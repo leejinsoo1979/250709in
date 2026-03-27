@@ -26,6 +26,8 @@ import { useSpace3DView } from '../../context/useSpace3DView';
 import PlacedFurnitureContainer from './furniture/PlacedFurnitureContainer';
 import { FurnitureBoringOverlay } from './boring';
 import { useThree, useFrame } from '@react-three/fiber';
+import { Line, Html } from '@react-three/drei';
+import DimensionText from '../modules/components/DimensionText';
 import { useExcludedPanelsStore } from '../../context/ExcludedPanelsContext';
 
 interface RoomProps {
@@ -359,7 +361,7 @@ const Room: React.FC<RoomProps> = ({
   const { theme: appTheme } = useTheme(); // 앱 테마 가져오기
   const { renderMode: contextRenderMode, plainMaterial: isPlainMaterial } = useSpace3DView(); // context에서 renderMode 가져오기
   const renderMode = renderModeProp || contextRenderMode; // props로 전달된 값을 우선 사용
-  const { highlightedFrame, activeDroppedCeilingTab, view2DTheme, shadowEnabled, cameraMode: cameraModeFromStore, selectedSlotIndex, showBorings, isLayoutBuilderOpen } = useUIStore();
+  const { highlightedFrame, setHighlightedFrame, activeDroppedCeilingTab, view2DTheme, shadowEnabled, cameraMode: cameraModeFromStore, selectedSlotIndex, showBorings, isLayoutBuilderOpen } = useUIStore();
   const wireframeColor = view2DTheme === 'dark' ? "#ffffff" : "#333333"; // 은선모드 벽 라인 색상
   const placedModulesFromStore = useFurnitureStore((state) => state.placedModules); // 가구 정보 가져오기
   const firstModuleId = placedModulesFromStore[0]?.id || ''; // CNC 프레임 제외용
@@ -3921,6 +3923,55 @@ const Room: React.FC<RoomProps> = ({
                         <mesh position={frontPos}><boxGeometry args={frontArgs} /><primitive object={highlightOverlayMaterial} attach="material" /></mesh>
                       </>
                     )}
+
+                    {/* 좌측 서라운드 전면 패널 하단 치수선 */}
+                    {showDimensions && frontActualWidth > 0 && (() => {
+                      const extensionLineStart = mmToThreeUnits(70);
+                      const extensionLineLength = mmToThreeUnits(110);
+                      const tickSize = 0.03;
+                      const dimColor = '#000000';
+                      const halfW = mmToThreeUnits(frontActualWidth) / 2;
+                      const dimY = frontPos[1] - surrH / 2 - extensionLineStart - extensionLineLength;
+                      const extStart = frontPos[1] - surrH / 2 - extensionLineStart;
+                      const zD = frontPos[2] + mmToThreeUnits(END_PANEL_THICKNESS) / 2 + 0.01;
+                      return (
+                        <>
+                          <Line name="surround-dim" points={[[frontPos[0] - halfW, extStart, zD], [frontPos[0] - halfW, dimY, zD]]} color={dimColor} lineWidth={1} />
+                          <Line name="surround-dim" points={[[frontPos[0] + halfW, extStart, zD], [frontPos[0] + halfW, dimY, zD]]} color={dimColor} lineWidth={1} />
+                          <Line name="surround-dim" points={[[frontPos[0] - halfW, dimY, zD], [frontPos[0] + halfW, dimY, zD]]} color={dimColor} lineWidth={1} />
+                          <Line name="surround-dim" points={[[frontPos[0] - halfW - tickSize, dimY, zD], [frontPos[0] - halfW + tickSize, dimY, zD]]} color={dimColor} lineWidth={1} />
+                          <Line name="surround-dim" points={[[frontPos[0] + halfW - tickSize, dimY, zD], [frontPos[0] + halfW + tickSize, dimY, zD]]} color={dimColor} lineWidth={1} />
+                          <DimensionText name="surround-dim-text" value={Math.round(frontActualWidth)} position={[frontPos[0], dimY + mmToThreeUnits(15), zD]} color={dimColor} anchorX="center" anchorY="bottom" forceShow={true} />
+                        </>
+                      );
+                    })()}
+
+                    {/* 좌측 서라운드 전면 패널 기어 아이콘 */}
+                    {viewMode !== '2D' && showDimensions && (
+                      <Html
+                        position={[frontPos[0], frontPos[1], frontPos[2] + mmToThreeUnits(END_PANEL_THICKNESS) / 2 + 0.02]}
+                        center
+                        zIndexRange={[100, 0]}
+                        style={{ userSelect: 'none', pointerEvents: 'auto', zIndex: 100, background: 'transparent' }}
+                      >
+                        <div
+                          data-surround-gear
+                          style={{
+                            cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            width: '32px', height: '32px', border: `2px solid ${colors.primary}`, borderRadius: '50%',
+                            backgroundColor: '#ffffff', transition: 'all 0.2s ease', boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+                          }}
+                          onClick={(e) => { e.stopPropagation(); (window as any).__r3fClickHandled = true; setHighlightedFrame(highlightedFrame === 'surround-left' ? null : 'surround-left'); }}
+                          onPointerDown={(e) => e.stopPropagation()}
+                          title="서라운드 설정"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={colors.primary} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <circle cx="12" cy="12" r="3" />
+                            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
+                          </svg>
+                        </div>
+                      </Html>
+                    )}
                   </>
                 );
               })()}
@@ -3982,6 +4033,55 @@ const Room: React.FC<RoomProps> = ({
                         <mesh position={rFrontPos}><boxGeometry args={rFrontArgs} /><primitive object={highlightOverlayMaterial} attach="material" /></mesh>
                       </>
                     )}
+
+                    {/* 우측 서라운드 전면 패널 하단 치수선 */}
+                    {showDimensions && rFrontActualWidth > 0 && (() => {
+                      const extensionLineStart = mmToThreeUnits(70);
+                      const extensionLineLength = mmToThreeUnits(110);
+                      const tickSize = 0.03;
+                      const dimColor = '#000000';
+                      const halfW = mmToThreeUnits(rFrontActualWidth) / 2;
+                      const dimY = rFrontPos[1] - surrH / 2 - extensionLineStart - extensionLineLength;
+                      const extStart = rFrontPos[1] - surrH / 2 - extensionLineStart;
+                      const zD = rFrontPos[2] + mmToThreeUnits(END_PANEL_THICKNESS) / 2 + 0.01;
+                      return (
+                        <>
+                          <Line name="surround-dim" points={[[rFrontPos[0] - halfW, extStart, zD], [rFrontPos[0] - halfW, dimY, zD]]} color={dimColor} lineWidth={1} />
+                          <Line name="surround-dim" points={[[rFrontPos[0] + halfW, extStart, zD], [rFrontPos[0] + halfW, dimY, zD]]} color={dimColor} lineWidth={1} />
+                          <Line name="surround-dim" points={[[rFrontPos[0] - halfW, dimY, zD], [rFrontPos[0] + halfW, dimY, zD]]} color={dimColor} lineWidth={1} />
+                          <Line name="surround-dim" points={[[rFrontPos[0] - halfW - tickSize, dimY, zD], [rFrontPos[0] - halfW + tickSize, dimY, zD]]} color={dimColor} lineWidth={1} />
+                          <Line name="surround-dim" points={[[rFrontPos[0] + halfW - tickSize, dimY, zD], [rFrontPos[0] + halfW + tickSize, dimY, zD]]} color={dimColor} lineWidth={1} />
+                          <DimensionText name="surround-dim-text" value={Math.round(rFrontActualWidth)} position={[rFrontPos[0], dimY + mmToThreeUnits(15), zD]} color={dimColor} anchorX="center" anchorY="bottom" forceShow={true} />
+                        </>
+                      );
+                    })()}
+
+                    {/* 우측 서라운드 전면 패널 기어 아이콘 */}
+                    {viewMode !== '2D' && showDimensions && (
+                      <Html
+                        position={[rFrontPos[0], rFrontPos[1], rFrontPos[2] + mmToThreeUnits(END_PANEL_THICKNESS) / 2 + 0.02]}
+                        center
+                        zIndexRange={[100, 0]}
+                        style={{ userSelect: 'none', pointerEvents: 'auto', zIndex: 100, background: 'transparent' }}
+                      >
+                        <div
+                          data-surround-gear
+                          style={{
+                            cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            width: '32px', height: '32px', border: `2px solid ${colors.primary}`, borderRadius: '50%',
+                            backgroundColor: '#ffffff', transition: 'all 0.2s ease', boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+                          }}
+                          onClick={(e) => { e.stopPropagation(); (window as any).__r3fClickHandled = true; setHighlightedFrame(highlightedFrame === 'surround-right' ? null : 'surround-right'); }}
+                          onPointerDown={(e) => e.stopPropagation()}
+                          title="서라운드 설정"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={colors.primary} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <circle cx="12" cy="12" r="3" />
+                            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
+                          </svg>
+                        </div>
+                      </Html>
+                    )}
                   </>
                 );
               })()}
@@ -4032,6 +4132,55 @@ const Room: React.FC<RoomProps> = ({
                         <mesh position={mRSidePos}><boxGeometry args={mRSideArgs} /><primitive object={highlightOverlayMaterial} attach="material" /></mesh>
                         <mesh position={mFrontPos}><boxGeometry args={mFrontArgs} /><primitive object={highlightOverlayMaterial} attach="material" /></mesh>
                       </>
+                    )}
+
+                    {/* 중간 서라운드 전면 패널 하단 치수선 */}
+                    {showDimensions && mFrontActualWidth > 0 && (() => {
+                      const extensionLineStart = mmToThreeUnits(70);
+                      const extensionLineLength = mmToThreeUnits(110);
+                      const tickSize = 0.03;
+                      const dimColor = '#000000';
+                      const halfW = mmToThreeUnits(mFrontActualWidth) / 2;
+                      const dimY = mFrontPos[1] - surrH / 2 - extensionLineStart - extensionLineLength;
+                      const extStart = mFrontPos[1] - surrH / 2 - extensionLineStart;
+                      const zD = mFrontPos[2] + mmToThreeUnits(END_PANEL_THICKNESS) / 2 + 0.01;
+                      return (
+                        <>
+                          <Line name="surround-dim" points={[[mFrontPos[0] - halfW, extStart, zD], [mFrontPos[0] - halfW, dimY, zD]]} color={dimColor} lineWidth={1} />
+                          <Line name="surround-dim" points={[[mFrontPos[0] + halfW, extStart, zD], [mFrontPos[0] + halfW, dimY, zD]]} color={dimColor} lineWidth={1} />
+                          <Line name="surround-dim" points={[[mFrontPos[0] - halfW, dimY, zD], [mFrontPos[0] + halfW, dimY, zD]]} color={dimColor} lineWidth={1} />
+                          <Line name="surround-dim" points={[[mFrontPos[0] - halfW - tickSize, dimY, zD], [mFrontPos[0] - halfW + tickSize, dimY, zD]]} color={dimColor} lineWidth={1} />
+                          <Line name="surround-dim" points={[[mFrontPos[0] + halfW - tickSize, dimY, zD], [mFrontPos[0] + halfW + tickSize, dimY, zD]]} color={dimColor} lineWidth={1} />
+                          <DimensionText name="surround-dim-text" value={Math.round(mFrontActualWidth)} position={[mFrontPos[0], dimY + mmToThreeUnits(15), zD]} color={dimColor} anchorX="center" anchorY="bottom" forceShow={true} />
+                        </>
+                      );
+                    })()}
+
+                    {/* 중간 서라운드 전면 패널 기어 아이콘 */}
+                    {viewMode !== '2D' && showDimensions && (
+                      <Html
+                        position={[mFrontPos[0], mFrontPos[1], mFrontPos[2] + mmToThreeUnits(END_PANEL_THICKNESS) / 2 + 0.02]}
+                        center
+                        zIndexRange={[100, 0]}
+                        style={{ userSelect: 'none', pointerEvents: 'auto', zIndex: 100, background: 'transparent' }}
+                      >
+                        <div
+                          data-surround-gear
+                          style={{
+                            cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            width: '32px', height: '32px', border: `2px solid ${colors.primary}`, borderRadius: '50%',
+                            backgroundColor: '#ffffff', transition: 'all 0.2s ease', boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+                          }}
+                          onClick={(e) => { e.stopPropagation(); (window as any).__r3fClickHandled = true; setHighlightedFrame(highlightedFrame === `surround-middle-${idx}` ? null : `surround-middle-${idx}`); }}
+                          onPointerDown={(e) => e.stopPropagation()}
+                          title="서라운드 설정"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={colors.primary} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <circle cx="12" cy="12" r="3" />
+                            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
+                          </svg>
+                        </div>
+                      </Html>
                     )}
                   </group>
                 );
