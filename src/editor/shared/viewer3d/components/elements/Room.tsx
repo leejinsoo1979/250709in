@@ -16,8 +16,7 @@ import {
   calculateBaseFrameWidth,
   calculateTopBottomFrameHeight,
   calculateBaseFrameHeight,
-  calculateInternalSpace,
-  EP_RENDER_OFFSET
+  calculateInternalSpace
 } from '../../utils/geometry';
 import { calculateSpaceIndexing, ColumnIndexer } from '@/editor/shared/utils/indexing';
 import { computeBaseStripGroups, computeTopStripGroups, getBaseFrameBoundsX, getLowerDepthZOffsetMM } from '@/editor/shared/utils/baseStripUtils';
@@ -3909,7 +3908,7 @@ const Room: React.FC<RoomProps> = ({
 
                 if (method === 'ep') {
                   const epArgs: [number, number, number] = [mmToThreeUnits(END_PANEL_RENDER_THICKNESS), surrH, mmToThreeUnits(END_PANEL_RENDER_THICKNESS)];
-                  const epPos: [number, number, number] = [mmToThreeUnits(minLeftMM - END_PANEL_THICKNESS / 2 - EP_RENDER_OFFSET), surrCenterY, frontZ];
+                  const epPos: [number, number, number] = [mmToThreeUnits(minLeftMM - END_PANEL_THICKNESS / 2), surrCenterY, frontZ];
                   return (
                     <>
                       <BoxWithEdges hideEdges={hideEdges} isOuterFrame key="free-left-ep" name="left-surround-ep"
@@ -4077,7 +4076,7 @@ const Room: React.FC<RoomProps> = ({
 
                 if (method === 'ep') {
                   const epArgs: [number, number, number] = [mmToThreeUnits(END_PANEL_RENDER_THICKNESS), surrH, mmToThreeUnits(END_PANEL_RENDER_THICKNESS)];
-                  const epPos: [number, number, number] = [mmToThreeUnits(maxRightMM + END_PANEL_THICKNESS / 2 + EP_RENDER_OFFSET), surrCenterY, frontZ];
+                  const epPos: [number, number, number] = [mmToThreeUnits(maxRightMM + END_PANEL_THICKNESS / 2), surrCenterY, frontZ];
                   return (
                     <>
                       <BoxWithEdges hideEdges={hideEdges} isOuterFrame key="free-right-ep" name="right-surround-ep"
