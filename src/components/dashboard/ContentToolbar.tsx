@@ -240,69 +240,74 @@ const ContentToolbar: React.FC<ContentToolbarProps> = ({
   const hasSelection = selectedCount > 0;
   const isAllSelected = totalItemCount > 0 && selectedCount === totalItemCount;
 
+  // 모바일에서 프로젝트 안에 있을 때 (새 디자인/새 폴더 버튼이 존재)
+  const mobileInsideProject = isMobile && (onCreateDesign || onCreateFolder);
+
   return (
-    <div className={styles.toolbar}>
-      {/* 좌측: 선택 바 또는 액션 버튼 */}
-      <div className={styles.actions}>
-        {hasSelection ? (
-          <div className={styles.selectionBar}>
-            <label className={styles.selectionBarLabel}>
-              <input
-                type="checkbox"
-                checked={isAllSelected}
-                ref={(el) => {
-                  if (el) el.indeterminate = !isAllSelected && hasSelection;
-                }}
-                onChange={() => {
-                  if (isAllSelected) {
-                    onClearSelection?.();
-                  } else {
-                    onSelectAll?.();
-                  }
-                }}
-              />
-              <span>전체선택</span>
-            </label>
-            <span className={styles.selectionBarCount}>{selectedCount}개 선택됨</span>
-          </div>
-        ) : isTrash ? (
-          <>
-            {onRestore && (
-              <button className={styles.createBtn} onClick={onRestore}>
-                <RotateCcw size={16} />
-                <span>복원</span>
-              </button>
-            )}
-            {onPermanentDelete && (
-              <button className={`${styles.createBtn} ${styles.dangerBtn}`} onClick={onPermanentDelete}>
-                <Trash2 size={16} />
-                <span>영구 삭제</span>
-              </button>
-            )}
-            {onEmptyTrash && (
-              <button className={`${styles.createBtn} ${styles.dangerBtn}`} onClick={onEmptyTrash}>
-                <Trash2 size={16} />
-                <span>휴지통 비우기</span>
-              </button>
-            )}
-          </>
-        ) : (
-          <>
-            {onCreateDesign && (
-              <button className={`${styles.createBtn} ${styles.createBtnPrimary}`} onClick={onCreateDesign}>
-                <Plus size={16} />
-                <span>새 디자인</span>
-              </button>
-            )}
-            {onCreateFolder && (
-              <button className={styles.createBtn} onClick={onCreateFolder}>
-                <FolderPlus size={16} />
-                <span>새 폴더</span>
-              </button>
-            )}
-          </>
-        )}
-      </div>
+    <div className={`${styles.toolbar} ${mobileInsideProject ? styles.toolbarMobileTwoRow : ''}`}>
+      {/* 데스크톱: 좌측 액션 버튼 (모바일 프로젝트 내부에서는 아래 별도 행으로 이동) */}
+      {!mobileInsideProject && (
+        <div className={styles.actions}>
+          {hasSelection ? (
+            <div className={styles.selectionBar}>
+              <label className={styles.selectionBarLabel}>
+                <input
+                  type="checkbox"
+                  checked={isAllSelected}
+                  ref={(el) => {
+                    if (el) el.indeterminate = !isAllSelected && hasSelection;
+                  }}
+                  onChange={() => {
+                    if (isAllSelected) {
+                      onClearSelection?.();
+                    } else {
+                      onSelectAll?.();
+                    }
+                  }}
+                />
+                <span>전체선택</span>
+              </label>
+              <span className={styles.selectionBarCount}>{selectedCount}개 선택됨</span>
+            </div>
+          ) : isTrash ? (
+            <>
+              {onRestore && (
+                <button className={styles.createBtn} onClick={onRestore}>
+                  <RotateCcw size={16} />
+                  <span>복원</span>
+                </button>
+              )}
+              {onPermanentDelete && (
+                <button className={`${styles.createBtn} ${styles.dangerBtn}`} onClick={onPermanentDelete}>
+                  <Trash2 size={16} />
+                  <span>영구 삭제</span>
+                </button>
+              )}
+              {onEmptyTrash && (
+                <button className={`${styles.createBtn} ${styles.dangerBtn}`} onClick={onEmptyTrash}>
+                  <Trash2 size={16} />
+                  <span>휴지통 비우기</span>
+                </button>
+              )}
+            </>
+          ) : (
+            <>
+              {onCreateDesign && (
+                <button className={`${styles.createBtn} ${styles.createBtnPrimary}`} onClick={onCreateDesign}>
+                  <Plus size={16} />
+                  <span>새 디자인</span>
+                </button>
+              )}
+              {onCreateFolder && (
+                <button className={styles.createBtn} onClick={onCreateFolder}>
+                  <FolderPlus size={16} />
+                  <span>새 폴더</span>
+                </button>
+              )}
+            </>
+          )}
+        </div>
+      )}
 
       {/* 네비게이션 버튼 + 브레드크럼 */}
       {nav && (
@@ -501,6 +506,49 @@ const ContentToolbar: React.FC<ContentToolbarProps> = ({
         <option value="name">이름순</option>
         <option value="type">종류순</option>
       </select>
+
+      {/* 모바일 프로젝트 내부: 2행 — 액션 버튼 (텍스트 포함) */}
+      {mobileInsideProject && (
+        <div className={styles.mobileActionRow}>
+          {hasSelection ? (
+            <div className={styles.selectionBar}>
+              <label className={styles.selectionBarLabel}>
+                <input
+                  type="checkbox"
+                  checked={isAllSelected}
+                  ref={(el) => {
+                    if (el) el.indeterminate = !isAllSelected && hasSelection;
+                  }}
+                  onChange={() => {
+                    if (isAllSelected) {
+                      onClearSelection?.();
+                    } else {
+                      onSelectAll?.();
+                    }
+                  }}
+                />
+                <span>전체선택</span>
+              </label>
+              <span className={styles.selectionBarCount}>{selectedCount}개 선택됨</span>
+            </div>
+          ) : (
+            <>
+              {onCreateDesign && (
+                <button className={`${styles.mobileActionBtn} ${styles.mobileActionBtnPrimary}`} onClick={onCreateDesign}>
+                  <Plus size={15} />
+                  <span>새 디자인</span>
+                </button>
+              )}
+              {onCreateFolder && (
+                <button className={styles.mobileActionBtn} onClick={onCreateFolder}>
+                  <FolderPlus size={15} />
+                  <span>새 폴더</span>
+                </button>
+              )}
+            </>
+          )}
+        </div>
+      )}
     </div>
   );
 };

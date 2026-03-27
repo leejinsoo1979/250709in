@@ -590,8 +590,16 @@
   }
 }
 
-/* 모바일 검색 토글 버튼 */
+/* 모바일 전용 요소 — 데스크톱에서 숨김 */
 .mobileSearchBtn {
+  display: none;
+}
+
+.mobileActionRow {
+  display: none;
+}
+
+.mobileActionBtn {
   display: none;
 }
 
@@ -613,5 +621,49 @@
 
   .mobileSearchBtn:active {
     background: var(--theme-background-secondary);
+  }
+
+  /* 2행 레이아웃: 프로젝트 내부 모바일 */
+  .toolbarMobileTwoRow {
+    flex-wrap: wrap;
+    height: auto;
+    padding: 8px 12px;
+    gap: 8px;
+  }
+
+  /* 모바일 액션 행 (2행) */
+  .mobileActionRow {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    order: 10;
+  }
+
+  .mobileActionBtn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    height: 32px;
+    padding: 0 14px;
+    border: 1px solid var(--theme-border);
+    border-radius: 8px;
+    background: transparent;
+    color: var(--theme-text-secondary);
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition: all 0.15s;
+  }
+
+  .mobileActionBtn:active {
+    opacity: 0.7;
+  }
+
+  .mobileActionBtnPrimary {
+    background: var(--theme-primary);
+    color: white;
+    border-color: var(--theme-primary);
   }
 }
