@@ -486,7 +486,7 @@ const ContentPane: React.FC<ContentPaneProps> = ({
   return (
     <div
       className={styles.iconGrid}
-      style={{ gridTemplateColumns: `repeat(auto-fill, minmax(${gridMinWidth}px, 1fr))` }}
+      style={isMobile ? undefined : { gridTemplateColumns: `repeat(auto-fill, minmax(${gridMinWidth}px, 1fr))` }}
       onClick={handleGridClick}
     >
       {filteredItems.map(item => (
@@ -504,7 +504,14 @@ const ContentPane: React.FC<ContentPaneProps> = ({
         >
           {renderCheckbox(item)}
           <div className={styles.iconThumbnail}>
-            {viewMode === 'large' && item.type === 'project' && projectDesignFiles ? (
+            {isMobile ? (
+              // 모바일: 48x48 작은 아이콘 또는 썸네일
+              item.thumbnail ? (
+                <img src={item.thumbnail} alt={item.name} />
+              ) : (
+                getItemIcon(item, 24)
+              )
+            ) : viewMode === 'large' && item.type === 'project' && projectDesignFiles ? (
               (() => {
                 const designFiles = projectDesignFiles[item.id] || [];
                 if (designFiles.length === 0) {
