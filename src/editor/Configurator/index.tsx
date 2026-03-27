@@ -4192,44 +4192,64 @@ const Configurator: React.FC = () => {
                 : 'full-surround';
 
             const handleModeChange = (newMode: string) => {
+              // 서라운드 타입별 업데이트 데이터 구성
+              let updates: Record<string, unknown>;
               if (newMode === 'full-surround') {
                 const topFrame = spaceInfo.frameSize?.top || 30;
-                handleSpaceInfoUpdate({
+                updates = {
                   surroundType: 'surround',
                   frameConfig: { ...currentFrameConfig, top: true, bottom: true },
                   frameSize: {
                     ...(spaceInfo.frameSize || { left: 50, right: 50, top: 30 }),
                   },
-                  doorTopGap: topFrame + 3, // 전체서라운드: 상부프레임 + 3mm
-                });
-                // 전체서라운드: EP 있는 가구의 옵셋을 23으로 설정
+                  doorTopGap: topFrame + 3,
+                };
+              } else if (newMode === 'sides-only') {
+                updates = {
+                  surroundType: 'surround',
+                  frameConfig: { ...currentFrameConfig, top: false, bottom: false },
+                  doorTopGap: 5,
+                };
+              } else {
+                updates = {
+                  surroundType: 'no-surround',
+                  frameConfig: { left: false, right: false, top: true, bottom: false },
+                  doorTopGap: 5,
+                };
+              }
+
+              // freeSurround 재계산: 변경된 spaceInfo로 gap 재측정
+              if (spaceInfo.freeSurround && placedModules.some(m => m.isFreePlacement)) {
+                const updatedSpaceInfo = { ...spaceInfo, ...updates } as SpaceInfo;
+                const result = generateSurround(updatedSpaceInfo, placedModules);
+                if (result.success && result.config) {
+                  // 기존 사용자 설정(offset, topGap, bottomGap) 보존하면서 gap만 재계산
+                  const oldFs = spaceInfo.freeSurround;
+                  const newFs = result.config;
+                  newFs.left = { ...newFs.left, offset: oldFs.left.offset, topGap: oldFs.left.topGap, bottomGap: oldFs.left.bottomGap };
+                  newFs.right = { ...newFs.right, offset: oldFs.right.offset, topGap: oldFs.right.topGap, bottomGap: oldFs.right.bottomGap };
+                  // 중간 서라운드: 사용자 설정 보존
+                  if (newFs.middle && oldFs.middle) {
+                    newFs.middle = newFs.middle.map((m, i) => {
+                      const oldM = oldFs.middle?.[i];
+                      return oldM ? { ...m, offset: oldM.offset, topGap: oldM.topGap, bottomGap: oldM.bottomGap } : m;
+                    });
+                  }
+                  updates.freeSurround = newFs;
+                }
+              }
+
+              handleSpaceInfoUpdate(updates);
+
+              // EP 옵셋 설정
+              if (newMode === 'full-surround') {
                 placedModules.forEach(m => {
                   const epUpdate: Partial<typeof m> = {};
                   if (m.hasLeftEndPanel) epUpdate.leftEndPanelOffset = 23;
                   if (m.hasRightEndPanel) epUpdate.rightEndPanelOffset = 23;
                   if (Object.keys(epUpdate).length > 0) updatePlacedModule(m.id, epUpdate);
                 });
-              } else if (newMode === 'sides-only') {
-                // 양쪽서라운드 = 기존 서라운드와 100% 동일, frameConfig만 구분용
-                handleSpaceInfoUpdate({
-                  surroundType: 'surround',
-                  frameConfig: { ...currentFrameConfig, top: false, bottom: false },
-                  doorTopGap: 5, // 양쪽서라운드: 상단갭 5mm (사용자 수정 가능)
-                });
-                // 양쪽서라운드: EP 옵셋을 0으로 리셋
-                placedModules.forEach(m => {
-                  const epUpdate: Partial<typeof m> = {};
-                  if (m.hasLeftEndPanel) epUpdate.leftEndPanelOffset = 0;
-                  if (m.hasRightEndPanel) epUpdate.rightEndPanelOffset = 0;
-                  if (Object.keys(epUpdate).length > 0) updatePlacedModule(m.id, epUpdate);
-                });
               } else {
-                handleSpaceInfoUpdate({
-                  surroundType: 'no-surround',
-                  frameConfig: { left: false, right: false, top: true, bottom: false },
-                  doorTopGap: 5, // 노서라운드: 기본 상단갭 5mm
-                });
-                // 노서라운드: EP 옵셋을 0으로 리셋
                 placedModules.forEach(m => {
                   const epUpdate: Partial<typeof m> = {};
                   if (m.hasLeftEndPanel) epUpdate.leftEndPanelOffset = 0;
