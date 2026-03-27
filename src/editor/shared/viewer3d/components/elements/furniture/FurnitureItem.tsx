@@ -21,9 +21,8 @@ import { useTheme } from '@/contexts/ThemeContext';
 import { isCustomizableModuleId, getCustomizableCategory, CUSTOMIZABLE_DEFAULTS } from '@/editor/shared/controls/furniture/CustomizableFurnitureLibrary';
 import SurroundPanelMesh from '../../modules/SurroundPanelMesh';
 
-// 엔드패널 두께 상수
-const END_PANEL_THICKNESS = 18; // mm — 슬롯/너비 계산 기준 (공간 배분)
-const END_PANEL_RENDER_THICKNESS = 18.5; // mm — 물리적 렌더링 두께 (PET 재질)
+// 엔드패널 슬롯 계산 기준 두께
+const END_PANEL_THICKNESS = 18; // mm
 
 // 커스텀 가구 ID인지 확인하는 함수
 const isCustomFurnitureId = (moduleId: string): boolean => {
@@ -2705,7 +2704,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   // + EP 18.5mm일 때 EP방향으로 0.5mm 추가 이동 (슬롯 기준 18mm와의 차이)
   let epOffsetX = 0;
   if (!placedModule.customConfig) {
-    const epThk = mmToThreeUnits(placedModule.endPanelThickness || 18);
+    const epThk = mmToThreeUnits(placedModule.endPanelThickness || END_PANEL_RENDER_THICKNESS);
     const leftEp = placedModule.hasLeftEndPanel ? epThk : 0;
     const rightEp = placedModule.hasRightEndPanel ? epThk : 0;
     epOffsetX = (leftEp - rightEp) / 2; // 좌EP만: 본체 →, 우EP만: 본체 ←
