@@ -91,6 +91,10 @@ const DualType4: React.FC<FurnitureTypeProps> = ({
   const { theme } = useTheme();
   const { dimensionColor, baseFontSize } = useDimensionColor();
 
+  // 18.5/15.5mm는 양면 접합 두께이므로 좌우 이격 불필요
+  const basicThicknessMmVal = basicThickness / 0.01;
+  const sidePanelGap = (basicThicknessMmVal === 18.5 || basicThicknessMmVal === 15.5) ? 0 : mmToThreeUnits(1);
+
   // 디버그: zone 값 확인
   React.useEffect(() => {
     console.log('🚪🔴 DualType4 - zone prop:', {
@@ -276,7 +280,7 @@ const DualType4: React.FC<FurnitureTypeProps> = ({
                     return (
                       <BoxWithEdges
                         key={`lower-top-panel-${getPanelMaterial('(하)상판').uuid}`}
-                        args={[innerWidth - mmToThreeUnits(1), basicThickness, panelDepth]}
+                        args={[innerWidth - sidePanelGap, basicThickness, panelDepth]}
                         position={[0, lowerTopPanelY, panelZOffset]}
                         material={getPanelMaterial('(하)상판')}
                         renderMode={renderMode}
@@ -301,7 +305,7 @@ const DualType4: React.FC<FurnitureTypeProps> = ({
 
                     return (
                       <BoxWithEdges
-                        args={[innerWidth - mmToThreeUnits(1), basicThickness, panelDepth]}
+                        args={[innerWidth - sidePanelGap, basicThickness, panelDepth]}
                         position={[0, lowerTopPanelY + basicThickness, panelZOffset]}
                         material={material}
                         renderMode={renderMode}
@@ -349,7 +353,7 @@ const DualType4: React.FC<FurnitureTypeProps> = ({
       
       {/* 상단 판재 - 뒤에서 26mm 줄여서 백패널과 맞닿게 */}
       <BoxWithEdges
-        args={[innerWidth - mmToThreeUnits(1), basicThickness, (sectionDepths && sectionDepths[1] ? sectionDepths[1] : depth) - mmToThreeUnits(26)]}
+        args={[innerWidth - sidePanelGap, basicThickness, (sectionDepths && sectionDepths[1] ? sectionDepths[1] : depth) - mmToThreeUnits(26)]}
         position={[0, height/2 - basicThickness/2, (sectionDepths && sectionDepths[1] ? ((depth - sectionDepths[1]) === 0 ? 0 : upperSectionDepthDirection === 'back' ? (depth - sectionDepths[1]) / 2 : -(depth - sectionDepths[1]) / 2) : 0) + mmToThreeUnits(13)]}
         material={material}
         renderMode={renderMode}
@@ -408,7 +412,7 @@ const DualType4: React.FC<FurnitureTypeProps> = ({
       
       {/* 하단 판재 - 뒤에서 26mm 줄여서 백패널과 맞닿게 */}
       <BoxWithEdges
-        args={[innerWidth - mmToThreeUnits(1), basicThickness, (sectionDepths && sectionDepths[0] ? sectionDepths[0] : depth) - mmToThreeUnits(26)]}
+        args={[innerWidth - sidePanelGap, basicThickness, (sectionDepths && sectionDepths[0] ? sectionDepths[0] : depth) - mmToThreeUnits(26)]}
         position={[0, -height/2 + basicThickness/2, (sectionDepths && sectionDepths[0] ? ((depth - sectionDepths[0]) === 0 ? 0 : lowerSectionDepthDirection === 'back' ? (depth - sectionDepths[0]) / 2 : -(depth - sectionDepths[0]) / 2) : 0) + mmToThreeUnits(13)]}
         material={material}
         renderMode={renderMode}
@@ -482,7 +486,7 @@ const DualType4: React.FC<FurnitureTypeProps> = ({
                   const reinforcementHeight = mmToThreeUnits(60);
                   const reinforcementDepth = mmToThreeUnits(15);
                   // 양쪽 0.5mm씩 축소 (총 1mm)
-                  const reinforcementWidth = innerWidth - mmToThreeUnits(1);
+                  const reinforcementWidth = innerWidth - sidePanelGap;
                   const lowerBackPanelZ = -lowerSectionDepth/2 + backPanelThickness/2 + (basicThickness - mmToThreeUnits(1)) + lowerZOffset;
                   const upperBackPanelZ = -upperSectionDepth/2 + backPanelThickness/2 + (basicThickness - mmToThreeUnits(1)) + upperZOffset;
                   const lowerReinforcementZ = lowerBackPanelZ - backPanelThickness/2 - reinforcementDepth/2;
@@ -562,7 +566,7 @@ const DualType4: React.FC<FurnitureTypeProps> = ({
             const reinforcementHeight = mmToThreeUnits(60);
             const reinforcementDepth = mmToThreeUnits(15);
             // 양쪽 0.5mm씩 축소 (총 1mm)
-            const reinforcementWidth = innerWidth - mmToThreeUnits(1);
+            const reinforcementWidth = innerWidth - sidePanelGap;
             const backPanelZ = -depth/2 + backPanelThickness/2 + (basicThickness - mmToThreeUnits(1));
             const reinforcementZ = backPanelZ - backPanelThickness/2 - reinforcementDepth/2;
 

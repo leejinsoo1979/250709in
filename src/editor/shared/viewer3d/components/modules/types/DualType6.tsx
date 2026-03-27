@@ -87,6 +87,10 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
   // 띄움 배치 여부 확인
   const isFloating = spaceInfo?.baseConfig?.placementType === 'float';
 
+  // 18.5/15.5mm는 양면 접합 두께이므로 좌우 이격 불필요
+  const basicThicknessMmVal = basicThickness / 0.01;
+  const sidePanelGap = (basicThicknessMmVal === 18.5 || basicThicknessMmVal === 15.5) ? 0 : mmToThreeUnits(1);
+
   // Three.js 단위를 mm로 변환하는 함수
   const threeUnitsToMm = (units: number) => units * 100;
 
@@ -546,7 +550,7 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
         {hasSharedMiddlePanel && middlePanelHeight > 0 && (
           <>
             <BoxWithEdges
-              args={[innerWidth - mmToThreeUnits(1), basicThickness, adjustedDepthForShelves - basicThickness]}
+              args={[innerWidth - sidePanelGap, basicThickness, adjustedDepthForShelves - basicThickness]}
               position={[0, -height/2 + basicThickness + mmToThreeUnits(middlePanelHeight - 9), basicThickness/2 + shelfZOffset]}
               material={material}
               renderMode={useSpace3DView().renderMode}
@@ -610,7 +614,7 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
         {hasSharedSafetyShelf && safetyShelfHeight > 0 && (
           <>
             <BoxWithEdges
-              args={[innerWidth - mmToThreeUnits(1), basicThickness, adjustedDepthForShelves - basicThickness]}
+              args={[innerWidth - sidePanelGap, basicThickness, adjustedDepthForShelves - basicThickness]}
               position={[0, -height/2 + basicThickness + mmToThreeUnits(safetyShelfHeight), basicThickness/2 + shelfZOffset]}
               material={material}
               renderMode={useSpace3DView().renderMode}
@@ -752,7 +756,7 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
 
       {/* 상단 판재 - 통합 (상단 옷장이 좌우 연결되어 있음), 뒤에서 26mm 줄여서 백패널과 맞닿게 */}
       <BoxWithEdges
-        args={[innerWidth - mmToThreeUnits(1), basicThickness, depth - mmToThreeUnits(26)]}
+        args={[innerWidth - sidePanelGap, basicThickness, depth - mmToThreeUnits(26)]}
         position={[0, height/2 - basicThickness/2, mmToThreeUnits(13)]}
         material={material}
         renderMode={renderMode}
@@ -843,7 +847,7 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
         const reinforcementHeight = mmToThreeUnits(60);
         const reinforcementDepth = mmToThreeUnits(15);
         // 양쪽 0.5mm씩 축소 (총 1mm)
-        const reinforcementWidth = innerWidth - mmToThreeUnits(1);
+        const reinforcementWidth = innerWidth - sidePanelGap;
         const reinforcementZ = backPanelZ - backPanelThickness/2 - reinforcementDepth/2;
 
         return (

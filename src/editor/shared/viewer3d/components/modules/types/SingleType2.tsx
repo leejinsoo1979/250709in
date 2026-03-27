@@ -89,6 +89,10 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
   const { renderMode, viewMode } = useSpace3DView();
   const { isIndividualDoorOpen, toggleIndividualDoor } = useUIStore();
 
+  // 18.5/15.5mm는 양면 접합 두께이므로 좌우 이격 불필요
+  const basicThicknessMmVal = basicThickness / 0.01;
+  const sidePanelGap = (basicThicknessMmVal === 18.5 || basicThicknessMmVal === 15.5) ? 0 : mmToThreeUnits(1);
+
   // 띄워서 배치 여부 확인
   const isFloating = spaceInfo?.baseConfig?.placementType === 'float';
 
@@ -260,7 +264,7 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
                     <>
                       {/* 하부 섹션 상판 - 하부 섹션 깊이 적용 + 사용자 오프셋 (앞에서 줄어듦) + 뒤에서 26mm 줄임, 좌우 각 0.5mm씩 줄임 */}
                       <BoxWithEdges
-                        args={[innerWidth - mmToThreeUnits(1), basicThickness, lowerDepth - mmToThreeUnits(26) - mmToThreeUnits(lowerSectionTopOffset || 0)]}
+                        args={[innerWidth - sidePanelGap, basicThickness, lowerDepth - mmToThreeUnits(26) - mmToThreeUnits(lowerSectionTopOffset || 0)]}
                         position={[0, lowerTopPanelY, lowerZOffset + mmToThreeUnits(13) - mmToThreeUnits(lowerSectionTopOffset || 0) / 2]}
                         material={material}
                         renderMode={renderMode}
@@ -276,7 +280,7 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
 
                       {/* 상부 섹션 바닥판 - 상부 섹션 깊이 적용 + 뒤에서 26mm 줄임, 좌우 각 0.5mm씩 줄임 */}
                       <BoxWithEdges
-                        args={[innerWidth - mmToThreeUnits(1), basicThickness, upperDepth - mmToThreeUnits(26)]}
+                        args={[innerWidth - sidePanelGap, basicThickness, upperDepth - mmToThreeUnits(26)]}
                         position={[0, middlePanelY + basicThickness, upperZOffset + mmToThreeUnits(13)]}
                         material={material}
                         renderMode={renderMode}
@@ -547,7 +551,7 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
 
         return (
           <BoxWithEdges
-            args={[innerWidth - mmToThreeUnits(1), basicThickness, topPanelDepth - backReduction]}
+            args={[innerWidth - sidePanelGap, basicThickness, topPanelDepth - backReduction]}
             position={[0, height/2 - basicThickness/2, topPanelZOffset]}
             material={material}
             renderMode={renderMode}
@@ -573,7 +577,7 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
 
         return (
           <BoxWithEdges
-            args={[innerWidth - mmToThreeUnits(1), basicThickness, bottomPanelDepth - backReduction]}
+            args={[innerWidth - sidePanelGap, basicThickness, bottomPanelDepth - backReduction]}
             position={[0, -height/2 + basicThickness/2, bottomPanelZOffset]}
             material={material}
             renderMode={renderMode}
@@ -662,7 +666,7 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
                   const reinforcementHeight = mmToThreeUnits(60);
                   const reinforcementDepth = mmToThreeUnits(15);
                   // 양쪽 0.5mm씩 축소 (총 1mm)
-                  const reinforcementWidth = innerWidth - mmToThreeUnits(1);
+                  const reinforcementWidth = innerWidth - sidePanelGap;
                   const lowerReinforcementZ = lowerBackPanelZ - backPanelThickness/2 - reinforcementDepth/2;
                   const upperReinforcementZ = upperBackPanelZ - backPanelThickness/2 - reinforcementDepth/2;
 
@@ -747,7 +751,7 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
             const reinforcementHeight = mmToThreeUnits(60);
             const reinforcementDepth = mmToThreeUnits(15);
             // 양쪽 0.5mm씩 축소 (총 1mm)
-            const reinforcementWidth = innerWidth - mmToThreeUnits(1);
+            const reinforcementWidth = innerWidth - sidePanelGap;
             const backPanelZ = -depth/2 + backPanelThickness/2 + (basicThickness - mmToThreeUnits(1));
             const reinforcementZ = backPanelZ - backPanelThickness/2 - reinforcementDepth/2;
 
