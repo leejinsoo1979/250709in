@@ -1202,11 +1202,12 @@ const DoorModule: React.FC<DoorModuleProps> = ({
       leftDoorWidth = actualDoorWidth / 2 - doorGap;
       rightDoorWidth = actualDoorWidth / 2 - doorGap;
     } else {
-      // 슬롯 배치: 항상 spaceInfo에서 직접 계산한 effectiveColumnWidth 사용
-      // (slotWidths prop은 FurnitureItem 경유로 stale할 수 있으므로 무시)
-      totalWidth = effectiveColumnWidth * 2;
-      leftDoorWidth = effectiveColumnWidth - doorGap;
-      rightDoorWidth = effectiveColumnWidth - doorGap;
+      // 슬롯 배치: 가구 본체와 동일한 slotWidths 기준 사용
+      // actualDoorWidth는 이미 slotWidths 기반으로 계산됨 (듀얼: slotWidth * 2)
+      const halfWidth = actualDoorWidth / 2;
+      totalWidth = actualDoorWidth;
+      leftDoorWidth = halfWidth - doorGap;
+      rightDoorWidth = halfWidth - doorGap;
     }
 
     // EP 앞으로 돌출(offset > 0) 시 해당 쪽 도어 너비를 EP 두께만큼 축소
@@ -1230,9 +1231,10 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     const leftDoorWidthUnits = mmToThreeUnits(leftDoorWidth);
     const rightDoorWidthUnits = mmToThreeUnits(rightDoorWidth);
     
-    // 도어 위치 계산 — effectiveColumnWidth 기반 (spaceInfo 직접 계산)
-    const leftSlotWidth = isFree ? totalWidth / 2 : effectiveColumnWidth;
-    const rightSlotWidth = isFree ? totalWidth / 2 : effectiveColumnWidth;
+    // 도어 위치 계산 — actualDoorWidth 기반 (slotWidths 기준, 본체와 일치)
+    const halfActualDoor = actualDoorWidth / 2;
+    const leftSlotWidth = isFree ? totalWidth / 2 : halfActualDoor;
+    const rightSlotWidth = isFree ? totalWidth / 2 : halfActualDoor;
     
     const leftSlotCenter = -totalWidth / 2 + leftSlotWidth / 2;  // 왼쪽 슬롯 중심
     const rightSlotCenter = -totalWidth / 2 + leftSlotWidth + rightSlotWidth / 2;  // 오른쪽 슬롯 중심
