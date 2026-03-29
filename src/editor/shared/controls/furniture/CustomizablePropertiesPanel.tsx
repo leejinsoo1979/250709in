@@ -789,28 +789,39 @@ const CustomizablePropertiesPanel: React.FC = () => {
     4: { sectionHeight: 1000, heights: [255, 255, 176, 176] },
   };
 
+  // 바닥판 올림을 반영한 가용 높이 계산 (서랍/선반 배치용)
+  // sIdx === 0 (최하단 섹션)에서만 bottomPanelRaise 적용
+  const getUsableHeight = (sec: CustomSection, sIdx: number, side?: 'full' | 'left' | 'center' | 'right'): number => {
+    if (sIdx !== 0) return sec.height;
+    // areaFinish 영역별 바닥판 올림 → section-level 폴백
+    const areaKey = side || 'full';
+    const raiseMm = sec.areaFinish?.[areaKey]?.bottomPanelRaise ?? sec.bottomPanelRaise ?? 0;
+    return Math.max(0, sec.height - raiseMm);
+  };
+
   // 섹션 타입 변경 (연필 메뉴용) — 서랍 선택 시 단수도 함께 처리
   const handleSectionTypeChange = (sIdx: number, elementType: CustomElement['type'], drawerCount?: number) => {
     const sections = [...config.sections];
     const sec = { ...sections[sIdx] };
 
+    const usableH = getUsableHeight(sec, sIdx, 'full');
     let newElement: CustomElement;
     switch (elementType) {
       case 'shelf':
-        newElement = { type: 'shelf', heights: [Math.round(sec.height / 2)], shelfMethod: 'dowel', shelfFrontInset: 30 };
+        newElement = { type: 'shelf', heights: [Math.round(usableH / 2)], shelfMethod: 'dowel', shelfFrontInset: 30 };
         break;
       case 'drawer': {
         const count = drawerCount || 2;
-        // 균등 분배 계산으로 서랍 높이 결정
-        const { heights: drawerHeights } = calculateEvenFillDrawers(sec.height, count);
+        // 균등 분배 계산으로 서랍 높이 결정 (바닥판 올림 반영)
+        const { heights: drawerHeights } = calculateEvenFillDrawers(usableH, count);
         newElement = { type: 'drawer', heights: drawerHeights };
         break;
       }
       case 'rod':
-        newElement = { type: 'rod', height: Math.round(sec.height * 0.85) };
+        newElement = { type: 'rod', height: Math.round(usableH * 0.85) };
         break;
       case 'pants':
-        newElement = { type: 'pants', height: Math.round(sec.height * 0.85) };
+        newElement = { type: 'pants', height: Math.round(usableH * 0.85) };
         break;
       default:
         newElement = { type: 'open' };
@@ -950,19 +961,20 @@ const CustomizablePropertiesPanel: React.FC = () => {
     const sec = { ...sections[sIdx] };
     if (!sec.horizontalSplit) return;
 
+    const usableH = getUsableHeight(sec, sIdx, side);
     let newElement: CustomElement;
     switch (elementType) {
       case 'shelf':
-        newElement = { type: 'shelf', heights: [Math.round(sec.height / 2)], shelfMethod: 'dowel', shelfFrontInset: 30 };
+        newElement = { type: 'shelf', heights: [Math.round(usableH / 2)], shelfMethod: 'dowel', shelfFrontInset: 30 };
         break;
       case 'drawer': {
         const count = drawerCount || 2;
-        const { heights: drawerHeights } = calculateEvenFillDrawers(sec.height, count);
+        const { heights: drawerHeights } = calculateEvenFillDrawers(usableH, count);
         newElement = { type: 'drawer', heights: drawerHeights };
         break;
       }
       case 'rod':
-        newElement = { type: 'rod', height: Math.round(sec.height * 0.85) };
+        newElement = { type: 'rod', height: Math.round(usableH * 0.85) };
         break;
       default:
         newElement = { type: 'open' };
@@ -1145,7 +1157,12 @@ const CustomizablePropertiesPanel: React.FC = () => {
     const sub = subSplits[areaKey];
     if (!sub) return;
 
-    const subHeight = subPart === 'lower' ? sub.lowerHeight : sec.height - sub.lowerHeight;
+    let subHeight = subPart === 'lower' ? sub.lowerHeight : sec.height - sub.lowerHeight;
+    // 하단 서브영역에서 바닥판 올림 반영
+    if (subPart === 'lower' && sIdx === 0) {
+      const raiseMm = sec.areaFinish?.[areaKey]?.bottomPanelRaise ?? sec.bottomPanelRaise ?? 0;
+      subHeight = Math.max(0, subHeight - raiseMm);
+    }
     let newElement: CustomElement;
     switch (elementType) {
       case 'shelf':
@@ -1219,7 +1236,7 @@ const CustomizablePropertiesPanel: React.FC = () => {
   const handleEvenFillDrawers = (sIdx: number, side: 'full' | 'left' | 'center' | 'right') => {
     const sections = [...config.sections];
     const sec = { ...sections[sIdx] };
-    const sectionHeight = sec.height;
+    const usableH = getUsableHeight(sec, sIdx, side);
 
     // 현재 서랍 단수 가져오기
     let currentElements: CustomElement[] | undefined;
@@ -1236,7 +1253,7 @@ const CustomizablePropertiesPanel: React.FC = () => {
     const currentDrawer = currentElements?.find((el): el is Extract<CustomElement, { type: 'drawer' }> => el.type === 'drawer');
     const currentCount = currentDrawer?.heights?.length;
 
-    const { heights } = calculateEvenFillDrawers(sectionHeight, currentCount);
+    const { heights } = calculateEvenFillDrawers(usableH, currentCount);
 
     const newElement: CustomElement = { type: 'drawer', heights };
 
@@ -1316,13 +1333,13 @@ const CustomizablePropertiesPanel: React.FC = () => {
   const handleEvenFillDrawersForSection = (sIdx: number) => {
     const sections = [...config.sections];
     const sec = { ...sections[sIdx] };
-    const sectionHeight = sec.height;
+    const usableH = getUsableHeight(sec, sIdx, 'full');
 
     // 현재 서랍 단수 가져오기
     const currentDrawer = sec.elements?.find((el): el is Extract<CustomElement, { type: 'drawer' }> => el.type === 'drawer');
     const currentCount = currentDrawer?.heights?.length;
 
-    const { heights } = calculateEvenFillDrawers(sectionHeight, currentCount);
+    const { heights } = calculateEvenFillDrawers(usableH, currentCount);
 
     sec.elements = [{ type: 'drawer', heights }];
     sec.hasPartition = false;
@@ -1348,16 +1365,16 @@ const CustomizablePropertiesPanel: React.FC = () => {
   ) => {
     const sections = [...config.sections];
     const sec = { ...sections[sIdx] };
-    const sectionHeight = sec.height;
+    const usableH = getUsableHeight(sec, sIdx, side);
 
     let newElement: CustomElement;
     switch (elementType) {
       case 'shelf':
-        newElement = { type: 'shelf', heights: [Math.round(sectionHeight / 2)], shelfMethod: 'dowel', shelfFrontInset: 30 };
+        newElement = { type: 'shelf', heights: [Math.round(usableH / 2)], shelfMethod: 'dowel', shelfFrontInset: 30 };
         break;
       case 'drawer': {
-        // 서랍 단수: 명시적 지정 또는 영역 높이 기반 최대값
-        const maxCount = getMaxDrawerCount(sectionHeight);
+        // 서랍 단수: 명시적 지정 또는 영역 높이 기반 최대값 (바닥판 올림 반영)
+        const maxCount = getMaxDrawerCount(usableH);
         const count = drawerCount || maxCount;
         // 기본값은 DRAWER_STANDARD 표준 사이즈 (사용자 정의 기본값)
         const standard = DRAWER_STANDARD[count];
@@ -1366,12 +1383,12 @@ const CustomizablePropertiesPanel: React.FC = () => {
         break;
       }
       case 'rod':
-        newElement = sectionHeight >= 1100
-          ? { type: 'rod', height: Math.round(sectionHeight * 0.85), withShelf: true, shelfGap: 280 }
-          : { type: 'rod', height: Math.round(sectionHeight * 0.85), withShelf: false };
+        newElement = usableH >= 1100
+          ? { type: 'rod', height: Math.round(usableH * 0.85), withShelf: true, shelfGap: 280 }
+          : { type: 'rod', height: Math.round(usableH * 0.85), withShelf: false };
         break;
       case 'pants':
-        newElement = { type: 'pants', height: Math.round(sectionHeight * 0.85) };
+        newElement = { type: 'pants', height: Math.round(usableH * 0.85) };
         break;
       default:
         newElement = { type: 'open' };
