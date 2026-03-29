@@ -59,11 +59,12 @@ interface CustomizableBoxModuleProps {
 // mm → Three.js units
 const mmToUnit = (val: number) => val * 0.01;
 
-// 설계모드 하부프레임 반투명 스트립 (윤곽선 포함)
-const DesignBaseFrameStrip: React.FC<{
+// 하부프레임 스트립 (설계모드: 반투명+윤곽선, 배치모드: 불투명+윤곽선)
+const BaseFrameStrip: React.FC<{
   args: [number, number, number];
   position: [number, number, number];
-}> = ({ args, position }) => {
+  isDesignMode?: boolean;
+}> = ({ args, position, isDesignMode = false }) => {
   const geometry = useMemo(() => new THREE.BoxGeometry(...args), [args[0], args[1], args[2]]);
   const edgesGeometry = useMemo(() => new THREE.EdgesGeometry(geometry), [geometry]);
   useEffect(() => {
@@ -71,8 +72,13 @@ const DesignBaseFrameStrip: React.FC<{
   }, [geometry, edgesGeometry]);
   return (
     <group position={position}>
-      <mesh renderOrder={-1} geometry={geometry}>
-        <meshStandardMaterial color="#C0C0C0" transparent opacity={0.35} depthWrite={false} />
+      <mesh renderOrder={isDesignMode ? -1 : 0} geometry={geometry}>
+        <meshStandardMaterial
+          color="#C0C0C0"
+          transparent={isDesignMode}
+          opacity={isDesignMode ? 0.35 : 1.0}
+          depthWrite={!isDesignMode}
+        />
       </mesh>
       <lineSegments geometry={edgesGeometry}>
         <lineBasicMaterial color="#666666" linewidth={0.5} />
@@ -2567,7 +2573,7 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
           return (
             <group position={[footAlignOffset, 0, 0]}>
               {strips.map(({ w, cx, key }) => (
-                <DesignBaseFrameStrip key={key} args={[w, baseH, epThk]} position={[cx, baseY, baseZ]} />
+                <BaseFrameStrip key={key} args={[w, baseH, epThk]} position={[cx, baseY, baseZ]} isDesignMode={isEditMode} />
               ))}
             </group>
           );
@@ -2586,7 +2592,7 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
         // 기본: 전체 너비 하부프레임
         return (
           <group position={[footAlignOffset, 0, 0]}>
-            <DesignBaseFrameStrip args={[footWidth, baseH, epThk]} position={[0, baseY, baseZ]} />
+            <BaseFrameStrip args={[footWidth, baseH, epThk]} position={[0, baseY, baseZ]} isDesignMode={isEditMode} />
           </group>
         );
       })()}
