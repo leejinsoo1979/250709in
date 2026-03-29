@@ -1433,6 +1433,10 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
     // 영역별 마감 헬퍼
     const getAreaShowBackPanel = (side: string) => section.areaFinish?.[side]?.showBackPanel ?? section.showBackPanel;
     const getAreaBottomRaiseMm = (side: string) => sIdx === 0 ? (section.areaFinish?.[side]?.bottomPanelRaise ?? section.bottomPanelRaise ?? 0) : 0;
+    // 바닥판 올림 시 측판 아래 확장 (조절발 높이만큼 다리 역할)
+    const baseHeightMm = spaceInfo.baseConfig?.height || 65;
+    const sectionBottomRaiseActive = bottomRaiseMm > 0;
+    const sideExtension = sectionBottomRaiseActive && sIdx === 0 ? mmToUnit(baseHeightMm) : 0;
 
     // 칸막이 좌/우 독립 깊이 여부 (1단/2단 모두 지원)
     const hasPartitionInSection = section.hasPartition && section.partitionPosition;
@@ -1455,18 +1459,20 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
       const rightInnerW = bInnerW - partPos - t / 2;
       const rightCenterX = partitionX + t / 2 + rightOuterW / 2;
 
-      // ── 좌측 측판 ──
+      // ── 좌측 측판 ── (바닥판 올림 시 조절발 높이만큼 아래로 확장)
+      const leftSideExt = getAreaBottomRaiseMm('left') > 0 && sIdx === 0 ? mmToUnit(baseHeightMm) : sideExtension;
       meshes.push(
         <BoxWithEdges key={`${prefix}-left`}
-          args={[t, boxH, leftD]} position={[-bInnerW / 2 - t / 2, centerY, leftZOffset]}
+          args={[t, boxH + leftSideExt, leftD]} position={[-bInnerW / 2 - t / 2, centerY - leftSideExt / 2, leftZOffset]}
           material={material} renderMode={renderMode} isDragging={isDragging} isHighlighted={isHighlighted}
           panelName={`${sectionLabel}좌측판`} panelGrainDirections={panelGrainDirections} furnitureId={placedFurnitureId}
         />
       );
-      // ── 우측 측판 ──
+      // ── 우측 측판 ── (바닥판 올림 시 조절발 높이만큼 아래로 확장)
+      const rightSideExt = getAreaBottomRaiseMm('right') > 0 && sIdx === 0 ? mmToUnit(baseHeightMm) : sideExtension;
       meshes.push(
         <BoxWithEdges key={`${prefix}-right`}
-          args={[t, boxH, rightD]} position={[bInnerW / 2 + t / 2, centerY, rightZOffset]}
+          args={[t, boxH + rightSideExt, rightD]} position={[bInnerW / 2 + t / 2, centerY - rightSideExt / 2, rightZOffset]}
           material={material} renderMode={renderMode} isDragging={isDragging} isHighlighted={isHighlighted}
           panelName={`${sectionLabel}우측판`} panelGrainDirections={panelGrainDirections} furnitureId={placedFurnitureId}
         />
@@ -1551,11 +1557,13 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
     // ═══ 기존 단일 깊이 렌더링 ═══
 
     // ═══ 1. 측판 (좌/우) - 전체 높이, 전체 깊이 ═══
+    // 측판 높이 확장 (바닥판 올림 시 조절발 높이만큼 다리 역할)
+    const singleSideExt = sideExtension;
     meshes.push(
       <BoxWithEdges
         key={`${prefix}-left`}
-        args={[t, boxH, boxD]}
-        position={[-bInnerW / 2 - t / 2, centerY, 0]}
+        args={[t, boxH + singleSideExt, boxD]}
+        position={[-bInnerW / 2 - t / 2, centerY - singleSideExt / 2, 0]}
         material={material}
         renderMode={renderMode}
         isDragging={isDragging}
@@ -1568,8 +1576,8 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
     meshes.push(
       <BoxWithEdges
         key={`${prefix}-right`}
-        args={[t, boxH, boxD]}
-        position={[bInnerW / 2 + t / 2, centerY, 0]}
+        args={[t, boxH + singleSideExt, boxD]}
+        position={[bInnerW / 2 + t / 2, centerY - singleSideExt / 2, 0]}
         material={material}
         renderMode={renderMode}
         isDragging={isDragging}
@@ -1745,6 +1753,7 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
     const hsBottomRaiseUnit = mmToUnit(hsBottomRaiseMm);
     const hsGetAreaShowBackPanel = (side: string) => section.areaFinish?.[side]?.showBackPanel ?? section.showBackPanel;
     const hsGetAreaBottomRaiseMm = (side: string) => sIdx === 0 ? (section.areaFinish?.[side]?.bottomPanelRaise ?? section.bottomPanelRaise ?? 0) : 0;
+    const baseHeightMm = spaceInfo.baseConfig?.height || 65;
     // 패널 소유에 따른 내경 높이 계산
     const hsHasBottom = section.showBottomPanel !== false;
     const hsHasTop = section.showTopPanel !== false;
@@ -1794,12 +1803,13 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
         return;
       }
 
-      // 측판 (좌/우)
+      // 측판 (좌/우) — 바닥판 올림 시 조절발 높이만큼 아래 확장
+      const hsSideExt = hsGetAreaBottomRaiseMm(side) > 0 && sIdx === 0 ? mmToUnit(baseHeightMm) : 0;
       subMeshes.push(
         <BoxWithEdges
           key={`${prefix}-left-panel`}
-          args={[t, sbBoxH, subBoxD]}
-          position={[subCenterX - subInnerW / 2 - t / 2, sbCenterY, 0]}
+          args={[t, sbBoxH + hsSideExt, subBoxD]}
+          position={[subCenterX - subInnerW / 2 - t / 2, sbCenterY - hsSideExt / 2, 0]}
           material={material}
           renderMode={renderMode}
           isDragging={isDragging}
@@ -1812,8 +1822,8 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
       subMeshes.push(
         <BoxWithEdges
           key={`${prefix}-right-panel`}
-          args={[t, sbBoxH, subBoxD]}
-          position={[subCenterX + subInnerW / 2 + t / 2, sbCenterY, 0]}
+          args={[t, sbBoxH + hsSideExt, subBoxD]}
+          position={[subCenterX + subInnerW / 2 + t / 2, sbCenterY - hsSideExt / 2, 0]}
           material={material}
           renderMode={renderMode}
           isDragging={isDragging}
