@@ -224,6 +224,10 @@ interface DrawerRendererProps {
   sectionName?: string; // 섹션 이름 (예: "(상)", "(하)")
   drawerAlign?: 'top' | 'bottom'; // 서랍 배치 방향 (top: 위배치 - 맨 아래 마이다 24mm 확장)
   backPanelThicknessOverride?: number; // 백패널 두께 오버라이드 (mm, UI에서 변경 시)
+  maidaInsetTop?: number;    // 마이다 상단 인셋 (mm), 기본 0
+  maidaInsetBottom?: number; // 마이다 하단 인셋 (mm), 기본 0
+  maidaInsetLeft?: number;   // 마이다 좌측 인셋 (mm), 기본 0
+  maidaInsetRight?: number;  // 마이다 우측 인셋 (mm), 기본 0
 }
 
 /**
@@ -256,6 +260,10 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
   furnitureId,
   drawerAlign = 'bottom',
   backPanelThicknessOverride,
+  maidaInsetTop = 0,
+  maidaInsetBottom = 0,
+  maidaInsetLeft = 0,
+  maidaInsetRight = 0,
 }) => {
   const showDimensions = useUIStore(state => state.showDimensions);
   const showDimensionsText = useUIStore(state => state.showDimensionsText);
@@ -574,7 +582,7 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
           );
         })()}
 
-        {/* === 손잡이 판 (앞쪽, 15mm 두께) - 위배치 맨 아래 서랍은 24mm 하단 확장 === */}
+        {/* === 손잡이 판 (앞쪽, 15mm 두께) - 위배치 맨 아래 서랍은 24mm 하단 확장, 마이다 인셋 적용 === */}
         {(() => {
           const panelName = sectionName ? `${sectionName}서랍${drawerIndex + 1}(마이다)` : `서랍${drawerIndex + 1}(마이다)`;
           const mat = getPanelMaterial(panelName);
@@ -582,13 +590,16 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
           const isBottomDrawer = drawerIndex === 0;
           const maidaBottomExt = (drawerAlign === 'top' && isBottomDrawer) ? mmToThreeUnits(24) : 0;
           const maidaTopExt = (drawerAlign === 'top' && isBottomDrawer) ? basicThickness : 0;
-          const maidaHeight = drawerHeight + maidaBottomExt + maidaTopExt;
-          const maidaY = centerY + (maidaTopExt - maidaBottomExt) / 2; // 상하 확장 반영
+          // 마이다 인셋 적용: 상하좌우 축소
+          const maidaHeight = drawerHeight + maidaBottomExt + maidaTopExt - mmToThreeUnits(maidaInsetTop + maidaInsetBottom);
+          const maidaWidth = drawerWidth - mmToThreeUnits(maidaInsetLeft + maidaInsetRight);
+          const maidaY = centerY + (maidaTopExt - maidaBottomExt) / 2 + mmToThreeUnits(maidaInsetBottom - maidaInsetTop) / 2;
+          const maidaX = centerX + mmToThreeUnits(maidaInsetRight - maidaInsetLeft) / 2;
           return (
             <BoxWithEdges
               key={`drawer-${drawerIndex}-handle-${mat.uuid}`}
-              args={[drawerWidth, maidaHeight, HANDLE_PLATE_THICKNESS]}
-              position={[centerX, maidaY, centerZ + actualDrawerDepth/2 - HANDLE_PLATE_THICKNESS/2]}
+              args={[maidaWidth, maidaHeight, HANDLE_PLATE_THICKNESS]}
+              position={[maidaX, maidaY, centerZ + actualDrawerDepth/2 - HANDLE_PLATE_THICKNESS/2]}
               material={mat}
               renderMode={renderMode}
               isHighlighted={isHighlighted}
