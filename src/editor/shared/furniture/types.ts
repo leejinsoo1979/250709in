@@ -59,6 +59,13 @@ export interface CustomSection {
   showBottomPanel?: boolean; // 하판 마감 (기본: true)
   bottomPanelRaise?: number; // 바닥판 올림 mm (>0이면 조절발 제거, 측판이 아래로 연장)
   showBackPanel?: boolean;   // 뒷벽 마감 (기본: true)
+  // 영역별 마감 (칸막이/좌우분할 시 좌/우 독립 설정, undefined면 섹션 기본값 사용)
+  areaFinish?: {
+    [key: string]: { // 'left', 'right', 'center'
+      showBackPanel?: boolean;
+      bottomPanelRaise?: number;
+    };
+  };
 }
 
 // 커스터마이징 가구 내부 구조 설정
