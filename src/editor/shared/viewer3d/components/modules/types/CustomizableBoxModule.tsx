@@ -1117,14 +1117,14 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
           drawerYOffset = sectionCenterY;
           drawerInnerH = areaInnerHeight;
         } else if (align === 'top') {
-          // 위에서 배치: 상단갭은 상판에 흡수 (bottom과 동일 원리)
+          // 위에서 배치: 마이다 높이 = 서랍+gap 합계 (내경 그대로)
           const drawerTopY = sectionCenterY + areaInnerHeight / 2;
-          drawerInnerH = totalDrawerInnerH - t;
+          drawerInnerH = totalDrawerInnerH;
           drawerYOffset = drawerTopY - drawerInnerH / 2;
         } else {
-          // 아래서 배치(기본): 하단부터 배치, 날개벽은 위에서 패널두께만큼 줄임
+          // 아래서 배치(기본): 마이다 높이 = 서랍+gap 합계 (내경 그대로)
           const drawerBottomY = sectionCenterY - areaInnerHeight / 2;
-          drawerInnerH = totalDrawerInnerH - t;
+          drawerInnerH = totalDrawerInnerH;
           drawerYOffset = drawerBottomY + drawerInnerH / 2;
         }
 
