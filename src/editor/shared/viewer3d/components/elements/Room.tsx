@@ -5567,9 +5567,7 @@ const Room: React.FC<RoomProps> = ({
         });
         if (lowerFullModules.length > 0 && lowerFullModules.every(m => {
           const secs = (m as any).customConfig?.sections;
-          const secRaise = secs?.[0]?.bottomPanelRaise && secs[0].bottomPanelRaise > 0;
-          const areaRaise = secs?.[0]?.areaFinish && Object.values(secs[0].areaFinish).some((af: any) => af.bottomPanelRaise && af.bottomPanelRaise > 0);
-          return secRaise || areaRaise;
+          return secs?.[0]?.bottomPanelRaise && secs[0].bottomPanelRaise > 0;
         })) return null;
         return true;
       })() && (() => {

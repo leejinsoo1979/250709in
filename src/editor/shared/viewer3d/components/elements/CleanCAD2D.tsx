@@ -4225,9 +4225,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           // 가구 하단 Y 계산 (기존 우측 치수선 로직과 동일)
           // 바닥판 올림(bottomPanelRaise) 활성 시 조절발 높이를 0으로 (FurnitureItem과 동일)
           const configSections = customModule.customConfig.sections;
-          const sec0R = configSections?.[0]?.bottomPanelRaise && configSections[0].bottomPanelRaise > 0;
-          const sec0AR = configSections?.[0]?.areaFinish && Object.values(configSections[0].areaFinish).some((af: any) => af.bottomPanelRaise && af.bottomPanelRaise > 0);
-          const bottomRaiseActive = sec0R || sec0AR;
+          const bottomRaiseActive = configSections?.[0]?.bottomPanelRaise && configSections[0].bottomPanelRaise > 0;
           const isFloating = spaceInfo.baseConfig?.type === 'stand' && spaceInfo.baseConfig?.placementType === 'float';
           const floatHeight = isFloating ? (spaceInfo.baseConfig?.floatHeight || 0) : 0;
           const bottomFrameHeight = bottomRaiseActive ? 0 : (spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height || 65) : 0);

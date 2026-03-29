@@ -2445,11 +2445,8 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
 
       {/* 엔드패널(EP) 렌더링 — 바닥까지 연장, Z축 오프셋 적용 */}
       {(() => {
-        // bottomPanelRaise 활성 시 조절발 없으므로 바닥 연장 불필요 (영역별 areaFinish도 체크)
-        const sec0 = sections[0];
-        const sec0SectionRaise = sec0?.bottomPanelRaise && sec0.bottomPanelRaise > 0;
-        const sec0AnyAreaRaise = sec0?.areaFinish && Object.values(sec0.areaFinish).some(af => af.bottomPanelRaise && af.bottomPanelRaise > 0);
-        const bottomRaiseEP = sec0SectionRaise || sec0AnyAreaRaise;
+        // bottomPanelRaise 활성 시 조절발 없으므로 바닥 연장 불필요
+        const bottomRaiseEP = sections[0]?.bottomPanelRaise && sections[0].bottomPanelRaise > 0;
         const baseHeightMm = bottomRaiseEP ? 0 : (spaceInfo.baseConfig?.height || 65);
         const baseDepthMm = bottomRaiseEP ? 0 : (spaceInfo.baseConfig?.depth || 0);
         const footExtension = mmToUnit(baseHeightMm + baseDepthMm);

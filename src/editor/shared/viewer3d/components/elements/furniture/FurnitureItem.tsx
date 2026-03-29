@@ -1438,9 +1438,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         // 바닥판 올림(bottomPanelRaise) 활성 시 조절발 높이를 0으로 → 가구 전체가 바닥으로 내려감
         // customConfig.sections에서 bottomPanelRaise 확인 (customSections가 아닌 customConfig가 실제 데이터 소스)
         const configSections = placedModule.customConfig?.sections;
-        const sec0Raise = configSections?.[0]?.bottomPanelRaise && configSections[0].bottomPanelRaise > 0;
-        const sec0AreaRaise = configSections?.[0]?.areaFinish && Object.values(configSections[0].areaFinish).some((af: any) => af.bottomPanelRaise && af.bottomPanelRaise > 0);
-        const bottomRaiseActive = sec0Raise || sec0AreaRaise;
+        const bottomRaiseActive = configSections?.[0]?.bottomPanelRaise && configSections[0].bottomPanelRaise > 0;
         const baseHeightMm = bottomRaiseActive ? 0 : (spaceInfo.baseConfig?.type === 'stand' ? 0 : (placedModule.hasBase === false ? 0 : (placedModule.baseFrameHeight ?? spaceInfo.baseConfig?.height ?? 65)));
         // 하부프레임 OFF + 개별 띄움 높이
         const indivFloatMm = (placedModule.hasBase === false) ? (placedModule.individualFloatHeight ?? 0) : 0;
