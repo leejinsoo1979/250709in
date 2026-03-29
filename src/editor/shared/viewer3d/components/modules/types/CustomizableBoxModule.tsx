@@ -2448,7 +2448,7 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
           // 비움(elements === undefined) 영역 또는 바닥판 올림 영역은 조절발 제거
           // 상하분할에서 하부가 비움이면 해당 영역도 조절발 숨김
           const isSubSplitLowerDeleted = (side: string) => {
-            const sub = section.areaSubSplits?.[side];
+            const sub = lowerSection?.areaSubSplits?.[side];
             return sub?.enabled && !sub.lowerElements;
           };
           const leftDeleted = !hs.leftElements || isSubSplitLowerDeleted('left');
