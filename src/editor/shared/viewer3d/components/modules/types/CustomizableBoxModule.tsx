@@ -59,33 +59,6 @@ interface CustomizableBoxModuleProps {
 // mm → Three.js units
 const mmToUnit = (val: number) => val * 0.01;
 
-// 하부프레임 스트립 (설계모드: 반투명+윤곽선, 배치모드: 불투명+윤곽선)
-const BaseFrameStrip: React.FC<{
-  args: [number, number, number];
-  position: [number, number, number];
-  isDesignMode?: boolean;
-}> = ({ args, position, isDesignMode = false }) => {
-  const geometry = useMemo(() => new THREE.BoxGeometry(...args), [args[0], args[1], args[2]]);
-  const edgesGeometry = useMemo(() => new THREE.EdgesGeometry(geometry), [geometry]);
-  useEffect(() => {
-    return () => { geometry.dispose(); edgesGeometry.dispose(); };
-  }, [geometry, edgesGeometry]);
-  return (
-    <group position={position}>
-      <mesh renderOrder={isDesignMode ? -1 : 0} geometry={geometry}>
-        <meshStandardMaterial
-          color="#C0C0C0"
-          transparent={isDesignMode}
-          opacity={isDesignMode ? 0.35 : 1.0}
-          depthWrite={!isDesignMode}
-        />
-      </mesh>
-      <lineSegments geometry={edgesGeometry}>
-        <lineBasicMaterial color="#666666" linewidth={0.5} />
-      </lineSegments>
-    </group>
-  );
-};
 
 // ── 선반 간격 입력 컴포넌트 ──
 interface ShelfGapInputProps {
@@ -2512,104 +2485,7 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
       })()}
       </group>
 
-      {/* 설계모드: 하부프레임(받침대) 반투명 표시 — 조절발 기준 분할 */}
-      {spaceInfo.baseConfig?.type === 'floor' && category !== 'upper' && (() => {
-        const baseH = mmToUnit(spaceInfo.baseConfig?.height || 65);
-        const baseDepthOffset = mmToUnit(spaceInfo.baseConfig?.depth || 0);
-        const epThk = mmToUnit(18);
-        const baseY = -H / 2 - baseH / 2;
-        const baseZ = D / 2 - epThk / 2 - baseDepthOffset;
-
-        const lowerSection = sections[0];
-        const sectionBottomRaise = lowerSection?.bottomPanelRaise && lowerSection.bottomPanelRaise > 0;
-        const getAreaRaised = (side: string) => {
-          const areaRaise = lowerSection?.areaFinish?.[side]?.bottomPanelRaise;
-          if (areaRaise !== undefined) return areaRaise > 0;
-          return !!sectionBottomRaise;
-        };
-
-        // 전체 올림이면 하부프레임 전체 숨김
-        if (sectionBottomRaise && !lowerSection?.areaFinish) return null;
-
-        const footWidth = lowerSection?.width ? mmToUnit(lowerSection.width) : effectiveW;
-        const footAlignOffset = calculateAlignOffset(footWidth, effectiveW, lowerSection?.align || 'center');
-
-        // horizontalSplit: 세그먼트(측판/내경/칸막이) 개별 나열 → 비올림 연속구간 병합
-        const hs = lowerSection?.horizontalSplit;
-        if (hs) {
-          const totalInnerWMm = (footWidth - 2 * t) / 0.01;
-          const leftInnerWMm = hs.position;
-          const is3Split = hs.secondPosition != null;
-          const centerInnerWMm = is3Split ? (hs.secondPosition || 0) : 0;
-          const rightInnerWMm = is3Split
-            ? totalInnerWMm - leftInnerWMm - centerInnerWMm - 4 * panelThickness
-            : totalInnerWMm - leftInnerWMm - 2 * panelThickness;
-          const pnlW = mmToUnit(panelThickness);
-
-          // 영역별 raised 여부
-          const leftR = getAreaRaised('left');
-          const centerR = is3Split ? getAreaRaised('center') : false;
-          const rightR = getAreaRaised('right');
-
-          // 세그먼트 배열: [좌측판 | 좌내경 | 칸막이 | (중내경 | 칸막이 |) 우내경 | 우측판]
-          // 측판: 인접 영역의 raised를 따름, 칸막이: 양쪽 다 raised일 때만 raised
-          const segments: { startX: number; width: number; raised: boolean }[] = [];
-          let curX = -footWidth / 2;
-          segments.push({ startX: curX, width: pnlW, raised: leftR }); curX += pnlW;
-          segments.push({ startX: curX, width: mmToUnit(leftInnerWMm), raised: leftR }); curX += mmToUnit(leftInnerWMm);
-          if (is3Split) {
-            segments.push({ startX: curX, width: pnlW, raised: leftR && centerR }); curX += pnlW;
-            segments.push({ startX: curX, width: mmToUnit(centerInnerWMm), raised: centerR }); curX += mmToUnit(centerInnerWMm);
-            segments.push({ startX: curX, width: pnlW, raised: centerR && rightR }); curX += pnlW;
-          } else {
-            segments.push({ startX: curX, width: pnlW, raised: leftR && rightR }); curX += pnlW;
-          }
-          segments.push({ startX: curX, width: mmToUnit(Math.max(0, rightInnerWMm)), raised: rightR }); curX += mmToUnit(Math.max(0, rightInnerWMm));
-          segments.push({ startX: curX, width: pnlW, raised: rightR });
-
-          // 연속 비올림 세그먼트 병합
-          const merged: { startX: number; endX: number }[] = [];
-          let mStart = -1, mEnd = -1;
-          segments.forEach((seg) => {
-            if (!seg.raised && seg.width > 0) {
-              if (mStart < 0) { mStart = seg.startX; mEnd = seg.startX + seg.width; }
-              else { mEnd = seg.startX + seg.width; }
-            } else {
-              if (mStart >= 0) { merged.push({ startX: mStart, endX: mEnd }); mStart = -1; mEnd = -1; }
-            }
-          });
-          if (mStart >= 0) merged.push({ startX: mStart, endX: mEnd });
-
-          if (merged.length === 0) return null;
-
-          return (
-            <group position={[footAlignOffset, 0, 0]}>
-              {merged.map((m, i) => {
-                const segW = m.endX - m.startX;
-                const segCX = m.startX + segW / 2;
-                return <BaseFrameStrip key={`bf-${i}`} args={[segW, baseH, epThk]} position={[segCX, baseY, baseZ]} isDesignMode={isEditMode} />;
-              })}
-            </group>
-          );
-        }
-
-        // 칸막이만 있는 경우
-        if (lowerSection?.hasPartition) {
-          const leftRaised = getAreaRaised('left');
-          const rightRaised = getAreaRaised('right');
-          if (leftRaised && rightRaised) return null;
-          if (leftRaised || rightRaised) return null;
-        } else if (sectionBottomRaise) {
-          return null;
-        }
-
-        // 기본: 전체 너비 하부프레임
-        return (
-          <group position={[footAlignOffset, 0, 0]}>
-            <BaseFrameStrip args={[footWidth, baseH, epThk]} position={[0, baseY, baseZ]} isDesignMode={isEditMode} />
-          </group>
-        );
-      })()}
+      {/* 하부프레임은 Room.tsx에서 렌더링 (중복 방지) */}
 
       {/* 엔드패널(EP) 렌더링 — 표준 모듈과 동일한 높이 로직 적용 */}
       {(() => {

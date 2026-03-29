@@ -362,7 +362,8 @@ const Room: React.FC<RoomProps> = ({
   const { theme: appTheme } = useTheme(); // 앱 테마 가져오기
   const { renderMode: contextRenderMode, plainMaterial: isPlainMaterial } = useSpace3DView(); // context에서 renderMode 가져오기
   const renderMode = renderModeProp || contextRenderMode; // props로 전달된 값을 우선 사용
-  const { highlightedFrame, setHighlightedFrame, activeDroppedCeilingTab, view2DTheme, shadowEnabled, cameraMode: cameraModeFromStore, selectedSlotIndex, showBorings, isLayoutBuilderOpen, openSurroundEditPopup } = useUIStore();
+  const { highlightedFrame, setHighlightedFrame, activeDroppedCeilingTab, view2DTheme, shadowEnabled, cameraMode: cameraModeFromStore, selectedSlotIndex, showBorings, isLayoutBuilderOpen, openSurroundEditPopup, activePopup } = useUIStore();
+  const isDesignMode = isLayoutBuilderOpen || activePopup?.type === 'customizableEdit';
   const wireframeColor = view2DTheme === 'dark' ? "#ffffff" : "#333333"; // 은선모드 벽 라인 색상
   const placedModulesFromStore = useFurnitureStore((state) => state.placedModules); // 가구 정보 가져오기
   const firstModuleId = placedModulesFromStore[0]?.id || ''; // CNC 프레임 제외용
@@ -5603,8 +5604,8 @@ const Room: React.FC<RoomProps> = ({
 
           const allBaseSegments: (FrameRenderSegment & { key: string })[] = [];
           const rawBaseMat = baseFrameMaterial ?? createFrameMaterial('base');
-          // 디자인 모드(레이아웃 빌더): 조절발이 비치도록 반투명 처리
-          const baseMat = isLayoutBuilderOpen && rawBaseMat instanceof THREE.MeshStandardMaterial
+          // 디자인 모드: 조절발이 비치도록 반투명 처리
+          const baseMat = isDesignMode && rawBaseMat instanceof THREE.MeshStandardMaterial
             ? (() => { const m = rawBaseMat.clone(); m.transparent = true; m.opacity = 0.35; m.depthWrite = false; m.needsUpdate = true; return m; })()
             : rawBaseMat;
 
@@ -5801,8 +5802,8 @@ const Room: React.FC<RoomProps> = ({
                 const rawZoneMaterial = renderZone.zone === 'dropped'
                   ? (baseDroppedFrameMaterial ?? createFrameMaterial('base'))
                   : (baseFrameMaterial ?? createFrameMaterial('base'));
-                // 디자인 모드(레이아웃 빌더): 조절발이 비치도록 반투명 처리
-                const zoneMaterial = isLayoutBuilderOpen && rawZoneMaterial instanceof THREE.MeshStandardMaterial
+                // 디자인 모드: 조절발이 비치도록 반투명 처리
+                const zoneMaterial = isDesignMode && rawZoneMaterial instanceof THREE.MeshStandardMaterial
                   ? (() => { const m = rawZoneMaterial.clone(); m.transparent = true; m.opacity = 0.35; m.depthWrite = false; m.needsUpdate = true; return m; })()
                   : rawZoneMaterial;
                 // mm 단위를 Three.js 단위로 변환 - 노서라운드에서 엔드패널 제외
