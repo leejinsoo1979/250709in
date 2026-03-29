@@ -2484,27 +2484,114 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
       })()}
       </group>
 
-      {/* 설계모드: 하부프레임(받침대) 반투명 표시 — 조절발이 비치도록 */}
+      {/* 설계모드: 하부프레임(받침대) 반투명 표시 — 조절발이 비치도록, 영역별 분할 */}
       {isLayoutBuilderOpen && spaceInfo.baseConfig?.type === 'floor' && category !== 'upper' && (() => {
-        const baseH = mmToUnit(spaceInfo.baseConfig?.height || 65);
+        const baseHMm = spaceInfo.baseConfig?.height || 65;
+        const baseH = mmToUnit(baseHMm);
         const baseDepthOffset = mmToUnit(spaceInfo.baseConfig?.depth || 0);
-        const epThk = mmToUnit(18); // END_PANEL_THICKNESS
-        // 하부프레임 위치: 가구 하단 아래, 조절발 영역 앞면
+        const epThk = mmToUnit(18);
         const baseY = -H / 2 - baseH / 2;
         const baseZ = D / 2 - epThk / 2 - baseDepthOffset;
-        const effectiveFW = lowerSectionDepth
-          ? mmToUnit(lowerSectionDepth > 0 ? width : width)
-          : W;
+
+        const lowerSection = sections[0];
+        const sectionBottomRaise = lowerSection?.bottomPanelRaise && lowerSection.bottomPanelRaise > 0;
+        const getAreaRaised = (side: string) => {
+          const areaRaise = lowerSection?.areaFinish?.[side]?.bottomPanelRaise;
+          if (areaRaise !== undefined) return areaRaise > 0;
+          return !!sectionBottomRaise;
+        };
+
+        // 전체 올림이면 하부프레임 전체 숨김
+        if (sectionBottomRaise && !lowerSection?.areaFinish) return null;
+
+        const footWidth = lowerSection?.width ? mmToUnit(lowerSection.width) : effectiveW;
+        const footAlignOffset = calculateAlignOffset(footWidth, effectiveW, lowerSection?.align || 'center');
+
+        // 반투명 박스 + 윤곽선 렌더링 헬퍼
+        const renderBaseFrameBox = (w: number, posX: number, key: string) => {
+          const geo = new THREE.BoxGeometry(w, baseH, epThk);
+          const edges = new THREE.EdgesGeometry(geo);
+          return (
+            <group key={key} position={[posX, baseY, baseZ]}>
+              <mesh renderOrder={-1}>
+                <boxGeometry args={[w, baseH, epThk]} />
+                <meshStandardMaterial color="#C0C0C0" transparent opacity={0.35} depthWrite={false} />
+              </mesh>
+              <lineSegments geometry={edges}>
+                <lineBasicMaterial color="#666666" linewidth={0.5} />
+              </lineSegments>
+            </group>
+          );
+        };
+
+        const hs = lowerSection?.horizontalSplit;
+        if (hs) {
+          // horizontalSplit: 세그먼트별 분할 (조절발 로직과 동일)
+          const totalInnerWMm = (footWidth - 2 * t) / 0.01;
+          const leftInnerWMm = hs.position;
+          const is3Split = hs.secondPosition != null;
+          const centerInnerWMm = is3Split ? (hs.secondPosition || 0) : 0;
+          const rightInnerWMm = is3Split
+            ? totalInnerWMm - leftInnerWMm - centerInnerWMm - 4 * panelThickness
+            : totalInnerWMm - leftInnerWMm - 2 * panelThickness;
+          const pnlW = mmToUnit(panelThickness);
+
+          // 세그먼트 배열: [좌측판, 좌영역, 칸막이, (중앙영역, 칸막이,) 우영역, 우측판]
+          type Seg = { startX: number; width: number; raised: boolean };
+          const segments: Seg[] = [];
+          let curX = -footWidth / 2;
+          segments.push({ startX: curX, width: pnlW, raised: false }); curX += pnlW;
+          segments.push({ startX: curX, width: mmToUnit(leftInnerWMm), raised: getAreaRaised('left') }); curX += mmToUnit(leftInnerWMm);
+          segments.push({ startX: curX, width: pnlW, raised: false }); curX += pnlW;
+          if (is3Split) {
+            segments.push({ startX: curX, width: mmToUnit(centerInnerWMm), raised: getAreaRaised('center') }); curX += mmToUnit(centerInnerWMm);
+            segments.push({ startX: curX, width: pnlW, raised: false }); curX += pnlW;
+          }
+          segments.push({ startX: curX, width: mmToUnit(Math.max(0, rightInnerWMm)), raised: getAreaRaised('right') }); curX += mmToUnit(Math.max(0, rightInnerWMm));
+          segments.push({ startX: curX, width: pnlW, raised: false });
+
+          // 연속 비올림 세그먼트 병합
+          const merged: { startX: number; endX: number }[] = [];
+          let mStart = -1, mEnd = -1;
+          segments.forEach((seg) => {
+            if (!seg.raised && seg.width > 0) {
+              if (mStart < 0) { mStart = seg.startX; mEnd = seg.startX + seg.width; }
+              else { mEnd = seg.startX + seg.width; }
+            } else {
+              if (mStart >= 0) { merged.push({ startX: mStart, endX: mEnd }); mStart = -1; mEnd = -1; }
+            }
+          });
+          if (mStart >= 0) merged.push({ startX: mStart, endX: mEnd });
+
+          if (merged.length === 0) return null;
+
+          return (
+            <group position={[footAlignOffset, 0, 0]}>
+              {merged.map((m, i) => {
+                const segW = m.endX - m.startX;
+                const segCX = m.startX + segW / 2;
+                return renderBaseFrameBox(segW, segCX, `design-baseframe-${i}`);
+              })}
+            </group>
+          );
+        }
+
+        // 칸막이만 있는 경우 (horizontalSplit 없음)
+        if (lowerSection?.hasPartition) {
+          const leftRaised = getAreaRaised('left');
+          const rightRaised = getAreaRaised('right');
+          if (leftRaised && rightRaised) return null;
+          // 칸막이에서는 분리 불가 → 한쪽이라도 올림이면 전체 숨김
+          if (leftRaised || rightRaised) return null;
+        } else if (sectionBottomRaise) {
+          return null;
+        }
+
+        // 기본: 전체 너비 하부프레임
         return (
-          <mesh position={[0, baseY, baseZ]} renderOrder={-1}>
-            <boxGeometry args={[effectiveFW, baseH, epThk]} />
-            <meshStandardMaterial
-              color="#C0C0C0"
-              transparent
-              opacity={0.35}
-              depthWrite={false}
-            />
-          </mesh>
+          <group position={[footAlignOffset, 0, 0]}>
+            {renderBaseFrameBox(footWidth, 0, 'design-baseframe-full')}
+          </group>
         );
       })()}
 
