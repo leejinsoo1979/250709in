@@ -3969,28 +3969,18 @@ const CustomizablePropertiesPanel: React.FC = () => {
                       </div>
                     );
 
-                    // 상하 서브분할이 있으면 상부/하부를 각각 표시
-                    if (hasSubSplit && areaSubSplit && !isDeleted) {
-                      const upperH = section.height - areaSubSplit.lowerHeight;
-                      return (
-                        <React.Fragment key={side}>
-                          <div style={{ marginTop: '6px', padding: '6px 8px', background: 'rgba(0,0,0,0.03)', borderRadius: '6px' }}>
-                            <span style={{ fontSize: '11px', fontWeight: 600, color: '#555' }}>{label} 상부</span>
-                            <span style={{ fontSize: '9px', color: '#999', marginLeft: '4px' }}>{upperH}mm</span>
-                            {renderDepthControls()}
-                          </div>
-                          <div style={{ marginTop: '6px', padding: '6px 8px', background: 'rgba(0,0,0,0.03)', borderRadius: '6px' }}>
-                            <span style={{ fontSize: '11px', fontWeight: 600, color: '#555' }}>{label} 하부</span>
-                            <span style={{ fontSize: '9px', color: '#999', marginLeft: '4px' }}>{areaSubSplit.lowerHeight}mm</span>
-                          </div>
-                        </React.Fragment>
-                      );
-                    }
-
-                    return (
-                      <div key={side} style={{ flex: 1, minWidth: 0, padding: '6px 8px', background: 'rgba(0,0,0,0.03)', borderRadius: '6px' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
-                          <span style={{ fontSize: '11px', fontWeight: 600, color: '#555' }}>{label}</span>
+                    // 공통 헤더: 라벨 + 활성/비움 토글 + 내부편집 버튼
+                    const renderAreaHeader = () => (
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
+                        <span style={{ fontSize: '11px', fontWeight: 600, color: '#555' }}>{label}</span>
+                        <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
+                          {!isDeleted && (
+                            <button
+                              onClick={() => openCustomizableEditPopup(moduleId!, realIdx, side)}
+                              style={{ fontSize: '10px', padding: '2px 6px', background: '#e3f2fd', color: '#1976d2', border: '1px solid #bbdefb', borderRadius: '4px', cursor: 'pointer' }}
+                              title={`${label === '좌' ? '좌측' : label === '우' ? '우측' : '중앙'} 영역의 내부 구조 편집`}
+                            >내부 편집</button>
+                          )}
                           <div className={styles.toggleGroup} style={{ flex: 'none' }}>
                             <button
                               className={`${styles.toggleButton} ${!isDeleted ? styles.active : ''}`}
@@ -4004,6 +3994,29 @@ const CustomizablePropertiesPanel: React.FC = () => {
                             >비움</button>
                           </div>
                         </div>
+                      </div>
+                    );
+
+                    // 상하 서브분할이 있으면 헤더 + 상부/하부 표시
+                    if (hasSubSplit && areaSubSplit && !isDeleted) {
+                      const upperH = section.height - areaSubSplit.lowerHeight;
+                      return (
+                        <div key={side} style={{ padding: '6px 8px', background: 'rgba(0,0,0,0.03)', borderRadius: '6px' }}>
+                          {renderAreaHeader()}
+                          <div style={{ marginTop: '4px', padding: '4px 6px', background: 'rgba(0,0,0,0.02)', borderRadius: '4px' }}>
+                            <span style={{ fontSize: '10px', color: '#777' }}>{label} 상부 {upperH}mm</span>
+                          </div>
+                          <div style={{ marginTop: '2px', padding: '4px 6px', background: 'rgba(0,0,0,0.02)', borderRadius: '4px' }}>
+                            <span style={{ fontSize: '10px', color: '#777' }}>{label} 하부 {areaSubSplit.lowerHeight}mm</span>
+                          </div>
+                          {renderDepthControls()}
+                        </div>
+                      );
+                    }
+
+                    return (
+                      <div key={side} style={{ padding: '6px 8px', background: 'rgba(0,0,0,0.03)', borderRadius: '6px' }}>
+                        {renderAreaHeader()}
                         {!isDeleted && (
                           <>
                             {renderDepthControls()}
@@ -4171,8 +4184,8 @@ const CustomizablePropertiesPanel: React.FC = () => {
                                   </>
                                 );
                               })()}
-                              {/* 영역 활성/비움 */}
-                              <div style={{ display: 'flex', gap: '4px' }}>
+                              {/* 영역 활성/비움 + 내부편집 */}
+                              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                                 {renderHSplitAreaControls('left', section.horizontalSplit.leftElements, '좌')}
                                 {section.horizontalSplit.secondPosition != null &&
                                   renderHSplitAreaControls('center', section.horizontalSplit.centerElements, '중')}
@@ -4402,8 +4415,8 @@ const CustomizablePropertiesPanel: React.FC = () => {
                               </>
                             );
                           })()}
-                          {/* 영역 타입 + 삭제 */}
-                          <div style={{ display: 'flex', gap: '4px' }}>
+                          {/* 영역 활성/비움 + 내부편집 */}
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                             {renderHSplitAreaControls('left', section.horizontalSplit.leftElements, '좌')}
                             {section.horizontalSplit.secondPosition != null &&
                               renderHSplitAreaControls('center', section.horizontalSplit.centerElements, '중')}
