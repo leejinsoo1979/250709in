@@ -4405,10 +4405,17 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 </group>
               ))}
 
-              {/* 우측 섹션 높이 치수선 (가구 우측) — 상하 서브분할 반영 */}
+              {/* 우측 섹션 높이 치수선 (가구 우측) — 조절발/상부프레임/서브분할/바닥판올림 반영 */}
               {(() => {
                 const dimLineRightX = furnitureRightX + mmToThreeUnits(120);
                 const extLineRightX = dimLineRightX + mmToThreeUnits(20);
+
+                // 조절발/상부프레임 치수용 데이터
+                const footHeightMm = bottomRaiseActive ? 0 : (spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height || 65) : 0);
+                const topFrameMm = spaceInfo.frameSize?.top ?? 30;
+                // 바닥마감재 높이
+                const floorFinishMm = (spaceInfo.hasFloorFinish && spaceInfo.floorFinish) ? spaceInfo.floorFinish.height : 0;
+                const floorFinishY = mmToThreeUnits(floorFinishMm);
 
                 // 각 섹션에 대해 서브분할/바닥판올림이 있으면 분할된 높이 구간 목록, 없으면 전체 하나
                 const rightSegments: { startY: number; endY: number; heightMm: number }[] = [];
@@ -4469,7 +4476,35 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   }
                 });
 
-                return rightSegments.map((seg, idx) => (
+                // 조절발 + 섹션 + 상부프레임 전체 세그먼트 조합
+                const allRightSegments: { startY: number; endY: number; heightMm: number; isFrame?: boolean }[] = [];
+
+                // 1) 조절발 (바닥판 올림 시 조절발 없으므로 footHeightMm === 0)
+                if (footHeightMm > 0) {
+                  allRightSegments.push({
+                    startY: floorFinishY,
+                    endY: furnitureBaseY,
+                    heightMm: Math.round(footHeightMm),
+                    isFrame: true,
+                  });
+                }
+
+                // 2) 섹션 세그먼트
+                rightSegments.forEach(seg => allRightSegments.push(seg));
+
+                // 3) 상부프레임
+                if (topFrameMm > 0) {
+                  const topSegStartY = sectionRanges.length > 0 ? sectionRanges[sectionRanges.length - 1].endY : furnitureBaseY;
+                  const topSegEndY = topSegStartY + mmToThreeUnits(topFrameMm);
+                  allRightSegments.push({
+                    startY: topSegStartY,
+                    endY: topSegEndY,
+                    heightMm: Math.round(topFrameMm),
+                    isFrame: true,
+                  });
+                }
+
+                return allRightSegments.map((seg, idx) => (
                   <group key={`custom-section-dim-right-${idx}`}>
                     <NativeLine name="dimension_line"
                       points={[[dimLineRightX, seg.startY, 0.002], [dimLineRightX, seg.endY, 0.002]]}
@@ -4511,7 +4546,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                       depthTest={false}
                       position={[dimLineRightX + mmToThreeUnits(60), (seg.startY + seg.endY) / 2, 0.01]}
                       fontSize={baseFontSize}
-                      color={textColor}
+                      color={seg.isFrame ? '#999999' : textColor}
                       anchorX="center"
                       anchorY="middle"
                       outlineWidth={textOutlineWidth}
