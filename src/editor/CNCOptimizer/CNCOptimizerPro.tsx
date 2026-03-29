@@ -315,6 +315,10 @@ function PageInner(){
   const hasInitializedFromLive = useRef(false);
   // livePanels 변경 감지용 — 내용 기반 비교로 불필요한 재동기화 방지
   const prevLivePanelsKey = useRef('');
+  // handleOptimize 최신 참조 (setTimeout closure 문제 방지)
+  const handleOptimizeRef = useRef<(() => void) | null>(null);
+  // stock이 livePanels 기반으로 초기화되었는지 추적
+  const stockInitializedFromLive = useRef(false);
 
   // Configurator에서 온 경우 hasInitializedFromLive 리셋
   useEffect(() => {
@@ -486,6 +490,7 @@ function PageInner(){
       { label: 'MDF_5T_2440x1220', width: 1220, length: 2440, thickness: 5, quantity: 999, material: 'MDF' },
     ];
     setStock(defaultStock);
+    stockInitializedFromLive.current = true;
   }, [livePanels]); // livePanels 변경 시 stock 재설정
   
   // Separate effect for live panels initialization - only when they change and user hasn't modified
@@ -1040,17 +1045,23 @@ function PageInner(){
     }
   }, [fullSimulating, fullSimCurrentSheet, fullSimTotalSheets, currentSheetIndex, setFullSimCurrentSheet, setCurrentSheetIndex, setSelectedSheetId, setSimulating, setFullSimulating, optimizationResults, sawStats]);
 
+  // handleOptimize ref 최신 유지 (setTimeout closure 문제 방지)
+  handleOptimizeRef.current = handleOptimize;
+
   // Auto-optimize effect - must be after handleOptimize definition
+  // stockInitializedFromLive가 true일 때만 실행 (localStorage의 stale stock 방지)
   useEffect(() => {
     // Only auto-optimize when we have actual furniture panels from livePanels
     // Don't auto-optimize for empty or manually added panels
-    if (!hasAutoOptimized.current && livePanels.length > 0 && panels.length > 0 && stock.length > 0) {
+    // stock이 livePanels 기반으로 초기화된 후에만 실행
+    if (!hasAutoOptimized.current && livePanels.length > 0 && panels.length > 0 && stock.length > 0 && stockInitializedFromLive.current) {
       hasAutoOptimized.current = true;
 
       // 더 긴 딜레이로 settings가 완전히 로드된 후 실행
+      // ref를 통해 최신 handleOptimize 호출 (closure 문제 방지)
       setTimeout(() => {
         console.log('🚀 Auto-optimize with settings:', settings.optimizationType);
-        handleOptimize();
+        handleOptimizeRef.current?.();
       }, 300);
     }
   }, [livePanels, panels, stock, settings.optimizationType, handleOptimize]);
