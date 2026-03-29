@@ -664,8 +664,8 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     }
   }
 
-  // 듀얼 가구인지 moduleData ID로 확실히 판단
-  const isDualByModuleId = moduleData?.id?.startsWith('dual-') || false;
+  // 듀얼 가구인지 판단: moduleData ID 또는 PlacedModule.isDualSlot (커스텀 가구 지원)
+  const isDualByModuleId = moduleData?.id?.startsWith('dual-') || storePlacedModule?.isDualSlot || false;
 
   // 도어 크기 계산 — 가구 본체와 동일한 slotWidths(Math.floor) 기준 사용
   // columnWidth는 소수점이 유지되지만, 가구 본체는 slotWidths(정수 내림)를 사용하므로
