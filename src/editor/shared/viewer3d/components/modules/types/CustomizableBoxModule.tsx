@@ -267,7 +267,7 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
   const widthReductionMm = (panelThickness === 15.5 || panelThickness === 18.5) ? 0 : 1;
   const widthReduction = mmToUnit(widthReductionMm);
   const backPanelWidthExtMm = 10; // 백패널 너비 확장 (좌우 5mm씩)
-  const backPanelHeightExtMm = 26; // 백패널 높이 확장 (상하 13mm씩)
+  const backPanelHeightExtMm = 36; // 백패널 높이 확장 (상하 18mm씩) — 표준 모듈과 동일
   const backPanelDepthOffsetMm = 17; // 백패널 뒤쪽에서의 오프셋
   const drawerTopInsetMm = 85; // 서랍 섹션 상판 앞쪽 들여쓰기
   const drawerTopInset = mmToUnit(drawerTopInsetMm);
