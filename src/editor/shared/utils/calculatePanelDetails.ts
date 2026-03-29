@@ -45,7 +45,7 @@ export const calculatePanelDetails = (
   const backPanelThickness = backPanelThicknessMm ?? 9; // 백패널 두께
   const drawerHandleThickness = 15; // 서랍 손잡이판(마이다) 두께
   const drawerSideThickness = 15; // 서랍 측면 두께 (DRAWER_SIDE_THICKNESS) 
-  const drawerBottomThickness = 5; // 서랍 바닥판 두께
+  const drawerBottomThickness = backPanelThickness; // 서랍 바닥판 - MDF 재질, 백패널과 동일
   
   const originalHeight = moduleData.dimensions.height;
   const height = freeHeight || originalHeight;
@@ -892,7 +892,7 @@ export const calculatePanelDetails = (
     const basicThicknessCC = customConfig.panelThickness || basicThickness;
     const drawerHandleThicknessCC = 15;
     const drawerSideThicknessCC = 15;
-    const drawerBottomThicknessCC = 5;
+    const drawerBottomThicknessCC = backPanelThickness; // MDF 재질, 백패널과 동일
     const targetPanel = panels.upper.length > 0 ? panels.upper : panels.lower;
 
     customConfig.sections.forEach((section, secIdx) => {

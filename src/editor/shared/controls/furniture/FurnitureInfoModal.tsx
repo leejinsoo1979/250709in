@@ -64,9 +64,9 @@ const FurnitureInfoModal: React.FC<FurnitureInfoModalProps> = ({
     // 실제 3D 렌더링과 동일한 두께 값들
     const basicThickness = moduleData.modelConfig?.basicThickness || 18;
     const backPanelThickness = 9;
-    const drawerHandleThickness = (basicThickness === 18.5 || basicThickness === 15.5) ? 15.5 : 15;
-    const drawerSideThickness = (basicThickness === 18.5 || basicThickness === 15.5) ? 15.5 : 15;
-    const drawerBottomThickness = 5;
+    const drawerHandleThickness = 15; // 서랍 손잡이판(마이다) - PB 재질 고정
+    const drawerSideThickness = 15; // 서랍 측면 - PB 재질 고정
+    const drawerBottomThickness = backPanelThickness; // 서랍 바닥판 - MDF 재질, 백패널과 동일
     
     const height = moduleData.dimensions.height;
     // 18.5/15.5mm는 양면 접합 두께이므로 innerWidth는 정수 두께로 계산 (슬롯폭 유지)
