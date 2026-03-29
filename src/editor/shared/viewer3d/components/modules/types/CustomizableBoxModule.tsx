@@ -1160,10 +1160,10 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
               panelGrainDirections={panelGrainDirections}
               drawerAlign={align}
               backPanelThicknessOverride={backPanelThicknessProp}
-              maidaInsetTop={('maidaInsetTop' in el ? el.maidaInsetTop : undefined) ?? 0}
-              maidaInsetBottom={('maidaInsetBottom' in el ? el.maidaInsetBottom : undefined) ?? 0}
-              maidaInsetLeft={('maidaInsetLeft' in el ? el.maidaInsetLeft : undefined) ?? 0}
-              maidaInsetRight={('maidaInsetRight' in el ? el.maidaInsetRight : undefined) ?? 0}
+              maidaInsetTop={el.maidaInsetTop ?? 0}
+              maidaInsetBottom={el.maidaInsetBottom ?? 0}
+              maidaInsetLeft={el.maidaInsetLeft ?? 0}
+              maidaInsetRight={el.maidaInsetRight ?? 0}
             />
             {/* 서랍이 영역보다 작을 때: 덮개 선반 */}
             {!isFullFill && (() => {

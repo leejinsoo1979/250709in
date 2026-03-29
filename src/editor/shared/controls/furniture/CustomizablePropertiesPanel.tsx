@@ -2172,7 +2172,7 @@ const CustomizablePropertiesPanel: React.FC = () => {
                     type="number"
                     className={`${styles.input} ${styles.inputSmall}`}
                     style={{ width: '50px' }}
-                    value={(field in el ? (el as any)[field] : undefined) ?? 0}
+                    value={((el as any)[field]) ?? 0}
                     min={0}
                     max={30}
                     step={0.1}
