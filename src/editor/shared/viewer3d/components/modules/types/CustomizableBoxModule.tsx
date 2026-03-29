@@ -434,7 +434,7 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
       // drawerAlign이 top이면 상판에 밀착
       if ('drawerAlign' in el && el.drawerAlign === 'top') return true;
       // fullFill이면 상판에 밀착
-      const gapHeight = ('gapHeight' in el && el.gapHeight) ? el.gapHeight : 23.6;
+      const gapHeight = ('gapHeight' in el && el.gapHeight !== undefined) ? el.gapHeight : 23.6;
       const totalH = el.heights.reduce((s: number, h: number) => s + h, 0) + gapHeight * (el.heights.length + 1);
       return mmToUnit(totalH) >= mmToUnit(sectionInnerH) - t;
     });
@@ -1533,10 +1533,12 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
       const partTopZOffset = mmToUnit(section.topPanelDepthOffset ?? 0);
       const partBottomZOffset = mmToUnit(section.bottomPanelDepthOffset ?? 0);
       if (section.showTopPanel !== false) {
+      const partTopBaseDepth = leftD - backReduction - topDepthReduction;
+      const partTopFinalDepth = partTopBaseDepth - partTopZOffset;
       meshes.push(
         <BoxWithEdges key={`${prefix}-top-left`}
-          args={[leftInnerW - widthReduction / 2, t, leftD - backReduction - topDepthReduction]}
-          position={[-bInnerW / 2 + leftInnerW / 2, centerY + boxH / 2 - t / 2, leftZOffset + backReduction / 2 - topDepthReduction / 2 + partTopZOffset]}
+          args={[leftInnerW - widthReduction / 2, t, partTopFinalDepth]}
+          position={[-bInnerW / 2 + leftInnerW / 2, centerY + boxH / 2 - t / 2, leftZOffset + backReduction / 2 - topDepthReduction / 2 - partTopZOffset / 2]}
           material={material} renderMode={renderMode} isDragging={isDragging} isHighlighted={isHighlighted}
           panelName={`${sectionLabel}좌상판`} panelGrainDirections={panelGrainDirections} furnitureId={placedFurnitureId}
         />
@@ -1548,10 +1550,12 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
       const rightBottomRaiseMm = getAreaBottomRaiseMm('right');
       const rightBottomRaiseUnit = mmToUnit(rightBottomRaiseMm);
       if (section.showBottomPanel !== false) {
+      const partBottomBaseDepth = leftD - backReduction;
+      const partBottomFinalDepth = partBottomBaseDepth - partBottomZOffset;
       meshes.push(
         <BoxWithEdges key={`${prefix}-bottom-left`}
-          args={[leftInnerW - widthReduction / 2, t, leftD - backReduction]}
-          position={[-bInnerW / 2 + leftInnerW / 2, centerY - boxH / 2 + t / 2 + leftBottomRaiseUnit, leftZOffset + backReduction / 2 + partBottomZOffset]}
+          args={[leftInnerW - widthReduction / 2, t, partBottomFinalDepth]}
+          position={[-bInnerW / 2 + leftInnerW / 2, centerY - boxH / 2 + t / 2 + leftBottomRaiseUnit, leftZOffset + backReduction / 2 - partBottomZOffset / 2]}
           material={material} renderMode={renderMode} isDragging={isDragging} isHighlighted={isHighlighted}
           panelName={`${sectionLabel}좌바닥판`} panelGrainDirections={panelGrainDirections} furnitureId={placedFurnitureId}
         />
@@ -1559,20 +1563,24 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
       }
       // ── 우측 상판/바닥판 ──
       if (section.showTopPanel !== false) {
+      const partRTopBaseDepth = rightD - backReduction - topDepthReduction;
+      const partRTopFinalDepth = partRTopBaseDepth - partTopZOffset;
       meshes.push(
         <BoxWithEdges key={`${prefix}-top-right`}
-          args={[rightInnerW - widthReduction / 2, t, rightD - backReduction - topDepthReduction]}
-          position={[partitionX + t / 2 + rightInnerW / 2, centerY + boxH / 2 - t / 2, rightZOffset + backReduction / 2 - topDepthReduction / 2 + partTopZOffset]}
+          args={[rightInnerW - widthReduction / 2, t, partRTopFinalDepth]}
+          position={[partitionX + t / 2 + rightInnerW / 2, centerY + boxH / 2 - t / 2, rightZOffset + backReduction / 2 - topDepthReduction / 2 - partTopZOffset / 2]}
           material={material} renderMode={renderMode} isDragging={isDragging} isHighlighted={isHighlighted}
           panelName={`${sectionLabel}우상판`} panelGrainDirections={panelGrainDirections} furnitureId={placedFurnitureId}
         />
       );
       }
       if (section.showBottomPanel !== false) {
+      const partRBottomBaseDepth = rightD - backReduction;
+      const partRBottomFinalDepth = partRBottomBaseDepth - partBottomZOffset;
       meshes.push(
         <BoxWithEdges key={`${prefix}-bottom-right`}
-          args={[rightInnerW - widthReduction / 2, t, rightD - backReduction]}
-          position={[partitionX + t / 2 + rightInnerW / 2, centerY - boxH / 2 + t / 2 + rightBottomRaiseUnit, rightZOffset + backReduction / 2 + partBottomZOffset]}
+          args={[rightInnerW - widthReduction / 2, t, partRBottomFinalDepth]}
+          position={[partitionX + t / 2 + rightInnerW / 2, centerY - boxH / 2 + t / 2 + rightBottomRaiseUnit, rightZOffset + backReduction / 2 - partBottomZOffset / 2]}
           material={material} renderMode={renderMode} isDragging={isDragging} isHighlighted={isHighlighted}
           panelName={`${sectionLabel}우바닥판`} panelGrainDirections={panelGrainDirections} furnitureId={placedFurnitureId}
         />
@@ -1646,11 +1654,13 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
     const topPanelZOffset = mmToUnit(section.topPanelDepthOffset ?? 0);
     const bottomPanelZOffset = mmToUnit(section.bottomPanelDepthOffset ?? 0);
     if (section.showTopPanel !== false) {
+    const topBaseDepth = boxD - backReduction - topDepthReduction;
+    const topFinalDepth = topBaseDepth - topPanelZOffset;
     meshes.push(
       <BoxWithEdges
         key={`${prefix}-top`}
-        args={[bInnerW - widthReduction, t, boxD - backReduction - topDepthReduction]}
-        position={[0, centerY + boxH / 2 - t / 2, backReduction / 2 - topDepthReduction / 2 + topPanelZOffset]}
+        args={[bInnerW - widthReduction, t, topFinalDepth]}
+        position={[0, centerY + boxH / 2 - t / 2, backReduction / 2 - topDepthReduction / 2 - topPanelZOffset / 2]}
         material={material}
         renderMode={renderMode}
         isDragging={isDragging}
@@ -1662,11 +1672,13 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
     );
     }
     if (section.showBottomPanel !== false) {
+    const bottomBaseDepth = boxD - backReduction;
+    const bottomFinalDepth = bottomBaseDepth - bottomPanelZOffset;
     meshes.push(
       <BoxWithEdges
         key={`${prefix}-bottom`}
-        args={[bInnerW - widthReduction, t, boxD - backReduction]}
-        position={[0, centerY - boxH / 2 + t / 2 + bottomRaiseUnit, backReduction / 2 + bottomPanelZOffset]}
+        args={[bInnerW - widthReduction, t, bottomFinalDepth]}
+        position={[0, centerY - boxH / 2 + t / 2 + bottomRaiseUnit, backReduction / 2 - bottomPanelZOffset / 2]}
         material={material}
         renderMode={renderMode}
         isDragging={isDragging}
@@ -1889,11 +1901,13 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
       const hsTopZOffset = mmToUnit(section.topPanelDepthOffset ?? 0);
       const hsBottomZOffset = mmToUnit(section.bottomPanelDepthOffset ?? 0);
       if (section.showTopPanel !== false) {
+      const hsTopBaseDepth = subBoxD - backReduction;
+      const hsTopFinalDepth = hsTopBaseDepth - hsTopZOffset;
       subMeshes.push(
         <BoxWithEdges
           key={`${prefix}-top`}
-          args={[subInnerW - widthReduction, t, subBoxD - backReduction]}
-          position={[subCenterX, sbCenterY + sbBoxH / 2 - t / 2, backReduction / 2 + hsTopZOffset]}
+          args={[subInnerW - widthReduction, t, hsTopFinalDepth]}
+          position={[subCenterX, sbCenterY + sbBoxH / 2 - t / 2, backReduction / 2 - hsTopZOffset / 2]}
           material={material}
           renderMode={renderMode}
           isDragging={isDragging}
@@ -1908,11 +1922,13 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
       const areaBottomRaiseMm = hsGetAreaBottomRaiseMm(side);
       const areaBottomRaiseUnit = mmToUnit(areaBottomRaiseMm);
       if (section.showBottomPanel !== false) {
+      const hsBottomBaseDepth = subBoxD - backReduction;
+      const hsBottomFinalDepth = hsBottomBaseDepth - hsBottomZOffset;
       subMeshes.push(
         <BoxWithEdges
           key={`${prefix}-bottom`}
-          args={[subInnerW - widthReduction, t, subBoxD - backReduction]}
-          position={[subCenterX, sbCenterY - sbBoxH / 2 + t / 2 + areaBottomRaiseUnit, backReduction / 2 + hsBottomZOffset]}
+          args={[subInnerW - widthReduction, t, hsBottomFinalDepth]}
+          position={[subCenterX, sbCenterY - sbBoxH / 2 + t / 2 + areaBottomRaiseUnit, backReduction / 2 - hsBottomZOffset / 2]}
           material={material}
           renderMode={renderMode}
           isDragging={isDragging}

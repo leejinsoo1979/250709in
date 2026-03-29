@@ -646,7 +646,7 @@ const CustomizablePropertiesPanel: React.FC = () => {
         const el = sec.elements?.[0];
         if (el?.type === 'drawer' && 'heights' in el) {
           const newH = sections[sIdx].height;
-          const elGap = ('gapHeight' in el && el.gapHeight) ? el.gapHeight : 23.6;
+          const elGap = ('gapHeight' in el && el.gapHeight !== undefined) ? el.gapHeight : 23.6;
           const gapTotal = elGap * (el.heights.length + 1);
           const totalDrawerH = el.heights.reduce((s: number, h: number) => s + h, 0);
           const maxAllowed = newH - gapTotal;
@@ -765,7 +765,7 @@ const CustomizablePropertiesPanel: React.FC = () => {
         const el = sec.elements?.[0];
         if (el?.type === 'drawer' && 'heights' in el) {
           const newH = sIdx === idx ? clamped : otherH;
-          const elGap = ('gapHeight' in el && el.gapHeight) ? el.gapHeight : 23.6;
+          const elGap = ('gapHeight' in el && el.gapHeight !== undefined) ? el.gapHeight : 23.6;
           const gapTotal = elGap * (el.heights.length + 1);
           const totalDrawerH = el.heights.reduce((s: number, h: number) => s + h, 0);
           const maxAllowed = newH - gapTotal;
@@ -1584,7 +1584,7 @@ const CustomizablePropertiesPanel: React.FC = () => {
       const isTopAlignBottom = heightIdx === 0 && 'drawerAlign' in el && el.drawerAlign === 'top';
       if (isTopAlignBottom) num = num - 42;
       // 서랍 스택은 상판까지 포함 (내경 + 상판두께)
-      const gapPerDrawer = ('gapHeight' in el && el.gapHeight) ? el.gapHeight : 23.6;
+      const gapPerDrawer = ('gapHeight' in el && el.gapHeight !== undefined) ? el.gapHeight : 23.6;
       const totalGap = gapPerDrawer * (el.heights.length + 1);
       const usableHeight = (sectionHeight + panelThickness) - totalGap;
       const minDrawerH = 80;
@@ -1666,7 +1666,7 @@ const CustomizablePropertiesPanel: React.FC = () => {
     const el = elements[0];
     if (!el || el.type !== 'drawer') return true; // 서랍이 아니면 제한 없음
 
-    const gap = ('gapHeight' in el && el.gapHeight) ? el.gapHeight : 23.6;
+    const gap = ('gapHeight' in el && el.gapHeight !== undefined) ? el.gapHeight : 23.6;
     const minDrawerH = 80;
     const effectiveHeight = sec.height + panelThickness; // 상판 포함
     const newCount = el.heights.length + 1;
@@ -1702,7 +1702,7 @@ const CustomizablePropertiesPanel: React.FC = () => {
         if (!canAddDrawer(sIdx, side)) return;
 
         // 새 서랍 높이를 균등 재분배로 계산
-        const gap = ('gapHeight' in el && el.gapHeight) ? el.gapHeight : 23.6;
+        const gap = ('gapHeight' in el && el.gapHeight !== undefined) ? el.gapHeight : 23.6;
         const newCount = el.heights.length + 1;
         const effectiveHeight = sec.height + panelThickness;
         const totalGap = gap * (newCount + 1);
@@ -2119,7 +2119,7 @@ const CustomizablePropertiesPanel: React.FC = () => {
         {/* 서랍 갭 조절 */}
         {currentType === 'drawer' && 'heights' in el && (
           <div style={{ marginTop: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <span style={{ fontSize: '12px', whiteSpace: 'nowrap' }}>서랍 갭</span>
+            <span style={{ fontSize: '12px', whiteSpace: 'nowrap' }} title="서랍과 서랍 사이, 서랍과 상/하판 사이의 간격 (mm)">서랍 간격</span>
             <input
               type="number"
               className={`${styles.input} ${styles.inputSmall}`}
@@ -2188,7 +2188,7 @@ const CustomizablePropertiesPanel: React.FC = () => {
           const defaultCoverInset = currentAlign === 'top' ? 85 : 60;
           const coverInset = ('coverInset' in el && el.coverInset !== undefined) ? el.coverInset : defaultCoverInset;
           // 서랍이 영역을 꽉 채우는지 판단 (fullFill이면 배치방향/덮개 무의미)
-          const gap = ('gapHeight' in el && el.gapHeight) ? el.gapHeight : 23.6;
+          const gap = ('gapHeight' in el && el.gapHeight !== undefined) ? el.gapHeight : 23.6;
           const totalH = el.heights.reduce((s: number, h: number) => s + h, 0) + gap * (el.heights.length + 1);
           const isFullFill = totalH >= sectionHeight;
           return (
@@ -2228,7 +2228,7 @@ const CustomizablePropertiesPanel: React.FC = () => {
               {/* 덮개 옵셋 */}
               {!isFullFill && (
                 <div style={{ marginTop: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  <span style={{ fontSize: '12px', whiteSpace: 'nowrap' }}>덮개 옵셋</span>
+                  <span style={{ fontSize: '12px', whiteSpace: 'nowrap' }} title="서랍이 영역을 다 채우지 않을 때, 남는 공간의 덮개판이 앞에서 얼마나 들어가는지">덮개판 들임</span>
                   <input
                     type="number"
                     className={`${styles.input} ${styles.inputSmall}`}
@@ -2321,14 +2321,14 @@ const CustomizablePropertiesPanel: React.FC = () => {
           </div>
         )}
 
-        {/* 서랍 설정: 상판/하판 Z 오프셋 */}
+        {/* 서랍 설정: 상판/하판 앞 들임 */}
         {currentType === 'drawer' && (() => {
           const section = config.sections[sIdx];
           return (
             <>
               {section.showTopPanel !== false && (
                 <div style={{ marginTop: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  <span style={{ fontSize: '12px', whiteSpace: 'nowrap' }}>상판 Z옵셋</span>
+                  <span style={{ fontSize: '12px', whiteSpace: 'nowrap' }} title="상판 앞쪽을 안으로 줄임 (뒤쪽 고정)">상판 앞들임</span>
                   <input
                     type="number"
                     className={`${styles.input} ${styles.inputSmall}`}
@@ -2351,7 +2351,7 @@ const CustomizablePropertiesPanel: React.FC = () => {
               )}
               {section.showBottomPanel !== false && (
                 <div style={{ marginTop: '4px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  <span style={{ fontSize: '12px', whiteSpace: 'nowrap' }}>하판 Z옵셋</span>
+                  <span style={{ fontSize: '12px', whiteSpace: 'nowrap' }} title="하판 앞쪽을 안으로 줄임 (뒤쪽 고정)">하판 앞들임</span>
                   <input
                     type="number"
                     className={`${styles.input} ${styles.inputSmall}`}
@@ -3692,10 +3692,10 @@ const CustomizablePropertiesPanel: React.FC = () => {
             />
             <span className={styles.unit}>mm</span>
           </div>
-          {/* 상판 Z 오프셋 */}
+          {/* 상판 앞들임 */}
           {section.showTopPanel !== false && (
             <div className={styles.row}>
-              <span className={styles.label}>상판 Z옵셋</span>
+              <span className={styles.label} title="상판 앞쪽을 안으로 줄임 (뒤쪽 고정)">상판 앞들임</span>
               <input
                 type="number"
                 className={styles.input}
@@ -3716,10 +3716,10 @@ const CustomizablePropertiesPanel: React.FC = () => {
               <span className={styles.unit}>mm</span>
             </div>
           )}
-          {/* 하판 Z 오프셋 */}
+          {/* 하판 앞들임 */}
           {section.showBottomPanel !== false && (
             <div className={styles.row}>
-              <span className={styles.label}>하판 Z옵셋</span>
+              <span className={styles.label} title="하판 앞쪽을 안으로 줄임 (뒤쪽 고정)">하판 앞들임</span>
               <input
                 type="number"
                 className={styles.input}
