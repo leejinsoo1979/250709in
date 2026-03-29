@@ -1466,6 +1466,40 @@ const CustomizablePropertiesPanel: React.FC = () => {
     applyConfig({ ...config, sections });
   };
 
+  // 마이다 인셋 변경 (상/하/좌/우)
+  const handleMaidaInsetChange = (
+    sIdx: number,
+    side: 'full' | 'left' | 'center' | 'right',
+    field: 'maidaInsetTop' | 'maidaInsetBottom' | 'maidaInsetLeft' | 'maidaInsetRight',
+    value: number,
+  ) => {
+    const sections = [...config.sections];
+    const sec = { ...sections[sIdx] };
+    const getElements = () => {
+      if (side === 'full') return sec.elements ? [...sec.elements] : [];
+      if (side === 'left') return sec.leftElements ? [...sec.leftElements] : [];
+      if (side === 'center' && sec.horizontalSplit) {
+        return sec.horizontalSplit.centerElements ? [...sec.horizontalSplit.centerElements] : [];
+      }
+      if (sec.horizontalSplit && side === 'right') {
+        return sec.horizontalSplit.rightElements ? [...sec.horizontalSplit.rightElements] : [];
+      }
+      return sec.rightElements ? [...sec.rightElements] : [];
+    };
+    const els = getElements();
+    if (els.length > 0 && els[0].type === 'drawer') {
+      els[0] = { ...els[0], [field]: value };
+    }
+    if (side === 'full') sec.elements = els;
+    else if (side === 'left' && !sec.horizontalSplit) sec.leftElements = els;
+    else if (sec.horizontalSplit) {
+      const hsKey = side === 'left' ? 'leftElements' : side === 'center' ? 'centerElements' : 'rightElements';
+      sec.horizontalSplit = { ...sec.horizontalSplit, [hsKey]: els };
+    } else sec.rightElements = els;
+    sections[sIdx] = sec;
+    applyConfig({ ...config, sections });
+  };
+
   // 서랍 배치 방향(위/아래) 변경
   const handleDrawerAlignChange = (
     sIdx: number,
@@ -2130,6 +2164,41 @@ const CustomizablePropertiesPanel: React.FC = () => {
           </div>
         )}
 
+        {/* 마이다 인셋 (상/하/좌/우) */}
+        {currentType === 'drawer' && 'heights' in el && (
+          <div style={{ marginTop: '8px' }}>
+            <span style={{ fontSize: '12px', whiteSpace: 'nowrap', display: 'block', marginBottom: '4px' }}>마이다 인셋</span>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4px' }}>
+              {([
+                { label: '상', field: 'maidaInsetTop' as const },
+                { label: '하', field: 'maidaInsetBottom' as const },
+                { label: '좌', field: 'maidaInsetLeft' as const },
+                { label: '우', field: 'maidaInsetRight' as const },
+              ]).map(({ label, field }) => (
+                <div key={field} style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  <span style={{ fontSize: '11px', width: '14px', textAlign: 'center' }}>{label}</span>
+                  <input
+                    type="number"
+                    className={`${styles.input} ${styles.inputSmall}`}
+                    style={{ width: '50px' }}
+                    value={(field in el ? (el as any)[field] : undefined) ?? 0}
+                    min={0}
+                    max={30}
+                    step={0.1}
+                    onChange={(e) => {
+                      const v = parseFloat(e.target.value);
+                      if (!isNaN(v) && v >= 0 && v <= 30) {
+                        handleMaidaInsetChange(sIdx, side, field, v);
+                      }
+                    }}
+                  />
+                  <span className={styles.unit}>mm</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* 서랍 배치 방향 (위/아래) + 덮개 옵셋 */}
         {currentType === 'drawer' && 'heights' in el && (() => {
           const currentAlign = ('drawerAlign' in el && el.drawerAlign) || 'bottom';
@@ -2268,6 +2337,61 @@ const CustomizablePropertiesPanel: React.FC = () => {
             </button>
           </div>
         )}
+
+        {/* 서랍 설정: 상판/하판 Z 오프셋 */}
+        {currentType === 'drawer' && (() => {
+          const section = config.sections[sIdx];
+          return (
+            <>
+              {section.showTopPanel !== false && (
+                <div style={{ marginTop: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <span style={{ fontSize: '12px', whiteSpace: 'nowrap' }}>상판 Z옵셋</span>
+                  <input
+                    type="number"
+                    className={`${styles.input} ${styles.inputSmall}`}
+                    style={{ width: '60px' }}
+                    value={section.topPanelDepthOffset ?? 0}
+                    min={-50}
+                    max={50}
+                    step={1}
+                    onChange={(e) => {
+                      const v = parseInt(e.target.value, 10);
+                      if (!isNaN(v) && v >= -50 && v <= 50) {
+                        const sections = [...config.sections];
+                        sections[sIdx] = { ...sections[sIdx], topPanelDepthOffset: v };
+                        applyConfig({ ...config, sections });
+                      }
+                    }}
+                  />
+                  <span className={styles.unit}>mm</span>
+                </div>
+              )}
+              {section.showBottomPanel !== false && (
+                <div style={{ marginTop: '4px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <span style={{ fontSize: '12px', whiteSpace: 'nowrap' }}>하판 Z옵셋</span>
+                  <input
+                    type="number"
+                    className={`${styles.input} ${styles.inputSmall}`}
+                    style={{ width: '60px' }}
+                    value={section.bottomPanelDepthOffset ?? 0}
+                    min={-50}
+                    max={50}
+                    step={1}
+                    onChange={(e) => {
+                      const v = parseInt(e.target.value, 10);
+                      if (!isNaN(v) && v >= -50 && v <= 50) {
+                        const sections = [...config.sections];
+                        sections[sIdx] = { ...sections[sIdx], bottomPanelDepthOffset: v };
+                        applyConfig({ ...config, sections });
+                      }
+                    }}
+                  />
+                  <span className={styles.unit}>mm</span>
+                </div>
+              )}
+            </>
+          );
+        })()}
 
         {/* 옷봉: 고정선반+옷봉 / 옷봉만 선택 (섹션 높이 1100 이상만 선반+옷봉 가능) */}
         {currentType === 'rod' && el.type === 'rod' && (() => {
