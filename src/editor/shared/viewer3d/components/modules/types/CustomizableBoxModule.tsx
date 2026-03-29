@@ -1107,28 +1107,25 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
         // DrawerRenderer 내부: 바닥gap + (서랍+gap)*n = sum(heights) + (n+1)*gap
         const totalDrawerHeightMm = el.heights.reduce((sum: number, h: number) => sum + h, 0)
           + gapHeight * (drawerCount + 1);
-        const totalDrawerInnerH = mmToUnit(totalDrawerHeightMm);
+        const totalDrawerInnerH = Math.min(mmToUnit(totalDrawerHeightMm), areaInnerHeight);
 
         // 서랍이 영역 전체를 채우는지 판단
         const isFullFill = totalDrawerInnerH >= areaInnerHeight - t;
 
-        // 서랍 yOffset과 innerHeight 결정
+        // 서랍 yOffset과 innerHeight 결정 — 항상 가용 내경(areaInnerHeight) 범위 내 배치
         let drawerYOffset: number;
         let drawerInnerH: number;
 
         const align = ('drawerAlign' in el && el.drawerAlign) || 'bottom';
 
         if (isFullFill) {
-          // 영역 전체를 채움: 기존처럼 중앙 배치
           drawerYOffset = sectionCenterY;
           drawerInnerH = areaInnerHeight;
         } else if (align === 'top') {
-          // 위에서 배치: 마이다 높이 = 서랍+gap 합계 (내경 그대로)
           const drawerTopY = sectionCenterY + areaInnerHeight / 2;
           drawerInnerH = totalDrawerInnerH;
           drawerYOffset = drawerTopY - drawerInnerH / 2;
         } else {
-          // 아래서 배치(기본): 마이다 높이 = 서랍+gap 합계 (내경 그대로)
           const drawerBottomY = sectionCenterY - areaInnerHeight / 2;
           drawerInnerH = totalDrawerInnerH;
           drawerYOffset = drawerBottomY + drawerInnerH / 2;
