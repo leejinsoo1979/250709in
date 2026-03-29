@@ -1160,12 +1160,16 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
               panelGrainDirections={panelGrainDirections}
               drawerAlign={align}
               backPanelThicknessOverride={backPanelThicknessProp}
+              maidaInsetTop={('maidaInsetTop' in el ? el.maidaInsetTop : undefined) ?? 0}
+              maidaInsetBottom={('maidaInsetBottom' in el ? el.maidaInsetBottom : undefined) ?? 0}
+              maidaInsetLeft={('maidaInsetLeft' in el ? el.maidaInsetLeft : undefined) ?? 0}
+              maidaInsetRight={('maidaInsetRight' in el ? el.maidaInsetRight : undefined) ?? 0}
             />
             {/* 서랍이 영역보다 작을 때: 덮개 선반 */}
             {!isFullFill && (() => {
               // 위 배치 하단덮개: 상판과 동일한 85mm 옵셋, 아래 배치: 기본 60mm
               const defaultInset = align === 'top' ? 85 : 60;
-              const coverInsetMm = ('coverInset' in el && el.coverInset) ? el.coverInset : defaultInset;
+              const coverInsetMm = ('coverInset' in el && el.coverInset !== undefined) ? el.coverInset : defaultInset;
               const coverFrontInset = mmToUnit(coverInsetMm);
               const coverBackInset = mmToUnit(backReductionMm);
               const coverDepth = sectionDepth - coverFrontInset - coverBackInset;
