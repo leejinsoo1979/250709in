@@ -5639,56 +5639,101 @@ const Room: React.FC<RoomProps> = ({
                 if (allRaised) return; // 전체 올림 → 하부프레임 없음
 
                 // 좌우분할 시 무조건 영역별로 하부프레임 분할
-                // 각 영역 piece = 측판 + 내경 (양 끝), 칸막이 절반씩 분배
+                // 칸막이 귀속: non-raised 영역이 칸막이를 흡수 (raised 영역 옆 갭 방지)
+                // 양쪽 모두 non-raised면 칸막이 중심에서 분할
                 const modLeftMm = modCenterXmm - modWidthMM / 2;
-                const halfPnl = pnlThk / 2;
 
-                // 좌측 영역: 좌측판(전체) + 좌내경 + 칸막이(절반)
-                if (leftRaise <= 0) {
-                  const leftPieceW = pnlThk + leftInnerW + halfPnl;
-                  const leftPieceStartX = modLeftMm;
-                  allBaseSegments.push({
-                    widthMm: leftPieceW,
-                    centerXmm: leftPieceStartX + leftPieceW / 2,
-                    zPosition: baseZPosition,
-                    height: modBaseH,
-                    yPosition: panelStartY + floatHeight + modBaseH / 2,
-                    material: baseMat,
-                    key: `free-base-strip-${group.id}-${mod.id}-left`,
-                    placedModuleId: mod.id,
-                  });
-                }
+                if (!is3split) {
+                  // 2분할: 좌측 | 우측 (칸막이를 non-raised 쪽이 흡수)
+                  const partitionStart = modLeftMm + pnlThk + leftInnerW; // 칸막이 시작 X
 
-                // 중앙 영역 (3분할 시): 칸막이(절반) + 중내경 + 칸막이(절반)
-                if (is3split && centerRaise <= 0) {
-                  const centerStartX = modLeftMm + pnlThk + leftInnerW + halfPnl;
-                  const centerPieceW = halfPnl + centerInnerW + halfPnl;
-                  allBaseSegments.push({
-                    widthMm: centerPieceW,
-                    centerXmm: centerStartX + centerPieceW / 2,
-                    zPosition: baseZPosition,
-                    height: modBaseH,
-                    yPosition: panelStartY + floatHeight + modBaseH / 2,
-                    material: baseMat,
-                    key: `free-base-strip-${group.id}-${mod.id}-center`,
-                    placedModuleId: mod.id,
-                  });
-                }
+                  if (leftRaise <= 0) {
+                    // 좌측 piece: 좌측판 + 좌내경 + (우측 raised면 칸막이 전체, 아니면 절반)
+                    const leftExtra = rightRaise > 0 ? pnlThk : pnlThk / 2;
+                    const leftPieceW = pnlThk + leftInnerW + leftExtra;
+                    allBaseSegments.push({
+                      widthMm: leftPieceW,
+                      centerXmm: modLeftMm + leftPieceW / 2,
+                      zPosition: baseZPosition,
+                      height: modBaseH,
+                      yPosition: panelStartY + floatHeight + modBaseH / 2,
+                      material: baseMat,
+                      key: `free-base-strip-${group.id}-${mod.id}-left`,
+                      placedModuleId: mod.id,
+                    });
+                  }
 
-                // 우측 영역: 칸막이(절반) + 우내경 + 우측판(전체)
-                if (rightRaise <= 0) {
-                  const rightStartX = modLeftMm + pnlThk + leftInnerW + (is3split ? pnlThk + centerInnerW : 0) + halfPnl;
-                  const rightPieceW = halfPnl + Math.max(0, rightInnerW) + pnlThk;
-                  allBaseSegments.push({
-                    widthMm: rightPieceW,
-                    centerXmm: rightStartX + rightPieceW / 2,
-                    zPosition: baseZPosition,
-                    height: modBaseH,
-                    yPosition: panelStartY + floatHeight + modBaseH / 2,
-                    material: baseMat,
-                    key: `free-base-strip-${group.id}-${mod.id}-right`,
-                    placedModuleId: mod.id,
-                  });
+                  if (rightRaise <= 0) {
+                    // 우측 piece: (좌측 raised면 칸막이 전체, 아니면 절반) + 우내경 + 우측판
+                    const rightExtra = leftRaise > 0 ? pnlThk : pnlThk / 2;
+                    const rightPieceStartX = partitionStart + pnlThk - rightExtra;
+                    const rightPieceW = rightExtra + Math.max(0, rightInnerW) + pnlThk;
+                    allBaseSegments.push({
+                      widthMm: rightPieceW,
+                      centerXmm: rightPieceStartX + rightPieceW / 2,
+                      zPosition: baseZPosition,
+                      height: modBaseH,
+                      yPosition: panelStartY + floatHeight + modBaseH / 2,
+                      material: baseMat,
+                      key: `free-base-strip-${group.id}-${mod.id}-right`,
+                      placedModuleId: mod.id,
+                    });
+                  }
+                } else {
+                  // 3분할: 좌측 | 중앙 | 우측
+                  const part1Start = modLeftMm + pnlThk + leftInnerW; // 첫 칸막이 시작
+                  const part2Start = part1Start + pnlThk + centerInnerW; // 둘째 칸막이 시작
+
+                  // 좌측 piece
+                  if (leftRaise <= 0) {
+                    const leftExtra = centerRaise > 0 ? pnlThk : pnlThk / 2;
+                    const leftPieceW = pnlThk + leftInnerW + leftExtra;
+                    allBaseSegments.push({
+                      widthMm: leftPieceW,
+                      centerXmm: modLeftMm + leftPieceW / 2,
+                      zPosition: baseZPosition,
+                      height: modBaseH,
+                      yPosition: panelStartY + floatHeight + modBaseH / 2,
+                      material: baseMat,
+                      key: `free-base-strip-${group.id}-${mod.id}-left`,
+                      placedModuleId: mod.id,
+                    });
+                  }
+
+                  // 중앙 piece
+                  if (centerRaise <= 0) {
+                    const cLeftExtra = leftRaise > 0 ? pnlThk : pnlThk / 2;
+                    const cRightExtra = rightRaise > 0 ? pnlThk : pnlThk / 2;
+                    const centerPieceStartX = part1Start + pnlThk - cLeftExtra;
+                    const centerPieceW = cLeftExtra + centerInnerW + cRightExtra;
+                    allBaseSegments.push({
+                      widthMm: centerPieceW,
+                      centerXmm: centerPieceStartX + centerPieceW / 2,
+                      zPosition: baseZPosition,
+                      height: modBaseH,
+                      yPosition: panelStartY + floatHeight + modBaseH / 2,
+                      material: baseMat,
+                      key: `free-base-strip-${group.id}-${mod.id}-center`,
+                      placedModuleId: mod.id,
+                    });
+                  }
+
+                  // 우측 piece
+                  if (rightRaise <= 0) {
+                    const rightExtra = centerRaise > 0 ? pnlThk : pnlThk / 2;
+                    const rightPieceStartX = part2Start + pnlThk - rightExtra;
+                    const rightPieceW = rightExtra + Math.max(0, rightInnerW) + pnlThk;
+                    allBaseSegments.push({
+                      widthMm: rightPieceW,
+                      centerXmm: rightPieceStartX + rightPieceW / 2,
+                      zPosition: baseZPosition,
+                      height: modBaseH,
+                      yPosition: panelStartY + floatHeight + modBaseH / 2,
+                      material: baseMat,
+                      key: `free-base-strip-${group.id}-${mod.id}-right`,
+                      placedModuleId: mod.id,
+                    });
+                  }
                 }
                 return;
               }
@@ -5891,55 +5936,95 @@ const Room: React.FC<RoomProps> = ({
                         if (allRaised) return; // 전체 올림 → 하부프레임 없음
 
                         // 좌우분할 시 무조건 영역별로 하부프레임 분할
+                        // 칸막이 귀속: non-raised 영역이 칸막이를 흡수 (raised 영역 옆 갭 방지)
                         const modLeftMm = modCenterXmm - modWidthMM / 2;
-                        const halfPnl = pnlThk / 2;
 
-                        // 좌측 영역: 좌측판(전체) + 좌내경 + 칸막이(절반)
-                        if (leftRaise <= 0) {
-                          const leftPieceW = pnlThk + leftInnerW + halfPnl;
-                          const leftPieceStartX = modLeftMm;
-                          slotBaseSegments.push({
-                            widthMm: leftPieceW,
-                            centerXmm: leftPieceStartX + leftPieceW / 2,
-                            zPosition: baseZPos + modBaseZOffset,
-                            height: modBaseH,
-                            yPosition: panelStartY + floatHeight + modBaseH / 2,
-                            material: baseMat,
-                            key: `slot-base-${mod.id}-left`,
-                            placedModuleId: mod.id,
-                          });
-                        }
+                        if (!is3split) {
+                          // 2분할
+                          const partitionStart = modLeftMm + pnlThk + leftInnerW;
 
-                        // 중앙 영역 (3분할 시): 칸막이(절반) + 중내경 + 칸막이(절반)
-                        if (is3split && centerRaise <= 0) {
-                          const centerStartX = modLeftMm + pnlThk + leftInnerW + halfPnl;
-                          const centerPieceW = halfPnl + centerInnerW + halfPnl;
-                          slotBaseSegments.push({
-                            widthMm: centerPieceW,
-                            centerXmm: centerStartX + centerPieceW / 2,
-                            zPosition: baseZPos + modBaseZOffset,
-                            height: modBaseH,
-                            yPosition: panelStartY + floatHeight + modBaseH / 2,
-                            material: baseMat,
-                            key: `slot-base-${mod.id}-center`,
-                            placedModuleId: mod.id,
-                          });
-                        }
+                          if (leftRaise <= 0) {
+                            const leftExtra = rightRaise > 0 ? pnlThk : pnlThk / 2;
+                            const leftPieceW = pnlThk + leftInnerW + leftExtra;
+                            slotBaseSegments.push({
+                              widthMm: leftPieceW,
+                              centerXmm: modLeftMm + leftPieceW / 2,
+                              zPosition: baseZPos + modBaseZOffset,
+                              height: modBaseH,
+                              yPosition: panelStartY + floatHeight + modBaseH / 2,
+                              material: baseMat,
+                              key: `slot-base-${mod.id}-left`,
+                              placedModuleId: mod.id,
+                            });
+                          }
 
-                        // 우측 영역: 칸막이(절반) + 우내경 + 우측판(전체)
-                        if (rightRaise <= 0) {
-                          const rightStartX = modLeftMm + pnlThk + leftInnerW + (is3split ? pnlThk + centerInnerW : 0) + halfPnl;
-                          const rightPieceW = halfPnl + Math.max(0, rightInnerW) + pnlThk;
-                          slotBaseSegments.push({
-                            widthMm: rightPieceW,
-                            centerXmm: rightStartX + rightPieceW / 2,
-                            zPosition: baseZPos + modBaseZOffset,
-                            height: modBaseH,
-                            yPosition: panelStartY + floatHeight + modBaseH / 2,
-                            material: baseMat,
-                            key: `slot-base-${mod.id}-right`,
-                            placedModuleId: mod.id,
-                          });
+                          if (rightRaise <= 0) {
+                            const rightExtra = leftRaise > 0 ? pnlThk : pnlThk / 2;
+                            const rightPieceStartX = partitionStart + pnlThk - rightExtra;
+                            const rightPieceW = rightExtra + Math.max(0, rightInnerW) + pnlThk;
+                            slotBaseSegments.push({
+                              widthMm: rightPieceW,
+                              centerXmm: rightPieceStartX + rightPieceW / 2,
+                              zPosition: baseZPos + modBaseZOffset,
+                              height: modBaseH,
+                              yPosition: panelStartY + floatHeight + modBaseH / 2,
+                              material: baseMat,
+                              key: `slot-base-${mod.id}-right`,
+                              placedModuleId: mod.id,
+                            });
+                          }
+                        } else {
+                          // 3분할
+                          const part1Start = modLeftMm + pnlThk + leftInnerW;
+                          const part2Start = part1Start + pnlThk + centerInnerW;
+
+                          if (leftRaise <= 0) {
+                            const leftExtra = centerRaise > 0 ? pnlThk : pnlThk / 2;
+                            const leftPieceW = pnlThk + leftInnerW + leftExtra;
+                            slotBaseSegments.push({
+                              widthMm: leftPieceW,
+                              centerXmm: modLeftMm + leftPieceW / 2,
+                              zPosition: baseZPos + modBaseZOffset,
+                              height: modBaseH,
+                              yPosition: panelStartY + floatHeight + modBaseH / 2,
+                              material: baseMat,
+                              key: `slot-base-${mod.id}-left`,
+                              placedModuleId: mod.id,
+                            });
+                          }
+
+                          if (centerRaise <= 0) {
+                            const cLeftExtra = leftRaise > 0 ? pnlThk : pnlThk / 2;
+                            const cRightExtra = rightRaise > 0 ? pnlThk : pnlThk / 2;
+                            const centerPieceStartX = part1Start + pnlThk - cLeftExtra;
+                            const centerPieceW = cLeftExtra + centerInnerW + cRightExtra;
+                            slotBaseSegments.push({
+                              widthMm: centerPieceW,
+                              centerXmm: centerPieceStartX + centerPieceW / 2,
+                              zPosition: baseZPos + modBaseZOffset,
+                              height: modBaseH,
+                              yPosition: panelStartY + floatHeight + modBaseH / 2,
+                              material: baseMat,
+                              key: `slot-base-${mod.id}-center`,
+                              placedModuleId: mod.id,
+                            });
+                          }
+
+                          if (rightRaise <= 0) {
+                            const rightExtra = centerRaise > 0 ? pnlThk : pnlThk / 2;
+                            const rightPieceStartX = part2Start + pnlThk - rightExtra;
+                            const rightPieceW = rightExtra + Math.max(0, rightInnerW) + pnlThk;
+                            slotBaseSegments.push({
+                              widthMm: rightPieceW,
+                              centerXmm: rightPieceStartX + rightPieceW / 2,
+                              zPosition: baseZPos + modBaseZOffset,
+                              height: modBaseH,
+                              yPosition: panelStartY + floatHeight + modBaseH / 2,
+                              material: baseMat,
+                              key: `slot-base-${mod.id}-right`,
+                              placedModuleId: mod.id,
+                            });
+                          }
                         }
                         return;
                       }
