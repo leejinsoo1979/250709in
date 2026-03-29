@@ -42,23 +42,22 @@ export const ClothingRod: React.FC<ClothingRodProps> = ({
   const ctx = useSpace3DView();
   const viewMode = ctx.viewMode;
 
-  // 옵티마이저 뷰어에서는 해당 가구의 선반 하이라이트 시에만 옷봉 표시
-  if (ctx.hideAccessories) {
-    if (!highlightedPanel) return null;
-    // highlightedPanel: "furnitureId-meshName" 형식
-    const hasShelfKeyword = highlightedPanel.includes('선반') || highlightedPanel.includes('고정');
-    if (!hasShelfKeyword) return null;
-    // furnitureId가 있으면 해당 가구만, 없으면 모든 가구 표시
-    if (furnitureId && !highlightedPanel.startsWith(`${furnitureId}-`)) return null;
-  }
-
   // 패널 하이라이팅이 활성화되어 있으면 옷봉을 투명하게 처리
   const shouldDim = highlightedPanel && furnitureId && highlightedPanel.startsWith(`${furnitureId}-`);
 
-  // 탑뷰에서는 렌더링하지 않음
-  if (viewMode === '2D' && view2DDirection === 'top') {
-    return null;
-  }
+  // 숨김 여부 계산 (hook 이전에 early return 하지 않도록)
+  const shouldHide = React.useMemo(() => {
+    // 옵티마이저 뷰어에서는 해당 가구의 선반 하이라이트 시에만 옷봉 표시
+    if (ctx.hideAccessories) {
+      if (!highlightedPanel) return true;
+      const hasShelfKeyword = highlightedPanel.includes('선반') || highlightedPanel.includes('고정');
+      if (!hasShelfKeyword) return true;
+      if (furnitureId && !highlightedPanel.startsWith(`${furnitureId}-`)) return true;
+    }
+    // 탑뷰에서는 렌더링하지 않음
+    if (viewMode === '2D' && view2DDirection === 'top') return true;
+    return false;
+  }, [ctx.hideAccessories, highlightedPanel, furnitureId, viewMode, view2DDirection]);
 
   // 단위 변환 함수
   const mmToThreeUnits = (mm: number): number => mm * 0.01;
@@ -74,37 +73,20 @@ export const ClothingRod: React.FC<ClothingRodProps> = ({
   const rightBracketX = innerWidth / 2 - bracketWidth / 2 - widthReduction;
 
   // 옷봉 크기 및 위치: 브라켓 안쪽에서 안쪽까지
-  // 옷봉 시작 = 좌측 브라켓 안쪽 (leftBracketX + bracketWidth/2)
-  // 옷봉 끝 = 우측 브라켓 안쪽 (rightBracketX - bracketWidth/2)
   const rodStartX = leftBracketX + bracketWidth / 2;
   const rodEndX = rightBracketX - bracketWidth / 2;
-  const rodWidth = rodEndX - rodStartX; // 브라켓 안쪽 사이 거리
-  const rodCenterX = (rodStartX + rodEndX) / 2; // 옷봉 중심 X
+  const rodWidth = rodEndX - rodStartX;
+  const rodCenterX = (rodStartX + rodEndX) / 2;
   const rodDepth = mmToThreeUnits(10);
   const rodHeight = mmToThreeUnits(30);
 
-  console.log('🎽 ClothingRod 렌더링:', {
-    innerWidth: innerWidth * 100,
-    leftBracketX: leftBracketX * 100,
-    rightBracketX: rightBracketX * 100,
-    rodWidth: rodWidth * 100,
-    yPosition: yPosition * 100,
-    zPosition: zPosition * 100,
-    '섹션 깊이 오프셋 적용': zPosition !== 0
-  });
-
-  // 옷봉 Y 위치: 브라켓 하단에서 5mm 위에 옷봉 하단
-  // 브라켓 중심(Y=0) 기준, 브라켓 하단은 -bracketHeight/2
-  // 옷봉 하단 = 브라켓 하단 + 5mm = -bracketHeight/2 + mmToThreeUnits(5)
-  // 옷봉 중심 = 옷봉 하단 + rodHeight/2
+  // 옷봉 Y 위치
   const rodYOffset = -bracketHeight / 2 + mmToThreeUnits(5) + rodHeight / 2;
 
-  // 옷봉 Z 위치: 브라켓 안쪽에 배치 (브라켓은 D12, 옷봉은 D10)
-  // 브라켓 중심에서 옷봉이 안쪽으로 1mm 들어감
+  // 옷봉 Z 위치
   const rodZOffset = -mmToThreeUnits(1);
 
-  // 옷봉 재질: 3D 모드에서는 헤어라인 스테인리스 금속, 2D 모드에서는 회색
-  // 패널 하이라이팅 시 투명하게 처리
+  // 옷봉 재질
   const rodMaterial = React.useMemo(() => {
     if (shouldDim) {
       return new THREE.MeshBasicMaterial({
@@ -152,6 +134,9 @@ export const ClothingRod: React.FC<ClothingRodProps> = ({
   }, [viewMode, addFrontFillLight, yPosition, zPosition]);
 
   const shouldAddFillLight = viewMode === '3D' && (addFrontFillLight ?? yPosition < 0);
+
+  // 숨김 조건이면 렌더링하지 않음 (모든 hook 이후)
+  if (shouldHide) return null;
 
   return (
     <group position={[0, yPosition, zPosition]} userData={{ skipDimmer: true }}>
