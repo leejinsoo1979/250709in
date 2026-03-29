@@ -4263,18 +4263,27 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           const sectionRanges: { startY: number; endY: number; heightMm: number }[] = [];
           const sectionGap = customModule.customConfig.sectionGap ?? 0;
           const ptUnits = mmToThreeUnits(panelThickness);
+          // 바닥판 올림 시 조절발 높이만큼 측판이 아래로 확장됨
+          const baseHeightMmForExt = spaceInfo.baseConfig?.height || 65;
 
           // 각 섹션의 내경 시작 Y 위치를 먼저 누적 계산
           let internalY = furnitureBaseY + ptUnits; // 하판 상단 = section[0] 내경 하단
           sections.forEach((section: any, i: number) => {
             const internalH = mmToThreeUnits(section.height);
             // 외경 하단: 이 섹션 아래의 패널 하단
-            const outerStartY = internalY - ptUnits;
+            let outerStartY = internalY - ptUnits;
             // 외경 상단: 이 섹션 위의 패널 상단
             const outerEndY = internalY + internalH + ptUnits;
             // 외경 높이 (mm)
-            const outerH = section.height + 2 * panelThickness;
-            sectionRanges.push({ startY: outerStartY, endY: outerEndY, heightMm: outerH });
+            let outerH = section.height + 2 * panelThickness;
+
+            // 바닥판 올림 시 하부 섹션(i===0): 측판이 조절발 높이만큼 확장 → 치수에 포함
+            if (i === 0 && bottomRaiseActive) {
+              outerStartY = outerStartY - mmToThreeUnits(baseHeightMmForExt);
+              outerH = outerH + baseHeightMmForExt;
+            }
+
+            sectionRanges.push({ startY: outerStartY, endY: outerEndY, heightMm: Math.round(outerH) });
             // 다음 섹션 내경 시작: 현재 상판 + 다음 하판 (독립 박스이므로 패널 2개)
             if (i < sections.length - 1) {
               internalY = internalY + internalH + ptUnits + ptUnits + mmToThreeUnits(sectionGap);
@@ -4343,9 +4352,35 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             }
           });
 
+          // 공통 데이터: 조절발/상부프레임
+          const footHeightMm = bottomRaiseActive ? 0 : (spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height || 65) : 0);
+          const topFrameMm = spaceInfo.frameSize?.top ?? 30;
+          const floorFinishMm = (spaceInfo.hasFloorFinish && spaceInfo.floorFinish) ? spaceInfo.floorFinish.height : 0;
+          const floorFinishYDim = mmToThreeUnits(floorFinishMm);
+
+          // 좌/우 공통 세그먼트 생성 헬퍼
+          const buildAllSegments = (baseSegments: { startY: number; endY: number; heightMm: number }[]) => {
+            const all: { startY: number; endY: number; heightMm: number }[] = [];
+            // 1) 조절발
+            if (footHeightMm > 0) {
+              all.push({ startY: floorFinishYDim, endY: furnitureBaseY, heightMm: Math.round(footHeightMm) });
+            }
+            // 2) 섹션 세그먼트
+            baseSegments.forEach(seg => all.push(seg));
+            // 3) 상부프레임
+            if (topFrameMm > 0) {
+              const topStart = baseSegments.length > 0 ? baseSegments[baseSegments.length - 1].endY : furnitureBaseY;
+              const topEnd = topStart + mmToThreeUnits(topFrameMm);
+              all.push({ startY: topStart, endY: topEnd, heightMm: Math.round(topFrameMm) });
+            }
+            return all;
+          };
+
+          const leftAllSegments = buildAllSegments(sectionRanges);
+
           return (
             <>
-              {sectionRanges.map((range, idx) => (
+              {leftAllSegments.map((range, idx) => (
                 <group key={`custom-section-dim-${idx}`}>
                   {/* 수직 치수선 */}
                   <NativeLine name="dimension_line"
@@ -4410,13 +4445,6 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 const dimLineRightX = furnitureRightX + mmToThreeUnits(120);
                 const extLineRightX = dimLineRightX + mmToThreeUnits(20);
 
-                // 조절발/상부프레임 치수용 데이터
-                const footHeightMm = bottomRaiseActive ? 0 : (spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height || 65) : 0);
-                const topFrameMm = spaceInfo.frameSize?.top ?? 30;
-                // 바닥마감재 높이
-                const floorFinishMm = (spaceInfo.hasFloorFinish && spaceInfo.floorFinish) ? spaceInfo.floorFinish.height : 0;
-                const floorFinishY = mmToThreeUnits(floorFinishMm);
-
                 // 각 섹션에 대해 서브분할/바닥판올림이 있으면 분할된 높이 구간 목록, 없으면 전체 하나
                 const rightSegments: { startY: number; endY: number; heightMm: number }[] = [];
                 sectionRanges.forEach((range, idx) => {
@@ -4425,7 +4453,6 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   const subSplits = section.areaSubSplits;
                   let activeSub: any = null;
                   if (subSplits) {
-                    // right, left, center, full 순서로 활성화된 것 찾기
                     for (const key of ['right', 'left', 'center', 'full']) {
                       if (subSplits[key]?.enabled) {
                         activeSub = subSplits[key];
@@ -4437,11 +4464,9 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   // 바닥판 올림 확인 (첫 번째 섹션만, 영역별 areaFinish 포함)
                   let maxBottomRaiseMm = 0;
                   if (idx === 0) {
-                    // 섹션 레벨 바닥판 올림
                     if (section.bottomPanelRaise && section.bottomPanelRaise > 0) {
                       maxBottomRaiseMm = section.bottomPanelRaise;
                     }
-                    // 영역별 areaFinish 바닥판 올림 (최대값 사용)
                     if (section.areaFinish) {
                       for (const key of ['left', 'right', 'center', 'full']) {
                         const areaRaise = section.areaFinish[key]?.bottomPanelRaise;
@@ -4453,10 +4478,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   }
 
                   if (activeSub) {
-                    // 비율 기반 분할 (CustomizableBoxModule과 동일)
-                    // 서브분할은 섹션 내경 안에서 비율로 나누며, 중간에 별도 패널 없음
                     const ratio = activeSub.lowerHeight / section.height;
-                    const totalY = range.endY - range.startY; // 전체 외경 Three.js 높이
+                    const totalY = range.endY - range.startY;
                     const lowerY = totalY * ratio;
                     const splitY = range.startY + lowerY;
                     const lowerMm = Math.round(range.heightMm * ratio);
@@ -4464,7 +4487,6 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     rightSegments.push({ startY: range.startY, endY: splitY, heightMm: lowerMm });
                     rightSegments.push({ startY: splitY, endY: range.endY, heightMm: upperMm });
                   } else if (maxBottomRaiseMm > 0) {
-                    // 바닥판 올림: 하단(올림 높이)과 상단(나머지) 두 구간으로 분할
                     const totalYRange = range.endY - range.startY;
                     const raiseRatio = maxBottomRaiseMm / range.heightMm;
                     const raiseY = totalYRange * raiseRatio;
@@ -4476,33 +4498,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   }
                 });
 
-                // 조절발 + 섹션 + 상부프레임 전체 세그먼트 조합
-                const allRightSegments: { startY: number; endY: number; heightMm: number; isFrame?: boolean }[] = [];
-
-                // 1) 조절발 (바닥판 올림 시 조절발 없으므로 footHeightMm === 0)
-                if (footHeightMm > 0) {
-                  allRightSegments.push({
-                    startY: floorFinishY,
-                    endY: furnitureBaseY,
-                    heightMm: Math.round(footHeightMm),
-                    isFrame: true,
-                  });
-                }
-
-                // 2) 섹션 세그먼트
-                rightSegments.forEach(seg => allRightSegments.push(seg));
-
-                // 3) 상부프레임
-                if (topFrameMm > 0) {
-                  const topSegStartY = sectionRanges.length > 0 ? sectionRanges[sectionRanges.length - 1].endY : furnitureBaseY;
-                  const topSegEndY = topSegStartY + mmToThreeUnits(topFrameMm);
-                  allRightSegments.push({
-                    startY: topSegStartY,
-                    endY: topSegEndY,
-                    heightMm: Math.round(topFrameMm),
-                    isFrame: true,
-                  });
-                }
+                const allRightSegments = buildAllSegments(rightSegments);
 
                 return allRightSegments.map((seg, idx) => (
                   <group key={`custom-section-dim-right-${idx}`}>
@@ -4546,7 +4542,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                       depthTest={false}
                       position={[dimLineRightX + mmToThreeUnits(60), (seg.startY + seg.endY) / 2, 0.01]}
                       fontSize={baseFontSize}
-                      color={seg.isFrame ? '#999999' : textColor}
+                      color={textColor}
                       anchorX="center"
                       anchorY="middle"
                       outlineWidth={textOutlineWidth}
