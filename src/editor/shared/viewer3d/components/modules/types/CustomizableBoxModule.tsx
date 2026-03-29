@@ -252,6 +252,7 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
   const viewMode = useUIStore(state => state.viewMode);
   const view2DDirection = useUIStore(state => state.view2DDirection);
   const activePopup = useUIStore(state => state.activePopup);
+  const isLayoutBuilderOpen = useUIStore(state => state.isLayoutBuilderOpen);
   const { camera, gl } = useThree();
   const groupRef = useRef<THREE.Group>(null);
 
@@ -2482,6 +2483,30 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
         );
       })()}
       </group>
+
+      {/* 설계모드: 하부프레임(받침대) 반투명 표시 — 조절발이 비치도록 */}
+      {isLayoutBuilderOpen && spaceInfo.baseConfig?.type === 'floor' && category !== 'upper' && (() => {
+        const baseH = mmToUnit(spaceInfo.baseConfig?.height || 65);
+        const baseDepthOffset = mmToUnit(spaceInfo.baseConfig?.depth || 0);
+        const epThk = mmToUnit(18); // END_PANEL_THICKNESS
+        // 하부프레임 위치: 가구 하단 아래, 조절발 영역 앞면
+        const baseY = -H / 2 - baseH / 2;
+        const baseZ = D / 2 - epThk / 2 - baseDepthOffset;
+        const effectiveFW = lowerSectionDepth
+          ? mmToUnit(lowerSectionDepth > 0 ? width : width)
+          : W;
+        return (
+          <mesh position={[0, baseY, baseZ]} renderOrder={-1}>
+            <boxGeometry args={[effectiveFW, baseH, epThk]} />
+            <meshStandardMaterial
+              color="#C0C0C0"
+              transparent
+              opacity={0.35}
+              depthWrite={false}
+            />
+          </mesh>
+        );
+      })()}
 
       {/* 엔드패널(EP) 렌더링 — 표준 모듈과 동일한 높이 로직 적용 */}
       {(() => {

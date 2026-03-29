@@ -5589,12 +5589,7 @@ const Room: React.FC<RoomProps> = ({
         if (isAllRaised) return null;
         return true;
       })() && (() => {
-// console.log('🎯 베이스프레임 높이 확인:', {
-          // '최종_높이': baseFrameHeightMm,
-          // baseFrameHeight_ThreeUnits: baseFrameHeight,
-          // spaceInfo_baseConfig: spaceInfo.baseConfig,
-          // END_PANEL_THICKNESS
-        // });
+// console.log('🎯 [하부프레임] 렌더링 진입, isFreePlacement:', isFreePlacement);
 
         // 자유배치 모드: 가구별 개별 하부프레임 렌더링 (상부프레임과 동일 패턴)
         if (isFreePlacement) {
