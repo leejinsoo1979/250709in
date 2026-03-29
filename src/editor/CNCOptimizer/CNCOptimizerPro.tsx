@@ -777,11 +777,12 @@ function PageInner(){
           // Convert to optimizer format
           // stockPanel: width=W방향(1220), height=L방향(2440)
           // 캔버스는 rotation=-90으로 가로로 표시됨
+          // material: 그룹의 material을 우선 사용 (stock 폴백 시에도 패널 재질 유지)
           const stockPanel = {
             id: matchingStock.label || 'stock',
             width: matchingStock.width,   // 1220 (W방향)
             height: matchingStock.length, // 2440 (L방향)
-            material: matchingStock.material || 'PB',
+            material: material || matchingStock.material || 'PB',
             color: 'MW',
             price: 50000,
             stock: matchingStock.quantity,
