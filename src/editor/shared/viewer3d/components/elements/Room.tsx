@@ -5620,7 +5620,7 @@ const Room: React.FC<RoomProps> = ({
               const modBaseHeightMm = mod.baseFrameHeight ?? (spaceInfo.baseConfig?.height ?? 65);
               const modBaseH = mmToThreeUnits(modBaseHeightMm);
 
-              // 커스터마이즈 가구 좌우분할: 부분적 bottomPanelRaise → 하부프레임 분절
+              // 커스터마이즈 가구 좌우분할: 무조건 하부프레임도 영역별 분할
               const customSec0 = (mod as any).customConfig?.sections?.[0];
               if (customSec0?.horizontalSplit && customSec0.areaFinish) {
                 const hs = customSec0.horizontalSplit;
@@ -5635,70 +5635,62 @@ const Room: React.FC<RoomProps> = ({
                 const rightRaise = customSec0.areaFinish['right']?.bottomPanelRaise ?? 0;
                 const centerRaise = is3split ? (customSec0.areaFinish['center']?.bottomPanelRaise ?? 0) : 0;
                 const allRaised = leftRaise > 0 && rightRaise > 0 && (!is3split || centerRaise > 0);
-                const hasPartialRaise = (leftRaise > 0 || rightRaise > 0 || centerRaise > 0) && !allRaised;
 
                 if (allRaised) return; // 전체 올림 → 하부프레임 없음
-                if (hasPartialRaise) {
-                  const modLeftMm = modCenterXmm - modWidthMM / 2;
 
-                  // 구간 배열: 좌측판 | 좌영역 | 칸막이 | (중영역 | 칸막이) | 우영역 | 우측판
-                  const segments: { startX: number; width: number; raised: boolean }[] = [];
-                  let curX = modLeftMm;
-                  // 좌측 측판
-                  segments.push({ startX: curX, width: pnlThk, raised: false });
-                  curX += pnlThk;
-                  // 좌측 영역 (내경)
-                  segments.push({ startX: curX, width: leftInnerW, raised: leftRaise > 0 });
-                  curX += leftInnerW;
-                  // 칸막이
-                  segments.push({ startX: curX, width: pnlThk, raised: false });
-                  curX += pnlThk;
-                  if (is3split) {
-                    // 중앙 영역
-                    segments.push({ startX: curX, width: centerInnerW, raised: centerRaise > 0 });
-                    curX += centerInnerW;
-                    // 칸막이
-                    segments.push({ startX: curX, width: pnlThk, raised: false });
-                    curX += pnlThk;
-                  }
-                  // 우측 영역 (내경)
-                  segments.push({ startX: curX, width: Math.max(0, rightInnerW), raised: rightRaise > 0 });
-                  curX += Math.max(0, rightInnerW);
-                  // 우측 측판
-                  segments.push({ startX: curX, width: pnlThk, raised: false });
+                // 좌우분할 시 무조건 영역별로 하부프레임 분할
+                // 각 영역 piece = 측판 + 내경 (양 끝), 칸막이 절반씩 분배
+                const modLeftMm = modCenterXmm - modWidthMM / 2;
+                const halfPnl = pnlThk / 2;
 
-                  // 연속된 non-raised 구간을 병합하여 하부프레임 세그먼트 생성
-                  let mergeStart = -1;
-                  let mergeEnd = -1;
-                  const merged: { startX: number; endX: number }[] = [];
-                  segments.forEach((seg) => {
-                    if (!seg.raised && seg.width > 0) {
-                      if (mergeStart < 0) mergeStart = seg.startX;
-                      mergeEnd = seg.startX + seg.width;
-                    } else if (seg.raised) {
-                      if (mergeStart >= 0) {
-                        merged.push({ startX: mergeStart, endX: mergeEnd });
-                        mergeStart = -1;
-                      }
-                    }
+                // 좌측 영역: 좌측판(전체) + 좌내경 + 칸막이(절반)
+                if (leftRaise <= 0) {
+                  const leftPieceW = pnlThk + leftInnerW + halfPnl;
+                  const leftPieceStartX = modLeftMm;
+                  allBaseSegments.push({
+                    widthMm: leftPieceW,
+                    centerXmm: leftPieceStartX + leftPieceW / 2,
+                    zPosition: baseZPosition,
+                    height: modBaseH,
+                    yPosition: panelStartY + floatHeight + modBaseH / 2,
+                    material: baseMat,
+                    key: `free-base-strip-${group.id}-${mod.id}-left`,
+                    placedModuleId: mod.id,
                   });
-                  if (mergeStart >= 0) merged.push({ startX: mergeStart, endX: mergeEnd });
-
-                  merged.forEach((m, aIdx) => {
-                    const w = m.endX - m.startX;
-                    allBaseSegments.push({
-                      widthMm: w,
-                      centerXmm: m.startX + w / 2,
-                      zPosition: baseZPosition,
-                      height: modBaseH,
-                      yPosition: panelStartY + floatHeight + modBaseH / 2,
-                      material: baseMat,
-                      key: `free-base-strip-${group.id}-${mod.id}-split-${aIdx}`,
-                      placedModuleId: mod.id,
-                    });
-                  });
-                  return;
                 }
+
+                // 중앙 영역 (3분할 시): 칸막이(절반) + 중내경 + 칸막이(절반)
+                if (is3split && centerRaise <= 0) {
+                  const centerStartX = modLeftMm + pnlThk + leftInnerW + halfPnl;
+                  const centerPieceW = halfPnl + centerInnerW + halfPnl;
+                  allBaseSegments.push({
+                    widthMm: centerPieceW,
+                    centerXmm: centerStartX + centerPieceW / 2,
+                    zPosition: baseZPosition,
+                    height: modBaseH,
+                    yPosition: panelStartY + floatHeight + modBaseH / 2,
+                    material: baseMat,
+                    key: `free-base-strip-${group.id}-${mod.id}-center`,
+                    placedModuleId: mod.id,
+                  });
+                }
+
+                // 우측 영역: 칸막이(절반) + 우내경 + 우측판(전체)
+                if (rightRaise <= 0) {
+                  const rightStartX = modLeftMm + pnlThk + leftInnerW + (is3split ? pnlThk + centerInnerW : 0) + halfPnl;
+                  const rightPieceW = halfPnl + Math.max(0, rightInnerW) + pnlThk;
+                  allBaseSegments.push({
+                    widthMm: rightPieceW,
+                    centerXmm: rightStartX + rightPieceW / 2,
+                    zPosition: baseZPosition,
+                    height: modBaseH,
+                    yPosition: panelStartY + floatHeight + modBaseH / 2,
+                    material: baseMat,
+                    key: `free-base-strip-${group.id}-${mod.id}-right`,
+                    placedModuleId: mod.id,
+                  });
+                }
+                return;
               }
               // 섹션 전체 bottomPanelRaise → 하부프레임 없음
               if (customSec0?.bottomPanelRaise && customSec0.bottomPanelRaise > 0) return;
@@ -5880,12 +5872,12 @@ const Room: React.FC<RoomProps> = ({
                       const modBaseH = mmToThreeUnits(modBaseHeight);
                       const modBaseZOffset = mod.baseFrameOffset ? mmToThreeUnits(mod.baseFrameOffset) : 0;
 
-                      // 커스터마이즈 가구 좌우분할: 부분적 bottomPanelRaise → 하부프레임 분절
+                      // 커스터마이즈 가구 좌우분할: 무조건 하부프레임도 영역별 분할
                       const customSec0 = (mod as any).customConfig?.sections?.[0];
                       if (customSec0?.horizontalSplit && customSec0.areaFinish) {
                         const hs = customSec0.horizontalSplit;
                         const pnlThk = customSec0.panelThickness || (mod as any).customConfig?.panelThickness || 18;
-                        const innerW = modWidthMM - 2 * pnlThk; // 외경에서 좌우 측판 제외
+                        const innerW = modWidthMM - 2 * pnlThk;
                         const leftInnerW = hs.position;
                         const is3split = hs.secondPosition !== undefined;
                         const centerInnerW = is3split ? hs.secondPosition : 0;
@@ -5894,74 +5886,62 @@ const Room: React.FC<RoomProps> = ({
                         const leftRaise = customSec0.areaFinish['left']?.bottomPanelRaise ?? 0;
                         const rightRaise = customSec0.areaFinish['right']?.bottomPanelRaise ?? 0;
                         const centerRaise = is3split ? (customSec0.areaFinish['center']?.bottomPanelRaise ?? 0) : 0;
-                        const hasPartialRaise = (leftRaise > 0 || rightRaise > 0 || centerRaise > 0) &&
-                          !(leftRaise > 0 && rightRaise > 0 && (!is3split || centerRaise > 0));
+                        const allRaised = leftRaise > 0 && rightRaise > 0 && (!is3split || centerRaise > 0);
 
-                        if (hasPartialRaise) {
-                          // 모듈 좌측 끝 (mm) — 엔드패널 제외 후
-                          const modLeftMm = modCenterXmm - modWidthMM / 2;
+                        if (allRaised) return; // 전체 올림 → 하부프레임 없음
 
-                          // 구간 배열: 좌측판 | 좌영역 | 칸막이 | (중영역 | 칸막이) | 우영역 | 우측판
-                          // 각 구간의 startX, width, raised 여부 (측판/칸막이는 raised=false)
-                          const segments: { startX: number; width: number; raised: boolean }[] = [];
-                          let curX = modLeftMm;
-                          // 좌측 측판
-                          segments.push({ startX: curX, width: pnlThk, raised: false });
-                          curX += pnlThk;
-                          // 좌측 영역 (내경)
-                          segments.push({ startX: curX, width: leftInnerW, raised: leftRaise > 0 });
-                          curX += leftInnerW;
-                          // 칸막이
-                          segments.push({ startX: curX, width: pnlThk, raised: false });
-                          curX += pnlThk;
-                          if (is3split) {
-                            // 중앙 영역
-                            segments.push({ startX: curX, width: centerInnerW, raised: centerRaise > 0 });
-                            curX += centerInnerW;
-                            // 칸막이
-                            segments.push({ startX: curX, width: pnlThk, raised: false });
-                            curX += pnlThk;
-                          }
-                          // 우측 영역 (내경)
-                          segments.push({ startX: curX, width: Math.max(0, rightInnerW), raised: rightRaise > 0 });
-                          curX += Math.max(0, rightInnerW);
-                          // 우측 측판
-                          segments.push({ startX: curX, width: pnlThk, raised: false });
+                        // 좌우분할 시 무조건 영역별로 하부프레임 분할
+                        const modLeftMm = modCenterXmm - modWidthMM / 2;
+                        const halfPnl = pnlThk / 2;
 
-                          // 연속된 non-raised 구간을 병합하여 하부프레임 세그먼트 생성
-                          let mergeStart = -1;
-                          let mergeEnd = -1;
-                          const merged: { startX: number; endX: number }[] = [];
-                          segments.forEach((seg) => {
-                            if (!seg.raised && seg.width > 0) {
-                              if (mergeStart < 0) mergeStart = seg.startX;
-                              mergeEnd = seg.startX + seg.width;
-                            } else if (seg.raised) {
-                              if (mergeStart >= 0) {
-                                merged.push({ startX: mergeStart, endX: mergeEnd });
-                                mergeStart = -1;
-                              }
-                            }
+                        // 좌측 영역: 좌측판(전체) + 좌내경 + 칸막이(절반)
+                        if (leftRaise <= 0) {
+                          const leftPieceW = pnlThk + leftInnerW + halfPnl;
+                          const leftPieceStartX = modLeftMm;
+                          slotBaseSegments.push({
+                            widthMm: leftPieceW,
+                            centerXmm: leftPieceStartX + leftPieceW / 2,
+                            zPosition: baseZPos + modBaseZOffset,
+                            height: modBaseH,
+                            yPosition: panelStartY + floatHeight + modBaseH / 2,
+                            material: baseMat,
+                            key: `slot-base-${mod.id}-left`,
+                            placedModuleId: mod.id,
                           });
-                          if (mergeStart >= 0) merged.push({ startX: mergeStart, endX: mergeEnd });
-
-                          merged.forEach((m, aIdx) => {
-                            const w = m.endX - m.startX;
-                            slotBaseSegments.push({
-                              widthMm: w,
-                              centerXmm: m.startX + w / 2,
-                              zPosition: baseZPos + modBaseZOffset,
-                              height: modBaseH,
-                              yPosition: panelStartY + floatHeight + modBaseH / 2,
-                              material: baseMat,
-                              key: `slot-base-${mod.id}-split-${aIdx}`,
-                              placedModuleId: mod.id,
-                            });
-                          });
-                          return; // 분절 완료, 전체 세그먼트 추가하지 않음
                         }
-                        // 전체 올림이면 하부프레임 없음
-                        if (leftRaise > 0 && rightRaise > 0 && (!is3split || centerRaise > 0)) return;
+
+                        // 중앙 영역 (3분할 시): 칸막이(절반) + 중내경 + 칸막이(절반)
+                        if (is3split && centerRaise <= 0) {
+                          const centerStartX = modLeftMm + pnlThk + leftInnerW + halfPnl;
+                          const centerPieceW = halfPnl + centerInnerW + halfPnl;
+                          slotBaseSegments.push({
+                            widthMm: centerPieceW,
+                            centerXmm: centerStartX + centerPieceW / 2,
+                            zPosition: baseZPos + modBaseZOffset,
+                            height: modBaseH,
+                            yPosition: panelStartY + floatHeight + modBaseH / 2,
+                            material: baseMat,
+                            key: `slot-base-${mod.id}-center`,
+                            placedModuleId: mod.id,
+                          });
+                        }
+
+                        // 우측 영역: 칸막이(절반) + 우내경 + 우측판(전체)
+                        if (rightRaise <= 0) {
+                          const rightStartX = modLeftMm + pnlThk + leftInnerW + (is3split ? pnlThk + centerInnerW : 0) + halfPnl;
+                          const rightPieceW = halfPnl + Math.max(0, rightInnerW) + pnlThk;
+                          slotBaseSegments.push({
+                            widthMm: rightPieceW,
+                            centerXmm: rightStartX + rightPieceW / 2,
+                            zPosition: baseZPos + modBaseZOffset,
+                            height: modBaseH,
+                            yPosition: panelStartY + floatHeight + modBaseH / 2,
+                            material: baseMat,
+                            key: `slot-base-${mod.id}-right`,
+                            placedModuleId: mod.id,
+                          });
+                        }
+                        return;
                       }
                       // 섹션 전체 bottomPanelRaise → 하부프레임 없음
                       if (customSec0?.bottomPanelRaise && customSec0.bottomPanelRaise > 0) return;
