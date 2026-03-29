@@ -1260,7 +1260,7 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
             const fullBackPanelHeight = innerHeight + mmToThreeUnits(36);
             const fullBackPanelZ = -leftDepth/2 + backPanelThickness/2 + (basicThickness - mmToThreeUnits(1));
             const reinforcementHeight = mmToThreeUnits(60);
-            const reinforcementDepth = mmToThreeUnits(15);
+            const reinforcementDepth = mmToThreeUnits(((basicThickness / 0.01) === 18.5 || (basicThickness / 0.01) === 15.5) ? 15.5 : 15);
             const reinforcementZ = fullBackPanelZ - backPanelThickness/2 - reinforcementDepth/2;
 
             return (
@@ -1328,7 +1328,7 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
 
           // 보강대 치수
           const reinforcementHeight = mmToThreeUnits(60);
-          const reinforcementDepth = mmToThreeUnits(15);
+          const reinforcementDepth = mmToThreeUnits(((basicThickness / 0.01) === 18.5 || (basicThickness / 0.01) === 15.5) ? 15.5 : 15);
           const lowerReinforcementZ = lowerBackPanelZ - backPanelThickness/2 - reinforcementDepth/2;
           const upperReinforcementZ = upperBackPanelZ - backPanelThickness/2 - reinforcementDepth/2;
 
@@ -1449,7 +1449,7 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
           const rightBackPanelHeight = innerHeight + mmToThreeUnits(36);
           const rightBackPanelZ = -rightDepth/2 + backPanelThickness/2 + (basicThickness - mmToThreeUnits(1)) + (leftDepth - rightDepth) / 2;
           const reinforcementHeight = mmToThreeUnits(60);
-          const reinforcementDepth = mmToThreeUnits(15);
+          const reinforcementDepth = mmToThreeUnits(((basicThickness / 0.01) === 18.5 || (basicThickness / 0.01) === 15.5) ? 15.5 : 15);
           const rightReinforcementZ = rightBackPanelZ - backPanelThickness/2 - reinforcementDepth/2;
 
           return (

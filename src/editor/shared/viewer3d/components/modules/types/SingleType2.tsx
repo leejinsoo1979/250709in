@@ -664,7 +664,7 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
                     2D 정면도에서는 숨김 (백패널 뒤에 위치하지만 선 렌더링으로 보임) */}
                 {!(viewMode === '2D' && view2DDirection === 'front') && (() => {
                   const reinforcementHeight = mmToThreeUnits(60);
-                  const reinforcementDepth = mmToThreeUnits(15);
+                  const reinforcementDepth = mmToThreeUnits((basicThicknessMmVal === 18.5 || basicThicknessMmVal === 15.5) ? 15.5 : 15);
                   // 양쪽 0.5mm씩 축소 (총 1mm)
                   const reinforcementWidth = innerWidth - sidePanelGap;
                   const lowerReinforcementZ = lowerBackPanelZ - backPanelThickness/2 - reinforcementDepth/2;
@@ -749,7 +749,7 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
           {!(viewMode === '2D' && view2DDirection === 'front') && (() => {
             const singleBackPanelHeight = innerHeight + mmToThreeUnits(10 + 26);
             const reinforcementHeight = mmToThreeUnits(60);
-            const reinforcementDepth = mmToThreeUnits(15);
+            const reinforcementDepth = mmToThreeUnits((basicThicknessMmVal === 18.5 || basicThicknessMmVal === 15.5) ? 15.5 : 15);
             // 양쪽 0.5mm씩 축소 (총 1mm)
             const reinforcementWidth = innerWidth - sidePanelGap;
             const backPanelZ = -depth/2 + backPanelThickness/2 + (basicThickness - mmToThreeUnits(1));

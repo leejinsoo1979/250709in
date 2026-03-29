@@ -1045,7 +1045,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                         상부/측면 뷰에서만 표시됨 */}
                     {!(viewMode === '2D' && view2DDirection === 'front') && (() => {
                       const reinforcementHeight = mmToThreeUnits(60);
-                      const reinforcementDepth = mmToThreeUnits(15);
+                      const reinforcementDepth = mmToThreeUnits((basicThicknessMm === 18.5 || basicThicknessMm === 15.5) ? 15.5 : 15);
                       // 양쪽 0.5mm씩 축소 (총 1mm)
                       const reinforcementWidth = innerWidth - sidePanelGap;
                       // 보강대 Z 위치: 백패널 뒤쪽
@@ -1166,7 +1166,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                         상부/측면 뷰에서만 표시됨 */}
                     {!(viewMode === '2D' && view2DDirection === 'front') && (() => {
                       const reinforcementHeight = mmToThreeUnits(60);
-                      const reinforcementDepth = mmToThreeUnits(15);
+                      const reinforcementDepth = mmToThreeUnits((basicThicknessMm === 18.5 || basicThicknessMm === 15.5) ? 15.5 : 15);
                       // 양쪽 0.5mm씩 축소 (총 1mm)
                       const reinforcementWidth = innerWidth - sidePanelGap;
                       const backPanelZ = -depth/2 + backPanelThickness/2 + mmToThreeUnits(backPanelConfig.depthOffset);

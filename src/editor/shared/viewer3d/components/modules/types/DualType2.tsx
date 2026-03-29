@@ -445,7 +445,7 @@ const DualType2: React.FC<FurnitureTypeProps> = ({
                     상부/측면 뷰에서만 표시됨 */}
                 {!(viewMode === '2D' && view2DDirection === 'front') && (() => {
                   const reinforcementHeight = mmToThreeUnits(60);
-                  const reinforcementDepth = mmToThreeUnits(15);
+                  const reinforcementDepth = mmToThreeUnits((basicThicknessMmVal === 18.5 || basicThicknessMmVal === 15.5) ? 15.5 : 15);
                   // 양쪽 0.5mm씩 축소 (총 1mm)
                   const reinforcementWidth = innerWidth - sidePanelGap;
                   const lowerBackPanelZ = -lowerSectionDepth/2 + backPanelThickness/2 + (basicThickness - mmToThreeUnits(1)) + lowerZOffset;
@@ -528,7 +528,7 @@ const DualType2: React.FC<FurnitureTypeProps> = ({
           {!(viewMode === '2D' && view2DDirection === 'front') && (() => {
             const singleBackPanelHeight = innerHeight + mmToThreeUnits(36);
             const reinforcementHeight = mmToThreeUnits(60);
-            const reinforcementDepth = mmToThreeUnits(15);
+            const reinforcementDepth = mmToThreeUnits((basicThicknessMmVal === 18.5 || basicThicknessMmVal === 15.5) ? 15.5 : 15);
             // 양쪽 0.5mm씩 축소 (총 1mm)
             const reinforcementWidth = innerWidth - sidePanelGap;
             const backPanelZ = -depth/2 + backPanelThickness/2 + (basicThickness - mmToThreeUnits(1));
