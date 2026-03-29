@@ -2546,18 +2546,26 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
             : totalInnerWMm - leftInnerWMm - 2 * panelThickness;
           const pnlW = mmToUnit(panelThickness);
 
+          // 영역별 raised 여부
+          const leftR = getAreaRaised('left');
+          const centerR = is3Split ? getAreaRaised('center') : false;
+          const rightR = getAreaRaised('right');
+
           // 세그먼트 배열: [좌측판 | 좌내경 | 칸막이 | (중내경 | 칸막이 |) 우내경 | 우측판]
+          // 측판: 인접 영역의 raised를 따름, 칸막이: 양쪽 다 raised일 때만 raised
           const segments: { startX: number; width: number; raised: boolean }[] = [];
           let curX = -footWidth / 2;
-          segments.push({ startX: curX, width: pnlW, raised: false }); curX += pnlW;
-          segments.push({ startX: curX, width: mmToUnit(leftInnerWMm), raised: getAreaRaised('left') }); curX += mmToUnit(leftInnerWMm);
-          segments.push({ startX: curX, width: pnlW, raised: false }); curX += pnlW;
+          segments.push({ startX: curX, width: pnlW, raised: leftR }); curX += pnlW;
+          segments.push({ startX: curX, width: mmToUnit(leftInnerWMm), raised: leftR }); curX += mmToUnit(leftInnerWMm);
           if (is3Split) {
-            segments.push({ startX: curX, width: mmToUnit(centerInnerWMm), raised: getAreaRaised('center') }); curX += mmToUnit(centerInnerWMm);
-            segments.push({ startX: curX, width: pnlW, raised: false }); curX += pnlW;
+            segments.push({ startX: curX, width: pnlW, raised: leftR && centerR }); curX += pnlW;
+            segments.push({ startX: curX, width: mmToUnit(centerInnerWMm), raised: centerR }); curX += mmToUnit(centerInnerWMm);
+            segments.push({ startX: curX, width: pnlW, raised: centerR && rightR }); curX += pnlW;
+          } else {
+            segments.push({ startX: curX, width: pnlW, raised: leftR && rightR }); curX += pnlW;
           }
-          segments.push({ startX: curX, width: mmToUnit(Math.max(0, rightInnerWMm)), raised: getAreaRaised('right') }); curX += mmToUnit(Math.max(0, rightInnerWMm));
-          segments.push({ startX: curX, width: pnlW, raised: false });
+          segments.push({ startX: curX, width: mmToUnit(Math.max(0, rightInnerWMm)), raised: rightR }); curX += mmToUnit(Math.max(0, rightInnerWMm));
+          segments.push({ startX: curX, width: pnlW, raised: rightR });
 
           // 연속 비올림 세그먼트 병합
           const merged: { startX: number; endX: number }[] = [];
