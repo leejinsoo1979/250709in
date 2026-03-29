@@ -1106,10 +1106,21 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
         // DrawerRenderer 내부: 바닥gap + (서랍+gap)*n = sum(heights) + (n+1)*gap
         const totalDrawerHeightMm = el.heights.reduce((sum: number, h: number) => sum + h, 0)
           + gapHeight * (drawerCount + 1);
-        const totalDrawerInnerH = Math.min(mmToUnit(totalDrawerHeightMm), areaInnerHeight);
+        const areaInnerHeightMm = areaInnerHeight / 0.01; // Three.js → mm 변환
+        const clampedTotalMm = Math.min(totalDrawerHeightMm, areaInnerHeightMm);
+        const totalDrawerInnerH = mmToUnit(clampedTotalMm);
 
         // 서랍이 영역 전체를 채우는지 판단
         const isFullFill = totalDrawerInnerH >= areaInnerHeight - t;
+
+        // 서랍 높이가 가용 내경을 초과하면 비례 축소
+        let adjustedDrawerHeights = el.heights;
+        let adjustedGapHeight = gapHeight;
+        if (totalDrawerHeightMm > areaInnerHeightMm) {
+          const scale = areaInnerHeightMm / totalDrawerHeightMm;
+          adjustedDrawerHeights = el.heights.map((h: number) => h * scale);
+          adjustedGapHeight = gapHeight * scale;
+        }
 
         // 서랍 yOffset과 innerHeight 결정 — 항상 가용 내경(areaInnerHeight) 범위 내 배치
         let drawerYOffset: number;
@@ -1139,8 +1150,8 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
               depth={sectionDepth}
               basicThickness={t}
               yOffset={drawerYOffset}
-              drawerHeights={el.heights}
-              gapHeight={gapHeight}
+              drawerHeights={adjustedDrawerHeights}
+              gapHeight={adjustedGapHeight}
               material={material}
               renderMode={renderMode}
               isHighlighted={isHighlighted}
