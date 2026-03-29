@@ -87,9 +87,9 @@ export const useFurnitureSpaceAdapter = ({ setPlacedModules }: UseFurnitureSpace
             }
           }
 
-          // moduleId 업데이트 (너비 포함된 경우)
+          // moduleId 업데이트 (너비 포함된 경우, 커스텀 가구는 moduleId 보존)
           let newModuleId = module.moduleId;
-          if (needsResize) {
+          if (needsResize && !module.moduleId.startsWith('customizable-')) {
             const baseType = module.baseModuleType || module.moduleId.replace(/-[\d.]+$/, '');
             newModuleId = `${baseType}-${Math.round(newWidth * 10) / 10}`;
           }
@@ -130,14 +130,14 @@ export const useFurnitureSpaceAdapter = ({ setPlacedModules }: UseFurnitureSpace
           
           // 영역별 모듈 데이터 가져오기
           const moduleData = getModuleById(module.moduleId, zoneInternalSpace, zoneSpaceInfo);
-          if (!moduleData) {
+          if (!moduleData && !module.moduleId.startsWith('customizable-')) {
             updatedModules.push({
               ...module,
               isValidInCurrentSpace: false
             });
             return;
           }
-          
+
           // 영역 내에서 위치 재계산
           const slotIndex = module.slotIndex || 0;
           if (slotIndex >= targetZone.columnCount) {
@@ -147,20 +147,19 @@ export const useFurnitureSpaceAdapter = ({ setPlacedModules }: UseFurnitureSpace
             });
             return;
           }
-          
-          const isDual = module.moduleId.startsWith('dual-');
+
+          const isDual = module.isDualSlot || module.moduleId.startsWith('dual-');
 
           // slotWidths가 있으면 사용 (이격거리 반영된 실제 슬롯 너비)
           const slotWidth = targetZone.slotWidths?.[slotIndex] ?? targetZone.columnWidth;
           const newX = targetZone.startX + (slotIndex * slotWidth) +
                       (isDual ? slotWidth : slotWidth / 2);
 
-          // 영역에 맞는 새로운 moduleId 생성
-          // 모듈 타입(single/dual)을 유지하면서 새로운 너비로 업데이트
-          // 소수점 포함 숫자만 정확히 제거하는 패턴
-          const baseType = module.baseModuleType || module.moduleId.replace(/-[\d.]+$/, ''); // baseModuleType 우선 사용
+          // 커스텀 가구: moduleId 보존, 표준 모듈: 새 너비로 moduleId 업데이트
+          const isCustom = module.moduleId.startsWith('customizable-');
+          const baseType = module.baseModuleType || module.moduleId.replace(/-[\d.]+$/, '');
           const moduleWidth = isDual ? slotWidth * 2 : slotWidth;
-          const newModuleId = `${baseType}-${Math.round(moduleWidth * 10) / 10}`;
+          const newModuleId = isCustom ? module.moduleId : `${baseType}-${Math.round(moduleWidth * 10) / 10}`;
 
           // slotWidths에서 customWidth 계산 (이격거리 반영)
           let newCustomWidth: number = moduleWidth; // 기본값: 슬롯 너비 기반
@@ -188,15 +187,71 @@ export const useFurnitureSpaceAdapter = ({ setPlacedModules }: UseFurnitureSpace
         // zone 정보가 없는 기존 가구들을 위한 폴백 로직
         const oldInternalSpace = calculateInternalSpace(oldSpaceInfo);
         const moduleData = getModuleById(module.moduleId, oldInternalSpace, oldSpaceInfo);
-        
+
+        // ─── 커스텀 가구(customizable-*): moduleId 보존, 위치/너비만 업데이트 ───
+        const isCustomizable = module.moduleId.startsWith('customizable-');
+        if (isCustomizable) {
+          let slotIndex = module.slotIndex ?? 0;
+          const isDual = module.isDualSlot || false;
+
+          // 슬롯 범위 확인
+          if (slotIndex >= newIndexing.columnCount) {
+            slotIndex = Math.max(0, newIndexing.columnCount - (isDual ? 2 : 1));
+          }
+          // 듀얼 가구: 다음 슬롯이 유효한지 확인
+          if (isDual && slotIndex + 1 >= newIndexing.columnCount) {
+            slotIndex = Math.max(0, newIndexing.columnCount - 2);
+          }
+
+          // 충돌 검사
+          if (!isSlotAvailable(slotIndex, isDual, updatedModules, newSpaceInfo, module.moduleId, module.id)) {
+            let newSlot = findNextAvailableSlot(slotIndex, 'right', isDual, updatedModules, newSpaceInfo, module.moduleId, module.id);
+            if (newSlot === null) {
+              newSlot = findNextAvailableSlot(slotIndex, 'left', isDual, updatedModules, newSpaceInfo, module.moduleId, module.id);
+            }
+            if (newSlot !== null) {
+              slotIndex = newSlot;
+            } else {
+              updatedModules.push({ ...module, isValidInCurrentSpace: false });
+              return;
+            }
+          }
+
+          // 새 위치/너비 계산
+          const newX = isDual && newIndexing.threeUnitDualPositions
+            ? newIndexing.threeUnitDualPositions[slotIndex]
+            : newIndexing.threeUnitPositions[slotIndex];
+
+          let newCustomWidth: number | undefined;
+          if (newIndexing.slotWidths && newIndexing.slotWidths[slotIndex] !== undefined) {
+            newCustomWidth = isDual && slotIndex + 1 < newIndexing.slotWidths.length
+              ? newIndexing.slotWidths[slotIndex] + newIndexing.slotWidths[slotIndex + 1]
+              : newIndexing.slotWidths[slotIndex];
+          }
+          const newModuleWidth = isDual ? newIndexing.columnWidth * 2 : newIndexing.columnWidth;
+
+          updatedModules.push({
+            ...module,
+            // moduleId 보존 (customizable-full-1000 그대로)
+            moduleWidth: newCustomWidth || newModuleWidth,
+            position: { ...module.position, x: newX },
+            slotIndex,
+            isDualSlot: isDual, // 기존 isDualSlot 유지
+            isValidInCurrentSpace: true,
+            customWidth: newCustomWidth,
+            adjustedWidth: undefined,
+          });
+          return;
+        }
+
         let slotIndex: number | undefined = module.slotIndex;
-        
+
         // slotIndex가 없는 경우에만 위치에서 계산 (하위 호환성)
         if (slotIndex === undefined && moduleData) {
           const isDualFurniture = Math.abs(moduleData.dimensions.width - (oldIndexing.columnWidth * 2)) < 50;
           slotIndex = findSlotIndexFromPosition(module.position, oldIndexing, isDualFurniture);
         }
-        
+
         if (slotIndex === undefined || slotIndex < 0) {
           // 가구 삭제 대신 원래 위치에 그대로 유지
           updatedModules.push({
@@ -205,18 +260,18 @@ export const useFurnitureSpaceAdapter = ({ setPlacedModules }: UseFurnitureSpace
           });
           return;
         }
-        
+
         // 새로운 moduleId 계산 (동적 모듈의 경우 숫자 부분을 새로운 컬럼 폭으로 교체)
         let newModuleId = module.moduleId;
-        let isDualModule = false;
-        
+        let isDualModule = module.isDualSlot || false;
+
         // 듀얼 모듈 패턴 처리 (숫자가 컬럼폭*2인 경우)
         const dualPatterns = [
           /^(dual-[^-]+(?:-[^-]+)*)-(\d+(?:\.\d+)?)$/,  // dual-2drawer-hanging-1200, dual-2tier-hanging-1200 등
           /^(dual-upper-cabinet-[^-]+(?:-[^-]+)*)-(\d+(?:\.\d+)?)$/,  // dual-upper-cabinet-shelf-1200 등
           /^(dual-lower-cabinet-[^-]+(?:-[^-]+)*)-(\d+(?:\.\d+)?)$/,  // dual-lower-cabinet-2tier-1200 등
         ];
-        
+
         for (const pattern of dualPatterns) {
           const match = module.moduleId.match(pattern);
           if (match) {
@@ -226,15 +281,11 @@ export const useFurnitureSpaceAdapter = ({ setPlacedModules }: UseFurnitureSpace
               // 소수점 1자리까지 정확히 처리
               newModuleId = `${match[1]}-${Math.round(newIndexing.columnWidth * 2 * 10) / 10}`;
               isDualModule = true;
-              
-              // 디버깅: hanging 타입 체크
-              if (module.moduleId.includes('hanging')) {
-              }
               break;
             }
           }
         }
-        
+
         // 싱글 모듈 패턴 처리 (듀얼이 아닌 경우)
         if (!isDualModule) {
           const singlePatterns = [
@@ -242,7 +293,7 @@ export const useFurnitureSpaceAdapter = ({ setPlacedModules }: UseFurnitureSpace
             /^(upper-cabinet-[^-]+(?:-[^-]+)*)-(\d+(?:\.\d+)?)$/,  // upper-cabinet-shelf-600 등
             /^(lower-cabinet-[^-]+(?:-[^-]+)*)-(\d+(?:\.\d+)?)$/,  // lower-cabinet-2tier-600 등
           ];
-          
+
           let patternMatched = false;
           for (const pattern of singlePatterns) {
             const match = module.moduleId.match(pattern);
@@ -253,7 +304,7 @@ export const useFurnitureSpaceAdapter = ({ setPlacedModules }: UseFurnitureSpace
               break;
             }
           }
-          
+
           // 패턴 매칭 실패 시 기본 패턴으로 폴백
           if (!patternMatched) {
             // baseModuleType이 있으면 사용, 없으면 기본값
@@ -404,7 +455,7 @@ export const useFurnitureSpaceAdapter = ({ setPlacedModules }: UseFurnitureSpace
           moduleWidth: newCustomWidth || newModuleWidth, // 새 슬롯 너비로 업데이트
           position: { ...module.position, x: newX },
           slotIndex,
-          isDualSlot: newModuleId.includes('dual'),
+          isDualSlot: isDualModule,
           isValidInCurrentSpace: true,
           zone,
           customWidth: newCustomWidth,
