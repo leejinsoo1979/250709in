@@ -400,9 +400,12 @@ function PageInner(){
 
           const grain: Grain = isBackPanel ? 'H' : (p.grain === 'NONE' ? 'NONE' : 'H');
 
-          // 도어·엔드패널·프레임·서라운드는 PET 재질
+          // 재질 결정: calculatePanelDetails에서 이미 올바른 material 설정됨
+          // p.material을 우선 존중하고, 누락 시 패널 이름으로 판단
           let material = p.material || 'PB';
-          if (panelName.includes('도어') || panelName.includes('door') ||
+          if (panelName.includes('백패널') || (panelName.includes('서랍') && panelName.includes('바닥'))) {
+            material = 'MDF'; // 백패널·서랍바닥은 항상 MDF
+          } else if (panelName.includes('도어') || panelName.includes('door') ||
               panelName.includes('엔드') || panelName.includes('end') ||
               panelName.includes('프레임') || panelName.includes('서라운드')) {
             material = 'PET';
@@ -457,33 +460,33 @@ function PageInner(){
       }
     }
 
-    // Initialize default stock if empty
-    if (stock.length === 0) {
-      // basicThickness로 PET 코팅 여부 판단
-      const isPET = livePanels.some(p => p.thickness === 18.5 || p.thickness === 15.5 || p.thickness === 9.5 || p.thickness === 5.5);
-
-      const defaultStock: StockSheet[] = isPET ? [
-        // PET 코팅 원자재 (+0.5mm)
-        { label: 'PB_18.5T_2440x1220', width: 1220, length: 2440, thickness: 18.5, quantity: 999, material: 'PB' },
-        { label: 'PET_18.5T_2440x1220', width: 1220, length: 2440, thickness: 18.5, quantity: 999, material: 'PET' },
-        { label: 'PB_15.5T_2440x1220', width: 1220, length: 2440, thickness: 15.5, quantity: 999, material: 'PB' },
-        { label: 'MDF_9.5T_2440x1220', width: 1220, length: 2440, thickness: 9.5, quantity: 999, material: 'MDF' },
-        { label: 'MDF_5.5T_2440x1220', width: 1220, length: 2440, thickness: 5.5, quantity: 999, material: 'MDF' },
-      ] : [
-        // 일반 원자재
-        { label: 'PB_18T_2440x1220', width: 1220, length: 2440, thickness: 18, quantity: 999, material: 'PB' },
-        { label: 'PET_18.5T_2440x1220', width: 1220, length: 2440, thickness: 18.5, quantity: 999, material: 'PET' },
-        { label: 'PB_15T_2440x1220', width: 1220, length: 2440, thickness: 15, quantity: 999, material: 'PB' },
-        { label: 'MDF_9T_2440x1220', width: 1220, length: 2440, thickness: 9, quantity: 999, material: 'MDF' },
-        { label: 'MDF_5T_2440x1220', width: 1220, length: 2440, thickness: 5, quantity: 999, material: 'MDF' },
-      ];
-      setStock(defaultStock);
-    }
-
     // Initialize theme from localStorage
     initializeTheme();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // Only run on mount
+
+  // Stock 초기화: livePanels 기반으로 PET 코팅 여부 판단하여 적절한 stock 설정
+  useEffect(() => {
+    // livePanels에서 실제 사용되는 두께/재질 조합을 기반으로 stock 생성
+    const isPET = livePanels.some(p => p.thickness === 18.5 || p.thickness === 15.5 || p.thickness === 9.5 || p.thickness === 5.5);
+
+    const defaultStock: StockSheet[] = isPET ? [
+      // PET 코팅 원자재 (+0.5mm)
+      { label: 'PB_18.5T_2440x1220', width: 1220, length: 2440, thickness: 18.5, quantity: 999, material: 'PB' },
+      { label: 'PET_18.5T_2440x1220', width: 1220, length: 2440, thickness: 18.5, quantity: 999, material: 'PET' },
+      { label: 'PB_15.5T_2440x1220', width: 1220, length: 2440, thickness: 15.5, quantity: 999, material: 'PB' },
+      { label: 'MDF_9.5T_2440x1220', width: 1220, length: 2440, thickness: 9.5, quantity: 999, material: 'MDF' },
+      { label: 'MDF_5.5T_2440x1220', width: 1220, length: 2440, thickness: 5.5, quantity: 999, material: 'MDF' },
+    ] : [
+      // 일반 원자재
+      { label: 'PB_18T_2440x1220', width: 1220, length: 2440, thickness: 18, quantity: 999, material: 'PB' },
+      { label: 'PET_18.5T_2440x1220', width: 1220, length: 2440, thickness: 18.5, quantity: 999, material: 'PET' },
+      { label: 'PB_15T_2440x1220', width: 1220, length: 2440, thickness: 15, quantity: 999, material: 'PB' },
+      { label: 'MDF_9T_2440x1220', width: 1220, length: 2440, thickness: 9, quantity: 999, material: 'MDF' },
+      { label: 'MDF_5T_2440x1220', width: 1220, length: 2440, thickness: 5, quantity: 999, material: 'MDF' },
+    ];
+    setStock(defaultStock);
+  }, [livePanels]); // livePanels 변경 시 stock 재설정
   
   // Separate effect for live panels initialization - only when they change and user hasn't modified
   useEffect(() => {
@@ -532,8 +535,11 @@ function PageInner(){
         }
 
         const grain: Grain = isBackPanel ? 'H' : (p.grain === 'NONE' ? 'NONE' : 'H');
+        // 재질 결정: calculatePanelDetails에서 이미 올바른 material 설정됨
         let material = p.material || 'PB';
-        if (panelName.includes('도어') || panelName.includes('door') ||
+        if (panelName.includes('백패널') || (panelName.includes('서랍') && panelName.includes('바닥'))) {
+          material = 'MDF'; // 백패널·서랍바닥은 항상 MDF
+        } else if (panelName.includes('도어') || panelName.includes('door') ||
             panelName.includes('엔드') || panelName.includes('end') ||
             panelName.includes('프레임') || panelName.includes('서라운드')) {
           material = 'PET';
