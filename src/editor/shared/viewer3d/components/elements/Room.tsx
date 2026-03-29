@@ -5561,14 +5561,32 @@ const Room: React.FC<RoomProps> = ({
       {!isLayoutBuilderOpen && (effectiveShowFrame || isFreePlacement) && baseFrameHeightMm > 0 && spaceInfo.baseConfig?.type === 'floor' && (() => {
         // 모든 하부/키큰장 가구가 bottomPanelRaise 활성이면 하부프레임 전체 숨김
         // 일부만 활성이면 조절발 있는 가구용 하부프레임은 유지
+        // 좌우분할 시 영역별 areaFinish도 확인
         const lowerFullModules = placedModulesFromStore.filter(m => {
           const id = m.moduleId || '';
           return !id.includes('upper');
         });
-        if (lowerFullModules.length > 0 && lowerFullModules.every(m => {
+        const isAllRaised = lowerFullModules.length > 0 && lowerFullModules.every(m => {
           const secs = (m as any).customConfig?.sections;
-          return secs?.[0]?.bottomPanelRaise && secs[0].bottomPanelRaise > 0;
-        })) return null;
+          if (!secs?.[0]) return false;
+          const sec0 = secs[0];
+          // 섹션 전체 바닥판 올림
+          if (sec0.bottomPanelRaise && sec0.bottomPanelRaise > 0) return true;
+          // 좌우분할: 모든 영역이 바닥판 올림이면 전체 숨김
+          if (sec0.areaFinish) {
+            const hs = sec0.horizontalSplit;
+            if (hs) {
+              const leftRaise = sec0.areaFinish['left']?.bottomPanelRaise ?? 0;
+              const rightRaise = sec0.areaFinish['right']?.bottomPanelRaise ?? 0;
+              const centerRaise = sec0.areaFinish['center']?.bottomPanelRaise ?? 0;
+              const is3split = hs.secondPosition !== undefined;
+              if (is3split) return leftRaise > 0 && centerRaise > 0 && rightRaise > 0;
+              return leftRaise > 0 && rightRaise > 0;
+            }
+          }
+          return false;
+        });
+        if (isAllRaised) return null;
         return true;
       })() && (() => {
 // console.log('🎯 베이스프레임 높이 확인:', {
@@ -5601,6 +5619,53 @@ const Room: React.FC<RoomProps> = ({
               const baseZPosition = baseZBase - mmToThreeUnits(depthZOffsetMM) + modBaseZOffset;
               const modBaseHeightMm = mod.baseFrameHeight ?? (spaceInfo.baseConfig?.height ?? 65);
               const modBaseH = mmToThreeUnits(modBaseHeightMm);
+
+              // 커스터마이즈 가구 좌우분할: 부분적 bottomPanelRaise → 하부프레임 분절
+              const customSec0 = (mod as any).customConfig?.sections?.[0];
+              if (customSec0?.horizontalSplit && customSec0.areaFinish) {
+                const hs = customSec0.horizontalSplit;
+                const pnlThk = customSec0.panelThickness || (mod as any).customConfig?.panelThickness || 18;
+                const innerW = modWidthMM - 2 * pnlThk;
+                const leftInnerW = hs.position;
+                const is3split = hs.secondPosition !== undefined;
+                const centerInnerW = is3split ? hs.secondPosition : 0;
+                const rightInnerW = innerW - leftInnerW - centerInnerW - (is3split ? 2 : 1) * pnlThk;
+
+                const leftRaise = customSec0.areaFinish['left']?.bottomPanelRaise ?? 0;
+                const rightRaise = customSec0.areaFinish['right']?.bottomPanelRaise ?? 0;
+                const centerRaise = is3split ? (customSec0.areaFinish['center']?.bottomPanelRaise ?? 0) : 0;
+                const allRaised = leftRaise > 0 && rightRaise > 0 && (!is3split || centerRaise > 0);
+                const hasPartialRaise = (leftRaise > 0 || rightRaise > 0 || centerRaise > 0) && !allRaised;
+
+                if (allRaised) return; // 전체 올림 → 하부프레임 없음
+                if (hasPartialRaise) {
+                  const modLeftMm = modCenterXmm - modWidthMM / 2;
+                  const areas: { startX: number; width: number; raised: boolean }[] = [];
+                  let curX = modLeftMm + pnlThk;
+                  areas.push({ startX: curX, width: leftInnerW, raised: leftRaise > 0 });
+                  curX += leftInnerW + pnlThk;
+                  if (is3split) {
+                    areas.push({ startX: curX, width: centerInnerW, raised: centerRaise > 0 });
+                    curX += centerInnerW + pnlThk;
+                  }
+                  areas.push({ startX: curX, width: Math.max(0, rightInnerW), raised: rightRaise > 0 });
+                  areas.filter(a => !a.raised && a.width > 0).forEach((area, aIdx) => {
+                    allBaseSegments.push({
+                      widthMm: area.width,
+                      centerXmm: area.startX + area.width / 2,
+                      zPosition: baseZPosition,
+                      height: modBaseH,
+                      yPosition: panelStartY + floatHeight + modBaseH / 2,
+                      material: baseMat,
+                      key: `free-base-strip-${group.id}-${mod.id}-split-${aIdx}`,
+                      placedModuleId: mod.id,
+                    });
+                  });
+                  return;
+                }
+              }
+              // 섹션 전체 bottomPanelRaise → 하부프레임 없음
+              if (customSec0?.bottomPanelRaise && customSec0.bottomPanelRaise > 0) return;
 
               allBaseSegments.push({
                 widthMm: modWidthMM,
@@ -5774,6 +5839,62 @@ const Room: React.FC<RoomProps> = ({
                       const modBaseHeight = mod.baseFrameHeight ?? globalBaseHeightMm;
                       const modBaseH = mmToThreeUnits(modBaseHeight);
                       const modBaseZOffset = mod.baseFrameOffset ? mmToThreeUnits(mod.baseFrameOffset) : 0;
+
+                      // 커스터마이즈 가구 좌우분할: 부분적 bottomPanelRaise → 하부프레임 분절
+                      const customSec0 = (mod as any).customConfig?.sections?.[0];
+                      if (customSec0?.horizontalSplit && customSec0.areaFinish) {
+                        const hs = customSec0.horizontalSplit;
+                        const pnlThk = customSec0.panelThickness || (mod as any).customConfig?.panelThickness || 18;
+                        const innerW = modWidthMM - 2 * pnlThk; // 외경에서 좌우 측판 제외
+                        const leftInnerW = hs.position;
+                        const is3split = hs.secondPosition !== undefined;
+                        const centerInnerW = is3split ? hs.secondPosition : 0;
+                        const rightInnerW = innerW - leftInnerW - centerInnerW - (is3split ? 2 : 1) * pnlThk;
+
+                        const leftRaise = customSec0.areaFinish['left']?.bottomPanelRaise ?? 0;
+                        const rightRaise = customSec0.areaFinish['right']?.bottomPanelRaise ?? 0;
+                        const centerRaise = is3split ? (customSec0.areaFinish['center']?.bottomPanelRaise ?? 0) : 0;
+                        const hasPartialRaise = (leftRaise > 0 || rightRaise > 0 || centerRaise > 0) &&
+                          !(leftRaise > 0 && rightRaise > 0 && (!is3split || centerRaise > 0));
+
+                        if (hasPartialRaise) {
+                          // 모듈 좌측 끝 (mm) — 엔드패널 제외 후
+                          const modLeftMm = modCenterXmm - modWidthMM / 2;
+                          const leftSidePnl = pnlThk; // 좌측 측판
+
+                          // 각 영역의 시작X와 너비 (내경 기준 → 외경 추가 필요 없음, 하부프레임은 측판 안쪽)
+                          const areas: { startX: number; width: number; raised: boolean }[] = [];
+                          let curX = modLeftMm + leftSidePnl;
+                          // 좌측 영역
+                          areas.push({ startX: curX, width: leftInnerW, raised: leftRaise > 0 });
+                          curX += leftInnerW + pnlThk; // 칸막이
+                          if (is3split) {
+                            areas.push({ startX: curX, width: centerInnerW, raised: centerRaise > 0 });
+                            curX += centerInnerW + pnlThk;
+                          }
+                          // 우측 영역
+                          areas.push({ startX: curX, width: Math.max(0, rightInnerW), raised: rightRaise > 0 });
+
+                          // raised가 아닌 영역만 하부프레임 세그먼트로 추가
+                          areas.filter(a => !a.raised && a.width > 0).forEach((area, aIdx) => {
+                            slotBaseSegments.push({
+                              widthMm: area.width,
+                              centerXmm: area.startX + area.width / 2,
+                              zPosition: baseZPos + modBaseZOffset,
+                              height: modBaseH,
+                              yPosition: panelStartY + floatHeight + modBaseH / 2,
+                              material: baseMat,
+                              key: `slot-base-${mod.id}-split-${aIdx}`,
+                              placedModuleId: mod.id,
+                            });
+                          });
+                          return; // 분절 완료, 전체 세그먼트 추가하지 않음
+                        }
+                        // 전체 올림이면 하부프레임 없음
+                        if (leftRaise > 0 && rightRaise > 0 && (!is3split || centerRaise > 0)) return;
+                      }
+                      // 섹션 전체 bottomPanelRaise → 하부프레임 없음
+                      if (customSec0?.bottomPanelRaise && customSec0.bottomPanelRaise > 0) return;
 
                       slotBaseSegments.push({
                         widthMm: modWidthMM,
