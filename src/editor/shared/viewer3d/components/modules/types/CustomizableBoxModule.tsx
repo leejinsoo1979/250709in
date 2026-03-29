@@ -1101,7 +1101,7 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
       if (el.type === 'drawer') {
         // ═══ DrawerRenderer 사용 (ㄷ자 프레임 + 레일 + 보링홀 포함) ═══
         const drawerCount = el.heights.length;
-        const gapHeight = ('gapHeight' in el && el.gapHeight) ? el.gapHeight : 23.6; // 서랍 간 공백 (mm)
+        const gapHeight = ('gapHeight' in el && el.gapHeight !== undefined) ? el.gapHeight : 23.6; // 서랍 간 공백 (mm)
 
         // DrawerRenderer 내부: 바닥gap + (서랍+gap)*n = sum(heights) + (n+1)*gap
         const totalDrawerHeightMm = el.heights.reduce((sum: number, h: number) => sum + h, 0)

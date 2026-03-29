@@ -1466,7 +1466,7 @@ const CustomizablePropertiesPanel: React.FC = () => {
     applyConfig({ ...config, sections });
   };
 
-  // 마이다 인셋 변경 (상/하/좌/우)
+  // 마이다 인셋 변경 (상/하/좌/우) — handleCoverInsetChange와 동일 패턴
   const handleMaidaInsetChange = (
     sIdx: number,
     side: 'full' | 'left' | 'center' | 'right',
@@ -1478,12 +1478,6 @@ const CustomizablePropertiesPanel: React.FC = () => {
     const getElements = () => {
       if (side === 'full') return sec.elements ? [...sec.elements] : [];
       if (side === 'left') return sec.leftElements ? [...sec.leftElements] : [];
-      if (side === 'center' && sec.horizontalSplit) {
-        return sec.horizontalSplit.centerElements ? [...sec.horizontalSplit.centerElements] : [];
-      }
-      if (sec.horizontalSplit && side === 'right') {
-        return sec.horizontalSplit.rightElements ? [...sec.horizontalSplit.rightElements] : [];
-      }
       return sec.rightElements ? [...sec.rightElements] : [];
     };
     const els = getElements();
@@ -1491,11 +1485,8 @@ const CustomizablePropertiesPanel: React.FC = () => {
       els[0] = { ...els[0], [field]: value };
     }
     if (side === 'full') sec.elements = els;
-    else if (side === 'left' && !sec.horizontalSplit) sec.leftElements = els;
-    else if (sec.horizontalSplit) {
-      const hsKey = side === 'left' ? 'leftElements' : side === 'center' ? 'centerElements' : 'rightElements';
-      sec.horizontalSplit = { ...sec.horizontalSplit, [hsKey]: els };
-    } else sec.rightElements = els;
+    else if (side === 'left') sec.leftElements = els;
+    else sec.rightElements = els;
     sections[sIdx] = sec;
     applyConfig({ ...config, sections });
   };
