@@ -305,10 +305,10 @@ export const calculatePanelDetails = (
         material: 'MDF'
       });
 
-      // 백패널 보강대 (상단/하단) - 60mm 높이, 15mm 깊이
+      // 백패널 보강대 (상단/하단) - 60mm 높이, PB 재질
       // 15mm/18mm: 양쪽 0.5mm씩 축소 (총 1mm), 15.5mm/18.5mm: 갭 없음
       const reinforcementHeight = 60; // mm
-      const reinforcementDepth = 15; // mm
+      const reinforcementDepth = (basicThickness === 18.5 || basicThickness === 15.5) ? 15.5 : 15; // PB+PET 코팅 시 15.5mm
       const reinforcementWidth = innerWidth - sidePanelGap;
       targetPanel.push({
         name: `${sectionPrefix}후면 보강대 1`,
@@ -629,20 +629,21 @@ export const calculatePanelDetails = (
         material: 'MDF'
       });
 
-      // 우측 섹션 보강대 (상/하 2개)
+      // 우측 섹션 보강대 (상/하 2개) - PB 재질
       const rReinforcementWidth = rightInnerWidth - 1;
+      const rReinforcementDepth = (basicThickness === 18.5 || basicThickness === 15.5) ? 15.5 : 15;
       rTargetPanel.push({
         name: `${rSectionPrefix}후면 보강대 1`,
         width: rReinforcementWidth,
         height: 60,
-        thickness: 15,
+        thickness: rReinforcementDepth,
         material: 'PB'
       });
       rTargetPanel.push({
         name: `${rSectionPrefix}후면 보강대 2`,
         width: rReinforcementWidth,
         height: 60,
-        thickness: 15,
+        thickness: rReinforcementDepth,
         material: 'PB'
       });
 
