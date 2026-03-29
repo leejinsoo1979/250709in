@@ -459,61 +459,23 @@ function PageInner(){
 
     // Initialize default stock if empty
     if (stock.length === 0) {
-      const defaultStock: StockSheet[] = [
-        // 18mm PB (파티클보드) - 가구 본체용
-        {
-          label: 'PB_18T_2440x1220',
-          width: 1220,
-          length: 2440,
-          thickness: 18,
-          quantity: 999,
-          material: 'PB'
-        },
-        // 18.5mm PET - 도어, 프레임, 엔드패널용 (PET 재질 항상 18.5mm)
-        {
-          label: 'PET_18.5T_2440x1220',
-          width: 1220,
-          length: 2440,
-          thickness: 18.5,
-          quantity: 999,
-          material: 'PET'
-        },
-        // 18mm MDF - 일반용
-        {
-          label: 'MDF_18T_2440x1220',
-          width: 1220,
-          length: 2440,
-          thickness: 18,
-          quantity: 999,
-          material: 'MDF'
-        },
-        // 15mm PB - 서랍용
-        {
-          label: 'PB_15T_2440x1220',
-          width: 1220,
-          length: 2440,
-          thickness: 15,
-          quantity: 999,
-          material: 'PB'
-        },
-        // 9mm MDF - 뒷판용
-        {
-          label: 'MDF_9T_2440x1220',
-          width: 1220,
-          length: 2440,
-          thickness: 9,
-          quantity: 999,
-          material: 'MDF'
-        },
-        // 5mm MDF - 서랍 바닥용
-        {
-          label: 'MDF_5T_2440x1220',
-          width: 1220,
-          length: 2440,
-          thickness: 5,
-          quantity: 999,
-          material: 'MDF'
-        }
+      // basicThickness로 PET 코팅 여부 판단
+      const isPET = livePanels.some(p => p.thickness === 18.5 || p.thickness === 15.5 || p.thickness === 9.5 || p.thickness === 5.5);
+
+      const defaultStock: StockSheet[] = isPET ? [
+        // PET 코팅 원자재 (+0.5mm)
+        { label: 'PB_18.5T_2440x1220', width: 1220, length: 2440, thickness: 18.5, quantity: 999, material: 'PB' },
+        { label: 'PET_18.5T_2440x1220', width: 1220, length: 2440, thickness: 18.5, quantity: 999, material: 'PET' },
+        { label: 'PB_15.5T_2440x1220', width: 1220, length: 2440, thickness: 15.5, quantity: 999, material: 'PB' },
+        { label: 'MDF_9.5T_2440x1220', width: 1220, length: 2440, thickness: 9.5, quantity: 999, material: 'MDF' },
+        { label: 'MDF_5.5T_2440x1220', width: 1220, length: 2440, thickness: 5.5, quantity: 999, material: 'MDF' },
+      ] : [
+        // 일반 원자재
+        { label: 'PB_18T_2440x1220', width: 1220, length: 2440, thickness: 18, quantity: 999, material: 'PB' },
+        { label: 'PET_18.5T_2440x1220', width: 1220, length: 2440, thickness: 18.5, quantity: 999, material: 'PET' },
+        { label: 'PB_15T_2440x1220', width: 1220, length: 2440, thickness: 15, quantity: 999, material: 'PB' },
+        { label: 'MDF_9T_2440x1220', width: 1220, length: 2440, thickness: 9, quantity: 999, material: 'MDF' },
+        { label: 'MDF_5T_2440x1220', width: 1220, length: 2440, thickness: 5, quantity: 999, material: 'MDF' },
       ];
       setStock(defaultStock);
     }
