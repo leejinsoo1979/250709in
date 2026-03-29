@@ -3551,6 +3551,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                   isCustomizable={placedModule.isCustomizable}
                   customConfig={placedModule.customConfig}
                   parentGroupY={adjustedPosition.y}
+                  endPanelHeightMode={placedModule.endPanelHeightMode}
                 />
               );
             })()}

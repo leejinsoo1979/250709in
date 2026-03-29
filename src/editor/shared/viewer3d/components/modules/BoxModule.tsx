@@ -89,6 +89,7 @@ interface BoxModuleProps {
   onPointerOut?: () => void;
   onDoubleClick?: (e: any) => void;
   parentGroupY?: number; // 부모 그룹(가구)의 Y 위치 (Three.js 단위) — 도어 Y 보정용
+  endPanelHeightMode?: 'floor' | 'furniture'; // EP 높이 모드 (floor: 바닥~천장, furniture: 가구 높이에 맞춤)
 }
 
 /**
@@ -165,6 +166,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
   onPointerOut,
   onDoubleClick,
   parentGroupY, // 부모 그룹 Y 위치
+  endPanelHeightMode, // EP 높이 모드
 }) => {
   // === React Hooks는 항상 최상단에서 호출 ===
   const spaceConfigStore = useSpaceConfigStore();
@@ -224,6 +226,8 @@ const BoxModule: React.FC<BoxModuleProps> = ({
           endPanelDepth={endPanelDepth}
           leftEndPanelOffset={leftEndPanelOffset ?? endPanelOffset}
           rightEndPanelOffset={rightEndPanelOffset ?? endPanelOffset}
+          endPanelHeightMode={endPanelHeightMode}
+          parentGroupY={parentGroupY}
           isEditable={_isCustomizable}
           onPointerDown={onPointerDown}
           onPointerMove={onPointerMove}

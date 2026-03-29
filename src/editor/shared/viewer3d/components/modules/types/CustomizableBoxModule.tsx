@@ -45,6 +45,8 @@ interface CustomizableBoxModuleProps {
   endPanelDepth?: number; // 엔드패널 깊이 (mm, 기본값: 가구 깊이)
   leftEndPanelOffset?: number; // 좌측 EP 개별 옵셋 (mm, 기본값: 0)
   rightEndPanelOffset?: number; // 우측 EP 개별 옵셋 (mm, 기본값: 0)
+  endPanelHeightMode?: 'floor' | 'furniture'; // EP 높이 모드 (floor: 바닥~천장, furniture: 가구 높이에 맞춤)
+  parentGroupY?: number; // 부모 그룹(가구)의 Y 위치 (Three.js 단위) — EP Y 보정용
   isEditable?: boolean; // true: 커스텀 편집 가능 (톱니 아이콘 표시), false: 고정 구조 (My캐비넷)
   onPointerDown?: (e: any) => void;
   onPointerMove?: (e: any) => void;
@@ -234,6 +236,8 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
   endPanelDepth: endPanelDepthProp,
   leftEndPanelOffset: leftEndPanelOffsetProp = 0,
   rightEndPanelOffset: rightEndPanelOffsetProp = 0,
+  endPanelHeightMode: endPanelHeightModeProp,
+  parentGroupY: parentGroupYProp,
   isEditable = true,
   onPointerDown,
   onPointerMove,
@@ -2479,15 +2483,24 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
       })()}
       </group>
 
-      {/* 엔드패널(EP) 렌더링 — 바닥까지 연장, Z축 오프셋 적용 */}
+      {/* 엔드패널(EP) 렌더링 — 표준 모듈과 동일한 높이 로직 적용 */}
       {(() => {
-        // bottomPanelRaise 활성 시 조절발 없으므로 바닥 연장 불필요
-        const bottomRaiseEP = sections[0]?.bottomPanelRaise && sections[0].bottomPanelRaise > 0;
-        const baseHeightMm = bottomRaiseEP ? 0 : (spaceInfo.baseConfig?.height || 65);
-        const baseDepthMm = bottomRaiseEP ? 0 : (spaceInfo.baseConfig?.depth || 0);
-        const footExtension = mmToUnit(baseHeightMm + baseDepthMm);
-        const epH = H + footExtension;
-        const epYOffset = -footExtension / 2;
+        // EP 높이 모드 분기: 'floor' = 바닥~천장, 'furniture' = 가구 높이에 맞춤
+        const epHeightMode = endPanelHeightModeProp ?? 'floor';
+        const groupY = parentGroupYProp ?? 0; // 부모 그룹(가구)의 Y 위치 (Three.js 단위)
+        let epH: number;
+        let epYOffset: number;
+        if (epHeightMode === 'furniture') {
+          // 가구에 맞춤: EP 높이 = 가구 높이, EP 중심 = 가구 중심 (그룹 내 0)
+          epH = H;
+          epYOffset = 0;
+        } else {
+          // 바닥에 맞춤 (기본): 바닥~천장 — 표준 모듈과 동일한 로직
+          const spaceH = mmToUnit(spaceInfo.height);
+          epH = spaceH;
+          const epCenterWorldY = spaceH / 2;
+          epYOffset = epCenterWorldY - groupY;
+        }
         const leftEpOffsetZ = mmToUnit(leftEndPanelOffsetProp);
         const rightEpOffsetZ = mmToUnit(rightEndPanelOffsetProp);
         const epDActual = endPanelDepthProp ? mmToUnit(endPanelDepthProp) : D;
