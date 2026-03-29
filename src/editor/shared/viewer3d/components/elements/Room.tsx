@@ -5634,9 +5634,19 @@ const Room: React.FC<RoomProps> = ({
                 const leftRaise = customSec0.areaFinish['left']?.bottomPanelRaise ?? 0;
                 const rightRaise = customSec0.areaFinish['right']?.bottomPanelRaise ?? 0;
                 const centerRaise = is3split ? (customSec0.areaFinish['center']?.bottomPanelRaise ?? 0) : 0;
-                const allRaised = leftRaise > 0 && rightRaise > 0 && (!is3split || centerRaise > 0);
 
-                if (allRaised) return; // 전체 올림 → 하부프레임 없음
+                // 상하분할 하부 비움 체크: 비움이면 해당 영역 하부프레임도 숨김
+                const subSplits = customSec0.areaSubSplits;
+                const isSubLowerDeleted = (side: string) => {
+                  const sub = subSplits?.[side];
+                  return sub?.enabled && !sub.lowerElements;
+                };
+                const leftHidden = leftRaise > 0 || isSubLowerDeleted('left');
+                const rightHidden = rightRaise > 0 || isSubLowerDeleted('right');
+                const centerHidden = is3split ? (centerRaise > 0 || isSubLowerDeleted('center')) : false;
+                const allHidden = leftHidden && rightHidden && (!is3split || centerHidden);
+
+                if (allHidden) return; // 전체 숨김 → 하부프레임 없음
 
                 // 좌우분할 시 무조건 영역별로 하부프레임 분할
                 // 칸막이 귀속: non-raised 영역이 칸막이를 흡수 (raised 영역 옆 갭 방지)
@@ -5647,9 +5657,9 @@ const Room: React.FC<RoomProps> = ({
                   // 2분할: 좌측 | 우측 (칸막이를 non-raised 쪽이 흡수)
                   const partitionStart = modLeftMm + pnlThk + leftInnerW; // 칸막이 시작 X
 
-                  if (leftRaise <= 0) {
-                    // 좌측 piece: 좌측판 + 좌내경 + (우측 raised면 칸막이 전체, 아니면 절반)
-                    const leftExtra = rightRaise > 0 ? pnlThk : pnlThk / 2;
+                  if (!leftHidden) {
+                    // 좌측 piece: 좌측판 + 좌내경 + (우측 hidden이면 칸막이 전체, 아니면 절반)
+                    const leftExtra = rightHidden ? pnlThk : pnlThk / 2;
                     const leftPieceW = pnlThk + leftInnerW + leftExtra;
                     allBaseSegments.push({
                       widthMm: leftPieceW,
@@ -5663,9 +5673,9 @@ const Room: React.FC<RoomProps> = ({
                     });
                   }
 
-                  if (rightRaise <= 0) {
-                    // 우측 piece: (좌측 raised면 칸막이 전체, 아니면 절반) + 우내경 + 우측판
-                    const rightExtra = leftRaise > 0 ? pnlThk : pnlThk / 2;
+                  if (!rightHidden) {
+                    // 우측 piece: (좌측 hidden이면 칸막이 전체, 아니면 절반) + 우내경 + 우측판
+                    const rightExtra = leftHidden ? pnlThk : pnlThk / 2;
                     const rightPieceStartX = partitionStart + pnlThk - rightExtra;
                     const rightPieceW = rightExtra + Math.max(0, rightInnerW) + pnlThk;
                     allBaseSegments.push({
@@ -5685,8 +5695,8 @@ const Room: React.FC<RoomProps> = ({
                   const part2Start = part1Start + pnlThk + centerInnerW; // 둘째 칸막이 시작
 
                   // 좌측 piece
-                  if (leftRaise <= 0) {
-                    const leftExtra = centerRaise > 0 ? pnlThk : pnlThk / 2;
+                  if (!leftHidden) {
+                    const leftExtra = centerHidden ? pnlThk : pnlThk / 2;
                     const leftPieceW = pnlThk + leftInnerW + leftExtra;
                     allBaseSegments.push({
                       widthMm: leftPieceW,
@@ -5701,9 +5711,9 @@ const Room: React.FC<RoomProps> = ({
                   }
 
                   // 중앙 piece
-                  if (centerRaise <= 0) {
-                    const cLeftExtra = leftRaise > 0 ? pnlThk : pnlThk / 2;
-                    const cRightExtra = rightRaise > 0 ? pnlThk : pnlThk / 2;
+                  if (!centerHidden) {
+                    const cLeftExtra = leftHidden ? pnlThk : pnlThk / 2;
+                    const cRightExtra = rightHidden ? pnlThk : pnlThk / 2;
                     const centerPieceStartX = part1Start + pnlThk - cLeftExtra;
                     const centerPieceW = cLeftExtra + centerInnerW + cRightExtra;
                     allBaseSegments.push({
@@ -5719,8 +5729,8 @@ const Room: React.FC<RoomProps> = ({
                   }
 
                   // 우측 piece
-                  if (rightRaise <= 0) {
-                    const rightExtra = centerRaise > 0 ? pnlThk : pnlThk / 2;
+                  if (!rightHidden) {
+                    const rightExtra = centerHidden ? pnlThk : pnlThk / 2;
                     const rightPieceStartX = part2Start + pnlThk - rightExtra;
                     const rightPieceW = rightExtra + Math.max(0, rightInnerW) + pnlThk;
                     allBaseSegments.push({
@@ -5931,9 +5941,19 @@ const Room: React.FC<RoomProps> = ({
                         const leftRaise = customSec0.areaFinish['left']?.bottomPanelRaise ?? 0;
                         const rightRaise = customSec0.areaFinish['right']?.bottomPanelRaise ?? 0;
                         const centerRaise = is3split ? (customSec0.areaFinish['center']?.bottomPanelRaise ?? 0) : 0;
-                        const allRaised = leftRaise > 0 && rightRaise > 0 && (!is3split || centerRaise > 0);
 
-                        if (allRaised) return; // 전체 올림 → 하부프레임 없음
+                        // 상하분할 하부 비움 체크: 비움이면 해당 영역 하부프레임도 숨김
+                        const subSplits = customSec0.areaSubSplits;
+                        const isSubLowerDeleted = (side: string) => {
+                          const sub = subSplits?.[side];
+                          return sub?.enabled && !sub.lowerElements;
+                        };
+                        const leftHidden = leftRaise > 0 || isSubLowerDeleted('left');
+                        const rightHidden = rightRaise > 0 || isSubLowerDeleted('right');
+                        const centerHidden = is3split ? (centerRaise > 0 || isSubLowerDeleted('center')) : false;
+                        const allHidden = leftHidden && rightHidden && (!is3split || centerHidden);
+
+                        if (allHidden) return; // 전체 숨김 → 하부프레임 없음
 
                         // 좌우분할 시 무조건 영역별로 하부프레임 분할
                         // 칸막이 귀속: non-raised 영역이 칸막이를 흡수 (raised 영역 옆 갭 방지)
@@ -5943,8 +5963,8 @@ const Room: React.FC<RoomProps> = ({
                           // 2분할
                           const partitionStart = modLeftMm + pnlThk + leftInnerW;
 
-                          if (leftRaise <= 0) {
-                            const leftExtra = rightRaise > 0 ? pnlThk : pnlThk / 2;
+                          if (!leftHidden) {
+                            const leftExtra = rightHidden ? pnlThk : pnlThk / 2;
                             const leftPieceW = pnlThk + leftInnerW + leftExtra;
                             slotBaseSegments.push({
                               widthMm: leftPieceW,
@@ -5958,8 +5978,8 @@ const Room: React.FC<RoomProps> = ({
                             });
                           }
 
-                          if (rightRaise <= 0) {
-                            const rightExtra = leftRaise > 0 ? pnlThk : pnlThk / 2;
+                          if (!rightHidden) {
+                            const rightExtra = leftHidden ? pnlThk : pnlThk / 2;
                             const rightPieceStartX = partitionStart + pnlThk - rightExtra;
                             const rightPieceW = rightExtra + Math.max(0, rightInnerW) + pnlThk;
                             slotBaseSegments.push({
@@ -5978,8 +5998,8 @@ const Room: React.FC<RoomProps> = ({
                           const part1Start = modLeftMm + pnlThk + leftInnerW;
                           const part2Start = part1Start + pnlThk + centerInnerW;
 
-                          if (leftRaise <= 0) {
-                            const leftExtra = centerRaise > 0 ? pnlThk : pnlThk / 2;
+                          if (!leftHidden) {
+                            const leftExtra = centerHidden ? pnlThk : pnlThk / 2;
                             const leftPieceW = pnlThk + leftInnerW + leftExtra;
                             slotBaseSegments.push({
                               widthMm: leftPieceW,
@@ -5993,9 +6013,9 @@ const Room: React.FC<RoomProps> = ({
                             });
                           }
 
-                          if (centerRaise <= 0) {
-                            const cLeftExtra = leftRaise > 0 ? pnlThk : pnlThk / 2;
-                            const cRightExtra = rightRaise > 0 ? pnlThk : pnlThk / 2;
+                          if (!centerHidden) {
+                            const cLeftExtra = leftHidden ? pnlThk : pnlThk / 2;
+                            const cRightExtra = rightHidden ? pnlThk : pnlThk / 2;
                             const centerPieceStartX = part1Start + pnlThk - cLeftExtra;
                             const centerPieceW = cLeftExtra + centerInnerW + cRightExtra;
                             slotBaseSegments.push({
@@ -6010,8 +6030,8 @@ const Room: React.FC<RoomProps> = ({
                             });
                           }
 
-                          if (rightRaise <= 0) {
-                            const rightExtra = centerRaise > 0 ? pnlThk : pnlThk / 2;
+                          if (!rightHidden) {
+                            const rightExtra = centerHidden ? pnlThk : pnlThk / 2;
                             const rightPieceStartX = part2Start + pnlThk - rightExtra;
                             const rightPieceW = rightExtra + Math.max(0, rightInnerW) + pnlThk;
                             slotBaseSegments.push({
