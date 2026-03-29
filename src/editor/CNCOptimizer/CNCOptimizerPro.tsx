@@ -496,7 +496,7 @@ function PageInner(){
     }
 
     // livePanels 내용 기반 키 생성 — 실제 변경 시에만 재동기화
-    const livePanelsKey = livePanels.map(p => `${p.id}:${p.name}:${p.width}:${p.height}:${p.material}`).join('|');
+    const livePanelsKey = livePanels.map(p => `${p.id}:${p.name}:${p.width}:${p.height}:${p.thickness}:${p.material}`).join('|');
     if (livePanelsKey === prevLivePanelsKey.current) {
       return; // 내용이 동일하면 스킵
     }
