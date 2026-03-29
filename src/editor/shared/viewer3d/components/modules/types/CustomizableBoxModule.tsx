@@ -2297,8 +2297,21 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
       })()}
 
       {/* 조절발 (upper가 아닌 경우) — 바닥판 올림 시 숨김, 하부 섹션 비움 시 숨김 */}
-      {showFurniture && category !== 'upper' && sections[0]?.enabled !== false && !(sections[0]?.bottomPanelRaise && sections[0].bottomPanelRaise > 0) && (() => {
+      {showFurniture && category !== 'upper' && sections[0]?.enabled !== false && (() => {
         const lowerSection = sections[0];
+        // 섹션 전체 바닥판 올림 체크
+        const sectionBottomRaise = lowerSection?.bottomPanelRaise && lowerSection.bottomPanelRaise > 0;
+        // 영역별 바닥판 올림 체크 (하나라도 올림이면 해당 영역 조절발만 숨김)
+        const getAreaBottomRaiseActive = (side: string) => {
+          const areaRaise = lowerSection?.areaFinish?.[side]?.bottomPanelRaise;
+          if (areaRaise !== undefined) return areaRaise > 0;
+          return sectionBottomRaise;
+        };
+        // 모든 영역이 올림이면 전체 조절발 숨김
+        const allAreasRaised = sectionBottomRaise && !lowerSection?.areaFinish;
+
+        if (allAreasRaised) return null;
+
         const footWidth = lowerSection?.width ? mmToUnit(lowerSection.width) : effectiveW;
         const footAlignOffset = calculateAlignOffset(footWidth, effectiveW, lowerSection?.align || 'center');
 
@@ -2349,19 +2362,22 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
             view2DDirection,
           } as const;
 
-          // 비움(elements === undefined) 영역은 조절발 제거
+          // 비움(elements === undefined) 영역 또는 바닥판 올림 영역은 조절발 제거
           const leftDeleted = !hs.leftElements;
           const centerDeleted = !hs.centerElements;
           const rightDeleted = !hs.rightElements;
+          const leftRaised = getAreaBottomRaiseActive('left');
+          const centerRaised = getAreaBottomRaiseActive('center');
+          const rightRaised = getAreaBottomRaiseActive('right');
 
           return (
             <group position={[footAlignOffset, 0, 0]}>
-              {!leftDeleted && (
+              {!leftDeleted && !leftRaised && (
                 <group position={[leftCX, 0, leftFZ]}>
                   <AdjustableFootsRenderer width={leftOuterW} depth={leftFD} {...footProps} />
                 </group>
               )}
-              {is3Split && !centerDeleted && (() => {
+              {is3Split && !centerDeleted && !centerRaised && (() => {
                 const centerCX = -footWidth / 2 + leftOuterW + centerOuterW / 2;
                 const { fd: centerFD, fz: centerFZ } = getFootDepth('center');
                 return (
@@ -2370,13 +2386,23 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
                   </group>
                 );
               })()}
-              {!rightDeleted && (
+              {!rightDeleted && !rightRaised && (
                 <group position={[rightCX, 0, rightFZ]}>
                   <AdjustableFootsRenderer width={rightOuterW} depth={rightFD} {...footProps} />
                 </group>
               )}
             </group>
           );
+        }
+
+        // 칸막이 있을 때 영역별 바닥판 올림 체크
+        if (lowerSection?.hasPartition) {
+          const leftRaised = getAreaBottomRaiseActive('left');
+          const rightRaised = getAreaBottomRaiseActive('right');
+          if (leftRaised && rightRaised) return null; // 양쪽 다 올림이면 전체 숨김
+          if (leftRaised || rightRaised) return null; // 한쪽이라도 올림이면 전체 숨김 (칸막이에서는 분리 불가)
+        } else if (sectionBottomRaise) {
+          return null; // 칸막이 없고 섹션 전체 올림
         }
 
         // 기본: 단일 발판
@@ -2409,8 +2435,11 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
 
       {/* 엔드패널(EP) 렌더링 — 바닥까지 연장, Z축 오프셋 적용 */}
       {(() => {
-        // bottomPanelRaise 활성 시 조절발 없으므로 바닥 연장 불필요
-        const bottomRaiseEP = sections[0]?.bottomPanelRaise && sections[0].bottomPanelRaise > 0;
+        // bottomPanelRaise 활성 시 조절발 없으므로 바닥 연장 불필요 (영역별 areaFinish도 체크)
+        const sec0 = sections[0];
+        const sec0SectionRaise = sec0?.bottomPanelRaise && sec0.bottomPanelRaise > 0;
+        const sec0AnyAreaRaise = sec0?.areaFinish && Object.values(sec0.areaFinish).some(af => af.bottomPanelRaise && af.bottomPanelRaise > 0);
+        const bottomRaiseEP = sec0SectionRaise || sec0AnyAreaRaise;
         const baseHeightMm = bottomRaiseEP ? 0 : (spaceInfo.baseConfig?.height || 65);
         const baseDepthMm = bottomRaiseEP ? 0 : (spaceInfo.baseConfig?.depth || 0);
         const footExtension = mmToUnit(baseHeightMm + baseDepthMm);
