@@ -2446,9 +2446,14 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
           } as const;
 
           // 비움(elements === undefined) 영역 또는 바닥판 올림 영역은 조절발 제거
-          const leftDeleted = !hs.leftElements;
-          const centerDeleted = !hs.centerElements;
-          const rightDeleted = !hs.rightElements;
+          // 상하분할에서 하부가 비움이면 해당 영역도 조절발 숨김
+          const isSubSplitLowerDeleted = (side: string) => {
+            const sub = section.areaSubSplits?.[side];
+            return sub?.enabled && !sub.lowerElements;
+          };
+          const leftDeleted = !hs.leftElements || isSubSplitLowerDeleted('left');
+          const centerDeleted = !hs.centerElements || isSubSplitLowerDeleted('center');
+          const rightDeleted = !hs.rightElements || isSubSplitLowerDeleted('right');
           const leftRaised = getAreaBottomRaiseActive('left');
           const centerRaised = getAreaBottomRaiseActive('center');
           const rightRaised = getAreaBottomRaiseActive('right');
