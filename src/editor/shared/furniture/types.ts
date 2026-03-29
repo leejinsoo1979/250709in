@@ -3,7 +3,7 @@ import { ModuleData } from '@/data/modules';
 // 커스터마이징 가구 내부 요소 타입
 export type CustomElement =
   | { type: 'shelf'; heights: number[]; hasRod?: boolean; shelfMethod?: 'fixed' | 'dowel'; shelfFrontInset?: number }  // 선반 (각 선반의 바닥에서의 높이 mm, hasRod: 옷봉 추가, shelfMethod: 고정/다보, shelfFrontInset: 다보 앞 들여쓰기 mm)
-  | { type: 'drawer'; heights: number[]; coverInset?: number; drawerAlign?: 'top' | 'bottom' }  // 서랍 (각 서랍 높이 mm, coverInset: 덮개선반 앞 들여쓰기 mm 기본 60, drawerAlign: 위/아래 배치 기본 bottom)
+  | { type: 'drawer'; heights: number[]; coverInset?: number; drawerAlign?: 'top' | 'bottom'; gapHeight?: number }  // 서랍 (각 서랍 높이 mm, coverInset: 덮개선반 앞 들여쓰기 mm 기본 60, drawerAlign: 위/아래 배치 기본 bottom, gapHeight: 서랍 간 갭 mm 기본 23.6)
   | { type: 'rod'; height: number; withShelf?: boolean; shelfGap?: number }  // 옷봉 (withShelf: 고정선반+옷봉, shelfGap: 상판~선반 간격 mm)
   | { type: 'pants'; height: number }         // 바지걸이 (설치 높이 mm, 하부섹션 전용)
   | { type: 'open' };                         // 비어있음
@@ -57,6 +57,8 @@ export interface CustomSection {
   // 마감 패널 (기본: true = 렌더링)
   showTopPanel?: boolean;    // 상판 마감 (기본: true)
   showBottomPanel?: boolean; // 하판 마감 (기본: true)
+  topPanelDepthOffset?: number;     // 상판 Z 오프셋 (mm), 기본값 0 (양수=앞, 음수=뒤)
+  bottomPanelDepthOffset?: number;  // 하판 Z 오프셋 (mm), 기본값 0 (양수=앞, 음수=뒤)
   bottomPanelRaise?: number; // 바닥판 올림 mm (>0이면 조절발 제거, 측판이 아래로 연장)
   showBackPanel?: boolean;   // 뒷벽 마감 (기본: true)
   // 영역별 마감 (칸막이/좌우분할 시 좌/우 독립 설정, undefined면 섹션 기본값 사용)
