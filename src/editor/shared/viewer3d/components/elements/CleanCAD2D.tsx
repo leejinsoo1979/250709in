@@ -4410,7 +4410,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 const dimLineRightX = furnitureRightX + mmToThreeUnits(120);
                 const extLineRightX = dimLineRightX + mmToThreeUnits(20);
 
-                // 각 섹션에 대해 서브분할이 있으면 분할된 높이 구간 목록, 없으면 전체 하나
+                // 각 섹션에 대해 서브분할/바닥판올림이 있으면 분할된 높이 구간 목록, 없으면 전체 하나
                 const rightSegments: { startY: number; endY: number; heightMm: number }[] = [];
                 sectionRanges.forEach((range, idx) => {
                   const section = sections[idx] as any;
@@ -4427,6 +4427,24 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     }
                   }
 
+                  // 바닥판 올림 확인 (첫 번째 섹션만, 영역별 areaFinish 포함)
+                  let maxBottomRaiseMm = 0;
+                  if (idx === 0) {
+                    // 섹션 레벨 바닥판 올림
+                    if (section.bottomPanelRaise && section.bottomPanelRaise > 0) {
+                      maxBottomRaiseMm = section.bottomPanelRaise;
+                    }
+                    // 영역별 areaFinish 바닥판 올림 (최대값 사용)
+                    if (section.areaFinish) {
+                      for (const key of ['left', 'right', 'center', 'full']) {
+                        const areaRaise = section.areaFinish[key]?.bottomPanelRaise;
+                        if (areaRaise && areaRaise > maxBottomRaiseMm) {
+                          maxBottomRaiseMm = areaRaise;
+                        }
+                      }
+                    }
+                  }
+
                   if (activeSub) {
                     // 비율 기반 분할 (CustomizableBoxModule과 동일)
                     // 서브분할은 섹션 내경 안에서 비율로 나누며, 중간에 별도 패널 없음
@@ -4438,6 +4456,14 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     const upperMm = range.heightMm - lowerMm;
                     rightSegments.push({ startY: range.startY, endY: splitY, heightMm: lowerMm });
                     rightSegments.push({ startY: splitY, endY: range.endY, heightMm: upperMm });
+                  } else if (maxBottomRaiseMm > 0) {
+                    // 바닥판 올림: 하단(올림 높이)과 상단(나머지) 두 구간으로 분할
+                    const totalYRange = range.endY - range.startY;
+                    const raiseRatio = maxBottomRaiseMm / range.heightMm;
+                    const raiseY = totalYRange * raiseRatio;
+                    const splitY = range.startY + raiseY;
+                    rightSegments.push({ startY: range.startY, endY: splitY, heightMm: Math.round(maxBottomRaiseMm) });
+                    rightSegments.push({ startY: splitY, endY: range.endY, heightMm: Math.round(range.heightMm - maxBottomRaiseMm) });
                   } else {
                     rightSegments.push(range);
                   }

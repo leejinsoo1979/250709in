@@ -688,19 +688,24 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
           // 삭제된 영역은 아이콘 스킵
           if (areaKey !== 'full' && !elements) return;
 
+          // 바닥판 올림 시 아이콘 Y를 수납 영역 중심으로 보정
+          const areaRaiseMm = sIdx === 0 ? (section.areaFinish?.[areaKey]?.bottomPanelRaise ?? section.bottomPanelRaise ?? 0) : 0;
+          const areaRaiseOffset = areaRaiseMm > 0 ? mmToUnit(areaRaiseMm) / 2 : 0;
+          const adjustedCenterY = centerY + areaRaiseOffset;
+
           const subSplit = section.areaSubSplits?.[areaKey];
           if (subSplit?.enabled) {
             const areaInnerH = mmToUnit(section.height);
             const lowerH = mmToUnit(subSplit.lowerHeight);
             const upperH = areaInnerH - lowerH;
-            const lowerCY = centerY - areaInnerH / 2 + lowerH / 2;
-            const upperCY = centerY + areaInnerH / 2 - upperH / 2;
+            const lowerCY = adjustedCenterY - areaInnerH / 2 + lowerH / 2;
+            const upperCY = adjustedCenterY + areaInnerH / 2 - upperH / 2;
             const side = areaKey === 'full' ? undefined : areaKey;
             icons.push(renderSectionIcon(`${prefix}-${areaKey}-lower`, cx + xOffset, lowerCY, frontZ, sIdx, side, 'lower'));
             icons.push(renderSectionIcon(`${prefix}-${areaKey}-upper`, cx + xOffset, upperCY, frontZ, sIdx, side, 'upper'));
           } else {
             const side = areaKey === 'full' ? undefined : areaKey;
-            icons.push(renderSectionIcon(`${prefix}-${areaKey}`, cx + xOffset, centerY, frontZ, sIdx, side));
+            icons.push(renderSectionIcon(`${prefix}-${areaKey}`, cx + xOffset, adjustedCenterY, frontZ, sIdx, side));
           }
         };
 
@@ -721,17 +726,21 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
           // 서브분할 고려 아이콘 렌더링 헬퍼
           const addHSplitAreaIcon = (areaKey: 'left' | 'center' | 'right', cx: number, elements: CustomElement[] | undefined) => {
             if (!elements) return;
+            // 바닥판 올림 시 아이콘 Y를 수납 영역 중심으로 보정
+            const hsAreaRaiseMm = sIdx === 0 ? (section.areaFinish?.[areaKey]?.bottomPanelRaise ?? section.bottomPanelRaise ?? 0) : 0;
+            const hsAreaRaiseOffset = hsAreaRaiseMm > 0 ? mmToUnit(hsAreaRaiseMm) / 2 : 0;
+            const hsAdjustedCY = centerY + hsAreaRaiseOffset;
             const subSplit = section.areaSubSplits?.[areaKey];
             if (subSplit?.enabled) {
               const areaInnerH = mmToUnit(section.height);
               const lowerH = mmToUnit(subSplit.lowerHeight);
               const upperH = areaInnerH - lowerH;
-              const lowerCY = centerY - areaInnerH / 2 + lowerH / 2;
-              const upperCY = centerY + areaInnerH / 2 - upperH / 2;
+              const lowerCY = hsAdjustedCY - areaInnerH / 2 + lowerH / 2;
+              const upperCY = hsAdjustedCY + areaInnerH / 2 - upperH / 2;
               icons.push(renderSectionIcon(`${prefix}-hsplit-${areaKey}-lower`, cx + xOffset, lowerCY, frontZ, sIdx, areaKey, 'lower'));
               icons.push(renderSectionIcon(`${prefix}-hsplit-${areaKey}-upper`, cx + xOffset, upperCY, frontZ, sIdx, areaKey, 'upper'));
             } else {
-              icons.push(renderSectionIcon(`${prefix}-hsplit-${areaKey}`, cx + xOffset, centerY, frontZ, sIdx, areaKey));
+              icons.push(renderSectionIcon(`${prefix}-hsplit-${areaKey}`, cx + xOffset, hsAdjustedCY, frontZ, sIdx, areaKey));
             }
           };
           addHSplitAreaIcon('left', leftCX, hs.leftElements);
@@ -776,19 +785,24 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
         // 삭제된 영역은 아이콘 스킵
         if (areaKey !== 'full' && !elements) return;
 
+        // 바닥판 올림 시 아이콘 Y를 수납 영역 중심으로 보정
+        const singleRaiseMm = section?.areaFinish?.[areaKey]?.bottomPanelRaise ?? section?.bottomPanelRaise ?? 0;
+        const singleRaiseOffset = singleRaiseMm > 0 ? mmToUnit(singleRaiseMm) / 2 : 0;
+        const singleAdjustedCY = 0 + singleRaiseOffset; // 단일 섹션은 centerY = 0
+
         const subSplit = section?.areaSubSplits?.[areaKey];
         if (subSplit?.enabled) {
           const areaInnerH = mmToUnit(section.height);
           const lH = mmToUnit(subSplit.lowerHeight);
           const uH = areaInnerH - lH;
-          const lowerCY = -areaInnerH / 2 + lH / 2;
-          const upperCY = areaInnerH / 2 - uH / 2;
+          const lowerCY = singleAdjustedCY - areaInnerH / 2 + lH / 2;
+          const upperCY = singleAdjustedCY + areaInnerH / 2 - uH / 2;
           const side = areaKey === 'full' ? undefined : areaKey;
           icons.push(renderSectionIcon(`single-${areaKey}-lower`, cx + singleAlignOffset, lowerCY, frontZ, 0, side, 'lower'));
           icons.push(renderSectionIcon(`single-${areaKey}-upper`, cx + singleAlignOffset, upperCY, frontZ, 0, side, 'upper'));
         } else {
           const side = areaKey === 'full' ? undefined : areaKey;
-          icons.push(renderSectionIcon(`single-${areaKey}`, cx + singleAlignOffset, 0, frontZ, 0, side));
+          icons.push(renderSectionIcon(`single-${areaKey}`, cx + singleAlignOffset, singleAdjustedCY, frontZ, 0, side));
         }
       };
 
@@ -809,17 +823,21 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
         // 서브분할 고려 아이콘 렌더링 헬퍼
         const addSingleHSplitIcon = (areaKey: 'left' | 'center' | 'right', cx: number, elements: CustomElement[] | undefined) => {
           if (!elements) return;
+          // 바닥판 올림 시 아이콘 Y를 수납 영역 중심으로 보정
+          const shsRaiseMm = section?.areaFinish?.[areaKey]?.bottomPanelRaise ?? section?.bottomPanelRaise ?? 0;
+          const shsRaiseOffset = shsRaiseMm > 0 ? mmToUnit(shsRaiseMm) / 2 : 0;
+          const shsAdjustedCY = 0 + shsRaiseOffset;
           const subSplit = section.areaSubSplits?.[areaKey];
           if (subSplit?.enabled) {
             const areaInnerH = mmToUnit(section.height);
             const lowerH = mmToUnit(subSplit.lowerHeight);
             const upperH = areaInnerH - lowerH;
-            const lowerCY = -areaInnerH / 2 + lowerH / 2;
-            const upperCY = areaInnerH / 2 - upperH / 2;
+            const lowerCY = shsAdjustedCY - areaInnerH / 2 + lowerH / 2;
+            const upperCY = shsAdjustedCY + areaInnerH / 2 - upperH / 2;
             icons.push(renderSectionIcon(`single-hsplit-${areaKey}-lower`, cx + singleAlignOffset, lowerCY, frontZ, 0, areaKey, 'lower'));
             icons.push(renderSectionIcon(`single-hsplit-${areaKey}-upper`, cx + singleAlignOffset, upperCY, frontZ, 0, areaKey, 'upper'));
           } else {
-            icons.push(renderSectionIcon(`single-hsplit-${areaKey}`, cx + singleAlignOffset, 0, frontZ, 0, areaKey));
+            icons.push(renderSectionIcon(`single-hsplit-${areaKey}`, cx + singleAlignOffset, shsAdjustedCY, frontZ, 0, areaKey));
           }
         };
         addSingleHSplitIcon('left', leftCX, hs.leftElements);
@@ -1365,10 +1383,15 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
       const leftWidthMm = section.partitionPosition - panelThickness / 2;
       const leftInnerW = mmToUnit(leftWidthMm);
       const leftCenterX = -bInnerW / 2 + leftInnerW / 2;
+      // 바닥판 올림 시 수납 영역 높이/중심 보정
+      const leftRaiseMm = sIdx === 0 ? (section.areaFinish?.['left']?.bottomPanelRaise ?? section.bottomPanelRaise ?? 0) : 0;
+      const leftRaiseUnit = leftRaiseMm > 0 ? mmToUnit(leftRaiseMm) : 0;
+      const leftUsableH = bInnerH - leftRaiseUnit;
+      const leftUsableCY = contentCenterY + leftRaiseUnit / 2;
       meshes.push(
         ...renderAreaWithSubSplit(
           section, 'left', section.leftElements,
-          leftInnerW, bInnerH, contentCenterY, leftCenterX, leftBoxD,
+          leftInnerW, leftUsableH, leftUsableCY, leftCenterX, leftBoxD,
           `${sectionLabel}좌`, `s${sIdx}-left`, sIdx
         )
       );
@@ -1377,19 +1400,28 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
       const rightWidthMm = innerWidthMm - section.partitionPosition - panelThickness / 2;
       const rightInnerW = mmToUnit(rightWidthMm);
       const rightCenterX = partitionX + t / 2 + rightInnerW / 2;
+      // 바닥판 올림 시 수납 영역 높이/중심 보정
+      const rightRaiseMm = sIdx === 0 ? (section.areaFinish?.['right']?.bottomPanelRaise ?? section.bottomPanelRaise ?? 0) : 0;
+      const rightRaiseUnit = rightRaiseMm > 0 ? mmToUnit(rightRaiseMm) : 0;
+      const rightUsableH = bInnerH - rightRaiseUnit;
+      const rightUsableCY = contentCenterY + rightRaiseUnit / 2;
       meshes.push(
         ...renderAreaWithSubSplit(
           section, 'right', section.rightElements,
-          rightInnerW, bInnerH, contentCenterY, rightCenterX, rightBoxD,
+          rightInnerW, rightUsableH, rightUsableCY, rightCenterX, rightBoxD,
           `${sectionLabel}우`, `s${sIdx}-right`, sIdx
         )
       );
     } else {
-      // 칸막이 없는 경우
+      // 칸막이 없는 경우 (섹션 레벨 바닥판 올림 보정)
+      const fullRaiseMm = sIdx === 0 ? (section.bottomPanelRaise ?? 0) : 0;
+      const fullRaiseUnit = fullRaiseMm > 0 ? mmToUnit(fullRaiseMm) : 0;
+      const fullUsableH = bInnerH - fullRaiseUnit;
+      const fullUsableCY = contentCenterY + fullRaiseUnit / 2;
       meshes.push(
         ...renderAreaWithSubSplit(
           section, 'full', section.elements,
-          bInnerW, bInnerH, contentCenterY, 0, boxD,
+          bInnerW, fullUsableH, fullUsableCY, 0, boxD,
           sectionLabel, `s${sIdx}`, sIdx
         )
       );
@@ -1894,10 +1926,14 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
       }
 
       // 내부 요소 (선반, 서랍 등 — 드래그/고스트 중에도 표시)
+      // 바닥판 올림 시 수납 영역 높이/중심 보정
+      const hsContentRaiseUnit = areaBottomRaiseUnit; // renderSubBox의 areaBottomRaiseUnit 재사용
+      const hsContentUsableH = sbInnerH - hsContentRaiseUnit;
+      const hsContentUsableCY = sbHsCenterY + hsContentRaiseUnit / 2;
       if (hasContent) {
         subMeshes.push(
           ...renderSectionElements(
-            elements!, subInnerW, sbInnerH, sbHsCenterY, subCenterX, subBoxD,
+            elements!, subInnerW, hsContentUsableH, hsContentUsableCY, subCenterX, subBoxD,
             label, `s${sIdx}-hsplit-${side}`
           )
         );
