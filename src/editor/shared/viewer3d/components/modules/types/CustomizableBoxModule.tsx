@@ -2507,7 +2507,7 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
       </group>
 
       {/* 설계모드: 하부프레임(받침대) 반투명 표시 — 조절발 기준 분할 */}
-      {isLayoutBuilderOpen && spaceInfo.baseConfig?.type === 'floor' && category !== 'upper' && (() => {
+      {(isLayoutBuilderOpen || activePopup?.type === 'customizableEdit') && spaceInfo.baseConfig?.type === 'floor' && category !== 'upper' && (() => {
         const baseH = mmToUnit(spaceInfo.baseConfig?.height || 65);
         const baseDepthOffset = mmToUnit(spaceInfo.baseConfig?.depth || 0);
         const epThk = mmToUnit(18);
