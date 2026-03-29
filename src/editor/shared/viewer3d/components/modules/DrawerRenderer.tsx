@@ -383,8 +383,9 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
   // 서랍을 앞으로 100mm 이동
   const drawerZOffset = mmToThreeUnits(0);
   
-  // 서랍 구조 상수 - PB 재질 고정 (basicThickness와 무관)
-  const drawerPanelThicknessMm = 15; // mm
+  // 서랍 구조 상수 - PB+PET 코팅 시 15.5mm
+  const basicThicknessMm = basicThickness / 0.01;
+  const drawerPanelThicknessMm = (basicThicknessMm === 18.5 || basicThicknessMm === 15.5) ? 15.5 : 15; // mm
   // 손잡이 판 두께(마이다)
   const SPECIAL_PANEL_THICKNESS = drawerPanelThicknessMm; // mm
   const HANDLE_PLATE_THICKNESS = mmToThreeUnits(SPECIAL_PANEL_THICKNESS);

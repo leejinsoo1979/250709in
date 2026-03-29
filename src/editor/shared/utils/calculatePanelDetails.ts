@@ -43,8 +43,8 @@ export const calculatePanelDetails = (
   // 실제 3D 렌더링과 동일한 두께 값들 (BaseFurnitureShell.tsx와 DrawerRenderer.tsx 참조)
   const basicThickness = moduleData.modelConfig?.basicThickness || 18;
   const backPanelThickness = backPanelThicknessMm ?? 9; // 백패널 두께
-  const drawerHandleThickness = 15; // 서랍 손잡이판(마이다) 두께
-  const drawerSideThickness = 15; // 서랍 측면 두께 (DRAWER_SIDE_THICKNESS) 
+  const drawerHandleThickness = (basicThickness === 18.5 || basicThickness === 15.5) ? 15.5 : 15; // PB+PET 코팅 시 15.5mm
+  const drawerSideThickness = (basicThickness === 18.5 || basicThickness === 15.5) ? 15.5 : 15; // PB+PET 코팅 시 15.5mm
   const drawerBottomThickness = backPanelThickness; // 서랍 바닥판 - MDF 재질, 백패널과 동일
   
   const originalHeight = moduleData.dimensions.height;
@@ -890,8 +890,8 @@ export const calculatePanelDetails = (
   // === 커스텀 가구 내부 패널 (칸막이, 선반, 서랍) ===
   if (customConfig && customConfig.sections) {
     const basicThicknessCC = customConfig.panelThickness || basicThickness;
-    const drawerHandleThicknessCC = 15;
-    const drawerSideThicknessCC = 15;
+    const drawerHandleThicknessCC = (basicThicknessCC === 18.5 || basicThicknessCC === 15.5) ? 15.5 : 15; // PB+PET 코팅 시 15.5mm
+    const drawerSideThicknessCC = (basicThicknessCC === 18.5 || basicThicknessCC === 15.5) ? 15.5 : 15; // PB+PET 코팅 시 15.5mm
     const drawerBottomThicknessCC = backPanelThickness; // MDF 재질, 백패널과 동일
     const targetPanel = panels.upper.length > 0 ? panels.upper : panels.lower;
 
