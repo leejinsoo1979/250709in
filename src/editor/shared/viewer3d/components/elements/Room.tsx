@@ -5558,7 +5558,7 @@ const Room: React.FC<RoomProps> = ({
       {/* 하단 프레임 - 받침대 역할 (가구 앞면에 배치, 문 안쪽에 숨김) */}
       {/* 받침대가 있는 경우에만 렌더링 */}
       {/* 하부 베이스프레임 - 균등분할: 전체 너비, 자유배치: 가구별 세그먼트 */}
-      {!isLayoutBuilderOpen && (effectiveShowFrame || isFreePlacement) && baseFrameHeightMm > 0 && spaceInfo.baseConfig?.type === 'floor' && (() => {
+      {(effectiveShowFrame || isFreePlacement) && baseFrameHeightMm > 0 && spaceInfo.baseConfig?.type === 'floor' && (() => {
         // 모든 하부/키큰장 가구가 bottomPanelRaise 활성이면 하부프레임 전체 숨김
         // 일부만 활성이면 조절발 있는 가구용 하부프레임은 유지
         // 좌우분할 시 영역별 areaFinish도 확인
@@ -5607,7 +5607,11 @@ const Room: React.FC<RoomProps> = ({
             mmToThreeUnits(spaceInfo.baseConfig?.depth ?? 0);
 
           const allBaseSegments: (FrameRenderSegment & { key: string })[] = [];
-          const baseMat = baseFrameMaterial ?? createFrameMaterial('base');
+          const rawBaseMat = baseFrameMaterial ?? createFrameMaterial('base');
+          // 디자인 모드(레이아웃 빌더): 조절발이 비치도록 반투명 처리
+          const baseMat = isLayoutBuilderOpen && rawBaseMat instanceof THREE.MeshStandardMaterial
+            ? (() => { const m = rawBaseMat.clone(); m.transparent = true; m.opacity = 0.35; m.depthWrite = false; m.needsUpdate = true; return m; })()
+            : rawBaseMat;
 
           stripGroups.forEach((group) => {
             group.modules.filter((mod) => mod.hasBase !== false).forEach((mod) => {
@@ -5799,9 +5803,13 @@ const Room: React.FC<RoomProps> = ({
               // 각 영역에 대해 하부프레임 렌더링
               return renderZones.map((renderZone, zoneIndex) => {
                 // 단내림 구간은 별도 material 인스턴스 사용 (R3F primitive attach 이슈 방지)
-                const zoneMaterial = renderZone.zone === 'dropped'
+                const rawZoneMaterial = renderZone.zone === 'dropped'
                   ? (baseDroppedFrameMaterial ?? createFrameMaterial('base'))
                   : (baseFrameMaterial ?? createFrameMaterial('base'));
+                // 디자인 모드(레이아웃 빌더): 조절발이 비치도록 반투명 처리
+                const zoneMaterial = isLayoutBuilderOpen && rawZoneMaterial instanceof THREE.MeshStandardMaterial
+                  ? (() => { const m = rawZoneMaterial.clone(); m.transparent = true; m.opacity = 0.35; m.depthWrite = false; m.needsUpdate = true; return m; })()
+                  : rawZoneMaterial;
                 // mm 단위를 Three.js 단위로 변환 - 노서라운드에서 엔드패널 제외
                 let frameStartX = mmToThreeUnits(renderZone.startX);
                 let frameEndX = mmToThreeUnits(renderZone.endX);
