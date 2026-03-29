@@ -59,6 +59,28 @@ interface CustomizableBoxModuleProps {
 // mm → Three.js units
 const mmToUnit = (val: number) => val * 0.01;
 
+// 설계모드 하부프레임 반투명 스트립 (윤곽선 포함)
+const DesignBaseFrameStrip: React.FC<{
+  args: [number, number, number];
+  position: [number, number, number];
+}> = ({ args, position }) => {
+  const geometry = useMemo(() => new THREE.BoxGeometry(...args), [args[0], args[1], args[2]]);
+  const edgesGeometry = useMemo(() => new THREE.EdgesGeometry(geometry), [geometry]);
+  useEffect(() => {
+    return () => { geometry.dispose(); edgesGeometry.dispose(); };
+  }, [geometry, edgesGeometry]);
+  return (
+    <group position={position}>
+      <mesh renderOrder={-1} geometry={geometry}>
+        <meshStandardMaterial color="#C0C0C0" transparent opacity={0.35} depthWrite={false} />
+      </mesh>
+      <lineSegments geometry={edgesGeometry}>
+        <lineBasicMaterial color="#666666" linewidth={0.5} />
+      </lineSegments>
+    </group>
+  );
+};
+
 // ── 선반 간격 입력 컴포넌트 ──
 interface ShelfGapInputProps {
   value: number;
@@ -2484,10 +2506,9 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
       })()}
       </group>
 
-      {/* 설계모드: 하부프레임(받침대) 반투명 표시 — 조절발이 비치도록, 영역별 분할 */}
+      {/* 설계모드: 하부프레임(받침대) 반투명 표시 — 조절발 기준 분할 */}
       {isLayoutBuilderOpen && spaceInfo.baseConfig?.type === 'floor' && category !== 'upper' && (() => {
-        const baseHMm = spaceInfo.baseConfig?.height || 65;
-        const baseH = mmToUnit(baseHMm);
+        const baseH = mmToUnit(spaceInfo.baseConfig?.height || 65);
         const baseDepthOffset = mmToUnit(spaceInfo.baseConfig?.depth || 0);
         const epThk = mmToUnit(18);
         const baseY = -H / 2 - baseH / 2;
@@ -2507,81 +2528,56 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
         const footWidth = lowerSection?.width ? mmToUnit(lowerSection.width) : effectiveW;
         const footAlignOffset = calculateAlignOffset(footWidth, effectiveW, lowerSection?.align || 'center');
 
-        // 반투명 박스 + 윤곽선 렌더링 헬퍼
-        const renderBaseFrameBox = (w: number, posX: number, key: string) => {
-          const geo = new THREE.BoxGeometry(w, baseH, epThk);
-          const edges = new THREE.EdgesGeometry(geo);
-          return (
-            <group key={key} position={[posX, baseY, baseZ]}>
-              <mesh renderOrder={-1}>
-                <boxGeometry args={[w, baseH, epThk]} />
-                <meshStandardMaterial color="#C0C0C0" transparent opacity={0.35} depthWrite={false} />
-              </mesh>
-              <lineSegments geometry={edges}>
-                <lineBasicMaterial color="#666666" linewidth={0.5} />
-              </lineSegments>
-            </group>
-          );
-        };
-
+        // 조절발과 동일한 기준: horizontalSplit → 좌/우/중앙 섹션별 분할
         const hs = lowerSection?.horizontalSplit;
         if (hs) {
-          // horizontalSplit: 세그먼트별 분할 (조절발 로직과 동일)
           const totalInnerWMm = (footWidth - 2 * t) / 0.01;
           const leftInnerWMm = hs.position;
+          const leftOuterW = mmToUnit(leftInnerWMm + 2 * panelThickness);
           const is3Split = hs.secondPosition != null;
           const centerInnerWMm = is3Split ? (hs.secondPosition || 0) : 0;
+          const centerOuterW = is3Split ? mmToUnit(centerInnerWMm + 2 * panelThickness) : 0;
           const rightInnerWMm = is3Split
             ? totalInnerWMm - leftInnerWMm - centerInnerWMm - 4 * panelThickness
             : totalInnerWMm - leftInnerWMm - 2 * panelThickness;
-          const pnlW = mmToUnit(panelThickness);
+          const rightOuterW = mmToUnit(rightInnerWMm + 2 * panelThickness);
 
-          // 세그먼트 배열: [좌측판, 좌영역, 칸막이, (중앙영역, 칸막이,) 우영역, 우측판]
-          type Seg = { startX: number; width: number; raised: boolean };
-          const segments: Seg[] = [];
-          let curX = -footWidth / 2;
-          segments.push({ startX: curX, width: pnlW, raised: false }); curX += pnlW;
-          segments.push({ startX: curX, width: mmToUnit(leftInnerWMm), raised: getAreaRaised('left') }); curX += mmToUnit(leftInnerWMm);
-          segments.push({ startX: curX, width: pnlW, raised: false }); curX += pnlW;
-          if (is3Split) {
-            segments.push({ startX: curX, width: mmToUnit(centerInnerWMm), raised: getAreaRaised('center') }); curX += mmToUnit(centerInnerWMm);
-            segments.push({ startX: curX, width: pnlW, raised: false }); curX += pnlW;
+          const leftCX = -footWidth / 2 + leftOuterW / 2;
+          const rightCX = footWidth / 2 - rightOuterW / 2;
+
+          const leftDeleted = !hs.leftElements;
+          const centerDeleted = !hs.centerElements;
+          const rightDeleted = !hs.rightElements;
+          const leftRaised = getAreaRaised('left');
+          const centerRaised = getAreaRaised('center');
+          const rightRaised = getAreaRaised('right');
+
+          const strips: { w: number; cx: number; key: string }[] = [];
+          if (!leftDeleted && !leftRaised)
+            strips.push({ w: leftOuterW, cx: leftCX, key: 'left' });
+          if (is3Split && !centerDeleted && !centerRaised) {
+            const centerCX = -footWidth / 2 + leftOuterW + centerOuterW / 2;
+            strips.push({ w: centerOuterW, cx: centerCX, key: 'center' });
           }
-          segments.push({ startX: curX, width: mmToUnit(Math.max(0, rightInnerWMm)), raised: getAreaRaised('right') }); curX += mmToUnit(Math.max(0, rightInnerWMm));
-          segments.push({ startX: curX, width: pnlW, raised: false });
+          if (!rightDeleted && !rightRaised)
+            strips.push({ w: rightOuterW, cx: rightCX, key: 'right' });
 
-          // 연속 비올림 세그먼트 병합
-          const merged: { startX: number; endX: number }[] = [];
-          let mStart = -1, mEnd = -1;
-          segments.forEach((seg) => {
-            if (!seg.raised && seg.width > 0) {
-              if (mStart < 0) { mStart = seg.startX; mEnd = seg.startX + seg.width; }
-              else { mEnd = seg.startX + seg.width; }
-            } else {
-              if (mStart >= 0) { merged.push({ startX: mStart, endX: mEnd }); mStart = -1; mEnd = -1; }
-            }
-          });
-          if (mStart >= 0) merged.push({ startX: mStart, endX: mEnd });
-
-          if (merged.length === 0) return null;
+          if (strips.length === 0) return null;
 
           return (
             <group position={[footAlignOffset, 0, 0]}>
-              {merged.map((m, i) => {
-                const segW = m.endX - m.startX;
-                const segCX = m.startX + segW / 2;
-                return renderBaseFrameBox(segW, segCX, `design-baseframe-${i}`);
-              })}
+              {strips.map(({ w, cx, key }) => (
+                <DesignBaseFrameStrip key={key} args={[w, baseH, epThk]} position={[cx, baseY, baseZ]} />
+              ))}
             </group>
           );
         }
 
-        // 칸막이만 있는 경우 (horizontalSplit 없음)
+        // 칸막이만 있는 경우
         if (lowerSection?.hasPartition) {
           const leftRaised = getAreaRaised('left');
           const rightRaised = getAreaRaised('right');
           if (leftRaised && rightRaised) return null;
-          // 칸막이에서는 분리 불가 → 한쪽이라도 올림이면 전체 숨김
           if (leftRaised || rightRaised) return null;
         } else if (sectionBottomRaise) {
           return null;
@@ -2590,7 +2586,7 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
         // 기본: 전체 너비 하부프레임
         return (
           <group position={[footAlignOffset, 0, 0]}>
-            {renderBaseFrameBox(footWidth, 0, 'design-baseframe-full')}
+            <DesignBaseFrameStrip args={[footWidth, baseH, epThk]} position={[0, baseY, baseZ]} />
           </group>
         );
       })()}
