@@ -2534,47 +2534,53 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
         const footWidth = lowerSection?.width ? mmToUnit(lowerSection.width) : effectiveW;
         const footAlignOffset = calculateAlignOffset(footWidth, effectiveW, lowerSection?.align || 'center');
 
-        // 조절발과 동일한 기준: horizontalSplit → 좌/우/중앙 섹션별 분할
+        // horizontalSplit: 세그먼트(측판/내경/칸막이) 개별 나열 → 비올림 연속구간 병합
         const hs = lowerSection?.horizontalSplit;
         if (hs) {
           const totalInnerWMm = (footWidth - 2 * t) / 0.01;
           const leftInnerWMm = hs.position;
-          const leftOuterW = mmToUnit(leftInnerWMm + 2 * panelThickness);
           const is3Split = hs.secondPosition != null;
           const centerInnerWMm = is3Split ? (hs.secondPosition || 0) : 0;
-          const centerOuterW = is3Split ? mmToUnit(centerInnerWMm + 2 * panelThickness) : 0;
           const rightInnerWMm = is3Split
             ? totalInnerWMm - leftInnerWMm - centerInnerWMm - 4 * panelThickness
             : totalInnerWMm - leftInnerWMm - 2 * panelThickness;
-          const rightOuterW = mmToUnit(rightInnerWMm + 2 * panelThickness);
+          const pnlW = mmToUnit(panelThickness);
 
-          const leftCX = -footWidth / 2 + leftOuterW / 2;
-          const rightCX = footWidth / 2 - rightOuterW / 2;
-
-          const leftDeleted = !hs.leftElements;
-          const centerDeleted = !hs.centerElements;
-          const rightDeleted = !hs.rightElements;
-          const leftRaised = getAreaRaised('left');
-          const centerRaised = getAreaRaised('center');
-          const rightRaised = getAreaRaised('right');
-
-          const strips: { w: number; cx: number; key: string }[] = [];
-          if (!leftDeleted && !leftRaised)
-            strips.push({ w: leftOuterW, cx: leftCX, key: 'left' });
-          if (is3Split && !centerDeleted && !centerRaised) {
-            const centerCX = -footWidth / 2 + leftOuterW + centerOuterW / 2;
-            strips.push({ w: centerOuterW, cx: centerCX, key: 'center' });
+          // 세그먼트 배열: [좌측판 | 좌내경 | 칸막이 | (중내경 | 칸막이 |) 우내경 | 우측판]
+          const segments: { startX: number; width: number; raised: boolean }[] = [];
+          let curX = -footWidth / 2;
+          segments.push({ startX: curX, width: pnlW, raised: false }); curX += pnlW;
+          segments.push({ startX: curX, width: mmToUnit(leftInnerWMm), raised: getAreaRaised('left') }); curX += mmToUnit(leftInnerWMm);
+          segments.push({ startX: curX, width: pnlW, raised: false }); curX += pnlW;
+          if (is3Split) {
+            segments.push({ startX: curX, width: mmToUnit(centerInnerWMm), raised: getAreaRaised('center') }); curX += mmToUnit(centerInnerWMm);
+            segments.push({ startX: curX, width: pnlW, raised: false }); curX += pnlW;
           }
-          if (!rightDeleted && !rightRaised)
-            strips.push({ w: rightOuterW, cx: rightCX, key: 'right' });
+          segments.push({ startX: curX, width: mmToUnit(Math.max(0, rightInnerWMm)), raised: getAreaRaised('right') }); curX += mmToUnit(Math.max(0, rightInnerWMm));
+          segments.push({ startX: curX, width: pnlW, raised: false });
 
-          if (strips.length === 0) return null;
+          // 연속 비올림 세그먼트 병합
+          const merged: { startX: number; endX: number }[] = [];
+          let mStart = -1, mEnd = -1;
+          segments.forEach((seg) => {
+            if (!seg.raised && seg.width > 0) {
+              if (mStart < 0) { mStart = seg.startX; mEnd = seg.startX + seg.width; }
+              else { mEnd = seg.startX + seg.width; }
+            } else {
+              if (mStart >= 0) { merged.push({ startX: mStart, endX: mEnd }); mStart = -1; mEnd = -1; }
+            }
+          });
+          if (mStart >= 0) merged.push({ startX: mStart, endX: mEnd });
+
+          if (merged.length === 0) return null;
 
           return (
             <group position={[footAlignOffset, 0, 0]}>
-              {strips.map(({ w, cx, key }) => (
-                <BaseFrameStrip key={key} args={[w, baseH, epThk]} position={[cx, baseY, baseZ]} isDesignMode={isEditMode} />
-              ))}
+              {merged.map((m, i) => {
+                const segW = m.endX - m.startX;
+                const segCX = m.startX + segW / 2;
+                return <BaseFrameStrip key={`bf-${i}`} args={[segW, baseH, epThk]} position={[segCX, baseY, baseZ]} isDesignMode={isEditMode} />;
+              })}
             </group>
           );
         }
