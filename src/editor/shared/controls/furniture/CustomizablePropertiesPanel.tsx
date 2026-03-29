@@ -1132,6 +1132,20 @@ const CustomizablePropertiesPanel: React.FC = () => {
     applyConfig({ ...config, sections });
   };
 
+  // 상하분할 파트(upper/lower) 개별 비움/복원
+  const handleSubSplitPartDelete = (sIdx: number, areaKey: string, part: 'upper' | 'lower', restore: boolean) => {
+    const sections = [...config.sections];
+    const sec = { ...sections[sIdx] };
+    const subSplits = { ...(sec.areaSubSplits || {}) };
+    const sub = subSplits[areaKey];
+    if (!sub) return;
+    const key = part === 'lower' ? 'lowerElements' : 'upperElements';
+    subSplits[areaKey] = { ...sub, [key]: restore ? [{ type: 'open' as const }] : undefined };
+    sec.areaSubSplits = subSplits;
+    sections[sIdx] = sec;
+    applyConfig({ ...config, sections });
+  };
+
   // 영역별 서브분할 높이 변경
   const handleAreaSubSplitHeight = (sIdx: number, areaKey: string, lowerHeight: number) => {
     const sections = [...config.sections];
@@ -2781,12 +2795,30 @@ const CustomizablePropertiesPanel: React.FC = () => {
               )}
             </div>
             <div className={styles.section}>
-              <div className={styles.sectionTitle}>
-                {focusedSubPart === 'upper' ? '상부' : '하부'} 내부 구조
+              <div className={styles.sectionTitle} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <span>{focusedSubPart === 'upper' ? '상부' : '하부'} 내부 구조</span>
+                <div className={styles.toggleGroup} style={{ flex: 'none' }}>
+                  <button
+                    className={`${styles.toggleButton} ${subElements ? styles.active : ''}`}
+                    onClick={() => { if (!subElements) handleSubSplitPartDelete(sIdx, areaSide, focusedSubPart, true); }}
+                    style={{ flex: 'none', fontSize: '10px', padding: '2px 8px' }}
+                  >활성</button>
+                  <button
+                    className={`${styles.toggleButton} ${!subElements ? styles.active : ''}`}
+                    onClick={() => { if (subElements) handleSubSplitPartDelete(sIdx, areaSide, focusedSubPart, false); }}
+                    style={{ flex: 'none', fontSize: '10px', padding: '2px 8px' }}
+                  >비움</button>
+                </div>
               </div>
-              <div className={styles.areaCard}>
-                {renderSubSplitElementEditor(sIdx, areaSide, focusedSubPart, subElements, subHeight)}
-              </div>
+              {subElements ? (
+                <div className={styles.areaCard}>
+                  {renderSubSplitElementEditor(sIdx, areaSide, focusedSubPart, subElements, subHeight)}
+                </div>
+              ) : (
+                <div style={{ padding: '12px', textAlign: 'center', color: '#999', fontSize: '12px' }}>
+                  이 영역은 비움 상태입니다
+                </div>
+              )}
             </div>
 
           </div>
@@ -3591,16 +3623,48 @@ const CustomizablePropertiesPanel: React.FC = () => {
                           상부: {Math.round((section.height - areaSubSplit.lowerHeight) / section.height * (section.height + 2 * panelThickness))}mm / 하부: {Math.round(areaSubSplit.lowerHeight / section.height * (section.height + 2 * panelThickness))}mm
                         </div>
                         <div style={{ marginTop: '12px' }}>
-                          <div className={styles.sectionTitle}>상부 내부 구조</div>
-                          <div className={styles.areaCard}>
-                            {renderSubSplitElementEditor(sIdx, side as 'left' | 'center' | 'right', 'upper', areaSubSplit.upperElements, section.height - areaSubSplit.lowerHeight)}
+                          <div className={styles.sectionTitle} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                            <span>상부 내부 구조</span>
+                            <div className={styles.toggleGroup} style={{ flex: 'none' }}>
+                              <button
+                                className={`${styles.toggleButton} ${areaSubSplit.upperElements ? styles.active : ''}`}
+                                onClick={() => { if (!areaSubSplit.upperElements) handleSubSplitPartDelete(sIdx, side, 'upper', true); }}
+                                style={{ flex: 'none', fontSize: '10px', padding: '2px 8px' }}
+                              >활성</button>
+                              <button
+                                className={`${styles.toggleButton} ${!areaSubSplit.upperElements ? styles.active : ''}`}
+                                onClick={() => { if (areaSubSplit.upperElements) handleSubSplitPartDelete(sIdx, side, 'upper', false); }}
+                                style={{ flex: 'none', fontSize: '10px', padding: '2px 8px' }}
+                              >비움</button>
+                            </div>
                           </div>
+                          {areaSubSplit.upperElements && (
+                            <div className={styles.areaCard}>
+                              {renderSubSplitElementEditor(sIdx, side as 'left' | 'center' | 'right', 'upper', areaSubSplit.upperElements, section.height - areaSubSplit.lowerHeight)}
+                            </div>
+                          )}
                         </div>
                         <div style={{ marginTop: '12px' }}>
-                          <div className={styles.sectionTitle}>하부 내부 구조</div>
-                          <div className={styles.areaCard}>
-                            {renderSubSplitElementEditor(sIdx, side as 'left' | 'center' | 'right', 'lower', areaSubSplit.lowerElements, areaSubSplit.lowerHeight)}
+                          <div className={styles.sectionTitle} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                            <span>하부 내부 구조</span>
+                            <div className={styles.toggleGroup} style={{ flex: 'none' }}>
+                              <button
+                                className={`${styles.toggleButton} ${areaSubSplit.lowerElements ? styles.active : ''}`}
+                                onClick={() => { if (!areaSubSplit.lowerElements) handleSubSplitPartDelete(sIdx, side, 'lower', true); }}
+                                style={{ flex: 'none', fontSize: '10px', padding: '2px 8px' }}
+                              >활성</button>
+                              <button
+                                className={`${styles.toggleButton} ${!areaSubSplit.lowerElements ? styles.active : ''}`}
+                                onClick={() => { if (areaSubSplit.lowerElements) handleSubSplitPartDelete(sIdx, side, 'lower', false); }}
+                                style={{ flex: 'none', fontSize: '10px', padding: '2px 8px' }}
+                              >비움</button>
+                            </div>
                           </div>
+                          {areaSubSplit.lowerElements && (
+                            <div className={styles.areaCard}>
+                              {renderSubSplitElementEditor(sIdx, side as 'left' | 'center' | 'right', 'lower', areaSubSplit.lowerElements, areaSubSplit.lowerHeight)}
+                            </div>
+                          )}
                         </div>
                       </>
                     ) : (
@@ -3997,18 +4061,43 @@ const CustomizablePropertiesPanel: React.FC = () => {
                       </div>
                     );
 
-                    // 상하 서브분할이 있으면 헤더 + 상부/하부 표시
+                    // 상하 서브분할이 있으면 헤더 + 상부/하부 각각 활성/비움
                     if (hasSubSplit && areaSubSplit && !isDeleted) {
                       const upperH = section.height - areaSubSplit.lowerHeight;
+                      const upperDeleted = !areaSubSplit.upperElements;
+                      const lowerDeleted = !areaSubSplit.lowerElements;
+                      const renderSubPartRow = (part: 'upper' | 'lower', h: number, deleted: boolean) => (
+                        <div style={{ marginTop: '4px', padding: '4px 6px', background: deleted ? 'rgba(200,0,0,0.04)' : 'rgba(0,0,0,0.02)', borderRadius: '4px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                            <span style={{ fontSize: '10px', color: deleted ? '#c00' : '#777' }}>
+                              {label} {part === 'upper' ? '상부' : '하부'} {h}mm
+                            </span>
+                            {!deleted && (
+                              <button
+                                onClick={() => openCustomizableEditPopup(moduleId!, realIdx, side, part)}
+                                style={{ fontSize: '9px', padding: '1px 4px', background: '#e3f2fd', color: '#1976d2', border: '1px solid #bbdefb', borderRadius: '3px', cursor: 'pointer' }}
+                              >편집</button>
+                            )}
+                          </div>
+                          <div className={styles.toggleGroup} style={{ flex: 'none' }}>
+                            <button
+                              className={`${styles.toggleButton} ${!deleted ? styles.active : ''}`}
+                              onClick={() => { if (deleted) handleSubSplitPartDelete(realIdx, side, part, true); }}
+                              style={{ flex: 'none', fontSize: '9px', padding: '1px 6px' }}
+                            >활성</button>
+                            <button
+                              className={`${styles.toggleButton} ${deleted ? styles.active : ''}`}
+                              onClick={() => { if (!deleted) handleSubSplitPartDelete(realIdx, side, part, false); }}
+                              style={{ flex: 'none', fontSize: '9px', padding: '1px 6px' }}
+                            >비움</button>
+                          </div>
+                        </div>
+                      );
                       return (
                         <div key={side} style={{ padding: '6px 8px', background: 'rgba(0,0,0,0.03)', borderRadius: '6px' }}>
                           {renderAreaHeader()}
-                          <div style={{ marginTop: '4px', padding: '4px 6px', background: 'rgba(0,0,0,0.02)', borderRadius: '4px' }}>
-                            <span style={{ fontSize: '10px', color: '#777' }}>{label} 상부 {upperH}mm</span>
-                          </div>
-                          <div style={{ marginTop: '2px', padding: '4px 6px', background: 'rgba(0,0,0,0.02)', borderRadius: '4px' }}>
-                            <span style={{ fontSize: '10px', color: '#777' }}>{label} 하부 {areaSubSplit.lowerHeight}mm</span>
-                          </div>
+                          {renderSubPartRow('upper', upperH, upperDeleted)}
+                          {renderSubPartRow('lower', areaSubSplit.lowerHeight, lowerDeleted)}
                           {renderDepthControls()}
                         </div>
                       );
