@@ -646,7 +646,8 @@ const CustomizablePropertiesPanel: React.FC = () => {
         const el = sec.elements?.[0];
         if (el?.type === 'drawer' && 'heights' in el) {
           const newH = sections[sIdx].height;
-          const gapTotal = 23.6 * (el.heights.length + 1);
+          const elGap = ('gapHeight' in el && el.gapHeight) ? el.gapHeight : 23.6;
+          const gapTotal = elGap * (el.heights.length + 1);
           const totalDrawerH = el.heights.reduce((s: number, h: number) => s + h, 0);
           const maxAllowed = newH - gapTotal;
           if (totalDrawerH > maxAllowed) {
@@ -764,7 +765,8 @@ const CustomizablePropertiesPanel: React.FC = () => {
         const el = sec.elements?.[0];
         if (el?.type === 'drawer' && 'heights' in el) {
           const newH = sIdx === idx ? clamped : otherH;
-          const gapTotal = 23.6 * (el.heights.length + 1);
+          const elGap = ('gapHeight' in el && el.gapHeight) ? el.gapHeight : 23.6;
+          const gapTotal = elGap * (el.heights.length + 1);
           const totalDrawerH = el.heights.reduce((s: number, h: number) => s + h, 0);
           const maxAllowed = newH - gapTotal;
           if (totalDrawerH > maxAllowed) {
@@ -1206,10 +1208,10 @@ const CustomizablePropertiesPanel: React.FC = () => {
     return 1;
   };
 
-  // 서랍 균등 채움 계산: 현재 서랍 단수를 유지하면서 마이다 간격 23.6mm 기준으로 균등 분배
+  // 서랍 균등 채움 계산: 현재 서랍 단수를 유지하면서 마이다 간격 기준으로 균등 분배
   // currentCount가 주어지면 그 단수 유지, 없으면 자동 계산
-  const calculateEvenFillDrawers = (sectionInnerHeight: number, currentCount?: number): { count: number; heights: number[] } => {
-    const gap = 23.6; // 마이다 간격 (DrawerRenderer gapHeight와 동일)
+  const calculateEvenFillDrawers = (sectionInnerHeight: number, currentCount?: number, gapOverride?: number): { count: number; heights: number[] } => {
+    const gap = gapOverride ?? 23.6; // 마이다 간격 (DrawerRenderer gapHeight와 동일)
     const maxDrawerH = 320; // 마이다 최대 높이
     const minDrawerH = 80; // 서랍 최소 높이
     const effectiveHeight = sectionInnerHeight + panelThickness; // 상판 포함
@@ -1252,10 +1254,11 @@ const CustomizablePropertiesPanel: React.FC = () => {
     }
     const currentDrawer = currentElements?.find((el): el is Extract<CustomElement, { type: 'drawer' }> => el.type === 'drawer');
     const currentCount = currentDrawer?.heights?.length;
+    const currentGap = currentDrawer?.gapHeight;
 
-    const { heights } = calculateEvenFillDrawers(usableH, currentCount);
+    const { heights } = calculateEvenFillDrawers(usableH, currentCount, currentGap);
 
-    const newElement: CustomElement = { type: 'drawer', heights };
+    const newElement: CustomElement = { type: 'drawer', heights, ...(currentGap !== undefined ? { gapHeight: currentGap } : {}) };
 
     if (side === 'full') {
       sec.elements = [newElement];
@@ -1338,10 +1341,11 @@ const CustomizablePropertiesPanel: React.FC = () => {
     // 현재 서랍 단수 가져오기
     const currentDrawer = sec.elements?.find((el): el is Extract<CustomElement, { type: 'drawer' }> => el.type === 'drawer');
     const currentCount = currentDrawer?.heights?.length;
+    const currentGap = currentDrawer?.gapHeight;
 
-    const { heights } = calculateEvenFillDrawers(usableH, currentCount);
+    const { heights } = calculateEvenFillDrawers(usableH, currentCount, currentGap);
 
-    sec.elements = [{ type: 'drawer', heights }];
+    sec.elements = [{ type: 'drawer', heights, ...(currentGap !== undefined ? { gapHeight: currentGap } : {}) }];
     sec.hasPartition = false;
     sec.partitionPosition = undefined;
     sec.leftElements = undefined;
@@ -1547,7 +1551,7 @@ const CustomizablePropertiesPanel: React.FC = () => {
       const isTopAlignBottom = heightIdx === 0 && 'drawerAlign' in el && el.drawerAlign === 'top';
       if (isTopAlignBottom) num = num - 42;
       // 서랍 스택은 상판까지 포함 (내경 + 상판두께)
-      const gapPerDrawer = 23.6; // DrawerRenderer의 gapHeight와 동일
+      const gapPerDrawer = ('gapHeight' in el && el.gapHeight) ? el.gapHeight : 23.6;
       const totalGap = gapPerDrawer * (el.heights.length + 1);
       const usableHeight = (sectionHeight + panelThickness) - totalGap;
       const minDrawerH = 80;
@@ -1629,7 +1633,7 @@ const CustomizablePropertiesPanel: React.FC = () => {
     const el = elements[0];
     if (!el || el.type !== 'drawer') return true; // 서랍이 아니면 제한 없음
 
-    const gap = 23.6;
+    const gap = ('gapHeight' in el && el.gapHeight) ? el.gapHeight : 23.6;
     const minDrawerH = 80;
     const effectiveHeight = sec.height + panelThickness; // 상판 포함
     const newCount = el.heights.length + 1;
@@ -1665,7 +1669,7 @@ const CustomizablePropertiesPanel: React.FC = () => {
         if (!canAddDrawer(sIdx, side)) return;
 
         // 새 서랍 높이를 균등 재분배로 계산
-        const gap = 23.6;
+        const gap = ('gapHeight' in el && el.gapHeight) ? el.gapHeight : 23.6;
         const newCount = el.heights.length + 1;
         const effectiveHeight = sec.height + panelThickness;
         const totalGap = gap * (newCount + 1);
@@ -2079,13 +2083,60 @@ const CustomizablePropertiesPanel: React.FC = () => {
           );
         })()}
 
+        {/* 서랍 갭 조절 */}
+        {currentType === 'drawer' && 'heights' in el && (
+          <div style={{ marginTop: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <span style={{ fontSize: '12px', whiteSpace: 'nowrap' }}>서랍 갭</span>
+            <input
+              type="number"
+              className={`${styles.input} ${styles.inputSmall}`}
+              style={{ width: '60px' }}
+              value={('gapHeight' in el && el.gapHeight !== undefined) ? el.gapHeight : 23.6}
+              min={10}
+              max={50}
+              step={1}
+              onChange={(e) => {
+                const v = parseFloat(e.target.value);
+                if (!isNaN(v) && v >= 10 && v <= 50) {
+                  const sections = [...config.sections];
+                  const sec = { ...sections[sIdx] };
+                  const getElements = () => {
+                    if (side === 'full') return sec.elements ? [...sec.elements] : [];
+                    if (side === 'left') return sec.leftElements ? [...sec.leftElements] : [];
+                    if (side === 'center' && sec.horizontalSplit) {
+                      return sec.horizontalSplit.centerElements ? [...sec.horizontalSplit.centerElements] : [];
+                    }
+                    if (sec.horizontalSplit && side === 'right') {
+                      return sec.horizontalSplit.rightElements ? [...sec.horizontalSplit.rightElements] : [];
+                    }
+                    return sec.rightElements ? [...sec.rightElements] : [];
+                  };
+                  const els = getElements();
+                  if (els.length > 0 && els[0].type === 'drawer') {
+                    els[0] = { ...els[0], gapHeight: v };
+                  }
+                  if (side === 'full') sec.elements = els;
+                  else if (side === 'left' && !sec.horizontalSplit) sec.leftElements = els;
+                  else if (sec.horizontalSplit) {
+                    const hsKey = side === 'left' ? 'leftElements' : side === 'center' ? 'centerElements' : 'rightElements';
+                    sec.horizontalSplit = { ...sec.horizontalSplit, [hsKey]: els };
+                  } else sec.rightElements = els;
+                  sections[sIdx] = sec;
+                  applyConfig({ ...config, sections });
+                }
+              }}
+            />
+            <span className={styles.unit}>mm</span>
+          </div>
+        )}
+
         {/* 서랍 배치 방향 (위/아래) + 덮개 옵셋 */}
         {currentType === 'drawer' && 'heights' in el && (() => {
           const currentAlign = ('drawerAlign' in el && el.drawerAlign) || 'bottom';
           const defaultCoverInset = currentAlign === 'top' ? 85 : 60;
           const coverInset = ('coverInset' in el && el.coverInset !== undefined) ? el.coverInset : defaultCoverInset;
           // 서랍이 영역을 꽉 채우는지 판단 (fullFill이면 배치방향/덮개 무의미)
-          const gap = 23.6;
+          const gap = ('gapHeight' in el && el.gapHeight) ? el.gapHeight : 23.6;
           const totalH = el.heights.reduce((s: number, h: number) => s + h, 0) + gap * (el.heights.length + 1);
           const isFullFill = totalH >= sectionHeight;
           return (
@@ -3534,6 +3585,54 @@ const CustomizablePropertiesPanel: React.FC = () => {
             />
             <span className={styles.unit}>mm</span>
           </div>
+          {/* 상판 Z 오프셋 */}
+          {section.showTopPanel !== false && (
+            <div className={styles.row}>
+              <span className={styles.label}>상판 Z옵셋</span>
+              <input
+                type="number"
+                className={styles.input}
+                style={{ width: '60px', flex: 'none' }}
+                value={section.topPanelDepthOffset ?? 0}
+                min={-50}
+                max={50}
+                step={1}
+                onChange={(e) => {
+                  const v = parseInt(e.target.value, 10);
+                  if (!isNaN(v) && v >= -50 && v <= 50) {
+                    const sections = [...config.sections];
+                    sections[sIdx] = { ...sections[sIdx], topPanelDepthOffset: v };
+                    applyConfig({ ...config, sections });
+                  }
+                }}
+              />
+              <span className={styles.unit}>mm</span>
+            </div>
+          )}
+          {/* 하판 Z 오프셋 */}
+          {section.showBottomPanel !== false && (
+            <div className={styles.row}>
+              <span className={styles.label}>하판 Z옵셋</span>
+              <input
+                type="number"
+                className={styles.input}
+                style={{ width: '60px', flex: 'none' }}
+                value={section.bottomPanelDepthOffset ?? 0}
+                min={-50}
+                max={50}
+                step={1}
+                onChange={(e) => {
+                  const v = parseInt(e.target.value, 10);
+                  if (!isNaN(v) && v >= -50 && v <= 50) {
+                    const sections = [...config.sections];
+                    sections[sIdx] = { ...sections[sIdx], bottomPanelDepthOffset: v };
+                    applyConfig({ ...config, sections });
+                  }
+                }}
+              />
+              <span className={styles.unit}>mm</span>
+            </div>
+          )}
         </div>
 
       </div>
