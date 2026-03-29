@@ -434,7 +434,7 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
       // drawerAlign이 top이면 상판에 밀착
       if ('drawerAlign' in el && el.drawerAlign === 'top') return true;
       // fullFill이면 상판에 밀착
-      const gapHeight = 23.6;
+      const gapHeight = ('gapHeight' in el && el.gapHeight) ? el.gapHeight : 23.6;
       const totalH = el.heights.reduce((s: number, h: number) => s + h, 0) + gapHeight * (el.heights.length + 1);
       return mmToUnit(totalH) >= mmToUnit(sectionInnerH) - t;
     });
@@ -1101,7 +1101,7 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
       if (el.type === 'drawer') {
         // ═══ DrawerRenderer 사용 (ㄷ자 프레임 + 레일 + 보링홀 포함) ═══
         const drawerCount = el.heights.length;
-        const gapHeight = 23.6; // 서랍 간 공백 (mm) - 기존 모듈과 동일
+        const gapHeight = ('gapHeight' in el && el.gapHeight) ? el.gapHeight : 23.6; // 서랍 간 공백 (mm)
 
         // DrawerRenderer 내부: 바닥gap + (서랍+gap)*n = sum(heights) + (n+1)*gap
         const totalDrawerHeightMm = el.heights.reduce((sum: number, h: number) => sum + h, 0)
@@ -1526,11 +1526,13 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
       // ── 좌측 상판/바닥판 ──
       const drawerTouchesTop = sectionDrawerTouchesTop(section, section.height);
       const topDepthReduction = drawerTouchesTop ? drawerTopInset : 0;
+      const partTopZOffset = mmToUnit(section.topPanelDepthOffset ?? 0);
+      const partBottomZOffset = mmToUnit(section.bottomPanelDepthOffset ?? 0);
       if (section.showTopPanel !== false) {
       meshes.push(
         <BoxWithEdges key={`${prefix}-top-left`}
           args={[leftInnerW - widthReduction / 2, t, leftD - backReduction - topDepthReduction]}
-          position={[-bInnerW / 2 + leftInnerW / 2, centerY + boxH / 2 - t / 2, leftZOffset + backReduction / 2 - topDepthReduction / 2]}
+          position={[-bInnerW / 2 + leftInnerW / 2, centerY + boxH / 2 - t / 2, leftZOffset + backReduction / 2 - topDepthReduction / 2 + partTopZOffset]}
           material={material} renderMode={renderMode} isDragging={isDragging} isHighlighted={isHighlighted}
           panelName={`${sectionLabel}좌상판`} panelGrainDirections={panelGrainDirections} furnitureId={placedFurnitureId}
         />
@@ -1545,7 +1547,7 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
       meshes.push(
         <BoxWithEdges key={`${prefix}-bottom-left`}
           args={[leftInnerW - widthReduction / 2, t, leftD - backReduction]}
-          position={[-bInnerW / 2 + leftInnerW / 2, centerY - boxH / 2 + t / 2 + leftBottomRaiseUnit, leftZOffset + backReduction / 2]}
+          position={[-bInnerW / 2 + leftInnerW / 2, centerY - boxH / 2 + t / 2 + leftBottomRaiseUnit, leftZOffset + backReduction / 2 + partBottomZOffset]}
           material={material} renderMode={renderMode} isDragging={isDragging} isHighlighted={isHighlighted}
           panelName={`${sectionLabel}좌바닥판`} panelGrainDirections={panelGrainDirections} furnitureId={placedFurnitureId}
         />
@@ -1556,7 +1558,7 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
       meshes.push(
         <BoxWithEdges key={`${prefix}-top-right`}
           args={[rightInnerW - widthReduction / 2, t, rightD - backReduction - topDepthReduction]}
-          position={[partitionX + t / 2 + rightInnerW / 2, centerY + boxH / 2 - t / 2, rightZOffset + backReduction / 2 - topDepthReduction / 2]}
+          position={[partitionX + t / 2 + rightInnerW / 2, centerY + boxH / 2 - t / 2, rightZOffset + backReduction / 2 - topDepthReduction / 2 + partTopZOffset]}
           material={material} renderMode={renderMode} isDragging={isDragging} isHighlighted={isHighlighted}
           panelName={`${sectionLabel}우상판`} panelGrainDirections={panelGrainDirections} furnitureId={placedFurnitureId}
         />
@@ -1566,7 +1568,7 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
       meshes.push(
         <BoxWithEdges key={`${prefix}-bottom-right`}
           args={[rightInnerW - widthReduction / 2, t, rightD - backReduction]}
-          position={[partitionX + t / 2 + rightInnerW / 2, centerY - boxH / 2 + t / 2 + rightBottomRaiseUnit, rightZOffset + backReduction / 2]}
+          position={[partitionX + t / 2 + rightInnerW / 2, centerY - boxH / 2 + t / 2 + rightBottomRaiseUnit, rightZOffset + backReduction / 2 + partBottomZOffset]}
           material={material} renderMode={renderMode} isDragging={isDragging} isHighlighted={isHighlighted}
           panelName={`${sectionLabel}우바닥판`} panelGrainDirections={panelGrainDirections} furnitureId={placedFurnitureId}
         />
@@ -1637,12 +1639,14 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
     // 서랍이 상판에 밀착(fullFill 또는 drawerAlign=top)하면 상판 85mm 들여쓰기
     const drawerTouchesTop = sectionDrawerTouchesTop(section, section.height);
     const topDepthReduction = drawerTouchesTop ? drawerTopInset : 0;
+    const topPanelZOffset = mmToUnit(section.topPanelDepthOffset ?? 0);
+    const bottomPanelZOffset = mmToUnit(section.bottomPanelDepthOffset ?? 0);
     if (section.showTopPanel !== false) {
     meshes.push(
       <BoxWithEdges
         key={`${prefix}-top`}
         args={[bInnerW - widthReduction, t, boxD - backReduction - topDepthReduction]}
-        position={[0, centerY + boxH / 2 - t / 2, backReduction / 2 - topDepthReduction / 2]}
+        position={[0, centerY + boxH / 2 - t / 2, backReduction / 2 - topDepthReduction / 2 + topPanelZOffset]}
         material={material}
         renderMode={renderMode}
         isDragging={isDragging}
@@ -1658,7 +1662,7 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
       <BoxWithEdges
         key={`${prefix}-bottom`}
         args={[bInnerW - widthReduction, t, boxD - backReduction]}
-        position={[0, centerY - boxH / 2 + t / 2 + bottomRaiseUnit, backReduction / 2]}
+        position={[0, centerY - boxH / 2 + t / 2 + bottomRaiseUnit, backReduction / 2 + bottomPanelZOffset]}
         material={material}
         renderMode={renderMode}
         isDragging={isDragging}
@@ -1878,12 +1882,14 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
       );
 
       // 상판/하판
+      const hsTopZOffset = mmToUnit(section.topPanelDepthOffset ?? 0);
+      const hsBottomZOffset = mmToUnit(section.bottomPanelDepthOffset ?? 0);
       if (section.showTopPanel !== false) {
       subMeshes.push(
         <BoxWithEdges
           key={`${prefix}-top`}
           args={[subInnerW - widthReduction, t, subBoxD - backReduction]}
-          position={[subCenterX, sbCenterY + sbBoxH / 2 - t / 2, backReduction / 2]}
+          position={[subCenterX, sbCenterY + sbBoxH / 2 - t / 2, backReduction / 2 + hsTopZOffset]}
           material={material}
           renderMode={renderMode}
           isDragging={isDragging}
@@ -1902,7 +1908,7 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
         <BoxWithEdges
           key={`${prefix}-bottom`}
           args={[subInnerW - widthReduction, t, subBoxD - backReduction]}
-          position={[subCenterX, sbCenterY - sbBoxH / 2 + t / 2 + areaBottomRaiseUnit, backReduction / 2]}
+          position={[subCenterX, sbCenterY - sbBoxH / 2 + t / 2 + areaBottomRaiseUnit, backReduction / 2 + hsBottomZOffset]}
           material={material}
           renderMode={renderMode}
           isDragging={isDragging}
