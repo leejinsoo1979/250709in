@@ -5640,19 +5640,55 @@ const Room: React.FC<RoomProps> = ({
                 if (allRaised) return; // 전체 올림 → 하부프레임 없음
                 if (hasPartialRaise) {
                   const modLeftMm = modCenterXmm - modWidthMM / 2;
-                  const areas: { startX: number; width: number; raised: boolean }[] = [];
-                  let curX = modLeftMm + pnlThk;
-                  areas.push({ startX: curX, width: leftInnerW, raised: leftRaise > 0 });
-                  curX += leftInnerW + pnlThk;
+
+                  // 구간 배열: 좌측판 | 좌영역 | 칸막이 | (중영역 | 칸막이) | 우영역 | 우측판
+                  const segments: { startX: number; width: number; raised: boolean }[] = [];
+                  let curX = modLeftMm;
+                  // 좌측 측판
+                  segments.push({ startX: curX, width: pnlThk, raised: false });
+                  curX += pnlThk;
+                  // 좌측 영역 (내경)
+                  segments.push({ startX: curX, width: leftInnerW, raised: leftRaise > 0 });
+                  curX += leftInnerW;
+                  // 칸막이
+                  segments.push({ startX: curX, width: pnlThk, raised: false });
+                  curX += pnlThk;
                   if (is3split) {
-                    areas.push({ startX: curX, width: centerInnerW, raised: centerRaise > 0 });
-                    curX += centerInnerW + pnlThk;
+                    // 중앙 영역
+                    segments.push({ startX: curX, width: centerInnerW, raised: centerRaise > 0 });
+                    curX += centerInnerW;
+                    // 칸막이
+                    segments.push({ startX: curX, width: pnlThk, raised: false });
+                    curX += pnlThk;
                   }
-                  areas.push({ startX: curX, width: Math.max(0, rightInnerW), raised: rightRaise > 0 });
-                  areas.filter(a => !a.raised && a.width > 0).forEach((area, aIdx) => {
+                  // 우측 영역 (내경)
+                  segments.push({ startX: curX, width: Math.max(0, rightInnerW), raised: rightRaise > 0 });
+                  curX += Math.max(0, rightInnerW);
+                  // 우측 측판
+                  segments.push({ startX: curX, width: pnlThk, raised: false });
+
+                  // 연속된 non-raised 구간을 병합하여 하부프레임 세그먼트 생성
+                  let mergeStart = -1;
+                  let mergeEnd = -1;
+                  const merged: { startX: number; endX: number }[] = [];
+                  segments.forEach((seg) => {
+                    if (!seg.raised && seg.width > 0) {
+                      if (mergeStart < 0) mergeStart = seg.startX;
+                      mergeEnd = seg.startX + seg.width;
+                    } else if (seg.raised) {
+                      if (mergeStart >= 0) {
+                        merged.push({ startX: mergeStart, endX: mergeEnd });
+                        mergeStart = -1;
+                      }
+                    }
+                  });
+                  if (mergeStart >= 0) merged.push({ startX: mergeStart, endX: mergeEnd });
+
+                  merged.forEach((m, aIdx) => {
+                    const w = m.endX - m.startX;
                     allBaseSegments.push({
-                      widthMm: area.width,
-                      centerXmm: area.startX + area.width / 2,
+                      widthMm: w,
+                      centerXmm: m.startX + w / 2,
                       zPosition: baseZPosition,
                       height: modBaseH,
                       yPosition: panelStartY + floatHeight + modBaseH / 2,
@@ -5860,26 +5896,56 @@ const Room: React.FC<RoomProps> = ({
                         if (hasPartialRaise) {
                           // 모듈 좌측 끝 (mm) — 엔드패널 제외 후
                           const modLeftMm = modCenterXmm - modWidthMM / 2;
-                          const leftSidePnl = pnlThk; // 좌측 측판
 
-                          // 각 영역의 시작X와 너비 (내경 기준 → 외경 추가 필요 없음, 하부프레임은 측판 안쪽)
-                          const areas: { startX: number; width: number; raised: boolean }[] = [];
-                          let curX = modLeftMm + leftSidePnl;
-                          // 좌측 영역
-                          areas.push({ startX: curX, width: leftInnerW, raised: leftRaise > 0 });
-                          curX += leftInnerW + pnlThk; // 칸막이
+                          // 구간 배열: 좌측판 | 좌영역 | 칸막이 | (중영역 | 칸막이) | 우영역 | 우측판
+                          // 각 구간의 startX, width, raised 여부 (측판/칸막이는 raised=false)
+                          const segments: { startX: number; width: number; raised: boolean }[] = [];
+                          let curX = modLeftMm;
+                          // 좌측 측판
+                          segments.push({ startX: curX, width: pnlThk, raised: false });
+                          curX += pnlThk;
+                          // 좌측 영역 (내경)
+                          segments.push({ startX: curX, width: leftInnerW, raised: leftRaise > 0 });
+                          curX += leftInnerW;
+                          // 칸막이
+                          segments.push({ startX: curX, width: pnlThk, raised: false });
+                          curX += pnlThk;
                           if (is3split) {
-                            areas.push({ startX: curX, width: centerInnerW, raised: centerRaise > 0 });
-                            curX += centerInnerW + pnlThk;
+                            // 중앙 영역
+                            segments.push({ startX: curX, width: centerInnerW, raised: centerRaise > 0 });
+                            curX += centerInnerW;
+                            // 칸막이
+                            segments.push({ startX: curX, width: pnlThk, raised: false });
+                            curX += pnlThk;
                           }
-                          // 우측 영역
-                          areas.push({ startX: curX, width: Math.max(0, rightInnerW), raised: rightRaise > 0 });
+                          // 우측 영역 (내경)
+                          segments.push({ startX: curX, width: Math.max(0, rightInnerW), raised: rightRaise > 0 });
+                          curX += Math.max(0, rightInnerW);
+                          // 우측 측판
+                          segments.push({ startX: curX, width: pnlThk, raised: false });
 
-                          // raised가 아닌 영역만 하부프레임 세그먼트로 추가
-                          areas.filter(a => !a.raised && a.width > 0).forEach((area, aIdx) => {
+                          // 연속된 non-raised 구간을 병합하여 하부프레임 세그먼트 생성
+                          let mergeStart = -1;
+                          let mergeEnd = -1;
+                          const merged: { startX: number; endX: number }[] = [];
+                          segments.forEach((seg) => {
+                            if (!seg.raised && seg.width > 0) {
+                              if (mergeStart < 0) mergeStart = seg.startX;
+                              mergeEnd = seg.startX + seg.width;
+                            } else if (seg.raised) {
+                              if (mergeStart >= 0) {
+                                merged.push({ startX: mergeStart, endX: mergeEnd });
+                                mergeStart = -1;
+                              }
+                            }
+                          });
+                          if (mergeStart >= 0) merged.push({ startX: mergeStart, endX: mergeEnd });
+
+                          merged.forEach((m, aIdx) => {
+                            const w = m.endX - m.startX;
                             slotBaseSegments.push({
-                              widthMm: area.width,
-                              centerXmm: area.startX + area.width / 2,
+                              widthMm: w,
+                              centerXmm: m.startX + w / 2,
                               zPosition: baseZPos + modBaseZOffset,
                               height: modBaseH,
                               yPosition: panelStartY + floatHeight + modBaseH / 2,
