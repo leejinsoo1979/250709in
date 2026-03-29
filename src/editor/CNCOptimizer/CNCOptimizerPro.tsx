@@ -771,13 +771,13 @@ function PageInner(){
         let thickness: number;
         
         if (key.startsWith('THICKNESS_')) {
-          // 재질 구분 없이 두께만 고려: THICKNESS_18
-          thickness = parseInt(key.split('_')[1]) || 18;
+          // 재질 구분 없이 두께만 고려: THICKNESS_18.5
+          thickness = parseFloat(key.split('_')[1]) || 18;
         } else {
-          // 재질+두께: PET_18
+          // 재질+두께: PET_18.5
           const parts = key.split('_');
           material = parts[0];
-          thickness = parseInt(parts[1]) || 18;
+          thickness = parseFloat(parts[1]) || 18;
         }
         
         // Find matching stock by material and thickness
