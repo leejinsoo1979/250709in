@@ -448,7 +448,9 @@ export const useSpaceConfigStore = create<SpaceConfigState>()((set) => ({
         processedInfo.surroundType === undefined &&
         processedInfo.wallConfig === undefined;
 
-      if (shouldAdjust && !isGapConfigOnly) {
+      // 자유배치 모드에서는 슬롯 정수화 불필요 — gapConfig 보존
+      const isFreeMode = tempSpaceInfo.layoutMode === 'free-placement';
+      if (shouldAdjust && !isGapConfigOnly && !isFreeMode) {
         const adjustmentResult = SpaceCalculator.adjustForIntegerSlotWidth(tempSpaceInfo);
 
         if (adjustmentResult.adjustmentMade) {
