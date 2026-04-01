@@ -879,8 +879,9 @@ const PlacedModulePropertiesPanel: React.FC = () => {
       setOriginalColumnPlacementMode(placementModeVal);
 
       // 치수 초기화 (슬롯/자유배치 공통)
+      // NOTE: roundedWidth를 사용 (customWidth state는 이 useEffect 내에서 아직 이전 값)
       {
-        setFreeWidthInput((() => { const v = Math.round((currentPlacedModule.freeWidth || customWidth || moduleData.dimensions.width) * 10) / 10; return v % 1 === 0 ? v.toString() : v.toFixed(1); })());
+        setFreeWidthInput((() => { const v = Math.round((currentPlacedModule.freeWidth || roundedWidth || moduleData.dimensions.width) * 10) / 10; return v % 1 === 0 ? v.toString() : v.toFixed(1); })());
         setFreeHeightInput(Math.round(currentPlacedModule.freeHeight || moduleData.dimensions.height).toString());
         setFreeDepthInput(Math.round(currentPlacedModule.freeDepth || initialDepth).toString());
 
