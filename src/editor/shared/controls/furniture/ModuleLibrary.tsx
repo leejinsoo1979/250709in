@@ -1,12 +1,17 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { getModulesByCategory, ModuleData } from '@/data/modules';
 import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
 import { calculateInternalSpace } from '@/editor/shared/viewer3d/utils/geometry';
 import { calculateSpaceIndexing } from '@/editor/shared/utils/indexing';
+import { getCurrentUser } from '@/firebase/auth';
 import ModuleItem from './ModuleItem';
 import CabinetModuleItem from './CabinetModuleItem';
+import MyCabinetGallery from './MyCabinetGallery';
 import styles from './ModuleLibrary.module.css';
 import { useTranslation } from '@/i18n/useTranslation';
+
+// 개발자 계정 이메일
+const DEV_EMAIL = 'sbbc212@gmail.com';
 
 // 모듈 타입 정의
 type ModuleType = 'single' | 'dual';
@@ -14,12 +19,24 @@ type ModuleType = 'single' | 'dual';
 // 카테고리 타입 정의
 type CategoryType = 'full' | 'upper' | 'lower';
 
+// 소스 타입: 표준 모듈 vs My캐비넷
+type SourceType = 'standard' | 'myCabinet';
+
 const ModuleLibrary: React.FC = () => {
   const { t } = useTranslation();
   // 선택된 탭 상태 (싱글/듀얼)
   const [selectedType, setSelectedType] = useState<ModuleType>('single');
   // 선택된 카테고리 상태 (키큰장/상부장/하부장)
   const [selectedCategory, setSelectedCategory] = useState<'full' | 'upper' | 'lower'>('full');
+  // 소스 타입 (표준/My캐비넷)
+  const [sourceType, setSourceType] = useState<SourceType>('standard');
+  // 개발자 계정 여부
+  const [isDev, setIsDev] = useState(false);
+
+  useEffect(() => {
+    const user = getCurrentUser();
+    setIsDev(user?.email === DEV_EMAIL);
+  }, []);
 
   // 에디터 스토어에서 공간 정보 가져오기
   const { spaceInfo } = useSpaceConfigStore();
@@ -204,70 +221,97 @@ const ModuleLibrary: React.FC = () => {
           </button>
         </div>
         
-        {/* 싱글/듀얼 또는 상부장/하부장 탭 메뉴 */}
-        <div className={styles.tabMenu} style={{ marginTop: '10px' }}>
-          <button
-            className={`${styles.tabButton} ${selectedType === 'single' ? styles.activeTab : ''}`}
-            onClick={() => setSelectedType('single')}
-          >
-            {t('furniture.single')} ({singleModules.length})
-          </button>
-          <button
-            className={`${styles.tabButton} ${selectedType === 'dual' ? styles.activeTab : ''}`}
-            onClick={() => setSelectedType('dual')}
-          >
-            {t('furniture.dual')} ({dualModules.length})
-          </button>
-        </div>
-        
-        
-        {/* 모듈 설명 */}
-        <div className={styles.tabDescription}>
-          {selectedCategory === 'full' ? (
-            selectedType === 'single' ? (
-              <p>{t('material.tallSingleDesc', { width: columnWidth })}</p>
-            ) : (
-              <p>{t('material.tallDualDesc', { width: columnWidth * 2 })}</p>
-            )
-          ) : selectedCategory === 'upper' ? (
-            selectedType === 'single' ? (
-              <p>{t('material.upperSingleDesc', { width: columnWidth })}</p>
-            ) : (
-              <p>{t('material.upperDualDesc', { width: columnWidth * 2 })}</p>
-            )
-          ) : (
-            selectedType === 'single' ? (
-              <p>{t('material.lowerSingleDesc', { width: columnWidth })}</p>
-            ) : (
-              <p>{t('material.lowerDualDesc', { width: columnWidth * 2 })}</p>
-            )
-          )}
-        </div>
-        
-        {/* 모듈 그리드 */}
-        <div className={styles.moduleGrid}>
-          {currentModules.length > 0 ? (
-            currentModules.map(module => (
-              selectedCategory === 'full' ? (
-                <ModuleItem 
-                  key={module.id} 
-                  module={module} 
-                  internalSpace={internalSpace} 
-                />
-              ) : (
-                <CabinetModuleItem 
-                  key={module.id} 
-                  module={module} 
-                  internalSpace={internalSpace} 
-                />
-              )
-            ))
-          ) : (
-            <div className={styles.emptyMessage}>
-              {t('furniture.noModulesAvailable')}
+        {/* 개발자 계정: 소스 선택 탭 (표준/My캐비넷) */}
+        {isDev && (
+          <div className={styles.tabMenu} style={{ marginTop: '10px' }}>
+            <button
+              className={`${styles.tabButton} ${sourceType === 'standard' ? styles.activeTab : ''}`}
+              onClick={() => setSourceType('standard')}
+            >
+              표준 모듈
+            </button>
+            <button
+              className={`${styles.tabButton} ${sourceType === 'myCabinet' ? styles.activeTab : ''}`}
+              onClick={() => setSourceType('myCabinet')}
+            >
+              My캐비넷
+            </button>
+          </div>
+        )}
+
+        {/* My캐비넷 모드 */}
+        {isDev && sourceType === 'myCabinet' ? (
+          <div style={{ marginTop: '10px' }}>
+            <MyCabinetGallery filter={selectedCategory} />
+          </div>
+        ) : (
+          <>
+            {/* 싱글/듀얼 또는 상부장/하부장 탭 메뉴 */}
+            <div className={styles.tabMenu} style={{ marginTop: '10px' }}>
+              <button
+                className={`${styles.tabButton} ${selectedType === 'single' ? styles.activeTab : ''}`}
+                onClick={() => setSelectedType('single')}
+              >
+                {t('furniture.single')} ({singleModules.length})
+              </button>
+              <button
+                className={`${styles.tabButton} ${selectedType === 'dual' ? styles.activeTab : ''}`}
+                onClick={() => setSelectedType('dual')}
+              >
+                {t('furniture.dual')} ({dualModules.length})
+              </button>
             </div>
-          )}
-        </div>
+
+
+            {/* 모듈 설명 */}
+            <div className={styles.tabDescription}>
+              {selectedCategory === 'full' ? (
+                selectedType === 'single' ? (
+                  <p>{t('material.tallSingleDesc', { width: columnWidth })}</p>
+                ) : (
+                  <p>{t('material.tallDualDesc', { width: columnWidth * 2 })}</p>
+                )
+              ) : selectedCategory === 'upper' ? (
+                selectedType === 'single' ? (
+                  <p>{t('material.upperSingleDesc', { width: columnWidth })}</p>
+                ) : (
+                  <p>{t('material.upperDualDesc', { width: columnWidth * 2 })}</p>
+                )
+              ) : (
+                selectedType === 'single' ? (
+                  <p>{t('material.lowerSingleDesc', { width: columnWidth })}</p>
+                ) : (
+                  <p>{t('material.lowerDualDesc', { width: columnWidth * 2 })}</p>
+                )
+              )}
+            </div>
+
+            {/* 모듈 그리드 */}
+            <div className={styles.moduleGrid}>
+              {currentModules.length > 0 ? (
+                currentModules.map(module => (
+                  selectedCategory === 'full' ? (
+                    <ModuleItem
+                      key={module.id}
+                      module={module}
+                      internalSpace={internalSpace}
+                    />
+                  ) : (
+                    <CabinetModuleItem
+                      key={module.id}
+                      module={module}
+                      internalSpace={internalSpace}
+                    />
+                  )
+                ))
+              ) : (
+                <div className={styles.emptyMessage}>
+                  {t('furniture.noModulesAvailable')}
+                </div>
+              )}
+            </div>
+          </>
+        )}
       </div>
     </div>
   );
