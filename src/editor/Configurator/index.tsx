@@ -4619,6 +4619,7 @@ const Configurator: React.FC = () => {
                   const gapKey = isLeftBoundary ? 'middle' : 'left';
                   const curVal = isLeftBoundary ? (spaceInfo.gapConfig?.middle ?? 1.5) : (spaceInfo.gapConfig?.left ?? 1.5);
                   const isDisabled = !isLeftBoundary && !spaceInfo.wallConfig?.left;
+                  console.log('🔍 [우측바 이격 디버그] 좌측:', { curVal, gapConfig: spaceInfo.gapConfig, isLeftBoundary, gapKey });
                   return (
                 <div className={styles.frameItem}>
                   <label className={styles.frameItemLabel}>{isLeftBoundary ? '좌이격(경계)' : '좌이격'}</label>

@@ -451,13 +451,46 @@ export const useSpaceConfigStore = create<SpaceConfigState>()((set) => ({
       // 자유배치 모드에서는 슬롯 정수화 불필요 — gapConfig 보존
       const isFreeMode = tempSpaceInfo.layoutMode === 'free-placement';
       if (shouldAdjust && !isGapConfigOnly && !isFreeMode) {
+        console.log('🔍 [이격 디버그] adjustForIntegerSlotWidth 호출 전:', {
+          gapConfig: tempSpaceInfo.gapConfig,
+          width: tempSpaceInfo.width,
+          customColumnCount: tempSpaceInfo.customColumnCount,
+          shouldAdjust, isGapConfigOnly, isFreeMode,
+          processedKeys: Object.keys(processedInfo),
+        });
         const adjustmentResult = SpaceCalculator.adjustForIntegerSlotWidth(tempSpaceInfo);
+        console.log('🔍 [이격 디버그] adjustForIntegerSlotWidth 결과:', {
+          adjustmentMade: adjustmentResult.adjustmentMade,
+          slotWidth: adjustmentResult.slotWidth,
+          adjustedGapConfig: adjustmentResult.adjustedSpaceInfo.gapConfig,
+        });
 
-        if (adjustmentResult.adjustmentMade) {
-          // 조정된 값을 tempSpaceInfo에 반영하되, customColumnCount와 layoutMode는 보존
+        // adjustmentMade와 관계없이 gapConfig를 항상 동기화 (뷰어↔우측바 불일치 방지)
+        {
           const preservedCustomColumnCount = tempSpaceInfo.customColumnCount;
           const preservedLayoutMode = tempSpaceInfo.layoutMode;
-          tempSpaceInfo = adjustmentResult.adjustedSpaceInfo;
+          const preservedMiddle = tempSpaceInfo.gapConfig?.middle;
+          const preservedMiddle2 = tempSpaceInfo.gapConfig?.middle2;
+
+          if (adjustmentResult.adjustmentMade) {
+            // 조정된 값을 tempSpaceInfo에 반영
+            tempSpaceInfo = adjustmentResult.adjustedSpaceInfo;
+          } else {
+            // adjustmentMade=false 여도 반환된 gapConfig를 tempSpaceInfo에 반영
+            // (gapConfig가 undefined인 경우 기본값으로 설정)
+            tempSpaceInfo.gapConfig = {
+              ...tempSpaceInfo.gapConfig,
+              ...adjustmentResult.adjustedSpaceInfo.gapConfig,
+            };
+          }
+
+          // 기존 middle/middle2 보존
+          if (preservedMiddle !== undefined && tempSpaceInfo.gapConfig) {
+            tempSpaceInfo.gapConfig.middle = preservedMiddle;
+          }
+          if (preservedMiddle2 !== undefined && tempSpaceInfo.gapConfig) {
+            tempSpaceInfo.gapConfig.middle2 = preservedMiddle2;
+          }
 
           // customColumnCount가 명시적으로 설정된 경우 보존
           if (preservedCustomColumnCount !== undefined) {
@@ -467,6 +500,7 @@ export const useSpaceConfigStore = create<SpaceConfigState>()((set) => ({
           if (preservedLayoutMode !== undefined) {
             tempSpaceInfo.layoutMode = preservedLayoutMode;
           }
+        }
 
 // console.log('🎯 슬롯 정수화 자동 조정 완료:', {
 //             슬롯너비: adjustmentResult.slotWidth,
@@ -475,7 +509,6 @@ export const useSpaceConfigStore = create<SpaceConfigState>()((set) => ({
 //             조정여부: adjustmentResult.adjustmentMade,
 //             customColumnCount: tempSpaceInfo.customColumnCount
 //           });
-        }
       }
       
       const previousDropped = state.spaceInfo.droppedCeiling;
