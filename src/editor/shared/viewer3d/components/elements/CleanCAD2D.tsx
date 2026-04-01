@@ -1528,13 +1528,10 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         // 벽없음(freestanding)이면 이격거리/엔드패널 치수선 미표시
         if (spaceInfo.installType === 'freestanding') return null;
 
-        // 자유배치 모드: 좌측 이격 치수 미표시 (슬롯 모드 전용)
-        if (isFreePlacement) return null;
-
         // 커튼박스가 좌측에 있으면 좌측 외벽이격 치수 미표시 (CB 구간이 담당)
         if (spaceInfo.curtainBox?.enabled && spaceInfo.curtainBox?.position === 'left') return null;
 
-        // ── 슬롯 모드: 기존 gapConfig/엔드패널 로직 ──
+        // ── gapConfig/엔드패널 로직 ──
         const frameThickness = calculateFrameThickness(spaceInfo, hasLeftFurniture, hasRightFurniture);
 
         // 왼쪽 벽이 있는지 확인
@@ -1555,9 +1552,6 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           const r = Math.round(leftValue * 10) / 10;
           leftText = r % 1 === 0 ? String(r) : r.toFixed(1);
         }
-        // 디버그: 뷰어 이격 텍스트에 원본 값 강제 표시
-        leftText = `[${leftText}|g=${spaceInfo.gapConfig?.left}|w=${hasLeftWall?'Y':'N'}]`;
-
         // 이격거리가 0이면 표시하지 않음
         if (leftValue === 0) return null;
 
@@ -1681,13 +1675,10 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         // 벽없음(freestanding)이면 이격거리/엔드패널 치수선 미표시
         if (spaceInfo.installType === 'freestanding') return null;
 
-        // 자유배치 모드: 우측 이격 치수 미표시 (슬롯 모드 전용)
-        if (isFreePlacement) return null;
-
         // 커튼박스가 우측에 있으면 우측 외벽이격 치수 미표시 (CB 구간이 담당)
         if (spaceInfo.curtainBox?.enabled && spaceInfo.curtainBox?.position === 'right') return null;
 
-        // ── 슬롯 모드: 기존 gapConfig/엔드패널 로직 ──
+        // ── gapConfig/엔드패널 로직 ──
         const frameThickness = calculateFrameThickness(spaceInfo, hasLeftFurniture, hasRightFurniture);
 
         // 오른쪽 벽이 있는지 확인
@@ -1708,9 +1699,6 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           const rr = Math.round(rightValue * 10) / 10;
           rightText = rr % 1 === 0 ? String(rr) : rr.toFixed(1);
         }
-
-        // 디버그: 뷰어 이격 텍스트에 원본 값 강제 표시
-        rightText = `[${rightText}|g=${spaceInfo.gapConfig?.right}|w=${hasRightWall?'Y':'N'}]`;
 
         // 이격거리가 0이면 표시하지 않음
         if (rightValue === 0) return null;
