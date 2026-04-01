@@ -962,6 +962,7 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
                 if (!isDesignMode) {
                   useFurnitureStore.getState().setSelectedFurnitureId(null);
                   useUIStore.getState().setSelectedFurnitureId(null);
+                  useUIStore.getState().setSelectedColumnId(null);
                   useUIStore.getState().closeAllPopups();
                 }
               }
@@ -993,6 +994,7 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
             if (!isDesignMode) {
               useFurnitureStore.getState().setSelectedFurnitureId(null);
               useUIStore.getState().setSelectedFurnitureId(null);
+              useUIStore.getState().setSelectedColumnId(null);
               useUIStore.getState().closeAllPopups();
             }
           }}
