@@ -852,10 +852,10 @@ const PlacedModulePropertiesPanel: React.FC = () => {
       setLowerTopOffsetInput(lowerOffset.toString());
       setOriginalLowerTopOffset(lowerOffset);
       // customWidth도 동일하게 처리
-      const roundedWidth = Math.round(initialWidth);
+      const roundedWidth = Math.round(initialWidth * 10) / 10;
       if (customWidth !== roundedWidth) {
         setCustomWidth(roundedWidth);
-        setWidthInputValue(roundedWidth.toString());
+        setWidthInputValue(roundedWidth % 1 === 0 ? roundedWidth.toString() : roundedWidth.toFixed(1));
         setOriginalCustomWidth(initialWidth); // 원래 값 저장
       }
       const hingePos = currentPlacedModule.hingePosition || 'right';
@@ -884,12 +884,12 @@ const PlacedModulePropertiesPanel: React.FC = () => {
 
       // 치수 초기화 (슬롯/자유배치 공통)
       {
-        setFreeWidthInput(Math.round(currentPlacedModule.freeWidth || customWidth || moduleData.dimensions.width).toString());
+        setFreeWidthInput((() => { const v = Math.round((currentPlacedModule.freeWidth || initialWidth) * 10) / 10; return v % 1 === 0 ? v.toString() : v.toFixed(1); })());
         setFreeHeightInput(Math.round(currentPlacedModule.freeHeight || moduleData.dimensions.height).toString());
-        setFreeDepthInput(Math.round(currentPlacedModule.freeDepth || customDepth || moduleData.dimensions.depth).toString());
+        setFreeDepthInput(Math.round(currentPlacedModule.freeDepth || initialDepth).toString());
 
         // EP 깊이 초기화
-        const epFurnitureDepth = currentPlacedModule.freeDepth ?? customDepth ?? moduleData.dimensions.depth;
+        const epFurnitureDepth = currentPlacedModule.freeDepth ?? initialDepth;
         setEpDepthInput(Math.round(currentPlacedModule.endPanelDepth ?? epFurnitureDepth).toString());
 
         // 좌우 이격거리 초기화
@@ -919,7 +919,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
             else if (i === 1) dInputs[i] = Math.round(currentPlacedModule.upperSectionDepth || totalDepth).toString();
             else dInputs[i] = Math.round(totalDepth).toString();
             // 섹션 너비 (개별 너비가 없으면 전체 너비)
-            wInputs[i] = Math.round(sec.width || totalWidth).toString();
+            wInputs[i] = (() => { const v = Math.round((sec.width || totalWidth) * 10) / 10; return v % 1 === 0 ? v.toString() : v.toFixed(1); })();
             // horizontalSplit 서브박스
             const hs = sec.horizontalSplit;
             if (hs) {

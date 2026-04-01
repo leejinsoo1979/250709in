@@ -366,21 +366,21 @@ export class ColumnIndexer {
     const slotWidths: number[] = [];
     
     if (isNoSurround && spaceInfo.installType === 'freestanding') {
-      // 노서라운드 프리스탠딩: 전체너비를 균등 분할 — 싱글: 정수 내림
+      // 노서라운드 프리스탠딩: 전체너비를 균등 분할 — 소수점 1자리까지 내림
       const rawSlotWidth = totalWidth / columnCount;
-      const flooredSlotWidth = Math.floor(rawSlotWidth);
+      const flooredSlotWidth = Math.floor(rawSlotWidth * 10) / 10;
 
       for (let i = 0; i < columnCount; i++) {
         slotWidths.push(flooredSlotWidth);
       }
     } else {
-      // 서라운드 모드 또는 노서라운드 빌트인: 균등 분할 — 싱글: 정수 내림
+      // 서라운드 모드 또는 노서라운드 빌트인: 균등 분할 — 소수점 1자리까지 내림
       let actualInternalWidth = internalWidth;
       if (isNoSurround && (spaceInfo.installType === 'builtin' || spaceInfo.installType === 'built-in') && optimizedGapConfig) {
         actualInternalWidth = totalWidth - (optimizedGapConfig.left || 0) - (optimizedGapConfig.right || 0) - curtainBoxWidth;
       }
       const rawSlotWidth = actualInternalWidth / columnCount;
-      const flooredSlotWidth = Math.floor(rawSlotWidth);
+      const flooredSlotWidth = Math.floor(rawSlotWidth * 10) / 10;
 
       for (let i = 0; i < columnCount; i++) {
         slotWidths.push(flooredSlotWidth);
@@ -829,17 +829,17 @@ export class ColumnIndexer {
       const slotWidths: number[] = [];
       
       if (spaceInfo.surroundType === 'no-surround') {
-        // 노서라운드: actualInternalWidth를 균등 분할 — 싱글: 정수 내림
+        // 노서라운드: actualInternalWidth를 균등 분할 — 소수점 1자리까지 내림
         const rawSlotWidth = actualInternalWidth / columnCount;
-        const flooredSlotWidth = Math.floor(rawSlotWidth);
+        const flooredSlotWidth = Math.floor(rawSlotWidth * 10) / 10;
 
         for (let i = 0; i < columnCount; i++) {
           slotWidths.push(flooredSlotWidth);
         }
       } else {
-        // 서라운드 모드: 균등 분할 — 싱글: 정수 내림
+        // 서라운드 모드: 균등 분할 — 소수점 1자리까지 내림
         const rawSlotWidth = internalWidth / columnCount;
-        const flooredSlotWidth = Math.floor(rawSlotWidth);
+        const flooredSlotWidth = Math.floor(rawSlotWidth * 10) / 10;
 
         for (let i = 0; i < columnCount; i++) {
           slotWidths.push(flooredSlotWidth);
