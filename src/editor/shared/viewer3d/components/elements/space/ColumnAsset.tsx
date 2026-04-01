@@ -65,7 +65,7 @@ const ColumnAsset: React.FC<ColumnAssetProps> = ({
 
   const { viewMode } = useSpace3DView();
   const spaceConfig = useSpaceConfigStore();
-  const { selectedColumnId, setSelectedColumnId, openColumnEditModal, openColumnPopup, activePopup, view2DDirection, setFurnitureDragging, viewMode: uiViewMode } = useUIStore();
+  const { selectedColumnId, setSelectedColumnId, setSelectedFurnitureId, openColumnEditModal, openColumnPopup, activePopup, view2DDirection, setFurnitureDragging, viewMode: uiViewMode } = useUIStore();
 
   // 현재 기둥 데이터 가져오기
   const currentColumn = spaceConfig.spaceInfo.columns?.find(col => col.id === id);
@@ -190,7 +190,8 @@ const ColumnAsset: React.FC<ColumnAssetProps> = ({
     // console.log('🎯 기둥 클릭 - 기둥 선택 및 팝업 열기:', id);
     // console.log('🎯 현재 selectedColumnId:', selectedColumnId);
     
-    // 기둥 선택 및 기둥 팝업 열기
+    // 기둥 선택 및 기둥 팝업 열기 (가구 선택 해제)
+    setSelectedFurnitureId(null);
     setSelectedColumnId(id);
     openColumnPopup(id);
     

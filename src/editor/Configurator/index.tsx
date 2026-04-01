@@ -782,14 +782,20 @@ const Configurator: React.FC = () => {
         return;
       }
 
-      // Backspace 또는 Delete 키로 선택된 가구 삭제
+      // Backspace 또는 Delete 키로 선택된 기둥/가구 삭제
       if (event.key === 'Backspace' || event.key === 'Delete') {
-        const { selectedFurnitureId } = useUIStore.getState();
+        // 기둥이 선택되어 있으면 기둥 삭제 우선
+        const { selectedColumnId, selectedFurnitureId, setSelectedColumnId, setSelectedFurnitureId } = useUIStore.getState();
+        if (selectedColumnId) {
+          event.preventDefault();
+          const { removeColumn } = useSpaceConfigStore.getState();
+          removeColumn(selectedColumnId);
+          setSelectedColumnId(null);
+          return;
+        }
         if (selectedFurnitureId) {
           event.preventDefault();
-// console.log('🗑️ 키보드로 가구 삭제:', selectedFurnitureId);
           const { removeModule } = useFurnitureStore.getState();
-          const { setSelectedFurnitureId } = useUIStore.getState();
           removeModule(selectedFurnitureId);
           setSelectedFurnitureId(null);
           return;
