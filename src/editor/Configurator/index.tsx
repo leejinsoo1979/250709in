@@ -6208,6 +6208,7 @@ const Configurator: React.FC = () => {
                   setShowAll(false);
                 } else if (mode === '3D') {
                   setRenderMode('solid');
+                  setShowAll(true);
                 }
               }}
               showDimensions={showDimensions}
@@ -6228,8 +6229,9 @@ const Configurator: React.FC = () => {
                   setRenderMode('wireframe');
                   setShowAll(false);
                 } else if (mode === '3D') {
-                  // 3D 모드 선택 시 솔리드로 자동 설정
+                  // 3D 모드 선택 시 솔리드로 자동 설정 + 컬럼 가이드 복원
                   setRenderMode('solid');
+                  setShowAll(true);
                 }
               }}
               viewDirection={view2DDirection}
