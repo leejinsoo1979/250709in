@@ -5590,7 +5590,6 @@ const Room: React.FC<RoomProps> = ({
         if (isAllRaised) return null;
         return true;
       })() && (() => {
-// console.log('🎯 [하부프레임] 렌더링 진입, isFreePlacement:', isFreePlacement);
 
         // 자유배치 모드: 가구별 개별 하부프레임 렌더링 (상부프레임과 동일 패턴)
         if (isFreePlacement) {
