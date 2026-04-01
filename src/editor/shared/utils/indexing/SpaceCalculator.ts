@@ -219,7 +219,7 @@ export class SpaceCalculator {
         const currentSlotWidth = currentInternalWidth / columnCount;
         const currentIsInteger = Math.abs(currentSlotWidth - Math.round(currentSlotWidth)) < 0.001;
 
-        if (currentSlotWidth >= 400 && currentSlotWidth <= 600) {
+        if (currentIsInteger && currentSlotWidth >= 400 && currentSlotWidth <= 600) {
           return {
             adjustedSpaceInfo: {
               ...spaceInfo,
