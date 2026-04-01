@@ -6121,6 +6121,15 @@ const Configurator: React.FC = () => {
                       setSpaceInfo({ freeSurround: undefined });
                     }
                     const updates: Record<string, unknown> = { layoutMode: 'equal-division' };
+                    // 자유배치→슬롯 전환 시 이격거리 초기화 (노서라운드, 슬롯 정수화가 재계산)
+                    if (spaceInfo.surroundType === 'no-surround') {
+                      const wc = spaceInfo.wallConfig || { left: true, right: true };
+                      updates.gapConfig = {
+                        left: wc.left ? 1.5 : 0,
+                        right: wc.right ? 1.5 : 0,
+                        middle: 1.5,
+                      };
+                    }
                     // 자유배치→슬롯 전환 시 커튼박스/단내림 초기화
                     if (spaceInfo.droppedCeiling?.enabled) {
                       updates.droppedCeiling = {
@@ -6146,6 +6155,15 @@ const Configurator: React.FC = () => {
                       setSpaceInfo({ freeSurround: undefined });
                     }
                     const updates: Record<string, unknown> = { layoutMode: 'free-placement' };
+                    // 슬롯→자유배치 전환 시 이격거리 초기화 (노서라운드)
+                    if (spaceInfo.surroundType === 'no-surround') {
+                      const wc = spaceInfo.wallConfig || { left: true, right: true };
+                      updates.gapConfig = {
+                        left: wc.left ? 1.5 : 0,
+                        right: wc.right ? 1.5 : 0,
+                        middle: 1.5,
+                      };
+                    }
                     // 슬롯→자유배치 전환 시 단내림/커튼박스 초기화
                     if (spaceInfo.droppedCeiling?.enabled) {
                       updates.droppedCeiling = {
