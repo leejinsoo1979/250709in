@@ -884,7 +884,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
 
       // 치수 초기화 (슬롯/자유배치 공통)
       {
-        setFreeWidthInput((() => { const v = Math.round((currentPlacedModule.freeWidth || initialWidth) * 10) / 10; return v % 1 === 0 ? v.toString() : v.toFixed(1); })());
+        setFreeWidthInput((() => { const v = Math.round((currentPlacedModule.freeWidth || customWidth || moduleData.dimensions.width) * 10) / 10; return v % 1 === 0 ? v.toString() : v.toFixed(1); })());
         setFreeHeightInput(Math.round(currentPlacedModule.freeHeight || moduleData.dimensions.height).toString());
         setFreeDepthInput(Math.round(currentPlacedModule.freeDepth || initialDepth).toString());
 
