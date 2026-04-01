@@ -5204,7 +5204,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
 
   // 좌측뷰 치수선 - Room.tsx와 정확히 동일한 좌표계 사용
   const renderLeftView = () => {
-    if (viewDirection !== 'left') return null;
+    if (currentViewDirection !== 'left') return null;
     
     // Room.tsx와 동일한 계산 - 실제 spaceInfo 값 사용
     const panelDepthMm = spaceInfo.depth || 600; // 실제 공간 깊이 사용
@@ -5359,14 +5359,6 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             const extraFurnitureZ = rightDimensionZ + mmToThreeUnits(40);
             const extraFurnitureTextY = topFrameLineTopY + (maxFurnitureTop - topFrameLineTopY) / 2;
 
-// console.log('📐 [좌측뷰] 치수 렌더링:', {
-              // isFloating,
-              // floatHeight,
-              // maxLowerCabinetHeightMm,
-              // adjustedUpperCabinetHeightMm,
-              // floorFinishHeightMm,
-              // bottomFrameHeight
-            // });
 
             return (
               <>
@@ -5928,7 +5920,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
 
   // 우측뷰 치수선 - Room.tsx와 정확히 동일한 좌표계 사용
   const renderRightView = () => {
-    if (viewDirection !== 'right') return null;
+    if (currentViewDirection !== 'right') return null;
     
     // Room.tsx와 동일한 계산
     const panelDepthMm = spaceInfo.depth || 600;
@@ -6725,7 +6717,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
     return (
       <group>
         {/* 탑뷰 치수선들 - 좌측면도가 아닐 때만 표시 */}
-        {showDimensions && viewDirection !== 'left' && (
+        {showDimensions && currentViewDirection !== 'left' && (
           <>
         {/* 상단 전체 폭 치수선 (상부 프레임의 가로 길이) - 외부로 이동 */}
         <group>
