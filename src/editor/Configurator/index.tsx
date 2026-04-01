@@ -2855,6 +2855,20 @@ const Configurator: React.FC = () => {
 // console.log('🔧 handleSpaceInfoUpdate called with:', updates);
 // console.log('🔧 Current spaceInfo.wallConfig:', spaceInfo.wallConfig);
 
+    // 공간 치수 또는 컬럼 수 변경 시 배치된 가구 전체 초기화
+    const isDimensionChange =
+      (updates.width !== undefined && updates.width !== spaceInfo.width) ||
+      (updates.height !== undefined && updates.height !== spaceInfo.height) ||
+      (updates.depth !== undefined && updates.depth !== spaceInfo.depth);
+    const isColumnCountChange =
+      (updates.customColumnCount !== undefined && updates.customColumnCount !== spaceInfo.customColumnCount) ||
+      (updates.mainDoorCount !== undefined && updates.mainDoorCount !== spaceInfo.mainDoorCount) ||
+      (updates.droppedCeilingDoorCount !== undefined && updates.droppedCeilingDoorCount !== spaceInfo.droppedCeilingDoorCount);
+
+    if ((isDimensionChange || isColumnCountChange) && placedModules.length > 0) {
+      clearAllModules();
+    }
+
     // baseConfig.depth 업데이트 감지
     if (updates.baseConfig?.depth !== undefined) {
 // console.log('📏 Configurator - baseConfig.depth 업데이트:', {
