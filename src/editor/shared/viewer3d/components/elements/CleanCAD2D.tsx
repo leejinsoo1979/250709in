@@ -3287,7 +3287,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               outlineWidth={textOutlineWidth}
               outlineColor={textOutlineColor}
             >
-              {Math.round(internalWidthMm)}
+              {(() => { const v = Math.round(internalWidthMm * 2) / 2; return v % 1 === 0 ? v : v.toFixed(1); })()}
             </Text>
             {/* 좌측 연장선 - 공간 상단에서 치수선 위까지 */}
             <NativeLine name="dimension_line"
