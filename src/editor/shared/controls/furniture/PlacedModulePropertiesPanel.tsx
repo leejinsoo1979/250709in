@@ -830,12 +830,10 @@ const PlacedModulePropertiesPanel: React.FC = () => {
           ? currentPlacedModule.customWidth
           : moduleData.dimensions.width);
 
-      // customDepth가 이미 설정되어 있고 initialDepth와 같으면 업데이트하지 않음 (입력 중 방해 방지)
-      if (customDepth !== initialDepth) {
-        setCustomDepth(initialDepth);
-        setDepthInputValue(initialDepth.toString());
-        setOriginalCustomDepth(initialDepth); // 원래 값 저장
-      }
+      // customDepth 초기화 — 가구 변경 시 항상 갱신
+      setCustomDepth(initialDepth);
+      setDepthInputValue(initialDepth.toString());
+      setOriginalCustomDepth(initialDepth);
       // 섹션별 깊이 초기화
       const lowerDepth = currentPlacedModule.lowerSectionDepth;
       const upperDepth = currentPlacedModule.upperSectionDepth;
@@ -851,13 +849,11 @@ const PlacedModulePropertiesPanel: React.FC = () => {
       setLowerTopOffset(lowerOffset);
       setLowerTopOffsetInput(lowerOffset.toString());
       setOriginalLowerTopOffset(lowerOffset);
-      // customWidth도 동일하게 처리
+      // customWidth 초기화 — 가구 변경 시 항상 갱신
       const roundedWidth = Math.round(initialWidth * 10) / 10;
-      if (customWidth !== roundedWidth) {
-        setCustomWidth(roundedWidth);
-        setWidthInputValue(roundedWidth % 1 === 0 ? roundedWidth.toString() : roundedWidth.toFixed(1));
-        setOriginalCustomWidth(initialWidth); // 원래 값 저장
-      }
+      setCustomWidth(roundedWidth);
+      setWidthInputValue(roundedWidth % 1 === 0 ? roundedWidth.toString() : roundedWidth.toFixed(1));
+      setOriginalCustomWidth(initialWidth);
       const hingePos = currentPlacedModule.hingePosition || 'right';
       const hingeTypeVal = currentPlacedModule.hingeType || 'A';
       const hasDoorVal = currentPlacedModule.hasDoor ?? moduleData.hasDoor ?? false;
