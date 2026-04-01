@@ -110,8 +110,9 @@ const DimensionText: React.FC<DimensionTextProps> = ({
   const outlineW = viewMode === '3D' ? 0.06 : 0;
   const outlineC = '#ffffff';
   
-  // 텍스트 내용 (정수로 표시)
-  const formattedValue = Math.round(value);
+  // 텍스트 내용 (소수점 1자리까지 표시, .0이면 정수로)
+  const rounded = Math.round(value * 10) / 10;
+  const formattedValue = rounded % 1 === 0 ? String(rounded) : rounded.toFixed(1);
   const displayText = `${prefix}${formattedValue}`;
   
   return (

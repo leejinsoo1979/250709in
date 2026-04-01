@@ -3,6 +3,9 @@ import { Text, Html } from '@react-three/drei';
 import * as THREE from 'three';
 import { getThemeHex } from '@/theme';
 
+// 소수점 1자리 포맷 (.0이면 정수)
+const formatDim = (v: number) => { const r = Math.round(v * 10) / 10; return r % 1 === 0 ? String(r) : r.toFixed(1); };
+
 interface EditableDimensionTextProps {
   // 위치 및 표시
   position: [number, number, number];
@@ -46,7 +49,7 @@ const EditableDimensionText: React.FC<EditableDimensionTextProps> = ({
   onHoverChange
 }) => {
   const [isEditing, setIsEditing] = useState(false);
-  const [editValue, setEditValue] = useState(String(Math.round(value)));
+  const [editValue, setEditValue] = useState(formatDim(value));
   const [isHovered, setIsHovered] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const meshRef = useRef<THREE.Mesh>(null);
@@ -57,7 +60,7 @@ const EditableDimensionText: React.FC<EditableDimensionTextProps> = ({
   // 편집 모드 진입 (클릭으로 변경)
   const handleClick = useCallback((e: any) => {
     e.stopPropagation();
-    setEditValue(String(Math.round(value)));
+    setEditValue(formatDim(value));
     setIsEditing(true);
   }, [value]);
 
@@ -99,7 +102,7 @@ const EditableDimensionText: React.FC<EditableDimensionTextProps> = ({
   // 취소
   const handleCancel = useCallback(() => {
     console.log('❌ 치수 변경 취소');
-    setEditValue(String(Math.round(value)));
+    setEditValue(formatDim(value));
     setIsEditing(false);
   }, [value]);
 
@@ -197,7 +200,7 @@ const EditableDimensionText: React.FC<EditableDimensionTextProps> = ({
             renderOrder={renderOrder}
             depthTest={depthTest}
           >
-            {Math.round(value)}
+            {formatDim(value)}
           </Text>
 
           {/* 클릭 영역 - 투명 메시 */}
