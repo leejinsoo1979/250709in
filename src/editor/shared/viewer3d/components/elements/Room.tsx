@@ -3728,6 +3728,8 @@ const Room: React.FC<RoomProps> = ({
       {/* 노서라운드 모드에서는 전체 너비로 확장하지만 좌우 프레임이 없을 때만 표시 */}
       {/* 상부 프레임 - 균등분할: 전체 너비, 자유배치: 가구별 세그먼트 */}
       {(effectiveShowFrame || isFreePlacement) && (() => {
+        // 슬롯배치: 가구가 하나도 없으면 상부프레임 렌더링 안 함
+        if (!isFreePlacement && placedModulesFromStore.filter(m => !m.isSurroundPanel).length === 0) return null;
         // 자유배치 모드: 가구별 세그먼트로 상부 프레임 렌더링
         if (isFreePlacement) {
           const topStripGroups = computeTopStripGroups(placedModulesFromStore);
@@ -5560,6 +5562,8 @@ const Room: React.FC<RoomProps> = ({
       {/* 받침대가 있는 경우에만 렌더링 */}
       {/* 하부 베이스프레임 - 균등분할: 전체 너비, 자유배치: 가구별 세그먼트 */}
       {(effectiveShowFrame || isFreePlacement) && baseFrameHeightMm > 0 && spaceInfo.baseConfig?.type === 'floor' && (() => {
+        // 슬롯배치: 가구가 하나도 없으면 하부프레임 렌더링 안 함
+        if (!isFreePlacement && placedModulesFromStore.filter(m => !m.isSurroundPanel).length === 0) return null;
         // 모든 하부/키큰장 가구가 bottomPanelRaise 활성이면 하부프레임 전체 숨김
         // 일부만 활성이면 조절발 있는 가구용 하부프레임은 유지
         // 좌우분할 시 영역별 areaFinish도 확인
