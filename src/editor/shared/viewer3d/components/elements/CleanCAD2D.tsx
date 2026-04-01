@@ -1588,9 +1588,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             {/* 좌측 치수 텍스트 - 이격거리 클릭 편집 */}
             {hasLeftWall && editingGapSide === 'left' ? (
               <Html
-                position={[leftOffset + mmToThreeUnits(leftValue) / 2, leftDimY + mmToThreeUnits(30), 0.01]}
-                center
-                style={{ pointerEvents: 'auto' }}
+                position={[leftOffset + mmToThreeUnits(leftValue), leftDimY + mmToThreeUnits(30), 0.01]}
+                style={{ pointerEvents: 'auto', transform: 'translate(-50%, -50%)' }}
                 zIndexRange={[10000, 10001]}
               >
                 <div style={{ background: currentViewDirection !== '3D' && view2DTheme === 'dark' ? 'rgba(31,41,55,0.98)' : 'rgba(255,255,255,0.98)', padding: '3px', borderRadius: '4px', border: '2px solid #2196F3', boxShadow: '0 2px 10px rgba(0,0,0,0.3)' }}>
@@ -1611,9 +1610,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               </Html>
             ) : (
               <Html
-                position={[leftOffset + mmToThreeUnits(leftValue) / 2, leftDimY + mmToThreeUnits(30), 0.01]}
-                center
-                style={{ pointerEvents: hasLeftWall ? 'auto' : 'none' }}
+                position={[leftOffset + mmToThreeUnits(leftValue), leftDimY + mmToThreeUnits(30), 0.01]}
+                style={{ pointerEvents: hasLeftWall ? 'auto' : 'none', transform: 'translate(-50%, -50%)' }}
                 zIndexRange={[9999, 10000]}
               >
                 <div
@@ -1625,7 +1623,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     cursor: hasLeftWall ? 'pointer' : 'default',
                     userSelect: 'none',
                     whiteSpace: 'nowrap',
-                    background: hasLeftWall ? (currentViewDirection !== '3D' && view2DTheme === 'dark' ? 'rgba(31,41,55,0.7)' : 'rgba(255,255,255,0.7)') : 'transparent',
+                    background: hasLeftWall ? (currentViewDirection !== '3D' && view2DTheme === 'dark' ? 'rgba(31,41,55,0.9)' : 'rgba(255,255,255,0.9)') : 'transparent',
                     borderRadius: '3px',
                   }}
                   onClick={(e) => { if (hasLeftWall) { e.stopPropagation(); handleGapEdit('left', leftValue); } }}
@@ -1748,9 +1746,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             {/* 우측 치수 텍스트 - 이격거리 클릭 편집 */}
             {hasRightWall && editingGapSide === 'right' ? (
               <Html
-                position={[rightEdge - mmToThreeUnits(rightValue) / 2, rightDimY + mmToThreeUnits(30), 0.01]}
-                center
-                style={{ pointerEvents: 'auto' }}
+                position={[rightEdge - mmToThreeUnits(rightValue), rightDimY + mmToThreeUnits(30), 0.01]}
+                style={{ pointerEvents: 'auto', transform: 'translate(-50%, -50%)' }}
                 zIndexRange={[10000, 10001]}
               >
                 <div style={{ background: currentViewDirection !== '3D' && view2DTheme === 'dark' ? 'rgba(31,41,55,0.98)' : 'rgba(255,255,255,0.98)', padding: '3px', borderRadius: '4px', border: '2px solid #2196F3', boxShadow: '0 2px 10px rgba(0,0,0,0.3)' }}>
@@ -1771,9 +1768,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               </Html>
             ) : (
               <Html
-                position={[rightEdge - mmToThreeUnits(rightValue) / 2, rightDimY + mmToThreeUnits(30), 0.01]}
-                center
-                style={{ pointerEvents: hasRightWall ? 'auto' : 'none' }}
+                position={[rightEdge - mmToThreeUnits(rightValue), rightDimY + mmToThreeUnits(30), 0.01]}
+                style={{ pointerEvents: hasRightWall ? 'auto' : 'none', transform: 'translate(-50%, -50%)' }}
                 zIndexRange={[9999, 10000]}
               >
                 <div
@@ -1785,7 +1781,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     cursor: hasRightWall ? 'pointer' : 'default',
                     userSelect: 'none',
                     whiteSpace: 'nowrap',
-                    background: hasRightWall ? (currentViewDirection !== '3D' && view2DTheme === 'dark' ? 'rgba(31,41,55,0.7)' : 'rgba(255,255,255,0.7)') : 'transparent',
+                    background: hasRightWall ? (currentViewDirection !== '3D' && view2DTheme === 'dark' ? 'rgba(31,41,55,0.9)' : 'rgba(255,255,255,0.9)') : 'transparent',
                     borderRadius: '3px',
                   }}
                   onClick={(e) => { if (hasRightWall) { e.stopPropagation(); handleGapEdit('right', rightValue); } }}
