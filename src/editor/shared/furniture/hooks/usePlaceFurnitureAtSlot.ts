@@ -239,7 +239,7 @@ export function placeFurnitureAtSlot(params: PlaceFurnitureParams): PlaceFurnitu
       // 듀얼: columnWidth * 2의 0.5mm 단위 내림 (소수점 유지)
       customWidth = Math.floor(columnWidth * 2 * 2) / 2;
     } else {
-      // 싱글: slotWidths에서 정수 내림된 값 사용
+      // 싱글: slotWidths에서 소수점 1자리 내림된 값 사용
       customWidth = targetIndexing.slotWidths[slotIndex];
     }
   }
