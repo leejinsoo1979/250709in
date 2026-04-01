@@ -901,7 +901,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
         if (cc && cc.sections && cc.sections.length > 0) {
           const pt = cc.panelThickness || 18;
           const totalDepth = currentPlacedModule.freeDepth || moduleData.dimensions.depth;
-          const totalWidth = currentPlacedModule.freeWidth || moduleData.dimensions.width;
+          const totalWidth = currentPlacedModule.freeWidth || currentPlacedModule.customWidth || moduleData.dimensions.width;
           const hInputs: Record<number, string> = {};
           const dInputs: Record<number, string> = {};
           const wInputs: Record<number, string> = {};
@@ -2714,7 +2714,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                     : Math.round(currentPlacedModule.upperSectionDepth || totalD).toString());
                 // 너비 표시값
                 const displayW = sectionWidthInputs[sIdx]
-                  || Math.round((sec as any).width || totalW).toString();
+                  || (() => { const v = Math.round(((sec as any).width || totalW) * 10) / 10; return v % 1 === 0 ? v.toString() : v.toFixed(1); })();
 
                 return (
                   <div key={sIdx} style={{
