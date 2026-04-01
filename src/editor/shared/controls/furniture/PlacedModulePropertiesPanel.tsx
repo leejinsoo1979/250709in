@@ -2167,14 +2167,28 @@ const PlacedModulePropertiesPanel: React.FC = () => {
             
             <div className={styles.moduleDetails}>
               <h4 className={styles.moduleName}>
-                {customWidth && customWidth !== moduleData.dimensions.width
-                  ? moduleData.name.replace(/[\d.]+mm/, `${customWidth}mm`)
-                  : moduleData.name}
+                {(() => {
+                  // currentPlacedModule에서 직접 너비를 계산 (state 의존 제거로 갱신 지연 방지)
+                  const directW = currentPlacedModule
+                    ? Math.round((currentPlacedModule.adjustedWidth ?? currentPlacedModule.customWidth ?? moduleData.dimensions.width) * 10) / 10
+                    : customWidth;
+                  return directW && directW !== moduleData.dimensions.width
+                    ? moduleData.name.replace(/[\d.]+mm/, `${directW}mm`)
+                    : moduleData.name;
+                })()}
               </h4>
-              
+
               <div className={styles.property}>
                 <span className={styles.propertyValue}>
-                  {customWidth} × {moduleData.dimensions.height} × {customDepth}mm
+                  {(() => {
+                    const directW = currentPlacedModule
+                      ? Math.round((currentPlacedModule.adjustedWidth ?? currentPlacedModule.customWidth ?? moduleData.dimensions.width) * 10) / 10
+                      : customWidth;
+                    const directD = currentPlacedModule
+                      ? (currentPlacedModule.customDepth ?? getDefaultDepth(moduleData))
+                      : customDepth;
+                    return `${directW} × ${moduleData.dimensions.height} × ${directD}mm`;
+                  })()}
                 </span>
               </div>
             </div>
