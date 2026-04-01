@@ -1555,7 +1555,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           const r = Math.round(leftValue * 10) / 10;
           leftText = r % 1 === 0 ? String(r) : r.toFixed(1);
         }
-        console.log('🔍 [뷰어 이격 디버그] 좌측:', { hasLeftWall, leftValue, leftText, gapConfig: spaceInfo.gapConfig });
+        // 디버그: 뷰어 이격 텍스트에 원본 값 강제 표시
+        leftText = `[${leftText}|g=${spaceInfo.gapConfig?.left}|w=${hasLeftWall?'Y':'N'}]`;
 
         // 이격거리가 0이면 표시하지 않음
         if (leftValue === 0) return null;
@@ -1708,7 +1709,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           rightText = rr % 1 === 0 ? String(rr) : rr.toFixed(1);
         }
 
-        console.log('🔍 [뷰어 이격 디버그] 우측:', { hasRightWall, rightValue, rightText, gapConfig: spaceInfo.gapConfig });
+        // 디버그: 뷰어 이격 텍스트에 원본 값 강제 표시
+        rightText = `[${rightText}|g=${spaceInfo.gapConfig?.right}|w=${hasRightWall?'Y':'N'}]`;
 
         // 이격거리가 0이면 표시하지 않음
         if (rightValue === 0) return null;
