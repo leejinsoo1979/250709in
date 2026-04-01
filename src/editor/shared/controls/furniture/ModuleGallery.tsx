@@ -478,16 +478,14 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
         // 이전 배치 치수 적용 (lastCustomDimensions)
         const stdKey = getStandardDimensionKey(module.id);
         const lastDims = useFurnitureStore.getState().lastCustomDimensions[stdKey];
-        const dims = lastDims
+        let dims = lastDims
           ? { width: lastDims.width, height: lastDims.height, depth: lastDims.depth }
-          : module.dimensions;
+          : { ...module.dimensions };
         const { startX, endX } = getInternalSpaceBoundsX(spaceInfo);
 
         // 좌측부터 순서대로 빈 자리 찾기
-        const furnitureWidth = dims.width;
-        const halfW = furnitureWidth / 2;
+        let furnitureWidth = dims.width;
         const newCategory = (moduleData.category || 'full') as 'full' | 'upper' | 'lower';
-        let targetX: number | null = null;
 
         const freeModules = placedModules.filter(m => m.isFreePlacement && !m.isSurroundPanel);
         const sortedBounds = freeModules.map(m => getModuleBoundsX(m)).sort((a, b) => a.left - b.left);
@@ -526,10 +524,25 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
         }
 
         // 좌측부터 순서대로 들어갈 수 있는 첫 빈 공간에 배치
+        let targetX: number | null = null;
         for (const gap of candidates) {
           if ((gap.right - gap.left) >= furnitureWidth) {
-            targetX = gap.left + halfW;
+            targetX = gap.left + furnitureWidth / 2;
             break;
+          }
+        }
+
+        // 빈 공간에 못 들어가면, 가장 큰 빈 공간에 맞게 가구 너비 축소
+        if (targetX === null && candidates.length > 0) {
+          const largestGap = candidates.reduce((max, g) => {
+            const w = g.right - g.left;
+            return w > (max.right - max.left) ? g : max;
+          }, candidates[0]);
+          const gapWidth = Math.floor(largestGap.right - largestGap.left);
+          if (gapWidth >= 200) {
+            furnitureWidth = gapWidth;
+            dims = { ...dims, width: furnitureWidth };
+            targetX = largestGap.left + furnitureWidth / 2;
           }
         }
 
