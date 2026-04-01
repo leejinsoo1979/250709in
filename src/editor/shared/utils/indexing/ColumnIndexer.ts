@@ -313,52 +313,36 @@ export class ColumnIndexer {
     const hasWalls = spaceInfo.installType === 'builtin' || spaceInfo.installType === 'built-in' || 
                      (spaceInfo.wallConfig && (spaceInfo.wallConfig.left || spaceInfo.wallConfig.right));
     
-    // 노서라운드 최적 이격거리 자동 선택 비활성화
-    // 슬롯 너비와 가구 너비를 정확히 일치시키기 위해 자동 최적화 제거
-    // 사용자가 지정한 이격거리를 그대로 사용
-    if (false && isNoSurround && hasWalls) { // 비활성화됨
-      const validGapSums = SpaceCalculator.selectOptimalGapSum(totalWidth, columnCount);
-      if (validGapSums.length > 0) {
-        // 첫 번째 유효한 이격거리 합 사용 (보통 가장 작은 값)
-        const optimalGapSum = validGapSums[0];
-        
-        // 양쪽벽인 경우 정수로 분배, 한쪽벽인 경우 해당 쪽만 설정
-        const isBuiltin = spaceInfo.installType === 'builtin' || spaceInfo.installType === 'built-in';
-        if (isBuiltin || (spaceInfo.wallConfig?.left && spaceInfo.wallConfig?.right)) {
-          // 양쪽벽: 정수로 분배 (홀수면 좌측을 적게)
-          const leftGap = Math.floor(optimalGapSum / 2);
-          const rightGap = optimalGapSum - leftGap;
+    // 노서라운드 모드: 슬롯 너비가 정수가 되도록 이격거리 자동 최적화
+    // 사용자 이격 기준으로 가장 가까운 정수 슬롯폭을 만드는 이격합을 찾아 적용
+    if (isNoSurround) {
+      const userGapSum = (optimizedGapConfig?.left || 0) + (optimizedGapConfig?.right || 0);
+      const rawSlotWidth = (totalWidth - userGapSum) / columnCount;
+      const isAlreadyInteger = Math.abs(rawSlotWidth - Math.round(rawSlotWidth)) < 0.001;
+
+      if (!isAlreadyInteger) {
+        // 정수 슬롯폭을 만드는 최적 이격합 검색
+        const validGapSums = SpaceCalculator.selectOptimalGapSum(totalWidth, columnCount);
+        if (validGapSums.length > 0) {
+          const optimalGapSum = validGapSums[0];
+
+          // 좌우 균등 분배 (0.5mm 단위)
+          const userLeft = optimizedGapConfig?.left || 0;
+          const userRight = optimizedGapConfig?.right || 0;
+          const userRatio = userGapSum > 0 ? userLeft / userGapSum : 0.5;
+
+          // 사용자 비율 유지하면서 0.5mm 단위로 분배
+          const leftGap = Math.round(optimalGapSum * userRatio * 2) / 2;
+          const rightGap = Math.round((optimalGapSum - leftGap) * 2) / 2;
+
           optimizedGapConfig = {
             left: leftGap,
             right: rightGap
           };
-        } else if (spaceInfo.wallConfig?.left) {
-          // 왼쪽벽만: 왼쪽에만 이격
-          optimizedGapConfig = {
-            left: optimalGapSum,
-            right: 0
-          };
-        } else if (spaceInfo.wallConfig?.right) {
-          // 오른쪽벽만: 오른쪽에만 이격
-          optimizedGapConfig = {
-            left: 0,
-            right: optimalGapSum
-          };
+
+          // 최적화된 이격거리로 내경 재계산
+          internalWidth = totalWidth - optimizedGapConfig.left - optimizedGapConfig.right;
         }
-        
-        // console.log('🎯 노서라운드 최적 이격거리 자동 선택:', {
-        //   전체너비: totalWidth,
-        //   슬롯수: columnCount,
-        //   유효한_이격합: validGapSums,
-        //   선택된_이격합: optimalGapSum,
-        //   좌이격: optimizedGapConfig.left,
-        //   우이격: optimizedGapConfig.right,
-        //   내경: totalWidth - optimizedGapConfig.left - optimizedGapConfig.right,
-        //   슬롯폭: (totalWidth - optimizedGapConfig.left - optimizedGapConfig.right) / columnCount
-        // });
-        
-        // 최적화된 이격거리로 내경 재계산
-        internalWidth = totalWidth - optimizedGapConfig.left - optimizedGapConfig.right;
       }
     }
     

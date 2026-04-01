@@ -161,35 +161,35 @@ export class SpaceCalculator {
    */
   static selectOptimalGapSum(totalWidth: number, slotCount: number): number[] {
     const validGapSums: number[] = [];
-    
-    
-    // 먼저 정수 슬롯폭을 만드는 이격거리 찾기
-    for (let gapSum = 0; gapSum <= 20; gapSum++) {
+
+    // 0.5mm 단위로 이격거리 탐색 (0 ~ 20mm)
+    // 정수 슬롯폭을 만드는 가장 작은 이격거리를 우선 반환
+    for (let gapSum = 0; gapSum <= 20; gapSum += 0.5) {
       const internalWidth = totalWidth - gapSum;
       const slotWidth = internalWidth / slotCount;
-      
+
       // 정수인지 체크
       const isInteger = Math.abs(slotWidth - Math.round(slotWidth)) < 0.001;
-      
-      if (isInteger && slotWidth >= 400 && slotWidth <= 600) {
+
+      if (isInteger && slotWidth >= 200 && slotWidth <= 1200) {
         return [gapSum]; // 정수를 찾으면 바로 반환
       }
     }
-    
-    // 정수가 없으면 0.5 단위 찾기
-    for (let gapSum = 0; gapSum <= 20; gapSum++) {
+
+    // 정수가 없으면 0.5 단위 슬롯폭 찾기
+    for (let gapSum = 0; gapSum <= 20; gapSum += 0.5) {
       const internalWidth = totalWidth - gapSum;
       const slotWidth = internalWidth / slotCount;
-      
+
       // 0.5 단위로 반올림
       const roundedSlotWidth = Math.round(slotWidth * 2) / 2;
       const remainder = Math.abs(slotWidth - roundedSlotWidth);
-      
-      if (remainder < 0.01 && roundedSlotWidth >= 400 && roundedSlotWidth <= 600) {
+
+      if (remainder < 0.01 && roundedSlotWidth >= 200 && roundedSlotWidth <= 1200) {
         validGapSums.push(gapSum);
       }
     }
-    
+
     return validGapSums;
   }
 
