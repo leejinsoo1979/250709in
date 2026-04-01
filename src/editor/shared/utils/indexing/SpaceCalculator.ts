@@ -162,9 +162,9 @@ export class SpaceCalculator {
   static selectOptimalGapSum(totalWidth: number, slotCount: number): number[] {
     const validGapSums: number[] = [];
 
-    // 0.5mm 단위로 이격거리 탐색 (0 ~ 20mm)
+    // 0.5mm 단위로 이격거리 탐색 (2 ~ 20mm) — 빌트인 최소 이격합 2mm (양쪽 1mm)
     // 정수 슬롯폭을 만드는 가장 작은 이격거리를 우선 반환
-    for (let gapSum = 0; gapSum <= 20; gapSum += 0.5) {
+    for (let gapSum = 2; gapSum <= 20; gapSum += 0.5) {
       const internalWidth = totalWidth - gapSum;
       const slotWidth = internalWidth / slotCount;
 
@@ -177,7 +177,7 @@ export class SpaceCalculator {
     }
 
     // 정수가 없으면 0.5 단위 슬롯폭 찾기
-    for (let gapSum = 0; gapSum <= 20; gapSum += 0.5) {
+    for (let gapSum = 2; gapSum <= 20; gapSum += 0.5) {
       const internalWidth = totalWidth - gapSum;
       const slotWidth = internalWidth / slotCount;
 
@@ -231,7 +231,8 @@ export class SpaceCalculator {
         }
 
         // 2단계: 현재 값으로 안 되면 대칭 이격거리 탐색 (0.5 단위)
-        for (let gap = 0; gap <= 5; gap += 0.5) {
+        // 빌트인은 벽과의 최소 이격 1mm 필요
+        for (let gap = 1; gap <= 5; gap += 0.5) {
           const internalWidth = baseWidth - (gap * 2);
           const slotWidth = internalWidth / columnCount;
           
@@ -261,7 +262,7 @@ export class SpaceCalculator {
         
         // 대칭으로 안되면 비대칭 이격거리 시도 (0.5 단위)
         for (let diff = 0.5; diff <= 3.5; diff += 0.5) {
-          for (let leftGap = 0; leftGap <= 5; leftGap += 0.5) {
+          for (let leftGap = 1; leftGap <= 5; leftGap += 0.5) {
             const rightGap = Math.round((leftGap + diff) * 10) / 10;
             if (rightGap > 5) continue;
             
