@@ -1454,7 +1454,6 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
 
         // Y 위치 계산: 바닥마감재높이 + 받침대높이(+개별띄움) + 가구높이/2
         const yPos = floorFinishHeight + baseHeight + (furnitureHeight / 2);
-
         adjustedPosition = {
           ...adjustedPosition,
           y: yPos

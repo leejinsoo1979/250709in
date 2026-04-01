@@ -409,14 +409,21 @@ export const useSpaceConfigStore = create<SpaceConfigState>()((set) => ({
       }
 
       // 임시 spaceInfo 생성
-      // materialConfig는 명시적으로 병합하여 기존 텍스처 값 보존
+      // materialConfig, baseConfig는 명시적으로 병합하여 기존 값 보존
       let tempSpaceInfo = {
         ...state.spaceInfo,
         ...processedInfo,
         materialConfig: {
           ...state.spaceInfo.materialConfig,
           ...processedInfo.materialConfig
-        }
+        },
+        // baseConfig도 deep merge — type/placementType 등 기본값 유실 방지
+        ...(processedInfo.baseConfig !== undefined ? {
+          baseConfig: {
+            ...state.spaceInfo.baseConfig,
+            ...processedInfo.baseConfig
+          }
+        } : {})
       };
 
       // 상부프레임 최소값 보정 (30mm 미만이면 30으로)

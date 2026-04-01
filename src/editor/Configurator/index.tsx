@@ -2462,7 +2462,13 @@ const Configurator: React.FC = () => {
                   ...designFile.spaceConfig,
                   mainDoorCount: undefined,
                   droppedCeilingDoorCount: undefined,
-                  customColumnCount: undefined
+                  customColumnCount: undefined,
+                  // baseConfig.type 기본값 보장 — Firebase에 type 없이 저장된 경우 대비
+                  baseConfig: {
+                    type: 'floor' as const,
+                    placementType: 'ground' as const,
+                    ...designFile.spaceConfig.baseConfig
+                  }
                 };
                 // 상부프레임 최소값 보정 (30mm 미만이면 30으로)
                 if (spaceConfig.frameSize && spaceConfig.frameSize.top < 30) {
