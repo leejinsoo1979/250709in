@@ -1041,47 +1041,31 @@ const Configurator: React.FC = () => {
   };
 
   const getCurrentColumnCount = () => {
-    // 단내림이 활성화된 경우 메인 구간의 폭을 기준으로 계산
-    let effectiveWidth = spaceInfo.width || 4800;
+    // DoorSlider와 동일한 SpaceCalculator 기반 범위 사용 (범위 불일치 방지)
+    if (!spaceInfo.droppedCeiling?.enabled) {
+      const internalWidth = SpaceCalculator.calculateInternalWidth(spaceInfo);
+      const limits = SpaceCalculator.getColumnCountLimits(internalWidth);
 
-    if (spaceInfo.droppedCeiling?.enabled) {
-      // 단내림이 활성화된 경우 전체 폭에서 단내림 폭을 뺀 나머지가 메인 구간
-      effectiveWidth = effectiveWidth - (spaceInfo.droppedCeiling.width || (spaceInfo.layoutMode === 'free-placement' ? 150 : 900));
+      let count = spaceInfo.customColumnCount || derivedSpaceStore.columnCount || limits.minColumns;
+      count = Math.max(limits.minColumns, Math.min(limits.maxColumns, count));
+      return count;
     }
 
-    const range = calculateDoorRange(effectiveWidth);
+    // 단내림 활성화 시: 기존 calculateDoorRange 사용 (DoorSlider도 동일 로직)
+    let effectiveWidth = spaceInfo.width || 4800;
+    effectiveWidth = effectiveWidth - (spaceInfo.droppedCeiling.width || (spaceInfo.layoutMode === 'free-placement' ? 150 : 900));
 
-    // 기본값을 최소값으로 설정 (ideal 대신 min 사용)
+    const range = calculateDoorRange(effectiveWidth);
     let count = range.min;
 
-    // 단내림이 활성화된 경우 메인구간 도어 개수 사용
-    if (spaceInfo.droppedCeiling?.enabled) {
-      if (spaceInfo.mainDoorCount) {
-        count = spaceInfo.mainDoorCount;
-      } else {
-        // mainDoorCount가 없으면 현재 customColumnCount 사용, 없으면 최소값
-        count = spaceInfo.customColumnCount || derivedSpaceStore.columnCount || range.min;
-      }
+    if (spaceInfo.mainDoorCount) {
+      count = spaceInfo.mainDoorCount;
     } else {
-      // 단내림이 비활성화된 경우 customColumnCount 우선 사용, 없으면 최소값
       count = spaceInfo.customColumnCount || derivedSpaceStore.columnCount || range.min;
     }
 
-    // 반드시 400-600mm 범위 안에서만 동작하도록 강제
     count = Math.max(range.min, Math.min(range.max, count));
-
-    // 실제 슬롯 크기 검증
-    const usableWidth = effectiveWidth - 100;
-    const slotWidth = usableWidth / count;
-
-    // 슬롯 크기가 400-600mm 범위를 벗어나면 조정
-    if (slotWidth < 400) {
-      count = Math.floor(usableWidth / 400);
-    } else if (slotWidth > 600) {
-      count = Math.ceil(usableWidth / 600);
-    }
-
-    return Math.max(range.min, Math.min(range.max, count));
+    return count;
   };
 
 
@@ -3089,27 +3073,15 @@ const Configurator: React.FC = () => {
       // });
     }
 
-    // 폭(width)이 변경되었을 때 도어 개수 자동 조정
+    // 폭(width)이 변경되었을 때 도어 개수 자동 조정 (SpaceCalculator 기반)
     if (updates.width && updates.width !== spaceInfo.width) {
-      const range = calculateDoorRange(updates.width);
+      const tempSpaceInfo = { ...spaceInfo, ...finalUpdates, width: updates.width };
+      const internalWidth = SpaceCalculator.calculateInternalWidth(tempSpaceInfo);
+      const limits = SpaceCalculator.getColumnCountLimits(internalWidth);
       const currentCount = spaceInfo.customColumnCount || getCurrentColumnCount();
 
-      // 400-600mm 범위 엄격 적용
-      const usableWidth = updates.width - 100;
-      let adjustedCount = currentCount;
-
-      // 현재 카운트로 계산한 슬롯 크기 확인
-      const currentSlotWidth = usableWidth / currentCount;
-
-      if (currentSlotWidth < 400) {
-        adjustedCount = Math.floor(usableWidth / 400);
-      } else if (currentSlotWidth > 600) {
-        adjustedCount = Math.ceil(usableWidth / 600);
-      }
-
-      // 최종 범위 검증
-      const finalCount = Math.max(range.min, Math.min(range.max, adjustedCount));
-      finalUpdates = { ...finalUpdates, customColumnCount: finalCount };
+      const adjustedCount = Math.max(limits.minColumns, Math.min(limits.maxColumns, currentCount));
+      finalUpdates = { ...finalUpdates, customColumnCount: adjustedCount };
     }
 
     // customColumnCount가 직접 변경되었을 때 - 사용자가 설정한 값 그대로 사용
