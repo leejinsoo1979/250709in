@@ -286,7 +286,7 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
       panelMaterialRef.current.depthWrite = processedMaterial.depthWrite;
       panelMaterialRef.current.needsUpdate = true;
 
-      if (isDragging) {
+      if (isDragging || isEditMode) {
         panelMaterialRef.current.color = processedMaterial.color.clone();
       }
 
@@ -313,7 +313,7 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
     panelMaterialRef.current = panelMaterial;
 
     return panelMaterial;
-  }, [processedMaterial, panelName, activePanelGrainDirectionsStr, isDragging, textureSignature, viewMode, renderMode, isPlainMaterial]);
+  }, [processedMaterial, panelName, activePanelGrainDirectionsStr, isDragging, isEditMode, textureSignature, viewMode, renderMode, isPlainMaterial]);
 
   const finalMaterial = panelSpecificMaterial;
 
