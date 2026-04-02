@@ -32,22 +32,22 @@ const FURNITURE_ICONS: Record<string, string> = {
   'dual-4drawer-hanging': getImagePath('dual-4drawer-hanging.png'),
   'dual-2drawer-styler': getImagePath('dual-2drawer-styler.png'),
   'dual-4drawer-pantshanger': getImagePath('dual-4drawer-pantshanger.png'),
-  // 싱글 상부장
-  'upper-cabinet-shelf': getImagePath('upper-cabinet-shelf.png'),
-  'upper-cabinet-2tier': getImagePath('upper-cabinet-2tier.png'),
-  'upper-cabinet-open': getImagePath('upper-cabinet-open.png'),
-  'upper-cabinet-mixed': getImagePath('upper-cabinet-mixed.png'),
-  // 싱글 하부장
-  'lower-cabinet-basic': getImagePath('lower-cabinet-basic.png'),
-  'lower-cabinet-2tier': getImagePath('lower-cabinet-2tier.png'),
-  // 듀얼 상부장
-  'dual-upper-cabinet-shelf': getImagePath('dual-upper-cabinet-shelf.png'),
-  'dual-upper-cabinet-2tier': getImagePath('dual-upper-cabinet-2tier.png'),
-  'dual-upper-cabinet-open': getImagePath('dual-upper-cabinet-open.png'),
-  'dual-upper-cabinet-mixed': getImagePath('dual-upper-cabinet-mixed.png'),
-  // 듀얼 하부장
-  'dual-lower-cabinet-basic': getImagePath('dual-lower-cabinet-basic.png'),
-  'dual-lower-cabinet-2tier': getImagePath('dual-lower-cabinet-2tier.png'),
+  // 싱글 상부장 (임시 비활성화)
+  // 'upper-cabinet-shelf': getImagePath('upper-cabinet-shelf.png'),
+  // 'upper-cabinet-2tier': getImagePath('upper-cabinet-2tier.png'),
+  // 'upper-cabinet-open': getImagePath('upper-cabinet-open.png'),
+  // 'upper-cabinet-mixed': getImagePath('upper-cabinet-mixed.png'),
+  // 싱글 하부장 (임시 비활성화)
+  // 'lower-cabinet-basic': getImagePath('lower-cabinet-basic.png'),
+  // 'lower-cabinet-2tier': getImagePath('lower-cabinet-2tier.png'),
+  // 듀얼 상부장 (임시 비활성화)
+  // 'dual-upper-cabinet-shelf': getImagePath('dual-upper-cabinet-shelf.png'),
+  // 'dual-upper-cabinet-2tier': getImagePath('dual-upper-cabinet-2tier.png'),
+  // 'dual-upper-cabinet-open': getImagePath('dual-upper-cabinet-open.png'),
+  // 'dual-upper-cabinet-mixed': getImagePath('dual-upper-cabinet-mixed.png'),
+  // 듀얼 하부장 (임시 비활성화)
+  // 'dual-lower-cabinet-basic': getImagePath('dual-lower-cabinet-basic.png'),
+  // 'dual-lower-cabinet-2tier': getImagePath('dual-lower-cabinet-2tier.png'),
 };
 
 // 모듈 타입 정의
