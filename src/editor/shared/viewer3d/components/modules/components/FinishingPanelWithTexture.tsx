@@ -13,6 +13,7 @@ interface FinishingPanelWithTextureProps {
   doorColor: string;
   renderMode?: 'solid' | 'wireframe';
   isDragging?: boolean;
+  isEditMode?: boolean;
   furnitureId?: string;
 }
 
@@ -29,6 +30,7 @@ const FinishingPanelWithTexture: React.FC<FinishingPanelWithTextureProps> = ({
   doorColor,
   renderMode = 'solid',
   isDragging = false,
+  isEditMode = false,
   furnitureId
 }) => {
   const [textureLoaded, setTextureLoaded] = useState(false);
@@ -47,8 +49,8 @@ const FinishingPanelWithTexture: React.FC<FinishingPanelWithTextureProps> = ({
       envMapIntensity: 0.0,
       emissive: new THREE.Color(0x000000),
       emissiveIntensity: 0.0,
-      transparent: renderMode === 'wireframe' || isDragging,
-      opacity: renderMode === 'wireframe' ? 0.3 : isDragging ? 0.35 : 1.0,
+      transparent: renderMode === 'wireframe' || isDragging || isEditMode,
+      opacity: renderMode === 'wireframe' ? 0.3 : (isDragging || isEditMode) ? 0.35 : 1.0,
       wireframe: renderMode === 'wireframe'
     });
     
@@ -90,7 +92,7 @@ const FinishingPanelWithTexture: React.FC<FinishingPanelWithTextureProps> = ({
     }
     
     return material;
-  }, [effectiveColor, renderMode, isDragging, spaceInfo?.materialConfig?.doorTexture, spaceInfo?.materialConfig?.frameTexture]);
+  }, [effectiveColor, renderMode, isDragging, isEditMode, spaceInfo?.materialConfig?.doorTexture, spaceInfo?.materialConfig?.frameTexture]);
   
   // 컴포넌트 언마운트 시 재질 정리
   useEffect(() => {
@@ -108,6 +110,8 @@ const FinishingPanelWithTexture: React.FC<FinishingPanelWithTextureProps> = ({
       position={position}
       material={panelMaterial}
       renderMode={renderMode}
+      isDragging={isDragging}
+      isEditMode={isEditMode}
       furnitureId={furnitureId}
       hideEdges={false}
     />

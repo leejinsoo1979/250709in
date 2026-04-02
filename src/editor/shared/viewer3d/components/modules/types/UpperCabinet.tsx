@@ -160,6 +160,7 @@ const UpperCabinet: React.FC<FurnitureTypeProps> = ({
               renderMode={renderMode}
               furnitureId={moduleData.id}
               isDragging={isDragging}
+              isEditMode={isEditMode}
             />
         </>
       )}

@@ -150,25 +150,14 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
       return "#10b981"; // 기본값 (green)
     };
 
-    // 드래그 중일 때 테마색 고스트 (2D/3D 모두 동일)
-    if (isDragging && baseMaterial instanceof THREE.MeshStandardMaterial) {
+    // 드래그 중이거나 편집 모드일 때 동일한 테마색 고스트 (2D/3D 모두 동일)
+    if ((isDragging || isEditMode) && baseMaterial instanceof THREE.MeshStandardMaterial) {
       const ghostMaterial = baseMaterial.clone();
       ghostMaterial.transparent = true;
       ghostMaterial.opacity = 0.6;
       ghostMaterial.color = new THREE.Color(getThemeColor());
       ghostMaterial.needsUpdate = true;
       return ghostMaterial;
-    }
-
-    // 편집 모드에서는 테마색 반투명 고스트 (드래그 고스트와 동일 스타일)
-    if (isEditMode && baseMaterial instanceof THREE.MeshStandardMaterial) {
-      const editGhostMaterial = baseMaterial.clone();
-      editGhostMaterial.transparent = true;
-      editGhostMaterial.opacity = 0.5;
-      editGhostMaterial.depthWrite = false;
-      editGhostMaterial.color = new THREE.Color(getThemeColor());
-      editGhostMaterial.needsUpdate = true;
-      return editGhostMaterial;
     }
 
     // 2D 솔리드 모드에서 캐비넷을 투명하게 처리 (드래그/편집 중이 아닐 때만)

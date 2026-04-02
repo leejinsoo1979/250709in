@@ -258,10 +258,9 @@ export const useBaseFurniture = (
       
       // 투명도 설정 - 2D 모드에서는 편집 모드 여부와 관계없이 일정한 투명도 유지
       material.transparent = renderMode === 'wireframe' || (viewMode === '2D' && renderMode === 'solid') || isDragging || isEditMode;
-      material.opacity = renderMode === 'wireframe' ? 0.3 : 
+      material.opacity = renderMode === 'wireframe' ? 0.3 :
                         (viewMode === '2D' && renderMode === 'solid') ? 0.5 : // 2D 모드에서는 항상 0.5
-                        (isDragging ? 0.6 :
-                        (isEditMode ? 0.5 : 1.0));
+                        ((isDragging || isEditMode) ? 0.6 : 1.0);
       
       // 은선모드 또는 2D 투명 모드에서는 depthWrite를 false로 설정하여 치수 텍스트가 가려지지 않도록
       const shouldDisableDepthWrite = renderMode === 'wireframe' || (viewMode === '2D' && renderMode === 'solid');

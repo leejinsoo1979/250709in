@@ -325,16 +325,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     materials.forEach((mat) => {
       if (mat) {
         // 편집 모드일 때 설정
-        if (isEditMode) {
-          mat.transparent = true;
-          mat.opacity = 0.15;
-          mat.color.set(getThemeColor());
-          mat.depthWrite = false;
-          mat.depthTest = true;
-          mat.side = THREE.DoubleSide;
-          mat.emissive = new THREE.Color(getThemeColor());
-          mat.emissiveIntensity = 0.1;
-        } else if (isDragging) {
+        if (isEditMode || isDragging) {
           mat.transparent = true;
           mat.opacity = 0.3;
           mat.color.set(getThemeColor());
