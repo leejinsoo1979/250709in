@@ -724,7 +724,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   // === 문 높이 계산 ===
   // 상부장/하부장인지 확인
   const isUpperCabinet = moduleData?.id?.includes('upper-cabinet') || moduleData?.id?.includes('dual-upper-cabinet');
-  const isLowerCabinet = moduleData?.id?.includes('lower-cabinet') || moduleData?.id?.includes('dual-lower-cabinet');
+  const isLowerCabinet = moduleData?.id?.includes('lower-cabinet') || moduleData?.id?.includes('dual-lower-cabinet') || moduleData?.category === 'lower';
 
   // 패널 두께 - spaceInfo에서 동적으로 가져오기
   const panelThickness = originalSpaceInfo.panelThickness ?? 18;
