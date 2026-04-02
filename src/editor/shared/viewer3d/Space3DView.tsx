@@ -862,7 +862,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
       id: `column-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
       position: [centerX, 0, zPosition] as [number, number, number], // 바닥 기준: Y=0
       width: columnData.width || 300, // columnData에서 폭 가져오기
-      height: columnData.height || spaceInfo?.height || 2400, // columnData에서 높이 가져오기
+      height: spaceInfo?.height || 2400, // 항상 공간 높이 사용
       depth: columnData.depth || 730, // columnData에서 깊이 가져오기
       color: columnData.color || '#888888',
       material: columnData.material || 'concrete'
@@ -1796,7 +1796,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
               {/* 기둥 에셋 렌더링 */}
               {(spaceInfo?.columns || []).map((column) => {
                 // 기둥이 단내림 영역에 있는지 확인
-                let columnHeight = column.height || spaceInfo.height || 2400; // 기본값은 공간 높이
+                let columnHeight = spaceInfo.height || column.height || 2400; // 항상 공간 높이 우선
                 if (spaceInfo.droppedCeiling?.enabled && spaceInfo.layoutMode !== 'free-placement') {
                   const totalWidth = spaceInfo.width;
                   const droppedWidth = spaceInfo.droppedCeiling.width || (spaceInfo.layoutMode === 'free-placement' ? 150 : 900);
@@ -1821,7 +1821,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
 
                   // 기둥이 단내림 영역에 있으면 높이 조정
                   if (columnXMm >= droppedStartX && columnXMm <= droppedEndX) {
-                    columnHeight = column.height - dropHeight;
+                    columnHeight = columnHeight - dropHeight;
                   }
                 }
 

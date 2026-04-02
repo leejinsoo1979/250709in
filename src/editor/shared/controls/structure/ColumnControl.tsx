@@ -37,7 +37,7 @@ const ColumnControl: React.FC<ColumnControlProps> = ({ columns, onColumnsChange,
       id: `column-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
       position: [centerX, 0, centerZ],
       width: columnData.width,
-      height: columnData.height || spaceInfo.height || 2400,
+      height: spaceInfo.height || 2400,
       depth: columnData.depth,
       color: columnData.color || '#888888',
       material: columnData.material || 'concrete'

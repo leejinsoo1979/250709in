@@ -102,7 +102,7 @@ const ColumnGhostPreview: React.FC<ColumnGhostPreviewProps> = ({ spaceInfo }) =>
 
   // 기둥 크기 (mm를 Three.js 단위로 변환)
   const columnWidth = (dragData.width || 300) * 0.01;
-  const columnHeight = (dragData.height || 2400) * 0.01;
+  const columnHeight = (spaceInfo.height || dragData.height || 2400) * 0.01;
   const columnDepth = (dragData.depth || 730) * 0.01;
 
   // 기둥 위치 계산 (바닥 기준, 뒷벽 근처) - 유효한 슬롯이 있을 때만
