@@ -3221,9 +3221,9 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
           setIsHovered(false);
         }}
       >
-        {isSelected && !isEditMode && width > 0 && height > 0 && depth > 0 && (
+        {isSelected && width > 0 && height > 0 && depth > 0 && (
           <>
-            {/* 선택 하이라이트: 잠긴 가구는 빨간색, 일반 가구는 테마색 (편집 모드에서는 숨김) */}
+            {/* 선택 하이라이트: 잠긴 가구는 빨간색, 일반 가구는 테마색 */}
             <mesh
               ref={highlightMeshRef}
               position={[0, 0, 0]}
@@ -3242,8 +3242,8 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
               />
             </mesh>
 
-            {/* 가구 상단 아이콘 툴바 (readOnly 모드에서는 숨김) */}
-            {!isPanelListTabActive && !readOnly && (
+            {/* 가구 상단 아이콘 툴바 (편집 모드/readOnly에서는 숨김) */}
+            {!isPanelListTabActive && !readOnly && !isEditMode && (
               <Html
                 position={[0, height / 2 + mmToThreeUnits(50), depth / 2 + 0.03]}
                 center
