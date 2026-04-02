@@ -767,31 +767,13 @@ const DoorModule: React.FC<DoorModuleProps> = ({
       // actualDoorHeight,
     // });
   } else if (isLowerCabinet) {
-    // 하부장 도어는 하부장 상단과 일치, 아래로 확장
+    // 하부장 도어: 상단에서 20mm 내려온 지점 ~ 하단에서 2mm 아래 지점
     const lowerCabinetHeight = effectiveInternalHeight || moduleData?.dimensions?.height || 1000;
-    const LOWER_CABINET_BOTTOM_EXTENSION = 40; // 하부장 도어 아래쪽 확장 (mm) - 바닥배치 시만
-    const LOWER_CABINET_TOP_EXTENSION = panelThickness; // 하부장 상부 마감재 두께 (도어 상단이 하부장 상단과 일치)
+    const LOWER_DOOR_TOP_GAP = 20; // 하부장 상단에서 20mm 내려온 지점이 도어 상단
+    const LOWER_DOOR_BOTTOM_EXTENSION = 2; // 하부장 하단에서 2mm 아래가 도어 하단
 
-    // 띄움배치 시 하단 확장 제거 (키큰장 도어 하단과 맞추기 위해)
-    const bottomExtension = floatHeight > 0 ? 0 : LOWER_CABINET_BOTTOM_EXTENSION;
-
-    // 하부장 도어 높이 = 캐비넷 높이 + 아래 확장 + 위 확장(상부 마감재)
-    actualDoorHeight = lowerCabinetHeight + bottomExtension + LOWER_CABINET_TOP_EXTENSION;
-
-    if (floatHeight > 0) {
-// console.log('🚪📐 하부장 플로팅 도어 높이 조정:', {
-        // 원래높이: lowerCabinetHeight + LOWER_CABINET_TOP_EXTENSION,
-        // 하단확장제거: LOWER_CABINET_BOTTOM_EXTENSION,
-        // 조정된높이: actualDoorHeight,
-        // 설명: '띄움배치 시 하단 확장 제거하여 키큰장 도어 하단과 일치'
-      // });
-    }
-
-// console.log('🚪📏 하부장 도어 높이:', {
-      // moduleId: moduleData?.id,
-      // 캐비넷높이: lowerCabinetHeight,
-      // actualDoorHeight,
-    // });
+    // 하부장 도어 높이 = 캐비넷높이 - 상단갭 + 하단확장
+    actualDoorHeight = lowerCabinetHeight - LOWER_DOOR_TOP_GAP + LOWER_DOOR_BOTTOM_EXTENSION;
   } else {
     // 키큰장의 경우: 천장/바닥 기준으로 갭 적용
     // fullSpaceHeight는 zone prop에 따라 단내림 구간 높이 또는 일반 구간 높이 사용
@@ -890,45 +872,16 @@ const DoorModule: React.FC<DoorModuleProps> = ({
       // 설명: `도어가 캐비넷보다 ${UPPER_CABINET_BOTTOM_EXTENSION}mm 아래로 확장`
     // });
   } else if (isLowerCabinet) {
-    // 하부장 도어는 하부장 상단과 일치하고 아래로 확장
-    const LOWER_CABINET_BOTTOM_EXTENSION = 40; // 아래쪽 확장
-    const LOWER_CABINET_TOP_EXTENSION = panelThickness; // 상부 마감재 두께 (도어 상단 = 하부장 상단)
-    const DOOR_POSITION_ADJUSTMENT = 0; // 위치 조정값 (10mm 위로 올림)
+    // 하부장 도어: 상단에서 20mm 내려온 지점 ~ 하단에서 2mm 아래
     const lowerCabinetHeight = effectiveInternalHeight || moduleData?.dimensions?.height || 1000;
+    const LOWER_DOOR_TOP_GAP = 20;
+    const LOWER_DOOR_BOTTOM_EXTENSION = 2;
 
-    // 하부장 캐비넷은 Y=0에 위치 (cabinetYPosition = 0)
-    // 하부장 캐비넷 중심 Y = 0
-    // 하부장 캐비넷 상단 = 캐비넷높이/2 + 상부 마감재(18mm)
-    // 하부장 캐비넷 하단 = -캐비넷높이/2
-
-    // 도어는 캐비넷 상단(마감재 포함)에서 아래로 확장
-    // 도어 상단 = 캐비넷 상단 + 상부 마감재 (고정)
-    // 도어 하단 = 캐비넷 하단 - 아래 확장값 (플로팅 시 올라감)
-    // 도어 높이 = actualDoorHeight (이미 플로팅 높이가 반영됨)
-    const cabinetTop = mmToThreeUnits(lowerCabinetHeight) / 2 + mmToThreeUnits(LOWER_CABINET_TOP_EXTENSION);
-    const cabinetBottom = -mmToThreeUnits(lowerCabinetHeight) / 2;
-
-    // 도어 상단은 고정 (cabinetTop에서 DOOR_POSITION_ADJUSTMENT만큼 아래)
-    const doorTop = cabinetTop - mmToThreeUnits(DOOR_POSITION_ADJUSTMENT);
-
-    // 도어 중심 = 도어 상단 - (도어 높이 / 2)
-    // 플로팅 시 actualDoorHeight가 이미 줄어들었으므로, 도어 상단에서 절반 내려온 위치
-    doorYPosition = doorTop - mmToThreeUnits(actualDoorHeight) / 2;
-
-// console.log('🚪📍 하부장 도어 Y 위치 (상단 고정, 하단만 조정):', {
-      // moduleId: moduleData?.id,
-      // 캐비넷높이: lowerCabinetHeight,
-      // 캐비넷상단_mm: (cabinetTop / 0.01).toFixed(1),
-      // 캐비넷하단_mm: (cabinetBottom / 0.01).toFixed(1),
-      // 도어상단_mm: (doorTop / 0.01).toFixed(1),
-      // 도어높이_mm: actualDoorHeight,
-      // 플로팅높이_mm: floatHeight,
-      // 도어중심Y_mm: (doorYPosition / 0.01).toFixed(1),
-      // 위확장: LOWER_CABINET_TOP_EXTENSION,
-      // 위치조정: DOOR_POSITION_ADJUSTMENT,
-      // type: '하부장',
-      // 설명: '도어 상단 고정(' + (doorTop / 0.01).toFixed(1) + 'mm), 하단은 플로팅만큼 올라감'
-    // });
+    // 캐비넷 상단 = +캐비넷높이/2, 하단 = -캐비넷높이/2
+    // 도어 상단 = 캐비넷 상단 - 20mm
+    // 도어 하단 = 캐비넷 하단 - 2mm
+    const doorTopY = mmToThreeUnits(lowerCabinetHeight) / 2 - mmToThreeUnits(LOWER_DOOR_TOP_GAP);
+    doorYPosition = doorTopY - mmToThreeUnits(actualDoorHeight) / 2;
   } else {
     // 키큰장 도어 Y 위치: 오직 doorTopGap/doorBottomGap으로만 결정
     // 도어 절대 위치(바닥 기준 mm)를 구한 뒤, body center와의 차이로 로컬 좌표 계산
