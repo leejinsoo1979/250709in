@@ -126,8 +126,24 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
     return "#10b981";
   }, [isDragging, isEditMode]);
 
-  // 2D 솔리드 모드 투명 처리 (고스트는 ghostMaterial이 담당)
+  // material 처리: 고스트 / 2D 투명 / 기본
   const processedMaterial = React.useMemo(() => {
+    // 드래그/편집 고스트: 새 material 생성 (pipeline 완전 우회)
+    if ((isDragging || isEditMode) && !isClothingRod) {
+      const mat = new THREE.MeshStandardMaterial({
+        color: new THREE.Color(ghostColor),
+        transparent: true,
+        opacity: isDragging ? 0.6 : 0.5,
+        depthWrite: false,
+        emissive: new THREE.Color(ghostColor),
+        emissiveIntensity: 0.3,
+        roughness: 0.6,
+        metalness: 0.0,
+        side: THREE.DoubleSide,
+      });
+      return mat;
+    }
+
     if (baseMaterial instanceof THREE.MeshBasicMaterial) {
       return baseMaterial;
     }
@@ -161,7 +177,7 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
       }
     }
     return baseMaterial;
-  }, [baseMaterial, viewMode, renderMode, isClothingRod, panelName, view2DDirection, view2DTheme, isPlainMaterial]);
+  }, [baseMaterial, viewMode, renderMode, isClothingRod, panelName, view2DDirection, view2DTheme, isPlainMaterial, isDragging, isEditMode, ghostColor]);
 
   // activePanelGrainDirections를 JSON 문자열로 변환하여 값 변경 감지
   const activePanelGrainDirectionsStr = activePanelGrainDirections ? JSON.stringify(activePanelGrainDirections) : '';
@@ -646,29 +662,13 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
         ) : (
           <boxGeometry key={`${args[0]}-${args[1]}-${args[2]}`} args={args} />
         )}
-        {useGhostMaterial ? (
-          // 드래그/편집 고스트: 인라인 JSX로 확실한 테마색 면 표시
-          <meshStandardMaterial
-            key="ghost-material"
-            color={ghostColor}
-            transparent={true}
-            opacity={isDragging ? 0.6 : 0.5}
-            depthWrite={false}
-            emissive={ghostColor}
-            emissiveIntensity={0.3}
-            roughness={0.6}
-            metalness={0.0}
-            side={THREE.DoubleSide}
-          />
-        ) : renderMode === 'wireframe' ? (
-          // 와이어프레임 모드: 메시 숨기고 엣지만 표시
-          <meshBasicMaterial
-            visible={false}
-          />
+        {renderMode === 'wireframe' && !useGhostMaterial ? (
+          // 와이어프레임 모드 (고스트가 아닐 때만): 메시 숨기고 엣지만 표시
+          <meshBasicMaterial visible={false} />
         ) : (
-          // 솔리드 모드: 면 표시
+          // 솔리드 모드 또는 고스트: processedMaterial → panelSpecificMaterial → finalMaterial 사용
           <primitive
-            key={`${finalMaterial.uuid}-${viewMode}-${renderMode}-${renderOrder}`}
+            key={`${finalMaterial.uuid}-${viewMode}-${renderMode}-${renderOrder}-${isDragging}-${isEditMode}`}
             object={finalMaterial}
             attach="material"
           />
