@@ -311,7 +311,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   const [doorBottomGapInput, setDoorBottomGapInput] = useState<string>((storeDoorBottomGap ?? placedModule.doorBottomGap ?? 1.5).toString());
   // 커스텀 가구 편집 중에는 선택 하이라이트 끄기 (실시간 변경 확인을 위해)
   const isCustomEditing = placedModule.isCustomizable && activePopup.type === 'customizableEdit' && activePopup.id === placedModule.id;
-  const isSelected = viewMode === '3D' && selectedFurnitureId === placedModule.id && !isCustomEditing;
+  const isSelected = selectedFurnitureId === placedModule.id && !isCustomEditing;
   const { theme: appTheme } = useTheme();
 
   // 드래그/편집 시 도어/서라운드 옵션 패널 닫기
@@ -3897,7 +3897,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       {/* 도어는 BoxModule 내부에서 렌더링하도록 변경 */}
 
       {/* 자유배치 도어 설정 톱니 아이콘 — 캐비넷 중심에 하나만 표시 */}
-      {placedModule.isFreePlacement && placedModule.hasDoor && viewMode !== '2D' && !isDraggingThis && !isEditMode && showFurnitureEditHandles && showDimensions && (
+      {placedModule.isFreePlacement && placedModule.hasDoor && !isDraggingThis && !isEditMode && showFurnitureEditHandles && showDimensions && (
         <Html
           position={[
             adjustedPosition.x,
@@ -4092,7 +4092,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       )}
 
       {/* 3D 모드에서 편집 아이콘 표시 (하단 연필 아이콘) — 설계모드에서는 숨김 */}
-      {!readOnly && showFurnitureEditHandles && showDimensions && viewMode === '3D' && !isLayoutBuilderOpen && (
+      {!readOnly && showFurnitureEditHandles && showDimensions && !isLayoutBuilderOpen && (
         <Html
           position={[
             adjustedPosition.x,
