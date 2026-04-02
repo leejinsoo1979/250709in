@@ -81,6 +81,8 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
   // 부모 컨텍스트에서 편집/드래그 상태 자동 감지 (prop으로 전달되지 않은 경우에도 고스트 적용)
   const parentEditMode = useFurnitureGhostContext();
   const effectiveEditMode = isEditMode || parentEditMode;
+  // 편집/드래그 중에는 wireframe 대신 solid로 강제 (2D 모드에서도 고스트 표시를 위해)
+  const effectiveRenderMode = (effectiveEditMode || isDragging) ? 'solid' as const : renderMode;
 
   // 스토어에서 직접 panelGrainDirections 가져오기 (실시간 업데이트 보장)
   // Zustand는 selector 함수의 참조가 바뀌면 재구독하므로, furnitureId별로 안정적인 selector 필요
@@ -160,7 +162,7 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
     }
 
     // 2D 솔리드 모드에서 캐비넷을 투명하게 처리 (드래그/편집 중이 아닐 때만)
-    if (viewMode === '2D' && renderMode === 'solid' && baseMaterial instanceof THREE.MeshStandardMaterial) {
+    if (viewMode === '2D' && effectiveRenderMode === 'solid' && baseMaterial instanceof THREE.MeshStandardMaterial) {
       // 도어: DoorModule에서 이미 material 설정 완료 → 그대로 사용
       const isDoor = panelName && (panelName.includes('도어') || panelName.includes('door'));
       if (isDoor) {
@@ -187,7 +189,7 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
       }
     }
     return baseMaterial;
-  }, [baseMaterial, isDragging, effectiveEditMode, viewMode, renderMode, isClothingRod, panelName, view2DDirection, view2DTheme]);
+  }, [baseMaterial, isDragging, effectiveEditMode, viewMode, effectiveRenderMode, isClothingRod, panelName, view2DDirection, view2DTheme]);
 
   // activePanelGrainDirections를 JSON 문자열로 변환하여 값 변경 감지
   const activePanelGrainDirectionsStr = activePanelGrainDirections ? JSON.stringify(activePanelGrainDirections) : '';
@@ -303,7 +305,7 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
     panelMaterialRef.current = panelMaterial;
 
     return panelMaterial;
-  }, [processedMaterial, panelName, activePanelGrainDirectionsStr, isDragging, effectiveEditMode, textureSignature, viewMode, renderMode, isPlainMaterial]);
+  }, [processedMaterial, panelName, activePanelGrainDirectionsStr, isDragging, effectiveEditMode, textureSignature, viewMode, effectiveRenderMode, isPlainMaterial]);
 
   const finalMaterial = panelSpecificMaterial;
 
@@ -377,7 +379,7 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
         return "#18CF23";
       } else {
         // 3D 모드에서는 테마 색상 (엔드패널은 3D에서 일반 색상)
-        return isEndPanel ? (renderMode === 'wireframe' ? (view2DTheme === 'dark' ? "#FF4500" : "#000000") : "#505050") : highlightColor;
+        return isEndPanel ? (effectiveRenderMode === 'wireframe' ? (view2DTheme === 'dark' ? "#FF4500" : "#000000") : "#505050") : highlightColor;
       }
     }
 
@@ -394,11 +396,11 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
     }
 
     if (viewMode === '3D') {
-      if (renderMode === 'wireframe') {
+      if (effectiveRenderMode === 'wireframe') {
         return view2DTheme === 'dark' ? "#ffffff" : "#000000"; // 3D 은선모드에서는 최대 대비 색상
       }
       return "#3a3a3a"; // 3D 솔리드 모드에서는 진한 회색 엣지
-    } else if (renderMode === 'wireframe') {
+    } else if (effectiveRenderMode === 'wireframe') {
       return view2DTheme === 'dark' ? "#FFFFFF" : "#000000"; // 2D 와이어프레임 다크모드는 흰색(최대 대비), 라이트모드는 검정색
     } else {
       // 2D 솔리드 모드
@@ -410,7 +412,7 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
         return view2DTheme === 'dark' ? "#FF4500" : "#444444"; // 다크모드는 붉은 주황색
       }
     }
-  }, [viewMode, renderMode, view2DTheme, view2DDirection, baseMaterial, isHighlighted, highlightColor, panelName]);
+  }, [viewMode, effectiveRenderMode, view2DTheme, view2DDirection, baseMaterial, isHighlighted, highlightColor, panelName]);
 
   // Debug log for position
 
@@ -650,30 +652,21 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
       {/* DXF 내보내기를 위해 mesh에도 이름 추가 */}
       <mesh
         name={isClothingRod ? 'clothing-rod-mesh' : isBackPanel ? `back-panel-mesh${panelName ? `-${panelName}` : ''}` : `furniture-mesh${panelName ? `-${panelName}` : ''}`}
-        receiveShadow={viewMode === '3D' && renderMode === 'solid' && shadowEnabled}
-        castShadow={viewMode === '3D' && renderMode === 'solid' && shadowEnabled}
+        receiveShadow={viewMode === '3D' && effectiveRenderMode === 'solid' && shadowEnabled}
+        castShadow={viewMode === '3D' && effectiveRenderMode === 'solid' && shadowEnabled}
         renderOrder={renderOrder ?? 10}
         onClick={onClick}
         onPointerOver={onPointerOver}
         onPointerOut={onPointerOut}
+        material={effectiveRenderMode === 'wireframe' ? undefined : finalMaterial}
       >
         {notchGeometry ? (
           <primitive key={`notch-${args[0]}-${args[1]}-${args[2]}-${notch!.y}-${notch!.z}`} object={notchGeometry} attach="geometry" />
         ) : (
           <boxGeometry key={`${args[0]}-${args[1]}-${args[2]}`} args={args} />
         )}
-        {renderMode === 'wireframe' ? (
-          // 와이어프레임 모드: 메시 숨기고 엣지만 표시
-          <meshBasicMaterial
-            visible={false}
-          />
-        ) : (
-          // 솔리드 모드: processedMaterial에서 이미 2D 투명 처리 완료
-          <primitive
-            key={`${finalMaterial.uuid}-${viewMode}-${renderMode}-${renderOrder}`}
-            object={finalMaterial}
-            attach="material"
-          />
+        {effectiveRenderMode === 'wireframe' && (
+          <meshBasicMaterial visible={false} />
         )}
       </mesh>
       {/* 윤곽선 렌더링 - hideEdges prop 또는 edgeOutlineEnabled 스토어 설정으로 제어 */}
@@ -705,9 +698,9 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
                   </bufferGeometry>
                   <lineBasicMaterial
                     color={edgeColor}
-                    transparent={renderMode !== 'wireframe'}
-                    opacity={isHighlighted ? 1.0 : (renderMode === 'wireframe' ? 1.0 : 0.65)}
-                    depthTest={renderMode !== 'wireframe'}
+                    transparent={effectiveRenderMode !== 'wireframe'}
+                    opacity={isHighlighted ? 1.0 : (effectiveRenderMode === 'wireframe' ? 1.0 : 0.65)}
+                    depthTest={effectiveRenderMode !== 'wireframe'}
                     depthWrite={false}
                     linewidth={isHighlighted ? 3 : 1}
                   />
@@ -766,9 +759,9 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
                   </bufferGeometry>
                   <lineBasicMaterial
                     color={edgeColor}
-                    transparent={renderMode !== 'wireframe'}
-                    opacity={isHighlighted ? 1.0 : (renderMode === 'wireframe' ? 1.0 : 0.65)}
-                    depthTest={renderMode !== 'wireframe'}
+                    transparent={effectiveRenderMode !== 'wireframe'}
+                    opacity={isHighlighted ? 1.0 : (effectiveRenderMode === 'wireframe' ? 1.0 : 0.65)}
+                    depthTest={effectiveRenderMode !== 'wireframe'}
                     depthWrite={false}
                     linewidth={isHighlighted ? 3 : 1}
                   />
@@ -789,9 +782,9 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
                 <edgesGeometry key={`${args[0]}-${args[1]}-${args[2]}`} args={[new THREE.BoxGeometry(...args)]} />
                 <lineBasicMaterial
                   color={edgeColor}
-                  transparent={renderMode !== 'wireframe'}
-                  opacity={isHighlighted ? 1.0 : (renderMode === 'wireframe' ? 1.0 : 0.65)}
-                  depthTest={renderMode !== 'wireframe'}
+                  transparent={effectiveRenderMode !== 'wireframe'}
+                  opacity={isHighlighted ? 1.0 : (effectiveRenderMode === 'wireframe' ? 1.0 : 0.65)}
+                  depthTest={effectiveRenderMode !== 'wireframe'}
                   depthWrite={false}
                   polygonOffset={true}
                   polygonOffsetFactor={-10}

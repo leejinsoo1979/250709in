@@ -225,6 +225,7 @@ const PlacedFurnitureContainer: React.FC<PlacedFurnitureContainerProps> = ({
         // 선택/편집 중인 가구는 solid로 렌더링 (2D wireframe 모드에서도 고스트 표시)
         const effectiveRenderMode = (isThisSelected || isEditMode) ? 'solid' as const : renderMode;
 
+
         // 좌측뷰/우측뷰에서는 선택된 가구를 X=0에 렌더링
         const adjustedModule = (viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right'))
           ? { ...placedModule, position: { ...placedModule.position, x: 0 } }
