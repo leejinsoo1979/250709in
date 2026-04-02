@@ -510,6 +510,21 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                       furnitureId={placedFurnitureId}
                       textureUrl={textureUrl}
                     />
+
+                    {/* 가로전대 - 좌우 측판 앞쪽 상단 노치 부분을 연결하는 가로 부재 */}
+                    <BoxWithEdges
+                      key={`front-stretcher-${material instanceof THREE.Material ? material.uuid : 'mat'}`}
+                      args={[innerWidth, notchY, basicThickness]}
+                      position={[0, height/2 - notchY/2, depth/2 - basicThickness/2]}
+                      material={material}
+                      renderMode={renderMode}
+                      isDragging={isDragging}
+                      isEditMode={isEditMode}
+                      panelName="가로전대"
+                      panelGrainDirections={panelGrainDirections}
+                      furnitureId={placedFurnitureId}
+                      textureUrl={textureUrl}
+                    />
                   </>
                 );
               })()
