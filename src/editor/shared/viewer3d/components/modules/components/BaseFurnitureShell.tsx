@@ -159,6 +159,12 @@ interface BaseFurnitureShellProps {
   isLeftEndPanel?: boolean;
   isRightEndPanel?: boolean;
 
+  // 환기캡 숨김 (하부장용)
+  hideVentilationCap?: boolean;
+
+  // 상판 숨김 (하부장용)
+  hideTopPanel?: boolean;
+
   // 자식 컴포넌트 (내부 구조)
   children?: React.ReactNode;
 }
@@ -202,6 +208,8 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
   isRightEndPanel = false,
   textureUrl,
   panelGrainDirections,
+  hideVentilationCap = false,
+  hideTopPanel = false,
   renderMode: renderModeProp,
   children
 }) => {
@@ -778,7 +786,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
         )}
 
         {/* 상단 판재 - 뒤에서 26mm 줄여서 백패널과 맞닿게, 좌우 각 0.5mm씩 줄임 */}
-        {(() => {
+        {!hideTopPanel && (() => {
           const panelName = isMultiSectionFurniture() ? '(상)상판' : '상판';
           const topPanelMat = getPanelMaterial(panelName);
           const backReduction = backReductionForPanels; // 뒤에서 26mm 줄임
@@ -1111,7 +1119,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                     })()}
 
                     {/* 환기캡 - 상부 백패널과 같은 Z 위치 */}
-                    {!isDragging && (
+                    {!isDragging && !hideVentilationCap && (
                       <VentilationCap
                         position={[
                           innerWidth/2 - mmToThreeUnits(132),  // 우측 패널 안쪽으로 132mm
@@ -1203,7 +1211,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                     })()}
 
                     {/* 환기캡 - 백패널과 같은 Z 위치 */}
-                    {!isDragging && (
+                    {!isDragging && !hideVentilationCap && (
                       <VentilationCap
                         position={[
                           innerWidth/2 - mmToThreeUnits(132),  // 우측 패널 안쪽으로 132mm

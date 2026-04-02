@@ -6,7 +6,6 @@ import { useBaseFurniture, BaseFurnitureShell, SectionsRenderer, FurnitureTypePr
 import { useSpace3DView } from '../../../context/useSpace3DView';
 import { useUIStore } from '@/store/uiStore';
 import DoorModule from '../DoorModule';
-import FinishingPanelWithTexture from '../components/FinishingPanelWithTexture';
 import BoxWithEdges from '../components/BoxWithEdges';
 import { AdjustableFootsRenderer } from '../components/AdjustableFootsRenderer';
 
@@ -113,7 +112,9 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
               moduleData={moduleData}
               lowerSectionTopOffsetMm={lowerSectionTopOffset}
               renderMode={renderMode}
-              isFloating={isFloating}>
+              isFloating={isFloating}
+              hideVentilationCap={true}
+              hideTopPanel={true}>
             {/* 내부 구조는 항상 렌더링 (서랍/선반) */}
             <>
                 {/* 듀얼 가구인 경우 좌우 섹션 별도 렌더링 */}
@@ -190,21 +191,7 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
               </>
           </BaseFurnitureShell>
 
-          {/* 하부장 상단 마감재 (18mm) - 도어 색상과 동일 */}
-            <FinishingPanelWithTexture
-              width={baseFurniture.width}
-              height={0.18}
-              depth={baseFurniture.depth}
-              position={[
-                0,
-                (adjustedHeight / 2) + 0.09, // 상단에 위치 (18mm의 절반만큼 위로)
-                0
-              ]}
-              spaceInfo={spaceInfo}
-              doorColor={baseFurniture.doorColor}
-              renderMode={renderMode}
-              isDragging={isDragging}
-            />
+          {/* 하부장 상판 마감재 제거 - 하부모듈에는 상판 없음 */}
           </group>
         </>
       )}
