@@ -76,8 +76,8 @@
 .columnItem {
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  padding: 12px;
+  align-items: flex-start;
+  padding: 10px;
   background: var(--theme-surface, white);
   border: 1px solid var(--theme-border, #ddd);
   border-radius: 4px;
@@ -208,4 +208,72 @@
 .settingGroup select:focus {
   outline: none;
   border-color: #4CAF50;
+}
+
+/* 배치된 기둥 목록 - 갭 입력 */
+.gapInputs {
+  display: flex;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.gapLabel {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  color: var(--theme-text-muted, #666);
+}
+
+.gapInput {
+  width: 60px;
+  padding: 2px 4px;
+  border: 1px solid var(--theme-border, #ddd);
+  border-radius: 3px;
+  font-size: 12px;
+  text-align: right;
+}
+
+.gapInput:focus {
+  outline: none;
+  border-color: var(--theme-primary, #4CAF50);
+}
+
+.gapUnit {
+  font-size: 10px;
+  color: var(--theme-text-muted, #999);
+}
+
+/* 기둥 액션 버튼 */
+.columnActions {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex-shrink: 0;
+  margin-left: 8px;
+}
+
+.editButton {
+  background: var(--theme-primary, #4CAF50);
+  color: white;
+  border: none;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s;
+}
+
+.editButton:hover {
+  background: var(--theme-primary-dark, #388E3C);
+}
+
+.columnList h4 {
+  margin: 0 0 8px 0;
+  font-size: 13px;
+  color: var(--theme-text, #333);
 }
