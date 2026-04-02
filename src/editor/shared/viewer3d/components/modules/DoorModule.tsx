@@ -63,33 +63,19 @@ const BoxWithEdges: React.FC<{
 
   return (
     <group position={position} visible={!isExcludedByOptimizer}>
-      {/* 면 렌더링: solid 모드 또는 드래그/편집 중 */}
-      {(renderMode === 'solid' || isDragging || isEditMode) && (
+      {/* Solid 모드일 때만 면 렌더링 */}
+      {renderMode === 'solid' && (
         <mesh
           name={`furniture-mesh${panelName ? `-${panelName}` : ''}`}
           geometry={geometry}
-          receiveShadow={viewMode === '3D' && !isEditMode && !isDragging && shadowEnabled}
-          castShadow={viewMode === '3D' && !isEditMode && !isDragging && shadowEnabled}
+          material={material}
+          receiveShadow={viewMode === '3D' && !isEditMode && shadowEnabled}
+          castShadow={viewMode === '3D' && !isEditMode && shadowEnabled}
           renderOrder={isEditMode ? 999 : 10}
           onClick={onClick}
           onPointerOver={onPointerOver}
           onPointerOut={onPointerOut}
-        >
-          {(isDragging || isEditMode) ? (
-            <meshStandardMaterial
-              color={getThemeColor()}
-              transparent={true}
-              opacity={isDragging ? 0.6 : 0.5}
-              depthWrite={false}
-              emissive={getThemeColor()}
-              emissiveIntensity={0.3}
-              roughness={0.6}
-              metalness={0.0}
-            />
-          ) : (
-            <primitive object={material} attach="material" />
-          )}
-        </mesh>
+        />
       )}
       {/* 윤곽선 렌더링 - 3D에서 더 강력한 렌더링 */}
       {viewMode === '3D' ? (

@@ -204,10 +204,24 @@ export const useBaseFurniture = (
   const { renderMode, viewMode } = useSpace3DView();
   const { theme } = useTheme();
   
-  // 색상 결정: 고스트 색상은 BoxWithEdges에서 처리하므로 여기서는 항상 기본 색상
-  const furnitureColor = color || (materialConfig.interiorColor === materialConfig.doorColor
-    ? materialConfig.doorColor
-    : materialConfig.interiorColor);
+  // 테마 색상 가져오기
+  const getThemeColor = () => {
+    if (typeof window !== 'undefined') {
+      const computedStyle = getComputedStyle(document.documentElement);
+      const primaryColor = computedStyle.getPropertyValue('--theme-primary').trim();
+      if (primaryColor) {
+        return primaryColor;
+      }
+    }
+    return '#10b981'; // 기본값 (green)
+  };
+  
+  // 색상 결정: 드래그 중이거나 편집 모드면 테마 색상 사용, 아니면 기본 색상
+  const furnitureColor = (isDragging || isEditMode) ? getThemeColor() : (
+    color || (materialConfig.interiorColor === materialConfig.doorColor 
+      ? materialConfig.doorColor
+      : materialConfig.interiorColor)
+  );
   
   // 공통 재질 생성 함수 - 한 번만 생성
   const material = useMemo(() => {
@@ -225,35 +239,47 @@ export const useBaseFurniture = (
   }, []); // 의존성 배열 비움 - 한 번만 생성
   
   // 재질 속성 업데이트 (재생성 없이)
-  // 재질 속성 업데이트 (재생성 없이)
-  // 고스트 효과는 BoxWithEdges processedMaterial에서 처리
   useEffect(() => {
     if (material) {
-      material.emissive.set(new THREE.Color(0x000000));
-      material.emissiveIntensity = 0;
-
-      if (!material.map) {
-        material.color.set(furnitureColor);
+      // 드래그 중이거나 편집 모드일 때는 항상 테마 색상 사용 (2D/3D 모두)
+      if (isDragging || isEditMode) {
+        material.color.set(getThemeColor());
+        material.map = null; // 드래그 중이거나 편집 모드에는 텍스처 제거
+        material.emissive.set(new THREE.Color(getThemeColor())); // 편집 모드에서 발광 효과
+        material.emissiveIntensity = 0.2; // 약간의 발광
+      } else {
+        material.emissive.set(new THREE.Color(0x000000)); // 발광 제거
+        material.emissiveIntensity = 0;
+        if (!material.map) {
+          // 드래그 중이 아니고 편집 모드가 아니고 텍스처가 없을 때만 기본 색상 사용
+          material.color.set(furnitureColor);
+        }
       }
-
-      material.transparent = renderMode === 'wireframe' || (viewMode === '2D' && renderMode === 'solid');
-      material.opacity = renderMode === 'wireframe' ? 0.3 :
-                        (viewMode === '2D' && renderMode === 'solid') ? 0.5 : 1.0;
-
+      
+      // 투명도 설정 - 2D 모드에서는 편집 모드 여부와 관계없이 일정한 투명도 유지
+      material.transparent = renderMode === 'wireframe' || (viewMode === '2D' && renderMode === 'solid') || isDragging || isEditMode;
+      material.opacity = renderMode === 'wireframe' ? 0.3 : 
+                        (viewMode === '2D' && renderMode === 'solid') ? 0.5 : // 2D 모드에서는 항상 0.5
+                        (isDragging ? 0.6 :
+                        (isEditMode ? 0.5 : 1.0));
+      
+      // 은선모드 또는 2D 투명 모드에서는 depthWrite를 false로 설정하여 치수 텍스트가 가려지지 않도록
       const shouldDisableDepthWrite = renderMode === 'wireframe' || (viewMode === '2D' && renderMode === 'solid');
       material.depthWrite = !shouldDisableDepthWrite;
-
+      
       material.needsUpdate = true;
+      
+      
     }
-  }, [material, furnitureColor, renderMode, viewMode]);
+  }, [material, furnitureColor, renderMode, viewMode, isDragging, isEditMode]);
 
   // 텍스처 URL 추출 (useEffect 밖에서)
   const textureUrl = materialConfig.interiorTexture;
 
   // 텍스처 적용 (별도 useEffect로 처리)
   useEffect(() => {
-    // 드래그 중일 때만 텍스처 적용하지 않음 (편집 모드에서는 적용)
-    if (isDragging) {
+    // 드래그 중이거나 편집 모드일 때 텍스처 적용하지 않음 (고스트 테마색이 보이도록)
+    if (isDragging || isEditMode) {
       if (material) {
         material.map = null;
         material.needsUpdate = true;
