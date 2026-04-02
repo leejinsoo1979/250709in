@@ -515,7 +515,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                     <BoxWithEdges
                       key={`front-stretcher-${material instanceof THREE.Material ? material.uuid : 'mat'}`}
                       args={[innerWidth, notchY, basicThickness]}
-                      position={[0, height/2 - notchY/2, depth/2 - basicThickness/2]}
+                      position={[0, height/2 - notchY/2, depth/2 - notchZ - basicThickness/2]}
                       material={material}
                       renderMode={renderMode}
                       isDragging={isDragging}
