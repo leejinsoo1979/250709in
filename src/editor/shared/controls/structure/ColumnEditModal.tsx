@@ -1,10 +1,8 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Column } from '@/types/space';
 import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
-import { useFurnitureStore } from '@/store/core/furnitureStore';
 import { useUIStore } from '@/store/uiStore';
 import { useTranslation } from '@/i18n/useTranslation';
-import { getModuleBoundsX } from '@/editor/shared/utils/freePlacementUtils';
 import styles from './ColumnEditModal.module.css';
 
 interface ColumnEditModalProps {
@@ -20,7 +18,6 @@ const ColumnEditModal: React.FC<ColumnEditModalProps> = ({
 }) => {
   const { t } = useTranslation();
   const { spaceInfo, setSpaceInfo } = useSpaceConfigStore();
-  const placedModules = useFurnitureStore(state => state.placedModules);
   const { setSelectedColumnId, activePopup, closeAllPopups } = useUIStore();
 
   const columns = spaceInfo.columns || [];
@@ -143,20 +140,6 @@ const ColumnEditModal: React.FC<ColumnEditModalProps> = ({
   const updateColumnInStore = (partial: Partial<Column>) => {
     if (!column) return;
     const merged = { ...column, ...partial };
-
-    // 자유배치 모드에서 기둥-가구 충돌 체크
-    if (spaceInfo.layoutMode === 'free-placement' && merged.position) {
-      const colCenterXmm = merged.position[0] * 100;
-      const colHalfW = (merged.width || column.width) / 2;
-      for (const mod of placedModules) {
-        if (!mod.isFreePlacement || mod.isSurroundPanel) continue;
-        const modBounds = getModuleBoundsX(mod);
-        if (colCenterXmm - colHalfW < modBounds.right && colCenterXmm + colHalfW > modBounds.left) {
-          return; // 충돌 시 업데이트 차단
-        }
-      }
-    }
-
     const updatedColumns = columns.map(col =>
       col.id === column.id ? merged : col
     );
