@@ -3464,6 +3464,7 @@ const Configurator: React.FC = () => {
             <ColumnControl
               columns={spaceInfo.columns || []}
               onColumnsChange={(columns) => setSpaceInfo({ columns })}
+              onOpenEditModal={openColumnEditModal}
             />
           </div>
         );
