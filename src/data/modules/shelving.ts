@@ -925,15 +925,7 @@ const createDualLowerHalfCabinet = (dualWidth: number, slotWidths?: number[]): M
       ...base.modelConfig,
       basicThickness: FURNITURE_SPECS.BASIC_THICKNESS,
       hasOpenFront: false,
-      leftSections: [
-        {
-          type: 'shelf',
-          heightType: 'percentage',
-          height: 100,
-          count: 0
-        }
-      ],
-      rightSections: [
+      sections: [
         {
           type: 'shelf',
           heightType: 'percentage',
