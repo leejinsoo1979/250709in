@@ -3117,6 +3117,65 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                       })}
                     </div>
                   </div>
+                  {/* EP 천장/바닥 옵셋 — floor 모드에서만 표시 */}
+                  {(currentPlacedModule.endPanelHeightMode ?? 'floor') === 'floor' && (
+                    <div style={{ marginTop: '8px', display: 'flex', gap: '8px' }}>
+                      <div style={{ flex: 1 }}>
+                        <label style={{ display: 'block', marginBottom: '4px', fontSize: '12px', color: 'var(--theme-text-secondary)' }}>천장 옵셋</label>
+                        <div className={styles.inputWithUnit}>
+                          <input
+                            type="text"
+                            inputMode="numeric"
+                            value={currentPlacedModule.endPanelTopOffset ?? 0}
+                            onChange={(e) => {
+                              const v = e.target.value;
+                              if (v === '' || /^\d+$/.test(v)) {
+                                const num = v === '' ? 0 : Math.max(0, Math.min(500, parseInt(v, 10)));
+                                updatePlacedModule(currentPlacedModule.id, { endPanelTopOffset: num });
+                              }
+                            }}
+                            onKeyDown={(e) => {
+                              if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                                e.preventDefault();
+                                const cur = currentPlacedModule.endPanelTopOffset ?? 0;
+                                const next = Math.max(0, Math.min(500, cur + (e.key === 'ArrowUp' ? 1 : -1)));
+                                updatePlacedModule(currentPlacedModule.id, { endPanelTopOffset: next });
+                              }
+                            }}
+                            className={styles.dimensionInput}
+                          />
+                          <span className={styles.unit}>mm</span>
+                        </div>
+                      </div>
+                      <div style={{ flex: 1 }}>
+                        <label style={{ display: 'block', marginBottom: '4px', fontSize: '12px', color: 'var(--theme-text-secondary)' }}>바닥 옵셋</label>
+                        <div className={styles.inputWithUnit}>
+                          <input
+                            type="text"
+                            inputMode="numeric"
+                            value={currentPlacedModule.endPanelBottomOffset ?? 0}
+                            onChange={(e) => {
+                              const v = e.target.value;
+                              if (v === '' || /^\d+$/.test(v)) {
+                                const num = v === '' ? 0 : Math.max(0, Math.min(500, parseInt(v, 10)));
+                                updatePlacedModule(currentPlacedModule.id, { endPanelBottomOffset: num });
+                              }
+                            }}
+                            onKeyDown={(e) => {
+                              if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                                e.preventDefault();
+                                const cur = currentPlacedModule.endPanelBottomOffset ?? 0;
+                                const next = Math.max(0, Math.min(500, cur + (e.key === 'ArrowUp' ? 1 : -1)));
+                                updatePlacedModule(currentPlacedModule.id, { endPanelBottomOffset: next });
+                              }
+                            }}
+                            className={styles.dimensionInput}
+                          />
+                          <span className={styles.unit}>mm</span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                   <div style={{ marginTop: '8px' }}>
                     <label style={{ display: 'block', marginBottom: '4px', fontSize: '12px', color: 'var(--theme-text-secondary)' }}>EP 두께</label>
                     <div className={styles.inputWithUnit}>

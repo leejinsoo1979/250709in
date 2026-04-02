@@ -3602,10 +3602,14 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                 epH = height; // 이미 Three.js 단위인 가구 높이
                 epYRelative = 0;
               } else {
-                // 바닥에 맞춤 (기본): 바닥~천장
+                // 바닥에 맞춤 (기본): 바닥~천장, 천장/바닥 옵셋 적용
                 const spaceH = mmToThreeUnits(spaceInfo.height);
-                epH = spaceH;
-                const epCenterWorldY = spaceH / 2;
+                const epTopOffsetMm = placedModule.endPanelTopOffset ?? 0;
+                const epBottomOffsetMm = placedModule.endPanelBottomOffset ?? 0;
+                const topOff = mmToThreeUnits(epTopOffsetMm);
+                const bottomOff = mmToThreeUnits(epBottomOffsetMm);
+                epH = Math.max(0, spaceH - topOff - bottomOff);
+                const epCenterWorldY = bottomOff + epH / 2;
                 epYRelative = epCenterWorldY - groupY;
               }
 

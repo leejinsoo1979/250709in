@@ -154,6 +154,8 @@ export interface PlacedModule {
   leftEndPanelOffset?: number;   // 좌측 EP 개별 옵셋 (mm)
   rightEndPanelOffset?: number;  // 우측 EP 개별 옵셋 (mm)
   endPanelHeightMode?: 'floor' | 'furniture'; // EP 높이 모드 (floor: 바닥~천장, furniture: 가구 높이에 맞춤, 기본: 'floor')
+  endPanelTopOffset?: number;    // EP 천장 옵셋 (mm, 기본값: 0) — floor 모드에서만 적용
+  endPanelBottomOffset?: number; // EP 바닥 옵셋 (mm, 기본값: 0) — floor 모드에서만 적용
 
   // 공간 변경 시 가구 보존을 위한 추가 속성들
   slotIndex?: number; // 가구가 위치한 슬롯 번호 (0부터 시작)
