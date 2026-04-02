@@ -70,14 +70,6 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
   const compositeKey = furnitureId && panelName ? `${furnitureId}::${panelName}` : null;
   const isExcludedByOptimizer = excludedKeys.size > 0 && compositeKey ? excludedKeys.has(compositeKey) : false;
 
-  // DEBUG: 한 번만 로그 (첫 렌더 시)
-  React.useEffect(() => {
-    if (panelName && furnitureId) {
-      console.log(`[BWE-DEBUG] panelName="${panelName}" furnitureId="${furnitureId?.slice(0,8)}" excludedKeys.size=${excludedKeys.size} compositeKey="${compositeKey}" isExcluded=${isExcludedByOptimizer}`);
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [excludedKeys.size]);
-
   const { viewMode, plainMaterial: isPlainMaterial } = useSpace3DView();
   const { view2DDirection, shadowEnabled, edgeOutlineEnabled } = useUIStore(); // view2DDirection, shadowEnabled, edgeOutlineEnabled 추가
   const { theme } = useViewerTheme();
@@ -309,13 +301,6 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
   // 드래그/편집 모드 여부 (material pipeline 우회용)
   const useGhostMaterial = (isDragging || isEditMode) && !isClothingRod;
 
-  // DEBUG: 고스트 상태 추적
-  React.useEffect(() => {
-    if (panelName === '좌측판' || panelName === '(하)좌측') {
-      console.log('🟢 BWE GHOST', { panelName, isEditMode, isDragging, useGhostMaterial, ghostColor: ghostMaterial instanceof THREE.MeshStandardMaterial ? '#' + ghostMaterial.color.getHexString() : 'N/A', renderMode, isClothingRod });
-    }
-  }, [isEditMode, isDragging, useGhostMaterial, ghostMaterial, renderMode, panelName, isClothingRod]);
-
   // useEffect 제거: useMemo에서 이미 모든 회전 로직을 처리하므로 중복 실행 방지
 
   // 테마 색상 매핑
@@ -357,6 +342,11 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
 
   // 엣지 색상 결정
   const edgeColor = React.useMemo(() => {
+    // 드래그/편집 고스트: 엣지도 테마색으로 통일
+    if ((isDragging || isEditMode) && !isClothingRod) {
+      return '#' + ghostMaterial.color.getHexString();
+    }
+
     // 2D 모드에서 서랍속장 패널은 초록색 윤곽선
     if (viewMode === '2D' && panelName && panelName.includes('서랍속장')) {
       return '#00ff00'; // 초록색
@@ -419,7 +409,7 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
         return view2DTheme === 'dark' ? "#FF4500" : "#444444"; // 다크모드는 붉은 주황색
       }
     }
-  }, [viewMode, renderMode, view2DTheme, view2DDirection, baseMaterial, isHighlighted, highlightColor, panelName]);
+  }, [viewMode, renderMode, view2DTheme, view2DDirection, baseMaterial, isHighlighted, highlightColor, panelName, isDragging, isEditMode, ghostMaterial, isClothingRod]);
 
   // Debug log for position
 
@@ -565,14 +555,18 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
 
     const baseLineWidth = isHighlighted ? 4 : (isBackPanel ? 1 : 2);
 
+    // 고스트 모드에서는 깊이 블렌딩 없이 테마색 그대로 사용
+    const ghostEdge = useGhostMaterial;
+    const effectiveOpacity = ghostEdge ? 0.5 : panelDepthOpacity;
+
     // lineBasicMaterial opacity가 WebGL에서 잘 안 보이는 경우 대비
     // color 자체를 배경색과 블렌딩하여 깊이감 표현
-    const blendedColor = panelDepthOpacity >= 1.0 ? edgeColor : (() => {
+    const blendedColor = ghostEdge ? edgeColor : (panelDepthOpacity >= 1.0 ? edgeColor : (() => {
       const base = new THREE.Color(edgeColor);
       const bg = new THREE.Color(view2DTheme === 'dark' ? '#1a1a2e' : '#ffffff');
       bg.lerp(base, panelDepthOpacity);
       return '#' + bg.getHexString();
-    })();
+    })());
 
     return (
       <>
@@ -589,7 +583,7 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
             <lineBasicMaterial
               color={blendedColor}
               transparent={true}
-              opacity={panelDepthOpacity}
+              opacity={effectiveOpacity}
               depthTest={false}
               depthWrite={false}
               linewidth={baseLineWidth}
@@ -598,7 +592,7 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
         ))}
       </>
     );
-  }, [args, edgeColor, hideTopEdge, hideBottomEdge, isHighlighted, isBackPanel, isClothingRod, panelName, panelDepthOpacity, view2DTheme, notch, getNotchEdgeLines]);
+  }, [args, edgeColor, hideTopEdge, hideBottomEdge, isHighlighted, isBackPanel, isClothingRod, panelName, panelDepthOpacity, view2DTheme, notch, getNotchEdgeLines, useGhostMaterial]);
 
   // L자형 노치 지오메트리 (notch prop이 있을 때만 생성)
   const notchGeometry = React.useMemo(() => {
@@ -699,6 +693,12 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
           return render2DEdgesWithDepth();
         }
 
+        // 3D 엣지 공통: 고스트 모드에서는 반투명 테마색 엣지
+        const ghost3D = useGhostMaterial;
+        const edgeTransparent3D = ghost3D || renderMode !== 'wireframe';
+        const edgeOpacity3D = ghost3D ? 0.5 : (isHighlighted ? 1.0 : (renderMode === 'wireframe' ? 1.0 : 0.65));
+        const edgeDepthTest3D = ghost3D ? false : (renderMode !== 'wireframe');
+
         // 3D 모드: notch가 있으면 L자형 엣지
         if (notch) {
           const notchLines = getNotchEdgeLines();
@@ -721,9 +721,9 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
                   </bufferGeometry>
                   <lineBasicMaterial
                     color={edgeColor}
-                    transparent={renderMode !== 'wireframe'}
-                    opacity={isHighlighted ? 1.0 : (renderMode === 'wireframe' ? 1.0 : 0.65)}
-                    depthTest={renderMode !== 'wireframe'}
+                    transparent={edgeTransparent3D}
+                    opacity={edgeOpacity3D}
+                    depthTest={edgeDepthTest3D}
                     depthWrite={false}
                     linewidth={isHighlighted ? 3 : 1}
                   />
@@ -782,9 +782,9 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
                   </bufferGeometry>
                   <lineBasicMaterial
                     color={edgeColor}
-                    transparent={renderMode !== 'wireframe'}
-                    opacity={isHighlighted ? 1.0 : (renderMode === 'wireframe' ? 1.0 : 0.65)}
-                    depthTest={renderMode !== 'wireframe'}
+                    transparent={edgeTransparent3D}
+                    opacity={edgeOpacity3D}
+                    depthTest={edgeDepthTest3D}
                     depthWrite={false}
                     linewidth={isHighlighted ? 3 : 1}
                   />
@@ -805,9 +805,9 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
                 <edgesGeometry key={`${args[0]}-${args[1]}-${args[2]}`} args={[new THREE.BoxGeometry(...args)]} />
                 <lineBasicMaterial
                   color={edgeColor}
-                  transparent={renderMode !== 'wireframe'}
-                  opacity={isHighlighted ? 1.0 : (renderMode === 'wireframe' ? 1.0 : 0.65)}
-                  depthTest={renderMode !== 'wireframe'}
+                  transparent={edgeTransparent3D}
+                  opacity={edgeOpacity3D}
+                  depthTest={edgeDepthTest3D}
                   depthWrite={false}
                   polygonOffset={true}
                   polygonOffsetFactor={-10}

@@ -96,30 +96,6 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
   // 띄워서 배치 여부 확인
   const isFloating = spaceInfo?.baseConfig?.placementType === 'float';
 
-  // 디버깅: 조절발 렌더링 조건 확인
-  React.useEffect(() => {
-    console.log('🔍 SingleType2 조절발 조건 체크:', {
-      moduleId: moduleData.id,
-      placedFurnitureId,
-      showFurniture,
-      isFloating,
-      'spaceInfo.baseConfig.placementType': spaceInfo?.baseConfig?.placementType,
-      lowerSectionTopOffset,
-      '조절발렌더링': showFurniture && !isFloating && !(lowerSectionTopOffset && lowerSectionTopOffset > 0)
-    });
-  }, [showFurniture, isFloating, lowerSectionTopOffset, moduleData.id, placedFurnitureId, spaceInfo?.baseConfig?.placementType]);
-
-  // 디버그: zone 값 확인
-  React.useEffect(() => {
-    console.log('🚪🔴 SingleType2 - zone prop:', {
-      zone,
-      moduleId: moduleData.id,
-      placedFurnitureId,
-      droppedCeilingEnabled: spaceInfo?.droppedCeiling?.enabled,
-      dropHeight: spaceInfo?.droppedCeiling?.dropHeight
-    });
-  }, [zone, moduleData.id, placedFurnitureId, spaceInfo?.droppedCeiling]);
-
   // 가구 본체 클릭 시 열린 도어 닫기 핸들러
   const handleCabinetBodyClick = (e: any) => {
     if (!placedFurnitureId) return;
@@ -130,7 +106,6 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
     const isDoorOpen = isIndividualDoorOpen(placedFurnitureId, 0);
     if (isDoorOpen) {
       toggleIndividualDoor(placedFurnitureId, 0);
-      console.log('🚪 가구 본체 클릭 → 도어 닫기');
     }
   };
   const floatHeight = isFloating ? (spaceInfo?.baseConfig?.floatHeight || 0) : 0;
@@ -244,21 +219,6 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
                   const upperDepth = sectionDepths[1] || depth;
                   const upperDepthDiff = depth - upperDepth;
                   const upperZOffset = upperDepthDiff === 0 ? 0 : upperSectionDepthDirection === 'back' ? upperDepthDiff / 2 : -upperDepthDiff / 2;
-
-                  console.log('📦 중간판 실제 렌더링 위치:', {
-                    sectionCenterY,
-                    sectionHeight,
-                    basicThickness,
-                    middlePanelY,
-                    middlePanelY_mm: middlePanelY / 0.01,
-                    lowerTopPanelY,
-                    lowerTopPanelY_mm: lowerTopPanelY / 0.01,
-                    lowerDepth,
-                    lowerDepth_mm: lowerDepth / 0.01,
-                    upperDepth,
-                    upperDepth_mm: upperDepth / 0.01,
-                    설명: '상부섹션 바닥판(middlePanelY), 하부섹션 상판(lowerTopPanelY)'
-                  });
 
                   return (
                     <>
@@ -416,22 +376,11 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
             // 측판용: modelConfig의 원본 섹션 높이 (항상 고정)
             let sideAccumulatedY = -height/2 + basicThickness;
 
-            console.log('🟢 SingleType2 섹션 계산 시작');
-            console.log('  moduleId:', moduleData.id);
-            console.log('  internalHeight:', internalHeight);
-            console.log('  height(Three):', height * 100);
-            console.log('  availableHeight:', availableHeight * 100);
-            console.log('  basicThickness:', basicThickness * 100);
-            console.log('  sectionsCount:', sections.length);
+            // 섹션 계산 시작
 
             return sections.map((section: any, sectionIndex: number) => {
               // 옷봉 위치용: 실제 가구 높이 기반 계산 (동적)
               const sectionBottomY = sideAccumulatedY;
-
-              console.log(`🟡 SingleType2 섹션[${sectionIndex}] (${section.type})`);
-              console.log('  sectionBottomY:', sectionBottomY * 100);
-              console.log('  heightType:', section.heightType);
-              console.log('  heightValue:', section.height);
 
               // 측판용 누적 Y 위치 업데이트 (원본 높이 사용)
               const originalSectionHeight = mmToThreeUnits(section.height);
@@ -453,7 +402,6 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
               // hanging 섹션이 아니면 옷걸이봉 렌더링하지 않음
               const isHangingSection = section.type === 'hanging';
               if (!isHangingSection) {
-                console.log('  ⏭️ hanging 섹션이 아니므로 옷봉 렌더링 생략');
                 return null;
               }
 
@@ -483,26 +431,10 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
 
                 // 브라켓 상단이 하부섹션 상판 밑면에 닿으므로
                 rodYPosition = lowerTopPanelBottom - mmToThreeUnits(75 / 2);
-
-                console.log('🔵 SingleType2 하부섹션 옷봉 위치 계산');
-                console.log('  accumulatedY:', accumulatedY * 100);
-                console.log('  actualSectionHeight:', actualSectionHeight * 100);
-                console.log('  sectionCenterY_panel:', sectionCenterY_panel * 100);
-                console.log('  middlePanelY (상부바닥중심):', middlePanelY * 100);
-                console.log('  lowerTopPanelY (하부상판중심):', lowerTopPanelY * 100);
-                console.log('  lowerTopPanelBottom (하부상판밑면):', lowerTopPanelBottom * 100);
-                console.log('  bracketHeight:', 75);
-                console.log('  rodYPosition (옷봉중심):', rodYPosition * 100);
               } else {
                 // 상부 섹션: 브라켓 윗면이 상부 섹션 상판 하단에 붙음
                 const sectionTopPanelBottom = sectionBottomY + actualSectionHeight - basicThickness / 2;
                 rodYPosition = sectionTopPanelBottom - mmToThreeUnits(75 / 2) + mmToThreeUnits(9);
-
-                console.log('🔵 SingleType2 상부섹션 옷봉 위치 계산');
-                console.log('  sectionBottomY:', sectionBottomY * 100);
-                console.log('  actualSectionHeight:', actualSectionHeight * 100);
-                console.log('  sectionTopPanelBottom:', sectionTopPanelBottom * 100);
-                console.log('  rodYPosition:', rodYPosition * 100);
               }
 
               // 해당 섹션의 깊이 사용
@@ -513,14 +445,6 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
               const depthDiff = depth - currentSectionDepth;
               const sectionDir = sectionIndex === 0 ? lowerSectionDepthDirection : upperSectionDepthDirection;
               const rodZOffset = depthDiff === 0 ? 0 : sectionDir === 'back' ? depthDiff / 2 : -depthDiff / 2;
-
-              console.log(`🎽 ClothingRod Z 오프셋 계산 (섹션${sectionIndex}):`, {
-                depth_mm: depth / 0.01,
-                currentSectionDepth_mm: currentSectionDepth / 0.01,
-                depthDiff_mm: depthDiff / 0.01,
-                rodZOffset_mm: rodZOffset / 0.01,
-                설명: '섹션 깊이 중앙 = 0, 앞으로 이동 = +양수'
-              });
 
               return (
                 <ClothingRod
