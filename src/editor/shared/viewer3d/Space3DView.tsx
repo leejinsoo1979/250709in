@@ -26,7 +26,7 @@ import SlotDropZonesSimple from './components/elements/SlotDropZonesSimple';
 import SlotPlacementIndicators from './components/elements/SlotPlacementIndicators';
 import FurniturePlacementPlane from './components/elements/FurniturePlacementPlane';
 import FreePlacementDropZone from './components/elements/FreePlacementDropZone';
-import { getModuleBoundsX, getInternalSpaceBoundsX, checkFreeCollision, getModuleCategory } from '../utils/freePlacementUtils';
+import { getModuleBoundsX, getInternalSpaceBoundsX, checkFreeCollision, checkColumnCollision, getModuleCategory } from '../utils/freePlacementUtils';
 import FurnitureItem from './components/elements/furniture/FurnitureItem';
 import BackPanelBetweenCabinets from './components/elements/furniture/BackPanelBetweenCabinets';
 import UpperCabinetIndirectLight from './components/elements/furniture/UpperCabinetIndirectLight';
@@ -174,11 +174,12 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
 
         // 우측 → 좌측 순으로 빈 공간 탐색 (1mm 단위)
         let targetXmm: number | null = null;
+        const dupColumns = activeSpaceInfo.columns || [];
 
         // 우측 탐색: 원본 오른쪽 끝부터
         for (let x = currentXmm + widthMm; x <= spaceBounds.endX - halfW; x += 1) {
           const testBounds = { left: x - halfW, right: x + halfW, category };
-          if (!checkFreeCollision(latestPlacedModules, testBounds)) {
+          if (!checkFreeCollision(latestPlacedModules, testBounds) && !checkColumnCollision(dupColumns, testBounds)) {
             targetXmm = x;
             break;
           }
@@ -188,7 +189,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
         if (targetXmm === null) {
           for (let x = currentXmm - widthMm; x >= spaceBounds.startX + halfW; x -= 1) {
             const testBounds = { left: x - halfW, right: x + halfW, category };
-            if (!checkFreeCollision(latestPlacedModules, testBounds)) {
+            if (!checkFreeCollision(latestPlacedModules, testBounds) && !checkColumnCollision(dupColumns, testBounds)) {
               targetXmm = x;
               break;
             }

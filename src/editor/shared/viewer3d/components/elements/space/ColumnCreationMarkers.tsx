@@ -2,11 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { Text } from '@react-three/drei';
 import * as THREE from 'three';
 import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
+import { useFurnitureStore } from '@/store/core/furnitureStore';
 import { useUIStore } from '@/store/uiStore';
 import { useDerivedSpaceStore } from '@/store/derivedSpaceStore';
 import { useSpace3DView } from '../../../context/useSpace3DView';
 import { useThree } from '@react-three/fiber';
 import { Column } from '@/types/space';
+import { checkColumnCollision, getModuleBoundsX, FurnitureBoundsX } from '@/editor/shared/utils/freePlacementUtils';
 
 interface ColumnCreationMarkersProps {
   spaceInfo: any;
@@ -15,6 +17,7 @@ interface ColumnCreationMarkersProps {
 const ColumnCreationMarkers: React.FC<ColumnCreationMarkersProps> = ({ spaceInfo }) => {
   const { isColumnCreationMode } = useUIStore();
   const { addColumn } = useSpaceConfigStore();
+  const placedModules = useFurnitureStore(state => state.placedModules);
   const { indexing } = useDerivedSpaceStore();
   const { viewMode } = useSpace3DView();
   const { camera, raycaster, gl } = useThree();
@@ -127,8 +130,20 @@ const ColumnCreationMarkers: React.FC<ColumnCreationMarkersProps> = ({ spaceInfo
       material: 'concrete'
     };
 
-    console.error('🚨🚨🚨 [ColumnCreationMarkers] handleCreateColumn 호출됨:', newColumn.id);
-    console.trace('호출 스택:');
+    // 가구와 기둥 충돌 체크 (자유배치 모드)
+    if (spaceInfo?.layoutMode === 'free-placement') {
+      const colCenterXmm = finalPosition[0] * 100;
+      const colHalfW = newColumn.width / 2;
+      for (const mod of placedModules) {
+        if (!mod.isFreePlacement || mod.isSurroundPanel) continue;
+        const modBounds = getModuleBoundsX(mod);
+        if (colCenterXmm - colHalfW < modBounds.right && colCenterXmm + colHalfW > modBounds.left) {
+          console.warn('기둥 배치 실패: 가구와 겹칩니다');
+          return;
+        }
+      }
+    }
+
     addColumn(newColumn);
   };
 

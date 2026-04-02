@@ -1,8 +1,10 @@
 import React from 'react';
 import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
+import { useFurnitureStore } from '@/store/core/furnitureStore';
 import { Column } from '@/types/space';
 import ColumnThumbnail from './ColumnThumbnail';
 import { useTranslation } from '@/i18n/useTranslation';
+import { getModuleBoundsX } from '@/editor/shared/utils/freePlacementUtils';
 import styles from './ColumnControl.module.css';
 
 interface ColumnControlProps {
@@ -14,6 +16,7 @@ interface ColumnControlProps {
 const ColumnControl: React.FC<ColumnControlProps> = ({ columns, onColumnsChange, onOpenEditModal }) => {
   const { t } = useTranslation();
   const spaceConfig = useSpaceConfigStore();
+  const placedModules = useFurnitureStore(state => state.placedModules);
 
   // 기둥 생성 모드는 제거하고 드래그 앤 드롭 방식으로 대체
   const handleThumbnailDragStart = (e: React.DragEvent) => {
@@ -39,6 +42,20 @@ const ColumnControl: React.FC<ColumnControlProps> = ({ columns, onColumnsChange,
       color: columnData.color || '#888888',
       material: columnData.material || 'concrete'
     };
+
+    // 자유배치 모드에서 기둥-가구 충돌 체크
+    if (spaceInfo.layoutMode === 'free-placement') {
+      const colCenterXmm = centerX * 100;
+      const colHalfW = newColumn.width / 2;
+      for (const mod of placedModules) {
+        if (!mod.isFreePlacement || mod.isSurroundPanel) continue;
+        const modBounds = getModuleBoundsX(mod);
+        if (colCenterXmm - colHalfW < modBounds.right && colCenterXmm + colHalfW > modBounds.left) {
+          console.warn('기둥 배치 실패: 가구와 겹칩니다');
+          return;
+        }
+      }
+    }
 
     onColumnsChange([...columns, newColumn]);
   };

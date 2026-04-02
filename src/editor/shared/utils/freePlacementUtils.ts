@@ -1,5 +1,6 @@
 import { PlacedModule } from '@/editor/shared/furniture/types';
 import { SpaceInfo } from '@/store/core/spaceConfigStore';
+import { Column } from '@/types/space';
 import { SpaceCalculator } from './indexing';
 import { calculateFrameThickness } from '@/editor/shared/viewer3d/utils/geometry';
 
@@ -169,6 +170,31 @@ export function checkFreeCollision(
       (newBounds.category === 'lower' && existBounds.category === 'upper');
 
     if (!canCoexist) return true; // 충돌
+  }
+  return false;
+}
+
+/**
+ * 기둥-가구 충돌 체크 (자유배치 모드)
+ * 기둥의 X 범위와 가구의 X 범위가 겹치면 충돌
+ */
+export function checkColumnCollision(
+  columns: Column[],
+  newBounds: FurnitureBoundsX
+): boolean {
+  for (const col of columns) {
+    // column.position[0]은 Three.js 단위 (중심점), * 100으로 mm 변환
+    const colCenterXmm = col.position[0] * 100;
+    const colHalfWidth = col.width / 2;
+    const colLeft = colCenterXmm - colHalfWidth;
+    const colRight = colCenterXmm + colHalfWidth;
+
+    // X 겹침 체크
+    const hasOverlap =
+      newBounds.left < colRight + COLLISION_GAP_MM &&
+      newBounds.right > colLeft - COLLISION_GAP_MM;
+
+    if (hasOverlap) return true;
   }
   return false;
 }

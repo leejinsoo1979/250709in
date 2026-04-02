@@ -9,6 +9,7 @@ import { calculateInternalSpace } from '@/editor/shared/viewer3d/utils/geometry'
 import {
   clampToSpaceBoundsX,
   checkFreeCollision,
+  checkColumnCollision,
   detectDroppedZone,
   FurnitureBoundsX,
 } from '@/editor/shared/utils/freePlacementUtils';
@@ -97,8 +98,11 @@ export function placeFurnitureFree(params: PlaceFurnitureFreeParams): PlaceFurni
     category: moduleData.category as 'full' | 'upper' | 'lower',
   };
 
-  if (!params.skipCollisionCheck && checkFreeCollision(existingModules, newBounds)) {
-    return { success: false, error: '다른 가구와 겹칩니다' };
+  if (!params.skipCollisionCheck) {
+    const columns = spaceInfo.columns || [];
+    if (checkFreeCollision(existingModules, newBounds) || checkColumnCollision(columns, newBounds)) {
+      return { success: false, error: '다른 가구 또는 기둥과 겹칩니다' };
+    }
   }
 
   // Three.js 좌표 변환 (mm → Three.js units: mm * 0.01)

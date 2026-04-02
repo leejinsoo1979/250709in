@@ -9,6 +9,7 @@ import {
   getInternalSpaceBoundsX,
   clampToSpaceBoundsX,
   checkFreeCollision,
+  checkColumnCollision,
   getModuleBoundsX,
   detectDroppedZone,
   getModuleCategory,
@@ -497,16 +498,39 @@ const FreePlacementDropZone: React.FC = () => {
 
     setIsSnapped(snapped);
 
-    if (!snapped && checkFreeCollision(placedModules, newBounds)) {
+    const columns = spaceInfo.columns || [];
+    const hasFurnitureCollision = !snapped && checkFreeCollision(placedModules, newBounds);
+    const hasColumnCollision = checkColumnCollision(columns, newBounds);
+
+    if (hasFurnitureCollision || hasColumnCollision) {
       // 충돌 발생 → 왼쪽/오른쪽 중 가까운 빈 자리로 밀어냄
       let pushLeftX: number | null = null;
       let pushRightX: number | null = null;
 
+      // 가구 충돌 기반 밀어내기
       for (const b of bounds) {
         // 겹치는 가구 찾기
         if (b.right > clampedX - halfWidth && b.left < clampedX + halfWidth) {
           const candidateLeft = b.left - halfWidth;   // 가구 왼쪽에 배치
           const candidateRight = b.right + halfWidth;  // 가구 오른쪽에 배치
+          if (candidateLeft >= startX + halfWidth) {
+            if (pushLeftX === null || candidateLeft > pushLeftX) pushLeftX = candidateLeft;
+          }
+          if (candidateRight <= endX - halfWidth) {
+            if (pushRightX === null || candidateRight < pushRightX) pushRightX = candidateRight;
+          }
+        }
+      }
+
+      // 기둥 충돌 기반 밀어내기
+      for (const col of columns) {
+        const colCenterXmm = col.position[0] * 100;
+        const colHalfW = col.width / 2;
+        const colLeft = colCenterXmm - colHalfW;
+        const colRight = colCenterXmm + colHalfW;
+        if (colRight > clampedX - halfWidth && colLeft < clampedX + halfWidth) {
+          const candidateLeft = colLeft - halfWidth;
+          const candidateRight = colRight + halfWidth;
           if (candidateLeft >= startX + halfWidth) {
             if (pushLeftX === null || candidateLeft > pushLeftX) pushLeftX = candidateLeft;
           }
@@ -527,7 +551,7 @@ const FreePlacementDropZone: React.FC = () => {
         pushedX = pushRightX;
       }
 
-      // 밀어낸 위치에서 다시 충돌 체크
+      // 밀어낸 위치에서 다시 충돌 체크 (가구 + 기둥)
       pushedX = clampToSpaceBoundsX(pushedX, widthMm, spaceInfo);
       const pushedBounds: FurnitureBoundsX = {
         left: pushedX - halfWidth,
@@ -535,7 +559,7 @@ const FreePlacementDropZone: React.FC = () => {
         category: (category as 'full' | 'upper' | 'lower') || 'full',
       };
 
-      if (!checkFreeCollision(placedModules, pushedBounds)) {
+      if (!checkFreeCollision(placedModules, pushedBounds) && !checkColumnCollision(columns, pushedBounds)) {
         clampedX = pushedX;
         setIsColliding(false);
       } else {
@@ -1133,7 +1157,8 @@ const FreePlacementDropZone: React.FC = () => {
       right: clampedX + halfWidth,
       category: (movingModule as any).category || 'full',
     };
-    const colliding = snapped ? false : checkFreeCollision(otherModules, newBounds);
+    const dragColumns = spaceInfo.columns || [];
+    const colliding = snapped ? false : (checkFreeCollision(otherModules, newBounds) || checkColumnCollision(dragColumns, newBounds));
 
     return { x: Math.round(clampedX), snapped, colliding };
   }, [freeModules, placedModules, sortedBoundsWithId, spaceInfo, spaceBounds, zonePlacementBounds]);
