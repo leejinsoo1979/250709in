@@ -241,8 +241,8 @@ export const useBaseFurniture = (
   // 재질 속성 업데이트 (재생성 없이)
   useEffect(() => {
     if (material) {
-      // 드래그 중이거나 편집 모드일 때는 항상 테마 색상 사용
-      if (isDragging || (isEditMode && viewMode !== '2D')) { // 2D 모드에서는 편집 모드 효과 제거
+      // 드래그 중이거나 편집 모드일 때는 항상 테마 색상 사용 (2D/3D 모두)
+      if (isDragging || isEditMode) {
         material.color.set(getThemeColor());
         material.map = null; // 드래그 중이거나 편집 모드에는 텍스처 제거
         material.emissive.set(new THREE.Color(getThemeColor())); // 편집 모드에서 발광 효과
