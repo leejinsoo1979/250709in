@@ -312,6 +312,8 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   // 커스텀 가구 편집 중에는 선택 하이라이트 끄기 (실시간 변경 확인을 위해)
   const isCustomEditing = placedModule.isCustomizable && activePopup.type === 'customizableEdit' && activePopup.id === placedModule.id;
   const isSelected = selectedFurnitureId === placedModule.id && !isCustomEditing;
+  // 2D 모드에서도 선택/편집 중인 가구는 solid로 렌더링 (고스트 효과를 위해)
+  const effectiveRenderMode = (isSelected || isEditMode) ? 'solid' : renderMode;
   const { theme: appTheme } = useTheme();
 
   // 드래그/편집 시 도어/서라운드 옵션 패널 닫기
@@ -2944,7 +2946,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
           useUIStore.getState().openFurnitureEditPopup(placedModule.id);
         }}
       >
-        <SurroundPanelMesh placedModule={placedModule} renderMode={renderMode} viewMode={viewMode} />
+        <SurroundPanelMesh placedModule={placedModule} renderMode={effectiveRenderMode} viewMode={viewMode} />
 
         {/* 서라운드 패널 설정 톱니 아이콘 */}
         {(
@@ -3484,7 +3486,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                   color={furnitureColor}
                   internalHeight={furnitureHeightMm}
                   viewMode={viewMode}
-                  renderMode={renderMode}
+                  renderMode={effectiveRenderMode}
                   hasDoor={
                     // 기둥 앞에 배치 모드(front): 도어가 BoxModule 내부에서 렌더링됨
                     placedModule.columnPlacementMode === 'front'
@@ -3622,7 +3624,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                       depth={epD}
                       position={[-(width / 2) - epW / 2, epYRelative, leftEpOffsetZ]}
                       spaceInfo={zoneSpaceInfo}
-                      renderMode={renderMode}
+                      renderMode={effectiveRenderMode}
                       useFrameColor={true}
                     />
                   )}
@@ -3633,7 +3635,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                       depth={epD}
                       position={[(width / 2) + epW / 2, epYRelative, rightEpOffsetZ]}
                       spaceInfo={zoneSpaceInfo}
-                      renderMode={renderMode}
+                      renderMode={effectiveRenderMode}
                       useFrameColor={true}
                     />
                   )}
@@ -3663,7 +3665,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                 isDragMode,
                 viewMode,
                 view2DTheme,
-                renderMode
+                renderMode: effectiveRenderMode
               })}
               threshold={1}
               scale={1.001}
@@ -3885,7 +3887,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                   depth={endPanelDepth}
                   position={[0, 0, 0]}
                   spaceInfo={zoneSpaceInfo}
-                  renderMode={renderMode}
+                  renderMode={effectiveRenderMode}
                 />
               </group>
             ))}
