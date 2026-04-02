@@ -896,8 +896,8 @@ const createLowerHalfCabinet = (columnWidth: number): ModuleData => {
 };
 
 /**
- * 듀얼 기본하부장 반통 - 조절발 65mm + 캐비넷 W(듀얼)xD650xH785
- * 싱글 기본하부장 반통의 듀얼 버전 (좌우 도어 2개)
+ * 기본하부장 한통 (듀얼) - 조절발 65mm + 캐비넷 W(듀얼)xD650xH785
+ * 기본하부장 반통의 듀얼 버전 (좌우 도어 2개, 칸막이 없음)
  */
 const createDualLowerHalfCabinet = (dualWidth: number, slotWidths?: number[]): ModuleData => {
   const widthForId = Math.round(dualWidth * 100) / 100;
@@ -905,12 +905,12 @@ const createDualLowerHalfCabinet = (dualWidth: number, slotWidths?: number[]): M
 
   const base = createFurnitureBase(
     `dual-lower-half-cabinet-${widthForId}`,
-    `듀얼 기본하부장 반통 ${widthForId}mm`,
+    `기본하부장 한통 ${widthForId}mm`,
     dualWidth,
     cabinetHeight,
     650, // 깊이 650mm
     '#fff3e0', // 연한 오렌지색 (싱글과 동일)
-    `듀얼 기본하부장 반통 W${widthForId}xH785xD650 (조절발 65mm)`,
+    `기본하부장 한통 W${widthForId}xH785xD650 (조절발 65mm)`,
     650,
     'lower'
   );
@@ -920,7 +920,7 @@ const createDualLowerHalfCabinet = (dualWidth: number, slotWidths?: number[]): M
     isDynamic: true,
     defaultDepth: 650,
     slotWidths,
-    thumbnail: '/images/furniture-thumbnails/듀얼 하부장 반통.png',
+    thumbnail: '/images/furniture-thumbnails/듀얼 하부장 한통.png',
     modelConfig: {
       ...base.modelConfig,
       basicThickness: FURNITURE_SPECS.BASIC_THICKNESS,
