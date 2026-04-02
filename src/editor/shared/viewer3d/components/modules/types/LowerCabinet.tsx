@@ -234,6 +234,7 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
           isFloating={isFloating}
           baseHeight={spaceInfo?.baseConfig?.height || 65}
           baseDepth={spaceInfo?.baseConfig?.depth || 0}
+          frontZInset={83.5}
           viewMode={viewMode}
           view2DDirection={useUIStore.getState().view2DDirection}
         />

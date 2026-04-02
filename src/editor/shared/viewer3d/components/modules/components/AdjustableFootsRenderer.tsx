@@ -19,6 +19,7 @@ interface AdjustableFootsRendererProps {
   isFloating?: boolean; // 띄움배치 여부
   baseHeight?: number; // 받침대 높이 (mm)
   baseDepth?: number; // 받침대 깊이 (mm, 0~300) - 폴백용, store 값 우선
+  frontZInset?: number; // 앞쪽 조절발 추가 Z 안쪽 오프셋 (mm) - 하부장용
   viewMode?: '2D' | '3D';
   view2DDirection?: 'front' | 'left' | 'right' | 'top' | 'all';
 }
@@ -38,6 +39,7 @@ export const AdjustableFootsRenderer: React.FC<AdjustableFootsRendererProps> = (
   renderMode = 'solid',
   isHighlighted = false,
   isFloating = false,
+  frontZInset = 0,
   viewMode = '3D',
   view2DDirection,
 }) => {
@@ -133,7 +135,7 @@ export const AdjustableFootsRenderer: React.FC<AdjustableFootsRendererProps> = (
   // 뒤쪽: 뒷부분 꼭지점과 맞닿도록 plateHalf만큼 안쪽 (받침대 깊이 영향 없음)
   const baseDepthOffset = mmToThreeUnits(effectiveBaseDepth);
   const baseFrameZOffset = mmToThreeUnits(baseFrameOffset);
-  const frontZ = furnitureDepth / 2 - plateHalf - mmToThreeUnits(20) - baseDepthOffset + baseFrameZOffset;
+  const frontZ = furnitureDepth / 2 - plateHalf - mmToThreeUnits(20) - baseDepthOffset + baseFrameZOffset - mmToThreeUnits(frontZInset);
   const backZ = -furnitureDepth / 2 + plateHalf;
 
   // 발통 위치 배열 (네 모서리, 회전 없음)

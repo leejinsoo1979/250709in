@@ -5753,10 +5753,13 @@ const Room: React.FC<RoomProps> = ({
               // 섹션 전체 bottomPanelRaise → 하부프레임 없음
               if (customSec0?.bottomPanelRaise && customSec0.bottomPanelRaise > 0) return;
 
+              // 하부장 모듈: 하부프레임 Z를 83.5mm 안쪽으로
+              const freeModCategory = getModuleCategory(mod);
+              const freeLowerBaseZInset = freeModCategory === 'lower' ? mmToThreeUnits(83.5) : 0;
               allBaseSegments.push({
                 widthMm: modWidthMM,
                 centerXmm: modCenterXmm,
-                zPosition: baseZPosition,
+                zPosition: baseZPosition - freeLowerBaseZInset,
                 height: modBaseH,
                 yPosition: panelStartY + floatHeight + modBaseH / 2,
                 material: baseMat,
@@ -6054,10 +6057,13 @@ const Room: React.FC<RoomProps> = ({
                       // 섹션 전체 bottomPanelRaise → 하부프레임 없음
                       if (customSec0?.bottomPanelRaise && customSec0.bottomPanelRaise > 0) return;
 
+                      // 하부장 모듈: 하부프레임 Z를 83.5mm 안쪽으로
+                      const modCategory = getModuleCategory(mod);
+                      const lowerBaseZInset = modCategory === 'lower' ? mmToThreeUnits(83.5) : 0;
                       slotBaseSegments.push({
                         widthMm: modWidthMM,
                         centerXmm: modCenterXmm,
-                        zPosition: baseZPos + modBaseZOffset,
+                        zPosition: baseZPos + modBaseZOffset - lowerBaseZInset,
                         height: modBaseH,
                         yPosition: panelStartY + floatHeight + modBaseH / 2,
                         material: baseMat,
