@@ -44,11 +44,7 @@ export const useFurnitureSelection = (options?: UseFurnitureSelectionOptions) =>
 
     e.stopPropagation();
 
-    if (viewMode === '3D') {
-      setSelectedFurnitureId(placedModuleId);
-    } else {
-      setSelectedFurnitureId(null);
-    }
+    setSelectedFurnitureId(placedModuleId);
 
     if (dragMode) {
       // 드래그 모드에서는 삭제
