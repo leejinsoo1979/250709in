@@ -1221,9 +1221,12 @@ const RightPanel: React.FC<RightPanelProps> = ({
                   const newMode = value as 'equal-division' | 'free-placement';
                   const currentMode = spaceInfo.layoutMode || 'equal-division';
                   if (newMode === currentMode) return;
-                  if (placedModules.length > 0) {
+                  const hasModules = placedModules.length > 0;
+                  const hasColumns = (spaceInfo.columns || []).length > 0;
+                  if (hasModules || hasColumns) {
                     if (!window.confirm(t('space.modeSwitchWarning'))) return;
-                    clearAllModules();
+                    if (hasModules) clearAllModules();
+                    if (hasColumns) setSpaceInfo({ columns: [] });
                   }
                   setSpaceInfo({ layoutMode: newMode });
                 }}
