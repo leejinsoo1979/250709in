@@ -1,7 +1,6 @@
 .columnControl {
   padding: 20px;
-  background: var(--theme-background-secondary);
-  border-radius: 8px;
+  background: transparent;
   height: 100%;
   overflow-y: auto;
 }
