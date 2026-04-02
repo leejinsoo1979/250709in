@@ -433,39 +433,121 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
             })()}
           </>
         ) : (
-          // 기존: 통짜 측판
+          // 기존: 통짜 측판 (하부장은 앞쪽 상단 노치 적용)
           <>
-            {/* 왼쪽 측면 판재 */}
-            <BoxWithEdges
-              key={`left-panel-${getSidePanelMaterial('좌측판').uuid}`}
-              args={[basicThickness, height, depth]}
-              position={[-innerWidth/2 - basicThickness/2, 0, 0]}
-              material={getSidePanelMaterial('좌측판')}
-              renderMode={renderMode}
-              isDragging={isDragging}
-              isEditMode={isEditMode}
-              isEndPanel={isLeftEndPanel}
-              panelName="좌측판"
-              panelGrainDirections={panelGrainDirections}
-                    furnitureId={placedFurnitureId}
-              textureUrl={textureUrl}
-            />
+            {hideTopPanel ? (
+              // 하부장: 측판 앞쪽 상단 모서리 따내기 (Y 60mm × Z 40mm)
+              (() => {
+                const notchY = mmToThreeUnits(60); // 위에서 아래로 60mm
+                const notchZ = mmToThreeUnits(40); // 앞에서 뒤로 40mm
+                const mainHeight = height - notchY; // 하부 메인 부분 높이
+                const topDepth = depth - notchZ; // 상부 뒤쪽 부분 깊이
 
-            {/* 오른쪽 측면 판재 */}
-            <BoxWithEdges
-              key={`right-panel-${getSidePanelMaterial('우측판').uuid}`}
-              args={[basicThickness, height, depth]}
-              position={[innerWidth/2 + basicThickness/2, 0, 0]}
-              material={getSidePanelMaterial('우측판')}
-              renderMode={renderMode}
-              isDragging={isDragging}
-              isEditMode={isEditMode}
-              isEndPanel={isRightEndPanel}
-              panelName="우측판"
-              panelGrainDirections={panelGrainDirections}
-                    furnitureId={placedFurnitureId}
-              textureUrl={textureUrl}
-            />
+                return (
+                  <>
+                    {/* 좌측판 - 하부 메인 (전체 깊이, 높이 축소) */}
+                    <BoxWithEdges
+                      key={`left-panel-main-${getSidePanelMaterial('좌측판').uuid}`}
+                      args={[basicThickness, mainHeight, depth]}
+                      position={[-innerWidth/2 - basicThickness/2, -notchY/2, 0]}
+                      material={getSidePanelMaterial('좌측판')}
+                      renderMode={renderMode}
+                      isDragging={isDragging}
+                      isEditMode={isEditMode}
+                      isEndPanel={isLeftEndPanel}
+                      hideTopEdge={true}
+                      panelName="좌측판"
+                      panelGrainDirections={panelGrainDirections}
+                      furnitureId={placedFurnitureId}
+                      textureUrl={textureUrl}
+                    />
+                    {/* 좌측판 - 상부 뒤쪽 (깊이 축소, 앞쪽 따냄) */}
+                    <BoxWithEdges
+                      key={`left-panel-top-${getSidePanelMaterial('좌측판').uuid}`}
+                      args={[basicThickness, notchY, topDepth]}
+                      position={[-innerWidth/2 - basicThickness/2, height/2 - notchY/2, -notchZ/2]}
+                      material={getSidePanelMaterial('좌측판')}
+                      renderMode={renderMode}
+                      isDragging={isDragging}
+                      isEditMode={isEditMode}
+                      isEndPanel={isLeftEndPanel}
+                      hideBottomEdge={true}
+                      panelName="좌측판"
+                      panelGrainDirections={panelGrainDirections}
+                      furnitureId={placedFurnitureId}
+                      textureUrl={textureUrl}
+                    />
+
+                    {/* 우측판 - 하부 메인 (전체 깊이, 높이 축소) */}
+                    <BoxWithEdges
+                      key={`right-panel-main-${getSidePanelMaterial('우측판').uuid}`}
+                      args={[basicThickness, mainHeight, depth]}
+                      position={[innerWidth/2 + basicThickness/2, -notchY/2, 0]}
+                      material={getSidePanelMaterial('우측판')}
+                      renderMode={renderMode}
+                      isDragging={isDragging}
+                      isEditMode={isEditMode}
+                      isEndPanel={isRightEndPanel}
+                      hideTopEdge={true}
+                      panelName="우측판"
+                      panelGrainDirections={panelGrainDirections}
+                      furnitureId={placedFurnitureId}
+                      textureUrl={textureUrl}
+                    />
+                    {/* 우측판 - 상부 뒤쪽 (깊이 축소, 앞쪽 따냄) */}
+                    <BoxWithEdges
+                      key={`right-panel-top-${getSidePanelMaterial('우측판').uuid}`}
+                      args={[basicThickness, notchY, topDepth]}
+                      position={[innerWidth/2 + basicThickness/2, height/2 - notchY/2, -notchZ/2]}
+                      material={getSidePanelMaterial('우측판')}
+                      renderMode={renderMode}
+                      isDragging={isDragging}
+                      isEditMode={isEditMode}
+                      isEndPanel={isRightEndPanel}
+                      hideBottomEdge={true}
+                      panelName="우측판"
+                      panelGrainDirections={panelGrainDirections}
+                      furnitureId={placedFurnitureId}
+                      textureUrl={textureUrl}
+                    />
+                  </>
+                );
+              })()
+            ) : (
+              <>
+                {/* 왼쪽 측면 판재 */}
+                <BoxWithEdges
+                  key={`left-panel-${getSidePanelMaterial('좌측판').uuid}`}
+                  args={[basicThickness, height, depth]}
+                  position={[-innerWidth/2 - basicThickness/2, 0, 0]}
+                  material={getSidePanelMaterial('좌측판')}
+                  renderMode={renderMode}
+                  isDragging={isDragging}
+                  isEditMode={isEditMode}
+                  isEndPanel={isLeftEndPanel}
+                  panelName="좌측판"
+                  panelGrainDirections={panelGrainDirections}
+                  furnitureId={placedFurnitureId}
+                  textureUrl={textureUrl}
+                />
+
+                {/* 오른쪽 측면 판재 */}
+                <BoxWithEdges
+                  key={`right-panel-${getSidePanelMaterial('우측판').uuid}`}
+                  args={[basicThickness, height, depth]}
+                  position={[innerWidth/2 + basicThickness/2, 0, 0]}
+                  material={getSidePanelMaterial('우측판')}
+                  renderMode={renderMode}
+                  isDragging={isDragging}
+                  isEditMode={isEditMode}
+                  isEndPanel={isRightEndPanel}
+                  panelName="우측판"
+                  panelGrainDirections={panelGrainDirections}
+                  furnitureId={placedFurnitureId}
+                  textureUrl={textureUrl}
+                />
+              </>
+            )}
           </>
         )}
 
