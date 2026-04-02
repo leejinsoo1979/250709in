@@ -156,6 +156,9 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
       ghostMaterial.transparent = true;
       ghostMaterial.opacity = 0.6;
       ghostMaterial.color = new THREE.Color(getThemeColor());
+      ghostMaterial.map = null; // 텍스처 제거하여 테마색이 보이도록
+      ghostMaterial.emissive = new THREE.Color(getThemeColor());
+      ghostMaterial.emissiveIntensity = 0.3;
       ghostMaterial.needsUpdate = true;
       return ghostMaterial;
     }
@@ -167,6 +170,9 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
       editGhostMaterial.opacity = 0.5;
       editGhostMaterial.depthWrite = false;
       editGhostMaterial.color = new THREE.Color(getThemeColor());
+      editGhostMaterial.map = null; // 텍스처 제거하여 테마색이 보이도록
+      editGhostMaterial.emissive = new THREE.Color(getThemeColor());
+      editGhostMaterial.emissiveIntensity = 0.3;
       editGhostMaterial.needsUpdate = true;
       return editGhostMaterial;
     }
