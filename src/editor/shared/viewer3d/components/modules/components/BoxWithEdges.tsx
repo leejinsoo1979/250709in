@@ -160,11 +160,11 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
       return ghostMaterial;
     }
 
-    // 편집 모드에서는 테마색 반투명 고스트 (2D/3D 모두 동일)
+    // 편집 모드에서는 테마색 반투명 고스트 (드래그 고스트와 동일 스타일)
     if (isEditMode && baseMaterial instanceof THREE.MeshStandardMaterial) {
       const editGhostMaterial = baseMaterial.clone();
       editGhostMaterial.transparent = true;
-      editGhostMaterial.opacity = 0.15;
+      editGhostMaterial.opacity = 0.5;
       editGhostMaterial.depthWrite = false;
       editGhostMaterial.color = new THREE.Color(getThemeColor());
       editGhostMaterial.needsUpdate = true;
