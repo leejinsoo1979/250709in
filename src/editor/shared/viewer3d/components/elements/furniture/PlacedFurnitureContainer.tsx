@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useContext, useMemo } from 'react';
 import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
 import { useUIStore } from '@/store/uiStore';
@@ -8,6 +8,7 @@ import { useFurnitureSelection } from './hooks/useFurnitureSelection';
 import { useFurnitureKeyboard } from './hooks/useFurnitureKeyboard';
 import FurnitureItem from './FurnitureItem';
 import { FurnitureGhostProvider } from '../../../context/FurnitureGhostContext';
+import { Space3DViewContext } from '../../../context/Space3DViewContextTypes';
 
 
 interface PlacedFurnitureContainerProps {
@@ -34,7 +35,7 @@ const PlacedFurnitureContainer: React.FC<PlacedFurnitureContainerProps> = ({
   ghostHighlightSlotIndex
 }) => {
   const { spaceInfo } = useSpaceConfigStore();
-  const { activePopup, view2DDirection: contextView2DDirection, selectedSlotIndex } = useUIStore();
+  const { activePopup, view2DDirection: contextView2DDirection, selectedSlotIndex, selectedFurnitureId } = useUIStore();
   const { zones } = useDerivedSpaceStore();
 
   const storePlacedModules = useFurnitureStore(state => state.placedModules);
@@ -220,6 +221,9 @@ const PlacedFurnitureContainer: React.FC<PlacedFurnitureContainerProps> = ({
         const isDragMode = selectionState.dragMode;
         const isEditMode = activePopup.type === 'furnitureEdit' && activePopup.id === placedModule.id;
         const isDraggingThis = dragHandlers.draggingModuleId === placedModule.id;
+        const isThisSelected = selectedFurnitureId === placedModule.id;
+        // 선택/편집 중인 가구는 solid로 렌더링 (2D wireframe 모드에서도 고스트 표시)
+        const effectiveRenderMode = (isThisSelected || isEditMode) ? 'solid' as const : renderMode;
 
         // 좌측뷰/우측뷰에서는 선택된 가구를 X=0에 렌더링
         const adjustedModule = (viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right'))
@@ -227,32 +231,54 @@ const PlacedFurnitureContainer: React.FC<PlacedFurnitureContainerProps> = ({
           : placedModule;
 
         return (
-          <FurnitureGhostProvider key={placedModule.id} isEditMode={isEditMode}>
-            <FurnitureItem
-              placedModule={adjustedModule}
-              placedModules={placedModules}
-              spaceInfo={spaceInfo}
-              furnitureStartY={furnitureStartY}
-              isDragMode={isDragMode}
-              isEditMode={isEditMode}
-              isDraggingThis={isDraggingThis}
-              viewMode={viewMode}
-              view2DDirection={view2DDirection}
-              renderMode={renderMode}
-              onPointerDown={dragHandlers.handlePointerDown}
-              onPointerMove={dragHandlers.handlePointerMove}
-              onPointerUp={dragHandlers.handlePointerUp}
-              onDoubleClick={selectionState.handleFurnitureClick}
-              showFurniture={showFurniture}
-              readOnly={readOnly}
-              onFurnitureClick={onFurnitureClick}
-              ghostHighlightSlotIndex={ghostHighlightSlotIndex}
-            />
-          </FurnitureGhostProvider>
+          <RenderModeOverride key={placedModule.id} renderMode={effectiveRenderMode}>
+            <FurnitureGhostProvider isEditMode={isEditMode}>
+              <FurnitureItem
+                placedModule={adjustedModule}
+                placedModules={placedModules}
+                spaceInfo={spaceInfo}
+                furnitureStartY={furnitureStartY}
+                isDragMode={isDragMode}
+                isEditMode={isEditMode}
+                isDraggingThis={isDraggingThis}
+                viewMode={viewMode}
+                view2DDirection={view2DDirection}
+                renderMode={effectiveRenderMode}
+                onPointerDown={dragHandlers.handlePointerDown}
+                onPointerMove={dragHandlers.handlePointerMove}
+                onPointerUp={dragHandlers.handlePointerUp}
+                onDoubleClick={selectionState.handleFurnitureClick}
+                showFurniture={showFurniture}
+                readOnly={readOnly}
+                onFurnitureClick={onFurnitureClick}
+                ghostHighlightSlotIndex={ghostHighlightSlotIndex}
+              />
+            </FurnitureGhostProvider>
+          </RenderModeOverride>
         );
       })}
     </group>
   );
 };
 
-export default PlacedFurnitureContainer; 
+// 선택/편집 중인 가구의 하위 컴포넌트들이 context에서 renderMode를 직접 읽으므로
+// Context 레벨에서 renderMode를 오버라이드해야 함
+const RenderModeOverride: React.FC<{
+  renderMode: 'solid' | 'wireframe';
+  children: React.ReactNode;
+}> = ({ renderMode, children }) => {
+  const parentContext = useContext(Space3DViewContext);
+  const overriddenContext = useMemo(() => {
+    if (!parentContext || parentContext.renderMode === renderMode) return null;
+    return { ...parentContext, renderMode };
+  }, [parentContext, renderMode]);
+
+  if (!overriddenContext) return <>{children}</>;
+  return (
+    <Space3DViewContext.Provider value={overriddenContext}>
+      {children}
+    </Space3DViewContext.Provider>
+  );
+};
+
+export default PlacedFurnitureContainer;
