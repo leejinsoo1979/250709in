@@ -116,34 +116,15 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
   // 실제 사용할 material (plainMaterial 모드면 항상 기본 색상, 아니면 prop 우선)
   const baseMaterial = isPlainMaterial ? defaultMaterial : (material || defaultMaterial);
 
-  // 고스트 material (드래그/편집용) — material pipeline 완전 우회
-  const ghostMaterial = React.useMemo(() => {
-    const getThemeColorValue = () => {
-      if (typeof window !== "undefined") {
-        const computedStyle = getComputedStyle(document.documentElement);
-        const primaryColor = computedStyle.getPropertyValue("--theme-primary").trim();
-        if (primaryColor) return primaryColor;
-      }
-      return "#10b981";
-    };
-    const color = getThemeColorValue();
-    const mat = new THREE.MeshStandardMaterial({
-      color: new THREE.Color(color),
-      transparent: true,
-      opacity: isDragging ? 0.6 : 0.5,
-      depthWrite: false,
-      emissive: new THREE.Color(color),
-      emissiveIntensity: 0.3,
-      roughness: 0.6,
-      metalness: 0.0,
-    });
-    return mat;
+  // 고스트 색상 (드래그/편집용)
+  const ghostColor = React.useMemo(() => {
+    if (typeof window !== "undefined") {
+      const computedStyle = getComputedStyle(document.documentElement);
+      const primaryColor = computedStyle.getPropertyValue("--theme-primary").trim();
+      if (primaryColor) return primaryColor;
+    }
+    return "#10b981";
   }, [isDragging, isEditMode]);
-
-  // cleanup ghost material
-  React.useEffect(() => {
-    return () => { ghostMaterial.dispose(); };
-  }, [ghostMaterial]);
 
   // 2D 솔리드 모드 투명 처리 (고스트는 ghostMaterial이 담당)
   const processedMaterial = React.useMemo(() => {
@@ -344,7 +325,7 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
   const edgeColor = React.useMemo(() => {
     // 드래그/편집 고스트: 엣지도 테마색으로 통일
     if ((isDragging || isEditMode) && !isClothingRod) {
-      return '#' + ghostMaterial.color.getHexString();
+      return ghostColor;
     }
 
     // 2D 모드에서 서랍속장 패널은 초록색 윤곽선
@@ -409,7 +390,7 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
         return view2DTheme === 'dark' ? "#FF4500" : "#444444"; // 다크모드는 붉은 주황색
       }
     }
-  }, [viewMode, renderMode, view2DTheme, view2DDirection, baseMaterial, isHighlighted, highlightColor, panelName, isDragging, isEditMode, ghostMaterial, isClothingRod]);
+  }, [viewMode, renderMode, view2DTheme, view2DDirection, baseMaterial, isHighlighted, highlightColor, panelName, isDragging, isEditMode, ghostColor, isClothingRod]);
 
   // Debug log for position
 
@@ -666,11 +647,18 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
           <boxGeometry key={`${args[0]}-${args[1]}-${args[2]}`} args={args} />
         )}
         {useGhostMaterial ? (
-          // 드래그/편집 고스트: material pipeline 우회하여 확실한 테마색 표시
-          <primitive
-            key={`ghost-${ghostMaterial.uuid}`}
-            object={ghostMaterial}
-            attach="material"
+          // 드래그/편집 고스트: 인라인 JSX로 확실한 테마색 면 표시
+          <meshStandardMaterial
+            key="ghost-material"
+            color={ghostColor}
+            transparent={true}
+            opacity={isDragging ? 0.6 : 0.5}
+            depthWrite={false}
+            emissive={ghostColor}
+            emissiveIntensity={0.3}
+            roughness={0.6}
+            metalness={0.0}
+            side={THREE.DoubleSide}
           />
         ) : renderMode === 'wireframe' ? (
           // 와이어프레임 모드: 메시 숨기고 엣지만 표시
