@@ -8,6 +8,7 @@ import { useTheme } from '@/contexts/ThemeContext';
 import { getDefaultGrainDirection, resolvePanelGrainDirection } from '@/editor/shared/utils/materialConstants';
 import { useTexture } from '@react-three/drei';
 import { useExcludedPanelsStore } from '../../../context/ExcludedPanelsContext';
+import { useFurnitureGhostContext } from '../../../context/FurnitureGhostContext';
 
 interface BoxWithEdgesProps {
   args: [number, number, number];
@@ -70,19 +71,16 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
   const compositeKey = furnitureId && panelName ? `${furnitureId}::${panelName}` : null;
   const isExcludedByOptimizer = excludedKeys.size > 0 && compositeKey ? excludedKeys.has(compositeKey) : false;
 
-  // DEBUG: 한 번만 로그 (첫 렌더 시)
-  React.useEffect(() => {
-    if (panelName && furnitureId) {
-      console.log(`[BWE-DEBUG] panelName="${panelName}" furnitureId="${furnitureId?.slice(0,8)}" excludedKeys.size=${excludedKeys.size} compositeKey="${compositeKey}" isExcluded=${isExcludedByOptimizer}`);
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [excludedKeys.size]);
 
   const { viewMode, plainMaterial: isPlainMaterial } = useSpace3DView();
   const { view2DDirection, shadowEnabled, edgeOutlineEnabled } = useUIStore(); // view2DDirection, shadowEnabled, edgeOutlineEnabled 추가
   const { theme } = useViewerTheme();
   const { view2DTheme } = useUIStore();
   const { theme: appTheme } = useTheme();
+
+  // 부모 컨텍스트에서 편집/드래그 상태 자동 감지 (prop으로 전달되지 않은 경우에도 고스트 적용)
+  const parentEditMode = useFurnitureGhostContext();
+  const effectiveEditMode = isEditMode || parentEditMode;
 
   // 스토어에서 직접 panelGrainDirections 가져오기 (실시간 업데이트 보장)
   // Zustand는 selector 함수의 참조가 바뀌면 재구독하므로, furnitureId별로 안정적인 selector 필요
@@ -151,10 +149,11 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
     };
 
     // 드래그 중이거나 편집 모드일 때 동일한 테마색 고스트 (2D/3D 모두 동일)
-    if ((isDragging || isEditMode) && baseMaterial instanceof THREE.MeshStandardMaterial) {
+    if ((isDragging || effectiveEditMode) && baseMaterial instanceof THREE.MeshStandardMaterial) {
       const ghostMaterial = baseMaterial.clone();
       ghostMaterial.transparent = true;
       ghostMaterial.opacity = 0.6;
+      ghostMaterial.map = null; // 텍스처 제거하여 테마색이 보이도록
       ghostMaterial.color = new THREE.Color(getThemeColor());
       ghostMaterial.needsUpdate = true;
       return ghostMaterial;
@@ -188,7 +187,7 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
       }
     }
     return baseMaterial;
-  }, [baseMaterial, isDragging, isEditMode, viewMode, renderMode, isClothingRod, panelName, view2DDirection, view2DTheme]);
+  }, [baseMaterial, isDragging, effectiveEditMode, viewMode, renderMode, isClothingRod, panelName, view2DDirection, view2DTheme]);
 
   // activePanelGrainDirections를 JSON 문자열로 변환하여 값 변경 감지
   const activePanelGrainDirectionsStr = activePanelGrainDirections ? JSON.stringify(activePanelGrainDirections) : '';
@@ -213,7 +212,7 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
 
   // 편집/드래그 모드 해제 시 panelMaterialRef 캐시된 clone의 투명도 즉시 복원
   React.useEffect(() => {
-    if (!isEditMode && !isDragging && panelMaterialRef.current instanceof THREE.MeshStandardMaterial) {
+    if (!effectiveEditMode && !isDragging && panelMaterialRef.current instanceof THREE.MeshStandardMaterial) {
       if (panelMaterialRef.current.transparent || panelMaterialRef.current.opacity < 1.0) {
         panelMaterialRef.current.transparent = processedMaterial instanceof THREE.MeshStandardMaterial ? processedMaterial.transparent : false;
         panelMaterialRef.current.opacity = processedMaterial instanceof THREE.MeshStandardMaterial ? processedMaterial.opacity : 1.0;
@@ -221,7 +220,7 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
         panelMaterialRef.current.needsUpdate = true;
       }
     }
-  }, [isEditMode, isDragging, processedMaterial]);
+  }, [effectiveEditMode, isDragging, processedMaterial]);
 
   // 패널별 개별 material 생성 (텍스처 회전 적용)
   const panelSpecificMaterial = React.useMemo(() => {
@@ -229,6 +228,12 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
     if (isPlainMaterial) return processedMaterial;
 
     if (!panelName || !(processedMaterial instanceof THREE.MeshStandardMaterial)) {
+      return processedMaterial;
+    }
+
+    // 고스트 모드: 텍스처 처리 건너뛰고 processedMaterial 그대로 사용
+    if (isDragging || effectiveEditMode) {
+      panelMaterialRef.current = null;
       return processedMaterial;
     }
 
@@ -275,10 +280,6 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
       panelMaterialRef.current.depthWrite = processedMaterial.depthWrite;
       panelMaterialRef.current.needsUpdate = true;
 
-      if (isDragging || isEditMode) {
-        panelMaterialRef.current.color = processedMaterial.color.clone();
-      }
-
       return panelMaterialRef.current;
     }
 
@@ -302,7 +303,7 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
     panelMaterialRef.current = panelMaterial;
 
     return panelMaterial;
-  }, [processedMaterial, panelName, activePanelGrainDirectionsStr, isDragging, isEditMode, textureSignature, viewMode, renderMode, isPlainMaterial]);
+  }, [processedMaterial, panelName, activePanelGrainDirectionsStr, isDragging, effectiveEditMode, textureSignature, viewMode, renderMode, isPlainMaterial]);
 
   const finalMaterial = panelSpecificMaterial;
 

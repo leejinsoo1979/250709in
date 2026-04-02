@@ -7,6 +7,7 @@ import { useFurnitureDrag } from './hooks/useFurnitureDrag';
 import { useFurnitureSelection } from './hooks/useFurnitureSelection';
 import { useFurnitureKeyboard } from './hooks/useFurnitureKeyboard';
 import FurnitureItem from './FurnitureItem';
+import { FurnitureGhostProvider } from '../../../context/FurnitureGhostContext';
 
 
 interface PlacedFurnitureContainerProps {
@@ -226,27 +227,28 @@ const PlacedFurnitureContainer: React.FC<PlacedFurnitureContainerProps> = ({
           : placedModule;
 
         return (
-          <FurnitureItem
-            key={placedModule.id}
-            placedModule={adjustedModule}
-            placedModules={placedModules}
-            spaceInfo={spaceInfo}
-            furnitureStartY={furnitureStartY}
-            isDragMode={isDragMode}
-            isEditMode={isEditMode}
-            isDraggingThis={isDraggingThis}
-            viewMode={viewMode}
-            view2DDirection={view2DDirection}
-            renderMode={renderMode}
-            onPointerDown={dragHandlers.handlePointerDown}
-            onPointerMove={dragHandlers.handlePointerMove}
-            onPointerUp={dragHandlers.handlePointerUp}
-            onDoubleClick={selectionState.handleFurnitureClick}
-            showFurniture={showFurniture}
-            readOnly={readOnly}
-            onFurnitureClick={onFurnitureClick}
-            ghostHighlightSlotIndex={ghostHighlightSlotIndex}
-          />
+          <FurnitureGhostProvider key={placedModule.id} isEditMode={isEditMode}>
+            <FurnitureItem
+              placedModule={adjustedModule}
+              placedModules={placedModules}
+              spaceInfo={spaceInfo}
+              furnitureStartY={furnitureStartY}
+              isDragMode={isDragMode}
+              isEditMode={isEditMode}
+              isDraggingThis={isDraggingThis}
+              viewMode={viewMode}
+              view2DDirection={view2DDirection}
+              renderMode={renderMode}
+              onPointerDown={dragHandlers.handlePointerDown}
+              onPointerMove={dragHandlers.handlePointerMove}
+              onPointerUp={dragHandlers.handlePointerUp}
+              onDoubleClick={selectionState.handleFurnitureClick}
+              showFurniture={showFurniture}
+              readOnly={readOnly}
+              onFurnitureClick={onFurnitureClick}
+              ghostHighlightSlotIndex={ghostHighlightSlotIndex}
+            />
+          </FurnitureGhostProvider>
         );
       })}
     </group>
