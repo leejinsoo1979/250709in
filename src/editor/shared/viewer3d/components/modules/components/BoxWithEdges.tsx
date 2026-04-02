@@ -124,72 +124,47 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
   // 실제 사용할 material (plainMaterial 모드면 항상 기본 색상, 아니면 prop 우선)
   const baseMaterial = isPlainMaterial ? defaultMaterial : (material || defaultMaterial);
 
-  // 테마 색상 가져오기 (드래그/편집 고스트용)
-  const themeColor = React.useMemo(() => {
-    if (typeof window !== "undefined") {
-      const computedStyle = getComputedStyle(document.documentElement);
-      const primaryColor = computedStyle.getPropertyValue("--theme-primary").trim();
-      if (primaryColor) return primaryColor;
-    }
-    return "#10b981"; // 기본값 (green)
-  }, [isDragging, isEditMode]); // 드래그/편집 전환 시 재계산
+  // 고스트 material (드래그/편집용) — material pipeline 완전 우회
+  const ghostMaterial = React.useMemo(() => {
+    const getThemeColorValue = () => {
+      if (typeof window !== "undefined") {
+        const computedStyle = getComputedStyle(document.documentElement);
+        const primaryColor = computedStyle.getPropertyValue("--theme-primary").trim();
+        if (primaryColor) return primaryColor;
+      }
+      return "#10b981";
+    };
+    const color = getThemeColorValue();
+    const mat = new THREE.MeshStandardMaterial({
+      color: new THREE.Color(color),
+      transparent: true,
+      opacity: isDragging ? 0.6 : 0.5,
+      depthWrite: false,
+      emissive: new THREE.Color(color),
+      emissiveIntensity: 0.3,
+      roughness: 0.6,
+      metalness: 0.0,
+    });
+    return mat;
+  }, [isDragging, isEditMode]);
 
-  // 드래그/편집 고스트 효과 + 2D 솔리드 모드 투명 처리
+  // cleanup ghost material
+  React.useEffect(() => {
+    return () => { ghostMaterial.dispose(); };
+  }, [ghostMaterial]);
+
+  // 2D 솔리드 모드 투명 처리 (고스트는 ghostMaterial이 담당)
   const processedMaterial = React.useMemo(() => {
-    // MeshBasicMaterial인 경우
-    // - 패널 하이라이팅용 highlightMaterial은 그대로 사용 (투명 처리 안 함)
-    // - 프레임 형광색 등도 그대로 사용
     if (baseMaterial instanceof THREE.MeshBasicMaterial) {
       return baseMaterial;
     }
 
-    // 옷봉 전용: 항상 원본 재질 유지 (밝기 보존)
     if (isClothingRod) {
       return baseMaterial;
     }
 
-    // 테마 색상 가져오기 (드래그/편집 공용)
-    const getThemeColor = () => {
-      if (typeof window !== "undefined") {
-        const computedStyle = getComputedStyle(document.documentElement);
-        const primaryColor = computedStyle.getPropertyValue("--theme-primary").trim();
-        if (primaryColor) {
-          return primaryColor;
-        }
-      }
-      return "#10b981"; // 기본값 (green)
-    };
-
-    // 드래그 중일 때 테마색 고스트 (2D/3D 모두 동일)
-    if (isDragging && baseMaterial instanceof THREE.MeshStandardMaterial) {
-      const ghostMaterial = baseMaterial.clone();
-      ghostMaterial.transparent = true;
-      ghostMaterial.opacity = 0.6;
-      ghostMaterial.color = new THREE.Color(getThemeColor());
-      ghostMaterial.map = null; // 텍스처 제거하여 테마색이 보이도록
-      ghostMaterial.emissive = new THREE.Color(getThemeColor());
-      ghostMaterial.emissiveIntensity = 0.3;
-      ghostMaterial.needsUpdate = true;
-      return ghostMaterial;
-    }
-
-    // 편집 모드에서는 테마색 반투명 고스트 (드래그 고스트와 동일 스타일)
-    if (isEditMode && baseMaterial instanceof THREE.MeshStandardMaterial) {
-      const editGhostMaterial = baseMaterial.clone();
-      editGhostMaterial.transparent = true;
-      editGhostMaterial.opacity = 0.5;
-      editGhostMaterial.depthWrite = false;
-      editGhostMaterial.color = new THREE.Color(getThemeColor());
-      editGhostMaterial.map = null; // 텍스처 제거하여 테마색이 보이도록
-      editGhostMaterial.emissive = new THREE.Color(getThemeColor());
-      editGhostMaterial.emissiveIntensity = 0.3;
-      editGhostMaterial.needsUpdate = true;
-      return editGhostMaterial;
-    }
-
-    // 2D 솔리드 모드에서 캐비넷을 투명하게 처리 (드래그/편집 중이 아닐 때만)
+    // 2D 솔리드 모드에서 캐비넷을 투명하게 처리
     if (viewMode === '2D' && renderMode === 'solid' && baseMaterial instanceof THREE.MeshStandardMaterial) {
-      // 도어: DoorModule에서 이미 material 설정 완료 → 그대로 사용
       const isDoor = panelName && (panelName.includes('도어') || panelName.includes('door'));
       if (isDoor) {
         return baseMaterial;
@@ -203,9 +178,7 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
       return transparentMaterial;
     }
 
-    // 기본 상태: baseMaterial 투명도를 정상 복원 (useEffect 타이밍 이슈 방지)
-    // isEditMode/isDragging false인데 baseMaterial이 아직 투명 상태면 즉시 복원
-    // plainMaterial 모드(CNC 옵티마이저)에서는 PanelDimmer가 재질을 직접 제어하므로 건너뜀
+    // 기본 상태: baseMaterial 투명도를 정상 복원
     if (!isPlainMaterial && baseMaterial instanceof THREE.MeshStandardMaterial) {
       if (baseMaterial.transparent || baseMaterial.opacity < 1.0) {
         baseMaterial.transparent = false;
@@ -215,7 +188,7 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
       }
     }
     return baseMaterial;
-  }, [baseMaterial, isDragging, isEditMode, viewMode, renderMode, isClothingRod, panelName, view2DDirection, view2DTheme]);
+  }, [baseMaterial, viewMode, renderMode, isClothingRod, panelName, view2DDirection, view2DTheme, isPlainMaterial]);
 
   // activePanelGrainDirections를 JSON 문자열로 변환하여 값 변경 감지
   const activePanelGrainDirectionsStr = activePanelGrainDirections ? JSON.stringify(activePanelGrainDirections) : '';
@@ -335,6 +308,13 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
 
   // 드래그/편집 모드 여부 (material pipeline 우회용)
   const useGhostMaterial = (isDragging || isEditMode) && !isClothingRod;
+
+  // DEBUG: 고스트 상태 추적
+  React.useEffect(() => {
+    if (panelName === '좌측판' || panelName === '(하)좌측') {
+      console.log('🟢 BWE GHOST', { panelName, isEditMode, isDragging, useGhostMaterial, ghostColor: ghostMaterial instanceof THREE.MeshStandardMaterial ? '#' + ghostMaterial.color.getHexString() : 'N/A', renderMode, isClothingRod });
+    }
+  }, [isEditMode, isDragging, useGhostMaterial, ghostMaterial, renderMode, panelName, isClothingRod]);
 
   // useEffect 제거: useMemo에서 이미 모든 회전 로직을 처리하므로 중복 실행 방지
 
@@ -693,16 +673,10 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
         )}
         {useGhostMaterial ? (
           // 드래그/편집 고스트: material pipeline 우회하여 확실한 테마색 표시
-          <meshStandardMaterial
-            key={`ghost-${isDragging}-${isEditMode}`}
-            color={themeColor}
-            transparent={true}
-            opacity={isDragging ? 0.6 : 0.5}
-            depthWrite={false}
-            emissive={themeColor}
-            emissiveIntensity={0.3}
-            roughness={0.6}
-            metalness={0.0}
+          <primitive
+            key={`ghost-${ghostMaterial.uuid}`}
+            object={ghostMaterial}
+            attach="material"
           />
         ) : renderMode === 'wireframe' ? (
           // 와이어프레임 모드: 메시 숨기고 엣지만 표시

@@ -239,37 +239,29 @@ export const useBaseFurniture = (
   }, []); // 의존성 배열 비움 - 한 번만 생성
   
   // 재질 속성 업데이트 (재생성 없이)
+  // 고스트 효과는 BoxWithEdges에서 별도 ghostMaterial로 처리하므로
+  // 여기서는 material을 항상 정상(비고스트) 상태로 유지
   useEffect(() => {
     if (material) {
-      // 드래그 중이거나 편집 모드일 때는 항상 테마 색상 사용 (2D/3D 모두)
-      if (isDragging || isEditMode) {
-        material.color.set(getThemeColor());
-        material.map = null; // 드래그 중이거나 편집 모드에는 텍스처 제거
-        material.emissive.set(new THREE.Color(getThemeColor())); // 편집 모드에서 발광 효과
-        material.emissiveIntensity = 0.2; // 약간의 발광
-      } else {
-        material.emissive.set(new THREE.Color(0x000000)); // 발광 제거
-        material.emissiveIntensity = 0;
-        if (!material.map) {
-          // 드래그 중이 아니고 편집 모드가 아니고 텍스처가 없을 때만 기본 색상 사용
-          material.color.set(furnitureColor);
-        }
+      // 발광 항상 제거 (고스트는 BoxWithEdges ghostMaterial이 담당)
+      material.emissive.set(new THREE.Color(0x000000));
+      material.emissiveIntensity = 0;
+
+      // 텍스처가 없을 때만 기본 색상 설정 (텍스처가 있으면 텍스처 useEffect가 처리)
+      if (!material.map) {
+        material.color.set(furnitureColor);
       }
-      
-      // 투명도 설정 - 2D 모드에서는 편집 모드 여부와 관계없이 일정한 투명도 유지
-      material.transparent = renderMode === 'wireframe' || (viewMode === '2D' && renderMode === 'solid') || isDragging || isEditMode;
-      material.opacity = renderMode === 'wireframe' ? 0.3 : 
-                        (viewMode === '2D' && renderMode === 'solid') ? 0.5 : // 2D 모드에서는 항상 0.5
-                        (isDragging ? 0.6 :
-                        (isEditMode ? 0.5 : 1.0));
-      
+
+      // 투명도 설정 (드래그/편집 모드는 BoxWithEdges ghostMaterial이 담당하므로 제외)
+      material.transparent = renderMode === 'wireframe' || (viewMode === '2D' && renderMode === 'solid');
+      material.opacity = renderMode === 'wireframe' ? 0.3 :
+                        (viewMode === '2D' && renderMode === 'solid') ? 0.5 : 1.0;
+
       // 은선모드 또는 2D 투명 모드에서는 depthWrite를 false로 설정하여 치수 텍스트가 가려지지 않도록
       const shouldDisableDepthWrite = renderMode === 'wireframe' || (viewMode === '2D' && renderMode === 'solid');
       material.depthWrite = !shouldDisableDepthWrite;
-      
+
       material.needsUpdate = true;
-      
-      
     }
   }, [material, furnitureColor, renderMode, viewMode, isDragging, isEditMode]);
 
