@@ -50,8 +50,8 @@ const FURNITURE_ICONS: Record<string, string> = {
   // 듀얼 하부장 (이전 모듈 비활성화)
   // 'dual-lower-cabinet-basic': getImagePath('dual-lower-cabinet-basic.png'),
   // 'dual-lower-cabinet-2tier': getImagePath('dual-lower-cabinet-2tier.png'),
-  // 새 듀얼 하부장
-  'dual-lower-half-cabinet': getImagePath('dual-lower-half-cabinet.png'),
+  // 새 듀얼 하부장 (텍스트 썸네일 — 이미지 준비 후 교체)
+  'dual-lower-half-cabinet': '',
 };
 
 // 모듈 타입 정의
@@ -775,17 +775,23 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
         title={isValid ? `클릭하여 선택 또는 드래그하여 배치: ${module.name}` : '현재 공간에 배치할 수 없습니다'}
       >
         <div className={styles.thumbnailImage}>
-          <img
-            src={iconPath}
-            alt={module.name}
-            onError={(e) => {
-              const img = e.target as HTMLImageElement;
-              if (!img.dataset.fallbackAttempted) {
-                img.dataset.fallbackAttempted = 'true';
-                img.src = '/images/furniture-thumbnails/single-2drawer-hanging.png';
-              }
-            }}
-          />
+          {iconPath ? (
+            <img
+              src={iconPath}
+              alt={module.name}
+              onError={(e) => {
+                const img = e.target as HTMLImageElement;
+                if (!img.dataset.fallbackAttempted) {
+                  img.dataset.fallbackAttempted = 'true';
+                  img.src = '/images/furniture-thumbnails/single-2drawer-hanging.png';
+                }
+              }}
+            />
+          ) : (
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', height: '100%', fontSize: '11px', color: '#666', textAlign: 'center', padding: '4px', wordBreak: 'keep-all' }}>
+              {module.name.replace(/\s*[\d.]+mm$/, '')}
+            </div>
+          )}
         </div>
         {!isValid && <div className={styles.disabledOverlay} />}
       </div>
