@@ -851,6 +851,51 @@ const createDualLowerCabinet2 = (dualWidth: number): ModuleData => {
 */ // 상부장/하부장 생성 함수 전체 주석 끝
 
 // ============================================================================
+// 새 하부장 가구 생성 함수
+// ============================================================================
+
+/**
+ * 기본하부장 반통 - 조절발 65mm + 캐비넷 W500xD650xH785
+ * 전체 높이: 850mm (65 + 785)
+ */
+const createLowerHalfCabinet = (columnWidth: number): ModuleData => {
+  const widthForId = Math.round(columnWidth * 100) / 100;
+  const cabinetHeight = 785; // 캐비넷 본체 높이
+
+  const base = createFurnitureBase(
+    `lower-half-cabinet-${widthForId}`,
+    `기본하부장 반통 ${widthForId}mm`,
+    columnWidth,
+    cabinetHeight, // 캐비넷 높이 (조절발 제외)
+    650, // 깊이 650mm
+    '#fff3e0', // 연한 오렌지색
+    `기본하부장 반통 W${widthForId}xH785xD650 (조절발 65mm)`,
+    650, // 기본 깊이
+    'lower' // 하부장 카테고리
+  );
+
+  return {
+    ...base,
+    isDynamic: true,
+    defaultDepth: 650,
+    thumbnail: '/images/furniture-thumbnails/하부장 반통.png',
+    modelConfig: {
+      ...base.modelConfig,
+      basicThickness: FURNITURE_SPECS.BASIC_THICKNESS, // 18mm 패널 두께
+      hasOpenFront: false,
+      sections: [
+        {
+          type: 'shelf',
+          heightType: 'percentage',
+          height: 100,
+          count: 0 // 내부 선반 없이 오픈 공간
+        }
+      ]
+    }
+  } as ModuleData;
+};
+
+// ============================================================================
 // 메인 생성 함수 (기존 인터페이스 유지)
 // ============================================================================
 
@@ -1132,11 +1177,14 @@ export const generateShelvingModules = (
   // modules.push(createUpperCabinet3(columnWidth));
   // modules.push(createUpperCabinet4(columnWidth));
 
-  // === 싱글 하부장 가구 생성 === (임시 비활성화)
+  // === 싱글 하부장 가구 생성 === (이전 모듈 비활성화)
   // const lowerCabinet1 = createLowerCabinet1(columnWidth);
   // modules.push(lowerCabinet1);
   // const lowerCabinet2 = createLowerCabinet2(columnWidth);
   // modules.push(lowerCabinet2);
+
+  // === 새 하부장 가구 생성 ===
+  modules.push(createLowerHalfCabinet(columnWidth));
   
   // console.log('📊 generateShelvingModules 최종 결과:', {
   //   totalModulesCount: modules.length,
