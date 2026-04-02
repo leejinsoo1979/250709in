@@ -124,6 +124,16 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
   // 실제 사용할 material (plainMaterial 모드면 항상 기본 색상, 아니면 prop 우선)
   const baseMaterial = isPlainMaterial ? defaultMaterial : (material || defaultMaterial);
 
+  // 테마 색상 가져오기 (드래그/편집 고스트용)
+  const themeColor = React.useMemo(() => {
+    if (typeof window !== "undefined") {
+      const computedStyle = getComputedStyle(document.documentElement);
+      const primaryColor = computedStyle.getPropertyValue("--theme-primary").trim();
+      if (primaryColor) return primaryColor;
+    }
+    return "#10b981"; // 기본값 (green)
+  }, [isDragging, isEditMode]); // 드래그/편집 전환 시 재계산
+
   // 드래그/편집 고스트 효과 + 2D 솔리드 모드 투명 처리
   const processedMaterial = React.useMemo(() => {
     // MeshBasicMaterial인 경우
@@ -322,6 +332,9 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
   }, [processedMaterial, panelName, activePanelGrainDirectionsStr, isDragging, isEditMode, textureSignature, viewMode, renderMode, isPlainMaterial]);
 
   const finalMaterial = panelSpecificMaterial;
+
+  // 드래그/편집 모드 여부 (material pipeline 우회용)
+  const useGhostMaterial = (isDragging || isEditMode) && !isClothingRod;
 
   // useEffect 제거: useMemo에서 이미 모든 회전 로직을 처리하므로 중복 실행 방지
 
@@ -678,13 +691,26 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
         ) : (
           <boxGeometry key={`${args[0]}-${args[1]}-${args[2]}`} args={args} />
         )}
-        {renderMode === 'wireframe' ? (
+        {useGhostMaterial ? (
+          // 드래그/편집 고스트: material pipeline 우회하여 확실한 테마색 표시
+          <meshStandardMaterial
+            key={`ghost-${isDragging}-${isEditMode}`}
+            color={themeColor}
+            transparent={true}
+            opacity={isDragging ? 0.6 : 0.5}
+            depthWrite={false}
+            emissive={themeColor}
+            emissiveIntensity={0.3}
+            roughness={0.6}
+            metalness={0.0}
+          />
+        ) : renderMode === 'wireframe' ? (
           // 와이어프레임 모드: 메시 숨기고 엣지만 표시
           <meshBasicMaterial
             visible={false}
           />
         ) : (
-          // 솔리드 모드: processedMaterial에서 이미 2D 투명 처리 완료
+          // 솔리드 모드: 면 표시
           <primitive
             key={`${finalMaterial.uuid}-${viewMode}-${renderMode}-${renderOrder}`}
             object={finalMaterial}
