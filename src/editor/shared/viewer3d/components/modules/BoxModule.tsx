@@ -759,7 +759,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
   }
 
   // === 하부장 타입들 (싱글 및 듀얼) ===
-  if (moduleData.id.includes('lower-cabinet-') || moduleData.id.includes('dual-lower-cabinet-') || moduleData.id.includes('lower-half-cabinet')) {
+  if (moduleData.id.includes('lower-cabinet-') || moduleData.id.includes('dual-lower-cabinet-') || moduleData.id.includes('lower-half-cabinet') || moduleData.id.includes('dual-lower-half-cabinet')) {
     return (
       <>
         {/* 모든 타입에서 간접조명 렌더링 */}

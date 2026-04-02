@@ -47,9 +47,11 @@ const FURNITURE_ICONS: Record<string, string> = {
   // 'dual-upper-cabinet-2tier': getImagePath('dual-upper-cabinet-2tier.png'),
   // 'dual-upper-cabinet-open': getImagePath('dual-upper-cabinet-open.png'),
   // 'dual-upper-cabinet-mixed': getImagePath('dual-upper-cabinet-mixed.png'),
-  // 듀얼 하부장 (임시 비활성화)
+  // 듀얼 하부장 (이전 모듈 비활성화)
   // 'dual-lower-cabinet-basic': getImagePath('dual-lower-cabinet-basic.png'),
   // 'dual-lower-cabinet-2tier': getImagePath('dual-lower-cabinet-2tier.png'),
+  // 새 듀얼 하부장
+  'dual-lower-half-cabinet': getImagePath('dual-lower-half-cabinet.png'),
 };
 
 // 모듈 타입 정의

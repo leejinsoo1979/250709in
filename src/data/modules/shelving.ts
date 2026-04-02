@@ -895,6 +895,56 @@ const createLowerHalfCabinet = (columnWidth: number): ModuleData => {
   } as ModuleData;
 };
 
+/**
+ * 듀얼 기본하부장 반통 - 조절발 65mm + 캐비넷 W(듀얼)xD650xH785
+ * 싱글 기본하부장 반통의 듀얼 버전 (좌우 도어 2개)
+ */
+const createDualLowerHalfCabinet = (dualWidth: number, slotWidths?: number[]): ModuleData => {
+  const widthForId = Math.round(dualWidth * 100) / 100;
+  const cabinetHeight = 785; // 캐비넷 본체 높이
+
+  const base = createFurnitureBase(
+    `dual-lower-half-cabinet-${widthForId}`,
+    `듀얼 기본하부장 반통 ${widthForId}mm`,
+    dualWidth,
+    cabinetHeight,
+    650, // 깊이 650mm
+    '#fff3e0', // 연한 오렌지색 (싱글과 동일)
+    `듀얼 기본하부장 반통 W${widthForId}xH785xD650 (조절발 65mm)`,
+    650,
+    'lower'
+  );
+
+  return {
+    ...base,
+    isDynamic: true,
+    defaultDepth: 650,
+    slotWidths,
+    thumbnail: '/images/furniture-thumbnails/듀얼 하부장 반통.png',
+    modelConfig: {
+      ...base.modelConfig,
+      basicThickness: FURNITURE_SPECS.BASIC_THICKNESS,
+      hasOpenFront: false,
+      leftSections: [
+        {
+          type: 'shelf',
+          heightType: 'percentage',
+          height: 100,
+          count: 0
+        }
+      ],
+      rightSections: [
+        {
+          type: 'shelf',
+          heightType: 'percentage',
+          height: 100,
+          count: 0
+        }
+      ]
+    }
+  } as ModuleData;
+};
+
 // ============================================================================
 // 메인 생성 함수 (기존 인터페이스 유지)
 // ============================================================================
@@ -1165,9 +1215,12 @@ export const generateShelvingModules = (
     // modules.push(createDualUpperCabinet3(dualWidth));
     // modules.push(createDualUpperCabinet4(dualWidth));
 
-    // === 듀얼 하부장 가구 생성 === (임시 비활성화)
+    // === 듀얼 하부장 가구 생성 === (이전 모듈 비활성화)
     // modules.push(createDualLowerCabinet1(dualWidth));
     // modules.push(createDualLowerCabinet2(dualWidth));
+
+    // === 새 듀얼 하부장 가구 생성 ===
+    modules.push(createDualLowerHalfCabinet(dualWidth, dualSlotWidths));
   }
   
   // === 싱글 상부장 가구 생성 === (임시 비활성화)
