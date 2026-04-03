@@ -525,24 +525,37 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
     const profileVertices: [number, number][] = []; // [Y, Z] 쌍
 
     if (notches && notches.length > 0) {
-      // 다중 노치: bottom-back → bottom-front → 각 노치 → upper notch → top-back
+      // 다중 노치: bottom-back → bottom-front → 각 노치 → top-back
       profileVertices.push([-halfH, -halfD]); // bottom-back
       profileVertices.push([-halfH, halfD]);  // bottom-front
 
-      // 하단 노치들 (fromBottom 순으로 정렬)
+      // 노치들 (fromBottom 순으로 정렬)
       const sortedNotches = [...notches].sort((a, b) => a.fromBottom - b.fromBottom);
-      for (const n of sortedNotches) {
+      for (let ni = 0; ni < sortedNotches.length; ni++) {
+        const n = sortedNotches[ni];
         const notchBottom = -halfH + n.fromBottom;
-        profileVertices.push([notchBottom, halfD]);                 // 노치 하단 시작점 (앞면)
-        profileVertices.push([notchBottom, halfD - n.z]);           // 안쪽으로 꺾임
-        profileVertices.push([notchBottom + n.y, halfD - n.z]);     // 위로 올라감
-        profileVertices.push([notchBottom + n.y, halfD]);           // 다시 앞면으로
+        const notchTop = notchBottom + n.y;
+        const isUppermostNotch = Math.abs(notchTop - halfH) < 0.001; // 최상단 노치 여부
+
+        profileVertices.push([notchBottom, halfD]);             // 노치 하단 시작점 (앞면)
+        profileVertices.push([notchBottom, halfD - n.z]);       // 안쪽으로 꺾임
+        profileVertices.push([notchTop, halfD - n.z]);          // 위로 올라감
+
+        if (isUppermostNotch) {
+          // 최상단 노치: 앞면으로 돌아가지 않고 바로 뒤쪽으로
+          profileVertices.push([halfH, -halfD]); // top-back
+        } else {
+          profileVertices.push([notchTop, halfD]); // 다시 앞면으로
+        }
       }
 
-      // 상단 노치 (notch prop) — notches 사용 시 상단은 별도 처리
-      // 상단 노치가 필요하면 notches 배열 마지막이 상단이 됨
-      profileVertices.push([halfH, halfD]);    // top-front (상단 노치 없으면 직선)
-      profileVertices.push([halfH, -halfD]);   // top-back
+      // 최상단 노치가 halfH에 도달하지 않은 경우 상단 마무리
+      const lastNotch = sortedNotches[sortedNotches.length - 1];
+      const lastNotchTop = -halfH + lastNotch.fromBottom + lastNotch.y;
+      if (Math.abs(lastNotchTop - halfH) >= 0.001) {
+        profileVertices.push([halfH, halfD]);    // top-front
+        profileVertices.push([halfH, -halfD]);   // top-back
+      }
     } else if (notch) {
       // 단일 상단 노치 (기존 로직)
       const ny = notch.y, nz = notch.z;
@@ -671,16 +684,31 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
       shape.lineTo(-halfH, halfD);  // bottom-front
 
       const sortedNotches = [...notches].sort((a, b) => a.fromBottom - b.fromBottom);
-      for (const n of sortedNotches) {
+      for (let ni = 0; ni < sortedNotches.length; ni++) {
+        const n = sortedNotches[ni];
         const notchBottom = -halfH + n.fromBottom;
-        shape.lineTo(notchBottom, halfD);             // 노치 하단 (앞면)
-        shape.lineTo(notchBottom, halfD - n.z);       // 안쪽으로 꺾임
-        shape.lineTo(notchBottom + n.y, halfD - n.z); // 위로 올라감
-        shape.lineTo(notchBottom + n.y, halfD);       // 다시 앞면으로
+        const notchTop = notchBottom + n.y;
+        const isUppermostNotch = Math.abs(notchTop - halfH) < 0.001;
+
+        shape.lineTo(notchBottom, halfD);         // 노치 하단 (앞면)
+        shape.lineTo(notchBottom, halfD - n.z);   // 안쪽으로 꺾임
+        shape.lineTo(notchTop, halfD - n.z);      // 위로 올라감
+
+        if (isUppermostNotch) {
+          // 최상단 노치: 앞면으로 돌아가지 않고 바로 뒤쪽으로
+          shape.lineTo(halfH, -halfD);
+        } else {
+          shape.lineTo(notchTop, halfD);           // 다시 앞면으로
+        }
       }
 
-      shape.lineTo(halfH, halfD);   // top-front
-      shape.lineTo(halfH, -halfD);  // top-back
+      // 최상단 노치가 halfH에 도달하지 않은 경우 상단 마무리
+      const lastNotch = sortedNotches[sortedNotches.length - 1];
+      const lastNotchTop = -halfH + lastNotch.fromBottom + lastNotch.y;
+      if (Math.abs(lastNotchTop - halfH) >= 0.001) {
+        shape.lineTo(halfH, halfD);   // top-front
+        shape.lineTo(halfH, -halfD);  // top-back
+      }
     } else if (notch) {
       // 단일 상단 노치 (기존 로직)
       const ny = notch.y, nz = notch.z;
