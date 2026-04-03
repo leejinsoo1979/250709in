@@ -34,6 +34,7 @@ interface BoxWithEdgesProps {
   furnitureId?: string; // 가구 ID - 스토어에서 직접 panelGrainDirections 가져오기 위함
   renderOrder?: number; // 렌더링 순서 (천장 뒤로 보낼 때 사용)
   notch?: { y: number; z: number }; // 앞쪽 상단 모서리 따내기 (Y방향 높이, Z방향 깊이) — L자형 단일 메시
+  notches?: Array<{ y: number; z: number; fromBottom: number }>; // 다중 따내기 (fromBottom: 바닥에서 시작점, Three.js 단위)
 }
 
 /**
@@ -63,7 +64,8 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
   panelGrainDirections,
   textureUrl,
   renderOrder,
-  notch
+  notch,
+  notches
 }) => {
 
   // CNC 옵티마이저에서 체크 해제된 패널이면 렌더링 생략 (furnitureId::panelName 복합키)
@@ -509,44 +511,73 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
   }, [viewMode, view2DDirection, panelName, isHighlighted, isClothingRod, isBackPanel, edgeOpacity]);
 
 
-  // L자형 노치 엣지 라인 생성 (2D/3D 공용)
+  // 다중 노치 여부 판별 (notches가 있으면 우선 사용)
+  const hasAnyNotch = !!(notch || (notches && notches.length > 0));
+
+  // L자형 노치 엣지 라인 생성 (2D/3D 공용) — 단일 및 다중 노치 지원
   const getNotchEdgeLines = React.useCallback((): [number, number, number][][] => {
-    if (!notch) return [];
+    if (!hasAnyNotch) return [];
     const [width, height, depth] = args;
     const halfW = width / 2, halfH = height / 2, halfD = depth / 2;
-    const ny = notch.y, nz = notch.z;
     const lines: [number, number, number][][] = [];
 
-    // L자 꼭짓점 (6개) — 앞쪽(+Z) 상단(+Y) 코너 따냄
-    // v0(-halfH, +halfD), v1(halfH-ny, +halfD), v2(halfH-ny, halfD-nz)
-    // v3(halfH, halfD-nz), v4(halfH, -halfD), v5(-halfH, -halfD)
+    // 프로필 꼭짓점 계산 (YZ 평면) — 앞면 윤곽선 경로
+    const profileVertices: [number, number][] = []; // [Y, Z] 쌍
 
-    // 앞면 (x = +halfW) — L자 윤곽
-    lines.push([[-halfW, -halfH, halfD], [-halfW, halfH - ny, halfD]]);     // v5→v0 (좌측 세로)
-    lines.push([[-halfW, halfH - ny, halfD], [-halfW, halfH - ny, halfD - nz]]); // v0→v1→v2 가로(노치 바닥)
-    lines.push([[-halfW, halfH - ny, halfD - nz], [-halfW, halfH, halfD - nz]]); // v2→v3 세로(노치 벽)
-    lines.push([[-halfW, halfH, halfD - nz], [-halfW, halfH, -halfD]]);     // v3→v4 상단
-    lines.push([[-halfW, halfH, -halfD], [-halfW, -halfH, -halfD]]);        // v4→v5 뒤쪽 세로
-    lines.push([[-halfW, -halfH, -halfD], [-halfW, -halfH, halfD]]);        // v5→v0 바닥
+    if (notches && notches.length > 0) {
+      // 다중 노치: bottom-back → bottom-front → 각 노치 → upper notch → top-back
+      profileVertices.push([-halfH, -halfD]); // bottom-back
+      profileVertices.push([-halfH, halfD]);  // bottom-front
 
-    // 뒷면 (x = -halfW) — 동일 L자
-    lines.push([[halfW, -halfH, halfD], [halfW, halfH - ny, halfD]]);
-    lines.push([[halfW, halfH - ny, halfD], [halfW, halfH - ny, halfD - nz]]);
-    lines.push([[halfW, halfH - ny, halfD - nz], [halfW, halfH, halfD - nz]]);
-    lines.push([[halfW, halfH, halfD - nz], [halfW, halfH, -halfD]]);
-    lines.push([[halfW, halfH, -halfD], [halfW, -halfH, -halfD]]);
-    lines.push([[halfW, -halfH, -halfD], [halfW, -halfH, halfD]]);
+      // 하단 노치들 (fromBottom 순으로 정렬)
+      const sortedNotches = [...notches].sort((a, b) => a.fromBottom - b.fromBottom);
+      for (const n of sortedNotches) {
+        const notchBottom = -halfH + n.fromBottom;
+        profileVertices.push([notchBottom, halfD]);                 // 노치 하단 시작점 (앞면)
+        profileVertices.push([notchBottom, halfD - n.z]);           // 안쪽으로 꺾임
+        profileVertices.push([notchBottom + n.y, halfD - n.z]);     // 위로 올라감
+        profileVertices.push([notchBottom + n.y, halfD]);           // 다시 앞면으로
+      }
 
-    // 연결 엣지 (앞면↔뒷면, 6개 꼭짓점)
-    lines.push([[-halfW, -halfH, halfD], [halfW, -halfH, halfD]]);
-    lines.push([[-halfW, halfH - ny, halfD], [halfW, halfH - ny, halfD]]);
-    lines.push([[-halfW, halfH - ny, halfD - nz], [halfW, halfH - ny, halfD - nz]]);
-    lines.push([[-halfW, halfH, halfD - nz], [halfW, halfH, halfD - nz]]);
-    lines.push([[-halfW, halfH, -halfD], [halfW, halfH, -halfD]]);
-    lines.push([[-halfW, -halfH, -halfD], [halfW, -halfH, -halfD]]);
+      // 상단 노치 (notch prop) — notches 사용 시 상단은 별도 처리
+      // 상단 노치가 필요하면 notches 배열 마지막이 상단이 됨
+      profileVertices.push([halfH, halfD]);    // top-front (상단 노치 없으면 직선)
+      profileVertices.push([halfH, -halfD]);   // top-back
+    } else if (notch) {
+      // 단일 상단 노치 (기존 로직)
+      const ny = notch.y, nz = notch.z;
+      profileVertices.push([-halfH, -halfD]);           // bottom-back
+      profileVertices.push([-halfH, halfD]);             // bottom-front
+      profileVertices.push([halfH - ny, halfD]);         // notch start (front)
+      profileVertices.push([halfH - ny, halfD - nz]);    // notch corner
+      profileVertices.push([halfH, halfD - nz]);         // above notch
+      profileVertices.push([halfH, -halfD]);             // top-back
+    }
+
+    // 프로필에서 중복 연속 꼭짓점 제거
+    const verts = profileVertices.filter((v, i) =>
+      i === 0 || v[0] !== profileVertices[i-1][0] || v[1] !== profileVertices[i-1][1]
+    );
+
+    // 양쪽 면(x = ±halfW) 윤곽선
+    for (const xSign of [-1, 1]) {
+      const x = xSign * halfW;
+      for (let i = 0; i < verts.length; i++) {
+        const next = (i + 1) % verts.length;
+        lines.push([
+          [x, verts[i][0], verts[i][1]],
+          [x, verts[next][0], verts[next][1]]
+        ]);
+      }
+    }
+
+    // 연결 엣지 (앞면↔뒷면, 각 꼭짓점)
+    for (const v of verts) {
+      lines.push([[-halfW, v[0], v[1]], [halfW, v[0], v[1]]]);
+    }
 
     return lines;
-  }, [notch, args]);
+  }, [notch, notches, hasAnyNotch, args]);
 
   // 2D 모드에서 엣지 렌더링 (panelName 기반 opacity 적용)
   const render2DEdgesWithDepth = React.useCallback(() => {
@@ -556,9 +587,9 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
     const halfD = depth / 2;
 
     // notch가 있으면 L자형 엣지 사용
-    const lines: [number, number, number][][] = notch ? getNotchEdgeLines() : [];
+    const lines: [number, number, number][][] = hasAnyNotch ? getNotchEdgeLines() : [];
 
-    if (!notch) {
+    if (!hasAnyNotch) {
     // 앞면 사각형
     if (!hideTopEdge) lines.push([[-halfW, halfH, halfD], [halfW, halfH, halfD]]);
     if (!hideBottomEdge) lines.push([[-halfW, -halfH, halfD], [halfW, -halfH, halfD]]);
@@ -580,7 +611,7 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
       lines.push([[-halfW, -halfH, halfD], [-halfW, -halfH, -halfD]]);
       lines.push([[halfW, -halfH, halfD], [halfW, -halfH, -halfD]]);
     }
-    } // end if (!notch)
+    } // end if (!hasAnyNotch)
 
     const edgeName = isClothingRod
       ? 'clothing-rod-edge'
@@ -623,37 +654,47 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
         ))}
       </>
     );
-  }, [args, edgeColor, hideTopEdge, hideBottomEdge, isHighlighted, isBackPanel, isClothingRod, panelName, panelDepthOpacity, view2DTheme, notch, getNotchEdgeLines]);
+  }, [args, edgeColor, hideTopEdge, hideBottomEdge, isHighlighted, isBackPanel, isClothingRod, panelName, panelDepthOpacity, view2DTheme, hasAnyNotch, getNotchEdgeLines]);
 
-  // L자형 노치 지오메트리 (notch prop이 있을 때만 생성)
+  // 노치 지오메트리 (단일 notch 또는 다중 notches 지원)
   const notchGeometry = React.useMemo(() => {
-    if (!notch) return null;
+    if (!hasAnyNotch) return null;
     const [w, h, d] = args;
     const halfW = w / 2, halfH = h / 2, halfD = d / 2;
-    const ny = notch.y, nz = notch.z;
 
-    // L자 단면 꼭짓점 (YZ 평면, 6개) — 앞쪽 상단 코너 따냄
-    // 0: 좌하(-halfH, -halfD), 1: 우하(-halfH, +halfD)
-    // 2: 노치시작(halfH-ny, +halfD), 3: 노치꺾임(halfH-ny, halfD-nz)
-    // 4: 상단뒤(halfH, halfD-nz), 5: 좌상(halfH, -halfD)
+    // YZ 평면 Shape 생성 (shapeX=Y축, shapeY=Z축)
     const shape = new THREE.Shape();
-    shape.moveTo(-halfH, -halfD);
-    shape.lineTo(-halfH, halfD);
-    shape.lineTo(halfH - ny, halfD);
-    shape.lineTo(halfH - ny, halfD - nz);
-    shape.lineTo(halfH, halfD - nz);
-    shape.lineTo(halfH, -halfD);
+
+    if (notches && notches.length > 0) {
+      // 다중 노치 프로필
+      shape.moveTo(-halfH, -halfD); // bottom-back
+      shape.lineTo(-halfH, halfD);  // bottom-front
+
+      const sortedNotches = [...notches].sort((a, b) => a.fromBottom - b.fromBottom);
+      for (const n of sortedNotches) {
+        const notchBottom = -halfH + n.fromBottom;
+        shape.lineTo(notchBottom, halfD);             // 노치 하단 (앞면)
+        shape.lineTo(notchBottom, halfD - n.z);       // 안쪽으로 꺾임
+        shape.lineTo(notchBottom + n.y, halfD - n.z); // 위로 올라감
+        shape.lineTo(notchBottom + n.y, halfD);       // 다시 앞면으로
+      }
+
+      shape.lineTo(halfH, halfD);   // top-front
+      shape.lineTo(halfH, -halfD);  // top-back
+    } else if (notch) {
+      // 단일 상단 노치 (기존 로직)
+      const ny = notch.y, nz = notch.z;
+      shape.moveTo(-halfH, -halfD);
+      shape.lineTo(-halfH, halfD);
+      shape.lineTo(halfH - ny, halfD);
+      shape.lineTo(halfH - ny, halfD - nz);
+      shape.lineTo(halfH, halfD - nz);
+      shape.lineTo(halfH, -halfD);
+    }
     shape.closePath();
 
     const extrudeSettings = { depth: w, bevelEnabled: false };
     const geom = new THREE.ExtrudeGeometry(shape, extrudeSettings);
-
-    // ExtrudeGeometry는 XY 평면에 Shape을 그리고 Z축으로 돌출
-    // Shape에서 x=Y축, y=Z축으로 매핑했으므로, 돌출 방향=X축
-    // 결과: geom의 x→Y, y→Z, z→X(돌출)
-    // 우리가 원하는: X=두께, Y=높이, Z=깊이
-    // 변환: x축(Shape의x=Y) → Y축, y축(Shape의y=Z) → Z축, z축(돌출=X) → X축
-    // 회전: z축을 x축으로 → Y축 기준 90도 회전? 아니, 직접 vertices 재매핑
 
     // 좌표 변환: (shapeX→Y, shapeY→Z, extrudeZ→X) 그리고 중심 맞추기
     const pos = geom.attributes.position;
@@ -674,7 +715,7 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
     geom.computeVertexNormals();
 
     return geom;
-  }, [notch, args]);
+  }, [notch, notches, hasAnyNotch, args]);
 
   // 옵티마이저에서 제외된 패널이면 렌더링하지 않음
   // return null 대신 visible={false}로 처리 — R3F scene graph에서 확실히 숨김
@@ -694,7 +735,7 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
         material={effectiveRenderMode === 'wireframe' ? undefined : finalMaterial}
       >
         {notchGeometry ? (
-          <primitive key={`notch-${args[0]}-${args[1]}-${args[2]}-${notch!.y}-${notch!.z}`} object={notchGeometry} attach="geometry" />
+          <primitive key={`notch-${args[0]}-${args[1]}-${args[2]}-${JSON.stringify(notch || notches)}`} object={notchGeometry} attach="geometry" />
         ) : (
           <boxGeometry key={`${args[0]}-${args[1]}-${args[2]}`} args={args} />
         )}
@@ -710,7 +751,7 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
         }
 
         // 3D 모드: notch가 있으면 L자형 엣지
-        if (notch) {
+        if (hasAnyNotch) {
           const notchLines = getNotchEdgeLines();
           const notchEdgeName = isClothingRod
             ? 'clothing-rod-edge'

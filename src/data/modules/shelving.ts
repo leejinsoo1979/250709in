@@ -937,6 +937,50 @@ const createDualLowerHalfCabinet = (dualWidth: number, slotWidths?: number[]): M
   } as ModuleData;
 };
 
+/**
+ * 기본하부장 2단 - 조절발 65mm + 캐비넷 W500xD650xH785
+ * 전체 높이: 850mm (65 + 785)
+ * 측판에 상단+하단(330mm) 2개의 따내기 홈이 있음
+ */
+const createLowerDrawer2Tier = (columnWidth: number): ModuleData => {
+  const widthForId = Math.round(columnWidth * 100) / 100;
+  const cabinetHeight = 785; // 캐비넷 본체 높이
+
+  const base = createFurnitureBase(
+    `lower-drawer-2tier-${widthForId}`,
+    `기본하부장 2단 ${widthForId}mm`,
+    columnWidth,
+    cabinetHeight,
+    650,
+    '#e3f2fd', // 연한 파란색
+    `기본하부장 2단 W${widthForId}xH785xD650 (조절발 65mm)`,
+    650,
+    'lower'
+  );
+
+  return {
+    ...base,
+    isDynamic: true,
+    defaultDepth: 650,
+    thumbnail: '/images/furniture-thumbnails/하부장 2단.png',
+    modelConfig: {
+      ...base.modelConfig,
+      basicThickness: FURNITURE_SPECS.BASIC_THICKNESS,
+      hasOpenFront: false,
+      sections: [
+        {
+          type: 'drawer',
+          heightType: 'percentage',
+          height: 100,
+          count: 2,
+          drawerHeights: [255, 255],
+          gapHeight: FURNITURE_SPECS.DRAWER_GAP
+        }
+      ]
+    }
+  } as ModuleData;
+};
+
 // ============================================================================
 // 메인 생성 함수 (기존 인터페이스 유지)
 // ============================================================================
@@ -1230,6 +1274,7 @@ export const generateShelvingModules = (
 
   // === 새 하부장 가구 생성 ===
   modules.push(createLowerHalfCabinet(columnWidth));
+  modules.push(createLowerDrawer2Tier(columnWidth));
   
   // console.log('📊 generateShelvingModules 최종 결과:', {
   //   totalModulesCount: modules.length,
