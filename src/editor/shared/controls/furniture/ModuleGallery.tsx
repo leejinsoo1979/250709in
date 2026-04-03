@@ -52,6 +52,8 @@ const FURNITURE_ICONS: Record<string, string> = {
   // 'dual-lower-cabinet-2tier': getImagePath('dual-lower-cabinet-2tier.png'),
   // 새 듀얼 하부장 (텍스트 썸네일 — 이미지 준비 후 교체)
   'dual-lower-half-cabinet': '',
+  // 기본하부장 2단 (텍스트 썸네일)
+  'lower-drawer-2tier': '',
 };
 
 // 모듈 타입 정의

@@ -969,12 +969,10 @@ const createLowerDrawer2Tier = (columnWidth: number): ModuleData => {
       hasOpenFront: false,
       sections: [
         {
-          type: 'drawer',
+          type: 'shelf',
           heightType: 'percentage',
           height: 100,
-          count: 2,
-          drawerHeights: [255, 255],
-          gapHeight: FURNITURE_SPECS.DRAWER_GAP
+          count: 0 // 서랍 미장착 — 오픈 공간
         }
       ]
     }
