@@ -938,6 +938,49 @@ const createDualLowerHalfCabinet = (dualWidth: number, slotWidths?: number[]): M
 };
 
 /**
+ * 듀얼 기본하부장 2단 - 조절발 65mm + 캐비넷 W(듀얼)xD650xH785
+ * 기본하부장 2단의 듀얼 버전
+ * 측판에 상단+하단(330mm) 2개의 따내기 홈이 있음
+ */
+const createDualLowerDrawer2Tier = (dualWidth: number, slotWidths?: number[]): ModuleData => {
+  const widthForId = Math.round(dualWidth * 100) / 100;
+  const cabinetHeight = 785;
+
+  const base = createFurnitureBase(
+    `dual-lower-drawer-2tier-${widthForId}`,
+    `듀얼 기본하부장 2단 ${widthForId}mm`,
+    dualWidth,
+    cabinetHeight,
+    650,
+    '#e3f2fd',
+    `듀얼 기본하부장 2단 W${widthForId}xH785xD650 (조절발 65mm)`,
+    650,
+    'lower'
+  );
+
+  return {
+    ...base,
+    isDynamic: true,
+    defaultDepth: 650,
+    slotWidths,
+    thumbnail: '',
+    modelConfig: {
+      ...base.modelConfig,
+      basicThickness: FURNITURE_SPECS.BASIC_THICKNESS,
+      hasOpenFront: false,
+      sections: [
+        {
+          type: 'shelf',
+          heightType: 'percentage',
+          height: 100,
+          count: 0
+        }
+      ]
+    }
+  } as ModuleData;
+};
+
+/**
  * 기본하부장 2단 - 조절발 65mm + 캐비넷 W500xD650xH785
  * 전체 높이: 850mm (65 + 785)
  * 측판에 상단+하단(330mm) 2개의 따내기 홈이 있음
@@ -1255,6 +1298,7 @@ export const generateShelvingModules = (
 
     // === 새 듀얼 하부장 가구 생성 ===
     modules.push(createDualLowerHalfCabinet(dualWidth, dualSlotWidths));
+    modules.push(createDualLowerDrawer2Tier(dualWidth, dualSlotWidths));
   }
   
   // === 싱글 상부장 가구 생성 === (임시 비활성화)
