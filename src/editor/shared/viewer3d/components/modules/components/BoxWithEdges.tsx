@@ -164,8 +164,8 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
       const ghostMaterial = new THREE.MeshBasicMaterial({
         color: new THREE.Color(themeColor),
         transparent: true,
-        opacity: 0.45,
-        depthWrite: true,
+        opacity: 0.05,
+        depthWrite: false,
         depthTest: true,
         side: THREE.DoubleSide,
         toneMapped: false,
