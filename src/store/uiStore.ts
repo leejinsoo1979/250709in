@@ -338,7 +338,7 @@ const initialUIState = {
   cameraMode: 'perspective' as const,  // 기본값: 원근 투영
   cameraFov: 50,  // 기본값: FOV 50도
   cameraZoom: 1,  // 기본값: 줌 배율 1
-  shadowEnabled: true,  // 기본값: 그림자 활성화
+  shadowEnabled: false,  // 기본값: 그림자 비활성화
   sunAngle: 45,  // 기본값: 태양 각도 45도 (우측 앞쪽)
   edgeOutlineEnabled: true,  // 기본값: 윤곽선 활성화
   showBorings: false,  // 기본값: 보링 시각화 비활성화
