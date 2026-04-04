@@ -275,31 +275,32 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
         const vertY = cabinetBottomY + mmToThreeUnits(notch.fromBottom) + baseFurniture.basicThickness + mmToThreeUnits(verticalHMm) / 2;
         const vertZ = baseFurniture.depth / 2 - mmToThreeUnits(40) + baseFurniture.basicThickness / 2;
 
-        // 도어 재질 생성 (L프레임은 도어 재질)
-        const doorMat = new THREE.MeshStandardMaterial({
-          color: new THREE.Color(baseFurniture.doorColor || '#E0E0E0'),
-          metalness: 0.0,
-          roughness: 0.6,
-        });
+        // 도어 재질 사용 (L프레임은 도어 재질 — PET 텍스처 포함)
+        const doorTextureUrl = spaceInfo?.materialConfig?.doorTexture;
+        const bodyTextureUrl = spaceInfo?.materialConfig?.texture;
 
         return (
           <group position={[0, 0, 0]}>
             <BoxWithEdges
               args={[frameWidth, baseFurniture.basicThickness, mmToThreeUnits(40)]}
               position={[0, horzY, horzZ]}
-              material={doorMat}
+              material={baseFurniture.material}
               renderMode={renderMode}
               isHighlighted={false}
               panelName="L프레임수평(1)"
+              textureUrl={doorTextureUrl || bodyTextureUrl}
+              panelGrainDirections={panelGrainDirections}
               furnitureId={placedFurnitureId}
             />
             <BoxWithEdges
               args={[frameWidth, mmToThreeUnits(verticalHMm), baseFurniture.basicThickness]}
               position={[0, vertY, vertZ]}
-              material={doorMat}
+              material={baseFurniture.material}
               renderMode={renderMode}
               isHighlighted={false}
               panelName="L프레임수직(1)"
+              textureUrl={doorTextureUrl || bodyTextureUrl}
+              panelGrainDirections={panelGrainDirections}
               furnitureId={placedFurnitureId}
             />
           </group>
