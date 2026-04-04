@@ -253,7 +253,7 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
               notchFromBottoms={notchFromBottoms}
               notchHeights={notchHeights}
               isEditMode={isEditMode}
-              hideTopNotch={isDoorLift2Tier || isDoorLift3Tier}
+              hideTopNotch={isDoorLift2Tier || isDoorLift3Tier || isTopDown2Tier || isTopDown3Tier}
               maidaHeightsMm={isDoorLift2Tier ? [400, 400] : isDoorLift3Tier ? [360, 210, 210] : undefined}
               sideHeightOverrides={isTopDown2Tier ? { all: 240 } : isTopDown3Tier ? { first: 180, rest: 130 } : undefined}
             />
