@@ -91,11 +91,11 @@ export const ExternalDrawerRenderer: React.FC<ExternalDrawerRendererProps> = ({
   const leftSideX = -innerWidth / 2 + SIDE_GAP + EXT_SIDE_T / 2;
   const rightSideX = innerWidth / 2 - SIDE_GAP - EXT_SIDE_T / 2;
 
-  // 좌우측판 Z 위치: 캐비넷 측판과 동일 (뒷면 정렬)
-  // 캐비넷 측판 뒷면 = -depth/2 + basicThickness
-  // 외부서랍 측판 뒷면도 동일 → Z중심 = 뒷면 + EXT_SIDE_D/2
-  const sideBackEdge = -depth / 2 + basicThickness;
-  const sideCenterZ = sideBackEdge + EXT_SIDE_D / 2;
+  // 좌우측판 Z 위치: 캐비넷 측판과 동일 (앞면 정렬)
+  // 캐비넷 측판 앞면 = depth/2
+  // 외부서랍 측판 앞면도 동일 → Z중심 = 앞면 - EXT_SIDE_D/2
+  const sideFrontEdge = depth / 2;
+  const sideCenterZ = sideFrontEdge - EXT_SIDE_D / 2;
 
   // 서랍 본체 깊이 = 측판 깊이 (453mm)와 동일
   const drawerBodyDepth = EXT_SIDE_D;
@@ -169,15 +169,15 @@ export const ExternalDrawerRenderer: React.FC<ExternalDrawerRendererProps> = ({
         const cX = 0;
         const cY = drawerCenterY;
 
-        // 바닥판: 깊이 = 측판과 동일(453mm)에서 앞쪽 10mm 홈 여유
+        // 바닥판: 측판 하단에서 15mm 위, 깊이 = 측판과 동일(453mm)에서 앞쪽 10mm 홈 여유
         const bottomThk = backPanelThickness;
         const bottomDepth = drawerBodyDepth - mmToThreeUnits(10);
         const bottomZPos = drawerBodyCenterZ - mmToThreeUnits(5);
-        const bottomY = cY - drawerHeight / 2 + basicThickness + mmToThreeUnits(10) + bottomThk / 2;
+        const bottomY = sideBottomY + mmToThreeUnits(15) + bottomThk / 2;
         const bottomWidth = drawerInnerWidth; // 좌우측판 안쪽면 사이
 
-        // 뒷판
-        const bottomTopY = cY - drawerHeight / 2 + basicThickness + mmToThreeUnits(10) + backPanelThickness;
+        // 뒷판: 바닥판 윗면에 올라탐
+        const bottomTopY = bottomY + bottomThk / 2;
         const origBackTop = cY + (drawerHeight - mmToThreeUnits(30)) / 2;
         const backHeight = origBackTop - bottomTopY;
         const backY = (origBackTop + bottomTopY) / 2;
