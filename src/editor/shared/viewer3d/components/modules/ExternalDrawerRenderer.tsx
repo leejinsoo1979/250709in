@@ -93,10 +93,10 @@ const SingleDrawer: React.FC<SingleDrawerProps> = ({
 
   const drawerBottomY = cabinetBottomY + mmToThreeUnits(zone.bottomMm);
 
-  // 측판 높이: 3단서랍장=1단 250mm/2단이상 130mm, 2단서랍장=모든 단 240mm
+  // 측판 높이: 3단서랍장=1단 250mm/2단이상 130mm, 2단서랍장=모든 단 250mm
   const sideHeightMm = drawerCount >= 3
     ? (index === 0 ? 250 : 130)
-    : 240;
+    : 250;
   const sideHeight = mmToThreeUnits(sideHeightMm);
 
   const bottomPanelTopY = cabinetBottomY + basicThickness;
