@@ -62,6 +62,10 @@ function getDefaultGrain(panelName: string): 'NONE' | 'HORIZONTAL' | 'VERTICAL' 
   // 커튼박스 L자 프레임 - 세로 방향
   if (panelName.includes('커튼박스')) return 'VERTICAL';
 
+  // 하부 서랍장 L자 PET 프레임
+  if (panelName.includes('L프레임수평')) return 'HORIZONTAL';
+  if (panelName.includes('L프레임수직')) return 'VERTICAL';
+
   // 가구 구조 패널 - 세로 방향
   if (panelName.includes('좌측') || panelName.includes('우측') || panelName.includes('측판')) return 'VERTICAL';
   if (panelName.includes('칸막이')) return 'VERTICAL';
