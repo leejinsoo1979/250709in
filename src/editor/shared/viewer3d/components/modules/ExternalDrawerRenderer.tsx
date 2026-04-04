@@ -397,6 +397,53 @@ export const ExternalDrawerRenderer: React.FC<ExternalDrawerRendererProps> = ({
           mmToThreeUnits={mmToThreeUnits}
         />
       ))}
+
+      {/* L자 PET 프레임 — 따내기 위치에 고정 (서랍 오픈과 무관) */}
+      {allNotches.map((notch, ni) => {
+        const verticalHMm = notch.height - basicThicknessMm;
+        if (verticalHMm <= 0) return null;
+        const moduleWidthThree = mmToThreeUnits(moduleWidth);
+
+        // 수평판: 따내기 바닥에 위치, 깊이 40mm
+        const horzY = cabinetBottomY + mmToThreeUnits(notch.fromBottom) + basicThickness / 2;
+        const horzZ = depth / 2 - mmToThreeUnits(40) / 2;
+        const horzArgs: [number, number, number] = [moduleWidthThree, basicThickness, mmToThreeUnits(40)];
+
+        // 수직판: 수평판 위에, 따내기 앞면(도어면)에 붙음
+        const vertY = cabinetBottomY + mmToThreeUnits(notch.fromBottom) + basicThickness + mmToThreeUnits(verticalHMm) / 2;
+        const vertZ = depth / 2 - basicThickness / 2;
+        const vertArgs: [number, number, number] = [moduleWidthThree, mmToThreeUnits(verticalHMm), basicThickness];
+
+        const horzName = sectionName ? `${sectionName}L프레임수평(${ni + 1})` : `L프레임수평(${ni + 1})`;
+        const vertName = sectionName ? `${sectionName}L프레임수직(${ni + 1})` : `L프레임수직(${ni + 1})`;
+
+        return (
+          <group key={`l-frame-${ni}`}>
+            <BoxWithEdges
+              args={horzArgs}
+              position={[0, horzY, horzZ]}
+              material={material}
+              renderMode={renderMode}
+              isHighlighted={isHighlighted}
+              panelName={horzName}
+              textureUrl={doorTextureUrl || textureUrl}
+              panelGrainDirections={panelGrainDirections}
+              furnitureId={furnitureId}
+            />
+            <BoxWithEdges
+              args={vertArgs}
+              position={[0, vertY, vertZ]}
+              material={material}
+              renderMode={renderMode}
+              isHighlighted={isHighlighted}
+              panelName={vertName}
+              textureUrl={doorTextureUrl || textureUrl}
+              panelGrainDirections={panelGrainDirections}
+              furnitureId={furnitureId}
+            />
+          </group>
+        );
+      })}
     </group>
   );
 };
