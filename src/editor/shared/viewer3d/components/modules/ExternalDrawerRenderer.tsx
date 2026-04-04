@@ -274,8 +274,8 @@ export const ExternalDrawerRenderer: React.FC<ExternalDrawerRendererProps> = ({
     ? doorsOpen
     : furnitureId ? isIndividualDoorOpen(furnitureId, 0) : false;
   const shouldOpenDrawers = useMemo(
-    () => isDoorOpen || (isEditMode && viewMode !== '2D'),
-    [isDoorOpen, isEditMode, viewMode]
+    () => isDoorOpen,
+    [isDoorOpen]
   );
 
   // 애니메이션 중 렌더링 갱신
