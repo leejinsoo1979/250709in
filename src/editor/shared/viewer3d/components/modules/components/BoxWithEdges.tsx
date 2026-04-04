@@ -632,6 +632,18 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
       return '#' + bg.getHexString();
     })();
 
+    // 측면뷰에서 전대/보강대 단면 대각선 (X자) 표시
+    const isCrossSection = panelName && (panelName.includes('전대') || panelName.includes('보강대'));
+    const isSideView = view2DDirection === 'left' || view2DDirection === 'right';
+    const crossLines: [number, number, number][][] = [];
+    if (isCrossSection && isSideView) {
+      // 측면뷰: Y-Z 평면 단면에 대각선 2개 (X자)
+      crossLines.push(
+        [[0, -halfH, -halfD], [0, halfH, halfD]],  // ↗ 대각선
+        [[0, halfH, -halfD], [0, -halfH, halfD]]   // ↘ 대각선
+      );
+    }
+
     return (
       <>
         {lines.map((line, i) => (
@@ -654,9 +666,29 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
             />
           </line>
         ))}
+        {crossLines.map((line, i) => (
+          <line key={`cross-${i}-${args[0]}-${args[1]}-${args[2]}`} name={`${edgeName}-cross-${i}`}>
+            <bufferGeometry>
+              <bufferAttribute
+                attach="attributes-position"
+                count={2}
+                array={new Float32Array([...line[0], ...line[1]])}
+                itemSize={3}
+              />
+            </bufferGeometry>
+            <lineBasicMaterial
+              color={blendedColor}
+              transparent={true}
+              opacity={panelDepthOpacity}
+              depthTest={false}
+              depthWrite={false}
+              linewidth={1}
+            />
+          </line>
+        ))}
       </>
     );
-  }, [args, edgeColor, hideTopEdge, hideBottomEdge, isHighlighted, isBackPanel, isClothingRod, panelName, panelDepthOpacity, view2DTheme, hasAnyNotch, getNotchEdgeLines]);
+  }, [args, edgeColor, hideTopEdge, hideBottomEdge, isHighlighted, isBackPanel, isClothingRod, panelName, panelDepthOpacity, view2DTheme, view2DDirection, hasAnyNotch, getNotchEdgeLines]);
 
   // 노치 지오메트리 (단일 notch 또는 다중 notches 지원)
   const notchGeometry = React.useMemo(() => {
