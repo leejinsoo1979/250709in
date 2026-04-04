@@ -416,11 +416,13 @@
   top: var(--configurator-top-offset, 88px); /* 헤더 + 탭 바 높이 */
   bottom: 0;
   width: var(--sidebar-content-width, 240px); /* CSS 변수 사용 - clamp()가 min/max 역할 */
+  max-width: var(--sidebar-content-width, 240px);
   background: var(--theme-surface, white);
   border-right: 1px solid var(--theme-border);
   box-shadow: none;
   z-index: 10;
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: hidden;
   display: flex;
   flex-direction: column;
   transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
