@@ -750,7 +750,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
 
   // 싱글 상하부장 디버깅
   const isUpperCabinet = placedModule.moduleId.includes('upper-cabinet');
-  const isLowerCabinet = placedModule.moduleId.includes('lower-cabinet') || placedModule.moduleId.includes('lower-half-cabinet') || (moduleData?.category === 'lower');
+  const isLowerCabinet = placedModule.moduleId.includes('lower-');
   const isDualCabinet = placedModule.moduleId.includes('dual-');
 
   if ((isUpperCabinet || isLowerCabinet) && !isDualCabinet) {
