@@ -57,6 +57,11 @@ const FURNITURE_ICONS: Record<string, string> = {
   'dual-lower-drawer-2tier': '',
   'lower-drawer-3tier': '',
   'dual-lower-drawer-3tier': '',
+  // 도어올림 하부장 (텍스트 썸네일)
+  'lower-door-lift-half': '',
+  'dual-lower-door-lift-half': '',
+  'lower-door-lift-2tier': '',
+  'lower-door-lift-3tier': '',
 };
 
 // 모듈 타입 정의
