@@ -128,11 +128,15 @@ export const useFurnitureKeyboard = ({
         switch (e.key) {
           case 'Delete':
           case 'Backspace':
-            // 팝업 모드에서는 삭제 비활성화 (편집 모드에서만 허용)
-            if (editMode && editingModuleId) {
+            // 편집 모드 또는 팝업 모드에서 삭제 허용
+            if (targetModuleId) {
               removeModule(targetModuleId);
               setEditMode(false);
               setEditingModuleId(null);
+              // 팝업도 닫기
+              if (activePopup.type === 'furnitureEdit') {
+                useUIStore.getState().closeAllPopups();
+              }
             }
             e.preventDefault();
             break;
