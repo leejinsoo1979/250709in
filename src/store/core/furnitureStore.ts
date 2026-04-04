@@ -134,12 +134,16 @@ const autoSetAdjacentFullEP = (newModule: PlacedModule) => {
     if (leftModule) {
       const leftData = getModuleById(leftModule.moduleId, internalSpace, spaceInfo);
       if (leftData?.category === 'full') {
-        const fullDepth = leftModule.customDepth || leftData.dimensions.depth;
-        const depthDiff = newDepth - fullDepth;
-        const offset = Math.round(depthDiff / 2);
         const updates: Partial<PlacedModule> = {};
-        if (!leftModule.hasRightEndPanel) updates.hasRightEndPanel = true;
-        if (depthDiff !== 0) updates.rightEndPanelOffset = offset;
+        if (leftModule.hasRightEndPanel) {
+          // 이미 수동으로 EP가 설치된 경우 → 깊이 차이만큼 뒤로 옵셋
+          const fullDepth = leftModule.customDepth || leftData.dimensions.depth;
+          const depthDiff = newDepth - fullDepth;
+          if (depthDiff !== 0) updates.rightEndPanelOffset = -Math.round(depthDiff / 2);
+        } else {
+          // EP 없으면 자동 체크만 (옵셋 없음)
+          updates.hasRightEndPanel = true;
+        }
         if (Object.keys(updates).length > 0) {
           useFurnitureStore.getState().updatePlacedModule(leftModule.id, updates);
         }
@@ -152,12 +156,16 @@ const autoSetAdjacentFullEP = (newModule: PlacedModule) => {
     if (rightModule) {
       const rightData = getModuleById(rightModule.moduleId, internalSpace, spaceInfo);
       if (rightData?.category === 'full') {
-        const fullDepth = rightModule.customDepth || rightData.dimensions.depth;
-        const depthDiff = newDepth - fullDepth;
-        const offset = Math.round(depthDiff / 2);
         const updates: Partial<PlacedModule> = {};
-        if (!rightModule.hasLeftEndPanel) updates.hasLeftEndPanel = true;
-        if (depthDiff !== 0) updates.leftEndPanelOffset = offset;
+        if (rightModule.hasLeftEndPanel) {
+          // 이미 수동으로 EP가 설치된 경우 → 깊이 차이만큼 뒤로 옵셋
+          const fullDepth = rightModule.customDepth || rightData.dimensions.depth;
+          const depthDiff = newDepth - fullDepth;
+          if (depthDiff !== 0) updates.leftEndPanelOffset = -Math.round(depthDiff / 2);
+        } else {
+          // EP 없으면 자동 체크만 (옵셋 없음)
+          updates.hasLeftEndPanel = true;
+        }
         if (Object.keys(updates).length > 0) {
           useFurnitureStore.getState().updatePlacedModule(rightModule.id, updates);
         }
