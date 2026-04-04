@@ -812,6 +812,7 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
             </div>
           )}
         </div>
+        <div className={styles.thumbnailName}>{module.name.replace(/\s*[\d.]+mm$/, '')}</div>
         {!isValid && <div className={styles.disabledOverlay} />}
       </div>
 
