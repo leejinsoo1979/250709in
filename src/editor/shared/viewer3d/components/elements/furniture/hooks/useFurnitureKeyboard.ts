@@ -130,7 +130,13 @@ export const useFurnitureKeyboard = ({
           case 'Backspace':
             // 편집 모드 또는 팝업 모드에서 삭제 허용
             if (targetModuleId) {
-              removeModule(targetModuleId);
+              // 같은 슬롯의 upper+lower 한번에 삭제
+              const sameSlotModules = placedModules.filter(m =>
+                m.slotIndex === editingModule.slotIndex &&
+                m.zone === editingModule.zone &&
+                !m.isFreePlacement
+              );
+              sameSlotModules.forEach(m => removeModule(m.id));
               setEditMode(false);
               setEditingModuleId(null);
               // 팝업도 닫기
@@ -449,11 +455,17 @@ export const useFurnitureKeyboard = ({
           
           switch (e.key) {
             case 'Delete':
-            case 'Backspace':
-              // 선택된 가구가 있으면 삭제
-              removeModule(selectedPlacedModuleId);
+            case 'Backspace': {
+              // 같은 슬롯의 upper+lower 한번에 삭제
+              const sameSlotModules = placedModules.filter(m =>
+                m.slotIndex === selectedModule.slotIndex &&
+                m.zone === selectedModule.zone &&
+                !m.isFreePlacement
+              );
+              sameSlotModules.forEach(m => removeModule(m.id));
               e.preventDefault();
               break;
+            }
               
             case 'ArrowLeft': {
               // 스마트 건너뛰기: 왼쪽으로 다음 사용 가능한 슬롯 찾기
