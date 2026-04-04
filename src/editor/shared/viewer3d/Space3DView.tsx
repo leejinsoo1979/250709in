@@ -60,7 +60,7 @@ const SunLight: React.FC<{ sunAngle: number; castShadow: boolean }> = ({ sunAngl
   useFrame(() => {
     if (!lightRef.current) return;
     // lerp로 부드러운 보간 (현재 → 목표)
-    currentAngle.current += (sunAngle - currentAngle.current) * 0.12;
+    currentAngle.current += (sunAngle - currentAngle.current) * 0.35;
     const rad = (currentAngle.current * Math.PI) / 180;
     lightRef.current.position.set(
       Math.sin(rad) * 22,
