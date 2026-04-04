@@ -8,6 +8,7 @@ import { useUIStore } from '@/store/uiStore';
 import DoorModule from '../DoorModule';
 import BoxWithEdges from '../components/BoxWithEdges';
 import { AdjustableFootsRenderer } from '../components/AdjustableFootsRenderer';
+import { ExternalDrawerRenderer } from '../ExternalDrawerRenderer';
 
 /**
  * 하부장 컴포넌트
@@ -201,6 +202,39 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
         </>
       )}
       
+      {/* 외부서랍 렌더링 (하부 서랍장 전용) */}
+      {showFurniture && moduleData.id.includes('lower-drawer-') && (() => {
+        const is3Tier = moduleData.id.includes('lower-drawer-3tier');
+        // 2단: 상단 서랍 354mm + 하단 서랍 330mm (notch fromBottom=330 기준)
+        // 3단: 상단 204mm + 중단 150mm + 하단 295mm (notch fromBottom=295, 510 기준)
+        const drawerHeights = is3Tier
+          ? [295, 150, 204]  // 바닥에서 위로: 하단, 중단, 상단
+          : [330, 354];       // 바닥에서 위로: 하단, 상단
+        const drawerCount = is3Tier ? 3 : 2;
+
+        return (
+          <group position={[0, cabinetYPosition, 0]}>
+            <ExternalDrawerRenderer
+              drawerCount={drawerCount}
+              moduleWidth={adjustedWidth || moduleData.dimensions.width}
+              innerWidth={baseFurniture.innerWidth}
+              innerHeight={adjustedHeight - baseFurniture.basicThickness * 2}
+              depth={baseFurniture.depth}
+              basicThickness={baseFurniture.basicThickness}
+              moduleDepthMm={baseFurniture.actualDepthMm}
+              drawerHeights={drawerHeights}
+              material={baseFurniture.material}
+              renderMode={renderMode}
+              isHighlighted={false}
+              textureUrl={spaceInfo?.materialConfig?.texture}
+              doorTextureUrl={spaceInfo?.materialConfig?.doorTexture}
+              panelGrainDirections={panelGrainDirections}
+              furnitureId={placedFurnitureId}
+            />
+          </group>
+        );
+      })()}
+
       {/* 도어는 showFurniture와 관계없이 hasDoor가 true이면 항상 렌더링 (도어만 보기 위해) */}
       {/* 단, 서랍장(lower-drawer-*)은 도어가 아닌 서랍이 달리므로 도어 렌더링 차단 */}
       {hasDoor && spaceInfo && !moduleData.id.includes('lower-drawer-') && (
