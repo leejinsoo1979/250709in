@@ -203,7 +203,7 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
       )}
       
       {/* 외부서랍 렌더링 (하부 서랍장 전용) */}
-      {showFurniture && hasDoor && moduleData.id.includes('lower-drawer-') && (() => {
+      {showFurniture && moduleData.id.includes('lower-drawer-') && (() => {
         const is3Tier = moduleData.id.includes('lower-drawer-3tier');
         // 2단: 상단 서랍 354mm + 하단 서랍 330mm (notch fromBottom=330 기준)
         // 3단: 상단 204mm + 중단 150mm + 하단 295mm (notch fromBottom=295, 510 기준)
@@ -230,6 +230,7 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
               doorTextureUrl={spaceInfo?.materialConfig?.doorTexture}
               panelGrainDirections={panelGrainDirections}
               furnitureId={placedFurnitureId}
+              showMaida={hasDoor}
             />
           </group>
         );

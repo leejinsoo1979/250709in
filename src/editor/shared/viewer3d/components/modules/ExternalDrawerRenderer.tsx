@@ -35,6 +35,7 @@ interface ExternalDrawerRendererProps {
   furnitureId?: string;
   sectionName?: string;
   backPanelThicknessOverride?: number;
+  showMaida?: boolean;        // 마이다(도어면) 표시 여부 (hasDoor 연동)
 }
 
 export const ExternalDrawerRenderer: React.FC<ExternalDrawerRendererProps> = ({
@@ -58,6 +59,7 @@ export const ExternalDrawerRenderer: React.FC<ExternalDrawerRendererProps> = ({
   furnitureId,
   sectionName = '',
   backPanelThicknessOverride,
+  showMaida = true,
 }) => {
   const { viewMode } = useSpace3DView();
   const highlightedPanel = useUIStore(state => state.highlightedPanel);
@@ -195,7 +197,7 @@ export const ExternalDrawerRenderer: React.FC<ExternalDrawerRendererProps> = ({
             })()}
 
             {/* 마이다 (도어 재질, 도어 Z 위치) - 앞판 없이 마이다가 곧 도어면 */}
-            {(() => {
+            {showMaida && (() => {
               const panelName = sectionName ? `${sectionName}서랍${i + 1}(마이다)` : `서랍${i + 1}(마이다)`;
               const mat = doorMaterial || getPanelMaterial(panelName);
               const maidaHeight = drawerHeight - mmToThreeUnits(3); // 상하 갭
