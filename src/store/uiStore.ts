@@ -869,7 +869,6 @@ export const useUIStore = create<UIState>()(
       partialize: (state) => ({
         viewMode: state.viewMode,
         view2DDirection: state.view2DDirection,
-        shadowEnabled: state.shadowEnabled,
         sunAngle: state.sunAngle,
         edgeOutlineEnabled: state.edgeOutlineEnabled,
         dashboardLayout: state.dashboardLayout,
