@@ -750,7 +750,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
 
   // 싱글 상하부장 디버깅
   const isUpperCabinet = placedModule.moduleId.includes('upper-cabinet');
-  const isLowerCabinet = placedModule.moduleId.includes('lower-cabinet');
+  const isLowerCabinet = placedModule.moduleId.includes('lower-cabinet') || placedModule.moduleId.includes('lower-half-cabinet') || (moduleData?.category === 'lower');
   const isDualCabinet = placedModule.moduleId.includes('dual-');
 
   if ((isUpperCabinet || isLowerCabinet) && !isDualCabinet) {
@@ -3037,7 +3037,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                         if (e.key === 'ArrowUp') { const v = (placedModule.surroundOffsetLeft ?? 0) + 1; updatePlacedModule(placedModule.id, { surroundOffsetLeft: v }); }
                         if (e.key === 'ArrowDown') { const v = (placedModule.surroundOffsetLeft ?? 0) - 1; updatePlacedModule(placedModule.id, { surroundOffsetLeft: v }); }
                       }}
-                      style={{ width: '50px', padding: '4px 6px', borderRadius: '4px', border: '1px solid #d1d5db', fontSize: '13px', textAlign: 'center', outline: 'none', color: '#000' }}
+                      style={{ width: '50px', padding: '4px 6px', borderRadius: '4px', border: '1px solid #d1d5db', fontSize: '13px', textAlign: 'center', outline: 'none', color: '#000', background: '#fff' }}
                     />
                     <span style={{ fontSize: '11px', color: '#9ca3af' }}>mm</span>
                   </div>
@@ -3057,7 +3057,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                         if (e.key === 'ArrowUp') { const v = (placedModule.surroundOffsetRight ?? 0) + 1; updatePlacedModule(placedModule.id, { surroundOffsetRight: v }); }
                         if (e.key === 'ArrowDown') { const v = (placedModule.surroundOffsetRight ?? 0) - 1; updatePlacedModule(placedModule.id, { surroundOffsetRight: v }); }
                       }}
-                      style={{ width: '50px', padding: '4px 6px', borderRadius: '4px', border: '1px solid #d1d5db', fontSize: '13px', textAlign: 'center', outline: 'none', color: '#000' }}
+                      style={{ width: '50px', padding: '4px 6px', borderRadius: '4px', border: '1px solid #d1d5db', fontSize: '13px', textAlign: 'center', outline: 'none', color: '#000', background: '#fff' }}
                     />
                     <span style={{ fontSize: '11px', color: '#9ca3af' }}>mm</span>
                   </div>
@@ -3081,7 +3081,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                         if (e.key === 'ArrowUp') { const v = (placedModule.surroundOffsetTop ?? 0) + 1; updatePlacedModule(placedModule.id, { surroundOffsetTop: v }); }
                         if (e.key === 'ArrowDown') { const v = (placedModule.surroundOffsetTop ?? 0) - 1; updatePlacedModule(placedModule.id, { surroundOffsetTop: v }); }
                       }}
-                      style={{ width: '50px', padding: '4px 6px', borderRadius: '4px', border: '1px solid #d1d5db', fontSize: '13px', textAlign: 'center', outline: 'none', color: '#000' }}
+                      style={{ width: '50px', padding: '4px 6px', borderRadius: '4px', border: '1px solid #d1d5db', fontSize: '13px', textAlign: 'center', outline: 'none', color: '#000', background: '#fff' }}
                     />
                     <span style={{ fontSize: '11px', color: '#9ca3af' }}>mm</span>
                   </div>
@@ -3101,7 +3101,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                         if (e.key === 'ArrowUp') { const v = (placedModule.surroundOffsetBottom ?? 0) + 1; updatePlacedModule(placedModule.id, { surroundOffsetBottom: v }); }
                         if (e.key === 'ArrowDown') { const v = (placedModule.surroundOffsetBottom ?? 0) - 1; updatePlacedModule(placedModule.id, { surroundOffsetBottom: v }); }
                       }}
-                      style={{ width: '50px', padding: '4px 6px', borderRadius: '4px', border: '1px solid #d1d5db', fontSize: '13px', textAlign: 'center', outline: 'none', color: '#000' }}
+                      style={{ width: '50px', padding: '4px 6px', borderRadius: '4px', border: '1px solid #d1d5db', fontSize: '13px', textAlign: 'center', outline: 'none', color: '#000', background: '#fff' }}
                     />
                     <span style={{ fontSize: '11px', color: '#9ca3af' }}>mm</span>
                   </div>
@@ -3124,7 +3124,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                       if (e.key === 'ArrowUp') { const v = (placedModule.surroundOffsetDepth ?? 0) + 1; updatePlacedModule(placedModule.id, { surroundOffsetDepth: v }); }
                       if (e.key === 'ArrowDown') { const v = (placedModule.surroundOffsetDepth ?? 0) - 1; updatePlacedModule(placedModule.id, { surroundOffsetDepth: v }); }
                     }}
-                    style={{ width: '50px', padding: '4px 6px', borderRadius: '4px', border: '1px solid #d1d5db', fontSize: '13px', textAlign: 'center', outline: 'none', color: '#000' }}
+                    style={{ width: '50px', padding: '4px 6px', borderRadius: '4px', border: '1px solid #d1d5db', fontSize: '13px', textAlign: 'center', outline: 'none', color: '#000', background: '#fff' }}
                   />
                   <span style={{ fontSize: '11px', color: '#9ca3af' }}>mm</span>
                 </div>
@@ -3949,7 +3949,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       )}
 
       {/* 도어 옵션 플로팅 패널 */}
-      {showDoorOptions && placedModule.isFreePlacement && placedModule.hasDoor && viewMode !== '2D' && (
+      {showDoorOptions && placedModule.isFreePlacement && placedModule.hasDoor && !isLowerCabinet && viewMode !== '2D' && (
         <Html
           position={[
             adjustedPosition.x + width / 2 + 1.5,
@@ -4020,7 +4020,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                     style={{
                       width: '50px', padding: '4px 6px', borderRadius: '4px',
                       border: '1px solid #d1d5db', fontSize: '13px', textAlign: 'center',
-                      outline: 'none', color: '#000',
+                      outline: 'none', color: '#000', background: '#fff',
                     }}
                   />
                   <span style={{ fontSize: '11px', color: '#9ca3af' }}>mm</span>
@@ -4051,7 +4051,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                     style={{
                       width: '50px', padding: '4px 6px', borderRadius: '4px',
                       border: '1px solid #d1d5db', fontSize: '13px', textAlign: 'center',
-                      outline: 'none', color: '#000',
+                      outline: 'none', color: '#000', background: '#fff',
                     }}
                   />
                   <span style={{ fontSize: '11px', color: '#9ca3af' }}>mm</span>
