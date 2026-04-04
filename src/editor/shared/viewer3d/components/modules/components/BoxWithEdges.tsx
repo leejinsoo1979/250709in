@@ -173,8 +173,9 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
       return ghostMaterial;
     }
 
-    // 2D 솔리드 모드에서 캐비넷을 투명하게 처리 (드래그/편집 중이 아닐 때만)
-    if (viewMode === '2D' && effectiveRenderMode === 'solid' && baseMaterial instanceof THREE.MeshStandardMaterial) {
+    // 2D 솔리드 모드에서 캐비넷을 투명하게 처리 (편집/드래그 중이 아닐 때만)
+    // 편집 중일 때는 원래 재질 유지 (치수 확인용)
+    if (viewMode === '2D' && effectiveRenderMode === 'solid' && !effectiveEditMode && !isDragging && baseMaterial instanceof THREE.MeshStandardMaterial) {
       // 도어: DoorModule에서 이미 material 설정 완료 → 그대로 사용
       const isDoor = panelName && (panelName.includes('도어') || panelName.includes('door'));
       if (isDoor) {
