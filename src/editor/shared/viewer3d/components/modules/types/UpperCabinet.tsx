@@ -159,11 +159,11 @@ const UpperCabinet: React.FC<FurnitureTypeProps> = ({
             <FinishingPanelWithTexture
               width={baseFurniture.width}
               height={0.18}
-              depth={baseFurniture.depth - 0.4} // 깊이 40mm 줄임
+              depth={baseFurniture.depth - 0.35} // 깊이 35mm 줄임
               position={[
                 0,
                 -(baseFurniture.height / 2) - 0.09, // 하단에 위치 (18mm의 절반만큼 아래로)
-                0.2 // z축 앞으로 20mm 이동
+                0.175 // z축 앞으로 17.5mm 이동
               ]}
               spaceInfo={spaceInfo}
               doorColor={baseFurniture.doorColor}
