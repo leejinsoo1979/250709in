@@ -256,7 +256,6 @@
 
 /* 모든 화면 크기에서 동일한 컴팩트 그리드 */
 .thumbnailItem {
-  aspect-ratio: 4 / 5;
   padding: 2px;
 }
 
