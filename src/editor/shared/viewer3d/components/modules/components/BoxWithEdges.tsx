@@ -158,24 +158,24 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
     };
 
     // 3D에서만 고스트 적용 (2D에서는 치수 확인을 위해 원래 재질 유지)
+    // MeshBasicMaterial 사용: 조명/카메라 각도에 무관하게 일관된 고스트 색상
     if (viewMode === '3D' && (isDragging || effectiveEditMode) && baseMaterial instanceof THREE.MeshStandardMaterial) {
-      const ghostMaterial = baseMaterial.clone();
-      ghostMaterial.transparent = true;
-      ghostMaterial.opacity = 0.6;
-      ghostMaterial.map = null; // 텍스처 제거하여 테마색이 보이도록
-      ghostMaterial.color = new THREE.Color(getThemeColor());
-      ghostMaterial.emissive = new THREE.Color(getThemeColor());
-      ghostMaterial.emissiveIntensity = 0.3;
-      ghostMaterial.depthWrite = true;
-      ghostMaterial.depthTest = true;
-      ghostMaterial.side = THREE.DoubleSide;
-      ghostMaterial.needsUpdate = true;
+      const themeColor = getThemeColor();
+      const ghostMaterial = new THREE.MeshBasicMaterial({
+        color: new THREE.Color(themeColor),
+        transparent: true,
+        opacity: 0.45,
+        depthWrite: true,
+        depthTest: true,
+        side: THREE.DoubleSide,
+        toneMapped: false,
+      });
       return ghostMaterial;
     }
 
-    // 2D 솔리드 모드에서 캐비넷을 투명하게 처리 (편집/드래그 중이 아닐 때만)
-    // 편집 중일 때는 원래 재질 유지 (치수 확인용)
-    if (viewMode === '2D' && effectiveRenderMode === 'solid' && !effectiveEditMode && !isDragging && baseMaterial instanceof THREE.MeshStandardMaterial) {
+    // 2D 솔리드 모드에서 캐비넷을 투명하게 처리 (편집/드래그 중에도 항상 적용)
+    // 2D에서는 고스트 색상 없이 원래 재질 그대로 투명화 → 와이어프레임 라인으로 치수 확인
+    if (viewMode === '2D' && effectiveRenderMode === 'solid' && baseMaterial instanceof THREE.MeshStandardMaterial) {
       // 도어: DoorModule에서 이미 material 설정 완료 → 그대로 사용
       const isDoor = panelName && (panelName.includes('도어') || panelName.includes('door'));
       if (isDoor) {
