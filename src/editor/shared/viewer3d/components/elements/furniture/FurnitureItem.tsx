@@ -78,11 +78,15 @@ const createModuleDataFromCustomFurniture = (
 };
 
 // 상부장/하부장과 키큰장(듀얼 포함)의 인접 판단 함수
+// → 자동 EP 로직 비활성화: 항상 false 반환
 const checkAdjacentUpperLowerToFull = (
-  currentModule: PlacedModule,
-  allModules: PlacedModule[],
-  spaceInfo: SpaceInfo
+  _currentModule: PlacedModule,
+  _allModules: PlacedModule[],
+  _spaceInfo: SpaceInfo
 ): { hasAdjacentUpperLower: boolean; adjacentSide: 'left' | 'right' | 'both' | null } => {
+  return { hasAdjacentUpperLower: false, adjacentSide: null };
+
+  /* === 기존 로직 (비활성화) ===
   // 현재 가구가 키큰장(full) 또는 듀얼 캐비넷인지 확인
   const currentModuleData = getModuleById(currentModule.moduleId, calculateInternalSpace(spaceInfo), spaceInfo);
   if (!currentModuleData) {
@@ -235,6 +239,7 @@ const checkAdjacentUpperLowerToFull = (
   })();
 
   return result;
+  === 기존 로직 끝 === */
 };
 
 interface FurnitureItemProps {
