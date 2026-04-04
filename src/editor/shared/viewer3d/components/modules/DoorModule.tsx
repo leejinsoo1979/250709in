@@ -859,7 +859,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     const doorHeightMm = upperCabinetHeight - UPPER_CABINET_TOP_GAP + UPPER_CABINET_BOTTOM_EXTENSION;
     const cabinetBottom = -upperCabinetHeight / 2;
     const doorBottom = cabinetBottom - UPPER_CABINET_BOTTOM_EXTENSION;
-    const doorCenter = doorBottom + doorHeightMm / 2 + 10; // 10mm 위로 조정
+    const doorCenter = doorBottom + doorHeightMm / 2; // 도어 상단 = 캐비넷 상단 - 5mm (TOP_GAP)
 
     doorYPosition = mmToThreeUnits(doorCenter);
 
