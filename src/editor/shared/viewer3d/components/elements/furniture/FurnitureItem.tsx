@@ -3244,8 +3244,8 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
               />
             </mesh>
 
-            {/* 가구 상단 아이콘 툴바 (편집 모드/readOnly에서는 숨김) */}
-            {!isPanelListTabActive && !readOnly && !isEditMode && (
+            {/* 가구 상단 아이콘 툴바 (readOnly에서는 숨김, 편집 모드에서도 표시) */}
+            {!isPanelListTabActive && !readOnly && (
               <Html
                 position={[0, height / 2 + mmToThreeUnits(50), depth / 2 + 0.03]}
                 center
