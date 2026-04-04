@@ -941,8 +941,14 @@ const Header: React.FC<HeaderProps> = ({
 
           {/* 태양 위치 슬라이더 (3D 모드에서만 표시) */}
           {viewMode === '3D' && !isMobile && (
-            <div className={styles.sunSliderWrap}>
-              <Sun size={14} strokeWidth={2} />
+            <div className={`${styles.sunSliderWrap} ${!shadowEnabled ? styles.sunSliderOff : ''}`}>
+              <button
+                className={`${styles.sunToggle} ${!shadowEnabled ? styles.sunToggleOff : ''}`}
+                onClick={() => setShadowEnabled(!shadowEnabled)}
+                title={shadowEnabled ? '그림자 끄기' : '그림자 켜기'}
+              >
+                <Sun size={14} strokeWidth={2} />
+              </button>
               <input
                 type="range"
                 min="0"
@@ -950,7 +956,8 @@ const Header: React.FC<HeaderProps> = ({
                 value={sunAngle ?? 45}
                 onChange={(e) => setSunAngle(Number(e.target.value))}
                 className={styles.sunSlider}
-                title={`태양 각도: ${sunAngle ?? 45}°`}
+                disabled={!shadowEnabled}
+                title={shadowEnabled ? `태양 각도: ${sunAngle ?? 45}°` : '그림자 꺼짐'}
               />
             </div>
           )}
