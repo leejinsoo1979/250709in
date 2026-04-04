@@ -98,6 +98,84 @@ const notifyR3F = (modules: PlacedModule[]) => {
   }, 50);
 };
 
+/**
+ * 가구 배치 후 인접 키큰장(full)의 EP를 자동 체크하는 헬퍼.
+ * - 새 가구가 upper/lower면 → 인접 full의 해당 방향 EP 체크
+ * - 새 가구가 full이면 → 인접 upper/lower가 있는 방향 EP 체크
+ */
+const autoSetAdjacentFullEP = (newModule: PlacedModule) => {
+  const spaceInfo = useSpaceConfigStore.getState().spaceInfo;
+  const internalSpace = calculateInternalSpace(spaceInfo);
+  const newModuleData = getModuleById(newModule.moduleId, internalSpace, spaceInfo);
+  if (!newModuleData) return;
+
+  const allModules = useFurnitureStore.getState().placedModules;
+  const newCategory = newModuleData.category;
+  const newSlotIndex = newModule.slotIndex;
+  if (newSlotIndex === undefined) return;
+
+  const isNewDual = newModule.moduleId?.includes('dual-') || newModule.isDualSlot;
+
+  // 인접 모듈 찾기 (같은 zone)
+  const findAdjacentModule = (targetSlotIndex: number) =>
+    allModules.find(m =>
+      m.id !== newModule.id &&
+      m.zone === newModule.zone &&
+      (m.slotIndex === targetSlotIndex ||
+        ((m.moduleId?.includes('dual-') || m.isDualSlot) && m.slotIndex === targetSlotIndex - 1))
+    );
+
+  // Case 1: 새 가구가 upper/lower → 인접 full 키큰장의 EP 체크
+  if (newCategory === 'upper' || newCategory === 'lower') {
+    // 왼쪽 인접 모듈
+    const leftModule = findAdjacentModule(newSlotIndex - 1);
+    if (leftModule) {
+      const leftData = getModuleById(leftModule.moduleId, internalSpace, spaceInfo);
+      if (leftData?.category === 'full' && !leftModule.hasRightEndPanel) {
+        useFurnitureStore.getState().updatePlacedModule(leftModule.id, { hasRightEndPanel: true });
+      }
+    }
+
+    // 오른쪽 인접 모듈
+    const rightSlot = isNewDual ? newSlotIndex + 2 : newSlotIndex + 1;
+    const rightModule = findAdjacentModule(rightSlot);
+    if (rightModule) {
+      const rightData = getModuleById(rightModule.moduleId, internalSpace, spaceInfo);
+      if (rightData?.category === 'full' && !rightModule.hasLeftEndPanel) {
+        useFurnitureStore.getState().updatePlacedModule(rightModule.id, { hasLeftEndPanel: true });
+      }
+    }
+  }
+
+  // Case 2: 새 가구가 full → 인접 upper/lower가 있으면 자기 EP 체크
+  if (newCategory === 'full') {
+    const updates: Partial<PlacedModule> = {};
+
+    // 왼쪽 인접 모듈
+    const leftModule = findAdjacentModule(newSlotIndex - 1);
+    if (leftModule) {
+      const leftData = getModuleById(leftModule.moduleId, internalSpace, spaceInfo);
+      if (leftData?.category === 'upper' || leftData?.category === 'lower') {
+        updates.hasLeftEndPanel = true;
+      }
+    }
+
+    // 오른쪽 인접 모듈
+    const rightSlot = isNewDual ? newSlotIndex + 2 : newSlotIndex + 1;
+    const rightModule = findAdjacentModule(rightSlot);
+    if (rightModule) {
+      const rightData = getModuleById(rightModule.moduleId, internalSpace, spaceInfo);
+      if (rightData?.category === 'upper' || rightData?.category === 'lower') {
+        updates.hasRightEndPanel = true;
+      }
+    }
+
+    if (Object.keys(updates).length > 0) {
+      useFurnitureStore.getState().updatePlacedModule(newModule.id, updates);
+    }
+  }
+};
+
 // 가구 데이터 Store 생성
 export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
   // 가구 데이터 초기 상태
@@ -263,6 +341,9 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
         placedModules: newModules3
       };
     });
+
+    // 배치 후 인접 키큰장 EP 자동 체크
+    autoSetAdjacentFullEP(module);
   },
 
   // 모듈 제거 함수 (기존 Context 로직과 동일)
