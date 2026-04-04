@@ -292,9 +292,14 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
 
       // 도어 바닥 이격거리 초기화 (spaceInfo에 저장된 값 우선 사용)
       if (module.doorBottomGap === undefined) {
-        const isFloatPlacement = spaceInfo.baseConfig?.placementType === 'float';
-        const floatHeight = spaceInfo.baseConfig?.floatHeight || 200;
-        module.doorBottomGap = spaceInfo.doorBottomGap ?? (isFloatPlacement ? floatHeight : 25);
+        if (newCategory === 'upper') {
+          // 상부장: 캐비넷 하단에서 도어 하단까지의 확장거리 (바닥 기준이 아님)
+          module.doorBottomGap = 28;
+        } else {
+          const isFloatPlacement = spaceInfo.baseConfig?.placementType === 'float';
+          const floatHeight = spaceInfo.baseConfig?.floatHeight || 200;
+          module.doorBottomGap = spaceInfo.doorBottomGap ?? (isFloatPlacement ? floatHeight : 25);
+        }
       }
 
       // 도어 상단 이격거리 초기화 (전체서라운드: 상부프레임 + 3mm)

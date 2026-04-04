@@ -746,16 +746,16 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   let doorTopLocal = 0; // 키큰장 기준 로컬 좌표에서의 도어 상단 (mm)
 
   if (isUpperCabinet) {
-    // 상부장 도어는 캐비넷보다 아래로 확장
+    // 상부장 도어
     const upperCabinetHeight = effectiveInternalHeight || moduleData?.dimensions?.height || 600;
     const topFrameHeightMm = perFurnitureTopFrame ?? (originalSpaceInfo.frameSize?.top || 30);
 
-    // 키큰장과 동일 방식: 도어 상단 = 천장에서 doorTopGap만큼 내려온 위치
-    // 캐비넷 상단은 천장 - topFrame이므로,
-    // 도어 상단의 캐비넷 상단 기준 로컬 오프셋 = topFrame - doorTopGap
-    // 양수: 캐비넷 위로 확장, 음수: 캐비넷 상단 아래 (갭)
+    // 도어 상단: 천장에서 doorTopGap만큼 내려온 위치 (키큰장과 동일)
+    // 캐비넷 상단 기준 로컬 오프셋 = topFrame - doorTopGap
     const topExtension = topFrameHeightMm - doorTopGap;
-    actualDoorHeight = upperCabinetHeight + topExtension + UPPER_CABINET_BOTTOM_EXTENSION;
+    // 도어 하단: 캐비넷 하단에서 doorBottomGap만큼 아래로 확장
+    const bottomExtension = doorBottomGap;
+    actualDoorHeight = upperCabinetHeight + topExtension + bottomExtension;
   } else if (isLowerCabinet) {
     const lowerCabinetHeight = effectiveInternalHeight || moduleData?.dimensions?.height || 1000;
     const isDoorLift = moduleData?.id?.includes('lower-door-lift-');
@@ -854,9 +854,10 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     const cabinetTop = upperCabinetHeight / 2;
     const topFrameForY = perFurnitureTopFrame ?? (originalSpaceInfo.frameSize?.top || 30);
     const topExtension = topFrameForY - doorTopGap;
+    const bottomExtension = doorBottomGap;
 
-    const doorTop = cabinetTop + topExtension; // 양수: 위로 확장, 음수: 캐비넷 안으로 갭
-    const doorBottom = cabinetBottom - UPPER_CABINET_BOTTOM_EXTENSION;
+    const doorTop = cabinetTop + topExtension;
+    const doorBottom = cabinetBottom - bottomExtension;
     const doorCenter = (doorTop + doorBottom) / 2;
     doorYPosition = mmToThreeUnits(doorCenter);
   } else if (isLowerCabinet) {
