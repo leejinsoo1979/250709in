@@ -1145,6 +1145,38 @@ export const calculatePanelDetails = (
     });
   }
 
+  // === L자 PET 프레임 (하부 서랍장 따내기 마감) ===
+  if (moduleData.id.includes('lower-drawer-')) {
+    const is3Tier = moduleData.id.includes('lower-drawer-3tier');
+    // 보강대 따내기 (65mm)
+    const lowerNotches: { fromBottom: number; height: number }[] = is3Tier
+      ? [{ fromBottom: 295, height: 65 }, { fromBottom: 510, height: 65 }]
+      : [{ fromBottom: 330, height: 65 }];
+    // 상단 따내기 (60mm)
+    lowerNotches.push({ fromBottom: height - 60, height: 60 });
+
+    lowerNotches.forEach((notch, ni) => {
+      const verticalH = notch.height - basicThickness;
+      if (verticalH <= 0) return;
+      panels.frame.push({
+        name: `L프레임수평(${ni + 1})`,
+        width: customWidth,
+        height: 40,
+        thickness: basicThickness,
+        material: 'PET',
+        quantity: 1,
+      });
+      panels.frame.push({
+        name: `L프레임수직(${ni + 1})`,
+        width: customWidth,
+        height: verticalH,
+        thickness: basicThickness,
+        material: 'PET',
+        quantity: 1,
+      });
+    });
+  }
+
   // === 프레임 패널 (상부프레임 / 하부프레임) ===
   const FRAME_THICKNESS = 18.5; // 프레임(PET 재질) 두께 항상 18.5mm
 
