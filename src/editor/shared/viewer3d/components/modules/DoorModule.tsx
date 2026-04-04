@@ -746,23 +746,16 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   let doorTopLocal = 0; // 키큰장 기준 로컬 좌표에서의 도어 상단 (mm)
 
   if (isUpperCabinet) {
-    // 상부장 도어는 캐비넷보다 아래로 확장, 위쪽 간격
+    // 상부장 도어는 캐비넷보다 아래로 확장
     const upperCabinetHeight = effectiveInternalHeight || moduleData?.dimensions?.height || 600;
-
-    // 양쪽서라운드/노서라운드: 키큰장처럼 도어 상단이 상부프레임 위까지 확장
-    const isSurroundOrNoSurround = originalSpaceInfo.surroundType === 'both-sides' ||
-      originalSpaceInfo.surroundType === 'surround' ||
-      originalSpaceInfo.surroundType === 'no-surround';
     const topFrameHeightMm = perFurnitureTopFrame ?? (originalSpaceInfo.frameSize?.top || 30);
 
-    if (isSurroundOrNoSurround) {
-      // 도어 상단 = 캐비넷 상단 + 상부프레임 높이 - doorTopGap
-      const topExtension = topFrameHeightMm - doorTopGap;
-      actualDoorHeight = upperCabinetHeight + Math.max(topExtension, 0) + UPPER_CABINET_BOTTOM_EXTENSION;
-    } else {
-      // 기본: 캐비넷 높이 - 위쪽 간격 + 아래 확장
-      actualDoorHeight = upperCabinetHeight - UPPER_CABINET_TOP_GAP + UPPER_CABINET_BOTTOM_EXTENSION;
-    }
+    // 키큰장과 동일 방식: 도어 상단 = 천장에서 doorTopGap만큼 내려온 위치
+    // 캐비넷 상단은 천장 - topFrame이므로,
+    // 도어 상단의 캐비넷 상단 기준 로컬 오프셋 = topFrame - doorTopGap
+    // 양수: 캐비넷 위로 확장, 음수: 캐비넷 상단 아래 (갭)
+    const topExtension = topFrameHeightMm - doorTopGap;
+    actualDoorHeight = upperCabinetHeight + topExtension + UPPER_CABINET_BOTTOM_EXTENSION;
   } else if (isLowerCabinet) {
     const lowerCabinetHeight = effectiveInternalHeight || moduleData?.dimensions?.height || 1000;
     const isDoorLift = moduleData?.id?.includes('lower-door-lift-');
@@ -855,30 +848,17 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   let doorYPosition: number;
   
   if (isUpperCabinet) {
-    // 상부장 도어 Y 위치 계산
+    // 상부장 도어 Y 위치 — 높이 계산과 동일 로직
     const upperCabinetHeight = effectiveInternalHeight || moduleData?.dimensions?.height || 600;
     const cabinetBottom = -upperCabinetHeight / 2;
     const cabinetTop = upperCabinetHeight / 2;
-
-    // 양쪽서라운드/노서라운드: 도어 상단이 상부프레임 위까지 확장
-    const isSurroundOrNoSurroundY = originalSpaceInfo.surroundType === 'both-sides' ||
-      originalSpaceInfo.surroundType === 'surround' ||
-      originalSpaceInfo.surroundType === 'no-surround';
     const topFrameForY = perFurnitureTopFrame ?? (originalSpaceInfo.frameSize?.top || 30);
+    const topExtension = topFrameForY - doorTopGap;
 
-    if (isSurroundOrNoSurroundY) {
-      const topExtension = topFrameForY - doorTopGap;
-      const doorTop = cabinetTop + Math.max(topExtension, 0);
-      const doorBottom = cabinetBottom - UPPER_CABINET_BOTTOM_EXTENSION;
-      const doorCenter = (doorTop + doorBottom) / 2;
-      doorYPosition = mmToThreeUnits(doorCenter);
-    } else {
-      // 기본: 도어 상단 = 캐비넷 상단 - 5mm (TOP_GAP)
-      const doorBottom = cabinetBottom - UPPER_CABINET_BOTTOM_EXTENSION;
-      const doorHeightMm = upperCabinetHeight - UPPER_CABINET_TOP_GAP + UPPER_CABINET_BOTTOM_EXTENSION;
-      const doorCenter = doorBottom + doorHeightMm / 2;
-      doorYPosition = mmToThreeUnits(doorCenter);
-    }
+    const doorTop = cabinetTop + topExtension; // 양수: 위로 확장, 음수: 캐비넷 안으로 갭
+    const doorBottom = cabinetBottom - UPPER_CABINET_BOTTOM_EXTENSION;
+    const doorCenter = (doorTop + doorBottom) / 2;
+    doorYPosition = mmToThreeUnits(doorCenter);
   } else if (isLowerCabinet) {
     const lowerCabinetHeight = effectiveInternalHeight || moduleData?.dimensions?.height || 1000;
     const isDoorLiftForY = moduleData?.id?.includes('lower-door-lift-');
