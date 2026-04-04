@@ -88,11 +88,15 @@ const SingleDrawer: React.FC<SingleDrawerProps> = ({
 
   const drawerBottomY = cabinetBottomY + mmToThreeUnits(zone.bottomMm);
 
+  // 측판 높이: 1단=240mm, 2단 이상=130mm
+  const sideHeightMm = index === 0 ? 240 : 130;
+  const sideHeight = mmToThreeUnits(sideHeightMm);
+
   const bottomPanelTopY = cabinetBottomY + basicThickness;
   const sideBottomY = index === 0
     ? bottomPanelTopY + bottomGap
     : drawerBottomY;
-  const sideCenterY = sideBottomY + extSideH / 2;
+  const sideCenterY = sideBottomY + sideHeight / 2;
 
   const cX = 0;
 
@@ -102,7 +106,8 @@ const SingleDrawer: React.FC<SingleDrawerProps> = ({
   const bottomY = sideBottomY + mmToThreeUnits(15) + bottomThk / 2;
   const bottomWidth = drawerInnerWidth + mmToThreeUnits(10);
 
-  const backHeightMm = 216;
+  // 뒷판 높이: 측판높이 - 15mm(바닥갭) - 9mm(바닥판두께)
+  const backHeightMm = sideHeightMm - 15 - 9;
   const backHeight = mmToThreeUnits(backHeightMm);
   const bottomTopYPos = bottomY + bottomThk / 2;
   const backY = bottomTopYPos + backHeight / 2;
@@ -125,7 +130,7 @@ const SingleDrawer: React.FC<SingleDrawerProps> = ({
         const panelName = sectionName ? `${sectionName}서랍${i + 1} 좌측판` : `서랍${i + 1} 좌측판`;
         return (
           <BoxWithEdges
-            args={[extSideT, extSideH, extSideD]}
+            args={[extSideT, sideHeight, extSideD]}
             position={[leftSideX, sideCenterY, sideCenterZ]}
             material={getPanelMaterial(panelName)}
             renderMode={renderMode}
@@ -143,7 +148,7 @@ const SingleDrawer: React.FC<SingleDrawerProps> = ({
         const panelName = sectionName ? `${sectionName}서랍${i + 1} 우측판` : `서랍${i + 1} 우측판`;
         return (
           <BoxWithEdges
-            args={[extSideT, extSideH, extSideD]}
+            args={[extSideT, sideHeight, extSideD]}
             position={[rightSideX, sideCenterY, sideCenterZ]}
             material={getPanelMaterial(panelName)}
             renderMode={renderMode}
