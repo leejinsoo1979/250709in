@@ -373,8 +373,8 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
 
   // 엣지 색상 결정
   const edgeColor = React.useMemo(() => {
-    // 2D 모드에서 서랍속장 패널은 초록색 윤곽선
-    if (viewMode === '2D' && panelName && panelName.includes('서랍속장')) {
+    // 2D 모드에서 서랍속장/도어/마이다 패널은 초록색 윤곽선
+    if (viewMode === '2D' && panelName && (panelName.includes('서랍속장') || panelName.includes('도어') || panelName.includes('마이다'))) {
       return '#00ff00'; // 초록색
     }
 
