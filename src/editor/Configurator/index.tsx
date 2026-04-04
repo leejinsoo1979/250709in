@@ -641,7 +641,7 @@ const Configurator: React.FC = () => {
     if (latestSidebarTab.current === null) setActiveSidebarTab(defaultTab);
     if (!latestRightPanel.current) setIsRightPanelOpen(true);
     if (latestCameraMode.current === 'orthographic') setCameraMode('perspective');
-    if (!latestShadow.current) setShadowEnabled(true);
+    // 그림자는 복원 시 건드리지 않음 (기본값 false 유지)
   }, [setCameraMode, setShadowEnabled]);
 
   useEffect(() => {
@@ -665,7 +665,7 @@ const Configurator: React.FC = () => {
         setActiveSidebarTab(stateBeforeDesign.current.activeSidebarTab ?? 'module');
         setIsRightPanelOpen(stateBeforeDesign.current.isRightPanelOpen ?? true);
         setCameraMode(stateBeforeDesign.current.cameraMode ?? 'perspective');
-        setShadowEnabled(stateBeforeDesign.current.shadowEnabled ?? true);
+        setShadowEnabled(stateBeforeDesign.current.shadowEnabled ?? false);
         stateBeforeDesign.current = null;
       } else {
         // 백업 유실 시 — 기본값으로 복원
