@@ -595,84 +595,19 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
           const maidaWidth = drawerWidth - mmToThreeUnits(maidaInsetLeft + maidaInsetRight);
           const maidaY = centerY + (maidaTopExt - maidaBottomExt) / 2 + mmToThreeUnits(maidaInsetBottom - maidaInsetTop) / 2;
           const maidaX = centerX + mmToThreeUnits(maidaInsetRight - maidaInsetLeft) / 2;
-          const maidaZ = centerZ + actualDrawerDepth/2 - HANDLE_PLATE_THICKNESS/2;
-          // 2D 정면뷰: 마이다에 도어와 동일한 반투명 overlay + 대각선 인출 표시
-          const showMaidaOverlay = viewMode === '2D' && (view2DDirection === 'front' || view2DDirection === 'left' || view2DDirection === 'right');
-          const maidaOverlayColor = view2DTheme === 'dark' ? '#3a5a7a' : '#a0b8d0';
           return (
-            <group>
-              <BoxWithEdges
-                key={`drawer-${drawerIndex}-handle-${mat.uuid}`}
-                args={[maidaWidth, maidaHeight, HANDLE_PLATE_THICKNESS]}
-                position={[maidaX, maidaY, maidaZ]}
-                material={mat}
-                renderMode={renderMode}
-                isHighlighted={isHighlighted}
-                panelName={panelName}
-                textureUrl={textureUrl}
-                panelGrainDirections={panelGrainDirections}
-                furnitureId={furnitureId}
-              />
-              {/* 2D: 마이다 반투명 overlay */}
-              {showMaidaOverlay && (
-                <mesh position={[maidaX, maidaY, maidaZ + HANDLE_PLATE_THICKNESS / 2 + 0.001]} renderOrder={9999}>
-                  <planeGeometry args={[maidaWidth, maidaHeight]} />
-                  <meshBasicMaterial color={maidaOverlayColor} transparent opacity={0.2} side={THREE.DoubleSide} depthTest={false} depthWrite={false} />
-                </mesh>
-              )}
-              {/* 2D: 마이다 대각선 인출 표시 (X자) */}
-              {showMaidaOverlay && (() => {
-                const hw = maidaWidth / 2;
-                const hh = maidaHeight / 2;
-                const maidaFrontZ = maidaZ + HANDLE_PLATE_THICKNESS / 2 + 0.002;
-                const lineColor = '#FF8800';
-                // 대각선 1: 좌하 → 우상
-                const start1: [number, number, number] = [maidaX - hw, maidaY - hh, maidaFrontZ];
-                const end1: [number, number, number] = [maidaX + hw, maidaY + hh, maidaFrontZ];
-                // 대각선 2: 좌상 → 우하
-                const start2: [number, number, number] = [maidaX - hw, maidaY + hh, maidaFrontZ];
-                const end2: [number, number, number] = [maidaX + hw, maidaY - hh, maidaFrontZ];
-
-                const makeDashedLine = (s: [number, number, number], e: [number, number, number], keyPrefix: string) => {
-                  const dx = e[0] - s[0], dy = e[1] - s[1];
-                  const totalLen = Math.sqrt(dx * dx + dy * dy);
-                  const longDash = 0.12, shortDash = 0.04, gap = 0.04;
-                  const segments: React.ReactElement[] = [];
-                  let pos = 0;
-                  let isLong = true;
-                  while (pos < totalLen) {
-                    const dashLen = isLong ? longDash : shortDash;
-                    const actual = Math.min(dashLen, totalLen - pos);
-                    const t1 = pos / totalLen;
-                    const t2 = (pos + actual) / totalLen;
-                    segments.push(
-                      <Line
-                        key={`${keyPrefix}-${pos}`}
-                        points={[
-                          [s[0] + dx * t1, s[1] + dy * t1, s[2]],
-                          [s[0] + dx * t2, s[1] + dy * t2, s[2]]
-                        ]}
-                        color={lineColor}
-                        lineWidth={1}
-                        transparent
-                        opacity={1.0}
-                      />
-                    );
-                    if (pos + actual >= totalLen) break;
-                    pos += actual + gap;
-                    isLong = !isLong;
-                  }
-                  return segments;
-                };
-
-                return (
-                  <>
-                    {makeDashedLine(start1, end1, `maida-diag1-${drawerIndex}`)}
-                    {makeDashedLine(start2, end2, `maida-diag2-${drawerIndex}`)}
-                  </>
-                );
-              })()}
-            </group>
+            <BoxWithEdges
+              key={`drawer-${drawerIndex}-handle-${mat.uuid}`}
+              args={[maidaWidth, maidaHeight, HANDLE_PLATE_THICKNESS]}
+              position={[maidaX, maidaY, centerZ + actualDrawerDepth/2 - HANDLE_PLATE_THICKNESS/2]}
+              material={mat}
+              renderMode={renderMode}
+              isHighlighted={isHighlighted}
+              panelName={panelName}
+              textureUrl={textureUrl}
+              panelGrainDirections={panelGrainDirections}
+              furnitureId={furnitureId}
+            />
           );
         })()}
 

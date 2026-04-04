@@ -139,6 +139,11 @@ const SingleDrawer: React.FC<SingleDrawerProps> = ({
   const maidaHeight = mmToThreeUnits(maidaHeightMm);
   const maidaCenterY = cabinetBottomY + mmToThreeUnits(maidaBottomMm) + maidaHeight / 2;
 
+  // 2D 마이다 overlay/대각선용
+  const { viewMode } = useSpace3DView();
+  const view2DDirection = useUIStore(state => state.view2DDirection);
+  const view2DTheme = useUIStore(state => state.view2DTheme);
+
   const i = index;
   const getPanelMaterial = (_: string) => material;
 
@@ -216,21 +221,80 @@ const SingleDrawer: React.FC<SingleDrawerProps> = ({
         );
       })()}
 
-      {/* 마이다 (도어면) */}
+      {/* 마이다 (도어면) + 2D overlay/대각선 */}
       {showMaida && (() => {
         const panelName = sectionName ? `${sectionName}서랍${i + 1}(마이다)` : `서랍${i + 1}(마이다)`;
+        const showMaidaOverlay = viewMode === '2D' && view2DDirection === 'front';
+        const maidaOverlayColor = view2DTheme === 'dark' ? '#3a5a7a' : '#a0b8d0';
         return (
-          <BoxWithEdges
-            args={[maidaWidth, maidaHeight, handlePlateThickness]}
-            position={[cX, maidaCenterY, maidaZ]}
-            material={doorMaterial}
-            renderMode={renderMode}
-            isHighlighted={isHighlighted}
-            panelName={panelName}
-            textureUrl={doorTextureUrl || textureUrl}
-            panelGrainDirections={panelGrainDirections}
-            furnitureId={furnitureId}
-          />
+          <group>
+            <BoxWithEdges
+              args={[maidaWidth, maidaHeight, handlePlateThickness]}
+              position={[cX, maidaCenterY, maidaZ]}
+              material={doorMaterial}
+              renderMode={renderMode}
+              isHighlighted={isHighlighted}
+              panelName={panelName}
+              textureUrl={doorTextureUrl || textureUrl}
+              panelGrainDirections={panelGrainDirections}
+              furnitureId={furnitureId}
+            />
+            {/* 2D: 마이다 반투명 overlay */}
+            {showMaidaOverlay && (
+              <mesh position={[cX, maidaCenterY, maidaZ + handlePlateThickness / 2 + 0.001]} renderOrder={9999}>
+                <planeGeometry args={[maidaWidth, maidaHeight]} />
+                <meshBasicMaterial color={maidaOverlayColor} transparent opacity={0.2} side={THREE.DoubleSide} depthTest={false} depthWrite={false} />
+              </mesh>
+            )}
+            {/* 2D: 마이다 V자 인출 표시 (좌상→중앙하, 중앙하→우상) */}
+            {showMaidaOverlay && (() => {
+              const hw = maidaWidth / 2;
+              const hh = maidaHeight / 2;
+              const frontZ = maidaZ + handlePlateThickness / 2 + 0.002;
+              const lineColor = '#FF8800';
+              const makeDashedLine = (s: [number, number, number], e: [number, number, number], keyPrefix: string) => {
+                const dx = e[0] - s[0], dy = e[1] - s[1];
+                const totalLen = Math.sqrt(dx * dx + dy * dy);
+                const longDash = 2.4, shortDash = 0.9, gap = 0.9;
+                const segments: React.ReactElement[] = [];
+                let pos = 0;
+                let isLong = true;
+                while (pos < totalLen) {
+                  const dashLen = isLong ? longDash : shortDash;
+                  const actual = Math.min(dashLen, totalLen - pos);
+                  const t1 = pos / totalLen;
+                  const t2 = (pos + actual) / totalLen;
+                  segments.push(
+                    <Line
+                      key={`${keyPrefix}-${pos}`}
+                      points={[
+                        [s[0] + dx * t1, s[1] + dy * t1, s[2]],
+                        [s[0] + dx * t2, s[1] + dy * t2, s[2]]
+                      ]}
+                      color={lineColor}
+                      lineWidth={1}
+                      transparent
+                      opacity={1.0}
+                    />
+                  );
+                  if (pos + actual >= totalLen) break;
+                  pos += actual + gap;
+                  isLong = !isLong;
+                }
+                return segments;
+              };
+              // V자: 좌상 → 중앙하, 중앙하 → 우상
+              const leftTop: [number, number, number] = [cX - hw, maidaCenterY + hh, frontZ];
+              const centerBottom: [number, number, number] = [cX, maidaCenterY - hh, frontZ];
+              const rightTop: [number, number, number] = [cX + hw, maidaCenterY + hh, frontZ];
+              return (
+                <>
+                  {makeDashedLine(leftTop, centerBottom, `ext-maida-v1-${i}`)}
+                  {makeDashedLine(centerBottom, rightTop, `ext-maida-v2-${i}`)}
+                </>
+              );
+            })()}
+          </group>
         );
       })()}
     </animated.group>

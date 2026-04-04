@@ -1333,7 +1333,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
 
 
               {/* Door opening direction for left door - 정면뷰는 항상, 측면뷰는 열렸을 때만, 3D도 표시 */}
-              {!isPlainMaterial && (viewMode === '3D' || (viewMode === '2D' && (view2DDirection === 'front' || view2DDirection === 'left' || view2DDirection === 'right') && (view2DDirection === 'front' || isDoorOpen))) && (() => {
+              {!isPlainMaterial && (viewMode === '3D' || (viewMode === '2D' && view2DDirection === 'front')) && (() => {
                 const segments = (() => {
                   const isFrontView = viewMode === '3D' || view2DDirection === 'front';
                   const segmentList: React.ReactNode[] = [];
@@ -1664,7 +1664,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
 
 
               {/* Door opening direction for right door - 정면뷰는 항상, 측면뷰는 열렸을 때만, 3D도 표시 */}
-              {!isPlainMaterial && (viewMode === '3D' || (viewMode === '2D' && (view2DDirection === 'front' || view2DDirection === 'left' || view2DDirection === 'right') && (view2DDirection === 'front' || isDoorOpen))) && (() => {
+              {!isPlainMaterial && (viewMode === '3D' || (viewMode === '2D' && view2DDirection === 'front')) && (() => {
                 const segments = (() => {
                   const isFrontView = viewMode === '3D' || view2DDirection === 'front';
                   const segmentList: React.ReactNode[] = [];
@@ -2096,7 +2096,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
 
 
             {/* 도어 열리는 방향 표시 (2D 정면뷰/측면뷰 + 3D) - 정면은 항상, 측면은 열렸을 때만 */}
-            {!isPlainMaterial && (viewMode === '3D' || (viewMode === '2D' && (view2DDirection === 'front' || view2DDirection === 'left' || view2DDirection === 'right') && (view2DDirection === 'front' || isDoorOpen))) && (() => {
+            {!isPlainMaterial && (viewMode === '3D' || (viewMode === '2D' && view2DDirection === 'front')) && (() => {
               const indicatorRotation = (adjustedHingePosition === 'left'
                 ? leftHingeDoorSpring.rotation
                 : rightHingeDoorSpring.rotation).to(value => {
