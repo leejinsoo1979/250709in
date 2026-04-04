@@ -766,9 +766,9 @@ const drawFrontFurnitureModules = (dxf: DxfWriter, placedModules: DXFPlacedModul
       const dxfNotches: { fromBottom: number; height: number }[] = is3TierDxf
         ? [{ fromBottom: 295, height: 65 }, { fromBottom: 510, height: 65 }]
         : isDoorLift3Tier
-        ? [{ fromBottom: 218, height: 65 }, { fromBottom: 501, height: 65 }]
+        ? [{ fromBottom: 212, height: 65 }, { fromBottom: 489, height: 65 }]
         : isDoorLift2Tier
-        ? [{ fromBottom: 360, height: 65 }]
+        ? [{ fromBottom: 351, height: 65 }]
         : [{ fromBottom: 330, height: 65 }];
       // 상단 따내기 (60mm) - 도어올림은 상단 따내기 없음
       if (!isDoorLift2Tier && !isDoorLift3Tier) {

@@ -428,13 +428,15 @@ export const ExternalDrawerRenderer: React.FC<ExternalDrawerRendererProps> = ({
     cursor = notch.fromBottom + notch.height;
   }
 
-  // hideTopNotch: 마지막 노치 ~ 캐비넷 상단까지 남은 영역도 서랍 zone으로 추가
+  // hideTopNotch: 마지막 노치 ~ 상판 안쪽까지 남은 영역도 서랍 zone으로 추가
+  // 상판 두께(basicThicknessMm)를 빼서 서랍이 상판 안쪽까지만 차지하도록
   if (hideTopNotch && cursor < sidePanelHeightMm) {
     const lastNotch = allNotches[allNotches.length - 1];
+    const topLimit = sidePanelHeightMm - basicThicknessMm;
     zones.push({
       bottomMm: cursor,
-      topMm: sidePanelHeightMm,
-      notchAboveBottom: sidePanelHeightMm,
+      topMm: topLimit,
+      notchAboveBottom: topLimit,
       notchBelowTop: lastNotch ? (lastNotch.fromBottom + lastNotch.height) : null,
     });
   }
