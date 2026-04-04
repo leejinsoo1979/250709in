@@ -168,6 +168,9 @@ interface BaseFurnitureShellProps {
   // 상판 앞쪽 깊이 감소 (상판내림: 전대 뒤에 맞닿도록 40mm 줄임)
   topPanelFrontReduction?: number;
 
+  // 상단 가로전대 (상판내림: 상판이 있으면서도 상단에 가로전대 필요, 측판 따내기 없음)
+  topStretcher?: { heightMm: number; depthMm: number };
+
   // 측판 추가 노치 (하부장 2단용 — fromBottom: mm, y: mm, z: mm)
   sideNotches?: Array<{ y: number; z: number; fromBottom: number }>;
 
@@ -217,6 +220,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
   hideVentilationCap = false,
   hideTopPanel = false,
   topPanelFrontReduction = 0,
+  topStretcher,
   sideNotches,
   renderMode: renderModeProp,
   children
@@ -510,6 +514,23 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                         isDragging={isDragging}
                         isEditMode={isEditMode}
                         panelName="가로전대"
+                        panelGrainDirections={panelGrainDirections}
+                        furnitureId={placedFurnitureId}
+                        textureUrl={textureUrl}
+                      />
+                    )}
+
+                    {/* 상단 가로전대 (상판내림: 따내기 없이 전대만) */}
+                    {topStretcher && (
+                      <BoxWithEdges
+                        key={`front-stretcher-top-${material instanceof THREE.Material ? material.uuid : 'mat'}`}
+                        args={[innerWidth, mmToThreeUnits(topStretcher.heightMm), basicThickness]}
+                        position={[0, height/2 - mmToThreeUnits(topStretcher.heightMm)/2, depth/2 - mmToThreeUnits(topStretcher.depthMm) - basicThickness/2]}
+                        material={material}
+                        renderMode={renderMode}
+                        isDragging={isDragging}
+                        isEditMode={isEditMode}
+                        panelName="가로전대(상)"
                         panelGrainDirections={panelGrainDirections}
                         furnitureId={placedFurnitureId}
                         textureUrl={textureUrl}
