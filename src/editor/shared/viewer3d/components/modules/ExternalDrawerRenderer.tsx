@@ -118,40 +118,41 @@ export const ExternalDrawerRenderer: React.FC<ExternalDrawerRendererProps> = ({
   }
 
   // === 서랍 영역 계산 (보강대로 분리) ===
-  const cabinetInnerTop = (height / 0.01) - basicThicknessMm * 2; // 내경 높이 (mm)
+  // 모든 mm 값은 측판 하단(= 캐비넷 외부 바닥) 기준
+  const sidePanelHeightMm = height / 0.01; // 측판 전체 높이 (mm)
   const upperNotchH = 60; // 상단 따내기 높이
+  const upperNotchFromBottom = sidePanelHeightMm - upperNotchH; // 상단 따내기 하단 (측판 바닥 기준)
 
   interface DrawerZone {
     bottomMm: number;
     topMm: number;
-    notchAboveBottom: number;  // 위쪽 따내기의 하단면 (mm)
+    notchAboveBottom: number;  // 위쪽 따내기의 하단면 (mm, 측판 바닥 기준)
     notchBelowTop: number | null; // 아래쪽 따내기의 상단면 (mm), 최하단은 null
   }
 
   const zones: DrawerZone[] = [];
   let cursor = 0;
 
+  // notchFromBottoms는 측판 바닥 기준 (mm)
   const sortedNotches = notchFromBottoms
     .map((fb, idx) => ({ fromBottom: fb, height: notchHeights[idx] || 65 }))
     .sort((a, b) => a.fromBottom - b.fromBottom);
 
   // 상단 따내기도 notch 목록에 추가 (마이다 계산용)
-  const allNotches = [...sortedNotches, { fromBottom: cabinetInnerTop - upperNotchH, height: upperNotchH }];
+  const allNotches = [...sortedNotches, { fromBottom: upperNotchFromBottom, height: upperNotchH }];
 
   for (let ni = 0; ni < allNotches.length; ni++) {
     const notch = allNotches[ni];
     if (notch.fromBottom > cursor) {
-      // 이 영역 위의 따내기 = 현재 notch
-      const notchAboveBottom = notch.fromBottom; // 위쪽 따내기의 하단면
-      // 이 영역 아래의 따내기 = 이전 notch (없으면 null = 최하단)
+      const notchAboveBottom = notch.fromBottom;
       const notchBelowTop = ni > 0 ? (allNotches[ni - 1].fromBottom + allNotches[ni - 1].height) : null;
       zones.push({ bottomMm: cursor, topMm: notch.fromBottom, notchAboveBottom, notchBelowTop });
     }
     cursor = notch.fromBottom + notch.height;
   }
 
-  // 바닥판 윗면 기준 Y
-  const bottomPanelTop = -height / 2 + basicThickness;
+  // 캐비넷 외부 바닥 Y (= 측판 바닥 = mm 0 기준점)
+  const cabinetBottomY = -height / 2;
 
   return (
     <group>
@@ -159,45 +160,45 @@ export const ExternalDrawerRenderer: React.FC<ExternalDrawerRendererProps> = ({
         const zoneHeightMm = zone.topMm - zone.bottomMm;
         const drawerHeight = mmToThreeUnits(zoneHeightMm);
 
-        // 서랍 중심 Y
-        const drawerBottomY = bottomPanelTop + mmToThreeUnits(zone.bottomMm);
+        // 모든 Y는 cabinetBottomY(측판 바닥) + mm오프셋으로 계산
+        const drawerBottomY = cabinetBottomY + mmToThreeUnits(zone.bottomMm);
         const drawerCenterY = drawerBottomY + drawerHeight / 2;
 
         // === 좌우측판 Y 위치 ===
-        // 1단(i=0): 바닥판에서 15mm 위에 하단
+        // 1단(i=0): 캐비넷 바닥판 윗면(basicThickness)에서 15mm 위
         // 2단 이상: 보강대 윗면에서 시작 (= 영역 시작점)
+        const bottomPanelTopY = cabinetBottomY + basicThickness; // 바닥판 윗면
         const sideBottomY = i === 0
-          ? bottomPanelTop + BOTTOM_GAP
+          ? bottomPanelTopY + BOTTOM_GAP
           : drawerBottomY;
         const sideCenterY = sideBottomY + EXT_SIDE_H / 2;
 
-        // === 바닥판·뒷판 (기존 renderDrawer 기반, 깊이=측판과 동일) ===
+        // === 바닥판·뒷판 ===
         const cX = 0;
-        const cY = drawerCenterY;
 
-        // 바닥판: 측판 하단에서 15mm 위, 깊이·Z = 측판과 동일(453mm)
         const bottomThk = backPanelThickness;
-        const bottomDepth = drawerBodyDepth; // 측판과 동일 453mm
-        const bottomZPos = drawerBodyCenterZ; // 측판과 동일 Z
+        const bottomDepth = drawerBodyDepth;
+        const bottomZPos = drawerBodyCenterZ;
         const bottomY = sideBottomY + mmToThreeUnits(15) + bottomThk / 2;
-        const bottomWidth = drawerInnerWidth + mmToThreeUnits(10); // 좌우측판 홈 끼움 (양쪽 5mm씩)
+        const bottomWidth = drawerInnerWidth + mmToThreeUnits(10);
 
-        // 뒷판: 높이 = 216mm (측판240 - 15mm - 바닥판9mm), 바닥판 윗면에 올라탐
         const backHeightMm = 216;
         const backHeight = mmToThreeUnits(backHeightMm);
         const bottomTopYPos = bottomY + bottomThk / 2;
         const backY = bottomTopYPos + backHeight / 2;
         const backWidth = drawerInnerWidth;
 
-        // === 마이다 높이·Y 계산 ===
+        // === 마이다 높이·Y 계산 (측판 바닥 기준 mm) ===
         // 마이다 상단 = 위쪽 따내기 하단면에서 40mm 위로
         const maidaTopMm = zone.notchAboveBottom + 40;
-        // 마이다 하단 = 아래쪽 따내기 상단면에서 5mm 아래로 (최하단은 캐비넷 바닥 기준 -5mm)
+        // 마이다 하단 = 아래쪽 따내기 상단면에서 5mm 아래로 (최하단은 측판 바닥에서 -5mm)
         const maidaBottomMm = zone.notchBelowTop != null ? (zone.notchBelowTop - 5) : -5;
         const maidaHeightMm = maidaTopMm - maidaBottomMm;
         const maidaHeight = mmToThreeUnits(maidaHeightMm);
-        // 마이다 Y 중심 = 바닥판 윗면 기준
-        const maidaCenterY = bottomPanelTop + mmToThreeUnits(maidaBottomMm) + maidaHeight / 2;
+        // 마이다 Y 중심 = 캐비넷 외부 바닥(측판 바닥) 기준
+        const maidaCenterY = cabinetBottomY + mmToThreeUnits(maidaBottomMm) + maidaHeight / 2;
+
+        console.log(`🔧 [ExtDrawer] zone${i}: notchAbove=${zone.notchAboveBottom}, notchBelowTop=${zone.notchBelowTop}, maidaTop=${maidaTopMm}mm, maidaBottom=${maidaBottomMm}mm, maidaH=${maidaHeightMm}mm, maidaCenterY=${maidaCenterY.toFixed(4)}`);
 
         return (
           <group key={`ext-drawer-${i}`}>
