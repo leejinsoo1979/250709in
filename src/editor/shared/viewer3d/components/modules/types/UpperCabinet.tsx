@@ -90,6 +90,7 @@ const UpperCabinet: React.FC<FurnitureTypeProps> = ({
                         hideSectionDimensions={false}
                         lowerSectionTopOffsetMm={lowerSectionTopOffset}
                         isFloatingPlacement={spaceInfo?.baseConfig?.placementType === 'float'}
+                        shelfFrontInsetMm={30}
                       />
                     </group>
                     
@@ -120,6 +121,7 @@ const UpperCabinet: React.FC<FurnitureTypeProps> = ({
                         hideSectionDimensions={true}
                         lowerSectionTopOffsetMm={lowerSectionTopOffset}
                         isFloatingPlacement={spaceInfo?.baseConfig?.placementType === 'float'}
+                        shelfFrontInsetMm={30}
                       />
                     </group>
                   </>
@@ -140,6 +142,7 @@ const UpperCabinet: React.FC<FurnitureTypeProps> = ({
                     furnitureId={moduleData.id}
                     lowerSectionTopOffsetMm={lowerSectionTopOffset}
                     isFloatingPlacement={spaceInfo?.baseConfig?.placementType === 'float'}
+                    shelfFrontInsetMm={30}
                   />
                 )}
               </>

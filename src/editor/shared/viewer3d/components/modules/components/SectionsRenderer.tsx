@@ -76,6 +76,9 @@ interface SectionsRendererProps {
 
   // 띄움 배치 여부 (spaceInfo 기반)
   isFloatingPlacement?: boolean;
+
+  // 선반 앞면 들여쓰기 (mm, 다보 선반용 - 기본: 0)
+  shelfFrontInsetMm?: number;
 }
 
 /**
@@ -106,7 +109,8 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
   textureUrl,
   panelGrainDirections,
   lowerSectionTopOffsetMm = 0,
-  isFloatingPlacement = false
+  isFloatingPlacement = false,
+  shelfFrontInsetMm = 0
 }) => {
   // UI 상태에서 치수 표시 여부 가져오기
   const showDimensions = useUIStore(state => state.showDimensions);
@@ -342,6 +346,7 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
                 sectionName={sectionName}
                 sectionIndex={index}
                 floatOffsetMm={lowerSectionTopOffsetMm}
+                shelfFrontInsetMm={shelfFrontInsetMm}
               />
             );
           }
@@ -378,6 +383,7 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
               panelGrainDirections={panelGrainDirections}
               sectionName={sectionName}
               floatOffsetMm={lowerSectionTopOffsetMm}
+              shelfFrontInsetMm={shelfFrontInsetMm}
             />
           );
           break;

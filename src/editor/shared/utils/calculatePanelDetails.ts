@@ -53,6 +53,10 @@ export const calculatePanelDetails = (
   const drawerSideThickness = (basicThickness === 18.5 || basicThickness === 15.5) ? 15.5 : 15; // PB+PET 코팅 시 15.5mm
   const drawerBottomThickness = backPanelThickness; // 서랍 바닥판 - MDF 재질, 백패널과 동일
   
+  // 상부장 선반 앞면 30mm 옵셋 (하부장은 LowerCabinet.tsx에서 직접 처리)
+  const isUpperCabinet = moduleData.category === 'upper';
+  const shelfFrontInsetMm = isUpperCabinet ? 30 : 0;
+
   const originalHeight = moduleData.dimensions.height;
   const height = freeHeight || originalHeight;
   const heightRatio = freeHeight && originalHeight > 0 ? freeHeight / originalHeight : 1;
@@ -567,7 +571,7 @@ export const calculatePanelDetails = (
           targetPanel.push({
             name: `${sectionPrefix}선반 1`,
             width: horizontalPanelWidth, // 좌우 0.5mm씩 갭
-            depth: customDepth - 8 - basicThickness, // 실제 선반 깊이 = adjustedDepthForShelves - basicThickness
+            depth: customDepth - 8 - basicThickness - shelfFrontInsetMm, // 실제 선반 깊이 (상부장: 앞 30mm 옵셋)
             thickness: basicThickness,
             material: 'PB'
           });
@@ -578,7 +582,7 @@ export const calculatePanelDetails = (
           targetPanel.push({
             name: `${sectionPrefix}선반 ${i}`,
             width: horizontalPanelWidth, // 좌우 0.5mm씩 갭
-            depth: customDepth - 8 - basicThickness, // 실제 선반 깊이 = adjustedDepthForShelves - basicThickness
+            depth: customDepth - 8 - basicThickness - shelfFrontInsetMm, // 실제 선반 깊이 (상부장: 앞 30mm 옵셋)
             thickness: basicThickness,
             material: 'PB'  // 기본 재질
           });
@@ -659,7 +663,7 @@ export const calculatePanelDetails = (
           rTargetPanel.push({
             name: `${rSectionPrefix}선반 1`,
             width: rightHorizontalPanelWidth,
-            depth: customDepth - 8 - basicThickness,
+            depth: customDepth - 8 - basicThickness - shelfFrontInsetMm,
             thickness: basicThickness,
             material: 'PB'
           });
@@ -669,7 +673,7 @@ export const calculatePanelDetails = (
           rTargetPanel.push({
             name: `${rSectionPrefix}선반 ${i}`,
             width: rightHorizontalPanelWidth,
-            depth: customDepth - 8 - basicThickness,
+            depth: customDepth - 8 - basicThickness - shelfFrontInsetMm,
             thickness: basicThickness,
             material: 'PB'
           });
