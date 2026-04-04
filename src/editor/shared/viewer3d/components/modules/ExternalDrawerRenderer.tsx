@@ -32,6 +32,7 @@ interface DrawerZone {
 interface SingleDrawerProps {
   zone: DrawerZone;
   index: number;
+  drawerCount: number;
   shouldOpen: boolean;
   openDistance: number;
   // 공통 geometry
@@ -66,7 +67,7 @@ interface SingleDrawerProps {
 }
 
 const SingleDrawer: React.FC<SingleDrawerProps> = ({
-  zone, index, shouldOpen, openDistance,
+  zone, index, drawerCount, shouldOpen, openDistance,
   cabinetBottomY, basicThickness, bottomGap,
   extSideH, extSideD, extSideT,
   leftSideX, rightSideX, sideCenterZ,
@@ -88,8 +89,8 @@ const SingleDrawer: React.FC<SingleDrawerProps> = ({
 
   const drawerBottomY = cabinetBottomY + mmToThreeUnits(zone.bottomMm);
 
-  // 측판 높이: 1단=240mm, 2단 이상=130mm
-  const sideHeightMm = index === 0 ? 240 : 130;
+  // 측판 높이: 1단=240mm(2단서랍장) or 250mm(3단서랍장), 2단이상=130mm
+  const sideHeightMm = index === 0 ? (drawerCount >= 3 ? 250 : 240) : 130;
   const sideHeight = mmToThreeUnits(sideHeightMm);
 
   const bottomPanelTopY = cabinetBottomY + basicThickness;
@@ -361,6 +362,7 @@ export const ExternalDrawerRenderer: React.FC<ExternalDrawerRendererProps> = ({
           key={`ext-drawer-${i}`}
           zone={zone}
           index={i}
+          drawerCount={drawerCount}
           shouldOpen={shouldOpenDrawers}
           openDistance={DRAWER_OPEN_DISTANCE}
           cabinetBottomY={cabinetBottomY}
