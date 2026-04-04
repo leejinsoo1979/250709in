@@ -13,7 +13,7 @@
 }
 
 .filterSection {
-  padding: 8px 8px 0 8px;
+  padding: 6px 8px 0 8px;
   border-bottom: 1px solid var(--theme-border);
   flex-shrink: 0;
 }
@@ -30,15 +30,15 @@
   min-width: 0;
   background: var(--theme-surface);
   border: none;
-  padding: 6px 2px;
+  padding: 5px 2px;
   font-family: 'Apple SD Gothic Neo', -apple-system, BlinkMacSystemFont, sans-serif;
   font-size: 12px;
   font-weight: 500;
   color: var(--theme-primary) !important;
   cursor: pointer;
   transition: all 0.2s ease;
-  line-height: 20px;
-  height: 32px;
+  line-height: 1.2;
+  height: 30px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -62,13 +62,14 @@
 
 .moduleGrid {
   flex: 1;
-  padding: 6px;
+  padding: 8px;
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 6px;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
   overflow-x: hidden;
   overflow-y: auto;
   width: 100%;
+  align-content: start;
   scrollbar-width: thin;
   scrollbar-color: var(--theme-border) var(--theme-background-secondary);
 }
@@ -92,71 +93,44 @@
 
 .moduleCard {
   background: var(--theme-background-secondary);
-  border: 1px solid var(--theme-border);
-  border-radius: 6px;
-  padding: 6px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  display: flex;
-  flex-direction: column;
-  height: 160px;
-  position: relative;
-  user-select: none;
-  min-width: 0;
+  border: 1.5px solid var(--theme-border);
+  border-radius: 8px;
   overflow: hidden;
+  cursor: pointer;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  min-width: 0;
 }
 
 .moduleCard:hover {
   border-color: var(--theme-primary);
-  box-shadow: 0 2px 4px var(--theme-primary-light);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
 }
 
 .moduleCard.selected {
   border-color: var(--theme-primary);
-  background: var(--theme-primary-light);
-  box-shadow: 0 2px 8px var(--theme-primary-light);
+  box-shadow: 0 0 0 2px var(--theme-primary-light);
 }
 
 /* 더블클릭 시 시각적 피드백 */
 .moduleCard:active {
-  transform: scale(0.98);
+  transform: scale(0.97);
   transition: transform 0.1s ease;
 }
 
-.moduleCard::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: var(--theme-primary-light);
-  border-radius: 6px;
-  opacity: 0;
-  transition: opacity 0.2s ease;
-  pointer-events: none;
-}
-
-.moduleCard:active::after {
-  opacity: 1;
-}
-
 .moduleImage {
-  flex: 1;
+  width: 100%;
+  aspect-ratio: 1;
   display: flex;
   align-items: center;
   justify-content: center;
   background: var(--theme-surface);
-  border-radius: 4px;
-  margin-bottom: 4px;
   overflow: hidden;
-  min-height: 0;
 }
 
 .moduleImage img {
-  max-width: 100%;
-  max-height: 100%;
-  object-fit: contain;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
   transition: transform 0.2s ease;
 }
 
@@ -167,20 +141,20 @@
 .moduleName {
   font-family: 'Apple SD Gothic Neo', -apple-system, BlinkMacSystemFont, sans-serif;
   font-size: 11px;
-  font-weight: 400;
+  font-weight: 500;
   color: var(--theme-text);
   text-align: center;
-  line-height: 14px;
-  margin-top: auto;
+  line-height: 1.3;
+  padding: 5px 4px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  flex-shrink: 0;
+  border-top: 1px solid var(--theme-border);
 }
 
 .moduleCard.selected .moduleName {
   color: var(--theme-primary);
-  font-weight: 500;
+  font-weight: 600;
 }
 
 .emptyState {
@@ -209,7 +183,7 @@
 /* 반응형 디자인 */
 @media (max-width: 768px) {
   .filterButton {
-    padding: 6px 2px;
+    padding: 4px 2px;
     font-size: 11px;
     height: 28px;
   }
@@ -219,18 +193,14 @@
     gap: 4px;
   }
 
-  .moduleCard {
-    height: 140px;
-    padding: 4px;
-  }
-
   .moduleName {
     font-size: 10px;
+    padding: 4px 2px;
   }
 }
 
 @media (min-width: 1200px) {
   .moduleGrid {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: 1fr 1fr;
   }
 }
