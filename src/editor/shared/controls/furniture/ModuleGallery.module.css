@@ -93,23 +93,25 @@
 
 /* 썸네일 아이템 */
 .thumbnailItem {
-  position: relative;
-  aspect-ratio: 3 / 4; /* 모든 탭에서 동일한 비율로 통일 */
-  background-color: var(--theme-surface);
-  border: 1px solid var(--theme-border);
-  border-radius: 4px;
-  cursor: grab;
-  transition: all 0.2s ease;
-  overflow: hidden;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  padding: 2px; /* 패딩 줄여서 이미지 크게 */
+  cursor: grab;
+  transition: all 0.2s ease;
   user-select: none;
 }
 
-.thumbnailItem:hover {
+.thumbnailItem .thumbnailImage {
+  position: relative;
+  aspect-ratio: 3 / 4;
+  background-color: var(--theme-surface);
+  border: 1px solid var(--theme-border);
+  border-radius: 4px;
+  overflow: hidden;
+  padding: 2px;
+}
+
+.thumbnailItem:hover .thumbnailImage {
   border-color: var(--theme-border-hover);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
   transform: translateY(-1px);
@@ -117,11 +119,14 @@
 
 .thumbnailItem:active {
   cursor: grabbing;
+}
+
+.thumbnailItem:active .thumbnailImage {
   transform: translateY(0);
 }
 
 /* 더블클릭 시 시각적 피드백 */
-.thumbnailItem::after {
+.thumbnailItem .thumbnailImage::after {
   content: '';
   position: absolute;
   top: 0;
@@ -135,18 +140,18 @@
   pointer-events: none;
 }
 
-.thumbnailItem:active::after {
+.thumbnailItem:active .thumbnailImage::after {
   opacity: 1;
 }
 
 /* 선택된 상태 */
-.thumbnailItem.selected {
+.thumbnailItem.selected .thumbnailImage {
   border-color: var(--theme-primary);
   border-width: 2px;
   box-shadow: 0 0 0 1px var(--theme-primary);
 }
 
-.thumbnailItem.selected:hover {
+.thumbnailItem.selected:hover .thumbnailImage {
   transform: none;
   box-shadow: 0 0 0 1px var(--theme-primary);
 }
@@ -155,41 +160,39 @@
 .thumbnailItem.disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+.thumbnailItem.disabled .thumbnailImage {
   border-color: var(--theme-border);
 }
 
-.thumbnailItem.disabled:hover {
+.thumbnailItem.disabled:hover .thumbnailImage {
   border-color: var(--theme-border);
   box-shadow: none;
   transform: none;
 }
 
-.thumbnailItem.disabled:active::after {
+.thumbnailItem.disabled:active .thumbnailImage::after {
   opacity: 0;
 }
 
 /* 썸네일 이름 */
 .thumbnailName {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  padding: 2px 4px;
+  margin-top: 4px;
   font-size: 10px;
   font-weight: 500;
   color: var(--theme-text-secondary);
   text-align: center;
-  background: linear-gradient(transparent, var(--theme-surface) 30%);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  line-height: 1.4;
+  width: 100%;
+  line-height: 1.3;
 }
 
 /* 썸네일 이미지 */
 .thumbnailImage {
   width: 100%;
-  height: 100%;
   display: flex;
   align-items: center;
   justify-content: center;

@@ -811,9 +811,9 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
               {module.name.replace(/\s*[\d.]+mm$/, '')}
             </div>
           )}
+          {!isValid && <div className={styles.disabledOverlay} />}
         </div>
         <div className={styles.thumbnailName}>{module.name.replace(/\s*[\d.]+mm$/, '')}</div>
-        {!isValid && <div className={styles.disabledOverlay} />}
       </div>
 
       {/* 드래그 전용 이미지 (화면에 표시되지 않음, 각 썸네일마다 독립적) */}
