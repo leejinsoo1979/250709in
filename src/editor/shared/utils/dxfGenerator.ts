@@ -768,8 +768,8 @@ const drawFrontFurnitureModules = (dxf: DxfWriter, placedModules: DXFPlacedModul
 
       dxfNotches.forEach(notch => {
         const notchBase = y1 + notch.fromBottom;
-        // 수직판: 따내기 전체를 앞면에서 가림 (정면도에서 수평판은 뒤에 숨어 보이지 않음)
-        drawRectangle(dxf, x1, notchBase, x2, notchBase + notch.height);
+        // 수직판: 측판 안쪽(내경)에서 따내기 전체를 가림
+        drawRectangle(dxf, innerX1, notchBase, innerX2, notchBase + notch.height);
       });
     }
 
