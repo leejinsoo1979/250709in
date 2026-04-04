@@ -520,12 +520,12 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                       />
                     )}
 
-                    {/* 상단 가로전대 (상판내림: 따내기 없이 전대만) */}
+                    {/* 상단 가로전대 (상판내림: 따내기 없이 전대만, 캐비넷 앞면에 부착) */}
                     {topStretcher && (
                       <BoxWithEdges
                         key={`front-stretcher-top-${material instanceof THREE.Material ? material.uuid : 'mat'}`}
                         args={[innerWidth, mmToThreeUnits(topStretcher.heightMm), basicThickness]}
-                        position={[0, height/2 - mmToThreeUnits(topStretcher.heightMm)/2, depth/2 - mmToThreeUnits(topStretcher.depthMm) - basicThickness/2]}
+                        position={[0, height/2 - mmToThreeUnits(topStretcher.heightMm)/2, depth/2 - basicThickness/2]}
                         material={material}
                         renderMode={renderMode}
                         isDragging={isDragging}
