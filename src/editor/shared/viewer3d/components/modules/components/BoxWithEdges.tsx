@@ -80,11 +80,16 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
   const { view2DTheme } = useUIStore();
   const { theme: appTheme } = useTheme();
 
-  // 부모 컨텍스트에서 편집/드래그 상태 자동 감지 (prop으로 전달되지 않은 경우에도 고스트 적용)
+  // 전역 스토어에서 직접 편집 상태 감지 (Context bridge 문제 회피)
+  const activePopup = useUIStore(state => state.activePopup);
+  const selectedFurnitureId = useUIStore(state => state.selectedFurnitureId);
+  const storeEditMode = furnitureId ? (activePopup.type === 'furnitureEdit' && activePopup.id === furnitureId) : false;
+  const storeSelected = furnitureId ? (selectedFurnitureId === furnitureId) : false;
   const parentEditMode = useFurnitureGhostContext();
-  const effectiveEditMode = isEditMode || parentEditMode;
-  // 편집/드래그 중에는 wireframe 대신 solid로 강제 (2D 모드에서도 고스트 표시를 위해)
-  const effectiveRenderMode = (effectiveEditMode || isDragging) ? 'solid' as const : renderMode;
+  const effectiveEditMode = isEditMode || parentEditMode || storeEditMode;
+  const effectiveSelected = storeSelected;
+  // 편집/드래그/선택 중에는 wireframe 대신 solid로 강제 (고스트 표시를 위해)
+  const effectiveRenderMode = (effectiveEditMode || effectiveSelected || isDragging) ? 'solid' as const : renderMode;
 
   // 스토어에서 직접 panelGrainDirections 가져오기 (실시간 업데이트 보장)
   // Zustand는 selector 함수의 참조가 바뀌면 재구독하므로, furnitureId별로 안정적인 selector 필요
@@ -152,8 +157,8 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
       return "#10b981"; // 기본값 (green)
     };
 
-    // 드래그 중이거나 편집 모드일 때 동일한 테마색 고스트 (2D/3D 모두 동일)
-    if ((isDragging || effectiveEditMode) && baseMaterial instanceof THREE.MeshStandardMaterial) {
+    // 드래그/편집/선택 중일 때 동일한 테마색 고스트 (2D/3D 모두 동일)
+    if ((isDragging || effectiveEditMode || effectiveSelected) && baseMaterial instanceof THREE.MeshStandardMaterial) {
       const ghostMaterial = baseMaterial.clone();
       ghostMaterial.transparent = true;
       ghostMaterial.opacity = 0.6;
@@ -206,7 +211,7 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
       }
     }
     return baseMaterial;
-  }, [baseMaterial, isDragging, effectiveEditMode, viewMode, effectiveRenderMode, isClothingRod, panelName, view2DDirection, view2DTheme]);
+  }, [baseMaterial, isDragging, effectiveEditMode, effectiveSelected, viewMode, effectiveRenderMode, isClothingRod, panelName, view2DDirection, view2DTheme]);
 
   // activePanelGrainDirections를 JSON 문자열로 변환하여 값 변경 감지
   const activePanelGrainDirectionsStr = activePanelGrainDirections ? JSON.stringify(activePanelGrainDirections) : '';
@@ -231,7 +236,7 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
 
   // 편집/드래그 모드 해제 시 panelMaterialRef 캐시된 clone의 투명도 즉시 복원
   React.useEffect(() => {
-    if (!effectiveEditMode && !isDragging && panelMaterialRef.current instanceof THREE.MeshStandardMaterial) {
+    if (!effectiveEditMode && !effectiveSelected && !isDragging && panelMaterialRef.current instanceof THREE.MeshStandardMaterial) {
       if (panelMaterialRef.current.transparent || panelMaterialRef.current.opacity < 1.0) {
         panelMaterialRef.current.transparent = processedMaterial instanceof THREE.MeshStandardMaterial ? processedMaterial.transparent : false;
         panelMaterialRef.current.opacity = processedMaterial instanceof THREE.MeshStandardMaterial ? processedMaterial.opacity : 1.0;
@@ -239,7 +244,7 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
         panelMaterialRef.current.needsUpdate = true;
       }
     }
-  }, [effectiveEditMode, isDragging, processedMaterial]);
+  }, [effectiveEditMode, effectiveSelected, isDragging, processedMaterial]);
 
   // 패널별 개별 material 생성 (텍스처 회전 적용)
   const panelSpecificMaterial = React.useMemo(() => {
@@ -251,7 +256,7 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
     }
 
     // 고스트 모드: 텍스처 처리 건너뛰고 processedMaterial 그대로 사용
-    if (isDragging || effectiveEditMode) {
+    if (isDragging || effectiveEditMode || effectiveSelected) {
       panelMaterialRef.current = null;
       return processedMaterial;
     }
