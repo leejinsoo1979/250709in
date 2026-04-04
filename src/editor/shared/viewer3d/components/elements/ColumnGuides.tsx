@@ -748,6 +748,7 @@ const ColumnGuides: React.FC<ColumnGuidesProps> = ({ viewMode: viewModeProp }) =
           const slotWidth = mmToThreeUnits(sw);
 
           if (viewMode === '2D' && view2DDirection === 'top') {
+            // 2D 탑뷰: 바닥 메쉬
             meshes.push(
               <mesh
                 key={`${zoneType}-floor-mesh-${i}`}
@@ -764,11 +765,27 @@ const ColumnGuides: React.FC<ColumnGuidesProps> = ({ viewMode: viewModeProp }) =
               </mesh>
             );
           } else {
+            // 3D: 천장 + 바닥 메쉬 모두
             meshes.push(
               <mesh
                 key={`${zoneType}-top-mesh-${i}`}
                 position={[slotCenterX, ceilingY, centerZ]}
                 rotation={[Math.PI / 2, 0, 0]}
+              >
+                <planeGeometry args={[slotWidth, depth]} />
+                <meshBasicMaterial
+                  color={primaryColor}
+                  transparent
+                  opacity={opacity}
+                  side={THREE.DoubleSide}
+                />
+              </mesh>
+            );
+            meshes.push(
+              <mesh
+                key={`${zoneType}-bottom-mesh-${i}`}
+                position={[slotCenterX, floorY, centerZ]}
+                rotation={[-Math.PI / 2, 0, 0]}
               >
                 <planeGeometry args={[slotWidth, depth]} />
                 <meshBasicMaterial
