@@ -244,6 +244,7 @@ interface ExternalDrawerRendererProps {
   notchFromBottoms: number[];
   notchHeights: number[];
   isEditMode?: boolean;
+  hideTopNotch?: boolean;
 }
 
 export const ExternalDrawerRenderer: React.FC<ExternalDrawerRendererProps> = ({
@@ -268,6 +269,7 @@ export const ExternalDrawerRenderer: React.FC<ExternalDrawerRendererProps> = ({
   notchFromBottoms,
   notchHeights,
   isEditMode = false,
+  hideTopNotch = false,
 }) => {
   const { viewMode } = useSpace3DView();
   const { doorsOpen, isIndividualDoorOpen } = useUIStore();
@@ -412,7 +414,9 @@ export const ExternalDrawerRenderer: React.FC<ExternalDrawerRendererProps> = ({
     .map((fb, idx) => ({ fromBottom: fb, height: notchHeights[idx] || 65 }))
     .sort((a, b) => a.fromBottom - b.fromBottom);
 
-  const allNotches = [...sortedNotches, { fromBottom: upperNotchFromBottom, height: upperNotchH }];
+  const allNotches = hideTopNotch
+    ? [...sortedNotches]
+    : [...sortedNotches, { fromBottom: upperNotchFromBottom, height: upperNotchH }];
 
   for (let ni = 0; ni < allNotches.length; ni++) {
     const notch = allNotches[ni];
@@ -422,6 +426,17 @@ export const ExternalDrawerRenderer: React.FC<ExternalDrawerRendererProps> = ({
       zones.push({ bottomMm: cursor, topMm: notch.fromBottom, notchAboveBottom, notchBelowTop });
     }
     cursor = notch.fromBottom + notch.height;
+  }
+
+  // hideTopNotch: 마지막 노치 ~ 캐비넷 상단까지 남은 영역도 서랍 zone으로 추가
+  if (hideTopNotch && cursor < sidePanelHeightMm) {
+    const lastNotch = allNotches[allNotches.length - 1];
+    zones.push({
+      bottomMm: cursor,
+      topMm: sidePanelHeightMm,
+      notchAboveBottom: sidePanelHeightMm,
+      notchBelowTop: lastNotch ? (lastNotch.fromBottom + lastNotch.height) : null,
+    });
   }
 
   const cabinetBottomY = -height / 2;

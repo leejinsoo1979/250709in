@@ -49,7 +49,9 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
     moduleId: moduleData.id,
     lowerSectionTopOffset,
     placementType: spaceInfo?.baseConfig?.placementType,
-    floatHeight: spaceInfo?.baseConfig?.floatHeight
+    floatHeight: spaceInfo?.baseConfig?.floatHeight,
+    hideTopPanel: !moduleData.id.includes('lower-door-lift-'),
+    hasSideNotches: moduleData.id.includes('lower-door-lift-2tier') || moduleData.id.includes('lower-door-lift-3tier') || moduleData.id.includes('lower-drawer-'),
   });
   const { renderMode: contextRenderMode, viewMode } = useSpace3DView();
   const renderMode = renderModeProp || contextRenderMode;
@@ -239,6 +241,7 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
               notchFromBottoms={notchFromBottoms}
               notchHeights={notchHeights}
               isEditMode={isEditMode}
+              hideTopNotch={isDoorLift2Tier || isDoorLift3Tier}
             />
           </group>
         );
