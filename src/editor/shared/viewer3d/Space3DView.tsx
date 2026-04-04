@@ -40,6 +40,7 @@ import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
 import { useUIStore } from '@/store/uiStore';
 import { Environment } from '@react-three/drei';
+import { useFrame } from '@react-three/fiber';
 import { calculateSpaceIndexing } from '@/editor/shared/utils/indexing';
 import { calculateOptimalDistance, mmToThreeUnits, calculateCameraTarget, threeUnitsToMm } from './components/base/utils/threeUtils';
 import { useThemeColors } from '@/hooks/useThemeColors';
@@ -47,6 +48,46 @@ import { useTheme } from '@/contexts/ThemeContext';
 import { getModuleById } from '@/data/modules';
 import { useThrottle } from '@/editor/shared/hooks/useThrottle';
 import { useResponsive } from '@/hooks/useResponsive';
+
+/**
+ * SunLight — sunAngle에 따라 부드럽게 회전하는 메인 조명
+ * useRef로 light 인스턴스를 직접 조작하여 shadow map 재생성 없이 위치 변경
+ */
+const SunLight: React.FC<{ sunAngle: number; castShadow: boolean }> = ({ sunAngle, castShadow }) => {
+  const lightRef = useRef<THREE.DirectionalLight>(null);
+  const currentAngle = useRef(sunAngle);
+
+  useFrame(() => {
+    if (!lightRef.current) return;
+    // lerp로 부드러운 보간 (현재 → 목표)
+    currentAngle.current += (sunAngle - currentAngle.current) * 0.12;
+    const rad = (currentAngle.current * Math.PI) / 180;
+    lightRef.current.position.set(
+      Math.sin(rad) * 22,
+      15,
+      Math.cos(rad) * 22
+    );
+  });
+
+  return (
+    <directionalLight
+      ref={lightRef}
+      intensity={2.5}
+      color="#ffffff"
+      castShadow={castShadow}
+      shadow-mapSize-width={4096}
+      shadow-mapSize-height={4096}
+      shadow-camera-far={50}
+      shadow-camera-left={-25}
+      shadow-camera-right={25}
+      shadow-camera-top={25}
+      shadow-camera-bottom={-25}
+      shadow-bias={-0.0005}
+      shadow-radius={12}
+      shadow-normalBias={0.02}
+    />
+  );
+};
 
 /**
  * Space3DView 컴포넌트
@@ -1723,26 +1764,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
               {/* 조명 시스템 - 2D 모드에서는 그림자 없음 */}
 
               {/* 메인 자연광 - 3D 모드에서만 그림자 생성, sunAngle로 위치 조절 */}
-              <directionalLight
-                position={[
-                  Math.sin(((sunAngle ?? 45) * Math.PI) / 180) * 22,
-                  15,
-                  Math.cos(((sunAngle ?? 45) * Math.PI) / 180) * 22
-                ]}
-                intensity={2.5}
-                color="#ffffff"
-                castShadow={viewMode === '3D'}
-                shadow-mapSize-width={4096}
-                shadow-mapSize-height={4096}
-                shadow-camera-far={50}
-                shadow-camera-left={-25}
-                shadow-camera-right={25}
-                shadow-camera-top={25}
-                shadow-camera-bottom={-25}
-                shadow-bias={-0.0005}
-                shadow-radius={12}
-                shadow-normalBias={0.02}
-              />
+              <SunLight sunAngle={sunAngle ?? 45} castShadow={viewMode === '3D'} />
 
               {/* 부드러운 필 라이트 - 그림자 대비 조절 */}
               <directionalLight
