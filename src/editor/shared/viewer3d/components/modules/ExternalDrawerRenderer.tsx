@@ -403,17 +403,17 @@ export const ExternalDrawerRenderer: React.FC<ExternalDrawerRendererProps> = ({
         if (notch.height <= 0) return null;
         const frameWidth = mmToThreeUnits(moduleWidth); // 캐비넷 전체 폭
         const notchHMm = notch.height;
-        const horzDepthMm = 40 - basicThicknessMm; // 수평판 깊이 = 따내기깊이 - 수직판두께
+        const verticalHMm = notchHMm - basicThicknessMm; // 수직판 높이 = 따내기높이 - 수평판두께
 
-        // 수직판: 따내기 전체 높이를 앞면(도어면)에서 완전히 가림
-        const vertY = cabinetBottomY + mmToThreeUnits(notch.fromBottom) + mmToThreeUnits(notchHMm) / 2;
-        const vertZ = depth / 2 - basicThickness / 2;
-        const vertArgs: [number, number, number] = [frameWidth, mmToThreeUnits(notchHMm), basicThickness];
-
-        // 수평판: 따내기 바닥에 위치, 수직판 뒤에서 안쪽으로 보강
+        // 수평판: 따내기 바닥에 위치, 깊이 40mm
         const horzY = cabinetBottomY + mmToThreeUnits(notch.fromBottom) + basicThickness / 2;
-        const horzZ = depth / 2 - basicThickness - mmToThreeUnits(horzDepthMm) / 2;
-        const horzArgs: [number, number, number] = [frameWidth, basicThickness, mmToThreeUnits(horzDepthMm)];
+        const horzZ = depth / 2 - mmToThreeUnits(40) / 2;
+        const horzArgs: [number, number, number] = [frameWidth, basicThickness, mmToThreeUnits(40)];
+
+        // 수직판: 수평판 위에 올라감, 안쪽(따내기 뒤쪽 면)에 붙음
+        const vertY = cabinetBottomY + mmToThreeUnits(notch.fromBottom) + basicThickness + mmToThreeUnits(verticalHMm) / 2;
+        const vertZ = depth / 2 - mmToThreeUnits(40) + basicThickness / 2;
+        const vertArgs: [number, number, number] = [frameWidth, mmToThreeUnits(verticalHMm), basicThickness];
 
         const horzName = sectionName ? `${sectionName}L프레임수평(${ni + 1})` : `L프레임수평(${ni + 1})`;
         const vertName = sectionName ? `${sectionName}L프레임수직(${ni + 1})` : `L프레임수직(${ni + 1})`;
