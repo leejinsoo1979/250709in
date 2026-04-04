@@ -86,11 +86,6 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
   // 편집/드래그 중에는 wireframe 대신 solid로 강제 (2D 모드에서도 고스트 표시를 위해)
   const effectiveRenderMode = (effectiveEditMode || isDragging) ? 'solid' as const : renderMode;
 
-  // 임시 디버그 — 모든 패널의 편집 상태 확인
-  if (effectiveEditMode && panelName) {
-    console.log(`🔍 [${panelName}] renderMode=${renderMode} effectiveRM=${effectiveRenderMode} editMode=${isEditMode} parentEdit=${parentEditMode} drag=${isDragging}`);
-  }
-
   // 스토어에서 직접 panelGrainDirections 가져오기 (실시간 업데이트 보장)
   // Zustand는 selector 함수의 참조가 바뀌면 재구독하므로, furnitureId별로 안정적인 selector 필요
   const storePanelGrainDirections = useFurnitureStore((state) => {
@@ -170,7 +165,6 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
       ghostMaterial.depthTest = true;
       ghostMaterial.side = THREE.DoubleSide;
       ghostMaterial.needsUpdate = true;
-      console.log(`👻 [${panelName}] GHOST MATERIAL CREATED: color=${ghostMaterial.color.getHexString()} opacity=${ghostMaterial.opacity} transparent=${ghostMaterial.transparent}`);
       return ghostMaterial;
     }
 
@@ -188,6 +182,16 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
       transparentMaterial.opacity = 0.1;
       transparentMaterial.needsUpdate = true;
       return transparentMaterial;
+    }
+
+    // wireframe 모드에서는 메시를 완전히 투명하게 (클릭 가능하도록 visible은 유지)
+    if (effectiveRenderMode === 'wireframe' && baseMaterial instanceof THREE.MeshStandardMaterial) {
+      const invisibleMaterial = baseMaterial.clone();
+      invisibleMaterial.transparent = true;
+      invisibleMaterial.opacity = 0;
+      invisibleMaterial.depthWrite = false;
+      invisibleMaterial.needsUpdate = true;
+      return invisibleMaterial;
     }
 
     // 기본 상태: baseMaterial 투명도를 정상 복원 (useEffect 타이밍 이슈 방지)
@@ -321,27 +325,6 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
   }, [processedMaterial, panelName, activePanelGrainDirectionsStr, isDragging, effectiveEditMode, textureSignature, viewMode, effectiveRenderMode, isPlainMaterial]);
 
   const finalMaterial = panelSpecificMaterial;
-
-  // 디버그: 메시 ref로 실제 Three.js 오브젝트 상태 확인
-  const debugMeshRef = React.useRef<THREE.Mesh>(null);
-  React.useEffect(() => {
-    if (effectiveEditMode && debugMeshRef.current && panelName) {
-      const mesh = debugMeshRef.current;
-      const mat = mesh.material as THREE.MeshStandardMaterial;
-      console.log(`🔬 [${panelName}] MESH STATE: visible=${mesh.visible} matType=${mat?.constructor?.name} matColor=${mat?.color?.getHexString?.()} matOpacity=${mat?.opacity} matTransparent=${mat?.transparent} matVisible=${mat?.visible} matDepthWrite=${mat?.depthWrite} renderOrder=${mesh.renderOrder}`);
-
-      // Also check parent visibility
-      let parent = mesh.parent;
-      let depth = 0;
-      while (parent && depth < 5) {
-        if (!parent.visible) {
-          console.log(`🔬 [${panelName}] HIDDEN PARENT at depth ${depth}: name=${parent.name} type=${parent.type}`);
-        }
-        parent = parent.parent;
-        depth++;
-      }
-    }
-  }, [effectiveEditMode, finalMaterial, panelName]);
 
   // useEffect 제거: useMemo에서 이미 모든 회전 로직을 처리하므로 중복 실행 방지
 
@@ -752,7 +735,6 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
       {/* 면 렌더링 - 와이어프레임에서는 투명하게 */}
       {/* DXF 내보내기를 위해 mesh에도 이름 추가 */}
       <mesh
-        ref={debugMeshRef}
         name={isClothingRod ? 'clothing-rod-mesh' : isBackPanel ? `back-panel-mesh${panelName ? `-${panelName}` : ''}` : `furniture-mesh${panelName ? `-${panelName}` : ''}`}
         receiveShadow={viewMode === '3D' && effectiveRenderMode === 'solid' && shadowEnabled}
         castShadow={viewMode === '3D' && effectiveRenderMode === 'solid' && shadowEnabled}
@@ -760,15 +742,12 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
         onClick={onClick}
         onPointerOver={onPointerOver}
         onPointerOut={onPointerOut}
-        material={effectiveRenderMode === 'wireframe' ? undefined : finalMaterial}
+        material={finalMaterial}
       >
         {notchGeometry ? (
           <primitive key={`notch-${args[0]}-${args[1]}-${args[2]}-${JSON.stringify(notch || notches)}`} object={notchGeometry} attach="geometry" />
         ) : (
           <boxGeometry key={`${args[0]}-${args[1]}-${args[2]}`} args={args} />
-        )}
-        {effectiveRenderMode === 'wireframe' && (
-          <meshBasicMaterial visible={false} />
         )}
       </mesh>
       {/* 윤곽선 렌더링 - hideEdges prop 또는 edgeOutlineEnabled 스토어 설정으로 제어 */}
