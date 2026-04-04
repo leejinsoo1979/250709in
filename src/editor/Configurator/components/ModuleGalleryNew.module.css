@@ -55,6 +55,7 @@
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 12px;
+  overflow-x: hidden;
   overflow-y: auto;
   scrollbar-width: thin;
   scrollbar-color: var(--theme-border) var(--theme-background-secondary);
@@ -89,6 +90,8 @@
   height: 180px;
   position: relative;
   user-select: none;
+  min-width: 0;
+  overflow: hidden;
 }
 
 .moduleCard:hover {
@@ -156,6 +159,9 @@
   text-align: center;
   line-height: 16px;
   margin-top: auto;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .moduleCard.selected .moduleName {
