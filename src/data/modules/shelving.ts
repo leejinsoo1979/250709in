@@ -938,8 +938,8 @@ const createDualLowerHalfCabinet = (dualWidth: number, slotWidths?: number[]): M
 };
 
 /**
- * 듀얼 기본하부장 2단 - 조절발 65mm + 캐비넷 W(듀얼)xD650xH785
- * 기본하부장 2단의 듀얼 버전
+ * 2단서랍장한통 - 조절발 65mm + 캐비넷 W(듀얼)xD650xH785
+ * 2단서랍장반통의 듀얼 버전
  * 측판에 상단+하단(330mm) 2개의 따내기 홈이 있음
  */
 const createDualLowerDrawer2Tier = (dualWidth: number, slotWidths?: number[]): ModuleData => {
@@ -948,12 +948,12 @@ const createDualLowerDrawer2Tier = (dualWidth: number, slotWidths?: number[]): M
 
   const base = createFurnitureBase(
     `dual-lower-drawer-2tier-${widthForId}`,
-    `듀얼 기본하부장 2단 ${widthForId}mm`,
+    `2단서랍장한통 ${widthForId}mm`,
     dualWidth,
     cabinetHeight,
     650,
     '#e3f2fd',
-    `듀얼 기본하부장 2단 W${widthForId}xH785xD650 (조절발 65mm)`,
+    `2단서랍장한통 W${widthForId}xH785xD650 (조절발 65mm)`,
     650,
     'lower'
   );
@@ -981,7 +981,7 @@ const createDualLowerDrawer2Tier = (dualWidth: number, slotWidths?: number[]): M
 };
 
 /**
- * 기본하부장 2단 - 조절발 65mm + 캐비넷 W500xD650xH785
+ * 2단서랍장반통 - 조절발 65mm + 캐비넷 W500xD650xH785
  * 전체 높이: 850mm (65 + 785)
  * 측판에 상단+하단(330mm) 2개의 따내기 홈이 있음
  */
@@ -991,12 +991,12 @@ const createLowerDrawer2Tier = (columnWidth: number): ModuleData => {
 
   const base = createFurnitureBase(
     `lower-drawer-2tier-${widthForId}`,
-    `기본하부장 2단 ${widthForId}mm`,
+    `2단서랍장반통 ${widthForId}mm`,
     columnWidth,
     cabinetHeight,
     650,
     '#e3f2fd', // 연한 파란색
-    `기본하부장 2단 W${widthForId}xH785xD650 (조절발 65mm)`,
+    `2단서랍장반통 W${widthForId}xH785xD650 (조절발 65mm)`,
     650,
     'lower'
   );
