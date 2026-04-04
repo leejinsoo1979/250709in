@@ -828,7 +828,7 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
               }}
             />
           ) : (
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', height: '100%', fontSize: '11px', color: '#666', textAlign: 'center', padding: '4px', wordBreak: 'keep-all' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', height: '100%', fontSize: '11px', color: 'var(--theme-text)', textAlign: 'center', padding: '4px', wordBreak: 'keep-all' }}>
               {module.name.replace(/\s*[\d.]+mm$/, '')}
             </div>
           )}
