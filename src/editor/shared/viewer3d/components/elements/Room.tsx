@@ -3859,7 +3859,7 @@ const Room: React.FC<RoomProps> = ({
                   const args: [number, number, number] = [
                     mmToThreeUnits(seg.widthMm),
                     seg.height,
-                    mmToThreeUnits(END_PANEL_THICKNESS)
+                    mmToThreeUnits(END_PANEL_RENDER_THICKNESS) // 도어(18.5mm)와 동일한 PET 두께
                   ];
                   const pos: [number, number, number] = [
                     mmToThreeUnits(seg.centerXmm),
@@ -4716,7 +4716,7 @@ const Room: React.FC<RoomProps> = ({
                     const args: [number, number, number] = [
                       mmToThreeUnits(seg.widthMm),
                       seg.height,
-                      mmToThreeUnits(END_PANEL_THICKNESS)
+                      mmToThreeUnits(END_PANEL_RENDER_THICKNESS) // 도어(18.5mm)와 동일한 PET 두께
                     ];
                     const pos: [number, number, number] = [
                       mmToThreeUnits(seg.centerXmm),
