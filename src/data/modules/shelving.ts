@@ -726,16 +726,16 @@ const createUpperCabinet3 = (columnWidth: number): ModuleData => {
   } as ModuleData;
 };
 
-// 듀얼 상부장 가구 생성 함수
+// 상부장 가구 생성 함수
 
 const createDualUpperCabinet1 = (dualWidth: number): ModuleData => {
   const widthForId = Math.round(dualWidth * 100) / 100;
   const base = createFurnitureBase(
-    `dual-upper-cabinet-shelf-${widthForId}`, `듀얼 상부장 3단형 ${widthForId}mm`,
+    `dual-upper-cabinet-shelf-${widthForId}`, `상부장 3단형 ${widthForId}mm`,
     dualWidth, 600, FURNITURE_SPECS.DEFAULT_DEPTH, '#c8e6c9',
-    `듀얼 상부장 선반 2단형`, FURNITURE_SPECS.DEFAULT_DEPTH, 'upper'
+    `상부장 선반 2단형`, FURNITURE_SPECS.DEFAULT_DEPTH, 'upper'
   );
-  return { ...base, thumbnail: '/images/furniture-thumbnails/듀얼 상부장 3단형.png',
+  return { ...base, thumbnail: '/images/furniture-thumbnails/상부장 3단형.png',
     modelConfig: { ...base.modelConfig,
       leftSections: [{ type: 'shelf', heightType: 'percentage', height: 100, count: 2 }],
       rightSections: [{ type: 'shelf', heightType: 'percentage', height: 100, count: 2 }]
@@ -746,11 +746,11 @@ const createDualUpperCabinet1 = (dualWidth: number): ModuleData => {
 const createDualUpperCabinet2 = (dualWidth: number): ModuleData => {
   const widthForId = Math.round(dualWidth * 100) / 100;
   const base = createFurnitureBase(
-    `dual-upper-cabinet-2tier-${widthForId}`, `듀얼 상부장 2단형 ${widthForId}mm`,
+    `dual-upper-cabinet-2tier-${widthForId}`, `상부장 2단형 ${widthForId}mm`,
     dualWidth, 600, FURNITURE_SPECS.DEFAULT_DEPTH, '#bbdefb',
-    `듀얼 상부장 2단형 (중간 선반 1개)`, FURNITURE_SPECS.DEFAULT_DEPTH, 'upper'
+    `상부장 2단형 (중간 선반 1개)`, FURNITURE_SPECS.DEFAULT_DEPTH, 'upper'
   );
-  return { ...base, thumbnail: '/images/furniture-thumbnails/듀얼 상부장2단형.png',
+  return { ...base, thumbnail: '/images/furniture-thumbnails/상부장2단형.png',
     modelConfig: { ...base.modelConfig,
       leftSections: [{ type: 'shelf', heightType: 'percentage', height: 100, count: 1 }],
       rightSections: [{ type: 'shelf', heightType: 'percentage', height: 100, count: 1 }]
@@ -761,11 +761,11 @@ const createDualUpperCabinet2 = (dualWidth: number): ModuleData => {
 const createDualUpperCabinet3 = (dualWidth: number): ModuleData => {
   const widthForId = Math.round(dualWidth * 100) / 100;
   const base = createFurnitureBase(
-    `dual-upper-cabinet-open-${widthForId}`, `듀얼 상부장 기본 ${widthForId}mm`,
+    `dual-upper-cabinet-open-${widthForId}`, `상부장 기본 ${widthForId}mm`,
     dualWidth, 600, FURNITURE_SPECS.DEFAULT_DEPTH, '#ffe0b2',
-    `듀얼 상부장 기본`, FURNITURE_SPECS.DEFAULT_DEPTH, 'upper'
+    `상부장 기본`, FURNITURE_SPECS.DEFAULT_DEPTH, 'upper'
   );
-  return { ...base, thumbnail: '/images/furniture-thumbnails/듀얼 상부장 기본.png',
+  return { ...base, thumbnail: '/images/furniture-thumbnails/상부장 기본.png',
     modelConfig: { ...base.modelConfig,
       leftSections: [{ type: 'open', heightType: 'percentage', height: 100 }],
       rightSections: [{ type: 'open', heightType: 'percentage', height: 100 }]
@@ -776,11 +776,11 @@ const createDualUpperCabinet3 = (dualWidth: number): ModuleData => {
 const createDualUpperCabinet4 = (dualWidth: number): ModuleData => {
   const widthForId = Math.round(dualWidth * 100) / 100;
   const base = createFurnitureBase(
-    `dual-upper-cabinet-mixed-${widthForId}`, `듀얼 상부장 혼합형 ${widthForId}mm`,
+    `dual-upper-cabinet-mixed-${widthForId}`, `상부장 혼합형 ${widthForId}mm`,
     dualWidth, 600, FURNITURE_SPECS.DEFAULT_DEPTH, '#e1bee7',
-    `듀얼 상부장 혼합형 (오픈+선반)`, FURNITURE_SPECS.DEFAULT_DEPTH, 'upper'
+    `상부장 혼합형 (오픈+선반)`, FURNITURE_SPECS.DEFAULT_DEPTH, 'upper'
   );
-  return { ...base, thumbnail: '/images/furniture-thumbnails/듀얼 상부장 혼합형.png',
+  return { ...base, thumbnail: '/images/furniture-thumbnails/상부장 혼합형.png',
     modelConfig: { ...base.modelConfig,
       leftSections: [{ type: 'shelf', heightType: 'percentage', height: 50, count: 1 }, { type: 'open', heightType: 'percentage', height: 50 }],
       rightSections: [{ type: 'shelf', heightType: 'percentage', height: 50, count: 1 }, { type: 'open', heightType: 'percentage', height: 50 }]
@@ -1878,11 +1878,11 @@ export const generateShelvingModules = (
     modules.push(createDualType5(dualWidth, maxHeight, dualSlotWidths));
     modules.push(createDualType6(dualWidth, maxHeight, dualSlotWidths));
     
-    // === 듀얼 상부장 가구 생성 ===
+    // === 상부장 가구 생성 ===
     modules.push(createDualUpperCabinet1(dualWidth));
     modules.push(createDualUpperCabinet2(dualWidth));
     modules.push(createDualUpperCabinet3(dualWidth));
-    // modules.push(createDualUpperCabinet4(dualWidth)); // 듀얼 상부장 혼합형 제거
+    // modules.push(createDualUpperCabinet4(dualWidth)); // 상부장 혼합형 제거
 
     // === 듀얼 하부장 가구 생성 === (이전 모듈 비활성화)
     // modules.push(createDualLowerCabinet1(dualWidth));
