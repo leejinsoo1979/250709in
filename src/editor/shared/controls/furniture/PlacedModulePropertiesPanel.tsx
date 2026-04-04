@@ -30,16 +30,10 @@ const FURNITURE_ICONS: Record<string, string> = {
   'dual-4drawer-pantshanger': getImagePath('dual-4drawer-pantshanger.png'),
 };
 
-// 가구 이미지 매핑 함수
-const getFurnitureImagePath = (moduleId: string) => {
-  // moduleId에서 너비 정보 제거하여 기본 타입 추출
+// 가구 이미지 매핑 함수 — 매핑에 없으면 null 반환 (텍스트 썸네일로 대체)
+const getFurnitureImagePath = (moduleId: string): string | null => {
   const baseModuleType = moduleId.replace(/-\d+$/, '');
-  const imagePath = FURNITURE_ICONS[baseModuleType] || FURNITURE_ICONS['single-2drawer-hanging'];
-  
-  if (import.meta.env.DEV) {
-// console.log(`🖼️ [가구 팝업 이미지] ${moduleId} → ${baseModuleType} → ${imagePath}`);
-  }
-  return imagePath;
+  return FURNITURE_ICONS[baseModuleType] || null;
 };
 
 // Remove local calculatePanelDetails - now using shared utility
@@ -2152,26 +2146,41 @@ const PlacedModulePropertiesPanel: React.FC = () => {
         <div className={styles.content}>
           <div className={styles.moduleInfo}>
             <div className={styles.modulePreview}>
-              <img 
-                src={getFurnitureImagePath(moduleData.id)}
-                alt={moduleData.name}
-                className={styles.moduleImage}
-                onError={(e) => {
-                  // 이미지 로드 실패 시 기본 색상 박스로 대체
-                  const img = e.target as HTMLImageElement;
-                  img.style.display = 'none';
-                  const container = img.parentElement;
-                  if (container) {
-                    container.innerHTML = `<div 
-                      class="${styles.moduleBox}"
-                      style="
-                        background-color: ${moduleData.color};
-                        aspect-ratio: ${moduleData.dimensions.width} / ${moduleData.dimensions.height}
-                      "
-                    ></div>`;
-                  }
-                }}
-              />
+              {(() => {
+                const imgPath = getFurnitureImagePath(moduleData.id);
+                if (imgPath) {
+                  return (
+                    <img
+                      src={imgPath}
+                      alt={moduleData.name}
+                      className={styles.moduleImage}
+                      onError={(e) => {
+                        // 이미지 로드 실패 시 텍스트 썸네일로 대체
+                        const img = e.target as HTMLImageElement;
+                        img.style.display = 'none';
+                        const container = img.parentElement;
+                        if (container) {
+                          const name = moduleData.name.replace(/\s*\d+(\.\d+)?mm$/, '');
+                          container.innerHTML = `<div style="
+                            display: flex; align-items: center; justify-content: center;
+                            width: 100%; height: 100%; background: #f5f5f5; border-radius: 6px;
+                            font-size: 12px; color: #666; text-align: center; padding: 4px;
+                          ">${name}</div>`;
+                        }
+                      }}
+                    />
+                  );
+                }
+                // 이미지 없으면 텍스트 썸네일
+                const name = moduleData.name.replace(/\s*\d+(\.\d+)?mm$/, '');
+                return (
+                  <div style={{
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    width: '100%', height: '100%', background: '#f5f5f5', borderRadius: '6px',
+                    fontSize: '12px', color: '#666', textAlign: 'center', padding: '4px',
+                  }}>{name}</div>
+                );
+              })()}
             </div>
             
             <div className={styles.moduleDetails}>
