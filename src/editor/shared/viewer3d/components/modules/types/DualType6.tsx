@@ -303,51 +303,7 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
                   </>
                 ) : null}
                 
-                {/* 첫 번째 섹션(서랍)의 하부 프레임 두께 표시 */}
-                {index === 0 && (
-                  <group>
-                    {/* 하부 프레임 두께 텍스트 */}
-                    <Text
-                      position={[
-                        getDimensionXPosition(leftWidth, true),
-                        -height/2 + basicThickness/2,
-                        getDimensionZPosition()
-                      ]}
-                      fontSize={baseFontSize}
-                      color={viewMode === '3D' ? '#000000' : dimensionColor}
-                      anchorX="center"
-                      anchorY="middle"
-                      rotation={[0, 0, Math.PI / 2]}
-                      renderOrder={999}
-                      depthTest={false}
-                    >
-                      {((v: number) => v % 1 === 0 ? v : +v.toFixed(1))(threeUnitsToMm(basicThickness))}
-                    </Text>
-
-                    {/* 하부 프레임 두께 수직선 */}
-                    <Line
-                      points={[
-                        [getDimensionXPosition(leftWidth, false), -height/2, getDimensionZPosition()],
-                        [getDimensionXPosition(leftWidth, false), -height/2 + basicThickness, getDimensionZPosition()]
-                      ]}
-                      color={viewMode === '3D' ? '#000000' : dimensionColor}
-                      lineWidth={1}
-                    />
-                    {/* 수직선 양끝 점 - 측면뷰에서 숨김 */}
-                    {!(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right')) && (
-                      <>
-                        <mesh position={[-leftWidth/2 * 0.3, -height/2, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : depth/2 + 1.0]}>
-                          <sphereGeometry args={[0.05, 8, 8]} />
-                          <meshBasicMaterial color={viewMode === '3D' ? '#000000' : dimensionColor} />
-                        </mesh>
-                        <mesh position={[-leftWidth/2 * 0.3, -height/2 + basicThickness, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : depth/2 + 1.0]}>
-                          <sphereGeometry args={[0.05, 8, 8]} />
-                          <meshBasicMaterial color={viewMode === '3D' ? '#000000' : dimensionColor} />
-                        </mesh>
-                      </>
-                    )}
-                  </group>
-                )}
+                {/* 첫 번째 섹션(서랍)의 하부 프레임 두께 표시 - 제거됨 (2D에서 18mm 두께 표시 불필요) */}
               </group>
             )}
           </group>
@@ -560,53 +516,7 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
               panelName="(하)상판"
             />
             
-            {/* 중단선반 두께 치수 표시 - 탑뷰/3D에서는 숨김 */}
-            {showDimensions && showDimensionsText &&
-             viewMode !== '3D' &&
-             !(viewMode === '2D' && view2DDirection === 'top') && (
-              <group>
-                {/* 중단선반 두께 텍스트 */}
-                <Text
-                  position={[
-                    getDimensionXPosition(rightWidth, true),
-                    -height/2 + basicThickness + mmToThreeUnits(middlePanelHeight - 9),
-                    getDimensionZPosition()
-                  ]}
-                  fontSize={baseFontSize}
-                  color={viewMode === '3D' ? '#000000' : dimensionColor}
-                  anchorX="center"
-                  anchorY="middle"
-                  rotation={[0, 0, Math.PI / 2]}
-                  renderOrder={999}
-                  depthTest={false}
-                >
-                  {((v: number) => v % 1 === 0 ? v : +v.toFixed(1))(basicThickness / 0.01)}
-                </Text>
-
-                {/* 중단선반 두께 수직선 */}
-                <Line
-                  points={[
-                    [getDimensionXPosition(rightWidth, false), -height/2 + basicThickness + mmToThreeUnits(middlePanelHeight - 9) - basicThickness/2, getDimensionZPosition()],
-                    [getDimensionXPosition(rightWidth, false), -height/2 + basicThickness + mmToThreeUnits(middlePanelHeight - 9) + basicThickness/2, getDimensionZPosition()]
-                  ]}
-                  color={viewMode === '3D' ? '#000000' : dimensionColor}
-                  lineWidth={1}
-                />
-                {/* 수직선 양끝 점 - 측면뷰에서 숨김 */}
-                {!(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right')) && (
-                  <>
-                    <mesh position={[-rightWidth/2 * 0.3, -height/2 + basicThickness + mmToThreeUnits(middlePanelHeight - 9) - basicThickness/2, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : depth/2 + 1.0]}>
-                      <sphereGeometry args={[0.05, 8, 8]} />
-                      <meshBasicMaterial color={viewMode === '3D' ? '#000000' : dimensionColor} />
-                    </mesh>
-                    <mesh position={[-rightWidth/2 * 0.3, -height/2 + basicThickness + mmToThreeUnits(middlePanelHeight - 9) + basicThickness/2, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : depth/2 + 1.0]}>
-                      <sphereGeometry args={[0.05, 8, 8]} />
-                      <meshBasicMaterial color={viewMode === '3D' ? '#000000' : dimensionColor} />
-                    </mesh>
-                  </>
-                )}
-              </group>
-            )}
+            {/* 중단선반 두께 치수 표시 - 제거됨 (2D에서 18mm 두께 표시 불필요) */}
           </>
         )}
         
@@ -624,103 +534,11 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
               panelName="안전선반"
             />
             
-            {/* 안전선반 두께 치수 표시 - 탑뷰/3D에서는 숨김 */}
-            {showDimensions && showDimensionsText &&
-             viewMode !== '3D' &&
-             !(viewMode === '2D' && view2DDirection === 'top') && (
-              <group>
-                {/* 안전선반 두께 텍스트 */}
-                <Text
-                  position={[
-                    getDimensionXPosition(rightWidth, true),
-                    -height/2 + basicThickness + mmToThreeUnits(safetyShelfHeight),
-                    getDimensionZPosition()
-                  ]}
-                  fontSize={baseFontSize}
-                  color={viewMode === '3D' ? '#000000' : dimensionColor}
-                  anchorX="center"
-                  anchorY="middle"
-                  rotation={[0, 0, Math.PI / 2]}
-                  renderOrder={999}
-                  depthTest={false}
-                >
-                  {((v: number) => v % 1 === 0 ? v : +v.toFixed(1))(basicThickness / 0.01)}
-                </Text>
-
-                {/* 안전선반 두께 수직선 */}
-                <Line
-                  points={[
-                    [getDimensionXPosition(rightWidth, false), -height/2 + basicThickness + mmToThreeUnits(safetyShelfHeight) - basicThickness/2, getDimensionZPosition()],
-                    [getDimensionXPosition(rightWidth, false), -height/2 + basicThickness + mmToThreeUnits(safetyShelfHeight) + basicThickness/2, getDimensionZPosition()]
-                  ]}
-                  color={viewMode === '3D' ? '#000000' : dimensionColor}
-                  lineWidth={1}
-                />
-                {/* 수직선 양끝 점 - 측면뷰에서 숨김 */}
-                {!(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right')) && (
-                  <>
-                    <mesh position={[-rightWidth/2 * 0.3, -height/2 + basicThickness + mmToThreeUnits(safetyShelfHeight) - basicThickness/2, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : depth/2 + 1.0]}>
-                      <sphereGeometry args={[0.05, 8, 8]} />
-                      <meshBasicMaterial color={viewMode === '3D' ? '#000000' : dimensionColor} />
-                    </mesh>
-                    <mesh position={[-rightWidth/2 * 0.3, -height/2 + basicThickness + mmToThreeUnits(safetyShelfHeight) + basicThickness/2, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : depth/2 + 1.0]}>
-                      <sphereGeometry args={[0.05, 8, 8]} />
-                      <meshBasicMaterial color={viewMode === '3D' ? '#000000' : dimensionColor} />
-                    </mesh>
-                  </>
-                )}
-              </group>
-            )}
+            {/* 안전선반 두께 치수 표시 - 제거됨 (2D에서 18mm 두께 표시 불필요) */}
           </>
         )}
         
-        {/* 상단 프레임 두께 치수 표시 - 탑뷰/3D에서는 숨김 */}
-        {showDimensions && showDimensionsText &&
-         viewMode !== '3D' &&
-         !(viewMode === '2D' && view2DDirection === 'top') && (
-          <group>
-            {/* 상단 프레임 두께 텍스트 */}
-            <Text
-              position={[
-                getDimensionXPosition(rightWidth, true),
-                height/2 - basicThickness/2,
-                getDimensionZPosition()
-              ]}
-              fontSize={baseFontSize}
-              color={viewMode === '3D' ? '#000000' : dimensionColor}
-              anchorX="center"
-              anchorY="middle"
-              rotation={[0, 0, Math.PI / 2]}
-              renderOrder={999}
-              depthTest={false}
-            >
-              {((v: number) => v % 1 === 0 ? v : +v.toFixed(1))(basicThickness / 0.01)}
-            </Text>
-
-            {/* 상단 프레임 두께 수직선 */}
-            <Line
-              points={[
-                [getDimensionXPosition(rightWidth, false), height/2, getDimensionZPosition()],
-                [getDimensionXPosition(rightWidth, false), height/2 - basicThickness, getDimensionZPosition()]
-              ]}
-              color={viewMode === '3D' ? '#000000' : dimensionColor}
-              lineWidth={1}
-            />
-            {/* 수직선 양끝 점 - 측면뷰에서 숨김 */}
-            {!(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right')) && (
-              <>
-                <mesh position={[-rightWidth/2 * 0.3, height/2, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : depth/2 + 1.0]}>
-                  <sphereGeometry args={[0.05, 8, 8]} />
-                  <meshBasicMaterial color={viewMode === '3D' ? '#000000' : dimensionColor} />
-                </mesh>
-                <mesh position={[-rightWidth/2 * 0.3, height/2 - basicThickness, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : depth/2 + 1.0]}>
-                  <sphereGeometry args={[0.05, 8, 8]} />
-                  <meshBasicMaterial color={viewMode === '3D' ? '#000000' : dimensionColor} />
-                </mesh>
-              </>
-            )}
-          </group>
-        )}
+        {/* 상단 프레임 두께 치수 표시 - 제거됨 (2D에서 18mm 두께 표시 불필요) */}
       </>
     );
   };

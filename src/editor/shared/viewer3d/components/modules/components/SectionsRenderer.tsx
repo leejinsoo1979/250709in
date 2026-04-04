@@ -904,106 +904,10 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
             );
           })()}
           
-          {/* 첫 번째 섹션의 하단 프레임 두께 표시 - 3D에서는 숨김 */}
-          {showDimensions && showDimensionsText && viewMode !== '3D' && !(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right' || view2DDirection === 'top')) && index === 0 && (
-            <group>
-              {/* 하단 프레임 두께 텍스트 - 수직선 좌측에 표시 */}
-              <Text
-                position={[
-                  viewMode === '3D' ? -innerWidth/2 * 0.3 - 0.8 : -innerWidth/2 * 0.3 - 0.5,
-                  -height/2 + basicThickness/2,
-                  viewMode === '3D' ? depth/2 + 0.1 : depth/2 + 1.0
-                ]}
-                fontSize={baseFontSize}
-                color={viewMode === '3D' ? '#000000' : dimensionColor}
-                anchorX="center"
-                anchorY="middle"
-                rotation={[0, 0, Math.PI / 2]}
-                renderOrder={1000}
-                depthTest={false}
-              >
-                {((v: number) => v % 1 === 0 ? v : +v.toFixed(1))((basicThickness > 0 ? basicThickness : 0.18) * 100)}
-              </Text>
-              
-              {/* 하단 프레임 두께 수직선 - 왼쪽으로 이동 */}
-              <NativeLine name="dimension_line"
-                points={[
-                  [-innerWidth/2 * 0.3, -height/2, viewMode === '3D' ? depth/2 + 0.1 : depth/2 + 1.0],
-                  [-innerWidth/2 * 0.3, -height/2 + basicThickness, viewMode === '3D' ? depth/2 + 0.1 : depth/2 + 1.0]
-                ]}
-                color={viewMode === '3D' ? '#000000' : dimensionColor}
-                lineWidth={1}
-                dashed={false}
-              />
-              
-              {/* 하단 프레임 두께 수직선 양끝 점 - 측면뷰/탑뷰와 드래그 중에는 숨김 */}
-              {!isDragging && !(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right' || view2DDirection === 'top')) && (
-                <>
-                  <mesh position={[-innerWidth/2 * 0.3, -height/2, viewMode === '3D' ? depth/2 + 0.1 : depth/2 + 1.0]}>
-                    <sphereGeometry args={[0.05, 8, 8]} />
-                    <meshBasicMaterial color={viewMode === '3D' ? '#000000' : dimensionColor} />
-                  </mesh>
-                  <mesh position={[-innerWidth/2 * 0.3, -height/2 + basicThickness, viewMode === '3D' ? depth/2 + 0.1 : depth/2 + 1.0]}>
-                    <sphereGeometry args={[0.05, 8, 8]} />
-                    <meshBasicMaterial color={viewMode === '3D' ? '#000000' : dimensionColor} />
-                  </mesh>
-                </>
-              )}
-            </group>
-          )}
+          {/* 첫 번째 섹션의 하단 프레임 두께 표시 - 제거됨 (2D에서 18mm 두께 표시 불필요) */}
           
           
-          {/* 마지막 섹션의 상단 프레임 두께 표시 - 3D에서는 숨김 */}
-          {showDimensions && showDimensionsText && viewMode !== '3D' && !(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right' || view2DDirection === 'top')) && index === allSections.length - 1 && !(
-            section.type === 'hanging' && section.shelfPositions && section.shelfPositions.some(pos => pos > 0)
-          ) && (
-            <group>
-              {/* 상단 프레임 두께 텍스트 - 수직선 좌측에 표시 */}
-              <Text
-                position={[
-                  viewMode === '3D' ? -innerWidth/2 * 0.3 - 0.8 : -innerWidth/2 * 0.3 - 0.5,
-                  height/2 - basicThickness/2,
-                  viewMode === '3D'
-                    ? depth/2 + 0.1
-                    : depth/2 + 1.0
-                ]}
-                fontSize={baseFontSize}
-                color={viewMode === '3D' ? '#000000' : dimensionColor}
-                anchorX="center"
-                anchorY="middle"
-                rotation={[0, 0, Math.PI / 2]}
-                renderOrder={999}
-                depthTest={false}
-              >
-                {((v: number) => v % 1 === 0 ? v : +v.toFixed(1))((basicThickness > 0 ? basicThickness : 0.18) * 100)}
-              </Text>
-              
-              {/* 상단 프레임 두께 수직선 - 왼쪽으로 이동 */}
-              <NativeLine name="dimension_line"
-                points={[
-                  [-innerWidth/2 * 0.3, height/2, viewMode === '3D' ? depth/2 + 0.1 : depth/2 + 1.0],
-                  [-innerWidth/2 * 0.3, height/2 - basicThickness, viewMode === '3D' ? depth/2 + 0.1 : depth/2 + 1.0]
-                ]}
-                color={viewMode === '3D' ? '#000000' : dimensionColor}
-                lineWidth={1}
-                dashed={false}
-              />
-              
-              {/* 상단 프레임 두께 수직선 양끝 점 - 측면뷰/탑뷰에서 숨김 */}
-              {!(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right' || view2DDirection === 'top')) && (
-                <>
-                  <mesh position={[-innerWidth/2 * 0.3, height/2, viewMode === '3D' ? depth/2 + 0.1 : depth/2 + 1.0]}>
-                    <sphereGeometry args={[0.05, 8, 8]} />
-                    <meshBasicMaterial color={viewMode === '3D' ? '#000000' : dimensionColor} />
-                  </mesh>
-                  <mesh position={[-innerWidth/2 * 0.3, height/2 - basicThickness, viewMode === '3D' ? depth/2 + 0.1 : depth/2 + 1.0]}>
-                    <sphereGeometry args={[0.05, 8, 8]} />
-                    <meshBasicMaterial color={viewMode === '3D' ? '#000000' : dimensionColor} />
-                  </mesh>
-                </>
-              )}
-            </group>
-          )}
+          {/* 마지막 섹션의 상단 프레임 두께 표시 - 제거됨 (2D에서 18mm 두께 표시 불필요) */}
         </group>
       );
     });

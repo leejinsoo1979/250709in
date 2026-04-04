@@ -957,51 +957,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
           );
         })()}
 
-        {/* Type4 상단 상판 두께 치수 표시 - 2D 정면도에서만 */}
-        {(moduleData?.id?.includes('4drawer-hanging') || moduleData?.id?.includes('2drawer-hanging')) && showDimensions && showDimensionsText && viewMode !== '3D' && !(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right')) && (
-        <group>
-          {/* 상판 두께 텍스트 */}
-          <Text
-            position={[
-              viewMode === '3D' ? -innerWidth/2 * 0.3 - 0.8 : -innerWidth/2 * 0.3 - 0.5,
-              height/2 - basicThickness/2,
-              viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : depth/2 + 1.0
-            ]}
-            fontSize={baseFontSize}
-            color={viewMode === '3D' ? '#000000' : dimensionColor}
-            anchorX="center"
-            anchorY="middle"
-            rotation={[0, 0, Math.PI / 2]}
-            renderOrder={999}
-            depthTest={false}
-          >
-            {((v: number) => v % 1 === 0 ? v : +v.toFixed(1))(basicThickness * 100)}
-          </Text>
-          
-          {/* 상판 두께 수직선 */}
-          <Line
-            points={[
-              [-innerWidth/2 * 0.3, height/2, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : depth/2 + 1.0],
-              [-innerWidth/2 * 0.3, height/2 - basicThickness, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : depth/2 + 1.0]
-            ]}
-            color={viewMode === '3D' ? '#000000' : dimensionColor}
-            lineWidth={1}
-          />
-          {/* 수직선 양끝 점 - 측면뷰/탑뷰와 드래그 중에는 숨김 */}
-          {!isDragging && !(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right' || view2DDirection === 'top')) && (
-            <>
-              <mesh position={[-innerWidth/2 * 0.3, height/2, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : depth/2 + 1.0]}>
-                <sphereGeometry args={[0.05, 8, 8]} />
-                <meshBasicMaterial color={viewMode === '3D' ? '#000000' : dimensionColor} />
-              </mesh>
-              <mesh position={[-innerWidth/2 * 0.3, height/2 - basicThickness, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : depth/2 + 1.0]}>
-                <sphereGeometry args={[0.05, 8, 8]} />
-                <meshBasicMaterial color={viewMode === '3D' ? '#000000' : dimensionColor} />
-              </mesh>
-            </>
-          )}
-        </group>
-        )}
+        {/* Type4 상단 상판 두께 치수 표시 - 제거됨 (2D에서 18mm 두께 표시 불필요) */}
 
         {/* 하단 판재 - 뒤에서 26mm 줄여서 백패널과 맞닿게, 좌우 각 0.5mm씩 줄임 */}
         {(() => {
@@ -1042,51 +998,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
           );
         })()}
 
-        {/* Type4 하부섹션 바닥판 두께 치수 표시 - 2D 정면도에서만 */}
-        {(moduleData?.id?.includes('4drawer-hanging') || moduleData?.id?.includes('2drawer-hanging')) && showDimensions && showDimensionsText && viewMode !== '3D' && !(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right')) && (
-        <group>
-          {/* 바닥판 두께 텍스트 */}
-          <Text
-            position={[
-              viewMode === '3D' ? -innerWidth/2 * 0.3 - 0.8 : -innerWidth/2 * 0.3 - 0.5,
-              -height/2 + basicThickness/2,
-              viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : depth/2 + 1.0
-            ]}
-            fontSize={baseFontSize}
-            color={viewMode === '3D' ? '#000000' : dimensionColor}
-            anchorX="center"
-            anchorY="middle"
-            rotation={[0, 0, Math.PI / 2]}
-            renderOrder={999}
-            depthTest={false}
-          >
-            {((v: number) => v % 1 === 0 ? v : +v.toFixed(1))(basicThickness * 100)}
-          </Text>
-
-          {/* 바닥판 두께 수직선 */}
-          <Line
-            points={[
-              [-innerWidth/2 * 0.3, -height/2, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : depth/2 + 1.0],
-              [-innerWidth/2 * 0.3, -height/2 + basicThickness, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : depth/2 + 1.0]
-            ]}
-            color={viewMode === '3D' ? '#000000' : dimensionColor}
-            lineWidth={1}
-          />
-          {/* 수직선 양끝 점 - 측면뷰/탑뷰와 드래그 중에는 숨김 */}
-          {!isDragging && !(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right' || view2DDirection === 'top')) && (
-            <>
-              <mesh position={[-innerWidth/2 * 0.3, -height/2, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : depth/2 + 1.0]}>
-                <sphereGeometry args={[0.05, 8, 8]} />
-                <meshBasicMaterial color={viewMode === '3D' ? '#000000' : dimensionColor} />
-              </mesh>
-              <mesh position={[-innerWidth/2 * 0.3, -height/2 + basicThickness, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : depth/2 + 1.0]}>
-                <sphereGeometry args={[0.05, 8, 8]} />
-                <meshBasicMaterial color={viewMode === '3D' ? '#000000' : dimensionColor} />
-              </mesh>
-            </>
-          )}
-        </group>
-        )}
+        {/* Type4 하부섹션 바닥판 두께 치수 표시 - 제거됨 (2D에서 18mm 두께 표시 불필요) */}
 
         {/* 뒷면 판재 (9mm 백패널) - hasBackPanel이 true일 때만 렌더링 */}
         {hasBackPanel && (
