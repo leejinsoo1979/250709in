@@ -1154,7 +1154,7 @@ export const calculatePanelDetails = (
     const lowerNotches: { fromBottom: number; height: number }[] = is3Tier
       ? [{ fromBottom: 295, height: 65 }, { fromBottom: 510, height: 65 }]
       : isDoorLift3Tier
-      ? [{ fromBottom: 212, height: 65 }, { fromBottom: 489, height: 65 }]
+      ? [{ fromBottom: 314, height: 65 }, { fromBottom: 544, height: 65 }]
       : isDoorLift2Tier
       ? [{ fromBottom: 351, height: 65 }]
       : [{ fromBottom: 330, height: 65 }];
