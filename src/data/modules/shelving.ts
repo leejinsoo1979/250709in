@@ -938,6 +938,91 @@ const createDualLowerHalfCabinet = (dualWidth: number, slotWidths?: number[]): M
 };
 
 /**
+ * 3단서랍장한통 - 조절발 65mm + 캐비넷 W(듀얼)xD650xH785
+ * 3단서랍장반통의 듀얼 버전
+ * 측판에 상단+중단(510mm)+하단(295mm) 3개의 따내기 홈이 있음
+ */
+const createDualLowerDrawer3Tier = (dualWidth: number, slotWidths?: number[]): ModuleData => {
+  const widthForId = Math.round(dualWidth * 100) / 100;
+  const cabinetHeight = 785;
+
+  const base = createFurnitureBase(
+    `dual-lower-drawer-3tier-${widthForId}`,
+    `3단서랍장한통 ${widthForId}mm`,
+    dualWidth,
+    cabinetHeight,
+    650,
+    '#e3f2fd',
+    `3단서랍장한통 W${widthForId}xH785xD650 (조절발 65mm)`,
+    650,
+    'lower'
+  );
+
+  return {
+    ...base,
+    isDynamic: true,
+    defaultDepth: 650,
+    slotWidths,
+    thumbnail: '',
+    modelConfig: {
+      ...base.modelConfig,
+      basicThickness: FURNITURE_SPECS.BASIC_THICKNESS,
+      hasOpenFront: false,
+      sections: [
+        {
+          type: 'shelf',
+          heightType: 'percentage',
+          height: 100,
+          count: 0
+        }
+      ]
+    }
+  } as ModuleData;
+};
+
+/**
+ * 3단서랍장반통 - 조절발 65mm + 캐비넷 W가변xD650xH785
+ * 전체 높이: 850mm (65 + 785)
+ * 측판에 상단+중단(510mm)+하단(295mm) 3개의 따내기 홈이 있음
+ */
+const createLowerDrawer3Tier = (columnWidth: number): ModuleData => {
+  const widthForId = Math.round(columnWidth * 100) / 100;
+  const cabinetHeight = 785;
+
+  const base = createFurnitureBase(
+    `lower-drawer-3tier-${widthForId}`,
+    `3단서랍장반통 ${widthForId}mm`,
+    columnWidth,
+    cabinetHeight,
+    650,
+    '#e3f2fd',
+    `3단서랍장반통 W${widthForId}xH785xD650 (조절발 65mm)`,
+    650,
+    'lower'
+  );
+
+  return {
+    ...base,
+    isDynamic: true,
+    defaultDepth: 650,
+    thumbnail: '',
+    modelConfig: {
+      ...base.modelConfig,
+      basicThickness: FURNITURE_SPECS.BASIC_THICKNESS,
+      hasOpenFront: false,
+      sections: [
+        {
+          type: 'shelf',
+          heightType: 'percentage',
+          height: 100,
+          count: 0
+        }
+      ]
+    }
+  } as ModuleData;
+};
+
+/**
  * 2단서랍장한통 - 조절발 65mm + 캐비넷 W(듀얼)xD650xH785
  * 2단서랍장반통의 듀얼 버전
  * 측판에 상단+하단(330mm) 2개의 따내기 홈이 있음
@@ -1299,6 +1384,7 @@ export const generateShelvingModules = (
     // === 새 듀얼 하부장 가구 생성 ===
     modules.push(createDualLowerHalfCabinet(dualWidth, dualSlotWidths));
     modules.push(createDualLowerDrawer2Tier(dualWidth, dualSlotWidths));
+    modules.push(createDualLowerDrawer3Tier(dualWidth, dualSlotWidths));
   }
   
   // === 싱글 상부장 가구 생성 === (임시 비활성화)
@@ -1317,6 +1403,7 @@ export const generateShelvingModules = (
   // === 새 하부장 가구 생성 ===
   modules.push(createLowerHalfCabinet(columnWidth));
   modules.push(createLowerDrawer2Tier(columnWidth));
+  modules.push(createLowerDrawer3Tier(columnWidth));
   
   // console.log('📊 generateShelvingModules 최종 결과:', {
   //   totalModulesCount: modules.length,

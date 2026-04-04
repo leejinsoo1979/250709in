@@ -115,7 +115,9 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
               isFloating={isFloating}
               hideVentilationCap={true}
               hideTopPanel={true}
-              {...(moduleData.id.includes('lower-drawer-2tier') ? {
+              {...(moduleData.id.includes('lower-drawer-3tier') ? {
+                sideNotches: [{ y: 65, z: 40, fromBottom: 295 }, { y: 65, z: 40, fromBottom: 510 }]
+              } : moduleData.id.includes('lower-drawer-2tier') ? {
                 sideNotches: [{ y: 65, z: 40, fromBottom: 330 }]
               } : {})}>
             {/* 내부 구조는 항상 렌더링 (서랍/선반) */}
