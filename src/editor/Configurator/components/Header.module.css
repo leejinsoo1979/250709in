@@ -315,8 +315,8 @@
 }
 
 .sunToggleOff {
-  color: var(--theme-text-muted, #aaa);
-  opacity: 0.5;
+  color: var(--theme-text-secondary, #888);
+  opacity: 0.7;
 }
 
 .sunSliderOff {

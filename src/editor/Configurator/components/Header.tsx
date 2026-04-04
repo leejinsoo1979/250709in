@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styles from './Header.module.css';
 import { Settings, User, ChevronDown, Undo, Redo, FileText, Sun, Moon } from 'lucide-react';
+import { FiSunset } from 'react-icons/fi';
 import { FaRegKeyboard } from 'react-icons/fa';
 import { SiConvertio } from 'react-icons/si';
 import { RxDashboard } from 'react-icons/rx';
@@ -947,7 +948,7 @@ const Header: React.FC<HeaderProps> = ({
                 onClick={() => setShadowEnabled(!shadowEnabled)}
                 title={shadowEnabled ? '그림자 끄기' : '그림자 켜기'}
               >
-                <Sun size={14} strokeWidth={2} />
+                <FiSunset size={15} />
               </button>
               <input
                 type="range"
