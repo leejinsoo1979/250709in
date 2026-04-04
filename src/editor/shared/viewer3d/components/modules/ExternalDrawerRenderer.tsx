@@ -67,6 +67,7 @@ interface SingleDrawerProps {
   showMaida: boolean;
   mmToThreeUnits: (mm: number) => number;
   uniformDrawerHeight?: boolean;
+  fixedMaidaHeightMm?: number;
 }
 
 const SingleDrawer: React.FC<SingleDrawerProps> = ({
@@ -81,6 +82,7 @@ const SingleDrawer: React.FC<SingleDrawerProps> = ({
   textureUrl, doorTextureUrl, panelGrainDirections, furnitureId, sectionName,
   showMaida, mmToThreeUnits,
   uniformDrawerHeight = false,
+  fixedMaidaHeightMm,
 }) => {
   // Z축 슬라이드 애니메이션
   const spring = useSpring({
@@ -124,9 +126,13 @@ const SingleDrawer: React.FC<SingleDrawerProps> = ({
   // 마이다 높이·Y
   const maidaTopMm = zone.notchAboveBottom + 40;
   const maidaBottomMm = zone.notchBelowTop != null ? (zone.notchBelowTop - 5) : -5;
-  const maidaHeightMm = maidaTopMm - maidaBottomMm;
+  const defaultMaidaHeightMm = maidaTopMm - maidaBottomMm;
+  const maidaHeightMm = fixedMaidaHeightMm || defaultMaidaHeightMm;
   const maidaHeight = mmToThreeUnits(maidaHeightMm);
-  const maidaCenterY = cabinetBottomY + mmToThreeUnits(maidaBottomMm) + maidaHeight / 2;
+  // 고정 높이 사용 시 마이다 중심을 zone 중심에 맞춤
+  const maidaCenterY = fixedMaidaHeightMm
+    ? cabinetBottomY + mmToThreeUnits(zone.bottomMm + (zone.topMm - zone.bottomMm) / 2)
+    : cabinetBottomY + mmToThreeUnits(maidaBottomMm) + maidaHeight / 2;
 
   const i = index;
   const getPanelMaterial = (_: string) => material;
@@ -249,6 +255,7 @@ interface ExternalDrawerRendererProps {
   notchHeights: number[];
   isEditMode?: boolean;
   hideTopNotch?: boolean;
+  maidaHeightsMm?: number[];
 }
 
 export const ExternalDrawerRenderer: React.FC<ExternalDrawerRendererProps> = ({
@@ -274,6 +281,7 @@ export const ExternalDrawerRenderer: React.FC<ExternalDrawerRendererProps> = ({
   notchHeights,
   isEditMode = false,
   hideTopNotch = false,
+  maidaHeightsMm,
 }) => {
   const { viewMode } = useSpace3DView();
   const { doorsOpen, isIndividualDoorOpen } = useUIStore();
@@ -486,6 +494,7 @@ export const ExternalDrawerRenderer: React.FC<ExternalDrawerRendererProps> = ({
           sectionName={sectionName}
           showMaida={showMaida}
           mmToThreeUnits={mmToThreeUnits}
+          fixedMaidaHeightMm={maidaHeightsMm ? maidaHeightsMm[i] : undefined}
         />
       ))}
 
