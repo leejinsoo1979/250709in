@@ -451,7 +451,8 @@ export const ExternalDrawerRenderer: React.FC<ExternalDrawerRendererProps> = ({
 
   // hideTopNotch: 마지막 노치 ~ 상판 안쪽까지 남은 영역도 서랍 zone으로 추가
   // 상판 두께(basicThicknessMm)를 빼서 서랍이 상판 안쪽까지만 차지하도록
-  if (hideTopNotch && cursor < sidePanelHeightMm) {
+  // 단, zone이 이미 drawerCount만큼 있으면 추가하지 않음 (상판내림: 665 위는 전대+상판)
+  if (hideTopNotch && cursor < sidePanelHeightMm && zones.length < drawerCount) {
     const lastNotch = allNotches[allNotches.length - 1];
     const topLimit = sidePanelHeightMm - basicThicknessMm;
     zones.push({
