@@ -1,15 +1,21 @@
 .moduleGallery {
   background: var(--theme-surface);
   height: 100%;
+  width: 100%;
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.moduleGallery * {
+  box-sizing: border-box;
 }
 
 .filterSection {
-  padding: 12px 12px 0 12px;
+  padding: 8px 8px 0 8px;
   border-bottom: 1px solid var(--theme-border);
+  flex-shrink: 0;
 }
 
 .filterGroup {
@@ -24,15 +30,15 @@
   min-width: 0;
   background: var(--theme-surface);
   border: none;
-  padding: 8px 4px;
+  padding: 6px 2px;
   font-family: 'Apple SD Gothic Neo', -apple-system, BlinkMacSystemFont, sans-serif;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 500;
   color: var(--theme-primary) !important;
   cursor: pointer;
   transition: all 0.2s ease;
   line-height: 20px;
-  height: 36px;
+  height: 32px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -56,20 +62,19 @@
 
 .moduleGrid {
   flex: 1;
-  padding: 8px;
+  padding: 6px;
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 8px;
+  gap: 6px;
   overflow-x: hidden;
   overflow-y: auto;
-  max-width: 100%;
-  box-sizing: border-box;
+  width: 100%;
   scrollbar-width: thin;
   scrollbar-color: var(--theme-border) var(--theme-background-secondary);
 }
 
 .moduleGrid::-webkit-scrollbar {
-  width: 6px;
+  width: 4px;
 }
 
 .moduleGrid::-webkit-scrollbar-track {
@@ -78,7 +83,7 @@
 
 .moduleGrid::-webkit-scrollbar-thumb {
   background: var(--theme-border);
-  border-radius: 3px;
+  border-radius: 2px;
 }
 
 .moduleGrid::-webkit-scrollbar-thumb:hover {
@@ -89,12 +94,12 @@
   background: var(--theme-background-secondary);
   border: 1px solid var(--theme-border);
   border-radius: 6px;
-  padding: 8px;
+  padding: 6px;
   cursor: pointer;
   transition: all 0.2s ease;
   display: flex;
   flex-direction: column;
-  height: 180px;
+  height: 160px;
   position: relative;
   user-select: none;
   min-width: 0;
@@ -143,14 +148,15 @@
   justify-content: center;
   background: var(--theme-surface);
   border-radius: 4px;
-  margin-bottom: 8px;
+  margin-bottom: 4px;
   overflow: hidden;
+  min-height: 0;
 }
 
 .moduleImage img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
   transition: transform 0.2s ease;
 }
 
@@ -160,15 +166,16 @@
 
 .moduleName {
   font-family: 'Apple SD Gothic Neo', -apple-system, BlinkMacSystemFont, sans-serif;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 400;
   color: var(--theme-text);
   text-align: center;
-  line-height: 16px;
+  line-height: 14px;
   margin-top: auto;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .moduleCard.selected .moduleName {
@@ -202,23 +209,23 @@
 /* 반응형 디자인 */
 @media (max-width: 768px) {
   .filterButton {
-    padding: 6px 12px;
-    font-size: 13px;
-    height: 32px;
-  }
-  
-  .moduleGrid {
-    padding: 8px;
-    gap: 8px;
-  }
-  
-  .moduleCard {
-    height: 160px;
-    padding: 6px;
-  }
-  
-  .moduleName {
+    padding: 6px 2px;
     font-size: 11px;
+    height: 28px;
+  }
+
+  .moduleGrid {
+    padding: 4px;
+    gap: 4px;
+  }
+
+  .moduleCard {
+    height: 140px;
+    padding: 4px;
+  }
+
+  .moduleName {
+    font-size: 10px;
   }
 }
 
@@ -226,4 +233,4 @@
   .moduleGrid {
     grid-template-columns: repeat(2, 1fr);
   }
-} 
+}
