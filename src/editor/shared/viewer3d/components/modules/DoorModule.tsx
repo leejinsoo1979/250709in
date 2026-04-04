@@ -758,13 +758,20 @@ const DoorModule: React.FC<DoorModuleProps> = ({
       // actualDoorHeight,
     // });
   } else if (isLowerCabinet) {
-    // 하부장 도어: 상단에서 20mm 내려온 지점 ~ 하단에서 2mm 아래 지점
     const lowerCabinetHeight = effectiveInternalHeight || moduleData?.dimensions?.height || 1000;
-    const LOWER_DOOR_TOP_GAP = 20; // 하부장 상단에서 20mm 내려온 지점이 도어 상단
-    const LOWER_DOOR_BOTTOM_EXTENSION = 2; // 하부장 하단에서 2mm 아래가 도어 하단
+    const isDoorLift = moduleData?.id?.includes('lower-door-lift-');
 
-    // 하부장 도어 높이 = 캐비넷높이 - 상단갭 + 하단확장
-    actualDoorHeight = lowerCabinetHeight - LOWER_DOOR_TOP_GAP + LOWER_DOOR_BOTTOM_EXTENSION;
+    if (isDoorLift) {
+      // 도어올림: 캐비넷 아래 5mm ~ 캐비넷 위 30mm
+      const DOOR_LIFT_BOTTOM_EXTENSION = 5;
+      const DOOR_LIFT_TOP_EXTENSION = 30;
+      actualDoorHeight = lowerCabinetHeight + DOOR_LIFT_BOTTOM_EXTENSION + DOOR_LIFT_TOP_EXTENSION;
+    } else {
+      // 기본 하부장: 상단에서 20mm 내려온 지점 ~ 하단에서 2mm 아래 지점
+      const LOWER_DOOR_TOP_GAP = 20;
+      const LOWER_DOOR_BOTTOM_EXTENSION = 2;
+      actualDoorHeight = lowerCabinetHeight - LOWER_DOOR_TOP_GAP + LOWER_DOOR_BOTTOM_EXTENSION;
+    }
   } else {
     // 키큰장의 경우: 천장/바닥 기준으로 갭 적용
     // fullSpaceHeight는 zone prop에 따라 단내림 구간 높이 또는 일반 구간 높이 사용
@@ -863,16 +870,19 @@ const DoorModule: React.FC<DoorModuleProps> = ({
       // 설명: `도어가 캐비넷보다 ${UPPER_CABINET_BOTTOM_EXTENSION}mm 아래로 확장`
     // });
   } else if (isLowerCabinet) {
-    // 하부장 도어: 상단에서 20mm 내려온 지점 ~ 하단에서 2mm 아래
     const lowerCabinetHeight = effectiveInternalHeight || moduleData?.dimensions?.height || 1000;
-    const LOWER_DOOR_TOP_GAP = 20;
-    const LOWER_DOOR_BOTTOM_EXTENSION = 2;
+    const isDoorLiftForY = moduleData?.id?.includes('lower-door-lift-');
 
-    // 캐비넷 상단 = +캐비넷높이/2, 하단 = -캐비넷높이/2
-    // 도어 상단 = 캐비넷 상단 - 20mm
-    // 도어 하단 = 캐비넷 하단 - 2mm
-    const doorTopY = mmToThreeUnits(lowerCabinetHeight) / 2 - mmToThreeUnits(LOWER_DOOR_TOP_GAP);
-    doorYPosition = doorTopY - mmToThreeUnits(actualDoorHeight) / 2;
+    if (isDoorLiftForY) {
+      // 도어올림: 도어 상단 = 캐비넷 상단 + 30mm
+      const doorTopY = mmToThreeUnits(lowerCabinetHeight) / 2 + mmToThreeUnits(30);
+      doorYPosition = doorTopY - mmToThreeUnits(actualDoorHeight) / 2;
+    } else {
+      // 기본 하부장: 도어 상단 = 캐비넷 상단 - 20mm
+      const LOWER_DOOR_TOP_GAP = 20;
+      const doorTopY = mmToThreeUnits(lowerCabinetHeight) / 2 - mmToThreeUnits(LOWER_DOOR_TOP_GAP);
+      doorYPosition = doorTopY - mmToThreeUnits(actualDoorHeight) / 2;
+    }
   } else {
     // 키큰장 도어 Y 위치: 오직 doorTopGap/doorBottomGap으로만 결정
     // 도어 절대 위치(바닥 기준 mm)를 구한 뒤, body center와의 차이로 로컬 좌표 계산
