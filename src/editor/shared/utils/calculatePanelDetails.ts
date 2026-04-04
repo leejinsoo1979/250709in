@@ -1156,20 +1156,21 @@ export const calculatePanelDetails = (
     lowerNotches.push({ fromBottom: height - 60, height: 60 });
 
     lowerNotches.forEach((notch, ni) => {
-      const verticalH = notch.height - basicThickness;
-      if (verticalH <= 0) return;
+      if (notch.height <= 0) return;
+      // 수직판: 따내기 전체 높이를 앞면에서 가림
       panels.frame.push({
-        name: `L프레임수평(${ni + 1})`,
+        name: `L프레임수직(${ni + 1})`,
         width: customWidth,
-        height: 40,
+        height: notch.height,
         thickness: basicThickness,
         material: 'PET',
         quantity: 1,
       });
+      // 수평판: 수직판 뒤에서 안쪽으로 보강 (깊이 = 40 - basicThickness)
       panels.frame.push({
-        name: `L프레임수직(${ni + 1})`,
+        name: `L프레임수평(${ni + 1})`,
         width: customWidth,
-        height: verticalH,
+        height: 40 - basicThickness,
         thickness: basicThickness,
         material: 'PET',
         quantity: 1,
