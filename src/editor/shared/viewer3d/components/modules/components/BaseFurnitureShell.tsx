@@ -439,18 +439,18 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
         ) : (
           // 기존: 통짜 측판 (하부장은 앞쪽 상단 노치 적용)
           <>
-            {hideTopPanel ? (
-              // 하부장: 측판 앞쪽 상단 모서리 따내기 (Y 60mm × Z 40mm) — L자형 단일 메시
+            {(hideTopPanel || sideNotches) ? (
+              // 하부장: 측판 앞쪽 따내기 — L자형 단일 메시
               (() => {
                 const notchYmm = 60;
                 const notchZmm = 40;
                 const notchY = mmToThreeUnits(notchYmm);
                 const notchZ = mmToThreeUnits(notchZmm);
 
-                // 다중 노치 (sideNotches가 있으면 상단 노치 + 추가 노치)
+                // 다중 노치 (sideNotches가 있으면 추가 노치 포함)
                 const allNotches = sideNotches ? [
-                  // 상단 노치 (기존 — 상단에서 notchYmm 크기의 따내기)
-                  { y: notchY, z: notchZ, fromBottom: height - notchY },
+                  // 상단 노치: hideTopPanel일 때만 (도어올림은 상판이 있으므로 상단 따내기 없음)
+                  ...(hideTopPanel ? [{ y: notchY, z: notchZ, fromBottom: height - notchY }] : []),
                   // 추가 노치들 (mm → Three.js 단위 변환)
                   ...sideNotches.map(n => ({
                     y: mmToThreeUnits(n.y),
@@ -495,20 +495,22 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                       {...(allNotches ? { notches: allNotches } : { notch: { y: notchY, z: notchZ } })}
                     />
 
-                    {/* 가로전대 (상단) - 좌우 측판 앞쪽 상단 노치 부분을 연결하는 가로 부재 */}
-                    <BoxWithEdges
-                      key={`front-stretcher-${material instanceof THREE.Material ? material.uuid : 'mat'}`}
-                      args={[innerWidth, notchY, basicThickness]}
-                      position={[0, height/2 - notchY/2, depth/2 - notchZ - basicThickness/2]}
-                      material={material}
-                      renderMode={renderMode}
-                      isDragging={isDragging}
-                      isEditMode={isEditMode}
-                      panelName="가로전대"
-                      panelGrainDirections={panelGrainDirections}
-                      furnitureId={placedFurnitureId}
-                      textureUrl={textureUrl}
-                    />
+                    {/* 가로전대 (상단) - 상판이 없는 하부장만 (도어올림은 상판이 있으므로 제외) */}
+                    {hideTopPanel && (
+                      <BoxWithEdges
+                        key={`front-stretcher-${material instanceof THREE.Material ? material.uuid : 'mat'}`}
+                        args={[innerWidth, notchY, basicThickness]}
+                        position={[0, height/2 - notchY/2, depth/2 - notchZ - basicThickness/2]}
+                        material={material}
+                        renderMode={renderMode}
+                        isDragging={isDragging}
+                        isEditMode={isEditMode}
+                        panelName="가로전대"
+                        panelGrainDirections={panelGrainDirections}
+                        furnitureId={placedFurnitureId}
+                        textureUrl={textureUrl}
+                      />
+                    )}
 
                     {/* 하단 가로전대 (sideNotches가 있을 때) - 하단 노치 위치에 가로 부재 */}
                     {sideNotches && sideNotches.map((n, idx) => {
