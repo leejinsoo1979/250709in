@@ -669,7 +669,6 @@ const createDualType6 = (dualColumnWidth: number, maxHeight: number, slotWidths?
 // 상부장 가구 생성 함수 (임시 비활성화)
 // ============================================================================
 
-/*
 const createUpperCabinet1 = (columnWidth: number, maxHeight?: number): ModuleData => {
   const widthForId = Math.round(columnWidth * 100) / 100;
   const upperHeight = maxHeight ? maxHeight - 200 : 600;
@@ -727,6 +726,7 @@ const createUpperCabinet3 = (columnWidth: number): ModuleData => {
   } as ModuleData;
 };
 
+/*
 const createLowerCabinet1 = (columnWidth: number): ModuleData => {
   const widthForId = Math.round(columnWidth * 100) / 100;
   const base = createFurnitureBase(
@@ -754,6 +754,8 @@ const createLowerCabinet2 = (columnWidth: number): ModuleData => {
       sections: [{ type: 'shelf', heightType: 'percentage', height: 100, count: 1 }] }
   } as ModuleData;
 };
+
+*/ // 이전 하부장 생성 함수 주석 끝
 
 // 듀얼 상부장 가구 생성 함수
 
@@ -817,6 +819,7 @@ const createDualUpperCabinet4 = (dualWidth: number): ModuleData => {
   } as ModuleData;
 };
 
+/*
 // 듀얼 하부장 가구 생성 함수
 
 const createDualLowerCabinet1 = (dualWidth: number): ModuleData => {
@@ -1877,11 +1880,11 @@ export const generateShelvingModules = (
     modules.push(createDualType5(dualWidth, maxHeight, dualSlotWidths));
     modules.push(createDualType6(dualWidth, maxHeight, dualSlotWidths));
     
-    // === 듀얼 상부장 가구 생성 === (임시 비활성화)
-    // modules.push(createDualUpperCabinet1(dualWidth));
-    // modules.push(createDualUpperCabinet2(dualWidth));
-    // modules.push(createDualUpperCabinet3(dualWidth));
-    // modules.push(createDualUpperCabinet4(dualWidth));
+    // === 듀얼 상부장 가구 생성 ===
+    modules.push(createDualUpperCabinet1(dualWidth));
+    modules.push(createDualUpperCabinet2(dualWidth));
+    modules.push(createDualUpperCabinet3(dualWidth));
+    modules.push(createDualUpperCabinet4(dualWidth));
 
     // === 듀얼 하부장 가구 생성 === (이전 모듈 비활성화)
     // modules.push(createDualLowerCabinet1(dualWidth));
@@ -1903,12 +1906,11 @@ export const generateShelvingModules = (
     modules.push(createDualLowerTopDown3Tier(dualWidth, dualSlotWidths));
   }
   
-  // === 싱글 상부장 가구 생성 === (임시 비활성화)
-  // const upperCabinet1 = createUpperCabinet1(columnWidth);
-  // modules.push(upperCabinet1);
-  // modules.push(createUpperCabinet2(columnWidth));
-  // modules.push(createUpperCabinet3(columnWidth));
-  // modules.push(createUpperCabinet4(columnWidth));
+  // === 싱글 상부장 가구 생성 ===
+  modules.push(createUpperCabinet1(columnWidth, maxHeight));
+  modules.push(createUpperCabinet2(columnWidth));
+  modules.push(createUpperCabinet3(columnWidth));
+  modules.push(createUpperCabinet4(columnWidth, maxHeight));
 
   // === 싱글 하부장 가구 생성 === (이전 모듈 비활성화)
   // const lowerCabinet1 = createLowerCabinet1(columnWidth);
