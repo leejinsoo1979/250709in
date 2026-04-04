@@ -169,18 +169,18 @@ export const ExternalDrawerRenderer: React.FC<ExternalDrawerRendererProps> = ({
         const cX = 0;
         const cY = drawerCenterY;
 
-        // 바닥판: 측판 하단에서 15mm 위, 깊이 = 측판과 동일(453mm)에서 앞쪽 10mm 홈 여유
+        // 바닥판: 측판 하단에서 15mm 위, 깊이·Z = 측판과 동일(453mm)
         const bottomThk = backPanelThickness;
-        const bottomDepth = drawerBodyDepth - mmToThreeUnits(10);
-        const bottomZPos = drawerBodyCenterZ - mmToThreeUnits(5);
+        const bottomDepth = drawerBodyDepth; // 측판과 동일 453mm
+        const bottomZPos = drawerBodyCenterZ; // 측판과 동일 Z
         const bottomY = sideBottomY + mmToThreeUnits(15) + bottomThk / 2;
         const bottomWidth = drawerInnerWidth; // 좌우측판 안쪽면 사이
 
-        // 뒷판: 바닥판 윗면에 올라탐
-        const bottomTopY = bottomY + bottomThk / 2;
-        const origBackTop = cY + (drawerHeight - mmToThreeUnits(30)) / 2;
-        const backHeight = origBackTop - bottomTopY;
-        const backY = (origBackTop + bottomTopY) / 2;
+        // 뒷판: 높이 = 216mm (측판240 - 15mm - 바닥판9mm), 바닥판 윗면에 올라탐
+        const backHeightMm = 216;
+        const backHeight = mmToThreeUnits(backHeightMm);
+        const bottomTopYPos = bottomY + bottomThk / 2;
+        const backY = bottomTopYPos + backHeight / 2;
         const backWidth = drawerInnerWidth;
 
         // 마이다 높이
