@@ -423,14 +423,14 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
       }
     }
 
-    // 삭제 전에 인접 키큰장 EP 해제
-    if (module) {
-      autoClearAdjacentFullEP(module);
-    }
-
     set((state) => ({
       placedModules: state.placedModules.filter(m => m.id !== id)
     }));
+
+    // 삭제 후 인접 키큰장 EP 해제 (비동기: 삭제 set과 분리하여 리렌더 충돌 방지)
+    if (module) {
+      setTimeout(() => autoClearAdjacentFullEP(module), 0);
+    }
     // 가구 삭제 시 서라운드도 함께 초기화 + 프레임 병합 해제
     const spaceStore = useSpaceConfigStore.getState();
     spaceStore.setSpaceInfo({ freeSurround: undefined });
