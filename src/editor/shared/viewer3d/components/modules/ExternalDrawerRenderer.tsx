@@ -71,6 +71,7 @@ interface SingleDrawerProps {
   mmToThreeUnits: (mm: number) => number;
   uniformDrawerHeight?: boolean;
   fixedMaidaHeightMm?: number;
+  sideHeightOverrides?: { all?: number; first?: number; rest?: number };
 }
 
 const SingleDrawer: React.FC<SingleDrawerProps> = ({
@@ -86,6 +87,7 @@ const SingleDrawer: React.FC<SingleDrawerProps> = ({
   showMaida, mmToThreeUnits,
   uniformDrawerHeight = false,
   fixedMaidaHeightMm,
+  sideHeightOverrides,
 }) => {
   // Z축 슬라이드 애니메이션
   const spring = useSpring({
@@ -98,10 +100,13 @@ const SingleDrawer: React.FC<SingleDrawerProps> = ({
 
   const drawerBottomY = cabinetBottomY + mmToThreeUnits(zone.bottomMm);
 
-  // 측판 높이: 3단서랍장=1단 250mm/2단이상 130mm, 2단서랍장=모든 단 250mm
-  const sideHeightMm = drawerCount >= 3
-    ? (index === 0 ? 250 : 130)
-    : 250;
+  // 측판 높이: sideHeightOverrides가 있으면 우선, 없으면 기본값
+  // 기본: 3단서랍장=1단 250mm/2단이상 130mm, 2단서랍장=모든 단 250mm
+  const sideHeightMm = sideHeightOverrides
+    ? (sideHeightOverrides.all != null
+      ? sideHeightOverrides.all
+      : (index === 0 ? (sideHeightOverrides.first ?? 250) : (sideHeightOverrides.rest ?? 130)))
+    : (drawerCount >= 3 ? (index === 0 ? 250 : 130) : 250);
   const sideHeight = mmToThreeUnits(sideHeightMm);
 
   const bottomPanelTopY = cabinetBottomY + basicThickness;
@@ -256,6 +261,7 @@ interface ExternalDrawerRendererProps {
   isEditMode?: boolean;
   hideTopNotch?: boolean;
   maidaHeightsMm?: number[];
+  sideHeightOverrides?: { all?: number; first?: number; rest?: number };
 }
 
 export const ExternalDrawerRenderer: React.FC<ExternalDrawerRendererProps> = ({
@@ -282,6 +288,7 @@ export const ExternalDrawerRenderer: React.FC<ExternalDrawerRendererProps> = ({
   isEditMode = false,
   hideTopNotch = false,
   maidaHeightsMm,
+  sideHeightOverrides,
 }) => {
   const { viewMode } = useSpace3DView();
   const view2DDirection = useUIStore(s => s.view2DDirection);
@@ -497,6 +504,7 @@ export const ExternalDrawerRenderer: React.FC<ExternalDrawerRendererProps> = ({
           showMaida={showMaida}
           mmToThreeUnits={mmToThreeUnits}
           fixedMaidaHeightMm={maidaHeightsMm ? maidaHeightsMm[i] : undefined}
+          sideHeightOverrides={sideHeightOverrides}
         />
       ))}
 

@@ -760,8 +760,12 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   } else if (isLowerCabinet) {
     const lowerCabinetHeight = effectiveInternalHeight || moduleData?.dimensions?.height || 1000;
     const isDoorLift = moduleData?.id?.includes('lower-door-lift-');
+    const isTopDown = moduleData?.id?.includes('lower-top-down-');
 
-    if (isDoorLift) {
+    if (isTopDown) {
+      // 상판내림: 캐비넷 아래 5mm ~ 따내기하단(665)+40mm = 710mm
+      actualDoorHeight = 710;
+    } else if (isDoorLift) {
       // 도어올림: 캐비넷 아래 5mm ~ 캐비넷 위 30mm
       const DOOR_LIFT_BOTTOM_EXTENSION = 5;
       const DOOR_LIFT_TOP_EXTENSION = 30;
@@ -872,8 +876,13 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   } else if (isLowerCabinet) {
     const lowerCabinetHeight = effectiveInternalHeight || moduleData?.dimensions?.height || 1000;
     const isDoorLiftForY = moduleData?.id?.includes('lower-door-lift-');
+    const isTopDownForY = moduleData?.id?.includes('lower-top-down-');
 
-    if (isDoorLiftForY) {
+    if (isTopDownForY) {
+      // 상판내림: 도어 하단 = 캐비넷 하단 - 5mm, 도어 상단 = 따내기하단(665)+40mm = 705mm from bottom
+      const doorBottomY = -mmToThreeUnits(lowerCabinetHeight) / 2 - mmToThreeUnits(5);
+      doorYPosition = doorBottomY + mmToThreeUnits(actualDoorHeight) / 2;
+    } else if (isDoorLiftForY) {
       // 도어올림: 도어 상단 = 캐비넷 상단 + 30mm
       const doorTopY = mmToThreeUnits(lowerCabinetHeight) / 2 + mmToThreeUnits(30);
       doorYPosition = doorTopY - mmToThreeUnits(actualDoorHeight) / 2;

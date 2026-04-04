@@ -1146,10 +1146,13 @@ export const calculatePanelDetails = (
   }
 
   // === L자 PET 프레임 (하부 서랍장 따내기 마감) ===
-  if (moduleData.id.includes('lower-drawer-') || moduleData.id.includes('lower-door-lift-2tier') || moduleData.id.includes('lower-door-lift-3tier')) {
+  if (moduleData.id.includes('lower-drawer-') || moduleData.id.includes('lower-door-lift-2tier') || moduleData.id.includes('lower-door-lift-3tier') || moduleData.id.includes('lower-top-down-')) {
     const is3Tier = moduleData.id.includes('lower-drawer-3tier');
     const isDoorLift3Tier = moduleData.id.includes('lower-door-lift-3tier');
     const isDoorLift2Tier = moduleData.id.includes('lower-door-lift-2tier');
+    const isTopDown3Tier = moduleData.id.includes('lower-top-down-3tier');
+    const isTopDown2Tier = moduleData.id.includes('lower-top-down-2tier');
+    const isTopDownHalf = moduleData.id.includes('lower-top-down-half') || moduleData.id.includes('dual-lower-top-down-half');
     // 보강대 따내기 (65mm)
     const lowerNotches: { fromBottom: number; height: number }[] = is3Tier
       ? [{ fromBottom: 295, height: 65 }, { fromBottom: 510, height: 65 }]
@@ -1157,9 +1160,15 @@ export const calculatePanelDetails = (
       ? [{ fromBottom: 315, height: 65 }, { fromBottom: 545, height: 65 }]
       : isDoorLift2Tier
       ? [{ fromBottom: 355, height: 65 }]
+      : isTopDown3Tier
+      ? [{ fromBottom: 225, height: 65 }, { fromBottom: 445, height: 65 }, { fromBottom: 665, height: 65 }]
+      : isTopDown2Tier
+      ? [{ fromBottom: 300, height: 65 }, { fromBottom: 665, height: 65 }]
+      : isTopDownHalf
+      ? [{ fromBottom: 665, height: 65 }]
       : [{ fromBottom: 330, height: 65 }];
-    // 상단 따내기 (60mm) - 도어올림은 상단 따내기 없음
-    if (!isDoorLift2Tier && !isDoorLift3Tier) {
+    // 상단 따내기 (60mm) - 도어올림/상판내림은 상단 따내기 없음 (상판내림은 665에 이미 포함)
+    if (!isDoorLift2Tier && !isDoorLift3Tier && !isTopDown3Tier && !isTopDown2Tier && !isTopDownHalf) {
       lowerNotches.push({ fromBottom: height - 60, height: 60 });
     }
 

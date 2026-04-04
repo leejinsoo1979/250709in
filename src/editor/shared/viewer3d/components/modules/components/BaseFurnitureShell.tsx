@@ -165,6 +165,9 @@ interface BaseFurnitureShellProps {
   // 상판 숨김 (하부장용)
   hideTopPanel?: boolean;
 
+  // 상판 앞쪽 깊이 감소 (상판내림: 전대 뒤에 맞닿도록 40mm 줄임)
+  topPanelFrontReduction?: number;
+
   // 측판 추가 노치 (하부장 2단용 — fromBottom: mm, y: mm, z: mm)
   sideNotches?: Array<{ y: number; z: number; fromBottom: number }>;
 
@@ -213,6 +216,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
   panelGrainDirections,
   hideVentilationCap = false,
   hideTopPanel = false,
+  topPanelFrontReduction = 0,
   sideNotches,
   renderMode: renderModeProp,
   children
@@ -897,6 +901,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
           const panelName = isMultiSectionFurniture() ? '(상)상판' : '상판';
           const topPanelMat = getPanelMaterial(panelName);
           const backReduction = backReductionForPanels; // 뒤에서 26mm 줄임
+          const frontReduction = topPanelFrontReduction ? mmToThreeUnits(topPanelFrontReduction) : 0; // 앞쪽 감소 (상판내림: 전대 뒤로)
           const widthReduction = sidePanelGap; // 좌우 각 0.5mm씩 총 1mm 줄임 (18.5/15.5mm는 0)
           return (
             <BoxWithEdges
@@ -904,9 +909,9 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
               args={[innerWidth - widthReduction, basicThickness, (() => {
                 // 다중 섹션이고 상부 깊이가 있으면 상부 섹션 깊이 사용
                 if (isMultiSectionFurniture() && upperSectionDepthMm !== undefined) {
-                  return mmToThreeUnits(upperSectionDepthMm) - backReduction;
+                  return mmToThreeUnits(upperSectionDepthMm) - backReduction - frontReduction;
                 }
-                return depth - backReduction;
+                return depth - backReduction - frontReduction;
               })()]}
               position={[0, height/2 - basicThickness/2, (() => {
                 // 다중 섹션이고 상부 깊이가 있으면 Z 오프셋 적용
@@ -914,9 +919,9 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                   const upperDepth = mmToThreeUnits(upperSectionDepthMm);
                   const depthDiff = depth - upperDepth;
                   const dirOffset = upperSectionDepthDirection === 'back' ? depthDiff / 2 : -depthDiff / 2;
-                  return dirOffset + backReduction / 2; // 방향에 따른 오프셋 + 백패널 맞춤
+                  return dirOffset + (backReduction - frontReduction) / 2; // 방향에 따른 오프셋 + 백패널/전대 맞춤
                 }
-                return backReduction / 2; // 앞쪽 고정, 뒤에서 26mm 줄임
+                return (backReduction - frontReduction) / 2; // 뒤에서 26mm 줄임 + 앞에서 전대만큼 줄임
               })()]}
               material={topPanelMat}
               renderMode={renderMode}
