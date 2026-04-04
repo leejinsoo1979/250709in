@@ -76,7 +76,28 @@ const FURNITURE_ICONS: Record<string, string> = {
 // 모듈 타입 정의
 export type ModuleType = 'all' | 'single' | 'dual';
 
-// 썸네일 아이템 컴포넌트
+/**
+ * 썸네일 하단에 표시할 이름 포맷팅
+ * - 뒤에 붙은 "XXmm" 제거
+ * - 듀얼: "듀얼 " 접두어 제거 → "(한통)" 접미어
+ * - 싱글: "(반통)" 접미어
+ * - 이미 반통/한통이 이름에 포함되어 있으면 그대로 사용
+ */
+const formatThumbnailName = (module: ModuleData): string => {
+  let name = module.name.replace(/\s*[\d.]+mm$/, '');
+  const isDual = module.id.includes('dual-');
+  const alreadyHasLabel = name.includes('반통') || name.includes('한통');
+
+  if (alreadyHasLabel) return name;
+
+  if (isDual) {
+    name = name.replace(/^듀얼\s*/, '');
+    return `${name}(한통)`;
+  }
+  return `${name}(반통)`;
+};
+
+// 썸네일 아이�� 컴포넌트
 interface ThumbnailItemProps {
   module: ModuleData;
   iconPath: string;
@@ -813,7 +834,7 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
           )}
           {!isValid && <div className={styles.disabledOverlay} />}
         </div>
-        <div className={styles.thumbnailName}>{module.name.replace(/\s*[\d.]+mm$/, '')}</div>
+        <div className={styles.thumbnailName}>{formatThumbnailName(module)}</div>
       </div>
 
       {/* 드래그 전용 이미지 (화면에 표시되지 않음, 각 썸네일마다 독립적) */}
