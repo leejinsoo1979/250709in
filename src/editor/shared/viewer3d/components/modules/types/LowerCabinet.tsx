@@ -231,6 +231,7 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
               showMaida={hasDoor}
               notchFromBottoms={notchFromBottoms}
               notchHeights={notchHeights}
+              isEditMode={isEditMode}
             />
           </group>
         );

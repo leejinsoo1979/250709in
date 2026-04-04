@@ -1,5 +1,7 @@
-import React from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import * as THREE from 'three';
+import { useSpring, animated } from '@react-spring/three';
+import { useFrame, useThree } from '@react-three/fiber';
 import { useSpace3DView } from '../../context/useSpace3DView';
 import { useUIStore } from '@/store/uiStore';
 import BoxWithEdges from './components/BoxWithEdges';
@@ -13,31 +15,225 @@ import BoxWithEdges from './components/BoxWithEdges';
  * 3. 마이다가 도어 재질로 도어 위치(Z축)에 노출 — 마이다 = 도어면
  * 4. 마이다 폭 = 모듈 전체 폭 - 3mm (양쪽 1.5mm 갭)
  * 5. 서랍 좌우측판: 캐비넷 측판에서 6mm 갭, H=240mm, D=453mm, T=basicThickness
- * 6. 서랍 좌우측판 Z: 캐비넷 측판과 동일 (뒷면 정렬)
+ * 6. 서랍 좌우측판 Z: 캐비넷 측판과 동일 (앞면 정렬)
  * 7. 1단 서랍 좌우측판 하단: 캐비넷 바닥판에서 15mm 위
  * 8. 바닥판·뒷판: 기존 renderDrawer 로직 그대로 (변경된 좌우측판 기준 폭만 재계산)
+ * 9. 도어 오픈 시 서랍+마이다가 Z축 300mm 앞으로 슬라이드 애니메이션
  */
 
+interface DrawerZone {
+  bottomMm: number;
+  topMm: number;
+  notchAboveBottom: number;
+  notchBelowTop: number | null;
+}
+
+/** 서랍 한 칸 (useSpring 사용을 위해 별도 컴포넌트) */
+interface SingleDrawerProps {
+  zone: DrawerZone;
+  index: number;
+  shouldOpen: boolean;
+  openDistance: number;
+  // 공통 geometry
+  cabinetBottomY: number;
+  basicThickness: number;
+  bottomGap: number;
+  extSideH: number;
+  extSideD: number;
+  extSideT: number;
+  leftSideX: number;
+  rightSideX: number;
+  sideCenterZ: number;
+  drawerBodyDepth: number;
+  drawerBodyCenterZ: number;
+  drawerInnerWidth: number;
+  drawerSideThickness: number;
+  handlePlateThickness: number;
+  backPanelThickness: number;
+  maidaWidth: number;
+  maidaZ: number;
+  // rendering
+  material: THREE.Material;
+  renderMode: 'solid' | 'wireframe';
+  isHighlighted: boolean;
+  textureUrl?: string;
+  doorTextureUrl?: string;
+  panelGrainDirections?: { [panelName: string]: 'horizontal' | 'vertical' };
+  furnitureId?: string;
+  sectionName: string;
+  showMaida: boolean;
+  mmToThreeUnits: (mm: number) => number;
+}
+
+const SingleDrawer: React.FC<SingleDrawerProps> = ({
+  zone, index, shouldOpen, openDistance,
+  cabinetBottomY, basicThickness, bottomGap,
+  extSideH, extSideD, extSideT,
+  leftSideX, rightSideX, sideCenterZ,
+  drawerBodyDepth, drawerBodyCenterZ, drawerInnerWidth,
+  drawerSideThickness, handlePlateThickness, backPanelThickness: bpThk,
+  maidaWidth, maidaZ,
+  material, renderMode, isHighlighted,
+  textureUrl, doorTextureUrl, panelGrainDirections, furnitureId, sectionName,
+  showMaida, mmToThreeUnits,
+}) => {
+  // Z축 슬라이드 애니메이션
+  const spring = useSpring({
+    z: shouldOpen ? openDistance : 0,
+    config: { tension: 90, friction: 16, clamp: true },
+  });
+
+  const zoneHeightMm = zone.topMm - zone.bottomMm;
+  const drawerHeight = mmToThreeUnits(zoneHeightMm);
+
+  const drawerBottomY = cabinetBottomY + mmToThreeUnits(zone.bottomMm);
+
+  const bottomPanelTopY = cabinetBottomY + basicThickness;
+  const sideBottomY = index === 0
+    ? bottomPanelTopY + bottomGap
+    : drawerBottomY;
+  const sideCenterY = sideBottomY + extSideH / 2;
+
+  const cX = 0;
+
+  const bottomThk = bpThk;
+  const bottomDepth = drawerBodyDepth;
+  const bottomZPos = drawerBodyCenterZ;
+  const bottomY = sideBottomY + mmToThreeUnits(15) + bottomThk / 2;
+  const bottomWidth = drawerInnerWidth + mmToThreeUnits(10);
+
+  const backHeightMm = 216;
+  const backHeight = mmToThreeUnits(backHeightMm);
+  const bottomTopYPos = bottomY + bottomThk / 2;
+  const backY = bottomTopYPos + backHeight / 2;
+  const backWidth = drawerInnerWidth;
+
+  // 마이다 높이·Y
+  const maidaTopMm = zone.notchAboveBottom + 40;
+  const maidaBottomMm = zone.notchBelowTop != null ? (zone.notchBelowTop - 5) : -5;
+  const maidaHeightMm = maidaTopMm - maidaBottomMm;
+  const maidaHeight = mmToThreeUnits(maidaHeightMm);
+  const maidaCenterY = cabinetBottomY + mmToThreeUnits(maidaBottomMm) + maidaHeight / 2;
+
+  const i = index;
+  const getPanelMaterial = (_: string) => material;
+
+  return (
+    <animated.group position-z={spring.z}>
+      {/* 서랍 좌측판 */}
+      {(() => {
+        const panelName = sectionName ? `${sectionName}서랍${i + 1} 좌측판` : `서랍${i + 1} 좌측판`;
+        return (
+          <BoxWithEdges
+            args={[extSideT, extSideH, extSideD]}
+            position={[leftSideX, sideCenterY, sideCenterZ]}
+            material={getPanelMaterial(panelName)}
+            renderMode={renderMode}
+            isHighlighted={isHighlighted}
+            panelName={panelName}
+            textureUrl={textureUrl}
+            panelGrainDirections={panelGrainDirections}
+            furnitureId={furnitureId}
+          />
+        );
+      })()}
+
+      {/* 서랍 우측판 */}
+      {(() => {
+        const panelName = sectionName ? `${sectionName}서랍${i + 1} 우측판` : `서랍${i + 1} 우측판`;
+        return (
+          <BoxWithEdges
+            args={[extSideT, extSideH, extSideD]}
+            position={[rightSideX, sideCenterY, sideCenterZ]}
+            material={getPanelMaterial(panelName)}
+            renderMode={renderMode}
+            isHighlighted={isHighlighted}
+            panelName={panelName}
+            textureUrl={textureUrl}
+            panelGrainDirections={panelGrainDirections}
+            furnitureId={furnitureId}
+          />
+        );
+      })()}
+
+      {/* 서랍 바닥판 */}
+      {(() => {
+        const panelName = sectionName ? `${sectionName}서랍${i + 1} 바닥` : `서랍${i + 1} 바닥`;
+        return (
+          <BoxWithEdges
+            args={[bottomWidth, bottomThk, bottomDepth]}
+            position={[cX, bottomY, bottomZPos]}
+            material={getPanelMaterial(panelName)}
+            renderMode={renderMode}
+            isHighlighted={isHighlighted}
+            panelName={panelName}
+            textureUrl={textureUrl}
+            panelGrainDirections={panelGrainDirections}
+            furnitureId={furnitureId}
+          />
+        );
+      })()}
+
+      {/* 서랍 뒷판 */}
+      {(() => {
+        const panelName = sectionName ? `${sectionName}서랍${i + 1} 뒷판` : `서랍${i + 1} 뒷판`;
+        return (
+          <BoxWithEdges
+            args={[backWidth, backHeight, drawerSideThickness]}
+            position={[cX, backY, drawerBodyCenterZ - drawerBodyDepth / 2 + drawerSideThickness / 2]}
+            material={getPanelMaterial(panelName)}
+            renderMode={renderMode}
+            isHighlighted={isHighlighted}
+            panelName={panelName}
+            textureUrl={textureUrl}
+            panelGrainDirections={panelGrainDirections}
+            furnitureId={furnitureId}
+          />
+        );
+      })()}
+
+      {/* 마이다 (도어면) */}
+      {showMaida && (() => {
+        const panelName = sectionName ? `${sectionName}서랍${i + 1}(마이다)` : `서랍${i + 1}(마이다)`;
+        return (
+          <BoxWithEdges
+            args={[maidaWidth, maidaHeight, handlePlateThickness]}
+            position={[cX, maidaCenterY, maidaZ]}
+            material={getPanelMaterial(panelName)}
+            renderMode={renderMode}
+            isHighlighted={isHighlighted}
+            panelName={panelName}
+            textureUrl={doorTextureUrl || textureUrl}
+            panelGrainDirections={panelGrainDirections}
+            furnitureId={furnitureId}
+          />
+        );
+      })()}
+    </animated.group>
+  );
+};
+
 interface ExternalDrawerRendererProps {
-  drawerCount: number;        // 서랍 수 (2단=2, 3단=3)
-  moduleWidth: number;        // 모듈 전체 폭 (mm)
-  innerWidth: number;         // 내경 폭 (Three.js units)
-  height: number;             // 가구 전체 높이 (Three.js units)
-  depth: number;              // 가구 깊이 (Three.js units)
-  basicThickness: number;     // 기본 판 두께 (Three.js units, 보통 18mm=0.18)
-  moduleDepthMm: number;      // 모듈 깊이 (mm, 도어 Z 계산용)
+  drawerCount: number;
+  moduleWidth: number;
+  innerWidth: number;
+  height: number;
+  depth: number;
+  basicThickness: number;
+  moduleDepthMm: number;
   material: THREE.Material;
   renderMode: 'solid' | 'wireframe';
   isHighlighted?: boolean;
   textureUrl?: string;
-  doorTextureUrl?: string;    // 도어 텍스처 (마이다용)
+  doorTextureUrl?: string;
   panelGrainDirections?: { [panelName: string]: 'horizontal' | 'vertical' };
   furnitureId?: string;
   sectionName?: string;
   backPanelThicknessOverride?: number;
-  showMaida?: boolean;        // 마이다(도어면) 표시 여부 (hasDoor 연동)
-  notchFromBottoms: number[]; // 보강대 위치 (바닥에서 mm)
-  notchHeights: number[];     // 보강대 높이 (mm)
+  showMaida?: boolean;
+  notchFromBottoms: number[];
+  notchHeights: number[];
+  isEditMode?: boolean;
 }
 
 export const ExternalDrawerRenderer: React.FC<ExternalDrawerRendererProps> = ({
@@ -60,85 +256,84 @@ export const ExternalDrawerRenderer: React.FC<ExternalDrawerRendererProps> = ({
   showMaida = true,
   notchFromBottoms,
   notchHeights,
+  isEditMode = false,
 }) => {
   const { viewMode } = useSpace3DView();
+  const { doorsOpen, isIndividualDoorOpen } = useUIStore();
+  const { gl } = useThree();
+
+  // === 서랍 오픈 상태 (도어 오픈과 연동) ===
+  const isDoorOpen = doorsOpen !== null
+    ? doorsOpen
+    : furnitureId ? isIndividualDoorOpen(furnitureId, 0) : false;
+  const shouldOpenDrawers = useMemo(
+    () => isDoorOpen || (isEditMode && viewMode !== '2D'),
+    [isDoorOpen, isEditMode, viewMode]
+  );
+
+  // 애니메이션 중 렌더링 갱신
+  const [isAnimating, setIsAnimating] = useState(false);
+  useEffect(() => {
+    if (isDoorOpen !== undefined) {
+      setIsAnimating(true);
+      const timer = setTimeout(() => setIsAnimating(false), 1200);
+      return () => clearTimeout(timer);
+    }
+  }, [isDoorOpen]);
+  useFrame(() => {
+    if (isAnimating && gl && 'invalidate' in gl) {
+      (gl as any).invalidate();
+    }
+  });
 
   const mmToThreeUnits = (mm: number) => mm * 0.01;
 
-  // === 두께 상수 (기존 DrawerRenderer와 동일) ===
+  // === 두께 상수 ===
   const basicThicknessMm = basicThickness / 0.01;
   const drawerPanelThicknessMm = (basicThicknessMm === 18.5 || basicThicknessMm === 15.5) ? 15.5 : 15;
-  const DRAWER_SIDE_THICKNESS = mmToThreeUnits(drawerPanelThicknessMm); // 서랍 앞/뒷판 두께
-  const HANDLE_PLATE_THICKNESS = mmToThreeUnits(drawerPanelThicknessMm); // 마이다 두께
+  const DRAWER_SIDE_THICKNESS = mmToThreeUnits(drawerPanelThicknessMm);
+  const HANDLE_PLATE_THICKNESS = mmToThreeUnits(drawerPanelThicknessMm);
   const backPanelThickness = backPanelThicknessOverride != null
     ? mmToThreeUnits(backPanelThicknessOverride)
     : mmToThreeUnits(9);
 
   // === 외부서랍 전용 좌우측판 스펙 ===
-  const EXT_SIDE_H = mmToThreeUnits(240);   // 높이 240mm
-  const EXT_SIDE_D = mmToThreeUnits(453);   // 깊이 453mm
-  const EXT_SIDE_T = basicThickness;         // 두께 = 캐비넷 basicThickness
-  const SIDE_GAP = mmToThreeUnits(6);        // 캐비넷 측판 안쪽에서 6mm 갭
-  const BOTTOM_GAP = mmToThreeUnits(15);     // 1단 서랍: 캐비넷 바닥판에서 15mm 위
+  const EXT_SIDE_H = mmToThreeUnits(240);
+  const EXT_SIDE_D = mmToThreeUnits(453);
+  const EXT_SIDE_T = basicThickness;
+  const SIDE_GAP = mmToThreeUnits(6);
+  const BOTTOM_GAP = mmToThreeUnits(15);
 
-  // 마이다 폭 = 모듈 전체 폭 - 3mm (양쪽 1.5mm 갭)
   const maidaWidth = mmToThreeUnits(moduleWidth - 3);
-
-  // 마이다 Z 위치 = 도어와 동일 (가구 앞면 + 14mm)
   const maidaZ = (mmToThreeUnits(moduleDepthMm) + mmToThreeUnits(28)) / 2;
 
-  // 좌우측판 X 위치: 캐비넷 내경 안쪽에서 6mm 갭
   const leftSideX = -innerWidth / 2 + SIDE_GAP + EXT_SIDE_T / 2;
   const rightSideX = innerWidth / 2 - SIDE_GAP - EXT_SIDE_T / 2;
 
-  // 좌우측판 Z 위치: 캐비넷 측판과 동일 (앞면 정렬)
-  // 캐비넷 측판 앞면 = depth/2
-  // 외부서랍 측판 앞면도 동일 → Z중심 = 앞면 - EXT_SIDE_D/2
   const sideFrontEdge = depth / 2;
   const sideCenterZ = sideFrontEdge - EXT_SIDE_D / 2;
 
-  // 서랍 본체 깊이 = 측판 깊이 (453mm)와 동일
   const drawerBodyDepth = EXT_SIDE_D;
-  // 서랍 본체 Z 중심 = 측판 Z 중심과 동일
   const drawerBodyCenterZ = sideCenterZ;
 
-  // 서랍 바닥판·뒷판 폭: 좌우측판 안쪽면 사이
-  // 기존: drawerWidth - 96mm (바닥판), drawerWidth - 107mm (뒷판)
-  // 외부서랍: 좌우측판 안쪽면 사이 폭 기준으로 계산
-  // 좌측판 안쪽면 = leftSideX + EXT_SIDE_T/2
-  // 우측판 안쪽면 = rightSideX - EXT_SIDE_T/2
   const drawerInnerWidth = (rightSideX - EXT_SIDE_T / 2) - (leftSideX + EXT_SIDE_T / 2);
-
-  const getPanelMaterial = React.useCallback((_panelName: string) => {
-    return material;
-  }, [material]);
 
   if (drawerCount <= 0) {
     return null;
   }
 
-  // === 서랍 영역 계산 (보강대로 분리) ===
-  // 모든 mm 값은 측판 하단(= 캐비넷 외부 바닥) 기준
-  const sidePanelHeightMm = height / 0.01; // 측판 전체 높이 (mm)
-  const upperNotchH = 60; // 상단 따내기 높이
-  const upperNotchFromBottom = sidePanelHeightMm - upperNotchH; // 상단 따내기 하단 (측판 바닥 기준)
-
-  interface DrawerZone {
-    bottomMm: number;
-    topMm: number;
-    notchAboveBottom: number;  // 위쪽 따내기의 하단면 (mm, 측판 바닥 기준)
-    notchBelowTop: number | null; // 아래쪽 따내기의 상단면 (mm), 최하단은 null
-  }
+  // === 서랍 영역 계산 (측판 바닥 기준 mm) ===
+  const sidePanelHeightMm = height / 0.01;
+  const upperNotchH = 60;
+  const upperNotchFromBottom = sidePanelHeightMm - upperNotchH;
 
   const zones: DrawerZone[] = [];
   let cursor = 0;
 
-  // notchFromBottoms는 측판 바닥 기준 (mm)
   const sortedNotches = notchFromBottoms
     .map((fb, idx) => ({ fromBottom: fb, height: notchHeights[idx] || 65 }))
     .sort((a, b) => a.fromBottom - b.fromBottom);
 
-  // 상단 따내기도 notch 목록에 추가 (마이다 계산용)
   const allNotches = [...sortedNotches, { fromBottom: upperNotchFromBottom, height: upperNotchH }];
 
   for (let ni = 0; ni < allNotches.length; ni++) {
@@ -151,157 +346,47 @@ export const ExternalDrawerRenderer: React.FC<ExternalDrawerRendererProps> = ({
     cursor = notch.fromBottom + notch.height;
   }
 
-  // 캐비넷 외부 바닥 Y (= 측판 바닥 = mm 0 기준점)
   const cabinetBottomY = -height / 2;
+  const DRAWER_OPEN_DISTANCE = mmToThreeUnits(300);
 
   return (
     <group>
-      {zones.map((zone, i) => {
-        const zoneHeightMm = zone.topMm - zone.bottomMm;
-        const drawerHeight = mmToThreeUnits(zoneHeightMm);
-
-        // 모든 Y는 cabinetBottomY(측판 바닥) + mm오프셋으로 계산
-        const drawerBottomY = cabinetBottomY + mmToThreeUnits(zone.bottomMm);
-        const drawerCenterY = drawerBottomY + drawerHeight / 2;
-
-        // === 좌우측판 Y 위치 ===
-        // 1단(i=0): 캐비넷 바닥판 윗면(basicThickness)에서 15mm 위
-        // 2단 이상: 보강대 윗면에서 시작 (= 영역 시작점)
-        const bottomPanelTopY = cabinetBottomY + basicThickness; // 바닥판 윗면
-        const sideBottomY = i === 0
-          ? bottomPanelTopY + BOTTOM_GAP
-          : drawerBottomY;
-        const sideCenterY = sideBottomY + EXT_SIDE_H / 2;
-
-        // === 바닥판·뒷판 ===
-        const cX = 0;
-
-        const bottomThk = backPanelThickness;
-        const bottomDepth = drawerBodyDepth;
-        const bottomZPos = drawerBodyCenterZ;
-        const bottomY = sideBottomY + mmToThreeUnits(15) + bottomThk / 2;
-        const bottomWidth = drawerInnerWidth + mmToThreeUnits(10);
-
-        const backHeightMm = 216;
-        const backHeight = mmToThreeUnits(backHeightMm);
-        const bottomTopYPos = bottomY + bottomThk / 2;
-        const backY = bottomTopYPos + backHeight / 2;
-        const backWidth = drawerInnerWidth;
-
-        // === 마이다 높이·Y 계산 (측판 바닥 기준 mm) ===
-        // 마이다 상단 = 위쪽 따내기 하단면에서 40mm 위로
-        const maidaTopMm = zone.notchAboveBottom + 40;
-        // 마이다 하단 = 아래쪽 따내기 상단면에서 5mm 아래로 (최하단은 측판 바닥에서 -5mm)
-        const maidaBottomMm = zone.notchBelowTop != null ? (zone.notchBelowTop - 5) : -5;
-        const maidaHeightMm = maidaTopMm - maidaBottomMm;
-        const maidaHeight = mmToThreeUnits(maidaHeightMm);
-        // 마이다 Y 중심 = 캐비넷 외부 바닥(측판 바닥) 기준
-        const maidaCenterY = cabinetBottomY + mmToThreeUnits(maidaBottomMm) + maidaHeight / 2;
-
-        console.log(`🔧 [ExtDrawer] zone${i}: notchAbove=${zone.notchAboveBottom}, notchBelowTop=${zone.notchBelowTop}, maidaTop=${maidaTopMm}mm, maidaBottom=${maidaBottomMm}mm, maidaH=${maidaHeightMm}mm, maidaCenterY=${maidaCenterY.toFixed(4)}`);
-
-        return (
-          <group key={`ext-drawer-${i}`}>
-
-            {/* === 서랍 좌측판 === */}
-            {(() => {
-              const panelName = sectionName ? `${sectionName}서랍${i + 1} 좌측판` : `서랍${i + 1} 좌측판`;
-              const mat = getPanelMaterial(panelName);
-              return (
-                <BoxWithEdges
-                  args={[EXT_SIDE_T, EXT_SIDE_H, EXT_SIDE_D]}
-                  position={[leftSideX, sideCenterY, sideCenterZ]}
-                  material={mat}
-                  renderMode={renderMode}
-                  isHighlighted={isHighlighted}
-                  panelName={panelName}
-                  textureUrl={textureUrl}
-                  panelGrainDirections={panelGrainDirections}
-                  furnitureId={furnitureId}
-                />
-              );
-            })()}
-
-            {/* === 서랍 우측판 === */}
-            {(() => {
-              const panelName = sectionName ? `${sectionName}서랍${i + 1} 우측판` : `서랍${i + 1} 우측판`;
-              const mat = getPanelMaterial(panelName);
-              return (
-                <BoxWithEdges
-                  args={[EXT_SIDE_T, EXT_SIDE_H, EXT_SIDE_D]}
-                  position={[rightSideX, sideCenterY, sideCenterZ]}
-                  material={mat}
-                  renderMode={renderMode}
-                  isHighlighted={isHighlighted}
-                  panelName={panelName}
-                  textureUrl={textureUrl}
-                  panelGrainDirections={panelGrainDirections}
-                  furnitureId={furnitureId}
-                />
-              );
-            })()}
-
-            {/* === 서랍 바닥판 (기존 renderDrawer 동일 — 폭만 재계산) === */}
-            {(() => {
-              const panelName = sectionName ? `${sectionName}서랍${i + 1} 바닥` : `서랍${i + 1} 바닥`;
-              const mat = getPanelMaterial(panelName);
-              return (
-                <BoxWithEdges
-                  args={[bottomWidth, bottomThk, bottomDepth]}
-                  position={[cX, bottomY, bottomZPos]}
-                  material={mat}
-                  renderMode={renderMode}
-                  isHighlighted={isHighlighted}
-                  panelName={panelName}
-                  textureUrl={textureUrl}
-                  panelGrainDirections={panelGrainDirections}
-                  furnitureId={furnitureId}
-                />
-              );
-            })()}
-
-            {/* === 서랍 뒷판 (기존 renderDrawer 동일 — 폭만 재계산) === */}
-            {(() => {
-              const panelName = sectionName ? `${sectionName}서랍${i + 1} 뒷판` : `서랍${i + 1} 뒷판`;
-              const mat = getPanelMaterial(panelName);
-              return (
-                <BoxWithEdges
-                  args={[backWidth, backHeight, DRAWER_SIDE_THICKNESS]}
-                  position={[cX, backY, drawerBodyCenterZ - drawerBodyDepth / 2 + DRAWER_SIDE_THICKNESS / 2]}
-                  material={mat}
-                  renderMode={renderMode}
-                  isHighlighted={isHighlighted}
-                  panelName={panelName}
-                  textureUrl={textureUrl}
-                  panelGrainDirections={panelGrainDirections}
-                  furnitureId={furnitureId}
-                />
-              );
-            })()}
-
-            {/* === 앞판 없음 (외부서랍) === */}
-
-            {/* === 마이다 (도어면) — hasDoor 시에만 === */}
-            {showMaida && (() => {
-              const panelName = sectionName ? `${sectionName}서랍${i + 1}(마이다)` : `서랍${i + 1}(마이다)`;
-              const mat = getPanelMaterial(panelName);
-              return (
-                <BoxWithEdges
-                  args={[maidaWidth, maidaHeight, HANDLE_PLATE_THICKNESS]}
-                  position={[cX, maidaCenterY, maidaZ]}
-                  material={mat}
-                  renderMode={renderMode}
-                  isHighlighted={isHighlighted}
-                  panelName={panelName}
-                  textureUrl={doorTextureUrl || textureUrl}
-                  panelGrainDirections={panelGrainDirections}
-                  furnitureId={furnitureId}
-                />
-              );
-            })()}
-          </group>
-        );
-      })}
+      {zones.map((zone, i) => (
+        <SingleDrawer
+          key={`ext-drawer-${i}`}
+          zone={zone}
+          index={i}
+          shouldOpen={shouldOpenDrawers}
+          openDistance={DRAWER_OPEN_DISTANCE}
+          cabinetBottomY={cabinetBottomY}
+          basicThickness={basicThickness}
+          bottomGap={BOTTOM_GAP}
+          extSideH={EXT_SIDE_H}
+          extSideD={EXT_SIDE_D}
+          extSideT={EXT_SIDE_T}
+          leftSideX={leftSideX}
+          rightSideX={rightSideX}
+          sideCenterZ={sideCenterZ}
+          drawerBodyDepth={drawerBodyDepth}
+          drawerBodyCenterZ={drawerBodyCenterZ}
+          drawerInnerWidth={drawerInnerWidth}
+          drawerSideThickness={DRAWER_SIDE_THICKNESS}
+          handlePlateThickness={HANDLE_PLATE_THICKNESS}
+          backPanelThickness={backPanelThickness}
+          maidaWidth={maidaWidth}
+          maidaZ={maidaZ}
+          material={material}
+          renderMode={renderMode}
+          isHighlighted={isHighlighted}
+          textureUrl={textureUrl}
+          doorTextureUrl={doorTextureUrl}
+          panelGrainDirections={panelGrainDirections}
+          furnitureId={furnitureId}
+          sectionName={sectionName}
+          showMaida={showMaida}
+          mmToThreeUnits={mmToThreeUnits}
+        />
+      ))}
     </group>
   );
 };
