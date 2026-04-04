@@ -370,6 +370,18 @@ const getAppTheme = (): 'dark' | 'light' => {
   return 'light';
 };
 
+// localStorage에서 shadowEnabled 캐시 강제 제거 (항상 기본값 false 사용)
+try {
+  const raw = localStorage.getItem('ui-store');
+  if (raw) {
+    const parsed = JSON.parse(raw);
+    if (parsed?.state && 'shadowEnabled' in parsed.state) {
+      delete parsed.state.shadowEnabled;
+      localStorage.setItem('ui-store', JSON.stringify(parsed));
+    }
+  }
+} catch (_) { /* ignore */ }
+
 export const useUIStore = create<UIState>()(
   persist(
     (set, get) => {
@@ -866,14 +878,6 @@ export const useUIStore = create<UIState>()(
     },
     {
       name: 'ui-store', // localStorage 키
-      version: 1, // 버전 업: shadowEnabled localStorage 캐시 무효화
-      migrate: (persistedState: any) => {
-        // 기존 localStorage에 남아있는 shadowEnabled 제거
-        if (persistedState && 'shadowEnabled' in persistedState) {
-          delete persistedState.shadowEnabled;
-        }
-        return persistedState;
-      },
       partialize: (state) => ({
         viewMode: state.viewMode,
         view2DDirection: state.view2DDirection,
