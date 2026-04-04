@@ -86,15 +86,15 @@ export type ModuleType = 'all' | 'single' | 'dual';
 const formatThumbnailName = (module: ModuleData): string => {
   let name = module.name.replace(/\s*[\d.]+mm$/, '');
   const isDual = module.id.includes('dual-');
-  const alreadyHasLabel = name.includes('반통') || name.includes('한통');
 
-  if (alreadyHasLabel) return name;
+  // "한통" 제거, "듀얼 " 접두어 제거
+  name = name.replace(/\s*한통/, '').replace(/^��얼\s*/, '');
 
-  if (isDual) {
-    name = name.replace(/^듀얼\s*/, '');
-    return `${name}(한통)`;
+  // 싱글만 (반통) 표기, 이미 반통이 있으면 그대로
+  if (!isDual && !name.includes('반통')) {
+    return `${name}(반통)`;
   }
-  return `${name}(반통)`;
+  return name;
 };
 
 // 썸네일 아이�� 컴포넌트
