@@ -174,7 +174,7 @@ export const ExternalDrawerRenderer: React.FC<ExternalDrawerRendererProps> = ({
         const bottomDepth = drawerBodyDepth; // 측판과 동일 453mm
         const bottomZPos = drawerBodyCenterZ; // 측판과 동일 Z
         const bottomY = sideBottomY + mmToThreeUnits(15) + bottomThk / 2;
-        const bottomWidth = drawerInnerWidth; // 좌우측판 안쪽면 사이
+        const bottomWidth = drawerInnerWidth + mmToThreeUnits(10); // 좌우측판 홈 끼움 (양쪽 5mm씩)
 
         // 뒷판: 높이 = 216mm (측판240 - 15mm - 바닥판9mm), 바닥판 윗면에 올라탐
         const backHeightMm = 216;
