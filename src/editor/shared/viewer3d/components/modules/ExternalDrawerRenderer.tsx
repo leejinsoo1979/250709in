@@ -404,14 +404,14 @@ export const ExternalDrawerRenderer: React.FC<ExternalDrawerRendererProps> = ({
         if (verticalHMm <= 0) return null;
         const moduleWidthThree = mmToThreeUnits(moduleWidth);
 
-        // 수평판: 따내기 바닥에 위치, 깊이 40mm
+        // 수평판: 따내기 바닥에 위치, 앞면(도어면)에 붙음
         const horzY = cabinetBottomY + mmToThreeUnits(notch.fromBottom) + basicThickness / 2;
-        const horzZ = depth / 2 - mmToThreeUnits(40) / 2;
+        const horzZ = depth / 2 - basicThickness / 2;
         const horzArgs: [number, number, number] = [moduleWidthThree, basicThickness, mmToThreeUnits(40)];
 
-        // 수직판: 수평판 위에, 따내기 앞면(도어면)에 붙음
+        // 수직판: 수평판 위에 올라감, 안쪽(따내기 뒤쪽 면)에 붙음
         const vertY = cabinetBottomY + mmToThreeUnits(notch.fromBottom) + basicThickness + mmToThreeUnits(verticalHMm) / 2;
-        const vertZ = depth / 2 - basicThickness / 2;
+        const vertZ = depth / 2 - mmToThreeUnits(40) + basicThickness / 2;
         const vertArgs: [number, number, number] = [moduleWidthThree, mmToThreeUnits(verticalHMm), basicThickness];
 
         const horzName = sectionName ? `${sectionName}L프레임수평(${ni + 1})` : `L프레임수평(${ni + 1})`;
