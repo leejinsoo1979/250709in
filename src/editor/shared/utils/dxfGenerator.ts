@@ -758,6 +758,23 @@ const drawFrontFurnitureModules = (dxf: DxfWriter, placedModules: DXFPlacedModul
       }
     }
 
+    // L자 PET 프레임 (하부 서랍장 따내기 마감)
+    if (moduleId?.includes('lower-drawer-')) {
+      const is3TierDxf = moduleId.includes('lower-drawer-3tier');
+      const dxfNotches: { fromBottom: number; height: number }[] = is3TierDxf
+        ? [{ fromBottom: 295, height: 65 }, { fromBottom: 510, height: 65 }]
+        : [{ fromBottom: 330, height: 65 }];
+      dxfNotches.push({ fromBottom: furnitureHeight - 60, height: 60 });
+
+      dxfNotches.forEach(notch => {
+        const notchBase = y1 + notch.fromBottom;
+        // 수평판 (아래): 따내기 하단에 위치
+        drawRectangle(dxf, x1, notchBase, x2, notchBase + PANEL_THICKNESS);
+        // 수직판 (위): 수평판 위에서 따내기 상단까지
+        drawRectangle(dxf, x1, notchBase + PANEL_THICKNESS, x2, notchBase + notch.height);
+      });
+    }
+
     // 받침대/지지대 (baseFrame이 있는 경우)
     if (y1 > 0) {
       dxf.addLine(point3d(x1, 0), point3d(x1, y1)); // 좌측 지지대
