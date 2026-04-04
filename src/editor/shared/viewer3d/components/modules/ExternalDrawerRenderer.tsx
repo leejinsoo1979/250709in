@@ -94,9 +94,10 @@ const SingleDrawer: React.FC<SingleDrawerProps> = ({
   const sideHeight = mmToThreeUnits(sideHeightMm);
 
   const bottomPanelTopY = cabinetBottomY + basicThickness;
+  // 측판 하단: 1단=바닥판에서 15mm 위, 2단이상=따내기 상단에서 15mm 위
   const sideBottomY = index === 0
     ? bottomPanelTopY + bottomGap
-    : drawerBottomY;
+    : drawerBottomY + bottomGap;
   const sideCenterY = sideBottomY + sideHeight / 2;
 
   const cX = 0;
