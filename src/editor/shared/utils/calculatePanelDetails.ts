@@ -1156,7 +1156,7 @@ export const calculatePanelDetails = (
       : isDoorLift3Tier
       ? [{ fromBottom: 314, height: 65 }, { fromBottom: 544, height: 65 }]
       : isDoorLift2Tier
-      ? [{ fromBottom: 351, height: 65 }]
+      ? [{ fromBottom: 354, height: 65 }]
       : [{ fromBottom: 330, height: 65 }];
     // 상단 따내기 (60mm) - 도어올림은 상단 따내기 없음
     if (!isDoorLift2Tier && !isDoorLift3Tier) {
