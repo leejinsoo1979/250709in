@@ -632,15 +632,13 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
       return '#' + bg.getHexString();
     })();
 
-    // 측면뷰에서 전대/보강대 단면 대각선 (X자) 표시
+    // 측면뷰에서 전대/보강대 단면 대각선 표시 (한쪽만)
     const isCrossSection = panelName && (panelName.includes('전대') || panelName.includes('보강대'));
     const isSideView = view2DDirection === 'left' || view2DDirection === 'right';
     const crossLines: [number, number, number][][] = [];
     if (isCrossSection && isSideView) {
-      // 측면뷰: Y-Z 평면 단면에 대각선 2개 (X자)
       crossLines.push(
-        [[0, -halfH, -halfD], [0, halfH, halfD]],  // ↗ 대각선
-        [[0, halfH, -halfD], [0, -halfH, halfD]]   // ↘ 대각선
+        [[0, -halfH, -halfD], [0, halfH, halfD]]   // ↗ 대각선 1개
       );
     }
 
