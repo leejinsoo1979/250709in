@@ -124,6 +124,8 @@ export const ExternalDrawerRenderer: React.FC<ExternalDrawerRendererProps> = ({
   interface DrawerZone {
     bottomMm: number;
     topMm: number;
+    notchAboveBottom: number;  // 위쪽 따내기의 하단면 (mm)
+    notchBelowTop: number | null; // 아래쪽 따내기의 상단면 (mm), 최하단은 null
   }
 
   const zones: DrawerZone[] = [];
@@ -133,15 +135,19 @@ export const ExternalDrawerRenderer: React.FC<ExternalDrawerRendererProps> = ({
     .map((fb, idx) => ({ fromBottom: fb, height: notchHeights[idx] || 65 }))
     .sort((a, b) => a.fromBottom - b.fromBottom);
 
-  for (const notch of sortedNotches) {
+  // 상단 따내기도 notch 목록에 추가 (마이다 계산용)
+  const allNotches = [...sortedNotches, { fromBottom: cabinetInnerTop - upperNotchH, height: upperNotchH }];
+
+  for (let ni = 0; ni < allNotches.length; ni++) {
+    const notch = allNotches[ni];
     if (notch.fromBottom > cursor) {
-      zones.push({ bottomMm: cursor, topMm: notch.fromBottom });
+      // 이 영역 위의 따내기 = 현재 notch
+      const notchAboveBottom = notch.fromBottom; // 위쪽 따내기의 하단면
+      // 이 영역 아래의 따내기 = 이전 notch (없으면 null = 최하단)
+      const notchBelowTop = ni > 0 ? (allNotches[ni - 1].fromBottom + allNotches[ni - 1].height) : null;
+      zones.push({ bottomMm: cursor, topMm: notch.fromBottom, notchAboveBottom, notchBelowTop });
     }
     cursor = notch.fromBottom + notch.height;
-  }
-  const lastTop = cabinetInnerTop - upperNotchH;
-  if (lastTop > cursor) {
-    zones.push({ bottomMm: cursor, topMm: lastTop });
   }
 
   // 바닥판 윗면 기준 Y
@@ -183,8 +189,15 @@ export const ExternalDrawerRenderer: React.FC<ExternalDrawerRendererProps> = ({
         const backY = bottomTopYPos + backHeight / 2;
         const backWidth = drawerInnerWidth;
 
-        // 마이다 높이
-        const maidaHeight = drawerHeight - mmToThreeUnits(3);
+        // === 마이다 높이·Y 계산 ===
+        // 마이다 상단 = 위쪽 따내기 하단면에서 40mm 위로
+        const maidaTopMm = zone.notchAboveBottom + 40;
+        // 마이다 하단 = 아래쪽 따내기 상단면에서 5mm 아래로 (최하단은 캐비넷 바닥 기준 -5mm)
+        const maidaBottomMm = zone.notchBelowTop != null ? (zone.notchBelowTop - 5) : -5;
+        const maidaHeightMm = maidaTopMm - maidaBottomMm;
+        const maidaHeight = mmToThreeUnits(maidaHeightMm);
+        // 마이다 Y 중심 = 바닥판 윗면 기준
+        const maidaCenterY = bottomPanelTop + mmToThreeUnits(maidaBottomMm) + maidaHeight / 2;
 
         return (
           <group key={`ext-drawer-${i}`}>
@@ -274,7 +287,7 @@ export const ExternalDrawerRenderer: React.FC<ExternalDrawerRendererProps> = ({
               return (
                 <BoxWithEdges
                   args={[maidaWidth, maidaHeight, HANDLE_PLATE_THICKNESS]}
-                  position={[cX, drawerCenterY, maidaZ]}
+                  position={[cX, maidaCenterY, maidaZ]}
                   material={mat}
                   renderMode={renderMode}
                   isHighlighted={isHighlighted}
