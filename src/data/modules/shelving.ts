@@ -1288,12 +1288,12 @@ const createLowerDoorLift2Tier = (columnWidth: number): ModuleData => {
 
   const base = createFurnitureBase(
     `lower-door-lift-2tier-${widthForId}`,
-    `도어올림 2단 ${widthForId}mm`,
+    `도어올림 2단 반통 ${widthForId}mm`,
     columnWidth,
     cabinetHeight,
     650,
     '#e8f5e9',
-    `도어올림 2단 W${widthForId}xH785xD650 (조절발 65mm)`,
+    `도어올림 2단 반통 W${widthForId}xH785xD650 (조절발 65mm)`,
     650,
     'lower'
   );
@@ -1329,12 +1329,12 @@ const createLowerDoorLift3Tier = (columnWidth: number): ModuleData => {
 
   const base = createFurnitureBase(
     `lower-door-lift-3tier-${widthForId}`,
-    `도어올림 3단 ${widthForId}mm`,
+    `도어올림 3단 반통 ${widthForId}mm`,
     columnWidth,
     cabinetHeight,
     650,
     '#e8f5e9',
-    `도어올림 3단 W${widthForId}xH785xD650 (조절발 65mm)`,
+    `도어올림 3단 반통 W${widthForId}xH785xD650 (조절발 65mm)`,
     650,
     'lower'
   );
