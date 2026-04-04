@@ -226,6 +226,7 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
               isHighlighted={false}
               textureUrl={spaceInfo?.materialConfig?.texture}
               doorTextureUrl={spaceInfo?.materialConfig?.doorTexture}
+              doorColor={baseFurniture.doorColor}
               panelGrainDirections={panelGrainDirections}
               furnitureId={placedFurnitureId}
               showMaida={hasDoor}

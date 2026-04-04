@@ -1,10 +1,11 @@
-import React, { useMemo, useState, useEffect } from 'react';
+import React, { useMemo, useState, useEffect, useRef } from 'react';
 import * as THREE from 'three';
 import { useSpring, animated } from '@react-spring/three';
 import { useFrame, useThree } from '@react-three/fiber';
 import { useSpace3DView } from '../../context/useSpace3DView';
 import { useUIStore } from '@/store/uiStore';
 import BoxWithEdges from './components/BoxWithEdges';
+import { isCabinetTexture1, applyCabinetTexture1Settings, isOakTexture, applyOakTextureSettings, applyDefaultImageTextureSettings } from '@/editor/shared/utils/materialConstants';
 
 /**
  * 외부서랍 렌더러 (하부 서랍장 전용)
@@ -55,6 +56,7 @@ interface SingleDrawerProps {
   maidaZ: number;
   // rendering
   material: THREE.Material;
+  doorMaterial: THREE.Material;
   renderMode: 'solid' | 'wireframe';
   isHighlighted: boolean;
   textureUrl?: string;
@@ -74,7 +76,7 @@ const SingleDrawer: React.FC<SingleDrawerProps> = ({
   drawerBodyDepth, drawerBodyCenterZ, drawerInnerWidth,
   drawerSideThickness, handlePlateThickness, backPanelThickness: bpThk,
   maidaWidth, maidaZ,
-  material, renderMode, isHighlighted,
+  material, doorMaterial, renderMode, isHighlighted,
   textureUrl, doorTextureUrl, panelGrainDirections, furnitureId, sectionName,
   showMaida, mmToThreeUnits,
 }) => {
@@ -206,7 +208,7 @@ const SingleDrawer: React.FC<SingleDrawerProps> = ({
           <BoxWithEdges
             args={[maidaWidth, maidaHeight, handlePlateThickness]}
             position={[cX, maidaCenterY, maidaZ]}
-            material={getPanelMaterial(panelName)}
+            material={doorMaterial}
             renderMode={renderMode}
             isHighlighted={isHighlighted}
             panelName={panelName}
@@ -233,6 +235,7 @@ interface ExternalDrawerRendererProps {
   isHighlighted?: boolean;
   textureUrl?: string;
   doorTextureUrl?: string;
+  doorColor?: string;
   panelGrainDirections?: { [panelName: string]: 'horizontal' | 'vertical' };
   furnitureId?: string;
   sectionName?: string;
@@ -256,6 +259,7 @@ export const ExternalDrawerRenderer: React.FC<ExternalDrawerRendererProps> = ({
   isHighlighted = false,
   textureUrl,
   doorTextureUrl,
+  doorColor,
   panelGrainDirections,
   furnitureId,
   sectionName = '',
@@ -294,6 +298,71 @@ export const ExternalDrawerRenderer: React.FC<ExternalDrawerRendererProps> = ({
   });
 
   const mmToThreeUnits = (mm: number) => mm * 0.01;
+
+  // === 도어 재질 (L자 프레임 + 마이다용) ===
+  const doorMaterialRef = useRef<THREE.MeshStandardMaterial | null>(null);
+  const doorMaterial = useMemo(() => {
+    const effectiveColor = doorColor || '#E0E0E0';
+    const mat = new THREE.MeshStandardMaterial({
+      color: new THREE.Color(effectiveColor),
+      metalness: 0.0,
+      roughness: 0.6,
+      envMapIntensity: 0.0,
+    });
+    doorMaterialRef.current = mat;
+    return mat;
+  }, []);
+
+  // doorColor 변경 시 material 색상 업데이트
+  useEffect(() => {
+    if (doorMaterialRef.current) {
+      const effectiveColor = doorColor || '#E0E0E0';
+      if (!doorMaterialRef.current.map) {
+        doorMaterialRef.current.color.set(effectiveColor);
+      }
+      doorMaterialRef.current.needsUpdate = true;
+    }
+  }, [doorColor]);
+
+  // doorTextureUrl 변경 시 텍스처 적용 (DoorModule과 동일 방식)
+  useEffect(() => {
+    const mat = doorMaterialRef.current;
+    if (!mat) return;
+
+    if (doorTextureUrl) {
+      if (isOakTexture(doorTextureUrl)) {
+        applyOakTextureSettings(mat);
+      } else if (isCabinetTexture1(doorTextureUrl)) {
+        applyCabinetTexture1Settings(mat);
+      }
+      const loader = new THREE.TextureLoader();
+      loader.load(doorTextureUrl, (texture) => {
+        texture.wrapS = THREE.RepeatWrapping;
+        texture.wrapT = THREE.RepeatWrapping;
+        texture.repeat.set(1, 1);
+        mat.map = texture;
+        if (isOakTexture(doorTextureUrl)) {
+          applyOakTextureSettings(mat);
+        } else if (isCabinetTexture1(doorTextureUrl)) {
+          applyCabinetTexture1Settings(mat);
+        } else {
+          applyDefaultImageTextureSettings(mat);
+        }
+        mat.needsUpdate = true;
+        requestAnimationFrame(() => { mat.needsUpdate = true; });
+      });
+    } else {
+      if (mat.map) {
+        mat.map.dispose();
+        mat.map = null;
+      }
+      const effectiveColor = doorColor || '#E0E0E0';
+      mat.color.set(effectiveColor);
+      mat.toneMapped = true;
+      mat.roughness = 0.6;
+      mat.needsUpdate = true;
+    }
+  }, [doorTextureUrl, doorColor]);
 
   // === 두께 상수 ===
   const basicThicknessMm = basicThickness / 0.01;
@@ -386,6 +455,7 @@ export const ExternalDrawerRenderer: React.FC<ExternalDrawerRendererProps> = ({
           maidaWidth={maidaWidth}
           maidaZ={maidaZ}
           material={material}
+          doorMaterial={doorMaterial}
           renderMode={renderMode}
           isHighlighted={isHighlighted}
           textureUrl={textureUrl}
@@ -423,7 +493,7 @@ export const ExternalDrawerRenderer: React.FC<ExternalDrawerRendererProps> = ({
             <BoxWithEdges
               args={horzArgs}
               position={[0, horzY, horzZ]}
-              material={material}
+              material={doorMaterial}
               renderMode={renderMode}
               isHighlighted={isHighlighted}
               panelName={horzName}
@@ -434,7 +504,7 @@ export const ExternalDrawerRenderer: React.FC<ExternalDrawerRendererProps> = ({
             <BoxWithEdges
               args={vertArgs}
               position={[0, vertY, vertZ]}
-              material={material}
+              material={doorMaterial}
               renderMode={renderMode}
               isHighlighted={isHighlighted}
               panelName={vertName}
