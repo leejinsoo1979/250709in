@@ -219,9 +219,7 @@ export const MeasurementTool: React.FC<MeasurementToolProps> = ({ viewDirection 
   // 씬의 모든 꼭지점 추출 (캐싱)
   const sceneVertices = useMemo(() => {
     if (!isMeasureMode) return [];
-// console.log(`📐 씬 꼭지점 추출 중... (viewDirection: ${viewDirection})`);
     const vertices = extractVertices(scene);
-// console.log(`📐 총 ${vertices.length}개 꼭지점 발견`);
     return vertices;
   }, [scene, isMeasureMode, viewDirection]);
 
@@ -230,6 +228,16 @@ export const MeasurementTool: React.FC<MeasurementToolProps> = ({ viewDirection 
   useEffect(() => {
     sceneVerticesRef.current = sceneVertices;
   }, [sceneVertices]);
+
+  // 측정 모드 진입 후 지연 재수집 (도어 등 조건부 컴포넌트가 마운트된 후 꼭지점 갱신)
+  useEffect(() => {
+    if (!isMeasureMode) return;
+    const timer = setTimeout(() => {
+      const freshVertices = extractVertices(scene);
+      sceneVerticesRef.current = freshVertices;
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [isMeasureMode, scene, viewDirection]);
 
   // 지우개 모드에서 측정선과의 거리 계산 (호버 감지용)
   const getDistanceToLine = useCallback((point: MeasurePoint, lineStart: MeasurePoint, lineEnd: MeasurePoint): number => {
