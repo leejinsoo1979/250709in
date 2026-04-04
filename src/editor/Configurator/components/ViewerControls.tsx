@@ -270,11 +270,13 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
   }
 
   // ── Desktop UI ──
+  const isSideView = viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right');
+
   return (
     <div className={styles.viewerControls}>
 
-      {/* ─── Center: absolute-centered 3D/2D toggle ─── */}
-      <div className={styles.centerAbsolute}>
+      {/* ─── Center: absolute-centered 3D/2D toggle (2D 측면뷰에서는 숨김) ─── */}
+      {!isSideView && <div className={styles.centerAbsolute}>
         {isFreePlacement && (
           <div className={styles.segmentedControl}>
             <button
@@ -351,7 +353,7 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
         )}
 
         {/* 프레임분절/병합 버튼 숨김 — CNC 옵티마이저 진입 시 팝업으로 대체 */}
-      </div>
+      </div>}
 
       <div className={styles.spacer} />
 
