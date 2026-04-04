@@ -866,6 +866,14 @@ export const useUIStore = create<UIState>()(
     },
     {
       name: 'ui-store', // localStorage 키
+      version: 1, // 버전 업: shadowEnabled localStorage 캐시 무효화
+      migrate: (persistedState: any) => {
+        // 기존 localStorage에 남아있는 shadowEnabled 제거
+        if (persistedState && 'shadowEnabled' in persistedState) {
+          delete persistedState.shadowEnabled;
+        }
+        return persistedState;
+      },
       partialize: (state) => ({
         viewMode: state.viewMode,
         view2DDirection: state.view2DDirection,
