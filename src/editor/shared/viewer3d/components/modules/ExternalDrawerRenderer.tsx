@@ -129,10 +129,7 @@ const SingleDrawer: React.FC<SingleDrawerProps> = ({
   const defaultMaidaHeightMm = maidaTopMm - maidaBottomMm;
   const maidaHeightMm = fixedMaidaHeightMm || defaultMaidaHeightMm;
   const maidaHeight = mmToThreeUnits(maidaHeightMm);
-  // 고정 높이 사용 시 마이다 중심을 zone 중심에 맞춤
-  const maidaCenterY = fixedMaidaHeightMm
-    ? cabinetBottomY + mmToThreeUnits(zone.bottomMm + (zone.topMm - zone.bottomMm) / 2)
-    : cabinetBottomY + mmToThreeUnits(maidaBottomMm) + maidaHeight / 2;
+  const maidaCenterY = cabinetBottomY + mmToThreeUnits(maidaBottomMm) + maidaHeight / 2;
 
   const i = index;
   const getPanelMaterial = (_: string) => material;
