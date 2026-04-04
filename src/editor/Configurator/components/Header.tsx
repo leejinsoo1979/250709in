@@ -165,7 +165,7 @@ const Header: React.FC<HeaderProps> = ({
   const [isExitModalOpen, setIsExitModalOpen] = useState(false);
   const [isFrameMergeModalOpen, setIsFrameMergeModalOpen] = useState(false);
   // UIStore에서 카메라 및 그래픽 설정 가져오기
-  const { cameraMode, setCameraMode, shadowEnabled, setShadowEnabled, viewMode, setViewMode, view2DDirection, setView2DDirection } = useUIStore();
+  const { cameraMode, setCameraMode, shadowEnabled, setShadowEnabled, viewMode, setViewMode, view2DDirection, setView2DDirection, sunAngle, setSunAngle } = useUIStore();
   const { colors } = useThemeColors();
   const { theme, toggleMode } = useTheme();
   const profileButtonRef = useRef<HTMLDivElement>(null);
@@ -937,6 +937,22 @@ const Header: React.FC<HeaderProps> = ({
                 </button>
               )}
             </>
+          )}
+
+          {/* 태양 위치 슬라이더 (3D 모드에서만 표시) */}
+          {viewMode === '3D' && !isMobile && (
+            <div className={styles.sunSliderWrap}>
+              <Sun size={14} strokeWidth={2} />
+              <input
+                type="range"
+                min="0"
+                max="360"
+                value={sunAngle ?? 45}
+                onChange={(e) => setSunAngle(Number(e.target.value))}
+                className={styles.sunSlider}
+                title={`태양 각도: ${sunAngle ?? 45}°`}
+              />
+            </div>
           )}
 
           {/* 설정 버튼 */}

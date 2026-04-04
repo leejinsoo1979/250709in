@@ -58,7 +58,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
   const location = useLocation();
   const { spaceInfo: storeSpaceInfo, updateColumn, removeColumn, updateWall, removeWall, addWall, removePanelB, updatePanelB } = useSpaceConfigStore();
   const { placedModules, updateFurnitureForColumns } = useFurnitureStore();
-  const { view2DDirection, showDimensions: storeShowDimensions, showDimensionsText, showGuides, showAxis, activePopup, setView2DDirection, setViewMode: setUIViewMode, isColumnCreationMode, isWallCreationMode, isPanelBCreationMode, view2DTheme, showFurniture: storeShowFurniture, isMeasureMode, toggleMeasureMode, isEraserMode, selectedSlotIndex, setSelectedSlotIndex, cameraMode, isLayoutBuilderOpen } = useUIStore();
+  const { view2DDirection, showDimensions: storeShowDimensions, showDimensionsText, showGuides, showAxis, activePopup, setView2DDirection, setViewMode: setUIViewMode, isColumnCreationMode, isWallCreationMode, isPanelBCreationMode, view2DTheme, showFurniture: storeShowFurniture, isMeasureMode, toggleMeasureMode, isEraserMode, selectedSlotIndex, setSelectedSlotIndex, cameraMode, isLayoutBuilderOpen, sunAngle } = useUIStore();
 
   // props로 전달된 showFurniture가 있으면 사용, 없으면 store 값 사용
   const showFurniture = showFurnitureProp !== undefined ? showFurnitureProp : storeShowFurniture;
@@ -1722,9 +1722,13 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
 
               {/* 조명 시스템 - 2D 모드에서는 그림자 없음 */}
 
-              {/* 메인 자연광 - 3D 모드에서만 그림자 생성 */}
+              {/* 메인 자연광 - 3D 모드에서만 그림자 생성, sunAngle로 위치 조절 */}
               <directionalLight
-                position={[5, 15, 20]}
+                position={[
+                  Math.sin(((sunAngle ?? 45) * Math.PI) / 180) * 22,
+                  15,
+                  Math.cos(((sunAngle ?? 45) * Math.PI) / 180) * 22
+                ]}
                 intensity={2.5}
                 color="#ffffff"
                 castShadow={viewMode === '3D'}

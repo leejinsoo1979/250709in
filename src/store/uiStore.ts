@@ -157,6 +157,9 @@ interface UIState {
   // 그림자 설정
   shadowEnabled: boolean;
 
+  // 태양(조명) 각도 설정 (0~360도, 수평 회전)
+  sunAngle: number;
+
   // 윤곽선(엣지) 설정
   edgeOutlineEnabled: boolean;
 
@@ -262,6 +265,7 @@ interface UIState {
   setCameraFov: (fov: number) => void;
   setCameraZoom: (zoom: number) => void;
   setShadowEnabled: (enabled: boolean) => void;
+  setSunAngle: (angle: number) => void;
   setEdgeOutlineEnabled: (enabled: boolean) => void;
   setShowBorings: (show: boolean) => void;
   toggleBorings: () => void;
@@ -335,6 +339,7 @@ const initialUIState = {
   cameraFov: 50,  // 기본값: FOV 50도
   cameraZoom: 1,  // 기본값: 줌 배율 1
   shadowEnabled: true,  // 기본값: 그림자 활성화
+  sunAngle: 45,  // 기본값: 태양 각도 45도 (우측 앞쪽)
   edgeOutlineEnabled: true,  // 기본값: 윤곽선 활성화
   showBorings: false,  // 기본값: 보링 시각화 비활성화
   isMeasureMode: false,  // 기본값: 측정 모드 비활성화
@@ -685,6 +690,9 @@ export const useUIStore = create<UIState>()(
       setShadowEnabled: (enabled) =>
         set({ shadowEnabled: enabled }),
 
+      setSunAngle: (angle) =>
+        set({ sunAngle: angle }),
+
       setEdgeOutlineEnabled: (enabled) =>
         set({ edgeOutlineEnabled: enabled }),
 
@@ -862,6 +870,7 @@ export const useUIStore = create<UIState>()(
         viewMode: state.viewMode,
         view2DDirection: state.view2DDirection,
         shadowEnabled: state.shadowEnabled,
+        sunAngle: state.sunAngle,
         edgeOutlineEnabled: state.edgeOutlineEnabled,
         dashboardLayout: state.dashboardLayout,
         openTabs: state.openTabs,
