@@ -275,9 +275,10 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
             const moduleId = moduleData.id;
             // 기본하부장, 도어올림, 상판내림만 해당
             const isLowerHalf = moduleId.includes('lower-half-cabinet') || moduleId.includes('dual-lower-half-cabinet');
-            const isDoorLift = moduleId.includes('lower-door-lift-');
-            const isTopDown = moduleId.includes('lower-top-down-');
-            if (!isLowerHalf && !isDoorLift && !isTopDown) return null;
+            // 도어올림/상판내림 중 서랍장(2tier/3tier)은 제외 — 반통/한통만 선반 있음
+            const isDoorLiftHalf = moduleId.includes('lower-door-lift-half') || moduleId.includes('dual-lower-door-lift-half');
+            const isTopDownHalf = moduleId.includes('lower-top-down-half') || moduleId.includes('dual-lower-top-down-half');
+            if (!isLowerHalf && !isDoorLiftHalf && !isTopDownHalf) return null;
 
             const mmToUnits = (mm: number) => mm * 0.01;
             const basicThicknessMm = baseFurniture.basicThickness / 0.01;
@@ -285,19 +286,11 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
             const depthMm = baseFurniture.depth / 0.01;
             const backPanelMm = (backPanelThickness || 9);
 
-            // 기준 높이 계산 (mm)
+            // 기준 높이 계산 (mm) — 반통/한통만 해당
             let referenceHeightMm: number;
-            const hasTopPanel = moduleId.includes('lower-door-lift-') || moduleId.includes('lower-top-down-');
+            const hasTopPanel = isDoorLiftHalf || isTopDownHalf;
 
-            if (moduleId.includes('lower-drawer-3tier') || moduleId.includes('lower-door-lift-3tier')) {
-              referenceHeightMm = moduleId.includes('lower-door-lift-3tier') ? 315 : 295;
-            } else if (moduleId.includes('lower-drawer-2tier') || moduleId.includes('lower-door-lift-2tier')) {
-              referenceHeightMm = moduleId.includes('lower-door-lift-2tier') ? 355 : 330;
-            } else if (moduleId.includes('lower-top-down-3tier')) {
-              referenceHeightMm = 225;
-            } else if (moduleId.includes('lower-top-down-2tier')) {
-              referenceHeightMm = 300;
-            } else if (moduleId.includes('lower-top-down-half') || moduleId.includes('dual-lower-top-down-half')) {
+            if (isTopDownHalf) {
               referenceHeightMm = 665; // 따내기 하단
             } else if (hasTopPanel) {
               // 도어올림 반통/한통: 바닥판 위 ~ 상판 아래
