@@ -86,7 +86,7 @@
 /* 썸네일 그리드 */
 .thumbnailGrid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(2, 1fr);
   gap: 4px;
   margin-top: 4px;
   padding: 0 2px;
@@ -101,8 +101,7 @@
   transition: all 0.2s ease;
   user-select: none;
   min-width: 0;
-  max-width: 100px;
-  justify-self: center;
+  width: 100%;
 }
 
 .thumbnailItem .thumbnailImage {
@@ -255,9 +254,6 @@
 /* 반응형 디자인 - 맥북 및 다양한 화면 크기 지원 */
 
 /* 모든 화면 크기에서 동일한 컴팩트 그리드 */
-.thumbnailItem {
-  padding: 2px;
-}
 
 /* 태블릿 이하 */
 @media (max-width: 1023px) {
