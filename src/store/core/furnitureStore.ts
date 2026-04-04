@@ -125,14 +125,24 @@ const autoSetAdjacentFullEP = (newModule: PlacedModule) => {
         ((m.moduleId?.includes('dual-') || m.isDualSlot) && m.slotIndex === targetSlotIndex - 1))
     );
 
-  // Case 1: 새 가구가 upper/lower → 인접 full 키큰장의 EP 체크
+  // Case 1: 새 가구가 upper/lower → 인접 full 키큰장의 EP 체크 + 옵셋 설정
   if (newCategory === 'upper' || newCategory === 'lower') {
+    const newDepth = newModule.customDepth || newModuleData.dimensions.depth;
+
     // 왼쪽 인접 모듈
     const leftModule = findAdjacentModule(newSlotIndex - 1);
     if (leftModule) {
       const leftData = getModuleById(leftModule.moduleId, internalSpace, spaceInfo);
-      if (leftData?.category === 'full' && !leftModule.hasRightEndPanel) {
-        useFurnitureStore.getState().updatePlacedModule(leftModule.id, { hasRightEndPanel: true });
+      if (leftData?.category === 'full') {
+        const fullDepth = leftModule.customDepth || leftData.dimensions.depth;
+        const depthDiff = newDepth - fullDepth;
+        const offset = Math.round(depthDiff / 2);
+        const updates: Partial<PlacedModule> = {};
+        if (!leftModule.hasRightEndPanel) updates.hasRightEndPanel = true;
+        if (depthDiff !== 0) updates.rightEndPanelOffset = offset;
+        if (Object.keys(updates).length > 0) {
+          useFurnitureStore.getState().updatePlacedModule(leftModule.id, updates);
+        }
       }
     }
 
@@ -141,8 +151,16 @@ const autoSetAdjacentFullEP = (newModule: PlacedModule) => {
     const rightModule = findAdjacentModule(rightSlot);
     if (rightModule) {
       const rightData = getModuleById(rightModule.moduleId, internalSpace, spaceInfo);
-      if (rightData?.category === 'full' && !rightModule.hasLeftEndPanel) {
-        useFurnitureStore.getState().updatePlacedModule(rightModule.id, { hasLeftEndPanel: true });
+      if (rightData?.category === 'full') {
+        const fullDepth = rightModule.customDepth || rightData.dimensions.depth;
+        const depthDiff = newDepth - fullDepth;
+        const offset = Math.round(depthDiff / 2);
+        const updates: Partial<PlacedModule> = {};
+        if (!rightModule.hasLeftEndPanel) updates.hasLeftEndPanel = true;
+        if (depthDiff !== 0) updates.leftEndPanelOffset = offset;
+        if (Object.keys(updates).length > 0) {
+          useFurnitureStore.getState().updatePlacedModule(rightModule.id, updates);
+        }
       }
     }
   }
