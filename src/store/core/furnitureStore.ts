@@ -176,6 +176,67 @@ const autoSetAdjacentFullEP = (newModule: PlacedModule) => {
   }
 };
 
+/**
+ * 가구 삭제 시 인접 키큰장(full)의 EP를 해제하는 헬퍼.
+ * 삭제되는 가구가 upper/lower이고, 같은 슬롯에 다른 upper/lower가 남아있지 않으면 EP 해제.
+ */
+const autoClearAdjacentFullEP = (removedModule: PlacedModule) => {
+  const spaceInfo = useSpaceConfigStore.getState().spaceInfo;
+  const internalSpace = calculateInternalSpace(spaceInfo);
+  const removedData = getModuleById(removedModule.moduleId, internalSpace, spaceInfo);
+  if (!removedData) return;
+
+  const removedCategory = removedData.category;
+  if (removedCategory !== 'upper' && removedCategory !== 'lower') return;
+
+  const allModules = useFurnitureStore.getState().placedModules;
+  const slotIndex = removedModule.slotIndex;
+  if (slotIndex === undefined) return;
+
+  const isRemovedDual = removedModule.moduleId?.includes('dual-') || removedModule.isDualSlot;
+
+  // 같은 슬롯에 다른 upper/lower가 남아있는지 체크
+  const remainingUpperLower = allModules.find(m =>
+    m.id !== removedModule.id &&
+    m.zone === removedModule.zone &&
+    m.slotIndex === slotIndex &&
+    (() => {
+      const d = getModuleById(m.moduleId, internalSpace, spaceInfo);
+      return d?.category === 'upper' || d?.category === 'lower';
+    })()
+  );
+
+  // 아직 상부장/하부장이 남아있으면 EP 유지
+  if (remainingUpperLower) return;
+
+  // 인접 모듈 찾기
+  const findAdjacentFull = (targetSlotIndex: number) =>
+    allModules.find(m =>
+      m.id !== removedModule.id &&
+      m.zone === removedModule.zone &&
+      (() => {
+        const d = getModuleById(m.moduleId, internalSpace, spaceInfo);
+        if (d?.category !== 'full') return false;
+        const mDual = m.moduleId?.includes('dual-') || m.isDualSlot;
+        const mSlots = mDual ? [m.slotIndex, m.slotIndex + 1] : [m.slotIndex];
+        return mSlots.includes(targetSlotIndex);
+      })()
+    );
+
+  // 왼쪽 인접 키큰장 → 우측 EP 해제
+  const leftFull = findAdjacentFull(slotIndex - 1);
+  if (leftFull?.hasRightEndPanel) {
+    useFurnitureStore.getState().updatePlacedModule(leftFull.id, { hasRightEndPanel: false });
+  }
+
+  // 오른쪽 인접 키큰장 → 좌측 EP 해제
+  const rightSlot = isRemovedDual ? slotIndex + 2 : slotIndex + 1;
+  const rightFull = findAdjacentFull(rightSlot);
+  if (rightFull?.hasLeftEndPanel) {
+    useFurnitureStore.getState().updatePlacedModule(rightFull.id, { hasLeftEndPanel: false });
+  }
+};
+
 // 가구 데이터 Store 생성
 export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
   // 가구 데이터 초기 상태
@@ -360,6 +421,11 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
       if (module.freeRightGapLocked && module.freeRightGap != null) {
         setLockedWallGap('right', module.freeRightGap);
       }
+    }
+
+    // 삭제 전에 인접 키큰장 EP 해제
+    if (module) {
+      autoClearAdjacentFullEP(module);
     }
 
     set((state) => ({
