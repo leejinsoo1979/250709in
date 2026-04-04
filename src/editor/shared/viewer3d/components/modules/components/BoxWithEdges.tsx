@@ -675,9 +675,9 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
               />
             </bufferGeometry>
             <lineBasicMaterial
-              color={blendedColor}
+              color={edgeColor}
               transparent={true}
-              opacity={panelDepthOpacity}
+              opacity={1.0}
               depthTest={false}
               depthWrite={false}
               linewidth={1}
