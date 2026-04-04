@@ -202,7 +202,8 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
       )}
       
       {/* 도어는 showFurniture와 관계없이 hasDoor가 true이면 항상 렌더링 (도어만 보기 위해) */}
-      {hasDoor && spaceInfo && (
+      {/* 단, 서랍장(lower-drawer-*)은 도어가 아닌 서랍이 달리므로 도어 렌더링 차단 */}
+      {hasDoor && spaceInfo && !moduleData.id.includes('lower-drawer-') && (
         <DoorModule
           moduleWidth={doorWidth || moduleData.dimensions.width}
           moduleDepth={baseFurniture.actualDepthMm}
