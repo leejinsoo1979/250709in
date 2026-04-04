@@ -123,9 +123,9 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
               } : moduleData.id.includes('lower-drawer-2tier') ? {
                 sideNotches: [{ y: 65, z: 40, fromBottom: 330 }]
               } : moduleData.id.includes('lower-door-lift-3tier') ? {
-                sideNotches: [{ y: 65, z: 40, fromBottom: 314 }, { y: 65, z: 40, fromBottom: 544 }]
+                sideNotches: [{ y: 65, z: 40, fromBottom: 218 }, { y: 65, z: 40, fromBottom: 501 }]
               } : moduleData.id.includes('lower-door-lift-2tier') ? {
-                sideNotches: [{ y: 65, z: 40, fromBottom: 354 }]
+                sideNotches: [{ y: 65, z: 40, fromBottom: 360 }]
               } : {})}>
             {/* 내부 구조는 항상 렌더링 (서랍/선반) */}
             <>
@@ -213,9 +213,9 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
         const is3Tier = moduleData.id.includes('lower-drawer-3tier');
         const isDoorLift3Tier = moduleData.id.includes('lower-door-lift-3tier');
         const isDoorLift2Tier = moduleData.id.includes('lower-door-lift-2tier');
-        // 기존 서랍장: 2단 fromBottom=330(65mm), 3단 fromBottom=295(65mm)+510(65mm)
-        // 도어올림: 2단 fromBottom=354(65mm), 3단 fromBottom=314(65mm)+544(65mm)
-        const notchFromBottoms = is3Tier ? [295, 510] : isDoorLift3Tier ? [314, 544] : isDoorLift2Tier ? [354] : [330];
+        // 기존 서랍장: 상단 따내기 60mm 있음. 2단 fromBottom=330(균등), 3단 fromBottom=295+510
+        // 도어올림: 상단 따내기 없음. 2단 fromBottom=360(균등), 3단 fromBottom=218+501(균등)
+        const notchFromBottoms = is3Tier ? [295, 510] : isDoorLift3Tier ? [218, 501] : isDoorLift2Tier ? [360] : [330];
         const notchHeights = is3Tier ? [65, 65] : isDoorLift3Tier ? [65, 65] : isDoorLift2Tier ? [65] : [65];
         const drawerCount = (is3Tier || isDoorLift3Tier) ? 3 : 2;
 
