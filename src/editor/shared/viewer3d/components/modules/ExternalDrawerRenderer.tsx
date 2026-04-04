@@ -125,8 +125,7 @@ const SingleDrawer: React.FC<SingleDrawerProps> = ({
 
   // 마이다 높이·Y
   const maidaTopMm = zone.notchAboveBottom + 40;
-  const maidaGap = fixedMaidaHeightMm ? 4 : 5;
-  const maidaBottomMm = zone.notchBelowTop != null ? (zone.notchBelowTop - maidaGap) : -maidaGap;
+  const maidaBottomMm = zone.notchBelowTop != null ? (zone.notchBelowTop - 5) : -5;
   const defaultMaidaHeightMm = maidaTopMm - maidaBottomMm;
   const maidaHeightMm = fixedMaidaHeightMm || defaultMaidaHeightMm;
   const maidaHeight = mmToThreeUnits(maidaHeightMm);
