@@ -759,12 +759,21 @@ const drawFrontFurnitureModules = (dxf: DxfWriter, placedModules: DXFPlacedModul
     }
 
     // L자 PET 프레임 (하부 서랍장 따내기 마감)
-    if (moduleId?.includes('lower-drawer-')) {
+    if (moduleId?.includes('lower-drawer-') || moduleId?.includes('lower-door-lift-2tier') || moduleId?.includes('lower-door-lift-3tier')) {
       const is3TierDxf = moduleId.includes('lower-drawer-3tier');
+      const isDoorLift3Tier = moduleId.includes('lower-door-lift-3tier');
+      const isDoorLift2Tier = moduleId.includes('lower-door-lift-2tier');
       const dxfNotches: { fromBottom: number; height: number }[] = is3TierDxf
         ? [{ fromBottom: 295, height: 65 }, { fromBottom: 510, height: 65 }]
+        : isDoorLift3Tier
+        ? [{ fromBottom: 314, height: 65 }, { fromBottom: 544, height: 65 }]
+        : isDoorLift2Tier
+        ? [{ fromBottom: 354, height: 65 }]
         : [{ fromBottom: 330, height: 65 }];
-      dxfNotches.push({ fromBottom: furnitureHeight - 60, height: 60 });
+      // 상단 따내기 (60mm) - 도어올림은 상단 따내기 없음
+      if (!isDoorLift2Tier && !isDoorLift3Tier) {
+        dxfNotches.push({ fromBottom: furnitureHeight - 60, height: 60 });
+      }
 
       dxfNotches.forEach(notch => {
         const notchBase = y1 + notch.fromBottom;

@@ -115,11 +115,15 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
               renderMode={renderMode}
               isFloating={isFloating}
               hideVentilationCap={true}
-              hideTopPanel={true}
+              hideTopPanel={!moduleData.id.includes('lower-door-lift-')}
               {...(moduleData.id.includes('lower-drawer-3tier') ? {
                 sideNotches: [{ y: 65, z: 40, fromBottom: 295 }, { y: 65, z: 40, fromBottom: 510 }]
               } : moduleData.id.includes('lower-drawer-2tier') ? {
                 sideNotches: [{ y: 65, z: 40, fromBottom: 330 }]
+              } : moduleData.id.includes('lower-door-lift-3tier') ? {
+                sideNotches: [{ y: 65, z: 40, fromBottom: 314 }, { y: 65, z: 40, fromBottom: 544 }]
+              } : moduleData.id.includes('lower-door-lift-2tier') ? {
+                sideNotches: [{ y: 65, z: 40, fromBottom: 354 }]
               } : {})}>
             {/* 내부 구조는 항상 렌더링 (서랍/선반) */}
             <>
@@ -203,13 +207,15 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
       )}
       
       {/* 외부서랍 렌더링 (하부 서랍장 전용) */}
-      {showFurniture && moduleData.id.includes('lower-drawer-') && (() => {
+      {showFurniture && (moduleData.id.includes('lower-drawer-') || moduleData.id.includes('lower-door-lift-2tier') || moduleData.id.includes('lower-door-lift-3tier')) && (() => {
         const is3Tier = moduleData.id.includes('lower-drawer-3tier');
-        // 2단: 보강대 fromBottom=330(65mm)
-        // 3단: 보강대 fromBottom=295(65mm), 510(65mm)
-        const notchFromBottoms = is3Tier ? [295, 510] : [330];
-        const notchHeights = is3Tier ? [65, 65] : [65];
-        const drawerCount = is3Tier ? 3 : 2;
+        const isDoorLift3Tier = moduleData.id.includes('lower-door-lift-3tier');
+        const isDoorLift2Tier = moduleData.id.includes('lower-door-lift-2tier');
+        // 기존 서랍장: 2단 fromBottom=330(65mm), 3단 fromBottom=295(65mm)+510(65mm)
+        // 도어올림: 2단 fromBottom=354(65mm), 3단 fromBottom=314(65mm)+544(65mm)
+        const notchFromBottoms = is3Tier ? [295, 510] : isDoorLift3Tier ? [314, 544] : isDoorLift2Tier ? [354] : [330];
+        const notchHeights = is3Tier ? [65, 65] : isDoorLift3Tier ? [65, 65] : isDoorLift2Tier ? [65] : [65];
+        const drawerCount = (is3Tier || isDoorLift3Tier) ? 3 : 2;
 
         return (
           <group position={[0, cabinetYPosition, 0]}>
@@ -240,7 +246,7 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
 
       {/* 도어는 showFurniture와 관계없이 hasDoor가 true이면 항상 렌더링 (도어만 보기 위해) */}
       {/* 단, 서랍장(lower-drawer-*)은 도어가 아닌 서랍이 달리므로 도어 렌더링 차단 */}
-      {hasDoor && spaceInfo && !moduleData.id.includes('lower-drawer-') && (
+      {hasDoor && spaceInfo && !moduleData.id.includes('lower-drawer-') && !moduleData.id.includes('lower-door-lift-2tier') && !moduleData.id.includes('lower-door-lift-3tier') && (
         <DoorModule
           moduleWidth={doorWidth || moduleData.dimensions.width}
           moduleDepth={baseFurniture.actualDepthMm}

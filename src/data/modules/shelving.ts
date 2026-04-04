@@ -1108,6 +1108,175 @@ const createLowerDrawer2Tier = (columnWidth: number): ModuleData => {
 };
 
 // ============================================================================
+// 도어올림 하부장 가구 생성 함수
+// ============================================================================
+
+/**
+ * 도어올림 반통 - 조절발 65mm + 캐비넷 W가변xD650xH785
+ * 기본하부장과 동일 구조 + 상판 있음. 따내기 없음.
+ */
+const createLowerDoorLiftHalf = (columnWidth: number): ModuleData => {
+  const widthForId = Math.round(columnWidth * 100) / 100;
+  const cabinetHeight = 785;
+
+  const base = createFurnitureBase(
+    `lower-door-lift-half-${widthForId}`,
+    `도어올림 반통 ${widthForId}mm`,
+    columnWidth,
+    cabinetHeight,
+    650,
+    '#e8f5e9', // 연한 초록색
+    `도어올림 반통 W${widthForId}xH785xD650 (조절발 65mm)`,
+    650,
+    'lower'
+  );
+
+  return {
+    ...base,
+    isDynamic: true,
+    defaultDepth: 650,
+    thumbnail: '',
+    modelConfig: {
+      ...base.modelConfig,
+      basicThickness: FURNITURE_SPECS.BASIC_THICKNESS,
+      hasOpenFront: false,
+      sections: [
+        {
+          type: 'shelf',
+          heightType: 'percentage',
+          height: 100,
+          count: 0
+        }
+      ]
+    }
+  } as ModuleData;
+};
+
+/**
+ * 도어올림 한통 (듀얼) - 조절발 65mm + 캐비넷 W(듀얼)xD650xH785
+ * 도어올림 반통의 듀얼 버전. 상판 있음, 따내기 없음.
+ */
+const createDualLowerDoorLiftHalf = (dualWidth: number, slotWidths?: number[]): ModuleData => {
+  const widthForId = Math.round(dualWidth * 100) / 100;
+  const cabinetHeight = 785;
+
+  const base = createFurnitureBase(
+    `dual-lower-door-lift-half-${widthForId}`,
+    `도어올림 한통 ${widthForId}mm`,
+    dualWidth,
+    cabinetHeight,
+    650,
+    '#e8f5e9',
+    `도어올림 한통 W${widthForId}xH785xD650 (조절발 65mm)`,
+    650,
+    'lower'
+  );
+
+  return {
+    ...base,
+    isDynamic: true,
+    defaultDepth: 650,
+    slotWidths,
+    thumbnail: '',
+    modelConfig: {
+      ...base.modelConfig,
+      basicThickness: FURNITURE_SPECS.BASIC_THICKNESS,
+      hasOpenFront: false,
+      sections: [
+        {
+          type: 'shelf',
+          heightType: 'percentage',
+          height: 100,
+          count: 0
+        }
+      ]
+    }
+  } as ModuleData;
+};
+
+/**
+ * 도어올림 2단 - 조절발 65mm + 캐비넷 W가변xD650xH785
+ * 서랍 2단. 따내기 1개: fromBottom 354mm(65mm). 상단 따내기 없음. 상판 있음.
+ */
+const createLowerDoorLift2Tier = (columnWidth: number): ModuleData => {
+  const widthForId = Math.round(columnWidth * 100) / 100;
+  const cabinetHeight = 785;
+
+  const base = createFurnitureBase(
+    `lower-door-lift-2tier-${widthForId}`,
+    `도어올림 2단 ${widthForId}mm`,
+    columnWidth,
+    cabinetHeight,
+    650,
+    '#e8f5e9',
+    `도어올림 2단 W${widthForId}xH785xD650 (조절발 65mm)`,
+    650,
+    'lower'
+  );
+
+  return {
+    ...base,
+    isDynamic: true,
+    defaultDepth: 650,
+    thumbnail: '',
+    modelConfig: {
+      ...base.modelConfig,
+      basicThickness: FURNITURE_SPECS.BASIC_THICKNESS,
+      hasOpenFront: false,
+      sections: [
+        {
+          type: 'shelf',
+          heightType: 'percentage',
+          height: 100,
+          count: 0
+        }
+      ]
+    }
+  } as ModuleData;
+};
+
+/**
+ * 도어올림 3단 - 조절발 65mm + 캐비넷 W가변xD650xH785
+ * 서랍 3단. 따내기 2개: fromBottom 314mm(65mm), 544mm(65mm). 상단 따내기 없음. 상판 있음.
+ */
+const createLowerDoorLift3Tier = (columnWidth: number): ModuleData => {
+  const widthForId = Math.round(columnWidth * 100) / 100;
+  const cabinetHeight = 785;
+
+  const base = createFurnitureBase(
+    `lower-door-lift-3tier-${widthForId}`,
+    `도어올림 3단 ${widthForId}mm`,
+    columnWidth,
+    cabinetHeight,
+    650,
+    '#e8f5e9',
+    `도어올림 3단 W${widthForId}xH785xD650 (조절발 65mm)`,
+    650,
+    'lower'
+  );
+
+  return {
+    ...base,
+    isDynamic: true,
+    defaultDepth: 650,
+    thumbnail: '',
+    modelConfig: {
+      ...base.modelConfig,
+      basicThickness: FURNITURE_SPECS.BASIC_THICKNESS,
+      hasOpenFront: false,
+      sections: [
+        {
+          type: 'shelf',
+          heightType: 'percentage',
+          height: 100,
+          count: 0
+        }
+      ]
+    }
+  } as ModuleData;
+};
+
+// ============================================================================
 // 메인 생성 함수 (기존 인터페이스 유지)
 // ============================================================================
 
@@ -1385,6 +1554,9 @@ export const generateShelvingModules = (
     modules.push(createDualLowerHalfCabinet(dualWidth, dualSlotWidths));
     modules.push(createDualLowerDrawer2Tier(dualWidth, dualSlotWidths));
     modules.push(createDualLowerDrawer3Tier(dualWidth, dualSlotWidths));
+
+    // === 듀얼 도어올림 하부장 가구 생성 ===
+    modules.push(createDualLowerDoorLiftHalf(dualWidth, dualSlotWidths));
   }
   
   // === 싱글 상부장 가구 생성 === (임시 비활성화)
@@ -1404,6 +1576,11 @@ export const generateShelvingModules = (
   modules.push(createLowerHalfCabinet(columnWidth));
   modules.push(createLowerDrawer2Tier(columnWidth));
   modules.push(createLowerDrawer3Tier(columnWidth));
+
+  // === 도어올림 하부장 가구 생성 ===
+  modules.push(createLowerDoorLiftHalf(columnWidth));
+  modules.push(createLowerDoorLift2Tier(columnWidth));
+  modules.push(createLowerDoorLift3Tier(columnWidth));
   
   // console.log('📊 generateShelvingModules 최종 결과:', {
   //   totalModulesCount: modules.length,
