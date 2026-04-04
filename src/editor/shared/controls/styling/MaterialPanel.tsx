@@ -69,18 +69,21 @@ const MaterialPanel: React.FC = () => {
   const materialConfig = spaceInfo.materialConfig || { interiorColor: '#FFFFFF', doorColor: '#E0E0E0', frameColor: '#E0E0E0' };
   
   // UI Store에서 도어 상태 가져오기
-  const { doorsOpen, setDoorsOpen } = useUIStore();
+  const { doorsOpen, setDoorsOpen, setIsInteriorMaterialMode } = useUIStore();
 
   // materialTab 변경 시 도어 자동 열기/닫기 (마운트 시점 포함)
   useEffect(() => {
     if (materialTab === 'interior') {
       setDoorsOpen(true);
+      setIsInteriorMaterialMode(true);
     } else {
       setDoorsOpen(false);
+      setIsInteriorMaterialMode(false);
     }
     // 언마운트 시 개별 상태로 복원
     return () => {
       setDoorsOpen(null);
+      setIsInteriorMaterialMode(false);
     };
   }, [materialTab]);
 

@@ -175,6 +175,10 @@ interface UIState {
   isEraserMode: boolean;
   hoveredMeasureLineId: string | null; // 호버 중인 측정선 ID
 
+  // 속장 재질 선택 모드 (MaterialPanel에서 속장 탭 활성 시 true → 서랍 인출 차단)
+  isInteriorMaterialMode: boolean;
+  setIsInteriorMaterialMode: (mode: boolean) => void;
+
   // 레이아웃 빌더(커스텀 가구 설계모드) 열림 상태
   isLayoutBuilderOpen: boolean;
   layoutBuilderRevision: number; // setLayoutBuilderOpen(true) 호출 시마다 증가 → useEffect 재트리거용
@@ -348,6 +352,7 @@ const initialUIState = {
   isEraserMode: false,  // 기본값: 지우개 모드 비활성화
   hoveredMeasureLineId: null,  // 기본값: 호버 중인 측정선 없음
   equalDistribution: false,  // 기본값: 균등배치 비활성화
+  isInteriorMaterialMode: false,  // 기본값: 속장 재질 모드 비활성
   isLayoutBuilderOpen: false,  // 기본값: 레이아웃 빌더 닫힘
   layoutBuilderRevision: 0,
   designExitSaveRequest: false,  // 기본값: 저장 후 종료 요청 없음
@@ -792,6 +797,9 @@ export const useUIStore = create<UIState>()(
 
       toggleEqualDistribution: () =>
         set((state) => ({ equalDistribution: !state.equalDistribution })),
+
+      setIsInteriorMaterialMode: (mode) =>
+        set({ isInteriorMaterialMode: mode }),
 
       setLayoutBuilderOpen: (open) =>
         set((state) => ({
