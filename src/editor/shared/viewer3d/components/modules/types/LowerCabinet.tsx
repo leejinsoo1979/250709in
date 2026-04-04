@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useEffect, useRef } from 'react';
 import * as THREE from 'three';
 import { ModuleData } from '@/data/modules/shelving';
 import { SpaceInfo } from '@/store/core/spaceConfigStore';
@@ -9,6 +9,7 @@ import DoorModule from '../DoorModule';
 import BoxWithEdges from '../components/BoxWithEdges';
 import { AdjustableFootsRenderer } from '../components/AdjustableFootsRenderer';
 import { ExternalDrawerRenderer } from '../ExternalDrawerRenderer';
+import { isCabinetTexture1, applyCabinetTexture1Settings, isOakTexture, applyOakTextureSettings, applyDefaultImageTextureSettings } from '@/editor/shared/utils/materialConstants';
 
 /**
  * 하부장 컴포넌트
@@ -86,8 +87,67 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
   // 간접조명 Y 위치 계산 (가구 바닥 바로 아래)
   const furnitureBottomY = cabinetYPosition - adjustedHeight/2;
   const lightY = furnitureBottomY - 0.5; // 가구 바닥에서 50cm 아래
-  
-  
+
+  // 상판내림 반통/한통 L프레임용 도어 재질 (텍스처 로드 포함)
+  const doorTextureUrl = spaceInfo?.materialConfig?.doorTexture;
+  const doorColorVal = baseFurniture.doorColor || '#E0E0E0';
+  const doorMaterialRef = useRef<THREE.MeshStandardMaterial | null>(null);
+  const lFrameDoorMaterial = useMemo(() => {
+    const mat = new THREE.MeshStandardMaterial({
+      color: new THREE.Color(doorColorVal),
+      metalness: 0.0,
+      roughness: 0.6,
+      envMapIntensity: 0.0,
+    });
+    doorMaterialRef.current = mat;
+    return mat;
+  }, []);
+
+  useEffect(() => {
+    if (doorMaterialRef.current) {
+      if (!doorMaterialRef.current.map) {
+        doorMaterialRef.current.color.set(doorColorVal);
+      }
+      doorMaterialRef.current.needsUpdate = true;
+    }
+  }, [doorColorVal]);
+
+  useEffect(() => {
+    const mat = doorMaterialRef.current;
+    if (!mat) return;
+    if (doorTextureUrl) {
+      if (isOakTexture(doorTextureUrl)) {
+        applyOakTextureSettings(mat);
+      } else if (isCabinetTexture1(doorTextureUrl)) {
+        applyCabinetTexture1Settings(mat);
+      }
+      const loader = new THREE.TextureLoader();
+      loader.load(doorTextureUrl, (texture) => {
+        texture.wrapS = THREE.RepeatWrapping;
+        texture.wrapT = THREE.RepeatWrapping;
+        texture.repeat.set(1, 1);
+        mat.map = texture;
+        if (isOakTexture(doorTextureUrl)) {
+          applyOakTextureSettings(mat);
+        } else if (isCabinetTexture1(doorTextureUrl)) {
+          applyCabinetTexture1Settings(mat);
+        } else {
+          applyDefaultImageTextureSettings(mat);
+        }
+        mat.needsUpdate = true;
+        requestAnimationFrame(() => { mat.needsUpdate = true; });
+      });
+    } else {
+      if (mat.map) {
+        mat.map.dispose();
+        mat.map = null;
+      }
+      mat.color.set(doorColorVal);
+      mat.toneMapped = true;
+      mat.roughness = 0.6;
+      mat.needsUpdate = true;
+    }
+  }, [doorTextureUrl, doorColorVal]);
 
   return (
     <>
@@ -275,31 +335,25 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
         const vertY = cabinetBottomY + mmToThreeUnits(notch.fromBottom) + baseFurniture.basicThickness + mmToThreeUnits(verticalHMm) / 2;
         const vertZ = baseFurniture.depth / 2 - mmToThreeUnits(40) + baseFurniture.basicThickness / 2;
 
-        // 도어 재질 사용 (L프레임은 도어 재질 — PET 텍스처 포함)
-        const doorTextureUrl = spaceInfo?.materialConfig?.doorTexture;
-        const bodyTextureUrl = spaceInfo?.materialConfig?.texture;
-
         return (
           <group position={[0, 0, 0]}>
             <BoxWithEdges
               args={[frameWidth, baseFurniture.basicThickness, mmToThreeUnits(40)]}
               position={[0, horzY, horzZ]}
-              material={baseFurniture.material}
+              material={lFrameDoorMaterial}
               renderMode={renderMode}
               isHighlighted={false}
               panelName="L프레임수평(1)"
-              textureUrl={doorTextureUrl || bodyTextureUrl}
               panelGrainDirections={panelGrainDirections}
               furnitureId={placedFurnitureId}
             />
             <BoxWithEdges
               args={[frameWidth, mmToThreeUnits(verticalHMm), baseFurniture.basicThickness]}
               position={[0, vertY, vertZ]}
-              material={baseFurniture.material}
+              material={lFrameDoorMaterial}
               renderMode={renderMode}
               isHighlighted={false}
               panelName="L프레임수직(1)"
-              textureUrl={doorTextureUrl || bodyTextureUrl}
               panelGrainDirections={panelGrainDirections}
               furnitureId={placedFurnitureId}
             />
