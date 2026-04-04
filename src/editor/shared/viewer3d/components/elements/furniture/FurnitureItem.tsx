@@ -3225,24 +3225,26 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       >
         {isSelected && width > 0 && height > 0 && depth > 0 && (
           <>
-            {/* 선택 하이라이트: 잠긴 가구는 빨간색, 일반 가구는 테마색 */}
-            <mesh
-              ref={highlightMeshRef}
-              position={[0, 0, 0]}
-              renderOrder={999}
-              userData={{ decoration: 'selection-highlight', furnitureId: placedModule.id }}
-            >
-              <boxGeometry args={[width + highlightPadding, height + highlightPadding, depth + highlightPadding]} />
-              <meshBasicMaterial
-                color={placedModule.isLocked ? "#ff3333" : selectionHighlightColor}
-                transparent
-                opacity={placedModule.isLocked ? 0.08 : 0.12}
-                depthWrite={false}
-                depthTest={false}
-                side={THREE.DoubleSide}
-                toneMapped={false}
-              />
-            </mesh>
+            {/* 선택 하이라이트: 3D에서만 표시 (2D에서는 치수 확인을 위해 숨김) */}
+            {viewMode === '3D' && (
+              <mesh
+                ref={highlightMeshRef}
+                position={[0, 0, 0]}
+                renderOrder={999}
+                userData={{ decoration: 'selection-highlight', furnitureId: placedModule.id }}
+              >
+                <boxGeometry args={[width + highlightPadding, height + highlightPadding, depth + highlightPadding]} />
+                <meshBasicMaterial
+                  color={placedModule.isLocked ? "#ff3333" : selectionHighlightColor}
+                  transparent
+                  opacity={placedModule.isLocked ? 0.08 : 0.12}
+                  depthWrite={false}
+                  depthTest={false}
+                  side={THREE.DoubleSide}
+                  toneMapped={false}
+                />
+              </mesh>
+            )}
 
             {/* 가구 상단 아이콘 툴바 (readOnly에서는 숨김, 편집 모드에서도 표시) */}
             {!isPanelListTabActive && !readOnly && (
