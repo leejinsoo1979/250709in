@@ -5566,8 +5566,11 @@ const Room: React.FC<RoomProps> = ({
       {/* 받침대가 있는 경우에만 렌더링 */}
       {/* 하부 베이스프레임 - 균등분할: 전체 너비, 자유배치: 가구별 세그먼트 */}
       {(effectiveShowFrame || isFreePlacement) && baseFrameHeightMm > 0 && spaceInfo.baseConfig?.type === 'floor' && (() => {
-        // 슬롯배치: 가구가 하나도 없으면 하부프레임 렌더링 안 함
-        if (!isFreePlacement && placedModulesFromStore.filter(m => !m.isSurroundPanel).length === 0) return null;
+        // 슬롯배치: 하부장/키큰장이 없으면 하부프레임 렌더링 안 함 (상부장만 있을 때는 숨김)
+        const hasNonUpperFurniture = placedModulesFromStore.some(m =>
+          !m.isSurroundPanel && !(m.moduleId || '').includes('upper-cabinet')
+        );
+        if (!isFreePlacement && !hasNonUpperFurniture) return null;
         // 모든 하부/키큰장 가구가 bottomPanelRaise 활성이면 하부프레임 전체 숨김
         // 일부만 활성이면 조절발 있는 가구용 하부프레임은 유지
         // 좌우분할 시 영역별 areaFinish도 확인
@@ -5899,9 +5902,11 @@ const Room: React.FC<RoomProps> = ({
                 // });
 
                 if (columns.length === 0 || !hasDeepColumns) {
-                  // 슬롯배치: 항상 가구별 개별 하부프레임 렌더링 (가구 없으면 프레임 없음)
-                  const slotModsForBase = placedModulesFromStore.filter(m => !m.isSurroundPanel);
-                  if (slotModsForBase.length === 0) return null; // 가구 없으면 하부프레임 없음
+                  // 슬롯배치: 하부장/키큰장이 없으면 하부프레임 없음 (상부장만 있을 때 숨김)
+                  const slotModsForBase = placedModulesFromStore.filter(m =>
+                    !m.isSurroundPanel && !(m.moduleId || '').includes('upper-cabinet')
+                  );
+                  if (slotModsForBase.length === 0) return null;
 
                   const baseZPos = furnitureZOffset + furnitureDepth / 2 - mmToThreeUnits(END_PANEL_THICKNESS) / 2 -
                     mmToThreeUnits(calculateMaxNoSurroundOffset(spaceInfo)) -

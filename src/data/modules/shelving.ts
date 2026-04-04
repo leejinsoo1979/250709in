@@ -1882,7 +1882,7 @@ export const generateShelvingModules = (
     modules.push(createDualUpperCabinet1(dualWidth));
     modules.push(createDualUpperCabinet2(dualWidth));
     modules.push(createDualUpperCabinet3(dualWidth));
-    modules.push(createDualUpperCabinet4(dualWidth));
+    // modules.push(createDualUpperCabinet4(dualWidth)); // 듀얼 상부장 혼합형 제거
 
     // === 듀얼 하부장 가구 생성 === (이전 모듈 비활성화)
     // modules.push(createDualLowerCabinet1(dualWidth));
@@ -1905,10 +1905,10 @@ export const generateShelvingModules = (
   }
   
   // === 싱글 상부장 가구 생성 ===
-  modules.push(createUpperCabinet1(columnWidth, maxHeight));
+  modules.push(createUpperCabinet1(columnWidth));
   modules.push(createUpperCabinet2(columnWidth));
   modules.push(createUpperCabinet3(columnWidth));
-  modules.push(createUpperCabinet4(columnWidth, maxHeight));
+  modules.push(createUpperCabinet4(columnWidth));
 
   // === 싱글 하부장 가구 생성 === (이전 모듈 비활성화)
   // const lowerCabinet1 = createLowerCabinet1(columnWidth);

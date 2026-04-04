@@ -130,13 +130,8 @@ export const useFurnitureKeyboard = ({
           case 'Backspace':
             // 편집 모드 또는 팝업 모드에서 삭제 허용
             if (targetModuleId) {
-              // 같은 슬롯의 upper+lower 한번에 삭제
-              const sameSlotModules = placedModules.filter(m =>
-                m.slotIndex === editingModule.slotIndex &&
-                m.zone === editingModule.zone &&
-                !m.isFreePlacement
-              );
-              sameSlotModules.forEach(m => removeModule(m.id));
+              // 선택된 가구만 삭제 (상부장/하부장 개별 삭제)
+              removeModule(editingModule.id);
               setEditMode(false);
               setEditingModuleId(null);
               // 팝업도 닫기
