@@ -306,7 +306,9 @@ export const ExternalDrawerRenderer: React.FC<ExternalDrawerRendererProps> = ({
 
   // === 외부서랍 전용 좌우측판 스펙 ===
   const EXT_SIDE_H = mmToThreeUnits(240);
-  const EXT_SIDE_D = mmToThreeUnits(453);
+  // 서랍 깊이 = 캐비넷 깊이 - 50mm(뒷판갭), 최대 453mm
+  const drawerDepthMm = Math.min(moduleDepthMm - 50, 453);
+  const EXT_SIDE_D = mmToThreeUnits(drawerDepthMm);
   const EXT_SIDE_T = basicThickness;
   const SIDE_GAP = mmToThreeUnits(6);
   const BOTTOM_GAP = mmToThreeUnits(15);

@@ -2614,7 +2614,9 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                       onChange={(e) => setFreeDepthInput(e.target.value)}
                       onBlur={() => {
                         const val = parseInt(freeDepthInput, 10);
-                        if (!isNaN(val) && val >= 100 && val <= 800 && currentPlacedModule) {
+                        const isLowerDrawer = currentPlacedModule?.moduleId?.includes('lower-drawer-');
+                        const minDepth = isLowerDrawer ? 400 : 100;
+                        if (!isNaN(val) && val >= minDepth && val <= 800 && currentPlacedModule) {
                           updatePlacedModule(currentPlacedModule.id, { freeDepth: val });
                           setFreeDepthInput(val.toString());
                           const store = useFurnitureStore.getState();
@@ -2655,7 +2657,9 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                         else if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
                           e.preventDefault();
                           const cur = parseInt(freeDepthInput, 10) || (currentPlacedModule?.freeDepth || moduleData.dimensions.depth);
-                          const next = Math.max(100, Math.min(800, cur + (e.key === 'ArrowUp' ? 1 : -1)));
+                          const isLowerDrawerArrow = currentPlacedModule?.moduleId?.includes('lower-drawer-');
+                          const minDepthArrow = isLowerDrawerArrow ? 400 : 100;
+                          const next = Math.max(minDepthArrow, Math.min(800, cur + (e.key === 'ArrowUp' ? 1 : -1)));
                           setFreeDepthInput(next.toString());
                           if (currentPlacedModule) {
                             updatePlacedModule(currentPlacedModule.id, { freeDepth: next });
