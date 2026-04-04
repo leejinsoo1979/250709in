@@ -3900,8 +3900,8 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
 
       {/* 도어는 BoxModule 내부에서 렌더링하도록 변경 */}
 
-      {/* 자유배치 도어 설정 톱니 아이콘 — 캐비넷 중심에 하나만 표시 */}
-      {placedModule.isFreePlacement && placedModule.hasDoor && !isDraggingThis && !isEditMode && showFurnitureEditHandles && showDimensions && (
+      {/* 자유배치 도어 설정 톱니 아이콘 — 캐비넷 중심에 하나만 표시 (하부장 제외) */}
+      {placedModule.isFreePlacement && placedModule.hasDoor && !isLowerCabinet && !isDraggingThis && !isEditMode && showFurnitureEditHandles && showDimensions && (
         <Html
           position={[
             adjustedPosition.x,
