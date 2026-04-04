@@ -699,19 +699,21 @@ const ColumnGuides: React.FC<ColumnGuidesProps> = ({ viewMode: viewModeProp }) =
     ceilingY: number,
     isActive: boolean,
     meshType: 'back' | 'top',
-    zoneType: string
+    zoneType: string,
+    columnCount?: number,
+    columnWidth?: number,
+    slotWidths?: number[]
   ) => {
-    const centerX = mmToThreeUnits(startX + width / 2);
-    const meshWidth = mmToThreeUnits(width);
-    
     // 모든 영역 동일한 투명도
     const opacity = 0.2;
-    
+
     if (meshType === 'back') {
       // 뒷면 메쉬 - 가이드 점선과 정확히 일치
+      const centerX = mmToThreeUnits(startX + width / 2);
+      const meshWidth = mmToThreeUnits(width);
       const height = ceilingY - floorY;
       const centerY = floorY + height / 2;
-      
+
       return (
         <mesh
           key={`${zoneType}-back-mesh`}
@@ -719,54 +721,71 @@ const ColumnGuides: React.FC<ColumnGuidesProps> = ({ viewMode: viewModeProp }) =
           rotation={[0, 0, 0]}
         >
           <planeGeometry args={[meshWidth, height]} />
-          <meshBasicMaterial 
-            color={primaryColor} 
-            transparent 
+          <meshBasicMaterial
+            color={primaryColor}
+            transparent
             opacity={opacity}
             side={THREE.DoubleSide}
           />
         </mesh>
       );
     } else {
-      // 상부 메쉬 (2D 탑뷰에서는 바닥 메쉬로 표시)
+      // 상부/바닥 메쉬 — 슬롯별로 분할하여 가구 배치된 슬롯은 숨김
       const depth = frontZ - backZ;
       const centerZ = (frontZ + backZ) / 2;
-      
-      // 2D 탑뷰에서는 바닥에 표시
-      if (viewMode === '2D' && view2DDirection === 'top') {
-        return (
-          <mesh
-            key={`${zoneType}-floor-mesh`}
-            position={[centerX, floorY, centerZ]}
-            rotation={[-Math.PI / 2, 0, 0]}
-          >
-            <planeGeometry args={[meshWidth, depth]} />
-            <meshBasicMaterial 
-              color={primaryColor} 
-              transparent 
-              opacity={opacity}
-              side={THREE.DoubleSide}
-            />
-          </mesh>
-        );
+      const occupiedSet = getOccupiedSlots(zoneType);
+      const slotCount = columnCount || 1;
+
+      const meshes: React.ReactNode[] = [];
+      let currentX = startX;
+
+      for (let i = 0; i < slotCount; i++) {
+        const sw = slotWidths ? slotWidths[i] : (columnWidth || width / slotCount);
+
+        // 가구가 배치된 슬롯은 Z축 메쉬 숨김
+        if (!occupiedSet.has(i)) {
+          const slotCenterX = mmToThreeUnits(currentX + sw / 2);
+          const slotWidth = mmToThreeUnits(sw);
+
+          if (viewMode === '2D' && view2DDirection === 'top') {
+            meshes.push(
+              <mesh
+                key={`${zoneType}-floor-mesh-${i}`}
+                position={[slotCenterX, floorY, centerZ]}
+                rotation={[-Math.PI / 2, 0, 0]}
+              >
+                <planeGeometry args={[slotWidth, depth]} />
+                <meshBasicMaterial
+                  color={primaryColor}
+                  transparent
+                  opacity={opacity}
+                  side={THREE.DoubleSide}
+                />
+              </mesh>
+            );
+          } else {
+            meshes.push(
+              <mesh
+                key={`${zoneType}-top-mesh-${i}`}
+                position={[slotCenterX, ceilingY, centerZ]}
+                rotation={[Math.PI / 2, 0, 0]}
+              >
+                <planeGeometry args={[slotWidth, depth]} />
+                <meshBasicMaterial
+                  color={primaryColor}
+                  transparent
+                  opacity={opacity}
+                  side={THREE.DoubleSide}
+                />
+              </mesh>
+            );
+          }
+        }
+
+        currentX += sw;
       }
-      
-      // 3D 모드에서는 천장에 표시
-      return (
-        <mesh
-          key={`${zoneType}-top-mesh`}
-          position={[centerX, ceilingY, centerZ]}
-          rotation={[Math.PI / 2, 0, 0]}
-        >
-          <planeGeometry args={[meshWidth, depth]} />
-          <meshBasicMaterial 
-            color={primaryColor} 
-            transparent 
-            opacity={opacity}
-            side={THREE.DoubleSide}
-          />
-        </mesh>
-      );
+
+      return <>{meshes}</>;
     }
   };
 
@@ -810,15 +829,18 @@ const ColumnGuides: React.FC<ColumnGuidesProps> = ({ viewMode: viewModeProp }) =
                 'back',
                 'main'
               )}
-              {/* 메인 영역 상부 메쉬 - 3D와 탑뷰에서 표시 */}
+              {/* 메인 영역 상부 메쉬 - 3D와 탑뷰에서 표시 (가구 배치 슬롯 제외) */}
               {(viewMode === '3D' || (viewMode === '2D' && view2DDirection === 'top')) && renderTransparentMeshes(
                 zoneSlotInfo.normal.startX,
                 zoneSlotInfo.normal.width,
                 floorY,
                 ceilingY,
-                true, // 모든 영역 활성화
+                true,
                 'top',
-                'main'
+                'main',
+                zoneSlotInfo.normal.columnCount,
+                zoneSlotInfo.normal.columnWidth,
+                zoneSlotInfo.normal.slotWidths
               )}
               {/* 단내림 영역 뒷면 메쉬 */}
               {renderTransparentMeshes(
@@ -830,15 +852,18 @@ const ColumnGuides: React.FC<ColumnGuidesProps> = ({ viewMode: viewModeProp }) =
                 'back',
                 'dropped'
               )}
-              {/* 단내림 영역 상부 메쉬 - 3D와 탑뷰에서 표시 */}
+              {/* 단내림 영역 상부 메쉬 - 3D와 탑뷰에서 표시 (가구 배치 슬롯 제외) */}
               {(viewMode === '3D' || (viewMode === '2D' && view2DDirection === 'top')) && renderTransparentMeshes(
                 zoneSlotInfo.dropped.startX,
                 zoneSlotInfo.dropped.width,
                 floorY,
                 droppedCeilingY,
-                true, // 모든 영역 활성화
+                true,
                 'top',
-                'dropped'
+                'dropped',
+                zoneSlotInfo.dropped.columnCount,
+                zoneSlotInfo.dropped.columnWidth,
+                zoneSlotInfo.dropped.slotWidths
               )}
             </>
           )}
@@ -869,7 +894,7 @@ const ColumnGuides: React.FC<ColumnGuidesProps> = ({ viewMode: viewModeProp }) =
                 'back',
                 'full'
               )}
-              {/* 상부 메쉬 - 3D와 탑뷰에서 표시 */}
+              {/* 상부 메쉬 - 3D와 탑뷰에서 표시 (가구 배치 슬롯 제외) */}
               {(viewMode === '3D' || (viewMode === '2D' && view2DDirection === 'top')) && renderTransparentMeshes(
                 zoneSlotInfo.normal.startX,
                 zoneSlotInfo.normal.width,
@@ -877,7 +902,10 @@ const ColumnGuides: React.FC<ColumnGuidesProps> = ({ viewMode: viewModeProp }) =
                 ceilingY,
                 true,
                 'top',
-                'full'
+                'full',
+                zoneSlotInfo.normal.columnCount,
+                zoneSlotInfo.normal.columnWidth,
+                zoneSlotInfo.normal.slotWidths
               )}
             </>
           )}
