@@ -375,7 +375,7 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
   const edgeColor = React.useMemo(() => {
     // 2D 모드에서 L프레임은 파란색 윤곽선
     if (viewMode === '2D' && panelName && panelName.includes('L프레임')) {
-      return '#66bbff';
+      return '#00cfff';
     }
     // 2D 모드에서 서랍속장/도어/마이다 패널은 초록색 윤곽선
     if (viewMode === '2D' && panelName && (panelName.includes('서랍속장') || panelName.includes('도어') || panelName.includes('마이다'))) {
