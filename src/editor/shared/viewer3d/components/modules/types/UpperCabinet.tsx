@@ -94,14 +94,21 @@ const UpperCabinet: React.FC<FurnitureTypeProps> = ({
                       />
                     </group>
                     
-                    {/* 중앙 분리대 - BoxWithEdges 사용 */}
-                    <BoxWithEdges
-                      args={[baseFurniture.basicThickness, baseFurniture.height - baseFurniture.basicThickness * 2, baseFurniture.adjustedDepthForShelves]}
-                      position={[0, 0, baseFurniture.shelfZOffset]}
-                      material={baseFurniture.material}
-                      renderMode={renderMode}
-                        furnitureId={moduleData.id}
-                    />
+                    {/* 중앙 분리대 - 상/바닥판과 동일한 깊이 (백패널 뒤로 침범 방지) */}
+                    {(() => {
+                      const backReduction = baseFurniture.backPanelThickness + baseFurniture.basicThickness - baseFurniture.mmToThreeUnits(1);
+                      const dividerDepth = baseFurniture.depth - backReduction;
+                      const dividerZOffset = backReduction / 2;
+                      return (
+                        <BoxWithEdges
+                          args={[baseFurniture.basicThickness, baseFurniture.height - baseFurniture.basicThickness * 2, dividerDepth]}
+                          position={[0, 0, dividerZOffset]}
+                          material={baseFurniture.material}
+                          renderMode={renderMode}
+                          furnitureId={moduleData.id}
+                        />
+                      );
+                    })()}
                     
                     {/* 오른쪽 섹션 - 오른쪽 구획의 중앙에서 오른쪽으로 basicThickness/2만큼 이동 */}
                     <group position={[(baseFurniture.innerWidth/2 - baseFurniture.basicThickness/2)/2 + baseFurniture.basicThickness/2, 0, 0]}>
