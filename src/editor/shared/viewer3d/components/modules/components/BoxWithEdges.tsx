@@ -88,8 +88,8 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
   const parentEditMode = useFurnitureGhostContext();
   const effectiveEditMode = isEditMode || parentEditMode || storeEditMode;
   const effectiveSelected = storeSelected;
-  // 편집/드래그/선택 중에는 wireframe 대신 solid로 강제 (고스트 표시를 위해)
-  const effectiveRenderMode = (effectiveEditMode || effectiveSelected || isDragging) ? 'solid' as const : renderMode;
+  // 편집/드래그 중에는 wireframe 대신 solid로 강제 (고스트 표시를 위해)
+  const effectiveRenderMode = (effectiveEditMode || isDragging) ? 'solid' as const : renderMode;
 
   // 스토어에서 직접 panelGrainDirections 가져오기 (실시간 업데이트 보장)
   // Zustand는 selector 함수의 참조가 바뀌면 재구독하므로, furnitureId별로 안정적인 selector 필요
@@ -157,8 +157,8 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
       return "#10b981"; // 기본값 (green)
     };
 
-    // 드래그/편집/선택 중일 때 동일한 테마색 고스트 (2D/3D 모두 동일)
-    if ((isDragging || effectiveEditMode || effectiveSelected) && baseMaterial instanceof THREE.MeshStandardMaterial) {
+    // 드래그/편집 중일 때만 테마색 고스트 (선택만 한 상태에서는 원래 재질 유지)
+    if ((isDragging || effectiveEditMode) && baseMaterial instanceof THREE.MeshStandardMaterial) {
       const ghostMaterial = baseMaterial.clone();
       ghostMaterial.transparent = true;
       ghostMaterial.opacity = 0.6;
