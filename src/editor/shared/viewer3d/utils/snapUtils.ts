@@ -9,6 +9,7 @@ export const SNAP_DISTANCE = 0.1;
 
 /**
  * 객체의 모든 꼭지점을 추출
+ * visible=false인 노드 및 그 하위는 건너뜀 (보이지 않는 드롭존/충돌 메시 제외)
  */
 export function extractVertices(object: THREE.Object3D): MeasurePoint[] {
   const vertices: MeasurePoint[] = [];
@@ -16,20 +17,21 @@ export function extractVertices(object: THREE.Object3D): MeasurePoint[] {
   const processedVertices = new Set<string>();
   let meshCount = 0;
 
-  object.traverse((child) => {
-    // Mesh, Line, LineSegments 모두 처리
-    if ((child instanceof THREE.Mesh || child instanceof THREE.Line || child instanceof THREE.LineSegments) && child.geometry) {
+  // traverse 대신 재귀 순회: visible=false인 노드의 하위 전체를 건너뜀
+  function visitNode(node: THREE.Object3D) {
+    if (!node.visible) return; // 숨겨진 노드 및 하위 전체 스킵
+
+    if ((node instanceof THREE.Mesh || node instanceof THREE.Line || node instanceof THREE.LineSegments) && node.geometry) {
       meshCount++;
-      const geometry = child.geometry;
+      const geometry = node.geometry;
 
       // 월드 매트릭스 계산
-      child.updateMatrixWorld(true);
-      worldMatrix.copy(child.matrixWorld);
+      node.updateMatrixWorld(true);
+      worldMatrix.copy(node.matrixWorld);
 
       // 위치 속성 가져오기
       const positions = geometry.attributes.position;
       if (!positions) {
-        console.warn('⚠️ 위치 속성 없음:', child.name || child.type);
         return;
       }
 
@@ -52,11 +54,130 @@ export function extractVertices(object: THREE.Object3D): MeasurePoint[] {
         }
       }
     }
-  });
+
+    for (const child of node.children) {
+      visitNode(child);
+    }
+  }
+
+  visitNode(object);
 
   console.log(`📐 꼭지점 추출 완료: ${meshCount}개 객체에서 ${vertices.length}개 꼭지점 발견`);
 
   return vertices;
+}
+
+/**
+ * 2D 뷰에서 보이는 엣지 선분들의 교차점을 계산하여 추가 스냅 포인트 생성
+ * 서로 다른 패널의 엣지가 2D 투영에서 교차하는 점을 찾음
+ */
+export function extractEdgeIntersections(
+  object: THREE.Object3D,
+  viewDirection: 'front' | 'left' | 'right' | 'top'
+): MeasurePoint[] {
+  type Seg2D = { a: [number, number]; b: [number, number]; z: number };
+  const segments: Seg2D[] = [];
+  const worldMatrix = new THREE.Matrix4();
+
+  // 1) 모든 visible Line/LineSegments에서 선분 추출 (2D 투영)
+  function visitNode(node: THREE.Object3D) {
+    if (!node.visible) return;
+
+    if ((node instanceof THREE.Line || node instanceof THREE.LineSegments) && node.geometry) {
+      const positions = node.geometry.attributes.position;
+      if (!positions) { visitChildren(); return; }
+
+      node.updateMatrixWorld(true);
+      worldMatrix.copy(node.matrixWorld);
+
+      const v = new THREE.Vector3();
+      const verts: [number, number, number][] = [];
+      for (let i = 0; i < positions.count; i++) {
+        v.fromBufferAttribute(positions, i);
+        v.applyMatrix4(worldMatrix);
+        verts.push([v.x, v.y, v.z]);
+      }
+
+      // Line: 연속 선분, LineSegments: 쌍별 선분
+      if (node instanceof THREE.LineSegments) {
+        for (let i = 0; i + 1 < verts.length; i += 2) {
+          addSegment(verts[i], verts[i + 1]);
+        }
+      } else {
+        for (let i = 0; i + 1 < verts.length; i++) {
+          addSegment(verts[i], verts[i + 1]);
+        }
+      }
+    }
+
+    visitChildren();
+
+    function visitChildren() {
+      for (const child of node.children) visitNode(child);
+    }
+  }
+
+  function addSegment(p1: [number, number, number], p2: [number, number, number]) {
+    let a: [number, number], b: [number, number], z: number;
+    switch (viewDirection) {
+      case 'front':
+        a = [p1[0], p1[1]]; b = [p2[0], p2[1]]; z = 0; break;
+      case 'left': case 'right':
+        a = [p1[2], p1[1]]; b = [p2[2], p2[1]]; z = 0; break;
+      case 'top':
+        a = [p1[0], p1[2]]; b = [p2[0], p2[2]]; z = 0; break;
+      default:
+        a = [p1[0], p1[1]]; b = [p2[0], p2[1]]; z = 0;
+    }
+    // 길이 0인 선분 무시
+    if (Math.abs(a[0] - b[0]) < 0.0001 && Math.abs(a[1] - b[1]) < 0.0001) return;
+    segments.push({ a, b, z });
+  }
+
+  visitNode(object);
+
+  // 2) 수직/수평 선분만 필터 (대각선 교차는 무시 — 가구는 직교 구조)
+  const EPS = 0.001;
+  const hSegs: Seg2D[] = []; // 수평 (y 동일)
+  const vSegs: Seg2D[] = []; // 수직 (x 동일)
+  for (const s of segments) {
+    if (Math.abs(s.a[1] - s.b[1]) < EPS) hSegs.push(s);
+    else if (Math.abs(s.a[0] - s.b[0]) < EPS) vSegs.push(s);
+  }
+
+  // 3) 수평×수직 교차점 계산
+  const intersections: MeasurePoint[] = [];
+  const seen = new Set<string>();
+
+  for (const h of hSegs) {
+    const y = (h.a[1] + h.b[1]) / 2;
+    const hMinX = Math.min(h.a[0], h.b[0]);
+    const hMaxX = Math.max(h.a[0], h.b[0]);
+
+    for (const vv of vSegs) {
+      const x = (vv.a[0] + vv.b[0]) / 2;
+      const vMinY = Math.min(vv.a[1], vv.b[1]);
+      const vMaxY = Math.max(vv.a[1], vv.b[1]);
+
+      // 교차 조건: x가 수평 범위 안, y가 수직 범위 안
+      if (x >= hMinX - EPS && x <= hMaxX + EPS && y >= vMinY - EPS && y <= vMaxY + EPS) {
+        const rx = Math.round(x * 10000) / 10000;
+        const ry = Math.round(y * 10000) / 10000;
+        const key = `${rx},${ry}`;
+        if (!seen.has(key)) {
+          seen.add(key);
+          // 뷰 방향에 맞게 3D 좌표 복원
+          switch (viewDirection) {
+            case 'front': intersections.push([rx, ry, 0]); break;
+            case 'left': case 'right': intersections.push([0, ry, rx]); break;
+            case 'top': intersections.push([rx, 0, ry]); break;
+          }
+        }
+      }
+    }
+  }
+
+  return intersections;
 }
 
 /**
