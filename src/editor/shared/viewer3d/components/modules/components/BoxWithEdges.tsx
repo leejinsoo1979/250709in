@@ -596,26 +596,31 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
     const lines: [number, number, number][][] = hasAnyNotch ? getNotchEdgeLines() : [];
 
     if (!hasAnyNotch) {
+    // 입면도(front)에서는 앞면 사각형만 표시 (뒷면·연결 엣지 제거 → 불필요한 중앙선 방지)
+    const isFrontView = view2DDirection === 'front';
+
     // 앞면 사각형
     if (!hideTopEdge) lines.push([[-halfW, halfH, halfD], [halfW, halfH, halfD]]);
     if (!hideBottomEdge) lines.push([[-halfW, -halfH, halfD], [halfW, -halfH, halfD]]);
     lines.push([[-halfW, -halfH, halfD], [-halfW, halfH, halfD]]);
     lines.push([[halfW, -halfH, halfD], [halfW, halfH, halfD]]);
 
-    // 뒷면 사각형
-    if (!hideTopEdge) lines.push([[-halfW, halfH, -halfD], [halfW, halfH, -halfD]]);
-    if (!hideBottomEdge) lines.push([[-halfW, -halfH, -halfD], [halfW, -halfH, -halfD]]);
-    lines.push([[-halfW, -halfH, -halfD], [-halfW, halfH, -halfD]]);
-    lines.push([[halfW, -halfH, -halfD], [halfW, halfH, -halfD]]);
+    if (!isFrontView) {
+      // 뒷면 사각형
+      if (!hideTopEdge) lines.push([[-halfW, halfH, -halfD], [halfW, halfH, -halfD]]);
+      if (!hideBottomEdge) lines.push([[-halfW, -halfH, -halfD], [halfW, -halfH, -halfD]]);
+      lines.push([[-halfW, -halfH, -halfD], [-halfW, halfH, -halfD]]);
+      lines.push([[halfW, -halfH, -halfD], [halfW, halfH, -halfD]]);
 
-    // 연결 엣지
-    if (!hideTopEdge) {
-      lines.push([[-halfW, halfH, halfD], [-halfW, halfH, -halfD]]);
-      lines.push([[halfW, halfH, halfD], [halfW, halfH, -halfD]]);
-    }
-    if (!hideBottomEdge) {
-      lines.push([[-halfW, -halfH, halfD], [-halfW, -halfH, -halfD]]);
-      lines.push([[halfW, -halfH, halfD], [halfW, -halfH, -halfD]]);
+      // 연결 엣지
+      if (!hideTopEdge) {
+        lines.push([[-halfW, halfH, halfD], [-halfW, halfH, -halfD]]);
+        lines.push([[halfW, halfH, halfD], [halfW, halfH, -halfD]]);
+      }
+      if (!hideBottomEdge) {
+        lines.push([[-halfW, -halfH, halfD], [-halfW, -halfH, -halfD]]);
+        lines.push([[halfW, -halfH, halfD], [halfW, -halfH, -halfD]]);
+      }
     }
     } // end if (!hasAnyNotch)
 

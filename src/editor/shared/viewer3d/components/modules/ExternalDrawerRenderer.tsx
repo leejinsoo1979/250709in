@@ -360,9 +360,11 @@ export const ExternalDrawerRenderer: React.FC<ExternalDrawerRendererProps> = ({
   const { dimensionColor } = useDimensionColor();
   const { gl } = useThree();
 
-  // === 서랍 오픈 상태 (개별 토글만 — 전역 doorsOpen 무시) ===
-  // 재질 선택(속장 탭) 시 도어만 열고 서랍은 인출하지 않음
-  const isDoorOpen = furnitureId ? isIndividualDoorOpen(furnitureId, 0) : false;
+  // === 서랍 오픈 상태 (도어 오픈과 연동, 재질 속장탭 제외) ===
+  const isInteriorMaterialMode = useUIStore(s => s.isInteriorMaterialMode);
+  const isDoorOpen = (doorsOpen !== null && !isInteriorMaterialMode)
+    ? doorsOpen
+    : furnitureId ? isIndividualDoorOpen(furnitureId, 0) : false;
   const shouldOpenDrawers = useMemo(
     () => isDoorOpen,
     [isDoorOpen]
