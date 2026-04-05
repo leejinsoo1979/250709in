@@ -426,6 +426,47 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
         );
       })()}
 
+      {/* 기본하부장 반통/한통: 상단 따내기 L자 프레임 렌더링 */}
+      {showFurniture && (moduleData.id.includes('lower-half-cabinet') || moduleData.id.includes('dual-lower-half-cabinet')) && (() => {
+        const mmToThreeUnits = (mm: number) => mm * 0.01;
+        const cabinetHeight = adjustedHeight;
+        const notchHeightMm = 60;
+        const notchFromBottomMm = (moduleData.dimensions.height || 785) - notchHeightMm;
+        const basicThicknessMm = baseFurniture.basicThickness / 0.01;
+        const frameWidth = mmToThreeUnits(adjustedWidth || moduleData.dimensions.width);
+        const verticalHMm = notchHeightMm - basicThicknessMm;
+        const cabinetBottomY = -cabinetHeight / 2;
+        const horzY = cabinetBottomY + mmToThreeUnits(notchFromBottomMm) + baseFurniture.basicThickness / 2;
+        const horzZ = baseFurniture.depth / 2 - mmToThreeUnits(40) / 2;
+        const vertY = cabinetBottomY + mmToThreeUnits(notchFromBottomMm) + baseFurniture.basicThickness + mmToThreeUnits(verticalHMm) / 2;
+        const vertZ = baseFurniture.depth / 2 - mmToThreeUnits(40) + baseFurniture.basicThickness / 2;
+
+        return (
+          <group position={[0, cabinetYPosition, 0]}>
+            <BoxWithEdges
+              args={[frameWidth, baseFurniture.basicThickness, mmToThreeUnits(40)]}
+              position={[0, horzY, horzZ]}
+              material={lFrameDoorMaterial}
+              renderMode={renderMode}
+              isHighlighted={false}
+              panelName="L프레임수평(1)"
+              panelGrainDirections={panelGrainDirections}
+              furnitureId={placedFurnitureId}
+            />
+            <BoxWithEdges
+              args={[frameWidth, mmToThreeUnits(verticalHMm), baseFurniture.basicThickness]}
+              position={[0, vertY, vertZ]}
+              material={lFrameDoorMaterial}
+              renderMode={renderMode}
+              isHighlighted={false}
+              panelName="L프레임수직(1)"
+              panelGrainDirections={panelGrainDirections}
+              furnitureId={placedFurnitureId}
+            />
+          </group>
+        );
+      })()}
+
       {/* 도어는 showFurniture와 관계없이 hasDoor가 true이면 항상 렌더링 (도어만 보기 위해) */}
       {/* 단, 서랍장(lower-drawer-*)은 도어가 아닌 서랍이 달리므로 도어 렌더링 차단 */}
       {hasDoor && spaceInfo && !moduleData.id.includes('lower-drawer-') && !moduleData.id.includes('lower-door-lift-2tier') && !moduleData.id.includes('lower-door-lift-3tier') && !moduleData.id.includes('lower-top-down-2tier') && !moduleData.id.includes('lower-top-down-3tier') && (
