@@ -212,37 +212,62 @@ export const calculatePanelDetails = (
       // 측판 높이는 섹션 높이 그대로 사용 (3D 렌더링의 getSectionHeights와 동일)
       const adjustedSectionHeight = sectionHeightMm;
 
+      // Type5 스타일러장: 우측 절대깊이 (660mm), 좌측은 customDepth 그대로
+      // 3D DualType5.tsx line 170-184와 동일한 로직
+      const rightAbsoluteDepthForSide = moduleData.modelConfig?.rightAbsoluteDepth;
+      const leftSideDepth = customDepth;
+      const rightSideDepth = rightAbsoluteDepthForSide || customDepth;
+
+      // Type5 스타일러장(2drawer-styler): 3D에서 우측판은 분할 안됨 (전체 높이 통짜)
+      // 좌측판만 섹션별로 분할. DualType5.tsx line 921-932 주석 참조
+      const isStyler = moduleData.id.includes('2drawer-styler');
+
       // 다중 섹션이고 상하 분리 측판 가구인 경우만 섹션별로 추가
       // 그 외는 통짜로 첫 번째 섹션에만 추가
       if (sections.length >= 2 && isSplitSidePanelFurniture) {
         const sidePanelHeight = adjustedSectionHeight;
-        // 상하 분리: 각 섹션마다 측판 추가
+        // 상하 분리: 각 섹션마다 좌측판 추가
         targetPanel.push({
           name: `${sectionPrefix}좌측`,
-          width: customDepth,
+          width: leftSideDepth,
           height: sidePanelHeight,
           thickness: basicThickness,
           material: 'PB'
         });
-        targetPanel.push({
-          name: `${sectionPrefix}우측`,
-          width: customDepth,
-          height: sidePanelHeight,
-          thickness: basicThickness,
-          material: 'PB'
-        });
+
+        if (isStyler) {
+          // 스타일러장: 우측판은 첫 번째 섹션에서만 전체 높이 통짜로 추가
+          if (sectionIndex === 0) {
+            targetPanel.push({
+              name: '우측판',
+              width: rightSideDepth,
+              height: height,
+              thickness: basicThickness,
+              material: 'PB'
+            });
+          }
+        } else {
+          // 일반 분할 측판 가구: 우측판도 섹션별 분할
+          targetPanel.push({
+            name: `${sectionPrefix}우측`,
+            width: rightSideDepth,
+            height: sidePanelHeight,
+            thickness: basicThickness,
+            material: 'PB'
+          });
+        }
       } else if (sectionIndex === 0) {
         // 통짜 측판: 첫 번째 섹션에 전체 높이로 추가
         targetPanel.push({
           name: '좌측판',
-          width: customDepth,
+          width: leftSideDepth,
           height: height,
           thickness: basicThickness,
           material: 'PB'
         });
         targetPanel.push({
           name: '우측판',
-          width: customDepth,
+          width: rightSideDepth,
           height: height,
           thickness: basicThickness,
           material: 'PB'
