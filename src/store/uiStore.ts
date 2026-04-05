@@ -396,7 +396,7 @@ export const useUIStore = create<UIState>()(
       
       return {
         ...initialUIState,
-        view2DTheme: appTheme,  // 앱 테마와 동일하게 초기화
+        view2DTheme: 'dark' as const,  // 2D 모드 기본 다크
       
       setViewMode: (mode) =>
         set((state) => ({
