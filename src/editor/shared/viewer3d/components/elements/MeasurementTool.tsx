@@ -217,26 +217,33 @@ export const MeasurementTool: React.FC<MeasurementToolProps> = ({ viewDirection 
     }
   };
 
-  // 씬의 모든 꼭지점 + 엣지 교차점 추출 (캐싱)
+  // 꼭지점에 엣지 교차점을 병합하는 헬퍼
   const effectiveViewDir = viewDirection === 'all' ? 'front' : viewDirection;
+  const mergeIntersections = useCallback((vertices: MeasurePoint[]) => {
+    try {
+      const intersections = extractEdgeIntersections(scene, effectiveViewDir);
+      if (intersections.length > 0) {
+        const existing = new Set(vertices.map(v => `${v[0]},${v[1]},${v[2]}`));
+        for (const pt of intersections) {
+          const key = `${pt[0]},${pt[1]},${pt[2]}`;
+          if (!existing.has(key)) {
+            vertices.push(pt);
+            existing.add(key);
+          }
+        }
+      }
+    } catch {
+      // 교차점 계산 실패 시 무시 — 기본 꼭지점만 사용
+    }
+    return vertices;
+  }, [scene, effectiveViewDir]);
+
+  // 씬의 모든 꼭지점 + 엣지 교차점 추출 (캐싱)
   const sceneVertices = useMemo(() => {
     if (!isMeasureMode) return [];
     const vertices = extractVertices(scene);
-    // 2D 엣지 선분 교차점도 스냅 대상에 추가
-    const intersections = extractEdgeIntersections(scene, effectiveViewDir);
-    if (intersections.length > 0) {
-      // 기존 꼭지점과 중복 제거
-      const existing = new Set(vertices.map(v => `${v[0]},${v[1]},${v[2]}`));
-      for (const pt of intersections) {
-        const key = `${pt[0]},${pt[1]},${pt[2]}`;
-        if (!existing.has(key)) {
-          vertices.push(pt);
-          existing.add(key);
-        }
-      }
-    }
-    return vertices;
-  }, [scene, isMeasureMode, viewDirection, effectiveViewDir]);
+    return mergeIntersections(vertices);
+  }, [scene, isMeasureMode, viewDirection, mergeIntersections]);
 
   // sceneVertices를 ref로 관리하여 최신 값 유지
   const sceneVerticesRef = useRef(sceneVertices);
@@ -249,21 +256,10 @@ export const MeasurementTool: React.FC<MeasurementToolProps> = ({ viewDirection 
     if (!isMeasureMode) return;
     const timer = setTimeout(() => {
       const freshVertices = extractVertices(scene);
-      const freshIntersections = extractEdgeIntersections(scene, effectiveViewDir);
-      if (freshIntersections.length > 0) {
-        const existing = new Set(freshVertices.map(v => `${v[0]},${v[1]},${v[2]}`));
-        for (const pt of freshIntersections) {
-          const key = `${pt[0]},${pt[1]},${pt[2]}`;
-          if (!existing.has(key)) {
-            freshVertices.push(pt);
-            existing.add(key);
-          }
-        }
-      }
-      sceneVerticesRef.current = freshVertices;
+      sceneVerticesRef.current = mergeIntersections(freshVertices);
     }, 500);
     return () => clearTimeout(timer);
-  }, [isMeasureMode, scene, viewDirection, effectiveViewDir]);
+  }, [isMeasureMode, scene, viewDirection, mergeIntersections]);
 
   // 지우개 모드에서 측정선과의 거리 계산 (호버 감지용)
   const getDistanceToLine = useCallback((point: MeasurePoint, lineStart: MeasurePoint, lineEnd: MeasurePoint): number => {

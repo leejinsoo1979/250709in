@@ -145,7 +145,11 @@ export function extractEdgeIntersections(
     else if (Math.abs(s.a[0] - s.b[0]) < EPS) vSegs.push(s);
   }
 
-  // 3) 수평×수직 교차점 계산
+  // 3) 수평×수직 교차점 계산 (성능 보호: 선분이 너무 많으면 스킵)
+  if (hSegs.length * vSegs.length > 50000) {
+    return [];
+  }
+
   const intersections: MeasurePoint[] = [];
   const seen = new Set<string>();
 
