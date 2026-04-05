@@ -314,9 +314,24 @@ export const calculatePanelDetails = (
       const totalHeightExtension = basicThickness * 2 - heightExtension;
       const backPanelHeight = sectionHeightMm - basicThickness * 2 + heightExtension + totalHeightExtension;
 
+      // Type5/6 (4drawer-pantshanger, 2drawer-styler)의 좌측 백패널은
+      // 좌측 컬럼 내경폭(leftWidth)을 사용 (3D DualType6.tsx leftWidth 계산과 동일)
+      let backPanelWidth = innerWidth + 10;
+      let backPanelNamePrefix = sectionPrefix;
+      if (isType5or6) {
+        const rightAbsoluteWidth = moduleData.modelConfig?.rightAbsoluteWidth || 0;
+        const originalTotalWidth = moduleData.dimensions.width;
+        const rightRatio = rightAbsoluteWidth / (originalTotalWidth - 36);
+        const rightWidth = innerWidth * rightRatio;
+        const leftWidth = innerWidth - rightWidth - basicThickness; // 중앙 칸막이 두께 제외
+        backPanelWidth = leftWidth + 10;
+        // 좌측 백패널임을 명시: "좌(하)백패널", "좌(상)백패널"
+        backPanelNamePrefix = `좌${sectionPrefix}`;
+      }
+
       targetPanel.push({
-        name: `${sectionPrefix}백패널`,
-        width: innerWidth + 10, // 내경폭 + 좌우 5mm씩 확장
+        name: `${backPanelNamePrefix}백패널`,
+        width: backPanelWidth, // 내경폭 + 좌우 5mm씩 확장
         height: backPanelHeight, // 내경높이 + 상하 5mm씩 확장
         thickness: backPanelThickness, // 9mm
         material: 'MDF'
