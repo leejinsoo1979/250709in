@@ -889,7 +889,7 @@ const createLowerHalfCabinet = (columnWidth: number): ModuleData => {
           type: 'shelf',
           heightType: 'percentage',
           height: 100,
-          count: 2
+          count: 0
         }
       ]
     }
@@ -931,7 +931,7 @@ const createDualLowerHalfCabinet = (dualWidth: number, slotWidths?: number[]): M
           type: 'shelf',
           heightType: 'percentage',
           height: 100,
-          count: 2
+          count: 0
         }
       ]
     }

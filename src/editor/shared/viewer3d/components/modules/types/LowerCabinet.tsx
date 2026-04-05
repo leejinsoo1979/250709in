@@ -270,6 +270,62 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
                 )}
               </>
 
+          {/* 다보 선반 렌더링 (하부장 반통·한통, 도어올림/상판내림 반통·한통) */}
+          {(() => {
+            const moduleId = moduleData.id;
+            const isLowerHalf = moduleId.includes('lower-half-cabinet') || moduleId.includes('dual-lower-half-cabinet');
+            const isDoorLiftHalf = moduleId.includes('lower-door-lift-half') || moduleId.includes('dual-lower-door-lift-half');
+            const isTopDownHalf = moduleId.includes('lower-top-down-half') || moduleId.includes('dual-lower-top-down-half');
+            if (!isLowerHalf && !isDoorLiftHalf && !isTopDownHalf) return null;
+
+            const mmToUnits = (mm: number) => mm * 0.01;
+            const basicThicknessMm = baseFurniture.basicThickness / 0.01;
+            const cabinetHeightMm = adjustedHeight / 0.01;
+            const depthMm = baseFurniture.depth / 0.01;
+            const backPanelMm = (backPanelThickness || 9);
+
+            let referenceHeightMm: number;
+            const hasTopPanel = isDoorLiftHalf || isTopDownHalf;
+
+            if (isTopDownHalf) {
+              referenceHeightMm = 665;
+            } else if (hasTopPanel) {
+              referenceHeightMm = cabinetHeightMm - basicThicknessMm * 2;
+            } else {
+              referenceHeightMm = cabinetHeightMm - basicThicknessMm;
+            }
+
+            const shelfInterval = referenceHeightMm / 3;
+            const shelfPositions = [shelfInterval, shelfInterval * 2];
+
+            const shelfThicknessMm = 18;
+            const shelfFrontGapMm = 30;
+            const shelfDepthMm = depthMm - backPanelMm - shelfFrontGapMm;
+            const shelfWidth = baseFurniture.innerWidth;
+            const shelfDepth = mmToUnits(shelfDepthMm);
+            const shelfThickness = mmToUnits(shelfThicknessMm);
+
+            const backPanelFrontZ = -baseFurniture.depth / 2 + mmToUnits(backPanelMm);
+            const shelfFrontZ = baseFurniture.depth / 2 - mmToUnits(shelfFrontGapMm);
+            const shelfZ = (backPanelFrontZ + shelfFrontZ) / 2;
+
+            const cabinetBottomY = -adjustedHeight / 2;
+            const bottomPanelTopY = cabinetBottomY + baseFurniture.basicThickness;
+
+            return shelfPositions.map((posFromBottom, idx) => (
+              <BoxWithEdges
+                key={`dowel-shelf-${idx}`}
+                args={[shelfWidth, shelfThickness, shelfDepth]}
+                position={[0, bottomPanelTopY + mmToUnits(posFromBottom), shelfZ]}
+                material={baseFurniture.material}
+                renderMode={renderMode}
+                isHighlighted={false}
+                panelName={`다보선반(${idx + 1})`}
+                furnitureId={placedFurnitureId}
+              />
+            ));
+          })()}
+
           </BaseFurnitureShell>
 
           {/* 하부장 상판 마감재 제거 - 하부모듈에는 상판 없음 */}
