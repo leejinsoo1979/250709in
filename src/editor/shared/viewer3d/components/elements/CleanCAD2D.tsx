@@ -7374,8 +7374,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             return;
           }
           
-          // 가구 본래 깊이 사용 (customDepth는 기둥 조정값이므로 무시)
-          const actualDepthMm = moduleData.dimensions.depth;
+          // 사용자가 변경한 깊이(customDepth) 우선 사용
+          const actualDepthMm = module.customDepth || moduleData.dimensions.depth;
           const moduleWidthMm = (module.isFreePlacement && module.freeWidth) ? module.freeWidth : moduleData.dimensions.width;
           const isStylerModule = moduleData.id.includes('dual-2drawer-styler');
 
@@ -7517,8 +7517,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               return;
             }
             
-            // 가구 본래 깊이 사용 (customDepth는 기둥 조정값이므로 무시)
-            const actualDepthMm = moduleData.dimensions.depth;
+            // 사용자가 변경한 깊이(customDepth) 우선 사용
+            const actualDepthMm = module.customDepth || moduleData.dimensions.depth;
             const moduleWidthMm = (module.isFreePlacement && module.freeWidth) ? module.freeWidth : moduleData.dimensions.width;
             const isStylerModule = moduleData.id.includes('dual-2drawer-styler');
 
