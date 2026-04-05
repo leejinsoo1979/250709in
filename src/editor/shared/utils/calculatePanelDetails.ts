@@ -53,9 +53,12 @@ export const calculatePanelDetails = (
   const drawerSideThickness = (basicThickness === 18.5 || basicThickness === 15.5) ? 15.5 : 15; // PB+PET 코팅 시 15.5mm
   const drawerBottomThickness = backPanelThickness; // 서랍 바닥판 - MDF 재질, 백패널과 동일
   
-  // 상부장 선반 앞면 30mm 옵셋 (하부장은 LowerCabinet.tsx에서 직접 처리)
+  // 선반 앞면 30mm 옵셋 (다보선반: 상부장·하부장 공통)
   const isUpperCabinet = moduleData.category === 'upper';
-  const shelfFrontInsetMm = isUpperCabinet ? 30 : 0;
+  const isLowerHalfCabinet = moduleData.id.includes('lower-half-cabinet') || moduleData.id.includes('dual-lower-half-cabinet')
+    || moduleData.id.includes('lower-door-lift-half') || moduleData.id.includes('dual-lower-door-lift-half')
+    || moduleData.id.includes('lower-top-down-half') || moduleData.id.includes('dual-lower-top-down-half');
+  const shelfFrontInsetMm = (isUpperCabinet || isLowerHalfCabinet) ? 30 : 0;
 
   const originalHeight = moduleData.dimensions.height;
   const height = freeHeight || originalHeight;
