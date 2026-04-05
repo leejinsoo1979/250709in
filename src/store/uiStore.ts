@@ -401,9 +401,10 @@ export const useUIStore = create<UIState>()(
       setViewMode: (mode) =>
         set((state) => ({
           viewMode: mode,
-          // 2D 모드로 전환 시 가구 체크박스 기본 ON, 축 기본 OFF
+          // 2D 모드로 전환 시 가구 체크박스 기본 ON, 축 기본 OFF, 다크모드 강제
           showFurniture: mode === '2D' ? true : state.showFurniture,
           showAxis: mode === '2D' ? false : state.showAxis,
+          view2DTheme: mode === '2D' ? 'dark' as const : state.view2DTheme,
           // 3D 모드 진입 시 표시 항목 항상 ON
           ...(mode === '3D' ? {
             showDimensions: true,
