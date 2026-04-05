@@ -15,6 +15,7 @@ interface FinishingPanelWithTextureProps {
   isDragging?: boolean;
   isEditMode?: boolean;
   furnitureId?: string;
+  panelName?: string;
 }
 
 /**
@@ -31,7 +32,8 @@ const FinishingPanelWithTexture: React.FC<FinishingPanelWithTextureProps> = ({
   renderMode = 'solid',
   isDragging = false,
   isEditMode = false,
-  furnitureId
+  furnitureId,
+  panelName
 }) => {
   const [textureLoaded, setTextureLoaded] = useState(false);
 
@@ -113,6 +115,7 @@ const FinishingPanelWithTexture: React.FC<FinishingPanelWithTextureProps> = ({
       isDragging={isDragging}
       isEditMode={isEditMode}
       furnitureId={furnitureId}
+      panelName={panelName}
       hideEdges={false}
     />
   );

@@ -171,6 +171,7 @@ const UpperCabinet: React.FC<FurnitureTypeProps> = ({
               furnitureId={moduleData.id}
               isDragging={isDragging}
               isEditMode={isEditMode}
+              panelName="하부마감판"
             />
         </>
       )}
