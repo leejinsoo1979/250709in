@@ -889,7 +889,7 @@ const createLowerHalfCabinet = (columnWidth: number): ModuleData => {
           type: 'shelf',
           heightType: 'percentage',
           height: 100,
-          count: 2 // 선반 2개
+          count: 0 // 내부 선반 없이 오픈 공간
         }
       ]
     }
@@ -931,7 +931,7 @@ const createDualLowerHalfCabinet = (dualWidth: number, slotWidths?: number[]): M
           type: 'shelf',
           heightType: 'percentage',
           height: 100,
-          count: 2
+          count: 0
         }
       ]
     }
