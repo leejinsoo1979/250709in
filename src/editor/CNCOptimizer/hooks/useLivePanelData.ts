@@ -8,6 +8,7 @@ import { Panel } from '../types';
 import { normalizePanels, NormalizedPanel } from '@/utils/cutlist/normalize';
 import { calculateShelfBoringPositions } from '@/domain/boring/utils/calculateShelfBoringPositions';
 import { computeFrameMergeGroups } from '@/editor/shared/utils/frameMergeUtils';
+import { getDefaultGrainDirection } from '@/editor/shared/utils/materialConstants';
 
 /**
  * CNC 패널 이름 → 3D panelName 변환
@@ -39,47 +40,11 @@ function toMeshName(cncName: string): string {
 
 /**
  * 패널 이름에서 기본 결방향(grain) 결정
- * - 사용자가 panelGrainDirections에 명시적으로 설정하지 않은 패널에 적용
- * - 측판/백패널/도어/칸막이: VERTICAL (결이 높이 방향)
- * - 상판/바닥/선반/분할판/보강대: HORIZONTAL (결이 너비 방향)
- * - 서랍 바닥/MDF 패널: NONE (결 무관, 회전 허용)
- * - 백패널: MDF 무결이지만 VERTICAL (무조건 2440방향=높이=Length, 회전 불가)
+ * - 단일 소스: materialConstants.ts의 getDefaultGrainDirection() 사용
+ * - 팝업 패널목록과 CNC 옵티마이저가 동일한 규칙을 공유함
  */
-function getDefaultGrain(panelName: string): 'NONE' | 'HORIZONTAL' | 'VERTICAL' {
-  // 백패널: MDF 무결이지만 무조건 높이(Y축)=Length 고정 → VERTICAL (회전 불가)
-  if (panelName.includes('백패널')) return 'VERTICAL';
-  if (panelName.includes('바닥') && panelName.includes('서랍')) return 'HORIZONTAL'; // 서랍 바닥 (MDF) - 폭(L)방향 고정, 회전 불가
-
-  // 서랍 부품
-  if (panelName.includes('마이다')) return 'HORIZONTAL';    // 서랍 손잡이판 (X축 너비 = 재단방향)
-  if (panelName.includes('서랍') && panelName.includes('앞판')) return 'HORIZONTAL';
-  if (panelName.includes('서랍') && panelName.includes('뒷판')) return 'HORIZONTAL';
-  if (panelName.includes('서랍') && (panelName.includes('좌측판') || panelName.includes('우측판'))) return 'HORIZONTAL'; // 서랍 측판: L=깊이(Z축=p.width), W=높이(Y축=p.height)
-
-  // 서랍속장 (날개벽) - 세로 방향 (Y축 높이 = 재단방향)
-  if (panelName.includes('서랍속장')) return 'VERTICAL';
-
-  // 커튼박스 L자 프레임 - 세로 방향
-  if (panelName.includes('커튼박스')) return 'VERTICAL';
-
-  // 하부 서랍장 L자 PET 프레임
-  if (panelName.includes('L프레임수평')) return 'HORIZONTAL';
-  if (panelName.includes('L프레임수직')) return 'VERTICAL';
-
-  // 가구 구조 패널 - 세로 방향
-  if (panelName.includes('좌측') || panelName.includes('우측') || panelName.includes('측판')) return 'VERTICAL';
-  if (panelName.includes('칸막이')) return 'VERTICAL';
-  if (panelName.includes('좌우 분할판')) return 'VERTICAL'; // horizontalSplit 분할판
-  if (panelName.includes('도어') || panelName.includes('Door')) return 'VERTICAL';
-
-  // 가구 구조 패널 - 가로 방향
-  if (panelName.includes('상판') || panelName.includes('바닥')) return 'HORIZONTAL';
-  if (panelName.includes('선반')) return 'HORIZONTAL';
-  if (panelName.includes('분할판')) return 'HORIZONTAL';    // areaSubSplit 수평 분할판
-  if (panelName.includes('보강대')) return 'HORIZONTAL';
-
-  // 기본값: HORIZONTAL (가로 결)
-  return 'HORIZONTAL';
+function getDefaultGrain(panelName: string): 'HORIZONTAL' | 'VERTICAL' {
+  return getDefaultGrainDirection(panelName) === 'vertical' ? 'VERTICAL' : 'HORIZONTAL';
 }
 
 /**
