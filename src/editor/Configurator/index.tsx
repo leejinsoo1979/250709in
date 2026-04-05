@@ -473,6 +473,11 @@ const Configurator: React.FC = () => {
   // 하부프레임 OFF/ON + 띄움높이 동기화는 RightPanel에서 직접 처리
   // (Configurator watcher 제거 — React 배치 업데이트로 인한 경쟁 조건 방지)
 
+  // Configurator 진입 시 렌더모드 solid로 초기화 (CNC 옵티마이저 등 다른 페이지에서 돌아왔을 때 wireframe 잔상 방지)
+  useEffect(() => {
+    setRenderMode('solid');
+  }, []);
+
   // 보링 데이터 생성 훅
   const { panels: boringPanels, totalBorings, furnitureCount: boringFurnitureCount } = useFurnitureBoring();
 
@@ -6215,11 +6220,10 @@ const Configurator: React.FC = () => {
               viewMode={viewMode as ViewMode}
               onViewModeChange={(mode) => {
                 setViewMode(mode);
+                // 2D↔wireframe 자동 연동 제거: 렌더모드는 사용자가 직접 선택
                 if (mode === '2D') {
-                  setRenderMode('wireframe');
                   setShowAll(false);
                 } else if (mode === '3D') {
-                  setRenderMode('solid');
                   setShowAll(true);
                 }
               }}
@@ -6236,13 +6240,10 @@ const Configurator: React.FC = () => {
               viewMode={viewMode as ViewMode}
               onViewModeChange={(mode) => {
                 setViewMode(mode);
-                // 2D 모드 선택 시 와이어프레임으로 자동 설정 + 컬럼 끄기
+                // 2D↔wireframe 자동 연동 제거: 렌더모드는 사용자가 직접 선택
                 if (mode === '2D') {
-                  setRenderMode('wireframe');
                   setShowAll(false);
                 } else if (mode === '3D') {
-                  // 3D 모드 선택 시 솔리드로 자동 설정 + 컬럼 가이드 복원
-                  setRenderMode('solid');
                   setShowAll(true);
                 }
               }}
