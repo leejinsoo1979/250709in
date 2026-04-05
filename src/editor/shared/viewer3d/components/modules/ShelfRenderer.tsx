@@ -199,8 +199,8 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
       <group position={[0, yOffset, 0]}>
         <BoxWithEdges
           key={`top-finish-${topFinishMat.uuid}`}
-          args={[innerWidth - sidePanelGap, basicThickness, depth - basicThickness]}
-          position={[0, topPosition, basicThickness/2 + zOffset]}
+          args={[innerWidth - sidePanelGap, basicThickness, depth - basicThickness - mmToThreeUnits(1)]}
+          position={[0, topPosition, basicThickness/2 + zOffset - mmToThreeUnits(0.5)]}
           material={topFinishMat}
           renderMode={renderMode}
           isHighlighted={isHighlighted}
@@ -237,12 +237,13 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
           // 스타일러장 우측 섹션의 안전선반: 앞에서 8mm 줄이고 뒤로 5mm 이동
           const isStylerRightSection = furnitureId && furnitureId.includes('-right-section');
           const frontInset = mmToThreeUnits(shelfFrontInsetMm);
+          const backGap = mmToThreeUnits(1); // 백패널 앞면과 1mm 이격
           const shelfDepth = isStylerRightSection
             ? depth - basicThickness - mmToThreeUnits(8) // 앞에서 8mm 줄임
-            : depth - basicThickness - frontInset; // 다보 선반: 앞에서 들여쓰기
+            : depth - basicThickness - backGap - frontInset; // 다보 선반: 백패널 1mm 이격 + 앞면 들여쓰기
           const shelfZPosition = isStylerRightSection
             ? basicThickness/2 + zOffset - mmToThreeUnits(5) // 뒤로 5mm 이동 (백패널에 붙임)
-            : basicThickness/2 + zOffset - frontInset / 2; // 다보 선반: 뒤쪽으로 이동
+            : basicThickness/2 + zOffset - backGap/2 - frontInset / 2; // 백패널 이격 + 앞면 들여쓰기
 
           const panelName = sectionName ? `${sectionName}선반 ${shelfRenderIndex}` : `선반 ${shelfRenderIndex}`;
           const shelfMat = getPanelMaterial(panelName);
@@ -549,8 +550,8 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
         return (
           <BoxWithEdges
             key={`shelf-${i}-${shelfMat.uuid}`}
-            args={[innerWidth - sidePanelGap, basicThickness, depth - basicThickness - mmToThreeUnits(shelfFrontInsetMm)]}
-            position={[0, relativeYPosition, basicThickness/2 + zOffset - mmToThreeUnits(shelfFrontInsetMm) / 2]}
+            args={[innerWidth - sidePanelGap, basicThickness, depth - basicThickness - mmToThreeUnits(1) - mmToThreeUnits(shelfFrontInsetMm)]}
+            position={[0, relativeYPosition, basicThickness/2 + zOffset - mmToThreeUnits(0.5) - mmToThreeUnits(shelfFrontInsetMm) / 2]}
             material={shelfMat}
             renderMode={renderMode}
             isHighlighted={isHighlighted}
