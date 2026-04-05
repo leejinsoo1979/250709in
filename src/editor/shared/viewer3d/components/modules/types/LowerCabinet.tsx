@@ -299,14 +299,13 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
             const shelfPositions = [shelfInterval, shelfInterval * 2];
 
             const shelfThicknessMm = 18;
-            const shelfFrontGapMm = 30;
-            const shelfDepthMm = depthMm - backPanelMm - shelfFrontGapMm;
+            const shelfDepthMm = depthMm - backPanelMm;
             const shelfWidth = baseFurniture.innerWidth;
             const shelfDepth = mmToUnits(shelfDepthMm);
             const shelfThickness = mmToUnits(shelfThicknessMm);
 
             const backPanelFrontZ = -baseFurniture.depth / 2 + mmToUnits(backPanelMm);
-            const shelfFrontZ = baseFurniture.depth / 2 - mmToUnits(shelfFrontGapMm);
+            const shelfFrontZ = baseFurniture.depth / 2;
             const shelfZ = (backPanelFrontZ + shelfFrontZ) / 2;
 
             const cabinetBottomY = -adjustedHeight / 2;
