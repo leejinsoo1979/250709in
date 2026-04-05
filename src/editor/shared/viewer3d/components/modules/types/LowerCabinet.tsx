@@ -299,14 +299,13 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
             const shelfPositions = [shelfInterval, shelfInterval * 2];
 
             const shelfThicknessMm = 18;
-            const shelfDepthMm = depthMm - backPanelMm;
+            const backReductionMm = backPanelMm + basicThicknessMm - 1; // 26mm (바닥판과 동일)
+            const shelfDepthMm = depthMm - backReductionMm;
             const shelfWidth = baseFurniture.innerWidth;
             const shelfDepth = mmToUnits(shelfDepthMm);
             const shelfThickness = mmToUnits(shelfThicknessMm);
 
-            const backPanelFrontZ = -baseFurniture.depth / 2 + mmToUnits(backPanelMm);
-            const shelfFrontZ = baseFurniture.depth / 2;
-            const shelfZ = (backPanelFrontZ + shelfFrontZ) / 2;
+            const shelfZ = mmToUnits(backReductionMm) / 2; // 앞쪽 고정, 뒤에서 줄임
 
             const cabinetBottomY = -adjustedHeight / 2;
             const bottomPanelTopY = cabinetBottomY + baseFurniture.basicThickness;
