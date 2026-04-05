@@ -1149,16 +1149,19 @@ export const calculatePanelDetails = (
     });
   }
 
-  // === L자 PET 프레임 (하부 서랍장 따내기 마감) ===
-  if (moduleData.id.includes('lower-drawer-') || moduleData.id.includes('lower-door-lift-2tier') || moduleData.id.includes('lower-door-lift-3tier') || moduleData.id.includes('lower-top-down-')) {
+  // === L자 PET 프레임 (하부장 따내기 마감) ===
+  if (moduleData.id.includes('lower-drawer-') || moduleData.id.includes('lower-door-lift-2tier') || moduleData.id.includes('lower-door-lift-3tier') || moduleData.id.includes('lower-top-down-') || moduleData.id.includes('lower-half-cabinet') || moduleData.id.includes('dual-lower-half-cabinet')) {
     const is3Tier = moduleData.id.includes('lower-drawer-3tier');
     const isDoorLift3Tier = moduleData.id.includes('lower-door-lift-3tier');
     const isDoorLift2Tier = moduleData.id.includes('lower-door-lift-2tier');
     const isTopDown3Tier = moduleData.id.includes('lower-top-down-3tier');
     const isTopDown2Tier = moduleData.id.includes('lower-top-down-2tier');
     const isTopDownHalf = moduleData.id.includes('lower-top-down-half') || moduleData.id.includes('dual-lower-top-down-half');
+    const isHalfCabinet = moduleData.id.includes('lower-half-cabinet') || moduleData.id.includes('dual-lower-half-cabinet');
     // 보강대 따내기 (65mm)
-    const lowerNotches: { fromBottom: number; height: number }[] = is3Tier
+    const lowerNotches: { fromBottom: number; height: number }[] = isHalfCabinet
+      ? [] // 반통/한통: 서랍 없으므로 하부 따내기 없음, 상단만
+      : is3Tier
       ? [{ fromBottom: 295, height: 65 }, { fromBottom: 510, height: 65 }]
       : isDoorLift3Tier
       ? [{ fromBottom: 315, height: 65 }, { fromBottom: 545, height: 65 }]
