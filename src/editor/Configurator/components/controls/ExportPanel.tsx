@@ -191,14 +191,15 @@ const ExportPanel: React.FC = () => {
 
   // 뷰 캡처 함수
   const captureViews = async () => {
-    const { viewMode, view2DDirection, setViewMode, setView2DDirection, setRenderMode } = useUIStore.getState();
-    
+    const { viewMode, view2DDirection, renderMode, setViewMode, setView2DDirection, setRenderMode } = useUIStore.getState();
+
     // 현재 상태 저장
     const originalViewMode = viewMode;
     const originalView2DDirection = view2DDirection;
-    
+    const originalRenderMode = renderMode;
+
     const captures: typeof capturedViews = {};
-    
+
     try {
       // 상부뷰 캡처
       setViewMode('2D');
@@ -207,37 +208,39 @@ const ExportPanel: React.FC = () => {
       await new Promise(resolve => setTimeout(resolve, 1000));
       const topCanvas = document.querySelector('[data-viewer-container="true"] canvas') as HTMLCanvasElement;
       if (topCanvas) captures.top = topCanvas.toDataURL();
-      
+
       // 정면뷰 캡처
       setView2DDirection('front');
       await new Promise(resolve => setTimeout(resolve, 500));
       const frontCanvas = document.querySelector('[data-viewer-container="true"] canvas') as HTMLCanvasElement;
       if (frontCanvas) captures.front = frontCanvas.toDataURL();
-      
+
       // 측면뷰 캡처
       setView2DDirection('left');
       await new Promise(resolve => setTimeout(resolve, 500));
       const sideCanvas = document.querySelector('[data-viewer-container="true"] canvas') as HTMLCanvasElement;
       if (sideCanvas) captures.side = sideCanvas.toDataURL();
-      
+
       // 도어뷰 캡처 (3D 정면)
       setViewMode('3D');
       setRenderMode('solid');
       await new Promise(resolve => setTimeout(resolve, 1000));
       const doorCanvas = document.querySelector('[data-viewer-container="true"] canvas') as HTMLCanvasElement;
       if (doorCanvas) captures.door = doorCanvas.toDataURL();
-      
+
       setCapturedViews(captures);
-      
-      // 원래 상태로 복원
+
+      // 원래 상태로 복원 (renderMode 포함)
       setViewMode(originalViewMode);
       setView2DDirection(originalView2DDirection);
-      
+      setRenderMode(originalRenderMode);
+
     } catch (error) {
       console.error('뷰 캡처 실패:', error);
-      // 원래 상태로 복원
+      // 원래 상태로 복원 (renderMode 포함)
       setViewMode(originalViewMode);
       setView2DDirection(originalView2DDirection);
+      setRenderMode(originalRenderMode);
     }
   };
 

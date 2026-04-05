@@ -176,7 +176,7 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
               className={`${styles.mobileButton} ${viewMode === '2D' ? styles.active : ''}`}
               onClick={() => {
                 onViewModeChange('2D');
-                if (renderMode !== 'wireframe') onRenderModeChange('wireframe');
+                // 2D↔wireframe 자동 연동 제거: 렌더모드는 사용자가 직접 선택
               }}
             >2D</button>
           </div>
@@ -301,7 +301,7 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
               onClick={() => {
                 onViewModeChange(mode.id);
                 if (mode.id === '2D') {
-                  if (renderMode !== 'wireframe') onRenderModeChange('wireframe');
+                  // 2D↔wireframe 자동 연동 제거: 렌더모드는 사용자가 직접 선택
                   requestAnimationFrame(() => {
                     setView2DTheme(theme.mode === 'dark' ? 'dark' : 'light');
                   });
