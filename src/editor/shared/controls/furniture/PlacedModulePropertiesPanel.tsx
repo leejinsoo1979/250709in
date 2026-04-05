@@ -2292,53 +2292,43 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                   // 서랍 패널인지 확인
                   const isDrawerPanel = panel.name.includes('서랍');
 
+                  // 백패널 여부 확인 (무결이어도 Length는 항상 높이 축)
+                  const isBackPanel = panel.name.includes('백패널');
+
                   if (panel.diameter) {
                     dimensionDisplay = `Φ ${panel.diameter} × L ${panel.width}`;
                   } else if (panel.width && panel.height) {
-                    // width/height를 가진 패널
-                    if (isDrawerPanel) {
-                      // 서랍 패널 (마이다, 앞판, 뒷판): width가 가로(긴쪽 L), height가 세로(짧은쪽 W)
-                      if (isVerticalGrain) {
-                        // L 방향: width가 긴쪽
-                        dimensionDisplay = `W ${panel.height} × L ${panel.width}`;
-                      } else {
-                        // W 방향: height가 짧은쪽
-                        dimensionDisplay = `W ${panel.width} × L ${panel.height}`;
-                      }
+                    // width/height를 가진 패널 (도어, 측판, 백패널 등)
+                    if (isBackPanel) {
+                      // 백패널: 높이(height) = L (항상), 가로(width) = W
+                      dimensionDisplay = `W ${panel.width} × L ${panel.height}`;
+                    } else if (isVerticalGrain) {
+                      // 세로 결: height가 L
+                      dimensionDisplay = `W ${panel.width} × L ${panel.height}`;
                     } else {
-                      // 일반 가구 패널: height가 세로(긴쪽 L), width가 가로(짧은쪽 W)
-                      if (isVerticalGrain) {
-                        // L 방향: height가 긴쪽
-                        dimensionDisplay = `W ${panel.width} × L ${panel.height}`;
-                      } else {
-                        // W 방향: width가 짧은쪽
-                        dimensionDisplay = `W ${panel.height} × L ${panel.width}`;
-                      }
+                      // 가로 결: width가 L
+                      dimensionDisplay = `W ${panel.height} × L ${panel.width}`;
                     }
                   } else if (panel.width && panel.depth) {
-                    // width/depth를 가진 패널 (상판, 바닥판, 선반)
-                    // 가로로 긴 패널: width가 긴쪽(L)
+                    // width/depth를 가진 패널 (상판, 바닥판, 선반 - 기본 가로 결)
                     if (isVerticalGrain) {
-                      // L 방향: width가 긴쪽
-                      dimensionDisplay = `W ${panel.depth} × L ${panel.width}`;
-                    } else {
-                      // W 방향: depth가 짧은쪽
+                      // 세로 결: depth가 L
                       dimensionDisplay = `W ${panel.width} × L ${panel.depth}`;
+                    } else {
+                      // 가로 결: width가 L (선반·상판·바닥은 width가 재단방향)
+                      dimensionDisplay = `W ${panel.depth} × L ${panel.width}`;
                     }
                   } else if (panel.height && panel.depth) {
                     // height/depth를 가진 패널
                     if (isDrawerPanel) {
-                      // 서랍 측판: depth가 깊이(긴쪽 L), height가 세로(짧은쪽 W)
-                      if (isVerticalGrain) {
-                        // L 방향: depth가 긴쪽
-                        dimensionDisplay = `W ${panel.height} × L ${panel.depth}`;
-                      } else {
-                        // W 방향: height가 짧은쪽
-                        dimensionDisplay = `W ${panel.depth} × L ${panel.height}`;
-                      }
-                    } else {
-                      // 일반 가구 측판: height가 세로(긴쪽 L), depth가 깊이(짧은쪽 W)
+                      // 서랍 측판: depth가 재단방향(L)
+                      dimensionDisplay = `W ${panel.height} × L ${panel.depth}`;
+                    } else if (isVerticalGrain) {
+                      // 일반 가구 측판 (세로 결): height가 L
                       dimensionDisplay = `W ${panel.depth} × L ${panel.height}`;
+                    } else {
+                      // 가로 결: depth가 L
+                      dimensionDisplay = `W ${panel.height} × L ${panel.depth}`;
                     }
                   } else if (panel.description) {
                     dimensionDisplay = panel.description;
