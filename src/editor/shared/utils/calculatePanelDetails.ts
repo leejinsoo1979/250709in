@@ -321,16 +321,20 @@ export const calculatePanelDetails = (
 
       // 백패널 보강대 (상단/하단) - 60mm 높이, PB 재질
       // 15mm/18mm: 양쪽 0.5mm씩 축소 (총 1mm), 15.5mm/18.5mm: 갭 없음
+      // 하부장 모듈은 하단 보강대 생략 (상단만)
       const reinforcementHeight = 60; // mm
       const reinforcementDepth = (basicThickness === 18.5 || basicThickness === 15.5) ? 15.5 : 15; // PB+PET 코팅 시 15.5mm
       const reinforcementWidth = innerWidth - sidePanelGap;
-      targetPanel.push({
-        name: `${sectionPrefix}후면 보강대 1`,
-        width: reinforcementWidth,
-        height: reinforcementHeight,
-        thickness: reinforcementDepth,
-        material: 'PB'
-      });
+      const isLowerCabinetModule = moduleData.id.includes('lower-');
+      if (!isLowerCabinetModule) {
+        targetPanel.push({
+          name: `${sectionPrefix}후면 보강대 1`,
+          width: reinforcementWidth,
+          height: reinforcementHeight,
+          thickness: reinforcementDepth,
+          material: 'PB'
+        });
+      }
       targetPanel.push({
         name: `${sectionPrefix}후면 보강대 2`,
         width: reinforcementWidth,
@@ -644,15 +648,19 @@ export const calculatePanelDetails = (
       });
 
       // 우측 섹션 보강대 (상/하 2개) - PB 재질
+      // 하부장 모듈은 하단 보강대 생략 (상단만)
       const rReinforcementWidth = rightInnerWidth - 1;
       const rReinforcementDepth = (basicThickness === 18.5 || basicThickness === 15.5) ? 15.5 : 15;
-      rTargetPanel.push({
-        name: `${rSectionPrefix}후면 보강대 1`,
-        width: rReinforcementWidth,
-        height: 60,
-        thickness: rReinforcementDepth,
-        material: 'PB'
-      });
+      const isLowerCabinetModuleR = moduleData.id.includes('lower-');
+      if (!isLowerCabinetModuleR) {
+        rTargetPanel.push({
+          name: `${rSectionPrefix}후면 보강대 1`,
+          width: rReinforcementWidth,
+          height: 60,
+          thickness: rReinforcementDepth,
+          material: 'PB'
+        });
+      }
       rTargetPanel.push({
         name: `${rSectionPrefix}후면 보강대 2`,
         width: rReinforcementWidth,

@@ -1105,21 +1105,25 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                       const lowerReinforcementZ = lowerBackPanelZ - backPanelThickness/2 - reinforcementDepth/2;
                       const upperReinforcementZ = upperBackPanelZ - backPanelThickness/2 - reinforcementDepth/2;
 
+                      // 하부장 모듈은 하단 보강대 생략 (상단만 유지)
+                      const isLowerModule = moduleData?.id?.includes('lower-');
                       return (
                         <>
-                          {/* 하부 섹션 하단 보강대 */}
-                          <BoxWithEdges
-                            key="lower-reinforcement-bottom"
-                            args={[reinforcementWidth, reinforcementHeight, reinforcementDepth]}
-                            position={[0, lowerBackPanelY - lowerBackPanelHeight/2 + reinforcementHeight/2, lowerReinforcementZ]}
-                            material={material}
-                            renderMode={renderMode}
-                            isDragging={isDragging}
-                            isEditMode={isEditMode}
-                            isHighlighted={highlightedSection === `${placedFurnitureId}-0`}
-                            panelName="(하)보강대 1"
-                            furnitureId={placedFurnitureId}
-                          />
+                          {/* 하부 섹션 하단 보강대 — 하부장은 생략 */}
+                          {!isLowerModule && (
+                            <BoxWithEdges
+                              key="lower-reinforcement-bottom"
+                              args={[reinforcementWidth, reinforcementHeight, reinforcementDepth]}
+                              position={[0, lowerBackPanelY - lowerBackPanelHeight/2 + reinforcementHeight/2, lowerReinforcementZ]}
+                              material={material}
+                              renderMode={renderMode}
+                              isDragging={isDragging}
+                              isEditMode={isEditMode}
+                              isHighlighted={highlightedSection === `${placedFurnitureId}-0`}
+                              panelName="(하)보강대 1"
+                              furnitureId={placedFurnitureId}
+                            />
+                          )}
                           {/* 하부 섹션 상단 보강대 */}
                           <BoxWithEdges
                             key="lower-reinforcement-top"
@@ -1133,19 +1137,21 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                             panelName="(하)보강대 2"
                             furnitureId={placedFurnitureId}
                           />
-                          {/* 상부 섹션 하단 보강대 */}
-                          <BoxWithEdges
-                            key="upper-reinforcement-bottom"
-                            args={[reinforcementWidth, reinforcementHeight, reinforcementDepth]}
-                            position={[0, upperBackPanelY - upperBackPanelHeight/2 + reinforcementHeight/2, upperReinforcementZ]}
-                            material={material}
-                            renderMode={renderMode}
-                            isDragging={isDragging}
-                            isEditMode={isEditMode}
-                            isHighlighted={highlightedSection === `${placedFurnitureId}-1`}
-                            panelName="(상)보강대 1"
-                            furnitureId={placedFurnitureId}
-                          />
+                          {/* 상부 섹션 하단 보강대 — 하부장은 생략 */}
+                          {!isLowerModule && (
+                            <BoxWithEdges
+                              key="upper-reinforcement-bottom"
+                              args={[reinforcementWidth, reinforcementHeight, reinforcementDepth]}
+                              position={[0, upperBackPanelY - upperBackPanelHeight/2 + reinforcementHeight/2, upperReinforcementZ]}
+                              material={material}
+                              renderMode={renderMode}
+                              isDragging={isDragging}
+                              isEditMode={isEditMode}
+                              isHighlighted={highlightedSection === `${placedFurnitureId}-1`}
+                              panelName="(상)보강대 1"
+                              furnitureId={placedFurnitureId}
+                            />
+                          )}
                           {/* 상부 섹션 상단 보강대 */}
                           <BoxWithEdges
                             key="upper-reinforcement-top"
@@ -1225,20 +1231,24 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                       const backPanelZ = -depth/2 + backPanelThickness/2 + mmToThreeUnits(backPanelConfig.depthOffset);
                       const reinforcementZ = backPanelZ - backPanelThickness/2 - reinforcementDepth/2;
 
+                      // 하부장 모듈은 하단 보강대 생략 (상단만 유지)
+                      const isLowerModuleSingle = moduleData?.id?.includes('lower-');
                       return (
                         <>
-                          {/* 하단 보강대 */}
-                          <BoxWithEdges
-                            key="reinforcement-bottom"
-                            args={[reinforcementWidth, reinforcementHeight, reinforcementDepth]}
-                            position={[0, -singleBackPanelHeight/2 + reinforcementHeight/2, reinforcementZ]}
-                            material={material}
-                            renderMode={renderMode}
-                            furnitureId={placedFurnitureId}
-                            isDragging={isDragging}
-                            isEditMode={isEditMode}
-                            panelName="보강대 1"
-                          />
+                          {/* 하단 보강대 — 하부장은 생략 */}
+                          {!isLowerModuleSingle && (
+                            <BoxWithEdges
+                              key="reinforcement-bottom"
+                              args={[reinforcementWidth, reinforcementHeight, reinforcementDepth]}
+                              position={[0, -singleBackPanelHeight/2 + reinforcementHeight/2, reinforcementZ]}
+                              material={material}
+                              renderMode={renderMode}
+                              furnitureId={placedFurnitureId}
+                              isDragging={isDragging}
+                              isEditMode={isEditMode}
+                              panelName="보강대 1"
+                            />
+                          )}
                           {/* 상단 보강대 */}
                           <BoxWithEdges
                             key="reinforcement-top"
