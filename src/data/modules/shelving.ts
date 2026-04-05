@@ -879,6 +879,7 @@ const createLowerHalfCabinet = (columnWidth: number): ModuleData => {
     ...base,
     isDynamic: true,
     defaultDepth: 650,
+    hasDoor: false,
     thumbnail: '/images/furniture-thumbnails/하부장 반통.png',
     modelConfig: {
       ...base.modelConfig,
@@ -920,6 +921,7 @@ const createDualLowerHalfCabinet = (dualWidth: number, slotWidths?: number[]): M
     ...base,
     isDynamic: true,
     defaultDepth: 650,
+    hasDoor: false,
     slotWidths,
     thumbnail: '/images/furniture-thumbnails/듀얼 하부장 한통.png',
     modelConfig: {
