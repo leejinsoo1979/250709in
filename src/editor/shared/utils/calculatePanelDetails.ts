@@ -284,14 +284,18 @@ export const calculatePanelDetails = (
             material: 'PB'
           });
         }
-        // 상판 - 뒤에서 26mm 줄임
-        targetPanel.push({
-          name: `${sectionPrefix}상판`,
-          width: horizontalPanelWidth,
-          depth: customDepth - 26, // 백패널과 맞닿게 26mm 감소
-          thickness: basicThickness,
-          material: 'PB'
-        });
+        // 상판 - 뒤에서 26mm 줄임 (상판이 없는 하부장은 제외)
+        const noTopPanel = moduleData.id.includes('lower-half-cabinet') || moduleData.id.includes('dual-lower-half-cabinet')
+          || moduleData.id.includes('lower-drawer-');
+        if (!noTopPanel) {
+          targetPanel.push({
+            name: `${sectionPrefix}상판`,
+            width: horizontalPanelWidth,
+            depth: customDepth - 26, // 백패널과 맞닿게 26mm 감소
+            thickness: basicThickness,
+            material: 'PB'
+          });
+        }
       }
 
       // === 백패널 (섹션별로 분리) ===
