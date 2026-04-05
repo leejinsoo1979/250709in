@@ -312,7 +312,7 @@ export const calculatePanelDetails = (
       // 기본: 섹션높이 - 상하판(36) + heightExtension(10) + 상하확장(26) = 섹션높이
       const heightExtension = 10; // backPanelConfig.heightExtension
       const totalHeightExtension = basicThickness * 2 - heightExtension;
-      const backPanelHeight = sectionHeightMm - basicThickness * 2 + heightExtension + totalHeightExtension;
+      let backPanelHeight = sectionHeightMm - basicThickness * 2 + heightExtension + totalHeightExtension;
 
       // Type5/6 (4drawer-pantshanger, 2drawer-styler)의 좌측 백패널은
       // 좌측 컬럼 내경폭(leftWidth)을 사용 (3D DualType6.tsx leftWidth 계산과 동일)
@@ -327,6 +327,21 @@ export const calculatePanelDetails = (
         backPanelWidth = leftWidth + 10;
         // 좌측 백패널임을 명시: "좌(하)백패널", "좌(상)백패널"
         backPanelNamePrefix = `좌${sectionPrefix}`;
+
+        // Type5/6 좌측 백패널 높이는 하단 섹션 상단 경계에서 분할 (3D DualType6.tsx와 동일)
+        // 하단 섹션 상단 경계 mm = basicThickness(바닥판) + leftSections[0].height
+        // 좌(하) = basicThickness + leftSections[0].height
+        // 좌(상) = 전체 가구 높이 - 좌(하)
+        const leftLowerSectionHeightMm = moduleData.modelConfig?.leftSections?.[0]?.height || 0;
+        const lowerBoundaryMm = basicThickness + leftLowerSectionHeightMm;
+        const furnitureHeightMm = moduleData.dimensions.height;
+        if (sectionIndex === 0) {
+          // 하단 섹션 (서랍)
+          backPanelHeight = lowerBoundaryMm;
+        } else if (sectionIndex === 1) {
+          // 상단 섹션 (옷장)
+          backPanelHeight = furnitureHeightMm - lowerBoundaryMm;
+        }
       }
 
       targetPanel.push({
