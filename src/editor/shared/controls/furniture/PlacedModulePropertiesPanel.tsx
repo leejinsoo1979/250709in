@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { FaExchangeAlt } from 'react-icons/fa';
 import { useSpaceConfigStore, FURNITURE_LIMITS } from '@/store/core/spaceConfigStore';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
 import { useUIStore } from '@/store/uiStore';
@@ -2371,14 +2372,14 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                           color: 'white',
                           border: 'none',
                           borderRadius: '4px',
-                          fontSize: '11px',
+                          fontSize: '14px',
                           fontWeight: '600',
                           cursor: 'pointer',
-                          minWidth: '50px',
+                          minWidth: '36px',
+                          height: '26px',
                           display: 'flex',
                           alignItems: 'center',
-                          justifyContent: 'center',
-                          gap: '2px'
+                          justifyContent: 'center'
                         }}
                         onClick={(e) => {
                           e.stopPropagation(); // 패널 선택 방지
@@ -2390,10 +2391,9 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                           };
                           updatePlacedModule(currentPlacedModule.id, { panelGrainDirections: newDirections });
                         }}
-                        title={`${panel.name} 나무결 방향 전환`}
+                        title={`${panel.name} 나무결 방향 전환 (W ↔ L)`}
                       >
-                        <span style={{ fontSize: '11px', lineHeight: '18px' }}>{currentDirection === 'vertical' ? 'L' : 'W'}</span>
-                        <span style={{ fontSize: '18px', lineHeight: '18px' }}>{currentDirection === 'vertical' ? '↓' : '→'}</span>
+                        <FaExchangeAlt size={12} />
                       </button>
                     </div>
                   );
