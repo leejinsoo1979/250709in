@@ -274,6 +274,42 @@ export const calculatePanelDetails = (
         });
       }
 
+      // === Type5/6 중앙 칸막이 (좌측 섹션과 우측 섹션 사이) ===
+      // 3D DualType5.tsx line 818-863와 동일: leftSections 개수만큼 섹션별 분할
+      // 깊이 = Math.max(leftDepth, rightDepth) (스타일러장: 660mm, 바지걸이장: 650mm)
+      //
+      // 3D 로직 분석 (DualType5.tsx line 832-841):
+      //   - 첫 섹션: finalBottom=-h/2, finalTop=originalTop → height = sectionHeights[0]
+      //   - 마지막 섹션: finalBottom=originalBottom, finalTop=h/2 → height = h - sectionHeights[0]
+      //   - 중간 섹션: height = sectionHeight (확장 없음)
+      //   합계 = h (전체 가구 높이)
+      //
+      // sectionHeights[0] = leftSections[0].height (styler: 600, pantshanger: 1000)
+      if (isType5or6) {
+        const middlePanelDepth = Math.max(leftSideDepth, rightSideDepth);
+        const isFirstSection = sectionIndex === 0;
+        const isLastSection = sectionIndex === sections.length - 1;
+        const leftLowerHeightMm = moduleData.modelConfig?.leftSections?.[0]?.height || 0;
+        const furnitureHeightMm = moduleData.dimensions.height;
+
+        let middlePanelHeightMm: number;
+        if (isFirstSection) {
+          middlePanelHeightMm = leftLowerHeightMm;
+        } else if (isLastSection) {
+          middlePanelHeightMm = furnitureHeightMm - leftLowerHeightMm;
+        } else {
+          middlePanelHeightMm = sectionHeightMm;
+        }
+
+        targetPanel.push({
+          name: `${sectionPrefix}칸막이`,
+          width: middlePanelDepth,
+          height: middlePanelHeightMm,
+          thickness: basicThickness,
+          material: 'PB'
+        });
+      }
+
       // === 수평 패널 너비 계산 (상판, 바닥판, 선반 공통) ===
       // 15mm/18mm: 좌우 측판과 각각 0.5mm 갭 → 총 1mm 감소
       // 15.5mm/18.5mm: 갭 없음 (0mm)
