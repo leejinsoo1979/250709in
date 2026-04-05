@@ -1215,7 +1215,7 @@ export const calculatePanelDetails = (
   }
 
   // === 프레임 패널 (상부프레임 / 하부프레임) ===
-  const FRAME_THICKNESS = 18.5; // 프레임(PET 재질) 두께 항상 18.5mm
+  const FRAME_THICKNESS = basicThickness; // 사용자 선택 두께 (18 또는 18.5 등)
 
   // 상부프레임
   if (hasTopFrame !== false && topFrameHeightMm && topFrameHeightMm > 0) {
