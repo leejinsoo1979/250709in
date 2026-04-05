@@ -386,20 +386,10 @@ function PageInner(){
             // 백패널: 높이(Y축) = Length, 가로(X축) = Width
             length = p.height;
             width = p.width;
-          } else if (p.grain === 'HORIZONTAL') {
-            // 수평 패널(상판/바닥/선반/서랍바닥/서랍측판/서랍앞뒷판/마이다):
-            // L = p.width(가구가로/폭/깊이), W = p.height(가구깊이/높이)
-            length = p.width;
-            width = p.height;
-          } else if (p.grain === 'VERTICAL') {
-            // 수직 패널(가구측판/칸막이/도어/서랍속장):
-            // L = p.height(가구높이), W = p.width(가구깊이/너비)
-            length = p.height;
-            width = p.width;
           } else {
-            // NONE(무결): 긴 쪽 = Length, 짧은 쪽 = Width (회전 가능)
-            width = Math.min(p.width, p.height);
+            // 모든 패널: L = 긴 쪽(2440방향), W = 짧은 쪽(1220방향)
             length = Math.max(p.width, p.height);
+            width = Math.min(p.width, p.height);
           }
 
           const grain: Grain = isBackPanel ? 'H' : (p.grain === 'NONE' ? 'NONE' : 'H');
@@ -525,18 +515,10 @@ function PageInner(){
         if (isBackPanel) {
           length = p.height;
           width = p.width;
-        } else if (p.grain === 'HORIZONTAL') {
-          // 수평 패널: L = p.width, W = p.height
-          length = p.width;
-          width = p.height;
-        } else if (p.grain === 'VERTICAL') {
-          // 수직 패널: L = p.height, W = p.width
-          length = p.height;
-          width = p.width;
         } else {
-          // NONE(무결): 긴 쪽 = Length, 짧은 쪽 = Width
-          width = Math.min(p.width, p.height);
+          // 모든 패널: L = 긴 쪽(2440방향), W = 짧은 쪽(1220방향)
           length = Math.max(p.width, p.height);
+          width = Math.min(p.width, p.height);
         }
 
         const grain: Grain = isBackPanel ? 'H' : (p.grain === 'NONE' ? 'NONE' : 'H');
