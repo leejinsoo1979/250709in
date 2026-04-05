@@ -319,6 +319,8 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   const isSelected = selectedFurnitureId === placedModule.id && !isCustomEditing;
   // 2D 모드에서도 선택/편집 중인 가구는 solid로 렌더링 (고스트 효과를 위해)
   const effectiveRenderMode = (isSelected || isEditMode) ? 'solid' : renderMode;
+  // 편집 모드 고스트: 측면/상면뷰에서는 비활성화 (정면/3D에서만 표시)
+  const isEditModeForView = isEditMode && (viewMode === '3D' || view2DDirection === 'front' || view2DDirection === 'all');
   const { theme: appTheme } = useTheme();
 
   // 드래그/편집 시 도어/서라운드 옵션 패널 닫기
@@ -3251,8 +3253,8 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
               </mesh>
             )}
 
-            {/* 가구 상단 아이콘 툴바 (readOnly에서는 숨김, 편집 모드에서도 표시) */}
-            {!isPanelListTabActive && !readOnly && (
+            {/* 가구 상단 아이콘 툴바 (readOnly에서는 숨김, 2D 측면/상면뷰에서는 숨김) */}
+            {!isPanelListTabActive && !readOnly && (viewMode === '3D' || view2DDirection === 'front' || view2DDirection === 'all') && (
               <Html
                 position={[0, height / 2 + mmToThreeUnits(50), depth / 2 + 0.03]}
                 center
@@ -3489,7 +3491,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                 <BoxModule
                   moduleData={actualModuleData}
                   isDragging={isDraggingThis} // 드래그 중에만 고스트 투명 표시 (내부 선반/서랍 숨김)
-                  isEditMode={isEditMode} // 편집 모드에서 고스트 표시 (선반/서랍 유지)
+                  isEditMode={isEditModeForView} // 편집 모드 고스트: 측면/상면뷰에서는 숨김
                   color={furnitureColor}
                   internalHeight={furnitureHeightMm}
                   viewMode={viewMode}
@@ -3651,16 +3653,16 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
             })()}
           </>
         ) : (
-          // 기본 가구 (단순 Box) 렌더링
+          // 기본 가구 (단순 Box) 렌더링 — 측면/상면뷰에서는 편집 고스트 숨김
           <>
             <Box
               args={[width, height, depth]}
             >
               <meshStandardMaterial
-                color={isEditMode ? selectionHighlightColor : furnitureColor}
-                transparent={isDraggingThis || isEditMode}
-                opacity={isDraggingThis ? 0.35 : isEditMode ? 0.15 : 1.0}
-                depthWrite={!(isDraggingThis || isEditMode)}
+                color={isEditModeForView ? selectionHighlightColor : furnitureColor}
+                transparent={isDraggingThis || isEditModeForView}
+                opacity={isDraggingThis ? 0.35 : isEditModeForView ? 0.15 : 1.0}
+                depthWrite={!(isDraggingThis || isEditModeForView)}
                 metalness={0.0}
                 roughness={0.7}
               />
@@ -3668,7 +3670,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
             <Edges
               color={columnCResize.isResizing ? '#ff6600' : getEdgeColor({
                 isDragging: isDraggingThis,
-                isEditMode,
+                isEditMode: isEditModeForView,
                 isDragMode,
                 viewMode,
                 view2DTheme,
@@ -3773,7 +3775,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
               slotCenterX={doorXOffset}
               moduleData={actualModuleData}
               isDragging={isDraggingThis}
-              isEditMode={isEditMode}
+              isEditMode={isEditModeForView}
               adjustedWidth={furnitureWidthMm}
               floatHeight={
                 // **중요**: 저장된 값 무시하고 항상 현재 spaceInfo의 placementType을 우선 사용
