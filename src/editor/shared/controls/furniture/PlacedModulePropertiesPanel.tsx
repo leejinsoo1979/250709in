@@ -2368,7 +2368,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                       <button
                         style={{
                           padding: '4px 8px',
-                          background: currentDirection === 'vertical' ? '#4CAF50' : '#2196F3',
+                          background: '#757575',
                           color: 'white',
                           border: 'none',
                           borderRadius: '4px',
