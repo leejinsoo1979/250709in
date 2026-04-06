@@ -14,6 +14,7 @@ import { useFurnitureStore } from '@/store/core/furnitureStore';
 import { updateSectionHeight } from '@/editor/shared/utils/sectionHeightUpdater';
 import { getThemeHex } from '@/theme';
 import SidePanelBoring from './SidePanelBoring';
+import BoxWithEdges from './BoxWithEdges';
 import { calculateShelfBoringPositionsFromThreeUnits } from '@/domain/boring';
 
 // SectionsRenderer Props 인터페이스
@@ -449,7 +450,24 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
       return (
         <group key={`section-${index}`}>
           {sectionContent}
-          
+
+          {/* 섹션 간 구분패널 (수평 가로판) — 마지막 섹션이 아닌 경우 렌더링 */}
+          {hasDividerPanel && (() => {
+            const reducedDepth = depth - mmToThreeUnits(26);
+            const reducedZPosition = mmToThreeUnits(13);
+            return (
+              <BoxWithEdges
+                args={[innerWidth, basicThickness, reducedDepth]}
+                position={[0, dividerPanelY, reducedZPosition]}
+                material={material}
+                renderMode={renderMode}
+                panelName={`구분패널-${index}`}
+                panelGrainDirections={panelGrainDirections}
+                textureUrl={textureUrl}
+              />
+            );
+          })()}
+
           {/* 섹션 내경 치수 표시 - 2단 옷장은 하부 섹션만 표시 (상부는 안전선반 있을 때만), 듀얼 타입 중복 방지 */}
           {(() => {
             // 모든 가구에서 furnitureId 확인
