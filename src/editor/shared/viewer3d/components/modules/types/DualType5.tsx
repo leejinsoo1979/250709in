@@ -297,7 +297,7 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
                   shelfPositions={section.shelfPositions}
                   isTopFinishPanel={section.isTopFinishPanel}
                   renderMode={renderMode}
-                  furnitureId={moduleData.id}
+                  furnitureId={placedFurnitureId}
                   sectionName={shelfSectionName}
                   allowSideViewDimensions={true}
                   sideViewTextX={getDimensionXPosition(leftWidth, true, leftXOffset)}
@@ -323,7 +323,7 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
                   shelfPositions={section.shelfPositions}
                   isTopFinishPanel={section.isTopFinishPanel}
                   renderMode={renderMode}
-                  furnitureId={moduleData.id}
+                  furnitureId={placedFurnitureId}
                   sectionName={hangingSectionName}
                   allowSideViewDimensions={true}
                   sideViewTextX={getDimensionXPosition(leftWidth, true, leftXOffset)}
@@ -586,7 +586,7 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
                   shelfPositions={section.shelfPositions}
                   isTopFinishPanel={section.isTopFinishPanel}
                   renderMode={renderMode}
-                  furnitureId={moduleData.id}
+                  furnitureId={placedFurnitureId}
                   sectionName={rShelfSectionName}
                   allowSideViewDimensions={true}
                   sideViewTextX={getDimensionXPosition(rightWidth, true, rightXOffset)}
@@ -963,10 +963,10 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
           isDragging={isDragging}
           isEditMode={isEditMode}
           edgeOpacity={(view2DDirection === 'left' || visibleSectionIndex === 0) && visibleSectionIndex !== 1 ? 0.1 : undefined}
-          panelName="상판"
+          panelName="(상)상판"
         />
       </>
-      
+
       {/* 하단 판재 - 좌/우 분리, 뒤에서 26mm 줄여서 백패널과 맞닿게 */}
       <>
         {/* 좌측 하단판 */}
@@ -992,7 +992,7 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
           isDragging={isDragging}
           isEditMode={isEditMode}
           edgeOpacity={(view2DDirection === 'left' || visibleSectionIndex === 0) && visibleSectionIndex !== 1 ? 0.1 : undefined}
-          panelName="바닥판"
+          panelName="(하)바닥"
         />
       </>
       

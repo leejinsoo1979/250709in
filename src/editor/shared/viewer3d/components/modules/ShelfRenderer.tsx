@@ -235,7 +235,7 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
           const relativeYPosition = (-innerHeight / 2) + mmToThreeUnits(positionMm);
 
           // 스타일러장 우측 섹션의 안전선반: 앞에서 8mm 줄이고 뒤로 5mm 이동
-          const isStylerRightSection = furnitureId && furnitureId.includes('-right-section');
+          const isStylerRightSection = sectionName.startsWith('우');
           const frontInset = mmToThreeUnits(shelfFrontInsetMm);
           const backGap = mmToThreeUnits(1); // 백패널 앞면과 1mm 이격
           const shelfDepth = isStylerRightSection
