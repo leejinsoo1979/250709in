@@ -803,13 +803,14 @@ const BoxModule: React.FC<BoxModuleProps> = ({
     <>
       {/* 가구 본체는 showFurniture가 true일 때만 렌더링 */}
       {showFurniture && (
-        <BaseFurnitureShell 
-          {...baseFurniture} 
-          isDragging={isDragging} 
-          isEditMode={isEditMode} 
+        <BaseFurnitureShell
+          {...baseFurniture}
+          isDragging={isDragging}
+          isEditMode={isEditMode}
           isHighlighted={isHighlighted}
           placedFurnitureId={placedFurnitureId}
           panelGrainDirections={panelGrainDirections}
+          moduleData={moduleData}
         >
           {/* 내부 구조 렌더링 (드래그/고스트 중에도 표시) */}
           {(
