@@ -1189,7 +1189,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           const doorBottomY = mmToThreeUnits(doorBottomAbsMm);
           const doorTopY = mmToThreeUnits(doorTopAbsMm);
           const doorMidY = (doorBottomY + doorTopY) / 2;
-          const doorColor = '#E91E63';
+          const doorColor = dimensionColor;
 
           // 도어 치수선 Z 위치: 가구 앞면(도어면) 바로 옆에 배치
           const panelDepthMm = spaceInfo.depth || 1500;
