@@ -290,11 +290,14 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
       const newModuleData = getModuleById(module.moduleId, internalSpace, spaceInfo);
       const newCategory = newModuleData?.category;
 
-      // 도어 바닥 이격거리 초기화 (spaceInfo에 저장된 값 우선 사용)
+      // 도어 바닥 이격거리 초기화 (카테고리별 기본값)
       if (module.doorBottomGap === undefined) {
         if (newCategory === 'upper') {
           // 상부장: 캐비넷 하단에서 도어 하단까지의 확장거리 (바닥 기준이 아님)
           module.doorBottomGap = 28;
+        } else if (newCategory === 'lower') {
+          // 하부장: 캐비넷 하단에서 2mm 아래로 확장 (DoorModule LOWER_DOOR_BOTTOM_EXTENSION)
+          module.doorBottomGap = 2;
         } else {
           const isFloatPlacement = spaceInfo.baseConfig?.placementType === 'float';
           const floatHeight = spaceInfo.baseConfig?.floatHeight || 200;
@@ -302,11 +305,16 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
         }
       }
 
-      // 도어 상단 이격거리 초기화 (전체서라운드: 상부프레임 + 3mm)
+      // 도어 상단 이격거리 초기화 (카테고리별 기본값)
       if (module.doorTopGap === undefined) {
-        const isFullSurround = spaceInfo.surroundType === 'surround' && spaceInfo.frameConfig?.top !== false;
-        const topFrameMm = spaceInfo.frameSize?.top || 30;
-        module.doorTopGap = isFullSurround ? (topFrameMm + 3) : (spaceInfo.doorTopGap || 5);
+        if (newCategory === 'lower') {
+          // 하부장: 캐비넷 상단에서 20mm 내려옴 (DoorModule LOWER_DOOR_TOP_GAP)
+          module.doorTopGap = 20;
+        } else {
+          const isFullSurround = spaceInfo.surroundType === 'surround' && spaceInfo.frameConfig?.top !== false;
+          const topFrameMm = spaceInfo.frameSize?.top || 30;
+          module.doorTopGap = isFullSurround ? (topFrameMm + 3) : (spaceInfo.doorTopGap || 5);
+        }
       }
 
       // 2단 가구인 경우 섹션 깊이 초기화
@@ -669,6 +677,7 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
   // 전체 도어 설치/제거 함수
   setAllDoors: (hasDoor: boolean) => {
     const spaceInfo = useSpaceConfigStore.getState().spaceInfo;
+    const internalSpace = calculateInternalSpace(spaceInfo);
     const isFloatPlacement = spaceInfo.baseConfig?.placementType === 'float';
     const floatHeight = spaceInfo.baseConfig?.floatHeight || 200;
     const defaultBottomGap = spaceInfo.doorBottomGap ?? (isFloatPlacement ? floatHeight : 25);
@@ -679,14 +688,27 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
     const defaultTopGap = isFullSurround ? (topFrameMm + 3) : (spaceInfo.doorTopGap || 5);
 
     set((state) => {
-      const updatedModules = state.placedModules.map(module => ({
-        ...module,
-        hasDoor,
-        ...(hasDoor && {
-          doorTopGap: module.doorTopGap ?? defaultTopGap,
-          doorBottomGap: module.doorBottomGap ?? defaultBottomGap
-        })
-      }));
+      const updatedModules = state.placedModules.map(module => {
+        // 카테고리별 기본 도어 갭 결정
+        const moduleData = getModuleById(module.moduleId, internalSpace, spaceInfo);
+        const category = moduleData?.category;
+        let topGap = defaultTopGap;
+        let bottomGap = defaultBottomGap;
+        if (category === 'lower') {
+          topGap = 20;    // LOWER_DOOR_TOP_GAP
+          bottomGap = 2;  // LOWER_DOOR_BOTTOM_EXTENSION
+        } else if (category === 'upper') {
+          bottomGap = 28; // 상부장 기본값
+        }
+        return {
+          ...module,
+          hasDoor,
+          ...(hasDoor && {
+            doorTopGap: module.doorTopGap ?? topGap,
+            doorBottomGap: module.doorBottomGap ?? bottomGap
+          })
+        };
+      });
 
       return {
         placedModules: updatedModules
