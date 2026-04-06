@@ -1114,13 +1114,23 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                             {(() => {
                               const pn = '서랍1 바닥';
                               const mat = getPanelMaterial(pn);
+                              // 바닥판 깊이: 서랍 본체 깊이 - 앞쪽 10mm 홈 여유
                               const bottomDepth2 = drawerBodyDepth - mmToThreeUnits(10);
                               const bottomZ2 = drawerBodyCenterZ - mmToThreeUnits(5);
+                              // 바닥판 폭: 서랍 좌우측판 안쪽 간격
+                              // 좌측판 안쪽 X = -drawerAreaWidth/2 + 38mm + drawerSideT
+                              // 우측판 안쪽 X = drawerAreaWidth/2 - 38mm - drawerSideT
+                              // 바닥판 폭 = 안쪽 간격 = drawerAreaWidth - (38mm + drawerSideT) * 2
+                              const bottomWidth = drawerAreaWidth - mmToThreeUnits(38 * 2) - drawerSideT * 2;
+                              // 바닥판 Y: 측판 하단에서 18mm 위
+                              const sidePanelBottom = drawerCenterY - (drawerSideH - mmToThreeUnits(30)) / 2;
+                              const bottomY = sidePanelBottom + mmToThreeUnits(18) + bottomT / 2;
+                              console.log('🔵 서랍 바닥판:', { bottomWidth: bottomWidth/0.01, bottomT: bottomT/0.01, bottomDepth: bottomDepth2/0.01, bottomY: bottomY/0.01, bottomZ: bottomZ2/0.01 });
                               return (
                                 <BoxWithEdges
                                   key={`entryway-drawer-bottom-${mat.uuid}`}
-                                  args={[drawerAreaWidth - mmToThreeUnits(70) - mmToThreeUnits(26), bottomT, bottomDepth2]}
-                                  position={[0, drawerCenterY - (drawerSideH - mmToThreeUnits(30))/2 + mmToThreeUnits(18) + bottomT/2, bottomZ2]}
+                                  args={[bottomWidth, bottomT, bottomDepth2]}
+                                  position={[0, bottomY, bottomZ2]}
                                   material={mat}
                                   renderMode={renderMode}
                                   isDragging={isDragging}
