@@ -1014,9 +1014,11 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                         // 날개벽 후면 수평패널 뒷면 Z (백패널 앞면과 일치)
                         // backPanelThickness shadowed → backReductionForPanels 사용
                         const wingBackFaceZ = -depth/2 + backReductionForPanels;
-                        // 서랍 측판 깊이: 날개벽 전면 앞면 ~ 후면 뒷면
-                        const drawerSideDepth = wingFrontFaceZ - wingBackFaceZ;
-                        const drawerSideCenterZ = (wingFrontFaceZ + wingBackFaceZ) / 2;
+                        // 서랍 뒷판 뒷면 Z: 백패널 앞면 + 12mm
+                        const drawerBackZ = -depth/2 + backPanelThickness + mmToThreeUnits(12);
+                        // 서랍 측판 깊이: 날개벽 전면 앞면 ~ 뒷판 뒷면
+                        const drawerSideDepth = wingFrontFaceZ - drawerBackZ;
+                        const drawerSideCenterZ = (wingFrontFaceZ + drawerBackZ) / 2;
 
                         return (
                           <>
@@ -1097,7 +1099,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                                 <BoxWithEdges
                                   key={`entryway-drawer-back-${mat.uuid}`}
                                   args={[drawerAreaWidth - mmToThreeUnits(107), backH, drawerSideT]}
-                                  position={[0, backCY, -depth/2 + backPanelThickness + mmToThreeUnits(12) + drawerSideT/2]}
+                                  position={[0, backCY, drawerBackZ + drawerSideT/2]}
                                   material={mat}
                                   renderMode={renderMode}
                                   isDragging={isDragging}
