@@ -3598,33 +3598,42 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
               const epDepthMm = placedModule.endPanelDepth ?? (actualDepthMm || 580);
               const epD = mmToThreeUnits(epDepthMm);
 
-              // EP 높이 모드 분기: 'floor' = 바닥~천장, 'furniture' = 가구 높이에 맞춤
-              // 하부장/상부장은 가구 높이에 맞춤이 기본 (바닥~천장이면 가구와 안 맞음)
-              const isNotFullCategory = actualModuleData?.category === 'upper' || actualModuleData?.category === 'lower';
-              const epHeightMode = placedModule.endPanelHeightMode ?? (isNotFullCategory ? 'furniture' : 'floor');
+              // EP 높이 계산: 카테고리별 상단/하단 기준이 다름
+              // 상부장: 상단=천장, 하단=가구 하단
+              // 하부장: 상단=가구 상단, 하단=바닥
+              // 키큰장: 상단=천장, 하단=바닥
+              const furnitureCategory = actualModuleData?.category;
               const groupY = adjustedPosition.y; // Three.js 단위 (가구 중심 Y)
+              const spaceH = mmToThreeUnits(spaceInfo.height);
+              const epTopOffsetMm = placedModule.endPanelTopOffset ?? 0;
+              const epBottomOffsetMm = placedModule.endPanelBottomOffset ?? 0;
+              const topOff = mmToThreeUnits(epTopOffsetMm);
+              const bottomOff = mmToThreeUnits(epBottomOffsetMm);
+
+              let epTopWorld: number; // EP 상단의 월드 Y
+              let epBottomWorld: number; // EP 하단의 월드 Y
+              const furnitureTop = groupY + height / 2;
+              const furnitureBottom = groupY - height / 2;
+
+              if (furnitureCategory === 'upper') {
+                // 상부장: 상단=천장 기준, 하단=가구 하단 기준
+                epTopWorld = spaceH - topOff;
+                epBottomWorld = furnitureBottom + bottomOff;
+              } else if (furnitureCategory === 'lower') {
+                // 하부장: 상단=가구 상단 기준, 하단=바닥 기준
+                epTopWorld = furnitureTop - topOff;
+                epBottomWorld = bottomOff;
+              } else {
+                // 키큰장(full): 상단=천장 기준, 하단=바닥 기준
+                epTopWorld = spaceH - topOff;
+                epBottomWorld = bottomOff;
+              }
+
               let epH: number;
               let epYRelative: number;
-              if (epHeightMode === 'furniture') {
-                // 가구에 맞춤: EP 높이 = 가구 높이, 상단/하단 옵셋 적용 (가구 기준)
-                const epTopOffsetMm = placedModule.endPanelTopOffset ?? 0;
-                const epBottomOffsetMm = placedModule.endPanelBottomOffset ?? 0;
-                const topOff = mmToThreeUnits(epTopOffsetMm);
-                const bottomOff = mmToThreeUnits(epBottomOffsetMm);
-                epH = Math.max(0, height - topOff - bottomOff);
-                // EP 중심: 가구 중심에서 하단옵셋만큼 위로, 상단옵셋만큼 아래로 → (bottomOff - topOff) / 2
-                epYRelative = (bottomOff - topOff) / 2;
-              } else {
-                // 바닥에 맞춤 (기본): 바닥~천장, 천장/바닥 옵셋 적용
-                const spaceH = mmToThreeUnits(spaceInfo.height);
-                const epTopOffsetMm = placedModule.endPanelTopOffset ?? 0;
-                const epBottomOffsetMm = placedModule.endPanelBottomOffset ?? 0;
-                const topOff = mmToThreeUnits(epTopOffsetMm);
-                const bottomOff = mmToThreeUnits(epBottomOffsetMm);
-                epH = Math.max(0, spaceH - topOff - bottomOff);
-                const epCenterWorldY = bottomOff + epH / 2;
-                epYRelative = epCenterWorldY - groupY;
-              }
+              epH = Math.max(0, epTopWorld - epBottomWorld);
+              const epCenterWorld = epBottomWorld + epH / 2;
+              epYRelative = epCenterWorld - groupY;
 
               return (
                 <>

@@ -3101,7 +3101,8 @@ const PlacedModulePropertiesPanel: React.FC = () => {
               </div>
               {(currentPlacedModule.hasLeftEndPanel || currentPlacedModule.hasRightEndPanel) && (
                 <>
-                  {/* EP 높이 모드 */}
+                  {/* EP 높이 모드 — 키큰장(full)만 표시 (하부장/상부장은 카테고리별 자동 결정) */}
+                  {moduleData.category === 'full' && (
                   <div className={styles.epField}>
                     <label className={styles.epFieldLabel}>EP 높이</label>
                     <div className={styles.epToggleGroup}>
@@ -3119,11 +3120,14 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                       })}
                     </div>
                   </div>
-                  {/* 상단/하단 갭 — 모든 EP 높이 모드에서 표시 */}
+                  )}
+                  {/* 상단/하단 갭 — 카테고리별 기준 다름 */}
                   {(
                     <div className={styles.epRow}>
                       <div className={styles.epField}>
-                        <label className={styles.epFieldLabel}>상단 갭</label>
+                        <label className={styles.epFieldLabel}>
+                          {moduleData.category === 'lower' ? '상단 갭 (가구↓)' : '상단 갭 (천장↓)'}
+                        </label>
                         <div className={styles.inputWithUnit}>
                           <input
                             type="text"
@@ -3150,7 +3154,9 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                         </div>
                       </div>
                       <div className={styles.epField}>
-                        <label className={styles.epFieldLabel}>하단 갭</label>
+                        <label className={styles.epFieldLabel}>
+                          {moduleData.category === 'upper' ? '하단 갭 (가구↑)' : '하단 갭 (바닥↑)'}
+                        </label>
                         <div className={styles.inputWithUnit}>
                           <input
                             type="text"
