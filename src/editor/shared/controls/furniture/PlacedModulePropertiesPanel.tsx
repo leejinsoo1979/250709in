@@ -589,6 +589,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
   const [freeHeightInput, setFreeHeightInput] = useState<string>('');
   const [freeDepthInput, setFreeDepthInput] = useState<string>('');
   const [epDepthInput, setEpDepthInput] = useState<string>(''); // EP 깊이 로컬 버퍼
+  const [epThicknessInput, setEpThicknessInput] = useState<string>(''); // EP 두께 로컬 버퍼
 
   // 섹션별 치수 상태 (자유배치 + customConfig 분할 가구용)
   const [sectionHeightInputs, setSectionHeightInputs] = useState<Record<number, string>>({});
@@ -887,9 +888,10 @@ const PlacedModulePropertiesPanel: React.FC = () => {
         setFreeHeightInput(Math.round(currentPlacedModule.freeHeight || moduleData.dimensions.height).toString());
         setFreeDepthInput(Math.round(currentPlacedModule.freeDepth || initialDepth).toString());
 
-        // EP 깊이 초기화
+        // EP 깊이/두께 초기화
         const epFurnitureDepth = currentPlacedModule.freeDepth ?? initialDepth;
         setEpDepthInput(Math.round(currentPlacedModule.endPanelDepth ?? epFurnitureDepth).toString());
+        setEpThicknessInput((currentPlacedModule.endPanelThickness ?? 18).toString());
 
         // 섹션별 치수 초기화 (customConfig가 있을 때)
         const cc = currentPlacedModule.customConfig;
@@ -3173,19 +3175,31 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                             <input
                               type="text"
                               inputMode="numeric"
-                              value={currentPlacedModule.endPanelThickness ?? 18}
+                              value={epThicknessInput}
                               onChange={(e) => {
                                 const v = e.target.value;
                                 if (v === '' || /^\d+$/.test(v)) {
-                                  const num = v === '' ? 18 : Math.max(10, parseInt(v, 10));
-                                  updatePlacedModule(currentPlacedModule.id, { endPanelThickness: num });
+                                  setEpThicknessInput(v);
+                                }
+                              }}
+                              onBlur={() => {
+                                const val = parseInt(epThicknessInput, 10);
+                                if (!isNaN(val) && val >= 10) {
+                                  setEpThicknessInput(val.toString());
+                                  updatePlacedModule(currentPlacedModule.id, { endPanelThickness: val });
+                                } else {
+                                  const fallback = currentPlacedModule.endPanelThickness ?? 18;
+                                  setEpThicknessInput(fallback.toString());
                                 }
                               }}
                               onKeyDown={(e) => {
-                                if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                                if (e.key === 'Enter') {
+                                  (e.target as HTMLInputElement).blur();
+                                } else if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
                                   e.preventDefault();
-                                  const cur = currentPlacedModule.endPanelThickness ?? 18;
+                                  const cur = parseInt(epThicknessInput, 10) || (currentPlacedModule.endPanelThickness ?? 18);
                                   const next = Math.max(10, cur + (e.key === 'ArrowUp' ? 1 : -1));
+                                  setEpThicknessInput(next.toString());
                                   updatePlacedModule(currentPlacedModule.id, { endPanelThickness: next });
                                 }
                               }}
