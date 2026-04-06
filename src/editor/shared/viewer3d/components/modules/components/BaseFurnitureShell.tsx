@@ -866,6 +866,49 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                         />
                       )}
 
+                      {/* 현관장 H: 서랍 좌우 날개벽 - 하부 상판과 서랍 받침대 사이 */}
+                      {moduleData?.id?.includes('entryway-h') && (() => {
+                        const drawerWallHeight = mmToThreeUnits(188) - (basicThickness - mmToThreeUnits(0.1)); // 188mm에서 받침대 두께 제외
+                        const drawerWallDepth = lowerSectionDepth - backReductionForPanels - mmToThreeUnits(lowerSectionTopOffsetMm || 0);
+                        const drawerWallY = lowerTopPanelY - basicThickness/2 - drawerWallHeight/2; // 하부 상판 하단에서 시작
+                        const drawerWallZ = lowerZOffset + panelZOffset - mmToThreeUnits(lowerSectionTopOffsetMm || 0)/2;
+                        const halfInnerWidth = (innerWidth - sidePanelGap) / 2;
+                        return (
+                          <>
+                            {/* 좌측 날개벽 */}
+                            <BoxWithEdges
+                              key={`drawer-wing-left-${getPanelMaterial('(하)좌측판').uuid}`}
+                              args={[basicThickness, drawerWallHeight, drawerWallDepth]}
+                              position={[-halfInnerWidth + basicThickness/2, drawerWallY, drawerWallZ]}
+                              material={getPanelMaterial('(하)좌측판')}
+                              renderMode={renderMode}
+                              isDragging={isDragging}
+                              isEditMode={isEditMode}
+                              isHighlighted={isLowerSectionHighlighted}
+                              panelName="서랍날개벽(좌)"
+                              panelGrainDirections={panelGrainDirections}
+                              furnitureId={placedFurnitureId}
+                              textureUrl={textureUrl}
+                            />
+                            {/* 우측 날개벽 */}
+                            <BoxWithEdges
+                              key={`drawer-wing-right-${getPanelMaterial('(하)우측판').uuid}`}
+                              args={[basicThickness, drawerWallHeight, drawerWallDepth]}
+                              position={[halfInnerWidth - basicThickness/2, drawerWallY, drawerWallZ]}
+                              material={getPanelMaterial('(하)우측판')}
+                              renderMode={renderMode}
+                              isDragging={isDragging}
+                              isEditMode={isEditMode}
+                              isHighlighted={isLowerSectionHighlighted}
+                              panelName="서랍날개벽(우)"
+                              panelGrainDirections={panelGrainDirections}
+                              furnitureId={placedFurnitureId}
+                              textureUrl={textureUrl}
+                            />
+                          </>
+                        );
+                      })()}
+
                       {/* 상부 섹션 바닥판 - 뒤에서 26mm 줄여서 백패널과 맞닿게, 좌우 각 0.5mm씩 줄임 */}
                       <BoxWithEdges
                         key={`upper-floor-2drawer-${getPanelMaterial('(상)바닥').uuid}`}
