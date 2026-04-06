@@ -861,11 +861,11 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
                     </>
                   )}
 
-                  {/* 안전선반 상단부터 상단 프레임 하단까지 */}
+                  {/* 안전선반 상단부터 상판 상단까지 (상판 포함) */}
                   <Text
                     position={[
                       getDimensionXPosition(innerWidth, true),
-                      ((-height/2 + basicThickness + mmToThreeUnits(effectiveSafetyShelfHeight) + basicThickness/2) + (height/2 - basicThickness)) / 2,
+                      ((-height/2 + basicThickness + mmToThreeUnits(effectiveSafetyShelfHeight) + basicThickness/2) + (height/2)) / 2,
                       getDimensionZPosition()
                     ]}
                     fontSize={baseFontSize}
@@ -876,13 +876,13 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
                     renderOrder={999}
                     depthTest={false}
                   >
-                    {Math.round(threeUnitsToMm(((height/2 - basicThickness) - (-height/2 + basicThickness + mmToThreeUnits(effectiveSafetyShelfHeight) + basicThickness/2))))}
+                    {Math.round(threeUnitsToMm(((height/2) - (-height/2 + basicThickness + mmToThreeUnits(effectiveSafetyShelfHeight) + basicThickness/2))))}
                   </Text>
 
                   <Line
                     points={[
                       [getDimensionXPosition(innerWidth, false), -height/2 + basicThickness + mmToThreeUnits(effectiveSafetyShelfHeight) + basicThickness/2, getDimensionZPosition()],
-                      [getDimensionXPosition(innerWidth, false), height/2 - basicThickness, getDimensionZPosition()]
+                      [getDimensionXPosition(innerWidth, false), height/2, getDimensionZPosition()]
                     ]}
                     color={viewMode === '3D' ? '#000000' : dimensionColor}
                     lineWidth={1}
@@ -893,7 +893,7 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
                         <sphereGeometry args={[0.05, 8, 8]} />
                         <meshBasicMaterial color={viewMode === '3D' ? '#000000' : dimensionColor} />
                       </mesh>
-                      <mesh position={[-innerWidth/2 * 0.3, height/2 - basicThickness, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : depth/2 + 1.0]}>
+                      <mesh position={[-innerWidth/2 * 0.3, height/2, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : depth/2 + 1.0]}>
                         <sphereGeometry args={[0.05, 8, 8]} />
                         <meshBasicMaterial color={viewMode === '3D' ? '#000000' : dimensionColor} />
                       </mesh>
@@ -902,11 +902,11 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
                 </>
               ) : (
                 <>
-                  {/* 안전선반이 없는 경우 - 중간 가로선반 상단부터 상단 프레임 하단까지 */}
+                  {/* 안전선반이 없는 경우 - 중간 가로선반 상단부터 상판 상단까지 (상판 포함) */}
                   <Text
                     position={[
                       getDimensionXPosition(innerWidth, true),
-                      ((-height/2 + basicThickness + mmToThreeUnits(middlePanelHeight - 9) + basicThickness/2) + (height/2 - basicThickness)) / 2,
+                      ((-height/2 + basicThickness + mmToThreeUnits(middlePanelHeight - 9) + basicThickness/2) + (height/2)) / 2,
                       getDimensionZPosition()
                     ]}
                     fontSize={baseFontSize}
@@ -917,13 +917,13 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
                     renderOrder={999}
                     depthTest={false}
                   >
-                    {Math.round(threeUnitsToMm(((height/2 - basicThickness) - (-height/2 + basicThickness + mmToThreeUnits(middlePanelHeight - 9) + basicThickness/2))))}
+                    {Math.round(threeUnitsToMm(((height/2) - (-height/2 + basicThickness + mmToThreeUnits(middlePanelHeight - 9) + basicThickness/2))))}
                   </Text>
 
                   <Line
                     points={[
                       [getDimensionXPosition(innerWidth, false), -height/2 + basicThickness + mmToThreeUnits(middlePanelHeight - 9) + basicThickness/2, getDimensionZPosition()],
-                      [getDimensionXPosition(innerWidth, false), height/2 - basicThickness, getDimensionZPosition()]
+                      [getDimensionXPosition(innerWidth, false), height/2, getDimensionZPosition()]
                     ]}
                     color={viewMode === '3D' ? '#000000' : dimensionColor}
                     lineWidth={1}
@@ -934,7 +934,7 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
                         <sphereGeometry args={[0.05, 8, 8]} />
                         <meshBasicMaterial color={viewMode === '3D' ? '#000000' : dimensionColor} />
                       </mesh>
-                      <mesh position={[-innerWidth/2 * 0.3, height/2 - basicThickness, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : depth/2 + 1.0]}>
+                      <mesh position={[-innerWidth/2 * 0.3, height/2, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : depth/2 + 1.0]}>
                         <sphereGeometry args={[0.05, 8, 8]} />
                         <meshBasicMaterial color={viewMode === '3D' ? '#000000' : dimensionColor} />
                       </mesh>
