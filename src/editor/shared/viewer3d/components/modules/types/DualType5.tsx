@@ -283,6 +283,7 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
         switch (section.type) {
           case 'shelf':
             if (section.count && section.count > 0) {
+              const shelfSectionName = allSections.length > 1 ? (index === 0 ? '(하)' : '(상)') : '';
               sectionContent = (
                 <ShelfRenderer
                   shelfCount={section.count}
@@ -297,6 +298,7 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
                   isTopFinishPanel={section.isTopFinishPanel}
                   renderMode={renderMode}
                   furnitureId={moduleData.id}
+                  sectionName={shelfSectionName}
                   allowSideViewDimensions={true}
                   sideViewTextX={getDimensionXPosition(leftWidth, true, leftXOffset)}
                   sideViewLineX={getDimensionXPosition(leftWidth, false, leftXOffset)}
@@ -307,6 +309,7 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
 
           case 'hanging':
             if (section.count && section.count > 0) {
+              const hangingSectionName = allSections.length > 1 ? (index === 0 ? '(하)' : '(상)') : '';
               sectionContent = (
                 <ShelfRenderer
                   shelfCount={section.count}
@@ -321,6 +324,7 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
                   isTopFinishPanel={section.isTopFinishPanel}
                   renderMode={renderMode}
                   furnitureId={moduleData.id}
+                  sectionName={hangingSectionName}
                   allowSideViewDimensions={true}
                   sideViewTextX={getDimensionXPosition(leftWidth, true, leftXOffset)}
                   sideViewLineX={getDimensionXPosition(leftWidth, false, leftXOffset)}
@@ -539,8 +543,7 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
           case 'hanging':
             // 스타일러장 - 안전선반이 있는 경우 렌더링
             if (section.count && section.count > 0) {
-              // 우측 스타일러장의 경우 특별한 furnitureId 전달
-              const rightFurnitureId = `${moduleData.id}-right-section`;
+              const rHangingSectionName = allSections.length > 1 ? (index === 0 ? '우(하)' : '우(상)') : '우';
               sectionContent = (
                 <ShelfRenderer
                   shelfCount={section.count}
@@ -554,7 +557,8 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
                   shelfPositions={section.shelfPositions}
                   isTopFinishPanel={section.isTopFinishPanel}
                   renderMode={renderMode}
-                  furnitureId={rightFurnitureId}
+                  furnitureId={placedFurnitureId}
+                  sectionName={rHangingSectionName}
                   allowSideViewDimensions={true}
                   sideViewTextX={getDimensionXPosition(rightWidth, true, rightXOffset)}
                   sideViewLineX={getDimensionXPosition(rightWidth, false, rightXOffset)}
@@ -568,6 +572,7 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
 
           case 'shelf':
             if (section.count && section.count > 0) {
+              const rShelfSectionName = allSections.length > 1 ? (index === 0 ? '우(하)' : '우(상)') : '우';
               sectionContent = (
                 <ShelfRenderer
                   shelfCount={section.count}
@@ -582,6 +587,7 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
                   isTopFinishPanel={section.isTopFinishPanel}
                   renderMode={renderMode}
                   furnitureId={moduleData.id}
+                  sectionName={rShelfSectionName}
                   allowSideViewDimensions={true}
                   sideViewTextX={getDimensionXPosition(rightWidth, true, rightXOffset)}
                   sideViewLineX={getDimensionXPosition(rightWidth, false, rightXOffset)}
@@ -845,6 +851,7 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
             // 중앙 칸막이 Z 위치: 좌측 깊이가 우측보다 클 때는 좌측 기준, 아니면 우측 기준
             const middlePanelZOffset = leftDepth > rightDepth ? 0 : (leftDepth - rightDepth) / 2;
 
+            const sectionPrefix = totalSections > 1 ? (isFirstSection ? '(하)' : '(상)') : '';
             return (
               <BoxWithEdges
                 key={`middle-panel-${moduleData.id}-${index}`}
@@ -856,7 +863,7 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
                 isDragging={isDragging}
                 isEditMode={isEditMode}
                 edgeOpacity={view2DDirection === 'left' ? 0.1 : undefined}
-                panelName="칸막이"
+                panelName={`${sectionPrefix}칸막이`}
               />
             );
           });
@@ -1044,10 +1051,10 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
                   isEditMode={isEditMode}
                   hideEdges={false}
                   isBackPanel={true}
-                  panelName="백패널"
+                  panelName="좌백패널"
                 />
                 {/* 보강대 (좌측 전체 백패널 상/하단)
-                    2D 정면도에서는 숨김 (백패널 뒤에 위치하지만 선 렌더링으로 보임)
+                    2D 정면도에서는 ��김 (백패널 뒤에 위치하지만 선 렌더링으로 보임)
                     상부/측면 뷰에서만 표시됨 */}
                 {!(viewMode === '2D' && view2DDirection === 'front') && (
                   <>
@@ -1060,7 +1067,7 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
                       furnitureId={placedFurnitureId}
                       isDragging={isDragging}
                       isEditMode={isEditMode}
-                      panelName="보강대"
+                      panelName="좌보강대"
                     />
                     <BoxWithEdges
                       key="left-reinforcement-top"
@@ -1071,7 +1078,7 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
                       furnitureId={placedFurnitureId}
                       isDragging={isDragging}
                       isEditMode={isEditMode}
-                      panelName="보강대"
+                      panelName="좌보강대"
                     />
                   </>
                 )}
@@ -1114,7 +1121,7 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
                 isEditMode={isEditMode}
                 hideEdges={false}
                 isBackPanel={true}
-                panelName="(하)백패널"
+                panelName="좌(하)백패널"
               />
 
               {/* 하부 백패널 보강대 (상/하단)
@@ -1132,7 +1139,7 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
                     isDragging={isDragging}
                     isEditMode={isEditMode}
                     isHighlighted={highlightedSection === `${placedFurnitureId}-0`}
-                    panelName="(하)보강대"
+                    panelName="좌(하)보강대"
                   />
                   <BoxWithEdges
                     key="left-lower-reinforcement-top"
@@ -1144,7 +1151,7 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
                     isDragging={isDragging}
                     isEditMode={isEditMode}
                     isHighlighted={highlightedSection === `${placedFurnitureId}-0`}
-                    panelName="(하)보강대"
+                    panelName="좌(하)보강대"
                   />
                 </>
               )}
@@ -1161,7 +1168,7 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
                 isEditMode={isEditMode}
                 hideEdges={false}
                 isBackPanel={true}
-                panelName="(상)백패널"
+                panelName="좌(상)백패널"
               />
 
               {/* 상부 백패널 보강대 (상/하단)
@@ -1179,7 +1186,7 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
                     isDragging={isDragging}
                     isEditMode={isEditMode}
                     isHighlighted={highlightedSection === `${placedFurnitureId}-1`}
-                    panelName="(상)보강대"
+                    panelName="좌(상)보강대"
                   />
                   <BoxWithEdges
                     key="left-upper-reinforcement-top"
@@ -1191,7 +1198,7 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
                     isDragging={isDragging}
                     isEditMode={isEditMode}
                     isHighlighted={highlightedSection === `${placedFurnitureId}-1`}
-                    panelName="(상)보강대"
+                    panelName="좌(상)보강대"
                   />
                 </>
               )}
@@ -1233,7 +1240,7 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
                 hideEdges={false} // 엣지는 표시하되
                 isBackPanel={true} // 백패널임을 표시
                 edgeOpacity={view2DDirection === 'left' && visibleSectionIndex !== 1 ? 0.1 : undefined}
-                panelName="백패널"
+                panelName="우백패널"
               />
               {/* 우측 백패널 보강대 (상/하단)
                   2D 정면도에서는 숨김 (백패널 뒤에 위치하지만 선 렌더링으로 보임)
@@ -1249,7 +1256,7 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
                     furnitureId={placedFurnitureId}
                     isDragging={isDragging}
                     isEditMode={isEditMode}
-                    panelName="보강대"
+                    panelName="우보강대"
                     edgeOpacity={view2DDirection === 'left' && visibleSectionIndex !== 1 ? 0.1 : undefined}
                   />
                   <BoxWithEdges
@@ -1261,7 +1268,7 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
                     furnitureId={placedFurnitureId}
                     isDragging={isDragging}
                     isEditMode={isEditMode}
-                    panelName="보강대"
+                    panelName="우보강대"
                     edgeOpacity={view2DDirection === 'left' && visibleSectionIndex !== 1 ? 0.1 : undefined}
                   />
                 </>
