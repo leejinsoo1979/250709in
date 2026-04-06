@@ -233,24 +233,7 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
             break;
         }
         
-        // 서랍 섹션 위에 (하)상판 렌더링 (4단서랍장처럼 좌측만, 앞에서 85mm 옵셋)
-        let drawerTopPanel = null;
-        if (section.type === 'drawer' && index < allSections.length - 1) {
-          const topPanelInset = 85; // 앞에서 85mm 안으로
-          const panelDepth = depth - mmToThreeUnits(26) - mmToThreeUnits(topPanelInset);
-          drawerTopPanel = (
-            <BoxWithEdges
-              args={[leftWidth, basicThickness, panelDepth]}
-              position={[0, sectionCenterY + sectionHeight/2 - basicThickness * 1.5, mmToThreeUnits(13) - mmToThreeUnits(topPanelInset / 2)]}
-              material={material}
-              renderMode={useSpace3DView().renderMode}
-              furnitureId={placedFurnitureId}
-              isDragging={isDragging}
-              isEditMode={isEditMode}
-              panelName="(하)상판"
-            />
-          );
-        }
+        // 좌측 서랍 상판은 통합 중단선반(전체폭)이 대체하므로 별도 렌더링 불필요
 
         // 다음 섹션을 위해 Y 위치 이동
         currentYPosition += sectionHeight;
@@ -258,7 +241,6 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
         return (
           <group key={`left-section-${index}`}>
             {sectionContent}
-            {drawerTopPanel}
 
             {/* 좌측 섹션 치수 표시 - 탑뷰/3D에서는 숨김 */}
             {showDimensions && showDimensionsText &&
@@ -530,11 +512,11 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
           );
         })()}
         
-        {/* 중단선반: 우측만 (좌측은 서랍 상판으로 별도 렌더링) */}
+        {/* 중단선반 (상부섹션 바닥판): 전체폭 */}
         {hasSharedMiddlePanel && middlePanelHeight > 0 && (
           <BoxWithEdges
-            args={[rightWidth, basicThickness, adjustedDepthForShelves - basicThickness]}
-            position={[rightXOffset, -height/2 + basicThickness + mmToThreeUnits(middlePanelHeight - 9), basicThickness/2 + shelfZOffset]}
+            args={[innerWidth, basicThickness, adjustedDepthForShelves - basicThickness]}
+            position={[0, -height/2 + basicThickness + mmToThreeUnits(middlePanelHeight - 9), basicThickness/2 + shelfZOffset]}
             material={material}
             renderMode={useSpace3DView().renderMode}
             furnitureId={placedFurnitureId}
