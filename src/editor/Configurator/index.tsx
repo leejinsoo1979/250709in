@@ -407,8 +407,8 @@ const Configurator: React.FC = () => {
     let doorNum = 1;
     return doorFurnitureList.map((mod) => {
       const isDual = mod.isDualSlot || mod.moduleId?.includes('dual-') || mod.baseModuleType?.includes('dual-');
-      const isUpper = mod.moduleId?.includes('upper-cabinet') || mod.moduleId?.includes('dual-upper-cabinet');
-      const isLower = mod.moduleId?.includes('lower-cabinet') || mod.moduleId?.includes('dual-lower-cabinet');
+      const isUpper = mod.moduleId?.includes('upper-');
+      const isLower = mod.moduleId?.includes('lower-');
       const category: 'full' | 'upper' | 'lower' = isUpper ? 'upper' : isLower ? 'lower' : 'full';
       if (isDual) {
         const nums = [doorNum, doorNum + 1];
@@ -5664,7 +5664,7 @@ const Configurator: React.FC = () => {
             {/* 키큰장 도어 테이블 */}
             {fullDoorIndices.length > 0 && (
               <div style={{ marginTop: '8px', overflowX: 'auto' }}>
-                <div style={{ fontSize: '11px', fontWeight: 600, color: 'var(--theme-text-secondary, #666)', marginBottom: '4px' }}>키큰장</div>
+                {partialDoorIndices.length > 0 && <div style={{ fontSize: '11px', fontWeight: 600, color: 'var(--theme-text-secondary, #666)', marginBottom: '4px' }}>키큰장</div>}
                 <table style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed' }}>
                   <thead>
                     <tr>
@@ -5714,7 +5714,7 @@ const Configurator: React.FC = () => {
             {/* 상하부장 도어 테이블 */}
             {partialDoorIndices.length > 0 && (
               <div style={{ marginTop: fullDoorIndices.length > 0 ? '12px' : '8px', overflowX: 'auto' }}>
-                <div style={{ fontSize: '11px', fontWeight: 600, color: 'var(--theme-text-secondary, #666)', marginBottom: '4px' }}>상하부장</div>
+                {fullDoorIndices.length > 0 && <div style={{ fontSize: '11px', fontWeight: 600, color: 'var(--theme-text-secondary, #666)', marginBottom: '4px' }}>상하부장</div>}
                 <table style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed' }}>
                   <thead>
                     <tr>
