@@ -4179,6 +4179,112 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
 
               {/* 커튼박스(droppedCeiling) 구간 치수는 표시하지 않음 */}
 
+              {/* ── 도어 높이 치수선 (도어 설치 시에만 표시) ── */}
+              {rightmostMod?.hasDoor && (() => {
+                // 도어 높이 치수선 X 위치: 커튼박스가 있으면 4단, 없으면 3단 위치
+                const rightDoorDimX = hasCB_R
+                  ? rightWallX + mmToThreeUnits(800)
+                  : rightWallX + mmToThreeUnits(600);
+
+                // 가구 카테고리 판별
+                const rDoorModData = getModuleById(
+                  rightmostMod.moduleId,
+                  { width: spaceInfo.width, height: spaceInfo.height, depth: spaceInfo.depth },
+                  spaceInfo
+                );
+                const rDoorCategory = rDoorModData?.category
+                  ?? (rightmostMod.moduleId.includes('-upper-') ? 'upper'
+                    : rightmostMod.moduleId.includes('-lower-') ? 'lower' : 'full');
+
+                let doorHeightMm = 0;
+                let doorBottomAbsMm = 0; // 바닥에서 도어 하단까지 (mm)
+                let doorTopAbsMm = 0;    // 바닥에서 도어 상단까지 (mm)
+
+                const doorTopGapVal = rightmostMod.doorTopGap ?? 5;
+                const doorBottomGapVal = rightmostMod.doorBottomGap ?? 25;
+
+                if (rDoorCategory === 'upper') {
+                  // 상부장: 도어가 캐비넷 바깥으로 확장
+                  const cabinetH = rDoorModData?.dimensions.height ?? 600;
+                  const topFrameVal = rightmostMod.topFrameThickness ?? (spaceInfo.frameSize?.top ?? 30);
+                  const topExtension = topFrameVal - doorTopGapVal;
+                  doorHeightMm = cabinetH + topExtension + doorBottomGapVal;
+                  doorTopAbsMm = rEffectiveH - doorTopGapVal;
+                  doorBottomAbsMm = doorTopAbsMm - doorHeightMm;
+                } else if (rDoorCategory === 'lower') {
+                  // 하부장
+                  const cabinetH = rDoorModData?.dimensions.height ?? 1000;
+                  const isDoorLift = rDoorModData?.id?.includes('lower-door-lift-');
+                  const isTopDown = rDoorModData?.id?.includes('lower-top-down-');
+                  const cabinetBottomAbs = rFloorFinishForHeight + rBottomFrameH;
+
+                  if (isTopDown) {
+                    doorHeightMm = 710;
+                    doorBottomAbsMm = cabinetBottomAbs - 5;
+                    doorTopAbsMm = doorBottomAbsMm + doorHeightMm;
+                  } else if (isDoorLift) {
+                    doorHeightMm = cabinetH + 5 + 30;
+                    doorTopAbsMm = cabinetBottomAbs + cabinetH + 30;
+                    doorBottomAbsMm = doorTopAbsMm - doorHeightMm;
+                  } else {
+                    doorHeightMm = cabinetH - 20 + 2;
+                    doorTopAbsMm = cabinetBottomAbs + cabinetH - 20;
+                    doorBottomAbsMm = doorTopAbsMm - doorHeightMm;
+                  }
+                } else {
+                  // 키큰장: 천장/바닥 기준
+                  const isFloorType = !spaceInfo.baseConfig || spaceInfo.baseConfig.type === 'floor';
+                  const floorFinishForDoor = (isFloorType && spaceInfo.hasFloorFinish)
+                    ? (spaceInfo.floorFinish?.height || 0) : 0;
+                  doorBottomAbsMm = doorBottomGapVal + floorFinishForDoor;
+                  doorTopAbsMm = rEffectiveH - doorTopGapVal;
+                  doorHeightMm = Math.max(0, doorTopAbsMm - doorBottomAbsMm);
+                }
+
+                if (doorHeightMm <= 0) return null;
+
+                const doorBottomY = mmToThreeUnits(doorBottomAbsMm);
+                const doorTopY = mmToThreeUnits(doorTopAbsMm);
+                const doorMidY = (doorBottomY + doorTopY) / 2;
+
+                return (
+                  <>
+                    {/* 세로 메인 라인 */}
+                    <NativeLine name="dimension_line"
+                      points={[[rightDoorDimX, doorBottomY, 0.002], [rightDoorDimX, doorTopY, 0.002]]}
+                      color="#E91E63" lineWidth={1} renderOrder={100000} depthTest={false}
+                    />
+                    {/* 화살표 */}
+                    <NativeLine name="dimension_line"
+                      points={createArrowHead([rightDoorDimX, doorBottomY, 0.002], [rightDoorDimX, doorBottomY + 0.05, 0.002])}
+                      color="#E91E63" lineWidth={1} renderOrder={100000} depthTest={false}
+                    />
+                    <NativeLine name="dimension_line"
+                      points={createArrowHead([rightDoorDimX, doorTopY, 0.002], [rightDoorDimX, doorTopY - 0.05, 0.002])}
+                      color="#E91E63" lineWidth={1} renderOrder={100000} depthTest={false}
+                    />
+                    {/* 도어 높이 텍스트 */}
+                    <Text renderOrder={1000} depthTest={false}
+                      position={[rightDoorDimX + mmToThreeUnits(10), doorMidY, 0.01]}
+                      fontSize={largeFontSize} color="#E91E63"
+                      anchorX="left" anchorY="middle"
+                      outlineWidth={textOutlineWidth} outlineColor={textOutlineColor}
+                    >
+                      {Math.round(doorHeightMm)}
+                    </Text>
+                    {/* 연장선: 도어 상단/하단 */}
+                    <NativeLine name="dimension_line"
+                      points={[[rightWallX, doorTopY, 0.001], [rightDoorDimX + mmToThreeUnits(20), doorTopY, 0.001]]}
+                      color="#E91E63" lineWidth={1} renderOrder={100000} depthTest={false}
+                    />
+                    <NativeLine name="dimension_line"
+                      points={[[rightWallX, doorBottomY, 0.001], [rightDoorDimX + mmToThreeUnits(20), doorBottomY, 0.001]]}
+                      color="#E91E63" lineWidth={1} renderOrder={100000} depthTest={false}
+                    />
+                  </>
+                );
+              })()}
+
               {/* ── 연장선: 각 경계점에서 수평선 ── */}
               {/* 바닥(Y=0) — 커튼박스 있으면 3단까지 연장 */}
               <NativeLine name="dimension_line"
