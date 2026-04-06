@@ -658,173 +658,15 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
         )}
       </>
       
-      {/* 뒷면 판재 (9mm 얇은 백패널)
-          Type5/6(4drawer-pantshanger, 2drawer-styler)은 좌측 상/하 + 우측 3개로 분할
-          그 외는 통짜 1개 */}
+      {/* 뒷면 판재 (9mm 얇은 백패널, 상하좌우 각 5mm 확장) */}
       {(() => {
-        const isType5or6Module = moduleData.id.includes('dual-4drawer-pantshanger') || moduleData.id.includes('dual-2drawer-styler');
+        const backPanelHeight = innerHeight + mmToThreeUnits(36);
         const backPanelZ = -depth/2 + backPanelThickness/2 + (basicThickness - mmToThreeUnits(1));
         const reinforcementHeight = mmToThreeUnits(60);
         const reinforcementDepth = mmToThreeUnits((basicThicknessMmVal === 18.5 || basicThicknessMmVal === 15.5) ? 15.5 : 15);
-        const reinforcementZ = backPanelZ - backPanelThickness/2 - reinforcementDepth/2;
-
-        if (isType5or6Module && modelConfig.leftSections && modelConfig.leftSections.length >= 2) {
-          // === Type5/6: 좌측 상/하 + 우측 3개로 분할 ===
-          // 좌측 백패널은 하단 섹션(서랍) 상단 경계에서 상/하로 분할됨:
-          //   - 하단 백패널: 바닥 → 하단 섹션 상단 경계
-          //     높이 = basicThickness(바닥판) + leftSections[0].height
-          //   - 상단 백패널: 하단 섹션 상단 경계 → 천장
-          //     높이 = 전체 높이 - (basicThickness + leftSections[0].height)
-          //   - 합계 = 전체 furniture 높이 (단일 백패널과 동일)
-          //
-          // Type6 pantshanger: leftSections[0].height = middlePanelHeight = bottomSectionHeight (1000mm)
-          //   → 경계 = 18 + 1000 = 1018mm (중간 칸막이 상단)
-          // Type5 styler: leftSections[0].height = leftDrawerWithFinishHeight (600mm)
-          //   → 경계 = 18 + 600 = 618mm (서랍 섹션 상단)
-          //
-          // 폭: leftWidth + 10mm (좌측 컬럼 내경 + 좌우 5mm 확장)
-          // Z: backPanelZ (기존과 동일)
-          const basicThicknessMm = basicThicknessMmVal;
-          const leftLowerSectionHeightMm = modelConfig.leftSections[0].height || 0;
-
-          // 하단 섹션 상단 경계 mm 위치 (바닥 기준)
-          const lowerBoundaryMm = basicThicknessMm + leftLowerSectionHeightMm;
-          // 가구 전체 높이 mm
-          const furnitureHeightMm = height / 0.01;
-
-          // 좌(하) 백패널: 바닥부터 하단 섹션 상단까지
-          const lowerBackHeightMm = lowerBoundaryMm;
-          const lowerBackHeight = mmToThreeUnits(lowerBackHeightMm);
-          const lowerBackCenterY = -height/2 + mmToThreeUnits(lowerBackHeightMm/2);
-
-          // 좌(상) 백패널: 하단 섹션 상단부터 천장까지
-          const upperBackHeightMm = furnitureHeightMm - lowerBoundaryMm;
-          const upperBackHeight = mmToThreeUnits(upperBackHeightMm);
-          const upperBackCenterY = height/2 - mmToThreeUnits(upperBackHeightMm/2);
-
-          // 우측 섹션 백패널: rightSections 개수에 따라 분할 여부 결정
-          //   - Type6 pantshanger: rightSections 2개 (좌측과 동일하게 분할)
-          //   - Type5 styler: rightSections 1개 (분할 없이 전체 높이)
-          const rightSectionsArr = modelConfig.rightSections || [];
-          const isRightSplit = rightSectionsArr.length >= 2;
-          const rightLowerSectionHeightMm = rightSectionsArr[0]?.height || 0;
-          const rightLowerBoundaryMm = basicThicknessMm + rightLowerSectionHeightMm;
-          const rightLowerBackHeight = mmToThreeUnits(rightLowerBoundaryMm);
-          const rightLowerBackCenterY = -height/2 + mmToThreeUnits(rightLowerBoundaryMm/2);
-          const rightUpperBackHeightMm = furnitureHeightMm - rightLowerBoundaryMm;
-          const rightUpperBackHeight = mmToThreeUnits(rightUpperBackHeightMm);
-          const rightUpperBackCenterY = height/2 - mmToThreeUnits(rightUpperBackHeightMm/2);
-          // 단일 우측 백패널 (styler)
-          const rightBackHeight = innerHeight + mmToThreeUnits(36);
-          const rightBackCenterY = 0;
-
-          // 좌측 백패널 폭 = leftWidth + 10mm, 우측 백패널 폭 = rightWidth + 10mm
-          const leftBackWidth = leftWidth + mmToThreeUnits(10);
-          const rightBackWidth = rightWidth + mmToThreeUnits(10);
-
-          // 좌측 백패널 X 위치 = leftXOffset (좌측 컬럼 중심)
-          // 우측 백패널 X 위치 = rightXOffset (우측 컬럼 중심)
-
-          return (
-            <>
-              {/* 좌(하) 백패널 — 서랍 섹션 뒤 */}
-              <BoxWithEdges
-                args={[leftBackWidth, lowerBackHeight, backPanelThickness]}
-                position={[leftXOffset, lowerBackCenterY, backPanelZ]}
-                material={material}
-                renderMode={useSpace3DView().renderMode}
-                furnitureId={placedFurnitureId}
-                isDragging={isDragging}
-                isEditMode={isEditMode}
-                isBackPanel={true}
-                panelName="좌(하)백패널"
-              />
-              {/* 좌(상) 백패널 — 옷장 섹션 뒤 */}
-              <BoxWithEdges
-                args={[leftBackWidth, upperBackHeight, backPanelThickness]}
-                position={[leftXOffset, upperBackCenterY, backPanelZ]}
-                material={material}
-                renderMode={useSpace3DView().renderMode}
-                furnitureId={placedFurnitureId}
-                isDragging={isDragging}
-                isEditMode={isEditMode}
-                isBackPanel={true}
-                panelName="좌(상)백패널"
-              />
-              {/* 우측 백패널 — pantshanger는 상/하 분할, styler는 전체 높이 */}
-              {isRightSplit ? (
-                <>
-                  <BoxWithEdges
-                    args={[rightBackWidth, rightLowerBackHeight, backPanelThickness]}
-                    position={[rightXOffset, rightLowerBackCenterY, backPanelZ]}
-                    material={material}
-                    renderMode={useSpace3DView().renderMode}
-                    furnitureId={placedFurnitureId}
-                    isDragging={isDragging}
-                    isEditMode={isEditMode}
-                    isBackPanel={true}
-                    panelName="우(하)백패널"
-                  />
-                  <BoxWithEdges
-                    args={[rightBackWidth, rightUpperBackHeight, backPanelThickness]}
-                    position={[rightXOffset, rightUpperBackCenterY, backPanelZ]}
-                    material={material}
-                    renderMode={useSpace3DView().renderMode}
-                    furnitureId={placedFurnitureId}
-                    isDragging={isDragging}
-                    isEditMode={isEditMode}
-                    isBackPanel={true}
-                    panelName="우(상)백패널"
-                  />
-                </>
-              ) : (
-                <BoxWithEdges
-                  args={[rightBackWidth, rightBackHeight, backPanelThickness]}
-                  position={[rightXOffset, rightBackCenterY, backPanelZ]}
-                  material={material}
-                  renderMode={useSpace3DView().renderMode}
-                  furnitureId={placedFurnitureId}
-                  isDragging={isDragging}
-                  isEditMode={isEditMode}
-                  isBackPanel={true}
-                  panelName="우백패널"
-                />
-              )}
-              {/* 보강대 (백패널 상/하단) — 전체 내경폭 기준 */}
-              {!(viewMode === '2D' && view2DDirection === 'front') && (
-                <>
-                  <BoxWithEdges
-                    key="reinforcement-bottom"
-                    args={[innerWidth - sidePanelGap, reinforcementHeight, reinforcementDepth]}
-                    position={[0, -innerHeight/2 - mmToThreeUnits(18) + reinforcementHeight/2, reinforcementZ]}
-                    material={material}
-                    renderMode={renderMode}
-                    furnitureId={placedFurnitureId}
-                    isDragging={isDragging}
-                    isEditMode={isEditMode}
-                    panelName="보강대"
-                  />
-                  <BoxWithEdges
-                    key="reinforcement-top"
-                    args={[innerWidth - sidePanelGap, reinforcementHeight, reinforcementDepth]}
-                    position={[0, innerHeight/2 + mmToThreeUnits(18) - reinforcementHeight/2, reinforcementZ]}
-                    material={material}
-                    renderMode={renderMode}
-                    furnitureId={placedFurnitureId}
-                    isDragging={isDragging}
-                    isEditMode={isEditMode}
-                    panelName="보강대"
-                  />
-                </>
-              )}
-            </>
-          );
-        }
-
-        // === 기본: 통짜 백패널 1개 ===
-        const backPanelHeight = innerHeight + mmToThreeUnits(36);
         // 양쪽 0.5mm씩 축소 (총 1mm)
         const reinforcementWidth = innerWidth - sidePanelGap;
+        const reinforcementZ = backPanelZ - backPanelThickness/2 - reinforcementDepth/2;
 
         return (
           <>
@@ -836,9 +678,12 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
               furnitureId={placedFurnitureId}
               isDragging={isDragging}
               isEditMode={isEditMode}
-              isBackPanel={true}
+              isBackPanel={true} // 백패널임을 표시
               panelName="백패널"
             />
+            {/* 보강대 (백패널 상/하단) - 60mm 높이, 15.5mm 두께
+                2D 정면도에서는 숨김 (백패널 뒤에 위치하지만 선 렌더링으로 보임)
+                상부/측면 뷰에서만 표시됨 */}
             {!(viewMode === '2D' && view2DDirection === 'front') && (
               <>
                 <BoxWithEdges
