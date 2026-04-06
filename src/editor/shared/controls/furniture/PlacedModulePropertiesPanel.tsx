@@ -590,6 +590,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
   const [freeDepthInput, setFreeDepthInput] = useState<string>('');
   const [epDepthInput, setEpDepthInput] = useState<string>(''); // EP 깊이 로컬 버퍼
   const [epThicknessInput, setEpThicknessInput] = useState<string>(''); // EP 두께 로컬 버퍼
+  const epThicknessFocusedRef = React.useRef(false); // EP 두께 입력 포커스 추적
 
   // 섹션별 치수 상태 (자유배치 + customConfig 분할 가구용)
   const [sectionHeightInputs, setSectionHeightInputs] = useState<Record<number, string>>({});
@@ -891,7 +892,9 @@ const PlacedModulePropertiesPanel: React.FC = () => {
         // EP 깊이/두께 초기화
         const epFurnitureDepth = currentPlacedModule.freeDepth ?? initialDepth;
         setEpDepthInput(Math.round(currentPlacedModule.endPanelDepth ?? epFurnitureDepth).toString());
-        setEpThicknessInput((currentPlacedModule.endPanelThickness ?? 18).toString());
+        if (!epThicknessFocusedRef.current) {
+          setEpThicknessInput((currentPlacedModule.endPanelThickness ?? 18).toString());
+        }
 
         // 섹션별 치수 초기화 (customConfig가 있을 때)
         const cc = currentPlacedModule.customConfig;
@@ -3176,6 +3179,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                               type="text"
                               inputMode="numeric"
                               value={epThicknessInput}
+                              onFocus={() => { epThicknessFocusedRef.current = true; }}
                               onChange={(e) => {
                                 const v = e.target.value;
                                 if (v === '' || /^\d+$/.test(v)) {
@@ -3183,6 +3187,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                                 }
                               }}
                               onBlur={() => {
+                                epThicknessFocusedRef.current = false;
                                 const val = parseInt(epThicknessInput, 10);
                                 if (!isNaN(val) && val >= 10) {
                                   setEpThicknessInput(val.toString());
