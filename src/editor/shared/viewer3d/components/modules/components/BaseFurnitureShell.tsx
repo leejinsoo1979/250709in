@@ -1150,7 +1150,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                               return (
                                 <BoxWithEdges
                                   key={`entryway-drawer-maida-${mat.uuid}`}
-                                  args={[drawerAreaWidth, maidaH, maidaT]}
+                                  args={[innerWidth - sidePanelGap - mmToThreeUnits(12) * 2, maidaH, maidaT]}
                                   position={[0, maidaCenterY, wingFrontFaceZ + maidaT/2]}
                                   material={mat}
                                   renderMode={renderMode}
