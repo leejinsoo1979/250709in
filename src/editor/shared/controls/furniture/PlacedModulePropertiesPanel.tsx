@@ -2445,13 +2445,14 @@ const PlacedModulePropertiesPanel: React.FC = () => {
             <div className={styles.propertySection}>
               <h5 className={styles.sectionTitle}>가구 치수</h5>
               <div style={{ display: 'flex', gap: '4px', alignItems: 'center', marginTop: '2px' }}>
-                {/* 너비 */}
+                {/* 너비 — 슬롯배치 모드에서는 편집 불가 (슬롯 폭이 자동 결정) */}
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <label style={{ fontSize: '10px', color: 'var(--theme-text-tertiary)', display: 'block', lineHeight: 1 }}>W</label>
                   <div className={styles.inputWithUnit}>
                     <input
                       type="text"
                       inputMode="numeric"
+                      disabled={spaceInfo.layoutMode !== 'free-placement'}
                       value={freeWidthInput}
                       onChange={(e) => setFreeWidthInput(e.target.value)}
                       onBlur={() => {
