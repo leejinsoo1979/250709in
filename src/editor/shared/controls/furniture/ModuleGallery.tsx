@@ -71,6 +71,9 @@ const FURNITURE_ICONS: Record<string, string> = {
   'dual-lower-top-down-2tier': '',
   'lower-top-down-3tier': '',
   'dual-lower-top-down-3tier': '',
+  // 현관장 H
+  'single-entryway-h': getImagePath('entrance_single-H.png'),
+  'dual-entryway-h': getImagePath('entrance_duel-H.png'),
 };
 
 // 모듈 타입 정의
