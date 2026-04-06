@@ -776,11 +776,12 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
   // 옵티마이저에서 제외된 패널이면 렌더링하지 않음
   // return null 대신 visible={false}로 처리 — R3F scene graph에서 확실히 숨김
   return (
-    <group position={position} visible={!isExcludedByOptimizer}>
+    <group position={position} visible={!isExcludedByOptimizer} userData={furnitureId ? { furnitureId } : undefined}>
       {/* 면 렌더링 - 와이어프레임에서는 투명하게 */}
       {/* DXF 내보내기를 위해 mesh에도 이름 추가 */}
       <mesh
         name={isClothingRod ? 'clothing-rod-mesh' : isBackPanel ? `back-panel-mesh${panelName ? `-${panelName}` : ''}` : `furniture-mesh${panelName ? `-${panelName}` : ''}`}
+        userData={furnitureId ? { furnitureId } : undefined}
         receiveShadow={viewMode === '3D' && effectiveRenderMode === 'solid' && shadowEnabled}
         castShadow={viewMode === '3D' && effectiveRenderMode === 'solid' && shadowEnabled}
         renderOrder={renderOrder ?? 10}

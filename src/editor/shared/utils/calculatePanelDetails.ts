@@ -418,7 +418,16 @@ export const calculatePanelDetails = (
       // 하부장 모듈은 하단 보강대 생략 (상단만)
       const reinforcementHeight = 60; // mm
       const reinforcementDepth = (basicThickness === 18.5 || basicThickness === 15.5) ? 15.5 : 15; // PB+PET 코팅 시 15.5mm
-      const reinforcementWidth = innerWidth - sidePanelGap;
+      // Type5/6: 좌측 보강대는 좌측 컬럼 내경폭 기준 (백패널과 동일하게 좌/우 분리)
+      let reinforcementWidth = innerWidth - sidePanelGap;
+      if (isType5or6) {
+        const rightAbsoluteWidthR = moduleData.modelConfig?.rightAbsoluteWidth || 0;
+        const originalTotalWidthR = moduleData.dimensions.width;
+        const rightRatioR = rightAbsoluteWidthR / (originalTotalWidthR - 36);
+        const rightWidthR = innerWidth * rightRatioR;
+        const leftWidthR = innerWidth - rightWidthR - basicThickness;
+        reinforcementWidth = leftWidthR - sidePanelGap;
+      }
       const isLowerCabinetModule = moduleData.id.includes('lower-');
       if (!isLowerCabinetModule) {
         targetPanel.push({
