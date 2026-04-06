@@ -291,12 +291,17 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
       const newCategory = newModuleData?.category;
 
       // 도어 바닥 이격거리 초기화 (카테고리별 기본값)
+      const isBasicLowerCabinet = module.moduleId?.includes('lower-cabinet-basic') || module.moduleId?.includes('lower-cabinet-2tier') ||
+        module.moduleId?.includes('dual-lower-cabinet-basic') || module.moduleId?.includes('dual-lower-cabinet-2tier');
       if (module.doorBottomGap === undefined) {
         if (newCategory === 'upper') {
           // 상부장: 캐비넷 하단에서 도어 하단까지의 확장거리 (바닥 기준이 아님)
           module.doorBottomGap = 28;
+        } else if (isBasicLowerCabinet) {
+          // 기본하부장 반통/한통: 하단 5mm 확장
+          module.doorBottomGap = 5;
         } else if (newCategory === 'lower') {
-          // 하부장: 캐비넷 하단에서 2mm 아래로 확장 (DoorModule LOWER_DOOR_BOTTOM_EXTENSION)
+          // 기타 하부장: 캐비넷 하단에서 2mm 아래로 확장
           module.doorBottomGap = 2;
         } else {
           const isFloatPlacement = spaceInfo.baseConfig?.placementType === 'float';
@@ -307,8 +312,11 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
 
       // 도어 상단 이격거리 초기화 (카테고리별 기본값)
       if (module.doorTopGap === undefined) {
-        if (newCategory === 'lower') {
-          // 하부장: 캐비넷 상단에서 20mm 내려옴 (DoorModule LOWER_DOOR_TOP_GAP)
+        if (isBasicLowerCabinet) {
+          // 기본하부장 반통/한통: 상단 -20mm (도어가 캐비넷보다 20mm 짧음)
+          module.doorTopGap = -20;
+        } else if (newCategory === 'lower') {
+          // 기타 하부장: 캐비넷 상단에서 20mm 내려옴
           module.doorTopGap = 20;
         } else {
           const isFullSurround = spaceInfo.surroundType === 'surround' && spaceInfo.frameConfig?.top !== false;
