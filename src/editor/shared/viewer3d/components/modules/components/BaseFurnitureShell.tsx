@@ -853,7 +853,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                         <BoxWithEdges
                           key={`drawer-support-${getPanelMaterial('(하)상판').uuid}`}
                           args={[innerWidth - sidePanelGap, basicThickness - mmToThreeUnits(0.1), lowerSectionDepth - backReductionForPanels - mmToThreeUnits(lowerSectionTopOffsetMm || 0)]}
-                          position={[0, lowerTopPanelY - basicThickness - mmToThreeUnits(188) - (basicThickness - mmToThreeUnits(0.1))/2, lowerZOffset + panelZOffset - mmToThreeUnits(lowerSectionTopOffsetMm || 0)/2]}
+                          position={[0, lowerTopPanelY - basicThickness/2 - mmToThreeUnits(188) - (basicThickness - mmToThreeUnits(0.1))/2, lowerZOffset + panelZOffset - mmToThreeUnits(lowerSectionTopOffsetMm || 0)/2]}
                           material={getPanelMaterial('(하)상판')}
                           renderMode={renderMode}
                           isDragging={isDragging}
