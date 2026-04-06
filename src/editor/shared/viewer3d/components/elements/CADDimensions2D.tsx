@@ -1117,7 +1117,13 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
 
         {/* ===== 도어 높이 치수선 (도어가 설치된 가구가 있을 때만) ===== */}
         {(() => {
-          const doorModule = placedModules.find(m => m.hasDoor && !m.isSurroundPanel);
+          // 선택된 슬롯의 도어 가구만 표시 (듀얼 가구는 2슬롯 차지)
+          const doorModule = placedModules.find(m =>
+            m.hasDoor && !m.isSurroundPanel &&
+            (selectedSlotIndex === null ||
+              m.slotIndex === selectedSlotIndex ||
+              (m.isDualSlot && m.slotIndex + 1 === selectedSlotIndex))
+          );
           if (!doorModule) return null;
 
           let doorModData = getModuleById(
@@ -1229,19 +1235,19 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
               >
                 {Math.round(doorHeightMm)}
               </Text>
-              {/* 도어 상단 연장선: 가구 앞면에서 치수선까지 */}
+              {/* 도어 상단 연장선: 가구 앞면에서 치수선까지 (끊김 없이 연결) */}
               <NativeLine name="door_height_ext"
                 points={[
                   [0, doorTopY, furnitureFrontZ + mmToThreeUnits(20)],
-                  [0, doorTopY, doorDimZ - mmToThreeUnits(20)]
+                  [0, doorTopY, doorDimZ]
                 ]}
                 color={doorColor} lineWidth={0.5} renderOrder={100000} depthTest={false}
               />
-              {/* 도어 하단 연장선: 가구 앞면에서 치수선까지 */}
+              {/* 도어 하단 연장선: 가구 앞면에서 치수선까지 (끊김 없이 연결) */}
               <NativeLine name="door_height_ext"
                 points={[
                   [0, doorBottomY, furnitureFrontZ + mmToThreeUnits(20)],
-                  [0, doorBottomY, doorDimZ - mmToThreeUnits(20)]
+                  [0, doorBottomY, doorDimZ]
                 ]}
                 color={doorColor} lineWidth={0.5} renderOrder={100000} depthTest={false}
               />
