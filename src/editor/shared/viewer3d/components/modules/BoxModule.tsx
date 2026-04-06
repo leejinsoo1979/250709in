@@ -811,6 +811,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
           placedFurnitureId={placedFurnitureId}
           panelGrainDirections={panelGrainDirections}
           moduleData={moduleData}
+          lowerSectionTopOffsetMm={furnitureId?.includes('entryway-h') ? 85 : (lowerSectionTopOffset || 0)}
         >
           {/* 내부 구조 렌더링 (드래그/고스트 중에도 표시) */}
           {(
