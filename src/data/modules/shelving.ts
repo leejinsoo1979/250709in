@@ -257,7 +257,7 @@ const createSingleType1 = (columnWidth: number, maxHeight: number): ModuleData =
   
   const base = createFurnitureBase(
     `single-2drawer-hanging-${widthForId}`,
-    `붙박이장 F ${widthForId}mm`,
+    `코트장 ${widthForId}mm`,
     columnWidth,
     maxHeight,
     FURNITURE_SPECS.DEFAULT_DEPTH,
@@ -485,7 +485,7 @@ const createDualType1 = (dualColumnWidth: number, maxHeight: number, slotWidths?
   
   const base = createFurnitureBase(
     `dual-2drawer-hanging-${widthForId}`,
-    `붙박이장 F ${widthForId}mm`,
+    `코트장 ${widthForId}mm`,
     dualColumnWidth,
     maxHeight,
     FURNITURE_SPECS.DEFAULT_DEPTH,
