@@ -439,7 +439,10 @@ export function useLivePanelData() {
       } else if (spaceInfo.surroundType === 'surround' && spaceInfo.frameSize) {
         // 균등배치 서라운드 — frameSize에서 직접 패널 생성
         const fs = spaceInfo.frameSize;
-        const surroundThickness = 18.5; // 서라운드(PET) 항상 18.5mm
+        // 서라운드 두께/재질: 사용자 설정값 따름 (18→PB, 18.5→PET). 15/15.5는 서라운드에 없으므로 18/18.5로 변환
+        const userPT = spaceInfo.panelThickness ?? 18;
+        const surroundThickness = (userPT === 18.5 || userPT === 15.5) ? 18.5 : 18;
+        const surroundMaterial = surroundThickness === 18.5 ? 'PET' : 'PB';
         const SIDE_DEPTH = 40; // L자 측면판 깊이 (mm)
         // 서라운드 프레임은 항상 L자 구조 (전면판 + 측면판으로 재단)
         const isLeftLShape = true;
@@ -458,18 +461,18 @@ export function useLivePanelData() {
               surroundPanelList.push({
                 name: '좌측 서라운드 측면판',
                 width: SIDE_DEPTH, height: leftH,
-                thickness: surroundThickness, material: 'PET',
+                thickness: surroundThickness, material: surroundMaterial,
               });
               surroundPanelList.push({
                 name: '좌측 서라운드 전면판',
                 width: Math.max(0, fs.left - 3), height: leftH,
-                thickness: surroundThickness, material: 'PET',
+                thickness: surroundThickness, material: surroundMaterial,
               });
             } else {
               surroundPanelList.push({
                 name: '좌측 서라운드 프레임',
                 width: fs.left, height: leftH,
-                thickness: surroundThickness, material: 'PET',
+                thickness: surroundThickness, material: surroundMaterial,
               });
             }
           }
@@ -480,18 +483,18 @@ export function useLivePanelData() {
               surroundPanelList.push({
                 name: '우측 서라운드 측면판',
                 width: SIDE_DEPTH, height: rightH,
-                thickness: surroundThickness, material: 'PET',
+                thickness: surroundThickness, material: surroundMaterial,
               });
               surroundPanelList.push({
                 name: '우측 서라운드 전면판',
                 width: Math.max(0, fs.right - 3), height: rightH,
-                thickness: surroundThickness, material: 'PET',
+                thickness: surroundThickness, material: surroundMaterial,
               });
             } else {
               surroundPanelList.push({
                 name: '우측 서라운드 프레임',
                 width: fs.right, height: rightH,
-                thickness: surroundThickness, material: 'PET',
+                thickness: surroundThickness, material: surroundMaterial,
               });
             }
           }
@@ -503,18 +506,18 @@ export function useLivePanelData() {
               surroundPanelList.push({
                 name: '좌측 서라운드 측면판',
                 width: SIDE_DEPTH, height: panelH,
-                thickness: surroundThickness, material: 'PET',
+                thickness: surroundThickness, material: surroundMaterial,
               });
               surroundPanelList.push({
                 name: '좌측 서라운드 전면판',
                 width: Math.max(0, fs.left - 3), height: panelH,
-                thickness: surroundThickness, material: 'PET',
+                thickness: surroundThickness, material: surroundMaterial,
               });
             } else {
               surroundPanelList.push({
                 name: '좌측 서라운드 프레임',
                 width: fs.left, height: panelH,
-                thickness: surroundThickness, material: 'PET',
+                thickness: surroundThickness, material: surroundMaterial,
               });
             }
           }
@@ -523,18 +526,18 @@ export function useLivePanelData() {
               surroundPanelList.push({
                 name: '우측 서라운드 측면판',
                 width: SIDE_DEPTH, height: panelH,
-                thickness: surroundThickness, material: 'PET',
+                thickness: surroundThickness, material: surroundMaterial,
               });
               surroundPanelList.push({
                 name: '우측 서라운드 전면판',
                 width: Math.max(0, fs.right - 3), height: panelH,
-                thickness: surroundThickness, material: 'PET',
+                thickness: surroundThickness, material: surroundMaterial,
               });
             } else {
               surroundPanelList.push({
                 name: '우측 서라운드 프레임',
                 width: fs.right, height: panelH,
-                thickness: surroundThickness, material: 'PET',
+                thickness: surroundThickness, material: surroundMaterial,
               });
             }
           }
@@ -544,7 +547,7 @@ export function useLivePanelData() {
             name: '상부 서라운드 프레임',
             width: spaceInfo.width - (fs.left || 0) - (fs.right || 0),
             height: fs.top,
-            thickness: surroundThickness, material: 'PET',
+            thickness: surroundThickness, material: surroundMaterial,
           });
         }
       }
@@ -554,7 +557,7 @@ export function useLivePanelData() {
         const cbPos = spaceInfo.curtainBox.position || 'right';
         const cbWidthMM = spaceInfo.curtainBox.width || 150;
         const cbDropH = spaceInfo.curtainBox.dropHeight || 60;
-        const cbPanelThickness = 18.5; // 커튼박스(PET) 항상 18.5mm
+        const cbPanelThickness = surroundThickness; // 커튼박스도 서라운드와 동일 두께
         const cbSideDepth = 40;
         // 전면 가림판: CB폭 - 3mm (양쪽 1.5mm gap)
         const cbFrontWidth = cbWidthMM - 3;
@@ -568,7 +571,7 @@ export function useLivePanelData() {
           width: cbFrontWidth,
           height: cbPanelHeight,
           thickness: cbPanelThickness,
-          material: 'PET',
+          material: surroundMaterial,
         });
         // 경계면 칸막이 (측면판)
         surroundPanelList.push({
@@ -576,7 +579,7 @@ export function useLivePanelData() {
           width: cbSideDepth,
           height: cbPanelHeight,
           thickness: cbPanelThickness,
-          material: 'PET',
+          material: surroundMaterial,
         });
       }
 
@@ -690,8 +693,8 @@ export function useLivePanelData() {
               name: `${group.label} 상부프레임`,
               width: Math.round(group.totalWidthMm * 10) / 10,
               height: group.frameHeight,
-              thickness: 18.5, // 프레임(PET) 항상 18.5mm
-              material: 'PET',
+              thickness: (spaceInfo.panelThickness === 18.5 || spaceInfo.panelThickness === 15.5) ? 18.5 : 18, // 프레임: 사용자 설정 따름
+              material: (spaceInfo.panelThickness === 18.5 || spaceInfo.panelThickness === 15.5) ? 'PET' : 'PB',
               color: placedModules[0]?.color || 'MW',
               quantity: 1,
               grain: 'H' as any,
@@ -708,8 +711,8 @@ export function useLivePanelData() {
               name: `${group.label} 하부프레임`,
               width: Math.round(group.totalWidthMm * 10) / 10,
               height: group.frameHeight,
-              thickness: 18.5, // 프레임(PET) 항상 18.5mm
-              material: 'PET',
+              thickness: (spaceInfo.panelThickness === 18.5 || spaceInfo.panelThickness === 15.5) ? 18.5 : 18, // 프레임: 사용자 설정 따름
+              material: (spaceInfo.panelThickness === 18.5 || spaceInfo.panelThickness === 15.5) ? 'PET' : 'PB',
               color: placedModules[0]?.color || 'MW',
               quantity: 1,
               grain: 'H' as any,
@@ -1126,7 +1129,10 @@ export function usePanelSubscription(callback: (panels: Panel[]) => void) {
       surroundPanelList2 = calculateSurroundPanels(spaceInfo.freeSurround, surroundH2, spaceInfo.panelThickness ?? 18);
     } else if (spaceInfo.surroundType === 'surround' && spaceInfo.frameSize) {
       const fs2 = spaceInfo.frameSize;
-      const surroundThickness2 = 18.5; // 서라운드(PET) 항상 18.5mm
+      // 서라운드 두께/재질: 사용자 설정값 따름 (18→PB, 18.5→PET). 15/15.5는 서라운드에 없으므로 18/18.5로 변환
+      const userPT2 = spaceInfo.panelThickness ?? 18;
+      const surroundThickness2 = (userPT2 === 18.5 || userPT2 === 15.5) ? 18.5 : 18;
+      const surroundMaterial2 = surroundThickness2 === 18.5 ? 'PET' : 'PB';
 
       if (dropH2 > 0) {
         const dropPosition2 = spaceInfo.droppedCeiling?.position || 'left';
@@ -1138,7 +1144,7 @@ export function usePanelSubscription(callback: (panels: Panel[]) => void) {
           surroundPanelList2.push({
             name: '좌측 서라운드 프레임',
             width: fs2.left, height: leftH2,
-            thickness: surroundThickness2, material: 'PET',
+            thickness: surroundThickness2, material: surroundMaterial2,
           });
         }
         if (fs2.right > 0) {
@@ -1146,7 +1152,7 @@ export function usePanelSubscription(callback: (panels: Panel[]) => void) {
           surroundPanelList2.push({
             name: '우측 서라운드 프레임',
             width: fs2.right, height: rightH2,
-            thickness: surroundThickness2, material: 'PET',
+            thickness: surroundThickness2, material: surroundMaterial2,
           });
         }
       } else {
@@ -1155,14 +1161,14 @@ export function usePanelSubscription(callback: (panels: Panel[]) => void) {
           surroundPanelList2.push({
             name: '좌측 서라운드 프레임',
             width: fs2.left, height: panelH2,
-            thickness: surroundThickness2, material: 'PET',
+            thickness: surroundThickness2, material: surroundMaterial2,
           });
         }
         if (fs2.right > 0) {
           surroundPanelList2.push({
             name: '우측 서라운드 프레임',
             width: fs2.right, height: panelH2,
-            thickness: surroundThickness2, material: 'PET',
+            thickness: surroundThickness2, material: surroundMaterial2,
           });
         }
       }
@@ -1172,7 +1178,7 @@ export function usePanelSubscription(callback: (panels: Panel[]) => void) {
           width: spaceInfo.width - (fs2.left || 0) - (fs2.right || 0),
           height: fs2.top,
           thickness: surroundThickness2,
-          material: 'PET',
+          material: surroundMaterial2,
         });
       }
     }
@@ -1182,7 +1188,7 @@ export function usePanelSubscription(callback: (panels: Panel[]) => void) {
       const cbPos2 = spaceInfo.curtainBox.position || 'right';
       const cbWidthMM2 = spaceInfo.curtainBox.width || 150;
       const cbDropH2 = spaceInfo.curtainBox.dropHeight || 60;
-      const cbPanelThickness2 = 18.5; // 커튼박스(PET) 항상 18.5mm
+      const cbPanelThickness2 = surroundThickness2; // 커튼박스도 서라운드와 동일 두께
       const cbSideDepth2 = 40;
       const cbFrontWidth2 = cbWidthMM2 - 3;
       const cbPanelHeight2 = surroundH2 + cbDropH2;
@@ -1191,12 +1197,12 @@ export function usePanelSubscription(callback: (panels: Panel[]) => void) {
       surroundPanelList2.push({
         name: `${posLabel2} 커튼박스 전면판`,
         width: cbFrontWidth2, height: cbPanelHeight2,
-        thickness: cbPanelThickness2, material: 'PET',
+        thickness: cbPanelThickness2, material: surroundMaterial2,
       });
       surroundPanelList2.push({
         name: `${posLabel2} 커튼박스 측면판`,
         width: cbSideDepth2, height: cbPanelHeight2,
-        thickness: cbPanelThickness2, material: 'PET',
+        thickness: cbPanelThickness2, material: surroundMaterial2,
       });
     }
 
