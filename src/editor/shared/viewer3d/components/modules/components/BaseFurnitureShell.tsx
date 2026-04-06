@@ -783,8 +783,8 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                   );
                 });
               })()
-            ) : (moduleData?.id?.includes('2drawer-hanging') || moduleData?.id?.includes('entryway-h')) ? (
-              // 2drawer-hanging / entryway-h: 싱글장 처리
+            ) : (moduleData?.id?.includes('2drawer-hanging') || moduleData?.id?.includes('entryway-h') || moduleData?.id?.includes('entryway-i')) ? (
+              // 2drawer-hanging / entryway-h / entryway-i: 싱글장 처리
               (() => {
                 return getSectionHeights().map((sectionHeight: number, index: number) => {
                   if (index >= getSectionHeights().length - 1) return null;
