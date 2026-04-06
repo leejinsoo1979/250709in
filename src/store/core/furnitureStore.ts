@@ -892,9 +892,15 @@ storeRef = useFurnitureStore;
 
 // 기본하부장 도어갭 마이그레이션: placedModules가 변경될 때마다
 // 옛 기본값(doorTopGap=20, doorBottomGap=2) → 새 기본값(-20, 5)으로 자동 교체
+// Zustand v5: subscribe는 (state) => void 시그니처만 지원
 let migrationRunning = false;
-useFurnitureStore.subscribe((state, prevState) => {
-  if (migrationRunning || state.placedModules === prevState.placedModules) return;
+let prevModulesRef = useFurnitureStore.getState().placedModules;
+useFurnitureStore.subscribe((state) => {
+  if (migrationRunning || state.placedModules === prevModulesRef) {
+    prevModulesRef = state.placedModules;
+    return;
+  }
+  prevModulesRef = state.placedModules;
   let needsMigration = false;
   for (const m of state.placedModules) {
     const isBasic = m.moduleId?.includes('lower-cabinet-basic') || m.moduleId?.includes('lower-cabinet-2tier') ||
@@ -915,9 +921,34 @@ useFurnitureStore.subscribe((state, prevState) => {
     if (!fixTop && !fixBot) return m;
     return { ...m, ...(fixTop ? { doorTopGap: -20 } : {}), ...(fixBot ? { doorBottomGap: 5 } : {}) };
   });
+  prevModulesRef = migrated;
   useFurnitureStore.setState({ placedModules: migrated });
   migrationRunning = false;
 });
+
+// 즉시 마이그레이션: 이미 메모리에 있는 placedModules에도 적용 (HMR 대응)
+{
+  const cur = useFurnitureStore.getState().placedModules;
+  if (cur.length > 0) {
+    let changed = false;
+    const fixed = cur.map(m => {
+      const isBasic = m.moduleId?.includes('lower-cabinet-basic') || m.moduleId?.includes('lower-cabinet-2tier') ||
+        m.moduleId?.includes('dual-lower-cabinet-basic') || m.moduleId?.includes('dual-lower-cabinet-2tier');
+      if (!isBasic) return m;
+      const fixTop = m.doorTopGap === 20;
+      const fixBot = m.doorBottomGap === 2;
+      if (!fixTop && !fixBot) return m;
+      changed = true;
+      return { ...m, ...(fixTop ? { doorTopGap: -20 } : {}), ...(fixBot ? { doorBottomGap: 5 } : {}) };
+    });
+    if (changed) {
+      prevModulesRef = fixed;
+      migrationRunning = true;
+      useFurnitureStore.setState({ placedModules: fixed });
+      migrationRunning = false;
+    }
+  }
+}
 
 // Development mode에서 디버깅을 위해 store를 window에 노출
 if (process.env.NODE_ENV === 'development') {
