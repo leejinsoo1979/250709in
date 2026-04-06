@@ -228,6 +228,7 @@ interface DrawerRendererProps {
   maidaInsetBottom?: number; // 마이다 하단 인셋 (mm), 기본 0
   maidaInsetLeft?: number;   // 마이다 좌측 인셋 (mm), 기본 0
   maidaInsetRight?: number;  // 마이다 우측 인셋 (mm), 기본 0
+  topPanelFrontInset?: number; // (하)상판 앞쪽 옵셋 (mm) — 타공 간격 연동용
 }
 
 /**
@@ -264,6 +265,7 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
   maidaInsetBottom = 0,
   maidaInsetLeft = 0,
   maidaInsetRight = 0,
+  topPanelFrontInset = 0,
 }) => {
   const showDimensions = useUIStore(state => state.showDimensions);
   const showDimensionsText = useUIStore(state => state.showDimensionsText);
@@ -402,12 +404,13 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
   // 서랍 바닥 두께 상수 (9mm)
   const DRAWER_BOTTOM_THICKNESS = mmToThreeUnits(9); // mm 단위 변환 일관 적용
   
-  // TopSupportPanel 기본 설정: 앞쪽 85mm 잘라내고, 뒤쪽은 백패널 공간 피하기
-  const topSupportPanelDepth = depth - mmToThreeUnits(85 + 9) - basicThickness + mmToThreeUnits(1); // 가구depth - (85+9+(basicThickness-1))
+  // TopSupportPanel 기본 설정: 앞쪽 (85 + topPanelFrontInset)mm 잘라내고, 뒤쪽은 백패널 공간 피하기
+  const frontInsetTotal = 85 + topPanelFrontInset;
+  const topSupportPanelDepth = depth - mmToThreeUnits(frontInsetTotal + 9) - basicThickness + mmToThreeUnits(1);
   const topSupportPanelY = innerHeight / 2 - basicThickness - mmToThreeUnits(9); // 내경 상단에서 18+9mm 아래
 
-  // TopSupportPanel Z축 위치: 모듈 앞면에서 85mm 뒤로 시작
-  const topSupportPanelZ = depth/2 - topSupportPanelDepth/2 - mmToThreeUnits(85); // 앞쪽 85mm 후퇴
+  // TopSupportPanel Z축 위치: 모듈 앞면에서 (85 + topPanelFrontInset)mm 뒤로 시작
+  const topSupportPanelZ = depth/2 - topSupportPanelDepth/2 - mmToThreeUnits(frontInsetTotal);
 
   // 서랍속장 (Drawer Interior Frame) 설정 - ㄷ자 프레임
   // 구조: 좌우 수직 패널 + 뒤쪽 수평 패널(좌우 연결) + 앞쪽 수평 패널(좌/우 각각)
@@ -434,7 +437,7 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
 
   // 2. 앞쪽 수평 패널 (좌/우 각각) — 전면 위치
   const backHorizontalPanelY = 0;
-  const backHorizontalPanelZ = depth/2 - mmToThreeUnits(85) - horizontalPanelDepthFront/2; // 앞에서 85mm + 수평패널 반두께
+  const backHorizontalPanelZ = depth/2 - mmToThreeUnits(frontInsetTotal) - horizontalPanelDepthFront/2; // 앞에서 (85+옵셋)mm + 수평패널 반두께
 
   // 3. 뒤쪽 수평 패널 (좌/우 각각) — 후면 위치 (백패널 앞면에 맞닿음)
   const frontHorizontalPanelY = 0;

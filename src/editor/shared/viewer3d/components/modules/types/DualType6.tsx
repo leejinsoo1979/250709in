@@ -221,6 +221,7 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
                   panelGrainDirections={panelGrainDirections}
                   furnitureId={placedFurnitureId}
                   backPanelThicknessOverride={backPanelThicknessProp}
+                  topPanelFrontInset={lowerSectionTopOffset || 0}
                 />
               );
             }
