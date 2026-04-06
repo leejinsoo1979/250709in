@@ -530,22 +530,18 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
           );
         })()}
         
-        {/* 통합 중단선반 (전체 폭) */}
+        {/* 중단선반: 우측만 (좌측은 서랍 상판으로 별도 렌더링) */}
         {hasSharedMiddlePanel && middlePanelHeight > 0 && (
-          <>
-            <BoxWithEdges
-              args={[innerWidth - sidePanelGap, basicThickness, adjustedDepthForShelves - basicThickness]}
-              position={[0, -height/2 + basicThickness + mmToThreeUnits(middlePanelHeight - 9), basicThickness/2 + shelfZOffset]}
-              material={material}
-              renderMode={useSpace3DView().renderMode}
-              furnitureId={placedFurnitureId}
-              isDragging={isDragging}
-              isEditMode={isEditMode}
-              panelName="(하)상판"
-            />
-            
-            {/* 중단선반 두께 치수 표시 - 제거됨 (2D에서 18mm 두께 표시 불필요) */}
-          </>
+          <BoxWithEdges
+            args={[rightWidth, basicThickness, adjustedDepthForShelves - basicThickness]}
+            position={[rightXOffset, -height/2 + basicThickness + mmToThreeUnits(middlePanelHeight - 9), basicThickness/2 + shelfZOffset]}
+            material={material}
+            renderMode={useSpace3DView().renderMode}
+            furnitureId={placedFurnitureId}
+            isDragging={isDragging}
+            isEditMode={isEditMode}
+            panelName="(하)상판"
+          />
         )}
         
         {/* 통합 안전선반 (전체 폭) */}
