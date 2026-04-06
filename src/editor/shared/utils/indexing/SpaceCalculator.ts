@@ -161,12 +161,21 @@ export class SpaceCalculator {
    */
   static selectOptimalGapSum(totalWidth: number, slotCount: number): number[] {
     // 0.5mm 단위로 이격거리 탐색 (2 ~ 20mm) — 빌트인 최소 이격합 2mm (양쪽 1mm)
-    // 0.5mm 단위 슬롯폭을 만드는 가장 작은 이격거리를 반환
+    // 우선순위: 정수 슬롯폭 → 0.5mm 단위 슬롯폭
     for (let gapSum = 2; gapSum <= 20; gapSum += 0.5) {
       const internalWidth = totalWidth - gapSum;
       const slotWidth = internalWidth / slotCount;
+      const isInteger = Math.abs(slotWidth - Math.round(slotWidth)) < 0.001;
 
-      // 0.5mm 단위로 떨어지는지 체크 (정수 + 0.5mm 허용)
+      if (isInteger && slotWidth >= 200 && slotWidth <= 1200) {
+        return [gapSum]; // 정수 우선
+      }
+    }
+
+    // 정수가 없으면 0.5mm 단위 허용
+    for (let gapSum = 2; gapSum <= 20; gapSum += 0.5) {
+      const internalWidth = totalWidth - gapSum;
+      const slotWidth = internalWidth / slotCount;
       const isHalfMm = Math.abs(slotWidth * 2 - Math.round(slotWidth * 2)) < 0.001;
 
       if (isHalfMm && slotWidth >= 200 && slotWidth <= 1200) {
@@ -196,8 +205,12 @@ export class SpaceCalculator {
         let bestConfig = null;
         let bestSlotWidth = null;
 
-        // 0.5mm 단위로 떨어지는지 체크 (정수 + 0.5mm 허용)
-        const isHalfMmUnit = (val: number) => Math.abs(val * 2 - Math.round(val * 2)) < 0.001;
+        // 슬롯 너비 허용 기준:
+        // - 싱글(슬롯1개) 가구는 슬롯폭 = 가구폭 → 정수만 허용
+        // - 듀얼(슬롯2개) 가구는 가구폭 = 슬롯폭×2 → 슬롯폭 0.5mm 허용 (가구폭은 정수)
+        // 이격거리 계산 시점에는 가구 미배치 → 슬롯폭 0.5mm 단위 허용 (최소 공배수)
+        const isValidSlotWidth = (val: number) => Math.abs(val * 2 - Math.round(val * 2)) < 0.001;
+        const roundSlotWidth = (val: number) => Math.round(val * 2) / 2;
 
         // 1단계: 현재 설정된 gapConfig를 먼저 시도
         const currentLeft = spaceInfo.gapConfig?.left ?? 1.5;
@@ -205,37 +218,83 @@ export class SpaceCalculator {
         const currentInternalWidth = baseWidth - currentLeft - currentRight;
         const currentSlotWidth = currentInternalWidth / columnCount;
 
-        if (isHalfMmUnit(currentSlotWidth) && currentSlotWidth >= 400 && currentSlotWidth <= 600) {
+        if (isValidSlotWidth(currentSlotWidth) && currentSlotWidth >= 400 && currentSlotWidth <= 600) {
           return {
             adjustedSpaceInfo: {
               ...spaceInfo,
               gapConfig: { left: currentLeft, right: currentRight }
             },
-            slotWidth: Math.round(currentSlotWidth * 2) / 2,
+            slotWidth: roundSlotWidth(currentSlotWidth),
             adjustmentMade: true
           };
         }
 
         // 2단계: 현재 값으로 안 되면 대칭 이격거리 탐색 (0.5 단위)
         // 빌트인은 벽과의 최소 이격 1mm 필요
+        // 우선순위: 정수 슬롯폭 먼저, 없으면 0.5mm 슬롯폭
         for (let gap = 1; gap <= 5; gap += 0.5) {
           const internalWidth = baseWidth - (gap * 2);
           const slotWidth = internalWidth / columnCount;
+          const isInteger = Math.abs(slotWidth - Math.round(slotWidth)) < 0.001;
 
-          // 0.5mm 단위로 떨어지는지 체크 (정수 + 0.5mm 허용)
-          if (isHalfMmUnit(slotWidth) && slotWidth >= 400 && slotWidth <= 600) {
+          if (isInteger && slotWidth >= 400 && slotWidth <= 600) {
             return {
               adjustedSpaceInfo: {
                 ...spaceInfo,
                 gapConfig: { left: gap, right: gap }
               },
-              slotWidth: Math.round(slotWidth * 2) / 2,
+              slotWidth: Math.round(slotWidth),
               adjustmentMade: true
             };
           }
         }
-        
-        // 대칭으로 안되면 비대칭 이격거리 시도 (0.5 단위)
+        // 정수 못 찾으면 0.5mm 단위 허용
+        for (let gap = 1; gap <= 5; gap += 0.5) {
+          const internalWidth = baseWidth - (gap * 2);
+          const slotWidth = internalWidth / columnCount;
+
+          if (isValidSlotWidth(slotWidth) && slotWidth >= 400 && slotWidth <= 600) {
+            return {
+              adjustedSpaceInfo: {
+                ...spaceInfo,
+                gapConfig: { left: gap, right: gap }
+              },
+              slotWidth: roundSlotWidth(slotWidth),
+              adjustmentMade: true
+            };
+          }
+        }
+
+        // 대칭으로 안되면 비대칭 이격거리 시도
+        for (let diff = 0.5; diff <= 3.5; diff += 0.5) {
+          for (let leftGap = 1; leftGap <= 5; leftGap += 0.5) {
+            const rightGap = Math.round((leftGap + diff) * 10) / 10;
+            if (rightGap > 5) continue;
+
+            const configs = [
+              { left: leftGap, right: rightGap },
+              { left: rightGap, right: leftGap }
+            ];
+
+            for (const config of configs) {
+              const internalWidth = baseWidth - config.left - config.right;
+              const slotWidth = internalWidth / columnCount;
+              const isInteger = Math.abs(slotWidth - Math.round(slotWidth)) < 0.001;
+
+              if (isInteger && slotWidth >= 400 && slotWidth <= 600) {
+                return {
+                  adjustedSpaceInfo: {
+                    ...spaceInfo,
+                    gapConfig: config
+                  },
+                  slotWidth: Math.round(slotWidth),
+                  adjustmentMade: true
+                };
+              }
+            }
+          }
+        }
+        // 비대칭에서도 정수 못 찾으면 0.5mm 단위 허용
         for (let diff = 0.5; diff <= 3.5; diff += 0.5) {
           for (let leftGap = 1; leftGap <= 5; leftGap += 0.5) {
             const rightGap = Math.round((leftGap + diff) * 10) / 10;
@@ -250,13 +309,13 @@ export class SpaceCalculator {
               const internalWidth = baseWidth - config.left - config.right;
               const slotWidth = internalWidth / columnCount;
 
-              if (isHalfMmUnit(slotWidth) && slotWidth >= 400 && slotWidth <= 600) {
+              if (isValidSlotWidth(slotWidth) && slotWidth >= 400 && slotWidth <= 600) {
                 return {
                   adjustedSpaceInfo: {
                     ...spaceInfo,
                     gapConfig: config
                   },
-                  slotWidth: Math.round(slotWidth * 2) / 2,
+                  slotWidth: roundSlotWidth(slotWidth),
                   adjustmentMade: true
                 };
               }
