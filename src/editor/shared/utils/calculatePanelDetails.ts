@@ -689,7 +689,19 @@ export const calculatePanelDetails = (
       }
     });
   }
-  
+
+  // === 바지걸이장 안전선반 (전체 너비, 상부 섹션) ===
+  if (isPantsHanger && moduleData.modelConfig?.hasSharedSafetyShelf) {
+    const sidePanelGap = (basicThickness === 15.5 || basicThickness === 18.5) ? 0 : 1;
+    const shelfFrontInsetMm = moduleData.modelConfig?.shelfFrontInsetMm || 0;
+    panels.upper.push({
+      name: '(상)선반 1',
+      width: innerWidth - sidePanelGap,
+      depth: customDepth - 8 - basicThickness - shelfFrontInsetMm,
+      thickness: basicThickness,
+      material: 'PB'
+    });
+  }
 
   // === Type5/6 우측 섹션 패널 (rightSections) ===
   if (isType5or6 && rightSectionsForType5or6.length > 0) {
