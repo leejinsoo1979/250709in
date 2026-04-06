@@ -510,19 +510,24 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
           });
         })()}
         
-        {/* 중간 세로 칸막이 (바닥부터 중단선반까지만) */}
-        {hasSharedMiddlePanel && middlePanelHeight > 0 && (
-          <BoxWithEdges
-            args={[basicThickness, mmToThreeUnits(middlePanelHeight), adjustedDepthForShelves - basicThickness]}
-            position={[(leftWidth - rightWidth) / 2, -height/2 + basicThickness + mmToThreeUnits(middlePanelHeight)/2 - mmToThreeUnits(18), basicThickness/2 + shelfZOffset]}
-            material={material}
-            renderMode={useSpace3DView().renderMode}
-            furnitureId={placedFurnitureId}
-            isDragging={isDragging}
-            isEditMode={isEditMode}
-            panelName="칸막이"
-          />
-        )}
+        {/* 중간 세로 칸막이 (바닥판 위 ~ 중단선반까지) */}
+        {hasSharedMiddlePanel && middlePanelHeight > 0 && (() => {
+          // 칸막이 높이: 바닥판 윗면부터 중단선반 하면까지
+          const partitionH = mmToThreeUnits(middlePanelHeight - 9) - basicThickness/2;
+          const partitionY = -height/2 + basicThickness + partitionH / 2;
+          return (
+            <BoxWithEdges
+              args={[basicThickness, partitionH, adjustedDepthForShelves - basicThickness]}
+              position={[(leftWidth - rightWidth) / 2, partitionY, basicThickness/2 + shelfZOffset]}
+              material={material}
+              renderMode={useSpace3DView().renderMode}
+              furnitureId={placedFurnitureId}
+              isDragging={isDragging}
+              isEditMode={isEditMode}
+              panelName="칸막이"
+            />
+          );
+        })()}
         
         {/* 통합 중단선반 (전체 폭) */}
         {hasSharedMiddlePanel && middlePanelHeight > 0 && (
@@ -679,27 +684,16 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
         panelName="상판"
       />
       
-      {/* 하단 판재 - 좌/우 분리, 뒤에서 26mm 줄여서 백패널과 맞닿게 */}
+      {/* 하단 판재 - 전체 너비 1장 (중간칸막이가 바닥판 위에 올라옴), 뒤에서 26mm 줄여서 백패널과 맞닿게 */}
       <>
-        {/* 좌측 하단판 */}
         <BoxWithEdges
-          args={[leftWidth, basicThickness, depth - mmToThreeUnits(26)]}
-          position={[leftXOffset, -height/2 + basicThickness/2, mmToThreeUnits(13)]}
+          args={[innerWidth - sidePanelGap, basicThickness, depth - mmToThreeUnits(26)]}
+          position={[0, -height/2 + basicThickness/2, mmToThreeUnits(13)]}
           material={material}
           renderMode={useSpace3DView().renderMode}
           furnitureId={placedFurnitureId}
           isDragging={isDragging}
-          panelName="(하)바닥"
-        />
-
-        {/* 우측 하단판 */}
-        <BoxWithEdges
-          args={[rightWidth, basicThickness, depth - mmToThreeUnits(26)]}
-          position={[rightXOffset, -height/2 + basicThickness/2, mmToThreeUnits(13)]}
-          material={material}
-          renderMode={useSpace3DView().renderMode}
-          furnitureId={placedFurnitureId}
-          isDragging={isDragging}
+          isEditMode={isEditMode}
           panelName="바닥판"
         />
         
