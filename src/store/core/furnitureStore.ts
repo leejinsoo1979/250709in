@@ -627,7 +627,24 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
   // 가구 목록 직접 설정 함수 (함수형 업데이트 지원)
   setPlacedModules: (modules: PlacedModule[] | ((prev: PlacedModule[]) => PlacedModule[])) => {
     const state = get();
-    const newModules = typeof modules === 'function' ? modules(state.placedModules) : modules;
+    const resolved = typeof modules === 'function' ? modules(state.placedModules) : modules;
+    // 마이그레이션: 기본하부장 도어갭 기본값 업데이트 (옛 기본값 20/2 → 새 기본값 -20/5)
+    const newModules = resolved.map(m => {
+      const isBasic = m.moduleId?.includes('lower-cabinet-basic') || m.moduleId?.includes('lower-cabinet-2tier') ||
+        m.moduleId?.includes('dual-lower-cabinet-basic') || m.moduleId?.includes('dual-lower-cabinet-2tier');
+      if (isBasic) {
+        const needsTopFix = m.doorTopGap === 20;
+        const needsBottomFix = m.doorBottomGap === 2;
+        if (needsTopFix || needsBottomFix) {
+          return {
+            ...m,
+            ...(needsTopFix ? { doorTopGap: -20 } : {}),
+            ...(needsBottomFix ? { doorBottomGap: 5 } : {})
+          };
+        }
+      }
+      return m;
+    });
     set({ placedModules: newModules });
     notifyR3F(newModules);
   },
