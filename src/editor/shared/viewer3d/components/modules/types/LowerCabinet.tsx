@@ -399,7 +399,7 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
               material={lFrameDoorMaterial}
               renderMode={renderMode}
               isHighlighted={false}
-              panelName="L프레임수평(1)"
+              panelName="목찬넬프레임수평(1)"
               panelGrainDirections={panelGrainDirections}
               furnitureId={placedFurnitureId}
             />
@@ -409,7 +409,7 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
               material={lFrameDoorMaterial}
               renderMode={renderMode}
               isHighlighted={false}
-              panelName="L프레임수직(1)"
+              panelName="목찬넬프레임수직(1)"
               panelGrainDirections={panelGrainDirections}
               furnitureId={placedFurnitureId}
             />
@@ -440,7 +440,7 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
               material={lFrameDoorMaterial}
               renderMode={renderMode}
               isHighlighted={false}
-              panelName="L프레임수평(1)"
+              panelName="목찬넬프레임수평(1)"
               panelGrainDirections={panelGrainDirections}
               furnitureId={placedFurnitureId}
             />
@@ -450,7 +450,7 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
               material={lFrameDoorMaterial}
               renderMode={renderMode}
               isHighlighted={false}
-              panelName="L프레임수직(1)"
+              panelName="목찬넬프레임수직(1)"
               panelGrainDirections={panelGrainDirections}
               furnitureId={placedFurnitureId}
             />

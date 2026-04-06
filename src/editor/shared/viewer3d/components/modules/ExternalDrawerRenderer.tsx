@@ -591,8 +591,8 @@ export const ExternalDrawerRenderer: React.FC<ExternalDrawerRendererProps> = ({
         const vertZ = depth / 2 - mmToThreeUnits(40) + basicThickness / 2;
         const vertArgs: [number, number, number] = [frameWidth, mmToThreeUnits(verticalHMm), basicThickness];
 
-        const horzName = sectionName ? `${sectionName}L프레임수평(${ni + 1})` : `L프레임수평(${ni + 1})`;
-        const vertName = sectionName ? `${sectionName}L프레임수직(${ni + 1})` : `L프레임수직(${ni + 1})`;
+        const horzName = sectionName ? `${sectionName}목찬넬프레임수평(${ni + 1})` : `목찬넬프레임수평(${ni + 1})`;
+        const vertName = sectionName ? `${sectionName}목찬넬프레임수직(${ni + 1})` : `목찬넬프레임수직(${ni + 1})`;
 
         return (
           <group key={`l-frame-${ni}`}>

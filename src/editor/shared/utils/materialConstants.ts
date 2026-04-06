@@ -82,8 +82,8 @@ export const applyDefaultImageTextureSettings = (material: THREE.MeshStandardMat
  * 패널 이름으로 기본 결 방향 판단 (단일 기준 — CNC 옵티마이저와 팝업 패널목록 공통)
  *
  * 규칙:
- * - VERTICAL (결이 높이 방향, L=Y축): 백패널, 측판, 칸막이, 도어, 서랍속장, 커튼박스, L프레임수직, 좌우 분할판
- * - HORIZONTAL (결이 너비 방향, L=X축): 상판, 바닥, 선반, 분할판, 보강대, 마이다, 서랍 앞판·뒷판·측판, L프레임수평
+ * - VERTICAL (결이 높이 방향, L=Y축): 백패널, 측판, 칸막이, 도어, 서랍속장, 커튼박스, 목찬넬프레임수직, 좌우 분할판
+ * - HORIZONTAL (결이 너비 방향, L=X축): 상판, 바닥, 선반, 분할판, 보강대, 마이다, 서랍 앞판·뒷판·측판, 목찬넬프레임수평
  *
  * 주의: 백패널은 MDF 무결이지만 2440방향 고정 → VERTICAL로 취급(회전 불가).
  *
@@ -114,8 +114,8 @@ export const getDefaultGrainDirection = (panelName?: string): 'horizontal' | 've
 
   // ── 프레임류 ──────────────────────────────────
   if (panelName.includes('커튼박스')) return 'vertical';
-  if (panelName.includes('L프레임수평')) return 'horizontal';
-  if (panelName.includes('L프레임수직')) return 'vertical';
+  if (panelName.includes('목찬넬프레임수평')) return 'horizontal';
+  if (panelName.includes('목찬넬프레임수직')) return 'vertical';
 
   // ── 가구 구조 패널 (세로 방향) ─────────────────
   if (panelName.includes('좌측') || panelName.includes('우측') || panelName.includes('측판')) {

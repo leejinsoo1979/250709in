@@ -1368,7 +1368,7 @@ export const calculatePanelDetails = (
       if (notch.height <= 0) return;
       // 수평판: 깊이 40mm
       panels.frame.push({
-        name: `L프레임수평(${ni + 1})`,
+        name: `목찬넬프레임수평(${ni + 1})`,
         width: customWidth,
         height: 40,
         thickness: basicThickness,
@@ -1377,7 +1377,7 @@ export const calculatePanelDetails = (
       });
       // 수직판: 높이 = 따내기높이 - 수평판두께
       panels.frame.push({
-        name: `L프레임수직(${ni + 1})`,
+        name: `목찬넬프레임수직(${ni + 1})`,
         width: customWidth,
         height: notch.height - basicThickness,
         thickness: basicThickness,

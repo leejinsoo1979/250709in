@@ -383,8 +383,8 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
 
   // 엣지 색상 결정
   const edgeColor = React.useMemo(() => {
-    // 2D 모드에서 L프레임은 파란색 윤곽선
-    if (viewMode === '2D' && panelName && panelName.includes('L프레임')) {
+    // 2D 모드에서 목찬넬프레임은 파란색 윤곽선
+    if (viewMode === '2D' && panelName && panelName.includes('목찬넬프레임')) {
       return '#00cfff';
     }
     // 2D 모드에서 서랍속장/도어/마이다/마감판 패널은 초록색 윤곽선
