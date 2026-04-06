@@ -991,10 +991,8 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                         const supportTopY = lowerTopPanelY - basicThickness/2 - mmToThreeUnits(188);
                         // 서랍 drawerHeight = 155mm (측판 기준 높이)
                         const drawerH = mmToThreeUnits(155);
-                        // 측판 하단 = 받침대 상단 + 12mm, 측판은 drawerH - 30mm이므로 상하 15mm 유격
-                        // drawerRegionBottom = centerY - drawerH/2, 측판 하단 = centerY - (drawerH-30)/2
-                        // 측판 하단 = drawerRegionBottom + 15mm = supportTopY + 12mm
-                        const drawerRegionBottom = supportTopY + mmToThreeUnits(12) - mmToThreeUnits(15);
+                        // 측판 하단 = 받침대 상단 + 12mm (측판 155mm 전체 높이, 유격 없음)
+                        const drawerRegionBottom = supportTopY + mmToThreeUnits(12);
                         // 서랍 중심 Y (DrawerRenderer 동일: centerY 기준으로 모든 부품 배치)
                         const drawerCenterY = drawerRegionBottom + drawerH / 2;
                         // DrawerRenderer 호환 alias
@@ -1013,12 +1011,13 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                         const frameT = basicThickness;
                         const drawerAreaWidth = innerWidth - sidePanelGap - (vertXOff + frameT + mmToThreeUnits(0.5)) * 2;
 
-                        // 서랍 깊이: 하부섹션 깊이 기준, 앞 30mm - 뒤 30mm = 총 60mm 감소
-                        const drawerFullDepth = lowerSectionDepth - mmToThreeUnits(60);
-                        const drawerBodyDepth = drawerFullDepth - maidaT;
-                        // Z 기준: 하부 섹션 Z 오프셋 적용
-                        const drawerBaseZ = lowerZOffset + basicThickness/2;
-                        const drawerBodyCenterZ = drawerBaseZ - maidaT / 2;
+                        // 날개벽 전면 수평패널 앞면 Z (서랍 앞면 기준)
+                        const wingFrontFaceZ = depth/2 - mmToThreeUnits(85);
+                        // 날개벽 후면 수평패널 뒷면 Z
+                        const wingBackFaceZ = -depth/2 + basicThickness + bpT;
+                        // 서랍 측판 깊이: 날개벽 전면 앞면 ~ 후면 뒷면
+                        const drawerSideDepth = wingFrontFaceZ - wingBackFaceZ;
+                        const drawerSideCenterZ = (wingFrontFaceZ + wingBackFaceZ) / 2;
 
                         return (
                           <>
@@ -1029,8 +1028,8 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                               return (
                                 <BoxWithEdges
                                   key={`entryway-drawer-left-${mat.uuid}`}
-                                  args={[drawerSideT, drawerSideH - mmToThreeUnits(30), drawerBodyDepth]}
-                                  position={[-drawerAreaWidth/2 + drawerSideT/2 + mmToThreeUnits(38), drawerCenterY, drawerBodyCenterZ]}
+                                  args={[drawerSideT, drawerSideH, drawerSideDepth]}
+                                  position={[-drawerAreaWidth/2 + drawerSideT/2 + mmToThreeUnits(38), drawerCenterY, drawerSideCenterZ]}
                                   material={mat}
                                   renderMode={renderMode}
                                   isDragging={isDragging}
@@ -1050,8 +1049,8 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                               return (
                                 <BoxWithEdges
                                   key={`entryway-drawer-right-${mat.uuid}`}
-                                  args={[drawerSideT, drawerSideH - mmToThreeUnits(30), drawerBodyDepth]}
-                                  position={[drawerAreaWidth/2 - drawerSideT/2 - mmToThreeUnits(38), drawerCenterY, drawerBodyCenterZ]}
+                                  args={[drawerSideT, drawerSideH, drawerSideDepth]}
+                                  position={[drawerAreaWidth/2 - drawerSideT/2 - mmToThreeUnits(38), drawerCenterY, drawerSideCenterZ]}
                                   material={mat}
                                   renderMode={renderMode}
                                   isDragging={isDragging}
@@ -1071,8 +1070,8 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                               return (
                                 <BoxWithEdges
                                   key={`entryway-drawer-front-${mat.uuid}`}
-                                  args={[drawerAreaWidth - mmToThreeUnits(107), drawerSideH - mmToThreeUnits(30), drawerSideT]}
-                                  position={[0, drawerCenterY, drawerBodyCenterZ + drawerBodyDepth/2 - drawerSideT/2]}
+                                  args={[drawerAreaWidth - mmToThreeUnits(107), drawerSideH, drawerSideT]}
+                                  position={[0, drawerCenterY, wingFrontFaceZ - drawerSideT/2]}
                                   material={mat}
                                   renderMode={renderMode}
                                   isDragging={isDragging}
@@ -1089,15 +1088,17 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                             {(() => {
                               const pn = '서랍1 뒷판';
                               const mat = getPanelMaterial(pn);
-                              const bottomTopY2 = drawerCenterY - (drawerSideH - mmToThreeUnits(30))/2 + mmToThreeUnits(18) + bottomT;
-                              const origBackTop = drawerCenterY + (drawerSideH - mmToThreeUnits(30)) / 2;
+                              // 뒷판 하단 = 바닥판 윗면
+                              const sidePanelBottom2 = drawerCenterY - drawerSideH / 2;
+                              const bottomTopY2 = sidePanelBottom2 + mmToThreeUnits(18) + bottomT;
+                              const origBackTop = drawerCenterY + drawerSideH / 2;
                               const backH = origBackTop - bottomTopY2;
                               const backCY = (origBackTop + bottomTopY2) / 2;
                               return (
                                 <BoxWithEdges
                                   key={`entryway-drawer-back-${mat.uuid}`}
                                   args={[drawerAreaWidth - mmToThreeUnits(107), backH, drawerSideT]}
-                                  position={[0, backCY, drawerBodyCenterZ - drawerBodyDepth/2 + drawerSideT/2]}
+                                  position={[0, backCY, wingBackFaceZ + drawerSideT/2]}
                                   material={mat}
                                   renderMode={renderMode}
                                   isDragging={isDragging}
@@ -1114,18 +1115,14 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                             {(() => {
                               const pn = '서랍1 바닥';
                               const mat = getPanelMaterial(pn);
-                              // 바닥판 깊이: 서랍 본체 깊이 - 앞쪽 10mm 홈 여유
-                              const bottomDepth2 = drawerBodyDepth - mmToThreeUnits(10);
-                              const bottomZ2 = drawerBodyCenterZ - mmToThreeUnits(5);
+                              // 바닥판 깊이: 측판 깊이 - 앞쪽 10mm 홈 여유
+                              const bottomDepth2 = drawerSideDepth - mmToThreeUnits(10);
+                              const bottomZ2 = drawerSideCenterZ - mmToThreeUnits(5);
                               // 바닥판 폭: 서랍 좌우측판 안쪽 간격
-                              // 좌측판 안쪽 X = -drawerAreaWidth/2 + 38mm + drawerSideT
-                              // 우측판 안쪽 X = drawerAreaWidth/2 - 38mm - drawerSideT
-                              // 바닥판 폭 = 안쪽 간격 = drawerAreaWidth - (38mm + drawerSideT) * 2
                               const bottomWidth = drawerAreaWidth - mmToThreeUnits(38 * 2) - drawerSideT * 2;
                               // 바닥판 Y: 측판 하단에서 18mm 위
-                              const sidePanelBottom = drawerCenterY - (drawerSideH - mmToThreeUnits(30)) / 2;
+                              const sidePanelBottom = drawerCenterY - drawerSideH / 2;
                               const bottomY = sidePanelBottom + mmToThreeUnits(18) + bottomT / 2;
-                              console.log('🔵 서랍 바닥판:', { bottomWidth: bottomWidth/0.01, bottomT: bottomT/0.01, bottomDepth: bottomDepth2/0.01, bottomY: bottomY/0.01, bottomZ: bottomZ2/0.01 });
                               return (
                                 <BoxWithEdges
                                   key={`entryway-drawer-bottom-${mat.uuid}`}
@@ -1151,7 +1148,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                                 <BoxWithEdges
                                   key={`entryway-drawer-maida-${mat.uuid}`}
                                   args={[drawerAreaWidth, drawerSideH, maidaT]}
-                                  position={[0, drawerCenterY, drawerBaseZ + drawerFullDepth/2 - maidaT/2]}
+                                  position={[0, drawerCenterY, wingFrontFaceZ + maidaT/2]}
                                   material={mat}
                                   renderMode={renderMode}
                                   isDragging={isDragging}
