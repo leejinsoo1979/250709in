@@ -66,18 +66,11 @@ function extractPanelName(objName: string): string | null {
 }
 
 /**
- * 제외 패널 숨김 — BoxWithEdges/DoorModule의 return null 방식으로 대체됨.
- * composite key(furnitureId::panelName)는 컴포넌트 레벨에서 처리하므로
- * scene traverse 방식은 더 이상 사용하지 않음.
+ * PanelHider — 이전 scene traverse 방식에서 BoxWithEdges useFrame 폴링 방식으로 대체됨.
+ * BoxWithEdges가 useFrame 내에서 ExcludedPanelsStore.getState()를 직접 읽어 visible 제어.
+ * (R3F Canvas 별도 reconciler ↔ DOM Zustand 구독 호환 문제 회피)
  */
-const PanelHider: React.FC = () => {
-  // DEBUG: R3F Canvas 내부에서 store 읽기 확인
-  const excludedKeys = useExcludedPanelsStore((s) => s.excludedKeys);
-  React.useEffect(() => {
-    console.log('[PanelHider-R3F] excludedKeys.size inside Canvas:', excludedKeys.size);
-  }, [excludedKeys.size]);
-  return null;
-};
+const PanelHider: React.FC = () => null;
 
 /** 비하이라이트 패널 반투명 처리 (scene traverse) — wireframe + solid 모드 모두 지원 */
 const PanelDimmer: React.FC<{
@@ -396,15 +389,11 @@ const PanelHighlight3DViewer: React.FC<PanelHighlight3DViewerProps> = ({
   const setHighlightedPanel = useUIStore((state) => state.setHighlightedPanel);
   const setExcludedKeys = useExcludedPanelsStore((s) => s.setExcludedKeys);
 
-  // excludedMeshNames → Zustand store 동기화 (R3F Canvas 안에서 접근 가능하게)
+  // excludedMeshNames → Zustand store 동기화 (R3F Canvas 안에서 BoxWithEdges가 getState()로 접근)
   useEffect(() => {
     const keys = excludedMeshNames ?? new Set();
-    console.log('[PH3DV] useEffect fired! excludedMeshNames.size=', keys.size, 'calling setExcludedKeys');
     setExcludedKeys(keys);
-    return () => {
-      console.log('[PH3DV] useEffect cleanup! clearing excludedKeys');
-      setExcludedKeys(new Set());
-    };
+    return () => setExcludedKeys(new Set());
   }, [excludedMeshNames, setExcludedKeys]);
 
   // 지연 마운트: 이전 WebGL 컨텍스트 정리 대기

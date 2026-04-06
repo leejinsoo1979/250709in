@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import * as THREE from 'three';
+import { useFrame } from '@react-three/fiber';
 import { useSpace3DView } from '../../../context/useSpace3DView';
 import { useViewerTheme } from '../../../context/ViewerThemeContext';
 import { useUIStore } from '@/store/uiStore';
@@ -69,9 +70,18 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
 }) => {
 
   // CNC 옵티마이저에서 체크 해제된 패널이면 렌더링 생략 (furnitureId::panelName 복합키)
-  const excludedKeys = useExcludedPanelsStore((s) => s.excludedKeys);
+  // NOTE: React hook (useExcludedPanelsStore) 대신 useFrame으로 폴링 — R3F Canvas는 별도 React reconciler를 사용하므로
+  // DOM 쪽 Zustand 구독이 R3F 내부 컴포넌트 리렌더를 트리거하지 못함
+  const groupRef = useRef<THREE.Group>(null);
   const compositeKey = furnitureId && panelName ? `${furnitureId}::${panelName}` : null;
-  const isExcludedByOptimizer = excludedKeys.size > 0 && compositeKey ? excludedKeys.has(compositeKey) : false;
+  useFrame(() => {
+    if (!groupRef.current || !compositeKey) return;
+    const { excludedKeys } = useExcludedPanelsStore.getState();
+    const shouldHide = excludedKeys.size > 0 && excludedKeys.has(compositeKey);
+    if (groupRef.current.visible === shouldHide) {
+      groupRef.current.visible = !shouldHide;
+    }
+  });
 
 
   const { viewMode, plainMaterial: isPlainMaterial } = useSpace3DView();
@@ -774,9 +784,9 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
   }, [notch, notches, hasAnyNotch, args]);
 
   // 옵티마이저에서 제외된 패널이면 렌더링하지 않음
-  // return null 대신 visible={false}로 처리 — R3F scene graph에서 확실히 숨김
+  // useFrame 폴링으로 visible 제어 — R3F reconciler/DOM reconciler 간 Zustand 구독 호환 문제 회피
   return (
-    <group position={position} visible={!isExcludedByOptimizer} userData={furnitureId ? { furnitureId } : undefined}>
+    <group ref={groupRef} position={position} userData={furnitureId ? { furnitureId } : undefined}>
       {/* 면 렌더링 - 와이어프레임에서는 투명하게 */}
       {/* DXF 내보내기를 위해 mesh에도 이름 추가 */}
       <mesh
