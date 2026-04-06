@@ -991,8 +991,10 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                         const supportTopY = lowerTopPanelY - basicThickness/2 - mmToThreeUnits(188);
                         // 서랍 drawerHeight = 155mm (측판 기준 높이)
                         const drawerH = mmToThreeUnits(155);
-                        // 서랍 영역 하단 = 받침대 상단 + 12mm
-                        const drawerRegionBottom = supportTopY + mmToThreeUnits(12);
+                        // 측판 하단 = 받침대 상단 + 12mm, 측판은 drawerH - 30mm이므로 상하 15mm 유격
+                        // drawerRegionBottom = centerY - drawerH/2, 측판 하단 = centerY - (drawerH-30)/2
+                        // 측판 하단 = drawerRegionBottom + 15mm = supportTopY + 12mm
+                        const drawerRegionBottom = supportTopY + mmToThreeUnits(12) - mmToThreeUnits(15);
                         // 서랍 중심 Y (DrawerRenderer 동일: centerY 기준으로 모든 부품 배치)
                         const drawerCenterY = drawerRegionBottom + drawerH / 2;
                         // DrawerRenderer 호환 alias
