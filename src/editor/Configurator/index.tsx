@@ -5610,8 +5610,10 @@ const Configurator: React.FC = () => {
               </div>
               {!isFrameSectionCollapsed && (
                 <div className={styles.subSetting}>
-                  {/* 상부프레임 — 좌→우 순서 */}
+                  {/* 상부프레임 — 좌→우 순서 (하부장만 배치된 슬롯은 숨김) */}
                   {sorted.map((mod) => {
+                    const cat = getModuleCategory(mod);
+                    if (cat === 'lower') return null;
                     topNum++;
                     return <React.Fragment key={`top-${mod.id}`}>{renderSlotFrameRow(
                       `${toAlpha(topNum)}(상)`,
@@ -5628,8 +5630,10 @@ const Configurator: React.FC = () => {
                   {spaceInfo.baseConfig?.type !== 'stand' && sorted.length > 0 && (
                     <div style={{ borderTop: '1px solid var(--theme-border, #e0e0e0)', margin: '6px 0' }} />
                   )}
-                  {/* 하부프레임 — stand 타입이면 숨김 */}
+                  {/* 하부프레임 — stand 타입이면 숨김, 상부장만 배치된 슬롯은 숨김 */}
                   {spaceInfo.baseConfig?.type !== 'stand' && sorted.map((mod) => {
+                    const cat = getModuleCategory(mod);
+                    if (cat === 'upper') return null;
                     baseNum++;
                     return <React.Fragment key={`base-${mod.id}`}>{renderSlotBaseFrameRow(
                       mod,
