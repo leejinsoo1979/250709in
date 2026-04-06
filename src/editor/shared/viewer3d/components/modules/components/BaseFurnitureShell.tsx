@@ -1146,12 +1146,12 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                                 />
                               );
                             })()}
-                            {/* 서랍 마이다: 상단=하부상판 하단-6mm, 하단=받침대 하단, 높이=212mm */}
+                            {/* 서랍 마이다: 상단=하부상판 윗면-6mm, 하단=받침대 하단, 높이=212mm */}
                             {(() => {
                               const pn = '서랍1(마이다)';
                               const mat = getPanelMaterial(pn);
                               const maidaH = mmToThreeUnits(212);
-                              const maidaTopY = lowerTopPanelY - basicThickness / 2 - mmToThreeUnits(6);
+                              const maidaTopY = lowerTopPanelY + basicThickness / 2 - mmToThreeUnits(6);
                               const maidaCenterY = maidaTopY - maidaH / 2;
                               return (
                                 <BoxWithEdges
