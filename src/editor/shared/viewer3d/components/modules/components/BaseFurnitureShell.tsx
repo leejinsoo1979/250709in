@@ -853,7 +853,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                         <BoxWithEdges
                           key={`drawer-support-${getPanelMaterial('(하)상판').uuid}`}
                           args={[innerWidth - sidePanelGap, basicThickness - mmToThreeUnits(0.1), lowerSectionDepth - backReductionForPanels - mmToThreeUnits(lowerSectionTopOffsetMm || 0)]}
-                          position={[0, lowerTopPanelY - mmToThreeUnits(188), lowerZOffset + panelZOffset - mmToThreeUnits(lowerSectionTopOffsetMm || 0)/2]}
+                          position={[0, lowerTopPanelY - basicThickness - mmToThreeUnits(188) - (basicThickness - mmToThreeUnits(0.1))/2, lowerZOffset + panelZOffset - mmToThreeUnits(lowerSectionTopOffsetMm || 0)/2]}
                           material={getPanelMaterial('(하)상판')}
                           renderMode={renderMode}
                           isDragging={isDragging}
@@ -868,9 +868,9 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
 
                       {/* 현관장 H: 서랍 좌우 날개벽 - 하부 상판과 서랍 받침대 사이 */}
                       {moduleData?.id?.includes('entryway-h') && (() => {
-                        const drawerWallHeight = mmToThreeUnits(188) - (basicThickness - mmToThreeUnits(0.1)); // 188mm에서 받침대 두께 제외
+                        const drawerWallHeight = mmToThreeUnits(188); // 내경 188mm
                         const drawerWallDepth = lowerSectionDepth - backReductionForPanels - mmToThreeUnits(lowerSectionTopOffsetMm || 0);
-                        const drawerWallY = lowerTopPanelY - basicThickness/2 - drawerWallHeight/2; // 하부 상판 하단에서 시작
+                        const drawerWallY = lowerTopPanelY - basicThickness/2 - drawerWallHeight/2; // 하부 상판 하단 ~ 서랍 받침대 상단 중심
                         const drawerWallZ = lowerZOffset + panelZOffset - mmToThreeUnits(lowerSectionTopOffsetMm || 0)/2;
                         const halfInnerWidth = (innerWidth - sidePanelGap) / 2;
                         return (
