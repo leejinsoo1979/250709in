@@ -190,8 +190,6 @@ const DualType1: React.FC<FurnitureTypeProps> = ({
               sectionDepthDirections={[lowerSectionDepthDirection, upperSectionDepthDirection]}
               lowerSectionTopOffsetMm={lowerSectionTopOffset}
               isFloatingPlacement={spaceInfo?.baseConfig?.placementType === 'float'}
-              doorTopGap={doorTopGap}
-              doorBottomGap={doorBottomGap}
             />
 
             {/* 옷걸이 봉 렌더링 - hanging 섹션에만 */}

@@ -367,14 +367,12 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
                   furnitureId={placedFurnitureId}
                   backPanelThicknessOverride={backPanelThicknessProp}
                   topPanelFrontInset={lowerSectionTopOffset || 0}
-                  doorTopGap={doorTopGap}
-                  doorBottomGap={doorBottomGap}
                 />
               );
             }
             break;
         }
-
+        
         // 개별 구분 패널 렌더링 (좌측 섹션 간, 마지막 섹션 제외)
         // visibleSectionIndex가 1(스타일러장 선택)일 때는 좌측 구분 패널도 흐리게 표시
         let separatorPanel = null;

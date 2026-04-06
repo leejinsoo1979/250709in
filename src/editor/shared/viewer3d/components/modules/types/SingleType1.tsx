@@ -231,8 +231,6 @@ const SingleType1: React.FC<FurnitureTypeProps> = ({
                 sectionDepthDirections={[lowerSectionDepthDirection, upperSectionDepthDirection]}
                 lowerSectionTopOffsetMm={lowerSectionTopOffset}
                 isFloatingPlacement={spaceInfo?.baseConfig?.placementType === 'float'}
-                doorTopGap={doorTopGap}
-                doorBottomGap={doorBottomGap}
               />
 
               {clothingRods}
