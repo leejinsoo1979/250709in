@@ -954,9 +954,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
             const totalH = currentPlacedModule.freeHeight || moduleData.dimensions.height;
             const totalD = currentPlacedModule.freeDepth || moduleData.dimensions.depth;
             const totalW = currentPlacedModule.freeWidth || moduleData.dimensions.width;
-            const innerH = totalH - 2 * pt;
-            const dividerH = (mcSections.length - 1) * pt;
-            const availH = innerH - dividerH;
+            const availH = totalH - 2 * pt; // 상하판만 제외 (칸막이 미차감 — 3D SectionsRenderer와 동일)
             const hInputs: Record<number, string> = {};
             const dInputs: Record<number, string> = {};
             const wInputs: Record<number, string> = {};
@@ -966,16 +964,20 @@ const PlacedModulePropertiesPanel: React.FC = () => {
               let sH: number;
               if (ht === 'absolute') {
                 if (isLast) {
-                  // 마지막 섹션은 나머지 높이 흡수 (getStdSectionHeightMM과 동일)
-                  const prevFixed = mcSections
+                  // 마지막 섹션은 나머지 높이 흡수 (3D와 동일: availH - 이전 섹션 합)
+                  const prevSectionsHeight = mcSections
                     .filter((_: any, idx: number) => idx < i)
                     .reduce((sum: number, s: any) => sum + ((s.heightType === 'absolute' ? s.height : 0) || 0), 0);
-                  sH = Math.max(0, availH - prevFixed);
+                  sH = Math.max(0, availH - prevSectionsHeight);
                 } else {
                   sH = sec.height || 0;
                 }
               } else {
-                sH = Math.round(availH * ((sec.height || sec.heightRatio || 50) / 100));
+                const fixedTotal = mcSections
+                  .filter((s: any) => s.heightType === 'absolute')
+                  .reduce((sum: number, s: any) => sum + (s.height || 0), 0);
+                const remaining = availH - fixedTotal;
+                sH = Math.round(remaining * ((sec.height || sec.heightRatio || 50) / 100));
               }
               hInputs[i] = Math.round(sH).toString();
               if (i === 0) dInputs[i] = Math.round(currentPlacedModule.lowerSectionDepth || totalD).toString();
@@ -2726,27 +2728,32 @@ const PlacedModulePropertiesPanel: React.FC = () => {
             const totalW = currentPlacedModule.freeWidth || moduleData?.dimensions?.width || 600;
             const totalD = currentPlacedModule.freeDepth || moduleData?.dimensions?.depth || 580;
 
-            // 표준 가구의 섹션 높이 계산 (3D 렌더링과 동일한 로직)
+            // 표준 가구의 섹션 높이 계산 (3D SectionsRenderer와 동일한 로직)
+            // 3D는 availableHeight = height - 2*basicThickness (상하판만 차감, 칸막이 미차감)
+            // 마지막 섹션이 availableHeight - lowerSectionsHeight로 나머지 흡수
             const getStdSectionHeightMM = (sIdx: number): number => {
               if (!mcSections || mcSections.length < 2) return totalH;
               const sec = mcSections[sIdx];
-              const innerH = totalH - 2 * pt; // 상하판 제외
-              const dividerH = (mcSections.length - 1) * pt; // 중간 칸막이
-              const availH = innerH - dividerH;
+              const availH = totalH - 2 * pt; // 상하판만 제외 (칸막이 미차감 — 3D와 동일)
               const ht = sec.heightType || 'percentage';
               if (ht === 'absolute') {
-                // 마지막 섹션은 나머지 높이 흡수 (이전 고정 섹션 합 차감)
+                // 마지막 섹션은 나머지 높이 흡수 (이전 섹션 높이 합 차감)
                 const isLast = sIdx === mcSections.length - 1;
                 if (isLast) {
-                  const prevFixed = mcSections
+                  const prevSectionsHeight = mcSections
                     .filter((_, idx) => idx < sIdx)
                     .reduce((sum, s) => sum + ((s.heightType === 'absolute' ? s.height : 0) || 0), 0);
-                  return Math.max(0, availH - prevFixed);
+                  return Math.max(0, availH - prevSectionsHeight);
                 }
                 return sec.height || 0;
               }
+              // percentage 타입: 고정 섹션 제외한 나머지 높이 기준
+              const fixedTotal = mcSections
+                .filter(s => s.heightType === 'absolute')
+                .reduce((sum, s) => sum + (s.height || 0), 0);
+              const remaining = availH - fixedTotal;
               const ratio = (sec.height || sec.heightRatio || 50) / 100;
-              return Math.round(availH * ratio);
+              return Math.round(remaining * ratio);
             };
 
             return (
@@ -2873,8 +2880,9 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                                 const prevFixed = mcSections
                                   .filter((_: any, idx: number) => idx < sIdx)
                                   .reduce((sum: number, s: any) => sum + ((s.heightType === 'absolute' ? s.height : 0) || 0), 0);
-                                const dividerCount = mcSections.length - 1;
-                                const newTotalH = inputVal + prevFixed + 2 * pt + dividerCount * pt;
+                                // 역계산: availH = totalH - 2*pt, 상부섹션 = availH - prevFixed
+                                // → totalH = inputVal + prevFixed + 2*pt (칸막이 미포함 — 3D와 동일)
+                                const newTotalH = inputVal + prevFixed + 2 * pt;
                                 const clampedH = Math.max(300, Math.min(3000, newTotalH));
                                 const secUpdates: any = { freeHeight: clampedH };
                                 // 키큰장: 상부프레임도 연동
