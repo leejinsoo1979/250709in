@@ -291,7 +291,7 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
       const newCategory = newModuleData?.category;
 
       // 도어 바닥 이격거리 초기화 (카테고리별 기본값)
-      const isBasicLowerCabinet = module.moduleId?.includes('lower-half-cabinet') || module.moduleId?.includes('dual-lower-half-cabinet');
+      const isBasicLowerCabinet = module.moduleId?.includes('lower-half-cabinet') || module.moduleId?.includes('dual-lower-half-cabinet') || module.moduleId?.includes('lower-drawer-') || module.moduleId?.includes('dual-lower-drawer-');
       if (module.doorBottomGap === undefined) {
         if (newCategory === 'upper') {
           // 상부장: 캐비넷 하단에서 도어 하단까지의 확장거리 (바닥 기준이 아님)
@@ -627,9 +627,9 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
   setPlacedModules: (modules: PlacedModule[] | ((prev: PlacedModule[]) => PlacedModule[])) => {
     const state = get();
     const resolved = typeof modules === 'function' ? modules(state.placedModules) : modules;
-    // 마이그레이션: 기본하부장 도어갭 기본값 업데이트 (옛 기본값 20/2 → 새 기본값 -20/5)
+    // 마이그레이션: 기본하부장/서랍장 도어갭 기본값 업데이트 (옛 기본값 20/2 → 새 기본값 -20/5)
     const newModules = resolved.map(m => {
-      const isBasic = m.moduleId?.includes('lower-half-cabinet') || m.moduleId?.includes('dual-lower-half-cabinet');
+      const isBasic = m.moduleId?.includes('lower-half-cabinet') || m.moduleId?.includes('dual-lower-half-cabinet') || m.moduleId?.includes('lower-drawer-') || m.moduleId?.includes('dual-lower-drawer-');
       if (isBasic) {
         const needsTopFix = m.doorTopGap === 20;
         const needsBottomFix = m.doorBottomGap === 2;
@@ -717,7 +717,7 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
       const category = moduleData?.category;
       let topGap = defaultTopGap;
       let bottomGap = defaultBottomGap;
-      const isBasicLower = module.moduleId?.includes('lower-half-cabinet') || module.moduleId?.includes('dual-lower-half-cabinet');
+      const isBasicLower = module.moduleId?.includes('lower-half-cabinet') || module.moduleId?.includes('dual-lower-half-cabinet') || module.moduleId?.includes('lower-drawer-') || module.moduleId?.includes('dual-lower-drawer-');
       if (isBasicLower) {
         topGap = -20;   // 기본하부장: 도어 상단 -20mm (캐비넷보다 짧음)
         bottomGap = 5;  // 기본하부장: 도어 하단 5mm 확장
@@ -903,7 +903,7 @@ useFurnitureStore.subscribe((state) => {
   prevModulesRef = state.placedModules;
   let needsMigration = false;
   for (const m of state.placedModules) {
-    const isBasic = m.moduleId?.includes('lower-half-cabinet') || m.moduleId?.includes('dual-lower-half-cabinet');
+    const isBasic = m.moduleId?.includes('lower-half-cabinet') || m.moduleId?.includes('dual-lower-half-cabinet') || m.moduleId?.includes('lower-drawer-') || m.moduleId?.includes('dual-lower-drawer-');
     if (isBasic && (m.doorTopGap === 20 || m.doorBottomGap === 2)) {
       needsMigration = true;
       break;
@@ -912,7 +912,7 @@ useFurnitureStore.subscribe((state) => {
   if (!needsMigration) return;
   migrationRunning = true;
   const migrated = state.placedModules.map(m => {
-    const isBasic = m.moduleId?.includes('lower-half-cabinet') || m.moduleId?.includes('dual-lower-half-cabinet');
+    const isBasic = m.moduleId?.includes('lower-half-cabinet') || m.moduleId?.includes('dual-lower-half-cabinet') || m.moduleId?.includes('lower-drawer-') || m.moduleId?.includes('dual-lower-drawer-');
     if (!isBasic) return m;
     const fixTop = m.doorTopGap === 20;
     const fixBot = m.doorBottomGap === 2;
@@ -931,7 +931,7 @@ useFurnitureStore.subscribe((state) => {
   if (cur.length > 0) {
     let changed = false;
     const fixed = cur.map(m => {
-      const isBasic = m.moduleId?.includes('lower-half-cabinet') || m.moduleId?.includes('dual-lower-half-cabinet');
+      const isBasic = m.moduleId?.includes('lower-half-cabinet') || m.moduleId?.includes('dual-lower-half-cabinet') || m.moduleId?.includes('lower-drawer-') || m.moduleId?.includes('dual-lower-drawer-');
       if (!isBasic) return m;
       const fixTop = m.doorTopGap === 20;
       const fixBot = m.doorBottomGap === 2;

@@ -72,6 +72,10 @@ interface SingleDrawerProps {
   uniformDrawerHeight?: boolean;
   fixedMaidaHeightMm?: number;
   sideHeightOverrides?: { all?: number; first?: number; rest?: number };
+  doorTopGap?: number;
+  doorBottomGap?: number;
+  isTopDrawer?: boolean;
+  isBottomDrawer?: boolean;
 }
 
 const SingleDrawer: React.FC<SingleDrawerProps> = ({
@@ -88,6 +92,10 @@ const SingleDrawer: React.FC<SingleDrawerProps> = ({
   uniformDrawerHeight = false,
   fixedMaidaHeightMm,
   sideHeightOverrides,
+  doorTopGap = 0,
+  doorBottomGap = 0,
+  isTopDrawer = false,
+  isBottomDrawer = false,
 }) => {
   // Z축 슬라이드 애니메이션
   const spring = useSpring({
@@ -131,13 +139,15 @@ const SingleDrawer: React.FC<SingleDrawerProps> = ({
   const backY = bottomTopYPos + backHeight / 2;
   const backWidth = drawerInnerWidth;
 
-  // 마이다 높이·Y
+  // 마이다 높이·Y — 상단갭/하단갭 확장 포함
   const maidaTopMm = zone.notchAboveBottom + 40;
   const maidaBottomMm = zone.notchBelowTop != null ? (zone.notchBelowTop - 5) : -5;
-  const defaultMaidaHeightMm = maidaTopMm - maidaBottomMm;
+  const gapTopExt = isTopDrawer ? doorTopGap : 0;
+  const gapBottomExt = isBottomDrawer ? doorBottomGap : 0;
+  const defaultMaidaHeightMm = maidaTopMm - maidaBottomMm + gapTopExt + gapBottomExt;
   const maidaHeightMm = fixedMaidaHeightMm || defaultMaidaHeightMm;
   const maidaHeight = mmToThreeUnits(maidaHeightMm);
-  const maidaCenterY = cabinetBottomY + mmToThreeUnits(maidaBottomMm) + maidaHeight / 2;
+  const maidaCenterY = cabinetBottomY + mmToThreeUnits(maidaBottomMm - gapBottomExt) + maidaHeight / 2;
 
   // 2D 마이다 overlay/대각선용
   const { viewMode } = useSpace3DView();
@@ -326,6 +336,8 @@ interface ExternalDrawerRendererProps {
   hideTopNotch?: boolean;
   maidaHeightsMm?: number[];
   sideHeightOverrides?: { all?: number; first?: number; rest?: number };
+  doorTopGap?: number; // 상단갭 (mm) — 맨위 서랍 마이다 상단 확장
+  doorBottomGap?: number; // 하단갭 (mm) — 맨아래 서랍 마이다 하단 확장
 }
 
 export const ExternalDrawerRenderer: React.FC<ExternalDrawerRendererProps> = ({
@@ -353,6 +365,8 @@ export const ExternalDrawerRenderer: React.FC<ExternalDrawerRendererProps> = ({
   hideTopNotch = false,
   maidaHeightsMm,
   sideHeightOverrides,
+  doorTopGap = 0,
+  doorBottomGap = 0,
 }) => {
   const { viewMode } = useSpace3DView();
   const view2DDirection = useUIStore(s => s.view2DDirection);
@@ -571,6 +585,10 @@ export const ExternalDrawerRenderer: React.FC<ExternalDrawerRendererProps> = ({
           mmToThreeUnits={mmToThreeUnits}
           fixedMaidaHeightMm={maidaHeightsMm ? maidaHeightsMm[i] : undefined}
           sideHeightOverrides={sideHeightOverrides}
+          doorTopGap={doorTopGap}
+          doorBottomGap={doorBottomGap}
+          isTopDrawer={i === drawerCount - 1}
+          isBottomDrawer={i === 0}
         />
       ))}
 
