@@ -74,6 +74,7 @@ export const calculatePanelDetails = (
   let sections;
   // 듀얼 타입5/6은 leftSections + rightSections 모두 처리
   const isType5or6 = moduleData.id.includes('dual-4drawer-pantshanger') || moduleData.id.includes('dual-2drawer-styler');
+  const isPantsHanger = moduleData.id.includes('dual-4drawer-pantshanger');
   const rightSectionsForType5or6 = isType5or6 ? (moduleData.modelConfig?.rightSections || []) : [];
   if (isType5or6) {
     sections = moduleData.modelConfig?.leftSections || [];
@@ -286,28 +287,34 @@ export const calculatePanelDetails = (
       //
       // sectionHeights[0] = leftSections[0].height (styler: 600, pantshanger: 1000)
       if (isType5or6) {
-        const middlePanelDepth = Math.max(leftSideDepth, rightSideDepth);
-        const isFirstSection = sectionIndex === 0;
+        // 바지걸이장(Type6): 상부섹션에는 칸막이 없음 (상부는 전체 너비 옷장)
+        // 스타일러장(Type5): 모든 섹션에 칸막이 있음
         const isLastSection = sectionIndex === sections.length - 1;
-        const leftLowerHeightMm = moduleData.modelConfig?.leftSections?.[0]?.height || 0;
-        const furnitureHeightMm = moduleData.dimensions.height;
+        const skipMiddlePanel = isPantsHanger && isLastSection;
 
-        let middlePanelHeightMm: number;
-        if (isFirstSection) {
-          middlePanelHeightMm = leftLowerHeightMm;
-        } else if (isLastSection) {
-          middlePanelHeightMm = furnitureHeightMm - leftLowerHeightMm;
-        } else {
-          middlePanelHeightMm = sectionHeightMm;
+        if (!skipMiddlePanel) {
+          const middlePanelDepth = Math.max(leftSideDepth, rightSideDepth);
+          const isFirstSection = sectionIndex === 0;
+          const leftLowerHeightMm = moduleData.modelConfig?.leftSections?.[0]?.height || 0;
+          const furnitureHeightMm = moduleData.dimensions.height;
+
+          let middlePanelHeightMm: number;
+          if (isFirstSection) {
+            middlePanelHeightMm = leftLowerHeightMm;
+          } else if (isLastSection) {
+            middlePanelHeightMm = furnitureHeightMm - leftLowerHeightMm;
+          } else {
+            middlePanelHeightMm = sectionHeightMm;
+          }
+
+          targetPanel.push({
+            name: `${sectionPrefix}칸막이`,
+            width: middlePanelDepth,
+            height: middlePanelHeightMm,
+            thickness: basicThickness,
+            material: 'PB'
+          });
         }
-
-        targetPanel.push({
-          name: `${sectionPrefix}칸막이`,
-          width: middlePanelDepth,
-          height: middlePanelHeightMm,
-          thickness: basicThickness,
-          material: 'PB'
-        });
       }
 
       // === 수평 패널 너비 계산 (상판, 바닥판, 선반 공통) ===
