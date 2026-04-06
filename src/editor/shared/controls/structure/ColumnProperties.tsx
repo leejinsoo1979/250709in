@@ -42,6 +42,12 @@ const ColumnProperties: React.FC<ColumnPropertiesProps> = ({ columnId }) => {
     }
   };
 
+  const handleToggleLock = () => {
+    handleColumnUpdate(column.id, { isLocked: !column.isLocked });
+  };
+
+  const isLocked = column.isLocked ?? false;
+
   return (
     <div className={styles.columnProperties}>
       <div className={styles.header}>
@@ -64,6 +70,7 @@ const ColumnProperties: React.FC<ColumnPropertiesProps> = ({ columnId }) => {
               min="100"
               max="1000"
               step="10"
+              disabled={isLocked}
             />
           </div>
           <div className={styles.propertyItem}>
@@ -75,6 +82,7 @@ const ColumnProperties: React.FC<ColumnPropertiesProps> = ({ columnId }) => {
               min="100"
               max="1500"
               step="10"
+              disabled={isLocked}
             />
           </div>
           <div className={styles.propertyItem}>
@@ -86,6 +94,7 @@ const ColumnProperties: React.FC<ColumnPropertiesProps> = ({ columnId }) => {
               min="1000"
               max="3000"
               step="10"
+              disabled={isLocked}
             />
           </div>
         </div>
@@ -99,10 +108,11 @@ const ColumnProperties: React.FC<ColumnPropertiesProps> = ({ columnId }) => {
             <input
               type="number"
               value={Math.round(column.position[0] * 100)}
-              onChange={(e) => handleColumnUpdate(column.id, { 
+              onChange={(e) => handleColumnUpdate(column.id, {
                 position: [Number(e.target.value) / 100, column.position[1], column.position[2]] as [number, number, number]
               })}
               step="10"
+              disabled={isLocked}
             />
           </div>
           <div className={styles.propertyItem}>
@@ -110,10 +120,11 @@ const ColumnProperties: React.FC<ColumnPropertiesProps> = ({ columnId }) => {
             <input
               type="number"
               value={Math.round(column.position[1] * 100)}
-              onChange={(e) => handleColumnUpdate(column.id, { 
+              onChange={(e) => handleColumnUpdate(column.id, {
                 position: [column.position[0], Number(e.target.value) / 100, column.position[2]] as [number, number, number]
               })}
               step="10"
+              disabled={isLocked}
             />
           </div>
           <div className={styles.propertyItem}>
@@ -121,10 +132,11 @@ const ColumnProperties: React.FC<ColumnPropertiesProps> = ({ columnId }) => {
             <input
               type="number"
               value={Math.round(column.position[2] * 100)}
-              onChange={(e) => handleColumnUpdate(column.id, { 
+              onChange={(e) => handleColumnUpdate(column.id, {
                 position: [column.position[0], column.position[1], Number(e.target.value) / 100] as [number, number, number]
               })}
               step="10"
+              disabled={isLocked}
             />
           </div>
         </div>
@@ -138,6 +150,7 @@ const ColumnProperties: React.FC<ColumnPropertiesProps> = ({ columnId }) => {
             <select
               value={column.material}
               onChange={(e) => handleColumnUpdate(column.id, { material: e.target.value as 'concrete' | 'steel' | 'wood' })}
+              disabled={isLocked}
             >
               <option value="concrete">콘크리트</option>
               <option value="steel">철골</option>
@@ -150,6 +163,7 @@ const ColumnProperties: React.FC<ColumnPropertiesProps> = ({ columnId }) => {
               type="color"
               value={column.color}
               onChange={(e) => handleColumnUpdate(column.id, { color: e.target.value })}
+              disabled={isLocked}
             />
           </div>
         </div>
@@ -157,8 +171,15 @@ const ColumnProperties: React.FC<ColumnPropertiesProps> = ({ columnId }) => {
 
       <div className={styles.actions}>
         <button
+          onClick={handleToggleLock}
+          className={`${styles.lockButton} ${isLocked ? styles.locked : ''}`}
+        >
+          {isLocked ? '잠금 해제' : '기둥 잠금'}
+        </button>
+        <button
           onClick={() => handleRemoveColumn(column.id)}
           className={styles.deleteButton}
+          disabled={isLocked}
         >
           기둥 삭제
         </button>

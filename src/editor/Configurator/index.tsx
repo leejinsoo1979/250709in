@@ -793,7 +793,9 @@ const Configurator: React.FC = () => {
         const { selectedColumnId, selectedFurnitureId, setSelectedColumnId, setSelectedFurnitureId } = useUIStore.getState();
         if (selectedColumnId) {
           event.preventDefault();
-          const { removeColumn } = useSpaceConfigStore.getState();
+          const { spaceInfo, removeColumn } = useSpaceConfigStore.getState();
+          const targetColumn = spaceInfo.columns?.find(col => col.id === selectedColumnId);
+          if (targetColumn?.isLocked) return;
           removeColumn(selectedColumnId);
           setSelectedColumnId(null);
           return;

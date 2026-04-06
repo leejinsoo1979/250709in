@@ -92,6 +92,27 @@
   border-top: 1px solid var(--theme-border);
 }
 
+.lockButton {
+  width: 100%;
+  padding: 10px;
+  background: var(--theme-primary, #1976d2);
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  margin-bottom: 8px;
+}
+
+.lockButton:hover {
+  opacity: 0.9;
+}
+
+.lockButton.locked {
+  background: #f59e0b;
+}
+
 .deleteButton {
   width: 100%;
   padding: 10px;
@@ -110,4 +131,16 @@
 
 .deleteButton:active {
   transform: translateY(1px);
+}
+
+.deleteButton:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.propertyItem input:disabled,
+.propertyItem select:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background: var(--theme-background-secondary, #f0f0f0);
 }

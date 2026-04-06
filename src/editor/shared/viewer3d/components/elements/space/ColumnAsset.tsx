@@ -69,7 +69,8 @@ const ColumnAsset: React.FC<ColumnAssetProps> = ({
 
   // 현재 기둥 데이터 가져오기
   const currentColumn = spaceConfig.spaceInfo.columns?.find(col => col.id === id);
-  
+  const isLocked = currentColumn?.isLocked ?? false;
+
   const { invalidate } = useThree();
   
   // 기둥 위치나 크기 변경 시 렌더링 업데이트 (드래그 중이 아닐 때만)
@@ -229,9 +230,12 @@ const ColumnAsset: React.FC<ColumnAssetProps> = ({
   const handlePointerDown = (event: ThreeEvent<PointerEvent>) => {
     event.stopPropagation();
     event.nativeEvent.stopPropagation();
-    
+
+    // 잠금된 기둥은 드래그 차단
+    if (isLocked) return;
+
     // console.log('🎯 기둥 포인터 다운:', id);
-    
+
     setPointerDownTime(Date.now());
     setHasMoved(false);
     setDragStart(event.point);
@@ -353,6 +357,10 @@ const ColumnAsset: React.FC<ColumnAssetProps> = ({
     event.stopPropagation();
     event.nativeEvent.stopPropagation();
     event.nativeEvent.preventDefault();
+
+    // 잠금된 기둥은 우클릭 삭제 차단
+    if (isLocked) return;
+
     // console.log('🎯 기둥 우클릭 - 삭제 확인');
     if (window.confirm('기둥을 삭제하시겠습니까?')) {
       onRemove?.(id);

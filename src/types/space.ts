@@ -8,6 +8,7 @@ export interface Column {
   material: 'concrete' | 'steel' | 'wood';
   hasBackPanelFinish?: boolean; // 뒷면 패널 마감 여부
   hasFrontPanelFinish?: boolean; // 전면 패널 마감 여부
+  isLocked?: boolean; // 잠금 상태 (드래그/삭제/편집 방지)
 }
 
 export interface Wall {
