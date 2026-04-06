@@ -85,10 +85,9 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
   const basicThicknessMm = basicThickness / 0.01;
   const sidePanelGap = (basicThicknessMm === 18.5 || basicThicknessMm === 15.5) ? 0 : mmToThreeUnits(1);
 
-  // 2D 측면뷰에서 치수 가이드 Y 오프셋 보정 (띄움 배치 시 바닥 기준 유지)
-  const dimensionYOffset = (viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right'))
-    ? -mmToThreeUnits(floatOffsetMm)
-    : 0;
+  // 치수 가이드 Y 오프셋: 가구 group 자체가 Y 위치를 반영하므로 추가 보정 불필요
+  // (이전에 floatOffsetMm(Z축 오프셋)을 Y축 보정으로 잘못 사용하던 버그 수정)
+  const dimensionYOffset = 0;
 
   // 패널 비활성화용 material - 한 번만 생성하고 재사용
   const panelDimmedMaterial = React.useMemo(() => {

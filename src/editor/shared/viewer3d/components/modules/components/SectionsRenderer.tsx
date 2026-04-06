@@ -137,10 +137,9 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
   // 테마 색상
   const themeColor = getThemeHex();
 
-  // 2D 측면뷰에서 치수 가이드 Y 오프셋 보정 (띄움 배치 시 바닥 기준 유지)
-  const dimensionYOffset = (viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right'))
-    ? -mmToThreeUnits(lowerSectionTopOffsetMm)
-    : 0;
+  // 치수 가이드 Y 오프셋: 가구 group 자체가 Y 위치를 반영하므로 추가 보정 불필요
+  // (이전에 lowerSectionTopOffsetMm(Z축 오프셋)을 Y축 보정으로 잘못 사용하던 버그 수정)
+  const dimensionYOffset = 0;
 
   // 띄움 여부는 명시적으로 받은 플래그를 우선 사용하고, 없으면 기존 lowerSectionTopOffset 기반 로직을 사용
   const hasFloatingPlacement = isFloatingPlacement || (lowerSectionTopOffsetMm ?? 0) > 0;
