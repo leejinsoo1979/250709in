@@ -831,6 +831,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
               textureUrl={baseFurniture.textureUrl}
               panelGrainDirections={panelGrainDirections}
               isFloatingPlacement={spaceInfo?.baseConfig?.placementType === 'float'}
+              shelfFrontInsetMm={furnitureId?.includes('entryway-h') ? 30 : 0}
             />
           )}
         </BaseFurnitureShell>
