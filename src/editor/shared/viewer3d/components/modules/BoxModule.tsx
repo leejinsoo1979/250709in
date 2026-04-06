@@ -203,7 +203,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
       <>
         <CustomizableBoxModule
           width={adjustedWidth || moduleData.dimensions.width}
-          height={moduleData.dimensions.height}
+          height={internalHeight || moduleData.dimensions.height}
           depth={customDepth || moduleData.dimensions.depth}
           customConfig={customConfig}
           category={moduleData.category as 'full' | 'upper' | 'lower'}
