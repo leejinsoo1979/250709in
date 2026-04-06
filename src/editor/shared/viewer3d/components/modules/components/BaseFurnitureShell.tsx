@@ -1085,7 +1085,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                             {(() => {
                               const pn = '서랍1 뒷판';
                               const mat = getPanelMaterial(pn);
-                              const bottomTopY2 = drawerCenterY - drawerH/2 + basicThickness + mmToThreeUnits(10) + bottomT;
+                              const bottomTopY2 = drawerCenterY - (drawerSideH - mmToThreeUnits(30))/2 + mmToThreeUnits(18) + bottomT;
                               const origBackTop = drawerCenterY + (drawerSideH - mmToThreeUnits(30)) / 2;
                               const backH = origBackTop - bottomTopY2;
                               const backCY = (origBackTop + bottomTopY2) / 2;
@@ -1116,7 +1116,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                                 <BoxWithEdges
                                   key={`entryway-drawer-bottom-${mat.uuid}`}
                                   args={[drawerAreaWidth - mmToThreeUnits(70) - mmToThreeUnits(26), bottomT, bottomDepth2]}
-                                  position={[0, drawerCenterY - drawerH/2 + basicThickness + mmToThreeUnits(10) + bottomT/2, bottomZ2]}
+                                  position={[0, drawerCenterY - (drawerSideH - mmToThreeUnits(30))/2 + mmToThreeUnits(18) + bottomT/2, bottomZ2]}
                                   material={mat}
                                   renderMode={renderMode}
                                   isDragging={isDragging}
