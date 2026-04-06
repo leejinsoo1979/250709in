@@ -113,8 +113,14 @@ const FURNITURE_SPECS = {
     TYPE2: '#303F9F',  // 남색 (2단 옷장)
     TYPE4: '#0097A7',  // 청록색 (4단서랍+옷장)
     STYLER: '#4CAF50', // 녹색 (스타일러)
-    PANTSHANGER: '#9C27B0' // 보라색 (바지걸이)
-  }
+    PANTSHANGER: '#9C27B0', // 보라색 (바지걸이)
+    ENTRYWAY: '#795548' // 갈색 (현관장)
+  },
+
+  // 현관장 스펙
+  ENTRYWAY_DEPTH: 400,          // 현관장 기본 깊이
+  ENTRYWAY_BOTTOM_HEIGHT: 1200, // 하부섹션(선반+서랍) 고정 높이
+  ENTRYWAY_DRAWER_HEIGHT: 212   // 속서랍 마이다 높이
 };
 
 // ============================================================================
@@ -372,8 +378,63 @@ const createSingleType4 = (columnWidth: number, maxHeight: number): ModuleData =
   } as ModuleData;
 };
 
+/**
+ * 싱글 현관장 H: 신발선반(하부) + 속서랍 + 다보선반(상부)
+ */
+const createSingleEntrywayH = (columnWidth: number, maxHeight: number): ModuleData => {
+  const bottomHeight = FURNITURE_SPECS.ENTRYWAY_BOTTOM_HEIGHT; // 1200
+  const topHeight = maxHeight - bottomHeight;
+  // 하부: 선반영역 = 1200 - 212(서랍) = 988mm
+  const shelfAreaHeight = bottomHeight - FURNITURE_SPECS.ENTRYWAY_DRAWER_HEIGHT;
+
+  const baseSections: SectionConfig[] = [
+    // 섹션0: 하부 신발선반 (바닥부터 177mm 간격 고정선반 4개)
+    {
+      type: 'shelf',
+      heightType: 'absolute',
+      height: shelfAreaHeight,  // 988mm
+      count: 4,
+      shelfPositions: [0, 177, 354, 531, 708]
+    },
+    // 섹션1: 속서랍 (마이다 212mm)
+    {
+      type: 'drawer',
+      heightType: 'absolute',
+      height: FURNITURE_SPECS.ENTRYWAY_DRAWER_HEIGHT, // 212mm
+      count: 1,
+      drawerHeights: [FURNITURE_SPECS.ENTRYWAY_DRAWER_HEIGHT],
+      gapHeight: FURNITURE_SPECS.DRAWER_GAP
+    },
+    // 섹션2: 상부 다보선반 (내경: 205, 171, 171, 171, 나머지)
+    {
+      type: 'shelf',
+      heightType: 'absolute',
+      height: topHeight,
+      count: 4,
+      shelfPositions: [0, 205, 376, 547, 718]
+    }
+  ];
+
+  const widthForId = Math.round(columnWidth * 100) / 100;
+  const base = createFurnitureBase(
+    `single-entryway-h-${widthForId}`,
+    `현관장 H ${widthForId}mm`,
+    columnWidth,
+    maxHeight,
+    FURNITURE_SPECS.ENTRYWAY_DEPTH,
+    FURNITURE_SPECS.COLORS.ENTRYWAY,
+    `하단 신발장 + 속서랍 + 상단 다보선반`,
+    FURNITURE_SPECS.ENTRYWAY_DEPTH
+  );
+
+  return {
+    ...base,
+    modelConfig: { ...base.modelConfig, sections: baseSections }
+  } as ModuleData;
+};
+
 // ============================================================================
-// 듀얼 가구 생성 함수들  
+// 듀얼 가구 생성 함수들
 // ============================================================================
 
 /**
@@ -662,6 +723,43 @@ const createDualType6 = (dualColumnWidth: number, maxHeight: number, slotWidths?
         }
       ]
     }
+  } as ModuleData;
+};
+
+/**
+ * 듀얼 현관장 H: 신발선반(하부) + 속서랍 + 다보선반(상부) — 내부 구조 동일, 도어 2개
+ */
+const createDualEntrywayH = (dualColumnWidth: number, maxHeight: number, slotWidths?: number[]): ModuleData => {
+  const bottomHeight = FURNITURE_SPECS.ENTRYWAY_BOTTOM_HEIGHT;
+  const topHeight = maxHeight - bottomHeight;
+  const shelfAreaHeight = bottomHeight - FURNITURE_SPECS.ENTRYWAY_DRAWER_HEIGHT;
+
+  const baseSections: SectionConfig[] = [
+    { type: 'shelf', heightType: 'absolute', height: shelfAreaHeight, count: 4,
+      shelfPositions: [0, 177, 354, 531, 708] },
+    { type: 'drawer', heightType: 'absolute', height: FURNITURE_SPECS.ENTRYWAY_DRAWER_HEIGHT,
+      count: 1, drawerHeights: [FURNITURE_SPECS.ENTRYWAY_DRAWER_HEIGHT],
+      gapHeight: FURNITURE_SPECS.DRAWER_GAP },
+    { type: 'shelf', heightType: 'absolute', height: topHeight, count: 4,
+      shelfPositions: [0, 205, 376, 547, 718] }
+  ];
+
+  const widthForId = Math.round(dualColumnWidth * 100) / 100;
+  const base = createFurnitureBase(
+    `dual-entryway-h-${widthForId}`,
+    `현관장 H ${widthForId}mm`,
+    dualColumnWidth,
+    maxHeight,
+    FURNITURE_SPECS.ENTRYWAY_DEPTH,
+    FURNITURE_SPECS.COLORS.ENTRYWAY,
+    `하단 신발장 + 속서랍 + 상단 다보선반`,
+    FURNITURE_SPECS.ENTRYWAY_DEPTH
+  );
+
+  return {
+    ...base,
+    slotWidths,
+    modelConfig: { ...base.modelConfig, sections: baseSections }
   } as ModuleData;
 };
 
@@ -1829,7 +1927,8 @@ export const generateShelvingModules = (
   modules.push(createSingleType1(columnWidth, maxHeight));
   modules.push(createSingleType2(columnWidth, maxHeight));
   modules.push(createSingleType4(columnWidth, maxHeight));
-  
+  modules.push(createSingleEntrywayH(columnWidth, maxHeight));
+
   // === 듀얼 가구 생성 ===
   // _tempSlotWidths가 있고 듀얼 가구를 위한 2개의 슬롯 너비가 있으면 합계 사용
   let dualWidth: number;
@@ -1879,7 +1978,8 @@ export const generateShelvingModules = (
     modules.push(createDualType4(dualWidth, maxHeight, dualSlotWidths));
     modules.push(createDualType5(dualWidth, maxHeight, dualSlotWidths));
     modules.push(createDualType6(dualWidth, maxHeight, dualSlotWidths));
-    
+    modules.push(createDualEntrywayH(dualWidth, maxHeight, dualSlotWidths));
+
     // === 상부장 가구 생성 ===
     modules.push(createDualUpperCabinet1(dualWidth));
     modules.push(createDualUpperCabinet2(dualWidth));
