@@ -403,27 +403,27 @@ const Configurator: React.FC = () => {
     [placedModules]
   );
   // 도어 번호 매핑: 듀얼(양문) 가구는 도어 2개, 싱글 가구는 도어 1개
-  // 상부장/하부장은 (상)/(하) 접미사 표시
   const doorNumberMap = useMemo(() => {
     let doorNum = 1;
     return doorFurnitureList.map((mod) => {
       const isDual = mod.isDualSlot || mod.moduleId?.includes('dual-') || mod.baseModuleType?.includes('dual-');
       const isUpper = mod.moduleId?.includes('upper-cabinet') || mod.moduleId?.includes('dual-upper-cabinet');
       const isLower = mod.moduleId?.includes('lower-cabinet') || mod.moduleId?.includes('dual-lower-cabinet');
-      const suffix = isUpper ? '상' : isLower ? '하' : '';
+      const category: 'full' | 'upper' | 'lower' = isUpper ? 'upper' : isLower ? 'lower' : 'full';
       if (isDual) {
-        const label = `도어 ${doorNum},${doorNum + 1}`;
         const nums = [doorNum, doorNum + 1];
         doorNum += 2;
-        return { label, nums, isDual: true, suffix };
+        return { label: nums.join(','), nums, isDual: true, category };
       } else {
-        const label = `도어 ${doorNum}`;
         const nums = [doorNum];
         doorNum += 1;
-        return { label, nums, isDual: false, suffix };
+        return { label: String(nums[0]), nums, isDual: false, category };
       }
     });
   }, [doorFurnitureList]);
+  // 키큰장 / 상하부장 분리
+  const fullDoorIndices = useMemo(() => doorNumberMap.map((info, i) => ({ info, i })).filter(x => x.info.category === 'full'), [doorNumberMap]);
+  const partialDoorIndices = useMemo(() => doorNumberMap.map((info, i) => ({ info, i })).filter(x => x.info.category !== 'full'), [doorNumberMap]);
   const showDoorSetup = doorFurnitureList.length > 0;
   const isFloatPlacement = spaceInfo.baseConfig?.placementType === 'float';
   const currentFloatHeight = spaceInfo.baseConfig?.floatHeight || 200;
@@ -5661,56 +5661,96 @@ const Configurator: React.FC = () => {
 
             {/* Close/Open 토글 → ViewerControls 상단바로 이동됨 */}
 
-            {/* 개별 모드: 가로 테이블 형태 — 헤더행 + 상단갭행 + 하단갭행 */}
-            <div style={{ marginTop: '8px', overflowX: 'auto' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed' }}>
-                {/* 헤더: 도어 1, 도어 2, ... */}
-                <thead>
-                  <tr>
-                    <th style={{ width: '52px', padding: '2px 4px', fontSize: '10px', fontWeight: 500, color: 'var(--theme-text-secondary, #999)', textAlign: 'center', whiteSpace: 'nowrap' }}>
-                      <label style={{ display: 'flex', alignItems: 'center', gap: '2px', cursor: 'pointer', justifyContent: 'center' }}>
-                        <input
-                          type="checkbox"
-                          checked={doorGapAllSync}
-                          onChange={(e) => setDoorGapAllSync(e.target.checked)}
-                          style={{ width: '13px', height: '13px', cursor: 'pointer', accentColor: 'var(--theme-primary, #4a90d9)' }}
-                        />
-                        <span style={{ fontSize: '9px', color: 'var(--theme-text-secondary, #999)' }}>전체</span>
-                      </label>
-                    </th>
-                    {doorNumberMap.map((info, idx) => (
-                      <th key={idx} style={{ padding: '2px 2px', fontSize: '10px', fontWeight: 600, color: 'var(--theme-text-secondary, #666)', textAlign: 'center', lineHeight: '1.2' }}>
-                        <div>{info.nums.length > 1 ? info.nums.join(',') : info.nums[0]}</div>
-                        {info.suffix && <div style={{ fontSize: '9px', fontWeight: 400, color: 'var(--theme-text-secondary, #999)' }}>{info.suffix}</div>}
+            {/* 키큰장 도어 테이블 */}
+            {fullDoorIndices.length > 0 && (
+              <div style={{ marginTop: '8px', overflowX: 'auto' }}>
+                <div style={{ fontSize: '11px', fontWeight: 600, color: 'var(--theme-text-secondary, #666)', marginBottom: '4px' }}>키큰장</div>
+                <table style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed' }}>
+                  <thead>
+                    <tr>
+                      <th style={{ width: '52px', padding: '2px 4px', fontSize: '10px', fontWeight: 500, color: 'var(--theme-text-secondary, #999)', textAlign: 'center', whiteSpace: 'nowrap' }}>
+                        <label style={{ display: 'flex', alignItems: 'center', gap: '2px', cursor: 'pointer', justifyContent: 'center' }}>
+                          <input
+                            type="checkbox"
+                            checked={doorGapAllSync}
+                            onChange={(e) => setDoorGapAllSync(e.target.checked)}
+                            style={{ width: '13px', height: '13px', cursor: 'pointer', accentColor: 'var(--theme-primary, #4a90d9)' }}
+                          />
+                          <span style={{ fontSize: '9px', color: 'var(--theme-text-secondary, #999)' }}>전체</span>
+                        </label>
                       </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {/* 상단갭 행 */}
-                  <tr>
-                    <td style={{ padding: '3px 4px', fontSize: '11px', color: 'var(--theme-text-secondary, #999)', whiteSpace: 'nowrap' }}>상단갭</td>
-                    {doorFurnitureList.map((mod) => (
-                      <DoorGapInput key={`top-${mod.id}`} moduleId={mod.id} field="doorTopGap"
-                        storeValue={mod.doorTopGap || spaceInfo.doorTopGap || 5}
-                        onCommit={handleIndividualDoorGapChange} />
-                    ))}
-                  </tr>
-                  {/* 하단갭 행 */}
-                  <tr>
-                    <td style={{ padding: '3px 4px', fontSize: '11px', color: 'var(--theme-text-secondary, #999)', whiteSpace: 'nowrap' }}>하단갭</td>
-                    {doorFurnitureList.map((mod) => {
-                      const sv = mod.doorBottomGap ?? spaceInfo.doorBottomGap ?? 1.5;
-                      return (
-                      <DoorGapInput key={`bot-${mod.id}`} moduleId={mod.id} field="doorBottomGap"
-                        storeValue={sv}
-                        onCommit={handleIndividualDoorGapChange} />
-                      );
-                    })}
-                  </tr>
-                </tbody>
-              </table>
-            </div>
+                      {fullDoorIndices.map(({ info, i }) => (
+                        <th key={i} style={{ padding: '2px 2px', fontSize: '10px', fontWeight: 600, color: 'var(--theme-text-secondary, #666)', textAlign: 'center' }}>
+                          {info.label}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td style={{ padding: '3px 4px', fontSize: '11px', color: 'var(--theme-text-secondary, #999)', whiteSpace: 'nowrap' }}>상단갭</td>
+                      {fullDoorIndices.map(({ i }) => {
+                        const mod = doorFurnitureList[i];
+                        return <DoorGapInput key={`top-${mod.id}`} moduleId={mod.id} field="doorTopGap"
+                          storeValue={mod.doorTopGap || spaceInfo.doorTopGap || 5}
+                          onCommit={handleIndividualDoorGapChange} />;
+                      })}
+                    </tr>
+                    <tr>
+                      <td style={{ padding: '3px 4px', fontSize: '11px', color: 'var(--theme-text-secondary, #999)', whiteSpace: 'nowrap' }}>하단갭</td>
+                      {fullDoorIndices.map(({ i }) => {
+                        const mod = doorFurnitureList[i];
+                        const sv = mod.doorBottomGap ?? spaceInfo.doorBottomGap ?? 1.5;
+                        return <DoorGapInput key={`bot-${mod.id}`} moduleId={mod.id} field="doorBottomGap"
+                          storeValue={sv}
+                          onCommit={handleIndividualDoorGapChange} />;
+                      })}
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            )}
+
+            {/* 상하부장 도어 테이블 */}
+            {partialDoorIndices.length > 0 && (
+              <div style={{ marginTop: fullDoorIndices.length > 0 ? '12px' : '8px', overflowX: 'auto' }}>
+                <div style={{ fontSize: '11px', fontWeight: 600, color: 'var(--theme-text-secondary, #666)', marginBottom: '4px' }}>상하부장</div>
+                <table style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed' }}>
+                  <thead>
+                    <tr>
+                      <th style={{ width: '52px', padding: '2px 4px', fontSize: '10px', fontWeight: 500, color: 'var(--theme-text-secondary, #999)', textAlign: 'center', whiteSpace: 'nowrap' }}></th>
+                      {partialDoorIndices.map(({ info, i }) => (
+                        <th key={i} style={{ padding: '2px 2px', fontSize: '10px', fontWeight: 600, color: 'var(--theme-text-secondary, #666)', textAlign: 'center', lineHeight: '1.2' }}>
+                          <div>{info.label}</div>
+                          <div style={{ fontSize: '9px', fontWeight: 400, color: 'var(--theme-text-secondary, #999)' }}>{info.category === 'upper' ? '상' : '하'}</div>
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td style={{ padding: '3px 4px', fontSize: '11px', color: 'var(--theme-text-secondary, #999)', whiteSpace: 'nowrap' }}>상단갭</td>
+                      {partialDoorIndices.map(({ i }) => {
+                        const mod = doorFurnitureList[i];
+                        return <DoorGapInput key={`top-${mod.id}`} moduleId={mod.id} field="doorTopGap"
+                          storeValue={mod.doorTopGap || spaceInfo.doorTopGap || 5}
+                          onCommit={handleIndividualDoorGapChange} />;
+                      })}
+                    </tr>
+                    <tr>
+                      <td style={{ padding: '3px 4px', fontSize: '11px', color: 'var(--theme-text-secondary, #999)', whiteSpace: 'nowrap' }}>하단갭</td>
+                      {partialDoorIndices.map(({ i }) => {
+                        const mod = doorFurnitureList[i];
+                        const sv = mod.doorBottomGap ?? spaceInfo.doorBottomGap ?? 1.5;
+                        return <DoorGapInput key={`bot-${mod.id}`} moduleId={mod.id} field="doorBottomGap"
+                          storeValue={sv}
+                          onCommit={handleIndividualDoorGapChange} />;
+                      })}
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            )}
 
           </div>
         )}
