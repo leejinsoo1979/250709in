@@ -331,7 +331,6 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
       {showFurniture && (
         <>
           {/* 좌우 측면 판재 - 다중 섹션은 상하 분할, 나머지는 통짜 */}
-          {(() => { console.log('🔵 BaseFurnitureShell 측판 분할 체크:', { moduleId: moduleData?.id, isMulti: isMultiSectionFurniture(), sectionCount: getSectionHeights().length, match: moduleData?.id?.includes('entryway-h') }); return null; })()}
           {(moduleData?.id?.includes('4drawer-hanging') || moduleData?.id?.includes('2drawer-hanging') || moduleData?.id?.includes('2hanging') || moduleData?.id?.includes('entryway-h')) && isMultiSectionFurniture() && getSectionHeights().length === 2 ? (
           // 다중 섹션: 좌우 측판을 상부/하부로 분할
           <>
@@ -787,7 +786,6 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
             ) : (moduleData?.id?.includes('2drawer-hanging') || moduleData?.id?.includes('entryway-h')) ? (
               // 2drawer-hanging / entryway-h: 싱글장 처리
               (() => {
-                console.log('🟢 BaseFurnitureShell 중간 구분패널 분기 진입:', { moduleId: moduleData?.id, lowerSectionTopOffsetMm, sectionHeights: getSectionHeights().map(h => h / 0.01) });
                 return getSectionHeights().map((sectionHeight: number, index: number) => {
                   if (index >= getSectionHeights().length - 1) return null;
 

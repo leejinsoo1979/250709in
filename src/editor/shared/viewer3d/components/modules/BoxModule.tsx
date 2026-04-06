@@ -811,7 +811,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
           placedFurnitureId={placedFurnitureId}
           panelGrainDirections={panelGrainDirections}
           moduleData={moduleData}
-          lowerSectionTopOffsetMm={furnitureId?.includes('entryway-h') ? 85 : (lowerSectionTopOffset || 0)}
+          lowerSectionTopOffsetMm={moduleData?.id?.includes('entryway-h') ? 85 : (lowerSectionTopOffset || 0)}
         >
           {/* 내부 구조 렌더링 (드래그/고스트 중에도 표시) */}
           {(
@@ -832,7 +832,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
               textureUrl={baseFurniture.textureUrl}
               panelGrainDirections={panelGrainDirections}
               isFloatingPlacement={spaceInfo?.baseConfig?.placementType === 'float'}
-              shelfFrontInsetMm={furnitureId?.includes('entryway-h') ? 30 : 0}
+              shelfFrontInsetMm={moduleData?.id?.includes('entryway-h') ? 30 : 0}
             />
           )}
         </BaseFurnitureShell>
