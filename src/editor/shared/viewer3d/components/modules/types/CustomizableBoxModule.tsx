@@ -2526,7 +2526,9 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
       {/* 엔드패널(EP) 렌더링 — 표준 모듈과 동일한 높이 로직 적용 */}
       {(() => {
         // EP 높이 모드 분기: 'floor' = 바닥~천장, 'furniture' = 가구 높이에 맞춤
-        const epHeightMode = endPanelHeightModeProp ?? 'floor';
+        // 하부장/상부장은 가구 높이에 맞춤이 기본
+        const isNotFullCategory = category === 'upper' || category === 'lower';
+        const epHeightMode = endPanelHeightModeProp ?? (isNotFullCategory ? 'furniture' : 'floor');
         const groupY = parentGroupYProp ?? 0; // 부모 그룹(가구)의 Y 위치 (Three.js 단위)
         let epH: number;
         let epYOffset: number;

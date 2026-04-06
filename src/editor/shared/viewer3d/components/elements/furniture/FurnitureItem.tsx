@@ -3599,7 +3599,9 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
               const epD = mmToThreeUnits(epDepthMm);
 
               // EP 높이 모드 분기: 'floor' = 바닥~천장, 'furniture' = 가구 높이에 맞춤
-              const epHeightMode = placedModule.endPanelHeightMode ?? 'floor';
+              // 하부장/상부장은 가구 높이에 맞춤이 기본 (바닥~천장이면 가구와 안 맞음)
+              const isNotFullCategory = actualModuleData?.category === 'upper' || actualModuleData?.category === 'lower';
+              const epHeightMode = placedModule.endPanelHeightMode ?? (isNotFullCategory ? 'furniture' : 'floor');
               const groupY = adjustedPosition.y; // Three.js 단위 (가구 중심 Y)
               let epH: number;
               let epYRelative: number;

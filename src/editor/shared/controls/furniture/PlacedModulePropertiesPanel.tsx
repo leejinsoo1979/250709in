@@ -3063,9 +3063,14 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                     onChange={() => {
                       const turning = !currentPlacedModule.hasLeftEndPanel;
                       const isFullSurround = spaceInfo.surroundType === 'surround' && spaceInfo.frameConfig?.top !== false;
+                      const isNotFull = moduleData.category === 'upper' || moduleData.category === 'lower';
                       const update: Record<string, unknown> = { hasLeftEndPanel: turning };
                       if (turning && isFullSurround) {
                         update.leftEndPanelOffset = 23;
+                      }
+                      // 하부장/상부장은 EP 높이를 가구에 맞춤으로 자동 설정
+                      if (turning && isNotFull && !currentPlacedModule.endPanelHeightMode) {
+                        update.endPanelHeightMode = 'furniture';
                       }
                       updatePlacedModule(currentPlacedModule.id, update);
                     }}
@@ -3079,9 +3084,14 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                     onChange={() => {
                       const turning = !currentPlacedModule.hasRightEndPanel;
                       const isFullSurround = spaceInfo.surroundType === 'surround' && spaceInfo.frameConfig?.top !== false;
+                      const isNotFull = moduleData.category === 'upper' || moduleData.category === 'lower';
                       const update: Record<string, unknown> = { hasRightEndPanel: turning };
                       if (turning && isFullSurround) {
                         update.rightEndPanelOffset = 23;
+                      }
+                      // 하부장/상부장은 EP 높이를 가구에 맞춤으로 자동 설정
+                      if (turning && isNotFull && !currentPlacedModule.endPanelHeightMode) {
+                        update.endPanelHeightMode = 'furniture';
                       }
                       updatePlacedModule(currentPlacedModule.id, update);
                     }}
