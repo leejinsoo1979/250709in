@@ -3479,7 +3479,20 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             } else if (leftmostMod.customHeight) {
               furnitureH = leftmostMod.customHeight;
             } else {
-              furnitureH = Math.max(0, effectiveH - actualBottomSize - actualTopSize);
+              // 상부장/하부장은 공간 전체를 차지하지 않으므로 모듈 자체 높이 사용
+              const leftModData = getModuleById(
+                leftmostMod.moduleId,
+                { width: spaceInfo.width, height: spaceInfo.height, depth: spaceInfo.depth },
+                spaceInfo
+              );
+              const leftCategory = leftModData?.category
+                ?? (leftmostMod.moduleId.includes('-upper-') ? 'upper'
+                  : leftmostMod.moduleId.includes('-lower-') ? 'lower' : 'full');
+              if (leftCategory === 'lower' || leftCategory === 'upper') {
+                furnitureH = leftModData?.dimensions.height ?? Math.max(0, effectiveH - actualBottomSize - actualTopSize);
+              } else {
+                furnitureH = Math.max(0, effectiveH - actualBottomSize - actualTopSize);
+              }
             }
             // hasBase=false → 가구 높이에 하부프레임 높이를 더하되, 개별 띄움만큼 차감 (FurnitureItem.tsx:1338-1342)
             // freeHeight/customHeight 경로에서도 적용 필요
@@ -3874,7 +3887,20 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             } else if (rightmostMod.customHeight) {
               rFurnitureH = rightmostMod.customHeight;
             } else {
-              rFurnitureH = Math.max(0, rEffectiveH - rActualBottomSize - rActualTopSize);
+              // 상부장/하부장은 공간 전체를 차지하지 않으므로 모듈 자체 높이 사용
+              const rightModData = getModuleById(
+                rightmostMod.moduleId,
+                { width: spaceInfo.width, height: spaceInfo.height, depth: spaceInfo.depth },
+                spaceInfo
+              );
+              const rightCategory = rightModData?.category
+                ?? (rightmostMod.moduleId.includes('-upper-') ? 'upper'
+                  : rightmostMod.moduleId.includes('-lower-') ? 'lower' : 'full');
+              if (rightCategory === 'lower' || rightCategory === 'upper') {
+                rFurnitureH = rightModData?.dimensions.height ?? Math.max(0, rEffectiveH - rActualBottomSize - rActualTopSize);
+              } else {
+                rFurnitureH = Math.max(0, rEffectiveH - rActualBottomSize - rActualTopSize);
+              }
             }
             // hasBase=false → 가구 높이에 하부프레임 높이를 더하되, 개별 띄움만큼 차감 (FurnitureItem.tsx:1338-1342)
             // freeHeight/customHeight 경로에서도 적용 필요
