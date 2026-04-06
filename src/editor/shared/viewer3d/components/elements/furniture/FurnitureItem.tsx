@@ -1364,9 +1364,10 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   } else {
     furnitureHeightMm = actualModuleData?.dimensions.height || 0;
     // 슬롯모드: 개별 가구 프레임 높이 변경 시 가구 body 높이 보정
-    // internalSpace.height는 전역 프레임값 기준이므로, 개별 delta만큼 보정
-    // baseFrameHeight 변경은 가구 크기에 영향 없음 — Y위치만 이동
-    if (!placedModule.isFreePlacement && furnitureHeightMm > 0) {
+    // freeHeight가 있으면 사용자가 직접 높이를 지정한 것이므로 topFrameThickness delta 보정 불필요
+    // (freeHeight 자체에 이미 줄어든 높이가 반영되어 있음 — 이중 차감 방지)
+    // freeHeight가 없을 때만 topFrameThickness delta로 보정
+    if (!placedModule.isFreePlacement && furnitureHeightMm > 0 && !placedModule.freeHeight) {
       if (placedModule.topFrameThickness !== undefined) {
         const globalTop = spaceInfo.frameSize?.top ?? 30;
         furnitureHeightMm -= (placedModule.topFrameThickness - globalTop);
