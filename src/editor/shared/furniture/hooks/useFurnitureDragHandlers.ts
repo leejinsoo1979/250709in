@@ -48,11 +48,21 @@ export const useFurnitureDragHandlers = (spaceInfo: SpaceInfo) => {
 
         const indexing = calculateSpaceIndexing(spaceInfo);
 
-        // 특수 듀얼 가구이고 슬롯폭이 550mm 미만인 경우
-        if (isSpecialDualFurniture && indexing.columnWidth < 550) {
-          showAlert('슬롯갯수를 줄여주세요', { title: '배치 불가' });
+        // 특수 듀얼 가구: 싱글 슬롯 525mm 미만이면 배치 불가
+        if (isSpecialDualFurniture && indexing.columnWidth < 525) {
+          showAlert('본 가구는 슬롯 폭이 525mm 이상이어야 배치할 수 있습니다', { title: '배치 불가' });
           setFurniturePlacementMode(false);
           return;
+        }
+
+        // 특수 듀얼 가구: 2슬롯 합 1050mm 미만이면 배치 불가
+        if (isSpecialDualFurniture) {
+          const dualWidth = indexing.columnWidth * 2;
+          if (dualWidth < 1050) {
+            showAlert('본 가구는 슬롯 2개의 합이 1050mm 이상이어야 배치할 수 있습니다', { title: '배치 불가' });
+            setFurniturePlacementMode(false);
+            return;
+          }
         }
 
         // 드롭 위치 계산
