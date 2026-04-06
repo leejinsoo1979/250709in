@@ -760,7 +760,82 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
         const reinforcementDepth = mmToThreeUnits((basicThicknessMmVal === 18.5 || basicThicknessMmVal === 15.5) ? 15.5 : 15);
         const reinforcementZ = backPanelZ - backPanelThickness/2 - reinforcementDepth/2;
 
-        // === 백패널 + 보강대 (바지걸이장 포함 모든 가구 동일) ===
+        const isPantsHanger = moduleData.id.includes('4drawer-pantshanger');
+
+        if (isPantsHanger && middlePanelHeight > 0) {
+          // === 바지걸이장: 백패널 상/하 2장 (전체 너비) + 보강대 4개 ===
+          // 상/하부섹션 경계: basicThickness(바닥판) + leftSections[0].height
+          const leftLowerSectionHeightMm = modelConfig.leftSections?.[0]?.height || 0;
+          const lowerBoundaryMm = basicThicknessMmVal + leftLowerSectionHeightMm;
+          const furnitureHeightMm = height / 0.01;
+          const bpWidth = innerWidth + mmToThreeUnits(10); // 전체 내경폭 + 확장
+          const lowerH = mmToThreeUnits(lowerBoundaryMm);
+          const upperH = mmToThreeUnits(furnitureHeightMm - lowerBoundaryMm);
+          const lowerY = -height / 2 + lowerH / 2;
+          const upperY = height / 2 - upperH / 2;
+
+          const reinforcementWidth = innerWidth - sidePanelGap;
+
+          return (
+            <>
+              {/* (하)백패널 */}
+              <BoxWithEdges
+                args={[bpWidth, lowerH, backPanelThickness]}
+                position={[0, lowerY, backPanelZ]}
+                material={material} renderMode={renderMode} furnitureId={placedFurnitureId}
+                isDragging={isDragging} isEditMode={isEditMode} isBackPanel={true}
+                panelName="(하)백패널"
+              />
+              {/* (상)백패널 */}
+              <BoxWithEdges
+                args={[bpWidth, upperH, backPanelThickness]}
+                position={[0, upperY, backPanelZ]}
+                material={material} renderMode={renderMode} furnitureId={placedFurnitureId}
+                isDragging={isDragging} isEditMode={isEditMode} isBackPanel={true}
+                panelName="(상)백패널"
+              />
+              {/* 보강대 4개: 2D 정면도에서 숨김 */}
+              {!(viewMode === '2D' && view2DDirection === 'front') && (
+                <>
+                  {/* (하)보강대 하단 */}
+                  <BoxWithEdges
+                    key="reinf-lower-bottom"
+                    args={[reinforcementWidth, reinforcementHeightVal, reinforcementDepth]}
+                    position={[0, -height / 2 + reinforcementHeightVal / 2, reinforcementZ]}
+                    material={material} renderMode={renderMode} furnitureId={placedFurnitureId}
+                    isDragging={isDragging} isEditMode={isEditMode} panelName="(하)보강대"
+                  />
+                  {/* (하)보강대 상단 */}
+                  <BoxWithEdges
+                    key="reinf-lower-top"
+                    args={[reinforcementWidth, reinforcementHeightVal, reinforcementDepth]}
+                    position={[0, lowerY + lowerH / 2 - reinforcementHeightVal / 2, reinforcementZ]}
+                    material={material} renderMode={renderMode} furnitureId={placedFurnitureId}
+                    isDragging={isDragging} isEditMode={isEditMode} panelName="(하)보강대"
+                  />
+                  {/* (상)보강대 하단 */}
+                  <BoxWithEdges
+                    key="reinf-upper-bottom"
+                    args={[reinforcementWidth, reinforcementHeightVal, reinforcementDepth]}
+                    position={[0, upperY - upperH / 2 + reinforcementHeightVal / 2, reinforcementZ]}
+                    material={material} renderMode={renderMode} furnitureId={placedFurnitureId}
+                    isDragging={isDragging} isEditMode={isEditMode} panelName="(상)보강대"
+                  />
+                  {/* (상)보강대 상단 */}
+                  <BoxWithEdges
+                    key="reinf-upper-top"
+                    args={[reinforcementWidth, reinforcementHeightVal, reinforcementDepth]}
+                    position={[0, upperY + upperH / 2 - reinforcementHeightVal / 2, reinforcementZ]}
+                    material={material} renderMode={renderMode} furnitureId={placedFurnitureId}
+                    isDragging={isDragging} isEditMode={isEditMode} panelName="(상)보강대"
+                  />
+                </>
+              )}
+            </>
+          );
+        }
+
+        // === 기본 가구: 통짜 백패널 1장 + 보강대 2개 ===
         const backPanelHeight = innerHeight + mmToThreeUnits(36);
         const reinforcementWidth = innerWidth - sidePanelGap;
 
