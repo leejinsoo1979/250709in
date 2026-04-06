@@ -2549,6 +2549,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                         if (!isNaN(val) && val >= 100 && val <= 3000 && currentPlacedModule) {
                           updatePlacedModule(currentPlacedModule.id, { freeHeight: val });
                           setFreeHeightInput(val.toString());
+                          setSectionHeightInputs({}); // 섹션 높이 캐시 초기화 → 재계산
                           const store = useFurnitureStore.getState();
                           const dims = {
                             width: currentPlacedModule.freeWidth || moduleData.dimensions.width,
@@ -2591,6 +2592,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                           setFreeHeightInput(next.toString());
                           if (currentPlacedModule) {
                             updatePlacedModule(currentPlacedModule.id, { freeHeight: next });
+                            setSectionHeightInputs({}); // 섹션 높이 캐시 초기화
                           }
                         }
                       }}
@@ -2811,7 +2813,13 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                           <span className={styles.unit}>mm</span>
                         </div>
                       </div>
-                      {/* 섹션 높이 (읽기 전용 — 표준 가구는 비율 고정, 커스텀은 편집 가능) */}
+                      {/* 섹션 높이 — 표준 가구: 마지막(상부) 섹션만 편집 가능 (전체 높이 역계산), 커스텀: 모두 편집 가능 */}
+                      {(() => {
+                        // 표준 가구에서 마지막 섹션(상부=가변)만 편집 가능
+                        const isLastSection = sIdx === sectionCount - 1;
+                        const isStdEditable = !isCustom && isLastSection && sectionCount >= 2;
+                        const canEdit = isCustom || isStdEditable;
+                        return (
                       <div style={{ flex: 1, minWidth: '70px' }}>
                         <label style={{ fontSize: '10px', color: 'var(--theme-text-secondary)', display: 'block', lineHeight: 1 }}>높이</label>
                         <div className={styles.inputWithUnit}>
@@ -2822,14 +2830,30 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                             onBlur={() => {
                               if (isCustom) {
                                 handleSectionHeightBlur(sIdx);
+                              } else if (isStdEditable && mcSections) {
+                                // 표준 가구 마지막(상부) 섹션 높이 변경 → 전체 높이 역계산
+                                const inputVal = parseInt(sectionHeightInputs[sIdx] || '0', 10);
+                                if (isNaN(inputVal) || inputVal < 100) {
+                                  setSectionHeightInputs({});
+                                  return;
+                                }
+                                // 하부 고정 섹션 합 + 패널 두께 → 전체 높이 역계산
+                                const prevFixed = mcSections
+                                  .filter((_: any, idx: number) => idx < sIdx)
+                                  .reduce((sum: number, s: any) => sum + ((s.heightType === 'absolute' ? s.height : 0) || 0), 0);
+                                const dividerCount = mcSections.length - 1;
+                                const newTotalH = inputVal + prevFixed + 2 * pt + dividerCount * pt;
+                                const clampedH = Math.max(300, Math.min(3000, newTotalH));
+                                updatePlacedModule(currentPlacedModule.id, { freeHeight: clampedH });
+                                setFreeHeightInput(clampedH.toString());
+                                setSectionHeightInputs({});
                               } else {
-                                // 표준 가구: 높이 비율은 고정이므로 전체 높이를 변경
                                 setSectionHeightInputs(prev => ({ ...prev, [sIdx]: displayH }));
                               }
                             }}
                             onKeyDown={(e) => {
                               if (e.key === 'Enter') { (e.target as HTMLInputElement).blur(); }
-                              else if (isCustom && (e.key === 'ArrowUp' || e.key === 'ArrowDown')) {
+                              else if (canEdit && (e.key === 'ArrowUp' || e.key === 'ArrowDown')) {
                                 e.preventDefault();
                                 const cur = parseInt(displayH, 10) || 0;
                                 const next = Math.max(100, cur + (e.key === 'ArrowUp' ? 1 : -1));
@@ -2837,16 +2861,18 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                               }
                             }}
                             className={styles.depthInput}
-                            readOnly={!isCustom}
+                            readOnly={!canEdit}
                             style={{
-                              color: '#000', backgroundColor: isCustom ? '#fff' : '#f5f5f5',
-                              WebkitTextFillColor: '#000', opacity: isCustom ? 1 : 0.7,
-                              cursor: isCustom ? 'text' : 'default',
+                              color: '#000', backgroundColor: canEdit ? '#fff' : '#f5f5f5',
+                              WebkitTextFillColor: '#000', opacity: canEdit ? 1 : 0.7,
+                              cursor: canEdit ? 'text' : 'default',
                             }}
                           />
                           <span className={styles.unit}>mm</span>
                         </div>
                       </div>
+                        );
+                      })()}
                       {/* 섹션 깊이 */}
                       <div style={{ flex: 1, minWidth: '70px' }}>
                         <label style={{ fontSize: '10px', color: 'var(--theme-text-secondary)', display: 'block', lineHeight: 1 }}>깊이</label>
