@@ -629,7 +629,6 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   // doorTopGap/doorBottomGap: 항상 바닥/천장 기준 (받침대/띄움 무관, 0이면 공간 높이)
   const doorTopGap = doorTopGapProp ?? originalSpaceInfo.doorTopGap ?? 0;
   const doorBottomGap = doorBottomGapProp ?? originalSpaceInfo.doorBottomGap ?? 0;
-  // debug removed
 
   // 인덱싱 정보 계산 - 원본 spaceInfo 사용
   const indexing = calculateSpaceIndexing(originalSpaceInfo);

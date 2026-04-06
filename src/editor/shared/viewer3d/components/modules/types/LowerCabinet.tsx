@@ -44,7 +44,9 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
   zone, // 단내림 영역 정보
   hasBase,
   individualFloatHeight,
-  parentGroupY
+  parentGroupY,
+  doorTopGap,
+  doorBottomGap
 }) => {
   console.log('🏠 [LowerCabinet] Props 확인:', {
     moduleId: moduleData.id,
@@ -482,6 +484,8 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
           hasBase={hasBase}
           individualFloatHeight={individualFloatHeight}
           parentGroupY={parentGroupY}
+          doorTopGap={doorTopGap}
+          doorBottomGap={doorBottomGap}
         />
       )}
 

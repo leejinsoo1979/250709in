@@ -791,8 +791,10 @@ const BoxModule: React.FC<BoxModuleProps> = ({
         renderMode={renderMode} // 렌더 모드 전달
         zone={zone} // 단내림 영역 정보
         hasBase={hasBase}
-            individualFloatHeight={individualFloatHeight}
+        individualFloatHeight={individualFloatHeight}
         parentGroupY={parentGroupY}
+        doorTopGap={doorTopGap}
+        doorBottomGap={doorBottomGap}
       />
       </>
     );
