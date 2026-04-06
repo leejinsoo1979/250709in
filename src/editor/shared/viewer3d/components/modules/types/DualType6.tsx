@@ -149,6 +149,8 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
   const middlePanelHeight = modelConfig.middlePanelHeight || 0;
   const hasSharedSafetyShelf = modelConfig.hasSharedSafetyShelf || false;
   const safetyShelfHeight = modelConfig.safetyShelfHeight || 0;
+  // 바지걸이장 상부섹션 선반/옷봉 21mm 하강 (다른 가구들과 높이 맞춤)
+  const effectiveSafetyShelfHeight = safetyShelfHeight > 0 ? safetyShelfHeight - 21 : 0;
 
   // 좌우 섹션 렌더링
   const renderAsymmetricSections = () => {
@@ -464,7 +466,7 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
             let rodYPosition: number;
             if (hasSharedSafetyShelf && safetyShelfHeight > 0) {
               // 안전선반이 있는 경우: 브라켓 윗면이 안전선반 하단에 붙음
-              const safetyShelfY = -height/2 + basicThickness + mmToThreeUnits(safetyShelfHeight);
+              const safetyShelfY = -height/2 + basicThickness + mmToThreeUnits(effectiveSafetyShelfHeight);
               rodYPosition = safetyShelfY - basicThickness / 2 - mmToThreeUnits(75 / 2);
             } else {
               // 안전선반이 없는 경우: 브라켓 윗면이 섹션 상판 하단에 붙음
@@ -525,7 +527,7 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
           <>
             <BoxWithEdges
               args={[innerWidth - sidePanelGap, basicThickness, adjustedDepthForShelves - basicThickness]}
-              position={[0, -height/2 + basicThickness + mmToThreeUnits(safetyShelfHeight), basicThickness/2 + shelfZOffset]}
+              position={[0, -height/2 + basicThickness + mmToThreeUnits(effectiveSafetyShelfHeight), basicThickness/2 + shelfZOffset]}
               material={material}
               renderMode={useSpace3DView().renderMode}
               furnitureId={placedFurnitureId}
@@ -553,19 +555,20 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
         const isPantsHanger = moduleData.id.includes('4drawer-pantshanger');
         if (isPantsHanger && middlePanelHeight > 0) {
           // 상/하 분할: middlePanelHeight 기준
-          // 하부 측판: 바닥판 상면 ~ 중간칸막이 하면
+          // 측판은 바닥판/상판을 감싸므로 외경(두께 포함) 기준
           const lowerInnerMm = middlePanelHeight - 9 - basicThicknessMmVal / 2;
-          // 상부 측판: 중간칸막이 상면 ~ 상판 하면
           const totalInnerMm = innerHeight / 0.01;
           const upperInnerMm = totalInnerMm - lowerInnerMm - basicThicknessMmVal;
 
-          const lowerH = mmToThreeUnits(lowerInnerMm);
-          const upperH = mmToThreeUnits(upperInnerMm);
+          // 하부 측판: 가구 바닥 ~ 중간칸막이 하면 (바닥판 두께 포함)
+          const lowerH = mmToThreeUnits(lowerInnerMm + basicThicknessMmVal);
+          // 상부 측판: 중간칸막이 상면 ~ 가구 상단 (상판 두께 포함)
+          const upperH = mmToThreeUnits(upperInnerMm + basicThicknessMmVal);
 
-          // 하부 측판 Y: 바닥판 상면 + lowerH/2
-          const lowerY = -height / 2 + basicThickness + lowerH / 2;
-          // 상부 측판 Y: 상판 하면 - upperH/2
-          const upperY = height / 2 - basicThickness - upperH / 2;
+          // 하부 측판 Y: 가구 바닥부터
+          const lowerY = -height / 2 + lowerH / 2;
+          // 상부 측판 Y: 가구 상단까지
+          const upperY = height / 2 - upperH / 2;
 
           return (
             <>
@@ -813,7 +816,7 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
                   <Text
                     position={[
                       getDimensionXPosition(innerWidth, true),
-                      ((-height/2 + basicThickness + mmToThreeUnits(middlePanelHeight - 9) + basicThickness/2) + (-height/2 + basicThickness + mmToThreeUnits(safetyShelfHeight) - basicThickness/2)) / 2,
+                      ((-height/2 + basicThickness + mmToThreeUnits(middlePanelHeight - 9) + basicThickness/2) + (-height/2 + basicThickness + mmToThreeUnits(effectiveSafetyShelfHeight) - basicThickness/2)) / 2,
                       getDimensionZPosition()
                     ]}
                     fontSize={baseFontSize}
@@ -824,13 +827,13 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
                     renderOrder={999}
                     depthTest={false}
                   >
-                    {Math.round(threeUnitsToMm(((-height/2 + basicThickness + mmToThreeUnits(safetyShelfHeight) - basicThickness/2) - (-height/2 + basicThickness + mmToThreeUnits(middlePanelHeight - 9) + basicThickness/2))))}
+                    {Math.round(threeUnitsToMm(((-height/2 + basicThickness + mmToThreeUnits(effectiveSafetyShelfHeight) - basicThickness/2) - (-height/2 + basicThickness + mmToThreeUnits(middlePanelHeight - 9) + basicThickness/2))))}
                   </Text>
 
                   <Line
                     points={[
                       [getDimensionXPosition(innerWidth, false), -height/2 + basicThickness + mmToThreeUnits(middlePanelHeight - 9) + basicThickness/2, getDimensionZPosition()],
-                      [getDimensionXPosition(innerWidth, false), -height/2 + basicThickness + mmToThreeUnits(safetyShelfHeight) - basicThickness/2, getDimensionZPosition()]
+                      [getDimensionXPosition(innerWidth, false), -height/2 + basicThickness + mmToThreeUnits(effectiveSafetyShelfHeight) - basicThickness/2, getDimensionZPosition()]
                     ]}
                     color={viewMode === '3D' ? '#000000' : dimensionColor}
                     lineWidth={1}
@@ -841,7 +844,7 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
                         <sphereGeometry args={[0.05, 8, 8]} />
                         <meshBasicMaterial color={viewMode === '3D' ? '#000000' : dimensionColor} />
                       </mesh>
-                      <mesh position={[-innerWidth/2 * 0.3, -height/2 + basicThickness + mmToThreeUnits(safetyShelfHeight) - basicThickness/2, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : depth/2 + 1.0]}>
+                      <mesh position={[-innerWidth/2 * 0.3, -height/2 + basicThickness + mmToThreeUnits(effectiveSafetyShelfHeight) - basicThickness/2, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : depth/2 + 1.0]}>
                         <sphereGeometry args={[0.05, 8, 8]} />
                         <meshBasicMaterial color={viewMode === '3D' ? '#000000' : dimensionColor} />
                       </mesh>
@@ -852,7 +855,7 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
                   <Text
                     position={[
                       getDimensionXPosition(innerWidth, true),
-                      ((-height/2 + basicThickness + mmToThreeUnits(safetyShelfHeight) + basicThickness/2) + (height/2 - basicThickness)) / 2,
+                      ((-height/2 + basicThickness + mmToThreeUnits(effectiveSafetyShelfHeight) + basicThickness/2) + (height/2 - basicThickness)) / 2,
                       getDimensionZPosition()
                     ]}
                     fontSize={baseFontSize}
@@ -863,12 +866,12 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
                     renderOrder={999}
                     depthTest={false}
                   >
-                    {Math.round(threeUnitsToMm(((height/2 - basicThickness) - (-height/2 + basicThickness + mmToThreeUnits(safetyShelfHeight) + basicThickness/2))))}
+                    {Math.round(threeUnitsToMm(((height/2 - basicThickness) - (-height/2 + basicThickness + mmToThreeUnits(effectiveSafetyShelfHeight) + basicThickness/2))))}
                   </Text>
 
                   <Line
                     points={[
-                      [getDimensionXPosition(innerWidth, false), -height/2 + basicThickness + mmToThreeUnits(safetyShelfHeight) + basicThickness/2, getDimensionZPosition()],
+                      [getDimensionXPosition(innerWidth, false), -height/2 + basicThickness + mmToThreeUnits(effectiveSafetyShelfHeight) + basicThickness/2, getDimensionZPosition()],
                       [getDimensionXPosition(innerWidth, false), height/2 - basicThickness, getDimensionZPosition()]
                     ]}
                     color={viewMode === '3D' ? '#000000' : dimensionColor}
@@ -876,7 +879,7 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
                   />
                   {!(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right')) && (
                     <>
-                      <mesh position={[-innerWidth/2 * 0.3, -height/2 + basicThickness + mmToThreeUnits(safetyShelfHeight) + basicThickness/2, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : depth/2 + 1.0]}>
+                      <mesh position={[-innerWidth/2 * 0.3, -height/2 + basicThickness + mmToThreeUnits(effectiveSafetyShelfHeight) + basicThickness/2, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : depth/2 + 1.0]}>
                         <sphereGeometry args={[0.05, 8, 8]} />
                         <meshBasicMaterial color={viewMode === '3D' ? '#000000' : dimensionColor} />
                       </mesh>
@@ -932,23 +935,24 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
             </group>
           )}
 
-          {/* 조절발통 (네 모서리) - 띄움 배치 시에는 렌더링하지 않음 */}
-          {!isFloating && !(lowerSectionTopOffset && lowerSectionTopOffset > 0) && (
-            <AdjustableFootsRenderer
-              width={width}
-              depth={depth}
-              yOffset={-height / 2}
-              placedFurnitureId={placedFurnitureId}
-              renderMode={renderMode}
-              isHighlighted={false}
-              isFloating={isFloating}
-              baseHeight={spaceInfo?.baseConfig?.height || 65}
-              baseDepth={spaceInfo?.baseConfig?.depth || 0}
-              viewMode={viewMode}
-              view2DDirection={view2DDirection}
-            />
-          )}
         </>
+      )}
+
+      {/* 조절발통 (네 모서리) - showFurniture와 무관하게 항상 렌더링 */}
+      {!isFloating && !(lowerSectionTopOffset && lowerSectionTopOffset > 0) && (
+        <AdjustableFootsRenderer
+          width={width}
+          depth={depth}
+          yOffset={-height / 2}
+          placedFurnitureId={placedFurnitureId}
+          renderMode={renderMode}
+          isHighlighted={false}
+          isFloating={isFloating}
+          baseHeight={spaceInfo?.baseConfig?.height || 65}
+          baseDepth={spaceInfo?.baseConfig?.depth || 0}
+          viewMode={viewMode}
+          view2DDirection={view2DDirection}
+        />
       )}
 
       {/* 도어는 showFurniture와 관계없이 hasDoor가 true이면 항상 렌더링 */}
