@@ -690,6 +690,93 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           });
         })}
 
+        {/* ===== 서랍 마이다 치수 가이드 (좌측뷰) ===== */}
+        {visibleFurniture.map((module, moduleIndex) => {
+          let moduleData = getModuleById(
+            module.moduleId,
+            { width: internalSpace.width, height: internalSpace.height, depth: internalSpace.depth },
+            spaceInfo
+          );
+          if (!moduleData) {
+            moduleData = buildModuleDataFromPlacedModule(module as PlacedModule, internalSpace, spaceInfo);
+          }
+          if (!moduleData) return null;
+
+          const mod = module as PlacedModule;
+          const moduleHeightMm = computeFurnitureHeightMm(mod, moduleData, spaceInfo, internalSpace);
+          const { sections: sectionConfigs, heightsMm: sectionHeightsMm } = computeSectionHeightsInfo(mod, moduleData, moduleHeightMm, 'left');
+          if (sectionConfigs.length === 0) return null;
+
+          // 서랍 섹션 찾기
+          const drawerSections: { sectionIndex: number; config: SectionConfig; heightMm: number; bottomOffsetMm: number }[] = [];
+          let accumulatedMm = 0;
+          sectionConfigs.forEach((sec, idx) => {
+            if (sec.type === 'drawer' && sec.drawerHeights && sec.drawerHeights.length > 0) {
+              drawerSections.push({
+                sectionIndex: idx,
+                config: sec,
+                heightMm: sectionHeightsMm[idx] || 0,
+                bottomOffsetMm: accumulatedMm
+              });
+            }
+            accumulatedMm += sectionHeightsMm[idx] || 0;
+          });
+
+          if (drawerSections.length === 0) return null;
+
+          const cabinetBottomY = furnitureBaseY;
+          const drawerColor = '#FF9800'; // 오렌지
+          const drawerDimZ = spaceDepth/2 + rightDimOffset - mmToThreeUnits(390); // 섹션 치수선 안쪽
+
+          return drawerSections.map((ds) => {
+            const drawerHeights = ds.config.drawerHeights!;
+            const gapHeightMm = ds.config.gapHeight ?? 23.6;
+            const sectionBottomY = cabinetBottomY + mmToThreeUnits(ds.bottomOffsetMm);
+
+            let cursorMm = gapHeightMm; // 하단 갭부터 시작
+            return drawerHeights.map((dh, di) => {
+              const drawerBottomMm = cursorMm;
+              const drawerTopMm = cursorMm + dh;
+              cursorMm = drawerTopMm + gapHeightMm;
+
+              const drawerBottomY = sectionBottomY + mmToThreeUnits(drawerBottomMm);
+              const drawerTopY = sectionBottomY + mmToThreeUnits(drawerTopMm);
+              const drawerMidY = (drawerBottomY + drawerTopY) / 2;
+
+              return (
+                <group key={`drawer-dim-${moduleIndex}-${ds.sectionIndex}-${di}`}>
+                  {/* 세로 치수선 */}
+                  <NativeLine name="drawer_maida_dim"
+                    points={[[0, drawerBottomY, drawerDimZ], [0, drawerTopY, drawerDimZ]]}
+                    color={drawerColor} lineWidth={2} renderOrder={100000} depthTest={false}
+                  />
+                  {/* 상단 티크 */}
+                  <NativeLine name="drawer_maida_dim"
+                    points={[[-0.03, drawerTopY, drawerDimZ], [0.03, drawerTopY, drawerDimZ]]}
+                    color={drawerColor} lineWidth={2} renderOrder={100000} depthTest={false}
+                  />
+                  {/* 하단 티크 */}
+                  <NativeLine name="drawer_maida_dim"
+                    points={[[-0.03, drawerBottomY, drawerDimZ], [0.03, drawerBottomY, drawerDimZ]]}
+                    color={drawerColor} lineWidth={2} renderOrder={100000} depthTest={false}
+                  />
+                  {/* 높이 텍스트 */}
+                  <Text
+                    position={[0, drawerMidY, drawerDimZ + mmToThreeUnits(60)]}
+                    fontSize={smallFontSize}
+                    color={drawerColor}
+                    anchorX="center" anchorY="middle"
+                    renderOrder={1000} depthTest={false}
+                    rotation={[0, -Math.PI / 2, Math.PI / 2]}
+                  >
+                    {Math.round(dh)}
+                  </Text>
+                </group>
+              );
+            });
+          });
+        })}
+
         {/* 바닥마감재 치수 (별도 위치, 좌측뷰) */}
         {floorFinishHeightMm > 0 && !isFloating && (
         <group>
@@ -1562,6 +1649,88 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                 </Text>
               </group>
             );
+          });
+        })}
+
+        {/* ===== 서랍 마이다 치수 가이드 (우측뷰) ===== */}
+        {visibleFurniture.map((module, moduleIndex) => {
+          let moduleData = getModuleById(
+            module.moduleId,
+            { width: internalSpace.width, height: internalSpace.height, depth: internalSpace.depth },
+            spaceInfo
+          );
+          if (!moduleData) {
+            moduleData = buildModuleDataFromPlacedModule(module as PlacedModule, internalSpace, spaceInfo);
+          }
+          if (!moduleData) return null;
+
+          const mod = module as PlacedModule;
+          const moduleHeightMm = computeFurnitureHeightMm(mod, moduleData, spaceInfo, internalSpace);
+          const { sections: sectionConfigs, heightsMm: sectionHeightsMm } = computeSectionHeightsInfo(mod, moduleData, moduleHeightMm, 'right');
+          if (sectionConfigs.length === 0) return null;
+
+          const drawerSections: { sectionIndex: number; config: SectionConfig; heightMm: number; bottomOffsetMm: number }[] = [];
+          let accumulatedMm = 0;
+          sectionConfigs.forEach((sec, idx) => {
+            if (sec.type === 'drawer' && sec.drawerHeights && sec.drawerHeights.length > 0) {
+              drawerSections.push({
+                sectionIndex: idx,
+                config: sec,
+                heightMm: sectionHeightsMm[idx] || 0,
+                bottomOffsetMm: accumulatedMm
+              });
+            }
+            accumulatedMm += sectionHeightsMm[idx] || 0;
+          });
+
+          if (drawerSections.length === 0) return null;
+
+          const cabinetBottomY = furnitureBaseY;
+          const drawerColor = '#FF9800';
+          const drawerDimZ = spaceDepth/2 + rightDimOffset - mmToThreeUnits(390);
+
+          return drawerSections.map((ds) => {
+            const drawerHeights = ds.config.drawerHeights!;
+            const gapHeightMm = ds.config.gapHeight ?? 23.6;
+            const sectionBottomY = cabinetBottomY + mmToThreeUnits(ds.bottomOffsetMm);
+
+            let cursorMm = gapHeightMm;
+            return drawerHeights.map((dh, di) => {
+              const drawerBottomMm = cursorMm;
+              const drawerTopMm = cursorMm + dh;
+              cursorMm = drawerTopMm + gapHeightMm;
+
+              const drawerBottomY = sectionBottomY + mmToThreeUnits(drawerBottomMm);
+              const drawerTopY = sectionBottomY + mmToThreeUnits(drawerTopMm);
+              const drawerMidY = (drawerBottomY + drawerTopY) / 2;
+
+              return (
+                <group key={`drawer-dim-${moduleIndex}-${ds.sectionIndex}-${di}`}>
+                  <NativeLine name="drawer_maida_dim"
+                    points={[[0, drawerBottomY, drawerDimZ], [0, drawerTopY, drawerDimZ]]}
+                    color={drawerColor} lineWidth={2} renderOrder={100000} depthTest={false}
+                  />
+                  <NativeLine name="drawer_maida_dim"
+                    points={[[-0.03, drawerTopY, drawerDimZ], [0.03, drawerTopY, drawerDimZ]]}
+                    color={drawerColor} lineWidth={2} renderOrder={100000} depthTest={false}
+                  />
+                  <NativeLine name="drawer_maida_dim"
+                    points={[[-0.03, drawerBottomY, drawerDimZ], [0.03, drawerBottomY, drawerDimZ]]}
+                    color={drawerColor} lineWidth={2} renderOrder={100000} depthTest={false}
+                  />
+                  <Text
+                    position={[0, drawerMidY, drawerDimZ + mmToThreeUnits(60)]}
+                    fontSize={smallFontSize}
+                    color={drawerColor}
+                    anchorX="center" anchorY="middle"
+                    renderOrder={1000} depthTest={false}
+                    rotation={[0, Math.PI / 2, Math.PI / 2]}
+                  >
+                    {Math.round(dh)}
+                  </Text>
+                </group>
+              );
+            });
           });
         })}
 
