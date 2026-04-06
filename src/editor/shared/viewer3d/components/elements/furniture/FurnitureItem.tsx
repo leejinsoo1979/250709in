@@ -1281,13 +1281,11 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   }, [placedModule.position, isLastSlot, isFurnitureDragging]);
 
   // 🔴🔴🔴 Y축 위치 계산 - actualModuleData가 정의된 후에 실행
-  // 상부장 체크 (변수명 변경: 위에서 이미 선언됨)
-  const isUpperCabinetForY = placedModule.moduleId?.includes('upper-cabinet') ||
-    placedModule.moduleId?.includes('dual-upper-cabinet');
+  // category 기반 체크 (moduleId 패턴 매칭 대신 actualModuleData.category 사용)
+  const isUpperCabinetForY = actualModuleData?.category === 'upper';
 
-  // 하부장 체크 (변수명 변경: 위에서 이미 선언됨)
-  const isLowerCabinetForY = placedModule.moduleId?.includes('lower-cabinet') ||
-    placedModule.moduleId?.includes('dual-lower-cabinet');
+  // 하부장 체크: category 'lower' (lower-half-cabinet, lower-drawer, lower-door-lift 등 모두 포함)
+  const isLowerCabinetForY = actualModuleData?.category === 'lower';
 
   // 키큰장 체크
   const isTallCabinetForY = actualModuleData?.category === 'full';
