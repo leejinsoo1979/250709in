@@ -232,14 +232,15 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
             break;
         }
         
-        // 서랍 섹션 위에 (하)상판 렌더링 (4단서랍장처럼 좌측만)
+        // 서랍 섹션 위에 (하)상판 렌더링 (4단서랍장처럼 좌측만, 앞에서 85mm 옵셋)
         let drawerTopPanel = null;
         if (section.type === 'drawer' && index < allSections.length - 1) {
-          const panelDepth = depth - mmToThreeUnits(26);
+          const topPanelInset = 85; // 앞에서 85mm 안으로
+          const panelDepth = depth - mmToThreeUnits(26) - mmToThreeUnits(topPanelInset);
           drawerTopPanel = (
             <BoxWithEdges
               args={[leftWidth, basicThickness, panelDepth]}
-              position={[0, sectionCenterY + sectionHeight/2 - basicThickness * 1.5, mmToThreeUnits(13)]}
+              position={[0, sectionCenterY + sectionHeight/2 - basicThickness * 1.5, mmToThreeUnits(13) - mmToThreeUnits(topPanelInset / 2)]}
               material={material}
               renderMode={useSpace3DView().renderMode}
               furnitureId={placedFurnitureId}
@@ -581,8 +582,8 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
 
           // 하부 측판: 가구 바닥 ~ 중간칸막이 하면 (바닥판 두께 포함)
           const lowerH = mmToThreeUnits(lowerInnerMm + basicThicknessMmVal);
-          // 상부 측판: 중간칸막이 상면 ~ 가구 상단 (상판 두께 포함)
-          const upperH = mmToThreeUnits(upperInnerMm + basicThicknessMmVal);
+          // 상부 측판: 중간칸막이 하면 ~ 가구 상단 (중간칸막이 + 상부내경 + 상판)
+          const upperH = mmToThreeUnits(upperInnerMm + basicThicknessMmVal * 2);
 
           // 하부 측판 Y: 가구 바닥부터
           const lowerY = -height / 2 + lowerH / 2;
