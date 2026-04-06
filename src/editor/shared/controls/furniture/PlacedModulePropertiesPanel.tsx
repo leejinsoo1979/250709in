@@ -962,9 +962,21 @@ const PlacedModulePropertiesPanel: React.FC = () => {
             const wInputs: Record<number, string> = {};
             mcSections.forEach((sec: any, i: number) => {
               const ht = sec.heightType || 'percentage';
-              const sH = ht === 'absolute'
-                ? (sec.height || 0)
-                : Math.round(availH * ((sec.height || sec.heightRatio || 50) / 100));
+              const isLast = i === mcSections.length - 1;
+              let sH: number;
+              if (ht === 'absolute') {
+                if (isLast) {
+                  // 마지막 섹션은 나머지 높이 흡수 (getStdSectionHeightMM과 동일)
+                  const prevFixed = mcSections
+                    .filter((_: any, idx: number) => idx < i)
+                    .reduce((sum: number, s: any) => sum + ((s.heightType === 'absolute' ? s.height : 0) || 0), 0);
+                  sH = Math.max(0, availH - prevFixed);
+                } else {
+                  sH = sec.height || 0;
+                }
+              } else {
+                sH = Math.round(availH * ((sec.height || sec.heightRatio || 50) / 100));
+              }
               hInputs[i] = Math.round(sH).toString();
               if (i === 0) dInputs[i] = Math.round(currentPlacedModule.lowerSectionDepth || totalD).toString();
               else if (i === 1) dInputs[i] = Math.round(currentPlacedModule.upperSectionDepth || totalD).toString();
