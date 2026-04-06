@@ -229,6 +229,8 @@ interface DrawerRendererProps {
   maidaInsetLeft?: number;   // 마이다 좌측 인셋 (mm), 기본 0
   maidaInsetRight?: number;  // 마이다 우측 인셋 (mm), 기본 0
   topPanelFrontInset?: number; // (하)상판 앞쪽 옵셋 (mm) — 타공 간격 연동용
+  doorTopGap?: number; // 상단갭 (mm) — 맨위 서랍 마이다 상단 확장
+  doorBottomGap?: number; // 하단갭 (mm) — 맨아래 서랍 마이다 하단 확장
 }
 
 /**
@@ -266,6 +268,8 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
   maidaInsetLeft = 0,
   maidaInsetRight = 0,
   topPanelFrontInset = 0,
+  doorTopGap = 0,
+  doorBottomGap = 0,
 }) => {
   const showDimensions = useUIStore(state => state.showDimensions);
   const showDimensionsText = useUIStore(state => state.showDimensionsText);
@@ -450,7 +454,7 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
   const verticalPanelZ = (verticalPanelFrontEdge + verticalPanelBackEdge) / 2;
   
   // 개별 서랍 렌더링 함수 (본체 + 손잡이 판)
-  const renderDrawer = (drawerWidth: number, drawerHeight: number, drawerDepth: number, centerPosition: [number, number, number], key: string, isTopDrawer: boolean = false, drawerIndex: number = 0) => {
+  const renderDrawer = (drawerWidth: number, drawerHeight: number, drawerDepth: number, centerPosition: [number, number, number], key: string, isTopDrawer: boolean = false, drawerIndex: number = 0, isBottomDrawer: boolean = false) => {
     const [centerX, centerY, centerZ] = centerPosition;
     
     // 서랍 실제 깊이 계산: 가구 앞면에서 30mm 후퇴, 뒷면에서 30mm 전진 = 총 60mm 감소
@@ -585,18 +589,21 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
           );
         })()}
 
-        {/* === 손잡이 판 (앞쪽, 15mm 두께) - 위배치 맨 아래 서랍은 24mm 하단 확장, 마이다 인셋 적용 === */}
+        {/* === 손잡이 판 (앞쪽, 15mm 두께) - 위배치 맨 아래 서랍은 24mm 하단 확장, 마이다 인셋 적용, 상단갭/하단갭 확장 === */}
         {(() => {
           const panelName = sectionName ? `${sectionName}서랍${drawerIndex + 1}(마이다)` : `서랍${drawerIndex + 1}(마이다)`;
           const mat = getPanelMaterial(panelName);
           // 위배치 맨 아래 서랍: 마이다 하단 24mm + 상단 18mm 확장 (하부덮개 가림)
-          const isBottomDrawer = drawerIndex === 0;
-          const maidaBottomExt = (drawerAlign === 'top' && isBottomDrawer) ? mmToThreeUnits(24) : 0;
-          const maidaTopExt = (drawerAlign === 'top' && isBottomDrawer) ? basicThickness : 0;
+          const isBottomDrawerForAlign = drawerIndex === 0;
+          const maidaBottomExt = (drawerAlign === 'top' && isBottomDrawerForAlign) ? mmToThreeUnits(24) : 0;
+          const maidaTopExt = (drawerAlign === 'top' && isBottomDrawerForAlign) ? basicThickness : 0;
+          // 상단갭/하단갭 확장: 맨위 서랍은 상단 확장, 맨아래 서랍은 하단 확장
+          const gapTopExt = isTopDrawer ? mmToThreeUnits(doorTopGap) : 0;
+          const gapBottomExt = isBottomDrawer ? mmToThreeUnits(doorBottomGap) : 0;
           // 마이다 인셋 적용: 상하좌우 축소
-          const maidaHeight = drawerHeight + maidaBottomExt + maidaTopExt - mmToThreeUnits(maidaInsetTop + maidaInsetBottom);
+          const maidaHeight = drawerHeight + maidaBottomExt + maidaTopExt + gapTopExt + gapBottomExt - mmToThreeUnits(maidaInsetTop + maidaInsetBottom);
           const maidaWidth = drawerWidth - mmToThreeUnits(maidaInsetLeft + maidaInsetRight);
-          const maidaY = centerY + (maidaTopExt - maidaBottomExt) / 2 + mmToThreeUnits(maidaInsetBottom - maidaInsetTop) / 2;
+          const maidaY = centerY + (maidaTopExt + gapTopExt - maidaBottomExt - gapBottomExt) / 2 + mmToThreeUnits(maidaInsetBottom - maidaInsetTop) / 2;
           const maidaX = centerX + mmToThreeUnits(maidaInsetRight - maidaInsetLeft) / 2;
           return (
             <BoxWithEdges
@@ -910,7 +917,8 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
             [0, drawerCenter, basicThickness/2],
             `custom-drawer-${i}`,
             i === drawerHeights.length - 1, // 마지막 인덱스가 최상단 서랍
-            i // 서랍 인덱스 전달
+            i, // 서랍 인덱스 전달
+            i === 0 // 첫 번째 인덱스가 최하단 서랍
           );
 
           // 다음 서랍을 위해 Y 위치 업데이트
@@ -1058,7 +1066,8 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
             [0, relativeYPosition, basicThickness/2],
             `drawer-${i}`,
             i === drawerCount - 1, // 마지막 인덱스가 최상단 서랍
-            i // 서랍 인덱스 전달
+            i, // 서랍 인덱스 전달
+            i === 0 // 첫 번째 인덱스가 최하단 서랍
           );
         })}
       </group>

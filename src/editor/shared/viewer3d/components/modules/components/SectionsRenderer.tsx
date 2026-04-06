@@ -79,6 +79,10 @@ interface SectionsRendererProps {
 
   // 선반 앞면 들여쓰기 (mm, 다보 선반용 - 기본: 0)
   shelfFrontInsetMm?: number;
+
+  // 도어/서랍 상단갭/하단갭 (mm, 확장 방향)
+  doorTopGap?: number;
+  doorBottomGap?: number;
 }
 
 /**
@@ -110,7 +114,9 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
   panelGrainDirections,
   lowerSectionTopOffsetMm = 0,
   isFloatingPlacement = false,
-  shelfFrontInsetMm = 0
+  shelfFrontInsetMm = 0,
+  doorTopGap = 0,
+  doorBottomGap = 0,
 }) => {
   // UI 상태에서 치수 표시 여부 가져오기
   const showDimensions = useUIStore(state => state.showDimensions);
@@ -433,6 +439,8 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
                 sectionName={sectionName}
                 backPanelThicknessOverride={currentPlacedModule?.backPanelThickness}
                 topPanelFrontInset={lowerSectionTopOffsetMm}
+                doorTopGap={doorTopGap}
+                doorBottomGap={doorBottomGap}
               />
             );
           }
