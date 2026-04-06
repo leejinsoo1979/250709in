@@ -291,8 +291,7 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
       const newCategory = newModuleData?.category;
 
       // 도어 바닥 이격거리 초기화 (카테고리별 기본값)
-      const isBasicLowerCabinet = module.moduleId?.includes('lower-cabinet-basic') || module.moduleId?.includes('lower-cabinet-2tier') ||
-        module.moduleId?.includes('dual-lower-cabinet-basic') || module.moduleId?.includes('dual-lower-cabinet-2tier');
+      const isBasicLowerCabinet = module.moduleId?.includes('lower-half-cabinet') || module.moduleId?.includes('dual-lower-half-cabinet');
       if (module.doorBottomGap === undefined) {
         if (newCategory === 'upper') {
           // 상부장: 캐비넷 하단에서 도어 하단까지의 확장거리 (바닥 기준이 아님)
@@ -630,8 +629,7 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
     const resolved = typeof modules === 'function' ? modules(state.placedModules) : modules;
     // 마이그레이션: 기본하부장 도어갭 기본값 업데이트 (옛 기본값 20/2 → 새 기본값 -20/5)
     const newModules = resolved.map(m => {
-      const isBasic = m.moduleId?.includes('lower-cabinet-basic') || m.moduleId?.includes('lower-cabinet-2tier') ||
-        m.moduleId?.includes('dual-lower-cabinet-basic') || m.moduleId?.includes('dual-lower-cabinet-2tier');
+      const isBasic = m.moduleId?.includes('lower-half-cabinet') || m.moduleId?.includes('dual-lower-half-cabinet');
       if (isBasic) {
         const needsTopFix = m.doorTopGap === 20;
         const needsBottomFix = m.doorBottomGap === 2;
@@ -903,8 +901,7 @@ useFurnitureStore.subscribe((state) => {
   prevModulesRef = state.placedModules;
   let needsMigration = false;
   for (const m of state.placedModules) {
-    const isBasic = m.moduleId?.includes('lower-cabinet-basic') || m.moduleId?.includes('lower-cabinet-2tier') ||
-      m.moduleId?.includes('dual-lower-cabinet-basic') || m.moduleId?.includes('dual-lower-cabinet-2tier');
+    const isBasic = m.moduleId?.includes('lower-half-cabinet') || m.moduleId?.includes('dual-lower-half-cabinet');
     if (isBasic && (m.doorTopGap === 20 || m.doorBottomGap === 2)) {
       needsMigration = true;
       break;
@@ -913,8 +910,7 @@ useFurnitureStore.subscribe((state) => {
   if (!needsMigration) return;
   migrationRunning = true;
   const migrated = state.placedModules.map(m => {
-    const isBasic = m.moduleId?.includes('lower-cabinet-basic') || m.moduleId?.includes('lower-cabinet-2tier') ||
-      m.moduleId?.includes('dual-lower-cabinet-basic') || m.moduleId?.includes('dual-lower-cabinet-2tier');
+    const isBasic = m.moduleId?.includes('lower-half-cabinet') || m.moduleId?.includes('dual-lower-half-cabinet');
     if (!isBasic) return m;
     const fixTop = m.doorTopGap === 20;
     const fixBot = m.doorBottomGap === 2;
@@ -932,8 +928,7 @@ useFurnitureStore.subscribe((state) => {
   if (cur.length > 0) {
     let changed = false;
     const fixed = cur.map(m => {
-      const isBasic = m.moduleId?.includes('lower-cabinet-basic') || m.moduleId?.includes('lower-cabinet-2tier') ||
-        m.moduleId?.includes('dual-lower-cabinet-basic') || m.moduleId?.includes('dual-lower-cabinet-2tier');
+      const isBasic = m.moduleId?.includes('lower-half-cabinet') || m.moduleId?.includes('dual-lower-half-cabinet');
       if (!isBasic) return m;
       const fixTop = m.doorTopGap === 20;
       const fixBot = m.doorBottomGap === 2;
