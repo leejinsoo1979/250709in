@@ -2718,7 +2718,6 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     adjustedPosition.y, // finalYPosition 대신 직접 사용 (TDZ 에러 방지)
     furnitureZ
   ];
-  console.log('[Y-DEBUG FINAL]', placedModule.id, 'groupY:', furnitureGroupPosition[1], 'baseFrameH:', placedModule.baseFrameHeight);
 
   const furnitureGroupRotation: [number, number, number] = [
     0,
