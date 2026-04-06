@@ -160,37 +160,21 @@ export class SpaceCalculator {
    * 정수 슬롯폭을 우선으로, 없으면 0.5 단위 슬롯폭 선택
    */
   static selectOptimalGapSum(totalWidth: number, slotCount: number): number[] {
-    const validGapSums: number[] = [];
-
     // 0.5mm 단위로 이격거리 탐색 (2 ~ 20mm) — 빌트인 최소 이격합 2mm (양쪽 1mm)
-    // 정수 슬롯폭을 만드는 가장 작은 이격거리를 우선 반환
+    // 0.5mm 단위 슬롯폭을 만드는 가장 작은 이격거리를 반환
     for (let gapSum = 2; gapSum <= 20; gapSum += 0.5) {
       const internalWidth = totalWidth - gapSum;
       const slotWidth = internalWidth / slotCount;
 
-      // 정수인지 체크
-      const isInteger = Math.abs(slotWidth - Math.round(slotWidth)) < 0.001;
+      // 0.5mm 단위로 떨어지는지 체크 (정수 + 0.5mm 허용)
+      const isHalfMm = Math.abs(slotWidth * 2 - Math.round(slotWidth * 2)) < 0.001;
 
-      if (isInteger && slotWidth >= 200 && slotWidth <= 1200) {
-        return [gapSum]; // 정수를 찾으면 바로 반환
+      if (isHalfMm && slotWidth >= 200 && slotWidth <= 1200) {
+        return [gapSum];
       }
     }
 
-    // 정수가 없으면 0.5 단위 슬롯폭 찾기
-    for (let gapSum = 2; gapSum <= 20; gapSum += 0.5) {
-      const internalWidth = totalWidth - gapSum;
-      const slotWidth = internalWidth / slotCount;
-
-      // 0.5 단위로 반올림
-      const roundedSlotWidth = Math.round(slotWidth * 2) / 2;
-      const remainder = Math.abs(slotWidth - roundedSlotWidth);
-
-      if (remainder < 0.01 && roundedSlotWidth >= 200 && roundedSlotWidth <= 1200) {
-        validGapSums.push(gapSum);
-      }
-    }
-
-    return validGapSums;
+    return [];
   }
 
   /**
@@ -212,20 +196,22 @@ export class SpaceCalculator {
         let bestConfig = null;
         let bestSlotWidth = null;
 
+        // 0.5mm 단위로 떨어지는지 체크 (정수 + 0.5mm 허용)
+        const isHalfMmUnit = (val: number) => Math.abs(val * 2 - Math.round(val * 2)) < 0.001;
+
         // 1단계: 현재 설정된 gapConfig를 먼저 시도
         const currentLeft = spaceInfo.gapConfig?.left ?? 1.5;
         const currentRight = spaceInfo.gapConfig?.right ?? 1.5;
         const currentInternalWidth = baseWidth - currentLeft - currentRight;
         const currentSlotWidth = currentInternalWidth / columnCount;
-        const currentIsInteger = Math.abs(currentSlotWidth - Math.round(currentSlotWidth)) < 0.001;
 
-        if (currentIsInteger && currentSlotWidth >= 400 && currentSlotWidth <= 600) {
+        if (isHalfMmUnit(currentSlotWidth) && currentSlotWidth >= 400 && currentSlotWidth <= 600) {
           return {
             adjustedSpaceInfo: {
               ...spaceInfo,
               gapConfig: { left: currentLeft, right: currentRight }
             },
-            slotWidth: Math.round(currentSlotWidth * 100) / 100,
+            slotWidth: Math.round(currentSlotWidth * 2) / 2,
             adjustmentMade: true
           };
         }
@@ -235,28 +221,17 @@ export class SpaceCalculator {
         for (let gap = 1; gap <= 5; gap += 0.5) {
           const internalWidth = baseWidth - (gap * 2);
           const slotWidth = internalWidth / columnCount;
-          
-          // 정수로 완벽하게 떨어지는지 체크
-          const isInteger = Math.abs(slotWidth - Math.round(slotWidth)) < 0.001;
-          
-          if (isInteger && slotWidth >= 400 && slotWidth <= 600) {
+
+          // 0.5mm 단위로 떨어지는지 체크 (정수 + 0.5mm 허용)
+          if (isHalfMmUnit(slotWidth) && slotWidth >= 400 && slotWidth <= 600) {
             return {
               adjustedSpaceInfo: {
                 ...spaceInfo,
                 gapConfig: { left: gap, right: gap }
               },
-              slotWidth: Math.round(slotWidth * 100) / 100,
+              slotWidth: Math.round(slotWidth * 2) / 2,
               adjustmentMade: true
             };
-          }
-          
-          // 소수점 2자리로 반올림한 경우도 기록
-          const roundedSlotWidth = Math.round(slotWidth * 100) / 100;
-          const remainder = Math.abs(slotWidth - roundedSlotWidth);
-          
-          if (!bestSlotWidth && remainder < 0.001 && roundedSlotWidth >= 400 && roundedSlotWidth <= 600) {
-            bestSlotWidth = roundedSlotWidth;
-            bestConfig = { left: gap, right: gap };
           }
         }
         
@@ -265,53 +240,28 @@ export class SpaceCalculator {
           for (let leftGap = 1; leftGap <= 5; leftGap += 0.5) {
             const rightGap = Math.round((leftGap + diff) * 10) / 10;
             if (rightGap > 5) continue;
-            
-            // 두 가지 경우 모두 시도: (left, right) 및 (right, left)
+
             const configs = [
               { left: leftGap, right: rightGap },
               { left: rightGap, right: leftGap }
             ];
-            
+
             for (const config of configs) {
               const internalWidth = baseWidth - config.left - config.right;
               const slotWidth = internalWidth / columnCount;
-              
-              // 정수로 완벽하게 떨어지는지 체크
-              const isInteger = Math.abs(slotWidth - Math.round(slotWidth)) < 0.001;
-              
-              if (isInteger && slotWidth >= 400 && slotWidth <= 600) {
+
+              if (isHalfMmUnit(slotWidth) && slotWidth >= 400 && slotWidth <= 600) {
                 return {
                   adjustedSpaceInfo: {
                     ...spaceInfo,
                     gapConfig: config
                   },
-                  slotWidth: Math.round(slotWidth * 100) / 100,
+                  slotWidth: Math.round(slotWidth * 2) / 2,
                   adjustmentMade: true
                 };
               }
-              
-              // 소수점 2자리로 반올림한 경우도 기록
-              const roundedSlotWidth = Math.round(slotWidth * 100) / 100;
-              const remainder = Math.abs(slotWidth - roundedSlotWidth);
-              
-              if (!bestSlotWidth && remainder < 0.001 && roundedSlotWidth >= 400 && roundedSlotWidth <= 600) {
-                bestSlotWidth = roundedSlotWidth;
-                bestConfig = config;
-              }
             }
           }
-        }
-        
-        // 정수가 없으면 소수점 2자리 사용
-        if (bestConfig && bestSlotWidth) {
-          return {
-            adjustedSpaceInfo: {
-              ...spaceInfo,
-              gapConfig: bestConfig
-            },
-            slotWidth: bestSlotWidth,
-            adjustmentMade: true
-          };
         }
         
         // 정수로 안 떨어지면 기본 1.5mm 사용
