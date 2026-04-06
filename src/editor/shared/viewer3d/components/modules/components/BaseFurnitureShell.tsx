@@ -1004,10 +1004,11 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                         const maidaT = mmToThreeUnits(drawerPanelThicknessMm);
                         const bottomT = mmToThreeUnits(9); // 바닥판 두께 = 백패널 두께 (9mm 고정)
 
-                        // 서랍 영역: 날개벽 수직패널 안쪽 ~ 안쪽
+                        // 서랍 영역: 날개벽 수직패널 안쪽면 사이에서 좌우 5mm 갭
                         const vertXOff = mmToThreeUnits(27);
                         const frameT = basicThickness;
-                        const drawerAreaWidth = innerWidth - sidePanelGap - (vertXOff + frameT + mmToThreeUnits(0.5)) * 2;
+                        const wingInnerWidth = innerWidth - sidePanelGap - (vertXOff + frameT) * 2;
+                        const drawerAreaWidth = wingInnerWidth - mmToThreeUnits(5) * 2;
 
                         // 날개벽 수직패널 앞쪽 끝 = 전면 수평패널 안쪽면
                         // 날개벽 전면 앞면 Z (마이다/앞판 기준)
