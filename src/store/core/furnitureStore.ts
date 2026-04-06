@@ -461,13 +461,15 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
 
   // 모듈 이동 함수 (기존 Context 로직과 동일)
   moveModule: (id: string, position: { x: number; y: number; z: number }) => {
-    set((state) => ({
-      placedModules: state.placedModules.map(module =>
-        module.id === id
-          ? { ...module, position }
-          : module
-      )
-    }));
+    // get() + non-callback set() 방식 사용 (R3F Canvas 내부 리렌더 보장)
+    const state = get();
+    const newModules = state.placedModules.map(module =>
+      module.id === id
+        ? { ...module, position }
+        : module
+    );
+    set({ placedModules: newModules });
+    notifyR3F(newModules);
   },
 
   // 배치된 모듈 속성 업데이트 함수 (기존 Context 로직과 동일)
