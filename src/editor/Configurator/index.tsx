@@ -403,17 +403,21 @@ const Configurator: React.FC = () => {
     [placedModules]
   );
   // 도어 번호 매핑: 듀얼(양문) 가구는 도어 2개, 싱글 가구는 도어 1개
+  // 상부장/하부장은 (상)/(하) 접미사 표시
   const doorNumberMap = useMemo(() => {
     let doorNum = 1;
     return doorFurnitureList.map((mod) => {
       const isDual = mod.isDualSlot || mod.moduleId?.includes('dual-') || mod.baseModuleType?.includes('dual-');
+      const isUpper = mod.moduleId?.includes('upper-cabinet') || mod.moduleId?.includes('dual-upper-cabinet');
+      const isLower = mod.moduleId?.includes('lower-cabinet') || mod.moduleId?.includes('dual-lower-cabinet');
+      const suffix = isUpper ? '(상)' : isLower ? '(하)' : '';
       if (isDual) {
-        const label = `도어 ${doorNum},${doorNum + 1}`;
+        const label = `도어 ${doorNum},${doorNum + 1}${suffix}`;
         const nums = [doorNum, doorNum + 1];
         doorNum += 2;
         return { label, nums, isDual: true };
       } else {
-        const label = `도어 ${doorNum}`;
+        const label = `도어 ${doorNum}${suffix}`;
         const nums = [doorNum];
         doorNum += 1;
         return { label, nums, isDual: false };
