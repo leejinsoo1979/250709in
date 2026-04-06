@@ -1137,15 +1137,18 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                                 />
                               );
                             })()}
-                            {/* 서랍 마이다 */}
+                            {/* 서랍 마이다: 상단=하부상판 하단-12mm, 하단=받침대 하단, 높이=212mm */}
                             {(() => {
                               const pn = '서랍1(마이다)';
                               const mat = getPanelMaterial(pn);
+                              const maidaH = mmToThreeUnits(212);
+                              const maidaTopY = lowerTopPanelY - basicThickness / 2 - mmToThreeUnits(12);
+                              const maidaCenterY = maidaTopY - maidaH / 2;
                               return (
                                 <BoxWithEdges
                                   key={`entryway-drawer-maida-${mat.uuid}`}
-                                  args={[drawerAreaWidth, drawerSideH, maidaT]}
-                                  position={[0, drawerCenterY, wingFrontFaceZ + maidaT/2]}
+                                  args={[drawerAreaWidth, maidaH, maidaT]}
+                                  position={[0, maidaCenterY, wingFrontFaceZ + maidaT/2]}
                                   material={mat}
                                   renderMode={renderMode}
                                   isDragging={isDragging}
