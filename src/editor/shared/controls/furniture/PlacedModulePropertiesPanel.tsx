@@ -3177,7 +3177,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                               onChange={(e) => {
                                 const v = e.target.value;
                                 if (v === '' || /^\d+$/.test(v)) {
-                                  const num = v === '' ? 18 : Math.max(10, Math.min(50, parseInt(v, 10)));
+                                  const num = v === '' ? 18 : Math.max(10, parseInt(v, 10));
                                   updatePlacedModule(currentPlacedModule.id, { endPanelThickness: num });
                                 }
                               }}
@@ -3185,7 +3185,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                                 if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
                                   e.preventDefault();
                                   const cur = currentPlacedModule.endPanelThickness ?? 18;
-                                  const next = Math.max(10, Math.min(50, cur + (e.key === 'ArrowUp' ? 1 : -1)));
+                                  const next = Math.max(10, cur + (e.key === 'ArrowUp' ? 1 : -1));
                                   updatePlacedModule(currentPlacedModule.id, { endPanelThickness: next });
                                 }
                               }}
