@@ -251,7 +251,7 @@ const createSingleType1 = (columnWidth: number, maxHeight: number): ModuleData =
   
   const base = createFurnitureBase(
     `single-2drawer-hanging-${widthForId}`,
-    `2단서랍+옷장 ${widthForId}mm`,
+    `붙박이장 F ${widthForId}mm`,
     columnWidth,
     maxHeight,
     FURNITURE_SPECS.DEFAULT_DEPTH,
@@ -302,7 +302,7 @@ const createSingleType2 = (columnWidth: number, maxHeight: number): ModuleData =
   
   const base = createFurnitureBase(
     `single-2hanging-${widthForId}`,
-    `2단 옷장 ${widthForId}mm`,
+    `붙박이장 B ${widthForId}mm`,
     columnWidth,
     maxHeight,
     FURNITURE_SPECS.DEFAULT_DEPTH,
@@ -353,7 +353,7 @@ const createSingleType4 = (columnWidth: number, maxHeight: number): ModuleData =
   
   const base = createFurnitureBase(
     `single-4drawer-hanging-${widthForId}`,
-    `4단서랍+옷장 ${widthForId}mm`,
+    `붙박이장 D ${widthForId}mm`,
     columnWidth, // columnWidth 사용 (500mm 대신)
     maxHeight,
     FURNITURE_SPECS.DEFAULT_DEPTH,
@@ -408,7 +408,7 @@ const createDualType1 = (dualColumnWidth: number, maxHeight: number, slotWidths?
   
   const base = createFurnitureBase(
     `dual-2drawer-hanging-${widthForId}`,
-    `듀얼 2단서랍+옷장 ${widthForId}mm`,
+    `붙박이장 F ${widthForId}mm`,
     dualColumnWidth,
     maxHeight,
     FURNITURE_SPECS.DEFAULT_DEPTH,
@@ -458,7 +458,7 @@ const createDualType2 = (dualColumnWidth: number, maxHeight: number, slotWidths?
   
   const base = createFurnitureBase(
     `dual-2hanging-${widthForId}`,
-    `듀얼 2단 옷장 ${widthForId}mm`,
+    `붙박이장 B ${widthForId}mm`,
     dualColumnWidth,
     maxHeight,
     FURNITURE_SPECS.DEFAULT_DEPTH,
@@ -509,7 +509,7 @@ const createDualType4 = (dualColumnWidth: number, maxHeight: number, slotWidths?
   
   const base = createFurnitureBase(
     `dual-4drawer-hanging-${widthForId}`,
-    `듀얼 4단서랍+옷장 ${widthForId}mm`,
+    `붙박이장 D ${widthForId}mm`,
     dualColumnWidth, // dualColumnWidth 사용 (1000mm 대신)
     maxHeight,
     FURNITURE_SPECS.DEFAULT_DEPTH,
@@ -573,7 +573,7 @@ const createDualType5 = (dualColumnWidth: number, maxHeight: number, slotWidths?
   
   const base = createFurnitureBase(
     `dual-2drawer-styler-${widthForId}`,
-    `듀얼 서랍+스타일러 ${widthForId}mm`,
+    `스타일러장 ${widthForId}mm`,
     dualColumnWidth,
     maxHeight,
     600, // 좌측 서랍+옷장 기본 깊이 (customDepth로 변경 가능)
@@ -612,7 +612,7 @@ const createDualType6 = (dualColumnWidth: number, maxHeight: number, slotWidths?
   
   const base = createFurnitureBase(
     `dual-4drawer-pantshanger-${widthForId}`,
-    `듀얼 서랍+바지걸이 ${widthForId}mm`,
+    `바지걸이장 ${widthForId}mm`,
     dualColumnWidth,
     maxHeight,
     FURNITURE_SPECS.DEFAULT_DEPTH,
