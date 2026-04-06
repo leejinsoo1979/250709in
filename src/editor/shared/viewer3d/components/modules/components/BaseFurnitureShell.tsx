@@ -985,6 +985,172 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                         );
                       })()}
 
+                      {/* 현관장 H: 속서랍 - 서랍받침대 위 12mm 간격 */}
+                      {moduleData?.id?.includes('entryway-h') && (() => {
+                        // 서랍 받침대 상단 Y
+                        const supportTopY = lowerTopPanelY - basicThickness/2 - mmToThreeUnits(188);
+                        // 서랍 바닥 = 받침대 상단 + 12mm
+                        const drawerBottomY = supportTopY + mmToThreeUnits(12);
+                        // 서랍 측판 높이 155mm
+                        const drawerSideH = mmToThreeUnits(155);
+                        const drawerCenterY = drawerBottomY + drawerSideH / 2;
+
+                        // 서랍 패널 두께
+                        const basicThicknessMm = basicThickness / 0.01;
+                        const drawerPanelThicknessMm = (basicThicknessMm === 18.5 || basicThicknessMm === 15.5) ? 15.5 : 15;
+                        const drawerSideT = mmToThreeUnits(drawerPanelThicknessMm);
+                        const maidaT = mmToThreeUnits(drawerPanelThicknessMm);
+                        const bpT = depth - adjustedDepthForShelves; // 백패널 두께
+                        const bottomT = bpT; // 바닥판 두께 = 백패널 두께
+
+                        // 서랍 영역: 날개벽 수직패널 안쪽 ~ 안쪽
+                        const vertXOff = mmToThreeUnits(27);
+                        const frameT = basicThickness;
+                        const drawerAreaWidth = innerWidth - sidePanelGap - (vertXOff + frameT + mmToThreeUnits(0.5)) * 2;
+
+                        // 서랍 깊이: 가구 깊이 - 앞 30mm - 뒤 30mm = 총 60mm 감소
+                        const drawerFullDepth = depth - mmToThreeUnits(60);
+                        const drawerBodyDepth = drawerFullDepth - maidaT;
+                        const drawerBodyCenterZ = -maidaT / 2;
+
+                        return (
+                          <>
+                            {/* 서랍 좌측판 */}
+                            {(() => {
+                              const pn = '서랍1 좌측판';
+                              const mat = getPanelMaterial(pn);
+                              return (
+                                <BoxWithEdges
+                                  key={`entryway-drawer-left-${mat.uuid}`}
+                                  args={[drawerSideT, drawerSideH - mmToThreeUnits(30), drawerBodyDepth]}
+                                  position={[-drawerAreaWidth/2 + drawerSideT/2 + mmToThreeUnits(38), drawerCenterY, drawerBodyCenterZ]}
+                                  material={mat}
+                                  renderMode={renderMode}
+                                  isDragging={isDragging}
+                                  isEditMode={isEditMode}
+                                  isHighlighted={isLowerSectionHighlighted}
+                                  panelName={pn}
+                                  panelGrainDirections={panelGrainDirections}
+                                  furnitureId={placedFurnitureId}
+                                  textureUrl={textureUrl}
+                                />
+                              );
+                            })()}
+                            {/* 서랍 우측판 */}
+                            {(() => {
+                              const pn = '서랍1 우측판';
+                              const mat = getPanelMaterial(pn);
+                              return (
+                                <BoxWithEdges
+                                  key={`entryway-drawer-right-${mat.uuid}`}
+                                  args={[drawerSideT, drawerSideH - mmToThreeUnits(30), drawerBodyDepth]}
+                                  position={[drawerAreaWidth/2 - drawerSideT/2 - mmToThreeUnits(38), drawerCenterY, drawerBodyCenterZ]}
+                                  material={mat}
+                                  renderMode={renderMode}
+                                  isDragging={isDragging}
+                                  isEditMode={isEditMode}
+                                  isHighlighted={isLowerSectionHighlighted}
+                                  panelName={pn}
+                                  panelGrainDirections={panelGrainDirections}
+                                  furnitureId={placedFurnitureId}
+                                  textureUrl={textureUrl}
+                                />
+                              );
+                            })()}
+                            {/* 서랍 앞판 */}
+                            {(() => {
+                              const pn = '서랍1 앞판';
+                              const mat = getPanelMaterial(pn);
+                              return (
+                                <BoxWithEdges
+                                  key={`entryway-drawer-front-${mat.uuid}`}
+                                  args={[drawerAreaWidth - mmToThreeUnits(107), drawerSideH - mmToThreeUnits(30), drawerSideT]}
+                                  position={[0, drawerCenterY, drawerBodyCenterZ + drawerBodyDepth/2 - drawerSideT/2]}
+                                  material={mat}
+                                  renderMode={renderMode}
+                                  isDragging={isDragging}
+                                  isEditMode={isEditMode}
+                                  isHighlighted={isLowerSectionHighlighted}
+                                  panelName={pn}
+                                  panelGrainDirections={panelGrainDirections}
+                                  furnitureId={placedFurnitureId}
+                                  textureUrl={textureUrl}
+                                />
+                              );
+                            })()}
+                            {/* 서랍 뒷판 */}
+                            {(() => {
+                              const pn = '서랍1 뒷판';
+                              const mat = getPanelMaterial(pn);
+                              const bottomTopY2 = drawerBottomY + basicThickness + mmToThreeUnits(10) + bottomT;
+                              const origBackTop = drawerCenterY + (drawerSideH - mmToThreeUnits(30)) / 2;
+                              const backH = origBackTop - bottomTopY2;
+                              const backCY = (origBackTop + bottomTopY2) / 2;
+                              return (
+                                <BoxWithEdges
+                                  key={`entryway-drawer-back-${mat.uuid}`}
+                                  args={[drawerAreaWidth - mmToThreeUnits(107), backH, drawerSideT]}
+                                  position={[0, backCY, drawerBodyCenterZ - drawerBodyDepth/2 + drawerSideT/2]}
+                                  material={mat}
+                                  renderMode={renderMode}
+                                  isDragging={isDragging}
+                                  isEditMode={isEditMode}
+                                  isHighlighted={isLowerSectionHighlighted}
+                                  panelName={pn}
+                                  panelGrainDirections={panelGrainDirections}
+                                  furnitureId={placedFurnitureId}
+                                  textureUrl={textureUrl}
+                                />
+                              );
+                            })()}
+                            {/* 서랍 바닥판 */}
+                            {(() => {
+                              const pn = '서랍1 바닥';
+                              const mat = getPanelMaterial(pn);
+                              const bottomDepth2 = drawerBodyDepth - mmToThreeUnits(10);
+                              const bottomZ2 = drawerBodyCenterZ - mmToThreeUnits(5);
+                              return (
+                                <BoxWithEdges
+                                  key={`entryway-drawer-bottom-${mat.uuid}`}
+                                  args={[drawerAreaWidth - mmToThreeUnits(70) - mmToThreeUnits(26), bottomT, bottomDepth2]}
+                                  position={[0, drawerBottomY + basicThickness + mmToThreeUnits(10) + bottomT/2, bottomZ2]}
+                                  material={mat}
+                                  renderMode={renderMode}
+                                  isDragging={isDragging}
+                                  isEditMode={isEditMode}
+                                  isHighlighted={isLowerSectionHighlighted}
+                                  panelName={pn}
+                                  panelGrainDirections={panelGrainDirections}
+                                  furnitureId={placedFurnitureId}
+                                  textureUrl={textureUrl}
+                                />
+                              );
+                            })()}
+                            {/* 서랍 마이다 */}
+                            {(() => {
+                              const pn = '서랍1(마이다)';
+                              const mat = getPanelMaterial(pn);
+                              return (
+                                <BoxWithEdges
+                                  key={`entryway-drawer-maida-${mat.uuid}`}
+                                  args={[drawerAreaWidth, drawerSideH, maidaT]}
+                                  position={[0, drawerCenterY, drawerFullDepth/2 - maidaT/2]}
+                                  material={mat}
+                                  renderMode={renderMode}
+                                  isDragging={isDragging}
+                                  isEditMode={isEditMode}
+                                  isHighlighted={isLowerSectionHighlighted}
+                                  panelName={pn}
+                                  panelGrainDirections={panelGrainDirections}
+                                  furnitureId={placedFurnitureId}
+                                  textureUrl={textureUrl}
+                                />
+                              );
+                            })()}
+                          </>
+                        );
+                      })()}
+
                       {/* 상부 섹션 바닥판 - 뒤에서 26mm 줄여서 백패널과 맞닿게, 좌우 각 0.5mm씩 줄임 */}
                       <BoxWithEdges
                         key={`upper-floor-2drawer-${getPanelMaterial('(상)바닥').uuid}`}
