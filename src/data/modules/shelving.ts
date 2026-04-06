@@ -120,7 +120,6 @@ const FURNITURE_SPECS = {
   // 현관장 스펙
   ENTRYWAY_DEPTH: 400,          // 현관장 기본 깊이
   ENTRYWAY_BOTTOM_HEIGHT: 1200, // 하부섹션(선반+서랍) 고정 높이
-  ENTRYWAY_DRAWER_HEIGHT: 212   // 속서랍 마이다 높이
 };
 
 // ============================================================================
@@ -379,39 +378,28 @@ const createSingleType4 = (columnWidth: number, maxHeight: number): ModuleData =
 };
 
 /**
- * 싱글 현관장 H: 신발선반(하부) + 속서랍 + 다보선반(상부)
+ * 싱글 현관장 H: 하부(신발선반4 + 속서랍) + 상부(다보선반)
  */
 const createSingleEntrywayH = (columnWidth: number, maxHeight: number): ModuleData => {
   const bottomHeight = FURNITURE_SPECS.ENTRYWAY_BOTTOM_HEIGHT; // 1200
   const topHeight = maxHeight - bottomHeight;
-  // 하부: 선반영역 = 1200 - 212(서랍) = 988mm
-  const shelfAreaHeight = bottomHeight - FURNITURE_SPECS.ENTRYWAY_DRAWER_HEIGHT;
 
   const baseSections: SectionConfig[] = [
-    // 섹션0: 하부 신발선반 (177mm 간격 고정선반 4개)
+    // 섹션0: 하부 — 신발선반 4개 (177mm 간격) + 속서랍 포함 (1200mm 통합)
     {
       type: 'shelf',
       heightType: 'absolute',
-      height: shelfAreaHeight,  // 988mm
+      height: bottomHeight,
       count: 4,
       shelfPositions: [177, 354, 531, 708]
     },
-    // 섹션1: 속서랍 (마이다 212mm)
-    {
-      type: 'drawer',
-      heightType: 'absolute',
-      height: FURNITURE_SPECS.ENTRYWAY_DRAWER_HEIGHT, // 212mm
-      count: 1,
-      drawerHeights: [FURNITURE_SPECS.ENTRYWAY_DRAWER_HEIGHT],
-      gapHeight: FURNITURE_SPECS.DRAWER_GAP
-    },
-    // 섹션2: 상부 다보선반 (내경: 205, 171, 171, 171, 나머지)
+    // 섹션1: 상부 — 다보선반 4개 (내경: 205, 171, 171, 171, 나머지)
     {
       type: 'shelf',
       heightType: 'absolute',
       height: topHeight,
       count: 4,
-      shelfPositions: [0, 205, 376, 547, 718]
+      shelfPositions: [205, 376, 547, 718]
     }
   ];
 
@@ -423,7 +411,7 @@ const createSingleEntrywayH = (columnWidth: number, maxHeight: number): ModuleDa
     maxHeight,
     FURNITURE_SPECS.ENTRYWAY_DEPTH,
     FURNITURE_SPECS.COLORS.ENTRYWAY,
-    `하단 신발장 + 속서랍 + 상단 다보선반`,
+    `하단 신발장 + 상단 다보선반`,
     FURNITURE_SPECS.ENTRYWAY_DEPTH
   );
 
@@ -727,21 +715,19 @@ const createDualType6 = (dualColumnWidth: number, maxHeight: number, slotWidths?
 };
 
 /**
- * 듀얼 현관장 H: 신발선반(하부) + 속서랍 + 다보선반(상부) — 내부 구조 동일, 도어 2개
+ * 듀얼 현관장 H: 하부(신발선반4 + 속서랍) + 상부(다보선반) — 내부 구조 동일, 도어 2개
  */
 const createDualEntrywayH = (dualColumnWidth: number, maxHeight: number, slotWidths?: number[]): ModuleData => {
   const bottomHeight = FURNITURE_SPECS.ENTRYWAY_BOTTOM_HEIGHT;
   const topHeight = maxHeight - bottomHeight;
-  const shelfAreaHeight = bottomHeight - FURNITURE_SPECS.ENTRYWAY_DRAWER_HEIGHT;
 
   const baseSections: SectionConfig[] = [
-    { type: 'shelf', heightType: 'absolute', height: shelfAreaHeight, count: 4,
+    // 섹션0: 하부 — 신발선반 4개 + 속서랍 포함 (1200mm 통합)
+    { type: 'shelf', heightType: 'absolute', height: bottomHeight, count: 4,
       shelfPositions: [177, 354, 531, 708] },
-    { type: 'drawer', heightType: 'absolute', height: FURNITURE_SPECS.ENTRYWAY_DRAWER_HEIGHT,
-      count: 1, drawerHeights: [FURNITURE_SPECS.ENTRYWAY_DRAWER_HEIGHT],
-      gapHeight: FURNITURE_SPECS.DRAWER_GAP },
+    // 섹션1: 상부 — 다보선반 4개
     { type: 'shelf', heightType: 'absolute', height: topHeight, count: 4,
-      shelfPositions: [0, 205, 376, 547, 718] }
+      shelfPositions: [205, 376, 547, 718] }
   ];
 
   const widthForId = Math.round(dualColumnWidth * 100) / 100;
@@ -752,7 +738,7 @@ const createDualEntrywayH = (dualColumnWidth: number, maxHeight: number, slotWid
     maxHeight,
     FURNITURE_SPECS.ENTRYWAY_DEPTH,
     FURNITURE_SPECS.COLORS.ENTRYWAY,
-    `하단 신발장 + 속서랍 + 상단 다보선반`,
+    `하단 신발장 + 상단 다보선반`,
     FURNITURE_SPECS.ENTRYWAY_DEPTH
   );
 
