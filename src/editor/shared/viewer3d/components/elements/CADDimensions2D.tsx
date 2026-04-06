@@ -450,18 +450,6 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
             depthTest={false}
           />
 
-          {/* 엔드포인트 - 상단 (세로선과 연장선 만나는 지점) */}
-          <mesh position={[0, displaySpaceHeight, -spaceDepth/2 - leftDimOffset + mmToThreeUnits(150)]} renderOrder={100001} rotation={[0, -Math.PI / 2, 0]}>
-            <circleGeometry args={[0.06, 16]} />
-            <meshBasicMaterial color={dimensionColor} depthTest={false} />
-          </mesh>
-
-          {/* 엔드포인트 - 하단 (세로선과 연장선 만나는 지점) */}
-          <mesh position={[0, 0, -spaceDepth/2 - leftDimOffset + mmToThreeUnits(150)]} renderOrder={100001} rotation={[0, -Math.PI / 2, 0]}>
-            <circleGeometry args={[0.06, 16]} />
-            <meshBasicMaterial color={dimensionColor} depthTest={false} />
-          </mesh>
-
           {/* 높이 텍스트 */}
           <Text
             position={[0, displaySpaceHeight / 2, -spaceDepth/2 - leftDimOffset + mmToThreeUnits(150) - mmToThreeUnits(60)]}
@@ -680,36 +668,6 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                   renderOrder={100000}
                   depthTest={false}
                 />
-                {/* 엔드포인트 - 시작 모서리 */}
-                {shouldRenderStartGuide && (
-                <mesh
-                  position={[
-                    0,
-                    sectionStartY,
-                    spaceDepth/2 + rightDimOffset - mmToThreeUnits(750)
-                  ]}
-                  renderOrder={100001}
-                  rotation={[0, -Math.PI / 2, 0]}
-                >
-                  <circleGeometry args={[0.06, 16]} />
-                  <meshBasicMaterial color={dimensionColor} depthTest={false} />
-                </mesh>
-                )}
-
-                {/* 엔드포인트 - 끝 모서리 */}
-                <mesh
-                  position={[
-                    0,
-                    sectionEndY,
-                    spaceDepth/2 + rightDimOffset - mmToThreeUnits(750)
-                  ]}
-                  renderOrder={100001}
-                  rotation={[0, -Math.PI / 2, 0]}
-                >
-                  <circleGeometry args={[0.06, 16]} />
-                  <meshBasicMaterial color={dimensionColor} depthTest={false} />
-                </mesh>
-
                 {/* 치수 텍스트 */}
                 <Text
                   position={[
@@ -935,18 +893,6 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                 depthTest={false}
               />
 
-              {/* 엔드포인트 - 앞쪽 (치수선과 연장선 만나는 지점) */}
-              <mesh position={[0, furnitureTopY, furnitureZ + moduleDepth/2]} renderOrder={100001} rotation={[0, -Math.PI / 2, 0]}>
-                <circleGeometry args={[0.06, 16]} />
-                <meshBasicMaterial color={dimensionColor} depthTest={false} />
-              </mesh>
-
-              {/* 엔드포인트 - 뒤쪽 (치수선과 연장선 만나는 지점) */}
-              <mesh position={[0, furnitureTopY, furnitureZ - moduleDepth/2]} renderOrder={100001} rotation={[0, -Math.PI / 2, 0]}>
-                <circleGeometry args={[0.06, 16]} />
-                <meshBasicMaterial color={dimensionColor} depthTest={false} />
-              </mesh>
-
               {/* 가구 깊이 텍스트 */}
               <Text
                 position={[0, furnitureTopY + mmToThreeUnits(80), furnitureZ]}
@@ -1029,18 +975,6 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                       renderOrder={100000}
                       depthTest={false}
                     />
-
-                    {/* 엔드포인트 - 앞쪽 */}
-                    <mesh position={[0, lowerDimY, lowerFurnitureZ + lowerModuleDepth/2]} renderOrder={100001} rotation={[0, -Math.PI / 2, 0]}>
-                      <circleGeometry args={[0.06, 16]} />
-                      <meshBasicMaterial color={dimensionColor} depthTest={false} />
-                    </mesh>
-
-                    {/* 엔드포인트 - 뒤쪽 */}
-                    <mesh position={[0, lowerDimY, lowerFurnitureZ - lowerModuleDepth/2]} renderOrder={100001} rotation={[0, -Math.PI / 2, 0]}>
-                      <circleGeometry args={[0.06, 16]} />
-                      <meshBasicMaterial color={dimensionColor} depthTest={false} />
-                    </mesh>
 
                     {/* 하부 깊이 텍스트 */}
                     <Text
@@ -1250,18 +1184,6 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
             renderOrder={100000}
             depthTest={false}
           />
-
-          {/* 엔드포인트 - 상단 */}
-          <mesh position={[0, displaySpaceHeight, -spaceDepth/2 - leftDimOffset + mmToThreeUnits(150)]} renderOrder={100001} rotation={[0, -Math.PI / 2, 0]}>
-            <circleGeometry args={[0.06, 16]} />
-            <meshBasicMaterial color={dimensionColor} depthTest={false} />
-          </mesh>
-
-          {/* 엔드포인트 - 하단 */}
-          <mesh position={[0, 0, -spaceDepth/2 - leftDimOffset + mmToThreeUnits(150)]} renderOrder={100001} rotation={[0, -Math.PI / 2, 0]}>
-            <circleGeometry args={[0.06, 16]} />
-            <meshBasicMaterial color={dimensionColor} depthTest={false} />
-          </mesh>
 
           {/* 높이 텍스트 */}
           <Text
@@ -1481,36 +1403,6 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                   renderOrder={100000}
                   depthTest={false}
                 />
-                {/* 엔드포인트 - 시작 모서리 */}
-                {shouldRenderStartGuide && (
-                <mesh
-                  position={[
-                    0,
-                    sectionStartY,
-                    spaceDepth/2 + rightDimOffset - mmToThreeUnits(750)
-                  ]}
-                  renderOrder={100001}
-                  rotation={[0, Math.PI / 2, 0]}
-                >
-                  <circleGeometry args={[0.06, 16]} />
-                  <meshBasicMaterial color={dimensionColor} depthTest={false} />
-                </mesh>
-                )}
-
-                {/* 엔드포인트 - 끝 모서리 */}
-                <mesh
-                  position={[
-                    0,
-                    sectionEndY,
-                    spaceDepth/2 + rightDimOffset - mmToThreeUnits(750)
-                  ]}
-                  renderOrder={100001}
-                  rotation={[0, Math.PI / 2, 0]}
-                >
-                  <circleGeometry args={[0.06, 16]} />
-                  <meshBasicMaterial color={dimensionColor} depthTest={false} />
-                </mesh>
-
                 {/* 치수 텍스트 */}
                 <Text
                   position={[
@@ -1728,16 +1620,6 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                 depthTest={false}
               />
 
-              <mesh position={[0, furnitureTopY, furnitureZ + moduleDepth/2]} renderOrder={100001} rotation={[0, Math.PI / 2, 0]}>
-                <circleGeometry args={[0.06, 16]} />
-                <meshBasicMaterial color={dimensionColor} depthTest={false} />
-              </mesh>
-
-              <mesh position={[0, furnitureTopY, furnitureZ - moduleDepth/2]} renderOrder={100001} rotation={[0, Math.PI / 2, 0]}>
-                <circleGeometry args={[0.06, 16]} />
-                <meshBasicMaterial color={dimensionColor} depthTest={false} />
-              </mesh>
-
               <Text
                 position={[0, furnitureTopY + mmToThreeUnits(80), furnitureZ]}
                 fontSize={largeFontSize}
@@ -1814,16 +1696,6 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                       renderOrder={100000}
                       depthTest={false}
                     />
-
-                    <mesh position={[0, lowerDimY, lowerFurnitureZ + lowerModuleDepth/2]} renderOrder={100001} rotation={[0, Math.PI / 2, 0]}>
-                      <circleGeometry args={[0.06, 16]} />
-                      <meshBasicMaterial color={dimensionColor} depthTest={false} />
-                    </mesh>
-
-                    <mesh position={[0, lowerDimY, lowerFurnitureZ - lowerModuleDepth/2]} renderOrder={100001} rotation={[0, Math.PI / 2, 0]}>
-                      <circleGeometry args={[0.06, 16]} />
-                      <meshBasicMaterial color={dimensionColor} depthTest={false} />
-                    </mesh>
 
                     <Text
                       position={[0, lowerDimY - mmToThreeUnits(80), lowerFurnitureZ]}
