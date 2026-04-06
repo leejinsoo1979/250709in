@@ -211,9 +211,7 @@ export const calculatePanelDetails = (
         moduleData.id.includes('2drawer-styler');
 
       // 측판 높이는 섹션 높이 그대로 사용 (3D 렌더링의 getSectionHeights와 동일)
-      // 하부섹션(sectionIndex===0)에 바닥프레임이 있으면 프레임 높이만큼 측판/백패널 축소
-      const baseFrameReduction = (sectionIndex === 0 && hasBase !== false && baseFrameHeightMm && baseFrameHeightMm > 0) ? baseFrameHeightMm : 0;
-      const adjustedSectionHeight = sectionHeightMm - baseFrameReduction;
+      const adjustedSectionHeight = sectionHeightMm;
 
       // Type5 스타일러장: 우측 절대깊이 (660mm), 좌측은 customDepth 그대로
       // 3D DualType5.tsx line 170-184와 동일한 로직
@@ -261,19 +259,17 @@ export const calculatePanelDetails = (
         }
       } else if (sectionIndex === 0) {
         // 통짜 측판: 첫 번째 섹션에 전체 높이로 추가
-        // 바닥프레임이 있으면 전체 높이에서 프레임 높이 차감
-        const fullSidePanelHeight = height - baseFrameReduction;
         targetPanel.push({
           name: '좌측판',
           width: leftSideDepth,
-          height: fullSidePanelHeight,
+          height: height,
           thickness: basicThickness,
           material: 'PB'
         });
         targetPanel.push({
           name: '우측판',
           width: rightSideDepth,
-          height: fullSidePanelHeight,
+          height: height,
           thickness: basicThickness,
           material: 'PB'
         });
@@ -382,10 +378,9 @@ export const calculatePanelDetails = (
 
       // 백패널 높이 계산
       // 기본: 섹션높이 - 상하판(36) + heightExtension(10) + 상하확장(26) = 섹션높이
-      // 하부섹션에 바닥프레임이 있으면 프레임 높이만큼 축소
       const heightExtension = 10; // backPanelConfig.heightExtension
       const totalHeightExtension = basicThickness * 2 - heightExtension;
-      let backPanelHeight = (sectionHeightMm - baseFrameReduction) - basicThickness * 2 + heightExtension + totalHeightExtension;
+      let backPanelHeight = sectionHeightMm - basicThickness * 2 + heightExtension + totalHeightExtension;
 
       // Type5/6 (4drawer-pantshanger, 2drawer-styler): 전체 너비, 상/하부 섹션 경계에서 높이 분할
       let backPanelWidth = innerWidth + 10;
