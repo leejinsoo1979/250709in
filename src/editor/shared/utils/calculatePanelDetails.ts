@@ -688,6 +688,109 @@ export const calculatePanelDetails = (
         // CNC 절단 목록에 추가할 항목 없음
       }
     });
+
+    // === 현관장 H 전용: 서랍받침대 + 서랍속장(날개벽) + 속서랍 ===
+    if (moduleData.id.includes('entryway-h')) {
+      const backReduction = backPanelThickness + 17; // 26mm
+      const lowerTopOffset = 85; // 하부 상판 앞쪽 오프셋
+      const sidePanelGap = (basicThickness === 15.5 || basicThickness === 18.5) ? 0 : 1;
+      const horizontalPanelWidth = innerWidth - sidePanelGap;
+
+      // 1. 서랍받침대 (하부 상판과 동일 크기)
+      panels.lower.push({
+        name: '서랍받침대',
+        width: horizontalPanelWidth,
+        depth: customDepth - backReduction - lowerTopOffset,
+        thickness: basicThickness,
+        material: 'PB'
+      });
+
+      // 2. 서랍속장(날개벽) — 수직 패널 좌/우
+      const wingVertDepth = customDepth - lowerTopOffset - backReduction - 2 * basicThickness;
+      ['좌', '우'].forEach(side => {
+        panels.lower.push({
+          name: `서랍속장(${side})`,
+          width: wingVertDepth,
+          depth: 188,
+          thickness: basicThickness,
+          material: 'PB'
+        });
+      });
+
+      // 3. 서랍속장(날개벽) — 수평 패널 전면/후면 × 좌/우
+      const wingHorizWidth = 27 + basicThickness;
+      ['좌', '우'].forEach(side => {
+        ['전면', '후면'].forEach(face => {
+          panels.lower.push({
+            name: `서랍속장(${side}) ${face}`,
+            width: wingHorizWidth,
+            depth: 188,
+            thickness: basicThickness,
+            material: 'PB'
+          });
+        });
+      });
+
+      // 4. 속서랍 — 날개벽 안쪽면 사이에서 좌우 5mm 갭
+      const drawerAreaWidth = horizontalPanelWidth - 2 * (27 + basicThickness) - 10;
+      const drawerSideDepth = customDepth - lowerTopOffset - backReduction - 1.5 * basicThickness;
+      const drawerInnerWidth = drawerAreaWidth - 2 * drawerSideThickness;
+      const drawerBackH = 155 - 18 - backPanelThickness;
+
+      // 서랍 좌측판
+      panels.lower.push({
+        name: '서랍1 좌측판',
+        width: Math.round(drawerSideDepth),
+        depth: 155,
+        thickness: drawerSideThickness,
+        material: 'PB'
+      });
+
+      // 서랍 우측판
+      panels.lower.push({
+        name: '서랍1 우측판',
+        width: Math.round(drawerSideDepth),
+        depth: 155,
+        thickness: drawerSideThickness,
+        material: 'PB'
+      });
+
+      // 서랍 앞판
+      panels.lower.push({
+        name: '서랍1 앞판',
+        width: Math.round(drawerInnerWidth),
+        depth: 155,
+        thickness: drawerSideThickness,
+        material: 'PB'
+      });
+
+      // 서랍 뒷판
+      panels.lower.push({
+        name: '서랍1 뒷판',
+        width: Math.round(drawerInnerWidth),
+        depth: Math.round(drawerBackH),
+        thickness: drawerSideThickness,
+        material: 'PB'
+      });
+
+      // 서랍 바닥판
+      panels.lower.push({
+        name: '서랍1 바닥',
+        width: Math.round(drawerInnerWidth),
+        depth: Math.round(drawerSideDepth - 10),
+        thickness: backPanelThickness,
+        material: 'MDF'
+      });
+
+      // 서랍 마이다 (좌우 12mm 갭)
+      panels.lower.push({
+        name: '서랍1(마이다)',
+        width: horizontalPanelWidth - 24,
+        depth: 212,
+        thickness: drawerSideThickness,
+        material: 'PB'
+      });
+    }
   }
 
   // === 바지걸이장 안전선반 (전체 너비, 상부 섹션) ===
