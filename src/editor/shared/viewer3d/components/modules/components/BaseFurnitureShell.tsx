@@ -879,6 +879,15 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                         // 후면 수평 패널: 백패널 앞면에 맞닿음 (backPanelThickness prop 사용)
                         const backPanelFrontFace = -depth/2 + backPanelThickness + mmToThreeUnits(backPanelConfig.depthOffset);
                         const backHorizZ = backPanelFrontFace + basicThickness/2;
+                        console.log('[날개벽 DEBUG]', {
+                          depth_mm: depth / 0.01,
+                          backPanelThickness_mm: backPanelThickness / 0.01,
+                          depthOffset_mm: backPanelConfig.depthOffset,
+                          backPanelFrontFace_mm: backPanelFrontFace / 0.01,
+                          backHorizZ_center_mm: backHorizZ / 0.01,
+                          backHorizZ_backEdge_mm: (backHorizZ - basicThickness/2) / 0.01,
+                          basicThickness_mm: basicThickness / 0.01,
+                        });
                         // 수직 패널 깊이: 전면~후면 수평 패널 사이
                         const vertFrontEdge = frontHorizZ - basicThickness/2;
                         const vertBackEdge = backHorizZ + basicThickness/2;
@@ -1137,12 +1146,12 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                                 />
                               );
                             })()}
-                            {/* 서랍 마이다: 상단=하부상판 하단-12mm, 하단=받침대 하단, 높이=212mm */}
+                            {/* 서랍 마이다: 상단=하부상판 하단-6mm, 하단=받침대 하단, 높이=212mm */}
                             {(() => {
                               const pn = '서랍1(마이다)';
                               const mat = getPanelMaterial(pn);
                               const maidaH = mmToThreeUnits(212);
-                              const maidaTopY = lowerTopPanelY - basicThickness / 2 - mmToThreeUnits(12);
+                              const maidaTopY = lowerTopPanelY - basicThickness / 2 - mmToThreeUnits(6);
                               const maidaCenterY = maidaTopY - maidaH / 2;
                               return (
                                 <BoxWithEdges
