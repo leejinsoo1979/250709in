@@ -710,33 +710,35 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
     const topFrameMm = spaceInfo.frameSize?.top || 30;
     const defaultTopGap = isFullSurround ? (topFrameMm + 3) : (spaceInfo.doorTopGap || 5);
 
-    set((state) => {
-      const updatedModules = state.placedModules.map(module => {
-        // 카테고리별 기본 도어 갭 결정
-        const moduleData = getModuleById(module.moduleId, internalSpace, spaceInfo);
-        const category = moduleData?.category;
-        let topGap = defaultTopGap;
-        let bottomGap = defaultBottomGap;
-        if (category === 'lower') {
-          topGap = 20;    // LOWER_DOOR_TOP_GAP
-          bottomGap = 2;  // LOWER_DOOR_BOTTOM_EXTENSION
-        } else if (category === 'upper') {
-          bottomGap = 28; // 상부장 기본값
-        }
-        return {
-          ...module,
-          hasDoor,
-          ...(hasDoor && {
-            doorTopGap: module.doorTopGap ?? topGap,
-            doorBottomGap: module.doorBottomGap ?? bottomGap
-          })
-        };
-      });
-
+    const currentModules = get().placedModules;
+    const updatedModules = currentModules.map(module => {
+      // 카테고리별 기본 도어 갭 결정
+      const moduleData = getModuleById(module.moduleId, internalSpace, spaceInfo);
+      const category = moduleData?.category;
+      let topGap = defaultTopGap;
+      let bottomGap = defaultBottomGap;
+      const isBasicLower = module.moduleId?.includes('lower-half-cabinet') || module.moduleId?.includes('dual-lower-half-cabinet');
+      if (isBasicLower) {
+        topGap = -20;   // 기본하부장: 도어 상단 -20mm (캐비넷보다 짧음)
+        bottomGap = 5;  // 기본하부장: 도어 하단 5mm 확장
+      } else if (category === 'lower') {
+        topGap = 20;    // 기타 하부장: LOWER_DOOR_TOP_GAP
+        bottomGap = 2;  // 기타 하부장: LOWER_DOOR_BOTTOM_EXTENSION
+      } else if (category === 'upper') {
+        bottomGap = 28; // 상부장 기본값
+      }
       return {
-        placedModules: updatedModules
+        ...module,
+        hasDoor,
+        ...(hasDoor && {
+          doorTopGap: module.doorTopGap ?? topGap,
+          doorBottomGap: module.doorBottomGap ?? bottomGap
+        })
       };
     });
+
+    set({ placedModules: updatedModules });
+    notifyR3F(updatedModules);
   },
 
   // 기둥 변경 시 가구 adjustedWidth 업데이트
