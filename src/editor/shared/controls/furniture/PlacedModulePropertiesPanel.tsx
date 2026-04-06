@@ -2912,54 +2912,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                       </div>
                         );
                       })()}
-                      {/* 섹션 깊이 */}
-                      <div style={{ flex: 1, minWidth: '70px' }}>
-                        <label style={{ fontSize: '10px', color: 'var(--theme-text-secondary)', display: 'block', lineHeight: 1 }}>깊이</label>
-                        <div className={styles.inputWithUnit}>
-                          <input
-                            type="text" inputMode="numeric"
-                            value={displayD}
-                            onChange={(e) => setSectionDepthInputs(prev => ({ ...prev, [sIdx]: e.target.value }))}
-                            onBlur={() => {
-                              const val = parseInt(sectionDepthInputs[sIdx] || displayD, 10);
-                              if (!isNaN(val) && val >= 100 && val <= 800) {
-                                if (sIdx === 0) {
-                                  setLowerSectionDepth(val);
-                                  updatePlacedModule(currentPlacedModule.id, { lowerSectionDepth: val });
-                                  setLowerDepthInput(val.toString());
-                                } else if (sIdx === 1) {
-                                  setUpperSectionDepth(val);
-                                  updatePlacedModule(currentPlacedModule.id, { upperSectionDepth: val });
-                                  setUpperDepthInput(val.toString());
-                                }
-                              } else {
-                                setSectionDepthInputs(prev => ({ ...prev, [sIdx]: displayD }));
-                              }
-                            }}
-                            onKeyDown={(e) => {
-                              if (e.key === 'Enter') { (e.target as HTMLInputElement).blur(); }
-                              else if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
-                                e.preventDefault();
-                                const cur = parseInt(displayD, 10) || Math.round(totalD);
-                                const next = Math.max(100, Math.min(800, cur + (e.key === 'ArrowUp' ? 1 : -1)));
-                                setSectionDepthInputs(prev => ({ ...prev, [sIdx]: next.toString() }));
-                                if (sIdx === 0) {
-                                  setLowerSectionDepth(next);
-                                  updatePlacedModule(currentPlacedModule.id, { lowerSectionDepth: next });
-                                  setLowerDepthInput(next.toString());
-                                } else if (sIdx === 1) {
-                                  setUpperSectionDepth(next);
-                                  updatePlacedModule(currentPlacedModule.id, { upperSectionDepth: next });
-                                  setUpperDepthInput(next.toString());
-                                }
-                              }
-                            }}
-                            className={styles.depthInput}
-                            style={{ color: '#000', backgroundColor: '#fff', WebkitTextFillColor: '#000', opacity: 1 }}
-                          />
-                          <span className={styles.unit}>mm</span>
-                        </div>
-                      </div>
+                      {/* 섹션 깊이: 아래 "섹션 깊이 설정"에서 관리하므로 여기서는 제거 */}
                     </div>
 
                     {/* 좌우 분할 서브박스 치수 (커스텀 가구 전용) */}
