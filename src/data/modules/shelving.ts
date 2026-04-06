@@ -388,13 +388,13 @@ const createSingleEntrywayH = (columnWidth: number, maxHeight: number): ModuleDa
   const shelfAreaHeight = bottomHeight - FURNITURE_SPECS.ENTRYWAY_DRAWER_HEIGHT;
 
   const baseSections: SectionConfig[] = [
-    // 섹션0: 하부 신발선반 (바닥부터 177mm 간격 고정선반 4개)
+    // 섹션0: 하부 신발선반 (177mm 간격 고정선반 4개)
     {
       type: 'shelf',
       heightType: 'absolute',
       height: shelfAreaHeight,  // 988mm
       count: 4,
-      shelfPositions: [0, 177, 354, 531, 708]
+      shelfPositions: [177, 354, 531, 708]
     },
     // 섹션1: 속서랍 (마이다 212mm)
     {
@@ -736,7 +736,7 @@ const createDualEntrywayH = (dualColumnWidth: number, maxHeight: number, slotWid
 
   const baseSections: SectionConfig[] = [
     { type: 'shelf', heightType: 'absolute', height: shelfAreaHeight, count: 4,
-      shelfPositions: [0, 177, 354, 531, 708] },
+      shelfPositions: [177, 354, 531, 708] },
     { type: 'drawer', heightType: 'absolute', height: FURNITURE_SPECS.ENTRYWAY_DRAWER_HEIGHT,
       count: 1, drawerHeights: [FURNITURE_SPECS.ENTRYWAY_DRAWER_HEIGHT],
       gapHeight: FURNITURE_SPECS.DRAWER_GAP },
