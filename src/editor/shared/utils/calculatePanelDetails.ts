@@ -293,7 +293,7 @@ export const calculatePanelDetails = (
         const skipMiddlePanel = isPantsHanger && isLastSection;
 
         if (!skipMiddlePanel) {
-          const middlePanelDepth = Math.max(leftSideDepth, rightSideDepth);
+          const middlePanelDepth = Math.max(leftSideDepth, rightSideDepth) - 26; // 백패널과 맞닿게 26mm 감소
           const isFirstSection = sectionIndex === 0;
           const leftLowerHeightMm = moduleData.modelConfig?.leftSections?.[0]?.height || 0;
           const furnitureHeightMm = moduleData.dimensions.height;
