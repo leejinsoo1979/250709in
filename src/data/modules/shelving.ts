@@ -468,6 +468,7 @@ const createSingleEntrywayI = (columnWidth: number, maxHeight: number): ModuleDa
 
   return {
     ...base,
+    thumbnail: '/images/furniture-thumbnails/entrance_single-I.png',
     modelConfig: { ...base.modelConfig, sections: baseSections }
   } as ModuleData;
 };
@@ -834,6 +835,7 @@ const createDualEntrywayI = (dualColumnWidth: number, maxHeight: number, slotWid
   return {
     ...base,
     slotWidths,
+    thumbnail: '/images/furniture-thumbnails/entrance_duel-I.png',
     modelConfig: { ...base.modelConfig, sections: baseSections }
   } as ModuleData;
 };
