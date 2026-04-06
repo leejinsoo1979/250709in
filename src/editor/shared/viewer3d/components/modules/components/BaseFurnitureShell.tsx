@@ -1009,16 +1009,17 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                         const frameT = basicThickness;
                         const drawerAreaWidth = innerWidth - sidePanelGap - (vertXOff + frameT + mmToThreeUnits(0.5)) * 2;
 
-                        // 날개벽 전면 수평패널 앞면 Z (서랍 앞면 기준)
+                        // 날개벽 수직패널 앞쪽 끝 = 전면 수평패널 안쪽면
+                        const vertFrontEdge2 = depth/2 - mmToThreeUnits(85) - basicThickness;
+                        // 날개벽 수직패널 뒤쪽 끝 = 후면 수평패널 안쪽면
+                        const vertBackEdge2 = -depth/2 + backReductionForPanels + basicThickness;
+                        // 서랍 측판 깊이 = 날개벽 수직패널 깊이와 동일
+                        const drawerSideDepth = vertFrontEdge2 - vertBackEdge2;
+                        const drawerSideCenterZ = (vertFrontEdge2 + vertBackEdge2) / 2;
+                        // 날개벽 전면 앞면 Z (마이다/앞판 기준)
                         const wingFrontFaceZ = depth/2 - mmToThreeUnits(85);
-                        // 날개벽 후면 수평패널 뒷면 Z (백패널 앞면과 일치)
-                        // backPanelThickness shadowed → backReductionForPanels 사용
-                        const wingBackFaceZ = -depth/2 + backReductionForPanels;
-                        // 서랍 뒷판 뒷면 Z: 백패널 앞면 + 12mm
-                        const drawerBackZ = -depth/2 + backPanelThickness + mmToThreeUnits(12);
-                        // 서랍 측판 깊이: 날개벽 전면 앞면 ~ 뒷판 뒷면
-                        const drawerSideDepth = wingFrontFaceZ - drawerBackZ;
-                        const drawerSideCenterZ = (wingFrontFaceZ + drawerBackZ) / 2;
+                        // 서랍 뒷판 Z: 백패널 앞면 + 12mm
+                        const drawerBackZ = -depth/2 + backReductionForPanels + mmToThreeUnits(12);
 
                         return (
                           <>
