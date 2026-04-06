@@ -890,6 +890,35 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
 // R3F 호환성 workaround: store 참조 설정
 storeRef = useFurnitureStore;
 
+// 기본하부장 도어갭 마이그레이션: placedModules가 변경될 때마다
+// 옛 기본값(doorTopGap=20, doorBottomGap=2) → 새 기본값(-20, 5)으로 자동 교체
+let migrationRunning = false;
+useFurnitureStore.subscribe((state, prevState) => {
+  if (migrationRunning || state.placedModules === prevState.placedModules) return;
+  let needsMigration = false;
+  for (const m of state.placedModules) {
+    const isBasic = m.moduleId?.includes('lower-cabinet-basic') || m.moduleId?.includes('lower-cabinet-2tier') ||
+      m.moduleId?.includes('dual-lower-cabinet-basic') || m.moduleId?.includes('dual-lower-cabinet-2tier');
+    if (isBasic && (m.doorTopGap === 20 || m.doorBottomGap === 2)) {
+      needsMigration = true;
+      break;
+    }
+  }
+  if (!needsMigration) return;
+  migrationRunning = true;
+  const migrated = state.placedModules.map(m => {
+    const isBasic = m.moduleId?.includes('lower-cabinet-basic') || m.moduleId?.includes('lower-cabinet-2tier') ||
+      m.moduleId?.includes('dual-lower-cabinet-basic') || m.moduleId?.includes('dual-lower-cabinet-2tier');
+    if (!isBasic) return m;
+    const fixTop = m.doorTopGap === 20;
+    const fixBot = m.doorBottomGap === 2;
+    if (!fixTop && !fixBot) return m;
+    return { ...m, ...(fixTop ? { doorTopGap: -20 } : {}), ...(fixBot ? { doorBottomGap: 5 } : {}) };
+  });
+  useFurnitureStore.setState({ placedModules: migrated });
+  migrationRunning = false;
+});
+
 // Development mode에서 디버깅을 위해 store를 window에 노출
 if (process.env.NODE_ENV === 'development') {
   (window as any).__furnitureStore = useFurnitureStore;
