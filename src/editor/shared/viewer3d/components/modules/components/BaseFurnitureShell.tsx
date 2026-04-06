@@ -866,41 +866,117 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                         />
                       )}
 
-                      {/* 현관장 H: 서랍 좌우 날개벽 - 하부 상판과 서랍 받침대 사이 */}
+                      {/* 현관장 H: 서랍속장 ㄷ자 프레임 - 하부 상판과 서랍 받침대 사이 */}
                       {moduleData?.id?.includes('entryway-h') && (() => {
-                        const drawerWallHeight = mmToThreeUnits(188); // 내경 188mm
-                        const drawerWallDepth = lowerSectionDepth - backReductionForPanels - mmToThreeUnits(lowerSectionTopOffsetMm || 0);
-                        const drawerWallY = lowerTopPanelY - basicThickness/2 - drawerWallHeight/2; // 하부 상판 하단 ~ 서랍 받침대 상단 중심
-                        const drawerWallZ = lowerZOffset + panelZOffset - mmToThreeUnits(lowerSectionTopOffsetMm || 0)/2;
-                        const halfInnerWidth = (innerWidth - sidePanelGap) / 2;
+                        const drawerFrameH = mmToThreeUnits(188); // 내경 188mm
+                        const drawerFrameCenterY = lowerTopPanelY - basicThickness/2 - drawerFrameH/2;
+                        const halfInnerW = (innerWidth - sidePanelGap) / 2;
+
+                        // 백패널 두께
+                        const bpThickness = depth - adjustedDepthForShelves;
+
+                        // 수직 패널: 측판에서 27mm 안쪽, 레일 부착용
+                        const vertXOffset = mmToThreeUnits(27);
+                        // 전면 수평 패널: 앞에서 85mm 위치
+                        const frontHorizZ = depth/2 - mmToThreeUnits(85) - basicThickness/2;
+                        // 후면 수평 패널: 백패널 앞면에 맞닿음
+                        const backHorizZ = -depth/2 + basicThickness + bpThickness + basicThickness/2 - mmToThreeUnits(1);
+                        // 수직 패널 깊이: 전면~후면 수평 패널 사이
+                        const vertFrontEdge = frontHorizZ - basicThickness/2;
+                        const vertBackEdge = backHorizZ + basicThickness/2;
+                        const vertDepth = vertFrontEdge - vertBackEdge;
+                        const vertZ = (vertFrontEdge + vertBackEdge) / 2;
+                        // 수평 패널 폭: 27mm + basicThickness
+                        const horizWidth = vertXOffset + basicThickness;
+
                         return (
                           <>
-                            {/* 좌측 날개벽 */}
+                            {/* 좌측 수직 패널 (레일 부착) */}
                             <BoxWithEdges
-                              key={`drawer-wing-left-${getPanelMaterial('(하)좌측판').uuid}`}
-                              args={[basicThickness, drawerWallHeight, drawerWallDepth]}
-                              position={[-halfInnerWidth + basicThickness/2, drawerWallY, drawerWallZ]}
-                              material={getPanelMaterial('(하)좌측판')}
+                              key={`drawer-frame-left-vert-${getPanelMaterial('서랍속장(좌)').uuid}`}
+                              args={[basicThickness, drawerFrameH, vertDepth]}
+                              position={[-halfInnerW + vertXOffset + basicThickness/2 + mmToThreeUnits(0.5), drawerFrameCenterY, vertZ]}
+                              material={getPanelMaterial('서랍속장(좌)')}
                               renderMode={renderMode}
                               isDragging={isDragging}
                               isEditMode={isEditMode}
                               isHighlighted={isLowerSectionHighlighted}
-                              panelName="서랍날개벽(좌)"
+                              panelName="서랍속장(좌)"
                               panelGrainDirections={panelGrainDirections}
                               furnitureId={placedFurnitureId}
                               textureUrl={textureUrl}
                             />
-                            {/* 우측 날개벽 */}
+                            {/* 우측 수직 패널 (레일 부착) */}
                             <BoxWithEdges
-                              key={`drawer-wing-right-${getPanelMaterial('(하)우측판').uuid}`}
-                              args={[basicThickness, drawerWallHeight, drawerWallDepth]}
-                              position={[halfInnerWidth - basicThickness/2, drawerWallY, drawerWallZ]}
-                              material={getPanelMaterial('(하)우측판')}
+                              key={`drawer-frame-right-vert-${getPanelMaterial('서랍속장(우)').uuid}`}
+                              args={[basicThickness, drawerFrameH, vertDepth]}
+                              position={[halfInnerW - vertXOffset - basicThickness/2 - mmToThreeUnits(0.5), drawerFrameCenterY, vertZ]}
+                              material={getPanelMaterial('서랍속장(우)')}
                               renderMode={renderMode}
                               isDragging={isDragging}
                               isEditMode={isEditMode}
                               isHighlighted={isLowerSectionHighlighted}
-                              panelName="서랍날개벽(우)"
+                              panelName="서랍속장(우)"
+                              panelGrainDirections={panelGrainDirections}
+                              furnitureId={placedFurnitureId}
+                              textureUrl={textureUrl}
+                            />
+                            {/* 좌측 전면 수평 패널 */}
+                            <BoxWithEdges
+                              key={`drawer-frame-left-front-${getPanelMaterial('서랍속장(좌) 전면').uuid}`}
+                              args={[horizWidth, drawerFrameH, basicThickness]}
+                              position={[-halfInnerW + horizWidth/2 + mmToThreeUnits(0.5), drawerFrameCenterY, frontHorizZ]}
+                              material={getPanelMaterial('서랍속장(좌) 전면')}
+                              renderMode={renderMode}
+                              isDragging={isDragging}
+                              isEditMode={isEditMode}
+                              isHighlighted={isLowerSectionHighlighted}
+                              panelName="서랍속장(좌) 전면"
+                              panelGrainDirections={panelGrainDirections}
+                              furnitureId={placedFurnitureId}
+                              textureUrl={textureUrl}
+                            />
+                            {/* 우측 전면 수평 패널 */}
+                            <BoxWithEdges
+                              key={`drawer-frame-right-front-${getPanelMaterial('서랍속장(우) 전면').uuid}`}
+                              args={[horizWidth, drawerFrameH, basicThickness]}
+                              position={[halfInnerW - horizWidth/2 - mmToThreeUnits(0.5), drawerFrameCenterY, frontHorizZ]}
+                              material={getPanelMaterial('서랍속장(우) 전면')}
+                              renderMode={renderMode}
+                              isDragging={isDragging}
+                              isEditMode={isEditMode}
+                              isHighlighted={isLowerSectionHighlighted}
+                              panelName="서랍속장(우) 전면"
+                              panelGrainDirections={panelGrainDirections}
+                              furnitureId={placedFurnitureId}
+                              textureUrl={textureUrl}
+                            />
+                            {/* 좌측 후면 수평 패널 */}
+                            <BoxWithEdges
+                              key={`drawer-frame-left-back-${getPanelMaterial('서랍속장(좌) 후면').uuid}`}
+                              args={[horizWidth, drawerFrameH, basicThickness]}
+                              position={[-halfInnerW + horizWidth/2 + mmToThreeUnits(0.5), drawerFrameCenterY, backHorizZ]}
+                              material={getPanelMaterial('서랍속장(좌) 후면')}
+                              renderMode={renderMode}
+                              isDragging={isDragging}
+                              isEditMode={isEditMode}
+                              isHighlighted={isLowerSectionHighlighted}
+                              panelName="서랍속장(좌) 후면"
+                              panelGrainDirections={panelGrainDirections}
+                              furnitureId={placedFurnitureId}
+                              textureUrl={textureUrl}
+                            />
+                            {/* 우측 후면 수평 패널 */}
+                            <BoxWithEdges
+                              key={`drawer-frame-right-back-${getPanelMaterial('서랍속장(우) 후면').uuid}`}
+                              args={[horizWidth, drawerFrameH, basicThickness]}
+                              position={[halfInnerW - horizWidth/2 - mmToThreeUnits(0.5), drawerFrameCenterY, backHorizZ]}
+                              material={getPanelMaterial('서랍속장(우) 후면')}
+                              renderMode={renderMode}
+                              isDragging={isDragging}
+                              isEditMode={isEditMode}
+                              isHighlighted={isLowerSectionHighlighted}
+                              panelName="서랍속장(우) 후면"
                               panelGrainDirections={panelGrainDirections}
                               furnitureId={placedFurnitureId}
                               textureUrl={textureUrl}
