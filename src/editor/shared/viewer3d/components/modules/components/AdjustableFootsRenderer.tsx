@@ -58,7 +58,7 @@ export const AdjustableFootsRenderer: React.FC<AdjustableFootsRendererProps> = (
     state.spaceInfo.baseConfig?.type === 'stand' &&
     state.spaceInfo.baseConfig?.placementType === 'float'
   );
-  // placedFurnitureId로 baseFrameOffset, hasBase 조회 (primitive 반환으로 무한 렌더 방지)
+  // placedFurnitureId로 baseFrameOffset, hasBase, baseFrameHeight 조회 (primitive 반환으로 무한 렌더 방지)
   const baseFrameOffset = useFurnitureStore(state => {
     if (!placedFurnitureId) return 0;
     const mod = state.placedModules.find(m => m.id === placedFurnitureId);
@@ -69,11 +69,17 @@ export const AdjustableFootsRenderer: React.FC<AdjustableFootsRendererProps> = (
     const mod = state.placedModules.find(m => m.id === placedFurnitureId);
     return mod?.hasBase !== false;
   });
+  // 개별 가구 하부프레임 높이 (설정되어 있으면 글로벌 baseConfig.height 대신 사용)
+  const individualBaseFrameHeight = useFurnitureStore(state => {
+    if (!placedFurnitureId) return undefined;
+    const mod = state.placedModules.find(m => m.id === placedFurnitureId);
+    return mod?.baseFrameHeight;
+  });
 
   // Store 값 우선, prop은 폴백
   const effectiveBaseDepth = storeBaseDepth;
-  // 조절발 크기는 바닥마감재와 무관하게 받침대 높이 그대로 사용
-  const effectiveBaseHeight = storeBaseHeight;
+  // 개별 가구 baseFrameHeight > 글로벌 baseConfig.height > prop 폴백
+  const effectiveBaseHeight = individualBaseFrameHeight ?? storeBaseHeight;
   const effectiveIsFloating = storeIsFloating || isFloating;
 
   const effectiveViewMode = viewMode ?? storeViewMode ?? '3D';
