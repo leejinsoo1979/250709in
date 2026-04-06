@@ -848,6 +848,24 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                         textureUrl={textureUrl}
                       />
 
+                      {/* 현관장 H: 서랍 받침대 - 하부 상판 아래 188mm 간격, 동일 사이즈 */}
+                      {moduleData?.id?.includes('entryway-h') && (
+                        <BoxWithEdges
+                          key={`drawer-support-${getPanelMaterial('(하)상판').uuid}`}
+                          args={[innerWidth - sidePanelGap, basicThickness - mmToThreeUnits(0.1), lowerSectionDepth - backReductionForPanels - mmToThreeUnits(lowerSectionTopOffsetMm || 0)]}
+                          position={[0, lowerTopPanelY - mmToThreeUnits(188), lowerZOffset + panelZOffset - mmToThreeUnits(lowerSectionTopOffsetMm || 0)/2]}
+                          material={getPanelMaterial('(하)상판')}
+                          renderMode={renderMode}
+                          isDragging={isDragging}
+                          isEditMode={isEditMode}
+                          isHighlighted={isLowerTopPanelHighlighted || isLowerSectionHighlighted}
+                          panelName="서랍받침대"
+                          panelGrainDirections={panelGrainDirections}
+                          furnitureId={placedFurnitureId}
+                          textureUrl={textureUrl}
+                        />
+                      )}
+
                       {/* 상부 섹션 바닥판 - 뒤에서 26mm 줄여서 백패널과 맞닿게, 좌우 각 0.5mm씩 줄임 */}
                       <BoxWithEdges
                         key={`upper-floor-2drawer-${getPanelMaterial('(상)바닥').uuid}`}
