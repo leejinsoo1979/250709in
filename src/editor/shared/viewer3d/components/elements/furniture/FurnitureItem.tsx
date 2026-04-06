@@ -3606,9 +3606,14 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
               let epH: number;
               let epYRelative: number;
               if (epHeightMode === 'furniture') {
-                // 가구에 맞춤: EP 높이 = 가구 높이, EP 중심 = 가구 중심 (그룹 내 0)
-                epH = height; // 이미 Three.js 단위인 가구 높이
-                epYRelative = 0;
+                // 가구에 맞춤: EP 높이 = 가구 높이, 상단/하단 옵셋 적용 (가구 기준)
+                const epTopOffsetMm = placedModule.endPanelTopOffset ?? 0;
+                const epBottomOffsetMm = placedModule.endPanelBottomOffset ?? 0;
+                const topOff = mmToThreeUnits(epTopOffsetMm);
+                const bottomOff = mmToThreeUnits(epBottomOffsetMm);
+                epH = Math.max(0, height - topOff - bottomOff);
+                // EP 중심: 가구 중심에서 하단옵셋만큼 위로, 상단옵셋만큼 아래로 → (bottomOff - topOff) / 2
+                epYRelative = (bottomOff - topOff) / 2;
               } else {
                 // 바닥에 맞춤 (기본): 바닥~천장, 천장/바닥 옵셋 적용
                 const spaceH = mmToThreeUnits(spaceInfo.height);

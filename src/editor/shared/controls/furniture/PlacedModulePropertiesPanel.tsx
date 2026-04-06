@@ -3119,11 +3119,11 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                       })}
                     </div>
                   </div>
-                  {/* 천장/바닥 옵셋 — floor 모드 */}
-                  {(currentPlacedModule.endPanelHeightMode ?? 'floor') === 'floor' && (
+                  {/* 상단/하단 갭 — 모든 EP 높이 모드에서 표시 */}
+                  {(
                     <div className={styles.epRow}>
                       <div className={styles.epField}>
-                        <label className={styles.epFieldLabel}>천장 옵셋</label>
+                        <label className={styles.epFieldLabel}>상단 갭</label>
                         <div className={styles.inputWithUnit}>
                           <input
                             type="text"
@@ -3150,7 +3150,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                         </div>
                       </div>
                       <div className={styles.epField}>
-                        <label className={styles.epFieldLabel}>바닥 옵셋</label>
+                        <label className={styles.epFieldLabel}>하단 갭</label>
                         <div className={styles.inputWithUnit}>
                           <input
                             type="text"
