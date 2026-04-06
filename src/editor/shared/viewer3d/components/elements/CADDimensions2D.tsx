@@ -1185,8 +1185,12 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           const doorMidY = (doorBottomY + doorTopY) / 2;
           const doorColor = '#E91E63';
 
-          // 도어 치수선 Z 위치: 기존 오른쪽 가구높이 치수 바로 바깥 (+150mm)
-          const doorDimZ = spaceDepth / 2 + rightDimOffset - mmToThreeUnits(750) + mmToThreeUnits(150);
+          // 도어 치수선 Z 위치: 가구 앞면(도어면) 바로 옆에 배치
+          const panelDepthMm = spaceInfo.depth || 1500;
+          const panelDepthU = mmToThreeUnits(panelDepthMm);
+          const furnitureDepthU = mmToThreeUnits(600);
+          const furnitureFrontZ = -panelDepthU / 2 + (panelDepthU - furnitureDepthU) / 2 + furnitureDepthU / 2;
+          const doorDimZ = furnitureFrontZ + mmToThreeUnits(200);
 
           return (
             <group>
@@ -1225,18 +1229,18 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
               >
                 {Math.round(doorHeightMm)}
               </Text>
-              {/* 도어 상단 연장선 */}
+              {/* 도어 상단 연장선: 가구 앞면에서 치수선까지 */}
               <NativeLine name="door_height_ext"
                 points={[
-                  [0, doorTopY, doorDimZ + mmToThreeUnits(150)],
+                  [0, doorTopY, furnitureFrontZ + mmToThreeUnits(20)],
                   [0, doorTopY, doorDimZ - mmToThreeUnits(20)]
                 ]}
                 color={doorColor} lineWidth={0.5} renderOrder={100000} depthTest={false}
               />
-              {/* 도어 하단 연장선 */}
+              {/* 도어 하단 연장선: 가구 앞면에서 치수선까지 */}
               <NativeLine name="door_height_ext"
                 points={[
-                  [0, doorBottomY, doorDimZ + mmToThreeUnits(150)],
+                  [0, doorBottomY, furnitureFrontZ + mmToThreeUnits(20)],
                   [0, doorBottomY, doorDimZ - mmToThreeUnits(20)]
                 ]}
                 color={doorColor} lineWidth={0.5} renderOrder={100000} depthTest={false}
