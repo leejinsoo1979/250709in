@@ -1011,10 +1011,12 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                         const frameT = basicThickness;
                         const drawerAreaWidth = innerWidth - sidePanelGap - (vertXOff + frameT + mmToThreeUnits(0.5)) * 2;
 
-                        // 서랍 깊이: 가구 깊이 - 앞 30mm - 뒤 30mm = 총 60mm 감소
-                        const drawerFullDepth = depth - mmToThreeUnits(60);
+                        // 서랍 깊이: 하부섹션 깊이 기준, 앞 30mm - 뒤 30mm = 총 60mm 감소
+                        const drawerFullDepth = lowerSectionDepth - mmToThreeUnits(60);
                         const drawerBodyDepth = drawerFullDepth - maidaT;
-                        const drawerBodyCenterZ = -maidaT / 2;
+                        // Z 기준: 하부 섹션 Z 오프셋 적용
+                        const drawerBaseZ = lowerZOffset + basicThickness/2;
+                        const drawerBodyCenterZ = drawerBaseZ - maidaT / 2;
 
                         return (
                           <>
@@ -1137,7 +1139,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                                 <BoxWithEdges
                                   key={`entryway-drawer-maida-${mat.uuid}`}
                                   args={[drawerAreaWidth, drawerSideH, maidaT]}
-                                  position={[0, drawerCenterY, drawerFullDepth/2 - maidaT/2]}
+                                  position={[0, drawerCenterY, drawerBaseZ + drawerFullDepth/2 - maidaT/2]}
                                   material={mat}
                                   renderMode={renderMode}
                                   isDragging={isDragging}
