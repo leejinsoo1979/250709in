@@ -232,13 +232,32 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
             break;
         }
         
+        // 서랍 섹션 위에 (하)상판 렌더링 (4단서랍장처럼 좌측만)
+        let drawerTopPanel = null;
+        if (section.type === 'drawer' && index < allSections.length - 1) {
+          const panelDepth = depth - mmToThreeUnits(26);
+          drawerTopPanel = (
+            <BoxWithEdges
+              args={[leftWidth, basicThickness, panelDepth]}
+              position={[0, sectionCenterY + sectionHeight/2 - basicThickness * 1.5, mmToThreeUnits(13)]}
+              material={material}
+              renderMode={useSpace3DView().renderMode}
+              furnitureId={placedFurnitureId}
+              isDragging={isDragging}
+              isEditMode={isEditMode}
+              panelName="(하)상판"
+            />
+          );
+        }
+
         // 다음 섹션을 위해 Y 위치 이동
         currentYPosition += sectionHeight;
-        
+
         return (
           <group key={`left-section-${index}`}>
             {sectionContent}
-            
+            {drawerTopPanel}
+
             {/* 좌측 섹션 치수 표시 - 탑뷰/3D에서는 숨김 */}
             {showDimensions && showDimensionsText &&
              viewMode !== '3D' &&
