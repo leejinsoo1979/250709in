@@ -410,17 +410,17 @@ const Configurator: React.FC = () => {
       const isDual = mod.isDualSlot || mod.moduleId?.includes('dual-') || mod.baseModuleType?.includes('dual-');
       const isUpper = mod.moduleId?.includes('upper-cabinet') || mod.moduleId?.includes('dual-upper-cabinet');
       const isLower = mod.moduleId?.includes('lower-cabinet') || mod.moduleId?.includes('dual-lower-cabinet');
-      const suffix = isUpper ? '(상)' : isLower ? '(하)' : '';
+      const suffix = isUpper ? '상' : isLower ? '하' : '';
       if (isDual) {
-        const label = `도어 ${doorNum},${doorNum + 1}${suffix}`;
+        const label = `도어 ${doorNum},${doorNum + 1}`;
         const nums = [doorNum, doorNum + 1];
         doorNum += 2;
-        return { label, nums, isDual: true };
+        return { label, nums, isDual: true, suffix };
       } else {
-        const label = `도어 ${doorNum}${suffix}`;
+        const label = `도어 ${doorNum}`;
         const nums = [doorNum];
         doorNum += 1;
-        return { label, nums, isDual: false };
+        return { label, nums, isDual: false, suffix };
       }
     });
   }, [doorFurnitureList]);
@@ -5679,8 +5679,9 @@ const Configurator: React.FC = () => {
                       </label>
                     </th>
                     {doorNumberMap.map((info, idx) => (
-                      <th key={idx} style={{ padding: '2px 4px', fontSize: '11px', fontWeight: 600, color: 'var(--theme-text-secondary, #666)', textAlign: 'center' }}>
-                        {info.label}
+                      <th key={idx} style={{ padding: '2px 2px', fontSize: '10px', fontWeight: 600, color: 'var(--theme-text-secondary, #666)', textAlign: 'center', lineHeight: '1.2' }}>
+                        <div>{info.nums.length > 1 ? info.nums.join(',') : info.nums[0]}</div>
+                        {info.suffix && <div style={{ fontSize: '9px', fontWeight: 400, color: 'var(--theme-text-secondary, #999)' }}>{info.suffix}</div>}
                       </th>
                     ))}
                   </tr>
