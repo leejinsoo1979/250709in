@@ -1185,8 +1185,8 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           const doorMidY = (doorBottomY + doorTopY) / 2;
           const doorColor = '#E91E63';
 
-          // 도어 치수선 Z 위치: 기존 오른쪽 가구높이 치수 바로 옆 (도어 가까이)
-          const doorDimZ = spaceDepth / 2 + rightDimOffset - mmToThreeUnits(750) - mmToThreeUnits(400);
+          // 도어 치수선 Z 위치: 기존 오른쪽 가구높이 치수 바로 바깥 (+150mm)
+          const doorDimZ = spaceDepth / 2 + rightDimOffset - mmToThreeUnits(750) + mmToThreeUnits(150);
 
           return (
             <group>
