@@ -2547,7 +2547,21 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                       onBlur={() => {
                         const val = parseInt(freeHeightInput, 10);
                         if (!isNaN(val) && val >= 100 && val <= 3000 && currentPlacedModule) {
-                          updatePlacedModule(currentPlacedModule.id, { freeHeight: val });
+                          const updates: any = { freeHeight: val };
+                          // 키큰장(full): 가구 높이 줄이면 상부프레임이 늘어나야 함
+                          if (moduleData.category === 'full') {
+                            const iSpace = calculateInternalSpace(spaceInfo);
+                            const originalH = iSpace.height; // 원래 내경 높이
+                            const globalTopFrame = spaceInfo.frameSize?.top || 30;
+                            const heightDiff = originalH - val; // 줄어든 만큼
+                            if (heightDiff > 0) {
+                              updates.topFrameThickness = globalTopFrame + heightDiff;
+                            } else {
+                              // 원래보다 크거나 같으면 상부프레임 기본값
+                              updates.topFrameThickness = Math.max(0, globalTopFrame + heightDiff);
+                            }
+                          }
+                          updatePlacedModule(currentPlacedModule.id, updates);
                           setFreeHeightInput(val.toString());
                           setSectionHeightInputs({}); // 섹션 높이 캐시 초기화 → 재계산
                           const store = useFurnitureStore.getState();
@@ -2591,7 +2605,13 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                           const next = Math.max(100, Math.min(3000, cur + (e.key === 'ArrowUp' ? 1 : -1)));
                           setFreeHeightInput(next.toString());
                           if (currentPlacedModule) {
-                            updatePlacedModule(currentPlacedModule.id, { freeHeight: next });
+                            const arrowUpdates: any = { freeHeight: next };
+                            if (moduleData.category === 'full') {
+                              const iSpace = calculateInternalSpace(spaceInfo);
+                              const globalTopFrame = spaceInfo.frameSize?.top || 30;
+                              arrowUpdates.topFrameThickness = Math.max(0, globalTopFrame + (iSpace.height - next));
+                            }
+                            updatePlacedModule(currentPlacedModule.id, arrowUpdates);
                             setSectionHeightInputs({}); // 섹션 높이 캐시 초기화
                           }
                         }
@@ -2844,7 +2864,14 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                                 const dividerCount = mcSections.length - 1;
                                 const newTotalH = inputVal + prevFixed + 2 * pt + dividerCount * pt;
                                 const clampedH = Math.max(300, Math.min(3000, newTotalH));
-                                updatePlacedModule(currentPlacedModule.id, { freeHeight: clampedH });
+                                const secUpdates: any = { freeHeight: clampedH };
+                                // 키큰장: 상부프레임도 연동
+                                if (moduleData.category === 'full') {
+                                  const iSpace = calculateInternalSpace(spaceInfo);
+                                  const globalTopFrame = spaceInfo.frameSize?.top || 30;
+                                  secUpdates.topFrameThickness = Math.max(0, globalTopFrame + (iSpace.height - clampedH));
+                                }
+                                updatePlacedModule(currentPlacedModule.id, secUpdates);
                                 setFreeHeightInput(clampedH.toString());
                                 setSectionHeightInputs({});
                               } else {
