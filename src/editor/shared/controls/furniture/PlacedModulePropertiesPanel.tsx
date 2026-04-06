@@ -954,7 +954,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
             const totalH = currentPlacedModule.freeHeight || moduleData.dimensions.height;
             const totalD = currentPlacedModule.freeDepth || moduleData.dimensions.depth;
             const totalW = currentPlacedModule.freeWidth || moduleData.dimensions.width;
-            const availH = totalH - 2 * pt; // 상하판만 제외 (칸막이 미차감 — 3D SectionsRenderer와 동일)
+            const dimH = moduleData.dimensions.height; // 원래 모듈 높이
             const hInputs: Record<number, string> = {};
             const dInputs: Record<number, string> = {};
             const wInputs: Record<number, string> = {};
@@ -964,20 +964,14 @@ const PlacedModulePropertiesPanel: React.FC = () => {
               let sH: number;
               if (ht === 'absolute') {
                 if (isLast) {
-                  // 마지막 섹션은 나머지 높이 흡수 (3D와 동일: availH - 이전 섹션 합)
-                  const prevSectionsHeight = mcSections
-                    .filter((_: any, idx: number) => idx < i)
-                    .reduce((sum: number, s: any) => sum + ((s.heightType === 'absolute' ? s.height : 0) || 0), 0);
-                  sH = Math.max(0, availH - prevSectionsHeight);
+                  // 마지막 섹션: sec.height + freeHeight 차이 흡수
+                  const diff = totalH - dimH;
+                  sH = (sec.height || 0) + diff;
                 } else {
                   sH = sec.height || 0;
                 }
               } else {
-                const fixedTotal = mcSections
-                  .filter((s: any) => s.heightType === 'absolute')
-                  .reduce((sum: number, s: any) => sum + (s.height || 0), 0);
-                const remaining = availH - fixedTotal;
-                sH = Math.round(remaining * ((sec.height || sec.heightRatio || 50) / 100));
+                sH = Math.round(totalH * ((sec.height || sec.heightRatio || 50) / 100));
               }
               hInputs[i] = Math.round(sH).toString();
               if (i === 0) dInputs[i] = Math.round(currentPlacedModule.lowerSectionDepth || totalD).toString();
@@ -2728,32 +2722,26 @@ const PlacedModulePropertiesPanel: React.FC = () => {
             const totalW = currentPlacedModule.freeWidth || moduleData?.dimensions?.width || 600;
             const totalD = currentPlacedModule.freeDepth || moduleData?.dimensions?.depth || 580;
 
-            // 표준 가구의 섹션 높이 계산 (3D SectionsRenderer와 동일한 로직)
-            // 3D는 availableHeight = height - 2*basicThickness (상하판만 차감, 칸막이 미차감)
-            // 마지막 섹션이 availableHeight - lowerSectionsHeight로 나머지 흡수
+            // 표준 가구의 섹션 높이: shelving.ts에서 정의한 sec.height 그대로 사용
+            // freeHeight로 높이 변경 시 마지막 섹션만 차이를 흡수
             const getStdSectionHeightMM = (sIdx: number): number => {
               if (!mcSections || mcSections.length < 2) return totalH;
               const sec = mcSections[sIdx];
-              const availH = totalH - 2 * pt; // 상하판만 제외 (칸막이 미차감 — 3D와 동일)
               const ht = sec.heightType || 'percentage';
               if (ht === 'absolute') {
-                // 마지막 섹션은 나머지 높이 흡수 (이전 섹션 높이 합 차감)
                 const isLast = sIdx === mcSections.length - 1;
                 if (isLast) {
-                  const prevSectionsHeight = mcSections
-                    .filter((_, idx) => idx < sIdx)
-                    .reduce((sum, s) => sum + ((s.heightType === 'absolute' ? s.height : 0) || 0), 0);
-                  return Math.max(0, availH - prevSectionsHeight);
+                  // freeHeight가 있으면 마지막 섹션이 차이 흡수
+                  // sec.height는 원래 moduleData 기준이므로 freeHeight 반영 필요
+                  const dimH = moduleData?.dimensions?.height || totalH;
+                  const diff = totalH - dimH; // freeHeight에 의한 높이 차이
+                  return (sec.height || 0) + diff;
                 }
                 return sec.height || 0;
               }
-              // percentage 타입: 고정 섹션 제외한 나머지 높이 기준
-              const fixedTotal = mcSections
-                .filter(s => s.heightType === 'absolute')
-                .reduce((sum, s) => sum + (s.height || 0), 0);
-              const remaining = availH - fixedTotal;
+              // percentage 타입
               const ratio = (sec.height || sec.heightRatio || 50) / 100;
-              return Math.round(remaining * ratio);
+              return Math.round(totalH * ratio);
             };
 
             return (
@@ -2880,9 +2868,10 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                                 const prevFixed = mcSections
                                   .filter((_: any, idx: number) => idx < sIdx)
                                   .reduce((sum: number, s: any) => sum + ((s.heightType === 'absolute' ? s.height : 0) || 0), 0);
-                                // 역계산: availH = totalH - 2*pt, 상부섹션 = availH - prevFixed
-                                // → totalH = inputVal + prevFixed + 2*pt (칸막이 미포함 — 3D와 동일)
-                                const newTotalH = inputVal + prevFixed + 2 * pt;
+                                // 역계산: 상부 = sec.height + (totalH - dimH)
+                                // → totalH = inputVal - sec.height + dimH  (단, sec.height는 원래 모듈의 상부 높이)
+                                // 더 단순하게: newTotalH = prevFixed + inputVal (하부+상부 = 전체)
+                                const newTotalH = prevFixed + inputVal;
                                 const clampedH = Math.max(300, Math.min(3000, newTotalH));
                                 const secUpdates: any = { freeHeight: clampedH };
                                 // 키큰장: 상부프레임도 연동
