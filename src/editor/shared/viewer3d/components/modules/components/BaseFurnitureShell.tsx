@@ -876,18 +876,10 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                         const vertXOffset = mmToThreeUnits(27);
                         // 전면 수평 패널: 앞에서 85mm 위치
                         const frontHorizZ = depth/2 - mmToThreeUnits(85) - basicThickness/2;
-                        // 후면 수평 패널: 백패널 앞면에 맞닿음 (backPanelThickness prop 사용)
-                        const backPanelFrontFace = -depth/2 + backPanelThickness + mmToThreeUnits(backPanelConfig.depthOffset);
-                        const backHorizZ = backPanelFrontFace + basicThickness/2;
-                        console.log('[날개벽 DEBUG]', {
-                          depth_mm: depth / 0.01,
-                          backPanelThickness_mm: backPanelThickness / 0.01,
-                          depthOffset_mm: backPanelConfig.depthOffset,
-                          backPanelFrontFace_mm: backPanelFrontFace / 0.01,
-                          backHorizZ_center_mm: backHorizZ / 0.01,
-                          backHorizZ_backEdge_mm: (backHorizZ - basicThickness/2) / 0.01,
-                          basicThickness_mm: basicThickness / 0.01,
-                        });
+                        // 후면 수평 패널: 백패널 앞면에 맞닿음
+                        // backPanelThickness는 line 727에서 8mm로 shadowing됨 → backReductionForPanels(26mm) 사용
+                        const bpFrontFace = -depth/2 + backReductionForPanels;
+                        const backHorizZ = bpFrontFace + basicThickness/2;
                         // 수직 패널 깊이: 전면~후면 수평 패널 사이
                         const vertFrontEdge = frontHorizZ - basicThickness/2;
                         const vertBackEdge = backHorizZ + basicThickness/2;
@@ -1010,7 +1002,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                         const drawerPanelThicknessMm = (basicThicknessMm === 18.5 || basicThicknessMm === 15.5) ? 15.5 : 15;
                         const drawerSideT = mmToThreeUnits(drawerPanelThicknessMm);
                         const maidaT = mmToThreeUnits(drawerPanelThicknessMm);
-                        const bottomT = backPanelThickness; // 바닥판 두께 = 백패널 두께 (prop)
+                        const bottomT = mmToThreeUnits(9); // 바닥판 두께 = 백패널 두께 (9mm 고정)
 
                         // 서랍 영역: 날개벽 수직패널 안쪽 ~ 안쪽
                         const vertXOff = mmToThreeUnits(27);
@@ -1020,7 +1012,8 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                         // 날개벽 전면 수평패널 앞면 Z (서랍 앞면 기준)
                         const wingFrontFaceZ = depth/2 - mmToThreeUnits(85);
                         // 날개벽 후면 수평패널 뒷면 Z (백패널 앞면과 일치)
-                        const wingBackFaceZ = -depth/2 + backPanelThickness + mmToThreeUnits(backPanelConfig.depthOffset);
+                        // backPanelThickness shadowed → backReductionForPanels 사용
+                        const wingBackFaceZ = -depth/2 + backReductionForPanels;
                         // 서랍 측판 깊이: 날개벽 전면 앞면 ~ 후면 뒷면
                         const drawerSideDepth = wingFrontFaceZ - wingBackFaceZ;
                         const drawerSideCenterZ = (wingFrontFaceZ + wingBackFaceZ) / 2;
