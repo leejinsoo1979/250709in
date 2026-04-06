@@ -1573,8 +1573,8 @@ const RightPanel: React.FC<RightPanelProps> = ({
               </FormControl>
             )}
 
-            {/* 가구재 두께 설정 (15 / 15.5 / 18 / 18.5 mm) — 슈퍼어드민만 */}
-            {user?.email === 'sbbc212@gmail.com' && (
+            {/* 가구재 두께 설정 (15 / 15.5 / 18 / 18.5 mm) */}
+            {(
             <FormControl
               label="가구재 두께"
               expanded={expandedSections.has('panelThickness')}

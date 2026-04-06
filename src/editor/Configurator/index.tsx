@@ -5781,8 +5781,8 @@ const Configurator: React.FC = () => {
           />
         </div>
 
-        {/* 가구재 두께 설정 (15 / 15.5 / 18 / 18.5 mm) — 슈퍼어드민만 */}
-        {user?.email === 'sbbc212@gmail.com' && (
+        {/* 가구재 두께 설정 (15 / 15.5 / 18 / 18.5 mm) */}
+        {(
         <div className={styles.configSection}>
           <div className={styles.sectionHeader}>
             <span className={styles.sectionDot}></span>
