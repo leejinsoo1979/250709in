@@ -140,10 +140,12 @@ const SingleDrawer: React.FC<SingleDrawerProps> = ({
   const backWidth = drawerInnerWidth;
 
   // 마이다 높이·Y — 상단갭/하단갭 확장 포함
+  // 기본 마이다: 노치 위 +40mm(= doorTopGap=-20 기본값에 해당), 하단 -5mm(= doorBottomGap=5 기본값에 해당)
+  // doorTopGap/doorBottomGap 변경분만 적용 (기본값 대비 델타)
   const maidaTopMm = zone.notchAboveBottom + 40;
   const maidaBottomMm = zone.notchBelowTop != null ? (zone.notchBelowTop - 5) : -5;
-  const gapTopExt = isTopDrawer ? doorTopGap : 0;
-  const gapBottomExt = isBottomDrawer ? doorBottomGap : 0;
+  const gapTopExt = isTopDrawer ? (doorTopGap - (-20)) : 0;   // 기본값 -20 대비 변경분
+  const gapBottomExt = isBottomDrawer ? (doorBottomGap - 5) : 0; // 기본값 5 대비 변경분
   const defaultMaidaHeightMm = maidaTopMm - maidaBottomMm + gapTopExt + gapBottomExt;
   const maidaHeightMm = fixedMaidaHeightMm || defaultMaidaHeightMm;
   const maidaHeight = mmToThreeUnits(maidaHeightMm);
