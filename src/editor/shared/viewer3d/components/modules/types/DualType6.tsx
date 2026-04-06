@@ -1016,7 +1016,7 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
       )}
 
       {/* 조절발통 (네 모서리) - showFurniture와 무관하게 항상 렌더링 */}
-      {!isFloating && !(lowerSectionTopOffset && lowerSectionTopOffset > 0) && (
+      {!isFloating && (
         <AdjustableFootsRenderer
           width={width}
           depth={depth}
