@@ -884,10 +884,11 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
           {/* 드래그 중이 아닐 때만 비대칭 섹션 렌더링 */}
           {!isDragging && renderAsymmetricSections()}
 
-          {/* 상부 옷장 치수 표시 - 전체 너비 기준, 탑뷰/3D에서는 숨김 */}
+          {/* 상부 옷장 치수 표시 - 정면뷰 전용 (측면뷰는 CADDimensions2D가 처리) */}
           {!isDragging && showDimensions && showDimensionsText &&
            viewMode !== '3D' &&
-           !(viewMode === '2D' && view2DDirection === 'top') && (
+           !(viewMode === '2D' && view2DDirection === 'top') &&
+           !(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right')) && (
             <group>
               {hasSharedSafetyShelf ? (
                 <>
