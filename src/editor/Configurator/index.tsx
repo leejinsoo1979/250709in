@@ -6222,10 +6222,11 @@ const Configurator: React.FC = () => {
               viewMode={viewMode as ViewMode}
               onViewModeChange={(mode) => {
                 setViewMode(mode);
-                // 2D↔wireframe 자동 연동 제거: 렌더모드는 사용자가 직접 선택
                 if (mode === '2D') {
+                  setRenderMode('wireframe');
                   setShowAll(false);
                 } else if (mode === '3D') {
+                  setRenderMode('solid');
                   setShowAll(true);
                 }
               }}
@@ -6242,10 +6243,11 @@ const Configurator: React.FC = () => {
               viewMode={viewMode as ViewMode}
               onViewModeChange={(mode) => {
                 setViewMode(mode);
-                // 2D↔wireframe 자동 연동 제거: 렌더모드는 사용자가 직접 선택
                 if (mode === '2D') {
+                  setRenderMode('wireframe');
                   setShowAll(false);
                 } else if (mode === '3D') {
+                  setRenderMode('solid');
                   setShowAll(true);
                 }
               }}
