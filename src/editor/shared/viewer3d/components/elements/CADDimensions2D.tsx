@@ -732,9 +732,10 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           });
         })}
 
-        {/* 바닥마감재 치수 (바닥 ~ 마감재 상단) */}
-        {floorFinishHeightMm > 0 && !isFloating && (
+        {/* 받침대 높이 (바닥 ~ 받침대 상단, 바닥마감재 틱 포함) */}
+        {(baseFrameHeightMm > 0 || (floorFinishHeightMm > 0 && !isFloating)) && (
         <group>
+            {/* 보조 가이드 연장선 - 바닥 */}
             <NativeLine name="dimension_line"
               points={[
                 [0, 0, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750) - mmToThreeUnits(360)],
@@ -742,20 +743,23 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
               ]}
               color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
             />
+            {/* 보조 가이드 연장선 - 받침대 상단 */}
             <NativeLine name="dimension_line"
               points={[
-                [0, floorFinishY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750) - mmToThreeUnits(360)],
-                [0, floorFinishY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750)]
+                [0, furnitureBaseY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750) - mmToThreeUnits(360)],
+                [0, furnitureBaseY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750)]
               ]}
               color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
             />
+            {/* 메인 치수선 (바닥 ~ 받침대 상단) */}
             <NativeLine name="dimension_line"
               points={[
                 [0, 0, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750)],
-                [0, floorFinishY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750)]
+                [0, furnitureBaseY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750)]
               ]}
               color={dimensionColor} lineWidth={2} renderOrder={100000} depthTest={false}
             />
+            {/* 티크 마크 - 바닥 */}
             <NativeLine name="dimension_line"
               points={[
                 [-0.03, 0, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750)],
@@ -763,127 +767,57 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
               ]}
               color={dimensionColor} lineWidth={2} renderOrder={100000} depthTest={false}
             />
-            <NativeLine name="dimension_line"
-              points={[
-                [-0.03, floorFinishY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750)],
-                [0.03, floorFinishY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750)]
-              ]}
-              color={dimensionColor} lineWidth={2} renderOrder={100000} depthTest={false}
-            />
-            <mesh
-              position={[0, 0, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750)]}
-              renderOrder={100001} rotation={[0, -Math.PI / 2, 0]}
-            >
-              <circleGeometry args={[0.06, 16]} />
-              <meshBasicMaterial color={dimensionColor} depthTest={false} />
-            </mesh>
-            <Text
-              position={[0, floorFinishY / 2, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750) + mmToThreeUnits(60)]}
-              fontSize={largeFontSize} color={textColor}
-              anchorX="center" anchorY="middle"
-              renderOrder={1000} depthTest={false}
-              rotation={[0, -Math.PI / 2, Math.PI / 2]}
-            >
-              {floorFinishHeightMm}
-            </Text>
-        </group>
-        )}
-
-        {/* 받침대 높이 (바닥마감재 상단부터) */}
-        {baseFrameHeightMm > 0 && (
-        <group>
-            {/* 보조 가이드 연장선 - 시작 (바닥마감재 상단 또는 바닥) */}
-            <NativeLine name="dimension_line"
-              points={[
-                [0, floorFinishY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750) - mmToThreeUnits(360)],
-                [0, floorFinishY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750)]
-              ]}
-              color={dimensionColor}
-              lineWidth={1}
-              renderOrder={100000}
-              depthTest={false}
-            />
-            {/* 보조 가이드 연장선 - 끝 (받침대 상단) */}
-            <NativeLine name="dimension_line"
-              points={[
-                [0, furnitureBaseY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750) - mmToThreeUnits(360)],
-                [0, furnitureBaseY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750)]
-              ]}
-              color={dimensionColor}
-              lineWidth={1}
-              renderOrder={100000}
-              depthTest={false}
-            />
-            {/* 치수선 (바닥마감재 상단 ~ furnitureBase) */}
-            <NativeLine name="dimension_line"
-              points={[
-                [0, floorFinishY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750)],
-                [0, furnitureBaseY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750)]
-              ]}
-              color={dimensionColor}
-              lineWidth={2}
-              renderOrder={100000}
-              depthTest={false}
-            />
-            {/* 티크 마크 - 하단 */}
-            <NativeLine name="dimension_line"
-              points={[
-                [-0.03, floorFinishY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750)],
-                [0.03, floorFinishY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750)]
-              ]}
-              color={dimensionColor}
-              lineWidth={2}
-              renderOrder={100000}
-              depthTest={false}
-            />
-            {/* 티크 마크 - 상단 */}
+            {/* 티크 마크 - 받침대 상단 */}
             <NativeLine name="dimension_line"
               points={[
                 [-0.03, furnitureBaseY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750)],
                 [0.03, furnitureBaseY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750)]
               ]}
-              color={dimensionColor}
-              lineWidth={2}
-              renderOrder={100000}
-              depthTest={false}
+              color={dimensionColor} lineWidth={2} renderOrder={100000} depthTest={false}
             />
-            {/* 엔드포인트 - 바닥마감재 상단 모서리 (바닥마감재 없을 때만) */}
-            {floorFinishHeightMm <= 0 && (
-            <mesh
-              position={[0, 0, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750)]}
-              renderOrder={100001}
-              rotation={[0, -Math.PI / 2, 0]}
-            >
-              <circleGeometry args={[0.06, 16]} />
-              <meshBasicMaterial color={dimensionColor} depthTest={false} />
-            </mesh>
-            )}
 
-            {/* 엔드포인트 - 받침대 상단 모서리 (가구가 없을 때만 표시) */}
-            {visibleFurniture.length === 0 && (
-            <mesh
-              position={[0, furnitureBaseY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750)]}
-              renderOrder={100001}
-              rotation={[0, -Math.PI / 2, 0]}
-            >
-              <circleGeometry args={[0.06, 16]} />
-              <meshBasicMaterial color={dimensionColor} depthTest={false} />
-            </mesh>
+            {/* 바닥마감재 구분 틱 & 치수 */}
+            {floorFinishHeightMm > 0 && !isFloating && (
+              <>
+                <NativeLine name="dimension_line"
+                  points={[
+                    [-0.03, floorFinishY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750)],
+                    [0.03, floorFinishY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750)]
+                  ]}
+                  color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
+                />
+                <Text
+                  position={[0, floorFinishY / 2, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750) + mmToThreeUnits(60)]}
+                  fontSize={largeFontSize} color={textColor}
+                  anchorX="center" anchorY="middle"
+                  renderOrder={1000} depthTest={false}
+                  rotation={[0, -Math.PI / 2, Math.PI / 2]}
+                >
+                  {floorFinishHeightMm}
+                </Text>
+                <Text
+                  position={[0, floorFinishY + (furnitureBaseY - floorFinishY) / 2, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750) + mmToThreeUnits(60)]}
+                  fontSize={largeFontSize} color={textColor}
+                  anchorX="center" anchorY="middle"
+                  renderOrder={1000} depthTest={false}
+                  rotation={[0, -Math.PI / 2, Math.PI / 2]}
+                >
+                  {baseFrameDisplayMm}
+                </Text>
+              </>
             )}
-
-            {/* 치수 텍스트 */}
-            <Text
-              position={[0, floorFinishY + (furnitureBaseY - floorFinishY) / 2, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750) + mmToThreeUnits(60)]}
-              fontSize={largeFontSize}
-              color={textColor}
-              anchorX="center"
-              anchorY="middle"
-              renderOrder={1000}
-              depthTest={false}
-              rotation={[0, -Math.PI / 2, Math.PI / 2]}
-            >
-              {baseFrameDisplayMm}
-            </Text>
+            {/* 바닥마감재 없을 때: 전체를 하부프레임 치수로 표시 */}
+            {(floorFinishHeightMm <= 0 || isFloating) && (
+              <Text
+                position={[0, furnitureBaseY / 2, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750) + mmToThreeUnits(60)]}
+                fontSize={largeFontSize} color={textColor}
+                anchorX="center" anchorY="middle"
+                renderOrder={1000} depthTest={false}
+                rotation={[0, -Math.PI / 2, Math.PI / 2]}
+              >
+                {baseFrameDisplayMm}
+              </Text>
+            )}
         </group>
         )}
 
@@ -1578,9 +1512,10 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           });
         })}
 
-        {/* 바닥마감재 치수 (바닥 ~ 마감재 상단, 우측뷰) */}
-        {floorFinishHeightMm > 0 && !isFloating && (
+        {/* 받침대 높이 (바닥 ~ 받침대 상단, 바닥마감재 틱 포함, 우측뷰) */}
+        {(baseFrameHeightMm > 0 || (floorFinishHeightMm > 0 && !isFloating)) && (
         <group>
+            {/* 보조 가이드 연장선 - 바닥 */}
             <NativeLine name="dimension_line"
               points={[
                 [0, 0, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750) - mmToThreeUnits(360)],
@@ -1588,20 +1523,23 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
               ]}
               color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
             />
+            {/* 보조 가이드 연장선 - 받침대 상단 */}
             <NativeLine name="dimension_line"
               points={[
-                [0, floorFinishY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750) - mmToThreeUnits(360)],
-                [0, floorFinishY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750)]
+                [0, furnitureBaseY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750) - mmToThreeUnits(360)],
+                [0, furnitureBaseY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750)]
               ]}
               color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
             />
+            {/* 메인 치수선 (바닥 ~ 받침대 상단) */}
             <NativeLine name="dimension_line"
               points={[
                 [0, 0, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750)],
-                [0, floorFinishY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750)]
+                [0, furnitureBaseY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750)]
               ]}
               color={dimensionColor} lineWidth={2} renderOrder={100000} depthTest={false}
             />
+            {/* 티크 마크 - 바닥 */}
             <NativeLine name="dimension_line"
               points={[
                 [-0.03, 0, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750)],
@@ -1609,119 +1547,57 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
               ]}
               color={dimensionColor} lineWidth={2} renderOrder={100000} depthTest={false}
             />
-            <NativeLine name="dimension_line"
-              points={[
-                [-0.03, floorFinishY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750)],
-                [0.03, floorFinishY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750)]
-              ]}
-              color={dimensionColor} lineWidth={2} renderOrder={100000} depthTest={false}
-            />
-            <mesh
-              position={[0, 0, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750)]}
-              renderOrder={100001} rotation={[0, Math.PI / 2, 0]}
-            >
-              <circleGeometry args={[0.06, 16]} />
-              <meshBasicMaterial color={dimensionColor} depthTest={false} />
-            </mesh>
-            <Text
-              position={[0, floorFinishY / 2, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750) + mmToThreeUnits(60)]}
-              fontSize={largeFontSize} color={textColor}
-              anchorX="center" anchorY="middle"
-              renderOrder={1000} depthTest={false}
-              rotation={[0, Math.PI / 2, Math.PI / 2]}
-            >
-              {floorFinishHeightMm}
-            </Text>
-        </group>
-        )}
-
-        {/* 받침대 높이 (바닥마감재 상단부터, 우측뷰) */}
-        {baseFrameHeightMm > 0 && (
-        <group>
-            <NativeLine name="dimension_line"
-              points={[
-                [0, floorFinishY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750) - mmToThreeUnits(360)],
-                [0, floorFinishY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750)]
-              ]}
-              color={dimensionColor}
-              lineWidth={1}
-              renderOrder={100000}
-              depthTest={false}
-            />
-            <NativeLine name="dimension_line"
-              points={[
-                [0, furnitureBaseY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750) - mmToThreeUnits(360)],
-                [0, furnitureBaseY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750)]
-              ]}
-              color={dimensionColor}
-              lineWidth={1}
-              renderOrder={100000}
-              depthTest={false}
-            />
-            <NativeLine name="dimension_line"
-              points={[
-                [0, floorFinishY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750)],
-                [0, furnitureBaseY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750)]
-              ]}
-              color={dimensionColor}
-              lineWidth={2}
-              renderOrder={100000}
-              depthTest={false}
-            />
-            <NativeLine name="dimension_line"
-              points={[
-                [-0.03, floorFinishY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750)],
-                [0.03, floorFinishY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750)]
-              ]}
-              color={dimensionColor}
-              lineWidth={2}
-              renderOrder={100000}
-              depthTest={false}
-            />
+            {/* 티크 마크 - 받침대 상단 */}
             <NativeLine name="dimension_line"
               points={[
                 [-0.03, furnitureBaseY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750)],
                 [0.03, furnitureBaseY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750)]
               ]}
-              color={dimensionColor}
-              lineWidth={2}
-              renderOrder={100000}
-              depthTest={false}
+              color={dimensionColor} lineWidth={2} renderOrder={100000} depthTest={false}
             />
-            {floorFinishHeightMm <= 0 && (
-            <mesh
-              position={[0, 0, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750)]}
-              renderOrder={100001}
-              rotation={[0, Math.PI / 2, 0]}
-            >
-              <circleGeometry args={[0.06, 16]} />
-              <meshBasicMaterial color={dimensionColor} depthTest={false} />
-            </mesh>
-            )}
 
-            {visibleFurniture.length === 0 && (
-            <mesh
-              position={[0, furnitureBaseY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750)]}
-              renderOrder={100001}
-              rotation={[0, Math.PI / 2, 0]}
-            >
-              <circleGeometry args={[0.06, 16]} />
-              <meshBasicMaterial color={dimensionColor} depthTest={false} />
-            </mesh>
+            {/* 바닥마감재 구분 틱 & 치수 */}
+            {floorFinishHeightMm > 0 && !isFloating && (
+              <>
+                <NativeLine name="dimension_line"
+                  points={[
+                    [-0.03, floorFinishY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750)],
+                    [0.03, floorFinishY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750)]
+                  ]}
+                  color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
+                />
+                <Text
+                  position={[0, floorFinishY / 2, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750) + mmToThreeUnits(60)]}
+                  fontSize={largeFontSize} color={textColor}
+                  anchorX="center" anchorY="middle"
+                  renderOrder={1000} depthTest={false}
+                  rotation={[0, Math.PI / 2, Math.PI / 2]}
+                >
+                  {floorFinishHeightMm}
+                </Text>
+                <Text
+                  position={[0, floorFinishY + (furnitureBaseY - floorFinishY) / 2, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750) + mmToThreeUnits(60)]}
+                  fontSize={largeFontSize} color={textColor}
+                  anchorX="center" anchorY="middle"
+                  renderOrder={1000} depthTest={false}
+                  rotation={[0, Math.PI / 2, Math.PI / 2]}
+                >
+                  {baseFrameDisplayMm}
+                </Text>
+              </>
             )}
-
-            <Text
-              position={[0, floorFinishY + (furnitureBaseY - floorFinishY) / 2, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750) + mmToThreeUnits(60)]}
-              fontSize={largeFontSize}
-              color={textColor}
-              anchorX="center"
-              anchorY="middle"
-              renderOrder={1000}
-              depthTest={false}
-              rotation={[0, Math.PI / 2, Math.PI / 2]}
-            >
-              {baseFrameDisplayMm}
-            </Text>
+            {/* 바닥마감재 없을 때: 전체를 하부프레임 치수로 표시 */}
+            {(floorFinishHeightMm <= 0 || isFloating) && (
+              <Text
+                position={[0, furnitureBaseY / 2, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750) + mmToThreeUnits(60)]}
+                fontSize={largeFontSize} color={textColor}
+                anchorX="center" anchorY="middle"
+                renderOrder={1000} depthTest={false}
+                rotation={[0, Math.PI / 2, Math.PI / 2]}
+              >
+                {baseFrameDisplayMm}
+              </Text>
+            )}
         </group>
         )}
 
