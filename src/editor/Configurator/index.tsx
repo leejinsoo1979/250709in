@@ -5681,7 +5681,7 @@ const Configurator: React.FC = () => {
                       </th>
                       {fullDoorIndices.map(({ info, i }) => (
                         <th key={i} style={{ padding: '2px 2px', fontSize: '10px', fontWeight: 600, color: 'var(--theme-text-secondary, #666)', textAlign: 'center' }}>
-                          {info.label}
+                          도어 {info.label}
                         </th>
                       ))}
                     </tr>
@@ -5720,9 +5720,8 @@ const Configurator: React.FC = () => {
                     <tr>
                       <th style={{ width: '52px', padding: '2px 4px', fontSize: '10px', fontWeight: 500, color: 'var(--theme-text-secondary, #999)', textAlign: 'center', whiteSpace: 'nowrap' }}></th>
                       {partialDoorIndices.map(({ info, i }) => (
-                        <th key={i} style={{ padding: '2px 2px', fontSize: '10px', fontWeight: 600, color: 'var(--theme-text-secondary, #666)', textAlign: 'center', lineHeight: '1.2' }}>
-                          <div>{info.label}</div>
-                          <div style={{ fontSize: '9px', fontWeight: 400, color: 'var(--theme-text-secondary, #999)' }}>{info.category === 'upper' ? '상' : '하'}</div>
+                        <th key={i} style={{ padding: '2px 2px', fontSize: '10px', fontWeight: 600, color: 'var(--theme-text-secondary, #666)', textAlign: 'center' }}>
+                          도어 {info.label}<span style={{ fontSize: '9px', fontWeight: 400, color: 'var(--theme-text-secondary, #999)' }}>({info.category === 'upper' ? '상' : '하'})</span>
                         </th>
                       ))}
                     </tr>
