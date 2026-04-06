@@ -375,32 +375,18 @@ export const calculatePanelDetails = (
       const totalHeightExtension = basicThickness * 2 - heightExtension;
       let backPanelHeight = sectionHeightMm - basicThickness * 2 + heightExtension + totalHeightExtension;
 
-      // Type5/6 (4drawer-pantshanger, 2drawer-styler)의 좌측 백패널은
-      // 좌측 컬럼 내경폭(leftWidth)을 사용 (3D DualType6.tsx leftWidth 계산과 동일)
+      // Type5/6 (4drawer-pantshanger, 2drawer-styler): 전체 너비, 상/하부 섹션 경계에서 높이 분할
       let backPanelWidth = innerWidth + 10;
       let backPanelNamePrefix = sectionPrefix;
       if (isType5or6) {
-        const rightAbsoluteWidth = moduleData.modelConfig?.rightAbsoluteWidth || 0;
-        const originalTotalWidth = moduleData.dimensions.width;
-        const rightRatio = rightAbsoluteWidth / (originalTotalWidth - 36);
-        const rightWidth = innerWidth * rightRatio;
-        const leftWidth = innerWidth - rightWidth - basicThickness; // 중앙 칸막이 두께 제외
-        backPanelWidth = leftWidth + 10;
-        // 좌측 백패널임을 명시: "좌(하)백패널", "좌(상)백패널"
-        backPanelNamePrefix = `좌${sectionPrefix}`;
-
-        // Type5/6 좌측 백패널 높이는 하단 섹션 상단 경계에서 분할 (3D DualType6.tsx와 동일)
-        // 하단 섹션 상단 경계 mm = basicThickness(바닥판) + leftSections[0].height
-        // 좌(하) = basicThickness + leftSections[0].height
-        // 좌(상) = 전체 가구 높이 - 좌(하)
+        // 너비: 전체 내경폭 (좌/우 분할 안 함)
+        // 높이: 상/하부 섹션 경계에서 분할
         const leftLowerSectionHeightMm = moduleData.modelConfig?.leftSections?.[0]?.height || 0;
         const lowerBoundaryMm = basicThickness + leftLowerSectionHeightMm;
         const furnitureHeightMm = moduleData.dimensions.height;
         if (sectionIndex === 0) {
-          // 하단 섹션 (서랍)
           backPanelHeight = lowerBoundaryMm;
         } else if (sectionIndex === 1) {
-          // 상단 섹션 (옷장)
           backPanelHeight = furnitureHeightMm - lowerBoundaryMm;
         }
       }
@@ -408,7 +394,7 @@ export const calculatePanelDetails = (
       targetPanel.push({
         name: `${backPanelNamePrefix}백패널`,
         width: backPanelWidth, // 내경폭 + 좌우 5mm씩 확장
-        height: backPanelHeight, // 내경높이 + 상하 5mm씩 확장
+        height: backPanelHeight, // 섹션별 높이
         thickness: backPanelThickness, // 9mm
         material: 'MDF'
       });
@@ -418,16 +404,8 @@ export const calculatePanelDetails = (
       // 하부장 모듈은 하단 보강대 생략 (상단만)
       const reinforcementHeight = 60; // mm
       const reinforcementDepth = (basicThickness === 18.5 || basicThickness === 15.5) ? 15.5 : 15; // PB+PET 코팅 시 15.5mm
-      // Type5/6: 좌측 보강대는 좌측 컬럼 내경폭 기준 (백패널과 동일하게 좌/우 분리)
-      let reinforcementWidth = innerWidth - sidePanelGap;
-      if (isType5or6) {
-        const rightAbsoluteWidthR = moduleData.modelConfig?.rightAbsoluteWidth || 0;
-        const originalTotalWidthR = moduleData.dimensions.width;
-        const rightRatioR = rightAbsoluteWidthR / (originalTotalWidthR - 36);
-        const rightWidthR = innerWidth * rightRatioR;
-        const leftWidthR = innerWidth - rightWidthR - basicThickness;
-        reinforcementWidth = leftWidthR - sidePanelGap;
-      }
+      // 보강대 너비: 전체 내경폭 기준 (좌/우 분리 안 함)
+      const reinforcementWidth = innerWidth - sidePanelGap;
       const isLowerCabinetModule = moduleData.id.includes('lower-');
       if (!isLowerCabinetModule) {
         targetPanel.push({
@@ -740,37 +718,7 @@ export const calculatePanelDetails = (
         ? panels.lower
         : panels.upper;
 
-      // 우측 섹션 백패널
-      const rBackPanelHeight = rSectionHeight - basicThickness * 2 + 10 + 26; // heightExtension + totalHeightExtension
-      rTargetPanel.push({
-        name: `${rSectionPrefix}백패널`,
-        width: rightInnerWidth + 10,
-        height: rBackPanelHeight,
-        thickness: backPanelThickness,
-        material: 'MDF'
-      });
-
-      // 우측 섹션 보강대 (상/하 2개) - PB 재질
-      // 하부장 모듈은 하단 보강대 생략 (상단만)
-      const rReinforcementWidth = rightInnerWidth - 1;
-      const rReinforcementDepth = (basicThickness === 18.5 || basicThickness === 15.5) ? 15.5 : 15;
-      const isLowerCabinetModuleR = moduleData.id.includes('lower-');
-      if (!isLowerCabinetModuleR) {
-        rTargetPanel.push({
-          name: `${rSectionPrefix}후면 보강대 1`,
-          width: rReinforcementWidth,
-          height: 60,
-          thickness: rReinforcementDepth,
-          material: 'PB'
-        });
-      }
-      rTargetPanel.push({
-        name: `${rSectionPrefix}후면 보강대 2`,
-        width: rReinforcementWidth,
-        height: 60,
-        thickness: rReinforcementDepth,
-        material: 'PB'
-      });
+      // 우측 백패널/보강대는 좌측과 통합 (전체 너비로 상/하 2장 생성됨)
 
       // 우측 섹션별 내부 요소 (hanging → 선반)
       if (section.type === 'hanging') {
