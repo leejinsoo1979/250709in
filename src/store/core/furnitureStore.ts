@@ -919,6 +919,7 @@ useFurnitureStore.subscribe((state) => {
   });
   prevModulesRef = migrated;
   useFurnitureStore.setState({ placedModules: migrated });
+  notifyR3F(migrated);
   migrationRunning = false;
 });
 
@@ -940,6 +941,7 @@ useFurnitureStore.subscribe((state) => {
       prevModulesRef = fixed;
       migrationRunning = true;
       useFurnitureStore.setState({ placedModules: fixed });
+      notifyR3F(fixed);
       migrationRunning = false;
     }
   }
