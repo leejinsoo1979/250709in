@@ -548,29 +548,101 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
       {/* 가구 본체는 showFurniture가 true일 때만 렌더링 */}
       {showFurniture && (
         <>
-          {/* 좌측 측면 판재 - 통짜 (측면판 분할 안됨) */}
-          <BoxWithEdges
-        args={[basicThickness, height, depth]}
-        position={[-width/2 + basicThickness/2, 0, 0]}
-        material={material}
-        renderMode={useSpace3DView().renderMode}
-        furnitureId={placedFurnitureId}
-        isDragging={isDragging}
-        isEditMode={isEditMode}
-        panelName="좌측판"
-      />
+          {/* 좌우 측면 판재 — 바지걸이장(4drawer-pantshanger)은 상/하 분할, 그 외 통짜 */}
+      {(() => {
+        const isPantsHanger = moduleData.id.includes('4drawer-pantshanger');
+        if (isPantsHanger && middlePanelHeight > 0) {
+          // 상/하 분할: middlePanelHeight 기준
+          // 하부 측판: 바닥판 상면 ~ 중간칸막이 하면
+          const lowerInnerMm = middlePanelHeight - 9 - basicThicknessMmVal / 2;
+          // 상부 측판: 중간칸막이 상면 ~ 상판 하면
+          const totalInnerMm = innerHeight / 0.01;
+          const upperInnerMm = totalInnerMm - lowerInnerMm - basicThicknessMmVal;
 
-      {/* 우측 측면 판재 - 통짜 (측면판 분할 안됨) */}
-      <BoxWithEdges
-        args={[basicThickness, height, depth]}
-        position={[width/2 - basicThickness/2, 0, 0]}
-        material={material}
-        renderMode={useSpace3DView().renderMode}
-        furnitureId={placedFurnitureId}
-        isDragging={isDragging}
-        isEditMode={isEditMode}
-        panelName="우측판"
-      />
+          const lowerH = mmToThreeUnits(lowerInnerMm);
+          const upperH = mmToThreeUnits(upperInnerMm);
+
+          // 하부 측판 Y: 바닥판 상면 + lowerH/2
+          const lowerY = -height / 2 + basicThickness + lowerH / 2;
+          // 상부 측판 Y: 상판 하면 - upperH/2
+          const upperY = height / 2 - basicThickness - upperH / 2;
+
+          return (
+            <>
+              {/* (하)좌측판 */}
+              <BoxWithEdges
+                args={[basicThickness, lowerH, depth]}
+                position={[-width / 2 + basicThickness / 2, lowerY, 0]}
+                material={material}
+                renderMode={renderMode}
+                furnitureId={placedFurnitureId}
+                isDragging={isDragging}
+                isEditMode={isEditMode}
+                panelName="(하)좌측판"
+              />
+              {/* (상)좌측판 */}
+              <BoxWithEdges
+                args={[basicThickness, upperH, depth]}
+                position={[-width / 2 + basicThickness / 2, upperY, 0]}
+                material={material}
+                renderMode={renderMode}
+                furnitureId={placedFurnitureId}
+                isDragging={isDragging}
+                isEditMode={isEditMode}
+                panelName="(상)좌측판"
+              />
+              {/* (하)우측판 */}
+              <BoxWithEdges
+                args={[basicThickness, lowerH, depth]}
+                position={[width / 2 - basicThickness / 2, lowerY, 0]}
+                material={material}
+                renderMode={renderMode}
+                furnitureId={placedFurnitureId}
+                isDragging={isDragging}
+                isEditMode={isEditMode}
+                panelName="(하)우측판"
+              />
+              {/* (상)우측판 */}
+              <BoxWithEdges
+                args={[basicThickness, upperH, depth]}
+                position={[width / 2 - basicThickness / 2, upperY, 0]}
+                material={material}
+                renderMode={renderMode}
+                furnitureId={placedFurnitureId}
+                isDragging={isDragging}
+                isEditMode={isEditMode}
+                panelName="(상)우측판"
+              />
+            </>
+          );
+        }
+
+        // 통짜 측판 (기본)
+        return (
+          <>
+            <BoxWithEdges
+              args={[basicThickness, height, depth]}
+              position={[-width / 2 + basicThickness / 2, 0, 0]}
+              material={material}
+              renderMode={renderMode}
+              furnitureId={placedFurnitureId}
+              isDragging={isDragging}
+              isEditMode={isEditMode}
+              panelName="좌측판"
+            />
+            <BoxWithEdges
+              args={[basicThickness, height, depth]}
+              position={[width / 2 - basicThickness / 2, 0, 0]}
+              material={material}
+              renderMode={renderMode}
+              furnitureId={placedFurnitureId}
+              isDragging={isDragging}
+              isEditMode={isEditMode}
+              panelName="우측판"
+            />
+          </>
+        );
+      })()}
 
       {/* 상단 판재 - 통합 (상단 옷장이 좌우 연결되어 있음), 뒤에서 26mm 줄여서 백패널과 맞닿게 */}
       <BoxWithEdges
