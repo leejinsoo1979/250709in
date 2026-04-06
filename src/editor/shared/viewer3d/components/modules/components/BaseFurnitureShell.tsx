@@ -1104,7 +1104,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                                 <BoxWithEdges
                                   key={`entryway-drawer-back-${mat.uuid}`}
                                   args={[drawerAreaWidth - mmToThreeUnits(107), backH, drawerSideT]}
-                                  position={[0, backCY, wingBackFaceZ + drawerSideT/2]}
+                                  position={[0, backCY, -depth/2 + backPanelThickness + mmToThreeUnits(12) + drawerSideT/2]}
                                   material={mat}
                                   renderMode={renderMode}
                                   isDragging={isDragging}
