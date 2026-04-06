@@ -315,6 +315,143 @@ export const calculatePanelDetails = (
         }
       }
     });
+
+    // ======== 현관장 H 전용: 서랍받침대 + 서랍속장(날개벽) + 속서랍 ========
+    if (moduleData.id.includes('entryway-h')) {
+      const backReduction = backPanelThickness + 17; // 26mm (뒤에서 줄이는 양)
+      const lowerTopOffset = 85; // 하부 상판 앞쪽 오프셋
+
+      // 1. 서랍받침대 (하부 상판과 동일 크기, 188mm 아래)
+      panels.push({
+        id: `panel-${panelId++}`,
+        name: `${moduleData.name} - 서랍받침대`,
+        width: innerWidth,
+        height: customDepth - backReduction - lowerTopOffset,
+        thickness: basicThickness,
+        material: 'PB',
+        color: 'MW',
+        quantity: 1,
+        grain: 'HORIZONTAL'
+      });
+
+      // 2. 서랍속장(날개벽) — 수직 패널 좌/우
+      const wingVertDepth = customDepth - lowerTopOffset - backReduction - 2 * basicThickness;
+      ['좌', '우'].forEach(side => {
+        panels.push({
+          id: `panel-${panelId++}`,
+          name: `${moduleData.name} - 서랍속장(${side})`,
+          width: wingVertDepth,
+          height: 188,
+          thickness: basicThickness,
+          material: 'PB',
+          color: 'MW',
+          quantity: 1,
+          grain: 'VERTICAL'
+        });
+      });
+
+      // 3. 서랍속장(날개벽) — 수평 패널 전면/후면 × 좌/우 = 4개
+      const wingHorizWidth = 27 + basicThickness; // 45mm
+      ['좌', '우'].forEach(side => {
+        ['전면', '후면'].forEach(face => {
+          panels.push({
+            id: `panel-${panelId++}`,
+            name: `${moduleData.name} - 서랍속장(${side}) ${face}`,
+            width: wingHorizWidth,
+            height: 188,
+            thickness: basicThickness,
+            material: 'PB',
+            color: 'MW',
+            quantity: 1,
+            grain: 'VERTICAL'
+          });
+        });
+      });
+
+      // 4. 속서랍 — 날개벽 안쪽면 사이에서 좌우 5mm 갭
+      const drawerAreaWidth = innerWidth - 2 * (27 + basicThickness) - 10;
+      const drawerSideDepth = customDepth - lowerTopOffset - backReduction - 1.5 * basicThickness;
+      const drawerInnerWidth = drawerAreaWidth - 2 * drawerSideThickness;
+      const drawerBackH = 155 - 18 - backPanelThickness; // 측판높이 - 하단여유 - 바닥판두께
+
+      // 서랍 좌측판
+      panels.push({
+        id: `panel-${panelId++}`,
+        name: `${moduleData.name} - 서랍1 좌측판`,
+        width: drawerSideDepth,
+        height: 155,
+        thickness: drawerSideThickness,
+        material: 'PB',
+        color: 'MW',
+        quantity: 1,
+        grain: 'VERTICAL'
+      });
+
+      // 서랍 우측판
+      panels.push({
+        id: `panel-${panelId++}`,
+        name: `${moduleData.name} - 서랍1 우측판`,
+        width: drawerSideDepth,
+        height: 155,
+        thickness: drawerSideThickness,
+        material: 'PB',
+        color: 'MW',
+        quantity: 1,
+        grain: 'VERTICAL'
+      });
+
+      // 서랍 앞판
+      panels.push({
+        id: `panel-${panelId++}`,
+        name: `${moduleData.name} - 서랍1 앞판`,
+        width: drawerInnerWidth,
+        height: 155,
+        thickness: drawerSideThickness,
+        material: 'PB',
+        color: 'MW',
+        quantity: 1,
+        grain: 'VERTICAL'
+      });
+
+      // 서랍 뒷판
+      panels.push({
+        id: `panel-${panelId++}`,
+        name: `${moduleData.name} - 서랍1 뒷판`,
+        width: drawerInnerWidth,
+        height: Math.round(drawerBackH),
+        thickness: drawerSideThickness,
+        material: 'PB',
+        color: 'MW',
+        quantity: 1,
+        grain: 'VERTICAL'
+      });
+
+      // 서랍 바닥판
+      panels.push({
+        id: `panel-${panelId++}`,
+        name: `${moduleData.name} - 서랍1 바닥`,
+        width: drawerInnerWidth,
+        height: Math.round(drawerSideDepth - 10),
+        thickness: backPanelThickness, // MDF 9mm
+        material: 'MDF',
+        color: 'MW',
+        quantity: 1,
+        grain: 'NONE'
+      });
+
+      // 서랍 마이다 (앞판 = 하부상판~받침대 범위, 좌우 12mm 갭)
+      panels.push({
+        id: `panel-${panelId++}`,
+        name: `${moduleData.name} - 서랍1(마이다)`,
+        width: innerWidth - 24,
+        height: 212,
+        thickness: drawerSideThickness,
+        material: 'PB',
+        color: 'MW',
+        quantity: 1,
+        grain: 'VERTICAL'
+      });
+    }
   } else {
     // 섹션이 없는 기본 구조 (오픈박스 등)
     // 좌우측판
