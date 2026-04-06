@@ -74,6 +74,9 @@ const FURNITURE_ICONS: Record<string, string> = {
   // 현관장 H
   'single-entryway-h': getImagePath('entrance_single-H.png'),
   'dual-entryway-h': getImagePath('entrance_duel-H.png'),
+  // 현관장 I
+  'single-entryway-i': getImagePath('entrance_single-I.png'),
+  'dual-entryway-i': getImagePath('entrance_duel-I.png'),
 };
 
 // 모듈 타입 정의
