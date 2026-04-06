@@ -212,19 +212,18 @@ export class SpaceCalculator {
         const isValidSlotWidth = (val: number) => Math.abs(val * 2 - Math.round(val * 2)) < 0.001;
         const roundSlotWidth = (val: number) => Math.round(val * 2) / 2;
 
-        // 1단계: 현재 설정된 gapConfig를 먼저 시도
-        const currentLeft = spaceInfo.gapConfig?.left ?? 1.5;
-        const currentRight = spaceInfo.gapConfig?.right ?? 1.5;
-        const currentInternalWidth = baseWidth - currentLeft - currentRight;
-        const currentSlotWidth = currentInternalWidth / columnCount;
+        // 1단계: 기본 이격 1.5/1.5를 최우선으로 시도 (stored gapConfig 무시)
+        const defaultGap = 1.5;
+        const defaultInternalWidth = baseWidth - (defaultGap * 2);
+        const defaultSlotWidth = defaultInternalWidth / columnCount;
 
-        if (isValidSlotWidth(currentSlotWidth) && currentSlotWidth >= 400 && currentSlotWidth <= 600) {
+        if (isValidSlotWidth(defaultSlotWidth) && defaultSlotWidth >= 400 && defaultSlotWidth <= 600) {
           return {
             adjustedSpaceInfo: {
               ...spaceInfo,
-              gapConfig: { left: currentLeft, right: currentRight }
+              gapConfig: { left: defaultGap, right: defaultGap }
             },
-            slotWidth: roundSlotWidth(currentSlotWidth),
+            slotWidth: roundSlotWidth(defaultSlotWidth),
             adjustmentMade: true
           };
         }
