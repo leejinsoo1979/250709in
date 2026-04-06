@@ -1366,11 +1366,14 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     furnitureHeightMm = actualModuleData?.dimensions.height || 0;
     // 슬롯모드: 개별 가구 프레임 높이 변경 시 가구 body 높이 보정
     // internalSpace.height는 전역 프레임값 기준이므로, 개별 delta만큼 보정
-    // 단, baseFrameHeight 변경은 가구 크기를 줄이지 않고 Y위치만 올림
     if (!placedModule.isFreePlacement && furnitureHeightMm > 0) {
       if (placedModule.topFrameThickness !== undefined) {
         const globalTop = spaceInfo.frameSize?.top ?? 30;
         furnitureHeightMm -= (placedModule.topFrameThickness - globalTop);
+      }
+      if (placedModule.baseFrameHeight !== undefined) {
+        const globalBase = spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height ?? 65) : 0;
+        furnitureHeightMm -= (placedModule.baseFrameHeight - globalBase);
       }
     }
     // 슬롯 기반 키큰장: shelving.ts가 이미 floatHeight를 차감한 모듈을 생성하므로
