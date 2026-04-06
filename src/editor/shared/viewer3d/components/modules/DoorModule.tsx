@@ -770,10 +770,9 @@ const DoorModule: React.FC<DoorModuleProps> = ({
       const DOOR_LIFT_TOP_EXTENSION = 30;
       actualDoorHeight = lowerCabinetHeight + DOOR_LIFT_BOTTOM_EXTENSION + DOOR_LIFT_TOP_EXTENSION;
     } else {
-      // 기본 하부장: doorTopGap/doorBottomGap 사용 (기본값: 상단 20mm, 하단 2mm)
-      const lowerTopGap = doorTopGap ?? 20;
-      const lowerBottomExt = doorBottomGap ?? 2;
-      actualDoorHeight = lowerCabinetHeight - lowerTopGap + lowerBottomExt;
+      // 기본 하부장: doorTopGap=상단이격, doorBottomGap=하단이격
+      // 갭 0이면 도어 = 캐비넷 높이, 양수면 도어가 짧아짐
+      actualDoorHeight = lowerCabinetHeight - doorTopGap - doorBottomGap;
     }
   } else {
     // 키큰장의 경우: 천장/바닥 기준으로 갭 적용
@@ -874,9 +873,8 @@ const DoorModule: React.FC<DoorModuleProps> = ({
       const doorTopY = mmToThreeUnits(lowerCabinetHeight) / 2 + mmToThreeUnits(30);
       doorYPosition = doorTopY - mmToThreeUnits(actualDoorHeight) / 2;
     } else {
-      // 기본 하부장: doorTopGap 사용
-      const lowerTopGap = doorTopGap ?? 20;
-      const doorTopY = mmToThreeUnits(lowerCabinetHeight) / 2 - mmToThreeUnits(lowerTopGap);
+      // 기본 하부장: 도어 상단 = 캐비넷 상단 - doorTopGap
+      const doorTopY = mmToThreeUnits(lowerCabinetHeight) / 2 - mmToThreeUnits(doorTopGap);
       doorYPosition = doorTopY - mmToThreeUnits(actualDoorHeight) / 2;
     }
   } else {
