@@ -1171,10 +1171,10 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     // EP ㄷ자 프레임 잠금: EP > 18mm이면 해당 쪽 도어 잠금 (안 열림, 힌지 없음, 빨간선)
     const leftDoorLocked = !!(storePlacedModule
       && storePlacedModule.hasLeftEndPanel
-      && (storePlacedModule.endPanelThickness || 18) > 18);
+      && (storePlacedModule.endPanelThickness || 18) > 20);
     const rightDoorLocked = !!(storePlacedModule
       && storePlacedModule.hasRightEndPanel
-      && (storePlacedModule.endPanelThickness || 18) > 18);
+      && (storePlacedModule.endPanelThickness || 18) > 20);
 
     // EP 앞으로 돌출(offset > 0) 시 해당 쪽 도어 너비를 EP 두께만큼 축소
     let leftEpTrimShift = 0;
@@ -1934,8 +1934,8 @@ const DoorModule: React.FC<DoorModuleProps> = ({
 
     // EP ㄷ자 프레임 잠금: 싱글 도어는 어느 쪽이든 EP > 18mm이면 전체 잠금
     const singleDoorLocked = !!(storePlacedModule && (
-      (storePlacedModule.hasLeftEndPanel && (storePlacedModule.endPanelThickness || 18) > 18)
-      || (storePlacedModule.hasRightEndPanel && (storePlacedModule.endPanelThickness || 18) > 18)
+      (storePlacedModule.hasLeftEndPanel && (storePlacedModule.endPanelThickness || 18) > 20)
+      || (storePlacedModule.hasRightEndPanel && (storePlacedModule.endPanelThickness || 18) > 20)
     ));
 
     // EP 앞으로 돌출(offset > 0) 시 해당 쪽에서 EP 두께만큼 도어 너비 축소 (경첩 방향 무관)
