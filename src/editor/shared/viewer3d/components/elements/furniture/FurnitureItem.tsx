@@ -399,13 +399,15 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   const isSlotSurround = spaceInfo.surroundType === 'surround' && spaceInfo.frameConfig?.top !== false;
   const isFreeSurroundActive = placedModule.isFreePlacement && spaceInfo.freeSurround?.top?.enabled === true;
   const hasTopFrameActive = isSlotSurround || isFreeSurroundActive;
+  // 하부장 서랍/도어올림/상하개폐는 마이다 기반 doorTopGap을 사용하므로 서라운드 연동 제외
+  const isLowerDrawerType = placedModule.moduleId?.includes('lower-drawer-') || placedModule.moduleId?.includes('lower-door-lift-') || placedModule.moduleId?.includes('lower-top-down-');
   useEffect(() => {
-    if (!hasTopFrameActive || !placedModule.hasDoor) return;
+    if (!hasTopFrameActive || !placedModule.hasDoor || isLowerDrawerType) return;
     const expectedGap = effectiveTopFrame + 3;
     if (storeDoorTopGap !== expectedGap) {
       updatePlacedModule(placedModule.id, { doorTopGap: expectedGap });
     }
-  }, [hasTopFrameActive, effectiveTopFrame, placedModule.hasDoor, placedModule.id, storeDoorTopGap, updatePlacedModule]);
+  }, [hasTopFrameActive, effectiveTopFrame, placedModule.hasDoor, placedModule.id, storeDoorTopGap, updatePlacedModule, isLowerDrawerType]);
 
   // 도어 갭 변경 핸들러
   const handleDoorTopGapCommit = useCallback((value: string) => {
