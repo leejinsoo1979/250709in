@@ -2122,7 +2122,9 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   let doorWidthExpansion = 0;
   let doorWidth = (placedModule.isFreePlacement && placedModule.freeWidth)
     ? placedModule.freeWidth
-    : (actualModuleData?.dimensions.width || 0);
+    : (!placedModule.isFreePlacement && placedModule.slotCustomWidth !== undefined)
+      ? placedModule.slotCustomWidth
+      : (actualModuleData?.dimensions.width || 0);
   let doorXOffset = 0;
   let originalSlotWidthForDoor = originalSlotWidthMm;
 
