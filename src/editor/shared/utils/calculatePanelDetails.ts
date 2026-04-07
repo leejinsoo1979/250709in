@@ -1315,7 +1315,7 @@ export const calculatePanelDetails = (
   const epT = 18.5; // EP(엔드패널)는 PET 재질 항상 18.5mm
   const epThicknessMm = endPanelThickness || 18; // 사용자 설정 EP 두께
   const isEpCFrame = epThicknessMm > 18; // >18mm이면 ㄷ자 프레임
-  const EP_CONNECTOR_DEPTH = 40; // 전면/후면 연결판 깊이 (서라운드 SURROUND_SIDE_DEPTH와 동일)
+  const epConnectorWidth = epThicknessMm - 18.5; // 전면/후면 연결판 폭 = EP두께 - 외판두께
 
   if (hasLeftEndPanel) {
     if (isEpCFrame) {
@@ -1331,7 +1331,7 @@ export const calculatePanelDetails = (
       result.push({
         name: 'EP(좌)전면연결판',
         width: height,
-        height: EP_CONNECTOR_DEPTH,
+        height: epConnectorWidth,
         thickness: epT,
         material: 'PET',
         quantity: 1,
@@ -1339,7 +1339,7 @@ export const calculatePanelDetails = (
       result.push({
         name: 'EP(좌)후면연결판',
         width: height,
-        height: EP_CONNECTOR_DEPTH,
+        height: epConnectorWidth,
         thickness: epT,
         material: 'PET',
         quantity: 1,
@@ -1368,7 +1368,7 @@ export const calculatePanelDetails = (
       result.push({
         name: 'EP(우)전면연결판',
         width: height,
-        height: EP_CONNECTOR_DEPTH,
+        height: epConnectorWidth,
         thickness: epT,
         material: 'PET',
         quantity: 1,
@@ -1376,7 +1376,7 @@ export const calculatePanelDetails = (
       result.push({
         name: 'EP(우)후면연결판',
         width: height,
-        height: EP_CONNECTOR_DEPTH,
+        height: epConnectorWidth,
         thickness: epT,
         material: 'PET',
         quantity: 1,
