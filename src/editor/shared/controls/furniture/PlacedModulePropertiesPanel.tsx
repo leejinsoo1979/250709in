@@ -3317,7 +3317,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                               onBlur={() => {
                                 epDepthFocusedRef.current = false;
                                 const val = parseInt(epDepthInput, 10);
-                                if (!isNaN(val) && val >= 50 && val <= furnitureDepth && currentPlacedModule) {
+                                if (!isNaN(val) && val >= 50 && val <= 1200 && currentPlacedModule) {
                                   updatePlacedModule(currentPlacedModule.id, { endPanelDepth: val });
                                   setEpDepthInput(val.toString());
                                 } else {
@@ -3330,7 +3330,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                                 else if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
                                   e.preventDefault();
                                   const cur = parseInt(epDepthInput, 10) || (currentPlacedModule.endPanelDepth ?? furnitureDepth);
-                                  const next = Math.max(50, Math.min(furnitureDepth, cur + (e.key === 'ArrowUp' ? 1 : -1)));
+                                  const next = Math.max(50, Math.min(1200, cur + (e.key === 'ArrowUp' ? 1 : -1)));
                                   setEpDepthInput(next.toString());
                                   updatePlacedModule(currentPlacedModule.id, { endPanelDepth: next });
                                 }

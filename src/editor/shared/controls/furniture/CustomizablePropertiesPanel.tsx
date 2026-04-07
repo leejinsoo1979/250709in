@@ -4617,7 +4617,7 @@ const CustomizablePropertiesPanel: React.FC = () => {
                             onBlur={() => {
                               epDepthFocusedRef.current = false;
                               const val = parseInt(epDepthInput, 10);
-                              if (!isNaN(val) && val >= 50 && val <= furnitureDepth) {
+                              if (!isNaN(val) && val >= 50 && val <= 1200) {
                                 updatePlacedModule(moduleId, { endPanelDepth: val });
                                 setEpDepthInput(val.toString());
                               } else {
@@ -4630,7 +4630,7 @@ const CustomizablePropertiesPanel: React.FC = () => {
                               else if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
                                 e.preventDefault();
                                 const cur = parseInt(epDepthInput, 10) || (placedModule.endPanelDepth ?? furnitureDepth);
-                                const next = Math.max(50, Math.min(furnitureDepth, cur + (e.key === 'ArrowUp' ? 1 : -1)));
+                                const next = Math.max(50, Math.min(1200, cur + (e.key === 'ArrowUp' ? 1 : -1)));
                                 setEpDepthInput(next.toString());
                                 updatePlacedModule(moduleId, { endPanelDepth: next });
                               }
