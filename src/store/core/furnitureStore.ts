@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { PlacedModule, CurrentDragData, CustomFurnitureConfig } from '@/editor/shared/furniture/types';
 import { analyzeColumnSlots } from '@/editor/shared/utils/columnSlotProcessor';
-import { ColumnIndexer, calculateSpaceIndexing } from '@/editor/shared/utils/indexing';
+import { ColumnIndexer, calculateSpaceIndexing, recalculateWithCustomWidths } from '@/editor/shared/utils/indexing';
 import { getModuleById } from '@/data/modules';
 import { calculateInternalSpace } from '@/editor/shared/viewer3d/utils/geometry';
 import { useSpaceConfigStore } from './spaceConfigStore';
@@ -38,6 +38,9 @@ interface FurnitureDataState {
 
   // 기둥 변경 시 가구 업데이트
   updateFurnitureForColumns: (spaceInfo: any) => void;
+
+  // 슬롯 모드 가구 너비 조정 → 나머지 슬롯 재분할
+  adjustSlotWidth: (moduleId: string, newWidth: number) => void;
 
   // wallConfig/frameSize 변경 시 가구 너비 재계산
   resetFurnitureWidths: () => void;
@@ -872,6 +875,94 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
     set({ placedModules: [], hasUnsavedChanges: false });
   },
 
+  // 슬롯 모드 가구 너비 조정 → 나머지 슬롯 재분할
+  adjustSlotWidth: (moduleId: string, newWidth: number) => {
+    set((state) => {
+      const spaceInfo = useSpaceConfigStore.getState().spaceInfo;
+      const baseIndexing = calculateSpaceIndexing(spaceInfo);
+
+      // 1. 대상 모듈의 slotCustomWidth 설정
+      let updatedModules = state.placedModules.map(m =>
+        m.id === moduleId ? { ...m, slotCustomWidth: newWidth } : { ...m }
+      );
+
+      const target = updatedModules.find(m => m.id === moduleId);
+      if (!target || target.slotIndex === undefined) return { placedModules: updatedModules };
+
+      const targetZone = target.zone || 'normal';
+
+      // 2. recalculateWithCustomWidths로 슬롯 재분할
+      const recalculated = recalculateWithCustomWidths(baseIndexing, updatedModules, targetZone);
+      const columnCount = recalculated.columnCount;
+
+      // 3. 같은 zone 내 모든 모듈의 position.x / moduleWidth 업데이트
+      updatedModules = updatedModules.map(m => {
+        const mZone = m.zone || 'normal';
+        if (mZone !== targetZone) return m;
+        if (m.slotIndex === undefined) return m;
+
+        const updated = { ...m };
+        const slotIdx = updated.slotIndex!;
+
+        if (updated.isDualSlot && slotIdx < columnCount - 1) {
+          // 듀얼: 두 슬롯 경계 중심
+          const newX = recalculated.threeUnitDualPositions[slotIdx];
+          if (newX !== undefined) {
+            updated.position = { ...updated.position, x: newX };
+          }
+          // 듀얼 너비: 두 슬롯 합
+          const w1 = recalculated.slotWidths?.[slotIdx] ?? recalculated.columnWidth;
+          const w2 = recalculated.slotWidths?.[slotIdx + 1] ?? recalculated.columnWidth;
+          const dualW = w1 + w2;
+
+          if (updated.slotCustomWidth !== undefined) {
+            // slotCustomWidth가 있는 모듈 → customWidth도 동기화
+            updated.customWidth = updated.slotCustomWidth;
+            updated.moduleWidth = updated.slotCustomWidth;
+          } else {
+            updated.customWidth = Math.floor(dualW);
+            updated.moduleWidth = Math.floor(dualW);
+          }
+        } else {
+          // 싱글: 슬롯 중심
+          const newX = recalculated.threeUnitPositions[slotIdx];
+          if (newX !== undefined) {
+            // 확장 방향 규칙: 좌측 가구 → 좌변boundary 고정, 우측 가구 → 우변boundary 고정
+            if (updated.slotCustomWidth !== undefined) {
+              const isLeftSide = slotIdx < columnCount / 2;
+              const slotW = updated.slotCustomWidth;
+              if (isLeftSide) {
+                // 좌측 고정: boundary 좌변 기준
+                const leftBound = recalculated.columnBoundaries[slotIdx];
+                updated.position = { ...updated.position, x: (leftBound + slotW / 2) * 0.01 };
+              } else {
+                // 우측 고정: boundary 우변 기준
+                const rightBound = recalculated.columnBoundaries[slotIdx + 1];
+                updated.position = { ...updated.position, x: (rightBound - slotW / 2) * 0.01 };
+              }
+              updated.customWidth = updated.slotCustomWidth;
+              updated.moduleWidth = updated.slotCustomWidth;
+            } else {
+              // slotCustomWidth가 없는 모듈: 슬롯 중심으로 이동
+              updated.position = { ...updated.position, x: newX };
+              const slotW = recalculated.slotWidths?.[slotIdx] ?? recalculated.columnWidth;
+              updated.customWidth = Math.floor(slotW);
+              updated.moduleWidth = Math.floor(slotW);
+            }
+          }
+        }
+
+        return updated;
+      });
+
+      return { placedModules: updatedModules, hasUnsavedChanges: true };
+    });
+
+    // R3F 동기화
+    const modules = useFurnitureStore.getState().placedModules;
+    notifyR3F(modules);
+  },
+
   // wallConfig/frameSize 변경 시 가구 너비 재계산
   resetFurnitureWidths: () => {
     set((state) => {
@@ -884,6 +975,10 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
 
         if (module.adjustedWidth !== undefined) {
           delete updated.adjustedWidth;
+        }
+
+        if (module.slotCustomWidth !== undefined) {
+          delete updated.slotCustomWidth;
         }
 
         return updated;
