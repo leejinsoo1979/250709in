@@ -3338,19 +3338,23 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                               className={styles.epInput}
                             />
                             <span className={styles.unit}>mm</span>
-                            <select
-                              value={currentPlacedModule.endPanelDepthDirection ?? 'front'}
-                              onChange={(e) => {
-                                updatePlacedModule(currentPlacedModule.id, {
-                                  endPanelDepthDirection: e.target.value as 'front' | 'back'
-                                });
-                              }}
-                              className={styles.epInput}
-                              style={{ width: '52px', height: '24px', fontSize: '11px', padding: '0 2px' }}
-                            >
-                              <option value="front">앞으로</option>
-                              <option value="back">뒤로</option>
-                            </select>
+                            {(['front', 'back'] as const).map((dir) => (
+                              <button
+                                key={dir}
+                                onClick={() => updatePlacedModule(currentPlacedModule.id, { endPanelDepthDirection: dir })}
+                                style={{
+                                  padding: '2px 8px', fontSize: '11px', height: '24px',
+                                  border: '1px solid var(--theme-border)', borderRadius: '4px',
+                                  background: (currentPlacedModule.endPanelDepthDirection ?? 'front') === dir
+                                    ? 'var(--theme-primary)' : 'var(--theme-background-tertiary)',
+                                  color: (currentPlacedModule.endPanelDepthDirection ?? 'front') === dir
+                                    ? '#fff' : 'var(--theme-text-secondary)',
+                                  cursor: 'default', whiteSpace: 'nowrap',
+                                }}
+                              >
+                                {dir === 'front' ? '앞' : '뒤'}
+                              </button>
+                            ))}
                           </div>
                         </div>
                       </div>

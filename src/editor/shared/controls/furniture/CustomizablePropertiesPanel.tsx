@@ -4642,22 +4642,23 @@ const CustomizablePropertiesPanel: React.FC = () => {
                             }}
                           />
                           <span style={{ fontSize: '12px', color: 'var(--theme-text-secondary)' }}>mm</span>
-                          <select
-                            value={placedModule.endPanelDepthDirection ?? 'front'}
-                            onChange={(e) => {
-                              updatePlacedModule(moduleId, {
-                                endPanelDepthDirection: e.target.value as 'front' | 'back'
-                              });
-                            }}
-                            style={{
-                              width: '52px', padding: '0 2px', border: '1px solid var(--theme-border)',
-                              borderRadius: '4px', fontSize: '11px', height: '24px',
-                              background: 'var(--theme-background)', color: 'var(--theme-text)',
-                            }}
-                          >
-                            <option value="front">앞으로</option>
-                            <option value="back">뒤로</option>
-                          </select>
+                          {(['front', 'back'] as const).map((dir) => (
+                            <button
+                              key={dir}
+                              onClick={() => updatePlacedModule(moduleId, { endPanelDepthDirection: dir })}
+                              style={{
+                                padding: '2px 8px', fontSize: '11px', height: '24px',
+                                border: '1px solid var(--theme-border)', borderRadius: '4px',
+                                background: (placedModule.endPanelDepthDirection ?? 'front') === dir
+                                  ? 'var(--theme-primary)' : 'var(--theme-background-tertiary)',
+                                color: (placedModule.endPanelDepthDirection ?? 'front') === dir
+                                  ? '#fff' : 'var(--theme-text-secondary)',
+                                cursor: 'default', whiteSpace: 'nowrap',
+                              }}
+                            >
+                              {dir === 'front' ? '앞' : '뒤'}
+                            </button>
+                          ))}
                         </div>
                       );
                     })()}
