@@ -849,7 +849,10 @@ const Header: React.FC<HeaderProps> = ({
                       const isFrameMerged = currentSpaceInfo.frameMergeEnabled ?? false;
 
                       // 프레임 병합 안 된 상태면 커스텀 모달로 병합 여부 확인
-                      if (!isFrameMerged) {
+                      // 단, 슬롯 배치 가구가 2개 이상일 때만 (1개면 병합 대상 없음)
+                      const slotModules = useFurnitureStore.getState().placedModules
+                        .filter(m => !m.isFreePlacement);
+                      if (!isFrameMerged && slotModules.length >= 2) {
                         setIsConvertMenuOpen(false);
                         setIsFrameMergeModalOpen(true);
                         return;
