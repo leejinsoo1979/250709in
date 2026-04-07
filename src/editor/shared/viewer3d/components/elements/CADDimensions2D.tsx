@@ -996,7 +996,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
 
               {/* 가구 깊이 텍스트 */}
               <Text
-                position={[0, depthDimY - mmToThreeUnits(80), furnitureZ]}
+                position={[0, depthDimY - mmToThreeUnits(40), furnitureZ]}
                 fontSize={largeFontSize}
                 color={textColor}
                 anchorX="center"
@@ -1047,7 +1047,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                     />
                     {/* 하부프레임 옵셋 깊이 텍스트 */}
                     <Text
-                      position={[0, (depthDimEdge + depthDimY) / 2 - mmToThreeUnits(80), (frontZ + offsetBackZ) / 2]}
+                      position={[0, (depthDimEdge + depthDimY) / 2 - mmToThreeUnits(40), (frontZ + offsetBackZ) / 2]}
                       fontSize={largeFontSize}
                       color={textColor}
                       anchorX="center"
