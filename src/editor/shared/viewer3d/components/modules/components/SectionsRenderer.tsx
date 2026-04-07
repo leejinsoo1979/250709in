@@ -438,7 +438,7 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
                 furnitureId={placedFurnitureId || furnitureId}
                 sectionName={sectionName}
                 backPanelThicknessOverride={currentPlacedModule?.backPanelThickness}
-                topPanelFrontInset={index === 0 ? lowerSectionTopOffsetMm : 0}
+                topPanelFrontInset={index === 0 && category === 'lower' ? lowerSectionTopOffsetMm : 0}
                 doorTopGap={doorTopGap}
                 doorBottomGap={doorBottomGap}
               />
