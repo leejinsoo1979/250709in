@@ -885,7 +885,11 @@ const PlacedModulePropertiesPanel: React.FC = () => {
       // 치수 초기화 (슬롯/자유배치 공통)
       // NOTE: roundedWidth를 사용 (customWidth state는 이 useEffect 내에서 아직 이전 값)
       {
-        setFreeWidthInput((() => { const v = Math.round((currentPlacedModule.freeWidth || roundedWidth || moduleData.dimensions.width) * 10) / 10; return v % 1 === 0 ? v.toString() : v.toFixed(1); })());
+        const isSlotMode = spaceInfo.layoutMode !== 'free-placement';
+        const slotModeWidth = isSlotMode
+          ? (currentPlacedModule.slotCustomWidth ?? roundedWidth ?? moduleData.dimensions.width)
+          : (currentPlacedModule.freeWidth || roundedWidth || moduleData.dimensions.width);
+        setFreeWidthInput((() => { const v = Math.round(slotModeWidth * 10) / 10; return v % 1 === 0 ? v.toString() : v.toFixed(1); })());
         setFreeHeightInput(Math.round(currentPlacedModule.freeHeight || moduleData.dimensions.height).toString());
         setFreeDepthInput(Math.round(currentPlacedModule.freeDepth || initialDepth).toString());
 
@@ -2453,20 +2457,29 @@ const PlacedModulePropertiesPanel: React.FC = () => {
             <div className={styles.propertySection}>
               <h5 className={styles.sectionTitle}>가구 치수</h5>
               <div style={{ display: 'flex', gap: '4px', alignItems: 'center', marginTop: '2px' }}>
-                {/* 너비 — 슬롯배치 모드에서는 편집 불가 (슬롯 폭이 자동 결정) */}
+                {/* 너비 — 슬롯배치/자유배치 모두 편집 가능 */}
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <label style={{ fontSize: '10px', color: 'var(--theme-text-tertiary)', display: 'block', lineHeight: 1 }}>W</label>
                   <div className={styles.inputWithUnit}>
                     <input
                       type="text"
                       inputMode="numeric"
-                      disabled={spaceInfo.layoutMode !== 'free-placement'}
                       value={freeWidthInput}
                       onChange={(e) => setFreeWidthInput(e.target.value)}
                       onBlur={() => {
                         const val = parseInt(freeWidthInput, 10);
-                        if (!isNaN(val) && val >= 100 && val <= 2400 && currentPlacedModule) {
-                          // store에서 최신 모듈/spaceInfo 가져오기 (stale state 방지)
+                        const isSlotMode = spaceInfo.layoutMode !== 'free-placement';
+
+                        if (isSlotMode && currentPlacedModule) {
+                          // 슬롯 모드: adjustSlotWidth 사용
+                          if (!isNaN(val) && val >= 200 && currentPlacedModule.slotIndex !== undefined) {
+                            // max 검증: internalWidth - 다른 고정합 - 남은슬롯×200
+                            const { adjustSlotWidth } = useFurnitureStore.getState();
+                            adjustSlotWidth(currentPlacedModule.id, val);
+                            setFreeWidthInput(val.toString());
+                          }
+                        } else if (!isNaN(val) && val >= 100 && val <= 2400 && currentPlacedModule) {
+                          // 자유배치 모드: 기존 로직
                           const freshModule = useFurnitureStore.getState().placedModules.find(m => m.id === currentPlacedModule.id) || currentPlacedModule;
                           const freshAll = useFurnitureStore.getState().placedModules;
                           const freshSI = useSpaceConfigStore.getState().spaceInfo;
@@ -2516,22 +2529,33 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                         if (e.key === 'Enter') { (e.target as HTMLInputElement).blur(); }
                         else if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
                           e.preventDefault();
-                          // store에서 최신 너비 읽기 (React state 대신)
+                          const isSlotMode = spaceInfo.layoutMode !== 'free-placement';
                           const freshMod = useFurnitureStore.getState().placedModules.find(m => m.id === currentPlacedModule?.id);
-                          const curW = freshMod?.freeWidth || parseInt(freeWidthInput, 10) || (currentPlacedModule?.freeWidth || moduleData.dimensions.width);
-                          const next = Math.max(100, Math.min(2400, curW + (e.key === 'ArrowUp' ? 1 : -1)));
-                          setFreeWidthInput(next.toString());
-                          if (currentPlacedModule && freshMod) {
-                            const freshAll = useFurnitureStore.getState().placedModules;
-                            const freshSI = useSpaceConfigStore.getState().spaceInfo;
-                            const newX = freshMod.isFreePlacement
-                              ? calcResizedPositionX(freshMod, next, freshAll, freshSI)
-                              : freshMod.position.x;
-                            updatePlacedModule(currentPlacedModule.id, {
-                              freeWidth: next,
-                              moduleWidth: next,
-                              position: { ...freshMod.position, x: newX },
-                            });
+
+                          if (isSlotMode && currentPlacedModule && freshMod) {
+                            // 슬롯 모드: adjustSlotWidth 사용
+                            const curW = freshMod.slotCustomWidth ?? freshMod.customWidth ?? moduleData.dimensions.width;
+                            const next = Math.max(200, curW + (e.key === 'ArrowUp' ? 1 : -1));
+                            setFreeWidthInput(next.toString());
+                            const { adjustSlotWidth } = useFurnitureStore.getState();
+                            adjustSlotWidth(currentPlacedModule.id, next);
+                          } else {
+                            // 자유배치 모드: 기존 로직
+                            const curW = freshMod?.freeWidth || parseInt(freeWidthInput, 10) || (currentPlacedModule?.freeWidth || moduleData.dimensions.width);
+                            const next = Math.max(100, Math.min(2400, curW + (e.key === 'ArrowUp' ? 1 : -1)));
+                            setFreeWidthInput(next.toString());
+                            if (currentPlacedModule && freshMod) {
+                              const freshAll = useFurnitureStore.getState().placedModules;
+                              const freshSI = useSpaceConfigStore.getState().spaceInfo;
+                              const newX = freshMod.isFreePlacement
+                                ? calcResizedPositionX(freshMod, next, freshAll, freshSI)
+                                : freshMod.position.x;
+                              updatePlacedModule(currentPlacedModule.id, {
+                                freeWidth: next,
+                                moduleWidth: next,
+                                position: { ...freshMod.position, x: newX },
+                              });
+                            }
                           }
                         }
                       }}
