@@ -1176,23 +1176,28 @@ const DoorModule: React.FC<DoorModuleProps> = ({
       && storePlacedModule.hasRightEndPanel
       && (storePlacedModule.endPanelThickness || 18) > 20);
 
-    // EP 앞으로 돌출(offset > 0 또는 깊이 확장 front) 시 해당 쪽 도어 너비를 EP 두께만큼 축소
+    // EP 앞으로 돌출(옵셋 front 방향 또는 깊이 확장 front) 시 해당 쪽 도어 너비를 EP 두께만큼 축소
     let leftEpTrimShift = 0;
     let rightEpTrimShift = 0;
     if (storePlacedModule) {
       const epThickMm = storePlacedModule.endPanelThickness || 18;
       const leftOffset = storePlacedModule.leftEndPanelOffset ?? storePlacedModule.endPanelOffset ?? 0;
       const rightOffset = storePlacedModule.rightEndPanelOffset ?? storePlacedModule.endPanelOffset ?? 0;
+      const leftOffDir = storePlacedModule.leftEndPanelOffsetDir ?? 'front';
+      const rightOffDir = storePlacedModule.rightEndPanelOffsetDir ?? 'front';
       // EP 깊이 앞으로 확장 시 도어 앞면 침범 여부
       const epDepthDir = storePlacedModule.endPanelDepthDirection ?? 'front';
       const epDepthMm = storePlacedModule.endPanelDepth ?? moduleDepth;
       const epFrontOverhang = epDepthDir === 'front' ? Math.max(0, epDepthMm - moduleDepth) : 0;
+      // 옵셋 front 방향만 도어 침범
+      const leftOffsetFront = leftOffset > 0 && leftOffDir === 'front';
+      const rightOffsetFront = rightOffset > 0 && rightOffDir === 'front';
 
-      if (storePlacedModule.hasLeftEndPanel && (leftOffset > 0 || epFrontOverhang > 0)) {
+      if (storePlacedModule.hasLeftEndPanel && (leftOffsetFront || epFrontOverhang > 0)) {
         leftDoorWidth -= epThickMm;
         leftEpTrimShift = mmToThreeUnits(epThickMm) / 2; // 좌도어를 오른쪽으로 밀기
       }
-      if (storePlacedModule.hasRightEndPanel && (rightOffset > 0 || epFrontOverhang > 0)) {
+      if (storePlacedModule.hasRightEndPanel && (rightOffsetFront || epFrontOverhang > 0)) {
         rightDoorWidth -= epThickMm;
         rightEpTrimShift = -mmToThreeUnits(epThickMm) / 2; // 우도어를 왼쪽으로 밀기
       }
@@ -1944,23 +1949,27 @@ const DoorModule: React.FC<DoorModuleProps> = ({
       || (storePlacedModule.hasRightEndPanel && (storePlacedModule.endPanelThickness || 18) > 20)
     ));
 
-    // EP 앞으로 돌출(offset > 0 또는 깊이 확장 front) 시 해당 쪽에서 EP 두께만큼 도어 너비 축소 (경첩 방향 무관)
+    // EP 앞으로 돌출(옵셋 front 방향 또는 깊이 확장 front) 시 해당 쪽에서 EP 두께만큼 도어 너비 축소 (경첩 방향 무관)
     let epTrimLeft = 0; // 좌측 EP 돌출로 줄어든 mm
     let epTrimRight = 0; // 우측 EP 돌출로 줄어든 mm
     if (storePlacedModule) {
       const epThickMm = storePlacedModule.endPanelThickness || 18;
       const leftOffset = storePlacedModule.leftEndPanelOffset ?? storePlacedModule.endPanelOffset ?? 0;
       const rightOffset = storePlacedModule.rightEndPanelOffset ?? storePlacedModule.endPanelOffset ?? 0;
+      const leftOffDir = storePlacedModule.leftEndPanelOffsetDir ?? 'front';
+      const rightOffDir = storePlacedModule.rightEndPanelOffsetDir ?? 'front';
       // EP 깊이 앞으로 확장 시 도어 앞면 침범 여부
       const epDepthDir = storePlacedModule.endPanelDepthDirection ?? 'front';
       const epDepthMm = storePlacedModule.endPanelDepth ?? moduleDepth;
       const epFrontOverhang = epDepthDir === 'front' ? Math.max(0, epDepthMm - moduleDepth) : 0;
+      const leftOffsetFront = leftOffset > 0 && leftOffDir === 'front';
+      const rightOffsetFront = rightOffset > 0 && rightOffDir === 'front';
 
-      if (storePlacedModule.hasLeftEndPanel && (leftOffset > 0 || epFrontOverhang > 0)) {
+      if (storePlacedModule.hasLeftEndPanel && (leftOffsetFront || epFrontOverhang > 0)) {
         doorWidth -= epThickMm;
         epTrimLeft = epThickMm;
       }
-      if (storePlacedModule.hasRightEndPanel && (rightOffset > 0 || epFrontOverhang > 0)) {
+      if (storePlacedModule.hasRightEndPanel && (rightOffsetFront || epFrontOverhang > 0)) {
         doorWidth -= epThickMm;
         epTrimRight = epThickMm;
       }

@@ -4665,25 +4665,26 @@ const CustomizablePropertiesPanel: React.FC = () => {
                     {/* 좌측 EP 옵셋 */}
                     {placedModule.hasLeftEndPanel && (() => {
                       const rawVal = placedModule.leftEndPanelOffset ?? placedModule.endPanelOffset ?? 0;
+                      const leftOffDir = placedModule.leftEndPanelOffsetDir ?? 'front';
                       return (
                         <div style={{ marginTop: '4px' }}>
                           <span style={{ fontSize: '12px', color: 'var(--theme-text-secondary)' }}>좌측 EP 옵셋</span>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '4px' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginTop: '4px' }}>
                             <input
                               type="text"
                               inputMode="numeric"
                               value={rawVal}
                               onChange={(e) => {
                                 const v = e.target.value;
-                                if (v === '' || v === '-' || /^-?\d+$/.test(v)) {
-                                  const num = (v === '' || v === '-') ? 0 : Math.max(-50, Math.min(50, parseInt(v, 10)));
+                                if (v === '' || /^\d+$/.test(v)) {
+                                  const num = v === '' ? 0 : Math.max(0, Math.min(200, parseInt(v, 10)));
                                   updatePlacedModule(moduleId, { leftEndPanelOffset: num });
                                 }
                               }}
                               onKeyDown={(e) => {
                                 if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
                                   e.preventDefault();
-                                  const next = Math.max(-50, Math.min(50, rawVal + (e.key === 'ArrowUp' ? 1 : -1)));
+                                  const next = Math.max(0, Math.min(200, rawVal + (e.key === 'ArrowUp' ? 1 : -1)));
                                   updatePlacedModule(moduleId, { leftEndPanelOffset: next });
                                 }
                               }}
@@ -4694,33 +4695,48 @@ const CustomizablePropertiesPanel: React.FC = () => {
                               }}
                             />
                             <span style={{ fontSize: '12px', color: 'var(--theme-text-secondary)' }}>mm</span>
+                            {(['front', 'back'] as const).map((dir) => (
+                              <button
+                                key={dir}
+                                onClick={() => updatePlacedModule(moduleId, { leftEndPanelOffsetDir: dir })}
+                                style={{
+                                  padding: '2px 8px', fontSize: '11px', height: '24px',
+                                  border: '1px solid var(--theme-border)', borderRadius: '4px',
+                                  background: leftOffDir === dir ? 'var(--theme-primary)' : 'var(--theme-background-tertiary)',
+                                  color: leftOffDir === dir ? '#fff' : 'var(--theme-text-secondary)',
+                                  cursor: 'default', whiteSpace: 'nowrap',
+                                }}
+                              >
+                                {dir === 'front' ? '앞' : '뒤'}
+                              </button>
+                            ))}
                           </div>
-                          <span style={{ fontSize: '10px', color: 'var(--theme-text-tertiary)', marginTop: '2px', display: 'block' }}>+ 앞 / - 뒤</span>
                         </div>
                       );
                     })()}
                     {/* 우측 EP 옵셋 */}
                     {placedModule.hasRightEndPanel && (() => {
                       const rawVal = placedModule.rightEndPanelOffset ?? placedModule.endPanelOffset ?? 0;
+                      const rightOffDir = placedModule.rightEndPanelOffsetDir ?? 'front';
                       return (
                         <div style={{ marginTop: '4px' }}>
                           <span style={{ fontSize: '12px', color: 'var(--theme-text-secondary)' }}>우측 EP 옵셋</span>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '4px' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginTop: '4px' }}>
                             <input
                               type="text"
                               inputMode="numeric"
                               value={rawVal}
                               onChange={(e) => {
                                 const v = e.target.value;
-                                if (v === '' || v === '-' || /^-?\d+$/.test(v)) {
-                                  const num = (v === '' || v === '-') ? 0 : Math.max(-50, Math.min(50, parseInt(v, 10)));
+                                if (v === '' || /^\d+$/.test(v)) {
+                                  const num = v === '' ? 0 : Math.max(0, Math.min(200, parseInt(v, 10)));
                                   updatePlacedModule(moduleId, { rightEndPanelOffset: num });
                                 }
                               }}
                               onKeyDown={(e) => {
                                 if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
                                   e.preventDefault();
-                                  const next = Math.max(-50, Math.min(50, rawVal + (e.key === 'ArrowUp' ? 1 : -1)));
+                                  const next = Math.max(0, Math.min(200, rawVal + (e.key === 'ArrowUp' ? 1 : -1)));
                                   updatePlacedModule(moduleId, { rightEndPanelOffset: next });
                                 }
                               }}
@@ -4731,8 +4747,22 @@ const CustomizablePropertiesPanel: React.FC = () => {
                               }}
                             />
                             <span style={{ fontSize: '12px', color: 'var(--theme-text-secondary)' }}>mm</span>
+                            {(['front', 'back'] as const).map((dir) => (
+                              <button
+                                key={dir}
+                                onClick={() => updatePlacedModule(moduleId, { rightEndPanelOffsetDir: dir })}
+                                style={{
+                                  padding: '2px 8px', fontSize: '11px', height: '24px',
+                                  border: '1px solid var(--theme-border)', borderRadius: '4px',
+                                  background: rightOffDir === dir ? 'var(--theme-primary)' : 'var(--theme-background-tertiary)',
+                                  color: rightOffDir === dir ? '#fff' : 'var(--theme-text-secondary)',
+                                  cursor: 'default', whiteSpace: 'nowrap',
+                                }}
+                              >
+                                {dir === 'front' ? '앞' : '뒤'}
+                              </button>
+                            ))}
                           </div>
-                          <span style={{ fontSize: '10px', color: 'var(--theme-text-tertiary)', marginTop: '2px', display: 'block' }}>+ 앞 / - 뒤</span>
                         </div>
                       );
                     })()}

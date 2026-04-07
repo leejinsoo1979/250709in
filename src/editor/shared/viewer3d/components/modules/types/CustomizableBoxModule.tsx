@@ -46,6 +46,8 @@ interface CustomizableBoxModuleProps {
   endPanelDepthDirection?: 'front' | 'back'; // EP 깊이 확장 방향 (front: 앞으로, back: 뒤로)
   leftEndPanelOffset?: number; // 좌측 EP 개별 옵셋 (mm, 기본값: 0)
   rightEndPanelOffset?: number; // 우측 EP 개별 옵셋 (mm, 기본값: 0)
+  leftEndPanelOffsetDir?: 'front' | 'back'; // 좌측 EP 옵셋 방향
+  rightEndPanelOffsetDir?: 'front' | 'back'; // 우측 EP 옵셋 방향
   endPanelHeightMode?: 'floor' | 'furniture'; // EP 높이 모드 (floor: 바닥~천장, furniture: 가구 높이에 맞춤)
   parentGroupY?: number; // 부모 그룹(가구)의 Y 위치 (Three.js 단위) — EP Y 보정용
   isEditable?: boolean; // true: 커스텀 편집 가능 (톱니 아이콘 표시), false: 고정 구조 (My캐비넷)
@@ -239,6 +241,8 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
   endPanelDepthDirection: endPanelDepthDirectionProp = 'front',
   leftEndPanelOffset: leftEndPanelOffsetProp = 0,
   rightEndPanelOffset: rightEndPanelOffsetProp = 0,
+  leftEndPanelOffsetDir: leftEpOffsetDirProp = 'front',
+  rightEndPanelOffsetDir: rightEpOffsetDirProp = 'front',
   endPanelHeightMode: endPanelHeightModeProp,
   parentGroupY: parentGroupYProp,
   isEditable = true,
@@ -2552,13 +2556,13 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
         const epDepthDirOffset = endPanelDepthDirectionProp === 'back'
           ? -(epDActual - D) / 2
           : (epDActual - D) / 2;
-        // EP 옵셋: 앞면 고정, 뒷쪽에서 줄어듦 (depth -= offset, Z += offset/2)
+        // EP 옵셋: 방향에 따라 앞면/뒷면 고정 (front: 앞 고정→뒤에서 줄어듦, back: 뒤 고정→앞에서 줄어듦)
         const leftEpOffsetUnit = mmToUnit(leftEpOffsetMm);
         const leftEpDepth = Math.max(0, epDActual - leftEpOffsetUnit);
-        const leftEpZShift = leftEpOffsetUnit / 2;
+        const leftEpZShift = leftEpOffsetDirProp === 'back' ? -(leftEpOffsetUnit / 2) : (leftEpOffsetUnit / 2);
         const rightEpOffsetUnit = mmToUnit(rightEpOffsetMm);
         const rightEpDepth = Math.max(0, epDActual - rightEpOffsetUnit);
-        const rightEpZShift = rightEpOffsetUnit / 2;
+        const rightEpZShift = rightEpOffsetDirProp === 'back' ? -(rightEpOffsetUnit / 2) : (rightEpOffsetUnit / 2);
         return (
           <>
             {hasLeftEndPanel && (

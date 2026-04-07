@@ -71,6 +71,8 @@ interface BoxModuleProps {
   endPanelOffset?: number; // 엔드패널 Z축 옵셋 (mm, 기본값: 0) — 하위호환
   leftEndPanelOffset?: number; // 좌측 EP 개별 옵셋 (mm)
   rightEndPanelOffset?: number; // 우측 EP 개별 옵셋 (mm)
+  leftEndPanelOffsetDir?: 'front' | 'back'; // 좌측 EP 옵셋 방향
+  rightEndPanelOffsetDir?: 'front' | 'back'; // 우측 EP 옵셋 방향
   zone?: 'normal' | 'dropped'; // 단내림 영역 정보
   isFreePlacement?: boolean; // 자유배치 모드 여부
   doorSplit?: boolean; // 도어 분할 모드 (상/하 개별 도어)
@@ -149,6 +151,8 @@ const BoxModule: React.FC<BoxModuleProps> = ({
   endPanelOffset, // 엔드패널 Z축 옵셋 (mm) — 하위호환
   leftEndPanelOffset, // 좌측 EP 개별 옵셋 (mm)
   rightEndPanelOffset, // 우측 EP 개별 옵셋 (mm)
+  leftEndPanelOffsetDir, // 좌측 EP 옵셋 방향
+  rightEndPanelOffsetDir, // 우측 EP 옵셋 방향
   zone, // 단내림 영역 정보
   isFreePlacement = false, // 자유배치 모드 여부
   doorSplit, // 도어 분할 모드
@@ -230,6 +234,8 @@ const BoxModule: React.FC<BoxModuleProps> = ({
           endPanelDepthDirection={endPanelDepthDirection}
           leftEndPanelOffset={leftEndPanelOffset ?? endPanelOffset}
           rightEndPanelOffset={rightEndPanelOffset ?? endPanelOffset}
+          leftEndPanelOffsetDir={leftEndPanelOffsetDir}
+          rightEndPanelOffsetDir={rightEndPanelOffsetDir}
           endPanelHeightMode={endPanelHeightMode}
           parentGroupY={parentGroupY}
           isEditable={_isCustomizable}
