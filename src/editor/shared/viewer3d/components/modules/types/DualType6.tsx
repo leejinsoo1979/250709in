@@ -234,8 +234,10 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
         }
         
         // 서랍 섹션 위에 (하)상판 렌더링 (4단서랍장처럼 좌측만, 앞에서 85mm 옵셋)
+        // 탑뷰에서는 하부섹션 상판 숨김
         let drawerTopPanel = null;
-        if (section.type === 'drawer' && index < allSections.length - 1) {
+        const isTopView = viewMode === '2D' && view2DDirection === 'top';
+        if (section.type === 'drawer' && index < allSections.length - 1 && !isTopView) {
           const topPanelInset = 85; // 앞에서 85mm 안으로
           const panelDepth = depth - mmToThreeUnits(26) - mmToThreeUnits(topPanelInset);
           drawerTopPanel = (
@@ -531,7 +533,7 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
         })()}
         
         {/* 중단선반 (상부섹션 바닥판): 전체폭 */}
-        {hasSharedMiddlePanel && middlePanelHeight > 0 && (
+        {hasSharedMiddlePanel && middlePanelHeight > 0 && !(viewMode === '2D' && view2DDirection === 'top') && (
           <BoxWithEdges
             args={[innerWidth, basicThickness, adjustedDepthForShelves - basicThickness]}
             position={[0, -height/2 + basicThickness + mmToThreeUnits(middlePanelHeight - 9), basicThickness/2 + shelfZOffset]}
