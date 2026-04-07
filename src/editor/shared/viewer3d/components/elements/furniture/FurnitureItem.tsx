@@ -3658,11 +3658,11 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                 : (epD - freeEpFurnitureD) / 2;
               // EP 옵셋: + 앞 확장(Z+), - 뒤 축소(Z-). abs로 깊이 줄이고 부호로 Z shift 방향 결정
               const leftEpOffsetUnit = mmToThreeUnits(leftEpOffsetMm);
-              // + 옵셋: EP 깊이 유지, 앞으로 돌출. - 옵셋: EP 깊이 줄어듦(뒤에서 깎임)
-              const leftEpD = Math.max(0, epD - Math.max(0, -leftEpOffsetUnit));
+              // + 옵셋: EP 깊이 증가(앞 돌출), - 옵셋: EP 깊이 감소
+              const leftEpD = Math.max(0, epD + leftEpOffsetUnit);
               const leftEpZShift = leftEpOffsetUnit / 2;
               const rightEpOffsetUnit = mmToThreeUnits(rightEpOffsetMm);
-              const rightEpD = Math.max(0, epD - Math.max(0, -rightEpOffsetUnit));
+              const rightEpD = Math.max(0, epD + rightEpOffsetUnit);
               const rightEpZShift = rightEpOffsetUnit / 2;
 
               // EP 높이 계산: 카테고리별 상단/하단 기준이 다름
@@ -3970,9 +3970,9 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
             ? (placedModule.leftEndPanelOffset ?? placedModule.endPanelOffset ?? 0)
             : (placedModule.rightEndPanelOffset ?? placedModule.endPanelOffset ?? 0);
           const offsetUnit = mmToThreeUnits(mm);
-          // + 옵셋: EP 깊이 유지, 앞으로 돌출. - 옵셋: EP 깊이 줄어듦(뒤에서 깎임)
+          // + 옵셋: EP 깊이 증가(앞 돌출), - 옵셋: EP 깊이 감소
           return {
-            depth: Math.max(0, endPanelDepth - Math.max(0, -offsetUnit)),
+            depth: Math.max(0, endPanelDepth + offsetUnit),
             zShift: offsetUnit / 2 + epDepthDirOffset,
           };
         };
