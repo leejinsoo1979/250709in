@@ -900,16 +900,18 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
 
         {/* ===== 가구별 깊이 치수 - 측면뷰에서 보이는 가구만 표시 ===== */}
         {visibleFurniture.map((module, index) => {
-          const moduleData = getModuleById(
-            module.moduleId,
-            { width: internalSpace.width, height: internalSpace.height, depth: internalSpace.depth },
-            spaceInfo
-          );
+          let depthModuleData = moduleData;
+          if (!depthModuleData) {
+            depthModuleData = buildModuleDataFromPlacedModule(module as PlacedModule, internalSpace, spaceInfo);
+          }
+          if (!depthModuleData) return null;
 
-          if (!moduleData) return null;
+          const mod = module as PlacedModule;
+          const modCategory = getModuleCategory(mod);
+          const isLowerMod = modCategory === 'lower';
 
           // 상부섹션 깊이 우선 사용
-          const upperDepth = module.upperSectionDepth || module.customDepth || moduleData.dimensions.depth;
+          const upperDepth = module.upperSectionDepth || module.customDepth || depthModuleData.dimensions.depth;
           const customDepth = upperDepth;
           const moduleDepth = mmToThreeUnits(customDepth);
 
@@ -927,6 +929,12 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           const zOffset = -panelDepth / 2;
           const furnitureZOffset = zOffset + (panelDepth - furnitureDepth) / 2;
           const furnitureZ = furnitureZOffset + furnitureDepth/2 - doorThickness - moduleDepth/2;
+
+          // 하부프레임 옵셋 깊이 (하부장 전용)
+          const baseFrameOffsetMm = isLowerMod
+            ? (mod.baseFrameOffset ?? (spaceInfo.baseConfig?.height ?? 100))
+            : 0;
+          const baseFrameOffsetDepth = mmToThreeUnits(baseFrameOffsetMm);
 
           return (
             <group key={`furniture-depth-${index}`}>
@@ -985,6 +993,61 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
               >
                 {customDepth}
               </Text>
+
+              {/* 하부프레임 옵셋 깊이 치수 (하부장 전용) */}
+              {isLowerMod && baseFrameOffsetMm > 0 && (() => {
+                const offsetDimY = floatHeight - mmToThreeUnits(200);
+                // 하부프레임은 가구 앞면(도어면)에서 옵셋만큼 뒤로 들어감
+                const frontZ = furnitureZOffset + furnitureDepth/2 - doorThickness;
+                const offsetBackZ = frontZ - baseFrameOffsetDepth;
+
+                return (
+                  <group>
+                    {/* 보조 가이드 연장선 - 앞쪽 */}
+                    <ExtLine points={[[0, floatHeight, frontZ], [0, offsetDimY, frontZ]]} color={dimensionColor} />
+                    {/* 보조 가이드 연장선 - 뒤쪽 */}
+                    <ExtLine points={[[0, floatHeight, offsetBackZ], [0, offsetDimY, offsetBackZ]]} color={dimensionColor} />
+
+                    {/* 하부프레임 옵셋 깊이 치수선 */}
+                    <NativeLine name="dimension_line"
+                      points={[[0, offsetDimY, offsetBackZ], [0, offsetDimY, frontZ]]}
+                      color={dimensionColor}
+                      lineWidth={1.5}
+                      renderOrder={100000}
+                      depthTest={false}
+                    />
+                    {/* 앞쪽 티크 */}
+                    <NativeLine name="dimension_line"
+                      points={[[0 - 0.02, offsetDimY, frontZ], [0 + 0.02, offsetDimY, frontZ]]}
+                      color={dimensionColor}
+                      lineWidth={1.5}
+                      renderOrder={100000}
+                      depthTest={false}
+                    />
+                    {/* 뒤쪽 티크 */}
+                    <NativeLine name="dimension_line"
+                      points={[[0 - 0.02, offsetDimY, offsetBackZ], [0 + 0.02, offsetDimY, offsetBackZ]]}
+                      color={dimensionColor}
+                      lineWidth={1.5}
+                      renderOrder={100000}
+                      depthTest={false}
+                    />
+                    {/* 하부프레임 옵셋 깊이 텍스트 */}
+                    <Text
+                      position={[0, offsetDimY - mmToThreeUnits(80), (frontZ + offsetBackZ) / 2]}
+                      fontSize={largeFontSize}
+                      color={textColor}
+                      anchorX="center"
+                      anchorY="middle"
+                      renderOrder={1000}
+                      depthTest={false}
+                      rotation={[0, -Math.PI / 2, 0]}
+                    >
+                      {baseFrameOffsetMm}
+                    </Text>
+                  </group>
+                );
+              })()}
 
               {/* 하부섹션 깊이 치수 (2섹션 가구인 경우) */}
               {(module.lowerSectionDepth !== undefined) && (() => {
