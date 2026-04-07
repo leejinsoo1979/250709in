@@ -5626,8 +5626,8 @@ const Room: React.FC<RoomProps> = ({
               const modCenterXmm = (bounds.left + bounds.right) / 2;
               const depthZOffsetMM = getLowerDepthZOffsetMM(mod);
               const freeIsLower = getModuleCategory(mod) === 'lower';
-              const modBaseZOffset = (!freeIsLower && mod.baseFrameOffset) ? mmToThreeUnits(mod.baseFrameOffset) : 0;
-              const baseZPosition = baseZBase - mmToThreeUnits(depthZOffsetMM) + modBaseZOffset;
+              const modBaseZInset = mod.baseFrameOffset ? mmToThreeUnits(mod.baseFrameOffset) : (freeIsLower ? mmToThreeUnits(spaceInfo.baseConfig?.height ?? 65) : 0);
+              const baseZPosition = baseZBase - mmToThreeUnits(depthZOffsetMM) - modBaseZInset;
               const modBaseHeightMm = mod.baseFrameHeight ?? (spaceInfo.baseConfig?.height ?? 65);
               const modBaseH = mmToThreeUnits(modBaseHeightMm);
 
@@ -5761,12 +5761,11 @@ const Room: React.FC<RoomProps> = ({
               // 섹션 전체 bottomPanelRaise → 하부프레임 없음
               if (customSec0?.bottomPanelRaise && customSec0.bottomPanelRaise > 0) return;
 
-              // 하부장 모듈: 하부프레임 Z를 baseFrameOffset(기본 65mm) 안쪽으로
-              const freeLowerBaseZInset = freeIsLower ? mmToThreeUnits(mod.baseFrameOffset ?? 65) : 0;
+              // baseFrameOffset은 이미 baseZPosition에 반영됨 (modBaseZInset)
               allBaseSegments.push({
                 widthMm: modWidthMM,
                 centerXmm: modCenterXmm,
-                zPosition: baseZPosition - freeLowerBaseZInset,
+                zPosition: baseZPosition,
                 height: modBaseH,
                 yPosition: panelStartY + floatHeight + modBaseH / 2,
                 material: baseMat,
@@ -5940,7 +5939,9 @@ const Room: React.FC<RoomProps> = ({
                       if (mod.hasRightEndPanel) { modWidthMM -= epThk; modCenterXmm -= epThk / 2; }
                       const modBaseHeight = mod.baseFrameHeight ?? globalBaseHeightMm;
                       const modBaseH = mmToThreeUnits(modBaseHeight);
-                      const modBaseZOffset = mod.baseFrameOffset ? mmToThreeUnits(mod.baseFrameOffset) : 0;
+                      const modCategory = getModuleCategory(mod);
+                      const isLowerMod = modCategory === 'lower';
+                      const modBaseZInset = mod.baseFrameOffset ? mmToThreeUnits(mod.baseFrameOffset) : (isLowerMod ? mmToThreeUnits(spaceInfo.baseConfig?.height ?? 65) : 0);
 
                       // 커스터마이즈 가구 좌우분할: 무조건 하부프레임도 영역별 분할
                       const customSec0 = (mod as any).customConfig?.sections?.[0];
@@ -5984,7 +5985,7 @@ const Room: React.FC<RoomProps> = ({
                             slotBaseSegments.push({
                               widthMm: leftPieceW,
                               centerXmm: modLeftMm + leftPieceW / 2,
-                              zPosition: baseZPos + modBaseZOffset,
+                              zPosition: baseZPos - modBaseZInset,
                               height: modBaseH,
                               yPosition: panelStartY + floatHeight + modBaseH / 2,
                               material: baseMat,
@@ -6000,7 +6001,7 @@ const Room: React.FC<RoomProps> = ({
                             slotBaseSegments.push({
                               widthMm: rightPieceW,
                               centerXmm: rightPieceStartX + rightPieceW / 2,
-                              zPosition: baseZPos + modBaseZOffset,
+                              zPosition: baseZPos - modBaseZInset,
                               height: modBaseH,
                               yPosition: panelStartY + floatHeight + modBaseH / 2,
                               material: baseMat,
@@ -6019,7 +6020,7 @@ const Room: React.FC<RoomProps> = ({
                             slotBaseSegments.push({
                               widthMm: leftPieceW,
                               centerXmm: modLeftMm + leftPieceW / 2,
-                              zPosition: baseZPos + modBaseZOffset,
+                              zPosition: baseZPos - modBaseZInset,
                               height: modBaseH,
                               yPosition: panelStartY + floatHeight + modBaseH / 2,
                               material: baseMat,
@@ -6036,7 +6037,7 @@ const Room: React.FC<RoomProps> = ({
                             slotBaseSegments.push({
                               widthMm: centerPieceW,
                               centerXmm: centerPieceStartX + centerPieceW / 2,
-                              zPosition: baseZPos + modBaseZOffset,
+                              zPosition: baseZPos - modBaseZInset,
                               height: modBaseH,
                               yPosition: panelStartY + floatHeight + modBaseH / 2,
                               material: baseMat,
@@ -6052,7 +6053,7 @@ const Room: React.FC<RoomProps> = ({
                             slotBaseSegments.push({
                               widthMm: rightPieceW,
                               centerXmm: rightPieceStartX + rightPieceW / 2,
-                              zPosition: baseZPos + modBaseZOffset,
+                              zPosition: baseZPos - modBaseZInset,
                               height: modBaseH,
                               yPosition: panelStartY + floatHeight + modBaseH / 2,
                               material: baseMat,
@@ -6066,14 +6067,11 @@ const Room: React.FC<RoomProps> = ({
                       // 섹션 전체 bottomPanelRaise → 하부프레임 없음
                       if (customSec0?.bottomPanelRaise && customSec0.bottomPanelRaise > 0) return;
 
-                      // 하부장 모듈: 하부프레임 Z를 baseFrameOffset(기본 65mm) 안쪽으로
-                      const modCategory = getModuleCategory(mod);
-                      const isLowerMod = modCategory === 'lower';
-                      const lowerBaseZInset = isLowerMod ? mmToThreeUnits(mod.baseFrameOffset ?? 65) : 0;
+                      // baseFrameOffset: 양수 = 안쪽(뒤쪽)으로 들어감 (modBaseZInset으로 이미 계산됨)
                       slotBaseSegments.push({
                         widthMm: modWidthMM,
                         centerXmm: modCenterXmm,
-                        zPosition: baseZPos + (isLowerMod ? 0 : modBaseZOffset) - lowerBaseZInset,
+                        zPosition: baseZPos - modBaseZInset,
                         height: modBaseH,
                         yPosition: panelStartY + floatHeight + modBaseH / 2,
                         material: baseMat,
