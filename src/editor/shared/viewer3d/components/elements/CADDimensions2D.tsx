@@ -1397,8 +1397,9 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
             ?? (doorModule.moduleId.includes('-upper-') ? 'upper'
               : doorModule.moduleId.startsWith('lower-') ? 'lower' : 'full');
 
-          const doorTopGapVal = doorModule.doorTopGap ?? 5;
-          const doorBottomGapVal = doorModule.doorBottomGap ?? 25;
+          // DoorModule과 동일한 fallback: 개별값 → 글로벌값 → 0
+          const doorTopGapVal = doorModule.doorTopGap ?? spaceInfo.doorTopGap ?? 0;
+          const doorBottomGapVal = doorModule.doorBottomGap ?? spaceInfo.doorBottomGap ?? 0;
 
           let doorHeightMm = 0;
           let doorBottomAbsMm = 0;
@@ -1428,9 +1429,10 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
               doorTopAbsMm = cabinetBottomAbs + cabinetH + 30;
               doorBottomAbsMm = doorTopAbsMm - doorHeightMm;
             } else {
-              doorHeightMm = cabinetH - 20 + 2;
-              doorTopAbsMm = cabinetBottomAbs + cabinetH - 20;
-              doorBottomAbsMm = doorTopAbsMm - doorHeightMm;
+              // 기본 하부장: DoorModule과 동일 — cabinetH + doorTopGap + doorBottomGap
+              doorHeightMm = cabinetH + doorTopGapVal + doorBottomGapVal;
+              doorTopAbsMm = cabinetBottomAbs + cabinetH + doorTopGapVal;
+              doorBottomAbsMm = cabinetBottomAbs - doorBottomGapVal;
             }
           } else {
             // 키큰장
