@@ -664,7 +664,7 @@ export const ExternalDrawerRenderer: React.FC<ExternalDrawerRendererProps> = ({
         const is3D = viewMode === '3D';
         const extensionLineStart = mmToThreeUnits(70);
         const extensionLineLength = mmToThreeUnits(110);
-        const tickSize = 0.03;
+        const tickSize = 0.008;
         const zPos = is3D ? mmToThreeUnits(moduleDepthMm / 2 + 14 + 1) : maidaZ + mmToThreeUnits(10);
         const dimColor = is3D ? '#000000' : dimensionColor;
         const maidaWidthMm = moduleWidth - 3;

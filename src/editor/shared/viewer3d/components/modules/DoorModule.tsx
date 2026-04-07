@@ -1517,7 +1517,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                 const is3D = viewMode === '3D';
                 const extensionLineStart = mmToThreeUnits(70);
                 const extensionLineLength = mmToThreeUnits(110);
-                const tickSize = 0.03;
+                const tickSize = 0.008;
                 const zPos = is3D ? doorThicknessUnits / 2 + 0.01 : doorThicknessUnits / 2 + 0.001;
                 const dimColor = is3D ? '#000000' : dimensionColor;
 
@@ -1849,7 +1849,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                 const is3D = viewMode === '3D';
                 const extensionLineStart = mmToThreeUnits(70);
                 const extensionLineLength = mmToThreeUnits(110);
-                const tickSize = 0.03;
+                const tickSize = 0.008;
                 const zPos = is3D ? doorThicknessUnits / 2 + 0.01 : doorThicknessUnits / 2 + 0.001;
                 const dimColor = is3D ? '#000000' : dimensionColor;
 
@@ -2364,7 +2364,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
               const is3D = viewMode === '3D';
               const extensionLineStart = mmToThreeUnits(70);
               const extensionLineLength = mmToThreeUnits(110);
-              const tickSize = 0.03;
+              const tickSize = 0.008;
               const zPos = is3D ? doorThicknessUnits / 2 + 0.01 : doorThicknessUnits / 2 + 0.001;
               const dimColor = is3D ? '#000000' : dimensionColor;
 
