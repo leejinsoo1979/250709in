@@ -51,7 +51,7 @@ export const calculatePanelDetails = (
   const backPanelThickness = (!isAlreadyPETAdjusted && (basicThickness === 18.5 || basicThickness === 15.5))
     ? rawBackPanelThickness + 0.5
     : rawBackPanelThickness;
-  const drawerHandleThickness = (basicThickness === 18.5 || basicThickness === 15.5) ? 15.5 : 15; // PB+PET 코팅 시 15.5mm
+  const drawerHandleThickness = basicThickness; // 마이다는 외부 노출 패널이므로 도어와 동일한 basicThickness
   const drawerSideThickness = (basicThickness === 18.5 || basicThickness === 15.5) ? 15.5 : 15; // PB+PET 코팅 시 15.5mm
   const drawerBottomThickness = backPanelThickness; // 서랍 바닥판 - MDF 재질, 백패널과 동일
   
