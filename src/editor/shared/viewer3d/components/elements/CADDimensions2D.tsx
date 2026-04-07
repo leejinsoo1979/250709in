@@ -890,9 +890,9 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
 
         {/* ===== 오른쪽 서랍 마이다 개별 높이 (하부장 전용, 좌측뷰) ===== */}
         {selectedModCategory === 'lower' && visibleFurniture.length > 0 && (() => {
-          // 백색 섹션 높이 치수선보다 200mm 앞(도어면 쪽)에 배치
+          // 백색 섹션 높이 치수선보다 200mm 앞(도어면 쪽)에 배치, 연장선은 100mm만
           const rightDrawerZ = spaceDepth/2 + rightDimOffset - mmToThreeUnits(750) + mmToThreeUnits(200);
-          const rightDrawerExtStartZ = spaceDepth/2 + rightDimOffset - mmToThreeUnits(750) - mmToThreeUnits(360);
+          const rightDrawerExtStartZ = rightDrawerZ - mmToThreeUnits(100);
           const drawerColor = '#FF9800';
 
           const mod = visibleFurniture[0] as PlacedModule;
