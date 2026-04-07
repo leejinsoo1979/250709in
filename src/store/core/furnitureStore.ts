@@ -293,12 +293,13 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
       // 도어 바닥 이격거리 초기화 (카테고리별 기본값)
       const isBasicLowerCabinet = module.moduleId?.includes('lower-half-cabinet') || module.moduleId?.includes('dual-lower-half-cabinet') || module.moduleId?.includes('lower-drawer-') || module.moduleId?.includes('dual-lower-drawer-');
       const isDoorLift = module.moduleId?.includes('lower-door-lift-');
+      const isTopDown = module.moduleId?.includes('lower-top-down-');
       if (module.doorBottomGap === undefined) {
         if (newCategory === 'upper') {
           // 상부장: 캐비넷 하단에서 도어 하단까지의 확장거리 (바닥 기준이 아님)
           module.doorBottomGap = 28;
-        } else if (isBasicLowerCabinet || isDoorLift) {
-          // 기본하부장/서랍장/도어올림: 하단 5mm 확장
+        } else if (isBasicLowerCabinet || isDoorLift || isTopDown) {
+          // 기본하부장/서랍장/도어올림/상판내림: 하단 5mm 확장
           module.doorBottomGap = 5;
         } else if (newCategory === 'lower') {
           // 기타 하부장: 캐비넷 하단에서 2mm 아래로 확장
@@ -312,7 +313,10 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
 
       // 도어 상단 이격거리 초기화 (카테고리별 기본값)
       if (module.doorTopGap === undefined) {
-        if (isDoorLift) {
+        if (isTopDown) {
+          // 상판내림: 상단 -80mm
+          module.doorTopGap = -80;
+        } else if (isDoorLift) {
           // 도어올림: 상단 30mm (마이다가 위로 올라감)
           module.doorTopGap = 30;
         } else if (isBasicLowerCabinet) {
@@ -660,6 +664,19 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
           };
         }
       }
+      // 상판내림: 옛 기본값(20/2) → 새 기본값(-80/5)
+      const isTopDown = m.moduleId?.includes('lower-top-down-');
+      if (isTopDown) {
+        const needsTopFix = m.doorTopGap === 20;
+        const needsBottomFix = m.doorBottomGap === 2;
+        if (needsTopFix || needsBottomFix) {
+          return {
+            ...m,
+            ...(needsTopFix ? { doorTopGap: -80 } : {}),
+            ...(needsBottomFix ? { doorBottomGap: 5 } : {})
+          };
+        }
+      }
       return m;
     });
     set({ placedModules: newModules });
@@ -738,7 +755,11 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
       let bottomGap = defaultBottomGap;
       const isBasicLower = module.moduleId?.includes('lower-half-cabinet') || module.moduleId?.includes('dual-lower-half-cabinet') || module.moduleId?.includes('lower-drawer-') || module.moduleId?.includes('dual-lower-drawer-');
       const isDoorLift = module.moduleId?.includes('lower-door-lift-');
-      if (isDoorLift) {
+      const isTopDown = module.moduleId?.includes('lower-top-down-');
+      if (isTopDown) {
+        topGap = -80;   // 상판내림: 상단 -80mm
+        bottomGap = 5;  // 상판내림: 하단 5mm
+      } else if (isDoorLift) {
         topGap = 30;    // 도어올림: 상단 30mm
         bottomGap = 5;  // 도어올림: 하단 5mm
       } else if (isBasicLower) {
@@ -928,7 +949,8 @@ useFurnitureStore.subscribe((state) => {
   for (const m of state.placedModules) {
     const isBasic = m.moduleId?.includes('lower-half-cabinet') || m.moduleId?.includes('dual-lower-half-cabinet') || m.moduleId?.includes('lower-drawer-') || m.moduleId?.includes('dual-lower-drawer-');
     const isDoorLift = m.moduleId?.includes('lower-door-lift-');
-    if ((isBasic || isDoorLift) && (m.doorTopGap === 20 || m.doorBottomGap === 2)) {
+    const isTopDown = m.moduleId?.includes('lower-top-down-');
+    if ((isBasic || isDoorLift || isTopDown) && (m.doorTopGap === 20 || m.doorBottomGap === 2)) {
       needsMigration = true;
       break;
     }
@@ -938,6 +960,7 @@ useFurnitureStore.subscribe((state) => {
   const migrated = state.placedModules.map(m => {
     const isBasic = m.moduleId?.includes('lower-half-cabinet') || m.moduleId?.includes('dual-lower-half-cabinet') || m.moduleId?.includes('lower-drawer-') || m.moduleId?.includes('dual-lower-drawer-');
     const isDoorLift = m.moduleId?.includes('lower-door-lift-');
+    const isTopDown = m.moduleId?.includes('lower-top-down-');
     if (isBasic) {
       const fixTop = m.doorTopGap === 20;
       const fixBot = m.doorBottomGap === 2;
@@ -949,6 +972,12 @@ useFurnitureStore.subscribe((state) => {
       const fixBot = m.doorBottomGap === 2;
       if (!fixTop && !fixBot) return m;
       return { ...m, ...(fixTop ? { doorTopGap: 30 } : {}), ...(fixBot ? { doorBottomGap: 5 } : {}) };
+    }
+    if (isTopDown) {
+      const fixTop = m.doorTopGap === 20;
+      const fixBot = m.doorBottomGap === 2;
+      if (!fixTop && !fixBot) return m;
+      return { ...m, ...(fixTop ? { doorTopGap: -80 } : {}), ...(fixBot ? { doorBottomGap: 5 } : {}) };
     }
     return m;
   });
@@ -966,6 +995,7 @@ useFurnitureStore.subscribe((state) => {
     const fixed = cur.map(m => {
       const isBasic = m.moduleId?.includes('lower-half-cabinet') || m.moduleId?.includes('dual-lower-half-cabinet') || m.moduleId?.includes('lower-drawer-') || m.moduleId?.includes('dual-lower-drawer-');
       const isDoorLift = m.moduleId?.includes('lower-door-lift-');
+      const isTopDown = m.moduleId?.includes('lower-top-down-');
       if (isBasic) {
         const fixTop = m.doorTopGap === 20;
         const fixBot = m.doorBottomGap === 2;
@@ -979,6 +1009,13 @@ useFurnitureStore.subscribe((state) => {
         if (!fixTop && !fixBot) return m;
         changed = true;
         return { ...m, ...(fixTop ? { doorTopGap: 30 } : {}), ...(fixBot ? { doorBottomGap: 5 } : {}) };
+      }
+      if (isTopDown) {
+        const fixTop = m.doorTopGap === 20;
+        const fixBot = m.doorBottomGap === 2;
+        if (!fixTop && !fixBot) return m;
+        changed = true;
+        return { ...m, ...(fixTop ? { doorTopGap: -80 } : {}), ...(fixBot ? { doorBottomGap: 5 } : {}) };
       }
       return m;
     });
