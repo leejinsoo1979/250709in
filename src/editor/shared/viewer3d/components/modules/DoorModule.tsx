@@ -1925,64 +1925,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
         </group>
         )}
 
-        {/* 측면뷰: 도어 높이 + 상단갭 치수 (듀얼) */}
-        {viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right') && !isPlainMaterial && (() => {
-          const dimColor = dimensionColor;
-          // 도어 상단/하단 Y — 도어 메쉬와 동일한 좌표
-          const dTopY = doorYPosition + doorHeight / 2;
-          const dBottomY = doorYPosition - doorHeight / 2;
-          // 측면뷰: Z→화면수평. 도어 앞면 바로 옆에 치수선 배치
-          const doorFaceZ = doorDepth / 2 + doorThicknessUnits / 2;
-          const dimZ = doorFaceZ + mmToThreeUnits(30);    // 도어 앞면에서 30mm
-          const extStartZ = doorFaceZ + mmToThreeUnits(5); // 연장선 시작 (도어에서 5mm)
-          const extEndZ = dimZ + mmToThreeUnits(5);        // 연장선 끝
-          const tick = mmToThreeUnits(5);
-
-          // 캐비넷 상단 Y
-          const cabH = effectiveInternalHeight || moduleData?.dimensions?.height || 1000;
-          const cabTopY = mmToThreeUnits(cabH) / 2;
-          const topGapMm = Math.abs(doorTopGap);
-          // 갭 표시: doorTopGap < 0이면 도어가 캐비넷보다 아래 = 상단에 갭 존재
-          const showTopGap = topGapMm > 0 && isLowerCabinet && doorTopGap < 0;
-
-          return (
-            <>
-              {/* ── 도어 높이 치수 ── */}
-              <Line name="door-side-dim" points={[[0, dTopY, dimZ], [0, dBottomY, dimZ]]} color={dimColor} lineWidth={1} />
-              <Line name="door-side-dim" points={[[0, dTopY, extStartZ], [0, dTopY, extEndZ]]} color={dimColor} lineWidth={1} />
-              <Line name="door-side-dim" points={[[0, dBottomY, extStartZ], [0, dBottomY, extEndZ]]} color={dimColor} lineWidth={1} />
-              <Line name="door-side-dim" points={[[0, dTopY, dimZ - tick], [0, dTopY, dimZ + tick]]} color={dimColor} lineWidth={1} />
-              <Line name="door-side-dim" points={[[0, dBottomY, dimZ - tick], [0, dBottomY, dimZ + tick]]} color={dimColor} lineWidth={1} />
-              <DimensionText
-                name="door-side-dim-text"
-                value={actualDoorHeight}
-                position={[0, (dTopY + dBottomY) / 2, dimZ + mmToThreeUnits(8)]}
-                color={dimColor}
-                anchorX="left"
-                anchorY="middle"
-                forceShow={true}
-              />
-
-              {/* ── 상단 갭 치수 (하부장, doorTopGap < 0일 때) ── */}
-              {showTopGap && (
-                <>
-                  <Line name="door-side-dim" points={[[0, cabTopY, dimZ], [0, dTopY, dimZ]]} color={dimColor} lineWidth={1} />
-                  <Line name="door-side-dim" points={[[0, cabTopY, extStartZ], [0, cabTopY, extEndZ]]} color={dimColor} lineWidth={1} />
-                  <Line name="door-side-dim" points={[[0, cabTopY, dimZ - tick], [0, cabTopY, dimZ + tick]]} color={dimColor} lineWidth={1} />
-                  <DimensionText
-                    name="door-side-dim-text"
-                    value={topGapMm}
-                    position={[0, (cabTopY + dTopY) / 2, dimZ + mmToThreeUnits(8)]}
-                    color={dimColor}
-                    anchorX="left"
-                    anchorY="middle"
-                    forceShow={true}
-                  />
-                </>
-              )}
-            </>
-          );
-        })()}
+        {/* 측면뷰 하부장/하부프레임 치수는 CADDimensions2D 왼쪽 2단에서 처리 */}
       </group>
     );
   } else {
@@ -2495,58 +2438,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
           </group>
         </animated.group>
 
-        {/* 측면뷰: 도어 높이 + 상단갭 치수 (싱글) */}
-        {viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right') && !isPlainMaterial && (() => {
-          const dimColor = dimensionColor;
-          const dTopY = doorYPosition + doorHeight / 2;
-          const dBottomY = doorYPosition - doorHeight / 2;
-          const doorFaceZ = doorDepth / 2 + doorThicknessUnits / 2;
-          const dimZ = doorFaceZ + mmToThreeUnits(30);
-          const extStartZ = doorFaceZ + mmToThreeUnits(5);
-          const extEndZ = dimZ + mmToThreeUnits(5);
-          const tick = mmToThreeUnits(5);
-
-          const cabH = effectiveInternalHeight || moduleData?.dimensions?.height || 1000;
-          const cabTopY = mmToThreeUnits(cabH) / 2;
-          const topGapMm = Math.abs(doorTopGap);
-          const showTopGap = topGapMm > 0 && isLowerCabinet && doorTopGap < 0;
-
-          return (
-            <>
-              <Line name="door-side-dim" points={[[0, dTopY, dimZ], [0, dBottomY, dimZ]]} color={dimColor} lineWidth={1} />
-              <Line name="door-side-dim" points={[[0, dTopY, extStartZ], [0, dTopY, extEndZ]]} color={dimColor} lineWidth={1} />
-              <Line name="door-side-dim" points={[[0, dBottomY, extStartZ], [0, dBottomY, extEndZ]]} color={dimColor} lineWidth={1} />
-              <Line name="door-side-dim" points={[[0, dTopY, dimZ - tick], [0, dTopY, dimZ + tick]]} color={dimColor} lineWidth={1} />
-              <Line name="door-side-dim" points={[[0, dBottomY, dimZ - tick], [0, dBottomY, dimZ + tick]]} color={dimColor} lineWidth={1} />
-              <DimensionText
-                name="door-side-dim-text"
-                value={actualDoorHeight}
-                position={[0, (dTopY + dBottomY) / 2, dimZ + mmToThreeUnits(8)]}
-                color={dimColor}
-                anchorX="left"
-                anchorY="middle"
-                forceShow={true}
-              />
-
-              {showTopGap && (
-                <>
-                  <Line name="door-side-dim" points={[[0, cabTopY, dimZ], [0, dTopY, dimZ]]} color={dimColor} lineWidth={1} />
-                  <Line name="door-side-dim" points={[[0, cabTopY, extStartZ], [0, cabTopY, extEndZ]]} color={dimColor} lineWidth={1} />
-                  <Line name="door-side-dim" points={[[0, cabTopY, dimZ - tick], [0, cabTopY, dimZ + tick]]} color={dimColor} lineWidth={1} />
-                  <DimensionText
-                    name="door-side-dim-text"
-                    value={topGapMm}
-                    position={[0, (cabTopY + dTopY) / 2, dimZ + mmToThreeUnits(8)]}
-                    color={dimColor}
-                    anchorX="left"
-                    anchorY="middle"
-                    forceShow={true}
-                  />
-                </>
-              )}
-            </>
-          );
-        })()}
+        {/* 측면뷰 하부장/하부프레임 치수는 CADDimensions2D 왼쪽 2단에서 처리 */}
       </group>
     );
   }
