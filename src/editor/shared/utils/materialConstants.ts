@@ -115,7 +115,7 @@ export const getDefaultGrainDirection = (panelName?: string): 'horizontal' | 've
   // ── 프레임류 ──────────────────────────────────
   if (panelName.includes('커튼박스')) return 'vertical';
   if (panelName.includes('목찬넬프레임수평')) return 'horizontal';
-  if (panelName.includes('목찬넬프레임수직')) return 'vertical';
+  if (panelName.includes('목찬넬프레임수직')) return 'horizontal';
 
   // ── 가구 구조 패널 (세로 방향) ─────────────────
   if (panelName.includes('좌측') || panelName.includes('우측') || panelName.includes('측판')) {
