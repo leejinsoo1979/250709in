@@ -340,7 +340,7 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
       if (module.baseFrameHeight === undefined && (newCategory === 'lower' || isLowerById)) {
         module.baseFrameHeight = 100;
       }
-      console.log('[addModule] baseFrameHeight:', module.baseFrameHeight, 'moduleId:', module.moduleId, 'category:', newCategory, 'isLowerById:', isLowerById);
+
 
       // 2단 가구인 경우 섹션 깊이 초기화
       const sections = newModuleData?.modelConfig?.sections;
