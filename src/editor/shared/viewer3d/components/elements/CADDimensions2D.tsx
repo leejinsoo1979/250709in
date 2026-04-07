@@ -625,7 +625,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
 
               {/* 도어올림: 마이다가 캐비넷 상판 위로 올라간 양 (도어 상단갭) */}
               {(() => {
-                if (!mod.moduleId.includes('lower-door-lift-')) return null;
+                if (!mod.moduleId.includes('lower-door-lift-') || mod.hasDoor === false) return null;
                 const lowerMaidas = computeLowerCabinetMaidaHeights(
                   mod.moduleId, moduleHeightMm, mod.doorTopGap ?? 0, mod.doorBottomGap ?? 0
                 );
@@ -1189,6 +1189,8 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           // 서랍 모듈: 도어 높이 대신 마이다 개별 높이 표시
           if (selectedModCategory === 'lower' && visibleFurniture.length > 0) {
             const mod = visibleFurniture[0] as PlacedModule;
+            // 도어가 없으면 마이다 치수선 미표시
+            if (mod.hasDoor === false) return null;
             let modData = getModuleById(
               mod.moduleId,
               { width: internalSpace.width, height: internalSpace.height, depth: internalSpace.depth },
