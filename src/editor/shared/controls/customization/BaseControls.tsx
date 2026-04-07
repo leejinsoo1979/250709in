@@ -85,6 +85,7 @@ const BaseControls: React.FC<BaseControlsProps> = ({ spaceInfo, onUpdate, disabl
 
     if (value !== currentBaseConfig.height) {
       const saveValue = value;
+      const oldHeight = currentBaseConfig.height ?? 100;
       const updates: Partial<SpaceInfo> = {
         baseConfig: {
           ...currentBaseConfig,
@@ -93,6 +94,13 @@ const BaseControls: React.FC<BaseControlsProps> = ({ spaceInfo, onUpdate, disabl
       };
       onUpdate(updates);
       recalcFreePlacementHeights(updates);
+
+      // 하부프레임 높이 동기화: 기존 글로벌 높이와 같은 baseFrameHeight를 가진 가구를 새 값으로 업데이트
+      placedModules.forEach(mod => {
+        if (mod.baseFrameHeight === oldHeight) {
+          updatePlacedModule(mod.id, { baseFrameHeight: saveValue });
+        }
+      });
     }
   };
 
