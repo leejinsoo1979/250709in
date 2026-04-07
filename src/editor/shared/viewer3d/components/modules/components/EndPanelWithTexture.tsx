@@ -125,7 +125,7 @@ const EndPanelWithTexture: React.FC<EndPanelWithTextureProps> = ({
 
   return (
     <group position={position}>
-      {/* 외판 (바깥쪽) */}
+      {/* 측판 (바깥쪽) */}
       <BoxWithEdges
         isEndPanel={true}
         args={[boardThickness, height, depth]}
