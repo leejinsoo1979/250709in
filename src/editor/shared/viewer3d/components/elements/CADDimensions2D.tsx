@@ -25,7 +25,7 @@ const ExtLine: React.FC<{
   <group>
     <NativeLine name={name} points={points} color={color} lineWidth={lineWidth} renderOrder={100000} depthTest={false} />
     <mesh position={points[points.length - 1]} renderOrder={100001}>
-      <sphereGeometry args={[0.12, 8, 8]} />
+      <sphereGeometry args={[0.06, 8, 8]} />
       <meshBasicMaterial color={color} depthTest={false} transparent />
     </mesh>
   </group>
