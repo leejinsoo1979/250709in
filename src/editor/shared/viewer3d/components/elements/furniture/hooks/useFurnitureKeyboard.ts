@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { useFurnitureStore } from '@/store';
 import { useUIStore } from '@/store/uiStore';
 import { getModuleById, buildModuleDataFromPlacedModule } from '@/data/modules';
-import { calculateSpaceIndexing, ColumnIndexer } from '@/editor/shared/utils/indexing';
+import { calculateSpaceIndexing, recalculateWithCustomWidths, ColumnIndexer } from '@/editor/shared/utils/indexing';
 import { calculateInternalSpace } from '../../../../utils/geometry';
 import { SpaceInfo } from '@/store/core/spaceConfigStore';
 import { findNextAvailableSlot } from '@/editor/shared/utils/slotAvailability';
@@ -30,7 +30,9 @@ export const useFurnitureKeyboard = ({
   
   // 내경 공간 계산
   const internalSpace = calculateInternalSpace(spaceInfo);
-  const indexing = calculateSpaceIndexing(spaceInfo);
+  const baseIndexing = calculateSpaceIndexing(spaceInfo);
+  const hasCustomWidths = placedModules.some(m => m.slotCustomWidth !== undefined);
+  const indexing = hasCustomWidths ? recalculateWithCustomWidths(baseIndexing, placedModules) : baseIndexing;
 
   // 키보드 이벤트 처리
   useEffect(() => {

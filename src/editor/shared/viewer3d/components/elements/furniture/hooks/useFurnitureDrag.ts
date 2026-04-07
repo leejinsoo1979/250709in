@@ -4,7 +4,7 @@ import { useThree } from '@react-three/fiber';
 import { useFurnitureStore } from '@/store';
 import { useUIStore } from '@/store/uiStore';
 import { getModuleById } from '@/data/modules';
-import { calculateSpaceIndexing } from '@/editor/shared/utils/indexing';
+import { calculateSpaceIndexing, recalculateWithCustomWidths } from '@/editor/shared/utils/indexing';
 import { calculateInternalSpace } from '../../../../utils/geometry';
 import { SpaceInfo } from '@/store/core/spaceConfigStore';
 import { getSlotIndexAndZoneFromMousePosition } from '../../../../utils/slotRaycast';
@@ -34,6 +34,14 @@ export const useFurnitureDrag = ({ spaceInfo }: UseFurnitureDragProps) => {
   // 내경 공간 계산
   const internalSpace = calculateInternalSpace(spaceInfo);
 
+  // slotCustomWidth 재분할이 적용된 인덱싱 계산 헬퍼
+  const getRecalculatedIndexing = useCallback(() => {
+    const base = calculateSpaceIndexing(spaceInfo);
+    const modules = useFurnitureStore.getState().placedModules;
+    const hasCustom = modules.some(m => m.slotCustomWidth !== undefined);
+    return hasCustom ? recalculateWithCustomWidths(base, modules) : base;
+  }, [spaceInfo]);
+
   // 간단한 렌더링 업데이트 - 디바운스 적용
   const triggerRender = useCallback(() => {
     invalidate();
@@ -48,7 +56,7 @@ export const useFurnitureDrag = ({ spaceInfo }: UseFurnitureDragProps) => {
     const moduleData = getModuleById(movingModule.moduleId, internalSpace, spaceInfo);
     if (!moduleData) return [];
 
-    const indexing = calculateSpaceIndexing(spaceInfo);
+    const indexing = getRecalculatedIndexing();
     const columnWidth = indexing.columnWidth;
     // 이동하는 가구의 isDualSlot 속성을 우선 사용
     const isDualFurniture = movingModule.isDualSlot !== undefined ? movingModule.isDualSlot :
@@ -269,7 +277,7 @@ export const useFurnitureDrag = ({ spaceInfo }: UseFurnitureDragProps) => {
         if (!moduleData) return;
 
         // 전체 indexing에서 zone별 정보 가져오기 (threeUnitPositions 포함)
-        const fullIndexing = calculateSpaceIndexing(spaceInfo);
+        const fullIndexing = getRecalculatedIndexing();
         const zoneData = currentModule.zone === 'dropped'
           ? fullIndexing.zones?.dropped
           : fullIndexing.zones?.normal;
@@ -298,7 +306,7 @@ export const useFurnitureDrag = ({ spaceInfo }: UseFurnitureDragProps) => {
         moduleData = getModuleById(currentModule.moduleId, internalSpace, spaceInfo);
         if (!moduleData) return;
         
-        indexing = calculateSpaceIndexing(spaceInfo);
+        indexing = getRecalculatedIndexing();
         const columnWidth = indexing.columnWidth;
         // isDualSlot 속성을 우선 사용
         isDualFurniture = currentModule.isDualSlot !== undefined ? currentModule.isDualSlot :
@@ -308,7 +316,7 @@ export const useFurnitureDrag = ({ spaceInfo }: UseFurnitureDragProps) => {
       // 슬롯 가용성 검사 (자기 자신 제외)
 
       // 위치 계산 - zone별 배열 직접 접근
-      const fullIndexing = calculateSpaceIndexing(spaceInfo);
+      const fullIndexing = getRecalculatedIndexing();
       let finalX: number;
 
       if (spaceInfo.droppedCeiling?.enabled && currentModule.zone) {
@@ -574,7 +582,7 @@ export const useFurnitureDrag = ({ spaceInfo }: UseFurnitureDragProps) => {
           }
           // zone별로 다른 슬롯 너비 사용
           if (currentModule.zone && spaceInfo.droppedCeiling?.enabled) {
-            const fullIndexing = calculateSpaceIndexing(spaceInfo);
+            const fullIndexing = getRecalculatedIndexing();
             
             if (currentModule.zone === 'dropped' && fullIndexing.zones?.dropped?.slotWidths) {
               const droppedSlotWidths = fullIndexing.zones.dropped.slotWidths;
@@ -605,7 +613,7 @@ export const useFurnitureDrag = ({ spaceInfo }: UseFurnitureDragProps) => {
           }
           
           // zone이 없는 경우 기존 로직 사용
-          const globalIndexing = calculateSpaceIndexing(spaceInfo);
+          const globalIndexing = getRecalculatedIndexing();
           if (globalIndexing.slotWidths) {
             if (isDualFurniture && slotIndex < globalIndexing.slotWidths.length - 1) {
               // 듀얼 가구: 두 슬롯의 실제 너비 합계
