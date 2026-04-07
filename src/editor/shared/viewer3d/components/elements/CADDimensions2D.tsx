@@ -943,7 +943,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
 
           // 하부프레임 옵셋 깊이 (하부장 전용)
           const baseFrameOffsetMm = isLowerMod
-            ? (mod.baseFrameOffset ?? (spaceInfo.baseConfig?.height ?? 100))
+            ? (mod.baseFrameOffset ?? 65)
             : 0;
           const baseFrameOffsetDepth = mmToThreeUnits(baseFrameOffsetMm);
 
