@@ -493,8 +493,8 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
     // 정면 뷰 기준 깊이 등급
     if (view2DDirection === 'front') {
       if (isMaida) return 1.0;
-      if (isDrawerFrame) return 0.15;
-      if (isDrawerPanel) return 0.15;
+      if (isDrawerFrame) return view2DTheme === 'dark' ? 0.45 : 0.15;
+      if (isDrawerPanel) return view2DTheme === 'dark' ? 0.45 : 0.15;
       // 하부섹션 상판: 옵셋으로 뒤에 있으므로 약간 흐리게
       if (panelName.includes('(하)상판')) return 0.5;
       return 1.0;
@@ -530,7 +530,7 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
     }
 
     return 1;
-  }, [viewMode, view2DDirection, panelName, isHighlighted, isClothingRod, isBackPanel, edgeOpacity]);
+  }, [viewMode, view2DDirection, view2DTheme, panelName, isHighlighted, isClothingRod, isBackPanel, edgeOpacity]);
 
 
   // 다중 노치 여부 판별 (notches가 있으면 우선 사용)
