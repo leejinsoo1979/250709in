@@ -900,7 +900,11 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
 
         {/* ===== 가구별 깊이 치수 - 측면뷰에서 보이는 가구만 표시 ===== */}
         {visibleFurniture.map((module, index) => {
-          let depthModuleData = moduleData;
+          let depthModuleData = getModuleById(
+            module.moduleId,
+            { width: internalSpace.width, height: internalSpace.height, depth: internalSpace.depth },
+            spaceInfo
+          );
           if (!depthModuleData) {
             depthModuleData = buildModuleDataFromPlacedModule(module as PlacedModule, internalSpace, spaceInfo);
           }
