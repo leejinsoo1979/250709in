@@ -1016,10 +1016,10 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
 
                 return (
                   <group>
-                    {/* 보조 가이드 연장선 - 앞쪽 (가구 바닥에서 depthDimY까지 짧게) */}
-                    <ExtLine points={[[0, depthDimEdge, frontZ], [0, depthDimY, frontZ]]} color={dimensionColor} />
-                    {/* 보조 가이드 연장선 - 뒤쪽 (가구 바닥에서 depthDimY까지 짧게) */}
-                    <ExtLine points={[[0, depthDimEdge, offsetBackZ], [0, depthDimY, offsetBackZ]]} color={dimensionColor} />
+                    {/* 보조 가이드 연장선 - 앞쪽 (절반 길이) */}
+                    <ExtLine points={[[0, (depthDimEdge + depthDimY) / 2, frontZ], [0, depthDimY, frontZ]]} color={dimensionColor} />
+                    {/* 보조 가이드 연장선 - 뒤쪽 (절반 길이) */}
+                    <ExtLine points={[[0, (depthDimEdge + depthDimY) / 2, offsetBackZ], [0, depthDimY, offsetBackZ]]} color={dimensionColor} />
 
                     {/* 하부프레임 옵셋 깊이 치수선 (가구 깊이와 같은 Y) */}
                     <NativeLine name="dimension_line"
