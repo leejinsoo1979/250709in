@@ -651,8 +651,8 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           </group>
         )}
 
-        {/* 가구별 섹션 치수 가이드 - 측면뷰에서 보이는 가구만 표시 */}
-        {visibleFurniture.map((module, moduleIndex) => {
+        {/* 가구별 섹션 치수 가이드 - 측면뷰에서 보이는 가구만 표시 (하부장은 왼쪽 2단에서 표시하므로 제외) */}
+        {selectedModCategory !== 'lower' && visibleFurniture.map((module, moduleIndex) => {
           let moduleData = getModuleById(
             module.moduleId,
             { width: internalSpace.width, height: internalSpace.height, depth: internalSpace.depth },
@@ -888,8 +888,8 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           });
         })}
 
-        {/* 바닥마감재 치수 (별도 위치, 좌측뷰) */}
-        {floorFinishHeightMm > 0 && !isFloating && (
+        {/* 바닥마감재 치수 (별도 위치, 좌측뷰) — 하부장은 왼쪽 2단에서 표시하므로 제외 */}
+        {floorFinishHeightMm > 0 && !isFloating && selectedModCategory !== 'lower' && (
         <group>
             {/* 보조 가이드 연장선 - 바닥 */}
             <NativeLine name="dimension_line"
@@ -943,8 +943,8 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
         </group>
         )}
 
-        {/* 받침대 높이 (마감재 상단 ~ 받침대 상단, 좌측뷰) */}
-        {baseFrameHeightMm > 0 && (
+        {/* 받침대 높이 (마감재 상단 ~ 받침대 상단, 좌측뷰) — 하부장은 왼쪽 2단에서 표시하므로 제외 */}
+        {baseFrameHeightMm > 0 && selectedModCategory !== 'lower' && (
         <group>
             {/* 보조 가이드 연장선 - 시작 (마감재 상단 or 바닥) */}
             <NativeLine name="dimension_line"
@@ -1724,8 +1724,8 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           </group>
         )}
 
-        {/* 가구별 섹션 치수 가이드 - 우측뷰에서 보이는 가구만 표시 */}
-        {visibleFurniture.map((module, moduleIndex) => {
+        {/* 가구별 섹션 치수 가이드 - 우측뷰에서 보이는 가구만 표시 (하부장은 왼쪽 2단에서 표시하므로 제외) */}
+        {selectedModCategory !== 'lower' && visibleFurniture.map((module, moduleIndex) => {
           let moduleData = getModuleById(
             module.moduleId,
             { width: internalSpace.width, height: internalSpace.height, depth: internalSpace.depth },
@@ -1956,8 +1956,8 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           });
         })}
 
-        {/* 바닥마감재 치수 (별도 위치, 우측뷰) */}
-        {floorFinishHeightMm > 0 && !isFloating && (
+        {/* 바닥마감재 치수 (별도 위치, 우측뷰) — 하부장은 왼쪽 2단에서 표시하므로 제외 */}
+        {floorFinishHeightMm > 0 && !isFloating && selectedModCategory !== 'lower' && (
         <group>
             {/* 보조 가이드 연장선 - 바닥 */}
             <NativeLine name="dimension_line"
@@ -2011,8 +2011,8 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
         </group>
         )}
 
-        {/* 받침대 높이 (마감재 상단 ~ 받침대 상단, 우측뷰) */}
-        {baseFrameHeightMm > 0 && (
+        {/* 받침대 높이 (마감재 상단 ~ 받침대 상단, 우측뷰) — 하부장은 왼쪽 2단에서 표시하므로 제외 */}
+        {baseFrameHeightMm > 0 && selectedModCategory !== 'lower' && (
         <group>
             {/* 보조 가이드 연장선 - 시작 (마감재 상단 or 바닥) */}
             <NativeLine name="dimension_line"
