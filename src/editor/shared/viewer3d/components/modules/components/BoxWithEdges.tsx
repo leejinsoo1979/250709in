@@ -649,16 +649,12 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
 
     const baseLineWidth = isHighlighted ? 4 : (isBackPanel ? 1 : 2);
 
-    // lineBasicMaterial opacity가 WebGL에서 잘 안 보이는 경우 대비
-    // color 자체를 배경색과 블렌딩하여 깊이감 표현
-    // 라이트 모드: 최소 opacity 0.3 보장 (너무 연한 색상은 흰 배경에서 안 보임)
-    const blendedColor = panelDepthOpacity >= 1.0 ? edgeColor : (() => {
-      const effectiveOpacity = view2DTheme === 'light'
-        ? Math.max(panelDepthOpacity, 0.5)
-        : panelDepthOpacity;
+    // 깊이감 표현: 다크모드만 color 블렌딩, 라이트모드는 원색 그대로 사용
+    // 라이트모드에서 블렌딩하면 흰 배경에 묻혀 안 보이는 문제 방지
+    const blendedColor = (view2DTheme === 'light' || panelDepthOpacity >= 1.0) ? edgeColor : (() => {
       const base = new THREE.Color(edgeColor);
-      const bg = new THREE.Color(view2DTheme === 'dark' ? '#1a1a2e' : '#ffffff');
-      bg.lerp(base, effectiveOpacity);
+      const bg = new THREE.Color('#1a1a2e');
+      bg.lerp(base, panelDepthOpacity);
       return '#' + bg.getHexString();
     })();
 
@@ -687,7 +683,7 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
             <lineBasicMaterial
               color={blendedColor}
               transparent={true}
-              opacity={view2DTheme === 'light' ? Math.max(panelDepthOpacity, 0.7) : panelDepthOpacity}
+              opacity={view2DTheme === 'light' ? 1.0 : panelDepthOpacity}
               depthTest={false}
               depthWrite={false}
               linewidth={baseLineWidth}
