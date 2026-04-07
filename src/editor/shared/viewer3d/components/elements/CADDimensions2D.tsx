@@ -230,6 +230,16 @@ const computeLowerCabinetMaidaHeights = (
     }
     cursor = notch.fromBottom + notch.height;
   }
+  // hideTopNotch일 때 마지막 노치 위 남은 공간을 추가 zone으로 생성
+  if (cursor < moduleHeightMm) {
+    const lastNotch = allNotches[allNotches.length - 1];
+    zones.push({
+      bottomMm: cursor,
+      topMm: moduleHeightMm,
+      notchAboveBottom: moduleHeightMm,
+      notchBelowTop: lastNotch ? (lastNotch.fromBottom + lastNotch.height) : null,
+    });
+  }
 
   // ExternalDrawerRenderer line 149-154: 마이다 높이 계산
   return zones.map((zone, i) => {
@@ -1295,6 +1305,16 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           const doorTopY = mmToThreeUnits(doorTopAbsMm);
           const doorMidY = (doorBottomY + doorTopY) / 2;
 
+          // 도어 상단갭 계산 (하부장: 도어 상단 ~ 가구 상판)
+          let doorTopGapMm = 0;
+          let cabinetTopAbsMm = 0;
+          if (doorCategory === 'lower') {
+            const cabinetH = doorModData?.dimensions.height ?? 1000;
+            const cabinetBottomAbs = baseFrameHeightMm + floorFinishHeightMm;
+            cabinetTopAbsMm = cabinetBottomAbs + cabinetH;
+            doorTopGapMm = Math.round(cabinetTopAbsMm - doorTopAbsMm);
+          }
+
           return (
             <group>
               <NativeLine name="door_height_dim" points={[[0, doorBottomY, doorDimZ], [0, doorTopY, doorDimZ]]} color={doorColor} lineWidth={2} renderOrder={100000} depthTest={false} />
@@ -1305,6 +1325,21 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
               </Text>
               <ExtLine points={[[0, doorTopY, furnitureFrontZ + mmToThreeUnits(20)], [0, doorTopY, doorDimZ]]} color={doorColor} lineWidth={0.5} name="door_height_ext" />
               <ExtLine points={[[0, doorBottomY, furnitureFrontZ + mmToThreeUnits(20)], [0, doorBottomY, doorDimZ]]} color={doorColor} lineWidth={0.5} name="door_height_ext" />
+              {/* 하부장 도어 상단갭 */}
+              {doorTopGapMm > 0 && (() => {
+                const gapTopY = mmToThreeUnits(cabinetTopAbsMm);
+                const gapBotY = doorTopY;
+                return (
+                  <group>
+                    <NativeLine name="door_height_dim" points={[[0, gapBotY, doorDimZ], [0, gapTopY, doorDimZ]]} color={doorColor} lineWidth={2} renderOrder={100000} depthTest={false} />
+                    <NativeLine name="door_height_dim" points={[[-0.03, gapTopY, doorDimZ], [0.03, gapTopY, doorDimZ]]} color={doorColor} lineWidth={2} renderOrder={100000} depthTest={false} />
+                    <Text position={[0, (gapBotY + gapTopY) / 2, doorDimZ + mmToThreeUnits(60)]} fontSize={largeFontSize} color={doorColor} anchorX="center" anchorY="middle" renderOrder={1000} depthTest={false} rotation={[0, -Math.PI / 2, Math.PI / 2]}>
+                      {doorTopGapMm}
+                    </Text>
+                    <ExtLine points={[[0, gapTopY, furnitureFrontZ + mmToThreeUnits(20)], [0, gapTopY, doorDimZ]]} color={doorColor} lineWidth={0.5} name="door_height_ext" />
+                  </group>
+                );
+              })()}
             </group>
           );
         })()}
