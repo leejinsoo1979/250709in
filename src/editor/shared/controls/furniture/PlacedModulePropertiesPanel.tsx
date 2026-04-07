@@ -862,7 +862,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
       setOriginalCustomWidth(initialWidth);
       const hingePos = currentPlacedModule.hingePosition || 'right';
       const hingeTypeVal = currentPlacedModule.hingeType || 'A';
-      const hasDoorVal = currentPlacedModule.hasDoor ?? moduleData.hasDoor ?? false;
+      const hasDoorVal = currentPlacedModule.hasDoor ?? false; // 3D 렌더링(FurnitureItem)과 동일 기준
       const doorSplitVal = currentPlacedModule.doorSplit ?? false;
       const hasGapVal = currentPlacedModule.hasGapBackPanel ?? false;
       const backPanelThicknessVal = currentPlacedModule.backPanelThickness ?? 9;

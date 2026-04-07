@@ -1505,11 +1505,8 @@ export const calculatePanelDetails = (
         { name: `서랍${drawerNum} 뒷판`, width: Math.round(extInnerWidth), height: Math.round(extBackHMm), thickness: drawerSideThickness, material: 'PB' },
         { name: `서랍${drawerNum} 바닥`, width: Math.round(extBottomWidthMm), depth: extSideDepthMm, thickness: backPanelThickness, material: 'MDF' },
       );
-      // 마이다는 도어+마이다가 실제 렌더링될 때만 (ExternalDrawerRenderer showMaida={hasDoor} 동일)
-      // lower-drawer-* 순수서랍장: 배치 시 placedModule.hasDoor가 미설정→moduleData.hasDoor=true 폴백으로
-      // 패널목록에 잘못 표시될 수 있으므로, 순수서랍장은 마이다 제외
-      const isDrawerOnlyModule = moduleData.id.includes('lower-drawer-');
-      if (hasDoor && !isDrawerOnlyModule) {
+      // 마이다는 도어 있을 때만 (ExternalDrawerRenderer showMaida={hasDoor} 동일)
+      if (hasDoor) {
         extDrawerPanels.push(
           { name: `서랍${drawerNum}(마이다)`, width: customWidth - 3, height: Math.round(maidaHeightMm), thickness: basicThickness, material: 'PET' },
         );
