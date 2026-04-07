@@ -125,6 +125,9 @@ export const useFurnitureKeyboard = ({
 // console.log('⚠️ [useFurnitureKeyboard] 슬롯 위치를 못 찾아 저장된 slotIndex 사용:', currentSlotIndex);
         }
         
+        // slotCustomWidth가 설정된 가구는 좌우 이동 차단
+        const hasSlotCustomWidth = editingModule.slotCustomWidth !== undefined;
+
         switch (e.key) {
           case 'Delete':
           case 'Backspace':
@@ -141,8 +144,9 @@ export const useFurnitureKeyboard = ({
             }
             e.preventDefault();
             break;
-            
+
           case 'ArrowLeft': {
+            if (hasSlotCustomWidth) { e.preventDefault(); break; }
             // 스마트 건너뛰기: 왼쪽으로 다음 사용 가능한 슬롯 찾기
 // console.log('⌨️ ArrowLeft 키 입력:', {
               // currentSlot: currentSlotIndex,
@@ -270,6 +274,7 @@ export const useFurnitureKeyboard = ({
           }
 
           case 'ArrowRight': {
+            if (hasSlotCustomWidth) { e.preventDefault(); break; }
             // 스마트 건너뛰기: 오른쪽으로 다음 사용 가능한 슬롯 찾기
 // console.log('⌨️ ArrowRight 키 입력:', {
               // currentSlot: currentSlotIndex,
@@ -448,6 +453,9 @@ export const useFurnitureKeyboard = ({
             currentSlotIndex = selectedModule.slotIndex || 0;
           }
           
+          // slotCustomWidth가 설정된 가구는 좌우 이동 차단
+          const hasSlotCustomWidth2 = selectedModule.slotCustomWidth !== undefined;
+
           switch (e.key) {
             case 'Delete':
             case 'Backspace': {
@@ -461,8 +469,9 @@ export const useFurnitureKeyboard = ({
               e.preventDefault();
               break;
             }
-              
+
             case 'ArrowLeft': {
+              if (hasSlotCustomWidth2) { e.preventDefault(); break; }
               // 스마트 건너뛰기: 왼쪽으로 다음 사용 가능한 슬롯 찾기
               const nextSlot = findNextAvailableSlot(
                 currentSlotIndex,
@@ -561,6 +570,7 @@ export const useFurnitureKeyboard = ({
             }
               
             case 'ArrowRight': {
+              if (hasSlotCustomWidth2) { e.preventDefault(); break; }
               // 스마트 건너뛰기: 오른쪽으로 다음 사용 가능한 슬롯 찾기
               const nextSlot = findNextAvailableSlot(
                 currentSlotIndex,
