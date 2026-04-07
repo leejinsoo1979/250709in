@@ -2556,13 +2556,15 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
         const epDepthDirOffset = endPanelDepthDirectionProp === 'back'
           ? -(epDActual - D) / 2
           : (epDActual - D) / 2;
-        // EP 옵셋: 앞=앞에서 줄어듦(뒷면 고정, Z-), 뒤=뒤에서 줄어듦(앞면 고정, Z+)
+        // EP 옵셋: + 앞 확장(Z+), - 뒤 축소(Z-). abs로 깊이 줄이고 부호로 Z shift 방향 결정
         const leftEpOffsetUnit = mmToUnit(leftEpOffsetMm);
-        const leftEpDepth = Math.max(0, epDActual - leftEpOffsetUnit);
-        const leftEpZShift = leftEpOffsetDirProp === 'front' ? -(leftEpOffsetUnit / 2) : (leftEpOffsetUnit / 2);
+        const leftEpAbsUnit = Math.abs(leftEpOffsetUnit);
+        const leftEpDepth = Math.max(0, epDActual - leftEpAbsUnit);
+        const leftEpZShift = leftEpOffsetUnit / 2; // 양수→Z+, 음수→Z-
         const rightEpOffsetUnit = mmToUnit(rightEpOffsetMm);
-        const rightEpDepth = Math.max(0, epDActual - rightEpOffsetUnit);
-        const rightEpZShift = rightEpOffsetDirProp === 'front' ? -(rightEpOffsetUnit / 2) : (rightEpOffsetUnit / 2);
+        const rightEpAbsUnit = Math.abs(rightEpOffsetUnit);
+        const rightEpDepth = Math.max(0, epDActual - rightEpAbsUnit);
+        const rightEpZShift = rightEpOffsetUnit / 2;
         return (
           <>
             {hasLeftEndPanel && (

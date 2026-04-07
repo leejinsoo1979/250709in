@@ -3656,15 +3656,13 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
               const freeEpDepthDirOffset = (placedModule.endPanelDepthDirection ?? 'front') === 'back'
                 ? -(epD - freeEpFurnitureD) / 2
                 : (epD - freeEpFurnitureD) / 2;
-              // EP 옵셋: 앞=앞에서 줄어듦(뒷면 고정, Z-), 뒤=뒤에서 줄어듦(앞면 고정, Z+)
-              const leftOffDir = placedModule.leftEndPanelOffsetDir ?? 'front';
-              const rightOffDir = placedModule.rightEndPanelOffsetDir ?? 'front';
+              // EP 옵셋: + 앞 확장(Z+), - 뒤 축소(Z-). abs로 깊이 줄이고 부호로 Z shift 방향 결정
               const leftEpOffsetUnit = mmToThreeUnits(leftEpOffsetMm);
-              const leftEpD = Math.max(0, epD - leftEpOffsetUnit);
-              const leftEpZShift = leftOffDir === 'front' ? -(leftEpOffsetUnit / 2) : (leftEpOffsetUnit / 2);
+              const leftEpD = Math.max(0, epD - Math.abs(leftEpOffsetUnit));
+              const leftEpZShift = leftEpOffsetUnit / 2;
               const rightEpOffsetUnit = mmToThreeUnits(rightEpOffsetMm);
-              const rightEpD = Math.max(0, epD - rightEpOffsetUnit);
-              const rightEpZShift = rightOffDir === 'front' ? -(rightEpOffsetUnit / 2) : (rightEpOffsetUnit / 2);
+              const rightEpD = Math.max(0, epD - Math.abs(rightEpOffsetUnit));
+              const rightEpZShift = rightEpOffsetUnit / 2;
 
               // EP 높이 계산: 카테고리별 상단/하단 기준이 다름
               // 상부장: 상단=천장, 하단=가구 하단
@@ -3970,14 +3968,10 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
           const mm = side === 'left'
             ? (placedModule.leftEndPanelOffset ?? placedModule.endPanelOffset ?? 0)
             : (placedModule.rightEndPanelOffset ?? placedModule.endPanelOffset ?? 0);
-          const offDir = side === 'left'
-            ? (placedModule.leftEndPanelOffsetDir ?? 'front')
-            : (placedModule.rightEndPanelOffsetDir ?? 'front');
           const offsetUnit = mmToThreeUnits(mm);
-          const zSign = offDir === 'front' ? -1 : 1;
           return {
-            depth: Math.max(0, endPanelDepth - offsetUnit),
-            zShift: zSign * (offsetUnit / 2) + epDepthDirOffset,
+            depth: Math.max(0, endPanelDepth - Math.abs(offsetUnit)),
+            zShift: offsetUnit / 2 + epDepthDirOffset,
           };
         };
 
