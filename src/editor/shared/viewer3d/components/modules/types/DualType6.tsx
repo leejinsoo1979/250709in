@@ -221,7 +221,7 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
                   panelGrainDirections={panelGrainDirections}
                   furnitureId={placedFurnitureId}
                   backPanelThicknessOverride={backPanelThicknessProp}
-                  topPanelFrontInset={lowerSectionTopOffset || 0}
+                  topPanelFrontInset={0} // 키큰장 서랍은 상판 옵셋 불필요
                 />
               );
             }

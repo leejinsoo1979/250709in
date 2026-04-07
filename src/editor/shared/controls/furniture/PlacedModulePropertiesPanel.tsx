@@ -808,7 +808,11 @@ const PlacedModulePropertiesPanel: React.FC = () => {
 
   const moduleDefaultLowerTopOffset = React.useMemo(() => {
     if (!moduleData?.id) return 0;
-    return moduleData.id.includes('2drawer') || moduleData.id.includes('4drawer') ? 85 : 0;
+    // 하부장 서랍 전용: lower-drawer-* / dual-lower-drawer-* 패턴만 85mm 기본값
+    // 키큰장 서랍(2drawer-hanging, 4drawer-hanging, 2drawer-styler 등)은 0
+    const id = moduleData.id;
+    const isLowerDrawer = id.includes('lower-drawer-');
+    return isLowerDrawer ? 85 : 0;
   }, [moduleData?.id]);
 
   // 초기값 설정 - 의존성에서 getDefaultDepth 제거하여 불필요한 재실행 방지
