@@ -1450,7 +1450,7 @@ export const calculatePanelDetails = (
     }
 
     // zone 계산 (ExternalDrawerRenderer 동일)
-    const sidePanelHMm = customHeight;
+    const sidePanelHMm = height;
     const upperNotchH = 60;
     const sortedNotches = notchFromBottoms
       .map((fb, idx) => ({ fromBottom: fb, height: notchHeightsArr[idx] || 65 }))
