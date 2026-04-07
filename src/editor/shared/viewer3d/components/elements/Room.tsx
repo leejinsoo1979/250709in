@@ -3727,7 +3727,7 @@ const Room: React.FC<RoomProps> = ({
       {/* 수평 상단 프레임 - 좌우 프레임 사이에만 배치 (가구 앞면에 배치, 문 안쪽에 숨김) */}
       {/* 노서라운드 모드에서는 전체 너비로 확장하지만 좌우 프레임이 없을 때만 표시 */}
       {/* 상부 프레임 - 균등분할: 전체 너비, 자유배치: 가구별 세그먼트 */}
-      {(effectiveShowFrame || isFreePlacement) && (() => {
+      {(effectiveShowFrame || isFreePlacement) && !(viewMode === '2D' && view2DDirection === 'top') && (() => {
         // 슬롯배치: 가구가 하나도 없으면 상부프레임 렌더링 안 함
         if (!isFreePlacement && placedModulesFromStore.filter(m => !m.isSurroundPanel).length === 0) return null;
         // 자유배치 모드: 가구별 세그먼트로 상부 프레임 렌더링
@@ -5565,7 +5565,7 @@ const Room: React.FC<RoomProps> = ({
       {/* 하단 프레임 - 받침대 역할 (가구 앞면에 배치, 문 안쪽에 숨김) */}
       {/* 받침대가 있는 경우에만 렌더링 */}
       {/* 하부 베이스프레임 - 균등분할: 전체 너비, 자유배치: 가구별 세그먼트 */}
-      {(effectiveShowFrame || isFreePlacement) && baseFrameHeightMm > 0 && spaceInfo.baseConfig?.type === 'floor' && (() => {
+      {(effectiveShowFrame || isFreePlacement) && baseFrameHeightMm > 0 && spaceInfo.baseConfig?.type === 'floor' && !(viewMode === '2D' && view2DDirection === 'top') && (() => {
         // 슬롯배치: 하부장/키큰장이 없으면 하부프레임 렌더링 안 함 (상부장만 있을 때는 숨김)
         const hasNonUpperFurniture = placedModulesFromStore.some(m =>
           !m.isSurroundPanel && !(m.moduleId || '').includes('upper-cabinet')
