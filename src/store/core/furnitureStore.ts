@@ -307,7 +307,7 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
         } else {
           const isFloatPlacement = spaceInfo.baseConfig?.placementType === 'float';
           const floatHeight = spaceInfo.baseConfig?.floatHeight || 200;
-          module.doorBottomGap = spaceInfo.doorBottomGap ?? (isFloatPlacement ? floatHeight : 25);
+          module.doorBottomGap = isFloatPlacement ? floatHeight : 25;
         }
       }
 
@@ -328,7 +328,7 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
         } else {
           const isFullSurround = spaceInfo.surroundType === 'surround' && spaceInfo.frameConfig?.top !== false;
           const topFrameMm = spaceInfo.frameSize?.top || 30;
-          module.doorTopGap = isFullSurround ? (topFrameMm + 3) : (spaceInfo.doorTopGap || 5);
+          module.doorTopGap = isFullSurround ? (topFrameMm + 3) : 5;
         }
       }
 
@@ -739,12 +739,12 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
     const internalSpace = calculateInternalSpace(spaceInfo);
     const isFloatPlacement = spaceInfo.baseConfig?.placementType === 'float';
     const floatHeight = spaceInfo.baseConfig?.floatHeight || 200;
-    const defaultBottomGap = spaceInfo.doorBottomGap ?? (isFloatPlacement ? floatHeight : 25);
+    const defaultBottomGap = isFloatPlacement ? floatHeight : 25;
 
-    // 전체서라운드: 상부프레임 + 3mm, 그 외: spaceInfo.doorTopGap 또는 5mm
+    // 전체서라운드: 상부프레임 + 3mm, 그 외: 5mm
     const isFullSurround = spaceInfo.surroundType === 'surround' && spaceInfo.frameConfig?.top !== false;
     const topFrameMm = spaceInfo.frameSize?.top || 30;
-    const defaultTopGap = isFullSurround ? (topFrameMm + 3) : (spaceInfo.doorTopGap || 5);
+    const defaultTopGap = isFullSurround ? (topFrameMm + 3) : 5;
 
     const currentModules = get().placedModules;
     const updatedModules = currentModules.map(module => {

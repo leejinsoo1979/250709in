@@ -5705,7 +5705,7 @@ const Configurator: React.FC = () => {
                       {fullDoorIndices.map(({ i }) => {
                         const mod = doorFurnitureList[i];
                         return <DoorGapInput key={`top-${mod.id}`} moduleId={mod.id} field="doorTopGap"
-                          storeValue={mod.doorTopGap || spaceInfo.doorTopGap || 5}
+                          storeValue={mod.doorTopGap ?? 5}
                           onCommit={handleIndividualDoorGapChange} />;
                       })}
                     </tr>
@@ -5713,9 +5713,8 @@ const Configurator: React.FC = () => {
                       <td style={{ padding: '3px 4px', fontSize: '11px', color: 'var(--theme-text-secondary, #999)', whiteSpace: 'nowrap' }}>하단갭</td>
                       {fullDoorIndices.map(({ i }) => {
                         const mod = doorFurnitureList[i];
-                        const sv = mod.doorBottomGap ?? spaceInfo.doorBottomGap ?? 1.5;
                         return <DoorGapInput key={`bot-${mod.id}`} moduleId={mod.id} field="doorBottomGap"
-                          storeValue={sv}
+                          storeValue={mod.doorBottomGap ?? 25}
                           onCommit={handleIndividualDoorGapChange} />;
                       })}
                     </tr>
@@ -5745,7 +5744,7 @@ const Configurator: React.FC = () => {
                       {partialDoorIndices.map(({ i }) => {
                         const mod = doorFurnitureList[i];
                         return <DoorGapInput key={`top-${mod.id}`} moduleId={mod.id} field="doorTopGap"
-                          storeValue={mod.doorTopGap || spaceInfo.doorTopGap || 5}
+                          storeValue={mod.doorTopGap ?? 20}
                           onCommit={handleIndividualDoorGapChange} />;
                       })}
                     </tr>
@@ -5753,9 +5752,8 @@ const Configurator: React.FC = () => {
                       <td style={{ padding: '3px 4px', fontSize: '11px', color: 'var(--theme-text-secondary, #999)', whiteSpace: 'nowrap' }}>하단갭</td>
                       {partialDoorIndices.map(({ i }) => {
                         const mod = doorFurnitureList[i];
-                        const sv = mod.doorBottomGap ?? spaceInfo.doorBottomGap ?? 1.5;
                         return <DoorGapInput key={`bot-${mod.id}`} moduleId={mod.id} field="doorBottomGap"
-                          storeValue={sv}
+                          storeValue={mod.doorBottomGap ?? 2}
                           onCommit={handleIndividualDoorGapChange} />;
                       })}
                     </tr>
