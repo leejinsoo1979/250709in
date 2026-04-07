@@ -2813,6 +2813,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                           <input
                             type="text" inputMode="numeric"
                             value={displayW}
+                            disabled={spaceInfo.layoutMode !== 'free-placement'}
                             onChange={(e) => setSectionWidthInputs(prev => ({ ...prev, [sIdx]: e.target.value }))}
                             onBlur={() => {
                               // 너비 변경 → 전체 가구 너비 변경 (모든 섹션 연동)
@@ -2861,7 +2862,12 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                               }
                             }}
                             className={styles.depthInput}
-                            style={{ color: '#000', backgroundColor: '#fff', WebkitTextFillColor: '#000', opacity: 1 }}
+                            style={{
+                              color: spaceInfo.layoutMode !== 'free-placement' ? '#999' : '#000',
+                              backgroundColor: spaceInfo.layoutMode !== 'free-placement' ? '#f0f0f0' : '#fff',
+                              WebkitTextFillColor: spaceInfo.layoutMode !== 'free-placement' ? '#999' : '#000',
+                              opacity: 1,
+                            }}
                           />
                           <span className={styles.unit}>mm</span>
                         </div>
