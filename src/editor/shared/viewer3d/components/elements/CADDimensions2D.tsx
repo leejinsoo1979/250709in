@@ -1008,23 +1008,22 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                 {customDepth}
               </Text>
 
-              {/* 하부프레임 옵셋 깊이 치수 (하부장 전용) — 가구 깊이보다 한 단 아래 */}
+              {/* 하부프레임 옵셋 깊이 치수 (하부장 전용) — 650 깊이 치수 안쪽 같은 단 */}
               {isLowerMod && baseFrameOffsetMm > 0 && (() => {
-                const offsetDimY = floatHeight - mmToThreeUnits(200); // 하부프레임 바로 아래
                 // 하부프레임은 가구 앞면(도어면)에서 옵셋만큼 뒤로 들어감
                 const frontZ = furnitureZOffset + furnitureDepth/2 - doorThickness;
                 const offsetBackZ = frontZ - baseFrameOffsetDepth;
 
                 return (
                   <group>
-                    {/* 보조 가이드 연장선 - 앞쪽 (하부프레임 하단에서 짧게) */}
-                    <ExtLine points={[[0, floatHeight, frontZ], [0, offsetDimY, frontZ]]} color={dimensionColor} />
-                    {/* 보조 가이드 연장선 - 뒤쪽 (하부프레임 하단에서 짧게) */}
-                    <ExtLine points={[[0, floatHeight, offsetBackZ], [0, offsetDimY, offsetBackZ]]} color={dimensionColor} />
+                    {/* 보조 가이드 연장선 - 앞쪽 (가구 바닥에서 depthDimY까지 짧게) */}
+                    <ExtLine points={[[0, depthDimEdge, frontZ], [0, depthDimY, frontZ]]} color={dimensionColor} />
+                    {/* 보조 가이드 연장선 - 뒤쪽 (가구 바닥에서 depthDimY까지 짧게) */}
+                    <ExtLine points={[[0, depthDimEdge, offsetBackZ], [0, depthDimY, offsetBackZ]]} color={dimensionColor} />
 
-                    {/* 하부프레임 옵셋 깊이 치수선 */}
+                    {/* 하부프레임 옵셋 깊이 치수선 (가구 깊이와 같은 Y) */}
                     <NativeLine name="dimension_line"
-                      points={[[0, offsetDimY, offsetBackZ], [0, offsetDimY, frontZ]]}
+                      points={[[0, depthDimY, offsetBackZ], [0, depthDimY, frontZ]]}
                       color={dimensionColor}
                       lineWidth={1.5}
                       renderOrder={100000}
@@ -1032,7 +1031,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                     />
                     {/* 앞쪽 티크 */}
                     <NativeLine name="dimension_line"
-                      points={[[0 - 0.02, offsetDimY, frontZ], [0 + 0.02, offsetDimY, frontZ]]}
+                      points={[[0 - 0.02, depthDimY, frontZ], [0 + 0.02, depthDimY, frontZ]]}
                       color={dimensionColor}
                       lineWidth={1.5}
                       renderOrder={100000}
@@ -1040,7 +1039,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                     />
                     {/* 뒤쪽 티크 */}
                     <NativeLine name="dimension_line"
-                      points={[[0 - 0.02, offsetDimY, offsetBackZ], [0 + 0.02, offsetDimY, offsetBackZ]]}
+                      points={[[0 - 0.02, depthDimY, offsetBackZ], [0 + 0.02, depthDimY, offsetBackZ]]}
                       color={dimensionColor}
                       lineWidth={1.5}
                       renderOrder={100000}
@@ -1048,7 +1047,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                     />
                     {/* 하부프레임 옵셋 깊이 텍스트 */}
                     <Text
-                      position={[0, offsetDimY - mmToThreeUnits(80), (frontZ + offsetBackZ) / 2]}
+                      position={[0, depthDimY - mmToThreeUnits(80), (frontZ + offsetBackZ) / 2]}
                       fontSize={largeFontSize}
                       color={textColor}
                       anchorX="center"
