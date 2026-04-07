@@ -515,53 +515,7 @@ const ColumnGuides: React.FC<ColumnGuidesProps> = ({ viewMode: viewModeProp }) =
           />
         );
         
-        // 3D에서만 Z축 가이드 표시 (배치된 슬롯 인접 경계는 제외)
-        if (viewMode === '3D') {
-          // boundary[index]는 슬롯 index-1(좌)과 index(우)의 경계
-          // 인접 슬롯 중 하나라도 가구가 배치되어 있으면 Z축 가이드 숨김
-          const occupiedSet = getOccupiedSlots(zoneType);
-          const leftSlotOccupied = index > 0 && occupiedSet.has(index - 1);
-          const rightSlotOccupied = index < columnCount && occupiedSet.has(index);
-          const hideZGuide = leftSlotOccupied || rightSlotOccupied;
-
-          if (!hideZGuide) {
-            // 바닥 Z축 가이드
-            guides.push(
-              <Line
-                key={`${zoneType}-z-guide-floor-${index}`}
-                points={[
-                  new THREE.Vector3(xPos, floorY, backZ),
-                  new THREE.Vector3(xPos, floorY, frontZ)
-                ]}
-                color={zoneColor}
-                lineWidth={zoneLineWidth}
-                dashed
-                dashSize={0.2}
-                gapSize={0.1}
-                opacity={zoneOpacity}
-                transparent
-              />
-            );
-
-            // 천장 Z축 가이드
-            guides.push(
-              <Line
-                key={`${zoneType}-z-guide-ceiling-${index}`}
-                points={[
-                  new THREE.Vector3(xPos, ceilingY, backZ),
-                  new THREE.Vector3(xPos, ceilingY, frontZ)
-                ]}
-                color={zoneColor}
-                lineWidth={zoneLineWidth}
-                dashed
-                dashSize={0.2}
-                gapSize={0.1}
-                opacity={zoneOpacity}
-                transparent
-              />
-            );
-          }
-        }
+        // 3D 바닥/천장 Z축 가이드 라인 제거 — 뒷면 가이드만 유지
       }
     });
     
