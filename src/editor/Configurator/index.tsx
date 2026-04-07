@@ -5255,17 +5255,17 @@ const Configurator: React.FC = () => {
                             <span style={{ fontSize: '10px', color: 'var(--theme-text-secondary)', padding: '0 2px', flexShrink: 0 }}>옵셋</span>
                             <input
                               type="text" inputMode="numeric"
-                              value={(mod.baseFrameOffset || 0) !== 0 ? (mod.baseFrameOffset || 0) : ''} placeholder="0"
+                              value={mod.baseFrameOffset ?? globalBase} placeholder={String(globalBase)}
                               onFocus={() => setHighlightedFrame(`base-${mod.id}`)}
                               onKeyDown={(e) => {
                                 if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
                                   e.preventDefault();
-                                  const cur = mod.baseFrameOffset || 0;
+                                  const cur = mod.baseFrameOffset ?? globalBase;
                                   updatePlacedModule(mod.id, { baseFrameOffset: Math.max(-200, Math.min(200, cur + (e.key === 'ArrowUp' ? 1 : -1))) });
                                 }
                               }}
                               onChange={(e) => { const v = e.target.value; if (v === '' || v === '-' || /^-?\d+$/.test(v)) updatePlacedModule(mod.id, { baseFrameOffset: v === '' || v === '-' ? 0 : parseInt(v, 10) }); }}
-                              onBlur={(e) => { setHighlightedFrame(null); updatePlacedModule(mod.id, { baseFrameOffset: Math.max(-200, Math.min(200, parseInt(e.target.value) || 0)) }); }}
+                              onBlur={(e) => { setHighlightedFrame(null); updatePlacedModule(mod.id, { baseFrameOffset: Math.max(-200, Math.min(200, parseInt(e.target.value) || globalBase)) }); }}
                               className={styles.frameNumberInput}
                             />
                           </div>
@@ -5353,7 +5353,7 @@ const Configurator: React.FC = () => {
                     <span style={{ fontSize: '10px', color: 'var(--theme-text-secondary)', padding: '0 2px', flexShrink: 0 }}>옵셋</span>
                     <input
                       type="text" inputMode="numeric"
-                      value={offset !== 0 ? offset : ''} placeholder="0"
+                      value={offset} placeholder={String(globalBase)}
                       onFocus={() => setHighlightedFrame(hlKey)}
                       onKeyDown={(e) => {
                         if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
@@ -5368,7 +5368,7 @@ const Configurator: React.FC = () => {
                       }}
                       onBlur={(e) => {
                         setHighlightedFrame(null);
-                        onOffsetChange(Math.max(-200, Math.min(200, parseInt(e.target.value) || 0)));
+                        onOffsetChange(Math.max(-200, Math.min(200, parseInt(e.target.value) || globalBase)));
                       }}
                       className={styles.frameNumberInput}
                     />
@@ -5420,17 +5420,17 @@ const Configurator: React.FC = () => {
                       <span style={{ fontSize: '10px', color: 'var(--theme-text-secondary)', padding: '0 2px', flexShrink: 0 }}>옵셋</span>
                       <input
                         type="text" inputMode="numeric"
-                        value={(mod.baseFrameOffset ?? 0) !== 0 ? (mod.baseFrameOffset ?? 0) : ''} placeholder="0"
+                        value={mod.baseFrameOffset ?? globalBase} placeholder={String(globalBase)}
                         onFocus={() => setHighlightedFrame(`base-${mod.id}`)}
                         onKeyDown={(e) => {
                           if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
                             e.preventDefault();
-                            const cur = mod.baseFrameOffset ?? 0;
+                            const cur = mod.baseFrameOffset ?? globalBase;
                             updatePlacedModule(mod.id, { baseFrameOffset: Math.max(-200, Math.min(200, cur + (e.key === 'ArrowUp' ? 1 : -1))) });
                           }
                         }}
                         onChange={(e) => { const v = e.target.value; if (v === '' || v === '-' || /^-?\d+$/.test(v)) updatePlacedModule(mod.id, { baseFrameOffset: v === '' || v === '-' ? 0 : parseInt(v, 10) }); }}
-                        onBlur={(e) => { setHighlightedFrame(null); updatePlacedModule(mod.id, { baseFrameOffset: Math.max(-200, Math.min(200, parseInt(e.target.value) || 0)) }); }}
+                        onBlur={(e) => { setHighlightedFrame(null); updatePlacedModule(mod.id, { baseFrameOffset: Math.max(-200, Math.min(200, parseInt(e.target.value) || globalBase)) }); }}
                         className={styles.frameNumberInput}
                       />
                     </div>
@@ -5521,7 +5521,7 @@ const Configurator: React.FC = () => {
                     <span style={{ fontSize: '10px', color: 'var(--theme-text-secondary)', padding: '0 2px', flexShrink: 0 }}>옵셋</span>
                     <input
                       type="text" inputMode="numeric"
-                      value={offset !== 0 ? offset : ''} placeholder="0"
+                      value={offset} placeholder={String(globalBase)}
                       onFocus={() => setHighlightedFrame(hlKey)}
                       onKeyDown={(e) => {
                         if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
@@ -5536,7 +5536,7 @@ const Configurator: React.FC = () => {
                       }}
                       onBlur={(e) => {
                         setHighlightedFrame(null);
-                        onOffsetChange(Math.max(-200, Math.min(200, parseInt(e.target.value) || 0)));
+                        onOffsetChange(Math.max(-200, Math.min(200, parseInt(e.target.value) || globalBase)));
                       }}
                       className={styles.frameNumberInput}
                     />
@@ -5594,7 +5594,7 @@ const Configurator: React.FC = () => {
                         allEnabled,
                         group.totalWidthMm,
                         firstMod?.baseFrameHeight ?? globalBase,
-                        firstMod?.baseFrameOffset ?? 0,
+                        firstMod?.baseFrameOffset ?? globalBase,
                         () => {
                           const newVal = !allEnabled;
                           group.moduleIds.forEach(id => updatePlacedModule(id, {

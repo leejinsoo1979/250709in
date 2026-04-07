@@ -5625,7 +5625,8 @@ const Room: React.FC<RoomProps> = ({
               const modWidthMM = bounds.right - bounds.left;
               const modCenterXmm = (bounds.left + bounds.right) / 2;
               const depthZOffsetMM = getLowerDepthZOffsetMM(mod);
-              const modBaseZOffset = mod.baseFrameOffset ? mmToThreeUnits(mod.baseFrameOffset) : 0;
+              const freeIsLower = getModuleCategory(mod) === 'lower';
+              const modBaseZOffset = (!freeIsLower && mod.baseFrameOffset) ? mmToThreeUnits(mod.baseFrameOffset) : 0;
               const baseZPosition = baseZBase - mmToThreeUnits(depthZOffsetMM) + modBaseZOffset;
               const modBaseHeightMm = mod.baseFrameHeight ?? (spaceInfo.baseConfig?.height ?? 65);
               const modBaseH = mmToThreeUnits(modBaseHeightMm);
@@ -5760,9 +5761,8 @@ const Room: React.FC<RoomProps> = ({
               // 섹션 전체 bottomPanelRaise → 하부프레임 없음
               if (customSec0?.bottomPanelRaise && customSec0.bottomPanelRaise > 0) return;
 
-              // 하부장 모듈: 하부프레임 Z를 83.5mm 안쪽으로
-              const freeModCategory = getModuleCategory(mod);
-              const freeLowerBaseZInset = freeModCategory === 'lower' ? mmToThreeUnits(83.5) : 0;
+              // 하부장 모듈: 하부프레임 Z를 baseFrameOffset(기본 65mm) 안쪽으로
+              const freeLowerBaseZInset = freeIsLower ? mmToThreeUnits(mod.baseFrameOffset ?? 65) : 0;
               allBaseSegments.push({
                 widthMm: modWidthMM,
                 centerXmm: modCenterXmm,
@@ -6066,13 +6066,14 @@ const Room: React.FC<RoomProps> = ({
                       // 섹션 전체 bottomPanelRaise → 하부프레임 없음
                       if (customSec0?.bottomPanelRaise && customSec0.bottomPanelRaise > 0) return;
 
-                      // 하부장 모듈: 하부프레임 Z를 83.5mm 안쪽으로
+                      // 하부장 모듈: 하부프레임 Z를 baseFrameOffset(기본 65mm) 안쪽으로
                       const modCategory = getModuleCategory(mod);
-                      const lowerBaseZInset = modCategory === 'lower' ? mmToThreeUnits(83.5) : 0;
+                      const isLowerMod = modCategory === 'lower';
+                      const lowerBaseZInset = isLowerMod ? mmToThreeUnits(mod.baseFrameOffset ?? 65) : 0;
                       slotBaseSegments.push({
                         widthMm: modWidthMM,
                         centerXmm: modCenterXmm,
-                        zPosition: baseZPos + modBaseZOffset - lowerBaseZInset,
+                        zPosition: baseZPos + (isLowerMod ? 0 : modBaseZOffset) - lowerBaseZInset,
                         height: modBaseH,
                         yPosition: panelStartY + floatHeight + modBaseH / 2,
                         material: baseMat,
