@@ -2558,12 +2558,11 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
           : (epDActual - D) / 2;
         // EP 옵셋: + 앞 확장(Z+), - 뒤 축소(Z-). abs로 깊이 줄이고 부호로 Z shift 방향 결정
         const leftEpOffsetUnit = mmToUnit(leftEpOffsetMm);
-        const leftEpAbsUnit = Math.abs(leftEpOffsetUnit);
-        const leftEpDepth = Math.max(0, epDActual - leftEpAbsUnit);
-        const leftEpZShift = leftEpOffsetUnit / 2; // 양수→Z+, 음수→Z-
+        // + 옵셋: EP 깊이 유지, 앞으로 돌출. - 옵셋: EP 깊이 줄어듦(뒤에서 깎임)
+        const leftEpDepth = Math.max(0, epDActual - Math.max(0, -leftEpOffsetUnit));
+        const leftEpZShift = leftEpOffsetUnit / 2;
         const rightEpOffsetUnit = mmToUnit(rightEpOffsetMm);
-        const rightEpAbsUnit = Math.abs(rightEpOffsetUnit);
-        const rightEpDepth = Math.max(0, epDActual - rightEpAbsUnit);
+        const rightEpDepth = Math.max(0, epDActual - Math.max(0, -rightEpOffsetUnit));
         const rightEpZShift = rightEpOffsetUnit / 2;
         return (
           <>
