@@ -155,7 +155,7 @@ const Step2SpaceAndCustomization: React.FC<Step2SpaceAndCustomizationProps> = ({
       };
       updates.baseConfig = {
         type: 'floor' as const,
-        height: 65,
+        height: 60,
         placementType: 'ground' as const
       };
     }

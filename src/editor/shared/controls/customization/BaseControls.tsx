@@ -70,7 +70,7 @@ const BaseControls: React.FC<BaseControlsProps> = ({ spaceInfo, onUpdate, disabl
 
   // 높이 업데이트 (blur 또는 Enter 시)
   const handleHeightBlur = () => {
-    const currentBaseConfig = spaceInfo.baseConfig || { type: 'floor', height: 65 };
+    const currentBaseConfig = spaceInfo.baseConfig || { type: 'floor', height: 60 };
 
     let value: any = baseHeight;
 
@@ -109,7 +109,7 @@ const BaseControls: React.FC<BaseControlsProps> = ({ spaceInfo, onUpdate, disabl
 
     setBaseDepth(value);
 
-    const currentBaseConfig = spaceInfo.baseConfig || { type: 'floor', height: 65 };
+    const currentBaseConfig = spaceInfo.baseConfig || { type: 'floor', height: 60 };
 
     if (value !== (currentBaseConfig.depth ?? 0)) {
       onUpdate({

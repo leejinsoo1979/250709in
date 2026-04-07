@@ -100,7 +100,7 @@ export const createProject = async (projectData: CreateProjectData): Promise<{ i
         surroundType: 'surround',
         baseConfig: {
           type: 'floor',
-          height: 65,
+          height: 60,
           placementType: 'ground',
         },
         hasFloorFinish: false,

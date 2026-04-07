@@ -94,7 +94,7 @@ const ViewerPage: React.FC = () => {
             surroundType: 'surround',
             baseConfig: {
               type: 'floor',
-              height: 65,
+              height: 60,
               placementType: 'ground',
             },
             hasFloorFinish: false,

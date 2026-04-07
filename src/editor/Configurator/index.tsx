@@ -1854,7 +1854,7 @@ const Configurator: React.FC = () => {
         hasFloorFinish: false,
         surroundType: 'three-sided' as const,
         frameSize: { top: 50, bottom: 50, left: 50, right: 50 },
-        baseConfig: { type: 'floor' as const, height: 65 },
+        baseConfig: { type: 'floor' as const, height: 60 },
         materialConfig: { interiorColor: '#FFFFFF', doorColor: '#FFFFFF' },
         columns: []
       };
@@ -5242,12 +5242,12 @@ const Configurator: React.FC = () => {
                               onKeyDown={(e) => {
                                 if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
                                   e.preventDefault();
-                                  const cur = spaceInfo.baseConfig?.height || 65;
-                                  setSpaceInfo({ baseConfig: { ...(spaceInfo.baseConfig || { type: 'floor', height: 65 }), height: Math.max(0, Math.min(9999, cur + (e.key === 'ArrowUp' ? 1 : -1))) } });
+                                  const cur = spaceInfo.baseConfig?.height || 60;
+                                  setSpaceInfo({ baseConfig: { ...(spaceInfo.baseConfig || { type: 'floor', height: 60 }), height: Math.max(0, Math.min(9999, cur + (e.key === 'ArrowUp' ? 1 : -1))) } });
                                 }
                               }}
-                              onChange={(e) => { const v = e.target.value; if (v === '' || /^\d+$/.test(v)) setSpaceInfo({ baseConfig: { ...(spaceInfo.baseConfig || { type: 'floor', height: 65 }), height: v === '' ? 0 : parseInt(v, 10) } }); }}
-                              onBlur={(e) => { setHighlightedFrame(null); setSpaceInfo({ baseConfig: { ...(spaceInfo.baseConfig || { type: 'floor', height: 65 }), height: Math.max(0, Math.min(9999, parseInt(e.target.value) || 0)) } }); }}
+                              onChange={(e) => { const v = e.target.value; if (v === '' || /^\d+$/.test(v)) setSpaceInfo({ baseConfig: { ...(spaceInfo.baseConfig || { type: 'floor', height: 60 }), height: v === '' ? 0 : parseInt(v, 10) } }); }}
+                              onBlur={(e) => { setHighlightedFrame(null); setSpaceInfo({ baseConfig: { ...(spaceInfo.baseConfig || { type: 'floor', height: 60 }), height: Math.max(0, Math.min(9999, parseInt(e.target.value) || 0)) } }); }}
                               className={styles.frameNumberInput}
                             />
                           </div>
