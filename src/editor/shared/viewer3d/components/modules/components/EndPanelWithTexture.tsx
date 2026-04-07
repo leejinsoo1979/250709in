@@ -163,17 +163,6 @@ const EndPanelWithTexture: React.FC<EndPanelWithTextureProps> = ({
           furnitureId={furnitureId}
         />
       )}
-      {/* 후면연결판 (안쪽 뒤) */}
-      {gapWidth > 0 && (
-        <BoxWithEdges
-          isEndPanel={true}
-          args={[gapWidth, height, connectorDepthZ]}
-          position={[connectorX, 0, -(depth / 2 - connectorDepthZ / 2)]}
-          material={endPanelMaterial}
-          renderMode={renderMode}
-          furnitureId={furnitureId}
-        />
-      )}
     </group>
   );
 };
