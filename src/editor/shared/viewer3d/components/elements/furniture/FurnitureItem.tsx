@@ -3656,15 +3656,15 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
               const freeEpDepthDirOffset = (placedModule.endPanelDepthDirection ?? 'front') === 'back'
                 ? -(epD - freeEpFurnitureD) / 2
                 : (epD - freeEpFurnitureD) / 2;
-              // EP 옵셋: 방향에 따라 앞면/뒷면 고정 (front: 앞 고정→뒤에서 줄어듦, back: 뒤 고정→앞에서 줄어듦)
+              // EP 옵셋: 앞=앞에서 줄어듦(뒷면 고정, Z-), 뒤=뒤에서 줄어듦(앞면 고정, Z+)
               const leftOffDir = placedModule.leftEndPanelOffsetDir ?? 'front';
               const rightOffDir = placedModule.rightEndPanelOffsetDir ?? 'front';
               const leftEpOffsetUnit = mmToThreeUnits(leftEpOffsetMm);
               const leftEpD = Math.max(0, epD - leftEpOffsetUnit);
-              const leftEpZShift = leftOffDir === 'back' ? -(leftEpOffsetUnit / 2) : (leftEpOffsetUnit / 2);
+              const leftEpZShift = leftOffDir === 'front' ? -(leftEpOffsetUnit / 2) : (leftEpOffsetUnit / 2);
               const rightEpOffsetUnit = mmToThreeUnits(rightEpOffsetMm);
               const rightEpD = Math.max(0, epD - rightEpOffsetUnit);
-              const rightEpZShift = rightOffDir === 'back' ? -(rightEpOffsetUnit / 2) : (rightEpOffsetUnit / 2);
+              const rightEpZShift = rightOffDir === 'front' ? -(rightEpOffsetUnit / 2) : (rightEpOffsetUnit / 2);
 
               // EP 높이 계산: 카테고리별 상단/하단 기준이 다름
               // 상부장: 상단=천장, 하단=가구 하단
@@ -3974,7 +3974,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
             ? (placedModule.leftEndPanelOffsetDir ?? 'front')
             : (placedModule.rightEndPanelOffsetDir ?? 'front');
           const offsetUnit = mmToThreeUnits(mm);
-          const zSign = offDir === 'back' ? -1 : 1;
+          const zSign = offDir === 'front' ? -1 : 1;
           return {
             depth: Math.max(0, endPanelDepth - offsetUnit),
             zShift: zSign * (offsetUnit / 2) + epDepthDirOffset,

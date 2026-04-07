@@ -2556,13 +2556,13 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
         const epDepthDirOffset = endPanelDepthDirectionProp === 'back'
           ? -(epDActual - D) / 2
           : (epDActual - D) / 2;
-        // EP 옵셋: 방향에 따라 앞면/뒷면 고정 (front: 앞 고정→뒤에서 줄어듦, back: 뒤 고정→앞에서 줄어듦)
+        // EP 옵셋: 앞=앞에서 줄어듦(뒷면 고정, Z-), 뒤=뒤에서 줄어듦(앞면 고정, Z+)
         const leftEpOffsetUnit = mmToUnit(leftEpOffsetMm);
         const leftEpDepth = Math.max(0, epDActual - leftEpOffsetUnit);
-        const leftEpZShift = leftEpOffsetDirProp === 'back' ? -(leftEpOffsetUnit / 2) : (leftEpOffsetUnit / 2);
+        const leftEpZShift = leftEpOffsetDirProp === 'front' ? -(leftEpOffsetUnit / 2) : (leftEpOffsetUnit / 2);
         const rightEpOffsetUnit = mmToUnit(rightEpOffsetMm);
         const rightEpDepth = Math.max(0, epDActual - rightEpOffsetUnit);
-        const rightEpZShift = rightEpOffsetDirProp === 'back' ? -(rightEpOffsetUnit / 2) : (rightEpOffsetUnit / 2);
+        const rightEpZShift = rightEpOffsetDirProp === 'front' ? -(rightEpOffsetUnit / 2) : (rightEpOffsetUnit / 2);
         return (
           <>
             {hasLeftEndPanel && (
