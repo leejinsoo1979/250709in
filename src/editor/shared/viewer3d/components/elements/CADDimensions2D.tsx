@@ -467,8 +467,8 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
 
         {/* ===== 왼쪽 2단: 하부장 높이 + 하부프레임 (하부장 선택 시만) ===== */}
         {selectedModCategory === 'lower' && (() => {
-          const leftInnerZ = -spaceDepth/2 - leftDimOffset + mmToThreeUnits(150) + mmToThreeUnits(360);
-          const leftInnerExtStartZ = leftInnerZ + mmToThreeUnits(100);
+          const leftInnerZ = -spaceDepth/2 - leftDimOffset + mmToThreeUnits(150) + mmToThreeUnits(200);
+          const leftInnerExtStartZ = -spaceDepth/2 + mmToThreeUnits(110);
           const cabinetTopY = furnitureBaseY + internalHeight;
           const cabinetHeightMm = adjustedInternalHeightMm;
           return (
@@ -1498,8 +1498,8 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
 
         {/* ===== 왼쪽 2단: 하부장 높이 + 하부프레임 (하부장 선택 시만) ===== */}
         {selectedModCategory === 'lower' && (() => {
-          const leftInnerZ = -spaceDepth/2 - leftDimOffset + mmToThreeUnits(150) + mmToThreeUnits(360);
-          const leftInnerExtStartZ = leftInnerZ + mmToThreeUnits(100);
+          const leftInnerZ = -spaceDepth/2 - leftDimOffset + mmToThreeUnits(150) + mmToThreeUnits(200);
+          const leftInnerExtStartZ = -spaceDepth/2 + mmToThreeUnits(110);
           const cabinetTopY = furnitureBaseY + internalHeight;
           const cabinetHeightMm = adjustedInternalHeightMm;
           return (
