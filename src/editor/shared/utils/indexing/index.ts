@@ -56,6 +56,11 @@ export const getDefaultColumnCount = SpaceCalculator.getDefaultColumnCount;
 export const findSlotIndexFromPosition = ColumnIndexer.findSlotIndexFromPosition;
 
 /**
+ * slotCustomWidth 고정 후 나머지 슬롯 재분할
+ */
+export const recalculateWithCustomWidths = ColumnIndexer.recalculateWithCustomWidths;
+
+/**
  * 가구가 새로운 공간 설정에서 유효한지 검증하는 함수
  */
 export const validateFurniturePosition = FurniturePositioner.validateFurniturePosition;
