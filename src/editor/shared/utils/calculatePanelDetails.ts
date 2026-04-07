@@ -870,7 +870,9 @@ export const calculatePanelDetails = (
   }
 
   // === 도어 패널 (커버도어이므로 원래 너비 사용) ===
-  if (hasDoor) {
+  // lower-drawer-* 는 서랍전용 모듈 — 도어 자체가 존재하지 않음
+  const isDrawerOnlyLower = moduleData.id.includes('lower-drawer-');
+  if (hasDoor && !isDrawerOnlyLower) {
     const doorGap = 3; // DoorModule.tsx 3D 렌더링과 동일 (doorGap = 3)
     // 도어 높이 = 공간높이 - 천장이격 - 바닥이격 (가구편집창 입력값)
     // spaceHeight가 제공되면 실제 도어 높이 공식 사용, 아니면 기존 방식 fallback
@@ -1506,7 +1508,8 @@ export const calculatePanelDetails = (
         { name: `서랍${drawerNum} 바닥`, width: Math.round(extBottomWidthMm), depth: extSideDepthMm, thickness: backPanelThickness, material: 'MDF' },
       );
       // 마이다는 도어 있을 때만 (ExternalDrawerRenderer showMaida={hasDoor} 동일)
-      if (hasDoor) {
+      // lower-drawer-*는 서랍전용 — 마이다 없음
+      if (hasDoor && !isDrawerOnlyLower) {
         extDrawerPanels.push(
           { name: `서랍${drawerNum}(마이다)`, width: customWidth - 3, height: Math.round(maidaHeightMm), thickness: basicThickness, material: 'PET' },
         );
