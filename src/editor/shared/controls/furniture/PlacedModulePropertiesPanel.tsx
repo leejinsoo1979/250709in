@@ -1126,7 +1126,9 @@ const PlacedModulePropertiesPanel: React.FC = () => {
 
   // 프레임 높이 계산 (상부프레임, 하부프레임)
   const topFrameHeightMm = calculateTopBottomFrameHeight(spaceInfo);
-  const baseFrameHeightMm = calculateBaseFrameHeight(spaceInfo);
+  // 개별 가구 baseFrameHeight 우선 → 글로벌 spaceInfo 폴백 (FurnitureItem.tsx와 동일 우선순위)
+  const globalBaseFrameHeightMm = calculateBaseFrameHeight(spaceInfo);
+  const baseFrameHeightMm = currentPlacedModule?.baseFrameHeight ?? globalBaseFrameHeightMm;
   // 받침대 높이는 바닥마감재와 무관하게 원래 값 사용
   const floorFinishH = spaceInfo.hasFloorFinish ? (spaceInfo.floorFinish?.height || 15) : 0;
   const visualBaseFrameHeightMm = baseFrameHeightMm;
