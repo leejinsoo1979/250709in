@@ -43,7 +43,6 @@
   color: var(--theme-surface);
   font-size: 14px;
   font-weight: 600;
-  cursor: pointer;
   transition: all 0.2s ease;
   white-space: nowrap;
   box-shadow: 0 2px 8px var(--theme-shadow);
@@ -72,7 +71,6 @@
   align-items: center;
   gap: 20px;
   transition: all 0.2s ease;
-  cursor: pointer;
 }
 
 .statCard:hover {

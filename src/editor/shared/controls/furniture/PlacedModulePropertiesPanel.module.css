@@ -59,7 +59,6 @@
   color: var(--theme-text-secondary);
   font-size: 13px;
   font-weight: 500;
-  cursor: pointer;
   border-bottom: 3px solid transparent;
   transition: all 0.2s ease;
   position: relative;
@@ -104,7 +103,6 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  cursor: pointer;
   font-size: 14px;
   color: var(--theme-surface);
   transition: all 0.2s ease;
@@ -125,7 +123,6 @@
   border-radius: 6px;
   font-size: 14px;
   font-weight: 500;
-  cursor: pointer;
   transition: all 0.2s ease;
   display: flex;
   align-items: center;
@@ -161,7 +158,6 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  cursor: pointer;
   font-size: 16px;
   color: var(--theme-text-secondary);
   transition: all 0.2s ease;
@@ -231,7 +227,6 @@
   border-radius: 6px;
   font-size: 13px;
   font-weight: 500;
-  cursor: pointer;
   transition: all 0.2s ease;
   margin-left: 12px;
   white-space: nowrap;
@@ -448,7 +443,6 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  cursor: pointer;
   font-size: 13px;
   color: var(--theme-text);
 }
@@ -456,7 +450,6 @@
 .epCheckboxLabel input[type="checkbox"] {
   width: 15px;
   height: 15px;
-  cursor: pointer;
   accent-color: var(--theme-primary);
 }
 
@@ -480,7 +473,6 @@
   padding: 5px 8px;
   font-size: 12px;
   border: none;
-  cursor: pointer;
   background-color: var(--theme-bg-secondary);
   color: var(--theme-text-secondary);
   font-weight: 400;
@@ -544,7 +536,6 @@
   border: 1px solid var(--theme-border);
   border-radius: 6px;
   background: var(--theme-surface);
-  cursor: pointer;
   transition: all 0.2s ease;
   font-size: 14px;
   font-weight: 500;
@@ -587,7 +578,6 @@
   border: 1px solid var(--theme-border);
   border-radius: 6px;
   background: var(--theme-surface);
-  cursor: pointer;
   transition: all 0.2s ease;
   font-size: 13px;
   font-weight: 500;
@@ -685,7 +675,6 @@
   border-radius: 6px;
   font-size: 14px;
   font-weight: 500;
-  cursor: pointer;
   transition: all 0.2s ease;
 }
 
@@ -750,7 +739,6 @@
   border-radius: 6px;
   font-size: 14px;
   font-weight: 500;
-  cursor: pointer;
   transition: all 0.2s ease;
 }
 
@@ -766,7 +754,6 @@
   border-radius: 6px;
   font-size: 14px;
   font-weight: 500;
-  cursor: pointer;
   transition: all 0.2s ease;
 }
 
@@ -888,7 +875,6 @@
   border-radius: 6px;
   font-size: 14px;
   font-weight: 500;
-  cursor: pointer;
   transition: all 0.2s ease;
 }
 
@@ -906,7 +892,6 @@
   border-radius: 6px;
   font-size: 14px;
   font-weight: 500;
-  cursor: pointer;
   transition: all 0.2s ease;
 }
 
@@ -931,7 +916,6 @@
   border-radius: 8px;
   font-size: 14px;
   font-weight: 600;
-  cursor: pointer;
   transition: all 0.2s ease;
   display: flex;
   align-items: center;

@@ -36,7 +36,6 @@
   color: white;
   font-size: 14px;
   font-weight: 600;
-  cursor: pointer;
   transition: all 0.2s ease;
   white-space: nowrap;
   box-shadow: 0 2px 8px var(--theme-primary-shadow, rgba(102, 126, 234, 0.25));
@@ -74,7 +73,6 @@
   border: 1px solid var(--theme-border, #e5e7eb);
   border-radius: 8px;
   color: var(--theme-text-secondary, #6b7280);
-  cursor: pointer;
   transition: all 0.2s ease;
 }
 
@@ -132,7 +130,6 @@
   color: white !important;
   font-size: 15px;
   font-weight: 600;
-  cursor: pointer;
   transition: all 0.2s ease;
   box-shadow: 0 2px 8px var(--theme-shadow);
   white-space: nowrap;
@@ -203,7 +200,6 @@
   color: var(--theme-text-secondary, #6b7280);
   font-size: 13px;
   font-weight: 600;
-  cursor: pointer;
   transition: all 0.2s ease;
 }
 
@@ -230,7 +226,6 @@
   color: white;
   font-size: 14px;
   font-weight: 600;
-  cursor: pointer;
   transition: all 0.2s ease;
   white-space: nowrap;
   box-shadow: 0 2px 8px var(--theme-shadow);
@@ -290,7 +285,6 @@
   color: var(--theme-text, #1f2937);
   font-size: 15px;
   font-weight: 600;
-  cursor: pointer;
   transition: all 0.2s ease;
   white-space: nowrap;
 }
@@ -356,7 +350,6 @@
 }
 
 select.input {
-  cursor: pointer;
   appearance: none;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%23667eea' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3E%3C/svg%3E");
   background-position: right 12px center;
@@ -387,14 +380,12 @@ select.input {
   display: flex;
   align-items: center;
   gap: 8px;
-  cursor: pointer;
   font-size: 14px;
   font-weight: 600;
   color: var(--theme-text, #1f2937);
 }
 
 .checkboxLabel input[type="checkbox"] {
-  cursor: pointer;
   width: 18px;
   height: 18px;
   accent-color: var(--theme-primary, #667eea);
@@ -412,7 +403,6 @@ select.input {
   border-radius: 8px;
   font-size: 15px;
   font-weight: 600;
-  cursor: pointer;
   transition: all 0.2s ease;
 }
 
@@ -524,7 +514,6 @@ select.input {
   border: 1px solid var(--theme-border, #e5e7eb);
   border-radius: 6px;
   color: var(--theme-text-secondary, #6b7280);
-  cursor: pointer;
   transition: all 0.2s ease;
 }
 

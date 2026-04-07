@@ -62,7 +62,6 @@
   background: var(--theme-background-secondary);
   border: 2px solid var(--theme-border);
   border-radius: 8px;
-  cursor: pointer;
   transition: all 0.2s ease;
 }
 
@@ -117,7 +116,6 @@
   border-radius: 6px;
   color: var(--theme-text-secondary);
   font-size: 14px;
-  cursor: pointer;
   transition: all 0.15s ease;
 }
 

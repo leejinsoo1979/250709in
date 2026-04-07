@@ -180,7 +180,6 @@
   color: var(--theme-text, #1f2937);
   font-size: 13px;
   font-weight: 500;
-  cursor: pointer;
   transition: all 0.2s ease;
 }
 

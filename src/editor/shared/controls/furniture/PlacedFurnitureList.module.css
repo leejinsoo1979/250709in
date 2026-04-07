@@ -89,7 +89,6 @@
   background-color: #ef4444;
   color: white;
   border-radius: 50%;
-  cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -127,7 +126,6 @@
   border-radius: 6px;
   background-color: white;
   transition: border-color 0.2s ease;
-  cursor: pointer;
   position: relative;
 }
 

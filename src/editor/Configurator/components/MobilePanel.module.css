@@ -35,7 +35,6 @@
     color: var(--theme-text-secondary);
     font-size: 13px;
     font-weight: 600;
-    cursor: pointer;
     transition: all 0.2s ease;
     text-align: center;
     line-height: 1.2;
@@ -129,7 +128,6 @@
     color: var(--theme-text);
     font-size: 13px;
     font-weight: 500;
-    cursor: pointer;
     transition: all 0.2s;
 }
 
@@ -155,7 +153,6 @@
     color: var(--theme-text-secondary);
     font-size: 14px;
     font-weight: 500;
-    cursor: pointer;
     transition: all 0.2s;
 }
 

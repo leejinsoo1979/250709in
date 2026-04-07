@@ -115,7 +115,6 @@
   color: var(--theme-text, #1f2937);
   font-size: 14px;
   font-weight: 500;
-  cursor: pointer;
   transition: all 0.2s ease;
 }
 
@@ -183,7 +182,6 @@
   font-size: 14px;
   font-weight: 500;
   text-align: left;
-  cursor: pointer;
   transition: all 0.2s ease;
 }
 
@@ -245,7 +243,6 @@
 }
 
 .clickableRow {
-  cursor: pointer;
 }
 
 .table tbody tr:hover {
@@ -321,7 +318,6 @@
   color: var(--theme-text, #1f2937);
   font-size: 13px;
   font-weight: 500;
-  cursor: pointer;
   transition: all 0.2s ease;
 }
 
@@ -450,7 +446,6 @@
   border-radius: 6px;
   font-size: 13px;
   font-weight: 500;
-  cursor: pointer;
   border: none;
   transition: all 0.2s ease;
 }
@@ -515,7 +510,6 @@
   border-radius: 6px;
   font-size: 13px;
   font-weight: 500;
-  cursor: pointer;
   border: none;
   background: var(--theme-primary, #10b981);
   color: white;
@@ -602,7 +596,6 @@
   border-radius: 8px;
   font-size: 14px;
   font-weight: 600;
-  cursor: pointer;
   border: none;
   transition: all 0.2s ease;
 }
@@ -701,7 +694,6 @@
   background: var(--theme-surface, white);
   border: 2px solid var(--theme-border, #e5e7eb);
   border-radius: 12px;
-  cursor: pointer;
   transition: all 0.2s ease;
   display: flex;
   flex-direction: column;

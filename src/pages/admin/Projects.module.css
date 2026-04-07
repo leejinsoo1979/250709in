@@ -196,7 +196,6 @@
   border: 2px solid var(--theme-border, #e5e7eb);
   border-radius: 14px;
   padding: 24px;
-  cursor: pointer;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
   overflow: hidden;
@@ -536,7 +535,6 @@
   border-radius: 8px;
   font-size: 13px;
   font-weight: 600;
-  cursor: pointer;
   transition: all 0.2s ease;
   white-space: nowrap;
 }

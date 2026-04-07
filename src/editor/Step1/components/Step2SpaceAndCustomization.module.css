@@ -69,7 +69,6 @@
   background: #f3f4f6;
   border-radius: 6px;
   color: #6b7280;
-  cursor: pointer;
   font-size: 18px;
   display: flex;
   align-items: center;
@@ -126,7 +125,6 @@
   font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif;
   font-size: 13px;
   font-weight: 500;
-  cursor: pointer;
   transition: all 0.15s ease;
   border-radius: 6px;
   min-width: 60px;
@@ -231,7 +229,6 @@
   font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif;
   font-size: 12px;
   font-weight: 500;
-  cursor: pointer;
   transition: all 0.15s ease;
   border-radius: 6px;
   flex: 1;
@@ -263,7 +260,6 @@
   border-radius: 3px;
   outline: none;
   -webkit-appearance: none;
-  cursor: pointer;
 }
 
 .rangeInput::-webkit-slider-thumb {
@@ -273,7 +269,6 @@
   background: var(--theme-primary);
   border: 3px solid white;
   border-radius: 50%;
-  cursor: pointer;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
   transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
@@ -293,7 +288,6 @@
   background: var(--theme-primary);
   border: 3px solid white;
   border-radius: 50%;
-  cursor: pointer;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
 }
 
@@ -315,7 +309,6 @@
   font-weight: 600;
   min-width: 14px;
   text-align: center;
-  cursor: pointer;
   transition: color 0.15s ease;
 }
 
@@ -411,7 +404,6 @@
   border-radius: 6px;
   font-size: 13px;
   font-weight: 500;
-  cursor: pointer;
   transition: all 0.2s ease;
   min-width: 72px;
 }
@@ -512,7 +504,6 @@
   color: #374151;
   font-size: 13px;
   transition: all 0.2s ease;
-  cursor: pointer;
 }
 
 .selectInput:focus {
@@ -564,7 +555,6 @@
   border-radius: 6px;
   font-size: 14px;
   font-weight: 600;
-  cursor: pointer;
   transition: all 0.2s ease;
 }
 
@@ -581,7 +571,6 @@
   border-radius: 6px;
   font-size: 14px;
   font-weight: 600;
-  cursor: pointer;
   transition: all 0.2s ease;
   display: flex;
   align-items: center;

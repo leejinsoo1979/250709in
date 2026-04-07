@@ -36,7 +36,6 @@
   color: var(--theme-text);
   font-size: 14px;
   font-weight: 500;
-  cursor: pointer;
   transition: all 0.2s ease;
 }
 
@@ -143,7 +142,6 @@
   color: var(--theme-text-secondary);
   font-size: 14px;
   font-weight: 500;
-  cursor: pointer;
   transition: all 0.2s ease;
   position: relative;
 }
@@ -231,7 +229,6 @@
   color: var(--theme-text-secondary);
   font-size: 12px;
   font-weight: 500;
-  cursor: pointer;
   transition: all 0.2s ease;
 }
 
@@ -262,7 +259,6 @@
   border: 1px solid var(--theme-border);
   border-radius: 8px;
   margin-bottom: 8px;
-  cursor: pointer;
   transition: all 0.2s ease;
 }
 
@@ -320,7 +316,6 @@
   border: 1px solid var(--theme-border);
   border-radius: 4px;
   color: var(--theme-text);
-  cursor: pointer;
   transition: all 0.2s ease;
 }
 
@@ -465,7 +460,6 @@
   border-radius: 6px;
   font-size: 13px;
   font-weight: 500;
-  cursor: pointer;
   transition: all 0.2s ease;
   background: var(--theme-surface);
   color: var(--theme-text);
@@ -499,7 +493,6 @@
   border: 1px solid var(--theme-border);
   border-radius: 6px;
   color: var(--theme-text-secondary);
-  cursor: pointer;
   transition: all 0.2s ease;
 }
 
@@ -617,7 +610,6 @@
   color: white;
   font-size: 14px;
   font-weight: 500;
-  cursor: pointer;
   transition: all 0.2s ease;
 }
 
@@ -687,7 +679,6 @@
   border: 1px solid var(--theme-border);
   border-radius: 4px;
   color: var(--theme-text-secondary);
-  cursor: pointer;
   transition: all 0.2s ease;
 }
 
@@ -829,7 +820,6 @@
   height: 24px;
   background: var(--theme-background-secondary);
   border-radius: 12px;
-  cursor: pointer;
   transition: all 0.3s ease;
 }
 
@@ -898,7 +888,6 @@
   color: var(--theme-text);
   font-size: 13px;
   font-weight: 500;
-  cursor: pointer;
   transition: all 0.2s ease;
 }
 
@@ -1076,7 +1065,6 @@
   color: white;
   font-size: 14px;
   font-weight: 600;
-  cursor: pointer;
   transition: all 0.2s ease;
 }
 
@@ -1112,7 +1100,6 @@
   background: var(--theme-primary);
   color: white;
   border-radius: 50%;
-  cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1150,7 +1137,6 @@
   color: white;
   font-size: 14px;
   font-weight: 500;
-  cursor: pointer;
   transition: all 0.2s ease;
   margin-left: 16px;
 }

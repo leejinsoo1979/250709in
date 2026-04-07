@@ -1000,7 +1000,7 @@ const SimpleDashboard: React.FC = () => {
                 style={{
                   display: 'inline-flex', alignItems: 'center', gap: 4,
                   padding: '8px 16px', background: 'var(--theme-primary)', color: 'white',
-                  border: 'none', borderRadius: 6, cursor: 'pointer', marginTop: 12,
+                  border: 'none', borderRadius: 6,  marginTop: 12,
                 }}
                 onClick={() => alert('팀 생성 기능은 준비 중입니다.')}
               >
@@ -1136,7 +1136,7 @@ const SimpleDashboard: React.FC = () => {
                 <button
                   style={{
                     width: '100%', padding: '8px 16px', border: 'none', background: 'none',
-                    color: 'var(--theme-text, #fff)', textAlign: 'left', cursor: 'pointer',
+                    color: 'var(--theme-text, #fff)', textAlign: 'left', 
                     display: 'flex', alignItems: 'center', gap: 10, fontSize: 13,
                   }}
                   onMouseEnter={e => (e.currentTarget.style.background = 'var(--theme-primary, #3b82f6)')}
@@ -1171,7 +1171,7 @@ const SimpleDashboard: React.FC = () => {
                 <button
                   style={{
                     width: '100%', padding: '8px 16px', border: 'none', background: 'none',
-                    color: '#ef4444', textAlign: 'left', cursor: 'pointer',
+                    color: '#ef4444', textAlign: 'left', 
                     display: 'flex', alignItems: 'center', gap: 10, fontSize: 13,
                   }}
                   onMouseEnter={e => (e.currentTarget.style.background = 'rgba(239,68,68,0.15)')}
@@ -1210,7 +1210,7 @@ const SimpleDashboard: React.FC = () => {
             <button
               style={{
                 width: '100%', padding: '8px 16px', border: 'none', background: 'none',
-                color: 'var(--theme-text, #fff)', textAlign: 'left', cursor: 'pointer',
+                color: 'var(--theme-text, #fff)', textAlign: 'left', 
                 display: 'flex', alignItems: 'center', gap: 10, fontSize: 13,
               }}
               onMouseEnter={e => (e.currentTarget.style.background = 'var(--theme-primary, #3b82f6)')}
@@ -1229,7 +1229,7 @@ const SimpleDashboard: React.FC = () => {
               <button
                 style={{
                   width: '100%', padding: '8px 16px', border: 'none', background: 'none',
-                  color: 'var(--theme-text, #fff)', textAlign: 'left', cursor: 'pointer',
+                  color: 'var(--theme-text, #fff)', textAlign: 'left', 
                   display: 'flex', alignItems: 'center', gap: 10, fontSize: 13,
                 }}
                 onMouseEnter={e => (e.currentTarget.style.background = 'var(--theme-primary, #3b82f6)')}
@@ -1255,7 +1255,7 @@ const SimpleDashboard: React.FC = () => {
             <button
               style={{
                 width: '100%', padding: '8px 16px', border: 'none', background: 'none',
-                color: 'var(--theme-text, #fff)', textAlign: 'left', cursor: 'pointer',
+                color: 'var(--theme-text, #fff)', textAlign: 'left', 
                 display: 'flex', alignItems: 'center', gap: 10, fontSize: 13,
               }}
               onMouseEnter={e => (e.currentTarget.style.background = 'var(--theme-primary, #3b82f6)')}
@@ -1280,7 +1280,7 @@ const SimpleDashboard: React.FC = () => {
               <button
                 style={{
                   width: '100%', padding: '8px 16px', border: 'none', background: 'none',
-                  color: 'var(--theme-text, #fff)', textAlign: 'left', cursor: 'pointer',
+                  color: 'var(--theme-text, #fff)', textAlign: 'left', 
                   display: 'flex', alignItems: 'center', gap: 10, fontSize: 13,
                 }}
                 onMouseEnter={e => (e.currentTarget.style.background = 'var(--theme-primary, #3b82f6)')}
@@ -1316,7 +1316,7 @@ const SimpleDashboard: React.FC = () => {
               <button
                 style={{
                   width: '100%', padding: '8px 16px', border: 'none', background: 'none',
-                  color: 'var(--theme-text, #fff)', textAlign: 'left', cursor: 'pointer',
+                  color: 'var(--theme-text, #fff)', textAlign: 'left', 
                   display: 'flex', alignItems: 'center', gap: 10, fontSize: 13,
                 }}
                 onMouseEnter={e => (e.currentTarget.style.background = 'var(--theme-primary, #3b82f6)')}
@@ -1341,7 +1341,7 @@ const SimpleDashboard: React.FC = () => {
               <button
                 style={{
                   width: '100%', padding: '8px 16px', border: 'none', background: 'none',
-                  color: 'var(--theme-text, #fff)', textAlign: 'left', cursor: 'pointer',
+                  color: 'var(--theme-text, #fff)', textAlign: 'left', 
                   display: 'flex', alignItems: 'center', gap: 10, fontSize: 13,
                 }}
                 onMouseEnter={e => (e.currentTarget.style.background = 'var(--theme-primary, #3b82f6)')}
@@ -1370,7 +1370,7 @@ const SimpleDashboard: React.FC = () => {
             <button
               style={{
                 width: '100%', padding: '8px 16px', border: 'none', background: 'none',
-                color: 'var(--theme-text, #fff)', textAlign: 'left', cursor: 'pointer',
+                color: 'var(--theme-text, #fff)', textAlign: 'left', 
                 display: 'flex', alignItems: 'center', gap: 10, fontSize: 13,
               }}
               onMouseEnter={e => (e.currentTarget.style.background = 'var(--theme-primary, #3b82f6)')}
@@ -1391,7 +1391,7 @@ const SimpleDashboard: React.FC = () => {
             <button
               style={{
                 width: '100%', padding: '8px 16px', border: 'none', background: 'none',
-                color: 'var(--theme-text, #fff)', textAlign: 'left', cursor: 'pointer',
+                color: 'var(--theme-text, #fff)', textAlign: 'left', 
                 display: 'flex', alignItems: 'center', gap: 10, fontSize: 13,
               }}
               onMouseEnter={e => (e.currentTarget.style.background = 'var(--theme-primary, #3b82f6)')}
@@ -1413,7 +1413,7 @@ const SimpleDashboard: React.FC = () => {
               <button
                 style={{
                   width: '100%', padding: '8px 16px', border: 'none', background: 'none',
-                  color: 'var(--theme-text, #fff)', textAlign: 'left', cursor: 'pointer',
+                  color: 'var(--theme-text, #fff)', textAlign: 'left', 
                   display: 'flex', alignItems: 'center', gap: 10, fontSize: 13,
                 }}
                 onMouseEnter={e => (e.currentTarget.style.background = 'var(--theme-primary, #3b82f6)')}
@@ -1433,7 +1433,7 @@ const SimpleDashboard: React.FC = () => {
             <button
               style={{
                 width: '100%', padding: '8px 16px', border: 'none', background: 'none',
-                color: 'var(--theme-text, #fff)', textAlign: 'left', cursor: 'pointer',
+                color: 'var(--theme-text, #fff)', textAlign: 'left', 
                 display: 'flex', alignItems: 'center', gap: 10, fontSize: 13,
               }}
               onMouseEnter={e => (e.currentTarget.style.background = 'var(--theme-primary, #3b82f6)')}
@@ -1457,7 +1457,7 @@ const SimpleDashboard: React.FC = () => {
             <button
               style={{
                 width: '100%', padding: '8px 16px', border: 'none', background: 'none',
-                color: '#ef4444', textAlign: 'left', cursor: 'pointer',
+                color: '#ef4444', textAlign: 'left', 
                 display: 'flex', alignItems: 'center', gap: 10, fontSize: 13,
               }}
               onMouseEnter={e => (e.currentTarget.style.background = 'rgba(239,68,68,0.15)')}
@@ -1522,7 +1522,7 @@ const SimpleDashboard: React.FC = () => {
               <button
                 style={{
                   width: '100%', padding: '8px 16px', border: 'none', background: 'none',
-                  color: '#ef4444', textAlign: 'left', cursor: 'pointer',
+                  color: '#ef4444', textAlign: 'left', 
                   display: 'flex', alignItems: 'center', gap: 10, fontSize: 13,
                 }}
                 onMouseEnter={e => (e.currentTarget.style.background = 'rgba(239,68,68,0.15)')}
@@ -1557,7 +1557,7 @@ const SimpleDashboard: React.FC = () => {
                 <button
                   style={{
                     width: '100%', padding: '8px 16px', border: 'none', background: 'none',
-                    color: 'var(--theme-text, #fff)', textAlign: 'left', cursor: 'pointer',
+                    color: 'var(--theme-text, #fff)', textAlign: 'left', 
                     display: 'flex', alignItems: 'center', gap: 10, fontSize: 13,
                   }}
                   onMouseEnter={e => (e.currentTarget.style.background = 'var(--theme-primary, #3b82f6)')}
@@ -1574,7 +1574,7 @@ const SimpleDashboard: React.FC = () => {
                 <button
                   style={{
                     width: '100%', padding: '8px 16px', border: 'none', background: 'none',
-                    color: 'var(--theme-text, #fff)', textAlign: 'left', cursor: 'pointer',
+                    color: 'var(--theme-text, #fff)', textAlign: 'left', 
                     display: 'flex', alignItems: 'center', gap: 10, fontSize: 13,
                   }}
                   onMouseEnter={e => (e.currentTarget.style.background = 'var(--theme-primary, #3b82f6)')}
@@ -1593,7 +1593,7 @@ const SimpleDashboard: React.FC = () => {
                   <button
                     style={{
                       width: '100%', padding: '8px 16px', border: 'none', background: 'none',
-                      color: 'var(--theme-text, #fff)', textAlign: 'left', cursor: 'pointer',
+                      color: 'var(--theme-text, #fff)', textAlign: 'left', 
                       display: 'flex', alignItems: 'center', gap: 10, fontSize: 13,
                     }}
                     onMouseEnter={e => (e.currentTarget.style.background = 'var(--theme-primary, #3b82f6)')}
@@ -1613,7 +1613,7 @@ const SimpleDashboard: React.FC = () => {
                   <button
                     style={{
                       width: '100%', padding: '8px 16px', border: 'none', background: 'none',
-                      color: 'var(--theme-text, #fff)', textAlign: 'left', cursor: 'pointer',
+                      color: 'var(--theme-text, #fff)', textAlign: 'left', 
                       display: 'flex', alignItems: 'center', gap: 10, fontSize: 13,
                     }}
                     onMouseEnter={e => (e.currentTarget.style.background = 'var(--theme-primary, #3b82f6)')}

@@ -31,7 +31,6 @@
   padding: 6px 12px;
   background: none;
   border: none;
-  cursor: pointer;
   transition: all 0.2s ease;
   border-radius: 8px;
   min-width: 64px;
@@ -79,7 +78,6 @@
   color: #fff;
   font-size: 11px;
   font-weight: 600;
-  cursor: pointer;
   padding: 6px 10px;
   transition: transform 0.2s ease;
 }

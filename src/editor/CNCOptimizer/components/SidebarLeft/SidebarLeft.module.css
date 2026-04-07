@@ -64,7 +64,6 @@
   border-radius: 4px;
   color: hsl(var(--theme));
   font-size: 12px;
-  cursor: pointer;
   transition: all 0.2s;
 }
 
@@ -229,7 +228,6 @@
 }
 
 .table tbody tr {
-  cursor: pointer;
   transition: all 0.15s;
   border-bottom: 1px solid #f3f4f6;
 }
@@ -392,7 +390,6 @@
   background: white;
   color: #333;
   font-size: 10px;
-  cursor: pointer;
   transition: all 0.2s;
   border-radius: 3px;
   -webkit-appearance: none;
@@ -426,7 +423,6 @@
   background: transparent;
   border: none;
   color: var(--theme-text-muted);
-  cursor: pointer;
   border-radius: 3px;
   transition: all 0.2s;
 }
@@ -460,7 +456,6 @@
   background: var(--theme-surface);
   border: 1px solid var(--theme-border);
   border-radius: 4px;
-  cursor: pointer;
   transition: all 0.2s;
   font-size: 11px;
 }
@@ -474,7 +469,6 @@
   margin: 0;
   width: 14px;
   height: 14px;
-  cursor: pointer;
 }
 
 .radioButton input[type="radio"]:checked {
@@ -515,7 +509,6 @@
   color: var(--theme-text-muted);
   font-size: 14px;
   font-weight: bold;
-  cursor: pointer;
   transition: all 0.2s;
   padding: 0;
 }
@@ -549,7 +542,6 @@
   color: var(--theme-text-muted);
   font-size: 12px;
   font-weight: 600;
-  cursor: pointer;
   transition: all 0.15s;
   padding: 0;
 }
@@ -592,7 +584,6 @@
 .panelCheckbox {
   width: 13px;
   height: 13px;
-  cursor: pointer;
   accent-color: hsl(var(--theme));
   margin: 0;
   flex-shrink: 0;
@@ -659,7 +650,6 @@
   gap: 6px;
   font-size: 11px;
   color: var(--theme-text);
-  cursor: pointer;
   transition: all 0.2s ease;
   height: 20px;
 }
@@ -778,7 +768,6 @@
   color: var(--theme-text-secondary);
   font-size: 11px;
   font-weight: 500;
-  cursor: pointer;
   transition: all 0.15s;
 }
 
@@ -818,7 +807,6 @@
   min-width: 0;
   padding: 3px 4px;
   border-radius: 3px;
-  cursor: pointer;
   transition: all 0.15s;
 }
 
@@ -829,7 +817,6 @@
 .checkboxCompact input[type="checkbox"] {
   width: 14px;
   height: 14px;
-  cursor: pointer;
   flex-shrink: 0;
   appearance: none;
   -webkit-appearance: none;
@@ -875,7 +862,6 @@
 .optionGroup input[type="checkbox"] {
   width: 14px;
   height: 14px;
-  cursor: pointer;
   position: relative;
   appearance: none;
   -webkit-appearance: none;
@@ -927,7 +913,6 @@
   color: hsl(var(--theme));
   font-size: 13px;
   font-weight: 500;
-  cursor: pointer;
   transition: all 0.2s;
   padding: 8px 16px;
   width: 100%;

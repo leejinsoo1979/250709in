@@ -1265,8 +1265,8 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           // 서랍 모듈: 도어 높이 대신 마이다 개별 높이 표시
           if (selectedModCategory === 'lower' && visibleFurniture.length > 0) {
             const mod = visibleFurniture[0] as PlacedModule;
-            // 도어가 없으면 마이다 치수선 미표시
-            if (mod.hasDoor === false) return null;
+            // 도어가 없으면 마이다 치수선 미표시 (hasDoor가 undefined거나 false면 미설치)
+            if (!mod.hasDoor) return null;
             let modData = getModuleById(
               mod.moduleId,
               { width: internalSpace.width, height: internalSpace.height, depth: internalSpace.depth },

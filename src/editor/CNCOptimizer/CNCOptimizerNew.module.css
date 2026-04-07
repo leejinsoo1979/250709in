@@ -52,7 +52,6 @@
   border: 1px solid var(--theme-border);
   border-radius: 6px;
   color: var(--theme-text);
-  cursor: pointer;
   transition: all 0.2s;
   font-size: 14px;
 }
@@ -71,7 +70,6 @@
   color: white;
   border: none;
   border-radius: 6px;
-  cursor: pointer;
   transition: all 0.2s;
   font-size: 14px;
   font-weight: 500;
@@ -149,7 +147,6 @@
   background: var(--theme-background-secondary);
   border: 1px solid var(--theme-border);
   border-radius: 6px;
-  cursor: pointer;
   transition: all 0.2s;
 }
 
@@ -251,7 +248,6 @@
   background: var(--theme-surface);
   border: 1px solid var(--theme-border);
   border-radius: 6px;
-  cursor: pointer;
   transition: all 0.2s;
 }
 
@@ -346,7 +342,6 @@
   background: var(--theme-background-secondary);
   border: 1px solid var(--theme-border);
   border-radius: 6px;
-  cursor: pointer;
   transition: all 0.2s;
   font-size: 13px;
   color: var(--theme-text-muted);

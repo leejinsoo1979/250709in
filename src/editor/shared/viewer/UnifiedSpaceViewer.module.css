@@ -34,7 +34,6 @@
   font-size: 14px;
   font-weight: 500;
   color: #666;
-  cursor: pointer;
   transition: all 0.2s ease;
 }
 
@@ -59,7 +58,6 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  cursor: pointer;
   font-size: 13px;
   user-select: none;
 }
@@ -67,7 +65,6 @@
 .toggleCheckbox {
   width: 16px;
   height: 16px;
-  cursor: pointer;
 }
 
 .toggleText {
@@ -153,7 +150,6 @@
   border-radius: 4px;
   font-size: 14px;
   font-weight: 500;
-  cursor: pointer;
   transition: background 0.2s ease;
 }
 

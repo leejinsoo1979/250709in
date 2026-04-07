@@ -48,7 +48,6 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  cursor: pointer;
   font-size: 18px;
   color: var(--theme-text-secondary);
   transition: all 0.2s ease;

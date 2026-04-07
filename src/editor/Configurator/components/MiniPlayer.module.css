@@ -59,7 +59,6 @@
   border: none;
   border-radius: 4px;
   color: var(--theme-text-muted);
-  cursor: pointer;
   transition: all 0.15s ease;
 }
 
@@ -140,7 +139,6 @@
   border: none;
   border-radius: 6px;
   font-size: 13px;
-  cursor: pointer;
   transition: background 0.2s ease;
 }
 

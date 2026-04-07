@@ -206,7 +206,6 @@
   border: none;
   padding: 6px;
   border-radius: 50%;
-  cursor: pointer;
   color: var(--theme-text-secondary);
   transition: background 0.2s ease;
 }

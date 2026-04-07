@@ -249,7 +249,6 @@
   border: none;
   border-radius: 50%;
   color: var(--theme-surface);
-  cursor: pointer;
   transition: all 0.2s ease;
   box-shadow: 0 4px 12px var(--theme-shadow);
   z-index: 1000;

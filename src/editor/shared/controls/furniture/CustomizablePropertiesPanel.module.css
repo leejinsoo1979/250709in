@@ -83,7 +83,6 @@
   background: none;
   border: none;
   color: var(--theme-text-secondary);
-  cursor: pointer;
   font-size: 18px;
   padding: 4px;
   border-radius: 4px;
@@ -184,7 +183,6 @@
   background: var(--theme-background);
   color: var(--theme-text-secondary);
   font-size: 12px;
-  cursor: pointer;
   transition: all 0.15s;
 }
 
@@ -213,7 +211,6 @@
   background: var(--theme-background);
   color: var(--theme-text-secondary);
   font-size: 11px;
-  cursor: pointer;
   transition: all 0.15s;
   text-align: center;
 }
@@ -253,7 +250,6 @@
   background: none;
   border: none;
   color: var(--theme-error, #ef4444);
-  cursor: pointer;
   font-size: 14px;
   padding: 2px 4px;
   border-radius: 4px;
@@ -270,7 +266,6 @@
   background: transparent;
   color: var(--theme-text-secondary);
   font-size: 12px;
-  cursor: pointer;
   transition: all 0.15s;
   width: 100%;
   margin-top: 3px;
@@ -314,7 +309,6 @@
   border-radius: 6px;
   font-size: 13px;
   font-weight: 500;
-  cursor: pointer;
   transition: all 0.15s;
 }
 
@@ -374,7 +368,6 @@
   height: 14px;
   border-radius: 50%;
   background: var(--theme-primary);
-  cursor: pointer;
 }
 
 .sliderValue {
@@ -394,7 +387,6 @@
   color: var(--theme-text-secondary);
   font-size: 13px;
   font-weight: 500;
-  cursor: pointer;
   transition: all 0.15s;
   display: flex;
   align-items: center;
@@ -437,7 +429,6 @@
   background: var(--theme-background);
   color: var(--theme-text-tertiary);
   font-size: 11px;
-  cursor: pointer;
   transition: all 0.15s;
   line-height: 1;
 }

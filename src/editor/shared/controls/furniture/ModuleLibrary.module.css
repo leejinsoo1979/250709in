@@ -81,7 +81,6 @@
   background: none;
   border: none;
   border-bottom: 2px solid transparent;
-  cursor: pointer;
   color: var(--theme-text-secondary);
   transition: all 0.15s ease;
   flex: 1;

@@ -118,7 +118,6 @@
   border: 2px solid var(--theme-border, #e5e7eb);
   border-radius: 12px;
   padding: 20px;
-  cursor: pointer;
   transition: all 0.2s ease;
 }
 

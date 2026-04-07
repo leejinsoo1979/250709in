@@ -318,7 +318,6 @@
   color: #9ca3af;
   font-size: 28px;
   font-weight: bold;
-  cursor: pointer;
   z-index: 10;
   transition: color 0.2s;
 }

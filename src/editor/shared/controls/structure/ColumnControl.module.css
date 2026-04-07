@@ -80,7 +80,6 @@
   background: var(--theme-surface, white);
   border: 1px solid var(--theme-border, #ddd);
   border-radius: 4px;
-  cursor: pointer;
   transition: all 0.2s;
 }
 
@@ -117,7 +116,6 @@
   width: 24px;
   height: 24px;
   border-radius: 50%;
-  cursor: pointer;
   font-size: 16px;
   display: flex;
   align-items: center;
@@ -192,7 +190,6 @@
   height: 40px;
   border: 1px solid var(--theme-border, #ddd);
   border-radius: 4px;
-  cursor: pointer;
 }
 
 .settingGroup select {
@@ -259,7 +256,6 @@
   width: 24px;
   height: 24px;
   border-radius: 50%;
-  cursor: pointer;
   font-size: 14px;
   display: flex;
   align-items: center;

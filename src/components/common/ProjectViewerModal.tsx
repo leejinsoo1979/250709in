@@ -380,7 +380,7 @@ const ProjectViewerModal: React.FC<ProjectViewerModalProps> = ({ isOpen, onClose
                         backgroundColor: 'rgba(0, 0, 0, 0.6)',
                         border: '3px solid white',
                         color: 'white',
-                        cursor: 'pointer',
+                        
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',

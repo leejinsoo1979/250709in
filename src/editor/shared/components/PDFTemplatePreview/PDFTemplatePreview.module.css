@@ -84,7 +84,6 @@
 }
 
 .templateOption {
-  cursor: pointer;
   text-align: center;
   transition: all 0.2s ease;
 }
@@ -129,7 +128,6 @@
   background: var(--theme-background);
   color: var(--theme-text);
   font-size: 14px;
-  cursor: pointer;
 }
 
 .downloadFooter {
@@ -148,7 +146,6 @@
   border-radius: 6px;
   font-size: 14px;
   font-weight: 500;
-  cursor: pointer;
   transition: all 0.2s ease;
 }
 
@@ -195,7 +192,6 @@
   background: none;
   border: none;
   color: var(--theme-text-secondary);
-  cursor: pointer;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -267,7 +263,6 @@
   border: 2px dashed var(--theme-border);
   border-radius: 8px;
   background-color: var(--theme-background-secondary);
-  cursor: pointer;
   transition: all 0.3s ease;
   text-align: center;
 }
@@ -328,7 +323,6 @@
   border-radius: 8px;
   border: 1px solid var(--theme-border);
   transition: all 0.2s ease;
-  cursor: pointer;
 }
 
 .fileItem:hover {
@@ -398,7 +392,6 @@
   border: 1px solid var(--theme-border);
   border-radius: 4px;
   padding: 4px;
-  cursor: pointer;
   transition: all 0.2s ease;
   display: flex;
   align-items: center;
@@ -439,7 +432,6 @@
   font-size: 13px;
   font-weight: 500;
   border-radius: 6px;
-  cursor: pointer;
   transition: all 0.2s ease;
 }
 
@@ -486,7 +478,6 @@
   font-size: 13px;
   font-weight: 500;
   border-radius: 20px;
-  cursor: pointer;
   transition: all 0.2s ease;
   white-space: nowrap;
 }
@@ -515,7 +506,6 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  cursor: pointer;
   transition: all 0.2s ease;
   font-size: 16px;
   font-weight: bold;
@@ -635,7 +625,6 @@
   background: var(--theme-surface);
   border-radius: 12px;
   overflow: hidden;
-  cursor: pointer;
   transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
   text-align: left;
   padding: 0;
@@ -838,7 +827,6 @@
   border: 1px solid var(--border-primary);
   background-color: var(--bg-button);
   color: var(--text-primary);
-  cursor: pointer;
   border-radius: 4px;
   font-size: 16px;
   font-weight: 500;
@@ -894,7 +882,6 @@
   border: 1px solid var(--theme-border);
   border-radius: 4px;
   padding: 4px 6px;
-  cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -928,7 +915,6 @@
   background: none;
   border: none;
   text-align: left;
-  cursor: pointer;
   color: var(--theme-text-primary);
   font-size: 13px;
   border-radius: 4px;
@@ -947,7 +933,6 @@
 .zoomOption {
   padding: 10px 16px;
   color: var(--text-primary);
-  cursor: pointer;
   transition: all 0.2s ease;
   font-size: 14px;
   display: flex;
@@ -1001,7 +986,6 @@
   font-size: 14px;
   background-color: var(--bg-tertiary);
   color: var(--text-primary);
-  cursor: pointer;
   appearance: none;
   background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23999999' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
   background-repeat: no-repeat;
@@ -1041,7 +1025,6 @@
   border-radius: 4px;
   font-size: 14px;
   font-weight: 500;
-  cursor: pointer;
   transition: background-color 0.2s;
   display: flex;
   align-items: center;
@@ -1066,7 +1049,6 @@
   border: 1px solid var(--border-primary);
   border-radius: 8px;
   color: var(--text-primary);
-  cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1095,7 +1077,6 @@
   border: 1px solid var(--border-primary);
   border-radius: 8px;
   color: var(--text-primary);
-  cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1123,7 +1104,6 @@
   border-radius: 4px;
   font-size: 14px;
   font-weight: 500;
-  cursor: pointer;
   transition: all 0.2s;
 }
 
@@ -1253,7 +1233,6 @@
   font-size: 9px;
   color: var(--text-primary);
   margin: 0;
-  cursor: pointer;
   padding: 1px;
   line-height: 1.2;
 }
@@ -1285,7 +1264,6 @@
 
 .infoSpecItem > span:last-child {
   color: var(--accent-primary);
-  cursor: pointer;
   padding: 1px 4px;
 }
 
@@ -1307,7 +1285,6 @@
   font-weight: 600;
   color: var(--text-primary);
   margin: 0;
-  cursor: pointer;
   padding: 4px 8px;
   text-align: center;
 }
@@ -1349,7 +1326,6 @@
   font-size: 14px;
   color: var(--text-secondary);
   margin: 0;
-  cursor: pointer;
   padding: 4px;
   width: 100%;
 }
@@ -1553,7 +1529,6 @@
 
 .draggableView:hover {
   border: 2px solid var(--theme-primary);
-  cursor: pointer;
 }
 
 /* 더블클릭 힌트는 이미지가 없을 때만 표시 */
@@ -1641,7 +1616,6 @@
   font-size: 14px;
   font-weight: 500;
   color: var(--theme-text-primary);
-  cursor: pointer;
   transition: all 0.2s ease;
   min-width: 80px;
 }
@@ -1674,7 +1648,6 @@
   background: none;
   border: none;
   text-align: left;
-  cursor: pointer;
   color: var(--theme-text-primary);
   font-size: 13px;
   font-weight: 500;
@@ -1713,7 +1686,6 @@
   background-color: transparent;
   border: none;
   border-radius: 8px;
-  cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1764,7 +1736,6 @@
   border: 1px solid var(--theme-border);
   background-color: var(--theme-surface);
   color: var(--theme-surface);
-  cursor: pointer;
   border-radius: 2px;
   font-size: 14px;
   display: flex;
@@ -1792,7 +1763,6 @@
   border: 1px solid var(--theme-danger);
   background-color: var(--theme-surface);
   color: var(--theme-danger);
-  cursor: pointer;
   border-radius: 2px;
   font-size: 16px;
   display: flex;
@@ -1960,7 +1930,6 @@
   border: 2px dashed var(--theme-primary);
   border-radius: 6px;
   padding: 6px;
-  cursor: pointer;
   transition: all 0.2s;
   display: flex;
   flex-direction: column;
@@ -2136,7 +2105,6 @@
   border: 2px solid var(--border-primary);
   border-radius: 6px;
   padding: 6px;
-  cursor: pointer;
   transition: all 0.2s;
   height: 95px;
   width: 155px;
@@ -2248,7 +2216,6 @@
   color: white;
   border: none;
   border-radius: 3px;
-  cursor: pointer;
   display: none;
   align-items: center;
   justify-content: center;
@@ -2386,7 +2353,6 @@
   border: none;
   color: var(--theme-text-muted);
   font-size: 24px;
-  cursor: pointer;
   padding: 4px 8px;
   transition: color 0.2s;
 }
@@ -2430,7 +2396,6 @@
 }
 
 .viewerSubHeader .toggleLabel.clickable {
-  cursor: pointer;
   user-select: none;
 }
 
@@ -2444,7 +2409,6 @@
   background-color: var(--theme-background-secondary);
   border-radius: 10px;
   position: relative;
-  cursor: pointer;
   transition: background-color 0.3s;
   border: none;
   padding: 0;
@@ -2487,7 +2451,6 @@
   gap: 6px;
   color: var(--theme-text-secondary);
   font-size: 13px;
-  cursor: pointer;
   position: relative;
 }
 
@@ -2495,7 +2458,6 @@
   width: 16px;
   height: 16px;
   margin: 0;
-  cursor: pointer;
   position: relative;
   opacity: 0;
 }
@@ -2564,7 +2526,6 @@
   background: none;
   color: var(--theme-text-muted);
   font-size: 13px;
-  cursor: pointer;
   border-radius: 4px;
   transition: all 0.2s ease;
 }
@@ -2598,7 +2559,6 @@
   font-size: 11px;
   font-weight: 500;
   color: var(--accent-primary);
-  cursor: pointer;
   transition: all 0.2s ease;
   line-height: 18px;
   height: 28px;
@@ -2633,7 +2593,6 @@
   background-color: var(--theme-background-secondary);
   color: var(--theme-text-muted);
   border-radius: 6px;
-  cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -2655,7 +2614,6 @@
   background-color: transparent;
   border: none;
   color: var(--theme-text-muted);
-  cursor: pointer;
   font-size: 13px;
   border-radius: 4px;
   transition: all 0.2s;
@@ -2729,7 +2687,6 @@
   border-radius: 50%;
   background: var(--theme-primary);
   border: 2px solid #fff;
-  cursor: pointer;
   pointer-events: auto;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.25);
 }
@@ -2820,7 +2777,6 @@
   border-radius: 6px;
   font-size: 14px;
   font-weight: 500;
-  cursor: pointer;
   transition: all 0.2s;
 }
 
@@ -2838,7 +2794,6 @@
   border-radius: 6px;
   font-size: 14px;
   font-weight: 500;
-  cursor: pointer;
   transition: all 0.2s;
 }
 
@@ -2922,7 +2877,6 @@
   height: 30px;
   border: 1px solid var(--theme-border);
   border-radius: 4px;
-  cursor: pointer;
   background: none;
 }
 
@@ -2970,7 +2924,6 @@
   color: var(--theme-text);
   padding: 12px;
   border-radius: 8px;
-  cursor: pointer;
   transition: all 0.2s;
   font-size: 14px;
   box-shadow: 0 1px 3px var(--shadow);
@@ -3015,7 +2968,6 @@
   border: 1px solid var(--theme-border);
   border-radius: 8px;
   padding: 12px;
-  cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -3068,7 +3020,6 @@
   background: white;
   border: 2px solid #7c3aed;
   border-radius: 50%;
-  cursor: pointer;
 }
 
 .resizeHandle.topLeft {
@@ -3238,7 +3189,6 @@
   color: var(--theme-text);
   font-size: 18px;
   border-radius: 4px;
-  cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -3258,7 +3208,6 @@
   background: var(--border-primary);
   border-radius: 2px;
   outline: none;
-  cursor: pointer;
   margin: 0 8px;
 }
 
@@ -3269,7 +3218,6 @@
   height: 16px;
   background: var(--accent-primary);
   border-radius: 50%;
-  cursor: pointer;
   transition: all 0.2s;
 }
 
@@ -3283,7 +3231,6 @@
   height: 16px;
   background: var(--accent-primary);
   border-radius: 50%;
-  cursor: pointer;
   border: none;
   transition: all 0.2s;
 }
@@ -3922,7 +3869,6 @@
   background: none;
   color: var(--theme-text-secondary);
   font-size: 20px;
-  cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -3946,7 +3892,6 @@
   padding: 12px 16px;
   margin-bottom: 4px;
   border-radius: 6px;
-  cursor: pointer;
   transition: all 0.2s ease;
   border: 2px solid transparent;
 }
@@ -3998,7 +3943,6 @@
   border-radius: 6px;
   font-size: 14px;
   font-weight: 500;
-  cursor: pointer;
   transition: background-color 0.2s ease;
 }
 
@@ -4015,7 +3959,6 @@
   border-radius: 6px;
   font-size: 14px;
   font-weight: 500;
-  cursor: pointer;
   transition: all 0.2s ease;
 }
 

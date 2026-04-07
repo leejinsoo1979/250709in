@@ -42,7 +42,6 @@
   color: var(--theme-text-secondary, #6b7280);
   font-size: 14px;
   font-weight: 600;
-  cursor: pointer;
   transition: all 0.2s ease;
   white-space: nowrap;
 }

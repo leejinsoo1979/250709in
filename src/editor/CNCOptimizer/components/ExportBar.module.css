@@ -14,7 +14,6 @@
   color: white;
   font-size: 13px;
   font-weight: 600;
-  cursor: pointer;
   transition: all 0.2s ease;
   position: relative;
 }
@@ -87,7 +86,6 @@
   background: var(--theme-surface);
   border: none;
   text-align: left;
-  cursor: pointer;
   transition: all 0.15s ease;
   position: relative;
 }

@@ -188,7 +188,7 @@ const ClassicDashboard: React.FC<ClassicDashboardProps> = ({
               nav.setActiveMenu('in-progress');
               nav.navigateToRoot();
             }}
-            style={{ cursor: 'pointer' }}
+            style={{  }}
           >
             <Logo size="large" />
           </div>
@@ -229,7 +229,7 @@ const ClassicDashboard: React.FC<ClassicDashboardProps> = ({
           <div
             className={styles.settingsItem}
             onClick={() => setIsSettingsPanelOpen(true)}
-            style={{ cursor: 'pointer' }}
+            style={{  }}
           >
             <div className={styles.navItemIcon}>
               <SettingsIcon size={20} />

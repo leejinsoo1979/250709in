@@ -117,7 +117,6 @@
 .closeButton {
   background: rgba(255, 255, 255, 0.2);
   border: none;
-  cursor: pointer;
   color: white;
   padding: 8px;
   display: flex;
@@ -236,7 +235,6 @@
   background: transparent;
   border: 1px solid var(--theme-border, #e5e7eb);
   border-radius: 8px;
-  cursor: pointer;
   transition: all 0.2s ease;
   font-size: 14px;
   color: var(--theme-text, #111827);
@@ -413,7 +411,6 @@
   border-radius: 8px;
   font-size: 14px;
   font-weight: 600;
-  cursor: pointer;
   transition: all 0.2s ease;
   margin-top: 4px;
 }

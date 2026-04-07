@@ -63,7 +63,6 @@
   color: #6b7280;
   font-size: 14px;
   font-weight: 500;
-  cursor: pointer;
   transition: all 0.2s ease;
   min-width: 50px;
 }
@@ -91,7 +90,6 @@
   border-radius: 8px;
   background: #f3f4f6;
   color: #6b7280;
-  cursor: pointer;
   transition: all 0.2s ease;
   display: flex;
   align-items: center;
@@ -114,7 +112,6 @@
   border-radius: 8px;
   font-size: 14px;
   font-weight: 500;
-  cursor: pointer;
   transition: all 0.2s ease;
 }
 
@@ -172,7 +169,6 @@
   border-radius: 8px;
   font-size: 14px;
   font-weight: 500;
-  cursor: pointer;
   transition: background-color 0.2s ease;
 }
 

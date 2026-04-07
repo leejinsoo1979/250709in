@@ -52,7 +52,6 @@
 }
 
 .table tbody tr {
-  cursor: pointer;
   transition: all 0.15s;
   border-bottom: 1px solid #f3f4f6;
 }

@@ -43,7 +43,6 @@
   display: flex;
   justify-content: center;
   padding: 12px 0 8px;
-  cursor: pointer;
 }
 
 .handleBar {
@@ -78,7 +77,6 @@
   border: none;
   border-radius: 50%;
   color: var(--theme-text-muted);
-  cursor: pointer;
   transition: all 0.2s ease;
 }
 

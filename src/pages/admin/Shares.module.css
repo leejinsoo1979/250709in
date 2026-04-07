@@ -151,7 +151,6 @@
   justify-content: space-between;
   padding: 20px;
   background: var(--theme-surface, #ffffff);
-  cursor: pointer;
   transition: background-color 0.2s ease;
 }
 

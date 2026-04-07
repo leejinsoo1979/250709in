@@ -72,7 +72,6 @@
   border: none;
   border-radius: 6px;
   color: var(--theme-text-muted);
-  cursor: pointer;
   transition: all 0.2s;
 }
 

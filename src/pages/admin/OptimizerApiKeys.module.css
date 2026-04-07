@@ -36,7 +36,6 @@
   color: var(--theme-surface);
   font-size: 14px;
   font-weight: 600;
-  cursor: pointer;
   transition: all 0.2s ease;
   white-space: nowrap;
   box-shadow: 0 2px 8px var(--theme-shadow);
@@ -100,7 +99,6 @@
   color: var(--theme-text-secondary, #6b7280);
   font-size: 14px;
   font-weight: 600;
-  cursor: pointer;
   transition: all 0.2s ease;
 }
 
@@ -118,7 +116,6 @@
   color: var(--theme-surface);
   font-size: 14px;
   font-weight: 600;
-  cursor: pointer;
   transition: all 0.2s ease;
 }
 
@@ -141,7 +138,6 @@
   border-radius: 8px;
   color: var(--theme-text, #1f2937);
   font-size: 14px;
-  cursor: pointer;
   transition: all 0.2s ease;
 }
 
@@ -172,7 +168,6 @@
   padding: 12px 16px;
   font-size: 14px;
   color: var(--theme-text, #1f2937);
-  cursor: pointer;
   transition: all 0.15s ease;
 }
 
@@ -314,7 +309,6 @@
   border: 1px solid var(--theme-border, #e5e7eb);
   border-radius: 6px;
   color: var(--theme-text-secondary, #6b7280);
-  cursor: pointer;
   transition: all 0.2s ease;
 }
 
@@ -362,7 +356,6 @@
   border: 1px solid var(--theme-border, #e5e7eb);
   border-radius: 6px;
   color: var(--theme-text-secondary, #6b7280);
-  cursor: pointer;
   transition: all 0.2s ease;
 }
 
@@ -409,7 +402,6 @@
   color: var(--theme-surface);
   font-size: 14px;
   font-weight: 600;
-  cursor: pointer;
   transition: all 0.2s ease;
   margin-top: 8px;
 }

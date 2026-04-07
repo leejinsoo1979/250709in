@@ -36,7 +36,6 @@
   border: 1px solid var(--theme-border);
   border-radius: 4px;
   font-size: 12px;
-  cursor: pointer;
   transition: all 0.2s;
   color: var(--theme-text-muted);
 }
