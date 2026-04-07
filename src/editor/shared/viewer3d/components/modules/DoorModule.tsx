@@ -712,8 +712,8 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   // mm를 Three.js 단위로 변환
   const mmToThreeUnits = (mm: number) => mm * 0.01;
   
-  // 도어 두께 (PET 도어는 항상 18.5mm)
-  const doorThickness = 18.5;
+  // 도어 두께 = 가구재 두께 (spaceInfo.panelThickness, 기본 18mm)
+  const doorThickness = currentSpaceInfo?.panelThickness || 18;
   const doorThicknessUnits = mmToThreeUnits(doorThickness);
   
   // === 도어 확장 설정 (변수화) ===
@@ -919,7 +919,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   // 노서라운드 + 벽없음 상태 체크
   const isNoSurroundNoWallLeft = originalSpaceInfo.surroundType === 'no-surround' && !originalSpaceInfo.wallConfig?.left;
   const isNoSurroundNoWallRight = originalSpaceInfo.surroundType === 'no-surround' && !originalSpaceInfo.wallConfig?.right;
-  const endPanelThickness = 18.5; // 엔드패널 두께 18.5mm (PET 재질)
+  const endPanelThickness = currentSpaceInfo?.panelThickness || 18; // 엔드패널 두께 = 가구재 두께
 
   // 도어 Z 위치: doorDepth/2로 사용되므로 offset을 2배로 설정해야 함
   // 목표: 가구 앞면에서 5mm 떨어지고 + 도어 두께 절반(9mm) = 14mm
