@@ -1313,25 +1313,100 @@ export const calculatePanelDetails = (
 
   // 엔드패널(EP) — 좌/우 독립
   const epT = 18.5; // EP(엔드패널)는 PET 재질 항상 18.5mm
+  const epThicknessMm = endPanelThickness || 18; // 사용자 설정 EP 두께
+  const isEpCFrame = epThicknessMm > 18; // >18mm이면 ㄷ자 프레임
+  const EP_CONNECTOR_DEPTH = 40; // 전면/후면 연결판 깊이 (서라운드 SURROUND_SIDE_DEPTH와 동일)
+
   if (hasLeftEndPanel) {
-    result.push({
-      name: '엔드패널(좌)',
-      width: height,
-      height: customDepth,
-      thickness: epT,
-      material: 'PET',
-      quantity: 1,
-    });
+    if (isEpCFrame) {
+      // ㄷ자 프레임: 외판 + 내판 + 전면연결판 + 후면연결판
+      result.push({
+        name: 'EP(좌)외판',
+        width: height,
+        height: customDepth,
+        thickness: epT,
+        material: 'PET',
+        quantity: 1,
+      });
+      result.push({
+        name: 'EP(좌)내판',
+        width: height,
+        height: customDepth,
+        thickness: epT,
+        material: 'PET',
+        quantity: 1,
+      });
+      result.push({
+        name: 'EP(좌)전면연결판',
+        width: height,
+        height: EP_CONNECTOR_DEPTH,
+        thickness: epT,
+        material: 'PET',
+        quantity: 1,
+      });
+      result.push({
+        name: 'EP(좌)후면연결판',
+        width: height,
+        height: EP_CONNECTOR_DEPTH,
+        thickness: epT,
+        material: 'PET',
+        quantity: 1,
+      });
+    } else {
+      result.push({
+        name: '엔드패널(좌)',
+        width: height,
+        height: customDepth,
+        thickness: epT,
+        material: 'PET',
+        quantity: 1,
+      });
+    }
   }
   if (hasRightEndPanel) {
-    result.push({
-      name: '엔드패널(우)',
-      width: height,
-      height: customDepth,
-      thickness: epT,
-      material: 'PET',
-      quantity: 1,
-    });
+    if (isEpCFrame) {
+      result.push({
+        name: 'EP(우)외판',
+        width: height,
+        height: customDepth,
+        thickness: epT,
+        material: 'PET',
+        quantity: 1,
+      });
+      result.push({
+        name: 'EP(우)내판',
+        width: height,
+        height: customDepth,
+        thickness: epT,
+        material: 'PET',
+        quantity: 1,
+      });
+      result.push({
+        name: 'EP(우)전면연결판',
+        width: height,
+        height: EP_CONNECTOR_DEPTH,
+        thickness: epT,
+        material: 'PET',
+        quantity: 1,
+      });
+      result.push({
+        name: 'EP(우)후면연결판',
+        width: height,
+        height: EP_CONNECTOR_DEPTH,
+        thickness: epT,
+        material: 'PET',
+        quantity: 1,
+      });
+    } else {
+      result.push({
+        name: '엔드패널(우)',
+        width: height,
+        height: customDepth,
+        thickness: epT,
+        material: 'PET',
+        quantity: 1,
+      });
+    }
   }
 
   // === L자 PET 프레임 (하부장 따내기 마감) ===

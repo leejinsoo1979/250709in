@@ -3664,6 +3664,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                       spaceInfo={zoneSpaceInfo}
                       renderMode={effectiveRenderMode}
                       useFrameColor={true}
+                      endPanelThicknessMm={epThicknessMm}
                     />
                   )}
                   {hasRight && (
@@ -3675,6 +3676,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                       spaceInfo={zoneSpaceInfo}
                       renderMode={effectiveRenderMode}
                       useFrameColor={true}
+                      endPanelThicknessMm={epThicknessMm}
                     />
                   )}
                 </>
@@ -3926,6 +3928,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                   position={[0, 0, 0]}
                   spaceInfo={zoneSpaceInfo}
                   renderMode={effectiveRenderMode}
+                  endPanelThicknessMm={placedModule.endPanelThickness || 18.5}
                 />
               </group>
             ))}
