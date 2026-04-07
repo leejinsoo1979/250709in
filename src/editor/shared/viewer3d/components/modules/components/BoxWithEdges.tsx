@@ -192,6 +192,18 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
         return baseMaterial;
       }
 
+      // 목찬넬프레임: 연한 파란색 반투명 면
+      const isWoodChannel = panelName && panelName.includes('목찬넬프레임');
+      if (isWoodChannel) {
+        return new THREE.MeshBasicMaterial({
+          color: '#00cfff',
+          transparent: true,
+          opacity: 0.15,
+          depthWrite: false,
+          side: THREE.DoubleSide,
+        });
+      }
+
       const transparentMaterial = baseMaterial.clone();
       transparentMaterial.transparent = true;
       transparentMaterial.depthWrite = false;
