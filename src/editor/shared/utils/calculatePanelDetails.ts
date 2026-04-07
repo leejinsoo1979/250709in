@@ -1500,10 +1500,10 @@ export const calculatePanelDetails = (
         maidaHeightMm = 375; // 안전 기본값
       }
 
+      // 외부서랍: 앞판 없음 (ExternalDrawerRenderer 주석: "서랍 앞판 없음" — 마이다가 앞면 덮음)
       extDrawerPanels.push(
         { name: `서랍${drawerNum} 좌측판`, width: extSideDepthMm, height: extSideHMm, thickness: drawerSideThickness, material: 'PB' },
         { name: `서랍${drawerNum} 우측판`, width: extSideDepthMm, height: extSideHMm, thickness: drawerSideThickness, material: 'PB' },
-        { name: `서랍${drawerNum} 앞판`, width: Math.round(extInnerWidth), height: extSideHMm, thickness: drawerSideThickness, material: 'PB' },
         { name: `서랍${drawerNum} 뒷판`, width: Math.round(extInnerWidth), height: Math.round(extBackHMm), thickness: drawerSideThickness, material: 'PB' },
         { name: `서랍${drawerNum} 바닥`, width: Math.round(extBottomWidthMm), depth: extSideDepthMm, thickness: backPanelThickness, material: 'MDF' },
       );
@@ -1585,8 +1585,8 @@ export const calculatePanelDetails = (
   // === 프레임 패널 (상부프레임 / 하부프레임) ===
   const FRAME_THICKNESS = basicThickness; // 사용자 선택 두께 (18 또는 18.5 등)
 
-  // 상부프레임
-  if (hasTopFrame !== false && topFrameHeightMm && topFrameHeightMm > 0) {
+  // 상부프레임 — 하부장(lower-*)에는 상부프레임 없음
+  if (!isLowerCabinetModule && hasTopFrame !== false && topFrameHeightMm && topFrameHeightMm > 0) {
     panels.frame.push({
       name: '상부프레임',
       width: customWidth,
