@@ -2844,6 +2844,12 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       return;
     }
 
+    // slotCustomWidth가 설정된 가구는 드래그(좌우 이동) 불가
+    if (placedModule.slotCustomWidth !== undefined) {
+      e.stopPropagation();
+      return;
+    }
+
     // 편집/이동 모드에서는 드래그 시작 차단 (onClick에서 처리)
     if (isEditMode || (window as any).__furnitureMoveMode) {
       e.stopPropagation();
