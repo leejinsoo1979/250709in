@@ -5672,7 +5672,7 @@ const Configurator: React.FC = () => {
                           <div className={styles.frameItemInput} style={{ flex: 1 }}>
                             <span style={{ fontSize: '10px', color: 'var(--theme-text-secondary)', padding: '0 2px', flexShrink: 0 }}>상단</span>
                             <input type="text" inputMode="numeric"
-                              value={(mod.doorTopGap ?? 0) || ''} placeholder="0"
+                              value={mod.doorTopGap ?? 0} placeholder="0"
                               onKeyDown={(e) => { if (e.key === 'ArrowUp' || e.key === 'ArrowDown') { e.preventDefault(); const cur = mod.doorTopGap ?? 0; updatePlacedModule(mod.id, { doorTopGap: Math.max(-200, Math.min(200, cur + (e.key === 'ArrowUp' ? 1 : -1))) }); } }}
                               onChange={(e) => { const v = e.target.value; if (v === '' || v === '-' || /^-?\d+$/.test(v)) updatePlacedModule(mod.id, { doorTopGap: v === '' || v === '-' ? 0 : parseInt(v, 10) }); }}
                               onBlur={(e) => { const v = parseInt(e.target.value) || 0; updatePlacedModule(mod.id, { doorTopGap: Math.max(-200, Math.min(200, v)) }); }}
@@ -5682,7 +5682,7 @@ const Configurator: React.FC = () => {
                           <div className={styles.frameItemInput} style={{ flex: 1 }}>
                             <span style={{ fontSize: '10px', color: 'var(--theme-text-secondary)', padding: '0 2px', flexShrink: 0 }}>하단</span>
                             <input type="text" inputMode="numeric"
-                              value={(mod.doorBottomGap ?? 0) || ''} placeholder="0"
+                              value={mod.doorBottomGap ?? 0} placeholder="0"
                               onKeyDown={(e) => { if (e.key === 'ArrowUp' || e.key === 'ArrowDown') { e.preventDefault(); const cur = mod.doorBottomGap ?? 0; updatePlacedModule(mod.id, { doorBottomGap: Math.max(-200, Math.min(200, cur + (e.key === 'ArrowUp' ? 1 : -1))) }); } }}
                               onChange={(e) => { const v = e.target.value; if (v === '' || v === '-' || /^-?\d+$/.test(v)) updatePlacedModule(mod.id, { doorBottomGap: v === '' || v === '-' ? 0 : parseInt(v, 10) }); }}
                               onBlur={(e) => { const v = parseInt(e.target.value) || 0; updatePlacedModule(mod.id, { doorBottomGap: Math.max(-200, Math.min(200, v)) }); }}
