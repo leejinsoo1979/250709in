@@ -1165,7 +1165,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
   // });
   
   // 화살표 생성 함수
-  const createArrowHead = (start: [number, number, number], end: [number, number, number], size = 0.015) => {
+  const createArrowHead = (start: [number, number, number], end: [number, number, number], size = 0.008) => {
     const direction = new THREE.Vector3(end[0] - start[0], end[1] - start[1], end[2] - start[2]).normalize();
     const perpendicular = new THREE.Vector3(-direction.y, direction.x, 0).multiplyScalar(size);
     
@@ -3250,7 +3250,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             />
             {/* 좌측 화살표 */}
             <NativeLine name="dimension_line"
-              points={createArrowHead([internalLeftX, columnDimensionY, 0.002], [internalLeftX + 0.03, columnDimensionY, 0.002], 0.01)}
+              points={createArrowHead([internalLeftX, columnDimensionY, 0.002], [internalLeftX + 0.015, columnDimensionY, 0.002], 0.01)}
               color={dimensionColor}
               lineWidth={1}
               renderOrder={100000}
@@ -3258,7 +3258,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             />
             {/* 우측 화살표 */}
             <NativeLine name="dimension_line"
-              points={createArrowHead([internalRightX, columnDimensionY, 0.002], [internalRightX - 0.03, columnDimensionY, 0.002], 0.01)}
+              points={createArrowHead([internalRightX, columnDimensionY, 0.002], [internalRightX - 0.015, columnDimensionY, 0.002], 0.01)}
               color={dimensionColor}
               lineWidth={1}
               renderOrder={100000}
@@ -3330,11 +3330,11 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
                 />
                 <NativeLine name="dimension_line"
-                  points={createArrowHead([wallLeft, columnDimensionY, 0.002], [wallLeft + 0.03, columnDimensionY, 0.002], 0.01)}
+                  points={createArrowHead([wallLeft, columnDimensionY, 0.002], [wallLeft + 0.015, columnDimensionY, 0.002], 0.01)}
                   color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
                 />
                 <NativeLine name="dimension_line"
-                  points={createArrowHead([furnitureLeft, columnDimensionY, 0.002], [furnitureLeft - 0.03, columnDimensionY, 0.002], 0.01)}
+                  points={createArrowHead([furnitureLeft, columnDimensionY, 0.002], [furnitureLeft - 0.015, columnDimensionY, 0.002], 0.01)}
                   color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
                 />
                 <Text renderOrder={1000} depthTest={false}
@@ -3353,11 +3353,11 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
             />
             <NativeLine name="dimension_line"
-              points={createArrowHead([furnitureLeft, columnDimensionY, 0.002], [furnitureLeft + 0.03, columnDimensionY, 0.002], 0.01)}
+              points={createArrowHead([furnitureLeft, columnDimensionY, 0.002], [furnitureLeft + 0.015, columnDimensionY, 0.002], 0.01)}
               color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
             />
             <NativeLine name="dimension_line"
-              points={createArrowHead([furnitureRight, columnDimensionY, 0.002], [furnitureRight - 0.03, columnDimensionY, 0.002], 0.01)}
+              points={createArrowHead([furnitureRight, columnDimensionY, 0.002], [furnitureRight - 0.015, columnDimensionY, 0.002], 0.01)}
               color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
             />
             <Text renderOrder={1000} depthTest={false}
@@ -3376,11 +3376,11 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
                 />
                 <NativeLine name="dimension_line"
-                  points={createArrowHead([furnitureRight, columnDimensionY, 0.002], [furnitureRight + 0.03, columnDimensionY, 0.002], 0.01)}
+                  points={createArrowHead([furnitureRight, columnDimensionY, 0.002], [furnitureRight + 0.015, columnDimensionY, 0.002], 0.01)}
                   color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
                 />
                 <NativeLine name="dimension_line"
-                  points={createArrowHead([wallRight, columnDimensionY, 0.002], [wallRight - 0.03, columnDimensionY, 0.002], 0.01)}
+                  points={createArrowHead([wallRight, columnDimensionY, 0.002], [wallRight - 0.015, columnDimensionY, 0.002], 0.01)}
                   color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
                 />
                 <Text renderOrder={1000} depthTest={false}
@@ -4407,7 +4407,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   />
                   {/* 하단 틱 마크 */}
                   <NativeLine name="dimension_line"
-                    points={createArrowHead([dimLineX, range.startY, 0.002], [dimLineX, range.startY - 0.03, 0.002])}
+                    points={createArrowHead([dimLineX, range.startY, 0.002], [dimLineX, range.startY - 0.015, 0.002])}
                     color={dimensionColor}
                     lineWidth={1}
                     renderOrder={100000}
@@ -4415,7 +4415,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   />
                   {/* 상단 틱 마크 */}
                   <NativeLine name="dimension_line"
-                    points={createArrowHead([dimLineX, range.endY, 0.002], [dimLineX, range.endY + 0.03, 0.002])}
+                    points={createArrowHead([dimLineX, range.endY, 0.002], [dimLineX, range.endY + 0.015, 0.002])}
                     color={dimensionColor}
                     lineWidth={1}
                     renderOrder={100000}
@@ -4525,14 +4525,14 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                       depthTest={false}
                     />
                     <NativeLine name="dimension_line"
-                      points={createArrowHead([dimLineRightX, seg.startY, 0.002], [dimLineRightX, seg.startY - 0.03, 0.002])}
+                      points={createArrowHead([dimLineRightX, seg.startY, 0.002], [dimLineRightX, seg.startY - 0.015, 0.002])}
                       color={dimensionColor}
                       lineWidth={1}
                       renderOrder={100000}
                       depthTest={false}
                     />
                     <NativeLine name="dimension_line"
-                      points={createArrowHead([dimLineRightX, seg.endY, 0.002], [dimLineRightX, seg.endY + 0.03, 0.002])}
+                      points={createArrowHead([dimLineRightX, seg.endY, 0.002], [dimLineRightX, seg.endY + 0.015, 0.002])}
                       color={dimensionColor}
                       lineWidth={1}
                       renderOrder={100000}
@@ -4590,7 +4590,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                         />
                         {/* 좌측 틱 마크 */}
                         <NativeLine name="dimension_line"
-                          points={createArrowHead([box.startX, wd.dimY, 0.002], [box.startX - 0.03, wd.dimY, 0.002])}
+                          points={createArrowHead([box.startX, wd.dimY, 0.002], [box.startX - 0.015, wd.dimY, 0.002])}
                           color={dimensionColor}
                           lineWidth={1}
                           renderOrder={100000}
@@ -4598,7 +4598,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                         />
                         {/* 우측 틱 마크 */}
                         <NativeLine name="dimension_line"
-                          points={createArrowHead([box.endX, wd.dimY, 0.002], [box.endX + 0.03, wd.dimY, 0.002])}
+                          points={createArrowHead([box.endX, wd.dimY, 0.002], [box.endX + 0.015, wd.dimY, 0.002])}
                           color={dimensionColor}
                           lineWidth={1}
                           renderOrder={100000}
@@ -5392,12 +5392,12 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     lineWidth={1}
                   />
                   <Line
-                    points={createArrowHead([0, mmToThreeUnits(floorFinishHeightMm), rightDimensionZ], [0, mmToThreeUnits(floorFinishHeightMm) + 0.03, rightDimensionZ])}
+                    points={createArrowHead([0, mmToThreeUnits(floorFinishHeightMm), rightDimensionZ], [0, mmToThreeUnits(floorFinishHeightMm) + 0.015, rightDimensionZ])}
                     color={dimensionColor}
                     lineWidth={1}
                   />
                   <Line
-                    points={createArrowHead([0, mmToThreeUnits(floorFinishHeightMm + floatHeight), rightDimensionZ], [0, mmToThreeUnits(floorFinishHeightMm + floatHeight) + 0.03, rightDimensionZ])}
+                    points={createArrowHead([0, mmToThreeUnits(floorFinishHeightMm + floatHeight), rightDimensionZ], [0, mmToThreeUnits(floorFinishHeightMm + floatHeight) + 0.015, rightDimensionZ])}
                     color={dimensionColor}
                     lineWidth={1}
                   />
@@ -5427,12 +5427,12 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     lineWidth={1}
                   />
                   <Line
-                    points={createArrowHead([0, bottomY, rightDimensionZ], [0, bottomY - 0.03, rightDimensionZ])}
+                    points={createArrowHead([0, bottomY, rightDimensionZ], [0, bottomY - 0.015, rightDimensionZ])}
                     color={dimensionColor}
                     lineWidth={1}
                   />
                   <Line
-                    points={createArrowHead([0, bottomFrameTopY, rightDimensionZ], [0, bottomFrameTopY + 0.03, rightDimensionZ])}
+                    points={createArrowHead([0, bottomFrameTopY, rightDimensionZ], [0, bottomFrameTopY + 0.015, rightDimensionZ])}
                     color={dimensionColor}
                     lineWidth={1}
                   />
@@ -5463,12 +5463,12 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     lineWidth={1}
                   />
                   <Line
-                    points={createArrowHead([0, mmToThreeUnits(floorFinishHeightMm + floatHeight), rightDimensionZ], [0, mmToThreeUnits(floorFinishHeightMm + floatHeight) + 0.03, rightDimensionZ])}
+                    points={createArrowHead([0, mmToThreeUnits(floorFinishHeightMm + floatHeight), rightDimensionZ], [0, mmToThreeUnits(floorFinishHeightMm + floatHeight) + 0.015, rightDimensionZ])}
                     color={dimensionColor}
                     lineWidth={1}
                   />
                   <Line
-                    points={createArrowHead([0, mmToThreeUnits(floorFinishHeightMm + floatHeight + maxLowerCabinetHeightMm), rightDimensionZ], [0, mmToThreeUnits(floorFinishHeightMm + floatHeight + maxLowerCabinetHeightMm) - 0.03, rightDimensionZ])}
+                    points={createArrowHead([0, mmToThreeUnits(floorFinishHeightMm + floatHeight + maxLowerCabinetHeightMm), rightDimensionZ], [0, mmToThreeUnits(floorFinishHeightMm + floatHeight + maxLowerCabinetHeightMm) - 0.015, rightDimensionZ])}
                     color={dimensionColor}
                     lineWidth={1}
                   />
@@ -5498,12 +5498,12 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     lineWidth={1}
                   />
                   <Line
-                    points={createArrowHead([0, bottomFrameTopY, rightDimensionZ], [0, bottomFrameTopY + 0.03, rightDimensionZ])}
+                    points={createArrowHead([0, bottomFrameTopY, rightDimensionZ], [0, bottomFrameTopY + 0.015, rightDimensionZ])}
                     color={dimensionColor}
                     lineWidth={1}
                   />
                   <Line
-                    points={createArrowHead([0, furnitureTopY, rightDimensionZ], [0, furnitureTopY - 0.03, rightDimensionZ])}
+                    points={createArrowHead([0, furnitureTopY, rightDimensionZ], [0, furnitureTopY - 0.015, rightDimensionZ])}
                     color={dimensionColor}
                     lineWidth={1}
                   />
@@ -5533,12 +5533,12 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     lineWidth={1}
                   />
                   <Line
-                    points={createArrowHead([0, mmToThreeUnits(floorFinishHeightMm + floatHeight + maxLowerCabinetHeightMm), rightDimensionZ], [0, mmToThreeUnits(floorFinishHeightMm + floatHeight + maxLowerCabinetHeightMm) + 0.03, rightDimensionZ])}
+                    points={createArrowHead([0, mmToThreeUnits(floorFinishHeightMm + floatHeight + maxLowerCabinetHeightMm), rightDimensionZ], [0, mmToThreeUnits(floorFinishHeightMm + floatHeight + maxLowerCabinetHeightMm) + 0.015, rightDimensionZ])}
                     color={dimensionColor}
                     lineWidth={1}
                   />
                   <Line
-                    points={createArrowHead([0, mmToThreeUnits(floorFinishHeightMm + floatHeight + maxLowerCabinetHeightMm + adjustedUpperCabinetHeightMm), rightDimensionZ], [0, mmToThreeUnits(floorFinishHeightMm + floatHeight + maxLowerCabinetHeightMm + adjustedUpperCabinetHeightMm) - 0.03, rightDimensionZ])}
+                    points={createArrowHead([0, mmToThreeUnits(floorFinishHeightMm + floatHeight + maxLowerCabinetHeightMm + adjustedUpperCabinetHeightMm), rightDimensionZ], [0, mmToThreeUnits(floorFinishHeightMm + floatHeight + maxLowerCabinetHeightMm + adjustedUpperCabinetHeightMm) - 0.015, rightDimensionZ])}
                     color={dimensionColor}
                     lineWidth={1}
                   />
@@ -5568,12 +5568,12 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     lineWidth={1}
                   />
                   <Line
-                    points={createArrowHead([0, cabinetAreaTopY, rightDimensionZ], [0, cabinetAreaTopY + 0.03, rightDimensionZ])}
+                    points={createArrowHead([0, cabinetAreaTopY, rightDimensionZ], [0, cabinetAreaTopY + 0.015, rightDimensionZ])}
                     color={spaceInfo.surroundType === 'no-surround' ? textColor : frameDimensionColor}
                     lineWidth={1}
                   />
                   <Line
-                    points={createArrowHead([0, topFrameTopY, rightDimensionZ], [0, topFrameTopY - 0.03, rightDimensionZ])}
+                    points={createArrowHead([0, topFrameTopY, rightDimensionZ], [0, topFrameTopY - 0.015, rightDimensionZ])}
                     color={spaceInfo.surroundType === 'no-surround' ? textColor : frameDimensionColor}
                     lineWidth={1}
                   />
@@ -5603,12 +5603,12 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     lineWidth={1}
                   />
                   <Line
-                    points={createArrowHead([0, topFrameTopY, extraFurnitureZ], [0, topFrameTopY + 0.03, extraFurnitureZ])}
+                    points={createArrowHead([0, topFrameTopY, extraFurnitureZ], [0, topFrameTopY + 0.015, extraFurnitureZ])}
                     color={dimensionColor}
                     lineWidth={1}
                   />
                   <Line
-                    points={createArrowHead([0, maxFurnitureTop, extraFurnitureZ], [0, maxFurnitureTop - 0.03, extraFurnitureZ])}
+                    points={createArrowHead([0, maxFurnitureTop, extraFurnitureZ], [0, maxFurnitureTop - 0.015, extraFurnitureZ])}
                     color={dimensionColor}
                     lineWidth={1}
                   />
@@ -5705,11 +5705,11 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                         color={doorColor} lineWidth={1}
                       />
                       <Line
-                        points={createArrowHead([0, doorBottomY, doorDimZ], [0, doorBottomY + 0.03, doorDimZ])}
+                        points={createArrowHead([0, doorBottomY, doorDimZ], [0, doorBottomY + 0.015, doorDimZ])}
                         color={doorColor} lineWidth={1}
                       />
                       <Line
-                        points={createArrowHead([0, doorTopY, doorDimZ], [0, doorTopY - 0.03, doorDimZ])}
+                        points={createArrowHead([0, doorTopY, doorDimZ], [0, doorTopY - 0.015, doorDimZ])}
                         color={doorColor} lineWidth={1}
                       />
                       <Text
@@ -6396,12 +6396,12 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     lineWidth={1}
                   />
                   <Line
-                    points={createArrowHead([spaceWidth, mmToThreeUnits(floorFinishHeightMm), leftDimensionZ], [spaceWidth, mmToThreeUnits(floorFinishHeightMm) + 0.03, leftDimensionZ])}
+                    points={createArrowHead([spaceWidth, mmToThreeUnits(floorFinishHeightMm), leftDimensionZ], [spaceWidth, mmToThreeUnits(floorFinishHeightMm) + 0.015, leftDimensionZ])}
                     color={dimensionColor}
                     lineWidth={1}
                   />
                   <Line
-                    points={createArrowHead([spaceWidth, mmToThreeUnits(floorFinishHeightMm + floatHeight), leftDimensionZ], [spaceWidth, mmToThreeUnits(floorFinishHeightMm + floatHeight) + 0.03, leftDimensionZ])}
+                    points={createArrowHead([spaceWidth, mmToThreeUnits(floorFinishHeightMm + floatHeight), leftDimensionZ], [spaceWidth, mmToThreeUnits(floorFinishHeightMm + floatHeight) + 0.015, leftDimensionZ])}
                     color={dimensionColor}
                     lineWidth={1}
                   />
@@ -6431,12 +6431,12 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     lineWidth={1}
                   />
                   <Line
-                    points={createArrowHead([spaceWidth, bottomY, leftDimensionZ], [spaceWidth, bottomY - 0.03, leftDimensionZ])}
+                    points={createArrowHead([spaceWidth, bottomY, leftDimensionZ], [spaceWidth, bottomY - 0.015, leftDimensionZ])}
                     color={dimensionColor}
                     lineWidth={1}
                   />
                   <Line
-                    points={createArrowHead([spaceWidth, bottomFrameTopY, leftDimensionZ], [spaceWidth, bottomFrameTopY + 0.03, leftDimensionZ])}
+                    points={createArrowHead([spaceWidth, bottomFrameTopY, leftDimensionZ], [spaceWidth, bottomFrameTopY + 0.015, leftDimensionZ])}
                     color={dimensionColor}
                     lineWidth={1}
                   />
@@ -6467,12 +6467,12 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     lineWidth={1}
                   />
                   <Line
-                    points={createArrowHead([spaceWidth, mmToThreeUnits(floorFinishHeightMm + floatHeight), leftDimensionZ], [spaceWidth, mmToThreeUnits(floorFinishHeightMm + floatHeight) + 0.03, leftDimensionZ])}
+                    points={createArrowHead([spaceWidth, mmToThreeUnits(floorFinishHeightMm + floatHeight), leftDimensionZ], [spaceWidth, mmToThreeUnits(floorFinishHeightMm + floatHeight) + 0.015, leftDimensionZ])}
                     color={dimensionColor}
                     lineWidth={1}
                   />
                   <Line
-                    points={createArrowHead([spaceWidth, mmToThreeUnits(floorFinishHeightMm + floatHeight + maxLowerCabinetHeightMm), leftDimensionZ], [spaceWidth, mmToThreeUnits(floorFinishHeightMm + floatHeight + maxLowerCabinetHeightMm) - 0.03, leftDimensionZ])}
+                    points={createArrowHead([spaceWidth, mmToThreeUnits(floorFinishHeightMm + floatHeight + maxLowerCabinetHeightMm), leftDimensionZ], [spaceWidth, mmToThreeUnits(floorFinishHeightMm + floatHeight + maxLowerCabinetHeightMm) - 0.015, leftDimensionZ])}
                     color={dimensionColor}
                     lineWidth={1}
                   />
@@ -6502,12 +6502,12 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     lineWidth={1}
                   />
                   <Line
-                    points={createArrowHead([spaceWidth, bottomFrameTopY, leftDimensionZ], [spaceWidth, bottomFrameTopY + 0.03, leftDimensionZ])}
+                    points={createArrowHead([spaceWidth, bottomFrameTopY, leftDimensionZ], [spaceWidth, bottomFrameTopY + 0.015, leftDimensionZ])}
                     color={dimensionColor}
                     lineWidth={1}
                   />
                   <Line
-                    points={createArrowHead([spaceWidth, furnitureTopY, leftDimensionZ], [spaceWidth, furnitureTopY - 0.03, leftDimensionZ])}
+                    points={createArrowHead([spaceWidth, furnitureTopY, leftDimensionZ], [spaceWidth, furnitureTopY - 0.015, leftDimensionZ])}
                     color={dimensionColor}
                     lineWidth={1}
                   />
@@ -6537,12 +6537,12 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     lineWidth={1}
                   />
                   <Line
-                    points={createArrowHead([spaceWidth, mmToThreeUnits(floorFinishHeightMm + floatHeight + maxLowerCabinetHeightMm), leftDimensionZ], [spaceWidth, mmToThreeUnits(floorFinishHeightMm + floatHeight + maxLowerCabinetHeightMm) + 0.03, leftDimensionZ])}
+                    points={createArrowHead([spaceWidth, mmToThreeUnits(floorFinishHeightMm + floatHeight + maxLowerCabinetHeightMm), leftDimensionZ], [spaceWidth, mmToThreeUnits(floorFinishHeightMm + floatHeight + maxLowerCabinetHeightMm) + 0.015, leftDimensionZ])}
                     color={dimensionColor}
                     lineWidth={1}
                   />
                   <Line
-                    points={createArrowHead([spaceWidth, mmToThreeUnits(floorFinishHeightMm + floatHeight + maxLowerCabinetHeightMm + adjustedUpperCabinetHeightMm), leftDimensionZ], [spaceWidth, mmToThreeUnits(floorFinishHeightMm + floatHeight + maxLowerCabinetHeightMm + adjustedUpperCabinetHeightMm) - 0.03, leftDimensionZ])}
+                    points={createArrowHead([spaceWidth, mmToThreeUnits(floorFinishHeightMm + floatHeight + maxLowerCabinetHeightMm + adjustedUpperCabinetHeightMm), leftDimensionZ], [spaceWidth, mmToThreeUnits(floorFinishHeightMm + floatHeight + maxLowerCabinetHeightMm + adjustedUpperCabinetHeightMm) - 0.015, leftDimensionZ])}
                     color={dimensionColor}
                     lineWidth={1}
                   />
@@ -6572,12 +6572,12 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     lineWidth={1}
                   />
                   <Line
-                    points={createArrowHead([spaceWidth, cabinetAreaTopY, leftDimensionZ], [spaceWidth, cabinetAreaTopY + 0.03, leftDimensionZ])}
+                    points={createArrowHead([spaceWidth, cabinetAreaTopY, leftDimensionZ], [spaceWidth, cabinetAreaTopY + 0.015, leftDimensionZ])}
                     color={spaceInfo.surroundType === 'no-surround' ? textColor : frameDimensionColor}
                     lineWidth={1}
                   />
                   <Line
-                    points={createArrowHead([spaceWidth, topFrameLineTopY, leftDimensionZ], [spaceWidth, topFrameLineTopY - 0.03, leftDimensionZ])}
+                    points={createArrowHead([spaceWidth, topFrameLineTopY, leftDimensionZ], [spaceWidth, topFrameLineTopY - 0.015, leftDimensionZ])}
                     color={spaceInfo.surroundType === 'no-surround' ? textColor : frameDimensionColor}
                     lineWidth={1}
                   />
@@ -6607,12 +6607,12 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     lineWidth={1}
                   />
                   <Line
-                    points={createArrowHead([spaceWidth, topFrameLineTopY, extraFurnitureZ], [spaceWidth, topFrameLineTopY + 0.03, extraFurnitureZ])}
+                    points={createArrowHead([spaceWidth, topFrameLineTopY, extraFurnitureZ], [spaceWidth, topFrameLineTopY + 0.015, extraFurnitureZ])}
                     color={dimensionColor}
                     lineWidth={1}
                   />
                   <Line
-                    points={createArrowHead([spaceWidth, maxFurnitureTop, extraFurnitureZ], [spaceWidth, maxFurnitureTop - 0.03, extraFurnitureZ])}
+                    points={createArrowHead([spaceWidth, maxFurnitureTop, extraFurnitureZ], [spaceWidth, maxFurnitureTop - 0.015, extraFurnitureZ])}
                     color={dimensionColor}
                     lineWidth={1}
                   />
