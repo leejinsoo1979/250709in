@@ -377,6 +377,8 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
               sideHeightOverrides={isTopDown2Tier ? { all: 240 } : isTopDown3Tier ? { first: 180, rest: 130 } : undefined}
               doorTopGap={doorTopGap}
               doorBottomGap={doorBottomGap}
+              defaultDoorTopGap={isTopDown2Tier || isTopDown3Tier ? -80 : isDoorLift2Tier || isDoorLift3Tier ? 30 : -20}
+              defaultDoorBottomGap={5}
             />
           </group>
         );

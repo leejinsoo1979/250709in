@@ -74,6 +74,8 @@ interface SingleDrawerProps {
   sideHeightOverrides?: { all?: number; first?: number; rest?: number };
   doorTopGap?: number;
   doorBottomGap?: number;
+  defaultDoorTopGap?: number;
+  defaultDoorBottomGap?: number;
   isTopDrawer?: boolean;
   isBottomDrawer?: boolean;
 }
@@ -94,6 +96,8 @@ const SingleDrawer: React.FC<SingleDrawerProps> = ({
   sideHeightOverrides,
   doorTopGap = 0,
   doorBottomGap = 0,
+  defaultDoorTopGap = -20,
+  defaultDoorBottomGap = 5,
   isTopDrawer = false,
   isBottomDrawer = false,
 }) => {
@@ -140,12 +144,12 @@ const SingleDrawer: React.FC<SingleDrawerProps> = ({
   const backWidth = drawerInnerWidth;
 
   // 마이다 높이·Y — 상단갭/하단갭 확장 포함
-  // 기본 마이다: 노치 위 +40mm(= doorTopGap=-20 기본값에 해당), 하단 -5mm(= doorBottomGap=5 기본값에 해당)
-  // doorTopGap/doorBottomGap 변경분만 적용 (기본값 대비 델타)
+  // 기본 마이다: 노치 위 +40mm, 하단 -5mm (기본하부장 doorTopGap=-20, doorBottomGap=5에 해당)
+  // doorTopGap/doorBottomGap 변경분만 적용 (모듈별 기본값 대비 델타)
   const maidaTopMm = zone.notchAboveBottom + 40;
   const maidaBottomMm = zone.notchBelowTop != null ? (zone.notchBelowTop - 5) : -5;
-  const gapTopExt = isTopDrawer ? (doorTopGap - (-20)) : 0;   // 기본값 -20 대비 변경분
-  const gapBottomExt = isBottomDrawer ? (doorBottomGap - 5) : 0; // 기본값 5 대비 변경분
+  const gapTopExt = isTopDrawer ? (doorTopGap - defaultDoorTopGap) : 0;
+  const gapBottomExt = isBottomDrawer ? (doorBottomGap - defaultDoorBottomGap) : 0;
   const defaultMaidaHeightMm = maidaTopMm - maidaBottomMm + gapTopExt + gapBottomExt;
   const maidaHeightMm = fixedMaidaHeightMm || defaultMaidaHeightMm;
   const maidaHeight = mmToThreeUnits(maidaHeightMm);
@@ -340,6 +344,8 @@ interface ExternalDrawerRendererProps {
   sideHeightOverrides?: { all?: number; first?: number; rest?: number };
   doorTopGap?: number; // 상단갭 (mm) — 맨위 서랍 마이다 상단 확장
   doorBottomGap?: number; // 하단갭 (mm) — 맨아래 서랍 마이다 하단 확장
+  defaultDoorTopGap?: number; // 모듈 타입별 기본 doorTopGap (delta 계산 기준)
+  defaultDoorBottomGap?: number; // 모듈 타입별 기본 doorBottomGap (delta 계산 기준)
 }
 
 export const ExternalDrawerRenderer: React.FC<ExternalDrawerRendererProps> = ({
@@ -369,6 +375,8 @@ export const ExternalDrawerRenderer: React.FC<ExternalDrawerRendererProps> = ({
   sideHeightOverrides,
   doorTopGap = 0,
   doorBottomGap = 0,
+  defaultDoorTopGap = -20,
+  defaultDoorBottomGap = 5,
 }) => {
   const { viewMode } = useSpace3DView();
   const view2DDirection = useUIStore(s => s.view2DDirection);
@@ -591,6 +599,8 @@ export const ExternalDrawerRenderer: React.FC<ExternalDrawerRendererProps> = ({
           sideHeightOverrides={sideHeightOverrides}
           doorTopGap={doorTopGap}
           doorBottomGap={doorBottomGap}
+          defaultDoorTopGap={defaultDoorTopGap}
+          defaultDoorBottomGap={defaultDoorBottomGap}
           isTopDrawer={i === drawerCount - 1}
           isBottomDrawer={i === 0}
         />
