@@ -369,7 +369,7 @@ export const calculatePanelDetails = (
       });
 
       // 4. 속서랍 — 날개벽 안쪽면 사이에서 좌우 5mm 갭
-      const drawerAreaWidth = innerWidth - 2 * (27 + basicThickness) - 10;
+      const drawerAreaWidth = innerWidth - 2 * (27 + drawerSideThickness) - 10;
       const drawerSideDepth = customDepth - lowerTopOffset - backReduction - 1.5 * basicThickness;
       const drawerInnerWidth = drawerAreaWidth - 2 * drawerSideThickness;
       const drawerBackH = 155 - 18 - backPanelThickness; // 측판높이 - 하단여유 - 바닥판두께

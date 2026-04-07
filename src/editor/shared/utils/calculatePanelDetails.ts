@@ -714,27 +714,27 @@ export const calculatePanelDetails = (
           name: `서랍속장(${side})`,
           width: wingVertDepth,
           depth: 188,
-          thickness: basicThickness,
+          thickness: drawerSideThickness, // 서랍재 두께 (15mm, PET 시 15.5mm)
           material: 'PB'
         });
       });
 
       // 3. 서랍속장(날개벽) — 수평 패널 전면/후면 × 좌/우
-      const wingHorizWidth = 27 + basicThickness;
+      const wingHorizWidth = 27 + drawerSideThickness; // 서랍재 두께 (15mm, PET 시 15.5mm)
       ['좌', '우'].forEach(side => {
         ['전면', '후면'].forEach(face => {
           panels.lower.push({
             name: `서랍속장(${side}) ${face}`,
             width: wingHorizWidth,
             depth: 188,
-            thickness: basicThickness,
+            thickness: drawerSideThickness, // 서랍재 두께 (15mm, PET 시 15.5mm)
             material: 'PB'
           });
         });
       });
 
       // 4. 속서랍 — 날개벽 안쪽면 사이에서 좌우 5mm 갭
-      const drawerAreaWidth = horizontalPanelWidth - 2 * (27 + basicThickness) - 10;
+      const drawerAreaWidth = horizontalPanelWidth - 2 * (27 + drawerSideThickness) - 10;
       const drawerSideDepth = customDepth - lowerTopOffset - backReduction - 1.5 * basicThickness;
       const drawerInnerWidth = drawerAreaWidth - 2 * drawerSideThickness;
       const drawerBackH = 155 - 18 - backPanelThickness;
@@ -1395,6 +1395,71 @@ export const calculatePanelDetails = (
         thickness: epT,
         material: 'PET',
         quantity: 1,
+      });
+    }
+  }
+
+  // === 하부장 외부서랍 패널 (ExternalDrawerRenderer 기준) ===
+  if (moduleData.id.includes('lower-drawer-') || moduleData.id.includes('lower-door-lift-2tier') || moduleData.id.includes('lower-door-lift-3tier') || moduleData.id.includes('lower-top-down-') && !moduleData.id.includes('lower-top-down-half')) {
+    const is3TierExt = moduleData.id.includes('lower-drawer-3tier') || moduleData.id.includes('lower-door-lift-3tier') || moduleData.id.includes('lower-top-down-3tier');
+    const extDrawerCount = is3TierExt ? 3 : 2;
+    // ExternalDrawerRenderer 기준 치수
+    const extSideDepthMm = Math.min(customDepth - 50, 453); // 서랍 깊이 = 캐비넷깊이 - 50, 최대 453
+    const sideGapMm = 6; // 좌우 갭
+    const extInnerWidth = innerWidth - sideGapMm * 2 - drawerSideThickness * 2; // 서랍 내부 폭
+    const extBottomWidthMm = extInnerWidth + 10; // 바닥판 폭
+    // 측판 높이: 1단 250mm, 2단이상 130mm (3단서랍), 2단서랍은 모두 250mm
+    for (let di = 0; di < extDrawerCount; di++) {
+      const extSideHMm = extDrawerCount >= 3 ? (di === 0 ? 250 : 130) : 250;
+      const extBackHMm = extSideHMm - 15 - backPanelThickness; // 뒷판높이 = 측판 - 15 - 바닥판두께
+      const drawerNum = di + 1;
+      // 좌측판
+      result.push({
+        name: `서랍${drawerNum} 좌측판`,
+        width: extSideDepthMm,
+        height: extSideHMm,
+        thickness: drawerSideThickness,
+        material: 'PB'
+      });
+      // 우측판
+      result.push({
+        name: `서랍${drawerNum} 우측판`,
+        width: extSideDepthMm,
+        height: extSideHMm,
+        thickness: drawerSideThickness,
+        material: 'PB'
+      });
+      // 앞판 (뒷판과 동일 폭, 측판과 동일 높이)
+      result.push({
+        name: `서랍${drawerNum} 앞판`,
+        width: Math.round(extInnerWidth),
+        height: extSideHMm,
+        thickness: drawerSideThickness,
+        material: 'PB'
+      });
+      // 뒷판 (바닥판 위에서 시작)
+      result.push({
+        name: `서랍${drawerNum} 뒷판`,
+        width: Math.round(extInnerWidth),
+        height: Math.round(extBackHMm),
+        thickness: drawerSideThickness,
+        material: 'PB'
+      });
+      // 바닥판
+      result.push({
+        name: `서랍${drawerNum} 바닥`,
+        width: Math.round(extBottomWidthMm),
+        depth: extSideDepthMm,
+        thickness: backPanelThickness, // 9mm MDF
+        material: 'MDF'
+      });
+      // 마이다 (도어면)
+      result.push({
+        name: `서랍${drawerNum}(마이다)`,
+        width: customWidth - 3,
+        height: 0, // 마이다 높이는 따내기 기준 가변 — 별도 계산 필요 시 추가
+        thickness: basicThickness,
+        material: 'PET'
       });
     }
   }
