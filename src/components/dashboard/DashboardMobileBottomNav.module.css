@@ -27,7 +27,6 @@
   background: none;
   color: var(--theme-text-muted);
   font-size: 10px;
-  cursor: pointer;
   transition: color 0.2s;
   -webkit-tap-highlight-color: transparent;
   position: relative;

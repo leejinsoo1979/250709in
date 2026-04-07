@@ -41,7 +41,6 @@
   border-radius: 6px;
   background: transparent;
   color: var(--theme-text);
-  cursor: pointer;
   transition: background 0.15s;
 }
 
@@ -86,7 +85,6 @@
   font-size: 13px;
   padding: 2px 6px;
   border-radius: 4px;
-  cursor: pointer;
   transition: all 0.15s;
   white-space: nowrap;
   display: flex;

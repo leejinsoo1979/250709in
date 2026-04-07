@@ -47,7 +47,6 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  cursor: pointer;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   transition: background 0.2s, transform 0.2s;
 }
@@ -138,7 +137,6 @@
   border-radius: 6px;
   font-size: 14px;
   font-weight: 500;
-  cursor: pointer;
   transition: background-color 0.2s;
   min-width: 100px;
 }
@@ -235,7 +233,6 @@
   border-radius: 10px;
   font-size: 15px;
   font-weight: 600;
-  cursor: pointer;
   transition: all 0.2s ease;
 }
 

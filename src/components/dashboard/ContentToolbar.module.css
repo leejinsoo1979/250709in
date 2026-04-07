@@ -15,7 +15,6 @@
   justify-content: center;
   width: 28px;
   height: 28px;
-  cursor: pointer;
   flex-shrink: 0;
 }
 
@@ -23,7 +22,6 @@
   width: 16px;
   height: 16px;
   margin: 0;
-  cursor: pointer;
   accent-color: var(--theme-primary);
 }
 
@@ -46,7 +44,6 @@
   border-radius: 4px;
   background: transparent;
   color: var(--theme-text-secondary);
-  cursor: pointer;
   transition: all 0.12s;
   flex-shrink: 0;
 }
@@ -100,7 +97,6 @@
   border: none;
   color: var(--theme-text-secondary);
   font-size: 12px;
-  cursor: pointer;
   padding: 2px 6px;
   border-radius: 4px;
   white-space: nowrap;
@@ -145,7 +141,6 @@
   border-radius: 3px;
   background: transparent;
   color: var(--theme-text-muted);
-  cursor: pointer;
   padding: 0;
   margin-left: auto;
   transition: all 0.12s;
@@ -213,7 +208,6 @@
   border: none;
   background: transparent;
   color: inherit;
-  cursor: pointer;
   padding: 0;
   flex-shrink: 0;
 }
@@ -275,7 +269,6 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  cursor: pointer;
   font-weight: 500;
 }
 
@@ -283,7 +276,6 @@
   width: 14px;
   height: 14px;
   margin: 0;
-  cursor: pointer;
   accent-color: white;
 }
 
@@ -310,7 +302,6 @@
   background: transparent;
   color: var(--theme-text-secondary);
   font-size: 13px;
-  cursor: pointer;
   transition: all 0.15s;
 }
 
@@ -361,7 +352,6 @@
   background: transparent;
   color: var(--theme-text-secondary);
   font-size: 12px;
-  cursor: pointer;
   transition: all 0.12s;
   white-space: nowrap;
 }
@@ -406,7 +396,6 @@
   background: transparent;
   color: var(--theme-text-secondary);
   font-size: 12px;
-  cursor: pointer;
   transition: all 0.1s;
   text-align: left;
 }
@@ -431,7 +420,6 @@
   background: transparent;
   color: var(--theme-text-secondary);
   font-size: 12px;
-  cursor: pointer;
   outline: none;
 }
 
@@ -614,7 +602,6 @@
     border-radius: 50%;
     background: transparent;
     color: var(--theme-text-muted);
-    cursor: pointer;
     flex-shrink: 0;
     -webkit-tap-highlight-color: transparent;
   }
@@ -652,7 +639,6 @@
     color: var(--theme-text-secondary);
     font-size: 13px;
     font-weight: 500;
-    cursor: pointer;
     -webkit-tap-highlight-color: transparent;
     transition: all 0.15s;
   }
