@@ -60,7 +60,7 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
   const renderMode = renderModeProp || contextRenderMode;
   
   // 공통 가구 로직 사용
-  const { indirectLightEnabled, indirectLightIntensity } = useUIStore();
+  const { indirectLightEnabled, indirectLightIntensity, view2DDirection } = useUIStore();
   const baseFurniture = useBaseFurniture(moduleData, {
     color,
     internalHeight,
@@ -272,8 +272,9 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
                 )}
               </>
 
-          {/* 다보 선반 렌더링 (하부장 반통·한통, 도어올림/상판내림 반통·한통) */}
+          {/* 다보 선반 렌더링 (하부장 반통·한통, 도어올림/상판내림 반통·한통) — 탑뷰에서는 숨김 */}
           {(() => {
+            if (viewMode === '2D' && view2DDirection === 'top') return null;
             const moduleId = moduleData.id;
             const isLowerHalf = moduleId.includes('lower-half-cabinet') || moduleId.includes('dual-lower-half-cabinet');
             const isDoorLiftHalf = moduleId.includes('lower-door-lift-half') || moduleId.includes('dual-lower-door-lift-half');
