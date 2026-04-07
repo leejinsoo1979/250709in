@@ -2,7 +2,6 @@
   border: none;
   border-radius: 8px;
   font-weight: 600;
-  cursor: pointer;
   transition: background 0.2s;
   display: inline-block;
 }

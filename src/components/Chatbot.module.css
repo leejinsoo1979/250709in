@@ -9,7 +9,6 @@
   border: none;
   border-radius: 50%;
   color: white;
-  cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -238,7 +237,6 @@
   border: none;
   border-radius: 50%;
   color: white;
-  cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;

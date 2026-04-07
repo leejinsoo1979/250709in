@@ -32,7 +32,6 @@
   color: white;
   font-size: 24px;
   font-weight: 500;
-  cursor: pointer;
   transition: all 0.2s ease;
   -webkit-tap-highlight-color: transparent;
 }
@@ -65,7 +64,6 @@
   font-size: 18px;
   font-weight: 600;
   text-align: center;
-  cursor: pointer;
   transition: all 0.2s ease;
   -webkit-tap-highlight-color: transparent;
 }
@@ -146,7 +144,6 @@
   color: var(--theme-text-primary);
   font-size: 24px;
   font-weight: 500;
-  cursor: pointer;
   transition: all 0.2s ease;
   -webkit-tap-highlight-color: transparent;
 }

@@ -12,7 +12,6 @@
 }
 
 .interactive {
-  cursor: pointer;
   box-shadow: var(--theme-shadow, 0 1px 3px rgba(0, 0, 0, 0.1));
 }
 
@@ -76,7 +75,6 @@
 
 /* Clickable state */
 .clickable {
-  cursor: pointer;
 }
 
 .clickable:focus-visible {

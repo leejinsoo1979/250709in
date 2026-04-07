@@ -15,7 +15,6 @@
   background: var(--theme-surface, #ffffff);
   border: 2px solid var(--theme-border, #e5e7eb);
   border-radius: 16px;
-  cursor: pointer;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   outline: none;
   box-shadow: 
@@ -333,7 +332,6 @@
   background: none;
   border: none;
   border-radius: 12px;
-  cursor: pointer;
   transition: all 0.2s ease;
   text-align: left;
   margin-bottom: 4px;
@@ -563,7 +561,6 @@
   border-radius: 12px;
   font-size: 15px;
   font-weight: 600;
-  cursor: pointer;
   transition: all 0.2s ease;
   outline: none;
   box-shadow: 

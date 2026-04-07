@@ -51,7 +51,6 @@
   background: transparent;
   border: none;
   color: var(--theme-text-muted);
-  cursor: pointer;
   font-size: 18px;
   width: 28px;
   height: 28px;
@@ -151,7 +150,6 @@
   width: 26px;
   min-width: 26px;
   height: 26px;
-  cursor: pointer;
   font-size: 13px;
   font-weight: 400;
   color: var(--theme-text-muted);
@@ -240,7 +238,6 @@
   color: var(--theme-text-muted);
   font-size: 11px;
   font-weight: 500;
-  cursor: pointer;
   transition: all 0.12s;
 }
 
@@ -258,7 +255,6 @@
   border-radius: 6px;
   font-size: 11px;
   font-weight: 600;
-  cursor: pointer;
   transition: all 0.12s;
 }
 

@@ -86,7 +86,6 @@
   display: flex;
   align-items: center;
   gap: var(--spacing-sm);
-  cursor: pointer;
   transition: all var(--transition-normal);
 }
 
@@ -119,7 +118,6 @@
   border-radius: var(--radius-sm);
   background: none;
   color: var(--text-secondary);
-  cursor: pointer;
   transition: all var(--transition-normal);
 }
 
@@ -144,7 +142,6 @@
   border-radius: var(--radius-md);
   background-color: var(--surface-color);
   color: var(--text-secondary);
-  cursor: pointer;
   transition: all var(--transition-normal);
 }
 

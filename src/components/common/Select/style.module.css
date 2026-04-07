@@ -27,7 +27,6 @@
   border-radius: var(--radius-md);
   background-color: var(--color-background);
   color: var(--color-text-primary);
-  cursor: pointer;
   transition: all 0.2s;
 }
 

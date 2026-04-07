@@ -26,7 +26,6 @@
   justify-content: center;
   border: none;
   background: none;
-  cursor: pointer;
   transition: all 0.2s;
   font-weight: var(--font-medium);
   white-space: nowrap;

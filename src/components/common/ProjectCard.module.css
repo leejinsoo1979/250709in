@@ -9,7 +9,6 @@
   overflow: hidden;
   transition: all var(--transition-normal);
   position: relative;
-  cursor: pointer;
 }
 
 .projectCard:hover {
@@ -153,7 +152,6 @@
   border: none;
   border-radius: var(--radius-sm);
   color: var(--text-secondary);
-  cursor: pointer;
   opacity: 0;
   transition: all var(--transition-normal);
 }
@@ -254,7 +252,6 @@
   border-radius: var(--radius-md);
   color: var(--text-primary);
   font-size: var(--font-size-sm);
-  cursor: pointer;
   transition: all var(--transition-normal);
   white-space: nowrap;
 }
@@ -293,7 +290,6 @@
   color: var(--text-inverse);
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-medium);
-  cursor: pointer;
   transition: all var(--transition-normal);
 }
 
