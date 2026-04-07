@@ -76,18 +76,6 @@ export function placeFurnitureAtSlot(params: PlaceFurnitureParams): PlaceFurnitu
   // 듀얼 가구 여부 확인 (ID 기반)
   const isDualFurnitureId = moduleId.startsWith('dual-');
 
-  // zone별 columnWidth로 정확한 너비 계산
-  let furnitureId = moduleId;
-  if (hasDroppedCeiling && zone && indexing.zones && isDualFurnitureId) {
-    const zoneColumnWidth = zone === 'dropped' && indexing.zones.dropped
-      ? indexing.zones.dropped.columnWidth
-      : indexing.zones.normal.columnWidth;
-
-    const dualWidth = zoneColumnWidth * 2;
-    const baseId = moduleId.replace(/-[\d.]+$/, '');
-    furnitureId = `${baseId}-${dualWidth}`;
-  }
-
   // zone별 columnWidth 결정
   let columnWidth: number;
   if (hasDroppedCeiling && zone && indexing.zones) {
@@ -96,6 +84,23 @@ export function placeFurnitureAtSlot(params: PlaceFurnitureParams): PlaceFurnitu
       : indexing.zones.normal.columnWidth;
   } else {
     columnWidth = indexing.columnWidth;
+  }
+
+  // 듀얼 가구의 실제 너비: 재분할된 슬롯이면 두 슬롯 합, 아니면 columnWidth * 2
+  const getActualDualWidth = (): number => {
+    const sw = indexing.slotWidths;
+    if (sw && slotIndex < sw.length - 1) {
+      return sw[slotIndex] + sw[slotIndex + 1];
+    }
+    return columnWidth * 2;
+  };
+
+  // zone별 columnWidth로 정확한 너비 계산
+  let furnitureId = moduleId;
+  if (hasDroppedCeiling && zone && indexing.zones && isDualFurnitureId) {
+    const dualWidth = getActualDualWidth();
+    const baseId = moduleId.replace(/-[\d.]+$/, '');
+    furnitureId = `${baseId}-${dualWidth}`;
   }
 
   // 모듈 데이터 조회 (커스터마이징 가구는 getModuleById로 찾을 수 없으므로 pendingPlacement에서 합성)
@@ -126,7 +131,9 @@ export function placeFurnitureAtSlot(params: PlaceFurnitureParams): PlaceFurnitu
     return { success: false, error: `가구 데이터를 찾을 수 없습니다: ${moduleId}` };
   }
 
-  const isDualFurniture = Math.abs(moduleData.dimensions.width - (columnWidth * 2)) < 50;
+  // 듀얼 판별: ID 기반 우선, 또는 실제 두 슬롯 합과 비교
+  const actualDualWidth = getActualDualWidth();
+  const isDualFurniture = isDualFurnitureId || Math.abs(moduleData.dimensions.width - actualDualWidth) < 50;
 
   // 슬롯 위치 계산
   let allSlotPositions: Array<{ position: number; zone: 'normal' | 'dropped'; index: number }> = [];
@@ -244,8 +251,9 @@ export function placeFurnitureAtSlot(params: PlaceFurnitureParams): PlaceFurnitu
 
   if (targetIndexing.slotWidths && targetIndexing.slotWidths[slotIndex] !== undefined) {
     if (isDualFurniture && slotIndex < targetIndexing.slotWidths.length - 1) {
-      // 듀얼: columnWidth * 2의 0.5mm 단위 내림 (소수점 유지)
-      customWidth = Math.floor(columnWidth * 2 * 2) / 2;
+      // 듀얼: 실제 두 슬롯 너비 합 사용
+      const dualW = targetIndexing.slotWidths[slotIndex] + targetIndexing.slotWidths[slotIndex + 1];
+      customWidth = Math.floor(dualW);
     } else {
       // 싱글: slotWidths에서 정수 내림된 값 사용
       customWidth = targetIndexing.slotWidths[slotIndex];
