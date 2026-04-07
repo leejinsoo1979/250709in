@@ -335,14 +335,14 @@ export const calculatePanelDetails = (
       });
 
       // 2. 서랍속장(날개벽) — 수직 패널 좌/우
-      const wingVertDepth = customDepth - lowerTopOffset - backReduction - 2 * basicThickness;
+      const wingVertDepth = customDepth - lowerTopOffset - backReduction - 2 * drawerSideThickness;
       ['좌', '우'].forEach(side => {
         panels.push({
           id: `panel-${panelId++}`,
           name: `${moduleData.name} - 서랍속장(${side})`,
           width: wingVertDepth,
           height: 188,
-          thickness: basicThickness,
+          thickness: drawerSideThickness,
           material: 'PB',
           color: 'MW',
           quantity: 1,
@@ -351,7 +351,7 @@ export const calculatePanelDetails = (
       });
 
       // 3. 서랍속장(날개벽) — 수평 패널 전면/후면 × 좌/우 = 4개
-      const wingHorizWidth = 27 + basicThickness; // 45mm
+      const wingHorizWidth = 27 + drawerSideThickness; // 42mm
       ['좌', '우'].forEach(side => {
         ['전면', '후면'].forEach(face => {
           panels.push({
@@ -359,7 +359,7 @@ export const calculatePanelDetails = (
             name: `${moduleData.name} - 서랍속장(${side}) ${face}`,
             width: wingHorizWidth,
             height: 188,
-            thickness: basicThickness,
+            thickness: drawerSideThickness,
             material: 'PB',
             color: 'MW',
             quantity: 1,
