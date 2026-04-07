@@ -51,12 +51,14 @@ ul, ol {
 button {
   background: none;
   border: none;
+  cursor: default;
 }
 
 /* Remove text decoration from links */
 a {
   color: inherit;
   text-decoration: none;
+  cursor: default;
 }
 
 /* Better tables */
