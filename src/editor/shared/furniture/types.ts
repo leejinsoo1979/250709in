@@ -157,6 +157,9 @@ export interface PlacedModule {
   endPanelTopOffset?: number;    // EP 천장 옵셋 (mm, 기본값: 0) — floor 모드에서만 적용
   endPanelBottomOffset?: number; // EP 바닥 옵셋 (mm, 기본값: 0) — floor 모드에서만 적용
 
+  // 슬롯 모드 사용자 지정 너비
+  slotCustomWidth?: number; // 슬롯모드에서 사용자 지정 가구 너비 (mm)
+
   // 공간 변경 시 가구 보존을 위한 추가 속성들
   slotIndex?: number; // 가구가 위치한 슬롯 번호 (0부터 시작)
   isDualSlot?: boolean; // 듀얼 가구 여부 (2개 슬롯을 차지하는지)
