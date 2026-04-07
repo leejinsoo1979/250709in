@@ -4171,8 +4171,9 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         </Html>
       )}
 
-      {/* 3D 모드에서 편집 아이콘 표시 (하단 연필 아이콘) — 설계모드에서는 숨김 */}
-      {!readOnly && showFurnitureEditHandles && showDimensions && !isLayoutBuilderOpen && (
+      {/* 편집 아이콘 표시 (하단 연필 아이콘) — 설계모드, 2D 측면/평면에서는 숨김 */}
+      {!readOnly && showFurnitureEditHandles && showDimensions && !isLayoutBuilderOpen &&
+        !(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right' || view2DDirection === 'top')) && (
         <Html
           position={[
             adjustedPosition.x,
