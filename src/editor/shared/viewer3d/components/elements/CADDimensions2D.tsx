@@ -763,41 +763,10 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           const dimZ = spaceDepth/2 + rightDimOffset - mmToThreeUnits(750);
           const dimExtZ = dimZ - mmToThreeUnits(360);
 
-          // 하부장 서랍 모듈: 섹션 높이 대신 마이다 개별 높이 표시
-          const lowerMaidas = computeLowerCabinetMaidaHeights(
-            mod.moduleId, moduleHeightMm,
-            mod.doorTopGap ?? 0, mod.doorBottomGap ?? 0
-          );
-          if (lowerMaidas && lowerMaidas.length > 0) {
-            return lowerMaidas.map((m, i) => {
-              const dBotY = cabinetBottomY + mmToThreeUnits(m.maidaBottomMm);
-              const dTopY = cabinetBottomY + mmToThreeUnits(m.maidaTopMm);
-              const isFirst = i === 0;
-              const shouldRenderStartGuide = !isFirst || baseFrameHeightMm <= 0;
-              return (
-                <group key={`section-maida-${moduleIndex}-${i}`}>
-                  {shouldRenderStartGuide && (
-                    <NativeLine name="dimension_line" points={[[0, dBotY, dimExtZ], [0, dBotY, dimZ]]} color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false} />
-                  )}
-                  <NativeLine name="dimension_line" points={[[0, dTopY, dimExtZ], [0, dTopY, dimZ]]} color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false} />
-                  <NativeLine name="dimension_line" points={[[0, dBotY, dimZ], [0, dTopY, dimZ]]} color={dimensionColor} lineWidth={2} renderOrder={100000} depthTest={false} />
-                  {shouldRenderStartGuide && (
-                    <NativeLine name="dimension_line" points={[[-0.03, dBotY, dimZ], [0.03, dBotY, dimZ]]} color={dimensionColor} lineWidth={2} renderOrder={100000} depthTest={false} />
-                  )}
-                  <NativeLine name="dimension_line" points={[[-0.03, dTopY, dimZ], [0.03, dTopY, dimZ]]} color={dimensionColor} lineWidth={2} renderOrder={100000} depthTest={false} />
-                  <Text position={[0, (dBotY + dTopY) / 2, dimZ + mmToThreeUnits(60)]} fontSize={largeFontSize} color={textColor} anchorX="center" anchorY="middle" renderOrder={1000} depthTest={false} rotation={[0, -Math.PI / 2, Math.PI / 2]}>
-                    {Math.round(m.maidaHeightMm)}
-                  </Text>
-                </group>
-              );
-            });
-          }
-
-          // 하부장(서랍 외): 왼쪽 2단에서 이미 표시하므로 오른쪽 섹션 높이 생략
+          // 하부장: 왼쪽 2단에서 이미 표시하므로 오른쪽 섹션 높이 생략
           if (selectedModCategory === 'lower') return null;
 
           // 키큰장/상부장: 기존 섹션 높이 표시
-          console.log('[CAD-DEBUG-RIGHT-SEC] fallthrough to section heights! moduleId:', mod.moduleId, 'selectedModCategory:', selectedModCategory);
           const { sections: sectionConfigs, heightsMm: sectionHeightsMm } = computeSectionHeightsInfo(mod, moduleData, moduleHeightMm, 'left');
           if (sectionConfigs.length === 0) return null;
 
@@ -1262,9 +1231,60 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           );
         })()}
 
-        {/* ===== 도어 높이 치수선 (도어가 설치된 가구가 있을 때만) ===== */}
+        {/* ===== 도어/마이다 높이 치수선 ===== */}
         {(() => {
-          // 선택된 슬롯의 도어 가구만 표시 (듀얼 가구는 2슬롯 차지)
+          // 도어 치수선 Z 위치 (공통)
+          const panelDepthMm = spaceInfo.depth || 1500;
+          const panelDepthU = mmToThreeUnits(panelDepthMm);
+          const furnitureDepthU = mmToThreeUnits(600);
+          const furnitureFrontZ = -panelDepthU / 2 + (panelDepthU - furnitureDepthU) / 2 + furnitureDepthU / 2;
+          const doorDimZ = furnitureFrontZ + mmToThreeUnits(200);
+          const doorColor = dimensionColor;
+
+          // 서랍 모듈: 도어 높이 대신 마이다 개별 높이 표시
+          if (selectedModCategory === 'lower' && visibleFurniture.length > 0) {
+            const mod = visibleFurniture[0] as PlacedModule;
+            let modData = getModuleById(
+              mod.moduleId,
+              { width: internalSpace.width, height: internalSpace.height, depth: internalSpace.depth },
+              spaceInfo
+            );
+            if (!modData) modData = buildModuleDataFromPlacedModule(mod, internalSpace, spaceInfo);
+            const modHeightMm = modData ? computeFurnitureHeightMm(mod, modData, spaceInfo, internalSpace) : 0;
+            const lowerMaidas = computeLowerCabinetMaidaHeights(
+              mod.moduleId, modHeightMm, mod.doorTopGap ?? 0, mod.doorBottomGap ?? 0
+            );
+            if (lowerMaidas && lowerMaidas.length > 0) {
+              const cabinetBottomY = furnitureBaseY;
+              return (
+                <group>
+                  {lowerMaidas.map((m, i) => {
+                    const dBotY = cabinetBottomY + mmToThreeUnits(m.maidaBottomMm);
+                    const dTopY = cabinetBottomY + mmToThreeUnits(m.maidaTopMm);
+                    return (
+                      <group key={`door-maida-${i}`}>
+                        {/* 수직 치수선 */}
+                        <NativeLine name="door_height_dim" points={[[0, dBotY, doorDimZ], [0, dTopY, doorDimZ]]} color={doorColor} lineWidth={2} renderOrder={100000} depthTest={false} />
+                        {/* 하단 티크 */}
+                        <NativeLine name="door_height_dim" points={[[-0.03, dBotY, doorDimZ], [0.03, dBotY, doorDimZ]]} color={doorColor} lineWidth={2} renderOrder={100000} depthTest={false} />
+                        {/* 상단 티크 */}
+                        <NativeLine name="door_height_dim" points={[[-0.03, dTopY, doorDimZ], [0.03, dTopY, doorDimZ]]} color={doorColor} lineWidth={2} renderOrder={100000} depthTest={false} />
+                        <Text position={[0, (dBotY + dTopY) / 2, doorDimZ + mmToThreeUnits(60)]} fontSize={largeFontSize} color={doorColor} anchorX="center" anchorY="middle" renderOrder={1000} depthTest={false} rotation={[0, -Math.PI / 2, Math.PI / 2]}>
+                          {Math.round(m.maidaHeightMm)}
+                        </Text>
+                        {/* 상단 연장선 */}
+                        <NativeLine name="door_height_ext" points={[[0, dTopY, furnitureFrontZ + mmToThreeUnits(20)], [0, dTopY, doorDimZ]]} color={doorColor} lineWidth={0.5} renderOrder={100000} depthTest={false} />
+                        {/* 하단 연장선 */}
+                        <NativeLine name="door_height_ext" points={[[0, dBotY, furnitureFrontZ + mmToThreeUnits(20)], [0, dBotY, doorDimZ]]} color={doorColor} lineWidth={0.5} renderOrder={100000} depthTest={false} />
+                      </group>
+                    );
+                  })}
+                </group>
+              );
+            }
+          }
+
+          // 서랍 외 도어 가구: 기존 도어 높이 치수선
           const doorModule = placedModules.find(m =>
             m.hasDoor && !m.isSurroundPanel &&
             (selectedSlotIndex === null ||
@@ -1286,7 +1306,6 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
             ?? (doorModule.moduleId.includes('-upper-') ? 'upper'
               : doorModule.moduleId.startsWith('lower-') ? 'lower' : 'full');
 
-          // DoorModule과 동일한 fallback: 개별값 → 글로벌값 → 0
           const doorTopGapVal = doorModule.doorTopGap ?? spaceInfo.doorTopGap ?? 0;
           const doorBottomGapVal = doorModule.doorBottomGap ?? spaceInfo.doorBottomGap ?? 0;
 
@@ -1318,13 +1337,11 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
               doorTopAbsMm = cabinetBottomAbs + cabinetH + 30;
               doorBottomAbsMm = doorTopAbsMm - doorHeightMm;
             } else {
-              // 기본 하부장: DoorModule과 동일 — cabinetH + doorTopGap + doorBottomGap
               doorHeightMm = cabinetH + doorTopGapVal + doorBottomGapVal;
               doorTopAbsMm = cabinetBottomAbs + cabinetH + doorTopGapVal;
               doorBottomAbsMm = cabinetBottomAbs - doorBottomGapVal;
             }
           } else {
-            // 키큰장
             const isFloorType = !spaceInfo.baseConfig || spaceInfo.baseConfig.type === 'floor';
             const floorFinishForDoor = (isFloorType && spaceInfo.hasFloorFinish)
               ? (spaceInfo.floorFinish?.height || 0) : 0;
@@ -1338,68 +1355,17 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           const doorBottomY = mmToThreeUnits(doorBottomAbsMm);
           const doorTopY = mmToThreeUnits(doorTopAbsMm);
           const doorMidY = (doorBottomY + doorTopY) / 2;
-          const doorColor = dimensionColor;
-
-          // 도어 치수선 Z 위치: 가구 앞면(도어면) 바로 옆에 배치
-          const panelDepthMm = spaceInfo.depth || 1500;
-          const panelDepthU = mmToThreeUnits(panelDepthMm);
-          const furnitureDepthU = mmToThreeUnits(600);
-          const furnitureFrontZ = -panelDepthU / 2 + (panelDepthU - furnitureDepthU) / 2 + furnitureDepthU / 2;
-          const doorDimZ = furnitureFrontZ + mmToThreeUnits(200);
 
           return (
             <group>
-              {/* 수직 치수선 */}
-              <NativeLine name="door_height_dim"
-                points={[
-                  [0, doorBottomY, doorDimZ],
-                  [0, doorTopY, doorDimZ]
-                ]}
-                color={doorColor} lineWidth={2} renderOrder={100000} depthTest={false}
-              />
-              {/* 상단 티크 */}
-              <NativeLine name="door_height_dim"
-                points={[
-                  [-0.03, doorTopY, doorDimZ],
-                  [0.03, doorTopY, doorDimZ]
-                ]}
-                color={doorColor} lineWidth={2} renderOrder={100000} depthTest={false}
-              />
-              {/* 하단 티크 */}
-              <NativeLine name="door_height_dim"
-                points={[
-                  [-0.03, doorBottomY, doorDimZ],
-                  [0.03, doorBottomY, doorDimZ]
-                ]}
-                color={doorColor} lineWidth={2} renderOrder={100000} depthTest={false}
-              />
-              {/* 높이 텍스트 */}
-              <Text
-                position={[0, doorMidY, doorDimZ + mmToThreeUnits(60)]}
-                fontSize={largeFontSize}
-                color={doorColor}
-                anchorX="center" anchorY="middle"
-                renderOrder={1000} depthTest={false}
-                rotation={[0, -Math.PI / 2, Math.PI / 2]}
-              >
+              <NativeLine name="door_height_dim" points={[[0, doorBottomY, doorDimZ], [0, doorTopY, doorDimZ]]} color={doorColor} lineWidth={2} renderOrder={100000} depthTest={false} />
+              <NativeLine name="door_height_dim" points={[[-0.03, doorTopY, doorDimZ], [0.03, doorTopY, doorDimZ]]} color={doorColor} lineWidth={2} renderOrder={100000} depthTest={false} />
+              <NativeLine name="door_height_dim" points={[[-0.03, doorBottomY, doorDimZ], [0.03, doorBottomY, doorDimZ]]} color={doorColor} lineWidth={2} renderOrder={100000} depthTest={false} />
+              <Text position={[0, doorMidY, doorDimZ + mmToThreeUnits(60)]} fontSize={largeFontSize} color={doorColor} anchorX="center" anchorY="middle" renderOrder={1000} depthTest={false} rotation={[0, -Math.PI / 2, Math.PI / 2]}>
                 {Math.round(doorHeightMm)}
               </Text>
-              {/* 도어 상단 연장선: 가구 앞면에서 치수선까지 (끊김 없이 연결) */}
-              <NativeLine name="door_height_ext"
-                points={[
-                  [0, doorTopY, furnitureFrontZ + mmToThreeUnits(20)],
-                  [0, doorTopY, doorDimZ]
-                ]}
-                color={doorColor} lineWidth={0.5} renderOrder={100000} depthTest={false}
-              />
-              {/* 도어 하단 연장선: 가구 앞면에서 치수선까지 (끊김 없이 연결) */}
-              <NativeLine name="door_height_ext"
-                points={[
-                  [0, doorBottomY, furnitureFrontZ + mmToThreeUnits(20)],
-                  [0, doorBottomY, doorDimZ]
-                ]}
-                color={doorColor} lineWidth={0.5} renderOrder={100000} depthTest={false}
-              />
+              <NativeLine name="door_height_ext" points={[[0, doorTopY, furnitureFrontZ + mmToThreeUnits(20)], [0, doorTopY, doorDimZ]]} color={doorColor} lineWidth={0.5} renderOrder={100000} depthTest={false} />
+              <NativeLine name="door_height_ext" points={[[0, doorBottomY, furnitureFrontZ + mmToThreeUnits(20)], [0, doorBottomY, doorDimZ]]} color={doorColor} lineWidth={0.5} renderOrder={100000} depthTest={false} />
             </group>
           );
         })()}
