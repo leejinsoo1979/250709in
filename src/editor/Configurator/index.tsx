@@ -5255,17 +5255,17 @@ const Configurator: React.FC = () => {
                             <span style={{ fontSize: '10px', color: 'var(--theme-text-secondary)', padding: '0 2px', flexShrink: 0 }}>옵셋</span>
                             <input
                               type="text" inputMode="numeric"
-                              value={mod.baseFrameOffset ?? globalBase} placeholder={String(globalBase)}
+                              value={mod.baseFrameOffset ?? (spaceInfo.baseConfig?.height ?? 65)} placeholder={String(spaceInfo.baseConfig?.height ?? 65)}
                               onFocus={() => setHighlightedFrame(`base-${mod.id}`)}
                               onKeyDown={(e) => {
                                 if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
                                   e.preventDefault();
-                                  const cur = mod.baseFrameOffset ?? globalBase;
+                                  const cur = mod.baseFrameOffset ?? (spaceInfo.baseConfig?.height ?? 65);
                                   updatePlacedModule(mod.id, { baseFrameOffset: Math.max(-200, Math.min(200, cur + (e.key === 'ArrowUp' ? 1 : -1))) });
                                 }
                               }}
                               onChange={(e) => { const v = e.target.value; if (v === '' || v === '-' || /^-?\d+$/.test(v)) updatePlacedModule(mod.id, { baseFrameOffset: v === '' || v === '-' ? 0 : parseInt(v, 10) }); }}
-                              onBlur={(e) => { setHighlightedFrame(null); updatePlacedModule(mod.id, { baseFrameOffset: Math.max(-200, Math.min(200, parseInt(e.target.value) || globalBase)) }); }}
+                              onBlur={(e) => { setHighlightedFrame(null); updatePlacedModule(mod.id, { baseFrameOffset: Math.max(-200, Math.min(200, parseInt(e.target.value) || (spaceInfo.baseConfig?.height ?? 65))) }); }}
                               className={styles.frameNumberInput}
                             />
                           </div>
