@@ -24,6 +24,7 @@ export const useFurnitureSpaceAdapter = ({ setPlacedModules }: UseFurnitureSpace
       if (currentModules.length === 0) return currentModules;
       
       const oldIndexing = calculateSpaceIndexing(oldSpaceInfo);
+      // 공간 구조 변경 시 slotCustomWidth를 리셋하므로 base indexing 사용
       const newIndexing = calculateSpaceIndexing(newSpaceInfo);
 
       const updatedModules: PlacedModule[] = [];
@@ -178,12 +179,13 @@ export const useFurnitureSpaceAdapter = ({ setPlacedModules }: UseFurnitureSpace
             position: { ...module.position, x: newX * 0.01 }, // mm to Three.js units
             isValidInCurrentSpace: true,
             adjustedWidth: undefined,
+            slotCustomWidth: undefined, // 공간 구조 변경 시 커스텀 너비 리셋
             customWidth: newCustomWidth, // slotWidths 기반 (이격거리 반영)
             isDualSlot: isDual
           });
           return;
         }
-        
+
         // zone 정보가 없는 기존 가구들을 위한 폴백 로직
         const oldInternalSpace = calculateInternalSpace(oldSpaceInfo);
         const moduleData = getModuleById(module.moduleId, oldInternalSpace, oldSpaceInfo);
@@ -240,6 +242,7 @@ export const useFurnitureSpaceAdapter = ({ setPlacedModules }: UseFurnitureSpace
             isValidInCurrentSpace: true,
             customWidth: newCustomWidth,
             adjustedWidth: undefined,
+            slotCustomWidth: undefined, // 공간 구조 변경 시 커스텀 너비 리셋
           });
           return;
         }
@@ -459,7 +462,8 @@ export const useFurnitureSpaceAdapter = ({ setPlacedModules }: UseFurnitureSpace
           isValidInCurrentSpace: true,
           zone,
           customWidth: newCustomWidth,
-          adjustedWidth: undefined // adjustedWidth는 FurnitureItem에서 다시 계산됨
+          adjustedWidth: undefined, // adjustedWidth는 FurnitureItem에서 다시 계산됨
+          slotCustomWidth: undefined, // 공간 구조 변경 시 커스텀 너비 리셋
         });
       });
       
