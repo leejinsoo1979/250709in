@@ -74,10 +74,12 @@ export const MeasurementTool: React.FC<MeasurementToolProps> = ({ viewDirection 
     return 0.5; // 기본 크기
   }, [camera]);
 
-  // 고정 스냅 거리 사용
+  // 줌 레벨에 따른 스냅 거리 — 화면상 일정 픽셀 거리 유지
   const getSnapDistance = useCallback(() => {
-    return SNAP_DISTANCE; // 3.0 = 300mm 고정
-  }, []);
+    // 화면상 약 12픽셀에 해당하는 월드 좌표 거리
+    const basePixelSnap = 12;
+    return Math.max(SNAP_DISTANCE, basePixelSnap / currentZoom);
+  }, [currentZoom]);
 
   // 십자가 크기 (화면 픽셀 크기로 고정하기 위해 줌의 역수 사용)
   const crosshairSize = useMemo(() => {
