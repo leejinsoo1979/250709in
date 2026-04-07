@@ -15,6 +15,22 @@ import type { SpaceInfo } from '@/store/core/spaceConfigStore';
 
 const DEFAULT_BASIC_THICKNESS_MM = 18;
 
+/** 연장선 + 양쪽 꼭지점 점 표시 */
+const ExtLine: React.FC<{
+  points: [number, number, number][];
+  color?: string;
+  lineWidth?: number;
+  name?: string;
+}> = ({ points, color = '#ffffff', lineWidth = 1, name = 'dimension_line' }) => (
+  <group>
+    <NativeLine name={name} points={points} color={color} lineWidth={lineWidth} renderOrder={100000} depthTest={false} />
+    <mesh position={points[points.length - 1]} renderOrder={100001}>
+      <sphereGeometry args={[0.12, 8, 8]} />
+      <meshBasicMaterial color={color} depthTest={false} transparent />
+    </mesh>
+  </group>
+);
+
 const mmToThreeUnits = (mm: number) => mm * 0.01;
 
 type SectionWithCalc = SectionConfig & { calculatedHeight?: number };
@@ -464,28 +480,10 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
         {/* 단내림 구간이 선택된 경우 단내림 높이를 표시 */}
         {<group>
           {/* 보조 가이드 연장선 - 하단 */}
-          <NativeLine name="dimension_line"
-            points={[
-              [0, 0, -spaceDepth/2 + mmToThreeUnits(110)],
-              [0, 0, -spaceDepth/2 - leftDimOffset + mmToThreeUnits(150)]
-            ]}
-            color={dimensionColor}
-            lineWidth={1}
-            renderOrder={100000}
-            depthTest={false}
-          />
+          <ExtLine points={[[0, 0, -spaceDepth/2 + mmToThreeUnits(110)], [0, 0, -spaceDepth/2 - leftDimOffset + mmToThreeUnits(150)]]} color={dimensionColor} />
 
           {/* 보조 가이드 연장선 - 상단 */}
-          <NativeLine name="dimension_line"
-            points={[
-              [0, displaySpaceHeight, -spaceDepth/2 + mmToThreeUnits(110)],
-              [0, displaySpaceHeight, -spaceDepth/2 - leftDimOffset + mmToThreeUnits(150)]
-            ]}
-            color={dimensionColor}
-            lineWidth={1}
-            renderOrder={100000}
-            depthTest={false}
-          />
+          <ExtLine points={[[0, displaySpaceHeight, -spaceDepth/2 + mmToThreeUnits(110)], [0, displaySpaceHeight, -spaceDepth/2 - leftDimOffset + mmToThreeUnits(150)]]} color={dimensionColor} />
 
           {/* 수직 치수선 */}
           <NativeLine name="dimension_line"
@@ -579,16 +577,10 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                   <group key={`left-sec-${si}`}>
                     {/* 시작 가이드선 */}
                     {shouldRenderStartGuide && (
-                      <NativeLine name="dimension_line"
-                        points={[[0, sec.startY, leftInnerExtStartZ], [0, sec.startY, leftInnerZ]]}
-                        color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
-                      />
+                      <ExtLine points={[[0, sec.startY, leftInnerExtStartZ], [0, sec.startY, leftInnerZ]]} color={dimensionColor} />
                     )}
                     {/* 끝 가이드선 */}
-                    <NativeLine name="dimension_line"
-                      points={[[0, sec.endY, leftInnerExtStartZ], [0, sec.endY, leftInnerZ]]}
-                      color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
-                    />
+                    <ExtLine points={[[0, sec.endY, leftInnerExtStartZ], [0, sec.endY, leftInnerZ]]} color={dimensionColor} />
                     {/* 수직 치수선 */}
                     <NativeLine name="dimension_line"
                       points={[[0, sec.startY, leftInnerZ], [0, sec.endY, leftInnerZ]]}
@@ -624,15 +616,9 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
               {baseFrameHeightMm > 0 && (
                 <>
                   {/* 바닥마감재 상단 연장선 */}
-                  <NativeLine name="dimension_line"
-                    points={[[0, floorFinishY, leftInnerExtStartZ], [0, floorFinishY, leftInnerZ]]}
-                    color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
-                  />
+                  <ExtLine points={[[0, floorFinishY, leftInnerExtStartZ], [0, floorFinishY, leftInnerZ]]} color={dimensionColor} />
                   {/* 받침대 상단 연장선 */}
-                  <NativeLine name="dimension_line"
-                    points={[[0, furnitureBaseY, leftInnerExtStartZ], [0, furnitureBaseY, leftInnerZ]]}
-                    color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
-                  />
+                  <ExtLine points={[[0, furnitureBaseY, leftInnerExtStartZ], [0, furnitureBaseY, leftInnerZ]]} color={dimensionColor} />
                   {/* 수직 치수선 */}
                   <NativeLine name="dimension_line"
                     points={[[0, floorFinishY, leftInnerZ], [0, furnitureBaseY, leftInnerZ]]}
@@ -670,27 +656,9 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
         {topFrameHeightMm > 0 && (
           <group>
             {/* 보조 가이드 연장선 - 하단 (상부 프레임 하단) */}
-            <NativeLine name="dimension_line"
-              points={[
-                [0, displaySpaceHeight - topFrameHeight, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750) - mmToThreeUnits(360)],
-                [0, displaySpaceHeight - topFrameHeight, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750)]
-              ]}
-              color={dimensionColor}
-              lineWidth={1}
-              renderOrder={100000}
-              depthTest={false}
-            />
+            <ExtLine points={[[0, displaySpaceHeight - topFrameHeight, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750) - mmToThreeUnits(360)], [0, displaySpaceHeight - topFrameHeight, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750)]]} color={dimensionColor} />
             {/* 보조 가이드 연장선 - 상단 (공간 최상단) */}
-            <NativeLine name="dimension_line"
-              points={[
-                [0, displaySpaceHeight, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750) - mmToThreeUnits(360)],
-                [0, displaySpaceHeight, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750)]
-              ]}
-              color={dimensionColor}
-              lineWidth={1}
-              renderOrder={100000}
-              depthTest={false}
-            />
+            <ExtLine points={[[0, displaySpaceHeight, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750) - mmToThreeUnits(360)], [0, displaySpaceHeight, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750)]]} color={dimensionColor} />
             {/* 수직 치수선 */}
             <NativeLine name="dimension_line"
               points={[
@@ -788,9 +756,9 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
             return (
               <group key={`section-${moduleIndex}-${sectionIndex}`}>
                 {shouldRenderStartGuide && (
-                  <NativeLine name="dimension_line" points={[[0, sectionStartY, dimExtZ], [0, sectionStartY, dimZ]]} color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false} />
+                  <ExtLine points={[[0, sectionStartY, dimExtZ], [0, sectionStartY, dimZ]]} color={dimensionColor} />
                 )}
-                <NativeLine name="dimension_line" points={[[0, sectionEndY, dimExtZ], [0, sectionEndY, dimZ]]} color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false} />
+                <ExtLine points={[[0, sectionEndY, dimExtZ], [0, sectionEndY, dimZ]]} color={dimensionColor} />
                 <NativeLine name="dimension_line" points={[[0, sectionStartY, dimZ], [0, sectionEndY, dimZ]]} color={dimensionColor} lineWidth={2} renderOrder={100000} depthTest={false} />
                 {shouldRenderStartGuide && (
                   <NativeLine name="dimension_line" points={[[-0.03, sectionStartY, dimZ], [0.03, sectionStartY, dimZ]]} color={dimensionColor} lineWidth={2} renderOrder={100000} depthTest={false} />
@@ -810,21 +778,9 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
         {floorFinishHeightMm > 0 && !isFloating && selectedModCategory !== 'lower' && (
         <group>
             {/* 보조 가이드 연장선 - 바닥 */}
-            <NativeLine name="dimension_line"
-              points={[
-                [0, 0, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750) - mmToThreeUnits(720)],
-                [0, 0, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750) - mmToThreeUnits(360)]
-              ]}
-              color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
-            />
+            <ExtLine points={[[0, 0, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750) - mmToThreeUnits(720)], [0, 0, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750) - mmToThreeUnits(360)]]} color={dimensionColor} />
             {/* 보조 가이드 연장선 - 마감재 상단 */}
-            <NativeLine name="dimension_line"
-              points={[
-                [0, floorFinishY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750) - mmToThreeUnits(720)],
-                [0, floorFinishY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750) - mmToThreeUnits(360)]
-              ]}
-              color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
-            />
+            <ExtLine points={[[0, floorFinishY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750) - mmToThreeUnits(720)], [0, floorFinishY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750) - mmToThreeUnits(360)]]} color={dimensionColor} />
             {/* 메인 치수선 (바닥 ~ 마감재 상단) */}
             <NativeLine name="dimension_line"
               points={[
@@ -865,21 +821,9 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
         {baseFrameHeightMm > 0 && selectedModCategory !== 'lower' && (
         <group>
             {/* 보조 가이드 연장선 - 시작 (마감재 상단 or 바닥) */}
-            <NativeLine name="dimension_line"
-              points={[
-                [0, floorFinishY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750) - mmToThreeUnits(360)],
-                [0, floorFinishY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750)]
-              ]}
-              color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
-            />
+            <ExtLine points={[[0, floorFinishY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750) - mmToThreeUnits(360)], [0, floorFinishY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750)]]} color={dimensionColor} />
             {/* 보조 가이드 연장선 - 받침대 상단 */}
-            <NativeLine name="dimension_line"
-              points={[
-                [0, furnitureBaseY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750) - mmToThreeUnits(360)],
-                [0, furnitureBaseY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750)]
-              ]}
-              color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
-            />
+            <ExtLine points={[[0, furnitureBaseY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750) - mmToThreeUnits(360)], [0, furnitureBaseY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750)]]} color={dimensionColor} />
             {/* 메인 치수선 (마감재 상단 ~ 받침대 상단) */}
             <NativeLine name="dimension_line"
               points={[
@@ -950,28 +894,10 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           return (
             <group key={`furniture-depth-${index}`}>
               {/* 보조 가이드 연장선 - 앞쪽 */}
-              <NativeLine name="dimension_line"
-                points={[
-                  [0, furnitureBaseY + internalHeight, furnitureZ + moduleDepth/2],
-                  [0, furnitureTopY, furnitureZ + moduleDepth/2]
-                ]}
-                color={dimensionColor}
-                lineWidth={1}
-                renderOrder={100000}
-                depthTest={false}
-              />
+              <ExtLine points={[[0, furnitureBaseY + internalHeight, furnitureZ + moduleDepth/2], [0, furnitureTopY, furnitureZ + moduleDepth/2]]} color={dimensionColor} />
 
               {/* 보조 가이드 연장선 - 뒤쪽 */}
-              <NativeLine name="dimension_line"
-                points={[
-                  [0, furnitureBaseY + internalHeight, furnitureZ - moduleDepth/2],
-                  [0, furnitureTopY, furnitureZ - moduleDepth/2]
-                ]}
-                color={dimensionColor}
-                lineWidth={1}
-                renderOrder={100000}
-                depthTest={false}
-              />
+              <ExtLine points={[[0, furnitureBaseY + internalHeight, furnitureZ - moduleDepth/2], [0, furnitureTopY, furnitureZ - moduleDepth/2]]} color={dimensionColor} />
 
               {/* 가구 깊이 치수선 */}
               <NativeLine name="dimension_line"
@@ -1033,28 +959,10 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                 return (
                   <group>
                     {/* 보조 가이드 연장선 - 앞쪽 */}
-                    <NativeLine name="dimension_line"
-                      points={[
-                        [0, floatHeight, lowerFurnitureZ + lowerModuleDepth/2],
-                        [0, lowerDimY, lowerFurnitureZ + lowerModuleDepth/2]
-                      ]}
-                      color={dimensionColor}
-                      lineWidth={1}
-                      renderOrder={100000}
-                      depthTest={false}
-                    />
+                    <ExtLine points={[[0, floatHeight, lowerFurnitureZ + lowerModuleDepth/2], [0, lowerDimY, lowerFurnitureZ + lowerModuleDepth/2]]} color={dimensionColor} />
 
                     {/* 보조 가이드 연장선 - 뒤쪽 */}
-                    <NativeLine name="dimension_line"
-                      points={[
-                        [0, floatHeight, lowerFurnitureZ - lowerModuleDepth/2],
-                        [0, lowerDimY, lowerFurnitureZ - lowerModuleDepth/2]
-                      ]}
-                      color={dimensionColor}
-                      lineWidth={1}
-                      renderOrder={100000}
-                      depthTest={false}
-                    />
+                    <ExtLine points={[[0, floatHeight, lowerFurnitureZ - lowerModuleDepth/2], [0, lowerDimY, lowerFurnitureZ - lowerModuleDepth/2]]} color={dimensionColor} />
 
                     {/* 하부 깊이 치수선 */}
                     <NativeLine name="dimension_line"
@@ -1288,8 +1196,8 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                         <Text position={[0, (dBotY + dTopY) / 2, doorDimZ + mmToThreeUnits(60)]} fontSize={largeFontSize} color={doorColor} anchorX="center" anchorY="middle" renderOrder={1000} depthTest={false} rotation={[0, -Math.PI / 2, Math.PI / 2]}>
                           {Math.round(m.maidaHeightMm)}
                         </Text>
-                        <NativeLine name="door_height_ext" points={[[0, dTopY, furnitureFrontZ + mmToThreeUnits(20)], [0, dTopY, doorDimZ]]} color={doorColor} lineWidth={0.5} renderOrder={100000} depthTest={false} />
-                        <NativeLine name="door_height_ext" points={[[0, dBotY, furnitureFrontZ + mmToThreeUnits(20)], [0, dBotY, doorDimZ]]} color={doorColor} lineWidth={0.5} renderOrder={100000} depthTest={false} />
+                        <ExtLine points={[[0, dTopY, furnitureFrontZ + mmToThreeUnits(20)], [0, dTopY, doorDimZ]]} color={doorColor} lineWidth={0.5} name="door_height_ext" />
+                        <ExtLine points={[[0, dBotY, furnitureFrontZ + mmToThreeUnits(20)], [0, dBotY, doorDimZ]]} color={doorColor} lineWidth={0.5} name="door_height_ext" />
                       </group>
                     );
                   })}
@@ -1305,8 +1213,8 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                         <Text position={[0, (gBotY + gTopY) / 2, doorDimZ + mmToThreeUnits(60)]} fontSize={largeFontSize} color={doorColor} anchorX="center" anchorY="middle" renderOrder={1000} depthTest={false} rotation={[0, -Math.PI / 2, Math.PI / 2]}>
                           {gap.heightMm}
                         </Text>
-                        <NativeLine name="door_height_ext" points={[[0, gTopY, furnitureFrontZ + mmToThreeUnits(20)], [0, gTopY, doorDimZ]]} color={doorColor} lineWidth={0.5} renderOrder={100000} depthTest={false} />
-                        <NativeLine name="door_height_ext" points={[[0, gBotY, furnitureFrontZ + mmToThreeUnits(20)], [0, gBotY, doorDimZ]]} color={doorColor} lineWidth={0.5} renderOrder={100000} depthTest={false} />
+                        <ExtLine points={[[0, gTopY, furnitureFrontZ + mmToThreeUnits(20)], [0, gTopY, doorDimZ]]} color={doorColor} lineWidth={0.5} name="door_height_ext" />
+                        <ExtLine points={[[0, gBotY, furnitureFrontZ + mmToThreeUnits(20)], [0, gBotY, doorDimZ]]} color={doorColor} lineWidth={0.5} name="door_height_ext" />
                       </group>
                     );
                   })}
@@ -1395,8 +1303,8 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
               <Text position={[0, doorMidY, doorDimZ + mmToThreeUnits(60)]} fontSize={largeFontSize} color={doorColor} anchorX="center" anchorY="middle" renderOrder={1000} depthTest={false} rotation={[0, -Math.PI / 2, Math.PI / 2]}>
                 {Math.round(doorHeightMm)}
               </Text>
-              <NativeLine name="door_height_ext" points={[[0, doorTopY, furnitureFrontZ + mmToThreeUnits(20)], [0, doorTopY, doorDimZ]]} color={doorColor} lineWidth={0.5} renderOrder={100000} depthTest={false} />
-              <NativeLine name="door_height_ext" points={[[0, doorBottomY, furnitureFrontZ + mmToThreeUnits(20)], [0, doorBottomY, doorDimZ]]} color={doorColor} lineWidth={0.5} renderOrder={100000} depthTest={false} />
+              <ExtLine points={[[0, doorTopY, furnitureFrontZ + mmToThreeUnits(20)], [0, doorTopY, doorDimZ]]} color={doorColor} lineWidth={0.5} name="door_height_ext" />
+              <ExtLine points={[[0, doorBottomY, furnitureFrontZ + mmToThreeUnits(20)], [0, doorBottomY, doorDimZ]]} color={doorColor} lineWidth={0.5} name="door_height_ext" />
             </group>
           );
         })()}
@@ -1412,28 +1320,10 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
         {/* 단내림 구간이 선택된 경우 단내림 높이를 표시 */}
         {<group>
           {/* 보조 가이드 연장선 - 하단 */}
-          <NativeLine name="dimension_line"
-            points={[
-              [0, 0, -spaceDepth/2 + mmToThreeUnits(110)],
-              [0, 0, -spaceDepth/2 - leftDimOffset + mmToThreeUnits(150)]
-            ]}
-            color={dimensionColor}
-            lineWidth={1}
-            renderOrder={100000}
-            depthTest={false}
-          />
+          <ExtLine points={[[0, 0, -spaceDepth/2 + mmToThreeUnits(110)], [0, 0, -spaceDepth/2 - leftDimOffset + mmToThreeUnits(150)]]} color={dimensionColor} />
 
           {/* 보조 가이드 연장선 - 상단 */}
-          <NativeLine name="dimension_line"
-            points={[
-              [0, displaySpaceHeight, -spaceDepth/2 + mmToThreeUnits(110)],
-              [0, displaySpaceHeight, -spaceDepth/2 - leftDimOffset + mmToThreeUnits(150)]
-            ]}
-            color={dimensionColor}
-            lineWidth={1}
-            renderOrder={100000}
-            depthTest={false}
-          />
+          <ExtLine points={[[0, displaySpaceHeight, -spaceDepth/2 + mmToThreeUnits(110)], [0, displaySpaceHeight, -spaceDepth/2 - leftDimOffset + mmToThreeUnits(150)]]} color={dimensionColor} />
 
           {/* 수직 치수선 */}
           <NativeLine name="dimension_line"
@@ -1526,16 +1416,10 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                   <group key={`right-sec-${si}`}>
                     {/* 시작 가이드선 */}
                     {shouldRenderStartGuide && (
-                      <NativeLine name="dimension_line"
-                        points={[[0, sec.startY, leftInnerExtStartZ], [0, sec.startY, leftInnerZ]]}
-                        color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
-                      />
+                      <ExtLine points={[[0, sec.startY, leftInnerExtStartZ], [0, sec.startY, leftInnerZ]]} color={dimensionColor} />
                     )}
                     {/* 끝 가이드선 */}
-                    <NativeLine name="dimension_line"
-                      points={[[0, sec.endY, leftInnerExtStartZ], [0, sec.endY, leftInnerZ]]}
-                      color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
-                    />
+                    <ExtLine points={[[0, sec.endY, leftInnerExtStartZ], [0, sec.endY, leftInnerZ]]} color={dimensionColor} />
                     {/* 수직 치수선 */}
                     <NativeLine name="dimension_line"
                       points={[[0, sec.startY, leftInnerZ], [0, sec.endY, leftInnerZ]]}
@@ -1571,15 +1455,9 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
               {baseFrameHeightMm > 0 && (
                 <>
                   {/* 바닥마감재 상단 연장선 */}
-                  <NativeLine name="dimension_line"
-                    points={[[0, floorFinishY, leftInnerExtStartZ], [0, floorFinishY, leftInnerZ]]}
-                    color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
-                  />
+                  <ExtLine points={[[0, floorFinishY, leftInnerExtStartZ], [0, floorFinishY, leftInnerZ]]} color={dimensionColor} />
                   {/* 받침대 상단 연장선 */}
-                  <NativeLine name="dimension_line"
-                    points={[[0, furnitureBaseY, leftInnerExtStartZ], [0, furnitureBaseY, leftInnerZ]]}
-                    color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
-                  />
+                  <ExtLine points={[[0, furnitureBaseY, leftInnerExtStartZ], [0, furnitureBaseY, leftInnerZ]]} color={dimensionColor} />
                   {/* 수직 치수선 */}
                   <NativeLine name="dimension_line"
                     points={[[0, floorFinishY, leftInnerZ], [0, furnitureBaseY, leftInnerZ]]}
@@ -1617,27 +1495,9 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
         {topFrameHeightMm > 0 && (
           <group>
             {/* 보조 가이드 연장선 - 하단 (상부 프레임 하단) */}
-            <NativeLine name="dimension_line"
-              points={[
-                [0, displaySpaceHeight - topFrameHeight, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750) - mmToThreeUnits(360)],
-                [0, displaySpaceHeight - topFrameHeight, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750)]
-              ]}
-              color={dimensionColor}
-              lineWidth={1}
-              renderOrder={100000}
-              depthTest={false}
-            />
+            <ExtLine points={[[0, displaySpaceHeight - topFrameHeight, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750) - mmToThreeUnits(360)], [0, displaySpaceHeight - topFrameHeight, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750)]]} color={dimensionColor} />
             {/* 보조 가이드 연장선 - 상단 (공간 최상단) */}
-            <NativeLine name="dimension_line"
-              points={[
-                [0, displaySpaceHeight, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750) - mmToThreeUnits(360)],
-                [0, displaySpaceHeight, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750)]
-              ]}
-              color={dimensionColor}
-              lineWidth={1}
-              renderOrder={100000}
-              depthTest={false}
-            />
+            <ExtLine points={[[0, displaySpaceHeight, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750) - mmToThreeUnits(360)], [0, displaySpaceHeight, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750)]]} color={dimensionColor} />
             {/* 수직 치수선 */}
             <NativeLine name="dimension_line"
               points={[
@@ -1738,36 +1598,10 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
               <group key={`section-${moduleIndex}-${sectionIndex}`}>
                 {/* 보조 가이드 연장선 - 시작 */}
                 {shouldRenderStartGuide && (
-                <NativeLine name="dimension_line"
-                  points={[
-                    [0,
-                      sectionStartY,
-                      spaceDepth/2 + rightDimOffset - mmToThreeUnits(750) - mmToThreeUnits(360)],
-                    [0,
-                      sectionStartY,
-                      spaceDepth/2 + rightDimOffset - mmToThreeUnits(750)]
-                  ]}
-                  color={dimensionColor}
-                  lineWidth={1}
-                  renderOrder={100000}
-                  depthTest={false}
-                />
+                <ExtLine points={[[0, sectionStartY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750) - mmToThreeUnits(360)], [0, sectionStartY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750)]]} color={dimensionColor} />
                 )}
                 {/* 보조 가이드 연장선 - 끝 (상부섹션은 가구 최상단에서) */}
-                <NativeLine name="dimension_line"
-                  points={[
-                    [0,
-                      sectionEndY,
-                      spaceDepth/2 + rightDimOffset - mmToThreeUnits(750) - mmToThreeUnits(360)],
-                    [0,
-                      sectionEndY,
-                      spaceDepth/2 + rightDimOffset - mmToThreeUnits(750)]
-                  ]}
-                  color={dimensionColor}
-                  lineWidth={1}
-                  renderOrder={100000}
-                  depthTest={false}
-                />
+                <ExtLine points={[[0, sectionEndY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750) - mmToThreeUnits(360)], [0, sectionEndY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750)]]} color={dimensionColor} />
                 {/* 치수선 */}
                 <NativeLine name="dimension_line"
                   points={[
@@ -1840,21 +1674,9 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
         {floorFinishHeightMm > 0 && !isFloating && selectedModCategory !== 'lower' && (
         <group>
             {/* 보조 가이드 연장선 - 바닥 */}
-            <NativeLine name="dimension_line"
-              points={[
-                [0, 0, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750) - mmToThreeUnits(720)],
-                [0, 0, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750) - mmToThreeUnits(360)]
-              ]}
-              color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
-            />
+            <ExtLine points={[[0, 0, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750) - mmToThreeUnits(720)], [0, 0, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750) - mmToThreeUnits(360)]]} color={dimensionColor} />
             {/* 보조 가이드 연장선 - 마감재 상단 */}
-            <NativeLine name="dimension_line"
-              points={[
-                [0, floorFinishY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750) - mmToThreeUnits(720)],
-                [0, floorFinishY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750) - mmToThreeUnits(360)]
-              ]}
-              color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
-            />
+            <ExtLine points={[[0, floorFinishY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750) - mmToThreeUnits(720)], [0, floorFinishY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750) - mmToThreeUnits(360)]]} color={dimensionColor} />
             {/* 메인 치수선 (바닥 ~ 마감재 상단) */}
             <NativeLine name="dimension_line"
               points={[
@@ -1895,21 +1717,9 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
         {baseFrameHeightMm > 0 && selectedModCategory !== 'lower' && (
         <group>
             {/* 보조 가이드 연장선 - 시작 (마감재 상단 or 바닥) */}
-            <NativeLine name="dimension_line"
-              points={[
-                [0, floorFinishY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750) - mmToThreeUnits(360)],
-                [0, floorFinishY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750)]
-              ]}
-              color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
-            />
+            <ExtLine points={[[0, floorFinishY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750) - mmToThreeUnits(360)], [0, floorFinishY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750)]]} color={dimensionColor} />
             {/* 보조 가이드 연장선 - 받침대 상단 */}
-            <NativeLine name="dimension_line"
-              points={[
-                [0, furnitureBaseY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750) - mmToThreeUnits(360)],
-                [0, furnitureBaseY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750)]
-              ]}
-              color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
-            />
+            <ExtLine points={[[0, furnitureBaseY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750) - mmToThreeUnits(360)], [0, furnitureBaseY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750)]]} color={dimensionColor} />
             {/* 메인 치수선 (마감재 상단 ~ 받침대 상단) */}
             <NativeLine name="dimension_line"
               points={[
@@ -1976,27 +1786,8 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
 
           return (
             <group key={`furniture-depth-${index}`}>
-              <NativeLine name="dimension_line"
-                points={[
-                  [0, furnitureBaseY + internalHeight, furnitureZ + moduleDepth/2],
-                  [0, furnitureTopY, furnitureZ + moduleDepth/2]
-                ]}
-                color={dimensionColor}
-                lineWidth={1}
-                renderOrder={100000}
-                depthTest={false}
-              />
-
-              <NativeLine name="dimension_line"
-                points={[
-                  [0, furnitureBaseY + internalHeight, furnitureZ - moduleDepth/2],
-                  [0, furnitureTopY, furnitureZ - moduleDepth/2]
-                ]}
-                color={dimensionColor}
-                lineWidth={1}
-                renderOrder={100000}
-                depthTest={false}
-              />
+              <ExtLine points={[[0, furnitureBaseY + internalHeight, furnitureZ + moduleDepth/2], [0, furnitureTopY, furnitureZ + moduleDepth/2]]} color={dimensionColor} />
+              <ExtLine points={[[0, furnitureBaseY + internalHeight, furnitureZ - moduleDepth/2], [0, furnitureTopY, furnitureZ - moduleDepth/2]]} color={dimensionColor} />
 
               <NativeLine name="dimension_line"
                 points={[
@@ -2053,27 +1844,8 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
 
                 return (
                   <group>
-                    <NativeLine name="dimension_line"
-                      points={[
-                        [0, floatHeight, lowerFurnitureZ + lowerModuleDepth/2],
-                        [0, lowerDimY, lowerFurnitureZ + lowerModuleDepth/2]
-                      ]}
-                      color={dimensionColor}
-                      lineWidth={1}
-                      renderOrder={100000}
-                      depthTest={false}
-                    />
-
-                    <NativeLine name="dimension_line"
-                      points={[
-                        [0, floatHeight, lowerFurnitureZ - lowerModuleDepth/2],
-                        [0, lowerDimY, lowerFurnitureZ - lowerModuleDepth/2]
-                      ]}
-                      color={dimensionColor}
-                      lineWidth={1}
-                      renderOrder={100000}
-                      depthTest={false}
-                    />
+                    <ExtLine points={[[0, floatHeight, lowerFurnitureZ + lowerModuleDepth/2], [0, lowerDimY, lowerFurnitureZ + lowerModuleDepth/2]]} color={dimensionColor} />
+                    <ExtLine points={[[0, floatHeight, lowerFurnitureZ - lowerModuleDepth/2], [0, lowerDimY, lowerFurnitureZ - lowerModuleDepth/2]]} color={dimensionColor} />
 
                     <NativeLine name="dimension_line"
                       points={[
