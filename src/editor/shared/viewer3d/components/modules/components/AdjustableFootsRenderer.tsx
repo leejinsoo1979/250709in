@@ -140,11 +140,12 @@ export const AdjustableFootsRenderer: React.FC<AdjustableFootsRendererProps> = (
   // 앞쪽: 하부프레임 뒷면과 맞닿도록 20mm 뒤로 + 받침대 깊이만큼 뒤로 + 하부프레임 옵셋
   // 뒤쪽: 뒷부분 꼭지점과 맞닿도록 plateHalf만큼 안쪽 (받침대 깊이 영향 없음)
   const baseDepthOffset = mmToThreeUnits(effectiveBaseDepth);
+  // baseFrameOffset: 양수 = 안쪽(뒤쪽) 방향 (Room.tsx와 동일 컨벤션)
   // frontZInset > 0 인 경우(하부장): baseFrameOffset이 있으면 대체, 없으면 frontZInset 사용
-  // frontZInset === 0 인 경우(키큰장 등): baseFrameOffset을 앞/뒤 오프셋으로 사용
+  // frontZInset === 0 인 경우(키큰장 등): baseFrameOffset을 안쪽 오프셋으로 사용
   const effectiveFrontZInset = frontZInset > 0 ? (baseFrameOffset ?? frontZInset) : frontZInset;
-  const baseFrameZOffset = frontZInset > 0 ? 0 : mmToThreeUnits(baseFrameOffset ?? 0);
-  const frontZ = furnitureDepth / 2 - plateHalf - mmToThreeUnits(20) - baseDepthOffset + baseFrameZOffset - mmToThreeUnits(effectiveFrontZInset);
+  const baseFrameZInset = frontZInset > 0 ? 0 : mmToThreeUnits(baseFrameOffset ?? 0);
+  const frontZ = furnitureDepth / 2 - plateHalf - mmToThreeUnits(20) - baseDepthOffset - baseFrameZInset - mmToThreeUnits(effectiveFrontZInset);
   const backZ = -furnitureDepth / 2 + plateHalf;
 
   // 발통 위치 배열 (네 모서리, 회전 없음)
