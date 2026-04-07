@@ -1240,11 +1240,11 @@ const DoorModule: React.FC<DoorModuleProps> = ({
         <group position={[leftHingeX + leftEpTrimShift, doorYPosition, doorDepth / 2]}>
           <animated.group rotation-y={leftDoorLocked ? 0 : dualLeftDoorSpring.rotation}>
             <group position={[leftDoorWidthUnits / 2 - hingeOffsetUnits, 0, 0]}>
-              {/* 2D 정면뷰: 좌측 도어 반투명 overlay */}
+              {/* 2D 정면뷰: 좌측 도어 반투명 overlay (잠금 시 붉은색) */}
               {showDoorOverlay && (
                 <mesh position={[0, 0, doorThicknessUnits / 2 + 0.001]} renderOrder={9999}>
                   <planeGeometry args={[leftDoorWidthUnits, doorHeight]} />
-                  <meshBasicMaterial color={doorOverlayColor} transparent opacity={0.2} side={THREE.DoubleSide} depthTest={false} depthWrite={false} />
+                  <meshBasicMaterial color={leftDoorLocked ? '#FF0000' : doorOverlayColor} transparent opacity={leftDoorLocked ? 0.15 : 0.2} side={THREE.DoubleSide} depthTest={false} depthWrite={false} />
                 </mesh>
               )}
               {/* BoxWithEdges 사용하여 도어 렌더링 */}
@@ -1573,11 +1573,11 @@ const DoorModule: React.FC<DoorModuleProps> = ({
         <group position={[rightHingeX + rightEpTrimShift, doorYPosition, doorDepth / 2]}>
           <animated.group rotation-y={rightDoorLocked ? 0 : dualRightDoorSpring.rotation}>
             <group position={[-rightDoorWidthUnits / 2 + hingeOffsetUnits, 0, 0]}>
-              {/* 2D 정면뷰: 우측 도어 반투명 overlay */}
+              {/* 2D 정면뷰: 우측 도어 반투명 overlay (잠금 시 붉은색) */}
               {showDoorOverlay && (
                 <mesh position={[0, 0, doorThicknessUnits / 2 + 0.001]} renderOrder={9999}>
                   <planeGeometry args={[rightDoorWidthUnits, doorHeight]} />
-                  <meshBasicMaterial color={doorOverlayColor} transparent opacity={0.2} side={THREE.DoubleSide} depthTest={false} depthWrite={false} />
+                  <meshBasicMaterial color={rightDoorLocked ? '#FF0000' : doorOverlayColor} transparent opacity={rightDoorLocked ? 0.15 : 0.2} side={THREE.DoubleSide} depthTest={false} depthWrite={false} />
                 </mesh>
               )}
               {/* BoxWithEdges 사용하여 도어 렌더링 */}
@@ -1980,11 +1980,11 @@ const DoorModule: React.FC<DoorModuleProps> = ({
       <group position={[doorGroupX + hingeAxisOffset + epTrimShiftX, doorYPosition, doorDepth / 2]}>
         <animated.group rotation-y={singleDoorLocked ? 0 : (adjustedHingePosition === 'left' ? leftHingeDoorSpring.rotation : rightHingeDoorSpring.rotation)}>
           <group position={[doorPositionX, 0, 0]}>
-            {/* 2D 정면뷰: 싱글 도어 반투명 overlay */}
+            {/* 2D 정면뷰: 싱글 도어 반투명 overlay (잠금 시 붉은색) */}
             {showDoorOverlay && (
               <mesh position={[0, 0, doorThicknessUnits / 2 + 0.001]} renderOrder={9999}>
                 <planeGeometry args={[doorWidthUnits, doorHeight]} />
-                <meshBasicMaterial color={doorOverlayColor} transparent opacity={0.2} side={THREE.DoubleSide} depthTest={false} depthWrite={false} />
+                <meshBasicMaterial color={singleDoorLocked ? '#FF0000' : doorOverlayColor} transparent opacity={singleDoorLocked ? 0.15 : 0.2} side={THREE.DoubleSide} depthTest={false} depthWrite={false} />
               </mesh>
             )}
             {/* BoxWithEdges 사용하여 도어 렌더링 */}
