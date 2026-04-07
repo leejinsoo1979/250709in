@@ -2,7 +2,7 @@ import React, { useMemo } from 'react';
 import { Html } from '@react-three/drei';
 import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
-import { calculateSpaceIndexing } from '@/editor/shared/utils/indexing';
+import { calculateSpaceIndexing, recalculateWithCustomWidths } from '@/editor/shared/utils/indexing';
 import { getModuleById } from '@/data/modules';
 import { calculateInternalSpace } from '../../utils/geometry';
 import { useUIStore } from '@/store/uiStore';
@@ -70,8 +70,12 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
     return Math.abs(selectedModuleData.dimensions.width - (columnWidth * 2)) < 50;
   }, [selectedModuleData, spaceInfo]);
 
-  // 슬롯 인덱싱 정보
-  const indexing = useMemo(() => calculateSpaceIndexing(spaceInfo), [spaceInfo]);
+  // 슬롯 인덱싱 정보 — slotCustomWidth 재분할 반영
+  const indexing = useMemo(() => {
+    const base = calculateSpaceIndexing(spaceInfo);
+    const hasCustomWidths = placedModules.some(m => m.slotCustomWidth !== undefined);
+    return hasCustomWidths ? recalculateWithCustomWidths(base, placedModules) : base;
+  }, [spaceInfo, placedModules]);
 
   // 단내림이 있는 경우 영역별 슬롯 위치 계산
   const getAllSlotPositions = useMemo(() => {

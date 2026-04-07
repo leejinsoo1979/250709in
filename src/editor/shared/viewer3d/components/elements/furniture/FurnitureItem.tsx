@@ -8,7 +8,7 @@ import { PlacedModule } from '@/editor/shared/furniture/types';
 import BoxModule from '../../modules/BoxModule';
 import * as THREE from 'three';
 import { analyzeColumnSlots, calculateFurnitureWidthWithColumn, convertDualToSingleIfNeeded, calculateFurnitureBounds, calculateOptimalHingePosition } from '@/editor/shared/utils/columnSlotProcessor';
-import { calculateSpaceIndexing, ColumnIndexer } from '@/editor/shared/utils/indexing';
+import { calculateSpaceIndexing, ColumnIndexer, recalculateWithCustomWidths } from '@/editor/shared/utils/indexing';
 import DoorModule from '../../modules/DoorModule';
 import { useUIStore } from '@/store/uiStore';
 import { EditIcon } from '@/components/common/Icons';
@@ -117,7 +117,12 @@ const checkAdjacentUpperLowerToFull = (
   if (spaceInfo.droppedCeiling?.enabled && currentZone) {
   }
 
-  const indexing = calculateSpaceIndexing(spaceInfo);
+  // slotCustomWidth 재분할이 반영된 indexing 사용
+  const baseIndexing = calculateSpaceIndexing(spaceInfo);
+  const indexing = useMemo(() => {
+    const hasCustomWidths = placedModules.some(m => m.slotCustomWidth !== undefined);
+    return hasCustomWidths ? recalculateWithCustomWidths(baseIndexing, placedModules) : baseIndexing;
+  }, [baseIndexing, placedModules]);
 
   // 인접한 슬롯에 상부장/하부장이 있는지 확인
   // 왼쪽: 싱글 가구는 -1, 듀얼 가구는 시작 슬롯이 -2 위치에 있어야 함

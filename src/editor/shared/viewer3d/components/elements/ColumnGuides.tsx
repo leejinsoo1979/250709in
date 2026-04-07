@@ -5,7 +5,7 @@ import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
 import { useUIStore } from '@/store/uiStore';
 import { useViewerTheme } from '../../context/ViewerThemeContext';
-import { calculateSpaceIndexing, ColumnIndexer } from '@/editor/shared/utils/indexing';
+import { calculateSpaceIndexing, ColumnIndexer, recalculateWithCustomWidths } from '@/editor/shared/utils/indexing';
 import { calculateInternalSpace, calculateFrameThickness, END_PANEL_THICKNESS } from '../../utils/geometry';
 import ColumnDropTarget from './ColumnDropTarget';
 
@@ -26,8 +26,12 @@ const ColumnGuides: React.FC<ColumnGuidesProps> = ({ viewMode: viewModeProp }) =
   const viewMode = viewModeProp || contextViewMode;
   const { theme } = useViewerTheme();
   
-  // 전체 공간의 인덱싱 계산 (가구 위치 판단용)
-  const indexing = calculateSpaceIndexing(spaceInfo);
+  // 전체 공간의 인덱싱 계산 (가구 위치 판단용) — slotCustomWidth 재분할 적용
+  const baseIndexing = calculateSpaceIndexing(spaceInfo);
+  const indexing = React.useMemo(() => {
+    const hasCustomWidths = placedModules.some(m => m.slotCustomWidth !== undefined);
+    return hasCustomWidths ? recalculateWithCustomWidths(baseIndexing, placedModules) : baseIndexing;
+  }, [baseIndexing, placedModules]);
   
   // 노서라운드 모드에서 가구 위치별 엔드패널 표시 여부 결정
   const hasLeftFurniture = spaceInfo.surroundType === 'no-surround' && 
@@ -120,49 +124,38 @@ const ColumnGuides: React.FC<ColumnGuidesProps> = ({ viewMode: viewModeProp }) =
     // isLeftDropped
   // });
   
-  // 영역별 슬롯 정보 계산
+  // 영역별 슬롯 정보 계산 — slotCustomWidth가 있으면 재분할 적용
   const zoneSlotInfo = React.useMemo(() => {
     const info = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
-    
-    // 전체 내경 정보와 비교
     const fullIndexing = calculateSpaceIndexing(spaceInfo);
-    
-// console.log('🔍🔍🔍 ColumnGuides - 슬롯 가이드 라인 경계:', {
-      // 전체인덱싱: {
-        // 내경시작X: fullIndexing.internalStartX,
-        // 내경너비: fullIndexing.internalWidth,
-        // 슬롯너비: fullIndexing.columnWidth
-      // },
-      // 영역별정보: {
-        // 메인: {
-          // 시작X: info.normal.startX,
-          // 너비: info.normal.width,
-          // 끝X: info.normal.startX + info.normal.width,
-          // 슬롯너비: info.normal.columnWidth,
-          // slotWidths: info.normal.slotWidths,
-          // '🎯 Three.js 단위': {
-            // 시작X_three: info.normal.startX * 0.01,
-            // 끝X_three: (info.normal.startX + info.normal.width) * 0.01,
-            // 중심X_three: (info.normal.startX + info.normal.width/2) * 0.01
-          // }
-        // },
-        // 단내림: info.dropped ? {
-          // 시작X: info.dropped.startX,
-          // 너비: info.dropped.width,
-          // 끝X: info.dropped.startX + info.dropped.width,
-          // 슬롯너비: info.dropped.columnWidth,
-          // slotWidths: info.dropped.slotWidths
-        // } : null
-      // },
-      // 갭체크: info.dropped ? {
-        // '메인끝-단내림시작': (info.dropped.startX - (info.normal.startX + info.normal.width))
-      // } : null,
-      // 'spaceInfo.surroundType': spaceInfo.surroundType,
-      // 'spaceInfo.installType': spaceInfo.installType
-    // });
-    
+
+    // slotCustomWidth가 있는 모듈이 있으면 슬롯 재분할 적용
+    const hasCustomWidths = placedModules.some(m => m.slotCustomWidth !== undefined);
+    if (hasCustomWidths) {
+      // normal zone 재분할
+      if (info.normal && info.normal.slotWidths) {
+        const normalRecalc = recalculateWithCustomWidths(
+          { ...fullIndexing, columnCount: info.normal.columnCount, slotWidths: info.normal.slotWidths, internalWidth: info.normal.width, internalStartX: info.normal.startX, columnWidth: info.normal.columnWidth } as any,
+          placedModules,
+          'normal'
+        );
+        info.normal.slotWidths = normalRecalc.slotWidths;
+        info.normal.columnWidth = normalRecalc.columnWidth;
+      }
+      // dropped zone 재분할
+      if (info.dropped && info.dropped.slotWidths) {
+        const droppedRecalc = recalculateWithCustomWidths(
+          { ...fullIndexing, columnCount: info.dropped.columnCount, slotWidths: info.dropped.slotWidths, internalWidth: info.dropped.width, internalStartX: info.dropped.startX, columnWidth: info.dropped.columnWidth } as any,
+          placedModules,
+          'dropped'
+        );
+        info.dropped.slotWidths = droppedRecalc.slotWidths;
+        info.dropped.columnWidth = droppedRecalc.columnWidth;
+      }
+    }
+
     return info;
-  }, [spaceInfo, spaceInfo.customColumnCount, spaceInfo.mainDoorCount, spaceInfo.droppedCeilingDoorCount]);
+  }, [spaceInfo, spaceInfo.customColumnCount, spaceInfo.mainDoorCount, spaceInfo.droppedCeilingDoorCount, placedModules]);
   
   // 디버깅 로그 추가
   React.useEffect(() => {

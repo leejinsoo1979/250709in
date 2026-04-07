@@ -112,8 +112,8 @@ export function getInternalSpaceBoundsX(spaceInfo: SpaceInfo): { startX: number;
  * PlacedModule의 X 범위 반환 (mm 단위)
  */
 export function getModuleBoundsX(module: PlacedModule): FurnitureBoundsX {
-  // 너비 우선순위: freeWidth(자유배치) > customWidth(슬롯/슬롯듀얼) > adjustedWidth(기둥침범) > moduleWidth > moduleId 파싱 > 450
-  let widthMM = module.freeWidth || module.customWidth || module.adjustedWidth || module.moduleWidth || 0;
+  // 너비 우선순위: freeWidth(자유배치) > slotCustomWidth(슬롯 사용자지정) > customWidth(슬롯/듀얼) > adjustedWidth(기둥침범) > moduleWidth > moduleId 파싱 > 450
+  let widthMM = module.freeWidth || module.slotCustomWidth || module.customWidth || module.adjustedWidth || module.moduleWidth || 0;
   if (!widthMM) {
     // moduleId에서 너비 파싱 (예: "full-1200" → 1200, "dual-upper-4drawer-1800" → 1800)
     const match = module.moduleId?.match(/-(\d{3,})(?:$|-)/);
