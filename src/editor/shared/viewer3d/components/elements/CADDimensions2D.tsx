@@ -590,8 +590,8 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           );
         })()}
 
-        {/* ===== 왼쪽 서랍 마이다 개별 높이 + 상단갭 (모든 카테고리, 좌측뷰) ===== */}
-        {visibleFurniture.length > 0 && (() => {
+        {/* ===== 왼쪽 서랍 마이다 개별 높이 + 상단갭 (하부장 전용, 좌측뷰) ===== */}
+        {selectedModCategory === 'lower' && visibleFurniture.length > 0 && (() => {
           const leftDrawerZ = -spaceDepth/2 - leftDimOffset + mmToThreeUnits(150) + mmToThreeUnits(400);
           const leftDrawerExtStartZ = -spaceDepth/2 + mmToThreeUnits(110);
           const drawerColor = '#FF9800';
@@ -1725,8 +1725,8 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           );
         })()}
 
-        {/* ===== 왼쪽 서랍 마이다 개별 높이 + 상단갭 (모든 카테고리, 우측뷰) ===== */}
-        {visibleFurniture.length > 0 && (() => {
+        {/* ===== 왼쪽 서랍 마이다 개별 높이 + 상단갭 (하부장 전용, 우측뷰) ===== */}
+        {selectedModCategory === 'lower' && visibleFurniture.length > 0 && (() => {
           const leftDrawerZ = -spaceDepth/2 - leftDimOffset + mmToThreeUnits(150) + mmToThreeUnits(400);
           const leftDrawerExtStartZ = -spaceDepth/2 + mmToThreeUnits(110);
           const drawerColor = '#FF9800';
