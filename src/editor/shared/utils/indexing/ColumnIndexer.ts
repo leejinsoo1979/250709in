@@ -1,6 +1,7 @@
 import { SpaceInfo } from '@/store/core/spaceConfigStore';
 import { SpaceCalculator } from './SpaceCalculator';
 import { calculateFrameThickness, SURROUND_FRAME_THICKNESS, END_PANEL_THICKNESS } from '../../viewer3d/utils/geometry';
+import type { PlacedModule } from '../../furniture/types';
 
 /**
  * 컬럼 인덱싱 계산 결과 타입
@@ -555,6 +556,104 @@ export class ColumnIndexer {
       // console.log(`가장 가까운 컬럼: ${closestIndex + 1} (거리: ${minDistance.toFixed(4)})`);
     }
     return closestIndex;
+  }
+
+  /**
+   * slotCustomWidth가 있는 모듈을 고정폭으로 취급하고,
+   * 나머지 빈 슬롯의 너비를 균등 재분할하여 SpaceIndexingResult를 반환
+   */
+  static recalculateWithCustomWidths(
+    baseIndexing: SpaceIndexingResult,
+    placedModules: PlacedModule[],
+    zone?: 'normal' | 'dropped'
+  ): SpaceIndexingResult {
+    const { columnCount, internalWidth, internalStartX } = baseIndexing;
+    if (columnCount <= 0) return baseIndexing;
+
+    // 1. 각 슬롯을 {fixed, width}로 매핑
+    const slots: { fixed: boolean; width: number }[] = Array.from({ length: columnCount }, (_, i) => ({
+      fixed: false,
+      width: baseIndexing.slotWidths?.[i] ?? baseIndexing.columnWidth,
+    }));
+
+    // 2. slotCustomWidth가 있는 모듈의 슬롯 → fixed
+    const zoneModules = placedModules.filter(m => {
+      if (zone) return m.zone === zone;
+      return !m.zone || m.zone === 'normal';
+    });
+
+    for (const mod of zoneModules) {
+      if (mod.slotCustomWidth === undefined || mod.slotIndex === undefined) continue;
+
+      if (mod.isDualSlot) {
+        // 듀얼 가구: 두 슬롯의 합 = slotCustomWidth
+        const idx = mod.slotIndex;
+        if (idx < columnCount - 1) {
+          const halfWidth = mod.slotCustomWidth / 2;
+          slots[idx] = { fixed: true, width: halfWidth };
+          slots[idx + 1] = { fixed: true, width: halfWidth };
+        }
+      } else {
+        const idx = mod.slotIndex;
+        if (idx < columnCount) {
+          slots[idx] = { fixed: true, width: mod.slotCustomWidth };
+        }
+      }
+    }
+
+    // 3. 남은 공간 계산
+    const fixedTotal = slots.filter(s => s.fixed).reduce((sum, s) => sum + s.width, 0);
+    const remainingCount = slots.filter(s => !s.fixed).length;
+
+    if (remainingCount > 0) {
+      const remainingWidth = internalWidth - fixedTotal;
+      const remainingSlotWidth = Math.floor(remainingWidth / remainingCount);
+      slots.forEach(s => {
+        if (!s.fixed) s.width = remainingSlotWidth;
+      });
+    }
+
+    // 4. columnBoundaries, columnPositions, threeUnitPositions 재계산
+    const newSlotWidths = slots.map(s => s.width);
+    const newColumnBoundaries: number[] = [];
+    const newColumnPositions: number[] = [];
+    let currentX = internalStartX;
+
+    newColumnBoundaries.push(currentX);
+    for (let i = 0; i < columnCount; i++) {
+      const slotW = newSlotWidths[i];
+      const center = currentX + slotW / 2;
+      newColumnPositions.push(center);
+      currentX += slotW;
+      newColumnBoundaries.push(currentX);
+    }
+
+    const newThreeUnitPositions = newColumnPositions.map(p => SpaceCalculator.mmToThreeUnits(p));
+    const newThreeUnitBoundaries = newColumnBoundaries.map(p => SpaceCalculator.mmToThreeUnits(p));
+
+    // 5. 듀얼 위치 재계산
+    const newDualColumnPositions: number[] = [];
+    const newThreeUnitDualPositions: number[] = [];
+    for (let i = 1; i < columnCount; i++) {
+      const dualCenter = newColumnBoundaries[i];
+      newDualColumnPositions.push(dualCenter);
+      newThreeUnitDualPositions.push(SpaceCalculator.mmToThreeUnits(dualCenter));
+    }
+
+    const avgWidth = internalWidth / columnCount;
+
+    return {
+      ...baseIndexing,
+      columnPositions: newColumnPositions,
+      threeUnitPositions: newThreeUnitPositions,
+      columnBoundaries: newColumnBoundaries,
+      threeUnitBoundaries: newThreeUnitBoundaries,
+      dualColumnPositions: newDualColumnPositions,
+      threeUnitDualPositions: newThreeUnitDualPositions,
+      columnWidth: avgWidth,
+      slotWidths: newSlotWidths,
+      threeUnitColumnWidth: SpaceCalculator.mmToThreeUnits(avgWidth),
+    };
   }
 
   /**
