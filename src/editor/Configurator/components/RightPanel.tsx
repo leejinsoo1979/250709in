@@ -168,15 +168,15 @@ const MergedFrameRow = React.memo(({ label, enabled, widthMM, heightMM, offset, 
               onKeyDown={(e) => {
                 if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
                   e.preventDefault();
-                  const next = Math.max(0, Math.min(9999, (heightMM || 0) + (e.key === 'ArrowUp' ? 1 : -1)));
+                  const next = Math.max(60, Math.min(150, (heightMM || 65) + (e.key === 'ArrowUp' ? 1 : -1)));
                   setHeightText(String(next));
                   onHeightChange(next);
                 } else if (e.key === 'Enter') {
                   (e.target as HTMLInputElement).blur();
                 }
               }}
-              onChange={(e) => { const v = e.target.value; if (v === '' || /^\d+$/.test(v)) setHeightText(v); }}
-              onBlur={(e) => { heightEditingRef.current = false; setHighlightedFrame(null); const clamped = Math.max(0, Math.min(9999, parseInt(e.target.value) || 0)); setHeightText(String(clamped)); onHeightChange(clamped); }}
+              onChange={(e) => { const v = e.target.value; if (v === '' || /^\d+$/.test(v)) { if (v !== '' && parseInt(v) > 150) { setHeightText('150'); } else { setHeightText(v); } } }}
+              onBlur={(e) => { heightEditingRef.current = false; setHighlightedFrame(null); const clamped = Math.max(60, Math.min(150, parseInt(e.target.value) || 65)); setHeightText(String(clamped)); onHeightChange(clamped); }}
               style={{ width: '100%', border: 'none', outline: 'none', fontSize: '12px', textAlign: 'center', background: 'transparent', color: 'var(--theme-text-primary)' }}
             />
           </div>
@@ -1502,9 +1502,9 @@ const RightPanel: React.FC<RightPanelProps> = ({
                               <input type="text" inputMode="numeric"
                                 value={(mod.baseFrameHeight ?? globalBase) || ''} placeholder="0"
                                 onFocus={() => setHighlightedFrame(`base-${mod.id}`)}
-                                onKeyDown={(e) => { if (e.key === 'ArrowUp' || e.key === 'ArrowDown') { e.preventDefault(); const cur = mod.baseFrameHeight ?? globalBase; updatePlacedModule(mod.id, { baseFrameHeight: Math.max(0, Math.min(9999, cur + (e.key === 'ArrowUp' ? 1 : -1))) }); } }}
-                                onChange={(e) => { const v = e.target.value; if (v === '' || /^\d+$/.test(v)) updatePlacedModule(mod.id, { baseFrameHeight: v === '' ? 0 : parseInt(v, 10) }); }}
-                                onBlur={(e) => { setHighlightedFrame(null); updatePlacedModule(mod.id, { baseFrameHeight: Math.max(0, Math.min(9999, parseInt(e.target.value) || 0)) }); }}
+                                onKeyDown={(e) => { if (e.key === 'ArrowUp' || e.key === 'ArrowDown') { e.preventDefault(); const cur = mod.baseFrameHeight ?? globalBase; updatePlacedModule(mod.id, { baseFrameHeight: Math.max(60, Math.min(150, cur + (e.key === 'ArrowUp' ? 1 : -1))) }); } }}
+                                onChange={(e) => { const v = e.target.value; if (v === '' || /^\d+$/.test(v)) { const num = v === '' ? 0 : parseInt(v, 10); updatePlacedModule(mod.id, { baseFrameHeight: num > 150 ? 150 : num }); } }}
+                                onBlur={(e) => { setHighlightedFrame(null); updatePlacedModule(mod.id, { baseFrameHeight: Math.max(60, Math.min(150, parseInt(e.target.value) || 65)) }); }}
                                 style={{ width: '100%', border: 'none', outline: 'none', fontSize: '12px', textAlign: 'center', background: 'transparent', color: 'var(--theme-text-primary)' }}
                               />
                             </div>
