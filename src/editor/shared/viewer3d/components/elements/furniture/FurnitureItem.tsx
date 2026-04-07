@@ -3613,21 +3613,33 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
               const hasRight = placedModule.hasRightEndPanel;
               if (!hasLeft && !hasRight) return null;
 
-              // 인접 가구 판단: EP 방향 슬롯에 다른 가구가 있으면 측판 불필요
+              // 인접 가구 판단: EP 방향에 같은 높이(full) 가구가 있을 때만 측판 생략
+              // 키큰장(full) 옆에 하부장(lower)/상부장(upper)이 있으면 높이 차이로 측판 노출 → 측판 필요
               const mySlot = placedModule.slotIndex;
               const myZone = placedModule.zone || 'normal';
               const isDual = placedModule.isDualSlot;
-              const leftAdjacentExists = mySlot !== undefined && placedModules.some(m =>
+              const furnitureCategory = actualModuleData?.category;
+              const isSlotAdjacent = (m: typeof placedModule, targetSlot: number) =>
                 m.id !== placedModule.id && !m.isFreePlacement && (m.zone || 'normal') === myZone &&
-                m.slotIndex !== undefined && (
-                  isDual ? m.slotIndex === mySlot - 1 || (m.isDualSlot && m.slotIndex === mySlot - 2)
-                         : m.slotIndex === mySlot - 1 || (m.isDualSlot && m.slotIndex === mySlot - 2)
-                )
-              );
+                m.slotIndex !== undefined && (m.slotIndex === targetSlot || (m.isDualSlot && m.slotIndex === targetSlot - 1));
+              const isSameHeightAdjacent = (m: typeof placedModule) => {
+                // full(키큰장)의 EP → 인접도 full이어야 측판 생략
+                if (furnitureCategory === 'full') {
+                  const adjData = getModuleById(m.moduleId, internalSpace, spaceInfo);
+                  return adjData?.category === 'full';
+                }
+                // upper/lower는 기존 로직 유지 (인접 가구 있으면 측판 생략)
+                return true;
+              };
+              const leftAdjacentExists = mySlot !== undefined && placedModules.some(m => {
+                const adjSlot = isDual ? mySlot - 1 : mySlot - 1;
+                return isSlotAdjacent(m, adjSlot) && isSameHeightAdjacent(m);
+              });
               const rightSlotEnd = isDual && mySlot !== undefined ? mySlot + 1 : mySlot;
               const rightAdjacentExists = rightSlotEnd !== undefined && placedModules.some(m =>
                 m.id !== placedModule.id && !m.isFreePlacement && (m.zone || 'normal') === myZone &&
                 m.slotIndex !== undefined && (m.slotIndex === rightSlotEnd + 1 || (m.isDualSlot && m.slotIndex === rightSlotEnd + 1))
+                && isSameHeightAdjacent(m)
               );
 
               const epThicknessMm = placedModule.endPanelThickness || 18.5; // 물리적 렌더링 두께 (PET)
@@ -3641,7 +3653,6 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
               // 상부장: 상단=천장, 하단=가구 하단
               // 하부장: 상단=가구 상단, 하단=바닥
               // 키큰장: 상단=천장, 하단=바닥
-              const furnitureCategory = actualModuleData?.category;
               const groupY = adjustedPosition.y; // Three.js 단위 (가구 중심 Y)
               const spaceH = mmToThreeUnits(spaceInfo.height);
               const epTopOffsetMm = placedModule.endPanelTopOffset ?? 0;
