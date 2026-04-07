@@ -793,7 +793,9 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
   // 옵티마이저에서 제외된 패널이면 렌더링하지 않음
   // useFrame 폴링으로 visible 제어 — R3F reconciler/DOM reconciler 간 Zustand 구독 호환 문제 회피
   return (
-    <group ref={groupRef} position={position} userData={furnitureId ? { furnitureId } : undefined}>
+    <group ref={groupRef} position={position} userData={furnitureId ? { furnitureId } : undefined}
+      visible={!(viewMode === '2D' && view2DDirection === 'top' && panelName && panelName.includes('(하)상판'))}
+    >
       {/* 면 렌더링 - 와이어프레임에서는 투명하게 */}
       {/* DXF 내보내기를 위해 mesh에도 이름 추가 */}
       <mesh
