@@ -1294,21 +1294,27 @@ export const calculatePanelDetails = (
 
   // 플랫 배열로 변환하여 반환
   const result: any[] = [];
+  const isLowerCabinetModule = moduleData.id.includes('lower-');
 
-  // 상부장 패널 (상부 섹션)
+  // 상부장 패널 (하부장 모듈이면 "몸통", 아니면 "상부 섹션")
   if (panels.upper.length > 0) {
-    result.push({ name: `=== ${t('furniture.upperSection')} ===` });
+    result.push({ name: isLowerCabinetModule ? '=== 몸통 ===' : `=== ${t('furniture.upperSection')} ===` });
     result.push(...panels.upper);
   }
 
-  // 하부장 패널 (하부 섹션)
+  // 하부장 패널 (하부 섹션) — 하부장 모듈이면 몸통에 합산
   if (panels.lower.length > 0) {
-    result.push({ name: `=== ${t('furniture.lowerSection')} ===` });
-    result.push(...panels.lower);
+    if (isLowerCabinetModule) {
+      // 하부장: lower 패널도 몸통에 포함 (별도 헤더 없이 추가)
+      result.push(...panels.lower);
+    } else {
+      result.push({ name: `=== ${t('furniture.lowerSection')} ===` });
+      result.push(...panels.lower);
+    }
   }
 
-  // 도어 패널은 필요시 표시
-  if (panels.door.length > 0 && hasDoor) {
+  // 도어 패널은 필요시 표시 (하부장은 외부서랍과 합쳐서 뒤에서 출력)
+  if (!isLowerCabinetModule && panels.door.length > 0 && hasDoor) {
     result.push({ name: `=== ${t('furniture.door')} ===` });
     result.push(...panels.door);
   }
@@ -1400,7 +1406,8 @@ export const calculatePanelDetails = (
   }
 
   // === 하부장 외부서랍 패널 (ExternalDrawerRenderer 기준) ===
-  if (moduleData.id.includes('lower-drawer-') || moduleData.id.includes('lower-door-lift-2tier') || moduleData.id.includes('lower-door-lift-3tier') || moduleData.id.includes('lower-top-down-') && !moduleData.id.includes('lower-top-down-half')) {
+  const extDrawerPanels: any[] = [];
+  if (moduleData.id.includes('lower-drawer-') || moduleData.id.includes('lower-door-lift-2tier') || moduleData.id.includes('lower-door-lift-3tier') || (moduleData.id.includes('lower-top-down-') && !moduleData.id.includes('lower-top-down-half'))) {
     const is3TierExt = moduleData.id.includes('lower-drawer-3tier') || moduleData.id.includes('lower-door-lift-3tier') || moduleData.id.includes('lower-top-down-3tier');
     const extDrawerCount = is3TierExt ? 3 : 2;
     // ExternalDrawerRenderer 기준 치수
@@ -1413,55 +1420,27 @@ export const calculatePanelDetails = (
       const extSideHMm = extDrawerCount >= 3 ? (di === 0 ? 250 : 130) : 250;
       const extBackHMm = extSideHMm - 15 - backPanelThickness; // 뒷판높이 = 측판 - 15 - 바닥판두께
       const drawerNum = di + 1;
-      // 좌측판
-      result.push({
-        name: `서랍${drawerNum} 좌측판`,
-        width: extSideDepthMm,
-        height: extSideHMm,
-        thickness: drawerSideThickness,
-        material: 'PB'
-      });
-      // 우측판
-      result.push({
-        name: `서랍${drawerNum} 우측판`,
-        width: extSideDepthMm,
-        height: extSideHMm,
-        thickness: drawerSideThickness,
-        material: 'PB'
-      });
-      // 앞판 (뒷판과 동일 폭, 측판과 동일 높이)
-      result.push({
-        name: `서랍${drawerNum} 앞판`,
-        width: Math.round(extInnerWidth),
-        height: extSideHMm,
-        thickness: drawerSideThickness,
-        material: 'PB'
-      });
-      // 뒷판 (바닥판 위에서 시작)
-      result.push({
-        name: `서랍${drawerNum} 뒷판`,
-        width: Math.round(extInnerWidth),
-        height: Math.round(extBackHMm),
-        thickness: drawerSideThickness,
-        material: 'PB'
-      });
-      // 바닥판
-      result.push({
-        name: `서랍${drawerNum} 바닥`,
-        width: Math.round(extBottomWidthMm),
-        depth: extSideDepthMm,
-        thickness: backPanelThickness, // 9mm MDF
-        material: 'MDF'
-      });
-      // 마이다 (도어면)
-      result.push({
-        name: `서랍${drawerNum}(마이다)`,
-        width: customWidth - 3,
-        height: 0, // 마이다 높이는 따내기 기준 가변 — 별도 계산 필요 시 추가
-        thickness: basicThickness,
-        material: 'PET'
-      });
+      extDrawerPanels.push(
+        { name: `서랍${drawerNum} 좌측판`, width: extSideDepthMm, height: extSideHMm, thickness: drawerSideThickness, material: 'PB' },
+        { name: `서랍${drawerNum} 우측판`, width: extSideDepthMm, height: extSideHMm, thickness: drawerSideThickness, material: 'PB' },
+        { name: `서랍${drawerNum} 앞판`, width: Math.round(extInnerWidth), height: extSideHMm, thickness: drawerSideThickness, material: 'PB' },
+        { name: `서랍${drawerNum} 뒷판`, width: Math.round(extInnerWidth), height: Math.round(extBackHMm), thickness: drawerSideThickness, material: 'PB' },
+        { name: `서랍${drawerNum} 바닥`, width: Math.round(extBottomWidthMm), depth: extSideDepthMm, thickness: backPanelThickness, material: 'MDF' },
+        { name: `서랍${drawerNum}(마이다)`, width: customWidth - 3, height: 0, thickness: basicThickness, material: 'PET' },
+      );
     }
+  }
+
+  // 하부장: 외부서랍 + 도어를 "서랍 및 도어"로 합산 출력
+  if (isLowerCabinetModule && (extDrawerPanels.length > 0 || (panels.door.length > 0 && hasDoor))) {
+    result.push({ name: '=== 서랍 및 도어 ===' });
+    result.push(...extDrawerPanels);
+    if (panels.door.length > 0 && hasDoor) {
+      result.push(...panels.door);
+    }
+  } else if (extDrawerPanels.length > 0) {
+    // 하부장이 아닌데 외부서랍이 있는 경우 (발생하지 않지만 안전장치)
+    result.push(...extDrawerPanels);
   }
 
   // === L자 PET 프레임 (하부장 따내기 마감) ===
