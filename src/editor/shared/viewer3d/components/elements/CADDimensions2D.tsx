@@ -890,8 +890,9 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
 
         {/* ===== 오른쪽 서랍 마이다 개별 높이 (하부장 전용, 좌측뷰) ===== */}
         {selectedModCategory === 'lower' && visibleFurniture.length > 0 && (() => {
-          const rightDrawerZ = spaceDepth/2 + rightDimOffset - mmToThreeUnits(150) - mmToThreeUnits(400);
-          const rightDrawerExtStartZ = spaceDepth/2 - mmToThreeUnits(110);
+          // 백색 섹션 높이 치수선보다 200mm 앞(도어면 쪽)에 배치
+          const rightDrawerZ = spaceDepth/2 + rightDimOffset - mmToThreeUnits(750) + mmToThreeUnits(200);
+          const rightDrawerExtStartZ = spaceDepth/2 + rightDimOffset - mmToThreeUnits(750) - mmToThreeUnits(360);
           const drawerColor = '#FF9800';
 
           const mod = visibleFurniture[0] as PlacedModule;
@@ -945,7 +946,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                     <NativeLine name="dimension_line" points={[[0, dBotY, rightDrawerZ], [0, dTopY, rightDrawerZ]]} color={drawerColor} lineWidth={2} renderOrder={100000} depthTest={false} />
                     <NativeLine name="dimension_line" points={[[-0.03, dBotY, rightDrawerZ], [0.03, dBotY, rightDrawerZ]]} color={drawerColor} lineWidth={2} renderOrder={100000} depthTest={false} />
                     <NativeLine name="dimension_line" points={[[-0.03, dTopY, rightDrawerZ], [0.03, dTopY, rightDrawerZ]]} color={drawerColor} lineWidth={2} renderOrder={100000} depthTest={false} />
-                    <Text position={[0, (dBotY + dTopY) / 2, rightDrawerZ + mmToThreeUnits(60)]} fontSize={smallFontSize} color={drawerColor} anchorX="center" anchorY="middle" renderOrder={1000} depthTest={false} rotation={[0, Math.PI / 2, Math.PI / 2]}>{Math.round(dh)}</Text>
+                    <Text position={[0, (dBotY + dTopY) / 2, rightDrawerZ + mmToThreeUnits(60)]} fontSize={smallFontSize} color={drawerColor} anchorX="center" anchorY="middle" renderOrder={1000} depthTest={false} rotation={[0, -Math.PI / 2, Math.PI / 2]}>{Math.round(dh)}</Text>
                   </group>
                 );
               });
@@ -965,7 +966,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                 <NativeLine name="dimension_line" points={[[0, dBotY, rightDrawerZ], [0, dTopY, rightDrawerZ]]} color={drawerColor} lineWidth={2} renderOrder={100000} depthTest={false} />
                 <NativeLine name="dimension_line" points={[[-0.03, dBotY, rightDrawerZ], [0.03, dBotY, rightDrawerZ]]} color={drawerColor} lineWidth={2} renderOrder={100000} depthTest={false} />
                 <NativeLine name="dimension_line" points={[[-0.03, dTopY, rightDrawerZ], [0.03, dTopY, rightDrawerZ]]} color={drawerColor} lineWidth={2} renderOrder={100000} depthTest={false} />
-                <Text position={[0, (dBotY + dTopY) / 2, rightDrawerZ + mmToThreeUnits(60)]} fontSize={smallFontSize} color={drawerColor} anchorX="center" anchorY="middle" renderOrder={1000} depthTest={false} rotation={[0, Math.PI / 2, Math.PI / 2]}>{Math.round(m.maidaHeightMm)}</Text>
+                <Text position={[0, (dBotY + dTopY) / 2, rightDrawerZ + mmToThreeUnits(60)]} fontSize={smallFontSize} color={drawerColor} anchorX="center" anchorY="middle" renderOrder={1000} depthTest={false} rotation={[0, -Math.PI / 2, Math.PI / 2]}>{Math.round(m.maidaHeightMm)}</Text>
               </group>
             );
           });
