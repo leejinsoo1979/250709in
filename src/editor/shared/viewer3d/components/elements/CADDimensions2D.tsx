@@ -512,8 +512,8 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           {/* 상단 티크 */}
           <NativeLine name="dimension_line"
             points={[
-              [-0.03, displaySpaceHeight, -spaceDepth/2 - leftDimOffset + mmToThreeUnits(150)],
-              [0.03, displaySpaceHeight, -spaceDepth/2 - leftDimOffset + mmToThreeUnits(150)]
+              [-0.015, displaySpaceHeight, -spaceDepth/2 - leftDimOffset + mmToThreeUnits(150)],
+              [0.015, displaySpaceHeight, -spaceDepth/2 - leftDimOffset + mmToThreeUnits(150)]
             ]}
             color={dimensionColor}
             lineWidth={2}
@@ -524,8 +524,8 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           {/* 하단 티크 */}
           <NativeLine name="dimension_line"
             points={[
-              [-0.03, 0, -spaceDepth/2 - leftDimOffset + mmToThreeUnits(150)],
-              [0.03, 0, -spaceDepth/2 - leftDimOffset + mmToThreeUnits(150)]
+              [-0.015, 0, -spaceDepth/2 - leftDimOffset + mmToThreeUnits(150)],
+              [0.015, 0, -spaceDepth/2 - leftDimOffset + mmToThreeUnits(150)]
             ]}
             color={dimensionColor}
             lineWidth={2}
@@ -601,13 +601,13 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                     {/* 시작 티크 */}
                     {shouldRenderStartGuide && (
                       <NativeLine name="dimension_line"
-                        points={[[-0.03, sec.startY, leftInnerZ], [0.03, sec.startY, leftInnerZ]]}
+                        points={[[-0.015, sec.startY, leftInnerZ], [0.015, sec.startY, leftInnerZ]]}
                         color={dimensionColor} lineWidth={2} renderOrder={100000} depthTest={false}
                       />
                     )}
                     {/* 끝 티크 */}
                     <NativeLine name="dimension_line"
-                      points={[[-0.03, sec.endY, leftInnerZ], [0.03, sec.endY, leftInnerZ]]}
+                      points={[[-0.015, sec.endY, leftInnerZ], [0.015, sec.endY, leftInnerZ]]}
                       color={dimensionColor} lineWidth={2} renderOrder={100000} depthTest={false}
                     />
                     {/* 치수 텍스트 */}
@@ -624,26 +624,27 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                 );
               })}
 
-              {/* 도어 상단갭: 마지막 마이다 상단 ~ 가구 상판 */}
+              {/* 도어올림: 마이다가 캐비넷 상판 위로 올라간 양 (도어 상단갭) */}
               {(() => {
+                if (!mod.moduleId.includes('lower-door-lift-')) return null;
                 const lowerMaidas = computeLowerCabinetMaidaHeights(
                   mod.moduleId, moduleHeightMm, mod.doorTopGap ?? 0, mod.doorBottomGap ?? 0
                 );
                 if (!lowerMaidas || lowerMaidas.length === 0) return null;
                 const lastMaida = lowerMaidas[lowerMaidas.length - 1];
-                const topGapMm = Math.round(moduleHeightMm - lastMaida.maidaTopMm);
-                if (topGapMm <= 0) return null;
-                const gapTopY = cabinetTopY;
-                const gapBotY = cabinetBottomY + mmToThreeUnits(lastMaida.maidaTopMm);
+                const overlapMm = Math.round(lastMaida.maidaTopMm - moduleHeightMm);
+                if (overlapMm <= 0) return null;
+                const gapBotY = cabinetTopY;
+                const gapTopY = cabinetBottomY + mmToThreeUnits(lastMaida.maidaTopMm);
                 return (
                   <group>
                     <ExtLine points={[[0, gapTopY, leftInnerExtStartZ], [0, gapTopY, leftInnerZ]]} color={dimensionColor} />
                     <ExtLine points={[[0, gapBotY, leftInnerExtStartZ], [0, gapBotY, leftInnerZ]]} color={dimensionColor} />
                     <NativeLine name="dimension_line" points={[[0, gapBotY, leftInnerZ], [0, gapTopY, leftInnerZ]]} color={dimensionColor} lineWidth={2} renderOrder={100000} depthTest={false} />
-                    <NativeLine name="dimension_line" points={[[-0.03, gapBotY, leftInnerZ], [0.03, gapBotY, leftInnerZ]]} color={dimensionColor} lineWidth={2} renderOrder={100000} depthTest={false} />
-                    <NativeLine name="dimension_line" points={[[-0.03, gapTopY, leftInnerZ], [0.03, gapTopY, leftInnerZ]]} color={dimensionColor} lineWidth={2} renderOrder={100000} depthTest={false} />
+                    <NativeLine name="dimension_line" points={[[-0.015, gapBotY, leftInnerZ], [0.015, gapBotY, leftInnerZ]]} color={dimensionColor} lineWidth={2} renderOrder={100000} depthTest={false} />
+                    <NativeLine name="dimension_line" points={[[-0.015, gapTopY, leftInnerZ], [0.015, gapTopY, leftInnerZ]]} color={dimensionColor} lineWidth={2} renderOrder={100000} depthTest={false} />
                     <Text position={[0, (gapBotY + gapTopY) / 2, leftInnerZ - mmToThreeUnits(60)]} fontSize={largeFontSize} color={textColor} anchorX="center" anchorY="middle" renderOrder={1000} depthTest={false} rotation={[0, -Math.PI / 2, Math.PI / 2]}>
-                      {topGapMm}
+                      {overlapMm}
                     </Text>
                   </group>
                 );
@@ -663,12 +664,12 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                   />
                   {/* 바닥마감재 상단 티크 */}
                   <NativeLine name="dimension_line"
-                    points={[[-0.03, floorFinishY, leftInnerZ], [0.03, floorFinishY, leftInnerZ]]}
+                    points={[[-0.015, floorFinishY, leftInnerZ], [0.015, floorFinishY, leftInnerZ]]}
                     color={dimensionColor} lineWidth={2} renderOrder={100000} depthTest={false}
                   />
                   {/* 받침대 상단 티크 */}
                   <NativeLine name="dimension_line"
-                    points={[[-0.03, furnitureBaseY, leftInnerZ], [0.03, furnitureBaseY, leftInnerZ]]}
+                    points={[[-0.015, furnitureBaseY, leftInnerZ], [0.015, furnitureBaseY, leftInnerZ]]}
                     color={dimensionColor} lineWidth={2} renderOrder={100000} depthTest={false}
                   />
                   <Text
@@ -710,8 +711,8 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
             {/* 티크 마크 - 하단 */}
             <NativeLine name="dimension_line"
               points={[
-                [-0.03, displaySpaceHeight - topFrameHeight, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750)],
-                [0.03, displaySpaceHeight - topFrameHeight, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750)]
+                [-0.015, displaySpaceHeight - topFrameHeight, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750)],
+                [0.015, displaySpaceHeight - topFrameHeight, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750)]
               ]}
               color={dimensionColor}
               lineWidth={2}
@@ -721,8 +722,8 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
             {/* 티크 마크 - 상단 */}
             <NativeLine name="dimension_line"
               points={[
-                [-0.03, displaySpaceHeight, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750)],
-                [0.03, displaySpaceHeight, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750)]
+                [-0.015, displaySpaceHeight, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750)],
+                [0.015, displaySpaceHeight, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750)]
               ]}
               color={dimensionColor}
               lineWidth={2}
@@ -798,9 +799,9 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                 <ExtLine points={[[0, sectionEndY, dimExtZ], [0, sectionEndY, dimZ]]} color={dimensionColor} />
                 <NativeLine name="dimension_line" points={[[0, sectionStartY, dimZ], [0, sectionEndY, dimZ]]} color={dimensionColor} lineWidth={2} renderOrder={100000} depthTest={false} />
                 {shouldRenderStartGuide && (
-                  <NativeLine name="dimension_line" points={[[-0.03, sectionStartY, dimZ], [0.03, sectionStartY, dimZ]]} color={dimensionColor} lineWidth={2} renderOrder={100000} depthTest={false} />
+                  <NativeLine name="dimension_line" points={[[-0.015, sectionStartY, dimZ], [0.015, sectionStartY, dimZ]]} color={dimensionColor} lineWidth={2} renderOrder={100000} depthTest={false} />
                 )}
-                <NativeLine name="dimension_line" points={[[-0.03, sectionEndY, dimZ], [0.03, sectionEndY, dimZ]]} color={dimensionColor} lineWidth={2} renderOrder={100000} depthTest={false} />
+                <NativeLine name="dimension_line" points={[[-0.015, sectionEndY, dimZ], [0.015, sectionEndY, dimZ]]} color={dimensionColor} lineWidth={2} renderOrder={100000} depthTest={false} />
                 <Text position={[0, (sectionStartY + sectionEndY) / 2, dimZ + mmToThreeUnits(60)]} fontSize={largeFontSize} color={textColor} anchorX="center" anchorY="middle" renderOrder={1000} depthTest={false} rotation={[0, -Math.PI / 2, Math.PI / 2]}>
                   {Math.round(sectionHeightMm)}
                 </Text>
@@ -829,16 +830,16 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
             {/* 티크 마크 - 바닥 */}
             <NativeLine name="dimension_line"
               points={[
-                [-0.03, 0, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750) - mmToThreeUnits(360)],
-                [0.03, 0, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750) - mmToThreeUnits(360)]
+                [-0.015, 0, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750) - mmToThreeUnits(360)],
+                [0.015, 0, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750) - mmToThreeUnits(360)]
               ]}
               color={dimensionColor} lineWidth={2} renderOrder={100000} depthTest={false}
             />
             {/* 티크 마크 - 마감재 상단 */}
             <NativeLine name="dimension_line"
               points={[
-                [-0.03, floorFinishY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750) - mmToThreeUnits(360)],
-                [0.03, floorFinishY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750) - mmToThreeUnits(360)]
+                [-0.015, floorFinishY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750) - mmToThreeUnits(360)],
+                [0.015, floorFinishY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750) - mmToThreeUnits(360)]
               ]}
               color={dimensionColor} lineWidth={2} renderOrder={100000} depthTest={false}
             />
@@ -872,16 +873,16 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
             {/* 티크 마크 - 시작 */}
             <NativeLine name="dimension_line"
               points={[
-                [-0.03, floorFinishY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750)],
-                [0.03, floorFinishY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750)]
+                [-0.015, floorFinishY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750)],
+                [0.015, floorFinishY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750)]
               ]}
               color={dimensionColor} lineWidth={2} renderOrder={100000} depthTest={false}
             />
             {/* 티크 마크 - 받침대 상단 */}
             <NativeLine name="dimension_line"
               points={[
-                [-0.03, furnitureBaseY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750)],
-                [0.03, furnitureBaseY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750)]
+                [-0.015, furnitureBaseY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750)],
+                [0.015, furnitureBaseY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750)]
               ]}
               color={dimensionColor} lineWidth={2} renderOrder={100000} depthTest={false}
             />
@@ -1228,8 +1229,8 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                     return (
                       <group key={`door-maida-${i}`}>
                         <NativeLine name="door_height_dim" points={[[0, dBotY, doorDimZ], [0, dTopY, doorDimZ]]} color={doorColor} lineWidth={2} renderOrder={100000} depthTest={false} />
-                        <NativeLine name="door_height_dim" points={[[-0.03, dBotY, doorDimZ], [0.03, dBotY, doorDimZ]]} color={doorColor} lineWidth={2} renderOrder={100000} depthTest={false} />
-                        <NativeLine name="door_height_dim" points={[[-0.03, dTopY, doorDimZ], [0.03, dTopY, doorDimZ]]} color={doorColor} lineWidth={2} renderOrder={100000} depthTest={false} />
+                        <NativeLine name="door_height_dim" points={[[-0.015, dBotY, doorDimZ], [0.015, dBotY, doorDimZ]]} color={doorColor} lineWidth={2} renderOrder={100000} depthTest={false} />
+                        <NativeLine name="door_height_dim" points={[[-0.015, dTopY, doorDimZ], [0.015, dTopY, doorDimZ]]} color={doorColor} lineWidth={2} renderOrder={100000} depthTest={false} />
                         <Text position={[0, (dBotY + dTopY) / 2, doorDimZ + mmToThreeUnits(60)]} fontSize={largeFontSize} color={doorColor} anchorX="center" anchorY="middle" renderOrder={1000} depthTest={false} rotation={[0, -Math.PI / 2, Math.PI / 2]}>
                           {Math.round(m.maidaHeightMm)}
                         </Text>
@@ -1245,8 +1246,8 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                     return (
                       <group key={`door-gap-${gi}`}>
                         <NativeLine name="door_height_dim" points={[[0, gBotY, doorDimZ], [0, gTopY, doorDimZ]]} color={doorColor} lineWidth={2} renderOrder={100000} depthTest={false} />
-                        <NativeLine name="door_height_dim" points={[[-0.03, gBotY, doorDimZ], [0.03, gBotY, doorDimZ]]} color={doorColor} lineWidth={2} renderOrder={100000} depthTest={false} />
-                        <NativeLine name="door_height_dim" points={[[-0.03, gTopY, doorDimZ], [0.03, gTopY, doorDimZ]]} color={doorColor} lineWidth={2} renderOrder={100000} depthTest={false} />
+                        <NativeLine name="door_height_dim" points={[[-0.015, gBotY, doorDimZ], [0.015, gBotY, doorDimZ]]} color={doorColor} lineWidth={2} renderOrder={100000} depthTest={false} />
+                        <NativeLine name="door_height_dim" points={[[-0.015, gTopY, doorDimZ], [0.015, gTopY, doorDimZ]]} color={doorColor} lineWidth={2} renderOrder={100000} depthTest={false} />
                         <Text position={[0, (gBotY + gTopY) / 2, doorDimZ + mmToThreeUnits(60)]} fontSize={largeFontSize} color={doorColor} anchorX="center" anchorY="middle" renderOrder={1000} depthTest={false} rotation={[0, -Math.PI / 2, Math.PI / 2]}>
                           {gap.heightMm}
                         </Text>
@@ -1345,8 +1346,8 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           return (
             <group>
               <NativeLine name="door_height_dim" points={[[0, doorBottomY, doorDimZ], [0, doorTopY, doorDimZ]]} color={doorColor} lineWidth={2} renderOrder={100000} depthTest={false} />
-              <NativeLine name="door_height_dim" points={[[-0.03, doorTopY, doorDimZ], [0.03, doorTopY, doorDimZ]]} color={doorColor} lineWidth={2} renderOrder={100000} depthTest={false} />
-              <NativeLine name="door_height_dim" points={[[-0.03, doorBottomY, doorDimZ], [0.03, doorBottomY, doorDimZ]]} color={doorColor} lineWidth={2} renderOrder={100000} depthTest={false} />
+              <NativeLine name="door_height_dim" points={[[-0.015, doorTopY, doorDimZ], [0.015, doorTopY, doorDimZ]]} color={doorColor} lineWidth={2} renderOrder={100000} depthTest={false} />
+              <NativeLine name="door_height_dim" points={[[-0.015, doorBottomY, doorDimZ], [0.015, doorBottomY, doorDimZ]]} color={doorColor} lineWidth={2} renderOrder={100000} depthTest={false} />
               <Text position={[0, doorMidY, doorDimZ + mmToThreeUnits(60)]} fontSize={largeFontSize} color={doorColor} anchorX="center" anchorY="middle" renderOrder={1000} depthTest={false} rotation={[0, -Math.PI / 2, Math.PI / 2]}>
                 {Math.round(doorHeightMm)}
               </Text>
@@ -1359,7 +1360,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                 return (
                   <group>
                     <NativeLine name="door_height_dim" points={[[0, gapBotY, doorDimZ], [0, gapTopY, doorDimZ]]} color={doorColor} lineWidth={2} renderOrder={100000} depthTest={false} />
-                    <NativeLine name="door_height_dim" points={[[-0.03, gapTopY, doorDimZ], [0.03, gapTopY, doorDimZ]]} color={doorColor} lineWidth={2} renderOrder={100000} depthTest={false} />
+                    <NativeLine name="door_height_dim" points={[[-0.015, gapTopY, doorDimZ], [0.015, gapTopY, doorDimZ]]} color={doorColor} lineWidth={2} renderOrder={100000} depthTest={false} />
                     <Text position={[0, (gapBotY + gapTopY) / 2, doorDimZ + mmToThreeUnits(60)]} fontSize={largeFontSize} color={doorColor} anchorX="center" anchorY="middle" renderOrder={1000} depthTest={false} rotation={[0, -Math.PI / 2, Math.PI / 2]}>
                       {doorTopGapMm}
                     </Text>
@@ -1402,8 +1403,8 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           {/* 상단 티크 */}
           <NativeLine name="dimension_line"
             points={[
-              [-0.03, displaySpaceHeight, -spaceDepth/2 - leftDimOffset + mmToThreeUnits(150)],
-              [0.03, displaySpaceHeight, -spaceDepth/2 - leftDimOffset + mmToThreeUnits(150)]
+              [-0.015, displaySpaceHeight, -spaceDepth/2 - leftDimOffset + mmToThreeUnits(150)],
+              [0.015, displaySpaceHeight, -spaceDepth/2 - leftDimOffset + mmToThreeUnits(150)]
             ]}
             color={dimensionColor}
             lineWidth={2}
@@ -1414,8 +1415,8 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           {/* 하단 티크 */}
           <NativeLine name="dimension_line"
             points={[
-              [-0.03, 0, -spaceDepth/2 - leftDimOffset + mmToThreeUnits(150)],
-              [0.03, 0, -spaceDepth/2 - leftDimOffset + mmToThreeUnits(150)]
+              [-0.015, 0, -spaceDepth/2 - leftDimOffset + mmToThreeUnits(150)],
+              [0.015, 0, -spaceDepth/2 - leftDimOffset + mmToThreeUnits(150)]
             ]}
             color={dimensionColor}
             lineWidth={2}
@@ -1490,13 +1491,13 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                     {/* 시작 티크 */}
                     {shouldRenderStartGuide && (
                       <NativeLine name="dimension_line"
-                        points={[[-0.03, sec.startY, leftInnerZ], [0.03, sec.startY, leftInnerZ]]}
+                        points={[[-0.015, sec.startY, leftInnerZ], [0.015, sec.startY, leftInnerZ]]}
                         color={dimensionColor} lineWidth={2} renderOrder={100000} depthTest={false}
                       />
                     )}
                     {/* 끝 티크 */}
                     <NativeLine name="dimension_line"
-                      points={[[-0.03, sec.endY, leftInnerZ], [0.03, sec.endY, leftInnerZ]]}
+                      points={[[-0.015, sec.endY, leftInnerZ], [0.015, sec.endY, leftInnerZ]]}
                       color={dimensionColor} lineWidth={2} renderOrder={100000} depthTest={false}
                     />
                     {/* 치수 텍스트 */}
@@ -1527,12 +1528,12 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                   />
                   {/* 바닥마감재 상단 티크 */}
                   <NativeLine name="dimension_line"
-                    points={[[-0.03, floorFinishY, leftInnerZ], [0.03, floorFinishY, leftInnerZ]]}
+                    points={[[-0.015, floorFinishY, leftInnerZ], [0.015, floorFinishY, leftInnerZ]]}
                     color={dimensionColor} lineWidth={2} renderOrder={100000} depthTest={false}
                   />
                   {/* 받침대 상단 티크 */}
                   <NativeLine name="dimension_line"
-                    points={[[-0.03, furnitureBaseY, leftInnerZ], [0.03, furnitureBaseY, leftInnerZ]]}
+                    points={[[-0.015, furnitureBaseY, leftInnerZ], [0.015, furnitureBaseY, leftInnerZ]]}
                     color={dimensionColor} lineWidth={2} renderOrder={100000} depthTest={false}
                   />
                   <Text
@@ -1574,8 +1575,8 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
             {/* 티크 마크 - 하단 */}
             <NativeLine name="dimension_line"
               points={[
-                [-0.03, displaySpaceHeight - topFrameHeight, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750)],
-                [0.03, displaySpaceHeight - topFrameHeight, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750)]
+                [-0.015, displaySpaceHeight - topFrameHeight, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750)],
+                [0.015, displaySpaceHeight - topFrameHeight, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750)]
               ]}
               color={dimensionColor}
               lineWidth={2}
@@ -1585,8 +1586,8 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
             {/* 티크 마크 - 상단 */}
             <NativeLine name="dimension_line"
               points={[
-                [-0.03, displaySpaceHeight, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750)],
-                [0.03, displaySpaceHeight, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750)]
+                [-0.015, displaySpaceHeight, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750)],
+                [0.015, displaySpaceHeight, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750)]
               ]}
               color={dimensionColor}
               lineWidth={2}
@@ -1683,10 +1684,10 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                 {shouldRenderStartGuide && (
                 <NativeLine name="dimension_line"
                   points={[
-                    [0 - 0.03,
+                    [0 - 0.015,
                       sectionStartY,
                       spaceDepth/2 + rightDimOffset - mmToThreeUnits(750)],
-                    [0 + 0.03,
+                    [0 + 0.015,
                       sectionStartY,
                       spaceDepth/2 + rightDimOffset - mmToThreeUnits(750)]
                   ]}
@@ -1698,10 +1699,10 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                 )}
                 <NativeLine name="dimension_line"
                   points={[
-                    [0 - 0.03,
+                    [0 - 0.015,
                       sectionEndY,
                       spaceDepth/2 + rightDimOffset - mmToThreeUnits(750)],
-                    [0 + 0.03,
+                    [0 + 0.015,
                       sectionEndY,
                       spaceDepth/2 + rightDimOffset - mmToThreeUnits(750)]
                   ]}
@@ -1750,16 +1751,16 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
             {/* 티크 마크 - 바닥 */}
             <NativeLine name="dimension_line"
               points={[
-                [-0.03, 0, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750) - mmToThreeUnits(360)],
-                [0.03, 0, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750) - mmToThreeUnits(360)]
+                [-0.015, 0, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750) - mmToThreeUnits(360)],
+                [0.015, 0, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750) - mmToThreeUnits(360)]
               ]}
               color={dimensionColor} lineWidth={2} renderOrder={100000} depthTest={false}
             />
             {/* 티크 마크 - 마감재 상단 */}
             <NativeLine name="dimension_line"
               points={[
-                [-0.03, floorFinishY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750) - mmToThreeUnits(360)],
-                [0.03, floorFinishY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750) - mmToThreeUnits(360)]
+                [-0.015, floorFinishY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750) - mmToThreeUnits(360)],
+                [0.015, floorFinishY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750) - mmToThreeUnits(360)]
               ]}
               color={dimensionColor} lineWidth={2} renderOrder={100000} depthTest={false}
             />
@@ -1793,16 +1794,16 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
             {/* 티크 마크 - 시작 */}
             <NativeLine name="dimension_line"
               points={[
-                [-0.03, floorFinishY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750)],
-                [0.03, floorFinishY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750)]
+                [-0.015, floorFinishY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750)],
+                [0.015, floorFinishY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750)]
               ]}
               color={dimensionColor} lineWidth={2} renderOrder={100000} depthTest={false}
             />
             {/* 티크 마크 - 받침대 상단 */}
             <NativeLine name="dimension_line"
               points={[
-                [-0.03, furnitureBaseY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750)],
-                [0.03, furnitureBaseY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750)]
+                [-0.015, furnitureBaseY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750)],
+                [0.015, furnitureBaseY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750)]
               ]}
               color={dimensionColor} lineWidth={2} renderOrder={100000} depthTest={false}
             />
