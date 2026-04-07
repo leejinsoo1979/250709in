@@ -158,6 +158,79 @@ const computeSectionHeightsInfo = (
   };
 };
 
+/**
+ * 하부장 외부서랍 마이다 높이 계산 (LowerCabinet.tsx + ExternalDrawerRenderer 로직 복제)
+ * lower-drawer-*, lower-door-lift-*, lower-top-down-* 모듈 전용
+ */
+const computeLowerCabinetMaidaHeights = (
+  moduleId: string,
+  moduleHeightMm: number,
+  doorTopGap: number,
+  doorBottomGap: number,
+): { maidaHeightMm: number; maidaBottomMm: number; maidaTopMm: number }[] | null => {
+  // 하부장 서랍 모듈만 처리
+  const isLowerDrawer = moduleId.includes('lower-drawer-');
+  const isLowerDoorLift = moduleId.includes('lower-door-lift-');
+  const isLowerTopDown = moduleId.includes('lower-top-down-');
+  if (!isLowerDrawer && !isLowerDoorLift && !isLowerTopDown) return null;
+
+  const is3Tier = moduleId.includes('lower-drawer-3tier');
+  const isDoorLift3Tier = moduleId.includes('lower-door-lift-3tier');
+  const isDoorLift2Tier = moduleId.includes('lower-door-lift-2tier');
+  const isTopDown3Tier = moduleId.includes('lower-top-down-3tier');
+  const isTopDown2Tier = moduleId.includes('lower-top-down-2tier');
+
+  // LowerCabinet.tsx line 349-350과 동일
+  const notchFromBottoms = is3Tier ? [295, 510] : isDoorLift3Tier ? [315, 545] : isDoorLift2Tier ? [355] : isTopDown3Tier ? [225, 445, 665] : isTopDown2Tier ? [300, 665] : [330];
+  const notchHeights = is3Tier ? [65, 65] : isDoorLift3Tier ? [65, 65] : isDoorLift2Tier ? [65] : isTopDown3Tier ? [65, 65, 65] : isTopDown2Tier ? [65, 65] : [65];
+  const hideTopNotch = isDoorLift2Tier || isDoorLift3Tier || isTopDown2Tier || isTopDown3Tier;
+  const fixedMaidaHeights = isDoorLift2Tier ? [400, 400] : isDoorLift3Tier ? [360, 210, 210] : undefined;
+
+  // 모듈별 기본 doorTopGap/doorBottomGap (LowerCabinet.tsx line 379-381)
+  const defaultDoorTopGap = isTopDown2Tier || isTopDown3Tier ? -80 : isDoorLift2Tier || isDoorLift3Tier ? 30 : -20;
+  const defaultDoorBottomGap = 5;
+
+  // ExternalDrawerRenderer line 517-555: zone 계산
+  const upperNotchH = 60;
+  const upperNotchFromBottom = moduleHeightMm - upperNotchH;
+
+  const sortedNotches = notchFromBottoms
+    .map((fb, idx) => ({ fromBottom: fb, height: notchHeights[idx] || 65 }))
+    .sort((a, b) => a.fromBottom - b.fromBottom);
+
+  const allNotches = hideTopNotch
+    ? [...sortedNotches]
+    : [...sortedNotches, { fromBottom: upperNotchFromBottom, height: upperNotchH }];
+
+  interface Zone { bottomMm: number; topMm: number; notchAboveBottom: number; notchBelowTop: number | null; }
+  const zones: Zone[] = [];
+  let cursor = 0;
+  for (let ni = 0; ni < allNotches.length; ni++) {
+    const notch = allNotches[ni];
+    if (notch.fromBottom > cursor) {
+      const notchAboveBottom = notch.fromBottom;
+      const notchBelowTop = ni > 0 ? (allNotches[ni - 1].fromBottom + allNotches[ni - 1].height) : null;
+      zones.push({ bottomMm: cursor, topMm: notch.fromBottom, notchAboveBottom, notchBelowTop });
+    }
+    cursor = notch.fromBottom + notch.height;
+  }
+
+  // ExternalDrawerRenderer line 149-154: 마이다 높이 계산
+  return zones.map((zone, i) => {
+    const isTopDrawer = i === zones.length - 1;
+    const isBottomDrawer = i === 0;
+    const maidaTopBase = zone.notchAboveBottom + 40;
+    const maidaBottomBase = zone.notchBelowTop != null ? (zone.notchBelowTop - 5) : -5;
+    const gapTopExt = isTopDrawer ? (doorTopGap - defaultDoorTopGap) : 0;
+    const gapBottomExt = isBottomDrawer ? (doorBottomGap - defaultDoorBottomGap) : 0;
+    const defaultMaidaH = maidaTopBase - maidaBottomBase + gapTopExt + gapBottomExt;
+    const maidaH = (fixedMaidaHeights && fixedMaidaHeights[i]) ? fixedMaidaHeights[i] : defaultMaidaH;
+    const maidaBottom = maidaBottomBase - gapBottomExt;
+    const maidaTop = maidaBottom + maidaH;
+    return { maidaHeightMm: maidaH, maidaBottomMm: maidaBottom, maidaTopMm: maidaTop };
+  });
+};
+
 interface CADDimensions2DProps {
   viewDirection?: '3D' | 'front' | 'left' | 'right' | 'top';
   showDimensions?: boolean;
@@ -590,7 +663,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           );
         })()}
 
-        {/* ===== 왼쪽 서랍 마이다 개별 높이 + 상단갭 (하부장 전용, 좌측뷰) ===== */}
+        {/* ===== 왼쪽 서랍 마이다 개별 높이 (하부장 전용, 좌측뷰) ===== */}
         {selectedModCategory === 'lower' && visibleFurniture.length > 0 && (() => {
           const leftDrawerZ = -spaceDepth/2 - leftDimOffset + mmToThreeUnits(150) + mmToThreeUnits(400);
           const leftDrawerExtStartZ = -spaceDepth/2 + mmToThreeUnits(110);
@@ -608,116 +681,68 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           if (!moduleData) return null;
 
           const moduleHeightMm = computeFurnitureHeightMm(mod, moduleData, spaceInfo, internalSpace);
-          const { sections: sectionConfigs, heightsMm: sectionHeightsMm } = computeSectionHeightsInfo(mod, moduleData, moduleHeightMm, 'left');
-          if (sectionConfigs.length === 0) return null;
 
-          const drawerSections: { sectionIndex: number; config: SectionWithCalc; heightMm: number; bottomOffsetMm: number }[] = [];
-          let accMm = 0;
-          sectionConfigs.forEach((sec, idx) => {
-            if (sec.type === 'drawer' && sec.drawerHeights && sec.drawerHeights.length > 0) {
-              drawerSections.push({
-                sectionIndex: idx, config: sec,
-                heightMm: sectionHeightsMm[idx] || 0, bottomOffsetMm: accMm
-              });
-            }
-            accMm += sectionHeightsMm[idx] || 0;
-          });
-
-          if (drawerSections.length === 0) return null;
-
-          const cabinetBottomY = furnitureBaseY;
-          return drawerSections.map((ds) => {
-            const drawerHeights = ds.config.drawerHeights!;
-            const gapHeightMm = ds.config.gapHeight ?? 23.6;
-            const sectionBottomY = cabinetBottomY + mmToThreeUnits(ds.bottomOffsetMm);
-            const sectionTopY = sectionBottomY + mmToThreeUnits(ds.heightMm);
-
-            let cursorMm = gapHeightMm;
-            const items: React.ReactNode[] = [];
-
-            drawerHeights.forEach((dh, di) => {
-              const dBotMm = cursorMm;
-              const dTopMm = cursorMm + dh;
-              cursorMm = dTopMm + gapHeightMm;
-              const dBotY = sectionBottomY + mmToThreeUnits(dBotMm);
-              const dTopY = sectionBottomY + mmToThreeUnits(dTopMm);
-
-              items.push(
-                <group key={`lv-drawer-${ds.sectionIndex}-${di}`}>
-                  <NativeLine name="dimension_line"
-                    points={[[0, dBotY, leftDrawerExtStartZ], [0, dBotY, leftDrawerZ]]}
-                    color={drawerColor} lineWidth={1} renderOrder={100000} depthTest={false}
-                  />
-                  <NativeLine name="dimension_line"
-                    points={[[0, dTopY, leftDrawerExtStartZ], [0, dTopY, leftDrawerZ]]}
-                    color={drawerColor} lineWidth={1} renderOrder={100000} depthTest={false}
-                  />
-                  <NativeLine name="dimension_line"
-                    points={[[0, dBotY, leftDrawerZ], [0, dTopY, leftDrawerZ]]}
-                    color={drawerColor} lineWidth={2} renderOrder={100000} depthTest={false}
-                  />
-                  <NativeLine name="dimension_line"
-                    points={[[-0.03, dBotY, leftDrawerZ], [0.03, dBotY, leftDrawerZ]]}
-                    color={drawerColor} lineWidth={2} renderOrder={100000} depthTest={false}
-                  />
-                  <NativeLine name="dimension_line"
-                    points={[[-0.03, dTopY, leftDrawerZ], [0.03, dTopY, leftDrawerZ]]}
-                    color={drawerColor} lineWidth={2} renderOrder={100000} depthTest={false}
-                  />
-                  <Text
-                    position={[0, (dBotY + dTopY) / 2, leftDrawerZ - mmToThreeUnits(60)]}
-                    fontSize={smallFontSize} color={drawerColor}
-                    anchorX="center" anchorY="middle"
-                    renderOrder={1000} depthTest={false}
-                    rotation={[0, -Math.PI / 2, Math.PI / 2]}
-                  >
-                    {Math.round(dh)}
-                  </Text>
-                </group>
-              );
+          // 하부장 외부서랍: notch 기반 마이다 높이 계산
+          const lowerMaidas = computeLowerCabinetMaidaHeights(
+            mod.moduleId, moduleHeightMm,
+            mod.doorTopGap ?? 0, mod.doorBottomGap ?? 0
+          );
+          if (!lowerMaidas || lowerMaidas.length === 0) {
+            // 키큰장 속서랍 fallback: sec.type === 'drawer' 경로
+            const { sections: sectionConfigs, heightsMm: sectionHeightsMm } = computeSectionHeightsInfo(mod, moduleData, moduleHeightMm, 'left');
+            if (sectionConfigs.length === 0) return null;
+            const drawerSections: { sectionIndex: number; config: SectionWithCalc; heightMm: number; bottomOffsetMm: number }[] = [];
+            let accMm = 0;
+            sectionConfigs.forEach((sec, idx) => {
+              if (sec.type === 'drawer' && sec.drawerHeights && sec.drawerHeights.length > 0) {
+                drawerSections.push({ sectionIndex: idx, config: sec, heightMm: sectionHeightsMm[idx] || 0, bottomOffsetMm: accMm });
+              }
+              accMm += sectionHeightsMm[idx] || 0;
             });
+            if (drawerSections.length === 0) return null;
+            const cabinetBottomY = furnitureBaseY;
+            return drawerSections.map((ds) => {
+              const drawerHeights = ds.config.drawerHeights!;
+              const gapHeightMm = ds.config.gapHeight ?? 23.6;
+              const sectionBottomY = cabinetBottomY + mmToThreeUnits(ds.bottomOffsetMm);
+              let cursorMm = gapHeightMm;
+              const items: React.ReactNode[] = [];
+              drawerHeights.forEach((dh, di) => {
+                const dBotMm = cursorMm;
+                const dTopMm = cursorMm + dh;
+                cursorMm = dTopMm + gapHeightMm;
+                const dBotY = sectionBottomY + mmToThreeUnits(dBotMm);
+                const dTopY = sectionBottomY + mmToThreeUnits(dTopMm);
+                items.push(
+                  <group key={`lv-drawer-${ds.sectionIndex}-${di}`}>
+                    <NativeLine name="dimension_line" points={[[0, dBotY, leftDrawerExtStartZ], [0, dBotY, leftDrawerZ]]} color={drawerColor} lineWidth={1} renderOrder={100000} depthTest={false} />
+                    <NativeLine name="dimension_line" points={[[0, dTopY, leftDrawerExtStartZ], [0, dTopY, leftDrawerZ]]} color={drawerColor} lineWidth={1} renderOrder={100000} depthTest={false} />
+                    <NativeLine name="dimension_line" points={[[0, dBotY, leftDrawerZ], [0, dTopY, leftDrawerZ]]} color={drawerColor} lineWidth={2} renderOrder={100000} depthTest={false} />
+                    <NativeLine name="dimension_line" points={[[-0.03, dBotY, leftDrawerZ], [0.03, dBotY, leftDrawerZ]]} color={drawerColor} lineWidth={2} renderOrder={100000} depthTest={false} />
+                    <NativeLine name="dimension_line" points={[[-0.03, dTopY, leftDrawerZ], [0.03, dTopY, leftDrawerZ]]} color={drawerColor} lineWidth={2} renderOrder={100000} depthTest={false} />
+                    <Text position={[0, (dBotY + dTopY) / 2, leftDrawerZ - mmToThreeUnits(60)]} fontSize={smallFontSize} color={drawerColor} anchorX="center" anchorY="middle" renderOrder={1000} depthTest={false} rotation={[0, -Math.PI / 2, Math.PI / 2]}>{Math.round(dh)}</Text>
+                  </group>
+                );
+              });
+              return items;
+            });
+          }
 
-            // 상단갭
-            const lastTopMm = cursorMm - gapHeightMm;
-            const topGapMm = ds.heightMm - lastTopMm;
-            if (topGapMm > 1) {
-              const gBotY = sectionBottomY + mmToThreeUnits(lastTopMm);
-              const gTopY = sectionTopY;
-              items.push(
-                <group key={`lv-drawer-topgap-${ds.sectionIndex}`}>
-                  <NativeLine name="dimension_line"
-                    points={[[0, gBotY, leftDrawerExtStartZ], [0, gBotY, leftDrawerZ]]}
-                    color={drawerColor} lineWidth={1} renderOrder={100000} depthTest={false}
-                  />
-                  <NativeLine name="dimension_line"
-                    points={[[0, gTopY, leftDrawerExtStartZ], [0, gTopY, leftDrawerZ]]}
-                    color={drawerColor} lineWidth={1} renderOrder={100000} depthTest={false}
-                  />
-                  <NativeLine name="dimension_line"
-                    points={[[0, gBotY, leftDrawerZ], [0, gTopY, leftDrawerZ]]}
-                    color={drawerColor} lineWidth={2} renderOrder={100000} depthTest={false}
-                  />
-                  <NativeLine name="dimension_line"
-                    points={[[-0.03, gBotY, leftDrawerZ], [0.03, gBotY, leftDrawerZ]]}
-                    color={drawerColor} lineWidth={2} renderOrder={100000} depthTest={false}
-                  />
-                  <NativeLine name="dimension_line"
-                    points={[[-0.03, gTopY, leftDrawerZ], [0.03, gTopY, leftDrawerZ]]}
-                    color={drawerColor} lineWidth={2} renderOrder={100000} depthTest={false}
-                  />
-                  <Text
-                    position={[0, (gBotY + gTopY) / 2, leftDrawerZ - mmToThreeUnits(60)]}
-                    fontSize={smallFontSize} color={drawerColor}
-                    anchorX="center" anchorY="middle"
-                    renderOrder={1000} depthTest={false}
-                    rotation={[0, -Math.PI / 2, Math.PI / 2]}
-                  >
-                    {Math.round(topGapMm)}
-                  </Text>
-                </group>
-              );
-            }
-            return items;
+          // 하부장 외부서랍: notch 기반 마이다 치수 렌더링
+          const cabinetBottomY = furnitureBaseY;
+          return lowerMaidas.map((m, i) => {
+            const dBotY = cabinetBottomY + mmToThreeUnits(m.maidaBottomMm);
+            const dTopY = cabinetBottomY + mmToThreeUnits(m.maidaTopMm);
+            return (
+              <group key={`lv-lower-maida-${i}`}>
+                <NativeLine name="dimension_line" points={[[0, dBotY, leftDrawerExtStartZ], [0, dBotY, leftDrawerZ]]} color={drawerColor} lineWidth={1} renderOrder={100000} depthTest={false} />
+                <NativeLine name="dimension_line" points={[[0, dTopY, leftDrawerExtStartZ], [0, dTopY, leftDrawerZ]]} color={drawerColor} lineWidth={1} renderOrder={100000} depthTest={false} />
+                <NativeLine name="dimension_line" points={[[0, dBotY, leftDrawerZ], [0, dTopY, leftDrawerZ]]} color={drawerColor} lineWidth={2} renderOrder={100000} depthTest={false} />
+                <NativeLine name="dimension_line" points={[[-0.03, dBotY, leftDrawerZ], [0.03, dBotY, leftDrawerZ]]} color={drawerColor} lineWidth={2} renderOrder={100000} depthTest={false} />
+                <NativeLine name="dimension_line" points={[[-0.03, dTopY, leftDrawerZ], [0.03, dTopY, leftDrawerZ]]} color={drawerColor} lineWidth={2} renderOrder={100000} depthTest={false} />
+                <Text position={[0, (dBotY + dTopY) / 2, leftDrawerZ - mmToThreeUnits(60)]} fontSize={smallFontSize} color={drawerColor} anchorX="center" anchorY="middle" renderOrder={1000} depthTest={false} rotation={[0, -Math.PI / 2, Math.PI / 2]}>{Math.round(m.maidaHeightMm)}</Text>
+              </group>
+            );
           });
         })()}
 
@@ -946,7 +971,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           });
         })}
 
-        {/* ===== 오른쪽 서랍 마이다 개별 높이 + 상단갭 (하부장 전용, 좌측뷰) ===== */}
+        {/* ===== 오른쪽 서랍 마이다 개별 높이 (하부장 전용, 좌측뷰) ===== */}
         {selectedModCategory === 'lower' && visibleFurniture.length > 0 && (() => {
           const rightDrawerZ = spaceDepth/2 + rightDimOffset - mmToThreeUnits(150) - mmToThreeUnits(400);
           const rightDrawerExtStartZ = spaceDepth/2 - mmToThreeUnits(110);
@@ -964,116 +989,68 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           if (!moduleData) return null;
 
           const moduleHeightMm = computeFurnitureHeightMm(mod, moduleData, spaceInfo, internalSpace);
-          const { sections: sectionConfigs, heightsMm: sectionHeightsMm } = computeSectionHeightsInfo(mod, moduleData, moduleHeightMm, 'left');
-          if (sectionConfigs.length === 0) return null;
 
-          const drawerSections: { sectionIndex: number; config: SectionWithCalc; heightMm: number; bottomOffsetMm: number }[] = [];
-          let accMm = 0;
-          sectionConfigs.forEach((sec, idx) => {
-            if (sec.type === 'drawer' && sec.drawerHeights && sec.drawerHeights.length > 0) {
-              drawerSections.push({
-                sectionIndex: idx, config: sec,
-                heightMm: sectionHeightsMm[idx] || 0, bottomOffsetMm: accMm
-              });
-            }
-            accMm += sectionHeightsMm[idx] || 0;
-          });
-
-          if (drawerSections.length === 0) return null;
-
-          const cabinetBottomY = furnitureBaseY;
-          return drawerSections.map((ds) => {
-            const drawerHeights = ds.config.drawerHeights!;
-            const gapHeightMm = ds.config.gapHeight ?? 23.6;
-            const sectionBottomY = cabinetBottomY + mmToThreeUnits(ds.bottomOffsetMm);
-            const sectionTopY = sectionBottomY + mmToThreeUnits(ds.heightMm);
-
-            let cursorMm = gapHeightMm;
-            const items: React.ReactNode[] = [];
-
-            drawerHeights.forEach((dh, di) => {
-              const dBotMm = cursorMm;
-              const dTopMm = cursorMm + dh;
-              cursorMm = dTopMm + gapHeightMm;
-              const dBotY = sectionBottomY + mmToThreeUnits(dBotMm);
-              const dTopY = sectionBottomY + mmToThreeUnits(dTopMm);
-
-              items.push(
-                <group key={`lv-r-drawer-${ds.sectionIndex}-${di}`}>
-                  <NativeLine name="dimension_line"
-                    points={[[0, dBotY, rightDrawerExtStartZ], [0, dBotY, rightDrawerZ]]}
-                    color={drawerColor} lineWidth={1} renderOrder={100000} depthTest={false}
-                  />
-                  <NativeLine name="dimension_line"
-                    points={[[0, dTopY, rightDrawerExtStartZ], [0, dTopY, rightDrawerZ]]}
-                    color={drawerColor} lineWidth={1} renderOrder={100000} depthTest={false}
-                  />
-                  <NativeLine name="dimension_line"
-                    points={[[0, dBotY, rightDrawerZ], [0, dTopY, rightDrawerZ]]}
-                    color={drawerColor} lineWidth={2} renderOrder={100000} depthTest={false}
-                  />
-                  <NativeLine name="dimension_line"
-                    points={[[-0.03, dBotY, rightDrawerZ], [0.03, dBotY, rightDrawerZ]]}
-                    color={drawerColor} lineWidth={2} renderOrder={100000} depthTest={false}
-                  />
-                  <NativeLine name="dimension_line"
-                    points={[[-0.03, dTopY, rightDrawerZ], [0.03, dTopY, rightDrawerZ]]}
-                    color={drawerColor} lineWidth={2} renderOrder={100000} depthTest={false}
-                  />
-                  <Text
-                    position={[0, (dBotY + dTopY) / 2, rightDrawerZ + mmToThreeUnits(60)]}
-                    fontSize={smallFontSize} color={drawerColor}
-                    anchorX="center" anchorY="middle"
-                    renderOrder={1000} depthTest={false}
-                    rotation={[0, Math.PI / 2, Math.PI / 2]}
-                  >
-                    {Math.round(dh)}
-                  </Text>
-                </group>
-              );
+          // 하부장 외부서랍: notch 기반 마이다 높이 계산
+          const lowerMaidas = computeLowerCabinetMaidaHeights(
+            mod.moduleId, moduleHeightMm,
+            mod.doorTopGap ?? 0, mod.doorBottomGap ?? 0
+          );
+          if (!lowerMaidas || lowerMaidas.length === 0) {
+            // 키큰장 속서랍 fallback: sec.type === 'drawer' 경로
+            const { sections: sectionConfigs, heightsMm: sectionHeightsMm } = computeSectionHeightsInfo(mod, moduleData, moduleHeightMm, 'left');
+            if (sectionConfigs.length === 0) return null;
+            const drawerSections: { sectionIndex: number; config: SectionWithCalc; heightMm: number; bottomOffsetMm: number }[] = [];
+            let accMm = 0;
+            sectionConfigs.forEach((sec, idx) => {
+              if (sec.type === 'drawer' && sec.drawerHeights && sec.drawerHeights.length > 0) {
+                drawerSections.push({ sectionIndex: idx, config: sec, heightMm: sectionHeightsMm[idx] || 0, bottomOffsetMm: accMm });
+              }
+              accMm += sectionHeightsMm[idx] || 0;
             });
+            if (drawerSections.length === 0) return null;
+            const cabinetBottomY = furnitureBaseY;
+            return drawerSections.map((ds) => {
+              const drawerHeights = ds.config.drawerHeights!;
+              const gapHeightMm = ds.config.gapHeight ?? 23.6;
+              const sectionBottomY = cabinetBottomY + mmToThreeUnits(ds.bottomOffsetMm);
+              let cursorMm = gapHeightMm;
+              const items: React.ReactNode[] = [];
+              drawerHeights.forEach((dh, di) => {
+                const dBotMm = cursorMm;
+                const dTopMm = cursorMm + dh;
+                cursorMm = dTopMm + gapHeightMm;
+                const dBotY = sectionBottomY + mmToThreeUnits(dBotMm);
+                const dTopY = sectionBottomY + mmToThreeUnits(dTopMm);
+                items.push(
+                  <group key={`lv-r-drawer-${ds.sectionIndex}-${di}`}>
+                    <NativeLine name="dimension_line" points={[[0, dBotY, rightDrawerExtStartZ], [0, dBotY, rightDrawerZ]]} color={drawerColor} lineWidth={1} renderOrder={100000} depthTest={false} />
+                    <NativeLine name="dimension_line" points={[[0, dTopY, rightDrawerExtStartZ], [0, dTopY, rightDrawerZ]]} color={drawerColor} lineWidth={1} renderOrder={100000} depthTest={false} />
+                    <NativeLine name="dimension_line" points={[[0, dBotY, rightDrawerZ], [0, dTopY, rightDrawerZ]]} color={drawerColor} lineWidth={2} renderOrder={100000} depthTest={false} />
+                    <NativeLine name="dimension_line" points={[[-0.03, dBotY, rightDrawerZ], [0.03, dBotY, rightDrawerZ]]} color={drawerColor} lineWidth={2} renderOrder={100000} depthTest={false} />
+                    <NativeLine name="dimension_line" points={[[-0.03, dTopY, rightDrawerZ], [0.03, dTopY, rightDrawerZ]]} color={drawerColor} lineWidth={2} renderOrder={100000} depthTest={false} />
+                    <Text position={[0, (dBotY + dTopY) / 2, rightDrawerZ + mmToThreeUnits(60)]} fontSize={smallFontSize} color={drawerColor} anchorX="center" anchorY="middle" renderOrder={1000} depthTest={false} rotation={[0, Math.PI / 2, Math.PI / 2]}>{Math.round(dh)}</Text>
+                  </group>
+                );
+              });
+              return items;
+            });
+          }
 
-            // 상단갭
-            const lastTopMm = cursorMm - gapHeightMm;
-            const topGapMm = ds.heightMm - lastTopMm;
-            if (topGapMm > 1) {
-              const gBotY = sectionBottomY + mmToThreeUnits(lastTopMm);
-              const gTopY = sectionTopY;
-              items.push(
-                <group key={`lv-r-drawer-topgap-${ds.sectionIndex}`}>
-                  <NativeLine name="dimension_line"
-                    points={[[0, gBotY, rightDrawerExtStartZ], [0, gBotY, rightDrawerZ]]}
-                    color={drawerColor} lineWidth={1} renderOrder={100000} depthTest={false}
-                  />
-                  <NativeLine name="dimension_line"
-                    points={[[0, gTopY, rightDrawerExtStartZ], [0, gTopY, rightDrawerZ]]}
-                    color={drawerColor} lineWidth={1} renderOrder={100000} depthTest={false}
-                  />
-                  <NativeLine name="dimension_line"
-                    points={[[0, gBotY, rightDrawerZ], [0, gTopY, rightDrawerZ]]}
-                    color={drawerColor} lineWidth={2} renderOrder={100000} depthTest={false}
-                  />
-                  <NativeLine name="dimension_line"
-                    points={[[-0.03, gBotY, rightDrawerZ], [0.03, gBotY, rightDrawerZ]]}
-                    color={drawerColor} lineWidth={2} renderOrder={100000} depthTest={false}
-                  />
-                  <NativeLine name="dimension_line"
-                    points={[[-0.03, gTopY, rightDrawerZ], [0.03, gTopY, rightDrawerZ]]}
-                    color={drawerColor} lineWidth={2} renderOrder={100000} depthTest={false}
-                  />
-                  <Text
-                    position={[0, (gBotY + gTopY) / 2, rightDrawerZ + mmToThreeUnits(60)]}
-                    fontSize={smallFontSize} color={drawerColor}
-                    anchorX="center" anchorY="middle"
-                    renderOrder={1000} depthTest={false}
-                    rotation={[0, Math.PI / 2, Math.PI / 2]}
-                  >
-                    {Math.round(topGapMm)}
-                  </Text>
-                </group>
-              );
-            }
-            return items;
+          // 하부장 외부서랍: notch 기반 마이다 치수 렌더링
+          const cabinetBottomY = furnitureBaseY;
+          return lowerMaidas.map((m, i) => {
+            const dBotY = cabinetBottomY + mmToThreeUnits(m.maidaBottomMm);
+            const dTopY = cabinetBottomY + mmToThreeUnits(m.maidaTopMm);
+            return (
+              <group key={`lv-r-lower-maida-${i}`}>
+                <NativeLine name="dimension_line" points={[[0, dBotY, rightDrawerExtStartZ], [0, dBotY, rightDrawerZ]]} color={drawerColor} lineWidth={1} renderOrder={100000} depthTest={false} />
+                <NativeLine name="dimension_line" points={[[0, dTopY, rightDrawerExtStartZ], [0, dTopY, rightDrawerZ]]} color={drawerColor} lineWidth={1} renderOrder={100000} depthTest={false} />
+                <NativeLine name="dimension_line" points={[[0, dBotY, rightDrawerZ], [0, dTopY, rightDrawerZ]]} color={drawerColor} lineWidth={2} renderOrder={100000} depthTest={false} />
+                <NativeLine name="dimension_line" points={[[-0.03, dBotY, rightDrawerZ], [0.03, dBotY, rightDrawerZ]]} color={drawerColor} lineWidth={2} renderOrder={100000} depthTest={false} />
+                <NativeLine name="dimension_line" points={[[-0.03, dTopY, rightDrawerZ], [0.03, dTopY, rightDrawerZ]]} color={drawerColor} lineWidth={2} renderOrder={100000} depthTest={false} />
+                <Text position={[0, (dBotY + dTopY) / 2, rightDrawerZ + mmToThreeUnits(60)]} fontSize={smallFontSize} color={drawerColor} anchorX="center" anchorY="middle" renderOrder={1000} depthTest={false} rotation={[0, Math.PI / 2, Math.PI / 2]}>{Math.round(m.maidaHeightMm)}</Text>
+              </group>
+            );
           });
         })()}
 
@@ -1854,7 +1831,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           );
         })()}
 
-        {/* ===== 왼쪽 서랍 마이다 개별 높이 + 상단갭 (하부장 전용, 우측뷰) ===== */}
+        {/* ===== 왼쪽 서랍 마이다 개별 높이 (하부장 전용, 우측뷰) ===== */}
         {selectedModCategory === 'lower' && visibleFurniture.length > 0 && (() => {
           const leftDrawerZ = -spaceDepth/2 - leftDimOffset + mmToThreeUnits(150) + mmToThreeUnits(400);
           const leftDrawerExtStartZ = -spaceDepth/2 + mmToThreeUnits(110);
@@ -1872,115 +1849,68 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           if (!moduleData) return null;
 
           const moduleHeightMm = computeFurnitureHeightMm(mod, moduleData, spaceInfo, internalSpace);
-          const { sections: sectionConfigs, heightsMm: sectionHeightsMm } = computeSectionHeightsInfo(mod, moduleData, moduleHeightMm, 'right');
-          if (sectionConfigs.length === 0) return null;
 
-          const drawerSections: { sectionIndex: number; config: SectionWithCalc; heightMm: number; bottomOffsetMm: number }[] = [];
-          let accMm = 0;
-          sectionConfigs.forEach((sec, idx) => {
-            if (sec.type === 'drawer' && sec.drawerHeights && sec.drawerHeights.length > 0) {
-              drawerSections.push({
-                sectionIndex: idx, config: sec,
-                heightMm: sectionHeightsMm[idx] || 0, bottomOffsetMm: accMm
-              });
-            }
-            accMm += sectionHeightsMm[idx] || 0;
-          });
-
-          if (drawerSections.length === 0) return null;
-
-          const cabinetBottomY = furnitureBaseY;
-          return drawerSections.map((ds) => {
-            const drawerHeights = ds.config.drawerHeights!;
-            const gapHeightMm = ds.config.gapHeight ?? 23.6;
-            const sectionBottomY = cabinetBottomY + mmToThreeUnits(ds.bottomOffsetMm);
-            const sectionTopY = sectionBottomY + mmToThreeUnits(ds.heightMm);
-
-            let cursorMm = gapHeightMm;
-            const items: React.ReactNode[] = [];
-
-            drawerHeights.forEach((dh, di) => {
-              const dBotMm = cursorMm;
-              const dTopMm = cursorMm + dh;
-              cursorMm = dTopMm + gapHeightMm;
-              const dBotY = sectionBottomY + mmToThreeUnits(dBotMm);
-              const dTopY = sectionBottomY + mmToThreeUnits(dTopMm);
-
-              items.push(
-                <group key={`rv-drawer-${ds.sectionIndex}-${di}`}>
-                  <NativeLine name="dimension_line"
-                    points={[[0, dBotY, leftDrawerExtStartZ], [0, dBotY, leftDrawerZ]]}
-                    color={drawerColor} lineWidth={1} renderOrder={100000} depthTest={false}
-                  />
-                  <NativeLine name="dimension_line"
-                    points={[[0, dTopY, leftDrawerExtStartZ], [0, dTopY, leftDrawerZ]]}
-                    color={drawerColor} lineWidth={1} renderOrder={100000} depthTest={false}
-                  />
-                  <NativeLine name="dimension_line"
-                    points={[[0, dBotY, leftDrawerZ], [0, dTopY, leftDrawerZ]]}
-                    color={drawerColor} lineWidth={2} renderOrder={100000} depthTest={false}
-                  />
-                  <NativeLine name="dimension_line"
-                    points={[[-0.03, dBotY, leftDrawerZ], [0.03, dBotY, leftDrawerZ]]}
-                    color={drawerColor} lineWidth={2} renderOrder={100000} depthTest={false}
-                  />
-                  <NativeLine name="dimension_line"
-                    points={[[-0.03, dTopY, leftDrawerZ], [0.03, dTopY, leftDrawerZ]]}
-                    color={drawerColor} lineWidth={2} renderOrder={100000} depthTest={false}
-                  />
-                  <Text
-                    position={[0, (dBotY + dTopY) / 2, leftDrawerZ - mmToThreeUnits(60)]}
-                    fontSize={smallFontSize} color={drawerColor}
-                    anchorX="center" anchorY="middle"
-                    renderOrder={1000} depthTest={false}
-                    rotation={[0, Math.PI / 2, Math.PI / 2]}
-                  >
-                    {Math.round(dh)}
-                  </Text>
-                </group>
-              );
+          // 하부장 외부서랍: notch 기반 마이다 높이 계산
+          const lowerMaidas = computeLowerCabinetMaidaHeights(
+            mod.moduleId, moduleHeightMm,
+            mod.doorTopGap ?? 0, mod.doorBottomGap ?? 0
+          );
+          if (!lowerMaidas || lowerMaidas.length === 0) {
+            // 키큰장 속서랍 fallback
+            const { sections: sectionConfigs, heightsMm: sectionHeightsMm } = computeSectionHeightsInfo(mod, moduleData, moduleHeightMm, 'right');
+            if (sectionConfigs.length === 0) return null;
+            const drawerSections: { sectionIndex: number; config: SectionWithCalc; heightMm: number; bottomOffsetMm: number }[] = [];
+            let accMm = 0;
+            sectionConfigs.forEach((sec, idx) => {
+              if (sec.type === 'drawer' && sec.drawerHeights && sec.drawerHeights.length > 0) {
+                drawerSections.push({ sectionIndex: idx, config: sec, heightMm: sectionHeightsMm[idx] || 0, bottomOffsetMm: accMm });
+              }
+              accMm += sectionHeightsMm[idx] || 0;
             });
+            if (drawerSections.length === 0) return null;
+            const cabinetBottomY = furnitureBaseY;
+            return drawerSections.map((ds) => {
+              const drawerHeights = ds.config.drawerHeights!;
+              const gapHeightMm = ds.config.gapHeight ?? 23.6;
+              const sectionBottomY = cabinetBottomY + mmToThreeUnits(ds.bottomOffsetMm);
+              let cursorMm = gapHeightMm;
+              const items: React.ReactNode[] = [];
+              drawerHeights.forEach((dh, di) => {
+                const dBotMm = cursorMm;
+                const dTopMm = cursorMm + dh;
+                cursorMm = dTopMm + gapHeightMm;
+                const dBotY = sectionBottomY + mmToThreeUnits(dBotMm);
+                const dTopY = sectionBottomY + mmToThreeUnits(dTopMm);
+                items.push(
+                  <group key={`rv-drawer-${ds.sectionIndex}-${di}`}>
+                    <NativeLine name="dimension_line" points={[[0, dBotY, leftDrawerExtStartZ], [0, dBotY, leftDrawerZ]]} color={drawerColor} lineWidth={1} renderOrder={100000} depthTest={false} />
+                    <NativeLine name="dimension_line" points={[[0, dTopY, leftDrawerExtStartZ], [0, dTopY, leftDrawerZ]]} color={drawerColor} lineWidth={1} renderOrder={100000} depthTest={false} />
+                    <NativeLine name="dimension_line" points={[[0, dBotY, leftDrawerZ], [0, dTopY, leftDrawerZ]]} color={drawerColor} lineWidth={2} renderOrder={100000} depthTest={false} />
+                    <NativeLine name="dimension_line" points={[[-0.03, dBotY, leftDrawerZ], [0.03, dBotY, leftDrawerZ]]} color={drawerColor} lineWidth={2} renderOrder={100000} depthTest={false} />
+                    <NativeLine name="dimension_line" points={[[-0.03, dTopY, leftDrawerZ], [0.03, dTopY, leftDrawerZ]]} color={drawerColor} lineWidth={2} renderOrder={100000} depthTest={false} />
+                    <Text position={[0, (dBotY + dTopY) / 2, leftDrawerZ - mmToThreeUnits(60)]} fontSize={smallFontSize} color={drawerColor} anchorX="center" anchorY="middle" renderOrder={1000} depthTest={false} rotation={[0, Math.PI / 2, Math.PI / 2]}>{Math.round(dh)}</Text>
+                  </group>
+                );
+              });
+              return items;
+            });
+          }
 
-            const lastTopMm = cursorMm - gapHeightMm;
-            const topGapMm = ds.heightMm - lastTopMm;
-            if (topGapMm > 1) {
-              const gBotY = sectionBottomY + mmToThreeUnits(lastTopMm);
-              const gTopY = sectionTopY;
-              items.push(
-                <group key={`rv-drawer-topgap-${ds.sectionIndex}`}>
-                  <NativeLine name="dimension_line"
-                    points={[[0, gBotY, leftDrawerExtStartZ], [0, gBotY, leftDrawerZ]]}
-                    color={drawerColor} lineWidth={1} renderOrder={100000} depthTest={false}
-                  />
-                  <NativeLine name="dimension_line"
-                    points={[[0, gTopY, leftDrawerExtStartZ], [0, gTopY, leftDrawerZ]]}
-                    color={drawerColor} lineWidth={1} renderOrder={100000} depthTest={false}
-                  />
-                  <NativeLine name="dimension_line"
-                    points={[[0, gBotY, leftDrawerZ], [0, gTopY, leftDrawerZ]]}
-                    color={drawerColor} lineWidth={2} renderOrder={100000} depthTest={false}
-                  />
-                  <NativeLine name="dimension_line"
-                    points={[[-0.03, gBotY, leftDrawerZ], [0.03, gBotY, leftDrawerZ]]}
-                    color={drawerColor} lineWidth={2} renderOrder={100000} depthTest={false}
-                  />
-                  <NativeLine name="dimension_line"
-                    points={[[-0.03, gTopY, leftDrawerZ], [0.03, gTopY, leftDrawerZ]]}
-                    color={drawerColor} lineWidth={2} renderOrder={100000} depthTest={false}
-                  />
-                  <Text
-                    position={[0, (gBotY + gTopY) / 2, leftDrawerZ - mmToThreeUnits(60)]}
-                    fontSize={smallFontSize} color={drawerColor}
-                    anchorX="center" anchorY="middle"
-                    renderOrder={1000} depthTest={false}
-                    rotation={[0, Math.PI / 2, Math.PI / 2]}
-                  >
-                    {Math.round(topGapMm)}
-                  </Text>
-                </group>
-              );
-            }
-            return items;
+          // 하부장 외부서랍: notch 기반 마이다 치수 렌더링
+          const cabinetBottomY = furnitureBaseY;
+          return lowerMaidas.map((m, i) => {
+            const dBotY = cabinetBottomY + mmToThreeUnits(m.maidaBottomMm);
+            const dTopY = cabinetBottomY + mmToThreeUnits(m.maidaTopMm);
+            return (
+              <group key={`rv-lower-maida-${i}`}>
+                <NativeLine name="dimension_line" points={[[0, dBotY, leftDrawerExtStartZ], [0, dBotY, leftDrawerZ]]} color={drawerColor} lineWidth={1} renderOrder={100000} depthTest={false} />
+                <NativeLine name="dimension_line" points={[[0, dTopY, leftDrawerExtStartZ], [0, dTopY, leftDrawerZ]]} color={drawerColor} lineWidth={1} renderOrder={100000} depthTest={false} />
+                <NativeLine name="dimension_line" points={[[0, dBotY, leftDrawerZ], [0, dTopY, leftDrawerZ]]} color={drawerColor} lineWidth={2} renderOrder={100000} depthTest={false} />
+                <NativeLine name="dimension_line" points={[[-0.03, dBotY, leftDrawerZ], [0.03, dBotY, leftDrawerZ]]} color={drawerColor} lineWidth={2} renderOrder={100000} depthTest={false} />
+                <NativeLine name="dimension_line" points={[[-0.03, dTopY, leftDrawerZ], [0.03, dTopY, leftDrawerZ]]} color={drawerColor} lineWidth={2} renderOrder={100000} depthTest={false} />
+                <Text position={[0, (dBotY + dTopY) / 2, leftDrawerZ - mmToThreeUnits(60)]} fontSize={smallFontSize} color={drawerColor} anchorX="center" anchorY="middle" renderOrder={1000} depthTest={false} rotation={[0, Math.PI / 2, Math.PI / 2]}>{Math.round(m.maidaHeightMm)}</Text>
+              </group>
+            );
           });
         })()}
 
@@ -2209,7 +2139,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           });
         })}
 
-        {/* ===== 오른쪽 서랍 마이다 개별 높이 + 상단갭 (하부장 전용, 우측뷰) ===== */}
+        {/* ===== 오른쪽 서랍 마이다 개별 높이 (하부장 전용, 우측뷰) ===== */}
         {selectedModCategory === 'lower' && visibleFurniture.length > 0 && (() => {
           const rightDrawerZ = spaceDepth/2 + rightDimOffset - mmToThreeUnits(150) - mmToThreeUnits(400);
           const rightDrawerExtStartZ = spaceDepth/2 - mmToThreeUnits(110);
@@ -2227,116 +2157,68 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           if (!moduleData) return null;
 
           const moduleHeightMm = computeFurnitureHeightMm(mod, moduleData, spaceInfo, internalSpace);
-          const { sections: sectionConfigs, heightsMm: sectionHeightsMm } = computeSectionHeightsInfo(mod, moduleData, moduleHeightMm, 'right');
-          if (sectionConfigs.length === 0) return null;
 
-          const drawerSections: { sectionIndex: number; config: SectionWithCalc; heightMm: number; bottomOffsetMm: number }[] = [];
-          let accMm = 0;
-          sectionConfigs.forEach((sec, idx) => {
-            if (sec.type === 'drawer' && sec.drawerHeights && sec.drawerHeights.length > 0) {
-              drawerSections.push({
-                sectionIndex: idx, config: sec,
-                heightMm: sectionHeightsMm[idx] || 0, bottomOffsetMm: accMm
-              });
-            }
-            accMm += sectionHeightsMm[idx] || 0;
-          });
-
-          if (drawerSections.length === 0) return null;
-
-          const cabinetBottomY = furnitureBaseY;
-          return drawerSections.map((ds) => {
-            const drawerHeights = ds.config.drawerHeights!;
-            const gapHeightMm = ds.config.gapHeight ?? 23.6;
-            const sectionBottomY = cabinetBottomY + mmToThreeUnits(ds.bottomOffsetMm);
-            const sectionTopY = sectionBottomY + mmToThreeUnits(ds.heightMm);
-
-            let cursorMm = gapHeightMm;
-            const items: React.ReactNode[] = [];
-
-            drawerHeights.forEach((dh, di) => {
-              const dBotMm = cursorMm;
-              const dTopMm = cursorMm + dh;
-              cursorMm = dTopMm + gapHeightMm;
-              const dBotY = sectionBottomY + mmToThreeUnits(dBotMm);
-              const dTopY = sectionBottomY + mmToThreeUnits(dTopMm);
-
-              items.push(
-                <group key={`rv-r-drawer-${ds.sectionIndex}-${di}`}>
-                  <NativeLine name="dimension_line"
-                    points={[[0, dBotY, rightDrawerExtStartZ], [0, dBotY, rightDrawerZ]]}
-                    color={drawerColor} lineWidth={1} renderOrder={100000} depthTest={false}
-                  />
-                  <NativeLine name="dimension_line"
-                    points={[[0, dTopY, rightDrawerExtStartZ], [0, dTopY, rightDrawerZ]]}
-                    color={drawerColor} lineWidth={1} renderOrder={100000} depthTest={false}
-                  />
-                  <NativeLine name="dimension_line"
-                    points={[[0, dBotY, rightDrawerZ], [0, dTopY, rightDrawerZ]]}
-                    color={drawerColor} lineWidth={2} renderOrder={100000} depthTest={false}
-                  />
-                  <NativeLine name="dimension_line"
-                    points={[[-0.03, dBotY, rightDrawerZ], [0.03, dBotY, rightDrawerZ]]}
-                    color={drawerColor} lineWidth={2} renderOrder={100000} depthTest={false}
-                  />
-                  <NativeLine name="dimension_line"
-                    points={[[-0.03, dTopY, rightDrawerZ], [0.03, dTopY, rightDrawerZ]]}
-                    color={drawerColor} lineWidth={2} renderOrder={100000} depthTest={false}
-                  />
-                  <Text
-                    position={[0, (dBotY + dTopY) / 2, rightDrawerZ + mmToThreeUnits(60)]}
-                    fontSize={smallFontSize} color={drawerColor}
-                    anchorX="center" anchorY="middle"
-                    renderOrder={1000} depthTest={false}
-                    rotation={[0, Math.PI / 2, Math.PI / 2]}
-                  >
-                    {Math.round(dh)}
-                  </Text>
-                </group>
-              );
+          // 하부장 외부서랍: notch 기반 마이다 높이 계산
+          const lowerMaidas = computeLowerCabinetMaidaHeights(
+            mod.moduleId, moduleHeightMm,
+            mod.doorTopGap ?? 0, mod.doorBottomGap ?? 0
+          );
+          if (!lowerMaidas || lowerMaidas.length === 0) {
+            // 키큰장 속서랍 fallback
+            const { sections: sectionConfigs, heightsMm: sectionHeightsMm } = computeSectionHeightsInfo(mod, moduleData, moduleHeightMm, 'right');
+            if (sectionConfigs.length === 0) return null;
+            const drawerSections: { sectionIndex: number; config: SectionWithCalc; heightMm: number; bottomOffsetMm: number }[] = [];
+            let accMm = 0;
+            sectionConfigs.forEach((sec, idx) => {
+              if (sec.type === 'drawer' && sec.drawerHeights && sec.drawerHeights.length > 0) {
+                drawerSections.push({ sectionIndex: idx, config: sec, heightMm: sectionHeightsMm[idx] || 0, bottomOffsetMm: accMm });
+              }
+              accMm += sectionHeightsMm[idx] || 0;
             });
+            if (drawerSections.length === 0) return null;
+            const cabinetBottomY = furnitureBaseY;
+            return drawerSections.map((ds) => {
+              const drawerHeights = ds.config.drawerHeights!;
+              const gapHeightMm = ds.config.gapHeight ?? 23.6;
+              const sectionBottomY = cabinetBottomY + mmToThreeUnits(ds.bottomOffsetMm);
+              let cursorMm = gapHeightMm;
+              const items: React.ReactNode[] = [];
+              drawerHeights.forEach((dh, di) => {
+                const dBotMm = cursorMm;
+                const dTopMm = cursorMm + dh;
+                cursorMm = dTopMm + gapHeightMm;
+                const dBotY = sectionBottomY + mmToThreeUnits(dBotMm);
+                const dTopY = sectionBottomY + mmToThreeUnits(dTopMm);
+                items.push(
+                  <group key={`rv-r-drawer-${ds.sectionIndex}-${di}`}>
+                    <NativeLine name="dimension_line" points={[[0, dBotY, rightDrawerExtStartZ], [0, dBotY, rightDrawerZ]]} color={drawerColor} lineWidth={1} renderOrder={100000} depthTest={false} />
+                    <NativeLine name="dimension_line" points={[[0, dTopY, rightDrawerExtStartZ], [0, dTopY, rightDrawerZ]]} color={drawerColor} lineWidth={1} renderOrder={100000} depthTest={false} />
+                    <NativeLine name="dimension_line" points={[[0, dBotY, rightDrawerZ], [0, dTopY, rightDrawerZ]]} color={drawerColor} lineWidth={2} renderOrder={100000} depthTest={false} />
+                    <NativeLine name="dimension_line" points={[[-0.03, dBotY, rightDrawerZ], [0.03, dBotY, rightDrawerZ]]} color={drawerColor} lineWidth={2} renderOrder={100000} depthTest={false} />
+                    <NativeLine name="dimension_line" points={[[-0.03, dTopY, rightDrawerZ], [0.03, dTopY, rightDrawerZ]]} color={drawerColor} lineWidth={2} renderOrder={100000} depthTest={false} />
+                    <Text position={[0, (dBotY + dTopY) / 2, rightDrawerZ + mmToThreeUnits(60)]} fontSize={smallFontSize} color={drawerColor} anchorX="center" anchorY="middle" renderOrder={1000} depthTest={false} rotation={[0, Math.PI / 2, Math.PI / 2]}>{Math.round(dh)}</Text>
+                  </group>
+                );
+              });
+              return items;
+            });
+          }
 
-            // 상단갭
-            const lastTopMm = cursorMm - gapHeightMm;
-            const topGapMm = ds.heightMm - lastTopMm;
-            if (topGapMm > 1) {
-              const gBotY = sectionBottomY + mmToThreeUnits(lastTopMm);
-              const gTopY = sectionTopY;
-              items.push(
-                <group key={`rv-r-drawer-topgap-${ds.sectionIndex}`}>
-                  <NativeLine name="dimension_line"
-                    points={[[0, gBotY, rightDrawerExtStartZ], [0, gBotY, rightDrawerZ]]}
-                    color={drawerColor} lineWidth={1} renderOrder={100000} depthTest={false}
-                  />
-                  <NativeLine name="dimension_line"
-                    points={[[0, gTopY, rightDrawerExtStartZ], [0, gTopY, rightDrawerZ]]}
-                    color={drawerColor} lineWidth={1} renderOrder={100000} depthTest={false}
-                  />
-                  <NativeLine name="dimension_line"
-                    points={[[0, gBotY, rightDrawerZ], [0, gTopY, rightDrawerZ]]}
-                    color={drawerColor} lineWidth={2} renderOrder={100000} depthTest={false}
-                  />
-                  <NativeLine name="dimension_line"
-                    points={[[-0.03, gBotY, rightDrawerZ], [0.03, gBotY, rightDrawerZ]]}
-                    color={drawerColor} lineWidth={2} renderOrder={100000} depthTest={false}
-                  />
-                  <NativeLine name="dimension_line"
-                    points={[[-0.03, gTopY, rightDrawerZ], [0.03, gTopY, rightDrawerZ]]}
-                    color={drawerColor} lineWidth={2} renderOrder={100000} depthTest={false}
-                  />
-                  <Text
-                    position={[0, (gBotY + gTopY) / 2, rightDrawerZ + mmToThreeUnits(60)]}
-                    fontSize={smallFontSize} color={drawerColor}
-                    anchorX="center" anchorY="middle"
-                    renderOrder={1000} depthTest={false}
-                    rotation={[0, Math.PI / 2, Math.PI / 2]}
-                  >
-                    {Math.round(topGapMm)}
-                  </Text>
-                </group>
-              );
-            }
-            return items;
+          // 하부장 외부서랍: notch 기반 마이다 치수 렌더링
+          const cabinetBottomY = furnitureBaseY;
+          return lowerMaidas.map((m, i) => {
+            const dBotY = cabinetBottomY + mmToThreeUnits(m.maidaBottomMm);
+            const dTopY = cabinetBottomY + mmToThreeUnits(m.maidaTopMm);
+            return (
+              <group key={`rv-r-lower-maida-${i}`}>
+                <NativeLine name="dimension_line" points={[[0, dBotY, rightDrawerExtStartZ], [0, dBotY, rightDrawerZ]]} color={drawerColor} lineWidth={1} renderOrder={100000} depthTest={false} />
+                <NativeLine name="dimension_line" points={[[0, dTopY, rightDrawerExtStartZ], [0, dTopY, rightDrawerZ]]} color={drawerColor} lineWidth={1} renderOrder={100000} depthTest={false} />
+                <NativeLine name="dimension_line" points={[[0, dBotY, rightDrawerZ], [0, dTopY, rightDrawerZ]]} color={drawerColor} lineWidth={2} renderOrder={100000} depthTest={false} />
+                <NativeLine name="dimension_line" points={[[-0.03, dBotY, rightDrawerZ], [0.03, dBotY, rightDrawerZ]]} color={drawerColor} lineWidth={2} renderOrder={100000} depthTest={false} />
+                <NativeLine name="dimension_line" points={[[-0.03, dTopY, rightDrawerZ], [0.03, dTopY, rightDrawerZ]]} color={drawerColor} lineWidth={2} renderOrder={100000} depthTest={false} />
+                <Text position={[0, (dBotY + dTopY) / 2, rightDrawerZ + mmToThreeUnits(60)]} fontSize={smallFontSize} color={drawerColor} anchorX="center" anchorY="middle" renderOrder={1000} depthTest={false} rotation={[0, Math.PI / 2, Math.PI / 2]}>{Math.round(m.maidaHeightMm)}</Text>
+              </group>
+            );
           });
         })()}
 
