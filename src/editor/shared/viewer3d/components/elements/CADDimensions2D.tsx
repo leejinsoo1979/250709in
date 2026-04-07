@@ -465,44 +465,86 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           </Text>
         </group>}
 
-        {/* ===== 왼쪽 2단: 하부장 높이 + 하부프레임 (하부장 선택 시만) ===== */}
-        {selectedModCategory === 'lower' && (() => {
+        {/* ===== 왼쪽 2단: 섹션별 높이 + 하부프레임 (하부장 선택 시만) ===== */}
+        {selectedModCategory === 'lower' && visibleFurniture.length > 0 && (() => {
           const leftInnerZ = -spaceDepth/2 - leftDimOffset + mmToThreeUnits(150) + mmToThreeUnits(200);
           const leftInnerExtStartZ = -spaceDepth/2 + mmToThreeUnits(110);
-          const cabinetTopY = furnitureBaseY + internalHeight;
-          const cabinetHeightMm = adjustedInternalHeightMm;
+
+          const mod = visibleFurniture[0] as PlacedModule;
+          let moduleData = getModuleById(
+            mod.moduleId,
+            { width: internalSpace.width, height: internalSpace.height, depth: internalSpace.depth },
+            spaceInfo
+          );
+          if (!moduleData) {
+            moduleData = buildModuleDataFromPlacedModule(mod, internalSpace, spaceInfo);
+          }
+          if (!moduleData) return null;
+
+          const moduleHeightMm = computeFurnitureHeightMm(mod, moduleData, spaceInfo, internalSpace);
+          const { sections: sectionConfigs, heightsMm: sectionHeightsMm } = computeSectionHeightsInfo(mod, moduleData, moduleHeightMm, 'left');
+          if (sectionConfigs.length === 0) return null;
+
+          const lowerSectionHeightMm = sectionHeightsMm[0] || 0;
+          const upperSectionHeightMm = sectionHeightsMm.slice(1).reduce((sum, h) => sum + h, 0);
+          const cabinetBottomY = furnitureBaseY;
+          const cabinetHeight = mmToThreeUnits(moduleHeightMm);
+          const cabinetTopY = cabinetBottomY + cabinetHeight;
+          const lowerSectionEndY = cabinetBottomY + mmToThreeUnits(lowerSectionHeightMm);
+
+          const displaySections = [
+            { startY: cabinetBottomY, endY: lowerSectionEndY, heightMm: lowerSectionHeightMm, isFirst: true },
+            { startY: lowerSectionEndY, endY: cabinetTopY, heightMm: upperSectionHeightMm, isFirst: false }
+          ].filter(s => s.heightMm > 0);
+
           return (
             <group>
-              {/* 하부장 높이: 받침대 상단 ~ 가구 상단 */}
-              <NativeLine name="dimension_line"
-                points={[[0, furnitureBaseY, leftInnerExtStartZ], [0, furnitureBaseY, leftInnerZ]]}
-                color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
-              />
-              <NativeLine name="dimension_line"
-                points={[[0, cabinetTopY, leftInnerExtStartZ], [0, cabinetTopY, leftInnerZ]]}
-                color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
-              />
-              <NativeLine name="dimension_line"
-                points={[[0, furnitureBaseY, leftInnerZ], [0, cabinetTopY, leftInnerZ]]}
-                color={dimensionColor} lineWidth={2} renderOrder={100000} depthTest={false}
-              />
-              <NativeLine name="dimension_line"
-                points={[[-0.03, furnitureBaseY, leftInnerZ], [0.03, furnitureBaseY, leftInnerZ]]}
-                color={dimensionColor} lineWidth={2} renderOrder={100000} depthTest={false}
-              />
-              <NativeLine name="dimension_line"
-                points={[[-0.03, cabinetTopY, leftInnerZ], [0.03, cabinetTopY, leftInnerZ]]}
-                color={dimensionColor} lineWidth={2} renderOrder={100000} depthTest={false}
-              />
-              <Text
-                position={[0, furnitureBaseY + (cabinetTopY - furnitureBaseY) / 2, leftInnerZ - mmToThreeUnits(60)]}
-                fontSize={largeFontSize} color={textColor}
-                anchorX="center" anchorY="middle"
-                renderOrder={1000} depthTest={false}
-                rotation={[0, -Math.PI / 2, Math.PI / 2]}
-              >
-                {Math.round(cabinetHeightMm)}
-              </Text>
+              {displaySections.map((sec, si) => {
+                const shouldRenderStartGuide = !sec.isFirst || baseFrameHeightMm <= 0;
+                return (
+                  <group key={`left-sec-${si}`}>
+                    {/* 시작 가이드선 */}
+                    {shouldRenderStartGuide && (
+                      <NativeLine name="dimension_line"
+                        points={[[0, sec.startY, leftInnerExtStartZ], [0, sec.startY, leftInnerZ]]}
+                        color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
+                      />
+                    )}
+                    {/* 끝 가이드선 */}
+                    <NativeLine name="dimension_line"
+                      points={[[0, sec.endY, leftInnerExtStartZ], [0, sec.endY, leftInnerZ]]}
+                      color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
+                    />
+                    {/* 수직 치수선 */}
+                    <NativeLine name="dimension_line"
+                      points={[[0, sec.startY, leftInnerZ], [0, sec.endY, leftInnerZ]]}
+                      color={dimensionColor} lineWidth={2} renderOrder={100000} depthTest={false}
+                    />
+                    {/* 시작 티크 */}
+                    {shouldRenderStartGuide && (
+                      <NativeLine name="dimension_line"
+                        points={[[-0.03, sec.startY, leftInnerZ], [0.03, sec.startY, leftInnerZ]]}
+                        color={dimensionColor} lineWidth={2} renderOrder={100000} depthTest={false}
+                      />
+                    )}
+                    {/* 끝 티크 */}
+                    <NativeLine name="dimension_line"
+                      points={[[-0.03, sec.endY, leftInnerZ], [0.03, sec.endY, leftInnerZ]]}
+                      color={dimensionColor} lineWidth={2} renderOrder={100000} depthTest={false}
+                    />
+                    {/* 치수 텍스트 */}
+                    <Text
+                      position={[0, (sec.startY + sec.endY) / 2, leftInnerZ - mmToThreeUnits(60)]}
+                      fontSize={largeFontSize} color={textColor}
+                      anchorX="center" anchorY="middle"
+                      renderOrder={1000} depthTest={false}
+                      rotation={[0, -Math.PI / 2, Math.PI / 2]}
+                    >
+                      {Math.round(sec.heightMm)}
+                    </Text>
+                  </group>
+                );
+              })}
 
               {/* 하부프레임 높이: 바닥마감재 상단 ~ 받침대 상단 */}
               {baseFrameHeightMm > 0 && (
@@ -1496,44 +1538,86 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           </Text>
         </group>}
 
-        {/* ===== 왼쪽 2단: 하부장 높이 + 하부프레임 (하부장 선택 시만) ===== */}
-        {selectedModCategory === 'lower' && (() => {
+        {/* ===== 왼쪽 2단: 섹션별 높이 + 하부프레임 (하부장 선택 시만) ===== */}
+        {selectedModCategory === 'lower' && visibleFurniture.length > 0 && (() => {
           const leftInnerZ = -spaceDepth/2 - leftDimOffset + mmToThreeUnits(150) + mmToThreeUnits(200);
           const leftInnerExtStartZ = -spaceDepth/2 + mmToThreeUnits(110);
-          const cabinetTopY = furnitureBaseY + internalHeight;
-          const cabinetHeightMm = adjustedInternalHeightMm;
+
+          const mod = visibleFurniture[0] as PlacedModule;
+          let moduleData = getModuleById(
+            mod.moduleId,
+            { width: internalSpace.width, height: internalSpace.height, depth: internalSpace.depth },
+            spaceInfo
+          );
+          if (!moduleData) {
+            moduleData = buildModuleDataFromPlacedModule(mod, internalSpace, spaceInfo);
+          }
+          if (!moduleData) return null;
+
+          const moduleHeightMm = computeFurnitureHeightMm(mod, moduleData, spaceInfo, internalSpace);
+          const { sections: sectionConfigs, heightsMm: sectionHeightsMm } = computeSectionHeightsInfo(mod, moduleData, moduleHeightMm, 'right');
+          if (sectionConfigs.length === 0) return null;
+
+          const lowerSectionHeightMm = sectionHeightsMm[0] || 0;
+          const upperSectionHeightMm = sectionHeightsMm.slice(1).reduce((sum, h) => sum + h, 0);
+          const cabinetBottomY = furnitureBaseY;
+          const cabinetHeight = mmToThreeUnits(moduleHeightMm);
+          const cabinetTopY = cabinetBottomY + cabinetHeight;
+          const lowerSectionEndY = cabinetBottomY + mmToThreeUnits(lowerSectionHeightMm);
+
+          const displaySections = [
+            { startY: cabinetBottomY, endY: lowerSectionEndY, heightMm: lowerSectionHeightMm, isFirst: true },
+            { startY: lowerSectionEndY, endY: cabinetTopY, heightMm: upperSectionHeightMm, isFirst: false }
+          ].filter(s => s.heightMm > 0);
+
           return (
             <group>
-              {/* 하부장 높이 */}
-              <NativeLine name="dimension_line"
-                points={[[0, furnitureBaseY, leftInnerExtStartZ], [0, furnitureBaseY, leftInnerZ]]}
-                color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
-              />
-              <NativeLine name="dimension_line"
-                points={[[0, cabinetTopY, leftInnerExtStartZ], [0, cabinetTopY, leftInnerZ]]}
-                color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
-              />
-              <NativeLine name="dimension_line"
-                points={[[0, furnitureBaseY, leftInnerZ], [0, cabinetTopY, leftInnerZ]]}
-                color={dimensionColor} lineWidth={2} renderOrder={100000} depthTest={false}
-              />
-              <NativeLine name="dimension_line"
-                points={[[-0.03, furnitureBaseY, leftInnerZ], [0.03, furnitureBaseY, leftInnerZ]]}
-                color={dimensionColor} lineWidth={2} renderOrder={100000} depthTest={false}
-              />
-              <NativeLine name="dimension_line"
-                points={[[-0.03, cabinetTopY, leftInnerZ], [0.03, cabinetTopY, leftInnerZ]]}
-                color={dimensionColor} lineWidth={2} renderOrder={100000} depthTest={false}
-              />
-              <Text
-                position={[0, furnitureBaseY + (cabinetTopY - furnitureBaseY) / 2, leftInnerZ - mmToThreeUnits(60)]}
-                fontSize={largeFontSize} color={textColor}
-                anchorX="center" anchorY="middle"
-                renderOrder={1000} depthTest={false}
-                rotation={[0, Math.PI / 2, Math.PI / 2]}
-              >
-                {Math.round(cabinetHeightMm)}
-              </Text>
+              {displaySections.map((sec, si) => {
+                const shouldRenderStartGuide = !sec.isFirst || baseFrameHeightMm <= 0;
+                return (
+                  <group key={`right-sec-${si}`}>
+                    {/* 시작 가이드선 */}
+                    {shouldRenderStartGuide && (
+                      <NativeLine name="dimension_line"
+                        points={[[0, sec.startY, leftInnerExtStartZ], [0, sec.startY, leftInnerZ]]}
+                        color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
+                      />
+                    )}
+                    {/* 끝 가이드선 */}
+                    <NativeLine name="dimension_line"
+                      points={[[0, sec.endY, leftInnerExtStartZ], [0, sec.endY, leftInnerZ]]}
+                      color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
+                    />
+                    {/* 수직 치수선 */}
+                    <NativeLine name="dimension_line"
+                      points={[[0, sec.startY, leftInnerZ], [0, sec.endY, leftInnerZ]]}
+                      color={dimensionColor} lineWidth={2} renderOrder={100000} depthTest={false}
+                    />
+                    {/* 시작 티크 */}
+                    {shouldRenderStartGuide && (
+                      <NativeLine name="dimension_line"
+                        points={[[-0.03, sec.startY, leftInnerZ], [0.03, sec.startY, leftInnerZ]]}
+                        color={dimensionColor} lineWidth={2} renderOrder={100000} depthTest={false}
+                      />
+                    )}
+                    {/* 끝 티크 */}
+                    <NativeLine name="dimension_line"
+                      points={[[-0.03, sec.endY, leftInnerZ], [0.03, sec.endY, leftInnerZ]]}
+                      color={dimensionColor} lineWidth={2} renderOrder={100000} depthTest={false}
+                    />
+                    {/* 치수 텍스트 */}
+                    <Text
+                      position={[0, (sec.startY + sec.endY) / 2, leftInnerZ - mmToThreeUnits(60)]}
+                      fontSize={largeFontSize} color={textColor}
+                      anchorX="center" anchorY="middle"
+                      renderOrder={1000} depthTest={false}
+                      rotation={[0, Math.PI / 2, Math.PI / 2]}
+                    >
+                      {Math.round(sec.heightMm)}
+                    </Text>
+                  </group>
+                );
+              })}
 
               {/* 하부프레임 높이 */}
               {baseFrameHeightMm > 0 && (
