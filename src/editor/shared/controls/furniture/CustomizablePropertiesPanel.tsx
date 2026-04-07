@@ -84,6 +84,7 @@ const CustomizablePropertiesPanel: React.FC = () => {
   const [hSplitDepthInputs, setHSplitDepthInputs] = useState<Record<string, string>>({});
   // EP 깊이 로컬 버퍼
   const [epDepthInput, setEpDepthInput] = useState<string>('');
+  const epDepthFocusedRef = useRef(false); // EP 깊이 포커스 추적
 
   // 섹션 팝업 바깥 클릭 감지용 ref + 동적 위치 조정
   const sectionPopupRef = useRef<HTMLDivElement>(null);
@@ -169,7 +170,9 @@ const CustomizablePropertiesPanel: React.FC = () => {
       const uD = placedModule.upperSectionDepth ?? d;
       setSectionDepthInputs({ 0: lD.toString(), 1: uD.toString() });
       // EP 깊이 초기화
-      setEpDepthInput(Math.round(placedModule.endPanelDepth ?? d).toString());
+      if (!epDepthFocusedRef.current) {
+        setEpDepthInput(Math.round(placedModule.endPanelDepth ?? d).toString());
+      }
       // 원본 스냅샷 저장 (취소 시 복원용)
       setOriginalSnapshot({
         customConfig: placedModule.customConfig
@@ -4610,7 +4613,9 @@ const CustomizablePropertiesPanel: React.FC = () => {
                                 setEpDepthInput(v);
                               }
                             }}
+                            onFocus={() => { epDepthFocusedRef.current = true; }}
                             onBlur={() => {
+                              epDepthFocusedRef.current = false;
                               const val = parseInt(epDepthInput, 10);
                               if (!isNaN(val) && val >= 50 && val <= furnitureDepth) {
                                 updatePlacedModule(moduleId, { endPanelDepth: val });

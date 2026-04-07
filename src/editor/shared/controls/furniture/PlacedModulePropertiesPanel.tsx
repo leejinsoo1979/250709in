@@ -589,6 +589,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
   const [freeHeightInput, setFreeHeightInput] = useState<string>('');
   const [freeDepthInput, setFreeDepthInput] = useState<string>('');
   const [epDepthInput, setEpDepthInput] = useState<string>(''); // EP 깊이 로컬 버퍼
+  const epDepthFocusedRef = React.useRef(false); // EP 깊이 입력 포커스 추적
   const [epThicknessInput, setEpThicknessInput] = useState<string>(''); // EP 두께 로컬 버퍼
   const epThicknessFocusedRef = React.useRef(false); // EP 두께 입력 포커스 추적
 
@@ -897,7 +898,9 @@ const PlacedModulePropertiesPanel: React.FC = () => {
 
         // EP 깊이/두께 초기화
         const epFurnitureDepth = currentPlacedModule.freeDepth ?? initialDepth;
-        setEpDepthInput(Math.round(currentPlacedModule.endPanelDepth ?? epFurnitureDepth).toString());
+        if (!epDepthFocusedRef.current) {
+          setEpDepthInput(Math.round(currentPlacedModule.endPanelDepth ?? epFurnitureDepth).toString());
+        }
         if (!epThicknessFocusedRef.current) {
           setEpThicknessInput((currentPlacedModule.endPanelThickness ?? 18).toString());
         }
@@ -3310,7 +3313,9 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                                   setEpDepthInput(v);
                                 }
                               }}
+                              onFocus={() => { epDepthFocusedRef.current = true; }}
                               onBlur={() => {
+                                epDepthFocusedRef.current = false;
                                 const val = parseInt(epDepthInput, 10);
                                 if (!isNaN(val) && val >= 50 && val <= furnitureDepth && currentPlacedModule) {
                                   updatePlacedModule(currentPlacedModule.id, { endPanelDepth: val });
