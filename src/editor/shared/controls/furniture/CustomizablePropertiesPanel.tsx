@@ -4591,24 +4591,28 @@ const CustomizablePropertiesPanel: React.FC = () => {
                       />
                       <span style={{ fontSize: '12px', color: 'var(--theme-text-secondary)' }}>mm</span>
                     </div>
-                    {/* EP 깊이 (읽기 전용 — 앞/뒤 옵셋 합산) */}
+                    {/* EP 깊이 (읽기 전용 — 좌/우 각각 표시) */}
                     {(() => {
                       const base = placedModule.endPanelDepth ?? (placedModule.freeDepth || 580);
-                      const front = placedModule.leftEndPanelOffset ?? 0;
-                      const back = placedModule.leftEndPanelBackOffset ?? 0;
+                      const inputStyle = {
+                        width: '45px', padding: '4px 6px', border: '1px solid var(--theme-border)',
+                        borderRadius: '4px', fontSize: '13px', textAlign: 'center' as const,
+                        background: 'var(--theme-background-tertiary)', color: 'var(--theme-text)', cursor: 'default',
+                      };
                       return (
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '4px' }}>
-                          <span style={{ fontSize: '12px', color: 'var(--theme-text-secondary)', whiteSpace: 'nowrap', width: '50px' }}>EP 깊이</span>
-                          <input
-                            type="text"
-                            readOnly
-                            value={Math.round(base + front + back)}
-                            style={{
-                              width: '50px', padding: '4px 8px', border: '1px solid var(--theme-border)',
-                              borderRadius: '4px', fontSize: '13px', textAlign: 'center',
-                              background: 'var(--theme-background-tertiary)', color: 'var(--theme-text)', cursor: 'default',
-                            }}
-                          />
+                          {placedModule.hasLeftEndPanel && (
+                            <>
+                              <span style={{ fontSize: '11px', color: 'var(--theme-text-secondary)', whiteSpace: 'nowrap' }}>좌EP</span>
+                              <input type="text" readOnly value={Math.round(base + (placedModule.leftEndPanelOffset ?? 0) + (placedModule.leftEndPanelBackOffset ?? 0))} style={inputStyle} />
+                            </>
+                          )}
+                          {placedModule.hasRightEndPanel && (
+                            <>
+                              <span style={{ fontSize: '11px', color: 'var(--theme-text-secondary)', whiteSpace: 'nowrap' }}>우EP</span>
+                              <input type="text" readOnly value={Math.round(base + (placedModule.rightEndPanelOffset ?? 0) + (placedModule.rightEndPanelBackOffset ?? 0))} style={inputStyle} />
+                            </>
+                          )}
                           <span style={{ fontSize: '12px', color: 'var(--theme-text-secondary)' }}>mm</span>
                         </div>
                       );

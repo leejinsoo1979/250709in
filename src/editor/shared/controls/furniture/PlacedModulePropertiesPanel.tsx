@@ -3276,24 +3276,44 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                             <span className={styles.unit}>mm</span>
                           </div>
                         </div>
-                        <div className={styles.epField}>
-                          <label className={styles.epFieldLabel}>EP 깊이</label>
-                          <div className={styles.inputWithUnit}>
-                            <input
-                              type="text"
-                              readOnly
-                              value={(() => {
-                                const base = currentPlacedModule.endPanelDepth ?? furnitureDepth;
-                                const front = currentPlacedModule.leftEndPanelOffset ?? 0;
-                                const back = currentPlacedModule.leftEndPanelBackOffset ?? 0;
-                                return Math.round(base + front + back);
-                              })()}
-                              className={styles.epInput}
-                              style={{ background: 'var(--theme-background-tertiary)', cursor: 'default' }}
-                            />
-                            <span className={styles.unit}>mm</span>
+                        {currentPlacedModule.hasLeftEndPanel && (
+                          <div className={styles.epField}>
+                            <label className={styles.epFieldLabel}>좌EP깊이</label>
+                            <div className={styles.inputWithUnit}>
+                              <input
+                                type="text"
+                                readOnly
+                                value={Math.round(
+                                  (currentPlacedModule.endPanelDepth ?? furnitureDepth)
+                                  + (currentPlacedModule.leftEndPanelOffset ?? 0)
+                                  + (currentPlacedModule.leftEndPanelBackOffset ?? 0)
+                                )}
+                                className={styles.epInput}
+                                style={{ background: 'var(--theme-background-tertiary)', cursor: 'default' }}
+                              />
+                              <span className={styles.unit}>mm</span>
+                            </div>
                           </div>
-                        </div>
+                        )}
+                        {currentPlacedModule.hasRightEndPanel && (
+                          <div className={styles.epField}>
+                            <label className={styles.epFieldLabel}>우EP깊이</label>
+                            <div className={styles.inputWithUnit}>
+                              <input
+                                type="text"
+                                readOnly
+                                value={Math.round(
+                                  (currentPlacedModule.endPanelDepth ?? furnitureDepth)
+                                  + (currentPlacedModule.rightEndPanelOffset ?? 0)
+                                  + (currentPlacedModule.rightEndPanelBackOffset ?? 0)
+                                )}
+                                className={styles.epInput}
+                                style={{ background: 'var(--theme-background-tertiary)', cursor: 'default' }}
+                              />
+                              <span className={styles.unit}>mm</span>
+                            </div>
+                          </div>
+                        )}
                       </div>
                     );
                   })()}
