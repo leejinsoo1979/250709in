@@ -14,6 +14,7 @@ interface EndPanelWithTextureProps {
   useFrameColor?: boolean; // true면 프레임 색상 사용 (자유배치 EP)
   furnitureId?: string;
   endPanelThicknessMm?: number; // EP 물리적 두께 (mm) — >18mm이면 ㄷ자 프레임
+  side?: 'left' | 'right'; // EP 위치 (ㄷ자 프레임 방향 결정)
 }
 
 /**
@@ -29,7 +30,8 @@ const EndPanelWithTexture: React.FC<EndPanelWithTextureProps> = ({
   renderMode = 'solid',
   useFrameColor = false,
   furnitureId,
-  endPanelThicknessMm = 18
+  endPanelThicknessMm = 18,
+  side = 'left'
 }) => {
   const [textureLoaded, setTextureLoaded] = useState(false);
 
@@ -117,11 +119,17 @@ const EndPanelWithTexture: React.FC<EndPanelWithTextureProps> = ({
     );
   }
 
-  // ㄷ자 프레임: 외판 + 전면연결판 + 후면연결판 (내판 없음)
+  // ㄷ자 프레임: 측판(바깥) + 전면연결판(안쪽) + 후면연결판(안쪽)
   const boardThickness = 18.5 * 0.01; // PET 18.5mm → Three.js 단위
   const connectorDepthZ = boardThickness; // 연결판 Z축 깊이 = 패널 두께 (18.5mm)
   const totalWidth = width;            // 전체 EP 두께 (이미 Three.js 단위)
-  const gapWidth = totalWidth - boardThickness; // 연결판 X축 폭 = EP두께 - 외판두께
+  const gapWidth = totalWidth - boardThickness; // 연결판 X축 폭 = EP두께 - 측판두께
+
+  // 좌측 EP: 측판이 -X(바깥), 연결판이 +X(안쪽)
+  // 우측 EP: 측판이 +X(바깥), 연결판이 -X(안쪽)
+  const dir = side === 'left' ? -1 : 1;
+  const sideX = dir * (totalWidth / 2 - boardThickness / 2); // 측판 중심
+  const connectorX = -dir * (boardThickness / 2);             // 연결판 중심 (측판 반대쪽)
 
   return (
     <group position={position}>
@@ -129,28 +137,28 @@ const EndPanelWithTexture: React.FC<EndPanelWithTextureProps> = ({
       <BoxWithEdges
         isEndPanel={true}
         args={[boardThickness, height, depth]}
-        position={[-(totalWidth / 2 - boardThickness / 2), 0, 0]}
+        position={[sideX, 0, 0]}
         material={endPanelMaterial}
         renderMode={renderMode}
         furnitureId={furnitureId}
       />
-      {/* 전면연결판 (앞쪽) */}
+      {/* 전면연결판 (안쪽 앞) */}
       {gapWidth > 0 && (
         <BoxWithEdges
           isEndPanel={true}
           args={[gapWidth, height, connectorDepthZ]}
-          position={[boardThickness / 2, 0, depth / 2 - connectorDepthZ / 2]}
+          position={[connectorX, 0, depth / 2 - connectorDepthZ / 2]}
           material={endPanelMaterial}
           renderMode={renderMode}
           furnitureId={furnitureId}
         />
       )}
-      {/* 후면연결판 (뒤쪽) */}
+      {/* 후면연결판 (안쪽 뒤) */}
       {gapWidth > 0 && (
         <BoxWithEdges
           isEndPanel={true}
           args={[gapWidth, height, connectorDepthZ]}
-          position={[boardThickness / 2, 0, -(depth / 2 - connectorDepthZ / 2)]}
+          position={[connectorX, 0, -(depth / 2 - connectorDepthZ / 2)]}
           material={endPanelMaterial}
           renderMode={renderMode}
           furnitureId={furnitureId}
