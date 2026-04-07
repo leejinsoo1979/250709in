@@ -471,7 +471,6 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
     }
     if (edgeOpacity !== undefined) return edgeOpacity;
     if (isBackPanel && view2DDirection === 'front') return 0.1;
-    if (isBackPanel && view2DDirection === 'top') return 0;
     if (!panelName) return 1;
 
     // 서랍 관련 패널 판별 (서랍속장 > 서랍 내부 > 마이다 순서로 체크)
@@ -617,18 +616,26 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
     // 입면도(front)에서는 앞면 사각형만 표시 (뒷면·연결 엣지 제거 → 불필요한 중앙선 방지)
     const isFrontView = view2DDirection === 'front';
 
+    // 탑뷰에서 백패널 좌우 세로선 숨김 (측판 홈 안에서 보이는 선 제거)
+    const isTopView = view2DDirection === 'top';
+    const hideXEdges = isBackPanel && isTopView;
+
     // 앞면 사각형
     if (!hideTopEdge) lines.push([[-halfW, halfH, halfD], [halfW, halfH, halfD]]);
     if (!hideBottomEdge) lines.push([[-halfW, -halfH, halfD], [halfW, -halfH, halfD]]);
-    lines.push([[-halfW, -halfH, halfD], [-halfW, halfH, halfD]]);
-    lines.push([[halfW, -halfH, halfD], [halfW, halfH, halfD]]);
+    if (!hideXEdges) {
+      lines.push([[-halfW, -halfH, halfD], [-halfW, halfH, halfD]]);
+      lines.push([[halfW, -halfH, halfD], [halfW, halfH, halfD]]);
+    }
 
     if (!isFrontView) {
       // 뒷면 사각형
       if (!hideTopEdge) lines.push([[-halfW, halfH, -halfD], [halfW, halfH, -halfD]]);
       if (!hideBottomEdge) lines.push([[-halfW, -halfH, -halfD], [halfW, -halfH, -halfD]]);
-      lines.push([[-halfW, -halfH, -halfD], [-halfW, halfH, -halfD]]);
-      lines.push([[halfW, -halfH, -halfD], [halfW, halfH, -halfD]]);
+      if (!hideXEdges) {
+        lines.push([[-halfW, -halfH, -halfD], [-halfW, halfH, -halfD]]);
+        lines.push([[halfW, -halfH, -halfD], [halfW, halfH, -halfD]]);
+      }
 
       // 연결 엣지
       if (!hideTopEdge) {
