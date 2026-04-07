@@ -2545,21 +2545,28 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
           const epCenterWorldY = spaceH / 2;
           epYOffset = epCenterWorldY - groupY;
         }
-        const leftEpOffsetZ = mmToUnit(leftEndPanelOffsetProp);
-        const rightEpOffsetZ = mmToUnit(rightEndPanelOffsetProp);
+        const leftEpOffsetMm = leftEndPanelOffsetProp;
+        const rightEpOffsetMm = rightEndPanelOffsetProp;
         const epDActual = endPanelDepthProp ? mmToUnit(endPanelDepthProp) : D;
         // EP 깊이 확장 방향에 따른 Z 오프셋: front=앞으로, back=뒤로
         const epDepthDirOffset = endPanelDepthDirectionProp === 'back'
           ? -(epDActual - D) / 2
           : (epDActual - D) / 2;
+        // EP 옵셋: 앞면 고정, 뒷쪽에서 줄어듦 (depth -= offset, Z += offset/2)
+        const leftEpOffsetUnit = mmToUnit(leftEpOffsetMm);
+        const leftEpDepth = Math.max(0, epDActual - leftEpOffsetUnit);
+        const leftEpZShift = leftEpOffsetUnit / 2;
+        const rightEpOffsetUnit = mmToUnit(rightEpOffsetMm);
+        const rightEpDepth = Math.max(0, epDActual - rightEpOffsetUnit);
+        const rightEpZShift = rightEpOffsetUnit / 2;
         return (
           <>
             {hasLeftEndPanel && (
               <EndPanelWithTexture
                 width={leftEP}
                 height={epH}
-                depth={epDActual}
-                position={[-(W / 2) + leftEP / 2, epYOffset, leftEpOffsetZ + epDepthDirOffset]}
+                depth={leftEpDepth}
+                position={[-(W / 2) + leftEP / 2, epYOffset, leftEpZShift + epDepthDirOffset]}
                 spaceInfo={spaceInfo}
                 renderMode={renderMode}
                 useFrameColor={spaceInfo.layoutMode === 'free-placement'}
@@ -2569,8 +2576,8 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
               <EndPanelWithTexture
                 width={rightEP}
                 height={epH}
-                depth={epDActual}
-                position={[(W / 2) - rightEP / 2, epYOffset, rightEpOffsetZ + epDepthDirOffset]}
+                depth={rightEpDepth}
+                position={[(W / 2) - rightEP / 2, epYOffset, rightEpZShift + epDepthDirOffset]}
                 spaceInfo={spaceInfo}
                 renderMode={renderMode}
                 useFrameColor={spaceInfo.layoutMode === 'free-placement'}

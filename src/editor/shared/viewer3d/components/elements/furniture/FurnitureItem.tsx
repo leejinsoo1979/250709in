@@ -3645,8 +3645,8 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
 
               const epThicknessMm = placedModule.endPanelThickness || 18.5; // 물리적 렌더링 두께 (PET)
               const epW = mmToThreeUnits(epThicknessMm);
-              const leftEpOffsetZ = mmToThreeUnits(placedModule.leftEndPanelOffset ?? placedModule.endPanelOffset ?? 0);
-              const rightEpOffsetZ = mmToThreeUnits(placedModule.rightEndPanelOffset ?? placedModule.endPanelOffset ?? 0);
+              const leftEpOffsetMm = placedModule.leftEndPanelOffset ?? placedModule.endPanelOffset ?? 0;
+              const rightEpOffsetMm = placedModule.rightEndPanelOffset ?? placedModule.endPanelOffset ?? 0;
               const epDepthMm = placedModule.endPanelDepth ?? (actualDepthMm || 580);
               const epD = mmToThreeUnits(epDepthMm);
               // EP 깊이 확장 방향 오프셋
@@ -3654,6 +3654,13 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
               const freeEpDepthDirOffset = (placedModule.endPanelDepthDirection ?? 'front') === 'back'
                 ? -(epD - freeEpFurnitureD) / 2
                 : (epD - freeEpFurnitureD) / 2;
+              // EP 옵셋: 앞면 고정, 뒷쪽에서 줄어듦
+              const leftEpOffsetUnit = mmToThreeUnits(leftEpOffsetMm);
+              const leftEpD = Math.max(0, epD - leftEpOffsetUnit);
+              const leftEpZShift = leftEpOffsetUnit / 2;
+              const rightEpOffsetUnit = mmToThreeUnits(rightEpOffsetMm);
+              const rightEpD = Math.max(0, epD - rightEpOffsetUnit);
+              const rightEpZShift = rightEpOffsetUnit / 2;
 
               // EP 높이 계산: 카테고리별 상단/하단 기준이 다름
               // 상부장: 상단=천장, 하단=가구 하단
@@ -3697,8 +3704,8 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                     <EndPanelWithTexture
                       width={epW}
                       height={epH}
-                      depth={epD}
-                      position={[-(width / 2) - epW / 2, epYRelative, leftEpOffsetZ + freeEpDepthDirOffset]}
+                      depth={leftEpD}
+                      position={[-(width / 2) - epW / 2, epYRelative, leftEpZShift + freeEpDepthDirOffset]}
                       spaceInfo={zoneSpaceInfo}
                       renderMode={effectiveRenderMode}
                       useFrameColor={true}
@@ -3711,8 +3718,8 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                     <EndPanelWithTexture
                       width={epW}
                       height={epH}
-                      depth={epD}
-                      position={[(width / 2) + epW / 2, epYRelative, rightEpOffsetZ + freeEpDepthDirOffset]}
+                      depth={rightEpD}
+                      position={[(width / 2) + epW / 2, epYRelative, rightEpZShift + freeEpDepthDirOffset]}
                       spaceInfo={zoneSpaceInfo}
                       renderMode={effectiveRenderMode}
                       useFrameColor={true}
@@ -3954,24 +3961,31 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         const epDepthDirOffset = (placedModule.endPanelDepthDirection ?? 'front') === 'back'
           ? -(endPanelDepth - furnitureD) / 2
           : (endPanelDepth - furnitureD) / 2;
-        const getSlotEpOffsetZ = (side: string) => {
+        // EP 옵셋: 앞면 고정, 뒷쪽에서 줄어듦 (슬롯 모드)
+        const getSlotEpOffset = (side: string) => {
           const mm = side === 'left'
             ? (placedModule.leftEndPanelOffset ?? placedModule.endPanelOffset ?? 0)
             : (placedModule.rightEndPanelOffset ?? placedModule.endPanelOffset ?? 0);
-          return mmToThreeUnits(mm) + epDepthDirOffset;
+          const offsetUnit = mmToThreeUnits(mm);
+          return {
+            depth: Math.max(0, endPanelDepth - offsetUnit),
+            zShift: offsetUnit / 2 + epDepthDirOffset,
+          };
         };
 
         return (
           <>
-            {endPanelXPositions.map((panel, index) => (
+            {endPanelXPositions.map((panel, index) => {
+              const slotEp = getSlotEpOffset(panel.side);
+              return (
               <group
                 key={`endpanel-group-${placedModule.id}-${panel.side}-${index}`}
-                position={[panel.x, endPanelYPosition, furnitureZ + getSlotEpOffsetZ(panel.side)]}
+                position={[panel.x, endPanelYPosition, furnitureZ + slotEp.zShift]}
               >
                 <EndPanelWithTexture
                   width={endPanelWidth}
                   height={extendedEndPanelHeight}
-                  depth={endPanelDepth}
+                  depth={slotEp.depth}
                   position={[0, 0, 0]}
                   spaceInfo={zoneSpaceInfo}
                   renderMode={effectiveRenderMode}
@@ -3994,7 +4008,8 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                   })()}
                 />
               </group>
-            ))}
+              );
+            })}
           </>
         );
       })()}
