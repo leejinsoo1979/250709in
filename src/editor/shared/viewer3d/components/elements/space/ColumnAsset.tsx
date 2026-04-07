@@ -53,6 +53,7 @@ const ColumnAsset: React.FC<ColumnAssetProps> = ({
   const [dragStart, setDragStart] = useState<THREE.Vector3 | null>(null);
   const [pointerDownTime, setPointerDownTime] = useState<number>(0);
   const [hasMoved, setHasMoved] = useState(false);
+  const hasMovedRef = useRef(false);
   
   // 캐싱된 canvas 및 rect
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -174,16 +175,14 @@ const ColumnAsset: React.FC<ColumnAssetProps> = ({
     
     // console.log('🎯 기둥 클릭 이벤트 발생:', id);
     
-    // 드래그 중이거나 움직임이 있었으면 클릭 무시
-    if (isDragging || hasMoved) {
-      // console.log('🎯 드래그 중이거나 움직임이 있었으므로 클릭 무시');
+    // 드래그 중이거나 움직임이 있었으면 클릭 무시 (ref로 체크 — state는 비동기라 pointerUp 후 아직 갱신 안 됨)
+    if (isDraggingRef.current || hasMovedRef.current) {
       return;
     }
 
     // 클릭 시간이 너무 길면 드래그로 간주
     const clickDuration = Date.now() - pointerDownTime;
     if (clickDuration > 200) {
-      // console.log('🎯 클릭 시간이 너무 길어서 무시:', clickDuration);
       return;
     }
 
@@ -208,9 +207,8 @@ const ColumnAsset: React.FC<ColumnAssetProps> = ({
     
     // console.log('🎯 기둥 더블클릭 이벤트 발생:', id);
     
-    // 드래그 중이거나 움직임이 있었으면 더블클릭 무시
-    if (isDragging || hasMoved) {
-      // console.log('🎯 드래그 중이거나 움직임이 있었으므로 더블클릭 무시');
+    // 드래그 중이거나 움직임이 있었으면 더블클릭 무시 (ref로 체크)
+    if (isDraggingRef.current || hasMovedRef.current) {
       return;
     }
 
@@ -231,13 +229,13 @@ const ColumnAsset: React.FC<ColumnAssetProps> = ({
     event.stopPropagation();
     event.nativeEvent.stopPropagation();
 
-    // 잠금된 기둥은 드래그 차단
-    if (isLocked) return;
-
-    // console.log('🎯 기둥 포인터 다운:', id);
-
     setPointerDownTime(Date.now());
     setHasMoved(false);
+    hasMovedRef.current = false;
+
+    // 잠금된 기둥은 클릭 선택은 가능하되 드래그만 차단
+    if (isLocked) return;
+
     setDragStart(event.point);
     
     // 화면 좌표 저장
@@ -264,6 +262,7 @@ const ColumnAsset: React.FC<ColumnAssetProps> = ({
       
       if (moveDistance > moveThreshold && !isDraggingRef.current) {
         setHasMoved(true);
+        hasMovedRef.current = true;
         setIsDragging(true);
         isDraggingRef.current = true;
         setFurnitureDragging(true); // 기둥 드래그 시작 시 화면 회전 비활성화
@@ -331,7 +330,11 @@ const ColumnAsset: React.FC<ColumnAssetProps> = ({
       setIsDragging(false);
       isDraggingRef.current = false;
       setDragStart(null);
-      setHasMoved(false);
+      // hasMoved는 onClick 이후에 리셋 (onClick이 pointerUp 직후 동기 실행되므로 즉시 리셋하면 안 됨)
+      requestAnimationFrame(() => {
+        setHasMoved(false);
+        hasMovedRef.current = false;
+      });
       
       // 전역 이벤트 리스너 제거
       document.removeEventListener('pointermove', handleGlobalPointerMove);
