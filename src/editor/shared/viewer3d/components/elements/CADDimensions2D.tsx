@@ -1256,26 +1256,57 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
             );
             if (lowerMaidas && lowerMaidas.length > 0) {
               const cabinetBottomY = furnitureBaseY;
+              const cabinetTopY = cabinetBottomY + mmToThreeUnits(modHeightMm);
+
+              // 갭 계산: 상단갭 + 마이다 사이 간격
+              const gaps: { bottomMm: number; topMm: number; heightMm: number }[] = [];
+              // 마이다 사이 간격 (아래→위 순서)
+              for (let gi = 0; gi < lowerMaidas.length - 1; gi++) {
+                const gapBotMm = lowerMaidas[gi].maidaTopMm;
+                const gapTopMm = lowerMaidas[gi + 1].maidaBottomMm;
+                if (gapTopMm - gapBotMm > 0) {
+                  gaps.push({ bottomMm: gapBotMm, topMm: gapTopMm, heightMm: Math.round(gapTopMm - gapBotMm) });
+                }
+              }
+              // 상단갭: 마지막 마이다 상단 ~ 가구 상판
+              const lastMaida = lowerMaidas[lowerMaidas.length - 1];
+              if (modHeightMm - lastMaida.maidaTopMm > 0) {
+                gaps.push({ bottomMm: lastMaida.maidaTopMm, topMm: modHeightMm, heightMm: Math.round(modHeightMm - lastMaida.maidaTopMm) });
+              }
+
               return (
                 <group>
+                  {/* 마이다 개별 높이 */}
                   {lowerMaidas.map((m, i) => {
                     const dBotY = cabinetBottomY + mmToThreeUnits(m.maidaBottomMm);
                     const dTopY = cabinetBottomY + mmToThreeUnits(m.maidaTopMm);
                     return (
                       <group key={`door-maida-${i}`}>
-                        {/* 수직 치수선 */}
                         <NativeLine name="door_height_dim" points={[[0, dBotY, doorDimZ], [0, dTopY, doorDimZ]]} color={doorColor} lineWidth={2} renderOrder={100000} depthTest={false} />
-                        {/* 하단 티크 */}
                         <NativeLine name="door_height_dim" points={[[-0.03, dBotY, doorDimZ], [0.03, dBotY, doorDimZ]]} color={doorColor} lineWidth={2} renderOrder={100000} depthTest={false} />
-                        {/* 상단 티크 */}
                         <NativeLine name="door_height_dim" points={[[-0.03, dTopY, doorDimZ], [0.03, dTopY, doorDimZ]]} color={doorColor} lineWidth={2} renderOrder={100000} depthTest={false} />
                         <Text position={[0, (dBotY + dTopY) / 2, doorDimZ + mmToThreeUnits(60)]} fontSize={largeFontSize} color={doorColor} anchorX="center" anchorY="middle" renderOrder={1000} depthTest={false} rotation={[0, -Math.PI / 2, Math.PI / 2]}>
                           {Math.round(m.maidaHeightMm)}
                         </Text>
-                        {/* 상단 연장선 */}
                         <NativeLine name="door_height_ext" points={[[0, dTopY, furnitureFrontZ + mmToThreeUnits(20)], [0, dTopY, doorDimZ]]} color={doorColor} lineWidth={0.5} renderOrder={100000} depthTest={false} />
-                        {/* 하단 연장선 */}
                         <NativeLine name="door_height_ext" points={[[0, dBotY, furnitureFrontZ + mmToThreeUnits(20)], [0, dBotY, doorDimZ]]} color={doorColor} lineWidth={0.5} renderOrder={100000} depthTest={false} />
+                      </group>
+                    );
+                  })}
+                  {/* 상단갭 + 마이다 사이 간격 */}
+                  {gaps.map((gap, gi) => {
+                    const gBotY = cabinetBottomY + mmToThreeUnits(gap.bottomMm);
+                    const gTopY = cabinetBottomY + mmToThreeUnits(gap.topMm);
+                    return (
+                      <group key={`door-gap-${gi}`}>
+                        <NativeLine name="door_height_dim" points={[[0, gBotY, doorDimZ], [0, gTopY, doorDimZ]]} color={doorColor} lineWidth={2} renderOrder={100000} depthTest={false} />
+                        <NativeLine name="door_height_dim" points={[[-0.03, gBotY, doorDimZ], [0.03, gBotY, doorDimZ]]} color={doorColor} lineWidth={2} renderOrder={100000} depthTest={false} />
+                        <NativeLine name="door_height_dim" points={[[-0.03, gTopY, doorDimZ], [0.03, gTopY, doorDimZ]]} color={doorColor} lineWidth={2} renderOrder={100000} depthTest={false} />
+                        <Text position={[0, (gBotY + gTopY) / 2, doorDimZ + mmToThreeUnits(60)]} fontSize={largeFontSize} color={doorColor} anchorX="center" anchorY="middle" renderOrder={1000} depthTest={false} rotation={[0, -Math.PI / 2, Math.PI / 2]}>
+                          {gap.heightMm}
+                        </Text>
+                        <NativeLine name="door_height_ext" points={[[0, gTopY, furnitureFrontZ + mmToThreeUnits(20)], [0, gTopY, doorDimZ]]} color={doorColor} lineWidth={0.5} renderOrder={100000} depthTest={false} />
+                        <NativeLine name="door_height_ext" points={[[0, gBotY, furnitureFrontZ + mmToThreeUnits(20)], [0, gBotY, doorDimZ]]} color={doorColor} lineWidth={0.5} renderOrder={100000} depthTest={false} />
                       </group>
                     );
                   })}
