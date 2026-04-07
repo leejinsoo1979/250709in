@@ -7563,8 +7563,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         const sortedDepths = Array.from(depthGroups.entries()).sort((a, b) => a[0] - b[0]);
         const innerDimX = spaceXOffset - mmToThreeUnits(200);  // 1단(안쪽): 짧은 깊이
         const outerDimX = spaceXOffset - mmToThreeUnits(350);  // 2단(바깥): 긴 깊이
-        // 모든 연장선의 끝점 X
-        const extLineEndX = sortedDepths.length > 1 ? outerDimX : innerDimX;
+        const extPad = mmToThreeUnits(20); // 연장선 치수선 바깥 여유
 
         return (
           <group key="left-cabinet-depth-dims">
@@ -7573,6 +7572,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               const dimX = sortedDepths.length === 1 ? innerDimX : (tierIdx === 0 ? innerDimX : outerDimX);
               const textOffsetX = dimX - mmToThreeUnits(40);
               const cabinetDepthMm = Math.round((group.frontZ - group.backZ) / 0.01);
+              // 연장선: 가구 앞/뒷면에서 해당 치수선 X 위치 바깥까지만
+              const extEndX = dimX - extPad;
 
               return (
                 <group key={`left-depth-tier-${tierIdx}`}>
@@ -7598,14 +7599,14 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   >
                     {cabinetDepthMm}
                   </Text>
-                  {/* 연장선 - 뒷면 */}
+                  {/* 연장선 - 뒷면: 가구에서 치수선 바깥까지만 */}
                   <NativeLine name="dimension_line"
-                    points={[[group.edgeX, spaceHeight, group.backZ], [extLineEndX, spaceHeight, group.backZ]]}
+                    points={[[spaceXOffset, spaceHeight, group.backZ], [extEndX, spaceHeight, group.backZ]]}
                     color={dimensionColor} renderOrder={100000} depthTest={false}
                   />
-                  {/* 연장선 - 앞면 */}
+                  {/* 연장선 - 앞면: 가구에서 치수선 바깥까지만 */}
                   <NativeLine name="dimension_line"
-                    points={[[group.edgeX, spaceHeight, group.frontZ], [extLineEndX, spaceHeight, group.frontZ]]}
+                    points={[[spaceXOffset, spaceHeight, group.frontZ], [extEndX, spaceHeight, group.frontZ]]}
                     color={dimensionColor} renderOrder={100000} depthTest={false}
                   />
                 </group>
@@ -7678,7 +7679,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           const sortedDepths = Array.from(depthGroups.entries()).sort((a, b) => a[0] - b[0]);
           const innerDimX = spaceXOffset + spaceWidth + mmToThreeUnits(200);
           const outerDimX = spaceXOffset + spaceWidth + mmToThreeUnits(350);
-          const extLineEndX = sortedDepths.length > 1 ? outerDimX : innerDimX;
+          const extPad = mmToThreeUnits(20);
+          const rightWallX = spaceXOffset + spaceWidth; // 우측 공간 벽 위치
 
           return (
             <group key="right-cabinet-depth-dims">
@@ -7687,6 +7689,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 const dimX = sortedDepths.length === 1 ? innerDimX : (tierIdx === 0 ? innerDimX : outerDimX);
                 const textOffsetX = dimX + mmToThreeUnits(40);
                 const cabinetDepthMm = Math.round((group.frontZ - group.backZ) / 0.01);
+                const extEndX = dimX + extPad;
 
                 return (
                   <group key={`right-depth-tier-${tierIdx}`}>
@@ -7712,14 +7715,14 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     >
                       {cabinetDepthMm}
                     </Text>
-                    {/* 연장선 - 뒷면 */}
+                    {/* 연장선 - 뒷면: 공간 벽에서 치수선 바깥까지만 */}
                     <NativeLine name="dimension_line"
-                      points={[[group.edgeX, spaceHeight, group.backZ], [extLineEndX, spaceHeight, group.backZ]]}
+                      points={[[rightWallX, spaceHeight, group.backZ], [extEndX, spaceHeight, group.backZ]]}
                       color={dimensionColor} renderOrder={100000} depthTest={false}
                     />
-                    {/* 연장선 - 앞면 */}
+                    {/* 연장선 - 앞면: 공간 벽에서 치수선 바깥까지만 */}
                     <NativeLine name="dimension_line"
-                      points={[[group.edgeX, spaceHeight, group.frontZ], [extLineEndX, spaceHeight, group.frontZ]]}
+                      points={[[rightWallX, spaceHeight, group.frontZ], [extEndX, spaceHeight, group.frontZ]]}
                       color={dimensionColor} renderOrder={100000} depthTest={false}
                     />
                   </group>
