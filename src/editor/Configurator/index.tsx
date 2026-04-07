@@ -5383,6 +5383,9 @@ const Configurator: React.FC = () => {
             label: string,
           ) => {
             const enabled = mod.hasBase !== false;
+            const isLower = mod.moduleId?.startsWith('lower-') || mod.moduleId?.includes('-lower-');
+            const bfMin = isLower ? 60 : 40;
+            const bfMax = isLower ? 150 : 100;
             return (
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '3px 0' }}>
                 <span className={styles.frameItemLabel} style={{ minWidth: '34px', textAlign: 'left', margin: 0 }}>{label}</span>
@@ -5405,11 +5408,11 @@ const Configurator: React.FC = () => {
                           if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
                             e.preventDefault();
                             const cur = mod.baseFrameHeight ?? globalBase;
-                            updatePlacedModule(mod.id, { baseFrameHeight: Math.max(60, Math.min(150, cur + (e.key === 'ArrowUp' ? 1 : -1))) });
+                            updatePlacedModule(mod.id, { baseFrameHeight: Math.max(bfMin, Math.min(bfMax, cur + (e.key === 'ArrowUp' ? 1 : -1))) });
                           }
                         }}
-                        onChange={(e) => { const v = e.target.value; if (v === '' || /^\d+$/.test(v)) { const num = v === '' ? 0 : parseInt(v, 10); updatePlacedModule(mod.id, { baseFrameHeight: num > 150 ? 150 : num }); } }}
-                        onBlur={(e) => { setHighlightedFrame(null); updatePlacedModule(mod.id, { baseFrameHeight: Math.max(60, Math.min(150, parseInt(e.target.value) || 65)) }); }}
+                        onChange={(e) => { const v = e.target.value; if (v === '' || /^\d+$/.test(v)) { const num = v === '' ? 0 : parseInt(v, 10); updatePlacedModule(mod.id, { baseFrameHeight: num > bfMax ? bfMax : num }); } }}
+                        onBlur={(e) => { setHighlightedFrame(null); updatePlacedModule(mod.id, { baseFrameHeight: Math.max(bfMin, Math.min(bfMax, parseInt(e.target.value) || 65)) }); }}
                         className={styles.frameNumberInput}
                       />
                     </div>
@@ -5463,7 +5466,11 @@ const Configurator: React.FC = () => {
           const renderMergedFrameRow = (
             label: string, enabled: boolean, widthMM: number, heightMM: number, offset: number,
             onToggle: () => void, onHeightChange: (v: number) => void, onOffsetChange: (v: number) => void, hlKey: string,
-          ) => (
+            isLowerCategory = false,
+          ) => {
+            const bfMin = isLowerCategory ? 60 : 40;
+            const bfMax = isLowerCategory ? 150 : 100;
+            return (
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '3px 0' }}>
               <span className={styles.frameItemLabel} style={{ minWidth: '50px', textAlign: 'left', margin: 0 }}>{label}</span>
               <button
@@ -5493,19 +5500,19 @@ const Configurator: React.FC = () => {
                         if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
                           e.preventDefault();
                           const delta = e.key === 'ArrowUp' ? 1 : -1;
-                          onHeightChange(Math.max(60, Math.min(150, (heightMM || 65) + delta)));
+                          onHeightChange(Math.max(bfMin, Math.min(bfMax, (heightMM || 65) + delta)));
                         }
                       }}
                       onChange={(e) => {
                         const v = e.target.value;
                         if (v === '' || /^\d+$/.test(v)) {
                           const num = v === '' ? 0 : parseInt(v, 10);
-                          onHeightChange(num > 150 ? 150 : num);
+                          onHeightChange(num > bfMax ? bfMax : num);
                         }
                       }}
                       onBlur={(e) => {
                         setHighlightedFrame(null);
-                        onHeightChange(Math.max(60, Math.min(150, parseInt(e.target.value) || 65)));
+                        onHeightChange(Math.max(bfMin, Math.min(bfMax, parseInt(e.target.value) || 65)));
                       }}
                       className={styles.frameNumberInput}
                     />
@@ -5538,6 +5545,7 @@ const Configurator: React.FC = () => {
               ) : null}
             </div>
           );
+          };
 
           // 병합 모드: computeFrameMergeGroups 사용
           if (isMergeMode) {
@@ -5580,6 +5588,7 @@ const Configurator: React.FC = () => {
                       const groupMods = group.moduleIds.map(id => slotMods.find(m => m.id === id)!).filter(Boolean);
                       const firstMod = groupMods[0];
                       const allEnabled = groupMods.every(m => m.hasBase !== false);
+                      const isLowerGroup = firstMod?.moduleId?.startsWith('lower-') || firstMod?.moduleId?.includes('-lower-');
                       return <React.Fragment key={`merged-base-${gIdx}`}>{renderMergedFrameRow(
                         group.label,
                         allEnabled,
@@ -5596,6 +5605,7 @@ const Configurator: React.FC = () => {
                         (v) => { group.moduleIds.forEach(id => updatePlacedModule(id, { baseFrameHeight: v })); },
                         (v) => { group.moduleIds.forEach(id => updatePlacedModule(id, { baseFrameOffset: v })); },
                         `merged-base-${gIdx}`,
+                        !!isLowerGroup,
                       )}</React.Fragment>;
                     })}
                   </div>
