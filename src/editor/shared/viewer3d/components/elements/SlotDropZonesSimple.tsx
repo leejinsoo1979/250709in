@@ -2757,18 +2757,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
                   <meshBasicMaterial color={primaryColor} transparent opacity={0.35} />
                 </mesh>
               );
-              // 천장 메쉬 (3D만)
-              if (viewMode !== '2D') {
-                meshes.push(
-                  <mesh
-                    key={`${groupKey}-ceil-${i}`}
-                    position={[slotCenterX, slotCeilingY, slotFloorZ]}
-                  >
-                    <boxGeometry args={[slotW, 0.001, slotFloorDepth]} />
-                    <meshBasicMaterial color={primaryColor} transparent opacity={0.35} />
-                  </mesh>
-                );
-              }
+              // 천장 메쉬 제거 — 뒷면 가이드만 유지
               // 외곽선
               meshes.push(
                 <lineSegments
