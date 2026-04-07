@@ -335,6 +335,11 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
         }
       }
 
+      // 하부장 모듈: 하부프레임 기본값 100mm (키큰장/상부장은 글로벌 기본값 사용)
+      if (module.baseFrameHeight === undefined && newCategory === 'lower') {
+        module.baseFrameHeight = 100;
+      }
+
       // 2단 가구인 경우 섹션 깊이 초기화
       const sections = newModuleData?.modelConfig?.sections;
       if (sections && sections.length === 2) {
