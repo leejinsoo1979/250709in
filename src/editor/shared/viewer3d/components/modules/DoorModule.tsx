@@ -33,7 +33,8 @@ const BoxWithEdges: React.FC<{
   textureUrl?: string;
   panelGrainDirections?: { [panelName: string]: 'horizontal' | 'vertical' };
   furnitureId?: string;
-}> = ({ args, position, material, renderMode, isDragging = false, isEditMode = false, onClick, onPointerOver, onPointerOut, panelName, textureUrl, panelGrainDirections, furnitureId }) => {
+  isLocked?: boolean; // EP ㄷ자 프레임 잠금 도어
+}> = ({ args, position, material, renderMode, isDragging = false, isEditMode = false, onClick, onPointerOver, onPointerOut, panelName, textureUrl, panelGrainDirections, furnitureId, isLocked = false }) => {
   const isExcludedByOptimizer = useExcludedPanelsStore((s) => {
     if (s.excludedKeys.size === 0) return false;
     return panelName && furnitureId ? s.excludedKeys.has(`${furnitureId}::${panelName}`) : false;
@@ -95,7 +96,7 @@ const BoxWithEdges: React.FC<{
         ((viewMode === '2D' && renderMode === 'solid') || renderMode === 'wireframe') && (
           <lineSegments name="door-edge" geometry={edgesGeometry} renderOrder={1001}>
             <lineBasicMaterial
-              color={viewMode === '2D' ? "#18CF23" : (renderMode === 'wireframe' ? (theme?.mode === 'dark' ? "#ffffff" : "#333333") : (view2DTheme === 'dark' ? "#999999" : "#444444"))}
+              color={viewMode === '2D' ? (isLocked ? "#FF0000" : "#18CF23") : (renderMode === 'wireframe' ? (theme?.mode === 'dark' ? "#ffffff" : "#333333") : (view2DTheme === 'dark' ? "#999999" : "#444444"))}
               linewidth={viewMode === '2D' ? 3 : 0.5}
               depthTest={false}
               depthWrite={false}
@@ -1167,6 +1168,14 @@ const DoorModule: React.FC<DoorModuleProps> = ({
       rightDoorWidth = halfWidth - doorGap;
     }
 
+    // EP ㄷ자 프레임 잠금: EP > 18mm이면 해당 쪽 도어 잠금 (안 열림, 힌지 없음, 빨간선)
+    const leftDoorLocked = !!(storePlacedModule
+      && storePlacedModule.hasLeftEndPanel
+      && (storePlacedModule.endPanelThickness || 18) > 18);
+    const rightDoorLocked = !!(storePlacedModule
+      && storePlacedModule.hasRightEndPanel
+      && (storePlacedModule.endPanelThickness || 18) > 18);
+
     // EP 앞으로 돌출(offset > 0) 시 해당 쪽 도어 너비를 EP 두께만큼 축소
     let leftEpTrimShift = 0;
     let rightEpTrimShift = 0;
@@ -1229,7 +1238,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
         {/* 왼쪽 도어 - 왼쪽 힌지 (왼쪽 가장자리에서 회전) */}
         {showLeftDoor && (
         <group position={[leftHingeX + leftEpTrimShift, doorYPosition, doorDepth / 2]}>
-          <animated.group rotation-y={dualLeftDoorSpring.rotation}>
+          <animated.group rotation-y={leftDoorLocked ? 0 : dualLeftDoorSpring.rotation}>
             <group position={[leftDoorWidthUnits / 2 - hingeOffsetUnits, 0, 0]}>
               {/* 2D 정면뷰: 좌측 도어 반투명 overlay */}
               {showDoorOverlay && (
@@ -1251,11 +1260,12 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                 panelName="좌측 도어"
                 textureUrl={textureUrl}
                 panelGrainDirections={panelGrainDirections}
+                isLocked={leftDoorLocked}
               />
               
 
-              {/* Hinges for left door - 상부장, 하부장, 키큰장 */}
-              {viewMode === '2D' && (view2DDirection === 'front' || view2DDirection === 'left' || view2DDirection === 'right') && (
+              {/* Hinges for left door - 상부장, 하부장, 키큰장 (잠금 시 숨김) */}
+              {viewMode === '2D' && !leftDoorLocked && (view2DDirection === 'front' || view2DDirection === 'left' || view2DDirection === 'right') && (
                 <>
                   {isUpperCabinet ? (
                     // 상부장: 위에서 100mm, 아래에서 100mm
@@ -1338,8 +1348,8 @@ const DoorModule: React.FC<DoorModuleProps> = ({
               )}
 
 
-              {/* Door opening direction for left door - 정면뷰는 항상, 측면뷰는 열렸을 때만, 3D도 표시 */}
-              {!isPlainMaterial && (viewMode === '3D' || (viewMode === '2D' && view2DDirection === 'front')) && (() => {
+              {/* Door opening direction for left door - 잠금 시 숨김 */}
+              {!isPlainMaterial && !leftDoorLocked && (viewMode === '3D' || (viewMode === '2D' && view2DDirection === 'front')) && (() => {
                 const segments = (() => {
                   const isFrontView = viewMode === '3D' || view2DDirection === 'front';
                   const segmentList: React.ReactNode[] = [];
@@ -1561,7 +1571,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
         {/* 오른쪽 도어 - 오른쪽 힌지 (오른쪽 가장자리에서 회전) */}
         {showRightDoor && (
         <group position={[rightHingeX + rightEpTrimShift, doorYPosition, doorDepth / 2]}>
-          <animated.group rotation-y={dualRightDoorSpring.rotation}>
+          <animated.group rotation-y={rightDoorLocked ? 0 : dualRightDoorSpring.rotation}>
             <group position={[-rightDoorWidthUnits / 2 + hingeOffsetUnits, 0, 0]}>
               {/* 2D 정면뷰: 우측 도어 반투명 overlay */}
               {showDoorOverlay && (
@@ -1583,10 +1593,11 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                 panelName="우측 도어"
                 textureUrl={textureUrl}
                 panelGrainDirections={panelGrainDirections}
+                isLocked={rightDoorLocked}
               />
               
-              {/* Hinges for right door - 상부장, 하부장, 키큰장 */}
-              {viewMode === '2D' && (view2DDirection === 'front' || view2DDirection === 'left' || view2DDirection === 'right') && (
+              {/* Hinges for right door - 상부장, 하부장, 키큰장 (잠금 시 숨김) */}
+              {viewMode === '2D' && !rightDoorLocked && (view2DDirection === 'front' || view2DDirection === 'left' || view2DDirection === 'right') && (
                 <>
                   {isUpperCabinet ? (
                     // 상부장: 위에서 100mm, 아래에서 100mm
@@ -1669,8 +1680,8 @@ const DoorModule: React.FC<DoorModuleProps> = ({
               )}
 
 
-              {/* Door opening direction for right door - 정면뷰는 항상, 측면뷰는 열렸을 때만, 3D도 표시 */}
-              {!isPlainMaterial && (viewMode === '3D' || (viewMode === '2D' && view2DDirection === 'front')) && (() => {
+              {/* Door opening direction for right door - 잠금 시 숨김 */}
+              {!isPlainMaterial && !rightDoorLocked && (viewMode === '3D' || (viewMode === '2D' && view2DDirection === 'front')) && (() => {
                 const segments = (() => {
                   const isFrontView = viewMode === '3D' || view2DDirection === 'front';
                   const segmentList: React.ReactNode[] = [];
@@ -1921,6 +1932,12 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     const doorGap = 3;
     let doorWidth = actualDoorWidth - doorGap; // 슬롯사이즈 - 갭
 
+    // EP ㄷ자 프레임 잠금: 싱글 도어는 어느 쪽이든 EP > 18mm이면 전체 잠금
+    const singleDoorLocked = !!(storePlacedModule && (
+      (storePlacedModule.hasLeftEndPanel && (storePlacedModule.endPanelThickness || 18) > 18)
+      || (storePlacedModule.hasRightEndPanel && (storePlacedModule.endPanelThickness || 18) > 18)
+    ));
+
     // EP 앞으로 돌출(offset > 0) 시 해당 쪽에서 EP 두께만큼 도어 너비 축소 (경첩 방향 무관)
     let epTrimLeft = 0; // 좌측 EP 돌출로 줄어든 mm
     let epTrimRight = 0; // 우측 EP 돌출로 줄어든 mm
@@ -1961,7 +1978,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
 
     return (
       <group position={[doorGroupX + hingeAxisOffset + epTrimShiftX, doorYPosition, doorDepth / 2]}>
-        <animated.group rotation-y={adjustedHingePosition === 'left' ? leftHingeDoorSpring.rotation : rightHingeDoorSpring.rotation}>
+        <animated.group rotation-y={singleDoorLocked ? 0 : (adjustedHingePosition === 'left' ? leftHingeDoorSpring.rotation : rightHingeDoorSpring.rotation)}>
           <group position={[doorPositionX, 0, 0]}>
             {/* 2D 정면뷰: 싱글 도어 반투명 overlay */}
             {showDoorOverlay && (
@@ -1983,10 +2000,11 @@ const DoorModule: React.FC<DoorModuleProps> = ({
               panelName="도어"
               textureUrl={textureUrl}
               panelGrainDirections={panelGrainDirections}
+              isLocked={singleDoorLocked}
             />
 
-            {/* Hinges for single door - 상부장 2개, 하부장 2개, 키큰장 4개 */}
-            {viewMode === '2D' && (view2DDirection === 'front' || view2DDirection === 'left' || view2DDirection === 'right') && (
+            {/* Hinges for single door - 상부장 2개, 하부장 2개, 키큰장 4개 (잠금 시 숨김) */}
+            {viewMode === '2D' && !singleDoorLocked && (view2DDirection === 'front' || view2DDirection === 'left' || view2DDirection === 'right') && (
               <>
                 {isUpperCabinet ? (
                   // 상부장: 위에서 100mm, 아래에서 100mm
@@ -2101,8 +2119,8 @@ const DoorModule: React.FC<DoorModuleProps> = ({
             )}
 
 
-            {/* 도어 열리는 방향 표시 (2D 정면뷰/측면뷰 + 3D) - 정면은 항상, 측면은 열렸을 때만 */}
-            {!isPlainMaterial && (viewMode === '3D' || (viewMode === '2D' && view2DDirection === 'front')) && (() => {
+            {/* 도어 열리는 방향 표시 (2D 정면뷰/측면뷰 + 3D) - 잠금 시 숨김 */}
+            {!isPlainMaterial && !singleDoorLocked && (viewMode === '3D' || (viewMode === '2D' && view2DDirection === 'front')) && (() => {
               const indicatorRotation = (adjustedHingePosition === 'left'
                 ? leftHingeDoorSpring.rotation
                 : rightHingeDoorSpring.rotation).to(value => {
