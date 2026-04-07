@@ -923,16 +923,16 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           const indexing = calculateSpaceIndexing(spaceInfo);
           const slotX = -spaceWidth / 2 + indexing.columnWidth * module.slotIndex + indexing.columnWidth / 2;
 
-          // 하부장: 가구 아래, 키큰장/상부장: 가구 위
+          // 가구 깊이 치수: 하부장은 가구 바닥 아래, 키큰장/상부장은 가구 상단 위
           const modHeightMm = isLowerMod
             ? computeFurnitureHeightMm(mod, depthModuleData, spaceInfo, internalSpace)
             : adjustedInternalHeightMm;
           const modHeight = mmToThreeUnits(modHeightMm);
           const furnitureTopEdge = furnitureBaseY + modHeight; // 가구 상단
           const depthDimY = isLowerMod
-            ? furnitureBaseY - mmToThreeUnits(200)   // 하부장: 가구 바닥 아래
+            ? furnitureBaseY - mmToThreeUnits(200)    // 하부장: 가구 바닥 아래
             : furnitureTopEdge + mmToThreeUnits(200); // 키큰장: 가구 상단 위
-          const depthDimEdge = isLowerMod ? furnitureBaseY : furnitureTopEdge; // 가이드 연장선 시작점
+          const depthDimEdge = isLowerMod ? furnitureBaseY : furnitureTopEdge;
 
           // Z축 위치 계산 (FurnitureItem.tsx와 동일)
           const panelDepthMm = spaceInfo.depth || 1500;
@@ -1010,17 +1010,17 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
 
               {/* 하부프레임 옵셋 깊이 치수 (하부장 전용) — 가구 깊이보다 한 단 아래 */}
               {isLowerMod && baseFrameOffsetMm > 0 && (() => {
-                const offsetDimY = depthDimY - mmToThreeUnits(300); // 가구 깊이 치수선보다 300mm 아래 (2단)
+                const offsetDimY = floatHeight - mmToThreeUnits(200); // 하부프레임 바로 아래
                 // 하부프레임은 가구 앞면(도어면)에서 옵셋만큼 뒤로 들어감
                 const frontZ = furnitureZOffset + furnitureDepth/2 - doorThickness;
                 const offsetBackZ = frontZ - baseFrameOffsetDepth;
 
                 return (
                   <group>
-                    {/* 보조 가이드 연장선 - 앞쪽 (depthDimY에서 짧게) */}
-                    <ExtLine points={[[0, depthDimY, frontZ], [0, offsetDimY, frontZ]]} color={dimensionColor} />
-                    {/* 보조 가이드 연장선 - 뒤쪽 (depthDimY에서 짧게) */}
-                    <ExtLine points={[[0, depthDimY, offsetBackZ], [0, offsetDimY, offsetBackZ]]} color={dimensionColor} />
+                    {/* 보조 가이드 연장선 - 앞쪽 (하부프레임 하단에서 짧게) */}
+                    <ExtLine points={[[0, floatHeight, frontZ], [0, offsetDimY, frontZ]]} color={dimensionColor} />
+                    {/* 보조 가이드 연장선 - 뒤쪽 (하부프레임 하단에서 짧게) */}
+                    <ExtLine points={[[0, floatHeight, offsetBackZ], [0, offsetDimY, offsetBackZ]]} color={dimensionColor} />
 
                     {/* 하부프레임 옵셋 깊이 치수선 */}
                     <NativeLine name="dimension_line"
