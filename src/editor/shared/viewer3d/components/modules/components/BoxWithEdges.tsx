@@ -420,14 +420,21 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
       }
     }
 
-    // Cabinet Texture1이 적용된 경우 정확한 색상 사용
+    // Cabinet Texture1이 적용된 경우: 2D 모드에서는 theme-aware 색상 사용
     if (baseMaterial instanceof THREE.MeshStandardMaterial) {
       const materialColor = baseMaterial.color;
       // RGB 값이 정확히 0.12면 Cabinet Texture1 (오차 허용)
       if (Math.abs(materialColor.r - 0.12) < 0.01 &&
           Math.abs(materialColor.g - 0.12) < 0.01 &&
           Math.abs(materialColor.b - 0.12) < 0.01) {
-        // Cabinet Texture1과 완전히 동일한 색상 사용 (RGB 0.12, 0.12, 0.12 = #1e1e1e)
+        // 2D 모드: 테마에 맞는 대비 색상 사용 (라이트→검정, 다크→주황)
+        if (viewMode === '2D') {
+          if (effectiveRenderMode === 'wireframe') {
+            return view2DTheme === 'dark' ? "#FFFFFF" : "#000000";
+          }
+          return view2DTheme === 'dark' ? "#FF4500" : "#444444";
+        }
+        // 3D 모드: 원래 색상 유지
         return "#" + new THREE.Color(0.12, 0.12, 0.12).getHexString();
       }
     }
@@ -644,10 +651,14 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
 
     // lineBasicMaterial opacity가 WebGL에서 잘 안 보이는 경우 대비
     // color 자체를 배경색과 블렌딩하여 깊이감 표현
+    // 라이트 모드: 최소 opacity 0.3 보장 (너무 연한 색상은 흰 배경에서 안 보임)
     const blendedColor = panelDepthOpacity >= 1.0 ? edgeColor : (() => {
+      const effectiveOpacity = view2DTheme === 'light'
+        ? Math.max(panelDepthOpacity, 0.3)
+        : panelDepthOpacity;
       const base = new THREE.Color(edgeColor);
       const bg = new THREE.Color(view2DTheme === 'dark' ? '#1a1a2e' : '#ffffff');
-      bg.lerp(base, panelDepthOpacity);
+      bg.lerp(base, effectiveOpacity);
       return '#' + bg.getHexString();
     })();
 
