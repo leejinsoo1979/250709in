@@ -74,9 +74,8 @@ const computeFurnitureHeightMm = (
         const globalTop = spaceInfo.frameSize?.top ?? 30;
         heightMm -= (mod.topFrameThickness - globalTop);
       }
-      if (mod.baseFrameHeight !== undefined && !isStandType) {
-        const isLowerMod = mod.moduleId?.startsWith('lower-') || mod.moduleId?.includes('-lower-');
-        const globalBase = spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height ?? (isLowerMod ? 100 : 65)) : 0;
+      if (mod.baseFrameHeight !== undefined && !isStandType && isTall) {
+        const globalBase = spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height ?? 65) : 0;
         heightMm -= (mod.baseFrameHeight - globalBase);
       }
     }
