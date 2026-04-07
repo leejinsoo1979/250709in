@@ -1928,61 +1928,62 @@ const DoorModule: React.FC<DoorModuleProps> = ({
         {/* 측면뷰: 도어 높이 + 상단갭 치수 (듀얼) */}
         {viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right') && !isPlainMaterial && (() => {
           const dimColor = dimensionColor;
-          const doorTopY = doorYPosition + doorHeight / 2;
-          const doorBottomY = doorYPosition - doorHeight / 2;
-          // 도어 Z 위치 (측면뷰에서 X로 변환됨)
-          const doorFrontZ = doorDepth / 2 + doorThicknessUnits / 2;
-          // 치수선 X 위치: 도어 앞면에서 약간 왼쪽 (측면뷰 기준)
-          const dimLineX = doorFrontZ + mmToThreeUnits(60);
-          const extLineStart = doorFrontZ + mmToThreeUnits(10);
-          const tickSize = 0.03;
+          // 도어 상단/하단 Y (DoorModule 로컬 좌표)
+          const dTopY = doorYPosition + doorHeight / 2;
+          const dBottomY = doorYPosition - doorHeight / 2;
+          // 측면뷰: Z축이 화면 수평, Y축이 화면 수직
+          // 도어 앞면 Z 위치 (도어 그룹 Z=doorDepth/2, 도어 두께 반)
+          const doorFaceZ = doorDepth / 2 + doorThicknessUnits / 2;
+          // 치수선은 도어 앞면에서 Z+ 방향으로 오프셋 (화면에서 도어 옆에 표시)
+          const dimZ = doorFaceZ + mmToThreeUnits(80);   // 메인 치수선 Z
+          const extStartZ = doorFaceZ + mmToThreeUnits(15); // 연장선 시작
+          const extEndZ = dimZ + mmToThreeUnits(15);     // 연장선 끝
+          const tick = mmToThreeUnits(8); // 틱 마크 길이 (Z방향)
 
-          // 캐비넷 상단 Y (로컬 좌표)
-          const cabinetHeight = effectiveInternalHeight || moduleData?.dimensions?.height || 1000;
-          const cabinetTopY = mmToThreeUnits(cabinetHeight) / 2;
-
-          // 상단 갭 = 캐비넷 상단 ~ 도어 상단 (doorTopGap 값)
+          // 캐비넷 상단 Y
+          const cabH = effectiveInternalHeight || moduleData?.dimensions?.height || 1000;
+          const cabTopY = mmToThreeUnits(cabH) / 2;
           const topGapMm = Math.abs(doorTopGap);
           const showTopGap = topGapMm > 0 && isLowerCabinet;
 
           return (
             <>
-              {/* 도어 높이 치수 */}
-              {/* 상단 연장선 */}
-              <Line name="door-side-dim" points={[[extLineStart, doorTopY, 0], [dimLineX + mmToThreeUnits(10), doorTopY, 0]]} color={dimColor} lineWidth={1} />
-              {/* 하단 연장선 */}
-              <Line name="door-side-dim" points={[[extLineStart, doorBottomY, 0], [dimLineX + mmToThreeUnits(10), doorBottomY, 0]]} color={dimColor} lineWidth={1} />
-              {/* 세로 치수선 */}
-              <Line name="door-side-dim" points={[[dimLineX, doorTopY, 0], [dimLineX, doorBottomY, 0]]} color={dimColor} lineWidth={1} />
-              {/* 상단 틱 */}
-              <Line name="door-side-dim" points={[[dimLineX - tickSize, doorTopY, 0], [dimLineX + tickSize, doorTopY, 0]]} color={dimColor} lineWidth={1} />
-              {/* 하단 틱 */}
-              <Line name="door-side-dim" points={[[dimLineX - tickSize, doorBottomY, 0], [dimLineX + tickSize, doorBottomY, 0]]} color={dimColor} lineWidth={1} />
+              {/* ── 도어 높이 치수 ── */}
+              {/* 세로 치수선 (메인) */}
+              <Line name="door-side-dim" points={[[0, dTopY, dimZ], [0, dBottomY, dimZ]]} color={dimColor} lineWidth={1} />
+              {/* 상단 수평 연장선 */}
+              <Line name="door-side-dim" points={[[0, dTopY, extStartZ], [0, dTopY, extEndZ]]} color={dimColor} lineWidth={1} />
+              {/* 하단 수평 연장선 */}
+              <Line name="door-side-dim" points={[[0, dBottomY, extStartZ], [0, dBottomY, extEndZ]]} color={dimColor} lineWidth={1} />
+              {/* 상단 틱 (수평 Z방향) */}
+              <Line name="door-side-dim" points={[[0, dTopY, dimZ - tick], [0, dTopY, dimZ + tick]]} color={dimColor} lineWidth={1} />
+              {/* 하단 틱 (수평 Z방향) */}
+              <Line name="door-side-dim" points={[[0, dBottomY, dimZ - tick], [0, dBottomY, dimZ + tick]]} color={dimColor} lineWidth={1} />
               {/* 도어 높이 텍스트 */}
               <DimensionText
                 name="door-side-dim-text"
                 value={actualDoorHeight}
-                position={[dimLineX + mmToThreeUnits(15), (doorTopY + doorBottomY) / 2, 0]}
+                position={[0, (dTopY + dBottomY) / 2, dimZ + mmToThreeUnits(20)]}
                 color={dimColor}
                 anchorX="left"
                 anchorY="middle"
                 forceShow={true}
               />
 
-              {/* 상단 갭 치수 (하부장) */}
+              {/* ── 상단 갭 치수 (하부장) ── */}
               {showTopGap && (
                 <>
-                  {/* 캐비넷 상단 연장선 */}
-                  <Line name="door-side-dim" points={[[extLineStart, cabinetTopY, 0], [dimLineX + mmToThreeUnits(10), cabinetTopY, 0]]} color={dimColor} lineWidth={1} />
-                  {/* 갭 세로선 (캐비넷 상단 ~ 도어 상단) */}
-                  <Line name="door-side-dim" points={[[dimLineX, cabinetTopY, 0], [dimLineX, doorTopY, 0]]} color={dimColor} lineWidth={1} />
+                  {/* 갭 세로선 (캐비넷상단 ~ 도어상단) */}
+                  <Line name="door-side-dim" points={[[0, cabTopY, dimZ], [0, dTopY, dimZ]]} color={dimColor} lineWidth={1} />
+                  {/* 캐비넷 상단 수평 연장선 */}
+                  <Line name="door-side-dim" points={[[0, cabTopY, extStartZ], [0, cabTopY, extEndZ]]} color={dimColor} lineWidth={1} />
                   {/* 캐비넷 상단 틱 */}
-                  <Line name="door-side-dim" points={[[dimLineX - tickSize, cabinetTopY, 0], [dimLineX + tickSize, cabinetTopY, 0]]} color={dimColor} lineWidth={1} />
+                  <Line name="door-side-dim" points={[[0, cabTopY, dimZ - tick], [0, cabTopY, dimZ + tick]]} color={dimColor} lineWidth={1} />
                   {/* 갭 텍스트 */}
                   <DimensionText
                     name="door-side-dim-text"
                     value={topGapMm}
-                    position={[dimLineX + mmToThreeUnits(15), (cabinetTopY + doorTopY) / 2, 0]}
+                    position={[0, (cabTopY + dTopY) / 2, dimZ + mmToThreeUnits(20)]}
                     color={dimColor}
                     anchorX="left"
                     anchorY="middle"
@@ -2508,47 +2509,45 @@ const DoorModule: React.FC<DoorModuleProps> = ({
         {/* 측면뷰: 도어 높이 + 상단갭 치수 (싱글) */}
         {viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right') && !isPlainMaterial && (() => {
           const dimColor = dimensionColor;
-          const doorTopY = doorYPosition + doorHeight / 2;
-          const doorBottomY = doorYPosition - doorHeight / 2;
-          const doorFrontZ = doorDepth / 2 + doorThicknessUnits / 2;
-          const dimLineX = doorFrontZ + mmToThreeUnits(60);
-          const extLineStart = doorFrontZ + mmToThreeUnits(10);
-          const tickSize = 0.03;
+          const dTopY = doorYPosition + doorHeight / 2;
+          const dBottomY = doorYPosition - doorHeight / 2;
+          const doorFaceZ = doorDepth / 2 + doorThicknessUnits / 2;
+          const dimZ = doorFaceZ + mmToThreeUnits(80);
+          const extStartZ = doorFaceZ + mmToThreeUnits(15);
+          const extEndZ = dimZ + mmToThreeUnits(15);
+          const tick = mmToThreeUnits(8);
 
-          const cabinetHeight = effectiveInternalHeight || moduleData?.dimensions?.height || 1000;
-          const cabinetTopY = mmToThreeUnits(cabinetHeight) / 2;
-
+          const cabH = effectiveInternalHeight || moduleData?.dimensions?.height || 1000;
+          const cabTopY = mmToThreeUnits(cabH) / 2;
           const topGapMm = Math.abs(doorTopGap);
           const showTopGap = topGapMm > 0 && isLowerCabinet;
 
           return (
             <>
-              {/* 도어 높이 치수 */}
-              <Line name="door-side-dim" points={[[extLineStart, doorTopY, 0], [dimLineX + mmToThreeUnits(10), doorTopY, 0]]} color={dimColor} lineWidth={1} />
-              <Line name="door-side-dim" points={[[extLineStart, doorBottomY, 0], [dimLineX + mmToThreeUnits(10), doorBottomY, 0]]} color={dimColor} lineWidth={1} />
-              <Line name="door-side-dim" points={[[dimLineX, doorTopY, 0], [dimLineX, doorBottomY, 0]]} color={dimColor} lineWidth={1} />
-              <Line name="door-side-dim" points={[[dimLineX - tickSize, doorTopY, 0], [dimLineX + tickSize, doorTopY, 0]]} color={dimColor} lineWidth={1} />
-              <Line name="door-side-dim" points={[[dimLineX - tickSize, doorBottomY, 0], [dimLineX + tickSize, doorBottomY, 0]]} color={dimColor} lineWidth={1} />
+              <Line name="door-side-dim" points={[[0, dTopY, dimZ], [0, dBottomY, dimZ]]} color={dimColor} lineWidth={1} />
+              <Line name="door-side-dim" points={[[0, dTopY, extStartZ], [0, dTopY, extEndZ]]} color={dimColor} lineWidth={1} />
+              <Line name="door-side-dim" points={[[0, dBottomY, extStartZ], [0, dBottomY, extEndZ]]} color={dimColor} lineWidth={1} />
+              <Line name="door-side-dim" points={[[0, dTopY, dimZ - tick], [0, dTopY, dimZ + tick]]} color={dimColor} lineWidth={1} />
+              <Line name="door-side-dim" points={[[0, dBottomY, dimZ - tick], [0, dBottomY, dimZ + tick]]} color={dimColor} lineWidth={1} />
               <DimensionText
                 name="door-side-dim-text"
                 value={actualDoorHeight}
-                position={[dimLineX + mmToThreeUnits(15), (doorTopY + doorBottomY) / 2, 0]}
+                position={[0, (dTopY + dBottomY) / 2, dimZ + mmToThreeUnits(20)]}
                 color={dimColor}
                 anchorX="left"
                 anchorY="middle"
                 forceShow={true}
               />
 
-              {/* 상단 갭 치수 (하부장) */}
               {showTopGap && (
                 <>
-                  <Line name="door-side-dim" points={[[extLineStart, cabinetTopY, 0], [dimLineX + mmToThreeUnits(10), cabinetTopY, 0]]} color={dimColor} lineWidth={1} />
-                  <Line name="door-side-dim" points={[[dimLineX, cabinetTopY, 0], [dimLineX, doorTopY, 0]]} color={dimColor} lineWidth={1} />
-                  <Line name="door-side-dim" points={[[dimLineX - tickSize, cabinetTopY, 0], [dimLineX + tickSize, cabinetTopY, 0]]} color={dimColor} lineWidth={1} />
+                  <Line name="door-side-dim" points={[[0, cabTopY, dimZ], [0, dTopY, dimZ]]} color={dimColor} lineWidth={1} />
+                  <Line name="door-side-dim" points={[[0, cabTopY, extStartZ], [0, cabTopY, extEndZ]]} color={dimColor} lineWidth={1} />
+                  <Line name="door-side-dim" points={[[0, cabTopY, dimZ - tick], [0, cabTopY, dimZ + tick]]} color={dimColor} lineWidth={1} />
                   <DimensionText
                     name="door-side-dim-text"
                     value={topGapMm}
-                    position={[dimLineX + mmToThreeUnits(15), (cabinetTopY + doorTopY) / 2, 0]}
+                    position={[0, (cabTopY + dTopY) / 2, dimZ + mmToThreeUnits(20)]}
                     color={dimColor}
                     anchorX="left"
                     anchorY="middle"
