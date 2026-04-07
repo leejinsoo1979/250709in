@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useRef, useEffect, useMemo } from 'react';
 import * as THREE from 'three';
 
 interface NativeLineProps {
@@ -18,7 +18,7 @@ interface NativeLineProps {
 
 /**
  * Native Three.js line component to replace @react-three/drei Line
- * This avoids R3F hooks errors by using pure Three.js geometry and materials
+ * Uses useRef + useEffect for reliable geometry updates when points change.
  */
 export const NativeLine: React.FC<NativeLineProps> = ({
   points,
@@ -34,12 +34,29 @@ export const NativeLine: React.FC<NativeLineProps> = ({
   depthWrite = true,
   name
 }) => {
-  const geometry = useMemo(() => {
-    const geo = new THREE.BufferGeometry();
+  const geoRef = useRef<THREE.BufferGeometry>(null!);
+
+  // points를 값 기반으로 비교하기 위해 직렬화
+  const pointsKey = useMemo(() => {
+    const flat: number[] = [];
+    for (const point of points) {
+      if (point instanceof THREE.Vector3) {
+        flat.push(point.x, point.y, point.z);
+      } else if (Array.isArray(point)) {
+        flat.push(point[0] || 0, point[1] || 0, point[2] || 0);
+      }
+    }
+    return flat.join(',');
+  }, [points]);
+
+  // points 변경 시 geometry의 position attribute를 인-플레이스 업데이트
+  useEffect(() => {
+    const geo = geoRef.current;
+    if (!geo) return;
+
     const positions = new Float32Array(points.length * 3);
-    
+
     points.forEach((point, index) => {
-      // Handle both Vector3 objects and arrays
       if (point instanceof THREE.Vector3) {
         positions[index * 3] = point.x;
         positions[index * 3 + 1] = point.y;
@@ -50,18 +67,24 @@ export const NativeLine: React.FC<NativeLineProps> = ({
         positions[index * 3 + 2] = point[2] || 0;
       }
     });
-    
-    geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-    
+
+    const existingAttr = geo.getAttribute('position') as THREE.BufferAttribute | null;
+    if (existingAttr && existingAttr.array.length === positions.length) {
+      (existingAttr.array as Float32Array).set(positions);
+      existingAttr.needsUpdate = true;
+    } else {
+      geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+    }
+
     // Compute line distances for dashed lines
     if (dashed && points.length > 1) {
       const lineDistances = new Float32Array(points.length);
       lineDistances[0] = 0;
-      
+
       for (let i = 1; i < points.length; i++) {
         const prevPoint = points[i - 1];
         const currPoint = points[i];
-        
+
         let distance: number;
         if (prevPoint instanceof THREE.Vector3 && currPoint instanceof THREE.Vector3) {
           distance = Math.sqrt(
@@ -84,16 +107,31 @@ export const NativeLine: React.FC<NativeLineProps> = ({
         } else {
           distance = 0;
         }
-        
+
         lineDistances[i] = lineDistances[i - 1] + distance;
       }
-      
-      geo.setAttribute('lineDistance', new THREE.BufferAttribute(lineDistances, 1));
+
+      const existingDist = geo.getAttribute('lineDistance') as THREE.BufferAttribute | null;
+      if (existingDist && existingDist.array.length === lineDistances.length) {
+        (existingDist.array as Float32Array).set(lineDistances);
+        existingDist.needsUpdate = true;
+      } else {
+        geo.setAttribute('lineDistance', new THREE.BufferAttribute(lineDistances, 1));
+      }
     }
-    
-    return geo;
-  }, [points, dashed]);
-  
+
+    geo.computeBoundingSphere();
+  }, [pointsKey, dashed]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // cleanup
+  useEffect(() => {
+    return () => {
+      if (geoRef.current) {
+        geoRef.current.dispose();
+      }
+    };
+  }, []);
+
   const material = useMemo(() => {
     if (dashed) {
       return (
@@ -119,9 +157,10 @@ export const NativeLine: React.FC<NativeLineProps> = ({
       );
     }
   }, [color, dashed, dashSize, gapSize, opacity, transparent, depthTest, depthWrite]);
-  
+
   return (
-    <line geometry={geometry} renderOrder={renderOrder} name={name}>
+    <line renderOrder={renderOrder} name={name}>
+      <bufferGeometry ref={geoRef} />
       {material}
     </line>
   );
