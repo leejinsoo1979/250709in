@@ -5405,11 +5405,11 @@ const Configurator: React.FC = () => {
                           if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
                             e.preventDefault();
                             const cur = mod.baseFrameHeight ?? globalBase;
-                            updatePlacedModule(mod.id, { baseFrameHeight: Math.max(0, Math.min(9999, cur + (e.key === 'ArrowUp' ? 1 : -1))) });
+                            updatePlacedModule(mod.id, { baseFrameHeight: Math.max(60, Math.min(150, cur + (e.key === 'ArrowUp' ? 1 : -1))) });
                           }
                         }}
-                        onChange={(e) => { const v = e.target.value; if (v === '' || /^\d+$/.test(v)) updatePlacedModule(mod.id, { baseFrameHeight: v === '' ? 0 : parseInt(v, 10) }); }}
-                        onBlur={(e) => { setHighlightedFrame(null); updatePlacedModule(mod.id, { baseFrameHeight: Math.max(0, Math.min(9999, parseInt(e.target.value) || 0)) }); }}
+                        onChange={(e) => { const v = e.target.value; if (v === '' || /^\d+$/.test(v)) { const num = v === '' ? 0 : parseInt(v, 10); updatePlacedModule(mod.id, { baseFrameHeight: num > 150 ? 150 : num }); } }}
+                        onBlur={(e) => { setHighlightedFrame(null); updatePlacedModule(mod.id, { baseFrameHeight: Math.max(60, Math.min(150, parseInt(e.target.value) || 65)) }); }}
                         className={styles.frameNumberInput}
                       />
                     </div>
@@ -5493,16 +5493,19 @@ const Configurator: React.FC = () => {
                         if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
                           e.preventDefault();
                           const delta = e.key === 'ArrowUp' ? 1 : -1;
-                          onHeightChange(Math.max(0, Math.min(9999, (heightMM || 0) + delta)));
+                          onHeightChange(Math.max(60, Math.min(150, (heightMM || 65) + delta)));
                         }
                       }}
                       onChange={(e) => {
                         const v = e.target.value;
-                        if (v === '' || /^\d+$/.test(v)) onHeightChange(v === '' ? 0 : parseInt(v, 10));
+                        if (v === '' || /^\d+$/.test(v)) {
+                          const num = v === '' ? 0 : parseInt(v, 10);
+                          onHeightChange(num > 150 ? 150 : num);
+                        }
                       }}
                       onBlur={(e) => {
                         setHighlightedFrame(null);
-                        onHeightChange(Math.max(0, Math.min(9999, parseInt(e.target.value) || 0)));
+                        onHeightChange(Math.max(60, Math.min(150, parseInt(e.target.value) || 65)));
                       }}
                       className={styles.frameNumberInput}
                     />
