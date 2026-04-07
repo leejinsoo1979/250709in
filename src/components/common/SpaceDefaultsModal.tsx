@@ -15,7 +15,7 @@ const SYSTEM_DEFAULTS: Required<SpaceConfigDefaults> = {
   frameTop: 30,
   frameLeft: 18,
   frameRight: 18,
-  baseHeight: 65,
+  baseHeight: 60,
   furnitureSingleWidth: 500,
   furnitureDualWidth: 1000,
   placementType: 'slot',

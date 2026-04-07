@@ -1735,7 +1735,7 @@ const Configurator: React.FC = () => {
             },
             baseConfig: {
               ...defaultSpaceConfig.baseConfig,
-              height: defaults.baseHeight ?? 65,
+              height: defaults.baseHeight ?? 60,
             },
             ...(defaults.furnitureSingleWidth !== undefined && { furnitureSingleWidth: defaults.furnitureSingleWidth }),
             ...(defaults.furnitureDualWidth !== undefined && { furnitureDualWidth: defaults.furnitureDualWidth }),

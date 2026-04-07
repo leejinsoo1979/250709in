@@ -87,7 +87,7 @@ const Step1: React.FC<Step1Props> = ({ onClose, projectId, projectTitle, initial
           },
           baseConfig: {
             ...current.baseConfig!,
-            height: defaults.baseHeight ?? current.baseConfig?.height ?? 65,
+            height: defaults.baseHeight ?? current.baseConfig?.height ?? 60,
           },
           furnitureSingleWidth: defaults.furnitureSingleWidth ?? current.furnitureSingleWidth,
           furnitureDualWidth: defaults.furnitureDualWidth ?? current.furnitureDualWidth,
