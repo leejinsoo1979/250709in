@@ -687,7 +687,7 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
             <lineBasicMaterial
               color={blendedColor}
               transparent={true}
-              opacity={panelDepthOpacity}
+              opacity={view2DTheme === 'light' ? Math.max(panelDepthOpacity, 0.7) : panelDepthOpacity}
               depthTest={false}
               depthWrite={false}
               linewidth={baseLineWidth}
