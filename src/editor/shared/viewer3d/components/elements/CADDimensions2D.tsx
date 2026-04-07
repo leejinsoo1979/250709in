@@ -555,13 +555,100 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           if (!moduleData) return null;
 
           const moduleHeightMm = computeFurnitureHeightMm(mod, moduleData, spaceInfo, internalSpace);
+          const cabinetBottomY = furnitureBaseY;
+
+          // 서랍 모듈(마이다 있음): 섹션 높이(770) 대신 마이다 개별 높이로 대체
+          const lowerMaidas = computeLowerCabinetMaidaHeights(
+            mod.moduleId, moduleHeightMm, mod.doorTopGap ?? 0, mod.doorBottomGap ?? 0
+          );
+          if (lowerMaidas && lowerMaidas.length > 0) {
+            const displaySections = lowerMaidas.map((m, i) => ({
+              startY: cabinetBottomY + mmToThreeUnits(m.maidaBottomMm),
+              endY: cabinetBottomY + mmToThreeUnits(m.maidaTopMm),
+              heightMm: m.maidaHeightMm,
+              isFirst: i === 0
+            }));
+            return (
+              <group>
+                {displaySections.map((sec, si) => {
+                  const shouldRenderStartGuide = !sec.isFirst || baseFrameHeightMm <= 0;
+                  return (
+                    <group key={`left-maida-${si}`}>
+                      {shouldRenderStartGuide && (
+                        <NativeLine name="dimension_line"
+                          points={[[0, sec.startY, leftInnerExtStartZ], [0, sec.startY, leftInnerZ]]}
+                          color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
+                        />
+                      )}
+                      <NativeLine name="dimension_line"
+                        points={[[0, sec.endY, leftInnerExtStartZ], [0, sec.endY, leftInnerZ]]}
+                        color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
+                      />
+                      <NativeLine name="dimension_line"
+                        points={[[0, sec.startY, leftInnerZ], [0, sec.endY, leftInnerZ]]}
+                        color={dimensionColor} lineWidth={2} renderOrder={100000} depthTest={false}
+                      />
+                      {shouldRenderStartGuide && (
+                        <NativeLine name="dimension_line"
+                          points={[[-0.03, sec.startY, leftInnerZ], [0.03, sec.startY, leftInnerZ]]}
+                          color={dimensionColor} lineWidth={2} renderOrder={100000} depthTest={false}
+                        />
+                      )}
+                      <NativeLine name="dimension_line"
+                        points={[[-0.03, sec.endY, leftInnerZ], [0.03, sec.endY, leftInnerZ]]}
+                        color={dimensionColor} lineWidth={2} renderOrder={100000} depthTest={false}
+                      />
+                      <Text
+                        position={[0, (sec.startY + sec.endY) / 2, leftInnerZ - mmToThreeUnits(60)]}
+                        fontSize={largeFontSize} color={textColor}
+                        anchorX="center" anchorY="middle"
+                        renderOrder={1000} depthTest={false}
+                        rotation={[0, -Math.PI / 2, Math.PI / 2]}
+                      >
+                        {Math.round(sec.heightMm)}
+                      </Text>
+                    </group>
+                  );
+                })}
+                {/* 하부프레임 높이 */}
+                {baseFrameHeightMm > 0 && (
+                  <>
+                    <NativeLine name="dimension_line"
+                      points={[[0, floorFinishY, leftInnerExtStartZ], [0, floorFinishY, leftInnerZ]]}
+                      color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
+                    />
+                    <NativeLine name="dimension_line"
+                      points={[[0, floorFinishY, leftInnerZ], [0, furnitureBaseY, leftInnerZ]]}
+                      color={dimensionColor} lineWidth={2} renderOrder={100000} depthTest={false}
+                    />
+                    <NativeLine name="dimension_line"
+                      points={[[-0.03, floorFinishY, leftInnerZ], [0.03, floorFinishY, leftInnerZ]]}
+                      color={dimensionColor} lineWidth={2} renderOrder={100000} depthTest={false}
+                    />
+                    <NativeLine name="dimension_line"
+                      points={[[-0.03, furnitureBaseY, leftInnerZ], [0.03, furnitureBaseY, leftInnerZ]]}
+                      color={dimensionColor} lineWidth={2} renderOrder={100000} depthTest={false}
+                    />
+                    <Text
+                      position={[0, floorFinishY + (furnitureBaseY - floorFinishY) / 2, leftInnerZ - mmToThreeUnits(60)]}
+                      fontSize={largeFontSize} color={textColor}
+                      anchorX="center" anchorY="middle"
+                      renderOrder={1000} depthTest={false}
+                      rotation={[0, -Math.PI / 2, Math.PI / 2]}
+                    >
+                      {baseFrameDisplayMm}
+                    </Text>
+                  </>
+                )}
+              </group>
+            );
+          }
 
           const { sections: sectionConfigs, heightsMm: sectionHeightsMm } = computeSectionHeightsInfo(mod, moduleData, moduleHeightMm, 'left');
           if (sectionConfigs.length === 0) return null;
 
           const lowerSectionHeightMm = sectionHeightsMm[0] || 0;
           const upperSectionHeightMm = sectionHeightsMm.slice(1).reduce((sum, h) => sum + h, 0);
-          const cabinetBottomY = furnitureBaseY;
           const cabinetHeight = mmToThreeUnits(moduleHeightMm);
           const cabinetTopY = cabinetBottomY + cabinetHeight;
           const lowerSectionEndY = cabinetBottomY + mmToThreeUnits(lowerSectionHeightMm);
