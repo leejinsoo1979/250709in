@@ -555,6 +555,13 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           if (!moduleData) return null;
 
           const moduleHeightMm = computeFurnitureHeightMm(mod, moduleData, spaceInfo, internalSpace);
+
+          // 서랍 모듈(마이다 있음)이면 왼쪽 섹션 높이 생략 (오른쪽에 마이다 개별 높이로 대체)
+          const hasLowerMaida = !!computeLowerCabinetMaidaHeights(
+            mod.moduleId, moduleHeightMm, mod.doorTopGap ?? 0, mod.doorBottomGap ?? 0
+          );
+          if (hasLowerMaida) return null;
+
           const { sections: sectionConfigs, heightsMm: sectionHeightsMm } = computeSectionHeightsInfo(mod, moduleData, moduleHeightMm, 'left');
           if (sectionConfigs.length === 0) return null;
 
