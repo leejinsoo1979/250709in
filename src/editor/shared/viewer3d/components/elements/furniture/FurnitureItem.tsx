@@ -1397,7 +1397,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   // 하부프레임 토글 꺼짐 → 가구 높이에 하부프레임 높이를 더하되, 개별 띄움 높이만큼 차감
   if (placedModule.hasBase === false && spaceInfo.baseConfig?.type === 'floor') {
     const isLowerMod = placedModule.moduleId?.startsWith('lower-') || placedModule.moduleId?.includes('-lower-');
-    const hiddenBaseH = placedModule.baseFrameHeight ?? spaceInfo.baseConfig?.height ?? (isLowerMod ? 100 : 65);
+    const hiddenBaseH = placedModule.baseFrameHeight ?? spaceInfo.baseConfig?.height ?? (isLowerMod ? 100 : 60);
     const indivFloat = placedModule.individualFloatHeight ?? 0;
     furnitureHeightMm += hiddenBaseH - indivFloat;
   }
@@ -1452,7 +1452,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         const configSections = placedModule.customConfig?.sections;
         const bottomRaiseActive = configSections?.[0]?.bottomPanelRaise && configSections[0].bottomPanelRaise > 0;
         const isLowerModBase = placedModule.moduleId?.startsWith('lower-') || placedModule.moduleId?.includes('-lower-');
-        const baseHeightMm = bottomRaiseActive ? 0 : (spaceInfo.baseConfig?.type === 'stand' ? 0 : (placedModule.hasBase === false ? 0 : (placedModule.baseFrameHeight ?? spaceInfo.baseConfig?.height ?? (isLowerModBase ? 100 : 65))));
+        const baseHeightMm = bottomRaiseActive ? 0 : (spaceInfo.baseConfig?.type === 'stand' ? 0 : (placedModule.hasBase === false ? 0 : (placedModule.baseFrameHeight ?? spaceInfo.baseConfig?.height ?? (isLowerModBase ? 100 : 60))));
         // 하부프레임 OFF + 개별 띄움 높이
         const indivFloatMm = (placedModule.hasBase === false) ? (placedModule.individualFloatHeight ?? 0) : 0;
         const baseHeight = (baseHeightMm + indivFloatMm) * 0.01; // mm to Three.js units

@@ -425,7 +425,7 @@ export const calculateBaseFrameWidth = (spaceInfo: SpaceInfo) => {
 
 /**
  * 받침대 높이 계산 (mm 단위)
- * 기본값은 65mm이고, baseConfig.height 설정이 있으면 그 값을 사용
+ * 기본값은 60mm이고, baseConfig.height 설정이 있으면 그 값을 사용
  */
 export const calculateBaseFrameHeight = (spaceInfo: SpaceInfo) => {
   if (!spaceInfo) {
@@ -434,7 +434,7 @@ export const calculateBaseFrameHeight = (spaceInfo: SpaceInfo) => {
   
   // 받침대가 있는 경우에만 높이 반환
   if (spaceInfo.baseConfig?.type === 'floor') {
-    const height = spaceInfo.baseConfig.height || 65;
+    const height = spaceInfo.baseConfig.height || 60;
     return height;
   }
   return 0;

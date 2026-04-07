@@ -5386,7 +5386,7 @@ const Configurator: React.FC = () => {
             const isLower = mod.moduleId?.startsWith('lower-') || mod.moduleId?.includes('-lower-');
             const bfMin = isLower ? 60 : 40;
             const bfMax = isLower ? 150 : 100;
-            const bfDefault = isLower ? 100 : 65;
+            const bfDefault = isLower ? 100 : 60;
             return (
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '3px 0' }}>
                 <span className={styles.frameItemLabel} style={{ minWidth: '34px', textAlign: 'left', margin: 0 }}>{label}</span>
@@ -5471,7 +5471,7 @@ const Configurator: React.FC = () => {
           ) => {
             const bfMin = isLowerCategory ? 60 : 40;
             const bfMax = isLowerCategory ? 150 : 100;
-            const bfDefault = isLowerCategory ? 100 : 65;
+            const bfDefault = isLowerCategory ? 100 : 60;
             return (
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '3px 0' }}>
               <span className={styles.frameItemLabel} style={{ minWidth: '50px', textAlign: 'left', margin: 0 }}>{label}</span>

@@ -120,7 +120,7 @@ const MergedFrameRow = React.memo(({ label, enabled, widthMM, heightMM, offset, 
 }) => {
   const bfMin = isLowerCategory ? 60 : 40;
   const bfMax = isLowerCategory ? 150 : 100;
-  const bfDefault = isLowerCategory ? 100 : 65;
+  const bfDefault = isLowerCategory ? 100 : 60;
   const [heightText, setHeightText] = React.useState(String(heightMM || ''));
   const [offsetText, setOffsetText] = React.useState(offset !== 0 ? String(offset) : '');
   const heightEditingRef = React.useRef(false);
@@ -1471,7 +1471,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
                     const isLowerMod = mod.moduleId?.startsWith('lower-') || mod.moduleId?.includes('-lower-');
                     const bfMin = isLowerMod ? 60 : 40;
                     const bfMax = isLowerMod ? 150 : 100;
-                    const bfDefault = isLowerMod ? 100 : 65;
+                    const bfDefault = isLowerMod ? 100 : 60;
                     return (
                       <div key={`base-${mod.id}`} style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '3px 0' }}>
                         <span style={{ minWidth: '50px', fontSize: '11px', color: 'var(--theme-text-secondary)', fontWeight: 500 }}>{`${toAlpha(baseNum)}(하)`}</span>
@@ -1546,6 +1546,37 @@ const RightPanel: React.FC<RightPanelProps> = ({
                       </div>
                     );
                   })}
+                  {/* 도어갭 (하부장 서랍/도어올림/상하개폐 가구만) */}
+                  {sorted.filter(m => m.moduleId?.includes('lower-drawer-') || m.moduleId?.includes('lower-door-lift-') || m.moduleId?.includes('lower-top-down-')).length > 0 && (
+                    <>
+                      <div style={{ borderTop: '1px dashed var(--theme-border, #e0e0e0)', margin: '4px 0' }} />
+                      <div style={{ fontSize: '10px', color: 'var(--theme-text-secondary)', marginBottom: '2px' }}>도어갭</div>
+                      {sorted.filter(m => m.moduleId?.includes('lower-drawer-') || m.moduleId?.includes('lower-door-lift-') || m.moduleId?.includes('lower-top-down-')).map((mod) => (
+                        <div key={`doorgap-${mod.id}`} style={{ display: 'flex', alignItems: 'center', gap: '4px', padding: '2px 0' }}>
+                          <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '2px', border: '1px solid var(--theme-border)', borderRadius: '4px', padding: '2px 4px' }}>
+                            <span style={{ fontSize: '10px', color: 'var(--theme-text-secondary)', flexShrink: 0 }}>상단</span>
+                            <input type="text" inputMode="numeric"
+                              value={(mod.doorTopGap ?? 0) || ''} placeholder="0"
+                              onKeyDown={(e) => { if (e.key === 'ArrowUp' || e.key === 'ArrowDown') { e.preventDefault(); const cur = mod.doorTopGap ?? 0; const nv = Math.max(-100, Math.min(200, cur + (e.key === 'ArrowUp' ? 1 : -1))); updatePlacedModule(mod.id, { doorTopGap: nv }); } }}
+                              onChange={(e) => { const v = e.target.value; if (v === '' || v === '-' || /^-?\d+$/.test(v)) updatePlacedModule(mod.id, { doorTopGap: v === '' || v === '-' ? 0 : parseInt(v, 10) }); }}
+                              onBlur={(e) => { const v = parseInt(e.target.value) || 0; updatePlacedModule(mod.id, { doorTopGap: Math.max(-100, Math.min(200, v)) }); }}
+                              style={{ width: '100%', border: 'none', outline: 'none', fontSize: '12px', textAlign: 'center', background: 'transparent', color: 'var(--theme-text-primary)' }}
+                            />
+                          </div>
+                          <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '2px', border: '1px solid var(--theme-border)', borderRadius: '4px', padding: '2px 4px' }}>
+                            <span style={{ fontSize: '10px', color: 'var(--theme-text-secondary)', flexShrink: 0 }}>하단</span>
+                            <input type="text" inputMode="numeric"
+                              value={(mod.doorBottomGap ?? 0) || ''} placeholder="0"
+                              onKeyDown={(e) => { if (e.key === 'ArrowUp' || e.key === 'ArrowDown') { e.preventDefault(); const cur = mod.doorBottomGap ?? 0; const nv = Math.max(-100, Math.min(200, cur + (e.key === 'ArrowUp' ? 1 : -1))); updatePlacedModule(mod.id, { doorBottomGap: nv }); } }}
+                              onChange={(e) => { const v = e.target.value; if (v === '' || v === '-' || /^-?\d+$/.test(v)) updatePlacedModule(mod.id, { doorBottomGap: v === '' || v === '-' ? 0 : parseInt(v, 10) }); }}
+                              onBlur={(e) => { const v = parseInt(e.target.value) || 0; updatePlacedModule(mod.id, { doorBottomGap: Math.max(-100, Math.min(200, v)) }); }}
+                              style={{ width: '100%', border: 'none', outline: 'none', fontSize: '12px', textAlign: 'center', background: 'transparent', color: 'var(--theme-text-primary)' }}
+                            />
+                          </div>
+                        </div>
+                      ))}
+                    </>
+                  )}
                 </FormControl>
               );
             })()}

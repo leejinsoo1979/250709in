@@ -258,7 +258,7 @@ export const DEFAULT_FRAME_VALUES = {
 } as const;
 
 export const DEFAULT_BASE_VALUES = {
-  HEIGHT: 65,
+  HEIGHT: 60,
   FLOOR_FINISH_HEIGHT: 15,
 } as const;
 

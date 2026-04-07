@@ -335,10 +335,14 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
         }
       }
 
-      // 하부장 모듈: 하부프레임 기본값 100mm (키큰장/상부장은 글로벌 기본값 사용)
+      // 하부프레임 기본값: 하부장 100mm, 키큰장 60mm
       const isLowerById = module.moduleId?.startsWith('lower-') || module.moduleId?.includes('dual-lower-');
-      if (module.baseFrameHeight === undefined && (newCategory === 'lower' || isLowerById)) {
-        module.baseFrameHeight = 100;
+      if (module.baseFrameHeight === undefined) {
+        if (newCategory === 'lower' || isLowerById) {
+          module.baseFrameHeight = 100;
+        } else if (newCategory === 'full') {
+          module.baseFrameHeight = 60;
+        }
       }
 
 

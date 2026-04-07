@@ -90,7 +90,7 @@ const computeFurnitureHeightMm = (
   // hasBase=false: 하부프레임 높이 추가, 개별 띄움 차감
   if (mod.hasBase === false && spaceInfo.baseConfig?.type === 'floor') {
     const isLowerModH = mod.moduleId?.startsWith('lower-') || mod.moduleId?.includes('-lower-');
-    const hiddenBaseH = mod.baseFrameHeight ?? spaceInfo.baseConfig?.height ?? (isLowerModH ? 100 : 65);
+    const hiddenBaseH = mod.baseFrameHeight ?? spaceInfo.baseConfig?.height ?? (isLowerModH ? 100 : 60);
     const indivFloat = mod.individualFloatHeight ?? 0;
     heightMm += hiddenBaseH - indivFloat;
   }
