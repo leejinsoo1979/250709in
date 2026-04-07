@@ -801,7 +801,7 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
         userData={furnitureId ? { furnitureId } : undefined}
         receiveShadow={viewMode === '3D' && effectiveRenderMode === 'solid' && shadowEnabled}
         castShadow={viewMode === '3D' && effectiveRenderMode === 'solid' && shadowEnabled}
-        renderOrder={(isBackPanel && view2DDirection === 'top') ? 50 : (renderOrder ?? 10)}
+        renderOrder={renderOrder ?? 10}
         onClick={onClick}
         onPointerOver={onPointerOver}
         onPointerOut={onPointerOut}
