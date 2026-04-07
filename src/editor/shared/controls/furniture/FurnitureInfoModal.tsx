@@ -24,6 +24,7 @@ const FurnitureInfoModal: React.FC<FurnitureInfoModalProps> = ({
 }) => {
   const { t } = useTranslation();
   const { updateModule } = useFurnitureStore();
+  const allPlacedModules = useFurnitureStore(state => state.placedModules);
 
   const { spaceInfo } = useSpaceConfigStore();
 
@@ -375,6 +376,20 @@ const FurnitureInfoModal: React.FC<FurnitureInfoModalProps> = ({
     ? Math.max(0, baseFrameHeightMm - floorFinishH)
     : baseFrameHeightMm;
 
+  // EP ㄷ자 프레임: 인접 가구 판단
+  const mySlot = placedModule?.slotIndex;
+  const myZone = placedModule?.zone || 'normal';
+  const isDualPm = placedModule?.isDualSlot;
+  const leftEpAdj = mySlot !== undefined && !placedModule?.isFreePlacement && allPlacedModules.some(m =>
+    m.id !== placedModule?.id && !m.isFreePlacement && (m.zone || 'normal') === myZone &&
+    m.slotIndex !== undefined && (m.slotIndex === mySlot - 1 || (m.isDualSlot && m.slotIndex === mySlot - 2))
+  );
+  const rightSlotEnd = isDualPm && mySlot !== undefined ? mySlot + 1 : mySlot;
+  const rightEpAdj = rightSlotEnd !== undefined && !placedModule?.isFreePlacement && allPlacedModules.some(m =>
+    m.id !== placedModule?.id && !m.isFreePlacement && (m.zone || 'normal') === myZone &&
+    m.slotIndex !== undefined && (m.slotIndex === rightSlotEnd + 1 || (m.isDualSlot && m.slotIndex === rightSlotEnd + 1))
+  );
+
   const panels = calculatePanelDetails(
     moduleData as ModuleData, customWidth, customDepth, hasDoor, t,
     undefined, undefined, undefined, undefined, undefined, undefined, undefined,
@@ -383,7 +398,8 @@ const FurnitureInfoModal: React.FC<FurnitureInfoModalProps> = ({
     placedModule?.endPanelThickness, placedModule?.freeHeight || placedModule?.customHeight,
     topFrameHeightMm, visualBaseFrameHeightMm,
     placedModule?.hasTopFrame, placedModule?.hasBase,
-    placedModule?.isDualSlot
+    placedModule?.isDualSlot,
+    leftEpAdj, rightEpAdj
   );
 
   // 서라운드 패널 (공간 전체 단위)

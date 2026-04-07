@@ -3609,6 +3609,23 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
               const hasRight = placedModule.hasRightEndPanel;
               if (!hasLeft && !hasRight) return null;
 
+              // 인접 가구 판단: EP 방향 슬롯에 다른 가구가 있으면 측판 불필요
+              const mySlot = placedModule.slotIndex;
+              const myZone = placedModule.zone || 'normal';
+              const isDual = placedModule.isDualSlot;
+              const leftAdjacentExists = mySlot !== undefined && placedModules.some(m =>
+                m.id !== placedModule.id && !m.isFreePlacement && (m.zone || 'normal') === myZone &&
+                m.slotIndex !== undefined && (
+                  isDual ? m.slotIndex === mySlot - 1 || (m.isDualSlot && m.slotIndex === mySlot - 2)
+                         : m.slotIndex === mySlot - 1 || (m.isDualSlot && m.slotIndex === mySlot - 2)
+                )
+              );
+              const rightSlotEnd = isDual && mySlot !== undefined ? mySlot + 1 : mySlot;
+              const rightAdjacentExists = rightSlotEnd !== undefined && placedModules.some(m =>
+                m.id !== placedModule.id && !m.isFreePlacement && (m.zone || 'normal') === myZone &&
+                m.slotIndex !== undefined && (m.slotIndex === rightSlotEnd + 1 || (m.isDualSlot && m.slotIndex === rightSlotEnd + 1))
+              );
+
               const epThicknessMm = placedModule.endPanelThickness || 18.5; // 물리적 렌더링 두께 (PET)
               const epW = mmToThreeUnits(epThicknessMm);
               const leftEpOffsetZ = mmToThreeUnits(placedModule.leftEndPanelOffset ?? placedModule.endPanelOffset ?? 0);
@@ -3666,6 +3683,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                       useFrameColor={true}
                       endPanelThicknessMm={epThicknessMm}
                       side="left"
+                      adjacentFurniture={leftAdjacentExists}
                     />
                   )}
                   {hasRight && (
@@ -3679,6 +3697,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                       useFrameColor={true}
                       endPanelThicknessMm={epThicknessMm}
                       side="right"
+                      adjacentFurniture={rightAdjacentExists}
                     />
                   )}
                 </>
@@ -3932,6 +3951,21 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                   renderMode={effectiveRenderMode}
                   endPanelThicknessMm={placedModule.endPanelThickness || 18.5}
                   side={panel.side as 'left' | 'right'}
+                  adjacentFurniture={(() => {
+                    // EP 방향 슬롯에 인접 가구가 있으면 측판 불필요
+                    const mySlot = normalizedSlotIndex;
+                    const myZone = placedModule.zone || 'normal';
+                    if (mySlot === undefined) return false;
+                    const checkSlot = panel.side === 'left'
+                      ? mySlot - 1
+                      : (isDualFurniture ? mySlot + 2 : mySlot + 1);
+                    return placedModules.some(m =>
+                      m.id !== placedModule.id && !m.isFreePlacement &&
+                      (m.zone || 'normal') === myZone &&
+                      m.slotIndex !== undefined &&
+                      (m.slotIndex === checkSlot || (m.isDualSlot && m.slotIndex + 1 === checkSlot))
+                    );
+                  })()}
                 />
               </group>
             ))}

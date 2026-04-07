@@ -28,7 +28,9 @@ export const calculatePanelDetails = (
   baseFrameHeightMm?: number, // 하부프레임(받침대) 높이 (mm) — 0이면 받침대 없음
   hasTopFrame?: boolean, // 상부프레임 표시 여부 (기본: true)
   hasBase?: boolean, // 하부프레임(받침대) 표시 여부 (기본: true)
-  isDualSlot?: boolean // 듀얼 슬롯 가구 여부 (커스텀 가구에서 moduleId에 'dual'이 없어도 듀얼 판단)
+  isDualSlot?: boolean, // 듀얼 슬롯 가구 여부 (커스텀 가구에서 moduleId에 'dual'이 없어도 듀얼 판단)
+  leftEpAdjacentFurniture?: boolean, // 좌측 EP 방향에 인접 가구 있음 (ㄷ자 측판 생략)
+  rightEpAdjacentFurniture?: boolean // 우측 EP 방향에 인접 가구 있음 (ㄷ자 측판 생략)
 ) => {
   const panels: { upper: any[]; lower: any[]; door: any[]; frame: any[] } = {
     upper: [],     // 상부장 패널
@@ -1319,19 +1321,21 @@ export const calculatePanelDetails = (
 
   if (hasLeftEndPanel) {
     if (isEpCFrame) {
-      // ㄷ자 프레임: 외판 + 전면연결판 + 후면연결판 (내판 없음)
-      result.push({
-        name: 'EP(좌)측판',
-        width: height,
-        height: customDepth,
-        thickness: epT,
-        material: 'PET',
-        quantity: 1,
-      });
+      // ㄷ자 프레임: 측판(인접가구 없을 때만) + 전면연결판 + 후면연결판
+      if (!leftEpAdjacentFurniture) {
+        result.push({
+          name: 'EP(좌)측판',
+          width: height,
+          height: customDepth,
+          thickness: epT,
+          material: 'PET',
+          quantity: 1,
+        });
+      }
       result.push({
         name: 'EP(좌)전면연결판',
         width: height,
-        height: epConnectorWidth,
+        height: leftEpAdjacentFurniture ? epThicknessMm : epConnectorWidth,
         thickness: epT,
         material: 'PET',
         quantity: 1,
@@ -1339,7 +1343,7 @@ export const calculatePanelDetails = (
       result.push({
         name: 'EP(좌)후면연결판',
         width: height,
-        height: epConnectorWidth,
+        height: leftEpAdjacentFurniture ? epThicknessMm : epConnectorWidth,
         thickness: epT,
         material: 'PET',
         quantity: 1,
@@ -1357,18 +1361,20 @@ export const calculatePanelDetails = (
   }
   if (hasRightEndPanel) {
     if (isEpCFrame) {
-      result.push({
-        name: 'EP(우)측판',
-        width: height,
-        height: customDepth,
-        thickness: epT,
-        material: 'PET',
-        quantity: 1,
-      });
+      if (!rightEpAdjacentFurniture) {
+        result.push({
+          name: 'EP(우)측판',
+          width: height,
+          height: customDepth,
+          thickness: epT,
+          material: 'PET',
+          quantity: 1,
+        });
+      }
       result.push({
         name: 'EP(우)전면연결판',
         width: height,
-        height: epConnectorWidth,
+        height: rightEpAdjacentFurniture ? epThicknessMm : epConnectorWidth,
         thickness: epT,
         material: 'PET',
         quantity: 1,
@@ -1376,7 +1382,7 @@ export const calculatePanelDetails = (
       result.push({
         name: 'EP(우)후면연결판',
         width: height,
-        height: epConnectorWidth,
+        height: rightEpAdjacentFurniture ? epThicknessMm : epConnectorWidth,
         thickness: epT,
         material: 'PET',
         quantity: 1,

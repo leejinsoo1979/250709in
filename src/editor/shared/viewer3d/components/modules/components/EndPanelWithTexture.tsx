@@ -15,6 +15,7 @@ interface EndPanelWithTextureProps {
   furnitureId?: string;
   endPanelThicknessMm?: number; // EP 물리적 두께 (mm) — >18mm이면 ㄷ자 프레임
   side?: 'left' | 'right'; // EP 위치 (ㄷ자 프레임 방향 결정)
+  adjacentFurniture?: boolean; // 이 EP 방향에 인접 가구 있으면 측판 생략
 }
 
 /**
@@ -31,7 +32,8 @@ const EndPanelWithTexture: React.FC<EndPanelWithTextureProps> = ({
   useFrameColor = false,
   furnitureId,
   endPanelThicknessMm = 18,
-  side = 'left'
+  side = 'left',
+  adjacentFurniture = false
 }) => {
   const [textureLoaded, setTextureLoaded] = useState(false);
 
@@ -120,28 +122,36 @@ const EndPanelWithTexture: React.FC<EndPanelWithTextureProps> = ({
   }
 
   // ㄷ자 프레임: 측판(바깥) + 전면연결판(안쪽) + 후면연결판(안쪽)
+  // 인접 가구가 있으면 측판 생략 → 전면연결판만 렌더링
   const boardThickness = 18.5 * 0.01; // PET 18.5mm → Three.js 단위
   const connectorDepthZ = boardThickness; // 연결판 Z축 깊이 = 패널 두께 (18.5mm)
   const totalWidth = width;            // 전체 EP 두께 (이미 Three.js 단위)
-  const gapWidth = totalWidth - boardThickness; // 연결판 X축 폭 = EP두께 - 측판두께
+  const showSidePanel = !adjacentFurniture; // 인접 가구 없을 때만 측판 표시
+  const gapWidth = showSidePanel
+    ? totalWidth - boardThickness  // 측판 있으면: EP두께 - 측판두께
+    : totalWidth;                  // 측판 없으면: EP 전체 폭
 
   // 좌측 EP: 측판이 -X(바깥), 연결판이 +X(안쪽)
   // 우측 EP: 측판이 +X(바깥), 연결판이 -X(안쪽)
   const dir = side === 'left' ? -1 : 1;
   const sideX = dir * (totalWidth / 2 - boardThickness / 2); // 측판 중심
-  const connectorX = -dir * (boardThickness / 2);             // 연결판 중심 (측판 반대쪽)
+  const connectorX = showSidePanel
+    ? -dir * (boardThickness / 2)  // 측판 있으면: 측판 안쪽
+    : 0;                           // 측판 없으면: EP 중심
 
   return (
     <group position={position}>
-      {/* 측판 (바깥쪽) */}
-      <BoxWithEdges
-        isEndPanel={true}
-        args={[boardThickness, height, depth]}
-        position={[sideX, 0, 0]}
-        material={endPanelMaterial}
-        renderMode={renderMode}
-        furnitureId={furnitureId}
-      />
+      {/* 측판 (바깥쪽) — 인접 가구 없을 때만 */}
+      {showSidePanel && (
+        <BoxWithEdges
+          isEndPanel={true}
+          args={[boardThickness, height, depth]}
+          position={[sideX, 0, 0]}
+          material={endPanelMaterial}
+          renderMode={renderMode}
+          furnitureId={furnitureId}
+        />
+      )}
       {/* 전면연결판 (안쪽 앞) */}
       {gapWidth > 0 && (
         <BoxWithEdges
