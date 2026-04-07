@@ -73,8 +73,8 @@ const BaseControls: React.FC<BaseControlsProps> = ({ spaceInfo, onUpdate, disabl
       value = value === '' ? 65 : parseInt(value);
     }
 
-    if (value < 50) value = 50;
-    if (value > 500) value = 500;
+    if (value < 60) value = 60;
+    if (value > 150) value = 150;
 
     setBaseHeight(value);
 
