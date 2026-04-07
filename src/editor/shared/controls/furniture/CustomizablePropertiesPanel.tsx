@@ -4645,6 +4645,26 @@ const CustomizablePropertiesPanel: React.FC = () => {
                         </div>
                       );
                     })()}
+                    {/* EP 깊이 확장 방향 */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '4px' }}>
+                      <span style={{ fontSize: '12px', color: 'var(--theme-text-secondary)', whiteSpace: 'nowrap', width: '50px' }}>확장방향</span>
+                      <select
+                        value={placedModule.endPanelDepthDirection ?? 'front'}
+                        onChange={(e) => {
+                          updatePlacedModule(moduleId, {
+                            endPanelDepthDirection: e.target.value as 'front' | 'back'
+                          });
+                        }}
+                        style={{
+                          width: '80px', padding: '4px 8px', border: '1px solid var(--theme-border)',
+                          borderRadius: '4px', fontSize: '13px',
+                          background: 'var(--theme-background)', color: 'var(--theme-text)',
+                        }}
+                      >
+                        <option value="front">앞으로</option>
+                        <option value="back">뒤로</option>
+                      </select>
+                    </div>
                     {/* 좌측 EP 옵셋 */}
                     {placedModule.hasLeftEndPanel && (() => {
                       const rawVal = placedModule.leftEndPanelOffset ?? placedModule.endPanelOffset ?? 0;

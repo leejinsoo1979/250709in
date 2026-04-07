@@ -3341,6 +3341,25 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                           </div>
                         </div>
                       </div>
+                      {/* EP 깊이 확장 방향 */}
+                      <div className={styles.epRow}>
+                        <div className={styles.epField} style={{ flex: 1 }}>
+                          <label className={styles.epFieldLabel}>확장 방향</label>
+                          <select
+                            value={currentPlacedModule.endPanelDepthDirection ?? 'front'}
+                            onChange={(e) => {
+                              updatePlacedModule(currentPlacedModule.id, {
+                                endPanelDepthDirection: e.target.value as 'front' | 'back'
+                              });
+                            }}
+                            className={styles.epInput}
+                            style={{ width: '100%', height: '28px' }}
+                          >
+                            <option value="front">앞으로</option>
+                            <option value="back">뒤로</option>
+                          </select>
+                        </div>
+                      </div>
                     );
                   })()}
                   {/* 좌/우 EP 옵셋 — 한 줄에 나란히 */}

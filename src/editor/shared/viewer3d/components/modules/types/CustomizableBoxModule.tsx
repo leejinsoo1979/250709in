@@ -43,6 +43,7 @@ interface CustomizableBoxModuleProps {
   hasRightEndPanel?: boolean; // 우측 엔드패널 표시 여부
   endPanelThickness?: number; // 엔드패널 두께 (mm, 기본값: 18)
   endPanelDepth?: number; // 엔드패널 깊이 (mm, 기본값: 가구 깊이)
+  endPanelDepthDirection?: 'front' | 'back'; // EP 깊이 확장 방향 (front: 앞으로, back: 뒤로)
   leftEndPanelOffset?: number; // 좌측 EP 개별 옵셋 (mm, 기본값: 0)
   rightEndPanelOffset?: number; // 우측 EP 개별 옵셋 (mm, 기본값: 0)
   endPanelHeightMode?: 'floor' | 'furniture'; // EP 높이 모드 (floor: 바닥~천장, furniture: 가구 높이에 맞춤)
@@ -235,6 +236,7 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
   hasRightEndPanel = false,
   endPanelThickness: endPanelThicknessProp,
   endPanelDepth: endPanelDepthProp,
+  endPanelDepthDirection: endPanelDepthDirectionProp = 'front',
   leftEndPanelOffset: leftEndPanelOffsetProp = 0,
   rightEndPanelOffset: rightEndPanelOffsetProp = 0,
   endPanelHeightMode: endPanelHeightModeProp,
@@ -2546,6 +2548,10 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
         const leftEpOffsetZ = mmToUnit(leftEndPanelOffsetProp);
         const rightEpOffsetZ = mmToUnit(rightEndPanelOffsetProp);
         const epDActual = endPanelDepthProp ? mmToUnit(endPanelDepthProp) : D;
+        // EP 깊이 확장 방향에 따른 Z 오프셋: front=앞으로, back=뒤로
+        const epDepthDirOffset = endPanelDepthDirectionProp === 'back'
+          ? -(epDActual - D) / 2
+          : (epDActual - D) / 2;
         return (
           <>
             {hasLeftEndPanel && (
@@ -2553,7 +2559,7 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
                 width={leftEP}
                 height={epH}
                 depth={epDActual}
-                position={[-(W / 2) + leftEP / 2, epYOffset, leftEpOffsetZ]}
+                position={[-(W / 2) + leftEP / 2, epYOffset, leftEpOffsetZ + epDepthDirOffset]}
                 spaceInfo={spaceInfo}
                 renderMode={renderMode}
                 useFrameColor={spaceInfo.layoutMode === 'free-placement'}
@@ -2564,7 +2570,7 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
                 width={rightEP}
                 height={epH}
                 depth={epDActual}
-                position={[(W / 2) - rightEP / 2, epYOffset, rightEpOffsetZ]}
+                position={[(W / 2) - rightEP / 2, epYOffset, rightEpOffsetZ + epDepthDirOffset]}
                 spaceInfo={spaceInfo}
                 renderMode={renderMode}
                 useFrameColor={spaceInfo.layoutMode === 'free-placement'}

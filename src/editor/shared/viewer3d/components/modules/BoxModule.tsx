@@ -67,6 +67,7 @@ interface BoxModuleProps {
   hasRightEndPanel?: boolean; // 우측 엔드패널 표시 여부
   endPanelThickness?: number; // 엔드패널 두께 (mm, 기본값: 18)
   endPanelDepth?: number; // 엔드패널 깊이 (mm, 기본값: 가구 깊이)
+  endPanelDepthDirection?: 'front' | 'back'; // EP 깊이 확장 방향 (front: 앞으로, back: 뒤로)
   endPanelOffset?: number; // 엔드패널 Z축 옵셋 (mm, 기본값: 0) — 하위호환
   leftEndPanelOffset?: number; // 좌측 EP 개별 옵셋 (mm)
   rightEndPanelOffset?: number; // 우측 EP 개별 옵셋 (mm)
@@ -144,6 +145,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
   hasRightEndPanel, // 우측 엔드패널
   endPanelThickness, // 엔드패널 두께 (mm)
   endPanelDepth, // 엔드패널 깊이 (mm)
+  endPanelDepthDirection, // EP 깊이 확장 방향
   endPanelOffset, // 엔드패널 Z축 옵셋 (mm) — 하위호환
   leftEndPanelOffset, // 좌측 EP 개별 옵셋 (mm)
   rightEndPanelOffset, // 우측 EP 개별 옵셋 (mm)
@@ -225,6 +227,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
           hasRightEndPanel={hasRightEndPanel}
           endPanelThickness={endPanelThickness}
           endPanelDepth={endPanelDepth}
+          endPanelDepthDirection={endPanelDepthDirection}
           leftEndPanelOffset={leftEndPanelOffset ?? endPanelOffset}
           rightEndPanelOffset={rightEndPanelOffset ?? endPanelOffset}
           endPanelHeightMode={endPanelHeightMode}
