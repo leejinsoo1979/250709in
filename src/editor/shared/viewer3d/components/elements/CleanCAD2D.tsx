@@ -7496,206 +7496,163 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           /> */}
         </group>
 
-              {/* 좌측 치수선 - 좌측에 배치된 캐비넷만 고려 */}
+              {/* 좌측 치수선 - 좌측에 배치된 캐비넷 깊이별 2단 표시 */}
       {placedModules.length > 0 && (() => {
-        // 좌측에 배치된 가구 중에서 가장 깊은 가구 찾기 (x < 0인 가구만)
-        let deepestBackZ = Infinity;
-        let deepestFrontZ = -Infinity;
-        let deepestFurnitureRightX = spaceXOffset;
-        let hasLeftFurniture = false;
-        
+        // 좌측 가구들의 깊이별 정보 수집
+        const depthGroups: Map<number, { backZ: number; frontZ: number; edgeX: number }> = new Map();
+
         placedModules.forEach((module) => {
-          // 좌측에 배치된 가구만 고려 (x 좌표가 음수)
           if (module.position.x >= 0) return;
           const moduleData = getModuleById(
             module.moduleId,
             { width: spaceInfo.width, height: spaceInfo.height, depth: spaceInfo.depth },
             spaceInfo
           );
-          
-          if (!moduleData || !moduleData.dimensions) {
-            return;
-          }
-          
-          // 사용자가 변경한 깊이(customDepth) 우선 사용
-          const actualDepthMm = module.customDepth || moduleData.dimensions.depth;
-          const moduleWidthMm = (module.isFreePlacement && module.freeWidth) ? module.freeWidth : moduleData.dimensions.width;
-          const isStylerModule = moduleData.id.includes('dual-2drawer-styler');
+          if (!moduleData || !moduleData.dimensions) return;
 
+          const actualDepthMm = module.customDepth || module.upperSectionDepth || moduleData.dimensions.depth;
+          const moduleWidthMm = (module.isFreePlacement && module.freeWidth) ? module.freeWidth : (module.customWidth || module.adjustedWidth || moduleData.dimensions.width);
+          const isStylerModule = moduleData.id.includes('dual-2drawer-styler');
           const moduleWidth = mmToThreeUnits(moduleWidthMm);
           const rightX = module.position.x + moduleWidth / 2;
 
-          // FurnitureItem.tsx와 완전히 동일한 Z 위치 계산 (실제 공간 깊이 사용)
           const panelDepthMm = spaceInfo.depth || 600;
           const furnitureDepthMm = Math.min(panelDepthMm, 600);
           const doorThicknessMm = 20;
-
           const panelDepth = mmToThreeUnits(panelDepthMm);
           const furnitureDepth = mmToThreeUnits(furnitureDepthMm);
           const doorThickness = mmToThreeUnits(doorThicknessMm);
-          
-          let furnitureBackZ, furnitureFrontZ;
-          
+
+          let furnitureBackZ: number, furnitureFrontZ: number;
+
           if (isStylerModule) {
-            // 스타일러장: 우측이 660mm로 더 깊음
-            const leftDepthMm = actualDepthMm; // 좌측: 600mm
-            const rightDepthMm = 660; // 우측: 스타일러장 고정 깊이
-            
+            const leftDepthMm = actualDepthMm;
+            const rightDepthMm = 660;
             const leftDepth = mmToThreeUnits(leftDepthMm);
             const rightDepth = mmToThreeUnits(rightDepthMm);
-            
-            // 기본 가구 Z 오프셋
             const zOffset = -panelDepth / 2;
             const baseFurnitureZOffset = zOffset + (panelDepth - furnitureDepth) / 2;
-            
-            // 좌측 부분 위치
             const leftFurnitureZ = baseFurnitureZOffset + furnitureDepth/2 - doorThickness - leftDepth/2;
-            const leftBackZ = leftFurnitureZ - leftDepth/2;
-            const leftFrontZ = leftFurnitureZ + leftDepth/2;
-            
-            // 우측 부분 위치 (깊이 차이만큼 뒤로 이동)
-            const depthOffset = (leftDepth - rightDepth) / 2; // (600-660)/2 = -30mm
+            const depthOffset = (leftDepth - rightDepth) / 2;
             const rightFurnitureZ = baseFurnitureZOffset + furnitureDepth/2 - doorThickness - rightDepth/2 + depthOffset;
-            const rightBackZ = rightFurnitureZ - rightDepth/2;
-            const rightFrontZ = rightFurnitureZ + rightDepth/2;
-            
-            // 전체에서 가장 뒤쪽과 앞쪽 선택
-            furnitureBackZ = Math.min(leftBackZ, rightBackZ);
-            furnitureFrontZ = Math.max(leftFrontZ, rightFrontZ);
+            furnitureBackZ = Math.min(leftFurnitureZ - leftDepth/2, rightFurnitureZ - rightDepth/2);
+            furnitureFrontZ = Math.max(leftFurnitureZ + leftDepth/2, rightFurnitureZ + rightDepth/2);
           } else {
-            // 일반 가구: 동일한 깊이
             const depth = mmToThreeUnits(actualDepthMm);
-          const zOffset = -panelDepth / 2;
-          const furnitureZOffset = zOffset + (panelDepth - furnitureDepth) / 2;
-          const furnitureZ = furnitureZOffset + furnitureDepth/2 - doorThickness - depth/2;
+            const zOffset = -panelDepth / 2;
+            const furnitureZOffset = zOffset + (panelDepth - furnitureDepth) / 2;
+            const furnitureZ = furnitureZOffset + furnitureDepth/2 - doorThickness - depth/2;
             furnitureBackZ = furnitureZ - depth/2;
             furnitureFrontZ = furnitureZ + depth/2;
           }
-          
-          hasLeftFurniture = true; // 좌측에 가구가 있음을 표시
-          
-          // 가장 뒤쪽과 앞쪽 가구 찾기
-          if (furnitureBackZ < deepestBackZ) {
-            deepestBackZ = furnitureBackZ;
-            deepestFurnitureRightX = rightX;
-          }
-          if (furnitureFrontZ > deepestFrontZ) {
-            deepestFrontZ = furnitureFrontZ;
+
+          const depthKey = Math.round(actualDepthMm);
+          const existing = depthGroups.get(depthKey);
+          if (existing) {
+            existing.backZ = Math.min(existing.backZ, furnitureBackZ);
+            existing.frontZ = Math.max(existing.frontZ, furnitureFrontZ);
+            existing.edgeX = Math.max(existing.edgeX, rightX);
+          } else {
+            depthGroups.set(depthKey, { backZ: furnitureBackZ, frontZ: furnitureFrontZ, edgeX: rightX });
           }
         });
-        
-        // 좌측에 가구가 없거나 유효한 치수가 없으면 표시하지 않음
-        if (!hasLeftFurniture || deepestBackZ === Infinity || deepestFrontZ === -Infinity) {
-          return null;
-        }
-        
-        // 실제 캐비넷 깊이 계산 (mm 단위)
-        const cabinetDepthMm = Math.round((deepestFrontZ - deepestBackZ) / 0.01);
-        const leftDimensionX = spaceXOffset - mmToThreeUnits(200);
-        
+
+        if (depthGroups.size === 0) return null;
+
+        // 깊이 오름차순 정렬: 안쪽(가까운)=짧은깊이, 바깥쪽(먼)=긴깊이
+        const sortedDepths = Array.from(depthGroups.entries()).sort((a, b) => a[0] - b[0]);
+        const innerDimX = spaceXOffset - mmToThreeUnits(200);  // 1단(안쪽): 짧은 깊이
+        const outerDimX = spaceXOffset - mmToThreeUnits(350);  // 2단(바깥): 긴 깊이
+        // 모든 연장선의 끝점 X
+        const extLineEndX = sortedDepths.length > 1 ? outerDimX : innerDimX;
+
         return (
-          <group key="cabinet-depth-dimension">
-            {/* 치수선 */}
-            <NativeLine name="dimension_line"
-              points={[[leftDimensionX, spaceHeight, deepestBackZ], [leftDimensionX, spaceHeight, deepestFrontZ]]}
-              color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
-            />
+          <group key="left-cabinet-depth-dims">
+            {sortedDepths.map((entry, tierIdx) => {
+              const [depthMm, group] = entry;
+              const dimX = sortedDepths.length === 1 ? innerDimX : (tierIdx === 0 ? innerDimX : outerDimX);
+              const textOffsetX = dimX - mmToThreeUnits(40);
+              const cabinetDepthMm = Math.round((group.frontZ - group.backZ) / 0.01);
 
-            {/* 화살표들 */}
-            <NativeLine name="dimension_line"
-              points={createArrowHead([leftDimensionX, spaceHeight, deepestBackZ], [leftDimensionX, spaceHeight, deepestBackZ + 0.02], 0.01)}
-              color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
-            />
-            <NativeLine name="dimension_line"
-              points={createArrowHead([leftDimensionX, spaceHeight, deepestFrontZ], [leftDimensionX, spaceHeight, deepestFrontZ - 0.02], 0.01)}
-              color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
-            />
-
-            {/* 캐비넷 깊이 텍스트 */}
-            <Text
-                  renderOrder={100000}
-                  depthTest={false}
-              position={[leftDimensionX - mmToThreeUnits(40), spaceHeight + 0.1, (deepestBackZ + deepestFrontZ) / 2]}
-              fontSize={baseFontSize}
-              color={dimensionColor}
-              anchorX="center"
-              anchorY="middle"
-              rotation={[-Math.PI / 2, 0, 0]}
-            >
-              {cabinetDepthMm}
-            </Text>
-
-            {/* 연장선들 - 캐비넷 뒷면과 앞면에서 치수선까지 */}
-            <NativeLine name="dimension_line"
-              points={[[deepestFurnitureRightX, spaceHeight, deepestBackZ], [leftDimensionX, spaceHeight, deepestBackZ]]}
-              color={dimensionColor} renderOrder={100000} depthTest={false}
-            />
-            <NativeLine name="dimension_line"
-              points={[[deepestFurnitureRightX, spaceHeight, deepestFrontZ], [leftDimensionX, spaceHeight, deepestFrontZ]]}
-              color={dimensionColor} renderOrder={100000} depthTest={false}
-            />
+              return (
+                <group key={`left-depth-tier-${tierIdx}`}>
+                  {/* 치수선 */}
+                  <NativeLine name="dimension_line"
+                    points={[[dimX, spaceHeight, group.backZ], [dimX, spaceHeight, group.frontZ]]}
+                    color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
+                  />
+                  {/* 화살표 */}
+                  <NativeLine name="dimension_line"
+                    points={createArrowHead([dimX, spaceHeight, group.backZ], [dimX, spaceHeight, group.backZ + 0.02], 0.01)}
+                    color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
+                  />
+                  <NativeLine name="dimension_line"
+                    points={createArrowHead([dimX, spaceHeight, group.frontZ], [dimX, spaceHeight, group.frontZ - 0.02], 0.01)}
+                    color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
+                  />
+                  {/* 깊이 텍스트 */}
+                  <Text renderOrder={100000} depthTest={false}
+                    position={[textOffsetX, spaceHeight + 0.1, (group.backZ + group.frontZ) / 2]}
+                    fontSize={baseFontSize} color={dimensionColor}
+                    anchorX="center" anchorY="middle" rotation={[-Math.PI / 2, 0, 0]}
+                  >
+                    {cabinetDepthMm}
+                  </Text>
+                  {/* 연장선 - 뒷면 */}
+                  <NativeLine name="dimension_line"
+                    points={[[group.edgeX, spaceHeight, group.backZ], [extLineEndX, spaceHeight, group.backZ]]}
+                    color={dimensionColor} renderOrder={100000} depthTest={false}
+                  />
+                  {/* 연장선 - 앞면 */}
+                  <NativeLine name="dimension_line"
+                    points={[[group.edgeX, spaceHeight, group.frontZ], [extLineEndX, spaceHeight, group.frontZ]]}
+                    color={dimensionColor} renderOrder={100000} depthTest={false}
+                  />
+                </group>
+              );
+            })}
           </group>
         );
       })()}
 
-        {/* 우측 치수선 - 우측에 배치된 캐비넷만 고려 */}
+        {/* 우측 치수선 - 우측에 배치된 캐비넷 깊이별 2단 표시 */}
         {placedModules.length > 0 && (() => {
-          // 우측에 배치된 가구 중에서 가장 깊은 가구 찾기 (x >= 0인 가구만)
-          let deepestBackZ = Infinity;
-          let deepestFrontZ = -Infinity;
-          let deepestFurnitureLeftX = spaceXOffset;
-          let hasRightFurniture = false;
-          
+          const depthGroups: Map<number, { backZ: number; frontZ: number; edgeX: number }> = new Map();
+
           placedModules.forEach((module) => {
-            // 우측에 배치된 가구만 고려 (x 좌표가 0 이상)
             if (module.position.x < 0) return;
-            
             const moduleData = getModuleById(
               module.moduleId,
               { width: spaceInfo.width, height: spaceInfo.height, depth: spaceInfo.depth },
               spaceInfo
             );
-            
-            if (!moduleData || !moduleData.dimensions) {
-              return;
-            }
-            
-            // 사용자가 변경한 깊이(customDepth) 우선 사용
-            const actualDepthMm = module.customDepth || moduleData.dimensions.depth;
-            const moduleWidthMm = (module.isFreePlacement && module.freeWidth) ? module.freeWidth : moduleData.dimensions.width;
-            const isStylerModule = moduleData.id.includes('dual-2drawer-styler');
+            if (!moduleData || !moduleData.dimensions) return;
 
+            const actualDepthMm = module.customDepth || module.upperSectionDepth || moduleData.dimensions.depth;
+            const moduleWidthMm = (module.isFreePlacement && module.freeWidth) ? module.freeWidth : (module.customWidth || module.adjustedWidth || moduleData.dimensions.width);
+            const isStylerModule = moduleData.id.includes('dual-2drawer-styler');
             const moduleWidth = mmToThreeUnits(moduleWidthMm);
             const leftX = module.position.x - moduleWidth / 2;
 
-            // FurnitureItem.tsx와 완전히 동일한 Z 위치 계산 (실제 공간 깊이 사용)
-        const panelDepthMm = spaceInfo.depth || 600;
-        const furnitureDepthMm = Math.min(panelDepthMm, 600);
-        const doorThicknessMm = 20;
-            
-        const panelDepth = mmToThreeUnits(panelDepthMm);
-        const furnitureDepth = mmToThreeUnits(furnitureDepthMm);
-        const doorThickness = mmToThreeUnits(doorThicknessMm);
-            
-            let furnitureBackZ, furnitureFrontZ;
-            
+            const panelDepthMm = spaceInfo.depth || 600;
+            const furnitureDepthMm = Math.min(panelDepthMm, 600);
+            const doorThicknessMm = 20;
+            const panelDepth = mmToThreeUnits(panelDepthMm);
+            const furnitureDepth = mmToThreeUnits(furnitureDepthMm);
+            const doorThickness = mmToThreeUnits(doorThicknessMm);
+
+            let furnitureBackZ: number, furnitureFrontZ: number;
+
             if (isStylerModule) {
-              // 스타일러장: 우측이 660mm로 더 깊음 (DualType5.tsx와 동일한 계산)
-              const rightDepthMm = 660; // 우측: 스타일러장 고정 깊이
+              const rightDepthMm = 660;
               const rightDepth = mmToThreeUnits(rightDepthMm);
-              
-              // 기본 가구 Z 오프셋 (600mm 기준)
               const zOffset = -panelDepth / 2;
               const baseFurnitureZOffset = zOffset + (panelDepth - furnitureDepth) / 2;
-              
-              // 스타일러장 우측 부분 위치 계산 (DualType5 컴포넌트와 동일)
-              // furnitureZOffset에서 시작해서 스타일러장 깊이만큼 조정
               const stylerZOffset = baseFurnitureZOffset + (furnitureDepth - rightDepth) / 2;
               const stylerZ = stylerZOffset + rightDepth/2 - doorThickness - rightDepth/2;
               furnitureBackZ = stylerZ - rightDepth/2;
               furnitureFrontZ = stylerZ + rightDepth/2;
             } else {
-              // 일반 가구: 동일한 깊이
               const depth = mmToThreeUnits(actualDepthMm);
               const zOffset = -panelDepth / 2;
               const furnitureZOffset = zOffset + (panelDepth - furnitureDepth) / 2;
@@ -7703,71 +7660,73 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               furnitureBackZ = furnitureZ - depth/2;
               furnitureFrontZ = furnitureZ + depth/2;
             }
-            
-            hasRightFurniture = true; // 우측에 가구가 있음을 표시
-            
-            // 가장 뒤쪽과 앞쪽 가구 찾기
-            if (furnitureBackZ < deepestBackZ) {
-              deepestBackZ = furnitureBackZ;
-              deepestFurnitureLeftX = leftX;
-            }
-            if (furnitureFrontZ > deepestFrontZ) {
-              deepestFrontZ = furnitureFrontZ;
+
+            const depthKey = Math.round(actualDepthMm);
+            const existing = depthGroups.get(depthKey);
+            if (existing) {
+              existing.backZ = Math.min(existing.backZ, furnitureBackZ);
+              existing.frontZ = Math.max(existing.frontZ, furnitureFrontZ);
+              existing.edgeX = Math.min(existing.edgeX, leftX);
+            } else {
+              depthGroups.set(depthKey, { backZ: furnitureBackZ, frontZ: furnitureFrontZ, edgeX: leftX });
             }
           });
-          
-          // 우측에 가구가 없거나 유효한 치수가 없으면 표시하지 않음
-          if (!hasRightFurniture || deepestBackZ === Infinity || deepestFrontZ === -Infinity) {
-            return null;
-          }
-          
-          // 실제 캐비넷 깊이 계산 (mm 단위)
-          const cabinetDepthMm = Math.round((deepestFrontZ - deepestBackZ) / 0.01);
-          const rightDimensionX = spaceXOffset + spaceWidth + mmToThreeUnits(200);
-        
-        return (
-            <group key="right-cabinet-depth-dimension">
-            {/* 치수선 */}
-            <NativeLine name="dimension_line"
-                points={[[rightDimensionX, spaceHeight, deepestBackZ], [rightDimensionX, spaceHeight, deepestFrontZ]]}
-              color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
-            />
-            
-            {/* 화살표들 */}
-            <NativeLine name="dimension_line"
-                points={createArrowHead([rightDimensionX, spaceHeight, deepestBackZ], [rightDimensionX, spaceHeight, deepestBackZ + 0.02], 0.01)}
-              color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
-            />
-            <NativeLine name="dimension_line"
-                points={createArrowHead([rightDimensionX, spaceHeight, deepestFrontZ], [rightDimensionX, spaceHeight, deepestFrontZ - 0.02], 0.01)}
-              color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
-            />
-            
-              {/* 캐비넷 깊이 텍스트 */}
-            <Text
-                  renderOrder={100000}
-                  depthTest={false}
-                position={[rightDimensionX + mmToThreeUnits(40), spaceHeight + 0.1, (deepestBackZ + deepestFrontZ) / 2]}
-              fontSize={baseFontSize}
-              color={dimensionColor}
-              anchorX="center"
-              anchorY="middle"
-              rotation={[-Math.PI / 2, 0, 0]}
-            >
-                {cabinetDepthMm}
-            </Text>
 
-              {/* 연장선들 - 캐비넷 뒷면과 앞면에서 치수선까지 */}
-            <NativeLine name="dimension_line"
-                points={[[deepestFurnitureLeftX, spaceHeight, deepestBackZ], [rightDimensionX, spaceHeight, deepestBackZ]]}
-              color={dimensionColor} renderOrder={100000} depthTest={false}
-            />
-            <NativeLine name="dimension_line"
-                points={[[deepestFurnitureLeftX, spaceHeight, deepestFrontZ], [rightDimensionX, spaceHeight, deepestFrontZ]]}
-              color={dimensionColor} renderOrder={100000} depthTest={false}
-            />
-          </group>
-        );
+          if (depthGroups.size === 0) return null;
+
+          // 깊이 오름차순 정렬: 안쪽(가까운)=짧은깊이, 바깥쪽(먼)=긴깊이
+          const sortedDepths = Array.from(depthGroups.entries()).sort((a, b) => a[0] - b[0]);
+          const innerDimX = spaceXOffset + spaceWidth + mmToThreeUnits(200);
+          const outerDimX = spaceXOffset + spaceWidth + mmToThreeUnits(350);
+          const extLineEndX = sortedDepths.length > 1 ? outerDimX : innerDimX;
+
+          return (
+            <group key="right-cabinet-depth-dims">
+              {sortedDepths.map((entry, tierIdx) => {
+                const [depthMm, group] = entry;
+                const dimX = sortedDepths.length === 1 ? innerDimX : (tierIdx === 0 ? innerDimX : outerDimX);
+                const textOffsetX = dimX + mmToThreeUnits(40);
+                const cabinetDepthMm = Math.round((group.frontZ - group.backZ) / 0.01);
+
+                return (
+                  <group key={`right-depth-tier-${tierIdx}`}>
+                    {/* 치수선 */}
+                    <NativeLine name="dimension_line"
+                      points={[[dimX, spaceHeight, group.backZ], [dimX, spaceHeight, group.frontZ]]}
+                      color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
+                    />
+                    {/* 화살표 */}
+                    <NativeLine name="dimension_line"
+                      points={createArrowHead([dimX, spaceHeight, group.backZ], [dimX, spaceHeight, group.backZ + 0.02], 0.01)}
+                      color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
+                    />
+                    <NativeLine name="dimension_line"
+                      points={createArrowHead([dimX, spaceHeight, group.frontZ], [dimX, spaceHeight, group.frontZ - 0.02], 0.01)}
+                      color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
+                    />
+                    {/* 깊이 텍스트 */}
+                    <Text renderOrder={100000} depthTest={false}
+                      position={[textOffsetX, spaceHeight + 0.1, (group.backZ + group.frontZ) / 2]}
+                      fontSize={baseFontSize} color={dimensionColor}
+                      anchorX="center" anchorY="middle" rotation={[-Math.PI / 2, 0, 0]}
+                    >
+                      {cabinetDepthMm}
+                    </Text>
+                    {/* 연장선 - 뒷면 */}
+                    <NativeLine name="dimension_line"
+                      points={[[group.edgeX, spaceHeight, group.backZ], [extLineEndX, spaceHeight, group.backZ]]}
+                      color={dimensionColor} renderOrder={100000} depthTest={false}
+                    />
+                    {/* 연장선 - 앞면 */}
+                    <NativeLine name="dimension_line"
+                      points={[[group.edgeX, spaceHeight, group.frontZ], [extLineEndX, spaceHeight, group.frontZ]]}
+                      color={dimensionColor} renderOrder={100000} depthTest={false}
+                    />
+                  </group>
+                );
+              })}
+            </group>
+          );
       })()}
 
         {/* 기존 복잡한 좌측 치수선 주석 처리 */}
