@@ -1244,7 +1244,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
               {showDoorOverlay && (
                 <mesh position={[0, 0, doorThicknessUnits / 2 + 0.001]} renderOrder={9999}>
                   <planeGeometry args={[leftDoorWidthUnits, doorHeight]} />
-                  <meshBasicMaterial color={leftDoorLocked ? '#FF0000' : doorOverlayColor} transparent opacity={leftDoorLocked ? 0.15 : 0.2} side={THREE.DoubleSide} depthTest={false} depthWrite={false} />
+                  <meshBasicMaterial color={leftDoorLocked ? '#FF0000' : doorOverlayColor} transparent opacity={leftDoorLocked ? 0.08 : 0.2} side={THREE.DoubleSide} depthTest={false} depthWrite={false} />
                 </mesh>
               )}
               {/* BoxWithEdges 사용하여 도어 렌더링 */}
@@ -1577,7 +1577,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
               {showDoorOverlay && (
                 <mesh position={[0, 0, doorThicknessUnits / 2 + 0.001]} renderOrder={9999}>
                   <planeGeometry args={[rightDoorWidthUnits, doorHeight]} />
-                  <meshBasicMaterial color={rightDoorLocked ? '#FF0000' : doorOverlayColor} transparent opacity={rightDoorLocked ? 0.15 : 0.2} side={THREE.DoubleSide} depthTest={false} depthWrite={false} />
+                  <meshBasicMaterial color={rightDoorLocked ? '#FF0000' : doorOverlayColor} transparent opacity={rightDoorLocked ? 0.08 : 0.2} side={THREE.DoubleSide} depthTest={false} depthWrite={false} />
                 </mesh>
               )}
               {/* BoxWithEdges 사용하여 도어 렌더링 */}
@@ -1984,7 +1984,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
             {showDoorOverlay && (
               <mesh position={[0, 0, doorThicknessUnits / 2 + 0.001]} renderOrder={9999}>
                 <planeGeometry args={[doorWidthUnits, doorHeight]} />
-                <meshBasicMaterial color={singleDoorLocked ? '#FF0000' : doorOverlayColor} transparent opacity={singleDoorLocked ? 0.15 : 0.2} side={THREE.DoubleSide} depthTest={false} depthWrite={false} />
+                <meshBasicMaterial color={singleDoorLocked ? '#FF0000' : doorOverlayColor} transparent opacity={singleDoorLocked ? 0.08 : 0.2} side={THREE.DoubleSide} depthTest={false} depthWrite={false} />
               </mesh>
             )}
             {/* BoxWithEdges 사용하여 도어 렌더링 */}
