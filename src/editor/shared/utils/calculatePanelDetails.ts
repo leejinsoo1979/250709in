@@ -1319,17 +1319,9 @@ export const calculatePanelDetails = (
 
   if (hasLeftEndPanel) {
     if (isEpCFrame) {
-      // ㄷ자 프레임: 외판 + 내판 + 전면연결판 + 후면연결판
+      // ㄷ자 프레임: 외판 + 전면연결판 + 후면연결판 (내판 없음)
       result.push({
         name: 'EP(좌)외판',
-        width: height,
-        height: customDepth,
-        thickness: epT,
-        material: 'PET',
-        quantity: 1,
-      });
-      result.push({
-        name: 'EP(좌)내판',
         width: height,
         height: customDepth,
         thickness: epT,
@@ -1367,14 +1359,6 @@ export const calculatePanelDetails = (
     if (isEpCFrame) {
       result.push({
         name: 'EP(우)외판',
-        width: height,
-        height: customDepth,
-        thickness: epT,
-        material: 'PET',
-        quantity: 1,
-      });
-      result.push({
-        name: 'EP(우)내판',
         width: height,
         height: customDepth,
         thickness: epT,

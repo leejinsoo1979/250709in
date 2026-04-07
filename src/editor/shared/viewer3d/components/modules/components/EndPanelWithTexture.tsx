@@ -117,11 +117,11 @@ const EndPanelWithTexture: React.FC<EndPanelWithTextureProps> = ({
     );
   }
 
-  // ㄷ자 프레임: 외판 + 내판 + 전면연결판 + 후면연결판
+  // ㄷ자 프레임: 외판 + 전면연결판 + 후면연결판 (내판 없음)
   const boardThickness = 18.5 * 0.01; // PET 18.5mm → Three.js 단위
   const connectorDepth = 40 * 0.01;   // 연결판 깊이 40mm (서라운드 SURROUND_SIDE_DEPTH와 동일)
   const totalWidth = width;            // 전체 EP 두께 (이미 Three.js 단위)
-  const gapWidth = totalWidth - boardThickness * 2; // 외판/내판 사이 공간
+  const gapWidth = totalWidth - boardThickness; // 외판 제외한 나머지 공간
 
   return (
     <group position={position}>
@@ -134,21 +134,12 @@ const EndPanelWithTexture: React.FC<EndPanelWithTextureProps> = ({
         renderMode={renderMode}
         furnitureId={furnitureId}
       />
-      {/* 내판 (안쪽) */}
-      <BoxWithEdges
-        isEndPanel={true}
-        args={[boardThickness, height, depth]}
-        position={[(totalWidth / 2 - boardThickness / 2), 0, 0]}
-        material={endPanelMaterial}
-        renderMode={renderMode}
-        furnitureId={furnitureId}
-      />
       {/* 전면연결판 (앞쪽) */}
       {gapWidth > 0 && (
         <BoxWithEdges
           isEndPanel={true}
           args={[gapWidth, height, connectorDepth]}
-          position={[0, 0, depth / 2 - connectorDepth / 2]}
+          position={[boardThickness / 2, 0, depth / 2 - connectorDepth / 2]}
           material={endPanelMaterial}
           renderMode={renderMode}
           furnitureId={furnitureId}
@@ -159,7 +150,7 @@ const EndPanelWithTexture: React.FC<EndPanelWithTextureProps> = ({
         <BoxWithEdges
           isEndPanel={true}
           args={[gapWidth, height, connectorDepth]}
-          position={[0, 0, -(depth / 2 - connectorDepth / 2)]}
+          position={[boardThickness / 2, 0, -(depth / 2 - connectorDepth / 2)]}
           material={endPanelMaterial}
           renderMode={renderMode}
           furnitureId={furnitureId}
