@@ -471,6 +471,7 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
     }
     if (edgeOpacity !== undefined) return edgeOpacity;
     if (isBackPanel && view2DDirection === 'front') return 0.1;
+    if (isBackPanel && view2DDirection === 'top') return 0;
     if (!panelName) return 1;
 
     // 서랍 관련 패널 판별 (서랍속장 > 서랍 내부 > 마이다 순서로 체크)
