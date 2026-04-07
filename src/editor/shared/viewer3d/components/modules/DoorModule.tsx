@@ -1181,17 +1181,15 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     let rightEpTrimShift = 0;
     if (storePlacedModule) {
       const epThickMm = storePlacedModule.endPanelThickness || 18;
-      const epDepthDir = storePlacedModule.endPanelDepthDirection ?? 'front';
-      const epDepthMm = storePlacedModule.endPanelDepth ?? moduleDepth;
-      const epFrontOverhang = epDepthDir === 'front' ? Math.max(0, epDepthMm - moduleDepth) : 0;
-      const leftOffset = storePlacedModule.leftEndPanelOffset ?? storePlacedModule.endPanelOffset ?? 0;
-      const rightOffset = storePlacedModule.rightEndPanelOffset ?? storePlacedModule.endPanelOffset ?? 0;
+      // 앞 옵셋 > 0 이면 EP가 앞으로 돌출 → 도어 트림 필요
+      const leftFrontOffset = storePlacedModule.leftEndPanelOffset ?? 0;
+      const rightFrontOffset = storePlacedModule.rightEndPanelOffset ?? 0;
 
-      if (storePlacedModule.hasLeftEndPanel && (epFrontOverhang > 0 || leftOffset > 0)) {
+      if (storePlacedModule.hasLeftEndPanel && leftFrontOffset > 0) {
         leftDoorWidth -= epThickMm;
         leftEpTrimShift = mmToThreeUnits(epThickMm) / 2;
       }
-      if (storePlacedModule.hasRightEndPanel && (epFrontOverhang > 0 || rightOffset > 0)) {
+      if (storePlacedModule.hasRightEndPanel && rightFrontOffset > 0) {
         rightDoorWidth -= epThickMm;
         rightEpTrimShift = -mmToThreeUnits(epThickMm) / 2;
       }
@@ -1948,17 +1946,15 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     let epTrimRight = 0;
     if (storePlacedModule) {
       const epThickMm = storePlacedModule.endPanelThickness || 18;
-      const epDepthDir = storePlacedModule.endPanelDepthDirection ?? 'front';
-      const epDepthMm = storePlacedModule.endPanelDepth ?? moduleDepth;
-      const epFrontOverhang = epDepthDir === 'front' ? Math.max(0, epDepthMm - moduleDepth) : 0;
-      const leftOffset = storePlacedModule.leftEndPanelOffset ?? storePlacedModule.endPanelOffset ?? 0;
-      const rightOffset = storePlacedModule.rightEndPanelOffset ?? storePlacedModule.endPanelOffset ?? 0;
+      // 앞 옵셋 > 0 이면 EP가 앞으로 돌출 → 도어 트림 필요
+      const leftFrontOffset = storePlacedModule.leftEndPanelOffset ?? 0;
+      const rightFrontOffset = storePlacedModule.rightEndPanelOffset ?? 0;
 
-      if (storePlacedModule.hasLeftEndPanel && (epFrontOverhang > 0 || leftOffset > 0)) {
+      if (storePlacedModule.hasLeftEndPanel && leftFrontOffset > 0) {
         doorWidth -= epThickMm;
         epTrimLeft = epThickMm;
       }
-      if (storePlacedModule.hasRightEndPanel && (epFrontOverhang > 0 || rightOffset > 0)) {
+      if (storePlacedModule.hasRightEndPanel && rightFrontOffset > 0) {
         doorWidth -= epThickMm;
         epTrimRight = epThickMm;
       }

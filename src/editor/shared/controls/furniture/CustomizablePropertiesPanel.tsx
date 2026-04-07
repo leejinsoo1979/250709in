@@ -82,9 +82,7 @@ const CustomizablePropertiesPanel: React.FC = () => {
   const [hSplitInputs, setHSplitInputs] = useState<Record<string, string>>({});
   // 좌우 섹션분할 깊이 입력 - 키: "sIdx-left" / "sIdx-center" / "sIdx-right"
   const [hSplitDepthInputs, setHSplitDepthInputs] = useState<Record<string, string>>({});
-  // EP 깊이 로컬 버퍼
-  const [epDepthInput, setEpDepthInput] = useState<string>('');
-  const epDepthFocusedRef = useRef(false); // EP 깊이 포커스 추적
+  // EP 깊이 (읽기 전용 — 앞/뒤 옵셋에서 자동 계산)
 
   // 섹션 팝업 바깥 클릭 감지용 ref + 동적 위치 조정
   const sectionPopupRef = useRef<HTMLDivElement>(null);
@@ -169,10 +167,6 @@ const CustomizablePropertiesPanel: React.FC = () => {
       const lD = placedModule.lowerSectionDepth ?? d;
       const uD = placedModule.upperSectionDepth ?? d;
       setSectionDepthInputs({ 0: lD.toString(), 1: uD.toString() });
-      // EP 깊이 초기화
-      if (!epDepthFocusedRef.current) {
-        setEpDepthInput(Math.round(placedModule.endPanelDepth ?? d).toString());
-      }
       // 원본 스냅샷 저장 (취소 시 복원용)
       setOriginalSnapshot({
         customConfig: placedModule.customConfig
@@ -4597,151 +4591,78 @@ const CustomizablePropertiesPanel: React.FC = () => {
                       />
                       <span style={{ fontSize: '12px', color: 'var(--theme-text-secondary)' }}>mm</span>
                     </div>
-                    {/* EP 깊이 */}
+                    {/* EP 깊이 (읽기 전용 — 앞/뒤 옵셋 합산) */}
                     {(() => {
-                      const furnitureDepth = placedModule.freeDepth || 580;
+                      const base = placedModule.endPanelDepth ?? (placedModule.freeDepth || 580);
+                      const front = placedModule.leftEndPanelOffset ?? 0;
+                      const back = placedModule.leftEndPanelBackOffset ?? 0;
                       return (
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '4px' }}>
                           <span style={{ fontSize: '12px', color: 'var(--theme-text-secondary)', whiteSpace: 'nowrap', width: '50px' }}>EP 깊이</span>
                           <input
                             type="text"
-                            inputMode="numeric"
-                            value={epDepthInput}
-                            onChange={(e) => {
-                              const v = e.target.value;
-                              if (v === '' || /^\d+$/.test(v)) {
-                                setEpDepthInput(v);
-                              }
-                            }}
-                            onFocus={() => { epDepthFocusedRef.current = true; }}
-                            onBlur={() => {
-                              epDepthFocusedRef.current = false;
-                              const val = parseInt(epDepthInput, 10);
-                              if (!isNaN(val) && val >= 50 && val <= 1200) {
-                                updatePlacedModule(moduleId, { endPanelDepth: val });
-                                setEpDepthInput(val.toString());
-                              } else {
-                                const fallback = placedModule.endPanelDepth ?? furnitureDepth;
-                                setEpDepthInput(Math.round(fallback).toString());
-                              }
-                            }}
-                            onKeyDown={(e) => {
-                              if (e.key === 'Enter') { (e.target as HTMLInputElement).blur(); }
-                              else if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
-                                e.preventDefault();
-                                const cur = parseInt(epDepthInput, 10) || (placedModule.endPanelDepth ?? furnitureDepth);
-                                const next = Math.max(50, Math.min(1200, cur + (e.key === 'ArrowUp' ? 1 : -1)));
-                                setEpDepthInput(next.toString());
-                                updatePlacedModule(moduleId, { endPanelDepth: next });
-                              }
-                            }}
+                            readOnly
+                            value={Math.round(base + front + back)}
                             style={{
                               width: '50px', padding: '4px 8px', border: '1px solid var(--theme-border)',
                               borderRadius: '4px', fontSize: '13px', textAlign: 'center',
-                              background: 'var(--theme-background)', color: 'var(--theme-text)',
+                              background: 'var(--theme-background-tertiary)', color: 'var(--theme-text)', cursor: 'default',
                             }}
                           />
                           <span style={{ fontSize: '12px', color: 'var(--theme-text-secondary)' }}>mm</span>
-                          {(['front', 'back'] as const).map((dir) => (
-                            <button
-                              key={dir}
-                              onClick={() => updatePlacedModule(moduleId, { endPanelDepthDirection: dir })}
-                              style={{
-                                padding: '2px 8px', fontSize: '11px', height: '24px',
-                                border: '1px solid var(--theme-border)', borderRadius: '4px',
-                                background: (placedModule.endPanelDepthDirection ?? 'front') === dir
-                                  ? 'var(--theme-primary)' : 'var(--theme-background-tertiary)',
-                                color: (placedModule.endPanelDepthDirection ?? 'front') === dir
-                                  ? '#fff' : 'var(--theme-text-secondary)',
-                                cursor: 'default', whiteSpace: 'nowrap',
-                              }}
-                            >
-                              {dir === 'front' ? '앞' : '뒤'}
-                            </button>
-                          ))}
                         </div>
                       );
                     })()}
-                    {/* 좌측 EP 옵셋 */}
-                    {placedModule.hasLeftEndPanel && (() => {
-                      const rawVal = placedModule.leftEndPanelOffset ?? placedModule.endPanelOffset ?? 0;
-                      const baseDepth = placedModule.endPanelDepth ?? furnitureDepth;
-                      return (
-                        <div style={{ marginTop: '4px' }}>
-                          <span style={{ fontSize: '12px', color: 'var(--theme-text-secondary)' }}>좌측 EP 옵셋</span>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '4px' }}>
-                            <input
-                              type="text"
-                              inputMode="numeric"
-                              value={rawVal}
-                              onChange={(e) => {
-                                const v = e.target.value;
-                                if (v === '' || v === '-' || /^-?\d+$/.test(v)) {
-                                  const num = (v === '' || v === '-') ? 0 : Math.max(-200, Math.min(200, parseInt(v, 10)));
-                                  updatePlacedModule(moduleId, { leftEndPanelOffset: num });
-                                  setEpDepthInput(Math.round(baseDepth + num).toString());
-                                }
-                              }}
-                              onKeyDown={(e) => {
-                                if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
-                                  e.preventDefault();
-                                  const next = Math.max(-200, Math.min(200, rawVal + (e.key === 'ArrowUp' ? 1 : -1)));
-                                  updatePlacedModule(moduleId, { leftEndPanelOffset: next });
-                                  setEpDepthInput(Math.round(baseDepth + next).toString());
-                                }
-                              }}
-                              style={{
-                                width: '50px', padding: '4px 8px', border: '1px solid var(--theme-border)',
-                                borderRadius: '4px', fontSize: '13px', textAlign: 'center',
-                                background: 'var(--theme-background)', color: 'var(--theme-text)',
-                              }}
-                            />
-                            <span style={{ fontSize: '12px', color: 'var(--theme-text-secondary)' }}>mm</span>
+                    {/* 좌측 EP 앞/뒤 옵셋 */}
+                    {placedModule.hasLeftEndPanel && (
+                      <div style={{ display: 'flex', gap: '8px', marginTop: '4px' }}>
+                        <div>
+                          <span style={{ fontSize: '11px', color: 'var(--theme-text-secondary)' }}>좌EP 앞</span>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginTop: '2px' }}>
+                            <input type="text" inputMode="numeric" value={placedModule.leftEndPanelOffset ?? 0}
+                              onChange={(e) => { const v = e.target.value; if (v === '' || v === '-' || /^-?\d+$/.test(v)) { const num = (v === '' || v === '-') ? 0 : Math.max(-200, Math.min(200, parseInt(v, 10))); updatePlacedModule(moduleId, { leftEndPanelOffset: num }); } }}
+                              onKeyDown={(e) => { if (e.key === 'ArrowUp' || e.key === 'ArrowDown') { e.preventDefault(); const cur = placedModule.leftEndPanelOffset ?? 0; const next = Math.max(-200, Math.min(200, cur + (e.key === 'ArrowUp' ? 1 : -1))); updatePlacedModule(moduleId, { leftEndPanelOffset: next }); } }}
+                              style={{ width: '45px', padding: '4px 6px', border: '1px solid var(--theme-border)', borderRadius: '4px', fontSize: '13px', textAlign: 'center', background: 'var(--theme-background)', color: 'var(--theme-text)' }} />
+                            <span style={{ fontSize: '11px', color: 'var(--theme-text-secondary)' }}>mm</span>
                           </div>
-                          <span style={{ fontSize: '10px', color: 'var(--theme-text-tertiary)', marginTop: '2px', display: 'block' }}>+ 앞 확장 / - 뒤 축소</span>
                         </div>
-                      );
-                    })()}
-                    {/* 우측 EP 옵셋 */}
-                    {placedModule.hasRightEndPanel && (() => {
-                      const rawVal = placedModule.rightEndPanelOffset ?? placedModule.endPanelOffset ?? 0;
-                      const baseDepth = placedModule.endPanelDepth ?? furnitureDepth;
-                      return (
-                        <div style={{ marginTop: '4px' }}>
-                          <span style={{ fontSize: '12px', color: 'var(--theme-text-secondary)' }}>우측 EP 옵셋</span>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '4px' }}>
-                            <input
-                              type="text"
-                              inputMode="numeric"
-                              value={rawVal}
-                              onChange={(e) => {
-                                const v = e.target.value;
-                                if (v === '' || v === '-' || /^-?\d+$/.test(v)) {
-                                  const num = (v === '' || v === '-') ? 0 : Math.max(-200, Math.min(200, parseInt(v, 10)));
-                                  updatePlacedModule(moduleId, { rightEndPanelOffset: num });
-                                  setEpDepthInput(Math.round(baseDepth + num).toString());
-                                }
-                              }}
-                              onKeyDown={(e) => {
-                                if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
-                                  e.preventDefault();
-                                  const next = Math.max(-200, Math.min(200, rawVal + (e.key === 'ArrowUp' ? 1 : -1)));
-                                  updatePlacedModule(moduleId, { rightEndPanelOffset: next });
-                                  setEpDepthInput(Math.round(baseDepth + next).toString());
-                                }
-                              }}
-                              style={{
-                                width: '50px', padding: '4px 8px', border: '1px solid var(--theme-border)',
-                                borderRadius: '4px', fontSize: '13px', textAlign: 'center',
-                                background: 'var(--theme-background)', color: 'var(--theme-text)',
-                              }}
-                            />
-                            <span style={{ fontSize: '12px', color: 'var(--theme-text-secondary)' }}>mm</span>
+                        <div>
+                          <span style={{ fontSize: '11px', color: 'var(--theme-text-secondary)' }}>좌EP 뒤</span>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginTop: '2px' }}>
+                            <input type="text" inputMode="numeric" value={placedModule.leftEndPanelBackOffset ?? 0}
+                              onChange={(e) => { const v = e.target.value; if (v === '' || v === '-' || /^-?\d+$/.test(v)) { const num = (v === '' || v === '-') ? 0 : Math.max(-200, Math.min(200, parseInt(v, 10))); updatePlacedModule(moduleId, { leftEndPanelBackOffset: num }); } }}
+                              onKeyDown={(e) => { if (e.key === 'ArrowUp' || e.key === 'ArrowDown') { e.preventDefault(); const cur = placedModule.leftEndPanelBackOffset ?? 0; const next = Math.max(-200, Math.min(200, cur + (e.key === 'ArrowUp' ? 1 : -1))); updatePlacedModule(moduleId, { leftEndPanelBackOffset: next }); } }}
+                              style={{ width: '45px', padding: '4px 6px', border: '1px solid var(--theme-border)', borderRadius: '4px', fontSize: '13px', textAlign: 'center', background: 'var(--theme-background)', color: 'var(--theme-text)' }} />
+                            <span style={{ fontSize: '11px', color: 'var(--theme-text-secondary)' }}>mm</span>
                           </div>
-                          <span style={{ fontSize: '10px', color: 'var(--theme-text-tertiary)', marginTop: '2px', display: 'block' }}>+ 앞 확장 / - 뒤 축소</span>
                         </div>
-                      );
-                    })()}
+                      </div>
+                    )}
+                    {/* 우측 EP 앞/뒤 옵셋 */}
+                    {placedModule.hasRightEndPanel && (
+                      <div style={{ display: 'flex', gap: '8px', marginTop: '4px' }}>
+                        <div>
+                          <span style={{ fontSize: '11px', color: 'var(--theme-text-secondary)' }}>우EP 앞</span>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginTop: '2px' }}>
+                            <input type="text" inputMode="numeric" value={placedModule.rightEndPanelOffset ?? 0}
+                              onChange={(e) => { const v = e.target.value; if (v === '' || v === '-' || /^-?\d+$/.test(v)) { const num = (v === '' || v === '-') ? 0 : Math.max(-200, Math.min(200, parseInt(v, 10))); updatePlacedModule(moduleId, { rightEndPanelOffset: num }); } }}
+                              onKeyDown={(e) => { if (e.key === 'ArrowUp' || e.key === 'ArrowDown') { e.preventDefault(); const cur = placedModule.rightEndPanelOffset ?? 0; const next = Math.max(-200, Math.min(200, cur + (e.key === 'ArrowUp' ? 1 : -1))); updatePlacedModule(moduleId, { rightEndPanelOffset: next }); } }}
+                              style={{ width: '45px', padding: '4px 6px', border: '1px solid var(--theme-border)', borderRadius: '4px', fontSize: '13px', textAlign: 'center', background: 'var(--theme-background)', color: 'var(--theme-text)' }} />
+                            <span style={{ fontSize: '11px', color: 'var(--theme-text-secondary)' }}>mm</span>
+                          </div>
+                        </div>
+                        <div>
+                          <span style={{ fontSize: '11px', color: 'var(--theme-text-secondary)' }}>우EP 뒤</span>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginTop: '2px' }}>
+                            <input type="text" inputMode="numeric" value={placedModule.rightEndPanelBackOffset ?? 0}
+                              onChange={(e) => { const v = e.target.value; if (v === '' || v === '-' || /^-?\d+$/.test(v)) { const num = (v === '' || v === '-') ? 0 : Math.max(-200, Math.min(200, parseInt(v, 10))); updatePlacedModule(moduleId, { rightEndPanelBackOffset: num }); } }}
+                              onKeyDown={(e) => { if (e.key === 'ArrowUp' || e.key === 'ArrowDown') { e.preventDefault(); const cur = placedModule.rightEndPanelBackOffset ?? 0; const next = Math.max(-200, Math.min(200, cur + (e.key === 'ArrowUp' ? 1 : -1))); updatePlacedModule(moduleId, { rightEndPanelBackOffset: next }); } }}
+                              style={{ width: '45px', padding: '4px 6px', border: '1px solid var(--theme-border)', borderRadius: '4px', fontSize: '13px', textAlign: 'center', background: 'var(--theme-background)', color: 'var(--theme-text)' }} />
+                            <span style={{ fontSize: '11px', color: 'var(--theme-text-secondary)' }}>mm</span>
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>

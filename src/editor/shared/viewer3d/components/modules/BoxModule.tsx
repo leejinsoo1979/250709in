@@ -69,10 +69,12 @@ interface BoxModuleProps {
   endPanelDepth?: number; // 엔드패널 깊이 (mm, 기본값: 가구 깊이)
   endPanelDepthDirection?: 'front' | 'back'; // EP 깊이 확장 방향 (front: 앞으로, back: 뒤로)
   endPanelOffset?: number; // 엔드패널 Z축 옵셋 (mm, 기본값: 0) — 하위호환
-  leftEndPanelOffset?: number; // 좌측 EP 개별 옵셋 (mm)
-  rightEndPanelOffset?: number; // 우측 EP 개별 옵셋 (mm)
-  leftEndPanelOffsetDir?: 'front' | 'back'; // 좌측 EP 옵셋 방향
-  rightEndPanelOffsetDir?: 'front' | 'back'; // 우측 EP 옵셋 방향
+  leftEndPanelOffset?: number; // 좌측 EP 앞 옵셋 (mm)
+  rightEndPanelOffset?: number; // 우측 EP 앞 옵셋 (mm)
+  leftEndPanelBackOffset?: number; // 좌측 EP 뒤 옵셋 (mm)
+  rightEndPanelBackOffset?: number; // 우측 EP 뒤 옵셋 (mm)
+  leftEndPanelOffsetDir?: 'front' | 'back'; // (deprecated)
+  rightEndPanelOffsetDir?: 'front' | 'back'; // (deprecated)
   zone?: 'normal' | 'dropped'; // 단내림 영역 정보
   isFreePlacement?: boolean; // 자유배치 모드 여부
   doorSplit?: boolean; // 도어 분할 모드 (상/하 개별 도어)
@@ -149,10 +151,12 @@ const BoxModule: React.FC<BoxModuleProps> = ({
   endPanelDepth, // 엔드패널 깊이 (mm)
   endPanelDepthDirection, // EP 깊이 확장 방향
   endPanelOffset, // 엔드패널 Z축 옵셋 (mm) — 하위호환
-  leftEndPanelOffset, // 좌측 EP 개별 옵셋 (mm)
-  rightEndPanelOffset, // 우측 EP 개별 옵셋 (mm)
-  leftEndPanelOffsetDir, // 좌측 EP 옵셋 방향
-  rightEndPanelOffsetDir, // 우측 EP 옵셋 방향
+  leftEndPanelOffset, // 좌측 EP 앞 옵셋 (mm)
+  rightEndPanelOffset, // 우측 EP 앞 옵셋 (mm)
+  leftEndPanelBackOffset, // 좌측 EP 뒤 옵셋 (mm)
+  rightEndPanelBackOffset, // 우측 EP 뒤 옵셋 (mm)
+  leftEndPanelOffsetDir, // (deprecated)
+  rightEndPanelOffsetDir, // (deprecated)
   zone, // 단내림 영역 정보
   isFreePlacement = false, // 자유배치 모드 여부
   doorSplit, // 도어 분할 모드
@@ -234,6 +238,8 @@ const BoxModule: React.FC<BoxModuleProps> = ({
           endPanelDepthDirection={endPanelDepthDirection}
           leftEndPanelOffset={leftEndPanelOffset ?? endPanelOffset}
           rightEndPanelOffset={rightEndPanelOffset ?? endPanelOffset}
+          leftEndPanelBackOffset={leftEndPanelBackOffset}
+          rightEndPanelBackOffset={rightEndPanelBackOffset}
           leftEndPanelOffsetDir={leftEndPanelOffsetDir}
           rightEndPanelOffsetDir={rightEndPanelOffsetDir}
           endPanelHeightMode={endPanelHeightMode}

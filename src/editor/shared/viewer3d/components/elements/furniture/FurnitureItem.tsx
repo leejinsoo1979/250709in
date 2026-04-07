@@ -3556,6 +3556,8 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                   endPanelDepthDirection={placedModule.endPanelDepthDirection}
                   leftEndPanelOffset={placedModule.leftEndPanelOffset ?? placedModule.endPanelOffset}
                   rightEndPanelOffset={placedModule.rightEndPanelOffset ?? placedModule.endPanelOffset}
+                  leftEndPanelBackOffset={placedModule.leftEndPanelBackOffset}
+                  rightEndPanelBackOffset={placedModule.rightEndPanelBackOffset}
                   leftEndPanelOffsetDir={placedModule.leftEndPanelOffsetDir}
                   rightEndPanelOffsetDir={placedModule.rightEndPanelOffsetDir}
                   doorSplit={placedModule.doorSplit}
@@ -3647,23 +3649,17 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
 
               const epThicknessMm = placedModule.endPanelThickness || 18.5; // 물리적 렌더링 두께 (PET)
               const epW = mmToThreeUnits(epThicknessMm);
-              const leftEpOffsetMm = placedModule.leftEndPanelOffset ?? placedModule.endPanelOffset ?? 0;
-              const rightEpOffsetMm = placedModule.rightEndPanelOffset ?? placedModule.endPanelOffset ?? 0;
               const epDepthMm = placedModule.endPanelDepth ?? (actualDepthMm || 580);
               const epD = mmToThreeUnits(epDepthMm);
-              // EP 깊이 확장 방향 오프셋
-              const freeEpFurnitureD = mmToThreeUnits(actualDepthMm || 580);
-              const freeEpDepthDirOffset = (placedModule.endPanelDepthDirection ?? 'front') === 'back'
-                ? -(epD - freeEpFurnitureD) / 2
-                : (epD - freeEpFurnitureD) / 2;
-              // EP 옵셋: + 앞 확장(Z+), - 뒤 축소(Z-). abs로 깊이 줄이고 부호로 Z shift 방향 결정
-              const leftEpOffsetUnit = mmToThreeUnits(leftEpOffsetMm);
-              // + 옵셋: EP 깊이 증가(앞 돌출), - 옵셋: EP 깊이 감소
-              const leftEpD = Math.max(0, epD + leftEpOffsetUnit);
-              const leftEpZShift = leftEpOffsetUnit / 2;
-              const rightEpOffsetUnit = mmToThreeUnits(rightEpOffsetMm);
-              const rightEpD = Math.max(0, epD + rightEpOffsetUnit);
-              const rightEpZShift = rightEpOffsetUnit / 2;
+              // 앞/뒤 옵셋: + 늘림, - 줄임. 깊이 = base + front + back, Z = (front - back) / 2
+              const leftFront = mmToThreeUnits(placedModule.leftEndPanelOffset ?? 0);
+              const leftBack = mmToThreeUnits(placedModule.leftEndPanelBackOffset ?? 0);
+              const leftEpD = Math.max(0, epD + leftFront + leftBack);
+              const leftEpZShift = (leftFront - leftBack) / 2;
+              const rightFront = mmToThreeUnits(placedModule.rightEndPanelOffset ?? 0);
+              const rightBack = mmToThreeUnits(placedModule.rightEndPanelBackOffset ?? 0);
+              const rightEpD = Math.max(0, epD + rightFront + rightBack);
+              const rightEpZShift = (rightFront - rightBack) / 2;
 
               // EP 높이 계산: 카테고리별 상단/하단 기준이 다름
               // 상부장: 상단=천장, 하단=가구 하단
@@ -3708,7 +3704,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                       width={epW}
                       height={epH}
                       depth={leftEpD}
-                      position={[-(width / 2) - epW / 2, epYRelative, leftEpZShift + freeEpDepthDirOffset]}
+                      position={[-(width / 2) - epW / 2, epYRelative, leftEpZShift]}
                       spaceInfo={zoneSpaceInfo}
                       renderMode={effectiveRenderMode}
                       useFrameColor={true}
@@ -3722,7 +3718,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                       width={epW}
                       height={epH}
                       depth={rightEpD}
-                      position={[(width / 2) + epW / 2, epYRelative, rightEpZShift + freeEpDepthDirOffset]}
+                      position={[(width / 2) + epW / 2, epYRelative, rightEpZShift]}
                       spaceInfo={zoneSpaceInfo}
                       renderMode={effectiveRenderMode}
                       useFrameColor={true}
@@ -3959,21 +3955,19 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         const furnitureTopY = finalYPosition + height / 2; // 가구 상단 Y
         const extendedEndPanelHeight = furnitureTopY; // 바닥(0)부터 가구 상단까지
         const endPanelYPosition = extendedEndPanelHeight / 2; // 중심 Y
-        // EP 깊이 확장 방향 오프셋
-        const furnitureD = mmToThreeUnits(actualDepthMm || 580);
-        const epDepthDirOffset = (placedModule.endPanelDepthDirection ?? 'front') === 'back'
-          ? -(endPanelDepth - furnitureD) / 2
-          : (endPanelDepth - furnitureD) / 2;
-        // EP 옵셋: 방향에 따라 앞면/뒷면 고정 (슬롯 모드)
+        // 앞/뒤 옵셋: + 늘림, - 줄임
         const getSlotEpOffset = (side: string) => {
-          const mm = side === 'left'
-            ? (placedModule.leftEndPanelOffset ?? placedModule.endPanelOffset ?? 0)
-            : (placedModule.rightEndPanelOffset ?? placedModule.endPanelOffset ?? 0);
-          const offsetUnit = mmToThreeUnits(mm);
-          // + 옵셋: EP 깊이 증가(앞 돌출), - 옵셋: EP 깊이 감소
+          const frontMm = side === 'left'
+            ? (placedModule.leftEndPanelOffset ?? 0)
+            : (placedModule.rightEndPanelOffset ?? 0);
+          const backMm = side === 'left'
+            ? (placedModule.leftEndPanelBackOffset ?? 0)
+            : (placedModule.rightEndPanelBackOffset ?? 0);
+          const frontUnit = mmToThreeUnits(frontMm);
+          const backUnit = mmToThreeUnits(backMm);
           return {
-            depth: Math.max(0, endPanelDepth + offsetUnit),
-            zShift: offsetUnit / 2 + epDepthDirOffset,
+            depth: Math.max(0, endPanelDepth + frontUnit + backUnit),
+            zShift: (frontUnit - backUnit) / 2,
           };
         };
 

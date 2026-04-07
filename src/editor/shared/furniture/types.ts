@@ -152,10 +152,12 @@ export interface PlacedModule {
   endPanelDepth?: number;        // EP 깊이 (mm, 기본값: 가구 깊이)
   endPanelDepthDirection?: 'front' | 'back'; // EP 깊이 확장 방향 (front: 앞으로, back: 뒤로, 기본: 'front')
   endPanelOffset?: number;       // EP 옵셋 (mm, 기본값: 0) — 하위호환용
-  leftEndPanelOffset?: number;   // 좌측 EP 개별 옵셋 (mm)
-  rightEndPanelOffset?: number;  // 우측 EP 개별 옵셋 (mm)
-  leftEndPanelOffsetDir?: 'front' | 'back';  // 좌측 EP 옵셋 방향 (기본: 'front')
-  rightEndPanelOffsetDir?: 'front' | 'back'; // 우측 EP 옵셋 방향 (기본: 'front')
+  leftEndPanelOffset?: number;   // 좌측 EP 앞 옵셋 (mm, +늘림 -줄임)
+  rightEndPanelOffset?: number;  // 우측 EP 앞 옵셋 (mm, +늘림 -줄임)
+  leftEndPanelBackOffset?: number;  // 좌측 EP 뒤 옵셋 (mm, +늘림 -줄임)
+  rightEndPanelBackOffset?: number; // 우측 EP 뒤 옵셋 (mm, +늘림 -줄임)
+  leftEndPanelOffsetDir?: 'front' | 'back';  // (deprecated) 좌측 EP 옵셋 방향
+  rightEndPanelOffsetDir?: 'front' | 'back'; // (deprecated) 우측 EP 옵셋 방향
   endPanelHeightMode?: 'floor' | 'furniture'; // EP 높이 모드 (floor: 바닥~천장, furniture: 가구 높이에 맞춤, 기본: 'floor')
   endPanelTopOffset?: number;    // EP 천장 옵셋 (mm, 기본값: 0) — floor 모드에서만 적용
   endPanelBottomOffset?: number; // EP 바닥 옵셋 (mm, 기본값: 0) — floor 모드에서만 적용
