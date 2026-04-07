@@ -1504,8 +1504,13 @@ export const calculatePanelDetails = (
         { name: `서랍${drawerNum} 앞판`, width: Math.round(extInnerWidth), height: extSideHMm, thickness: drawerSideThickness, material: 'PB' },
         { name: `서랍${drawerNum} 뒷판`, width: Math.round(extInnerWidth), height: Math.round(extBackHMm), thickness: drawerSideThickness, material: 'PB' },
         { name: `서랍${drawerNum} 바닥`, width: Math.round(extBottomWidthMm), depth: extSideDepthMm, thickness: backPanelThickness, material: 'MDF' },
-        { name: `서랍${drawerNum}(마이다)`, width: customWidth - 3, height: Math.round(maidaHeightMm), thickness: basicThickness, material: 'PET' },
       );
+      // 마이다는 도어 있을 때만 (ExternalDrawerRenderer showMaida={hasDoor} 동일)
+      if (hasDoor) {
+        extDrawerPanels.push(
+          { name: `서랍${drawerNum}(마이다)`, width: customWidth - 3, height: Math.round(maidaHeightMm), thickness: basicThickness, material: 'PET' },
+        );
+      }
     }
   }
 
