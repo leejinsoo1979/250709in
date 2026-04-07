@@ -2746,7 +2746,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
               const slotCenterX = mmToThreeUnits(currentX + sw / 2);
               const slotW = mmToThreeUnits(sw);
 
-              // 바닥 메쉬
+              // 바닥 메쉬 — 클릭 이벤트용으로만 유지 (시각적으로 투명)
               meshes.push(
                 <mesh
                   key={`${groupKey}-floor-${i}`}
@@ -2754,19 +2754,8 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
                   onClick={handleSlotFloorClick}
                 >
                   <boxGeometry args={[slotW, viewMode === '2D' ? 0.1 : 0.001, slotFloorDepth]} />
-                  <meshBasicMaterial color={primaryColor} transparent opacity={0.35} />
+                  <meshBasicMaterial transparent opacity={0} />
                 </mesh>
-              );
-              // 천장 메쉬 제거 — 뒷면 가이드만 유지
-              // 외곽선
-              meshes.push(
-                <lineSegments
-                  key={`${groupKey}-edge-${i}`}
-                  position={[slotCenterX, slotFloorY, slotFloorZ]}
-                >
-                  <edgesGeometry args={[new THREE.BoxGeometry(slotW, viewMode === '2D' ? 0.1 : 0.001, slotFloorDepth)]} />
-                  <lineBasicMaterial color={primaryColor} opacity={0.8} transparent />
-                </lineSegments>
               );
             }
             currentX += sw;
