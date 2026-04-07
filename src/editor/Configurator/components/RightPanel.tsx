@@ -120,6 +120,7 @@ const MergedFrameRow = React.memo(({ label, enabled, widthMM, heightMM, offset, 
 }) => {
   const bfMin = isLowerCategory ? 60 : 40;
   const bfMax = isLowerCategory ? 150 : 100;
+  const bfDefault = isLowerCategory ? 100 : 65;
   const [heightText, setHeightText] = React.useState(String(heightMM || ''));
   const [offsetText, setOffsetText] = React.useState(offset !== 0 ? String(offset) : '');
   const heightEditingRef = React.useRef(false);
@@ -170,7 +171,7 @@ const MergedFrameRow = React.memo(({ label, enabled, widthMM, heightMM, offset, 
               onKeyDown={(e) => {
                 if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
                   e.preventDefault();
-                  const next = Math.max(bfMin, Math.min(bfMax, (heightMM || 65) + (e.key === 'ArrowUp' ? 1 : -1)));
+                  const next = Math.max(bfMin, Math.min(bfMax, (heightMM || bfDefault) + (e.key === 'ArrowUp' ? 1 : -1)));
                   setHeightText(String(next));
                   onHeightChange(next);
                 } else if (e.key === 'Enter') {
@@ -178,7 +179,7 @@ const MergedFrameRow = React.memo(({ label, enabled, widthMM, heightMM, offset, 
                 }
               }}
               onChange={(e) => { const v = e.target.value; if (v === '' || /^\d+$/.test(v)) { if (v !== '' && parseInt(v) > bfMax) { setHeightText(String(bfMax)); } else { setHeightText(v); } } }}
-              onBlur={(e) => { heightEditingRef.current = false; setHighlightedFrame(null); const clamped = Math.max(bfMin, Math.min(bfMax, parseInt(e.target.value) || 65)); setHeightText(String(clamped)); onHeightChange(clamped); }}
+              onBlur={(e) => { heightEditingRef.current = false; setHighlightedFrame(null); const clamped = Math.max(bfMin, Math.min(bfMax, parseInt(e.target.value) || bfDefault)); setHeightText(String(clamped)); onHeightChange(clamped); }}
               style={{ width: '100%', border: 'none', outline: 'none', fontSize: '12px', textAlign: 'center', background: 'transparent', color: 'var(--theme-text-primary)' }}
             />
           </div>
@@ -1470,6 +1471,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
                     const isLowerMod = mod.moduleId?.startsWith('lower-') || mod.moduleId?.includes('-lower-');
                     const bfMin = isLowerMod ? 60 : 40;
                     const bfMax = isLowerMod ? 150 : 100;
+                    const bfDefault = isLowerMod ? 100 : 65;
                     return (
                       <div key={`base-${mod.id}`} style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '3px 0' }}>
                         <span style={{ minWidth: '50px', fontSize: '11px', color: 'var(--theme-text-secondary)', fontWeight: 500 }}>{`${toAlpha(baseNum)}(하)`}</span>
@@ -1507,11 +1509,11 @@ const RightPanel: React.FC<RightPanelProps> = ({
                             <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '2px', border: '1px solid var(--theme-border)', borderRadius: '4px', padding: '2px 4px' }}>
                               <span style={{ fontSize: '10px', color: 'var(--theme-text-secondary)', flexShrink: 0 }}>높이</span>
                               <input type="text" inputMode="numeric"
-                                value={(mod.baseFrameHeight ?? globalBase) || ''} placeholder="0"
+                                value={(mod.baseFrameHeight ?? bfDefault) || ''} placeholder="0"
                                 onFocus={() => setHighlightedFrame(`base-${mod.id}`)}
-                                onKeyDown={(e) => { if (e.key === 'ArrowUp' || e.key === 'ArrowDown') { e.preventDefault(); const cur = mod.baseFrameHeight ?? globalBase; updatePlacedModule(mod.id, { baseFrameHeight: Math.max(bfMin, Math.min(bfMax, cur + (e.key === 'ArrowUp' ? 1 : -1))) }); } }}
+                                onKeyDown={(e) => { if (e.key === 'ArrowUp' || e.key === 'ArrowDown') { e.preventDefault(); const cur = mod.baseFrameHeight ?? bfDefault; updatePlacedModule(mod.id, { baseFrameHeight: Math.max(bfMin, Math.min(bfMax, cur + (e.key === 'ArrowUp' ? 1 : -1))) }); } }}
                                 onChange={(e) => { const v = e.target.value; if (v === '' || /^\d+$/.test(v)) { const num = v === '' ? 0 : parseInt(v, 10); updatePlacedModule(mod.id, { baseFrameHeight: num > bfMax ? bfMax : num }); } }}
-                                onBlur={(e) => { setHighlightedFrame(null); updatePlacedModule(mod.id, { baseFrameHeight: Math.max(bfMin, Math.min(bfMax, parseInt(e.target.value) || 65)) }); }}
+                                onBlur={(e) => { setHighlightedFrame(null); updatePlacedModule(mod.id, { baseFrameHeight: Math.max(bfMin, Math.min(bfMax, parseInt(e.target.value) || bfDefault)) }); }}
                                 style={{ width: '100%', border: 'none', outline: 'none', fontSize: '12px', textAlign: 'center', background: 'transparent', color: 'var(--theme-text-primary)' }}
                               />
                             </div>

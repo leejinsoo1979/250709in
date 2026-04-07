@@ -5626,9 +5626,9 @@ const Room: React.FC<RoomProps> = ({
               const modCenterXmm = (bounds.left + bounds.right) / 2;
               const depthZOffsetMM = getLowerDepthZOffsetMM(mod);
               const freeIsLower = getModuleCategory(mod) === 'lower';
-              const modBaseZInset = mod.baseFrameOffset ? mmToThreeUnits(mod.baseFrameOffset) : (freeIsLower ? mmToThreeUnits(spaceInfo.baseConfig?.height ?? 65) : 0);
+              const modBaseZInset = mod.baseFrameOffset ? mmToThreeUnits(mod.baseFrameOffset) : (freeIsLower ? mmToThreeUnits(spaceInfo.baseConfig?.height ?? (freeIsLower ? 100 : 65)) : 0);
               const baseZPosition = baseZBase - mmToThreeUnits(depthZOffsetMM) - modBaseZInset;
-              const modBaseHeightMm = mod.baseFrameHeight ?? (spaceInfo.baseConfig?.height ?? 65);
+              const modBaseHeightMm = mod.baseFrameHeight ?? (spaceInfo.baseConfig?.height ?? (freeIsLower ? 100 : 65));
               const modBaseH = mmToThreeUnits(modBaseHeightMm);
 
               // 커스터마이즈 가구 좌우분할: 무조건 하부프레임도 영역별 분할

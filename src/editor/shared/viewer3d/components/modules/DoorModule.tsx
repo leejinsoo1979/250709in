@@ -793,7 +793,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     // 도어 높이 계산용 받침대: hasBase 토글에 관계없이 항상 기본 받침대 높이 사용
     // (hasBase=false 시 가구 본체가 받침대를 흡수하지만, 도어는 공간 기준이므로 불변)
     // 개별 받침대 높이가 설정된 경우 해당 값 사용 (FurnitureItem의 furnitureHeightMm과 일치시키기 위해)
-    const globalBaseHeight = originalSpaceInfo.baseConfig?.height || 65;
+    const globalBaseHeight = originalSpaceInfo.baseConfig?.height || (isLowerCabinet ? 100 : 65);
     const rawBaseHeight = placementType === 'float' ? floatHeight : (individualBaseFrameHeightProp ?? globalBaseHeight);
     const baseHeightValue = rawBaseHeight;
 
@@ -907,7 +907,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
         const floorForBody = isFloorType ? (floorFinish) : 0;
         const baseForBody = placementType === 'float'
           ? (floatHeight || 0)
-          : (individualBaseFrameHeightProp ?? originalSpaceInfo.baseConfig?.height ?? 65);
+          : (individualBaseFrameHeightProp ?? originalSpaceInfo.baseConfig?.height ?? (isLowerCabinet ? 100 : 65));
         bodyAbsCenter = floorForBody + baseForBody + tallCabinetFurnitureHeight / 2;
       }
 

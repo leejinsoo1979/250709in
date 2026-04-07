@@ -5386,6 +5386,7 @@ const Configurator: React.FC = () => {
             const isLower = mod.moduleId?.startsWith('lower-') || mod.moduleId?.includes('-lower-');
             const bfMin = isLower ? 60 : 40;
             const bfMax = isLower ? 150 : 100;
+            const bfDefault = isLower ? 100 : 65;
             return (
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '3px 0' }}>
                 <span className={styles.frameItemLabel} style={{ minWidth: '34px', textAlign: 'left', margin: 0 }}>{label}</span>
@@ -5402,17 +5403,17 @@ const Configurator: React.FC = () => {
                       <span style={{ fontSize: '10px', color: 'var(--theme-text-secondary)', padding: '0 2px', flexShrink: 0 }}>size</span>
                       <input
                         type="text" inputMode="numeric"
-                        value={(mod.baseFrameHeight ?? globalBase) || ''} placeholder="0"
+                        value={(mod.baseFrameHeight ?? bfDefault) || ''} placeholder="0"
                         onFocus={() => setHighlightedFrame(`base-${mod.id}`)}
                         onKeyDown={(e) => {
                           if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
                             e.preventDefault();
-                            const cur = mod.baseFrameHeight ?? globalBase;
+                            const cur = mod.baseFrameHeight ?? bfDefault;
                             updatePlacedModule(mod.id, { baseFrameHeight: Math.max(bfMin, Math.min(bfMax, cur + (e.key === 'ArrowUp' ? 1 : -1))) });
                           }
                         }}
                         onChange={(e) => { const v = e.target.value; if (v === '' || /^\d+$/.test(v)) { const num = v === '' ? 0 : parseInt(v, 10); updatePlacedModule(mod.id, { baseFrameHeight: num > bfMax ? bfMax : num }); } }}
-                        onBlur={(e) => { setHighlightedFrame(null); updatePlacedModule(mod.id, { baseFrameHeight: Math.max(bfMin, Math.min(bfMax, parseInt(e.target.value) || 65)) }); }}
+                        onBlur={(e) => { setHighlightedFrame(null); updatePlacedModule(mod.id, { baseFrameHeight: Math.max(bfMin, Math.min(bfMax, parseInt(e.target.value) || bfDefault)) }); }}
                         className={styles.frameNumberInput}
                       />
                     </div>
@@ -5420,17 +5421,17 @@ const Configurator: React.FC = () => {
                       <span style={{ fontSize: '10px', color: 'var(--theme-text-secondary)', padding: '0 2px', flexShrink: 0 }}>옵셋</span>
                       <input
                         type="text" inputMode="numeric"
-                        value={mod.baseFrameOffset ?? (isLower ? globalBase : 0)} placeholder={String(isLower ? globalBase : 0)}
+                        value={mod.baseFrameOffset ?? (isLower ? bfDefault : 0)} placeholder={String(isLower ? bfDefault : 0)}
                         onFocus={() => setHighlightedFrame(`base-${mod.id}`)}
                         onKeyDown={(e) => {
                           if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
                             e.preventDefault();
-                            const cur = mod.baseFrameOffset ?? (isLower ? globalBase : 0);
+                            const cur = mod.baseFrameOffset ?? (isLower ? bfDefault : 0);
                             updatePlacedModule(mod.id, { baseFrameOffset: Math.max(-200, Math.min(200, cur + (e.key === 'ArrowUp' ? 1 : -1))) });
                           }
                         }}
                         onChange={(e) => { const v = e.target.value; if (v === '' || v === '-' || /^-?\d+$/.test(v)) updatePlacedModule(mod.id, { baseFrameOffset: v === '' || v === '-' ? 0 : parseInt(v, 10) }); }}
-                        onBlur={(e) => { setHighlightedFrame(null); updatePlacedModule(mod.id, { baseFrameOffset: Math.max(-200, Math.min(200, parseInt(e.target.value) || (isLower ? globalBase : 0))) }); }}
+                        onBlur={(e) => { setHighlightedFrame(null); updatePlacedModule(mod.id, { baseFrameOffset: Math.max(-200, Math.min(200, parseInt(e.target.value) || (isLower ? bfDefault : 0))) }); }}
                         className={styles.frameNumberInput}
                       />
                     </div>
@@ -5470,6 +5471,7 @@ const Configurator: React.FC = () => {
           ) => {
             const bfMin = isLowerCategory ? 60 : 40;
             const bfMax = isLowerCategory ? 150 : 100;
+            const bfDefault = isLowerCategory ? 100 : 65;
             return (
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '3px 0' }}>
               <span className={styles.frameItemLabel} style={{ minWidth: '50px', textAlign: 'left', margin: 0 }}>{label}</span>
@@ -5500,7 +5502,7 @@ const Configurator: React.FC = () => {
                         if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
                           e.preventDefault();
                           const delta = e.key === 'ArrowUp' ? 1 : -1;
-                          onHeightChange(Math.max(bfMin, Math.min(bfMax, (heightMM || 65) + delta)));
+                          onHeightChange(Math.max(bfMin, Math.min(bfMax, (heightMM || bfDefault) + delta)));
                         }
                       }}
                       onChange={(e) => {
@@ -5512,7 +5514,7 @@ const Configurator: React.FC = () => {
                       }}
                       onBlur={(e) => {
                         setHighlightedFrame(null);
-                        onHeightChange(Math.max(bfMin, Math.min(bfMax, parseInt(e.target.value) || 65)));
+                        onHeightChange(Math.max(bfMin, Math.min(bfMax, parseInt(e.target.value) || bfDefault)));
                       }}
                       className={styles.frameNumberInput}
                     />

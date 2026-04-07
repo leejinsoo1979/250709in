@@ -75,7 +75,8 @@ const computeFurnitureHeightMm = (
         heightMm -= (mod.topFrameThickness - globalTop);
       }
       if (mod.baseFrameHeight !== undefined && !isStandType) {
-        const globalBase = spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height ?? 65) : 0;
+        const isLowerMod = mod.moduleId?.startsWith('lower-') || mod.moduleId?.includes('-lower-');
+        const globalBase = spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height ?? (isLowerMod ? 100 : 65)) : 0;
         heightMm -= (mod.baseFrameHeight - globalBase);
       }
     }
@@ -89,7 +90,8 @@ const computeFurnitureHeightMm = (
 
   // hasBase=false: 하부프레임 높이 추가, 개별 띄움 차감
   if (mod.hasBase === false && spaceInfo.baseConfig?.type === 'floor') {
-    const hiddenBaseH = mod.baseFrameHeight ?? spaceInfo.baseConfig?.height ?? 65;
+    const isLowerModH = mod.moduleId?.startsWith('lower-') || mod.moduleId?.includes('-lower-');
+    const hiddenBaseH = mod.baseFrameHeight ?? spaceInfo.baseConfig?.height ?? (isLowerModH ? 100 : 65);
     const indivFloat = mod.individualFloatHeight ?? 0;
     heightMm += hiddenBaseH - indivFloat;
   }
@@ -622,13 +624,17 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                 );
               })}
 
-              {/* 도어 상단갭: 가구 상판 아래 doorTopGap 영역 */}
+              {/* 도어 상단갭: 마지막 마이다 상단 ~ 가구 상판 */}
               {(() => {
-                const doorTopGapVal = mod.doorTopGap ?? -20;
-                const doorTopGapMm = Math.abs(doorTopGapVal);
-                if (doorTopGapMm <= 0) return null;
+                const lowerMaidas = computeLowerCabinetMaidaHeights(
+                  mod.moduleId, moduleHeightMm, mod.doorTopGap ?? 0, mod.doorBottomGap ?? 0
+                );
+                if (!lowerMaidas || lowerMaidas.length === 0) return null;
+                const lastMaida = lowerMaidas[lowerMaidas.length - 1];
+                const topGapMm = Math.round(moduleHeightMm - lastMaida.maidaTopMm);
+                if (topGapMm <= 0) return null;
                 const gapTopY = cabinetTopY;
-                const gapBotY = cabinetTopY - mmToThreeUnits(doorTopGapMm);
+                const gapBotY = cabinetBottomY + mmToThreeUnits(lastMaida.maidaTopMm);
                 return (
                   <group>
                     <ExtLine points={[[0, gapTopY, leftInnerExtStartZ], [0, gapTopY, leftInnerZ]]} color={dimensionColor} />
@@ -637,7 +643,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                     <NativeLine name="dimension_line" points={[[-0.03, gapBotY, leftInnerZ], [0.03, gapBotY, leftInnerZ]]} color={dimensionColor} lineWidth={2} renderOrder={100000} depthTest={false} />
                     <NativeLine name="dimension_line" points={[[-0.03, gapTopY, leftInnerZ], [0.03, gapTopY, leftInnerZ]]} color={dimensionColor} lineWidth={2} renderOrder={100000} depthTest={false} />
                     <Text position={[0, (gapBotY + gapTopY) / 2, leftInnerZ - mmToThreeUnits(60)]} fontSize={largeFontSize} color={textColor} anchorX="center" anchorY="middle" renderOrder={1000} depthTest={false} rotation={[0, -Math.PI / 2, Math.PI / 2]}>
-                      {doorTopGapMm}
+                      {topGapMm}
                     </Text>
                   </group>
                 );
