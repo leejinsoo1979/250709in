@@ -30,13 +30,16 @@ export function generateGuillotineCuts(
   if (panels.length === 0) return cuts;
 
   // 재귀적으로 영역을 분할하는 함수
+  const MAX_RECURSION = 200;
   const divideRegion = (
     xStart: number, yStart: number,
     xEnd: number, yEnd: number,
     regionPanels: PanelPlacement[],
-    preferVertical: boolean
+    preferVertical: boolean,
+    depth: number = 0
   ) => {
     if (regionPanels.length === 0) return;
+    if (depth > MAX_RECURSION) return; // 무한 재귀 방지
 
     // 특정 위치에서 재단이 가능한지 확인 (해당 영역의 패널만 검사)
     const canCutVertically = (xPos: number): boolean => {
@@ -182,11 +185,11 @@ export function generateGuillotineCuts(
 
         // 왼쪽 영역 재귀
         const leftPanels = regionPanels.filter(p => p.x + p.width <= cutX + kerf);
-        divideRegion(xStart, yStart, cutX, yEnd, leftPanels, preferVertical);
+        divideRegion(xStart, yStart, cutX, yEnd, leftPanels, preferVertical, depth + 1);
 
         // 오른쪽 영역 재귀
         const rightPanels = regionPanels.filter(p => p.x >= cutX - kerf);
-        divideRegion(cutX, yStart, xEnd, yEnd, rightPanels, preferVertical);
+        divideRegion(cutX, yStart, xEnd, yEnd, rightPanels, preferVertical, depth + 1);
 
         cutMade = true;
       }
@@ -211,11 +214,11 @@ export function generateGuillotineCuts(
 
         // 위쪽 영역 재귀
         const topPanels = regionPanels.filter(p => p.y + p.height <= cutY + kerf);
-        divideRegion(xStart, yStart, xEnd, cutY, topPanels, preferVertical);
+        divideRegion(xStart, yStart, xEnd, cutY, topPanels, preferVertical, depth + 1);
 
         // 아래쪽 영역 재귀
         const bottomPanels = regionPanels.filter(p => p.y >= cutY - kerf);
-        divideRegion(xStart, cutY, xEnd, yEnd, bottomPanels, preferVertical);
+        divideRegion(xStart, cutY, xEnd, yEnd, bottomPanels, preferVertical, depth + 1);
       }
     } else {
       // 가로 재단 우선 시도
@@ -238,11 +241,11 @@ export function generateGuillotineCuts(
 
         // 위쪽 영역 재귀
         const topPanels = regionPanels.filter(p => p.y + p.height <= cutY + kerf);
-        divideRegion(xStart, yStart, xEnd, cutY, topPanels, preferVertical);
+        divideRegion(xStart, yStart, xEnd, cutY, topPanels, preferVertical, depth + 1);
 
         // 아래쪽 영역 재귀
         const bottomPanels = regionPanels.filter(p => p.y >= cutY - kerf);
-        divideRegion(xStart, cutY, xEnd, yEnd, bottomPanels, preferVertical);
+        divideRegion(xStart, cutY, xEnd, yEnd, bottomPanels, preferVertical, depth + 1);
 
         cutMade = true;
       }
@@ -267,11 +270,11 @@ export function generateGuillotineCuts(
 
         // 왼쪽 영역 재귀
         const leftPanels = regionPanels.filter(p => p.x + p.width <= cutX + kerf);
-        divideRegion(xStart, yStart, cutX, yEnd, leftPanels, preferVertical);
+        divideRegion(xStart, yStart, cutX, yEnd, leftPanels, preferVertical, depth + 1);
 
         // 오른쪽 영역 재귀
         const rightPanels = regionPanels.filter(p => p.x >= cutX - kerf);
-        divideRegion(cutX, yStart, xEnd, yEnd, rightPanels, preferVertical);
+        divideRegion(cutX, yStart, xEnd, yEnd, rightPanels, preferVertical, depth + 1);
       }
     }
   };

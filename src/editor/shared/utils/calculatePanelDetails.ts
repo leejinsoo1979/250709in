@@ -1415,18 +1415,96 @@ export const calculatePanelDetails = (
     const sideGapMm = 6; // 좌우 갭
     const extInnerWidth = innerWidth - sideGapMm * 2 - drawerSideThickness * 2; // 서랍 내부 폭
     const extBottomWidthMm = extInnerWidth + 10; // 바닥판 폭
+
+    // === 마이다 높이 계산 (ExternalDrawerRenderer + LowerCabinet.tsx 동일 로직) ===
+    const isDoorLift2Tier = moduleData.id.includes('lower-door-lift-2tier');
+    const isDoorLift3Tier = moduleData.id.includes('lower-door-lift-3tier');
+    const isTopDown2Tier = moduleData.id.includes('lower-top-down-2tier');
+    const isTopDown3Tier = moduleData.id.includes('lower-top-down-3tier');
+
+    let notchFromBottoms: number[];
+    let notchHeightsArr: number[];
+    let hideTopNotch = false;
+    let fixedMaidaHeights: number[] | undefined;
+
+    if (is3TierExt) {
+      if (moduleData.id.includes('lower-drawer-3tier')) {
+        notchFromBottoms = [295, 510]; notchHeightsArr = [65, 65];
+      } else if (isDoorLift3Tier) {
+        notchFromBottoms = [315, 545]; notchHeightsArr = [65, 65];
+        hideTopNotch = true; fixedMaidaHeights = [360, 210, 210];
+      } else { // lower-top-down-3tier
+        notchFromBottoms = [225, 445, 665]; notchHeightsArr = [65, 65, 65];
+        hideTopNotch = true;
+      }
+    } else {
+      if (isDoorLift2Tier) {
+        notchFromBottoms = [355]; notchHeightsArr = [65];
+        hideTopNotch = true; fixedMaidaHeights = [400, 400];
+      } else if (isTopDown2Tier) {
+        notchFromBottoms = [300, 665]; notchHeightsArr = [65, 65];
+        hideTopNotch = true;
+      } else { // standard lower-drawer-2tier
+        notchFromBottoms = [330]; notchHeightsArr = [65];
+      }
+    }
+
+    // zone 계산 (ExternalDrawerRenderer 동일)
+    const sidePanelHMm = customHeight;
+    const upperNotchH = 60;
+    const sortedNotches = notchFromBottoms
+      .map((fb, idx) => ({ fromBottom: fb, height: notchHeightsArr[idx] || 65 }))
+      .sort((a, b) => a.fromBottom - b.fromBottom);
+    const allNotches = hideTopNotch
+      ? [...sortedNotches]
+      : [...sortedNotches, { fromBottom: sidePanelHMm - upperNotchH, height: upperNotchH }];
+
+    const extZones: { notchAboveBottom: number; notchBelowTop: number | null }[] = [];
+    let zCursor = 0;
+    for (let ni = 0; ni < allNotches.length; ni++) {
+      const notch = allNotches[ni];
+      if (notch.fromBottom > zCursor) {
+        extZones.push({
+          notchAboveBottom: notch.fromBottom,
+          notchBelowTop: ni > 0 ? (allNotches[ni - 1].fromBottom + allNotches[ni - 1].height) : null,
+        });
+      }
+      zCursor = notch.fromBottom + notch.height;
+    }
+    if (hideTopNotch && zCursor < sidePanelHMm && extZones.length < extDrawerCount) {
+      const lastNotch = allNotches[allNotches.length - 1];
+      extZones.push({
+        notchAboveBottom: sidePanelHMm - basicThickness,
+        notchBelowTop: lastNotch ? (lastNotch.fromBottom + lastNotch.height) : null,
+      });
+    }
+
     // 측판 높이: 1단 250mm, 2단이상 130mm (3단서랍), 2단서랍은 모두 250mm
     for (let di = 0; di < extDrawerCount; di++) {
       const extSideHMm = extDrawerCount >= 3 ? (di === 0 ? 250 : 130) : 250;
       const extBackHMm = extSideHMm - 15 - backPanelThickness; // 뒷판높이 = 측판 - 15 - 바닥판두께
       const drawerNum = di + 1;
+
+      // 마이다 높이: fixedMaidaHeights 우선, 없으면 zone 기반 계산
+      let maidaHeightMm: number;
+      if (fixedMaidaHeights && fixedMaidaHeights[di]) {
+        maidaHeightMm = fixedMaidaHeights[di];
+      } else if (extZones[di]) {
+        const zone = extZones[di];
+        const maidaTopMm = zone.notchAboveBottom + 40;
+        const maidaBottomMm = zone.notchBelowTop != null ? (zone.notchBelowTop - 5) : -5;
+        maidaHeightMm = maidaTopMm - maidaBottomMm;
+      } else {
+        maidaHeightMm = 375; // 안전 기본값
+      }
+
       extDrawerPanels.push(
         { name: `서랍${drawerNum} 좌측판`, width: extSideDepthMm, height: extSideHMm, thickness: drawerSideThickness, material: 'PB' },
         { name: `서랍${drawerNum} 우측판`, width: extSideDepthMm, height: extSideHMm, thickness: drawerSideThickness, material: 'PB' },
         { name: `서랍${drawerNum} 앞판`, width: Math.round(extInnerWidth), height: extSideHMm, thickness: drawerSideThickness, material: 'PB' },
         { name: `서랍${drawerNum} 뒷판`, width: Math.round(extInnerWidth), height: Math.round(extBackHMm), thickness: drawerSideThickness, material: 'PB' },
         { name: `서랍${drawerNum} 바닥`, width: Math.round(extBottomWidthMm), depth: extSideDepthMm, thickness: backPanelThickness, material: 'MDF' },
-        { name: `서랍${drawerNum}(마이다)`, width: customWidth - 3, height: 0, thickness: basicThickness, material: 'PET' },
+        { name: `서랍${drawerNum}(마이다)`, width: customWidth - 3, height: Math.round(maidaHeightMm), thickness: basicThickness, material: 'PET' },
       );
     }
   }
