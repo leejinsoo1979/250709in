@@ -622,6 +622,27 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                 );
               })}
 
+              {/* 도어 상단갭: 가구 상판 아래 doorTopGap 영역 */}
+              {(() => {
+                const doorTopGapVal = mod.doorTopGap ?? -20;
+                const doorTopGapMm = Math.abs(doorTopGapVal);
+                if (doorTopGapMm <= 0) return null;
+                const gapTopY = cabinetTopY;
+                const gapBotY = cabinetTopY - mmToThreeUnits(doorTopGapMm);
+                return (
+                  <group>
+                    <ExtLine points={[[0, gapTopY, leftInnerExtStartZ], [0, gapTopY, leftInnerZ]]} color={dimensionColor} />
+                    <ExtLine points={[[0, gapBotY, leftInnerExtStartZ], [0, gapBotY, leftInnerZ]]} color={dimensionColor} />
+                    <NativeLine name="dimension_line" points={[[0, gapBotY, leftInnerZ], [0, gapTopY, leftInnerZ]]} color={dimensionColor} lineWidth={2} renderOrder={100000} depthTest={false} />
+                    <NativeLine name="dimension_line" points={[[-0.03, gapBotY, leftInnerZ], [0.03, gapBotY, leftInnerZ]]} color={dimensionColor} lineWidth={2} renderOrder={100000} depthTest={false} />
+                    <NativeLine name="dimension_line" points={[[-0.03, gapTopY, leftInnerZ], [0.03, gapTopY, leftInnerZ]]} color={dimensionColor} lineWidth={2} renderOrder={100000} depthTest={false} />
+                    <Text position={[0, (gapBotY + gapTopY) / 2, leftInnerZ - mmToThreeUnits(60)]} fontSize={largeFontSize} color={textColor} anchorX="center" anchorY="middle" renderOrder={1000} depthTest={false} rotation={[0, -Math.PI / 2, Math.PI / 2]}>
+                      {doorTopGapMm}
+                    </Text>
+                  </group>
+                );
+              })()}
+
               {/* 하부프레임 높이: 바닥마감재 상단 ~ 받침대 상단 */}
               {baseFrameHeightMm > 0 && (
                 <>
