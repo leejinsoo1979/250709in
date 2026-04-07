@@ -480,7 +480,7 @@ export const ExternalDrawerRenderer: React.FC<ExternalDrawerRendererProps> = ({
 
   // === 두께 상수 ===
   const basicThicknessMm = basicThickness / 0.01;
-  const drawerPanelThicknessMm = (basicThicknessMm === 18.5 || basicThicknessMm === 15.5) ? 15.5 : basicThicknessMm;
+  const drawerPanelThicknessMm = (basicThicknessMm === 18.5 || basicThicknessMm === 15.5) ? 15.5 : 15;
   const DRAWER_SIDE_THICKNESS = mmToThreeUnits(drawerPanelThicknessMm);
   const HANDLE_PLATE_THICKNESS = basicThickness; // 마이다는 외부 노출 패널이므로 도어와 동일한 basicThickness
   const backPanelThickness = backPanelThicknessOverride != null
