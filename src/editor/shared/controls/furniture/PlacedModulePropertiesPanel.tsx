@@ -50,7 +50,7 @@ const getFurnitureImagePath = (moduleId: string): string | null => {
   const basicThickness = moduleData.modelConfig?.basicThickness || 18;
   const backPanelThickness = (basicThickness === 18.5 || basicThickness === 15.5) ? 9.5 : 9; // MDF+PET 코팅 시 +0.5mm
   const drawerHandleThickness = basicThickness; // 마이다는 외부 노출 패널이므로 도어와 동일한 basicThickness
-  const drawerSideThickness = (basicThickness === 18.5 || basicThickness === 15.5) ? 15.5 : basicThickness; // PET 코팅 시 15.5mm, 그 외 basicThickness 그대로
+  const drawerSideThickness = (basicThickness === 18.5 || basicThickness === 15.5) ? 15.5 : 15; // PB+PET 코팅 시 15.5mm
   const drawerBottomThickness = backPanelThickness; // 서랍 바닥판 - MDF 재질, 백패널과 동일
   
   const height = moduleData.dimensions.height;

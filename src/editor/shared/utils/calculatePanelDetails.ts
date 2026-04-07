@@ -1089,7 +1089,7 @@ export const calculatePanelDetails = (
   if (customConfig && customConfig.sections) {
     const basicThicknessCC = customConfig.panelThickness || basicThickness;
     const drawerHandleThicknessCC = (basicThicknessCC === 18.5 || basicThicknessCC === 15.5) ? 15.5 : 15; // PB+PET 코팅 시 15.5mm
-    const drawerSideThicknessCC = (basicThicknessCC === 18.5 || basicThicknessCC === 15.5) ? 15.5 : basicThicknessCC; // PET 코팅 시 15.5mm, 그 외 basicThickness 그대로
+    const drawerSideThicknessCC = (basicThicknessCC === 18.5 || basicThicknessCC === 15.5) ? 15.5 : 15; // PB+PET 코팅 시 15.5mm
     const drawerBottomThicknessCC = backPanelThickness; // MDF 재질, 백패널과 동일
     const targetPanel = panels.upper.length > 0 ? panels.upper : panels.lower;
 
