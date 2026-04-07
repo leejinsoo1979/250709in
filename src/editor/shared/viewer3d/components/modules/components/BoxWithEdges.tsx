@@ -399,8 +399,8 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
     if (viewMode === '2D' && panelName && panelName.includes('목찬넬프레임')) {
       return '#00cfff';
     }
-    // 2D 모드에서 서랍/도어/마이다/마감판 패널은 초록색 윤곽선
-    if (viewMode === '2D' && panelName && (panelName.includes('서랍') || panelName.includes('도어') || panelName.includes('마이다') || panelName.includes('마감판'))) {
+    // 2D 모드에서 도어/마이다/마감판 패널은 초록색 윤곽선 (서랍재는 본체와 동일)
+    if (viewMode === '2D' && panelName && (panelName.includes('도어') || panelName.includes('마이다') || panelName.includes('마감판'))) {
       return view2DTheme === 'dark' ? '#00ff00' : '#228B22'; // 다크→초록, 라이트→진한 녹색
     }
 

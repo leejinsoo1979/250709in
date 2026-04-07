@@ -424,8 +424,8 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
     ? mmToThreeUnits(backPanelThicknessOverride)
     : mmToThreeUnits(9);
 
-  // 공통 설정
-  const drawerFrameThickness = basicThickness; // 18mm
+  // 공통 설정 — 서랍속장 프레임도 서랍재와 동일 두께 (15mm, PET 시 15.5mm)
+  const drawerFrameThickness = DRAWER_SIDE_THICKNESS;
   const drawerFrameHeight = innerHeight; // 전달받은 내경 높이 그대로 사용
 
   // 서랍속장 (Drawer Interior Frame) - ㄷ자 프레임
