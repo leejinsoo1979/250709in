@@ -1021,9 +1021,9 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                     {/* 보조 가이드 연장선 - 뒤쪽 (절반 길이, 위에서 시작) */}
                     <ExtLine points={[[0, depthDimEdge, offsetBackZ], [0, (depthDimEdge + depthDimY) / 2, offsetBackZ]]} color={dimensionColor} />
 
-                    {/* 하부프레임 옵셋 깊이 치수선 (가구 깊이와 같은 Y) */}
+                    {/* 하부프레임 옵셋 깊이 치수선 (연장선 끝점 = 중간) */}
                     <NativeLine name="dimension_line"
-                      points={[[0, depthDimY, offsetBackZ], [0, depthDimY, frontZ]]}
+                      points={[[0, (depthDimEdge + depthDimY) / 2, offsetBackZ], [0, (depthDimEdge + depthDimY) / 2, frontZ]]}
                       color={dimensionColor}
                       lineWidth={1.5}
                       renderOrder={100000}
@@ -1031,7 +1031,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                     />
                     {/* 앞쪽 티크 */}
                     <NativeLine name="dimension_line"
-                      points={[[0 - 0.02, depthDimY, frontZ], [0 + 0.02, depthDimY, frontZ]]}
+                      points={[[0 - 0.02, (depthDimEdge + depthDimY) / 2, frontZ], [0 + 0.02, (depthDimEdge + depthDimY) / 2, frontZ]]}
                       color={dimensionColor}
                       lineWidth={1.5}
                       renderOrder={100000}
@@ -1039,7 +1039,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                     />
                     {/* 뒤쪽 티크 */}
                     <NativeLine name="dimension_line"
-                      points={[[0 - 0.02, depthDimY, offsetBackZ], [0 + 0.02, depthDimY, offsetBackZ]]}
+                      points={[[0 - 0.02, (depthDimEdge + depthDimY) / 2, offsetBackZ], [0 + 0.02, (depthDimEdge + depthDimY) / 2, offsetBackZ]]}
                       color={dimensionColor}
                       lineWidth={1.5}
                       renderOrder={100000}
@@ -1047,7 +1047,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                     />
                     {/* 하부프레임 옵셋 깊이 텍스트 */}
                     <Text
-                      position={[0, depthDimY - mmToThreeUnits(80), (frontZ + offsetBackZ) / 2]}
+                      position={[0, (depthDimEdge + depthDimY) / 2 - mmToThreeUnits(80), (frontZ + offsetBackZ) / 2]}
                       fontSize={largeFontSize}
                       color={textColor}
                       anchorX="center"
