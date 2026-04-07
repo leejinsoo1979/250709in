@@ -4,7 +4,7 @@ import * as THREE from 'three';
 import { ThreeEvent } from '@react-three/fiber';
 import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
 import { SpaceInfo } from '@/store/core/spaceConfigStore';
-import { calculateSpaceIndexing } from '../../../utils/indexing';
+import { calculateSpaceIndexing, recalculateWithCustomWidths } from '../../../utils/indexing';
 import { ColumnIndexer } from '@/editor/shared/utils/indexing/ColumnIndexer';
 import { useSpace3DView } from '../../context/useSpace3DView';
 import { useUIStore } from '@/store/uiStore';
@@ -630,8 +630,13 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   const doorTopGap = doorTopGapProp ?? originalSpaceInfo.doorTopGap ?? 0;
   const doorBottomGap = doorBottomGapProp ?? originalSpaceInfo.doorBottomGap ?? 0;
 
-  // 인덱싱 정보 계산 - 원본 spaceInfo 사용
-  const indexing = calculateSpaceIndexing(originalSpaceInfo);
+  // 인덱싱 정보 계산 - 원본 spaceInfo 사용 + slotCustomWidth 재분할 반영
+  const allPlacedModules = useFurnitureStore(state => state.placedModules);
+  const indexing = useMemo(() => {
+    const base = calculateSpaceIndexing(originalSpaceInfo);
+    const hasCustomWidths = allPlacedModules.some(m => m.slotCustomWidth !== undefined);
+    return hasCustomWidths ? recalculateWithCustomWidths(base, allPlacedModules) : base;
+  }, [originalSpaceInfo, allPlacedModules]);
 
   // 단내림 구간인 경우 영역별 슬롯 정보 계산 - 원본 spaceInfo로 계산
   let effectiveColumnWidth = indexing.columnWidth;
@@ -665,6 +670,9 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   if (isFree) {
     // 자유배치: store에서 가져온 freeWidth 또는 props moduleWidth 사용
     actualDoorWidth = storeFreeWidth || moduleWidth;
+  } else if (storePlacedModule?.slotCustomWidth !== undefined) {
+    // slotCustomWidth가 있으면 최우선 사용 (사용자가 슬롯 너비를 조정한 경우)
+    actualDoorWidth = storePlacedModule.slotCustomWidth;
   } else {
     // 슬롯 배치: slotWidths(가구 본체와 동일 기준) 우선, 없으면 effectiveColumnWidth fallback
     const storeSlotIndex = storePlacedModule?.slotIndex;
