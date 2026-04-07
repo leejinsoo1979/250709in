@@ -3258,6 +3258,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                   {(() => {
                     const furnitureDepth = currentPlacedModule.freeDepth ?? (moduleData ? moduleData.dimensions.depth : 580);
                     return (
+                      <>
                       <div className={styles.epRow}>
                         <div className={styles.epField}>
                           <label className={styles.epFieldLabel}>EP 두께</label>
@@ -3360,6 +3361,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                           </select>
                         </div>
                       </div>
+                      </>
                     );
                   })()}
                   {/* 좌/우 EP 옵셋 — 한 줄에 나란히 */}
