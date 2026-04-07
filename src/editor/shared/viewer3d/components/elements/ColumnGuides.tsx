@@ -740,56 +740,22 @@ const ColumnGuides: React.FC<ColumnGuidesProps> = ({ viewMode: viewModeProp }) =
           const slotCenterX = mmToThreeUnits(currentX + sw / 2);
           const slotWidth = mmToThreeUnits(sw);
 
-          if (viewMode === '2D' && view2DDirection === 'top') {
-            // 2D 탑뷰: 바닥 메쉬
-            meshes.push(
-              <mesh
-                key={`${zoneType}-floor-mesh-${i}`}
-                position={[slotCenterX, floorY, centerZ]}
-                rotation={[-Math.PI / 2, 0, 0]}
-              >
-                <planeGeometry args={[slotWidth, depth]} />
-                <meshBasicMaterial
-                  color={primaryColor}
-                  transparent
-                  opacity={opacity}
-                  side={THREE.DoubleSide}
-                />
-              </mesh>
-            );
-          } else {
-            // 3D: 천장 + 바닥 메쉬 모두
-            meshes.push(
-              <mesh
-                key={`${zoneType}-top-mesh-${i}`}
-                position={[slotCenterX, ceilingY, centerZ]}
-                rotation={[Math.PI / 2, 0, 0]}
-              >
-                <planeGeometry args={[slotWidth, depth]} />
-                <meshBasicMaterial
-                  color={primaryColor}
-                  transparent
-                  opacity={opacity}
-                  side={THREE.DoubleSide}
-                />
-              </mesh>
-            );
-            meshes.push(
-              <mesh
-                key={`${zoneType}-bottom-mesh-${i}`}
-                position={[slotCenterX, floorY, centerZ]}
-                rotation={[-Math.PI / 2, 0, 0]}
-              >
-                <planeGeometry args={[slotWidth, depth]} />
-                <meshBasicMaterial
-                  color={primaryColor}
-                  transparent
-                  opacity={opacity}
-                  side={THREE.DoubleSide}
-                />
-              </mesh>
-            );
-          }
+          // 2D 탑뷰: 바닥 메쉬만 표시 (3D에서는 위/아래 메쉬 불필요 — 뒷면만 사용)
+          meshes.push(
+            <mesh
+              key={`${zoneType}-floor-mesh-${i}`}
+              position={[slotCenterX, floorY, centerZ]}
+              rotation={[-Math.PI / 2, 0, 0]}
+            >
+              <planeGeometry args={[slotWidth, depth]} />
+              <meshBasicMaterial
+                color={primaryColor}
+                transparent
+                opacity={opacity}
+                side={THREE.DoubleSide}
+              />
+            </mesh>
+          );
         }
 
         currentX += sw;
@@ -839,8 +805,8 @@ const ColumnGuides: React.FC<ColumnGuidesProps> = ({ viewMode: viewModeProp }) =
                 'back',
                 'main'
               )}
-              {/* 메인 영역 상부 메쉬 - 3D와 탑뷰에서 표시 (가구 배치 슬롯 제외) */}
-              {(viewMode === '3D' || (viewMode === '2D' && view2DDirection === 'top')) && renderTransparentMeshes(
+              {/* 메인 영역 바닥 메쉬 - 2D 탑뷰에서만 표시 (가구 배치 슬롯 제외) */}
+              {(viewMode === '2D' && view2DDirection === 'top') && renderTransparentMeshes(
                 zoneSlotInfo.normal.startX,
                 zoneSlotInfo.normal.width,
                 floorY,
@@ -862,8 +828,8 @@ const ColumnGuides: React.FC<ColumnGuidesProps> = ({ viewMode: viewModeProp }) =
                 'back',
                 'dropped'
               )}
-              {/* 단내림 영역 상부 메쉬 - 3D와 탑뷰에서 표시 (가구 배치 슬롯 제외) */}
-              {(viewMode === '3D' || (viewMode === '2D' && view2DDirection === 'top')) && renderTransparentMeshes(
+              {/* 단내림 영역 바닥 메쉬 - 2D 탑뷰에서만 표시 (가구 배치 슬롯 제외) */}
+              {(viewMode === '2D' && view2DDirection === 'top') && renderTransparentMeshes(
                 zoneSlotInfo.dropped.startX,
                 zoneSlotInfo.dropped.width,
                 floorY,
@@ -904,8 +870,8 @@ const ColumnGuides: React.FC<ColumnGuidesProps> = ({ viewMode: viewModeProp }) =
                 'back',
                 'full'
               )}
-              {/* 상부 메쉬 - 3D와 탑뷰에서 표시 (가구 배치 슬롯 제외) */}
-              {(viewMode === '3D' || (viewMode === '2D' && view2DDirection === 'top')) && renderTransparentMeshes(
+              {/* 바닥 메쉬 - 2D 탑뷰에서만 표시 (가구 배치 슬롯 제외) */}
+              {(viewMode === '2D' && view2DDirection === 'top') && renderTransparentMeshes(
                 zoneSlotInfo.normal.startX,
                 zoneSlotInfo.normal.width,
                 floorY,
