@@ -52,6 +52,11 @@ const BaseControls: React.FC<BaseControlsProps> = ({ spaceInfo, onUpdate, disabl
   // 높이 입력 처리 (로컬 상태만 변경, store는 blur에서 업데이트)
   const handleHeightChange = (value: string) => {
     if (value === '' || /^\d+$/.test(value)) {
+      // 입력 중 최대값 초과 방지 (3자리 이상이면 즉시 클램핑)
+      if (value !== '' && parseInt(value) > 150) {
+        setBaseHeight('150');
+        return;
+      }
       setBaseHeight(value);
     }
   };
@@ -76,7 +81,7 @@ const BaseControls: React.FC<BaseControlsProps> = ({ spaceInfo, onUpdate, disabl
     if (value < 60) value = 60;
     if (value > 150) value = 150;
 
-    setBaseHeight(value);
+    setBaseHeight(String(value));
 
     if (value !== currentBaseConfig.height) {
       const saveValue = value;
