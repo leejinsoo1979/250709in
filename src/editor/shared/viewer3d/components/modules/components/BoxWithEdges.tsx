@@ -387,9 +387,9 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
     if (viewMode === '2D' && panelName && panelName.includes('목찬넬프레임')) {
       return '#00cfff';
     }
-    // 2D 모드에서 서랍속장/도어/마이다/마감판 패널은 초록색 윤곽선
-    if (viewMode === '2D' && panelName && (panelName.includes('서랍속장') || panelName.includes('도어') || panelName.includes('마이다') || panelName.includes('마감판'))) {
-      return '#00ff00'; // 초록색
+    // 2D 모드에서 서랍/도어/마이다/마감판 패널은 초록색 윤곽선
+    if (viewMode === '2D' && panelName && (panelName.includes('서랍') || panelName.includes('도어') || panelName.includes('마이다') || panelName.includes('마감판'))) {
+      return view2DTheme === 'dark' ? '#00ff00' : '#228B22'; // 다크→초록, 라이트→진한 녹색
     }
 
     // 옷걸이 봉인 경우: 2D 모드에서 view2DTheme에 따라 색상 변경
@@ -654,7 +654,7 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
     // 라이트 모드: 최소 opacity 0.3 보장 (너무 연한 색상은 흰 배경에서 안 보임)
     const blendedColor = panelDepthOpacity >= 1.0 ? edgeColor : (() => {
       const effectiveOpacity = view2DTheme === 'light'
-        ? Math.max(panelDepthOpacity, 0.3)
+        ? Math.max(panelDepthOpacity, 0.5)
         : panelDepthOpacity;
       const base = new THREE.Color(edgeColor);
       const bg = new THREE.Color(view2DTheme === 'dark' ? '#1a1a2e' : '#ffffff');
