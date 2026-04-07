@@ -12,6 +12,8 @@
   flex-direction: column;
   position: relative;
   z-index: 85;
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 .rightPanel.open {
