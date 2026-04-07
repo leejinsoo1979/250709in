@@ -3348,6 +3348,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                     <div className={styles.epRow}>
                       {currentPlacedModule.hasLeftEndPanel && (() => {
                         const rawVal = currentPlacedModule.leftEndPanelOffset ?? currentPlacedModule.endPanelOffset ?? 0;
+                        const baseDepth = currentPlacedModule.endPanelDepth ?? (currentPlacedModule.freeDepth ?? furnitureDepth);
                         return (
                           <div className={styles.epField}>
                             <label className={styles.epFieldLabel}>좌측 EP 옵셋</label>
@@ -3361,6 +3362,8 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                                   if (v === '' || v === '-' || /^-?\d+$/.test(v)) {
                                     const num = (v === '' || v === '-') ? 0 : Math.max(-200, Math.min(200, parseInt(v, 10)));
                                     updatePlacedModule(currentPlacedModule.id, { leftEndPanelOffset: num });
+                                    // EP 깊이 표시 실시간 반영
+                                    setEpDepthInput(Math.round(baseDepth + num).toString());
                                   }
                                 }}
                                 onKeyDown={(e) => {
@@ -3368,6 +3371,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                                     e.preventDefault();
                                     const next = Math.max(-200, Math.min(200, rawVal + (e.key === 'ArrowUp' ? 1 : -1)));
                                     updatePlacedModule(currentPlacedModule.id, { leftEndPanelOffset: next });
+                                    setEpDepthInput(Math.round(baseDepth + next).toString());
                                   }
                                 }}
                                 className={styles.epInput}
@@ -3380,6 +3384,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                       })()}
                       {currentPlacedModule.hasRightEndPanel && (() => {
                         const rawVal = currentPlacedModule.rightEndPanelOffset ?? currentPlacedModule.endPanelOffset ?? 0;
+                        const baseDepth = currentPlacedModule.endPanelDepth ?? (currentPlacedModule.freeDepth ?? furnitureDepth);
                         return (
                           <div className={styles.epField}>
                             <label className={styles.epFieldLabel}>우측 EP 옵셋</label>
@@ -3393,6 +3398,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                                   if (v === '' || v === '-' || /^-?\d+$/.test(v)) {
                                     const num = (v === '' || v === '-') ? 0 : Math.max(-200, Math.min(200, parseInt(v, 10)));
                                     updatePlacedModule(currentPlacedModule.id, { rightEndPanelOffset: num });
+                                    setEpDepthInput(Math.round(baseDepth + num).toString());
                                   }
                                 }}
                                 onKeyDown={(e) => {
@@ -3400,6 +3406,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                                     e.preventDefault();
                                     const next = Math.max(-200, Math.min(200, rawVal + (e.key === 'ArrowUp' ? 1 : -1)));
                                     updatePlacedModule(currentPlacedModule.id, { rightEndPanelOffset: next });
+                                    setEpDepthInput(Math.round(baseDepth + next).toString());
                                   }
                                 }}
                                 className={styles.epInput}

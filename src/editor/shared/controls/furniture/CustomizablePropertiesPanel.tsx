@@ -4665,6 +4665,7 @@ const CustomizablePropertiesPanel: React.FC = () => {
                     {/* 좌측 EP 옵셋 */}
                     {placedModule.hasLeftEndPanel && (() => {
                       const rawVal = placedModule.leftEndPanelOffset ?? placedModule.endPanelOffset ?? 0;
+                      const baseDepth = placedModule.endPanelDepth ?? furnitureDepth;
                       return (
                         <div style={{ marginTop: '4px' }}>
                           <span style={{ fontSize: '12px', color: 'var(--theme-text-secondary)' }}>좌측 EP 옵셋</span>
@@ -4678,6 +4679,7 @@ const CustomizablePropertiesPanel: React.FC = () => {
                                 if (v === '' || v === '-' || /^-?\d+$/.test(v)) {
                                   const num = (v === '' || v === '-') ? 0 : Math.max(-200, Math.min(200, parseInt(v, 10)));
                                   updatePlacedModule(moduleId, { leftEndPanelOffset: num });
+                                  setEpDepthInput(Math.round(baseDepth + num).toString());
                                 }
                               }}
                               onKeyDown={(e) => {
@@ -4685,6 +4687,7 @@ const CustomizablePropertiesPanel: React.FC = () => {
                                   e.preventDefault();
                                   const next = Math.max(-200, Math.min(200, rawVal + (e.key === 'ArrowUp' ? 1 : -1)));
                                   updatePlacedModule(moduleId, { leftEndPanelOffset: next });
+                                  setEpDepthInput(Math.round(baseDepth + next).toString());
                                 }
                               }}
                               style={{
@@ -4702,6 +4705,7 @@ const CustomizablePropertiesPanel: React.FC = () => {
                     {/* 우측 EP 옵셋 */}
                     {placedModule.hasRightEndPanel && (() => {
                       const rawVal = placedModule.rightEndPanelOffset ?? placedModule.endPanelOffset ?? 0;
+                      const baseDepth = placedModule.endPanelDepth ?? furnitureDepth;
                       return (
                         <div style={{ marginTop: '4px' }}>
                           <span style={{ fontSize: '12px', color: 'var(--theme-text-secondary)' }}>우측 EP 옵셋</span>
@@ -4715,6 +4719,7 @@ const CustomizablePropertiesPanel: React.FC = () => {
                                 if (v === '' || v === '-' || /^-?\d+$/.test(v)) {
                                   const num = (v === '' || v === '-') ? 0 : Math.max(-200, Math.min(200, parseInt(v, 10)));
                                   updatePlacedModule(moduleId, { rightEndPanelOffset: num });
+                                  setEpDepthInput(Math.round(baseDepth + num).toString());
                                 }
                               }}
                               onKeyDown={(e) => {
@@ -4722,6 +4727,7 @@ const CustomizablePropertiesPanel: React.FC = () => {
                                   e.preventDefault();
                                   const next = Math.max(-200, Math.min(200, rawVal + (e.key === 'ArrowUp' ? 1 : -1)));
                                   updatePlacedModule(moduleId, { rightEndPanelOffset: next });
+                                  setEpDepthInput(Math.round(baseDepth + next).toString());
                                 }
                               }}
                               style={{
