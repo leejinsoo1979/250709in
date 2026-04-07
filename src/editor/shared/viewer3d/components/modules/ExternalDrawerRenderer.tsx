@@ -404,6 +404,7 @@ export const ExternalDrawerRenderer: React.FC<ExternalDrawerRendererProps> = ({
   const mmToThreeUnits = (mm: number) => mm * 0.01;
 
   // === 도어 재질 (L자 프레임 + 마이다용) ===
+  console.log('🎨 [ExtDrawer] doorColor:', doorColor, 'doorTextureUrl:', doorTextureUrl);
   const doorMaterialRef = useRef<THREE.MeshStandardMaterial | null>(null);
   const doorMaterial = useMemo(() => {
     const effectiveColor = doorColor || '#E0E0E0';
@@ -430,6 +431,7 @@ export const ExternalDrawerRenderer: React.FC<ExternalDrawerRendererProps> = ({
 
   // doorTextureUrl 변경 시 텍스처 적용 (DoorModule과 동일 방식)
   useEffect(() => {
+    console.log('🎨 [ExtDrawer] useEffect doorTextureUrl:', doorTextureUrl, 'doorColor:', doorColor);
     const mat = doorMaterialRef.current;
     if (!mat) return;
 
