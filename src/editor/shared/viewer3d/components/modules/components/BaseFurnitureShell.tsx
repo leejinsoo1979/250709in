@@ -999,7 +999,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
 
                         // 서랍 패널 두께
                         const basicThicknessMm = basicThickness / 0.01;
-                        const drawerPanelThicknessMm = (basicThicknessMm === 18.5 || basicThicknessMm === 15.5) ? 15.5 : 15;
+                        const drawerPanelThicknessMm = (basicThicknessMm === 18.5 || basicThicknessMm === 15.5) ? 15.5 : basicThicknessMm;
                         const drawerSideT = mmToThreeUnits(drawerPanelThicknessMm);
                         const maidaT = mmToThreeUnits(drawerPanelThicknessMm);
                         const bottomT = mmToThreeUnits(9); // 바닥판 두께 = 백패널 두께 (9mm 고정)

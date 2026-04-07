@@ -399,7 +399,7 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
   
   // 서랍 구조 상수 - PB+PET 코팅 시 15.5mm
   const basicThicknessMm = basicThickness / 0.01;
-  const drawerPanelThicknessMm = (basicThicknessMm === 18.5 || basicThicknessMm === 15.5) ? 15.5 : 15; // mm
+  const drawerPanelThicknessMm = (basicThicknessMm === 18.5 || basicThicknessMm === 15.5) ? 15.5 : basicThicknessMm; // PET 코팅 시 15.5mm, 그 외 basicThickness 그대로
   // 손잡이 판 두께(마이다) - 외부 노출 패널이므로 도어와 동일한 basicThickness 사용
   const SPECIAL_PANEL_THICKNESS = basicThicknessMm; // mm
   const HANDLE_PLATE_THICKNESS = basicThickness;
