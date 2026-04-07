@@ -229,14 +229,14 @@ const autoClearAdjacentFullEP = (removedModule: PlacedModule) => {
   // 왼쪽 인접 키큰장 → 우측 EP 해제
   const leftFull = findAdjacentFull(slotIndex - 1);
   if (leftFull?.hasRightEndPanel) {
-    useFurnitureStore.getState().updatePlacedModule(leftFull.id, { hasRightEndPanel: false });
+    useFurnitureStore.getState().updatePlacedModule(leftFull.id, { hasRightEndPanel: false, endPanelThickness: 18 });
   }
 
   // 오른쪽 인접 키큰장 → 좌측 EP 해제
   const rightSlot = isRemovedDual ? slotIndex + 2 : slotIndex + 1;
   const rightFull = findAdjacentFull(rightSlot);
   if (rightFull?.hasLeftEndPanel) {
-    useFurnitureStore.getState().updatePlacedModule(rightFull.id, { hasLeftEndPanel: false });
+    useFurnitureStore.getState().updatePlacedModule(rightFull.id, { hasLeftEndPanel: false, endPanelThickness: 18 });
   }
 };
 
@@ -535,6 +535,8 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
 
     // 슬롯 변경이 있을 경우 중복 체크 (자유배치 가구는 제외)
     const checkTarget = existingModule || state.placedModules.find(m => m.id === id);
+    const oldSlotIndex = checkTarget?.slotIndex;
+    const isSlotChanging = (updates.slotIndex !== undefined && updates.slotIndex !== oldSlotIndex) || (updates.zone !== undefined && updates.zone !== checkTarget?.zone);
     if ((updates.slotIndex !== undefined || updates.zone !== undefined) && !checkTarget?.isFreePlacement) {
       const targetModule = checkTarget;
       if (targetModule) {
@@ -608,6 +610,14 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
             );
             set({ placedModules: newModules });
             notifyR3F(newModules);
+            // 슬롯 변경 시 EP 재계산
+            if (isSlotChanging && checkTarget) {
+              setTimeout(() => {
+                autoClearAdjacentFullEP({ ...checkTarget }); // 이전 위치 EP 해제
+                const updated = useFurnitureStore.getState().placedModules.find(m => m.id === id);
+                if (updated) autoSetAdjacentFullEP(updated); // 새 위치 EP 설정
+              }, 0);
+            }
             return;
           }
 
@@ -622,6 +632,14 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
             );
             set({ placedModules: newModules });
             notifyR3F(newModules);
+            // 슬롯 변경 시 EP 재계산
+            if (isSlotChanging && checkTarget) {
+              setTimeout(() => {
+                autoClearAdjacentFullEP({ ...checkTarget }); // 이전 위치 EP 해제
+                const updated = useFurnitureStore.getState().placedModules.find(m => m.id === id);
+                if (updated) autoSetAdjacentFullEP(updated); // 새 위치 EP 설정
+              }, 0);
+            }
             return;
           }
         }
@@ -638,6 +656,15 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
 
     set({ placedModules: newModules });
     notifyR3F(newModules);
+
+    // 슬롯 변경 시 EP 재계산
+    if (isSlotChanging && checkTarget) {
+      setTimeout(() => {
+        autoClearAdjacentFullEP({ ...checkTarget }); // 이전 위치 EP 해제
+        const updated = useFurnitureStore.getState().placedModules.find(m => m.id === id);
+        if (updated) autoSetAdjacentFullEP(updated); // 새 위치 EP 설정
+      }, 0);
+    }
   },
 
   // 모든 가구 초기화 함수 (기존 Context 로직과 동일)
