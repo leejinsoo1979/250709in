@@ -818,12 +818,14 @@ const PlacedModulePropertiesPanel: React.FC = () => {
         ? currentPlacedModule.customDepth
         : getDefaultDepth(moduleData);
 
-      // 기둥에 의해 조정된 너비가 있으면 우선 사용, 없으면 customWidth, 그것도 없으면 기본 너비
+      // 기둥에 의해 조정된 너비가 있으면 우선 사용, 없으면 slotCustomWidth, customWidth, 기본 너비 순
       const initialWidth = currentPlacedModule.adjustedWidth !== undefined && currentPlacedModule.adjustedWidth !== null
         ? currentPlacedModule.adjustedWidth
-        : (currentPlacedModule.customWidth !== undefined && currentPlacedModule.customWidth !== null
-          ? currentPlacedModule.customWidth
-          : moduleData.dimensions.width);
+        : (currentPlacedModule.slotCustomWidth !== undefined
+          ? currentPlacedModule.slotCustomWidth
+          : (currentPlacedModule.customWidth !== undefined && currentPlacedModule.customWidth !== null
+            ? currentPlacedModule.customWidth
+            : moduleData.dimensions.width));
       console.log('🔍 [팝업 치수 디버그]', {
         moduleId: currentPlacedModule.moduleId,
         isDualSlot: currentPlacedModule.isDualSlot,
@@ -1121,8 +1123,8 @@ const PlacedModulePropertiesPanel: React.FC = () => {
   const sections = moduleData?.modelConfig?.sections || [];
   const isTwoSectionFurniture = sections.length === 2;
 
-  // 도어용 원래 너비 계산 (adjustedWidth가 없으면 customWidth가 원래 너비)
-  const doorOriginalWidth = currentPlacedModule?.customWidth || moduleData?.dimensions.width;
+  // 도어용 원래 너비 계산 (adjustedWidth가 없으면 slotCustomWidth → customWidth → 기본 너비)
+  const doorOriginalWidth = currentPlacedModule?.slotCustomWidth ?? currentPlacedModule?.customWidth ?? moduleData?.dimensions.width;
 
   // 프레임 높이 계산 (상부프레임, 하부프레임)
   const topFrameHeightMm = calculateTopBottomFrameHeight(spaceInfo);
