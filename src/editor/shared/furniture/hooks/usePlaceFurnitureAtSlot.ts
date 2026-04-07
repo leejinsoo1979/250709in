@@ -6,8 +6,9 @@
 import { SpaceInfo } from '@/store/core/spaceConfigStore';
 import { PlacedModule, CustomFurnitureConfig } from '@/editor/shared/furniture/types';
 import { getModuleById, ModuleData } from '@/data/modules';
-import { calculateSpaceIndexing } from '@/editor/shared/utils/indexing';
+import { calculateSpaceIndexing, recalculateWithCustomWidths } from '@/editor/shared/utils/indexing';
 import { calculateInternalSpace } from '@/editor/shared/viewer3d/utils/geometry';
+import { useFurnitureStore } from '@/store/core/furnitureStore';
 import { analyzeColumnSlots, calculateFurnitureBounds } from '@/editor/shared/utils/columnSlotProcessor';
 import { isCustomizableModuleId, createDefaultCustomConfig } from '@/editor/shared/controls/furniture/CustomizableFurnitureLibrary';
 import { useMyCabinetStore, PendingPlacement } from '@/store/core/myCabinetStore';
@@ -37,8 +38,15 @@ export function placeFurnitureAtSlot(params: PlaceFurnitureParams): PlaceFurnitu
 
   console.log('🎯 [placeFurnitureAtSlot] 호출:', { moduleId, slotIndex, zone });
 
-  const indexing = calculateSpaceIndexing(spaceInfo);
+  const baseIndexing = calculateSpaceIndexing(spaceInfo);
   const hasDroppedCeiling = spaceInfo.droppedCeiling?.enabled || false;
+
+  // slotCustomWidth가 있는 기존 모듈이 있으면 재분할된 indexing 사용
+  const existingModules = useFurnitureStore.getState().placedModules;
+  const hasCustomWidthModules = existingModules.some(m => m.slotCustomWidth !== undefined);
+  const indexing = hasCustomWidthModules
+    ? recalculateWithCustomWidths(baseIndexing, existingModules, zone || 'normal')
+    : baseIndexing;
 
   // zone별 spaceInfo 생성
   let zoneSpaceInfo = spaceInfo;
