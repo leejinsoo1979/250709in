@@ -493,8 +493,10 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
     const isMaida = panelName.includes('마이다'); // 마이다 (서랍 앞면 손잡이판)
 
     // 정면 뷰 기준 깊이 등급
+    const isInductionDrawer = panelName.includes('인덕션') && panelName.includes('서랍');
     if (view2DDirection === 'front') {
       if (isMaida) return 1.0;
+      if (isInductionDrawer) return view2DTheme === 'dark' ? 0.7 : 0.5; // 인덕션 서랍: 전대 뒤로 보이므로 진하게
       if (isDrawerFrame) return view2DTheme === 'dark' ? 0.45 : 0.15;
       if (isDrawerPanel) return view2DTheme === 'dark' ? 0.45 : 0.15;
       // 하부섹션 상판: 옵셋으로 뒤에 있으므로 약간 흐리게
