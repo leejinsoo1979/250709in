@@ -512,10 +512,9 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
         const drawerBottomWidthMm = widthMm - basicThicknessMm * 2 - bottomSideGapMm * 2;
         const drawerBackWidthMm = widthMm - basicThicknessMm * 2 - backSideGapMm * 2;
         const drawerDepthMm = 490; // 레그라박스 서랍 바닥판 깊이 고정
-        const bottomGapMm = 28; // 하부장 바닥판에서 28mm 갭
-
-        // 1단 서랍: 총 높이 228mm (바닥판+뒷판), 바닥판 위치 = 바닥판(18) + 28mm
-        const drawer1BottomY = cabinetBottomY + mmToThreeUnits(basicThicknessMm + bottomGapMm);
+        // 1단 서랍: 총 높이 228mm, 상단이 하단에서 338mm → 바닥 = 338 - 228 = 110mm
+        const drawer1FromBottomMm = 338 - 228; // = 110mm
+        const drawer1BottomY = cabinetBottomY + mmToThreeUnits(drawer1FromBottomMm);
         const drawer1TotalH = 228;
         const drawer1BackH = drawer1TotalH - drawerThicknessMm; // 뒷판 높이 = 228 - 15 = 213mm
 
