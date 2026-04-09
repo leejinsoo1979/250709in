@@ -1092,6 +1092,77 @@ const createDualLowerHalfCabinet = (dualWidth: number, slotWidths?: number[]): M
 };
 
 /**
+ * 싱크장 반통 - 조절발 65mm + 캐비넷 W500xD650xH785
+ * 기본하부장과 동일한 디자인이지만 내부 선반 없음
+ */
+const createLowerSinkCabinet = (columnWidth: number): ModuleData => {
+  const widthForId = Math.round(columnWidth * 100) / 100;
+  const cabinetHeight = 785;
+
+  const base = createFurnitureBase(
+    `lower-sink-cabinet-${widthForId}`,
+    `싱크장 반통 ${widthForId}mm`,
+    columnWidth,
+    cabinetHeight,
+    650,
+    '#fff3e0',
+    `싱크장 반통 W${widthForId}xH785xD650 (조절발 65mm)`,
+    650,
+    'lower'
+  );
+
+  return {
+    ...base,
+    isDynamic: true,
+    defaultDepth: 650,
+    hasDoor: false,
+    thumbnail: '',
+    modelConfig: {
+      ...base.modelConfig,
+      basicThickness: FURNITURE_SPECS.BASIC_THICKNESS,
+      hasOpenFront: false,
+      sections: []
+    }
+  } as ModuleData;
+};
+
+/**
+ * 싱크장 한통 (듀얼) - 조절발 65mm + 캐비넷 W(듀얼)xD650xH785
+ * 싱크장 반통의 듀얼 버전 (칸막이 없음, 내부 선반 없음)
+ */
+const createDualLowerSinkCabinet = (dualWidth: number, slotWidths?: number[]): ModuleData => {
+  const widthForId = Math.round(dualWidth * 100) / 100;
+  const cabinetHeight = 785;
+
+  const base = createFurnitureBase(
+    `dual-lower-sink-cabinet-${widthForId}`,
+    `싱크장 한통 ${widthForId}mm`,
+    dualWidth,
+    cabinetHeight,
+    650,
+    '#fff3e0',
+    `싱크장 한통 W${widthForId}xH785xD650 (조절발 65mm)`,
+    650,
+    'lower'
+  );
+
+  return {
+    ...base,
+    isDynamic: true,
+    defaultDepth: 650,
+    hasDoor: false,
+    slotWidths,
+    thumbnail: '',
+    modelConfig: {
+      ...base.modelConfig,
+      basicThickness: FURNITURE_SPECS.BASIC_THICKNESS,
+      hasOpenFront: false,
+      sections: []
+    }
+  } as ModuleData;
+};
+
+/**
  * 3단서랍장한통 - 조절발 65mm + 캐비넷 W(듀얼)xD650xH785
  * 3단서랍장반통의 듀얼 버전
  * 측판에 상단+중단(510mm)+하단(295mm) 3개의 따내기 홈이 있음
@@ -2047,6 +2118,7 @@ export const generateShelvingModules = (
 
     // === 새 듀얼 하부장 가구 생성 ===
     modules.push(createDualLowerHalfCabinet(dualWidth, dualSlotWidths));
+    modules.push(createDualLowerSinkCabinet(dualWidth, dualSlotWidths));
     modules.push(createDualLowerDrawer2Tier(dualWidth, dualSlotWidths));
     modules.push(createDualLowerDrawer3Tier(dualWidth, dualSlotWidths));
 
@@ -2075,6 +2147,7 @@ export const generateShelvingModules = (
 
   // === 새 하부장 가구 생성 ===
   modules.push(createLowerHalfCabinet(columnWidth));
+  modules.push(createLowerSinkCabinet(columnWidth));
   modules.push(createLowerDrawer2Tier(columnWidth));
   modules.push(createLowerDrawer3Tier(columnWidth));
 

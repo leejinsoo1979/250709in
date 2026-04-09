@@ -425,8 +425,8 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
         );
       })()}
 
-      {/* 기본하부장 반통/한통: 상단 따내기 L자 프레임 렌더링 */}
-      {showFurniture && (moduleData.id.includes('lower-half-cabinet') || moduleData.id.includes('dual-lower-half-cabinet')) && (() => {
+      {/* 기본하부장/싱크장 반통/한통: 상단 따내기 L자 프레임 렌더링 */}
+      {showFurniture && (moduleData.id.includes('lower-half-cabinet') || moduleData.id.includes('dual-lower-half-cabinet') || moduleData.id.includes('lower-sink-cabinet') || moduleData.id.includes('dual-lower-sink-cabinet')) && (() => {
         const mmToThreeUnits = (mm: number) => mm * 0.01;
         const cabinetHeight = adjustedHeight;
         const notchHeightMm = 60;
