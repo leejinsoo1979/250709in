@@ -1016,6 +1016,19 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     };
   }
 
+  // cabinetBodyHeight가 있으면 moduleData.dimensions.height 오버라이드
+  // 2단서랍장 반통/한통의 몸통 높이 변경용 (기본 785mm)
+  if (moduleData && placedModule.cabinetBodyHeight
+      && (placedModule.moduleId.includes('lower-drawer-2tier') || placedModule.moduleId.includes('dual-lower-drawer-2tier'))) {
+    moduleData = {
+      ...moduleData,
+      dimensions: {
+        ...moduleData.dimensions,
+        height: placedModule.cabinetBodyHeight,
+      },
+    };
+  }
+
   // moduleData가 없을 때 체크 - 단순 변수로 처리
   const moduleNotFound = !moduleData;
 
