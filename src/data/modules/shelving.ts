@@ -2154,6 +2154,136 @@ const createDualLowerTopDown3Tier = (dualWidth: number, slotWidths?: number[]): 
   } as ModuleData;
 };
 
+/**
+ * 상판내림 터치 2단 반통 - 조절발 65mm + 캐비넷 W가변xD650xH785
+ * 레그라박스 서랍: SL(228)+SL(228), 이격 28/356. 따내기 없음, 전대 없음.
+ */
+const createLowerTopDownTouch2Tier = (columnWidth: number): ModuleData => {
+  const widthForId = Math.round(columnWidth * 100) / 100;
+  const cabinetHeight = 785;
+
+  const base = createFurnitureBase(
+    `lower-top-down-touch-2tier-${widthForId}`,
+    `상판내림터치2단 반통 ${widthForId}mm`,
+    columnWidth,
+    cabinetHeight,
+    650,
+    '#e8f5e9',
+    `상판내림터치2단 반통 W${widthForId}xH785xD650 (조절발 65mm)`,
+    650,
+    'lower'
+  );
+
+  return {
+    ...base,
+    isDynamic: true,
+    defaultDepth: 650,
+    thumbnail: '',
+    modelConfig: {
+      ...base.modelConfig,
+      basicThickness: FURNITURE_SPECS.BASIC_THICKNESS,
+      hasOpenFront: false,
+      sections: [{ type: 'shelf', heightType: 'percentage', height: 100, count: 0 }]
+    }
+  } as ModuleData;
+};
+
+const createDualLowerTopDownTouch2Tier = (dualWidth: number, slotWidths?: number[]): ModuleData => {
+  const widthForId = Math.round(dualWidth * 100) / 100;
+  const cabinetHeight = 785;
+
+  const base = createFurnitureBase(
+    `dual-lower-top-down-touch-2tier-${widthForId}`,
+    `상판내림터치2단 한통 ${widthForId}mm`,
+    dualWidth,
+    cabinetHeight,
+    650,
+    '#e8f5e9',
+    `상판내림터치2단 한통 W${widthForId}xH785xD650 (조절발 65mm)`,
+    650,
+    'lower'
+  );
+
+  return {
+    ...base,
+    isDynamic: true,
+    defaultDepth: 650,
+    slotWidths,
+    thumbnail: '',
+    modelConfig: {
+      ...base.modelConfig,
+      basicThickness: FURNITURE_SPECS.BASIC_THICKNESS,
+      hasOpenFront: false,
+      sections: [{ type: 'shelf', heightType: 'percentage', height: 100, count: 0 }]
+    }
+  } as ModuleData;
+};
+
+/**
+ * 상판내림 터치 3단 반통 - 조절발 65mm + 캐비넷 W가변xD650xH785
+ * 레그라박스 서랍: L(164)+M(117)+M(117), 이격 28/281/494. 따내기 없음, 전대 없음.
+ */
+const createLowerTopDownTouch3Tier = (columnWidth: number): ModuleData => {
+  const widthForId = Math.round(columnWidth * 100) / 100;
+  const cabinetHeight = 785;
+
+  const base = createFurnitureBase(
+    `lower-top-down-touch-3tier-${widthForId}`,
+    `상판내림터치3단 반통 ${widthForId}mm`,
+    columnWidth,
+    cabinetHeight,
+    650,
+    '#e8f5e9',
+    `상판내림터치3단 반통 W${widthForId}xH785xD650 (조절발 65mm)`,
+    650,
+    'lower'
+  );
+
+  return {
+    ...base,
+    isDynamic: true,
+    defaultDepth: 650,
+    thumbnail: '',
+    modelConfig: {
+      ...base.modelConfig,
+      basicThickness: FURNITURE_SPECS.BASIC_THICKNESS,
+      hasOpenFront: false,
+      sections: [{ type: 'shelf', heightType: 'percentage', height: 100, count: 0 }]
+    }
+  } as ModuleData;
+};
+
+const createDualLowerTopDownTouch3Tier = (dualWidth: number, slotWidths?: number[]): ModuleData => {
+  const widthForId = Math.round(dualWidth * 100) / 100;
+  const cabinetHeight = 785;
+
+  const base = createFurnitureBase(
+    `dual-lower-top-down-touch-3tier-${widthForId}`,
+    `상판내림터치3단 한통 ${widthForId}mm`,
+    dualWidth,
+    cabinetHeight,
+    650,
+    '#e8f5e9',
+    `상판내림터치3단 한통 W${widthForId}xH785xD650 (조절발 65mm)`,
+    650,
+    'lower'
+  );
+
+  return {
+    ...base,
+    isDynamic: true,
+    defaultDepth: 650,
+    slotWidths,
+    thumbnail: '',
+    modelConfig: {
+      ...base.modelConfig,
+      basicThickness: FURNITURE_SPECS.BASIC_THICKNESS,
+      hasOpenFront: false,
+      sections: [{ type: 'shelf', heightType: 'percentage', height: 100, count: 0 }]
+    }
+  } as ModuleData;
+};
+
 // ============================================================================
 // 메인 생성 함수 (기존 인터페이스 유지)
 // ============================================================================
@@ -2453,6 +2583,10 @@ export const generateShelvingModules = (
     modules.push(createDualLowerTopDownHalf(dualWidth, dualSlotWidths));
     modules.push(createDualLowerTopDown2Tier(dualWidth, dualSlotWidths));
     modules.push(createDualLowerTopDown3Tier(dualWidth, dualSlotWidths));
+
+    // === 듀얼 상판내림 터치 하부장 가구 생성 ===
+    modules.push(createDualLowerTopDownTouch2Tier(dualWidth, dualSlotWidths));
+    modules.push(createDualLowerTopDownTouch3Tier(dualWidth, dualSlotWidths));
   }
   
   // === 싱글 상부장 가구 생성 ===
@@ -2488,6 +2622,10 @@ export const generateShelvingModules = (
   modules.push(createLowerTopDownHalf(columnWidth));
   modules.push(createLowerTopDown2Tier(columnWidth));
   modules.push(createLowerTopDown3Tier(columnWidth));
+
+  // === 상판내림 터치 하부장 가구 생성 ===
+  modules.push(createLowerTopDownTouch2Tier(columnWidth));
+  modules.push(createLowerTopDownTouch3Tier(columnWidth));
   
   // console.log('📊 generateShelvingModules 최종 결과:', {
   //   totalModulesCount: modules.length,
