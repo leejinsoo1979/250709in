@@ -3952,15 +3952,15 @@ const Room: React.FC<RoomProps> = ({
                       </>
                     )}
 
-                    {/* 좌측 서라운드 전면 패널 하단 치수선 (이격치수와 겹치지 않도록 한 단 위) */}
+                    {/* 좌측 서라운드 전면 패널 상단 치수선 (이격치수와 겹치지 않도록 위로) */}
                     {showDimensions && frontActualWidth > 0 && (() => {
                       const extensionLineStart = mmToThreeUnits(10);
                       const extensionLineLength = mmToThreeUnits(50);
                       const tickSize = 0.008;
                       const dimColor = '#000000';
                       const halfW = mmToThreeUnits(frontActualWidth) / 2;
-                      const dimY = frontPos[1] - surrH / 2 - extensionLineStart - extensionLineLength;
-                      const extStart = frontPos[1] - surrH / 2 - extensionLineStart;
+                      const dimY = frontPos[1] + surrH / 2 + extensionLineStart + extensionLineLength;
+                      const extStart = frontPos[1] + surrH / 2 + extensionLineStart;
                       const zD = frontPos[2] + mmToThreeUnits(END_PANEL_THICKNESS) / 2 + 0.01;
                       return (
                         <>
@@ -3969,7 +3969,7 @@ const Room: React.FC<RoomProps> = ({
                           <Line name="surround-dim" points={[[frontPos[0] - halfW, dimY, zD], [frontPos[0] + halfW, dimY, zD]]} color={dimColor} lineWidth={1} />
                           <Line name="surround-dim" points={[[frontPos[0] - halfW - tickSize, dimY, zD], [frontPos[0] - halfW + tickSize, dimY, zD]]} color={dimColor} lineWidth={1} />
                           <Line name="surround-dim" points={[[frontPos[0] + halfW - tickSize, dimY, zD], [frontPos[0] + halfW + tickSize, dimY, zD]]} color={dimColor} lineWidth={1} />
-                          <DimensionText name="surround-dim-text" value={Math.round(frontActualWidth)} position={[frontPos[0], dimY + mmToThreeUnits(15), zD]} color={dimColor} anchorX="center" anchorY="bottom" forceShow={true} />
+                          <DimensionText name="surround-dim-text" value={Math.round(frontActualWidth)} position={[frontPos[0], dimY + mmToThreeUnits(5), zD]} color={dimColor} anchorX="center" anchorY="bottom" forceShow={true} />
                         </>
                       );
                     })()}
@@ -4120,15 +4120,15 @@ const Room: React.FC<RoomProps> = ({
                       </>
                     )}
 
-                    {/* 우측 서라운드 전면 패널 하단 치수선 (이격치수와 겹치지 않도록 한 단 위) */}
+                    {/* 우측 서라운드 전면 패널 상단 치수선 (이격치수와 겹치지 않도록 위로) */}
                     {showDimensions && rFrontActualWidth > 0 && (() => {
                       const extensionLineStart = mmToThreeUnits(10);
                       const extensionLineLength = mmToThreeUnits(50);
                       const tickSize = 0.008;
                       const dimColor = '#000000';
                       const halfW = mmToThreeUnits(rFrontActualWidth) / 2;
-                      const dimY = rFrontPos[1] - surrH / 2 - extensionLineStart - extensionLineLength;
-                      const extStart = rFrontPos[1] - surrH / 2 - extensionLineStart;
+                      const dimY = rFrontPos[1] + surrH / 2 + extensionLineStart + extensionLineLength;
+                      const extStart = rFrontPos[1] + surrH / 2 + extensionLineStart;
                       const zD = rFrontPos[2] + mmToThreeUnits(END_PANEL_THICKNESS) / 2 + 0.01;
                       return (
                         <>
@@ -4137,7 +4137,7 @@ const Room: React.FC<RoomProps> = ({
                           <Line name="surround-dim" points={[[rFrontPos[0] - halfW, dimY, zD], [rFrontPos[0] + halfW, dimY, zD]]} color={dimColor} lineWidth={1} />
                           <Line name="surround-dim" points={[[rFrontPos[0] - halfW - tickSize, dimY, zD], [rFrontPos[0] - halfW + tickSize, dimY, zD]]} color={dimColor} lineWidth={1} />
                           <Line name="surround-dim" points={[[rFrontPos[0] + halfW - tickSize, dimY, zD], [rFrontPos[0] + halfW + tickSize, dimY, zD]]} color={dimColor} lineWidth={1} />
-                          <DimensionText name="surround-dim-text" value={Math.round(rFrontActualWidth)} position={[rFrontPos[0], dimY + mmToThreeUnits(15), zD]} color={dimColor} anchorX="center" anchorY="bottom" forceShow={true} />
+                          <DimensionText name="surround-dim-text" value={Math.round(rFrontActualWidth)} position={[rFrontPos[0], dimY + mmToThreeUnits(5), zD]} color={dimColor} anchorX="center" anchorY="bottom" forceShow={true} />
                         </>
                       );
                     })()}
@@ -4278,15 +4278,15 @@ const Room: React.FC<RoomProps> = ({
                       </>
                     )}
 
-                    {/* 중간 서라운드 전면 패널 하단 치수선 (이격치수와 겹치지 않도록 한 단 위) */}
+                    {/* 중간 서라운드 전면 패널 상단 치수선 (이격치수와 겹치지 않도록 위로) */}
                     {showDimensions && mFrontActualWidth > 0 && (() => {
                       const extensionLineStart = mmToThreeUnits(10);
                       const extensionLineLength = mmToThreeUnits(50);
                       const tickSize = 0.008;
                       const dimColor = '#000000';
                       const halfW = mmToThreeUnits(mFrontActualWidth) / 2;
-                      const dimY = mFrontPos[1] - surrH / 2 - extensionLineStart - extensionLineLength;
-                      const extStart = mFrontPos[1] - surrH / 2 - extensionLineStart;
+                      const dimY = mFrontPos[1] + surrH / 2 + extensionLineStart + extensionLineLength;
+                      const extStart = mFrontPos[1] + surrH / 2 + extensionLineStart;
                       const zD = mFrontPos[2] + mmToThreeUnits(END_PANEL_THICKNESS) / 2 + 0.01;
                       return (
                         <>
@@ -4295,7 +4295,7 @@ const Room: React.FC<RoomProps> = ({
                           <Line name="surround-dim" points={[[mFrontPos[0] - halfW, dimY, zD], [mFrontPos[0] + halfW, dimY, zD]]} color={dimColor} lineWidth={1} />
                           <Line name="surround-dim" points={[[mFrontPos[0] - halfW - tickSize, dimY, zD], [mFrontPos[0] - halfW + tickSize, dimY, zD]]} color={dimColor} lineWidth={1} />
                           <Line name="surround-dim" points={[[mFrontPos[0] + halfW - tickSize, dimY, zD], [mFrontPos[0] + halfW + tickSize, dimY, zD]]} color={dimColor} lineWidth={1} />
-                          <DimensionText name="surround-dim-text" value={Math.round(mFrontActualWidth)} position={[mFrontPos[0], dimY + mmToThreeUnits(15), zD]} color={dimColor} anchorX="center" anchorY="bottom" forceShow={true} />
+                          <DimensionText name="surround-dim-text" value={Math.round(mFrontActualWidth)} position={[mFrontPos[0], dimY + mmToThreeUnits(5), zD]} color={dimColor} anchorX="center" anchorY="bottom" forceShow={true} />
                         </>
                       );
                     })()}
