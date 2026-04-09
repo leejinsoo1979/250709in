@@ -1447,7 +1447,8 @@ export const calculatePanelDetails = (
         notchFromBottoms = [300, 665]; notchHeightsArr = [65, 65];
         hideTopNotch = true;
       } else { // standard lower-drawer-2tier
-        notchFromBottoms = [330]; notchHeightsArr = [65];
+        const bodyH = moduleData.dimensions.height || 785;
+        notchFromBottoms = [(bodyH - 125) / 2]; notchHeightsArr = [65];
       }
     }
 
@@ -1550,7 +1551,7 @@ export const calculatePanelDetails = (
       ? [{ fromBottom: 300, height: 65 }, { fromBottom: 665, height: 65 }]
       : isTopDownHalf
       ? [{ fromBottom: 665, height: 65 }]
-      : [{ fromBottom: 330, height: 65 }];
+      : [{ fromBottom: ((moduleData.dimensions.height || 785) - 125) / 2, height: 65 }];
     // 상단 따내기 (60mm) - 도어올림/상판내림은 상단 따내기 없음 (상판내림은 665에 이미 포함)
     if (!isDoorLift2Tier && !isDoorLift3Tier && !isTopDown3Tier && !isTopDown2Tier && !isTopDownHalf) {
       lowerNotches.push({ fromBottom: height - 60, height: 60 });
