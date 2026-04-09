@@ -65,8 +65,12 @@ const LegraSideRail: React.FC<LegraSideRailProps> = ({
   drawerHeightMm,
 }) => {
   // drawerHeightMm 제공 시 높이 기반 모델 선택, 미제공 시 기존 tier 기반
-  const useSL = drawerHeightMm != null ? drawerHeightMm >= 200 : drawerTier === 1;
-  const modelPath = useSL ? '/models/Legra_SL500.glb' : '/models/Legra_L500.glb';
+  // 228↑ → SL500, 117↓ → M500, 나머지(164 등) → L500
+  const modelPath = drawerHeightMm != null
+    ? (drawerHeightMm >= 200 ? '/models/Legra_SL500.glb'
+      : drawerHeightMm <= 120 ? '/models/Legra_M500.glb'
+      : '/models/Legra_L500.glb')
+    : (drawerTier === 1 ? '/models/Legra_SL500.glb' : '/models/Legra_L500.glb');
   const { scene } = useGLTF(modelPath);
 
   const { leftClone, rightClone, leftScale, rightScale, leftPos, rightPos } = useMemo(() => {
@@ -130,5 +134,6 @@ const LegraSideRail: React.FC<LegraSideRailProps> = ({
 
 useGLTF.preload('/models/Legra_SL500.glb');
 useGLTF.preload('/models/Legra_L500.glb');
+useGLTF.preload('/models/Legra_M500.glb');
 
 export default LegraSideRail;
