@@ -75,18 +75,8 @@ const LegraSideRail: React.FC<LegraSideRailProps> = ({
 
     // drawerHeightMm 제공 시에만 Y 스케일 축소 (터치 모듈 등)
     // 기존 도어올림은 drawerHeightMm 미제공 → 원본 크기 유지
-    // 서랍 높이가 200mm 미만(117, 164 등)일 때만 Y 스케일 축소
-    // 228mm 서랍은 원본 GLB 모델 크기 유지
-    let yScale = GLTF_SCALE;
-    if (drawerHeightMm != null && drawerHeightMm < 200) {
-      const baseScale = new THREE.Vector3(GLTF_SCALE, GLTF_SCALE, GLTF_SCALE);
-      const baseBox = getScaledBounds(left, baseScale);
-      const modelHeight = baseBox.max.y - baseBox.min.y;
-      const targetMaxHeight = drawerBottomThickness + backPanelHeight;
-      if (targetMaxHeight < modelHeight) {
-        yScale = (targetMaxHeight / modelHeight) * GLTF_SCALE;
-      }
-    }
+    // GLB 모델은 원본 크기 그대로 사용 — Y 스케일 축소 없음
+    const yScale = GLTF_SCALE;
 
     const lScale = new THREE.Vector3(GLTF_SCALE, yScale, GLTF_SCALE);
     const rScale = new THREE.Vector3(-GLTF_SCALE, yScale, GLTF_SCALE); // X 미러링
@@ -96,9 +86,7 @@ const LegraSideRail: React.FC<LegraSideRailProps> = ({
     const rightBox = getScaledBounds(right, rScale);
 
     // GLB 모델 높이가 서랍 높이보다 13.7mm 큼 (레일 마운트 돌출부)
-    // Y 축소 시 오버행도 비례 축소되므로 비율 적용
-    const scaleRatio = yScale / GLTF_SCALE;
-    const RAIL_MOUNT_OVERHANG = 13.7 * 0.01 * scaleRatio; // 13.7mm × 축소비율
+    const RAIL_MOUNT_OVERHANG = 13.7 * 0.01; // 13.7mm → Three.js units
     const targetMinY = drawerBottomY - RAIL_MOUNT_OVERHANG;
 
     // X: 캐비넷 측판 안쪽면에서 7mm 안쪽으로 (서랍 뒷판과 맞닿도록)
