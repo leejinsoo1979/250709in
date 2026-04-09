@@ -466,6 +466,37 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
         );
       })()}
 
+      {/* 싱크장 전대 렌더링 — 상단 따내기 아래 높이 150mm */}
+      {showFurniture && (moduleData.id.includes('lower-sink-cabinet') || moduleData.id.includes('dual-lower-sink-cabinet')) && (() => {
+        const mmToThreeUnits = (mm: number) => mm * 0.01;
+        const cabinetHeight = adjustedHeight;
+        const cabinetBottomY = -cabinetHeight / 2;
+        const apronHeightMm = 150;
+        const notchHeightMm = 60;
+        const notchFromBottomMm = (moduleData.dimensions.height || 785) - notchHeightMm;
+        // 전대 상단 = 따내기 시작점(notchFromBottomMm), 전대 하단 = notchFromBottomMm - apronHeightMm
+        const apronCenterY = cabinetBottomY + mmToThreeUnits(notchFromBottomMm - apronHeightMm / 2);
+        const apronWidth = mmToThreeUnits(adjustedWidth || moduleData.dimensions.width);
+        const apronHeight = mmToThreeUnits(apronHeightMm);
+        const apronThickness = baseFurniture.basicThickness; // 18mm
+        // 전대는 캐비넷 앞면에 위치
+        const apronZ = baseFurniture.depth / 2 - apronThickness / 2;
+
+        return (
+          <group position={[0, cabinetYPosition, 0]}>
+            <BoxWithEdges
+              args={[apronWidth, apronHeight, apronThickness]}
+              position={[0, apronCenterY, apronZ]}
+              material={baseFurniture.material}
+              renderMode={renderMode}
+              isHighlighted={false}
+              panelName="전대"
+              furnitureId={placedFurnitureId}
+            />
+          </group>
+        );
+      })()}
+
       {/* 도어는 showFurniture와 관계없이 hasDoor가 true이면 항상 렌더링 (도어만 보기 위해) */}
       {/* 단, 서랍장(lower-drawer-*)은 도어가 아닌 서랍이 달리므로 도어 렌더링 차단 */}
       {hasDoor && spaceInfo && !moduleData.id.includes('lower-drawer-') && !moduleData.id.includes('lower-door-lift-2tier') && !moduleData.id.includes('lower-door-lift-3tier') && !moduleData.id.includes('lower-top-down-2tier') && !moduleData.id.includes('lower-top-down-3tier') && (

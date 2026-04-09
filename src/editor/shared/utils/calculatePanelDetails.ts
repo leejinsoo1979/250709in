@@ -1583,6 +1583,17 @@ export const calculatePanelDetails = (
     });
   }
 
+  // === 싱크장 전대 (상단 따내기 아래 150mm) ===
+  if (moduleData.id.includes('lower-sink-cabinet') || moduleData.id.includes('dual-lower-sink-cabinet')) {
+    panels.frame.push({
+      name: '전대',
+      width: customWidth,
+      height: 150,
+      thickness: basicThickness,
+      material: 'PB',
+    });
+  }
+
   // === 프레임 패널 (상부프레임 / 하부프레임) ===
   const FRAME_THICKNESS = basicThickness; // 사용자 선택 두께 (18 또는 18.5 등)
 
