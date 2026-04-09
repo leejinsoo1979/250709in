@@ -18,9 +18,9 @@ export const useDimensionColor = () => {
     return computedStyle.getPropertyValue('--theme-primary').trim() || '#10b981';
   };
   
-  const dimensionColor = viewMode === '3D' 
-    ? getThemeColor() 
-    : (view2DTheme === 'dark' ? '#ffffff' : '#000000');
+  const dimensionColor = viewMode === '3D'
+    ? getThemeColor()
+    : (view2DTheme === 'dark' ? '#b0b0b0' : '#555555');
   
   const baseFontSize = viewMode === '3D' ? 0.55 : 0.32;
 

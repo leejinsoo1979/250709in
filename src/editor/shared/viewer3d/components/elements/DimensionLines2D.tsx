@@ -43,7 +43,7 @@ const DimensionLines2D: React.FC<DimensionLines2DProps> = ({ onTextsChange }) =>
       <NativeLine
         points={[[overallLeft, topY, zVal], [overallRight, topY, zVal]]}
         color={dimensionColor}
-        lineWidth={2.5}
+        lineWidth={1.2}
         renderOrder={1000}  // 높은 renderOrder로 항상 앞에 표시
         depthTest={false}   // depth test 비활성화로 다른 메쉬에 가려지지 않도록
       />
@@ -51,14 +51,14 @@ const DimensionLines2D: React.FC<DimensionLines2DProps> = ({ onTextsChange }) =>
       <NativeLine
         points={[[overallLeft, topY + mmToThreeUnits(18) * Math.sin(Math.PI / 6), zVal], [overallLeft, topY, zVal], [overallLeft, topY - mmToThreeUnits(18) * Math.sin(Math.PI / 6), zVal]]}
         color={dimensionColor}
-        lineWidth={1.5}
+        lineWidth={0.8}
         renderOrder={1000}
         depthTest={false}
       />
       <NativeLine
         points={[[overallRight, topY + mmToThreeUnits(18) * Math.sin(Math.PI / 6), zVal], [overallRight, topY, zVal], [overallRight, topY - mmToThreeUnits(18) * Math.sin(Math.PI / 6), zVal]]}
         color={dimensionColor}
-        lineWidth={1.5}
+        lineWidth={0.8}
         renderOrder={1000}
         depthTest={false}
       />
@@ -86,7 +86,7 @@ const DimensionLines2D: React.FC<DimensionLines2DProps> = ({ onTextsChange }) =>
             <NativeLine
               points={[[internalLeft, internalY, zVal], [internalRight, internalY, zVal]]}
               color={internalDimensionColor}
-              lineWidth={2}
+              lineWidth={1}
               renderOrder={1000}
               depthTest={false}
             />
@@ -99,7 +99,7 @@ const DimensionLines2D: React.FC<DimensionLines2DProps> = ({ onTextsChange }) =>
                 [internalLeft, internalY - mmToThreeUnits(10), zVal]
               ]}
               color={internalDimensionColor}
-              lineWidth={1.5}
+              lineWidth={0.8}
               renderOrder={1000}
               depthTest={false}
             />
@@ -112,7 +112,7 @@ const DimensionLines2D: React.FC<DimensionLines2DProps> = ({ onTextsChange }) =>
                 [internalRight, internalY - mmToThreeUnits(10), zVal]
               ]}
               color={internalDimensionColor}
-              lineWidth={1.5}
+              lineWidth={0.8}
               renderOrder={1000}
               depthTest={false}
             />
