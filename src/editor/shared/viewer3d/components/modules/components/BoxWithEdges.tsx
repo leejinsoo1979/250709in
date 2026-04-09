@@ -721,7 +721,7 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
         ? `back-panel-edge${panelName ? `-${panelName}` : ''}`
         : `furniture-edge${panelName ? `-${panelName}` : ''}`;
 
-    const baseLineWidth = isHighlighted ? 4 : (isBackPanel ? 1 : 2);
+    const baseLineWidth = isHighlighted ? 2 : 1;
 
     // 깊이감 표현: 다크모드는 배경색과 블렌딩, 라이트모드는 원색 유지 (배경 블렌딩 시 안 보임)
     const blendedColor = panelDepthOpacity >= 1.0 ? edgeColor : (() => {
