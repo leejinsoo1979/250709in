@@ -26,9 +26,6 @@ interface LegraSideRailProps {
   sidePanelInnerX: number;
 }
 
-// GLB 모델 원본 높이 (mm)
-const MODEL_HEIGHT_MM = { SL: 241.70, L: 177.70 };
-
 // glTF meters → project units (0.01 = 1mm)
 const GLTF_SCALE = 10;
 
@@ -71,14 +68,9 @@ const LegraSideRail: React.FC<LegraSideRailProps> = ({
     const left = cleanClone(scene);
     const right = cleanClone(scene);
 
-    // 높이 스케일 계산
-    const originalH = drawerTier === 1 ? MODEL_HEIGHT_MM.SL : MODEL_HEIGHT_MM.L;
-    const targetH = backPanelHeight / 0.01; // mm
-    const hScale = targetH / originalH;
-    const sy = GLTF_SCALE * hScale;
-
-    const lScale = new THREE.Vector3(GLTF_SCALE, sy, GLTF_SCALE);
-    const rScale = new THREE.Vector3(-GLTF_SCALE, sy, GLTF_SCALE); // X 미러링
+    // 원본 크기 유지 — glTF meters → project units 변환만 적용
+    const lScale = new THREE.Vector3(GLTF_SCALE, GLTF_SCALE, GLTF_SCALE);
+    const rScale = new THREE.Vector3(-GLTF_SCALE, GLTF_SCALE, GLTF_SCALE); // X 미러링
 
     // 바운딩박스 측정 (스케일 적용 상태)
     const leftBox = getScaledBounds(left, lScale);
