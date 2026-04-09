@@ -476,7 +476,7 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
         const notchFromBottomMm = (moduleData.dimensions.height || 785) - notchHeightMm;
         // 전대 상단 = 따내기 시작점(notchFromBottomMm), 전대 하단 = notchFromBottomMm - apronHeightMm
         const apronCenterY = cabinetBottomY + mmToThreeUnits(notchFromBottomMm - apronHeightMm / 2);
-        const apronWidth = mmToThreeUnits(adjustedWidth || moduleData.dimensions.width);
+        const apronWidth = baseFurniture.innerWidth; // 내경 (전체폭 - 측판두께×2)
         const apronHeight = mmToThreeUnits(apronHeightMm);
         const apronThickness = baseFurniture.basicThickness; // 18mm
         // 전대는 캐비넷 앞면에 위치

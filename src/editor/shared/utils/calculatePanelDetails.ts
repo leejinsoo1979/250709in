@@ -1587,7 +1587,7 @@ export const calculatePanelDetails = (
   if (moduleData.id.includes('lower-sink-cabinet') || moduleData.id.includes('dual-lower-sink-cabinet')) {
     panels.frame.push({
       name: '전대',
-      width: customWidth,
+      width: customWidth - basicThickness * 2, // 내경 (전체폭 - 측판두께×2)
       height: 150,
       thickness: basicThickness,
       material: 'PB',
