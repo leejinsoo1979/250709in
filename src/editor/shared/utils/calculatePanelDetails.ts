@@ -1540,13 +1540,11 @@ export const calculatePanelDetails = (
     const isTopDown2Tier = moduleData.id.includes('lower-top-down-2tier');
     const isTopDownHalf = moduleData.id.includes('lower-top-down-half') || moduleData.id.includes('dual-lower-top-down-half');
     const isHalfCabinet = moduleData.id.includes('lower-half-cabinet') || moduleData.id.includes('dual-lower-half-cabinet')
-      || moduleData.id.includes('lower-sink-cabinet') || moduleData.id.includes('dual-lower-sink-cabinet');
-    const isInductionCabinet = moduleData.id.includes('lower-induction-cabinet') || moduleData.id.includes('dual-lower-induction-cabinet');
+      || moduleData.id.includes('lower-sink-cabinet') || moduleData.id.includes('dual-lower-sink-cabinet')
+      || moduleData.id.includes('lower-induction-cabinet') || moduleData.id.includes('dual-lower-induction-cabinet');
     // 보강대 따내기 (65mm)
     const lowerNotches: { fromBottom: number; height: number }[] = isHalfCabinet
-      ? [] // 반통/한통: 서랍 없으므로 하부 따내기 없음, 상단만
-      : isInductionCabinet
-      ? [{ fromBottom: 338, height: 65 }] // 인덕션장: 338mm 따내기
+      ? [] // 반통/한통/싱크장/인덕션장: 중간 따내기 없음, 상단만
       : is3Tier
       ? [{ fromBottom: 295, height: 65 }, { fromBottom: 510, height: 65 }]
       : isDoorLift3Tier

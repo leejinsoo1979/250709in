@@ -196,8 +196,6 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
                 sideNotches: [{ y: 65, z: 40, fromBottom: 300 }, { y: 65, z: 40, fromBottom: 665 }]
               } : (moduleData.id.includes('lower-top-down-half') || moduleData.id.includes('dual-lower-top-down-half')) ? {
                 sideNotches: [{ y: 65, z: 40, fromBottom: 665 }]
-              } : (moduleData.id.includes('lower-induction-cabinet') || moduleData.id.includes('dual-lower-induction-cabinet')) ? {
-                sideNotches: [{ y: 65, z: 40, fromBottom: 338 }]
               } : {})}>
             {/* 내부 구조는 항상 렌더링 (서랍/선반) */}
             <>
