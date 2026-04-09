@@ -55,7 +55,7 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
     placementType: spaceInfo?.baseConfig?.placementType,
     floatHeight: spaceInfo?.baseConfig?.floatHeight,
     hideTopPanel: !moduleData.id.includes('lower-door-lift-') && !moduleData.id.includes('lower-top-down-'),
-    hasSideNotches: (moduleData.id.includes('lower-door-lift-2tier') || moduleData.id.includes('lower-door-lift-3tier') || moduleData.id.includes('lower-drawer-') || moduleData.id.includes('lower-top-down-')) && !moduleData.id.includes('lower-door-lift-touch-') && !moduleData.id.includes('lower-top-down-touch-'),
+    hasSideNotches: (moduleData.id.includes('lower-door-lift-2tier') || moduleData.id.includes('lower-door-lift-3tier') || moduleData.id.includes('lower-drawer-') || moduleData.id.includes('lower-top-down-')) && !moduleData.id.includes('lower-door-lift-touch-'),
   });
   const { renderMode: contextRenderMode, viewMode } = useSpace3DView();
   const renderMode = renderModeProp || contextRenderMode;
@@ -183,8 +183,11 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
               hideTopPanel={!moduleData.id.includes('lower-door-lift-') && !moduleData.id.includes('lower-top-down-')}
               topPanelFrontReduction={moduleData.id.includes('lower-top-down-') ? 18.5 : 0}
               topStretcher={moduleData.id.includes('lower-top-down-') ? { heightMm: 55, depthMm: 40 } : undefined}
-              {...(moduleData.id.includes('lower-door-lift-touch-') || moduleData.id.includes('lower-top-down-touch-') ? {
-                // 터치 모듈: 따내기 없음
+              {...(moduleData.id.includes('lower-door-lift-touch-') ? {
+                // 도어올림 터치: 따내기 없음
+              } : moduleData.id.includes('lower-top-down-touch-') ? {
+                // 상판내림 터치: 상판내림 반통과 동일한 상단 따내기
+                sideNotches: [{ y: 65, z: 40, fromBottom: 665 }]
               } : moduleData.id.includes('lower-drawer-3tier') ? {
                 sideNotches: [{ y: 65, z: 40, fromBottom: 295 }, { y: 65, z: 40, fromBottom: 510 }]
               } : moduleData.id.includes('lower-drawer-2tier') ? {
@@ -390,7 +393,7 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
       })()}
 
       {/* 상판내림 반통/한통: L자 프레임만 렌더링 (서랍 없음, 도어는 별도) */}
-      {showFurniture && (moduleData.id.includes('lower-top-down-half') || moduleData.id.includes('dual-lower-top-down-half')) && (() => {
+      {showFurniture && (moduleData.id.includes('lower-top-down-half') || moduleData.id.includes('dual-lower-top-down-half') || moduleData.id.includes('lower-top-down-touch-') || moduleData.id.includes('dual-lower-top-down-touch-')) && (() => {
         const mmToThreeUnits = (mm: number) => mm * 0.01;
         const notch = { fromBottom: 665, height: 65 };
         const basicThicknessMm = baseFurniture.basicThickness / 0.01;

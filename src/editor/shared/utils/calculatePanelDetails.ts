@@ -1576,13 +1576,14 @@ export const calculatePanelDetails = (
   }
 
   // === L자 PET 프레임 (하부장 따내기 마감) ===
-  if (!moduleData.id.includes('lower-door-lift-touch-') && !moduleData.id.includes('lower-top-down-touch-') && (moduleData.id.includes('lower-drawer-') || moduleData.id.includes('lower-door-lift-2tier') || moduleData.id.includes('lower-door-lift-3tier') || moduleData.id.includes('lower-top-down-') || moduleData.id.includes('lower-half-cabinet') || moduleData.id.includes('dual-lower-half-cabinet') || moduleData.id.includes('lower-sink-cabinet') || moduleData.id.includes('dual-lower-sink-cabinet') || moduleData.id.includes('lower-induction-cabinet') || moduleData.id.includes('dual-lower-induction-cabinet'))) {
+  if (!moduleData.id.includes('lower-door-lift-touch-') && (moduleData.id.includes('lower-drawer-') || moduleData.id.includes('lower-door-lift-2tier') || moduleData.id.includes('lower-door-lift-3tier') || moduleData.id.includes('lower-top-down-') || moduleData.id.includes('lower-half-cabinet') || moduleData.id.includes('dual-lower-half-cabinet') || moduleData.id.includes('lower-sink-cabinet') || moduleData.id.includes('dual-lower-sink-cabinet') || moduleData.id.includes('lower-induction-cabinet') || moduleData.id.includes('dual-lower-induction-cabinet'))) {
     const is3Tier = moduleData.id.includes('lower-drawer-3tier');
     const isDoorLift3Tier = moduleData.id.includes('lower-door-lift-3tier');
     const isDoorLift2Tier = moduleData.id.includes('lower-door-lift-2tier');
     const isTopDown3Tier = moduleData.id.includes('lower-top-down-3tier');
     const isTopDown2Tier = moduleData.id.includes('lower-top-down-2tier');
     const isTopDownHalf = moduleData.id.includes('lower-top-down-half') || moduleData.id.includes('dual-lower-top-down-half');
+    const isTopDownTouch = moduleData.id.includes('lower-top-down-touch-');
     const isHalfCabinet = moduleData.id.includes('lower-half-cabinet') || moduleData.id.includes('dual-lower-half-cabinet')
       || moduleData.id.includes('lower-sink-cabinet') || moduleData.id.includes('dual-lower-sink-cabinet')
       || moduleData.id.includes('lower-induction-cabinet') || moduleData.id.includes('dual-lower-induction-cabinet');
@@ -1599,11 +1600,11 @@ export const calculatePanelDetails = (
       ? [{ fromBottom: 225, height: 65 }, { fromBottom: 445, height: 65 }, { fromBottom: 665, height: 65 }]
       : isTopDown2Tier
       ? [{ fromBottom: 300, height: 65 }, { fromBottom: 665, height: 65 }]
-      : isTopDownHalf
+      : isTopDownHalf || isTopDownTouch
       ? [{ fromBottom: 665, height: 65 }]
       : [{ fromBottom: ((moduleData.dimensions.height || 785) - 125) / 2, height: 65 }];
     // 상단 따내기 (60mm) - 도어올림/상판내림은 상단 따내기 없음 (상판내림은 665에 이미 포함)
-    if (!isDoorLift2Tier && !isDoorLift3Tier && !isTopDown3Tier && !isTopDown2Tier && !isTopDownHalf) {
+    if (!isDoorLift2Tier && !isDoorLift3Tier && !isTopDown3Tier && !isTopDown2Tier && !isTopDownHalf && !isTopDownTouch) {
       lowerNotches.push({ fromBottom: height - 60, height: 60 });
     }
 
