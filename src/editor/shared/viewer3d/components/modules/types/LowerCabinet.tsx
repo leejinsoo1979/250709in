@@ -694,7 +694,7 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
         // [서랍높이mm, 하판윗면에서 바닥판까지 이격mm]
         const drawerSpecs: [number, number][] = isTouch2A ? [[228, 28], [228, 406]]
           : isTouch2B ? [[228, 28], [164, 406]]
-          : isTouch3 ? [[228, 28], [117, 306], [117, 473]]
+          : isTouch3 ? [[228, 28], [117, 357], [117, 587]]
           : [[228, 28], [228, 406]];
 
         // 서랍 위치 계산: 하판 윗면 = cabinetBottomY + basicThickness
