@@ -10,6 +10,7 @@ import BoxWithEdges from '../components/BoxWithEdges';
 import { AdjustableFootsRenderer } from '../components/AdjustableFootsRenderer';
 import { ExternalDrawerRenderer } from '../ExternalDrawerRenderer';
 import { isCabinetTexture1, applyCabinetTexture1Settings, isOakTexture, applyOakTextureSettings, applyDefaultImageTextureSettings } from '@/editor/shared/utils/materialConstants';
+import LegraSideRail from '../components/LegraSideRail';
 
 /**
  * 하부장 컴포넌트
@@ -582,6 +583,24 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
               isHighlighted={false}
               panelName="인덕션 2단서랍 뒷판"
               furnitureId={placedFurnitureId}
+            />
+            {/* 1단 서랍 레그라 측판 (GLB 모델) */}
+            <LegraSideRail
+              drawerTier={1}
+              drawerBottomY={drawer1BottomY}
+              drawerBottomThickness={drawerThickness}
+              backPanelHeight={mmToThreeUnits(drawer1BackH)}
+              drawerFrontZ={drawerFrontZ}
+              sidePanelInnerX={mmToThreeUnits(widthMm / 2 - basicThicknessMm)}
+            />
+            {/* 2단 서랍 레그라 측판 (GLB 모델) */}
+            <LegraSideRail
+              drawerTier={2}
+              drawerBottomY={drawer2BottomY}
+              drawerBottomThickness={drawerThickness}
+              backPanelHeight={mmToThreeUnits(drawer2BackH)}
+              drawerFrontZ={drawerFrontZ}
+              sidePanelInnerX={mmToThreeUnits(widthMm / 2 - basicThicknessMm)}
             />
           </group>
         );
