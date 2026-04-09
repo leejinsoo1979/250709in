@@ -1604,7 +1604,7 @@ export const calculatePanelDetails = (
     const backSideGap = 18.5; // 뒷판: 양쪽 18.5mm 갭
     const drawerBottomWidth = customWidth - basicThickness * 2 - bottomSideGap * 2; // 내경 - 양쪽 17mm
     const drawerBackWidth = customWidth - basicThickness * 2 - backSideGap * 2; // 내경 - 양쪽 18.5mm
-    const drawerDepth = customDepth - (backPanelThickness || 9) - basicThickness - 1;
+    const drawerDepth = 490; // 레그라박스 서랍 바닥판 깊이 고정
     // 1단 서랍: 총 높이 228mm
     panels.lower.push({
       name: '인덕션 1단서랍 바닥판',
