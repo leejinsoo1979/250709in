@@ -59,6 +59,7 @@ export const calculatePanelDetails = (
   const isUpperCabinet = moduleData.category === 'upper';
   const isLowerHalfCabinet = moduleData.id.includes('lower-half-cabinet') || moduleData.id.includes('dual-lower-half-cabinet')
     || moduleData.id.includes('lower-sink-cabinet') || moduleData.id.includes('dual-lower-sink-cabinet')
+    || moduleData.id.includes('lower-induction-cabinet') || moduleData.id.includes('dual-lower-induction-cabinet')
     || moduleData.id.includes('lower-door-lift-half') || moduleData.id.includes('dual-lower-door-lift-half')
     || moduleData.id.includes('lower-top-down-half') || moduleData.id.includes('dual-lower-top-down-half');
   const shelfFrontInsetMm = (isUpperCabinet || isLowerHalfCabinet) ? 30 : 0;
@@ -361,6 +362,7 @@ export const calculatePanelDetails = (
         // 상판 - 뒤에서 26mm 줄임 (상판이 없는 하부장은 제외)
         const noTopPanel = moduleData.id.includes('lower-half-cabinet') || moduleData.id.includes('dual-lower-half-cabinet')
           || moduleData.id.includes('lower-sink-cabinet') || moduleData.id.includes('dual-lower-sink-cabinet')
+          || moduleData.id.includes('lower-induction-cabinet') || moduleData.id.includes('dual-lower-induction-cabinet')
           || moduleData.id.includes('lower-drawer-');
         if (!noTopPanel) {
           targetPanel.push({
@@ -1530,7 +1532,7 @@ export const calculatePanelDetails = (
   }
 
   // === L자 PET 프레임 (하부장 따내기 마감) ===
-  if (moduleData.id.includes('lower-drawer-') || moduleData.id.includes('lower-door-lift-2tier') || moduleData.id.includes('lower-door-lift-3tier') || moduleData.id.includes('lower-top-down-') || moduleData.id.includes('lower-half-cabinet') || moduleData.id.includes('dual-lower-half-cabinet') || moduleData.id.includes('lower-sink-cabinet') || moduleData.id.includes('dual-lower-sink-cabinet')) {
+  if (moduleData.id.includes('lower-drawer-') || moduleData.id.includes('lower-door-lift-2tier') || moduleData.id.includes('lower-door-lift-3tier') || moduleData.id.includes('lower-top-down-') || moduleData.id.includes('lower-half-cabinet') || moduleData.id.includes('dual-lower-half-cabinet') || moduleData.id.includes('lower-sink-cabinet') || moduleData.id.includes('dual-lower-sink-cabinet') || moduleData.id.includes('lower-induction-cabinet') || moduleData.id.includes('dual-lower-induction-cabinet')) {
     const is3Tier = moduleData.id.includes('lower-drawer-3tier');
     const isDoorLift3Tier = moduleData.id.includes('lower-door-lift-3tier');
     const isDoorLift2Tier = moduleData.id.includes('lower-door-lift-2tier');
@@ -1539,9 +1541,12 @@ export const calculatePanelDetails = (
     const isTopDownHalf = moduleData.id.includes('lower-top-down-half') || moduleData.id.includes('dual-lower-top-down-half');
     const isHalfCabinet = moduleData.id.includes('lower-half-cabinet') || moduleData.id.includes('dual-lower-half-cabinet')
       || moduleData.id.includes('lower-sink-cabinet') || moduleData.id.includes('dual-lower-sink-cabinet');
+    const isInductionCabinet = moduleData.id.includes('lower-induction-cabinet') || moduleData.id.includes('dual-lower-induction-cabinet');
     // 보강대 따내기 (65mm)
     const lowerNotches: { fromBottom: number; height: number }[] = isHalfCabinet
       ? [] // 반통/한통: 서랍 없으므로 하부 따내기 없음, 상단만
+      : isInductionCabinet
+      ? [{ fromBottom: 338, height: 65 }] // 인덕션장: 338mm 따내기
       : is3Tier
       ? [{ fromBottom: 295, height: 65 }, { fromBottom: 510, height: 65 }]
       : isDoorLift3Tier
@@ -1583,14 +1588,52 @@ export const calculatePanelDetails = (
     });
   }
 
-  // === 싱크장 전대 (상단 따내기 아래 150mm) ===
-  if (moduleData.id.includes('lower-sink-cabinet') || moduleData.id.includes('dual-lower-sink-cabinet')) {
+  // === 싱크장/인덕션장 전대 (상단 따내기 아래 150mm) ===
+  if (moduleData.id.includes('lower-sink-cabinet') || moduleData.id.includes('dual-lower-sink-cabinet') || moduleData.id.includes('lower-induction-cabinet') || moduleData.id.includes('dual-lower-induction-cabinet')) {
     panels.frame.push({
       name: '전대',
       width: customWidth - basicThickness * 2, // 내경 (전체폭 - 측판두께×2)
       height: 150,
       thickness: basicThickness,
       material: 'PB',
+    });
+  }
+
+  // === 인덕션장 레그라박스 서랍 패널 (바닥판 + 뒷판만, 측판 없음) ===
+  if (moduleData.id.includes('lower-induction-cabinet') || moduleData.id.includes('dual-lower-induction-cabinet')) {
+    const drawerThickness = (basicThickness === 18.5 || basicThickness === 15.5) ? 15.5 : 15;
+    const sideGapMm = 17; // 양쪽 17mm 갭
+    const drawerWidth = customWidth - basicThickness * 2 - sideGapMm * 2; // 내경 - 양쪽 17mm
+    const drawerDepth = customDepth - (backPanelThickness || 9) - basicThickness - 1;
+    // 1단 서랍: 총 높이 228mm
+    panels.drawer.push({
+      name: '인덕션 1단서랍 바닥판',
+      width: drawerWidth,
+      depth: drawerDepth,
+      thickness: drawerThickness,
+      material: 'MDF',
+    });
+    panels.drawer.push({
+      name: '인덕션 1단서랍 뒷판',
+      width: drawerWidth,
+      height: 228 - drawerThickness, // 총높이 - 바닥판두께
+      thickness: drawerThickness,
+      material: 'MDF',
+    });
+    // 2단 서랍: 총 높이 164mm
+    panels.drawer.push({
+      name: '인덕션 2단서랍 바닥판',
+      width: drawerWidth,
+      depth: drawerDepth,
+      thickness: drawerThickness,
+      material: 'MDF',
+    });
+    panels.drawer.push({
+      name: '인덕션 2단서랍 뒷판',
+      width: drawerWidth,
+      height: 164 - drawerThickness, // 총높이 - 바닥판두께
+      thickness: drawerThickness,
+      material: 'MDF',
     });
   }
 

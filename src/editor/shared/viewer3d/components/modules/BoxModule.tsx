@@ -775,7 +775,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
   }
 
   // === 하부장 타입들 (싱글 및 듀얼) ===
-  if (moduleData.id.includes('lower-cabinet-') || moduleData.id.includes('dual-lower-cabinet-') || moduleData.id.includes('lower-half-cabinet') || moduleData.id.includes('dual-lower-half-cabinet') || moduleData.id.includes('lower-sink-cabinet') || moduleData.id.includes('dual-lower-sink-cabinet') || moduleData.id.includes('lower-drawer-') || moduleData.id.includes('lower-door-lift-') || moduleData.id.includes('lower-top-down-')) {
+  if (moduleData.id.includes('lower-cabinet-') || moduleData.id.includes('dual-lower-cabinet-') || moduleData.id.includes('lower-half-cabinet') || moduleData.id.includes('dual-lower-half-cabinet') || moduleData.id.includes('lower-sink-cabinet') || moduleData.id.includes('dual-lower-sink-cabinet') || moduleData.id.includes('lower-induction-cabinet') || moduleData.id.includes('dual-lower-induction-cabinet') || moduleData.id.includes('lower-drawer-') || moduleData.id.includes('lower-door-lift-') || moduleData.id.includes('lower-top-down-')) {
     return (
       <>
         {/* 모든 타입에서 간접조명 렌더링 */}

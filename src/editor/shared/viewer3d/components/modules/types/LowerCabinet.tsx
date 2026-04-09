@@ -196,6 +196,8 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
                 sideNotches: [{ y: 65, z: 40, fromBottom: 300 }, { y: 65, z: 40, fromBottom: 665 }]
               } : (moduleData.id.includes('lower-top-down-half') || moduleData.id.includes('dual-lower-top-down-half')) ? {
                 sideNotches: [{ y: 65, z: 40, fromBottom: 665 }]
+              } : (moduleData.id.includes('lower-induction-cabinet') || moduleData.id.includes('dual-lower-induction-cabinet')) ? {
+                sideNotches: [{ y: 65, z: 40, fromBottom: 338 }]
               } : {})}>
             {/* 내부 구조는 항상 렌더링 (서랍/선반) */}
             <>
@@ -425,8 +427,8 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
         );
       })()}
 
-      {/* 기본하부장/싱크장 반통/한통: 상단 따내기 L자 프레임 렌더링 */}
-      {showFurniture && (moduleData.id.includes('lower-half-cabinet') || moduleData.id.includes('dual-lower-half-cabinet') || moduleData.id.includes('lower-sink-cabinet') || moduleData.id.includes('dual-lower-sink-cabinet')) && (() => {
+      {/* 기본하부장/싱크장/인덕션장 반통/한통: 상단 따내기 L자 프레임 렌더링 */}
+      {showFurniture && (moduleData.id.includes('lower-half-cabinet') || moduleData.id.includes('dual-lower-half-cabinet') || moduleData.id.includes('lower-sink-cabinet') || moduleData.id.includes('dual-lower-sink-cabinet') || moduleData.id.includes('lower-induction-cabinet') || moduleData.id.includes('dual-lower-induction-cabinet')) && (() => {
         const mmToThreeUnits = (mm: number) => mm * 0.01;
         const cabinetHeight = adjustedHeight;
         const notchHeightMm = 60;
@@ -466,8 +468,8 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
         );
       })()}
 
-      {/* 싱크장 전대 렌더링 — 상단 따내기 아래 높이 150mm */}
-      {showFurniture && (moduleData.id.includes('lower-sink-cabinet') || moduleData.id.includes('dual-lower-sink-cabinet')) && (() => {
+      {/* 싱크장/인덕션장 전대 렌더링 — 상단 따내기 아래 높이 150mm */}
+      {showFurniture && (moduleData.id.includes('lower-sink-cabinet') || moduleData.id.includes('dual-lower-sink-cabinet') || moduleData.id.includes('lower-induction-cabinet') || moduleData.id.includes('dual-lower-induction-cabinet')) && (() => {
         const mmToThreeUnits = (mm: number) => mm * 0.01;
         const cabinetHeight = adjustedHeight;
         const cabinetBottomY = -cabinetHeight / 2;
@@ -491,6 +493,84 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
               renderMode={renderMode}
               isHighlighted={false}
               panelName="전대"
+              furnitureId={placedFurnitureId}
+            />
+          </group>
+        );
+      })()}
+
+      {/* 인덕션장 블럼 레그라박스 서랍 렌더링 (바닥판 + 뒷판만, 측판 없음) */}
+      {showFurniture && (moduleData.id.includes('lower-induction-cabinet') || moduleData.id.includes('dual-lower-induction-cabinet')) && (() => {
+        const mmToThreeUnits = (mm: number) => mm * 0.01;
+        const cabinetHeight = adjustedHeight;
+        const cabinetBottomY = -cabinetHeight / 2;
+        const basicThicknessMm = baseFurniture.basicThickness / 0.01; // 18mm
+        const depthMm = baseFurniture.depth / 0.01;
+        const backPanelMm = backPanelThickness || 9;
+        const drawerThicknessMm = 15; // 서랍재 두께
+        const sideGapMm = 17; // 양쪽 17mm 갭
+        const drawerWidthMm = (adjustedWidth || moduleData.dimensions.width) - basicThicknessMm * 2 - sideGapMm * 2;
+        const drawerDepthMm = depthMm - backPanelMm - basicThicknessMm - 1; // 백패널+측판두께-1
+        const bottomGapMm = 28; // 하부장 바닥판에서 28mm 갭
+
+        // 1단 서랍: 총 높이 228mm (바닥판+뒷판), 바닥판 위치 = 바닥판(18) + 28mm
+        const drawer1BottomY = cabinetBottomY + mmToThreeUnits(basicThicknessMm + bottomGapMm);
+        const drawer1TotalH = 228;
+        const drawer1BackH = drawer1TotalH - drawerThicknessMm; // 뒷판 높이 = 228 - 15 = 213mm
+
+        // 2단 서랍: 총 높이 164mm, 위치 = 따내기(338) + 보강대높이(65) 위
+        const notchFromBottom = 338;
+        const notchHeight = 65;
+        const drawer2BottomY = cabinetBottomY + mmToThreeUnits(notchFromBottom + notchHeight);
+        const drawer2TotalH = 164;
+        const drawer2BackH = drawer2TotalH - drawerThicknessMm; // 뒷판 높이 = 164 - 15 = 149mm
+
+        const drawerWidth = mmToThreeUnits(drawerWidthMm);
+        const drawerDepth = mmToThreeUnits(drawerDepthMm);
+        const drawerThickness = mmToThreeUnits(drawerThicknessMm);
+        // 서랍 Z 위치: 백패널 앞에서 시작
+        const drawerZ = -baseFurniture.depth / 2 + mmToThreeUnits(backPanelMm + basicThicknessMm) + drawerDepth / 2 - mmToThreeUnits(1);
+
+        return (
+          <group position={[0, cabinetYPosition, 0]}>
+            {/* 1단 서랍 바닥판 */}
+            <BoxWithEdges
+              args={[drawerWidth, drawerThickness, drawerDepth]}
+              position={[0, drawer1BottomY + drawerThickness / 2, drawerZ]}
+              material={baseFurniture.material}
+              renderMode={renderMode}
+              isHighlighted={false}
+              panelName="인덕션 1단서랍 바닥판"
+              furnitureId={placedFurnitureId}
+            />
+            {/* 1단 서랍 뒷판 */}
+            <BoxWithEdges
+              args={[drawerWidth, mmToThreeUnits(drawer1BackH), drawerThickness]}
+              position={[0, drawer1BottomY + drawerThickness + mmToThreeUnits(drawer1BackH) / 2, -baseFurniture.depth / 2 + mmToThreeUnits(backPanelMm + basicThicknessMm) + drawerThickness / 2]}
+              material={baseFurniture.material}
+              renderMode={renderMode}
+              isHighlighted={false}
+              panelName="인덕션 1단서랍 뒷판"
+              furnitureId={placedFurnitureId}
+            />
+            {/* 2단 서랍 바닥판 */}
+            <BoxWithEdges
+              args={[drawerWidth, drawerThickness, drawerDepth]}
+              position={[0, drawer2BottomY + drawerThickness / 2, drawerZ]}
+              material={baseFurniture.material}
+              renderMode={renderMode}
+              isHighlighted={false}
+              panelName="인덕션 2단서랍 바닥판"
+              furnitureId={placedFurnitureId}
+            />
+            {/* 2단 서랍 뒷판 */}
+            <BoxWithEdges
+              args={[drawerWidth, mmToThreeUnits(drawer2BackH), drawerThickness]}
+              position={[0, drawer2BottomY + drawerThickness + mmToThreeUnits(drawer2BackH) / 2, -baseFurniture.depth / 2 + mmToThreeUnits(backPanelMm + basicThicknessMm) + drawerThickness / 2]}
+              material={baseFurniture.material}
+              renderMode={renderMode}
+              isHighlighted={false}
+              panelName="인덕션 2단서랍 뒷판"
               furnitureId={placedFurnitureId}
             />
           </group>

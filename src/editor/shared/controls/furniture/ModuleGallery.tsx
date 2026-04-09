@@ -43,6 +43,7 @@ const FURNITURE_ICONS: Record<string, string> = {
   // 새 하부장 (텍스트 썸네일 — 이미지 준비 후 교체)
   'lower-half-cabinet': '',
   'lower-sink-cabinet': '',
+  'lower-induction-cabinet': '',
   // 듀얼 상부장
   'dual-upper-cabinet-shelf': getImagePath('dual-upper-cabinet-shelf.png'),
   'dual-upper-cabinet-2tier': getImagePath('dual-upper-cabinet-2tier.png'),
@@ -54,6 +55,7 @@ const FURNITURE_ICONS: Record<string, string> = {
   // 새 듀얼 하부장 (텍스트 썸네일 — 이미지 준비 후 교체)
   'dual-lower-half-cabinet': '',
   'dual-lower-sink-cabinet': '',
+  'dual-lower-induction-cabinet': '',
   // 기본하부장 2단 (텍스트 썸네일)
   'lower-drawer-2tier': '',
   'dual-lower-drawer-2tier': '',
