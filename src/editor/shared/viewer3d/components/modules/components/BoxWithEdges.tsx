@@ -550,31 +550,56 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
 
     if (bottomRebate) {
       // 반턱: 정면(XY)에서 양쪽 하단 모서리 깎기 — 엣지 라인
+      // 양쪽 바깥 수직선(측판에 묻히는 부분)은 제외
       const rw = bottomRebate.width, rh = bottomRebate.height;
-      const profile: [number, number][] = [
-        [-halfW, -halfH],           // 좌하단 바깥
-        [-halfW, -halfH + rh],      // 좌반턱 상단
-        [-halfW + rw, -halfH + rh], // 좌반턱 안쪽
+      // 반턱 안쪽 단면만 (바깥 수직선 제외)
+      const rebateInner: [number, number][] = [
         [-halfW + rw, -halfH],      // 중앙 좌측 하단
-        [halfW - rw, -halfH],       // 중앙 우측 하단
-        [halfW - rw, -halfH + rh],  // 우반턱 안쪽
-        [halfW, -halfH + rh],       // 우반턱 상단
-        [halfW, -halfH],            // 우하단 바깥
-        [halfW, halfH],             // 우상단
-        [-halfW, halfH],            // 좌상단
+        [-halfW + rw, -halfH + rh], // 좌반턱 안쪽
+        [-halfW, -halfH + rh],      // 좌반턱 상단 (좌측판 안쪽면)
       ];
-      // 앞면 + 뒷면 윤곽
+      const rebateInnerR: [number, number][] = [
+        [halfW, -halfH + rh],       // 우반턱 상단 (우측판 안쪽면)
+        [halfW - rw, -halfH + rh],  // 우반턱 안쪽
+        [halfW - rw, -halfH],       // 중앙 우측 하단
+      ];
+      // 하단 중앙 + 상단 사각형
+      const boxEdges: [number, number][][] = [
+        [[-halfW + rw, -halfH], [halfW - rw, -halfH]], // 하단 중앙
+        [[-halfW, halfH], [halfW, halfH]],               // 상단
+        [[-halfW, -halfH + rh], [-halfW, halfH]],        // 좌측 (반턱 상단~상단)
+        [[halfW, -halfH + rh], [halfW, halfH]],          // 우측 (반턱 상단~상단)
+      ];
       for (const zVal of [halfD, -halfD]) {
-        for (let i = 0; i < profile.length; i++) {
-          const next = (i + 1) % profile.length;
+        // 좌측 반턱 안쪽 꺾임
+        for (let i = 0; i < rebateInner.length - 1; i++) {
           lines.push([
-            [profile[i][0], profile[i][1], zVal],
-            [profile[next][0], profile[next][1], zVal],
+            [rebateInner[i][0], rebateInner[i][1], zVal],
+            [rebateInner[i+1][0], rebateInner[i+1][1], zVal],
+          ]);
+        }
+        // 우측 반턱 안쪽 꺾임
+        for (let i = 0; i < rebateInnerR.length - 1; i++) {
+          lines.push([
+            [rebateInnerR[i][0], rebateInnerR[i][1], zVal],
+            [rebateInnerR[i+1][0], rebateInnerR[i+1][1], zVal],
+          ]);
+        }
+        // 하단 중앙 + 상단 + 좌우 세로
+        for (const edge of boxEdges) {
+          lines.push([
+            [edge[0][0], edge[0][1], zVal],
+            [edge[1][0], edge[1][1], zVal],
           ]);
         }
       }
-      // 앞뒤 연결 엣지
-      for (const v of profile) {
+      // 앞뒤 연결 엣지 (바깥 수직선 꼭지점 제외)
+      const connectPts: [number, number][] = [
+        [-halfW + rw, -halfH], [-halfW + rw, -halfH + rh], [-halfW, -halfH + rh],
+        [halfW, -halfH + rh], [halfW - rw, -halfH + rh], [halfW - rw, -halfH],
+        [-halfW, halfH], [halfW, halfH],
+      ];
+      for (const v of connectPts) {
         lines.push([[v[0], v[1], -halfD], [v[0], v[1], halfD]]);
       }
       return lines;
