@@ -518,8 +518,8 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
         const drawer1TotalH = 228;
         const drawer1BackH = drawer1TotalH - drawerThicknessMm; // 뒷판 높이 = 228 - 15 = 213mm
 
-        // 2단 서랍: 하단에서 338mm 위치에서 시작
-        const drawer2FromBottomMm = 338;
+        // 2단 서랍: 바닥판 위에서 338mm → 캐비넷 하단에서 338 + 바닥판(18) = 356mm
+        const drawer2FromBottomMm = 338 + basicThicknessMm;
         const drawer2BottomY = cabinetBottomY + mmToThreeUnits(drawer2FromBottomMm);
         const drawer2TotalH = 164;
         const drawer2BackH = drawer2TotalH - drawerThicknessMm; // 뒷판 높이 = 164 - 15 = 149mm
