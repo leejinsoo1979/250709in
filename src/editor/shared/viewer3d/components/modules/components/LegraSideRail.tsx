@@ -26,6 +26,8 @@ interface LegraSideRailProps {
   sidePanelInnerX: number;
   /** 서랍 높이(mm) — 제공 시 높이 기반으로 GLB 모델 선택 (228↑ → SL, 그 외 → L) */
   drawerHeightMm?: number;
+  /** 렌더 모드 — '2d'일 때 머티리얼을 밝은 단색으로 교체 */
+  renderMode?: string;
 }
 
 // glTF meters → project units (0.01 = 1mm)
@@ -55,6 +57,8 @@ function getScaledBounds(obj: THREE.Object3D, scale: THREE.Vector3): THREE.Box3 
   return box;
 }
 
+const flatMaterial = new THREE.MeshBasicMaterial({ color: '#c0c0c0' });
+
 const LegraSideRail: React.FC<LegraSideRailProps> = ({
   drawerTier,
   drawerBottomY,
@@ -63,7 +67,9 @@ const LegraSideRail: React.FC<LegraSideRailProps> = ({
   drawerFrontZ,
   sidePanelInnerX,
   drawerHeightMm,
+  renderMode,
 }) => {
+  const is2D = renderMode === '2d';
   // drawerHeightMm 제공 시 높이 기반 모델 선택, 미제공 시 기존 tier 기반
   // 228↑ → SL500, 117↓ → M500, 나머지(164 등) → L500
   const modelPath = drawerHeightMm != null
@@ -77,9 +83,18 @@ const LegraSideRail: React.FC<LegraSideRailProps> = ({
     const left = cleanClone(scene);
     const right = cleanClone(scene);
 
-    // drawerHeightMm 제공 시에만 Y 스케일 축소 (터치 모듈 등)
-    // 기존 도어올림은 drawerHeightMm 미제공 → 원본 크기 유지
-    // GLB 모델은 원본 크기 그대로 사용 — Y 스케일 축소 없음
+    // 2D 모드: 머티리얼을 밝은 단색으로 교체
+    if (is2D) {
+      [left, right].forEach(obj => {
+        obj.traverse((child) => {
+          if ((child as THREE.Mesh).isMesh) {
+            (child as THREE.Mesh).material = flatMaterial;
+          }
+        });
+      });
+    }
+
+    // GLB 모델은 원본 크기 그대로 사용
     const yScale = GLTF_SCALE;
 
     const lScale = new THREE.Vector3(GLTF_SCALE, yScale, GLTF_SCALE);
@@ -118,7 +133,7 @@ const LegraSideRail: React.FC<LegraSideRailProps> = ({
       leftPos: lPos,
       rightPos: rPos,
     };
-  }, [scene, drawerTier, drawerBottomY, drawerBottomThickness, backPanelHeight, drawerFrontZ, sidePanelInnerX, drawerHeightMm]);
+  }, [scene, drawerTier, drawerBottomY, drawerBottomThickness, backPanelHeight, drawerFrontZ, sidePanelInnerX, drawerHeightMm, is2D]);
 
   return (
     <>
