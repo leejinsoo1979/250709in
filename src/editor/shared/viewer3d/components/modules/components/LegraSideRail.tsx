@@ -13,7 +13,7 @@ import { useGLTF } from '@react-three/drei';
  */
 
 interface LegraSideRailProps {
-  drawerTier: 1 | 2;
+  drawerTier: number;
   /** 서랍 바닥판 하단 Y (Three.js units) */
   drawerBottomY: number;
   /** 서랍 바닥판 두께 (Three.js units) */
@@ -24,6 +24,8 @@ interface LegraSideRailProps {
   drawerFrontZ: number;
   /** 캐비넷 측판 안쪽면 X (양수, Three.js units) */
   sidePanelInnerX: number;
+  /** 서랍 높이(mm) — 제공 시 높이 기반으로 GLB 모델 선택 (228↑ → SL, 그 외 → L) */
+  drawerHeightMm?: number;
 }
 
 // glTF meters → project units (0.01 = 1mm)
@@ -60,8 +62,11 @@ const LegraSideRail: React.FC<LegraSideRailProps> = ({
   backPanelHeight,
   drawerFrontZ,
   sidePanelInnerX,
+  drawerHeightMm,
 }) => {
-  const modelPath = drawerTier === 1 ? '/models/Legra_SL500.glb' : '/models/Legra_L500.glb';
+  // drawerHeightMm 제공 시 높이 기반 모델 선택, 미제공 시 기존 tier 기반
+  const useSL = drawerHeightMm != null ? drawerHeightMm >= 200 : drawerTier === 1;
+  const modelPath = useSL ? '/models/Legra_SL500.glb' : '/models/Legra_L500.glb';
   const { scene } = useGLTF(modelPath);
 
   const { leftClone, rightClone, leftScale, rightScale, leftPos, rightPos } = useMemo(() => {

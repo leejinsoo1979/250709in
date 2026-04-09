@@ -757,6 +757,7 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
                   backPanelHeight={mmToThreeUnits(d.backH)}
                   drawerFrontZ={drawerFrontZ}
                   sidePanelInnerX={mmToThreeUnits(widthMm / 2 - basicThicknessMm)}
+                  drawerHeightMm={d.height}
                 />
               </React.Fragment>
             ))}
