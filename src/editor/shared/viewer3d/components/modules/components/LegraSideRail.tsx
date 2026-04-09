@@ -57,8 +57,6 @@ function getScaledBounds(obj: THREE.Object3D, scale: THREE.Vector3): THREE.Box3 
   return box;
 }
 
-const flatMaterial = new THREE.MeshBasicMaterial({ color: '#c0c0c0' });
-
 const LegraSideRail: React.FC<LegraSideRailProps> = ({
   drawerTier,
   drawerBottomY,
@@ -69,7 +67,7 @@ const LegraSideRail: React.FC<LegraSideRailProps> = ({
   drawerHeightMm,
   renderMode,
 }) => {
-  const is2D = renderMode === '2d';
+  if (renderMode === '2d') return null;
   // drawerHeightMm 제공 시 높이 기반 모델 선택, 미제공 시 기존 tier 기반
   // 228↑ → SL500, 117↓ → M500, 나머지(164 등) → L500
   const modelPath = drawerHeightMm != null
@@ -82,17 +80,6 @@ const LegraSideRail: React.FC<LegraSideRailProps> = ({
   const { leftClone, rightClone, leftScale, rightScale, leftPos, rightPos } = useMemo(() => {
     const left = cleanClone(scene);
     const right = cleanClone(scene);
-
-    // 2D 모드: 머티리얼을 밝은 단색으로 교체
-    if (is2D) {
-      [left, right].forEach(obj => {
-        obj.traverse((child) => {
-          if ((child as THREE.Mesh).isMesh) {
-            (child as THREE.Mesh).material = flatMaterial;
-          }
-        });
-      });
-    }
 
     // GLB 모델은 원본 크기 그대로 사용
     const yScale = GLTF_SCALE;
@@ -133,7 +120,7 @@ const LegraSideRail: React.FC<LegraSideRailProps> = ({
       leftPos: lPos,
       rightPos: rPos,
     };
-  }, [scene, drawerTier, drawerBottomY, drawerBottomThickness, backPanelHeight, drawerFrontZ, sidePanelInnerX, drawerHeightMm, is2D]);
+  }, [scene, drawerTier, drawerBottomY, drawerBottomThickness, backPanelHeight, drawerFrontZ, sidePanelInnerX, drawerHeightMm]);
 
   return (
     <>

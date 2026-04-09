@@ -586,28 +586,26 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
               panelName="인덕션 2단서랍 뒷판"
               furnitureId={placedFurnitureId}
             />
-            {/* 1단 서랍 레그라 측판 (GLB 모델) — 2D 정면뷰에서는 측판 밖으로 삐져나오므로 숨김 */}
-            {!(viewMode === '2D' && view2DDirection === 'front') && (
-              <LegraSideRail
-                drawerTier={1}
-                drawerBottomY={drawer1BottomY}
-                drawerBottomThickness={drawerThickness}
-                backPanelHeight={mmToThreeUnits(drawer1BackH)}
-                drawerFrontZ={drawerFrontZ}
-                sidePanelInnerX={mmToThreeUnits(widthMm / 2 - basicThicknessMm)}
-              />
-            )}
-            {/* 2단 서랍 레그라 측판 (GLB 모델) — 2D 정면뷰에서는 측판 밖으로 삐져나오므로 숨김 */}
-            {!(viewMode === '2D' && view2DDirection === 'front') && (
-              <LegraSideRail
-                drawerTier={2}
-                drawerBottomY={drawer2BottomY}
-                drawerBottomThickness={drawerThickness}
-                backPanelHeight={mmToThreeUnits(drawer2BackH)}
-                drawerFrontZ={drawerFrontZ}
-                sidePanelInnerX={mmToThreeUnits(widthMm / 2 - basicThicknessMm)}
-              />
-            )}
+            {/* 1단 서랍 레그라 측판 (GLB 모델) */}
+            <LegraSideRail
+              drawerTier={1}
+              drawerBottomY={drawer1BottomY}
+              drawerBottomThickness={drawerThickness}
+              backPanelHeight={mmToThreeUnits(drawer1BackH)}
+              drawerFrontZ={drawerFrontZ}
+              sidePanelInnerX={mmToThreeUnits(widthMm / 2 - basicThicknessMm)}
+              renderMode={renderMode}
+            />
+            {/* 2단 서랍 레그라 측판 (GLB 모델) */}
+            <LegraSideRail
+              drawerTier={2}
+              drawerBottomY={drawer2BottomY}
+              drawerBottomThickness={drawerThickness}
+              backPanelHeight={mmToThreeUnits(drawer2BackH)}
+              drawerFrontZ={drawerFrontZ}
+              sidePanelInnerX={mmToThreeUnits(widthMm / 2 - basicThicknessMm)}
+              renderMode={renderMode}
+            />
           </group>
         );
       })()}
