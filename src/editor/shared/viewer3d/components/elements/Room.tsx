@@ -3952,10 +3952,10 @@ const Room: React.FC<RoomProps> = ({
                       </>
                     )}
 
-                    {/* 좌측 서라운드 전면 패널 하단 치수선 */}
+                    {/* 좌측 서라운드 전면 패널 하단 치수선 (이격치수와 겹치지 않도록 한 단 위) */}
                     {showDimensions && frontActualWidth > 0 && (() => {
-                      const extensionLineStart = mmToThreeUnits(70);
-                      const extensionLineLength = mmToThreeUnits(110);
+                      const extensionLineStart = mmToThreeUnits(10);
+                      const extensionLineLength = mmToThreeUnits(50);
                       const tickSize = 0.008;
                       const dimColor = '#000000';
                       const halfW = mmToThreeUnits(frontActualWidth) / 2;
@@ -4120,10 +4120,10 @@ const Room: React.FC<RoomProps> = ({
                       </>
                     )}
 
-                    {/* 우측 서라운드 전면 패널 하단 치수선 */}
+                    {/* 우측 서라운드 전면 패널 하단 치수선 (이격치수와 겹치지 않도록 한 단 위) */}
                     {showDimensions && rFrontActualWidth > 0 && (() => {
-                      const extensionLineStart = mmToThreeUnits(70);
-                      const extensionLineLength = mmToThreeUnits(110);
+                      const extensionLineStart = mmToThreeUnits(10);
+                      const extensionLineLength = mmToThreeUnits(50);
                       const tickSize = 0.008;
                       const dimColor = '#000000';
                       const halfW = mmToThreeUnits(rFrontActualWidth) / 2;
@@ -4278,10 +4278,10 @@ const Room: React.FC<RoomProps> = ({
                       </>
                     )}
 
-                    {/* 중간 서라운드 전면 패널 하단 치수선 */}
+                    {/* 중간 서라운드 전면 패널 하단 치수선 (이격치수와 겹치지 않도록 한 단 위) */}
                     {showDimensions && mFrontActualWidth > 0 && (() => {
-                      const extensionLineStart = mmToThreeUnits(70);
-                      const extensionLineLength = mmToThreeUnits(110);
+                      const extensionLineStart = mmToThreeUnits(10);
+                      const extensionLineLength = mmToThreeUnits(50);
                       const tickSize = 0.008;
                       const dimColor = '#000000';
                       const halfW = mmToThreeUnits(mFrontActualWidth) / 2;
