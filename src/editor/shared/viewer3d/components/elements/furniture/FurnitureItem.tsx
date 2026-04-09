@@ -1374,15 +1374,21 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     // freeHeight가 있으면 사용자가 직접 높이를 지정한 것이므로 topFrameThickness delta 보정 불필요
     // (freeHeight 자체에 이미 줄어든 높이가 반영되어 있음 — 이중 차감 방지)
     // freeHeight가 없을 때만 topFrameThickness delta로 보정
-    if (!placedModule.isFreePlacement && furnitureHeightMm > 0 && !placedModule.freeHeight) {
-      if (placedModule.topFrameThickness !== undefined) {
+    if (!placedModule.isFreePlacement && furnitureHeightMm > 0) {
+      // freeHeight가 없을 때만 topFrameThickness delta 보정
+      if (!placedModule.freeHeight && placedModule.topFrameThickness !== undefined) {
         const globalTop = spaceInfo.frameSize?.top ?? 30;
         furnitureHeightMm -= (placedModule.topFrameThickness - globalTop);
       }
+      // 개별 baseFrameHeight 보정: 키큰장(full)만 적용
+      // moduleData.dimensions.height는 글로벌 baseFrame 기준이므로 개별 차이를 반영
+      // (CADDimensions2D.tsx computeFurnitureHeightMm과 동일 로직)
+      const isStandType = spaceInfo.baseConfig?.type === 'stand';
+      if (placedModule.baseFrameHeight !== undefined && !isStandType && isTallCabinetForY) {
+        const globalBase = spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height ?? 65) : 0;
+        furnitureHeightMm -= (placedModule.baseFrameHeight - globalBase);
+      }
     }
-    // 슬롯 기반 키큰장: shelving.ts가 이미 floatHeight를 차감한 모듈을 생성하므로
-    // 여기서 추가 차감하면 이중 차감됨 → 제거
-    // (자유배치는 위의 if 분기에서 별도 처리)
   }
 
   // 바닥마감재 적용: 키큰장(full)만 가구 높이에서 차감 (상부 섹션이 흡수)
