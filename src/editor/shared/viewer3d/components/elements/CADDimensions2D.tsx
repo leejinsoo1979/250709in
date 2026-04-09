@@ -1000,9 +1000,9 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                 depthTest={false}
               />
 
-              {/* 가구 깊이 텍스트 */}
+              {/* 가구 깊이 텍스트: 하부장은 가이드선 아래, 키큰장/상부장은 가이드선 위 */}
               <Text
-                position={[0, depthDimY - mmToThreeUnits(40), furnitureZ]}
+                position={[0, depthDimY + mmToThreeUnits(isLowerMod ? -40 : 40), furnitureZ]}
                 fontSize={largeFontSize}
                 color={textColor}
                 anchorX="center"
