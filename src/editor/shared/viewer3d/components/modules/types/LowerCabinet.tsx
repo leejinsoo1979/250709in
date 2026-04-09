@@ -731,16 +731,18 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
                   panelName={`터치${d.tier}단서랍 뒷판`}
                   furnitureId={placedFurnitureId}
                 />
-                {/* 레그라 측판 (GLB 모델) */}
-                <LegraSideRail
-                  drawerTier={d.tier}
-                  drawerBottomY={d.bottomY}
-                  drawerBottomThickness={drawerThickness}
-                  backPanelHeight={mmToThreeUnits(d.backH)}
-                  drawerFrontZ={drawerFrontZ}
-                  sidePanelInnerX={mmToThreeUnits(widthMm / 2 - basicThicknessMm)}
-                  drawerHeightMm={d.height}
-                />
+                {/* 레그라 측판 (GLB 모델) — 2D 정면뷰에서는 숨김 */}
+                {!(viewMode === '2D' && view2DDirection === 'front') && (
+                  <LegraSideRail
+                    drawerTier={d.tier}
+                    drawerBottomY={d.bottomY}
+                    drawerBottomThickness={drawerThickness}
+                    backPanelHeight={mmToThreeUnits(d.backH)}
+                    drawerFrontZ={drawerFrontZ}
+                    sidePanelInnerX={mmToThreeUnits(widthMm / 2 - basicThicknessMm)}
+                    drawerHeightMm={d.height}
+                  />
+                )}
               </React.Fragment>
             ))}
           </group>
