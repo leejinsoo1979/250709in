@@ -81,16 +81,19 @@ const LegraSideRail: React.FC<LegraSideRailProps> = ({
     const RAIL_MOUNT_OVERHANG = 13.7 * 0.01; // 13.7mm → Three.js units
     const targetMinY = drawerBottomY - RAIL_MOUNT_OVERHANG;
 
-    // 왼쪽: 하단을 뒷판 하단에, 좌측면을 캐비넷 측판 안쪽에, Z앞면을 서랍 앞면에
+    // X: 캐비넷 측판 안쪽면에서 7mm 안쪽으로 (서랍 뒷판과 맞닿도록)
+    const INSET = 7 * 0.01; // 7mm → Three.js units
+
+    // 왼쪽
     const lPos = new THREE.Vector3(
-      -sidePanelInnerX - leftBox.min.x, // 모델 min.x를 -sidePanelInnerX로
-      targetMinY - leftBox.min.y,        // 모델 min.y를 바닥판 윗면으로
-      drawerFrontZ - leftBox.max.z,      // 모델 max.z를 서랍 앞면으로
+      -sidePanelInnerX + INSET - leftBox.min.x,
+      targetMinY - leftBox.min.y,
+      drawerFrontZ - leftBox.max.z,
     );
 
-    // 오른쪽 (X 미러): max.x를 +sidePanelInnerX로
+    // 오른쪽 (X 미러)
     const rPos = new THREE.Vector3(
-      sidePanelInnerX - rightBox.max.x,
+      sidePanelInnerX - INSET - rightBox.max.x,
       targetMinY - rightBox.min.y,
       drawerFrontZ - rightBox.max.z,
     );
