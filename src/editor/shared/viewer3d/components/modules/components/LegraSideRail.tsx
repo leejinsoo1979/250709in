@@ -5,51 +5,55 @@ import { useGLTF } from '@react-three/drei';
 /**
  * 레그라 서랍 측판 (GLB 모델)
  *
- * GLB 모델 세계 좌표 (useGLTF 로드 후, glTF meters 기준):
- *   X: 0 → +0.065m (두께 65mm, 오른쪽 방향)
- *   Y: -0.242m → 0 (높이, 아래 방향으로 펼쳐짐) [SL500 기준]
- *   Z: 0 → +0.494m (깊이, 뒤쪽 방향)
- *
- * 원점 = 상단-전면-좌측 모서리
- *
- * 프로젝트 단위: 0.01 = 1mm
- * glTF meters → project units: × 10
+ * 바운딩박스 기반 위치 보정:
+ * - GLB scene 로드 후 실제 바운딩박스를 측정
+ * - 뒷판 Y 위치에 맞춰 하단 정렬
+ * - 서랍 앞면 Z에 맞춰 전면 정렬
+ * - 캐비넷 측판 안쪽면 X에 밀착 배치
  */
 
 interface LegraSideRailProps {
-  /** 서랍 단수: 1 = SL (228mm), 2 = L (164mm) */
   drawerTier: 1 | 2;
-  /** 서랍 바닥판 Y 하단 좌표 (Three.js units) */
+  /** 서랍 바닥판 하단 Y (Three.js units) */
   drawerBottomY: number;
   /** 서랍 바닥판 두께 (Three.js units) */
   drawerBottomThickness: number;
-  /** 뒷판 높이 (Three.js units) - 레그라 높이 스케일 기준 */
+  /** 뒷판 높이 (Three.js units) */
   backPanelHeight: number;
-  /** 서랍 앞면 Z 좌표 (Three.js units) */
+  /** 서랍 앞면 Z (Three.js units) */
   drawerFrontZ: number;
-  /** 캐비넷 측판 안쪽면 X 좌표 (Three.js units, 양수) */
+  /** 캐비넷 측판 안쪽면 X (양수, Three.js units) */
   sidePanelInnerX: number;
 }
 
-// GLB 모델 원본 높이 (mm) - 높이 스케일 계산용
+// GLB 모델 원본 높이 (mm)
 const MODEL_HEIGHT_MM = { SL: 241.70, L: 177.70 };
 
-// glTF meters → project units 변환 계수
+// glTF meters → project units (0.01 = 1mm)
 const GLTF_SCALE = 10;
 
-/**
- * 클론된 씬에서 메시가 없는 불필요한 노드 제거 (Active View 등)
- */
 function cleanClone(source: THREE.Object3D): THREE.Object3D {
   const clone = source.clone(true);
   const toRemove: THREE.Object3D[] = [];
   clone.traverse((child) => {
-    if (child.name === 'Active View') {
-      toRemove.push(child);
-    }
+    if (child.name === 'Active View') toRemove.push(child);
   });
   toRemove.forEach((node) => node.parent?.remove(node));
   return clone;
+}
+
+/**
+ * 스케일이 적용된 scene의 바운딩박스를 계산
+ */
+function getScaledBounds(obj: THREE.Object3D, scale: THREE.Vector3): THREE.Box3 {
+  // 임시로 스케일 적용 → 바운딩박스 측정 → 복원
+  const tempGroup = new THREE.Group();
+  tempGroup.add(obj);
+  tempGroup.scale.copy(scale);
+  tempGroup.updateMatrixWorld(true);
+  const box = new THREE.Box3().setFromObject(tempGroup);
+  tempGroup.remove(obj);
+  return box;
 }
 
 const LegraSideRail: React.FC<LegraSideRailProps> = ({
@@ -63,39 +67,59 @@ const LegraSideRail: React.FC<LegraSideRailProps> = ({
   const modelPath = drawerTier === 1 ? '/models/Legra_SL500.glb' : '/models/Legra_L500.glb';
   const { scene } = useGLTF(modelPath);
 
-  const { leftClone, rightClone } = useMemo(() => ({
-    leftClone: cleanClone(scene),
-    rightClone: cleanClone(scene),
-  }), [scene]);
+  const { leftClone, rightClone, leftScale, rightScale, leftPos, rightPos } = useMemo(() => {
+    const left = cleanClone(scene);
+    const right = cleanClone(scene);
 
-  const { scaleL, scaleR, posL, posR } = useMemo(() => {
+    // 높이 스케일 계산
     const originalH = drawerTier === 1 ? MODEL_HEIGHT_MM.SL : MODEL_HEIGHT_MM.L;
-    const targetH = backPanelHeight / 0.01; // Three.js units → mm
+    const targetH = backPanelHeight / 0.01; // mm
     const hScale = targetH / originalH;
+    const sy = GLTF_SCALE * hScale;
 
-    const sx = GLTF_SCALE;
-    const sy = GLTF_SCALE * hScale; // 높이 방향만 스케일
-    const sz = GLTF_SCALE;
+    const lScale = new THREE.Vector3(GLTF_SCALE, sy, GLTF_SCALE);
+    const rScale = new THREE.Vector3(-GLTF_SCALE, sy, GLTF_SCALE); // X 미러링
 
-    // Y: 모델 원점=상단 → 뒷판 상단에 배치
+    // 바운딩박스 측정 (스케일 적용 상태)
+    const leftBox = getScaledBounds(left, lScale);
+    const rightBox = getScaledBounds(right, rScale);
+
+    // 목표 위치
     const bottomPanelTop = drawerBottomY + drawerBottomThickness / 2;
-    const topY = bottomPanelTop + backPanelHeight;
+    const targetMinY = bottomPanelTop; // 뒷판 하단 = 바닥판 윗면
 
-    // Z: 모델이 Z+ 방향(뒤쪽)으로 펼쳐짐 → 서랍 앞면에 배치
-    const z = drawerFrontZ;
+    // 왼쪽: 하단을 뒷판 하단에, 좌측면을 캐비넷 측판 안쪽에, Z앞면을 서랍 앞면에
+    const lPos = new THREE.Vector3(
+      -sidePanelInnerX - leftBox.min.x, // 모델 min.x를 -sidePanelInnerX로
+      targetMinY - leftBox.min.y,        // 모델 min.y를 바닥판 윗면으로
+      drawerFrontZ - leftBox.max.z,      // 모델 max.z를 서랍 앞면으로
+    );
+
+    // 오른쪽 (X 미러): max.x를 +sidePanelInnerX로
+    const rPos = new THREE.Vector3(
+      sidePanelInnerX - rightBox.max.x,
+      targetMinY - rightBox.min.y,
+      drawerFrontZ - rightBox.max.z,
+    );
 
     return {
-      scaleL: new THREE.Vector3(sx, sy, sz),
-      scaleR: new THREE.Vector3(-sx, sy, sz), // X 미러링
-      posL: new THREE.Vector3(-sidePanelInnerX, topY, z),
-      posR: new THREE.Vector3(sidePanelInnerX, topY, z),
+      leftClone: left,
+      rightClone: right,
+      leftScale: lScale,
+      rightScale: rScale,
+      leftPos: lPos,
+      rightPos: rPos,
     };
-  }, [drawerTier, drawerBottomY, drawerBottomThickness, backPanelHeight, drawerFrontZ, sidePanelInnerX]);
+  }, [scene, drawerTier, drawerBottomY, drawerBottomThickness, backPanelHeight, drawerFrontZ, sidePanelInnerX]);
 
   return (
     <>
-      <primitive object={leftClone} position={posL} scale={scaleL} />
-      <primitive object={rightClone} position={posR} scale={scaleR} />
+      <group position={leftPos}>
+        <primitive object={leftClone} scale={leftScale} />
+      </group>
+      <group position={rightPos}>
+        <primitive object={rightClone} scale={rightScale} />
+      </group>
     </>
   );
 };
