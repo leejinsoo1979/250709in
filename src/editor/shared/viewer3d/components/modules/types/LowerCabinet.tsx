@@ -55,7 +55,7 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
     placementType: spaceInfo?.baseConfig?.placementType,
     floatHeight: spaceInfo?.baseConfig?.floatHeight,
     hideTopPanel: !moduleData.id.includes('lower-door-lift-') && !moduleData.id.includes('lower-top-down-'),
-    hasSideNotches: (moduleData.id.includes('lower-door-lift-2tier') || moduleData.id.includes('lower-door-lift-3tier') || moduleData.id.includes('lower-drawer-') || moduleData.id.includes('lower-top-down-')) && !moduleData.id.includes('lower-door-lift-touch-'),
+    hasSideNotches: (moduleData.id.includes('lower-door-lift-2tier') || moduleData.id.includes('lower-door-lift-3tier') || moduleData.id.includes('lower-drawer-') || moduleData.id.includes('lower-top-down-')) && !moduleData.id.includes('lower-door-lift-touch-') && !moduleData.id.includes('lower-top-down-touch-'),
   });
   const { renderMode: contextRenderMode, viewMode } = useSpace3DView();
   const renderMode = renderModeProp || contextRenderMode;
@@ -183,8 +183,8 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
               hideTopPanel={!moduleData.id.includes('lower-door-lift-') && !moduleData.id.includes('lower-top-down-')}
               topPanelFrontReduction={moduleData.id.includes('lower-top-down-') ? 18.5 : 0}
               topStretcher={moduleData.id.includes('lower-top-down-') ? { heightMm: 55, depthMm: 40 } : undefined}
-              {...(moduleData.id.includes('lower-door-lift-touch-') ? {
-                // 도어올림 터치: 따내기 없음
+              {...(moduleData.id.includes('lower-door-lift-touch-') || moduleData.id.includes('lower-top-down-touch-') ? {
+                // 터치 모듈: 따내기 없음
               } : moduleData.id.includes('lower-drawer-3tier') ? {
                 sideNotches: [{ y: 65, z: 40, fromBottom: 295 }, { y: 65, z: 40, fromBottom: 510 }]
               } : moduleData.id.includes('lower-drawer-2tier') ? {
@@ -339,7 +339,7 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
       )}
       
       {/* 외부서랍 렌더링 (하부 서랍장 전용) */}
-      {showFurniture && !moduleData.id.includes('lower-door-lift-touch-') && (moduleData.id.includes('lower-drawer-') || moduleData.id.includes('lower-door-lift-2tier') || moduleData.id.includes('lower-door-lift-3tier') || moduleData.id.includes('lower-top-down-2tier') || moduleData.id.includes('lower-top-down-3tier')) && (() => {
+      {showFurniture && !moduleData.id.includes('lower-door-lift-touch-') && !moduleData.id.includes('lower-top-down-touch-') && (moduleData.id.includes('lower-drawer-') || moduleData.id.includes('lower-door-lift-2tier') || moduleData.id.includes('lower-door-lift-3tier') || moduleData.id.includes('lower-top-down-2tier') || moduleData.id.includes('lower-top-down-3tier')) && (() => {
         const is3Tier = moduleData.id.includes('lower-drawer-3tier');
         const isDoorLift3Tier = moduleData.id.includes('lower-door-lift-3tier');
         const isDoorLift2Tier = moduleData.id.includes('lower-door-lift-2tier');
@@ -661,8 +661,8 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
         );
       })()}
 
-      {/* 도어올림 터치 레그라박스 서랍 렌더링 (바닥판 + 뒷판만, 측판 없음) */}
-      {showFurniture && moduleData.id.includes('lower-door-lift-touch-') && (() => {
+      {/* 터치 레그라박스 서랍 렌더링 (도어올림 터치 + 상판내림 터치) */}
+      {showFurniture && (moduleData.id.includes('lower-door-lift-touch-') || moduleData.id.includes('lower-top-down-touch-')) && (() => {
         const mmToThreeUnits = (mm: number) => mm * 0.01;
         const cabinetHeight = adjustedHeight;
         const cabinetBottomY = -cabinetHeight / 2;
@@ -686,13 +686,19 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
         const rebateHeight = mmToThreeUnits(7.5);
 
         // 모듈별 서랍 높이 + 하판 윗면 기준 이격거리 (하단부터)
+        // 도어올림 터치
         const isTouch2A = moduleData.id.includes('lower-door-lift-touch-2tier-a');
         const isTouch2B = moduleData.id.includes('lower-door-lift-touch-2tier-b');
         const isTouch3 = moduleData.id.includes('lower-door-lift-touch-3tier');
+        // 상판내림 터치
+        const isTDTouch2 = moduleData.id.includes('lower-top-down-touch-2tier');
+        const isTDTouch3 = moduleData.id.includes('lower-top-down-touch-3tier');
         // [서랍높이mm, 하판윗면에서 바닥판까지 이격mm]
         const drawerSpecs: [number, number][] = isTouch2A ? [[228, 28], [228, 406]]
           : isTouch2B ? [[228, 28], [164, 406]]
           : isTouch3 ? [[228, 28], [117, 357], [117, 587]]
+          : isTDTouch2 ? [[228, 28], [228, 356]]
+          : isTDTouch3 ? [[164, 28], [117, 281], [117, 494]]
           : [[228, 28], [228, 406]];
 
         // 서랍 위치 계산: 하판 윗면 = cabinetBottomY + basicThickness
@@ -746,8 +752,8 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
         );
       })()}
 
-      {/* 도어올림 터치 마이다 렌더링 */}
-      {hasDoor && moduleData.id.includes('lower-door-lift-touch-') && (() => {
+      {/* 터치 마이다 렌더링 (도어올림 터치 + 상판내림 터치) */}
+      {hasDoor && (moduleData.id.includes('lower-door-lift-touch-') || moduleData.id.includes('lower-top-down-touch-')) && (() => {
         const mmToThreeUnits = (mm: number) => mm * 0.01;
         const cabinetHeight = adjustedHeight;
         const cabinetBottomY = -cabinetHeight / 2;
@@ -758,12 +764,18 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
         const moduleDepthMm = baseFurniture.depth / 0.01;
         const maidaZ = mmToThreeUnits((moduleDepthMm + 28) / 2);
 
+        // 도어올림 터치
         const isTouch2A = moduleData.id.includes('lower-door-lift-touch-2tier-a');
         const isTouch2B = moduleData.id.includes('lower-door-lift-touch-2tier-b');
         const isTouch3 = moduleData.id.includes('lower-door-lift-touch-3tier');
+        // 상판내림 터치
+        const isTDTouch2 = moduleData.id.includes('lower-top-down-touch-2tier');
+        const isTDTouch3 = moduleData.id.includes('lower-top-down-touch-3tier');
         const drawerHeights = isTouch2A ? [228, 228]
           : isTouch2B ? [228, 164]
           : isTouch3 ? [228, 117, 117]
+          : isTDTouch2 ? [228, 228]
+          : isTDTouch3 ? [164, 117, 117]
           : [228, 228];
 
         const topExtMm = 30;
@@ -805,7 +817,7 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
 
       {/* 도어는 showFurniture와 관계없이 hasDoor가 true이면 항상 렌더링 (도어만 보기 위해) */}
       {/* 단, 서랍장(lower-drawer-*)은 도어가 아닌 서랍이 달리므로 도어 렌더링 차단 */}
-      {hasDoor && spaceInfo && !moduleData.id.includes('lower-drawer-') && !moduleData.id.includes('lower-door-lift-2tier') && !moduleData.id.includes('lower-door-lift-3tier') && !moduleData.id.includes('lower-door-lift-touch-') && !moduleData.id.includes('lower-top-down-2tier') && !moduleData.id.includes('lower-top-down-3tier') && !moduleData.id.includes('lower-induction-cabinet') && !moduleData.id.includes('dual-lower-induction-cabinet') && (
+      {hasDoor && spaceInfo && !moduleData.id.includes('lower-drawer-') && !moduleData.id.includes('lower-door-lift-2tier') && !moduleData.id.includes('lower-door-lift-3tier') && !moduleData.id.includes('lower-door-lift-touch-') && !moduleData.id.includes('lower-top-down-2tier') && !moduleData.id.includes('lower-top-down-3tier') && !moduleData.id.includes('lower-top-down-touch-') && !moduleData.id.includes('lower-induction-cabinet') && !moduleData.id.includes('dual-lower-induction-cabinet') && (
         <DoorModule
           moduleWidth={doorWidth || moduleData.dimensions.width}
           moduleDepth={baseFurniture.actualDepthMm}
