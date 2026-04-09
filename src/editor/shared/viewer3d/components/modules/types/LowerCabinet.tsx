@@ -506,9 +506,12 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
         const depthMm = baseFurniture.depth / 0.01;
         const backPanelMm = backPanelThickness || 9;
         const drawerThicknessMm = 15; // 서랍재 두께
-        const sideGapMm = 17; // 양쪽 17mm 갭
-        const drawerWidthMm = (adjustedWidth || moduleData.dimensions.width) - basicThicknessMm * 2 - sideGapMm * 2;
-        const drawerDepthMm = depthMm - backPanelMm - basicThicknessMm - 1; // 백패널+측판두께-1
+        const bottomSideGapMm = 17; // 바닥판: 양쪽 17mm 갭
+        const backSideGapMm = 18.5; // 뒷판: 양쪽 18.5mm 갭
+        const widthMm = adjustedWidth || moduleData.dimensions.width;
+        const drawerBottomWidthMm = widthMm - basicThicknessMm * 2 - bottomSideGapMm * 2;
+        const drawerBackWidthMm = widthMm - basicThicknessMm * 2 - backSideGapMm * 2;
+        const drawerDepthMm = 490; // 레그라박스 서랍 바닥판 깊이 고정
         const bottomGapMm = 28; // 하부장 바닥판에서 28mm 갭
 
         // 1단 서랍: 총 높이 228mm (바닥판+뒷판), 바닥판 위치 = 바닥판(18) + 28mm
@@ -523,17 +526,21 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
         const drawer2TotalH = 164;
         const drawer2BackH = drawer2TotalH - drawerThicknessMm; // 뒷판 높이 = 164 - 15 = 149mm
 
-        const drawerWidth = mmToThreeUnits(drawerWidthMm);
+        const drawerBottomWidth = mmToThreeUnits(drawerBottomWidthMm);
+        const drawerBackWidth = mmToThreeUnits(drawerBackWidthMm);
         const drawerDepth = mmToThreeUnits(drawerDepthMm);
         const drawerThickness = mmToThreeUnits(drawerThicknessMm);
-        // 서랍 Z 위치: 백패널 앞에서 시작
-        const drawerZ = -baseFurniture.depth / 2 + mmToThreeUnits(backPanelMm + basicThicknessMm) + drawerDepth / 2 - mmToThreeUnits(1);
+        // 서랍 바닥판 Z: 앞판 쪽에 맞춰 배치 (캐비넷 앞면 기준 안쪽으로)
+        const drawerFrontZ = baseFurniture.depth / 2 - mmToThreeUnits(basicThicknessMm);
+        const drawerZ = drawerFrontZ - drawerDepth / 2;
+        // 서랍 뒷판 Z: 바닥판 뒤쪽 끝에 위치
+        const drawerBackZ = drawerFrontZ - drawerDepth + drawerThickness / 2;
 
         return (
           <group position={[0, cabinetYPosition, 0]}>
             {/* 1단 서랍 바닥판 */}
             <BoxWithEdges
-              args={[drawerWidth, drawerThickness, drawerDepth]}
+              args={[drawerBottomWidth, drawerThickness, drawerDepth]}
               position={[0, drawer1BottomY + drawerThickness / 2, drawerZ]}
               material={baseFurniture.material}
               renderMode={renderMode}
@@ -543,8 +550,8 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
             />
             {/* 1단 서랍 뒷판 */}
             <BoxWithEdges
-              args={[drawerWidth, mmToThreeUnits(drawer1BackH), drawerThickness]}
-              position={[0, drawer1BottomY + drawerThickness + mmToThreeUnits(drawer1BackH) / 2, -baseFurniture.depth / 2 + mmToThreeUnits(backPanelMm + basicThicknessMm) + drawerThickness / 2]}
+              args={[drawerBackWidth, mmToThreeUnits(drawer1BackH), drawerThickness]}
+              position={[0, drawer1BottomY + drawerThickness + mmToThreeUnits(drawer1BackH) / 2, drawerBackZ]}
               material={baseFurniture.material}
               renderMode={renderMode}
               isHighlighted={false}
@@ -553,7 +560,7 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
             />
             {/* 2단 서랍 바닥판 */}
             <BoxWithEdges
-              args={[drawerWidth, drawerThickness, drawerDepth]}
+              args={[drawerBottomWidth, drawerThickness, drawerDepth]}
               position={[0, drawer2BottomY + drawerThickness / 2, drawerZ]}
               material={baseFurniture.material}
               renderMode={renderMode}
@@ -563,8 +570,8 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
             />
             {/* 2단 서랍 뒷판 */}
             <BoxWithEdges
-              args={[drawerWidth, mmToThreeUnits(drawer2BackH), drawerThickness]}
-              position={[0, drawer2BottomY + drawerThickness + mmToThreeUnits(drawer2BackH) / 2, -baseFurniture.depth / 2 + mmToThreeUnits(backPanelMm + basicThicknessMm) + drawerThickness / 2]}
+              args={[drawerBackWidth, mmToThreeUnits(drawer2BackH), drawerThickness]}
+              position={[0, drawer2BottomY + drawerThickness + mmToThreeUnits(drawer2BackH) / 2, drawerBackZ]}
               material={baseFurniture.material}
               renderMode={renderMode}
               isHighlighted={false}
