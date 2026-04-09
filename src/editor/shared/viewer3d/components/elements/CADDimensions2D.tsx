@@ -68,7 +68,12 @@ const computeFurnitureHeightMm = (
     heightMm = mod.freeHeight;
   } else {
     // 슬롯 기반
-    heightMm = moduleData?.dimensions.height || 0;
+    // cabinetBodyHeight가 있으면 2단서랍장 몸통 높이 오버라이드 (FurnitureItem.tsx와 동기화)
+    if (mod.cabinetBodyHeight && (mod.moduleId.includes('lower-drawer-2tier') || mod.moduleId.includes('dual-lower-drawer-2tier'))) {
+      heightMm = mod.cabinetBodyHeight;
+    } else {
+      heightMm = moduleData?.dimensions.height || 0;
+    }
     if (!mod.isFreePlacement && heightMm > 0) {
       if (mod.topFrameThickness !== undefined) {
         const globalTop = spaceInfo.frameSize?.top ?? 30;
@@ -197,8 +202,9 @@ const computeLowerCabinetMaidaHeights = (
   const isTopDown3Tier = moduleId.includes('lower-top-down-3tier');
   const isTopDown2Tier = moduleId.includes('lower-top-down-2tier');
 
-  // LowerCabinet.tsx line 349-350과 동일
-  const notchFromBottoms = is3Tier ? [295, 510] : isDoorLift3Tier ? [315, 545] : isDoorLift2Tier ? [355] : isTopDown3Tier ? [225, 445, 665] : isTopDown2Tier ? [300, 665] : [330];
+  // LowerCabinet.tsx line 349-350과 동일 (2단서랍장은 동적 계산)
+  const drawer2TierFromBottom = (moduleHeightMm - 125) / 2;
+  const notchFromBottoms = is3Tier ? [295, 510] : isDoorLift3Tier ? [315, 545] : isDoorLift2Tier ? [355] : isTopDown3Tier ? [225, 445, 665] : isTopDown2Tier ? [300, 665] : [drawer2TierFromBottom];
   const notchHeights = is3Tier ? [65, 65] : isDoorLift3Tier ? [65, 65] : isDoorLift2Tier ? [65] : isTopDown3Tier ? [65, 65, 65] : isTopDown2Tier ? [65, 65] : [65];
   const hideTopNotch = isDoorLift2Tier || isDoorLift3Tier || isTopDown2Tier || isTopDown3Tier;
   const fixedMaidaHeights = isDoorLift2Tier ? [400, 400] : isDoorLift3Tier ? [360, 210, 210] : undefined;
