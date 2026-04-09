@@ -1604,14 +1604,14 @@ export const calculatePanelDetails = (
     const drawerWidth = customWidth - basicThickness * 2 - sideGapMm * 2; // 내경 - 양쪽 17mm
     const drawerDepth = customDepth - (backPanelThickness || 9) - basicThickness - 1;
     // 1단 서랍: 총 높이 228mm
-    panels.drawer.push({
+    panels.lower.push({
       name: '인덕션 1단서랍 바닥판',
       width: drawerWidth,
       depth: drawerDepth,
       thickness: drawerThickness,
       material: 'MDF',
     });
-    panels.drawer.push({
+    panels.lower.push({
       name: '인덕션 1단서랍 뒷판',
       width: drawerWidth,
       height: 228 - drawerThickness, // 총높이 - 바닥판두께
@@ -1619,14 +1619,14 @@ export const calculatePanelDetails = (
       material: 'MDF',
     });
     // 2단 서랍: 총 높이 164mm
-    panels.drawer.push({
+    panels.lower.push({
       name: '인덕션 2단서랍 바닥판',
       width: drawerWidth,
       depth: drawerDepth,
       thickness: drawerThickness,
       material: 'MDF',
     });
-    panels.drawer.push({
+    panels.lower.push({
       name: '인덕션 2단서랍 뒷판',
       width: drawerWidth,
       height: 164 - drawerThickness, // 총높이 - 바닥판두께
