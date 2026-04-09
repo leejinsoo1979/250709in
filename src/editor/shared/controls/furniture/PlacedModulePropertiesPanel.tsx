@@ -896,7 +896,12 @@ const PlacedModulePropertiesPanel: React.FC = () => {
           ? (currentPlacedModule.slotCustomWidth ?? roundedWidth ?? moduleData.dimensions.width)
           : (currentPlacedModule.freeWidth || roundedWidth || moduleData.dimensions.width);
         setFreeWidthInput((() => { const v = Math.round(slotModeWidth * 10) / 10; return v % 1 === 0 ? v.toString() : v.toFixed(1); })());
-        setFreeHeightInput(Math.round(currentPlacedModule.freeHeight || moduleData.dimensions.height).toString());
+        // 2단서랍장: cabinetBodyHeight 우선, 그 외: freeHeight → moduleData.dimensions.height
+        const is2TierDrawer = currentPlacedModule.moduleId.includes('lower-drawer-2tier') || currentPlacedModule.moduleId.includes('dual-lower-drawer-2tier');
+        const effectiveHeight = is2TierDrawer && currentPlacedModule.cabinetBodyHeight
+          ? currentPlacedModule.cabinetBodyHeight
+          : (currentPlacedModule.freeHeight || moduleData.dimensions.height);
+        setFreeHeightInput(Math.round(effectiveHeight).toString());
         setFreeDepthInput(Math.round(currentPlacedModule.freeDepth || initialDepth).toString());
 
         // EP 두께 초기화
@@ -2255,7 +2260,9 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                     const directD = currentPlacedModule
                       ? (currentPlacedModule.customDepth ?? getDefaultDepth(moduleData))
                       : customDepth;
-                    return `${directW} × ${moduleData.dimensions.height} × ${directD}mm`;
+                    const is2Tier = currentPlacedModule?.moduleId.includes('lower-drawer-2tier') || currentPlacedModule?.moduleId.includes('dual-lower-drawer-2tier');
+                    const displayH = is2Tier && currentPlacedModule?.cabinetBodyHeight ? currentPlacedModule.cabinetBodyHeight : moduleData.dimensions.height;
+                    return `${directW} × ${displayH} × ${directD}mm`;
                   })()}
                 </span>
               </div>
