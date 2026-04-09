@@ -73,13 +73,18 @@ const LegraSideRail: React.FC<LegraSideRailProps> = ({
     const left = cleanClone(scene);
     const right = cleanClone(scene);
 
-    // 서랍 높이에 맞춰 Y 스케일 조정: 뒷판 상단 = drawerBottomY + drawerBottomThickness + backPanelHeight
-    // 모델 원본 높이 측정 후, 뒷판 상단을 넘으면 Y 축소
-    const baseScale = new THREE.Vector3(GLTF_SCALE, GLTF_SCALE, GLTF_SCALE);
-    const baseBox = getScaledBounds(left, baseScale);
-    const modelHeight = baseBox.max.y - baseBox.min.y; // 모델 원본 높이 (Three.js units)
-    const targetMaxHeight = drawerBottomThickness + backPanelHeight; // 바닥판 두께 + 뒷판 높이
-    const yScale = targetMaxHeight < modelHeight ? (targetMaxHeight / modelHeight) * GLTF_SCALE : GLTF_SCALE;
+    // drawerHeightMm 제공 시에만 Y 스케일 축소 (터치 모듈 등)
+    // 기존 도어올림은 drawerHeightMm 미제공 → 원본 크기 유지
+    let yScale = GLTF_SCALE;
+    if (drawerHeightMm != null) {
+      const baseScale = new THREE.Vector3(GLTF_SCALE, GLTF_SCALE, GLTF_SCALE);
+      const baseBox = getScaledBounds(left, baseScale);
+      const modelHeight = baseBox.max.y - baseBox.min.y;
+      const targetMaxHeight = drawerBottomThickness + backPanelHeight;
+      if (targetMaxHeight < modelHeight) {
+        yScale = (targetMaxHeight / modelHeight) * GLTF_SCALE;
+      }
+    }
 
     const lScale = new THREE.Vector3(GLTF_SCALE, yScale, GLTF_SCALE);
     const rScale = new THREE.Vector3(-GLTF_SCALE, yScale, GLTF_SCALE); // X 미러링
