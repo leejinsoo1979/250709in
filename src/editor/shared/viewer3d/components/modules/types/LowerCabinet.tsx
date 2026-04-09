@@ -536,18 +536,64 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
         // 서랍 뒷판 Z: 바닥판 뒤쪽 끝에 위치
         const drawerBackZ = drawerFrontZ - drawerDepth + drawerThickness / 2;
 
+        // 반턱 따내기: 양쪽 하단 안쪽 38mm, 위로 7.5mm
+        const rebateWidthMm = 38; // 양쪽 따내기 폭
+        const rebateHeightMm = 7.5; // 따내기 높이 (하단에서 위로)
+        const centerWidthMm = drawerBottomWidthMm - rebateWidthMm * 2; // 가운데 부분 폭
+        const upperThicknessMm = drawerThicknessMm - rebateHeightMm; // 양쪽 남는 두께 (15 - 7.5 = 7.5mm)
+
+        // 바닥판 렌더링 헬퍼: 가운데(전체두께) + 양쪽(상단 7.5mm만)
+        const renderRebateBottom = (bottomY: number, prefix: string) => {
+          const centerW = mmToThreeUnits(centerWidthMm);
+          const sideW = mmToThreeUnits(rebateWidthMm);
+          const upperH = mmToThreeUnits(upperThicknessMm);
+          const fullH = drawerThickness; // 15mm
+          // 가운데: 전체 두께, Y 중심 = bottomY + 15/2
+          const centerY = bottomY + fullH / 2;
+          // 양쪽: 상단 7.5mm만 남음, Y 중심 = bottomY + 7.5(따내기) + 7.5/2
+          const sideY = bottomY + mmToThreeUnits(rebateHeightMm) + upperH / 2;
+          const sideOffsetX = (centerW + sideW) / 2; // 가운데 옆에 붙임
+
+          return (
+            <>
+              {/* 가운데 (전체 두께 15mm) */}
+              <BoxWithEdges
+                args={[centerW, fullH, drawerDepth]}
+                position={[0, centerY, drawerZ]}
+                material={baseFurniture.material}
+                renderMode={renderMode}
+                isHighlighted={false}
+                panelName={`${prefix} 바닥판`}
+                furnitureId={placedFurnitureId}
+              />
+              {/* 좌측 (상단 7.5mm) */}
+              <BoxWithEdges
+                args={[sideW, upperH, drawerDepth]}
+                position={[-sideOffsetX, sideY, drawerZ]}
+                material={baseFurniture.material}
+                renderMode={renderMode}
+                isHighlighted={false}
+                panelName={`${prefix} 바닥판(좌반턱)`}
+                furnitureId={placedFurnitureId}
+              />
+              {/* 우측 (상단 7.5mm) */}
+              <BoxWithEdges
+                args={[sideW, upperH, drawerDepth]}
+                position={[sideOffsetX, sideY, drawerZ]}
+                material={baseFurniture.material}
+                renderMode={renderMode}
+                isHighlighted={false}
+                panelName={`${prefix} 바닥판(우반턱)`}
+                furnitureId={placedFurnitureId}
+              />
+            </>
+          );
+        };
+
         return (
           <group position={[0, cabinetYPosition, 0]}>
-            {/* 1단 서랍 바닥판 */}
-            <BoxWithEdges
-              args={[drawerBottomWidth, drawerThickness, drawerDepth]}
-              position={[0, drawer1BottomY + drawerThickness / 2, drawerZ]}
-              material={baseFurniture.material}
-              renderMode={renderMode}
-              isHighlighted={false}
-              panelName="인덕션 1단서랍 바닥판"
-              furnitureId={placedFurnitureId}
-            />
+            {/* 1단 서랍 바닥판 (반턱) */}
+            {renderRebateBottom(drawer1BottomY, '인덕션 1단서랍')}
             {/* 1단 서랍 뒷판 */}
             <BoxWithEdges
               args={[drawerBackWidth, mmToThreeUnits(drawer1BackH), drawerThickness]}
@@ -558,16 +604,8 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
               panelName="인덕션 1단서랍 뒷판"
               furnitureId={placedFurnitureId}
             />
-            {/* 2단 서랍 바닥판 */}
-            <BoxWithEdges
-              args={[drawerBottomWidth, drawerThickness, drawerDepth]}
-              position={[0, drawer2BottomY + drawerThickness / 2, drawerZ]}
-              material={baseFurniture.material}
-              renderMode={renderMode}
-              isHighlighted={false}
-              panelName="인덕션 2단서랍 바닥판"
-              furnitureId={placedFurnitureId}
-            />
+            {/* 2단 서랍 바닥판 (반턱) */}
+            {renderRebateBottom(drawer2BottomY, '인덕션 2단서랍')}
             {/* 2단 서랍 뒷판 */}
             <BoxWithEdges
               args={[drawerBackWidth, mmToThreeUnits(drawer2BackH), drawerThickness]}

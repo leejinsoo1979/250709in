@@ -1605,6 +1605,9 @@ export const calculatePanelDetails = (
     const drawerBottomWidth = customWidth - basicThickness * 2 - bottomSideGap * 2; // 내경 - 양쪽 17mm
     const drawerBackWidth = customWidth - basicThickness * 2 - backSideGap * 2; // 내경 - 양쪽 18.5mm
     const drawerDepth = 490; // 레그라박스 서랍 바닥판 깊이 고정
+    // 반턱 따내기: 양쪽 하단 안쪽 38mm, 위로 7.5mm
+    const rebateWidthMm = 38;
+    const rebateHeightMm = 7.5;
     // 1단 서랍: 총 높이 228mm
     panels.lower.push({
       name: '인덕션 1단서랍 바닥판',
@@ -1612,6 +1615,7 @@ export const calculatePanelDetails = (
       depth: drawerDepth,
       thickness: drawerThickness,
       material: 'MDF',
+      rebate: { width: rebateWidthMm, height: rebateHeightMm, position: 'bottom-both-sides' },
     });
     panels.lower.push({
       name: '인덕션 1단서랍 뒷판',
@@ -1627,6 +1631,7 @@ export const calculatePanelDetails = (
       depth: drawerDepth,
       thickness: drawerThickness,
       material: 'MDF',
+      rebate: { width: rebateWidthMm, height: rebateHeightMm, position: 'bottom-both-sides' },
     });
     panels.lower.push({
       name: '인덕션 2단서랍 뒷판',
