@@ -1155,6 +1155,18 @@ const PlacedModulePropertiesPanel: React.FC = () => {
     return { leftEpAdjacent: leftAdj, rightEpAdjacent: rightAdj };
   }, [currentPlacedModule, placedModules]);
 
+  // 개별 baseFrameHeight가 글로벌과 다르면 가구 높이 보정
+  // moduleData.dimensions.height는 글로벌 baseFrame 기준이므로, 차이만큼 가구 높이에 반영
+  const baseFrameDelta = globalBaseFrameHeightMm - baseFrameHeightMm; // 글로벌65 - 개별60 = +5mm
+  const adjustedFreeHeight = (() => {
+    const base = currentPlacedModule?.freeHeight || currentPlacedModule?.customHeight;
+    if (baseFrameDelta !== 0) {
+      // freeHeight가 있으면 delta 보정, 없으면 moduleData 높이 + delta
+      return (base || moduleData?.dimensions.height || 0) + baseFrameDelta;
+    }
+    return base;
+  })();
+
   const panelDetails = React.useMemo(() => {
     if (!moduleData) return [];
     return calculatePanelDetails(
@@ -1162,13 +1174,13 @@ const PlacedModulePropertiesPanel: React.FC = () => {
       undefined, undefined, undefined, undefined, undefined, undefined,
       backPanelThicknessValue, currentPlacedModule?.customConfig,
       currentPlacedModule?.hasLeftEndPanel, currentPlacedModule?.hasRightEndPanel,
-      currentPlacedModule?.endPanelThickness, currentPlacedModule?.freeHeight || currentPlacedModule?.customHeight,
+      currentPlacedModule?.endPanelThickness, adjustedFreeHeight,
       topFrameHeightMm, visualBaseFrameHeightMm,
       currentPlacedModule?.hasTopFrame, currentPlacedModule?.hasBase,
       currentPlacedModule?.isDualSlot,
       leftEpAdjacent, rightEpAdjacent
     );
-  }, [moduleData, customWidth, customDepth, hasDoor, t, doorOriginalWidth, backPanelThicknessValue, currentPlacedModule?.customConfig, currentPlacedModule?.hasLeftEndPanel, currentPlacedModule?.hasRightEndPanel, currentPlacedModule?.endPanelThickness, currentPlacedModule?.freeHeight, currentPlacedModule?.customHeight, topFrameHeightMm, visualBaseFrameHeightMm, currentPlacedModule?.hasTopFrame, currentPlacedModule?.hasBase, currentPlacedModule?.isDualSlot, leftEpAdjacent, rightEpAdjacent]);
+  }, [moduleData, customWidth, customDepth, hasDoor, t, doorOriginalWidth, backPanelThicknessValue, currentPlacedModule?.customConfig, currentPlacedModule?.hasLeftEndPanel, currentPlacedModule?.hasRightEndPanel, currentPlacedModule?.endPanelThickness, adjustedFreeHeight, topFrameHeightMm, visualBaseFrameHeightMm, currentPlacedModule?.hasTopFrame, currentPlacedModule?.hasBase, currentPlacedModule?.isDualSlot, leftEpAdjacent, rightEpAdjacent]);
 
   // 서라운드 패널 계산 — 맨 좌측 가구에 좌측 서라운드, 맨 우측 가구에 우측 서라운드 귀속
   const surroundPanels = React.useMemo(() => {
