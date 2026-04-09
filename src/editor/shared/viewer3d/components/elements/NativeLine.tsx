@@ -1,5 +1,9 @@
 import React, { useRef, useEffect, useMemo } from 'react';
 import * as THREE from 'three';
+import { useThree } from '@react-three/fiber';
+import { Line2 } from 'three/examples/jsm/lines/Line2.js';
+import { LineGeometry } from 'three/examples/jsm/lines/LineGeometry.js';
+import { LineMaterial } from 'three/examples/jsm/lines/LineMaterial.js';
 
 interface NativeLineProps {
   points: THREE.Vector3[] | [number, number, number][] | number[][];
@@ -17,8 +21,9 @@ interface NativeLineProps {
 }
 
 /**
- * Native Three.js line component to replace @react-three/drei Line
- * Uses useRef + useEffect for reliable geometry updates when points change.
+ * Fat line component using Line2/LineMaterial for consistent rendering across platforms.
+ * Unlike basic GL_LINES, Line2 renders as screen-space quads with proper lineWidth
+ * support regardless of DPR (Device Pixel Ratio).
  */
 export const NativeLine: React.FC<NativeLineProps> = ({
   points,
@@ -34,10 +39,11 @@ export const NativeLine: React.FC<NativeLineProps> = ({
   depthWrite = true,
   name
 }) => {
-  const geoRef = useRef<THREE.BufferGeometry>(null!);
+  const lineRef = useRef<Line2>(null!);
+  const { size } = useThree();
 
-  // points를 값 기반으로 비교하기 위해 직렬화
-  const pointsKey = useMemo(() => {
+  // points를 flat array로 변환
+  const flatPositions = useMemo(() => {
     const flat: number[] = [];
     for (const point of points) {
       if (point instanceof THREE.Vector3) {
@@ -46,123 +52,100 @@ export const NativeLine: React.FC<NativeLineProps> = ({
         flat.push(point[0] || 0, point[1] || 0, point[2] || 0);
       }
     }
-    return flat.join(',');
+    return flat;
   }, [points]);
 
-  // points 변경 시 geometry의 position attribute를 인-플레이스 업데이트
-  useEffect(() => {
-    const geo = geoRef.current;
-    if (!geo) return;
+  const positionsKey = flatPositions.join(',');
 
-    const positions = new Float32Array(points.length * 3);
+  // LineGeometry + LineMaterial 생성
+  const { geometry, material } = useMemo(() => {
+    const geo = new LineGeometry();
+    geo.setPositions(flatPositions);
 
-    points.forEach((point, index) => {
-      if (point instanceof THREE.Vector3) {
-        positions[index * 3] = point.x;
-        positions[index * 3 + 1] = point.y;
-        positions[index * 3 + 2] = point.z;
-      } else if (Array.isArray(point)) {
-        positions[index * 3] = point[0] || 0;
-        positions[index * 3 + 1] = point[1] || 0;
-        positions[index * 3 + 2] = point[2] || 0;
-      }
+    const colorObj = new THREE.Color(color);
+
+    const mat = new LineMaterial({
+      color: colorObj.getHex(),
+      linewidth: lineWidth,
+      dashed: dashed,
+      dashSize: dashSize,
+      gapSize: gapSize,
+      opacity: opacity,
+      transparent: transparent || opacity < 1,
+      depthTest: depthTest,
+      depthWrite: depthWrite,
+      resolution: new THREE.Vector2(size.width, size.height),
     });
 
-    const existingAttr = geo.getAttribute('position') as THREE.BufferAttribute | null;
-    if (existingAttr && existingAttr.array.length === positions.length) {
-      (existingAttr.array as Float32Array).set(positions);
-      existingAttr.needsUpdate = true;
-    } else {
-      geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+    return { geometry: geo, material: mat };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // positions 업데이트
+  useEffect(() => {
+    if (geometry) {
+      geometry.setPositions(flatPositions);
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [positionsKey, geometry]);
 
-    // Compute line distances for dashed lines
-    if (dashed && points.length > 1) {
-      const lineDistances = new Float32Array(points.length);
-      lineDistances[0] = 0;
+  // material 속성 업데이트
+  useEffect(() => {
+    if (!material) return;
+    const colorObj = new THREE.Color(color);
+    material.color.set(colorObj);
+    material.linewidth = lineWidth;
+    material.dashed = dashed;
+    material.dashSize = dashSize;
+    material.gapSize = gapSize;
+    material.opacity = opacity;
+    material.transparent = transparent || opacity < 1;
+    material.depthTest = depthTest;
+    material.depthWrite = depthWrite;
+    material.needsUpdate = true;
+  }, [material, color, lineWidth, dashed, dashSize, gapSize, opacity, transparent, depthTest, depthWrite]);
 
-      for (let i = 1; i < points.length; i++) {
-        const prevPoint = points[i - 1];
-        const currPoint = points[i];
-
-        let distance: number;
-        if (prevPoint instanceof THREE.Vector3 && currPoint instanceof THREE.Vector3) {
-          distance = Math.sqrt(
-            Math.pow(currPoint.x - prevPoint.x, 2) +
-            Math.pow(currPoint.y - prevPoint.y, 2) +
-            Math.pow(currPoint.z - prevPoint.z, 2)
-          );
-        } else if (Array.isArray(prevPoint) && Array.isArray(currPoint)) {
-          const px = prevPoint[0] || 0;
-          const py = prevPoint[1] || 0;
-          const pz = prevPoint[2] || 0;
-          const cx = currPoint[0] || 0;
-          const cy = currPoint[1] || 0;
-          const cz = currPoint[2] || 0;
-          distance = Math.sqrt(
-            Math.pow(cx - px, 2) +
-            Math.pow(cy - py, 2) +
-            Math.pow(cz - pz, 2)
-          );
-        } else {
-          distance = 0;
-        }
-
-        lineDistances[i] = lineDistances[i - 1] + distance;
-      }
-
-      const existingDist = geo.getAttribute('lineDistance') as THREE.BufferAttribute | null;
-      if (existingDist && existingDist.array.length === lineDistances.length) {
-        (existingDist.array as Float32Array).set(lineDistances);
-        existingDist.needsUpdate = true;
-      } else {
-        geo.setAttribute('lineDistance', new THREE.BufferAttribute(lineDistances, 1));
-      }
+  // resolution 업데이트 (캔버스 리사이즈 대응)
+  useEffect(() => {
+    if (material) {
+      material.resolution.set(size.width, size.height);
     }
+  }, [material, size.width, size.height]);
 
-    geo.computeBoundingSphere();
-  }, [pointsKey, dashed]); // eslint-disable-line react-hooks/exhaustive-deps
+  // dashed line의 경우 computeLineDistances 호출
+  useEffect(() => {
+    if (lineRef.current && dashed) {
+      lineRef.current.computeLineDistances();
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [positionsKey, dashed]);
+
+  // Line2 인스턴스 (한 번만 생성)
+  const line2 = useMemo(() => {
+    return new Line2(geometry, material);
+  }, [geometry, material]);
+
+  // renderOrder, name 업데이트
+  useEffect(() => {
+    if (line2) {
+      line2.renderOrder = renderOrder;
+      if (name !== undefined) line2.name = name || '';
+    }
+  }, [line2, renderOrder, name]);
 
   // cleanup
   useEffect(() => {
     return () => {
-      if (geoRef.current) {
-        geoRef.current.dispose();
-      }
+      geometry?.dispose();
+      material?.dispose();
     };
-  }, []);
-
-  const material = useMemo(() => {
-    if (dashed) {
-      return (
-        <lineDashedMaterial
-          color={color}
-          dashSize={dashSize}
-          gapSize={gapSize}
-          opacity={opacity}
-          transparent={transparent}
-          depthTest={depthTest}
-          depthWrite={depthWrite}
-        />
-      );
-    } else {
-      return (
-        <lineBasicMaterial
-          color={color}
-          opacity={opacity}
-          transparent={transparent}
-          depthTest={depthTest}
-          depthWrite={depthWrite}
-        />
-      );
-    }
-  }, [color, dashed, dashSize, gapSize, opacity, transparent, depthTest, depthWrite]);
+  }, [geometry, material]);
 
   return (
-    <line renderOrder={renderOrder} name={name}>
-      <bufferGeometry ref={geoRef} />
-      {material}
-    </line>
+    <primitive
+      ref={lineRef}
+      object={line2}
+    />
   );
 };
 
