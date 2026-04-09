@@ -2612,7 +2612,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                   </div>
                 </div>
                 <span style={{ color: 'var(--theme-text-tertiary)', fontSize: '11px', flexShrink: 0 }}>×</span>
-                {/* 높이 */}
+                {/* 높이 — 2단서랍장은 '몸통 높이'로만 조절, H는 읽기전용 */}
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <label style={{ fontSize: '10px', color: 'var(--theme-text-tertiary)', display: 'block', lineHeight: 1 }}>H</label>
                   <div className={styles.inputWithUnit}>
@@ -2620,6 +2620,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                       type="text"
                       inputMode="numeric"
                       value={freeHeightInput}
+                      readOnly={!!(currentPlacedModule && (currentPlacedModule.moduleId.includes('lower-drawer-2tier') || currentPlacedModule.moduleId.includes('dual-lower-drawer-2tier')))}
                       onChange={(e) => setFreeHeightInput(e.target.value)}
                       onBlur={() => {
                         const val = parseInt(freeHeightInput, 10);
@@ -3534,6 +3535,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                     if (!isNaN(val) && val >= 760 && val <= 800 && currentPlacedModule) {
                       updatePlacedModule(currentPlacedModule.id, { cabinetBodyHeight: val });
                       setCabinetBodyHeightInput(val.toString());
+                      setFreeHeightInput(val.toString());
                     } else {
                       // 범위 밖이면 이전 값 복원
                       setCabinetBodyHeightInput((currentPlacedModule?.cabinetBodyHeight ?? 785).toString());
@@ -3546,6 +3548,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                       const cur = parseInt(cabinetBodyHeightInput, 10) || 785;
                       const next = Math.max(760, Math.min(800, cur + (e.key === 'ArrowUp' ? 1 : -1)));
                       setCabinetBodyHeightInput(next.toString());
+                      setFreeHeightInput(next.toString());
                       if (currentPlacedModule) {
                         updatePlacedModule(currentPlacedModule.id, { cabinetBodyHeight: next });
                       }
