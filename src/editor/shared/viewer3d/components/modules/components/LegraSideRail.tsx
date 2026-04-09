@@ -76,9 +76,8 @@ const LegraSideRail: React.FC<LegraSideRailProps> = ({
     const leftBox = getScaledBounds(left, lScale);
     const rightBox = getScaledBounds(right, rScale);
 
-    // 목표 위치
-    const bottomPanelTop = drawerBottomY + drawerBottomThickness / 2;
-    const targetMinY = bottomPanelTop; // 뒷판 하단 = 바닥판 윗면
+    // 목표 위치: 레그라 하단 = 서랍 바닥판 하단 (레그라가 바닥판을 감싸는 구조)
+    const targetMinY = drawerBottomY;
 
     // 왼쪽: 하단을 뒷판 하단에, 좌측면을 캐비넷 측판 안쪽에, Z앞면을 서랍 앞면에
     const lPos = new THREE.Vector3(
