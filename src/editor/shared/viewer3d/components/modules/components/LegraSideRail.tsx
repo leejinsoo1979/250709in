@@ -76,8 +76,10 @@ const LegraSideRail: React.FC<LegraSideRailProps> = ({
     const leftBox = getScaledBounds(left, lScale);
     const rightBox = getScaledBounds(right, rScale);
 
-    // 목표 위치: 레그라 하단 = 서랍 바닥판 하단 (레그라가 바닥판을 감싸는 구조)
-    const targetMinY = drawerBottomY;
+    // GLB 모델 높이가 서랍 높이보다 13.7mm 큼 (레일 마운트 돌출부)
+    // 레그라 상단을 서랍 상단에 맞추려면 13.7mm 아래로 오프셋
+    const RAIL_MOUNT_OVERHANG = 13.7 * 0.01; // 13.7mm → Three.js units
+    const targetMinY = drawerBottomY - RAIL_MOUNT_OVERHANG;
 
     // 왼쪽: 하단을 뒷판 하단에, 좌측면을 캐비넷 측판 안쪽에, Z앞면을 서랍 앞면에
     const lPos = new THREE.Vector3(
