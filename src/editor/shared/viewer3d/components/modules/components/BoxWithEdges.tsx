@@ -498,8 +498,8 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
     if (view2DDirection === 'front') {
       if (isMaida) return 1.0;
       if (isInductionDrawer) return view2DTheme === 'dark' ? 0.7 : 0.5; // 인덕션 서랍: 전대 뒤로 보이므로 진하게
-      if (isDrawerFrame) return view2DTheme === 'dark' ? 0.45 : 0.15;
-      if (isDrawerPanel) return view2DTheme === 'dark' ? 0.45 : 0.15;
+      if (isDrawerFrame) return view2DTheme === 'dark' ? 0.45 : 0.35;
+      if (isDrawerPanel) return view2DTheme === 'dark' ? 0.45 : 0.35;
       // 하부섹션 상판: 옵셋으로 뒤에 있으므로 약간 흐리게
       if (panelName.includes('(하)상판')) return 0.5;
       return 1.0;
@@ -723,11 +723,11 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
 
     const baseLineWidth = isHighlighted ? 4 : (isBackPanel ? 1 : 2);
 
-    // 깊이감 표현: 다크모드만 color 블렌딩, 라이트모드는 원색 그대로 사용
-    // 라이트모드에서 블렌딩하면 흰 배경에 묻혀 안 보이는 문제 방지
-    const blendedColor = (view2DTheme === 'light' || panelDepthOpacity >= 1.0) ? edgeColor : (() => {
+    // 깊이감 표현: 다크모드는 배경색과 블렌딩, 라이트모드는 원색 유지 (배경 블렌딩 시 안 보임)
+    const blendedColor = panelDepthOpacity >= 1.0 ? edgeColor : (() => {
       const base = new THREE.Color(edgeColor);
-      const bg = new THREE.Color('#1a1a2e');
+      const bgColor = view2DTheme === 'light' ? '#ffffff' : '#1a1a2e';
+      const bg = new THREE.Color(bgColor);
       bg.lerp(base, panelDepthOpacity);
       return '#' + bg.getHexString();
     })();
@@ -751,7 +751,7 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
             points={line}
             color={blendedColor}
             lineWidth={baseLineWidth}
-            opacity={view2DTheme === 'light' ? 1.0 : panelDepthOpacity}
+            opacity={panelDepthOpacity}
             transparent={true}
             depthTest={false}
             depthWrite={false}
