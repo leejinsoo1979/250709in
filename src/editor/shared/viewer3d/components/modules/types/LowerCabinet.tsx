@@ -582,9 +582,59 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
         );
       })()}
 
+      {/* 인덕션장 마이다 렌더링 (도어 대신 마이다 2개) */}
+      {hasDoor && (moduleData.id.includes('lower-induction-cabinet') || moduleData.id.includes('dual-lower-induction-cabinet')) && (() => {
+        const mmToThreeUnits = (mm: number) => mm * 0.01;
+        const cabinetHeight = adjustedHeight;
+        const cabinetBottomY = -cabinetHeight / 2;
+        const moduleWidthMm = adjustedWidth || moduleData.dimensions.width;
+        const maidaWidthMm = moduleWidthMm - 3; // 좌우 1.5mm씩 갭
+        const maidaWidth = mmToThreeUnits(maidaWidthMm);
+        const maidaThickness = mmToThreeUnits(28); // 마이다 두께 28mm
+        const maidaZ = baseFurniture.depth / 2 + maidaThickness / 2; // 캐비넷 앞면 바로 앞
+
+        // 1단 마이다: 높이 340mm, 바닥에서 -5mm(캐비넷 바닥판 아래 5mm)부터
+        const maida1HeightMm = 340;
+        const maida1BottomMm = -5; // 바닥판 아래 5mm
+        const maida1CenterY = cabinetBottomY + mmToThreeUnits(maida1BottomMm) + mmToThreeUnits(maida1HeightMm) / 2;
+
+        // 2단 마이다: 높이 427mm, 1단 마이다 상단 + 3mm 갭
+        const maida2HeightMm = 427;
+        const gapMm = 3;
+        const maida2BottomMm = maida1BottomMm + maida1HeightMm + gapMm;
+        const maida2CenterY = cabinetBottomY + mmToThreeUnits(maida2BottomMm) + mmToThreeUnits(maida2HeightMm) / 2;
+
+        return (
+          <group position={[0, cabinetYPosition, 0]}>
+            {/* 1단 서랍 마이다 */}
+            <BoxWithEdges
+              args={[maidaWidth, mmToThreeUnits(maida1HeightMm), maidaThickness]}
+              position={[0, maida1CenterY, maidaZ]}
+              material={lFrameDoorMaterial}
+              renderMode={renderMode}
+              isHighlighted={false}
+              panelName="인덕션 1단서랍(마이다)"
+              panelGrainDirections={panelGrainDirections}
+              furnitureId={placedFurnitureId}
+            />
+            {/* 2단 서랍 마이다 */}
+            <BoxWithEdges
+              args={[maidaWidth, mmToThreeUnits(maida2HeightMm), maidaThickness]}
+              position={[0, maida2CenterY, maidaZ]}
+              material={lFrameDoorMaterial}
+              renderMode={renderMode}
+              isHighlighted={false}
+              panelName="인덕션 2단서랍(마이다)"
+              panelGrainDirections={panelGrainDirections}
+              furnitureId={placedFurnitureId}
+            />
+          </group>
+        );
+      })()}
+
       {/* 도어는 showFurniture와 관계없이 hasDoor가 true이면 항상 렌더링 (도어만 보기 위해) */}
       {/* 단, 서랍장(lower-drawer-*)은 도어가 아닌 서랍이 달리므로 도어 렌더링 차단 */}
-      {hasDoor && spaceInfo && !moduleData.id.includes('lower-drawer-') && !moduleData.id.includes('lower-door-lift-2tier') && !moduleData.id.includes('lower-door-lift-3tier') && !moduleData.id.includes('lower-top-down-2tier') && !moduleData.id.includes('lower-top-down-3tier') && (
+      {hasDoor && spaceInfo && !moduleData.id.includes('lower-drawer-') && !moduleData.id.includes('lower-door-lift-2tier') && !moduleData.id.includes('lower-door-lift-3tier') && !moduleData.id.includes('lower-top-down-2tier') && !moduleData.id.includes('lower-top-down-3tier') && !moduleData.id.includes('lower-induction-cabinet') && !moduleData.id.includes('dual-lower-induction-cabinet') && (
         <DoorModule
           moduleWidth={doorWidth || moduleData.dimensions.width}
           moduleDepth={baseFurniture.actualDepthMm}

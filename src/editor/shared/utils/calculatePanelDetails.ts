@@ -1635,6 +1635,22 @@ export const calculatePanelDetails = (
       thickness: drawerThickness,
       material: 'MDF',
     });
+    // 인덕션장 마이다 2개 (도어 대신)
+    const maidaWidthMm = customWidth - 3; // 좌우 1.5mm씩 갭
+    panels.door.push({
+      name: '인덕션 1단서랍(마이다)',
+      width: maidaWidthMm,
+      height: 340,
+      thickness: basicThickness,
+      material: 'PET',
+    });
+    panels.door.push({
+      name: '인덕션 2단서랍(마이다)',
+      width: maidaWidthMm,
+      height: 427,
+      thickness: basicThickness,
+      material: 'PET',
+    });
   }
 
   // === 프레임 패널 (상부프레임 / 하부프레임) ===
