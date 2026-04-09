@@ -530,8 +530,8 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
         const drawerBackWidth = mmToThreeUnits(drawerBackWidthMm);
         const drawerDepth = mmToThreeUnits(drawerDepthMm);
         const drawerThickness = mmToThreeUnits(drawerThicknessMm);
-        // 서랍 바닥판 Z: 앞판 쪽에 맞춰 배치 (캐비넷 앞면 기준 안쪽으로)
-        const drawerFrontZ = baseFurniture.depth / 2 - mmToThreeUnits(basicThicknessMm);
+        // 서랍 바닥판 Z: 캐비넷 앞면에서 시작하여 뒤로 490mm
+        const drawerFrontZ = baseFurniture.depth / 2;
         const drawerZ = drawerFrontZ - drawerDepth / 2;
         // 서랍 뒷판 Z: 바닥판 뒤쪽 끝에 위치
         const drawerBackZ = drawerFrontZ - drawerDepth + drawerThickness / 2;
