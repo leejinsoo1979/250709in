@@ -2891,26 +2891,26 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
       </group>
       )}
 
-      {/* 서라운드 모드 좌측 프레임 치수선 - 이격치수(columnDimensionY)와 겹치지 않도록 topDimensionY 레벨 */}
+      {/* 서라운드 모드 좌측 프레임 치수선 (2단: columnDimensionY) */}
       {showDimensions && !isStep2 && spaceInfo.surroundType === 'surround' && !(spaceInfo.curtainBox?.enabled && spaceInfo.curtainBox?.position === 'left') && (
       <group>
             {/* 치수선 */}
             <Line
-              points={[[leftOffset, topDimensionY, 0.002], [leftOffset + mmToThreeUnits(frameSize.left), topDimensionY, 0.002]]}
+              points={[[leftOffset, columnDimensionY, 0.002], [leftOffset + mmToThreeUnits(frameSize.left), columnDimensionY, 0.002]]}
               color={dimensionColor}
               lineWidth={0.3}
             />
 
             {/* 좌측 화살표 */}
             <Line
-              points={createArrowHead([leftOffset, topDimensionY, 0.002], [leftOffset + 0.02, topDimensionY, 0.002])}
+              points={createArrowHead([leftOffset, columnDimensionY, 0.002], [leftOffset + 0.02, columnDimensionY, 0.002])}
               color={dimensionColor}
               lineWidth={0.3}
             />
 
             {/* 우측 화살표 */}
             <Line
-              points={createArrowHead([leftOffset + mmToThreeUnits(frameSize.left), topDimensionY, 0.002], [leftOffset + mmToThreeUnits(frameSize.left) - 0.02, topDimensionY, 0.002])}
+              points={createArrowHead([leftOffset + mmToThreeUnits(frameSize.left), columnDimensionY, 0.002], [leftOffset + mmToThreeUnits(frameSize.left) - 0.02, columnDimensionY, 0.002])}
               color={dimensionColor}
               lineWidth={0.3}
             />
@@ -2919,7 +2919,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             <Text
                   renderOrder={1000}
                   depthTest={false}
-              position={[leftOffset + mmToThreeUnits(frameSize.left) / 2, topDimensionY + mmToThreeUnits(30), 0.01]}
+              position={[leftOffset + mmToThreeUnits(frameSize.left) / 2, columnDimensionY + mmToThreeUnits(30), 0.01]}
               fontSize={baseFontSize}
               color={textColor}
               anchorX="center"
@@ -2932,7 +2932,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
 
             {/* 연장선 */}
             <NativeLine name="dimension_line"
-              points={[[leftOffset, spaceHeight, 0.001], [leftOffset, topDimensionY + mmToThreeUnits(EXTENSION_LENGTH), 0.001]]}
+              points={[[leftOffset, spaceHeight, 0.001], [leftOffset, topDimensionY + mmToThreeUnits(40), 0.001]]}
               color={dimensionColor}
               lineWidth={0.8}
               renderOrder={1000000}
@@ -2941,7 +2941,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               transparent={true}
             />
             <NativeLine name="dimension_line"
-              points={[[leftOffset + mmToThreeUnits(frameSize.left), spaceHeight, 0.001], [leftOffset + mmToThreeUnits(frameSize.left), topDimensionY + mmToThreeUnits(EXTENSION_LENGTH), 0.001]]}
+              points={[[leftOffset + mmToThreeUnits(frameSize.left), spaceHeight, 0.001], [leftOffset + mmToThreeUnits(frameSize.left), columnDimensionY + mmToThreeUnits(EXTENSION_LENGTH), 0.001]]}
               color={dimensionColor}
               lineWidth={0.8}
               renderOrder={1000000}
@@ -3168,26 +3168,26 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
       </group>
       )}
 
-      {/* 서라운드 모드 우측 프레임 치수선 - 커튼박스 우측 시 숨김 */}
+      {/* 서라운드 모드 우측 프레임 치수선 (2단: columnDimensionY) - 커튼박스 우측 시 숨김 */}
       {showDimensions && !isStep2 && spaceInfo.surroundType === 'surround' && !(spaceInfo.curtainBox?.enabled && spaceInfo.curtainBox?.position === 'right') && (
       <group>
             {/* 치수선 */}
             <Line
-              points={[[mmToThreeUnits(spaceInfo.width) + leftOffset - mmToThreeUnits(frameSize.right), topDimensionY, 0.002], [mmToThreeUnits(spaceInfo.width) + leftOffset, topDimensionY, 0.002]]}
+              points={[[mmToThreeUnits(spaceInfo.width) + leftOffset - mmToThreeUnits(frameSize.right), columnDimensionY, 0.002], [mmToThreeUnits(spaceInfo.width) + leftOffset, columnDimensionY, 0.002]]}
               color={dimensionColor}
               lineWidth={0.3}
             />
 
             {/* 좌측 화살표 */}
             <Line
-              points={createArrowHead([mmToThreeUnits(spaceInfo.width) + leftOffset - mmToThreeUnits(frameSize.right), topDimensionY, 0.002], [mmToThreeUnits(spaceInfo.width) + leftOffset - mmToThreeUnits(frameSize.right) + 0.02, topDimensionY, 0.002])}
+              points={createArrowHead([mmToThreeUnits(spaceInfo.width) + leftOffset - mmToThreeUnits(frameSize.right), columnDimensionY, 0.002], [mmToThreeUnits(spaceInfo.width) + leftOffset - mmToThreeUnits(frameSize.right) + 0.02, columnDimensionY, 0.002])}
               color={dimensionColor}
               lineWidth={0.3}
             />
 
             {/* 우측 화살표 */}
             <Line
-              points={createArrowHead([mmToThreeUnits(spaceInfo.width) + leftOffset, topDimensionY, 0.002], [mmToThreeUnits(spaceInfo.width) + leftOffset - 0.02, topDimensionY, 0.002])}
+              points={createArrowHead([mmToThreeUnits(spaceInfo.width) + leftOffset, columnDimensionY, 0.002], [mmToThreeUnits(spaceInfo.width) + leftOffset - 0.02, columnDimensionY, 0.002])}
               color={dimensionColor}
               lineWidth={0.3}
             />
@@ -3196,7 +3196,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             <Text
                   renderOrder={1000}
                   depthTest={false}
-              position={[mmToThreeUnits(spaceInfo.width) + leftOffset - mmToThreeUnits(frameSize.right) / 2, topDimensionY + mmToThreeUnits(30), 0.01]}
+              position={[mmToThreeUnits(spaceInfo.width) + leftOffset - mmToThreeUnits(frameSize.right) / 2, columnDimensionY + mmToThreeUnits(30), 0.01]}
               fontSize={baseFontSize}
               color={textColor}
               anchorX="center"
@@ -3209,7 +3209,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
 
             {/* 연장선 */}
             <NativeLine name="dimension_line"
-              points={[[mmToThreeUnits(spaceInfo.width) + leftOffset - mmToThreeUnits(frameSize.right), spaceHeight, 0.001], [mmToThreeUnits(spaceInfo.width) + leftOffset - mmToThreeUnits(frameSize.right), topDimensionY + mmToThreeUnits(EXTENSION_LENGTH), 0.001]]}
+              points={[[mmToThreeUnits(spaceInfo.width) + leftOffset - mmToThreeUnits(frameSize.right), spaceHeight, 0.001], [mmToThreeUnits(spaceInfo.width) + leftOffset - mmToThreeUnits(frameSize.right), columnDimensionY + mmToThreeUnits(EXTENSION_LENGTH), 0.001]]}
               color={dimensionColor}
               lineWidth={0.8}
               renderOrder={1000000}
@@ -3218,7 +3218,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               transparent={true}
             />
             <NativeLine name="dimension_line"
-              points={[[mmToThreeUnits(spaceInfo.width) + leftOffset, spaceHeight, 0.001], [mmToThreeUnits(spaceInfo.width) + leftOffset, topDimensionY + mmToThreeUnits(EXTENSION_LENGTH), 0.001]]}
+              points={[[mmToThreeUnits(spaceInfo.width) + leftOffset, spaceHeight, 0.001], [mmToThreeUnits(spaceInfo.width) + leftOffset, topDimensionY + mmToThreeUnits(40), 0.001]]}
               color={dimensionColor}
               lineWidth={0.8}
               renderOrder={1000000}
