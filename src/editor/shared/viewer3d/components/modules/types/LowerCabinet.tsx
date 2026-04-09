@@ -687,42 +687,24 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
         const rebateWidth = mmToThreeUnits(38);
         const rebateHeight = mmToThreeUnits(7.5);
 
-        // 모듈별 서랍 높이 배열 (하단부터)
+        // 모듈별 서랍 높이 + 하판 윗면 기준 이격거리 (하단부터)
         const isTouch2A = moduleData.id.includes('lower-door-lift-touch-2tier-a');
         const isTouch2B = moduleData.id.includes('lower-door-lift-touch-2tier-b');
         const isTouch3 = moduleData.id.includes('lower-door-lift-touch-3tier');
-        const drawerHeights = isTouch2A ? [228, 228]
-          : isTouch2B ? [228, 164]
-          : isTouch3 ? [228, 117, 117]
-          : [228, 228];
+        // [서랍높이mm, 하판윗면에서 바닥판까지 이격mm]
+        const drawerSpecs: [number, number][] = isTouch2A ? [[228, 28], [228, 406]]
+          : isTouch2B ? [[228, 28], [164, 406]]
+          : isTouch3 ? [[228, 28], [117, 306], [117, 473]]
+          : [[228, 28], [228, 406]];
 
-        // 마이다 영역: 하단 -5mm ~ 상단 +30mm (total = 785+30+5 = 820mm)
-        const topExtMm = 30;
-        const bottomExtMm = 5;
-        const totalFrontMm = (moduleData.dimensions.height || 785) + topExtMm + bottomExtMm;
-        const gapMm = 3;
-        const drawerCount = drawerHeights.length;
-        const totalGaps = (drawerCount - 1) * gapMm;
-        const totalMaidaMm = totalFrontMm - totalGaps;
-        // 마이다 높이 비례배분
-        const totalDrawerH = drawerHeights.reduce((a, b) => a + b, 0);
-        const maidaHeights = drawerHeights.map(h => (h / totalDrawerH) * totalMaidaMm);
-
-        // 서랍 박스 위치 계산 (마이다 기준으로 중앙 배치)
-        let currentBottomMm = -bottomExtMm; // 마이다 시작점 (캐비넷 하단 기준)
-        const drawers = drawerHeights.map((dh, idx) => {
-          const maidaH = maidaHeights[idx];
-          // 서랍 박스는 마이다 영역 내부에 중앙 배치
-          const maidaCenterFromBottom = currentBottomMm + maidaH / 2;
-          const drawerBottomFromCabinetBottom = maidaCenterFromBottom - dh / 2 + drawerThicknessMm;
-          currentBottomMm += maidaH + gapMm;
-          return {
-            height: dh,
-            backH: dh - drawerThicknessMm,
-            bottomY: cabinetBottomY + mmToThreeUnits(drawerBottomFromCabinetBottom),
-            tier: idx + 1
-          };
-        });
+        // 서랍 위치 계산: 하판 윗면 = cabinetBottomY + basicThickness
+        const bottomPanelTopY = cabinetBottomY + mmToThreeUnits(basicThicknessMm);
+        const drawers = drawerSpecs.map(([dh, offsetFromBottomPanel], idx) => ({
+          height: dh,
+          backH: dh - drawerThicknessMm,
+          bottomY: bottomPanelTopY + mmToThreeUnits(offsetFromBottomPanel),
+          tier: idx + 1
+        }));
 
         return (
           <group position={[0, cabinetYPosition, 0]}>
