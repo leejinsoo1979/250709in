@@ -583,6 +583,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
   const [hasGapBackPanel, setHasGapBackPanel] = useState<boolean>(false); // 상하부장 사이 갭 백패널 상태
   const [backPanelThicknessValue, setBackPanelThicknessValue] = useState<number>(9); // 백패널 두께 (기본값: 9mm)
   const [columnPlacementMode, setColumnPlacementMode] = useState<'beside' | 'front'>('beside'); // 기둥 C 배치 모드
+  const [cabinetBodyHeightInput, setCabinetBodyHeightInput] = useState<string>('785'); // 하부장 몸통 높이 입력
 
   // 자유배치 모드 치수 상태
   const [freeWidthInput, setFreeWidthInput] = useState<string>('');
@@ -883,6 +884,9 @@ const PlacedModulePropertiesPanel: React.FC = () => {
       const placementModeVal = currentPlacedModule.columnPlacementMode || 'beside';
       setColumnPlacementMode(placementModeVal);
       setOriginalColumnPlacementMode(placementModeVal);
+
+      // 하부장 몸통 높이 초기화 (2단서랍장만)
+      setCabinetBodyHeightInput((currentPlacedModule.cabinetBodyHeight ?? 785).toString());
 
       // 치수 초기화 (슬롯/자유배치 공통)
       // NOTE: roundedWidth를 사용 (customWidth state는 이 useEffect 내에서 아직 이전 값)
@@ -3501,6 +3505,58 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                 {columnPlacementMode === 'beside'
                   ? '가구가 기둥 옆에 배치됩니다 (기본)'
                   : '가구가 기둥 앞에 배치되어 기둥을 가립니다'}
+              </div>
+            </div>
+          )}
+
+          {/* 하부장 몸통 높이 설정 (2단서랍장 반통/한통만) */}
+          {!showDetails && currentPlacedModule && (
+            currentPlacedModule.moduleId.includes('lower-drawer-2tier') ||
+            currentPlacedModule.moduleId.includes('dual-lower-drawer-2tier')
+          ) && (
+            <div className={styles.propertySection}>
+              <h5 className={styles.sectionTitle}>몸통 높이</h5>
+              <div className={styles.inputWithUnit}>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  value={cabinetBodyHeightInput}
+                  onChange={(e) => setCabinetBodyHeightInput(e.target.value)}
+                  onBlur={() => {
+                    const val = parseInt(cabinetBodyHeightInput, 10);
+                    if (!isNaN(val) && val >= 760 && val <= 800 && currentPlacedModule) {
+                      updatePlacedModule(currentPlacedModule.id, { cabinetBodyHeight: val });
+                      setCabinetBodyHeightInput(val.toString());
+                    } else {
+                      // 범위 밖이면 이전 값 복원
+                      setCabinetBodyHeightInput((currentPlacedModule?.cabinetBodyHeight ?? 785).toString());
+                    }
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') { (e.target as HTMLInputElement).blur(); }
+                    else if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                      e.preventDefault();
+                      const cur = parseInt(cabinetBodyHeightInput, 10) || 785;
+                      const next = Math.max(760, Math.min(800, cur + (e.key === 'ArrowUp' ? 1 : -1)));
+                      setCabinetBodyHeightInput(next.toString());
+                      if (currentPlacedModule) {
+                        updatePlacedModule(currentPlacedModule.id, { cabinetBodyHeight: next });
+                      }
+                    }
+                  }}
+                  className={styles.depthInput}
+                  placeholder="785"
+                  style={{
+                    color: '#000000',
+                    backgroundColor: '#ffffff',
+                    WebkitTextFillColor: '#000000',
+                    opacity: 1
+                  }}
+                />
+                <span className={styles.unit}>mm</span>
+              </div>
+              <div className={styles.depthRange}>
+                범위: 760mm ~ 800mm (기본 785mm)
               </div>
             </div>
           )}
