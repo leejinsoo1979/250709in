@@ -75,16 +75,16 @@ const LegraSideRail: React.FC<LegraSideRailProps> = ({
 
     // drawerHeightMm 제공 시에만 Y 스케일 축소 (터치 모듈 등)
     // 기존 도어올림은 drawerHeightMm 미제공 → 원본 크기 유지
+    // 서랍 높이가 200mm 미만(117, 164 등)일 때만 Y 스케일 축소
+    // 228mm 서랍은 원본 GLB 모델 크기 유지
     let yScale = GLTF_SCALE;
-    if (drawerHeightMm != null) {
+    if (drawerHeightMm != null && drawerHeightMm < 200) {
       const baseScale = new THREE.Vector3(GLTF_SCALE, GLTF_SCALE, GLTF_SCALE);
       const baseBox = getScaledBounds(left, baseScale);
       const modelHeight = baseBox.max.y - baseBox.min.y;
       const targetMaxHeight = drawerBottomThickness + backPanelHeight;
-      console.log(`[LegraSideRail] drawerHeightMm=${drawerHeightMm}, modelH=${modelHeight.toFixed(3)}, targetH=${targetMaxHeight.toFixed(3)}, needScale=${targetMaxHeight < modelHeight}`);
       if (targetMaxHeight < modelHeight) {
         yScale = (targetMaxHeight / modelHeight) * GLTF_SCALE;
-        console.log(`[LegraSideRail] yScale=${yScale.toFixed(3)} (ratio=${(targetMaxHeight/modelHeight).toFixed(3)})`);
       }
     }
 
