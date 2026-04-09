@@ -590,7 +590,7 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
         const moduleWidthMm = adjustedWidth || moduleData.dimensions.width;
         const maidaWidthMm = moduleWidthMm - 3; // 좌우 1.5mm씩 갭
         const maidaWidth = mmToThreeUnits(maidaWidthMm);
-        const maidaThickness = mmToThreeUnits(28); // 마이다 두께 28mm
+        const maidaThickness = baseFurniture.basicThickness; // 마이다 두께 = 도어 두께 (18mm)
         const maidaZ = baseFurniture.depth / 2 + maidaThickness / 2; // 캐비넷 앞면 바로 앞
 
         // 1단 마이다: 높이 340mm, 바닥에서 -5mm(캐비넷 바닥판 아래 5mm)부터
