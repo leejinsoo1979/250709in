@@ -81,8 +81,10 @@ const LegraSideRail: React.FC<LegraSideRailProps> = ({
       const baseBox = getScaledBounds(left, baseScale);
       const modelHeight = baseBox.max.y - baseBox.min.y;
       const targetMaxHeight = drawerBottomThickness + backPanelHeight;
+      console.log(`[LegraSideRail] drawerHeightMm=${drawerHeightMm}, modelH=${modelHeight.toFixed(3)}, targetH=${targetMaxHeight.toFixed(3)}, needScale=${targetMaxHeight < modelHeight}`);
       if (targetMaxHeight < modelHeight) {
         yScale = (targetMaxHeight / modelHeight) * GLTF_SCALE;
+        console.log(`[LegraSideRail] yScale=${yScale.toFixed(3)} (ratio=${(targetMaxHeight/modelHeight).toFixed(3)})`);
       }
     }
 
