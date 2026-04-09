@@ -106,8 +106,7 @@ const DimensionText: React.FC<DimensionTextProps> = ({
   const baseFontSize = viewMode === '3D' ? 0.55 : 0.32;
   const fontSize = baseFontSize * sizeMultiplier;
 
-  // 3D 외곽선 (배경과 구분)
-  const outlineW = viewMode === '3D' ? 0.06 : 0;
+  const outlineW = 0;
   const outlineC = '#ffffff';
   
   // 텍스트 내용 (소수점 1자리까지 표시, .0이면 정수로)
