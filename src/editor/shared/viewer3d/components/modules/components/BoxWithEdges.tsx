@@ -10,6 +10,7 @@ import { getDefaultGrainDirection, resolvePanelGrainDirection } from '@/editor/s
 import { useTexture } from '@react-three/drei';
 import { useExcludedPanelsStore } from '../../../context/ExcludedPanelsContext';
 import { useFurnitureGhostContext } from '../../../context/FurnitureGhostContext';
+import { NativeLine } from '../../elements/NativeLine';
 
 interface BoxWithEdgesProps {
   args: [number, number, number];
@@ -744,44 +745,30 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
     return (
       <>
         {lines.map((line, i) => (
-          <line key={`${i}-${args[0]}-${args[1]}-${args[2]}`} name={`${edgeName}-${i}`}>
-            <bufferGeometry>
-              <bufferAttribute
-                attach="attributes-position"
-                count={2}
-                array={new Float32Array([...line[0], ...line[1]])}
-                itemSize={3}
-              />
-            </bufferGeometry>
-            <lineBasicMaterial
-              color={blendedColor}
-              transparent={true}
-              opacity={view2DTheme === 'light' ? 1.0 : panelDepthOpacity}
-              depthTest={false}
-              depthWrite={false}
-              linewidth={baseLineWidth}
-            />
-          </line>
+          <NativeLine
+            key={`${i}-${args[0]}-${args[1]}-${args[2]}`}
+            name={`${edgeName}-${i}`}
+            points={line}
+            color={blendedColor}
+            lineWidth={baseLineWidth}
+            opacity={view2DTheme === 'light' ? 1.0 : panelDepthOpacity}
+            transparent={true}
+            depthTest={false}
+            depthWrite={false}
+          />
         ))}
         {crossLines.map((line, i) => (
-          <line key={`cross-${i}-${args[0]}-${args[1]}-${args[2]}`} name={`${edgeName}-cross-${i}`}>
-            <bufferGeometry>
-              <bufferAttribute
-                attach="attributes-position"
-                count={2}
-                array={new Float32Array([...line[0], ...line[1]])}
-                itemSize={3}
-              />
-            </bufferGeometry>
-            <lineBasicMaterial
-              color={edgeColor}
-              transparent={true}
-              opacity={1.0}
-              depthTest={false}
-              depthWrite={false}
-              linewidth={1}
-            />
-          </line>
+          <NativeLine
+            key={`cross-${i}-${args[0]}-${args[1]}-${args[2]}`}
+            name={`${edgeName}-cross-${i}`}
+            points={line}
+            color={edgeColor}
+            lineWidth={1}
+            opacity={1.0}
+            transparent={true}
+            depthTest={false}
+            depthWrite={false}
+          />
         ))}
       </>
     );
