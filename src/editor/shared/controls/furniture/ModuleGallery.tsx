@@ -68,6 +68,13 @@ const FURNITURE_ICONS: Record<string, string> = {
   'dual-lower-door-lift-2tier': '',
   'lower-door-lift-3tier': '',
   'dual-lower-door-lift-3tier': '',
+  // 도어올림 터치 하부장 (텍스트 썸네일)
+  'lower-door-lift-touch-2tier-a': '',
+  'dual-lower-door-lift-touch-2tier-a': '',
+  'lower-door-lift-touch-2tier-b': '',
+  'dual-lower-door-lift-touch-2tier-b': '',
+  'lower-door-lift-touch-3tier': '',
+  'dual-lower-door-lift-touch-3tier': '',
   // 상판내림 하부장 (텍스트 썸네일)
   'lower-top-down-half': '',
   'dual-lower-top-down-half': '',

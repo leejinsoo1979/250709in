@@ -1658,6 +1658,250 @@ const createLowerDoorLift3Tier = (columnWidth: number): ModuleData => {
 };
 
 // ============================================================================
+// 도어올림 터치 하부장 모듈 (레그라박스 서랍)
+// ============================================================================
+
+/**
+ * 도어올림 터치 2단A 반통 - 조절발 65mm + 캐비넷 W가변xD650xH785
+ * 레그라박스 서랍 2단 (228+228). 따내기 없음. 상판 있음.
+ * 마이다: 상단 +30mm, 하단 -5mm, 간격 3mm.
+ */
+const createLowerDoorLiftTouch2TierA = (columnWidth: number): ModuleData => {
+  const widthForId = Math.round(columnWidth * 100) / 100;
+  const cabinetHeight = 785;
+
+  const base = createFurnitureBase(
+    `lower-door-lift-touch-2tier-a-${widthForId}`,
+    `도어올림터치2단A 반통 ${widthForId}mm`,
+    columnWidth,
+    cabinetHeight,
+    650,
+    '#e8f5e9',
+    `도어올림터치2단A 반통 W${widthForId}xH785xD650 (조절발 65mm)`,
+    650,
+    'lower'
+  );
+
+  return {
+    ...base,
+    isDynamic: true,
+    defaultDepth: 650,
+    thumbnail: '',
+    modelConfig: {
+      ...base.modelConfig,
+      basicThickness: FURNITURE_SPECS.BASIC_THICKNESS,
+      hasOpenFront: false,
+      sections: [
+        {
+          type: 'shelf',
+          heightType: 'percentage',
+          height: 100,
+          count: 0
+        }
+      ]
+    }
+  } as ModuleData;
+};
+
+const createDualLowerDoorLiftTouch2TierA = (dualWidth: number, slotWidths?: number[]): ModuleData => {
+  const widthForId = Math.round(dualWidth * 100) / 100;
+  const cabinetHeight = 785;
+
+  const base = createFurnitureBase(
+    `dual-lower-door-lift-touch-2tier-a-${widthForId}`,
+    `도어올림터치2단A 한통 ${widthForId}mm`,
+    dualWidth,
+    cabinetHeight,
+    650,
+    '#e8f5e9',
+    `도어올림터치2단A 한통 W${widthForId}xH785xD650 (조절발 65mm)`,
+    650,
+    'lower'
+  );
+
+  return {
+    ...base,
+    isDynamic: true,
+    defaultDepth: 650,
+    slotWidths,
+    thumbnail: '',
+    modelConfig: {
+      ...base.modelConfig,
+      basicThickness: FURNITURE_SPECS.BASIC_THICKNESS,
+      hasOpenFront: false,
+      sections: [
+        {
+          type: 'shelf',
+          heightType: 'percentage',
+          height: 100,
+          count: 0
+        }
+      ]
+    }
+  } as ModuleData;
+};
+
+/**
+ * 도어올림 터치 2단B 반통 - 조절발 65mm + 캐비넷 W가변xD650xH785
+ * 레그라박스 서랍 2단 (하단228+상단164). 따내기 없음. 상판 있음.
+ * 마이다: 상단 +30mm, 하단 -5mm, 간격 3mm.
+ */
+const createLowerDoorLiftTouch2TierB = (columnWidth: number): ModuleData => {
+  const widthForId = Math.round(columnWidth * 100) / 100;
+  const cabinetHeight = 785;
+
+  const base = createFurnitureBase(
+    `lower-door-lift-touch-2tier-b-${widthForId}`,
+    `도어올림터치2단B 반통 ${widthForId}mm`,
+    columnWidth,
+    cabinetHeight,
+    650,
+    '#e8f5e9',
+    `도어올림터치2단B 반통 W${widthForId}xH785xD650 (조절발 65mm)`,
+    650,
+    'lower'
+  );
+
+  return {
+    ...base,
+    isDynamic: true,
+    defaultDepth: 650,
+    thumbnail: '',
+    modelConfig: {
+      ...base.modelConfig,
+      basicThickness: FURNITURE_SPECS.BASIC_THICKNESS,
+      hasOpenFront: false,
+      sections: [
+        {
+          type: 'shelf',
+          heightType: 'percentage',
+          height: 100,
+          count: 0
+        }
+      ]
+    }
+  } as ModuleData;
+};
+
+const createDualLowerDoorLiftTouch2TierB = (dualWidth: number, slotWidths?: number[]): ModuleData => {
+  const widthForId = Math.round(dualWidth * 100) / 100;
+  const cabinetHeight = 785;
+
+  const base = createFurnitureBase(
+    `dual-lower-door-lift-touch-2tier-b-${widthForId}`,
+    `도어올림터치2단B 한통 ${widthForId}mm`,
+    dualWidth,
+    cabinetHeight,
+    650,
+    '#e8f5e9',
+    `도어올림터치2단B 한통 W${widthForId}xH785xD650 (조절발 65mm)`,
+    650,
+    'lower'
+  );
+
+  return {
+    ...base,
+    isDynamic: true,
+    defaultDepth: 650,
+    slotWidths,
+    thumbnail: '',
+    modelConfig: {
+      ...base.modelConfig,
+      basicThickness: FURNITURE_SPECS.BASIC_THICKNESS,
+      hasOpenFront: false,
+      sections: [
+        {
+          type: 'shelf',
+          heightType: 'percentage',
+          height: 100,
+          count: 0
+        }
+      ]
+    }
+  } as ModuleData;
+};
+
+/**
+ * 도어올림 터치 3단 반통 - 조절발 65mm + 캐비넷 W가변xD650xH785
+ * 레그라박스 서랍 3단 (하단228+중단117+상단117). 따내기 없음. 상판 있음.
+ * 마이다: 상단 +30mm, 하단 -5mm, 간격 3mm.
+ */
+const createLowerDoorLiftTouch3Tier = (columnWidth: number): ModuleData => {
+  const widthForId = Math.round(columnWidth * 100) / 100;
+  const cabinetHeight = 785;
+
+  const base = createFurnitureBase(
+    `lower-door-lift-touch-3tier-${widthForId}`,
+    `도어올림터치3단 반통 ${widthForId}mm`,
+    columnWidth,
+    cabinetHeight,
+    650,
+    '#e8f5e9',
+    `도어올림터치3단 반통 W${widthForId}xH785xD650 (조절발 65mm)`,
+    650,
+    'lower'
+  );
+
+  return {
+    ...base,
+    isDynamic: true,
+    defaultDepth: 650,
+    thumbnail: '',
+    modelConfig: {
+      ...base.modelConfig,
+      basicThickness: FURNITURE_SPECS.BASIC_THICKNESS,
+      hasOpenFront: false,
+      sections: [
+        {
+          type: 'shelf',
+          heightType: 'percentage',
+          height: 100,
+          count: 0
+        }
+      ]
+    }
+  } as ModuleData;
+};
+
+const createDualLowerDoorLiftTouch3Tier = (dualWidth: number, slotWidths?: number[]): ModuleData => {
+  const widthForId = Math.round(dualWidth * 100) / 100;
+  const cabinetHeight = 785;
+
+  const base = createFurnitureBase(
+    `dual-lower-door-lift-touch-3tier-${widthForId}`,
+    `도어올림터치3단 한통 ${widthForId}mm`,
+    dualWidth,
+    cabinetHeight,
+    650,
+    '#e8f5e9',
+    `도어올림터치3단 한통 W${widthForId}xH785xD650 (조절발 65mm)`,
+    650,
+    'lower'
+  );
+
+  return {
+    ...base,
+    isDynamic: true,
+    defaultDepth: 650,
+    slotWidths,
+    thumbnail: '',
+    modelConfig: {
+      ...base.modelConfig,
+      basicThickness: FURNITURE_SPECS.BASIC_THICKNESS,
+      hasOpenFront: false,
+      sections: [
+        {
+          type: 'shelf',
+          heightType: 'percentage',
+          height: 100,
+          count: 0
+        }
+      ]
+    }
+  } as ModuleData;
+};
+
+// ============================================================================
 // 상판내림 하부장 모듈
 // ============================================================================
 
@@ -2200,6 +2444,11 @@ export const generateShelvingModules = (
     modules.push(createDualLowerDoorLift2Tier(dualWidth, dualSlotWidths));
     modules.push(createDualLowerDoorLift3Tier(dualWidth, dualSlotWidths));
 
+    // === 듀얼 도어올림 터치 하부장 가구 생성 ===
+    modules.push(createDualLowerDoorLiftTouch2TierA(dualWidth, dualSlotWidths));
+    modules.push(createDualLowerDoorLiftTouch2TierB(dualWidth, dualSlotWidths));
+    modules.push(createDualLowerDoorLiftTouch3Tier(dualWidth, dualSlotWidths));
+
     // === 듀얼 상판내림 하부장 가구 생성 ===
     modules.push(createDualLowerTopDownHalf(dualWidth, dualSlotWidths));
     modules.push(createDualLowerTopDown2Tier(dualWidth, dualSlotWidths));
@@ -2229,6 +2478,11 @@ export const generateShelvingModules = (
   modules.push(createLowerDoorLiftHalf(columnWidth));
   modules.push(createLowerDoorLift2Tier(columnWidth));
   modules.push(createLowerDoorLift3Tier(columnWidth));
+
+  // === 도어올림 터치 하부장 가구 생성 ===
+  modules.push(createLowerDoorLiftTouch2TierA(columnWidth));
+  modules.push(createLowerDoorLiftTouch2TierB(columnWidth));
+  modules.push(createLowerDoorLiftTouch3Tier(columnWidth));
 
   // === 상판내림 하부장 가구 생성 ===
   modules.push(createLowerTopDownHalf(columnWidth));

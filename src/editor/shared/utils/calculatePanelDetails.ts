@@ -1413,7 +1413,7 @@ export const calculatePanelDetails = (
 
   // === 하부장 외부서랍 패널 (ExternalDrawerRenderer 기준) ===
   const extDrawerPanels: any[] = [];
-  if (moduleData.id.includes('lower-drawer-') || moduleData.id.includes('lower-door-lift-2tier') || moduleData.id.includes('lower-door-lift-3tier') || (moduleData.id.includes('lower-top-down-') && !moduleData.id.includes('lower-top-down-half'))) {
+  if (!moduleData.id.includes('lower-door-lift-touch-') && (moduleData.id.includes('lower-drawer-') || moduleData.id.includes('lower-door-lift-2tier') || moduleData.id.includes('lower-door-lift-3tier') || (moduleData.id.includes('lower-top-down-') && !moduleData.id.includes('lower-top-down-half')))) {
     const is3TierExt = moduleData.id.includes('lower-drawer-3tier') || moduleData.id.includes('lower-door-lift-3tier') || moduleData.id.includes('lower-top-down-3tier');
     const extDrawerCount = is3TierExt ? 3 : 2;
     // ExternalDrawerRenderer 기준 치수
@@ -1519,6 +1519,44 @@ export const calculatePanelDetails = (
     }
   }
 
+  // === 도어올림 터치 레그라박스 서랍 패널 (바닥판+뒷판만, 측판 없음) + 마이다 ===
+  if (moduleData.id.includes('lower-door-lift-touch-')) {
+    const isTouch2A = moduleData.id.includes('lower-door-lift-touch-2tier-a');
+    const isTouch2B = moduleData.id.includes('lower-door-lift-touch-2tier-b');
+    const isTouch3 = moduleData.id.includes('lower-door-lift-touch-3tier');
+    const drawerHeights = isTouch2A ? [228, 228]
+      : isTouch2B ? [228, 164]
+      : isTouch3 ? [228, 117, 117]
+      : [228, 228];
+    const drawerThicknessMm = 15;
+    const bottomSideGapMm = 17;
+    const backSideGapMm = 18.5;
+    const drawerBottomWidthMm = innerWidth - bottomSideGapMm * 2;
+    const drawerBackWidthMm = innerWidth - backSideGapMm * 2;
+    const drawerDepthMm = 490;
+
+    // 마이다 높이 비례배분
+    const topExtMm = 30;
+    const bottomExtMm = 5;
+    const totalFrontMm = height + topExtMm + bottomExtMm;
+    const gapMm = 3;
+    const totalGaps = (drawerHeights.length - 1) * gapMm;
+    const totalMaidaMm = totalFrontMm - totalGaps;
+    const totalDrawerH = drawerHeights.reduce((a: number, b: number) => a + b, 0);
+
+    drawerHeights.forEach((dh, di) => {
+      const drawerNum = di + 1;
+      const backH = dh - drawerThicknessMm;
+      const maidaH = Math.round((dh / totalDrawerH) * totalMaidaMm);
+
+      extDrawerPanels.push(
+        { name: `터치서랍${drawerNum} 바닥판`, width: Math.round(drawerBottomWidthMm), depth: drawerDepthMm, thickness: drawerThicknessMm, material: 'MDF' },
+        { name: `터치서랍${drawerNum} 뒷판`, width: Math.round(drawerBackWidthMm), height: Math.round(backH), thickness: drawerThicknessMm, material: 'MDF' },
+        { name: `터치서랍${drawerNum}(마이다)`, width: customWidth - 3, height: maidaH, thickness: basicThickness, material: 'PET' },
+      );
+    });
+  }
+
   // 하부장: 외부서랍 + 도어를 "서랍 및 도어"로 합산 출력
   if (isLowerCabinetModule && (extDrawerPanels.length > 0 || (panels.door.length > 0 && hasDoor))) {
     result.push({ name: '=== 서랍 및 도어 ===' });
@@ -1532,7 +1570,7 @@ export const calculatePanelDetails = (
   }
 
   // === L자 PET 프레임 (하부장 따내기 마감) ===
-  if (moduleData.id.includes('lower-drawer-') || moduleData.id.includes('lower-door-lift-2tier') || moduleData.id.includes('lower-door-lift-3tier') || moduleData.id.includes('lower-top-down-') || moduleData.id.includes('lower-half-cabinet') || moduleData.id.includes('dual-lower-half-cabinet') || moduleData.id.includes('lower-sink-cabinet') || moduleData.id.includes('dual-lower-sink-cabinet') || moduleData.id.includes('lower-induction-cabinet') || moduleData.id.includes('dual-lower-induction-cabinet')) {
+  if (!moduleData.id.includes('lower-door-lift-touch-') && (moduleData.id.includes('lower-drawer-') || moduleData.id.includes('lower-door-lift-2tier') || moduleData.id.includes('lower-door-lift-3tier') || moduleData.id.includes('lower-top-down-') || moduleData.id.includes('lower-half-cabinet') || moduleData.id.includes('dual-lower-half-cabinet') || moduleData.id.includes('lower-sink-cabinet') || moduleData.id.includes('dual-lower-sink-cabinet') || moduleData.id.includes('lower-induction-cabinet') || moduleData.id.includes('dual-lower-induction-cabinet'))) {
     const is3Tier = moduleData.id.includes('lower-drawer-3tier');
     const isDoorLift3Tier = moduleData.id.includes('lower-door-lift-3tier');
     const isDoorLift2Tier = moduleData.id.includes('lower-door-lift-2tier');
