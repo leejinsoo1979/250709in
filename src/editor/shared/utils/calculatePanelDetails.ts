@@ -1600,20 +1600,22 @@ export const calculatePanelDetails = (
   // === 인덕션장 레그라박스 서랍 패널 (바닥판 + 뒷판만, 측판 없음) ===
   if (moduleData.id.includes('lower-induction-cabinet') || moduleData.id.includes('dual-lower-induction-cabinet')) {
     const drawerThickness = (basicThickness === 18.5 || basicThickness === 15.5) ? 15.5 : 15;
-    const sideGapMm = 17; // 양쪽 17mm 갭
-    const drawerWidth = customWidth - basicThickness * 2 - sideGapMm * 2; // 내경 - 양쪽 17mm
+    const bottomSideGap = 17; // 바닥판: 양쪽 17mm 갭
+    const backSideGap = 18.5; // 뒷판: 양쪽 18.5mm 갭
+    const drawerBottomWidth = customWidth - basicThickness * 2 - bottomSideGap * 2; // 내경 - 양쪽 17mm
+    const drawerBackWidth = customWidth - basicThickness * 2 - backSideGap * 2; // 내경 - 양쪽 18.5mm
     const drawerDepth = customDepth - (backPanelThickness || 9) - basicThickness - 1;
     // 1단 서랍: 총 높이 228mm
     panels.lower.push({
       name: '인덕션 1단서랍 바닥판',
-      width: drawerWidth,
+      width: drawerBottomWidth,
       depth: drawerDepth,
       thickness: drawerThickness,
       material: 'MDF',
     });
     panels.lower.push({
       name: '인덕션 1단서랍 뒷판',
-      width: drawerWidth,
+      width: drawerBackWidth,
       height: 228 - drawerThickness, // 총높이 - 바닥판두께
       thickness: drawerThickness,
       material: 'MDF',
@@ -1621,14 +1623,14 @@ export const calculatePanelDetails = (
     // 2단 서랍: 총 높이 164mm
     panels.lower.push({
       name: '인덕션 2단서랍 바닥판',
-      width: drawerWidth,
+      width: drawerBottomWidth,
       depth: drawerDepth,
       thickness: drawerThickness,
       material: 'MDF',
     });
     panels.lower.push({
       name: '인덕션 2단서랍 뒷판',
-      width: drawerWidth,
+      width: drawerBackWidth,
       height: 164 - drawerThickness, // 총높이 - 바닥판두께
       thickness: drawerThickness,
       material: 'MDF',
