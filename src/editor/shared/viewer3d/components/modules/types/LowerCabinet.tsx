@@ -185,7 +185,7 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
               {...(moduleData.id.includes('lower-drawer-3tier') ? {
                 sideNotches: [{ y: 65, z: 40, fromBottom: 295 }, { y: 65, z: 40, fromBottom: 510 }]
               } : moduleData.id.includes('lower-drawer-2tier') ? {
-                sideNotches: [{ y: 65, z: 40, fromBottom: 330 }]
+                sideNotches: [{ y: 65, z: 40, fromBottom: (moduleData.dimensions.height - 125) / 2 }]
               } : moduleData.id.includes('lower-door-lift-3tier') ? {
                 sideNotches: [{ y: 65, z: 40, fromBottom: 315 }, { y: 65, z: 40, fromBottom: 545 }]
               } : moduleData.id.includes('lower-door-lift-2tier') ? {
@@ -347,7 +347,8 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
         // 도어올림 2단: fromBottom=355
         // 상판내림 3단: fromBottom=225, 445, 665 (1단=225, 따내기65, 2단=155, 따내기65, 3단=155, 따내기65, 상단55)
         // 상판내림 2단: fromBottom=300, 665 (1단=300, 따내기65, 2단=300, 따내기65, 상단55)
-        const notchFromBottoms = is3Tier ? [295, 510] : isDoorLift3Tier ? [315, 545] : isDoorLift2Tier ? [355] : isTopDown3Tier ? [225, 445, 665] : isTopDown2Tier ? [300, 665] : [330];
+        const drawer2TierFromBottom = (moduleData.dimensions.height - 125) / 2;
+        const notchFromBottoms = is3Tier ? [295, 510] : isDoorLift3Tier ? [315, 545] : isDoorLift2Tier ? [355] : isTopDown3Tier ? [225, 445, 665] : isTopDown2Tier ? [300, 665] : [drawer2TierFromBottom];
         const notchHeights = is3Tier ? [65, 65] : isDoorLift3Tier ? [65, 65] : isDoorLift2Tier ? [65] : isTopDown3Tier ? [65, 65, 65] : isTopDown2Tier ? [65, 65] : [65];
         const drawerCount = (is3Tier || isDoorLift3Tier || isTopDown3Tier) ? 3 : 2;
 
