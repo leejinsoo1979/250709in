@@ -101,23 +101,18 @@ const LegraSideRail: React.FC<LegraSideRailProps> = ({
       const solidMat = new THREE.MeshBasicMaterial({
         color: faceColor,
         transparent: false,
-        depthTest: false,
-        depthWrite: false,
         polygonOffset: true,
         polygonOffsetFactor: 1,
         polygonOffsetUnits: 1,
       });
       const edgeMat = new THREE.LineBasicMaterial({
         color: edgeColor,
-        depthTest: false,
-        depthWrite: false,
       });
       [left, right].forEach((root) => {
         root.traverse((child) => {
           if ((child as THREE.Mesh).isMesh) {
             const mesh = child as THREE.Mesh;
             mesh.material = solidMat;
-            mesh.renderOrder = 999;
             // 각 메시에 EdgesGeometry 윤곽선 추가 (45도 — 외곽/하드엣지만)
             if (mesh.geometry) {
               const edges = new THREE.EdgesGeometry(mesh.geometry, 45);
@@ -125,7 +120,6 @@ const LegraSideRail: React.FC<LegraSideRailProps> = ({
               line.position.copy(mesh.position);
               line.rotation.copy(mesh.rotation);
               line.scale.copy(mesh.scale);
-              line.renderOrder = 1000;
               (mesh as any).__edgeLine = line;
             }
           }
