@@ -210,32 +210,6 @@ export const useFurnitureDragHandlers = (spaceInfo: SpaceInfo) => {
             }
           }
 
-          // 엔드패널 + 가구 = 슬롯 너비 검증 (노서라운드 모드, 끝 슬롯)
-          if (spaceInfo.surroundType === 'no-surround') {
-            const lastSlotIndex = indexing.columnCount - 1;
-            const isEndSlot = targetSlotIndex === 0 || targetSlotIndex === lastSlotIndex;
-            const END_PANEL_THICKNESS = 18; // 슬롯 계산 기준
-
-            if (isEndSlot) {
-              const wallConfig = spaceInfo.wallConfig || { left: true, right: true };
-              const needsEndPanel = (targetSlotIndex === 0 && !wallConfig.left) ||
-                                    (targetSlotIndex === lastSlotIndex && !wallConfig.right);
-
-              if (needsEndPanel) {
-                const furnitureWidth = result.module.adjustedWidth || result.module.customWidth || indexing.columnWidth;
-                const totalWidth = END_PANEL_THICKNESS + furnitureWidth;
-                const expectedSlotWidth = indexing.columnWidth;
-
-                if (Math.abs(totalWidth - expectedSlotWidth) >= 1) {
-                  showAlert(
-                    `엔드패널(${END_PANEL_THICKNESS}mm) + 가구(${furnitureWidth}mm) = ${totalWidth}mm\n슬롯 너비: ${expectedSlotWidth}mm\n차이: ${(totalWidth - expectedSlotWidth).toFixed(1)}mm`,
-                    { title: '너비 불일치 경고' }
-                  );
-                }
-              }
-            }
-          }
-
           addModule(result.module);
         }
 

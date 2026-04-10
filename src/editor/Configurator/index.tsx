@@ -931,21 +931,6 @@ const Configurator: React.FC = () => {
   // 현재 컬럼 수를 안전하게 가져오는 함수
   // FrameSize 업데이트 도우미 함수
   const updateFrameSize = (property: 'left' | 'right' | 'top', value: number) => {
-    // 엔드패널인 경우 값 변경 불가 (20mm 고정)
-    if (property === 'left' && (
-      (spaceInfo.installType === 'semistanding' && !spaceInfo.wallConfig?.left) ||
-      spaceInfo.installType === 'freestanding'
-    )) {
-      return; // 좌측 엔드패널은 20mm 고정
-    }
-
-    if (property === 'right' && (
-      (spaceInfo.installType === 'semistanding' && !spaceInfo.wallConfig?.right) ||
-      spaceInfo.installType === 'freestanding'
-    )) {
-      return; // 우측 엔드패널은 20mm 고정
-    }
-
     const currentFrameSize = spaceInfo.frameSize || { left: 50, right: 50, top: 50 };
     handleSpaceInfoUpdate({
       frameSize: {
@@ -2978,12 +2963,12 @@ const Configurator: React.FC = () => {
       const newFrameSize = { ...spaceInfo.frameSize };
 
       if (updates.wallConfig.left && !updates.wallConfig.right) {
-        // 좌측벽만 있음: 좌측 프레임 50mm, 우측 엔드패널 18mm
+        // 좌측벽만 있음: 좌측 프레임 50mm, 우측 벽없음 0mm
         newFrameSize.left = 50;
-        newFrameSize.right = 18;
+        newFrameSize.right = 0;
       } else if (!updates.wallConfig.left && updates.wallConfig.right) {
-        // 우측벽만 있음: 좌측 엔드패널 18mm, 우측 프레임 50mm
-        newFrameSize.left = 18;
+        // 우측벽만 있음: 좌측 벽없음 0mm, 우측 프레임 50mm
+        newFrameSize.left = 0;
         newFrameSize.right = 50;
       }
 
@@ -3027,19 +3012,19 @@ const Configurator: React.FC = () => {
             newFrameSize.right = 50;
             break;
           case 'semistanding':
-            // 한쪽벽: 벽 위치에 따라 프레임/엔드패널 설정
+            // 한쪽벽: 벽 있는 쪽만 프레임, 벽없는 쪽은 0
             if (wallConfig.left && !wallConfig.right) {
               newFrameSize.left = 50;   // 좌측벽: 프레임
-              newFrameSize.right = 18;  // 우측: 엔드패널
+              newFrameSize.right = 0;   // 우측: 벽없음
             } else if (!wallConfig.left && wallConfig.right) {
-              newFrameSize.left = 18;   // 좌측: 엔드패널
+              newFrameSize.left = 0;    // 좌측: 벽없음
               newFrameSize.right = 50;  // 우측벽: 프레임
             }
             break;
           case 'freestanding':
-            // 벽없음: 양쪽 모두 엔드패널 18mm
-            newFrameSize.left = 18;
-            newFrameSize.right = 18;
+            // 벽없음: 양쪽 모두 0
+            newFrameSize.left = 0;
+            newFrameSize.right = 0;
             break;
         }
       } else if (spaceInfo.surroundType === 'no-surround') {
@@ -3051,19 +3036,19 @@ const Configurator: React.FC = () => {
             newFrameSize.right = 0;
             break;
           case 'semistanding':
-            // 세미스탠딩: 벽 없는 쪽만 엔드패널
+            // 세미스탠딩: 벽 없는 쪽 0
             if (wallConfig.left && !wallConfig.right) {
               newFrameSize.left = 0;
-              newFrameSize.right = 18;
+              newFrameSize.right = 0;
             } else if (!wallConfig.left && wallConfig.right) {
-              newFrameSize.left = 18;
+              newFrameSize.left = 0;
               newFrameSize.right = 0;
             }
             break;
           case 'freestanding':
-            // 프리스탠딩: 양쪽 엔드패널
-            newFrameSize.left = 18;
-            newFrameSize.right = 18;
+            // 프리스탠딩: 양쪽 0
+            newFrameSize.left = 0;
+            newFrameSize.right = 0;
             break;
         }
 
