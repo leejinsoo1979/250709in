@@ -114,7 +114,29 @@ const LegraSideRail: React.FC<LegraSideRailProps> = ({
             if (mesh.isMesh && mesh.geometry) {
               mesh.material = invisibleMat;
               const edgesGeom = new THREE.EdgesGeometry(mesh.geometry, 30);
-              const lineSeg = new THREE.LineSegments(edgesGeom, lineMat);
+
+              // 모델 전체 높이 기준으로 "전체 높이에 가까운 수직 라인"을 제거
+              // (2D 측면뷰에서 모델 바깥 실루엣 역할을 해서 서랍 영역을 가로지르는 선)
+              const posAttr = edgesGeom.getAttribute('position');
+              const meshBox = new THREE.Box3().setFromBufferAttribute(mesh.geometry.getAttribute('position') as THREE.BufferAttribute);
+              const meshHeight = meshBox.max.y - meshBox.min.y;
+              const kept: number[] = [];
+              for (let i = 0; i < posAttr.count; i += 2) {
+                const x1 = posAttr.getX(i),     y1 = posAttr.getY(i),     z1 = posAttr.getZ(i);
+                const x2 = posAttr.getX(i + 1), y2 = posAttr.getY(i + 1), z2 = posAttr.getZ(i + 1);
+                const dx = Math.abs(x2 - x1);
+                const dy = Math.abs(y2 - y1);
+                const dz = Math.abs(z2 - z1);
+                // 순수 Y 방향 세로선이고 길이가 모델 높이의 70% 이상이면 제거 (실루엣 선)
+                const isTallVertical = dy > meshHeight * 0.7 && dx < 1e-4 && dz < 1e-4;
+                if (!isTallVertical) {
+                  kept.push(x1, y1, z1, x2, y2, z2);
+                }
+              }
+              const filteredGeom = new THREE.BufferGeometry();
+              filteredGeom.setAttribute('position', new THREE.Float32BufferAttribute(kept, 3));
+
+              const lineSeg = new THREE.LineSegments(filteredGeom, lineMat);
               lineSeg.name = 'legra-edges';
               edgesToAdd.push({ parent: mesh, edges: lineSeg });
             }
