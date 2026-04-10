@@ -2253,64 +2253,8 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     }
 
     // 벽 위치 설정 (freestanding은 양쪽 벽 없음) - hasLeftWall, hasRightWall은 이미 위에서 설정됨
-  } else if (!needsEndPanelAdjustment && spaceInfo.surroundType === 'no-surround' && normalizedSlotIndex !== undefined) {
-    const isFirstSlot = normalizedSlotIndex === 0;
-    const isLastSlotForDual = isDualFurniture && normalizedSlotIndex === indexing.columnCount - 2;
-    const isLastSlotForSingle = !isDualFurniture && isLastSlot;
-
-    // 벽 위치 확인
-    if (spaceInfo.installType === 'freestanding') {
-      // 벽없음 모드: 양쪽 모두 벽 없음 - hasLeftWall, hasRightWall은 이미 위에서 false로 설정됨
-    } else if (spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') {
-      // 반벽 모드: hasLeftWall, hasRightWall은 이미 wallConfig에서 설정됨
-    }
-
-    if (isFirstSlot && !hasLeftWall) {
-      // 왼쪽 벽이 없는 첫번째 슬롯
-      if (isDualFurniture) {
-        // 듀얼장: 도어는 슬롯 너비 유지 (엔드패널을 덮도록)
-        const firstSlotReduction = indexing.slotWidths?.[0] ? indexing.columnWidth - indexing.slotWidths[0] : 0;
-        const secondSlotReduction = indexing.slotWidths?.[1] ? indexing.columnWidth - indexing.slotWidths[1] : 0;
-        // 도어는 원래 슬롯 너비 그대로 (슬롯 기준)
-        doorWidthExpansion = firstSlotReduction + secondSlotReduction;
-        // 상하부장이 인접한 경우 positionAdjustmentForEndPanel 값 사용, 아니면 기본 9mm 이동
-        doorXOffset = needsEndPanelAdjustment && isNoSurroundFirstSlot ?
-          positionAdjustmentForEndPanel : -(END_PANEL_THICKNESS / 2) * 0.01;
-
-      } else {
-        // 싱글장: 18mm 확장, 상하부장 인접 시 위치 조정
-        doorWidthExpansion = END_PANEL_THICKNESS;
-        // 상하부장이 인접한 경우 positionAdjustmentForEndPanel 값 사용, 아니면 기본 9mm 이동
-        doorXOffset = needsEndPanelAdjustment && isNoSurroundFirstSlot ?
-          positionAdjustmentForEndPanel : -(END_PANEL_THICKNESS / 2) * 0.01;
-
-      }
-
-    } else if ((isLastSlotForDual || isLastSlotForSingle) && !hasRightWall) {
-      // 오른쪽 벽이 없는 마지막 슬롯
-      if (isDualFurniture && isLastSlotForDual) {
-        // 듀얼장: 도어는 슬롯 너비 유지 (엔드패널을 덮도록)
-        const lastSlotIndex = indexing.columnCount - 1;
-        const beforeLastSlotIndex = indexing.columnCount - 2;
-        const lastSlotReduction = indexing.slotWidths?.[lastSlotIndex] ?
-          indexing.columnWidth - indexing.slotWidths[lastSlotIndex] : 0;
-        const beforeLastSlotReduction = indexing.slotWidths?.[beforeLastSlotIndex] ?
-          indexing.columnWidth - indexing.slotWidths[beforeLastSlotIndex] : 0;
-        // 도어는 원래 슬롯 너비 그대로 (슬롯 기준)
-        doorWidthExpansion = lastSlotReduction + beforeLastSlotReduction;
-        // 상하부장이 인접한 경우 positionAdjustmentForEndPanel 값 사용, 아니면 기본 9mm 이동
-        doorXOffset = needsEndPanelAdjustment && isNoSurroundLastSlot ?
-          positionAdjustmentForEndPanel : (END_PANEL_THICKNESS / 2) * 0.01;
-
-      } else {
-        // 싱글장: 18mm 확장, 상하부장 인접 시 위치 조정
-        doorWidthExpansion = END_PANEL_THICKNESS;
-        // 상하부장이 인접한 경우 positionAdjustmentForEndPanel 값 사용, 아니면 기본 9mm 이동
-        doorXOffset = needsEndPanelAdjustment && isNoSurroundLastSlot ?
-          positionAdjustmentForEndPanel : (END_PANEL_THICKNESS / 2) * 0.01;
-
-      }
-    }
+  } else if (false && !needsEndPanelAdjustment && spaceInfo.surroundType === 'no-surround' && normalizedSlotIndex !== undefined) {
+    // EP 자동 생성 제거됨 — 노서라운드 도어 확장/오프셋 비활성화
   }
 
   // 수동 EP가 있으면 도어 확장 비활성화 + 슬롯 모드에서 본체 이동 역보정
@@ -2646,30 +2590,8 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
 
 
     if (spaceInfo.surroundType === 'no-surround') {
-      // 단내림 좌측 메인 구간: 엔드패널과 안 겹치도록 왼쪽으로 9mm 이동
-      if (spaceInfo.droppedCeiling?.enabled &&
-        spaceInfo.droppedCeiling.position === 'left' &&
-        placedModule.zone === 'normal') {
-        // zone의 마지막 슬롯인지 확인
-        if (zoneSlotInfo && zoneSlotInfo.normal) {
-          const localIndex = localSlotIndex ?? placedModule.slotIndex;
-          const zoneColumnCount = zoneSlotInfo.normal.columnCount;
-          if (localIndex === zoneColumnCount - 1) {
-            finalOffset = -offset; // 왼쪽으로 9mm
-          }
-        }
-      }
-      // 노서라운드: 바깥쪽 끝 슬롯만 이동 (첫/마지막 슬롯)
-      // 단내림 구간은 이동하지 않음 (엔드패널과 붙어야 함)
-      // 엔드패널 조정이 필요한 경우(키큰장+상하부장)는 이동하지 않음
-      else if ((isNoSurroundFirstSlot || isNoSurroundLastSlot || isNoSurroundDualLastSlot) && !isDroppedZone && !needsEndPanelAdjustment) {
-        // 단내림 없음: 마지막 슬롯 좌측으로 9mm 추가 이동 (widthReduced로 인한 9mm + 추가 9mm = 총 18mm)
-        if (!spaceInfo.droppedCeiling?.enabled && (isNoSurroundLastSlot || isNoSurroundDualLastSlot)) {
-          finalOffset = -offset; // 좌측으로 9mm 추가 (widthReduced로 이미 9mm 이동됨)
-        } else {
-          finalOffset = offset; // 우측으로 9mm
-        }
-      }
+      // EP 자동 생성 제거됨 — 노서라운드에서 9mm 오프셋 불필요
+      finalOffset = 0;
     } else if (spaceInfo.surroundType === 'surround' && widthReduced) {
       // 서라운드: 너비가 줄어든 듀얼 가구만 안쪽(왼쪽)으로 9mm 이동
       finalOffset = -offset;
