@@ -102,8 +102,8 @@ const DimensionText: React.FC<DimensionTextProps> = ({
   const normalColor = color || (viewMode === '3D' ? getThemeColor() : (view2DTheme === 'dark' ? '#ffffff' : '#000000'));
   const textColor = isHovered ? highlightColor : normalColor;
   
-  // 폰트 크기 - 3D에서 더 크게
-  const baseFontSize = viewMode === '3D' ? 0.55 : 0.32;
+  // 치수 텍스트 크기 통일 (2D: 0.4, 3D: 0.5)
+  const baseFontSize = viewMode === '3D' ? 0.5 : 0.4;
   const fontSize = baseFontSize * sizeMultiplier;
 
   const outlineW = 0;

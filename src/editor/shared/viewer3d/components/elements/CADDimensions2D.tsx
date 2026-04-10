@@ -353,9 +353,9 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
   const displaySpaceHeight = isSelectedSlotInDroppedZone ? droppedCeilingHeight : spaceHeight;
   const displaySpaceHeightMm = isSelectedSlotInDroppedZone ? droppedCeilingHeightMm : spaceInfo.height;
 
-  // 폰트 크기
-  const largeFontSize = mmToThreeUnits(40);
-  const smallFontSize = mmToThreeUnits(30);
+  // 치수 텍스트 크기 통일 (CleanCAD2D와 동일: 2D = 0.4)
+  const largeFontSize = 0.4;
+  const smallFontSize = 0.4;
 
   // 치수선 오프셋
   const leftDimOffset = mmToThreeUnits(400);

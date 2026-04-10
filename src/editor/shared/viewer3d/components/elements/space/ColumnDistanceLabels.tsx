@@ -442,7 +442,7 @@ const ColumnDistanceLabels: React.FC<ColumnDistanceLabelsProps> = ({ column, spa
               </mesh>
               <Text
                 position={[0, 0, 0.2]}
-                fontSize={0.8}
+                fontSize={0.5}
                 color="#000000"
                 anchorX="center"
                 anchorY="middle"
@@ -615,7 +615,7 @@ const ColumnDistanceLabels: React.FC<ColumnDistanceLabelsProps> = ({ column, spa
               </mesh>
               <Text
                 position={[0, 0, 0.2]}
-                fontSize={0.8}
+                fontSize={0.5}
                 color="#000000"
                 anchorX="center"
                 anchorY="middle"
@@ -742,7 +742,7 @@ const ColumnDistanceLabels: React.FC<ColumnDistanceLabelsProps> = ({ column, spa
               </mesh>
               <Text
                 position={[0, 0, 0.2]}
-                fontSize={0.8}
+                fontSize={0.5}
                 color="#000000"
                 anchorX="center"
                 anchorY="middle"
@@ -770,7 +770,7 @@ const ColumnDistanceLabels: React.FC<ColumnDistanceLabelsProps> = ({ column, spa
       {showDimensions && (
         <group position={[currentColumn.position[0], columnHeightM / 2, currentColumn.position[2] + columnDepthM / 2 + 0.1]}>
           <Text
-            fontSize={0.4}
+            fontSize={0.5}
             color="#000000"
             anchorX="center"
             anchorY="middle"

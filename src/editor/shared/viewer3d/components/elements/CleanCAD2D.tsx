@@ -1107,9 +1107,10 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
   // showDimensions가 false일 때는 치수선은 숨기지만 기둥은 표시
   
   // 폰트 크기 - 3D에서 더 크게 표시
+  // 치수 텍스트 크기 통일 (2D: 0.4, 3D: 0.5)
   const baseFontSize = currentViewDirection === '3D' ? 0.5 : 0.4;
-  const largeFontSize = currentViewDirection === '3D' ? 0.6 : 0.5;
-  const smallFontSize = currentViewDirection === '3D' ? 0.42 : 0.35;
+  const largeFontSize = currentViewDirection === '3D' ? 0.5 : 0.4;
+  const smallFontSize = currentViewDirection === '3D' ? 0.5 : 0.4;
   // 텍스트 외곽선 제거 (2D/3D 모두)
   const textOutlineWidth = 0;
   const textOutlineColor = '#ffffff';

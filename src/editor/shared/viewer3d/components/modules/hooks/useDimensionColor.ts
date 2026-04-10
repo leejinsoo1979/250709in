@@ -22,7 +22,8 @@ export const useDimensionColor = () => {
     ? getThemeColor()
     : (view2DTheme === 'dark' ? '#b0b0b0' : '#555555');
   
-  const baseFontSize = viewMode === '3D' ? 0.55 : 0.32;
+  // 치수 텍스트 크기 통일 (2D: 0.4, 3D: 0.5)
+  const baseFontSize = viewMode === '3D' ? 0.5 : 0.4;
 
   return {
     dimensionColor,
