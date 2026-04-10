@@ -974,6 +974,9 @@ const ModuleGallery: React.FC<ModuleGalleryProps> = ({ moduleCategory = 'tall', 
     categoryModules = getModulesByCategory('full', adjustedInternalSpace, spaceInfoWithSlotWidths);
   }
 
+  // 현관장 H 임시 숨김 (싱글/듀얼 모두)
+  categoryModules = categoryModules.filter(m => !m.id.includes('entryway-h'));
+
   const fullModules = categoryModules;
   console.log('🏗️ ModuleGallery 렌더링:', {
     moduleCategory,
