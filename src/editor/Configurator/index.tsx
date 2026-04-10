@@ -2896,7 +2896,7 @@ const Configurator: React.FC = () => {
       const newFrameSize = { ...spaceInfo.frameSize, top: spaceInfo.frameSize?.top || 30 };
 
       if (updates.surroundType === 'surround') {
-        // 서라운드 모드
+        // 서라운드 모드 — 벽없는 쪽에는 EP 자동 생성하지 않음 (0으로 설정)
         switch (currentInstallType) {
           case 'builtin':
             newFrameSize.left = 50;
@@ -2905,39 +2905,31 @@ const Configurator: React.FC = () => {
           case 'semistanding':
             if (currentWallConfig.left && !currentWallConfig.right) {
               newFrameSize.left = 50;
-              newFrameSize.right = 18;
+              newFrameSize.right = 0;
             } else if (!currentWallConfig.left && currentWallConfig.right) {
-              newFrameSize.left = 18;
+              newFrameSize.left = 0;
               newFrameSize.right = 50;
             }
             break;
           case 'freestanding':
-            newFrameSize.left = 18;
-            newFrameSize.right = 18;
+            newFrameSize.left = 0;
+            newFrameSize.right = 0;
             break;
         }
       } else if (updates.surroundType === 'no-surround') {
-        // 노서라운드 모드
+        // 노서라운드 모드 — 벽없는 쪽에는 EP 자동 생성하지 않음
         switch (currentInstallType) {
           case 'builtin':
-            // 빌트인: 좌우 프레임 없음
             newFrameSize.left = 0;
             newFrameSize.right = 0;
             break;
           case 'semistanding':
-            // 세미스탠딩: 벽 없는 쪽만 엔드패널
-            if (currentWallConfig.left && !currentWallConfig.right) {
-              newFrameSize.left = 0;
-              newFrameSize.right = 18;
-            } else if (!currentWallConfig.left && currentWallConfig.right) {
-              newFrameSize.left = 18;
-              newFrameSize.right = 0;
-            }
+            newFrameSize.left = 0;
+            newFrameSize.right = 0;
             break;
           case 'freestanding':
-            // 프리스탠딩: 양쪽 엔드패널
-            newFrameSize.left = 18;
-            newFrameSize.right = 18;
+            newFrameSize.left = 0;
+            newFrameSize.right = 0;
             break;
         }
 
@@ -4224,14 +4216,9 @@ const Configurator: React.FC = () => {
                 if (preUpdates.surroundType === 'no-surround' && spaceInfo.surroundType !== 'no-surround') {
                   // 서라운드 → 노서라운드: gapConfig + frameSize 미리 반영
                   const newFrameSize = { ...spaceInfo.frameSize, top: spaceInfo.frameSize?.top || 30 };
-                  if (currentInstallType === 'builtin' || currentInstallType === 'built-in') {
-                    newFrameSize.left = 0; newFrameSize.right = 0;
-                  } else if (currentInstallType === 'semistanding' || currentInstallType === 'semi-standing') {
-                    newFrameSize.left = currentWallConfig.left ? 0 : 18;
-                    newFrameSize.right = currentWallConfig.right ? 0 : 18;
-                  } else {
-                    newFrameSize.left = 18; newFrameSize.right = 18;
-                  }
+                  // 벽없는 쪽에는 EP 자동 생성 안함 (모두 0)
+                  newFrameSize.left = 0;
+                  newFrameSize.right = 0;
                   preUpdates.frameSize = newFrameSize;
                   preUpdates.gapConfig = {
                     left: currentWallConfig.left ? 1.5 : 0,
@@ -4239,15 +4226,15 @@ const Configurator: React.FC = () => {
                     middle: spaceInfo.gapConfig?.middle ?? 1.5,
                   };
                 } else if (preUpdates.surroundType === 'surround' && spaceInfo.surroundType !== 'surround') {
-                  // 노서라운드 → 서라운드: frameSize 미리 반영
+                  // 노서라운드 → 서라운드: frameSize 미리 반영 (벽없는 쪽에는 EP 자동 생성 안함)
                   const newFrameSize = { ...spaceInfo.frameSize, top: spaceInfo.frameSize?.top || 30 };
                   if (currentInstallType === 'builtin' || currentInstallType === 'built-in') {
                     newFrameSize.left = 50; newFrameSize.right = 50;
                   } else if (currentInstallType === 'semistanding' || currentInstallType === 'semi-standing') {
-                    newFrameSize.left = currentWallConfig.left ? 50 : 18;
-                    newFrameSize.right = currentWallConfig.right ? 50 : 18;
+                    newFrameSize.left = currentWallConfig.left ? 50 : 0;
+                    newFrameSize.right = currentWallConfig.right ? 50 : 0;
                   } else {
-                    newFrameSize.left = 18; newFrameSize.right = 18;
+                    newFrameSize.left = 0; newFrameSize.right = 0;
                   }
                   preUpdates.frameSize = newFrameSize;
                 }
