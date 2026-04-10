@@ -221,15 +221,23 @@ const computeLowerCabinetMaidaHeights = (
     const totalGaps = (drawerCount - 1) * gapMm;
     const totalMaidaMm = totalFrontMm - totalGaps;
     const totalDrawerH = drawerHeights.reduce((a, b) => a + b, 0);
-    // 터치 2단: 1단=408, 2단=409로 고정
-    // 터치 3단 (도어올림 3단): 하→상 [360, 227, 227]로 고정
-    const is2Tier = drawerCount === 2 && (isTouch2A || isTouch2B || isTDTouch2);
-    const is3TierFixed = drawerCount === 3 && isTouch3;
-    const maidaHeightsMm = is2Tier
+    // 도어올림 터치 2단(2A/2B): 하→상 [408, 409] 고정
+    // 도어올림 터치 3단: 하→상 [360, 227, 227] 고정
+    // 상판내림 터치 2단: 하→상 [353, 354] 고정
+    // 상판내림 터치 3단: 하→상 [284, 210, 210] 고정
+    const isDoorLift2Fixed = drawerCount === 2 && (isTouch2A || isTouch2B);
+    const isDoorLift3Fixed = drawerCount === 3 && isTouch3;
+    const isTopDown2Fixed = drawerCount === 2 && isTDTouch2;
+    const isTopDown3Fixed = drawerCount === 3 && isTDTouch3;
+    const maidaHeightsMm = isDoorLift2Fixed
       ? [408, 409]
-      : is3TierFixed
+      : isDoorLift3Fixed
         ? [360, 227, 227]
-        : drawerHeights.map(h => (h / totalDrawerH) * totalMaidaMm);
+        : isTopDown2Fixed
+          ? [353, 354]
+          : isTopDown3Fixed
+            ? [284, 210, 210]
+            : drawerHeights.map(h => (h / totalDrawerH) * totalMaidaMm);
 
     // 마이다 위치 (캐비넷 하단 -5mm 부터 시작)
     let currentBottomMm = -bottomExtMm;

@@ -1558,21 +1558,31 @@ export const calculatePanelDetails = (
     const totalMaidaMm = totalFrontMm - totalGaps;
     const totalMaidaDrawerH = maidaDrawerHeights.reduce((a: number, b: number) => a + b, 0);
 
-    // 터치 2단: 1단=408, 2단=409로 고정
-    // 터치 3단 (도어올림 3단): 하→상 [360, 227, 227]로 고정
-    const is2Tier = drawerHeights.length === 2 && (isTouch2A || isTouch2B || isTDTouch2);
-    const is3TierFixed = drawerHeights.length === 3 && isTouch3;
-    const fixedMaidaH2Tier = [408, 409];
-    const fixedMaidaH3Tier = [360, 227, 227];
+    // 도어올림 터치 2단(2A/2B): 하→상 [408, 409] 고정
+    // 도어올림 터치 3단: 하→상 [360, 227, 227] 고정
+    // 상판내림 터치 2단: 하→상 [353, 354] 고정
+    // 상판내림 터치 3단: 하→상 [284, 210, 210] 고정
+    const isDoorLift2Fixed = drawerHeights.length === 2 && (isTouch2A || isTouch2B);
+    const isDoorLift3Fixed = drawerHeights.length === 3 && isTouch3;
+    const isTopDown2Fixed = drawerHeights.length === 2 && isTDTouch2;
+    const isTopDown3Fixed = drawerHeights.length === 3 && isTDTouch3;
+    const fixedMaidaDoorLift2 = [408, 409];
+    const fixedMaidaDoorLift3 = [360, 227, 227];
+    const fixedMaidaTopDown2 = [353, 354];
+    const fixedMaidaTopDown3 = [284, 210, 210];
 
     drawerHeights.forEach((dh, di) => {
       const drawerNum = di + 1;
       const backH = dh - drawerThicknessMm;
       let maidaH: number;
-      if (is2Tier) {
-        maidaH = fixedMaidaH2Tier[di];
-      } else if (is3TierFixed) {
-        maidaH = fixedMaidaH3Tier[di];
+      if (isDoorLift2Fixed) {
+        maidaH = fixedMaidaDoorLift2[di];
+      } else if (isDoorLift3Fixed) {
+        maidaH = fixedMaidaDoorLift3[di];
+      } else if (isTopDown2Fixed) {
+        maidaH = fixedMaidaTopDown2[di];
+      } else if (isTopDown3Fixed) {
+        maidaH = fixedMaidaTopDown3[di];
       } else {
         const maidaRef = maidaDrawerHeights[di] ?? dh;
         // 마이다 높이는 소수점 1자리 유지
