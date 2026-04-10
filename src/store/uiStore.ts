@@ -899,7 +899,7 @@ export const useUIStore = create<UIState>()(
         showDimensions: state.showDimensions,
         showDimensionsText: state.showDimensionsText,
         showAll: state.showAll,
-        showGuides: state.showGuides,
+        // showGuides는 기본값(false) 유지를 위해 영속화하지 않음
         showAxis: state.showAxis,
         showFurniture: state.showFurniture,
         showFurnitureEditHandles: state.showFurnitureEditHandles,
