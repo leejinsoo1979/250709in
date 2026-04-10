@@ -151,6 +151,63 @@ const LegraSideRail: React.FC<LegraSideRailProps> = ({
       });
     }
 
+    // 2D 측면뷰 스냅용: 바운딩박스 기반 외곽 코너 포인트 제공
+    // extractVertices()가 LineSegments의 vertex를 수집하므로,
+    // 바운딩박스 8개 corner를 연결하는 얇은 LineSegments를 추가하면
+    // 사용자가 측면뷰에서 레그라 모서리에 스냅 가능해짐
+    // 로컬 박스: scale이 적용되지 않은 원본 box → scaled로 다시 계산
+    if (is2DSideView) {
+      const snapMat = new THREE.LineBasicMaterial({
+        color: 0x000000,
+        transparent: true,
+        opacity: 0.0, // 시각적으로 완전 투명
+        depthWrite: false,
+      });
+      const makeSnapBox = (box: THREE.Box3, scale: THREE.Vector3): THREE.LineSegments => {
+        // box는 scale 적용된 world-space 박스이므로
+        // group position에 추가되기 전 기준 로컬 좌표로 변환
+        // → group이 (targetMinY - box.min.y) 등으로 위치하므로
+        // 스냅 박스도 동일한 group의 자식으로 들어가 자동 정렬됨
+        const lx = box.min.x / scale.x;
+        const ux = box.max.x / scale.x;
+        const ly = box.min.y / scale.y;
+        const uy = box.max.y / scale.y;
+        const lz = box.min.z / scale.z;
+        const uz = box.max.z / scale.z;
+        // 8개 corner를 연결하는 12개 엣지
+        const corners: number[] = [];
+        const add = (x1: number, y1: number, z1: number, x2: number, y2: number, z2: number) => {
+          corners.push(x1, y1, z1, x2, y2, z2);
+        };
+        // 하단 사각형
+        add(lx, ly, lz, ux, ly, lz);
+        add(ux, ly, lz, ux, ly, uz);
+        add(ux, ly, uz, lx, ly, uz);
+        add(lx, ly, uz, lx, ly, lz);
+        // 상단 사각형
+        add(lx, uy, lz, ux, uy, lz);
+        add(ux, uy, lz, ux, uy, uz);
+        add(ux, uy, uz, lx, uy, uz);
+        add(lx, uy, uz, lx, uy, lz);
+        // 수직 엣지
+        add(lx, ly, lz, lx, uy, lz);
+        add(ux, ly, lz, ux, uy, lz);
+        add(ux, ly, uz, ux, uy, uz);
+        add(lx, ly, uz, lx, uy, uz);
+
+        const geom = new THREE.BufferGeometry();
+        geom.setAttribute('position', new THREE.Float32BufferAttribute(corners, 3));
+        const lineSegs = new THREE.LineSegments(geom, snapMat);
+        lineSegs.userData = { isSnapHelper: true };
+        return lineSegs;
+      };
+
+      const leftSnap = makeSnapBox(leftBox, lScale);
+      const rightSnap = makeSnapBox(rightBox, rScale);
+      left.add(leftSnap);
+      right.add(rightSnap);
+    }
+
     // GLB 모델 상단 돌출부(레일 마운트) 보정값
     // - SL500/L500/M500: 13.7mm (기존 - 서랍 바닥판 하단 기준 -13.7mm)
     // - F500_o: 원점이 달라 별도 오프셋(-21mm) 사용
