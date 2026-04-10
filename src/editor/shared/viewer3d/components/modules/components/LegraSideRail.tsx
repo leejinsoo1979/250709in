@@ -115,9 +115,9 @@ const LegraSideRail: React.FC<LegraSideRailProps> = ({
             const mesh = child as THREE.Mesh;
             mesh.material = solidMat;
             mesh.renderOrder = 0;
-            // 각 메시에 EdgesGeometry 윤곽선 추가 (1도 임계값 — 거의 모든 엣지 포함)
+            // 각 메시에 EdgesGeometry 윤곽선 추가 (45도 — 외곽/하드엣지만)
             if (mesh.geometry) {
-              const edges = new THREE.EdgesGeometry(mesh.geometry, 1);
+              const edges = new THREE.EdgesGeometry(mesh.geometry, 45);
               const line = new THREE.LineSegments(edges, edgeMat);
               line.position.copy(mesh.position);
               line.rotation.copy(mesh.rotation);
