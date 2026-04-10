@@ -88,20 +88,20 @@ const LegraSideRail: React.FC<LegraSideRailProps> = ({
   // 2D 다크 모드 여부 (라이트 모드는 흰색 면, 다크 모드는 라인만)
   const is2DDark = view2DTheme === 'dark' || theme?.mode === 'dark';
 
-  const { leftClone, rightClone, leftScale, rightScale, leftPos, rightPos, outlineLeftBox, outlineRightBox } = useMemo(() => {
+  const { leftClone, rightClone, leftScale, rightScale, leftPos, rightPos } = useMemo(() => {
     const left = cleanClone(scene);
     const right = cleanClone(scene);
 
-    // 2D 측면뷰 라이트 모드: 면만 흰색 단색 (실루엣 느낌)
-    if (is2DSideView && !is2DDark) {
-      const whiteMat = new THREE.MeshBasicMaterial({
-        color: 0xffffff,
+    // 2D 측면뷰: 면만 단색으로 교체 (라이트=검정, 다크=흰색) — 실루엣 느낌
+    if (is2DSideView) {
+      const solidMat = new THREE.MeshBasicMaterial({
+        color: is2DDark ? 0xffffff : 0x000000,
         transparent: false,
       });
       [left, right].forEach((root) => {
         root.traverse((child) => {
           if ((child as THREE.Mesh).isMesh) {
-            (child as THREE.Mesh).material = whiteMat;
+            (child as THREE.Mesh).material = solidMat;
           }
         });
       });
@@ -142,17 +142,6 @@ const LegraSideRail: React.FC<LegraSideRailProps> = ({
       drawerFrontZ - rightBox.max.z,
     );
 
-    // 최종 렌더링 박스(월드 공간) = 로컬 박스 + 위치 오프셋
-    // primitive가 그룹 position에 놓이고 로컬은 leftBox 원점을 기준으로 그려지기 때문
-    const lFinalBox = new THREE.Box3(
-      new THREE.Vector3(leftBox.min.x + lPos.x, leftBox.min.y + lPos.y, leftBox.min.z + lPos.z),
-      new THREE.Vector3(leftBox.max.x + lPos.x, leftBox.max.y + lPos.y, leftBox.max.z + lPos.z),
-    );
-    const rFinalBox = new THREE.Box3(
-      new THREE.Vector3(rightBox.min.x + rPos.x, rightBox.min.y + rPos.y, rightBox.min.z + rPos.z),
-      new THREE.Vector3(rightBox.max.x + rPos.x, rightBox.max.y + rPos.y, rightBox.max.z + rPos.z),
-    );
-
     return {
       leftClone: left,
       rightClone: right,
@@ -160,44 +149,11 @@ const LegraSideRail: React.FC<LegraSideRailProps> = ({
       rightScale: rScale,
       leftPos: lPos,
       rightPos: rPos,
-      outlineLeftBox: lFinalBox,
-      outlineRightBox: rFinalBox,
     };
   }, [scene, drawerTier, drawerBottomY, drawerBottomThickness, backPanelHeight, drawerFrontZ, sidePanelInnerX, drawerHeightMm, is2DSideView, is2DDark]);
 
   // 2D 상단뷰에서는 숨김 (정면/측면뷰에서는 렌더링)
   if (viewMode === '2D' && view2DDirection === 'top') return null;
-
-  // 2D 측면뷰 + 다크 모드: GLB 숨기고 바운딩박스 외곽선(사각형)만 표시
-  if (is2DSideView && is2DDark) {
-    // 측면뷰는 X축 방향으로 바라봄 → Z-Y 평면의 사각형
-    const buildRectGeom = (box: THREE.Box3): THREE.BufferGeometry => {
-      const y0 = box.min.y, y1 = box.max.y;
-      const z0 = box.min.z, z1 = box.max.z;
-      // 선분용 8개 정점 (4변)
-      const pts = new Float32Array([
-        0, y0, z0,   0, y0, z1,
-        0, y0, z1,   0, y1, z1,
-        0, y1, z1,   0, y1, z0,
-        0, y1, z0,   0, y0, z0,
-      ]);
-      const geom = new THREE.BufferGeometry();
-      geom.setAttribute('position', new THREE.BufferAttribute(pts, 3));
-      return geom;
-    };
-    const lGeom = buildRectGeom(outlineLeftBox);
-    const rGeom = buildRectGeom(outlineRightBox);
-    const lineMat = new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 1 });
-    // X 위치는 레그라가 월드 위치에 이미 있으므로 각 박스의 X 평균을 사용
-    const lX = (outlineLeftBox.min.x + outlineLeftBox.max.x) / 2;
-    const rX = (outlineRightBox.min.x + outlineRightBox.max.x) / 2;
-    return (
-      <>
-        <lineSegments position={[lX, 0, 0]} geometry={lGeom} material={lineMat} />
-        <lineSegments position={[rX, 0, 0]} geometry={rGeom} material={lineMat} />
-      </>
-    );
-  }
 
   return (
     <>
