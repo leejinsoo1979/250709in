@@ -340,7 +340,7 @@ export class MaterialFactory {
         fragmentShader,
         uniforms: {
           colorStart: { value: new THREE.Color('#ffffff') },
-          colorEnd: { value: new THREE.Color('#e0e0e0') }, // 연하게: #cccccc → #e0e0e0
+          colorEnd: { value: new THREE.Color('#f0f0f0') }, // 더 연하게: #e0e0e0 → #f0f0f0
           direction: { value: directionValue },
           reverse: { value: isReverse ? 1.0 : 0.0 },
           opacity: { value: 1.0 }
