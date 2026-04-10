@@ -80,9 +80,28 @@ const LegraSideRail: React.FC<LegraSideRailProps> = ({
     : (drawerTier === 1 ? '/models/Legra%20F500_o.glb' : '/models/Legra_L500.glb');
   const { scene } = useGLTF(modelPath);
 
+  // 2D 측면뷰(left/right) 감지 — 다크 라인 스타일 적용
+  const is2DSideView = viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right');
+
   const { leftClone, rightClone, leftScale, rightScale, leftPos, rightPos } = useMemo(() => {
     const left = cleanClone(scene);
     const right = cleanClone(scene);
+
+    // 2D 측면뷰: 다크 라인 머티리얼 적용 (MeshBasicMaterial + edges)
+    if (is2DSideView) {
+      const darkMat = new THREE.MeshBasicMaterial({
+        color: 0x2a2a2a,
+        transparent: true,
+        opacity: 0.9,
+      });
+      [left, right].forEach((root) => {
+        root.traverse((child) => {
+          if ((child as THREE.Mesh).isMesh) {
+            (child as THREE.Mesh).material = darkMat;
+          }
+        });
+      });
+    }
 
     // GLB 모델은 원본 크기 그대로 사용
     const yScale = GLTF_SCALE;
@@ -127,10 +146,10 @@ const LegraSideRail: React.FC<LegraSideRailProps> = ({
       leftPos: lPos,
       rightPos: rPos,
     };
-  }, [scene, drawerTier, drawerBottomY, drawerBottomThickness, backPanelHeight, drawerFrontZ, sidePanelInnerX, drawerHeightMm]);
+  }, [scene, drawerTier, drawerBottomY, drawerBottomThickness, backPanelHeight, drawerFrontZ, sidePanelInnerX, drawerHeightMm, is2DSideView]);
 
-  // 2D 모드: 정면뷰(front)에서만 렌더링, 측면/상단뷰에서는 숨김
-  if (viewMode === '2D' && view2DDirection !== 'front') return null;
+  // 2D 상단뷰에서는 숨김 (정면/측면뷰에서는 렌더링)
+  if (viewMode === '2D' && view2DDirection === 'top') return null;
 
   return (
     <>
