@@ -2896,6 +2896,17 @@ const Configurator: React.FC = () => {
       const newFrameSize = { ...spaceInfo.frameSize, top: spaceInfo.frameSize?.top || 30 };
 
       if (updates.surroundType === 'surround') {
+        // 서라운드 모드 전환 시 수동 EP 제거 (서라운드 프레임과 중복 방지)
+        const currentModules = useFurnitureStore.getState().placedModules;
+        currentModules.forEach(m => {
+          if (m.hasLeftEndPanel || m.hasRightEndPanel) {
+            updatePlacedModule(m.id, {
+              hasLeftEndPanel: false,
+              hasRightEndPanel: false,
+            });
+          }
+        });
+
         // 서라운드 모드
         switch (currentInstallType) {
           case 'builtin':
@@ -2917,29 +2928,9 @@ const Configurator: React.FC = () => {
             break;
         }
       } else if (updates.surroundType === 'no-surround') {
-        // 노서라운드 모드
-        switch (currentInstallType) {
-          case 'builtin':
-            // 빌트인: 좌우 프레임 없음
-            newFrameSize.left = 0;
-            newFrameSize.right = 0;
-            break;
-          case 'semistanding':
-            // 세미스탠딩: 벽 없는 쪽만 엔드패널
-            if (currentWallConfig.left && !currentWallConfig.right) {
-              newFrameSize.left = 0;
-              newFrameSize.right = 18;
-            } else if (!currentWallConfig.left && currentWallConfig.right) {
-              newFrameSize.left = 18;
-              newFrameSize.right = 0;
-            }
-            break;
-          case 'freestanding':
-            // 프리스탠딩: 양쪽 엔드패널
-            newFrameSize.left = 18;
-            newFrameSize.right = 18;
-            break;
-        }
+        // 노서라운드 모드: EP 자동 생성 없음 — 프레임 0
+        newFrameSize.left = 0;
+        newFrameSize.right = 0;
 
         // 노서라운드일 때 gapConfig 설정 (middle 보존)
         finalUpdates.gapConfig = {
