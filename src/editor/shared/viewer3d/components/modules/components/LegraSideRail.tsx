@@ -92,16 +92,45 @@ const LegraSideRail: React.FC<LegraSideRailProps> = ({
     const left = cleanClone(scene);
     const right = cleanClone(scene);
 
-    // 2D 측면뷰: 면만 단색으로 교체 (라이트=검정, 다크=흰색) — 실루엣 느낌
+    // 2D 측면뷰: 면은 단색 + 윤곽선 추가
+    // 다크: 검정 면 + 흰색 윤곽선
+    // 라이트: 흰색 면 + 검정 윤곽선
     if (is2DSideView) {
+      const faceColor = is2DDark ? 0x000000 : 0xffffff;
+      const edgeColor = is2DDark ? 0xffffff : 0x000000;
       const solidMat = new THREE.MeshBasicMaterial({
-        color: is2DDark ? 0xffffff : 0x000000,
+        color: faceColor,
         transparent: false,
+        polygonOffset: true,
+        polygonOffsetFactor: 1,
+        polygonOffsetUnits: 1,
       });
+      const edgeMat = new THREE.LineBasicMaterial({ color: edgeColor });
       [left, right].forEach((root) => {
+        const edgeMeshes: THREE.LineSegments[] = [];
         root.traverse((child) => {
           if ((child as THREE.Mesh).isMesh) {
-            (child as THREE.Mesh).material = solidMat;
+            const mesh = child as THREE.Mesh;
+            mesh.material = solidMat;
+            // 각 메시에 EdgesGeometry 윤곽선 추가
+            if (mesh.geometry) {
+              const edges = new THREE.EdgesGeometry(mesh.geometry, 30);
+              const line = new THREE.LineSegments(edges, edgeMat);
+              line.position.copy(mesh.position);
+              line.rotation.copy(mesh.rotation);
+              line.scale.copy(mesh.scale);
+              edgeMeshes.push(line);
+              // 나중에 mesh의 부모에 추가 (traverse 중 수정 방지)
+              (mesh as any).__edgeLine = line;
+            }
+          }
+        });
+        // traverse 이후 edge line을 각 mesh의 부모에 추가
+        root.traverse((child) => {
+          const edgeLine = (child as any).__edgeLine as THREE.LineSegments | undefined;
+          if (edgeLine && child.parent) {
+            child.parent.add(edgeLine);
+            delete (child as any).__edgeLine;
           }
         });
       });
