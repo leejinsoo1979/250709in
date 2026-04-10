@@ -96,11 +96,11 @@ const LegraSideRail: React.FC<LegraSideRailProps> = ({
 
     // GLB 모델 상단 돌출부(레일 마운트) 보정값
     // - SL500/L500/M500: 13.7mm (기존 - 서랍 바닥판 하단 기준 -13.7mm)
-    // - F500_o: 원점이 달라서 뒷판 하단(서랍 바닥판 상단)과 정렬되도록 조정
+    // - F500_o: 원점이 달라 별도 오프셋 사용
     const isF500 = modelPath.includes('F500');
     const targetMinY = isF500
-      ? drawerBottomY + drawerBottomThickness  // 뒷판 하단(=바닥판 상단)에 정렬
-      : drawerBottomY - 13.7 * 0.01;           // 기존: 바닥판 하단 -13.7mm
+      ? drawerBottomY - 5 * 0.01   // F500: 바닥판 하단 -5mm (기존 -13.7보다 8.7mm 아래로)
+      : drawerBottomY - 13.7 * 0.01; // 기존: 바닥판 하단 -13.7mm
 
     // X: 캐비넷 측판 안쪽면에서 7mm 안쪽으로 (서랍 뒷판과 맞닿도록)
     const INSET = 7 * 0.01; // 7mm → Three.js units
