@@ -130,7 +130,7 @@ const UnifiedSpaceViewer: React.FC<UnifiedSpaceViewerProps> = ({
             viewMode={localViewMode}
             showDimensions={showDimensions}
             showFurniture={showFurniture}
-            showGrid={true}
+            showGrid={false}
           />
         ) : (
           // Render 3D or orthographic 2D view
