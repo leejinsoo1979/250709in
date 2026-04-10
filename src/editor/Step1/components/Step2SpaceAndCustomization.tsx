@@ -422,7 +422,7 @@ const Step2SpaceAndCustomization: React.FC<Step2SpaceAndCustomizationProps> = ({
                         installType: 'semistanding' as InstallType,
                       };
                       updates.wallConfig = { left: true, right: false };
-                      updates.gapConfig = { left: 1.5, right: 18 };
+                      updates.gapConfig = { left: 1.5, right: 0 };
                       handleUpdate(updates);
                     }}
                     title={t('space.semistandingDesc')}
@@ -455,7 +455,7 @@ const Step2SpaceAndCustomization: React.FC<Step2SpaceAndCustomizationProps> = ({
                       className={`${styles.toggleButton} ${spaceInfo.wallConfig?.left ? styles.active : ''}`}
                       onClick={() => handleUpdate({ 
                         wallConfig: { left: true, right: false },
-                        gapConfig: { left: 1.5, right: 18 }
+                        gapConfig: { left: 1.5, right: 0 }
                       })}
                     >
                       {t('furniture.left')}
@@ -464,7 +464,7 @@ const Step2SpaceAndCustomization: React.FC<Step2SpaceAndCustomizationProps> = ({
                       className={`${styles.toggleButton} ${spaceInfo.wallConfig?.right ? styles.active : ''}`}
                       onClick={() => handleUpdate({ 
                         wallConfig: { left: false, right: true },
-                        gapConfig: { left: 18, right: 1.5 }
+                        gapConfig: { left: 0, right: 1.5 }
                       })}
                     >
                       {t('furniture.right')}

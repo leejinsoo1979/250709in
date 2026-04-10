@@ -1197,18 +1197,9 @@ export class ColumnIndexer {
             leftReduction = spaceInfo.gapConfig?.left || 2;
             rightReduction = spaceInfo.gapConfig?.right || 2;
           } else {
-            // 기타 케이스 (엔드패널)
-            if (spaceInfo.wallConfig?.left) {
-              leftReduction = 0;
-            } else {
-              leftReduction = END_PANEL_THICKNESS;
-            }
-
-            if (spaceInfo.wallConfig?.right) {
-              rightReduction = 0;
-            } else {
-              rightReduction = END_PANEL_THICKNESS;
-            }
+            // 기타 케이스: EP 자동 생성 없음 — 벽없는 쪽은 이격 0
+            leftReduction = 0;
+            rightReduction = 0;
           }
 
           // 커튼박스가 좌측(단내림과 같은쪽)에 있으면: [벽][커튼박스][단내림][메인][벽]
@@ -1329,18 +1320,9 @@ export class ColumnIndexer {
             leftReduction = spaceInfo.gapConfig?.left || 2;
             rightReduction = spaceInfo.gapConfig?.right || 2;
           } else {
-            // 기타 케이스 (엔드패널)
-            if (spaceInfo.wallConfig?.left) {
-              leftReduction = 0;
-            } else {
-              leftReduction = END_PANEL_THICKNESS;
-            }
-
-            if (spaceInfo.wallConfig?.right) {
-              rightReduction = 0;
-            } else {
-              rightReduction = END_PANEL_THICKNESS;
-            }
+            // 기타 케이스: EP 자동 생성 없음 — 벽없는 쪽은 이격 0
+            leftReduction = 0;
+            rightReduction = 0;
           }
 
           // 커튼박스가 우측(단내림과 같은쪽)에 있으면: [벽][메인][단내림][커튼박스][벽]

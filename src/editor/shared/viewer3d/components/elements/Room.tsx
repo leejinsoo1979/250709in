@@ -78,7 +78,7 @@ if (typeof window !== 'undefined') {
 const calculateNoSurroundOffset = (spaceInfo: SpaceInfo, side: 'left' | 'right'): number => {
   if (spaceInfo.surroundType !== 'no-surround') return 0;
 
-  const gapConfig = spaceInfo.gapConfig || { left: 18, right: 18 };
+  const gapConfig = spaceInfo.gapConfig || { left: 0, right: 0 };
   const wallConfig = spaceInfo.wallConfig || { left: true, right: true };
 
   if (spaceInfo.installType === 'builtin' || spaceInfo.installType === 'built-in') {
