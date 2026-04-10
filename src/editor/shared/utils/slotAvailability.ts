@@ -64,17 +64,28 @@ export const isSlotAvailable = (
     ? (zoneInfo.normal?.columnCount ?? 0) + (zoneInfo.dropped?.columnCount ?? 0)
     : indexing.columnCount;
 
-  const effectiveColumnCount = Math.max(indexing.columnCount, totalZoneColumnCount);
-  
+  // targetZone이 지정된 경우 해당 zone의 columnCount로 범위 체크
+  // (slotIndex가 zone 로컬 인덱스이기 때문)
+  let effectiveColumnCount: number;
+  if (targetZone && zoneInfo) {
+    const zoneColumnCount = targetZone === 'dropped'
+      ? (zoneInfo.dropped?.columnCount ?? 0)
+      : (zoneInfo.normal?.columnCount ?? 0);
+    effectiveColumnCount = zoneColumnCount;
+  } else {
+    effectiveColumnCount = Math.max(indexing.columnCount, totalZoneColumnCount);
+  }
+
   console.log('[SlotDebug] isSlotAvailable:start', {
     slotIndex,
     isDualFurniture,
     placedCount: placedModules.length,
     effectiveColumnCount,
+    targetZone,
     moduleId,
     excludeModuleId
   });
-  
+
   // 범위 검사
   if (slotIndex < 0) {
     console.log('[SlotDebug] isSlotAvailable:range-fail', { reason: 'negative', slotIndex });

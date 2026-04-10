@@ -86,8 +86,39 @@ export function placeFurnitureAtSlot(params: PlaceFurnitureParams): PlaceFurnitu
     columnWidth = indexing.columnWidth;
   }
 
-  // 듀얼 가구의 실제 너비: 재분할된 슬롯이면 두 슬롯 합, 아니면 columnWidth * 2
+  // 듀얼 가구의 실제 너비: zone이 있으면 해당 zone의 slotWidths 사용
+  // 단, slotWidths는 Math.floor로 내림되어 있어 합산 시 내부 폭보다 -1~-N mm 손실 가능.
+  // 해결: zone의 실제 내부 폭(width)을 기준으로 2슬롯 비율만큼 사용 → floor 손실 방지.
   const getActualDualWidth = (): number => {
+    // 단내림 + zone 지정 시 해당 zone 기준
+    if (hasDroppedCeiling && zone && indexing.zones) {
+      const zoneData = zone === 'dropped' ? indexing.zones.dropped : indexing.zones.normal;
+      const zoneColumnCount = zoneData?.columnCount ?? 0;
+      const zoneInternalWidth = zoneData?.width ?? 0;
+
+      if (zoneColumnCount >= 2 && zoneInternalWidth > 0) {
+        // 듀얼은 항상 2슬롯 분량
+        // 2슬롯 존: 내부 폭 전체 사용 / 3슬롯 이상: 2/count 비율
+        if (zoneColumnCount === 2) {
+          return Math.floor(zoneInternalWidth);
+        }
+        return Math.floor((zoneInternalWidth * 2) / zoneColumnCount);
+      }
+
+      // 폴백
+      const zoneSlotWidths = zoneData?.slotWidths;
+      if (zoneSlotWidths && slotIndex < zoneSlotWidths.length - 1) {
+        return zoneSlotWidths[slotIndex] + zoneSlotWidths[slotIndex + 1];
+      }
+      return columnWidth * 2;
+    }
+    // 단내림 없음: 전체 내부 폭 기준
+    if (indexing.columnCount >= 2 && indexing.internalWidth > 0) {
+      if (indexing.columnCount === 2) {
+        return Math.floor(indexing.internalWidth);
+      }
+      return Math.floor((indexing.internalWidth * 2) / indexing.columnCount);
+    }
     const sw = indexing.slotWidths;
     if (sw && slotIndex < sw.length - 1) {
       return sw[slotIndex] + sw[slotIndex + 1];
@@ -251,9 +282,8 @@ export function placeFurnitureAtSlot(params: PlaceFurnitureParams): PlaceFurnitu
 
   if (targetIndexing.slotWidths && targetIndexing.slotWidths[slotIndex] !== undefined) {
     if (isDualFurniture && slotIndex < targetIndexing.slotWidths.length - 1) {
-      // 듀얼: 실제 두 슬롯 너비 합 사용
-      const dualW = targetIndexing.slotWidths[slotIndex] + targetIndexing.slotWidths[slotIndex + 1];
-      customWidth = Math.floor(dualW);
+      // 듀얼: getActualDualWidth()와 일치시켜 floor 손실 방지
+      customWidth = getActualDualWidth();
     } else {
       // 싱글: slotWidths에서 정수 내림된 값 사용
       customWidth = targetIndexing.slotWidths[slotIndex];

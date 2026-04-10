@@ -1031,19 +1031,30 @@ const ModuleGallery: React.FC<ModuleGalleryProps> = ({ moduleCategory = 'tall', 
     // 듀얼 가구인지 확인
     const isDualModule = module.id.includes('dual-');
 
-    // 단내림 구간에서 듀얼 가구는 실제 배치 가능성 체크
-    if (activeDroppedCeilingTab === 'dropped' && isDualModule) {
-      // 단내림 구간에서는 듀얼 가구가 2개 슬롯을 차지할 수 있는지 확인
+    // 단내림 활성화 시 영역별 검증
+    if (spaceInfo.droppedCeiling?.enabled) {
       const zoneInfo = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
-      if (zoneInfo.dropped) {
-        // 단내림 구간에 최소 2개의 슬롯이 있는지 확인
-        return zoneInfo.dropped.columnCount >= 2 &&
-          module.dimensions.height <= zoneInternalSpace.height &&
+
+      // 단내림 탭: dropped 영역 검증
+      if (activeDroppedCeilingTab === 'dropped') {
+        if (zoneInfo.dropped) {
+          if (isDualModule && zoneInfo.dropped.columnCount < 2) {
+            return false;
+          }
+          return module.dimensions.height <= zoneInternalSpace.height &&
+            module.dimensions.depth <= zoneInternalSpace.depth;
+        }
+      } else {
+        // 메인 탭: normal 영역 검증
+        if (isDualModule && zoneInfo.normal.columnCount < 2) {
+          return false;
+        }
+        return module.dimensions.height <= zoneInternalSpace.height &&
           module.dimensions.depth <= zoneInternalSpace.depth;
       }
     }
 
-    // 일반적인 유효성 검사
+    // 단내림 없음: 일반 검증
     return module.dimensions.width <= zoneInternalSpace.width &&
       module.dimensions.height <= zoneInternalSpace.height &&
       module.dimensions.depth <= zoneInternalSpace.depth;

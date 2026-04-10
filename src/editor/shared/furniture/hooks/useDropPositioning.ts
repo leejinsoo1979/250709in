@@ -92,9 +92,9 @@ export const useDropPositioning = (spaceInfo: SpaceInfo) => {
       const relativeX = worldXMm - zoneStartX;
       const columnIndex = Math.floor(relativeX / zoneColumnWidth);
       const clampedColumnIndex = Math.max(0, Math.min(columnIndex, zoneColumnCount - 1));
-      
-      // 듀얼 가구 여부 판단
-      const isDualFurniture = Math.abs(moduleData.dimensions.width - (zoneColumnWidth * 2)) < 50;
+
+      // 듀얼 가구 여부 판단 — id 기반 (갤러리 width가 전체 공간 기준이어도 정확)
+      const isDualFurniture = currentDragData.moduleData.id.includes('dual-');
       
       let targetPositionX: number;
       let targetColumn: number;
@@ -128,9 +128,9 @@ export const useDropPositioning = (spaceInfo: SpaceInfo) => {
     const columnCount = indexing.columnCount;
     const columnIndex = ColumnIndexer.findClosestColumnIndex({ x: worldX }, indexing);
     const clampedColumnIndex = Math.max(0, Math.min(columnIndex, columnCount - 1));
-    
-    const columnWidth = indexing.columnWidth;
-    const isDualFurniture = Math.abs(moduleData.dimensions.width - (columnWidth * 2)) < 50;
+
+    // 듀얼 가구 여부 판단 — id 기반으로 통일
+    const isDualFurniture = currentDragData.moduleData.id.includes('dual-');
     
     let targetPositionX: number;
     let targetColumn: number;

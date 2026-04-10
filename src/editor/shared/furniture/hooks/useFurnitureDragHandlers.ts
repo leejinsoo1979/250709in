@@ -1,7 +1,7 @@
 import React from 'react';
 import { useThree } from '@react-three/fiber';
 import { SpaceInfo } from '@/store/core/spaceConfigStore';
-import { calculateSpaceIndexing } from '@/editor/shared/utils/indexing';
+import { calculateSpaceIndexing, ColumnIndexer } from '@/editor/shared/utils/indexing';
 import { useFurnitureStore } from '@/store';
 import { useDropPositioning } from './useDropPositioning';
 import { getModuleById } from '@/data/modules';
@@ -48,26 +48,36 @@ export const useFurnitureDragHandlers = (spaceInfo: SpaceInfo) => {
 
         const indexing = calculateSpaceIndexing(spaceInfo);
 
-        // 특수 듀얼 가구: 싱글 슬롯 525mm 미만이면 배치 불가
-        if (isSpecialDualFurniture && indexing.columnWidth < 525) {
-          showAlert('본 가구는 슬롯 폭이 525mm 이상이어야 배치할 수 있습니다', { title: '배치 불가' });
-          setFurniturePlacementMode(false);
-          return;
-        }
+        // 드롭 위치 계산 (존 정보 필요)
+        const dropPosition = calculateDropPosition(e, currentDragData);
+        if (!dropPosition) return;
 
-        // 특수 듀얼 가구: 2슬롯 합 1050mm 미만이면 배치 불가
+        // 특수 듀얼 가구 검증 — 해당 존의 실제 슬롯 폭 기준
         if (isSpecialDualFurniture) {
-          const dualWidth = indexing.columnWidth * 2;
-          if (dualWidth < 1050) {
+          let checkSlotWidth = indexing.columnWidth;
+          if (spaceInfo.droppedCeiling?.enabled && indexing.zones) {
+            const zoneInfo = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
+            if (dropPosition.zone === 'dropped' && zoneInfo.dropped) {
+              checkSlotWidth = zoneInfo.dropped.columnWidth;
+            } else {
+              checkSlotWidth = zoneInfo.normal.columnWidth;
+            }
+          }
+
+          // 싱글 슬롯 525mm 미만이면 배치 불가
+          if (checkSlotWidth < 525) {
+            showAlert('본 가구는 슬롯 폭이 525mm 이상이어야 배치할 수 있습니다', { title: '배치 불가' });
+            setFurniturePlacementMode(false);
+            return;
+          }
+
+          // 2슬롯 합 1050mm 미만이면 배치 불가
+          if (checkSlotWidth * 2 < 1050) {
             showAlert('본 가구는 슬롯 2개의 합이 1050mm 이상이어야 배치할 수 있습니다', { title: '배치 불가' });
             setFurniturePlacementMode(false);
             return;
           }
         }
-
-        // 드롭 위치 계산
-        const dropPosition = calculateDropPosition(e, currentDragData);
-        if (!dropPosition) return;
 
         console.log('🟢🟢🟢 dropPosition 확인:', {
           column: dropPosition.column,
@@ -79,13 +89,15 @@ export const useFurnitureDragHandlers = (spaceInfo: SpaceInfo) => {
           전체높이: spaceInfo.height
         });
 
-        // 슬롯 사용 가능 여부 확인
+        // 슬롯 사용 가능 여부 확인 (zone 전달 — 단내림 시 필수)
         const isAvailable = isSlotAvailable(
           dropPosition.column,
           dropPosition.isDualFurniture,
           placedModules,
           spaceInfo,
-          currentDragData.moduleData.id
+          currentDragData.moduleData.id,
+          undefined,
+          dropPosition.zone
         );
 
         let targetSlotIndex = dropPosition.column;
@@ -93,7 +105,7 @@ export const useFurnitureDragHandlers = (spaceInfo: SpaceInfo) => {
         // 사용 불가능하면 다음 사용 가능한 슬롯 찾기
         if (!isAvailable) {
           const checkSlotWithColumn = (column: number, isDual: boolean) => {
-            return !isSlotAvailable(column, isDual, placedModules, spaceInfo, currentDragData.moduleData.id);
+            return !isSlotAvailable(column, isDual, placedModules, spaceInfo, currentDragData.moduleData.id, undefined, dropPosition.zone);
           };
 
           const availableSlot = findAvailableSlot(
