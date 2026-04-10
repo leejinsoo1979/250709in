@@ -470,7 +470,7 @@ export const useUIStore = create<UIState>()(
           return {
             showDimensions: true,
             showAll: backup ? backup.showAll : true,
-            showGuides: backup ? backup.showGuides : true,
+            showGuides: backup ? backup.showGuides : false, // 기본값: 그리드 꺼짐
             showAxis: backup ? backup.showAxis : true,
             showDimensionsText: backup ? backup.showDimensionsText : true,
             dimensionOptionsBackup: null
@@ -527,13 +527,13 @@ export const useUIStore = create<UIState>()(
           return {
             showDimensions: true,
             showAll: backup ? backup.showAll : true,
-            showGuides: backup ? backup.showGuides : true,
+            showGuides: backup ? backup.showGuides : false, // 기본값: 그리드 꺼짐
             showAxis: backup ? backup.showAxis : true,
             showDimensionsText: backup ? backup.showDimensionsText : true,
             dimensionOptionsBackup: null
           };
         }),
-      
+
       setShowDimensionsText: (show) =>
         set({ showDimensionsText: show }),
       
