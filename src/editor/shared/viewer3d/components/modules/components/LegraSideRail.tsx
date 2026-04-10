@@ -99,7 +99,7 @@ const LegraSideRail: React.FC<LegraSideRailProps> = ({
     // - F500_o: 원점이 달라 별도 오프셋 사용
     const isF500 = modelPath.includes('F500');
     const targetMinY = isF500
-      ? drawerBottomY - 20 * 0.01   // F500: 바닥판 하단 -20mm
+      ? drawerBottomY - 21 * 0.01   // F500: 바닥판 하단 -21mm
       : drawerBottomY - 13.7 * 0.01; // 기존: 바닥판 하단 -13.7mm
 
     // X: 캐비넷 측판 안쪽면에서 7mm 안쪽으로 (서랍 뒷판과 맞닿도록)
