@@ -92,12 +92,11 @@ const LegraSideRail: React.FC<LegraSideRailProps> = ({
     const left = cleanClone(scene);
     const right = cleanClone(scene);
 
-    // 2D 측면뷰: 면은 단색 + 윤곽선 추가
+    // 2D 측면뷰: 면은 단색 + 윤곽선 추가 (material만 교체, 바운딩박스에는 영향 없음)
     // 다크: 검정 면 + 흰색 윤곽선
     // 라이트: 흰색 면 + 검정 윤곽선
     if (is2DSideView) {
       const faceColor = is2DDark ? 0x000000 : 0xffffff;
-      const edgeColor = is2DDark ? 0xffffff : 0x000000;
       const solidMat = new THREE.MeshBasicMaterial({
         color: faceColor,
         transparent: false,
@@ -105,31 +104,10 @@ const LegraSideRail: React.FC<LegraSideRailProps> = ({
         polygonOffsetFactor: 1,
         polygonOffsetUnits: 1,
       });
-      const edgeMat = new THREE.LineBasicMaterial({
-        color: edgeColor,
-      });
       [left, right].forEach((root) => {
         root.traverse((child) => {
           if ((child as THREE.Mesh).isMesh) {
-            const mesh = child as THREE.Mesh;
-            mesh.material = solidMat;
-            // 각 메시에 EdgesGeometry 윤곽선 추가 (15도 — 완만한 곡면도 포함)
-            if (mesh.geometry) {
-              const edges = new THREE.EdgesGeometry(mesh.geometry, 15);
-              const line = new THREE.LineSegments(edges, edgeMat);
-              line.position.copy(mesh.position);
-              line.rotation.copy(mesh.rotation);
-              line.scale.copy(mesh.scale);
-              (mesh as any).__edgeLine = line;
-            }
-          }
-        });
-        // traverse 이후 edge line을 각 mesh의 부모에 추가
-        root.traverse((child) => {
-          const edgeLine = (child as any).__edgeLine as THREE.LineSegments | undefined;
-          if (edgeLine && child.parent) {
-            child.parent.add(edgeLine);
-            delete (child as any).__edgeLine;
+            (child as THREE.Mesh).material = solidMat;
           }
         });
       });
@@ -141,9 +119,37 @@ const LegraSideRail: React.FC<LegraSideRailProps> = ({
     const lScale = new THREE.Vector3(GLTF_SCALE, yScale, GLTF_SCALE);
     const rScale = new THREE.Vector3(-GLTF_SCALE, yScale, GLTF_SCALE); // X 미러링
 
-    // 바운딩박스 측정 (스케일 적용 상태)
+    // 바운딩박스 측정 (스케일 적용 상태, 엣지 라인 추가 전)
     const leftBox = getScaledBounds(left, lScale);
     const rightBox = getScaledBounds(right, rScale);
+
+    // 바운딩박스 계산 이후에 엣지 라인 추가 (Y정렬에 영향 주지 않도록)
+    if (is2DSideView) {
+      const edgeColor = is2DDark ? 0xffffff : 0x000000;
+      const edgeMat = new THREE.LineBasicMaterial({ color: edgeColor });
+      [left, right].forEach((root) => {
+        root.traverse((child) => {
+          if ((child as THREE.Mesh).isMesh) {
+            const mesh = child as THREE.Mesh;
+            if (mesh.geometry) {
+              const edges = new THREE.EdgesGeometry(mesh.geometry, 15);
+              const line = new THREE.LineSegments(edges, edgeMat);
+              line.position.copy(mesh.position);
+              line.rotation.copy(mesh.rotation);
+              line.scale.copy(mesh.scale);
+              (mesh as any).__edgeLine = line;
+            }
+          }
+        });
+        root.traverse((child) => {
+          const edgeLine = (child as any).__edgeLine as THREE.LineSegments | undefined;
+          if (edgeLine && child.parent) {
+            child.parent.add(edgeLine);
+            delete (child as any).__edgeLine;
+          }
+        });
+      });
+    }
 
     // GLB 모델 상단 돌출부(레일 마운트) 보정값
     // - SL500/L500/M500: 13.7mm (기존 - 서랍 바닥판 하단 기준 -13.7mm)
