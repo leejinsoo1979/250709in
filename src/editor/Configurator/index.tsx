@@ -221,7 +221,7 @@ const ZoneSizeDroppedRow: React.FC<{
             handleSpaceInfoUpdate({ droppedCeiling: { ...spaceInfo.droppedCeiling, enabled: true, width: newDroppedWidth } });
           }
         }}
-        className={`${styles.input} ${styles.inputWithUnitField}`}
+        className={styles.input}
         style={{ textAlign: 'center', fontSize: '12px' }}
       />
     </div>
@@ -254,7 +254,7 @@ const ZoneSizeDroppedRow: React.FC<{
             else { handleSpaceInfoUpdate({ droppedCeiling: { ...spaceInfo.droppedCeiling, enabled: true, dropHeight: newDropHeight } }); }
           }
         }}
-        className={`${styles.input} ${styles.inputWithUnitField}`}
+        className={styles.input}
         style={{ textAlign: 'center', fontSize: '12px' }}
       />
     </div>
@@ -281,7 +281,7 @@ const ZoneSizeCurtainBoxRow: React.FC<{
           const newW = Math.max(100, Math.min(200, parseInt(inputValue)));
           handleSpaceInfoUpdate({ curtainBox: { ...spaceInfo.curtainBox, width: newW } });
         }}
-        className={`${styles.input} ${styles.inputWithUnitField}`}
+        className={styles.input}
         style={{ textAlign: 'center', fontSize: '12px' }}
       />
     </div>
@@ -304,7 +304,7 @@ const ZoneSizeCurtainBoxRow: React.FC<{
           e.target.value = (totalHeight + clampedDrop).toString();
           handleSpaceInfoUpdate({ curtainBox: { ...spaceInfo.curtainBox, dropHeight: clampedDrop } });
         }}
-        className={`${styles.input} ${styles.inputWithUnitField}`}
+        className={styles.input}
         style={{ textAlign: 'center', fontSize: '12px' }}
       />
     </div>
@@ -3698,7 +3698,7 @@ const Configurator: React.FC = () => {
                       handleSpaceInfoUpdate({ droppedCeiling: { ...spaceInfo.droppedCeiling, enabled: true, width: newDroppedWidth } });
                     }
                   }}
-                  className={`${styles.input} ${styles.inputWithUnitField}`}
+                  className={styles.input}
                   style={{ textAlign: 'center', fontSize: '12px' }}
                 />
               </div>
@@ -3724,7 +3724,7 @@ const Configurator: React.FC = () => {
                     else if (numValue > 3000) { e.target.value = '3000'; handleSpaceInfoUpdate({ height: 3000 }); }
                     else { handleSpaceInfoUpdate({ height: numValue }); }
                   }}
-                  className={`${styles.input} ${styles.inputWithUnitField}`}
+                  className={styles.input}
                 />
               </div>
               <span style={{ fontSize: '11px', color: 'var(--theme-text-muted)' }}>mm</span>
@@ -3751,7 +3751,7 @@ const Configurator: React.FC = () => {
                     key={`sc-zone-w-${spaceInfo.stepCeiling.width}`}
                     readOnly
                     style={{ textAlign: 'center', fontSize: '12px', opacity: 0.6, cursor: 'default' }}
-                    className={`${styles.input} ${styles.inputWithUnitField}`}
+                    className={styles.input}
                   />
                 </div>
                 <span style={{ fontSize: '11px', color: 'var(--theme-text-muted)' }}>×</span>
@@ -3762,7 +3762,7 @@ const Configurator: React.FC = () => {
                     key={`sc-zone-h-${spaceInfo.height}-${spaceInfo.stepCeiling.dropHeight}`}
                     readOnly
                     style={{ textAlign: 'center', fontSize: '12px', opacity: 0.6, cursor: 'default' }}
-                    className={`${styles.input} ${styles.inputWithUnitField}`}
+                    className={styles.input}
                   />
                 </div>
                 <span style={{ fontSize: '11px', color: 'var(--theme-text-muted)' }}>mm</span>
