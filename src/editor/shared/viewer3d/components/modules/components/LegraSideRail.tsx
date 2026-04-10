@@ -77,10 +77,10 @@ const LegraSideRail: React.FC<LegraSideRailProps> = ({
   // drawerHeightMm 제공 시 높이 기반 모델 선택, 미제공 시 기존 tier 기반
   // 228↑ → SL500, 117↓ → M500, 나머지(164 등) → L500
   const modelPath = drawerHeightMm != null
-    ? (drawerHeightMm >= 200 ? '/models/Legra%20F500_o.glb'
+    ? (drawerHeightMm >= 200 ? '/models/f500.glb'
       : drawerHeightMm <= 120 ? '/models/Legra_M500.glb'
       : '/models/Legra_L500.glb')
-    : (drawerTier === 1 ? '/models/Legra%20F500_o.glb' : '/models/Legra_L500.glb');
+    : (drawerTier === 1 ? '/models/f500.glb' : '/models/Legra_L500.glb');
   const { scene } = useGLTF(modelPath);
 
   // 2D 측면뷰(left/right) 감지
@@ -210,8 +210,8 @@ const LegraSideRail: React.FC<LegraSideRailProps> = ({
 
     // GLB 모델 상단 돌출부(레일 마운트) 보정값
     // - SL500/L500/M500: 13.7mm (기존 - 서랍 바닥판 하단 기준 -13.7mm)
-    // - F500_o: 원점이 달라 별도 오프셋(-21mm) 사용
-    const isF500 = modelPath.includes('F500');
+    // - f500: 원점이 달라 별도 오프셋(-21mm) 사용
+    const isF500 = modelPath.toLowerCase().includes('f500');
     const targetMinY = isF500
       ? drawerBottomY - 21 * 0.01   // F500: 바닥판 하단 -21mm
       : drawerBottomY - 13.7 * 0.01; // 기존: 바닥판 하단 -13.7mm
@@ -258,7 +258,7 @@ const LegraSideRail: React.FC<LegraSideRailProps> = ({
   );
 };
 
-useGLTF.preload('/models/Legra%20F500_o.glb');
+useGLTF.preload('/models/f500.glb');
 useGLTF.preload('/models/Legra_L500.glb');
 useGLTF.preload('/models/Legra_M500.glb');
 
