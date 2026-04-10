@@ -3237,10 +3237,10 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                   }}
                   style={{
                     display: 'flex',
-                    gap: '12px',
+                    gap: '8px',
                     background: 'rgba(70, 70, 70, 0.7)',
-                    borderRadius: '24px',
-                    padding: '10px 18px',
+                    borderRadius: '18px',
+                    padding: '6px 12px',
                     boxShadow: '0 3px 12px rgba(0,0,0,0.25)'
                   }}
                 >
@@ -3260,8 +3260,8 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                       }, 100);
                     }}
                     style={{
-                      width: '32px',
-                      height: '32px',
+                      width: '24px',
+                      height: '24px',
                       background: 'transparent',
                       border: 'none',
                       borderRadius: '0',
@@ -3275,7 +3275,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                     onMouseEnter={(e) => e.currentTarget.style.opacity = '0.7'}
                     onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}
                   >
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <rect x="5" y="11" width="14" height="10" rx="2" />
                       <path d="M12 17a1 1 0 100-2 1 1 0 000 2z" fill="white" />
                       {placedModule.isLocked ? (
@@ -3299,8 +3299,8 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                       removeModule(placedModule.id);
                     }}
                     style={{
-                      width: '32px',
-                      height: '32px',
+                      width: '24px',
+                      height: '24px',
                       background: 'transparent',
                       border: 'none',
                       borderRadius: '0',
@@ -3314,7 +3314,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                     onMouseEnter={(e) => e.currentTarget.style.opacity = '0.7'}
                     onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}
                   >
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M3 6h18" />
                       <path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6" />
                       <path d="M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2" />
@@ -3336,8 +3336,8 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                       }));
                     }}
                     style={{
-                      width: '32px',
-                      height: '32px',
+                      width: '24px',
+                      height: '24px',
                       background: 'transparent',
                       border: 'none',
                       borderRadius: '0',
@@ -3351,7 +3351,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                     onMouseEnter={(e) => e.currentTarget.style.opacity = '0.7'}
                     onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}
                   >
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <rect x="9" y="9" width="13" height="13" rx="2" />
                       <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
                     </svg>

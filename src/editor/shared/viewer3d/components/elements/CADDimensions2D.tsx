@@ -205,8 +205,9 @@ const computeLowerCabinetMaidaHeights = (
     const isTouch3 = moduleId.includes('lower-door-lift-touch-3tier');
     const isTDTouch2 = moduleId.includes('lower-top-down-touch-2tier');
     const isTDTouch3 = moduleId.includes('lower-top-down-touch-3tier');
+    // 마이다 비례: 2B는 2A와 동일하게 [228, 228] 사용 (서랍 본체 높이만 다름)
     const drawerHeights = isTouch2A ? [228, 228]
-      : isTouch2B ? [228, 164]
+      : isTouch2B ? [228, 228]
       : isTouch3 ? [228, 117, 117]
       : isTDTouch2 ? [228, 228]
       : isTDTouch3 ? [164, 117, 117]

@@ -137,8 +137,9 @@ const TouchDrawerAnimated: React.FC<TouchDrawerAnimatedProps> = ({
   const moduleDepthMm = furnitureDepth / 0.01;
   const maidaZ = mmToThreeUnits((moduleDepthMm + 28) / 2);
 
+  // 마이다 비례: 2B는 2A와 동일하게 [228, 228] 사용 (서랍 본체 높이만 다름)
   const drawerHeights = isTouch2A ? [228, 228]
-    : isTouch2B ? [228, 164]
+    : isTouch2B ? [228, 228]
     : isTouch3 ? [228, 117, 117]
     : isTDTouch2 ? [228, 228]
     : isTDTouch3 ? [164, 117, 117]
