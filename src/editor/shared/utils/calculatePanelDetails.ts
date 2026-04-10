@@ -1558,13 +1558,22 @@ export const calculatePanelDetails = (
     const totalMaidaMm = totalFrontMm - totalGaps;
     const totalMaidaDrawerH = maidaDrawerHeights.reduce((a: number, b: number) => a + b, 0);
 
+    // 터치 2단: 1단=408, 2단=409로 고정 (균등 408.5 대신 정수 분배)
+    const is2Tier = drawerHeights.length === 2 && (isTouch2A || isTouch2B || isTDTouch2);
+    const fixedMaidaH2Tier = [408, 409];
+
     drawerHeights.forEach((dh, di) => {
       const drawerNum = di + 1;
       const backH = dh - drawerThicknessMm;
-      const maidaRef = maidaDrawerHeights[di] ?? dh;
-      // 마이다 높이는 소수점 1자리 유지 (408.5 같은 값을 409로 반올림하지 않음)
-      const maidaHRaw = (maidaRef / totalMaidaDrawerH) * totalMaidaMm;
-      const maidaH = Math.round(maidaHRaw * 10) / 10;
+      let maidaH: number;
+      if (is2Tier) {
+        maidaH = fixedMaidaH2Tier[di];
+      } else {
+        const maidaRef = maidaDrawerHeights[di] ?? dh;
+        // 마이다 높이는 소수점 1자리 유지
+        const maidaHRaw = (maidaRef / totalMaidaDrawerH) * totalMaidaMm;
+        maidaH = Math.round(maidaHRaw * 10) / 10;
+      }
 
       extDrawerPanels.push(
         { name: `터치서랍${drawerNum} 바닥판`, width: Math.round(drawerBottomWidthMm), depth: drawerDepthMm, thickness: drawerThicknessMm, material: 'MDF' },

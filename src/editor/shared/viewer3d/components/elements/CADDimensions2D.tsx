@@ -221,7 +221,11 @@ const computeLowerCabinetMaidaHeights = (
     const totalGaps = (drawerCount - 1) * gapMm;
     const totalMaidaMm = totalFrontMm - totalGaps;
     const totalDrawerH = drawerHeights.reduce((a, b) => a + b, 0);
-    const maidaHeightsMm = drawerHeights.map(h => (h / totalDrawerH) * totalMaidaMm);
+    // 터치 2단: 1단=408, 2단=409로 고정 (균등 408.5 대신 정수 분배)
+    const is2Tier = drawerCount === 2 && (isTouch2A || isTouch2B || isTDTouch2);
+    const maidaHeightsMm = is2Tier
+      ? [408, 409]
+      : drawerHeights.map(h => (h / totalDrawerH) * totalMaidaMm);
 
     // 마이다 위치 (캐비넷 하단 -5mm 부터 시작)
     let currentBottomMm = -bottomExtMm;
