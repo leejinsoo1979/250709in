@@ -348,9 +348,9 @@ export class SpaceCalculator {
         };
         
       } else {
-        // 프리스탠딩: 양쪽 엔드패널 18mm 고정, 조정 불가
-        const internalWidth = spaceInfo.width - (END_PANEL_THICKNESS * 2);
-        // 소수점 2자리까지 정확히 계산  
+        // 프리스탠딩: EP 없이 전체 너비 사용
+        const internalWidth = spaceInfo.width;
+        // 소수점 2자리까지 정확히 계산
         const slotWidth = Math.round((internalWidth / columnCount) * 100) / 100;
         return {
           adjustedSpaceInfo: spaceInfo,
@@ -365,14 +365,14 @@ export class SpaceCalculator {
       const hasRightWall = spaceInfo.wallConfig?.right;
       const currentFrameSize = spaceInfo.frameSize || { left: 50, right: 50, top: 30 };
       
-      // 엔드패널이 아닌 경우만 조정 가능
-      const canAdjustLeft = hasLeftWall && currentFrameSize.left !== END_PANEL_THICKNESS;
-      const canAdjustRight = hasRightWall && currentFrameSize.right !== END_PANEL_THICKNESS;
-      
+      // 프레임 조정 가능 여부
+      const canAdjustLeft = hasLeftWall && currentFrameSize.left > 0;
+      const canAdjustRight = hasRightWall && currentFrameSize.right > 0;
+
       if (!canAdjustLeft && !canAdjustRight) {
-        // 조정 불가능 (양쪽 모두 엔드패널)
+        // 조정 불가능
         const internalWidth = SpaceCalculator.calculateInternalWidth(spaceInfo);
-        // 소수점 2자리까지 정확히 계산  
+        // 소수점 2자리까지 정확히 계산
         const slotWidth = Math.round((internalWidth / columnCount) * 100) / 100;
         return {
           adjustedSpaceInfo: spaceInfo,
@@ -380,10 +380,10 @@ export class SpaceCalculator {
           adjustmentMade: false
         };
       }
-      
+
       // 프레임 크기 조정 시도 (40~60mm 범위)
-      const baseLeft = canAdjustLeft ? currentFrameSize.left : END_PANEL_THICKNESS;
-      const baseRight = canAdjustRight ? currentFrameSize.right : END_PANEL_THICKNESS;
+      const baseLeft = canAdjustLeft ? currentFrameSize.left : 0;
+      const baseRight = canAdjustRight ? currentFrameSize.right : 0;
       
       // 먼저 대칭 조정으로 시도 (프레임 합이 짝수인 경우)
       if (canAdjustLeft && canAdjustRight) {
