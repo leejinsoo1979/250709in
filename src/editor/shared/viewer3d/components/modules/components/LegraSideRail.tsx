@@ -3,6 +3,7 @@ import * as THREE from 'three';
 import { useGLTF } from '@react-three/drei';
 import { useSpace3DView } from '../../../context/useSpace3DView';
 import { useUIStore } from '@/store/uiStore';
+import { useTheme } from '@/contexts/ThemeContext';
 
 /**
  * 레그라 서랍 측판 (GLB 모델)
@@ -71,6 +72,8 @@ const LegraSideRail: React.FC<LegraSideRailProps> = ({
 }) => {
   const { viewMode } = useSpace3DView();
   const view2DDirection = useUIStore(state => state.view2DDirection);
+  const view2DTheme = useUIStore(state => state.view2DTheme);
+  const { theme } = useTheme();
   // drawerHeightMm 제공 시 높이 기반 모델 선택, 미제공 시 기존 tier 기반
   // 228↑ → SL500, 117↓ → M500, 나머지(164 등) → L500
   const modelPath = drawerHeightMm != null
@@ -80,27 +83,58 @@ const LegraSideRail: React.FC<LegraSideRailProps> = ({
     : (drawerTier === 1 ? '/models/Legra%20F500_o.glb' : '/models/Legra_L500.glb');
   const { scene } = useGLTF(modelPath);
 
-  // 2D 측면뷰(left/right) 감지 — 다크 라인 스타일 적용
+  // 2D 측면뷰(left/right) 감지
   const is2DSideView = viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right');
+  // 2D 다크 모드 여부 (라이트 모드는 흰색 면, 다크 모드는 라인만)
+  const is2DDark = view2DTheme === 'dark' || theme?.mode === 'dark';
 
   const { leftClone, rightClone, leftScale, rightScale, leftPos, rightPos } = useMemo(() => {
     const left = cleanClone(scene);
     const right = cleanClone(scene);
 
-    // 2D 측면뷰: 다크 라인 머티리얼 적용 (MeshBasicMaterial + edges)
+    // 2D 측면뷰 스타일링
     if (is2DSideView) {
-      const darkMat = new THREE.MeshBasicMaterial({
-        color: 0x2a2a2a,
-        transparent: true,
-        opacity: 0.9,
-      });
-      [left, right].forEach((root) => {
-        root.traverse((child) => {
-          if ((child as THREE.Mesh).isMesh) {
-            (child as THREE.Mesh).material = darkMat;
-          }
+      if (is2DDark) {
+        // 다크 모드: 면은 완전 투명 + edges 라인만 흰색 표시
+        const invisibleMat = new THREE.MeshBasicMaterial({
+          color: 0x000000,
+          transparent: true,
+          opacity: 0,
+          depthWrite: false,
         });
-      });
+        const lineMat = new THREE.LineBasicMaterial({
+          color: 0xffffff,
+          transparent: true,
+          opacity: 0.9,
+        });
+        [left, right].forEach((root) => {
+          const edgesToAdd: Array<{ parent: THREE.Object3D; edges: THREE.LineSegments }> = [];
+          root.traverse((child) => {
+            const mesh = child as THREE.Mesh;
+            if (mesh.isMesh && mesh.geometry) {
+              mesh.material = invisibleMat;
+              const edgesGeom = new THREE.EdgesGeometry(mesh.geometry, 30);
+              const lineSeg = new THREE.LineSegments(edgesGeom, lineMat);
+              lineSeg.name = 'legra-edges';
+              edgesToAdd.push({ parent: mesh, edges: lineSeg });
+            }
+          });
+          edgesToAdd.forEach(({ parent, edges }) => parent.add(edges));
+        });
+      } else {
+        // 라이트 모드: 면만 흰색 단색으로 (실루엣 느낌)
+        const whiteMat = new THREE.MeshBasicMaterial({
+          color: 0xffffff,
+          transparent: false,
+        });
+        [left, right].forEach((root) => {
+          root.traverse((child) => {
+            if ((child as THREE.Mesh).isMesh) {
+              (child as THREE.Mesh).material = whiteMat;
+            }
+          });
+        });
+      }
     }
 
     // GLB 모델은 원본 크기 그대로 사용
@@ -146,7 +180,7 @@ const LegraSideRail: React.FC<LegraSideRailProps> = ({
       leftPos: lPos,
       rightPos: rPos,
     };
-  }, [scene, drawerTier, drawerBottomY, drawerBottomThickness, backPanelHeight, drawerFrontZ, sidePanelInnerX, drawerHeightMm, is2DSideView]);
+  }, [scene, drawerTier, drawerBottomY, drawerBottomThickness, backPanelHeight, drawerFrontZ, sidePanelInnerX, drawerHeightMm, is2DSideView, is2DDark]);
 
   // 2D 상단뷰에서는 숨김 (정면/측면뷰에서는 렌더링)
   if (viewMode === '2D' && view2DDirection === 'top') return null;
