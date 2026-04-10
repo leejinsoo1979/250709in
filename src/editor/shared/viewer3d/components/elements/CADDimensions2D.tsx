@@ -196,6 +196,42 @@ const computeLowerCabinetMaidaHeights = (
   const isLowerTopDown = moduleId.includes('lower-top-down-');
   if (!isLowerDrawer && !isLowerDoorLift && !isLowerTopDown) return null;
 
+  // 터치 변형 (도어올림터치 / 상판내림터치): LowerCabinet.tsx line 758-800과 동일한 비례 계산
+  const isDoorLiftTouch = moduleId.includes('lower-door-lift-touch-');
+  const isTopDownTouch = moduleId.includes('lower-top-down-touch-');
+  if (isDoorLiftTouch || isTopDownTouch) {
+    const isTouch2A = moduleId.includes('lower-door-lift-touch-2tier-a');
+    const isTouch2B = moduleId.includes('lower-door-lift-touch-2tier-b');
+    const isTouch3 = moduleId.includes('lower-door-lift-touch-3tier');
+    const isTDTouch2 = moduleId.includes('lower-top-down-touch-2tier');
+    const isTDTouch3 = moduleId.includes('lower-top-down-touch-3tier');
+    const drawerHeights = isTouch2A ? [228, 228]
+      : isTouch2B ? [228, 164]
+      : isTouch3 ? [228, 117, 117]
+      : isTDTouch2 ? [228, 228]
+      : isTDTouch3 ? [164, 117, 117]
+      : [228, 228];
+
+    const topExtMm = 30;
+    const bottomExtMm = 5;
+    const totalFrontMm = moduleHeightMm + topExtMm + bottomExtMm;
+    const gapMm = 3;
+    const drawerCount = drawerHeights.length;
+    const totalGaps = (drawerCount - 1) * gapMm;
+    const totalMaidaMm = totalFrontMm - totalGaps;
+    const totalDrawerH = drawerHeights.reduce((a, b) => a + b, 0);
+    const maidaHeightsMm = drawerHeights.map(h => (h / totalDrawerH) * totalMaidaMm);
+
+    // 마이다 위치 (캐비넷 하단 -5mm 부터 시작)
+    let currentBottomMm = -bottomExtMm;
+    return maidaHeightsMm.map(h => {
+      const maidaBottom = currentBottomMm;
+      const maidaTop = maidaBottom + h;
+      currentBottomMm += h + gapMm;
+      return { maidaHeightMm: h, maidaBottomMm: maidaBottom, maidaTopMm: maidaTop };
+    });
+  }
+
   const is3Tier = moduleId.includes('lower-drawer-3tier');
   const isDoorLift3Tier = moduleId.includes('lower-door-lift-3tier');
   const isDoorLift2Tier = moduleId.includes('lower-door-lift-2tier');
