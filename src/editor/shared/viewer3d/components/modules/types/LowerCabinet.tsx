@@ -153,11 +153,15 @@ const TouchDrawerAnimated: React.FC<TouchDrawerAnimatedProps> = ({
   const totalGaps = (drawerCount - 1) * gapMm;
   const totalMaidaMm = totalFrontMm - totalGaps;
   const totalDrawerH = drawerHeights.reduce((a, b) => a + b, 0);
-  // 터치 2단: 1단=408, 2단=409로 고정 (균등 408.5 대신 정수 분배)
+  // 터치 2단: 1단=408, 2단=409로 고정
+  // 터치 3단 (도어올림 3단): 하→상 [360, 227, 227]로 고정
   const is2Tier = drawerCount === 2 && (isTouch2A || isTouch2B || isTDTouch2);
+  const is3TierFixed = drawerCount === 3 && isTouch3;
   const maidaHeightsMm = is2Tier
     ? [408, 409]
-    : drawerHeights.map(h => (h / totalDrawerH) * totalMaidaMm);
+    : is3TierFixed
+      ? [360, 227, 227]
+      : drawerHeights.map(h => (h / totalDrawerH) * totalMaidaMm);
 
   let currentBottomMm = -bottomExtMm;
   const maidas = maidaHeightsMm.map((h, idx) => {
