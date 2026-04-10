@@ -105,22 +105,24 @@ const LegraSideRail: React.FC<LegraSideRailProps> = ({
         polygonOffsetFactor: 1,
         polygonOffsetUnits: 1,
       });
-      const edgeMat = new THREE.LineBasicMaterial({ color: edgeColor });
+      const edgeMat = new THREE.LineBasicMaterial({
+        color: edgeColor,
+        depthTest: true,
+      });
       [left, right].forEach((root) => {
-        const edgeMeshes: THREE.LineSegments[] = [];
         root.traverse((child) => {
           if ((child as THREE.Mesh).isMesh) {
             const mesh = child as THREE.Mesh;
             mesh.material = solidMat;
-            // 각 메시에 EdgesGeometry 윤곽선 추가
+            mesh.renderOrder = 0;
+            // 각 메시에 EdgesGeometry 윤곽선 추가 (1도 임계값 — 거의 모든 엣지 포함)
             if (mesh.geometry) {
-              const edges = new THREE.EdgesGeometry(mesh.geometry, 30);
+              const edges = new THREE.EdgesGeometry(mesh.geometry, 1);
               const line = new THREE.LineSegments(edges, edgeMat);
               line.position.copy(mesh.position);
               line.rotation.copy(mesh.rotation);
               line.scale.copy(mesh.scale);
-              edgeMeshes.push(line);
-              // 나중에 mesh의 부모에 추가 (traverse 중 수정 방지)
+              line.renderOrder = 1;
               (mesh as any).__edgeLine = line;
             }
           }
