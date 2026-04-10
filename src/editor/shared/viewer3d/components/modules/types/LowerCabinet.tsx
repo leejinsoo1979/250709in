@@ -116,7 +116,7 @@ const TouchDrawerAnimated: React.FC<TouchDrawerAnimatedProps> = ({
   // 서랍 스펙
   const drawerSpecs: [number, number][] = isTouch2A ? [[228, 28], [228, 406]]
     : isTouch2B ? [[228, 28], [164, 406]]
-    : isTouch3 ? [[228, 28], [117, 357], [117, 587]]
+    : isTouch3 ? [[228, 28], [117, 358], [117, 588]]
     : isTDTouch2 ? [[228, 28], [228, 356]]
     : isTDTouch3 ? [[164, 28], [117, 281], [117, 494]]
     : [[228, 28], [228, 406]];
