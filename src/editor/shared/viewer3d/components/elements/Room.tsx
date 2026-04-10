@@ -3016,7 +3016,7 @@ const Room: React.FC<RoomProps> = ({
         return null;
       })()}
       {/* console.log('🚨 왼쪽 엔드패널 렌더링 직전 체크:', { ... }) */}
-      {effectiveShowFrame && frameThickness.left > 0 && (spaceInfo.surroundType !== 'no-surround' || spaceInfo.installType === 'freestanding' || hasLeftFurniture) && !(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right')) && (() => {
+      {effectiveShowFrame && frameThickness.left > 0 && (spaceInfo.surroundType !== 'no-surround') && !(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right')) && (() => {
 // console.log('🔥🔥🔥 [좌측 프레임/엔드패널 메인 렌더링 블록]', {
           // surroundType: spaceInfo.surroundType,
           // wallConfigLeft: wallConfig?.left,
@@ -3394,7 +3394,7 @@ const Room: React.FC<RoomProps> = ({
         // });
         return null;
       })()}
-      {effectiveShowFrame && frameThickness.right > 0 && (spaceInfo.surroundType !== 'no-surround' || spaceInfo.installType === 'freestanding' || hasRightFurniture) && !(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right')) && (() => {
+      {effectiveShowFrame && frameThickness.right > 0 && (spaceInfo.surroundType !== 'no-surround') && !(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right')) && (() => {
         // 자유배치 커튼박스가 이 쪽(우측)에 있으면 프레임 불필요
         if (spaceInfo.droppedCeiling?.enabled && spaceInfo.droppedCeiling?.position === 'right' && isFreePlacement) {
           return null;

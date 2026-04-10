@@ -1750,8 +1750,8 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   // - 서라운드: 단내림 구간 바깥쪽 끝 슬롯만
   // - 한쪽벽(semistanding)도 프리스탠딩과 동일하게 처리
   // - 단, 상하부장이 인접한 경우는 제외 (키큰장 로직에서 별도 처리)
+  // 노서라운드 EP 자동 생성 제거됨 — 서라운드 단내림 끝 슬롯만 처리
   const shouldReduceWidth = isDualFurniture && (spaceInfo.installType === 'freestanding' || isSemiStanding) && !needsEndPanelAdjustment && (
-    (spaceInfo.surroundType === 'no-surround' && (isNoSurroundFirstSlot || isNoSurroundLastSlot || isNoSurroundDualLastSlot)) ||
     isSurroundDroppedEdgeSlot
   );
 
@@ -1803,10 +1803,9 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     furnitureWidthMm = adjustedWidthForEndPanel; // 실제 가구 너비 업데이트
   }
 
-  // 노서라운드 모드에서 엔드패널 처리
-  // 벽없음(freestanding) 또는 한쪽벽(semistanding) 모드에서 엔드패널이 있는 슬롯 처리
-
-  if (spaceInfo.surroundType === 'no-surround' &&
+  // 노서라운드 모드에서 엔드패널 자동 처리 비활성화
+  // 벽없음 시 EP 자동 생성 기능 제거됨
+  if (false && spaceInfo.surroundType === 'no-surround' &&
     (spaceInfo.installType === 'freestanding' ||
       spaceInfo.installType === 'semistanding' ||
       spaceInfo.installType === 'semi-standing') &&
@@ -2155,10 +2154,8 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   if (needsEndPanelAdjustment) {
   }
 
-  // 노서라운드 엔드패널이 있는 슬롯 도어 확장 처리
-  // hasLeftWall과 hasRightWall은 이미 위에서 선언됨 (809-810줄)
-  // 단, 상하부장 인접 시에는 도어 확장하지 않음
-  if (!needsEndPanelAdjustment && spaceInfo.surroundType === 'no-surround' &&
+  // 노서라운드 엔드패널 도어 확장 비활성화 (EP 자동 생성 제거됨)
+  if (false && !needsEndPanelAdjustment && spaceInfo.surroundType === 'no-surround' &&
     (spaceInfo.installType === 'freestanding' ||
       spaceInfo.installType === 'semistanding' ||
       spaceInfo.installType === 'semi-standing') &&

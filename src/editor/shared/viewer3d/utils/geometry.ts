@@ -281,27 +281,9 @@ export const calculateFrameThickness = (spaceInfo: SpaceInfo, hasLeftFurniture: 
     let leftThickness = 0;
     let rightThickness = 0;
     
-    // 설치 타입에 따라 엔드패널 위치 결정
-    if (installType === 'builtin' || installType === 'built-in') {
-      // 빌트인: 양쪽 벽이 있으므로 엔드패널 없음
-      leftThickness = 0;
-      rightThickness = 0;
-    } else if (installType === 'semistanding' || installType === 'semi-standing') {
-      // 세미스탠딩: 벽이 없는 쪽에만 엔드패널 (가구가 있는 경우에만)
-      if (wallConfig?.left) {
-        // 왼쪽 벽이 있으면 오른쪽에만 엔드패널 가능
-        leftThickness = 0;
-        rightThickness = hasRightFurniture ? END_PANEL_THICKNESS : 0;
-      } else {
-        // 오른쪽 벽이 있으면 왼쪽에만 엔드패널 가능
-        leftThickness = hasLeftFurniture ? END_PANEL_THICKNESS : 0;
-        rightThickness = 0;
-      }
-    } else if (installType === 'freestanding') {
-      // 프리스탠딩: 각 쪽에 가구가 있으면 엔드패널
-      leftThickness = hasLeftFurniture ? END_PANEL_THICKNESS : 0;
-      rightThickness = hasRightFurniture ? END_PANEL_THICKNESS : 0;
-    }
+    // 노서라운드: 엔드패널 자동 생성 없음 (벽없음 = EP 없음)
+    leftThickness = 0;
+    rightThickness = 0;
     
     // console.log('🎯 노서라운드 엔드패널 계산:', {
     //   hasLeftFurniture, hasRightFurniture, leftThickness, rightThickness, installType, wallConfig
@@ -332,24 +314,24 @@ export const calculateFrameThickness = (spaceInfo: SpaceInfo, hasLeftFurniture: 
       break;
     case 'semistanding':
     case 'semi-standing':
-      // 세미스탠딩: 벽이 있는 쪽은 frameSize, 벽이 없는 쪽은 20mm 엔드패널
+      // 세미스탠딩: 벽이 있는 쪽은 frameSize, 벽이 없는 쪽은 0 (EP 자동 생성 없음)
       if (wallConfig?.left && !wallConfig?.right) {
         leftThickness = leftFrameSize;
-        rightThickness = END_PANEL_THICKNESS;
+        rightThickness = frameSize?.right ?? 0;
       } else if (!wallConfig?.left && wallConfig?.right) {
-        leftThickness = END_PANEL_THICKNESS;
+        leftThickness = frameSize?.left ?? 0;
         rightThickness = rightFrameSize;
       } else {
         // 기본값 (좌측벽)
         leftThickness = leftFrameSize;
-        rightThickness = END_PANEL_THICKNESS;
+        rightThickness = frameSize?.right ?? 0;
       }
       break;
     case 'freestanding':
     case 'free-standing':
-      // 프리스탠딩: 양쪽 모두 벽이 없으므로 20mm 엔드패널
-      leftThickness = END_PANEL_THICKNESS;
-      rightThickness = END_PANEL_THICKNESS;
+      // 프리스탠딩: 양쪽 모두 벽이 없으므로 frameSize 설정값 사용 (EP 자동 생성 없음)
+      leftThickness = frameSize?.left ?? 0;
+      rightThickness = frameSize?.right ?? 0;
       break;
     default:
       leftThickness = leftFrameSize;
