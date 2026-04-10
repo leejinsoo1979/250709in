@@ -88,7 +88,7 @@ const LegraSideRail: React.FC<LegraSideRailProps> = ({
   // 2D 다크 모드 여부 (라이트 모드는 흰색 면, 다크 모드는 라인만)
   const is2DDark = view2DTheme === 'dark' || theme?.mode === 'dark';
 
-  const { leftClone, rightClone, leftScale, rightScale, leftPos, rightPos, outlineBoxSize } = useMemo(() => {
+  const { leftClone, rightClone, leftScale, rightScale, leftPos, rightPos, outlineLeftBox, outlineRightBox } = useMemo(() => {
     const left = cleanClone(scene);
     const right = cleanClone(scene);
 
@@ -117,10 +117,6 @@ const LegraSideRail: React.FC<LegraSideRailProps> = ({
     const leftBox = getScaledBounds(left, lScale);
     const rightBox = getScaledBounds(right, rScale);
 
-    // 2D 측면뷰 다크 모드: 바운딩박스 외곽선만 표시용 크기 계산
-    const boxSize = new THREE.Vector3();
-    leftBox.getSize(boxSize);
-
     // GLB 모델 상단 돌출부(레일 마운트) 보정값
     // - SL500/L500/M500: 13.7mm (기존 - 서랍 바닥판 하단 기준 -13.7mm)
     // - F500_o: 원점이 달라 별도 오프셋 사용
@@ -146,6 +142,17 @@ const LegraSideRail: React.FC<LegraSideRailProps> = ({
       drawerFrontZ - rightBox.max.z,
     );
 
+    // 최종 렌더링 박스(월드 공간) = 로컬 박스 + 위치 오프셋
+    // primitive가 그룹 position에 놓이고 로컬은 leftBox 원점을 기준으로 그려지기 때문
+    const lFinalBox = new THREE.Box3(
+      new THREE.Vector3(leftBox.min.x + lPos.x, leftBox.min.y + lPos.y, leftBox.min.z + lPos.z),
+      new THREE.Vector3(leftBox.max.x + lPos.x, leftBox.max.y + lPos.y, leftBox.max.z + lPos.z),
+    );
+    const rFinalBox = new THREE.Box3(
+      new THREE.Vector3(rightBox.min.x + rPos.x, rightBox.min.y + rPos.y, rightBox.min.z + rPos.z),
+      new THREE.Vector3(rightBox.max.x + rPos.x, rightBox.max.y + rPos.y, rightBox.max.z + rPos.z),
+    );
+
     return {
       leftClone: left,
       rightClone: right,
@@ -153,7 +160,8 @@ const LegraSideRail: React.FC<LegraSideRailProps> = ({
       rightScale: rScale,
       leftPos: lPos,
       rightPos: rPos,
-      outlineBoxSize: boxSize,
+      outlineLeftBox: lFinalBox,
+      outlineRightBox: rFinalBox,
     };
   }, [scene, drawerTier, drawerBottomY, drawerBottomThickness, backPanelHeight, drawerFrontZ, sidePanelInnerX, drawerHeightMm, is2DSideView, is2DDark]);
 
@@ -162,37 +170,31 @@ const LegraSideRail: React.FC<LegraSideRailProps> = ({
 
   // 2D 측면뷰 + 다크 모드: GLB 숨기고 바운딩박스 외곽선(사각형)만 표시
   if (is2DSideView && is2DDark) {
-    // 측면뷰는 Z-Y 평면을 봄 → 박스의 Z(depth), Y(height)로 사각형
-    const depth = outlineBoxSize.z;
-    const height = outlineBoxSize.y;
-    // 좌측 레그라의 중심 X는 leftPos + box.min.x + boxSize/2
-    // 간단히 leftPos + 반폭 만큼 이동해 중심에 놓음 (측면뷰에서는 X 위치는 거의 무관)
-    const makeRect = (centerY: number, centerZ: number) => {
-      const hw = depth / 2;
-      const hh = height / 2;
+    // 측면뷰는 X축 방향으로 바라봄 → Z-Y 평면의 사각형
+    const buildRectGeom = (box: THREE.Box3): THREE.BufferGeometry => {
+      const y0 = box.min.y, y1 = box.max.y;
+      const z0 = box.min.z, z1 = box.max.z;
+      // 선분용 8개 정점 (4변)
       const pts = new Float32Array([
-        -hw, -hh, 0,   hw, -hh, 0,
-         hw, -hh, 0,   hw,  hh, 0,
-         hw,  hh, 0,  -hw,  hh, 0,
-        -hw,  hh, 0,  -hw, -hh, 0,
+        0, y0, z0,   0, y0, z1,
+        0, y0, z1,   0, y1, z1,
+        0, y1, z1,   0, y1, z0,
+        0, y1, z0,   0, y0, z0,
       ]);
       const geom = new THREE.BufferGeometry();
       geom.setAttribute('position', new THREE.BufferAttribute(pts, 3));
-      return { geom, centerY, centerZ };
+      return geom;
     };
-    // 외곽선 사각형을 좌/우 레그라 위치에 맞춰 배치
-    // Z 중심 = leftPos.z + (box.min.z + box.max.z)/2 간단화: drawerFrontZ - depth/2
-    // Y 중심 = targetMinY + height/2 → leftPos.y + height/2 (leftPos.y = targetMinY - leftBox.min.y, min.y는 로컬)
-    const lCenterY = leftPos.y + height / 2 + (outlineBoxSize.y / 2 - outlineBoxSize.y / 2); // = leftPos.y + height/2
-    const lCenterZ = leftPos.z + outlineBoxSize.z / 2;
-    const rCenterY = rightPos.y + height / 2;
-    const rCenterZ = rightPos.z + outlineBoxSize.z / 2;
-    const { geom } = makeRect(0, 0);
-    const lineMat = new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.9 });
+    const lGeom = buildRectGeom(outlineLeftBox);
+    const rGeom = buildRectGeom(outlineRightBox);
+    const lineMat = new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 1 });
+    // X 위치는 레그라가 월드 위치에 이미 있으므로 각 박스의 X 평균을 사용
+    const lX = (outlineLeftBox.min.x + outlineLeftBox.max.x) / 2;
+    const rX = (outlineRightBox.min.x + outlineRightBox.max.x) / 2;
     return (
       <>
-        <lineSegments position={[leftPos.x, lCenterY, lCenterZ]} geometry={geom} material={lineMat} />
-        <lineSegments position={[rightPos.x, rCenterY, rCenterZ]} geometry={geom.clone()} material={lineMat} />
+        <lineSegments position={[lX, 0, 0]} geometry={lGeom} material={lineMat} />
+        <lineSegments position={[rX, 0, 0]} geometry={rGeom} material={lineMat} />
       </>
     );
   }
