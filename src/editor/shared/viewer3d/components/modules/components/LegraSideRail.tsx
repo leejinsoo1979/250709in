@@ -2,6 +2,7 @@ import React, { useMemo } from 'react';
 import * as THREE from 'three';
 import { useGLTF } from '@react-three/drei';
 import { useSpace3DView } from '../../../context/useSpace3DView';
+import { useUIStore } from '@/store/uiStore';
 
 /**
  * 레그라 서랍 측판 (GLB 모델)
@@ -69,6 +70,7 @@ const LegraSideRail: React.FC<LegraSideRailProps> = ({
   renderMode,
 }) => {
   const { viewMode } = useSpace3DView();
+  const view2DDirection = useUIStore(state => state.view2DDirection);
   // drawerHeightMm 제공 시 높이 기반 모델 선택, 미제공 시 기존 tier 기반
   // 228↑ → SL500, 117↓ → M500, 나머지(164 등) → L500
   const modelPath = drawerHeightMm != null
@@ -123,7 +125,8 @@ const LegraSideRail: React.FC<LegraSideRailProps> = ({
     };
   }, [scene, drawerTier, drawerBottomY, drawerBottomThickness, backPanelHeight, drawerFrontZ, sidePanelInnerX, drawerHeightMm]);
 
-  if (viewMode === '2D') return null;
+  // 2D 모드: 정면뷰(front)에서만 렌더링, 측면/상단뷰에서는 숨김
+  if (viewMode === '2D' && view2DDirection !== 'front') return null;
 
   return (
     <>
