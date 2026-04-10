@@ -446,7 +446,7 @@ const ColumnDistanceLabels: React.FC<ColumnDistanceLabelsProps> = ({ column, spa
                 color="#000000"
                 anchorX="center"
                 anchorY="middle"
-                outlineWidth={0.1}
+                outlineWidth={0}
                 outlineColor="#ffffff"
                 onClick={(e) => {
                   e.stopPropagation();
@@ -619,7 +619,7 @@ const ColumnDistanceLabels: React.FC<ColumnDistanceLabelsProps> = ({ column, spa
                 color="#000000"
                 anchorX="center"
                 anchorY="middle"
-                outlineWidth={0.1}
+                outlineWidth={0}
                 outlineColor="#ffffff"
                 onClick={(e) => {
                   e.stopPropagation();
@@ -746,7 +746,7 @@ const ColumnDistanceLabels: React.FC<ColumnDistanceLabelsProps> = ({ column, spa
                 color="#000000"
                 anchorX="center"
                 anchorY="middle"
-                outlineWidth={0.1}
+                outlineWidth={0}
                 outlineColor="#ffffff"
                 onClick={(e) => {
                   e.stopPropagation();

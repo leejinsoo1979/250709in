@@ -1110,8 +1110,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
   const baseFontSize = currentViewDirection === '3D' ? 0.5 : 0.4;
   const largeFontSize = currentViewDirection === '3D' ? 0.6 : 0.5;
   const smallFontSize = currentViewDirection === '3D' ? 0.42 : 0.35;
-  // 3D 텍스트 외곽선 (배경과 구분되게)
-  const textOutlineWidth = currentViewDirection === '3D' ? 0.06 : 0;
+  // 텍스트 외곽선 제거 (2D/3D 모두)
+  const textOutlineWidth = 0;
   const textOutlineColor = '#ffffff';
   // 3D 치수선 굵기 (더 명확하게)
   const dimLineWidth = currentViewDirection === '3D' ? 2 : 1;
