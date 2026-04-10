@@ -88,75 +88,23 @@ const LegraSideRail: React.FC<LegraSideRailProps> = ({
   // 2D 다크 모드 여부 (라이트 모드는 흰색 면, 다크 모드는 라인만)
   const is2DDark = view2DTheme === 'dark' || theme?.mode === 'dark';
 
-  const { leftClone, rightClone, leftScale, rightScale, leftPos, rightPos } = useMemo(() => {
+  const { leftClone, rightClone, leftScale, rightScale, leftPos, rightPos, outlineBoxSize } = useMemo(() => {
     const left = cleanClone(scene);
     const right = cleanClone(scene);
 
-    // 2D 측면뷰 스타일링
-    if (is2DSideView) {
-      if (is2DDark) {
-        // 다크 모드: 면은 완전 투명 + edges 라인만 흰색 표시
-        const invisibleMat = new THREE.MeshBasicMaterial({
-          color: 0x000000,
-          transparent: true,
-          opacity: 0,
-          depthWrite: false,
+    // 2D 측면뷰 라이트 모드: 면만 흰색 단색 (실루엣 느낌)
+    if (is2DSideView && !is2DDark) {
+      const whiteMat = new THREE.MeshBasicMaterial({
+        color: 0xffffff,
+        transparent: false,
+      });
+      [left, right].forEach((root) => {
+        root.traverse((child) => {
+          if ((child as THREE.Mesh).isMesh) {
+            (child as THREE.Mesh).material = whiteMat;
+          }
         });
-        const lineMat = new THREE.LineBasicMaterial({
-          color: 0xffffff,
-          transparent: true,
-          opacity: 0.9,
-        });
-        [left, right].forEach((root) => {
-          const edgesToAdd: Array<{ parent: THREE.Object3D; edges: THREE.LineSegments }> = [];
-          root.traverse((child) => {
-            const mesh = child as THREE.Mesh;
-            if (mesh.isMesh && mesh.geometry) {
-              mesh.material = invisibleMat;
-              const edgesGeom = new THREE.EdgesGeometry(mesh.geometry, 30);
-
-              // 모델 전체 높이 기준으로 "전체 높이에 가까운 수직 라인"을 제거
-              // (2D 측면뷰에서 모델 바깥 실루엣 역할을 해서 서랍 영역을 가로지르는 선)
-              const posAttr = edgesGeom.getAttribute('position');
-              const meshBox = new THREE.Box3().setFromBufferAttribute(mesh.geometry.getAttribute('position') as THREE.BufferAttribute);
-              const meshHeight = meshBox.max.y - meshBox.min.y;
-              const kept: number[] = [];
-              for (let i = 0; i < posAttr.count; i += 2) {
-                const x1 = posAttr.getX(i),     y1 = posAttr.getY(i),     z1 = posAttr.getZ(i);
-                const x2 = posAttr.getX(i + 1), y2 = posAttr.getY(i + 1), z2 = posAttr.getZ(i + 1);
-                const dx = Math.abs(x2 - x1);
-                const dy = Math.abs(y2 - y1);
-                const dz = Math.abs(z2 - z1);
-                // 순수 Y 방향 세로선이고 길이가 모델 높이의 70% 이상이면 제거 (실루엣 선)
-                const isTallVertical = dy > meshHeight * 0.7 && dx < 1e-4 && dz < 1e-4;
-                if (!isTallVertical) {
-                  kept.push(x1, y1, z1, x2, y2, z2);
-                }
-              }
-              const filteredGeom = new THREE.BufferGeometry();
-              filteredGeom.setAttribute('position', new THREE.Float32BufferAttribute(kept, 3));
-
-              const lineSeg = new THREE.LineSegments(filteredGeom, lineMat);
-              lineSeg.name = 'legra-edges';
-              edgesToAdd.push({ parent: mesh, edges: lineSeg });
-            }
-          });
-          edgesToAdd.forEach(({ parent, edges }) => parent.add(edges));
-        });
-      } else {
-        // 라이트 모드: 면만 흰색 단색으로 (실루엣 느낌)
-        const whiteMat = new THREE.MeshBasicMaterial({
-          color: 0xffffff,
-          transparent: false,
-        });
-        [left, right].forEach((root) => {
-          root.traverse((child) => {
-            if ((child as THREE.Mesh).isMesh) {
-              (child as THREE.Mesh).material = whiteMat;
-            }
-          });
-        });
-      }
+      });
     }
 
     // GLB 모델은 원본 크기 그대로 사용
@@ -168,6 +116,10 @@ const LegraSideRail: React.FC<LegraSideRailProps> = ({
     // 바운딩박스 측정 (스케일 적용 상태)
     const leftBox = getScaledBounds(left, lScale);
     const rightBox = getScaledBounds(right, rScale);
+
+    // 2D 측면뷰 다크 모드: 바운딩박스 외곽선만 표시용 크기 계산
+    const boxSize = new THREE.Vector3();
+    leftBox.getSize(boxSize);
 
     // GLB 모델 상단 돌출부(레일 마운트) 보정값
     // - SL500/L500/M500: 13.7mm (기존 - 서랍 바닥판 하단 기준 -13.7mm)
@@ -201,11 +153,49 @@ const LegraSideRail: React.FC<LegraSideRailProps> = ({
       rightScale: rScale,
       leftPos: lPos,
       rightPos: rPos,
+      outlineBoxSize: boxSize,
     };
   }, [scene, drawerTier, drawerBottomY, drawerBottomThickness, backPanelHeight, drawerFrontZ, sidePanelInnerX, drawerHeightMm, is2DSideView, is2DDark]);
 
   // 2D 상단뷰에서는 숨김 (정면/측면뷰에서는 렌더링)
   if (viewMode === '2D' && view2DDirection === 'top') return null;
+
+  // 2D 측면뷰 + 다크 모드: GLB 숨기고 바운딩박스 외곽선(사각형)만 표시
+  if (is2DSideView && is2DDark) {
+    // 측면뷰는 Z-Y 평면을 봄 → 박스의 Z(depth), Y(height)로 사각형
+    const depth = outlineBoxSize.z;
+    const height = outlineBoxSize.y;
+    // 좌측 레그라의 중심 X는 leftPos + box.min.x + boxSize/2
+    // 간단히 leftPos + 반폭 만큼 이동해 중심에 놓음 (측면뷰에서는 X 위치는 거의 무관)
+    const makeRect = (centerY: number, centerZ: number) => {
+      const hw = depth / 2;
+      const hh = height / 2;
+      const pts = new Float32Array([
+        -hw, -hh, 0,   hw, -hh, 0,
+         hw, -hh, 0,   hw,  hh, 0,
+         hw,  hh, 0,  -hw,  hh, 0,
+        -hw,  hh, 0,  -hw, -hh, 0,
+      ]);
+      const geom = new THREE.BufferGeometry();
+      geom.setAttribute('position', new THREE.BufferAttribute(pts, 3));
+      return { geom, centerY, centerZ };
+    };
+    // 외곽선 사각형을 좌/우 레그라 위치에 맞춰 배치
+    // Z 중심 = leftPos.z + (box.min.z + box.max.z)/2 간단화: drawerFrontZ - depth/2
+    // Y 중심 = targetMinY + height/2 → leftPos.y + height/2 (leftPos.y = targetMinY - leftBox.min.y, min.y는 로컬)
+    const lCenterY = leftPos.y + height / 2 + (outlineBoxSize.y / 2 - outlineBoxSize.y / 2); // = leftPos.y + height/2
+    const lCenterZ = leftPos.z + outlineBoxSize.z / 2;
+    const rCenterY = rightPos.y + height / 2;
+    const rCenterZ = rightPos.z + outlineBoxSize.z / 2;
+    const { geom } = makeRect(0, 0);
+    const lineMat = new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.9 });
+    return (
+      <>
+        <lineSegments position={[leftPos.x, lCenterY, lCenterZ]} geometry={geom} material={lineMat} />
+        <lineSegments position={[rightPos.x, rCenterY, rCenterZ]} geometry={geom.clone()} material={lineMat} />
+      </>
+    );
+  }
 
   return (
     <>
