@@ -5298,11 +5298,12 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               const leftGapMm = Math.round(rawLeftGap);
               const rightGapMm = Math.round(rawRightGap);
 
-              // 서라운드 모드에서 벽 인접 가구의 이격은 프레임 두께와 겹침 → 숨김
-              // (프레임 치수선이 이미 2단에서 표시하므로 중복 방지)
+              // 이격 숨김 조건:
+              // 1) 서라운드 모드에서 벽 인접 가구의 이격은 프레임 두께와 겹침 → 숨김
+              // 2) 이격거리 ≤ 2mm 는 기본 최소간격이므로 숨김 (노서라운드 포함)
               const isSurround = spaceInfo.surroundType !== 'no-surround';
-              const suppressLeftGap = isSurround && !hasAdjacentLeft && leftGapMm > 0 && leftGapMm <= (frameSize?.left ?? 0) + 2;
-              const suppressRightGap = isSurround && !hasAdjacentRight && rightGapMm > 0 && rightGapMm <= (frameSize?.right ?? 0) + 2;
+              const suppressLeftGap = leftGapMm <= 2 || (isSurround && !hasAdjacentLeft && leftGapMm > 0 && leftGapMm <= (frameSize?.left ?? 0) + 2);
+              const suppressRightGap = rightGapMm <= 2 || (isSurround && !hasAdjacentRight && rightGapMm > 0 && rightGapMm <= (frameSize?.right ?? 0) + 2);
               // 좌측 갭: 가구 왼쪽 ~ (왼쪽 인접 가구 또는 구간 경계)
               const gapLeftX = leftX - mmToThreeUnits(leftGapMm);
               // 우측 갭: (오른쪽 인접 가구 또는 구간 경계) ~ 가구 오른쪽
