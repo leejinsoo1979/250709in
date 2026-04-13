@@ -5321,22 +5321,26 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               // 가구 이동 핸들러: 화살표 클릭 시 10mm씩 이동
               const MOVE_STEP = 0.1; // 10mm = 0.1 Three.js 단위
               const isSelected = selectedFurnitureId === module.id;
+              const canMoveLeft = leftGapMm > 2; // 벽에 붙어있으면 이동 불가
+              const canMoveRight = rightGapMm > 2;
+              const stopAll = (e: any) => { e.stopPropagation(); e.preventDefault(); e.nativeEvent?.stopImmediatePropagation?.(); };
               const moveLeft = (e: any) => {
-                e.stopPropagation();
+                stopAll(e);
                 const newX = module.position.x - MOVE_STEP;
                 updatePlacedModule(module.id, { position: { ...module.position, x: newX } });
               };
               const moveRight = (e: any) => {
-                e.stopPropagation();
+                stopAll(e);
                 const newX = module.position.x + MOVE_STEP;
                 updatePlacedModule(module.id, { position: { ...module.position, x: newX } });
               };
               return (<>
-                {/* 좌측 이동 화살표 — 가구 선택 시에만 표시 */}
-                {isSelected && (
+                {/* 좌측 이동 화살표 — 가구 선택 + 이격 여유 있을 때만 */}
+                {isSelected && canMoveLeft && (
                   <Html position={[leftX - mmToThreeUnits(20), gapDimY, 0.01]}
                     center style={{ pointerEvents: 'auto' }} zIndexRange={[10001, 10002]}>
                     <div
+                      onMouseDown={stopAll}
                       onClick={moveLeft}
                       style={{
                         width: '20px', height: '32px',
@@ -5377,11 +5381,12 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     {formatDim(leftGapMm)}
                   </Text>
                 </>)}
-                {/* 우측 이동 화살표 — 가구 선택 시에만 표시 */}
-                {isSelected && (
+                {/* 우측 이동 화살표 — 가구 선택 + 이격 여유 있을 때만 */}
+                {isSelected && canMoveRight && (
                   <Html position={[rightX + mmToThreeUnits(20), gapDimY, 0.01]}
                     center style={{ pointerEvents: 'auto' }} zIndexRange={[10001, 10002]}>
                     <div
+                      onMouseDown={stopAll}
                       onClick={moveRight}
                       style={{
                         width: '20px', height: '32px',
