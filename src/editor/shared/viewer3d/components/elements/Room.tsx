@@ -1610,10 +1610,10 @@ const Room: React.FC<RoomProps> = ({
             const stepDropHeight = hasStepCeiling ? mmToThreeUnits(spaceInfo.stepCeiling!.dropHeight || 200) : 0;
             const isLeftStep = spaceInfo.stepCeiling?.position === 'left';
 
-            // 슬롯배치 커튼박스 (droppedCeiling과 독립)
-            const hasCBSlot = !isFreePlacement && spaceInfo.curtainBox?.enabled;
-            const hasCBOnly = hasCBSlot && !hasDroppedCeiling; // CB 단독 (DC 없음)
-            const hasCBWithDC = hasCBSlot && hasDroppedCeiling; // CB + DC 동시
+            // 커튼박스 (슬롯배치 + 자유배치 모두, droppedCeiling과 독립)
+            const hasCBSlot = !!spaceInfo.curtainBox?.enabled;
+            const hasCBOnly = hasCBSlot && !hasDroppedCeiling && !hasStepCeiling; // CB 단독
+            const hasCBWithDC = hasCBSlot && (hasDroppedCeiling || hasStepCeiling); // CB + DC/SC 동시
             const cbOnlyWidth = hasCBSlot ? mmToThreeUnits(spaceInfo.curtainBox!.width || 150) : 0;
             const cbOnlyDropH = hasCBSlot ? mmToThreeUnits(spaceInfo.curtainBox!.dropHeight || 20) : 0;
             const cbOnlyIsLeft = hasCBSlot && spaceInfo.curtainBox!.position === 'left';
@@ -2045,8 +2045,8 @@ const Room: React.FC<RoomProps> = ({
             // 경계선 수집 (그라데이션: 뒷벽=진한, 앞쪽=투명)
             const lines: [number, number, number, number, number, number][] = [];
 
-            // 슬롯배치 커튼박스 단독 정보
-            const hasCBStandalone = !isFreePlacement && spaceInfo.curtainBox?.enabled;
+            // 커튼박스 정보 (슬롯배치 + 자유배치 모두)
+            const hasCBStandalone = !!spaceInfo.curtainBox?.enabled;
             const cbDropHLine = hasCBStandalone ? mmToThreeUnits(spaceInfo.curtainBox!.dropHeight || 20) : 0;
             const cbIsLeft = hasCBStandalone && spaceInfo.curtainBox?.position === 'left';
             const cbIsRight = hasCBStandalone && spaceInfo.curtainBox?.position === 'right';
@@ -2132,7 +2132,7 @@ const Room: React.FC<RoomProps> = ({
               }
             }
 
-            // === 슬롯배치 커튼박스 단독 경계벽 Z축 라인 ===
+            // === 커튼박스 단독 경계벽 Z축 라인 (슬롯+자유배치) ===
             if (hasCBStandalone && !hasDC && spaceInfo.curtainBox) {
               const cbW = mmToThreeUnits(spaceInfo.curtainBox.width || 150);
               const cbIsL = spaceInfo.curtainBox.position === 'left';
@@ -2226,8 +2226,8 @@ const Room: React.FC<RoomProps> = ({
               solidThemeLines.push([scBx, cY, z1, scBx, cY, z2]);
             }
 
-            // === 커튼박스 천장 메쉬 z축 안쪽 모서리 윤곽선 ===
-            if (!isFreePlacement && spaceInfo.curtainBox?.enabled) {
+            // === 커튼박스 천장 메쉬 z축 안쪽 모서리 윤곽선 (슬롯+자유배치) ===
+            if (spaceInfo.curtainBox?.enabled) {
               const _cbW3 = mmToThreeUnits(spaceInfo.curtainBox.width || 150);
               const _cbDH3 = mmToThreeUnits(spaceInfo.curtainBox.dropHeight || 20);
               const _cbIsL3 = spaceInfo.curtainBox.position === 'left';
@@ -2467,8 +2467,8 @@ const Room: React.FC<RoomProps> = ({
             const _dcDropH = _hasDC ? mmToThreeUnits(spaceInfo.droppedCeiling!.dropHeight || 200) : 0;
             const _dcW = _hasDC ? mmToThreeUnits(spaceInfo.droppedCeiling!.width || (isFreePlacement ? 150 : 900)) : 0;
 
-            // 슬롯배치 커튼박스 단독 처리
-            const _hasCBOnly = !isFreePlacement && spaceInfo.curtainBox?.enabled;
+            // 커튼박스 처리 (슬롯배치 + 자유배치 모두)
+            const _hasCBOnly = !!spaceInfo.curtainBox?.enabled;
             const _cbIsLeft = _hasCBOnly && spaceInfo.curtainBox?.position === 'left';
             const _cbIsRight = _hasCBOnly && spaceInfo.curtainBox?.position === 'right';
             const _cbDropH = _hasCBOnly ? mmToThreeUnits(spaceInfo.curtainBox!.dropHeight || 20) : 0;
@@ -2850,15 +2850,64 @@ const Room: React.FC<RoomProps> = ({
             const gradientLines: [number, number, number, number, number, number][] = [];
             const overlayLines: [number, number, number, number, number, number][] = [];
 
-            // 뒷벽(z1)에 X/Y축 경계 라인 추가
-            if (hasLeftWall) {
-              solidLines.push([x1, floorY, z1, x1, ceilingY, z1]); // 좌벽 세로선
+            // 뒷벽(z1)에 X/Y축 경계 라인 추가 (커튼박스/단내림 분절 반영)
+            const _bHasDC = spaceInfo.droppedCeiling?.enabled;
+            const _bDcIsLeft = _bHasDC && spaceInfo.droppedCeiling?.position === 'left';
+            const _bDcIsRight = _bHasDC && spaceInfo.droppedCeiling?.position === 'right';
+            const _bDcDropH = _bHasDC ? mmToThreeUnits(spaceInfo.droppedCeiling!.dropHeight || 200) : 0;
+            const _bDcW = _bHasDC ? mmToThreeUnits(spaceInfo.droppedCeiling!.width || (isFreePlacement ? 150 : 900)) : 0;
+            const _bHasSC = isFreePlacement && spaceInfo.stepCeiling?.enabled;
+            const _bScIsLeft = _bHasSC && spaceInfo.stepCeiling?.position === 'left';
+            const _bScIsRight = _bHasSC && spaceInfo.stepCeiling?.position === 'right';
+            const _bScDropH = _bHasSC ? mmToThreeUnits(spaceInfo.stepCeiling!.dropHeight || 200) : 0;
+            const _bScW = _bHasSC ? mmToThreeUnits(spaceInfo.stepCeiling!.width || 150) : 0;
+            const _bHasCB = !!spaceInfo.curtainBox?.enabled; // 슬롯+자유배치 모두
+            const _bCbIsLeft = _bHasCB && spaceInfo.curtainBox?.position === 'left';
+            const _bCbIsRight = _bHasCB && spaceInfo.curtainBox?.position === 'right';
+            const _bCbDropH = _bHasCB ? mmToThreeUnits(spaceInfo.curtainBox!.dropHeight || 20) : 0;
+            const _bCbW = _bHasCB ? mmToThreeUnits(spaceInfo.curtainBox!.width || 150) : 0;
+
+            let bLeftCeilY = ceilingY;
+            let bRightCeilY = ceilingY;
+            if (_bHasDC && !isFreePlacement) {
+              if (_bDcIsLeft) bLeftCeilY = ceilingY - _bDcDropH;
+              if (_bDcIsRight) bRightCeilY = ceilingY - _bDcDropH;
             }
-            if (hasRightWall) {
-              solidLines.push([x2, floorY, z1, x2, ceilingY, z1]); // 우벽 세로선
+            if (_bHasSC) {
+              if (_bScIsLeft) bLeftCeilY = ceilingY + _bScDropH;
+              if (_bScIsRight) bRightCeilY = ceilingY + _bScDropH;
             }
-            solidLines.push([x1, ceilingY, z1, x2, ceilingY, z1]); // 천장 가로선
+            if (_bHasCB) {
+              if (_bCbIsLeft) bLeftCeilY = ceilingY + _bCbDropH;
+              if (_bCbIsRight) bRightCeilY = ceilingY + _bCbDropH;
+            }
+
+            const bHasSplit = bLeftCeilY !== bRightCeilY;
+            let bSplitX = x1;
+            if (bHasSplit) {
+              if (_bHasDC && !isFreePlacement) bSplitX = _bDcIsLeft ? x1 + _bDcW : x2 - _bDcW;
+              else if (_bHasSC) bSplitX = _bScIsLeft ? x1 + _bScW : x2 - _bScW;
+              else if (_bHasCB) bSplitX = _bCbIsLeft ? x1 + _bCbW : x2 - _bCbW;
+            }
+
+            if (bHasSplit) {
+              const bLeftHigher = bLeftCeilY > bRightCeilY;
+              const bMainY = bLeftHigher ? bRightCeilY : bLeftCeilY;
+              const bDropY = bLeftHigher ? bLeftCeilY : bRightCeilY;
+              if (bLeftHigher) {
+                solidLines.push([bSplitX, bMainY, z1, x2, bMainY, z1]);
+                solidLines.push([x1, bDropY, z1, bSplitX, bDropY, z1]);
+              } else {
+                solidLines.push([x1, bMainY, z1, bSplitX, bMainY, z1]);
+                solidLines.push([bSplitX, bDropY, z1, x2, bDropY, z1]);
+              }
+              solidLines.push([bSplitX, bMainY, z1, bSplitX, bDropY, z1]); // 경계 세로선
+            } else {
+              solidLines.push([x1, ceilingY, z1, x2, ceilingY, z1]);
+            }
             solidLines.push([x1, floorY, z1, x2, floorY, z1]); // 바닥 가로선
+            if (hasLeftWall) solidLines.push([x1, floorY, z1, x1, bLeftCeilY, z1]);
+            if (hasRightWall) solidLines.push([x2, floorY, z1, x2, bRightCeilY, z1]);
 
             const hasDC = spaceInfo.droppedCeiling?.enabled;
             const dcIsLeft = hasDC && spaceInfo.droppedCeiling?.position === 'left';
@@ -2894,6 +2943,20 @@ const Room: React.FC<RoomProps> = ({
                 gradientLines.push([x1, bwBotY, z1, x1, bwBotY, z2]);
               } else if (dcIsRight && hasRightWall) {
                 gradientLines.push([x2, ceilingY - dcDropH, z1, x2, ceilingY - dcDropH, z2]);
+              }
+            }
+            // 커튼박스 단독 경계벽 Z축 그라데이션 라인 (슬롯+자유배치)
+            if (hasCBStandalone && !hasDC) {
+              const _cbGW = mmToThreeUnits(spaceInfo.curtainBox!.width || 150);
+              const _cbGIsL = spaceInfo.curtainBox!.position === 'left';
+              const _cbGBx = _cbGIsL ? x1 + _cbGW : x2 - _cbGW;
+              const _cbGTopY = ceilingY + cbDropHLine;
+              gradientLines.push([_cbGBx, _cbGTopY, z1, _cbGBx, _cbGTopY, z2]); // 경계벽 상단 (CB 천장)
+              gradientLines.push([_cbGBx, ceilingY, z1, _cbGBx, ceilingY, z2]); // 경계벽 하단 (메인 천장)
+              if (_cbGIsL && hasLeftWall) {
+                gradientLines.push([x1, _cbGTopY, z1, x1, _cbGTopY, z2]);
+              } else if (!_cbGIsL && hasRightWall) {
+                gradientLines.push([x2, _cbGTopY, z1, x2, _cbGTopY, z2]);
               }
             }
 
