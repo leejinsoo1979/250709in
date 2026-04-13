@@ -1043,13 +1043,20 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
 
           // Z축 위치 계산 (FurnitureItem.tsx와 동일)
           const panelDepthMm = spaceInfo.depth || 1500;
-          const furnitureDepthMm = 600; // 가구 깊이 고정값
+          const furnitureDepthMm = Math.min(panelDepthMm, 600); // 가구 공간 깊이
           const panelDepth = mmToThreeUnits(panelDepthMm);
           const furnitureDepth = mmToThreeUnits(furnitureDepthMm);
           const doorThickness = mmToThreeUnits(20);
           const zOffset = -panelDepth / 2;
           const furnitureZOffset = zOffset + (panelDepth - furnitureDepth) / 2;
-          const furnitureZ = furnitureZOffset + furnitureDepth/2 - doorThickness - moduleDepth/2;
+          let furnitureZ: number;
+          if (isUpperMod) {
+            // 상부장: 하부장 뒷면에 맞춤 (FurnitureItem.tsx line 2659-2664)
+            const lowerDepth = mmToThreeUnits(650);
+            furnitureZ = furnitureZOffset + furnitureDepth / 2 - doorThickness - lowerDepth + moduleDepth / 2;
+          } else {
+            furnitureZ = furnitureZOffset + furnitureDepth/2 - doorThickness - moduleDepth/2;
+          }
 
           // 하부프레임 옵셋 깊이 (하부장 전용)
           const baseFrameOffsetMm = isLowerMod
