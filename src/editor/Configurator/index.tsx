@@ -5197,10 +5197,16 @@ const Configurator: React.FC = () => {
                     <div key={`base-${mod.id}`} style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '3px 0' }}>
                       <span className={styles.frameItemLabel} style={{ minWidth: '34px', textAlign: 'left', margin: 0 }}>{toAlpha(bn)}(하)</span>
                       <button
-                        onClick={() => updatePlacedModule(mod.id, {
-                          hasBase: !freeBaseEnabled,
-                          ...(freeBaseEnabled ? { individualFloatHeight: 0 } : {}),
-                        })}
+                        onClick={() => {
+                          const isBasicLower = mod.moduleId?.includes('lower-half-cabinet') || mod.moduleId?.includes('dual-lower-half-cabinet') || mod.moduleId?.includes('lower-drawer-') || mod.moduleId?.includes('dual-lower-drawer-');
+                          const isDoorLift = mod.moduleId?.includes('lower-door-lift-');
+                          const isTopDown = mod.moduleId?.includes('lower-top-down-');
+                          const defaultBottomGap = (isBasicLower || isDoorLift || isTopDown) ? 5 : 2;
+                          updatePlacedModule(mod.id, {
+                            hasBase: !freeBaseEnabled,
+                            ...(freeBaseEnabled ? { individualFloatHeight: 0, doorBottomGap: -5 } : { doorBottomGap: defaultBottomGap }),
+                          });
+                        }}
                         className={`${styles.miniToggle} ${freeBaseEnabled ? styles.miniToggleActive : ''}`}
                       />
                       {freeBaseEnabled ? (
@@ -5363,10 +5369,16 @@ const Configurator: React.FC = () => {
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '3px 0' }}>
                 <span className={styles.frameItemLabel} style={{ minWidth: '34px', textAlign: 'left', margin: 0 }}>{label}</span>
                 <button
-                  onClick={() => updatePlacedModule(mod.id, {
-                    hasBase: !enabled,
-                    ...(enabled ? { individualFloatHeight: 0 } : {}),
-                  })}
+                  onClick={() => {
+                    const isBasicLower = mod.moduleId?.includes('lower-half-cabinet') || mod.moduleId?.includes('dual-lower-half-cabinet') || mod.moduleId?.includes('lower-drawer-') || mod.moduleId?.includes('dual-lower-drawer-');
+                    const isDoorLift = mod.moduleId?.includes('lower-door-lift-');
+                    const isTopDown = mod.moduleId?.includes('lower-top-down-');
+                    const defaultBottomGap = (isBasicLower || isDoorLift || isTopDown) ? 5 : 2;
+                    updatePlacedModule(mod.id, {
+                      hasBase: !enabled,
+                      ...(enabled ? { individualFloatHeight: 0, doorBottomGap: -5 } : { doorBottomGap: defaultBottomGap }),
+                    });
+                  }}
                   className={`${styles.miniToggle} ${enabled ? styles.miniToggleActive : ''}`}
                 />
                 {enabled ? (
@@ -5571,10 +5583,17 @@ const Configurator: React.FC = () => {
                         firstMod?.baseFrameOffset ?? (isLowerGroup ? 65 : 0),
                         () => {
                           const newVal = !allEnabled;
-                          group.moduleIds.forEach(id => updatePlacedModule(id, {
-                            hasBase: newVal,
-                            ...(newVal ? {} : { individualFloatHeight: 0 }),
-                          }));
+                          group.moduleIds.forEach(id => {
+                            const targetMod = groupMods.find(m => m.id === id);
+                            const isBasicLower = targetMod?.moduleId?.includes('lower-half-cabinet') || targetMod?.moduleId?.includes('dual-lower-half-cabinet') || targetMod?.moduleId?.includes('lower-drawer-') || targetMod?.moduleId?.includes('dual-lower-drawer-');
+                            const isDoorLift = targetMod?.moduleId?.includes('lower-door-lift-');
+                            const isTopDown = targetMod?.moduleId?.includes('lower-top-down-');
+                            const defaultBottomGap = (isBasicLower || isDoorLift || isTopDown) ? 5 : 2;
+                            updatePlacedModule(id, {
+                              hasBase: newVal,
+                              ...(newVal ? { doorBottomGap: defaultBottomGap } : { individualFloatHeight: 0, doorBottomGap: -5 }),
+                            });
+                          });
                         },
                         (v) => { group.moduleIds.forEach(id => updatePlacedModule(id, { baseFrameHeight: v })); },
                         (v) => { group.moduleIds.forEach(id => updatePlacedModule(id, { baseFrameOffset: v })); },
