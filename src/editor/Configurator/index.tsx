@@ -5149,8 +5149,22 @@ const Configurator: React.FC = () => {
                   if (cat !== 'upper' && cat !== 'full') return null;
                   topNum++;
                   const tn = topNum;
-                  // 실제 렌더링되는 상부프레임 높이
-                  // actualTopFrameSize = 공간높이 - 받침대 - 띄움높이 - 가구높이
+                  const globalTop = spaceInfo.frameSize?.top ?? 30;
+                  // 상부장(upper)은 상부프레임 = topFrameThickness (캐비넷 위 작은 띠)
+                  // 키큰장(full)은 상부프레임 = 공간높이 - 받침대 - 가구높이
+                  if (cat === 'upper') {
+                    const upperTopFrame = mod.topFrameThickness ?? globalTop;
+                    return <FrameOffsetRow key={`top-${mod.id}`}
+                      num={tn} label="(상)"
+                      enabled={mod.hasTopFrame !== false} sizeMM={upperTopFrame} offset={mod.topFrameOffset ?? 0}
+                      onToggle={() => updatePlacedModule(mod.id, { hasTopFrame: !(mod.hasTopFrame !== false) })}
+                      onSizeChange={(v) => updatePlacedModule(mod.id, { topFrameThickness: Math.max(0, v) })}
+                      onOffsetChange={(v) => updatePlacedModule(mod.id, { topFrameOffset: v })}
+                      highlightKey={`top-${mod.id}`}
+                      toAlpha={toAlpha} styles={styles} setHighlightedFrame={setHighlightedFrame}
+                    />;
+                  }
+                  // 키큰장(full): 공간높이 - 받침대 - 띄움높이 - 가구높이
                   const baseH = spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig.height || 65) : 0;
                   const isStandFloat = spaceInfo.baseConfig?.type === 'stand' && spaceInfo.baseConfig?.placementType === 'float';
                   const floatH = isStandFloat ? (spaceInfo.baseConfig?.floatHeight || 0) : 0;
