@@ -1059,8 +1059,8 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                 {customDepth}
               </Text>
 
-              {/* 하부프레임 옵셋 깊이 치수 (하부장 전용) — 650 깊이 치수 안쪽 같은 단 */}
-              {isLowerMod && baseFrameOffsetMm > 0 && (() => {
+              {/* 하부프레임 옵셋 깊이 치수 (하부장 전용) — hasBase=false이면 숨김 */}
+              {isLowerMod && baseFrameOffsetMm > 0 && mod.hasBase !== false && (() => {
                 // 하부프레임은 가구 앞면(도어면)에서 옵셋만큼 뒤로 들어감
                 const frontZ = furnitureZOffset + furnitureDepth/2 - doorThickness;
                 const offsetBackZ = frontZ - baseFrameOffsetDepth;
