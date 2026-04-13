@@ -5310,7 +5310,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               // 가구 이동 핸들러: 화살표 클릭 시 10mm씩 이동
               const MOVE_STEP = 0.1; // 10mm = 0.1 Three.js 단위
               const isSelected = selectedFurnitureId === module.id;
-              const canMoveLeft = leftGapMm >= 1;
+              const canMoveLeft = leftGapMm >= 1; // 벽 or 인접가구와 1mm 이상 떨어져야 화살표 표시
               const canMoveRight = rightGapMm >= 1;
               const stopAll = (e: any) => {
                 e.stopPropagation(); e.preventDefault();
@@ -5319,14 +5319,18 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 (window as any).__r3fClickHandled = true;
               };
               const halfW = moduleWidth / 2;
+              // 좌측 한계: 벽 또는 인접 가구 우측 끝
+              const leftLimit = leftX - mmToThreeUnits(leftGapMm); // gapLeftX = 벽 or 인접가구 경계
+              // 우측 한계: 벽 또는 인접 가구 좌측 끝
+              const rightLimit = rightX + mmToThreeUnits(rightGapMm); // gapRightX = 벽 or 인접가구 경계
               const moveLeft = (e: any) => {
                 stopAll(e);
-                const newX = Math.max(zoneLimitLeft + halfW, module.position.x - MOVE_STEP);
+                const newX = Math.max(leftLimit + halfW, module.position.x - MOVE_STEP);
                 updatePlacedModule(module.id, { position: { ...module.position, x: newX } });
               };
               const moveRight = (e: any) => {
                 stopAll(e);
-                const newX = Math.min(zoneLimitRight - halfW, module.position.x + MOVE_STEP);
+                const newX = Math.min(rightLimit - halfW, module.position.x + MOVE_STEP);
                 updatePlacedModule(module.id, { position: { ...module.position, x: newX } });
               };
               return (<>
