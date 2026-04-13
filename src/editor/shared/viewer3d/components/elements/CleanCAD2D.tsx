@@ -996,8 +996,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         hasAdjacentLeft = Math.abs(leftEdge - zoneLimitLeft) > 0.001;
         hasAdjacentRight = Math.abs(rightEdge - zoneLimitRight) > 0.001;
 
-        nearestLeftDistance = Math.abs((moduleLeft - leftEdge) * 100);
-        nearestRightDistance = Math.abs((rightEdge - moduleRight) * 100);
+        nearestLeftDistance = Math.round(Math.abs((moduleLeft - leftEdge) * 100));
+        nearestRightDistance = Math.round(Math.abs((rightEdge - moduleRight) * 100));
       }
 
       // ────────────────────────────────────────────────
@@ -3567,6 +3567,11 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           }
           // hasDualCabinet: 상부장+하부장 동시 배치
           const hasDualCabinet = leftCompanionMod !== null && companionH > 0;
+          console.log('🔍 [좌측치수] leftmostMod:', leftmostMod?.moduleId, 'cat:', leftCategoryResolved,
+            'companion:', leftCompanionMod?.moduleId, 'companionCat:', companionCategory,
+            'companionH:', companionH, 'hasDual:', hasDualCabinet,
+            'slotIdx:', leftmostMod?.slotIndex, 'compSlotIdx:', leftCompanionMod?.slotIndex,
+            'allMods:', allMods.map(m => ({ id: m.moduleId, slot: m.slotIndex, x: m.position?.x })));
           // 하부장/상부장 높이 분리
           let lowerCabinetH = 0;
           let upperCabinetH = 0;
@@ -5183,8 +5188,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   onClick={(e) => { e.stopPropagation(); handleFurnitureWidthEdit(module.id, actualWidth); }}
                 >
                   {(() => {
-                    const w = Math.floor(actualWidth * 2) / 2; // 0.5mm 단위 내림
-                    return w % 1 === 0 ? w : w.toFixed(1);
+                    return Math.round(actualWidth);
                   })()}
                 </div>
               </Html>
@@ -5199,8 +5203,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 depthTest={false}
               >
                 {(() => {
-                    const w = Math.floor(actualWidth * 2) / 2; // 0.5mm 단위 내림
-                    return w % 1 === 0 ? w : w.toFixed(1);
+                    return Math.round(actualWidth);
                 })()}
               </Text>
             )}
@@ -5242,10 +5245,10 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 ? module.freeLeftGap : nearestLeftDistance;
               const rawRightGap = !hasAdjacentRight && module.freeRightGap != null
                 ? module.freeRightGap : nearestRightDistance;
-              // 0.5mm 단위 내림 (가구 너비와 동일한 규칙)
-              const formatDim = (v: number) => v % 1 === 0 ? v.toString() : v.toFixed(1);
-              const leftGapMm = Math.floor(rawLeftGap * 2) / 2;
-              const rightGapMm = Math.floor(rawRightGap * 2) / 2;
+              // 이격거리는 정수 mm로 반올림 (소수점 불필요)
+              const formatDim = (v: number) => Math.round(v).toString();
+              const leftGapMm = Math.round(rawLeftGap);
+              const rightGapMm = Math.round(rawRightGap);
 
               // 서라운드 모드에서 벽 인접 가구의 이격은 프레임 두께와 겹침 → 숨김
               // (프레임 치수선이 이미 2단에서 표시하므로 중복 방지)
