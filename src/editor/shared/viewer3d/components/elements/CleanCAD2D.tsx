@@ -5347,15 +5347,13 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 boxShadow: '0 1px 4px rgba(0,0,0,0.15)',
               };
               return (<>
-                {/* 좌측 이동 화살표 */}
-                {leftGapMm > 2 && !suppressLeftGap && (
-                  <Html position={[leftX - mmToThreeUnits(8), gapDimY, 0.01]}
-                    center style={{ pointerEvents: 'auto' }} zIndexRange={[10001, 10002]}>
-                    <button style={arrowBtnStyle} onClick={moveLeft} title={`좌로 10mm 이동 (이격: ${leftGapMm}mm)`}>
-                      ◀
-                    </button>
-                  </Html>
-                )}
+                {/* 좌측 이동 화살표 — 이격 크기 무관, 항상 표시 */}
+                <Html position={[leftX - mmToThreeUnits(15), gapDimY, 0.01]}
+                  center style={{ pointerEvents: 'auto' }} zIndexRange={[10001, 10002]}>
+                  <button style={arrowBtnStyle} onClick={moveLeft} title={`좌로 10mm 이동`}>
+                    ◀
+                  </button>
+                </Html>
                 {/* 좌측 이격 치수 */}
                 {leftGapMm > 0 && !suppressLeftGap && (<>
                   <NativeLine name="dimension_line"
@@ -5379,15 +5377,13 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     {formatDim(leftGapMm)}
                   </Text>
                 </>)}
-                {/* 우측 이동 화살표 */}
-                {rightGapMm > 2 && !suppressRightGap && (
-                  <Html position={[rightX + mmToThreeUnits(8), gapDimY, 0.01]}
-                    center style={{ pointerEvents: 'auto' }} zIndexRange={[10001, 10002]}>
-                    <button style={arrowBtnStyle} onClick={moveRight} title={`우로 10mm 이동 (이격: ${rightGapMm}mm)`}>
-                      ▶
-                    </button>
-                  </Html>
-                )}
+                {/* 우측 이동 화살표 — 이격 크기 무관, 항상 표시 */}
+                <Html position={[rightX + mmToThreeUnits(15), gapDimY, 0.01]}
+                  center style={{ pointerEvents: 'auto' }} zIndexRange={[10001, 10002]}>
+                  <button style={arrowBtnStyle} onClick={moveRight} title={`우로 10mm 이동`}>
+                    ▶
+                  </button>
+                </Html>
                 {/* 우측 이격 치수 */}
                 {rightGapMm > 0 && !suppressRightGap && (<>
                   <NativeLine name="dimension_line"
