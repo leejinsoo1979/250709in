@@ -2329,7 +2329,8 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
             let doorTopAbsMm = 0;
 
             if (modCategory === 'upper') {
-              const cabinetH = moduleHeightMm_d || modData?.dimensions.height || 600;
+              // DoorModule과 동일: freeHeight || dimensions.height (delta 보정 없는 원본값)
+              const cabinetH = (mod as PlacedModule).freeHeight || modData?.dimensions.height || 600;
               const topFrameVal = mod.topFrameThickness ?? (spaceInfo.frameSize?.top ?? 30);
               const topExtension = topFrameVal - doorTopGapVal;
               doorHeightMm = cabinetH + topExtension + doorBottomGapVal;
