@@ -2625,20 +2625,6 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         (adjustedDepthMm !== moduleDepth ? adjustedDepthMm : moduleDepth)));
   const depth = mmToThreeUnits(actualDepthMm);
 
-  // 🔍 깊이 디버그
-  if (placedModule.customDepth || placedModule.freeDepth) {
-    console.log('🔍 [깊이 디버그]', {
-      moduleId: placedModule.moduleId,
-      customDepth: placedModule.customDepth,
-      freeDepth: placedModule.freeDepth,
-      adjustedDepthMm,
-      moduleDepth,
-      autoAdjustedDepthMm,
-      columnPlacementMode: placedModule.columnPlacementMode,
-      actualDepthMm,
-      isFreePlacement: placedModule.isFreePlacement,
-    });
-  }
 
 
   // 도어 두께 (20mm) - furnitureZ 계산에 필요하므로 먼저 선언
@@ -2674,14 +2660,6 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       ? backWall + depth / 2  // 상부장: 뒷면이 뒷벽에 닿음
       : furnitureZOffset + furnitureDepth / 2 - doorThickness - depth / 2 + baseDepthOffset;
 
-  // 🔴 Z축 디버그 — 모든 가구
-  console.log('🔴 Z디버그', placedModule.moduleId, {
-    actualDepthMm,
-    furnitureZ_mm: furnitureZ * 100,
-    뒷면mm: (furnitureZ - depth / 2) * 100,
-    앞면mm: (furnitureZ + depth / 2) * 100,
-    lowerBackFace_mm: lowerBackFace * 100,
-  });
 
   // EP 비대칭 보정: 좌EP만 → 본체 오른쪽으로, 우EP만 → 본체 왼쪽으로
   // 본체 너비가 EP만큼 줄었으므로 본체+EP 전체가 슬롯/위치 중앙에 오도록 보정
