@@ -2134,8 +2134,9 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     const freeDcOnRight = isFreePlacement && dcOnRight; // 자유배치 커튼박스(우)
                     const mainLeftAdj = (cbOnLeft || freeDcOnLeft) ? 'curtainbox' : (scOnLeft ? 'step' : 'wall');
                     const mainRightAdj = (cbOnRight || freeDcOnRight) ? 'curtainbox' : (scOnRight ? 'step' : 'wall');
-                    const mainLeftGap = mainLeftAdj === 'wall' ? (hasLeftWall ? leftGapMm : 0) : middleGapMm;
-                    const mainRightGap = mainRightAdj === 'wall' ? (hasRightWall ? rightGapMm : 0) : middleGapMm;
+                    // 커튼박스 인접 → 이격 없음 (0), 단내림 인접 → middleGap, 벽 인접 → wallGap
+                    const mainLeftGap = mainLeftAdj === 'curtainbox' ? 0 : (mainLeftAdj === 'wall' ? (hasLeftWall ? leftGapMm : 0) : middleGapMm);
+                    const mainRightGap = mainRightAdj === 'curtainbox' ? 0 : (mainRightAdj === 'wall' ? (hasRightWall ? rightGapMm : 0) : middleGapMm);
 
                     // ── 3단 치수선: 각 구간의 실배치 폭 ──
                     // 단내림 구간: 양쪽 경계이격을 흡수하여 확장 (1.5 + 900 + 1.5 = 903)
@@ -2170,12 +2171,13 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
 
                     // 메인 배치폭: 각 방향별 delta 계산
                     // - 단내림(step) 인접 → 단내림 가구가 경계이격을 침범 → 차감 (-middleGap)
-                    // - 커튼박스(CB) 인접 → CB는 배치불가 구간이므로 경계이격 차감 (-middleGap)
+                    // - 커튼박스(CB) 인접 → CB는 배치불가 구간, 경계이격 불필요 (0)
+                    //   단, 메인의 반대쪽(벽) 이격만 차감
                     // - 벽 인접 → 벽이격 차감 (-wallGap)
                     let mainLeftDelta = 0;
                     if (cbOnLeft || freeDcOnLeft) {
-                      // 메인 좌측 = 커튼박스 인접 → 경계이격 차감
-                      mainLeftDelta = -(hasLeftWall ? leftGapMm : middleGapMm);
+                      // 메인 좌측 = 커튼박스 인접 → 커튼박스 경계에는 이격 불필요 (0)
+                      mainLeftDelta = 0;
                     } else if (scOnLeft) {
                       // 메인 좌측 = 단내림 인접 → 단내림 가구가 침범 → 차감
                       mainLeftDelta = -middleGapMm;
@@ -2186,8 +2188,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
 
                     let mainRightDelta = 0;
                     if (cbOnRight || freeDcOnRight) {
-                      // 메인 우측 = 커튼박스 인접 → 경계이격 차감
-                      mainRightDelta = -(hasRightWall ? rightGapMm : middleGapMm);
+                      // 메인 우측 = 커튼박스 인접 → 커튼박스 경계에는 이격 불필요 (0)
+                      mainRightDelta = 0;
                     } else if (scOnRight) {
                       // 메인 우측 = 단내림 인접 → 단내림 가구가 침범 → 차감
                       mainRightDelta = -middleGapMm;
@@ -2415,8 +2417,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   </>);
                 })()}
 
-                {/* 단내림(droppedCeiling) 구간 실배치 치수선 */}
-                {hasDC && (() => {
+                {/* 단내림(droppedCeiling) 구간 실배치 치수선 — 자유배치 커튼박스는 배치불가 구간이므로 숨김 */}
+                {hasDC && !hasFreeCurtainBox && (() => {
                   const dsx = isFreePlacement ? dcPlacStartX : droppedStartX;
                   const dex = isFreePlacement ? dcPlacEndX : droppedEndX;
                   return (<>
