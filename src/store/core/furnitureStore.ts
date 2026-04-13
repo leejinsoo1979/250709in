@@ -335,10 +335,10 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
         }
       }
 
-      // 상부장 상판 따내기 기본값: 680×140 우측
+      // 상부장 상판 따내기 기본값: 듀얼 680×140, 싱글 340×140 (우측)
       if (newCategory === 'upper') {
         if (module.topPanelNotchSize === undefined) {
-          module.topPanelNotchSize = '680x140';
+          module.topPanelNotchSize = module.isDualSlot ? '680x140' : '340x140';
         }
         if (module.topPanelNotchSide === undefined) {
           module.topPanelNotchSide = 'right';

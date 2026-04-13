@@ -4039,17 +4039,19 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                 >
                   없음
                 </button>
-                <button
-                  className={`${styles.doorTab} ${currentPlacedModule?.topPanelNotchSize === '680x140' ? styles.activeDoorTab : ''}`}
-                  onClick={() => {
-                    updatePlacedModule(activePopup.id, {
-                      topPanelNotchSize: '680x140',
-                      topPanelNotchSide: currentPlacedModule?.topPanelNotchSide || 'right'
-                    });
-                  }}
-                >
-                  680×140
-                </button>
+                {currentPlacedModule?.isDualSlot && (
+                  <button
+                    className={`${styles.doorTab} ${currentPlacedModule?.topPanelNotchSize === '680x140' ? styles.activeDoorTab : ''}`}
+                    onClick={() => {
+                      updatePlacedModule(activePopup.id, {
+                        topPanelNotchSize: '680x140',
+                        topPanelNotchSide: currentPlacedModule?.topPanelNotchSide || 'right'
+                      });
+                    }}
+                  >
+                    680×140
+                  </button>
+                )}
                 <button
                   className={`${styles.doorTab} ${currentPlacedModule?.topPanelNotchSize === '340x140' ? styles.activeDoorTab : ''}`}
                   onClick={() => {
