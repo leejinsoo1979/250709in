@@ -2737,10 +2737,20 @@ const Room: React.FC<RoomProps> = ({
             const x2 = xOffset + width;
 
             const floorY = panelStartY;
-            // X/Y축 뒷벽 실선은 제거 — Z축 그라데이션 라인만 유지
+            // X/Y축 뒷벽 라인 + Z축 그라데이션 라인
             const solidLines: [number, number, number, number, number, number][] = [];
             const gradientLines: [number, number, number, number, number, number][] = [];
             const overlayLines: [number, number, number, number, number, number][] = [];
+
+            // 뒷벽(z1)에 X/Y축 경계 라인 추가
+            if (hasLeftWall) {
+              solidLines.push([x1, floorY, z1, x1, ceilingY, z1]); // 좌벽 세로선
+            }
+            if (hasRightWall) {
+              solidLines.push([x2, floorY, z1, x2, ceilingY, z1]); // 우벽 세로선
+            }
+            solidLines.push([x1, ceilingY, z1, x2, ceilingY, z1]); // 천장 가로선
+            solidLines.push([x1, floorY, z1, x2, floorY, z1]); // 바닥 가로선
 
             const hasDC = spaceInfo.droppedCeiling?.enabled;
             const dcIsLeft = hasDC && spaceInfo.droppedCeiling?.position === 'left';
