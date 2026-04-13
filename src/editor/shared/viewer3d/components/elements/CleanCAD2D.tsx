@@ -1136,11 +1136,11 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
   const EXTENSION_LENGTH = 60; // 보조선 연장 길이 (mm)
 
   // 치수선 균등 간격 배치: 4단 — 전체폭 → 구간사이즈 → 슬롯합계(실배치) → 슬롯폭
-  // 자유배치+단내림: 슬롯합계 불필요 → 3단으로 축소
+  // 자유배치+단내림+가구없음: 2단(전체폭+구간사이즈)으로 축소
   const DIM_GAP = 120; // 치수선 간 간격 120mm (균등)
   const hasCurtainBox = !isFreePlacement && spaceInfo.curtainBox?.enabled;
   const hasFreeStepCeiling = isFreePlacement && spaceInfo.stepCeiling?.enabled;
-  const dimLevels = (hasDroppedCeiling && !isFreePlacement) ? 4 : hasCurtainBox ? 4 : hasFreeStepCeiling ? 4 : isFreePlacement ? 3 : 3;
+  const dimLevels = (hasDroppedCeiling && !isFreePlacement) ? 4 : hasCurtainBox ? 4 : hasFreeStepCeiling ? (hasPlacedModules ? 4 : 3) : isFreePlacement ? 3 : 3;
   // 최상단: 전체 너비 (3600)
   const topDimensionY = spaceHeight + mmToThreeUnits(DIM_GAP * dimLevels);
   // 2단: 구간사이즈 (2700 / 900)
@@ -1561,8 +1561,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         // 이격거리가 0이면 표시하지 않음
         if (leftValue === 0) return null;
 
-        // 단내림 활성 시 이격 치수선을 4단 아래로 내림
-        const leftDimY = spaceInfo.droppedCeiling?.enabled ? slotDimensionY - mmToThreeUnits(80) : slotDimensionY;
+        // 이격 치수선: 단내림/커튼박스 활성 시 3단(slotTotalDimensionY)에 배치
+        const leftDimY = (spaceInfo.droppedCeiling?.enabled || hasFreeStepCeiling || hasCurtainBox) ? slotTotalDimensionY : slotDimensionY;
 
         return (
           <group>
@@ -1711,8 +1711,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         if (rightValue === 0) return null;
 
         const rightEdge = mmToThreeUnits(spaceInfo.width) + leftOffset;
-        // 단내림 활성 시 이격 치수선을 4단 아래로 내림
-        const rightDimY = spaceInfo.droppedCeiling?.enabled ? slotDimensionY - mmToThreeUnits(80) : slotDimensionY;
+        // 이격 치수선: 단내림/커튼박스 활성 시 3단(slotTotalDimensionY)에 배치
+        const rightDimY = (spaceInfo.droppedCeiling?.enabled || hasFreeStepCeiling || hasCurtainBox) ? slotTotalDimensionY : slotDimensionY;
 
         return (
           <group>
@@ -2077,8 +2077,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
 
                 {/* 커튼박스 프레임 폭 치수선 — 숨김 (좁은 영역에서 텍스트 겹침 방지) */}
 
-                {/* ===== 3단: 실배치 공간 치수선 ===== */}
-                {(() => {
+                {/* ===== 3단: 실배치 공간 치수선 (가구 있을 때만) ===== */}
+                {hasPlacedModules && (() => {
                   // 메인 구간에 듀얼 가구가 있는지 판별
                   const mainModules = placedModules.filter(m => m.zone !== 'dropped');
                   const hasDualInMain = mainModules.some(m => m.isDualSlot || m.moduleId.includes('dual-'));
@@ -2531,10 +2531,10 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 </>
                 )}
 
-                {/* 경계면 이격거리 치수선 - 좌우 이격과 동일한 Y 레벨 */}
+                {/* 경계면 이격거리 치수선 - 좌우 이격과 동일한 Y 레벨 (가구 있을 때만) */}
                 {/* 단내림 있으면 2개 경계면: 메인↔단내림, 단내림↔커튼박스 */}
                 {/* 단내림 없으면 1개 경계면: 메인↔커튼박스 */}
-                {(() => {
+                {hasPlacedModules && (() => {
                   // 전체서라운드/양쪽서라운드: 이격 1.5 고정, 노서라운드만 gapConfig
                   const isNoSurroundBoundary = spaceInfo.surroundType === 'no-surround';
                   const middleGapMm = isNoSurroundBoundary ? (spaceInfo.gapConfig?.middle ?? 1.5) : 1.5;
@@ -5440,8 +5440,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         );
       })}
 
-      {/* 자유배치: 가구 없는 구간의 전체 폭 치수 (slotDimensionY 레벨) */}
-      {isFreePlacement && showDimensions && (spaceInfo.stepCeiling?.enabled) && (() => {
+      {/* 자유배치: 가구 없는 구간의 전체 폭 치수 (slotDimensionY 레벨) — 가구 있을 때만 */}
+      {isFreePlacement && showDimensions && hasPlacedModules && (spaceInfo.stepCeiling?.enabled) && (() => {
         // 각 구간(메인/단내림)에 가구가 있는지 확인
         const stepDownWidthMm = isFreePlacement
           ? (spaceInfo.stepCeiling?.width || 0)
