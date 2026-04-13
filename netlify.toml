@@ -2,16 +2,6 @@
   publish = "dist"
   command = "npm run build"
 
-[[headers]]
-  for = "/models/*"
-  [headers.values]
-    Cache-Control = "public, max-age=31536000, immutable"
-
-[[redirects]]
-  from = "/models/*"
-  to = "/models/:splat"
-  status = 200
-
 [[redirects]]
   from = "/*"
   to = "/index.html"
