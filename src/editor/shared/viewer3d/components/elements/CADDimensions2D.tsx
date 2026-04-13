@@ -2190,14 +2190,22 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                 const finishDepth_r = mmToThreeUnits(finishDepthMm_r);
                 const finishZ_r = upperFurnitureZ + mmToThreeUnits(17.5);
                 const finishDimY_r = furnitureBottomEdge_r - mmToThreeUnits(200);
+                const cabinetBackZ_r = upperFurnitureZ - moduleDepth / 2;
+                const finishBackZ_r = finishZ_r - finishDepth_r / 2;
+                const offsetMm_r = 35;
 
                 return (
                   <group>
+                    {/* 보조 가이드 연장선 - 앞쪽 */}
                     <ExtLine points={[[0, furnitureBottomEdge_r, finishZ_r + finishDepth_r/2], [0, finishDimY_r, finishZ_r + finishDepth_r/2]]} color={dimensionColor} />
-                    <ExtLine points={[[0, furnitureBottomEdge_r, finishZ_r - finishDepth_r/2], [0, finishDimY_r, finishZ_r - finishDepth_r/2]]} color={dimensionColor} />
+                    {/* 보조 가이드 연장선 - 마감판 뒤쪽 */}
+                    <ExtLine points={[[0, furnitureBottomEdge_r, finishBackZ_r], [0, finishDimY_r, finishBackZ_r]]} color={dimensionColor} />
+                    {/* 보조 가이드 연장선 - 가구 뒤쪽 */}
+                    <ExtLine points={[[0, furnitureBottomEdge_r, cabinetBackZ_r], [0, finishDimY_r, cabinetBackZ_r]]} color={dimensionColor} />
 
+                    {/* 마감판 깊이 치수선 */}
                     <NativeLine name="dimension_line"
-                      points={[[0, finishDimY_r, finishZ_r - finishDepth_r/2], [0, finishDimY_r, finishZ_r + finishDepth_r/2]]}
+                      points={[[0, finishDimY_r, finishBackZ_r], [0, finishDimY_r, finishZ_r + finishDepth_r/2]]}
                       color={dimensionColor} lineWidth={0.5} renderOrder={100000} depthTest={false}
                     />
                     <NativeLine name="dimension_line"
@@ -2205,10 +2213,9 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                       color={dimensionColor} lineWidth={0.5} renderOrder={100000} depthTest={false}
                     />
                     <NativeLine name="dimension_line"
-                      points={[[0 - 0.02, finishDimY_r, finishZ_r - finishDepth_r/2], [0 + 0.02, finishDimY_r, finishZ_r - finishDepth_r/2]]}
+                      points={[[0 - 0.02, finishDimY_r, finishBackZ_r], [0 + 0.02, finishDimY_r, finishBackZ_r]]}
                       color={dimensionColor} lineWidth={0.5} renderOrder={100000} depthTest={false}
                     />
-
                     <Text
                       position={[0, finishDimY_r - mmToThreeUnits(40), finishZ_r]}
                       fontSize={largeFontSize} color={textColor}
@@ -2219,42 +2226,24 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                       {finishDepthMm_r}
                     </Text>
 
-                    {/* 마감판 뒤쪽 옵셋 치수 (가구 뒷면 ~ 마감판 뒷면 = 35mm) */}
-                    {(() => {
-                      const cabinetBackZ_r = upperFurnitureZ - moduleDepth / 2;
-                      const finishBackZ_r = finishZ_r - finishDepth_r / 2;
-                      const offsetMm_r = 35;
-                      const midY_r = (furnitureBottomEdge_r + finishDimY_r) / 2;
-
-                      return (
-                        <group>
-                          <ExtLine points={[[0, furnitureBottomEdge_r, cabinetBackZ_r], [0, midY_r, cabinetBackZ_r]]} color={dimensionColor} />
-
-                          <NativeLine name="dimension_line"
-                            points={[[0, midY_r, cabinetBackZ_r], [0, midY_r, finishBackZ_r]]}
-                            color={dimensionColor} lineWidth={0.5} renderOrder={100000} depthTest={false}
-                          />
-                          <NativeLine name="dimension_line"
-                            points={[[0 - 0.02, midY_r, finishBackZ_r], [0 + 0.02, midY_r, finishBackZ_r]]}
-                            color={dimensionColor} lineWidth={0.5} renderOrder={100000} depthTest={false}
-                          />
-                          <NativeLine name="dimension_line"
-                            points={[[0 - 0.02, midY_r, cabinetBackZ_r], [0 + 0.02, midY_r, cabinetBackZ_r]]}
-                            color={dimensionColor} lineWidth={0.5} renderOrder={100000} depthTest={false}
-                          />
-
-                          <Text
-                            position={[0, midY_r - mmToThreeUnits(40), (cabinetBackZ_r + finishBackZ_r) / 2]}
-                            fontSize={largeFontSize} color={textColor}
-                            anchorX="center" anchorY="middle"
-                            renderOrder={1000} depthTest={false}
-                            rotation={[0, Math.PI / 2, 0]}
-                          >
-                            {offsetMm_r}
-                          </Text>
-                        </group>
-                      );
-                    })()}
+                    {/* 갭 치수선 (가구 뒷면 ~ 마감판 뒷면 = 35mm) — 같은 높이 */}
+                    <NativeLine name="dimension_line"
+                      points={[[0, finishDimY_r, cabinetBackZ_r], [0, finishDimY_r, finishBackZ_r]]}
+                      color={dimensionColor} lineWidth={0.5} renderOrder={100000} depthTest={false}
+                    />
+                    <NativeLine name="dimension_line"
+                      points={[[0 - 0.02, finishDimY_r, cabinetBackZ_r], [0 + 0.02, finishDimY_r, cabinetBackZ_r]]}
+                      color={dimensionColor} lineWidth={0.5} renderOrder={100000} depthTest={false}
+                    />
+                    <Text
+                      position={[0, finishDimY_r - mmToThreeUnits(40), (cabinetBackZ_r + finishBackZ_r) / 2]}
+                      fontSize={largeFontSize} color={textColor}
+                      anchorX="center" anchorY="middle"
+                      renderOrder={1000} depthTest={false}
+                      rotation={[0, Math.PI / 2, 0]}
+                    >
+                      {offsetMm_r}
+                    </Text>
                   </group>
                 );
               })()}
