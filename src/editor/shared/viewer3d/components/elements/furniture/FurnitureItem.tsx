@@ -2650,7 +2650,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
 
   // 기둥 앞 공간 가구는 저장된 Z 위치 사용, 일반 가구는 계산된 Z 위치 사용
   // 상부장은 뒷벽 정렬 (하부장 뒷면과 같은 위치)
-  const isUpperForZ = actualModuleData?.category === 'upper';
+  const isUpperForZ = actualModuleData?.category === 'upper' || placedModule.moduleId?.includes('upper-cabinet');
   const furnitureZ = isFrontSpaceFurniture
     ? placedModule.position.z  // 기둥 앞 공간: 저장된 위치 사용
     : isUpperForZ
