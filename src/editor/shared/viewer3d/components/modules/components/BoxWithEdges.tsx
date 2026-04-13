@@ -1011,7 +1011,7 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
         material={finalMaterial}
       >
         {notchGeometry ? (
-          <primitive key={`notch-${args[0]}-${args[1]}-${args[2]}-${JSON.stringify(notch || notches)}`} object={notchGeometry} attach="geometry" />
+          <primitive key={`notch-${args[0]}-${args[1]}-${args[2]}-${JSON.stringify(notch || notches || cornerNotch)}`} object={notchGeometry} attach="geometry" />
         ) : (
           <boxGeometry key={`${args[0]}-${args[1]}-${args[2]}`} args={args} />
         )}
@@ -1034,7 +1034,7 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
           return (
             <>
               {notchLines.map((line, i) => (
-                <line key={i} name={`${notchEdgeName}-${i}`}>
+                <line key={`${notchEdgeName}-${i}-${line[0].join(',')}-${line[1].join(',')}`} name={`${notchEdgeName}-${i}`}>
                   <bufferGeometry>
                     <bufferAttribute
                       attach="attributes-position"
