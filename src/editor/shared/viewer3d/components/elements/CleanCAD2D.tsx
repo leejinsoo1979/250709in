@@ -3522,24 +3522,23 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
 
           // 가구 내경 높이 — FurnitureItem.tsx와 동일한 로직 적용
           let furnitureH: number;
-          let leftCategoryResolved: string = 'full';
+          // 카테고리는 항상 먼저 resolve (freeHeight/customHeight 여부와 무관)
+          const leftModDataForCat = leftmostMod ? getModuleById(
+            leftmostMod.moduleId,
+            { width: spaceInfo.width, height: spaceInfo.height, depth: spaceInfo.depth },
+            spaceInfo
+          ) : null;
+          let leftCategoryResolved: string = leftModDataForCat?.category
+            ?? (leftmostMod?.moduleId.includes('-upper-') ? 'upper'
+              : leftmostMod?.moduleId.includes('-lower-') ? 'lower' : 'full');
           if (leftmostMod) {
             if (leftmostMod.freeHeight) {
               furnitureH = leftmostMod.freeHeight;
             } else if (leftmostMod.customHeight) {
               furnitureH = leftmostMod.customHeight;
             } else {
-              // 상부장/하부장은 공간 전체를 차지하지 않으므로 모듈 자체 높이 사용
-              const leftModData = getModuleById(
-                leftmostMod.moduleId,
-                { width: spaceInfo.width, height: spaceInfo.height, depth: spaceInfo.depth },
-                spaceInfo
-              );
-              leftCategoryResolved = leftModData?.category
-                ?? (leftmostMod.moduleId.includes('-upper-') ? 'upper'
-                  : leftmostMod.moduleId.includes('-lower-') ? 'lower' : 'full');
               if (leftCategoryResolved === 'lower' || leftCategoryResolved === 'upper') {
-                furnitureH = leftModData?.dimensions.height ?? Math.max(0, effectiveH - actualBottomSize - actualTopSize);
+                furnitureH = leftModDataForCat?.dimensions.height ?? Math.max(0, effectiveH - actualBottomSize - actualTopSize);
               } else {
                 furnitureH = Math.max(0, effectiveH - actualBottomSize - actualTopSize);
               }
@@ -4115,24 +4114,23 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
 
           // 가구 내경 높이 — FurnitureItem.tsx와 동일한 로직 적용
           let rFurnitureH: number;
-          let rightCategoryResolved: string = 'full';
+          // 카테고리는 항상 먼저 resolve (freeHeight/customHeight 여부와 무관)
+          const rightModDataForCat = rightmostMod ? getModuleById(
+            rightmostMod.moduleId,
+            { width: spaceInfo.width, height: spaceInfo.height, depth: spaceInfo.depth },
+            spaceInfo
+          ) : null;
+          let rightCategoryResolved: string = rightModDataForCat?.category
+            ?? (rightmostMod?.moduleId.includes('-upper-') ? 'upper'
+              : rightmostMod?.moduleId.includes('-lower-') ? 'lower' : 'full');
           if (rightmostMod) {
             if (rightmostMod.freeHeight) {
               rFurnitureH = rightmostMod.freeHeight;
             } else if (rightmostMod.customHeight) {
               rFurnitureH = rightmostMod.customHeight;
             } else {
-              // 상부장/하부장은 공간 전체를 차지하지 않으므로 모듈 자체 높이 사용
-              const rightModData = getModuleById(
-                rightmostMod.moduleId,
-                { width: spaceInfo.width, height: spaceInfo.height, depth: spaceInfo.depth },
-                spaceInfo
-              );
-              rightCategoryResolved = rightModData?.category
-                ?? (rightmostMod.moduleId.includes('-upper-') ? 'upper'
-                  : rightmostMod.moduleId.includes('-lower-') ? 'lower' : 'full');
               if (rightCategoryResolved === 'lower' || rightCategoryResolved === 'upper') {
-                rFurnitureH = rightModData?.dimensions.height ?? Math.max(0, rEffectiveH - rActualBottomSize - rActualTopSize);
+                rFurnitureH = rightModDataForCat?.dimensions.height ?? Math.max(0, rEffectiveH - rActualBottomSize - rActualTopSize);
               } else {
                 rFurnitureH = Math.max(0, rEffectiveH - rActualBottomSize - rActualTopSize);
               }
