@@ -4095,7 +4095,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               ?? (rightmostMod.moduleId.includes('-upper-') ? 'upper'
                 : rightmostMod.moduleId.includes('-lower-') ? 'lower' : 'full');
             if (cat === 'upper') {
-              const lowerMod = allMods.find(m => {
+              const lowerMod = allMods_R.find(m => {
                 if (m === rightmostMod) return false;
                 const samePos = isFreePlacement
                   ? Math.abs(m.position.x - rightmostMod.position.x) < 100
