@@ -92,13 +92,7 @@ const computeFurnitureHeightMm = (
     heightMm -= floorFinishH;
   }
 
-  // hasBase=false: 하부프레임 높이 추가, 개별 띄움 차감
-  if (mod.hasBase === false && spaceInfo.baseConfig?.type === 'floor') {
-    const isLowerModH = mod.moduleId?.startsWith('lower-') || mod.moduleId?.includes('-lower-');
-    const hiddenBaseH = mod.baseFrameHeight ?? spaceInfo.baseConfig?.height ?? (isLowerModH ? 100 : 60);
-    const indivFloat = mod.individualFloatHeight ?? 0;
-    heightMm += hiddenBaseH - indivFloat;
-  }
+  // hasBase=false → 가구 높이 유지 (FurnitureItem.tsx와 동일하게 높이 증가 제거)
 
   return heightMm;
 };
@@ -533,9 +527,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
       adjustedInternalHeightMm -= (selectedMod.topFrameThickness - globalTopFrameHeightMm);
     }
     if (modHasBaseOff) {
-      // 하부프레임 OFF: 받침대 높이만큼 가구 내경이 늘어나고, 개별 띄움만큼 줄어듦
-      const hiddenBaseH = selectedMod.baseFrameHeight ?? globalRailOrBaseHeightMm;
-      adjustedInternalHeightMm += hiddenBaseH - indivFloatMm;
+      // hasBase=false → 가구 높이 유지 (FurnitureItem.tsx와 동일하게 높이 증가 제거)
     } else if (selectedMod.baseFrameHeight !== undefined && !isStandType) {
       adjustedInternalHeightMm -= (selectedMod.baseFrameHeight - globalRailOrBaseHeightMm);
     }
