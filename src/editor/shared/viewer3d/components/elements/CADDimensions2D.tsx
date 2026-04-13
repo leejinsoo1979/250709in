@@ -812,10 +812,15 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
 
             const modCat = getModuleCategory(mod);
             const moduleHeightMm = computeFurnitureHeightMm(mod, modData, spaceInfo, internalSpace);
-            // placedModulesStore에서 최신 doorGap 값 읽기 (visibleFurniture의 mod는 stale할 수 있음)
-            const storeMod = placedModulesStore.find(m => m.id === mod.id);
-            const doorTopGapVal = storeMod?.doorTopGap ?? mod.doorTopGap ?? spaceInfo.doorTopGap ?? 0;
-            const doorBottomGapVal = storeMod?.doorBottomGap ?? mod.doorBottomGap ?? spaceInfo.doorBottomGap ?? 0;
+            const modCatForGap = getModuleCategory(mod);
+            // 상부장: UpperCabinet→DoorModule에 doorGap prop 안 넘김 → spaceInfo 글로벌 값 사용
+            // 하부장/키큰장: FurnitureItem→DoorModule에 store값 전달
+            const doorTopGapVal = modCatForGap === 'upper'
+              ? (spaceInfo.doorTopGap ?? 0)
+              : (mod.doorTopGap ?? spaceInfo.doorTopGap ?? 0);
+            const doorBottomGapVal = modCatForGap === 'upper'
+              ? (spaceInfo.doorBottomGap ?? 0)
+              : (mod.doorBottomGap ?? spaceInfo.doorBottomGap ?? 0);
 
             let doorBottomAbsMm = 0;
             let doorTopAbsMm = 0;
@@ -1013,6 +1018,55 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
         </group>
         )}
 
+
+        {/* 하부장/상부장: 바닥 ~ 가구 상단 합산 치수 (바닥마감재 + 하부프레임 + 가구높이) */}
+        {(selectedModCategory === 'lower' || selectedModCategory === 'upper') && selectedMod && (() => {
+          let selModData = getModuleById(
+            selectedMod.moduleId,
+            { width: internalSpace.width, height: internalSpace.height, depth: internalSpace.depth },
+            spaceInfo
+          );
+          if (!selModData) {
+            selModData = buildModuleDataFromPlacedModule(selectedMod, internalSpace, spaceInfo);
+          }
+          if (!selModData) return null;
+          const selFurnitureHeightMm = computeFurnitureHeightMm(selectedMod, selModData, spaceInfo, internalSpace);
+          const totalFromFloorMm = Math.round(floorFinishHeightMm + baseFrameHeightMm + selFurnitureHeightMm);
+          const totalFromFloorY = mmToThreeUnits(totalFromFloorMm);
+          const dimZ_combined = spaceDepth/2 + rightDimOffset - mmToThreeUnits(750);
+          return (
+            <group>
+              {/* 보조 가이드 연장선 - 바닥 */}
+              <ExtLine points={[[0, 0, dimZ_combined - mmToThreeUnits(360)], [0, 0, dimZ_combined]]} color={dimensionColor} />
+              {/* 보조 가이드 연장선 - 가구 상단 */}
+              <ExtLine points={[[0, totalFromFloorY, dimZ_combined - mmToThreeUnits(360)], [0, totalFromFloorY, dimZ_combined]]} color={dimensionColor} />
+              {/* 메인 치수선 (바닥 ~ 가구 상단) */}
+              <NativeLine name="dimension_line"
+                points={[[0, 0, dimZ_combined], [0, totalFromFloorY, dimZ_combined]]}
+                color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
+              />
+              {/* 티크 마크 - 바닥 */}
+              <NativeLine name="dimension_line"
+                points={[[-0.008, 0, dimZ_combined], [0.008, 0, dimZ_combined]]}
+                color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
+              />
+              {/* 티크 마크 - 가구 상단 */}
+              <NativeLine name="dimension_line"
+                points={[[-0.008, totalFromFloorY, dimZ_combined], [0.008, totalFromFloorY, dimZ_combined]]}
+                color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
+              />
+              <Text
+                position={[0, totalFromFloorY / 2, dimZ_combined + mmToThreeUnits(60)]}
+                fontSize={largeFontSize} color={textColor}
+                anchorX="center" anchorY="middle"
+                renderOrder={1000} depthTest={false}
+                rotation={[0, -Math.PI / 2, Math.PI / 2]}
+              >
+                {totalFromFloorMm}
+              </Text>
+            </group>
+          );
+        })()}
 
         {/* ===== 가구별 깊이 치수 - 측면뷰에서 보이는 가구만 표시 ===== */}
         {visibleFurniture.map((module, index) => {
@@ -1565,10 +1619,13 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
 
             // 단일 도어 가구 (하부장 일반, 상부장, 키큰장)
             const moduleHeightMm_d = modData ? computeFurnitureHeightMm(mod as PlacedModule, modData, spaceInfo, internalSpace) : 0;
-            // placedModulesStore에서 최신 doorGap 값 읽기
-            const storeMod_ld = placedModulesStore.find(m => m.id === mod.id);
-            const doorTopGapVal = storeMod_ld?.doorTopGap ?? mod.doorTopGap ?? spaceInfo.doorTopGap ?? 0;
-            const doorBottomGapVal = storeMod_ld?.doorBottomGap ?? mod.doorBottomGap ?? spaceInfo.doorBottomGap ?? 0;
+            // 상부장: UpperCabinet→DoorModule에 doorGap prop 안 넘김 → spaceInfo 글로벌 값 사용
+            const doorTopGapVal = modCategory === 'upper'
+              ? (spaceInfo.doorTopGap ?? 0)
+              : (mod.doorTopGap ?? spaceInfo.doorTopGap ?? 0);
+            const doorBottomGapVal = modCategory === 'upper'
+              ? (spaceInfo.doorBottomGap ?? 0)
+              : (mod.doorBottomGap ?? spaceInfo.doorBottomGap ?? 0);
 
             let doorHeightMm = 0;
             let doorBottomAbsMm = 0;
@@ -1837,10 +1894,13 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
 
             const modCat = getModuleCategory(mod);
             const moduleHeightMm = computeFurnitureHeightMm(mod, modData, spaceInfo, internalSpace);
-            // placedModulesStore에서 최신 doorGap 값 읽기
-            const storeMod_r = placedModulesStore.find(m => m.id === mod.id);
-            const doorTopGapVal = storeMod_r?.doorTopGap ?? mod.doorTopGap ?? spaceInfo.doorTopGap ?? 0;
-            const doorBottomGapVal = storeMod_r?.doorBottomGap ?? mod.doorBottomGap ?? spaceInfo.doorBottomGap ?? 0;
+            // 상부장: UpperCabinet→DoorModule에 doorGap prop 안 넘김 → spaceInfo 글로벌 값 사용
+            const doorTopGapVal = modCat === 'upper'
+              ? (spaceInfo.doorTopGap ?? 0)
+              : (mod.doorTopGap ?? spaceInfo.doorTopGap ?? 0);
+            const doorBottomGapVal = modCat === 'upper'
+              ? (spaceInfo.doorBottomGap ?? 0)
+              : (mod.doorBottomGap ?? spaceInfo.doorBottomGap ?? 0);
 
             let doorBottomAbsMm = 0;
             let doorTopAbsMm = 0;
@@ -2005,6 +2065,55 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
             </Text>
         </group>
         )}
+
+        {/* 하부장/상부장: 바닥 ~ 가구 상단 합산 치수 (바닥마감재 + 하부프레임 + 가구높이) — 우측뷰 */}
+        {(selectedModCategory === 'lower' || selectedModCategory === 'upper') && selectedMod && (() => {
+          let selModData_r = getModuleById(
+            selectedMod.moduleId,
+            { width: internalSpace.width, height: internalSpace.height, depth: internalSpace.depth },
+            spaceInfo
+          );
+          if (!selModData_r) {
+            selModData_r = buildModuleDataFromPlacedModule(selectedMod, internalSpace, spaceInfo);
+          }
+          if (!selModData_r) return null;
+          const selFurnitureHeightMm_r = computeFurnitureHeightMm(selectedMod, selModData_r, spaceInfo, internalSpace);
+          const totalFromFloorMm_r = Math.round(floorFinishHeightMm + baseFrameHeightMm + selFurnitureHeightMm_r);
+          const totalFromFloorY_r = mmToThreeUnits(totalFromFloorMm_r);
+          const dimZ_combined_r = spaceDepth/2 + rightDimOffset - mmToThreeUnits(750);
+          return (
+            <group>
+              {/* 보조 가이드 연장선 - 바닥 */}
+              <ExtLine points={[[0, 0, dimZ_combined_r - mmToThreeUnits(360)], [0, 0, dimZ_combined_r]]} color={dimensionColor} />
+              {/* 보조 가이드 연장선 - 가구 상단 */}
+              <ExtLine points={[[0, totalFromFloorY_r, dimZ_combined_r - mmToThreeUnits(360)], [0, totalFromFloorY_r, dimZ_combined_r]]} color={dimensionColor} />
+              {/* 메인 치수선 (바닥 ~ 가구 상단) */}
+              <NativeLine name="dimension_line"
+                points={[[0, 0, dimZ_combined_r], [0, totalFromFloorY_r, dimZ_combined_r]]}
+                color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
+              />
+              {/* 티크 마크 - 바닥 */}
+              <NativeLine name="dimension_line"
+                points={[[-0.008, 0, dimZ_combined_r], [0.008, 0, dimZ_combined_r]]}
+                color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
+              />
+              {/* 티크 마크 - 가구 상단 */}
+              <NativeLine name="dimension_line"
+                points={[[-0.008, totalFromFloorY_r, dimZ_combined_r], [0.008, totalFromFloorY_r, dimZ_combined_r]]}
+                color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
+              />
+              <Text
+                position={[0, totalFromFloorY_r / 2, dimZ_combined_r + mmToThreeUnits(60)]}
+                fontSize={largeFontSize} color={textColor}
+                anchorX="center" anchorY="middle"
+                renderOrder={1000} depthTest={false}
+                rotation={[0, Math.PI / 2, Math.PI / 2]}
+              >
+                {totalFromFloorMm_r}
+              </Text>
+            </group>
+          );
+        })()}
 
         {/* 가구별 깊이 치수 - 측면뷰에서 보이는 가구만 표시 */}
         {visibleFurniture.map((module, index) => {
@@ -2326,10 +2435,13 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
 
             // 단일 도어 가구 (하부장 일반, 상부장, 키큰장)
             const moduleHeightMm_d = modData ? computeFurnitureHeightMm(mod as PlacedModule, modData, spaceInfo, internalSpace) : 0;
-            // placedModulesStore에서 최신 doorGap 값 읽기
-            const storeMod_rd = placedModulesStore.find(m => m.id === mod.id);
-            const doorTopGapVal = storeMod_rd?.doorTopGap ?? mod.doorTopGap ?? spaceInfo.doorTopGap ?? 0;
-            const doorBottomGapVal = storeMod_rd?.doorBottomGap ?? mod.doorBottomGap ?? spaceInfo.doorBottomGap ?? 0;
+            // 상부장: UpperCabinet→DoorModule에 doorGap prop 안 넘김 → spaceInfo 글로벌 값 사용
+            const doorTopGapVal = modCategory === 'upper'
+              ? (spaceInfo.doorTopGap ?? 0)
+              : (mod.doorTopGap ?? spaceInfo.doorTopGap ?? 0);
+            const doorBottomGapVal = modCategory === 'upper'
+              ? (spaceInfo.doorBottomGap ?? 0)
+              : (mod.doorBottomGap ?? spaceInfo.doorBottomGap ?? 0);
 
             let doorHeightMm = 0;
             let doorBottomAbsMm = 0;
