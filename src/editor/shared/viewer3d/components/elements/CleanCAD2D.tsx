@@ -5312,7 +5312,12 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               const isSelected = selectedFurnitureId === module.id;
               const canMoveLeft = leftGapMm >= 1;
               const canMoveRight = rightGapMm >= 1;
-              const stopAll = (e: any) => { e.stopPropagation(); e.preventDefault(); e.nativeEvent?.stopImmediatePropagation?.(); };
+              const stopAll = (e: any) => {
+                e.stopPropagation(); e.preventDefault();
+                e.nativeEvent?.stopImmediatePropagation?.();
+                // 캔버스 클릭 → 선택해제 방지
+                (window as any).__r3fClickHandled = true;
+              };
               const moveLeft = (e: any) => {
                 stopAll(e);
                 const newX = module.position.x - MOVE_STEP;
