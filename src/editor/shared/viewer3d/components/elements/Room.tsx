@@ -1811,8 +1811,8 @@ const Room: React.FC<RoomProps> = ({
 
             let droppedAreaWidth: number;
             let normalAreaWidth: number;
-            // DC+CB 동시: CB 너비를 normalArea에서 추가 제외
-            const cbWForCeiling = hasCBWithDC ? cbOnlyWidth : 0;
+            // DC+CB 동시: CB 너비를 normalArea에서 추가 제외 (같은 쪽/다른 쪽 모두)
+            const cbWForCeiling = (hasCBWithDC || hasCBOppDC) ? cbOnlyWidth : 0;
 
             if (isLeftDropped) {
               // 왼쪽 단내림: 천장은 전체 너비 사용
@@ -1824,18 +1824,22 @@ const Room: React.FC<RoomProps> = ({
               droppedAreaWidth = droppedWidth;
             }
 
-            // 구간 순서: 벽 → [CB] → [DC] → [메인] (같은 쪽 기준)
-            // DC+CB 동시: isLeftDropped → [CB(좌끝) | DC | 메인]
-            //              !isLeftDropped → [메인 | DC | CB(우끝)]
+            // 구간 순서 (같은 쪽): 벽 → [CB] → [DC] → [메인] (같은 쪽 기준)
+            // 같은 쪽: isLeftDropped → [CB | DC | 메인], !isLeftDropped → [메인 | DC | CB]
+            // 다른 쪽: isLeftDropped+우CB → [DC | 메인 | CB], !isLeftDropped+좌CB → [CB | 메인 | DC]
+            // CB 오프셋: 같은 쪽이면 DC 옆, 다른 쪽이면 DC 반대편
+            const cbOffDcSide = hasCBWithDC ? cbWForCeiling : 0;  // DC 쪽에 붙는 CB 오프셋
+            const cbOffOppSide = hasCBOppDC ? cbWForCeiling : 0;  // DC 반대쪽 CB 오프셋
+
             // 단내림 영역의 X 위치 계산
             const droppedAreaX = isLeftDropped
-              ? xOffset + cbWForCeiling + droppedAreaWidth / 2
-              : xOffset + normalAreaWidth + droppedAreaWidth / 2;
+              ? xOffset + cbOffDcSide + droppedAreaWidth / 2                       // 좌DC: [같은CB?] DC ...
+              : xOffset + cbOffOppSide + normalAreaWidth + droppedAreaWidth / 2;   // 우DC: [반대CB?] 메인 DC ...
 
             // 일반 영역의 X 위치 계산
             const normalAreaX = isLeftDropped
-              ? xOffset + cbWForCeiling + droppedAreaWidth + normalAreaWidth / 2
-              : xOffset + normalAreaWidth / 2;
+              ? xOffset + cbOffDcSide + droppedAreaWidth + normalAreaWidth / 2     // 좌DC: ... DC 메인 [반대CB?]
+              : xOffset + cbOffOppSide + normalAreaWidth / 2;                      // 우DC: [반대CB?] 메인 ...
 
 // console.log('🔥 천장 분할 계산:', {
               // hasDroppedCeiling,
@@ -1989,22 +1993,23 @@ const Room: React.FC<RoomProps> = ({
                     </mesh>
                   </>
                 ) : hasCBOppDC ? (
-                  /* DC+CB 다른 쪽: normalArea를 [메인]+[CB]로 추가 분할 */
+                  /* DC+CB 다른 쪽: normalArea(CB 차감 완료)를 메인으로, CB를 별도 렌더링 */
                   (() => {
                     const oppCbW = cbOnlyWidth;
-                    const oppMainW = normalAreaWidth - oppCbW;
+                    // normalAreaWidth에서 이미 CB 차감됨 → oppMainW = normalAreaWidth
+                    const oppMainW = normalAreaWidth;
                     // 좌단내림+우CB: [DC | 메인 | CB(우)]
                     // 우단내림+좌CB: [CB(좌) | 메인 | DC]
-                    const oppMainX = isLeftDropped
-                      ? xOffset + cbWForCeiling + droppedAreaWidth + oppMainW / 2
-                      : (cbOnlyIsLeft ? xOffset + oppCbW + oppMainW / 2 : xOffset + oppMainW / 2);
+                    // normalAreaX가 이미 올바른 메인 위치를 가리킴
+                    const oppMainX = normalAreaX;
+                    // CB는 DC 반대편 벽에 붙음
                     const oppCbAreaX = isLeftDropped
-                      ? xOffset + cbWForCeiling + droppedAreaWidth + oppMainW + oppCbW / 2
-                      : (cbOnlyIsLeft ? xOffset + oppCbW / 2 : xOffset + oppMainW + oppCbW / 2);
+                      ? xOffset + droppedAreaWidth + oppMainW + oppCbW / 2       // 좌DC: ... 메인 CB(우끝)
+                      : xOffset + oppCbW / 2;                                     // 우DC: CB(좌끝) 메인 ...
                     const oppCbCeilY = panelStartY + height + cbOnlyDropH + 0.001;
                     const oppCbBoundX = isLeftDropped
-                      ? xOffset + cbWForCeiling + droppedAreaWidth + oppMainW
-                      : (cbOnlyIsLeft ? xOffset + oppCbW : xOffset + oppMainW);
+                      ? xOffset + droppedAreaWidth + oppMainW                    // 메인-CB 경계 (우측)
+                      : xOffset + oppCbW;                                         // CB-메인 경계 (좌측)
                     const oppCbBoundH = cbOnlyDropH;
                     const oppCbBoundY = panelStartY + height + cbOnlyDropH / 2;
                     return (
