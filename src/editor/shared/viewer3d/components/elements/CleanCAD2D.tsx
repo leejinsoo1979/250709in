@@ -5265,6 +5265,24 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
 
             {/* 자유배치: 구간 내 좌/우 이격 치수선 (가구~구간경계 거리) */}
             {isFreePlacement && (() => {
+              // 이격 치수선 Y: 가구 수직 중앙 (공간 안에 표시)
+              const modHeightMm = module.freeHeight ?? module.customHeight ?? moduleData.dimensions.height;
+              const modCat = moduleData.category
+                ?? (module.moduleId.includes('upper') ? 'upper'
+                  : module.moduleId.includes('lower') ? 'lower' : 'full');
+              const baseFrameHGap = module.baseFrameHeight ?? (spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig.height || 65) : 0);
+              const topFrameForGap = module.topFrameThickness ?? (spaceInfo.frameSize?.top ?? 30);
+              let gapDimY: number;
+              if (modCat === 'upper') {
+                // 상부장 중앙: (공간상단 - topFrame - modHeight) ~ (공간상단 - topFrame) 의 중간
+                const upperTop = spaceInfo.height - topFrameForGap;
+                const upperBottom = upperTop - modHeightMm;
+                gapDimY = mmToThreeUnits((upperTop + upperBottom) / 2);
+              } else {
+                // 하부장/키큰장 중앙: baseFrame ~ (baseFrame + modHeight) 의 중간
+                gapDimY = mmToThreeUnits(baseFrameHGap + modHeightMm / 2);
+              }
+
               // 벽 인접(hasAdjacentLeft=false): freeLeftGap → gapConfig → 1.5 순 폴백
               // 가구 간(hasAdjacentLeft=true): 좌표 차이(nearestDistance) 그대로 사용
               const rawLeftGap = hasAdjacentLeft
@@ -5291,64 +5309,48 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 {/* 좌측 이격 — 서라운드 벽 인접 시 프레임과 겹치므로 숨김 */}
                 {leftGapMm > 0 && !suppressLeftGap && (<>
                   <NativeLine name="dimension_line"
-                    points={[[gapLeftX, dimY, 0.002], [leftX, dimY, 0.002]]}
+                    points={[[gapLeftX, gapDimY, 0.002], [leftX, gapDimY, 0.002]]}
                     color={dimensionColor} lineWidth={0.6} renderOrder={1000000} depthTest={false}
                   />
                   <NativeLine name="dimension_line"
-                    points={createArrowHead([gapLeftX, dimY, 0.002], [gapLeftX + 0.02, dimY, 0.002], 0.01)}
+                    points={createArrowHead([gapLeftX, gapDimY, 0.002], [gapLeftX + 0.02, gapDimY, 0.002], 0.01)}
                     color={dimensionColor} lineWidth={0.6} renderOrder={1000000} depthTest={false}
                   />
                   <NativeLine name="dimension_line"
-                    points={createArrowHead([leftX, dimY, 0.002], [leftX - 0.02, dimY, 0.002], 0.01)}
+                    points={createArrowHead([leftX, gapDimY, 0.002], [leftX - 0.02, gapDimY, 0.002], 0.01)}
                     color={dimensionColor} lineWidth={0.6} renderOrder={1000000} depthTest={false}
                   />
                   <Text renderOrder={1000000} depthTest={false}
-                    position={[(gapLeftX + leftX) / 2, dimY + mmToThreeUnits(30), 0.01]}
+                    position={[(gapLeftX + leftX) / 2, gapDimY + mmToThreeUnits(30), 0.01]}
                     fontSize={baseFontSize} color={textColor}
                     anchorX="center" anchorY="middle"
                     outlineWidth={textOutlineWidth} outlineColor={textOutlineColor}
                   >
                     {formatDim(leftGapMm)}
                   </Text>
-                  {/* 좌측 이격 연장선 */}
-                  {!hasAdjacentLeft && (
-                    <NativeLine name="dimension_line"
-                      points={[[gapLeftX, spaceHeight, 0.001], [gapLeftX, (hasDroppedCeiling || hasStepDown) ? slotTotalDimensionY : columnDimensionY, 0.001]]}
-                      color={dimensionColor} lineWidth={0.6} renderOrder={1000000}
-                      depthTest={false} depthWrite={false} transparent={true}
-                    />
-                  )}
                 </>)}
                 {/* 우측 이격 — 서라운드 벽 인접 시 프레임과 겹치므로 숨김 */}
                 {rightGapMm > 0 && !suppressRightGap && (<>
                   <NativeLine name="dimension_line"
-                    points={[[rightX, dimY, 0.002], [gapRightX, dimY, 0.002]]}
+                    points={[[rightX, gapDimY, 0.002], [gapRightX, gapDimY, 0.002]]}
                     color={dimensionColor} lineWidth={0.6} renderOrder={1000000} depthTest={false}
                   />
                   <NativeLine name="dimension_line"
-                    points={createArrowHead([rightX, dimY, 0.002], [rightX + 0.02, dimY, 0.002], 0.01)}
+                    points={createArrowHead([rightX, gapDimY, 0.002], [rightX + 0.02, gapDimY, 0.002], 0.01)}
                     color={dimensionColor} lineWidth={0.6} renderOrder={1000000} depthTest={false}
                   />
                   <NativeLine name="dimension_line"
-                    points={createArrowHead([gapRightX, dimY, 0.002], [gapRightX - 0.02, dimY, 0.002], 0.01)}
+                    points={createArrowHead([gapRightX, gapDimY, 0.002], [gapRightX - 0.02, gapDimY, 0.002], 0.01)}
                     color={dimensionColor} lineWidth={0.6} renderOrder={1000000} depthTest={false}
                   />
                   <Text renderOrder={1000000} depthTest={false}
-                    position={[(rightX + gapRightX) / 2, dimY + mmToThreeUnits(30), 0.01]}
+                    position={[(rightX + gapRightX) / 2, gapDimY + mmToThreeUnits(30), 0.01]}
                     fontSize={baseFontSize} color={textColor}
                     anchorX="center" anchorY="middle"
                     outlineWidth={textOutlineWidth} outlineColor={textOutlineColor}
                   >
                     {formatDim(rightGapMm)}
                   </Text>
-                  {/* 우측 이격 연장선 */}
-                  {!hasAdjacentRight && (
-                    <NativeLine name="dimension_line"
-                      points={[[gapRightX, spaceHeight, 0.001], [gapRightX, (hasDroppedCeiling || hasStepDown) ? slotTotalDimensionY : columnDimensionY, 0.001]]}
-                      color={dimensionColor} lineWidth={0.6} renderOrder={1000000}
-                      depthTest={false} depthWrite={false} transparent={true}
-                    />
-                  )}
                 </>)}
               </>);
             })()}
