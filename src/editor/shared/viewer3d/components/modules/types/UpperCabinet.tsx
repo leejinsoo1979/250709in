@@ -111,16 +111,7 @@ const UpperCabinet: React.FC<FurnitureTypeProps> = ({
                       />
                     </group>
 
-                    {/* 중앙 분리대 - 상부장 기본(open)은 칸막이 없음 */}
-                    {!isOpenType && (
-                      <BoxWithEdges
-                        args={[baseFurniture.basicThickness, baseFurniture.height - baseFurniture.basicThickness * 2, baseFurniture.depth - (baseFurniture.backPanelThickness + baseFurniture.basicThickness - baseFurniture.mmToThreeUnits(1))]}
-                        position={[0, 0, (baseFurniture.backPanelThickness + baseFurniture.basicThickness - baseFurniture.mmToThreeUnits(1)) / 2]}
-                        material={baseFurniture.material}
-                        renderMode={renderMode}
-                        furnitureId={moduleData.id}
-                      />
-                    )}
+                    {/* 중앙 분리대 제거됨 — 상부장은 세로 칸막이 없음 */}
 
                     {/* 오른쪽 섹션 */}
                     <group position={[rightX, 0, 0]}>
