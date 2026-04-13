@@ -5318,8 +5318,45 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               const gapLeftX = leftX - mmToThreeUnits(leftGapMm);
               // 우측 갭: (오른쪽 인접 가구 또는 구간 경계) ~ 가구 오른쪽
               const gapRightX = rightX + mmToThreeUnits(rightGapMm);
+              // 가구 이동 핸들러: 화살표 클릭 시 10mm씩 이동
+              const MOVE_STEP = 0.1; // 10mm = 0.1 Three.js 단위
+              const moveLeft = (e: any) => {
+                e.stopPropagation();
+                const newX = module.position.x - MOVE_STEP;
+                updatePlacedModule(module.id, { position: { ...module.position, x: newX } });
+              };
+              const moveRight = (e: any) => {
+                e.stopPropagation();
+                const newX = module.position.x + MOVE_STEP;
+                updatePlacedModule(module.id, { position: { ...module.position, x: newX } });
+              };
+              const arrowBtnStyle = {
+                width: '24px', height: '24px',
+                borderRadius: '50%',
+                border: '1.5px solid #2196F3',
+                background: 'rgba(255,255,255,0.95)',
+                color: '#2196F3',
+                fontSize: '14px',
+                fontWeight: 'bold' as const,
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                padding: 0,
+                lineHeight: 1,
+                boxShadow: '0 1px 4px rgba(0,0,0,0.15)',
+              };
               return (<>
-                {/* 좌측 이격 — 서라운드 벽 인접 시 프레임과 겹치므로 숨김 */}
+                {/* 좌측 이동 화살표 */}
+                {leftGapMm > 2 && !suppressLeftGap && (
+                  <Html position={[leftX - mmToThreeUnits(8), gapDimY, 0.01]}
+                    center style={{ pointerEvents: 'auto' }} zIndexRange={[10001, 10002]}>
+                    <button style={arrowBtnStyle} onClick={moveLeft} title={`좌로 10mm 이동 (이격: ${leftGapMm}mm)`}>
+                      ◀
+                    </button>
+                  </Html>
+                )}
+                {/* 좌측 이격 치수 */}
                 {leftGapMm > 0 && !suppressLeftGap && (<>
                   <NativeLine name="dimension_line"
                     points={[[gapLeftX, gapDimY, 0.002], [leftX, gapDimY, 0.002]]}
@@ -5342,7 +5379,16 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     {formatDim(leftGapMm)}
                   </Text>
                 </>)}
-                {/* 우측 이격 — 서라운드 벽 인접 시 프레임과 겹치므로 숨김 */}
+                {/* 우측 이동 화살표 */}
+                {rightGapMm > 2 && !suppressRightGap && (
+                  <Html position={[rightX + mmToThreeUnits(8), gapDimY, 0.01]}
+                    center style={{ pointerEvents: 'auto' }} zIndexRange={[10001, 10002]}>
+                    <button style={arrowBtnStyle} onClick={moveRight} title={`우로 10mm 이동 (이격: ${rightGapMm}mm)`}>
+                      ▶
+                    </button>
+                  </Html>
+                )}
+                {/* 우측 이격 치수 */}
                 {rightGapMm > 0 && !suppressRightGap && (<>
                   <NativeLine name="dimension_line"
                     points={[[rightX, gapDimY, 0.002], [gapRightX, gapDimY, 0.002]]}
