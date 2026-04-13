@@ -2429,101 +2429,6 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   </>);
                 })()}
 
-                {/* 메인↔단내림 경계 이격거리 치수선 — 자유배치 전용 (클릭 편집 가능) */}
-                {hasSC && isFreePlacement && (() => {
-                  // 경계이격 위치: 메인 실배치 끝 ~ 2단 구간 경계
-                  let gapLeftX: number, gapRightX: number;
-                  if (scOnRight) {
-                    gapLeftX = mainPlacEndX;
-                    gapRightX = mainEndX; // = scStartX (2단 경계)
-                  } else {
-                    gapLeftX = mainStartX; // = scEndX (2단 경계)
-                    gapRightX = mainPlacStartX;
-                  }
-                  // middleGap이 0이면 표시하지 않음
-                  if (Math.abs(gapRightX - gapLeftX) < 0.0001) return null;
-                  const boundaryGapMm = middleGapMm;
-                  const fmtGap = (() => { const r = Math.round(boundaryGapMm * 10) / 10; return r % 1 === 0 ? String(r) : r.toFixed(1); })();
-                  return (<>
-                    <Line
-                      points={[[gapLeftX, slotTotalDimensionY, 0.002], [gapRightX, slotTotalDimensionY, 0.002]]}
-                      color={dimensionColor}
-                      lineWidth={0.6}
-                    />
-                    <Line
-                      points={createArrowHead([gapLeftX, slotTotalDimensionY, 0.002], [gapLeftX + 0.005, slotTotalDimensionY, 0.002], 0.004)}
-                      color={dimensionColor}
-                      lineWidth={0.6}
-                    />
-                    <Line
-                      points={createArrowHead([gapRightX, slotTotalDimensionY, 0.002], [gapRightX - 0.005, slotTotalDimensionY, 0.002], 0.004)}
-                      color={dimensionColor}
-                      lineWidth={0.6}
-                    />
-                    {editingGapSide === 'middle' ? (
-                      <Html
-                        position={[(gapLeftX + gapRightX) / 2, slotTotalDimensionY + mmToThreeUnits(30), 0.01]}
-                        center
-                        style={{ pointerEvents: 'auto' }}
-                        zIndexRange={[10000, 10001]}
-                      >
-                        <div style={{ background: currentViewDirection !== '3D' && view2DTheme === 'dark' ? 'rgba(31,41,55,0.98)' : 'rgba(255,255,255,0.98)', padding: '3px', borderRadius: '4px', border: '2px solid #2196F3', boxShadow: '0 2px 10px rgba(0,0,0,0.3)' }}>
-                          <input
-                            ref={gapInputRef}
-                            type="number"
-                            step="0.5"
-                            min="0"
-                            max="5"
-                            value={editingGapValue}
-                            onChange={(e) => setEditingGapValue(e.target.value)}
-                            onKeyDown={(e) => { if (e.key === 'Enter') handleGapEditSubmit(); else if (e.key === 'Escape') handleGapEditCancel(); }}
-                            onBlur={handleGapEditSubmit}
-                            style={{ width: '50px', padding: '2px 4px', border: '1px solid #ccc', borderRadius: '2px', fontSize: '12px', fontWeight: 'bold', textAlign: 'center', outline: 'none', background: currentViewDirection !== '3D' && view2DTheme === 'dark' ? '#1f2937' : '#fff', color: currentViewDirection !== '3D' && view2DTheme === 'dark' ? '#fff' : '#000' }}
-                            autoFocus
-                            onClick={(e) => e.stopPropagation()}
-                          />
-                          <span style={{ marginLeft: '2px', fontSize: '11px', color: currentViewDirection !== '3D' && view2DTheme === 'dark' ? '#9ca3af' : '#666' }}>mm</span>
-                        </div>
-                      </Html>
-                    ) : (
-                      <Html
-                        position={[(gapLeftX + gapRightX) / 2, slotTotalDimensionY + mmToThreeUnits(30), 0.01]}
-                        center
-                        style={{ pointerEvents: 'auto' }}
-                        zIndexRange={[9999, 10000]}
-                      >
-                        <div
-                          style={{
-                            padding: '2px 6px',
-                            fontSize: '12px',
-                            fontWeight: 'bold',
-                            color: dimensionColor,
-                            cursor: 'pointer',
-                            userSelect: 'none',
-                            whiteSpace: 'nowrap',
-                            background: currentViewDirection !== '3D' && view2DTheme === 'dark' ? 'rgba(31,41,55,0.7)' : 'rgba(255,255,255,0.7)',
-                            borderRadius: '3px',
-                          }}
-                          onClick={(e) => { e.stopPropagation(); handleGapEdit('middle', boundaryGapMm); }}
-                        >
-                          {fmtGap}
-                        </div>
-                      </Html>
-                    )}
-                    {/* 경계이격 연장선 */}
-                    <Line
-                      points={[[gapLeftX, spaceHeight, 0.001], [gapLeftX, slotTotalDimensionY + mmToThreeUnits(10), 0.001]]}
-                      color={subGuideColor}
-                      lineWidth={0.6}
-                    />
-                    <Line
-                      points={[[gapRightX, spaceHeight, 0.001], [gapRightX, slotTotalDimensionY + mmToThreeUnits(10), 0.001]]}
-                      color={subGuideColor}
-                      lineWidth={0.6}
-                    />
-                  </>);
-                })()}
-
                 {/* 단내림(droppedCeiling) 구간 실배치 치수선 — 자유배치 커튼박스는 배치불가 구간이므로 숨김 */}
                 {hasDC && !hasFreeCurtainBox && (() => {
                   const dsx = isFreePlacement ? dcPlacStartX : droppedStartX;
@@ -5351,7 +5256,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   onClick={(e) => { e.stopPropagation(); handleFurnitureWidthEdit(module.id, actualWidth); }}
                 >
                   {(() => {
-                    return Math.round(actualWidth);
+                    const r = Math.round(actualWidth * 2) / 2; // 0.5mm 단위
+                    return r % 1 === 0 ? String(r) : r.toFixed(1);
                   })()}
                 </div>
               </Html>
