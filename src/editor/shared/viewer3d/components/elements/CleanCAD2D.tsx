@@ -3495,13 +3495,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 furnitureH = Math.max(0, effectiveH - actualBottomSize - actualTopSize);
               }
             }
-            // hasBase=false → 가구 높이에 하부프레임 높이를 더하되, 개별 띄움만큼 차감 (FurnitureItem.tsx:1338-1342)
-            // freeHeight/customHeight 경로에서도 적용 필요
-            if (leftmostMod.hasBase === false && spaceInfo.baseConfig?.type === 'floor') {
-              const hiddenBaseH = actualBottomSize;
-              const indivFloat = leftmostMod.individualFloatHeight ?? 0;
-              furnitureH += hiddenBaseH - indivFloat;
-            }
+            // hasBase=false → 가구 높이 유지 (FurnitureItem.tsx와 동일하게 높이 증가 제거)
           } else {
             furnitureH = _internalHeight;
           }
@@ -3903,13 +3897,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 rFurnitureH = Math.max(0, rEffectiveH - rActualBottomSize - rActualTopSize);
               }
             }
-            // hasBase=false → 가구 높이에 하부프레임 높이를 더하되, 개별 띄움만큼 차감 (FurnitureItem.tsx:1338-1342)
-            // freeHeight/customHeight 경로에서도 적용 필요
-            if (rightmostMod.hasBase === false && spaceInfo.baseConfig?.type === 'floor') {
-              const rHiddenBaseH = rActualBottomSize;
-              const rIndivFloat = rightmostMod.individualFloatHeight ?? 0;
-              rFurnitureH += rHiddenBaseH - rIndivFloat;
-            }
+            // hasBase=false → 가구 높이 유지 (FurnitureItem.tsx와 동일하게 높이 증가 제거)
           } else {
             rFurnitureH = rInternalHeight;
           }
