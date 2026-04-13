@@ -80,10 +80,10 @@ export async function recordProjectHistory(
       changeType,
       changedBy: userId,
       changedByName: userName,
-      changedByEmail: userEmail,
       timestamp: Timestamp.now(),
       changes,
-      metadata,
+      ...(userEmail !== undefined && { changedByEmail: userEmail }),
+      ...(metadata !== undefined && { metadata }),
     };
 
     await addDoc(collection(db, 'projectHistory'), historyEntry);
