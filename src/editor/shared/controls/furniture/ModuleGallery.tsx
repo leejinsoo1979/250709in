@@ -578,22 +578,38 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
 
         // 단내림(stepCeiling) 활성 시: 메인 구간 + 단내림 구간을 별도로 검색
         const hasStepCeiling = !!spaceInfo.stepCeiling?.enabled;
-        const stepWidth = hasStepCeiling ? (spaceInfo.stepCeiling!.width || 0) : 0;
-        const stepPos = hasStepCeiling ? (spaceInfo.stepCeiling!.position || 'right') : 'right';
+        const scWidthMm = hasStepCeiling ? (spaceInfo.stepCeiling!.width || 0) : 0;
+        const scPos = hasStepCeiling ? (spaceInfo.stepCeiling!.position || 'right') : 'right';
         const middleGap = spaceInfo.gapConfig?.middle ?? 1.5;
 
         // 구간별 영역 계산
+        // fullBounds = 통합 배치공간(메인+단내림, 커튼박스 제외)
+        // 단내림 구간은 통합 배치공간 내에서 위치 기준으로 분리
         interface ZoneRange { startX: number; endX: number; zone: 'main' | 'step' }
         const zones: ZoneRange[] = [];
         if (hasStepCeiling) {
-          // 메인 구간
-          const mainStart = stepPos === 'left' ? fullBounds.startX + stepWidth + middleGap : fullBounds.startX;
-          const mainEnd = stepPos === 'right' ? fullBounds.endX - stepWidth - middleGap : fullBounds.endX;
-          zones.push({ startX: mainStart, endX: mainEnd, zone: 'main' });
-          // 단내림 구간
-          const stepStart = stepPos === 'left' ? fullBounds.startX : fullBounds.endX - stepWidth;
-          const stepEnd = stepPos === 'left' ? fullBounds.startX + stepWidth : fullBounds.endX;
-          zones.push({ startX: stepStart, endX: stepEnd, zone: 'step' });
+          // 단내림 경계점 = 공간 원점 기준으로 계산
+          // 커튼박스가 같은 쪽에 있으면 커튼박스 폭도 고려
+          const halfW = (spaceInfo.width || 2400) / 2;
+          const hasCB = !!spaceInfo.droppedCeiling?.enabled;
+          const cbPos = spaceInfo.droppedCeiling?.position || 'right';
+          const cbWidth = hasCB ? (spaceInfo.droppedCeiling!.width || 150) : 0;
+          // 같은 쪽 커튼박스 폭 차감
+          const sameSideCB = (hasCB && cbPos === scPos) ? cbWidth : 0;
+
+          const scBoundary = scPos === 'left'
+            ? -halfW + sameSideCB + scWidthMm  // 좌단내림: 왼쪽벽 + 커튼박스 + 단내림폭 = 경계
+            : halfW - sameSideCB - scWidthMm;  // 우단내림: 오른쪽벽 - 커튼박스 - 단내림폭 = 경계
+
+          if (scPos === 'left') {
+            // [벽] [커튼박스] [단내림] [middleGap] [메인] [벽]
+            zones.push({ startX: scBoundary + middleGap, endX: fullBounds.endX, zone: 'main' });
+            zones.push({ startX: fullBounds.startX, endX: scBoundary, zone: 'step' });
+          } else {
+            // [벽] [메인] [middleGap] [단내림] [커튼박스] [벽]
+            zones.push({ startX: fullBounds.startX, endX: scBoundary - middleGap, zone: 'main' });
+            zones.push({ startX: scBoundary, endX: fullBounds.endX, zone: 'step' });
+          }
         } else {
           zones.push({ startX: fullBounds.startX, endX: fullBounds.endX, zone: 'main' });
         }
@@ -663,14 +679,6 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
         }
 
         if (targetX === null) {
-          console.error('🔍 [자유배치 더블클릭] 배치 실패 디버그', {
-            zones: zones.map(z => ({ ...z, width: z.endX - z.startX })),
-            furnitureWidth: dims.width,
-            fullBounds,
-            sortedBounds: sortedBounds.map(b => ({ left: b.left, right: b.right, cat: b.category })),
-            newCategory,
-            hasStepCeiling, stepWidth, stepPos, middleGap,
-          });
           showAlert('배치할 공간이 부족합니다', { title: '배치 불가' });
           return;
         }
