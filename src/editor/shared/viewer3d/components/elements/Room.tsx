@@ -3832,9 +3832,19 @@ const Room: React.FC<RoomProps> = ({
                       effectiveCeilingToBase = ceilingToBaseTopMM - dropH;
                       effectiveTopY = panelStartY + height - mmToThreeUnits(dropH);
                     }
-                    const totalFrameHeightMM = Math.max(0, effectiveCeilingToBase - modFreeHeight);
+                    // 상부장(upper): 상부프레임 = topFrameThickness (캐비넷 위 작은 띠)
+                    // 키큰장(full)/기타: 공간 기반 계산 (공간높이 - 가구높이)
+                    let totalFrameHeightMM: number;
+                    if (modCategory === 'upper') {
+                      totalFrameHeightMM = mod.topFrameThickness ?? (spaceInfo.frameSize?.top || 30);
+                    } else {
+                      totalFrameHeightMM = Math.max(0, effectiveCeilingToBase - modFreeHeight);
+                    }
                     const modFrameHeight = mmToThreeUnits(totalFrameHeightMM);
-                    const modFrameCenterY = effectiveTopY - modFrameHeight / 2;
+                    // 상부장: 프레임 Y = 천장에서 프레임 높이의 절반만큼 내려온 위치
+                    const modFrameCenterY = modCategory === 'upper'
+                      ? effectiveTopY - modFrameHeight / 2
+                      : effectiveTopY - modFrameHeight / 2;
 
                     const modTopZOffset = mod.topFrameOffset ? mmToThreeUnits(mod.topFrameOffset) : 0;
                     const DOOR_THICKNESS_MM = 18.5; // PET 재질
