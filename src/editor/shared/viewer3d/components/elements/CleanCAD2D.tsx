@@ -865,6 +865,9 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
       const stepDownPosition = isFreePlacement
         ? (spaceInfo.stepCeiling?.position || 'right')
         : (spaceInfo.droppedCeiling?.position || 'right');
+      // 자유배치 커튼박스 폭 (droppedCeiling 필드 사용) — 단내림과 같은 쪽에 위치
+      const freeCbWidth = (isFreePlacement && spaceInfo.droppedCeiling?.enabled)
+        ? (spaceInfo.droppedCeiling.width || 0) : 0;
       
       // 기둥 슬롯 분석
       const columnSlots = analyzeColumnSlots(spaceInfo);
@@ -895,13 +898,15 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
       const moduleLeft = moduleX - actualWidthThree / 2;
       const moduleRight = moduleX + actualWidthThree / 2;
       
-      // 단내림 구간 영역 계산
-      const stepDownStartX = stepDownPosition === 'left' 
-        ? -(spaceInfo.width * 0.01) / 2 
-        : (spaceInfo.width * 0.01) / 2 - (stepDownWidth * 0.01);
+      // 단내림 구간 영역 계산 (커튼박스가 벽쪽에 위치하므로 커튼박스 폭 차감)
+      // 레이아웃(우측): [벽]─[메인]─[단내림]─[커튼박스]─[벽]
+      // 레이아웃(좌측): [벽]─[커튼박스]─[단내림]─[메인]─[벽]
+      const stepDownStartX = stepDownPosition === 'left'
+        ? -(spaceInfo.width * 0.01) / 2 + (freeCbWidth * 0.01)
+        : (spaceInfo.width * 0.01) / 2 - (stepDownWidth * 0.01) - (freeCbWidth * 0.01);
       const stepDownEndX = stepDownPosition === 'left'
-        ? -(spaceInfo.width * 0.01) / 2 + (stepDownWidth * 0.01)
-        : (spaceInfo.width * 0.01) / 2;
+        ? -(spaceInfo.width * 0.01) / 2 + (stepDownWidth * 0.01) + (freeCbWidth * 0.01)
+        : (spaceInfo.width * 0.01) / 2 - (freeCbWidth * 0.01);
       
       // 스페이서 처리 
       const SPACER_WIDTH = 36; // 36mm 스페이서
@@ -918,11 +923,11 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
       let hasAdjacentLeft = false;  // 왼쪽에 인접 가구 있음 (벽이 아닌 가구)
       let hasAdjacentRight = false; // 오른쪽에 인접 가구 있음
 
-      // 단내림 경계 mm/Three.js 좌표
+      // 단내림 경계 mm/Three.js 좌표 (메인↔단내림 경계, 커튼박스 폭 차감)
       const stepDownBoundaryMm = hasStepDown
         ? (stepDownPosition === 'left'
-          ? (-spaceInfo.width / 2 + stepDownWidth)
-          : (spaceInfo.width / 2 - stepDownWidth))
+          ? (-spaceInfo.width / 2 + stepDownWidth + freeCbWidth)
+          : (spaceInfo.width / 2 - stepDownWidth - freeCbWidth))
         : undefined;
       const stepDownBoundaryThree = stepDownBoundaryMm !== undefined
         ? stepDownBoundaryMm * 0.01 : undefined;
@@ -938,26 +943,30 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
       let zoneLimitLeft: number; // 이 가구가 속한 구간의 왼쪽 경계
       let zoneLimitRight: number; // 이 가구가 속한 구간의 오른쪽 경계
 
+      // 커튼박스를 제외한 벽 경계 (가구 배치 가능 영역의 끝)
+      const wallLeftThree = -(spaceInfo.width * 0.01) / 2 + (stepDownPosition === 'left' ? freeCbWidth * 0.01 : 0);
+      const wallRightThree = (spaceInfo.width * 0.01) / 2 - (stepDownPosition === 'right' ? freeCbWidth * 0.01 : 0);
+
       if (!hasStepDown) {
         // 단내림 없음 → 전체 공간
         zoneLimitLeft = -(spaceInfo.width * 0.01) / 2;
         zoneLimitRight = (spaceInfo.width * 0.01) / 2;
       } else if (isModuleInStepDown) {
-        // 단내림 구간 안
+        // 단내림 구간 안 (커튼박스 영역 제외)
         if (stepDownPosition === 'left') {
-          zoneLimitLeft = -(spaceInfo.width * 0.01) / 2;
+          zoneLimitLeft = wallLeftThree;
           zoneLimitRight = stepDownBoundaryThree!;
         } else {
           zoneLimitLeft = stepDownBoundaryThree!;
-          zoneLimitRight = (spaceInfo.width * 0.01) / 2;
+          zoneLimitRight = wallRightThree;
         }
       } else {
         // 메인 구간
         if (stepDownPosition === 'left') {
           zoneLimitLeft = stepDownBoundaryThree!;
-          zoneLimitRight = (spaceInfo.width * 0.01) / 2;
+          zoneLimitRight = wallRightThree;
         } else {
-          zoneLimitLeft = -(spaceInfo.width * 0.01) / 2;
+          zoneLimitLeft = wallLeftThree;
           zoneLimitRight = stepDownBoundaryThree!;
         }
       }
@@ -1044,16 +1053,18 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           }
         } else {
           // 단내림 구간 가구 → 메인 쪽 경계에 인접 가구가 없을 때만 farSide
+          // farSide = 메인 구간 폭 (전체 - 단내림 - 커튼박스)
+          const mainZoneWidth = spaceInfo.width - stepDownWidth - freeCbWidth;
           if (stepDownPosition === 'left') {
             const distToZoneBoundary = Math.abs((zoneLimitRight - moduleRight) * 100);
             if (Math.abs(nearestRightDistance - distToZoneBoundary) < 1) {
-              farSideDistance = spaceInfo.width - stepDownWidth;
+              farSideDistance = mainZoneWidth;
               farSideSide = 'right';
             }
           } else {
             const distToZoneBoundary = Math.abs((moduleLeft - zoneLimitLeft) * 100);
             if (Math.abs(nearestLeftDistance - distToZoneBoundary) < 1) {
-              farSideDistance = spaceInfo.width - stepDownWidth;
+              farSideDistance = mainZoneWidth;
               farSideSide = 'left';
             }
           }
@@ -5160,12 +5171,14 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         const leftThreeWidth = mmToThreeUnits(leftWidth);
         const rightThreeWidth = mmToThreeUnits(rightWidth);
         
-        // 메인구간 경계 계산
+        // 메인구간 경계 계산 (커튼박스 폭 차감)
+        const freeCbWidthLocal = (isFreePlacement && spaceInfo.droppedCeiling?.enabled)
+          ? (spaceInfo.droppedCeiling.width || 0) : 0;
         const mainAreaLeft = hasStepDown && stepDownPosition === 'left'
-          ? mmToThreeUnits(stepDownWidthLocal)
+          ? mmToThreeUnits(stepDownWidthLocal + freeCbWidthLocal)
           : 0;
         const mainAreaRight = hasStepDown && stepDownPosition === 'right'
-          ? mmToThreeUnits(spaceInfo.width - stepDownWidthLocal)
+          ? mmToThreeUnits(spaceInfo.width - stepDownWidthLocal - freeCbWidthLocal)
           : mmToThreeUnits(spaceInfo.width);
         
         // 모듈이 속한 구간 확인 (메인구간 또는 단내림 구간)
@@ -5488,19 +5501,22 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           ? (spaceInfo.stepCeiling?.position || 'right')
           : (spaceInfo.droppedCeiling?.position || 'right');
 
-        // 구간 경계 (leftOffset 기반, Three.js 좌표)
+        // 자유배치 커튼박스 폭 (droppedCeiling)
+        const freeCbW = (isFreePlacement && spaceInfo.droppedCeiling?.enabled)
+          ? (spaceInfo.droppedCeiling.width || 0) : 0;
+        // 구간 경계 (leftOffset 기반, Three.js 좌표, 커튼박스 제외)
         const mainZoneStartX = stepDownPos === 'left'
-          ? leftOffset + mmToThreeUnits(stepDownWidthMm)
+          ? leftOffset + mmToThreeUnits(stepDownWidthMm + freeCbW)
           : leftOffset;
         const mainZoneEndX = stepDownPos === 'right'
-          ? leftOffset + mmToThreeUnits(spaceInfo.width - stepDownWidthMm)
+          ? leftOffset + mmToThreeUnits(spaceInfo.width - stepDownWidthMm - freeCbW)
           : leftOffset + mmToThreeUnits(spaceInfo.width);
         const scZoneStartX = stepDownPos === 'left'
-          ? leftOffset
-          : leftOffset + mmToThreeUnits(spaceInfo.width - stepDownWidthMm);
+          ? leftOffset + mmToThreeUnits(freeCbW)
+          : leftOffset + mmToThreeUnits(spaceInfo.width - stepDownWidthMm - freeCbW);
         const scZoneEndX = stepDownPos === 'left'
-          ? leftOffset + mmToThreeUnits(stepDownWidthMm)
-          : leftOffset + mmToThreeUnits(spaceInfo.width);
+          ? leftOffset + mmToThreeUnits(stepDownWidthMm + freeCbW)
+          : leftOffset + mmToThreeUnits(spaceInfo.width - freeCbW);
 
         // 가구가 해당 구간에 있는지
         const validDims = furnitureDimensions ? furnitureDimensions.filter(Boolean) : [];
@@ -5518,7 +5534,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         const dimY = slotDimensionY;
         const zones: { startX: number; endX: number; widthMm: number }[] = [];
         if (!hasFurnitureInMain) {
-          zones.push({ startX: mainZoneStartX, endX: mainZoneEndX, widthMm: spaceInfo.width - stepDownWidthMm });
+          zones.push({ startX: mainZoneStartX, endX: mainZoneEndX, widthMm: spaceInfo.width - stepDownWidthMm - freeCbW });
         }
         if (!hasFurnitureInSC) {
           zones.push({ startX: scZoneStartX, endX: scZoneEndX, widthMm: stepDownWidthMm });
