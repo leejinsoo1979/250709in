@@ -615,7 +615,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           const leftInnerExtStartZ = -spaceDepth/2 + mmToThreeUnits(110);
           const effectiveH_l2 = isSelectedSlotInDroppedZone ? (spaceInfo.height - dropHeightMm) : spaceInfo.height;
 
-          const segments_l2: { bottomY: number; topY: number; heightMm: number; key: string }[] = [];
+          const segments_l2: { bottomY: number; topY: number; heightMm: number; key: string; extStartZ?: number }[] = [];
 
           visibleFurniture.forEach((module, moduleIndex) => {
             let moduleData = getModuleById(
@@ -655,11 +655,25 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
             if (modCat_l2 === 'upper') {
               const topFrameVal = mod.topFrameThickness ?? (spaceInfo.frameSize?.top ?? 30);
               if (topFrameVal > 0) {
+                // 상부프레임 연장선은 가구 뒷면까지 연장
+                const upperDepthMm_tf = module.upperSectionDepth || module.customDepth || moduleData.dimensions.depth;
+                const upperModDepth_tf = mmToThreeUnits(upperDepthMm_tf);
+                const panelDepthMm_tf = spaceInfo.depth || 1500;
+                const panelDepth_tf = mmToThreeUnits(panelDepthMm_tf);
+                const furnitureDepth_tf = mmToThreeUnits(Math.min(panelDepthMm_tf, 600));
+                const doorThk_tf = mmToThreeUnits(20);
+                const zOff_tf = -panelDepth_tf / 2;
+                const fzOff_tf = zOff_tf + (panelDepth_tf - furnitureDepth_tf) / 2;
+                const lowerDepth_tf = mmToThreeUnits(650);
+                const upperFurnitureZ_tf = fzOff_tf + furnitureDepth_tf / 2 - doorThk_tf - lowerDepth_tf + upperModDepth_tf / 2;
+                const upperBackZ = upperFurnitureZ_tf - upperModDepth_tf / 2;
+
                 segments_l2.push({
                   bottomY: mmToThreeUnits(cabinetTopMm),
                   topY: mmToThreeUnits(effectiveH_l2),
                   heightMm: Math.round(topFrameVal),
-                  key: `upper-topframe-${moduleIndex}`
+                  key: `upper-topframe-${moduleIndex}`,
+                  extStartZ: upperBackZ
                 });
               }
             }
@@ -692,10 +706,12 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
 
           return (
             <group>
-              {allSegments_l2.map((seg) => (
+              {allSegments_l2.map((seg) => {
+                const segExtStartZ = seg.extStartZ !== undefined ? seg.extStartZ : leftInnerExtStartZ;
+                return (
                 <group key={`l2-sec-${seg.key}`}>
-                  <ExtLine points={[[0, seg.bottomY, leftInnerExtStartZ], [0, seg.bottomY, leftInnerZ]]} color={dimensionColor} />
-                  <ExtLine points={[[0, seg.topY, leftInnerExtStartZ], [0, seg.topY, leftInnerZ]]} color={dimensionColor} />
+                  <ExtLine points={[[0, seg.bottomY, segExtStartZ], [0, seg.bottomY, leftInnerZ]]} color={dimensionColor} />
+                  <ExtLine points={[[0, seg.topY, segExtStartZ], [0, seg.topY, leftInnerZ]]} color={dimensionColor} />
                   <NativeLine name="dimension_line"
                     points={[[0, seg.bottomY, leftInnerZ], [0, seg.topY, leftInnerZ]]}
                     color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
@@ -718,7 +734,8 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                     {seg.heightMm}
                   </Text>
                 </group>
-              ))}
+                );
+              })}
 
               {/* 하부프레임 높이: 바닥마감재 상단 ~ 받침대 상단 */}
               {hasLower && baseFrameHeightMm > 0 && (
@@ -803,13 +820,13 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
             let doorHeightMm = 0;
 
             if (modCat === 'upper') {
-              const cabinetH = moduleHeightMm || modData.dimensions.height || 600;
+              // DoorModule과 동일: effectiveInternalHeight || dimensions.height (delta 보정 없는 원본값)
+              const cabinetH = mod.freeHeight || modData.dimensions.height || 600;
               const topFrameVal = mod.topFrameThickness ?? (spaceInfo.frameSize?.top ?? 30);
               const topExtension = topFrameVal - doorTopGapVal;
               doorHeightMm = cabinetH + topExtension + doorBottomGapVal;
               doorTopAbsMm = effectiveH_door - doorTopGapVal;
               doorBottomAbsMm = doorTopAbsMm - doorHeightMm;
-              console.log('📐 CAD 상부장 도어:', { cabinetH, topFrameVal, doorTopGapVal, doorBottomGapVal, topExtension, doorHeightMm, doorTopAbsMm, doorBottomAbsMm, effectiveH_door, moduleHeightMm });
             } else if (modCat === 'lower') {
               const cabinetH = modData.dimensions.height ?? 1000;
               const cabinetBottomAbs = (isFloating ? floatHeightMm : (railOrBaseHeightMm + indivFloatMm)) + floorFinishHeightMm;
@@ -1554,7 +1571,8 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
             let doorTopAbsMm = 0;
 
             if (modCategory === 'upper') {
-              const cabinetH = moduleHeightMm_d || modData?.dimensions.height || 600;
+              // DoorModule과 동일: freeHeight || dimensions.height (delta 보정 없는 원본값)
+              const cabinetH = (mod as PlacedModule).freeHeight || modData?.dimensions.height || 600;
               const topFrameVal = mod.topFrameThickness ?? (spaceInfo.frameSize?.top ?? 30);
               const topExtension = topFrameVal - doorTopGapVal;
               doorHeightMm = cabinetH + topExtension + doorBottomGapVal;
@@ -1823,7 +1841,8 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
             let doorHeightMm = 0;
 
             if (modCat === 'upper') {
-              const cabinetH = moduleHeightMm || modData.dimensions.height || 600;
+              // DoorModule과 동일: effectiveInternalHeight || dimensions.height (delta 보정 없는 원본값)
+              const cabinetH = mod.freeHeight || modData.dimensions.height || 600;
               const topFrameVal = mod.topFrameThickness ?? (spaceInfo.frameSize?.top ?? 30);
               const topExtension = topFrameVal - doorTopGapVal;
               doorHeightMm = cabinetH + topExtension + doorBottomGapVal;
