@@ -2659,16 +2659,14 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       ? lowerBackFace + depth / 2  // 상부장: 하부장 뒷면에 맞춤
       : furnitureZOffset + furnitureDepth / 2 - doorThickness - depth / 2 + baseDepthOffset;
 
-  // 🔴 Z축 디버그 (상부장+하부장 비교)
-  if (placedModule.moduleId?.includes('upper-cabinet') || placedModule.moduleId?.includes('lower-cabinet') || placedModule.moduleId?.includes('single-open') || placedModule.moduleId?.includes('single-shelf')) {
-    console.log('🔴 Z디버그', placedModule.moduleId, {
-      actualDepthMm,
-      furnitureZ_mm: furnitureZ * 100,
-      앞면mm: (furnitureZ + depth / 2) * 100,
-      뒷면mm: (furnitureZ - depth / 2) * 100,
-      도어앞면mm: (furnitureZ + depth / 2 + doorThickness) * 100,
-    });
-  }
+  // 🔴 Z축 디버그 — 모든 가구
+  console.log('🔴 Z디버그', placedModule.moduleId, {
+    actualDepthMm,
+    furnitureZ_mm: furnitureZ * 100,
+    뒷면mm: (furnitureZ - depth / 2) * 100,
+    앞면mm: (furnitureZ + depth / 2) * 100,
+    lowerBackFace_mm: lowerBackFace * 100,
+  });
 
   // EP 비대칭 보정: 좌EP만 → 본체 오른쪽으로, 우EP만 → 본체 왼쪽으로
   // 본체 너비가 EP만큼 줄었으므로 본체+EP 전체가 슬롯/위치 중앙에 오도록 보정
