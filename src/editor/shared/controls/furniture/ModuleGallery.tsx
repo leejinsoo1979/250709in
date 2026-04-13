@@ -663,6 +663,14 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
         }
 
         if (targetX === null) {
+          console.error('🔍 [자유배치 더블클릭] 배치 실패 디버그', {
+            zones: zones.map(z => ({ ...z, width: z.endX - z.startX })),
+            furnitureWidth: dims.width,
+            fullBounds,
+            sortedBounds: sortedBounds.map(b => ({ left: b.left, right: b.right, cat: b.category })),
+            newCategory,
+            hasStepCeiling, stepWidth, stepPos, middleGap,
+          });
           showAlert('배치할 공간이 부족합니다', { title: '배치 불가' });
           return;
         }
