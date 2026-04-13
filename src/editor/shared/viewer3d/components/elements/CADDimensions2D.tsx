@@ -1033,13 +1033,15 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           const selFurnitureHeightMm = computeFurnitureHeightMm(selectedMod, selModData, spaceInfo, internalSpace);
           const totalFromFloorMm = Math.round(floorFinishHeightMm + baseFrameHeightMm + selFurnitureHeightMm);
           const totalFromFloorY = mmToThreeUnits(totalFromFloorMm);
-          const dimZ_combined = spaceDepth/2 + rightDimOffset - mmToThreeUnits(750);
+          // 도어 치수(dimZ) 바깥쪽에 배치: 도어 치수 + 360mm 간격
+          const dimZ_combined = spaceDepth/2 + rightDimOffset - mmToThreeUnits(750) + mmToThreeUnits(360);
+          const dimZ_combined_ext = dimZ_combined - mmToThreeUnits(360);
           return (
             <group>
               {/* 보조 가이드 연장선 - 바닥 */}
-              <ExtLine points={[[0, 0, dimZ_combined - mmToThreeUnits(360)], [0, 0, dimZ_combined]]} color={dimensionColor} />
+              <ExtLine points={[[0, 0, dimZ_combined_ext], [0, 0, dimZ_combined]]} color={dimensionColor} />
               {/* 보조 가이드 연장선 - 가구 상단 */}
-              <ExtLine points={[[0, totalFromFloorY, dimZ_combined - mmToThreeUnits(360)], [0, totalFromFloorY, dimZ_combined]]} color={dimensionColor} />
+              <ExtLine points={[[0, totalFromFloorY, dimZ_combined_ext], [0, totalFromFloorY, dimZ_combined]]} color={dimensionColor} />
               {/* 메인 치수선 (바닥 ~ 가구 상단) */}
               <NativeLine name="dimension_line"
                 points={[[0, 0, dimZ_combined], [0, totalFromFloorY, dimZ_combined]]}
@@ -2080,13 +2082,15 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           const selFurnitureHeightMm_r = computeFurnitureHeightMm(selectedMod, selModData_r, spaceInfo, internalSpace);
           const totalFromFloorMm_r = Math.round(floorFinishHeightMm + baseFrameHeightMm + selFurnitureHeightMm_r);
           const totalFromFloorY_r = mmToThreeUnits(totalFromFloorMm_r);
-          const dimZ_combined_r = spaceDepth/2 + rightDimOffset - mmToThreeUnits(750);
+          // 도어 치수 바깥쪽에 배치: 도어 치수 + 360mm 간격
+          const dimZ_combined_r = spaceDepth/2 + rightDimOffset - mmToThreeUnits(750) + mmToThreeUnits(360);
+          const dimZ_combined_r_ext = dimZ_combined_r - mmToThreeUnits(360);
           return (
             <group>
               {/* 보조 가이드 연장선 - 바닥 */}
-              <ExtLine points={[[0, 0, dimZ_combined_r - mmToThreeUnits(360)], [0, 0, dimZ_combined_r]]} color={dimensionColor} />
+              <ExtLine points={[[0, 0, dimZ_combined_r_ext], [0, 0, dimZ_combined_r]]} color={dimensionColor} />
               {/* 보조 가이드 연장선 - 가구 상단 */}
-              <ExtLine points={[[0, totalFromFloorY_r, dimZ_combined_r - mmToThreeUnits(360)], [0, totalFromFloorY_r, dimZ_combined_r]]} color={dimensionColor} />
+              <ExtLine points={[[0, totalFromFloorY_r, dimZ_combined_r_ext], [0, totalFromFloorY_r, dimZ_combined_r]]} color={dimensionColor} />
               {/* 메인 치수선 (바닥 ~ 가구 상단) */}
               <NativeLine name="dimension_line"
                 points={[[0, 0, dimZ_combined_r], [0, totalFromFloorY_r, dimZ_combined_r]]}
