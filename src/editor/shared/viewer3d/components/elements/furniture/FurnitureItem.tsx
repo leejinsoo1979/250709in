@@ -1415,13 +1415,8 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     }
   }
 
-  // 하부프레임 토글 꺼짐 → 가구 높이에 하부프레임 높이를 더하되, 개별 띄움 높이만큼 차감
-  if (placedModule.hasBase === false && spaceInfo.baseConfig?.type === 'floor') {
-    const isLowerMod = placedModule.moduleId?.startsWith('lower-') || placedModule.moduleId?.includes('-lower-');
-    const hiddenBaseH = placedModule.baseFrameHeight ?? spaceInfo.baseConfig?.height ?? (isLowerMod ? 100 : 60);
-    const indivFloat = placedModule.individualFloatHeight ?? 0;
-    furnitureHeightMm += hiddenBaseH - indivFloat;
-  }
+  // 하부프레임 토글 꺼짐 → 가구 높이 유지, Y 위치만 바닥으로 내림 (baseHeightMm=0 처리)
+  // furnitureHeightMm는 변경하지 않음 (측판 높이 유지)
 
   // customSections는 placedModule에 직접 저장된 것만 사용
   // (freeHeight에 의한 비례 조정은 useBaseFurniture에서 modelConfig.sections 자체를 조정)
