@@ -165,6 +165,18 @@ export class ColumnIndexer {
       
       // 영역별 정보 추가
       const zones = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
+      if (spaceInfo.curtainBox?.enabled) {
+        console.log('🟦🟦🟦 [calculateSpaceIndexing] DC+CB zones:', {
+          normalStartX: zones.normal?.startX,
+          normalWidth: zones.normal?.width,
+          normalSlotWidths: zones.normal?.slotWidths,
+          droppedStartX: zones.dropped?.startX,
+          droppedWidth: zones.dropped?.width,
+          droppedSlotWidths: zones.dropped?.slotWidths,
+          wholeInternalStartX: internalStartX,
+          wholeInternalWidth: internalWidth,
+        });
+      }
       
       // zones에 threeUnitPositions 추가
       if (zones.normal) {
@@ -1105,6 +1117,12 @@ export class ColumnIndexer {
     const cbDeduction = hasCurtainBox ? curtainBoxWidth : 0;
     const normalAreaOuterWidth = totalWidth - droppedWidth - cbDeduction;
     const droppedAreaOuterWidth = droppedWidth;
+
+    if (hasCurtainBox) console.log('🔴 ColumnIndexer DC+CB:', {
+      droppedPosition, curtainBoxPosition, curtainBoxSameSide, curtainBoxOppSide,
+      totalWidth, droppedWidth, curtainBoxWidth, cbDeduction,
+      normalAreaOuterWidth, droppedAreaOuterWidth,
+    });
     
     // 각 구간의 내부 너비 계산
     let normalAreaInternalWidth: number;
@@ -1528,6 +1546,19 @@ export class ColumnIndexer {
     //   }
     // });
     
+    if (hasCurtainBox) {
+      console.log('🟥🟥🟥 [calculateZoneSlotInfo] DC+CB FINAL RESULT:', {
+        droppedPosition, curtainBoxPosition, curtainBoxSameSide, curtainBoxOppSide,
+        normalStartX, normalAreaInternalWidth,
+        droppedStartX, droppedAreaInternalWidth,
+        normalColumnCount, droppedColumnCount,
+        normalSlotWidths, droppedSlotWidths,
+        internalStartX, totalWidth, droppedWidth, curtainBoxWidth,
+        surroundType: spaceInfo.surroundType,
+        installType: spaceInfo.installType,
+      });
+    }
+
     return {
       normal: {
         startX: normalStartX,
