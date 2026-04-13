@@ -2533,6 +2533,27 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 />
                 </>
                 )}
+                {/* 커튼박스 구간 연장선 */}
+                {hasCB && (
+                <>
+                <Line
+                  points={[
+                    [cbStartX, spaceHeight, 0.001],
+                    [cbStartX, subDimensionY + mmToThreeUnits(10), 0.001]
+                  ]}
+                  color={subGuideColor}
+                  lineWidth={0.6}
+                />
+                <Line
+                  points={[
+                    [cbEndX, spaceHeight, 0.001],
+                    [cbEndX, subDimensionY + mmToThreeUnits(10), 0.001]
+                  ]}
+                  color={subGuideColor}
+                  lineWidth={0.6}
+                />
+                </>
+                )}
 
                 {/* 경계면 이격거리 치수선 - 좌우 이격과 동일한 Y 레벨 */}
                 {/* 단내림 있으면 2개 경계면: 메인↔단내림, 단내림↔커튼박스 */}
