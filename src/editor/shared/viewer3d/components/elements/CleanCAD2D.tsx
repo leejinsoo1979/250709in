@@ -2157,25 +2157,34 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     const mainRightGap = mainRightAdj === 'curtainbox' ? 0 : (mainRightAdj === 'wall' ? (hasRightWall ? rightGapMm : 0) : middleGapMm);
 
                     // ── 3단 치수선: 각 구간의 실배치 폭 ──
-                    // 메인: 양쪽 인접 이격 차감
-                    // 단내림: 외측(커튼박스/벽) 이격만 차감 (메인쪽 이격은 메인에서 이미 차감)
+                    // 단내림 구간: 양쪽 경계이격을 흡수하여 확장 (1.5 + 900 + 1.5 = 903)
+                    // 메인/커튼박스: 단내림에게 뺏긴 경계이격만큼 차감
 
+                    // 단내림이 흡수하는 이격 계산
+                    let scInnerGap = middleGapMm; // 메인↔단내림 경계이격 (단내림이 흡수)
+                    let scOuterGap = 0; // 단내림 외측 경계이격 (단내림이 흡수)
                     // 단내림 구간 프레임 두께 (서라운드 모드에서 벽쪽 프레임)
-                    let scInnerGap = 0; // 치수선 X좌표 계산용 (흡수 안 함)
-                    let scOuterGap = 0;
                     scSideFrame = (spaceInfo.surroundType !== 'no-surround' && hasSC)
                       ? (spaceInfo.stepCeiling!.sideFrame ?? (scOnLeft ? (frameSize?.left ?? 0) : (frameSize?.right ?? 0)))
                       : 0;
                     if (hasSC) {
                       const sameSide = hasDC && dcPosition === scPosition;
                       if (sameSide) {
-                        // 커튼박스 같은 쪽: 커튼박스↔단내림 경계이격(middle2) 차감
-                        const cbGap = middle2GapMm;
-                        scPlacementWidth = floorValue(scWidth - cbGap - scSideFrame, true);
+                        scOuterGap = 0; // 커튼박스↔단내림 경계: 커튼박스 배치불가이므로 이격 없음
                       } else {
-                        // 벽 인접: 벽이격 차감
+                        // 외벽 인접: 벽이격은 단내림이 흡수하지 않음 (차감)
+                        const scOnWallSide = scOnLeft ? hasLeftWall : hasRightWall;
+                        scOuterGap = 0; // 벽쪽은 흡수 아닌 차감이므로 별도 처리
+                      }
+                      // 단내림 배치폭 = 기둥폭 + 메인쪽 경계이격 + 외측 경계이격 - 벽이격 - 프레임
+                      if (hasDC && dcPosition === scPosition) {
+                        // 커튼박스 같은 쪽: 메인쪽 경계이격만 흡수 (커튼박스쪽은 이격 없음)
+                        // 경계이격(1.5mm) 흡수로 0.5mm 소수 발생 가능 → 항상 0.5단위 floor
+                        scPlacementWidth = floorValue(scWidth + scInnerGap + scOuterGap - scSideFrame, true);
+                      } else {
+                        // 벽 인접: 벽쪽은 벽이격 차감, 메인쪽은 경계이격 흡수, 프레임 차감
                         const scWallGap = (scOnLeft ? (hasLeftWall ? leftGapMm : 0) : (hasRightWall ? rightGapMm : 0));
-                        scPlacementWidth = floorValue(scWidth - scWallGap - scSideFrame, true);
+                        scPlacementWidth = floorValue(scWidth + scInnerGap - scWallGap - scSideFrame, true);
                       }
                     }
 
@@ -2233,23 +2242,26 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     if (hasSC) {
                       const sameSide = hasDC && dcPosition === scPosition;
                       if (scOnLeft) {
-                        // 좌단내림: 오른쪽=메인 경계(변경없음), 왼쪽=외측이격 차감
+                        // 좌단내림: 오른쪽=메인 경계이격 흡수(확장), 왼쪽=외측
+                        scPlacEndX = scEndX + mmToThreeUnits(scInnerGap); // 메인쪽 확장
                         if (sameSide) {
-                          // 커튼박스 같은 쪽: 커튼박스↔단내림 경계이격(middle2) 차감
-                          scPlacStartX = scStartX + mmToThreeUnits(middle2GapMm);
+                          scPlacStartX = scStartX - mmToThreeUnits(scOuterGap); // 커튼박스쪽 확장
                         } else {
                           const scWallGap = hasLeftWall ? leftGapMm : 0;
-                          scPlacStartX = scStartX + mmToThreeUnits(scWallGap);
+                          scPlacStartX = scStartX + mmToThreeUnits(scWallGap); // 벽쪽 차감
                         }
+                        // 좌단내림 프레임: 좌측(벽쪽)에 프레임 → startX 안쪽으로 밀기
                         scPlacStartX += mmToThreeUnits(scSideFrame);
                       } else {
-                        // 우단내림: 왼쪽=메인 경계(변경없음), 오른쪽=외측이격 차감
+                        // 우단내림: 왼쪽=메인 경계이격 흡수(확장), 오른쪽=외측
+                        scPlacStartX = scStartX - mmToThreeUnits(scInnerGap); // 메인쪽 확장
                         if (sameSide) {
-                          scPlacEndX = scEndX - mmToThreeUnits(middle2GapMm);
+                          scPlacEndX = scEndX + mmToThreeUnits(scOuterGap); // 커튼박스쪽 확장
                         } else {
                           const scWallGap = hasRightWall ? rightGapMm : 0;
-                          scPlacEndX = scEndX - mmToThreeUnits(scWallGap);
+                          scPlacEndX = scEndX - mmToThreeUnits(scWallGap); // 벽쪽 차감
                         }
+                        // 우단내림 프레임: 우측(벽쪽)에 프레임 → endX 안쪽으로 밀기
                         scPlacEndX -= mmToThreeUnits(scSideFrame);
                       }
                     }
