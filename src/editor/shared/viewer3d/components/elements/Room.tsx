@@ -2825,9 +2825,11 @@ const Room: React.FC<RoomProps> = ({
             const cbBoundX = cbSide === 'left' ? lx + _cbxW : cbSide === 'right' ? rx - _cbxW : lx;
 
             // 경계 X 좌표 수집 (좌→우 정렬)
+            // DC+CB 같은 쪽 좌측: [CB | DC | 메인] → CB 경계 rightCeilY=dcCeilY (DC 구간 진입)
+            const _bothLeft = dcSide === 'left' && cbSide === 'left';
             const boundaries: {x: number; leftCeilY: number; rightCeilY: number}[] = [];
             if (dcSide === 'left') boundaries.push({x: dcBoundX, leftCeilY: dcCeilY, rightCeilY: mainCeilY});
-            if (cbSide === 'left') boundaries.push({x: cbBoundX, leftCeilY: cbCeilY, rightCeilY: mainCeilY});
+            if (cbSide === 'left') boundaries.push({x: cbBoundX, leftCeilY: cbCeilY, rightCeilY: _bothLeft ? dcCeilY : mainCeilY});
             if (dcSide === 'right') boundaries.push({x: dcBoundX, leftCeilY: mainCeilY, rightCeilY: dcCeilY});
             if (cbSide === 'right') boundaries.push({x: cbBoundX, leftCeilY: mainCeilY, rightCeilY: cbCeilY});
             boundaries.sort((a, b) => a.x - b.x);
@@ -2952,9 +2954,11 @@ const Room: React.FC<RoomProps> = ({
             const bCbCY = bCbSide ? ceilingY + _bCbxDropH : ceilingY;
             const bCbBX = bCbSide === 'left' ? x1 + _bCbxW : bCbSide === 'right' ? x2 - _bCbxW : x1;
 
+            // DC+CB 같은 쪽 좌측: [CB | DC | 메인] → CB 경계 rightCeilY=bDcCY (DC 구간 진입)
+            const _bBothLeft = bDcSide === 'left' && bCbSide === 'left';
             const bBounds: {x: number; rightCeilY: number}[] = [];
             if (bDcSide === 'left') bBounds.push({x: bDcBX, rightCeilY: bMainCY});
-            if (bCbSide === 'left') bBounds.push({x: bCbBX, rightCeilY: bMainCY});
+            if (bCbSide === 'left') bBounds.push({x: bCbBX, rightCeilY: _bBothLeft ? bDcCY : bMainCY});
             if (bDcSide === 'right') bBounds.push({x: bDcBX, rightCeilY: bDcCY});
             if (bCbSide === 'right') bBounds.push({x: bCbBX, rightCeilY: bCbCY});
             bBounds.sort((a, b) => a.x - b.x);
@@ -3010,19 +3014,35 @@ const Room: React.FC<RoomProps> = ({
             const dcBx = dcIsLeft ? x1 + _wfCbOff + dcW : x2 - _wfCbOff - dcW;
 
             // Z축 방향 그라데이션 라인만 유지 (천장-벽, 바닥-벽 경계)
+            // DC+CB 동시: 벽쪽 최외곽 구간 높이 사용 (CB가 벽 인접)
+            const _wfCbIsLeft = _wfCbEnabled && spaceInfo.curtainBox!.position === 'left';
+            const _wfCbIsRight = _wfCbEnabled && spaceInfo.curtainBox!.position === 'right';
+            const _wfCbDropH = _wfCbEnabled ? mmToThreeUnits(spaceInfo.curtainBox!.dropHeight || 20) : 0;
             if (hasLeftWall) {
-              const leftDcDropH = dcIsLeft ? mmToThreeUnits(spaceInfo.droppedCeiling!.dropHeight || 200) : 0;
-              const leftCeilingY = dcIsLeft
-                ? (isFreePlacement ? ceilingY + leftDcDropH : ceilingY - leftDcDropH)
-                : ceilingY;
+              let leftCeilingY: number;
+              if (dcIsLeft && _wfCbIsLeft) {
+                // DC+CB 같은 쪽 좌측: 벽 인접 = CB → 위로 확장
+                leftCeilingY = ceilingY + _wfCbDropH;
+              } else if (dcIsLeft) {
+                const leftDcDropH = mmToThreeUnits(spaceInfo.droppedCeiling!.dropHeight || 200);
+                leftCeilingY = isFreePlacement ? ceilingY + leftDcDropH : ceilingY - leftDcDropH;
+              } else {
+                leftCeilingY = ceilingY;
+              }
               gradientLines.push([x1, leftCeilingY, z1, x1, leftCeilingY, z2]); // 천장-좌벽
               gradientLines.push([x1, floorY, z1, x1, floorY, z2]); // 바닥-좌벽
             }
             if (hasRightWall) {
-              const rightDcDropH = dcIsRight ? mmToThreeUnits(spaceInfo.droppedCeiling!.dropHeight || 200) : 0;
-              const rightCeilingY = dcIsRight
-                ? (isFreePlacement ? ceilingY + rightDcDropH : ceilingY - rightDcDropH)
-                : ceilingY;
+              let rightCeilingY: number;
+              if (dcIsRight && _wfCbIsRight) {
+                // DC+CB 같은 쪽 우측: 벽 인접 = CB → 위로 확장
+                rightCeilingY = ceilingY + _wfCbDropH;
+              } else if (dcIsRight) {
+                const rightDcDropH = mmToThreeUnits(spaceInfo.droppedCeiling!.dropHeight || 200);
+                rightCeilingY = isFreePlacement ? ceilingY + rightDcDropH : ceilingY - rightDcDropH;
+              } else {
+                rightCeilingY = ceilingY;
+              }
               gradientLines.push([x2, rightCeilingY, z1, x2, rightCeilingY, z2]); // 천장-우벽
               gradientLines.push([x2, floorY, z1, x2, floorY, z2]); // 바닥-우벽
             }
@@ -3032,9 +3052,10 @@ const Room: React.FC<RoomProps> = ({
               const bwBotY = ceilingY - dcDropH;
               gradientLines.push([dcBx, ceilingY, z1, dcBx, ceilingY, z2]); // 경계벽 상단
               gradientLines.push([dcBx, bwBotY, z1, dcBx, bwBotY, z2]); // 경계벽 하단
-              if (dcIsLeft && hasLeftWall) {
+              // DC+CB 같은 쪽: 벽~DC 사이에 CB가 있으므로 벽에 DC 바닥선 그리지 않음
+              if (dcIsLeft && hasLeftWall && !_wfCbIsLeft) {
                 gradientLines.push([x1, bwBotY, z1, x1, bwBotY, z2]);
-              } else if (dcIsRight && hasRightWall) {
+              } else if (dcIsRight && hasRightWall && !_wfCbIsRight) {
                 gradientLines.push([x2, ceilingY - dcDropH, z1, x2, ceilingY - dcDropH, z2]);
               }
             }
