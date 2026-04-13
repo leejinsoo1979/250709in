@@ -59,6 +59,19 @@ const UpperCabinet: React.FC<FurnitureTypeProps> = ({
   // 간접조명은 UpperCabinetIndirectLight 컴포넌트에서 통합 관리
   // 개별 상부장에서는 간접조명을 렌더링하지 않음
 
+  // 듀얼 섹션 레이아웃 계산
+  const isDual = !!(baseFurniture.modelConfig.leftSections && baseFurniture.modelConfig.rightSections);
+  const isOpenType = moduleData.id.includes('dual-upper-cabinet-open');
+  const sectionWidth = isDual
+    ? (isOpenType ? baseFurniture.innerWidth / 2 : baseFurniture.innerWidth / 2 - baseFurniture.basicThickness / 2)
+    : baseFurniture.innerWidth;
+  const leftX = isOpenType
+    ? -baseFurniture.innerWidth / 4
+    : -(sectionWidth / 2 + baseFurniture.basicThickness / 2);
+  const rightX = isOpenType
+    ? baseFurniture.innerWidth / 4
+    : (sectionWidth / 2 + baseFurniture.basicThickness / 2);
+
   return (
     <>
       {/* 간접조명은 UpperCabinetIndirectLight 컴포넌트에서 통합 렌더링 */}
@@ -70,26 +83,12 @@ const UpperCabinet: React.FC<FurnitureTypeProps> = ({
             {/* 내부 구조는 항상 렌더링 (서랍/선반) */}
             <>
                 {/* 듀얼 가구인 경우 좌우 섹션 별도 렌더링 */}
-                {baseFurniture.modelConfig.leftSections && baseFurniture.modelConfig.rightSections ? (() => {
-                  const isOpenType = moduleData.id.includes('dual-upper-cabinet-open');
-                  // 칸막이 없으면 각 섹션이 innerWidth/2 전체 사용, 있으면 칸막이 두께만큼 빼기
-                  const sectionWidth = isOpenType
-                    ? baseFurniture.innerWidth / 2
-                    : baseFurniture.innerWidth / 2 - baseFurniture.basicThickness / 2;
-                  // 칸막이 없으면 정확히 ±innerWidth/4, 있으면 칸막이 두께 오프셋 포함
-                  const leftX = isOpenType
-                    ? -baseFurniture.innerWidth / 4
-                    : -(sectionWidth / 2 + baseFurniture.basicThickness / 2);
-                  const rightX = isOpenType
-                    ? baseFurniture.innerWidth / 4
-                    : (sectionWidth / 2 + baseFurniture.basicThickness / 2);
-
-                  return (
+                {isDual ? (
                   <>
                     {/* 왼쪽 섹션 */}
                     <group position={[leftX, 0, 0]}>
                       <SectionsRenderer
-                        modelConfig={{ sections: baseFurniture.modelConfig.leftSections }}
+                        modelConfig={{ sections: baseFurniture.modelConfig.leftSections! }}
                         height={baseFurniture.height}
                         innerWidth={sectionWidth}
                         depth={baseFurniture.depth}
@@ -109,25 +108,20 @@ const UpperCabinet: React.FC<FurnitureTypeProps> = ({
                     </group>
 
                     {/* 중앙 분리대 - 상부장 기본(open)은 칸막이 없음 */}
-                    {!isOpenType && (() => {
-                      const backReduction = baseFurniture.backPanelThickness + baseFurniture.basicThickness - baseFurniture.mmToThreeUnits(1);
-                      const dividerDepth = baseFurniture.depth - backReduction;
-                      const dividerZOffset = backReduction / 2;
-                      return (
-                        <BoxWithEdges
-                          args={[baseFurniture.basicThickness, baseFurniture.height - baseFurniture.basicThickness * 2, dividerDepth]}
-                          position={[0, 0, dividerZOffset]}
-                          material={baseFurniture.material}
-                          renderMode={renderMode}
-                          furnitureId={moduleData.id}
-                        />
-                      );
-                    })()}
+                    {!isOpenType && (
+                      <BoxWithEdges
+                        args={[baseFurniture.basicThickness, baseFurniture.height - baseFurniture.basicThickness * 2, baseFurniture.depth - (baseFurniture.backPanelThickness + baseFurniture.basicThickness - baseFurniture.mmToThreeUnits(1))]}
+                        position={[0, 0, (baseFurniture.backPanelThickness + baseFurniture.basicThickness - baseFurniture.mmToThreeUnits(1)) / 2]}
+                        material={baseFurniture.material}
+                        renderMode={renderMode}
+                        furnitureId={moduleData.id}
+                      />
+                    )}
 
                     {/* 오른쪽 섹션 */}
                     <group position={[rightX, 0, 0]}>
                       <SectionsRenderer
-                        modelConfig={{ sections: baseFurniture.modelConfig.rightSections }}
+                        modelConfig={{ sections: baseFurniture.modelConfig.rightSections! }}
                         height={baseFurniture.height}
                         innerWidth={sectionWidth}
                         depth={baseFurniture.depth}
@@ -146,8 +140,6 @@ const UpperCabinet: React.FC<FurnitureTypeProps> = ({
                       />
                     </group>
                   </>
-                  );
-                })()
                 ) : (
                   /* 싱글 가구인 경우 기존 방식 */
                   <SectionsRenderer
