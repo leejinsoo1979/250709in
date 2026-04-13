@@ -61,7 +61,10 @@ interface UIState {
   
   // 축 표시 상태
   showAxis: boolean;
-  
+
+  // 프레임 표시 상태 (상부/하부 프레임)
+  showFrame: boolean;
+
   // 가이드 표시 상태 (showAll 체크박스용)
   showAll: boolean;
 
@@ -227,6 +230,7 @@ interface UIState {
   setShowDimensionsText: (show: boolean) => void;
   setShowGuides: (show: boolean) => void;
   setShowAxis: (show: boolean) => void;
+  setShowFrame: (show: boolean) => void;
   setShowAll: (show: boolean) => void;
   setShowFurniture: (show: boolean) => void;
   setRenderMode: (mode: 'solid' | 'wireframe') => void;
@@ -308,6 +312,7 @@ const initialUIState = {
   showDimensionsText: true,  // 기본값: 치수 텍스트 표시
   showGuides: false, // 기본값: 그리드(가이드) 숨김
   showAxis: true, // 기본값: 축 표시
+  showFrame: true, // 기본값: 프레임 표시
   showAll: true, // 기본값: 모든 가이드 표시
   dimensionOptionsBackup: null,
   showFurniture: true, // 기본값: 가구 표시
@@ -538,7 +543,10 @@ export const useUIStore = create<UIState>()(
       
       setShowAxis: (show) =>
         set({ showAxis: show }),
-      
+
+      setShowFrame: (show) =>
+        set({ showFrame: show }),
+
       setShowAll: (show) =>
         set({ showAll: show }),
       
@@ -897,6 +905,7 @@ export const useUIStore = create<UIState>()(
         showAll: state.showAll,
         // showGuides는 기본값(false) 유지를 위해 영속화하지 않음
         showAxis: state.showAxis,
+        showFrame: state.showFrame,
         showFurniture: state.showFurniture,
         showFurnitureEditHandles: state.showFurnitureEditHandles,
       }),

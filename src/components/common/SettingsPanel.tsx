@@ -12,7 +12,7 @@ interface SettingsPanelProps {
 
 const SettingsPanel: React.FC<SettingsPanelProps> = ({ isOpen, onClose }) => {
   const { t, currentLanguage, changeLanguage, availableLanguages } = useTranslation();
-  const { viewMode, renderMode, setRenderMode, cameraMode, setCameraMode, shadowEnabled, setShadowEnabled, edgeOutlineEnabled, setEdgeOutlineEnabled, showDimensions, setShowDimensions, showDimensionsText, setShowDimensionsText, showAll, setShowAll, showFurniture, setShowFurniture, showGuides, setShowGuides, showAxis, setShowAxis, showFurnitureEditHandles, setShowFurnitureEditHandles } = useUIStore();
+  const { viewMode, renderMode, setRenderMode, cameraMode, setCameraMode, shadowEnabled, setShadowEnabled, edgeOutlineEnabled, setEdgeOutlineEnabled, showDimensions, setShowDimensions, showDimensionsText, setShowDimensionsText, showAll, setShowAll, showFurniture, setShowFurniture, showGuides, setShowGuides, showAxis, setShowAxis, showFrame, setShowFrame, showFurnitureEditHandles, setShowFurnitureEditHandles } = useUIStore();
   const [showSpaceDefaults, setShowSpaceDefaults] = useState(false);
   
   useEffect(() => {
@@ -207,6 +207,16 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({ isOpen, onClose }) => {
                 </div>
                 <label className={styles.switch}>
                   <input type="checkbox" checked={showAxis} onChange={() => setShowAxis(!showAxis)} />
+                  <span className={styles.slider}></span>
+                </label>
+              </div>
+              <div className={styles.settingItem}>
+                <div className={styles.settingInfo}>
+                  <span className={styles.settingLabel}>프레임</span>
+                  <span className={styles.settingDescription}>상부/하부 프레임 표시</span>
+                </div>
+                <label className={styles.switch}>
+                  <input type="checkbox" checked={showFrame} onChange={() => setShowFrame(!showFrame)} />
                   <span className={styles.slider}></span>
                 </label>
               </div>
