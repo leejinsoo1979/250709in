@@ -193,56 +193,78 @@ const FreePlacementDropZone: React.FC = () => {
     return Math.round(maxGap);
   }, [placedModules, spaceBounds]);
 
-  // ── 균등배치 모드: 잠기지 않은 이격을 제거하고 듀얼은 듀얼끼리, 싱글은 싱글끼리 균일 사이즈 ──
+  // ── 균등배치 모드: 구간별로 분리하여 균등 배분 ──
+  // 메인 구간 가구는 메인 범위 내에서, 단내림 구간 가구는 단내림 범위 내에서 균등
   useEffect(() => {
     if (!equalDistribution || !isFreePlacement || freeModules.length === 0) return;
 
-    const { startX, endX } = spaceBounds;
     const lockedWallGaps = spaceInfo.lockedWallGaps;
-
-    // 잠긴 이격 영역 제외한 유효 공간
-    const effectiveStartX = lockedWallGaps?.left != null ? startX + lockedWallGaps.left : startX;
-    const effectiveEndX = lockedWallGaps?.right != null ? endX - lockedWallGaps.right : endX;
-    const availableWidth = effectiveEndX - effectiveStartX;
-
-    if (availableWidth <= 0) return;
-
-    // 좌→우 정렬 순서
-    const sorted = [...freeModules].sort((a, b) => (a.position?.x || 0) - (b.position?.x || 0));
-
-    // 싱글/듀얼 분류
-    const isDualArr = sorted.map(mod => mod.isDualSlot === true || mod.moduleId?.includes('dual-'));
-    const singleCount = isDualArr.filter(d => !d).length;
-    const dualCount = isDualArr.filter(d => d).length;
-
-    // 단위 너비 = 유효 공간 / (싱글 수 + 듀얼 수 × 2)
     const MAX_SINGLE = 600;
     const MAX_DUAL = 1200;
-    const totalUnits = singleCount + dualCount * 2;
-    if (totalUnits === 0) return;
-    const exactUnitWidth = availableWidth / totalUnits;
-    const cappedUnitWidth = Math.min(MAX_SINGLE, exactUnitWidth);
 
-    // 각 가구의 정확한 너비를 소수점 1자리(0.1mm)로 균등 배분
-    let currentX = effectiveStartX;
-    sorted.forEach((mod, i) => {
-      const exactW = isDualArr[i] ? Math.min(cappedUnitWidth * 2, MAX_DUAL) : cappedUnitWidth;
-      const nextX = currentX + exactW;
-      // 0.1mm 단위로 반올림
-      const roundedCurrentX = Math.round(currentX * 10) / 10;
-      const roundedNextX = Math.round(nextX * 10) / 10;
-      const w = Math.round((roundedNextX - roundedCurrentX) * 10) / 10;
+    // 구간별 가구 분류 (zone 속성 기반)
+    const mainModules = freeModules.filter(m => m.zone !== 'dropped' && !m.isSurroundPanel);
+    const droppedModules = freeModules.filter(m => m.zone === 'dropped' && !m.isSurroundPanel);
 
-      const centerXmm = roundedCurrentX + (w / 2);
+    // 구간별 범위 계산
+    const zones = zonePlacementBounds;
+    const mainZone = zones.find(z => z.zone === 'main');
+    const scZone = zones.find(z => z.zone === 'stepCeiling');
 
-      updatePlacedModule(mod.id, {
-        freeWidth: w,
-        moduleWidth: w,
-        position: { ...mod.position, x: centerXmm * 0.01 },
+    // 구간별 균등배분 함수
+    const distributeInZone = (mods: typeof freeModules, zoneStartMm: number, zoneEndMm: number) => {
+      if (mods.length === 0) return;
+      const sorted = [...mods].sort((a, b) => (a.position?.x || 0) - (b.position?.x || 0));
+      const isDualArr = sorted.map(mod => mod.isDualSlot === true || mod.moduleId?.includes('dual-'));
+      const singleCount = isDualArr.filter(d => !d).length;
+      const dualCount = isDualArr.filter(d => d).length;
+      const totalUnits = singleCount + dualCount * 2;
+      if (totalUnits === 0) return;
+
+      const availableWidth = zoneEndMm - zoneStartMm;
+      if (availableWidth <= 0) return;
+
+      const exactUnitWidth = availableWidth / totalUnits;
+      const cappedUnitWidth = Math.min(MAX_SINGLE, exactUnitWidth);
+
+      let currentX = zoneStartMm;
+      sorted.forEach((mod, i) => {
+        const exactW = isDualArr[i] ? Math.min(cappedUnitWidth * 2, MAX_DUAL) : cappedUnitWidth;
+        const nextX = currentX + exactW;
+        const roundedCurrentX = Math.round(currentX * 10) / 10;
+        const roundedNextX = Math.round(nextX * 10) / 10;
+        const w = Math.round((roundedNextX - roundedCurrentX) * 10) / 10;
+        const centerXmm = roundedCurrentX + (w / 2);
+
+        updatePlacedModule(mod.id, {
+          freeWidth: w,
+          moduleWidth: w,
+          position: { ...mod.position, x: centerXmm * 0.01 },
+        });
+        currentX = nextX;
       });
+    };
 
-      currentX = nextX;
-    });
+    // 메인 구간 균등배분
+    if (mainZone && mainModules.length > 0) {
+      let mStart = mainZone.placementStartXmm;
+      let mEnd = mainZone.placementEndXmm;
+      // 잠긴 이격 적용 (메인 구간 양 끝이 벽인 경우)
+      if (lockedWallGaps?.left != null) mStart += lockedWallGaps.left;
+      if (lockedWallGaps?.right != null) mEnd -= lockedWallGaps.right;
+      distributeInZone(mainModules, mStart, mEnd);
+    } else if (!mainZone && mainModules.length > 0) {
+      // 단내림/커튼박스 없는 경우: 전체 spaceBounds 사용
+      const { startX, endX } = spaceBounds;
+      const effectiveStartX = lockedWallGaps?.left != null ? startX + lockedWallGaps.left : startX;
+      const effectiveEndX = lockedWallGaps?.right != null ? endX - lockedWallGaps.right : endX;
+      distributeInZone(mainModules, effectiveStartX, effectiveEndX);
+    }
+
+    // 단내림 구간 균등배분
+    if (scZone && droppedModules.length > 0) {
+      distributeInZone(droppedModules, scZone.placementStartXmm, scZone.placementEndXmm);
+    }
   }, [equalDistribution, isFreePlacement]);
 
   // ── 서라운드 패널 자동 배치 (선택 즉시 배치, 클릭 위치 불필요) ──
