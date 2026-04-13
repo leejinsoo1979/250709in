@@ -3442,10 +3442,12 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             const targetCat = leftCat === 'upper' ? 'lower' : 'upper';
             return allMods.find(m => {
               if (m === leftmostMod) return false;
-              // 슬롯배치: slotIndex 기반, 자유배치: X 위치 근접 (100mm 이내)
-              const samePosition = isFreePlacement
-                ? Math.abs(m.position.x - leftmostMod.position.x) < 100
-                : m.slotIndex === leftmostMod.slotIndex;
+              // slotIndex가 둘 다 정의된 경우: slotIndex 일치
+              // 그 외(자유배치 또는 slotIndex 미정의): X 위치 근접
+              const bothHaveSlot = m.slotIndex !== undefined && leftmostMod.slotIndex !== undefined;
+              const samePosition = bothHaveSlot
+                ? m.slotIndex === leftmostMod.slotIndex
+                : Math.abs((m.position?.x ?? 0) - (leftmostMod.position?.x ?? 0)) < 300;
               if (!samePosition) return false;
               const mData = getModuleById(m.moduleId);
               const mCat = mData?.category
@@ -3501,12 +3503,12 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 : leftmostMod.moduleId.includes('-lower-') ? 'lower' : 'full');
             if (cat === 'upper') {
               // leftmostMod가 상부장이면 companion(하부장)을 프레임 참조로 사용
-              // leftCompanionMod는 아직 계산 전이므로 여기서 직접 하부장 검색
               const lowerMod = allMods.find(m => {
                 if (m === leftmostMod) return false;
-                const samePos = isFreePlacement
-                  ? Math.abs(m.position.x - leftmostMod.position.x) < 100
-                  : m.slotIndex === leftmostMod.slotIndex;
+                const bothHaveSlot = m.slotIndex !== undefined && leftmostMod.slotIndex !== undefined;
+                const samePos = bothHaveSlot
+                  ? m.slotIndex === leftmostMod.slotIndex
+                  : Math.abs((m.position?.x ?? 0) - (leftmostMod.position?.x ?? 0)) < 300;
                 if (!samePos) return false;
                 const mCat = getModuleById(m.moduleId)?.category
                   ?? (m.moduleId.includes('-upper-') ? 'upper'
@@ -3567,11 +3569,6 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           }
           // hasDualCabinet: 상부장+하부장 동시 배치
           const hasDualCabinet = leftCompanionMod !== null && companionH > 0;
-          console.log('🔍 [좌측치수] leftmostMod:', leftmostMod?.moduleId, 'cat:', leftCategoryResolved,
-            'companion:', leftCompanionMod?.moduleId, 'companionCat:', companionCategory,
-            'companionH:', companionH, 'hasDual:', hasDualCabinet,
-            'slotIdx:', leftmostMod?.slotIndex, 'compSlotIdx:', leftCompanionMod?.slotIndex,
-            'allMods:', allMods.map(m => ({ id: m.moduleId, slot: m.slotIndex, x: m.position?.x })));
           // 하부장/상부장 높이 분리
           let lowerCabinetH = 0;
           let upperCabinetH = 0;
@@ -4042,9 +4039,10 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             const targetCat = rCat === 'upper' ? 'lower' : 'upper';
             return allMods_R.find(m => {
               if (m === rightmostMod) return false;
-              const samePosition = isFreePlacement
-                ? Math.abs(m.position.x - rightmostMod.position.x) < 100
-                : m.slotIndex === rightmostMod.slotIndex;
+              const bothHaveSlot = m.slotIndex !== undefined && rightmostMod.slotIndex !== undefined;
+              const samePosition = bothHaveSlot
+                ? m.slotIndex === rightmostMod.slotIndex
+                : Math.abs((m.position?.x ?? 0) - (rightmostMod.position?.x ?? 0)) < 300;
               if (!samePosition) return false;
               const mData = getModuleById(m.moduleId);
               const mCat = mData?.category
@@ -4101,9 +4099,10 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             if (cat === 'upper') {
               const lowerMod = allMods_R.find(m => {
                 if (m === rightmostMod) return false;
-                const samePos = isFreePlacement
-                  ? Math.abs(m.position.x - rightmostMod.position.x) < 100
-                  : m.slotIndex === rightmostMod.slotIndex;
+                const bothHaveSlot = m.slotIndex !== undefined && rightmostMod.slotIndex !== undefined;
+                const samePos = bothHaveSlot
+                  ? m.slotIndex === rightmostMod.slotIndex
+                  : Math.abs((m.position?.x ?? 0) - (rightmostMod.position?.x ?? 0)) < 300;
                 if (!samePos) return false;
                 const mCat = getModuleById(m.moduleId)?.category
                   ?? (m.moduleId.includes('-upper-') ? 'upper'
@@ -5240,11 +5239,14 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
 
             {/* 자유배치: 구간 내 좌/우 이격 치수선 (가구~구간경계 거리) */}
             {isFreePlacement && (() => {
-              // 벽 인접(hasAdjacentLeft=false) 시 모듈에 설정된 freeLeftGap 우선 사용
-              const rawLeftGap = !hasAdjacentLeft && module.freeLeftGap != null
-                ? module.freeLeftGap : nearestLeftDistance;
-              const rawRightGap = !hasAdjacentRight && module.freeRightGap != null
-                ? module.freeRightGap : nearestRightDistance;
+              // 벽 인접(hasAdjacentLeft=false): freeLeftGap → gapConfig → 1.5 순 폴백
+              // 가구 간(hasAdjacentLeft=true): 좌표 차이(nearestDistance) 그대로 사용
+              const rawLeftGap = hasAdjacentLeft
+                ? nearestLeftDistance
+                : (module.freeLeftGap ?? spaceInfo.gapConfig?.left ?? 1.5);
+              const rawRightGap = hasAdjacentRight
+                ? nearestRightDistance
+                : (module.freeRightGap ?? spaceInfo.gapConfig?.right ?? 1.5);
               // 이격거리는 정수 mm로 반올림 (소수점 불필요)
               const formatDim = (v: number) => Math.round(v).toString();
               const leftGapMm = Math.round(rawLeftGap);
