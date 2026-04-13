@@ -4116,7 +4116,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 </>);
               })()}
 
-              {/* ── 1단(안쪽): 받침대/가구높이/상부프레임 분해 (항상 표시) ── */}
+              {/* ── 1단(안쪽): 받침대/가구높이/상부프레임 분해 (가구가 배치된 경우만 표시) ── */}
+              {rightmostMod && (<>
               {/* 세로 메인 라인: 바닥마감재 위 ~ effectiveCeiling */}
               <NativeLine name="dimension_line"
                 points={[[rightInnerX, rFloorFinishBaseY, 0.002], [rightInnerX, rEffectiveCeilingY, 0.002]]}
@@ -4236,6 +4237,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   </Text>
                 </>
               )}
+              </>)}
 
               {/* 커튼박스(droppedCeiling) 구간 치수는 표시하지 않음 */}
 
@@ -4264,18 +4266,20 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   color={dimensionColor} lineWidth={0.6} renderOrder={100000} depthTest={false}
                 />
               )}
-              {/* 받침대 상단 또는 상부장 하단 경계 */}
-              {(rIsUpperCategory ? (rBottomFrameTopY > rFloorFinishBaseY + 0.001) : (rBottomFrameH > 0)) && (
+              {/* 받침대 상단 또는 상부장 하단 경계 (가구 있을 때만) */}
+              {rightmostMod && (rIsUpperCategory ? (rBottomFrameTopY > rFloorFinishBaseY + 0.001) : (rBottomFrameH > 0)) && (
                 <NativeLine name="dimension_line"
                   points={[[rightWallX, rBottomFrameTopY, 0.001], [rightInnerX + mmToThreeUnits(20), rBottomFrameTopY, 0.001]]}
                   color={dimensionColor} lineWidth={0.6} renderOrder={100000} depthTest={false}
                 />
               )}
-              {/* 가구(내경) 상단 */}
-              <NativeLine name="dimension_line"
-                points={[[rightWallX, rFurnitureTopY, 0.001], [rightInnerX + mmToThreeUnits(20), rFurnitureTopY, 0.001]]}
-                color={dimensionColor} lineWidth={0.6} renderOrder={100000} depthTest={false}
-              />
+              {/* 가구(내경) 상단 (가구 있을 때만) */}
+              {rightmostMod && (
+                <NativeLine name="dimension_line"
+                  points={[[rightWallX, rFurnitureTopY, 0.001], [rightInnerX + mmToThreeUnits(20), rFurnitureTopY, 0.001]]}
+                  color={dimensionColor} lineWidth={0.6} renderOrder={100000} depthTest={false}
+                />
+              )}
             </>
           );
         })()}
