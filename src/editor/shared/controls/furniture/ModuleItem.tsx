@@ -166,15 +166,22 @@ const ModuleItem: React.FC<ModuleItemProps> = ({ module, internalSpace }) => {
     }
 
     // upper/lower 공존: 동일 카테고리가 아닌 가구 위에도 배치 가능
+    // 단, 해당 X 범위에 같은 카테고리 가구가 이미 있으면 제외
     if (newCategory === 'upper' || newCategory === 'lower') {
       const coexistCategory = newCategory === 'upper' ? 'lower' : 'upper';
+      const sameCategoryBounds = sortedBounds.filter(b => b.category === newCategory);
       for (const b of sortedBounds) {
         if (b.category === coexistCategory) {
-          // 이 가구 위(또는 아래)에 배치 가능 — 같은 위치를 후보에 추가
           const overlapLeft = b.left;
           const overlapRight = b.right;
           if (overlapRight - overlapLeft >= furnitureWidth) {
-            candidates.push({ left: overlapLeft, right: overlapRight });
+            // 이 영역에 같은 카테고리 가구가 이미 있는지 확인
+            const alreadyOccupied = sameCategoryBounds.some(s =>
+              s.left < overlapRight && s.right > overlapLeft
+            );
+            if (!alreadyOccupied) {
+              candidates.push({ left: overlapLeft, right: overlapRight });
+            }
           }
         }
       }

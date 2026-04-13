@@ -606,11 +606,19 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
         }
 
         // upper/lower 공존: 다른 카테고리 가구 위에도 배치 가능
+        // 단, 해당 X 범위에 같은 카테고리 가구가 이미 있으면 제외
         if (newCategory === 'upper' || newCategory === 'lower') {
           const coexistCategory = newCategory === 'upper' ? 'lower' : 'upper';
+          const sameCategoryBounds = sortedBounds.filter(b => b.category === newCategory);
           for (const b of sortedBounds) {
             if (b.category === coexistCategory && (b.right - b.left) >= furnitureWidth) {
-              candidates.push({ left: b.left, right: b.right });
+              // 이 영역에 같은 카테고리 가구가 이미 있는지 확인
+              const alreadyOccupied = sameCategoryBounds.some(s =>
+                s.left < b.right && s.right > b.left
+              );
+              if (!alreadyOccupied) {
+                candidates.push({ left: b.left, right: b.right });
+              }
             }
           }
           candidates.sort((a, b) => a.left - b.left);
