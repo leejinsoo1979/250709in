@@ -42,7 +42,9 @@ const UpperCabinet: React.FC<FurnitureTypeProps> = ({
   individualFloatHeight,
   parentGroupY,
   topPanelNotchSize,
-  topPanelNotchSide
+  topPanelNotchSide,
+  doorTopGap: doorTopGapProp,
+  doorBottomGap: doorBottomGapProp
 }) => {
   const { renderMode: contextRenderMode, viewMode } = useSpace3DView();
   const renderMode = renderModeProp || contextRenderMode;
@@ -209,6 +211,8 @@ const UpperCabinet: React.FC<FurnitureTypeProps> = ({
           hasBase={hasBase}
           individualFloatHeight={individualFloatHeight}
           parentGroupY={parentGroupY}
+          doorTopGap={doorTopGapProp}
+          doorBottomGap={doorBottomGapProp}
         />
       )}
     </>

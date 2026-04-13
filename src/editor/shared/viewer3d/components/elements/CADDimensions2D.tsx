@@ -1627,13 +1627,8 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
 
             // 단일 도어 가구 (하부장 일반, 상부장, 키큰장)
             const moduleHeightMm_d = modData ? computeFurnitureHeightMm(mod as PlacedModule, modData, spaceInfo, internalSpace) : 0;
-            // 상부장: UpperCabinet→DoorModule에 doorGap prop 안 넘김 → spaceInfo 글로벌 값 사용
-            const doorTopGapVal = modCategory === 'upper'
-              ? (spaceInfo.doorTopGap ?? 0)
-              : (mod.doorTopGap ?? spaceInfo.doorTopGap ?? 0);
-            const doorBottomGapVal = modCategory === 'upper'
-              ? (spaceInfo.doorBottomGap ?? 0)
-              : (mod.doorBottomGap ?? spaceInfo.doorBottomGap ?? 0);
+            const doorTopGapVal = mod.doorTopGap ?? spaceInfo.doorTopGap ?? 0;
+            const doorBottomGapVal = mod.doorBottomGap ?? spaceInfo.doorBottomGap ?? 0;
 
             let doorHeightMm = 0;
             let doorBottomAbsMm = 0;
@@ -1902,13 +1897,8 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
 
             const modCat = getModuleCategory(mod);
             const moduleHeightMm = computeFurnitureHeightMm(mod, modData, spaceInfo, internalSpace);
-            // 상부장: UpperCabinet→DoorModule에 doorGap prop 안 넘김 → spaceInfo 글로벌 값 사용
-            const doorTopGapVal = modCat === 'upper'
-              ? (spaceInfo.doorTopGap ?? 0)
-              : (mod.doorTopGap ?? spaceInfo.doorTopGap ?? 0);
-            const doorBottomGapVal = modCat === 'upper'
-              ? (spaceInfo.doorBottomGap ?? 0)
-              : (mod.doorBottomGap ?? spaceInfo.doorBottomGap ?? 0);
+            const doorTopGapVal = mod.doorTopGap ?? spaceInfo.doorTopGap ?? 0;
+            const doorBottomGapVal = mod.doorBottomGap ?? spaceInfo.doorBottomGap ?? 0;
 
             let doorBottomAbsMm = 0;
             let doorTopAbsMm = 0;
@@ -2453,13 +2443,8 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
 
             // 단일 도어 가구 (하부장 일반, 상부장, 키큰장)
             const moduleHeightMm_d = modData ? computeFurnitureHeightMm(mod as PlacedModule, modData, spaceInfo, internalSpace) : 0;
-            // 상부장: UpperCabinet→DoorModule에 doorGap prop 안 넘김 → spaceInfo 글로벌 값 사용
-            const doorTopGapVal = modCategory === 'upper'
-              ? (spaceInfo.doorTopGap ?? 0)
-              : (mod.doorTopGap ?? spaceInfo.doorTopGap ?? 0);
-            const doorBottomGapVal = modCategory === 'upper'
-              ? (spaceInfo.doorBottomGap ?? 0)
-              : (mod.doorBottomGap ?? spaceInfo.doorBottomGap ?? 0);
+            const doorTopGapVal = mod.doorTopGap ?? spaceInfo.doorTopGap ?? 0;
+            const doorBottomGapVal = mod.doorBottomGap ?? spaceInfo.doorBottomGap ?? 0;
 
             let doorHeightMm = 0;
             let doorBottomAbsMm = 0;

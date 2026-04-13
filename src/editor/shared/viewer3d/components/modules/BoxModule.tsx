@@ -775,6 +775,8 @@ const BoxModule: React.FC<BoxModuleProps> = ({
         parentGroupY={parentGroupY}
         topPanelNotchSize={topPanelNotchSize}
         topPanelNotchSide={topPanelNotchSide}
+        doorTopGap={doorTopGap}
+        doorBottomGap={doorBottomGap}
       />
       </>
     );
