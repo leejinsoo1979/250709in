@@ -491,7 +491,15 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
   const visibleFurniture = getVisibleFurnitureForSideView();
 
   // 선택된 가구의 개별 프레임 값 우선 사용 (자유배치/슬롯 공통)
-  const selectedMod = visibleFurniture[0] as PlacedModule | undefined;
+  // 하부장/키큰장 우선 선택 — 받침대·하부프레임 치수의 기준이 되어야 함
+  const selectedMod = (() => {
+    if (visibleFurniture.length === 0) return undefined;
+    const lowerOrFull = visibleFurniture.find(m => {
+      const cat = getModuleCategory(m as PlacedModule);
+      return cat === 'lower' || cat === 'full';
+    });
+    return (lowerOrFull ?? visibleFurniture[0]) as PlacedModule;
+  })();
   const topFrameHeightMm = (selectedMod?.topFrameThickness !== undefined)
     ? selectedMod.topFrameThickness
     : globalTopFrameHeightMm;
