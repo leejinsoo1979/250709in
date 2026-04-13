@@ -2137,8 +2137,10 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     // 슬롯배치: dc = 실제 단내림, cb = curtainBox 필드
                     const freeDcOnLeft = isFreePlacement && dcOnLeft; // 자유배치 커튼박스(좌)
                     const freeDcOnRight = isFreePlacement && dcOnRight; // 자유배치 커튼박스(우)
-                    const mainLeftAdj = (cbOnLeft || freeDcOnLeft) ? 'curtainbox' : (scOnLeft ? 'step' : 'wall');
-                    const mainRightAdj = (cbOnRight || freeDcOnRight) ? 'curtainbox' : (scOnRight ? 'step' : 'wall');
+                    // 인접 판정 우선순위: 단내림 > 커튼박스 > 벽
+                    // 레이아웃이 [벽][메인][단내림][커튼박스][벽]이면 메인은 단내림에 인접 (커튼박스 아님)
+                    const mainLeftAdj = scOnLeft ? 'step' : ((cbOnLeft || freeDcOnLeft) ? 'curtainbox' : 'wall');
+                    const mainRightAdj = scOnRight ? 'step' : ((cbOnRight || freeDcOnRight) ? 'curtainbox' : 'wall');
                     // 커튼박스 인접 → 이격 없음 (0), 단내림 인접 → middleGap, 벽 인접 → wallGap
                     const mainLeftGap = mainLeftAdj === 'curtainbox' ? 0 : (mainLeftAdj === 'wall' ? (hasLeftWall ? leftGapMm : 0) : middleGapMm);
                     const mainRightGap = mainRightAdj === 'curtainbox' ? 0 : (mainRightAdj === 'wall' ? (hasRightWall ? rightGapMm : 0) : middleGapMm);
@@ -2179,25 +2181,26 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     // - 커튼박스(CB) 인접 → CB는 배치불가 구간, 경계이격 불필요 (0)
                     //   단, 메인의 반대쪽(벽) 이격만 차감
                     // - 벽 인접 → 벽이격 차감 (-wallGap)
+                    // 단내림 > 커튼박스 > 벽 우선순위로 delta 계산
                     let mainLeftDelta = 0;
-                    if (cbOnLeft || freeDcOnLeft) {
-                      // 메인 좌측 = 커튼박스 인접 → 커튼박스 경계에는 이격 불필요 (0)
-                      mainLeftDelta = 0;
-                    } else if (scOnLeft) {
-                      // 메인 좌측 = 단내림 인접 → 단내림 가구가 침범 → 차감
+                    if (scOnLeft) {
+                      // 메인 좌측 = 단내림 인접 → 경계이격 차감
                       mainLeftDelta = -middleGapMm;
+                    } else if (cbOnLeft || freeDcOnLeft) {
+                      // 메인 좌측 = 커튼박스 인접 → 이격 불필요
+                      mainLeftDelta = 0;
                     } else {
                       // 메인 좌측 = 벽 → 벽이격 차감
                       mainLeftDelta = -(hasLeftWall ? leftGapMm : 0);
                     }
 
                     let mainRightDelta = 0;
-                    if (cbOnRight || freeDcOnRight) {
-                      // 메인 우측 = 커튼박스 인접 → 커튼박스 경계에는 이격 불필요 (0)
-                      mainRightDelta = 0;
-                    } else if (scOnRight) {
-                      // 메인 우측 = 단내림 인접 → 단내림 가구가 침범 → 차감
+                    if (scOnRight) {
+                      // 메인 우측 = 단내림 인접 → 경계이격 차감
                       mainRightDelta = -middleGapMm;
+                    } else if (cbOnRight || freeDcOnRight) {
+                      // 메인 우측 = 커튼박스 인접 → 이격 불필요
+                      mainRightDelta = 0;
                     } else {
                       // 메인 우측 = 벽 → 벽이격 차감
                       mainRightDelta = -(hasRightWall ? rightGapMm : 0);
