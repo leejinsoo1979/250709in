@@ -899,20 +899,21 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
       const isRight = cornerNotch.side === 'right';
 
       // XZ 평면 (shapeX=X축, shapeY=Z축)
+      // 시계방향(CW)으로 정의 — 좌표 변환 후 법선이 올바르게 바깥을 향하도록
       if (isRight) {
         shape.moveTo(-halfW, -halfD);           // 좌측 뒤
-        shape.lineTo(-halfW, halfD);            // 좌측 앞
-        shape.lineTo(halfW, halfD);             // 우측 앞
-        shape.lineTo(halfW, -halfD + nd);       // 우측 따내기 시작
-        shape.lineTo(halfW - nw, -halfD + nd);  // 따내기 안쪽
         shape.lineTo(halfW - nw, -halfD);       // 따내기 끝
+        shape.lineTo(halfW - nw, -halfD + nd);  // 따내기 안쪽
+        shape.lineTo(halfW, -halfD + nd);       // 우측 따내기 시작
+        shape.lineTo(halfW, halfD);             // 우측 앞
+        shape.lineTo(-halfW, halfD);            // 좌측 앞
       } else {
         shape.moveTo(-halfW, -halfD + nd);      // 좌측 따내기 시작
-        shape.lineTo(-halfW, halfD);            // 좌측 앞
-        shape.lineTo(halfW, halfD);             // 우측 앞
-        shape.lineTo(halfW, -halfD);            // 우측 뒤
-        shape.lineTo(-halfW + nw, -halfD);      // 따내기 끝
         shape.lineTo(-halfW + nw, -halfD + nd); // 따내기 안쪽
+        shape.lineTo(-halfW + nw, -halfD);      // 따내기 끝
+        shape.lineTo(halfW, -halfD);            // 우측 뒤
+        shape.lineTo(halfW, halfD);             // 우측 앞
+        shape.lineTo(-halfW, halfD);            // 좌측 앞
       }
       shape.closePath();
 
@@ -933,6 +934,19 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
       }
       pos.array.set(temp);
       pos.needsUpdate = true;
+
+      // face winding 뒤집기 — 축 스왑(Y↔Z)으로 인해 면 방향이 반전됨
+      const index = geom.index;
+      if (index) {
+        const idxArr = index.array as Uint16Array | Uint32Array;
+        for (let i = 0; i < idxArr.length; i += 3) {
+          const tmp = idxArr[i];
+          idxArr[i] = idxArr[i + 2];
+          idxArr[i + 2] = tmp;
+        }
+        index.needsUpdate = true;
+      }
+
       geom.computeVertexNormals();
       return geom;
     }
