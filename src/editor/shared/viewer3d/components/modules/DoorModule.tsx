@@ -1349,8 +1349,8 @@ const DoorModule: React.FC<DoorModuleProps> = ({
               )}
 
 
-              {/* Door opening direction for left door - 잠금 시 숨김 */}
-              {!isPlainMaterial && !leftDoorLocked && (viewMode === '3D' || (viewMode === '2D' && view2DDirection === 'front')) && (() => {
+              {/* Door opening direction for left door - 잠금 시 숨김, 치수 OFF 시 숨김 */}
+              {showDimensions && !isPlainMaterial && !leftDoorLocked && (viewMode === '3D' || (viewMode === '2D' && view2DDirection === 'front')) && (() => {
                 const segments = (() => {
                   const isFrontView = viewMode === '3D' || view2DDirection === 'front';
                   const segmentList: React.ReactNode[] = [];
@@ -1681,8 +1681,8 @@ const DoorModule: React.FC<DoorModuleProps> = ({
               )}
 
 
-              {/* Door opening direction for right door - 잠금 시 숨김 */}
-              {!isPlainMaterial && !rightDoorLocked && (viewMode === '3D' || (viewMode === '2D' && view2DDirection === 'front')) && (() => {
+              {/* Door opening direction for right door - 잠금 시 숨김, 치수 OFF 시 숨김 */}
+              {showDimensions && !isPlainMaterial && !rightDoorLocked && (viewMode === '3D' || (viewMode === '2D' && view2DDirection === 'front')) && (() => {
                 const segments = (() => {
                   const isFrontView = viewMode === '3D' || view2DDirection === 'front';
                   const segmentList: React.ReactNode[] = [];
@@ -2123,8 +2123,8 @@ const DoorModule: React.FC<DoorModuleProps> = ({
             )}
 
 
-            {/* 도어 열리는 방향 표시 (2D 정면뷰/측면뷰 + 3D) - 잠금 시 숨김 */}
-            {!isPlainMaterial && !singleDoorLocked && (viewMode === '3D' || (viewMode === '2D' && view2DDirection === 'front')) && (() => {
+            {/* 도어 열리는 방향 표시 (2D 정면뷰/측면뷰 + 3D) - 잠금 시 숨김, 치수 OFF 시 숨김 */}
+            {showDimensions && !isPlainMaterial && !singleDoorLocked && (viewMode === '3D' || (viewMode === '2D' && view2DDirection === 'front')) && (() => {
               const indicatorRotation = (adjustedHingePosition === 'left'
                 ? leftHingeDoorSpring.rotation
                 : rightHingeDoorSpring.rotation).to(value => {
