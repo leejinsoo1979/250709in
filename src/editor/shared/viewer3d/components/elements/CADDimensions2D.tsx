@@ -885,18 +885,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                   isUpper: false
                 });
               }
-              // 하단갭: 바닥마감재 상단(또는 바닥) ~ 도어 하단
-              const bottomStartMm = floorFinishHeightMm > 0 ? floorFinishHeightMm : 0;
-              const bottomGapMm = Math.round(doorBottomAbsMm - bottomStartMm);
-              if (bottomGapMm > 0) {
-                doorSegs.push({
-                  bottomY: mmToThreeUnits(bottomStartMm),
-                  topY: mmToThreeUnits(doorBottomAbsMm),
-                  heightMm: bottomGapMm,
-                  key: `door-bottomgap-${moduleIndex}`,
-                  isUpper: false
-                });
-              }
+              // 하단갭은 doorSegs 밖에서 별도 렌더링 (바닥 기준 절대 거리)
             }
           });
 
@@ -968,6 +957,25 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                   </Text>
                 </group>
               ))}
+              {/* 하부장 도어 하단갭: 바닥(또는 바닥마감재 상단) ~ 도어 최하단 */}
+              {(() => {
+                if (allLowerDoorSegs.length === 0) return null;
+                // 도어 관련 세그먼트 중 가장 낮은 bottomY 찾기
+                const lowestBottomY = Math.min(...allLowerDoorSegs.map(s => s.bottomY));
+                const bottomStartY = floorFinishHeightMm > 0 ? mmToThreeUnits(floorFinishHeightMm) : 0;
+                const bottomGapMm = Math.round((lowestBottomY - bottomStartY) / 0.01);
+                if (bottomGapMm <= 0) return null;
+                return (
+                  <group key="r-door-bottomgap">
+                    <ExtLine points={[[0, bottomStartY, dimExtZ], [0, bottomStartY, dimZ]]} color={dimensionColor} />
+                    <NativeLine name="dimension_line" points={[[0, bottomStartY, dimZ], [0, lowestBottomY, dimZ]]} color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false} />
+                    <NativeLine name="dimension_line" points={[[-0.008, bottomStartY, dimZ], [0.008, bottomStartY, dimZ]]} color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false} />
+                    <Text position={[0, (bottomStartY + lowestBottomY) / 2, dimZ + mmToThreeUnits(60)]} fontSize={largeFontSize} color={textColor} anchorX="center" anchorY="middle" renderOrder={1000} depthTest={false} rotation={[0, -Math.PI / 2, Math.PI / 2]}>
+                      {bottomGapMm}
+                    </Text>
+                  </group>
+                );
+              })()}
             </>
           );
         })()}
