@@ -5359,7 +5359,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             const cabinetAreaTopY = mmToThreeUnits(bottomFrameHeight + cabinetPlacementHeight); // 캐비넷 영역 상단
             const topFrameTopY = cabinetAreaTopY + mmToThreeUnits(topFrameHeight); // 상부 프레임 상단
 
-            // 배치된 가구들의 최대 높이 계산 (좌측뷰)
+            // 배치된 가구들의 최대 높이 계산 (좌측뷰) — 상부장 제외 (별도 치수로 표시)
             let maxFurnitureTop = topFrameTopY;
             let maxModuleHeightMm = 0;
             let tallestModuleTopY = cabinetAreaTopY;
@@ -5369,6 +5369,12 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 const moduleData = getModuleById(module.moduleId);
                 const isCustomizable = module.moduleId.startsWith('customizable-');
                 if (!moduleData && !isCustomizable && !module.isFreePlacement) return;
+
+                // 상부장은 별도 치수선으로 표시하므로 제외
+                const category = moduleData?.category
+                  ?? (module.moduleId.includes('-upper-') ? 'upper'
+                    : module.moduleId.includes('-lower-') ? 'lower' : 'full');
+                if (category === 'upper') return;
 
                 const moduleHeight = module.freeHeight
                   ?? module.customHeight
@@ -6394,7 +6400,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             const cabinetAreaTopY = mmToThreeUnits(bottomFrameHeight + cabinetPlacementHeight);
             const topFrameTopY = cabinetAreaTopY + mmToThreeUnits(topFrameHeight);
 
-            // 배치된 가구들의 최대 높이 계산 (우측뷰)
+            // 배치된 가구들의 최대 높이 계산 (우측뷰) — 상부장 제외 (별도 치수로 표시)
             let maxFurnitureTop = topFrameTopY;
             let maxModuleHeightMm = 0;
             let tallestModuleTopY = cabinetAreaTopY;
@@ -6404,6 +6410,12 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 const moduleData = getModuleById(module.moduleId);
                 const isCustomizable = module.moduleId.startsWith('customizable-');
                 if (!moduleData && !isCustomizable && !module.isFreePlacement) return;
+
+                // 상부장은 별도 치수선으로 표시하므로 제외
+                const category = moduleData?.category
+                  ?? (module.moduleId.includes('-upper-') ? 'upper'
+                    : module.moduleId.includes('-lower-') ? 'lower' : 'full');
+                if (category === 'upper') return;
 
                 const moduleHeight = module.freeHeight
                   ?? module.customHeight
