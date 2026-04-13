@@ -2654,7 +2654,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   const furnitureZ = isFrontSpaceFurniture
     ? placedModule.position.z  // 기둥 앞 공간: 저장된 위치 사용
     : isUpperForZ
-      ? furnitureZOffset + depth / 2  // 상부장: 뒷벽 정렬
+      ? furnitureZOffset - furnitureDepth / 2 + depth / 2  // 상부장: 뒷벽 정렬 (뒷면이 공간 뒷벽에 닿음)
       : furnitureZOffset + furnitureDepth / 2 - doorThickness - depth / 2 + baseDepthOffset;  // 하부장/키큰장: 앞면 정렬
 
   // EP 비대칭 보정: 좌EP만 → 본체 오른쪽으로, 우EP만 → 본체 왼쪽으로

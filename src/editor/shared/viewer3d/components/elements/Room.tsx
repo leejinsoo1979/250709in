@@ -3851,10 +3851,21 @@ const Room: React.FC<RoomProps> = ({
                     const needsTopFrameRetract = isDoorBase && isSpaceFitDoor && mod.hasDoor;
                     const topFrameZRetract = needsTopFrameRetract ? -mmToThreeUnits(DOOR_THICKNESS_MM) : 0;
 
+                    // 상부장: 뒷벽 정렬이므로 프레임도 상부장 깊이 기준 Z
+                    // 하부장/키큰장: 앞면 기준 Z (기존 topZPosition)
+                    let modFrameZ: number;
+                    if (modCategory === 'upper') {
+                      const upperDepthMm = mod.customDepth || 350; // 상부장 기본 깊이
+                      // 뒷벽(-furnitureDepth) + 상부장깊이/2 = 상부장 중심 Z
+                      modFrameZ = furnitureZOffset - furnitureDepth / 2 + mmToThreeUnits(upperDepthMm) / 2 + modTopZOffset;
+                    } else {
+                      modFrameZ = topZPosition + modTopZOffset + topFrameZRetract;
+                    }
+
                     allTopSegments.push({
                       widthMm: modWidthMM,
                       centerXmm: modCenterXmm,
-                      zPosition: topZPosition + modTopZOffset + topFrameZRetract,
+                      zPosition: modFrameZ,
                       height: modFrameHeight,
                       yPosition: modFrameCenterY,
                       material: topSurrMat,
@@ -4706,11 +4717,20 @@ const Room: React.FC<RoomProps> = ({
                   const ceilingHeight = isInDroppedZone ? droppedCeilingHeight : height;
                   const modTopY = panelStartY + ceilingHeight - modTopHeight / 2;
                   const modTopZOffset = mod.topFrameOffset ? mmToThreeUnits(mod.topFrameOffset) : 0;
+                  // 상부장: 뒷벽 정렬이므로 프레임 Z도 상부장 깊이 기준
+                  const slotModCategory = getModuleCategory(mod);
+                  let slotFrameZ: number;
+                  if (slotModCategory === 'upper') {
+                    const upperDepthMm = mod.customDepth || 350;
+                    slotFrameZ = furnitureZOffset - furnitureDepth / 2 + mmToThreeUnits(upperDepthMm) / 2 + modTopZOffset;
+                  } else {
+                    slotFrameZ = topZPos + modTopZOffset;
+                  }
 
                   slotTopSegments.push({
                     widthMm: modWidthMM,
                     centerXmm: modCenterXmm,
-                    zPosition: topZPos + modTopZOffset,
+                    zPosition: slotFrameZ,
                     height: modTopHeight,
                     yPosition: modTopY,
                     material: topFrameMat,
