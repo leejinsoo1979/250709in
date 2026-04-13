@@ -2096,6 +2096,197 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           );
         })}
 
+
+        {/* ===== 도어/마이다 높이 치수선 (우측뷰) ===== */}
+        {(() => {
+          const panelDepthMm_door = spaceInfo.depth || 1500;
+          const panelDepthU_door = mmToThreeUnits(panelDepthMm_door);
+          const furnitureDepthU_door = mmToThreeUnits(600);
+          const furnitureFrontZ_door = -panelDepthU_door / 2 + (panelDepthU_door - furnitureDepthU_door) / 2 + furnitureDepthU_door / 2;
+          const doorDimZ_r = furnitureFrontZ_door + mmToThreeUnits(200);
+          const doorColor_r = dimensionColor;
+
+          // 서랍 모듈: 마이다 개별 높이 표시
+          if (selectedModCategory === 'lower' && visibleFurniture.length > 0) {
+            const mod = visibleFurniture[0] as PlacedModule;
+            if (!mod.hasDoor) return null;
+            const isDrawerModule = mod.moduleId.includes('lower-drawer-')
+              || (mod.moduleId.includes('lower-door-lift-') && !mod.moduleId.includes('-half-'))
+              || (mod.moduleId.includes('lower-top-down-') && !mod.moduleId.includes('-half-'));
+            let modData = getModuleById(
+              mod.moduleId,
+              { width: internalSpace.width, height: internalSpace.height, depth: internalSpace.depth },
+              spaceInfo
+            );
+            if (!modData) modData = buildModuleDataFromPlacedModule(mod, internalSpace, spaceInfo);
+            const modHeightMm = modData ? computeFurnitureHeightMm(mod, modData, spaceInfo, internalSpace) : 0;
+            const lowerMaidas = isDrawerModule
+              ? computeLowerCabinetMaidaHeights(mod.moduleId, modHeightMm, mod.doorTopGap ?? 0, mod.doorBottomGap ?? 0)
+              : null;
+            if (lowerMaidas && lowerMaidas.length > 0) {
+              const cabinetBottomY_r = furnitureBaseY;
+
+              const gaps_r: { bottomMm: number; topMm: number; heightMm: number }[] = [];
+              for (let gi = 0; gi < lowerMaidas.length - 1; gi++) {
+                const gapBotMm = lowerMaidas[gi].maidaTopMm;
+                const gapTopMm = lowerMaidas[gi + 1].maidaBottomMm;
+                if (gapTopMm - gapBotMm > 0) {
+                  gaps_r.push({ bottomMm: gapBotMm, topMm: gapTopMm, heightMm: Math.round(gapTopMm - gapBotMm) });
+                }
+              }
+              const lastMaida_r = lowerMaidas[lowerMaidas.length - 1];
+              if (modHeightMm - lastMaida_r.maidaTopMm > 0) {
+                gaps_r.push({ bottomMm: lastMaida_r.maidaTopMm, topMm: modHeightMm, heightMm: Math.round(modHeightMm - lastMaida_r.maidaTopMm) });
+              }
+
+              return (
+                <group>
+                  {lowerMaidas.map((m, i) => {
+                    const dBotY = cabinetBottomY_r + mmToThreeUnits(m.maidaBottomMm);
+                    const dTopY = cabinetBottomY_r + mmToThreeUnits(m.maidaTopMm);
+                    return (
+                      <group key={`r-door-maida-${i}`}>
+                        <NativeLine name="door_height_dim" points={[[0, dBotY, doorDimZ_r], [0, dTopY, doorDimZ_r]]} color={doorColor_r} lineWidth={1} renderOrder={100000} depthTest={false} />
+                        <NativeLine name="door_height_dim" points={[[-0.008, dBotY, doorDimZ_r], [0.008, dBotY, doorDimZ_r]]} color={doorColor_r} lineWidth={1} renderOrder={100000} depthTest={false} />
+                        <NativeLine name="door_height_dim" points={[[-0.008, dTopY, doorDimZ_r], [0.008, dTopY, doorDimZ_r]]} color={doorColor_r} lineWidth={1} renderOrder={100000} depthTest={false} />
+                        <Text position={[0, (dBotY + dTopY) / 2, doorDimZ_r + mmToThreeUnits(60)]} fontSize={largeFontSize} color={doorColor_r} anchorX="center" anchorY="middle" renderOrder={1000} depthTest={false} rotation={[0, Math.PI / 2, Math.PI / 2]}>
+                          {Number.isInteger(m.maidaHeightMm) ? m.maidaHeightMm.toString() : (Math.round(m.maidaHeightMm * 10) / 10).toString()}
+                        </Text>
+                        <ExtLine points={[[0, dTopY, furnitureFrontZ_door + mmToThreeUnits(20)], [0, dTopY, doorDimZ_r]]} color={doorColor_r} lineWidth={0.3} name="door_height_ext" />
+                        <ExtLine points={[[0, dBotY, furnitureFrontZ_door + mmToThreeUnits(20)], [0, dBotY, doorDimZ_r]]} color={doorColor_r} lineWidth={0.3} name="door_height_ext" />
+                      </group>
+                    );
+                  })}
+                  {gaps_r.map((gap, gi) => {
+                    const gBotY = cabinetBottomY_r + mmToThreeUnits(gap.bottomMm);
+                    const gTopY = cabinetBottomY_r + mmToThreeUnits(gap.topMm);
+                    return (
+                      <group key={`r-door-gap-${gi}`}>
+                        <NativeLine name="door_height_dim" points={[[0, gBotY, doorDimZ_r], [0, gTopY, doorDimZ_r]]} color={doorColor_r} lineWidth={1} renderOrder={100000} depthTest={false} />
+                        <NativeLine name="door_height_dim" points={[[-0.008, gBotY, doorDimZ_r], [0.008, gBotY, doorDimZ_r]]} color={doorColor_r} lineWidth={1} renderOrder={100000} depthTest={false} />
+                        <NativeLine name="door_height_dim" points={[[-0.008, gTopY, doorDimZ_r], [0.008, gTopY, doorDimZ_r]]} color={doorColor_r} lineWidth={1} renderOrder={100000} depthTest={false} />
+                        <Text position={[0, (gBotY + gTopY) / 2, doorDimZ_r + mmToThreeUnits(60)]} fontSize={largeFontSize} color={doorColor_r} anchorX="center" anchorY="middle" renderOrder={1000} depthTest={false} rotation={[0, Math.PI / 2, Math.PI / 2]}>
+                          {gap.heightMm}
+                        </Text>
+                        <ExtLine points={[[0, gTopY, furnitureFrontZ_door + mmToThreeUnits(20)], [0, gTopY, doorDimZ_r]]} color={doorColor_r} lineWidth={0.3} name="door_height_ext" />
+                        <ExtLine points={[[0, gBotY, furnitureFrontZ_door + mmToThreeUnits(20)], [0, gBotY, doorDimZ_r]]} color={doorColor_r} lineWidth={0.3} name="door_height_ext" />
+                      </group>
+                    );
+                  })}
+                </group>
+              );
+            }
+          }
+
+          // 서랍 외 도어 가구: 도어 높이 치수선
+          const doorModule_r = placedModules.find(m =>
+            m.hasDoor && !m.isSurroundPanel &&
+            (selectedSlotIndex === null ||
+              m.slotIndex === selectedSlotIndex ||
+              (m.isDualSlot && m.slotIndex + 1 === selectedSlotIndex))
+          );
+          if (!doorModule_r) return null;
+
+          let doorModData_r = getModuleById(
+            doorModule_r.moduleId,
+            { width: internalSpace.width, height: internalSpace.height, depth: internalSpace.depth },
+            spaceInfo
+          );
+          if (!doorModData_r) {
+            doorModData_r = buildModuleDataFromPlacedModule(doorModule_r as PlacedModule, internalSpace, spaceInfo);
+          }
+
+          const doorCategory_r = doorModData_r?.category
+            ?? (doorModule_r.moduleId.includes('-upper-') ? 'upper'
+              : doorModule_r.moduleId.startsWith('lower-') ? 'lower' : 'full');
+
+          const doorTopGapVal_r = doorModule_r.doorTopGap ?? spaceInfo.doorTopGap ?? 0;
+          const doorBottomGapVal_r = doorModule_r.doorBottomGap ?? spaceInfo.doorBottomGap ?? 0;
+
+          let doorHeightMm_r = 0;
+          let doorBottomAbsMm_r = 0;
+          let doorTopAbsMm_r = 0;
+
+          const effectiveH_r = isSelectedSlotInDroppedZone ? (spaceInfo.height - dropHeightMm) : spaceInfo.height;
+
+          if (doorCategory_r === 'upper') {
+            const cabinetH = doorModData_r?.dimensions.height ?? 600;
+            const topFrameVal = doorModule_r.topFrameThickness ?? (spaceInfo.frameSize?.top ?? 30);
+            const topExtension = topFrameVal - doorTopGapVal_r;
+            doorHeightMm_r = cabinetH + topExtension + doorBottomGapVal_r;
+            doorTopAbsMm_r = effectiveH_r - doorTopGapVal_r;
+            doorBottomAbsMm_r = doorTopAbsMm_r - doorHeightMm_r;
+          } else if (doorCategory_r === 'lower') {
+            const cabinetH = doorModData_r?.dimensions.height ?? 1000;
+            const isDoorLift = doorModData_r?.id?.includes('lower-door-lift-');
+            const isTopDown = doorModData_r?.id?.includes('lower-top-down-');
+            const cabinetBottomAbs = baseFrameHeightMm + floorFinishHeightMm;
+
+            if (isTopDown) {
+              doorHeightMm_r = 710;
+              doorBottomAbsMm_r = cabinetBottomAbs - 5;
+              doorTopAbsMm_r = doorBottomAbsMm_r + doorHeightMm_r;
+            } else if (isDoorLift) {
+              doorHeightMm_r = cabinetH + 5 + 30;
+              doorTopAbsMm_r = cabinetBottomAbs + cabinetH + 30;
+              doorBottomAbsMm_r = doorTopAbsMm_r - doorHeightMm_r;
+            } else {
+              doorHeightMm_r = cabinetH + doorTopGapVal_r + doorBottomGapVal_r;
+              doorTopAbsMm_r = cabinetBottomAbs + cabinetH + doorTopGapVal_r;
+              doorBottomAbsMm_r = cabinetBottomAbs - doorBottomGapVal_r;
+            }
+          } else {
+            const isFloorType = !spaceInfo.baseConfig || spaceInfo.baseConfig.type === 'floor';
+            const floorFinishForDoor = (isFloorType && spaceInfo.hasFloorFinish)
+              ? (spaceInfo.floorFinish?.height || 0) : 0;
+            doorBottomAbsMm_r = doorBottomGapVal_r + floorFinishForDoor;
+            doorTopAbsMm_r = effectiveH_r - doorTopGapVal_r;
+            doorHeightMm_r = Math.max(0, doorTopAbsMm_r - doorBottomAbsMm_r);
+          }
+
+          if (doorHeightMm_r <= 0) return null;
+
+          const doorBottomY_r = mmToThreeUnits(doorBottomAbsMm_r);
+          const doorTopY_r = mmToThreeUnits(doorTopAbsMm_r);
+          const doorMidY_r = (doorBottomY_r + doorTopY_r) / 2;
+
+          let doorTopGapMm_r = 0;
+          let cabinetTopAbsMm_r = 0;
+          if (doorCategory_r === 'lower') {
+            const cabinetH = doorModData_r?.dimensions.height ?? 1000;
+            const cabinetBottomAbs = baseFrameHeightMm + floorFinishHeightMm;
+            cabinetTopAbsMm_r = cabinetBottomAbs + cabinetH;
+            doorTopGapMm_r = Math.round(cabinetTopAbsMm_r - doorTopAbsMm_r);
+          }
+
+          return (
+            <group>
+              <NativeLine name="door_height_dim" points={[[0, doorBottomY_r, doorDimZ_r], [0, doorTopY_r, doorDimZ_r]]} color={doorColor_r} lineWidth={1} renderOrder={100000} depthTest={false} />
+              <NativeLine name="door_height_dim" points={[[-0.008, doorTopY_r, doorDimZ_r], [0.008, doorTopY_r, doorDimZ_r]]} color={doorColor_r} lineWidth={1} renderOrder={100000} depthTest={false} />
+              <NativeLine name="door_height_dim" points={[[-0.008, doorBottomY_r, doorDimZ_r], [0.008, doorBottomY_r, doorDimZ_r]]} color={doorColor_r} lineWidth={1} renderOrder={100000} depthTest={false} />
+              <Text position={[0, doorMidY_r, doorDimZ_r + mmToThreeUnits(60)]} fontSize={largeFontSize} color={doorColor_r} anchorX="center" anchorY="middle" renderOrder={1000} depthTest={false} rotation={[0, Math.PI / 2, Math.PI / 2]}>
+                {Math.round(doorHeightMm_r)}
+              </Text>
+              <ExtLine points={[[0, doorTopY_r, furnitureFrontZ_door + mmToThreeUnits(20)], [0, doorTopY_r, doorDimZ_r]]} color={doorColor_r} lineWidth={0.3} name="door_height_ext" />
+              <ExtLine points={[[0, doorBottomY_r, furnitureFrontZ_door + mmToThreeUnits(20)], [0, doorBottomY_r, doorDimZ_r]]} color={doorColor_r} lineWidth={0.3} name="door_height_ext" />
+              {doorTopGapMm_r > 0 && (() => {
+                const gapTopY = mmToThreeUnits(cabinetTopAbsMm_r);
+                const gapBotY = doorTopY_r;
+                return (
+                  <group>
+                    <NativeLine name="door_height_dim" points={[[0, gapBotY, doorDimZ_r], [0, gapTopY, doorDimZ_r]]} color={doorColor_r} lineWidth={1} renderOrder={100000} depthTest={false} />
+                    <NativeLine name="door_height_dim" points={[[-0.008, gapTopY, doorDimZ_r], [0.008, gapTopY, doorDimZ_r]]} color={doorColor_r} lineWidth={1} renderOrder={100000} depthTest={false} />
+                    <Text position={[0, (gapBotY + gapTopY) / 2, doorDimZ_r + mmToThreeUnits(60)]} fontSize={largeFontSize} color={doorColor_r} anchorX="center" anchorY="middle" renderOrder={1000} depthTest={false} rotation={[0, Math.PI / 2, Math.PI / 2]}>
+                      {doorTopGapMm_r}
+                    </Text>
+                    <ExtLine points={[[0, gapTopY, furnitureFrontZ_door + mmToThreeUnits(20)], [0, gapTopY, doorDimZ_r]]} color={doorColor_r} lineWidth={0.3} name="door_height_ext" />
+                  </group>
+                );
+              })()}
+            </group>
+          );
+        })()}
+
         {/* ===== 단내림 구간 선택 시 단내림 벽 표시 (빗금 패턴) ===== */}
         {isSelectedSlotInDroppedZone && (() => {
           // 보이는 가구의 깊이 가져오기 (가구가 없으면 기본값 600mm 사용)
