@@ -381,6 +381,7 @@ export const ExternalDrawerRenderer: React.FC<ExternalDrawerRendererProps> = ({
 }) => {
   const { viewMode } = useSpace3DView();
   const view2DDirection = useUIStore(s => s.view2DDirection);
+  const showDimensions = useUIStore(s => s.showDimensions);
   const { doorsOpen, isIndividualDoorOpen } = useUIStore();
   const { dimensionColor } = useDimensionColor();
   const { gl } = useThree();
