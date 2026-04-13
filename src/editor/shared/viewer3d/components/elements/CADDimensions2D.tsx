@@ -812,15 +812,26 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           if (!moduleData) return null;
 
           const mod = module as PlacedModule;
+          const modCat = getModuleCategory(mod);
           const moduleHeightMm = computeFurnitureHeightMm(mod, moduleData, spaceInfo, internalSpace);
-          const cabinetBottomY = furnitureBaseY;
+
+          // 상부장: 천장 기준 Y 위치 계산 (FurnitureItem.tsx와 동기화)
+          let cabinetBottomY: number;
+          if (modCat === 'upper') {
+            const topFrameVal = mod.topFrameThickness ?? (spaceInfo.frameSize?.top ?? 30);
+            const effectiveH = isSelectedSlotInDroppedZone ? (spaceInfo.height - dropHeightMm) : spaceInfo.height;
+            const cabinetTopMm = effectiveH - topFrameVal;
+            cabinetBottomY = mmToThreeUnits(cabinetTopMm - moduleHeightMm);
+          } else {
+            cabinetBottomY = furnitureBaseY;
+          }
 
           // 치수선 Z 위치 (기존 백색 섹션 높이와 동일 위치)
           const dimZ = spaceDepth/2 + rightDimOffset - mmToThreeUnits(750);
           const dimExtZ = dimZ - mmToThreeUnits(360);
 
           // 하부장: 왼쪽 2단에서 이미 표시하므로 오른쪽 섹션 높이 생략
-          if (selectedModCategory === 'lower') return null;
+          if (modCat === 'lower') return null;
 
           // 키큰장/상부장: 기존 섹션 높이 표시
           const { sections: sectionConfigs, heightsMm: sectionHeightsMm } = computeSectionHeightsInfo(mod, moduleData, moduleHeightMm, 'left');
@@ -862,8 +873,8 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
 
         {/* (하부장 서랍 마이다 치수는 위 섹션 치수 블록에서 흰색으로 처리) */}
 
-        {/* 바닥마감재 치수 (별도 위치, 좌측뷰) — 하부장은 왼쪽 2단에서 표시하므로 제외 */}
-        {floorFinishHeightMm > 0 && !isFloating && selectedModCategory !== 'lower' && (
+        {/* 바닥마감재 치수 (별도 위치, 좌측뷰) — 하부장은 왼쪽 2단에서 표시, 상부장은 받침대 없으므로 제외 */}
+        {floorFinishHeightMm > 0 && !isFloating && selectedModCategory !== 'lower' && selectedModCategory !== 'upper' && (
         <group>
             {/* 보조 가이드 연장선 - 바닥 */}
             <ExtLine points={[[0, 0, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750) - mmToThreeUnits(720)], [0, 0, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750) - mmToThreeUnits(360)]]} color={dimensionColor} />
@@ -905,8 +916,8 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
         </group>
         )}
 
-        {/* 받침대 높이 (마감재 상단 ~ 받침대 상단, 좌측뷰) — 하부장은 왼쪽 2단에서 표시하므로 제외 */}
-        {baseFrameHeightMm > 0 && selectedModCategory !== 'lower' && (
+        {/* 받침대 높이 (마감재 상단 ~ 받침대 상단, 좌측뷰) — 하부장은 왼쪽 2단에서 표시, 상부장은 받침대 없으므로 제외 */}
+        {baseFrameHeightMm > 0 && selectedModCategory !== 'lower' && selectedModCategory !== 'upper' && (
         <group>
             {/* 보조 가이드 연장선 - 시작 (마감재 상단 or 바닥) */}
             <ExtLine points={[[0, floorFinishY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750) - mmToThreeUnits(360)], [0, floorFinishY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750)]]} color={dimensionColor} />
@@ -1744,6 +1755,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           if (!moduleData) return null;
 
           const mod = module as PlacedModule;
+          const modCat_r = getModuleCategory(mod);
           // FurnitureItem.tsx와 완전히 동일한 높이 계산
           const moduleHeightMm = computeFurnitureHeightMm(mod, moduleData, spaceInfo, internalSpace);
           const { sections: sectionConfigs, heightsMm: sectionHeightsMm } = computeSectionHeightsInfo(mod, moduleData, moduleHeightMm, 'right');
@@ -1756,8 +1768,16 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           const lowerSectionHeightMm = sectionHeightsMm[0] || 0;
           const upperSectionHeightMm = sectionHeightsMm.slice(1).reduce((sum, h) => sum + h, 0);
 
-          // 각 섹션의 실제 높이 계산 (받침대 + 하판(basicThickness) 위부터 시작)
-          const cabinetBottomY = furnitureBaseY;
+          // 상부장: 천장 기준 Y 위치 (FurnitureItem.tsx와 동기화)
+          let cabinetBottomY: number;
+          if (modCat_r === 'upper') {
+            const topFrameVal = mod.topFrameThickness ?? (spaceInfo.frameSize?.top ?? 30);
+            const effectiveH = isSelectedSlotInDroppedZone ? (spaceInfo.height - dropHeightMm) : spaceInfo.height;
+            const cabinetTopMm = effectiveH - topFrameVal;
+            cabinetBottomY = mmToThreeUnits(cabinetTopMm - moduleHeightMm);
+          } else {
+            cabinetBottomY = furnitureBaseY;
+          }
           // computeFurnitureHeightMm으로 계산된 정확한 높이 사용
           const cabinetHeight = mmToThreeUnits(moduleHeightMm);
           const cabinetTopY = cabinetBottomY + cabinetHeight;
@@ -1852,8 +1872,8 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           });
         })}
 
-        {/* 바닥마감재 치수 (별도 위치, 우측뷰) — 하부장은 왼쪽 2단에서 표시하므로 제외 */}
-        {floorFinishHeightMm > 0 && !isFloating && selectedModCategory !== 'lower' && (
+        {/* 바닥마감재 치수 (별도 위치, 우측뷰) — 하부장은 왼쪽 2단에서 표시, 상부장은 받침대 없으므로 제외 */}
+        {floorFinishHeightMm > 0 && !isFloating && selectedModCategory !== 'lower' && selectedModCategory !== 'upper' && (
         <group>
             {/* 보조 가이드 연장선 - 바닥 */}
             <ExtLine points={[[0, 0, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750) - mmToThreeUnits(720)], [0, 0, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750) - mmToThreeUnits(360)]]} color={dimensionColor} />
@@ -1895,8 +1915,8 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
         </group>
         )}
 
-        {/* 받침대 높이 (마감재 상단 ~ 받침대 상단, 우측뷰) — 하부장은 왼쪽 2단에서 표시하므로 제외 */}
-        {baseFrameHeightMm > 0 && selectedModCategory !== 'lower' && (
+        {/* 받침대 높이 (마감재 상단 ~ 받침대 상단, 우측뷰) — 하부장은 왼쪽 2단에서 표시, 상부장은 받침대 없으므로 제외 */}
+        {baseFrameHeightMm > 0 && selectedModCategory !== 'lower' && selectedModCategory !== 'upper' && (
         <group>
             {/* 보조 가이드 연장선 - 시작 (마감재 상단 or 바닥) */}
             <ExtLine points={[[0, floorFinishY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750) - mmToThreeUnits(360)], [0, floorFinishY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750)]]} color={dimensionColor} />
