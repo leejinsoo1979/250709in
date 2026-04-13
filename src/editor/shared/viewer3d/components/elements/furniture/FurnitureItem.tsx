@@ -2646,9 +2646,13 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   const isFrontSpaceFurniture = placedModule.columnSlotInfo?.spaceType === 'front';
 
   // 기둥 앞 공간 가구는 저장된 Z 위치 사용, 일반 가구는 계산된 Z 위치 사용
+  // 상부장은 뒷벽 정렬 (하부장 뒷면과 같은 위치)
+  const isUpperForZ = actualModuleData?.category === 'upper';
   const furnitureZ = isFrontSpaceFurniture
     ? placedModule.position.z  // 기둥 앞 공간: 저장된 위치 사용
-    : furnitureZOffset + furnitureDepth / 2 - doorThickness - depth / 2 + baseDepthOffset;  // 일반: 계산된 위치 사용
+    : isUpperForZ
+      ? furnitureZOffset + depth / 2  // 상부장: 뒷벽 정렬
+      : furnitureZOffset + furnitureDepth / 2 - doorThickness - depth / 2 + baseDepthOffset;  // 하부장/키큰장: 앞면 정렬
 
   // EP 비대칭 보정: 좌EP만 → 본체 오른쪽으로, 우EP만 → 본체 왼쪽으로
   // 본체 너비가 EP만큼 줄었으므로 본체+EP 전체가 슬롯/위치 중앙에 오도록 보정
