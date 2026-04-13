@@ -57,7 +57,7 @@ const FURNITURE_ICONS: Record<string, string> = {
   'dual-lower-sink-cabinet': '',
   'dual-lower-induction-cabinet': '',
   // 기본하부장 2단 (텍스트 썸네일)
-  'lower-drawer-2tier': 'lower-drawer-2tier.png',
+  'lower-drawer-2tier': getImagePath('lower-drawer-2tier.png'),
   'dual-lower-drawer-2tier': '',
   'lower-drawer-3tier': '',
   'dual-lower-drawer-3tier': '',
