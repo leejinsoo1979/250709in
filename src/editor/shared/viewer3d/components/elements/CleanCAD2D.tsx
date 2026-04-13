@@ -3474,6 +3474,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
 
           // 가구 내경 높이 — FurnitureItem.tsx와 동일한 로직 적용
           let furnitureH: number;
+          let leftCategoryResolved: string = 'full';
           if (leftmostMod) {
             if (leftmostMod.freeHeight) {
               furnitureH = leftmostMod.freeHeight;
@@ -3486,10 +3487,10 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 { width: spaceInfo.width, height: spaceInfo.height, depth: spaceInfo.depth },
                 spaceInfo
               );
-              const leftCategory = leftModData?.category
+              leftCategoryResolved = leftModData?.category
                 ?? (leftmostMod.moduleId.includes('-upper-') ? 'upper'
                   : leftmostMod.moduleId.includes('-lower-') ? 'lower' : 'full');
-              if (leftCategory === 'lower' || leftCategory === 'upper') {
+              if (leftCategoryResolved === 'lower' || leftCategoryResolved === 'upper') {
                 furnitureH = leftModData?.dimensions.height ?? Math.max(0, effectiveH - actualBottomSize - actualTopSize);
               } else {
                 furnitureH = Math.max(0, effectiveH - actualBottomSize - actualTopSize);
@@ -3500,10 +3501,10 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             furnitureH = _internalHeight;
           }
 
-          // 바닥마감재 적용: 가구 높이에서 차감 (바닥마감재 위로 가구가 올라감)
+          // 바닥마감재 차감: 키큰장(full)만 (하부장/상부장은 고정 높이이므로 차감 불필요)
           const floorFinishForHeight = (spaceInfo.hasFloorFinish && spaceInfo.floorFinish)
             ? spaceInfo.floorFinish.height : 0;
-          if (floorFinishForHeight > 0) {
+          if (floorFinishForHeight > 0 && leftCategoryResolved === 'full') {
             furnitureH -= floorFinishForHeight;
           }
 
@@ -3876,6 +3877,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
 
           // 가구 내경 높이 — FurnitureItem.tsx와 동일한 로직 적용
           let rFurnitureH: number;
+          let rightCategoryResolved: string = 'full';
           if (rightmostMod) {
             if (rightmostMod.freeHeight) {
               rFurnitureH = rightmostMod.freeHeight;
@@ -3888,10 +3890,10 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 { width: spaceInfo.width, height: spaceInfo.height, depth: spaceInfo.depth },
                 spaceInfo
               );
-              const rightCategory = rightModData?.category
+              rightCategoryResolved = rightModData?.category
                 ?? (rightmostMod.moduleId.includes('-upper-') ? 'upper'
                   : rightmostMod.moduleId.includes('-lower-') ? 'lower' : 'full');
-              if (rightCategory === 'lower' || rightCategory === 'upper') {
+              if (rightCategoryResolved === 'lower' || rightCategoryResolved === 'upper') {
                 rFurnitureH = rightModData?.dimensions.height ?? Math.max(0, rEffectiveH - rActualBottomSize - rActualTopSize);
               } else {
                 rFurnitureH = Math.max(0, rEffectiveH - rActualBottomSize - rActualTopSize);
@@ -3902,10 +3904,10 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             rFurnitureH = rInternalHeight;
           }
 
-          // 바닥마감재 적용: 가구 높이에서 차감 (바닥마감재 위로 가구가 올라감)
+          // 바닥마감재 차감: 키큰장(full)만 (하부장/상부장은 고정 높이이므로 차감 불필요)
           const rFloorFinishForHeight = (spaceInfo.hasFloorFinish && spaceInfo.floorFinish)
             ? spaceInfo.floorFinish.height : 0;
-          if (rFloorFinishForHeight > 0) {
+          if (rFloorFinishForHeight > 0 && rightCategoryResolved === 'full') {
             rFurnitureH -= rFloorFinishForHeight;
           }
 
