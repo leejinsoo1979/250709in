@@ -445,8 +445,6 @@ export const useUIStore = create<UIState>()(
 
       toggleDimensions: () =>
         set((state) => {
-          // 3D 모드에서는 항상 켜진 상태 유지
-          if (state.viewMode === '3D') return {};
           const nextValue = !state.showDimensions;
 // console.log('🎯 toggleDimensions - 이전 상태:', state.showDimensions, '새 상태:', nextValue);
 
@@ -478,8 +476,6 @@ export const useUIStore = create<UIState>()(
         }),
       toggleDimensionsText: () =>
         set((state) => {
-          // 3D 모드에서는 항상 켜진 상태 유지
-          if (state.viewMode === '3D') return {};
           return { showDimensionsText: !state.showDimensionsText };
         }),
       toggleGuides: () =>
