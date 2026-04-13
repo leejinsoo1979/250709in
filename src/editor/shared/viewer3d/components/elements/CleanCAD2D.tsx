@@ -3517,6 +3517,9 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           // 바닥마감재는 바닥에서 별도 공간을 차지하므로 effectiveH에서도 차감
           const topFrameH = Math.max(0, effectiveH - floorFinishForHeight - bottomFrameH - furnitureH);
 
+          // 상부장 여부: 상부장은 천장에서 아래로 배치되므로 분할 순서가 다름
+          const isUpperCategory = leftCategoryResolved === 'upper';
+
           // ── 섹션 분할 정보 (2섹션 가구일 때 하부/상부 높이 분리) ──
           let sectionHeights: number[] = []; // 각 섹션의 mm 높이
           if (leftmostMod) {
@@ -3546,11 +3549,20 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           }
           const hasSectionSplit = sectionHeights.length >= 2;
 
-          // Y 좌표 (1단용) — 바닥마감재가 있으면 마감재 위에서 시작
+          // Y 좌표 (1단용)
           const floorFinishBaseY = mmToThreeUnits(floorFinishForHeight);
-          const bottomFrameTopY = mmToThreeUnits(floorFinishForHeight + bottomFrameH);
-          const furnitureTopY = mmToThreeUnits(floorFinishForHeight + bottomFrameH + furnitureH);
           const effectiveCeilingY = mmToThreeUnits(effectiveH);
+          // 상부장: 천장→상부프레임→가구→빈공간→바닥 순서
+          // 하부장/키큰장: 바닥→바닥마감재→받침대→가구→상부프레임→천장 순서
+          let bottomFrameTopY: number, furnitureTopY: number;
+          if (isUpperCategory) {
+            // 상부장: 가구는 천장 - 상부프레임 아래에 붙음
+            furnitureTopY = mmToThreeUnits(effectiveH - actualTopSize); // 상부프레임 하단 = 가구 상단
+            bottomFrameTopY = furnitureTopY - mmToThreeUnits(furnitureH); // 가구 하단 (bottomFrame 개념 없음, 빈공간 경계)
+          } else {
+            bottomFrameTopY = mmToThreeUnits(floorFinishForHeight + bottomFrameH);
+            furnitureTopY = mmToThreeUnits(floorFinishForHeight + bottomFrameH + furnitureH);
+          }
 
           return (
             <>
@@ -3681,21 +3693,41 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 color={dimensionColor} lineWidth={0.6} renderOrder={100000} depthTest={false}
               />
 
-              {/* 받침대 구분 틱 & 치수 */}
-              {bottomFrameH > 0 && (
-                <>
-                  <NativeLine name="dimension_line"
-                    points={[[innerX - mmToThreeUnits(15), bottomFrameTopY, 0.002], [innerX + mmToThreeUnits(15), bottomFrameTopY, 0.002]]}
-                    color={dimensionColor} lineWidth={0.6} renderOrder={100000} depthTest={false}
-                  />
-                  <Text renderOrder={1000} depthTest={false}
-                    position={[innerX - mmToThreeUnits(25), (floorFinishBaseY + bottomFrameTopY) / 2, 0.01]}
-                    fontSize={baseFontSize} color={textColor} anchorX="right" anchorY="middle"
-                    outlineWidth={textOutlineWidth} outlineColor={textOutlineColor}
-                  >
-                    {bottomFrameH}
-                  </Text>
-                </>
+              {/* 받침대 구분 틱 & 치수 (하부장/키큰장) 또는 빈공간 (상부장) */}
+              {isUpperCategory ? (
+                /* 상부장: 바닥마감재 위 ~ 가구 하단 = 빈공간 */
+                bottomFrameTopY > floorFinishBaseY + 0.001 && (
+                  <>
+                    <NativeLine name="dimension_line"
+                      points={[[innerX - mmToThreeUnits(15), bottomFrameTopY, 0.002], [innerX + mmToThreeUnits(15), bottomFrameTopY, 0.002]]}
+                      color={dimensionColor} lineWidth={0.6} renderOrder={100000} depthTest={false}
+                    />
+                    <Text renderOrder={1000} depthTest={false}
+                      position={[innerX - mmToThreeUnits(25), (floorFinishBaseY + bottomFrameTopY) / 2, 0.01]}
+                      fontSize={baseFontSize} color={textColor} anchorX="right" anchorY="middle"
+                      outlineWidth={textOutlineWidth} outlineColor={textOutlineColor}
+                    >
+                      {Math.round(effectiveH - actualTopSize - furnitureH - floorFinishForHeight)}
+                    </Text>
+                  </>
+                )
+              ) : (
+                /* 하부장/키큰장: 받침대 높이 */
+                bottomFrameH > 0 && (
+                  <>
+                    <NativeLine name="dimension_line"
+                      points={[[innerX - mmToThreeUnits(15), bottomFrameTopY, 0.002], [innerX + mmToThreeUnits(15), bottomFrameTopY, 0.002]]}
+                      color={dimensionColor} lineWidth={0.6} renderOrder={100000} depthTest={false}
+                    />
+                    <Text renderOrder={1000} depthTest={false}
+                      position={[innerX - mmToThreeUnits(25), (floorFinishBaseY + bottomFrameTopY) / 2, 0.01]}
+                      fontSize={baseFontSize} color={textColor} anchorX="right" anchorY="middle"
+                      outlineWidth={textOutlineWidth} outlineColor={textOutlineColor}
+                    >
+                      {bottomFrameH}
+                    </Text>
+                  </>
+                )
               )}
 
               {/* 가구(내경) 높이 — 섹션 분할 표시 */}
@@ -3792,8 +3824,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   color={dimensionColor} lineWidth={0.6} renderOrder={100000} depthTest={false}
                 />
               )}
-              {/* 받침대 상단 */}
-              {bottomFrameH > 0 && (
+              {/* 받침대 상단 또는 상부장 하단 경계 */}
+              {(isUpperCategory ? (bottomFrameTopY > floorFinishBaseY + 0.001) : (bottomFrameH > 0)) && (
                 <NativeLine name="dimension_line"
                   points={[[innerX - mmToThreeUnits(20), bottomFrameTopY, 0.001], [leftOffset, bottomFrameTopY, 0.001]]}
                   color={dimensionColor} lineWidth={0.6} renderOrder={100000} depthTest={false}
@@ -3947,11 +3979,21 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           }
           const rHasSectionSplit = rSectionHeights.length >= 2;
 
+          // 상부장 여부: 상부장은 천장에서 아래로 배치되므로 분할 순서가 다름
+          const rIsUpperCategory = rightCategoryResolved === 'upper';
+
           // Y 좌표 (1단용) — 바닥마감재가 있으면 마감재 위에서 시작
           const rFloorFinishBaseY = mmToThreeUnits(rFloorFinishForHeight);
-          const rBottomFrameTopY = mmToThreeUnits(rFloorFinishForHeight + rBottomFrameH);
-          const rFurnitureTopY = mmToThreeUnits(rFloorFinishForHeight + rBottomFrameH + rFurnitureH);
           const rEffectiveCeilingY = mmToThreeUnits(rEffectiveH);
+          let rBottomFrameTopY: number, rFurnitureTopY: number;
+          if (rIsUpperCategory) {
+            // 상부장: 가구는 천장 - 상부프레임 아래에 붙음
+            rFurnitureTopY = mmToThreeUnits(rEffectiveH - rActualTopSize); // 상부프레임 하단 = 가구 상단
+            rBottomFrameTopY = rFurnitureTopY - mmToThreeUnits(rFurnitureH); // 가구 하단 (빈공간 경계)
+          } else {
+            rBottomFrameTopY = mmToThreeUnits(rFloorFinishForHeight + rBottomFrameH);
+            rFurnitureTopY = mmToThreeUnits(rFloorFinishForHeight + rBottomFrameH + rFurnitureH);
+          }
 
           return (
             <>
@@ -4082,21 +4124,41 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 color={dimensionColor} lineWidth={0.6} renderOrder={100000} depthTest={false}
               />
 
-              {/* 받침대 구분 틱 & 치수 */}
-              {rBottomFrameH > 0 && (
-                <>
-                  <NativeLine name="dimension_line"
-                    points={[[rightInnerX - mmToThreeUnits(15), rBottomFrameTopY, 0.002], [rightInnerX + mmToThreeUnits(15), rBottomFrameTopY, 0.002]]}
-                    color={dimensionColor} lineWidth={0.6} renderOrder={100000} depthTest={false}
-                  />
-                  <Text renderOrder={1000} depthTest={false}
-                    position={[rightInnerX + mmToThreeUnits(10), (rFloorFinishBaseY + rBottomFrameTopY) / 2, 0.01]}
-                    fontSize={baseFontSize} color={textColor} anchorX="left" anchorY="middle"
-                    outlineWidth={textOutlineWidth} outlineColor={textOutlineColor}
-                  >
-                    {rBottomFrameH}
-                  </Text>
-                </>
+              {/* 받침대 구분 틱 & 치수 (하부장/키큰장) 또는 빈공간 (상부장) */}
+              {rIsUpperCategory ? (
+                /* 상부장: 바닥마감재 위 ~ 가구 하단 = 빈공간 */
+                rBottomFrameTopY > rFloorFinishBaseY + 0.001 && (
+                  <>
+                    <NativeLine name="dimension_line"
+                      points={[[rightInnerX - mmToThreeUnits(15), rBottomFrameTopY, 0.002], [rightInnerX + mmToThreeUnits(15), rBottomFrameTopY, 0.002]]}
+                      color={dimensionColor} lineWidth={0.6} renderOrder={100000} depthTest={false}
+                    />
+                    <Text renderOrder={1000} depthTest={false}
+                      position={[rightInnerX + mmToThreeUnits(10), (rFloorFinishBaseY + rBottomFrameTopY) / 2, 0.01]}
+                      fontSize={baseFontSize} color={textColor} anchorX="left" anchorY="middle"
+                      outlineWidth={textOutlineWidth} outlineColor={textOutlineColor}
+                    >
+                      {Math.round(rEffectiveH - rActualTopSize - rFurnitureH - rFloorFinishForHeight)}
+                    </Text>
+                  </>
+                )
+              ) : (
+                /* 하부장/키큰장: 받침대 높이 */
+                rBottomFrameH > 0 && (
+                  <>
+                    <NativeLine name="dimension_line"
+                      points={[[rightInnerX - mmToThreeUnits(15), rBottomFrameTopY, 0.002], [rightInnerX + mmToThreeUnits(15), rBottomFrameTopY, 0.002]]}
+                      color={dimensionColor} lineWidth={0.6} renderOrder={100000} depthTest={false}
+                    />
+                    <Text renderOrder={1000} depthTest={false}
+                      position={[rightInnerX + mmToThreeUnits(10), (rFloorFinishBaseY + rBottomFrameTopY) / 2, 0.01]}
+                      fontSize={baseFontSize} color={textColor} anchorX="left" anchorY="middle"
+                      outlineWidth={textOutlineWidth} outlineColor={textOutlineColor}
+                    >
+                      {rBottomFrameH}
+                    </Text>
+                  </>
+                )
               )}
 
               {/* 가구(내경) 높이 — 섹션 분할 표시 */}
@@ -4195,8 +4257,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   color={dimensionColor} lineWidth={0.6} renderOrder={100000} depthTest={false}
                 />
               )}
-              {/* 받침대 상단 */}
-              {rBottomFrameH > 0 && (
+              {/* 받침대 상단 또는 상부장 하단 경계 */}
+              {(rIsUpperCategory ? (rBottomFrameTopY > rFloorFinishBaseY + 0.001) : (rBottomFrameH > 0)) && (
                 <NativeLine name="dimension_line"
                   points={[[rightWallX, rBottomFrameTopY, 0.001], [rightInnerX + mmToThreeUnits(20), rBottomFrameTopY, 0.001]]}
                   color={dimensionColor} lineWidth={0.6} renderOrder={100000} depthTest={false}
@@ -4858,76 +4920,6 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               depthWrite={false}
               transparent={true}
             />
-
-            {/* 상부장/하부장 높이 치수선 (가구 우측, 정면뷰) */}
-            {(() => {
-              const isUpperModule = moduleData.category === 'upper' || module.moduleId?.includes('upper-cabinet');
-              const isLowerModule = moduleData.category === 'lower' || module.moduleId?.includes('lower-');
-              if (!isUpperModule && !isLowerModule) return null;
-
-              const moduleHeightMm = module.freeHeight ?? module.customHeight ?? moduleData.dimensions.height;
-              const topFrameHeightMm = module.topFrameThickness ?? (spaceInfo.frameSize?.top ?? 30);
-              const bottomFrameHeightMm = (spaceInfo.baseConfig?.type === 'floor') ? (module.baseFrameHeight ?? spaceInfo.baseConfig?.height ?? 65) : 0;
-              const floorFinishMm = (spaceInfo.hasFloorFinish && spaceInfo.floorFinish) ? spaceInfo.floorFinish.height : 0;
-
-              let furnitureBottomYMm: number, furnitureTopYMm: number;
-
-              if (isUpperModule) {
-                // 상부장: 천장 - 상부프레임 하단에 붙음
-                let ceilingHeight = spaceInfo.height;
-                if (module.zone === 'dropped' && spaceInfo.droppedCeiling?.enabled) {
-                  ceilingHeight = spaceInfo.height - (spaceInfo.droppedCeiling.dropHeight || 0);
-                }
-                furnitureTopYMm = ceilingHeight - topFrameHeightMm;
-                furnitureBottomYMm = furnitureTopYMm - moduleHeightMm;
-              } else {
-                // 하부장: 바닥마감재 + 받침대 위에서 시작
-                furnitureBottomYMm = floorFinishMm + bottomFrameHeightMm;
-                furnitureTopYMm = furnitureBottomYMm + moduleHeightMm;
-              }
-
-              const furnitureBottomY = mmToThreeUnits(furnitureBottomYMm);
-              const furnitureTopY = mmToThreeUnits(furnitureTopYMm);
-              const heightDimX = rightX + mmToThreeUnits(30);
-              const textX = heightDimX + mmToThreeUnits(30);
-              const extEndX = heightDimX + mmToThreeUnits(10);
-
-              return (
-                <group key={`module-height-dim-${index}`}>
-                  {/* 세로 치수선 */}
-                  <NativeLine name="dimension_line"
-                    points={[[heightDimX, furnitureBottomY, 0.002], [heightDimX, furnitureTopY, 0.002]]}
-                    color={dimensionColor} lineWidth={0.6} renderOrder={100000} depthTest={false}
-                  />
-                  {/* 화살표 */}
-                  <NativeLine name="dimension_line"
-                    points={createArrowHead([heightDimX, furnitureBottomY, 0.002], [heightDimX, furnitureBottomY + 0.02, 0.002], 0.01)}
-                    color={dimensionColor} lineWidth={0.6} renderOrder={100000} depthTest={false}
-                  />
-                  <NativeLine name="dimension_line"
-                    points={createArrowHead([heightDimX, furnitureTopY, 0.002], [heightDimX, furnitureTopY - 0.02, 0.002], 0.01)}
-                    color={dimensionColor} lineWidth={0.6} renderOrder={100000} depthTest={false}
-                  />
-                  {/* 연장선 */}
-                  <NativeLine name="dimension_line"
-                    points={[[rightX, furnitureBottomY, 0.001], [extEndX, furnitureBottomY, 0.001]]}
-                    color={dimensionColor} lineWidth={0.6} renderOrder={100000} depthTest={false}
-                  />
-                  <NativeLine name="dimension_line"
-                    points={[[rightX, furnitureTopY, 0.001], [extEndX, furnitureTopY, 0.001]]}
-                    color={dimensionColor} lineWidth={0.6} renderOrder={100000} depthTest={false}
-                  />
-                  {/* 높이 텍스트 */}
-                  <Text renderOrder={100000} depthTest={false}
-                    position={[textX, (furnitureBottomY + furnitureTopY) / 2, 0.01]}
-                    fontSize={baseFontSize} color={textColor} anchorX="left" anchorY="middle"
-                    outlineWidth={textOutlineWidth} outlineColor={textOutlineColor}
-                  >
-                    {moduleHeightMm}
-                  </Text>
-                </group>
-              );
-            })()}
 
             {/* 자유배치: 구간 내 좌/우 이격 치수선 (가구~구간경계 거리) */}
             {isFreePlacement && (() => {
