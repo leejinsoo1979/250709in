@@ -1087,10 +1087,25 @@ useFurnitureStore.subscribe((state) => {
       needsMigration = true;
       break;
     }
+    // 상부장 doorTopGap 이상치 수정 (이전 버그로 ~1700 등 큰 값이 저장된 경우)
+    const isUpper = m.moduleId?.includes('upper-cabinet');
+    if (isUpper && m.doorTopGap !== undefined && m.doorTopGap > 100) {
+      needsMigration = true;
+      break;
+    }
   }
   if (!needsMigration) return;
   migrationRunning = true;
+  const spInfo = useSpaceConfigStore.getState().spaceInfo;
   const migrated = state.placedModules.map(m => {
+    // 상부장 doorTopGap 이상치 수정
+    const isUpper = m.moduleId?.includes('upper-cabinet');
+    if (isUpper && m.doorTopGap !== undefined && m.doorTopGap > 100) {
+      const isFullSurround = spInfo.surroundType === 'surround' && spInfo.frameConfig?.top !== false;
+      const topFrameMm = m.topFrameThickness ?? spInfo.frameSize?.top ?? 30;
+      const correctGap = isFullSurround ? (topFrameMm + 3) : 5;
+      return { ...m, doorTopGap: correctGap };
+    }
     const isBasic = m.moduleId?.includes('lower-half-cabinet') || m.moduleId?.includes('dual-lower-half-cabinet') || m.moduleId?.includes('lower-drawer-') || m.moduleId?.includes('dual-lower-drawer-') || m.moduleId?.includes('lower-sink-cabinet') || m.moduleId?.includes('dual-lower-sink-cabinet');
     const isDoorLift = m.moduleId?.includes('lower-door-lift-');
     const isTopDown = m.moduleId?.includes('lower-top-down-');
