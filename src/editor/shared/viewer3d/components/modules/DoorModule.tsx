@@ -1513,8 +1513,8 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                 );
               })()}
 
-              {/* 왼쪽 도어 가로 폭 치수 (2D 정면뷰 + 3D, 상부장 제외) */}
-              {showDimensions && !isPlainMaterial && (viewMode === '3D' || (viewMode === '2D' && view2DDirection === 'front')) && !isUpperCabinet && (() => {
+              {/* 왼쪽 도어 가로 폭 치수 (2D 정면뷰 + 3D) */}
+              {showDimensions && !isPlainMaterial && (viewMode === '3D' || (viewMode === '2D' && view2DDirection === 'front')) && (() => {
                 const is3D = viewMode === '3D';
                 const extensionLineStart = mmToThreeUnits(70);
                 const extensionLineLength = mmToThreeUnits(110);
@@ -1845,8 +1845,8 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                 );
               })()}
 
-              {/* 오른쪽 도어 가로 폭 치수 (2D 정면뷰 + 3D, 상부장 제외) */}
-              {showDimensions && !isPlainMaterial && (viewMode === '3D' || (viewMode === '2D' && view2DDirection === 'front')) && !isUpperCabinet && (() => {
+              {/* 오른쪽 도어 가로 폭 치수 (2D 정면뷰 + 3D) */}
+              {showDimensions && !isPlainMaterial && (viewMode === '3D' || (viewMode === '2D' && view2DDirection === 'front')) && (() => {
                 const is3D = viewMode === '3D';
                 const extensionLineStart = mmToThreeUnits(70);
                 const extensionLineLength = mmToThreeUnits(110);
@@ -2361,8 +2361,8 @@ const DoorModule: React.FC<DoorModuleProps> = ({
               );
             })()}
 
-            {/* 도어 가로 폭 치수 (2D 정면뷰 + 3D, 상부장 제외) */}
-            {showDimensions && !isPlainMaterial && (viewMode === '3D' || (viewMode === '2D' && view2DDirection === 'front')) && !isUpperCabinet && (() => {
+            {/* 도어 가로 폭 치수 (2D 정면뷰 + 3D) */}
+            {showDimensions && !isPlainMaterial && (viewMode === '3D' || (viewMode === '2D' && view2DDirection === 'front')) && (() => {
               const is3D = viewMode === '3D';
               const extensionLineStart = mmToThreeUnits(70);
               const extensionLineLength = mmToThreeUnits(110);
