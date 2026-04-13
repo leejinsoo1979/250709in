@@ -1319,8 +1319,11 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
             const mod = visibleFurniture[0] as PlacedModule;
             // 도어가 없으면 마이다 치수선 미표시 (hasDoor가 undefined거나 false면 미설치)
             if (!mod.hasDoor) return null;
-            // 서랍 모듈만 마이다 치수 표시 (도어올림/상판내림/기본하부장 등은 단일 도어 치수로)
-            const isDrawerModule = mod.moduleId.includes('lower-drawer-');
+            // 마이다가 있는 모듈: 서랍장, 도어올림 2단/3단, 상판내림 2단/3단
+            // 단일 도어: 기본하부장, 싱크장, 도어올림 반통(half), 상판내림 반통(half)
+            const isDrawerModule = mod.moduleId.includes('lower-drawer-')
+              || (mod.moduleId.includes('lower-door-lift-') && !mod.moduleId.includes('-half-'))
+              || (mod.moduleId.includes('lower-top-down-') && !mod.moduleId.includes('-half-'));
             let modData = getModuleById(
               mod.moduleId,
               { width: internalSpace.width, height: internalSpace.height, depth: internalSpace.depth },
