@@ -209,7 +209,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
     () => (showFurniture ? placedModulesStore : []),
     [placedModulesStore, showFurniture]
   );
-  const { view2DDirection, showDimensions: showDimensionsFromStore, showDimensionsText, view2DTheme, selectedSlotIndex, isLayoutBuilderOpen } = useUIStore();
+  const { view2DDirection, showDimensions: showDimensionsFromStore, showDimensionsText, view2DTheme, selectedSlotIndex, isLayoutBuilderOpen, selectedFurnitureId } = useUIStore();
   const { zones } = useDerivedSpaceStore();
 
   // 단내림 설정
@@ -5320,6 +5320,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               const gapRightX = rightX + mmToThreeUnits(rightGapMm);
               // 가구 이동 핸들러: 화살표 클릭 시 10mm씩 이동
               const MOVE_STEP = 0.1; // 10mm = 0.1 Three.js 단위
+              const isSelected = selectedFurnitureId === module.id;
               const moveLeft = (e: any) => {
                 e.stopPropagation();
                 const newX = module.position.x - MOVE_STEP;
@@ -5330,30 +5331,29 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 const newX = module.position.x + MOVE_STEP;
                 updatePlacedModule(module.id, { position: { ...module.position, x: newX } });
               };
-              const arrowBtnStyle = {
-                width: '24px', height: '24px',
-                borderRadius: '50%',
-                border: '1.5px solid #2196F3',
-                background: 'rgba(255,255,255,0.95)',
-                color: '#2196F3',
-                fontSize: '14px',
-                fontWeight: 'bold' as const,
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                padding: 0,
-                lineHeight: 1,
-                boxShadow: '0 1px 4px rgba(0,0,0,0.15)',
-              };
               return (<>
-                {/* 좌측 이동 화살표 — 이격 크기 무관, 항상 표시 */}
-                <Html position={[leftX - mmToThreeUnits(15), gapDimY, 0.01]}
-                  center style={{ pointerEvents: 'auto' }} zIndexRange={[10001, 10002]}>
-                  <button style={arrowBtnStyle} onClick={moveLeft} title={`좌로 10mm 이동`}>
-                    ◀
-                  </button>
-                </Html>
+                {/* 좌측 이동 화살표 — 가구 선택 시에만 표시 */}
+                {isSelected && (
+                  <Html position={[leftX - mmToThreeUnits(20), gapDimY, 0.01]}
+                    center style={{ pointerEvents: 'auto' }} zIndexRange={[10001, 10002]}>
+                    <div
+                      onClick={moveLeft}
+                      style={{
+                        width: '20px', height: '32px',
+                        background: '#2196F3',
+                        borderRadius: '4px 0 0 4px',
+                        cursor: 'pointer',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
+                        transition: 'background 0.15s',
+                      }}
+                      onMouseEnter={(e) => { (e.currentTarget as HTMLDivElement).style.background = '#1976D2'; }}
+                      onMouseLeave={(e) => { (e.currentTarget as HTMLDivElement).style.background = '#2196F3'; }}
+                    >
+                      <svg width="10" height="14" viewBox="0 0 10 14" fill="none"><path d="M8 1L2 7L8 13" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                    </div>
+                  </Html>
+                )}
                 {/* 좌측 이격 치수 */}
                 {leftGapMm > 0 && !suppressLeftGap && (<>
                   <NativeLine name="dimension_line"
@@ -5377,13 +5377,28 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     {formatDim(leftGapMm)}
                   </Text>
                 </>)}
-                {/* 우측 이동 화살표 — 이격 크기 무관, 항상 표시 */}
-                <Html position={[rightX + mmToThreeUnits(15), gapDimY, 0.01]}
-                  center style={{ pointerEvents: 'auto' }} zIndexRange={[10001, 10002]}>
-                  <button style={arrowBtnStyle} onClick={moveRight} title={`우로 10mm 이동`}>
-                    ▶
-                  </button>
-                </Html>
+                {/* 우측 이동 화살표 — 가구 선택 시에만 표시 */}
+                {isSelected && (
+                  <Html position={[rightX + mmToThreeUnits(20), gapDimY, 0.01]}
+                    center style={{ pointerEvents: 'auto' }} zIndexRange={[10001, 10002]}>
+                    <div
+                      onClick={moveRight}
+                      style={{
+                        width: '20px', height: '32px',
+                        background: '#2196F3',
+                        borderRadius: '0 4px 4px 0',
+                        cursor: 'pointer',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
+                        transition: 'background 0.15s',
+                      }}
+                      onMouseEnter={(e) => { (e.currentTarget as HTMLDivElement).style.background = '#1976D2'; }}
+                      onMouseLeave={(e) => { (e.currentTarget as HTMLDivElement).style.background = '#2196F3'; }}
+                    >
+                      <svg width="10" height="14" viewBox="0 0 10 14" fill="none"><path d="M2 1L8 7L2 13" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                    </div>
+                  </Html>
+                )}
                 {/* 우측 이격 치수 */}
                 {rightGapMm > 0 && !suppressRightGap && (<>
                   <NativeLine name="dimension_line"
