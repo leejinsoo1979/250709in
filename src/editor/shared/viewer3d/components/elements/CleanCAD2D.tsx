@@ -3989,10 +3989,24 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   color={dimensionColor} lineWidth={0.6} renderOrder={100000} depthTest={false}
                 />
               )}
-              {/* 가구(내경) 상단 (가구 있을 때만) */}
+              {/* 가구(내경) 상단 = 하부장 상단 (가구 있을 때만) */}
               {leftmostMod && (
                 <NativeLine name="dimension_line"
                   points={[[innerX - mmToThreeUnits(20), furnitureTopY, 0.001], [leftOffset, furnitureTopY, 0.001]]}
+                  color={dimensionColor} lineWidth={0.6} renderOrder={100000} depthTest={false}
+                />
+              )}
+              {/* 듀얼: 상부장 하단 경계 연장선 */}
+              {hasDualCabinet && upperCabinetBottomY > furnitureTopY + 0.001 && (
+                <NativeLine name="dimension_line"
+                  points={[[innerX - mmToThreeUnits(20), upperCabinetBottomY, 0.001], [leftOffset, upperCabinetBottomY, 0.001]]}
+                  color={dimensionColor} lineWidth={0.6} renderOrder={100000} depthTest={false}
+                />
+              )}
+              {/* 듀얼: 상부장 상단 경계 연장선 */}
+              {hasDualCabinet && (
+                <NativeLine name="dimension_line"
+                  points={[[innerX - mmToThreeUnits(20), upperCabinetTopY, 0.001], [leftOffset, upperCabinetTopY, 0.001]]}
                   color={dimensionColor} lineWidth={0.6} renderOrder={100000} depthTest={false}
                 />
               )}
@@ -4578,10 +4592,24 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   color={dimensionColor} lineWidth={0.6} renderOrder={100000} depthTest={false}
                 />
               )}
-              {/* 가구(내경) 상단 (가구 있을 때만) */}
+              {/* 가구(내경) 상단 = 하부장 상단 (가구 있을 때만) */}
               {rightmostMod && (
                 <NativeLine name="dimension_line"
                   points={[[rightWallX, rFurnitureTopY, 0.001], [rightInnerX + mmToThreeUnits(20), rFurnitureTopY, 0.001]]}
+                  color={dimensionColor} lineWidth={0.6} renderOrder={100000} depthTest={false}
+                />
+              )}
+              {/* 듀얼: 상부장 하단 경계 연장선 */}
+              {rHasDualCabinet && rUpperCabinetBottomY > rFurnitureTopY + 0.001 && (
+                <NativeLine name="dimension_line"
+                  points={[[rightWallX, rUpperCabinetBottomY, 0.001], [rightInnerX + mmToThreeUnits(20), rUpperCabinetBottomY, 0.001]]}
+                  color={dimensionColor} lineWidth={0.6} renderOrder={100000} depthTest={false}
+                />
+              )}
+              {/* 듀얼: 상부장 상단 경계 연장선 */}
+              {rHasDualCabinet && (
+                <NativeLine name="dimension_line"
+                  points={[[rightWallX, rUpperCabinetTopY, 0.001], [rightInnerX + mmToThreeUnits(20), rUpperCabinetTopY, 0.001]]}
                   color={dimensionColor} lineWidth={0.6} renderOrder={100000} depthTest={false}
                 />
               )}
