@@ -5278,8 +5278,11 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
 
             // 개별 모듈의 baseFrameHeight 우선 사용 (좌측뷰 → leftmostModules)
             const viewMod = leftmostModules[0];
-            const bottomFrameHeight = (viewMod?.baseFrameHeight !== undefined && spaceInfo.baseConfig?.type === 'floor')
-              ? viewMod.baseFrameHeight : globalBottomFrame;
+            // hasBase=false → 하부프레임 0 (individualFloatHeight만 반영)
+            const bottomFrameHeight = viewMod?.hasBase === false
+              ? (viewMod.individualFloatHeight ?? 0)
+              : (viewMod?.baseFrameHeight !== undefined && spaceInfo.baseConfig?.type === 'floor')
+                ? viewMod.baseFrameHeight : globalBottomFrame;
 
             // 단내림 구간이면 단내림 높이, 일반 구간이면 전체 높이 사용
             const cabinetPlacementHeight = Math.max(spaceInfo.height - topFrameHeight - bottomFrameHeight, 0); // 캐비넷 배치 영역 (바닥마감재는 받침대에 포함)
@@ -6274,8 +6277,11 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
 
             // 개별 모듈의 baseFrameHeight 우선 사용 (우측뷰 → rightmostModules)
             const viewMod = rightmostModules[0];
-            const bottomFrameHeight = (viewMod?.baseFrameHeight !== undefined && spaceInfo.baseConfig?.type === 'floor')
-              ? viewMod.baseFrameHeight : globalBottomFrame;
+            // hasBase=false → 하부프레임 0 (individualFloatHeight만 반영)
+            const bottomFrameHeight = viewMod?.hasBase === false
+              ? (viewMod.individualFloatHeight ?? 0)
+              : (viewMod?.baseFrameHeight !== undefined && spaceInfo.baseConfig?.type === 'floor')
+                ? viewMod.baseFrameHeight : globalBottomFrame;
 
             // 단내림 구간이면 단내림 높이, 일반 구간이면 전체 높이 사용
             const cabinetPlacementHeight = Math.max(spaceInfo.height - topFrameHeight - bottomFrameHeight, 0); // 바닥마감재는 받침대에 포함
