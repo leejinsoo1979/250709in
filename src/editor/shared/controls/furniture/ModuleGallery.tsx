@@ -581,7 +581,15 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
         const newCategory = (moduleData.category || 'full') as 'full' | 'upper' | 'lower';
 
         const freeModules = placedModules.filter(m => m.isFreePlacement && !m.isSurroundPanel);
-        const sortedBounds = freeModules.map(m => getModuleBoundsX(m)).sort((a, b) => a.left - b.left);
+        const allBounds = freeModules.map(m => getModuleBoundsX(m)).sort((a, b) => a.left - b.left);
+
+        // upper/lower 공존: 다른 카테고리 가구는 장애물에서 제외
+        // full 가구는 모든 가구가 장애물
+        const isCoexistable = newCategory === 'upper' || newCategory === 'lower';
+        const blockingBounds = isCoexistable
+          ? allBounds.filter(b => b.category === newCategory || b.category === 'full')
+          : allBounds;
+        const sortedBounds = blockingBounds.sort((a, b) => a.left - b.left);
 
         // 후보 빈 공간: 왼쪽 벽부터 오른쪽 벽까지 순서대로
         const candidates: { left: number; right: number }[] = [];
@@ -603,25 +611,6 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
           if (endX > lastRight) {
             candidates.push({ left: lastRight, right: endX });
           }
-        }
-
-        // upper/lower 공존: 다른 카테고리 가구 위에도 배치 가능
-        // 단, 해당 X 범위에 같은 카테고리 가구가 이미 있으면 제외
-        if (newCategory === 'upper' || newCategory === 'lower') {
-          const coexistCategory = newCategory === 'upper' ? 'lower' : 'upper';
-          const sameCategoryBounds = sortedBounds.filter(b => b.category === newCategory);
-          for (const b of sortedBounds) {
-            if (b.category === coexistCategory && (b.right - b.left) >= furnitureWidth) {
-              // 이 영역에 같은 카테고리 가구가 이미 있는지 확인
-              const alreadyOccupied = sameCategoryBounds.some(s =>
-                s.left < b.right && s.right > b.left
-              );
-              if (!alreadyOccupied) {
-                candidates.push({ left: b.left, right: b.right });
-              }
-            }
-          }
-          candidates.sort((a, b) => a.left - b.left);
         }
 
         // 좌측부터 순서대로 들어갈 수 있는 첫 빈 공간에 배치
