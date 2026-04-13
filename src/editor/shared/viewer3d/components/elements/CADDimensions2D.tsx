@@ -1209,6 +1209,48 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                     >
                       {finishDepthMm}
                     </Text>
+
+                    {/* 마감판 뒤쪽 옵셋 치수 (가구 뒷면 ~ 마감판 뒷면 = 17.5mm) */}
+                    {(() => {
+                      const cabinetBackZ = furnitureZ - moduleDepth / 2; // 가구 뒷면
+                      const finishBackZ = finishZ - finishDepth / 2; // 마감판 뒷면
+                      const offsetMm = 17.5;
+                      const midY = (furnitureBottomEdge + finishDimY) / 2;
+
+                      return (
+                        <group>
+                          {/* 가이드 연장선 - 가구 뒷면 (짧게) */}
+                          <ExtLine points={[[0, furnitureBottomEdge, cabinetBackZ], [0, midY, cabinetBackZ]]} color={dimensionColor} />
+                          {/* 가이드 연장선 - 마감판 뒷면 (짧게, 이미 위에서 그려짐 — 중간까지만 추가) */}
+
+                          {/* 옵셋 치수선 */}
+                          <NativeLine name="dimension_line"
+                            points={[[0, midY, cabinetBackZ], [0, midY, finishBackZ]]}
+                            color={dimensionColor} lineWidth={0.5} renderOrder={100000} depthTest={false}
+                          />
+                          {/* 앞쪽 티크 */}
+                          <NativeLine name="dimension_line"
+                            points={[[0 - 0.02, midY, finishBackZ], [0 + 0.02, midY, finishBackZ]]}
+                            color={dimensionColor} lineWidth={0.5} renderOrder={100000} depthTest={false}
+                          />
+                          {/* 뒤쪽 티크 */}
+                          <NativeLine name="dimension_line"
+                            points={[[0 - 0.02, midY, cabinetBackZ], [0 + 0.02, midY, cabinetBackZ]]}
+                            color={dimensionColor} lineWidth={0.5} renderOrder={100000} depthTest={false}
+                          />
+                          {/* 옵셋 텍스트 */}
+                          <Text
+                            position={[0, midY - mmToThreeUnits(40), (cabinetBackZ + finishBackZ) / 2]}
+                            fontSize={largeFontSize} color={textColor}
+                            anchorX="center" anchorY="middle"
+                            renderOrder={1000} depthTest={false}
+                            rotation={[0, -Math.PI / 2, 0]}
+                          >
+                            {offsetMm}
+                          </Text>
+                        </group>
+                      );
+                    })()}
                   </group>
                 );
               })()}
@@ -2176,6 +2218,43 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                     >
                       {finishDepthMm_r}
                     </Text>
+
+                    {/* 마감판 뒤쪽 옵셋 치수 (가구 뒷면 ~ 마감판 뒷면 = 17.5mm) */}
+                    {(() => {
+                      const cabinetBackZ_r = upperFurnitureZ - moduleDepth / 2;
+                      const finishBackZ_r = finishZ_r - finishDepth_r / 2;
+                      const offsetMm_r = 17.5;
+                      const midY_r = (furnitureBottomEdge_r + finishDimY_r) / 2;
+
+                      return (
+                        <group>
+                          <ExtLine points={[[0, furnitureBottomEdge_r, cabinetBackZ_r], [0, midY_r, cabinetBackZ_r]]} color={dimensionColor} />
+
+                          <NativeLine name="dimension_line"
+                            points={[[0, midY_r, cabinetBackZ_r], [0, midY_r, finishBackZ_r]]}
+                            color={dimensionColor} lineWidth={0.5} renderOrder={100000} depthTest={false}
+                          />
+                          <NativeLine name="dimension_line"
+                            points={[[0 - 0.02, midY_r, finishBackZ_r], [0 + 0.02, midY_r, finishBackZ_r]]}
+                            color={dimensionColor} lineWidth={0.5} renderOrder={100000} depthTest={false}
+                          />
+                          <NativeLine name="dimension_line"
+                            points={[[0 - 0.02, midY_r, cabinetBackZ_r], [0 + 0.02, midY_r, cabinetBackZ_r]]}
+                            color={dimensionColor} lineWidth={0.5} renderOrder={100000} depthTest={false}
+                          />
+
+                          <Text
+                            position={[0, midY_r - mmToThreeUnits(40), (cabinetBackZ_r + finishBackZ_r) / 2]}
+                            fontSize={largeFontSize} color={textColor}
+                            anchorX="center" anchorY="middle"
+                            renderOrder={1000} depthTest={false}
+                            rotation={[0, Math.PI / 2, 0]}
+                          >
+                            {offsetMm_r}
+                          </Text>
+                        </group>
+                      );
+                    })()}
                   </group>
                 );
               })()}
