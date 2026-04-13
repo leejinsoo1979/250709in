@@ -335,6 +335,16 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
         }
       }
 
+      // 상부장 상판 따내기 기본값: 680×140 우측
+      if (newCategory === 'upper') {
+        if (module.topPanelNotchSize === undefined) {
+          module.topPanelNotchSize = '680x140';
+        }
+        if (module.topPanelNotchSide === undefined) {
+          module.topPanelNotchSide = 'right';
+        }
+      }
+
       // 하부프레임 기본값: 하부장 100mm, 키큰장 60mm
       const isLowerById = module.moduleId?.startsWith('lower-') || module.moduleId?.includes('dual-lower-');
       if (module.baseFrameHeight === undefined) {
