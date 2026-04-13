@@ -2168,11 +2168,12 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                       // 단내림 배치폭 = 기둥폭 + 메인쪽 경계이격 + 외측 경계이격 - 벽이격 - 프레임
                       if (hasDC && dcPosition === scPosition) {
                         // 커튼박스 같은 쪽: 메인쪽 경계이격만 흡수 (커튼박스쪽은 이격 없음)
-                        scPlacementWidth = floorValue(scWidth + scInnerGap + scOuterGap - scSideFrame, hasDualInMain);
+                        // 경계이격(1.5mm) 흡수로 0.5mm 소수 발생 가능 → 항상 0.5단위 floor
+                        scPlacementWidth = floorValue(scWidth + scInnerGap + scOuterGap - scSideFrame, true);
                       } else {
                         // 벽 인접: 벽쪽은 벽이격 차감, 메인쪽은 경계이격 흡수, 프레임 차감
                         const scWallGap = (scOnLeft ? (hasLeftWall ? leftGapMm : 0) : (hasRightWall ? rightGapMm : 0));
-                        scPlacementWidth = floorValue(scWidth + scInnerGap - scWallGap - scSideFrame, hasDualInMain);
+                        scPlacementWidth = floorValue(scWidth + scInnerGap - scWallGap - scSideFrame, true);
                       }
                     }
 
