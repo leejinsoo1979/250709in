@@ -2649,11 +2649,15 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   const isFrontSpaceFurniture = placedModule.columnSlotInfo?.spaceType === 'front';
 
   // 기둥 앞 공간 가구는 저장된 Z 위치 사용, 일반 가구는 계산된 Z 위치 사용
-  // 모든 가구 동일 공식: 앞면(도어 제외) 정렬 — 상부장/하부장/키큰장 앞면이 같은 Z
-  // 상부장은 깊이가 얕아(350mm) 뒷면이 하부장(560mm)보다 앞에 오지만, 앞면은 동일
+  const isUpperForZ = actualModuleData?.category === 'upper' || placedModule.moduleId?.includes('upper-cabinet');
+  // 하부장/키큰장: 앞면 정렬 (도어 앞면 = 공간 앞면)
+  // 상부장: 뒷면 정렬 (하부장 뒷면과 동일 위치 = furnitureZOffset - furnitureDepth/2 + doorThickness)
+  const lowerBackFace = furnitureZOffset - furnitureDepth / 2 + doorThickness; // 하부장 뒷면 위치
   const furnitureZ = isFrontSpaceFurniture
     ? placedModule.position.z  // 기둥 앞 공간: 저장된 위치 사용
-    : furnitureZOffset + furnitureDepth / 2 - doorThickness - depth / 2 + baseDepthOffset;
+    : isUpperForZ
+      ? lowerBackFace + depth / 2  // 상부장: 하부장 뒷면에 맞춤
+      : furnitureZOffset + furnitureDepth / 2 - doorThickness - depth / 2 + baseDepthOffset;
 
   // 🔴 Z축 디버그 (상부장+하부장 비교)
   if (placedModule.moduleId?.includes('upper-cabinet') || placedModule.moduleId?.includes('lower-cabinet') || placedModule.moduleId?.includes('single-open') || placedModule.moduleId?.includes('single-shelf')) {
