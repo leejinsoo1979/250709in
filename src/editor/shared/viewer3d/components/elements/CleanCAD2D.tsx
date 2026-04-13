@@ -344,8 +344,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
 
         // 상하부장 분류
         const category = moduleData?.category
-          ?? (module.moduleId.includes('-upper-') ? 'upper'
-            : module.moduleId.includes('-lower-') ? 'lower' : 'full');
+          ?? (module.moduleId.includes('upper') ? 'upper'
+            : module.moduleId.includes('lower') ? 'lower' : 'full');
         if (category === 'lower' && moduleHeight > maxLowerCabinetHeightMm) {
           maxLowerCabinetHeightMm = moduleHeight;
         }
@@ -820,8 +820,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           const mX = module.position.x;
           const hasStepDownFb = spaceInfo.droppedCeiling?.enabled || false;
           const stepDownPositionFb = spaceInfo.droppedCeiling?.position || 'right';
-          const fbCategory = module.moduleId.includes('-upper-') ? 'upper'
-            : module.moduleId.includes('-lower-') ? 'lower' : 'full';
+          const fbCategory = module.moduleId.includes('upper') ? 'upper'
+            : module.moduleId.includes('lower') ? 'lower' : 'full';
           return {
             module,
             moduleData: {
@@ -3433,29 +3433,13 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
 
           // 같은 슬롯/위치에 상부장+하부장 동시 배치 시 companion 모듈 찾기
           const leftCompanionMod = (() => {
-            console.log('🟥 [companion] 진입 leftmostMod:', leftmostMod?.moduleId, 'allMods:', allMods.length);
             if (!leftmostMod) return null;
             const leftModData = getModuleById(leftmostMod.moduleId);
             const leftCat = leftModData?.category
-              ?? (leftmostMod.moduleId.includes('-upper-') ? 'upper'
-                : leftmostMod.moduleId.includes('-lower-') ? 'lower' : 'full');
-            console.log('🟥 [companion] leftCat:', leftCat, 'leftModData?.category:', leftModData?.category, 'moduleId:', leftmostMod.moduleId);
+              ?? (leftmostMod.moduleId.includes('upper') ? 'upper'
+                : leftmostMod.moduleId.includes('lower') ? 'lower' : 'full');
             if (leftCat === 'full') return null; // 키큰장은 companion 없음
             const targetCat = leftCat === 'upper' ? 'lower' : 'upper';
-            console.log('🟥 [companion] targetCat:', targetCat, 'allMods:', allMods.map(m => m.moduleId));
-            allMods.forEach((m, i) => {
-              if (m === leftmostMod) { console.log(`  🟥 [${i}] SKIP (자기자신) ${m.moduleId}`); return; }
-              const bothHaveSlot = m.slotIndex !== undefined && leftmostMod.slotIndex !== undefined;
-              const xDist = Math.abs((m.position?.x ?? 0) - (leftmostMod.position?.x ?? 0));
-              const samePosition = bothHaveSlot
-                ? m.slotIndex === leftmostMod.slotIndex
-                : xDist < 300;
-              const mData = getModuleById(m.moduleId);
-              const mCat = mData?.category
-                ?? (m.moduleId.includes('-upper-') ? 'upper'
-                  : m.moduleId.includes('-lower-') ? 'lower' : 'full');
-              console.log(`  🟥 [${i}] ${m.moduleId} | bothSlot:${bothHaveSlot} slot:${m.slotIndex} xDist:${xDist.toFixed(0)} samePos:${samePosition} | mCat:${mCat} target:${targetCat} match:${mCat===targetCat}`);
-            });
             return allMods.find(m => {
               if (m === leftmostMod) return false;
               const bothHaveSlot = m.slotIndex !== undefined && leftmostMod.slotIndex !== undefined;
@@ -3465,8 +3449,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               if (!samePosition) return false;
               const mData = getModuleById(m.moduleId);
               const mCat = mData?.category
-                ?? (m.moduleId.includes('-upper-') ? 'upper'
-                  : m.moduleId.includes('-lower-') ? 'lower' : 'full');
+                ?? (m.moduleId.includes('upper') ? 'upper'
+                  : m.moduleId.includes('lower') ? 'lower' : 'full');
               return mCat === targetCat;
             }) ?? null;
           })();
@@ -3513,8 +3497,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           const leftLowerMod = (() => {
             if (!leftmostMod) return leftmostMod;
             const cat = getModuleById(leftmostMod.moduleId)?.category
-              ?? (leftmostMod.moduleId.includes('-upper-') ? 'upper'
-                : leftmostMod.moduleId.includes('-lower-') ? 'lower' : 'full');
+              ?? (leftmostMod.moduleId.includes('upper') ? 'upper'
+                : leftmostMod.moduleId.includes('lower') ? 'lower' : 'full');
             if (cat === 'upper') {
               // leftmostMod가 상부장이면 companion(하부장)을 프레임 참조로 사용
               const lowerMod = allMods.find(m => {
@@ -3525,8 +3509,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   : Math.abs((m.position?.x ?? 0) - (leftmostMod.position?.x ?? 0)) < 300;
                 if (!samePos) return false;
                 const mCat = getModuleById(m.moduleId)?.category
-                  ?? (m.moduleId.includes('-upper-') ? 'upper'
-                    : m.moduleId.includes('-lower-') ? 'lower' : 'full');
+                  ?? (m.moduleId.includes('upper') ? 'upper'
+                    : m.moduleId.includes('lower') ? 'lower' : 'full');
                 return mCat === 'lower';
               });
               return lowerMod ?? leftmostMod;
@@ -3545,8 +3529,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             spaceInfo
           ) : null;
           let leftCategoryResolved: string = leftModDataForCat?.category
-            ?? (leftmostMod?.moduleId.includes('-upper-') ? 'upper'
-              : leftmostMod?.moduleId.includes('-lower-') ? 'lower' : 'full');
+            ?? (leftmostMod?.moduleId.includes('upper') ? 'upper'
+              : leftmostMod?.moduleId.includes('lower') ? 'lower' : 'full');
           if (leftmostMod) {
             if (leftmostMod.freeHeight) {
               furnitureH = leftmostMod.freeHeight;
@@ -3574,8 +3558,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               spaceInfo
             );
             companionCategory = compModData?.category
-              ?? (leftCompanionMod.moduleId.includes('-upper-') ? 'upper'
-                : leftCompanionMod.moduleId.includes('-lower-') ? 'lower' : 'full');
+              ?? (leftCompanionMod.moduleId.includes('upper') ? 'upper'
+                : leftCompanionMod.moduleId.includes('lower') ? 'lower' : 'full');
             companionH = leftCompanionMod.freeHeight
               ?? leftCompanionMod.customHeight
               ?? compModData?.dimensions.height
@@ -4047,8 +4031,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             if (!rightmostMod) return null;
             const rModData = getModuleById(rightmostMod.moduleId);
             const rCat = rModData?.category
-              ?? (rightmostMod.moduleId.includes('-upper-') ? 'upper'
-                : rightmostMod.moduleId.includes('-lower-') ? 'lower' : 'full');
+              ?? (rightmostMod.moduleId.includes('upper') ? 'upper'
+                : rightmostMod.moduleId.includes('lower') ? 'lower' : 'full');
             if (rCat === 'full') return null;
             const targetCat = rCat === 'upper' ? 'lower' : 'upper';
             return allMods_R.find(m => {
@@ -4060,8 +4044,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               if (!samePosition) return false;
               const mData = getModuleById(m.moduleId);
               const mCat = mData?.category
-                ?? (m.moduleId.includes('-upper-') ? 'upper'
-                  : m.moduleId.includes('-lower-') ? 'lower' : 'full');
+                ?? (m.moduleId.includes('upper') ? 'upper'
+                  : m.moduleId.includes('lower') ? 'lower' : 'full');
               return mCat === targetCat;
             }) ?? null;
           })();
@@ -4108,8 +4092,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           const rightLowerMod = (() => {
             if (!rightmostMod) return rightmostMod;
             const cat = getModuleById(rightmostMod.moduleId)?.category
-              ?? (rightmostMod.moduleId.includes('-upper-') ? 'upper'
-                : rightmostMod.moduleId.includes('-lower-') ? 'lower' : 'full');
+              ?? (rightmostMod.moduleId.includes('upper') ? 'upper'
+                : rightmostMod.moduleId.includes('lower') ? 'lower' : 'full');
             if (cat === 'upper') {
               const lowerMod = allMods_R.find(m => {
                 if (m === rightmostMod) return false;
@@ -4119,8 +4103,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   : Math.abs((m.position?.x ?? 0) - (rightmostMod.position?.x ?? 0)) < 300;
                 if (!samePos) return false;
                 const mCat = getModuleById(m.moduleId)?.category
-                  ?? (m.moduleId.includes('-upper-') ? 'upper'
-                    : m.moduleId.includes('-lower-') ? 'lower' : 'full');
+                  ?? (m.moduleId.includes('upper') ? 'upper'
+                    : m.moduleId.includes('lower') ? 'lower' : 'full');
                 return mCat === 'lower';
               });
               return lowerMod ?? rightmostMod;
@@ -4139,8 +4123,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             spaceInfo
           ) : null;
           let rightCategoryResolved: string = rightModDataForCat?.category
-            ?? (rightmostMod?.moduleId.includes('-upper-') ? 'upper'
-              : rightmostMod?.moduleId.includes('-lower-') ? 'lower' : 'full');
+            ?? (rightmostMod?.moduleId.includes('upper') ? 'upper'
+              : rightmostMod?.moduleId.includes('lower') ? 'lower' : 'full');
           if (rightmostMod) {
             if (rightmostMod.freeHeight) {
               rFurnitureH = rightmostMod.freeHeight;
@@ -4168,8 +4152,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               spaceInfo
             );
             rCompanionCategory = compModData?.category
-              ?? (rightCompanionMod.moduleId.includes('-upper-') ? 'upper'
-                : rightCompanionMod.moduleId.includes('-lower-') ? 'lower' : 'full');
+              ?? (rightCompanionMod.moduleId.includes('upper') ? 'upper'
+                : rightCompanionMod.moduleId.includes('lower') ? 'lower' : 'full');
             rCompanionH = rightCompanionMod.freeHeight
               ?? rightCompanionMod.customHeight
               ?? compModData?.dimensions.height
@@ -5705,8 +5689,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
 
                 // 상부장은 별도 치수선으로 표시하므로 제외
                 const category = moduleData?.category
-                  ?? (module.moduleId.includes('-upper-') ? 'upper'
-                    : module.moduleId.includes('-lower-') ? 'lower' : 'full');
+                  ?? (module.moduleId.includes('upper') ? 'upper'
+                    : module.moduleId.includes('lower') ? 'lower' : 'full');
                 if (category === 'upper') return;
 
                 const moduleHeight = module.freeHeight
@@ -6036,7 +6020,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     spaceInfo
                   );
                   const doorCategory = doorModData?.category
-                    ?? (doorModule.moduleId.includes('-upper-') ? 'upper'
+                    ?? (doorModule.moduleId.includes('upper') ? 'upper'
                       : doorModule.moduleId.startsWith('lower-') ? 'lower' : 'full');
 
                   const doorTopGapVal = doorModule.doorTopGap ?? 5;
@@ -6746,8 +6730,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
 
                 // 상부장은 별도 치수선으로 표시하므로 제외
                 const category = moduleData?.category
-                  ?? (module.moduleId.includes('-upper-') ? 'upper'
-                    : module.moduleId.includes('-lower-') ? 'lower' : 'full');
+                  ?? (module.moduleId.includes('upper') ? 'upper'
+                    : module.moduleId.includes('lower') ? 'lower' : 'full');
                 if (category === 'upper') return;
 
                 const moduleHeight = module.freeHeight
