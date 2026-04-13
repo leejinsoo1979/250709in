@@ -2655,24 +2655,14 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     ? placedModule.position.z  // 기둥 앞 공간: 저장된 위치 사용
     : furnitureZOffset + furnitureDepth / 2 - doorThickness - depth / 2 + baseDepthOffset;
 
-  // 🔴 Z축 디버그
-  if (placedModule.moduleId?.includes('upper-cabinet')) {
-    console.log('🔴 상부장 Z디버그', {
-      moduleId: placedModule.moduleId,
+  // 🔴 Z축 디버그 (상부장+하부장 비교)
+  if (placedModule.moduleId?.includes('upper-cabinet') || placedModule.moduleId?.includes('lower-cabinet') || placedModule.moduleId?.includes('single-open') || placedModule.moduleId?.includes('single-shelf')) {
+    console.log('🔴 Z디버그', placedModule.moduleId, {
       actualDepthMm,
-      moduleDepth,
-      adjustedDepthMm,
-      freeDepth: placedModule.freeDepth,
-      customDepth: placedModule.customDepth,
-      isFreePlacement: placedModule.isFreePlacement,
-      depth_threeUnits: depth,
-      furnitureZOffset,
-      furnitureDepth,
-      doorThickness,
-      baseDepthOffset,
-      furnitureZ,
-      '앞면mm': (furnitureZ + depth / 2) * 100,
-      '뒷면mm': (furnitureZ - depth / 2) * 100,
+      furnitureZ_mm: furnitureZ * 100,
+      앞면mm: (furnitureZ + depth / 2) * 100,
+      뒷면mm: (furnitureZ - depth / 2) * 100,
+      도어앞면mm: (furnitureZ + depth / 2 + doorThickness) * 100,
     });
   }
 
