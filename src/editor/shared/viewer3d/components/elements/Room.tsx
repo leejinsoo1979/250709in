@@ -1683,21 +1683,29 @@ const Room: React.FC<RoomProps> = ({
               ) : null;
             }
 
-            if (!hasDroppedCeiling && hasStepCeiling) {
-              // 커튼박스 없이 단내림만 있는 경우: 2구간 분할 (단내림 + 메인)
+            if (hasStepCeiling && (!hasDroppedCeiling || isFreePlacement)) {
+              // 자유배치: 단내림(stepCeiling) ± 커튼박스(droppedCeiling=위로확장)
+              // 슬롯배치: 단내림만 (hasDroppedCeiling=false)
+              // 구간 구성 (우측 예시): [메인] [단내림] [커튼박스]
+              const freeCbW = (isFreePlacement && hasDroppedCeiling) ? mmToThreeUnits(spaceInfo.droppedCeiling!.width || 150) : 0;
+              const freeCbDropH = (isFreePlacement && hasDroppedCeiling) ? mmToThreeUnits(spaceInfo.droppedCeiling!.dropHeight || 20) : 0;
               const stepAreaWidth = stepWidth;
-              const mainAreaWidth = width - stepWidth;
+              const mainAreaWidth = width - stepWidth - freeCbW;
+
+              // 구간 순서: 단내림/커튼박스는 같은 쪽
+              // 우측: [메인(좌)] [단내림(중)] [커튼박스(우)]
+              // 좌측: [커튼박스(좌)] [단내림(중)] [메인(우)]
               const stepAreaX = isLeftStep
-                ? xOffset + stepAreaWidth / 2
+                ? xOffset + freeCbW + stepAreaWidth / 2
                 : xOffset + mainAreaWidth + stepAreaWidth / 2;
               const mainAreaX = isLeftStep
-                ? xOffset + stepAreaWidth + mainAreaWidth / 2
+                ? xOffset + freeCbW + stepAreaWidth + mainAreaWidth / 2
                 : xOffset + mainAreaWidth / 2;
               const stepCeilingY = panelStartY + height - stepDropHeight + 0.001;
               const mainCeilingY = panelStartY + height + 0.001;
-              // 경계벽: 단내림쪽 천장~메인 천장 사이
+              // 메인↔단내림 경계벽
               const stepBoundaryX = isLeftStep
-                ? xOffset + stepAreaWidth
+                ? xOffset + freeCbW + stepAreaWidth
                 : xOffset + mainAreaWidth;
               const stepBoundaryY = panelStartY + height - stepDropHeight / 2;
 
@@ -1721,7 +1729,7 @@ const Room: React.FC<RoomProps> = ({
                     <planeGeometry args={[mainAreaWidth, extendedPanelDepth]} />
                     <primitive ref={topWallMaterialRef} object={topWallMaterial} />
                   </mesh>
-                  {/* 단내림 경계 수직 벽 — 천장보다 뒤 */}
+                  {/* 메인↔단내림 경계 수직 벽 — 천장보다 뒤 */}
                   <mesh
                     renderOrder={0}
                     position={[stepBoundaryX, stepBoundaryY, extendedZOffset + extendedPanelDepth / 2]}
@@ -1730,6 +1738,42 @@ const Room: React.FC<RoomProps> = ({
                     <planeGeometry args={[extendedPanelDepth, stepDropHeight]} />
                     <primitive object={ceilingBoundaryWallMaterial} />
                   </mesh>
+                  {/* 자유배치 커튼박스 영역 천장 (위로 확장) + 경계벽 */}
+                  {freeCbW > 0 && (() => {
+                    const cbAreaX = isLeftStep
+                      ? xOffset + freeCbW / 2
+                      : xOffset + mainAreaWidth + stepAreaWidth + freeCbW / 2;
+                    const cbCeilingY2 = panelStartY + height + freeCbDropH + 0.001;
+                    // 단내림↔커튼박스 경계벽
+                    const cbBoundaryX2 = isLeftStep
+                      ? xOffset + freeCbW
+                      : xOffset + mainAreaWidth + stepAreaWidth;
+                    // 경계벽 높이: 단내림 천장 ~ 커튼박스 천장 = scDropH + cbDropH
+                    const cbBoundaryH = stepDropHeight + freeCbDropH;
+                    const cbBoundaryY2 = panelStartY + height - stepDropHeight + cbBoundaryH / 2;
+                    return (
+                      <>
+                        {/* 커튼박스 천장 — 맨 뒤 */}
+                        <mesh
+                          position={[cbAreaX, cbCeilingY2, extendedZOffset + extendedPanelDepth / 2]}
+                          rotation={[Math.PI / 2, 0, 0]}
+                          renderOrder={-1}
+                        >
+                          <planeGeometry args={[freeCbW, extendedPanelDepth]} />
+                          <primitive object={opaqueTopWallMaterial} />
+                        </mesh>
+                        {/* 단내림↔커튼박스 경계 수직 벽 — 맨 뒤 */}
+                        <mesh
+                          renderOrder={-1}
+                          position={[cbBoundaryX2, cbBoundaryY2, extendedZOffset + extendedPanelDepth / 2]}
+                          rotation={[0, Math.PI / 2, 0]}
+                        >
+                          <planeGeometry args={[extendedPanelDepth, cbBoundaryH]} />
+                          <primitive object={cbBoundaryWallMaterial} />
+                        </mesh>
+                      </>
+                    );
+                  })()}
                 </>
               ) : null;
             }
