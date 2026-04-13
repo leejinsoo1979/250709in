@@ -613,6 +613,13 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
           }
         }
 
+        console.log('🔍 [자유배치 더블클릭]', {
+          startX, endX, furnitureWidth, newCategory,
+          sortedBounds: sortedBounds.map(b => ({ left: b.left, right: b.right, cat: b.category })),
+          candidates: candidates.map(c => ({ left: c.left, right: c.right, width: c.right - c.left })),
+          moduleId: module.id,
+        });
+
         // 좌측부터 순서대로 들어갈 수 있는 첫 빈 공간에 배치
         let targetX: number | null = null;
         for (const gap of candidates) {
