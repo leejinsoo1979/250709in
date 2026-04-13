@@ -86,55 +86,25 @@ const UpperCabinet: React.FC<FurnitureTypeProps> = ({
           <BaseFurnitureShell {...baseFurniture} isDragging={isDragging} isEditMode={isEditMode} hasBackPanel={hasBackPanel} isFloating={true} spaceInfo={spaceInfo} moduleData={moduleData} lowerSectionTopOffsetMm={lowerSectionTopOffset} renderMode={renderMode} topPanelNotchSize={topPanelNotchSize} topPanelNotchSide={topPanelNotchSide}>
             {/* 내부 구조는 항상 렌더링 (서랍/선반) */}
             <>
-                {/* 듀얼 가구인 경우 좌우 섹션 별도 렌더링 */}
+                {/* 듀얼 가구도 칸막이 없이 전체 너비로 선반 렌더링 */}
                 {isDual ? (
-                  <>
-                    {/* 왼쪽 섹션 */}
-                    <group position={[leftX, 0, 0]}>
-                      <SectionsRenderer
-                        modelConfig={{ sections: baseFurniture.modelConfig.leftSections! }}
-                        height={baseFurniture.height}
-                        innerWidth={sectionWidth}
-                        depth={baseFurniture.depth}
-                        adjustedDepthForShelves={baseFurniture.adjustedDepthForShelves}
-                        basicThickness={baseFurniture.basicThickness}
-                        shelfZOffset={baseFurniture.shelfZOffset}
-                        material={baseFurniture.material}
-                        calculateSectionHeight={baseFurniture.calculateSectionHeight}
-                        mmToThreeUnits={baseFurniture.mmToThreeUnits}
-                        renderMode={renderMode}
-                        furnitureId={moduleData.id}
-                        hideSectionDimensions={false}
-                        lowerSectionTopOffsetMm={lowerSectionTopOffset}
-                        isFloatingPlacement={spaceInfo?.baseConfig?.placementType === 'float'}
-                        shelfFrontInsetMm={30}
-                      />
-                    </group>
-
-                    {/* 중앙 분리대 제거됨 — 상부장은 세로 칸막이 없음 */}
-
-                    {/* 오른쪽 섹션 */}
-                    <group position={[rightX, 0, 0]}>
-                      <SectionsRenderer
-                        modelConfig={{ sections: baseFurniture.modelConfig.rightSections! }}
-                        height={baseFurniture.height}
-                        innerWidth={sectionWidth}
-                        depth={baseFurniture.depth}
-                        adjustedDepthForShelves={baseFurniture.adjustedDepthForShelves}
-                        basicThickness={baseFurniture.basicThickness}
-                        shelfZOffset={baseFurniture.shelfZOffset}
-                        material={baseFurniture.material}
-                        calculateSectionHeight={baseFurniture.calculateSectionHeight}
-                        mmToThreeUnits={baseFurniture.mmToThreeUnits}
-                        renderMode={renderMode}
-                        furnitureId={moduleData.id}
-                        hideSectionDimensions={true}
-                        lowerSectionTopOffsetMm={lowerSectionTopOffset}
-                        isFloatingPlacement={spaceInfo?.baseConfig?.placementType === 'float'}
-                        shelfFrontInsetMm={30}
-                      />
-                    </group>
-                  </>
+                  <SectionsRenderer
+                    modelConfig={{ sections: baseFurniture.modelConfig.leftSections! }}
+                    height={baseFurniture.height}
+                    innerWidth={baseFurniture.innerWidth}
+                    depth={baseFurniture.depth}
+                    adjustedDepthForShelves={baseFurniture.adjustedDepthForShelves}
+                    basicThickness={baseFurniture.basicThickness}
+                    shelfZOffset={baseFurniture.shelfZOffset}
+                    material={baseFurniture.material}
+                    calculateSectionHeight={baseFurniture.calculateSectionHeight}
+                    mmToThreeUnits={baseFurniture.mmToThreeUnits}
+                    renderMode={renderMode}
+                    furnitureId={moduleData.id}
+                    lowerSectionTopOffsetMm={lowerSectionTopOffset}
+                    isFloatingPlacement={spaceInfo?.baseConfig?.placementType === 'float'}
+                    shelfFrontInsetMm={30}
+                  />
                 ) : (
                   /* 싱글 가구인 경우 기존 방식 */
                   <SectionsRenderer
