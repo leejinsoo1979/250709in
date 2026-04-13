@@ -574,19 +574,28 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
         let dims = lastDims
           ? { width: lastDims.width, height: lastDims.height, depth: lastDims.depth }
           : { ...module.dimensions };
-        let { startX, endX } = getInternalSpaceBoundsX(spaceInfo);
+        const fullBounds = getInternalSpaceBoundsX(spaceInfo);
 
-        // 단내림(stepCeiling) 활성 시: 더블클릭은 메인 구간에만 배치
-        // getInternalSpaceBoundsX는 단내림+메인 통합 영역을 반환하므로 메인 구간으로 제한
-        if (spaceInfo.stepCeiling?.enabled) {
-          const stepWidth = spaceInfo.stepCeiling.width || 0;
-          const stepPos = spaceInfo.stepCeiling.position || 'right';
-          const middleGap = spaceInfo.gapConfig?.middle ?? 1.5;
-          if (stepPos === 'left') {
-            startX += stepWidth + middleGap;
-          } else {
-            endX -= stepWidth + middleGap;
-          }
+        // 단내림(stepCeiling) 활성 시: 메인 구간 + 단내림 구간을 별도로 검색
+        const hasStepCeiling = !!spaceInfo.stepCeiling?.enabled;
+        const stepWidth = hasStepCeiling ? (spaceInfo.stepCeiling!.width || 0) : 0;
+        const stepPos = hasStepCeiling ? (spaceInfo.stepCeiling!.position || 'right') : 'right';
+        const middleGap = spaceInfo.gapConfig?.middle ?? 1.5;
+
+        // 구간별 영역 계산
+        interface ZoneRange { startX: number; endX: number; zone: 'main' | 'step' }
+        const zones: ZoneRange[] = [];
+        if (hasStepCeiling) {
+          // 메인 구간
+          const mainStart = stepPos === 'left' ? fullBounds.startX + stepWidth + middleGap : fullBounds.startX;
+          const mainEnd = stepPos === 'right' ? fullBounds.endX - stepWidth - middleGap : fullBounds.endX;
+          zones.push({ startX: mainStart, endX: mainEnd, zone: 'main' });
+          // 단내림 구간
+          const stepStart = stepPos === 'left' ? fullBounds.startX : fullBounds.endX - stepWidth;
+          const stepEnd = stepPos === 'left' ? fullBounds.startX + stepWidth : fullBounds.endX;
+          zones.push({ startX: stepStart, endX: stepEnd, zone: 'step' });
+        } else {
+          zones.push({ startX: fullBounds.startX, endX: fullBounds.endX, zone: 'main' });
         }
 
         // 좌측부터 순서대로 빈 자리 찾기
@@ -597,56 +606,59 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
         const allBounds = freeModules.map(m => getModuleBoundsX(m)).sort((a, b) => a.left - b.left);
 
         // upper/lower 공존: 다른 카테고리 가구는 장애물에서 제외
-        // full 가구는 모든 가구가 장애물
         const isCoexistable = newCategory === 'upper' || newCategory === 'lower';
         const blockingBounds = isCoexistable
           ? allBounds.filter(b => b.category === newCategory || b.category === 'full')
           : allBounds;
         const sortedBounds = blockingBounds.sort((a, b) => a.left - b.left);
 
-        // 후보 빈 공간: 왼쪽 벽부터 오른쪽 벽까지 순서대로
-        const candidates: { left: number; right: number }[] = [];
-        if (sortedBounds.length === 0) {
-          candidates.push({ left: startX, right: endX });
-        } else {
-          // 왼쪽 벽 ~ 첫 가구
-          if (sortedBounds[0].left > startX) {
-            candidates.push({ left: startX, right: sortedBounds[0].left });
-          }
-          // 가구 사이
-          for (let i = 0; i < sortedBounds.length - 1; i++) {
-            if (sortedBounds[i + 1].left > sortedBounds[i].right) {
-              candidates.push({ left: sortedBounds[i].right, right: sortedBounds[i + 1].left });
+        // 각 구간에서 후보 빈 공간 수집 (메인 우선, 단내림 다음)
+        let targetX: number | null = null;
+        for (const zone of zones) {
+          const { startX, endX } = zone;
+
+          const candidates: { left: number; right: number }[] = [];
+          // 구간 내 장애물만 필터링
+          const zoneBounds = sortedBounds.filter(b => b.right > startX && b.left < endX);
+          if (zoneBounds.length === 0) {
+            candidates.push({ left: startX, right: endX });
+          } else {
+            if (zoneBounds[0].left > startX) {
+              candidates.push({ left: startX, right: zoneBounds[0].left });
+            }
+            for (let i = 0; i < zoneBounds.length - 1; i++) {
+              if (zoneBounds[i + 1].left > zoneBounds[i].right) {
+                candidates.push({ left: zoneBounds[i].right, right: zoneBounds[i + 1].left });
+              }
+            }
+            const lastRight = zoneBounds[zoneBounds.length - 1].right;
+            if (endX > lastRight) {
+              candidates.push({ left: lastRight, right: endX });
             }
           }
-          // 마지막 가구 ~ 오른쪽 벽
-          const lastRight = sortedBounds[sortedBounds.length - 1].right;
-          if (endX > lastRight) {
-            candidates.push({ left: lastRight, right: endX });
+
+          // 정확히 들어가는 첫 빈 공간
+          for (const gap of candidates) {
+            if ((gap.right - gap.left) >= furnitureWidth) {
+              targetX = gap.left + furnitureWidth / 2;
+              break;
+            }
           }
-        }
+          if (targetX !== null) break;
 
-
-        // 좌측부터 순서대로 들어갈 수 있는 첫 빈 공간에 배치
-        let targetX: number | null = null;
-        for (const gap of candidates) {
-          if ((gap.right - gap.left) >= furnitureWidth) {
-            targetX = gap.left + furnitureWidth / 2;
-            break;
-          }
-        }
-
-        // 빈 공간에 못 들어가면, 가장 큰 빈 공간에 맞게 너비 축소 배치
-        if (targetX === null && candidates.length > 0) {
-          const largestGap = candidates.reduce((max, g) => {
-            const w = g.right - g.left;
-            return w > (max.right - max.left) ? g : max;
-          }, candidates[0]);
-          const gapWidth = Math.floor(largestGap.right - largestGap.left);
-          if (gapWidth >= 200) {
-            furnitureWidth = gapWidth;
-            dims = { ...dims, width: furnitureWidth };
-            targetX = largestGap.left + furnitureWidth / 2;
+          // 축소 배치 시도
+          if (candidates.length > 0) {
+            const largestGap = candidates.reduce((max, g) => {
+              const w = g.right - g.left;
+              return w > (max.right - max.left) ? g : max;
+            }, candidates[0]);
+            const gapWidth = Math.floor(largestGap.right - largestGap.left);
+            if (gapWidth >= 200) {
+              furnitureWidth = gapWidth;
+              dims = { ...dims, width: furnitureWidth };
+              targetX = largestGap.left + furnitureWidth / 2;
+              break;
+            }
           }
         }
 
