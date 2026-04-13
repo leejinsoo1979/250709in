@@ -2673,6 +2673,9 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     epOffsetX = (leftEp - rightEp) / 2; // 좌EP만: 본체 →, 우EP만: 본체 ←
   }
 
+  // 🔴 Z축 디버그
+  console.log('🔴 Z', placedModule.moduleId, { depthMm: actualDepthMm, Z_mm: furnitureZ * 100, 뒷면: (furnitureZ - depth/2) * 100, 앞면: (furnitureZ + depth/2) * 100, backWall_mm: backWall * 100, panelDepthMm });
+
   const furnitureGroupPosition: [number, number, number] = [
     adjustedPosition.x + positionAdjustmentForEndPanel + epOffsetX,
     adjustedPosition.y, // finalYPosition 대신 직접 사용 (TDZ 에러 방지)
