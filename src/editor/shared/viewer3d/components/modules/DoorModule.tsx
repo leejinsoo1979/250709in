@@ -174,7 +174,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   const floatHeightSource = storeFloatHeight !== undefined ? storeFloatHeight : (propFloatHeight ?? 0);
   const floatHeight = placementType === 'float' ? floatHeightSource : 0;
   // Store에서 재질 설정과 도어 상태 가져오기
-  const { doorsOpen, view2DDirection, view2DTheme, isIndividualDoorOpen, toggleIndividualDoor, selectedSlotIndex } = useUIStore();
+  const { doorsOpen, view2DDirection, view2DTheme, isIndividualDoorOpen, toggleIndividualDoor, selectedSlotIndex, showDimensions } = useUIStore();
   const { renderMode, viewMode, plainMaterial: isPlainMaterial } = useSpace3DView(); // context에서 renderMode와 viewMode 가져오기
   const { gl } = useThree(); // Three.js renderer 가져오기
   const { dimensionColor } = useDimensionColor(); // 치수 색상
@@ -1514,7 +1514,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
               })()}
 
               {/* 왼쪽 도어 가로 폭 치수 (2D 정면뷰 + 3D, 상부장 제외) */}
-              {!isPlainMaterial && (viewMode === '3D' || (viewMode === '2D' && view2DDirection === 'front')) && !isUpperCabinet && (() => {
+              {showDimensions && !isPlainMaterial && (viewMode === '3D' || (viewMode === '2D' && view2DDirection === 'front')) && !isUpperCabinet && (() => {
                 const is3D = viewMode === '3D';
                 const extensionLineStart = mmToThreeUnits(70);
                 const extensionLineLength = mmToThreeUnits(110);
@@ -1846,7 +1846,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
               })()}
 
               {/* 오른쪽 도어 가로 폭 치수 (2D 정면뷰 + 3D, 상부장 제외) */}
-              {!isPlainMaterial && (viewMode === '3D' || (viewMode === '2D' && view2DDirection === 'front')) && !isUpperCabinet && (() => {
+              {showDimensions && !isPlainMaterial && (viewMode === '3D' || (viewMode === '2D' && view2DDirection === 'front')) && !isUpperCabinet && (() => {
                 const is3D = viewMode === '3D';
                 const extensionLineStart = mmToThreeUnits(70);
                 const extensionLineLength = mmToThreeUnits(110);
@@ -2362,7 +2362,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
             })()}
 
             {/* 도어 가로 폭 치수 (2D 정면뷰 + 3D, 상부장 제외) */}
-            {!isPlainMaterial && (viewMode === '3D' || (viewMode === '2D' && view2DDirection === 'front')) && !isUpperCabinet && (() => {
+            {showDimensions && !isPlainMaterial && (viewMode === '3D' || (viewMode === '2D' && view2DDirection === 'front')) && !isUpperCabinet && (() => {
               const is3D = viewMode === '3D';
               const extensionLineStart = mmToThreeUnits(70);
               const extensionLineLength = mmToThreeUnits(110);
