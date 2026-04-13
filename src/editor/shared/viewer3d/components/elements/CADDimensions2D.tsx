@@ -812,22 +812,23 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
 
             const modCat = getModuleCategory(mod);
             const moduleHeightMm = computeFurnitureHeightMm(mod, modData, spaceInfo, internalSpace);
-            const doorTopGapVal = mod.doorTopGap ?? spaceInfo.doorTopGap ?? 0;
-            const doorBottomGapVal = mod.doorBottomGap ?? spaceInfo.doorBottomGap ?? 0;
+            // placedModulesStore에서 최신 doorGap 값 읽기 (visibleFurniture의 mod는 stale할 수 있음)
+            const storeMod = placedModulesStore.find(m => m.id === mod.id);
+            const doorTopGapVal = storeMod?.doorTopGap ?? mod.doorTopGap ?? spaceInfo.doorTopGap ?? 0;
+            const doorBottomGapVal = storeMod?.doorBottomGap ?? mod.doorBottomGap ?? spaceInfo.doorBottomGap ?? 0;
 
             let doorBottomAbsMm = 0;
             let doorTopAbsMm = 0;
             let doorHeightMm = 0;
 
             if (modCat === 'upper') {
-              // DoorModule과 동일: effectiveInternalHeight || dimensions.height (delta 보정 없는 원본값)
+              // DoorModule과 동일: freeHeight || dimensions.height (delta 보정 없는 원본값)
               const cabinetH = mod.freeHeight || modData.dimensions.height || 600;
               const topFrameVal = mod.topFrameThickness ?? (spaceInfo.frameSize?.top ?? 30);
               const topExtension = topFrameVal - doorTopGapVal;
               doorHeightMm = cabinetH + topExtension + doorBottomGapVal;
               doorTopAbsMm = effectiveH_door - doorTopGapVal;
               doorBottomAbsMm = doorTopAbsMm - doorHeightMm;
-              console.log('📐 CAD좌측 상부장 도어:', { cabinetH, topFrameVal, doorTopGapVal, doorBottomGapVal, topExtension, doorHeightMm, doorTopAbsMm, doorBottomAbsMm, effectiveH_door, freeHeight: mod.freeHeight, dimHeight: modData.dimensions.height, moduleId: mod.moduleId, modDoorTopGap: mod.doorTopGap, modDoorBottomGap: mod.doorBottomGap, spaceDoorTopGap: spaceInfo.doorTopGap, spaceDoorBottomGap: spaceInfo.doorBottomGap });
             } else if (modCat === 'lower') {
               const cabinetH = modData.dimensions.height ?? 1000;
               const cabinetBottomAbs = (isFloating ? floatHeightMm : (railOrBaseHeightMm + indivFloatMm)) + floorFinishHeightMm;
@@ -1564,8 +1565,10 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
 
             // 단일 도어 가구 (하부장 일반, 상부장, 키큰장)
             const moduleHeightMm_d = modData ? computeFurnitureHeightMm(mod as PlacedModule, modData, spaceInfo, internalSpace) : 0;
-            const doorTopGapVal = mod.doorTopGap ?? spaceInfo.doorTopGap ?? 0;
-            const doorBottomGapVal = mod.doorBottomGap ?? spaceInfo.doorBottomGap ?? 0;
+            // placedModulesStore에서 최신 doorGap 값 읽기
+            const storeMod_ld = placedModulesStore.find(m => m.id === mod.id);
+            const doorTopGapVal = storeMod_ld?.doorTopGap ?? mod.doorTopGap ?? spaceInfo.doorTopGap ?? 0;
+            const doorBottomGapVal = storeMod_ld?.doorBottomGap ?? mod.doorBottomGap ?? spaceInfo.doorBottomGap ?? 0;
 
             let doorHeightMm = 0;
             let doorBottomAbsMm = 0;
@@ -1834,20 +1837,21 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
 
             const modCat = getModuleCategory(mod);
             const moduleHeightMm = computeFurnitureHeightMm(mod, modData, spaceInfo, internalSpace);
-            const doorTopGapVal = mod.doorTopGap ?? spaceInfo.doorTopGap ?? 0;
-            const doorBottomGapVal = mod.doorBottomGap ?? spaceInfo.doorBottomGap ?? 0;
+            // placedModulesStore에서 최신 doorGap 값 읽기
+            const storeMod_r = placedModulesStore.find(m => m.id === mod.id);
+            const doorTopGapVal = storeMod_r?.doorTopGap ?? mod.doorTopGap ?? spaceInfo.doorTopGap ?? 0;
+            const doorBottomGapVal = storeMod_r?.doorBottomGap ?? mod.doorBottomGap ?? spaceInfo.doorBottomGap ?? 0;
 
             let doorBottomAbsMm = 0;
             let doorTopAbsMm = 0;
             let doorHeightMm = 0;
 
             if (modCat === 'upper') {
-              // DoorModule과 동일: effectiveInternalHeight || dimensions.height (delta 보정 없는 원본값)
-              const cabinetH = mod.freeHeight || modData.dimensions.height || 600;
+              // 천장에서 상부장 바닥(마감판 하단)까지의 전체 높이
               const topFrameVal = mod.topFrameThickness ?? (spaceInfo.frameSize?.top ?? 30);
-              const topExtension = topFrameVal - doorTopGapVal;
-              doorHeightMm = cabinetH + topExtension + doorBottomGapVal;
-              doorTopAbsMm = effectiveH_rd - doorTopGapVal;
+              const finishPanelThickness = 18; // 하부마감판 18mm
+              doorHeightMm = topFrameVal + moduleHeightMm + finishPanelThickness;
+              doorTopAbsMm = effectiveH_rd;
               doorBottomAbsMm = doorTopAbsMm - doorHeightMm;
             } else if (modCat === 'lower') {
               const cabinetH = modData.dimensions.height ?? 1000;
@@ -2322,8 +2326,10 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
 
             // 단일 도어 가구 (하부장 일반, 상부장, 키큰장)
             const moduleHeightMm_d = modData ? computeFurnitureHeightMm(mod as PlacedModule, modData, spaceInfo, internalSpace) : 0;
-            const doorTopGapVal = mod.doorTopGap ?? spaceInfo.doorTopGap ?? 0;
-            const doorBottomGapVal = mod.doorBottomGap ?? spaceInfo.doorBottomGap ?? 0;
+            // placedModulesStore에서 최신 doorGap 값 읽기
+            const storeMod_rd = placedModulesStore.find(m => m.id === mod.id);
+            const doorTopGapVal = storeMod_rd?.doorTopGap ?? mod.doorTopGap ?? spaceInfo.doorTopGap ?? 0;
+            const doorBottomGapVal = storeMod_rd?.doorBottomGap ?? mod.doorBottomGap ?? spaceInfo.doorBottomGap ?? 0;
 
             let doorHeightMm = 0;
             let doorBottomAbsMm = 0;
