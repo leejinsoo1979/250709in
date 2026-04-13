@@ -815,13 +815,23 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           // 하부장/키큰장 도어: 기존 우측 고정 위치
           const dimZ = spaceDepth/2 + rightDimOffset - mmToThreeUnits(750);
           const dimExtZ = dimZ - mmToThreeUnits(360);
-          // 상부장 도어: 가구 앞면 바로 우측
+          // 상부장 도어: 상부장 앞면 바로 우측 (상부장 Z 위치 계산 — 깊이치수와 동일)
           const panelDepthMm_ud = spaceInfo.depth || 1500;
-          const panelDepthU_ud = mmToThreeUnits(panelDepthMm_ud);
-          const furnitureDepthU_ud = mmToThreeUnits(600);
-          const furnitureFrontZ_ud = -panelDepthU_ud / 2 + (panelDepthU_ud - furnitureDepthU_ud) / 2 + furnitureDepthU_ud / 2;
-          const upperDimZ = furnitureFrontZ_ud + mmToThreeUnits(200);
-          const upperDimExtZ = furnitureFrontZ_ud + mmToThreeUnits(20);
+          const panelDepth_ud = mmToThreeUnits(panelDepthMm_ud);
+          const furnitureDepth_ud = mmToThreeUnits(Math.min(panelDepthMm_ud, 600));
+          const doorThk_ud = mmToThreeUnits(20);
+          const zOff_ud = -panelDepth_ud / 2;
+          const fzOff_ud = zOff_ud + (panelDepth_ud - furnitureDepth_ud) / 2;
+          // 상부장 Z: 하부장 뒷면 맞춤 (FurnitureItem.tsx와 동일)
+          const lowerDepth_ud = mmToThreeUnits(650);
+          // 상부장 깊이 (첫 번째 상부장 모듈 기준)
+          const firstUpperMod = visibleFurniture.find(m => getModuleCategory(m as PlacedModule) === 'upper') as PlacedModule | undefined;
+          const upperModDepthMm = firstUpperMod?.upperSectionDepth || firstUpperMod?.customDepth || 300;
+          const upperModDepth_ud = mmToThreeUnits(upperModDepthMm);
+          const upperFurnitureZ = fzOff_ud + furnitureDepth_ud / 2 - doorThk_ud - lowerDepth_ud + upperModDepth_ud / 2;
+          const upperFrontZ = upperFurnitureZ + upperModDepth_ud / 2;
+          const upperDimZ = upperFrontZ + mmToThreeUnits(200);
+          const upperDimExtZ = upperFrontZ + mmToThreeUnits(20);
           const effectiveH_door = isSelectedSlotInDroppedZone ? (spaceInfo.height - dropHeightMm) : spaceInfo.height;
 
           const doorSegs: { bottomY: number; topY: number; heightMm: number; key: string; isUpper: boolean }[] = [];
@@ -1174,114 +1184,73 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                 {customDepth}
               </Text>
 
-              {/* 상부장 하부마감판 깊이 치수 */}
+              {/* 상부장 하부마감판 깊이 치수 + 뒤쪽 갭 치수 */}
               {isUpperMod && (() => {
-                const finishDepthMm = customDepth - 35; // 마감판 깊이 = 가구 깊이 - 35mm
+                const finishDepthMm = customDepth - 35;
                 const finishDepth = mmToThreeUnits(finishDepthMm);
-                // 마감판 Z 중심: 가구 앞면에서 17.5mm 뒤로 이동
                 const finishZ = furnitureZ + mmToThreeUnits(17.5);
-                // 치수선 Y위치: 가구 바닥 아래
                 const finishDimY = furnitureBottomEdge - mmToThreeUnits(200);
+                const cabinetBackZ = furnitureZ - moduleDepth / 2;
+                const finishBackZ = finishZ - finishDepth / 2;
+                const offsetMm = 35;
 
                 return (
                   <group>
                     {/* 보조 가이드 연장선 - 앞쪽 */}
                     <ExtLine points={[[0, furnitureBottomEdge, finishZ + finishDepth/2], [0, finishDimY, finishZ + finishDepth/2]]} color={dimensionColor} />
 
-                    {/* 보조 가이드 연장선 - 뒤쪽 */}
-                    <ExtLine points={[[0, furnitureBottomEdge, finishZ - finishDepth/2], [0, finishDimY, finishZ - finishDepth/2]]} color={dimensionColor} />
+                    {/* 보조 가이드 연장선 - 마감판 뒤쪽 (갭 치수선 높이까지) */}
+                    <ExtLine points={[[0, furnitureBottomEdge, finishBackZ], [0, finishDimY, finishBackZ]]} color={dimensionColor} />
+
+                    {/* 보조 가이드 연장선 - 가구 뒤쪽 (갭 치수선 높이까지) */}
+                    <ExtLine points={[[0, furnitureBottomEdge, cabinetBackZ], [0, finishDimY, cabinetBackZ]]} color={dimensionColor} />
 
                     {/* 마감판 깊이 치수선 */}
                     <NativeLine name="dimension_line"
-                      points={[
-                        [0, finishDimY, finishZ - finishDepth/2],
-                        [0, finishDimY, finishZ + finishDepth/2]
-                      ]}
-                      color={dimensionColor}
-                      lineWidth={0.5}
-                      renderOrder={100000}
-                      depthTest={false}
+                      points={[[0, finishDimY, finishBackZ], [0, finishDimY, finishZ + finishDepth/2]]}
+                      color={dimensionColor} lineWidth={0.5} renderOrder={100000} depthTest={false}
                     />
-
                     {/* 앞쪽 티크 */}
                     <NativeLine name="dimension_line"
-                      points={[
-                        [0 - 0.02, finishDimY, finishZ + finishDepth/2],
-                        [0 + 0.02, finishDimY, finishZ + finishDepth/2]
-                      ]}
-                      color={dimensionColor}
-                      lineWidth={0.5}
-                      renderOrder={100000}
-                      depthTest={false}
+                      points={[[0 - 0.02, finishDimY, finishZ + finishDepth/2], [0 + 0.02, finishDimY, finishZ + finishDepth/2]]}
+                      color={dimensionColor} lineWidth={0.5} renderOrder={100000} depthTest={false}
                     />
-
                     {/* 뒤쪽 티크 */}
                     <NativeLine name="dimension_line"
-                      points={[
-                        [0 - 0.02, finishDimY, finishZ - finishDepth/2],
-                        [0 + 0.02, finishDimY, finishZ - finishDepth/2]
-                      ]}
-                      color={dimensionColor}
-                      lineWidth={0.5}
-                      renderOrder={100000}
-                      depthTest={false}
+                      points={[[0 - 0.02, finishDimY, finishBackZ], [0 + 0.02, finishDimY, finishBackZ]]}
+                      color={dimensionColor} lineWidth={0.5} renderOrder={100000} depthTest={false}
                     />
-
                     {/* 마감판 깊이 텍스트 */}
                     <Text
                       position={[0, finishDimY - mmToThreeUnits(40), finishZ]}
-                      fontSize={largeFontSize}
-                      color={textColor}
-                      anchorX="center"
-                      anchorY="middle"
-                      renderOrder={1000}
-                      depthTest={false}
+                      fontSize={largeFontSize} color={textColor}
+                      anchorX="center" anchorY="middle"
+                      renderOrder={1000} depthTest={false}
                       rotation={[0, -Math.PI / 2, 0]}
                     >
                       {finishDepthMm}
                     </Text>
 
-                    {/* 마감판 뒤쪽 옵셋 치수 (가구 뒷면 ~ 마감판 뒷면 = 35mm) */}
-                    {(() => {
-                      const cabinetBackZ = furnitureZ - moduleDepth / 2; // 가구 뒷면
-                      const finishBackZ = finishZ - finishDepth / 2; // 마감판 뒷면
-                      const offsetMm = 35;
-                      const midY = (furnitureBottomEdge + finishDimY) / 2;
-
-                      return (
-                        <group>
-                          {/* 가이드 연장선 - 가구 뒷면 (짧게) */}
-                          <ExtLine points={[[0, furnitureBottomEdge, cabinetBackZ], [0, midY, cabinetBackZ]]} color={dimensionColor} />
-                          {/* 가이드 연장선 - 마감판 뒷면 (짧게, 이미 위에서 그려짐 — 중간까지만 추가) */}
-
-                          {/* 옵셋 치수선 */}
-                          <NativeLine name="dimension_line"
-                            points={[[0, midY, cabinetBackZ], [0, midY, finishBackZ]]}
-                            color={dimensionColor} lineWidth={0.5} renderOrder={100000} depthTest={false}
-                          />
-                          {/* 앞쪽 티크 */}
-                          <NativeLine name="dimension_line"
-                            points={[[0 - 0.02, midY, finishBackZ], [0 + 0.02, midY, finishBackZ]]}
-                            color={dimensionColor} lineWidth={0.5} renderOrder={100000} depthTest={false}
-                          />
-                          {/* 뒤쪽 티크 */}
-                          <NativeLine name="dimension_line"
-                            points={[[0 - 0.02, midY, cabinetBackZ], [0 + 0.02, midY, cabinetBackZ]]}
-                            color={dimensionColor} lineWidth={0.5} renderOrder={100000} depthTest={false}
-                          />
-                          {/* 옵셋 텍스트 */}
-                          <Text
-                            position={[0, midY - mmToThreeUnits(40), (cabinetBackZ + finishBackZ) / 2]}
-                            fontSize={largeFontSize} color={textColor}
-                            anchorX="center" anchorY="middle"
-                            renderOrder={1000} depthTest={false}
-                            rotation={[0, -Math.PI / 2, 0]}
-                          >
-                            {offsetMm}
-                          </Text>
-                        </group>
-                      );
-                    })()}
+                    {/* 갭 치수선 (가구 뒷면 ~ 마감판 뒷면 = 35mm) — 같은 높이 */}
+                    <NativeLine name="dimension_line"
+                      points={[[0, finishDimY, cabinetBackZ], [0, finishDimY, finishBackZ]]}
+                      color={dimensionColor} lineWidth={0.5} renderOrder={100000} depthTest={false}
+                    />
+                    {/* 갭 뒤쪽 티크 */}
+                    <NativeLine name="dimension_line"
+                      points={[[0 - 0.02, finishDimY, cabinetBackZ], [0 + 0.02, finishDimY, cabinetBackZ]]}
+                      color={dimensionColor} lineWidth={0.5} renderOrder={100000} depthTest={false}
+                    />
+                    {/* 갭 텍스트 */}
+                    <Text
+                      position={[0, finishDimY - mmToThreeUnits(40), (cabinetBackZ + finishBackZ) / 2]}
+                      fontSize={largeFontSize} color={textColor}
+                      anchorX="center" anchorY="middle"
+                      renderOrder={1000} depthTest={false}
+                      rotation={[0, -Math.PI / 2, 0]}
+                    >
+                      {offsetMm}
+                    </Text>
                   </group>
                 );
               })()}
