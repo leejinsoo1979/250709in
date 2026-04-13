@@ -2125,9 +2125,9 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     // 이격은 통합 배치공간의 양 끝에만 적용 (구간 경계에는 이격 없음)
 
                     // 메인 구간 좌/우에 인접한 것 → 해당 쪽 이격 결정
-                    // 단내림(step)은 통합 배치공간에 포함 → 'wall'로 처리 (경계이격은 별도 치수로 표시)
-                    const mainLeftAdj = dcOnLeft ? 'dropped' : 'wall';
-                    const mainRightAdj = dcOnRight ? 'dropped' : 'wall';
+                    // 단내림(step)은 통합 배치공간에 포함, 커튼박스는 별도 구간
+                    const mainLeftAdj = cbOnLeft ? 'curtainbox' : (scOnLeft ? 'step' : 'wall');
+                    const mainRightAdj = cbOnRight ? 'curtainbox' : (scOnRight ? 'step' : 'wall');
                     const mainLeftGap = mainLeftAdj === 'wall' ? (hasLeftWall ? leftGapMm : 0) : middleGapMm;
                     const mainRightGap = mainRightAdj === 'wall' ? (hasRightWall ? rightGapMm : 0) : middleGapMm;
 
@@ -2163,28 +2163,28 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     }
 
                     // 메인 배치폭: 각 방향별 delta 계산
-                    // - 단내림 인접 → 단내림 가구가 경계이격을 침범 → 차감 (-middleGap)
-                    // - 커튼박스 인접 → 메인 가구가 커튼박스 쪽으로 밀림 → 확장 (+gap)
+                    // - 단내림(step) 인접 → 단내림 가구가 경계이격을 침범 → 차감 (-middleGap)
+                    // - 커튼박스(CB) 인접 → CB는 배치불가 구간이므로 경계이격 차감 (-middleGap)
                     // - 벽 인접 → 벽이격 차감 (-wallGap)
                     let mainLeftDelta = 0;
-                    if (scOnLeft) {
+                    if (cbOnLeft) {
+                      // 메인 좌측 = 커튼박스 인접 → 경계이격 차감
+                      mainLeftDelta = -(hasLeftWall ? leftGapMm : middleGapMm);
+                    } else if (scOnLeft) {
                       // 메인 좌측 = 단내림 인접 → 단내림 가구가 침범 → 차감
                       mainLeftDelta = -middleGapMm;
-                    } else if (dcOnLeft) {
-                      // 메인 좌측 = 커튼박스 인접 → 메인 가구가 밀려서 확장 → 가산
-                      mainLeftDelta = middleGapMm;
                     } else {
                       // 메인 좌측 = 벽 → 벽이격 차감
                       mainLeftDelta = -(hasLeftWall ? leftGapMm : 0);
                     }
 
                     let mainRightDelta = 0;
-                    if (scOnRight) {
+                    if (cbOnRight) {
+                      // 메인 우측 = 커튼박스 인접 → 경계이격 차감
+                      mainRightDelta = -(hasRightWall ? rightGapMm : middleGapMm);
+                    } else if (scOnRight) {
                       // 메인 우측 = 단내림 인접 → 단내림 가구가 침범 → 차감
                       mainRightDelta = -middleGapMm;
-                    } else if (dcOnRight) {
-                      // 메인 우측 = 커튼박스 인접 → 메인 가구가 밀려서 확장 → 가산
-                      mainRightDelta = middleGapMm;
                     } else {
                       // 메인 우측 = 벽 → 벽이격 차감
                       mainRightDelta = -(hasRightWall ? rightGapMm : 0);
