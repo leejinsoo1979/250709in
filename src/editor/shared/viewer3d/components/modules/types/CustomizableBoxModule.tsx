@@ -2156,7 +2156,7 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
       {renderEditingHighlight()}
 
       {/* 섹션 내경 치수 (높이 + 칸막이 좌우 너비) */}
-      {!isDragging && viewMode === '2D' && view2DDirection === 'front' && (() => {
+      {showDimensions && !isDragging && viewMode === '2D' && view2DDirection === 'front' && (() => {
         const zPos = D / 2 + 1.0;
         // 가구 내부 좌측에 표시 (측판 바로 안쪽)
         const xPos = -innerW / 2 + 0.6;

@@ -159,6 +159,7 @@ const SingleDrawer: React.FC<SingleDrawerProps> = ({
   const { viewMode } = useSpace3DView();
   const view2DDirection = useUIStore(state => state.view2DDirection);
   const view2DTheme = useUIStore(state => state.view2DTheme);
+  const showDimensions = useUIStore(state => state.showDimensions);
 
   const i = index;
   const getPanelMaterial = (_: string) => material;
@@ -655,7 +656,7 @@ export const ExternalDrawerRenderer: React.FC<ExternalDrawerRendererProps> = ({
       })}
 
       {/* 마이다 하단 폭 치수 (1단 마이다 기준) */}
-      {showMaida && zones.length > 0 && (viewMode === '3D' || (viewMode === '2D' && view2DDirection === 'front')) && (() => {
+      {showDimensions && showMaida && zones.length > 0 && (viewMode === '3D' || (viewMode === '2D' && view2DDirection === 'front')) && (() => {
         const zone0 = zones[0];
         const maidaBottomMm0 = zone0.notchBelowTop != null ? (zone0.notchBelowTop - 5) : -5;
         const maidaHeightMm0 = maidaHeightsMm ? maidaHeightsMm[0] : ((zone0.notchAboveBottom + 40) - maidaBottomMm0);
