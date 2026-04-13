@@ -1130,6 +1130,76 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                 {customDepth}
               </Text>
 
+              {/* 상부장 하부마감판 깊이 치수 */}
+              {isUpperMod && (() => {
+                const finishDepthMm = customDepth - 35; // 마감판 깊이 = 가구 깊이 - 35mm
+                const finishDepth = mmToThreeUnits(finishDepthMm);
+                // 마감판 Z 중심: 가구 앞면에서 17.5mm 뒤로 이동
+                const finishZ = furnitureZ + mmToThreeUnits(17.5);
+                // 치수선 Y위치: 가구 바닥 아래
+                const finishDimY = furnitureBottomEdge - mmToThreeUnits(200);
+
+                return (
+                  <group>
+                    {/* 보조 가이드 연장선 - 앞쪽 */}
+                    <ExtLine points={[[0, furnitureBottomEdge, finishZ + finishDepth/2], [0, finishDimY, finishZ + finishDepth/2]]} color={dimensionColor} />
+
+                    {/* 보조 가이드 연장선 - 뒤쪽 */}
+                    <ExtLine points={[[0, furnitureBottomEdge, finishZ - finishDepth/2], [0, finishDimY, finishZ - finishDepth/2]]} color={dimensionColor} />
+
+                    {/* 마감판 깊이 치수선 */}
+                    <NativeLine name="dimension_line"
+                      points={[
+                        [0, finishDimY, finishZ - finishDepth/2],
+                        [0, finishDimY, finishZ + finishDepth/2]
+                      ]}
+                      color={dimensionColor}
+                      lineWidth={0.5}
+                      renderOrder={100000}
+                      depthTest={false}
+                    />
+
+                    {/* 앞쪽 티크 */}
+                    <NativeLine name="dimension_line"
+                      points={[
+                        [0 - 0.02, finishDimY, finishZ + finishDepth/2],
+                        [0 + 0.02, finishDimY, finishZ + finishDepth/2]
+                      ]}
+                      color={dimensionColor}
+                      lineWidth={0.5}
+                      renderOrder={100000}
+                      depthTest={false}
+                    />
+
+                    {/* 뒤쪽 티크 */}
+                    <NativeLine name="dimension_line"
+                      points={[
+                        [0 - 0.02, finishDimY, finishZ - finishDepth/2],
+                        [0 + 0.02, finishDimY, finishZ - finishDepth/2]
+                      ]}
+                      color={dimensionColor}
+                      lineWidth={0.5}
+                      renderOrder={100000}
+                      depthTest={false}
+                    />
+
+                    {/* 마감판 깊이 텍스트 */}
+                    <Text
+                      position={[0, finishDimY - mmToThreeUnits(40), finishZ]}
+                      fontSize={largeFontSize}
+                      color={textColor}
+                      anchorX="center"
+                      anchorY="middle"
+                      renderOrder={1000}
+                      depthTest={false}
+                      rotation={[0, -Math.PI / 2, 0]}
+                    >
+                      {finishDepthMm}
+                    </Text>
+                  </group>
+                );
+              })()}
+
               {/* 하부프레임 옵셋 깊이 치수 (하부장 전용) — hasBase=false이면 숨김 */}
               {isLowerMod && baseFrameOffsetMm > 0 && mod.hasBase !== false && (() => {
                 // 하부프레임은 가구 앞면(도어면)에서 옵셋만큼 뒤로 들어감
@@ -2044,6 +2114,58 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
               >
                 {customDepth}
               </Text>
+
+              {/* 상부장 하부마감판 깊이 치수 (우측뷰) */}
+              {(() => {
+                const mod = module as PlacedModule;
+                const modCat = getModuleCategory(mod);
+                if (modCat !== 'upper') return null;
+
+                const modHeightMm_r = computeFurnitureHeightMm(mod, moduleData!, spaceInfo, internalSpace);
+                const depthEffH_r = isSelectedSlotInDroppedZone ? (spaceInfo.height - dropHeightMm) : spaceInfo.height;
+                const topFrameVal_r = mod.topFrameThickness ?? (spaceInfo.frameSize?.top ?? 30);
+                const cabinetTopMm_r = depthEffH_r - topFrameVal_r;
+                const cabinetBottomMm_r = cabinetTopMm_r - modHeightMm_r;
+                const furnitureBottomEdge_r = mmToThreeUnits(cabinetBottomMm_r);
+                // 상부장 Z 재계산 (하부장 뒷면 맞춤)
+                const lowerDepthU = mmToThreeUnits(650);
+                const upperFurnitureZ = furnitureZOffset + furnitureDepth / 2 - doorThickness - lowerDepthU + moduleDepth / 2;
+
+                const finishDepthMm_r = customDepth - 35;
+                const finishDepth_r = mmToThreeUnits(finishDepthMm_r);
+                const finishZ_r = upperFurnitureZ + mmToThreeUnits(17.5);
+                const finishDimY_r = furnitureBottomEdge_r - mmToThreeUnits(200);
+
+                return (
+                  <group>
+                    <ExtLine points={[[0, furnitureBottomEdge_r, finishZ_r + finishDepth_r/2], [0, finishDimY_r, finishZ_r + finishDepth_r/2]]} color={dimensionColor} />
+                    <ExtLine points={[[0, furnitureBottomEdge_r, finishZ_r - finishDepth_r/2], [0, finishDimY_r, finishZ_r - finishDepth_r/2]]} color={dimensionColor} />
+
+                    <NativeLine name="dimension_line"
+                      points={[[0, finishDimY_r, finishZ_r - finishDepth_r/2], [0, finishDimY_r, finishZ_r + finishDepth_r/2]]}
+                      color={dimensionColor} lineWidth={0.5} renderOrder={100000} depthTest={false}
+                    />
+                    <NativeLine name="dimension_line"
+                      points={[[0 - 0.02, finishDimY_r, finishZ_r + finishDepth_r/2], [0 + 0.02, finishDimY_r, finishZ_r + finishDepth_r/2]]}
+                      color={dimensionColor} lineWidth={0.5} renderOrder={100000} depthTest={false}
+                    />
+                    <NativeLine name="dimension_line"
+                      points={[[0 - 0.02, finishDimY_r, finishZ_r - finishDepth_r/2], [0 + 0.02, finishDimY_r, finishZ_r - finishDepth_r/2]]}
+                      color={dimensionColor} lineWidth={0.5} renderOrder={100000} depthTest={false}
+                    />
+
+                    <Text
+                      position={[0, finishDimY_r - mmToThreeUnits(40), finishZ_r]}
+                      fontSize={largeFontSize} color={textColor}
+                      anchorX="center" anchorY="middle"
+                      renderOrder={1000} depthTest={false}
+                      rotation={[0, Math.PI / 2, 0]}
+                    >
+                      {finishDepthMm_r}
+                    </Text>
+                  </group>
+                );
+              })()}
 
               {/* 하부섹션 깊이 치수 (2섹션 가구인 경우) */}
               {(module.lowerSectionDepth !== undefined) && (() => {
