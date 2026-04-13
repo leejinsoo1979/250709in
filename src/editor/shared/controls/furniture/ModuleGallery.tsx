@@ -589,17 +589,13 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
         const zones: ZoneRange[] = [];
         if (hasStepCeiling) {
           // 단내림 경계점 = 공간 원점 기준으로 계산
-          // 커튼박스가 같은 쪽에 있으면 커튼박스 폭도 고려
+          // 커튼박스는 항상 단내림과 같은 쪽 → 커튼박스 폭 차감
           const halfW = (spaceInfo.width || 2400) / 2;
-          const hasCB = !!spaceInfo.droppedCeiling?.enabled;
-          const cbPos = spaceInfo.droppedCeiling?.position || 'right';
-          const cbWidth = hasCB ? (spaceInfo.droppedCeiling!.width || 150) : 0;
-          // 같은 쪽 커튼박스 폭 차감
-          const sameSideCB = (hasCB && cbPos === scPos) ? cbWidth : 0;
+          const cbWidth = spaceInfo.droppedCeiling?.enabled ? (spaceInfo.droppedCeiling.width || 150) : 0;
 
           const scBoundary = scPos === 'left'
-            ? -halfW + sameSideCB + scWidthMm  // 좌단내림: 왼쪽벽 + 커튼박스 + 단내림폭 = 경계
-            : halfW - sameSideCB - scWidthMm;  // 우단내림: 오른쪽벽 - 커튼박스 - 단내림폭 = 경계
+            ? -halfW + cbWidth + scWidthMm  // 좌: [벽][커튼박스][단내림]|경계|[메인][벽]
+            : halfW - cbWidth - scWidthMm;  // 우: [벽][메인]|경계|[단내림][커튼박스][벽]
 
           if (scPos === 'left') {
             // [벽] [커튼박스] [단내림] [middleGap] [메인] [벽]
