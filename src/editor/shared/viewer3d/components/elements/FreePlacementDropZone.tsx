@@ -245,14 +245,9 @@ const FreePlacementDropZone: React.FC = () => {
       });
     };
 
-    // 메인 구간 균등배분
+    // 메인 구간 균등배분 (zonePlacementBounds에 이격 이미 반영됨)
     if (mainZone && mainModules.length > 0) {
-      let mStart = mainZone.placementStartXmm;
-      let mEnd = mainZone.placementEndXmm;
-      // 잠긴 이격 적용 (메인 구간 양 끝이 벽인 경우)
-      if (lockedWallGaps?.left != null) mStart += lockedWallGaps.left;
-      if (lockedWallGaps?.right != null) mEnd -= lockedWallGaps.right;
-      distributeInZone(mainModules, mStart, mEnd);
+      distributeInZone(mainModules, mainZone.placementStartXmm, mainZone.placementEndXmm);
     } else if (!mainZone && mainModules.length > 0) {
       // 단내림/커튼박스 없는 경우: 전체 spaceBounds 사용
       const { startX, endX } = spaceBounds;
