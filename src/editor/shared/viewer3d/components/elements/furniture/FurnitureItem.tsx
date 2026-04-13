@@ -2651,8 +2651,9 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   // 기둥 앞 공간 가구는 저장된 Z 위치 사용, 일반 가구는 계산된 Z 위치 사용
   const isUpperForZ = actualModuleData?.category === 'upper' || placedModule.moduleId?.includes('upper-cabinet');
   // 하부장/키큰장: 앞면 정렬 (도어 앞면 = 공간 앞면)
-  // 상부장: 뒷면 정렬 (하부장 뒷면과 동일 위치 = furnitureZOffset - furnitureDepth/2 + doorThickness)
-  const lowerBackFace = furnitureZOffset - furnitureDepth / 2 + doorThickness; // 하부장 뒷면 위치
+  // 상부장: 뒷면 정렬 (하부장 뒷면과 동일 위치)
+  // 하부장 뒷면 = furnitureZOffset + furnitureDepth/2 - doorThickness - panelDepth (공간 깊이 = 하부장 깊이)
+  const lowerBackFace = furnitureZOffset + furnitureDepth / 2 - doorThickness - panelDepth;
   const furnitureZ = isFrontSpaceFurniture
     ? placedModule.position.z  // 기둥 앞 공간: 저장된 위치 사용
     : isUpperForZ
