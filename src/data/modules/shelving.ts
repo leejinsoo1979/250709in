@@ -853,8 +853,8 @@ const createUpperCabinet2 = (columnWidth: number): ModuleData => {
   const base = createFurnitureBase(
     `upper-cabinet-open-${widthForId}`,
     `상부장 기본 ${widthForId}mm`,
-    columnWidth, 600, FURNITURE_SPECS.DEFAULT_DEPTH,
-    '#fff3e0', `상부장 기본`, FURNITURE_SPECS.DEFAULT_DEPTH, 'upper'
+    columnWidth, 600, 300,
+    '#fff3e0', `상부장 기본`, 300, 'upper'
   );
   return { ...base, thumbnail: '/images/furniture-thumbnails/상부장 기본.png',
     modelConfig: { ...base.modelConfig, sections: [{ type: 'open', heightType: 'percentage', height: 100 }] }
@@ -913,8 +913,8 @@ const createDualUpperCabinet3 = (dualWidth: number): ModuleData => {
   const widthForId = Math.round(dualWidth * 100) / 100;
   const base = createFurnitureBase(
     `dual-upper-cabinet-open-${widthForId}`, `상부장 기본 ${widthForId}mm`,
-    dualWidth, 600, FURNITURE_SPECS.DEFAULT_DEPTH, '#ffe0b2',
-    `상부장 기본`, FURNITURE_SPECS.DEFAULT_DEPTH, 'upper'
+    dualWidth, 600, 300, '#ffe0b2',
+    `상부장 기본`, 300, 'upper'
   );
   return { ...base, thumbnail: '/images/furniture-thumbnails/상부장 기본.png',
     modelConfig: { ...base.modelConfig,
