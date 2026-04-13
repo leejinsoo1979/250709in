@@ -665,8 +665,8 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
         </>
       )}
 
-      {/* 환기캡 렌더링 */}
-      {!isDragging && showFurniture && (
+      {/* 환기캡 제거됨 */}
+      {false && !isDragging && showFurniture && (
         <VentilationCap
           position={[
             innerWidth/2 - mmToThreeUnits(132),  // 우측 패널 안쪽으로 132mm

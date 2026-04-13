@@ -217,7 +217,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
   isRightEndPanel = false,
   textureUrl,
   panelGrainDirections,
-  hideVentilationCap = false,
+  hideVentilationCap = true,
   hideTopPanel = false,
   topPanelFrontReduction = 0,
   topStretcher,

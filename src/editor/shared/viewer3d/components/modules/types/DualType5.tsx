@@ -1280,36 +1280,7 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
         })()}
       </>
 
-      {/* 환기캡 렌더링 */}
-      {!isDragging && (
-        <>
-          {/* 좌측 백패널 환기캡 (visibleSectionIndex가 null 또는 0일 때만) */}
-          {(visibleSectionIndex === null || visibleSectionIndex === 0) && (
-            <VentilationCap
-              position={[
-                leftXOffset + leftWidth/2 - mmToThreeUnits(132),  // 좌측 백패널 우측 끝에서 안쪽으로 132mm
-                height/2 - basicThickness - mmToThreeUnits(115),  // 상단 패널 아래로 115mm
-                -leftDepth/2 + backPanelThickness + (basicThickness - mmToThreeUnits(1)) + 0.01  // 좌측 백패널 앞쪽에 살짝 앞으로
-              ]}
-              diameter={98}
-              renderMode={renderMode}
-            />
-          )}
-
-          {/* 우측 백패널 환기캡 (visibleSectionIndex가 null 또는 1일 때만) */}
-          {(visibleSectionIndex === null || visibleSectionIndex === 1) && (
-            <VentilationCap
-              position={[
-                rightXOffset + rightWidth/2 - mmToThreeUnits(132),  // 우측 백패널 우측 끝에서 안쪽으로 132mm
-                height/2 - basicThickness - mmToThreeUnits(115),  // 상단 패널 아래로 115mm
-                -rightDepth/2 + backPanelThickness + (basicThickness - mmToThreeUnits(1)) + (leftDepth - rightDepth) / 2 + 0.01  // 우측 백패널 앞쪽 (깊이 차이 보정)
-              ]}
-              diameter={98}
-              renderMode={renderMode}
-            />
-          )}
-        </>
-      )}
+      {/* 환기캡 제거됨 */}
 
           {/* 드래그 중이 아닐 때만 비대칭 섹션 렌더링 */}
           {!isDragging && renderAsymmetricSections()}
