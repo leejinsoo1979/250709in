@@ -407,7 +407,6 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   useEffect(() => {
     if (!hasTopFrameActive || !placedModule.hasDoor || isLowerDrawerType) return;
     const expectedGap = effectiveTopFrame + 3;
-    console.log('🔴 doorTopGap sync:', { moduleId: placedModule.moduleId, isFreePlacement: placedModule.isFreePlacement, freeHeight: placedModule.freeHeight, effectiveTopFrame, expectedGap, storeDoorTopGap, hasTopFrameActive, isFreeSurroundActive, isSlotSurround });
     if (storeDoorTopGap !== expectedGap) {
       updatePlacedModule(placedModule.id, { doorTopGap: expectedGap });
     }
@@ -2670,9 +2669,6 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     epOffsetX = (leftEp - rightEp) / 2; // 좌EP만: 본체 →, 우EP만: 본체 ←
   }
 
-  if (placedModule.moduleId?.includes('upper-cabinet')) {
-    console.log('🟣 upper Z debug:', { moduleId: placedModule.moduleId, isFreePlacement: placedModule.isFreePlacement, isFrontSpaceFurniture, isUpperForZ, furnitureZOffset, depth, furnitureDepth, furnitureZ, positionZ: placedModule.position.z });
-  }
   const furnitureGroupPosition: [number, number, number] = [
     adjustedPosition.x + positionAdjustmentForEndPanel + epOffsetX,
     adjustedPosition.y, // finalYPosition 대신 직접 사용 (TDZ 에러 방지)
