@@ -1139,8 +1139,11 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
   // 자유배치+단내림+가구없음: 2단(전체폭+구간사이즈)으로 축소
   const DIM_GAP = 120; // 치수선 간 간격 120mm (균등)
   const hasCurtainBox = !isFreePlacement && spaceInfo.curtainBox?.enabled;
+  const hasFreeCurtainBox = isFreePlacement && !!spaceInfo.curtainBox?.enabled;
   const hasFreeStepCeiling = isFreePlacement && spaceInfo.stepCeiling?.enabled;
-  const dimLevels = (hasDroppedCeiling && !isFreePlacement) ? 4 : hasCurtainBox ? 4 : hasFreeStepCeiling ? (hasPlacedModules ? 4 : 3) : isFreePlacement ? 3 : 3;
+  // 구간 분리 조건: 단내림/커튼박스가 활성화되면 구간 치수선 필요
+  const hasZoneSplit = (hasDroppedCeiling && !isFreePlacement) || hasCurtainBox || hasFreeStepCeiling || hasFreeCurtainBox;
+  const dimLevels = hasZoneSplit ? (hasPlacedModules ? 4 : 3) : isFreePlacement ? 3 : 3;
   // 최상단: 전체 너비 (3600)
   const topDimensionY = spaceHeight + mmToThreeUnits(DIM_GAP * dimLevels);
   // 2단: 구간사이즈 (2700 / 900)
@@ -1562,7 +1565,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         if (leftValue === 0) return null;
 
         // 이격 치수선: 단내림/커튼박스 활성 시 3단(slotTotalDimensionY)에 배치
-        const leftDimY = (spaceInfo.droppedCeiling?.enabled || hasFreeStepCeiling || hasCurtainBox) ? slotTotalDimensionY : slotDimensionY;
+        const leftDimY = hasZoneSplit ? slotTotalDimensionY : slotDimensionY;
 
         return (
           <group>
@@ -1712,7 +1715,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
 
         const rightEdge = mmToThreeUnits(spaceInfo.width) + leftOffset;
         // 이격 치수선: 단내림/커튼박스 활성 시 3단(slotTotalDimensionY)에 배치
-        const rightDimY = (spaceInfo.droppedCeiling?.enabled || hasFreeStepCeiling || hasCurtainBox) ? slotTotalDimensionY : slotDimensionY;
+        const rightDimY = hasZoneSplit ? slotTotalDimensionY : slotDimensionY;
 
         return (
           <group>
@@ -1837,7 +1840,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
       })()}
 
       {/* 구간 치수선 - 전체 폭 치수선 아래에 표시 (탑뷰가 아닐 때만) */}
-      {showDimensions && (spaceInfo.droppedCeiling?.enabled || (isFreePlacement && spaceInfo.stepCeiling?.enabled)) && currentViewDirection !== 'top' && (
+      {showDimensions && hasZoneSplit && currentViewDirection !== 'top' && (
         <group>
           {(() => {
             const normalBounds = getNormalZoneBounds(spaceInfo);
@@ -1854,8 +1857,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             const scWidth = hasSC ? (spaceInfo.stepCeiling!.width || 0) : 0;
             const dcPosition = spaceInfo.droppedCeiling?.position || 'right';
             const scPosition = spaceInfo.stepCeiling?.position || 'right';
-            // 슬롯배치 커튼박스 (droppedCeiling과 독립)
-            const hasCB = !isFreePlacement && !!spaceInfo.curtainBox?.enabled;
+            // 커튼박스 (슬롯배치 + 자유배치 모두)
+            const hasCB = !!spaceInfo.curtainBox?.enabled;
             const cbWidth = hasCB ? (spaceInfo.curtainBox!.width || 150) : 0;
             const cbPosition = hasCB ? (spaceInfo.curtainBox!.position || 'right') : 'right';
 
@@ -3237,8 +3240,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
       )}
 
 
-      {/* 전체 내부 너비 치수선 (단내림 모드에서는 숨김, 자유배치에서는 stepCeiling 없을 때 표시) */}
-      {!(hasDroppedCeiling && !isFreePlacement) && !(isFreePlacement && spaceInfo.stepCeiling?.enabled) && (() => {
+      {/* 전체 내부 너비 치수선 (구간 분리 시 숨김 — 단내림/커튼박스 활성 시 구간 치수선이 대체) */}
+      {!hasZoneSplit && (() => {
         const internalLeftX = threeUnitBoundaries[0];
         const internalRightX = threeUnitBoundaries[threeUnitBoundaries.length - 1];
         const internalWidthMm = indexing.internalWidth;
