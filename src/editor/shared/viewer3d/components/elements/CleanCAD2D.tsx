@@ -1140,9 +1140,11 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
   const DIM_GAP = 120; // 치수선 간 간격 120mm (균등)
   const hasFreeStepCeiling = isFreePlacement && !!spaceInfo.stepCeiling?.enabled;
   // 구간 분리 조건: 단내림/커튼박스가 활성화되면 구간 치수선 필요
-  const hasAnyCurtainBox = !!spaceInfo.curtainBox?.enabled; // 슬롯/자유배치 모두 커버
+  // 자유배치 "커튼박스" = droppedCeiling 필드, 슬롯배치 "커튼박스" = curtainBox 필드
+  const hasAnyCurtainBox = !!spaceInfo.curtainBox?.enabled; // 슬롯배치 커튼박스
+  const hasFreeCurtainBox = isFreePlacement && !!hasDroppedCeiling; // 자유배치 커튼박스 (droppedCeiling 필드 사용)
   const hasAnyStepDown = hasFreeStepCeiling || (!!hasDroppedCeiling && !isFreePlacement);
-  const hasZoneSplit = hasAnyStepDown || hasAnyCurtainBox;
+  const hasZoneSplit = hasAnyStepDown || hasAnyCurtainBox || hasFreeCurtainBox;
   const dimLevels = hasZoneSplit ? (hasPlacedModules ? 4 : 3) : isFreePlacement ? 3 : 3;
   // 최상단: 전체 너비 (3600)
   const topDimensionY = spaceHeight + mmToThreeUnits(DIM_GAP * dimLevels);

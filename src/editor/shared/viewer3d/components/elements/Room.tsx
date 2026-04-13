@@ -2946,11 +2946,11 @@ const Room: React.FC<RoomProps> = ({
               }
             }
             // 커튼박스 단독 경계벽 Z축 그라데이션 라인 (슬롯+자유배치)
-            if (hasCBStandalone && !hasDC) {
+            if (_bHasCB && !hasDC) {
               const _cbGW = mmToThreeUnits(spaceInfo.curtainBox!.width || 150);
               const _cbGIsL = spaceInfo.curtainBox!.position === 'left';
               const _cbGBx = _cbGIsL ? x1 + _cbGW : x2 - _cbGW;
-              const _cbGTopY = ceilingY + cbDropHLine;
+              const _cbGTopY = ceilingY + _bCbDropH;
               gradientLines.push([_cbGBx, _cbGTopY, z1, _cbGBx, _cbGTopY, z2]); // 경계벽 상단 (CB 천장)
               gradientLines.push([_cbGBx, ceilingY, z1, _cbGBx, ceilingY, z2]); // 경계벽 하단 (메인 천장)
               if (_cbGIsL && hasLeftWall) {
