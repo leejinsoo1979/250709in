@@ -2655,6 +2655,27 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     ? placedModule.position.z  // 기둥 앞 공간: 저장된 위치 사용
     : furnitureZOffset + furnitureDepth / 2 - doorThickness - depth / 2 + baseDepthOffset;
 
+  // 🔴 Z축 디버그
+  if (placedModule.moduleId?.includes('upper-cabinet')) {
+    console.log('🔴 상부장 Z디버그', {
+      moduleId: placedModule.moduleId,
+      actualDepthMm,
+      moduleDepth,
+      adjustedDepthMm,
+      freeDepth: placedModule.freeDepth,
+      customDepth: placedModule.customDepth,
+      isFreePlacement: placedModule.isFreePlacement,
+      depth_threeUnits: depth,
+      furnitureZOffset,
+      furnitureDepth,
+      doorThickness,
+      baseDepthOffset,
+      furnitureZ,
+      '앞면mm': (furnitureZ + depth / 2) * 100,
+      '뒷면mm': (furnitureZ - depth / 2) * 100,
+    });
+  }
+
   // EP 비대칭 보정: 좌EP만 → 본체 오른쪽으로, 우EP만 → 본체 왼쪽으로
   // 본체 너비가 EP만큼 줄었으므로 본체+EP 전체가 슬롯/위치 중앙에 오도록 보정
   // 도어는 본체 그룹 안에서 렌더링되므로 자동으로 따라감
