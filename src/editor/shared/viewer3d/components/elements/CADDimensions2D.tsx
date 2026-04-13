@@ -1845,62 +1845,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           );
         })()}
 
-        {/* ===== 오른쪽: 상부프레임/가구높이/받침대 (좌측뷰와 동일, rotation만 대칭) ===== */}
-
-        {/* 상부 프레임 두께 (단내림 구간에서는 단내림 높이 기준) */}
-        {topFrameHeightMm > 0 && (
-          <group>
-            {/* 보조 가이드 연장선 - 하단 (상부 프레임 하단) */}
-            <ExtLine points={[[0, displaySpaceHeight - topFrameHeight, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750) - mmToThreeUnits(360)], [0, displaySpaceHeight - topFrameHeight, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750)]]} color={dimensionColor} />
-            {/* 보조 가이드 연장선 - 상단 (공간 최상단) */}
-            <ExtLine points={[[0, displaySpaceHeight, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750) - mmToThreeUnits(360)], [0, displaySpaceHeight, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750)]]} color={dimensionColor} />
-            {/* 수직 치수선 */}
-            <NativeLine name="dimension_line"
-              points={[
-                [0, displaySpaceHeight - topFrameHeight, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750)],
-                [0, displaySpaceHeight, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750)]
-              ]}
-              color={dimensionColor}
-              lineWidth={1}
-              renderOrder={100000}
-              depthTest={false}
-            />
-            {/* 티크 마크 - 하단 */}
-            <NativeLine name="dimension_line"
-              points={[
-                [-0.008, displaySpaceHeight - topFrameHeight, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750)],
-                [0.008, displaySpaceHeight - topFrameHeight, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750)]
-              ]}
-              color={dimensionColor}
-              lineWidth={1}
-              renderOrder={100000}
-              depthTest={false}
-            />
-            {/* 티크 마크 - 상단 */}
-            <NativeLine name="dimension_line"
-              points={[
-                [-0.008, displaySpaceHeight, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750)],
-                [0.008, displaySpaceHeight, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750)]
-              ]}
-              color={dimensionColor}
-              lineWidth={1}
-              renderOrder={100000}
-              depthTest={false}
-            />
-            <Text
-              position={[0, displaySpaceHeight - topFrameHeight / 2, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750) + mmToThreeUnits(60)]}
-              fontSize={largeFontSize}
-              color={textColor}
-              anchorX="center"
-              anchorY="middle"
-              renderOrder={1000}
-              depthTest={false}
-              rotation={[0, Math.PI / 2, Math.PI / 2]}
-            >
-              {topFrameHeightMm}
-            </Text>
-          </group>
-        )}
+        {/* ===== 오른쪽: 상부프레임 치수 제거됨 (좌측으로 이동) ===== */}
 
         {/* 우측뷰 — 우측 도어 사이즈 */}
         {(() => {
