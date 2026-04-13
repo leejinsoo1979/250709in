@@ -3667,50 +3667,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               })()}
 
               {/* ── 1단(안쪽): 받침대/가구높이/상부프레임 분해 (항상 표시) ── */}
-              {/* 하부장/상부장: 바닥(Y=0)부터 가구 상단까지 합산 치수 표시 */}
-              {/* 키큰장: 바닥마감재 위부터 받침대/가구/상부프레임 분해 */}
-              {(leftCategoryResolved === 'lower' || leftCategoryResolved === 'upper') ? (
-                <>
-                  {/* 하부장/상부장: 바닥(0) ~ 천장까지 메인 라인 */}
-                  <NativeLine name="dimension_line"
-                    points={[[innerX, 0, 0.002], [innerX, effectiveCeilingY, 0.002]]}
-                    color={dimensionColor} lineWidth={0.6} renderOrder={100000} depthTest={false}
-                  />
-                  <NativeLine name="dimension_line"
-                    points={createArrowHead([innerX, 0, 0.002], [innerX, 0.05, 0.002])}
-                    color={dimensionColor} lineWidth={0.6} renderOrder={100000} depthTest={false}
-                  />
-                  <NativeLine name="dimension_line"
-                    points={createArrowHead([innerX, effectiveCeilingY, 0.002], [innerX, effectiveCeilingY - 0.05, 0.002])}
-                    color={dimensionColor} lineWidth={0.6} renderOrder={100000} depthTest={false}
-                  />
-                  {/* 가구 상단 구분 틱 */}
-                  <NativeLine name="dimension_line"
-                    points={[[innerX - mmToThreeUnits(15), furnitureTopY, 0.002], [innerX + mmToThreeUnits(15), furnitureTopY, 0.002]]}
-                    color={dimensionColor} lineWidth={0.6} renderOrder={100000} depthTest={false}
-                  />
-                  {/* 바닥 ~ 가구 상단 합산 치수 (바닥마감재 + 하부프레임 + 가구높이) */}
-                  <Text renderOrder={1000} depthTest={false}
-                    position={[innerX - mmToThreeUnits(25), furnitureTopY / 2, 0.01]}
-                    fontSize={baseFontSize} color={textColor} anchorX="right" anchorY="middle"
-                    outlineWidth={textOutlineWidth} outlineColor={textOutlineColor}
-                  >
-                    {floorFinishForHeight + bottomFrameH + furnitureH}
-                  </Text>
-                  {/* 가구 상단 ~ 천장 (상부 나머지 공간) */}
-                  {(effectiveH - floorFinishForHeight - bottomFrameH - furnitureH) > 0 && (
-                    <Text renderOrder={1000} depthTest={false}
-                      position={[innerX - mmToThreeUnits(25), (furnitureTopY + effectiveCeilingY) / 2, 0.01]}
-                      fontSize={baseFontSize} color={frameDimensionColor} anchorX="right" anchorY="middle"
-                      outlineWidth={textOutlineWidth} outlineColor={textOutlineColor}
-                    >
-                      {effectiveH - floorFinishForHeight - bottomFrameH - furnitureH}
-                    </Text>
-                  )}
-                </>
-              ) : (
-                <>
-              {/* 키큰장: 세로 메인 라인: 바닥마감재 위 ~ effectiveCeiling */}
+              {/* 세로 메인 라인: 바닥마감재 위 ~ effectiveCeiling */}
               <NativeLine name="dimension_line"
                 points={[[innerX, floorFinishBaseY, 0.002], [innerX, effectiveCeilingY, 0.002]]}
                 color={dimensionColor} lineWidth={0.6} renderOrder={100000} depthTest={false}
@@ -3809,8 +3766,6 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   </Text>
                 </>
               )}
-                </>
-              )}
 
               {/* ── 연장선: 각 경계점에서 수평선 ── */}
               {/* 바닥(Y=0) — 커튼박스 있으면 3단까지 연장 */}
@@ -3837,8 +3792,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   color={dimensionColor} lineWidth={0.6} renderOrder={100000} depthTest={false}
                 />
               )}
-              {/* 받침대 상단 (키큰장만 — 하부장/상부장은 합산 치수이므로 불필요) */}
-              {bottomFrameH > 0 && leftCategoryResolved !== 'lower' && leftCategoryResolved !== 'upper' && (
+              {/* 받침대 상단 */}
+              {bottomFrameH > 0 && (
                 <NativeLine name="dimension_line"
                   points={[[innerX - mmToThreeUnits(20), bottomFrameTopY, 0.001], [leftOffset, bottomFrameTopY, 0.001]]}
                   color={dimensionColor} lineWidth={0.6} renderOrder={100000} depthTest={false}
@@ -4113,50 +4068,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               })()}
 
               {/* ── 1단(안쪽): 받침대/가구높이/상부프레임 분해 (항상 표시) ── */}
-              {/* 하부장/상부장: 바닥(Y=0)부터 가구 상단까지 합산 치수 표시 */}
-              {/* 키큰장: 바닥마감재 위부터 받침대/가구/상부프레임 분해 */}
-              {(rightCategoryResolved === 'lower' || rightCategoryResolved === 'upper') ? (
-                <>
-                  {/* 하부장/상부장: 바닥(0) ~ 천장까지 메인 라인 */}
-                  <NativeLine name="dimension_line"
-                    points={[[rightInnerX, 0, 0.002], [rightInnerX, rEffectiveCeilingY, 0.002]]}
-                    color={dimensionColor} lineWidth={0.6} renderOrder={100000} depthTest={false}
-                  />
-                  <NativeLine name="dimension_line"
-                    points={createArrowHead([rightInnerX, 0, 0.002], [rightInnerX, 0.05, 0.002])}
-                    color={dimensionColor} lineWidth={0.6} renderOrder={100000} depthTest={false}
-                  />
-                  <NativeLine name="dimension_line"
-                    points={createArrowHead([rightInnerX, rEffectiveCeilingY, 0.002], [rightInnerX, rEffectiveCeilingY - 0.05, 0.002])}
-                    color={dimensionColor} lineWidth={0.6} renderOrder={100000} depthTest={false}
-                  />
-                  {/* 가구 상단 구분 틱 */}
-                  <NativeLine name="dimension_line"
-                    points={[[rightInnerX - mmToThreeUnits(15), rFurnitureTopY, 0.002], [rightInnerX + mmToThreeUnits(15), rFurnitureTopY, 0.002]]}
-                    color={dimensionColor} lineWidth={0.6} renderOrder={100000} depthTest={false}
-                  />
-                  {/* 바닥 ~ 가구 상단 합산 치수 (바닥마감재 + 하부프레임 + 가구높이) */}
-                  <Text renderOrder={1000} depthTest={false}
-                    position={[rightInnerX + mmToThreeUnits(10), rFurnitureTopY / 2, 0.01]}
-                    fontSize={baseFontSize} color={textColor} anchorX="left" anchorY="middle"
-                    outlineWidth={textOutlineWidth} outlineColor={textOutlineColor}
-                  >
-                    {rFloorFinishForHeight + rBottomFrameH + rFurnitureH}
-                  </Text>
-                  {/* 가구 상단 ~ 천장 (상부 나머지 공간) */}
-                  {(rEffectiveH - rFloorFinishForHeight - rBottomFrameH - rFurnitureH) > 0 && (
-                    <Text renderOrder={1000} depthTest={false}
-                      position={[rightInnerX + mmToThreeUnits(10), (rFurnitureTopY + rEffectiveCeilingY) / 2, 0.01]}
-                      fontSize={baseFontSize} color={frameDimensionColor} anchorX="left" anchorY="middle"
-                      outlineWidth={textOutlineWidth} outlineColor={textOutlineColor}
-                    >
-                      {rEffectiveH - rFloorFinishForHeight - rBottomFrameH - rFurnitureH}
-                    </Text>
-                  )}
-                </>
-              ) : (
-                <>
-              {/* 키큰장: 세로 메인 라인: 바닥마감재 위 ~ effectiveCeiling */}
+              {/* 세로 메인 라인: 바닥마감재 위 ~ effectiveCeiling */}
               <NativeLine name="dimension_line"
                 points={[[rightInnerX, rFloorFinishBaseY, 0.002], [rightInnerX, rEffectiveCeilingY, 0.002]]}
                 color={dimensionColor} lineWidth={0.6} renderOrder={100000} depthTest={false}
@@ -4255,8 +4167,6 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   </Text>
                 </>
               )}
-                </>
-              )}
 
               {/* 커튼박스(droppedCeiling) 구간 치수는 표시하지 않음 */}
 
@@ -4285,8 +4195,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   color={dimensionColor} lineWidth={0.6} renderOrder={100000} depthTest={false}
                 />
               )}
-              {/* 받침대 상단 (키큰장만 — 하부장/상부장은 합산 치수이므로 불필요) */}
-              {rBottomFrameH > 0 && rightCategoryResolved !== 'lower' && rightCategoryResolved !== 'upper' && (
+              {/* 받침대 상단 */}
+              {rBottomFrameH > 0 && (
                 <NativeLine name="dimension_line"
                   points={[[rightWallX, rBottomFrameTopY, 0.001], [rightInnerX + mmToThreeUnits(20), rBottomFrameTopY, 0.001]]}
                   color={dimensionColor} lineWidth={0.6} renderOrder={100000} depthTest={false}
