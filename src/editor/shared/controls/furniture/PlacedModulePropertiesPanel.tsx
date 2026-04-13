@@ -2776,6 +2776,82 @@ const PlacedModulePropertiesPanel: React.FC = () => {
             </div>
           )}
 
+          {/* 하부장(1섹션) 깊이 + 뒤고정/앞고정 */}
+          {currentPlacedModule && moduleData?.category === 'lower' && !isTwoSectionFurniture && (() => {
+            const depthDir = currentPlacedModule.lowerSectionDepthDirection || 'front';
+            const curDepth = currentPlacedModule.freeDepth || currentPlacedModule.customDepth || moduleData.dimensions.depth;
+            return (
+              <div className={styles.propertySection}>
+                <div className={styles.inputWithUnit}>
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    value={freeDepthInput}
+                    onChange={(e) => setFreeDepthInput(e.target.value)}
+                    onBlur={() => {
+                      const val = parseInt(freeDepthInput, 10);
+                      const isLowerDrawer = currentPlacedModule?.moduleId?.includes('lower-drawer-');
+                      const minDepth = isLowerDrawer ? 400 : 100;
+                      if (!isNaN(val) && val >= minDepth && val <= 800 && currentPlacedModule) {
+                        updatePlacedModule(currentPlacedModule.id, { freeDepth: val, customDepth: val });
+                        setFreeDepthInput(val.toString());
+                      }
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') { (e.target as HTMLInputElement).blur(); }
+                      else if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                        e.preventDefault();
+                        const cur = parseInt(freeDepthInput, 10) || curDepth;
+                        const isLowerDrawerArrow = currentPlacedModule?.moduleId?.includes('lower-drawer-');
+                        const minDepthArrow = isLowerDrawerArrow ? 400 : 100;
+                        const next = Math.max(minDepthArrow, Math.min(800, cur + (e.key === 'ArrowUp' ? 1 : -1)));
+                        setFreeDepthInput(next.toString());
+                        if (currentPlacedModule) {
+                          updatePlacedModule(currentPlacedModule.id, { freeDepth: next, customDepth: next });
+                        }
+                      }
+                    }}
+                    className={styles.depthInput}
+                    style={{ fontSize: '14px' }}
+                  />
+                  <span className={styles.unit}>mm</span>
+                </div>
+                <div style={{ display: 'flex', gap: '4px', marginTop: '6px' }}>
+                  <button
+                    style={{
+                      flex: 1, padding: '6px 8px', border: '1px solid var(--theme-border)', borderRadius: '4px',
+                      background: depthDir === 'front' ? 'var(--theme-primary)' : 'var(--theme-surface)',
+                      color: depthDir === 'front' ? '#fff' : 'var(--theme-text-secondary)',
+                      fontSize: '12px', cursor: 'pointer', transition: 'all 0.2s', fontWeight: depthDir === 'front' ? 600 : 400
+                    }}
+                    onClick={() => {
+                      if (currentPlacedModule) {
+                        updatePlacedModule(currentPlacedModule.id, { lowerSectionDepthDirection: 'front' });
+                      }
+                    }}
+                  >
+                    뒤고정
+                  </button>
+                  <button
+                    style={{
+                      flex: 1, padding: '6px 8px', border: '1px solid var(--theme-border)', borderRadius: '4px',
+                      background: depthDir === 'back' ? 'var(--theme-primary)' : 'var(--theme-surface)',
+                      color: depthDir === 'back' ? '#fff' : 'var(--theme-text-secondary)',
+                      fontSize: '12px', cursor: 'pointer', transition: 'all 0.2s', fontWeight: depthDir === 'back' ? 600 : 400
+                    }}
+                    onClick={() => {
+                      if (currentPlacedModule) {
+                        updatePlacedModule(currentPlacedModule.id, { lowerSectionDepthDirection: 'back' });
+                      }
+                    }}
+                  >
+                    앞고정
+                  </button>
+                </div>
+              </div>
+            );
+          })()}
+
           {/* 섹션별 치수 설정 (2섹션 이상 가구: customConfig 또는 modelConfig) */}
           {currentPlacedModule && (() => {
             const cc = currentPlacedModule.customConfig;
