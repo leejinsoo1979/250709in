@@ -5310,8 +5310,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               // 가구 이동 핸들러: 화살표 클릭 시 10mm씩 이동
               const MOVE_STEP = 0.1; // 10mm = 0.1 Three.js 단위
               const isSelected = selectedFurnitureId === module.id;
-              const canMoveLeft = leftGapMm > 2; // 벽에 붙어있으면 이동 불가
-              const canMoveRight = rightGapMm > 2;
+              const canMoveLeft = leftGapMm >= 1;
+              const canMoveRight = rightGapMm >= 1;
               const stopAll = (e: any) => { e.stopPropagation(); e.preventDefault(); e.nativeEvent?.stopImmediatePropagation?.(); };
               const moveLeft = (e: any) => {
                 stopAll(e);
