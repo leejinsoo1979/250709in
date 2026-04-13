@@ -812,11 +812,19 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
 
         {/* 우측 도어 사이즈 (hasDoor 가구만) */}
         {(() => {
+          // 하부장/키큰장 도어: 기존 우측 고정 위치
           const dimZ = spaceDepth/2 + rightDimOffset - mmToThreeUnits(750);
           const dimExtZ = dimZ - mmToThreeUnits(360);
+          // 상부장 도어: 가구 앞면 바로 우측
+          const panelDepthMm_ud = spaceInfo.depth || 1500;
+          const panelDepthU_ud = mmToThreeUnits(panelDepthMm_ud);
+          const furnitureDepthU_ud = mmToThreeUnits(600);
+          const furnitureFrontZ_ud = -panelDepthU_ud / 2 + (panelDepthU_ud - furnitureDepthU_ud) / 2 + furnitureDepthU_ud / 2;
+          const upperDimZ = furnitureFrontZ_ud + mmToThreeUnits(200);
+          const upperDimExtZ = furnitureFrontZ_ud + mmToThreeUnits(20);
           const effectiveH_door = isSelectedSlotInDroppedZone ? (spaceInfo.height - dropHeightMm) : spaceInfo.height;
 
-          const doorSegs: { bottomY: number; topY: number; heightMm: number; key: string }[] = [];
+          const doorSegs: { bottomY: number; topY: number; heightMm: number; key: string; isUpper: boolean }[] = [];
 
           visibleFurniture.forEach((module, moduleIndex) => {
             const mod = module as PlacedModule;
@@ -880,45 +888,68 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
               bottomY: mmToThreeUnits(doorBottomAbsMm),
               topY: mmToThreeUnits(doorTopAbsMm),
               heightMm: Math.round(doorHeightMm),
-              key: `door-${moduleIndex}`
+              key: `door-${moduleIndex}`,
+              isUpper: modCat === 'upper'
             });
           });
 
           if (doorSegs.length === 0) return null;
 
-          doorSegs.sort((a, b) => a.bottomY - b.bottomY);
+          // 상부장 도어와 하부장/키큰장 도어 분리
+          const upperDoorSegs = doorSegs.filter(s => s.isUpper);
+          const lowerDoorSegs = doorSegs.filter(s => !s.isUpper);
 
-          // 도어 간 간격 계산
-          const allDoorSegs: typeof doorSegs = [];
-          for (let i = 0; i < doorSegs.length; i++) {
-            allDoorSegs.push(doorSegs[i]);
-            if (i < doorSegs.length - 1) {
-              const gapBottomY = doorSegs[i].topY;
-              const gapTopY = doorSegs[i + 1].bottomY;
+          // 하부장/키큰장 도어 간 간격 계산
+          lowerDoorSegs.sort((a, b) => a.bottomY - b.bottomY);
+          const allLowerDoorSegs: typeof doorSegs = [];
+          for (let i = 0; i < lowerDoorSegs.length; i++) {
+            allLowerDoorSegs.push(lowerDoorSegs[i]);
+            if (i < lowerDoorSegs.length - 1) {
+              const gapBottomY = lowerDoorSegs[i].topY;
+              const gapTopY = lowerDoorSegs[i + 1].bottomY;
               const gapMm = Math.round((gapTopY - gapBottomY) / 0.01);
               if (gapMm > 0) {
-                allDoorSegs.push({
+                allLowerDoorSegs.push({
                   bottomY: gapBottomY,
                   topY: gapTopY,
                   heightMm: gapMm,
-                  key: `door-gap-${i}`
+                  key: `door-gap-${i}`,
+                  isUpper: false
                 });
               }
             }
           }
 
-          return allDoorSegs.map((seg) => (
-            <group key={`r-door-${seg.key}`}>
-              <ExtLine points={[[0, seg.bottomY, dimExtZ], [0, seg.bottomY, dimZ]]} color={dimensionColor} />
-              <ExtLine points={[[0, seg.topY, dimExtZ], [0, seg.topY, dimZ]]} color={dimensionColor} />
-              <NativeLine name="dimension_line" points={[[0, seg.bottomY, dimZ], [0, seg.topY, dimZ]]} color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false} />
-              <NativeLine name="dimension_line" points={[[-0.008, seg.bottomY, dimZ], [0.008, seg.bottomY, dimZ]]} color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false} />
-              <NativeLine name="dimension_line" points={[[-0.008, seg.topY, dimZ], [0.008, seg.topY, dimZ]]} color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false} />
-              <Text position={[0, (seg.bottomY + seg.topY) / 2, dimZ + mmToThreeUnits(60)]} fontSize={largeFontSize} color={textColor} anchorX="center" anchorY="middle" renderOrder={1000} depthTest={false} rotation={[0, -Math.PI / 2, Math.PI / 2]}>
-                {seg.heightMm}
-              </Text>
-            </group>
-          ));
+          return (
+            <>
+              {/* 하부장/키큰장 도어: 기존 우측 고정 위치 */}
+              {allLowerDoorSegs.map((seg) => (
+                <group key={`r-door-${seg.key}`}>
+                  <ExtLine points={[[0, seg.bottomY, dimExtZ], [0, seg.bottomY, dimZ]]} color={dimensionColor} />
+                  <ExtLine points={[[0, seg.topY, dimExtZ], [0, seg.topY, dimZ]]} color={dimensionColor} />
+                  <NativeLine name="dimension_line" points={[[0, seg.bottomY, dimZ], [0, seg.topY, dimZ]]} color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false} />
+                  <NativeLine name="dimension_line" points={[[-0.008, seg.bottomY, dimZ], [0.008, seg.bottomY, dimZ]]} color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false} />
+                  <NativeLine name="dimension_line" points={[[-0.008, seg.topY, dimZ], [0.008, seg.topY, dimZ]]} color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false} />
+                  <Text position={[0, (seg.bottomY + seg.topY) / 2, dimZ + mmToThreeUnits(60)]} fontSize={largeFontSize} color={textColor} anchorX="center" anchorY="middle" renderOrder={1000} depthTest={false} rotation={[0, -Math.PI / 2, Math.PI / 2]}>
+                    {seg.heightMm}
+                  </Text>
+                </group>
+              ))}
+              {/* 상부장 도어: 가구 앞면 바로 우측 */}
+              {upperDoorSegs.map((seg) => (
+                <group key={`r-upper-door-${seg.key}`}>
+                  <ExtLine points={[[0, seg.bottomY, upperDimExtZ], [0, seg.bottomY, upperDimZ]]} color={dimensionColor} />
+                  <ExtLine points={[[0, seg.topY, upperDimExtZ], [0, seg.topY, upperDimZ]]} color={dimensionColor} />
+                  <NativeLine name="dimension_line" points={[[0, seg.bottomY, upperDimZ], [0, seg.topY, upperDimZ]]} color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false} />
+                  <NativeLine name="dimension_line" points={[[-0.008, seg.bottomY, upperDimZ], [0.008, seg.bottomY, upperDimZ]]} color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false} />
+                  <NativeLine name="dimension_line" points={[[-0.008, seg.topY, upperDimZ], [0.008, seg.topY, upperDimZ]]} color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false} />
+                  <Text position={[0, (seg.bottomY + seg.topY) / 2, upperDimZ + mmToThreeUnits(60)]} fontSize={largeFontSize} color={textColor} anchorX="center" anchorY="middle" renderOrder={1000} depthTest={false} rotation={[0, -Math.PI / 2, Math.PI / 2]}>
+                    {seg.heightMm}
+                  </Text>
+                </group>
+              ))}
+            </>
+          );
         })()}
 
         {/* 바닥마감재 치수 (별도 위치, 좌측뷰) — 하부장은 왼쪽 2단에서 표시, 상부장은 받침대 없으므로 제외 */}
