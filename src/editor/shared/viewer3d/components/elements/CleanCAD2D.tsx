@@ -996,8 +996,13 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         hasAdjacentLeft = Math.abs(leftEdge - zoneLimitLeft) > 0.001;
         hasAdjacentRight = Math.abs(rightEdge - zoneLimitRight) > 0.001;
 
-        nearestLeftDistance = Math.round(Math.abs((moduleLeft - leftEdge) * 100));
-        nearestRightDistance = Math.round(Math.abs((rightEdge - moduleRight) * 100));
+        // 정수mm로 계산 (Three.js 부동소수점 → mm 변환 시 0.5mm 오차 방지)
+        const moduleLeftMm = Math.round(moduleLeft * 100);
+        const moduleRightMm = Math.round(moduleRight * 100);
+        const leftEdgeMm = Math.round(leftEdge * 100);
+        const rightEdgeMm = Math.round(rightEdge * 100);
+        nearestLeftDistance = Math.abs(moduleLeftMm - leftEdgeMm);
+        nearestRightDistance = Math.abs(rightEdgeMm - moduleRightMm);
       }
 
       // ────────────────────────────────────────────────

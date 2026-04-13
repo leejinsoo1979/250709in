@@ -120,7 +120,8 @@ export function getModuleBoundsX(module: PlacedModule): FurnitureBoundsX {
     widthMM = match ? parseInt(match[1], 10) : 450;
   }
   // position.x는 Three.js 단위 (mm * 0.01), 중심점
-  const centerXmm = module.position.x * 100; // Three.js → mm
+  // 정수mm로 반올림하여 0.5mm 소수부 제거 (벽 이격 1.5mm에서 발생)
+  const centerXmm = Math.round(module.position.x * 100); // Three.js → mm (정수)
   const halfWidth = widthMM / 2;
 
   return {
