@@ -650,6 +650,19 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
               heightMm: Math.round(moduleHeightMm),
               key: `furniture-${moduleIndex}`
             });
+
+            // 상부장: 상부프레임 치수 세그먼트 추가 (캐비넷 상단 ~ 천장)
+            if (modCat_l2 === 'upper') {
+              const topFrameVal = mod.topFrameThickness ?? (spaceInfo.frameSize?.top ?? 30);
+              if (topFrameVal > 0) {
+                segments_l2.push({
+                  bottomY: mmToThreeUnits(cabinetTopMm),
+                  topY: mmToThreeUnits(effectiveH_l2),
+                  heightMm: Math.round(topFrameVal),
+                  key: `upper-topframe-${moduleIndex}`
+                });
+              }
+            }
           });
 
           if (segments_l2.length === 0) return null;
