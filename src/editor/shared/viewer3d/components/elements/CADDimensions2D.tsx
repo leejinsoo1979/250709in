@@ -813,8 +813,6 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
             if (!modData) return;
 
             const modCat = getModuleCategory(mod);
-            // 선택된 카테고리와 다른 카테고리의 도어는 건너뛰기 (770 중복 방지)
-            if (selectedModCategory && selectedModCategory !== modCat) return;
             const moduleHeightMm = computeFurnitureHeightMm(mod, modData, spaceInfo, internalSpace);
             const doorTopGapVal = mod.doorTopGap ?? spaceInfo.doorTopGap ?? 0;
             const doorBottomGapVal = mod.doorBottomGap ?? spaceInfo.doorBottomGap ?? 0;
