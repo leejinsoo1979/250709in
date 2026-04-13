@@ -2080,8 +2080,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
 
                 {/* 커튼박스 프레임 폭 치수선 — 숨김 (좁은 영역에서 텍스트 겹침 방지) */}
 
-                {/* ===== 3단: 실배치 공간 치수선 (가구 있을 때만) ===== */}
-                {hasPlacedModules && (() => {
+                {/* ===== 3단: 실배치 공간 치수선 ===== */}
+                {(() => {
                   // 메인 구간에 듀얼 가구가 있는지 판별
                   const mainModules = placedModules.filter(m => m.zone !== 'dropped');
                   const hasDualInMain = mainModules.some(m => m.isDualSlot || m.moduleId.includes('dual-'));
@@ -2534,10 +2534,10 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 </>
                 )}
 
-                {/* 경계면 이격거리 치수선 - 좌우 이격과 동일한 Y 레벨 (가구 있을 때만) */}
+                {/* 경계면 이격거리 치수선 - 좌우 이격과 동일한 Y 레벨 */}
                 {/* 단내림 있으면 2개 경계면: 메인↔단내림, 단내림↔커튼박스 */}
                 {/* 단내림 없으면 1개 경계면: 메인↔커튼박스 */}
-                {hasPlacedModules && (() => {
+                {(() => {
                   // 전체서라운드/양쪽서라운드: 이격 1.5 고정, 노서라운드만 gapConfig
                   const isNoSurroundBoundary = spaceInfo.surroundType === 'no-surround';
                   const middleGapMm = isNoSurroundBoundary ? (spaceInfo.gapConfig?.middle ?? 1.5) : 1.5;
