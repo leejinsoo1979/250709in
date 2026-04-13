@@ -601,126 +601,117 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           </Text>
         </group>}
 
-        {/* ===== 왼쪽 2단: 섹션별 높이 + 하부프레임 (하부장 선택 시만) ===== */}
-        {selectedModCategory === 'lower' && visibleFurniture.length > 0 && (() => {
+        {/* ===== 왼쪽 2단: 몸통 사이즈 (segment-based, 모든 카테고리) ===== */}
+        {visibleFurniture.length > 0 && (() => {
           const leftInnerZ = -spaceDepth/2 - leftDimOffset + mmToThreeUnits(150) + mmToThreeUnits(200);
           const leftInnerExtStartZ = -spaceDepth/2 + mmToThreeUnits(110);
+          const effectiveH_l2 = isSelectedSlotInDroppedZone ? (spaceInfo.height - dropHeightMm) : spaceInfo.height;
 
-          const mod = visibleFurniture[0] as PlacedModule;
-          let moduleData = getModuleById(
-            mod.moduleId,
-            { width: internalSpace.width, height: internalSpace.height, depth: internalSpace.depth },
-            spaceInfo
-          );
-          if (!moduleData) {
-            moduleData = buildModuleDataFromPlacedModule(mod, internalSpace, spaceInfo);
+          const segments_l2: { bottomY: number; topY: number; heightMm: number; key: string }[] = [];
+
+          visibleFurniture.forEach((module, moduleIndex) => {
+            let moduleData = getModuleById(
+              module.moduleId,
+              { width: internalSpace.width, height: internalSpace.height, depth: internalSpace.depth },
+              spaceInfo
+            );
+            if (!moduleData) {
+              moduleData = buildModuleDataFromPlacedModule(module as PlacedModule, internalSpace, spaceInfo);
+            }
+            if (!moduleData) return;
+
+            const mod = module as PlacedModule;
+            const modCat_l2 = getModuleCategory(mod);
+            const moduleHeightMm = computeFurnitureHeightMm(mod, moduleData, spaceInfo, internalSpace);
+
+            let cabinetBottomMm: number;
+            let cabinetTopMm: number;
+
+            if (modCat_l2 === 'upper') {
+              const topFrameVal = mod.topFrameThickness ?? (spaceInfo.frameSize?.top ?? 30);
+              cabinetTopMm = effectiveH_l2 - topFrameVal;
+              cabinetBottomMm = cabinetTopMm - moduleHeightMm;
+            } else {
+              cabinetBottomMm = (isFloating ? floatHeightMm : (railOrBaseHeightMm + indivFloatMm)) + floorFinishHeightMm;
+              cabinetTopMm = cabinetBottomMm + moduleHeightMm;
+            }
+
+            segments_l2.push({
+              bottomY: mmToThreeUnits(cabinetBottomMm),
+              topY: mmToThreeUnits(cabinetTopMm),
+              heightMm: Math.round(moduleHeightMm),
+              key: `furniture-${moduleIndex}`
+            });
+          });
+
+          if (segments_l2.length === 0) return null;
+
+          segments_l2.sort((a, b) => a.bottomY - b.bottomY);
+
+          const allSegments_l2: typeof segments_l2 = [];
+          for (let i = 0; i < segments_l2.length; i++) {
+            allSegments_l2.push(segments_l2[i]);
+            if (i < segments_l2.length - 1) {
+              const gapBottomY = segments_l2[i].topY;
+              const gapTopY = segments_l2[i + 1].bottomY;
+              const gapMm = Math.round((gapTopY - gapBottomY) / 0.01);
+              if (gapMm > 0) {
+                allSegments_l2.push({
+                  bottomY: gapBottomY,
+                  topY: gapTopY,
+                  heightMm: gapMm,
+                  key: `gap-${i}`
+                });
+              }
+            }
           }
-          if (!moduleData) return null;
 
-          const moduleHeightMm = computeFurnitureHeightMm(mod, moduleData, spaceInfo, internalSpace);
-          const cabinetBottomY = furnitureBaseY;
-
-          const { sections: sectionConfigs, heightsMm: sectionHeightsMm } = computeSectionHeightsInfo(mod, moduleData, moduleHeightMm, 'left');
-          if (sectionConfigs.length === 0) return null;
-
-          const lowerSectionHeightMm = sectionHeightsMm[0] || 0;
-          const upperSectionHeightMm = sectionHeightsMm.slice(1).reduce((sum, h) => sum + h, 0);
-          const cabinetHeight = mmToThreeUnits(moduleHeightMm);
-          const cabinetTopY = cabinetBottomY + cabinetHeight;
-          const lowerSectionEndY = cabinetBottomY + mmToThreeUnits(lowerSectionHeightMm);
-
-          const displaySections = [
-            { startY: cabinetBottomY, endY: lowerSectionEndY, heightMm: lowerSectionHeightMm, isFirst: true },
-            { startY: lowerSectionEndY, endY: cabinetTopY, heightMm: upperSectionHeightMm, isFirst: false }
-          ].filter(s => s.heightMm > 0);
+          // 하부장의 받침대/바닥마감재도 표시
+          const hasLower = visibleFurniture.some(m => getModuleCategory(m as PlacedModule) === 'lower' || getModuleCategory(m as PlacedModule) === 'full');
 
           return (
             <group>
-              {displaySections.map((sec, si) => {
-                const shouldRenderStartGuide = !sec.isFirst || baseFrameHeightMm <= 0;
-                return (
-                  <group key={`left-sec-${si}`}>
-                    {/* 시작 가이드선 */}
-                    {shouldRenderStartGuide && (
-                      <ExtLine points={[[0, sec.startY, leftInnerExtStartZ], [0, sec.startY, leftInnerZ]]} color={dimensionColor} />
-                    )}
-                    {/* 끝 가이드선 */}
-                    <ExtLine points={[[0, sec.endY, leftInnerExtStartZ], [0, sec.endY, leftInnerZ]]} color={dimensionColor} />
-                    {/* 수직 치수선 */}
-                    <NativeLine name="dimension_line"
-                      points={[[0, sec.startY, leftInnerZ], [0, sec.endY, leftInnerZ]]}
-                      color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
-                    />
-                    {/* 시작 티크 */}
-                    {shouldRenderStartGuide && (
-                      <NativeLine name="dimension_line"
-                        points={[[-0.008, sec.startY, leftInnerZ], [0.008, sec.startY, leftInnerZ]]}
-                        color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
-                      />
-                    )}
-                    {/* 끝 티크 */}
-                    <NativeLine name="dimension_line"
-                      points={[[-0.008, sec.endY, leftInnerZ], [0.008, sec.endY, leftInnerZ]]}
-                      color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
-                    />
-                    {/* 치수 텍스트 */}
-                    <Text
-                      position={[0, (sec.startY + sec.endY) / 2, leftInnerZ - mmToThreeUnits(60)]}
-                      fontSize={largeFontSize} color={textColor}
-                      anchorX="center" anchorY="middle"
-                      renderOrder={1000} depthTest={false}
-                      rotation={[0, -Math.PI / 2, Math.PI / 2]}
-                    >
-                      {Math.round(sec.heightMm)}
-                    </Text>
-                  </group>
-                );
-              })}
-
-              {/* 도어올림: 마이다가 캐비넷 상판 위로 올라간 양 (도어 상단갭) */}
-              {(() => {
-                if (!mod.moduleId.includes('lower-door-lift-') || mod.hasDoor === false) return null;
-                const lowerMaidas = computeLowerCabinetMaidaHeights(
-                  mod.moduleId, moduleHeightMm, mod.doorTopGap ?? 0, mod.doorBottomGap ?? 0
-                );
-                if (!lowerMaidas || lowerMaidas.length === 0) return null;
-                const lastMaida = lowerMaidas[lowerMaidas.length - 1];
-                const overlapMm = Math.round(lastMaida.maidaTopMm - moduleHeightMm);
-                if (overlapMm <= 0) return null;
-                const gapBotY = cabinetTopY;
-                const gapTopY = cabinetBottomY + mmToThreeUnits(lastMaida.maidaTopMm);
-                return (
-                  <group>
-                    <ExtLine points={[[0, gapTopY, leftInnerExtStartZ], [0, gapTopY, leftInnerZ]]} color={dimensionColor} />
-                    <ExtLine points={[[0, gapBotY, leftInnerExtStartZ], [0, gapBotY, leftInnerZ]]} color={dimensionColor} />
-                    <NativeLine name="dimension_line" points={[[0, gapBotY, leftInnerZ], [0, gapTopY, leftInnerZ]]} color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false} />
-                    <NativeLine name="dimension_line" points={[[-0.008, gapBotY, leftInnerZ], [0.008, gapBotY, leftInnerZ]]} color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false} />
-                    <NativeLine name="dimension_line" points={[[-0.008, gapTopY, leftInnerZ], [0.008, gapTopY, leftInnerZ]]} color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false} />
-                    <Text position={[0, (gapBotY + gapTopY) / 2, leftInnerZ - mmToThreeUnits(60)]} fontSize={largeFontSize} color={textColor} anchorX="center" anchorY="middle" renderOrder={1000} depthTest={false} rotation={[0, -Math.PI / 2, Math.PI / 2]}>
-                      {overlapMm}
-                    </Text>
-                  </group>
-                );
-              })()}
+              {allSegments_l2.map((seg) => (
+                <group key={`l2-sec-${seg.key}`}>
+                  <ExtLine points={[[0, seg.bottomY, leftInnerExtStartZ], [0, seg.bottomY, leftInnerZ]]} color={dimensionColor} />
+                  <ExtLine points={[[0, seg.topY, leftInnerExtStartZ], [0, seg.topY, leftInnerZ]]} color={dimensionColor} />
+                  <NativeLine name="dimension_line"
+                    points={[[0, seg.bottomY, leftInnerZ], [0, seg.topY, leftInnerZ]]}
+                    color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
+                  />
+                  <NativeLine name="dimension_line"
+                    points={[[-0.008, seg.bottomY, leftInnerZ], [0.008, seg.bottomY, leftInnerZ]]}
+                    color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
+                  />
+                  <NativeLine name="dimension_line"
+                    points={[[-0.008, seg.topY, leftInnerZ], [0.008, seg.topY, leftInnerZ]]}
+                    color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
+                  />
+                  <Text
+                    position={[0, (seg.bottomY + seg.topY) / 2, leftInnerZ - mmToThreeUnits(60)]}
+                    fontSize={largeFontSize} color={textColor}
+                    anchorX="center" anchorY="middle"
+                    renderOrder={1000} depthTest={false}
+                    rotation={[0, -Math.PI / 2, Math.PI / 2]}
+                  >
+                    {seg.heightMm}
+                  </Text>
+                </group>
+              ))}
 
               {/* 하부프레임 높이: 바닥마감재 상단 ~ 받침대 상단 */}
-              {baseFrameHeightMm > 0 && (
+              {hasLower && baseFrameHeightMm > 0 && (
                 <>
-                  {/* 바닥마감재 상단 연장선 */}
                   <ExtLine points={[[0, floorFinishY, leftInnerExtStartZ], [0, floorFinishY, leftInnerZ]]} color={dimensionColor} />
-                  {/* 받침대 상단 연장선 */}
                   <ExtLine points={[[0, furnitureBaseY, leftInnerExtStartZ], [0, furnitureBaseY, leftInnerZ]]} color={dimensionColor} />
-                  {/* 수직 치수선 */}
                   <NativeLine name="dimension_line"
                     points={[[0, floorFinishY, leftInnerZ], [0, furnitureBaseY, leftInnerZ]]}
                     color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
                   />
-                  {/* 바닥마감재 상단 티크 */}
                   <NativeLine name="dimension_line"
                     points={[[-0.008, floorFinishY, leftInnerZ], [0.008, floorFinishY, leftInnerZ]]}
                     color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
                   />
-                  {/* 받침대 상단 티크 */}
                   <NativeLine name="dimension_line"
                     points={[[-0.008, furnitureBaseY, leftInnerZ], [0.008, furnitureBaseY, leftInnerZ]]}
                     color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
@@ -798,84 +789,105 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           </group>
         )}
 
-        {/* 가구별 섹션 치수 가이드 - 측면뷰에서 보이는 가구만 표시
-            하부장 서랍 모듈(마이다 있음)은 섹션 높이 대신 마이다 개별 높이로 대체 */}
+        {/* 우측 도어 사이즈 (hasDoor 가구만) */}
         {(() => {
-          // 치수선 Z 위치
           const dimZ = spaceDepth/2 + rightDimOffset - mmToThreeUnits(750);
           const dimExtZ = dimZ - mmToThreeUnits(360);
-          const effectiveH = isSelectedSlotInDroppedZone ? (spaceInfo.height - dropHeightMm) : spaceInfo.height;
+          const effectiveH_door = isSelectedSlotInDroppedZone ? (spaceInfo.height - dropHeightMm) : spaceInfo.height;
 
-          // 슬롯 내 모든 가구의 Y범위 계산
-          const segments: { bottomY: number; topY: number; heightMm: number; label: string; key: string }[] = [];
+          const doorSegs: { bottomY: number; topY: number; heightMm: number; key: string }[] = [];
 
           visibleFurniture.forEach((module, moduleIndex) => {
-            let moduleData = getModuleById(
-              module.moduleId,
+            const mod = module as PlacedModule;
+            if (!mod.hasDoor) return;
+
+            let modData = getModuleById(
+              mod.moduleId,
               { width: internalSpace.width, height: internalSpace.height, depth: internalSpace.depth },
               spaceInfo
             );
-            if (!moduleData) {
-              moduleData = buildModuleDataFromPlacedModule(module as PlacedModule, internalSpace, spaceInfo);
-            }
-            if (!moduleData) return;
+            if (!modData) modData = buildModuleDataFromPlacedModule(mod, internalSpace, spaceInfo);
+            if (!modData) return;
 
-            const mod = module as PlacedModule;
             const modCat = getModuleCategory(mod);
-            const moduleHeightMm = computeFurnitureHeightMm(mod, moduleData, spaceInfo, internalSpace);
+            const moduleHeightMm = computeFurnitureHeightMm(mod, modData, spaceInfo, internalSpace);
+            const doorTopGapVal = mod.doorTopGap ?? spaceInfo.doorTopGap ?? 0;
+            const doorBottomGapVal = mod.doorBottomGap ?? spaceInfo.doorBottomGap ?? 0;
 
-            let cabinetBottomMm: number;
-            let cabinetTopMm: number;
+            let doorBottomAbsMm = 0;
+            let doorTopAbsMm = 0;
+            let doorHeightMm = 0;
 
             if (modCat === 'upper') {
+              const cabinetH = modData.dimensions.height ?? 600;
               const topFrameVal = mod.topFrameThickness ?? (spaceInfo.frameSize?.top ?? 30);
-              cabinetTopMm = effectiveH - topFrameVal;
-              cabinetBottomMm = cabinetTopMm - moduleHeightMm;
+              const topExtension = topFrameVal - doorTopGapVal;
+              doorHeightMm = cabinetH + topExtension + doorBottomGapVal;
+              doorTopAbsMm = effectiveH_door - doorTopGapVal;
+              doorBottomAbsMm = doorTopAbsMm - doorHeightMm;
             } else if (modCat === 'lower') {
-              cabinetBottomMm = (isFloating ? floatHeightMm : (railOrBaseHeightMm + indivFloatMm)) + floorFinishHeightMm;
-              cabinetTopMm = cabinetBottomMm + moduleHeightMm;
+              const cabinetH = modData.dimensions.height ?? 1000;
+              const cabinetBottomAbs = (isFloating ? floatHeightMm : (railOrBaseHeightMm + indivFloatMm)) + floorFinishHeightMm;
+              const isDoorLift = modData.id?.includes('lower-door-lift-');
+              const isTopDown = modData.id?.includes('lower-top-down-');
+              if (isTopDown) {
+                doorHeightMm = 710;
+                doorBottomAbsMm = cabinetBottomAbs - 5;
+                doorTopAbsMm = doorBottomAbsMm + doorHeightMm;
+              } else if (isDoorLift) {
+                doorHeightMm = cabinetH + 5 + 30;
+                doorTopAbsMm = cabinetBottomAbs + cabinetH + 30;
+                doorBottomAbsMm = doorTopAbsMm - doorHeightMm;
+              } else {
+                doorHeightMm = cabinetH + doorTopGapVal + doorBottomGapVal;
+                doorTopAbsMm = cabinetBottomAbs + cabinetH + doorTopGapVal;
+                doorBottomAbsMm = cabinetBottomAbs - doorBottomGapVal;
+              }
             } else {
               // 키큰장
-              cabinetBottomMm = (isFloating ? floatHeightMm : (railOrBaseHeightMm + indivFloatMm)) + floorFinishHeightMm;
-              cabinetTopMm = cabinetBottomMm + moduleHeightMm;
+              const isFloorType = !spaceInfo.baseConfig || spaceInfo.baseConfig.type === 'floor';
+              const floorFinishForDoor = (isFloorType && spaceInfo.hasFloorFinish)
+                ? (spaceInfo.floorFinish?.height || 0) : 0;
+              doorBottomAbsMm = doorBottomGapVal + floorFinishForDoor;
+              doorTopAbsMm = effectiveH_door - doorTopGapVal;
+              doorHeightMm = Math.max(0, doorTopAbsMm - doorBottomAbsMm);
             }
 
-            segments.push({
-              bottomY: mmToThreeUnits(cabinetBottomMm),
-              topY: mmToThreeUnits(cabinetTopMm),
-              heightMm: Math.round(moduleHeightMm),
-              label: `${Math.round(moduleHeightMm)}`,
-              key: `furniture-${moduleIndex}`
+            if (doorHeightMm <= 0) return;
+
+            doorSegs.push({
+              bottomY: mmToThreeUnits(doorBottomAbsMm),
+              topY: mmToThreeUnits(doorTopAbsMm),
+              heightMm: Math.round(doorHeightMm),
+              key: `door-${moduleIndex}`
             });
           });
 
-          if (segments.length === 0) return null;
+          if (doorSegs.length === 0) return null;
 
-          // Y 기준 정렬 (아래→위)
-          segments.sort((a, b) => a.bottomY - b.bottomY);
+          doorSegs.sort((a, b) => a.bottomY - b.bottomY);
 
-          // 사이 간격 계산
-          const allSegments: typeof segments = [];
-          for (let i = 0; i < segments.length; i++) {
-            allSegments.push(segments[i]);
-            if (i < segments.length - 1) {
-              const gapBottomY = segments[i].topY;
-              const gapTopY = segments[i + 1].bottomY;
+          // 도어 간 간격 계산
+          const allDoorSegs: typeof doorSegs = [];
+          for (let i = 0; i < doorSegs.length; i++) {
+            allDoorSegs.push(doorSegs[i]);
+            if (i < doorSegs.length - 1) {
+              const gapBottomY = doorSegs[i].topY;
+              const gapTopY = doorSegs[i + 1].bottomY;
               const gapMm = Math.round((gapTopY - gapBottomY) / 0.01);
               if (gapMm > 0) {
-                allSegments.push({
+                allDoorSegs.push({
                   bottomY: gapBottomY,
                   topY: gapTopY,
                   heightMm: gapMm,
-                  label: `${gapMm}`,
-                  key: `gap-${i}`
+                  key: `door-gap-${i}`
                 });
               }
             }
           }
 
-          return allSegments.map((seg) => (
-            <group key={`section-${seg.key}`}>
+          return allDoorSegs.map((seg) => (
+            <group key={`r-door-${seg.key}`}>
               <ExtLine points={[[0, seg.bottomY, dimExtZ], [0, seg.bottomY, dimZ]]} color={dimensionColor} />
               <ExtLine points={[[0, seg.topY, dimExtZ], [0, seg.topY, dimZ]]} color={dimensionColor} />
               <NativeLine name="dimension_line" points={[[0, seg.bottomY, dimZ], [0, seg.topY, dimZ]]} color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false} />
@@ -887,8 +899,6 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
             </group>
           ));
         })()}
-
-        {/* (하부장 서랍 마이다 치수는 위 섹션 치수 블록에서 흰색으로 처리) */}
 
         {/* 바닥마감재 치수 (별도 위치, 좌측뷰) — 하부장은 왼쪽 2단에서 표시, 상부장은 받침대 없으므로 제외 */}
         {floorFinishHeightMm > 0 && !isFloating && selectedModCategory !== 'lower' && selectedModCategory !== 'upper' && (
@@ -1003,15 +1013,33 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           const slotX = -spaceWidth / 2 + indexing.columnWidth * module.slotIndex + indexing.columnWidth / 2;
 
           // 가구 깊이 치수: 하부장은 가구 바닥 아래, 키큰장/상부장은 가구 상단 위
+          const isUpperMod = modCategory === 'upper';
           const modHeightMm = isLowerMod
             ? computeFurnitureHeightMm(mod, depthModuleData, spaceInfo, internalSpace)
-            : adjustedInternalHeightMm;
+            : isUpperMod
+              ? computeFurnitureHeightMm(mod, depthModuleData, spaceInfo, internalSpace)
+              : adjustedInternalHeightMm;
           const modHeight = mmToThreeUnits(modHeightMm);
-          const furnitureTopEdge = furnitureBaseY + modHeight; // 가구 상단
+
+          // 상부장: 천장 기준 Y 계산 (FurnitureItem.tsx와 동일)
+          const depthEffectiveH = isSelectedSlotInDroppedZone ? (spaceInfo.height - dropHeightMm) : spaceInfo.height;
+          let furnitureTopEdge: number;
+          let furnitureBottomEdge: number;
+          if (isUpperMod) {
+            const topFrameVal = mod.topFrameThickness ?? (spaceInfo.frameSize?.top ?? 30);
+            const cabinetTopMm = depthEffectiveH - topFrameVal;
+            const cabinetBottomMm = cabinetTopMm - modHeightMm;
+            furnitureTopEdge = mmToThreeUnits(cabinetTopMm);
+            furnitureBottomEdge = mmToThreeUnits(cabinetBottomMm);
+          } else {
+            furnitureBottomEdge = furnitureBaseY;
+            furnitureTopEdge = furnitureBaseY + modHeight;
+          }
+
           const depthDimY = isLowerMod
-            ? furnitureBaseY - mmToThreeUnits(200)    // 하부장: 가구 바닥 아래
-            : furnitureTopEdge + mmToThreeUnits(200); // 키큰장: 가구 상단 위
-          const depthDimEdge = isLowerMod ? furnitureBaseY : furnitureTopEdge;
+            ? furnitureBottomEdge - mmToThreeUnits(200)    // 하부장: 가구 바닥 아래
+            : furnitureTopEdge + mmToThreeUnits(200); // 키큰장/상부장: 가구 상단 위
+          const depthDimEdge = isLowerMod ? furnitureBottomEdge : furnitureTopEdge;
 
           // Z축 위치 계산 (FurnitureItem.tsx와 동일)
           const panelDepthMm = spaceInfo.depth || 1500;
@@ -1586,115 +1614,92 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           </Text>
         </group>}
 
-        {/* ===== 왼쪽 2단: 섹션별 높이 + 하부프레임 (하부장 선택 시만) ===== */}
-        {selectedModCategory === 'lower' && visibleFurniture.length > 0 && (() => {
+        {/* ===== 왼쪽 2단: 몸통 사이즈 (segment-based, 모든 카테고리) — 우측뷰 ===== */}
+        {visibleFurniture.length > 0 && (() => {
           const leftInnerZ = -spaceDepth/2 - leftDimOffset + mmToThreeUnits(150) + mmToThreeUnits(200);
           const leftInnerExtStartZ = -spaceDepth/2 + mmToThreeUnits(110);
+          const effectiveH_rl2 = isSelectedSlotInDroppedZone ? (spaceInfo.height - dropHeightMm) : spaceInfo.height;
 
-          const mod = visibleFurniture[0] as PlacedModule;
-          let moduleData = getModuleById(
-            mod.moduleId,
-            { width: internalSpace.width, height: internalSpace.height, depth: internalSpace.depth },
-            spaceInfo
-          );
-          if (!moduleData) {
-            moduleData = buildModuleDataFromPlacedModule(mod, internalSpace, spaceInfo);
+          const segments_rl2: { bottomY: number; topY: number; heightMm: number; key: string }[] = [];
+
+          visibleFurniture.forEach((module, moduleIndex) => {
+            let moduleData = getModuleById(
+              module.moduleId,
+              { width: internalSpace.width, height: internalSpace.height, depth: internalSpace.depth },
+              spaceInfo
+            );
+            if (!moduleData) moduleData = buildModuleDataFromPlacedModule(module as PlacedModule, internalSpace, spaceInfo);
+            if (!moduleData) return;
+
+            const mod = module as PlacedModule;
+            const modCat_rl2 = getModuleCategory(mod);
+            const moduleHeightMm = computeFurnitureHeightMm(mod, moduleData, spaceInfo, internalSpace);
+
+            let cabinetBottomMm: number;
+            let cabinetTopMm: number;
+
+            if (modCat_rl2 === 'upper') {
+              const topFrameVal = mod.topFrameThickness ?? (spaceInfo.frameSize?.top ?? 30);
+              cabinetTopMm = effectiveH_rl2 - topFrameVal;
+              cabinetBottomMm = cabinetTopMm - moduleHeightMm;
+            } else {
+              cabinetBottomMm = (isFloating ? floatHeightMm : (railOrBaseHeightMm + indivFloatMm)) + floorFinishHeightMm;
+              cabinetTopMm = cabinetBottomMm + moduleHeightMm;
+            }
+
+            segments_rl2.push({
+              bottomY: mmToThreeUnits(cabinetBottomMm),
+              topY: mmToThreeUnits(cabinetTopMm),
+              heightMm: Math.round(moduleHeightMm),
+              key: `furniture-${moduleIndex}`
+            });
+          });
+
+          if (segments_rl2.length === 0) return null;
+          segments_rl2.sort((a, b) => a.bottomY - b.bottomY);
+
+          const allSegments_rl2: typeof segments_rl2 = [];
+          for (let i = 0; i < segments_rl2.length; i++) {
+            allSegments_rl2.push(segments_rl2[i]);
+            if (i < segments_rl2.length - 1) {
+              const gapBottomY = segments_rl2[i].topY;
+              const gapTopY = segments_rl2[i + 1].bottomY;
+              const gapMm = Math.round((gapTopY - gapBottomY) / 0.01);
+              if (gapMm > 0) {
+                allSegments_rl2.push({ bottomY: gapBottomY, topY: gapTopY, heightMm: gapMm, key: `gap-${i}` });
+              }
+            }
           }
-          if (!moduleData) return null;
 
-          const moduleHeightMm = computeFurnitureHeightMm(mod, moduleData, spaceInfo, internalSpace);
-          const { sections: sectionConfigs, heightsMm: sectionHeightsMm } = computeSectionHeightsInfo(mod, moduleData, moduleHeightMm, 'right');
-          if (sectionConfigs.length === 0) return null;
-
-          const lowerSectionHeightMm = sectionHeightsMm[0] || 0;
-          const upperSectionHeightMm = sectionHeightsMm.slice(1).reduce((sum, h) => sum + h, 0);
-          const cabinetBottomY = furnitureBaseY;
-          const cabinetHeight = mmToThreeUnits(moduleHeightMm);
-          const cabinetTopY = cabinetBottomY + cabinetHeight;
-          const lowerSectionEndY = cabinetBottomY + mmToThreeUnits(lowerSectionHeightMm);
-
-          const displaySections = [
-            { startY: cabinetBottomY, endY: lowerSectionEndY, heightMm: lowerSectionHeightMm, isFirst: true },
-            { startY: lowerSectionEndY, endY: cabinetTopY, heightMm: upperSectionHeightMm, isFirst: false }
-          ].filter(s => s.heightMm > 0);
+          const hasLower_r = visibleFurniture.some(m => getModuleCategory(m as PlacedModule) === 'lower' || getModuleCategory(m as PlacedModule) === 'full');
 
           return (
             <group>
-              {displaySections.map((sec, si) => {
-                const shouldRenderStartGuide = !sec.isFirst || baseFrameHeightMm <= 0;
-                return (
-                  <group key={`right-sec-${si}`}>
-                    {/* 시작 가이드선 */}
-                    {shouldRenderStartGuide && (
-                      <ExtLine points={[[0, sec.startY, leftInnerExtStartZ], [0, sec.startY, leftInnerZ]]} color={dimensionColor} />
-                    )}
-                    {/* 끝 가이드선 */}
-                    <ExtLine points={[[0, sec.endY, leftInnerExtStartZ], [0, sec.endY, leftInnerZ]]} color={dimensionColor} />
-                    {/* 수직 치수선 */}
-                    <NativeLine name="dimension_line"
-                      points={[[0, sec.startY, leftInnerZ], [0, sec.endY, leftInnerZ]]}
-                      color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
-                    />
-                    {/* 시작 티크 */}
-                    {shouldRenderStartGuide && (
-                      <NativeLine name="dimension_line"
-                        points={[[-0.008, sec.startY, leftInnerZ], [0.008, sec.startY, leftInnerZ]]}
-                        color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
-                      />
-                    )}
-                    {/* 끝 티크 */}
-                    <NativeLine name="dimension_line"
-                      points={[[-0.008, sec.endY, leftInnerZ], [0.008, sec.endY, leftInnerZ]]}
-                      color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
-                    />
-                    {/* 치수 텍스트 */}
-                    <Text
-                      position={[0, (sec.startY + sec.endY) / 2, leftInnerZ - mmToThreeUnits(60)]}
-                      fontSize={largeFontSize} color={textColor}
-                      anchorX="center" anchorY="middle"
-                      renderOrder={1000} depthTest={false}
-                      rotation={[0, Math.PI / 2, Math.PI / 2]}
-                    >
-                      {Math.round(sec.heightMm)}
-                    </Text>
-                  </group>
-                );
-              })}
+              {allSegments_rl2.map((seg) => (
+                <group key={`rl2-sec-${seg.key}`}>
+                  <ExtLine points={[[0, seg.bottomY, leftInnerExtStartZ], [0, seg.bottomY, leftInnerZ]]} color={dimensionColor} />
+                  <ExtLine points={[[0, seg.topY, leftInnerExtStartZ], [0, seg.topY, leftInnerZ]]} color={dimensionColor} />
+                  <NativeLine name="dimension_line" points={[[0, seg.bottomY, leftInnerZ], [0, seg.topY, leftInnerZ]]} color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false} />
+                  <NativeLine name="dimension_line" points={[[-0.008, seg.bottomY, leftInnerZ], [0.008, seg.bottomY, leftInnerZ]]} color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false} />
+                  <NativeLine name="dimension_line" points={[[-0.008, seg.topY, leftInnerZ], [0.008, seg.topY, leftInnerZ]]} color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false} />
+                  <Text position={[0, (seg.bottomY + seg.topY) / 2, leftInnerZ - mmToThreeUnits(60)]} fontSize={largeFontSize} color={textColor} anchorX="center" anchorY="middle" renderOrder={1000} depthTest={false} rotation={[0, Math.PI / 2, Math.PI / 2]}>
+                    {seg.heightMm}
+                  </Text>
+                </group>
+              ))}
 
-              {/* 하부프레임 높이: 바닥마감재 상단 ~ 받침대 상단 */}
-              {baseFrameHeightMm > 0 && (
+              {hasLower_r && baseFrameHeightMm > 0 && (
                 <>
-                  {/* 바닥마감재 상단 연장선 */}
                   <ExtLine points={[[0, floorFinishY, leftInnerExtStartZ], [0, floorFinishY, leftInnerZ]]} color={dimensionColor} />
-                  {/* 받침대 상단 연장선 */}
                   <ExtLine points={[[0, furnitureBaseY, leftInnerExtStartZ], [0, furnitureBaseY, leftInnerZ]]} color={dimensionColor} />
-                  {/* 수직 치수선 */}
-                  <NativeLine name="dimension_line"
-                    points={[[0, floorFinishY, leftInnerZ], [0, furnitureBaseY, leftInnerZ]]}
-                    color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
-                  />
-                  {/* 바닥마감재 상단 티크 */}
-                  <NativeLine name="dimension_line"
-                    points={[[-0.008, floorFinishY, leftInnerZ], [0.008, floorFinishY, leftInnerZ]]}
-                    color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
-                  />
-                  {/* 받침대 상단 티크 */}
-                  <NativeLine name="dimension_line"
-                    points={[[-0.008, furnitureBaseY, leftInnerZ], [0.008, furnitureBaseY, leftInnerZ]]}
-                    color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
-                  />
-                  <Text
-                    position={[0, floorFinishY + (furnitureBaseY - floorFinishY) / 2, leftInnerZ - mmToThreeUnits(60)]}
-                    fontSize={largeFontSize} color={textColor}
-                    anchorX="center" anchorY="middle"
-                    renderOrder={1000} depthTest={false}
-                    rotation={[0, Math.PI / 2, Math.PI / 2]}
-                  >
+                  <NativeLine name="dimension_line" points={[[0, floorFinishY, leftInnerZ], [0, furnitureBaseY, leftInnerZ]]} color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false} />
+                  <NativeLine name="dimension_line" points={[[-0.008, floorFinishY, leftInnerZ], [0.008, floorFinishY, leftInnerZ]]} color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false} />
+                  <NativeLine name="dimension_line" points={[[-0.008, furnitureBaseY, leftInnerZ], [0.008, furnitureBaseY, leftInnerZ]]} color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false} />
+                  <Text position={[0, floorFinishY + (furnitureBaseY - floorFinishY) / 2, leftInnerZ - mmToThreeUnits(60)]} fontSize={largeFontSize} color={textColor} anchorX="center" anchorY="middle" renderOrder={1000} depthTest={false} rotation={[0, Math.PI / 2, Math.PI / 2]}>
                     {baseFrameDisplayMm}
                   </Text>
                 </>
               )}
-
             </group>
           );
         })()}
@@ -1756,78 +1761,97 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           </group>
         )}
 
+        {/* 우측뷰 — 우측 도어 사이즈 */}
         {(() => {
-          // 치수선 Z 위치 (우측뷰)
           const dimZ_r = spaceDepth/2 + rightDimOffset - mmToThreeUnits(750);
           const dimExtZ_r = dimZ_r - mmToThreeUnits(360);
-          const effectiveH_r = isSelectedSlotInDroppedZone ? (spaceInfo.height - dropHeightMm) : spaceInfo.height;
+          const effectiveH_rd = isSelectedSlotInDroppedZone ? (spaceInfo.height - dropHeightMm) : spaceInfo.height;
 
-          const segments_r: { bottomY: number; topY: number; heightMm: number; label: string; key: string }[] = [];
+          const doorSegs_r: { bottomY: number; topY: number; heightMm: number; key: string }[] = [];
 
           visibleFurniture.forEach((module, moduleIndex) => {
-            let moduleData = getModuleById(
-              module.moduleId,
+            const mod = module as PlacedModule;
+            if (!mod.hasDoor) return;
+
+            let modData = getModuleById(
+              mod.moduleId,
               { width: internalSpace.width, height: internalSpace.height, depth: internalSpace.depth },
               spaceInfo
             );
-            if (!moduleData) {
-              moduleData = buildModuleDataFromPlacedModule(module as PlacedModule, internalSpace, spaceInfo);
-            }
-            if (!moduleData) return;
+            if (!modData) modData = buildModuleDataFromPlacedModule(mod, internalSpace, spaceInfo);
+            if (!modData) return;
 
-            const mod = module as PlacedModule;
-            const modCat_r = getModuleCategory(mod);
-            const moduleHeightMm = computeFurnitureHeightMm(mod, moduleData, spaceInfo, internalSpace);
+            const modCat = getModuleCategory(mod);
+            const moduleHeightMm = computeFurnitureHeightMm(mod, modData, spaceInfo, internalSpace);
+            const doorTopGapVal = mod.doorTopGap ?? spaceInfo.doorTopGap ?? 0;
+            const doorBottomGapVal = mod.doorBottomGap ?? spaceInfo.doorBottomGap ?? 0;
 
-            let cabinetBottomMm: number;
-            let cabinetTopMm: number;
+            let doorBottomAbsMm = 0;
+            let doorTopAbsMm = 0;
+            let doorHeightMm = 0;
 
-            if (modCat_r === 'upper') {
+            if (modCat === 'upper') {
+              const cabinetH = modData.dimensions.height ?? 600;
               const topFrameVal = mod.topFrameThickness ?? (spaceInfo.frameSize?.top ?? 30);
-              cabinetTopMm = effectiveH_r - topFrameVal;
-              cabinetBottomMm = cabinetTopMm - moduleHeightMm;
-            } else if (modCat_r === 'lower') {
-              cabinetBottomMm = (isFloating ? floatHeightMm : (railOrBaseHeightMm + indivFloatMm)) + floorFinishHeightMm;
-              cabinetTopMm = cabinetBottomMm + moduleHeightMm;
+              const topExtension = topFrameVal - doorTopGapVal;
+              doorHeightMm = cabinetH + topExtension + doorBottomGapVal;
+              doorTopAbsMm = effectiveH_rd - doorTopGapVal;
+              doorBottomAbsMm = doorTopAbsMm - doorHeightMm;
+            } else if (modCat === 'lower') {
+              const cabinetH = modData.dimensions.height ?? 1000;
+              const cabinetBottomAbs = (isFloating ? floatHeightMm : (railOrBaseHeightMm + indivFloatMm)) + floorFinishHeightMm;
+              const isDoorLift = modData.id?.includes('lower-door-lift-');
+              const isTopDown = modData.id?.includes('lower-top-down-');
+              if (isTopDown) {
+                doorHeightMm = 710;
+                doorBottomAbsMm = cabinetBottomAbs - 5;
+                doorTopAbsMm = doorBottomAbsMm + doorHeightMm;
+              } else if (isDoorLift) {
+                doorHeightMm = cabinetH + 5 + 30;
+                doorTopAbsMm = cabinetBottomAbs + cabinetH + 30;
+                doorBottomAbsMm = doorTopAbsMm - doorHeightMm;
+              } else {
+                doorHeightMm = cabinetH + doorTopGapVal + doorBottomGapVal;
+                doorTopAbsMm = cabinetBottomAbs + cabinetH + doorTopGapVal;
+                doorBottomAbsMm = cabinetBottomAbs - doorBottomGapVal;
+              }
             } else {
-              cabinetBottomMm = (isFloating ? floatHeightMm : (railOrBaseHeightMm + indivFloatMm)) + floorFinishHeightMm;
-              cabinetTopMm = cabinetBottomMm + moduleHeightMm;
+              const isFloorType = !spaceInfo.baseConfig || spaceInfo.baseConfig.type === 'floor';
+              const floorFinishForDoor = (isFloorType && spaceInfo.hasFloorFinish)
+                ? (spaceInfo.floorFinish?.height || 0) : 0;
+              doorBottomAbsMm = doorBottomGapVal + floorFinishForDoor;
+              doorTopAbsMm = effectiveH_rd - doorTopGapVal;
+              doorHeightMm = Math.max(0, doorTopAbsMm - doorBottomAbsMm);
             }
 
-            segments_r.push({
-              bottomY: mmToThreeUnits(cabinetBottomMm),
-              topY: mmToThreeUnits(cabinetTopMm),
-              heightMm: Math.round(moduleHeightMm),
-              label: `${Math.round(moduleHeightMm)}`,
-              key: `furniture-${moduleIndex}`
+            if (doorHeightMm <= 0) return;
+
+            doorSegs_r.push({
+              bottomY: mmToThreeUnits(doorBottomAbsMm),
+              topY: mmToThreeUnits(doorTopAbsMm),
+              heightMm: Math.round(doorHeightMm),
+              key: `door-${moduleIndex}`
             });
           });
 
-          if (segments_r.length === 0) return null;
+          if (doorSegs_r.length === 0) return null;
+          doorSegs_r.sort((a, b) => a.bottomY - b.bottomY);
 
-          segments_r.sort((a, b) => a.bottomY - b.bottomY);
-
-          const allSegments_r: typeof segments_r = [];
-          for (let i = 0; i < segments_r.length; i++) {
-            allSegments_r.push(segments_r[i]);
-            if (i < segments_r.length - 1) {
-              const gapBottomY = segments_r[i].topY;
-              const gapTopY = segments_r[i + 1].bottomY;
+          const allDoorSegs_r: typeof doorSegs_r = [];
+          for (let i = 0; i < doorSegs_r.length; i++) {
+            allDoorSegs_r.push(doorSegs_r[i]);
+            if (i < doorSegs_r.length - 1) {
+              const gapBottomY = doorSegs_r[i].topY;
+              const gapTopY = doorSegs_r[i + 1].bottomY;
               const gapMm = Math.round((gapTopY - gapBottomY) / 0.01);
               if (gapMm > 0) {
-                allSegments_r.push({
-                  bottomY: gapBottomY,
-                  topY: gapTopY,
-                  heightMm: gapMm,
-                  label: `${gapMm}`,
-                  key: `gap-${i}`
-                });
+                allDoorSegs_r.push({ bottomY: gapBottomY, topY: gapTopY, heightMm: gapMm, key: `door-gap-${i}` });
               }
             }
           }
 
-          return allSegments_r.map((seg) => (
-            <group key={`r-section-${seg.key}`}>
+          return allDoorSegs_r.map((seg) => (
+            <group key={`r-door-${seg.key}`}>
               <ExtLine points={[[0, seg.bottomY, dimExtZ_r], [0, seg.bottomY, dimZ_r]]} color={dimensionColor} />
               <ExtLine points={[[0, seg.topY, dimExtZ_r], [0, seg.topY, dimZ_r]]} color={dimensionColor} />
               <NativeLine name="dimension_line" points={[[0, seg.bottomY, dimZ_r], [0, seg.topY, dimZ_r]]} color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false} />
