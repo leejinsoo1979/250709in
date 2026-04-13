@@ -2720,6 +2720,114 @@ const Room: React.FC<RoomProps> = ({
             );
           })()}
 
+          {/* 그라데이션 메쉬 뒷면(z축 뒤) 경계 라인 — 좌벽/우벽 세로, 천장/바닥 가로 */}
+          {renderMode === 'solid' && (() => {
+            const lineColor = theme?.mode === 'dark' ? '#888888' : '#aaaaaa';
+            const hasLW = spaceInfo.installType === 'builtin' || spaceInfo.installType === 'built-in' ||
+              (spaceInfo.installType === 'semistanding' && wallConfig?.left);
+            const hasRW = spaceInfo.installType === 'builtin' || spaceInfo.installType === 'built-in' ||
+              (spaceInfo.installType === 'semistanding' && wallConfig?.right);
+            const lx = xOffset;
+            const rx = xOffset + width;
+            const by = panelStartY;
+            const ty = panelStartY + height; // 메인 천장
+            const bz = extendedZOffset + 0.01;
+            const lines: number[] = [];
+
+            // 커튼박스/단내림 감지
+            const _hasDC = spaceInfo.droppedCeiling?.enabled;
+            const _dcIsLeft = _hasDC && spaceInfo.droppedCeiling?.position === 'left';
+            const _dcIsRight = _hasDC && spaceInfo.droppedCeiling?.position === 'right';
+            const _dcDropH = _hasDC ? mmToThreeUnits(spaceInfo.droppedCeiling!.dropHeight || 200) : 0;
+            const _dcW = _hasDC ? mmToThreeUnits(spaceInfo.droppedCeiling!.width || (isFreePlacement ? 150 : 900)) : 0;
+
+            // 자유배치 stepCeiling
+            const _hasSC = isFreePlacement && spaceInfo.stepCeiling?.enabled;
+            const _scIsLeft = _hasSC && spaceInfo.stepCeiling?.position === 'left';
+            const _scIsRight = _hasSC && spaceInfo.stepCeiling?.position === 'right';
+            const _scDropH = _hasSC ? mmToThreeUnits(spaceInfo.stepCeiling!.dropHeight || 200) : 0;
+            const _scW = _hasSC ? mmToThreeUnits(spaceInfo.stepCeiling!.width || 150) : 0;
+
+            // 커튼박스 (슬롯 배치)
+            const _hasCB = !isFreePlacement && spaceInfo.curtainBox?.enabled;
+            const _cbIsLeft = _hasCB && spaceInfo.curtainBox?.position === 'left';
+            const _cbIsRight = _hasCB && spaceInfo.curtainBox?.position === 'right';
+            const _cbDropH = _hasCB ? mmToThreeUnits(spaceInfo.curtainBox!.dropHeight || 20) : 0;
+            const _cbW = _hasCB ? mmToThreeUnits(spaceInfo.curtainBox!.width || 150) : 0;
+
+            // 좌/우 천장 높이 계산
+            let leftCeilingY = ty;
+            let rightCeilingY = ty;
+
+            // 단내림 (슬롯배치)
+            if (_hasDC && !isFreePlacement) {
+              if (_dcIsLeft) leftCeilingY = ty - _dcDropH;
+              if (_dcIsRight) rightCeilingY = ty - _dcDropH;
+            }
+            // 자유배치 stepCeiling: 위로 올라감
+            if (_hasSC) {
+              if (_scIsLeft) leftCeilingY = ty + _scDropH;
+              if (_scIsRight) rightCeilingY = ty + _scDropH;
+            }
+            // 커튼박스 (슬롯배치): 위로 올라감
+            if (_hasCB) {
+              if (_cbIsLeft) leftCeilingY = ty + _cbDropH;
+              if (_cbIsRight) rightCeilingY = ty + _cbDropH;
+            }
+
+            // 경계 X 위치
+            const hasSplit = leftCeilingY !== rightCeilingY;
+            let splitX = lx;
+            if (hasSplit) {
+              if (_hasDC && !isFreePlacement) {
+                splitX = _dcIsLeft ? lx + _dcW : rx - _dcW;
+              } else if (_hasSC) {
+                splitX = _scIsLeft ? lx + _scW : rx - _scW;
+              } else if (_hasCB) {
+                splitX = _cbIsLeft ? lx + _cbW : rx - _cbW;
+              }
+            }
+
+            // 천장 가로 라인 (분절)
+            if (hasSplit) {
+              const leftIsHigher = leftCeilingY > rightCeilingY;
+              const mainY = leftIsHigher ? rightCeilingY : leftCeilingY;
+              const dropY = leftIsHigher ? leftCeilingY : rightCeilingY;
+              // 메인 구간
+              if (leftIsHigher) {
+                lines.push(splitX, mainY, bz, rx, mainY, bz);
+              } else {
+                lines.push(lx, mainY, bz, splitX, mainY, bz);
+              }
+              // 단내림/커튼박스 구간
+              if (leftIsHigher) {
+                lines.push(lx, dropY, bz, splitX, dropY, bz);
+              } else {
+                lines.push(splitX, dropY, bz, rx, dropY, bz);
+              }
+              // 세로 연결선 (경계)
+              lines.push(splitX, mainY, bz, splitX, dropY, bz);
+            } else {
+              lines.push(lx, ty, bz, rx, ty, bz);
+            }
+
+            // 바닥 가로
+            lines.push(lx, by, bz, rx, by, bz);
+            // 좌벽 세로
+            if (hasLW) lines.push(lx, by, bz, lx, leftCeilingY, bz);
+            // 우벽 세로
+            if (hasRW) lines.push(rx, by, bz, rx, rightCeilingY, bz);
+
+            return lines.length > 0 ? (
+              <lineSegments renderOrder={5}>
+                <bufferGeometry>
+                  <bufferAttribute attach="attributes-position" args={[new Float32Array(lines), 3]} />
+                </bufferGeometry>
+                <lineBasicMaterial color={lineColor} depthTest={false} transparent opacity={0.5} />
+              </lineSegments>
+            ) : null;
+          })()}
+
         </>
       )}
 
