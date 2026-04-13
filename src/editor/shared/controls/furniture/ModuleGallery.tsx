@@ -642,10 +642,8 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
           }
         }
 
-        // 빈 공간에 못 들어가면, 싱글 가구만 가장 큰 빈 공간에 맞게 너비 축소
-        // 듀얼 가구는 좌우 비율이 깨지므로 축소 불가
-        const isDualModule = module.id.startsWith('dual-');
-        if (targetX === null && !isDualModule && candidates.length > 0) {
+        // 빈 공간에 못 들어가면, 가장 큰 빈 공간에 맞게 너비 축소 배치
+        if (targetX === null && candidates.length > 0) {
           const largestGap = candidates.reduce((max, g) => {
             const w = g.right - g.left;
             return w > (max.right - max.left) ? g : max;
