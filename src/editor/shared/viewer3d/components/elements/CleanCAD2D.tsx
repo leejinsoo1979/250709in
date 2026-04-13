@@ -5332,6 +5332,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             // useMemo로 메모이제이션된 값 사용
             const {
               maxLowerCabinetHeightMm,
+              maxUpperCabinetHeightMm,
               adjustedUpperCabinetHeightMm,
               isFloating,
               floatHeight,
@@ -5575,6 +5576,41 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     rotation={[0, -Math.PI / 2, -Math.PI / 2]}
                   >
                     {adjustedUpperCabinetHeightMm}
+                  </Text>
+                </group>
+                )}
+
+                {/* 3-1. 상부장 높이 (비띄움 배치이고 상부장이 있는 경우) */}
+                {!isFloating && maxUpperCabinetHeightMm > 0 && (
+                <group>
+                  <Line
+                    points={[[0, cabinetAreaTopY - mmToThreeUnits(maxUpperCabinetHeightMm), rightDimensionZ], [0, cabinetAreaTopY, rightDimensionZ]]}
+                    color={dimensionColor}
+                    lineWidth={0.6}
+                  />
+                  <Line
+                    points={createArrowHead([0, cabinetAreaTopY - mmToThreeUnits(maxUpperCabinetHeightMm), rightDimensionZ], [0, cabinetAreaTopY - mmToThreeUnits(maxUpperCabinetHeightMm) + 0.015, rightDimensionZ])}
+                    color={dimensionColor}
+                    lineWidth={0.6}
+                  />
+                  <Line
+                    points={createArrowHead([0, cabinetAreaTopY, rightDimensionZ], [0, cabinetAreaTopY - 0.015, rightDimensionZ])}
+                    color={dimensionColor}
+                    lineWidth={0.6}
+                  />
+                  <Text
+                    renderOrder={1000}
+                    depthTest={false}
+                    position={[0, cabinetAreaTopY - mmToThreeUnits(maxUpperCabinetHeightMm / 2), rightDimensionZ + mmToThreeUnits(60)]}
+                    fontSize={baseFontSize}
+                    color={textColor}
+                    anchorX="center"
+                    anchorY="middle"
+                    outlineWidth={textOutlineWidth}
+                    outlineColor={textOutlineColor}
+                    rotation={[0, -Math.PI / 2, -Math.PI / 2]}
+                  >
+                    {maxUpperCabinetHeightMm}
                   </Text>
                 </group>
                 )}
@@ -6331,6 +6367,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             // useMemo로 메모이제이션된 값 사용
             const {
               maxLowerCabinetHeightMm,
+              maxUpperCabinetHeightMm,
               adjustedUpperCabinetHeightMm,
               isFloating,
               floatHeight,
@@ -6582,6 +6619,41 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     rotation={[0, 0, 0]}
                   >
                     {adjustedUpperCabinetHeightMm}
+                  </Text>
+                </group>
+                )}
+
+                {/* 3-1. 상부장 높이 (비띄움 배치이고 상부장이 있는 경우) */}
+                {!isFloating && maxUpperCabinetHeightMm > 0 && (
+                <group>
+                  <Line
+                    points={[[spaceWidth, cabinetAreaTopY - mmToThreeUnits(maxUpperCabinetHeightMm), leftDimensionZ], [spaceWidth, cabinetAreaTopY, leftDimensionZ]]}
+                    color={dimensionColor}
+                    lineWidth={0.6}
+                  />
+                  <Line
+                    points={createArrowHead([spaceWidth, cabinetAreaTopY - mmToThreeUnits(maxUpperCabinetHeightMm), leftDimensionZ], [spaceWidth, cabinetAreaTopY - mmToThreeUnits(maxUpperCabinetHeightMm) + 0.015, leftDimensionZ])}
+                    color={dimensionColor}
+                    lineWidth={0.6}
+                  />
+                  <Line
+                    points={createArrowHead([spaceWidth, cabinetAreaTopY, leftDimensionZ], [spaceWidth, cabinetAreaTopY - 0.015, leftDimensionZ])}
+                    color={dimensionColor}
+                    lineWidth={0.6}
+                  />
+                  <Text
+                    renderOrder={1000}
+                    depthTest={false}
+                    position={[spaceWidth, cabinetAreaTopY - mmToThreeUnits(maxUpperCabinetHeightMm / 2), leftDimensionZ + mmToThreeUnits(60)]}
+                    fontSize={baseFontSize}
+                    color={textColor}
+                    anchorX="center"
+                    anchorY="middle"
+                    outlineWidth={textOutlineWidth}
+                    outlineColor={textOutlineColor}
+                    rotation={[0, 0, 0]}
+                  >
+                    {maxUpperCabinetHeightMm}
                   </Text>
                 </group>
                 )}
