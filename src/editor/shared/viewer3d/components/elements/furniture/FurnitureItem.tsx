@@ -2650,15 +2650,21 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   const isFrontSpaceFurniture = placedModule.columnSlotInfo?.spaceType === 'front';
 
   // 기둥 앞 공간 가구는 저장된 Z 위치 사용, 일반 가구는 계산된 Z 위치 사용
+  // 상부장: 뒷면을 하부장 뒷면에 맞춤 (하부장과 동일한 뒷면 Z)
+  // 하부장/키큰장: 앞면(도어 뒷면) 정렬
   const isUpperForZ = actualModuleData?.category === 'upper' || placedModule.moduleId?.includes('upper-cabinet');
-  // 하부장/키큰장: 앞면 정렬 (도어 앞면 = 공간 앞면)
-  // 상부장: 뒷벽 정렬 (뒷면 = 공간 뒷벽)
-  const backWall = zOffset - panelDepth / 2; // 공간 뒷벽 Z 위치 = -panelDepth
-  const furnitureZ = isFrontSpaceFurniture
-    ? placedModule.position.z  // 기둥 앞 공간: 저장된 위치 사용
-    : isUpperForZ
-      ? backWall + depth / 2  // 상부장: 뒷면이 뒷벽에 닿음
-      : furnitureZOffset + furnitureDepth / 2 - doorThickness - depth / 2 + baseDepthOffset;
+  let furnitureZ: number;
+  if (isFrontSpaceFurniture) {
+    furnitureZ = placedModule.position.z;
+  } else if (isUpperForZ) {
+    // 하부장 기본 깊이 650mm 기준 뒷면 맞춤
+    const lowerDepth = mmToThreeUnits(650);
+    // 하부장 뒷면 = furnitureZOffset + furnitureDepth/2 - doorThickness - lowerDepth
+    // 상부장 Z = 하부장 뒷면 + upperDepth/2
+    furnitureZ = furnitureZOffset + furnitureDepth / 2 - doorThickness - lowerDepth + depth / 2;
+  } else {
+    furnitureZ = furnitureZOffset + furnitureDepth / 2 - doorThickness - depth / 2 + baseDepthOffset;
+  }
 
 
   // EP 비대칭 보정: 좌EP만 → 본체 오른쪽으로, 우EP만 → 본체 왼쪽으로
@@ -2674,7 +2680,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   }
 
   // 🔴 Z축 디버그
-  console.log('🔴 Z', placedModule.moduleId, { depthMm: actualDepthMm, Z_mm: furnitureZ * 100, 뒷면: (furnitureZ - depth/2) * 100, 앞면: (furnitureZ + depth/2) * 100, backWall_mm: backWall * 100, panelDepthMm });
+  console.log('🔴 Z', placedModule.moduleId, { depthMm: actualDepthMm, Z_mm: furnitureZ * 100, 뒷면: (furnitureZ - depth/2) * 100, 앞면: (furnitureZ + depth/2) * 100, panelDepthMm, furnitureDepthMm });
 
   const furnitureGroupPosition: [number, number, number] = [
     adjustedPosition.x + positionAdjustmentForEndPanel + epOffsetX,
@@ -3532,6 +3538,8 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                   customConfig={placedModule.customConfig}
                   parentGroupY={adjustedPosition.y}
                   endPanelHeightMode={placedModule.endPanelHeightMode}
+                  topPanelNotchSize={placedModule.topPanelNotchSize}
+                  topPanelNotchSide={placedModule.topPanelNotchSide}
                 />
               );
             })()}
@@ -3962,8 +3970,8 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
 
       {/* 도어는 BoxModule 내부에서 렌더링하도록 변경 */}
 
-      {/* 자유배치 도어 설정 톱니 아이콘 — 캐비넷 중심에 하나만 표시 (하부장 제외) */}
-      {placedModule.isFreePlacement && placedModule.hasDoor && !isLowerCabinet && !isDraggingThis && !isEditMode && showFurnitureEditHandles && showDimensions && (
+      {/* 자유배치 도어 설정 톱니 아이콘 — 캐비넷 중심에 하나만 표시 (하부장 제외, 측면뷰 상부장 제외) */}
+      {placedModule.isFreePlacement && placedModule.hasDoor && !isLowerCabinet && !isDraggingThis && !isEditMode && showFurnitureEditHandles && showDimensions && !(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right') && isUpperCabinet) && (
         <Html
           position={[
             adjustedPosition.x,

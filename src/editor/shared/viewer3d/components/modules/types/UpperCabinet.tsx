@@ -40,7 +40,9 @@ const UpperCabinet: React.FC<FurnitureTypeProps> = ({
   zone, // 단내림 영역 정보
   hasBase,
   individualFloatHeight,
-  parentGroupY
+  parentGroupY,
+  topPanelNotchSize,
+  topPanelNotchSide
 }) => {
   const { renderMode: contextRenderMode, viewMode } = useSpace3DView();
   const renderMode = renderModeProp || contextRenderMode;
@@ -79,7 +81,7 @@ const UpperCabinet: React.FC<FurnitureTypeProps> = ({
       {/* 가구 본체는 showFurniture가 true일 때만 렌더링 */}
       {showFurniture && (
         <>
-          <BaseFurnitureShell {...baseFurniture} isDragging={isDragging} isEditMode={isEditMode} hasBackPanel={hasBackPanel} isFloating={true} spaceInfo={spaceInfo} moduleData={moduleData} lowerSectionTopOffsetMm={lowerSectionTopOffset} renderMode={renderMode}>
+          <BaseFurnitureShell {...baseFurniture} isDragging={isDragging} isEditMode={isEditMode} hasBackPanel={hasBackPanel} isFloating={true} spaceInfo={spaceInfo} moduleData={moduleData} lowerSectionTopOffsetMm={lowerSectionTopOffset} renderMode={renderMode} topPanelNotchSize={topPanelNotchSize} topPanelNotchSide={topPanelNotchSide}>
             {/* 내부 구조는 항상 렌더링 (서랍/선반) */}
             <>
                 {/* 듀얼 가구인 경우 좌우 섹션 별도 렌더링 */}

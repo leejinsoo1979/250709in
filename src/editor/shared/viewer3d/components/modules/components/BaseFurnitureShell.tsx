@@ -174,6 +174,10 @@ interface BaseFurnitureShellProps {
   // 측판 추가 노치 (하부장 2단용 — fromBottom: mm, y: mm, z: mm)
   sideNotches?: Array<{ y: number; z: number; fromBottom: number }>;
 
+  // 상판 코너 따내기 (상부장용)
+  topPanelNotchSize?: '680x140' | '340x140';
+  topPanelNotchSide?: 'left' | 'right';
+
   // 자식 컴포넌트 (내부 구조)
   children?: React.ReactNode;
 }
@@ -222,6 +226,8 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
   topPanelFrontReduction = 0,
   topStretcher,
   sideNotches,
+  topPanelNotchSize,
+  topPanelNotchSide = 'right',
   renderMode: renderModeProp,
   children
 }) => {
@@ -1273,6 +1279,14 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
               panelGrainDirections={panelGrainDirections}
               furnitureId={placedFurnitureId}
               textureUrl={textureUrl}
+              cornerNotch={topPanelNotchSize ? (() => {
+                const [wStr, dStr] = topPanelNotchSize.split('x');
+                return {
+                  width: mmToThreeUnits(Number(wStr)),
+                  depth: mmToThreeUnits(Number(dStr)),
+                  side: topPanelNotchSide || 'right'
+                };
+              })() : undefined}
             />
           );
         })()}
@@ -1640,6 +1654,8 @@ export default React.memo(BaseFurnitureShell, (prevProps, nextProps) => {
     prevProps.lowerSectionDepthMm === nextProps.lowerSectionDepthMm &&
     prevProps.upperSectionDepthMm === nextProps.upperSectionDepthMm &&
     prevProps.backPanelThickness === nextProps.backPanelThickness &&
+    prevProps.topPanelNotchSize === nextProps.topPanelNotchSize &&
+    prevProps.topPanelNotchSide === nextProps.topPanelNotchSide &&
     JSON.stringify(prevProps.panelGrainDirections) === JSON.stringify(nextProps.panelGrainDirections);
 
   // 모든 중요 props가 같으면 true 반환 (리렌더링 방지)

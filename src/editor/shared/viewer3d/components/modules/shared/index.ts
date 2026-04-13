@@ -53,6 +53,8 @@ export interface FurnitureTypeProps {
   hasBase?: boolean; // 하부프레임 존재 여부 (false면 받침대 없음 → baseHeight=0)
   individualFloatHeight?: number; // 개별 띄움 높이 (mm) - hasBase=false일 때 도어 Y보정용
   parentGroupY?: number; // 부모 그룹(가구)의 Y 위치 (Three.js 단위) — 도어 Y 보정용
+  topPanelNotchSize?: '680x140' | '340x140'; // 상판 따내기 크기
+  topPanelNotchSide?: 'left' | 'right'; // 따내기 위치 (기본: right)
   // 이벤트 핸들러 추가
   onPointerDown?: (e: any) => void;
   onPointerMove?: (e: any) => void;

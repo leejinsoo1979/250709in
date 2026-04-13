@@ -30,7 +30,9 @@ export const calculatePanelDetails = (
   hasBase?: boolean, // 하부프레임(받침대) 표시 여부 (기본: true)
   isDualSlot?: boolean, // 듀얼 슬롯 가구 여부 (커스텀 가구에서 moduleId에 'dual'이 없어도 듀얼 판단)
   leftEpAdjacentFurniture?: boolean, // 좌측 EP 방향에 인접 가구 있음 (ㄷ자 측판 생략)
-  rightEpAdjacentFurniture?: boolean // 우측 EP 방향에 인접 가구 있음 (ㄷ자 측판 생략)
+  rightEpAdjacentFurniture?: boolean, // 우측 EP 방향에 인접 가구 있음 (ㄷ자 측판 생략)
+  topPanelNotchSize?: '680x140' | '340x140', // 상판 따내기 크기
+  topPanelNotchSide?: 'left' | 'right' // 따내기 위치 (기본: right)
 ) => {
   const panels: { upper: any[]; lower: any[]; door: any[]; frame: any[] } = {
     upper: [],     // 상부장 패널
@@ -365,13 +367,23 @@ export const calculatePanelDetails = (
           || moduleData.id.includes('lower-induction-cabinet') || moduleData.id.includes('dual-lower-induction-cabinet')
           || moduleData.id.includes('lower-drawer-');
         if (!noTopPanel) {
-          targetPanel.push({
+          const topPanelEntry: any = {
             name: `${sectionPrefix}상판`,
             width: horizontalPanelWidth,
             depth: customDepth - 26, // 백패널과 맞닿게 26mm 감소
             thickness: basicThickness,
             material: 'PB'
-          });
+          };
+          // 상판 따내기 정보 추가 (상부장만)
+          if (topPanelNotchSize && moduleData.category === 'upper') {
+            const [nw, nd] = topPanelNotchSize.split('x').map(Number);
+            topPanelEntry.cornerNotch = {
+              width: nw,
+              depth: nd,
+              side: topPanelNotchSide || 'right'
+            };
+          }
+          targetPanel.push(topPanelEntry);
         }
       }
 

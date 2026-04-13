@@ -213,6 +213,10 @@ export interface PlacedModule {
   doorOverlayTop?: number;    // 도어 상단 확장 (mm, 기본값: 0)
   doorOverlayBottom?: number; // 도어 하단 확장 (mm, 기본값: 0)
 
+  // 상판 따내기 (상부장 코너 노치)
+  topPanelNotchSize?: '680x140' | '340x140';  // 상판 따내기 크기
+  topPanelNotchSide?: 'left' | 'right';       // 따내기 위치 (기본: right)
+
   // 서라운드 패널 속성
   isSurroundPanel?: boolean;              // 서라운드 패널 여부
   surroundPanelType?: 'left' | 'right' | 'top';  // 패널 방향

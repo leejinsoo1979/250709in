@@ -1187,9 +1187,10 @@ const PlacedModulePropertiesPanel: React.FC = () => {
       topFrameHeightMm, visualBaseFrameHeightMm,
       currentPlacedModule?.hasTopFrame, currentPlacedModule?.hasBase,
       currentPlacedModule?.isDualSlot,
-      leftEpAdjacent, rightEpAdjacent
+      leftEpAdjacent, rightEpAdjacent,
+      currentPlacedModule?.topPanelNotchSize, currentPlacedModule?.topPanelNotchSide
     );
-  }, [moduleData, customWidth, customDepth, hasDoor, t, doorOriginalWidth, backPanelThicknessValue, currentPlacedModule?.customConfig, currentPlacedModule?.hasLeftEndPanel, currentPlacedModule?.hasRightEndPanel, currentPlacedModule?.endPanelThickness, adjustedFreeHeight, topFrameHeightMm, visualBaseFrameHeightMm, currentPlacedModule?.hasTopFrame, currentPlacedModule?.hasBase, currentPlacedModule?.isDualSlot, leftEpAdjacent, rightEpAdjacent]);
+  }, [moduleData, customWidth, customDepth, hasDoor, t, doorOriginalWidth, backPanelThicknessValue, currentPlacedModule?.customConfig, currentPlacedModule?.hasLeftEndPanel, currentPlacedModule?.hasRightEndPanel, currentPlacedModule?.endPanelThickness, adjustedFreeHeight, topFrameHeightMm, visualBaseFrameHeightMm, currentPlacedModule?.hasTopFrame, currentPlacedModule?.hasBase, currentPlacedModule?.isDualSlot, leftEpAdjacent, rightEpAdjacent, currentPlacedModule?.topPanelNotchSize, currentPlacedModule?.topPanelNotchSide]);
 
   // 서라운드 패널 계산 — 맨 좌측 가구에 좌측 서라운드, 맨 우측 가구에 우측 서라운드 귀속
   const surroundPanels = React.useMemo(() => {
@@ -4024,6 +4025,65 @@ const PlacedModulePropertiesPanel: React.FC = () => {
           */}
 
           {/* 도어 셋팅 — 우측바로 이동됨 */}
+
+          {/* 상판 따내기 설정 (상부장만) */}
+          {moduleData.category === 'upper' && (
+            <div className={styles.propertySection}>
+              <h5 className={styles.sectionTitle}>상판 따내기</h5>
+              <div className={styles.doorTabSelector}>
+                <button
+                  className={`${styles.doorTab} ${!currentPlacedModule?.topPanelNotchSize ? styles.activeDoorTab : ''}`}
+                  onClick={() => {
+                    updatePlacedModule(activePopup.id, { topPanelNotchSize: undefined, topPanelNotchSide: undefined });
+                  }}
+                >
+                  없음
+                </button>
+                <button
+                  className={`${styles.doorTab} ${currentPlacedModule?.topPanelNotchSize === '680x140' ? styles.activeDoorTab : ''}`}
+                  onClick={() => {
+                    updatePlacedModule(activePopup.id, {
+                      topPanelNotchSize: '680x140',
+                      topPanelNotchSide: currentPlacedModule?.topPanelNotchSide || 'right'
+                    });
+                  }}
+                >
+                  680×140
+                </button>
+                <button
+                  className={`${styles.doorTab} ${currentPlacedModule?.topPanelNotchSize === '340x140' ? styles.activeDoorTab : ''}`}
+                  onClick={() => {
+                    updatePlacedModule(activePopup.id, {
+                      topPanelNotchSize: '340x140',
+                      topPanelNotchSide: currentPlacedModule?.topPanelNotchSide || 'right'
+                    });
+                  }}
+                >
+                  340×140
+                </button>
+              </div>
+              {currentPlacedModule?.topPanelNotchSize && (
+                <div className={styles.doorTabSelector} style={{ marginTop: '4px' }}>
+                  <button
+                    className={`${styles.doorTab} ${currentPlacedModule?.topPanelNotchSide === 'left' ? styles.activeDoorTab : ''}`}
+                    onClick={() => {
+                      updatePlacedModule(activePopup.id, { topPanelNotchSide: 'left' });
+                    }}
+                  >
+                    좌
+                  </button>
+                  <button
+                    className={`${styles.doorTab} ${(currentPlacedModule?.topPanelNotchSide || 'right') === 'right' ? styles.activeDoorTab : ''}`}
+                    onClick={() => {
+                      updatePlacedModule(activePopup.id, { topPanelNotchSide: 'right' });
+                    }}
+                  >
+                    우
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
 
           {/* 상하부장 사이 갭 백패널 설정 (상부장/하부장만) */}
           {(moduleData.category === 'upper' || moduleData.category === 'lower') && (

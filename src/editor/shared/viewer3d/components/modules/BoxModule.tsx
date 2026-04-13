@@ -96,6 +96,8 @@ interface BoxModuleProps {
   onDoubleClick?: (e: any) => void;
   parentGroupY?: number; // 부모 그룹(가구)의 Y 위치 (Three.js 단위) — 도어 Y 보정용
   endPanelHeightMode?: 'floor' | 'furniture'; // EP 높이 모드 (floor: 바닥~천장, furniture: 가구 높이에 맞춤)
+  topPanelNotchSize?: '680x140' | '340x140'; // 상판 따내기 크기
+  topPanelNotchSide?: 'left' | 'right'; // 따내기 위치 (기본: right)
 }
 
 /**
@@ -178,6 +180,8 @@ const BoxModule: React.FC<BoxModuleProps> = ({
   onDoubleClick,
   parentGroupY, // 부모 그룹 Y 위치
   endPanelHeightMode, // EP 높이 모드
+  topPanelNotchSize, // 상판 따내기 크기
+  topPanelNotchSide, // 따내기 위치
 }) => {
   // === React Hooks는 항상 최상단에서 호출 ===
   const spaceConfigStore = useSpaceConfigStore();
@@ -769,6 +773,8 @@ const BoxModule: React.FC<BoxModuleProps> = ({
         hasBase={hasBase}
             individualFloatHeight={individualFloatHeight}
         parentGroupY={parentGroupY}
+        topPanelNotchSize={topPanelNotchSize}
+        topPanelNotchSide={topPanelNotchSide}
       />
       </>
     );

@@ -38,6 +38,7 @@ interface BoxWithEdgesProps {
   notch?: { y: number; z: number }; // 앞쪽 상단 모서리 따내기 (Y방향 높이, Z방향 깊이) — L자형 단일 메시
   notches?: Array<{ y: number; z: number; fromBottom: number }>; // 다중 따내기 (fromBottom: 바닥에서 시작점, Three.js 단위)
   bottomRebate?: { width: number; height: number }; // 하단 양쪽 반턱 따내기 (width: 양쪽 폭, height: 따내기 높이, Three.js 단위)
+  cornerNotch?: { width: number; depth: number; side: 'left' | 'right' }; // 상판 코너 따내기 (XZ평면, 위에서 본 ㄴ자형)
 }
 
 /**
@@ -69,7 +70,8 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
   renderOrder,
   notch,
   notches,
-  bottomRebate
+  bottomRebate,
+  cornerNotch
 }) => {
 
   // CNC 옵티마이저에서 체크 해제된 패널이면 렌더링 생략 (furnitureId::panelName 복합키)
@@ -541,7 +543,7 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
 
 
   // 다중 노치 여부 판별 (notches가 있으면 우선 사용)
-  const hasAnyNotch = !!(notch || (notches && notches.length > 0) || bottomRebate);
+  const hasAnyNotch = !!(notch || (notches && notches.length > 0) || bottomRebate || cornerNotch);
 
   // L자형 노치 엣지 라인 생성 (2D/3D 공용) — 단일 및 다중 노치 지원
   const getNotchEdgeLines = React.useCallback((): [number, number, number][][] => {
@@ -673,8 +675,48 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
       lines.push([[-halfW, v[0], v[1]], [halfW, v[0], v[1]]]);
     }
 
+    // cornerNotch: XZ평면 코너 따내기 (상판용 — 위에서 본 ㄴ자형)
+    if (cornerNotch && profileVertices.length === 0) {
+      const nw = cornerNotch.width;  // 따내기 X방향 폭 (Three.js 단위)
+      const nd = cornerNotch.depth;  // 따내기 Z방향 깊이 (Three.js 단위)
+      const isRight = cornerNotch.side === 'right';
+
+      // XZ 평면 꼭짓점 (위에서 본 윤곽) — right: 오른쪽 뒤 모서리 따내기
+      const xzVerts: [number, number][] = isRight ? [
+        [-halfW, -halfD],           // 좌측 뒤
+        [-halfW, halfD],            // 좌측 앞
+        [halfW, halfD],             // 우측 앞
+        [halfW, -halfD + nd],       // 우측 따내기 시작점
+        [halfW - nw, -halfD + nd],  // 따내기 안쪽
+        [halfW - nw, -halfD],       // 따내기 끝 → 뒤로
+      ] : [
+        [-halfW, -halfD + nd],      // 좌측 따내기 시작점
+        [-halfW, halfD],            // 좌측 앞
+        [halfW, halfD],             // 우측 앞
+        [halfW, -halfD],            // 우측 뒤
+        [-halfW + nw, -halfD],      // 따내기 끝
+        [-halfW + nw, -halfD + nd], // 따내기 안쪽
+      ];
+
+      // 상면·하면 윤곽선 (Y = ±halfH)
+      for (const yVal of [halfH, -halfH]) {
+        for (let i = 0; i < xzVerts.length; i++) {
+          const next = (i + 1) % xzVerts.length;
+          lines.push([
+            [xzVerts[i][0], yVal, xzVerts[i][1]],
+            [xzVerts[next][0], yVal, xzVerts[next][1]]
+          ]);
+        }
+      }
+
+      // 수직 연결 엣지 (상면↔하면)
+      for (const v of xzVerts) {
+        lines.push([[v[0], -halfH, v[1]], [v[0], halfH, v[1]]]);
+      }
+    }
+
     return lines;
-  }, [notch, notches, bottomRebate, hasAnyNotch, args]);
+  }, [notch, notches, bottomRebate, cornerNotch, hasAnyNotch, args]);
 
   // 2D 모드에서 엣지 렌더링 (panelName 기반 opacity 적용)
   const render2DEdgesWithDepth = React.useCallback(() => {
@@ -850,7 +892,56 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
       shape.lineTo(halfH - ny, halfD - nz);
       shape.lineTo(halfH, halfD - nz);
       shape.lineTo(halfH, -halfD);
+    } else if (cornerNotch) {
+      // 코너 따내기: XZ 평면 Shape → Y축 extrude
+      const nw = cornerNotch.width;
+      const nd = cornerNotch.depth;
+      const isRight = cornerNotch.side === 'right';
+
+      // XZ 평면 (shapeX=X축, shapeY=Z축)
+      if (isRight) {
+        shape.moveTo(-halfW, -halfD);           // 좌측 뒤
+        shape.lineTo(-halfW, halfD);            // 좌측 앞
+        shape.lineTo(halfW, halfD);             // 우측 앞
+        shape.lineTo(halfW, -halfD + nd);       // 우측 따내기 시작
+        shape.lineTo(halfW - nw, -halfD + nd);  // 따내기 안쪽
+        shape.lineTo(halfW - nw, -halfD);       // 따내기 끝
+      } else {
+        shape.moveTo(-halfW, -halfD + nd);      // 좌측 따내기 시작
+        shape.lineTo(-halfW, halfD);            // 좌측 앞
+        shape.lineTo(halfW, halfD);             // 우측 앞
+        shape.lineTo(halfW, -halfD);            // 우측 뒤
+        shape.lineTo(-halfW + nw, -halfD);      // 따내기 끝
+        shape.lineTo(-halfW + nw, -halfD + nd); // 따내기 안쪽
+      }
+      shape.closePath();
+
+      const extrudeSettings = { depth: h, bevelEnabled: false };
+      const geom = new THREE.ExtrudeGeometry(shape, extrudeSettings);
+
+      // 좌표 변환: (shapeX→X, shapeY→Z, extrudeZ→Y) 중심 맞추기
+      const pos = geom.attributes.position;
+      const arr = pos.array as Float32Array;
+      const temp = new Float32Array(arr.length);
+      for (let i = 0; i < pos.count; i++) {
+        const sx = arr[i * 3];     // shape X → X
+        const sy = arr[i * 3 + 1]; // shape Y → Z
+        const sz = arr[i * 3 + 2]; // extrude Z → Y
+        temp[i * 3]     = sx;          // X
+        temp[i * 3 + 1] = sz - halfH;  // Y: 중심 맞춤
+        temp[i * 3 + 2] = sy;          // Z
+      }
+      pos.array.set(temp);
+      pos.needsUpdate = true;
+      geom.computeVertexNormals();
+      return geom;
     }
+
+    if (!notch && !(notches && notches.length > 0) && !bottomRebate) {
+      // cornerNotch만 있는 경우는 위에서 이미 반환했으므로 여기 도달하면 notch 없음
+      return null;
+    }
+
     shape.closePath();
 
     const extrudeSettings = { depth: w, bevelEnabled: false };
@@ -875,7 +966,7 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
     geom.computeVertexNormals();
 
     return geom;
-  }, [notch, notches, bottomRebate, hasAnyNotch, args]);
+  }, [notch, notches, bottomRebate, cornerNotch, hasAnyNotch, args]);
 
   // 옵티마이저에서 제외된 패널이면 렌더링하지 않음
   // useFrame 폴링으로 visible 제어 — R3F reconciler/DOM reconciler 간 Zustand 구독 호환 문제 회피
