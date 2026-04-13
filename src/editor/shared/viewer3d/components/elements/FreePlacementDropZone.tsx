@@ -211,8 +211,6 @@ const FreePlacementDropZone: React.FC = () => {
     const mainZone = zones.find(z => z.zone === 'main');
     const scZone = zones.find(z => z.zone === 'stepCeiling');
 
-    console.log('🔧 [균등배치] zones:', JSON.stringify(zones), 'mainZone:', mainZone, 'scZone:', scZone, 'mainModules:', mainModules.length, 'droppedModules:', droppedModules.length);
-
     // 구간별 균등배분 함수
     const distributeInZone = (mods: typeof freeModules, zoneStartMm: number, zoneEndMm: number) => {
       if (mods.length === 0) return;
@@ -249,14 +247,12 @@ const FreePlacementDropZone: React.FC = () => {
 
     // 메인 구간 균등배분 (zonePlacementBounds에 이격 이미 반영됨)
     if (mainZone && mainModules.length > 0) {
-      console.log('🔧 [균등배치] 메인구간 사용: start=', mainZone.placementStartXmm, 'end=', mainZone.placementEndXmm, 'width=', mainZone.placementEndXmm - mainZone.placementStartXmm);
       distributeInZone(mainModules, mainZone.placementStartXmm, mainZone.placementEndXmm);
     } else if (!mainZone && mainModules.length > 0) {
       // 단내림/커튼박스 없는 경우: 전체 spaceBounds 사용
       const { startX, endX } = spaceBounds;
       const effectiveStartX = lockedWallGaps?.left != null ? startX + lockedWallGaps.left : startX;
       const effectiveEndX = lockedWallGaps?.right != null ? endX - lockedWallGaps.right : endX;
-      console.log('🔧 [균등배치] spaceBounds 폴백: start=', effectiveStartX, 'end=', effectiveEndX, 'width=', effectiveEndX - effectiveStartX);
       distributeInZone(mainModules, effectiveStartX, effectiveEndX);
     }
 
