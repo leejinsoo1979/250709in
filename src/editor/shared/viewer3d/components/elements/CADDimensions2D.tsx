@@ -774,16 +774,18 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
 
         {/* 우측 도어 사이즈 (hasDoor 가구만) */}
         {(() => {
-          // 하부장/키큰장 도어: 기존 우측 고정 위치
-          const dimZ = spaceDepth/2 + rightDimOffset - mmToThreeUnits(750);
-          const dimExtZ = dimZ - mmToThreeUnits(360);
-          // 상부장 도어: 상부장 앞면 바로 우측 (상부장 Z 위치 계산 — 깊이치수와 동일)
+          // 가구 앞면 Z 계산 (FurnitureItem.tsx와 동일)
           const panelDepthMm_ud = spaceInfo.depth || 1500;
           const panelDepth_ud = mmToThreeUnits(panelDepthMm_ud);
           const furnitureDepth_ud = mmToThreeUnits(Math.min(panelDepthMm_ud, 600));
           const doorThk_ud = mmToThreeUnits(20);
           const zOff_ud = -panelDepth_ud / 2;
           const fzOff_ud = zOff_ud + (panelDepth_ud - furnitureDepth_ud) / 2;
+          // 하부장/키큰장 도어 앞면 Z (도어 포함)
+          const lowerDoorFrontZ = fzOff_ud + furnitureDepth_ud / 2;
+          // 도어 치수선: 도어 앞면에서 150mm 바깥, 연장선: 30mm부터
+          const dimZ = lowerDoorFrontZ + mmToThreeUnits(150);
+          const dimExtZ = lowerDoorFrontZ + mmToThreeUnits(30);
           // 상부장 Z: 하부장 뒷면 맞춤 (FurnitureItem.tsx와 동일)
           const lowerDepth_ud = mmToThreeUnits(650);
           // 상부장 깊이 (첫 번째 상부장 모듈 기준)
@@ -1041,9 +1043,15 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           const selFurnitureHeightMm = computeFurnitureHeightMm(selectedMod, selModData, spaceInfo, internalSpace);
           const totalFromFloorMm = Math.round(floorFinishHeightMm + baseFrameHeightMm + selFurnitureHeightMm);
           const totalFromFloorY = mmToThreeUnits(totalFromFloorMm);
-          // 도어 치수(dimZ) 바깥쪽에 배치: 도어 치수 + 360mm 간격
-          const dimZ_combined = spaceDepth/2 + rightDimOffset - mmToThreeUnits(750) + mmToThreeUnits(360);
-          const dimZ_combined_ext = dimZ_combined - mmToThreeUnits(360);
+          // 가구 도어 앞면 Z 계산 (도어 치수와 동일 기준)
+          const panelDepthMm_c = spaceInfo.depth || 1500;
+          const furnitureDepthMm_c = Math.min(panelDepthMm_c, 600);
+          const zOff_c = -mmToThreeUnits(panelDepthMm_c) / 2;
+          const fzOff_c = zOff_c + (mmToThreeUnits(panelDepthMm_c) - mmToThreeUnits(furnitureDepthMm_c)) / 2;
+          const doorFrontZ_c = fzOff_c + mmToThreeUnits(furnitureDepthMm_c) / 2;
+          // 합산 치수: 도어 앞면에서 300mm 바깥 (도어 치수 150mm + 간격 150mm)
+          const dimZ_combined = doorFrontZ_c + mmToThreeUnits(300);
+          const dimZ_combined_ext = doorFrontZ_c + mmToThreeUnits(30);
           return (
             <group>
               {/* 보조 가이드 연장선 - 바닥 */}
@@ -1626,93 +1634,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                 return; // this module done
               }
             }
-
-            // 단일 도어 가구 (하부장 일반, 상부장, 키큰장)
-            const moduleHeightMm_d = modData ? computeFurnitureHeightMm(mod as PlacedModule, modData, spaceInfo, internalSpace) : 0;
-            const doorTopGapVal = mod.doorTopGap ?? spaceInfo.doorTopGap ?? 0;
-            const doorBottomGapVal = mod.doorBottomGap ?? spaceInfo.doorBottomGap ?? 0;
-
-            let doorHeightMm = 0;
-            let doorBottomAbsMm = 0;
-            let doorTopAbsMm = 0;
-
-            if (modCategory === 'upper') {
-              // DoorModule과 동일: freeHeight || dimensions.height (delta 보정 없는 원본값)
-              const cabinetH = (mod as PlacedModule).freeHeight || modData?.dimensions.height || 600;
-              const topFrameVal = mod.topFrameThickness ?? (spaceInfo.frameSize?.top ?? 30);
-              const topExtension = topFrameVal - doorTopGapVal;
-              doorHeightMm = cabinetH + topExtension + doorBottomGapVal;
-              doorTopAbsMm = effectiveH - doorTopGapVal;
-              doorBottomAbsMm = doorTopAbsMm - doorHeightMm;
-            } else if (modCategory === 'lower') {
-              const cabinetH = modData?.dimensions.height ?? 1000;
-              const isDoorLift = modData?.id?.includes('lower-door-lift-');
-              const isTopDown = modData?.id?.includes('lower-top-down-');
-              const cabinetBottomAbs = baseFrameHeightMm + floorFinishHeightMm;
-
-              if (isTopDown) {
-                doorHeightMm = 710;
-                doorBottomAbsMm = cabinetBottomAbs - 5;
-                doorTopAbsMm = doorBottomAbsMm + doorHeightMm;
-              } else if (isDoorLift) {
-                doorHeightMm = cabinetH + 5 + 30;
-                doorTopAbsMm = cabinetBottomAbs + cabinetH + 30;
-                doorBottomAbsMm = doorTopAbsMm - doorHeightMm;
-              } else {
-                doorHeightMm = cabinetH + doorTopGapVal + doorBottomGapVal;
-                doorTopAbsMm = cabinetBottomAbs + cabinetH + doorTopGapVal;
-                doorBottomAbsMm = cabinetBottomAbs - doorBottomGapVal;
-              }
-            } else {
-              const isFloorType = !spaceInfo.baseConfig || spaceInfo.baseConfig.type === 'floor';
-              const floorFinishForDoor = (isFloorType && spaceInfo.hasFloorFinish)
-                ? (spaceInfo.floorFinish?.height || 0) : 0;
-              doorBottomAbsMm = doorBottomGapVal + floorFinishForDoor;
-              doorTopAbsMm = effectiveH - doorTopGapVal;
-              doorHeightMm = Math.max(0, doorTopAbsMm - doorBottomAbsMm);
-            }
-
-            if (doorHeightMm <= 0) return;
-
-            const doorBottomY = mmToThreeUnits(doorBottomAbsMm);
-            const doorTopY = mmToThreeUnits(doorTopAbsMm);
-            const doorMidY = (doorBottomY + doorTopY) / 2;
-
-            let doorTopGapMm = 0;
-            let cabinetTopAbsMm = 0;
-            if (modCategory === 'lower') {
-              const cabinetH = modData?.dimensions.height ?? 1000;
-              const cabinetBottomAbs = baseFrameHeightMm + floorFinishHeightMm;
-              cabinetTopAbsMm = cabinetBottomAbs + cabinetH;
-              doorTopGapMm = Math.round(cabinetTopAbsMm - doorTopAbsMm);
-            }
-
-            elements.push(
-              <group key={`door-single-${modIdx}`}>
-                <NativeLine name="door_height_dim" points={[[0, doorBottomY, doorDimZ], [0, doorTopY, doorDimZ]]} color={doorColor} lineWidth={1} renderOrder={100000} depthTest={false} />
-                <NativeLine name="door_height_dim" points={[[-0.008, doorTopY, doorDimZ], [0.008, doorTopY, doorDimZ]]} color={doorColor} lineWidth={1} renderOrder={100000} depthTest={false} />
-                <NativeLine name="door_height_dim" points={[[-0.008, doorBottomY, doorDimZ], [0.008, doorBottomY, doorDimZ]]} color={doorColor} lineWidth={1} renderOrder={100000} depthTest={false} />
-                <Text position={[0, doorMidY, doorDimZ + mmToThreeUnits(60)]} fontSize={largeFontSize} color={doorColor} anchorX="center" anchorY="middle" renderOrder={1000} depthTest={false} rotation={[0, -Math.PI / 2, Math.PI / 2]}>
-                  {Math.round(doorHeightMm)}
-                </Text>
-                <ExtLine points={[[0, doorTopY, furnitureFrontZ + mmToThreeUnits(20)], [0, doorTopY, doorDimZ]]} color={doorColor} lineWidth={0.3} name="door_height_ext" />
-                <ExtLine points={[[0, doorBottomY, furnitureFrontZ + mmToThreeUnits(20)], [0, doorBottomY, doorDimZ]]} color={doorColor} lineWidth={0.3} name="door_height_ext" />
-                {doorTopGapMm > 0 && (() => {
-                  const gapTopY = mmToThreeUnits(cabinetTopAbsMm);
-                  const gapBotY = doorTopY;
-                  return (
-                    <group>
-                      <NativeLine name="door_height_dim" points={[[0, gapBotY, doorDimZ], [0, gapTopY, doorDimZ]]} color={doorColor} lineWidth={1} renderOrder={100000} depthTest={false} />
-                      <NativeLine name="door_height_dim" points={[[-0.008, gapTopY, doorDimZ], [0.008, gapTopY, doorDimZ]]} color={doorColor} lineWidth={1} renderOrder={100000} depthTest={false} />
-                      <Text position={[0, (gapBotY + gapTopY) / 2, doorDimZ + mmToThreeUnits(60)]} fontSize={largeFontSize} color={doorColor} anchorX="center" anchorY="middle" renderOrder={1000} depthTest={false} rotation={[0, -Math.PI / 2, Math.PI / 2]}>
-                        {doorTopGapMm}
-                      </Text>
-                      <ExtLine points={[[0, gapTopY, furnitureFrontZ + mmToThreeUnits(20)], [0, gapTopY, doorDimZ]]} color={doorColor} lineWidth={0.3} name="door_height_ext" />
-                    </group>
-                  );
-                })()}
-              </group>
-            );
+            // 마이다가 없는 단일 도어 가구는 첫 번째 도어 치수 블록에서 이미 처리됨
           });
 
           return elements.length > 0 ? <group>{elements}</group> : null;
@@ -2444,93 +2366,6 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                 return;
               }
             }
-
-            // 단일 도어 가구 (하부장 일반, 상부장, 키큰장)
-            const moduleHeightMm_d = modData ? computeFurnitureHeightMm(mod as PlacedModule, modData, spaceInfo, internalSpace) : 0;
-            const doorTopGapVal = mod.doorTopGap ?? spaceInfo.doorTopGap ?? 0;
-            const doorBottomGapVal = mod.doorBottomGap ?? spaceInfo.doorBottomGap ?? 0;
-
-            let doorHeightMm = 0;
-            let doorBottomAbsMm = 0;
-            let doorTopAbsMm = 0;
-
-            if (modCategory === 'upper') {
-              // DoorModule과 동일: freeHeight || dimensions.height (delta 보정 없는 원본값)
-              const cabinetH = (mod as PlacedModule).freeHeight || modData?.dimensions.height || 600;
-              const topFrameVal = mod.topFrameThickness ?? (spaceInfo.frameSize?.top ?? 30);
-              const topExtension = topFrameVal - doorTopGapVal;
-              doorHeightMm = cabinetH + topExtension + doorBottomGapVal;
-              doorTopAbsMm = effectiveH_r - doorTopGapVal;
-              doorBottomAbsMm = doorTopAbsMm - doorHeightMm;
-            } else if (modCategory === 'lower') {
-              const cabinetH = modData?.dimensions.height ?? 1000;
-              const isDoorLift = modData?.id?.includes('lower-door-lift-');
-              const isTopDown = modData?.id?.includes('lower-top-down-');
-              const cabinetBottomAbs = baseFrameHeightMm + floorFinishHeightMm;
-
-              if (isTopDown) {
-                doorHeightMm = 710;
-                doorBottomAbsMm = cabinetBottomAbs - 5;
-                doorTopAbsMm = doorBottomAbsMm + doorHeightMm;
-              } else if (isDoorLift) {
-                doorHeightMm = cabinetH + 5 + 30;
-                doorTopAbsMm = cabinetBottomAbs + cabinetH + 30;
-                doorBottomAbsMm = doorTopAbsMm - doorHeightMm;
-              } else {
-                doorHeightMm = cabinetH + doorTopGapVal + doorBottomGapVal;
-                doorTopAbsMm = cabinetBottomAbs + cabinetH + doorTopGapVal;
-                doorBottomAbsMm = cabinetBottomAbs - doorBottomGapVal;
-              }
-            } else {
-              const isFloorType = !spaceInfo.baseConfig || spaceInfo.baseConfig.type === 'floor';
-              const floorFinishForDoor = (isFloorType && spaceInfo.hasFloorFinish)
-                ? (spaceInfo.floorFinish?.height || 0) : 0;
-              doorBottomAbsMm = doorBottomGapVal + floorFinishForDoor;
-              doorTopAbsMm = effectiveH_r - doorTopGapVal;
-              doorHeightMm = Math.max(0, doorTopAbsMm - doorBottomAbsMm);
-            }
-
-            if (doorHeightMm <= 0) return;
-
-            const doorBottomY = mmToThreeUnits(doorBottomAbsMm);
-            const doorTopY = mmToThreeUnits(doorTopAbsMm);
-            const doorMidY = (doorBottomY + doorTopY) / 2;
-
-            let doorTopGapMm = 0;
-            let cabinetTopAbsMm = 0;
-            if (modCategory === 'lower') {
-              const cabinetH = modData?.dimensions.height ?? 1000;
-              const cabinetBottomAbs = baseFrameHeightMm + floorFinishHeightMm;
-              cabinetTopAbsMm = cabinetBottomAbs + cabinetH;
-              doorTopGapMm = Math.round(cabinetTopAbsMm - doorTopAbsMm);
-            }
-
-            elements_r.push(
-              <group key={`r-door-single-${modIdx}`}>
-                <NativeLine name="door_height_dim" points={[[0, doorBottomY, doorDimZ_r], [0, doorTopY, doorDimZ_r]]} color={doorColor_r} lineWidth={1} renderOrder={100000} depthTest={false} />
-                <NativeLine name="door_height_dim" points={[[-0.008, doorTopY, doorDimZ_r], [0.008, doorTopY, doorDimZ_r]]} color={doorColor_r} lineWidth={1} renderOrder={100000} depthTest={false} />
-                <NativeLine name="door_height_dim" points={[[-0.008, doorBottomY, doorDimZ_r], [0.008, doorBottomY, doorDimZ_r]]} color={doorColor_r} lineWidth={1} renderOrder={100000} depthTest={false} />
-                <Text position={[0, doorMidY, doorDimZ_r + mmToThreeUnits(60)]} fontSize={largeFontSize} color={doorColor_r} anchorX="center" anchorY="middle" renderOrder={1000} depthTest={false} rotation={[0, Math.PI / 2, Math.PI / 2]}>
-                  {Math.round(doorHeightMm)}
-                </Text>
-                <ExtLine points={[[0, doorTopY, furnitureFrontZ_door + mmToThreeUnits(20)], [0, doorTopY, doorDimZ_r]]} color={doorColor_r} lineWidth={0.3} name="door_height_ext" />
-                <ExtLine points={[[0, doorBottomY, furnitureFrontZ_door + mmToThreeUnits(20)], [0, doorBottomY, doorDimZ_r]]} color={doorColor_r} lineWidth={0.3} name="door_height_ext" />
-                {doorTopGapMm > 0 && (() => {
-                  const gapTopY = mmToThreeUnits(cabinetTopAbsMm);
-                  const gapBotY = doorTopY;
-                  return (
-                    <group>
-                      <NativeLine name="door_height_dim" points={[[0, gapBotY, doorDimZ_r], [0, gapTopY, doorDimZ_r]]} color={doorColor_r} lineWidth={1} renderOrder={100000} depthTest={false} />
-                      <NativeLine name="door_height_dim" points={[[-0.008, gapTopY, doorDimZ_r], [0.008, gapTopY, doorDimZ_r]]} color={doorColor_r} lineWidth={1} renderOrder={100000} depthTest={false} />
-                      <Text position={[0, (gapBotY + gapTopY) / 2, doorDimZ_r + mmToThreeUnits(60)]} fontSize={largeFontSize} color={doorColor_r} anchorX="center" anchorY="middle" renderOrder={1000} depthTest={false} rotation={[0, Math.PI / 2, Math.PI / 2]}>
-                        {doorTopGapMm}
-                      </Text>
-                      <ExtLine points={[[0, gapTopY, furnitureFrontZ_door + mmToThreeUnits(20)], [0, gapTopY, doorDimZ_r]]} color={doorColor_r} lineWidth={0.3} name="door_height_ext" />
-                    </group>
-                  );
-                })()}
-              </group>
-            );
           });
 
           return elements_r.length > 0 ? <group>{elements_r}</group> : null;
