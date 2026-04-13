@@ -1617,6 +1617,12 @@ const Room: React.FC<RoomProps> = ({
             const cbOnlyWidth = hasCBSlot ? mmToThreeUnits(spaceInfo.curtainBox!.width || 150) : 0;
             const cbOnlyDropH = hasCBSlot ? mmToThreeUnits(spaceInfo.curtainBox!.dropHeight || 20) : 0;
             const cbOnlyIsLeft = hasCBSlot && spaceInfo.curtainBox!.position === 'left';
+            // DC+CB 같은 쪽 vs 다른 쪽 판단 (3D 천장 렌더링에서만 사용)
+            const _dcPos = hasDroppedCeiling ? (isLeftDropped ? 'left' : 'right')
+              : hasStepCeiling ? ((spaceInfo.stepCeiling?.position === 'left') ? 'left' : 'right') : null;
+            const _cbPos = hasCBSlot ? spaceInfo.curtainBox!.position : null;
+            const isCBSameSideDC = hasCBWithDC && _dcPos === _cbPos;
+            const isCBOppSideDC = hasCBWithDC && _dcPos !== _cbPos;
 
             if (!hasDroppedCeiling && !hasStepCeiling && !hasCBOnly) {
               // 단내림도 커튼박스도 없는 경우 전체 천장 렌더링
@@ -1819,18 +1825,33 @@ const Room: React.FC<RoomProps> = ({
               droppedAreaWidth = droppedWidth;
             }
 
-            // 구간 순서: 벽 → [CB] → [DC] → [메인] (같은 쪽 기준)
-            // DC+CB 동시: isLeftDropped → [CB(좌끝) | DC | 메인]
-            //              !isLeftDropped → [메인 | DC | CB(우끝)]
+            // 구간 순서 (같은 쪽):  벽 → [CB] → [DC] → [메인]
+            //           (다른 쪽):  벽 → [CB] → [메인] → [DC] → 벽
             // 단내림 영역의 X 위치 계산
-            const droppedAreaX = isLeftDropped
-              ? xOffset + cbWForCeiling + droppedAreaWidth / 2
-              : xOffset + normalAreaWidth + droppedAreaWidth / 2;
+            const droppedAreaX = (() => {
+              if (isCBOppSideDC) {
+                // 다른 쪽: DC는 CB 반대편 벽 쪽, CB offset 없음
+                return isLeftDropped
+                  ? xOffset + droppedAreaWidth / 2  // DC 좌측벽 붙임
+                  : xOffset + cbWForCeiling + normalAreaWidth + droppedAreaWidth / 2; // DC 우측벽 붙임
+              }
+              return isLeftDropped
+                ? xOffset + cbWForCeiling + droppedAreaWidth / 2
+                : xOffset + normalAreaWidth + droppedAreaWidth / 2;
+            })();
 
             // 일반 영역의 X 위치 계산
-            const normalAreaX = isLeftDropped
-              ? xOffset + cbWForCeiling + droppedAreaWidth + normalAreaWidth / 2
-              : xOffset + normalAreaWidth / 2;
+            const normalAreaX = (() => {
+              if (isCBOppSideDC) {
+                // 다른 쪽: 메인은 CB와 DC 사이
+                return isLeftDropped
+                  ? xOffset + droppedAreaWidth + normalAreaWidth / 2  // [DC(좌)] [메인] [CB(우)]
+                  : xOffset + cbWForCeiling + normalAreaWidth / 2;   // [CB(좌)] [메인] [DC(우)]
+              }
+              return isLeftDropped
+                ? xOffset + cbWForCeiling + droppedAreaWidth + normalAreaWidth / 2
+                : xOffset + normalAreaWidth / 2;
+            })();
 
 // console.log('🔥 천장 분할 계산:', {
               // hasDroppedCeiling,
@@ -1855,6 +1876,12 @@ const Room: React.FC<RoomProps> = ({
 
             // 단내림 경계벽 X 위치 계산 — 자유배치에서는 이격 없음
             const boundaryWallX = (() => {
+              if (isCBOppSideDC) {
+                // 다른 쪽: DC-메인 경계 직접 계산 (ColumnIndexer는 같은 쪽 가정이라 부정확)
+                return isLeftDropped
+                  ? xOffset + droppedAreaWidth   // [DC(좌)] | [메인] [CB(우)]
+                  : xOffset + cbWForCeiling + normalAreaWidth; // [CB(좌)] [메인] | [DC(우)]
+              }
               const zoneInfo = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
               const BOUNDARY_OFFSET = isFreePlacement ? 0 : 3; // mm
               if (isLeftDropped) {
@@ -2008,17 +2035,35 @@ const Room: React.FC<RoomProps> = ({
                 </mesh>
                 {/* DC+CB 동시: 커튼박스 영역 천장 + 경계벽 */}
                 {hasCBWithDC && (() => {
-                  const cbAreaX = isLeftDropped
-                    ? xOffset + cbOnlyWidth / 2
-                    : xOffset + normalAreaWidth + droppedAreaWidth + cbOnlyWidth / 2;
+                  // CB 위치: 같은 쪽이면 DC 바깥쪽(벽), 다른 쪽이면 DC 반대편 벽
+                  const cbAreaX = (() => {
+                    if (isCBOppSideDC) {
+                      // 다른 쪽: cbOnlyIsLeft로 판단
+                      return cbOnlyIsLeft
+                        ? xOffset + cbOnlyWidth / 2                   // CB 좌측벽
+                        : xOffset + width - cbOnlyWidth / 2;          // CB 우측벽
+                    }
+                    return isLeftDropped
+                      ? xOffset + cbOnlyWidth / 2
+                      : xOffset + normalAreaWidth + droppedAreaWidth + cbOnlyWidth / 2;
+                  })();
                   const cbCeilingY2 = panelStartY + height + cbOnlyDropH + 0.001;
-                  // CB-DC 경계벽: DC천장 ~ CB천장 사이 (또는 메인 천장 ~ CB 천장)
-                  const cbBoundaryX2 = isLeftDropped
-                    ? xOffset + cbOnlyWidth
-                    : xOffset + normalAreaWidth + droppedAreaWidth;
-                  // CB 경계벽 높이: DC천장 ~ CB천장 = dcDropH + cbDropH (슬롯: DC아래, CB위)
-                  const cbBoundaryH = droppedCeilingHeight + cbOnlyDropH;
-                  const cbBoundaryY2 = panelStartY + height - droppedCeilingHeight + cbBoundaryH / 2;
+                  // CB 경계벽 X: 같은 쪽이면 CB-DC 경계, 다른 쪽이면 CB-메인 경계
+                  const cbBoundaryX2 = (() => {
+                    if (isCBOppSideDC) {
+                      return cbOnlyIsLeft
+                        ? xOffset + cbOnlyWidth                       // CB 우측 edge (CB-메인 경계)
+                        : xOffset + width - cbOnlyWidth;              // CB 좌측 edge (메인-CB 경계)
+                    }
+                    return isLeftDropped
+                      ? xOffset + cbOnlyWidth
+                      : xOffset + normalAreaWidth + droppedAreaWidth;
+                  })();
+                  // CB 경계벽 높이: 같은 쪽 = DC천장~CB천장(dcDropH+cbDropH), 다른 쪽 = 메인천장~CB천장(cbDropH만)
+                  const cbBoundaryH = isCBOppSideDC ? cbOnlyDropH : (droppedCeilingHeight + cbOnlyDropH);
+                  const cbBoundaryY2 = isCBOppSideDC
+                    ? panelStartY + height + cbOnlyDropH / 2                            // 메인천장 ~ CB천장
+                    : panelStartY + height - droppedCeilingHeight + cbBoundaryH / 2;
 
                   return (
                     <>
@@ -3023,6 +3068,9 @@ const Room: React.FC<RoomProps> = ({
               if (dcIsLeft && _wfCbIsLeft) {
                 // DC+CB 같은 쪽 좌측: 벽 인접 = CB → 위로 확장
                 leftCeilingY = ceilingY + _wfCbDropH;
+              } else if (_wfCbIsLeft && !dcIsLeft) {
+                // CB만 좌측 (DC 우측 = 다른 쪽): 벽 인접 = CB → 위로 확장
+                leftCeilingY = ceilingY + _wfCbDropH;
               } else if (dcIsLeft) {
                 const leftDcDropH = mmToThreeUnits(spaceInfo.droppedCeiling!.dropHeight || 200);
                 leftCeilingY = isFreePlacement ? ceilingY + leftDcDropH : ceilingY - leftDcDropH;
@@ -3036,6 +3084,9 @@ const Room: React.FC<RoomProps> = ({
               let rightCeilingY: number;
               if (dcIsRight && _wfCbIsRight) {
                 // DC+CB 같은 쪽 우측: 벽 인접 = CB → 위로 확장
+                rightCeilingY = ceilingY + _wfCbDropH;
+              } else if (_wfCbIsRight && !dcIsRight) {
+                // CB만 우측 (DC 좌측 = 다른 쪽): 벽 인접 = CB → 위로 확장
                 rightCeilingY = ceilingY + _wfCbDropH;
               } else if (dcIsRight) {
                 const rightDcDropH = mmToThreeUnits(spaceInfo.droppedCeiling!.dropHeight || 200);
@@ -3059,13 +3110,13 @@ const Room: React.FC<RoomProps> = ({
                 gradientLines.push([x2, ceilingY - dcDropH, z1, x2, ceilingY - dcDropH, z2]);
               }
             }
-            // DC+CB 같은 쪽 동시: CB 경계벽 Z축 그라데이션 라인
-            if (_bHasCBx && _bHasSD && !isFreePlacement && _bDcCbSameSide) {
+            // DC+CB 동시: CB 경계벽 Z축 그라데이션 라인
+            if (_bHasCBx && _bHasSD && !isFreePlacement) {
               const _cbGBx2 = _bCbxIsLeft ? x1 + _bCbxW : x2 - _bCbxW;
               const _cbGTopY2 = ceilingY + _bCbxDropH;
               gradientLines.push([_cbGBx2, _cbGTopY2, z1, _cbGBx2, _cbGTopY2, z2]); // CB 경계벽 상단
-              // CB 경계벽 하단: DC 천장 높이 (DC가 낮아진 위치)
-              const _cbGBotY2 = ceilingY - dcDropH;
+              // CB 경계벽 하단: 같은 쪽=DC천장(낮음), 다른 쪽=메인천장
+              const _cbGBotY2 = _bDcCbSameSide ? ceilingY - dcDropH : ceilingY;
               gradientLines.push([_cbGBx2, _cbGBotY2, z1, _cbGBx2, _cbGBotY2, z2]);
             }
             // 커튼박스 단독 경계벽 Z축 그라데이션 라인 (슬롯+자유배치)
