@@ -812,15 +812,8 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
 
             const modCat = getModuleCategory(mod);
             const moduleHeightMm = computeFurnitureHeightMm(mod, modData, spaceInfo, internalSpace);
-            const modCatForGap = getModuleCategory(mod);
-            // 상부장: UpperCabinet→DoorModule에 doorGap prop 안 넘김 → spaceInfo 글로벌 값 사용
-            // 하부장/키큰장: FurnitureItem→DoorModule에 store값 전달
-            const doorTopGapVal = modCatForGap === 'upper'
-              ? (spaceInfo.doorTopGap ?? 0)
-              : (mod.doorTopGap ?? spaceInfo.doorTopGap ?? 0);
-            const doorBottomGapVal = modCatForGap === 'upper'
-              ? (spaceInfo.doorBottomGap ?? 0)
-              : (mod.doorBottomGap ?? spaceInfo.doorBottomGap ?? 0);
+            const doorTopGapVal = mod.doorTopGap ?? spaceInfo.doorTopGap ?? 0;
+            const doorBottomGapVal = mod.doorBottomGap ?? spaceInfo.doorBottomGap ?? 0;
 
             let doorBottomAbsMm = 0;
             let doorTopAbsMm = 0;
@@ -876,8 +869,21 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           if (doorSegs.length === 0) return null;
 
           // 상부장 도어와 하부장/키큰장 도어 분리
-          const upperDoorSegs = doorSegs.filter(s => s.isUpper);
-          const lowerDoorSegs = doorSegs.filter(s => !s.isUpper);
+          const upperDoorSegsRaw = doorSegs.filter(s => s.isUpper);
+          const lowerDoorSegsRaw = doorSegs.filter(s => !s.isUpper);
+
+          // 같은 높이·위치의 중복 세그먼트 제거 (같은 슬롯에 여러 가구가 있을 때)
+          const dedup = (segs: typeof doorSegs) => {
+            const seen = new Set<string>();
+            return segs.filter(s => {
+              const k = `${s.heightMm}_${Math.round(s.bottomY * 1000)}_${Math.round(s.topY * 1000)}`;
+              if (seen.has(k)) return false;
+              seen.add(k);
+              return true;
+            });
+          };
+          const upperDoorSegs = dedup(upperDoorSegsRaw);
+          const lowerDoorSegs = dedup(lowerDoorSegsRaw);
 
           // 하부장/키큰장 도어 간 간격 계산
           lowerDoorSegs.sort((a, b) => a.bottomY - b.bottomY);
@@ -1953,14 +1959,22 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           });
 
           if (doorSegs_r.length === 0) return null;
-          doorSegs_r.sort((a, b) => a.bottomY - b.bottomY);
+          // 같은 높이·위치의 중복 세그먼트 제거
+          const seen_r = new Set<string>();
+          const dedupSegs_r = doorSegs_r.filter(s => {
+            const k = `${s.heightMm}_${Math.round(s.bottomY * 1000)}_${Math.round(s.topY * 1000)}`;
+            if (seen_r.has(k)) return false;
+            seen_r.add(k);
+            return true;
+          });
+          dedupSegs_r.sort((a, b) => a.bottomY - b.bottomY);
 
-          const allDoorSegs_r: typeof doorSegs_r = [];
-          for (let i = 0; i < doorSegs_r.length; i++) {
-            allDoorSegs_r.push(doorSegs_r[i]);
-            if (i < doorSegs_r.length - 1) {
-              const gapBottomY = doorSegs_r[i].topY;
-              const gapTopY = doorSegs_r[i + 1].bottomY;
+          const allDoorSegs_r: typeof dedupSegs_r = [];
+          for (let i = 0; i < dedupSegs_r.length; i++) {
+            allDoorSegs_r.push(dedupSegs_r[i]);
+            if (i < dedupSegs_r.length - 1) {
+              const gapBottomY = dedupSegs_r[i].topY;
+              const gapTopY = dedupSegs_r[i + 1].bottomY;
               const gapMm = Math.round((gapTopY - gapBottomY) / 0.01);
               if (gapMm > 0) {
                 allDoorSegs_r.push({ bottomY: gapBottomY, topY: gapTopY, heightMm: gapMm, key: `door-gap-${i}` });
