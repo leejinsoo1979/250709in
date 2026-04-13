@@ -1613,10 +1613,15 @@ const Room: React.FC<RoomProps> = ({
             // 커튼박스 (슬롯배치 + 자유배치 모두, droppedCeiling과 독립)
             const hasCBSlot = !!spaceInfo.curtainBox?.enabled;
             const hasCBOnly = hasCBSlot && !hasDroppedCeiling && !hasStepCeiling; // CB 단독
-            const hasCBWithDC = hasCBSlot && (hasDroppedCeiling || hasStepCeiling); // CB + DC/SC 동시
             const cbOnlyWidth = hasCBSlot ? mmToThreeUnits(spaceInfo.curtainBox!.width || 150) : 0;
             const cbOnlyDropH = hasCBSlot ? mmToThreeUnits(spaceInfo.curtainBox!.dropHeight || 20) : 0;
             const cbOnlyIsLeft = hasCBSlot && spaceInfo.curtainBox!.position === 'left';
+            // DC+CB 동시: 같은 쪽(천장 3구간 분할) vs 다른 쪽(각각 별도 처리)
+            const _dcPosition = hasDroppedCeiling ? (isLeftDropped ? 'left' : 'right')
+              : hasStepCeiling ? (isLeftStep ? 'left' : 'right') : null;
+            const _cbPosition = hasCBSlot ? spaceInfo.curtainBox!.position : null;
+            const hasCBWithDC = hasCBSlot && (hasDroppedCeiling || hasStepCeiling) && _dcPosition === _cbPosition; // CB+DC 같은 쪽
+            const hasCBOppDC = hasCBSlot && (hasDroppedCeiling || hasStepCeiling) && _dcPosition !== _cbPosition; // CB+DC 다른 쪽
 
             if (!hasDroppedCeiling && !hasStepCeiling && !hasCBOnly) {
               // 단내림도 커튼박스도 없는 경우 전체 천장 렌더링
@@ -1983,6 +1988,57 @@ const Room: React.FC<RoomProps> = ({
                       <primitive object={ceilingBoundaryWallMaterial} />
                     </mesh>
                   </>
+                ) : hasCBOppDC ? (
+                  /* DC+CB 다른 쪽: normalArea를 [메인]+[CB]로 추가 분할 */
+                  (() => {
+                    const oppCbW = cbOnlyWidth;
+                    const oppMainW = normalAreaWidth - oppCbW;
+                    // 좌단내림+우CB: [DC | 메인 | CB(우)]
+                    // 우단내림+좌CB: [CB(좌) | 메인 | DC]
+                    const oppMainX = isLeftDropped
+                      ? xOffset + cbWForCeiling + droppedAreaWidth + oppMainW / 2
+                      : (cbOnlyIsLeft ? xOffset + oppCbW + oppMainW / 2 : xOffset + oppMainW / 2);
+                    const oppCbAreaX = isLeftDropped
+                      ? xOffset + cbWForCeiling + droppedAreaWidth + oppMainW + oppCbW / 2
+                      : (cbOnlyIsLeft ? xOffset + oppCbW / 2 : xOffset + oppMainW + oppCbW / 2);
+                    const oppCbCeilY = panelStartY + height + cbOnlyDropH + 0.001;
+                    const oppCbBoundX = isLeftDropped
+                      ? xOffset + cbWForCeiling + droppedAreaWidth + oppMainW
+                      : (cbOnlyIsLeft ? xOffset + oppCbW : xOffset + oppMainW);
+                    const oppCbBoundH = cbOnlyDropH;
+                    const oppCbBoundY = panelStartY + height + cbOnlyDropH / 2;
+                    return (
+                      <>
+                        {/* 메인 영역 천장 */}
+                        <mesh
+                          position={[oppMainX, normalCeilingY, extendedZOffset + extendedPanelDepth / 2]}
+                          rotation={[Math.PI / 2, 0, 0]}
+                          renderOrder={1}
+                        >
+                          <planeGeometry args={[oppMainW, extendedPanelDepth]} />
+                          <primitive ref={topWallMaterialRef} object={topWallMaterial} />
+                        </mesh>
+                        {/* CB 영역 천장 (위로 확장) */}
+                        <mesh
+                          position={[oppCbAreaX, oppCbCeilY, extendedZOffset + extendedPanelDepth / 2]}
+                          rotation={[Math.PI / 2, 0, 0]}
+                          renderOrder={-1}
+                        >
+                          <planeGeometry args={[oppCbW, extendedPanelDepth]} />
+                          <primitive object={opaqueTopWallMaterial} />
+                        </mesh>
+                        {/* CB-메인 경계 수직 벽 */}
+                        <mesh
+                          renderOrder={-1}
+                          position={[oppCbBoundX, oppCbBoundY, extendedZOffset + extendedPanelDepth / 2]}
+                          rotation={[0, Math.PI / 2, 0]}
+                        >
+                          <planeGeometry args={[extendedPanelDepth, oppCbBoundH]} />
+                          <primitive object={cbBoundaryWallMaterial} />
+                        </mesh>
+                      </>
+                    );
+                  })()
                 ) : (
                   /* 메인/일반 영역 천장 — 경계벽보다 앞 */
                   <mesh
