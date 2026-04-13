@@ -1095,8 +1095,14 @@ export class ColumnIndexer {
     // 커튼박스는 단내림과 별도 구간 — 메인에서 차감
     // 레이아웃: [메인] | [단내림] | [커튼박스] (우측인 경우)
     // 메인 = total - droppedWidth - curtainBoxWidth, 단내림 = droppedWidth (가구영역 유지)
-    const curtainBoxSameSide = hasCurtainBox; // 커튼박스는 항상 단내림과 같은 쪽
-    const cbDeduction = curtainBoxSameSide ? curtainBoxWidth : 0;
+    // 커튼박스 같은 쪽/다른 쪽 판단
+    const curtainBoxSameSide = hasCurtainBox && (
+      (droppedPosition === 'left' && curtainBoxPosition === 'left') ||
+      (droppedPosition === 'right' && curtainBoxPosition === 'right')
+    );
+    const curtainBoxOppSide = hasCurtainBox && !curtainBoxSameSide;
+    // CB는 항상 normalArea에서 차감 (같은 쪽이든 다른 쪽이든)
+    const cbDeduction = hasCurtainBox ? curtainBoxWidth : 0;
     const normalAreaOuterWidth = totalWidth - droppedWidth - cbDeduction;
     const droppedAreaOuterWidth = droppedWidth;
     
@@ -1135,14 +1141,17 @@ export class ColumnIndexer {
           const BOUNDARY_GAP = spaceInfo.gapConfig?.middle ?? 1.5;
 
           // 커튼박스가 좌측(단내림과 같은쪽)에 있으면: [벽][커튼박스][단내림][메인][벽]
+          // 커튼박스가 우측(반대쪽)에 있으면: [벽][단내림][메인][커튼박스][벽]
           const cbShift = curtainBoxSameSide && curtainBoxPosition === 'left' ? curtainBoxWidth : 0;
+          const cbOppShift = curtainBoxOppSide && curtainBoxPosition === 'right' ? curtainBoxWidth : 0;
 
           // 단내림구간(좌): 서라운드 프레임 차감 + 경계이격만큼 메인쪽으로 확장
           droppedAreaInternalWidth = droppedAreaOuterWidth - (cbShift > 0 ? 0 : frameThickness.left) + BOUNDARY_GAP;
           droppedStartX = -(totalWidth / 2) + (cbShift > 0 ? cbShift : frameThickness.left);
 
           // 일반구간(우): 우측 프레임 + 중간이격 빼기
-          normalAreaInternalWidth = normalAreaOuterWidth - frameThickness.right - BOUNDARY_GAP;
+          // CB 다른 쪽 우측: 프레임 대신 CB가 벽 인접이므로 이격 불필요
+          normalAreaInternalWidth = normalAreaOuterWidth - (cbOppShift > 0 ? 0 : frameThickness.right) - BOUNDARY_GAP;
           normalStartX = droppedStartX + droppedAreaInternalWidth;
         }
       } else {
@@ -1203,15 +1212,18 @@ export class ColumnIndexer {
           }
 
           // 커튼박스가 좌측(단내림과 같은쪽)에 있으면: [벽][커튼박스][단내림][메인][벽]
+          // 커튼박스가 우측(단내림 반대쪽)에 있으면: [벽][단내림][메인][커튼박스][벽]
           const cbShift = curtainBoxSameSide && curtainBoxPosition === 'left' ? curtainBoxWidth : 0;
+          const cbOppShift = curtainBoxOppSide && curtainBoxPosition === 'right' ? curtainBoxWidth : 0;
 
           // 단내림구간(좌): 경계이격만큼 메인쪽으로 확장
-          // CB 있으면 좌측 이격 불필요, CB 없으면 좌측 이격 차감
+          // CB 같은 쪽이면 좌측 이격 불필요, CB 없거나 다른 쪽이면 좌측 이격 차감
           droppedAreaInternalWidth = droppedAreaOuterWidth - (cbShift > 0 ? 0 : leftReduction) + BOUNDARY_GAP;
           droppedStartX = -(totalWidth / 2) + (cbShift > 0 ? cbShift : leftReduction);
 
           // 일반구간(우): 우측 이격거리 + 중간이격 빼기
-          normalAreaInternalWidth = normalAreaOuterWidth - rightReduction - BOUNDARY_GAP;
+          // CB 다른 쪽 우측: 우벽 이격 불필요 (CB가 벽 인접)
+          normalAreaInternalWidth = normalAreaOuterWidth - (cbOppShift > 0 ? 0 : rightReduction) - BOUNDARY_GAP;
           normalStartX = droppedStartX + droppedAreaInternalWidth; // 단내림 확장 후 메인 시작
 
           // console.log('🔍 노서라운드 왼쪽 단내림 경계 계산:', {
@@ -1221,7 +1233,7 @@ export class ColumnIndexer {
           //   '단내림구간 내경': droppedAreaInternalWidth,
           //   '일반구간 외부너비': normalAreaOuterWidth,
           //   '우측이격거리': rightReduction,
-          //   '커튼박스': curtainBoxSameSide ? `${curtainBoxWidth}mm 좌측` : '없음',
+          //   '커튼박스': curtainBoxSameSide ? `${curtainBoxWidth}mm 좌측` : curtainBoxOppSide ? `${curtainBoxWidth}mm 우측(반대)` : '없음',
           //   '일반구간 내경': normalAreaInternalWidth,
           //   '단내림 시작X': droppedStartX,
           //   '메인 시작X': normalStartX,
@@ -1258,11 +1270,14 @@ export class ColumnIndexer {
           const BOUNDARY_GAP = spaceInfo.gapConfig?.middle ?? 1.5;
 
           // 커튼박스가 우측(단내림과 같은쪽)에 있으면: [벽][메인][단내림][커튼박스][벽]
+          // 커튼박스가 좌측(반대쪽)에 있으면: [벽][커튼박스][메인][단내림][벽]
           const cbShift = curtainBoxSameSide && curtainBoxPosition === 'right' ? curtainBoxWidth : 0;
+          const cbOppShift = curtainBoxOppSide && curtainBoxPosition === 'left' ? curtainBoxWidth : 0;
 
           // 일반구간(좌): 좌측 프레임 + 중간이격 빼기
-          normalAreaInternalWidth = normalAreaOuterWidth - frameThickness.left - BOUNDARY_GAP;
-          normalStartX = internalStartX;
+          // CB 다른 쪽 좌측: 프레임 대신 CB 뒤에서 시작
+          normalAreaInternalWidth = normalAreaOuterWidth - (cbOppShift > 0 ? 0 : frameThickness.left) - BOUNDARY_GAP;
+          normalStartX = internalStartX + cbOppShift;
 
           // 단내림구간(우): 서라운드 프레임 차감 + 경계이격만큼 메인쪽으로 확장
           droppedAreaInternalWidth = droppedAreaOuterWidth - (cbShift > 0 ? 0 : frameThickness.right) + BOUNDARY_GAP;
@@ -1326,14 +1341,17 @@ export class ColumnIndexer {
           }
 
           // 커튼박스가 우측(단내림과 같은쪽)에 있으면: [벽][메인][단내림][커튼박스][벽]
+          // 커튼박스가 좌측(단내림 반대쪽)에 있으면: [벽][커튼박스][메인][단내림][벽]
           const cbShift = curtainBoxSameSide && curtainBoxPosition === 'right' ? curtainBoxWidth : 0;
+          const cbOppShift = curtainBoxOppSide && curtainBoxPosition === 'left' ? curtainBoxWidth : 0;
 
           // 일반구간(좌): 좌측 이격거리 + 중간이격 빼기
-          normalAreaInternalWidth = normalAreaOuterWidth - leftReduction - BOUNDARY_GAP;
-          normalStartX = internalStartX;
+          // CB 다른 쪽 좌측: 좌벽 이격 불필요 (CB가 벽 인접), 대신 CB 뒤에서 시작
+          normalAreaInternalWidth = normalAreaOuterWidth - (cbOppShift > 0 ? 0 : leftReduction) - BOUNDARY_GAP;
+          normalStartX = internalStartX + cbOppShift;
 
           // 단내림구간(우): 경계이격만큼 메인쪽으로 확장
-          // CB 있으면 우측 이격 불필요, CB 없으면 우측 이격 차감
+          // CB 같은 쪽이면 우측 이격 불필요, CB 없거나 다른 쪽이면 우측 이격 차감
           droppedAreaInternalWidth = droppedAreaOuterWidth - (cbShift > 0 ? 0 : rightReduction) + BOUNDARY_GAP;
           droppedStartX = normalStartX + normalAreaInternalWidth; // 단내림이 메인 바로 뒤에서 시작 (이격 흡수)
 
@@ -1344,7 +1362,7 @@ export class ColumnIndexer {
           //   '단내림구간 외부너비': droppedAreaOuterWidth,
           //   '중간경계이격거리(배치포함)': BOUNDARY_GAP,
           //   '우측이격거리': rightReduction,
-          //   '커튼박스': curtainBoxSameSide ? `${curtainBoxWidth}mm 우측` : '없음',
+          //   '커튼박스': curtainBoxSameSide ? `${curtainBoxWidth}mm 우측` : curtainBoxOppSide ? `${curtainBoxWidth}mm 좌측(반대)` : '없음',
           //   '단내림구간 내경': droppedAreaInternalWidth,
           //   '메인 시작X': normalStartX,
           //   '단내림 시작X': droppedStartX,

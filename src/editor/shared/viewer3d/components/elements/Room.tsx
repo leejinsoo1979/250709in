@@ -1876,12 +1876,6 @@ const Room: React.FC<RoomProps> = ({
 
             // 단내림 경계벽 X 위치 계산 — 자유배치에서는 이격 없음
             const boundaryWallX = (() => {
-              if (isCBOppSideDC) {
-                // 다른 쪽: DC-메인 경계 직접 계산 (ColumnIndexer는 같은 쪽 가정이라 부정확)
-                return isLeftDropped
-                  ? xOffset + droppedAreaWidth   // [DC(좌)] | [메인] [CB(우)]
-                  : xOffset + cbWForCeiling + normalAreaWidth; // [CB(좌)] [메인] | [DC(우)]
-              }
               const zoneInfo = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
               const BOUNDARY_OFFSET = isFreePlacement ? 0 : 3; // mm
               if (isLeftDropped) {
