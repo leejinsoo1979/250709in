@@ -3433,17 +3433,31 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
 
           // 같은 슬롯/위치에 상부장+하부장 동시 배치 시 companion 모듈 찾기
           const leftCompanionMod = (() => {
+            console.log('🟥 [companion] 진입 leftmostMod:', leftmostMod?.moduleId, 'allMods:', allMods.length);
             if (!leftmostMod) return null;
             const leftModData = getModuleById(leftmostMod.moduleId);
             const leftCat = leftModData?.category
               ?? (leftmostMod.moduleId.includes('-upper-') ? 'upper'
                 : leftmostMod.moduleId.includes('-lower-') ? 'lower' : 'full');
+            console.log('🟥 [companion] leftCat:', leftCat, 'leftModData?.category:', leftModData?.category, 'moduleId:', leftmostMod.moduleId);
             if (leftCat === 'full') return null; // 키큰장은 companion 없음
             const targetCat = leftCat === 'upper' ? 'lower' : 'upper';
+            console.log('🟥 [companion] targetCat:', targetCat, 'allMods:', allMods.map(m => m.moduleId));
+            allMods.forEach((m, i) => {
+              if (m === leftmostMod) { console.log(`  🟥 [${i}] SKIP (자기자신) ${m.moduleId}`); return; }
+              const bothHaveSlot = m.slotIndex !== undefined && leftmostMod.slotIndex !== undefined;
+              const xDist = Math.abs((m.position?.x ?? 0) - (leftmostMod.position?.x ?? 0));
+              const samePosition = bothHaveSlot
+                ? m.slotIndex === leftmostMod.slotIndex
+                : xDist < 300;
+              const mData = getModuleById(m.moduleId);
+              const mCat = mData?.category
+                ?? (m.moduleId.includes('-upper-') ? 'upper'
+                  : m.moduleId.includes('-lower-') ? 'lower' : 'full');
+              console.log(`  🟥 [${i}] ${m.moduleId} | bothSlot:${bothHaveSlot} slot:${m.slotIndex} xDist:${xDist.toFixed(0)} samePos:${samePosition} | mCat:${mCat} target:${targetCat} match:${mCat===targetCat}`);
+            });
             return allMods.find(m => {
               if (m === leftmostMod) return false;
-              // slotIndex가 둘 다 정의된 경우: slotIndex 일치
-              // 그 외(자유배치 또는 slotIndex 미정의): X 위치 근접
               const bothHaveSlot = m.slotIndex !== undefined && leftmostMod.slotIndex !== undefined;
               const samePosition = bothHaveSlot
                 ? m.slotIndex === leftmostMod.slotIndex
