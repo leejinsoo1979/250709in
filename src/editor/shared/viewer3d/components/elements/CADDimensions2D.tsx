@@ -1313,11 +1313,14 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           const doorDimZ = furnitureFrontZ + mmToThreeUnits(200);
           const doorColor = dimensionColor;
 
-          // 서랍 모듈: 도어 높이 대신 마이다 개별 높이 표시
+          // 서랍 모듈(lower-drawer-*)만: 도어 높이 대신 마이다 개별 높이 표시
+          // 도어올림/상판내림/기본하부장/싱크장 등은 단일 도어 치수로 표시
           if (selectedModCategory === 'lower' && visibleFurniture.length > 0) {
             const mod = visibleFurniture[0] as PlacedModule;
             // 도어가 없으면 마이다 치수선 미표시 (hasDoor가 undefined거나 false면 미설치)
             if (!mod.hasDoor) return null;
+            // 서랍 모듈만 마이다 치수 표시 (도어올림/상판내림/기본하부장 등은 단일 도어 치수로)
+            const isDrawerModule = mod.moduleId.includes('lower-drawer-');
             let modData = getModuleById(
               mod.moduleId,
               { width: internalSpace.width, height: internalSpace.height, depth: internalSpace.depth },
@@ -1325,9 +1328,9 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
             );
             if (!modData) modData = buildModuleDataFromPlacedModule(mod, internalSpace, spaceInfo);
             const modHeightMm = modData ? computeFurnitureHeightMm(mod, modData, spaceInfo, internalSpace) : 0;
-            const lowerMaidas = computeLowerCabinetMaidaHeights(
-              mod.moduleId, modHeightMm, mod.doorTopGap ?? 0, mod.doorBottomGap ?? 0
-            );
+            const lowerMaidas = isDrawerModule
+              ? computeLowerCabinetMaidaHeights(mod.moduleId, modHeightMm, mod.doorTopGap ?? 0, mod.doorBottomGap ?? 0)
+              : null;
             if (lowerMaidas && lowerMaidas.length > 0) {
               const cabinetBottomY = furnitureBaseY;
               const cabinetTopY = cabinetBottomY + mmToThreeUnits(modHeightMm);
