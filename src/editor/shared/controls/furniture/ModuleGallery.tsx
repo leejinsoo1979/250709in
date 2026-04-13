@@ -574,7 +574,20 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
         let dims = lastDims
           ? { width: lastDims.width, height: lastDims.height, depth: lastDims.depth }
           : { ...module.dimensions };
-        const { startX, endX } = getInternalSpaceBoundsX(spaceInfo);
+        let { startX, endX } = getInternalSpaceBoundsX(spaceInfo);
+
+        // 단내림(stepCeiling) 활성 시: 더블클릭은 메인 구간에만 배치
+        // getInternalSpaceBoundsX는 단내림+메인 통합 영역을 반환하므로 메인 구간으로 제한
+        if (spaceInfo.stepCeiling?.enabled) {
+          const stepWidth = spaceInfo.stepCeiling.width || 0;
+          const stepPos = spaceInfo.stepCeiling.position || 'right';
+          const middleGap = spaceInfo.gapConfig?.middle ?? 1.5;
+          if (stepPos === 'left') {
+            startX += stepWidth + middleGap;
+          } else {
+            endX -= stepWidth + middleGap;
+          }
+        }
 
         // 좌측부터 순서대로 빈 자리 찾기
         let furnitureWidth = dims.width;
