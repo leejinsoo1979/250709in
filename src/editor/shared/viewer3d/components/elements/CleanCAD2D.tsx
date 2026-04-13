@@ -3431,7 +3431,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             return allMods.length > 0 ? allMods.reduce((l, m) => m.position.x < l.position.x ? m : l) : null;
           })();
 
-          // 같은 슬롯에 상부장+하부장 동시 배치 시 companion 모듈 찾기
+          // 같은 슬롯/위치에 상부장+하부장 동시 배치 시 companion 모듈 찾기
           const leftCompanionMod = (() => {
             if (!leftmostMod) return null;
             const leftModData = getModuleById(leftmostMod.moduleId);
@@ -3439,11 +3439,14 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               ?? (leftmostMod.moduleId.includes('-upper-') ? 'upper'
                 : leftmostMod.moduleId.includes('-lower-') ? 'lower' : 'full');
             if (leftCat === 'full') return null; // 키큰장은 companion 없음
-            // leftmostMod와 같은 슬롯의 반대 카테고리 모듈 찾기
             const targetCat = leftCat === 'upper' ? 'lower' : 'upper';
             return allMods.find(m => {
               if (m === leftmostMod) return false;
-              if (m.slotIndex !== leftmostMod.slotIndex) return false;
+              // 슬롯배치: slotIndex 기반, 자유배치: X 위치 근접 (100mm 이내)
+              const samePosition = isFreePlacement
+                ? Math.abs(m.position.x - leftmostMod.position.x) < 100
+                : m.slotIndex === leftmostMod.slotIndex;
+              if (!samePosition) return false;
               const mData = getModuleById(m.moduleId);
               const mCat = mData?.category
                 ?? (m.moduleId.includes('-upper-') ? 'upper'
@@ -3490,7 +3493,31 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           const effectiveH = isLeftDrop ? (spaceInfo.height - dropHeight) : spaceInfo.height;
 
           // per-furniture 실제 프레임 size (토글 무관 — 가구 내경 계산용)
-          const actualBottomSize = leftmostMod?.baseFrameHeight !== undefined ? leftmostMod.baseFrameHeight : globalBottomFrameH;
+          // 상하부장 동시배치 시 하부장의 프레임 정보를 사용해야 함
+          const leftLowerMod = (() => {
+            if (!leftmostMod) return leftmostMod;
+            const cat = getModuleById(leftmostMod.moduleId)?.category
+              ?? (leftmostMod.moduleId.includes('-upper-') ? 'upper'
+                : leftmostMod.moduleId.includes('-lower-') ? 'lower' : 'full');
+            if (cat === 'upper') {
+              // leftmostMod가 상부장이면 companion(하부장)을 프레임 참조로 사용
+              // leftCompanionMod는 아직 계산 전이므로 여기서 직접 하부장 검색
+              const lowerMod = allMods.find(m => {
+                if (m === leftmostMod) return false;
+                const samePos = isFreePlacement
+                  ? Math.abs(m.position.x - leftmostMod.position.x) < 100
+                  : m.slotIndex === leftmostMod.slotIndex;
+                if (!samePos) return false;
+                const mCat = getModuleById(m.moduleId)?.category
+                  ?? (m.moduleId.includes('-upper-') ? 'upper'
+                    : m.moduleId.includes('-lower-') ? 'lower' : 'full');
+                return mCat === 'lower';
+              });
+              return lowerMod ?? leftmostMod;
+            }
+            return leftmostMod;
+          })();
+          const actualBottomSize = leftLowerMod?.baseFrameHeight !== undefined ? leftLowerMod.baseFrameHeight : globalBottomFrameH;
           const actualTopSize = leftmostMod?.topFrameThickness !== undefined ? leftmostMod.topFrameThickness : globalTopFrame;
 
           // 가구 내경 높이 — FurnitureItem.tsx와 동일한 로직 적용
@@ -3563,8 +3590,9 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
 
           // 치수가이드 표시용 프레임 높이 (토글 반영)
           // 하부: OFF → 띄움 높이(individualFloatHeight) 표시, ON → 실제 size
-          const bottomFrameH = leftmostMod?.hasBase === false
-            ? (leftmostMod.individualFloatHeight ?? 0)
+          // 상하부장 동시배치 시 하부장의 hasBase/individualFloatHeight 사용
+          const bottomFrameH = leftLowerMod?.hasBase === false
+            ? (leftLowerMod.individualFloatHeight ?? 0)
             : actualBottomSize;
           // 상부프레임 높이: 하부장/상부장은 고정값(actualTopSize), 키큰장은 나머지에서 계산
           const topFrameH = (leftCategoryResolved === 'lower' || leftCategoryResolved === 'upper' || hasDualCabinet)
@@ -3999,7 +4027,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             return allMods_R.length > 0 ? allMods_R.reduce((r, m) => m.position.x > r.position.x ? m : r) : null;
           })();
 
-          // 같은 슬롯에 상부장+하부장 동시 배치 시 companion 모듈 찾기
+          // 같은 슬롯/위치에 상부장+하부장 동시 배치 시 companion 모듈 찾기
           const rightCompanionMod = (() => {
             if (!rightmostMod) return null;
             const rModData = getModuleById(rightmostMod.moduleId);
@@ -4010,7 +4038,10 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             const targetCat = rCat === 'upper' ? 'lower' : 'upper';
             return allMods_R.find(m => {
               if (m === rightmostMod) return false;
-              if (m.slotIndex !== rightmostMod.slotIndex) return false;
+              const samePosition = isFreePlacement
+                ? Math.abs(m.position.x - rightmostMod.position.x) < 100
+                : m.slotIndex === rightmostMod.slotIndex;
+              if (!samePosition) return false;
               const mData = getModuleById(m.moduleId);
               const mCat = mData?.category
                 ?? (m.moduleId.includes('-upper-') ? 'upper'
@@ -4057,7 +4088,29 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           const rEffectiveH = isRightDrop ? (spaceInfo.height - dropHeight) : spaceInfo.height;
 
           // per-furniture 실제 프레임 size (토글 무관 — 가구 내경 계산용)
-          const rActualBottomSize = rightmostMod?.baseFrameHeight !== undefined ? rightmostMod.baseFrameHeight : rGlobalBottomFrameH;
+          // 상하부장 동시배치 시 하부장의 프레임 정보를 사용해야 함
+          const rightLowerMod = (() => {
+            if (!rightmostMod) return rightmostMod;
+            const cat = getModuleById(rightmostMod.moduleId)?.category
+              ?? (rightmostMod.moduleId.includes('-upper-') ? 'upper'
+                : rightmostMod.moduleId.includes('-lower-') ? 'lower' : 'full');
+            if (cat === 'upper') {
+              const lowerMod = allMods.find(m => {
+                if (m === rightmostMod) return false;
+                const samePos = isFreePlacement
+                  ? Math.abs(m.position.x - rightmostMod.position.x) < 100
+                  : m.slotIndex === rightmostMod.slotIndex;
+                if (!samePos) return false;
+                const mCat = getModuleById(m.moduleId)?.category
+                  ?? (m.moduleId.includes('-upper-') ? 'upper'
+                    : m.moduleId.includes('-lower-') ? 'lower' : 'full');
+                return mCat === 'lower';
+              });
+              return lowerMod ?? rightmostMod;
+            }
+            return rightmostMod;
+          })();
+          const rActualBottomSize = rightLowerMod?.baseFrameHeight !== undefined ? rightLowerMod.baseFrameHeight : rGlobalBottomFrameH;
           const rActualTopSize = rightmostMod?.topFrameThickness !== undefined ? rightmostMod.topFrameThickness : rGlobalTopFrame;
 
           // 가구 내경 높이 — FurnitureItem.tsx와 동일한 로직 적용
@@ -4127,8 +4180,9 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           }
 
           // 치수가이드 표시용 프레임 높이 (토글 반영)
-          const rBottomFrameH = rightmostMod?.hasBase === false
-            ? (rightmostMod.individualFloatHeight ?? 0)
+          // 상하부장 동시배치 시 하부장의 hasBase/individualFloatHeight 사용
+          const rBottomFrameH = rightLowerMod?.hasBase === false
+            ? (rightLowerMod.individualFloatHeight ?? 0)
             : rActualBottomSize;
           // 상부프레임 높이: 하부장/상부장은 고정값, 키큰장은 나머지에서 계산
           const rTopFrameH = (rightCategoryResolved === 'lower' || rightCategoryResolved === 'upper' || rHasDualCabinet)
