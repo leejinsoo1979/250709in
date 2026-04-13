@@ -1801,8 +1801,14 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
 
         {/* 우측뷰 — 우측 도어 사이즈 */}
         {(() => {
-          const dimZ_r = spaceDepth/2 + rightDimOffset - mmToThreeUnits(750);
-          const dimExtZ_r = dimZ_r - mmToThreeUnits(360);
+          // 가구 도어 앞면 기준 (좌측뷰와 동일)
+          const panelDepthMm_rd = spaceInfo.depth || 1500;
+          const furnitureDepthMm_rd = Math.min(panelDepthMm_rd, 600);
+          const zOff_rd = -mmToThreeUnits(panelDepthMm_rd) / 2;
+          const fzOff_rd = zOff_rd + (mmToThreeUnits(panelDepthMm_rd) - mmToThreeUnits(furnitureDepthMm_rd)) / 2;
+          const doorFrontZ_rd = fzOff_rd + mmToThreeUnits(furnitureDepthMm_rd) / 2;
+          const dimZ_r = doorFrontZ_rd + mmToThreeUnits(150);
+          const dimExtZ_r = doorFrontZ_rd + mmToThreeUnits(30);
           const effectiveH_rd = isSelectedSlotInDroppedZone ? (spaceInfo.height - dropHeightMm) : spaceInfo.height;
 
           const doorSegs_r: { bottomY: number; topY: number; heightMm: number; key: string }[] = [];
@@ -2012,9 +2018,15 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           const selFurnitureHeightMm_r = computeFurnitureHeightMm(selectedMod, selModData_r, spaceInfo, internalSpace);
           const totalFromFloorMm_r = Math.round(floorFinishHeightMm + baseFrameHeightMm + selFurnitureHeightMm_r);
           const totalFromFloorY_r = mmToThreeUnits(totalFromFloorMm_r);
-          // 도어 치수 바깥쪽에 배치: 도어 치수 + 360mm 간격
-          const dimZ_combined_r = spaceDepth/2 + rightDimOffset - mmToThreeUnits(750) + mmToThreeUnits(360);
-          const dimZ_combined_r_ext = dimZ_combined_r - mmToThreeUnits(360);
+          // 가구 도어 앞면 Z 계산
+          const panelDepthMm_cr = spaceInfo.depth || 1500;
+          const furnitureDepthMm_cr = Math.min(panelDepthMm_cr, 600);
+          const zOff_cr = -mmToThreeUnits(panelDepthMm_cr) / 2;
+          const fzOff_cr = zOff_cr + (mmToThreeUnits(panelDepthMm_cr) - mmToThreeUnits(furnitureDepthMm_cr)) / 2;
+          const doorFrontZ_cr = fzOff_cr + mmToThreeUnits(furnitureDepthMm_cr) / 2;
+          // 합산 치수: 도어 앞면에서 300mm 바깥
+          const dimZ_combined_r = doorFrontZ_cr + mmToThreeUnits(300);
+          const dimZ_combined_r_ext = doorFrontZ_cr + mmToThreeUnits(30);
           return (
             <group>
               {/* 보조 가이드 연장선 - 바닥 */}
