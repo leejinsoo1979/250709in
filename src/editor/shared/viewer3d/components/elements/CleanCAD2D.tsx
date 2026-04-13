@@ -2128,8 +2128,12 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
 
                     // 메인 구간 좌/우에 인접한 것 → 해당 쪽 이격 결정
                     // 단내림(step)은 통합 배치공간에 포함, 커튼박스는 별도 구간
-                    const mainLeftAdj = cbOnLeft ? 'curtainbox' : (scOnLeft ? 'step' : 'wall');
-                    const mainRightAdj = cbOnRight ? 'curtainbox' : (scOnRight ? 'step' : 'wall');
+                    // 자유배치: droppedCeiling(=dc)이 커튼박스 역할 → dcOnLeft/dcOnRight도 curtainbox 인접
+                    // 슬롯배치: dc = 실제 단내림, cb = curtainBox 필드
+                    const freeDcOnLeft = isFreePlacement && dcOnLeft; // 자유배치 커튼박스(좌)
+                    const freeDcOnRight = isFreePlacement && dcOnRight; // 자유배치 커튼박스(우)
+                    const mainLeftAdj = (cbOnLeft || freeDcOnLeft) ? 'curtainbox' : (scOnLeft ? 'step' : 'wall');
+                    const mainRightAdj = (cbOnRight || freeDcOnRight) ? 'curtainbox' : (scOnRight ? 'step' : 'wall');
                     const mainLeftGap = mainLeftAdj === 'wall' ? (hasLeftWall ? leftGapMm : 0) : middleGapMm;
                     const mainRightGap = mainRightAdj === 'wall' ? (hasRightWall ? rightGapMm : 0) : middleGapMm;
 
@@ -2169,7 +2173,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     // - 커튼박스(CB) 인접 → CB는 배치불가 구간이므로 경계이격 차감 (-middleGap)
                     // - 벽 인접 → 벽이격 차감 (-wallGap)
                     let mainLeftDelta = 0;
-                    if (cbOnLeft) {
+                    if (cbOnLeft || freeDcOnLeft) {
                       // 메인 좌측 = 커튼박스 인접 → 경계이격 차감
                       mainLeftDelta = -(hasLeftWall ? leftGapMm : middleGapMm);
                     } else if (scOnLeft) {
@@ -2181,7 +2185,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     }
 
                     let mainRightDelta = 0;
-                    if (cbOnRight) {
+                    if (cbOnRight || freeDcOnRight) {
                       // 메인 우측 = 커튼박스 인접 → 경계이격 차감
                       mainRightDelta = -(hasRightWall ? rightGapMm : middleGapMm);
                     } else if (scOnRight) {
