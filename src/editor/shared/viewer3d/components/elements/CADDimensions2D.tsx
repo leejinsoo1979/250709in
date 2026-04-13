@@ -885,11 +885,12 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                   isUpper: false
                 });
               }
-              // 하단갭: 바닥(0) ~ 도어 하단
-              const bottomGapMm = Math.round(doorBottomAbsMm);
+              // 하단갭: 바닥마감재 상단(또는 바닥) ~ 도어 하단
+              const bottomStartMm = floorFinishHeightMm > 0 ? floorFinishHeightMm : 0;
+              const bottomGapMm = Math.round(doorBottomAbsMm - bottomStartMm);
               if (bottomGapMm > 0) {
                 doorSegs.push({
-                  bottomY: 0,
+                  bottomY: mmToThreeUnits(bottomStartMm),
                   topY: mmToThreeUnits(doorBottomAbsMm),
                   heightMm: bottomGapMm,
                   key: `door-bottomgap-${moduleIndex}`,
