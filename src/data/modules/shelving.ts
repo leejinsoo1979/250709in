@@ -826,8 +826,8 @@ const createUpperCabinet1 = (columnWidth: number, maxHeight?: number): ModuleDat
   const base = createFurnitureBase(
     `upper-cabinet-shelf-${widthForId}`,
     `상부장 3단형 ${widthForId}mm`,
-    columnWidth, upperHeight, FURNITURE_SPECS.DEFAULT_DEPTH,
-    '#e8f5e9', `상부장 선반 2단형`, FURNITURE_SPECS.DEFAULT_DEPTH, 'upper'
+    columnWidth, upperHeight, 300,
+    '#e8f5e9', `상부장 선반 2단형`, 300, 'upper'
   );
   return { ...base, hasDoor: true, thumbnail: '/images/furniture-thumbnails/상부장 3단형.png',
     modelConfig: { ...base.modelConfig, sections: [{ type: 'shelf', heightType: 'percentage', height: 100, count: 2 }] }
@@ -840,8 +840,8 @@ const createUpperCabinet4 = (columnWidth: number, maxHeight?: number): ModuleDat
   const base = createFurnitureBase(
     `upper-cabinet-2tier-${widthForId}`,
     `상부장 2단형 ${widthForId}mm`,
-    columnWidth, upperHeight, FURNITURE_SPECS.DEFAULT_DEPTH,
-    '#e3f2fd', `상부장 2단형 (중간 선반 1개)`, FURNITURE_SPECS.DEFAULT_DEPTH, 'upper'
+    columnWidth, upperHeight, 300,
+    '#e3f2fd', `상부장 2단형 (중간 선반 1개)`, 300, 'upper'
   );
   return { ...base, thumbnail: '/images/furniture-thumbnails/상부장 2단형.png',
     modelConfig: { ...base.modelConfig, sections: [{ type: 'shelf', heightType: 'percentage', height: 100, count: 1 }] }
@@ -866,8 +866,8 @@ const createUpperCabinet3 = (columnWidth: number): ModuleData => {
   const base = createFurnitureBase(
     `upper-cabinet-mixed-${widthForId}`,
     `상부장 혼합형 ${widthForId}mm`,
-    columnWidth, 785, FURNITURE_SPECS.DEFAULT_DEPTH,
-    '#f3e5f5', `상부장 혼합형 (오픈+선반)`, FURNITURE_SPECS.DEFAULT_DEPTH, 'upper'
+    columnWidth, 785, 300,
+    '#f3e5f5', `상부장 혼합형 (오픈+선반)`, 300, 'upper'
   );
   return { ...base, thumbnail: '/images/furniture-thumbnails/상부장 혼합형.png',
     modelConfig: { ...base.modelConfig, sections: [
@@ -883,8 +883,8 @@ const createDualUpperCabinet1 = (dualWidth: number): ModuleData => {
   const widthForId = Math.round(dualWidth * 100) / 100;
   const base = createFurnitureBase(
     `dual-upper-cabinet-shelf-${widthForId}`, `상부장 3단형 ${widthForId}mm`,
-    dualWidth, 785, FURNITURE_SPECS.DEFAULT_DEPTH, '#c8e6c9',
-    `상부장 선반 2단형`, FURNITURE_SPECS.DEFAULT_DEPTH, 'upper'
+    dualWidth, 785, 300, '#c8e6c9',
+    `상부장 선반 2단형`, 300, 'upper'
   );
   return { ...base, thumbnail: '/images/furniture-thumbnails/상부장 3단형.png',
     modelConfig: { ...base.modelConfig,
@@ -898,8 +898,8 @@ const createDualUpperCabinet2 = (dualWidth: number): ModuleData => {
   const widthForId = Math.round(dualWidth * 100) / 100;
   const base = createFurnitureBase(
     `dual-upper-cabinet-2tier-${widthForId}`, `상부장 2단형 ${widthForId}mm`,
-    dualWidth, 785, FURNITURE_SPECS.DEFAULT_DEPTH, '#bbdefb',
-    `상부장 2단형 (중간 선반 1개)`, FURNITURE_SPECS.DEFAULT_DEPTH, 'upper'
+    dualWidth, 785, 300, '#bbdefb',
+    `상부장 2단형 (중간 선반 1개)`, 300, 'upper'
   );
   return { ...base, thumbnail: '/images/furniture-thumbnails/상부장2단형.png',
     modelConfig: { ...base.modelConfig,
@@ -928,8 +928,8 @@ const createDualUpperCabinet4 = (dualWidth: number): ModuleData => {
   const widthForId = Math.round(dualWidth * 100) / 100;
   const base = createFurnitureBase(
     `dual-upper-cabinet-mixed-${widthForId}`, `상부장 혼합형 ${widthForId}mm`,
-    dualWidth, 785, FURNITURE_SPECS.DEFAULT_DEPTH, '#e1bee7',
-    `상부장 혼합형 (오픈+선반)`, FURNITURE_SPECS.DEFAULT_DEPTH, 'upper'
+    dualWidth, 785, 300, '#e1bee7',
+    `상부장 혼합형 (오픈+선반)`, 300, 'upper'
   );
   return { ...base, thumbnail: '/images/furniture-thumbnails/상부장 혼합형.png',
     modelConfig: { ...base.modelConfig,
