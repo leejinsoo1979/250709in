@@ -40,10 +40,10 @@ const FURNITURE_ICONS: Record<string, string> = {
   // 싱글 하부장 (이전 모듈 비활성화)
   // 'lower-cabinet-basic': getImagePath('lower-cabinet-basic.png'),
   // 'lower-cabinet-2tier': getImagePath('lower-cabinet-2tier.png'),
-  // 새 하부장 (텍스트 썸네일 — 이미지 준비 후 교체)
-  'lower-half-cabinet': '',
-  'lower-sink-cabinet': '',
-  'lower-induction-cabinet': '',
+  // 새 하부장
+  'lower-half-cabinet': getImagePath('lower-half-cabinet.png'),
+  'lower-sink-cabinet': getImagePath('lower-sink-cabinet.png'),
+  'lower-induction-cabinet': getImagePath('lower-induction-cabinet.png'),
   // 듀얼 상부장
   'dual-upper-cabinet-shelf': getImagePath('dual-upper-cabinet-shelf.png'),
   'dual-upper-cabinet-2tier': getImagePath('dual-upper-cabinet-2tier.png'),
@@ -52,40 +52,40 @@ const FURNITURE_ICONS: Record<string, string> = {
   // 듀얼 하부장 (이전 모듈 비활성화)
   // 'dual-lower-cabinet-basic': getImagePath('dual-lower-cabinet-basic.png'),
   // 'dual-lower-cabinet-2tier': getImagePath('dual-lower-cabinet-2tier.png'),
-  // 새 듀얼 하부장 (텍스트 썸네일 — 이미지 준비 후 교체)
-  'dual-lower-half-cabinet': '',
-  'dual-lower-sink-cabinet': '',
-  'dual-lower-induction-cabinet': '',
-  // 기본하부장 2단 (텍스트 썸네일)
+  // 새 듀얼 하부장
+  'dual-lower-half-cabinet': getImagePath('lower-half-cabinet.png'),
+  'dual-lower-sink-cabinet': getImagePath('lower-sink-cabinet.png'),
+  'dual-lower-induction-cabinet': getImagePath('lower-induction-cabinet.png'),
+  // 기본하부장 서랍
   'lower-drawer-2tier': getImagePath('lower-drawer-2tier.png'),
-  'dual-lower-drawer-2tier': '',
+  'dual-lower-drawer-2tier': getImagePath('lower-drawer-2tier.png'),
   'lower-drawer-3tier': getImagePath('lower-drawer-3tier.png'),
-  'dual-lower-drawer-3tier': '',
-  // 도어올림 하부장 (텍스트 썸네일)
-  'lower-door-lift-half': '',
-  'dual-lower-door-lift-half': '',
-  'lower-door-lift-2tier': '',
-  'dual-lower-door-lift-2tier': '',
-  'lower-door-lift-3tier': '',
-  'dual-lower-door-lift-3tier': '',
-  // 도어올림 터치 하부장 (텍스트 썸네일)
-  'lower-door-lift-touch-2tier-a': '',
-  'dual-lower-door-lift-touch-2tier-a': '',
-  'lower-door-lift-touch-2tier-b': '',
-  'dual-lower-door-lift-touch-2tier-b': '',
-  'lower-door-lift-touch-3tier': '',
-  'dual-lower-door-lift-touch-3tier': '',
-  // 상판내림 하부장 (텍스트 썸네일)
-  'lower-top-down-half': '',
-  'dual-lower-top-down-half': '',
-  'lower-top-down-2tier': '',
-  'dual-lower-top-down-2tier': '',
-  'lower-top-down-3tier': '',
-  'dual-lower-top-down-3tier': '',
-  'lower-top-down-touch-2tier': '',
-  'dual-lower-top-down-touch-2tier': '',
-  'lower-top-down-touch-3tier': '',
-  'dual-lower-top-down-touch-3tier': '',
+  'dual-lower-drawer-3tier': getImagePath('lower-drawer-3tier.png'),
+  // 도어올림 하부장
+  'lower-door-lift-half': getImagePath('lower-door-lift-half.png'),
+  'dual-lower-door-lift-half': getImagePath('lower-door-lift-half.png'),
+  'lower-door-lift-2tier': getImagePath('lower-door-lift-2tier.png'),
+  'dual-lower-door-lift-2tier': getImagePath('lower-door-lift-2tier.png'),
+  'lower-door-lift-3tier': getImagePath('lower-door-lift-3tier.png'),
+  'dual-lower-door-lift-3tier': getImagePath('lower-door-lift-3tier.png'),
+  // 도어올림 터치 하부장
+  'lower-door-lift-touch-2tier-a': getImagePath('lower-door-lift-touch-2tier-a.png'),
+  'dual-lower-door-lift-touch-2tier-a': getImagePath('lower-door-lift-touch-2tier-a.png'),
+  'lower-door-lift-touch-2tier-b': getImagePath('lower-door-lift-touch-2tier-b.png'),
+  'dual-lower-door-lift-touch-2tier-b': getImagePath('lower-door-lift-touch-2tier-b.png'),
+  'lower-door-lift-touch-3tier': getImagePath('lower-door-lift-touch-3tier.png'),
+  'dual-lower-door-lift-touch-3tier': getImagePath('lower-door-lift-touch-3tier.png'),
+  // 상판내림 하부장
+  'lower-top-down-half': getImagePath('lower-top-down-half.png'),
+  'dual-lower-top-down-half': getImagePath('lower-top-down-half.png'),
+  'lower-top-down-2tier': getImagePath('lower-top-down-2tier.png'),
+  'dual-lower-top-down-2tier': getImagePath('lower-top-down-2tier.png'),
+  'lower-top-down-3tier': getImagePath('lower-top-down-3tier.png'),
+  'dual-lower-top-down-3tier': getImagePath('lower-top-down-3tier.png'),
+  'lower-top-down-touch-2tier': getImagePath('lower-top-down-touch-2tier.png'),
+  'dual-lower-top-down-touch-2tier': getImagePath('lower-top-down-touch-2tier.png'),
+  'lower-top-down-touch-3tier': getImagePath('lower-top-down-touch-3tier.png'),
+  'dual-lower-top-down-touch-3tier': getImagePath('lower-top-down-touch-3tier.png'),
   // 현관장 H
   'single-entryway-h': getImagePath('entrance_single-H.png'),
   'dual-entryway-h': getImagePath('entrance_duel-H.png'),
