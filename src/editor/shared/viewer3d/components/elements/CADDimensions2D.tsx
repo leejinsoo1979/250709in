@@ -666,14 +666,14 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                 const fzOff_tf = zOff_tf + (panelDepth_tf - furnitureDepth_tf) / 2;
                 const lowerDepth_tf = mmToThreeUnits(650);
                 const upperFurnitureZ_tf = fzOff_tf + furnitureDepth_tf / 2 - doorThk_tf - lowerDepth_tf + upperModDepth_tf / 2;
-                const upperBackZ = upperFurnitureZ_tf - upperModDepth_tf / 2;
+                const upperFrontZ = upperFurnitureZ_tf + upperModDepth_tf / 2;
 
                 segments_l2.push({
                   bottomY: mmToThreeUnits(cabinetTopMm),
                   topY: mmToThreeUnits(effectiveH_l2),
                   heightMm: Math.round(topFrameVal),
                   key: `upper-topframe-${moduleIndex}`,
-                  extStartZ: upperBackZ
+                  extStartZ: upperFrontZ
                 });
               }
             }
@@ -827,6 +827,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
               doorHeightMm = cabinetH + topExtension + doorBottomGapVal;
               doorTopAbsMm = effectiveH_door - doorTopGapVal;
               doorBottomAbsMm = doorTopAbsMm - doorHeightMm;
+              console.log('📐 CAD좌측 상부장 도어:', { cabinetH, topFrameVal, doorTopGapVal, doorBottomGapVal, topExtension, doorHeightMm, doorTopAbsMm, doorBottomAbsMm, effectiveH_door, freeHeight: mod.freeHeight, dimHeight: modData.dimensions.height, moduleId: mod.moduleId, modDoorTopGap: mod.doorTopGap, modDoorBottomGap: mod.doorBottomGap, spaceDoorTopGap: spaceInfo.doorTopGap, spaceDoorBottomGap: spaceInfo.doorBottomGap });
             } else if (modCat === 'lower') {
               const cabinetH = modData.dimensions.height ?? 1000;
               const cabinetBottomAbs = (isFloating ? floatHeightMm : (railOrBaseHeightMm + indivFloatMm)) + floorFinishHeightMm;
