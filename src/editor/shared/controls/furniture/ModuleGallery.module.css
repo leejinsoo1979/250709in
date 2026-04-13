@@ -207,11 +207,6 @@
   filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
 }
 
-/* 하부장 썸네일 배경 테마색 */
-.thumbnailItem[data-category="lower"] .thumbnailImage {
-  background-color: var(--theme-primary-light, #dcf8e5);
-}
-
 /* 상부장/하부장 색온도 낮춤 (차가운 톤) */
 .thumbnailItem[data-category="upper"] .thumbnailImage img,
 .thumbnailItem[data-category="lower"] .thumbnailImage img {
