@@ -724,6 +724,19 @@ const ColumnGuides: React.FC<ColumnGuidesProps> = ({ viewMode: viewModeProp }) =
       {/* 단내림 여부에 따른 가이드 렌더링 */}
       {hasDroppedCeiling && zoneSlotInfo.dropped ? (
         <>
+          {/* DC+CB 디버그 로그 */}
+          {spaceInfo.curtainBox?.enabled && console.log('🟩🟩🟩 [ColumnGuides] DC+CB rendering:', {
+            normalStartX: zoneSlotInfo.normal.startX,
+            normalWidth: zoneSlotInfo.normal.width,
+            normalSlotWidths: zoneSlotInfo.normal.slotWidths,
+            droppedStartX: zoneSlotInfo.dropped?.startX,
+            droppedWidth: zoneSlotInfo.dropped?.width,
+            droppedSlotWidths: zoneSlotInfo.dropped?.slotWidths,
+            cbEnabled: spaceInfo.curtainBox?.enabled,
+            cbPosition: spaceInfo.curtainBox?.position,
+            cbWidth: spaceInfo.curtainBox?.width,
+            dcPosition: spaceInfo.droppedCeiling?.position,
+          })}
           {/* 메인 영역 가이드는 항상 표시 */}
           {renderSlotGuides(
             zoneSlotInfo.normal.startX,
