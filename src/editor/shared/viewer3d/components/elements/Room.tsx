@@ -2555,8 +2555,9 @@ const Room: React.FC<RoomProps> = ({
               rightCeilingY = panelStartY + height + _cbDropH;
             }
             // 경계벽 X 위치 (droppedCeiling 또는 curtainBox)
-            const _bx = _dcIsLeft ? (xOffset + _dcW)
-              : _dcIsRight ? (xOffset + width - _dcW)
+            // DC+CB 동시: DC 경계는 CB 너비를 추가로 고려해야 함
+            const _bx = _dcIsLeft ? (xOffset + _cbW + _dcW)
+              : _dcIsRight ? (xOffset + width - _cbW - _dcW)
               : _cbIsLeft ? (xOffset + _cbW)
               : _cbIsRight ? (xOffset + width - _cbW)
               : 0;
@@ -2586,15 +2587,17 @@ const Room: React.FC<RoomProps> = ({
             {/* 상단 가로 모서리 (천장과 뒷벽 사이) - 단내림/커튼박스 시 메인 구간만 */}
             {(_hasDC || (_hasCBOnly && !_hasDC)) ? (() => {
               // 단내림이 있으면 _dcW 사용, 커튼박스 단독이면 _cbW 사용
+              // DC+CB 동시: DC 구간 + CB 구간 모두 메인에서 제외
               const _zoneW = _hasDC ? _dcW : _cbW;
+              const _cbExtraW = (_hasDC && _hasCBOnly) ? _cbW : 0; // DC+CB 동시 시 CB 추가 제외
               const _zoneDropH = _hasDC ? _dcDropH : _cbDropH;
               const _zoneIsLeft = _hasDC ? _dcIsLeft : _cbIsLeft;
               const _scEnabled = isFreePlacement && spaceInfo.stepCeiling?.enabled;
               const _scW2 = _scEnabled ? mmToThreeUnits(spaceInfo.stepCeiling!.width || 900) : 0;
-              const _mainW = width - _zoneW - _scW2;
+              const _mainW = width - _zoneW - _cbExtraW - _scW2;
               // 메인 구간 시작 X
               const _mainStartX = (_zoneIsLeft || (_scEnabled && spaceInfo.stepCeiling?.position === 'left'))
-                ? xOffset + _zoneW + _scW2
+                ? xOffset + _zoneW + _cbExtraW + _scW2
                 : xOffset;
               // 구간 천장 높이: 자유배치+DC = 위로, 슬롯+DC = 아래로, 슬롯+CB단독 = 위로
               const _zoneCeilingY = _hasDC
@@ -2622,7 +2625,7 @@ const Room: React.FC<RoomProps> = ({
                   {/* 커튼박스/단내림 구간 천장 가로선 */}
                   <mesh
                     position={[
-                      _zoneIsLeft ? (xOffset + _zoneW / 2) : (xOffset + width - _zoneW / 2),
+                      _zoneIsLeft ? (xOffset + _cbExtraW + _zoneW / 2) : (xOffset + width - _cbExtraW - _zoneW / 2),
                       _zoneCeilingY,
                       zOffset
                     ]}
@@ -2805,10 +2808,12 @@ const Room: React.FC<RoomProps> = ({
             const mainCeilY = ty;
 
             // 단내림: 천장이 내려감
+            // DC+CB 동시: DC 경계는 CB 너비를 추가로 고려
             const dcSide = _hasStepDown
               ? (_sdIsLeft ? 'left' : _sdIsRight ? 'right' : null) : null;
             const dcCeilY = dcSide ? ty - _sdDropH : ty;
-            const dcBoundX = dcSide === 'left' ? lx + _sdW : dcSide === 'right' ? rx - _sdW : lx;
+            const _cbxWForDc = (_hasCBx && dcSide) ? _cbxW : 0; // DC+CB 동시 시 CB 너비 오프셋
+            const dcBoundX = dcSide === 'left' ? lx + _cbxWForDc + _sdW : dcSide === 'right' ? rx - _cbxWForDc - _sdW : lx;
 
             // 커튼박스: 천장이 올라감
             const cbSide = _hasCBx
@@ -2935,7 +2940,9 @@ const Room: React.FC<RoomProps> = ({
 
             const bDcSide = _bHasSD ? (_bSdIsLeft ? 'left' : _bSdIsRight ? 'right' : null) : null;
             const bDcCY = bDcSide ? ceilingY - _bSdDropH : ceilingY;
-            const bDcBX = bDcSide === 'left' ? x1 + _bSdW : bDcSide === 'right' ? x2 - _bSdW : x1;
+            // DC+CB 동시: DC 경계는 CB 너비를 추가로 고려
+            const _bCbxWForDc = (_bHasCBx && bDcSide) ? _bCbxW : 0;
+            const bDcBX = bDcSide === 'left' ? x1 + _bCbxWForDc + _bSdW : bDcSide === 'right' ? x2 - _bCbxWForDc - _bSdW : x1;
 
             const bCbSide = _bHasCBx ? (_bCbxIsLeft ? 'left' : _bCbxIsRight ? 'right' : null) : null;
             const bCbCY = bCbSide ? ceilingY + _bCbxDropH : ceilingY;
@@ -2987,8 +2994,10 @@ const Room: React.FC<RoomProps> = ({
             const dcIsLeft = hasDC && spaceInfo.droppedCeiling?.position === 'left';
             const dcIsRight = hasDC && spaceInfo.droppedCeiling?.position === 'right';
             const dcW = hasDC ? mmToThreeUnits(spaceInfo.droppedCeiling!.width || (isFreePlacement ? 150 : 900)) : 0;
-            const dcBx = dcIsLeft ? x1 + dcW : x2 - dcW;
             const dcDropH = hasDC ? mmToThreeUnits(spaceInfo.droppedCeiling!.dropHeight || 200) : 0;
+            // DC+CB 동시: DC 경계는 CB 너비를 추가로 고려
+            const _wfCbW = (!isFreePlacement && spaceInfo.curtainBox?.enabled) ? mmToThreeUnits(spaceInfo.curtainBox!.width || 150) : 0;
+            const dcBx = dcIsLeft ? x1 + _wfCbW + dcW : x2 - _wfCbW - dcW;
 
             // Z축 방향 그라데이션 라인만 유지 (천장-벽, 바닥-벽 경계)
             if (hasLeftWall) {
@@ -3018,6 +3027,15 @@ const Room: React.FC<RoomProps> = ({
               } else if (dcIsRight && hasRightWall) {
                 gradientLines.push([x2, ceilingY - dcDropH, z1, x2, ceilingY - dcDropH, z2]);
               }
+            }
+            // DC+CB 동시: CB 경계벽 Z축 그라데이션 라인
+            if (_bHasCBx && _bHasSD && !isFreePlacement) {
+              const _cbGBx2 = _bCbxIsLeft ? x1 + _bCbxW : x2 - _bCbxW;
+              const _cbGTopY2 = ceilingY + _bCbxDropH;
+              gradientLines.push([_cbGBx2, _cbGTopY2, z1, _cbGBx2, _cbGTopY2, z2]); // CB 경계벽 상단
+              // CB 경계벽 하단: DC 천장 높이 (DC가 낮아진 위치)
+              const _cbGBotY2 = ceilingY - dcDropH;
+              gradientLines.push([_cbGBx2, _cbGBotY2, z1, _cbGBx2, _cbGBotY2, z2]);
             }
             // 커튼박스 단독 경계벽 Z축 그라데이션 라인 (슬롯+자유배치)
             if (_bHasCBx && !_bHasSD) {
