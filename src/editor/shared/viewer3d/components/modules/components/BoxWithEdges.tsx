@@ -357,7 +357,16 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
     return panelMaterial;
   }, [processedMaterial, panelName, activePanelGrainDirectionsStr, isDragging, effectiveEditMode, textureSignature, viewMode, effectiveRenderMode, isPlainMaterial]);
 
-  const finalMaterial = panelSpecificMaterial;
+  // cornerNotch ExtrudeGeometry는 축 스왑으로 일부 면 winding이 뒤집힘 → DoubleSide로 양면 렌더링
+  const finalMaterial = React.useMemo(() => {
+    if (cornerNotch && panelSpecificMaterial instanceof THREE.MeshStandardMaterial) {
+      const mat = panelSpecificMaterial.clone();
+      mat.side = THREE.DoubleSide;
+      mat.needsUpdate = true;
+      return mat;
+    }
+    return panelSpecificMaterial;
+  }, [panelSpecificMaterial, cornerNotch]);
 
   // useEffect 제거: useMemo에서 이미 모든 회전 로직을 처리하므로 중복 실행 방지
 
