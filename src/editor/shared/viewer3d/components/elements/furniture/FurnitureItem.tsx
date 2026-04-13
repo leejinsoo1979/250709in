@@ -384,7 +384,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   const effectiveTopFrame = (() => {
     // 상부장은 freeHeight 기반 계산 제외 — 상부장의 freeHeight는 캐비넷 높이이므로
     // 공간높이 - 받침대 - freeHeight 하면 상부프레임이 아닌 하부장 영역 높이가 나옴
-    const isUpperForFrame = actualModuleData?.category === 'upper';
+    const isUpperForFrame = placedModule.moduleId?.includes('upper-cabinet');
     if (placedModule.isFreePlacement && placedModule.freeHeight && !isUpperForFrame) {
       const baseH = spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height || 65) : 0;
       const standFloat = spaceInfo.baseConfig?.type === 'stand' && spaceInfo.baseConfig?.placementType === 'float';
