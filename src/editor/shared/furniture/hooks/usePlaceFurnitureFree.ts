@@ -60,8 +60,8 @@ export function placeFurnitureFree(params: PlaceFurnitureFreeParams): PlaceFurni
     return { success: false, error: `가구 데이터를 찾을 수 없습니다: ${moduleId}` };
   }
 
-  // X좌표 클램핑 (공간 경계 내)
-  const clampedX = clampToSpaceBoundsX(xPositionMM, dimensions.width, spaceInfo);
+  // X좌표 클램핑 (공간 경계 내) — 정수 mm로 반올림하여 0.5mm 소수점 방지
+  const clampedX = Math.round(clampToSpaceBoundsX(xPositionMM, dimensions.width, spaceInfo));
 
   // 단내림 구간 감지: X 좌표 + 가구 너비 기반으로 zone 결정 + 높이 조정
   const droppedZone = detectDroppedZone(clampedX, spaceInfo, dimensions.width);

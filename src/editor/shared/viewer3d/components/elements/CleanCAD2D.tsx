@@ -5323,14 +5323,16 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               const leftLimit = leftX - mmToThreeUnits(leftGapMm); // gapLeftX = 벽 or 인접가구 경계
               // 우측 한계: 벽 또는 인접 가구 좌측 끝
               const rightLimit = rightX + mmToThreeUnits(rightGapMm); // gapRightX = 벽 or 인접가구 경계
+              // 1mm(0.01) 단위로 스냅하여 부동소수점 오차 방지
+              const snap = (v: number) => Math.round(v * 100) / 100;
               const moveLeft = (e: any) => {
                 stopAll(e);
-                const newX = Math.max(leftLimit + halfW, module.position.x - MOVE_STEP);
+                const newX = snap(Math.max(leftLimit + halfW, module.position.x - MOVE_STEP));
                 updatePlacedModule(module.id, { position: { ...module.position, x: newX } });
               };
               const moveRight = (e: any) => {
                 stopAll(e);
-                const newX = Math.min(rightLimit - halfW, module.position.x + MOVE_STEP);
+                const newX = snap(Math.min(rightLimit - halfW, module.position.x + MOVE_STEP));
                 updatePlacedModule(module.id, { position: { ...module.position, x: newX } });
               };
               return (<>
