@@ -3864,7 +3864,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
           */}
 
           {/* 경첩 방향 선택 (도어가 있고 싱글 가구인 경우만, 상세보기 아닐 때만) */}
-          {!showDetails && moduleData.hasDoor && hasDoor && (
+          {!showDetails && hasDoor && (
             <div className={styles.propertySection}>
               {/* 경첩 방향 선택 (도어가 있고 싱글 가구인 경우만) */}
               {hasDoor && isSingleFurniture && (
