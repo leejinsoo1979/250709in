@@ -5318,14 +5318,15 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 // 캔버스 클릭 → 선택해제 방지
                 (window as any).__r3fClickHandled = true;
               };
+              const halfW = moduleWidth / 2;
               const moveLeft = (e: any) => {
                 stopAll(e);
-                const newX = module.position.x - MOVE_STEP;
+                const newX = Math.max(zoneLimitLeft + halfW, module.position.x - MOVE_STEP);
                 updatePlacedModule(module.id, { position: { ...module.position, x: newX } });
               };
               const moveRight = (e: any) => {
                 stopAll(e);
-                const newX = module.position.x + MOVE_STEP;
+                const newX = Math.min(zoneLimitRight - halfW, module.position.x + MOVE_STEP);
                 updatePlacedModule(module.id, { position: { ...module.position, x: newX } });
               };
               return (<>
