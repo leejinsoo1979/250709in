@@ -2625,6 +2625,21 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         (adjustedDepthMm !== moduleDepth ? adjustedDepthMm : moduleDepth)));
   const depth = mmToThreeUnits(actualDepthMm);
 
+  // 🔍 깊이 디버그
+  if (placedModule.customDepth || placedModule.freeDepth) {
+    console.log('🔍 [깊이 디버그]', {
+      moduleId: placedModule.moduleId,
+      customDepth: placedModule.customDepth,
+      freeDepth: placedModule.freeDepth,
+      adjustedDepthMm,
+      moduleDepth,
+      autoAdjustedDepthMm,
+      columnPlacementMode: placedModule.columnPlacementMode,
+      actualDepthMm,
+      isFreePlacement: placedModule.isFreePlacement,
+    });
+  }
+
 
   // 도어 두께 (20mm) - furnitureZ 계산에 필요하므로 먼저 선언
   const doorThicknessMm = 20;
@@ -2651,13 +2666,12 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   // 기둥 앞 공간 가구는 저장된 Z 위치 사용, 일반 가구는 계산된 Z 위치 사용
   const isUpperForZ = actualModuleData?.category === 'upper' || placedModule.moduleId?.includes('upper-cabinet');
   // 하부장/키큰장: 앞면 정렬 (도어 앞면 = 공간 앞면)
-  // 상부장: 뒷면 정렬 (하부장 뒷면과 동일 위치)
-  // 하부장 뒷면 = furnitureZOffset + furnitureDepth/2 - doorThickness - panelDepth (공간 깊이 = 하부장 깊이)
-  const lowerBackFace = furnitureZOffset + furnitureDepth / 2 - doorThickness - panelDepth;
+  // 상부장: 뒷벽 정렬 (뒷면 = 공간 뒷벽)
+  const backWall = zOffset - panelDepth / 2; // 공간 뒷벽 Z 위치 = -panelDepth
   const furnitureZ = isFrontSpaceFurniture
     ? placedModule.position.z  // 기둥 앞 공간: 저장된 위치 사용
     : isUpperForZ
-      ? lowerBackFace + depth / 2  // 상부장: 하부장 뒷면에 맞춤
+      ? backWall + depth / 2  // 상부장: 뒷면이 뒷벽에 닿음
       : furnitureZOffset + furnitureDepth / 2 - doorThickness - depth / 2 + baseDepthOffset;
 
   // 🔴 Z축 디버그 — 모든 가구
