@@ -3513,9 +3513,10 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           const bottomFrameH = leftmostMod?.hasBase === false
             ? (leftmostMod.individualFloatHeight ?? 0)
             : actualBottomSize;
-          // 상부: 전체높이에서 바닥마감재 + 받침대 + 가구 높이를 빼서 계산
-          // 바닥마감재는 바닥에서 별도 공간을 차지하므로 effectiveH에서도 차감
-          const topFrameH = Math.max(0, effectiveH - floorFinishForHeight - bottomFrameH - furnitureH);
+          // 상부프레임 높이: 하부장/상부장은 고정값(actualTopSize), 키큰장은 나머지에서 계산
+          const topFrameH = (leftCategoryResolved === 'lower' || leftCategoryResolved === 'upper')
+            ? actualTopSize
+            : Math.max(0, effectiveH - floorFinishForHeight - bottomFrameH - furnitureH);
 
           // 상부장 여부: 상부장은 천장에서 아래로 배치되므로 분할 순서가 다름
           const isUpperCategory = leftCategoryResolved === 'upper';
@@ -3678,7 +3679,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 </>);
               })()}
 
-              {/* ── 1단(안쪽): 받침대/가구높이/상부프레임 분해 (항상 표시) ── */}
+              {/* ── 1단(안쪽): 받침대/가구높이/상부프레임 분해 (가구가 배치된 경우만 표시) ── */}
+              {leftmostMod && (<>
               {/* 세로 메인 라인: 바닥마감재 위 ~ effectiveCeiling */}
               <NativeLine name="dimension_line"
                 points={[[innerX, floorFinishBaseY, 0.002], [innerX, effectiveCeilingY, 0.002]]}
@@ -3798,6 +3800,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   </Text>
                 </>
               )}
+              </>)}
 
               {/* ── 연장선: 각 경계점에서 수평선 ── */}
               {/* 바닥(Y=0) — 커튼박스 있으면 3단까지 연장 */}
@@ -3824,18 +3827,20 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   color={dimensionColor} lineWidth={0.6} renderOrder={100000} depthTest={false}
                 />
               )}
-              {/* 받침대 상단 또는 상부장 하단 경계 */}
-              {(isUpperCategory ? (bottomFrameTopY > floorFinishBaseY + 0.001) : (bottomFrameH > 0)) && (
+              {/* 받침대 상단 또는 상부장 하단 경계 (가구 있을 때만) */}
+              {leftmostMod && (isUpperCategory ? (bottomFrameTopY > floorFinishBaseY + 0.001) : (bottomFrameH > 0)) && (
                 <NativeLine name="dimension_line"
                   points={[[innerX - mmToThreeUnits(20), bottomFrameTopY, 0.001], [leftOffset, bottomFrameTopY, 0.001]]}
                   color={dimensionColor} lineWidth={0.6} renderOrder={100000} depthTest={false}
                 />
               )}
-              {/* 가구(내경) 상단 */}
-              <NativeLine name="dimension_line"
-                points={[[innerX - mmToThreeUnits(20), furnitureTopY, 0.001], [leftOffset, furnitureTopY, 0.001]]}
-                color={dimensionColor} lineWidth={0.6} renderOrder={100000} depthTest={false}
-              />
+              {/* 가구(내경) 상단 (가구 있을 때만) */}
+              {leftmostMod && (
+                <NativeLine name="dimension_line"
+                  points={[[innerX - mmToThreeUnits(20), furnitureTopY, 0.001], [leftOffset, furnitureTopY, 0.001]]}
+                  color={dimensionColor} lineWidth={0.6} renderOrder={100000} depthTest={false}
+                />
+              )}
             </>
           );
         })()}
@@ -3947,8 +3952,10 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           const rBottomFrameH = rightmostMod?.hasBase === false
             ? (rightmostMod.individualFloatHeight ?? 0)
             : rActualBottomSize;
-          // 상부: 전체높이에서 바닥마감재 + 받침대 + 가구 높이를 빼서 계산
-          const rTopFrameH = Math.max(0, rEffectiveH - rFloorFinishForHeight - rBottomFrameH - rFurnitureH);
+          // 상부프레임 높이: 하부장/상부장은 고정값, 키큰장은 나머지에서 계산
+          const rTopFrameH = (rightCategoryResolved === 'lower' || rightCategoryResolved === 'upper')
+            ? rActualTopSize
+            : Math.max(0, rEffectiveH - rFloorFinishForHeight - rBottomFrameH - rFurnitureH);
 
           // ── 섹션 분할 정보 (2섹션 가구일 때 하부/상부 높이 분리) ──
           let rSectionHeights: number[] = [];
