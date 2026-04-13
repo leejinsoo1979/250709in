@@ -1210,11 +1210,11 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                       {finishDepthMm}
                     </Text>
 
-                    {/* 마감판 뒤쪽 옵셋 치수 (가구 뒷면 ~ 마감판 뒷면 = 17.5mm) */}
+                    {/* 마감판 뒤쪽 옵셋 치수 (가구 뒷면 ~ 마감판 뒷면 = 35mm) */}
                     {(() => {
                       const cabinetBackZ = furnitureZ - moduleDepth / 2; // 가구 뒷면
                       const finishBackZ = finishZ - finishDepth / 2; // 마감판 뒷면
-                      const offsetMm = 17.5;
+                      const offsetMm = 35;
                       const midY = (furnitureBottomEdge + finishDimY) / 2;
 
                       return (
@@ -2219,11 +2219,11 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                       {finishDepthMm_r}
                     </Text>
 
-                    {/* 마감판 뒤쪽 옵셋 치수 (가구 뒷면 ~ 마감판 뒷면 = 17.5mm) */}
+                    {/* 마감판 뒤쪽 옵셋 치수 (가구 뒷면 ~ 마감판 뒷면 = 35mm) */}
                     {(() => {
                       const cabinetBackZ_r = upperFurnitureZ - moduleDepth / 2;
                       const finishBackZ_r = finishZ_r - finishDepth_r / 2;
-                      const offsetMm_r = 17.5;
+                      const offsetMm_r = 35;
                       const midY_r = (furnitureBottomEdge_r + finishDimY_r) / 2;
 
                       return (
