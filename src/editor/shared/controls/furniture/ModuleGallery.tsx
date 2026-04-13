@@ -59,7 +59,7 @@ const FURNITURE_ICONS: Record<string, string> = {
   // 기본하부장 2단 (텍스트 썸네일)
   'lower-drawer-2tier': getImagePath('lower-drawer-2tier.png'),
   'dual-lower-drawer-2tier': '',
-  'lower-drawer-3tier': '',
+  'lower-drawer-3tier': getImagePath('lower-drawer-3tier.png'),
   'dual-lower-drawer-3tier': '',
   // 도어올림 하부장 (텍스트 썸네일)
   'lower-door-lift-half': '',
