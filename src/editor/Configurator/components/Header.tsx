@@ -807,14 +807,16 @@ const Header: React.FC<HeaderProps> = ({
             </button>
           )}
 
-          {/* 다크/라이트 모드 토글 */}
-          <button
-            className={styles.settingsButton}
-            onClick={toggleMode}
-            title={theme.mode === 'dark' ? '라이트 모드' : '다크 모드'}
-          >
-            {theme.mode === 'dark' ? <Moon size={18} strokeWidth={1.8} /> : <Sun size={18} strokeWidth={1.8} />}
-          </button>
+          {/* 다크/라이트 모드 토글 — 모바일 숨김 */}
+          {!isMobile && (
+            <button
+              className={styles.settingsButton}
+              onClick={toggleMode}
+              title={theme.mode === 'dark' ? '라이트 모드' : '다크 모드'}
+            >
+              {theme.mode === 'dark' ? <Moon size={18} strokeWidth={1.8} /> : <Sun size={18} strokeWidth={1.8} />}
+            </button>
+          )}
 
           {/* 조작법 버튼 - 컨버팅 옆 */}
           {!isMobile && (
@@ -824,8 +826,8 @@ const Header: React.FC<HeaderProps> = ({
             </button>
           )}
 
-          {/* CNC 옵티마이저 버튼 - 읽기 전용 모드에서는 숨김 */}
-          {!readOnly && (
+          {/* CNC 옵티마이저 버튼 - 읽기 전용/모바일에서는 숨김 */}
+          {!readOnly && !isMobile && (
             <div className={styles.convertButtonContainer} ref={convertMenuRef}>
               <button
                 className={styles.convertButton}
