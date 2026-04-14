@@ -1611,7 +1611,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           const furnitureDepthU = mmToThreeUnits(600);
           const furnitureFrontZ = -panelDepthU / 2 + (panelDepthU - furnitureDepthU) / 2 + furnitureDepthU / 2;
           const doorDimZ = furnitureFrontZ + mmToThreeUnits(200);
-          const doorExtStartZ = doorDimZ - mmToThreeUnits(40);
+          const doorExtStartZ = furnitureFrontZ + mmToThreeUnits(20);
           const doorColor = dimensionColor;
 
           // 측면뷰에 보이는 가구만 대상 (visibleFurniture 기반)
