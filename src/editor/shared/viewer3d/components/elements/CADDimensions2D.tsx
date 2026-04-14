@@ -1693,6 +1693,8 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                       // useAbsCoord: 바닥(floorFinishY) 기준 절대좌표, 아니면 캐비넷 바닥 기준
                       const gBotY = gap.useAbsCoord ? floorFinishY + mmToThreeUnits(gap.bottomMm) : cabinetBottomY + mmToThreeUnits(gap.bottomMm);
                       const gTopY = gap.useAbsCoord ? floorFinishY + mmToThreeUnits(gap.topMm) : cabinetBottomY + mmToThreeUnits(gap.topMm);
+                      // 절대좌표 갭은 연장선을 좌측 치수선과 같은 짧은 길이로 (가구 외곽이 없는 영역이므로)
+                      const extStartZ = gap.useAbsCoord ? doorDimZ - mmToThreeUnits(40) : furnitureFrontZ + mmToThreeUnits(20);
                       return (
                         <group key={`door-gap-${modIdx}-${gi}`}>
                           <NativeLine name="door_height_dim" points={[[0, gBotY, doorDimZ], [0, gTopY, doorDimZ]]} color={doorColor} lineWidth={1} renderOrder={100000} depthTest={false} />
@@ -1701,8 +1703,8 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                           <Text position={[0, (gBotY + gTopY) / 2, doorDimZ + mmToThreeUnits(60)]} fontSize={largeFontSize} color={doorColor} anchorX="center" anchorY="middle" renderOrder={1000} depthTest={false} rotation={[0, -Math.PI / 2, Math.PI / 2]}>
                             {gap.heightMm}
                           </Text>
-                          <ExtLine points={[[0, gTopY, furnitureFrontZ + mmToThreeUnits(20)], [0, gTopY, doorDimZ]]} color={doorColor} lineWidth={0.3} name="door_height_ext" />
-                          <ExtLine points={[[0, gBotY, furnitureFrontZ + mmToThreeUnits(20)], [0, gBotY, doorDimZ]]} color={doorColor} lineWidth={0.3} name="door_height_ext" />
+                          <ExtLine points={[[0, gTopY, extStartZ], [0, gTopY, doorDimZ]]} color={doorColor} lineWidth={0.3} name="door_height_ext" />
+                          <ExtLine points={[[0, gBotY, extStartZ], [0, gBotY, doorDimZ]]} color={doorColor} lineWidth={0.3} name="door_height_ext" />
                         </group>
                       );
                     })}
@@ -2453,6 +2455,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                     {gaps_r.map((gap, gi) => {
                       const gBotY = gap.useAbsCoord ? floorFinishY + mmToThreeUnits(gap.bottomMm) : cabinetBottomY_r + mmToThreeUnits(gap.bottomMm);
                       const gTopY = gap.useAbsCoord ? floorFinishY + mmToThreeUnits(gap.topMm) : cabinetBottomY_r + mmToThreeUnits(gap.topMm);
+                      const extStartZ_r = gap.useAbsCoord ? doorDimZ_r + mmToThreeUnits(40) : furnitureFrontZ_door + mmToThreeUnits(20);
                       return (
                         <group key={`r-door-gap-${modIdx}-${gi}`}>
                           <NativeLine name="door_height_dim" points={[[0, gBotY, doorDimZ_r], [0, gTopY, doorDimZ_r]]} color={doorColor_r} lineWidth={1} renderOrder={100000} depthTest={false} />
@@ -2461,8 +2464,8 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                           <Text position={[0, (gBotY + gTopY) / 2, doorDimZ_r + mmToThreeUnits(60)]} fontSize={largeFontSize} color={doorColor_r} anchorX="center" anchorY="middle" renderOrder={1000} depthTest={false} rotation={[0, Math.PI / 2, Math.PI / 2]}>
                             {gap.heightMm}
                           </Text>
-                          <ExtLine points={[[0, gTopY, furnitureFrontZ_door + mmToThreeUnits(20)], [0, gTopY, doorDimZ_r]]} color={doorColor_r} lineWidth={0.3} name="door_height_ext" />
-                          <ExtLine points={[[0, gBotY, furnitureFrontZ_door + mmToThreeUnits(20)], [0, gBotY, doorDimZ_r]]} color={doorColor_r} lineWidth={0.3} name="door_height_ext" />
+                          <ExtLine points={[[0, gTopY, extStartZ_r], [0, gTopY, doorDimZ_r]]} color={doorColor_r} lineWidth={0.3} name="door_height_ext" />
+                          <ExtLine points={[[0, gBotY, extStartZ_r], [0, gBotY, doorDimZ_r]]} color={doorColor_r} lineWidth={0.3} name="door_height_ext" />
                         </group>
                       );
                     })}
