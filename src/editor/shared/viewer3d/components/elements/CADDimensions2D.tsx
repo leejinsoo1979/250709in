@@ -698,6 +698,17 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                 });
               }
             }
+
+            // 도어 올림 하부장: 도어 상단갭(30mm)을 좌측 2단에 표시 (가구 상단 ~ 도어 상단)
+            if (modCat_l2 === 'lower' && moduleData.id?.includes('lower-door-lift-')) {
+              const doorLiftTopGap = 30;
+              segments_l2.push({
+                bottomY: mmToThreeUnits(cabinetTopMm),
+                topY: mmToThreeUnits(cabinetTopMm + doorLiftTopGap),
+                heightMm: doorLiftTopGap,
+                key: `door-lift-topgap-${moduleIndex}`
+              });
+            }
           });
 
           if (segments_l2.length === 0) return null;
@@ -898,7 +909,8 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
 
             // 하부장: 도어 상단갭 (도어 상단 ~ 가구 상단) + 하단갭 (바닥 ~ 도어 하단)
             // lower-top-down은 고정 710mm 도어 → 별도 갭 처리 불필요
-            if (modCat === 'lower' && !modData.id?.includes('lower-top-down-')) {
+            // lower-door-lift는 도어가 가구 위로 올라가므로 좌측 2단에서 표시 (여기서 제외)
+            if (modCat === 'lower' && !modData.id?.includes('lower-top-down-') && !modData.id?.includes('lower-door-lift-')) {
               const cabinetH = modData.dimensions.height ?? 1000;
               const cabinetBottomAbs = (isFloating ? floatHeightMm : (railOrBaseHeightMm + indivFloatMm)) + floorFinishHeightMm;
               const cabinetTopAbsMm = cabinetBottomAbs + cabinetH;
@@ -1845,6 +1857,17 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
               heightMm: Math.round(moduleHeightMm),
               key: `furniture-${moduleIndex}`
             });
+
+            // 도어 올림 하부장: 도어 상단갭(30mm)을 좌측 2단에 표시
+            if (modCat_rl2 === 'lower' && moduleData.id?.includes('lower-door-lift-')) {
+              const doorLiftTopGap = 30;
+              segments_rl2.push({
+                bottomY: mmToThreeUnits(cabinetTopMm),
+                topY: mmToThreeUnits(cabinetTopMm + doorLiftTopGap),
+                heightMm: doorLiftTopGap,
+                key: `door-lift-topgap-${moduleIndex}`
+              });
+            }
           });
 
           if (segments_rl2.length === 0) return null;
