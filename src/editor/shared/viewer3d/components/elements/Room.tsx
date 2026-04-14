@@ -1842,48 +1842,61 @@ const Room: React.FC<RoomProps> = ({
               }
             }
 
-            let droppedAreaWidth: number;
-            let normalAreaWidth: number;
             // DC+CB 동시: CB 너비를 normalArea에서 추가 제외
             const cbWForCeiling = hasCBWithDC ? cbOnlyWidth : 0;
 
+            // 경계벽 X 위치를 먼저 계산 — 천장 메쉬도 이 경계에 맞춤
+            const _zoneInfoForCeiling = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
+            const _BOUNDARY_OFFSET = isFreePlacement ? 0 : 3; // mm
+            const boundaryEdgeX = (() => {
+              if (isLeftDropped) {
+                return mmToThreeUnits(_zoneInfoForCeiling.normal.startX - _BOUNDARY_OFFSET);
+              } else {
+                if (_zoneInfoForCeiling.dropped) {
+                  return mmToThreeUnits(_zoneInfoForCeiling.dropped.startX + _BOUNDARY_OFFSET);
+                } else {
+                  return mmToThreeUnits(_zoneInfoForCeiling.normal.startX + _zoneInfoForCeiling.normal.width + _BOUNDARY_OFFSET);
+                }
+              }
+            })();
+
+            // 천장 메쉬 영역을 boundaryEdgeX 기준으로 분할
+            let droppedAreaWidth: number;
+            let normalAreaWidth: number;
+            let droppedAreaX: number;
+            let normalAreaX: number;
+
             if (isLeftDropped) {
-              // 왼쪽 단내림: 천장은 전체 너비 사용
-              droppedAreaWidth = droppedWidth;
-              normalAreaWidth = width - droppedWidth - cbWForCeiling;
+              // [CB?] [DC] | [메인] [CB?]
+              if (isCBOppSideDC) {
+                // [DC(좌)] | [메인] [CB(우)]
+                droppedAreaWidth = boundaryEdgeX - xOffset;
+                normalAreaWidth = (xOffset + width - cbWForCeiling) - boundaryEdgeX;
+                droppedAreaX = xOffset + droppedAreaWidth / 2;
+                normalAreaX = boundaryEdgeX + normalAreaWidth / 2;
+              } else {
+                // [CB(좌)] [DC] | [메인]
+                droppedAreaWidth = boundaryEdgeX - (xOffset + cbWForCeiling);
+                normalAreaWidth = (xOffset + width) - boundaryEdgeX;
+                droppedAreaX = xOffset + cbWForCeiling + droppedAreaWidth / 2;
+                normalAreaX = boundaryEdgeX + normalAreaWidth / 2;
+              }
             } else {
-              // 오른쪽 단내림: 천장은 전체 너비 사용
-              normalAreaWidth = width - droppedWidth - cbWForCeiling;
-              droppedAreaWidth = droppedWidth;
+              // [CB?] [메인] | [DC] [CB?]
+              if (isCBOppSideDC) {
+                // [CB(좌)] [메인] | [DC(우)]
+                normalAreaWidth = boundaryEdgeX - (xOffset + cbWForCeiling);
+                droppedAreaWidth = (xOffset + width) - boundaryEdgeX;
+                normalAreaX = xOffset + cbWForCeiling + normalAreaWidth / 2;
+                droppedAreaX = boundaryEdgeX + droppedAreaWidth / 2;
+              } else {
+                // [메인] | [DC] [CB(우)]
+                normalAreaWidth = boundaryEdgeX - xOffset;
+                droppedAreaWidth = (xOffset + width - cbWForCeiling) - boundaryEdgeX;
+                normalAreaX = xOffset + normalAreaWidth / 2;
+                droppedAreaX = boundaryEdgeX + droppedAreaWidth / 2;
+              }
             }
-
-            // 구간 순서 (같은 쪽):  벽 → [CB] → [DC] → [메인]
-            //           (다른 쪽):  벽 → [CB] → [메인] → [DC] → 벽
-            // 단내림 영역의 X 위치 계산
-            const droppedAreaX = (() => {
-              if (isCBOppSideDC) {
-                // 다른 쪽: DC는 CB 반대편 벽 쪽, CB offset 없음
-                return isLeftDropped
-                  ? xOffset + droppedAreaWidth / 2  // DC 좌측벽 붙임
-                  : xOffset + cbWForCeiling + normalAreaWidth + droppedAreaWidth / 2; // DC 우측벽 붙임
-              }
-              return isLeftDropped
-                ? xOffset + cbWForCeiling + droppedAreaWidth / 2
-                : xOffset + normalAreaWidth + droppedAreaWidth / 2;
-            })();
-
-            // 일반 영역의 X 위치 계산
-            const normalAreaX = (() => {
-              if (isCBOppSideDC) {
-                // 다른 쪽: 메인은 CB와 DC 사이
-                return isLeftDropped
-                  ? xOffset + droppedAreaWidth + normalAreaWidth / 2  // [DC(좌)] [메인] [CB(우)]
-                  : xOffset + cbWForCeiling + normalAreaWidth / 2;   // [CB(좌)] [메인] [DC(우)]
-              }
-              return isLeftDropped
-                ? xOffset + cbWForCeiling + droppedAreaWidth + normalAreaWidth / 2
-                : xOffset + normalAreaWidth / 2;
-            })();
 
 // console.log('🔥 천장 분할 계산:', {
               // hasDroppedCeiling,
@@ -1906,21 +1919,8 @@ const Room: React.FC<RoomProps> = ({
               // '200mm 분절 확인': droppedCeilingHeight / 0.01 === 200 ? '✅' : '❌'
             // });
 
-            // 단내림 경계벽 X 위치 계산 — 자유배치에서는 이격 없음
-            const boundaryWallX = (() => {
-              const zoneInfo = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
-              const BOUNDARY_OFFSET = isFreePlacement ? 0 : 3; // mm
-              if (isLeftDropped) {
-                return mmToThreeUnits(zoneInfo.normal.startX - BOUNDARY_OFFSET);
-              } else {
-                // 커튼박스 모드에서는 dropped가 null → normal 끝 지점 사용
-                if (zoneInfo.dropped) {
-                  return mmToThreeUnits(zoneInfo.dropped.startX + BOUNDARY_OFFSET);
-                } else {
-                  return mmToThreeUnits(zoneInfo.normal.startX + zoneInfo.normal.width + BOUNDARY_OFFSET);
-                }
-              }
-            })();
+            // 단내림 경계벽 X 위치 — 위에서 계산한 boundaryEdgeX 재사용
+            const boundaryWallX = boundaryEdgeX;
 
             const wfColor = theme?.mode === 'dark' ? "#ffffff" : "#333333";
 
