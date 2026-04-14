@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 340" width="420" height="340">
+  <!-- dual-upper-cabinet-open: 기본 상부장 (듀얼) - 빈 박스 + 칸막이 -->
+
+  <!-- 내부 뒷벽 -->
+  <polygon fill="#B5B5B5" stroke="#8C8C8C" stroke-width="0.6" points="92,72 352,72 352,258 92,258"/>
+  <!-- 내부 좌벽 -->
+  <polygon fill="#ACACAC" stroke="#8C8C8C" stroke-width="0.6" points="65,92 92,72 92,258 65,278"/>
+  <!-- 내부 바닥면 -->
+  <polygon fill="#BDBDBD" stroke="#8C8C8C" stroke-width="0.6" points="65,278 92,258 352,258 379,278"/>
+
+  <!-- 칸막이 (센터 디바이더) -->
+  <!-- 칸막이 앞면 -->
+  <polygon fill="#C0C0C0" stroke="#8C8C8C" stroke-width="0.7" points="159,92 222,72 222,258 159,278"/>
+  <!-- 칸막이 두께 (앞쪽 보이는 엣지) -->
+  <polygon fill="#B5B5B5" stroke="#8C8C8C" stroke-width="0.5" points="159,92 159,278 165,274 165,89"/>
+
+  <!-- 우측판 -->
+  <polygon fill="#A0A0A0" stroke="#7A7A7A" stroke-width="1" points="352,72 388,48 388,252 352,258"/>
+  <polygon fill="#969696" stroke="#7A7A7A" stroke-width="0.7" points="352,72 352,258 359,254 359,69"/>
+
+  <!-- 상판 윗면 -->
+  <polygon fill="#D8D8D8" stroke="#7A7A7A" stroke-width="1" points="35,68 65,92 352,72 388,48 358,32 35,32"/>
+  <!-- 상판 앞면 두께 -->
+  <polygon fill="#C2C2C2" stroke="#7A7A7A" stroke-width="1" points="35,32 35,68 65,92 65,56"/>
+  <!-- 상판 우측 두께 -->
+  <polygon fill="#A8A8A8" stroke="#7A7A7A" stroke-width="0.7" points="358,32 388,48 388,56 358,40"/>
+
+  <!-- 좌측판 -->
+  <polygon fill="#C8C8C8" stroke="#7A7A7A" stroke-width="1" points="35,68 65,92 65,278 35,302"/>
+  <polygon fill="#B8B8B8" stroke="#7A7A7A" stroke-width="0.7" points="28,64 35,68 35,302 28,298"/>
+
+  <!-- 하판 -->
+  <polygon fill="#C2C2C2" stroke="#7A7A7A" stroke-width="1" points="35,302 65,278 379,278 388,252 388,260 379,286 65,286 35,310"/>
+  <polygon fill="#B0B0B0" stroke="#7A7A7A" stroke-width="0.7" points="35,310 65,286 379,286 388,260 388,252 379,278 65,278 35,302"/>
+</svg>
