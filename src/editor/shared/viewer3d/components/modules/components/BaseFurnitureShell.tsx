@@ -610,8 +610,8 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
         {/* 다중 섹션 가구인 경우 중간 구분 패널 렌더링 */}
         {isMultiSectionFurniture() && getSectionHeights().length > 1 && (
           <>
-            {moduleData?.id?.includes('4drawer-hanging') ? (
-              // 4drawer-hanging: 상부 바닥판 18mm 위로, 하부 상판 18mm 위로
+            {(moduleData?.id?.includes('4drawer-hanging') || moduleData?.id?.includes('4drawer-shelf')) ? (
+              // 4drawer-hanging/4drawer-shelf: 상부 바닥판 18mm 위로, 하부 상판 18mm 위로
               (() => {
                 return getSectionHeights().map((sectionHeight: number, index: number) => {
                   if (index >= getSectionHeights().length - 1) return null;
@@ -691,8 +691,8 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                   );
                 });
               })()
-            ) : moduleData?.id?.includes('dual-2drawer-hanging') ? (
-              // dual-2drawer-hanging: 듀얼장 전용 처리
+            ) : (moduleData?.id?.includes('dual-2drawer-hanging') || moduleData?.id?.includes('dual-2drawer-shelf')) ? (
+              // dual-2drawer-hanging/dual-2drawer-shelf: 듀얼장 전용 처리
               (() => {
                 return getSectionHeights().map((sectionHeight: number, index: number) => {
                   if (index >= getSectionHeights().length - 1) return null;
@@ -789,8 +789,8 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                   );
                 });
               })()
-            ) : (moduleData?.id?.includes('2drawer-hanging') || moduleData?.id?.includes('entryway-h')) ? (
-              // 2drawer-hanging / entryway-h: 싱글장 처리
+            ) : (moduleData?.id?.includes('2drawer-hanging') || moduleData?.id?.includes('2drawer-shelf') || moduleData?.id?.includes('entryway-h')) ? (
+              // 2drawer-hanging / 2drawer-shelf / entryway-h: 싱글장 처리
               (() => {
                 return getSectionHeights().map((sectionHeight: number, index: number) => {
                   if (index >= getSectionHeights().length - 1) return null;
