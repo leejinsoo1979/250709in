@@ -567,8 +567,12 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
   const internalHeight = mmToThreeUnits(adjustedInternalHeightMm);
 
   // 좌측뷰인 경우
-  // 좌측뷰 연장선 시작점
-  const leftExtStartZ = -spaceDepth/2 + mmToThreeUnits(110);
+  // 좌측뷰 연장선 시작점: 가구 측판 뒷부분선 기준
+  const _panelDepthMm = spaceInfo.depth || 1500;
+  const _furnitureDepthMm = Math.min(_panelDepthMm, 600);
+  const _zOff = -mmToThreeUnits(_panelDepthMm) / 2;
+  const _fzOff = _zOff + (mmToThreeUnits(_panelDepthMm) - mmToThreeUnits(_furnitureDepthMm)) / 2;
+  const leftExtStartZ = _fzOff - mmToThreeUnits(_furnitureDepthMm) / 2;
 
   if (currentViewDirection === 'left') {
     return (
