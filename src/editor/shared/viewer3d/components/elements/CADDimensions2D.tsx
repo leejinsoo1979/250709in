@@ -567,6 +567,9 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
   const internalHeight = mmToThreeUnits(adjustedInternalHeightMm);
 
   // 좌측뷰인 경우
+  // 좌측뷰 연장선 시작점: 가구 끝선(뒷면) 기준 — 벽면에서 약간만 앞
+  const leftExtStartZ = -spaceDepth/2 + mmToThreeUnits(20);
+
   if (currentViewDirection === 'left') {
     return (
       <group>
@@ -574,10 +577,10 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
         {/* 단내림 구간이 선택된 경우 단내림 높이를 표시 */}
         {<group>
           {/* 보조 가이드 연장선 - 하단 */}
-          <ExtLine points={[[0, 0, -spaceDepth/2 + mmToThreeUnits(110)], [0, 0, -spaceDepth/2 - leftDimOffset + mmToThreeUnits(150)]]} color={dimensionColor} />
+          <ExtLine points={[[0, 0, leftExtStartZ], [0, 0, -spaceDepth/2 - leftDimOffset + mmToThreeUnits(150)]]} color={dimensionColor} />
 
           {/* 보조 가이드 연장선 - 상단 */}
-          <ExtLine points={[[0, displaySpaceHeight, -spaceDepth/2 + mmToThreeUnits(110)], [0, displaySpaceHeight, -spaceDepth/2 - leftDimOffset + mmToThreeUnits(150)]]} color={dimensionColor} />
+          <ExtLine points={[[0, displaySpaceHeight, leftExtStartZ], [0, displaySpaceHeight, -spaceDepth/2 - leftDimOffset + mmToThreeUnits(150)]]} color={dimensionColor} />
 
           {/* 수직 치수선 */}
           <NativeLine name="dimension_line"
@@ -633,7 +636,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
         {/* ===== 왼쪽 2단: 몸통 사이즈 (segment-based, 모든 카테고리) ===== */}
         {visibleFurniture.length > 0 && (() => {
           const leftInnerZ = -spaceDepth/2 - leftDimOffset + mmToThreeUnits(150) + mmToThreeUnits(200);
-          const leftInnerExtStartZ = -spaceDepth/2 + mmToThreeUnits(110);
+          const leftInnerExtStartZ = leftExtStartZ;
           const effectiveH_l2 = isSelectedSlotInDroppedZone ? (spaceInfo.height - dropHeightMm) : spaceInfo.height;
 
           const segments_l2: { bottomY: number; topY: number; heightMm: number; key: string; extStartZ?: number }[] = [];
@@ -1762,10 +1765,10 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
         {/* 단내림 구간이 선택된 경우 단내림 높이를 표시 */}
         {<group>
           {/* 보조 가이드 연장선 - 하단 */}
-          <ExtLine points={[[0, 0, -spaceDepth/2 + mmToThreeUnits(110)], [0, 0, -spaceDepth/2 - leftDimOffset + mmToThreeUnits(150)]]} color={dimensionColor} />
+          <ExtLine points={[[0, 0, leftExtStartZ], [0, 0, -spaceDepth/2 - leftDimOffset + mmToThreeUnits(150)]]} color={dimensionColor} />
 
           {/* 보조 가이드 연장선 - 상단 */}
-          <ExtLine points={[[0, displaySpaceHeight, -spaceDepth/2 + mmToThreeUnits(110)], [0, displaySpaceHeight, -spaceDepth/2 - leftDimOffset + mmToThreeUnits(150)]]} color={dimensionColor} />
+          <ExtLine points={[[0, displaySpaceHeight, leftExtStartZ], [0, displaySpaceHeight, -spaceDepth/2 - leftDimOffset + mmToThreeUnits(150)]]} color={dimensionColor} />
 
           {/* 수직 치수선 */}
           <NativeLine name="dimension_line"
@@ -1821,7 +1824,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
         {/* ===== 왼쪽 2단: 몸통 사이즈 (segment-based, 모든 카테고리) — 우측뷰 ===== */}
         {visibleFurniture.length > 0 && (() => {
           const leftInnerZ = -spaceDepth/2 - leftDimOffset + mmToThreeUnits(150) + mmToThreeUnits(200);
-          const leftInnerExtStartZ = -spaceDepth/2 + mmToThreeUnits(110);
+          const leftInnerExtStartZ = leftExtStartZ;
           const effectiveH_rl2 = isSelectedSlotInDroppedZone ? (spaceInfo.height - dropHeightMm) : spaceInfo.height;
 
           const segments_rl2: { bottomY: number; topY: number; heightMm: number; key: string }[] = [];
