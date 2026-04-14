@@ -190,12 +190,22 @@ const computeLowerCabinetMaidaHeights = (
   const isLowerTopDown = moduleId.includes('lower-top-down-');
   const isInduction = moduleId.includes('lower-induction-cabinet') || moduleId.includes('dual-lower-induction-cabinet');
 
-  // 인덕션장: 고정 340/427 마이다 (doorTopGap/doorBottomGap 무관, 항상 기본값)
+  // 인덕션장: 기본 340/427 + doorTopGap/doorBottomGap 갭 확장 (3D 렌더링과 동일)
   if (isInduction) {
+    const defaultDTG = -20;
+    const defaultDBG = 5;
+    const gapTopExt = doorTopGap - defaultDTG;
+    const gapBottomExt = doorBottomGap - defaultDBG;
     const gapMm = 3;
+    const maida1H = 340 + gapBottomExt;
+    const maida2H = 427 + gapTopExt;
+    const maida1Bottom = -5 - gapBottomExt;
+    const maida1Top = maida1Bottom + maida1H;
+    const maida2Bottom = -5 + 340 + gapMm;
+    const maida2Top = maida2Bottom + maida2H;
     return [
-      { maidaHeightMm: 340, maidaBottomMm: -5, maidaTopMm: 335 },
-      { maidaHeightMm: 427, maidaBottomMm: 338, maidaTopMm: 765 },
+      { maidaHeightMm: maida1H, maidaBottomMm: maida1Bottom, maidaTopMm: maida1Top },
+      { maidaHeightMm: maida2H, maidaBottomMm: maida2Bottom, maidaTopMm: maida2Top },
     ];
   }
 

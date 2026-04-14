@@ -294,7 +294,7 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
       const newCategory = newModuleData?.category;
 
       // 도어 바닥 이격거리 초기화 (카테고리별 기본값)
-      const isBasicLowerCabinet = module.moduleId?.includes('lower-half-cabinet') || module.moduleId?.includes('dual-lower-half-cabinet') || module.moduleId?.includes('lower-drawer-') || module.moduleId?.includes('dual-lower-drawer-') || module.moduleId?.includes('lower-sink-cabinet') || module.moduleId?.includes('dual-lower-sink-cabinet');
+      const isBasicLowerCabinet = module.moduleId?.includes('lower-half-cabinet') || module.moduleId?.includes('dual-lower-half-cabinet') || module.moduleId?.includes('lower-drawer-') || module.moduleId?.includes('dual-lower-drawer-') || module.moduleId?.includes('lower-sink-cabinet') || module.moduleId?.includes('dual-lower-sink-cabinet') || module.moduleId?.includes('lower-induction-cabinet') || module.moduleId?.includes('dual-lower-induction-cabinet');
       const isDoorLift = module.moduleId?.includes('lower-door-lift-');
       const isTopDown = module.moduleId?.includes('lower-top-down-');
       if (module.doorBottomGap === undefined) {
@@ -690,10 +690,10 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
     const resolved = typeof modules === 'function' ? modules(state.placedModules) : modules;
     // 마이그레이션: 기본하부장/서랍장 도어갭 기본값 업데이트 (옛 기본값 20/2 → 새 기본값 -20/5)
     const newModules = resolved.map(m => {
-      const isBasic = m.moduleId?.includes('lower-half-cabinet') || m.moduleId?.includes('dual-lower-half-cabinet') || m.moduleId?.includes('lower-drawer-') || m.moduleId?.includes('dual-lower-drawer-') || m.moduleId?.includes('lower-sink-cabinet') || m.moduleId?.includes('dual-lower-sink-cabinet');
+      const isBasic = m.moduleId?.includes('lower-half-cabinet') || m.moduleId?.includes('dual-lower-half-cabinet') || m.moduleId?.includes('lower-drawer-') || m.moduleId?.includes('dual-lower-drawer-') || m.moduleId?.includes('lower-sink-cabinet') || m.moduleId?.includes('dual-lower-sink-cabinet') || m.moduleId?.includes('lower-induction-cabinet') || m.moduleId?.includes('dual-lower-induction-cabinet');
       if (isBasic) {
-        const needsTopFix = m.doorTopGap === 20;
-        const needsBottomFix = m.doorBottomGap === 2;
+        const needsTopFix = m.doorTopGap === 20 || m.doorTopGap === 0;
+        const needsBottomFix = m.doorBottomGap === 2 || m.doorBottomGap === 0;
         if (needsTopFix || needsBottomFix) {
           return {
             ...m,
@@ -1090,10 +1090,10 @@ useFurnitureStore.subscribe((state) => {
   prevModulesRef = state.placedModules;
   let needsMigration = false;
   for (const m of state.placedModules) {
-    const isBasic = m.moduleId?.includes('lower-half-cabinet') || m.moduleId?.includes('dual-lower-half-cabinet') || m.moduleId?.includes('lower-drawer-') || m.moduleId?.includes('dual-lower-drawer-') || m.moduleId?.includes('lower-sink-cabinet') || m.moduleId?.includes('dual-lower-sink-cabinet');
+    const isBasic = m.moduleId?.includes('lower-half-cabinet') || m.moduleId?.includes('dual-lower-half-cabinet') || m.moduleId?.includes('lower-drawer-') || m.moduleId?.includes('dual-lower-drawer-') || m.moduleId?.includes('lower-sink-cabinet') || m.moduleId?.includes('dual-lower-sink-cabinet') || m.moduleId?.includes('lower-induction-cabinet') || m.moduleId?.includes('dual-lower-induction-cabinet');
     const isDoorLift = m.moduleId?.includes('lower-door-lift-');
     const isTopDown = m.moduleId?.includes('lower-top-down-');
-    if ((isBasic || isDoorLift || isTopDown) && (m.doorTopGap === 20 || m.doorBottomGap === 2)) {
+    if ((isBasic || isDoorLift || isTopDown) && (m.doorTopGap === 20 || m.doorTopGap === 0 || m.doorBottomGap === 2 || m.doorBottomGap === 0)) {
       needsMigration = true;
       break;
     }
@@ -1116,24 +1116,24 @@ useFurnitureStore.subscribe((state) => {
       const correctGap = isFullSurround ? (topFrameMm + 3) : 5;
       return { ...m, doorTopGap: correctGap };
     }
-    const isBasic = m.moduleId?.includes('lower-half-cabinet') || m.moduleId?.includes('dual-lower-half-cabinet') || m.moduleId?.includes('lower-drawer-') || m.moduleId?.includes('dual-lower-drawer-') || m.moduleId?.includes('lower-sink-cabinet') || m.moduleId?.includes('dual-lower-sink-cabinet');
+    const isBasic = m.moduleId?.includes('lower-half-cabinet') || m.moduleId?.includes('dual-lower-half-cabinet') || m.moduleId?.includes('lower-drawer-') || m.moduleId?.includes('dual-lower-drawer-') || m.moduleId?.includes('lower-sink-cabinet') || m.moduleId?.includes('dual-lower-sink-cabinet') || m.moduleId?.includes('lower-induction-cabinet') || m.moduleId?.includes('dual-lower-induction-cabinet');
     const isDoorLift = m.moduleId?.includes('lower-door-lift-');
     const isTopDown = m.moduleId?.includes('lower-top-down-');
     if (isBasic) {
-      const fixTop = m.doorTopGap === 20;
-      const fixBot = m.doorBottomGap === 2;
+      const fixTop = m.doorTopGap === 20 || m.doorTopGap === 0;
+      const fixBot = m.doorBottomGap === 2 || m.doorBottomGap === 0;
       if (!fixTop && !fixBot) return m;
       return { ...m, ...(fixTop ? { doorTopGap: -20 } : {}), ...(fixBot ? { doorBottomGap: 5 } : {}) };
     }
     if (isDoorLift) {
-      const fixTop = m.doorTopGap === 20;
-      const fixBot = m.doorBottomGap === 2;
+      const fixTop = m.doorTopGap === 20 || m.doorTopGap === 0;
+      const fixBot = m.doorBottomGap === 2 || m.doorBottomGap === 0;
       if (!fixTop && !fixBot) return m;
       return { ...m, ...(fixTop ? { doorTopGap: 30 } : {}), ...(fixBot ? { doorBottomGap: 5 } : {}) };
     }
     if (isTopDown) {
-      const fixTop = m.doorTopGap === 20;
-      const fixBot = m.doorBottomGap === 2;
+      const fixTop = m.doorTopGap === 20 || m.doorTopGap === 0;
+      const fixBot = m.doorBottomGap === 2 || m.doorBottomGap === 0;
       if (!fixTop && !fixBot) return m;
       return { ...m, ...(fixTop ? { doorTopGap: -80 } : {}), ...(fixBot ? { doorBottomGap: 5 } : {}) };
     }
@@ -1151,26 +1151,26 @@ useFurnitureStore.subscribe((state) => {
   if (cur.length > 0) {
     let changed = false;
     const fixed = cur.map(m => {
-      const isBasic = m.moduleId?.includes('lower-half-cabinet') || m.moduleId?.includes('dual-lower-half-cabinet') || m.moduleId?.includes('lower-drawer-') || m.moduleId?.includes('dual-lower-drawer-') || m.moduleId?.includes('lower-sink-cabinet') || m.moduleId?.includes('dual-lower-sink-cabinet');
+      const isBasic = m.moduleId?.includes('lower-half-cabinet') || m.moduleId?.includes('dual-lower-half-cabinet') || m.moduleId?.includes('lower-drawer-') || m.moduleId?.includes('dual-lower-drawer-') || m.moduleId?.includes('lower-sink-cabinet') || m.moduleId?.includes('dual-lower-sink-cabinet') || m.moduleId?.includes('lower-induction-cabinet') || m.moduleId?.includes('dual-lower-induction-cabinet');
       const isDoorLift = m.moduleId?.includes('lower-door-lift-');
       const isTopDown = m.moduleId?.includes('lower-top-down-');
       if (isBasic) {
-        const fixTop = m.doorTopGap === 20;
-        const fixBot = m.doorBottomGap === 2;
+        const fixTop = m.doorTopGap === 20 || m.doorTopGap === 0;
+        const fixBot = m.doorBottomGap === 2 || m.doorBottomGap === 0;
         if (!fixTop && !fixBot) return m;
         changed = true;
         return { ...m, ...(fixTop ? { doorTopGap: -20 } : {}), ...(fixBot ? { doorBottomGap: 5 } : {}) };
       }
       if (isDoorLift) {
-        const fixTop = m.doorTopGap === 20;
-        const fixBot = m.doorBottomGap === 2;
+        const fixTop = m.doorTopGap === 20 || m.doorTopGap === 0;
+        const fixBot = m.doorBottomGap === 2 || m.doorBottomGap === 0;
         if (!fixTop && !fixBot) return m;
         changed = true;
         return { ...m, ...(fixTop ? { doorTopGap: 30 } : {}), ...(fixBot ? { doorBottomGap: 5 } : {}) };
       }
       if (isTopDown) {
-        const fixTop = m.doorTopGap === 20;
-        const fixBot = m.doorBottomGap === 2;
+        const fixTop = m.doorTopGap === 20 || m.doorTopGap === 0;
+        const fixBot = m.doorBottomGap === 2 || m.doorBottomGap === 0;
         if (!fixTop && !fixBot) return m;
         changed = true;
         return { ...m, ...(fixTop ? { doorTopGap: -80 } : {}), ...(fixBot ? { doorBottomGap: 5 } : {}) };
