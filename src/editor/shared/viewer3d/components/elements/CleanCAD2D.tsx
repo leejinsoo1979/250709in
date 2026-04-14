@@ -6254,23 +6254,22 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   const doorDimZ = rightDimensionZ + mmToThreeUnits(80);
                   const doorColor = '#E91E63';
 
-                  // 인덕션장: 마이다 개별 치수 표시 (기본 340mm + 427mm + 상하단 갭 반영)
+                  // 인덕션장: 마이다 고정 치수 (340mm + 427mm) + 상하단 갭
                   const isInduction = doorModule.moduleId?.includes('lower-induction-cabinet') || doorModule.moduleId?.includes('dual-lower-induction-cabinet');
                   if (isInduction) {
                     const cabinetBottomAbs = bottomFrameHeight;
-                    const defaultDTG = -20;
-                    const defaultDBG = 5;
-                    const dtg = doorModule.doorTopGap ?? 0;
-                    const dbg = doorModule.doorBottomGap ?? 0;
-                    const bottomExt = dbg - defaultDBG;
-                    const topExt = dtg - defaultDTG;
                     const gapMm = 3;
-                    const maida1H = 340 + bottomExt;
-                    const maida2H = 427 + topExt;
-                    const maida1BottomAbs = cabinetBottomAbs - (5 + bottomExt);
+                    const maida1H = 340;
+                    const maida2H = 427;
+                    const maida1BottomAbs = cabinetBottomAbs - 5;
                     const maida1TopAbs = maida1BottomAbs + maida1H;
                     const maida2BottomAbs = maida1TopAbs + gapMm;
                     const maida2TopAbs = maida2BottomAbs + maida2H;
+                    // 상단 갭: 2단 마이다 상단 ~ 캐비넷 상단
+                    const inductionModData = getModuleById(doorModule.moduleId, { width: spaceInfo.width, height: spaceInfo.height, depth: spaceInfo.depth }, spaceInfo);
+                    const cabinetH = inductionModData?.dimensions.height ?? 785;
+                    const cabinetTopAbs = cabinetBottomAbs + cabinetH;
+                    const topGapMm = Math.round(cabinetTopAbs - maida2TopAbs);
 
                     const renderMaidaDim = (bottomAbs: number, topAbs: number, heightMm: number) => {
                       const bY = mmToThreeUnits(bottomAbs);
@@ -6299,8 +6298,14 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
 
                     return (
                       <group>
+                        {/* 하단 갭: 받침대 상단 ~ 1단 마이다 하단 (마이다가 바닥 아래이면 음수 → 표시안됨) */}
+                        {maida1BottomAbs > cabinetBottomAbs && renderMaidaDim(cabinetBottomAbs, maida1BottomAbs, Math.round(maida1BottomAbs - cabinetBottomAbs))}
                         {renderMaidaDim(maida1BottomAbs, maida1TopAbs, maida1H)}
+                        {/* 마이다 사이 갭 */}
+                        {renderMaidaDim(maida1TopAbs, maida2BottomAbs, gapMm)}
                         {renderMaidaDim(maida2BottomAbs, maida2TopAbs, maida2H)}
+                        {/* 상단 갭: 2단 마이다 상단 ~ 캐비넷 상단 */}
+                        {topGapMm > 0 && renderMaidaDim(maida2TopAbs, cabinetTopAbs, topGapMm)}
                       </group>
                     );
                   }

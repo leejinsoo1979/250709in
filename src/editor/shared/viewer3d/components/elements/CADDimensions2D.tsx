@@ -190,18 +190,12 @@ const computeLowerCabinetMaidaHeights = (
   const isLowerTopDown = moduleId.includes('lower-top-down-');
   const isInduction = moduleId.includes('lower-induction-cabinet') || moduleId.includes('dual-lower-induction-cabinet');
 
-  // 인덕션장: 기본 마이다 340mm + 427mm + 상하단 갭 반영
+  // 인덕션장: 고정 마이다 340mm + 427mm (3D/CNC와 동일)
   if (isInduction) {
-    const defaultDTG = -20; // 하부장 기본 doorTopGap
-    const defaultDBG = 5;   // 하부장 기본 doorBottomGap
-    const bottomExt = doorBottomGap - defaultDBG; // 하단 마이다 확장량
-    const topExt = doorTopGap - defaultDTG;       // 상단 마이다 확장량
     const gapMm = 3;
-    const baseMaida1H = 340;
-    const baseMaida2H = 427;
-    const maida1H = baseMaida1H + bottomExt;
-    const maida2H = baseMaida2H + topExt;
-    const maida1Bottom = -(5 + bottomExt);
+    const maida1H = 340;
+    const maida2H = 427;
+    const maida1Bottom = -5;
     const maida1Top = maida1Bottom + maida1H;
     const maida2Bottom = maida1Top + gapMm;
     const maida2Top = maida2Bottom + maida2H;
@@ -1654,6 +1648,12 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                 const cabinetBottomY = furnitureBaseY;
 
                 const gaps: { bottomMm: number; topMm: number; heightMm: number }[] = [];
+                // 하단 갭: 캐비넷 바닥(0) ~ 1단 마이다 하단
+                const firstMaida = lowerMaidas[0];
+                if (firstMaida.maidaBottomMm > 0) {
+                  gaps.push({ bottomMm: 0, topMm: firstMaida.maidaBottomMm, heightMm: Math.round(firstMaida.maidaBottomMm) });
+                }
+                // 마이다 사이 갭
                 for (let gi = 0; gi < lowerMaidas.length - 1; gi++) {
                   const gapBotMm = lowerMaidas[gi].maidaTopMm;
                   const gapTopMm = lowerMaidas[gi + 1].maidaBottomMm;
@@ -1661,6 +1661,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                     gaps.push({ bottomMm: gapBotMm, topMm: gapTopMm, heightMm: Math.round(gapTopMm - gapBotMm) });
                   }
                 }
+                // 상단 갭: 마지막 마이다 상단 ~ 캐비넷 상단
                 const lastMaida = lowerMaidas[lowerMaidas.length - 1];
                 if (modHeightMm - lastMaida.maidaTopMm > 0) {
                   gaps.push({ bottomMm: lastMaida.maidaTopMm, topMm: modHeightMm, heightMm: Math.round(modHeightMm - lastMaida.maidaTopMm) });
@@ -2407,6 +2408,12 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                 const cabinetBottomY_r = furnitureBaseY;
 
                 const gaps_r: { bottomMm: number; topMm: number; heightMm: number }[] = [];
+                // 하단 갭: 캐비넷 바닥(0) ~ 1단 마이다 하단
+                const firstMaida_r = lowerMaidas[0];
+                if (firstMaida_r.maidaBottomMm > 0) {
+                  gaps_r.push({ bottomMm: 0, topMm: firstMaida_r.maidaBottomMm, heightMm: Math.round(firstMaida_r.maidaBottomMm) });
+                }
+                // 마이다 사이 갭
                 for (let gi = 0; gi < lowerMaidas.length - 1; gi++) {
                   const gapBotMm = lowerMaidas[gi].maidaTopMm;
                   const gapTopMm = lowerMaidas[gi + 1].maidaBottomMm;
@@ -2414,6 +2421,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                     gaps_r.push({ bottomMm: gapBotMm, topMm: gapTopMm, heightMm: Math.round(gapTopMm - gapBotMm) });
                   }
                 }
+                // 상단 갭: 마지막 마이다 상단 ~ 캐비넷 상단
                 const lastMaida_r = lowerMaidas[lowerMaidas.length - 1];
                 if (modHeightMm - lastMaida_r.maidaTopMm > 0) {
                   gaps_r.push({ bottomMm: lastMaida_r.maidaTopMm, topMm: modHeightMm, heightMm: Math.round(modHeightMm - lastMaida_r.maidaTopMm) });
