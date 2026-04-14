@@ -36,18 +36,7 @@ export interface PlaceFurnitureResult {
 export function placeFurnitureAtSlot(params: PlaceFurnitureParams): PlaceFurnitureResult {
   const { moduleId, slotIndex, zone, spaceInfo } = params;
 
-  console.log('🎯 [placeFurnitureAtSlot] 호출:', { moduleId, slotIndex, zone });
-
   const baseIndexing = calculateSpaceIndexing(spaceInfo);
-  console.log('🔍 [placeFurnitureAtSlot] indexing:', {
-    columnWidth: baseIndexing.columnWidth,
-    slotWidths: baseIndexing.slotWidths,
-    internalWidth: baseIndexing.internalWidth,
-    columnCount: baseIndexing.columnCount,
-    gapConfig: spaceInfo.gapConfig,
-    installType: spaceInfo.installType,
-    wallConfig: spaceInfo.wallConfig,
-  });
   const hasDroppedCeiling = spaceInfo.droppedCeiling?.enabled || false;
 
   // slotCustomWidth가 있는 기존 모듈이 있으면 재분할된 indexing 사용
@@ -308,14 +297,6 @@ export function placeFurnitureAtSlot(params: PlaceFurnitureParams): PlaceFurnitu
       customWidth = targetIndexing.slotWidths[slotIndex];
     }
   }
-  console.log('🔍 [placeFurnitureAtSlot] customWidth 결정:', {
-    customWidth,
-    targetSlotWidths: targetIndexing.slotWidths,
-    slotIndex,
-    isDualFurniture,
-    moduleId: furnitureId,
-  });
-
   // 기둥 체크 및 크기 조정
   const columnSlots = analyzeColumnSlots(spaceInfo);
 
@@ -419,17 +400,6 @@ export function placeFurnitureAtSlot(params: PlaceFurnitureParams): PlaceFurnitu
   if (params.pendingPlacement) {
     useMyCabinetStore.getState().setPendingPlacement(null);
   }
-
-  console.log('✅ [placeFurnitureAtSlot] 가구 배치 완료:', {
-    slotIndex,
-    zone: targetSlot.zone,
-    position: newModule.position,
-    isDual: isDualFurniture,
-    customWidth: newModule.customWidth,
-    adjustedWidth: newModule.adjustedWidth,
-    isCustomizable: newModule.isCustomizable,
-    hasCustomConfig: !!newModule.customConfig,
-  });
 
   return { success: true, module: newModule };
 }
