@@ -568,7 +568,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
 
   // 좌측뷰인 경우
   // 좌측뷰 연장선 시작점
-  const leftExtStartZ = -spaceDepth/2 + mmToThreeUnits(100);
+  const leftExtStartZ = -spaceDepth/2 + mmToThreeUnits(80);
 
   if (currentViewDirection === 'left') {
     return (
