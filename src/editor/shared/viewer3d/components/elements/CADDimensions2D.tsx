@@ -1653,16 +1653,14 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
               if (lowerMaidas && lowerMaidas.length > 0) {
                 const cabinetBottomY = furnitureBaseY;
 
-                const gaps: { bottomMm: number; topMm: number; heightMm: number; absCoord?: boolean }[] = [];
-                // 하단 갭: 바닥~마이다 하단 거리
+                const gaps: { bottomMm: number; topMm: number; heightMm: number }[] = [];
+                // 하단 갭: 캐비넷 바닥 ~ 마이다 하단 (캐비넷 내부 기준, maidaBottomMm > 0일 때만)
                 const firstMaida = lowerMaidas[0];
                 const floorToMaidaBottomMm = baseFrameHeightMm + firstMaida.maidaBottomMm;
                 if (firstMaida.maidaBottomMm > 0) {
                   gaps.push({ bottomMm: 0, topMm: firstMaida.maidaBottomMm, heightMm: Math.round(firstMaida.maidaBottomMm) });
-                } else if (firstMaida.maidaBottomMm < 0 && Math.abs(floorToMaidaBottomMm) >= 1) {
-                  // 바닥(0)~마이다 하단: 절대좌표로 치수선, 연장선은 가구 외곽 + 바닥 기준
-                  gaps.push({ bottomMm: 0, topMm: floorToMaidaBottomMm, heightMm: Math.round(floorToMaidaBottomMm), absCoord: true });
                 }
+                // maidaBottomMm < 0인 경우 (인덕션장): 바닥~마이다하단 치수는 마이다 그룹 밖에서 별도 렌더링
                 // 마이다 사이 갭
                 for (let gi = 0; gi < lowerMaidas.length - 1; gi++) {
                   const gapBotMm = lowerMaidas[gi].maidaTopMm;
@@ -1696,9 +1694,8 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                       );
                     })}
                     {gaps.map((gap, gi) => {
-                      // absCoord: 바닥(floorFinishY) 기준 절대좌표
-                      const gBotY = gap.absCoord ? floorFinishY + mmToThreeUnits(gap.bottomMm) : cabinetBottomY + mmToThreeUnits(gap.bottomMm);
-                      const gTopY = gap.absCoord ? floorFinishY + mmToThreeUnits(gap.topMm) : cabinetBottomY + mmToThreeUnits(gap.topMm);
+                      const gBotY = cabinetBottomY + mmToThreeUnits(gap.bottomMm);
+                      const gTopY = cabinetBottomY + mmToThreeUnits(gap.topMm);
                       return (
                         <group key={`door-gap-${modIdx}-${gi}`}>
                           <NativeLine name="door_height_dim" points={[[0, gBotY, doorDimZ], [0, gTopY, doorDimZ]]} color={doorColor} lineWidth={1} renderOrder={100000} depthTest={false} />
@@ -1714,6 +1711,25 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                     })}
                   </group>
                 );
+
+                // 바닥 ~ 마이다 하단 치수 (마이다 그룹과 별도로 하단 영역에 표시)
+                if (firstMaida.maidaBottomMm < 0 && Math.abs(floorToMaidaBottomMm) >= 1) {
+                  const bottomStartY = floorFinishHeightMm > 0 ? mmToThreeUnits(floorFinishHeightMm) : 0;
+                  const maidaBottomAbsY = floorFinishY + mmToThreeUnits(floorToMaidaBottomMm);
+                  const floorToMaidaDispMm = Math.round(floorToMaidaBottomMm);
+                  elements.push(
+                    <group key={`maida-floor-gap-${modIdx}`}>
+                      <ExtLine points={[[0, bottomStartY, doorExtStartZ], [0, bottomStartY, doorDimZ]]} color={doorColor} lineWidth={0.3} name="door_height_ext" />
+                      <NativeLine name="door_height_dim" points={[[0, bottomStartY, doorDimZ], [0, maidaBottomAbsY, doorDimZ]]} color={doorColor} lineWidth={1} renderOrder={100000} depthTest={false} />
+                      <NativeLine name="door_height_dim" points={[[-0.008, bottomStartY, doorDimZ], [0.008, bottomStartY, doorDimZ]]} color={doorColor} lineWidth={1} renderOrder={100000} depthTest={false} />
+                      <NativeLine name="door_height_dim" points={[[-0.008, maidaBottomAbsY, doorDimZ], [0.008, maidaBottomAbsY, doorDimZ]]} color={doorColor} lineWidth={1} renderOrder={100000} depthTest={false} />
+                      <Text position={[0, (bottomStartY + maidaBottomAbsY) / 2, doorDimZ + doorTextOffsetZ]} fontSize={largeFontSize} color={doorColor} anchorX="center" anchorY="middle" renderOrder={1000} depthTest={false} rotation={[0, -Math.PI / 2, Math.PI / 2]}>
+                        {floorToMaidaDispMm}
+                      </Text>
+                    </group>
+                  );
+                }
+
                 return; // this module done
               }
             }
