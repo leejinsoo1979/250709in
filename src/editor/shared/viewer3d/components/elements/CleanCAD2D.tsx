@@ -6227,12 +6227,11 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 </group>
                 )}
 
-                {/* 6. 도어 높이 치수선 (도어가 설치된 가구가 있을 때만) */}
+                {/* 6. 도어/마이다 높이 치수선 (선택된 슬롯의 가구 기준) */}
                 {(() => {
-                  // 도어가 설치된 가구 찾기
-                  const doorModule = placedModules.find(m => m.hasDoor && !m.isSurroundPanel);
-                  if (!doorModule) return null;
+                  if (!sideViewMod || sideViewMod.isSurroundPanel) return null;
 
+                  const doorModule = sideViewMod;
                   const doorModData = getModuleById(
                     doorModule.moduleId,
                     { width: spaceInfo.width, height: spaceInfo.height, depth: spaceInfo.depth },
@@ -6241,6 +6240,57 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   const doorCategory = doorModData?.category
                     ?? (doorModule.moduleId.includes('upper') ? 'upper'
                       : doorModule.moduleId.startsWith('lower-') ? 'lower' : 'full');
+
+                  const doorDimZ = rightDimensionZ + mmToThreeUnits(80);
+                  const doorColor = '#E91E63';
+
+                  // 인덕션장: 마이다 개별 치수 표시 (340mm + 3mm갭 + 427mm)
+                  const isInduction = doorModule.moduleId?.includes('lower-induction-cabinet') || doorModule.moduleId?.includes('dual-lower-induction-cabinet');
+                  if (isInduction) {
+                    const cabinetBottomAbs = bottomFrameHeight;
+                    const maida1H = 340;
+                    const maida2H = 427;
+                    const gapMm = 3;
+                    const maida1BottomAbs = cabinetBottomAbs - 5;
+                    const maida1TopAbs = maida1BottomAbs + maida1H;
+                    const maida2BottomAbs = maida1TopAbs + gapMm;
+                    const maida2TopAbs = maida2BottomAbs + maida2H;
+
+                    const renderMaidaDim = (bottomAbs: number, topAbs: number, heightMm: number) => {
+                      const bY = mmToThreeUnits(bottomAbs);
+                      const tY = mmToThreeUnits(topAbs);
+                      const midY = (bY + tY) / 2;
+                      return (
+                        <group>
+                          <Line points={[[0, bY, doorDimZ], [0, tY, doorDimZ]]} color={doorColor} lineWidth={0.6} />
+                          <Line points={createArrowHead([0, bY, doorDimZ], [0, bY + 0.015, doorDimZ])} color={doorColor} lineWidth={0.6} />
+                          <Line points={createArrowHead([0, tY, doorDimZ], [0, tY - 0.015, doorDimZ])} color={doorColor} lineWidth={0.6} />
+                          <Text
+                            renderOrder={1000} depthTest={false}
+                            position={[0, midY, doorDimZ + mmToThreeUnits(60)]}
+                            fontSize={baseFontSize} color={doorColor}
+                            anchorX="center" anchorY="middle"
+                            outlineWidth={textOutlineWidth} outlineColor={textOutlineColor}
+                            rotation={[0, -Math.PI / 2, -Math.PI / 2]}
+                          >
+                            {Math.round(heightMm)}
+                          </Text>
+                          <Line points={[[0, tY, spaceZOffset], [0, tY, doorDimZ - mmToThreeUnits(20)]]} color={doorColor} lineWidth={0.3} />
+                          <Line points={[[0, bY, spaceZOffset], [0, bY, doorDimZ - mmToThreeUnits(20)]]} color={doorColor} lineWidth={0.3} />
+                        </group>
+                      );
+                    };
+
+                    return (
+                      <group>
+                        {renderMaidaDim(maida1BottomAbs, maida1TopAbs, maida1H)}
+                        {renderMaidaDim(maida2BottomAbs, maida2TopAbs, maida2H)}
+                      </group>
+                    );
+                  }
+
+                  // 도어가 없는 가구 (인덕션 이외)는 치수선 생략
+                  if (!doorModule.hasDoor) return null;
 
                   const doorTopGapVal = doorModule.doorTopGap ?? 5;
                   const doorBottomGapVal = doorModule.doorBottomGap ?? 25;
@@ -6290,11 +6340,9 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
 
                   if (doorHeightMm <= 0) return null;
 
-                  const doorDimZ = rightDimensionZ + mmToThreeUnits(80);
                   const doorBottomY = mmToThreeUnits(doorBottomAbsMm);
                   const doorTopY = mmToThreeUnits(doorTopAbsMm);
                   const doorMidY = (doorBottomY + doorTopY) / 2;
-                  const doorColor = '#E91E63';
 
                   return (
                     <group>
