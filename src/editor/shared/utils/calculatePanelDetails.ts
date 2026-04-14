@@ -1732,23 +1732,23 @@ export const calculatePanelDetails = (
       thickness: drawerThickness,
       material: 'MDF',
     });
-    // 인덕션장 마이다 2개 (도어 대신) + doorTopGap/doorBottomGap 갭 확장
+    // 인덕션장 마이다 2개 (도어 대신) + doorTopGap/doorBottomGap 갭 확장 (3D와 동일)
     const maidaWidthMm = customWidth - 3; // 좌우 1.5mm씩 갭
-    const defaultDTG = -20;
-    const defaultDBG = 5;
-    const gapTopExt = (doorTopGap ?? defaultDTG) - defaultDTG;
-    const gapBottomExt = (doorBottomGap ?? defaultDBG) - defaultDBG;
+    const inductionDefaultDTG = -20;
+    const inductionDefaultDBG = 5;
+    const inductionGapTopExt = (doorTopGap ?? inductionDefaultDTG) - inductionDefaultDTG;
+    const inductionGapBottomExt = (doorBottomGap ?? inductionDefaultDBG) - inductionDefaultDBG;
     panels.door.push({
       name: '인덕션 1단서랍(마이다)',
       width: maidaWidthMm,
-      height: 340 + gapBottomExt,
+      height: 340 + inductionGapBottomExt,
       thickness: basicThickness,
       material: 'PET',
     });
     panels.door.push({
       name: '인덕션 2단서랍(마이다)',
       width: maidaWidthMm,
-      height: 427 + gapTopExt,
+      height: 427 + inductionGapTopExt,
       thickness: basicThickness,
       material: 'PET',
     });
