@@ -184,10 +184,28 @@ const computeLowerCabinetMaidaHeights = (
   doorTopGap: number,
   doorBottomGap: number,
 ): { maidaHeightMm: number; maidaBottomMm: number; maidaTopMm: number }[] | null => {
-  // 하부장 서랍 모듈만 처리
+  // 하부장 서랍/마이다 모듈만 처리
   const isLowerDrawer = moduleId.includes('lower-drawer-');
   const isLowerDoorLift = moduleId.includes('lower-door-lift-');
   const isLowerTopDown = moduleId.includes('lower-top-down-');
+  const isInduction = moduleId.includes('lower-induction-cabinet') || moduleId.includes('dual-lower-induction-cabinet');
+
+  // 인덕션장: 고정 마이다 (340mm + 427mm)
+  if (isInduction) {
+    const bottomExtMm = 5;
+    const gapMm = 3;
+    const maida1H = 340;
+    const maida2H = 427;
+    const maida1Bottom = -bottomExtMm;
+    const maida1Top = maida1Bottom + maida1H;
+    const maida2Bottom = maida1Top + gapMm;
+    const maida2Top = maida2Bottom + maida2H;
+    return [
+      { maidaHeightMm: maida1H, maidaBottomMm: maida1Bottom, maidaTopMm: maida1Top },
+      { maidaHeightMm: maida2H, maidaBottomMm: maida2Bottom, maidaTopMm: maida2Top },
+    ];
+  }
+
   if (!isLowerDrawer && !isLowerDoorLift && !isLowerTopDown) return null;
 
   // 터치 변형 (도어올림터치 / 상판내림터치): LowerCabinet.tsx line 758-800과 동일한 비례 계산
@@ -1590,12 +1608,12 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           const doorDimZ = furnitureFrontZ + mmToThreeUnits(200);
           const doorColor = dimensionColor;
 
-          // 슬롯 내 hasDoor가 있는 모든 모듈을 순회
+          // 측면뷰에 보이는 가구만 대상 (visibleFurniture 기반)
+          const visibleIds = new Set(visibleFurniture.map(m => m.id));
+          // 도어 또는 인덕션장(마이다) 가구만 필터
           const doorModules = placedModules.filter(m =>
-            m.hasDoor && !m.isSurroundPanel &&
-            (selectedSlotIndex === null ||
-              m.slotIndex === selectedSlotIndex ||
-              (m.isDualSlot && m.slotIndex + 1 === selectedSlotIndex))
+            !m.isSurroundPanel && visibleIds.has(m.id) &&
+            (m.hasDoor || m.moduleId.includes('lower-induction-cabinet') || m.moduleId.includes('dual-lower-induction-cabinet'))
           );
           if (doorModules.length === 0) return null;
 
@@ -1614,10 +1632,12 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
               ?? (mod.moduleId.includes('-upper-') ? 'upper'
                 : mod.moduleId.startsWith('lower-') ? 'lower' : 'full');
 
-            // 서랍/마이다 모듈 체크
+            // 서랍/마이다 모듈 체크 (인덕션장 포함)
             const isDrawerModule = mod.moduleId.includes('lower-drawer-')
               || (mod.moduleId.includes('lower-door-lift-') && !mod.moduleId.includes('-half-'))
-              || (mod.moduleId.includes('lower-top-down-') && !mod.moduleId.includes('-half-'));
+              || (mod.moduleId.includes('lower-top-down-') && !mod.moduleId.includes('-half-'))
+              || mod.moduleId.includes('lower-induction-cabinet')
+              || mod.moduleId.includes('dual-lower-induction-cabinet');
 
             if (modCategory === 'lower' && isDrawerModule) {
               // 서랍 모듈: 마이다 개별 높이
@@ -2342,12 +2362,11 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           const doorDimZ_r = furnitureFrontZ_door + mmToThreeUnits(200);
           const doorColor_r = dimensionColor;
 
-          // 슬롯 내 hasDoor가 있는 모든 모듈을 순회
+          // 측면뷰에 보이는 가구만 대상 (visibleFurniture 기반)
+          const visibleIds_r = new Set(visibleFurniture.map(m => m.id));
           const doorModules_r = placedModules.filter(m =>
-            m.hasDoor && !m.isSurroundPanel &&
-            (selectedSlotIndex === null ||
-              m.slotIndex === selectedSlotIndex ||
-              (m.isDualSlot && m.slotIndex + 1 === selectedSlotIndex))
+            !m.isSurroundPanel && visibleIds_r.has(m.id) &&
+            (m.hasDoor || m.moduleId.includes('lower-induction-cabinet') || m.moduleId.includes('dual-lower-induction-cabinet'))
           );
           if (doorModules_r.length === 0) return null;
 
@@ -2368,7 +2387,9 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
 
             const isDrawerModule = mod.moduleId.includes('lower-drawer-')
               || (mod.moduleId.includes('lower-door-lift-') && !mod.moduleId.includes('-half-'))
-              || (mod.moduleId.includes('lower-top-down-') && !mod.moduleId.includes('-half-'));
+              || (mod.moduleId.includes('lower-top-down-') && !mod.moduleId.includes('-half-'))
+              || mod.moduleId.includes('lower-induction-cabinet')
+              || mod.moduleId.includes('dual-lower-induction-cabinet');
 
             if (modCategory === 'lower' && isDrawerModule) {
               const modHeightMm = modData ? computeFurnitureHeightMm(mod as PlacedModule, modData, spaceInfo, internalSpace) : 0;
