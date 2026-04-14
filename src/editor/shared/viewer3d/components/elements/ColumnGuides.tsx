@@ -552,7 +552,7 @@ const ColumnGuides: React.FC<ColumnGuidesProps> = ({ viewMode: viewModeProp }) =
             anchorY="middle"
             rotation={textRotation}
           >
-            {actualWidth.toFixed(1)}
+            {actualWidth % 1 === 0 ? actualWidth : actualWidth.toFixed(1)}
           </Text>
         );
       });
@@ -615,7 +615,7 @@ const ColumnGuides: React.FC<ColumnGuidesProps> = ({ viewMode: viewModeProp }) =
             anchorX="center"
             anchorY="middle"
           >
-            {actualWidth.toFixed(1)}
+            {actualWidth % 1 === 0 ? actualWidth : actualWidth.toFixed(1)}
           </Text>
         );
       });
