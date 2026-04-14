@@ -190,13 +190,18 @@ const computeLowerCabinetMaidaHeights = (
   const isLowerTopDown = moduleId.includes('lower-top-down-');
   const isInduction = moduleId.includes('lower-induction-cabinet') || moduleId.includes('dual-lower-induction-cabinet');
 
-  // 인덕션장: 고정 마이다 (340mm + 427mm)
+  // 인덕션장: 기본 마이다 340mm + 427mm + 상하단 갭 반영
   if (isInduction) {
-    const bottomExtMm = 5;
+    const defaultDTG = -20; // 하부장 기본 doorTopGap
+    const defaultDBG = 5;   // 하부장 기본 doorBottomGap
+    const bottomExt = doorBottomGap - defaultDBG; // 하단 마이다 확장량
+    const topExt = doorTopGap - defaultDTG;       // 상단 마이다 확장량
     const gapMm = 3;
-    const maida1H = 340;
-    const maida2H = 427;
-    const maida1Bottom = -bottomExtMm;
+    const baseMaida1H = 340;
+    const baseMaida2H = 427;
+    const maida1H = baseMaida1H + bottomExt;
+    const maida2H = baseMaida2H + topExt;
+    const maida1Bottom = -(5 + bottomExt);
     const maida1Top = maida1Bottom + maida1H;
     const maida2Bottom = maida1Top + gapMm;
     const maida2Top = maida2Bottom + maida2H;

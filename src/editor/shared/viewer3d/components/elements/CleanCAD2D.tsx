@@ -6254,14 +6254,20 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   const doorDimZ = rightDimensionZ + mmToThreeUnits(80);
                   const doorColor = '#E91E63';
 
-                  // 인덕션장: 마이다 개별 치수 표시 (340mm + 3mm갭 + 427mm)
+                  // 인덕션장: 마이다 개별 치수 표시 (기본 340mm + 427mm + 상하단 갭 반영)
                   const isInduction = doorModule.moduleId?.includes('lower-induction-cabinet') || doorModule.moduleId?.includes('dual-lower-induction-cabinet');
                   if (isInduction) {
                     const cabinetBottomAbs = bottomFrameHeight;
-                    const maida1H = 340;
-                    const maida2H = 427;
+                    const defaultDTG = -20;
+                    const defaultDBG = 5;
+                    const dtg = doorModule.doorTopGap ?? 0;
+                    const dbg = doorModule.doorBottomGap ?? 0;
+                    const bottomExt = dbg - defaultDBG;
+                    const topExt = dtg - defaultDTG;
                     const gapMm = 3;
-                    const maida1BottomAbs = cabinetBottomAbs - 5;
+                    const maida1H = 340 + bottomExt;
+                    const maida2H = 427 + topExt;
+                    const maida1BottomAbs = cabinetBottomAbs - (5 + bottomExt);
                     const maida1TopAbs = maida1BottomAbs + maida1H;
                     const maida2BottomAbs = maida1TopAbs + gapMm;
                     const maida2TopAbs = maida2BottomAbs + maida2H;
