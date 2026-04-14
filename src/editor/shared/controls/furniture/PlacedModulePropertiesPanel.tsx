@@ -4,7 +4,7 @@ import { useSpaceConfigStore, FURNITURE_LIMITS } from '@/store/core/spaceConfigS
 import { useFurnitureStore } from '@/store/core/furnitureStore';
 import { useUIStore } from '@/store/uiStore';
 import { getModuleById, buildModuleDataFromPlacedModule, ModuleData, calculateEvenShelfPositions } from '@/data/modules';
-import type { SectionConfig } from '@/data/modules/shelving';
+import type { SectionConfig } from '@/data/modules';
 import { calculateInternalSpace, calculateTopBottomFrameHeight, calculateBaseFrameHeight } from '../../viewer3d/utils/geometry';
 import { analyzeColumnSlots } from '../../utils/columnSlotProcessor';
 import { calculateSpaceIndexing } from '../../utils/indexing';
