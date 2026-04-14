@@ -1650,14 +1650,12 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
               if (lowerMaidas && lowerMaidas.length > 0) {
                 const cabinetBottomY = furnitureBaseY;
 
-                const gaps: { bottomMm: number; topMm: number; heightMm: number }[] = [];
-                // 하단 갭: 1단 마이다 하단 ~ 캐비넷 바닥(0) — maidaBottomMm < 0이면 마이다가 바닥 아래로 내려간 것
+                const gaps: { bottomMm: number; topMm: number; heightMm: number; useAbsCoord?: boolean }[] = [];
+                // 하단 갭: 바닥(0)에서 마이다 1단 하단까지 (절대좌표)
                 const firstMaida = lowerMaidas[0];
-                if (firstMaida.maidaBottomMm > 0) {
-                  gaps.push({ bottomMm: 0, topMm: firstMaida.maidaBottomMm, heightMm: Math.round(firstMaida.maidaBottomMm) });
-                } else if (firstMaida.maidaBottomMm < 0) {
-                  // 마이다가 캐비넷 바닥 아래로 내려간 거리 (abs) = 도어 하단 오버랩
-                  gaps.push({ bottomMm: firstMaida.maidaBottomMm, topMm: 0, heightMm: Math.round(Math.abs(firstMaida.maidaBottomMm)) });
+                const floorToMaidaBottomMm = baseFrameHeightMm + firstMaida.maidaBottomMm;
+                if (Math.abs(floorToMaidaBottomMm) >= 1) {
+                  gaps.push({ bottomMm: 0, topMm: floorToMaidaBottomMm, heightMm: Math.round(floorToMaidaBottomMm), useAbsCoord: true });
                 }
                 // 마이다 사이 갭
                 for (let gi = 0; gi < lowerMaidas.length - 1; gi++) {
@@ -1692,8 +1690,9 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                       );
                     })}
                     {gaps.map((gap, gi) => {
-                      const gBotY = cabinetBottomY + mmToThreeUnits(gap.bottomMm);
-                      const gTopY = cabinetBottomY + mmToThreeUnits(gap.topMm);
+                      // useAbsCoord: 바닥(floorFinishY) 기준 절대좌표, 아니면 캐비넷 바닥 기준
+                      const gBotY = gap.useAbsCoord ? floorFinishY + mmToThreeUnits(gap.bottomMm) : cabinetBottomY + mmToThreeUnits(gap.bottomMm);
+                      const gTopY = gap.useAbsCoord ? floorFinishY + mmToThreeUnits(gap.topMm) : cabinetBottomY + mmToThreeUnits(gap.topMm);
                       return (
                         <group key={`door-gap-${modIdx}-${gi}`}>
                           <NativeLine name="door_height_dim" points={[[0, gBotY, doorDimZ], [0, gTopY, doorDimZ]]} color={doorColor} lineWidth={1} renderOrder={100000} depthTest={false} />
@@ -2412,13 +2411,12 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
               if (lowerMaidas && lowerMaidas.length > 0) {
                 const cabinetBottomY_r = furnitureBaseY;
 
-                const gaps_r: { bottomMm: number; topMm: number; heightMm: number }[] = [];
-                // 하단 갭: 1단 마이다 하단 ~ 캐비넷 바닥(0)
+                const gaps_r: { bottomMm: number; topMm: number; heightMm: number; useAbsCoord?: boolean }[] = [];
+                // 하단 갭: 바닥(0)에서 마이다 1단 하단까지 (절대좌표)
                 const firstMaida_r = lowerMaidas[0];
-                if (firstMaida_r.maidaBottomMm > 0) {
-                  gaps_r.push({ bottomMm: 0, topMm: firstMaida_r.maidaBottomMm, heightMm: Math.round(firstMaida_r.maidaBottomMm) });
-                } else if (firstMaida_r.maidaBottomMm < 0) {
-                  gaps_r.push({ bottomMm: firstMaida_r.maidaBottomMm, topMm: 0, heightMm: Math.round(Math.abs(firstMaida_r.maidaBottomMm)) });
+                const floorToMaidaBottomMm_r = baseFrameHeightMm + firstMaida_r.maidaBottomMm;
+                if (Math.abs(floorToMaidaBottomMm_r) >= 1) {
+                  gaps_r.push({ bottomMm: 0, topMm: floorToMaidaBottomMm_r, heightMm: Math.round(floorToMaidaBottomMm_r), useAbsCoord: true });
                 }
                 // 마이다 사이 갭
                 for (let gi = 0; gi < lowerMaidas.length - 1; gi++) {
@@ -2453,8 +2451,8 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                       );
                     })}
                     {gaps_r.map((gap, gi) => {
-                      const gBotY = cabinetBottomY_r + mmToThreeUnits(gap.bottomMm);
-                      const gTopY = cabinetBottomY_r + mmToThreeUnits(gap.topMm);
+                      const gBotY = gap.useAbsCoord ? floorFinishY + mmToThreeUnits(gap.bottomMm) : cabinetBottomY_r + mmToThreeUnits(gap.bottomMm);
+                      const gTopY = gap.useAbsCoord ? floorFinishY + mmToThreeUnits(gap.topMm) : cabinetBottomY_r + mmToThreeUnits(gap.topMm);
                       return (
                         <group key={`r-door-gap-${modIdx}-${gi}`}>
                           <NativeLine name="door_height_dim" points={[[0, gBotY, doorDimZ_r], [0, gTopY, doorDimZ_r]]} color={doorColor_r} lineWidth={1} renderOrder={100000} depthTest={false} />
