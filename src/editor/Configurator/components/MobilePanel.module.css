@@ -4,8 +4,8 @@
     /* Height of bottom bar */
     left: 0;
     right: 0;
-    top: 60%;
-    /* 뷰어 영역(60%) 아래부터 시작 */
+    top: 75%;
+    /* 뷰어 영역(75%) 아래부터 시작 — 패널 높이 축소 */
     background: var(--theme-surface);
     border-top-left-radius: 20px;
     border-top-right-radius: 20px;
