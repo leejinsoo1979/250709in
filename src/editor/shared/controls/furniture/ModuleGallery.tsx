@@ -86,6 +86,10 @@ const FURNITURE_ICONS: Record<string, string> = {
   'dual-lower-top-down-touch-2tier': getImagePath('dual-lower-top-down-touch-2tier.png'),
   'lower-top-down-touch-3tier': getImagePath('lower-top-down-touch-3tier.png'),
   'dual-lower-top-down-touch-3tier': getImagePath('dual-lower-top-down-touch-3tier.png'),
+  // 듀얼 선반장
+  'dual-2drawer-shelf': getImagePath('7.png'),
+  'dual-4drawer-shelf': getImagePath('8.png'),
+  'dual-shelf': getImagePath('9.png'),
   // 현관장 H
   'single-entryway-h': getImagePath('entrance_single-H.png'),
   'dual-entryway-h': getImagePath('entrance_duel-H.png'),
