@@ -1651,10 +1651,13 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                 const cabinetBottomY = furnitureBaseY;
 
                 const gaps: { bottomMm: number; topMm: number; heightMm: number }[] = [];
-                // 하단 갭: 캐비넷 바닥(0) ~ 1단 마이다 하단
+                // 하단 갭: 1단 마이다 하단 ~ 캐비넷 바닥(0) — maidaBottomMm < 0이면 마이다가 바닥 아래로 내려간 것
                 const firstMaida = lowerMaidas[0];
                 if (firstMaida.maidaBottomMm > 0) {
                   gaps.push({ bottomMm: 0, topMm: firstMaida.maidaBottomMm, heightMm: Math.round(firstMaida.maidaBottomMm) });
+                } else if (firstMaida.maidaBottomMm < 0) {
+                  // 마이다가 캐비넷 바닥 아래로 내려간 거리 (abs) = 도어 하단 오버랩
+                  gaps.push({ bottomMm: firstMaida.maidaBottomMm, topMm: 0, heightMm: Math.round(Math.abs(firstMaida.maidaBottomMm)) });
                 }
                 // 마이다 사이 갭
                 for (let gi = 0; gi < lowerMaidas.length - 1; gi++) {
@@ -2410,10 +2413,12 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                 const cabinetBottomY_r = furnitureBaseY;
 
                 const gaps_r: { bottomMm: number; topMm: number; heightMm: number }[] = [];
-                // 하단 갭: 캐비넷 바닥(0) ~ 1단 마이다 하단
+                // 하단 갭: 1단 마이다 하단 ~ 캐비넷 바닥(0)
                 const firstMaida_r = lowerMaidas[0];
                 if (firstMaida_r.maidaBottomMm > 0) {
                   gaps_r.push({ bottomMm: 0, topMm: firstMaida_r.maidaBottomMm, heightMm: Math.round(firstMaida_r.maidaBottomMm) });
+                } else if (firstMaida_r.maidaBottomMm < 0) {
+                  gaps_r.push({ bottomMm: firstMaida_r.maidaBottomMm, topMm: 0, heightMm: Math.round(Math.abs(firstMaida_r.maidaBottomMm)) });
                 }
                 // 마이다 사이 갭
                 for (let gi = 0; gi < lowerMaidas.length - 1; gi++) {
