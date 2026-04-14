@@ -1,16 +1,14 @@
 .panelContainer {
     position: fixed;
     bottom: 70px;
-    /* Height of bottom bar */
     left: 0;
     right: 0;
     top: 75%;
-    /* 뷰어 영역(75%) 아래부터 시작 — 패널 높이 축소 */
     background: var(--theme-surface);
-    border-top-left-radius: 20px;
-    border-top-right-radius: 20px;
-    box-shadow: 0 -8px 30px rgba(15, 23, 42, 0.08);
-    padding: 8px 0 4px;
+    border-top-left-radius: 12px;
+    border-top-right-radius: 12px;
+    box-shadow: 0 -4px 16px rgba(15, 23, 42, 0.08);
+    padding: 6px 0 2px;
     z-index: 999;
     overflow-y: auto;
     transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -20,35 +18,67 @@
     border-top: 1px solid var(--theme-border);
 }
 
+/* 상단 행: 배치모드 토글 + 카테고리 탭 한 줄 */
+.topRow {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0 10px 4px;
+    border-bottom: 1px solid var(--theme-border);
+    flex-shrink: 0;
+}
+
+/* 배치 모드 토글 (균등/자유) */
+.layoutToggle {
+    display: flex;
+    background: var(--theme-background-secondary);
+    border-radius: 4px;
+    padding: 2px;
+    gap: 1px;
+    flex-shrink: 0;
+}
+
+.layoutBtn {
+    padding: 3px 8px;
+    background: transparent;
+    border: none;
+    border-radius: 3px;
+    color: var(--theme-text-muted);
+    font-size: 11px;
+    font-weight: 500;
+    transition: all 0.15s ease;
+    white-space: nowrap;
+}
+
+.layoutActive {
+    background: var(--theme-surface) !important;
+    color: var(--theme-primary) !important;
+    font-weight: 600;
+    border: 1px solid var(--theme-primary) !important;
+}
+
+/* 카테고리 탭 (키큰장/상부장/하부장) */
 .categoryTabs {
     display: flex;
-    gap: 8px;
-    padding: 0 16px 12px;
+    gap: 12px;
+    flex: 1;
 }
 
 .categoryTab {
-    flex: 1;
-    padding: 8px 10px;
-    border: 1px solid var(--theme-border);
-    border-radius: 10px;
-    background: var(--theme-surface);
+    padding: 3px 2px;
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
     color: var(--theme-text-secondary);
-    font-size: 13px;
-    font-weight: 600;
-    transition: all 0.2s ease;
-    text-align: center;
-    line-height: 1.2;
+    font-size: 12px;
+    font-weight: 500;
+    transition: all 0.2s;
 }
 
 .categoryTab.active {
-    background: var(--theme-background-secondary);
-    color: var(--theme-primary) !important;
-    border-color: var(--theme-primary);
-}
-
-.categoryTab.active:focus,
-.categoryTab.active:hover {
     color: var(--theme-primary);
+    border-bottom-color: var(--theme-primary);
+    font-weight: 600;
 }
 
 .panelContent {
@@ -135,29 +165,4 @@
     background: var(--theme-background-secondary);
     color: var(--theme-primary);
     border-color: var(--theme-primary);
-}
-
-.categoryTabs {
-    display: flex;
-    padding: 0 16px;
-    margin-bottom: 4px;
-    border-bottom: 1px solid var(--theme-border);
-    gap: 16px;
-}
-
-.categoryTab {
-    padding: 4px 4px;
-    background: none;
-    border: none;
-    border-bottom: 2px solid transparent;
-    color: var(--theme-text-secondary);
-    font-size: 12px;
-    font-weight: 500;
-    transition: all 0.2s;
-}
-
-.categoryTab.active {
-    color: var(--theme-primary);
-    border-bottom-color: var(--theme-primary);
-    font-weight: 600;
 }
