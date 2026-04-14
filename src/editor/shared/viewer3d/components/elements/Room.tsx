@@ -1472,6 +1472,22 @@ const Room: React.FC<RoomProps> = ({
                   ) : null;
                 }
 
+                // DC가 반대쪽(우)이고 CB가 좌측인 경우: 벽을 CB 높이로 확장
+                if (hasDroppedCeiling && !isLeftDropped && hasLeftCB) {
+                  const cbWallHeight = height + leftCBDropH;
+                  const cbCenterY = panelStartY + cbWallHeight / 2;
+                  return renderMode === 'solid' ? (
+                    <mesh
+                      position={[-width / 2 - 0.01, cbCenterY, extendedZOffset + extendedPanelDepth / 2]}
+                      rotation={[0, Math.PI / 2, 0]}
+                      renderOrder={-1}
+                    >
+                      <planeGeometry args={[extendedPanelDepth, cbWallHeight]} />
+                      <primitive object={cbLeftWallMaterial} />
+                    </mesh>
+                  ) : null;
+                }
+
                 // 그 외: 전체 높이 렌더링
                 if (!hasDroppedCeiling || !isLeftDropped) {
                   return renderMode === 'solid' ? (
@@ -1568,6 +1584,22 @@ const Room: React.FC<RoomProps> = ({
                     >
                       <planeGeometry args={[extendedPanelDepth, stepWallHeight]} />
                       <primitive object={opaqueRightWallMaterial} />
+                    </mesh>
+                  ) : null;
+                }
+
+                // DC가 반대쪽(좌)이고 CB가 우측인 경우: 벽을 CB 높이로 확장
+                if (hasDroppedCeiling && !isRightDropped && hasRightCB) {
+                  const cbWallHeight = height + rightCBDropH;
+                  const cbCenterY = panelStartY + cbWallHeight / 2;
+                  return renderMode === 'solid' ? (
+                    <mesh
+                      position={[width / 2 + 0.01, cbCenterY, extendedZOffset + extendedPanelDepth / 2]}
+                      rotation={[0, -Math.PI / 2, 0]}
+                      renderOrder={-1}
+                    >
+                      <planeGeometry args={[extendedPanelDepth, cbWallHeight]} />
+                      <primitive object={cbRightWallMaterial} />
                     </mesh>
                   ) : null;
                 }
@@ -2276,9 +2308,10 @@ const Room: React.FC<RoomProps> = ({
               const dcIsL = spaceInfo.droppedCeiling.position === 'left';
               const dcDH = mmToThreeUnits(spaceInfo.droppedCeiling.dropHeight || 200);
               const droppedCY = cY - dcDH; // 단내림 천장 Y
-              // DC+CB 동시: 커튼박스 너비만큼 단내림 메쉬가 안쪽으로 이동
-              const hasCBWithDC2 = spaceInfo.curtainBox?.enabled;
-              const cbW2 = hasCBWithDC2 ? mmToThreeUnits(spaceInfo.curtainBox!.width || 150) : 0;
+              // DC+CB 동시: 같은 쪽에 있을 때만 커튼박스 너비만큼 단내림 메쉬가 안쪽으로 이동
+              const cbSameSide = spaceInfo.curtainBox?.enabled &&
+                spaceInfo.curtainBox.position === spaceInfo.droppedCeiling.position;
+              const cbW2 = cbSameSide ? mmToThreeUnits(spaceInfo.curtainBox!.width || 150) : 0;
               // 단내림 메쉬의 실제 X 범위 (천장 메쉬와 동일하게)
               const dcStartX = dcIsL ? x1 + cbW2 : x2 - cbW2 - dcW2;
               const dcEndX = dcIsL ? x1 + cbW2 + dcW2 : x2 - cbW2;
