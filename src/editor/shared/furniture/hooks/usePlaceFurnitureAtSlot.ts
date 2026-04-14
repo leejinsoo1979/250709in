@@ -126,12 +126,22 @@ export function placeFurnitureAtSlot(params: PlaceFurnitureParams): PlaceFurnitu
     return columnWidth * 2;
   };
 
-  // zone별 columnWidth로 정확한 너비 계산
+  // zone별 columnWidth로 정확한 너비 계산 — 싱글/듀얼 모두 재계산
   let furnitureId = moduleId;
-  if (hasDroppedCeiling && zone && indexing.zones && isDualFurnitureId) {
-    const dualWidth = getActualDualWidth();
+  if (hasDroppedCeiling && zone && indexing.zones) {
     const baseId = moduleId.replace(/-[\d.]+$/, '');
-    furnitureId = `${baseId}-${dualWidth}`;
+    if (isDualFurnitureId) {
+      const dualWidth = getActualDualWidth();
+      furnitureId = `${baseId}-${dualWidth}`;
+    } else {
+      // 싱글 가구: zone의 슬롯 너비 사용
+      const zoneData = zone === 'dropped' ? indexing.zones.dropped : indexing.zones.normal;
+      const zoneSlotWidths = zoneData?.slotWidths;
+      const singleWidth = zoneSlotWidths && slotIndex < zoneSlotWidths.length
+        ? zoneSlotWidths[slotIndex]
+        : columnWidth;
+      furnitureId = `${baseId}-${singleWidth}`;
+    }
   }
 
   // 모듈 데이터 조회 (커스터마이징 가구는 getModuleById로 찾을 수 없으므로 pendingPlacement에서 합성)
@@ -162,9 +172,9 @@ export function placeFurnitureAtSlot(params: PlaceFurnitureParams): PlaceFurnitu
     return { success: false, error: `가구 데이터를 찾을 수 없습니다: ${moduleId}` };
   }
 
-  // 듀얼 판별: ID 기반 우선, 또는 실제 두 슬롯 합과 비교
+  // 듀얼 판별: ID 기반 우선, 또는 가구 너비가 단일 슬롯의 1.5배 초과인지 확인
   const actualDualWidth = getActualDualWidth();
-  const isDualFurniture = isDualFurnitureId || Math.abs(moduleData.dimensions.width - actualDualWidth) < 50;
+  const isDualFurniture = isDualFurnitureId || (moduleData.dimensions.width > columnWidth * 1.5);
 
   // 슬롯 위치 계산
   let allSlotPositions: Array<{ position: number; zone: 'normal' | 'dropped'; index: number }> = [];
