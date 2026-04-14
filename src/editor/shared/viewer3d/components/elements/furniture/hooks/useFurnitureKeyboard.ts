@@ -230,31 +230,39 @@ export const useFurnitureKeyboard = ({
                 // });
               }
 
-              // customWidth 계산 - zone별 slotWidths 사용
+              // customWidth 계산 - 듀얼은 internalWidth 기준 (slotWidths 합산 시 floor 손실 방지)
               const customWidth = (() => {
-                // zone별 slotWidths와 columnWidth 가져오기
                 let zoneSlotWidths: number[] | undefined;
                 let zoneColumnWidth: number;
+                let zoneInternalWidth: number;
+                let zoneColumnCount: number;
 
                 if (indexing.zones && spaceInfo.droppedCeiling?.enabled) {
                   const zoneInfo = moduleZone === 'dropped' ? indexing.zones.dropped : indexing.zones.normal;
                   if (zoneInfo) {
                     zoneSlotWidths = zoneInfo.slotWidths;
                     zoneColumnWidth = zoneInfo.columnWidth;
+                    zoneInternalWidth = zoneInfo.width;
+                    zoneColumnCount = zoneInfo.columnCount;
                   } else {
                     zoneColumnWidth = indexing.columnWidth;
+                    zoneInternalWidth = indexing.internalWidth;
+                    zoneColumnCount = indexing.columnCount;
                   }
                 } else {
                   zoneSlotWidths = indexing.slotWidths;
                   zoneColumnWidth = indexing.columnWidth;
+                  zoneInternalWidth = indexing.internalWidth;
+                  zoneColumnCount = indexing.columnCount;
                 }
 
+                if (isDualFurniture && zoneInternalWidth > 0 && zoneColumnCount >= 2) {
+                  return zoneColumnCount === 2
+                    ? Math.floor(zoneInternalWidth)
+                    : Math.floor((zoneInternalWidth * 2) / zoneColumnCount);
+                }
                 if (zoneSlotWidths && zoneSlotWidths[nextSlot] !== undefined) {
-                  if (isDualFurniture && nextSlot < zoneSlotWidths.length - 1) {
-                    return zoneSlotWidths[nextSlot] + zoneSlotWidths[nextSlot + 1];
-                  } else {
-                    return zoneSlotWidths[nextSlot];
-                  }
+                  return zoneSlotWidths[nextSlot];
                 }
                 return zoneColumnWidth;
               })();
@@ -358,31 +366,39 @@ export const useFurnitureKeyboard = ({
                 // });
               }
 
-              // customWidth 계산 - zone별 slotWidths 사용
+              // customWidth 계산 - 듀얼은 internalWidth 기준 (slotWidths 합산 시 floor 손실 방지)
               const customWidth = (() => {
-                // zone별 slotWidths와 columnWidth 가져오기
                 let zoneSlotWidths: number[] | undefined;
                 let zoneColumnWidth: number;
+                let zoneInternalWidth: number;
+                let zoneColumnCount: number;
 
                 if (indexing.zones && spaceInfo.droppedCeiling?.enabled) {
                   const zoneInfo = moduleZone === 'dropped' ? indexing.zones.dropped : indexing.zones.normal;
                   if (zoneInfo) {
                     zoneSlotWidths = zoneInfo.slotWidths;
                     zoneColumnWidth = zoneInfo.columnWidth;
+                    zoneInternalWidth = zoneInfo.width;
+                    zoneColumnCount = zoneInfo.columnCount;
                   } else {
                     zoneColumnWidth = indexing.columnWidth;
+                    zoneInternalWidth = indexing.internalWidth;
+                    zoneColumnCount = indexing.columnCount;
                   }
                 } else {
                   zoneSlotWidths = indexing.slotWidths;
                   zoneColumnWidth = indexing.columnWidth;
+                  zoneInternalWidth = indexing.internalWidth;
+                  zoneColumnCount = indexing.columnCount;
                 }
 
+                if (isDualFurniture && zoneInternalWidth > 0 && zoneColumnCount >= 2) {
+                  return zoneColumnCount === 2
+                    ? Math.floor(zoneInternalWidth)
+                    : Math.floor((zoneInternalWidth * 2) / zoneColumnCount);
+                }
                 if (zoneSlotWidths && zoneSlotWidths[nextSlot] !== undefined) {
-                  if (isDualFurniture && nextSlot < zoneSlotWidths.length - 1) {
-                    return zoneSlotWidths[nextSlot] + zoneSlotWidths[nextSlot + 1];
-                  } else {
-                    return zoneSlotWidths[nextSlot];
-                  }
+                  return zoneSlotWidths[nextSlot];
                 }
                 return zoneColumnWidth;
               })();
