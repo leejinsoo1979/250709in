@@ -256,7 +256,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
 
   const isFreePlacement = spaceInfo.layoutMode === 'free-placement';
 
-  // 측면뷰 3구간 치수 기준 가구: 선택된 슬롯의 가구 사용 (CADDimensions2D와 동기화)
+  // 측면뷰 3구간 치수 기준 가구: CADDimensions2D.getVisibleFurnitureForSideView()와 완전 동기화
   const sideViewMod = useMemo(() => {
     if (placedModules.length === 0) return null;
     const nonSurround = placedModules.filter(m => !m.isSurroundPanel);
@@ -301,6 +301,17 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
       }
     }
     if (filtered.length === 0) return null;
+
+    // CADDimensions2D와 동일: view direction에 따라 가장 왼쪽/오른쪽 X 위치 가구 필터
+    const viewDir = viewDirection || view2DDirection;
+    if (viewDir === 'left') {
+      const target = filtered.reduce((a, b) => (a.position?.x ?? 0) < (b.position?.x ?? 0) ? a : b);
+      filtered = filtered.filter(m => Math.abs((m.position?.x ?? 0) - (target.position?.x ?? 0)) < 0.01);
+    } else if (viewDir === 'right') {
+      const target = filtered.reduce((a, b) => (a.position?.x ?? 0) > (b.position?.x ?? 0) ? a : b);
+      filtered = filtered.filter(m => Math.abs((m.position?.x ?? 0) - (target.position?.x ?? 0)) < 0.01);
+    }
+
     // 하부장/키큰장 우선 (받침대 기준이 되어야 함)
     const lowerOrFull = filtered.find(m => {
       const md = getModuleById(m.moduleId);
@@ -308,7 +319,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
       return cat === 'lower' || cat === 'full';
     });
     return (lowerOrFull ?? filtered[0]) as any;
-  }, [placedModules, selectedSlotIndex, isFreePlacement, spaceInfo, zones]);
+  }, [placedModules, selectedSlotIndex, isFreePlacement, spaceInfo, zones, viewDirection, view2DDirection]);
 
   // 실제 뷰 방향 결정
   const currentViewDirection = viewDirection || view2DDirection;
@@ -5903,7 +5914,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             const cabinetAreaTopY = mmToThreeUnits(bottomFrameHeight + cabinetPlacementHeight); // 캐비넷 영역 상단
             const topFrameTopY = cabinetAreaTopY + mmToThreeUnits(topFrameHeight); // 상부 프레임 상단
 
-            // 좌측뷰 대상 가구(leftmostModules[0])의 높이만 사용
+            // 좌측뷰 대상 가구의 높이만 사용
             let maxFurnitureTop = topFrameTopY;
             let maxModuleHeightMm = 0;
             let tallestModuleTopY = cabinetAreaTopY;
@@ -5928,7 +5939,6 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 }
               }
             }
-
             const hasFurnitureHeight = maxModuleHeightMm > 0;
             const furnitureHeightValue = hasFurnitureHeight ? maxModuleHeightMm : cabinetPlacementHeight;
             const furnitureTopY = hasFurnitureHeight ? tallestModuleTopY : cabinetAreaTopY;
