@@ -90,6 +90,10 @@ const FURNITURE_ICONS: Record<string, string> = {
   'single-2drawer-shelf': getImagePath('7.png'),
   'single-4drawer-shelf': getImagePath('8.png'),
   'single-shelf': getImagePath('9.png'),
+  // 듀얼 선반장
+  'dual-4drawer-shelf': getImagePath('18.png'),
+  'dual-2drawer-shelf': getImagePath('19.png'),
+  'dual-shelf': getImagePath('20.png'),
   // 현관장 H
   'single-entryway-h': getImagePath('entrance_single-H.png'),
   'dual-entryway-h': getImagePath('entrance_duel-H.png'),
