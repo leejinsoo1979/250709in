@@ -254,6 +254,60 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
     return [rightmostModule];
   }, [showDimensions, placedModules]);
 
+  // 측면뷰 3구간 치수 기준 가구: 선택된 슬롯의 가구 사용 (CADDimensions2D와 동기화)
+  const sideViewMod = useMemo(() => {
+    if (placedModules.length === 0) return null;
+    const nonSurround = placedModules.filter(m => !m.isSurroundPanel);
+    if (nonSurround.length === 0) return null;
+
+    let filtered = nonSurround;
+    if (selectedSlotIndex !== null) {
+      if (isFreePlacement) {
+        const sortedByX = [...nonSurround].sort((a, b) => (a.position?.x ?? 0) - (b.position?.x ?? 0));
+        const xGroups: number[][] = [];
+        let lastX: number | null = null;
+        sortedByX.forEach((m, idx) => {
+          const mx = m.position?.x ?? 0;
+          if (lastX === null || Math.abs(mx - lastX) > 0.01) {
+            xGroups.push([idx]);
+            lastX = mx;
+          } else {
+            xGroups[xGroups.length - 1].push(idx);
+          }
+        });
+        if (selectedSlotIndex < xGroups.length) {
+          const ids = new Set(xGroups[selectedSlotIndex].map(idx => sortedByX[idx].id));
+          filtered = nonSurround.filter(m => ids.has(m.id));
+        }
+      } else {
+        const hasDropCeiling = spaceInfo.droppedCeiling?.enabled || false;
+        const nSlotCount = zones?.normal?.columnCount || (spaceInfo.customColumnCount || 4);
+        filtered = nonSurround.filter(module => {
+          if (module.slotIndex === undefined) return false;
+          let gIdx = module.slotIndex;
+          let inDrop = module.zone === 'dropped';
+          if (hasDropCeiling && !inDrop && zones?.dropped && zones?.normal) {
+            const dPos = spaceInfo.droppedCeiling?.position || 'right';
+            const mXMm = module.position.x * 100;
+            inDrop = dPos === 'left' ? mXMm < zones.dropped.width : mXMm >= zones.normal.width;
+          }
+          if (hasDropCeiling && inDrop) gIdx = nSlotCount + module.slotIndex;
+          return module.isDualSlot
+            ? (gIdx === selectedSlotIndex || gIdx + 1 === selectedSlotIndex)
+            : (gIdx === selectedSlotIndex);
+        });
+      }
+    }
+    if (filtered.length === 0) return null;
+    // 하부장/키큰장 우선 (받침대 기준이 되어야 함)
+    const lowerOrFull = filtered.find(m => {
+      const md = getModuleById(m.moduleId);
+      const cat = md?.category ?? (m.moduleId.includes('upper') ? 'upper' : m.moduleId.includes('lower') ? 'lower' : 'full');
+      return cat === 'lower' || cat === 'full';
+    });
+    return (lowerOrFull ?? filtered[0]) as any;
+  }, [placedModules, selectedSlotIndex, isFreePlacement, spaceInfo, zones]);
+
   // 실제 뷰 방향 결정
   const currentViewDirection = viewDirection || view2DDirection;
 
@@ -5831,8 +5885,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               topFrameHeight
             } = furnitureHeights;
 
-            // 개별 모듈의 baseFrameHeight 우선 사용 (좌측뷰 → leftmostModules)
-            const viewMod = leftmostModules[0];
+            // 개별 모듈의 baseFrameHeight 우선 사용 (선택된 슬롯 기준 가구)
+            const viewMod = sideViewMod || leftmostModules[0];
             // hasBase=false → 하부프레임 0 (individualFloatHeight만 반영)
             const bottomFrameHeight = viewMod?.hasBase === false
               ? (viewMod.individualFloatHeight ?? 0)
@@ -6864,8 +6918,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               topFrameHeight
             } = furnitureHeights;
 
-            // 개별 모듈의 baseFrameHeight 우선 사용 (우측뷰 → rightmostModules)
-            const viewMod = rightmostModules[0];
+            // 개별 모듈의 baseFrameHeight 우선 사용 (선택된 슬롯 기준 가구)
+            const viewMod = sideViewMod || rightmostModules[0];
             // hasBase=false → 하부프레임 0 (individualFloatHeight만 반영)
             const bottomFrameHeight = viewMod?.hasBase === false
               ? (viewMod.individualFloatHeight ?? 0)
