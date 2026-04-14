@@ -2627,9 +2627,17 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     // 2) 단내림↔커튼박스 경계 → middle2 (이격2와 독립)
                     const m2Gap = isNoSurroundBoundary ? (spaceInfo.gapConfig?.middle2 ?? 1.5) : 1.5;
                     if (dcOnLeft && cbOnLeft) {
+                      // 같은 쪽(좌): CB↔DC 경계
                       boundaries.push({ leftX: cbEndX, rightX: droppedStartX, editable: boundaryEditable, gapSide: 'middle2', gapValue: m2Gap });
                     } else if (dcOnRight && cbOnRight) {
+                      // 같은 쪽(우): DC↔CB 경계
                       boundaries.push({ leftX: droppedEndX, rightX: cbStartX, editable: boundaryEditable, gapSide: 'middle2', gapValue: m2Gap });
+                    } else if (dcOnRight && cbOnLeft) {
+                      // 반대쪽: 좌CB↔메인 경계
+                      boundaries.push({ leftX: cbEndX, rightX: mainStartX, editable: boundaryEditable, gapSide: 'middle2', gapValue: m2Gap });
+                    } else if (dcOnLeft && cbOnRight) {
+                      // 반대쪽: 메인↔우CB 경계
+                      boundaries.push({ leftX: mainEndX, rightX: cbStartX, editable: boundaryEditable, gapSide: 'middle2', gapValue: m2Gap });
                     }
                   } else if (hasDC && !hasFreeCurtainBox) {
                     // 슬롯배치 단내림만(커튼박스 없음): 메인↔단내림 경계
