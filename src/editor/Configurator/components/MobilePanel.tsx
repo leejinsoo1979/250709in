@@ -58,13 +58,13 @@ const MobilePanel: React.FC<MobilePanelProps> = ({ activeTab, isOpen }) => {
                             className={`${styles.layoutBtn} ${!isFreePlacement ? styles.layoutActive : ''}`}
                             onClick={() => handleLayoutModeChange('equal-division')}
                         >
-                            균등
+                            슬롯배치
                         </button>
                         <button
                             className={`${styles.layoutBtn} ${isFreePlacement ? styles.layoutActive : ''}`}
                             onClick={() => handleLayoutModeChange('free-placement')}
                         >
-                            자유
+                            자유배치
                         </button>
                     </div>
                     <div className={styles.categoryTabs}>
