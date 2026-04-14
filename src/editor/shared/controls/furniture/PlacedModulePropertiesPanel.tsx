@@ -660,9 +660,11 @@ const PlacedModulePropertiesPanel: React.FC = () => {
   const [originalLowerDoorTopGap, setOriginalLowerDoorTopGap] = useState<number>(0);
   const [originalLowerDoorBottomGap, setOriginalLowerDoorBottomGap] = useState<number>(45);
 
-  // 선반장 편집 상태
-  const [shelfCount, setShelfCount] = useState<number>(5);
-  const [shelfPositionInputs, setShelfPositionInputs] = useState<string[]>([]);
+  // 선반장 편집 상태 (섹션별)
+  const [lowerShelfCount, setLowerShelfCount] = useState<number>(0);
+  const [lowerShelfPositionInputs, setLowerShelfPositionInputs] = useState<string[]>([]);
+  const [upperShelfCount, setUpperShelfCount] = useState<number>(0);
+  const [upperShelfPositionInputs, setUpperShelfPositionInputs] = useState<string[]>([]);
 
   // 전체 팝업에서 엔터키 처리 - 조건문 위로 이동
   useEffect(() => {
@@ -1128,18 +1130,29 @@ const PlacedModulePropertiesPanel: React.FC = () => {
         // finalWidth: initialWidth
       // });
 
-      // 선반장 모듈 초기화
+      // 선반장 모듈 초기화 (2섹션: 하단/상단 각각)
       const isShelfModule = currentPlacedModule.moduleId.includes('-shelf-') ||
         currentPlacedModule.moduleId.includes('-4drawer-shelf-') ||
         currentPlacedModule.moduleId.includes('-2drawer-shelf-');
       if (isShelfModule) {
         const effectiveSections = currentPlacedModule.customSections || moduleData.modelConfig?.sections || [];
-        const shelfSection = effectiveSections.find((s: SectionConfig) => s.type === 'shelf');
-        if (shelfSection) {
-          const count = shelfSection.count || 0;
-          setShelfCount(count);
-          const positions = shelfSection.shelfPositions || [];
-          setShelfPositionInputs(positions.map((p: number) => Math.round(p).toString()));
+        // 하단(섹션0) shelf
+        const sec0 = effectiveSections[0];
+        if (sec0 && sec0.type === 'shelf') {
+          setLowerShelfCount(sec0.count || 0);
+          setLowerShelfPositionInputs((sec0.shelfPositions || []).map((p: number) => Math.round(p).toString()));
+        } else {
+          setLowerShelfCount(0);
+          setLowerShelfPositionInputs([]);
+        }
+        // 상단(섹션1) shelf
+        const sec1 = effectiveSections[1];
+        if (sec1 && sec1.type === 'shelf') {
+          setUpperShelfCount(sec1.count || 0);
+          setUpperShelfPositionInputs((sec1.shelfPositions || []).map((p: number) => Math.round(p).toString()));
+        } else {
+          setUpperShelfCount(0);
+          setUpperShelfPositionInputs([]);
         }
       }
     }
@@ -3692,124 +3705,138 @@ const PlacedModulePropertiesPanel: React.FC = () => {
             </div>
           )}
 
-          {/* 선반장 선반 설정 */}
+          {/* 선반장 선반 설정 (2섹션: 하단/상단 각각 편집) */}
           {!showDetails && currentPlacedModule && (
             currentPlacedModule.moduleId.includes('-shelf-') ||
             currentPlacedModule.moduleId.includes('-4drawer-shelf-') ||
             currentPlacedModule.moduleId.includes('-2drawer-shelf-')
           ) && (() => {
             const effectiveSections: SectionConfig[] = currentPlacedModule.customSections || moduleData.modelConfig?.sections || [];
-            const shelfSectionIdx = effectiveSections.findIndex((s: SectionConfig) => s.type === 'shelf');
-            if (shelfSectionIdx < 0) return null;
-            const shelfSection = effectiveSections[shelfSectionIdx];
-            const sectionHeight = shelfSection.height;
             const basicThickness = moduleData.modelConfig?.basicThickness || 18;
 
-            const handleShelfCountChange = (delta: number) => {
-              const newCount = Math.max(1, Math.min(10, shelfCount + delta));
-              setShelfCount(newCount);
-              const newPositions = calculateEvenShelfPositions(sectionHeight, newCount, basicThickness);
-              setShelfPositionInputs(newPositions.map(p => Math.round(p).toString()));
-              // 섹션 업데이트
-              const newSections = [...effectiveSections];
-              newSections[shelfSectionIdx] = {
-                ...shelfSection,
-                count: newCount,
-                shelfPositions: newPositions
-              };
-              updatePlacedModule(currentPlacedModule.id, { customSections: newSections });
-            };
+            // 각 섹션별 shelf 편집 블록 렌더링 헬퍼
+            const renderShelfEditor = (
+              sectionIdx: number,
+              label: string,
+              count: number,
+              setCount: (n: number) => void,
+              posInputs: string[],
+              setPosInputs: (arr: string[]) => void
+            ) => {
+              const section = effectiveSections[sectionIdx];
+              if (!section || section.type !== 'shelf') return null;
+              const sectionHeight = section.height;
 
-            const handleShelfPositionChange = (index: number, value: string) => {
-              const newInputs = [...shelfPositionInputs];
-              newInputs[index] = value;
-              setShelfPositionInputs(newInputs);
-            };
-
-            const handleShelfPositionBlur = (index: number) => {
-              const val = parseInt(shelfPositionInputs[index], 10);
-              if (isNaN(val) || val < 0 || val > sectionHeight) {
-                // 잘못된 값이면 기존 위치로 복원
-                const positions = shelfSection.shelfPositions || [];
-                const newInputs = [...shelfPositionInputs];
-                newInputs[index] = Math.round(positions[index] || 0).toString();
-                setShelfPositionInputs(newInputs);
-                return;
-              }
-              const currentPositions = shelfSection.shelfPositions ? [...shelfSection.shelfPositions] : [];
-              currentPositions[index] = val;
-              const newSections = [...effectiveSections];
-              newSections[shelfSectionIdx] = {
-                ...shelfSection,
-                shelfPositions: currentPositions
+              const handleCountChange = (delta: number) => {
+                const newCount = Math.max(0, Math.min(10, count + delta));
+                setCount(newCount);
+                const newPositions = calculateEvenShelfPositions(sectionHeight, newCount, basicThickness);
+                setPosInputs(newPositions.map(p => Math.round(p).toString()));
+                const newSections = [...effectiveSections];
+                newSections[sectionIdx] = { ...section, count: newCount, shelfPositions: newPositions };
+                updatePlacedModule(currentPlacedModule.id, { customSections: newSections });
               };
-              updatePlacedModule(currentPlacedModule.id, { customSections: newSections });
+
+              const handlePosChange = (i: number, value: string) => {
+                const newInputs = [...posInputs];
+                newInputs[i] = value;
+                setPosInputs(newInputs);
+              };
+
+              const handlePosBlur = (i: number) => {
+                const val = parseInt(posInputs[i], 10);
+                if (isNaN(val) || val < 0 || val > sectionHeight) {
+                  const positions = section.shelfPositions || [];
+                  const newInputs = [...posInputs];
+                  newInputs[i] = Math.round(positions[i] || 0).toString();
+                  setPosInputs(newInputs);
+                  return;
+                }
+                const currentPositions = section.shelfPositions ? [...section.shelfPositions] : [];
+                currentPositions[i] = val;
+                const newSections = [...effectiveSections];
+                newSections[sectionIdx] = { ...section, shelfPositions: currentPositions };
+                updatePlacedModule(currentPlacedModule.id, { customSections: newSections });
+              };
+
+              const handlePosArrow = (i: number, direction: 'up' | 'down') => {
+                const cur = parseInt(posInputs[i], 10) || 0;
+                const next = Math.max(0, Math.min(Math.round(sectionHeight), cur + (direction === 'up' ? 1 : -1)));
+                handlePosChange(i, next.toString());
+                const currentPositions = section.shelfPositions ? [...section.shelfPositions] : [];
+                currentPositions[i] = next;
+                const newSections = [...effectiveSections];
+                newSections[sectionIdx] = { ...section, shelfPositions: currentPositions };
+                updatePlacedModule(currentPlacedModule.id, { customSections: newSections });
+              };
+
+              return (
+                <div key={sectionIdx} style={{ marginBottom: '12px' }}>
+                  <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--theme-text-primary)', marginBottom: '6px' }}>{label} (높이 {Math.round(sectionHeight)}mm)</div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
+                    <span style={{ fontSize: '12px', color: 'var(--theme-text-secondary)' }}>선반 갯수</span>
+                    <button
+                      onClick={() => handleCountChange(-1)}
+                      disabled={count <= 0}
+                      style={{
+                        width: '28px', height: '28px', border: '1px solid var(--theme-border)',
+                        borderRadius: '4px', background: 'var(--theme-surface)', cursor: count <= 0 ? 'not-allowed' : 'pointer',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '16px',
+                        color: count <= 0 ? 'var(--theme-text-disabled)' : 'var(--theme-text-primary)'
+                      }}
+                    >−</button>
+                    <span style={{ fontSize: '14px', fontWeight: 600, minWidth: '20px', textAlign: 'center' }}>{count}</span>
+                    <button
+                      onClick={() => handleCountChange(1)}
+                      disabled={count >= 10}
+                      style={{
+                        width: '28px', height: '28px', border: '1px solid var(--theme-border)',
+                        borderRadius: '4px', background: 'var(--theme-surface)', cursor: count >= 10 ? 'not-allowed' : 'pointer',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '16px',
+                        color: count >= 10 ? 'var(--theme-text-disabled)' : 'var(--theme-text-primary)'
+                      }}
+                    >+</button>
+                  </div>
+                  {posInputs.length > 0 && (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                      {posInputs.map((posInput, i) => (
+                        <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          <span style={{ fontSize: '11px', color: 'var(--theme-text-secondary)', minWidth: '50px' }}>선반 {i + 1}</span>
+                          <div className={styles.inputWithUnit}>
+                            <input
+                              type="text"
+                              inputMode="numeric"
+                              value={posInput}
+                              onChange={(e) => handlePosChange(i, e.target.value)}
+                              onBlur={() => handlePosBlur(i)}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') { (e.target as HTMLInputElement).blur(); }
+                                else if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                                  e.preventDefault();
+                                  handlePosArrow(i, e.key === 'ArrowUp' ? 'up' : 'down');
+                                }
+                              }}
+                              className={styles.depthInput}
+                              style={{
+                                color: '#000000', backgroundColor: '#ffffff',
+                                WebkitTextFillColor: '#000000', opacity: 1, width: '60px'
+                              }}
+                            />
+                            <span className={styles.unit}>mm</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
             };
 
             return (
               <div className={styles.propertySection}>
                 <h5 className={styles.sectionTitle}>선반 설정</h5>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-                  <span style={{ fontSize: '12px', color: 'var(--theme-text-secondary)' }}>선반 갯수</span>
-                  <button
-                    onClick={() => handleShelfCountChange(-1)}
-                    disabled={shelfCount <= 1}
-                    style={{
-                      width: '28px', height: '28px', border: '1px solid var(--theme-border)',
-                      borderRadius: '4px', background: 'var(--theme-surface)', cursor: shelfCount <= 1 ? 'not-allowed' : 'pointer',
-                      display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '16px',
-                      color: shelfCount <= 1 ? 'var(--theme-text-disabled)' : 'var(--theme-text-primary)'
-                    }}
-                  >−</button>
-                  <span style={{ fontSize: '14px', fontWeight: 600, minWidth: '20px', textAlign: 'center' }}>{shelfCount}</span>
-                  <button
-                    onClick={() => handleShelfCountChange(1)}
-                    disabled={shelfCount >= 10}
-                    style={{
-                      width: '28px', height: '28px', border: '1px solid var(--theme-border)',
-                      borderRadius: '4px', background: 'var(--theme-surface)', cursor: shelfCount >= 10 ? 'not-allowed' : 'pointer',
-                      display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '16px',
-                      color: shelfCount >= 10 ? 'var(--theme-text-disabled)' : 'var(--theme-text-primary)'
-                    }}
-                  >+</button>
-                </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                  {shelfPositionInputs.map((posInput, i) => (
-                    <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                      <span style={{ fontSize: '11px', color: 'var(--theme-text-secondary)', minWidth: '50px' }}>선반 {i + 1}</span>
-                      <div className={styles.inputWithUnit}>
-                        <input
-                          type="text"
-                          inputMode="numeric"
-                          value={posInput}
-                          onChange={(e) => handleShelfPositionChange(i, e.target.value)}
-                          onBlur={() => handleShelfPositionBlur(i)}
-                          onKeyDown={(e) => {
-                            if (e.key === 'Enter') { (e.target as HTMLInputElement).blur(); }
-                            else if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
-                              e.preventDefault();
-                              const cur = parseInt(posInput, 10) || 0;
-                              const next = Math.max(0, Math.min(Math.round(sectionHeight), cur + (e.key === 'ArrowUp' ? 1 : -1)));
-                              handleShelfPositionChange(i, next.toString());
-                              // blur 트리거 없이 즉시 적용
-                              const currentPositions = shelfSection.shelfPositions ? [...shelfSection.shelfPositions] : [];
-                              currentPositions[i] = next;
-                              const newSections = [...effectiveSections];
-                              newSections[shelfSectionIdx] = { ...shelfSection, shelfPositions: currentPositions };
-                              updatePlacedModule(currentPlacedModule.id, { customSections: newSections });
-                            }
-                          }}
-                          className={styles.depthInput}
-                          style={{
-                            color: '#000000', backgroundColor: '#ffffff',
-                            WebkitTextFillColor: '#000000', opacity: 1, width: '60px'
-                          }}
-                        />
-                        <span className={styles.unit}>mm</span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+                {renderShelfEditor(0, '하단 섹션', lowerShelfCount, setLowerShelfCount, lowerShelfPositionInputs, setLowerShelfPositionInputs)}
+                {renderShelfEditor(1, '상단 섹션', upperShelfCount, setUpperShelfCount, upperShelfPositionInputs, setUpperShelfPositionInputs)}
               </div>
             );
           })()}
