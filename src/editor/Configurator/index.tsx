@@ -474,6 +474,24 @@ const Configurator: React.FC = () => {
     }, 50);
   }, [showDoorSetup]);
 
+  // 하부장 doorTopGap 잘못된 기본값(20) → -20 마이그레이션
+  React.useEffect(() => {
+    const mods = useFurnitureStore.getState().placedModules;
+    let changed = false;
+    const fixed = mods.map(m => {
+      if (!m.hasDoor) return m;
+      const isLower = m.moduleId?.startsWith('lower-') || m.moduleId?.includes('dual-lower-');
+      if (isLower && m.doorTopGap === 20) {
+        changed = true;
+        return { ...m, doorTopGap: -20 };
+      }
+      return m;
+    });
+    if (changed) {
+      useFurnitureStore.setState({ placedModules: fixed });
+    }
+  }, []);
+
   // 하부프레임 OFF/ON + 띄움높이 동기화는 RightPanel에서 직접 처리
   // (Configurator watcher 제거 — React 배치 업데이트로 인한 경쟁 조건 방지)
 
