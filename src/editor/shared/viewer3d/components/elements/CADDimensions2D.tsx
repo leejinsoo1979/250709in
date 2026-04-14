@@ -567,8 +567,8 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
   const internalHeight = mmToThreeUnits(adjustedInternalHeightMm);
 
   // 좌측뷰인 경우
-  // 좌측뷰 연장선 시작점: 벽면에서 30mm만 앞 (기존 110mm에서 축소)
-  const leftExtStartZ = -spaceDepth/2 + mmToThreeUnits(30);
+  // 좌측뷰 연장선 시작점
+  const leftExtStartZ = -spaceDepth/2 + mmToThreeUnits(120);
 
   if (currentViewDirection === 'left') {
     return (
