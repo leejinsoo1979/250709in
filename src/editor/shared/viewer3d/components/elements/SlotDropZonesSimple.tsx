@@ -66,8 +66,9 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
 
   // 슬롯 바닥 클릭 시 선택 해제 및 팝업 닫기 핸들러
   const handleSlotFloorClick = useCallback((e: any) => {
-    // 드래그 중이면 무시
+    // 드래그 중이거나 클릭 배치 모드이면 무시 (캔버스 클릭 핸들러가 배치 처리)
     if (useFurnitureStore.getState().currentDragData) return;
+    if (useFurnitureStore.getState().furniturePlacementMode) return;
     e.stopPropagation();
     (window as any).__r3fClickHandled = true; // 허공 클릭 deselect 중복 방지
     useFurnitureStore.getState().setSelectedFurnitureId(null);
@@ -2218,6 +2219,65 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
       delete window.handleSlotDrop;
     };
   }, [handleSlotDrop]);
+
+  // Click & Place 모드: 모바일에서 섬네일 클릭 후 캔버스 클릭으로 배치
+  useEffect(() => {
+    const furniturePlacementMode = useFurnitureStore.getState().furniturePlacementMode;
+    if (!furniturePlacementMode || !currentDragData) {
+      return;
+    }
+
+    const handleClick = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (target.tagName !== 'CANVAS') return;
+
+      const canvas = target as HTMLCanvasElement;
+
+      // 클릭 이벤트를 DragEvent처럼 시뮬레이션
+      const simulatedDragEvent = new DragEvent('drop', {
+        clientX: e.clientX,
+        clientY: e.clientY,
+        bubbles: true,
+        cancelable: true
+      });
+
+      Object.defineProperty(simulatedDragEvent, 'dataTransfer', {
+        value: {
+          getData: (format: string) => {
+            if (format === 'application/json') {
+              return JSON.stringify(currentDragData);
+            }
+            return '';
+          },
+          types: ['application/json']
+        },
+        writable: false
+      });
+
+      const result = handleSlotDrop(simulatedDragEvent as any, canvas);
+
+      if (result) {
+        useFurnitureStore.getState().setFurniturePlacementMode(false);
+        setSelectedFurnitureId(null);
+      }
+    };
+
+    // 약간의 지연을 두고 등록 (섬네일 클릭 이벤트가 버블링되는 것 방지)
+    const timer = setTimeout(() => {
+      const canvasElement = document.querySelector('canvas');
+      if (canvasElement) {
+        canvasElement.addEventListener('click', handleClick);
+      }
+    }, 100);
+
+    return () => {
+      clearTimeout(timer);
+      const canvasElement = document.querySelector('canvas');
+      if (canvasElement) {
+        canvasElement.removeEventListener('click', handleClick);
+      }
+    };
+  }, [currentDragData, handleSlotDrop, setSelectedFurnitureId]);
 
   // 간단한 드래그오버 이벤트 핸들러 (드래그 모드와 클릭-앤-플레이스 모드 모두 지원)
   useEffect(() => {
