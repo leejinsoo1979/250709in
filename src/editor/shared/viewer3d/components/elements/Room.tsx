@@ -1724,27 +1724,53 @@ const Room: React.FC<RoomProps> = ({
             if (hasStepCeiling && (!hasDroppedCeiling || isFreePlacement)) {
               // 자유배치: 단내림(stepCeiling) ± 커튼박스(droppedCeiling=위로확장)
               // 슬롯배치: 단내림만 (hasDroppedCeiling=false)
-              // 구간 구성 (우측 예시): [메인] [단내림] [커튼박스]
               const freeCbW = (isFreePlacement && hasDroppedCeiling) ? mmToThreeUnits(spaceInfo.droppedCeiling!.width || 150) : 0;
               const freeCbDropH = (isFreePlacement && hasDroppedCeiling) ? mmToThreeUnits(spaceInfo.droppedCeiling!.dropHeight || 20) : 0;
               const stepAreaWidth = stepWidth;
               const mainAreaWidth = width - stepWidth - freeCbW;
 
-              // 구간 순서: 단내림/커튼박스는 같은 쪽
-              // 우측: [메인(좌)] [단내림(중)] [커튼박스(우)]
-              // 좌측: [커튼박스(좌)] [단내림(중)] [메인(우)]
-              const stepAreaX = isLeftStep
-                ? xOffset + freeCbW + stepAreaWidth / 2
-                : xOffset + mainAreaWidth + stepAreaWidth / 2;
-              const mainAreaX = isLeftStep
-                ? xOffset + freeCbW + stepAreaWidth + mainAreaWidth / 2
-                : xOffset + mainAreaWidth / 2;
+              // 커튼박스와 단내림이 같은 쪽인지 판단
+              const freeCbIsLeft = isFreePlacement && hasDroppedCeiling && spaceInfo.droppedCeiling?.position === 'left';
+              const freeCbSameSide = freeCbW > 0 && (
+                (isLeftStep && freeCbIsLeft) || (!isLeftStep && !freeCbIsLeft)
+              );
+              const freeCbOppSide = freeCbW > 0 && !freeCbSameSide;
+
+              // 구간 배치:
+              // 같은 쪽 우측: [메인] [단내림] [커튼박스]
+              // 같은 쪽 좌측: [커튼박스] [단내림] [메인]
+              // 반대쪽 (좌CB+우SC): [커튼박스] [메인] [단내림]
+              // 반대쪽 (우CB+좌SC): [단내림] [메인] [커튼박스]
+              let stepAreaX: number, mainAreaX: number, stepBoundaryX: number;
+
+              if (freeCbOppSide) {
+                // 반대쪽: CB와 SC가 양쪽 끝, 메인이 가운데
+                if (isLeftStep) {
+                  // 좌SC + 우CB: [단내림(좌)] [메인(중)] [커튼박스(우)]
+                  stepAreaX = xOffset + stepAreaWidth / 2;
+                  mainAreaX = xOffset + stepAreaWidth + mainAreaWidth / 2;
+                  stepBoundaryX = xOffset + stepAreaWidth;
+                } else {
+                  // 우SC + 좌CB: [커튼박스(좌)] [메인(중)] [단내림(우)]
+                  stepAreaX = xOffset + freeCbW + mainAreaWidth + stepAreaWidth / 2;
+                  mainAreaX = xOffset + freeCbW + mainAreaWidth / 2;
+                  stepBoundaryX = xOffset + freeCbW + mainAreaWidth;
+                }
+              } else {
+                // 같은 쪽 또는 커튼박스 없음
+                stepAreaX = isLeftStep
+                  ? xOffset + freeCbW + stepAreaWidth / 2
+                  : xOffset + mainAreaWidth + stepAreaWidth / 2;
+                mainAreaX = isLeftStep
+                  ? xOffset + freeCbW + stepAreaWidth + mainAreaWidth / 2
+                  : xOffset + mainAreaWidth / 2;
+                stepBoundaryX = isLeftStep
+                  ? xOffset + freeCbW + stepAreaWidth
+                  : xOffset + mainAreaWidth;
+              }
+
               const stepCeilingY = panelStartY + height - stepDropHeight + 0.001;
               const mainCeilingY = panelStartY + height + 0.001;
-              // 메인↔단내림 경계벽
-              const stepBoundaryX = isLeftStep
-                ? xOffset + freeCbW + stepAreaWidth
-                : xOffset + mainAreaWidth;
               const stepBoundaryY = panelStartY + height - stepDropHeight / 2;
 
               return renderMode === 'solid' ? (
@@ -1778,17 +1804,38 @@ const Room: React.FC<RoomProps> = ({
                   </mesh>
                   {/* 자유배치 커튼박스 영역 천장 (위로 확장) + 경계벽 */}
                   {freeCbW > 0 && (() => {
-                    const cbAreaX = isLeftStep
-                      ? xOffset + freeCbW / 2
-                      : xOffset + mainAreaWidth + stepAreaWidth + freeCbW / 2;
+                    let cbAreaX: number, cbBoundaryX2: number;
+                    // 경계벽 높이: 같은 쪽=단내림천장~CB천장, 반대쪽=메인천장~CB천장
+                    let cbBoundaryH: number, cbBoundaryY2: number;
+
+                    if (freeCbOppSide) {
+                      // 반대쪽: CB가 SC와 반대편 벽에 위치
+                      cbAreaX = freeCbIsLeft
+                        ? xOffset + freeCbW / 2
+                        : xOffset + freeCbW + mainAreaWidth + stepAreaWidth + freeCbW / 2 - freeCbW; // = xOffset + mainAreaWidth + stepAreaWidth + freeCbW/2
+                      cbAreaX = freeCbIsLeft
+                        ? xOffset + freeCbW / 2
+                        : xOffset + mainAreaWidth + stepAreaWidth + freeCbW / 2; // 우측 끝
+                      // CB-메인 경계벽
+                      cbBoundaryX2 = freeCbIsLeft
+                        ? xOffset + freeCbW
+                        : xOffset + mainAreaWidth + stepAreaWidth;
+                      cbBoundaryH = freeCbDropH; // 메인 천장 ~ CB 천장
+                      cbBoundaryY2 = panelStartY + height + freeCbDropH / 2;
+                    } else {
+                      // 같은 쪽: CB가 SC 바깥쪽(벽 인접)
+                      cbAreaX = isLeftStep
+                        ? xOffset + freeCbW / 2
+                        : xOffset + mainAreaWidth + stepAreaWidth + freeCbW / 2;
+                      // 단내림↔커튼박스 경계벽
+                      cbBoundaryX2 = isLeftStep
+                        ? xOffset + freeCbW
+                        : xOffset + mainAreaWidth + stepAreaWidth;
+                      cbBoundaryH = stepDropHeight + freeCbDropH; // 단내림 천장 ~ CB 천장
+                      cbBoundaryY2 = panelStartY + height - stepDropHeight + cbBoundaryH / 2;
+                    }
+
                     const cbCeilingY2 = panelStartY + height + freeCbDropH + 0.001;
-                    // 단내림↔커튼박스 경계벽
-                    const cbBoundaryX2 = isLeftStep
-                      ? xOffset + freeCbW
-                      : xOffset + mainAreaWidth + stepAreaWidth;
-                    // 경계벽 높이: 단내림 천장 ~ 커튼박스 천장 = scDropH + cbDropH
-                    const cbBoundaryH = stepDropHeight + freeCbDropH;
-                    const cbBoundaryY2 = panelStartY + height - stepDropHeight + cbBoundaryH / 2;
                     return (
                       <>
                         {/* 커튼박스 천장 — 맨 뒤 */}
@@ -1800,7 +1847,7 @@ const Room: React.FC<RoomProps> = ({
                           <planeGeometry args={[freeCbW, extendedPanelDepth]} />
                           <primitive object={opaqueTopWallMaterial} />
                         </mesh>
-                        {/* 단내림↔커튼박스 경계 수직 벽 — 맨 뒤 */}
+                        {/* CB 경계 수직 벽 — 맨 뒤 */}
                         <mesh
                           renderOrder={-1}
                           position={[cbBoundaryX2, cbBoundaryY2, extendedZOffset + extendedPanelDepth / 2]}
