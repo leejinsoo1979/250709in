@@ -1,5 +1,5 @@
 import { SpaceInfo } from '@/store/core/spaceConfigStore';
-import { generateShelvingModules } from './shelving';
+import { generateShelvingModules, calculateEvenShelfPositions } from './shelving';
 import type { SectionConfig } from './shelving';
 
 // ModuleData를 shelving에서 import
@@ -7,6 +7,8 @@ import type { ModuleData } from './shelving';
 
 // 공통 타입들 re-export
 export type { ModuleData };
+export type { SectionConfig };
+export { calculateEvenShelfPositions };
 
 // 서라운드 패널 모듈 re-export
 export { surroundPanelModules, SURROUND_PANEL_THICKNESS, isSurroundPanelId, getSurroundPanelType } from './surroundPanels';
