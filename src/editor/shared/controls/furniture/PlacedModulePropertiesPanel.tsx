@@ -2073,8 +2073,20 @@ const PlacedModulePropertiesPanel: React.FC = () => {
       // 현재 showDimensions 상태 저장
       const currentShowDimensions = useUIStore.getState().showDimensions;
       
-      updatePlacedModule(activePopup.id, { hasDoor: doorEnabled });
-      
+      // hasDoor 켤 때 doorTopGap/doorBottomGap 기본값도 함께 설정
+      const mod = useFurnitureStore.getState().placedModules.find(m => m.id === activePopup.id);
+      const updates: Record<string, unknown> = { hasDoor: doorEnabled };
+      if (doorEnabled && mod) {
+        const cat = mod.moduleId?.includes('upper-') ? 'upper' : mod.moduleId?.startsWith('lower-') ? 'lower' : 'full';
+        if (mod.doorTopGap === undefined) {
+          updates.doorTopGap = cat === 'lower' ? -20 : cat === 'upper' ? -20 : 5;
+        }
+        if (mod.doorBottomGap === undefined) {
+          updates.doorBottomGap = cat === 'lower' ? 5 : cat === 'upper' ? 5 : 25;
+        }
+      }
+      updatePlacedModule(activePopup.id, updates);
+
       // showDimensions 상태 복원 (도어 변경이 슬롯 가이드를 끄지 않도록)
       useUIStore.getState().setShowDimensions(currentShowDimensions);
     }

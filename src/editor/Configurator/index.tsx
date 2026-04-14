@@ -5785,7 +5785,7 @@ const Configurator: React.FC = () => {
                       {partialDoorIndices.map(({ i }) => {
                         const mod = doorFurnitureList[i];
                         return <DoorGapInput key={`top-${mod.id}`} moduleId={mod.id} field="doorTopGap"
-                          storeValue={mod.doorTopGap ?? 20}
+                          storeValue={mod.doorTopGap ?? -20}
                           onCommit={handleIndividualDoorGapChange} />;
                       })}
                     </tr>
@@ -5794,7 +5794,7 @@ const Configurator: React.FC = () => {
                       {partialDoorIndices.map(({ i }) => {
                         const mod = doorFurnitureList[i];
                         return <DoorGapInput key={`bot-${mod.id}`} moduleId={mod.id} field="doorBottomGap"
-                          storeValue={mod.doorBottomGap ?? 2}
+                          storeValue={mod.doorBottomGap ?? 5}
                           onCommit={handleIndividualDoorGapChange} />;
                       })}
                     </tr>
