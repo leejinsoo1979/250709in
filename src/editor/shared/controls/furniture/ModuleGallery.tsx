@@ -33,10 +33,10 @@ const FURNITURE_ICONS: Record<string, string> = {
   'dual-2drawer-styler': getImagePath('dual-2drawer-styler.png'),
   'dual-4drawer-pantshanger': getImagePath('dual-4drawer-pantshanger.png'),
   // 싱글 상부장
-  'upper-cabinet-shelf': getImagePath('upper-cabinet-shelf.png'),
-  'upper-cabinet-2tier': getImagePath('upper-cabinet-2tier.png'),
-  'upper-cabinet-open': getImagePath('upper-cabinet-open.png'),
-  'upper-cabinet-mixed': getImagePath('upper-cabinet-mixed.png'),
+  'upper-cabinet-shelf': getImagePath('upper-cabinet-shelf.svg'),
+  'upper-cabinet-2tier': getImagePath('upper-cabinet-2tier.svg'),
+  'upper-cabinet-open': getImagePath('upper-cabinet-open.svg'),
+  'upper-cabinet-mixed': getImagePath('upper-cabinet-mixed.svg'),
   // 싱글 하부장 (이전 모듈 비활성화)
   // 'lower-cabinet-basic': getImagePath('lower-cabinet-basic.png'),
   // 'lower-cabinet-2tier': getImagePath('lower-cabinet-2tier.png'),
@@ -45,10 +45,10 @@ const FURNITURE_ICONS: Record<string, string> = {
   'lower-sink-cabinet': getImagePath('lower-sink-cabinet.png'),
   'lower-induction-cabinet': getImagePath('lower-induction-cabinet.png'),
   // 듀얼 상부장
-  'dual-upper-cabinet-shelf': getImagePath('dual-upper-cabinet-shelf.png'),
-  'dual-upper-cabinet-2tier': getImagePath('dual-upper-cabinet-2tier.png'),
-  'dual-upper-cabinet-open': getImagePath('dual-upper-cabinet-open.png'),
-  'dual-upper-cabinet-mixed': getImagePath('dual-upper-cabinet-mixed.png'),
+  'dual-upper-cabinet-shelf': getImagePath('dual-upper-cabinet-shelf.svg'),
+  'dual-upper-cabinet-2tier': getImagePath('dual-upper-cabinet-2tier.svg'),
+  'dual-upper-cabinet-open': getImagePath('dual-upper-cabinet-open.svg'),
+  'dual-upper-cabinet-mixed': getImagePath('dual-upper-cabinet-mixed.svg'),
   // 듀얼 하부장 (이전 모듈 비활성화)
   // 'dual-lower-cabinet-basic': getImagePath('dual-lower-cabinet-basic.png'),
   // 'dual-lower-cabinet-2tier': getImagePath('dual-lower-cabinet-2tier.png'),

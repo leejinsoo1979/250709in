@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 400" width="300" height="400">
+  <!-- 듀얼 상부장 기본 (오픈) -->
+  <!-- 우측면 -->
+  <polygon points="210,110 270,80 270,310 210,340" fill="#A8A8A8" stroke="#808080" stroke-width="1.2"/>
+  <!-- 전면 -->
+  <polygon points="15,110 210,110 210,340 15,340" fill="#C8C8C8" stroke="#808080" stroke-width="1.2"/>
+  <!-- 상판 -->
+  <polygon points="15,110 210,110 270,80 75,80" fill="#DCDCDC" stroke="#808080" stroke-width="1.2"/>
+  <!-- 하판 -->
+  <polygon points="15,340 210,340 270,310 75,310" fill="#B0B0B0" stroke="#808080" stroke-width="0.8"/>
+  <!-- 중앙 칸막이 -->
+  <line x1="112" y1="118" x2="112" y2="332" stroke="#909090" stroke-width="1.5"/>
+  <!-- 좌측 내부 -->
+  <rect x="22" y="118" width="86" height="214" fill="#E0E0E0" stroke="#A0A0A0" stroke-width="0.5"/>
+  <!-- 우측 내부 -->
+  <rect x="116" y="118" width="87" height="214" fill="#E0E0E0" stroke="#A0A0A0" stroke-width="0.5"/>
+</svg>
