@@ -6181,10 +6181,11 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 </group>
                 )}
 
-                {/* 6. 도어 높이 치수선 (도어가 설치된 가구가 있을 때만) */}
+                {/* 6. 도어 높이 치수선 (좌측뷰에 보이는 가구의 도어만 표시) */}
                 {(() => {
-                  // 도어가 설치된 가구 찾기
-                  const doorModule = placedModules.find(m => m.hasDoor && !m.isSurroundPanel);
+                  // 좌측뷰 대상 가구(leftmostModules[0])가 도어를 가진 경우만 표시
+                  const viewModule = leftmostModules[0];
+                  const doorModule = viewModule?.hasDoor && !viewModule.isSurroundPanel ? viewModule : null;
                   if (!doorModule) return null;
 
                   const doorModData = getModuleById(
