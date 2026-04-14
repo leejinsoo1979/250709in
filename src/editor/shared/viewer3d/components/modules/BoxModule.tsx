@@ -859,7 +859,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
               textureUrl={baseFurniture.textureUrl}
               panelGrainDirections={panelGrainDirections}
               isFloatingPlacement={spaceInfo?.baseConfig?.placementType === 'float'}
-              shelfFrontInsetMm={(moduleData?.id?.includes('entryway-h')) ? 30 : 0}
+              shelfFrontInsetMm={(moduleData?.id?.includes('entryway-h') || moduleData?.id?.includes('-shelf-') || moduleData?.id?.includes('-4drawer-shelf-') || moduleData?.id?.includes('-2drawer-shelf-')) ? 30 : 0}
               doorTopGap={doorTopGap}
               doorBottomGap={doorBottomGap}
             />
