@@ -200,7 +200,8 @@ const BoxModule: React.FC<BoxModuleProps> = ({
     isHighlighted,
     grainDirection,
     panelGrainDirections,
-    backPanelThicknessMm: backPanelThicknessProp
+    backPanelThicknessMm: backPanelThicknessProp,
+    customSections
   });
 
 

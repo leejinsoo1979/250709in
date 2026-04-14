@@ -452,7 +452,9 @@ export const useBaseFurniture = (
     // 유틸리티
     mmToThreeUnits,
 
-    // 설정 데이터
-    modelConfig
+    // 설정 데이터 (customSections가 있으면 modelConfig.sections를 오버라이드)
+    modelConfig: customSections
+      ? { ...modelConfig, sections: customSections }
+      : modelConfig
   };
-}; 
+};
