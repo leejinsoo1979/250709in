@@ -5356,7 +5356,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 depthTest={false}
               >
                 {(() => {
-                    return Math.round(actualWidth);
+                    const r = Math.round(actualWidth * 2) / 2; // 0.5mm 단위
+                    return r % 1 === 0 ? String(r) : r.toFixed(1);
                 })()}
               </Text>
             )}
