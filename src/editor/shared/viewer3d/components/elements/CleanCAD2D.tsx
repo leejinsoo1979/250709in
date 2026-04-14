@@ -2593,7 +2593,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   // 전체서라운드/양쪽서라운드: 이격 1.5 고정, 노서라운드만 gapConfig
                   const isNoSurroundBoundary = spaceInfo.surroundType === 'no-surround';
                   const middleGapMm = isNoSurroundBoundary ? (spaceInfo.gapConfig?.middle ?? 1.5) : 1.5;
-                  const boundaryGapY = spaceHeight + mmToThreeUnits(DIM_GAP * 0.85);
+                  const boundaryGapY = slotDimensionY;
                   const boundaryEditable = isNoSurroundBoundary; // 서라운드에서는 편집 불가
 
                   const boundaries: { leftX: number; rightX: number; editable: boolean; gapSide: string; gapValue: number }[] = [];
