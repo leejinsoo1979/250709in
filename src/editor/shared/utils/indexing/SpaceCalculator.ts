@@ -200,10 +200,103 @@ export class SpaceCalculator {
     if (spaceInfo.surroundType === 'no-surround') {
       // 노서라운드 모드
       if (spaceInfo.installType === 'builtin' || spaceInfo.installType === 'built-in') {
-        // 빌트인: 이격 1.5mm 고정, 슬롯폭은 0.1mm 단위 내림
+        // 빌트인: 이격 1.5 우선 시도, 0.5mm 단위로 안 떨어지면 이격 조정
+        const baseWidth = spaceInfo.width;
+
+        const isValidSlotWidth = (val: number) => Math.abs(val * 2 - Math.round(val * 2)) < 0.001;
+        const roundSlotWidth = (val: number) => Math.round(val * 2) / 2;
+
+        // 1단계: 기본 이격 1.5mm 시도
+        const defaultGap = 1.5;
+        const defaultInternalWidth = baseWidth - (defaultGap * 2);
+        const defaultSlotWidth = defaultInternalWidth / columnCount;
+
+        if (isValidSlotWidth(defaultSlotWidth) && defaultSlotWidth >= 400 && defaultSlotWidth <= 600) {
+          return {
+            adjustedSpaceInfo: {
+              ...spaceInfo,
+              gapConfig: { left: defaultGap, right: defaultGap }
+            },
+            slotWidth: roundSlotWidth(defaultSlotWidth),
+            adjustmentMade: true
+          };
+        }
+
+        // 2단계: 대칭 이격 탐색 (정수 슬롯폭 우선)
+        for (let gap = 1; gap <= 5; gap += 0.5) {
+          const internalWidth = baseWidth - (gap * 2);
+          const slotWidth = internalWidth / columnCount;
+          const isInteger = Math.abs(slotWidth - Math.round(slotWidth)) < 0.001;
+
+          if (isInteger && slotWidth >= 400 && slotWidth <= 600) {
+            return {
+              adjustedSpaceInfo: {
+                ...spaceInfo,
+                gapConfig: { left: gap, right: gap }
+              },
+              slotWidth: Math.round(slotWidth),
+              adjustmentMade: true
+            };
+          }
+        }
+        // 정수 못 찾으면 0.5mm 단위 허용
+        for (let gap = 1; gap <= 5; gap += 0.5) {
+          const internalWidth = baseWidth - (gap * 2);
+          const slotWidth = internalWidth / columnCount;
+
+          if (isValidSlotWidth(slotWidth) && slotWidth >= 400 && slotWidth <= 600) {
+            return {
+              adjustedSpaceInfo: {
+                ...spaceInfo,
+                gapConfig: { left: gap, right: gap }
+              },
+              slotWidth: roundSlotWidth(slotWidth),
+              adjustmentMade: true
+            };
+          }
+        }
+
+        // 3단계: 비대칭 이격 (정수 우선 → 0.5mm)
+        for (const allowHalf of [false, true]) {
+          for (let diff = 0.5; diff <= 3.5; diff += 0.5) {
+            for (let leftGap = 1; leftGap <= 5; leftGap += 0.5) {
+              const rightGap = Math.round((leftGap + diff) * 10) / 10;
+              if (rightGap > 5) continue;
+
+              for (const config of [
+                { left: leftGap, right: rightGap },
+                { left: rightGap, right: leftGap }
+              ]) {
+                const internalWidth = baseWidth - config.left - config.right;
+                const slotWidth = internalWidth / columnCount;
+
+                if (allowHalf) {
+                  if (isValidSlotWidth(slotWidth) && slotWidth >= 400 && slotWidth <= 600) {
+                    return {
+                      adjustedSpaceInfo: { ...spaceInfo, gapConfig: config },
+                      slotWidth: roundSlotWidth(slotWidth),
+                      adjustmentMade: true
+                    };
+                  }
+                } else {
+                  const isInteger = Math.abs(slotWidth - Math.round(slotWidth)) < 0.001;
+                  if (isInteger && slotWidth >= 400 && slotWidth <= 600) {
+                    return {
+                      adjustedSpaceInfo: { ...spaceInfo, gapConfig: config },
+                      slotWidth: Math.round(slotWidth),
+                      adjustmentMade: true
+                    };
+                  }
+                }
+              }
+            }
+          }
+        }
+
+        // 폴백: 이격 1.5mm 고정
         const gap = 1.5;
-        const internalWidth = spaceInfo.width - (gap * 2);
-        const slotWidth = Math.floor((internalWidth / columnCount) * 10) / 10;
+        const internalWidth = baseWidth - (gap * 2);
+        const slotWidth = Math.round((internalWidth / columnCount) * 2) / 2;
 
         return {
           adjustedSpaceInfo: {
