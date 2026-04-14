@@ -804,6 +804,12 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
             const mod = module as PlacedModule;
             if (!mod.hasDoor) return;
 
+            // 서랍 모듈은 마이다 치수 블록에서 별도 처리 → 도어 치수 건너뜀
+            const isDrawerMod = mod.moduleId.includes('lower-drawer-')
+              || (mod.moduleId.includes('lower-door-lift-') && !mod.moduleId.includes('-half-'))
+              || (mod.moduleId.includes('lower-top-down-') && !mod.moduleId.includes('-half-'));
+            if (isDrawerMod) return;
+
             let modData = getModuleById(
               mod.moduleId,
               { width: internalSpace.width, height: internalSpace.height, depth: internalSpace.depth },
@@ -1854,6 +1860,12 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           visibleFurniture.forEach((module, moduleIndex) => {
             const mod = module as PlacedModule;
             if (!mod.hasDoor) return;
+
+            // 서랍 모듈은 마이다 치수 블록에서 별도 처리 → 도어 치수 건너뜀
+            const isDrawerMod = mod.moduleId.includes('lower-drawer-')
+              || (mod.moduleId.includes('lower-door-lift-') && !mod.moduleId.includes('-half-'))
+              || (mod.moduleId.includes('lower-top-down-') && !mod.moduleId.includes('-half-'));
+            if (isDrawerMod) return;
 
             let modData = getModuleById(
               mod.moduleId,
