@@ -297,8 +297,8 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
     
     return allSections.map((section: SectionConfig & { calculatedHeight: number }, index: number) => {
       const sectionHeight = section.calculatedHeight;
-      // Type4 하부 섹션(drawer)은 서랍을 18mm 아래로
-      const isType4DrawerSection = furnitureId?.includes('4drawer-hanging') && section.type === 'drawer' && index === 0;
+      // 하부 서랍 섹션은 서랍을 18mm 아래로 (4drawer-hanging, 4drawer-shelf, 2drawer-shelf 등)
+      const isType4DrawerSection = section.type === 'drawer' && index === 0 && allSections.length >= 2;
       const sectionCenterY = currentYPosition + sectionHeight / 2 - (isType4DrawerSection ? basicThickness : 0);
 
       // 현재 섹션의 깊이 가져오기 (sectionDepths가 없으면 기본 depth 사용)
