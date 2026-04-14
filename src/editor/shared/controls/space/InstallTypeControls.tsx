@@ -83,8 +83,8 @@ const InstallTypeControls: React.FC<InstallTypeControlsProps> = ({ spaceInfo, on
     // 노서라운드 모드에서 세미스탠딩/프리스탠딩으로 변경 시 이격거리 설정
     if (spaceInfo.surroundType === 'no-surround' && (installType === 'semistanding' || installType === 'freestanding')) {
       updates.gapConfig = {
-        left: wallConfig.left ? 2 : 18,
-        right: wallConfig.right ? 2 : 18,
+        left: wallConfig.left ? 1.5 : 0,
+        right: wallConfig.right ? 1.5 : 0,
       };
     }
 
@@ -116,8 +116,8 @@ const InstallTypeControls: React.FC<InstallTypeControlsProps> = ({ spaceInfo, on
 
       if (installType === 'semistanding' || installType === 'freestanding') {
         updates.gapConfig = {
-          left: wallConfig.left ? 2 : 18,
-          right: wallConfig.right ? 2 : 18,
+          left: wallConfig.left ? 1.5 : 0,
+          right: wallConfig.right ? 1.5 : 0,
         };
       }
     }

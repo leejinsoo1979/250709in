@@ -152,8 +152,8 @@ const SurroundControls: React.FC<SurroundControlsProps> = ({ spaceInfo, onUpdate
 
       if (spaceInfo.installType !== 'builtin' && spaceInfo.installType !== 'built-in') {
         updates.gapConfig = {
-          left: hasLeftWall ? 2 : 0,
-          right: hasRightWall ? 2 : 0,
+          left: hasLeftWall ? 1.5 : 0,
+          right: hasRightWall ? 1.5 : 0,
           middle: spaceInfo.gapConfig?.middle ?? 1.5,
         };
       }

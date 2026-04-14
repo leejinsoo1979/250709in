@@ -148,10 +148,10 @@ const Step2SpaceAndCustomization: React.FC<Step2SpaceAndCustomizationProps> = ({
       updates.surroundType = 'no-surround';
       updates.frameSize = { left: 0, right: 0, top: 30 };
       updates.gapConfig = {
-        left: spaceInfo.installType === 'builtin' ? 2 : 
-              (spaceInfo.installType === 'semistanding' && spaceInfo.wallConfig?.left) ? 2 : 20,
-        right: spaceInfo.installType === 'builtin' ? 2 : 
-               (spaceInfo.installType === 'semistanding' && spaceInfo.wallConfig?.right) ? 2 : 20
+        left: spaceInfo.installType === 'builtin' ? 1.5 :
+              (spaceInfo.installType === 'semistanding' && spaceInfo.wallConfig?.left) ? 1.5 : 0,
+        right: spaceInfo.installType === 'builtin' ? 1.5 :
+               (spaceInfo.installType === 'semistanding' && spaceInfo.wallConfig?.right) ? 1.5 : 0
       };
       updates.baseConfig = {
         type: 'floor' as const,

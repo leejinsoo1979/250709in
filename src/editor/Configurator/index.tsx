@@ -3087,8 +3087,8 @@ const Configurator: React.FC = () => {
 
         // 노서라운드일 때 gapConfig도 업데이트 (middle 보존)
         finalUpdates.gapConfig = {
-          left: wallConfig.left ? 2 : 0,
-          right: wallConfig.right ? 2 : 0,
+          left: wallConfig.left ? 1.5 : 0,
+          right: wallConfig.right ? 1.5 : 0,
           middle: spaceInfo.gapConfig?.middle ?? 1.5,
         };
       }
