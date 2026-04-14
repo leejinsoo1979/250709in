@@ -6303,9 +6303,9 @@ const Configurator: React.FC = () => {
             left: 0,
             right: 0,
             top: 0,
-            bottom: (activeMobileTab === 'modules' || activeMobileTab === 'column') ? '35%' : '70px', /* 패널 열림: 화면 65% 뷰어, 35% 패널 */
+            bottom: (activeMobileTab === 'modules' || activeMobileTab === 'column') ? '30%' : '54px',
             transition: 'bottom 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-            padding: '0 40px', /* 좌우 치수 및 가이드가 잘리지 않도록 여백 확보 */
+            padding: '0 8px',
           } : {
             position: 'absolute',
             left: isLayoutBuilderOpen ? '0' : (activeSidebarTab ? 'var(--sidebar-total-width, 304px)' : 'var(--sidebar-icon-width, 56px)'),

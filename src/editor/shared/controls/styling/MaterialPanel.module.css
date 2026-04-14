@@ -222,24 +222,48 @@
     height: auto;
   }
 
-  .tabNavigation {
-    margin: 8px 12px;
-  }
-
-  .tab {
-    padding: 6px 8px;
-    min-height: 28px;
-  }
-
-  .tabContent {
+  .header {
     padding: 8px 12px;
   }
 
-  /* 재질 카드 그리드 - 모바일: 3열, 작은 썸네일 */
+  .title {
+    font-size: 13px;
+  }
+
+  .tabNavigation {
+    margin: 4px 10px;
+  }
+
+  .tab {
+    padding: 3px 6px;
+    min-height: 24px;
+    font-size: 10px;
+  }
+
+  .filterBar {
+    padding: 4px 10px 0;
+  }
+
+  .filterChip {
+    padding: 3px 8px;
+    font-size: 10px;
+    border-radius: 10px;
+  }
+
+  .tabContent {
+    padding: 6px 10px;
+  }
+
+  /* 재질 카드 그리드 - 모바일: 4열, 콤팩트 썸네일 */
   .materialGrid {
-    grid-template-columns: 1fr 1fr 1fr;
+    grid-template-columns: repeat(4, 1fr);
     max-height: none;
-    gap: 6px;
+    gap: 4px;
+  }
+
+  .materialCard {
+    border-radius: 6px;
+    border-width: 1px;
   }
 
   .materialThumbnail {
@@ -247,18 +271,19 @@
   }
 
   .materialInfo {
-    padding: 4px 6px;
+    padding: 2px 4px 3px;
   }
 
   .materialType {
-    font-size: 9px;
+    font-size: 8px;
   }
 
   .materialName {
-    font-size: 11px;
+    font-size: 9px;
+    margin-top: 1px;
   }
 
   .materialManufacturer {
-    font-size: 9px;
+    font-size: 8px;
   }
 }
