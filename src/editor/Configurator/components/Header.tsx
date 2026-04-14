@@ -99,6 +99,53 @@ interface HeaderProps {
   boringFurnitureCount?: number;
 }
 
+// 모바일 배치 모드 토글 (슬롯배치/자유배치)
+const MobileLayoutToggle: React.FC = () => {
+  const spaceInfo = useSpaceConfigStore(s => s.spaceInfo);
+  const setSpaceInfo = useSpaceConfigStore(s => s.setSpaceInfo);
+  const layoutMode = spaceInfo.layoutMode || 'equal-division';
+  const isFree = layoutMode === 'free-placement';
+
+  const handleMode = (mode: 'equal-division' | 'free-placement') => {
+    if (layoutMode === mode) return;
+    const pm = useFurnitureStore.getState().placedModules;
+    if (pm.length > 0) {
+      if (!window.confirm('배치 방식을 변경하면 배치된 가구가 모두 초기화됩니다. 계속하시겠습니까?')) return;
+      useFurnitureStore.getState().clearAllModules();
+      setSpaceInfo({ freeSurround: undefined });
+    }
+    const updates: Record<string, unknown> = { layoutMode: mode };
+    if (spaceInfo.surroundType === 'no-surround') {
+      const wc = spaceInfo.wallConfig || { left: true, right: true };
+      updates.gapConfig = { left: wc.left ? 1.5 : 0, right: wc.right ? 1.5 : 0, middle: 1.5 };
+    }
+    if (mode === 'equal-division') {
+      if (spaceInfo.droppedCeiling?.enabled) {
+        updates.droppedCeiling = { enabled: false, position: 'right', width: 150, dropHeight: 20 };
+      }
+      updates.curtainBox = { enabled: false, position: 'right', width: 150, dropHeight: 20 };
+    }
+    setSpaceInfo(updates);
+  };
+
+  return (
+    <div className={styles.mobileViewModeToggle}>
+      <button
+        className={`${styles.viewModeButton} ${!isFree ? styles.active : ''}`}
+        onClick={() => handleMode('equal-division')}
+      >
+        <span>슬롯배치</span>
+      </button>
+      <button
+        className={`${styles.viewModeButton} ${isFree ? styles.active : ''}`}
+        onClick={() => handleMode('free-placement')}
+      >
+        <span>자유배치</span>
+      </button>
+    </div>
+  );
+};
+
 const Header: React.FC<HeaderProps> = ({
   title,
   projectName,
@@ -1028,25 +1075,8 @@ const Header: React.FC<HeaderProps> = ({
             </div>
           )}
 
-          {/* 카메라 모드 토글 (3D에서만 표시) */}
-          {viewMode === '3D' && (
-            <div className={styles.mobileViewModeToggle}>
-              <button
-                className={`${styles.viewModeButton} ${cameraMode === 'perspective' ? styles.active : ''}`}
-                onClick={() => setCameraMode('perspective')}
-              >
-                <PerspectiveCubeIcon size={16} />
-                <span>원근</span>
-              </button>
-              <button
-                className={`${styles.viewModeButton} ${cameraMode === 'orthographic' ? styles.active : ''}`}
-                onClick={() => setCameraMode('orthographic')}
-              >
-                <OrthographicCubeIcon size={16} />
-                <span>직교</span>
-              </button>
-            </div>
-          )}
+          {/* 배치 모드 토글 (모바일) */}
+          {!readOnly && <MobileLayoutToggle />}
 
           {/* 도어 설치 토글 */}
           <div className={styles.mobileShadowToggle}>
