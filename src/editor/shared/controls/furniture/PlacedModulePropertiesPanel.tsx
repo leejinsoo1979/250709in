@@ -3835,8 +3835,8 @@ const PlacedModulePropertiesPanel: React.FC = () => {
             return (
               <div className={styles.propertySection}>
                 <h5 className={styles.sectionTitle}>선반 설정</h5>
-                {renderShelfEditor(0, '하단 섹션', lowerShelfCount, setLowerShelfCount, lowerShelfPositionInputs, setLowerShelfPositionInputs)}
                 {renderShelfEditor(1, '상단 섹션', upperShelfCount, setUpperShelfCount, upperShelfPositionInputs, setUpperShelfPositionInputs)}
+                {renderShelfEditor(0, '하단 섹션', lowerShelfCount, setLowerShelfCount, lowerShelfPositionInputs, setLowerShelfPositionInputs)}
               </div>
             );
           })()}
