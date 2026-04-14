@@ -2178,7 +2178,7 @@ const Room: React.FC<RoomProps> = ({
                 // 슬롯배치: DC+CB 동시이면 CB(위로)가 외벽 높이, DC단독이면 아래로, CB단독이면 위로
                 if (dcIsLeft && cbIsLeft) leftCY = cY + cbDropHLine;       // DC+CB 동시: 외벽은 CB 높이
                 else if (dcIsLeft) leftCY = cY - dcDropH;                  // 슬롯단내림: 아래로 축소
-                else if (cbIsLeft && !hasDC) leftCY = cY + cbDropHLine;    // 슬롯 커튼박스 단독: 위로 확장
+                else if (cbIsLeft) leftCY = cY + cbDropHLine;              // 슬롯 커튼박스 (단독 또는 DC 반대쪽): 위로 확장
               }
               lines.push([x1, leftCY, z1, x1, leftCY, z2]);
             }
@@ -2191,7 +2191,7 @@ const Room: React.FC<RoomProps> = ({
               } else {
                 if (dcIsRight && cbIsRight) rightCY = cY + cbDropHLine;
                 else if (dcIsRight) rightCY = cY - dcDropH;
-                else if (cbIsRight && !hasDC) rightCY = cY + cbDropHLine;
+                else if (cbIsRight) rightCY = cY + cbDropHLine;            // 슬롯 커튼박스 (단독 또는 DC 반대쪽): 위로 확장
               }
               lines.push([x2, rightCY, z1, x2, rightCY, z2]);
             }
@@ -2249,8 +2249,10 @@ const Room: React.FC<RoomProps> = ({
               }
             }
 
-            // === 커튼박스 단독 경계벽 Z축 라인 (슬롯+자유배치) ===
-            if (hasCBStandalone && !hasDC && spaceInfo.curtainBox) {
+            // === 커튼박스 경계벽 Z축 라인 (단독 또는 DC 반대쪽) (슬롯+자유배치) ===
+            const _cbOppSideDC = hasCBStandalone && hasDC &&
+              spaceInfo.curtainBox?.position !== spaceInfo.droppedCeiling?.position;
+            if (hasCBStandalone && (!hasDC || _cbOppSideDC) && spaceInfo.curtainBox) {
               const cbW = mmToThreeUnits(spaceInfo.curtainBox.width || 150);
               const cbIsL = spaceInfo.curtainBox.position === 'left';
               const cbBx = cbIsL ? x1 + cbW : x2 - cbW;
@@ -2283,7 +2285,7 @@ const Room: React.FC<RoomProps> = ({
                 const _cbSL = hasCBStandalone && cbIsLeft;
                 if (dcIsLeft && _cbSL) leftCY2 = cY + cbDropHLine;
                 else if (dcIsLeft) leftCY2 = cY - dcDropH;
-                else if (_cbSL && !hasDC) leftCY2 = cY + cbDropHLine;
+                else if (_cbSL) leftCY2 = cY + cbDropHLine;               // CB (단독 또는 DC 반대쪽)
               }
               solidThemeLines.push([x1, leftCY2, z1, x1, leftCY2, z2]); // 좌벽-천장 z축
               solidThemeLines.push([x1, fY, z1, x1, fY, z2]);           // 좌벽-바닥 z축
@@ -2298,7 +2300,7 @@ const Room: React.FC<RoomProps> = ({
                 const _cbSR = hasCBStandalone && cbIsRight;
                 if (dcIsRight && _cbSR) rightCY2 = cY + cbDropHLine;
                 else if (dcIsRight) rightCY2 = cY - dcDropH;
-                else if (_cbSR && !hasDC) rightCY2 = cY + cbDropHLine;
+                else if (_cbSR) rightCY2 = cY + cbDropHLine;              // CB (단독 또는 DC 반대쪽)
               }
               solidThemeLines.push([x2, rightCY2, z1, x2, rightCY2, z2]); // 우벽-천장 z축
               solidThemeLines.push([x2, fY, z1, x2, fY, z2]);             // 우벽-바닥 z축
@@ -2601,15 +2603,15 @@ const Room: React.FC<RoomProps> = ({
               leftWallH = height + _cbDropH;  // DC+CB 동시: 외벽은 CB 높이(위로)
             } else if (_dcIsLeft) {
               leftWallH = isFreePlacement ? height + _dcDropH : height - _dcDropH;
-            } else if (_cbIsLeft && !_hasDC) {
-              leftWallH = height + _cbDropH;
+            } else if (_cbIsLeft) {
+              leftWallH = height + _cbDropH;  // CB (단독 또는 DC 반대쪽)
             }
             if (_dcIsRight && _cbIsRight) {
               rightWallH = height + _cbDropH;
             } else if (_dcIsRight) {
               rightWallH = isFreePlacement ? height + _dcDropH : height - _dcDropH;
-            } else if (_cbIsRight && !_hasDC) {
-              rightWallH = height + _cbDropH;
+            } else if (_cbIsRight) {
+              rightWallH = height + _cbDropH; // CB (단독 또는 DC 반대쪽)
             }
             // 좌/우 천장 Y
             let leftCeilingY = panelStartY + height;
@@ -2618,15 +2620,15 @@ const Room: React.FC<RoomProps> = ({
               leftCeilingY = panelStartY + height + _cbDropH;
             } else if (_dcIsLeft) {
               leftCeilingY = isFreePlacement ? panelStartY + height + _dcDropH : panelStartY + height - _dcDropH;
-            } else if (_cbIsLeft && !_hasDC) {
-              leftCeilingY = panelStartY + height + _cbDropH;
+            } else if (_cbIsLeft) {
+              leftCeilingY = panelStartY + height + _cbDropH;   // CB (단독 또는 DC 반대쪽)
             }
             if (_dcIsRight && _cbIsRight) {
               rightCeilingY = panelStartY + height + _cbDropH;
             } else if (_dcIsRight) {
               rightCeilingY = isFreePlacement ? panelStartY + height + _dcDropH : panelStartY + height - _dcDropH;
-            } else if (_cbIsRight && !_hasDC) {
-              rightCeilingY = panelStartY + height + _cbDropH;
+            } else if (_cbIsRight) {
+              rightCeilingY = panelStartY + height + _cbDropH;  // CB (단독 또는 DC 반대쪽)
             }
             // 경계벽 X 위치 (droppedCeiling 또는 curtainBox)
             // DC+CB 같은 쪽 동시: DC 경계는 CB 너비를 추가로 고려해야 함
