@@ -1,32 +1,54 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 380" width="300" height="380">
-  <!-- upper-cabinet-open: 기본 상부장 (싱글) - 빈 박스, 도어 없음 -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 340" width="300" height="340">
+  <!-- upper-cabinet-open: 상부장 기본 (싱글) - 오픈형 빈 박스 -->
+  <!-- 이소메트릭 뷰: 좌상단→우하단 시선, 내부가 보이는 열린 앞면 -->
 
-  <!-- 내부 뒷벽 -->
-  <polygon fill="#B5B5B5" stroke="#8C8C8C" stroke-width="0.6" points="92,82 232,82 232,298 92,298"/>
-  <!-- 내부 좌벽 -->
-  <polygon fill="#ACACAC" stroke="#8C8C8C" stroke-width="0.6" points="65,102 92,82 92,298 65,318"/>
-  <!-- 내부 바닥면 -->
-  <polygon fill="#BDBDBD" stroke="#8C8C8C" stroke-width="0.6" points="65,318 92,298 232,298 259,318"/>
+  <!-- 좌표 시스템:
+    앞면 좌상: (48, 80)  앞면 우상: (244, 52)
+    앞면 좌하: (48, 280) 앞면 우하: (244, 252)
+    뒤쪽 좌상: (80, 56)  뒤쪽 우상: (276, 28)
+    뒤쪽 좌하: (80, 256) 뒤쪽 우하: (276, 228)
+    이소메트릭 기울기: 뒤쪽은 (x+32, y-24) -->
 
-  <!-- 우측판 (어두운 면) -->
-  <polygon fill="#A0A0A0" stroke="#7A7A7A" stroke-width="1" points="232,82 268,56 268,290 232,298"/>
-  <!-- 우측판 두께 -->
-  <polygon fill="#969696" stroke="#7A7A7A" stroke-width="0.7" points="232,82 232,298 239,294 239,79"/>
+  <!-- 백패널 -->
+  <polygon fill="#BABABA" stroke="#909090" stroke-width="0.5"
+    points="80,56 276,28 276,228 80,256"/>
+  <!-- 좌측 내벽 -->
+  <polygon fill="#B0B0B0" stroke="#909090" stroke-width="0.5"
+    points="48,80 80,56 80,256 48,280"/>
+  <!-- 바닥 내면 -->
+  <polygon fill="#C5C5C5" stroke="#909090" stroke-width="0.5"
+    points="48,280 80,256 276,228 244,252"/>
+
+  <!-- 우측판 외부 (어두운 면) -->
+  <polygon fill="#9A9A9A" stroke="#757575" stroke-width="1.2"
+    points="244,52 276,28 276,228 244,252"/>
 
   <!-- 상판 윗면 -->
-  <polygon fill="#D8D8D8" stroke="#7A7A7A" stroke-width="1" points="35,76 65,102 232,82 268,56 238,38 35,38"/>
-  <!-- 상판 앞면 두께 -->
-  <polygon fill="#C2C2C2" stroke="#7A7A7A" stroke-width="1" points="35,38 35,76 65,102 65,64"/>
-  <!-- 상판 우측 두께 -->
-  <polygon fill="#A8A8A8" stroke="#7A7A7A" stroke-width="0.7" points="238,38 268,56 268,64 238,46"/>
+  <polygon fill="#DCDCDC" stroke="#757575" stroke-width="1.2"
+    points="48,80 80,56 276,28 244,52 244,44 48,44"/>
+  <!-- 상판 앞면 두께 (8px) -->
+  <polygon fill="#C5C5C5" stroke="#757575" stroke-width="1"
+    points="48,44 48,80 244,52 244,44"/>
 
-  <!-- 좌측판 (정면 밝은 면) -->
-  <polygon fill="#C8C8C8" stroke="#7A7A7A" stroke-width="1" points="35,76 65,102 65,318 35,342"/>
-  <!-- 좌측판 두께 -->
-  <polygon fill="#B8B8B8" stroke="#7A7A7A" stroke-width="0.7" points="28,72 35,76 35,342 28,338"/>
+  <!-- 좌측판 외부 (밝은 정면) -->
+  <polygon fill="#CCCCCC" stroke="#757575" stroke-width="1.2"
+    points="40,44 48,44 48,280 40,288"/>
 
   <!-- 하판 앞면 두께 -->
-  <polygon fill="#C2C2C2" stroke="#7A7A7A" stroke-width="1" points="35,342 65,318 259,318 268,290 268,298 259,326 65,326 35,350"/>
+  <polygon fill="#C5C5C5" stroke="#757575" stroke-width="1"
+    points="40,288 48,280 244,252 244,260"/>
   <!-- 하판 밑면 -->
-  <polygon fill="#B0B0B0" stroke="#7A7A7A" stroke-width="0.7" points="35,350 65,326 259,326 268,298 268,290 259,318 65,318 35,342"/>
+  <polygon fill="#A8A8A8" stroke="#757575" stroke-width="0.6"
+    points="40,288 244,260 276,236 276,228 244,252 48,280 40,288"/>
+  <!-- 하판 우측 -->
+  <polygon fill="#949494" stroke="#757575" stroke-width="0.6"
+    points="244,252 244,260 276,236 276,228"/>
+
+  <!-- 하단 마감판 (18mm 도어색) -->
+  <polygon fill="#E2D9CD" stroke="#B0A090" stroke-width="1"
+    points="39,296 47,288 245,260 245,268"/>
+  <polygon fill="#D5CCBF" stroke="#B0A090" stroke-width="0.6"
+    points="39,296 245,268 277,244 277,236 245,260 47,288 39,296"/>
+  <polygon fill="#C8BFB2" stroke="#B0A090" stroke-width="0.6"
+    points="245,260 245,268 277,244 277,236"/>
 </svg>

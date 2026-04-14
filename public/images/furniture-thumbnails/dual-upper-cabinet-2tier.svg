@@ -1,39 +1,53 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 340" width="420" height="340">
-  <!-- dual-upper-cabinet-2tier: 2단 상부장 (듀얼) - 선반 1개 + 칸막이 -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 440 310" width="440" height="310">
+  <!-- dual-upper-cabinet-2tier: 상부장 2단형 듀얼 - 선반 1개 + 칸막이 -->
 
-  <!-- 내부 뒷벽 -->
-  <polygon fill="#B5B5B5" stroke="#8C8C8C" stroke-width="0.6" points="92,72 352,72 352,258 92,258"/>
-  <!-- 내부 좌벽 -->
-  <polygon fill="#ACACAC" stroke="#8C8C8C" stroke-width="0.6" points="65,92 92,72 92,258 65,278"/>
-  <!-- 내부 바닥면 -->
-  <polygon fill="#BDBDBD" stroke="#8C8C8C" stroke-width="0.6" points="65,278 92,258 352,258 379,278"/>
+  <!-- 백패널 -->
+  <polygon fill="#BABABA" stroke="#909090" stroke-width="0.5"
+    points="80,46 392,10 392,200 80,236"/>
+  <polygon fill="#B0B0B0" stroke="#909090" stroke-width="0.5"
+    points="48,70 80,46 80,236 48,260"/>
+  <polygon fill="#C5C5C5" stroke="#909090" stroke-width="0.5"
+    points="48,260 80,236 392,200 360,224"/>
 
-  <!-- 선반 (좌측 칸) -->
-  <polygon fill="#CDCDCD" stroke="#8C8C8C" stroke-width="0.6" points="65,175 92,157 222,157 222,175"/>
-  <polygon fill="#BABABA" stroke="#8C8C8C" stroke-width="0.6" points="65,175 222,175 222,181 65,181"/>
-
-  <!-- 선반 (우측 칸) -->
-  <polygon fill="#CDCDCD" stroke="#8C8C8C" stroke-width="0.6" points="165,175 222,157 352,157 379,175"/>
-  <polygon fill="#BABABA" stroke="#8C8C8C" stroke-width="0.6" points="165,175 379,175 379,181 165,181"/>
+  <!-- 선반 (좌우 양쪽 칸에 걸쳐서) -->
+  <polygon fill="#D0D0D0" stroke="#909090" stroke-width="0.6"
+    points="48,158 80,136 392,100 360,122"/>
+  <polygon fill="#BABABA" stroke="#909090" stroke-width="0.6"
+    points="48,158 360,122 360,128 48,164"/>
 
   <!-- 칸막이 -->
-  <polygon fill="#C0C0C0" stroke="#8C8C8C" stroke-width="0.7" points="159,92 222,72 222,258 159,278"/>
-  <polygon fill="#B5B5B5" stroke="#8C8C8C" stroke-width="0.5" points="159,92 159,278 165,274 165,89"/>
+  <polygon fill="#C0C0C0" stroke="#888" stroke-width="0.8"
+    points="200,70 236,46 236,218 200,242"/>
+  <polygon fill="#B0B0B0" stroke="#888" stroke-width="0.5"
+    points="200,70 200,242 204,240 204,68"/>
 
   <!-- 우측판 -->
-  <polygon fill="#A0A0A0" stroke="#7A7A7A" stroke-width="1" points="352,72 388,48 388,252 352,258"/>
-  <polygon fill="#969696" stroke="#7A7A7A" stroke-width="0.7" points="352,72 352,258 359,254 359,69"/>
+  <polygon fill="#9A9A9A" stroke="#757575" stroke-width="1.2"
+    points="360,34 392,10 392,200 360,224"/>
 
   <!-- 상판 -->
-  <polygon fill="#D8D8D8" stroke="#7A7A7A" stroke-width="1" points="35,68 65,92 352,72 388,48 358,32 35,32"/>
-  <polygon fill="#C2C2C2" stroke="#7A7A7A" stroke-width="1" points="35,32 35,68 65,92 65,56"/>
-  <polygon fill="#A8A8A8" stroke="#7A7A7A" stroke-width="0.7" points="358,32 388,48 388,56 358,40"/>
+  <polygon fill="#DCDCDC" stroke="#757575" stroke-width="1.2"
+    points="48,70 80,46 392,10 360,34 360,26 48,26"/>
+  <polygon fill="#C5C5C5" stroke="#757575" stroke-width="1"
+    points="48,26 48,70 360,34 360,26"/>
 
   <!-- 좌측판 -->
-  <polygon fill="#C8C8C8" stroke="#7A7A7A" stroke-width="1" points="35,68 65,92 65,278 35,302"/>
-  <polygon fill="#B8B8B8" stroke="#7A7A7A" stroke-width="0.7" points="28,64 35,68 35,302 28,298"/>
+  <polygon fill="#CCCCCC" stroke="#757575" stroke-width="1.2"
+    points="40,26 48,26 48,260 40,268"/>
 
   <!-- 하판 -->
-  <polygon fill="#C2C2C2" stroke="#7A7A7A" stroke-width="1" points="35,302 65,278 379,278 388,252 388,260 379,286 65,286 35,310"/>
-  <polygon fill="#B0B0B0" stroke="#7A7A7A" stroke-width="0.7" points="35,310 65,286 379,286 388,260 388,252 379,278 65,278 35,302"/>
+  <polygon fill="#C5C5C5" stroke="#757575" stroke-width="1"
+    points="40,268 48,260 360,224 360,232"/>
+  <polygon fill="#A8A8A8" stroke="#757575" stroke-width="0.6"
+    points="40,268 360,232 392,208 392,200 360,224 48,260 40,268"/>
+  <polygon fill="#949494" stroke="#757575" stroke-width="0.6"
+    points="360,224 360,232 392,208 392,200"/>
+
+  <!-- 하단 마감판 -->
+  <polygon fill="#E2D9CD" stroke="#B0A090" stroke-width="1"
+    points="39,276 47,268 361,232 361,240"/>
+  <polygon fill="#D5CCBF" stroke="#B0A090" stroke-width="0.6"
+    points="39,276 361,240 393,216 393,208 361,232 47,268 39,276"/>
+  <polygon fill="#C8BFB2" stroke="#B0A090" stroke-width="0.6"
+    points="361,232 361,240 393,216 393,208"/>
 </svg>
