@@ -254,6 +254,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
     return [rightmostModule];
   }, [showDimensions, placedModules]);
 
+  const isFreePlacement = spaceInfo.layoutMode === 'free-placement';
+
   // 측면뷰 3구간 치수 기준 가구: 선택된 슬롯의 가구 사용 (CADDimensions2D와 동기화)
   const sideViewMod = useMemo(() => {
     if (placedModules.length === 0) return null;
@@ -343,8 +345,6 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
       if (isDual && module.slotIndex === lastSlotIndex - 1) return true;
       return false;
     });
-  
-  const isFreePlacement = spaceInfo.layoutMode === 'free-placement';
 
 // console.log('🎯 CleanCAD2D 전체 렌더링:', {
     // showDimensionsProp,
