@@ -1638,10 +1638,9 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           const r = Math.round(leftValue * 10) / 10;
           leftText = r % 1 === 0 ? String(r) : r.toFixed(1);
         } else {
-          // 왼쪽 벽이 없으면 엔드패널 표시
-          leftValue = frameThickness.left > 0 ? frameThickness.left : END_PANEL_THICKNESS;
-          const r = Math.round(leftValue * 10) / 10;
-          leftText = r % 1 === 0 ? String(r) : r.toFixed(1);
+          // 왼쪽 벽이 없으면 EP는 사용자 선택이므로 치수 미표시
+          leftValue = 0;
+          leftText = '0';
         }
         // 이격거리가 0이면 표시하지 않음
         if (leftValue === 0) return null;
@@ -1787,10 +1786,9 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           const rr = Math.round(rightValue * 10) / 10;
           rightText = rr % 1 === 0 ? String(rr) : rr.toFixed(1);
         } else {
-          // 오른쪽 벽이 없으면 엔드패널 표시
-          rightValue = frameThickness.right > 0 ? frameThickness.right : END_PANEL_THICKNESS;
-          const rr = Math.round(rightValue * 10) / 10;
-          rightText = rr % 1 === 0 ? String(rr) : rr.toFixed(1);
+          // 오른쪽 벽이 없으면 EP는 사용자 선택이므로 치수 미표시
+          rightValue = 0;
+          rightText = '0';
         }
 
         // 이격거리가 0이면 표시하지 않음
@@ -7667,11 +7665,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 if (leftValue === 0) return null;
                 { const _r = Math.round(leftValue * 10) / 10; leftText = _r % 1 === 0 ? String(_r) : _r.toFixed(1); }
               } else {
-                // 왼쪽 벽이 없으면 엔드패널 표시
-                const frameThickness = calculateFrameThickness(spaceInfo, hasLeftFurniture, hasRightFurniture);
-
-                leftValue = frameThickness.left > 0 ? frameThickness.left : END_PANEL_THICKNESS;
-                { const _r = Math.round(leftValue * 10) / 10; leftText = _r % 1 === 0 ? String(_r) : _r.toFixed(1); }
+                // 왼쪽 벽이 없으면 EP는 사용자 선택이므로 치수 미표시
+                return null;
               }
               
               return (
@@ -7792,11 +7787,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 if (rightValue === 0) return null;
                 { const _r = Math.round(rightValue * 10) / 10; rightText = _r % 1 === 0 ? String(_r) : _r.toFixed(1); }
               } else {
-                // 오른쪽 벽이 없으면 엔드패널 표시
-                const frameThickness = calculateFrameThickness(spaceInfo, hasLeftFurniture, hasRightFurniture);
-
-                rightValue = frameThickness.right > 0 ? frameThickness.right : END_PANEL_THICKNESS;
-                { const _r = Math.round(rightValue * 10) / 10; rightText = _r % 1 === 0 ? String(_r) : _r.toFixed(1); }
+                // 오른쪽 벽이 없으면 EP는 사용자 선택이므로 치수 미표시
+                return null;
               }
               
               return (
