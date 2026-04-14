@@ -159,17 +159,28 @@ export const useFurnitureSpaceAdapter = ({ setPlacedModules }: UseFurnitureSpace
           // 커스텀 가구: moduleId 보존, 표준 모듈: 새 너비로 moduleId 업데이트
           const isCustom = module.moduleId.startsWith('customizable-');
           const baseType = module.baseModuleType || module.moduleId.replace(/-[\d.]+$/, '');
-          const moduleWidth = isDual ? slotWidth * 2 : slotWidth;
+          // 듀얼: internalWidth 기준 계산 (slotWidth*2는 floor 손실)
+          let moduleWidth: number;
+          if (isDual && targetZone.width > 0 && targetZone.columnCount >= 2) {
+            moduleWidth = targetZone.columnCount === 2
+              ? Math.floor(targetZone.width)
+              : Math.floor((targetZone.width * 2) / targetZone.columnCount);
+          } else {
+            moduleWidth = isDual ? slotWidth * 2 : slotWidth;
+          }
           const newModuleId = isCustom ? module.moduleId : `${baseType}-${Math.round(moduleWidth * 10) / 10}`;
 
-          // slotWidths에서 customWidth 계산 (이격거리 반영)
+          // customWidth 계산 (이격거리 반영)
+          // 듀얼: internalWidth 기준으로 2/columnCount 비율 사용 (slotWidths 합산 시 floor 손실 방지)
           let newCustomWidth: number = moduleWidth; // 기본값: 슬롯 너비 기반
-          if (targetZone.slotWidths && targetZone.slotWidths[slotIndex] !== undefined) {
-            if (isDual && slotIndex + 1 < targetZone.slotWidths.length) {
-              newCustomWidth = targetZone.slotWidths[slotIndex] + targetZone.slotWidths[slotIndex + 1];
+          if (isDual && targetZone.width > 0 && targetZone.columnCount >= 2) {
+            if (targetZone.columnCount === 2) {
+              newCustomWidth = Math.floor(targetZone.width);
             } else {
-              newCustomWidth = targetZone.slotWidths[slotIndex];
+              newCustomWidth = Math.floor((targetZone.width * 2) / targetZone.columnCount);
             }
+          } else if (targetZone.slotWidths && targetZone.slotWidths[slotIndex] !== undefined) {
+            newCustomWidth = targetZone.slotWidths[slotIndex];
           }
 
           updatedModules.push({
