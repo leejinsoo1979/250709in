@@ -1722,15 +1722,20 @@ const Room: React.FC<RoomProps> = ({
             }
 
             if (hasStepCeiling && (!hasDroppedCeiling || isFreePlacement)) {
-              // 자유배치: 단내림(stepCeiling) ± 커튼박스(droppedCeiling=위로확장)
+              // 자유배치: 단내림(stepCeiling) ± 커튼박스(droppedCeiling 또는 curtainBox)
               // 슬롯배치: 단내림만 (hasDroppedCeiling=false)
-              const freeCbW = (isFreePlacement && hasDroppedCeiling) ? mmToThreeUnits(spaceInfo.droppedCeiling!.width || 150) : 0;
-              const freeCbDropH = (isFreePlacement && hasDroppedCeiling) ? mmToThreeUnits(spaceInfo.droppedCeiling!.dropHeight || 20) : 0;
+              // CB 소스: droppedCeiling(자유배치 전용) 또는 curtainBox(독립 필드)
+              const _scCbFromDC = isFreePlacement && hasDroppedCeiling;
+              const _scCbFromSlot = isFreePlacement && hasCBSlot;
+              const _scHasCB = _scCbFromDC || _scCbFromSlot;
+              const _scCbSrc = _scCbFromDC ? spaceInfo.droppedCeiling! : (_scCbFromSlot ? spaceInfo.curtainBox! : null);
+              const freeCbW = _scHasCB && _scCbSrc ? mmToThreeUnits(_scCbSrc.width || 150) : 0;
+              const freeCbDropH = _scHasCB && _scCbSrc ? mmToThreeUnits(_scCbSrc.dropHeight || 20) : 0;
               const stepAreaWidth = stepWidth;
               const mainAreaWidth = width - stepWidth - freeCbW;
 
               // 커튼박스와 단내림이 같은 쪽인지 판단
-              const freeCbIsLeft = isFreePlacement && hasDroppedCeiling && spaceInfo.droppedCeiling?.position === 'left';
+              const freeCbIsLeft = _scHasCB && _scCbSrc?.position === 'left';
               const freeCbSameSide = freeCbW > 0 && (
                 (isLeftStep && freeCbIsLeft) || (!isLeftStep && !freeCbIsLeft)
               );
@@ -2381,7 +2386,9 @@ const Room: React.FC<RoomProps> = ({
               const scDH = mmToThreeUnits(spaceInfo.stepCeiling.dropHeight || 200);
               const scIsL = spaceInfo.stepCeiling.position === 'left';
               const scCeilingY = cY - scDH;
-              const dcOffset = hasDC ? mmToThreeUnits(spaceInfo.droppedCeiling!.width || 150) : 0;
+              // CB(droppedCeiling)가 같은 쪽일 때만 offset 적용
+              const _scCbSameSide = hasDC && spaceInfo.droppedCeiling?.position === spaceInfo.stepCeiling.position;
+              const dcOffset = _scCbSameSide ? mmToThreeUnits(spaceInfo.droppedCeiling!.width || 150) : 0;
               const scStartX = scIsL ? x1 + dcOffset : x2 - dcOffset - scW2;
               const scEndX = scIsL ? x1 + dcOffset + scW2 : x2 - dcOffset;
               const scBx = scIsL ? scEndX : scStartX; // 경계벽 X
