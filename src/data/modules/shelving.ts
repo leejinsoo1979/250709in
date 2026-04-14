@@ -979,6 +979,148 @@ const createDualEntrywayH = (dualColumnWidth: number, maxHeight: number, slotWid
 // };
 
 // ============================================================================
+// 듀얼 선반장 생성 함수들
+// ============================================================================
+
+/**
+ * 듀얼 선반장: 전체 높이가 선반만으로 구성
+ */
+const createDualShelf = (dualColumnWidth: number, maxHeight: number, slotWidths?: number[]): ModuleData => {
+  const widthForId = Math.round(dualColumnWidth * 100) / 100;
+  const innerHeight = maxHeight - FURNITURE_SPECS.BASIC_THICKNESS * 2;
+  const defaultShelfCount = 5;
+  const shelfPositions = calculateEvenShelfPositions(innerHeight, defaultShelfCount);
+
+  const baseSections: SectionConfig[] = [
+    {
+      type: 'shelf',
+      heightType: 'absolute',
+      height: innerHeight,
+      count: defaultShelfCount,
+      shelfPositions
+    }
+  ];
+
+  const base = createFurnitureBase(
+    `dual-shelf-${widthForId}`,
+    `선반장 ${widthForId}mm`,
+    dualColumnWidth,
+    maxHeight,
+    FURNITURE_SPECS.DEFAULT_DEPTH,
+    '#607D8B',
+    `듀얼 선반 ${defaultShelfCount}개 (전체높이)`,
+    FURNITURE_SPECS.DEFAULT_DEPTH
+  );
+
+  return {
+    ...base,
+    slotWidths,
+    modelConfig: {
+      ...base.modelConfig,
+      sections: baseSections
+    }
+  } as ModuleData;
+};
+
+/**
+ * 듀얼 선반장+4단서랍: 하단 4단서랍(1000mm) + 상단 선반
+ */
+const createDual4DrawerShelf = (dualColumnWidth: number, maxHeight: number, slotWidths?: number[]): ModuleData => {
+  const widthForId = Math.round(dualColumnWidth * 100) / 100;
+  const drawerHeight = FURNITURE_SPECS.TYPE4_DRAWER_HEIGHT;
+  const shelfSectionHeight = maxHeight - FURNITURE_SPECS.BASIC_THICKNESS * 2 - drawerHeight;
+  const defaultShelfCount = 3;
+  const shelfPositions = calculateEvenShelfPositions(shelfSectionHeight, defaultShelfCount);
+
+  const baseSections: SectionConfig[] = [
+    {
+      type: 'drawer',
+      heightType: 'absolute',
+      height: drawerHeight,
+      count: 4,
+      drawerHeights: FURNITURE_SPECS.DRAWER_HEIGHTS_4TIER,
+      gapHeight: FURNITURE_SPECS.DRAWER_GAP
+    },
+    {
+      type: 'shelf',
+      heightType: 'absolute',
+      height: shelfSectionHeight,
+      count: defaultShelfCount,
+      shelfPositions
+    }
+  ];
+
+  const base = createFurnitureBase(
+    `dual-4drawer-shelf-${widthForId}`,
+    `선반장+4단서랍 ${widthForId}mm`,
+    dualColumnWidth,
+    maxHeight,
+    FURNITURE_SPECS.DEFAULT_DEPTH,
+    '#546E7A',
+    `듀얼 하단 4단서랍 + 상단 선반 ${defaultShelfCount}개`,
+    FURNITURE_SPECS.DEFAULT_DEPTH
+  );
+
+  return {
+    ...base,
+    slotWidths,
+    modelConfig: {
+      ...base.modelConfig,
+      sections: baseSections
+    }
+  } as ModuleData;
+};
+
+/**
+ * 듀얼 선반장+2단서랍: 하단 2단서랍(600mm) + 상단 선반
+ */
+const createDual2DrawerShelf = (dualColumnWidth: number, maxHeight: number, slotWidths?: number[]): ModuleData => {
+  const widthForId = Math.round(dualColumnWidth * 100) / 100;
+  const drawerHeight = FURNITURE_SPECS.TYPE1_DRAWER_HEIGHT;
+  const shelfSectionHeight = maxHeight - FURNITURE_SPECS.BASIC_THICKNESS * 2 - drawerHeight;
+  const defaultShelfCount = 3;
+  const shelfPositions = calculateEvenShelfPositions(shelfSectionHeight, defaultShelfCount);
+
+  const baseSections: SectionConfig[] = [
+    {
+      type: 'drawer',
+      heightType: 'absolute',
+      height: drawerHeight,
+      count: 2,
+      drawerHeights: FURNITURE_SPECS.DRAWER_HEIGHTS_2TIER,
+      gapHeight: FURNITURE_SPECS.DRAWER_GAP
+    },
+    {
+      type: 'shelf',
+      heightType: 'absolute',
+      height: shelfSectionHeight,
+      count: defaultShelfCount,
+      shelfPositions
+    }
+  ];
+
+  const base = createFurnitureBase(
+    `dual-2drawer-shelf-${widthForId}`,
+    `선반장+2단서랍 ${widthForId}mm`,
+    dualColumnWidth,
+    maxHeight,
+    FURNITURE_SPECS.DEFAULT_DEPTH,
+    '#78909C',
+    `듀얼 하단 2단서랍 + 상단 선반 ${defaultShelfCount}개`,
+    FURNITURE_SPECS.DEFAULT_DEPTH
+  );
+
+  return {
+    ...base,
+    slotWidths,
+    modelConfig: {
+      ...base.modelConfig,
+      sections: baseSections
+    }
+  } as ModuleData;
+};
+
+// ============================================================================
 // 상부장 가구 생성 함수 (임시 비활성화)
 // ============================================================================
 
@@ -2718,6 +2860,11 @@ export const generateShelvingModules = (
     modules.push(createDualType6(dualWidth, maxHeight, dualSlotWidths));
     modules.push(createDualEntrywayH(dualWidth, maxHeight, dualSlotWidths));
     // modules.push(createDualEntrywayI(dualWidth, maxHeight, dualSlotWidths));
+
+    // === 듀얼 선반장 가구 생성 ===
+    modules.push(createDualShelf(dualWidth, maxHeight, dualSlotWidths));
+    modules.push(createDual4DrawerShelf(dualWidth, maxHeight, dualSlotWidths));
+    modules.push(createDual2DrawerShelf(dualWidth, maxHeight, dualSlotWidths));
 
     // === 상부장 가구 생성 ===
     modules.push(createDualUpperCabinet1(dualWidth));
