@@ -3252,13 +3252,13 @@ const Room: React.FC<RoomProps> = ({
 
             return (
               <>
-                {/* 뒷벽 단색 선 */}
+                {/* 뒷벽 단색 선 — 가구 뒤로 가려지도록 renderOrder=-1 */}
                 {solidLines.length > 0 && (
-                  <lineSegments>
+                  <lineSegments renderOrder={-1}>
                     <bufferGeometry>
                       <bufferAttribute attach="attributes-position" args={[solidPositions, 3]} />
                     </bufferGeometry>
-                    <lineBasicMaterial color={wfLineColor} />
+                    <lineBasicMaterial color={wfLineColor} depthWrite={false} />
                   </lineSegments>
                 )}
                 {/* 경계벽 오버레이 선 (depthTest=false: 뒷벽 mesh에 가려지지 않음) */}
@@ -3270,14 +3270,14 @@ const Room: React.FC<RoomProps> = ({
                     <lineBasicMaterial color={wfLineColor} depthTest={false} />
                   </lineSegments>
                 )}
-                {/* z축 그라데이션 선 (뒷벽 진한색 → 앞쪽 배경색) */}
+                {/* z축 그라데이션 선 (뒷벽 진한색 → 앞쪽 배경색) — 가구 뒤로 가려지도록 */}
                 {gradientLines.length > 0 && (
-                  <lineSegments>
+                  <lineSegments renderOrder={-1}>
                     <bufferGeometry>
                       <bufferAttribute attach="attributes-position" args={[gradPositions, 3]} />
                       <bufferAttribute attach="attributes-color" args={[gradColors, 3]} />
                     </bufferGeometry>
-                    <lineBasicMaterial vertexColors />
+                    <lineBasicMaterial vertexColors depthWrite={false} />
                   </lineSegments>
                 )}
               </>
