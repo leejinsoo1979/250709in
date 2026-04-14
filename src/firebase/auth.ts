@@ -110,35 +110,26 @@ export const signInWithGoogle = async () => {
     console.log('🔐 Auth Domain:', import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || 'in-f8873.firebaseapp.com');
     console.log('🔐 환경:', import.meta.env.MODE);
 
-    // 모바일 환경 체크
-    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+    // 팝업 방식 통일 (모바일/데스크톱 모두)
+    // signInWithRedirect는 모바일 Safari/Chrome에서 3rd-party cookie 차단으로 실패하는 경우가 많음
+    const result = await signInWithPopup(auth, googleProvider);
 
-    if (isMobile) {
-      // 모바일에서는 리다이렉트 방식 사용
-      const { signInWithRedirect } = await import('firebase/auth');
-      await signInWithRedirect(auth, googleProvider);
-      return { user: null, error: null }; // 리다이렉트되므로 결과는 나중에 처리
-    } else {
-      // 데스크톱에서는 팝업 방식 사용
-      const result = await signInWithPopup(auth, googleProvider);
-      
-      // 개발 모드에서 로그 출력
-      if (import.meta.env.DEV) {
-        console.log('🔐 구글 로그인 성공:', result.user.email);
-        console.log('🔐 사용자 정보:', {
-          name: result.user.displayName,
-          email: result.user.email,
-          photo: result.user.photoURL
-        });
-      }
-      
-      // 팀 자동 생성 (최초 로그인 시)
-      if (FLAGS.teamScope) {
-        await ensurePersonalTeam(result.user, '구글 로그인');
-      }
-
-      return { user: result.user, error: null };
+    // 개발 모드에서 로그 출력
+    if (import.meta.env.DEV) {
+      console.log('🔐 구글 로그인 성공:', result.user.email);
+      console.log('🔐 사용자 정보:', {
+        name: result.user.displayName,
+        email: result.user.email,
+        photo: result.user.photoURL
+      });
     }
+
+    // 팀 자동 생성 (최초 로그인 시)
+    if (FLAGS.teamScope) {
+      await ensurePersonalTeam(result.user, '구글 로그인');
+    }
+
+    return { user: result.user, error: null };
   } catch (error) {
     const firebaseError = error as FirebaseError;
 
