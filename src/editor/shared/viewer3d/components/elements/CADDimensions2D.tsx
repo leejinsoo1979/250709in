@@ -1617,10 +1617,9 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
 
           // 측면뷰에 보이는 가구만 대상 (visibleFurniture 기반)
           const visibleIds = new Set(visibleFurniture.map(m => m.id));
-          // 도어 또는 인덕션장(마이다) 가구만 필터
+          // 도어 달린 가구만 필터 (인덕션장도 hasDoor=true일 때만)
           const doorModules = placedModules.filter(m =>
-            !m.isSurroundPanel && visibleIds.has(m.id) &&
-            (m.hasDoor || m.moduleId.includes('lower-induction-cabinet') || m.moduleId.includes('dual-lower-induction-cabinet'))
+            !m.isSurroundPanel && visibleIds.has(m.id) && m.hasDoor
           );
           if (doorModules.length === 0) return null;
 
@@ -2381,8 +2380,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           // 측면뷰에 보이는 가구만 대상 (visibleFurniture 기반)
           const visibleIds_r = new Set(visibleFurniture.map(m => m.id));
           const doorModules_r = placedModules.filter(m =>
-            !m.isSurroundPanel && visibleIds_r.has(m.id) &&
-            (m.hasDoor || m.moduleId.includes('lower-induction-cabinet') || m.moduleId.includes('dual-lower-induction-cabinet'))
+            !m.isSurroundPanel && visibleIds_r.has(m.id) && m.hasDoor
           );
           if (doorModules_r.length === 0) return null;
 

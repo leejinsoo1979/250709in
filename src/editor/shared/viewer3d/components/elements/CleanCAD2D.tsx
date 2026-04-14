@@ -6254,9 +6254,9 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   const doorDimZ = rightDimensionZ + mmToThreeUnits(80);
                   const doorColor = '#E91E63';
 
-                  // 인덕션장: 기본 마이다 340mm + 427mm + doorTopGap/doorBottomGap 갭 확장
+                  // 인덕션장: hasDoor일 때만 마이다 치수 표시
                   const isInduction = doorModule.moduleId?.includes('lower-induction-cabinet') || doorModule.moduleId?.includes('dual-lower-induction-cabinet');
-                  if (isInduction) {
+                  if (isInduction && doorModule.hasDoor) {
                     const cabinetBottomAbs = bottomFrameHeight;
                     const defaultDTG = -20;
                     const defaultDBG = 5;
