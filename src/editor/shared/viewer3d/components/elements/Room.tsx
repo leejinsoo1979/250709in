@@ -3030,8 +3030,8 @@ const Room: React.FC<RoomProps> = ({
         </>
       )}
 
-      {/* 공간 윤곽선: wireframe 모드 또는 3D orthographic 모드 */}
-      {viewMode !== '2D' && (renderMode === 'wireframe' || cameraMode === 'orthographic') && (() => {
+      {/* 공간 윤곽선: wireframe 모드 전용 (solid에서는 가구/도어를 뚫고 나오므로 제외) */}
+      {viewMode !== '2D' && renderMode === 'wireframe' && (() => {
             const wfLineColor = theme?.mode === 'dark' ? "#ffffff" : "#333333";
             const hasLeftWall = spaceInfo.installType === 'builtin' || spaceInfo.installType === 'built-in' ||
               (spaceInfo.installType === 'semistanding' && wallConfig?.left);
