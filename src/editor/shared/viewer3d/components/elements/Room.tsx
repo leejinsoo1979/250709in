@@ -2442,20 +2442,20 @@ const Room: React.FC<RoomProps> = ({
             return (
               <>
                 {lines.length > 0 && (
-                  <lineSegments renderOrder={0}>
+                  <lineSegments renderOrder={20}>
                     <bufferGeometry>
                       <bufferAttribute attach="attributes-position" args={[positions, 3]} />
                       <bufferAttribute attach="attributes-color" args={[vertColors, 3]} />
                     </bufferGeometry>
-                    <lineBasicMaterial vertexColors depthTest={true} />
+                    <lineBasicMaterial vertexColors depthTest={true} depthWrite={false} />
                   </lineSegments>
                 )}
                 {solidThemePositions && (
-                  <lineSegments renderOrder={10}>
+                  <lineSegments renderOrder={20}>
                     <bufferGeometry>
                       <bufferAttribute attach="attributes-position" args={[solidThemePositions, 3]} />
                     </bufferGeometry>
-                    <lineBasicMaterial color={edgeColor} depthTest={true} />
+                    <lineBasicMaterial color={edgeColor} depthTest={true} depthWrite={false} />
                   </lineSegments>
                 )}
               </>
@@ -3018,11 +3018,11 @@ const Room: React.FC<RoomProps> = ({
             if (hasRW) lines.push(rx, by, bz, rx, segments[segments.length - 1].cy, bz);
 
             return lines.length > 0 ? (
-              <lineSegments renderOrder={5}>
+              <lineSegments renderOrder={20}>
                 <bufferGeometry>
                   <bufferAttribute attach="attributes-position" args={[new Float32Array(lines), 3]} />
                 </bufferGeometry>
-                <lineBasicMaterial color={lineColor} depthTest={false} transparent opacity={0.5} />
+                <lineBasicMaterial color={lineColor} depthTest={true} depthWrite={false} transparent opacity={0.5} />
               </lineSegments>
             ) : null;
           })()}
