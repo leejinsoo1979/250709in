@@ -1007,9 +1007,12 @@ const PlacedModulePropertiesPanel: React.FC = () => {
       const isDoorLift = modId.includes('lower-door-lift-') && !modId.includes('-half-');
       const isTopDown = modId.includes('lower-top-down-') && !modId.includes('-half-');
       const defaultTopGap = isDoorLift ? 30 : isTopDown ? -80 : isLowerMod ? -20 : 0;
-      const initialTopGap = currentPlacedModule.doorTopGap ?? defaultTopGap;
+      // 하부장에서 doorTopGap=0은 이전 버그값 → 모듈별 기본값으로 보정
+      const rawTopGap = currentPlacedModule.doorTopGap;
+      const initialTopGap = (rawTopGap === undefined || (isLowerMod && rawTopGap === 0)) ? defaultTopGap : rawTopGap;
       // 도어 상하갭은 항상 바닥/천장 기준 (받침대/띄움 무관, 0이면 공간 높이)
-      const initialBottomGap = currentPlacedModule.doorBottomGap ?? (isLowerMod ? 5 : 0);
+      const rawBotGap = currentPlacedModule.doorBottomGap;
+      const initialBottomGap = (rawBotGap === undefined || (isLowerMod && rawBotGap === 0)) ? (isLowerMod ? 5 : 0) : rawBotGap;
       // State 업데이트
       const needsUpdate = doorTopGap !== initialTopGap || doorBottomGap !== initialBottomGap;
 
