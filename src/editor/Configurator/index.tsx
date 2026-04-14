@@ -481,22 +481,30 @@ const Configurator: React.FC = () => {
     }, 50);
   }, [showDoorSetup]);
 
-  // 하부장 doorTopGap/doorBottomGap 기본값 마이그레이션
-  // doorTopGap이 undefined/20/1.5인 경우 → -20으로, doorBottomGap undefined/2/25 → 5로
+  // 하부장 doorTopGap/doorBottomGap 기본값 마이그레이션 (모듈별 기본값)
+  // 잘못된 이전 기본값(0, 20, 1.5 등)을 모듈별 올바른 기본값으로 교정
   React.useEffect(() => {
     const mods = useFurnitureStore.getState().placedModules;
     let changed = false;
     const fixed = mods.map(m => {
       if (!m.hasDoor) return m;
-      const isLower = m.moduleId?.startsWith('lower-') || m.moduleId?.includes('dual-lower-');
+      const mid = m.moduleId || '';
+      const isLower = mid.startsWith('lower-') || mid.includes('dual-lower-');
       if (!isLower) return m;
-      const needsTopFix = m.doorTopGap === undefined || m.doorTopGap === 20 || m.doorTopGap === 1.5;
-      const needsBotFix = m.doorBottomGap === undefined || m.doorBottomGap === 2 || m.doorBottomGap === 25;
+      // 모듈별 올바른 기본값
+      const isDL = mid.includes('lower-door-lift-') && !mid.includes('-half-');
+      const isTD = mid.includes('lower-top-down-') && !mid.includes('-half-');
+      const correctTopGap = isDL ? 30 : isTD ? -80 : -20;
+      // 잘못된 값 목록: undefined, 이전 버그로 저장된 0, 20, 1.5
+      const badTopValues = [undefined, 0, 20, 1.5];
+      const badBotValues = [undefined, 0, 2, 25];
+      const needsTopFix = badTopValues.includes(m.doorTopGap as undefined | number);
+      const needsBotFix = badBotValues.includes(m.doorBottomGap as undefined | number);
       if (needsTopFix || needsBotFix) {
         changed = true;
         return {
           ...m,
-          doorTopGap: needsTopFix ? -20 : m.doorTopGap,
+          doorTopGap: needsTopFix ? correctTopGap : m.doorTopGap,
           doorBottomGap: needsBotFix ? 5 : m.doorBottomGap,
         };
       }
