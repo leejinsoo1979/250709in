@@ -1646,7 +1646,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
             if (modCategory === 'lower' && isDrawerModule) {
               // 서랍 모듈: 마이다 개별 높이
               const modHeightMm = modData ? computeFurnitureHeightMm(mod as PlacedModule, modData, spaceInfo, internalSpace) : 0;
-              const lowerMaidas = computeLowerCabinetMaidaHeights(mod.moduleId, modHeightMm, mod.doorTopGap ?? 0, mod.doorBottomGap ?? 0);
+              const lowerMaidas = computeLowerCabinetMaidaHeights(mod.moduleId, modHeightMm, mod.doorTopGap ?? -20, mod.doorBottomGap ?? 5);
               if (lowerMaidas && lowerMaidas.length > 0) {
                 const cabinetBottomY = furnitureBaseY;
 
@@ -2405,7 +2405,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
 
             if (modCategory === 'lower' && isDrawerModule) {
               const modHeightMm = modData ? computeFurnitureHeightMm(mod as PlacedModule, modData, spaceInfo, internalSpace) : 0;
-              const lowerMaidas = computeLowerCabinetMaidaHeights(mod.moduleId, modHeightMm, mod.doorTopGap ?? 0, mod.doorBottomGap ?? 0);
+              const lowerMaidas = computeLowerCabinetMaidaHeights(mod.moduleId, modHeightMm, mod.doorTopGap ?? -20, mod.doorBottomGap ?? 5);
               if (lowerMaidas && lowerMaidas.length > 0) {
                 const cabinetBottomY_r = furnitureBaseY;
 

@@ -452,7 +452,7 @@ const Configurator: React.FC = () => {
     }
   };
 
-  // 도어 셋팅 최초 표시 시 undefined 값만 기본값으로 채움
+  // 도어 셋팅 최초 표시 시 undefined 값만 기본값으로 채움 (카테고리별 분기)
   React.useEffect(() => {
     if (!showDoorSetup) return;
     const needsInit = spaceInfo.doorTopGap === undefined || spaceInfo.doorBottomGap === undefined;
@@ -466,7 +466,11 @@ const Configurator: React.FC = () => {
     const initMods = useFurnitureStore.getState().placedModules.map(m => {
       if (!m.hasDoor) return m;
       if (m.doorTopGap !== undefined && m.doorBottomGap !== undefined) return m;
-      return { ...m, doorTopGap: m.doorTopGap ?? topGap, doorBottomGap: m.doorBottomGap ?? botGap };
+      // 하부장은 -20/5, 그 외(상부/풀장)는 spaceInfo 기본값 사용
+      const isLower = m.moduleId?.startsWith('lower-') || m.moduleId?.includes('dual-lower-');
+      const defaultTop = isLower ? -20 : topGap;
+      const defaultBot = isLower ? 5 : botGap;
+      return { ...m, doorTopGap: m.doorTopGap ?? defaultTop, doorBottomGap: m.doorBottomGap ?? defaultBot };
     });
     useFurnitureStore.setState({ placedModules: initMods });
     setTimeout(() => {
@@ -474,16 +478,24 @@ const Configurator: React.FC = () => {
     }, 50);
   }, [showDoorSetup]);
 
-  // 하부장 doorTopGap 잘못된 기본값(20) → -20 마이그레이션
+  // 하부장 doorTopGap/doorBottomGap 기본값 마이그레이션
+  // doorTopGap이 undefined/20/1.5인 경우 → -20으로, doorBottomGap undefined/2/25 → 5로
   React.useEffect(() => {
     const mods = useFurnitureStore.getState().placedModules;
     let changed = false;
     const fixed = mods.map(m => {
       if (!m.hasDoor) return m;
       const isLower = m.moduleId?.startsWith('lower-') || m.moduleId?.includes('dual-lower-');
-      if (isLower && m.doorTopGap === 20) {
+      if (!isLower) return m;
+      const needsTopFix = m.doorTopGap === undefined || m.doorTopGap === 20 || m.doorTopGap === 1.5;
+      const needsBotFix = m.doorBottomGap === undefined || m.doorBottomGap === 2 || m.doorBottomGap === 25;
+      if (needsTopFix || needsBotFix) {
         changed = true;
-        return { ...m, doorTopGap: -20 };
+        return {
+          ...m,
+          doorTopGap: needsTopFix ? -20 : m.doorTopGap,
+          doorBottomGap: needsBotFix ? 5 : m.doorBottomGap,
+        };
       }
       return m;
     });
