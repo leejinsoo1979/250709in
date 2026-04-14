@@ -3,7 +3,8 @@ import { FaExchangeAlt } from 'react-icons/fa';
 import { useSpaceConfigStore, FURNITURE_LIMITS } from '@/store/core/spaceConfigStore';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
 import { useUIStore } from '@/store/uiStore';
-import { getModuleById, buildModuleDataFromPlacedModule, ModuleData } from '@/data/modules';
+import { getModuleById, buildModuleDataFromPlacedModule, ModuleData, calculateEvenShelfPositions } from '@/data/modules';
+import type { SectionConfig } from '@/data/modules/shelving';
 import { calculateInternalSpace, calculateTopBottomFrameHeight, calculateBaseFrameHeight } from '../../viewer3d/utils/geometry';
 import { analyzeColumnSlots } from '../../utils/columnSlotProcessor';
 import { calculateSpaceIndexing } from '../../utils/indexing';
@@ -659,6 +660,10 @@ const PlacedModulePropertiesPanel: React.FC = () => {
   const [originalLowerDoorTopGap, setOriginalLowerDoorTopGap] = useState<number>(0);
   const [originalLowerDoorBottomGap, setOriginalLowerDoorBottomGap] = useState<number>(45);
 
+  // 선반장 편집 상태
+  const [shelfCount, setShelfCount] = useState<number>(5);
+  const [shelfPositionInputs, setShelfPositionInputs] = useState<string[]>([]);
+
   // 전체 팝업에서 엔터키 처리 - 조건문 위로 이동
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -1122,6 +1127,21 @@ const PlacedModulePropertiesPanel: React.FC = () => {
         // defaultWidth: moduleData.dimensions.width,
         // finalWidth: initialWidth
       // });
+
+      // 선반장 모듈 초기화
+      const isShelfModule = currentPlacedModule.moduleId.includes('single-shelf-') ||
+        currentPlacedModule.moduleId.includes('single-4drawer-shelf-') ||
+        currentPlacedModule.moduleId.includes('single-2drawer-shelf-');
+      if (isShelfModule) {
+        const effectiveSections = currentPlacedModule.customSections || moduleData.modelConfig?.sections || [];
+        const shelfSection = effectiveSections.find((s: SectionConfig) => s.type === 'shelf');
+        if (shelfSection) {
+          const count = shelfSection.count || 0;
+          setShelfCount(count);
+          const positions = shelfSection.shelfPositions || [];
+          setShelfPositionInputs(positions.map((p: number) => Math.round(p).toString()));
+        }
+      }
     }
   }, [currentPlacedModule?.id, moduleData?.id, currentPlacedModule?.customDepth, currentPlacedModule?.customWidth, currentPlacedModule?.adjustedWidth, currentPlacedModule?.hasDoor, currentPlacedModule?.doorTopGap, currentPlacedModule?.doorBottomGap, moduleDefaultLowerTopOffset]); // 실제 값이 바뀔 때만 실행
 
@@ -3671,6 +3691,128 @@ const PlacedModulePropertiesPanel: React.FC = () => {
               </div>
             </div>
           )}
+
+          {/* 선반장 선반 설정 */}
+          {!showDetails && currentPlacedModule && (
+            currentPlacedModule.moduleId.includes('single-shelf-') ||
+            currentPlacedModule.moduleId.includes('single-4drawer-shelf-') ||
+            currentPlacedModule.moduleId.includes('single-2drawer-shelf-')
+          ) && (() => {
+            const effectiveSections: SectionConfig[] = currentPlacedModule.customSections || moduleData.modelConfig?.sections || [];
+            const shelfSectionIdx = effectiveSections.findIndex((s: SectionConfig) => s.type === 'shelf');
+            if (shelfSectionIdx < 0) return null;
+            const shelfSection = effectiveSections[shelfSectionIdx];
+            const sectionHeight = shelfSection.height;
+            const basicThickness = moduleData.modelConfig?.basicThickness || 18;
+
+            const handleShelfCountChange = (delta: number) => {
+              const newCount = Math.max(1, Math.min(10, shelfCount + delta));
+              setShelfCount(newCount);
+              const newPositions = calculateEvenShelfPositions(sectionHeight, newCount, basicThickness);
+              setShelfPositionInputs(newPositions.map(p => Math.round(p).toString()));
+              // 섹션 업데이트
+              const newSections = [...effectiveSections];
+              newSections[shelfSectionIdx] = {
+                ...shelfSection,
+                count: newCount,
+                shelfPositions: newPositions
+              };
+              updatePlacedModule(currentPlacedModule.id, { customSections: newSections });
+            };
+
+            const handleShelfPositionChange = (index: number, value: string) => {
+              const newInputs = [...shelfPositionInputs];
+              newInputs[index] = value;
+              setShelfPositionInputs(newInputs);
+            };
+
+            const handleShelfPositionBlur = (index: number) => {
+              const val = parseInt(shelfPositionInputs[index], 10);
+              if (isNaN(val) || val < 0 || val > sectionHeight) {
+                // 잘못된 값이면 기존 위치로 복원
+                const positions = shelfSection.shelfPositions || [];
+                const newInputs = [...shelfPositionInputs];
+                newInputs[index] = Math.round(positions[index] || 0).toString();
+                setShelfPositionInputs(newInputs);
+                return;
+              }
+              const currentPositions = shelfSection.shelfPositions ? [...shelfSection.shelfPositions] : [];
+              currentPositions[index] = val;
+              const newSections = [...effectiveSections];
+              newSections[shelfSectionIdx] = {
+                ...shelfSection,
+                shelfPositions: currentPositions
+              };
+              updatePlacedModule(currentPlacedModule.id, { customSections: newSections });
+            };
+
+            return (
+              <div className={styles.propertySection}>
+                <h5 className={styles.sectionTitle}>선반 설정</h5>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                  <span style={{ fontSize: '12px', color: 'var(--theme-text-secondary)' }}>선반 갯수</span>
+                  <button
+                    onClick={() => handleShelfCountChange(-1)}
+                    disabled={shelfCount <= 1}
+                    style={{
+                      width: '28px', height: '28px', border: '1px solid var(--theme-border)',
+                      borderRadius: '4px', background: 'var(--theme-surface)', cursor: shelfCount <= 1 ? 'not-allowed' : 'pointer',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '16px',
+                      color: shelfCount <= 1 ? 'var(--theme-text-disabled)' : 'var(--theme-text-primary)'
+                    }}
+                  >−</button>
+                  <span style={{ fontSize: '14px', fontWeight: 600, minWidth: '20px', textAlign: 'center' }}>{shelfCount}</span>
+                  <button
+                    onClick={() => handleShelfCountChange(1)}
+                    disabled={shelfCount >= 10}
+                    style={{
+                      width: '28px', height: '28px', border: '1px solid var(--theme-border)',
+                      borderRadius: '4px', background: 'var(--theme-surface)', cursor: shelfCount >= 10 ? 'not-allowed' : 'pointer',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '16px',
+                      color: shelfCount >= 10 ? 'var(--theme-text-disabled)' : 'var(--theme-text-primary)'
+                    }}
+                  >+</button>
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  {shelfPositionInputs.map((posInput, i) => (
+                    <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <span style={{ fontSize: '11px', color: 'var(--theme-text-secondary)', minWidth: '50px' }}>선반 {i + 1}</span>
+                      <div className={styles.inputWithUnit}>
+                        <input
+                          type="text"
+                          inputMode="numeric"
+                          value={posInput}
+                          onChange={(e) => handleShelfPositionChange(i, e.target.value)}
+                          onBlur={() => handleShelfPositionBlur(i)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') { (e.target as HTMLInputElement).blur(); }
+                            else if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                              e.preventDefault();
+                              const cur = parseInt(posInput, 10) || 0;
+                              const next = Math.max(0, Math.min(Math.round(sectionHeight), cur + (e.key === 'ArrowUp' ? 1 : -1)));
+                              handleShelfPositionChange(i, next.toString());
+                              // blur 트리거 없이 즉시 적용
+                              const currentPositions = shelfSection.shelfPositions ? [...shelfSection.shelfPositions] : [];
+                              currentPositions[i] = next;
+                              const newSections = [...effectiveSections];
+                              newSections[shelfSectionIdx] = { ...shelfSection, shelfPositions: currentPositions };
+                              updatePlacedModule(currentPlacedModule.id, { customSections: newSections });
+                            }
+                          }}
+                          className={styles.depthInput}
+                          style={{
+                            color: '#000000', backgroundColor: '#ffffff',
+                            WebkitTextFillColor: '#000000', opacity: 1, width: '60px'
+                          }}
+                        />
+                        <span className={styles.unit}>mm</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            );
+          })()}
 
           {/* 섹션 깊이 설정 (2섹션 가구만, 상세보기 아닐 때만) */}
           {!showDetails && isTwoSectionFurniture && (() => {
