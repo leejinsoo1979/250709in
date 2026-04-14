@@ -897,7 +897,8 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
             });
 
             // 하부장: 도어 상단갭 (도어 상단 ~ 가구 상단) + 하단갭 (바닥 ~ 도어 하단)
-            if (modCat === 'lower' && !modData.id?.includes('lower-door-lift-') && !modData.id?.includes('lower-top-down-')) {
+            // lower-top-down은 고정 710mm 도어 → 별도 갭 처리 불필요
+            if (modCat === 'lower' && !modData.id?.includes('lower-top-down-')) {
               const cabinetH = modData.dimensions.height ?? 1000;
               const cabinetBottomAbs = (isFloating ? floatHeightMm : (railOrBaseHeightMm + indivFloatMm)) + floorFinishHeightMm;
               const cabinetTopAbsMm = cabinetBottomAbs + cabinetH;
