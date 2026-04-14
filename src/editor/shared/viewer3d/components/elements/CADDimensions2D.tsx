@@ -1610,8 +1610,9 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           const panelDepthU = mmToThreeUnits(panelDepthMm);
           const furnitureDepthU = mmToThreeUnits(600);
           const furnitureFrontZ = -panelDepthU / 2 + (panelDepthU - furnitureDepthU) / 2 + furnitureDepthU / 2;
-          const doorDimZ = furnitureFrontZ + mmToThreeUnits(200);
-          const doorExtStartZ = furnitureFrontZ + mmToThreeUnits(20);
+          const doorDimZ = furnitureFrontZ + mmToThreeUnits(150);
+          const doorExtStartZ = furnitureFrontZ + mmToThreeUnits(30);
+          const doorTextOffsetZ = mmToThreeUnits(60);
           const doorColor = dimensionColor;
 
           // 측면뷰에 보이는 가구만 대상 (visibleFurniture 기반)
@@ -1651,16 +1652,15 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
               if (lowerMaidas && lowerMaidas.length > 0) {
                 const cabinetBottomY = furnitureBaseY;
 
-                const gaps: { bottomMm: number; topMm: number; heightMm: number }[] = [];
-                // 하단 갭: 바닥~마이다 하단 거리를 캐비넷 바닥 기준으로 표시
-                // 마이다 하단이 캐비넷 바닥 아래(-5mm)면 → 캐비넷 바닥(0)~마이다 하단(-5)에 치수선 그리되, 값은 바닥~마이다 거리
+                const gaps: { bottomMm: number; topMm: number; heightMm: number; absCoord?: boolean }[] = [];
+                // 하단 갭: 바닥~마이다 하단 거리
                 const firstMaida = lowerMaidas[0];
                 const floorToMaidaBottomMm = baseFrameHeightMm + firstMaida.maidaBottomMm;
                 if (firstMaida.maidaBottomMm > 0) {
                   gaps.push({ bottomMm: 0, topMm: firstMaida.maidaBottomMm, heightMm: Math.round(firstMaida.maidaBottomMm) });
                 } else if (firstMaida.maidaBottomMm < 0 && Math.abs(floorToMaidaBottomMm) >= 1) {
-                  // 캐비넷 바닥(0)에서 마이다 하단(음수)까지 치수선, 표시값은 바닥~마이다 절대거리
-                  gaps.push({ bottomMm: firstMaida.maidaBottomMm, topMm: 0, heightMm: Math.round(floorToMaidaBottomMm) });
+                  // 바닥(0)~마이다 하단: 절대좌표로 치수선, 연장선은 가구 외곽 + 바닥 기준
+                  gaps.push({ bottomMm: 0, topMm: floorToMaidaBottomMm, heightMm: Math.round(floorToMaidaBottomMm), absCoord: true });
                 }
                 // 마이다 사이 갭
                 for (let gi = 0; gi < lowerMaidas.length - 1; gi++) {
@@ -1686,7 +1686,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                           <NativeLine name="door_height_dim" points={[[0, dBotY, doorDimZ], [0, dTopY, doorDimZ]]} color={doorColor} lineWidth={1} renderOrder={100000} depthTest={false} />
                           <NativeLine name="door_height_dim" points={[[-0.008, dBotY, doorDimZ], [0.008, dBotY, doorDimZ]]} color={doorColor} lineWidth={1} renderOrder={100000} depthTest={false} />
                           <NativeLine name="door_height_dim" points={[[-0.008, dTopY, doorDimZ], [0.008, dTopY, doorDimZ]]} color={doorColor} lineWidth={1} renderOrder={100000} depthTest={false} />
-                          <Text position={[0, (dBotY + dTopY) / 2, doorDimZ + mmToThreeUnits(60)]} fontSize={largeFontSize} color={doorColor} anchorX="center" anchorY="middle" renderOrder={1000} depthTest={false} rotation={[0, -Math.PI / 2, Math.PI / 2]}>
+                          <Text position={[0, (dBotY + dTopY) / 2, doorDimZ + doorTextOffsetZ]} fontSize={largeFontSize} color={doorColor} anchorX="center" anchorY="middle" renderOrder={1000} depthTest={false} rotation={[0, -Math.PI / 2, Math.PI / 2]}>
                             {Number.isInteger(m.maidaHeightMm) ? m.maidaHeightMm.toString() : (Math.round(m.maidaHeightMm * 10) / 10).toString()}
                           </Text>
                           <ExtLine points={[[0, dTopY, doorExtStartZ], [0, dTopY, doorDimZ]]} color={doorColor} lineWidth={0.3} name="door_height_ext" />
@@ -1695,14 +1695,15 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                       );
                     })}
                     {gaps.map((gap, gi) => {
-                      const gBotY = cabinetBottomY + mmToThreeUnits(gap.bottomMm);
-                      const gTopY = cabinetBottomY + mmToThreeUnits(gap.topMm);
+                      // absCoord: 바닥(floorFinishY) 기준 절대좌표
+                      const gBotY = gap.absCoord ? floorFinishY + mmToThreeUnits(gap.bottomMm) : cabinetBottomY + mmToThreeUnits(gap.bottomMm);
+                      const gTopY = gap.absCoord ? floorFinishY + mmToThreeUnits(gap.topMm) : cabinetBottomY + mmToThreeUnits(gap.topMm);
                       return (
                         <group key={`door-gap-${modIdx}-${gi}`}>
                           <NativeLine name="door_height_dim" points={[[0, gBotY, doorDimZ], [0, gTopY, doorDimZ]]} color={doorColor} lineWidth={1} renderOrder={100000} depthTest={false} />
                           <NativeLine name="door_height_dim" points={[[-0.008, gBotY, doorDimZ], [0.008, gBotY, doorDimZ]]} color={doorColor} lineWidth={1} renderOrder={100000} depthTest={false} />
                           <NativeLine name="door_height_dim" points={[[-0.008, gTopY, doorDimZ], [0.008, gTopY, doorDimZ]]} color={doorColor} lineWidth={1} renderOrder={100000} depthTest={false} />
-                          <Text position={[0, (gBotY + gTopY) / 2, doorDimZ + mmToThreeUnits(60)]} fontSize={largeFontSize} color={doorColor} anchorX="center" anchorY="middle" renderOrder={1000} depthTest={false} rotation={[0, -Math.PI / 2, Math.PI / 2]}>
+                          <Text position={[0, (gBotY + gTopY) / 2, doorDimZ + doorTextOffsetZ]} fontSize={largeFontSize} color={doorColor} anchorX="center" anchorY="middle" renderOrder={1000} depthTest={false} rotation={[0, -Math.PI / 2, Math.PI / 2]}>
                             {gap.heightMm}
                           </Text>
                           <ExtLine points={[[0, gTopY, doorExtStartZ], [0, gTopY, doorDimZ]]} color={doorColor} lineWidth={0.3} name="door_height_ext" />
@@ -2415,14 +2416,14 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
               if (lowerMaidas && lowerMaidas.length > 0) {
                 const cabinetBottomY_r = furnitureBaseY;
 
-                const gaps_r: { bottomMm: number; topMm: number; heightMm: number }[] = [];
-                // 하단 갭: 바닥~마이다 하단 거리를 캐비넷 바닥 기준으로 표시
+                const gaps_r: { bottomMm: number; topMm: number; heightMm: number; absCoord?: boolean }[] = [];
+                // 하단 갭: 바닥~마이다 하단 거리
                 const firstMaida_r = lowerMaidas[0];
                 const floorToMaidaBottomMm_r = baseFrameHeightMm + firstMaida_r.maidaBottomMm;
                 if (firstMaida_r.maidaBottomMm > 0) {
                   gaps_r.push({ bottomMm: 0, topMm: firstMaida_r.maidaBottomMm, heightMm: Math.round(firstMaida_r.maidaBottomMm) });
                 } else if (firstMaida_r.maidaBottomMm < 0 && Math.abs(floorToMaidaBottomMm_r) >= 1) {
-                  gaps_r.push({ bottomMm: firstMaida_r.maidaBottomMm, topMm: 0, heightMm: Math.round(floorToMaidaBottomMm_r) });
+                  gaps_r.push({ bottomMm: 0, topMm: floorToMaidaBottomMm_r, heightMm: Math.round(floorToMaidaBottomMm_r), absCoord: true });
                 }
                 // 마이다 사이 갭
                 for (let gi = 0; gi < lowerMaidas.length - 1; gi++) {
@@ -2457,8 +2458,8 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                       );
                     })}
                     {gaps_r.map((gap, gi) => {
-                      const gBotY = cabinetBottomY_r + mmToThreeUnits(gap.bottomMm);
-                      const gTopY = cabinetBottomY_r + mmToThreeUnits(gap.topMm);
+                      const gBotY = gap.absCoord ? floorFinishY + mmToThreeUnits(gap.bottomMm) : cabinetBottomY_r + mmToThreeUnits(gap.bottomMm);
+                      const gTopY = gap.absCoord ? floorFinishY + mmToThreeUnits(gap.topMm) : cabinetBottomY_r + mmToThreeUnits(gap.topMm);
                       return (
                         <group key={`r-door-gap-${modIdx}-${gi}`}>
                           <NativeLine name="door_height_dim" points={[[0, gBotY, doorDimZ_r], [0, gTopY, doorDimZ_r]]} color={doorColor_r} lineWidth={1} renderOrder={100000} depthTest={false} />
