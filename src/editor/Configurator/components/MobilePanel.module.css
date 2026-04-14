@@ -10,7 +10,7 @@
     border-top-left-radius: 20px;
     border-top-right-radius: 20px;
     box-shadow: 0 -8px 30px rgba(15, 23, 42, 0.08);
-    padding: 20px 0 16px;
+    padding: 8px 0 4px;
     z-index: 999;
     overflow-y: auto;
     transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -140,18 +140,18 @@
 .categoryTabs {
     display: flex;
     padding: 0 16px;
-    margin-bottom: 12px;
+    margin-bottom: 4px;
     border-bottom: 1px solid var(--theme-border);
     gap: 16px;
 }
 
 .categoryTab {
-    padding: 8px 4px;
+    padding: 4px 4px;
     background: none;
     border: none;
     border-bottom: 2px solid transparent;
     color: var(--theme-text-secondary);
-    font-size: 14px;
+    font-size: 12px;
     font-weight: 500;
     transition: all 0.2s;
 }
