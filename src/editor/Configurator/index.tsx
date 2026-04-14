@@ -466,9 +466,12 @@ const Configurator: React.FC = () => {
     const initMods = useFurnitureStore.getState().placedModules.map(m => {
       if (!m.hasDoor) return m;
       if (m.doorTopGap !== undefined && m.doorBottomGap !== undefined) return m;
-      // 하부장은 -20/5, 그 외(상부/풀장)는 spaceInfo 기본값 사용
-      const isLower = m.moduleId?.startsWith('lower-') || m.moduleId?.includes('dual-lower-');
-      const defaultTop = isLower ? -20 : topGap;
+      // 모듈별 기본값: 도어올림=30, 상판내림=-80, 일반하부장=-20, 그 외=spaceInfo
+      const mid = m.moduleId || '';
+      const isLower = mid.startsWith('lower-') || mid.includes('dual-lower-');
+      const isDL = mid.includes('lower-door-lift-') && !mid.includes('-half-');
+      const isTD = mid.includes('lower-top-down-') && !mid.includes('-half-');
+      const defaultTop = isDL ? 30 : isTD ? -80 : isLower ? -20 : topGap;
       const defaultBot = isLower ? 5 : botGap;
       return { ...m, doorTopGap: m.doorTopGap ?? defaultTop, doorBottomGap: m.doorBottomGap ?? defaultBot };
     });

@@ -1001,9 +1001,13 @@ const PlacedModulePropertiesPanel: React.FC = () => {
 
       // 도어 상하 갭 초기값 설정 (천장/바닥 기준, 입력 중 방해 방지)
       // 띄움배치일 때는 띄움 높이를 바닥 이격거리로 자동 설정
-      // 하부장은 기본값 -20/5, 그 외는 0
-      const isLowerMod = currentPlacedModule.moduleId?.startsWith('lower-') || currentPlacedModule.moduleId?.includes('dual-lower-');
-      const initialTopGap = currentPlacedModule.doorTopGap ?? (isLowerMod ? -20 : 0);
+      // 모듈별 기본 doorTopGap: 도어올림=30, 상판내림=-80, 일반하부장=-20, 그 외=0
+      const modId = currentPlacedModule.moduleId || '';
+      const isLowerMod = modId.startsWith('lower-') || modId.includes('dual-lower-');
+      const isDoorLift = modId.includes('lower-door-lift-') && !modId.includes('-half-');
+      const isTopDown = modId.includes('lower-top-down-') && !modId.includes('-half-');
+      const defaultTopGap = isDoorLift ? 30 : isTopDown ? -80 : isLowerMod ? -20 : 0;
+      const initialTopGap = currentPlacedModule.doorTopGap ?? defaultTopGap;
       // 도어 상하갭은 항상 바닥/천장 기준 (받침대/띄움 무관, 0이면 공간 높이)
       const initialBottomGap = currentPlacedModule.doorBottomGap ?? (isLowerMod ? 5 : 0);
       // State 업데이트
@@ -2079,9 +2083,12 @@ const PlacedModulePropertiesPanel: React.FC = () => {
       const mod = useFurnitureStore.getState().placedModules.find(m => m.id === activePopup.id);
       const updates: Record<string, unknown> = { hasDoor: doorEnabled };
       if (doorEnabled && mod) {
-        const cat = mod.moduleId?.includes('upper-') ? 'upper' : mod.moduleId?.startsWith('lower-') ? 'lower' : 'full';
+        const mId = mod.moduleId || '';
+        const cat = mId.includes('upper-') ? 'upper' : mId.startsWith('lower-') ? 'lower' : 'full';
+        const isDL = mId.includes('lower-door-lift-') && !mId.includes('-half-');
+        const isTD = mId.includes('lower-top-down-') && !mId.includes('-half-');
         if (mod.doorTopGap === undefined) {
-          updates.doorTopGap = cat === 'lower' ? -20 : cat === 'upper' ? -20 : 5;
+          updates.doorTopGap = isDL ? 30 : isTD ? -80 : cat === 'lower' ? -20 : cat === 'upper' ? -20 : 5;
         }
         if (mod.doorBottomGap === undefined) {
           updates.doorBottomGap = cat === 'lower' ? 5 : cat === 'upper' ? 5 : 25;
