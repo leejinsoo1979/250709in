@@ -745,9 +745,27 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
       const moduleBaseType = dragData.moduleData.id.replace(/-[\d.]+$/, '');
 
       // 듀얼 가구 여부 판단 - ID prefix, isDualSlot 플래그, 또는 너비 기반
+      // zone의 columnWidth 사용 (전체 공간 indexing.columnWidth 대신)
+      const zoneColWidth = zoneIndexing.columnWidth || indexing.columnWidth;
       const isDual = dragData.moduleData.id.startsWith('dual-')
         || dragData.isDualSlot === true
-        || (dragData.moduleData.dimensions.width > indexing.columnWidth * 1.5);
+        || (dragData.moduleData.dimensions.width > zoneColWidth * 1.5);
+
+      console.log('🔴🔴🔴 [isDual 판정]', {
+        moduleId: dragData.moduleData.id,
+        isDualSlot: dragData.isDualSlot,
+        moduleWidth: dragData.moduleData.dimensions.width,
+        zoneColWidth,
+        'indexing.columnWidth': indexing.columnWidth,
+        'zoneIndexing.columnWidth': zoneIndexing.columnWidth,
+        threshold: zoneColWidth * 1.5,
+        idStartsDual: dragData.moduleData.id.startsWith('dual-'),
+        flagIsDual: dragData.isDualSlot === true,
+        widthIsDual: dragData.moduleData.dimensions.width > zoneColWidth * 1.5,
+        isDual,
+        zone: zoneToUse,
+        zoneSlotIndex,
+      });
 
       // 영역에 맞는 너비의 동일 타입 모듈 찾기 - 실제 슬롯 너비 사용
       let targetWidth: number;
