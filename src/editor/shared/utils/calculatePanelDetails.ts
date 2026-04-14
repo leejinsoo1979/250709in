@@ -130,8 +130,9 @@ export const calculatePanelDetails = (
       let sectionName = '';
       let targetPanel = null;
 
-      // 2단 옷장 (single-2hanging, dual-2hanging): 첫 번째 섹션(hanging)이 하부장, 두 번째 섹션(hanging)이 상부장
-      if (moduleData.id.includes('single-2hanging') || moduleData.id.includes('dual-2hanging')) {
+      // 2단 옷장/선반장 (single-2hanging, dual-2hanging, single-2shelf, dual-2shelf): 첫 번째 섹션이 하부장, 두 번째 섹션이 상부장
+      if (moduleData.id.includes('single-2hanging') || moduleData.id.includes('dual-2hanging') ||
+          moduleData.id.includes('single-2shelf') || moduleData.id.includes('dual-2shelf')) {
         if (sectionIndex === 0) {
           sectionName = '하부장';
           targetPanel = panels.lower;
@@ -140,8 +141,9 @@ export const calculatePanelDetails = (
           targetPanel = panels.upper;
         }
       }
-      // 싱글 서랍+옷장 (single-2drawer-hanging, single-4drawer-hanging): drawer면 하부장, hanging이면 상부장
-      else if (moduleData.id.includes('single-2drawer-hanging') || moduleData.id.includes('single-4drawer-hanging')) {
+      // 싱글 서랍+옷장/선반장 (single-2drawer-hanging, single-4drawer-hanging, single-2drawer-shelf, single-4drawer-shelf): drawer면 하부장, 나머지 상부장
+      else if (moduleData.id.includes('single-2drawer-hanging') || moduleData.id.includes('single-4drawer-hanging') ||
+               moduleData.id.includes('single-2drawer-shelf') || moduleData.id.includes('single-4drawer-shelf')) {
         if (section.type === 'drawer') {
           sectionName = '하부장';
           targetPanel = panels.lower;
@@ -150,9 +152,11 @@ export const calculatePanelDetails = (
           targetPanel = panels.upper;
         }
       }
-      // 듀얼 서랍+옷장 타입 (dual-2drawer-hanging, dual-4drawer-hanging, dual-4drawer-pantshanger, dual-2drawer-styler)
+      // 듀얼 서랍+옷장/선반장 타입 (dual-2drawer-hanging, dual-4drawer-hanging, dual-2drawer-shelf, dual-4drawer-shelf, dual-4drawer-pantshanger, dual-2drawer-styler)
       else if (moduleData.id.includes('dual-2drawer-hanging') ||
                moduleData.id.includes('dual-4drawer-hanging') ||
+               moduleData.id.includes('dual-2drawer-shelf') ||
+               moduleData.id.includes('dual-4drawer-shelf') ||
                moduleData.id.includes('dual-4drawer-pantshanger') ||
                moduleData.id.includes('dual-2drawer-styler')) {
         if (section.type === 'drawer') {
@@ -213,6 +217,9 @@ export const calculatePanelDetails = (
         moduleData.id.includes('4drawer-hanging') ||
         moduleData.id.includes('2drawer-hanging') ||
         moduleData.id.includes('2hanging') ||
+        moduleData.id.includes('4drawer-shelf') ||
+        moduleData.id.includes('2drawer-shelf') ||
+        moduleData.id.includes('2shelf') ||
         moduleData.id.includes('4drawer-pantshanger') ||
         moduleData.id.includes('2drawer-styler');
 
@@ -680,7 +687,8 @@ export const calculatePanelDetails = (
       } else if (section.type === 'hanging') {
         // 옷장 섹션 - 선반이 있으면 추가 (하나만)
         // 2단 옷장 하부장의 shelfPositions: [0]은 치수 표시용이므로 제외
-        const is2HangingLower = (moduleData.id.includes('single-2hanging') || moduleData.id.includes('dual-2hanging')) && sectionIndex === 0;
+        const is2HangingLower = (moduleData.id.includes('single-2hanging') || moduleData.id.includes('dual-2hanging') ||
+                                moduleData.id.includes('single-2shelf') || moduleData.id.includes('dual-2shelf')) && sectionIndex === 0;
         if (section.shelfPositions && section.shelfPositions.length > 0 && !is2HangingLower) {
           targetPanel.push({
             name: `${sectionPrefix}선반 1`,
@@ -1022,7 +1030,10 @@ export const calculatePanelDetails = (
     const isSplitSidePanelForBracket =
       moduleData.id.includes('4drawer-hanging') ||
       moduleData.id.includes('2drawer-hanging') ||
-      moduleData.id.includes('2hanging');
+      moduleData.id.includes('2hanging') ||
+      moduleData.id.includes('4drawer-shelf') ||
+      moduleData.id.includes('2drawer-shelf') ||
+      moduleData.id.includes('2shelf');
 
     // 하부 섹션 높이 계산 (분리 측판에서 Y좌표 변환용)
     let lowerSectionHeight = 0;
