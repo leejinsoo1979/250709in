@@ -3038,7 +3038,7 @@ const Room: React.FC<RoomProps> = ({
             const hasRightWall = spaceInfo.installType === 'builtin' || spaceInfo.installType === 'built-in' ||
               (spaceInfo.installType === 'semistanding' && wallConfig?.right);
             const ceilingY = panelStartY + height;
-            const z1 = extendedZOffset - 0.002; // 뒷벽 라인을 가구 백패널보다 살짝 뒤로 (z-fighting 방지)
+            const z1 = extendedZOffset;
             const z2 = extendedZOffset + extendedPanelDepth;
             const x1 = xOffset;
             const x2 = xOffset + width;
@@ -3252,13 +3252,13 @@ const Room: React.FC<RoomProps> = ({
 
             return (
               <>
-                {/* 뒷벽 단색 선 — 가구보다 먼저 렌더링, 가구에 가려짐 */}
+                {/* 뒷벽 단색 선 — 도어/가구가 먼저 depth에 기록된 후 그려져 가려짐 */}
                 {solidLines.length > 0 && (
-                  <lineSegments renderOrder={-10}>
+                  <lineSegments renderOrder={20}>
                     <bufferGeometry>
                       <bufferAttribute attach="attributes-position" args={[solidPositions, 3]} />
                     </bufferGeometry>
-                    <lineBasicMaterial color={wfLineColor} depthTest={true} depthWrite={true} />
+                    <lineBasicMaterial color={wfLineColor} depthTest={true} depthWrite={false} />
                   </lineSegments>
                 )}
                 {/* 경계벽 오버레이 선 (depthTest=false: 뒷벽 mesh에 가려지지 않음) */}
@@ -3270,14 +3270,14 @@ const Room: React.FC<RoomProps> = ({
                     <lineBasicMaterial color={wfLineColor} depthTest={false} />
                   </lineSegments>
                 )}
-                {/* z축 그라데이션 선 — 가구보다 먼저 렌더링, 가구에 가려짐 */}
+                {/* z축 그라데이션 선 — 도어/가구가 먼저 depth에 기록된 후 그려져 가려짐 */}
                 {gradientLines.length > 0 && (
-                  <lineSegments renderOrder={-10}>
+                  <lineSegments renderOrder={20}>
                     <bufferGeometry>
                       <bufferAttribute attach="attributes-position" args={[gradPositions, 3]} />
                       <bufferAttribute attach="attributes-color" args={[gradColors, 3]} />
                     </bufferGeometry>
-                    <lineBasicMaterial vertexColors depthTest={true} depthWrite={true} />
+                    <lineBasicMaterial vertexColors depthTest={true} depthWrite={false} />
                   </lineSegments>
                 )}
               </>
