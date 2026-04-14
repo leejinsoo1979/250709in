@@ -1129,9 +1129,9 @@ const PlacedModulePropertiesPanel: React.FC = () => {
       // });
 
       // 선반장 모듈 초기화
-      const isShelfModule = currentPlacedModule.moduleId.includes('single-shelf-') ||
-        currentPlacedModule.moduleId.includes('single-4drawer-shelf-') ||
-        currentPlacedModule.moduleId.includes('single-2drawer-shelf-');
+      const isShelfModule = currentPlacedModule.moduleId.includes('-shelf-') ||
+        currentPlacedModule.moduleId.includes('-4drawer-shelf-') ||
+        currentPlacedModule.moduleId.includes('-2drawer-shelf-');
       if (isShelfModule) {
         const effectiveSections = currentPlacedModule.customSections || moduleData.modelConfig?.sections || [];
         const shelfSection = effectiveSections.find((s: SectionConfig) => s.type === 'shelf');
@@ -3694,9 +3694,9 @@ const PlacedModulePropertiesPanel: React.FC = () => {
 
           {/* 선반장 선반 설정 */}
           {!showDetails && currentPlacedModule && (
-            currentPlacedModule.moduleId.includes('single-shelf-') ||
-            currentPlacedModule.moduleId.includes('single-4drawer-shelf-') ||
-            currentPlacedModule.moduleId.includes('single-2drawer-shelf-')
+            currentPlacedModule.moduleId.includes('-shelf-') ||
+            currentPlacedModule.moduleId.includes('-4drawer-shelf-') ||
+            currentPlacedModule.moduleId.includes('-2drawer-shelf-')
           ) && (() => {
             const effectiveSections: SectionConfig[] = currentPlacedModule.customSections || moduleData.modelConfig?.sections || [];
             const shelfSectionIdx = effectiveSections.findIndex((s: SectionConfig) => s.type === 'shelf');
