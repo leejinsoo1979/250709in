@@ -5340,7 +5340,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   onClick={(e) => { e.stopPropagation(); handleFurnitureWidthEdit(module.id, actualWidth); }}
                 >
                   {(() => {
-                    const r = Math.round(actualWidth * 2) / 2; // 0.5mm 단위
+                    const r = Math.round(actualWidth * 10) / 10; // 0.1mm 단위
                     return r % 1 === 0 ? String(r) : r.toFixed(1);
                   })()}
                 </div>
@@ -5356,7 +5356,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 depthTest={false}
               >
                 {(() => {
-                    const r = Math.round(actualWidth * 2) / 2; // 0.5mm 단위
+                    const r = Math.round(actualWidth * 10) / 10; // 0.1mm 단위
                     return r % 1 === 0 ? String(r) : r.toFixed(1);
                 })()}
               </Text>

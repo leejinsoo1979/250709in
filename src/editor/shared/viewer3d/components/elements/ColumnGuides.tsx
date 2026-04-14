@@ -522,8 +522,10 @@ const ColumnGuides: React.FC<ColumnGuidesProps> = ({ viewMode: viewModeProp }) =
     // 각 슬롯 중앙에 내경 사이즈 텍스트 표시
     if (showDimensions) {
       positions.forEach((xPos, index) => {
-        // 컬럼 너비 표시 — 0.5mm 단위까지 표시 (columnWidth 사용)
-        const actualWidth = Math.round(columnWidth * 2) / 2;
+        // 컬럼 너비 표시 — slotWidths 우선 (실제 배치폭과 일치)
+        const actualWidth = (slotWidths && slotWidths[index] !== undefined)
+          ? slotWidths[index]
+          : Math.round(columnWidth * 2) / 2;
         
         // 탑뷰와 다른 뷰에 따라 텍스트 위치와 회전 조정
         let textPosition: [number, number, number];

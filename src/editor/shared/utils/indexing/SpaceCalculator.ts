@@ -200,10 +200,10 @@ export class SpaceCalculator {
     if (spaceInfo.surroundType === 'no-surround') {
       // 노서라운드 모드
       if (spaceInfo.installType === 'builtin' || spaceInfo.installType === 'built-in') {
-        // 빌트인: 이격 1.5mm 고정, 슬롯폭은 0.5mm 단위 내림
+        // 빌트인: 이격 1.5mm 고정, 슬롯폭은 0.1mm 단위 내림
         const gap = 1.5;
         const internalWidth = spaceInfo.width - (gap * 2);
-        const slotWidth = Math.floor((internalWidth / columnCount) * 2) / 2;
+        const slotWidth = Math.floor((internalWidth / columnCount) * 10) / 10;
 
         return {
           adjustedSpaceInfo: {

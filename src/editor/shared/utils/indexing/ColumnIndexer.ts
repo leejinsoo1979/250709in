@@ -334,21 +334,21 @@ export class ColumnIndexer {
     const slotWidths: number[] = [];
     
     if (isNoSurround && spaceInfo.installType === 'freestanding') {
-      // 노서라운드 프리스탠딩: 전체너비를 균등 분할 — 0.5mm 단위 내림
+      // 노서라운드 프리스탠딩: 전체너비를 균등 분할 — 0.1mm 단위 내림
       const rawSlotWidth = totalWidth / columnCount;
-      const flooredSlotWidth = Math.floor(rawSlotWidth * 2) / 2;
+      const flooredSlotWidth = Math.floor(rawSlotWidth * 10) / 10;
 
       for (let i = 0; i < columnCount; i++) {
         slotWidths.push(flooredSlotWidth);
       }
     } else {
-      // 서라운드 모드 또는 노서라운드 빌트인: 균등 분할 — 0.5mm 단위 내림
+      // 서라운드 모드 또는 노서라운드 빌트인/세미스탠딩: 균등 분할 — 0.1mm 단위 내림
       let actualInternalWidth = internalWidth;
       if (isNoSurround && (spaceInfo.installType === 'builtin' || spaceInfo.installType === 'built-in') && optimizedGapConfig) {
         actualInternalWidth = totalWidth - (optimizedGapConfig.left || 0) - (optimizedGapConfig.right || 0) - curtainBoxWidth;
       }
       const rawSlotWidth = actualInternalWidth / columnCount;
-      const flooredSlotWidth = Math.floor(rawSlotWidth * 2) / 2;
+      const flooredSlotWidth = Math.floor(rawSlotWidth * 10) / 10;
 
       for (let i = 0; i < columnCount; i++) {
         slotWidths.push(flooredSlotWidth);
@@ -848,17 +848,17 @@ export class ColumnIndexer {
       const slotWidths: number[] = [];
       
       if (spaceInfo.surroundType === 'no-surround') {
-        // 노서라운드: actualInternalWidth를 균등 분할 — 0.5mm 단위 내림
+        // 노서라운드: actualInternalWidth를 균등 분할 — 0.1mm 단위 내림
         const rawSlotWidth = actualInternalWidth / columnCount;
-        const flooredSlotWidth = Math.floor(rawSlotWidth * 2) / 2;
+        const flooredSlotWidth = Math.floor(rawSlotWidth * 10) / 10;
 
         for (let i = 0; i < columnCount; i++) {
           slotWidths.push(flooredSlotWidth);
         }
       } else {
-        // 서라운드 모드: 균등 분할 — 0.5mm 단위 내림
+        // 서라운드 모드: 균등 분할 — 0.1mm 단위 내림
         const rawSlotWidth = internalWidth / columnCount;
-        const flooredSlotWidth = Math.floor(rawSlotWidth * 2) / 2;
+        const flooredSlotWidth = Math.floor(rawSlotWidth * 10) / 10;
 
         for (let i = 0; i < columnCount; i++) {
           slotWidths.push(flooredSlotWidth);
@@ -1395,14 +1395,14 @@ export class ColumnIndexer {
     //   설명: 'BOUNDARY_GAP 3mm 이미 적용됨'
     // });
     
-    // 각 영역의 컬럼 너비 계산 — 0.5mm 단위 내림
+    // 각 영역의 컬럼 너비 계산 — 0.1mm 단위 내림
     const normalRawSlot = normalAreaInternalWidth / normalColumnCount;
-    const normalSlotWidth = Math.floor(normalRawSlot * 2) / 2;
+    const normalSlotWidth = Math.floor(normalRawSlot * 10) / 10;
 
     const droppedRawSlot = droppedAreaInternalWidth / droppedColumnCount;
-    const droppedSlotWidth = Math.floor(droppedRawSlot * 2) / 2;
+    const droppedSlotWidth = Math.floor(droppedRawSlot * 10) / 10;
 
-    // 슬롯별 실제 너비 배열 생성 (0.5mm 단위 내림)
+    // 슬롯별 실제 너비 배열 생성 (0.1mm 단위 내림)
     const normalSlotWidths: number[] = [];
     const droppedSlotWidths: number[] = [];
 
