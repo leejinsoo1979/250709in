@@ -1001,9 +1001,11 @@ const PlacedModulePropertiesPanel: React.FC = () => {
 
       // 도어 상하 갭 초기값 설정 (천장/바닥 기준, 입력 중 방해 방지)
       // 띄움배치일 때는 띄움 높이를 바닥 이격거리로 자동 설정
-      const initialTopGap = currentPlacedModule.doorTopGap ?? 0;
+      // 하부장은 기본값 -20/5, 그 외는 0
+      const isLowerMod = currentPlacedModule.moduleId?.startsWith('lower-') || currentPlacedModule.moduleId?.includes('dual-lower-');
+      const initialTopGap = currentPlacedModule.doorTopGap ?? (isLowerMod ? -20 : 0);
       // 도어 상하갭은 항상 바닥/천장 기준 (받침대/띄움 무관, 0이면 공간 높이)
-      const initialBottomGap = currentPlacedModule.doorBottomGap ?? 0;
+      const initialBottomGap = currentPlacedModule.doorBottomGap ?? (isLowerMod ? 5 : 0);
       // State 업데이트
       const needsUpdate = doorTopGap !== initialTopGap || doorBottomGap !== initialBottomGap;
 

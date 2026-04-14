@@ -487,8 +487,8 @@ const Configurator: React.FC = () => {
       if (!m.hasDoor) return m;
       const isLower = m.moduleId?.startsWith('lower-') || m.moduleId?.includes('dual-lower-');
       if (!isLower) return m;
-      const needsTopFix = m.doorTopGap === undefined || m.doorTopGap === 20 || m.doorTopGap === 1.5;
-      const needsBotFix = m.doorBottomGap === undefined || m.doorBottomGap === 2 || m.doorBottomGap === 25;
+      const needsTopFix = m.doorTopGap === undefined || m.doorTopGap === 20 || m.doorTopGap === 1.5 || m.doorTopGap === 0;
+      const needsBotFix = m.doorBottomGap === undefined || m.doorBottomGap === 2 || m.doorBottomGap === 25 || m.doorBottomGap === 0;
       if (needsTopFix || needsBotFix) {
         changed = true;
         return {
