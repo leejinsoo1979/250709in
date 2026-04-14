@@ -320,6 +320,54 @@ const BoxModule: React.FC<BoxModuleProps> = ({
   }
 
   // === 1단계: 타입별 라우팅 (주요 타입들) ===
+  if (moduleData.id.includes('dual-4drawer-shelf')) {
+    return (
+      <>
+        <DualType4
+          moduleData={moduleData}
+          color={color}
+          isDragging={isDragging}
+          isEditMode={isEditMode}
+          internalHeight={internalHeight}
+          hasDoor={hasDoor}
+          customDepth={customDepth}
+          hingePosition={hingePosition}
+          spaceInfo={spaceInfo}
+          doorWidth={doorWidth}
+          doorXOffset={0}
+          originalSlotWidth={originalSlotWidth}
+          slotCenterX={slotCenterX}
+          adjustedWidth={adjustedWidth}
+          slotWidths={slotWidths}
+          slotIndex={slotIndex}
+          showFurniture={showFurniture}
+          customSections={customSections}
+          placedFurnitureId={placedFurnitureId}
+          visibleSectionIndex={visibleSectionIndex}
+          lowerSectionDepth={lowerSectionDepth}
+          upperSectionDepth={upperSectionDepth}
+          lowerSectionDepthDirection={lowerSectionDepthDirection}
+          upperSectionDepthDirection={upperSectionDepthDirection}
+          lowerSectionTopOffset={lowerSectionTopOffset}
+          backPanelThickness={backPanelThicknessProp}
+          onPointerDown={onPointerDown}
+          onPointerMove={onPointerMove}
+          onPointerUp={onPointerUp}
+          onPointerOver={onPointerOver}
+          onPointerOut={onPointerOut}
+          onDoubleClick={onDoubleClick}
+          furnitureId={furnitureId}
+          doorTopGap={doorTopGap}
+          doorBottomGap={doorBottomGap}
+          zone={zone}
+          hasBase={hasBase}
+          individualFloatHeight={individualFloatHeight}
+          parentGroupY={parentGroupY}
+        />
+      </>
+    );
+  }
+
   if (moduleData.id.includes('dual-4drawer-hanging')) {
     return (
       <>
@@ -366,6 +414,58 @@ const BoxModule: React.FC<BoxModuleProps> = ({
             individualFloatHeight={individualFloatHeight}
         parentGroupY={parentGroupY}
         />
+      </>
+    );
+  }
+
+  if (moduleData.id.includes('dual-2drawer-shelf')) {
+    return (
+      <>
+        <DualType1
+        key={`${placedFurnitureId}-${lowerSectionDepth}-${upperSectionDepth}`}
+        moduleData={moduleData}
+        color={color}
+        isDragging={isDragging}
+        isEditMode={isEditMode}
+        internalHeight={internalHeight}
+        hasDoor={hasDoor}
+        customDepth={customDepth}
+        hingePosition={hingePosition}
+        spaceInfo={spaceInfo}
+        doorWidth={doorWidth}
+        doorXOffset={0}
+        originalSlotWidth={originalSlotWidth}
+        slotCenterX={slotCenterX}
+        adjustedWidth={adjustedWidth}
+        slotWidths={slotWidths}
+        slotIndex={slotIndex}
+        showFurniture={showFurniture}
+        customSections={customSections}
+        isHighlighted={isHighlighted}
+        placedFurnitureId={placedFurnitureId}
+        visibleSectionIndex={visibleSectionIndex}
+        grainDirection={grainDirection}
+        panelGrainDirections={panelGrainDirections}
+        lowerSectionDepth={lowerSectionDepth}
+        upperSectionDepth={upperSectionDepth}
+        lowerSectionDepthDirection={lowerSectionDepthDirection}
+        upperSectionDepthDirection={upperSectionDepthDirection}
+        lowerSectionTopOffset={lowerSectionTopOffset}
+        backPanelThickness={backPanelThicknessProp}
+        onPointerDown={onPointerDown}
+        onPointerMove={onPointerMove}
+        onPointerUp={onPointerUp}
+        onPointerOver={onPointerOver}
+        onPointerOut={onPointerOut}
+        onDoubleClick={onDoubleClick}
+        furnitureId={furnitureId}
+        doorTopGap={doorTopGap}
+        doorBottomGap={doorBottomGap}
+        zone={zone}
+        hasBase={hasBase}
+            individualFloatHeight={individualFloatHeight}
+        parentGroupY={parentGroupY}
+      />
       </>
     );
   }
@@ -486,6 +586,54 @@ const BoxModule: React.FC<BoxModuleProps> = ({
     );
   }
 
+  if (moduleData.id.includes('single-4drawer-shelf')) {
+    return (
+      <>
+        <SingleType4
+        key={`${placedFurnitureId}-${lowerSectionDepth}-${upperSectionDepth}`}
+        moduleData={moduleData}
+        color={color}
+        isDragging={isDragging}
+        isEditMode={isEditMode}
+        internalHeight={internalHeight}
+        hasDoor={hasDoor}
+        customDepth={customDepth}
+        hingePosition={hingePosition}
+        spaceInfo={spaceInfo}
+        doorWidth={doorWidth}
+        doorXOffset={0}
+        originalSlotWidth={originalSlotWidth}
+        slotCenterX={slotCenterX}
+        adjustedWidth={adjustedWidth}
+        slotIndex={slotIndex}
+        slotInfo={slotInfo}
+        showFurniture={showFurniture}
+        customSections={customSections}
+        isHighlighted={isHighlighted}
+        furnitureId={furnitureId}
+        placedFurnitureId={placedFurnitureId}
+        doorTopGap={doorTopGap}
+        doorBottomGap={doorBottomGap}
+        lowerSectionDepth={lowerSectionDepth}
+        upperSectionDepth={upperSectionDepth}
+        lowerSectionDepthDirection={lowerSectionDepthDirection}
+        upperSectionDepthDirection={upperSectionDepthDirection}
+        doorSplit={doorSplit}
+        upperDoorTopGap={upperDoorTopGap}
+        upperDoorBottomGap={upperDoorBottomGap}
+        lowerDoorTopGap={lowerDoorTopGap}
+        lowerDoorBottomGap={lowerDoorBottomGap}
+        lowerSectionTopOffset={lowerSectionTopOffset}
+        backPanelThickness={backPanelThicknessProp}
+        zone={zone}
+        hasBase={hasBase}
+            individualFloatHeight={individualFloatHeight}
+        parentGroupY={parentGroupY}
+      />
+      </>
+    );
+  }
+
   if (moduleData.id.includes('single-4drawer-hanging')) {
     return (
       <>
@@ -527,6 +675,55 @@ const BoxModule: React.FC<BoxModuleProps> = ({
         lowerDoorBottomGap={lowerDoorBottomGap}
         lowerSectionTopOffset={lowerSectionTopOffset} // 하부 섹션 상판 오프셋 (mm) - 띄움 배치 시 사용
         backPanelThickness={backPanelThicknessProp} // 백패널 두께 (mm)
+        zone={zone}
+        hasBase={hasBase}
+            individualFloatHeight={individualFloatHeight}
+        parentGroupY={parentGroupY}
+      />
+      </>
+    );
+  }
+
+  if (moduleData.id.includes('single-2drawer-shelf')) {
+    return (
+      <>
+        <SingleType1
+        key={`${placedFurnitureId}-${lowerSectionDepth}-${upperSectionDepth}`}
+        moduleData={moduleData}
+        color={color}
+        isDragging={isDragging}
+        isEditMode={isEditMode}
+        internalHeight={internalHeight}
+        hasDoor={hasDoor}
+        customDepth={customDepth}
+        hingePosition={hingePosition}
+        spaceInfo={spaceInfo}
+        doorWidth={doorWidth}
+        customSections={customSections}
+        doorXOffset={0}
+        originalSlotWidth={originalSlotWidth}
+        slotCenterX={slotCenterX}
+        adjustedWidth={adjustedWidth}
+        slotIndex={slotIndex}
+        slotInfo={slotInfo}
+        showFurniture={showFurniture}
+        isHighlighted={isHighlighted}
+        furnitureId={furnitureId}
+        placedFurnitureId={placedFurnitureId}
+        lowerSectionDepth={lowerSectionDepth}
+        upperSectionDepth={upperSectionDepth}
+        lowerSectionDepthDirection={lowerSectionDepthDirection}
+        upperSectionDepthDirection={upperSectionDepthDirection}
+        panelGrainDirections={panelGrainDirections}
+        doorSplit={doorSplit}
+        doorTopGap={doorTopGap}
+        doorBottomGap={doorBottomGap}
+        upperDoorTopGap={upperDoorTopGap}
+        upperDoorBottomGap={upperDoorBottomGap}
+        lowerDoorTopGap={lowerDoorTopGap}
+        lowerDoorBottomGap={lowerDoorBottomGap}
+        lowerSectionTopOffset={lowerSectionTopOffset}
+        backPanelThickness={backPanelThicknessProp}
         zone={zone}
         hasBase={hasBase}
             individualFloatHeight={individualFloatHeight}
