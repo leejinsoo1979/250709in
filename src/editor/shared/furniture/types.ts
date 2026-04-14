@@ -1,4 +1,5 @@
 import { ModuleData } from '@/data/modules';
+import type { SectionConfig } from '@/data/modules/shelving';
 
 // 커스터마이징 가구 내부 요소 타입
 export type CustomElement =
@@ -181,6 +182,7 @@ export interface PlacedModule {
   // 커스터마이징 가구 속성
   isCustomizable?: boolean;  // 커스터마이징 가구 여부
   customConfig?: CustomFurnitureConfig;  // 커스터마이징 설정 데이터
+  customSections?: SectionConfig[];  // 표준 모듈 섹션 오버라이드 (선반장 등)
 
   // 기둥 C 배치 모드
   columnPlacementMode?: 'beside' | 'front'; // 'beside': 기둥 측면 배치 (기본), 'front': 기둥 앞에 배치 (기둥을 가림)
