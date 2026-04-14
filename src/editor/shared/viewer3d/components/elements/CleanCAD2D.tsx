@@ -6254,16 +6254,24 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   const doorDimZ = rightDimensionZ + mmToThreeUnits(80);
                   const doorColor = '#E91E63';
 
-                  // 인덕션장: 마이다 고정 치수 (340mm + 427mm) + 상하단 갭
+                  // 인덕션장: 기본 마이다 340mm + 427mm + doorTopGap/doorBottomGap 갭 확장
                   const isInduction = doorModule.moduleId?.includes('lower-induction-cabinet') || doorModule.moduleId?.includes('dual-lower-induction-cabinet');
                   if (isInduction) {
                     const cabinetBottomAbs = bottomFrameHeight;
+                    const defaultDTG = -20;
+                    const defaultDBG = 5;
+                    const dtg = doorModule.doorTopGap ?? defaultDTG;
+                    const dbg = doorModule.doorBottomGap ?? defaultDBG;
+                    const gapTopExt = dtg - defaultDTG;   // 2단(최상단) 마이다 확장
+                    const gapBottomExt = dbg - defaultDBG; // 1단(최하단) 마이다 확장
                     const gapMm = 3;
-                    const maida1H = 340;
-                    const maida2H = 427;
-                    const maida1BottomAbs = cabinetBottomAbs - 5;
+                    const maida1BaseH = 340;
+                    const maida2BaseH = 427;
+                    const maida1H = maida1BaseH + gapBottomExt;
+                    const maida2H = maida2BaseH + gapTopExt;
+                    const maida1BottomAbs = cabinetBottomAbs - 5 - gapBottomExt;
                     const maida1TopAbs = maida1BottomAbs + maida1H;
-                    const maida2BottomAbs = maida1TopAbs + gapMm;
+                    const maida2BottomAbs = cabinetBottomAbs - 5 + maida1BaseH + gapMm; // 위치는 기본 기준
                     const maida2TopAbs = maida2BottomAbs + maida2H;
                     // 상단 갭: 2단 마이다 상단 ~ 캐비넷 상단
                     const inductionModData = getModuleById(doorModule.moduleId, { width: spaceInfo.width, height: spaceInfo.height, depth: spaceInfo.depth }, spaceInfo);

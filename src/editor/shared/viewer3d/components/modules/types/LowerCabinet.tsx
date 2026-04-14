@@ -851,15 +851,23 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
         const moduleDepthMm = baseFurniture.depth / 0.01;
         const maidaZ = mmToThreeUnits((moduleDepthMm + 28) / 2); // ExternalDrawerRenderer와 동일 위치
 
-        // 1단 마이다: 높이 340mm, 바닥에서 -5mm(캐비넷 바닥판 아래 5mm)부터
-        const maida1HeightMm = 340;
-        const maida1BottomMm = -5; // 바닥판 아래 5mm
+        // doorTopGap/doorBottomGap 갭 확장 (ExternalDrawerRenderer와 동일 방식)
+        const defaultDTG = -20;
+        const defaultDBG = 5;
+        const gapTopExt = (doorTopGap ?? defaultDTG) - defaultDTG;   // 2단(최상단) 마이다에 적용
+        const gapBottomExt = (doorBottomGap ?? defaultDBG) - defaultDBG; // 1단(최하단) 마이다에 적용
+
+        // 1단 마이다: 기본 340mm + 하단 갭 확장
+        const maida1BaseH = 340;
+        const maida1BottomMm = -5 - gapBottomExt; // 바닥판 아래 5mm + 하단 확장
+        const maida1HeightMm = maida1BaseH + gapBottomExt;
         const maida1CenterY = cabinetBottomY + mmToThreeUnits(maida1BottomMm) + mmToThreeUnits(maida1HeightMm) / 2;
 
-        // 2단 마이다: 높이 427mm, 1단 마이다 상단 + 3mm 갭
-        const maida2HeightMm = 427;
+        // 2단 마이다: 기본 427mm + 상단 갭 확장
+        const maida2BaseH = 427;
         const gapMm = 3;
-        const maida2BottomMm = maida1BottomMm + maida1HeightMm + gapMm;
+        const maida2BottomMm = -5 + maida1BaseH + gapMm; // 위치는 기본 기준
+        const maida2HeightMm = maida2BaseH + gapTopExt;
         const maida2CenterY = cabinetBottomY + mmToThreeUnits(maida2BottomMm) + mmToThreeUnits(maida2HeightMm) / 2;
 
         return (
