@@ -1167,7 +1167,7 @@ export const calculatePanelDetails = (
       });
     }
 
-  } // end hasDoor bracket boring
+    } // end hasDoor bracket boring
 
   // === 커스텀 가구 내부 패널 (칸막이, 선반, 서랍) ===
   if (customConfig && customConfig.sections) {
