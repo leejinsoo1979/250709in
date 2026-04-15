@@ -1169,6 +1169,8 @@ export const calculatePanelDetails = (
 
     } // end hasDoor bracket boring
 
+  } // end if (hasDoor && !isDrawerOnlyLower) — 도어 패널 + 브라켓 보링 블록
+
   // === 커스텀 가구 내부 패널 (칸막이, 선반, 서랍) ===
   if (customConfig && customConfig.sections) {
     const basicThicknessCC = customConfig.panelThickness || basicThickness;
