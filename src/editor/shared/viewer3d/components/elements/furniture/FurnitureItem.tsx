@@ -402,10 +402,10 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   const isSlotSurround = spaceInfo.surroundType === 'surround' && spaceInfo.frameConfig?.top !== false;
   const isFreeSurroundActive = placedModule.isFreePlacement && spaceInfo.freeSurround?.top?.enabled === true;
   const hasTopFrameActive = isSlotSurround || isFreeSurroundActive;
-  // 하부장 서랍/도어올림/상하개폐는 마이다 기반 doorTopGap을 사용하므로 서라운드 연동 제외
-  const isLowerDrawerType = placedModule.moduleId?.includes('lower-drawer-') || placedModule.moduleId?.includes('lower-door-lift-') || placedModule.moduleId?.includes('lower-top-down-');
+  // 하부장은 상부프레임과 무관한 자체 doorTopGap을 사용하므로 서라운드 연동 제외
+  const isLowerModule = placedModule.moduleId?.includes('lower-');
   useEffect(() => {
-    if (!hasTopFrameActive || !placedModule.hasDoor || isLowerDrawerType) return;
+    if (!hasTopFrameActive || !placedModule.hasDoor || isLowerModule) return;
     const expectedGap = effectiveTopFrame + 3;
     if (storeDoorTopGap !== expectedGap) {
       updatePlacedModule(placedModule.id, { doorTopGap: expectedGap });
@@ -444,13 +444,17 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       setSpaceInfo({ doorSetupMode: mode, frameOffsetBase: 'furniture', doorTopGap: 1.5, doorBottomGap: spaceFitBottom });
       const allModules = useFurnitureStore.getState().placedModules;
       allModules.forEach((m) => {
-        if (m.hasDoor) updatePlacedModule(m.id, { doorTopGap: 1.5, doorBottomGap: spaceFitBottom });
+        if (!m.hasDoor) return;
+        const isLower = m.moduleId?.includes('lower-');
+        if (!isLower) updatePlacedModule(m.id, { doorTopGap: 1.5, doorBottomGap: spaceFitBottom });
       });
     } else {
       setSpaceInfo({ doorSetupMode: mode, frameOffsetBase: 'door', doorTopGap: 1.5, doorBottomGap: 1.5 });
       const allModules = useFurnitureStore.getState().placedModules;
       allModules.forEach((m) => {
-        if (m.hasDoor) updatePlacedModule(m.id, { doorTopGap: 1.5, doorBottomGap: 1.5 });
+        if (!m.hasDoor) return;
+        const isLower = m.moduleId?.includes('lower-');
+        if (!isLower) updatePlacedModule(m.id, { doorTopGap: 1.5, doorBottomGap: 1.5 });
       });
     }
   }, [updatePlacedModule]);
