@@ -1125,25 +1125,20 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
             // 가구 측판 (isDrawerSidePanel=false && isDrawerFrontPanel=false):
             // - rotated 여부에 따라 좌표 매핑
 
-            if (isDrawerSidePanel) {
-              // 서랍 측판: boringPositions=높이방향, depthPositions=깊이방향
+            if (isDrawerSidePanel || isDrawerFrontPanel) {
+              // 서랍 측판/앞판:
+              // calculatePanelDetails 원본: width=깊이(453), height=높이(130)
+              // CNC optimizer 변환 후: panel.width=높이(130), panel.height=깊이(453)
+              // boringPositions = 원본 height(130) 기준 = CNC panel.width 방향
+              // depthPositions = 원본 width(453) 기준 = CNC panel.height 방향
               if (panel.rotated) {
-                // rotated: displayed width=height(높이), height=width(깊이)
-                boringX = x + boringPosMm;
-                boringY = y + depthPosMm;
+                // rotated: displayed width=panel.height(453), height=panel.width(130)
+                boringX = x + depthPosMm;    // 깊이(453) → displayed width(453)
+                boringY = y + boringPosMm;   // 높이(130) → displayed height(130)
               } else {
-                // 비회전: displayed width=width(깊이), height=height(높이)
-                boringX = x + depthPosMm;
-                boringY = y + originalHeight - boringPosMm;
-              }
-            } else if (isDrawerFrontPanel) {
-              // 서랍 앞판: boringPositions=높이방향, depthPositions=너비방향
-              if (panel.rotated) {
-                boringX = x + boringPosMm;
-                boringY = y + depthPosMm;
-              } else {
-                boringX = x + depthPosMm;
-                boringY = y + originalHeight - boringPosMm;
+                // 비회전: displayed width=panel.width(130), height=panel.height(453)
+                boringX = x + boringPosMm;   // 높이(130) → displayed width(130)
+                boringY = y + depthPosMm;    // 깊이(453) → displayed height(453)
               }
             } else if (panel.rotated) {
               // 가구 측판 (rotated=true):
