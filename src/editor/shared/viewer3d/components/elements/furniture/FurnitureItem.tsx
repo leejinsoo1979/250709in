@@ -410,7 +410,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     if (storeDoorTopGap !== expectedGap) {
       updatePlacedModule(placedModule.id, { doorTopGap: expectedGap });
     }
-  }, [hasTopFrameActive, effectiveTopFrame, placedModule.hasDoor, placedModule.id, storeDoorTopGap, updatePlacedModule, isLowerDrawerType]);
+  }, [hasTopFrameActive, effectiveTopFrame, placedModule.hasDoor, placedModule.id, storeDoorTopGap, updatePlacedModule, isLowerModule]);
 
   // 도어 갭 변경 핸들러
   const handleDoorTopGapCommit = useCallback((value: string) => {
