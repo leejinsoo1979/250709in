@@ -859,6 +859,7 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
       }
 
       // ★★★ 공통 배치 함수 사용 (클릭+고스트, 드래그앤드랍과 동일) ★★★
+      console.log('🔵 [더블클릭배치]', { moduleId: module.id, localSlotIndex, targetZone, spaceWidth: correctedSpaceInfo.width });
       const result = placeFurnitureAtSlot({
         moduleId: module.id,
         slotIndex: localSlotIndex,

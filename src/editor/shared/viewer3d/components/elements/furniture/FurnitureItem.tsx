@@ -1552,7 +1552,19 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
 
   // 듀얼 가구 렌더링 너비 확인용
   if (placedModule.isDualSlot || placedModule.moduleId.startsWith('dual-')) {
-    console.log('📐 [렌더링너비]', { moduleId: placedModule.moduleId, furnitureWidthMm, customWidth: placedModule.customWidth, adjustedWidth: placedModule.adjustedWidth, moduleDataWidth: moduleData?.dimensions.width });
+    console.log('📐 [렌더링너비]', {
+      moduleId: placedModule.moduleId,
+      targetModuleId,
+      furnitureWidthMm,
+      customWidth: placedModule.customWidth,
+      adjustedWidth: placedModule.adjustedWidth,
+      slotCustomWidth: placedModule.slotCustomWidth,
+      moduleDataId: moduleData?.id,
+      moduleDataWidth: moduleData?.dimensions.width,
+      slotIndex: placedModule.slotIndex,
+      indexingColumnWidth: indexing.columnWidth,
+      indexingSlotWidths: indexing.slotWidths,
+    });
   }
 
   // 기둥에 의한 자동 깊이 조정을 위한 플래그와 값 저장

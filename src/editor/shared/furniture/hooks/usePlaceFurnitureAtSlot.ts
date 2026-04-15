@@ -402,7 +402,22 @@ export function placeFurnitureAtSlot(params: PlaceFurnitureParams): PlaceFurnitu
     droppedCustomHeight = spaceInfo.height - dropH - frameTop - baseH;
   }
 
-  console.log('📦 [배치결과]', { furnitureId, customWidth, isDualFurniture, spaceWidth: spaceInfo.width, internalWidth: indexing.internalWidth, columnCount: indexing.columnCount });
+  console.log('📦 [배치결과]', {
+    입력moduleId: moduleId,
+    baseId,
+    furnitureId,
+    customWidth,
+    isDualFurniture,
+    spaceWidth: spaceInfo.width,
+    internalWidth: indexing.internalWidth,
+    columnCount: indexing.columnCount,
+    columnWidth: indexing.columnWidth,
+    slotWidths: indexing.slotWidths,
+    slotIndex,
+    actualDualWidth: isDualFurnitureId ? getActualDualWidth() : 'N/A(싱글)',
+    hasCustomWidthModules,
+    moduleDataWidth: moduleData?.dimensions.width,
+  });
 
   const newModule: PlacedModule = {
     id: uuidv4(),
