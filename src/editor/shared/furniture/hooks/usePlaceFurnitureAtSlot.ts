@@ -124,10 +124,11 @@ export function placeFurnitureAtSlot(params: PlaceFurnitureParams): PlaceFurnitu
     return columnWidth * 2;
   };
 
-  // zone별 columnWidth로 정확한 너비 계산 — 싱글/듀얼 모두 재계산
-  let furnitureId = moduleId;
+  // 현재 인덱싱 기반으로 정확한 너비 재계산 — 싱글/듀얼 모두
+  // moduleId에 포함된 너비가 이전 공간 설정 기준일 수 있으므로 항상 현재 슬롯 너비로 재계산
+  const baseId = moduleId.replace(/-[\d.]+$/, '');
+  let furnitureId: string;
   if (hasDroppedCeiling && zone && indexing.zones) {
-    const baseId = moduleId.replace(/-[\d.]+$/, '');
     if (isDualFurnitureId) {
       const dualWidth = getActualDualWidth();
       furnitureId = `${baseId}-${dualWidth}`;
@@ -139,6 +140,17 @@ export function placeFurnitureAtSlot(params: PlaceFurnitureParams): PlaceFurnitu
         ? zoneSlotWidths[slotIndex]
         : columnWidth;
       furnitureId = `${baseId}-${singleWidth}`;
+    }
+  } else {
+    // 일반 (단내림 없음): 현재 인덱싱의 슬롯 너비로 재계산
+    if (isDualFurnitureId) {
+      const dualWidth = getActualDualWidth();
+      furnitureId = `${baseId}-${dualWidth}`;
+    } else {
+      const currentSlotWidth = indexing.slotWidths && slotIndex < indexing.slotWidths.length
+        ? indexing.slotWidths[slotIndex]
+        : columnWidth;
+      furnitureId = `${baseId}-${currentSlotWidth}`;
     }
   }
 
@@ -359,9 +371,9 @@ export function placeFurnitureAtSlot(params: PlaceFurnitureParams): PlaceFurnitu
   }
 
   // 새 가구 모듈 생성
-  const baseType = moduleId.replace(/-[\d.]+$/, '');
+  // baseId는 이미 위에서 계산됨 (moduleId.replace(/-[\d.]+$/, ''))
   // 서랍 모듈은 하부 섹션 상판 85mm 들여쓰기 기본값 적용
-  const defaultLowerTopOffset = (moduleId.includes('2drawer') || moduleId.includes('4drawer')) ? 85 : undefined;
+  const defaultLowerTopOffset = (furnitureId.includes('2drawer') || furnitureId.includes('4drawer')) ? 85 : undefined;
   // 단내림 구간 가구 높이 계산: 공간높이 - 단내림높이 - 프레임 - 받침대
   let droppedCustomHeight: number | undefined;
   if (hasDroppedCeiling && zone === 'dropped' && spaceInfo.droppedCeiling?.dropHeight) {
@@ -373,8 +385,8 @@ export function placeFurnitureAtSlot(params: PlaceFurnitureParams): PlaceFurnitu
 
   const newModule: PlacedModule = {
     id: uuidv4(),
-    moduleId: moduleId,
-    baseModuleType: baseType,
+    moduleId: furnitureId,
+    baseModuleType: baseId,
     position: {
       x: xPosition,
       y: yPosition,
