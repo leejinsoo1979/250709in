@@ -745,26 +745,15 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
         if (panel.cornerNotch) {
           const notch = panel.cornerNotch;
           // panel.width=274(W,깊이), panel.height=562.5(L,가로폭)
-          // 비회전: 화면가로=panel.width=274(W), 화면세로=panel.height=562.5(L)
-          // notch.width=340=L방향 → 화면세로(height), notch.depth=140=W방향 → 화면가로(width)
-          // side='right': 3D X+(우측)=L방향 끝 → 화면 y+height 쪽 (하단)
-          // side='left': 3D X-(좌측)=L방향 시작 → 화면 y=0 쪽 (상단)
-          // 뒤(벽): W방향 시작 = 화면 x=0 쪽
+          // 상판: 바깥쪽(천장)에서 내려다보는 시점 → 좌우 반전
+          // 비회전: 화면가로=panel.width=274(W=깊이), 화면세로=panel.height=562.5(L=가로폭)
+          // notch.width=340=L방향 → 화면세로, notch.depth=140=W방향 → 화면가로
+          // 뒤(벽) = x=0
           const nHoriz = Math.min(notch.depth, width);   // W방향=140 → 화면가로
           const nVert = Math.min(notch.width, height);   // L방향=340 → 화면세로
 
           if (notch.side === 'right') {
-            // 우측 뒤 코너 = 화면 좌하단 (x=0=뒤, y+height=우측L끝)
-            ctx.beginPath();
-            ctx.moveTo(x, y + height - nVert);
-            ctx.lineTo(x + nHoriz, y + height - nVert);
-            ctx.stroke();
-            ctx.beginPath();
-            ctx.moveTo(x + nHoriz, y + height - nVert);
-            ctx.lineTo(x + nHoriz, y + height);
-            ctx.stroke();
-          } else {
-            // 좌측 뒤 코너 = 화면 좌상단 (x=0=뒤, y=0=좌측L시작)
+            // 우측 뒤 코너 = 화면 좌상단 (x=0=뒤, y=0=우측 — 바깥에서 보면 반전)
             ctx.beginPath();
             ctx.moveTo(x + nHoriz, y);
             ctx.lineTo(x + nHoriz, y + nVert);
@@ -772,6 +761,16 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
             ctx.beginPath();
             ctx.moveTo(x + nHoriz, y + nVert);
             ctx.lineTo(x, y + nVert);
+            ctx.stroke();
+          } else {
+            // 좌측 뒤 코너 = 화면 좌하단 (x=0=뒤, y+height=좌측 — 바깥에서 보면 반전)
+            ctx.beginPath();
+            ctx.moveTo(x, y + height - nVert);
+            ctx.lineTo(x + nHoriz, y + height - nVert);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(x + nHoriz, y + height - nVert);
+            ctx.lineTo(x + nHoriz, y + height);
             ctx.stroke();
           }
         }
