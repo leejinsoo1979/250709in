@@ -85,7 +85,8 @@ export const calculatePanelDetails = (
   if (isType5or6) {
     sections = moduleData.modelConfig?.leftSections || [];
   } else {
-    sections = moduleData.modelConfig?.sections || [];
+    // sections가 없으면 leftSections 폴백 (듀얼 상부장 등 leftSections/rightSections만 있는 가구)
+    sections = moduleData.modelConfig?.sections || moduleData.modelConfig?.leftSections || [];
   }
   
   // availableHeight는 mm 단위로 사용 (내경이 아닌 전체 높이 기준)
