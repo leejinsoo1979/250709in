@@ -41,6 +41,11 @@ export const calculatePanelDetails = (
     frame: []      // 프레임 패널 (상부/하부)
   };
 
+  // 서랍전용 모듈(lower-drawer-*)과 인덕션장은 도어 없음 — hasDoor 강제 오버라이드
+  const isDrawerOnlyModule = moduleData.id.includes('lower-drawer-') || moduleData.id.includes('dual-lower-drawer-');
+  const isInductionModule = moduleData.id.includes('lower-induction-cabinet') || moduleData.id.includes('dual-lower-induction-cabinet');
+  const effectiveHasDoor = (isDrawerOnlyModule || isInductionModule) ? false : hasDoor;
+
   // 도어는 커버도어이므로 원래 너비 사용, 없으면 customWidth 사용
   const doorWidth = originalWidth || customWidth;
   
@@ -941,9 +946,7 @@ export const calculatePanelDetails = (
   // === 도어 패널 (커버도어이므로 원래 너비 사용) ===
   // lower-drawer-* 는 서랍전용 모듈 — 도어 자체가 존재하지 않음
   // lower-induction-cabinet 은 마이다(서랍 앞판) 전용 — 도어 아닌 마이다로 별도 생성
-  const isDrawerOnlyLower = moduleData.id.includes('lower-drawer-');
-  const isInductionCabinet = moduleData.id.includes('lower-induction-cabinet') || moduleData.id.includes('dual-lower-induction-cabinet');
-  if (hasDoor && !isDrawerOnlyLower && !isInductionCabinet) {
+  if (effectiveHasDoor) {
     const doorGap = 3; // DoorModule.tsx 3D 렌더링과 동일 (doorGap = 3)
     // 도어 높이 = 공간높이 - 천장이격 - 바닥이격 (가구편집창 입력값)
     // spaceHeight가 제공되면 실제 도어 높이 공식 사용, 아니면 기존 방식 fallback
@@ -1064,7 +1067,7 @@ export const calculatePanelDetails = (
 
     // === 측판에 힌지 브라켓 타공 데이터 주입 ===
     // 도어가 없는 모듈(서랍전용, 인덕션장 등)은 브라켓 보링 불필요
-    if (hasDoor && !isDrawerOnlyLower && !isInductionCabinet) {
+    if (effectiveHasDoor) {
     // 도어는 상부+하부 섹션 전체를 한장으로 덮는 구조
     // → 상부+하부 합산 높이를 한몸통으로 계산하여 타공점 결정
     // → 분리 측판이면 각 측판의 Y범위에 해당하는 타공점을 상대좌표로 변환
@@ -1172,7 +1175,7 @@ export const calculatePanelDetails = (
 
     } // end hasDoor bracket boring
 
-  } // end if (hasDoor && !isDrawerOnlyLower) — 도어 패널 + 브라켓 보링 블록
+  } // end if (effectiveHasDoor) — 도어 패널 + 브라켓 보링 블록
 
   // === 커스텀 가구 내부 패널 (칸막이, 선반, 서랍) ===
   if (customConfig && customConfig.sections) {
@@ -1403,7 +1406,7 @@ export const calculatePanelDetails = (
   }
 
   // 도어 패널은 필요시 표시 (하부장은 외부서랍과 합쳐서 뒤에서 출력)
-  if (!isLowerCabinetModule && panels.door.length > 0 && hasDoor) {
+  if (!isLowerCabinetModule && panels.door.length > 0 && effectiveHasDoor) {
     result.push({ name: `=== ${t('furniture.door')} ===` });
     result.push(...panels.door);
   }
@@ -1682,10 +1685,10 @@ export const calculatePanelDetails = (
   }
 
   // 하부장: 외부서랍 + 도어를 "서랍 및 도어"로 합산 출력
-  if (isLowerCabinetModule && (extDrawerPanels.length > 0 || (panels.door.length > 0 && hasDoor))) {
+  if (isLowerCabinetModule && (extDrawerPanels.length > 0 || (panels.door.length > 0 && effectiveHasDoor))) {
     result.push({ name: '=== 서랍 및 도어 ===' });
     result.push(...extDrawerPanels);
-    if (panels.door.length > 0 && hasDoor) {
+    if (panels.door.length > 0 && effectiveHasDoor) {
       result.push(...panels.door);
     }
   } else if (extDrawerPanels.length > 0) {
