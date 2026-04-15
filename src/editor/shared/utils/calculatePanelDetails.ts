@@ -1838,8 +1838,8 @@ export const calculatePanelDetails = (
   // === 프레임 패널 (상부프레임 / 하부프레임) ===
   const FRAME_THICKNESS = basicThickness; // 사용자 선택 두께 (18 또는 18.5 등)
 
-  // 상부프레임 — 하부장(lower-*)에는 상부프레임 없음
-  if (!isLowerCabinetModule && hasTopFrame !== false && topFrameHeightMm && topFrameHeightMm > 0) {
+  // 상부프레임 — 하부장(lower-*)과 상부장(upper)에는 상부프레임 없음
+  if (!isLowerCabinetModule && !isUpperCabinet && hasTopFrame !== false && topFrameHeightMm && topFrameHeightMm > 0) {
     panels.frame.push({
       name: '상부프레임',
       width: customWidth,
@@ -1849,8 +1849,8 @@ export const calculatePanelDetails = (
     });
   }
 
-  // 하부프레임 (받침대)
-  if (hasBase !== false && baseFrameHeightMm && baseFrameHeightMm > 0) {
+  // 하부프레임 (받침대) — 상부장(upper)은 벽걸이라 하부프레임 없음
+  if (!isUpperCabinet && hasBase !== false && baseFrameHeightMm && baseFrameHeightMm > 0) {
     panels.frame.push({
       name: '하부프레임',
       width: customWidth,
