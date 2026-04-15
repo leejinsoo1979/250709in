@@ -495,8 +495,9 @@ const Configurator: React.FC = () => {
       const isDL = mid.includes('lower-door-lift-') && !mid.includes('-half-');
       const isTD = mid.includes('lower-top-down-') && !mid.includes('-half-');
       const correctTopGap = isDL ? 30 : isTD ? -80 : -20;
-      // 잘못된 값 목록: undefined, 이전 버그로 저장된 0, 20, 1.5
-      const badTopValues = [undefined, 0, 20, 1.5];
+      // 잘못된 값 목록: undefined, 이전 버그로 저장된 0, 20, 1.5, 5, 33 등 (전체서라운드 전파 버그 포함)
+      // 하부장 올바른 값: 도어올림=30, 상판내림=-80, 나머지=-20 — 이 외의 양수값은 모두 잘못된 것
+      const badTopValues = [undefined, 0, 1.5, 5, 20, 33];
       const badBotValues = [undefined, 0, 2, 25];
       const needsTopFix = badTopValues.includes(m.doorTopGap as undefined | number);
       const needsBotFix = badBotValues.includes(m.doorBottomGap as undefined | number);
@@ -3199,12 +3200,15 @@ const Configurator: React.FC = () => {
 
     setSpaceInfo(finalUpdates);
 
-    // 전체서라운드 전환 시 도어 상단갭을 모든 배치 가구에 전파
+    // 전체서라운드 전환 시 도어 상단갭을 키큰장/상부장에만 전파 (하부장은 자체 기본값 사용)
     if (finalUpdates.doorTopGap !== undefined) {
       const currentModules = useFurnitureStore.getState().placedModules;
       const modulesWithDoor = currentModules.filter(m => m.hasDoor);
       modulesWithDoor.forEach(m => {
-        updatePlacedModule(m.id, { doorTopGap: finalUpdates.doorTopGap });
+        const isLower = m.moduleId?.includes('lower-');
+        if (!isLower) {
+          updatePlacedModule(m.id, { doorTopGap: finalUpdates.doorTopGap });
+        }
       });
     }
 
