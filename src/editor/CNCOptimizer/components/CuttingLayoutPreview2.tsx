@@ -774,8 +774,9 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
         if (panel.sideNotches) {
           // CNC 레이아웃에서 측판: panel.width=깊이, panel.height=높이
           // sideNotch: fromBottom=바닥에서 노치 하단까지, y=노치높이, z=노치깊이(앞면에서 안쪽으로)
-          // 앞면 = 깊이 축의 시작점 (x쪽 = 좌측)
+          // 좌측판: 앞면=깊이축 시작점(x), 우측판: 앞면=깊이축 끝(x+width) — 거울 대칭
           const panelH = panel.rotated ? panel.width : panel.height;
+          const isRightSide = panel.name.includes('우측판');
           for (const sn of panel.sideNotches) {
             // 상단 끝에 닿는 노치(fromBottom+y >= height)는 L자, 아니면 ㄷ자
             const isTopEdge = (sn.fromBottom + sn.y) >= panelH - 1;
@@ -785,46 +786,46 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
 
             if (panel.rotated) {
               // 회전 시: displayed width=panel.height(높이), height=panel.width(깊이)
-              // 앞면 = y (깊이 축 시작점)
-              frontEdge = y;
-              notchInner = y + sn.z; // z만큼 안쪽
-              // fromBottom은 높이 축 → displayed width 축
+              if (isRightSide) {
+                frontEdge = y + height; // 우측판: 앞면 = 깊이 축 끝
+                notchInner = y + height - sn.z;
+              } else {
+                frontEdge = y; // 좌측판: 앞면 = 깊이 축 시작
+                notchInner = y + sn.z;
+              }
               notchBottomY = x + width - sn.fromBottom;
               notchTopY = x + width - sn.fromBottom - sn.y;
 
               ctx.beginPath();
               if (!isTopEdge) {
-                // ㄷ자: 상단 가로선 포함
                 ctx.moveTo(notchTopY, frontEdge);
                 ctx.lineTo(notchTopY, notchInner);
               }
-              // 안쪽 세로선
               ctx.moveTo(notchTopY, notchInner);
               ctx.lineTo(notchBottomY, notchInner);
-              // 하단 가로선
               ctx.moveTo(notchBottomY, notchInner);
               ctx.lineTo(notchBottomY, frontEdge);
               ctx.stroke();
             } else {
               // 비회전: displayed width=panel.width(깊이), height=panel.height(높이)
-              // 앞면 = x (깊이 축 시작점)
-              frontEdge = x;
-              notchInner = x + sn.z; // z만큼 안쪽
+              if (isRightSide) {
+                frontEdge = x + width; // 우측판: 앞면 = 깊이 축 끝
+                notchInner = x + width - sn.z;
+              } else {
+                frontEdge = x; // 좌측판: 앞면 = 깊이 축 시작
+                notchInner = x + sn.z;
+              }
 
-              // fromBottom은 높이 축 → displayed height (아래쪽이 바닥)
               notchBottomY = y + height - sn.fromBottom;
               notchTopY = y + height - sn.fromBottom - sn.y;
 
               ctx.beginPath();
               if (!isTopEdge) {
-                // ㄷ자: 상단 가로선 포함
                 ctx.moveTo(frontEdge, notchTopY);
                 ctx.lineTo(notchInner, notchTopY);
               }
-              // 안쪽 세로선
               ctx.moveTo(notchInner, notchTopY);
               ctx.lineTo(notchInner, notchBottomY);
-              // 하단 가로선
               ctx.moveTo(notchInner, notchBottomY);
               ctx.lineTo(frontEdge, notchBottomY);
               ctx.stroke();
