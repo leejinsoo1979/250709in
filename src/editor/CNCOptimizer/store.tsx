@@ -111,25 +111,28 @@ export function CNCProvider({ children }: { children: React.ReactNode }){
   const [selectedPanelId, setSelectedPanelId] = useState<string | null>(null);
   const [currentSheetIndex, setCurrentSheetIndex] = useState(0);
   const [settings, setSettingsState] = useState<CutSettings>(() => {
-    const saved = localStorage.getItem('cnc_settings');
-    if (saved) {
-      return JSON.parse(saved);
-    }
-    return {
-      unit: 'mm' as Unit, 
-      kerf: 5, 
+    const defaults: CutSettings = {
+      unit: 'mm' as Unit,
+      kerf: 5,
       trimTop: 5,     // 상단 여백 기본값 5mm
       trimBottom: 5,  // 하단 여백 기본값 5mm
       trimLeft: 5,    // 좌측 여백 기본값 5mm
       trimRight: 5,   // 우측 여백 기본값 5mm
-      labelsOnPanels: true, 
+      labelsOnPanels: true,
       singleSheetOnly: false,
-      considerMaterial: true, 
-      edgeBanding: false, 
+      considerMaterial: true,
+      edgeBanding: false,
       considerGrain: true,
       alignVerticalCuts: true, // 세로 컷팅 라인 정렬 기본값
-      optimizationType: 'OPTIMAL_CNC' // 기본값: CNC 최적화
+      optimizationType: 'OPTIMAL_L' // 기본값: L방향 우선
     };
+    const saved = localStorage.getItem('cnc_settings');
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      // localStorage 복원 시에도 optimizationType은 항상 L방향 우선으로 고정
+      return { ...defaults, ...parsed, optimizationType: 'OPTIMAL_L' };
+    }
+    return defaults;
   });
 
   // Simulation state
