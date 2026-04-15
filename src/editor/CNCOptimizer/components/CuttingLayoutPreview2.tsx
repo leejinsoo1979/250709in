@@ -747,40 +747,74 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
         // 따내기는 뒷면 코너(좌 또는 우)에서 잘라냄
         if (panel.cornerNotch) {
           const notch = panel.cornerNotch;
-          // optimizer Panel: width=W방향(깊이), height=L방향(가로폭)
-          // notch.width=340=가로폭방향=panel.height(L), notch.depth=140=깊이방향=panel.width(W)
-          // 비회전: 화면x=panel.width(W), 화면y=panel.height(L)
-          // 회전: 화면x=panel.height(L), 화면y=panel.width(W)
-          const nX = panel.rotated ? notch.width : notch.depth;   // 비회전: W방향=140, 회전: L방향=340
-          const nY = panel.rotated ? notch.depth : notch.width;   // 비회전: L방향=340, 회전: W방향=140
-          const clampedNX = Math.min(nX, width);
-          const clampedNY = Math.min(nY, height);
-          const effectiveSide = panel.rotated
-            ? (notch.side === 'right' ? 'left' : 'right')
-            : notch.side;
+          // optimizer Panel: width=W(깊이274), height=L(가로폭563)
+          // 3D: notch.width=340=X축(가로폭=L), notch.depth=140=Z축(깊이=W)
+          // 3D side='right'=X+(우측), 'left'=X-(좌측) — 따내기는 뒤(Z-)쪽 코너
+          //
+          // 비회전: 화면x=panel.width(W=깊이), 화면y=panel.height(L=가로폭)
+          //   → 3D X축(좌우) = 화면y축, 3D Z축(깊이) = 화면x축
+          //   → right: y+height 쪽 (화면 하단), left: y=0 쪽 (화면 상단)
+          //   → 뒤(벽): x=0 쪽
+          //   → nX(깊이방향) = notch.depth=140, nY(가로폭방향) = notch.width=340
+          //
+          // 회전: 화면x=panel.height(L=가로폭), 화면y=panel.width(W=깊이)
+          //   → 3D X축(좌우) = 화면x축, 3D Z축(깊이) = 화면y축
+          //   → right: x+width 쪽 (화면 우측), left: x=0 쪽 (화면 좌측)
+          //   → 뒤(벽): y=0 쪽
+          //   → nX(가로폭방향) = notch.width=340, nY(깊이방향) = notch.depth=140
 
-          // ㄴ자를 두 개의 독립 선분으로 그림
-          // 따내기는 뒷면(벽쪽) 코너 — y=0(상단) = 뒷면
-          if (effectiveSide === 'right') {
-            // 우상단 코너 (뒷면 우측)
-            ctx.beginPath();
-            ctx.moveTo(x + width - clampedNX, y);
-            ctx.lineTo(x + width - clampedNX, y + clampedNY);
-            ctx.stroke();
-            ctx.beginPath();
-            ctx.moveTo(x + width - clampedNX, y + clampedNY);
-            ctx.lineTo(x + width, y + clampedNY);
-            ctx.stroke();
+          if (!panel.rotated) {
+            // 비회전: x축=깊이(W), y축=가로폭(L)
+            const nDepth = Math.min(notch.depth, width);   // 140, x축(깊이방향)
+            const nWidth = Math.min(notch.width, height);  // 340, y축(가로폭방향)
+
+            if (notch.side === 'right') {
+              // 우측 뒤 코너 = 화면 좌하단 (x=0=뒤, y+height=우측)
+              ctx.beginPath();
+              ctx.moveTo(x, y + height - nWidth);
+              ctx.lineTo(x + nDepth, y + height - nWidth);
+              ctx.stroke();
+              ctx.beginPath();
+              ctx.moveTo(x + nDepth, y + height - nWidth);
+              ctx.lineTo(x + nDepth, y + height);
+              ctx.stroke();
+            } else {
+              // 좌측 뒤 코너 = 화면 좌상단 (x=0=뒤, y=0=좌측)
+              ctx.beginPath();
+              ctx.moveTo(x + nDepth, y);
+              ctx.lineTo(x + nDepth, y + nWidth);
+              ctx.stroke();
+              ctx.beginPath();
+              ctx.moveTo(x + nDepth, y + nWidth);
+              ctx.lineTo(x, y + nWidth);
+              ctx.stroke();
+            }
           } else {
-            // 좌상단 코너 (뒷면 좌측)
-            ctx.beginPath();
-            ctx.moveTo(x, y + clampedNY);
-            ctx.lineTo(x + clampedNX, y + clampedNY);
-            ctx.stroke();
-            ctx.beginPath();
-            ctx.moveTo(x + clampedNX, y + clampedNY);
-            ctx.lineTo(x + clampedNX, y);
-            ctx.stroke();
+            // 회전: x축=가로폭(L), y축=깊이(W)
+            const nWidth = Math.min(notch.width, width);   // 340, x축(가로폭방향)
+            const nDepth = Math.min(notch.depth, height);  // 140, y축(깊이방향)
+
+            if (notch.side === 'right') {
+              // 우측 뒤 코너 = 화면 우상단 (x+width=우측, y=0=뒤)
+              ctx.beginPath();
+              ctx.moveTo(x + width - nWidth, y);
+              ctx.lineTo(x + width - nWidth, y + nDepth);
+              ctx.stroke();
+              ctx.beginPath();
+              ctx.moveTo(x + width - nWidth, y + nDepth);
+              ctx.lineTo(x + width, y + nDepth);
+              ctx.stroke();
+            } else {
+              // 좌측 뒤 코너 = 화면 좌상단 (x=0=좌측, y=0=뒤)
+              ctx.beginPath();
+              ctx.moveTo(x, y + nDepth);
+              ctx.lineTo(x + nWidth, y + nDepth);
+              ctx.stroke();
+              ctx.beginPath();
+              ctx.moveTo(x + nWidth, y + nDepth);
+              ctx.lineTo(x + nWidth, y);
+              ctx.stroke();
+            }
           }
         }
 
