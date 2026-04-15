@@ -770,11 +770,15 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
           }
         }
 
-        // 측판 따내기 (sideNotches): 각 노치 위치에 ㄷ자형 점선
+        // 측판 따내기 (sideNotches): 상단 노치=L자, 중간 노치=ㄷ자
         if (panel.sideNotches) {
           // CNC 레이아웃에서 측판: panel.width=깊이, panel.height=높이
           // sideNotch: fromBottom=바닥에서 노치 하단까지, y=노치높이, z=노치깊이(앞에서)
+          const panelH = panel.rotated ? panel.width : panel.height;
           for (const sn of panel.sideNotches) {
+            // 상단 끝에 닿는 노치(fromBottom+y >= height)는 L자, 아니면 ㄷ자
+            const isTopEdge = (sn.fromBottom + sn.y) >= panelH - 1;
+
             let frontEdgeX: number, notchInnerX: number;
             let notchBottomY: number, notchTopY: number;
 
@@ -788,10 +792,12 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
               notchTopY = x + width - sn.fromBottom - sn.y; // 노치 높이만큼 위로
 
               ctx.beginPath();
-              // 상단 가로선
-              ctx.moveTo(notchTopY, notchInnerX);
-              ctx.lineTo(notchTopY, frontEdgeX);
-              // 좌측 세로선
+              if (!isTopEdge) {
+                // ㄷ자: 상단 가로선 포함
+                ctx.moveTo(notchTopY, notchInnerX);
+                ctx.lineTo(notchTopY, frontEdgeX);
+              }
+              // 안쪽 세로선
               ctx.moveTo(notchTopY, notchInnerX);
               ctx.lineTo(notchBottomY, notchInnerX);
               // 하단 가로선
@@ -809,13 +815,15 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
               notchTopY = y + height - sn.fromBottom - sn.y; // 노치 높이만큼 위로
 
               ctx.beginPath();
-              // 상단 가로선 (노치 상단)
-              ctx.moveTo(notchInnerX, notchTopY);
-              ctx.lineTo(frontEdgeX, notchTopY);
-              // 좌측 세로선 (노치 안쪽 경계)
+              if (!isTopEdge) {
+                // ㄷ자: 상단 가로선 포함
+                ctx.moveTo(notchInnerX, notchTopY);
+                ctx.lineTo(frontEdgeX, notchTopY);
+              }
+              // 안쪽 세로선
               ctx.moveTo(notchInnerX, notchTopY);
               ctx.lineTo(notchInnerX, notchBottomY);
-              // 하단 가로선 (노치 하단)
+              // 하단 가로선
               ctx.moveTo(notchInnerX, notchBottomY);
               ctx.lineTo(frontEdgeX, notchBottomY);
               ctx.stroke();
