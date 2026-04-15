@@ -939,8 +939,10 @@ export const calculatePanelDetails = (
 
   // === 도어 패널 (커버도어이므로 원래 너비 사용) ===
   // lower-drawer-* 는 서랍전용 모듈 — 도어 자체가 존재하지 않음
+  // lower-induction-cabinet 은 마이다(서랍 앞판) 전용 — 도어 아닌 마이다로 별도 생성
   const isDrawerOnlyLower = moduleData.id.includes('lower-drawer-');
-  if (hasDoor && !isDrawerOnlyLower) {
+  const isInductionCabinet = moduleData.id.includes('lower-induction-cabinet') || moduleData.id.includes('dual-lower-induction-cabinet');
+  if (hasDoor && !isDrawerOnlyLower && !isInductionCabinet) {
     const doorGap = 3; // DoorModule.tsx 3D 렌더링과 동일 (doorGap = 3)
     // 도어 높이 = 공간높이 - 천장이격 - 바닥이격 (가구편집창 입력값)
     // spaceHeight가 제공되면 실제 도어 높이 공식 사용, 아니면 기존 방식 fallback
@@ -1060,8 +1062,8 @@ export const calculatePanelDetails = (
     }
 
     // === 측판에 힌지 브라켓 타공 데이터 주입 ===
-    // 도어가 없는 모듈(서랍전용 등)은 브라켓 보링 불필요
-    if (hasDoor && !isDrawerOnlyLower) {
+    // 도어가 없는 모듈(서랍전용, 인덕션장 등)은 브라켓 보링 불필요
+    if (hasDoor && !isDrawerOnlyLower && !isInductionCabinet) {
     // 도어는 상부+하부 섹션 전체를 한장으로 덮는 구조
     // → 상부+하부 합산 높이를 한몸통으로 계산하여 타공점 결정
     // → 분리 측판이면 각 측판의 Y범위에 해당하는 타공점을 상대좌표로 변환

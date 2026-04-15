@@ -803,14 +803,15 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
       const moduleData = getModuleById(module.moduleId, internalSpace, spaceInfo);
       const category = moduleData?.category;
 
-      // 모듈 정의에서 hasDoor: false인 모듈(인덕션장, 서랍전용 등)은 도어 설치 불가 → 건너뜀
-      if (hasDoor && moduleData && moduleData.hasDoor === false) {
+      // 서랍전용 모듈(lower-drawer-*)은 도어/마이다 모두 없음 → 건너뜀
+      const isDrawerOnly = module.moduleId?.includes('lower-drawer-') || module.moduleId?.includes('dual-lower-drawer-');
+      if (hasDoor && isDrawerOnly) {
         return module; // 원래 상태 유지
       }
 
       let topGap = defaultTopGap;
       let bottomGap = defaultBottomGap;
-      const isBasicLower = module.moduleId?.includes('lower-half-cabinet') || module.moduleId?.includes('dual-lower-half-cabinet') || module.moduleId?.includes('lower-drawer-') || module.moduleId?.includes('dual-lower-drawer-') || module.moduleId?.includes('lower-sink-cabinet') || module.moduleId?.includes('dual-lower-sink-cabinet');
+      const isBasicLower = module.moduleId?.includes('lower-half-cabinet') || module.moduleId?.includes('dual-lower-half-cabinet') || module.moduleId?.includes('lower-drawer-') || module.moduleId?.includes('dual-lower-drawer-') || module.moduleId?.includes('lower-sink-cabinet') || module.moduleId?.includes('dual-lower-sink-cabinet') || module.moduleId?.includes('lower-induction-cabinet') || module.moduleId?.includes('dual-lower-induction-cabinet');
       const isDoorLift = module.moduleId?.includes('lower-door-lift-');
       const isTopDown = module.moduleId?.includes('lower-top-down-');
       if (isTopDown) {
