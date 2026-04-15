@@ -75,8 +75,11 @@ export function placeFurnitureAtSlot(params: PlaceFurnitureParams): PlaceFurnitu
   const isDualFurnitureId = moduleId.startsWith('dual-');
 
   // zone별 columnWidth 결정
+  // recalculateWithCustomWidths() 적용 시 top-level columnWidth가 재계산되므로 우선 사용
   let columnWidth: number;
-  if (hasDroppedCeiling && zone && indexing.zones) {
+  if (hasCustomWidthModules) {
+    columnWidth = indexing.columnWidth;
+  } else if (hasDroppedCeiling && zone && indexing.zones) {
     columnWidth = zone === 'dropped' && indexing.zones.dropped
       ? indexing.zones.dropped.columnWidth
       : indexing.zones.normal.columnWidth;
@@ -90,36 +93,42 @@ export function placeFurnitureAtSlot(params: PlaceFurnitureParams): PlaceFurnitu
   const getActualDualWidth = (): number => {
     // 단내림 + zone 지정 시 해당 zone 기준
     if (hasDroppedCeiling && zone && indexing.zones) {
+      // recalculateWithCustomWidths()는 top-level slotWidths를 zone 기준으로 재계산하므로
+      // 재분배된 slotWidths가 있으면 우선 사용
+      const topLevelSw = indexing.slotWidths;
+      if (topLevelSw && slotIndex < topLevelSw.length - 1) {
+        return topLevelSw[slotIndex] + topLevelSw[slotIndex + 1];
+      }
+
+      // top-level slotWidths 없으면 zone 데이터에서 계산
       const zoneData = zone === 'dropped' ? indexing.zones.dropped : indexing.zones.normal;
+      const zoneSlotWidths = zoneData?.slotWidths;
+      if (zoneSlotWidths && slotIndex < zoneSlotWidths.length - 1) {
+        return zoneSlotWidths[slotIndex] + zoneSlotWidths[slotIndex + 1];
+      }
+
+      // 폴백: 균등 분할
       const zoneColumnCount = zoneData?.columnCount ?? 0;
       const zoneInternalWidth = zoneData?.width ?? 0;
-
       if (zoneColumnCount >= 2 && zoneInternalWidth > 0) {
-        // 듀얼은 항상 2슬롯 분량
-        // 2슬롯 존: 내부 폭 전체 사용 / 3슬롯 이상: 2/count 비율
         if (zoneColumnCount === 2) {
           return Math.floor(zoneInternalWidth);
         }
         return Math.floor((zoneInternalWidth * 2) / zoneColumnCount);
       }
-
-      // 폴백
-      const zoneSlotWidths = zoneData?.slotWidths;
-      if (zoneSlotWidths && slotIndex < zoneSlotWidths.length - 1) {
-        return zoneSlotWidths[slotIndex] + zoneSlotWidths[slotIndex + 1];
-      }
       return columnWidth * 2;
     }
-    // 단내림 없음: 전체 내부 폭 기준
+    // 단내림 없음: slotWidths가 재분배된 경우 실제 슬롯 너비 합 사용
+    const sw = indexing.slotWidths;
+    if (sw && slotIndex < sw.length - 1) {
+      return sw[slotIndex] + sw[slotIndex + 1];
+    }
+    // slotWidths 없을 때 폴백: 균등 분할
     if (indexing.columnCount >= 2 && indexing.internalWidth > 0) {
       if (indexing.columnCount === 2) {
         return Math.floor(indexing.internalWidth);
       }
       return Math.floor((indexing.internalWidth * 2) / indexing.columnCount);
-    }
-    const sw = indexing.slotWidths;
-    if (sw && slotIndex < sw.length - 1) {
-      return sw[slotIndex] + sw[slotIndex + 1];
     }
     return columnWidth * 2;
   };
@@ -134,12 +143,18 @@ export function placeFurnitureAtSlot(params: PlaceFurnitureParams): PlaceFurnitu
       const dualWidth = getActualDualWidth();
       furnitureId = `${baseId}-${dualWidth}`;
     } else {
-      // 싱글 가구: zone의 슬롯 너비 사용
-      const zoneData = zone === 'dropped' ? indexing.zones.dropped : indexing.zones.normal;
-      const zoneSlotWidths = zoneData?.slotWidths;
-      const singleWidth = zoneSlotWidths && slotIndex < zoneSlotWidths.length
-        ? zoneSlotWidths[slotIndex]
-        : columnWidth;
+      // 싱글 가구: 재분배된 top-level slotWidths 우선, 없으면 zone 데이터
+      const topSw = indexing.slotWidths;
+      let singleWidth: number;
+      if (topSw && slotIndex < topSw.length) {
+        singleWidth = topSw[slotIndex];
+      } else {
+        const zoneData = zone === 'dropped' ? indexing.zones.dropped : indexing.zones.normal;
+        const zoneSlotWidths = zoneData?.slotWidths;
+        singleWidth = zoneSlotWidths && slotIndex < zoneSlotWidths.length
+          ? zoneSlotWidths[slotIndex]
+          : columnWidth;
+      }
       furnitureId = `${baseId}-${singleWidth}`;
     }
   } else {
@@ -311,7 +326,11 @@ export function placeFurnitureAtSlot(params: PlaceFurnitureParams): PlaceFurnitu
     slotWidths?: number[];
   };
 
-  if (hasDroppedCeiling && zone === 'dropped' && indexing.zones?.dropped) {
+  // recalculateWithCustomWidths()는 top-level slotWidths를 zone 기준으로 재계산하므로
+  // 재분배된 경우 항상 top-level indexing 사용 (zone 내부 데이터는 stale일 수 있음)
+  if (hasCustomWidthModules) {
+    targetIndexing = indexing;
+  } else if (hasDroppedCeiling && zone === 'dropped' && indexing.zones?.dropped) {
     targetIndexing = indexing.zones.dropped;
   } else if (hasDroppedCeiling && zone === 'normal' && indexing.zones?.normal) {
     targetIndexing = indexing.zones.normal;
