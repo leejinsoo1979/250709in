@@ -41,10 +41,19 @@ export const calculatePanelDetails = (
     frame: []      // 프레임 패널 (상부/하부)
   };
 
-  // 서랍전용 모듈(lower-drawer-*)과 인덕션장은 도어 없음 — hasDoor 강제 오버라이드
-  const isDrawerOnlyModule = moduleData.id.includes('lower-drawer-') || moduleData.id.includes('dual-lower-drawer-');
-  const isInductionModule = moduleData.id.includes('lower-induction-cabinet') || moduleData.id.includes('dual-lower-induction-cabinet');
-  const effectiveHasDoor = (isDrawerOnlyModule || isInductionModule) ? false : hasDoor;
+  // 도어 없는 모듈 — 마이다(서랍 앞판)만 사용하는 모듈은 도어 강제 차단
+  // 3D LowerCabinet.tsx L922의 도어 차단 목록과 동일
+  const moduleId = moduleData.id;
+  const isNoDoorModule =
+    moduleId.includes('lower-drawer-') ||          // 서랍전용 (싱글/듀얼)
+    moduleId.includes('lower-door-lift-2tier') ||   // 도어올림 2단
+    moduleId.includes('lower-door-lift-3tier') ||   // 도어올림 3단
+    moduleId.includes('lower-door-lift-touch-') ||  // 도어올림 터치
+    moduleId.includes('lower-top-down-2tier') ||    // 상판내림 2단
+    moduleId.includes('lower-top-down-3tier') ||    // 상판내림 3단
+    moduleId.includes('lower-top-down-touch-') ||   // 상판내림 터치
+    moduleId.includes('lower-induction-cabinet') || moduleId.includes('dual-lower-induction-cabinet');
+  const effectiveHasDoor = isNoDoorModule ? false : hasDoor;
 
   // 도어는 커버도어이므로 원래 너비 사용, 없으면 customWidth 사용
   const doorWidth = originalWidth || customWidth;
