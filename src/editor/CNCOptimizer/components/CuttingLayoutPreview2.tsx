@@ -714,21 +714,18 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
       // === 따내기(노치) 점선 렌더링 ===
       if (panel.cornerNotch) {
         const notch = panel.cornerNotch;
-        const dbgNX = panel.rotated ? notch.depth : notch.width;
-        const dbgNY = panel.rotated ? notch.width : notch.depth;
-        const dbgEffSide = panel.rotated
-          ? (notch.side === 'right' ? 'left' : 'right')
-          : notch.side;
-        console.log(`[NOTCH DEBUG] 상판 따내기: "${panel.name}"`, {
-          notch, rotated: panel.rotated,
-          panelSize: `${panel.width}x${panel.height}`,
-          displayed: `${width}x${height}`,
-          nX: dbgNX, nY: dbgNY,
-          clampedNX: Math.min(dbgNX, width), clampedNY: Math.min(dbgNY, height),
-          effectiveSide: dbgEffSide,
-          panelPos: `x=${Math.round(x)}, y=${Math.round(y)}`,
-          drawRight: dbgEffSide === 'right' ? `세로: (${Math.round(x+width-dbgNX)},${Math.round(y)})→(${Math.round(x+width-dbgNX)},${Math.round(y+Math.min(dbgNY,height))}) / 가로: →(${Math.round(x+width)},${Math.round(y+Math.min(dbgNY,height))})` : undefined,
-          drawLeft: dbgEffSide === 'left' ? `가로: (${Math.round(x)},${Math.round(y+Math.min(dbgNY,height))})→(${Math.round(x+Math.min(dbgNX,width))},${Math.round(y+Math.min(dbgNY,height))}) / 세로: →(${Math.round(x+Math.min(dbgNX,width))},${Math.round(y)})` : undefined,
+        console.log(`[NOTCH DEBUG] ★★★ 상판 따내기: "${panel.name}"`, {
+          'panel.width': panel.width,
+          'panel.height': panel.height,
+          '(panel as any).length': (panel as any).length,
+          rotated: panel.rotated,
+          '화면width': width,
+          '화면height': height,
+          'notch.width': notch.width,
+          'notch.depth': notch.depth,
+          'notch.side': notch.side,
+          'nL=min(notch.width,화면width)': Math.min(notch.width, width),
+          'nW=min(notch.depth,화면height)': Math.min(notch.depth, height),
         });
       }
       if (panel.sideNotches) {
@@ -747,34 +744,34 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
         // 따내기는 뒷면 코너(좌 또는 우)에서 잘라냄
         if (panel.cornerNotch) {
           const notch = panel.cornerNotch;
-          // 화면 기준으로 단순하게 처리:
-          // width/height는 이미 rotated 반영된 화면 크기
-          // side='right' → 화면 우측 상단, side='left' → 화면 좌측 상단
-          // notch.width = 가로폭 방향(L) 따내기 크기 = 340
-          // notch.depth = 깊이 방향(W) 따내기 크기 = 140
-          // 화면에서 가로=L(563), 세로=W(274) 기준
-          const nL = Math.min(notch.width, width);   // L방향(가로) = 340
-          const nW = Math.min(notch.depth, height);  // W방향(세로) = 140
+          // panel.width=274(W,깊이), panel.height=562.5(L,가로폭)
+          // 비회전: 화면가로=panel.width=274(W), 화면세로=panel.height=562.5(L)
+          // notch.width=340=L방향 → 화면세로(height), notch.depth=140=W방향 → 화면가로(width)
+          // side='right': 3D X+(우측)=L방향 끝 → 화면 y+height 쪽 (하단)
+          // side='left': 3D X-(좌측)=L방향 시작 → 화면 y=0 쪽 (상단)
+          // 뒤(벽): W방향 시작 = 화면 x=0 쪽
+          const nHoriz = Math.min(notch.depth, width);   // W방향=140 → 화면가로
+          const nVert = Math.min(notch.width, height);   // L방향=340 → 화면세로
 
           if (notch.side === 'right') {
-            // 우측 상단 코너: (x+width-nL, y=0) ~ (x+width, y+nW)
+            // 우측 뒤 코너 = 화면 좌하단 (x=0=뒤, y+height=우측L끝)
             ctx.beginPath();
-            ctx.moveTo(x + width - nL, y);
-            ctx.lineTo(x + width - nL, y + nW);
+            ctx.moveTo(x, y + height - nVert);
+            ctx.lineTo(x + nHoriz, y + height - nVert);
             ctx.stroke();
             ctx.beginPath();
-            ctx.moveTo(x + width - nL, y + nW);
-            ctx.lineTo(x + width, y + nW);
+            ctx.moveTo(x + nHoriz, y + height - nVert);
+            ctx.lineTo(x + nHoriz, y + height);
             ctx.stroke();
           } else {
-            // 좌측 상단 코너: (x, y=0) ~ (x+nL, y+nW)
+            // 좌측 뒤 코너 = 화면 좌상단 (x=0=뒤, y=0=좌측L시작)
             ctx.beginPath();
-            ctx.moveTo(x, y + nW);
-            ctx.lineTo(x + nL, y + nW);
+            ctx.moveTo(x + nHoriz, y);
+            ctx.lineTo(x + nHoriz, y + nVert);
             ctx.stroke();
             ctx.beginPath();
-            ctx.moveTo(x + nL, y + nW);
-            ctx.lineTo(x + nL, y);
+            ctx.moveTo(x + nHoriz, y + nVert);
+            ctx.lineTo(x, y + nVert);
             ctx.stroke();
           }
         }
