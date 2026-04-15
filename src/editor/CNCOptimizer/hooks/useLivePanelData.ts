@@ -190,23 +190,39 @@ export function useLivePanelData() {
           }
         }
 
+        // EP ㄷ자 프레임: 인접 가구 판단 (측판 생략 여부) — PlacedModulePropertiesPanel과 동일
+        let leftEpAdj = false, rightEpAdj = false;
+        if (placedModule.slotIndex !== undefined && !placedModule.isFreePlacement) {
+          const mySlot = placedModule.slotIndex;
+          const myZone = placedModule.zone || 'normal';
+          const isDual = placedModule.isDualSlot;
+          leftEpAdj = placedModules.some(m =>
+            m.id !== placedModule.id && !m.isFreePlacement && (m.zone || 'normal') === myZone &&
+            m.slotIndex !== undefined && (m.slotIndex === mySlot - 1 || (m.isDualSlot && m.slotIndex === mySlot - 2))
+          );
+          const rightEnd = isDual ? mySlot + 1 : mySlot;
+          rightEpAdj = placedModules.some(m =>
+            m.id !== placedModule.id && !m.isFreePlacement && (m.zone || 'normal') === myZone &&
+            m.slotIndex !== undefined && (m.slotIndex === rightEnd + 1 || (m.isDualSlot && m.slotIndex === rightEnd + 1))
+          );
+        }
+
         const allPanelsList = calculatePanelDetailsShared(
           moduleData, width, depth, hasDoor, t, undefined,
           moduleHingePosition, moduleHingeType,
           moduleSpaceHeight, moduleDoorTopGap, moduleDoorBottomGap,
           baseHeight, moduleBackPanelThickness, placedModule.customConfig,
-          // --- 이전에 누락된 파라미터 8개 ---
           placedModule.hasLeftEndPanel,     // 좌측 엔드패널 여부
           placedModule.hasRightEndPanel,    // 우측 엔드패널 여부
           (placedModule as any).endPanelThickness, // 엔드패널 두께
-          placedModule.freeHeight || placedModule.customHeight, // 자유배치/단내림 높이 (moduleData에 이미 단내림 반영)
+          placedModule.freeHeight || placedModule.customHeight, // 자유배치/단내림 높이
           topFrameH,                        // 상부프레임 높이
           visualBaseFrameH,                 // 하부프레임 높이 (바닥마감재 차감)
           (placedModule as any).hasTopFrame, // 상부프레임 표시 여부
           (placedModule as any).hasBase,     // 하부프레임 표시 여부
           placedModule.isDualSlot,           // 듀얼 슬롯 가구 여부
-          undefined,                         // leftEpAdjacentFurniture
-          undefined,                         // rightEpAdjacentFurniture
+          leftEpAdj,                         // leftEpAdjacentFurniture
+          rightEpAdj,                        // rightEpAdjacentFurniture
           (placedModule as any).topPanelNotchSize,  // 상판 따내기 크기
           (placedModule as any).topPanelNotchSide   // 따내기 위치
         );
@@ -902,23 +918,39 @@ export function usePanelSubscription(callback: (panels: Panel[]) => void) {
         }
       }
 
+      // EP ㄷ자 프레임: 인접 가구 판단 — PlacedModulePropertiesPanel과 동일
+      let leftEpAdj2 = false, rightEpAdj2 = false;
+      if (placedModule.slotIndex !== undefined && !placedModule.isFreePlacement) {
+        const mySlot = placedModule.slotIndex;
+        const myZone = placedModule.zone || 'normal';
+        const isDual = placedModule.isDualSlot;
+        leftEpAdj2 = placedModules.some(m =>
+          m.id !== placedModule.id && !m.isFreePlacement && (m.zone || 'normal') === myZone &&
+          m.slotIndex !== undefined && (m.slotIndex === mySlot - 1 || (m.isDualSlot && m.slotIndex === mySlot - 2))
+        );
+        const rightEnd = isDual ? mySlot + 1 : mySlot;
+        rightEpAdj2 = placedModules.some(m =>
+          m.id !== placedModule.id && !m.isFreePlacement && (m.zone || 'normal') === myZone &&
+          m.slotIndex !== undefined && (m.slotIndex === rightEnd + 1 || (m.isDualSlot && m.slotIndex === rightEnd + 1))
+        );
+      }
+
       const allPanelsList = calculatePanelDetailsShared(
         moduleData, width, depth, hasDoor, t, undefined,
         moduleHingePosition, moduleHingeType,
         moduleSpaceHeight2, moduleDoorTopGap, moduleDoorBottomGap,
         baseHeight2, moduleBackPanelThickness2, placedModule.customConfig,
-        // --- 이전에 누락된 파라미터 8개 ---
         placedModule.hasLeftEndPanel,
         placedModule.hasRightEndPanel,
         (placedModule as any).endPanelThickness,
-        placedModule.freeHeight || placedModule.customHeight, // 자유배치/단내림 높이 (moduleData에 이미 단내림 반영)
+        placedModule.freeHeight || placedModule.customHeight,
         topFrameH2,
         visualBaseFrameH2,
         (placedModule as any).hasTopFrame,
         (placedModule as any).hasBase,
         placedModule.isDualSlot,           // 듀얼 슬롯 가구 여부
-        undefined,                          // leftEpAdjacentFurniture
-        undefined,                          // rightEpAdjacentFurniture
+        leftEpAdj2,                         // leftEpAdjacentFurniture
+        rightEpAdj2,                        // rightEpAdjacentFurniture
         (placedModule as any).topPanelNotchSize,  // 상판 따내기 크기
         (placedModule as any).topPanelNotchSide   // 따내기 위치
       );
