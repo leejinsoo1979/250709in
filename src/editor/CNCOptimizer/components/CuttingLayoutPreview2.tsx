@@ -754,17 +754,7 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
           const nVert = Math.min(notch.width, height);   // L방향=340 → 화면세로
 
           if (notch.side === 'right') {
-            // 우측 뒤 코너 = 화면 우상단 (x+width=뒤, y=0=우측)
-            ctx.beginPath();
-            ctx.moveTo(x + width - nHoriz, y);
-            ctx.lineTo(x + width - nHoriz, y + nVert);
-            ctx.stroke();
-            ctx.beginPath();
-            ctx.moveTo(x + width - nHoriz, y + nVert);
-            ctx.lineTo(x + width, y + nVert);
-            ctx.stroke();
-          } else {
-            // 좌측 뒤 코너 = 화면 우하단 (x+width=뒤, y+height=좌측)
+            // 우측 뒤 코너 = 화면 우하단
             ctx.beginPath();
             ctx.moveTo(x + width, y + height - nVert);
             ctx.lineTo(x + width - nHoriz, y + height - nVert);
@@ -772,6 +762,16 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
             ctx.beginPath();
             ctx.moveTo(x + width - nHoriz, y + height - nVert);
             ctx.lineTo(x + width - nHoriz, y + height);
+            ctx.stroke();
+          } else {
+            // 좌측 뒤 코너 = 화면 우상단
+            ctx.beginPath();
+            ctx.moveTo(x + width - nHoriz, y);
+            ctx.lineTo(x + width - nHoriz, y + nVert);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(x + width - nHoriz, y + nVert);
+            ctx.lineTo(x + width, y + nVert);
             ctx.stroke();
           }
         }
