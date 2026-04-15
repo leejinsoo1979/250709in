@@ -714,15 +714,21 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
       // === 따내기(노치) 점선 렌더링 ===
       if (panel.cornerNotch) {
         const notch = panel.cornerNotch;
-        const nW = panel.rotated ? notch.depth : notch.width;
-        const nD = panel.rotated ? notch.width : notch.depth;
+        const dbgNX = panel.rotated ? notch.depth : notch.width;
+        const dbgNY = panel.rotated ? notch.width : notch.depth;
+        const dbgEffSide = panel.rotated
+          ? (notch.side === 'right' ? 'left' : 'right')
+          : notch.side;
         console.log(`[NOTCH DEBUG] 상판 따내기: "${panel.name}"`, {
           notch, rotated: panel.rotated,
           panelSize: `${panel.width}x${panel.height}`,
           displayed: `${width}x${height}`,
-          notchDisplayed: `nW=${nW}, nD=${nD}`,
-          clamped: `nW=${Math.min(nW, width)}, nD=${Math.min(nD, height)}`,
+          nX: dbgNX, nY: dbgNY,
+          clampedNX: Math.min(dbgNX, width), clampedNY: Math.min(dbgNY, height),
+          effectiveSide: dbgEffSide,
           panelPos: `x=${Math.round(x)}, y=${Math.round(y)}`,
+          drawRight: dbgEffSide === 'right' ? `세로: (${Math.round(x+width-dbgNX)},${Math.round(y)})→(${Math.round(x+width-dbgNX)},${Math.round(y+Math.min(dbgNY,height))}) / 가로: →(${Math.round(x+width)},${Math.round(y+Math.min(dbgNY,height))})` : undefined,
+          drawLeft: dbgEffSide === 'left' ? `가로: (${Math.round(x)},${Math.round(y+Math.min(dbgNY,height))})→(${Math.round(x+Math.min(dbgNX,width))},${Math.round(y+Math.min(dbgNY,height))}) / 세로: →(${Math.round(x+Math.min(dbgNX,width))},${Math.round(y)})` : undefined,
         });
       }
       if (panel.sideNotches) {
@@ -741,9 +747,12 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
         // 따내기는 뒷면 코너(좌 또는 우)에서 잘라냄
         if (panel.cornerNotch) {
           const notch = panel.cornerNotch;
-          // 340x140: notch.width=340=L방향(x축), notch.depth=140=W방향(y축)
-          const nX = panel.rotated ? notch.depth : notch.width;   // x축(L방향) = 340
-          const nY = panel.rotated ? notch.width : notch.depth;   // y축(W방향) = 140
+          // optimizer Panel: width=W방향(깊이), height=L방향(가로폭)
+          // notch.width=340=가로폭방향=panel.height(L), notch.depth=140=깊이방향=panel.width(W)
+          // 비회전: 화면x=panel.width(W), 화면y=panel.height(L)
+          // 회전: 화면x=panel.height(L), 화면y=panel.width(W)
+          const nX = panel.rotated ? notch.width : notch.depth;   // 비회전: W방향=140, 회전: L방향=340
+          const nY = panel.rotated ? notch.depth : notch.width;   // 비회전: L방향=340, 회전: W방향=140
           const clampedNX = Math.min(nX, width);
           const clampedNY = Math.min(nY, height);
           const effectiveSide = panel.rotated
