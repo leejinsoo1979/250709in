@@ -1758,6 +1758,14 @@ export const calculatePanelDetails = (
         material: 'PET',
         quantity: 1,
       });
+      // 가로전대: L자 프레임 뒤 보강판 — 3D BaseFurnitureShell 가로전대(하N)/가로전대
+      panels.frame.push({
+        name: `가로전대(${ni + 1})`,
+        width: innerWidth,           // 내경폭
+        height: notch.height,        // 노치 높이 (65mm 또는 60mm)
+        thickness: basicThickness,
+        material: 'PB',
+      });
     });
   }
 
