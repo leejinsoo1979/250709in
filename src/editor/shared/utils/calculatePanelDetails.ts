@@ -272,20 +272,64 @@ export const calculatePanelDetails = (
         }
       } else if (sectionIndex === 0) {
         // 통짜 측판: 첫 번째 섹션에 전체 높이로 추가
-        targetPanel.push({
+        // 하부장 측판 따내기(sideNotches) 계산 — 3D LowerCabinet.tsx L412~L431와 동일
+        let sidePanelNotches: Array<{ y: number; z: number; fromBottom: number }> | undefined;
+        const id = moduleData.id;
+        if (id.includes('lower-')) {
+          const notches: Array<{ y: number; z: number; fromBottom: number }> = [];
+          // 상단 따내기 (60mm) — 상판이 없는 하부장 (drawer, half-cabinet, sink, induction)
+          const hideTopPanel = id.includes('lower-half-cabinet') || id.includes('dual-lower-half-cabinet')
+            || id.includes('lower-sink-cabinet') || id.includes('dual-lower-sink-cabinet')
+            || id.includes('lower-induction-cabinet') || id.includes('dual-lower-induction-cabinet')
+            || id.includes('lower-drawer-');
+          // 도어올림/상판내림은 상단 따내기 없음 (상판내림 상단은 665에 포함)
+          const noUpperNotch = id.includes('lower-door-lift-') || id.includes('lower-top-down-');
+          if (hideTopPanel && !noUpperNotch) {
+            notches.push({ y: 60, z: 40, fromBottom: height - 60 });
+          }
+          // 중간 따내기 (65mm) — 외부서랍 노치
+          if (id.includes('lower-door-lift-touch-')) {
+            // 도어올림 터치: 따내기 없음
+          } else if (id.includes('lower-top-down-touch-')) {
+            notches.push({ y: 65, z: 40, fromBottom: 665 });
+          } else if (id.includes('lower-drawer-3tier')) {
+            notches.push({ y: 65, z: 40, fromBottom: 295 }, { y: 65, z: 40, fromBottom: 510 });
+          } else if (id.includes('lower-drawer-2tier')) {
+            notches.push({ y: 65, z: 40, fromBottom: (moduleData.dimensions.height - 125) / 2 });
+          } else if (id.includes('lower-door-lift-3tier')) {
+            notches.push({ y: 65, z: 40, fromBottom: 315 }, { y: 65, z: 40, fromBottom: 545 });
+          } else if (id.includes('lower-door-lift-2tier')) {
+            notches.push({ y: 65, z: 40, fromBottom: 355 });
+          } else if (id.includes('lower-top-down-3tier')) {
+            notches.push({ y: 65, z: 40, fromBottom: 225 }, { y: 65, z: 40, fromBottom: 445 }, { y: 65, z: 40, fromBottom: 665 });
+          } else if (id.includes('lower-top-down-2tier')) {
+            notches.push({ y: 65, z: 40, fromBottom: 300 }, { y: 65, z: 40, fromBottom: 665 });
+          } else if (id.includes('lower-top-down-half') || id.includes('dual-lower-top-down-half')) {
+            notches.push({ y: 65, z: 40, fromBottom: 665 });
+          }
+          if (notches.length > 0) sidePanelNotches = notches;
+        }
+
+        const leftSideEntry: any = {
           name: '좌측판',
           width: leftSideDepth,
           height: height,
           thickness: basicThickness,
           material: 'PB'
-        });
-        targetPanel.push({
+        };
+        const rightSideEntry: any = {
           name: '우측판',
           width: rightSideDepth,
           height: height,
           thickness: basicThickness,
           material: 'PB'
-        });
+        };
+        if (sidePanelNotches) {
+          leftSideEntry.sideNotches = sidePanelNotches;
+          rightSideEntry.sideNotches = sidePanelNotches;
+        }
+        targetPanel.push(leftSideEntry);
+        targetPanel.push(rightSideEntry);
       }
 
       // === Type5/6 중앙 칸막이 (좌측 섹션과 우측 섹션 사이) ===

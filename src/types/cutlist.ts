@@ -30,6 +30,9 @@ export interface Panel {
   bracketBoringPositions?: number[];
   bracketBoringDepthPositions?: number[];
   isBracketSide?: boolean;
+  // 따내기 (노치) 정보
+  cornerNotch?: { width: number; depth: number; side: 'left' | 'right' };  // 상판 따내기
+  sideNotches?: Array<{ y: number; z: number; fromBottom: number }>;       // 측판 따내기
   // 3D 뷰어 패널 하이라이트용
   meshName?: string;
   furnitureId?: string;

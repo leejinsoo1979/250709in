@@ -711,6 +711,122 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
       }
       
 
+      // === 따내기(노치) 점선 렌더링 ===
+      if (panel.cornerNotch || panel.sideNotches) {
+        ctx.save();
+        ctx.setLineDash([4 / scale, 3 / scale]);
+        ctx.strokeStyle = '#ef4444'; // 빨간 점선
+        ctx.lineWidth = 1.5 / (baseScale * scale);
+
+        // 상판 따내기 (cornerNotch): 코너 ㄴ자형 점선
+        if (panel.cornerNotch) {
+          const notch = panel.cornerNotch;
+          // CNC 레이아웃에서: panel.width=가로폭, panel.height=깊이
+          // notch.width=가로폭 방향, notch.depth=깊이 방향
+          let nW: number, nD: number;
+          if (panel.rotated) {
+            // 회전 시: 표시 width=panel.height, height=panel.width
+            // notch.width(가로폭)→displayed height 방향, notch.depth(깊이)→displayed width 방향
+            nW = notch.depth; // displayed width 방향 (깊이)
+            nD = notch.width; // displayed height 방향 (가로폭)
+          } else {
+            nW = notch.width; // displayed width 방향 (가로폭)
+            nD = notch.depth; // displayed height 방향 (깊이)
+          }
+
+          if (panel.rotated) {
+            // 회전 시: side 방향이 height 축으로 변환
+            if (notch.side === 'right') {
+              // 우측 → 회전 시 하단: 우하단 코너
+              ctx.beginPath();
+              ctx.moveTo(x + width - nW, y + height);
+              ctx.lineTo(x + width - nW, y + height - nD);
+              ctx.lineTo(x + width, y + height - nD);
+              ctx.stroke();
+            } else {
+              // 좌측 → 회전 시 상단: 좌상단 코너
+              ctx.beginPath();
+              ctx.moveTo(x, y + nD);
+              ctx.lineTo(x + nW, y + nD);
+              ctx.lineTo(x + nW, y);
+              ctx.stroke();
+            }
+          } else {
+            if (notch.side === 'right') {
+              // 우상단 코너 (깊이 = y축 상단)
+              ctx.beginPath();
+              ctx.moveTo(x + width - nW, y);
+              ctx.lineTo(x + width - nW, y + nD);
+              ctx.lineTo(x + width, y + nD);
+              ctx.stroke();
+            } else {
+              // 좌상단 코너
+              ctx.beginPath();
+              ctx.moveTo(x, y + nD);
+              ctx.lineTo(x + nW, y + nD);
+              ctx.lineTo(x + nW, y);
+              ctx.stroke();
+            }
+          }
+        }
+
+        // 측판 따내기 (sideNotches): 각 노치 위치에 ㄷ자형 점선
+        if (panel.sideNotches) {
+          // CNC 레이아웃에서 측판: panel.width=깊이, panel.height=높이
+          // sideNotch: fromBottom=바닥에서 노치 하단까지, y=노치높이, z=노치깊이(앞에서)
+          for (const sn of panel.sideNotches) {
+            let frontEdgeX: number, notchInnerX: number;
+            let notchBottomY: number, notchTopY: number;
+
+            if (panel.rotated) {
+              // 회전 시: displayed width=panel.height(높이), height=panel.width(깊이)
+              // 앞면 = displayed height 끝 (하단)
+              frontEdgeX = y + height; // 앞면 (깊이 축의 끝)
+              notchInnerX = y + height - sn.z; // z만큼 안쪽
+              // fromBottom은 높이 축 → displayed width 축
+              notchBottomY = x + width - sn.fromBottom; // 바닥에서 fromBottom
+              notchTopY = x + width - sn.fromBottom - sn.y; // 노치 높이만큼 위로
+
+              ctx.beginPath();
+              // 상단 가로선
+              ctx.moveTo(notchTopY, notchInnerX);
+              ctx.lineTo(notchTopY, frontEdgeX);
+              // 좌측 세로선
+              ctx.moveTo(notchTopY, notchInnerX);
+              ctx.lineTo(notchBottomY, notchInnerX);
+              // 하단 가로선
+              ctx.moveTo(notchBottomY, notchInnerX);
+              ctx.lineTo(notchBottomY, frontEdgeX);
+              ctx.stroke();
+            } else {
+              // 비회전: displayed width=panel.width(깊이), height=panel.height(높이)
+              // 앞면 = displayed width 끝 (우측)
+              frontEdgeX = x + width; // 앞면 (깊이 축의 끝)
+              notchInnerX = x + width - sn.z; // z만큼 안쪽
+
+              // fromBottom은 높이 축 → displayed height (아래쪽이 바닥)
+              notchBottomY = y + height - sn.fromBottom; // 바닥에서 fromBottom
+              notchTopY = y + height - sn.fromBottom - sn.y; // 노치 높이만큼 위로
+
+              ctx.beginPath();
+              // 상단 가로선 (노치 상단)
+              ctx.moveTo(notchInnerX, notchTopY);
+              ctx.lineTo(frontEdgeX, notchTopY);
+              // 좌측 세로선 (노치 안쪽 경계)
+              ctx.moveTo(notchInnerX, notchTopY);
+              ctx.lineTo(notchInnerX, notchBottomY);
+              // 하단 가로선 (노치 하단)
+              ctx.moveTo(notchInnerX, notchBottomY);
+              ctx.lineTo(frontEdgeX, notchBottomY);
+              ctx.stroke();
+            }
+          }
+        }
+
+        ctx.setLineDash([]);
+        ctx.restore();
+      }
+
       // Grain direction arrow — 제거됨
 
       // Rotation indicator

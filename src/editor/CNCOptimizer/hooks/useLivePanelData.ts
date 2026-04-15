@@ -204,7 +204,11 @@ export function useLivePanelData() {
           visualBaseFrameH,                 // 하부프레임 높이 (바닥마감재 차감)
           (placedModule as any).hasTopFrame, // 상부프레임 표시 여부
           (placedModule as any).hasBase,     // 하부프레임 표시 여부
-          placedModule.isDualSlot            // 듀얼 슬롯 가구 여부
+          placedModule.isDualSlot,           // 듀얼 슬롯 가구 여부
+          undefined,                         // leftEpAdjacentFurniture
+          undefined,                         // rightEpAdjacentFurniture
+          (placedModule as any).topPanelNotchSize,  // 상판 따내기 크기
+          (placedModule as any).topPanelNotchSide   // 따내기 위치
         );
 
         console.log(`Module ${moduleIndex}: All panels list received:`, allPanelsList);
@@ -409,6 +413,9 @@ export function useLivePanelData() {
             bracketBoringPositions: panel.bracketBoringPositions,
             bracketBoringDepthPositions: panel.bracketBoringDepthPositions,
             isBracketSide: panel.isBracketSide,
+            // 따내기 (노치) 정보
+            cornerNotch: panel.cornerNotch,
+            sideNotches: panel.sideNotches,
             // 3D 뷰어 패널 하이라이트용
             meshName: toMeshName(panel.name),
             furnitureId: placedModule.id,
@@ -909,7 +916,11 @@ export function usePanelSubscription(callback: (panels: Panel[]) => void) {
         visualBaseFrameH2,
         (placedModule as any).hasTopFrame,
         (placedModule as any).hasBase,
-        placedModule.isDualSlot            // 듀얼 슬롯 가구 여부
+        placedModule.isDualSlot,           // 듀얼 슬롯 가구 여부
+        undefined,                          // leftEpAdjacentFurniture
+        undefined,                          // rightEpAdjacentFurniture
+        (placedModule as any).topPanelNotchSize,  // 상판 따내기 크기
+        (placedModule as any).topPanelNotchSide   // 따내기 위치
       );
 
       // calculatePanelDetailsShared는 평면 배열을 반환함 (섹션 헤더 포함)
@@ -1107,6 +1118,9 @@ export function usePanelSubscription(callback: (panels: Panel[]) => void) {
           bracketBoringPositions: panel.bracketBoringPositions,
           bracketBoringDepthPositions: panel.bracketBoringDepthPositions,
           isBracketSide: panel.isBracketSide,
+          // 따내기 (노치) 정보
+          cornerNotch: panel.cornerNotch,
+          sideNotches: panel.sideNotches,
         };
       });
 
