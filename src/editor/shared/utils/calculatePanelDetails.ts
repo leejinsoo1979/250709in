@@ -944,19 +944,28 @@ export const calculatePanelDetails = (
     const doorGap = 3; // DoorModule.tsx 3D 렌더링과 동일 (doorGap = 3)
     // 도어 높이 = 공간높이 - 천장이격 - 바닥이격 (가구편집창 입력값)
     // spaceHeight가 제공되면 실제 도어 높이 공식 사용, 아니면 기존 방식 fallback
-    const isUpperCab = moduleData.id.includes('upper-cabinet');
-    const isLowerCab = moduleData.id.includes('lower-cabinet');
+    const isUpperCab = moduleData.id.includes('upper-cabinet') || moduleData.id.includes('dual-upper-cabinet');
+    const isLowerCab = moduleData.id.includes('lower-') && moduleData.category === 'lower';
+    const isTallCab = !isUpperCab && !isLowerCab; // 키큰장 (category === 'full')
     let actualDoorH: number;
-    if (spaceHeight) {
+    if (spaceHeight && isTallCab) {
+      // 키큰장만 공간높이 기준 도어 (DoorModule.tsx L786-831과 동일)
       actualDoorH = spaceHeight - (doorTopGap ?? 5) - (doorBottomGap ?? 25);
     } else if (isUpperCab) {
-      // 상부장: 캐비넷높이 - 상단5mm + 하단확장28mm (DoorModule.tsx와 동일)
+      // 상부장: 캐비넷높이 - 상단5mm + 하단확장28mm (DoorModule.tsx L756-766)
       actualDoorH = height - 5 + 28;
     } else if (isLowerCab) {
-      // 하부장: 바닥형은 +40+18, 띄움배치(baseHeight>65)는 +0+18 (DoorModule.tsx: floatHeight>0 → bottomExtension=0)
-      const isFloating = (baseHeight ?? 65) > 65;
-      const bottomExt = isFloating ? 0 : 40;
-      actualDoorH = height + bottomExt + 18;
+      // 하부장 도어 높이: DoorModule.tsx L767-785와 동일
+      const isDoorLift = moduleData.id.includes('lower-door-lift-');
+      const isTopDown = moduleData.id.includes('lower-top-down-');
+      if (isTopDown) {
+        actualDoorH = 710; // 상판내림: 고정 710mm (DoorModule.tsx L774)
+      } else if (isDoorLift) {
+        actualDoorH = height + 5 + 30; // 도어올림: 캐비넷높이 + 5 + 30 (DoorModule.tsx L779)
+      } else {
+        // 기본 하부장: 상단갭 + 하단갭 확장 (DoorModule.tsx L784)
+        actualDoorH = height + (doorTopGap ?? 0) + (doorBottomGap ?? 0);
+      }
     } else {
       actualDoorH = height - doorGap * 2;
     }
