@@ -1596,7 +1596,7 @@ export const calculatePanelDetails = (
       );
       // 마이다: 서랍 앞면을 덮는 판 — 도어 유무와 무관하게 외부서랍에는 항상 존재
       extDrawerPanels.push(
-        { name: `서랍${drawerNum}(마이다)`, width: customWidth - 3, height: Math.round(maidaHeightMm), thickness: basicThickness, material: 'PET' },
+        { name: `서랍${drawerNum}(마이다)`, width: customWidth - 3, height: Math.round(maidaHeightMm), thickness: 18.5, material: 'PET' },
       );
     }
   }
@@ -1675,7 +1675,7 @@ export const calculatePanelDetails = (
       extDrawerPanels.push(
         { name: `터치서랍${drawerNum} 바닥판`, width: Math.round(drawerBottomWidthMm), depth: drawerDepthMm, thickness: drawerThicknessMm, material: 'MDF' },
         { name: `터치서랍${drawerNum} 뒷판`, width: Math.round(drawerBackWidthMm), height: Math.round(backH), thickness: drawerThicknessMm, material: 'MDF' },
-        { name: `터치서랍${drawerNum}(마이다)`, width: customWidth - 3, height: maidaH, thickness: basicThickness, material: 'PET' },
+        { name: `터치서랍${drawerNum}(마이다)`, width: customWidth - 3, height: maidaH, thickness: 18.5, material: 'PET' },
       );
     });
   }
@@ -1732,7 +1732,7 @@ export const calculatePanelDetails = (
         name: `목찬넬프레임수평(${ni + 1})`,
         width: customWidth,
         height: 40,
-        thickness: basicThickness,
+        thickness: 18.5,
         material: 'PET',
         quantity: 1,
       });
@@ -1740,8 +1740,8 @@ export const calculatePanelDetails = (
       panels.frame.push({
         name: `목찬넬프레임수직(${ni + 1})`,
         width: customWidth,
-        height: notch.height - basicThickness,
-        thickness: basicThickness,
+        height: notch.height - 18.5,
+        thickness: 18.5,
         material: 'PET',
         quantity: 1,
       });
@@ -1812,14 +1812,14 @@ export const calculatePanelDetails = (
       name: '인덕션 1단서랍(마이다)',
       width: maidaWidthMm,
       height: 340 + inductionGapBottomExt,
-      thickness: basicThickness,
+      thickness: 18.5,
       material: 'PET',
     });
     panels.door.push({
       name: '인덕션 2단서랍(마이다)',
       width: maidaWidthMm,
       height: 427 + inductionGapTopExt,
-      thickness: basicThickness,
+      thickness: 18.5,
       material: 'PET',
     });
   }
@@ -1830,13 +1830,13 @@ export const calculatePanelDetails = (
       name: '하부마감판',
       width: customWidth,
       depth: customDepth - 35,
-      thickness: 18, // 고정 18mm
+      thickness: 18.5, // PET 재질 항상 18.5mm
       material: 'PET',
     });
   }
 
   // === 프레임 패널 (상부프레임 / 하부프레임) ===
-  const FRAME_THICKNESS = basicThickness; // 사용자 선택 두께 (18 또는 18.5 등)
+  const PET_THICKNESS = 18.5; // PET 재질 항상 18.5mm
 
   // 상부프레임 — 하부장(lower-*)과 상부장(upper)에는 상부프레임 없음
   if (!isLowerCabinetModule && !isUpperCabinet && hasTopFrame !== false && topFrameHeightMm && topFrameHeightMm > 0) {
@@ -1844,7 +1844,7 @@ export const calculatePanelDetails = (
       name: '상부프레임',
       width: customWidth,
       height: topFrameHeightMm,
-      thickness: FRAME_THICKNESS,
+      thickness: PET_THICKNESS,
       material: 'PET',
     });
   }
@@ -1855,7 +1855,7 @@ export const calculatePanelDetails = (
       name: '하부프레임',
       width: customWidth,
       height: baseFrameHeightMm,
-      thickness: FRAME_THICKNESS,
+      thickness: PET_THICKNESS,
       material: 'PET',
     });
   }
