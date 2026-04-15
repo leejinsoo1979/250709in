@@ -1126,20 +1126,25 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
             // - rotated 여부에 따라 좌표 매핑
 
             if (isDrawerSidePanel) {
-              // ★★★ 서랍 측판: width가 시트의 세로(Y축) ★★★
-              // boringPositions(높이방향 0~225) → 시트 X축
-              // depthPositions(깊이방향 0~535) → 시트 Y축
-              boringX = x + boringPosMm;
-              boringY = y + depthPosMm;
-              console.log(`[BORING CALC] 서랍측판: boringPosMm=${boringPosMm.toFixed(1)} → X, depthPosMm=${depthPosMm.toFixed(1)} → Y`);
+              // 서랍 측판: boringPositions=높이방향, depthPositions=깊이방향
+              if (panel.rotated) {
+                // rotated: displayed width=height(높이), height=width(깊이)
+                boringX = x + boringPosMm;
+                boringY = y + depthPosMm;
+              } else {
+                // 비회전: displayed width=width(깊이), height=height(높이)
+                boringX = x + depthPosMm;
+                boringY = y + originalHeight - boringPosMm;
+              }
             } else if (isDrawerFrontPanel) {
-              // ★★★ 서랍 앞판: 마이다 보링 (6개) - 서랍 측판과 동일한 방향 ★★★
-              // 서랍 측판과 마찬가지로 측면(face)에서 뚫리는 보링
-              // boringPositions(높이방향) = 상30mm, 하30mm (2개) → 시트 X축
-              // depthPositions(너비방향) = 좌50mm, 중앙, 우50mm (3개) → 시트 Y축
-              boringX = x + boringPosMm;
-              boringY = y + depthPosMm;
-              console.log(`[BORING CALC] 서랍앞판: boringPosMm=${boringPosMm.toFixed(1)} → X, depthPosMm=${depthPosMm.toFixed(1)} → Y`);
+              // 서랍 앞판: boringPositions=높이방향, depthPositions=너비방향
+              if (panel.rotated) {
+                boringX = x + boringPosMm;
+                boringY = y + depthPosMm;
+              } else {
+                boringX = x + depthPosMm;
+                boringY = y + originalHeight - boringPosMm;
+              }
             } else if (panel.rotated) {
               // 가구 측판 (rotated=true):
               // Y좌표 뒤집기: 하단 기준 → 상단 기준
