@@ -128,6 +128,7 @@ export function placeFurnitureAtSlot(params: PlaceFurnitureParams): PlaceFurnitu
   // moduleId에 포함된 너비가 이전 공간 설정 기준일 수 있으므로 항상 현재 슬롯 너비로 재계산
   const baseId = moduleId.replace(/-[\d.]+$/, '');
   let furnitureId: string;
+
   if (hasDroppedCeiling && zone && indexing.zones) {
     if (isDualFurnitureId) {
       const dualWidth = getActualDualWidth();
@@ -400,6 +401,8 @@ export function placeFurnitureAtSlot(params: PlaceFurnitureParams): PlaceFurnitu
     const baseH = spaceInfo.baseConfig?.height || 0;
     droppedCustomHeight = spaceInfo.height - dropH - frameTop - baseH;
   }
+
+  console.log('📦 [배치결과]', { furnitureId, customWidth, isDualFurniture, spaceWidth: spaceInfo.width, internalWidth: indexing.internalWidth, columnCount: indexing.columnCount });
 
   const newModule: PlacedModule = {
     id: uuidv4(),

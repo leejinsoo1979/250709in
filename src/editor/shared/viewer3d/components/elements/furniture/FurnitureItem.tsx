@@ -1549,6 +1549,12 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     // slotIndex도 없으면 기본값 그대로 사용 (이미 위에서 설정됨)
   }
 
+
+  // 듀얼 가구 렌더링 너비 확인용
+  if (placedModule.isDualSlot || placedModule.moduleId.startsWith('dual-')) {
+    console.log('📐 [렌더링너비]', { moduleId: placedModule.moduleId, furnitureWidthMm, customWidth: placedModule.customWidth, adjustedWidth: placedModule.adjustedWidth, moduleDataWidth: moduleData?.dimensions.width });
+  }
+
   // 기둥에 의한 자동 깊이 조정을 위한 플래그와 값 저장
   // customWidth가 있어도 기둥이 있으면 깊이 조정 필요
   let autoAdjustedDepthMm: number | null = null;
