@@ -1447,7 +1447,13 @@ const createLowerSinkCabinet = (columnWidth: number): ModuleData => {
       ...base.modelConfig,
       basicThickness: FURNITURE_SPECS.BASIC_THICKNESS,
       hasOpenFront: false,
-      sections: []
+      sections: [
+        {
+          type: 'open',
+          heightType: 'percentage',
+          height: 100
+        }
+      ]
     }
   } as ModuleData;
 };
@@ -1483,7 +1489,13 @@ const createDualLowerSinkCabinet = (dualWidth: number, slotWidths?: number[]): M
       ...base.modelConfig,
       basicThickness: FURNITURE_SPECS.BASIC_THICKNESS,
       hasOpenFront: false,
-      sections: []
+      sections: [
+        {
+          type: 'open',
+          heightType: 'percentage',
+          height: 100
+        }
+      ]
     }
   } as ModuleData;
 };
@@ -1519,7 +1531,13 @@ const createLowerInductionCabinet = (columnWidth: number): ModuleData => {
       ...base.modelConfig,
       basicThickness: FURNITURE_SPECS.BASIC_THICKNESS,
       hasOpenFront: false,
-      sections: []
+      sections: [
+        {
+          type: 'open',
+          heightType: 'percentage',
+          height: 100
+        }
+      ]
     }
   } as ModuleData;
 };
@@ -1555,7 +1573,13 @@ const createDualLowerInductionCabinet = (dualWidth: number, slotWidths?: number[
       ...base.modelConfig,
       basicThickness: FURNITURE_SPECS.BASIC_THICKNESS,
       hasOpenFront: false,
-      sections: []
+      sections: [
+        {
+          type: 'open',
+          heightType: 'percentage',
+          height: 100
+        }
+      ]
     }
   } as ModuleData;
 };
