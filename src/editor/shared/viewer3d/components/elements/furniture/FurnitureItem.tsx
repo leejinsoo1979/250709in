@@ -805,11 +805,10 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         });
       }
     } else {
-      // 일반 가구: 이미 customWidth를 포함하고 있지 않을 때만 변경
-      if (!targetModuleId.endsWith(`-${placedModule.customWidth}`)) {
-        const baseType = targetModuleId.replace(/-\d+$/, '');
-        targetModuleId = `${baseType}-${placedModule.customWidth}`;
-      }
+      // 일반 가구: customWidth 기반으로 targetModuleId 재계산
+      // baseModuleType이 있으면 사용 (가장 정확), 없으면 정규식으로 추출
+      const baseType = placedModule.baseModuleType || targetModuleId.replace(/-[\d.]+$/, '');
+      targetModuleId = `${baseType}-${placedModule.customWidth}`;
     }
   }
 

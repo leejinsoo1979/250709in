@@ -155,8 +155,26 @@ export function placeFurnitureAtSlot(params: PlaceFurnitureParams): PlaceFurnitu
   }
 
   // 모듈 데이터 조회 (커스터마이징 가구는 getModuleById로 찾을 수 없으므로 pendingPlacement에서 합성)
+  // ★ params.moduleData가 전달되더라도 현재 너비와 다르면 무시하고 재조회
   const isCustomizableModule = isCustomizableModuleId(moduleId);
-  let moduleData = params.moduleData || getModuleById(furnitureId, zoneInternalSpace, zoneSpaceInfo);
+  let moduleData: ModuleData | undefined;
+
+  if (params.moduleData) {
+    // 전달된 moduleData의 너비가 현재 계산된 너비와 일치하는지 확인
+    const expectedWidth = isDualFurnitureId ? getActualDualWidth() : (
+      indexing.slotWidths && slotIndex < indexing.slotWidths.length
+        ? indexing.slotWidths[slotIndex]
+        : columnWidth
+    );
+    if (Math.abs(params.moduleData.dimensions.width - expectedWidth) < 2) {
+      moduleData = params.moduleData;
+    } else {
+      // 너비 불일치 — 현재 인덱싱 기반으로 재조회
+      moduleData = getModuleById(furnitureId, zoneInternalSpace, zoneSpaceInfo);
+    }
+  } else {
+    moduleData = getModuleById(furnitureId, zoneInternalSpace, zoneSpaceInfo);
+  }
 
   if (!moduleData && isCustomizableModule && params.pendingPlacement) {
     const pp = params.pendingPlacement;
