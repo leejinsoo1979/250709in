@@ -1759,9 +1759,10 @@ export const calculatePanelDetails = (
         quantity: 1,
       });
       // 가로전대: L자 프레임 뒤 보강판 — 3D BaseFurnitureShell 가로전대(하N)/가로전대
+      const stretcherGap = (basicThickness === 15.5 || basicThickness === 18.5) ? 0 : 1;
       panels.frame.push({
         name: `가로전대(${ni + 1})`,
-        width: innerWidth,           // 상판/바닥판과 동일 (내경폭)
+        width: innerWidth - stretcherGap, // 상판/바닥판과 동일 너비
         height: notch.height,        // 노치 높이 (65mm 또는 60mm)
         thickness: basicThickness,
         material: 'PB',
@@ -1770,10 +1771,11 @@ export const calculatePanelDetails = (
   }
 
   // === 싱크장/인덕션장 전대 (상단 따내기 아래 150mm) ===
+  const apronGap = (basicThickness === 15.5 || basicThickness === 18.5) ? 0 : 1;
   if (moduleId.includes('lower-sink-cabinet') || moduleId.includes('dual-lower-sink-cabinet') || moduleId.includes('lower-induction-cabinet') || moduleId.includes('dual-lower-induction-cabinet')) {
     panels.frame.push({
       name: '전대',
-      width: innerWidth, // 내경폭 (상판/바닥판과 동일)
+      width: innerWidth - apronGap, // 상판/바닥판과 동일 너비
       height: 150,
       thickness: basicThickness,
       material: 'PB',
@@ -1784,7 +1786,7 @@ export const calculatePanelDetails = (
   if (moduleId.includes('lower-top-down-')) {
     panels.frame.push({
       name: '전대',
-      width: innerWidth, // 내경폭 (3D: innerWidth)
+      width: innerWidth - apronGap, // 상판/바닥판과 동일 너비
       height: 55,        // topStretcher.heightMm
       thickness: basicThickness,
       material: 'PB',
