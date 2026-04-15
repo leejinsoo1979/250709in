@@ -752,25 +752,26 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
             : notch.side;
 
           // ㄴ자를 두 개의 독립 선분으로 그림 (경로가 닫히지 않도록)
+          // 따내기는 뒷면(벽쪽) 코너 — CNC 레이아웃에서 뒷면 = y+height(하단)
           if (effectiveSide === 'right') {
-            // 우상단 코너: 세로선 + 가로선
+            // 우하단 코너 (뒷면 우측): 세로선(아래→위) + 가로선(좌→우)
             ctx.beginPath();
-            ctx.moveTo(x + width - clampedNW, y);
-            ctx.lineTo(x + width - clampedNW, y + clampedND);
+            ctx.moveTo(x + width - clampedNW, y + height);
+            ctx.lineTo(x + width - clampedNW, y + height - clampedND);
             ctx.stroke();
             ctx.beginPath();
-            ctx.moveTo(x + width - clampedNW, y + clampedND);
-            ctx.lineTo(x + width, y + clampedND);
+            ctx.moveTo(x + width - clampedNW, y + height - clampedND);
+            ctx.lineTo(x + width, y + height - clampedND);
             ctx.stroke();
           } else {
-            // 좌상단 코너: 가로선 + 세로선
+            // 좌하단 코너 (뒷면 좌측): 가로선(좌→우) + 세로선(위→아래)
             ctx.beginPath();
-            ctx.moveTo(x, y + clampedND);
-            ctx.lineTo(x + clampedNW, y + clampedND);
+            ctx.moveTo(x, y + height - clampedND);
+            ctx.lineTo(x + clampedNW, y + height - clampedND);
             ctx.stroke();
             ctx.beginPath();
-            ctx.moveTo(x + clampedNW, y + clampedND);
-            ctx.lineTo(x + clampedNW, y);
+            ctx.moveTo(x + clampedNW, y + height - clampedND);
+            ctx.lineTo(x + clampedNW, y + height);
             ctx.stroke();
           }
         }
