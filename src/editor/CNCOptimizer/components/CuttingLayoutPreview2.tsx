@@ -713,22 +713,20 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
 
       // === 따내기(노치) 점선 렌더링 ===
       if (panel.cornerNotch) {
-        console.log(`[NOTCH DEBUG] 상판 따내기 감지: "${panel.name}"`, {
-          cornerNotch: panel.cornerNotch,
-          panelW: panel.width, panelH: panel.height,
-          displayedW: width, displayedH: height,
-          rotated: panel.rotated,
-          x, y
+        const notch = panel.cornerNotch;
+        const nW = panel.rotated ? notch.depth : notch.width;
+        const nD = panel.rotated ? notch.width : notch.depth;
+        console.log(`[NOTCH DEBUG] 상판 따내기: "${panel.name}"`, {
+          notch, rotated: panel.rotated,
+          panelSize: `${panel.width}x${panel.height}`,
+          displayed: `${width}x${height}`,
+          notchDisplayed: `nW=${nW}, nD=${nD}`,
+          clamped: `nW=${Math.min(nW, width)}, nD=${Math.min(nD, height)}`,
+          panelPos: `x=${Math.round(x)}, y=${Math.round(y)}`,
         });
       }
       if (panel.sideNotches) {
-        console.log(`[NOTCH DEBUG] 측판 따내기 감지: "${panel.name}"`, {
-          sideNotches: panel.sideNotches,
-          panelW: panel.width, panelH: panel.height,
-          displayedW: width, displayedH: height,
-          rotated: panel.rotated,
-          x, y
-        });
+        console.log(`[NOTCH DEBUG] 측판 따내기: "${panel.name}"`, panel.sideNotches);
       }
       if (panel.cornerNotch || panel.sideNotches) {
         ctx.save();
@@ -752,26 +750,26 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
             : notch.side;
 
           // ㄴ자를 두 개의 독립 선분으로 그림 (경로가 닫히지 않도록)
-          // 따내기는 뒷면(벽쪽) 코너 — CNC 레이아웃에서 뒷면 = y+height(하단)
+          // 따내기는 뒷면(벽쪽) 코너 — CNC 레이아웃에서 뒷면 = y=0(상단)
           if (effectiveSide === 'right') {
-            // 우하단 코너 (뒷면 우측): 세로선(아래→위) + 가로선(좌→우)
+            // 우상단 코너 (뒷면 우측)
             ctx.beginPath();
-            ctx.moveTo(x + width - clampedNW, y + height);
-            ctx.lineTo(x + width - clampedNW, y + height - clampedND);
+            ctx.moveTo(x + width - clampedNW, y);
+            ctx.lineTo(x + width - clampedNW, y + clampedND);
             ctx.stroke();
             ctx.beginPath();
-            ctx.moveTo(x + width - clampedNW, y + height - clampedND);
-            ctx.lineTo(x + width, y + height - clampedND);
+            ctx.moveTo(x + width - clampedNW, y + clampedND);
+            ctx.lineTo(x + width, y + clampedND);
             ctx.stroke();
           } else {
-            // 좌하단 코너 (뒷면 좌측): 가로선(좌→우) + 세로선(위→아래)
+            // 좌상단 코너 (뒷면 좌측)
             ctx.beginPath();
-            ctx.moveTo(x, y + height - clampedND);
-            ctx.lineTo(x + clampedNW, y + height - clampedND);
+            ctx.moveTo(x, y + clampedND);
+            ctx.lineTo(x + clampedNW, y + clampedND);
             ctx.stroke();
             ctx.beginPath();
-            ctx.moveTo(x + clampedNW, y + height - clampedND);
-            ctx.lineTo(x + clampedNW, y + height);
+            ctx.moveTo(x + clampedNW, y + clampedND);
+            ctx.lineTo(x + clampedNW, y);
             ctx.stroke();
           }
         }
