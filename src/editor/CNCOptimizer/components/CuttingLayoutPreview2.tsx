@@ -743,37 +743,36 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
         // 따내기는 뒷면 코너(좌 또는 우)에서 잘라냄
         if (panel.cornerNotch) {
           const notch = panel.cornerNotch;
-          // displayed 좌표계에서의 따내기 크기
-          const nW = panel.rotated ? notch.depth : notch.width;   // displayed width 방향
-          const nD = panel.rotated ? notch.width : notch.depth;   // displayed height 방향
-
-          // 따내기가 패널보다 크면 클램핑
+          const nW = panel.rotated ? notch.depth : notch.width;
+          const nD = panel.rotated ? notch.width : notch.depth;
           const clampedNW = Math.min(nW, width);
           const clampedND = Math.min(nD, height);
-
-          // 따내기 위치 결정: 뒷면(y=0 쪽) 코너
-          // side='right' → displayed width의 우측 뒷면 코너
-          // side='left' → displayed width의 좌측 뒷면 코너
-          // rotated일 때 side 방향이 뒤집힘
           const effectiveSide = panel.rotated
-            ? (notch.side === 'right' ? 'left' : 'right')  // 회전 시 좌우 반전
+            ? (notch.side === 'right' ? 'left' : 'right')
             : notch.side;
 
-          ctx.beginPath();
+          // ㄴ자를 두 개의 독립 선분으로 그림 (경로가 닫히지 않도록)
           if (effectiveSide === 'right') {
-            // 우상단 코너 (y=0 = 뒷면)
-            // ㄴ자: 세로선(위→아래) + 가로선(좌→우)
+            // 우상단 코너: 세로선 + 가로선
+            ctx.beginPath();
             ctx.moveTo(x + width - clampedNW, y);
             ctx.lineTo(x + width - clampedNW, y + clampedND);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(x + width - clampedNW, y + clampedND);
             ctx.lineTo(x + width, y + clampedND);
+            ctx.stroke();
           } else {
-            // 좌상단 코너 (y=0 = 뒷면)
-            // ㄴ자(거울): 가로선(좌→우) + 세로선(아래→위)
+            // 좌상단 코너: 가로선 + 세로선
+            ctx.beginPath();
             ctx.moveTo(x, y + clampedND);
             ctx.lineTo(x + clampedNW, y + clampedND);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(x + clampedNW, y + clampedND);
             ctx.lineTo(x + clampedNW, y);
+            ctx.stroke();
           }
-          ctx.stroke();
         }
 
         // 측판 따내기 (sideNotches): 상단 노치=L자, 중간 노치=ㄷ자
