@@ -1824,6 +1824,17 @@ export const calculatePanelDetails = (
     });
   }
 
+  // === 상부장 하부 마감판 (3D UpperCabinet.tsx L131-148과 동일) ===
+  if (moduleData.category === 'upper') {
+    panels.frame.push({
+      name: '하부마감판',
+      width: customWidth,
+      depth: customDepth - 35,
+      thickness: 18, // 고정 18mm
+      material: 'PET',
+    });
+  }
+
   // === 프레임 패널 (상부프레임 / 하부프레임) ===
   const FRAME_THICKNESS = basicThickness; // 사용자 선택 두께 (18 또는 18.5 등)
 
