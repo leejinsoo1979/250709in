@@ -143,9 +143,10 @@ export const calculatePanelDetails = (
       let sectionName = '';
       let targetPanel = null;
 
-      // 2단 옷장/선반장 (single-2hanging, dual-2hanging, single-2shelf, dual-2shelf): 첫 번째 섹션이 하부장, 두 번째 섹션이 상부장
+      // 2단 옷장/선반장 (single-2hanging, dual-2hanging, single-2shelf, dual-2shelf, single-shelf, dual-shelf): 첫 번째 섹션이 하부장, 두 번째 섹션이 상부장
       if (moduleData.id.includes('single-2hanging') || moduleData.id.includes('dual-2hanging') ||
-          moduleData.id.includes('single-2shelf') || moduleData.id.includes('dual-2shelf')) {
+          moduleData.id.includes('single-2shelf') || moduleData.id.includes('dual-2shelf') ||
+          moduleData.id.includes('single-shelf-') || moduleData.id.includes('dual-shelf-')) {
         if (sectionIndex === 0) {
           sectionName = '하부장';
           targetPanel = panels.lower;
@@ -233,6 +234,8 @@ export const calculatePanelDetails = (
         moduleData.id.includes('4drawer-shelf') ||
         moduleData.id.includes('2drawer-shelf') ||
         moduleData.id.includes('2shelf') ||
+        moduleData.id.includes('single-shelf-') ||
+        moduleData.id.includes('dual-shelf-') ||
         moduleData.id.includes('4drawer-pantshanger') ||
         moduleData.id.includes('2drawer-styler');
 
@@ -1101,7 +1104,9 @@ export const calculatePanelDetails = (
       moduleData.id.includes('2hanging') ||
       moduleData.id.includes('4drawer-shelf') ||
       moduleData.id.includes('2drawer-shelf') ||
-      moduleData.id.includes('2shelf');
+      moduleData.id.includes('2shelf') ||
+      moduleData.id.includes('single-shelf-') ||
+      moduleData.id.includes('dual-shelf-');
 
     // 하부 섹션 높이 계산 (분리 측판에서 Y좌표 변환용)
     let lowerSectionHeight = 0;
