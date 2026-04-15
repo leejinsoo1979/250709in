@@ -1761,7 +1761,7 @@ export const calculatePanelDetails = (
       // 가로전대: L자 프레임 뒤 보강판 — 3D BaseFurnitureShell 가로전대(하N)/가로전대
       panels.frame.push({
         name: `가로전대(${ni + 1})`,
-        width: innerWidth,           // 내경폭
+        width: innerWidth,           // 상판/바닥판과 동일 (내경폭)
         height: notch.height,        // 노치 높이 (65mm 또는 60mm)
         thickness: basicThickness,
         material: 'PB',
@@ -1773,7 +1773,7 @@ export const calculatePanelDetails = (
   if (moduleId.includes('lower-sink-cabinet') || moduleId.includes('dual-lower-sink-cabinet') || moduleId.includes('lower-induction-cabinet') || moduleId.includes('dual-lower-induction-cabinet')) {
     panels.frame.push({
       name: '전대',
-      width: customWidth - basicThickness * 2, // 내경 (전체폭 - 측판두께×2)
+      width: innerWidth, // 내경폭 (상판/바닥판과 동일)
       height: 150,
       thickness: basicThickness,
       material: 'PB',
