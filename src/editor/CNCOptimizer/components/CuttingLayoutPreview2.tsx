@@ -741,35 +741,37 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
         // 따내기는 뒷면 코너(좌 또는 우)에서 잘라냄
         if (panel.cornerNotch) {
           const notch = panel.cornerNotch;
-          const nW = panel.rotated ? notch.depth : notch.width;
-          const nD = panel.rotated ? notch.width : notch.depth;
-          const clampedNW = Math.min(nW, width);
-          const clampedND = Math.min(nD, height);
+          // 340x140에서: 340=W방향(y축, 깊이), 140=L방향(x축, 가로폭)
+          // notch.width=340 → y축, notch.depth=140 → x축
+          const nX = panel.rotated ? notch.width : notch.depth;   // x축(L방향) = 140
+          const nY = panel.rotated ? notch.depth : notch.width;   // y축(W방향) = 340
+          const clampedNX = Math.min(nX, width);
+          const clampedNY = Math.min(nY, height);
           const effectiveSide = panel.rotated
             ? (notch.side === 'right' ? 'left' : 'right')
             : notch.side;
 
-          // ㄴ자를 두 개의 독립 선분으로 그림 (경로가 닫히지 않도록)
-          // 따내기는 뒷면(벽쪽) 코너 — CNC 레이아웃에서 뒷면 = y=0(상단)
+          // ㄴ자를 두 개의 독립 선분으로 그림
+          // 따내기는 뒷면(벽쪽) 코너 — y=0(상단) = 뒷면
           if (effectiveSide === 'right') {
             // 우상단 코너 (뒷면 우측)
             ctx.beginPath();
-            ctx.moveTo(x + width - clampedNW, y);
-            ctx.lineTo(x + width - clampedNW, y + clampedND);
+            ctx.moveTo(x + width - clampedNX, y);
+            ctx.lineTo(x + width - clampedNX, y + clampedNY);
             ctx.stroke();
             ctx.beginPath();
-            ctx.moveTo(x + width - clampedNW, y + clampedND);
-            ctx.lineTo(x + width, y + clampedND);
+            ctx.moveTo(x + width - clampedNX, y + clampedNY);
+            ctx.lineTo(x + width, y + clampedNY);
             ctx.stroke();
           } else {
             // 좌상단 코너 (뒷면 좌측)
             ctx.beginPath();
-            ctx.moveTo(x, y + clampedND);
-            ctx.lineTo(x + clampedNW, y + clampedND);
+            ctx.moveTo(x, y + clampedNY);
+            ctx.lineTo(x + clampedNX, y + clampedNY);
             ctx.stroke();
             ctx.beginPath();
-            ctx.moveTo(x + clampedNW, y + clampedND);
-            ctx.lineTo(x + clampedNW, y);
+            ctx.moveTo(x + clampedNX, y + clampedNY);
+            ctx.lineTo(x + clampedNX, y);
             ctx.stroke();
           }
         }
