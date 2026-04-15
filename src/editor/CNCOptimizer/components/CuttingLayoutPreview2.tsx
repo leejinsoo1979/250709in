@@ -774,9 +774,8 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
         if (panel.sideNotches) {
           // CNC 레이아웃에서 측판: panel.width=깊이, panel.height=높이
           // sideNotch: fromBottom=바닥에서 노치 하단까지, y=노치높이, z=노치깊이(앞면에서 안쪽으로)
-          // 좌측판: 앞면=x+width(깊이축 끝), 우측판: 앞면=x(깊이축 시작) — 거울 대칭
+          // 좌/우 측판 동일 방향 재단: 앞면(따내기)=x+width쪽, 후면(홈)=x쪽(위)
           const panelH = panel.rotated ? panel.width : panel.height;
-          const isRightSide = panel.name.includes('우측판');
           for (const sn of panel.sideNotches) {
             const isTopEdge = (sn.fromBottom + sn.y) >= panelH - 1;
 
@@ -785,13 +784,9 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
 
             if (panel.rotated) {
               // 회전 시: displayed width=panel.height(높이), height=panel.width(깊이)
-              if (isRightSide) {
-                frontEdge = y;
-                notchInner = y + sn.z;
-              } else {
-                frontEdge = y + height;
-                notchInner = y + height - sn.z;
-              }
+              // 앞면 = y+height (깊이축 끝)
+              frontEdge = y + height;
+              notchInner = y + height - sn.z;
               notchBottomY = x + width - sn.fromBottom;
               notchTopY = x + width - sn.fromBottom - sn.y;
 
@@ -807,13 +802,9 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
               ctx.stroke();
             } else {
               // 비회전: displayed width=panel.width(깊이), height=panel.height(높이)
-              if (isRightSide) {
-                frontEdge = x;
-                notchInner = x + sn.z;
-              } else {
-                frontEdge = x + width;
-                notchInner = x + width - sn.z;
-              }
+              // 앞면 = x+width (깊이축 끝)
+              frontEdge = x + width;
+              notchInner = x + width - sn.z;
 
               notchBottomY = y + height - sn.fromBottom;
               notchTopY = y + height - sn.fromBottom - sn.y;
