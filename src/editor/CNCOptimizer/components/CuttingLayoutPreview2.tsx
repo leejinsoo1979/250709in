@@ -774,11 +774,10 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
         if (panel.sideNotches) {
           // CNC 레이아웃에서 측판: panel.width=깊이, panel.height=높이
           // sideNotch: fromBottom=바닥에서 노치 하단까지, y=노치높이, z=노치깊이(앞면에서 안쪽으로)
-          // 좌/우 측판 모두 앞면에서 안쪽으로 따내기 (방향 동일)
-          // 앞면 = 깊이축 끝 (x+width 쪽). 뒷면(백패널 홈)=x쪽
+          // 좌측판: 앞면=x+width(깊이축 끝), 우측판: 앞면=x(깊이축 시작) — 거울 대칭
           const panelH = panel.rotated ? panel.width : panel.height;
+          const isRightSide = panel.name.includes('우측판');
           for (const sn of panel.sideNotches) {
-            // 상단 끝에 닿는 노치(fromBottom+y >= height)는 L자, 아니면 ㄷ자
             const isTopEdge = (sn.fromBottom + sn.y) >= panelH - 1;
 
             let frontEdge: number, notchInner: number;
@@ -786,8 +785,13 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
 
             if (panel.rotated) {
               // 회전 시: displayed width=panel.height(높이), height=panel.width(깊이)
-              frontEdge = y + height; // 앞면 = 깊이 축 끝
-              notchInner = y + height - sn.z;
+              if (isRightSide) {
+                frontEdge = y;
+                notchInner = y + sn.z;
+              } else {
+                frontEdge = y + height;
+                notchInner = y + height - sn.z;
+              }
               notchBottomY = x + width - sn.fromBottom;
               notchTopY = x + width - sn.fromBottom - sn.y;
 
@@ -803,8 +807,13 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
               ctx.stroke();
             } else {
               // 비회전: displayed width=panel.width(깊이), height=panel.height(높이)
-              frontEdge = x + width; // 앞면 = 깊이 축 끝
-              notchInner = x + width - sn.z;
+              if (isRightSide) {
+                frontEdge = x;
+                notchInner = x + sn.z;
+              } else {
+                frontEdge = x + width;
+                notchInner = x + width - sn.z;
+              }
 
               notchBottomY = y + height - sn.fromBottom;
               notchTopY = y + height - sn.fromBottom - sn.y;
