@@ -814,6 +814,9 @@ function PageInner(){
               bracketBoringPositions: p.bracketBoringPositions,
               bracketBoringDepthPositions: p.bracketBoringDepthPositions,
               isBracketSide: p.isBracketSide,
+              // 따내기 (노치) 정보
+              cornerNotch: p.cornerNotch,
+              sideNotches: p.sideNotches,
               // 3D 패널 하이라이트용
               meshName: p.meshName,
               furnitureId: p.furnitureId,
