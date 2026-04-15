@@ -1762,11 +1762,22 @@ export const calculatePanelDetails = (
   }
 
   // === 싱크장/인덕션장 전대 (상단 따내기 아래 150mm) ===
-  if (moduleData.id.includes('lower-sink-cabinet') || moduleData.id.includes('dual-lower-sink-cabinet') || moduleData.id.includes('lower-induction-cabinet') || moduleData.id.includes('dual-lower-induction-cabinet')) {
+  if (moduleId.includes('lower-sink-cabinet') || moduleId.includes('dual-lower-sink-cabinet') || moduleId.includes('lower-induction-cabinet') || moduleId.includes('dual-lower-induction-cabinet')) {
     panels.frame.push({
       name: '전대',
       width: customWidth - basicThickness * 2, // 내경 (전체폭 - 측판두께×2)
       height: 150,
+      thickness: basicThickness,
+      material: 'PB',
+    });
+  }
+
+  // === 상판내림 전대 (topStretcher: 높이 55mm, 깊이 40mm) — 3D BaseFurnitureShell L530 ===
+  if (moduleId.includes('lower-top-down-')) {
+    panels.frame.push({
+      name: '전대',
+      width: innerWidth, // 내경폭 (3D: innerWidth)
+      height: 55,        // topStretcher.heightMm
       thickness: basicThickness,
       material: 'PB',
     });
