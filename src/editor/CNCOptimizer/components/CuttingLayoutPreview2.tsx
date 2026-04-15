@@ -712,62 +712,68 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
       
 
       // === 따내기(노치) 점선 렌더링 ===
+      if (panel.cornerNotch) {
+        console.log(`[NOTCH DEBUG] 상판 따내기 감지: "${panel.name}"`, {
+          cornerNotch: panel.cornerNotch,
+          panelW: panel.width, panelH: panel.height,
+          displayedW: width, displayedH: height,
+          rotated: panel.rotated,
+          x, y
+        });
+      }
+      if (panel.sideNotches) {
+        console.log(`[NOTCH DEBUG] 측판 따내기 감지: "${panel.name}"`, {
+          sideNotches: panel.sideNotches,
+          panelW: panel.width, panelH: panel.height,
+          displayedW: width, displayedH: height,
+          rotated: panel.rotated,
+          x, y
+        });
+      }
       if (panel.cornerNotch || panel.sideNotches) {
         ctx.save();
-        ctx.setLineDash([4 / scale, 3 / scale]);
+        ctx.setLineDash([6 / scale, 4 / scale]);
         ctx.strokeStyle = '#ef4444'; // 빨간 점선
         ctx.lineWidth = 1.5 / (baseScale * scale);
 
         // 상판 따내기 (cornerNotch): 코너 ㄴ자형 점선
+        // 상판 패널: width=가로폭, height=깊이
+        // notch: width=가로폭 방향 따내기 크기, depth=깊이 방향 따내기 크기
+        // CNC 레이아웃에서 상판의 y=0 방향이 뒷면(벽쪽), y+height 방향이 앞면
+        // 따내기는 뒷면 코너(좌 또는 우)에서 잘라냄
         if (panel.cornerNotch) {
           const notch = panel.cornerNotch;
-          // CNC 레이아웃에서: panel.width=가로폭, panel.height=깊이
-          // notch.width=가로폭 방향, notch.depth=깊이 방향
-          let nW: number, nD: number;
-          if (panel.rotated) {
-            // 회전 시: 표시 width=panel.height, height=panel.width
-            // notch.width(가로폭)→displayed height 방향, notch.depth(깊이)→displayed width 방향
-            nW = notch.depth; // displayed width 방향 (깊이)
-            nD = notch.width; // displayed height 방향 (가로폭)
-          } else {
-            nW = notch.width; // displayed width 방향 (가로폭)
-            nD = notch.depth; // displayed height 방향 (깊이)
-          }
+          // displayed 좌표계에서의 따내기 크기
+          const nW = panel.rotated ? notch.depth : notch.width;   // displayed width 방향
+          const nD = panel.rotated ? notch.width : notch.depth;   // displayed height 방향
 
-          if (panel.rotated) {
-            // 회전 시: side 방향이 height 축으로 변환
-            if (notch.side === 'right') {
-              // 우측 → 회전 시 하단: 우하단 코너
-              ctx.beginPath();
-              ctx.moveTo(x + width - nW, y + height);
-              ctx.lineTo(x + width - nW, y + height - nD);
-              ctx.lineTo(x + width, y + height - nD);
-              ctx.stroke();
-            } else {
-              // 좌측 → 회전 시 상단: 좌상단 코너
-              ctx.beginPath();
-              ctx.moveTo(x, y + nD);
-              ctx.lineTo(x + nW, y + nD);
-              ctx.lineTo(x + nW, y);
-              ctx.stroke();
-            }
+          // 따내기가 패널보다 크면 클램핑
+          const clampedNW = Math.min(nW, width);
+          const clampedND = Math.min(nD, height);
+
+          // 따내기 위치 결정: 뒷면(y=0 쪽) 코너
+          // side='right' → displayed width의 우측 뒷면 코너
+          // side='left' → displayed width의 좌측 뒷면 코너
+          // rotated일 때 side 방향이 뒤집힘
+          const effectiveSide = panel.rotated
+            ? (notch.side === 'right' ? 'left' : 'right')  // 회전 시 좌우 반전
+            : notch.side;
+
+          ctx.beginPath();
+          if (effectiveSide === 'right') {
+            // 우상단 코너 (y=0 = 뒷면)
+            // ㄴ자: 세로선(위→아래) + 가로선(좌→우)
+            ctx.moveTo(x + width - clampedNW, y);
+            ctx.lineTo(x + width - clampedNW, y + clampedND);
+            ctx.lineTo(x + width, y + clampedND);
           } else {
-            if (notch.side === 'right') {
-              // 우상단 코너 (깊이 = y축 상단)
-              ctx.beginPath();
-              ctx.moveTo(x + width - nW, y);
-              ctx.lineTo(x + width - nW, y + nD);
-              ctx.lineTo(x + width, y + nD);
-              ctx.stroke();
-            } else {
-              // 좌상단 코너
-              ctx.beginPath();
-              ctx.moveTo(x, y + nD);
-              ctx.lineTo(x + nW, y + nD);
-              ctx.lineTo(x + nW, y);
-              ctx.stroke();
-            }
+            // 좌상단 코너 (y=0 = 뒷면)
+            // ㄴ자(거울): 가로선(좌→우) + 세로선(아래→위)
+            ctx.moveTo(x, y + clampedND);
+            ctx.lineTo(x + clampedNW, y + clampedND);
+            ctx.lineTo(x + clampedNW, y);
           }
+          ctx.stroke();
         }
 
         // 측판 따내기 (sideNotches): 상단 노치=L자, 중간 노치=ㄷ자
