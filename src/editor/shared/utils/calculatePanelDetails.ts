@@ -1603,10 +1603,28 @@ export const calculatePanelDetails = (
       }
 
       // 외부서랍: 앞판 없음 (ExternalDrawerRenderer 주석: "서랍 앞판 없음" — 마이다가 앞면 덮음)
+      // 서랍 측판 보링/홈 위치 (키큰장 서랍과 동일 로직)
+      const extEdgeOffsetY = 20;
+      const extBoringYPositions = [
+        extEdgeOffsetY,              // 아래쪽 20mm
+        extSideHMm / 2,             // 중간
+        extSideHMm - extEdgeOffsetY  // 위쪽
+      ];
+      const extBoringXPositions = [
+        drawerSideThickness / 2,                    // 앞쪽 끝에서 7.5mm
+        extSideDepthMm - drawerSideThickness / 2    // 뒤쪽 끝에서 7.5mm
+      ];
+      const extGroovePositionY = 10; // 바닥판 홈: 하단에서 10mm
+      const extGrooveHeight = 5;     // 바닥판 두께 = 홈 높이
       extDrawerPanels.push(
-        { name: `서랍${drawerNum} 좌측판`, width: extSideDepthMm, height: extSideHMm, thickness: drawerSideThickness, material: 'PB' },
-        { name: `서랍${drawerNum} 우측판`, width: extSideDepthMm, height: extSideHMm, thickness: drawerSideThickness, material: 'PB' },
-        { name: `서랍${drawerNum} 뒷판`, width: Math.round(extInnerWidth), height: Math.round(extBackHMm), thickness: drawerSideThickness, material: 'PB' },
+        { name: `서랍${drawerNum} 좌측판`, width: extSideDepthMm, height: extSideHMm, thickness: drawerSideThickness, material: 'PB',
+          boringPositions: extBoringYPositions, boringDepthPositions: extBoringXPositions,
+          groovePositions: [{ y: extGroovePositionY, height: extGrooveHeight, depth: 5 }] },
+        { name: `서랍${drawerNum} 우측판`, width: extSideDepthMm, height: extSideHMm, thickness: drawerSideThickness, material: 'PB',
+          boringPositions: extBoringYPositions, boringDepthPositions: extBoringXPositions,
+          groovePositions: [{ y: extGroovePositionY, height: extGrooveHeight, depth: 5 }] },
+        { name: `서랍${drawerNum} 뒷판`, width: Math.round(extInnerWidth), height: Math.round(extBackHMm), thickness: drawerSideThickness, material: 'PB',
+          groovePositions: [{ y: extGroovePositionY, height: extGrooveHeight, depth: 5 }] },
         { name: `서랍${drawerNum} 바닥`, width: Math.round(extBottomWidthMm), depth: extSideDepthMm, thickness: backPanelThickness, material: 'MDF' },
       );
       // 마이다: 서랍 앞면을 덮는 판 — 도어 유무와 무관하게 외부서랍에는 항상 존재
