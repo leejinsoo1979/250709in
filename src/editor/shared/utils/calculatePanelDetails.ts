@@ -1061,9 +1061,7 @@ export const calculatePanelDetails = (
 
     // === 측판에 힌지 브라켓 타공 데이터 주입 ===
     // 도어가 없는 모듈(서랍전용 등)은 브라켓 보링 불필요
-    if (!hasDoor || isDrawerOnlyLower) {
-      // 도어 없음 → 브라켓 보링 스킵
-    } else {
+    if (hasDoor && !isDrawerOnlyLower) {
     // 도어는 상부+하부 섹션 전체를 한장으로 덮는 구조
     // → 상부+하부 합산 높이를 한몸통으로 계산하여 타공점 결정
     // → 분리 측판이면 각 측판의 Y범위에 해당하는 타공점을 상대좌표로 변환
