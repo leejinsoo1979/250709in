@@ -802,6 +802,12 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
       // 카테고리별 기본 도어 갭 결정
       const moduleData = getModuleById(module.moduleId, internalSpace, spaceInfo);
       const category = moduleData?.category;
+
+      // 모듈 정의에서 hasDoor: false인 모듈(인덕션장, 서랍전용 등)은 도어 설치 불가 → 건너뜀
+      if (hasDoor && moduleData && moduleData.hasDoor === false) {
+        return module; // 원래 상태 유지
+      }
+
       let topGap = defaultTopGap;
       let bottomGap = defaultBottomGap;
       const isBasicLower = module.moduleId?.includes('lower-half-cabinet') || module.moduleId?.includes('dual-lower-half-cabinet') || module.moduleId?.includes('lower-drawer-') || module.moduleId?.includes('dual-lower-drawer-') || module.moduleId?.includes('lower-sink-cabinet') || module.moduleId?.includes('dual-lower-sink-cabinet');
