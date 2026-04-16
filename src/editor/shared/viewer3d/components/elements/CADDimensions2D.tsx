@@ -797,13 +797,13 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
 
               {/* 도어 안쪽 갭 치수 (상판 윗면~도어 상단) */}
               {innerGapSegments_l2.map((seg) => {
-                // 도어 안쪽 = 가구 전면 쪽 (leftExtStartZ보다 +Z 방향)
-                const innerZ = leftExtStartZ + mmToThreeUnits(50);
-                const innerDimZ = leftExtStartZ + mmToThreeUnits(100);
+                // 도어 안쪽 = 바깥 치수선 반대 방향 (leftInnerZ보다 +Z 방향, 가구 쪽)
+                const innerExtStart = leftInnerZ + mmToThreeUnits(50);
+                const innerDimZ = leftInnerZ + mmToThreeUnits(150);
                 return (
                   <group key={`inner-gap-${seg.key}`}>
-                    <ExtLine points={[[0, seg.bottomY, leftExtStartZ], [0, seg.bottomY, innerDimZ]]} color={dimensionColor} />
-                    <ExtLine points={[[0, seg.topY, leftExtStartZ], [0, seg.topY, innerDimZ]]} color={dimensionColor} />
+                    <ExtLine points={[[0, seg.bottomY, innerExtStart], [0, seg.bottomY, innerDimZ]]} color={dimensionColor} />
+                    <ExtLine points={[[0, seg.topY, innerExtStart], [0, seg.topY, innerDimZ]]} color={dimensionColor} />
                     <NativeLine name="dimension_line"
                       points={[[0, seg.bottomY, innerDimZ], [0, seg.topY, innerDimZ]]}
                       color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
@@ -1992,12 +1992,12 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
 
               {/* 도어 안쪽 갭 치수 (상판 윗면~도어 상단) — 우측뷰 */}
               {innerGapSegments_rl2.map((seg) => {
-                const innerZ = leftExtStartZ + mmToThreeUnits(50);
-                const innerDimZ = leftExtStartZ + mmToThreeUnits(100);
+                const innerExtStart = leftInnerZ + mmToThreeUnits(50);
+                const innerDimZ = leftInnerZ + mmToThreeUnits(150);
                 return (
                   <group key={`inner-gap-${seg.key}`}>
-                    <ExtLine points={[[0, seg.bottomY, leftExtStartZ], [0, seg.bottomY, innerDimZ]]} color={dimensionColor} />
-                    <ExtLine points={[[0, seg.topY, leftExtStartZ], [0, seg.topY, innerDimZ]]} color={dimensionColor} />
+                    <ExtLine points={[[0, seg.bottomY, innerExtStart], [0, seg.bottomY, innerDimZ]]} color={dimensionColor} />
+                    <ExtLine points={[[0, seg.topY, innerExtStart], [0, seg.topY, innerDimZ]]} color={dimensionColor} />
                     <NativeLine name="dimension_line" points={[[0, seg.bottomY, innerDimZ], [0, seg.topY, innerDimZ]]} color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false} />
                     <NativeLine name="dimension_line" points={[[-0.008, seg.bottomY, innerDimZ], [0.008, seg.bottomY, innerDimZ]]} color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false} />
                     <NativeLine name="dimension_line" points={[[-0.008, seg.topY, innerDimZ], [0.008, seg.topY, innerDimZ]]} color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false} />
