@@ -1078,20 +1078,21 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
         // 졸리컷 L자 단면 (ZY 평면에 그리고 X축으로 extrude)
         // Shape XY 평면: X → Z축(깊이, 뒤=-, 앞=+), Y → Y축(높이)
         // 원점: 수평판 중심Z, 수평판 하면Y
+        // 수직 앞판 앞면 = 수평판 앞면 (같은 Z), 45도 면은 안쪽에서 만남
         const shape = new THREE.Shape();
         const halfD = hD / 2;
         // 뒤쪽 하단
         shape.moveTo(-halfD, 0);
         // 뒤쪽 상단
         shape.lineTo(-halfD, t);
-        // 앞쪽 상단 (수평판 앞면 + 수직 앞판 두께)
-        shape.lineTo(halfD + t, t);
+        // 앞쪽 상단 (수평판 앞면 = 수직 앞판 앞면)
+        shape.lineTo(halfD, t);
         // 수직 앞판 앞면 하단
-        shape.lineTo(halfD + t, t - dropH);
-        // 졸리컷 45도: 수직 앞판 뒷면 하단
         shape.lineTo(halfD, t - dropH);
-        // 수평판 앞면 하면 (45도 면 끝)
-        shape.lineTo(halfD, 0);
+        // 졸리컷 45도: 수직 앞판 뒷면 하단
+        shape.lineTo(halfD - t, t - dropH);
+        // 수평판 앞면 하면에서 45도로 올라옴
+        shape.lineTo(halfD - t, 0);
         // 닫기
         shape.lineTo(-halfD, 0);
 
