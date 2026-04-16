@@ -197,6 +197,12 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
         return baseMaterial;
       }
 
+      // 인조대리석 상판/뒷턱: 2D에서도 면 채움 유지 (상판 재질 색상 표시)
+      const isCountertop2D = panelName && (panelName.includes('인조대리석') || panelName.includes('countertop'));
+      if (isCountertop2D) {
+        return baseMaterial;
+      }
+
       // 목찬넬프레임: 연한 파란색 반투명 면
       const isWoodChannel = panelName && panelName.includes('목찬넬프레임');
       if (isWoodChannel) {
@@ -219,6 +225,11 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
 
     // wireframe 모드에서는 메시를 완전히 투명하게 (클릭 가능하도록 visible은 유지)
     if (effectiveRenderMode === 'wireframe' && baseMaterial instanceof THREE.MeshStandardMaterial) {
+      // 인조대리석 상판/뒷턱: 2D wireframe에서도 면 채움 유지 (상판 재질 색상 표시)
+      const isCountertop = panelName && (panelName.includes('인조대리석') || panelName.includes('countertop'));
+      if (isCountertop) {
+        return baseMaterial;
+      }
       const invisibleMaterial = baseMaterial.clone();
       invisibleMaterial.transparent = true;
       invisibleMaterial.opacity = 0;
