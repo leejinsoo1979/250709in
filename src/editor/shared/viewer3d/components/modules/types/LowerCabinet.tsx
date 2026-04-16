@@ -400,8 +400,7 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
         texture.wrapT = THREE.RepeatWrapping;
         texture.repeat.set(1, 1);
         mat.map = texture;
-        mat.color.set('#ffffff');
-        mat.needsUpdate = true;
+        applyDefaultImageTextureSettings(mat);
       });
     } else {
       if (mat.map) {
