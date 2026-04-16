@@ -519,6 +519,11 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
     const pm = state.placedModules.find(m => m.id === placedFurnitureId);
     return pm?.stoneTopRightOffset || 0;
   });
+  const stoneBackLip = useFurnitureStore(state => {
+    if (!placedFurnitureId) return false;
+    const pm = state.placedModules.find(m => m.id === placedFurnitureId);
+    return pm?.stoneTopBackLip || false;
+  });
 
   // 상판내림 모듈 여부
   const isTopDown = moduleData.id.includes('lower-top-down-') || moduleData.id.includes('dual-lower-top-down-');
@@ -537,8 +542,9 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
       depth: furD + fo + bo,
       xOffset: (ro - lo) / 2,
       zOffset: (fo - bo) / 2,
+      backLip: stoneBackLip,
     };
-  }, [stoneThickness, stoneFrontOff, stoneBackOff, stoneLeftOff, stoneRightOff, adjustedWidth, baseFurniture.width, baseFurniture.depth]);
+  }, [stoneThickness, stoneFrontOff, stoneBackOff, stoneLeftOff, stoneRightOff, stoneBackLip, adjustedWidth, baseFurniture.width, baseFurniture.depth]);
 
   // 인조대리석 상판 재질 — 전체 6면 동일 텍스처
   const countertopTextureUrl = spaceInfo?.materialConfig?.countertopTexture;
@@ -1233,6 +1239,21 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
           material={stoneTopMaterial}
           renderMode={renderMode}
           panelName="인조대리석 상판"
+        />
+      )}
+
+      {/* 인조대리석 뒷턱 (back lip) — 상판 뒤쪽 수직판 */}
+      {showFurniture && stoneTopData && stoneTopData.backLip && stoneTopMaterial && (
+        <BoxWithEdges
+          args={[stoneTopData.width, stoneTopData.thickness, stoneTopData.thickness]}
+          position={[
+            stoneTopData.xOffset,
+            cabinetYPosition + adjustedHeight / 2 + stoneTopData.thickness + stoneTopData.thickness / 2,
+            stoneTopData.zOffset - stoneTopData.depth / 2 + stoneTopData.thickness / 2
+          ]}
+          material={stoneTopMaterial}
+          renderMode={renderMode}
+          panelName="인조대리석 뒷턱"
         />
       )}
 
