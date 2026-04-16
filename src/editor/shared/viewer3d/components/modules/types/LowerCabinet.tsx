@@ -1243,13 +1243,16 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
       )}
 
       {/* 인조대리석 뒷턱 (back lip) — 상판 뒤쪽 수직판 */}
+      {/* 2D 정면뷰에서는 상판과 같은 Z(중심)에 배치하여 정면에서 보이게 함 */}
       {showFurniture && stoneTopData && stoneTopData.backLipHeight > 0 && stoneTopMaterial && (
         <BoxWithEdges
           args={[stoneTopData.width, stoneTopData.backLipHeight, stoneTopData.thickness]}
           position={[
             stoneTopData.xOffset,
             cabinetYPosition + adjustedHeight / 2 + stoneTopData.thickness + stoneTopData.backLipHeight / 2,
-            stoneTopData.zOffset - stoneTopData.depth / 2 + stoneTopData.thickness / 2
+            (is2DMode && view2DDirection === 'front')
+              ? stoneTopData.zOffset
+              : stoneTopData.zOffset - stoneTopData.depth / 2 + stoneTopData.thickness / 2
           ]}
           material={stoneTopMaterial}
           renderMode={renderMode}
