@@ -3740,14 +3740,14 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                           if (!isDoorLift && !isTopDown) {
                             updates.stoneTopFrontOffset = 23;
                           }
-                          // 도어올림: 도어 상단 = 상판 윗면 - 15mm → doorTopGap = thickness - 15
+                          // 도어올림: 도어 상단과 상판 윗면 갭 15mm → doorTopGap = thickness - 20
                           if (isDoorLift) {
-                            updates.doorTopGap = thickness - 15;
+                            updates.doorTopGap = thickness - 20;
                           }
                         } else {
                           // 두께 변경 시 도어올림 doorTopGap도 연동
                           if (isDoorLift) {
-                            updates.doorTopGap = thickness - 15;
+                            updates.doorTopGap = thickness - 20;
                           }
                         }
                         updatePlacedModule(currentPlacedModule.id, updates);
