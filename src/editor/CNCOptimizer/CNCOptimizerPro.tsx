@@ -476,6 +476,7 @@ function PageInner(){
       { label: 'PB_18.5T_2440x1220', width: 1220, length: 2440, thickness: 18.5, quantity: 999, material: 'PB' },
       { label: 'PET_18.5T_2440x1220', width: 1220, length: 2440, thickness: 18.5, quantity: 999, material: 'PET' },
       { label: 'PB_15.5T_2440x1220', width: 1220, length: 2440, thickness: 15.5, quantity: 999, material: 'PB' },
+      { label: 'MDF_15.5T_2440x1220', width: 1220, length: 2440, thickness: 15.5, quantity: 999, material: 'MDF' },
       { label: 'MDF_9.5T_2440x1220', width: 1220, length: 2440, thickness: 9.5, quantity: 999, material: 'MDF' },
       { label: 'MDF_5.5T_2440x1220', width: 1220, length: 2440, thickness: 5.5, quantity: 999, material: 'MDF' },
     ] : [
@@ -483,6 +484,7 @@ function PageInner(){
       { label: 'PB_18T_2440x1220', width: 1220, length: 2440, thickness: 18, quantity: 999, material: 'PB' },
       { label: 'PET_18.5T_2440x1220', width: 1220, length: 2440, thickness: 18.5, quantity: 999, material: 'PET' },
       { label: 'PB_15T_2440x1220', width: 1220, length: 2440, thickness: 15, quantity: 999, material: 'PB' },
+      { label: 'MDF_15T_2440x1220', width: 1220, length: 2440, thickness: 15, quantity: 999, material: 'MDF' },
       { label: 'MDF_9T_2440x1220', width: 1220, length: 2440, thickness: 9, quantity: 999, material: 'MDF' },
       { label: 'MDF_5T_2440x1220', width: 1220, length: 2440, thickness: 5, quantity: 999, material: 'MDF' },
     ];
