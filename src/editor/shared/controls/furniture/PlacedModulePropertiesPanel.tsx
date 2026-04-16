@@ -3728,6 +3728,13 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                           updates.stoneTopBackOffset = 0;
                           updates.stoneTopLeftOffset = 0;
                           updates.stoneTopRightOffset = 0;
+                        } else if ((currentPlacedModule.stoneTopThickness || 0) === 0) {
+                          // 처음 두께 선택 시 기본 오프셋 적용
+                          const mid = currentPlacedModule.moduleId || '';
+                          const isDoorLiftOrTopDown = mid.includes('lower-door-lift') || mid.includes('lower-top-down');
+                          if (!isDoorLiftOrTopDown) {
+                            updates.stoneTopFrontOffset = 23;
+                          }
                         }
                         updatePlacedModule(currentPlacedModule.id, updates);
                       }
