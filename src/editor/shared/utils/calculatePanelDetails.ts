@@ -1857,19 +1857,20 @@ export const calculatePanelDetails = (
       material: 'MDF',
     });
     // 인덕션장 마이다 2개 (도어 대신) + doorTopGap/doorBottomGap 갭 확장 (3D와 동일)
+    // extDrawerPanels에 push: effectiveHasDoor=false로 panels.door 출력이 차단되므로
     const maidaWidthMm = customWidth - 3; // 좌우 1.5mm씩 갭
     const inductionDefaultDTG = -20;
     const inductionDefaultDBG = 5;
     const inductionGapTopExt = (doorTopGap ?? inductionDefaultDTG) - inductionDefaultDTG;
     const inductionGapBottomExt = (doorBottomGap ?? inductionDefaultDBG) - inductionDefaultDBG;
-    panels.door.push({
+    extDrawerPanels.push({
       name: '인덕션 1단서랍(마이다)',
       width: maidaWidthMm,
       height: 340 + inductionGapBottomExt,
       thickness: 18.5,
       material: 'PET',
     });
-    panels.door.push({
+    extDrawerPanels.push({
       name: '인덕션 2단서랍(마이다)',
       width: maidaWidthMm,
       height: 427 + inductionGapTopExt,
