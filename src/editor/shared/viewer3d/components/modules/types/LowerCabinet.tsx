@@ -524,6 +524,11 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
     const pm = state.placedModules.find(m => m.id === placedFurnitureId);
     return pm?.stoneTopBackLip || 0;
   });
+  const stoneBackLipThickness = useFurnitureStore(state => {
+    if (!placedFurnitureId) return 0;
+    const pm = state.placedModules.find(m => m.id === placedFurnitureId);
+    return pm?.stoneTopBackLipThickness || 0; // 0이면 상판 두께 사용
+  });
 
   // 상판내림 모듈 여부
   const isTopDown = moduleData.id.includes('lower-top-down-') || moduleData.id.includes('dual-lower-top-down-');
@@ -536,6 +541,7 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
     const bo = stoneBackOff * 0.01;
     const lo = stoneLeftOff * 0.01;
     const ro = stoneRightOff * 0.01;
+    const lipThicknessMm = stoneBackLipThickness || stoneThickness; // 미설정 시 상판 두께 사용
     return {
       thickness: stoneThickness * 0.01,
       width: furW + lo + ro,
@@ -543,8 +549,9 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
       xOffset: (ro - lo) / 2,
       zOffset: (fo - bo) / 2,
       backLipHeight: stoneBackLip * 0.01, // mm → m
+      backLipThickness: lipThicknessMm * 0.01, // mm → m
     };
-  }, [stoneThickness, stoneFrontOff, stoneBackOff, stoneLeftOff, stoneRightOff, stoneBackLip, adjustedWidth, baseFurniture.width, baseFurniture.depth]);
+  }, [stoneThickness, stoneFrontOff, stoneBackOff, stoneLeftOff, stoneRightOff, stoneBackLip, stoneBackLipThickness, adjustedWidth, baseFurniture.width, baseFurniture.depth]);
 
   // 인조대리석 상판 재질 — 전체 6면 동일 텍스처
   const countertopTextureUrl = spaceInfo?.materialConfig?.countertopTexture;
@@ -1246,13 +1253,13 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
       {/* 2D 정면뷰에서는 상판과 같은 Z(중심)에 배치하여 정면에서 보이게 함 */}
       {showFurniture && stoneTopData && stoneTopData.backLipHeight > 0 && stoneTopMaterial && !(viewMode === '2D' && view2DDirection === 'top') && (
         <BoxWithEdges
-          args={[stoneTopData.width, stoneTopData.backLipHeight, stoneTopData.thickness]}
+          args={[stoneTopData.width, stoneTopData.backLipHeight, stoneTopData.backLipThickness]}
           position={[
             stoneTopData.xOffset,
             cabinetYPosition + adjustedHeight / 2 + stoneTopData.thickness + stoneTopData.backLipHeight / 2,
             (is2DMode && view2DDirection === 'front')
               ? stoneTopData.zOffset
-              : stoneTopData.zOffset - stoneTopData.depth / 2 + stoneTopData.thickness / 2
+              : stoneTopData.zOffset - stoneTopData.depth / 2 + stoneTopData.backLipThickness / 2
           ]}
           material={stoneTopMaterial}
           renderMode={renderMode}

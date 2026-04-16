@@ -3787,6 +3787,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                           updates.stoneTopLeftOffset = 0;
                           updates.stoneTopRightOffset = 0;
                           updates.stoneTopBackLip = 0;
+                          updates.stoneTopBackLipThickness = 0;
                           // 도어올림: 상판 제거 시 doorTopGap 기본값(30) 복원
                           if (isDoorLift) {
                             const defaultGap = 30;
@@ -3967,7 +3968,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                     <div className={styles.doorTabSelector} style={{ marginTop: '4px' }}>
                       <button
                         className={`${styles.doorTab} ${!(currentPlacedModule.stoneTopBackLip) ? styles.activeDoorTab : ''}`}
-                        onClick={() => updatePlacedModule(currentPlacedModule.id, { stoneTopBackLip: 0 })}
+                        onClick={() => updatePlacedModule(currentPlacedModule.id, { stoneTopBackLip: 0, stoneTopBackLipThickness: 0 })}
                       >
                         없음
                       </button>
@@ -4036,6 +4037,105 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                         />
                         다채움
                       </label>
+                    </div>
+                  )}
+                  {(currentPlacedModule.stoneTopBackLip || 0) > 0 && (
+                    <div className={styles.epRow} style={{ marginTop: '6px' }}>
+                      <div className={styles.epField}>
+                        <label className={styles.epFieldLabel}>뒷턱 두께</label>
+                        <div className={styles.inputWithUnit}>
+                          <input
+                            type="text"
+                            inputMode="numeric"
+                            value={currentPlacedModule.stoneTopBackLipThickness || currentPlacedModule.stoneTopThickness || 20}
+                            onChange={(e) => {
+                              const v = e.target.value;
+                              if (v === '' || /^\d+$/.test(v)) {
+                                const num = v === '' ? 0 : Math.max(1, parseInt(v, 10));
+                                updatePlacedModule(currentPlacedModule.id, { stoneTopBackLipThickness: num });
+                              }
+                            }}
+                            onKeyDown={(e) => {
+                              if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                                e.preventDefault();
+                                const cur = currentPlacedModule.stoneTopBackLipThickness || currentPlacedModule.stoneTopThickness || 20;
+                                const next = Math.max(1, cur + (e.key === 'ArrowUp' ? 1 : -1));
+                                updatePlacedModule(currentPlacedModule.id, { stoneTopBackLipThickness: next });
+                              }
+                            }}
+                            className={styles.epInput}
+                          />
+                          <span className={styles.unit}>mm</span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                  {(currentPlacedModule.stoneTopBackLip || 0) > 0 && (
+                    <div className={styles.epRow} style={{ marginTop: '6px' }}>
+                      <div className={styles.epField}>
+                        <label className={styles.epFieldLabel}>뒷턱 좌</label>
+                        <div className={styles.inputWithUnit}>
+                          <input
+                            type="text"
+                            inputMode="numeric"
+                            placeholder={`${currentPlacedModule.stoneTopLeftOffset ?? 0}`}
+                            value={currentPlacedModule.stoneTopBackLipLeftOffset ?? ''}
+                            onChange={(e) => {
+                              const v = e.target.value;
+                              if (v === '' || v === '-' || /^-?\d+$/.test(v)) {
+                                if (v === '' || v === '-') {
+                                  updatePlacedModule(currentPlacedModule.id, { stoneTopBackLipLeftOffset: undefined });
+                                } else {
+                                  const num = Math.max(-200, Math.min(200, parseInt(v, 10)));
+                                  updatePlacedModule(currentPlacedModule.id, { stoneTopBackLipLeftOffset: num });
+                                }
+                              }
+                            }}
+                            onKeyDown={(e) => {
+                              if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                                e.preventDefault();
+                                const cur = currentPlacedModule.stoneTopBackLipLeftOffset ?? currentPlacedModule.stoneTopLeftOffset ?? 0;
+                                const next = Math.max(-200, Math.min(200, cur + (e.key === 'ArrowUp' ? 1 : -1)));
+                                updatePlacedModule(currentPlacedModule.id, { stoneTopBackLipLeftOffset: next });
+                              }
+                            }}
+                            className={styles.epInput}
+                          />
+                          <span className={styles.unit}>mm</span>
+                        </div>
+                      </div>
+                      <div className={styles.epField}>
+                        <label className={styles.epFieldLabel}>뒷턱 우</label>
+                        <div className={styles.inputWithUnit}>
+                          <input
+                            type="text"
+                            inputMode="numeric"
+                            placeholder={`${currentPlacedModule.stoneTopRightOffset ?? 0}`}
+                            value={currentPlacedModule.stoneTopBackLipRightOffset ?? ''}
+                            onChange={(e) => {
+                              const v = e.target.value;
+                              if (v === '' || v === '-' || /^-?\d+$/.test(v)) {
+                                if (v === '' || v === '-') {
+                                  updatePlacedModule(currentPlacedModule.id, { stoneTopBackLipRightOffset: undefined });
+                                } else {
+                                  const num = Math.max(-200, Math.min(200, parseInt(v, 10)));
+                                  updatePlacedModule(currentPlacedModule.id, { stoneTopBackLipRightOffset: num });
+                                }
+                              }
+                            }}
+                            onKeyDown={(e) => {
+                              if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                                e.preventDefault();
+                                const cur = currentPlacedModule.stoneTopBackLipRightOffset ?? currentPlacedModule.stoneTopRightOffset ?? 0;
+                                const next = Math.max(-200, Math.min(200, cur + (e.key === 'ArrowUp' ? 1 : -1)));
+                                updatePlacedModule(currentPlacedModule.id, { stoneTopBackLipRightOffset: next });
+                              }
+                            }}
+                            className={styles.epInput}
+                          />
+                          <span className={styles.unit}>mm</span>
+                        </div>
+                      </div>
                     </div>
                   )}
                 </>
