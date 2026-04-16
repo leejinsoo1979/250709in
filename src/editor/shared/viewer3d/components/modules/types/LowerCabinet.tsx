@@ -1106,7 +1106,9 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
 
         return (
           <group position={[stoneTopData.xOffset, posY, posZ]}>
-            <mesh geometry={geometry} material={stoneTopMaterial} />
+            {renderMode === 'solid' && (
+              <mesh geometry={geometry} material={stoneTopMaterial} />
+            )}
             {renderMode === 'wireframe' && (
               <lineSegments>
                 <edgesGeometry args={[geometry]} />
