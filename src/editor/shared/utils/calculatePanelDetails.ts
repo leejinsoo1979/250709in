@@ -1928,9 +1928,10 @@ export const calculatePanelDetails = (
 
   // 인조대리석 상판 추가 (하부장 전용)
   const isLowerForStone = moduleData.id.includes('lower-') || moduleData.id.includes('dual-lower-') || moduleData.category === 'lower';
-  console.log('[인조대리석 디버그] stoneTopThickness:', stoneTopThickness, '| isLowerForStone:', isLowerForStone, '| moduleId:', moduleData.id);
   if (stoneTopThickness && stoneTopThickness > 0 && isLowerForStone) {
+    const isTopDownForStone = moduleData.id.includes('lower-top-down-') || moduleData.id.includes('dual-lower-top-down-');
     result.push({ name: '=== 인조대리석 ===' });
+    // 수평 상판 (모든 하부장 공통)
     result.push({
       name: '인조대리석 상판',
       width: customWidth + (stoneTopLeftOffset || 0) + (stoneTopRightOffset || 0),
@@ -1938,6 +1939,16 @@ export const calculatePanelDetails = (
       thickness: stoneTopThickness,
       material: '인조대리석',
     });
+    // 상판내림 전용: 수직 앞판 (45도 연귀 접합)
+    if (isTopDownForStone) {
+      result.push({
+        name: '인조대리석 앞판',
+        width: customWidth + (stoneTopLeftOffset || 0) + (stoneTopRightOffset || 0),
+        height: stoneTopThickness + 20,
+        thickness: stoneTopThickness,
+        material: '인조대리석',
+      });
+    }
   }
 
   return result;

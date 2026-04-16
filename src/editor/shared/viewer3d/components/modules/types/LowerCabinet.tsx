@@ -345,6 +345,9 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
     return pm?.stoneTopRightOffset || 0;
   });
 
+  // 상판내림 모듈 여부
+  const isTopDown = moduleData.id.includes('lower-top-down-') || moduleData.id.includes('dual-lower-top-down-');
+
   const stoneTopData = useMemo(() => {
     if (stoneThickness <= 0) return null;
     const furW = adjustedWidth ? adjustedWidth * 0.01 : baseFurniture.width;
@@ -1043,7 +1046,7 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
         />
       )}
 
-      {/* 인조대리석 상판 */}
+      {/* 인조대리석 상판 (수평판) */}
       {showFurniture && stoneTopData && stoneTopMaterial && (
         <BoxWithEdges
           args={[stoneTopData.width, stoneTopData.thickness, stoneTopData.depth]}
@@ -1057,6 +1060,26 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
           panelName="인조대리석 상판"
         />
       )}
+
+      {/* 상판내림 수직 앞판 (45도 연귀 접합) */}
+      {showFurniture && stoneTopData && stoneTopMaterial && isTopDown && (() => {
+        const gapMm = 20; // 도어 상단과의 갭
+        const frontPlateHeightThree = stoneTopData.thickness + gapMm * 0.01; // 두께 + 20mm
+        // Y: 수평판 하단에서 아래로 (두께 + 갭) 만큼 내려감
+        const topY = cabinetYPosition + adjustedHeight / 2 + stoneTopData.thickness; // 수평판 상면
+        const frontPlateY = topY - frontPlateHeightThree / 2;
+        // Z: 수평판 앞면 (가장 앞쪽)
+        const frontPlateZ = stoneTopData.zOffset + stoneTopData.depth / 2 - stoneTopData.thickness / 2;
+        return (
+          <BoxWithEdges
+            args={[stoneTopData.width, frontPlateHeightThree, stoneTopData.thickness]}
+            position={[stoneTopData.xOffset, frontPlateY, frontPlateZ]}
+            material={stoneTopMaterial}
+            renderMode={renderMode}
+            panelName="인조대리석 앞판"
+          />
+        );
+      })()}
 
       {/* 조절발통 (네 모서리) - 키큰장과 동일하게 처리 */}
       {showFurniture && !(lowerSectionTopOffset && lowerSectionTopOffset > 0) && (
