@@ -318,27 +318,36 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
   const furnitureBottomY = cabinetYPosition - adjustedHeight/2;
   const lightY = furnitureBottomY - 0.5; // 가구 바닥에서 50cm 아래
 
-  // 인조대리석 상판 데이터
-  const placedModules = useFurnitureStore(state => state.placedModules);
-  const stoneTopData = useMemo(() => {
+  // 인조대리석 상판 데이터 — 해당 모듈만 선택적 구독
+  const stoneTopProps = useFurnitureStore(state => {
     if (!placedFurnitureId) return null;
-    const pm = placedModules.find(m => m.id === placedFurnitureId);
+    const pm = state.placedModules.find(m => m.id === placedFurnitureId);
     if (!pm || !pm.stoneTopThickness || pm.stoneTopThickness <= 0) return null;
-    const t = pm.stoneTopThickness;
-    const frontOff = (pm.stoneTopFrontOffset || 0) * 0.01; // mm→Three.js
-    const backOff = (pm.stoneTopBackOffset || 0) * 0.01;
-    const leftOff = (pm.stoneTopLeftOffset || 0) * 0.01;
-    const rightOff = (pm.stoneTopRightOffset || 0) * 0.01;
+    return {
+      thickness: pm.stoneTopThickness,
+      frontOff: pm.stoneTopFrontOffset || 0,
+      backOff: pm.stoneTopBackOffset || 0,
+      leftOff: pm.stoneTopLeftOffset || 0,
+      rightOff: pm.stoneTopRightOffset || 0,
+    };
+  });
+
+  const stoneTopData = useMemo(() => {
+    if (!stoneTopProps) return null;
     const furW = adjustedWidth ? adjustedWidth * 0.01 : baseFurniture.width;
     const furD = baseFurniture.depth;
+    const fo = stoneTopProps.frontOff * 0.01;
+    const bo = stoneTopProps.backOff * 0.01;
+    const lo = stoneTopProps.leftOff * 0.01;
+    const ro = stoneTopProps.rightOff * 0.01;
     return {
-      thickness: t * 0.01,
-      width: furW + leftOff + rightOff,
-      depth: furD + frontOff + backOff,
-      xOffset: (rightOff - leftOff) / 2,
-      zOffset: (frontOff - backOff) / 2,
+      thickness: stoneTopProps.thickness * 0.01,
+      width: furW + lo + ro,
+      depth: furD + fo + bo,
+      xOffset: (ro - lo) / 2,
+      zOffset: (fo - bo) / 2,
     };
-  }, [placedFurnitureId, placedModules, adjustedWidth, baseFurniture.width, baseFurniture.depth]);
+  }, [stoneTopProps, adjustedWidth, baseFurniture.width, baseFurniture.depth]);
 
   const stoneTopMaterial = useMemo(() => {
     if (!stoneTopData) return null;
@@ -347,7 +356,7 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
       metalness: 0.1,
       roughness: 0.3,
     });
-  }, [stoneTopData]);
+  }, [!!stoneTopData]);
 
   // 상판내림 반통/한통 L프레임용 도어 재질 (텍스처 로드 포함)
   const doorTextureUrl = spaceInfo?.materialConfig?.doorTexture;
