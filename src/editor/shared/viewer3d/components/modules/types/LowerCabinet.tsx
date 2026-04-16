@@ -1061,43 +1061,61 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
         />
       )}
 
-      {/* 상판내림: 졸리컷 L자 (ExtrudeGeometry로 45도 연귀 표현) */}
+      {/* 상판내림: 수평판 + 수직 앞판 (BoxWithEdges) + 연귀 대각선 (wireframe) */}
       {showFurniture && stoneTopData && stoneTopMaterial && isTopDown && (() => {
         const t = stoneTopData.thickness;
         const absDoorTopGap = Math.abs(doorTopGap ?? -80);
         const doorGapMm = 20;
         const frontPlateH = (absDoorTopGap - doorGapMm) * 0.01;
-        const hW = stoneTopData.width;
-        const hD = stoneTopData.depth;
         const cabinetTopY = cabinetYPosition + adjustedHeight / 2;
-        const halfD = hD / 2;
-
-        // 졸리컷 L자 단면 (Shape XY: X→깊이, Y→높이)
-        const shape = new THREE.Shape();
-        shape.moveTo(-halfD, 0);           // 뒤쪽 하면
-        shape.lineTo(-halfD, t);           // 뒤쪽 상면
-        shape.lineTo(halfD, t);            // 앞쪽 상면
-        shape.lineTo(halfD, t - frontPlateH - t); // 수직 앞판 하단 (앞면)
-        shape.lineTo(halfD - t, t - frontPlateH - t); // 수직 앞판 하단 (뒷면)
-        shape.lineTo(halfD - t, 0);        // 연귀 끝 → 수평판 하면
-        shape.lineTo(-halfD, 0);           // 닫기
-
-        const geometry = new THREE.ExtrudeGeometry(shape, { steps: 1, depth: hW, bevelEnabled: false });
-        geometry.translate(0, 0, -hW / 2);
-        geometry.rotateY(-Math.PI / 2);
-
+        const hPosY = cabinetTopY + t / 2;
+        const vPosY = cabinetTopY - frontPlateH / 2;
+        const vPosZ = stoneTopData.zOffset + stoneTopData.depth / 2 + t / 2;
+        // 연귀 대각선 좌표
+        const halfW = stoneTopData.width / 2;
+        const diagY1 = cabinetTopY;
+        const diagZ1 = stoneTopData.zOffset + stoneTopData.depth / 2;
+        const diagY2 = cabinetTopY + t;
+        const diagZ2 = diagZ1 + t;
         return (
-          <group position={[stoneTopData.xOffset, cabinetTopY, stoneTopData.zOffset]}>
-            {renderMode === 'solid' && (
-              <mesh geometry={geometry} material={stoneTopMaterial} />
-            )}
+          <>
+            <BoxWithEdges
+              args={[stoneTopData.width, t, stoneTopData.depth]}
+              position={[stoneTopData.xOffset, hPosY, stoneTopData.zOffset]}
+              material={stoneTopMaterial}
+              renderMode={renderMode}
+              panelName="인조대리석 상판"
+            />
+            <BoxWithEdges
+              args={[stoneTopData.width, frontPlateH, t]}
+              position={[stoneTopData.xOffset, vPosY, vPosZ]}
+              material={stoneTopMaterial}
+              renderMode={renderMode}
+              panelName="인조대리석 앞판"
+            />
             {renderMode === 'wireframe' && (
-              <lineSegments>
-                <edgesGeometry args={[geometry]} />
-                <lineBasicMaterial color="#ffffff" />
-              </lineSegments>
+              <>
+                <line>
+                  <bufferGeometry>
+                    <bufferAttribute attach="attributes-position" array={new Float32Array([
+                      stoneTopData.xOffset - halfW, diagY1, diagZ1,
+                      stoneTopData.xOffset - halfW, diagY2, diagZ2,
+                    ])} count={2} itemSize={3} />
+                  </bufferGeometry>
+                  <lineBasicMaterial color="#ffffff" />
+                </line>
+                <line>
+                  <bufferGeometry>
+                    <bufferAttribute attach="attributes-position" array={new Float32Array([
+                      stoneTopData.xOffset + halfW, diagY1, diagZ1,
+                      stoneTopData.xOffset + halfW, diagY2, diagZ2,
+                    ])} count={2} itemSize={3} />
+                  </bufferGeometry>
+                  <lineBasicMaterial color="#ffffff" />
+                </line>
+              </>
             )}
-          </group>
+          </>
         );
       })()}
 
