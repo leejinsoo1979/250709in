@@ -164,8 +164,17 @@ export function useLivePanelData() {
         const color = placedModule.color || 'MW';
         const moduleHingePosition = (placedModule as any).hingePosition || 'right';
         const moduleHingeType = (placedModule as any).hingeType || 'A';
-        const moduleDoorTopGap = (placedModule as any).doorTopGap ?? 5;
-        const moduleDoorBottomGap = (placedModule as any).doorBottomGap ?? 25;
+        // doorTopGap/doorBottomGap: 모듈별 기본값 적용 (PlacedModulePropertiesPanel과 동일)
+        // 도어올림=30, 상판내림=-80, 일반하부장=-20, 키큰장=5 (하부장 0은 이전 버그값 → 기본값 복원)
+        const rawDoorTopGap = (placedModule as any).doorTopGap;
+        const rawDoorBottomGap = (placedModule as any).doorBottomGap;
+        const modId = placedModule.moduleId || '';
+        const isLowerMod = modId.startsWith('lower-') || modId.includes('dual-lower-');
+        const isDoorLiftMod = modId.includes('lower-door-lift-') && !modId.includes('-half-');
+        const isTopDownMod = modId.includes('lower-top-down-') && !modId.includes('-half-');
+        const defaultTopGap = isDoorLiftMod ? 30 : isTopDownMod ? -80 : isLowerMod ? -20 : 5;
+        const moduleDoorTopGap = (rawDoorTopGap === undefined || (isLowerMod && rawDoorTopGap === 0)) ? defaultTopGap : rawDoorTopGap;
+        const moduleDoorBottomGap = (rawDoorBottomGap === undefined || (isLowerMod && rawDoorBottomGap === 0)) ? (isLowerMod ? 5 : 25) : rawDoorBottomGap;
 
 
         // Extract panel details using shared calculatePanelDetails (same as PlacedModulePropertiesPanel)
