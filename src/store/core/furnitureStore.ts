@@ -335,15 +335,8 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
         }
       }
 
-      // 상부장 상판 따내기 기본값: 듀얼 680×140, 싱글 340×140 (우측)
-      if (newCategory === 'upper') {
-        if (module.topPanelNotchSize === undefined) {
-          module.topPanelNotchSize = module.isDualSlot ? '680x140' : '340x140';
-        }
-        if (module.topPanelNotchSide === undefined) {
-          module.topPanelNotchSide = 'right';
-        }
-      }
+      // 상부장 상판 따내기 기본값: 없음 (필요시 수동 설정)
+      // topPanelNotchSize, topPanelNotchSide는 undefined → 따내기 없음
 
       // 하부프레임 기본값: 하부장 100mm, 키큰장 60mm
       const isLowerById = module.moduleId?.startsWith('lower-') || module.moduleId?.includes('dual-lower-');
