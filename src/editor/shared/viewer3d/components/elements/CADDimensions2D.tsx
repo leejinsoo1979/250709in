@@ -497,7 +497,13 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
 
     if (filteredBySlot.length === 0) return [];
 
-    // 같은 X 위치에 있는 모든 모듈을 반환 (상부장+하부장 동시 표시용)
+    // 슬롯 기반 모드: slotIndex로 이미 정확히 필터링됨 → 그대로 반환
+    // (듀얼슬롯 하부장 + 상부장처럼 X좌표가 다를 수 있어 X필터 불필요)
+    if (!isFreePlacementMode) {
+      return filteredBySlot;
+    }
+
+    // 자유배치 모드: 같은 X 위치에 있는 모든 모듈을 반환 (상부장+하부장 동시 표시용)
     if (currentViewDirection === 'left') {
       const target = filteredBySlot.reduce((a, b) => a.position.x < b.position.x ? a : b);
       return filteredBySlot.filter(m => Math.abs((m.position?.x ?? 0) - (target.position?.x ?? 0)) < 0.01);
