@@ -1105,25 +1105,19 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
         geometry.translate(0, 0, -hW / 2); // extrude 중심 맞춤
         geometry.rotateY(-Math.PI / 2); // Shape X(깊이)→Z, extrude(Z)→X
 
-        // UV 정규화 — bounding box 기준으로 0~1 매핑 (텍스처 깨짐 방지)
-        geometry.computeBoundingBox();
-        const bb = geometry.boundingBox!;
-        const uvAttr = geometry.getAttribute('uv') as THREE.BufferAttribute;
-        const size = new THREE.Vector3();
-        bb.getSize(size);
-        for (let i = 0; i < uvAttr.count; i++) {
-          const pos = new THREE.Vector3().fromBufferAttribute(geometry.getAttribute('position') as THREE.BufferAttribute, i);
-          uvAttr.setXY(i, (pos.x - bb.min.x) / size.x, (pos.y - bb.min.y) / size.y);
-        }
-        uvAttr.needsUpdate = true;
-
         const posY = cabinetTopY; // 수평판 하면
         const posZ = stoneTopData.zOffset; // 깊이 중심
+
+        // 졸리컷 전용 단색 재질 (ExtrudeGeometry UV 호환 문제 방지)
+        const jollyMat = new THREE.MeshStandardMaterial({
+          color: new THREE.Color(countertopColorVal),
+          metalness: 0.0, roughness: 0.6, envMapIntensity: 0.0,
+        });
 
         return (
           <group position={[stoneTopData.xOffset, posY, posZ]}>
             {renderMode === 'solid' && (
-              <mesh geometry={geometry} material={stoneTopMaterial} />
+              <mesh geometry={geometry} material={jollyMat} />
             )}
             {renderMode === 'wireframe' && (
               <lineSegments>
