@@ -14,6 +14,7 @@ import { ExternalDrawerRenderer } from '../ExternalDrawerRenderer';
 import { isCabinetTexture1, applyCabinetTexture1Settings, isOakTexture, applyOakTextureSettings, applyDefaultImageTextureSettings } from '@/editor/shared/utils/materialConstants';
 import LegraSideRail from '../components/LegraSideRail';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
+import { useShallow } from 'zustand/react/shallow';
 
 /**
  * 터치 레그라박스 서랍 + 마이다 (인출 애니메이션 포함)
@@ -318,19 +319,21 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
   const furnitureBottomY = cabinetYPosition - adjustedHeight/2;
   const lightY = furnitureBottomY - 0.5; // 가구 바닥에서 50cm 아래
 
-  // 인조대리석 상판 데이터 — 해당 모듈만 선택적 구독
-  const stoneTopProps = useFurnitureStore(state => {
-    if (!placedFurnitureId) return null;
-    const pm = state.placedModules.find(m => m.id === placedFurnitureId);
-    if (!pm || !pm.stoneTopThickness || pm.stoneTopThickness <= 0) return null;
-    return {
-      thickness: pm.stoneTopThickness,
-      frontOff: pm.stoneTopFrontOffset || 0,
-      backOff: pm.stoneTopBackOffset || 0,
-      leftOff: pm.stoneTopLeftOffset || 0,
-      rightOff: pm.stoneTopRightOffset || 0,
-    };
-  });
+  // 인조대리석 상판 데이터 — 해당 모듈만 선택적 구독 (shallow 비교로 무한루프 방지)
+  const stoneTopProps = useFurnitureStore(
+    useShallow(state => {
+      if (!placedFurnitureId) return null;
+      const pm = state.placedModules.find(m => m.id === placedFurnitureId);
+      if (!pm || !pm.stoneTopThickness || pm.stoneTopThickness <= 0) return null;
+      return {
+        thickness: pm.stoneTopThickness,
+        frontOff: pm.stoneTopFrontOffset || 0,
+        backOff: pm.stoneTopBackOffset || 0,
+        leftOff: pm.stoneTopLeftOffset || 0,
+        rightOff: pm.stoneTopRightOffset || 0,
+      };
+    })
+  );
 
   const stoneTopData = useMemo(() => {
     if (!stoneTopProps) return null;
