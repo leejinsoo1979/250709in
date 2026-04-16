@@ -980,16 +980,17 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
 
       {/* 인조대리석 상판 */}
       {showFurniture && stoneTopData && stoneTopMaterial && (
-        <mesh
+        <BoxWithEdges
+          args={[stoneTopData.width, stoneTopData.thickness, stoneTopData.depth]}
           position={[
             stoneTopData.xOffset,
             cabinetYPosition + adjustedHeight / 2 + stoneTopData.thickness / 2,
             stoneTopData.zOffset
           ]}
           material={stoneTopMaterial}
-        >
-          <boxGeometry args={[stoneTopData.width, stoneTopData.thickness, stoneTopData.depth]} />
-        </mesh>
+          renderMode={renderMode}
+          panelName="인조대리석 상판"
+        />
       )}
 
       {/* 조절발통 (네 모서리) - 키큰장과 동일하게 처리 */}
