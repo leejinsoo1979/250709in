@@ -224,7 +224,13 @@ export function useLivePanelData() {
           leftEpAdj,                         // leftEpAdjacentFurniture
           rightEpAdj,                        // rightEpAdjacentFurniture
           (placedModule as any).topPanelNotchSize,  // 상판 따내기 크기
-          (placedModule as any).topPanelNotchSide   // 따내기 위치
+          (placedModule as any).topPanelNotchSide,  // 따내기 위치
+          // 인조대리석 상판설치
+          placedModule.stoneTopThickness,
+          placedModule.stoneTopFrontOffset,
+          placedModule.stoneTopBackOffset,
+          placedModule.stoneTopLeftOffset,
+          placedModule.stoneTopRightOffset
         );
 
         console.log(`Module ${moduleIndex}: All panels list received:`, allPanelsList);

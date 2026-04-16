@@ -32,7 +32,13 @@ export const calculatePanelDetails = (
   leftEpAdjacentFurniture?: boolean, // 좌측 EP 방향에 인접 가구 있음 (ㄷ자 측판 생략)
   rightEpAdjacentFurniture?: boolean, // 우측 EP 방향에 인접 가구 있음 (ㄷ자 측판 생략)
   topPanelNotchSize?: '680x140' | '340x140', // 상판 따내기 크기
-  topPanelNotchSide?: 'left' | 'right' // 따내기 위치 (기본: right)
+  topPanelNotchSide?: 'left' | 'right', // 따내기 위치 (기본: right)
+  // 인조대리석 상판설치
+  stoneTopThickness?: number, // 인조대리석 두께 (0=없음, 10/20/30mm)
+  stoneTopFrontOffset?: number, // 앞 오프셋 (mm)
+  stoneTopBackOffset?: number, // 뒤 오프셋 (mm)
+  stoneTopLeftOffset?: number, // 좌 오프셋 (mm)
+  stoneTopRightOffset?: number // 우 오프셋 (mm)
 ) => {
   const panels: { upper: any[]; lower: any[]; door: any[]; frame: any[] } = {
     upper: [],     // 상부장 패널
@@ -1918,6 +1924,18 @@ export const calculatePanelDetails = (
   if (panels.frame.length > 0) {
     result.push({ name: '=== 프레임 ===' });
     result.push(...panels.frame);
+  }
+
+  // 인조대리석 상판 추가 (하부장 전용)
+  if (stoneTopThickness && stoneTopThickness > 0 && moduleData.category === 'lower') {
+    result.push({ name: '=== 인조대리석 ===' });
+    result.push({
+      name: '인조대리석 상판',
+      width: customWidth + (stoneTopLeftOffset || 0) + (stoneTopRightOffset || 0),
+      depth: customDepth + (stoneTopFrontOffset || 0) + (stoneTopBackOffset || 0),
+      thickness: stoneTopThickness,
+      material: '인조대리석',
+    });
   }
 
   return result;

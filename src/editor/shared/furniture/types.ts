@@ -219,6 +219,13 @@ export interface PlacedModule {
   topPanelNotchSize?: '680x140' | '340x140';  // 상판 따내기 크기
   topPanelNotchSide?: 'left' | 'right';       // 따내기 위치 (기본: right)
 
+  // 인조대리석 상판설치 (하부장 전용)
+  stoneTopThickness?: 0 | 10 | 20 | 30;       // 인조대리석 두께 (0=없음, 기본: 0)
+  stoneTopFrontOffset?: number;                 // 앞 오프셋 (mm, 기본: 0)
+  stoneTopBackOffset?: number;                  // 뒤 오프셋 (mm, 기본: 0)
+  stoneTopLeftOffset?: number;                  // 좌 오프셋 (mm, 기본: 0)
+  stoneTopRightOffset?: number;                 // 우 오프셋 (mm, 기본: 0)
+
   // 서라운드 패널 속성
   isSurroundPanel?: boolean;              // 서라운드 패널 여부
   surroundPanelType?: 'left' | 'right' | 'top';  // 패널 방향

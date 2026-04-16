@@ -396,12 +396,15 @@ function PageInner(){
             width = p.height;
           }
 
-          const grain: Grain = isBackPanel ? 'H' : (p.grain === 'NONE' ? 'NONE' : 'H');
+          const isStoneTop = p.material === '인조대리석';
+          const grain: Grain = isBackPanel ? 'H' : isStoneTop ? 'NONE' : (p.grain === 'NONE' ? 'NONE' : 'H');
 
           // 재질 결정: calculatePanelDetails에서 이미 올바른 material 설정됨
           // p.material을 우선 존중하고, 누락 시 패널 이름으로 판단
           let material = p.material || 'PB';
-          if (panelName.includes('백패널')) {
+          if (isStoneTop) {
+            material = '인조대리석'; // 인조대리석은 그대로 유지
+          } else if (panelName.includes('백패널')) {
             material = 'MDF'; // 백패널은 항상 MDF
           } else if (panelName.includes('도어') || panelName.includes('door') ||
               panelName.includes('엔드') || panelName.includes('end') ||
@@ -414,7 +417,7 @@ function PageInner(){
             label: p.name || `Panel_${p.id}`,
             width: width,   // 백패널: X축 가로 / 일반: 짧은 쪽
             length: length, // 백패널: Y축 높이 / 일반: 긴 쪽
-            thickness: p.thickness || (material === 'PET' ? 18.5 : 18),
+            thickness: p.thickness || (isStoneTop ? p.thickness : (material === 'PET' ? 18.5 : 18)),
             quantity: p.quantity || 1,
             material: material,
             grain: grain,
@@ -489,6 +492,21 @@ function PageInner(){
       { label: 'MDF_9T_2440x1220', width: 1220, length: 2440, thickness: 9, quantity: 999, material: 'MDF' },
       { label: 'MDF_5T_2440x1220', width: 1220, length: 2440, thickness: 5, quantity: 999, material: 'MDF' },
     ];
+    // 인조대리석 패널이 있으면 해당 두께의 stock 추가
+    const stoneThicknesses = new Set<number>();
+    livePanels.forEach(p => {
+      if (p.material === '인조대리석' && p.thickness) {
+        stoneThicknesses.add(p.thickness);
+      }
+    });
+    stoneThicknesses.forEach(t => {
+      defaultStock.push({
+        label: `인조대리석_${t}T_3000x1500`,
+        width: 1500, length: 3000, thickness: t,
+        quantity: 999, material: '인조대리석'
+      });
+    });
+
     setStock(defaultStock);
     stockInitializedFromLive.current = true;
   }, [livePanels]); // livePanels 변경 시 stock 재설정
@@ -535,10 +553,13 @@ function PageInner(){
           width = p.height;
         }
 
-        const grain: Grain = isBackPanel ? 'H' : (p.grain === 'NONE' ? 'NONE' : 'H');
+        const isStoneTop = p.material === '인조대리석';
+        const grain: Grain = isBackPanel ? 'H' : isStoneTop ? 'NONE' : (p.grain === 'NONE' ? 'NONE' : 'H');
         // 재질 결정: calculatePanelDetails에서 이미 올바른 material 설정됨
         let material = p.material || 'PB';
-        if (panelName.includes('백패널')) {
+        if (isStoneTop) {
+          material = '인조대리석'; // 인조대리석은 그대로 유지
+        } else if (panelName.includes('백패널')) {
           material = 'MDF'; // 백패널은 항상 MDF
         } else if (panelName.includes('도어') || panelName.includes('door') ||
             panelName.includes('엔드') || panelName.includes('end') ||
@@ -557,7 +578,7 @@ function PageInner(){
           label: p.name || `Panel_${p.id}`,
           width: width,
           length: length,
-          thickness: p.thickness || (material === 'PET' ? 18.5 : 18),
+          thickness: p.thickness || (isStoneTop ? p.thickness : (material === 'PET' ? 18.5 : 18)),
           quantity: p.quantity || 1,
           material: material,
           grain: grain,
