@@ -4525,32 +4525,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
             </div>
           )}
 
-          {/* 상하부장 사이 갭 백패널 설정 (상부장/하부장만) */}
-          {(moduleData.category === 'upper' || moduleData.category === 'lower') && (
-            <div className={styles.propertySection}>
-              <h5 className={styles.sectionTitle}>{t('furniture.gapBackPanelSettings')}</h5>
-              {isBackPanelAlreadyInSlot ? (
-                <div className={styles.backPanelDisabledNote}>
-                  {t('furniture.backPanelAlreadySet', { position: moduleData.category === 'upper' ? t('furniture.lowerCabinet') : t('furniture.upperCabinet') })}
-                </div>
-              ) : (
-                <div className={styles.doorTabSelector}>
-                  <button
-                    className={`${styles.doorTab} ${!hasGapBackPanel ? styles.activeDoorTab : ''}`}
-                    onClick={() => handleGapBackPanelChange(false)}
-                  >
-                    {t('common.none')}
-                  </button>
-                  <button
-                    className={`${styles.doorTab} ${hasGapBackPanel ? styles.activeDoorTab : ''}`}
-                    onClick={() => handleGapBackPanelChange(true)}
-                  >
-                    {t('common.enabled')}
-                  </button>
-                </div>
-              )}
-            </div>
-          )}
+          {/* 상하부장 사이 갭 백패널 설정 — 숨김 처리 */}
 
 
           {/* 삭제 버튼 */}
