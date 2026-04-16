@@ -3739,8 +3739,11 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                             setDoorTopGapInput(String(defaultGap));
                           }
                         } else {
-                          // 두께 선택/변경 시 기본 오프셋 적용 (상판내림도 23mm 앞 오프셋)
-                          if ((currentPlacedModule.stoneTopThickness || 0) === 0 && !isDoorLift) {
+                          // 두께 선택/변경 시 기본 앞 오프셋 적용
+                          if (isTopDown) {
+                            // 상판내림: 두께별 앞 오프셋 (10mm→10, 20mm→23, 30mm→33)
+                            updates.stoneTopFrontOffset = thickness === 10 ? 10 : thickness === 30 ? 33 : 23;
+                          } else if ((currentPlacedModule.stoneTopThickness || 0) === 0 && !isDoorLift) {
                             updates.stoneTopFrontOffset = 23;
                           }
                           // 도어올림: 상판 두께별 도어 상단갭 (10mm→25, 20mm→35, 30mm→45)
