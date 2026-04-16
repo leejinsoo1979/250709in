@@ -3723,17 +3723,31 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                     onClick={() => {
                       if (currentPlacedModule) {
                         const updates: Record<string, unknown> = { stoneTopThickness: thickness };
+                        const mid = currentPlacedModule.moduleId || '';
+                        const isDoorLift = mid.includes('lower-door-lift');
+                        const isTopDown = mid.includes('lower-top-down');
                         if (thickness === 0) {
                           updates.stoneTopFrontOffset = 0;
                           updates.stoneTopBackOffset = 0;
                           updates.stoneTopLeftOffset = 0;
                           updates.stoneTopRightOffset = 0;
+                          // 도어올림: 상판 제거 시 doorTopGap 기본값(30) 복원
+                          if (isDoorLift) {
+                            updates.doorTopGap = 30;
+                          }
                         } else if ((currentPlacedModule.stoneTopThickness || 0) === 0) {
                           // 처음 두께 선택 시 기본 오프셋 적용
-                          const mid = currentPlacedModule.moduleId || '';
-                          const isDoorLiftOrTopDown = mid.includes('lower-door-lift') || mid.includes('lower-top-down');
-                          if (!isDoorLiftOrTopDown) {
+                          if (!isDoorLift && !isTopDown) {
                             updates.stoneTopFrontOffset = 23;
+                          }
+                          // 도어올림: 도어 상단 = 상판 윗면 - 15mm → doorTopGap = thickness - 15
+                          if (isDoorLift) {
+                            updates.doorTopGap = thickness - 15;
+                          }
+                        } else {
+                          // 두께 변경 시 도어올림 doorTopGap도 연동
+                          if (isDoorLift) {
+                            updates.doorTopGap = thickness - 15;
                           }
                         }
                         updatePlacedModule(currentPlacedModule.id, updates);
