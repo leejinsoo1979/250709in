@@ -738,13 +738,26 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                   });
                 }
               } else if (stoneThickness > 0) {
-                // 일반 하부장 + 상판: 상판 두께만 표시
+                // 일반 하부장 + 상판내림 공통: 상판 두께만 표시
                 segments_l2.push({
                   bottomY: mmToThreeUnits(cabinetTopMm),
                   topY: mmToThreeUnits(cabinetTopMm + stoneThickness),
                   heightMm: stoneThickness,
                   key: `stone-top-thickness-${moduleIndex}`
                 });
+              }
+
+              // 뒷턱 치수 (상판 위에 추가)
+              if (stoneThickness > 0) {
+                const backLipH = mod.stoneTopBackLip || 0;
+                if (backLipH > 0) {
+                  segments_l2.push({
+                    bottomY: mmToThreeUnits(cabinetTopMm + stoneThickness),
+                    topY: mmToThreeUnits(cabinetTopMm + stoneThickness + backLipH),
+                    heightMm: backLipH,
+                    key: `stone-backlip-${moduleIndex}`
+                  });
+                }
               }
             }
           });
@@ -1976,13 +1989,26 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                   });
                 }
               } else if (stoneThickness > 0) {
-                // 일반 하부장 + 상판: 상판 두께만 표시
+                // 일반 하부장 + 상판내림 공통: 상판 두께만 표시
                 segments_rl2.push({
                   bottomY: mmToThreeUnits(cabinetTopMm),
                   topY: mmToThreeUnits(cabinetTopMm + stoneThickness),
                   heightMm: stoneThickness,
                   key: `stone-top-thickness-${moduleIndex}`
                 });
+              }
+
+              // 뒷턱 치수 (상판 위에 추가)
+              if (stoneThickness > 0) {
+                const backLipH = mod.stoneTopBackLip || 0;
+                if (backLipH > 0) {
+                  segments_rl2.push({
+                    bottomY: mmToThreeUnits(cabinetTopMm + stoneThickness),
+                    topY: mmToThreeUnits(cabinetTopMm + stoneThickness + backLipH),
+                    heightMm: backLipH,
+                    key: `stone-backlip-${moduleIndex}`
+                  });
+                }
               }
             }
           });
