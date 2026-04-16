@@ -405,15 +405,9 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
     if (countertopTextureUrl) {
       const loader = new THREE.TextureLoader();
       loader.load(countertopTextureUrl, (texture) => {
-        texture.wrapS = THREE.ClampToEdgeWrapping;
-        texture.wrapT = THREE.ClampToEdgeWrapping;
-        // 상판 실제 크기에 비례한 텍스처 매핑 — 텍스처 원본 비율 유지
-        // 텍스처 1장 = 1500mm x 3000mm 원판 기준, 상판 크기만큼만 보이도록
-        const sheetW = 1.5; // 1500mm → 1.5 Three.js 단위
-        const sheetD = 3.0; // 3000mm → 3.0 Three.js 단위
-        const stW = stoneTopData ? stoneTopData.width : 0.6;
-        const stD = stoneTopData ? stoneTopData.depth : 0.6;
-        texture.repeat.set(stW / sheetW, stD / sheetD);
+        texture.wrapS = THREE.RepeatWrapping;
+        texture.wrapT = THREE.RepeatWrapping;
+        texture.repeat.set(1, 1);
         texture.colorSpace = THREE.SRGBColorSpace;
         faceMat.map = texture;
         faceMat.color.set('#ffffff');
