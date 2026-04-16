@@ -388,6 +388,45 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
     }
   }, [countertopColorVal]);
 
+  // 졸리컷(ExtrudeGeometry) 전용 재질 — 텍스처 없이 색상만 (UV 호환 문제 방지)
+  const jollyMatRef = useRef<THREE.MeshStandardMaterial | null>(null);
+  const jollyCutMaterial = useMemo(() => {
+    if (!stoneTopData || !isTopDown) return null;
+    const mat = new THREE.MeshStandardMaterial({
+      color: new THREE.Color(countertopColorVal),
+      metalness: 0.0, roughness: 0.6, envMapIntensity: 0.0,
+    });
+    jollyMatRef.current = mat;
+    return mat;
+  }, [!!stoneTopData, isTopDown]);
+
+  useEffect(() => {
+    if (jollyMatRef.current) {
+      jollyMatRef.current.color.set(countertopTextureUrl ? '#ffffff' : countertopColorVal);
+      if (countertopTextureUrl) {
+        const loader = new THREE.TextureLoader();
+        loader.load(countertopTextureUrl, (texture) => {
+          texture.wrapS = THREE.RepeatWrapping;
+          texture.wrapT = THREE.RepeatWrapping;
+          texture.repeat.set(0.5, 0.5);
+          texture.colorSpace = THREE.SRGBColorSpace;
+          if (jollyMatRef.current) {
+            jollyMatRef.current.map = texture;
+            jollyMatRef.current.color.set('#ffffff');
+            jollyMatRef.current.needsUpdate = true;
+          }
+        });
+      } else {
+        if (jollyMatRef.current.map) {
+          jollyMatRef.current.map.dispose();
+          jollyMatRef.current.map = null;
+        }
+        jollyMatRef.current.color.set(countertopColorVal);
+      }
+      jollyMatRef.current.needsUpdate = true;
+    }
+  }, [countertopTextureUrl, countertopColorVal]);
+
   // countertop 텍스처 로딩
   useEffect(() => {
     const mat = stoneTopMatRef.current;
@@ -1062,7 +1101,7 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
       )}
 
       {/* 상판내림 졸리컷 L자 상판 (수평판 + 수직 앞판, 45도 연귀 접합) */}
-      {showFurniture && stoneTopData && stoneTopMaterial && isTopDown && (() => {
+      {showFurniture && stoneTopData && jollyCutMaterial && isTopDown && (() => {
         const t = stoneTopData.thickness; // 인조대리석 두께 (Three 단위)
         // 상판내림 doorTopGap은 음수 (예: -80 → 도어 상단이 캐비넷 상면보다 80mm 아래)
         const absDoorTopGap = Math.abs(doorTopGap ?? -80); // mm
@@ -1111,7 +1150,7 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
         return (
           <group position={[stoneTopData.xOffset, posY, posZ]}>
             {renderMode === 'solid' && (
-              <mesh geometry={geometry} material={stoneTopMaterial} />
+              <mesh geometry={geometry} material={jollyCutMaterial} />
             )}
             {renderMode === 'wireframe' && (
               <lineSegments>
