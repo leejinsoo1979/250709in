@@ -1943,7 +1943,9 @@ export const calculatePanelDetails = (
     // 높이: 가시 영역(|doorTopGap| - 20mm) + 45도 연귀 겹침(stoneTopThickness)
     // 10mm→70, 20mm→80, 30mm→90
     if (isTopDownForStone) {
-      const absDoorTopGapForStone = Math.abs(doorTopGap ?? -80);
+      // doorTopGap: 0이면 이전 버그값 → 상판내림 기본값 -80 사용
+      const effectiveDoorTopGap = (doorTopGap === undefined || doorTopGap === 0) ? -80 : doorTopGap;
+      const absDoorTopGapForStone = Math.abs(effectiveDoorTopGap);
       const doorGapForStone = 20; // 도어 상단과 앞판 하단 사이 갭
       const frontPlateHeight = (absDoorTopGapForStone - doorGapForStone) + stoneTopThickness;
       result.push({
