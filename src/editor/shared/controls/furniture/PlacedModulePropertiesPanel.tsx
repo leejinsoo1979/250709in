@@ -3926,7 +3926,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                             onChange={(e) => {
                               const v = e.target.value;
                               if (v === '' || /^\d+$/.test(v)) {
-                                const num = v === '' ? 0 : Math.max(1, Math.min(200, parseInt(v, 10)));
+                                const num = v === '' ? 0 : Math.max(1, parseInt(v, 10));
                                 updatePlacedModule(currentPlacedModule.id, { stoneTopBackLip: num });
                               }
                             }}
@@ -3934,7 +3934,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                               if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
                                 e.preventDefault();
                                 const cur = currentPlacedModule.stoneTopBackLip ?? 10;
-                                const next = Math.max(1, Math.min(200, cur + (e.key === 'ArrowUp' ? 1 : -1)));
+                                const next = Math.max(1, cur + (e.key === 'ArrowUp' ? 1 : -1));
                                 updatePlacedModule(currentPlacedModule.id, { stoneTopBackLip: next });
                               }
                             }}
