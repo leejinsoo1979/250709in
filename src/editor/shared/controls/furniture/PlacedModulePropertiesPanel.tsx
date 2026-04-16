@@ -3809,6 +3809,20 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                             setDoorTopGap(newGap);
                             setDoorTopGapInput(String(newGap));
                           }
+                          // 뒷턱 다채움 상태이면 새 두께 기준으로 재계산
+                          const prevThickness = currentPlacedModule.stoneTopThickness || 0;
+                          const curBackLip = currentPlacedModule.stoneTopBackLip || 0;
+                          if (curBackLip > 0 && prevThickness > 0) {
+                            const prevFillH = calcBackLipFillHeight(currentPlacedModule, moduleData, spaceInfo, placedModules);
+                            if (curBackLip === prevFillH) {
+                              // 다채움 상태 → 새 두께로 재계산
+                              const tempMod = { ...currentPlacedModule, stoneTopThickness: thickness };
+                              const newFillH = calcBackLipFillHeight(tempMod, moduleData, spaceInfo, placedModules);
+                              if (newFillH > 0) {
+                                updates.stoneTopBackLip = newFillH;
+                              }
+                            }
+                          }
                         }
                         updatePlacedModule(currentPlacedModule.id, updates);
                       }
