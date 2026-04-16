@@ -13,6 +13,7 @@ import { AdjustableFootsRenderer } from '../components/AdjustableFootsRenderer';
 import { ExternalDrawerRenderer } from '../ExternalDrawerRenderer';
 import { isCabinetTexture1, applyCabinetTexture1Settings, isOakTexture, applyOakTextureSettings, applyDefaultImageTextureSettings } from '@/editor/shared/utils/materialConstants';
 import LegraSideRail from '../components/LegraSideRail';
+import { useFurnitureStore } from '@/store/core/furnitureStore';
 
 /**
  * 터치 레그라박스 서랍 + 마이다 (인출 애니메이션 포함)
@@ -316,6 +317,37 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
   // 간접조명 Y 위치 계산 (가구 바닥 바로 아래)
   const furnitureBottomY = cabinetYPosition - adjustedHeight/2;
   const lightY = furnitureBottomY - 0.5; // 가구 바닥에서 50cm 아래
+
+  // 인조대리석 상판 데이터
+  const placedModules = useFurnitureStore(state => state.placedModules);
+  const stoneTopData = useMemo(() => {
+    if (!placedFurnitureId) return null;
+    const pm = placedModules.find(m => m.id === placedFurnitureId);
+    if (!pm || !pm.stoneTopThickness || pm.stoneTopThickness <= 0) return null;
+    const t = pm.stoneTopThickness;
+    const frontOff = (pm.stoneTopFrontOffset || 0) * 0.01; // mm→Three.js
+    const backOff = (pm.stoneTopBackOffset || 0) * 0.01;
+    const leftOff = (pm.stoneTopLeftOffset || 0) * 0.01;
+    const rightOff = (pm.stoneTopRightOffset || 0) * 0.01;
+    const furW = adjustedWidth ? adjustedWidth * 0.01 : baseFurniture.width;
+    const furD = baseFurniture.depth;
+    return {
+      thickness: t * 0.01,
+      width: furW + leftOff + rightOff,
+      depth: furD + frontOff + backOff,
+      xOffset: (rightOff - leftOff) / 2,
+      zOffset: (frontOff - backOff) / 2,
+    };
+  }, [placedFurnitureId, placedModules, adjustedWidth, baseFurniture.width, baseFurniture.depth]);
+
+  const stoneTopMaterial = useMemo(() => {
+    if (!stoneTopData) return null;
+    return new THREE.MeshStandardMaterial({
+      color: new THREE.Color('#e8e0d4'), // 인조대리석 색상
+      metalness: 0.1,
+      roughness: 0.3,
+    });
+  }, [stoneTopData]);
 
   // 상판내림 반통/한통 L프레임용 도어 재질 (텍스처 로드 포함)
   const doorTextureUrl = spaceInfo?.materialConfig?.doorTexture;
@@ -944,6 +976,20 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
           doorTopGap={doorTopGap}
           doorBottomGap={doorBottomGap}
         />
+      )}
+
+      {/* 인조대리석 상판 */}
+      {showFurniture && stoneTopData && stoneTopMaterial && (
+        <mesh
+          position={[
+            stoneTopData.xOffset,
+            cabinetYPosition + adjustedHeight / 2 + stoneTopData.thickness / 2,
+            stoneTopData.zOffset
+          ]}
+          material={stoneTopMaterial}
+        >
+          <boxGeometry args={[stoneTopData.width, stoneTopData.thickness, stoneTopData.depth]} />
+        </mesh>
       )}
 
       {/* 조절발통 (네 모서리) - 키큰장과 동일하게 처리 */}

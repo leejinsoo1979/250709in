@@ -1927,8 +1927,9 @@ export const calculatePanelDetails = (
   }
 
   // 인조대리석 상판 추가 (하부장 전용)
-  console.log('[인조대리석 디버그] stoneTopThickness:', stoneTopThickness, '| category:', moduleData.category, '| moduleId:', moduleData.id);
-  if (stoneTopThickness && stoneTopThickness > 0 && moduleData.category === 'lower') {
+  const isLowerForStone = moduleData.id.includes('lower-') || moduleData.id.includes('dual-lower-') || moduleData.category === 'lower';
+  console.log('[인조대리석 디버그] stoneTopThickness:', stoneTopThickness, '| isLowerForStone:', isLowerForStone, '| moduleId:', moduleData.id);
+  if (stoneTopThickness && stoneTopThickness > 0 && isLowerForStone) {
     result.push({ name: '=== 인조대리석 ===' });
     result.push({
       name: '인조대리석 상판',

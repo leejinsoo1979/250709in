@@ -3712,7 +3712,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
           )}
 
           {/* 인조대리석 상판설치 (하부장 전용) */}
-          {!showDetails && currentPlacedModule && moduleData && moduleData.category === 'lower' && (
+          {!showDetails && currentPlacedModule && moduleData && (moduleData.id?.includes('lower-') || moduleData.id?.includes('dual-lower-') || moduleData.category === 'lower') && (
             <div className={styles.propertySection}>
               <h5 className={styles.sectionTitle}>상판설치 (인조대리석)</h5>
               <div className={styles.doorTabSelector}>
