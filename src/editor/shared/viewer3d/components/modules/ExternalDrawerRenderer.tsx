@@ -151,7 +151,8 @@ const SingleDrawer: React.FC<SingleDrawerProps> = ({
   const gapTopExt = isTopDrawer ? (doorTopGap - defaultDoorTopGap) : 0;
   const gapBottomExt = isBottomDrawer ? (doorBottomGap - defaultDoorBottomGap) : 0;
   const defaultMaidaHeightMm = maidaTopMm - maidaBottomMm + gapTopExt + gapBottomExt;
-  const maidaHeightMm = fixedMaidaHeightMm || defaultMaidaHeightMm;
+  // fixedMaidaHeightMm이 있어도 상단/하단 갭 delta를 추가 적용
+  const maidaHeightMm = fixedMaidaHeightMm ? (fixedMaidaHeightMm + gapTopExt + gapBottomExt) : defaultMaidaHeightMm;
   const maidaHeight = mmToThreeUnits(maidaHeightMm);
   const maidaCenterY = cabinetBottomY + mmToThreeUnits(maidaBottomMm - gapBottomExt) + maidaHeight / 2;
 
