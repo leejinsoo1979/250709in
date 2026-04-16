@@ -1940,11 +1940,12 @@ export const calculatePanelDetails = (
       material: '인조대리석',
     });
     // 상판내림 전용: 수직 앞판 (45도 연귀 접합)
-    // 높이: 수평판 하면 ~ 도어상단+20mm 위 = |doorTopGap| - 20mm
+    // 높이: 가시 영역(|doorTopGap| - 20mm) + 45도 연귀 겹침(stoneTopThickness)
+    // 10mm→70, 20mm→80, 30mm→90
     if (isTopDownForStone) {
       const absDoorTopGapForStone = Math.abs(doorTopGap ?? -80);
       const doorGapForStone = 20; // 도어 상단과 앞판 하단 사이 갭
-      const frontPlateHeight = absDoorTopGapForStone - doorGapForStone; // 기본: 80 - 20 = 60mm
+      const frontPlateHeight = (absDoorTopGapForStone - doorGapForStone) + stoneTopThickness;
       result.push({
         name: '인조대리석 앞판',
         width: customWidth + (stoneTopLeftOffset || 0) + (stoneTopRightOffset || 0),
