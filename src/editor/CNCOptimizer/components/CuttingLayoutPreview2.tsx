@@ -842,6 +842,52 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
         ctx.restore();
       }
 
+      // === 반턱(rebate) 점선 렌더링 ===
+      if (panel.rebate && panel.rebate.position === 'bottom-both-sides') {
+        ctx.save();
+        ctx.setLineDash([6 / scale, 4 / scale]);
+        ctx.strokeStyle = '#ef4444'; // 빨간 점선
+        ctx.lineWidth = 1.5 / (baseScale * scale);
+
+        const rW = panel.rebate.width;  // 38mm — 폭 방향(width) 안쪽
+        const rH = panel.rebate.height; // 7.5mm — 길이 방향(length) 안쪽
+
+        if (panel.rotated) {
+          // 회전: displayed width=panel.height(length=깊이), height=panel.width(폭)
+          // 반턱: x 양끝에서 rH만큼, y 양끝에서 rW만큼
+          // 좌측 하단 (x=0, y+height)
+          ctx.beginPath();
+          ctx.moveTo(x + rH, y + height);
+          ctx.lineTo(x + rH, y + height - rW);
+          ctx.lineTo(x, y + height - rW);
+          ctx.stroke();
+          // 우측 하단 (x+width, y+height)
+          ctx.beginPath();
+          ctx.moveTo(x + width - rH, y + height);
+          ctx.lineTo(x + width - rH, y + height - rW);
+          ctx.lineTo(x + width, y + height - rW);
+          ctx.stroke();
+        } else {
+          // 비회전: displayed width=panel.width(폭), height=panel.height(length=깊이)
+          // 반턱: y 양끝에서 rH만큼, x 양끝에서 rW만큼
+          // 좌측 하단 (x=0, y+height)
+          ctx.beginPath();
+          ctx.moveTo(x, y + height - rH);
+          ctx.lineTo(x + rW, y + height - rH);
+          ctx.lineTo(x + rW, y + height);
+          ctx.stroke();
+          // 우측 하단 (x+width, y+height)
+          ctx.beginPath();
+          ctx.moveTo(x + width, y + height - rH);
+          ctx.lineTo(x + width - rW, y + height - rH);
+          ctx.lineTo(x + width - rW, y + height);
+          ctx.stroke();
+        }
+
+        ctx.setLineDash([]);
+        ctx.restore();
+      }
+
       // Grain direction arrow — 제거됨
 
       // Rotation indicator

@@ -432,6 +432,7 @@ export function useLivePanelData() {
             // 따내기 (노치) 정보
             cornerNotch: panel.cornerNotch,
             sideNotches: panel.sideNotches,
+            rebate: panel.rebate,
             // 3D 뷰어 패널 하이라이트용
             meshName: toMeshName(panel.name),
             furnitureId: placedModule.id,
@@ -1153,6 +1154,7 @@ export function usePanelSubscription(callback: (panels: Panel[]) => void) {
           // 따내기 (노치) 정보
           cornerNotch: panel.cornerNotch,
           sideNotches: panel.sideNotches,
+          rebate: panel.rebate,
         };
       });
 

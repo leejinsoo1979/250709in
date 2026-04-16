@@ -31,6 +31,7 @@ export interface Panel {
   // 따내기 (노치) 정보
   cornerNotch?: { width: number; depth: number; side: 'left' | 'right' };  // 상판 따내기
   sideNotches?: Array<{ y: number; z: number; fromBottom: number }>;       // 측판 따내기
+  rebate?: { width: number; height: number; position: string };            // 반턱 따내기
   // 3D 뷰어 패널 하이라이트용
   meshName?: string;                       // 3D mesh 매칭용 패널 이름 (예: "좌측판", "선반 1")
   furnitureId?: string;                    // 해당 패널이 속한 가구 ID
@@ -70,6 +71,7 @@ export interface PlacedPanel extends Panel {
   // 따내기 (노치) 정보 — Panel에서 상속되지만 PlacedPanel에서도 명시
   cornerNotch?: { width: number; depth: number; side: 'left' | 'right' };
   sideNotches?: Array<{ y: number; z: number; fromBottom: number }>;
+  rebate?: { width: number; height: number; position: string };
 }
 
 export interface CuttingGuide {
