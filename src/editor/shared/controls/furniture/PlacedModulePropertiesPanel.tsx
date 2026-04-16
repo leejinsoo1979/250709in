@@ -3965,6 +3965,10 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                           <input
                             type="text"
                             inputMode="numeric"
+                            disabled={(() => {
+                              const fullH = calcBackLipFillHeight(currentPlacedModule, moduleData, spaceInfo, placedModules);
+                              return fullH > 0 && (currentPlacedModule.stoneTopBackLip || 0) === fullH;
+                            })()}
                             value={currentPlacedModule.stoneTopBackLip ?? 100}
                             onChange={(e) => {
                               const v = e.target.value;
