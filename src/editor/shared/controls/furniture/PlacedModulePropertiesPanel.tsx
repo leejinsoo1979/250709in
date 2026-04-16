@@ -466,14 +466,13 @@ const getFurnitureImagePath = (moduleId: string): string | null => {
 };
 */
 
-// 뒷턱 다채움 높이 계산: 상판 윗면 ~ 상부장 하단 (또는 천장)
+// 뒷턱 다채움 높이 계산: 하부장 상단 ~ 상부장 하단 (또는 천장)
 const calcBackLipFillHeight = (
   currentMod: any, moduleData: any, spaceInfo: any, placedModules: any[]
 ): number => {
-  const stoneT = currentMod.stoneTopThickness || 0;
   const internalSpace = calculateInternalSpace(spaceInfo);
 
-  // 하부장 상판 윗면 절대 위치 (CAD 치수와 동일한 계산)
+  // 하부장 상단 절대 위치
   const isFloating = spaceInfo.baseConfig?.type === 'stand' && spaceInfo.baseConfig?.placementType === 'float';
   const floatH = isFloating ? (spaceInfo.baseConfig?.floatHeight || 0) : 0;
   const isStandType = spaceInfo.baseConfig?.type === 'stand';
@@ -486,7 +485,7 @@ const calcBackLipFillHeight = (
   const baseH = isFloating ? floatH : (railOrBaseH + indivFloat);
   const floorH = spaceInfo.hasFloorFinish && spaceInfo.floorFinish ? spaceInfo.floorFinish.height : 0;
   const lowerBodyH = currentMod.cabinetBodyHeight ?? moduleData?.dimensions?.height ?? 785;
-  const lowerTopWithStone = floorH + baseH + lowerBodyH + stoneT;
+  const lowerTopMm = floorH + baseH + lowerBodyH;
 
   // 같은 슬롯 상부장 찾기
   const upperInSlot = placedModules.find((m: any) => {
@@ -506,7 +505,7 @@ const calcBackLipFillHeight = (
     targetMm = spaceInfo.height || 2400;
   }
 
-  return Math.max(0, Math.round(targetMm - lowerTopWithStone));
+  return Math.max(0, Math.round(targetMm - lowerTopMm));
 };
 
 const PlacedModulePropertiesPanel: React.FC = () => {
@@ -3999,6 +3998,8 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                               if (fullH > 0) {
                                 updatePlacedModule(currentPlacedModule.id, { stoneTopBackLip: fullH });
                               }
+                            } else {
+                              updatePlacedModule(currentPlacedModule.id, { stoneTopBackLip: 10 });
                             }
                           }}
                         />
