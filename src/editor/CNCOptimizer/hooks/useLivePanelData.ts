@@ -234,9 +234,16 @@ export function useLivePanelData() {
           rightEpAdj,                        // rightEpAdjacentFurniture
           (placedModule as any).topPanelNotchSize,  // 상판 따내기 크기
           (placedModule as any).topPanelNotchSide,  // 따내기 위치
-          // 인조대리석 상판설치
+          // 인조대리석 상판설치 (frontOffset 미설정 시 모듈별 기본값 적용)
           placedModule.stoneTopThickness,
-          placedModule.stoneTopFrontOffset,
+          (() => {
+            const stT = placedModule.stoneTopThickness || 0;
+            const fo = placedModule.stoneTopFrontOffset;
+            if (stT > 0 && (fo === undefined || fo === 0)) {
+              return isTopDownMod ? (stT === 30 ? 33 : 23) : isDoorLiftMod ? 0 : 23;
+            }
+            return fo;
+          })(),
           placedModule.stoneTopBackOffset,
           placedModule.stoneTopLeftOffset,
           placedModule.stoneTopRightOffset

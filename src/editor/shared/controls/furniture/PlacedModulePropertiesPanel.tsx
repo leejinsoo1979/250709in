@@ -1085,6 +1085,18 @@ const PlacedModulePropertiesPanel: React.FC = () => {
         });
       }
 
+      // 인조대리석 상판 앞 오프셋 자동 보정: 상판 설치 상태에서 frontOffset 미설정 시 기본값 적용
+      const stoneT = currentPlacedModule.stoneTopThickness || 0;
+      const stoneFO = currentPlacedModule.stoneTopFrontOffset;
+      if (stoneT > 0 && (stoneFO === undefined || stoneFO === 0)) {
+        const defaultFO = isTopDown
+          ? (stoneT === 30 ? 33 : 23)
+          : isDoorLift ? 0 : 23;
+        if (defaultFO > 0) {
+          updatePlacedModule(currentPlacedModule.id, { stoneTopFrontOffset: defaultFO });
+        }
+      }
+
       // 분할 모드용 섹션별 이격거리 초기화
       const upperTopGap = currentPlacedModule.upperDoorTopGap ?? 0;
       const upperBottomGap = currentPlacedModule.upperDoorBottomGap ?? 0;
