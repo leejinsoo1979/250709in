@@ -670,10 +670,17 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
               cabinetTopMm = cabinetBottomMm + moduleHeightMm;
             }
 
+            // 상판내림 + 인조대리석: 가구 높이에 상판 두께 포함
+            const isTopDownL2 = moduleData.id?.includes('lower-top-down-') || moduleData.id?.includes('dual-lower-top-down-');
+            const stoneThicknessL2 = mod.stoneTopThickness || 0;
+            const includeStoneInHeight = isTopDownL2 && stoneThicknessL2 > 0;
+            const displayHeightMm = includeStoneInHeight ? moduleHeightMm + stoneThicknessL2 : moduleHeightMm;
+            const displayTopMm = includeStoneInHeight ? cabinetTopMm + stoneThicknessL2 : cabinetTopMm;
+
             segments_l2.push({
               bottomY: mmToThreeUnits(cabinetBottomMm),
-              topY: mmToThreeUnits(cabinetTopMm),
-              heightMm: Math.round(moduleHeightMm),
+              topY: mmToThreeUnits(displayTopMm),
+              heightMm: Math.round(displayHeightMm),
               key: `furniture-${moduleIndex}`
             });
 
@@ -737,8 +744,8 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                     key: `door-lift-topgap-${moduleIndex}`
                   });
                 }
-              } else if (stoneThickness > 0) {
-                // 일반 하부장 + 상판내림 공통: 상판 두께만 표시
+              } else if (stoneThickness > 0 && !includeStoneInHeight) {
+                // 일반 하부장: 상판 두께만 별도 표시 (상판내림은 가구 높이에 포함됨)
                 segments_l2.push({
                   bottomY: mmToThreeUnits(cabinetTopMm),
                   topY: mmToThreeUnits(cabinetTopMm + stoneThickness),
@@ -999,9 +1006,23 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
             });
 
             // 하부장: 도어 상단갭 (도어 상단 ~ 가구 상단) + 하단갭 (바닥 ~ 도어 하단)
-            // lower-top-down은 고정 710mm 도어 → 별도 갭 처리 불필요
+            // lower-top-down: 도어 상단 ~ 인조대리석 앞판 하단 갭(20mm) 표시
             // lower-door-lift는 도어가 가구 위로 올라가므로 좌측 2단에서 표시 (여기서 제외)
-            if (modCat === 'lower' && !modData.id?.includes('lower-top-down-') && !modData.id?.includes('lower-door-lift-')) {
+            if (modCat === 'lower' && modData.id?.includes('lower-top-down-') && mod.stoneTopThickness && mod.stoneTopThickness > 0) {
+              const cabinetH = modData.dimensions.height ?? 785;
+              const cabinetBottomAbs = (isFloating ? floatHeightMm : (railOrBaseHeightMm + indivFloatMm)) + floorFinishHeightMm;
+              // 도어 상단 ~ 인조대리석 앞판 하단 = 20mm 갭
+              const doorGapMm = 20;
+              const gapBottomAbs = doorTopAbsMm; // 도어 상단
+              const gapTopAbs = gapBottomAbs + doorGapMm; // 앞판 하단
+              doorSegs.push({
+                bottomY: mmToThreeUnits(gapBottomAbs),
+                topY: mmToThreeUnits(gapTopAbs),
+                heightMm: doorGapMm,
+                key: `door-topgap-${moduleIndex}`,
+                isUpper: false
+              });
+            } else if (modCat === 'lower' && !modData.id?.includes('lower-top-down-') && !modData.id?.includes('lower-door-lift-')) {
               const cabinetH = modData.dimensions.height ?? 1000;
               const cabinetBottomAbs = (isFloating ? floatHeightMm : (railOrBaseHeightMm + indivFloatMm)) + floorFinishHeightMm;
               const cabinetTopAbsMm = cabinetBottomAbs + cabinetH;
@@ -1212,7 +1233,11 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           }
           if (!selModData) return null;
           const selFurnitureHeightMm = computeFurnitureHeightMm(selectedMod, selModData, spaceInfo, internalSpace);
-          const totalFromFloorMm = Math.round(floorFinishHeightMm + baseFrameHeightMm + selFurnitureHeightMm);
+          // 상판내림 + 인조대리석: 상판 두께를 총 높이에 포함
+          const isTopDownCombined = selModData.id?.includes('lower-top-down-') || selModData.id?.includes('dual-lower-top-down-');
+          const stoneThicknessCombined = selectedMod.stoneTopThickness || 0;
+          const stoneAddition = (isTopDownCombined && stoneThicknessCombined > 0) ? stoneThicknessCombined : 0;
+          const totalFromFloorMm = Math.round(floorFinishHeightMm + baseFrameHeightMm + selFurnitureHeightMm + stoneAddition);
           const totalFromFloorY = mmToThreeUnits(totalFromFloorMm);
           // 가구 도어 앞면 Z 계산 (도어 치수와 동일 기준)
           const panelDepthMm_c = spaceInfo.depth || 1500;
@@ -1950,10 +1975,17 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
               cabinetTopMm = cabinetBottomMm + moduleHeightMm;
             }
 
+            // 상판내림 + 인조대리석: 가구 높이에 상판 두께 포함
+            const isTopDownRL2 = moduleData.id?.includes('lower-top-down-') || moduleData.id?.includes('dual-lower-top-down-');
+            const stoneThicknessRL2 = mod.stoneTopThickness || 0;
+            const includeStoneInHeightRL2 = isTopDownRL2 && stoneThicknessRL2 > 0;
+            const displayHeightMmRL2 = includeStoneInHeightRL2 ? moduleHeightMm + stoneThicknessRL2 : moduleHeightMm;
+            const displayTopMmRL2 = includeStoneInHeightRL2 ? cabinetTopMm + stoneThicknessRL2 : cabinetTopMm;
+
             segments_rl2.push({
               bottomY: mmToThreeUnits(cabinetBottomMm),
-              topY: mmToThreeUnits(cabinetTopMm),
-              heightMm: Math.round(moduleHeightMm),
+              topY: mmToThreeUnits(displayTopMmRL2),
+              heightMm: Math.round(displayHeightMmRL2),
               key: `furniture-${moduleIndex}`
             });
 
@@ -1988,8 +2020,8 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                     key: `door-lift-topgap-${moduleIndex}`
                   });
                 }
-              } else if (stoneThickness > 0) {
-                // 일반 하부장 + 상판내림 공통: 상판 두께만 표시
+              } else if (stoneThickness > 0 && !includeStoneInHeightRL2) {
+                // 일반 하부장: 상판 두께만 별도 표시 (상판내림은 가구 높이에 포함됨)
                 segments_rl2.push({
                   bottomY: mmToThreeUnits(cabinetTopMm),
                   topY: mmToThreeUnits(cabinetTopMm + stoneThickness),
@@ -2174,6 +2206,17 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
               heightMm: Math.round(doorHeightMm),
               key: `door-${moduleIndex}`
             });
+
+            // 상판내림 + 인조대리석: 도어 상단 ~ 앞판 하단 20mm 갭 표시
+            if (modCat === 'lower' && modData.id?.includes('lower-top-down-') && mod.stoneTopThickness && mod.stoneTopThickness > 0) {
+              const doorGapMm = 20;
+              doorSegs_r.push({
+                bottomY: mmToThreeUnits(doorTopAbsMm),
+                topY: mmToThreeUnits(doorTopAbsMm + doorGapMm),
+                heightMm: doorGapMm,
+                key: `door-topgap-${moduleIndex}`
+              });
+            }
           });
 
           if (doorSegs_r.length === 0) return null;
@@ -2312,7 +2355,11 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           }
           if (!selModData_r) return null;
           const selFurnitureHeightMm_r = computeFurnitureHeightMm(selectedMod, selModData_r, spaceInfo, internalSpace);
-          const totalFromFloorMm_r = Math.round(floorFinishHeightMm + baseFrameHeightMm + selFurnitureHeightMm_r);
+          // 상판내림 + 인조대리석: 상판 두께를 총 높이에 포함
+          const isTopDownCombined_r = selModData_r.id?.includes('lower-top-down-') || selModData_r.id?.includes('dual-lower-top-down-');
+          const stoneThicknessCombined_r = selectedMod.stoneTopThickness || 0;
+          const stoneAddition_r = (isTopDownCombined_r && stoneThicknessCombined_r > 0) ? stoneThicknessCombined_r : 0;
+          const totalFromFloorMm_r = Math.round(floorFinishHeightMm + baseFrameHeightMm + selFurnitureHeightMm_r + stoneAddition_r);
           const totalFromFloorY_r = mmToThreeUnits(totalFromFloorMm_r);
           // 가구 도어 앞면 Z 계산
           const panelDepthMm_cr = spaceInfo.depth || 1500;
