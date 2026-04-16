@@ -1063,13 +1063,15 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
 
       {/* 상판내림 수직 앞판 (45도 연귀 접합) */}
       {showFurniture && stoneTopData && stoneTopMaterial && isTopDown && (() => {
-        const gapMm = 20; // 도어 상단과의 갭
+        const gapMm = 20; // 도어 상단과의 갭 (mm)
         const frontPlateHeightThree = stoneTopData.thickness + gapMm * 0.01; // 두께 + 20mm
-        // Y: 수평판 하단에서 아래로 (두께 + 갭) 만큼 내려감
-        const topY = cabinetYPosition + adjustedHeight / 2 + stoneTopData.thickness; // 수평판 상면
-        const frontPlateY = topY - frontPlateHeightThree / 2;
-        // Z: 수평판 앞면 (가장 앞쪽)
-        const frontPlateZ = stoneTopData.zOffset + stoneTopData.depth / 2 - stoneTopData.thickness / 2;
+        // 수평판 상면 Y
+        const horizontalTopY = cabinetYPosition + adjustedHeight / 2 + stoneTopData.thickness;
+        // 수직 앞판: 상면 = 수평판 상면, 하면 = 상면 - (두께+갭)
+        const frontPlateY = horizontalTopY - frontPlateHeightThree / 2;
+        // Z: 수평판 앞단에 맞닿음 (수평판 앞면과 수직 앞판 뒷면이 같은 위치)
+        const horizontalFrontZ = stoneTopData.zOffset + stoneTopData.depth / 2;
+        const frontPlateZ = horizontalFrontZ + stoneTopData.thickness / 2;
         return (
           <BoxWithEdges
             args={[stoneTopData.width, frontPlateHeightThree, stoneTopData.thickness]}
