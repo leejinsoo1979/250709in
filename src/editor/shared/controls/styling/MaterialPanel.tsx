@@ -230,7 +230,7 @@ const MaterialPanel: React.FC = () => {
                   )}
                 </div>
                 <div className={styles.materialInfo}>
-                  <span className={styles.materialType}>{material.type}</span>
+                  {materialTab !== 'countertop' && <span className={styles.materialType}>{material.type}</span>}
                   <span className={styles.materialName}>{material.name}</span>
                   <span className={styles.materialManufacturer}>{material.category}</span>
                 </div>
