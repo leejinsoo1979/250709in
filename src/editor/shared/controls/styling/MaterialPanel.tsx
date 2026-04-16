@@ -4,7 +4,7 @@ import { useUIStore } from '@/store/uiStore';
 import { useTranslation } from '@/i18n/useTranslation';
 import styles from './MaterialPanel.module.css';
 
-type MaterialTab = 'interior' | 'door';
+type MaterialTab = 'interior' | 'door' | 'countertop';
 
 // cn utility 함수
 const cn = (...classes: (string | undefined | null | false)[]) => {
@@ -80,6 +80,7 @@ const MaterialPanel: React.FC = () => {
       setDoorsOpen(false);
       setIsInteriorMaterialMode(false);
     }
+    // 상판 탭: 도어 닫기, 속장 모드 해제
     // 언마운트 시 개별 상태로 복원
     return () => {
       setDoorsOpen(null);
@@ -99,6 +100,14 @@ const MaterialPanel: React.FC = () => {
         ...materialConfig,
         interiorColor: color,
         interiorTexture: isTexture ? material.image : undefined
+      };
+      setSpaceInfo({ materialConfig: newMaterialConfig });
+    } else if (materialTab === 'countertop') {
+      // 상판: countertopColor/countertopTexture만 변경
+      const newMaterialConfig = {
+        ...materialConfig,
+        countertopColor: color,
+        countertopTexture: isTexture ? material.image : undefined
       };
       setSpaceInfo({ materialConfig: newMaterialConfig });
     } else {
@@ -141,6 +150,14 @@ const MaterialPanel: React.FC = () => {
           }}
         >
           <span className={styles.tabLabel}>{t('material.door')}</span>
+        </button>
+        <button
+          className={cn(styles.tab, materialTab === 'countertop' && styles.activeTab)}
+          onClick={() => {
+            setMaterialTab('countertop');
+          }}
+        >
+          <span className={styles.tabLabel}>상판</span>
         </button>
       </div>
 

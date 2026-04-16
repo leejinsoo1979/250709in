@@ -76,9 +76,11 @@ export interface MaterialConfig {
   interiorColor: string;
   doorColor: string;
   frameColor: string;        // 프레임 재질 색상
+  countertopColor?: string;  // 상판 재질 색상
   interiorTexture?: string;  // 내부 재질 텍스처 이미지 경로
   doorTexture?: string;      // 도어 재질 텍스처 이미지 경로
   frameTexture?: string;     // 프레임 재질 텍스처 이미지 경로
+  countertopTexture?: string; // 상판 재질 텍스처 이미지 경로
 }
 
 // 단내림/커튼박스 기본값 상수
