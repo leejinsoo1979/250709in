@@ -773,10 +773,9 @@ const DoorModule: React.FC<DoorModuleProps> = ({
       // 상판내림: 캐비넷 아래 5mm ~ 따내기하단(665)+40mm = 710mm
       actualDoorHeight = 710;
     } else if (isDoorLift) {
-      // 도어올림: 캐비넷 아래 5mm ~ 캐비넷 위 30mm
+      // 도어올림: 캐비넷 아래 5mm ~ 캐비넷 위 doorTopGap mm
       const DOOR_LIFT_BOTTOM_EXTENSION = 5;
-      const DOOR_LIFT_TOP_EXTENSION = 30;
-      actualDoorHeight = lowerCabinetHeight + DOOR_LIFT_BOTTOM_EXTENSION + DOOR_LIFT_TOP_EXTENSION;
+      actualDoorHeight = lowerCabinetHeight + DOOR_LIFT_BOTTOM_EXTENSION + doorTopGap;
     } else {
       // 기본 하부장: 상단갭/하단갭 양수 = 확장
       // 상단갭 0 + 하단갭 0 = 도어 == 캐비넷

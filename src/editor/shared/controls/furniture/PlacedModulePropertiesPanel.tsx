@@ -3751,13 +3751,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                             setDoorTopGapInput(String(newGap));
                           }
                         }
-                        console.log('[상판설치] updates:', JSON.stringify(updates));
                         updatePlacedModule(currentPlacedModule.id, updates);
-                        // doorTopGap 변경 확인
-                        setTimeout(() => {
-                          const stored = useFurnitureStore.getState().placedModules.find(m => m.id === currentPlacedModule.id);
-                          console.log('[상판설치] store doorTopGap:', stored?.doorTopGap, '| stoneTopThickness:', stored?.stoneTopThickness);
-                        }, 100);
                       }
                     }}
                   >
