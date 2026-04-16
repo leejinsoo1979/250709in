@@ -1070,7 +1070,8 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
         const cabinetTopY = cabinetYPosition + adjustedHeight / 2;
         const hPosY = cabinetTopY + t / 2;
         const vPosY = cabinetTopY - frontPlateH / 2;
-        const vPosZ = stoneTopData.zOffset + stoneTopData.depth / 2 + t / 2;
+        // 수직 앞판 앞면 = 수평판 앞면 (같은 Z). 수직 앞판 중심 = 앞면 - t/2
+        const vPosZ = stoneTopData.zOffset + stoneTopData.depth / 2 - t / 2;
         // 연귀 대각선 좌표
         const halfW = stoneTopData.width / 2;
         const diagY1 = cabinetTopY;
