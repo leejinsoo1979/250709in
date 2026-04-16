@@ -399,8 +399,14 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
         texture.wrapS = THREE.RepeatWrapping;
         texture.wrapT = THREE.RepeatWrapping;
         texture.repeat.set(1, 1);
+        texture.colorSpace = THREE.SRGBColorSpace;
         mat.map = texture;
-        applyDefaultImageTextureSettings(mat);
+        mat.color.set('#ffffff');
+        mat.toneMapped = false;
+        mat.envMapIntensity = 0.0;
+        mat.roughness = 0.8;
+        mat.metalness = 0.0;
+        mat.needsUpdate = true;
       });
     } else {
       if (mat.map) {
