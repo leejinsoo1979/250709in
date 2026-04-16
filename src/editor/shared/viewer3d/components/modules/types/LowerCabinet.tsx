@@ -33,42 +33,36 @@ const JollyCutHorizontalPlate: React.FC<{
 }> = React.memo(({ width, thickness: t, depth: d, position, material, renderMode }) => {
   const geom = useMemo(() => {
     const hw = width / 2, ht = t / 2, hd = d / 2;
-    // 8꼭짓점 좌표 배열
     // 0=좌상앞, 1=좌상뒤, 2=좌하뒤, 3=좌하앞(후퇴t)
     // 4=우상앞, 5=우상뒤, 6=우하뒤, 7=우하앞(후퇴t)
     const V: [number,number,number][] = [
-      [-hw, +ht, +hd],   // 0
-      [-hw, +ht, -hd],   // 1
-      [-hw, -ht, -hd],   // 2
-      [-hw, -ht, +hd-t], // 3
-      [+hw, +ht, +hd],   // 4
-      [+hw, +ht, -hd],   // 5
-      [+hw, -ht, -hd],   // 6
-      [+hw, -ht, +hd-t], // 7
+      [-hw, +ht, +hd],   [-hw, +ht, -hd],   [-hw, -ht, -hd],   [-hw, -ht, +hd-t],
+      [+hw, +ht, +hd],   [+hw, +ht, -hd],   [+hw, -ht, -hd],   [+hw, -ht, +hd-t],
     ];
+    // non-indexed: 면별 독립 정점 + UV
+    const pos: number[] = [];
+    const uvs: number[] = [];
+    // quad 헬퍼: 4정점 + 4 UV → 2 triangles (v0,v1,v2 + v0,v2,v3)
+    const quad = (a:number,b:number,c:number,d_:number, u0:[number,number],u1:[number,number],u2:[number,number],u3:[number,number]) => {
+      pos.push(...V[a],...V[b],...V[c], ...V[a],...V[c],...V[d_]);
+      uvs.push(...u0,...u1,...u2, ...u0,...u2,...u3);
+    };
+    // 상면 ↑: 0,4,5,1 (좌앞→우앞→우뒤→좌뒤)
+    quad(0,4,5,1, [0,1],[1,1],[1,0],[0,0]);
+    // 하면 ↓: 3,2,6,7 (좌앞→좌뒤→우뒤→우앞) — 아래서 봄
+    quad(3,2,6,7, [0,1],[0,0],[1,0],[1,1]);
+    // 뒷면 -Z: 1,5,6,2 (좌상→우상→우하→좌하)
+    quad(1,5,6,2, [0,1],[1,1],[1,0],[0,0]);
+    // 45도 경사면: 0,3,7,4 (좌상→좌하→우하→우상) — 앞+아래서 봄
+    quad(0,3,7,4, [0,1],[0,0],[1,0],[1,1]);
+    // 좌측면 -X: 0,1,2,3 (상앞→상뒤→하뒤→하앞)
+    quad(0,1,2,3, [1,1],[0,1],[0,0],[1,0]);
+    // 우측면 +X: 4,7,6,5 (상앞→하앞→하뒤→상뒤)
+    quad(4,7,6,5, [0,1],[0,0],[1,0],[1,1]);
 
     const geometry = new THREE.BufferGeometry();
-    // indexed geometry
-    const positions = new Float32Array(V.length * 3);
-    V.forEach((v, i) => { positions[i*3]=v[0]; positions[i*3+1]=v[1]; positions[i*3+2]=v[2]; });
-    // CCW winding (법선이 바깥을 향하도록)
-    // 각 면의 꼭짓점을 바깥에서 봤을 때 반시계 방향으로 나열
-    const indices = new Uint16Array([
-      // 상면 ↑ (위에서 봄): 0(좌앞),4(우앞),5(우뒤),1(좌뒤) → CCW: 0,4,5 + 0,5,1
-      0,4,5, 0,5,1,
-      // 하면 ↓ (아래서 봄): 3(좌앞),2(좌뒤),6(우뒤),7(우앞) → CCW: 3,2,6 + 3,6,7
-      3,2,6, 3,6,7,
-      // 뒷면 -Z (뒤에서 봄): 1(좌상),5(우상),6(우하),2(좌하) → CCW: 1,5,6 + 1,6,2
-      1,5,6, 1,6,2,
-      // 45도 경사면 (앞+아래에서 봄): 0(좌상),3(좌하),7(우하),4(우상) → CCW: 0,3,7 + 0,7,4
-      0,3,7, 0,7,4,
-      // 좌측면 -X (좌에서 봄): 0(상앞),1(상뒤),2(하뒤),3(하앞) → CCW: 0,1,2 + 0,2,3
-      0,1,2, 0,2,3,
-      // 우측면 +X (우에서 봄): 4(상앞),7(하앞),6(하뒤),5(상뒤) → CCW: 4,7,6 + 4,6,5
-      4,7,6, 4,6,5,
-    ]);
-    geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-    geometry.setIndex(new THREE.BufferAttribute(indices, 1));
+    geometry.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+    geometry.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2));
     geometry.computeVertexNormals();
     return geometry;
   }, [width, t, d]);
@@ -130,36 +124,31 @@ const JollyCutVerticalPlate: React.FC<{
     // 0=좌상앞, 1=좌하앞, 2=좌하뒤, 3=좌상후퇴뒤
     // 4=우상앞, 5=우하앞, 6=우하뒤, 7=우상후퇴뒤
     const V: [number,number,number][] = [
-      [-hw, +hh, +ht],     // 0
-      [-hw, -hh, +ht],     // 1
-      [-hw, -hh, -ht],     // 2
-      [-hw, +hh-t, -ht],   // 3
-      [+hw, +hh, +ht],     // 4
-      [+hw, -hh, +ht],     // 5
-      [+hw, -hh, -ht],     // 6
-      [+hw, +hh-t, -ht],   // 7
+      [-hw, +hh, +ht],   [-hw, -hh, +ht],   [-hw, -hh, -ht],   [-hw, +hh-t, -ht],
+      [+hw, +hh, +ht],   [+hw, -hh, +ht],   [+hw, -hh, -ht],   [+hw, +hh-t, -ht],
     ];
+    const pos: number[] = [];
+    const uvs: number[] = [];
+    const quad = (a:number,b:number,c:number,d_:number, u0:[number,number],u1:[number,number],u2:[number,number],u3:[number,number]) => {
+      pos.push(...V[a],...V[b],...V[c], ...V[a],...V[c],...V[d_]);
+      uvs.push(...u0,...u1,...u2, ...u0,...u2,...u3);
+    };
+    // 앞면 +Z: 0,1,5,4 (좌상→좌하→우하→우상)
+    quad(0,1,5,4, [0,1],[0,0],[1,0],[1,1]);
+    // 뒷면 -Z: 3,7,6,2 (좌상후퇴→우상후퇴→우하→좌하) — 뒤에서 봄
+    quad(3,7,6,2, [0,1],[1,1],[1,0],[0,0]);
+    // 하면 ↓: 1,2,6,5 (좌앞→좌뒤→우뒤→우앞)
+    quad(1,2,6,5, [0,1],[0,0],[1,0],[1,1]);
+    // 45도 경사면 (상): 0,4,7,3 (좌앞상→우앞상→우뒤후퇴→좌뒤후퇴) — 위+뒤에서 봄
+    quad(0,4,7,3, [0,1],[1,1],[1,0],[0,0]);
+    // 좌측면 -X: 0,3,2,1 (상앞→상뒤후퇴→하뒤→하앞)
+    quad(0,3,2,1, [1,1],[0,1],[0,0],[1,0]);
+    // 우측면 +X: 4,5,6,7 (상앞→하앞→하뒤→상뒤후퇴)
+    quad(4,5,6,7, [0,1],[0,0],[1,0],[1,1]);
 
     const geometry = new THREE.BufferGeometry();
-    const positions = new Float32Array(V.length * 3);
-    V.forEach((v, i) => { positions[i*3]=v[0]; positions[i*3+1]=v[1]; positions[i*3+2]=v[2]; });
-    // CCW winding (법선이 바깥을 향하도록)
-    const indices = new Uint16Array([
-      // 앞면 +Z (앞에서 봄): 0(좌상),1(좌하),5(우하),4(우상) → CCW: 0,1,5 + 0,5,4
-      0,1,5, 0,5,4,
-      // 뒷면 -Z (뒤에서 봄): 3(좌상후퇴),7(우상후퇴),6(우하),2(좌하) → CCW: 3,7,6 + 3,6,2
-      3,7,6, 3,6,2,
-      // 하면 ↓ (아래서 봄): 1(좌앞),2(좌뒤),6(우뒤),5(우앞) → CCW: 1,2,6 + 1,6,5
-      1,2,6, 1,6,5,
-      // 45도 경사면 (위+뒤에서 봄): 0(좌앞상),4(우앞상),7(우뒤상후퇴),3(좌뒤상후퇴) → CCW: 0,4,7 + 0,7,3
-      0,4,7, 0,7,3,
-      // 좌측면 -X (좌에서 봄): 0(상앞),3(상뒤후퇴),2(하뒤),1(하앞) → CCW: 0,3,2 + 0,2,1
-      0,3,2, 0,2,1,
-      // 우측면 +X (우에서 봄): 4(상앞),5(하앞),6(하뒤),7(상뒤후퇴) → CCW: 4,5,6 + 4,6,7
-      4,5,6, 4,6,7,
-    ]);
-    geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-    geometry.setIndex(new THREE.BufferAttribute(indices, 1));
+    geometry.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+    geometry.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2));
     geometry.computeVertexNormals();
     return geometry;
   }, [width, h, t]);
