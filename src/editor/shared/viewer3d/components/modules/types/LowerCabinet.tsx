@@ -1086,32 +1086,6 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
         geometry.translate(0, 0, -hW / 2);
         geometry.rotateY(-Math.PI / 2);
 
-        // UV: 각 vertex의 position 기반 planar 매핑 (면 노멀 방향별)
-        const posAttr = geometry.getAttribute('position') as THREE.BufferAttribute;
-        const normAttr = geometry.getAttribute('normal') as THREE.BufferAttribute;
-        const uvAttr = geometry.getAttribute('uv') as THREE.BufferAttribute;
-        geometry.computeBoundingBox();
-        const bb = geometry.boundingBox!;
-        for (let i = 0; i < uvAttr.count; i++) {
-          const nx = Math.abs(normAttr.getX(i));
-          const ny = Math.abs(normAttr.getY(i));
-          const nz = Math.abs(normAttr.getZ(i));
-          const px = posAttr.getX(i);
-          const py = posAttr.getY(i);
-          const pz = posAttr.getZ(i);
-          if (nx >= ny && nx >= nz) {
-            // X-facing face (좌/우 측면): Z,Y 매핑
-            uvAttr.setXY(i, (pz - bb.min.z) / (bb.max.z - bb.min.z), (py - bb.min.y) / (bb.max.y - bb.min.y));
-          } else if (ny >= nx && ny >= nz) {
-            // Y-facing face (상/하면): X,Z 매핑
-            uvAttr.setXY(i, (px - bb.min.x) / (bb.max.x - bb.min.x), (pz - bb.min.z) / (bb.max.z - bb.min.z));
-          } else {
-            // Z-facing face (앞/뒤면): X,Y 매핑
-            uvAttr.setXY(i, (px - bb.min.x) / (bb.max.x - bb.min.x), (py - bb.min.y) / (bb.max.y - bb.min.y));
-          }
-        }
-        uvAttr.needsUpdate = true;
-
         return (
           <group position={[stoneTopData.xOffset, cabinetTopY, stoneTopData.zOffset]}>
             {renderMode === 'solid' && (
