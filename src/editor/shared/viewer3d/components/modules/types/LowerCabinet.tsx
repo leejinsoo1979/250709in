@@ -408,6 +408,8 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
         texture.wrapS = THREE.RepeatWrapping;
         texture.wrapT = THREE.RepeatWrapping;
         texture.repeat.set(1, 1);
+        texture.center.set(0.5, 0.5);
+        texture.rotation = Math.PI / 2;
         texture.colorSpace = THREE.SRGBColorSpace;
         faceMat.map = texture;
         faceMat.color.set('#ffffff');
