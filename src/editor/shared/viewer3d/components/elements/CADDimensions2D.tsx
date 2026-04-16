@@ -1215,11 +1215,10 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           }
           if (!selModData) return null;
           const selFurnitureHeightMm = computeFurnitureHeightMm(selectedMod, selModData, spaceInfo, internalSpace);
-          // 하부장 + 인조대리석: 상판 두께를 총 높이에 포함 (도어올림 제외)
-          const isDoorLiftCombined = selModData.id?.includes('lower-door-lift-');
+          // 하부장 + 인조대리석: 상판 두께를 총 높이에 포함
           const selModCatCombined = getModuleCategory(selectedMod);
           const stoneThicknessCombined = selectedMod.stoneTopThickness || 0;
-          const stoneAddition = (selModCatCombined === 'lower' && !isDoorLiftCombined && stoneThicknessCombined > 0) ? stoneThicknessCombined : 0;
+          const stoneAddition = (selModCatCombined === 'lower' && stoneThicknessCombined > 0) ? stoneThicknessCombined : 0;
           const totalFromFloorMm = Math.round(floorFinishHeightMm + baseFrameHeightMm + selFurnitureHeightMm + stoneAddition);
           const totalFromFloorY = mmToThreeUnits(totalFromFloorMm);
           // 가구 도어 앞면 Z 계산 (도어 치수와 동일 기준)
@@ -2328,11 +2327,10 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           }
           if (!selModData_r) return null;
           const selFurnitureHeightMm_r = computeFurnitureHeightMm(selectedMod, selModData_r, spaceInfo, internalSpace);
-          // 하부장 + 인조대리석: 상판 두께를 총 높이에 포함 (도어올림 제외)
-          const isDoorLiftCombined_r = selModData_r.id?.includes('lower-door-lift-');
+          // 하부장 + 인조대리석: 상판 두께를 총 높이에 포함
           const selModCatCombined_r = getModuleCategory(selectedMod);
           const stoneThicknessCombined_r = selectedMod.stoneTopThickness || 0;
-          const stoneAddition_r = (selModCatCombined_r === 'lower' && !isDoorLiftCombined_r && stoneThicknessCombined_r > 0) ? stoneThicknessCombined_r : 0;
+          const stoneAddition_r = (selModCatCombined_r === 'lower' && stoneThicknessCombined_r > 0) ? stoneThicknessCombined_r : 0;
           const totalFromFloorMm_r = Math.round(floorFinishHeightMm + baseFrameHeightMm + selFurnitureHeightMm_r + stoneAddition_r);
           const totalFromFloorY_r = mmToThreeUnits(totalFromFloorMm_r);
           // 가구 도어 앞면 Z 계산
