@@ -1227,8 +1227,8 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
         />
       )}
 
-      {/* 인조대리석 상판 — 상판내림은 졸리컷 L자, 그 외는 단순 박스 */}
-      {showFurniture && stoneTopData && stoneTopMaterial && !isTopDown && (
+      {/* 인조대리석 상판 — 상판내림은 졸리컷 L자, 그 외는 단순 박스 (탑뷰에서는 숨김) */}
+      {showFurniture && stoneTopData && stoneTopMaterial && !isTopDown && !(viewMode === '2D' && view2DDirection === 'top') && (
         <BoxWithEdges
           args={[stoneTopData.width, stoneTopData.thickness, stoneTopData.depth]}
           position={[
@@ -1244,7 +1244,7 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
 
       {/* 인조대리석 뒷턱 (back lip) — 상판 뒤쪽 수직판 */}
       {/* 2D 정면뷰에서는 상판과 같은 Z(중심)에 배치하여 정면에서 보이게 함 */}
-      {showFurniture && stoneTopData && stoneTopData.backLipHeight > 0 && stoneTopMaterial && (
+      {showFurniture && stoneTopData && stoneTopData.backLipHeight > 0 && stoneTopMaterial && !(viewMode === '2D' && view2DDirection === 'top') && (
         <BoxWithEdges
           args={[stoneTopData.width, stoneTopData.backLipHeight, stoneTopData.thickness]}
           position={[
@@ -1260,8 +1260,8 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
         />
       )}
 
-      {/* 상판내림: 졸리컷 L자 (수평판 + 수직 앞판) */}
-      {showFurniture && stoneTopData && stoneTopMaterial && isTopDown && (() => {
+      {/* 상판내림: 졸리컷 L자 (수평판 + 수직 앞판) — 탑뷰에서는 숨김 */}
+      {showFurniture && stoneTopData && stoneTopMaterial && isTopDown && !(viewMode === '2D' && view2DDirection === 'top') && (() => {
         const t = stoneTopData.thickness;
         const absDoorTopGap = Math.abs(doorTopGap ?? -80);
         const doorGapMm = 20;
