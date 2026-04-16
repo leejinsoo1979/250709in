@@ -1064,8 +1064,11 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
       {/* 상판내림 졸리컷 L자 상판 (수평판 + 수직 앞판, 45도 연귀 접합) */}
       {showFurniture && stoneTopData && stoneTopMaterial && isTopDown && (() => {
         const t = stoneTopData.thickness; // 인조대리석 두께 (Three 단위)
-        const gapThree = 20 * 0.01; // 도어 상단 갭 20mm
-        const dropH = t + gapThree; // 수직 앞판 전체 높이
+        // 상판내림 doorTopGap은 음수 (예: -80 → 도어 상단이 캐비넷 상면보다 80mm 아래)
+        const absDoorTopGap = Math.abs(doorTopGap ?? -80); // mm
+        const doorGapMm = 20; // 도어 상단과 수직 앞판 하단 사이 갭 (mm)
+        // 수직 앞판 높이: 수평판 상면 ~ 도어상단+20mm 위
+        const dropH = t + (absDoorTopGap - doorGapMm) * 0.01;
         const hW = stoneTopData.width; // 폭
         const hD = stoneTopData.depth; // 수평판 깊이
         // 기준점: 캐비넷 상면
