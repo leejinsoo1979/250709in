@@ -1061,7 +1061,7 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
         />
       )}
 
-      {/* 상판내림: 수평판 + 수직 앞판 (BoxWithEdges) + 연귀 대각선 (wireframe) */}
+      {/* 상판내림: 수평판 + 수직 앞판 (BoxWithEdges) + 45도 연귀 대각선 */}
       {showFurniture && stoneTopData && stoneTopMaterial && isTopDown && (() => {
         const t = stoneTopData.thickness;
         const absDoorTopGap = Math.abs(doorTopGap ?? -80);
@@ -1072,12 +1072,12 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
         const vPosY = cabinetTopY - frontPlateH / 2;
         // 수직 앞판 앞면 = 수평판 앞면 (같은 Z). 수직 앞판 중심 = 앞면 - t/2
         const vPosZ = stoneTopData.zOffset + stoneTopData.depth / 2 - t / 2;
-        // 연귀 대각선 좌표
+        // 45도 연귀 대각선 좌표 (수평판 하면-앞면 모서리 ~ 수평판 상면-뒤쪽 t만큼)
         const halfW = stoneTopData.width / 2;
-        const diagY1 = cabinetTopY;
-        const diagZ1 = stoneTopData.zOffset + stoneTopData.depth / 2;
-        const diagY2 = cabinetTopY + t;
-        const diagZ2 = diagZ1 + t;
+        const diagFrontY = cabinetTopY;           // 수평판 하면 = 수직판 상면
+        const diagFrontZ = stoneTopData.zOffset + stoneTopData.depth / 2; // 앞면
+        const diagBackY = cabinetTopY + t;        // 수평판 상면
+        const diagBackZ = diagFrontZ - t;         // 앞면에서 t만큼 뒤
         return (
           <>
             <BoxWithEdges
@@ -1094,28 +1094,75 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
               renderMode={renderMode}
               panelName="인조대리석 앞판"
             />
-            {renderMode === 'wireframe' && (
-              <>
-                <line>
-                  <bufferGeometry>
-                    <bufferAttribute attach="attributes-position" array={new Float32Array([
-                      stoneTopData.xOffset - halfW, diagY1, diagZ1,
-                      stoneTopData.xOffset - halfW, diagY2, diagZ2,
-                    ])} count={2} itemSize={3} />
-                  </bufferGeometry>
-                  <lineBasicMaterial color="#ffffff" />
-                </line>
-                <line>
-                  <bufferGeometry>
-                    <bufferAttribute attach="attributes-position" array={new Float32Array([
-                      stoneTopData.xOffset + halfW, diagY1, diagZ1,
-                      stoneTopData.xOffset + halfW, diagY2, diagZ2,
-                    ])} count={2} itemSize={3} />
-                  </bufferGeometry>
-                  <lineBasicMaterial color="#ffffff" />
-                </line>
-              </>
-            )}
+            {/* 45도 연귀 — 양쪽 측면 대각선 면 + 엣지 */}
+            {(() => {
+              // 좌측면 45도 삼각형 2개 (quad): 수평판 하면-앞면 → 수평판 상면-뒤쪽t
+              // 좌측 X좌표
+              const xL = stoneTopData.xOffset - halfW;
+              const xR = stoneTopData.xOffset + halfW;
+              // 대각선 quad의 4개 꼭짓점 (좌측면 기준, YZ 평면)
+              // v0: 앞면 하단 (수직판 상단-앞면)
+              // v1: 앞면 상단 (수평판 상면-앞면) — 실제로는 없으나, 대각선이므로
+              // 실제 졸리컷 대각면: 앞면-하단 ~ 뒤쪽t-상단 (45도)
+              // 좌측 삼각형 pair
+              const positions_L = new Float32Array([
+                // 삼각형 1: v0-v1-v2
+                xL, diagFrontY, diagFrontZ,     // 앞면 하단
+                xL, diagBackY, diagBackZ,       // 뒤쪽 상단
+                xL, diagBackY, diagFrontZ,      // 앞면 상단
+                // 삼각형 2: v0-v3-v1
+                xL, diagFrontY, diagFrontZ,     // 앞면 하단
+                xL, diagFrontY, diagBackZ,      // 뒤쪽 하단
+                xL, diagBackY, diagBackZ,       // 뒤쪽 상단
+              ]);
+              // 우측 삼각형 pair (법선 반대)
+              const positions_R = new Float32Array([
+                // 삼각형 1: v0-v2-v1 (우측은 winding 반대)
+                xR, diagFrontY, diagFrontZ,
+                xR, diagBackY, diagFrontZ,
+                xR, diagBackY, diagBackZ,
+                // 삼각형 2: v0-v1-v3
+                xR, diagFrontY, diagFrontZ,
+                xR, diagBackY, diagBackZ,
+                xR, diagFrontY, diagBackZ,
+              ]);
+              const lineColor = renderMode === 'wireframe' ? '#ffffff' : '#666666';
+              return (
+                <>
+                  {/* 좌측 45도 대각면 */}
+                  <mesh>
+                    <bufferGeometry>
+                      <bufferAttribute attach="attributes-position" array={positions_L} count={6} itemSize={3} />
+                    </bufferGeometry>
+                    <meshStandardMaterial color={stoneTopMaterial instanceof THREE.MeshStandardMaterial ? stoneTopMaterial.color : '#cccccc'} side={THREE.DoubleSide} />
+                  </mesh>
+                  {/* 우측 45도 대각면 */}
+                  <mesh>
+                    <bufferGeometry>
+                      <bufferAttribute attach="attributes-position" array={positions_R} count={6} itemSize={3} />
+                    </bufferGeometry>
+                    <meshStandardMaterial color={stoneTopMaterial instanceof THREE.MeshStandardMaterial ? stoneTopMaterial.color : '#cccccc'} side={THREE.DoubleSide} />
+                  </mesh>
+                  {/* 45도 대각선 엣지 */}
+                  <line>
+                    <bufferGeometry>
+                      <bufferAttribute attach="attributes-position" array={new Float32Array([
+                        xL, diagFrontY, diagFrontZ, xL, diagBackY, diagBackZ,
+                      ])} count={2} itemSize={3} />
+                    </bufferGeometry>
+                    <lineBasicMaterial color={lineColor} />
+                  </line>
+                  <line>
+                    <bufferGeometry>
+                      <bufferAttribute attach="attributes-position" array={new Float32Array([
+                        xR, diagFrontY, diagFrontZ, xR, diagBackY, diagBackZ,
+                      ])} count={2} itemSize={3} />
+                    </bufferGeometry>
+                    <lineBasicMaterial color={lineColor} />
+                  </line>
+                </>
+              );
+            })()}
           </>
         );
       })()}
