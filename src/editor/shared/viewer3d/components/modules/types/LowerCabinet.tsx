@@ -1330,12 +1330,16 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
             )}
           </>
         ) : (
-          /* 기존 (단일 뒷턱) */
+          /* 기존 (단일 뒷턱) - 다채움인 경우 전체 높이(backLipFillHeight)로 렌더링 */
           <BoxWithEdges
-            args={[stoneTopData.width, stoneTopData.backLipHeight, stoneTopData.backLipThickness]}
+            args={[
+              stoneTopData.width, 
+              (stoneTopData.backLipFullFill && stoneTopData.backLipFillHeight > 0) ? stoneTopData.backLipFillHeight : stoneTopData.backLipHeight, 
+              stoneTopData.backLipThickness
+            ]}
             position={[
               stoneTopData.xOffset,
-              cabinetYPosition + adjustedHeight / 2 + stoneTopData.thickness + stoneTopData.backLipHeight / 2,
+              cabinetYPosition + adjustedHeight / 2 + stoneTopData.thickness + ((stoneTopData.backLipFullFill && stoneTopData.backLipFillHeight > 0) ? stoneTopData.backLipFillHeight : stoneTopData.backLipHeight) / 2,
               (is2DMode && view2DDirection === 'front')
                 ? stoneTopData.zOffset
                 : stoneTopData.zOffset - stoneTopData.depth / 2 + stoneTopData.backLipThickness / 2 + stoneTopData.backLipDepthOffset
