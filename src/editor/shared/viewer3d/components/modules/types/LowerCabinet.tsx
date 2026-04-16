@@ -16,6 +16,294 @@ import LegraSideRail from '../components/LegraSideRail';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
 
 /**
+ * 졸리컷 수평 상판 — 앞면 하단 모서리가 45도로 가공된 판
+ * 측면(YZ) 단면:  상면 전체 → 앞단 45도 경사 → 하면(짧음) → 뒷면 직각
+ *
+ *   상면: ──────────────────
+ *          \               |
+ *   45도→   \              | 뒷면
+ *            \             |
+ *   하면:     ─────────────
+ */
+const JollyCutHorizontalPlate: React.FC<{
+  width: number; thickness: number; depth: number;
+  position: [number, number, number];
+  material: THREE.Material;
+  renderMode: 'solid' | 'wireframe';
+}> = React.memo(({ width, thickness: t, depth: d, position, material, renderMode }) => {
+  const geom = useMemo(() => {
+    const hw = width / 2, ht = t / 2, hd = d / 2;
+    // 8꼭짓점 (YZ 단면 사다리꼴, X방향으로 확장)
+    // 뒷면 4개 (직각) + 앞면 4개 (상면은 앞까지, 하면은 t만큼 후퇴)
+    //
+    //  Y↑   4────────────5   상면 (y=+ht)
+    //   |    \           |
+    //   |  45 \          |   뒷면 (z=-hd)
+    //   |      \         |
+    //   |   7───\────────6   하면 (y=-ht)
+    //   |       |        |
+    //   +───────────────→Z  (앞=+hd)
+    //
+    // 좌측면 (x=-hw):  0,1,2,3
+    // 우측면 (x=+hw):  4,5,6,7
+    //
+    // 0=좌-상-앞, 1=좌-상-뒤, 2=좌-하-뒤, 3=좌-하-앞(후퇴)
+    // 4=우-상-앞, 5=우-상-뒤, 6=우-하-뒤, 7=우-하-앞(후퇴)
+    const vertices = new Float32Array([
+      // 0: 좌-상-앞     1: 좌-상-뒤       2: 좌-하-뒤       3: 좌-하-앞(후퇴t)
+      -hw, +ht, +hd,   -hw, +ht, -hd,   -hw, -ht, -hd,   -hw, -ht, +hd - t,
+      // 4: 우-상-앞     5: 우-상-뒤       6: 우-하-뒤       7: 우-하-앞(후퇴t)
+      +hw, +ht, +hd,   +hw, +ht, -hd,   +hw, -ht, -hd,   +hw, -ht, +hd - t,
+    ]);
+    // 삼각형 인덱스 (바깥 방향 법선 — CCW winding)
+    const indices = new Uint16Array([
+      // 상면 (y=+ht): 0,4,5, 0,5,1
+      0,4,5, 0,5,1,
+      // 하면 (y=-ht): 2,6,7, 2,7,3  → 뒤집어서 3,7,6, 3,6,2
+      3,7,6, 3,6,2,
+      // 뒷면 (z=-hd): 1,5,6, 1,6,2
+      1,5,6, 1,6,2,
+      // 45도 경사면 (앞단): 0→3→7→4 (상앞 → 하앞후퇴)
+      0,3,7, 0,7,4,
+      // 좌측면 (x=-hw): 0,1,2, 0,2,3
+      0,1,2, 0,2,3,
+      // 우측면 (x=+hw): 4,6,5, 4,7,6 → 뒤집어서 5,6,7, 5,7,4  아니, CCW로:
+      4,5,1, // 아 이건 아니다
+    ]);
+    // 인덱스 다시 정리
+    const idx = [
+      // 상면 (y=+ht) — 법선 ↑: 0,4,5  0,5,1
+      0,4,5, 0,5,1,
+      // 하면 (y=-ht) — 법선 ↓: 3,7,6은 아래쪽 봤을 때 CCW? → 2,6,7은 CW → 뒤집어서 7,6,2, 7,2,3
+      // 하면 꼭짓점: 2(뒤좌),6(뒤우),7(앞우),3(앞좌) — 아래에서 보면 2,3,7,6이 CCW
+      2,3,7, 2,7,6,
+      // 뒷면 (z=-hd) — 법선 -Z: 1,2,6, 1,6,5 → 뒤에서 보면 1(좌상),5(우상),6(우하),2(좌하) CCW
+      1,2,6, 1,6,5,
+      // 45도 경사면: 꼭짓점 0(좌상앞),4(우상앞),7(우하앞후퇴),3(좌하앞후퇴)
+      // 법선은 앞+아래쪽 (대각선 바깥) — 앞에서 보면 0,3,7,4 CCW
+      0,3,7, 0,7,4,
+      // 좌측면 (x=-hw) — 법선 -X: 꼭짓점 0(상앞),1(상뒤),2(하뒤),3(하앞후퇴)
+      // 좌측에서 보면(-X방향) 0,1,2,3은 CW → 뒤집어서 0,3,2, 0,2,1
+      0,3,2, 0,2,1,
+      // 우측면 (x=+hw) — 법선 +X: 꼭짓점 4(상앞),5(상뒤),6(하뒤),7(하앞후퇴)
+      // 우측에서 보면(+X방향) 4,5,6,7은 CCW
+      4,5,6, 4,6,7,
+    ];
+
+    const geometry = new THREE.BufferGeometry();
+    // 인덱스된 지오메트리 대신, 면별로 별도 정점 사용 (법선/UV 분리)
+    // 각 면의 삼각형을 별도 정점으로 풀어서 UV 정확히 제어
+    const pos: number[] = [];
+    const uvs: number[] = [];
+    const norms: number[] = [];
+
+    // 헬퍼: 정점 인덱스 → 좌표
+    const v = (i: number) => [vertices[i*3], vertices[i*3+1], vertices[i*3+2]] as [number, number, number];
+
+    // 면 추가 헬퍼 (quad → 2 triangles, UV 매핑)
+    const addFace = (
+      v0: [number,number,number], v1: [number,number,number],
+      v2: [number,number,number], v3: [number,number,number],
+      normal: [number,number,number],
+      uv0: [number,number], uv1: [number,number], uv2: [number,number], uv3: [number,number]
+    ) => {
+      // tri1: v0,v1,v2
+      pos.push(...v0, ...v1, ...v2);
+      uvs.push(...uv0, ...uv1, ...uv2);
+      norms.push(...normal, ...normal, ...normal);
+      // tri2: v0,v2,v3
+      pos.push(...v0, ...v2, ...v3);
+      uvs.push(...uv0, ...uv2, ...uv3);
+      norms.push(...normal, ...normal, ...normal);
+    };
+
+    // 상면 (y=+ht): v0(좌앞),v4(우앞),v5(우뒤),v1(좌뒤) — 법선 ↑
+    addFace(v(0), v(4), v(5), v(1), [0,1,0], [0,1], [1,1], [1,0], [0,0]);
+    // 하면 (y=-ht): v2(좌뒤),v3(좌앞),v7(우앞),v6(우뒤) — 법선 ↓
+    addFace(v(2), v(3), v(7), v(6), [0,-1,0], [0,0], [0,1], [1,1], [1,0]);
+    // 뒷면 (z=-hd): v1(좌상),v5(우상),v6(우하),v2(좌하) — 법선 -Z
+    addFace(v(1), v(5), v(6), v(2), [0,0,-1], [1,0], [0,0], [0,1], [1,1]);
+    // 45도 경사면: v0(좌상앞),v3(좌하앞후퇴),v7(우하앞후퇴),v4(우상앞) — 법선 대각선(앞+아래)
+    const n45 = [0, -Math.SQRT1_2, Math.SQRT1_2] as [number,number,number];
+    addFace(v(0), v(3), v(7), v(4), n45, [0,0], [0,1], [1,1], [1,0]);
+    // 좌측면 (x=-hw): v0(상앞),v1(상뒤),v2(하뒤),v3(하앞) — 법선 -X
+    addFace(v(0), v(1), v(2), v(3), [-1,0,0], [1,0], [0,0], [0,1], [1,1]);
+    // 우측면 (x=+hw): v4(상앞),v7(하앞),v6(하뒤),v5(상뒤) — 법선 +X
+    addFace(v(4), v(7), v(6), v(5), [1,0,0], [0,0], [0,1], [1,1], [1,0]);
+
+    geometry.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+    geometry.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2));
+    geometry.setAttribute('normal', new THREE.Float32BufferAttribute(norms, 3));
+    return geometry;
+  }, [width, t, d]);
+
+  // 엣지 라인 (wireframe/solid 모두)
+  const edgeLines = useMemo(() => {
+    const hw = width / 2, ht = t / 2, hd = d / 2;
+    // 8꼭짓점 좌표
+    const V = [
+      [-hw, +ht, +hd], [-hw, +ht, -hd], [-hw, -ht, -hd], [-hw, -ht, +hd - t],
+      [+hw, +ht, +hd], [+hw, +ht, -hd], [+hw, -ht, -hd], [+hw, -ht, +hd - t],
+    ];
+    // 12개 엣지 (직사각형 8면체)
+    const edges: [number, number][] = [
+      // 상면
+      [0,4], [4,5], [5,1], [1,0],
+      // 하면
+      [3,7], [7,6], [6,2], [2,3],
+      // 수직 엣지
+      [1,2], [5,6],
+      // 45도 경사 엣지
+      [0,3], [4,7],
+    ];
+    return edges.map(([a, b]) => ({
+      start: V[a] as [number, number, number],
+      end: V[b] as [number, number, number],
+    }));
+  }, [width, t, d]);
+
+  const lineColor = renderMode === 'wireframe' ? '#ffffff' : '#555555';
+
+  return (
+    <group position={position}>
+      <mesh material={material}>
+        <primitive object={geom} attach="geometry" />
+      </mesh>
+      {edgeLines.map((edge, i) => (
+        <line key={`hplate-edge-${i}`}>
+          <bufferGeometry>
+            <bufferAttribute attach="attributes-position" array={new Float32Array([
+              ...edge.start, ...edge.end
+            ])} count={2} itemSize={3} />
+          </bufferGeometry>
+          <lineBasicMaterial color={lineColor} />
+        </line>
+      ))}
+    </group>
+  );
+});
+
+/**
+ * 졸리컷 수직 앞판 — 뒷면 상단 모서리가 45도로 가공된 판
+ * 측면(YZ) 단면:
+ *
+ *            뒤    앞
+ *         3───────0   상면(앞면쪽만, 뒷면은 후퇴)
+ *          \      |
+ *    45도→  \     | 앞면
+ *            \    |
+ *         2───────1   하면
+ *            뒷면
+ */
+const JollyCutVerticalPlate: React.FC<{
+  width: number; height: number; thickness: number;
+  position: [number, number, number];
+  material: THREE.Material;
+  renderMode: 'solid' | 'wireframe';
+}> = React.memo(({ width, height: h, thickness: t, position, material, renderMode }) => {
+  const geom = useMemo(() => {
+    const hw = width / 2, hh = h / 2, ht = t / 2;
+    // 8꼭짓점 (측면에서 보면 사다리꼴)
+    // 앞면(z=+ht) 4개: 전체 높이
+    // 뒷면(z=-ht) 4개: 높이 h-t (상단이 t만큼 후퇴 = 아래로 내려옴)
+    //
+    // 0=좌-상-앞, 1=좌-하-앞, 2=좌-하-뒤, 3=좌-상후퇴-뒤
+    // 4=우-상-앞, 5=우-하-앞, 6=우-하-뒤, 7=우-상후퇴-뒤
+    const vertices = new Float32Array([
+      -hw, +hh, +ht,    // 0: 좌-상-앞
+      -hw, -hh, +ht,    // 1: 좌-하-앞
+      -hw, -hh, -ht,    // 2: 좌-하-뒤
+      -hw, +hh - t, -ht, // 3: 좌-상후퇴-뒤 (뒷면 상단이 t만큼 아래)
+      +hw, +hh, +ht,    // 4: 우-상-앞
+      +hw, -hh, +ht,    // 5: 우-하-앞
+      +hw, -hh, -ht,    // 6: 우-하-뒤
+      +hw, +hh - t, -ht, // 7: 우-상후퇴-뒤
+    ]);
+
+    const pos: number[] = [];
+    const uvs: number[] = [];
+    const norms: number[] = [];
+    const v = (i: number) => [vertices[i*3], vertices[i*3+1], vertices[i*3+2]] as [number,number,number];
+
+    const addFace = (
+      v0: [number,number,number], v1: [number,number,number],
+      v2: [number,number,number], v3: [number,number,number],
+      normal: [number,number,number],
+      uv0: [number,number], uv1: [number,number], uv2: [number,number], uv3: [number,number]
+    ) => {
+      pos.push(...v0, ...v1, ...v2);
+      uvs.push(...uv0, ...uv1, ...uv2);
+      norms.push(...normal, ...normal, ...normal);
+      pos.push(...v0, ...v2, ...v3);
+      uvs.push(...uv0, ...uv2, ...uv3);
+      norms.push(...normal, ...normal, ...normal);
+    };
+
+    // 앞면 (z=+ht): v0(좌상),v4(우상),v5(우하),v1(좌하) — 법선 +Z
+    addFace(v(0), v(4), v(5), v(1), [0,0,1], [0,1], [1,1], [1,0], [0,0]);
+    // 뒷면 (z=-ht): v3(좌상후퇴),v2(좌하),v6(우하),v7(우상후퇴) — 법선 -Z
+    addFace(v(3), v(2), v(6), v(7), [0,0,-1], [0,0], [0,1], [1,1], [1,0]);
+    // 하면 (y=-hh): v1(좌앞),v5(우앞),v6(우뒤),v2(좌뒤) — 법선 ↓
+    addFace(v(1), v(5), v(6), v(2), [0,-1,0], [0,1], [1,1], [1,0], [0,0]);
+    // 45도 경사면 (상면): v0(좌상앞),v4(우상앞),v7(우상후퇴뒤),v3(좌상후퇴뒤) — 법선 대각선(위+뒤)
+    const n45 = [0, Math.SQRT1_2, -Math.SQRT1_2] as [number,number,number];
+    addFace(v(0), v(4), v(7), v(3), n45, [0,1], [1,1], [1,0], [0,0]);
+    // 좌측면 (x=-hw): v0(상앞),v1(하앞),v2(하뒤),v3(상뒤후퇴) — 법선 -X
+    addFace(v(0), v(1), v(2), v(3), [-1,0,0], [0,1], [0,0], [1,0], [1,1]);
+    // 우측면 (x=+hw): v4(상앞),v7(상뒤후퇴),v6(하뒤),v5(하앞) — 법선 +X
+    addFace(v(4), v(7), v(6), v(5), [1,0,0], [1,1], [0,1], [0,0], [1,0]);
+
+    const geometry = new THREE.BufferGeometry();
+    geometry.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+    geometry.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2));
+    geometry.setAttribute('normal', new THREE.Float32BufferAttribute(norms, 3));
+    return geometry;
+  }, [width, h, t]);
+
+  const edgeLines = useMemo(() => {
+    const hw = width / 2, hh = h / 2, ht = t / 2;
+    const V = [
+      [-hw, +hh, +ht], [-hw, -hh, +ht], [-hw, -hh, -ht], [-hw, +hh - t, -ht],
+      [+hw, +hh, +ht], [+hw, -hh, +ht], [+hw, -hh, -ht], [+hw, +hh - t, -ht],
+    ];
+    const edges: [number, number][] = [
+      // 앞면
+      [0,4], [4,5], [5,1], [1,0],
+      // 하면/뒷면
+      [2,6], [6,7], [7,3], [3,2],
+      // 수직(앞뒤) 엣지
+      [1,2], [5,6],
+      // 45도 경사 엣지
+      [0,3], [4,7],
+    ];
+    return edges.map(([a, b]) => ({
+      start: V[a] as [number, number, number],
+      end: V[b] as [number, number, number],
+    }));
+  }, [width, h, t]);
+
+  const lineColor = renderMode === 'wireframe' ? '#ffffff' : '#555555';
+
+  return (
+    <group position={position}>
+      <mesh material={material}>
+        <primitive object={geom} attach="geometry" />
+      </mesh>
+      {edgeLines.map((edge, i) => (
+        <line key={`vplate-edge-${i}`}>
+          <bufferGeometry>
+            <bufferAttribute attach="attributes-position" array={new Float32Array([
+              ...edge.start, ...edge.end
+            ])} count={2} itemSize={3} />
+          </bufferGeometry>
+          <lineBasicMaterial color={lineColor} />
+        </line>
+      ))}
+    </group>
+  );
+});
+
+/**
  * 터치 레그라박스 서랍 + 마이다 (인출 애니메이션 포함)
  * - 도어올림 터치 / 상판내림 터치 전용
  * - 도어 오픈 시 서랍 본체 + 마이다 + 레그라 측판이 함께 Z축으로 슬라이드
@@ -1061,108 +1349,48 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
         />
       )}
 
-      {/* 상판내림: 수평판 + 수직 앞판 (BoxWithEdges) + 45도 연귀 대각선 */}
+      {/* 상판내림: 수평판(45도 연귀) + 수직 앞판(45도 연귀) — 졸리컷 */}
       {showFurniture && stoneTopData && stoneTopMaterial && isTopDown && (() => {
         const t = stoneTopData.thickness;
         const absDoorTopGap = Math.abs(doorTopGap ?? -80);
         const doorGapMm = 20;
         const frontPlateH = (absDoorTopGap - doorGapMm) * 0.01;
         const cabinetTopY = cabinetYPosition + adjustedHeight / 2;
-        const hPosY = cabinetTopY + t / 2;
-        const vPosY = cabinetTopY - frontPlateH / 2;
-        // 수직 앞판 앞면 = 수평판 앞면 (같은 Z). 수직 앞판 중심 = 앞면 - t/2
-        const vPosZ = stoneTopData.zOffset + stoneTopData.depth / 2 - t / 2;
-        // 45도 연귀 대각선 좌표 (수평판 하면-앞면 모서리 ~ 수평판 상면-뒤쪽 t만큼)
-        const halfW = stoneTopData.width / 2;
-        const diagFrontY = cabinetTopY;           // 수평판 하면 = 수직판 상면
-        const diagFrontZ = stoneTopData.zOffset + stoneTopData.depth / 2; // 앞면
-        const diagBackY = cabinetTopY + t;        // 수평판 상면
-        const diagBackZ = diagFrontZ - t;         // 앞면에서 t만큼 뒤
+        const W = stoneTopData.width;
+        const D = stoneTopData.depth;
+        const halfW = W / 2;
+        const halfT = t / 2;
+        const halfD = D / 2;
+        const halfFH = frontPlateH / 2;
+        const xOff = stoneTopData.xOffset;
+        const zOff = stoneTopData.zOffset;
+        // 수평판 앞면 Z
+        const frontZ = zOff + halfD;
+
         return (
           <>
-            <BoxWithEdges
-              args={[stoneTopData.width, t, stoneTopData.depth]}
-              position={[stoneTopData.xOffset, hPosY, stoneTopData.zOffset]}
+            {/* 수평 상판 — 앞면 하단이 45도로 잘린 형태 (측면에서 보면 사다리꼴)
+                상면: 전체 depth, 하면: depth-t (앞쪽 t만큼 짧음)
+                45도 경사면: 상면 앞끝(frontZ) → 하면 앞끝(frontZ-t) */}
+            <JollyCutHorizontalPlate
+              width={W}
+              thickness={t}
+              depth={D}
+              position={[xOff, cabinetTopY + halfT, zOff]}
               material={stoneTopMaterial}
               renderMode={renderMode}
-              panelName="인조대리석 상판"
             />
-            <BoxWithEdges
-              args={[stoneTopData.width, frontPlateH, t]}
-              position={[stoneTopData.xOffset, vPosY, vPosZ]}
+            {/* 수직 앞판 — 뒤면 상단이 45도로 잘린 형태
+                앞면: 전체 높이, 뒷면: 높이-t (위쪽 t만큼 짧음)
+                45도 경사면: 앞면 상단 → 뒷면 상단 */}
+            <JollyCutVerticalPlate
+              width={W}
+              height={frontPlateH}
+              thickness={t}
+              position={[xOff, cabinetTopY - halfFH, frontZ - halfT]}
               material={stoneTopMaterial}
               renderMode={renderMode}
-              panelName="인조대리석 앞판"
             />
-            {/* 45도 연귀 — 양쪽 측면 대각선 면 + 엣지 */}
-            {(() => {
-              // 좌측면 45도 삼각형 2개 (quad): 수평판 하면-앞면 → 수평판 상면-뒤쪽t
-              // 좌측 X좌표
-              const xL = stoneTopData.xOffset - halfW;
-              const xR = stoneTopData.xOffset + halfW;
-              // 대각선 quad의 4개 꼭짓점 (좌측면 기준, YZ 평면)
-              // v0: 앞면 하단 (수직판 상단-앞면)
-              // v1: 앞면 상단 (수평판 상면-앞면) — 실제로는 없으나, 대각선이므로
-              // 실제 졸리컷 대각면: 앞면-하단 ~ 뒤쪽t-상단 (45도)
-              // 좌측 삼각형 pair
-              const positions_L = new Float32Array([
-                // 삼각형 1: v0-v1-v2
-                xL, diagFrontY, diagFrontZ,     // 앞면 하단
-                xL, diagBackY, diagBackZ,       // 뒤쪽 상단
-                xL, diagBackY, diagFrontZ,      // 앞면 상단
-                // 삼각형 2: v0-v3-v1
-                xL, diagFrontY, diagFrontZ,     // 앞면 하단
-                xL, diagFrontY, diagBackZ,      // 뒤쪽 하단
-                xL, diagBackY, diagBackZ,       // 뒤쪽 상단
-              ]);
-              // 우측 삼각형 pair (법선 반대)
-              const positions_R = new Float32Array([
-                // 삼각형 1: v0-v2-v1 (우측은 winding 반대)
-                xR, diagFrontY, diagFrontZ,
-                xR, diagBackY, diagFrontZ,
-                xR, diagBackY, diagBackZ,
-                // 삼각형 2: v0-v1-v3
-                xR, diagFrontY, diagFrontZ,
-                xR, diagBackY, diagBackZ,
-                xR, diagFrontY, diagBackZ,
-              ]);
-              const lineColor = renderMode === 'wireframe' ? '#ffffff' : '#666666';
-              return (
-                <>
-                  {/* 좌측 45도 대각면 */}
-                  <mesh>
-                    <bufferGeometry>
-                      <bufferAttribute attach="attributes-position" array={positions_L} count={6} itemSize={3} />
-                    </bufferGeometry>
-                    <meshStandardMaterial color={stoneTopMaterial instanceof THREE.MeshStandardMaterial ? stoneTopMaterial.color : '#cccccc'} side={THREE.DoubleSide} />
-                  </mesh>
-                  {/* 우측 45도 대각면 */}
-                  <mesh>
-                    <bufferGeometry>
-                      <bufferAttribute attach="attributes-position" array={positions_R} count={6} itemSize={3} />
-                    </bufferGeometry>
-                    <meshStandardMaterial color={stoneTopMaterial instanceof THREE.MeshStandardMaterial ? stoneTopMaterial.color : '#cccccc'} side={THREE.DoubleSide} />
-                  </mesh>
-                  {/* 45도 대각선 엣지 */}
-                  <line>
-                    <bufferGeometry>
-                      <bufferAttribute attach="attributes-position" array={new Float32Array([
-                        xL, diagFrontY, diagFrontZ, xL, diagBackY, diagBackZ,
-                      ])} count={2} itemSize={3} />
-                    </bufferGeometry>
-                    <lineBasicMaterial color={lineColor} />
-                  </line>
-                  <line>
-                    <bufferGeometry>
-                      <bufferAttribute attach="attributes-position" array={new Float32Array([
-                        xR, diagFrontY, diagFrontZ, xR, diagBackY, diagBackZ,
-                      ])} count={2} itemSize={3} />
-                    </bufferGeometry>
-                    <lineBasicMaterial color={lineColor} />
-                  </line>
-                </>
-              );
-            })()}
           </>
         );
       })()}
