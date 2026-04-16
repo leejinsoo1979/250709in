@@ -843,43 +843,37 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
       }
 
       // === 반턱(rebate) 점선 렌더링 ===
+      // 바닥판 좌우 양쪽 긴 변을 따라 앞→뒤 전체 길이로 반턱 가공
+      // rebate.width=38mm (폭 방향 안쪽), rebate.height=7.5mm (두께 방향, 2D에선 표현 불필요)
+      // 2D 상면도에서는 양쪽 긴 변에서 38mm 안쪽에 평행선만 표시
       if (panel.rebate && panel.rebate.position === 'bottom-both-sides') {
         ctx.save();
         ctx.setLineDash([6 / scale, 4 / scale]);
         ctx.strokeStyle = '#ef4444'; // 빨간 점선
         ctx.lineWidth = 1.5 / (baseScale * scale);
 
-        const rW = panel.rebate.width;  // 38mm — 폭 방향(width) 안쪽
-        const rH = panel.rebate.height; // 7.5mm — 길이 방향(length) 안쪽
+        const rW = panel.rebate.width; // 38mm — 폭 방향 안쪽
 
         if (panel.rotated) {
-          // 회전: displayed width=panel.height(length=깊이), height=panel.width(폭)
-          // 반턱: x 양끝에서 rH만큼, y 양끝에서 rW만큼
-          // 좌측 하단 (x=0, y+height)
+          // 회전: displayed width=length(깊이), height=width(폭)
+          // 양쪽 폭 변 = y방향 → y+rW, y+height-rW에 수평선
           ctx.beginPath();
-          ctx.moveTo(x + rH, y + height);
-          ctx.lineTo(x + rH, y + height - rW);
-          ctx.lineTo(x, y + height - rW);
+          ctx.moveTo(x, y + rW);
+          ctx.lineTo(x + width, y + rW);
           ctx.stroke();
-          // 우측 하단 (x+width, y+height)
           ctx.beginPath();
-          ctx.moveTo(x + width - rH, y + height);
-          ctx.lineTo(x + width - rH, y + height - rW);
+          ctx.moveTo(x, y + height - rW);
           ctx.lineTo(x + width, y + height - rW);
           ctx.stroke();
         } else {
-          // 비회전: displayed width=panel.width(폭), height=panel.height(length=깊이)
-          // 반턱: y 양끝에서 rH만큼, x 양끝에서 rW만큼
-          // 좌측 하단 (x=0, y+height)
+          // 비회전: displayed width=width(폭), height=length(깊이)
+          // 양쪽 폭 변 = x방향 → x+rW, x+width-rW에 수직선
           ctx.beginPath();
-          ctx.moveTo(x, y + height - rH);
-          ctx.lineTo(x + rW, y + height - rH);
+          ctx.moveTo(x + rW, y);
           ctx.lineTo(x + rW, y + height);
           ctx.stroke();
-          // 우측 하단 (x+width, y+height)
           ctx.beginPath();
-          ctx.moveTo(x + width, y + height - rH);
-          ctx.lineTo(x + width - rW, y + height - rH);
+          ctx.moveTo(x + width - rW, y);
           ctx.lineTo(x + width - rW, y + height);
           ctx.stroke();
         }
