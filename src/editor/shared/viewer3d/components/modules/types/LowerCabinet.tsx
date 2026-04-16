@@ -1061,38 +1061,69 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
         />
       )}
 
-      {/* 상판내림: 수평판 + 수직 앞판 (BoxWithEdges 2개로 L자 구성) */}
+      {/* 상판내림: 졸리컷 L자 (ExtrudeGeometry로 45도 연귀 표현) */}
       {showFurniture && stoneTopData && stoneTopMaterial && isTopDown && (() => {
         const t = stoneTopData.thickness;
         const absDoorTopGap = Math.abs(doorTopGap ?? -80);
         const doorGapMm = 20;
-        const frontPlateH = (absDoorTopGap - doorGapMm) * 0.01; // 수직 앞판 높이 (수평판 하면 ~ 도어+20mm)
+        const frontPlateH = (absDoorTopGap - doorGapMm) * 0.01;
+        const hW = stoneTopData.width;
+        const hD = stoneTopData.depth;
         const cabinetTopY = cabinetYPosition + adjustedHeight / 2;
-        // 수평판: 캐비넷 상면 위
-        const hPosY = cabinetTopY + t / 2;
-        // 수직 앞판: 수평판 하면에서 아래로
-        const vPosY = cabinetTopY - frontPlateH / 2;
-        // 수직 앞판 Z: 수평판 앞면에 맞닿음
-        const vPosZ = stoneTopData.zOffset + stoneTopData.depth / 2 + t / 2;
+        const halfD = hD / 2;
+
+        // 졸리컷 L자 단면 (Shape XY: X→깊이, Y→높이)
+        const shape = new THREE.Shape();
+        shape.moveTo(-halfD, 0);           // 뒤쪽 하면
+        shape.lineTo(-halfD, t);           // 뒤쪽 상면
+        shape.lineTo(halfD, t);            // 앞쪽 상면
+        shape.lineTo(halfD, t - frontPlateH - t); // 수직 앞판 하단 (앞면)
+        shape.lineTo(halfD - t, t - frontPlateH - t); // 수직 앞판 하단 (뒷면)
+        shape.lineTo(halfD - t, 0);        // 연귀 끝 → 수평판 하면
+        shape.lineTo(-halfD, 0);           // 닫기
+
+        const geometry = new THREE.ExtrudeGeometry(shape, { steps: 1, depth: hW, bevelEnabled: false });
+        geometry.translate(0, 0, -hW / 2);
+        geometry.rotateY(-Math.PI / 2);
+
+        // UV: 각 vertex의 position 기반 planar 매핑 (면 노멀 방향별)
+        const posAttr = geometry.getAttribute('position') as THREE.BufferAttribute;
+        const normAttr = geometry.getAttribute('normal') as THREE.BufferAttribute;
+        const uvAttr = geometry.getAttribute('uv') as THREE.BufferAttribute;
+        geometry.computeBoundingBox();
+        const bb = geometry.boundingBox!;
+        for (let i = 0; i < uvAttr.count; i++) {
+          const nx = Math.abs(normAttr.getX(i));
+          const ny = Math.abs(normAttr.getY(i));
+          const nz = Math.abs(normAttr.getZ(i));
+          const px = posAttr.getX(i);
+          const py = posAttr.getY(i);
+          const pz = posAttr.getZ(i);
+          if (nx >= ny && nx >= nz) {
+            // X-facing face (좌/우 측면): Z,Y 매핑
+            uvAttr.setXY(i, (pz - bb.min.z) / (bb.max.z - bb.min.z), (py - bb.min.y) / (bb.max.y - bb.min.y));
+          } else if (ny >= nx && ny >= nz) {
+            // Y-facing face (상/하면): X,Z 매핑
+            uvAttr.setXY(i, (px - bb.min.x) / (bb.max.x - bb.min.x), (pz - bb.min.z) / (bb.max.z - bb.min.z));
+          } else {
+            // Z-facing face (앞/뒤면): X,Y 매핑
+            uvAttr.setXY(i, (px - bb.min.x) / (bb.max.x - bb.min.x), (py - bb.min.y) / (bb.max.y - bb.min.y));
+          }
+        }
+        uvAttr.needsUpdate = true;
+
         return (
-          <>
-            {/* 수평판 */}
-            <BoxWithEdges
-              args={[stoneTopData.width, t, stoneTopData.depth]}
-              position={[stoneTopData.xOffset, hPosY, stoneTopData.zOffset]}
-              material={stoneTopMaterial}
-              renderMode={renderMode}
-              panelName="인조대리석 상판"
-            />
-            {/* 수직 앞판 */}
-            <BoxWithEdges
-              args={[stoneTopData.width, frontPlateH, t]}
-              position={[stoneTopData.xOffset, vPosY, vPosZ]}
-              material={stoneTopMaterial}
-              renderMode={renderMode}
-              panelName="인조대리석 앞판"
-            />
-          </>
+          <group position={[stoneTopData.xOffset, cabinetTopY, stoneTopData.zOffset]}>
+            {renderMode === 'solid' && (
+              <mesh geometry={geometry} material={stoneTopMaterial} />
+            )}
+            {renderMode === 'wireframe' && (
+              <lineSegments>
+                <edgesGeometry args={[geometry]} />
+                <lineBasicMaterial color="#ffffff" />
+              </lineSegments>
+            )}
+          </group>
         );
       })()}
 
