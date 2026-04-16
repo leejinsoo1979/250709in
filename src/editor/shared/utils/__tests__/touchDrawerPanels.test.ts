@@ -44,13 +44,13 @@ describe('Touch Drawer Panel Generation', () => {
       expect(p.width).toBeGreaterThan(0);
       expect(p.height).toBeGreaterThan(0);
       expect(p.thickness).toBe(15);
-      expect(p.material).toBe('MDF');
+      expect(p.material).toBe('PB'); // 뒷판은 PB
     });
     bottomPanels.forEach((p: any) => {
       expect(p.width).toBeGreaterThan(0);
       expect(p.depth).toBeGreaterThan(0);
       expect(p.thickness).toBe(15);
-      expect(p.material).toBe('MDF');
+      expect(p.material).toBe('PB'); // 레그라 서랍 바닥판은 PB
     });
   });
 

@@ -401,8 +401,8 @@ function PageInner(){
           // 재질 결정: calculatePanelDetails에서 이미 올바른 material 설정됨
           // p.material을 우선 존중하고, 누락 시 패널 이름으로 판단
           let material = p.material || 'PB';
-          if (panelName.includes('백패널') || (panelName.includes('서랍') && panelName.includes('바닥'))) {
-            material = 'MDF'; // 백패널·서랍바닥은 항상 MDF
+          if (panelName.includes('백패널')) {
+            material = 'MDF'; // 백패널은 항상 MDF
           } else if (panelName.includes('도어') || panelName.includes('door') ||
               panelName.includes('엔드') || panelName.includes('end') ||
               panelName.includes('프레임') || panelName.includes('서라운드')) {
@@ -537,8 +537,8 @@ function PageInner(){
         const grain: Grain = isBackPanel ? 'H' : (p.grain === 'NONE' ? 'NONE' : 'H');
         // 재질 결정: calculatePanelDetails에서 이미 올바른 material 설정됨
         let material = p.material || 'PB';
-        if (panelName.includes('백패널') || (panelName.includes('서랍') && panelName.includes('바닥'))) {
-          material = 'MDF'; // 백패널·서랍바닥은 항상 MDF
+        if (panelName.includes('백패널')) {
+          material = 'MDF'; // 백패널은 항상 MDF
         } else if (panelName.includes('도어') || panelName.includes('door') ||
             panelName.includes('엔드') || panelName.includes('end') ||
             panelName.includes('프레임') || panelName.includes('서라운드')) {

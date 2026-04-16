@@ -87,7 +87,7 @@ function applyCNCConversion(livePanels: any[]): CutlistPanel[] {
     const grain: Grain = isBackPanel ? 'H' : (p.grain === 'NONE' ? 'NONE' : 'H');
 
     let material = p.material || 'PB';
-    if (panelName.includes('백패널') || (panelName.includes('서랍') && panelName.includes('바닥'))) {
+    if (panelName.includes('백패널')) {
       material = 'MDF';
     } else if (
       panelName.includes('도어') || panelName.includes('door') ||
@@ -145,7 +145,7 @@ describe('Full Pipeline Integration: 터치서랍 뒷판/바닥판', () => {
         // 뒷판에는 depth가 없어야 함
         expect(p.depth).toBeUndefined();
         expect(p.thickness).toBe(15);
-        expect(p.material).toBe('MDF');
+        expect(p.material).toBe('PB'); // 레그라 서랍 뒷판은 PB
       });
     });
 
@@ -169,7 +169,7 @@ describe('Full Pipeline Integration: 터치서랍 뒷판/바닥판', () => {
         // 바닥판에는 height가 없어야 함
         expect(p.height).toBeUndefined();
         expect(p.thickness).toBe(15);
-        expect(p.material).toBe('MDF');
+        expect(p.material).toBe('PB'); // 레그라 서랍 바닥판은 PB
       });
     });
   });
@@ -178,7 +178,7 @@ describe('Full Pipeline Integration: 터치서랍 뒷판/바닥판', () => {
   describe('Stage 3: useLivePanelData filter (header removal + dimension check)', () => {
     it('뒷판 (has width) passes hasValidDimensions check', () => {
       // 뒷판: { width, height } — width !== undefined → passes
-      const panel = { name: '터치서랍1 뒷판', width: 446, height: 120, thickness: 15, material: 'MDF' };
+      const panel = { name: '터치서랍1 뒷판', width: 446, height: 120, thickness: 15, material: 'PB' };
       const filtered = applyLivePanelFilter([panel]);
       expect(filtered).toHaveLength(1);
       expect(filtered[0].name).toBe('터치서랍1 뒷판');
@@ -186,7 +186,7 @@ describe('Full Pipeline Integration: 터치서랍 뒷판/바닥판', () => {
 
     it('바닥판 (has width) passes hasValidDimensions check', () => {
       // 바닥판: { width, depth } — width !== undefined → passes
-      const panel = { name: '터치서랍1 바닥판', width: 446, depth: 580, thickness: 15, material: 'MDF' };
+      const panel = { name: '터치서랍1 바닥판', width: 446, depth: 580, thickness: 15, material: 'PB' };
       const filtered = applyLivePanelFilter([panel]);
       expect(filtered).toHaveLength(1);
       expect(filtered[0].name).toBe('터치서랍1 바닥판');
@@ -195,8 +195,8 @@ describe('Full Pipeline Integration: 터치서랍 뒷판/바닥판', () => {
     it('section headers are removed by filter', () => {
       const items = [
         { name: '=== 서랍 및 도어 ===' },
-        { name: '터치서랍1 바닥판', width: 446, depth: 580, thickness: 15, material: 'MDF' },
-        { name: '터치서랍1 뒷판', width: 446, height: 120, thickness: 15, material: 'MDF' },
+        { name: '터치서랍1 바닥판', width: 446, depth: 580, thickness: 15, material: 'PB' },
+        { name: '터치서랍1 뒷판', width: 446, height: 120, thickness: 15, material: 'PB' },
       ];
       const filtered = applyLivePanelFilter(items);
       expect(filtered).toHaveLength(2);
@@ -214,14 +214,14 @@ describe('Full Pipeline Integration: 터치서랍 뒷판/바닥판', () => {
   // ─ Stage 4: map (height = height || depth) ──────────────────────────────────
   describe('Stage 4: useLivePanelData map — height = panel.height || panel.depth', () => {
     it('뒷판: height preserved from panel.height', () => {
-      const panel = { name: '터치서랍1 뒷판', width: 446, height: 120, thickness: 15, material: 'MDF' };
+      const panel = { name: '터치서랍1 뒷판', width: 446, height: 120, thickness: 15, material: 'PB' };
       const mapped = applyLivePanelMap([panel]);
       expect(mapped[0].height).toBe(120);    // panel.height exists → used
       expect(mapped[0].width).toBe(446);
     });
 
     it('바닥판: height resolved from panel.depth (no panel.height)', () => {
-      const panel = { name: '터치서랍1 바닥판', width: 446, depth: 580, thickness: 15, material: 'MDF' };
+      const panel = { name: '터치서랍1 바닥판', width: 446, depth: 580, thickness: 15, material: 'PB' };
       const mapped = applyLivePanelMap([panel]);
       expect(mapped[0].height).toBe(580);    // panel.depth fills in as height
       expect(mapped[0].width).toBe(446);
@@ -229,14 +229,14 @@ describe('Full Pipeline Integration: 터치서랍 뒷판/바닥판', () => {
 
     it('panel.height=0 and panel.depth set: depth is used', () => {
       // guard: if height=0 (falsy), depth should still be picked up
-      const panel = { name: '터치서랍1 바닥판', width: 446, height: 0, depth: 580, thickness: 15, material: 'MDF' };
+      const panel = { name: '터치서랍1 바닥판', width: 446, height: 0, depth: 580, thickness: 15, material: 'PB' };
       const mapped = applyLivePanelMap([panel]);
       expect(mapped[0].height).toBe(580);
     });
 
     it('mapped panel height is non-zero for both panel types', () => {
-      const backPanel  = { name: '터치서랍1 뒷판',  width: 446, height: 120, thickness: 15, material: 'MDF' };
-      const bottomPanel = { name: '터치서랍1 바닥판', width: 446, depth:  580, thickness: 15, material: 'MDF' };
+      const backPanel  = { name: '터치서랍1 뒷판',  width: 446, height: 120, thickness: 15, material: 'PB' };
+      const bottomPanel = { name: '터치서랍1 바닥판', width: 446, depth:  580, thickness: 15, material: 'PB' };
       const mapped = applyLivePanelMap([backPanel, bottomPanel]);
       expect(mapped[0].height).toBeGreaterThan(0);
       expect(mapped[1].height).toBeGreaterThan(0);
@@ -265,14 +265,14 @@ describe('Full Pipeline Integration: 터치서랍 뒷판/바닥판', () => {
   describe('Stage 6: CNCOptimizerPro L/W swap for touch drawer panels', () => {
     it('뒷판 HORIZONTAL: length=width(넓은쪽), width=height(좁은쪽)', () => {
       // After Stage 4 map: { width: 446, height: 120, grain: 'HORIZONTAL' }
-      const livePanels = [{ name: '터치서랍1 뒷판', width: 446, height: 120, thickness: 15, material: 'MDF', grain: 'HORIZONTAL' }];
+      const livePanels = [{ name: '터치서랍1 뒷판', width: 446, height: 120, thickness: 15, material: 'PB', grain: 'HORIZONTAL' }];
       const cnc = applyCNCConversion(livePanels);
 
       // HORIZONTAL → length=p.width, width=p.height
       expect(cnc[0].length).toBe(446);   // X축 폭 = length
       expect(cnc[0].width).toBe(120);    // height = width
       expect(cnc[0].grain).toBe('H');
-      expect(cnc[0].material).toBe('MDF');
+      expect(cnc[0].material).toBe('PB'); // 뒷판은 PB
       expect(cnc[0].thickness).toBe(15);
     });
 
@@ -282,28 +282,27 @@ describe('Full Pipeline Integration: 터치서랍 뒷판/바닥판', () => {
       // NOTE: CNCOptimizerPro does NOT call normalizeDimensions, so length=446 < width=580
       // is intentional — the raw X-axis dimension is preserved as "length" per the
       // grain-based convention, and the separate normalizePanels utility would swap if needed.
-      const livePanels = [{ name: '터치서랍1 바닥판', width: 446, height: 580, thickness: 15, material: 'MDF', grain: 'HORIZONTAL' }];
+      const livePanels = [{ name: '터치서랍1 바닥판', width: 446, height: 580, thickness: 15, material: 'PB', grain: 'HORIZONTAL' }];
       const cnc = applyCNCConversion(livePanels);
 
       // HORIZONTAL → length = p.width (X축), width = p.height (depth값)
       expect(cnc[0].length).toBe(446);   // p.width (cabinet inner width)
       expect(cnc[0].width).toBe(580);    // p.height = raw depth (cabinet depth)
       expect(cnc[0].grain).toBe('H');
-      expect(cnc[0].material).toBe('MDF');
+      expect(cnc[0].material).toBe('PB'); // 레그라 서랍 바닥판은 PB
       expect(cnc[0].thickness).toBe(15);
     });
 
-    it('CNC material override: 서랍바닥 → forced to MDF regardless of input material', () => {
+    it('CNC material: 서랍바닥 material은 calculatePanelDetails의 값(PB)을 존중', () => {
       const livePanels = [{ name: '터치서랍1 바닥판', width: 446, height: 580, thickness: 15, material: 'PB', grain: 'HORIZONTAL' }];
       const cnc = applyCNCConversion(livePanels);
-      // panelName includes '서랍' AND '바닥' → forced MDF
-      expect(cnc[0].material).toBe('MDF');
+      expect(cnc[0].material).toBe('PB');
     });
 
     it('both panels have non-zero length and width after CNC conversion', () => {
       const livePanels = [
-        { name: '터치서랍1 뒷판',  width: 446, height: 120, thickness: 15, material: 'MDF', grain: 'HORIZONTAL' },
-        { name: '터치서랍1 바닥판', width: 446, height: 580, thickness: 15, material: 'MDF', grain: 'HORIZONTAL' },
+        { name: '터치서랍1 뒷판',  width: 446, height: 120, thickness: 15, material: 'PB', grain: 'HORIZONTAL' },
+        { name: '터치서랍1 바닥판', width: 446, height: 580, thickness: 15, material: 'PB', grain: 'HORIZONTAL' },
       ];
       const cnc = applyCNCConversion(livePanels);
       cnc.forEach(p => {
@@ -381,14 +380,14 @@ describe('Full Pipeline Integration: 터치서랍 뒷판/바닥판', () => {
         cncBack.forEach(p => {
           expect(p.length).toBeGreaterThan(0);
           expect(p.width).toBeGreaterThan(0);
-          expect(p.material).toBe('MDF');
+          expect(p.material).toBe('PB'); // 레그라 서랍 뒷판은 PB
           expect(p.grain).toBe('H');
           expect(p.thickness).toBe(15);
         });
         cncBottom.forEach(p => {
           expect(p.length).toBeGreaterThan(0);
           expect(p.width).toBeGreaterThan(0);
-          expect(p.material).toBe('MDF');   // forced by material-override logic
+          expect(p.material).toBe('PB'); // 레그라 서랍 바닥판은 PB
           expect(p.grain).toBe('H');
           expect(p.thickness).toBe(15);
         });
@@ -469,12 +468,12 @@ describe('Full Pipeline Integration: 터치서랍 뒷판/바닥판', () => {
         cncBack.forEach(p => {
           expect(p.length).toBeGreaterThan(0);
           expect(p.width).toBeGreaterThan(0);
-          expect(p.material).toBe('MDF');
+          expect(p.material).toBe('PB');
         });
         cncBottom.forEach(p => {
           expect(p.length).toBeGreaterThan(0);
           expect(p.width).toBeGreaterThan(0);
-          expect(p.material).toBe('MDF');
+          expect(p.material).toBe('PB');
         });
       }
     });

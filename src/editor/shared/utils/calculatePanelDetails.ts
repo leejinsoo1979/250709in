@@ -1706,8 +1706,8 @@ export const calculatePanelDetails = (
       }
 
       extDrawerPanels.push(
-        { name: `터치서랍${drawerNum} 바닥판`, width: Math.round(drawerBottomWidthMm), depth: drawerDepthMm, thickness: drawerThicknessMm, material: 'MDF' },
-        { name: `터치서랍${drawerNum} 뒷판`, width: Math.round(drawerBackWidthMm), height: Math.round(backH), thickness: drawerThicknessMm, material: 'MDF' },
+        { name: `터치서랍${drawerNum} 바닥판`, width: Math.round(drawerBottomWidthMm), depth: drawerDepthMm, thickness: drawerThicknessMm, material: 'PB' },
+        { name: `터치서랍${drawerNum} 뒷판`, width: Math.round(drawerBackWidthMm), height: Math.round(backH), thickness: drawerThicknessMm, material: 'PB' },
         { name: `터치서랍${drawerNum}(마이다)`, width: customWidth - 3, height: maidaH, thickness: 18.5, material: 'PET' },
       );
     });
@@ -1730,7 +1730,7 @@ export const calculatePanelDetails = (
       width: drawerBottomWidth,
       depth: drawerDepth,
       thickness: drawerThickness,
-      material: 'MDF',
+      material: 'PB',
       rebate: { width: rebateWidthMm, height: rebateHeightMm, position: 'bottom-both-sides' },
     });
     extDrawerPanels.push({
@@ -1738,7 +1738,7 @@ export const calculatePanelDetails = (
       width: drawerBackWidth,
       height: 228 - drawerThickness, // 총높이 - 바닥판두께
       thickness: drawerThickness,
-      material: 'MDF',
+      material: 'PB',
     });
     // 2단 서랍: 총 높이 164mm
     extDrawerPanels.push({
@@ -1746,7 +1746,7 @@ export const calculatePanelDetails = (
       width: drawerBottomWidth,
       depth: drawerDepth,
       thickness: drawerThickness,
-      material: 'MDF',
+      material: 'PB',
       rebate: { width: rebateWidthMm, height: rebateHeightMm, position: 'bottom-both-sides' },
     });
     extDrawerPanels.push({
@@ -1754,7 +1754,7 @@ export const calculatePanelDetails = (
       width: drawerBackWidth,
       height: 164 - drawerThickness, // 총높이 - 바닥판두께
       thickness: drawerThickness,
-      material: 'MDF',
+      material: 'PB',
     });
     // 인덕션장 마이다 2개 (도어 대신) + doorTopGap/doorBottomGap 갭 확장 (3D와 동일)
     const maidaWidthMm = customWidth - 3; // 좌우 1.5mm씩 갭
