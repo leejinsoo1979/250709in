@@ -842,43 +842,60 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
         ctx.restore();
       }
 
-      // === 반턱(rebate) 점선 렌더링 ===
-      // 바닥판 좌우 양쪽 긴 변을 따라 앞→뒤 전체 길이로 반턱 가공
-      // rebate.width=38mm (폭 방향 안쪽), rebate.height=7.5mm (두께 방향, 2D에선 표현 불필요)
-      // 2D 상면도에서는 양쪽 긴 변에서 38mm 안쪽에 평행선만 표시
+      // === 반턱(rebate) 점선 렌더링 (홈가공과 동일 스타일) ===
+      // 바닥판 좌우(폭 방향) 양쪽을 깊이 전체 길이로 반턱 가공
+      // rebate.width=38mm (폭 방향 안쪽으로 따냄)
+      // cutlist: panel.width=W(깊이,짧은쪽), panel.height=L(폭,긴쪽)
+      // 비회전: 화면 width=W(깊이), height=L(폭) → 좌우(폭) = y방향
+      // 회전:   화면 width=L(폭), height=W(깊이) → 좌우(폭) = x방향
       if (panel.rebate && panel.rebate.position === 'bottom-both-sides') {
         ctx.save();
-        ctx.setLineDash([6 / scale, 4 / scale]);
-        ctx.strokeStyle = '#ef4444'; // 빨간 점선
-        ctx.lineWidth = 1.5 / (baseScale * scale);
-
-        const rW = panel.rebate.width; // 38mm — 폭 방향 안쪽
+        const rebateColor = materialColors[panel.material] || { fill: '#f3f4f6', stroke: '#9ca3af' };
+        const rW = panel.rebate.width; // 38mm
 
         if (panel.rotated) {
-          // 회전: displayed width=length(깊이), height=width(폭)
-          // 양쪽 폭 변 = y방향 → y+rW, y+height-rW에 수평선
-          ctx.beginPath();
-          ctx.moveTo(x, y + rW);
-          ctx.lineTo(x + width, y + rW);
-          ctx.stroke();
-          ctx.beginPath();
-          ctx.moveTo(x, y + height - rW);
-          ctx.lineTo(x + width, y + height - rW);
-          ctx.stroke();
+          // 회전: 화면 width=L(폭), height=W(깊이)
+          // 좌우(폭) = x방향 → 좌: x~x+rW, 우: x+width-rW~x+width
+          ctx.globalAlpha = 0.3;
+          ctx.fillStyle = rebateColor.fill;
+          ctx.fillRect(x, y, rW, height);
+          ctx.globalAlpha = 0.8;
+          ctx.strokeStyle = rebateColor.stroke;
+          ctx.lineWidth = 1.5 / (baseScale * scale);
+          ctx.setLineDash([4 / (baseScale * scale), 2 / (baseScale * scale)]);
+          ctx.strokeRect(x, y, rW, height);
+          ctx.setLineDash([]);
+
+          ctx.globalAlpha = 0.3;
+          ctx.fillStyle = rebateColor.fill;
+          ctx.fillRect(x + width - rW, y, rW, height);
+          ctx.globalAlpha = 0.8;
+          ctx.setLineDash([4 / (baseScale * scale), 2 / (baseScale * scale)]);
+          ctx.strokeRect(x + width - rW, y, rW, height);
+          ctx.setLineDash([]);
         } else {
-          // 비회전: displayed width=width(폭), height=length(깊이)
-          // 양쪽 폭 변 = x방향 → x+rW, x+width-rW에 수직선
-          ctx.beginPath();
-          ctx.moveTo(x + rW, y);
-          ctx.lineTo(x + rW, y + height);
-          ctx.stroke();
-          ctx.beginPath();
-          ctx.moveTo(x + width - rW, y);
-          ctx.lineTo(x + width - rW, y + height);
-          ctx.stroke();
+          // 비회전: 화면 width=W(깊이), height=L(폭)
+          // 좌우(폭) = y방향 → 좌: y~y+rW, 우: y+height-rW~y+height
+          ctx.globalAlpha = 0.3;
+          ctx.fillStyle = rebateColor.fill;
+          ctx.fillRect(x, y, width, rW);
+          ctx.globalAlpha = 0.8;
+          ctx.strokeStyle = rebateColor.stroke;
+          ctx.lineWidth = 1.5 / (baseScale * scale);
+          ctx.setLineDash([4 / (baseScale * scale), 2 / (baseScale * scale)]);
+          ctx.strokeRect(x, y, width, rW);
+          ctx.setLineDash([]);
+
+          ctx.globalAlpha = 0.3;
+          ctx.fillStyle = rebateColor.fill;
+          ctx.fillRect(x, y + height - rW, width, rW);
+          ctx.globalAlpha = 0.8;
+          ctx.setLineDash([4 / (baseScale * scale), 2 / (baseScale * scale)]);
+          ctx.strokeRect(x, y + height - rW, width, rW);
+          ctx.setLineDash([]);
         }
 
-        ctx.setLineDash([]);
+        ctx.globalAlpha = 1;
         ctx.restore();
       }
 
