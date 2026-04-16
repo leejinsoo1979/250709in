@@ -1075,42 +1075,34 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
         // 수평판 앞면 Z
         const frontZ = stoneTopData.zOffset + hD / 2;
 
-        // 졸리컷 L자 단면 (YZ 평면, X축으로 extrude)
-        // 좌표계: Y = 위쪽, Z = 앞쪽
-        // 원점: 수평판 뒷면-하면 코너
+        // 졸리컷 L자 단면 (ZY 평면에 그리고 X축으로 extrude)
+        // Shape XY 평면: X → Z축(깊이, 뒤=-, 앞=+), Y → Y축(높이)
+        // 원점: 수평판 중심Z, 수평판 하면Y
         const shape = new THREE.Shape();
-        // 뒤쪽 하단 (원점)
-        shape.moveTo(0, 0);
+        const halfD = hD / 2;
+        // 뒤쪽 하단
+        shape.moveTo(-halfD, 0);
         // 뒤쪽 상단
-        shape.lineTo(0, t);
-        // 앞쪽 상단 (수평판 + 수직 앞판 두께)
-        shape.lineTo(hD + t, t);
+        shape.lineTo(-halfD, t);
+        // 앞쪽 상단 (수평판 앞면 + 수직 앞판 두께)
+        shape.lineTo(halfD + t, t);
         // 수직 앞판 앞면 하단
-        shape.lineTo(hD + t, t - dropH);
-        // 졸리컷 45도 면: 수직 앞판 뒷면 하단 → 수평판 앞면 하단
-        shape.lineTo(hD, t - dropH);
-        // 수직 앞판 뒷면 상단 (45도 면 시작) → 수평판 앞면 하면
-        shape.lineTo(hD, 0);
+        shape.lineTo(halfD + t, t - dropH);
+        // 졸리컷 45도: 수직 앞판 뒷면 하단
+        shape.lineTo(halfD, t - dropH);
+        // 수평판 앞면 하면 (45도 면 끝)
+        shape.lineTo(halfD, 0);
         // 닫기
-        shape.lineTo(0, 0);
+        shape.lineTo(-halfD, 0);
 
-        const extrudeSettings = {
-          steps: 1,
-          depth: hW,
-          bevelEnabled: false,
-        };
+        const extrudeSettings = { steps: 1, depth: hW, bevelEnabled: false };
         const geometry = new THREE.ExtrudeGeometry(shape, extrudeSettings);
-        // ExtrudeGeometry는 Z축으로 extrude → 회전하여 X축으로 맞춤
-        // Shape은 XY 평면에 그려지고 Z축으로 extrude됨
-        // 우리 shape: X=깊이(Z방향), Y=높이(Y방향), extrude=폭(X방향)
-        // 위치 조정: geometry를 중심 맞춤
-        geometry.translate(-hW / 2, 0, 0); // X축 중심
-        // 회전: extrude(Z) → X축이 되도록
-        geometry.rotateY(Math.PI / 2);
-        // 이제: shape의 X축(깊이) → Z축, extrude → X축
+        // extrude는 Z축 방향 → X축으로 회전
+        geometry.translate(0, 0, -hW / 2); // extrude 중심 맞춤
+        geometry.rotateY(-Math.PI / 2); // Shape X(깊이)→Z, extrude(Z)→X
 
-        const posY = cabinetTopY; // 수평판 하면 = 캐비넷 상면
-        const posZ = stoneTopData.zOffset - hD / 2; // 뒤쪽 기준
+        const posY = cabinetTopY; // 수평판 하면
+        const posZ = stoneTopData.zOffset; // 깊이 중심
 
         return (
           <group position={[stoneTopData.xOffset, posY, posZ]}>
