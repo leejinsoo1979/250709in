@@ -14,7 +14,6 @@ import { ExternalDrawerRenderer } from '../ExternalDrawerRenderer';
 import { isCabinetTexture1, applyCabinetTexture1Settings, isOakTexture, applyOakTextureSettings, applyDefaultImageTextureSettings } from '@/editor/shared/utils/materialConstants';
 import LegraSideRail from '../components/LegraSideRail';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
-import { useShallow } from 'zustand/react/shallow';
 
 /**
  * 터치 레그라박스 서랍 + 마이다 (인출 애니메이션 포함)
@@ -319,38 +318,49 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
   const furnitureBottomY = cabinetYPosition - adjustedHeight/2;
   const lightY = furnitureBottomY - 0.5; // 가구 바닥에서 50cm 아래
 
-  // 인조대리석 상판 데이터 — 해당 모듈만 선택적 구독 (shallow 비교로 무한루프 방지)
-  const stoneTopProps = useFurnitureStore(
-    useShallow(state => {
-      if (!placedFurnitureId) return null;
-      const pm = state.placedModules.find(m => m.id === placedFurnitureId);
-      if (!pm || !pm.stoneTopThickness || pm.stoneTopThickness <= 0) return null;
-      return {
-        thickness: pm.stoneTopThickness,
-        frontOff: pm.stoneTopFrontOffset || 0,
-        backOff: pm.stoneTopBackOffset || 0,
-        leftOff: pm.stoneTopLeftOffset || 0,
-        rightOff: pm.stoneTopRightOffset || 0,
-      };
-    })
-  );
+  // 인조대리석 상판 데이터 — 개별 프리미티브 구독으로 무한루프 방지
+  const stoneThickness = useFurnitureStore(state => {
+    if (!placedFurnitureId) return 0;
+    const pm = state.placedModules.find(m => m.id === placedFurnitureId);
+    return pm?.stoneTopThickness || 0;
+  });
+  const stoneFrontOff = useFurnitureStore(state => {
+    if (!placedFurnitureId) return 0;
+    const pm = state.placedModules.find(m => m.id === placedFurnitureId);
+    return pm?.stoneTopFrontOffset || 0;
+  });
+  const stoneBackOff = useFurnitureStore(state => {
+    if (!placedFurnitureId) return 0;
+    const pm = state.placedModules.find(m => m.id === placedFurnitureId);
+    return pm?.stoneTopBackOffset || 0;
+  });
+  const stoneLeftOff = useFurnitureStore(state => {
+    if (!placedFurnitureId) return 0;
+    const pm = state.placedModules.find(m => m.id === placedFurnitureId);
+    return pm?.stoneTopLeftOffset || 0;
+  });
+  const stoneRightOff = useFurnitureStore(state => {
+    if (!placedFurnitureId) return 0;
+    const pm = state.placedModules.find(m => m.id === placedFurnitureId);
+    return pm?.stoneTopRightOffset || 0;
+  });
 
   const stoneTopData = useMemo(() => {
-    if (!stoneTopProps) return null;
+    if (stoneThickness <= 0) return null;
     const furW = adjustedWidth ? adjustedWidth * 0.01 : baseFurniture.width;
     const furD = baseFurniture.depth;
-    const fo = stoneTopProps.frontOff * 0.01;
-    const bo = stoneTopProps.backOff * 0.01;
-    const lo = stoneTopProps.leftOff * 0.01;
-    const ro = stoneTopProps.rightOff * 0.01;
+    const fo = stoneFrontOff * 0.01;
+    const bo = stoneBackOff * 0.01;
+    const lo = stoneLeftOff * 0.01;
+    const ro = stoneRightOff * 0.01;
     return {
-      thickness: stoneTopProps.thickness * 0.01,
+      thickness: stoneThickness * 0.01,
       width: furW + lo + ro,
       depth: furD + fo + bo,
       xOffset: (ro - lo) / 2,
       zOffset: (fo - bo) / 2,
     };
-  }, [stoneTopProps, adjustedWidth, baseFurniture.width, baseFurniture.depth]);
+  }, [stoneThickness, stoneFrontOff, stoneBackOff, stoneLeftOff, stoneRightOff, adjustedWidth, baseFurniture.width, baseFurniture.depth]);
 
   const stoneTopMaterial = useMemo(() => {
     if (!stoneTopData) return null;
