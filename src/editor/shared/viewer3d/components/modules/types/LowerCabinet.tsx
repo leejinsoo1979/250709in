@@ -362,37 +362,46 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
     };
   }, [stoneThickness, stoneFrontOff, stoneBackOff, stoneLeftOff, stoneRightOff, adjustedWidth, baseFurniture.width, baseFurniture.depth]);
 
-  // 인조대리석 상판 재질 — spaceInfo.materialConfig.countertopTexture/countertopColor 사용
+  // 인조대리석 상판 재질 — 상/하면: 텍스처, 측면 4면: 단색 (단면 뭉개짐 방지)
   const countertopTextureUrl = spaceInfo?.materialConfig?.countertopTexture;
   const countertopColorVal = spaceInfo?.materialConfig?.countertopColor || '#e8e0d4';
-  const stoneTopMatRef = useRef<THREE.MeshStandardMaterial | null>(null);
+  const stoneTopFaceMatRef = useRef<THREE.MeshStandardMaterial | null>(null);
+  const stoneTopSideMatRef = useRef<THREE.MeshStandardMaterial | null>(null);
 
-  const stoneTopMaterial = useMemo(() => {
+  // 6면 material 배열: [+X, -X, +Y(상면), -Y(하면), +Z, -Z]
+  const stoneTopMaterials = useMemo(() => {
     if (!stoneTopData) return null;
-    const mat = new THREE.MeshStandardMaterial({
+    const faceMat = new THREE.MeshStandardMaterial({
       color: new THREE.Color(countertopColorVal),
-      metalness: 0.0,
-      roughness: 0.6,
-      envMapIntensity: 0.0,
+      metalness: 0.0, roughness: 0.6, envMapIntensity: 0.0,
     });
-    stoneTopMatRef.current = mat;
-    return mat;
+    const sideMat = new THREE.MeshStandardMaterial({
+      color: new THREE.Color(countertopColorVal),
+      metalness: 0.0, roughness: 0.6, envMapIntensity: 0.0,
+    });
+    stoneTopFaceMatRef.current = faceMat;
+    stoneTopSideMatRef.current = sideMat;
+    // BoxGeometry face order: +X, -X, +Y, -Y, +Z, -Z
+    return [sideMat, sideMat, faceMat, faceMat, sideMat, sideMat];
   }, [!!stoneTopData]);
 
   // countertop 색상 변경 반영
   useEffect(() => {
-    if (stoneTopMatRef.current) {
-      if (!stoneTopMatRef.current.map) {
-        stoneTopMatRef.current.color.set(countertopColorVal);
-      }
-      stoneTopMatRef.current.needsUpdate = true;
+    if (stoneTopFaceMatRef.current && !stoneTopFaceMatRef.current.map) {
+      stoneTopFaceMatRef.current.color.set(countertopColorVal);
+      stoneTopFaceMatRef.current.needsUpdate = true;
+    }
+    if (stoneTopSideMatRef.current) {
+      stoneTopSideMatRef.current.color.set(countertopColorVal);
+      stoneTopSideMatRef.current.needsUpdate = true;
     }
   }, [countertopColorVal]);
 
-  // countertop 텍스처 로딩
+  // countertop 텍스처 로딩 — 상/하면(faceMat)에만 적용, 측면(sideMat)은 단색 유지
   useEffect(() => {
-    const mat = stoneTopMatRef.current;
-    if (!mat) return;
+    const faceMat = stoneTopFaceMatRef.current;
+    const sideMat = stoneTopSideMatRef.current;
+    if (!faceMat || !sideMat) return;
     if (countertopTextureUrl) {
       const loader = new THREE.TextureLoader();
       loader.load(countertopTextureUrl, (texture) => {
@@ -400,21 +409,39 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
         texture.wrapT = THREE.RepeatWrapping;
         texture.repeat.set(1, 1);
         texture.colorSpace = THREE.SRGBColorSpace;
-        mat.map = texture;
-        mat.color.set('#ffffff');
-        mat.toneMapped = false;
-        mat.envMapIntensity = 0.0;
-        mat.roughness = 0.8;
-        mat.metalness = 0.0;
-        mat.needsUpdate = true;
+        faceMat.map = texture;
+        faceMat.color.set('#ffffff');
+        faceMat.toneMapped = false;
+        faceMat.envMapIntensity = 0.0;
+        faceMat.roughness = 0.8;
+        faceMat.metalness = 0.0;
+        faceMat.needsUpdate = true;
+        // 측면은 텍스처 없이 단색 — 텍스처에서 평균색 추출
+        const canvas = document.createElement('canvas');
+        canvas.width = 1; canvas.height = 1;
+        const ctx = canvas.getContext('2d');
+        if (ctx) {
+          const img = texture.image as HTMLImageElement;
+          ctx.drawImage(img, 0, 0, 1, 1);
+          const pixel = ctx.getImageData(0, 0, 1, 1).data;
+          sideMat.color.setRGB(pixel[0] / 255, pixel[1] / 255, pixel[2] / 255);
+        }
+        sideMat.map = null;
+        sideMat.toneMapped = false;
+        sideMat.envMapIntensity = 0.0;
+        sideMat.roughness = 0.8;
+        sideMat.metalness = 0.0;
+        sideMat.needsUpdate = true;
       });
     } else {
-      if (mat.map) {
-        mat.map.dispose();
-        mat.map = null;
+      if (faceMat.map) {
+        faceMat.map.dispose();
+        faceMat.map = null;
       }
-      mat.color.set(countertopColorVal);
-      mat.needsUpdate = true;
+      faceMat.color.set(countertopColorVal);
+      faceMat.needsUpdate = true;
+      sideMat.color.set(countertopColorVal);
+      sideMat.needsUpdate = true;
     }
   }, [countertopTextureUrl, countertopColorVal]);
 
@@ -1047,19 +1074,23 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
         />
       )}
 
-      {/* 인조대리석 상판 */}
-      {showFurniture && stoneTopData && stoneTopMaterial && (
-        <BoxWithEdges
-          args={[stoneTopData.width, stoneTopData.thickness, stoneTopData.depth]}
-          position={[
-            stoneTopData.xOffset,
-            cabinetYPosition + adjustedHeight / 2 + stoneTopData.thickness / 2,
-            stoneTopData.zOffset
-          ]}
-          material={stoneTopMaterial}
-          renderMode={renderMode}
-          panelName="인조대리석 상판"
-        />
+      {/* 인조대리석 상판 — 상/하면 텍스처 + 측면 단색 (6면 material 배열) + 윤곽선 */}
+      {showFurniture && stoneTopData && stoneTopMaterials && (
+        <group position={[
+          stoneTopData.xOffset,
+          cabinetYPosition + adjustedHeight / 2 + stoneTopData.thickness / 2,
+          stoneTopData.zOffset
+        ]}>
+          <mesh material={stoneTopMaterials}>
+            <boxGeometry args={[stoneTopData.width, stoneTopData.thickness, stoneTopData.depth]} />
+          </mesh>
+          {renderMode === 'solid' && (
+            <lineSegments>
+              <edgesGeometry args={[new THREE.BoxGeometry(stoneTopData.width, stoneTopData.thickness, stoneTopData.depth)]} />
+              <lineBasicMaterial color="#b0b0b0" />
+            </lineSegments>
+          )}
+        </group>
       )}
 
       {/* 조절발통 (네 모서리) - 키큰장과 동일하게 처리 */}
