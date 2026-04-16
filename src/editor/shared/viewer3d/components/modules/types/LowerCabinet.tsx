@@ -87,10 +87,10 @@ const JollyCutHorizontalPlate: React.FC<{
   return (
     <group position={position}>
       <mesh material={material}>
-        <primitive object={geom} attach="geometry" />
+        <primitive key={`hplate-${width}-${t}-${d}`} object={geom} attach="geometry" />
       </mesh>
       {edgeLines.map(([s,e], i) => (
-        <line key={`h-edge-${i}`}>
+        <line key={`h-edge-${i}-${width}-${t}-${d}`}>
           <bufferGeometry>
             <bufferAttribute attach="attributes-position" array={new Float32Array([...s,...e])} count={2} itemSize={3} />
           </bufferGeometry>
@@ -172,10 +172,10 @@ const JollyCutVerticalPlate: React.FC<{
   return (
     <group position={position}>
       <mesh material={material}>
-        <primitive object={geom} attach="geometry" />
+        <primitive key={`vplate-${width}-${h}-${t}`} object={geom} attach="geometry" />
       </mesh>
       {edgeLines.map(([s,e], i) => (
-        <line key={`v-edge-${i}`}>
+        <line key={`v-edge-${i}-${width}-${h}-${t}`}>
           <bufferGeometry>
             <bufferAttribute attach="attributes-position" array={new Float32Array([...s,...e])} count={2} itemSize={3} />
           </bufferGeometry>
