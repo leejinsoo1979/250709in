@@ -3915,7 +3915,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                     </div>
                   </div>
                   {(currentPlacedModule.stoneTopBackLip || 0) > 0 && (
-                    <div className={styles.epRow} style={{ marginTop: '6px' }}>
+                    <div className={styles.epRow} style={{ marginTop: '6px', alignItems: 'center' }}>
                       <div className={styles.epField}>
                         <label className={styles.epFieldLabel}>뒷턱 높이</label>
                         <div className={styles.inputWithUnit}>
@@ -3943,6 +3943,72 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                           <span className={styles.unit}>mm</span>
                         </div>
                       </div>
+                      <label style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px', cursor: 'pointer', whiteSpace: 'nowrap', marginLeft: '8px' }}>
+                        <input
+                          type="checkbox"
+                          checked={(() => {
+                            const stoneT = currentPlacedModule.stoneTopThickness || 0;
+                            const bodyH = currentPlacedModule.cabinetBodyHeight ?? moduleData.dimensions.height ?? 785;
+                            const baseH = spaceInfo.baseConfig?.type === 'rail' ? (spaceInfo.baseConfig?.height || 65) : (spaceInfo.baseConfig?.type === 'stand' ? (spaceInfo.baseConfig?.height || 100) : 0);
+                            const floatH = spaceInfo.baseConfig?.type === 'stand' && spaceInfo.baseConfig?.placementType === 'float' ? (spaceInfo.baseConfig.floatHeight || 0) : 0;
+                            const floorH = spaceInfo.floorFinish?.enabled ? (spaceInfo.floorFinish.height || 0) : 0;
+                            const lowerTopMm = floorH + (floatH || baseH) + bodyH + stoneT;
+
+                            const internalSpace = calculateInternalSpace(spaceInfo);
+                            const upperInSlot = placedModules.find(m => {
+                              if (m.id === currentPlacedModule.id) return false;
+                              if (m.slotIndex !== currentPlacedModule.slotIndex) return false;
+                              const md = getModuleById(m.moduleId, internalSpace, spaceInfo) || buildModuleDataFromPlacedModule(m);
+                              return md?.category === 'upper';
+                            });
+
+                            let targetMm: number;
+                            if (upperInSlot) {
+                              const upperMd = getModuleById(upperInSlot.moduleId, internalSpace, spaceInfo) || buildModuleDataFromPlacedModule(upperInSlot);
+                              const upperH = upperInSlot.cabinetBodyHeight ?? upperMd?.dimensions.height ?? 785;
+                              const topFrame = upperInSlot.topFrameThickness ?? (spaceInfo.frameSize?.top ?? 30);
+                              targetMm = (spaceInfo.height || 2400) - topFrame - upperH;
+                            } else {
+                              targetMm = spaceInfo.height || 2400;
+                            }
+
+                            const fullH = Math.round(targetMm - lowerTopMm);
+                            return (currentPlacedModule.stoneTopBackLip || 0) === fullH && fullH > 0;
+                          })()}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              const stoneT = currentPlacedModule.stoneTopThickness || 0;
+                              const bodyH = currentPlacedModule.cabinetBodyHeight ?? moduleData.dimensions.height ?? 785;
+                              const baseH = spaceInfo.baseConfig?.type === 'rail' ? (spaceInfo.baseConfig?.height || 65) : (spaceInfo.baseConfig?.type === 'stand' ? (spaceInfo.baseConfig?.height || 100) : 0);
+                              const floatH = spaceInfo.baseConfig?.type === 'stand' && spaceInfo.baseConfig?.placementType === 'float' ? (spaceInfo.baseConfig.floatHeight || 0) : 0;
+                              const floorH = spaceInfo.floorFinish?.enabled ? (spaceInfo.floorFinish.height || 0) : 0;
+                              const lowerTopMm = floorH + (floatH || baseH) + bodyH + stoneT;
+
+                              const internalSpace = calculateInternalSpace(spaceInfo);
+                              const upperInSlot = placedModules.find(m => {
+                                if (m.id === currentPlacedModule.id) return false;
+                                if (m.slotIndex !== currentPlacedModule.slotIndex) return false;
+                                const md = getModuleById(m.moduleId, internalSpace, spaceInfo) || buildModuleDataFromPlacedModule(m);
+                                return md?.category === 'upper';
+                              });
+
+                              let targetMm: number;
+                              if (upperInSlot) {
+                                const upperMd = getModuleById(upperInSlot.moduleId, internalSpace, spaceInfo) || buildModuleDataFromPlacedModule(upperInSlot);
+                                const upperH = upperInSlot.cabinetBodyHeight ?? upperMd?.dimensions.height ?? 785;
+                                const topFrame = upperInSlot.topFrameThickness ?? (spaceInfo.frameSize?.top ?? 30);
+                                targetMm = (spaceInfo.height || 2400) - topFrame - upperH;
+                              } else {
+                                targetMm = spaceInfo.height || 2400;
+                              }
+
+                              const fullH = Math.max(1, Math.round(targetMm - lowerTopMm));
+                              updatePlacedModule(currentPlacedModule.id, { stoneTopBackLip: fullH });
+                            }
+                          }}
+                        />
+                        다채움
+                      </label>
                     </div>
                   )}
                 </>
