@@ -1635,7 +1635,6 @@ export const calculatePanelDetails = (
   }
 
   // === 터치 레그라박스 서랍 패널 (도어올림 터치 + 상판내림 터치) ===
-  console.log('[터치서랍 디버그] moduleId:', moduleData.id, '| touch check:', moduleData.id.includes('lower-door-lift-touch-') || moduleData.id.includes('lower-top-down-touch-'), '| innerWidth:', innerWidth, '| customWidth:', customWidth);
   if (moduleData.id.includes('lower-door-lift-touch-') || moduleData.id.includes('lower-top-down-touch-')) {
     // 도어올림 터치
     const isTouch2A = moduleData.id.includes('lower-door-lift-touch-2tier-a');
@@ -1712,11 +1711,74 @@ export const calculatePanelDetails = (
         { name: `터치서랍${drawerNum}(마이다)`, width: customWidth - 3, height: maidaH, thickness: 18.5, material: 'PET' },
       );
     });
-    console.log('[터치서랍 디버그] 터치서랍 패널 생성완료:', extDrawerPanels.filter(p => p.name.includes('터치서랍')).map(p => ({ name: p.name, w: p.width, h: p.height, d: p.depth, t: p.thickness, m: p.material })));
+  }
+
+  // === 인덕션장 레그라박스 서랍 패널 (바닥판 + 뒷판만, 측판은 기성품) ===
+  if (moduleData.id.includes('lower-induction-cabinet') || moduleData.id.includes('dual-lower-induction-cabinet')) {
+    const drawerThickness = (basicThickness === 18.5 || basicThickness === 15.5) ? 15.5 : 15;
+    const bottomSideGap = 17; // 바닥판: 양쪽 17mm 갭
+    const backSideGap = 18.5; // 뒷판: 양쪽 18.5mm 갭
+    const drawerBottomWidth = customWidth - basicThickness * 2 - bottomSideGap * 2; // 내경 - 양쪽 17mm
+    const drawerBackWidth = customWidth - basicThickness * 2 - backSideGap * 2; // 내경 - 양쪽 18.5mm
+    const drawerDepth = 490; // 레그라박스 서랍 바닥판 깊이 고정
+    // 반턱 따내기: 양쪽 하단 안쪽 38mm, 위로 7.5mm
+    const rebateWidthMm = 38;
+    const rebateHeightMm = 7.5;
+    // 1단 서랍: 총 높이 228mm
+    extDrawerPanels.push({
+      name: '인덕션 1단서랍 바닥판',
+      width: drawerBottomWidth,
+      depth: drawerDepth,
+      thickness: drawerThickness,
+      material: 'MDF',
+      rebate: { width: rebateWidthMm, height: rebateHeightMm, position: 'bottom-both-sides' },
+    });
+    extDrawerPanels.push({
+      name: '인덕션 1단서랍 뒷판',
+      width: drawerBackWidth,
+      height: 228 - drawerThickness, // 총높이 - 바닥판두께
+      thickness: drawerThickness,
+      material: 'MDF',
+    });
+    // 2단 서랍: 총 높이 164mm
+    extDrawerPanels.push({
+      name: '인덕션 2단서랍 바닥판',
+      width: drawerBottomWidth,
+      depth: drawerDepth,
+      thickness: drawerThickness,
+      material: 'MDF',
+      rebate: { width: rebateWidthMm, height: rebateHeightMm, position: 'bottom-both-sides' },
+    });
+    extDrawerPanels.push({
+      name: '인덕션 2단서랍 뒷판',
+      width: drawerBackWidth,
+      height: 164 - drawerThickness, // 총높이 - 바닥판두께
+      thickness: drawerThickness,
+      material: 'MDF',
+    });
+    // 인덕션장 마이다 2개 (도어 대신) + doorTopGap/doorBottomGap 갭 확장 (3D와 동일)
+    const maidaWidthMm = customWidth - 3; // 좌우 1.5mm씩 갭
+    const inductionDefaultDTG = -20;
+    const inductionDefaultDBG = 5;
+    const inductionGapTopExt = (doorTopGap ?? inductionDefaultDTG) - inductionDefaultDTG;
+    const inductionGapBottomExt = (doorBottomGap ?? inductionDefaultDBG) - inductionDefaultDBG;
+    extDrawerPanels.push({
+      name: '인덕션 1단서랍(마이다)',
+      width: maidaWidthMm,
+      height: 340 + inductionGapBottomExt,
+      thickness: 18.5,
+      material: 'PET',
+    });
+    extDrawerPanels.push({
+      name: '인덕션 2단서랍(마이다)',
+      width: maidaWidthMm,
+      height: 427 + inductionGapTopExt,
+      thickness: 18.5,
+      material: 'PET',
+    });
   }
 
   // 하부장: 외부서랍 + 도어를 "서랍 및 도어"로 합산 출력
-  console.log('[터치서랍 디버그] extDrawerPanels.length:', extDrawerPanels.length, '| isLowerCabinetModule:', isLowerCabinetModule, '| effectiveHasDoor:', effectiveHasDoor);
   if (isLowerCabinetModule && (extDrawerPanels.length > 0 || (panels.door.length > 0 && effectiveHasDoor))) {
     result.push({ name: '=== 서랍 및 도어 ===' });
     result.push(...extDrawerPanels);
@@ -1813,72 +1875,6 @@ export const calculatePanelDetails = (
       height: 55,        // topStretcher.heightMm
       thickness: basicThickness,
       material: 'PB',
-    });
-  }
-
-  // === 인덕션장 레그라박스 서랍 패널 (바닥판 + 뒷판만, 측판은 기성품) ===
-  if (moduleData.id.includes('lower-induction-cabinet') || moduleData.id.includes('dual-lower-induction-cabinet')) {
-    const drawerThickness = (basicThickness === 18.5 || basicThickness === 15.5) ? 15.5 : 15;
-    const bottomSideGap = 17; // 바닥판: 양쪽 17mm 갭
-    const backSideGap = 18.5; // 뒷판: 양쪽 18.5mm 갭
-    const drawerBottomWidth = customWidth - basicThickness * 2 - bottomSideGap * 2; // 내경 - 양쪽 17mm
-    const drawerBackWidth = customWidth - basicThickness * 2 - backSideGap * 2; // 내경 - 양쪽 18.5mm
-    const drawerDepth = 490; // 레그라박스 서랍 바닥판 깊이 고정
-    // 반턱 따내기: 양쪽 하단 안쪽 38mm, 위로 7.5mm
-    const rebateWidthMm = 38;
-    const rebateHeightMm = 7.5;
-    // 1단 서랍: 총 높이 228mm
-    extDrawerPanels.push({
-      name: '인덕션 1단서랍 바닥판',
-      width: drawerBottomWidth,
-      depth: drawerDepth,
-      thickness: drawerThickness,
-      material: 'MDF',
-      rebate: { width: rebateWidthMm, height: rebateHeightMm, position: 'bottom-both-sides' },
-    });
-    extDrawerPanels.push({
-      name: '인덕션 1단서랍 뒷판',
-      width: drawerBackWidth,
-      height: 228 - drawerThickness, // 총높이 - 바닥판두께
-      thickness: drawerThickness,
-      material: 'MDF',
-    });
-    // 2단 서랍: 총 높이 164mm
-    extDrawerPanels.push({
-      name: '인덕션 2단서랍 바닥판',
-      width: drawerBottomWidth,
-      depth: drawerDepth,
-      thickness: drawerThickness,
-      material: 'MDF',
-      rebate: { width: rebateWidthMm, height: rebateHeightMm, position: 'bottom-both-sides' },
-    });
-    extDrawerPanels.push({
-      name: '인덕션 2단서랍 뒷판',
-      width: drawerBackWidth,
-      height: 164 - drawerThickness, // 총높이 - 바닥판두께
-      thickness: drawerThickness,
-      material: 'MDF',
-    });
-    // 인덕션장 마이다 2개 (도어 대신) + doorTopGap/doorBottomGap 갭 확장 (3D와 동일)
-    // extDrawerPanels에 push: effectiveHasDoor=false로 panels.door 출력이 차단되므로
-    const maidaWidthMm = customWidth - 3; // 좌우 1.5mm씩 갭
-    const inductionDefaultDTG = -20;
-    const inductionDefaultDBG = 5;
-    const inductionGapTopExt = (doorTopGap ?? inductionDefaultDTG) - inductionDefaultDTG;
-    const inductionGapBottomExt = (doorBottomGap ?? inductionDefaultDBG) - inductionDefaultDBG;
-    extDrawerPanels.push({
-      name: '인덕션 1단서랍(마이다)',
-      width: maidaWidthMm,
-      height: 340 + inductionGapBottomExt,
-      thickness: 18.5,
-      material: 'PET',
-    });
-    extDrawerPanels.push({
-      name: '인덕션 2단서랍(마이다)',
-      width: maidaWidthMm,
-      height: 427 + inductionGapTopExt,
-      thickness: 18.5,
-      material: 'PET',
     });
   }
 
