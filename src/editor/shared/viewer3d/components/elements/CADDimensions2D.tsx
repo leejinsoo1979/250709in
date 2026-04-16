@@ -1033,12 +1033,12 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                 key: `door-topgap-${moduleIndex}`,
                 isUpper: false
               });
-              // 앞판 하단 ~ 캐비넷 상단 (앞판 가시 영역)
-              const frontPlateAreaMm = Math.round(cabinetTopAbs - gapTopAbs);
+              // 앞판 높이 = (캐비넷상단 - 앞판하단) + stoneTopThickness (패널목록과 동일)
+              const frontPlateAreaMm = Math.round(cabinetTopAbs - gapTopAbs) + mod.stoneTopThickness;
               if (frontPlateAreaMm > 0) {
                 doorSegs.push({
                   bottomY: mmToThreeUnits(gapTopAbs),
-                  topY: mmToThreeUnits(cabinetTopAbs),
+                  topY: mmToThreeUnits(cabinetTopAbs + mod.stoneTopThickness),
                   heightMm: frontPlateAreaMm,
                   key: `door-frontplate-${moduleIndex}`,
                   isUpper: false
@@ -1831,12 +1831,14 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                 const lastMaida = lowerMaidas[lowerMaidas.length - 1];
                 const topGapTotal = modHeightMm - lastMaida.maidaTopMm;
                 if (topGapTotal > 0) {
-                  // 상판내림 + 인조대리석: 20mm 갭(마이다~앞판 하단) + 나머지(앞판 영역) 분리
+                  // 상판내림 + 인조대리석: 20mm 갭(마이다~앞판 하단) + 앞판 높이(패널목록과 동일)
+                  // 앞판은 캐비넷 상단 위로 stoneTopThickness만큼 올라가므로 앞판높이 = (topGapTotal - 20) + stoneTopThickness
                   if (isTD && mod.stoneTopThickness && mod.stoneTopThickness > 0) {
                     const doorGapMm = 20;
                     if (doorGapMm < topGapTotal) {
+                      const frontPlateHeight = (topGapTotal - doorGapMm) + mod.stoneTopThickness;
                       gaps.push({ bottomMm: lastMaida.maidaTopMm, topMm: lastMaida.maidaTopMm + doorGapMm, heightMm: doorGapMm });
-                      gaps.push({ bottomMm: lastMaida.maidaTopMm + doorGapMm, topMm: modHeightMm, heightMm: Math.round(topGapTotal - doorGapMm) });
+                      gaps.push({ bottomMm: lastMaida.maidaTopMm + doorGapMm, topMm: modHeightMm + mod.stoneTopThickness, heightMm: frontPlateHeight });
                     } else {
                       gaps.push({ bottomMm: lastMaida.maidaTopMm, topMm: modHeightMm, heightMm: Math.round(topGapTotal) });
                     }
@@ -2252,15 +2254,15 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                 heightMm: doorGapMm,
                 key: `door-topgap-${moduleIndex}`
               });
-              // 앞판 하단 ~ 캐비넷 상단 (앞판 가시 영역)
+              // 앞판 높이 = (캐비넷상단 - 앞판하단) + stoneTopThickness (패널목록과 동일)
               const cabinetH_r = modData.dimensions.height ?? 785;
               const cabinetBottomAbs_r = (isFloating ? floatHeightMm : (railOrBaseHeightMm + indivFloatMm)) + floorFinishHeightMm;
               const cabinetTopAbs_r = cabinetBottomAbs_r + cabinetH_r;
-              const frontPlateAreaMm_r = Math.round(cabinetTopAbs_r - gapTopAbs_r);
+              const frontPlateAreaMm_r = Math.round(cabinetTopAbs_r - gapTopAbs_r) + mod.stoneTopThickness;
               if (frontPlateAreaMm_r > 0) {
                 doorSegs_r.push({
                   bottomY: mmToThreeUnits(gapTopAbs_r),
-                  topY: mmToThreeUnits(cabinetTopAbs_r),
+                  topY: mmToThreeUnits(cabinetTopAbs_r + mod.stoneTopThickness),
                   heightMm: frontPlateAreaMm_r,
                   key: `door-frontplate-${moduleIndex}`
                 });
@@ -2745,12 +2747,13 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                 const lastMaida_r = lowerMaidas[lowerMaidas.length - 1];
                 const topGapTotal_r = modHeightMm - lastMaida_r.maidaTopMm;
                 if (topGapTotal_r > 0) {
-                  // 상판내림 + 인조대리석: 20mm 갭(마이다~앞판 하단) + 나머지(앞판 영역) 분리
+                  // 상판내림 + 인조대리석: 20mm 갭(마이다~앞판 하단) + 앞판 높이(패널목록과 동일)
                   if (isTD_r && mod.stoneTopThickness && mod.stoneTopThickness > 0) {
                     const doorGapMm = 20;
                     if (doorGapMm < topGapTotal_r) {
+                      const frontPlateHeight_r = (topGapTotal_r - doorGapMm) + mod.stoneTopThickness;
                       gaps_r.push({ bottomMm: lastMaida_r.maidaTopMm, topMm: lastMaida_r.maidaTopMm + doorGapMm, heightMm: doorGapMm });
-                      gaps_r.push({ bottomMm: lastMaida_r.maidaTopMm + doorGapMm, topMm: modHeightMm, heightMm: Math.round(topGapTotal_r - doorGapMm) });
+                      gaps_r.push({ bottomMm: lastMaida_r.maidaTopMm + doorGapMm, topMm: modHeightMm + mod.stoneTopThickness, heightMm: frontPlateHeight_r });
                     } else {
                       gaps_r.push({ bottomMm: lastMaida_r.maidaTopMm, topMm: modHeightMm, heightMm: Math.round(topGapTotal_r) });
                     }
