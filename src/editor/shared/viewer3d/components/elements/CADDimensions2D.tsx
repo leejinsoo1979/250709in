@@ -795,16 +795,17 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                 );
               })}
 
-              {/* 도어 안쪽 갭 치수 (상판 윗면~도어 상단) — 도어 전면(마이다) 쪽 */}
+              {/* 도어 안쪽 갭 치수 (상판 윗면~도어 상단) — 도어 치수선 바깥(오른쪽) */}
               {innerGapSegments_l2.length > 0 && (() => {
-                // 도어 전면 Z 계산 (우측 도어 치수와 동일 기준)
+                // 도어 전면 Z 계산
                 const panelDepthMm_ig = spaceInfo.depth || 1500;
                 const furnitureDepthMm_ig = Math.min(panelDepthMm_ig, 600);
                 const zOff_ig = -mmToThreeUnits(panelDepthMm_ig) / 2;
                 const fzOff_ig = zOff_ig + (mmToThreeUnits(panelDepthMm_ig) - mmToThreeUnits(furnitureDepthMm_ig)) / 2;
                 const doorFrontZ_ig = fzOff_ig + mmToThreeUnits(furnitureDepthMm_ig) / 2;
-                const innerDimZ = doorFrontZ_ig + mmToThreeUnits(150);
-                const innerExtStart = doorFrontZ_ig + mmToThreeUnits(30);
+                // 도어 치수선(150mm) 바깥에 배치: 도어 전면 + 300mm
+                const innerDimZ = doorFrontZ_ig + mmToThreeUnits(300);
+                const innerExtStart = doorFrontZ_ig + mmToThreeUnits(180);
                 return innerGapSegments_l2.map((seg) => (
                   <group key={`inner-gap-${seg.key}`}>
                     <ExtLine points={[[0, seg.bottomY, innerExtStart], [0, seg.bottomY, innerDimZ]]} color={dimensionColor} />
@@ -1995,15 +1996,15 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                 </group>
               ))}
 
-              {/* 도어 안쪽 갭 치수 (상판 윗면~도어 상단) — 우측뷰: 도어 전면(마이다) 쪽 */}
+              {/* 도어 안쪽 갭 치수 (상판 윗면~도어 상단) — 우측뷰: 도어 치수선 바깥 */}
               {innerGapSegments_rl2.length > 0 && (() => {
                 const panelDepthMm_ig = spaceInfo.depth || 1500;
                 const furnitureDepthMm_ig = Math.min(panelDepthMm_ig, 600);
                 const zOff_ig = -mmToThreeUnits(panelDepthMm_ig) / 2;
                 const fzOff_ig = zOff_ig + (mmToThreeUnits(panelDepthMm_ig) - mmToThreeUnits(furnitureDepthMm_ig)) / 2;
                 const doorFrontZ_ig = fzOff_ig + mmToThreeUnits(furnitureDepthMm_ig) / 2;
-                const innerDimZ = doorFrontZ_ig + mmToThreeUnits(150);
-                const innerExtStart = doorFrontZ_ig + mmToThreeUnits(30);
+                const innerDimZ = doorFrontZ_ig + mmToThreeUnits(300);
+                const innerExtStart = doorFrontZ_ig + mmToThreeUnits(180);
                 return innerGapSegments_rl2.map((seg) => (
                   <group key={`inner-gap-${seg.key}`}>
                     <ExtLine points={[[0, seg.bottomY, innerExtStart], [0, seg.bottomY, innerDimZ]]} color={dimensionColor} />
