@@ -409,6 +409,10 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
 
   // 엣지 색상 결정
   const edgeColor = React.useMemo(() => {
+    // 인조대리석 상판은 연한 그레이 윤곽선
+    if (panelName && panelName.includes('인조대리석')) {
+      return '#b0b0b0';
+    }
     // 2D 모드에서 목찬넬프레임은 파란색 윤곽선
     if (viewMode === '2D' && panelName && panelName.includes('목찬넬프레임')) {
       return '#00cfff';
