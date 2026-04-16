@@ -3731,7 +3731,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                           updates.stoneTopBackOffset = 0;
                           updates.stoneTopLeftOffset = 0;
                           updates.stoneTopRightOffset = 0;
-                          updates.stoneTopBackLip = false;
+                          updates.stoneTopBackLip = 0;
                           // 도어올림: 상판 제거 시 doorTopGap 기본값(30) 복원
                           if (isDoorLift) {
                             const defaultGap = 30;
@@ -3893,23 +3893,18 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                     </div>
                   </div>
                   {/* 뒷턱 옵션 */}
-                  <div className={styles.epRow} style={{ marginTop: '8px' }}>
-                    <div className={styles.epField} style={{ flex: 1 }}>
-                      <label className={styles.epFieldLabel}>뒷턱</label>
-                      <div className={styles.doorTabSelector} style={{ marginTop: '4px' }}>
+                  <div style={{ marginTop: '8px' }}>
+                    <label className={styles.epFieldLabel}>뒷턱</label>
+                    <div className={styles.doorTabSelector} style={{ marginTop: '4px' }}>
+                      {([0, 10, 20, 30] as const).map(h => (
                         <button
-                          className={`${styles.doorTab} ${!currentPlacedModule.stoneTopBackLip ? styles.activeDoorTab : ''}`}
-                          onClick={() => updatePlacedModule(currentPlacedModule.id, { stoneTopBackLip: false })}
+                          key={h}
+                          className={`${styles.doorTab} ${(currentPlacedModule.stoneTopBackLip || 0) === h ? styles.activeDoorTab : ''}`}
+                          onClick={() => updatePlacedModule(currentPlacedModule.id, { stoneTopBackLip: h })}
                         >
-                          없음
+                          {h === 0 ? '없음' : `${h}mm`}
                         </button>
-                        <button
-                          className={`${styles.doorTab} ${currentPlacedModule.stoneTopBackLip ? styles.activeDoorTab : ''}`}
-                          onClick={() => updatePlacedModule(currentPlacedModule.id, { stoneTopBackLip: true })}
-                        >
-                          있음
-                        </button>
-                      </div>
+                      ))}
                     </div>
                   </div>
                 </>

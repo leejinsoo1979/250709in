@@ -225,7 +225,7 @@ export interface PlacedModule {
   stoneTopBackOffset?: number;                  // 뒤 오프셋 (mm, 기본: 0)
   stoneTopLeftOffset?: number;                  // 좌 오프셋 (mm, 기본: 0)
   stoneTopRightOffset?: number;                 // 우 오프셋 (mm, 기본: 0)
-  stoneTopBackLip?: boolean;                    // 뒷턱 여부 (기본: false)
+  stoneTopBackLip?: 0 | 10 | 20 | 30;           // 뒷턱 높이 (0=없음, 기본: 0)
 
   // 서라운드 패널 속성
   isSurroundPanel?: boolean;              // 서라운드 패널 여부

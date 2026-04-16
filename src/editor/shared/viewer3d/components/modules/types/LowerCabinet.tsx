@@ -520,9 +520,9 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
     return pm?.stoneTopRightOffset || 0;
   });
   const stoneBackLip = useFurnitureStore(state => {
-    if (!placedFurnitureId) return false;
+    if (!placedFurnitureId) return 0;
     const pm = state.placedModules.find(m => m.id === placedFurnitureId);
-    return pm?.stoneTopBackLip || false;
+    return pm?.stoneTopBackLip || 0;
   });
 
   // 상판내림 모듈 여부
@@ -542,7 +542,7 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
       depth: furD + fo + bo,
       xOffset: (ro - lo) / 2,
       zOffset: (fo - bo) / 2,
-      backLip: stoneBackLip,
+      backLipHeight: stoneBackLip * 0.01, // mm → m
     };
   }, [stoneThickness, stoneFrontOff, stoneBackOff, stoneLeftOff, stoneRightOff, stoneBackLip, adjustedWidth, baseFurniture.width, baseFurniture.depth]);
 
@@ -1243,12 +1243,12 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
       )}
 
       {/* 인조대리석 뒷턱 (back lip) — 상판 뒤쪽 수직판 */}
-      {showFurniture && stoneTopData && stoneTopData.backLip && stoneTopMaterial && (
+      {showFurniture && stoneTopData && stoneTopData.backLipHeight > 0 && stoneTopMaterial && (
         <BoxWithEdges
-          args={[stoneTopData.width, stoneTopData.thickness, stoneTopData.thickness]}
+          args={[stoneTopData.width, stoneTopData.backLipHeight, stoneTopData.thickness]}
           position={[
             stoneTopData.xOffset,
-            cabinetYPosition + adjustedHeight / 2 + stoneTopData.thickness + stoneTopData.thickness / 2,
+            cabinetYPosition + adjustedHeight / 2 + stoneTopData.thickness + stoneTopData.backLipHeight / 2,
             stoneTopData.zOffset - stoneTopData.depth / 2 + stoneTopData.thickness / 2
           ]}
           material={stoneTopMaterial}
