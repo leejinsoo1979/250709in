@@ -3893,35 +3893,58 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                     </div>
                   </div>
                   {/* 뒷턱 옵션 */}
-                  <div className={styles.epRow} style={{ marginTop: '8px' }}>
-                    <div className={styles.epField}>
-                      <label className={styles.epFieldLabel}>뒷턱</label>
-                      <div className={styles.inputWithUnit}>
-                        <input
-                          type="text"
-                          inputMode="numeric"
-                          value={currentPlacedModule.stoneTopBackLip ?? 0}
-                          onChange={(e) => {
-                            const v = e.target.value;
-                            if (v === '' || /^\d+$/.test(v)) {
-                              const num = v === '' ? 0 : Math.max(0, Math.min(200, parseInt(v, 10)));
-                              updatePlacedModule(currentPlacedModule.id, { stoneTopBackLip: num });
-                            }
-                          }}
-                          onKeyDown={(e) => {
-                            if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
-                              e.preventDefault();
-                              const cur = currentPlacedModule.stoneTopBackLip ?? 0;
-                              const next = Math.max(0, Math.min(200, cur + (e.key === 'ArrowUp' ? 1 : -1)));
-                              updatePlacedModule(currentPlacedModule.id, { stoneTopBackLip: next });
-                            }
-                          }}
-                          className={styles.epInput}
-                        />
-                        <span className={styles.unit}>mm</span>
-                      </div>
+                  <div style={{ marginTop: '8px' }}>
+                    <label className={styles.epFieldLabel}>뒷턱</label>
+                    <div className={styles.doorTabSelector} style={{ marginTop: '4px' }}>
+                      <button
+                        className={`${styles.doorTab} ${!(currentPlacedModule.stoneTopBackLip) ? styles.activeDoorTab : ''}`}
+                        onClick={() => updatePlacedModule(currentPlacedModule.id, { stoneTopBackLip: 0 })}
+                      >
+                        없음
+                      </button>
+                      <button
+                        className={`${styles.doorTab} ${(currentPlacedModule.stoneTopBackLip || 0) > 0 ? styles.activeDoorTab : ''}`}
+                        onClick={() => {
+                          if (!(currentPlacedModule.stoneTopBackLip)) {
+                            updatePlacedModule(currentPlacedModule.id, { stoneTopBackLip: 10 });
+                          }
+                        }}
+                      >
+                        있음
+                      </button>
                     </div>
                   </div>
+                  {(currentPlacedModule.stoneTopBackLip || 0) > 0 && (
+                    <div className={styles.epRow} style={{ marginTop: '6px' }}>
+                      <div className={styles.epField}>
+                        <label className={styles.epFieldLabel}>뒷턱 높이</label>
+                        <div className={styles.inputWithUnit}>
+                          <input
+                            type="text"
+                            inputMode="numeric"
+                            value={currentPlacedModule.stoneTopBackLip ?? 10}
+                            onChange={(e) => {
+                              const v = e.target.value;
+                              if (v === '' || /^\d+$/.test(v)) {
+                                const num = v === '' ? 0 : Math.max(1, Math.min(200, parseInt(v, 10)));
+                                updatePlacedModule(currentPlacedModule.id, { stoneTopBackLip: num });
+                              }
+                            }}
+                            onKeyDown={(e) => {
+                              if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                                e.preventDefault();
+                                const cur = currentPlacedModule.stoneTopBackLip ?? 10;
+                                const next = Math.max(1, Math.min(200, cur + (e.key === 'ArrowUp' ? 1 : -1)));
+                                updatePlacedModule(currentPlacedModule.id, { stoneTopBackLip: next });
+                              }
+                            }}
+                            className={styles.epInput}
+                          />
+                          <span className={styles.unit}>mm</span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </>
               )}
             </div>
