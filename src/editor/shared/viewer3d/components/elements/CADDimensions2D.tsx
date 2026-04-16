@@ -640,6 +640,8 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           const effectiveH_l2 = isSelectedSlotInDroppedZone ? (spaceInfo.height - dropHeightMm) : spaceInfo.height;
 
           const segments_l2: { bottomY: number; topY: number; heightMm: number; key: string; extStartZ?: number }[] = [];
+          // 도어 안쪽에 표시할 갭 치수 (상판 윗면~도어 상단)
+          const innerGapSegments_l2: { bottomY: number; topY: number; heightMm: number; key: string }[] = [];
 
           visibleFurniture.forEach((module, moduleIndex) => {
             let moduleData = getModuleById(
@@ -707,7 +709,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
               const doorLiftTopGap = mod.doorTopGap ?? 30;
               const stoneThickness = mod.stoneTopThickness || 0;
               if (stoneThickness > 0) {
-                // 상판 설치 시: 상판 두께 + 상판 윗면~도어 상단 갭으로 분리
+                // 상판 설치 시: 상판 두께는 바깥 치수선, 갭은 도어 안쪽 치수선
                 const gapAboveStone = doorLiftTopGap - stoneThickness;
                 segments_l2.push({
                   bottomY: mmToThreeUnits(cabinetTopMm),
@@ -716,11 +718,11 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                   key: `stone-top-thickness-${moduleIndex}`
                 });
                 if (gapAboveStone > 0) {
-                  segments_l2.push({
+                  innerGapSegments_l2.push({
                     bottomY: mmToThreeUnits(cabinetTopMm + stoneThickness),
                     topY: mmToThreeUnits(cabinetTopMm + doorLiftTopGap),
                     heightMm: Math.round(gapAboveStone),
-                    key: `door-lift-topgap-${moduleIndex}`
+                    key: `door-lift-topgap-inner-${moduleIndex}`
                   });
                 }
               } else {
@@ -790,6 +792,40 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                     {seg.heightMm}
                   </Text>
                 </group>
+                );
+              })}
+
+              {/* 도어 안쪽 갭 치수 (상판 윗면~도어 상단) */}
+              {innerGapSegments_l2.map((seg) => {
+                // 도어 안쪽 = 가구 전면 쪽 (leftExtStartZ보다 +Z 방향)
+                const innerZ = leftExtStartZ + mmToThreeUnits(50);
+                const innerDimZ = leftExtStartZ + mmToThreeUnits(100);
+                return (
+                  <group key={`inner-gap-${seg.key}`}>
+                    <ExtLine points={[[0, seg.bottomY, leftExtStartZ], [0, seg.bottomY, innerDimZ]]} color={dimensionColor} />
+                    <ExtLine points={[[0, seg.topY, leftExtStartZ], [0, seg.topY, innerDimZ]]} color={dimensionColor} />
+                    <NativeLine name="dimension_line"
+                      points={[[0, seg.bottomY, innerDimZ], [0, seg.topY, innerDimZ]]}
+                      color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
+                    />
+                    <NativeLine name="dimension_line"
+                      points={[[-0.008, seg.bottomY, innerDimZ], [0.008, seg.bottomY, innerDimZ]]}
+                      color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
+                    />
+                    <NativeLine name="dimension_line"
+                      points={[[-0.008, seg.topY, innerDimZ], [0.008, seg.topY, innerDimZ]]}
+                      color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
+                    />
+                    <Text
+                      position={[0, (seg.bottomY + seg.topY) / 2, innerDimZ + mmToThreeUnits(60)]}
+                      fontSize={largeFontSize} color={textColor}
+                      anchorX="center" anchorY="middle"
+                      renderOrder={1000} depthTest={false}
+                      rotation={[0, -Math.PI / 2, Math.PI / 2]}
+                    >
+                      {seg.heightMm}
+                    </Text>
+                  </group>
                 );
               })}
 
@@ -1856,6 +1892,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           const effectiveH_rl2 = isSelectedSlotInDroppedZone ? (spaceInfo.height - dropHeightMm) : spaceInfo.height;
 
           const segments_rl2: { bottomY: number; topY: number; heightMm: number; key: string }[] = [];
+          const innerGapSegments_rl2: { bottomY: number; topY: number; heightMm: number; key: string }[] = [];
 
           visibleFurniture.forEach((module, moduleIndex) => {
             let moduleData = getModuleById(
@@ -1902,11 +1939,11 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                   key: `stone-top-thickness-${moduleIndex}`
                 });
                 if (gapAboveStone > 0) {
-                  segments_rl2.push({
+                  innerGapSegments_rl2.push({
                     bottomY: mmToThreeUnits(cabinetTopMm + stoneThickness),
                     topY: mmToThreeUnits(cabinetTopMm + doorLiftTopGap),
                     heightMm: Math.round(gapAboveStone),
-                    key: `door-lift-topgap-${moduleIndex}`
+                    key: `door-lift-topgap-inner-${moduleIndex}`
                   });
                 }
               } else {
@@ -1952,6 +1989,24 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                   </Text>
                 </group>
               ))}
+
+              {/* 도어 안쪽 갭 치수 (상판 윗면~도어 상단) — 우측뷰 */}
+              {innerGapSegments_rl2.map((seg) => {
+                const innerZ = leftExtStartZ + mmToThreeUnits(50);
+                const innerDimZ = leftExtStartZ + mmToThreeUnits(100);
+                return (
+                  <group key={`inner-gap-${seg.key}`}>
+                    <ExtLine points={[[0, seg.bottomY, leftExtStartZ], [0, seg.bottomY, innerDimZ]]} color={dimensionColor} />
+                    <ExtLine points={[[0, seg.topY, leftExtStartZ], [0, seg.topY, innerDimZ]]} color={dimensionColor} />
+                    <NativeLine name="dimension_line" points={[[0, seg.bottomY, innerDimZ], [0, seg.topY, innerDimZ]]} color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false} />
+                    <NativeLine name="dimension_line" points={[[-0.008, seg.bottomY, innerDimZ], [0.008, seg.bottomY, innerDimZ]]} color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false} />
+                    <NativeLine name="dimension_line" points={[[-0.008, seg.topY, innerDimZ], [0.008, seg.topY, innerDimZ]]} color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false} />
+                    <Text position={[0, (seg.bottomY + seg.topY) / 2, innerDimZ + mmToThreeUnits(60)]} fontSize={largeFontSize} color={textColor} anchorX="center" anchorY="middle" renderOrder={1000} depthTest={false} rotation={[0, Math.PI / 2, Math.PI / 2]}>
+                      {seg.heightMm}
+                    </Text>
+                  </group>
+                );
+              })}
 
               {hasLower_r && baseFrameHeightMm > 0 && (
                 <>
