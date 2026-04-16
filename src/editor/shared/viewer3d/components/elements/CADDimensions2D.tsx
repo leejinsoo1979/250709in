@@ -702,15 +702,36 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
               }
             }
 
-            // 도어 올림 하부장: 도어 상단갭(30mm)을 좌측 2단에 표시 (가구 상단 ~ 도어 상단)
+            // 도어 올림 하부장: 도어 상단갭을 좌측 2단에 표시 (가구 상단 ~ 도어 상단)
             if (modCat_l2 === 'lower' && moduleData.id?.includes('lower-door-lift-')) {
-              const doorLiftTopGap = 30;
-              segments_l2.push({
-                bottomY: mmToThreeUnits(cabinetTopMm),
-                topY: mmToThreeUnits(cabinetTopMm + doorLiftTopGap),
-                heightMm: doorLiftTopGap,
-                key: `door-lift-topgap-${moduleIndex}`
-              });
+              const doorLiftTopGap = mod.doorTopGap ?? 30;
+              const stoneThickness = mod.stoneTopThickness || 0;
+              if (stoneThickness > 0) {
+                // 상판 설치 시: 상판 두께 + 상판 윗면~도어 상단 갭으로 분리
+                const gapAboveStone = doorLiftTopGap - stoneThickness;
+                segments_l2.push({
+                  bottomY: mmToThreeUnits(cabinetTopMm),
+                  topY: mmToThreeUnits(cabinetTopMm + stoneThickness),
+                  heightMm: stoneThickness,
+                  key: `stone-top-thickness-${moduleIndex}`
+                });
+                if (gapAboveStone > 0) {
+                  segments_l2.push({
+                    bottomY: mmToThreeUnits(cabinetTopMm + stoneThickness),
+                    topY: mmToThreeUnits(cabinetTopMm + doorLiftTopGap),
+                    heightMm: Math.round(gapAboveStone),
+                    key: `door-lift-topgap-${moduleIndex}`
+                  });
+                }
+              } else {
+                // 상판 미설치: 기존처럼 하나로 표시
+                segments_l2.push({
+                  bottomY: mmToThreeUnits(cabinetTopMm),
+                  topY: mmToThreeUnits(cabinetTopMm + doorLiftTopGap),
+                  heightMm: doorLiftTopGap,
+                  key: `door-lift-topgap-${moduleIndex}`
+                });
+              }
             }
           });
 
@@ -1868,15 +1889,34 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
               key: `furniture-${moduleIndex}`
             });
 
-            // 도어 올림 하부장: 도어 상단갭(30mm)을 좌측 2단에 표시
+            // 도어 올림 하부장: 도어 상단갭을 좌측 2단에 표시
             if (modCat_rl2 === 'lower' && moduleData.id?.includes('lower-door-lift-')) {
-              const doorLiftTopGap = 30;
-              segments_rl2.push({
-                bottomY: mmToThreeUnits(cabinetTopMm),
-                topY: mmToThreeUnits(cabinetTopMm + doorLiftTopGap),
-                heightMm: doorLiftTopGap,
-                key: `door-lift-topgap-${moduleIndex}`
-              });
+              const doorLiftTopGap = mod.doorTopGap ?? 30;
+              const stoneThickness = mod.stoneTopThickness || 0;
+              if (stoneThickness > 0) {
+                const gapAboveStone = doorLiftTopGap - stoneThickness;
+                segments_rl2.push({
+                  bottomY: mmToThreeUnits(cabinetTopMm),
+                  topY: mmToThreeUnits(cabinetTopMm + stoneThickness),
+                  heightMm: stoneThickness,
+                  key: `stone-top-thickness-${moduleIndex}`
+                });
+                if (gapAboveStone > 0) {
+                  segments_rl2.push({
+                    bottomY: mmToThreeUnits(cabinetTopMm + stoneThickness),
+                    topY: mmToThreeUnits(cabinetTopMm + doorLiftTopGap),
+                    heightMm: Math.round(gapAboveStone),
+                    key: `door-lift-topgap-${moduleIndex}`
+                  });
+                }
+              } else {
+                segments_rl2.push({
+                  bottomY: mmToThreeUnits(cabinetTopMm),
+                  topY: mmToThreeUnits(cabinetTopMm + doorLiftTopGap),
+                  heightMm: doorLiftTopGap,
+                  key: `door-lift-topgap-${moduleIndex}`
+                });
+              }
             }
           });
 
