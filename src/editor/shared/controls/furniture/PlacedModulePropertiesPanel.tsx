@@ -466,6 +466,49 @@ const getFurnitureImagePath = (moduleId: string): string | null => {
 };
 */
 
+// 뒷턱 다채움 높이 계산: 상판 윗면 ~ 상부장 하단 (또는 천장)
+const calcBackLipFillHeight = (
+  currentMod: any, moduleData: any, spaceInfo: any, placedModules: any[]
+): number => {
+  const stoneT = currentMod.stoneTopThickness || 0;
+  const internalSpace = calculateInternalSpace(spaceInfo);
+
+  // 하부장 상판 윗면 절대 위치 (CAD 치수와 동일한 계산)
+  const isFloating = spaceInfo.baseConfig?.type === 'stand' && spaceInfo.baseConfig?.placementType === 'float';
+  const floatH = isFloating ? (spaceInfo.baseConfig?.floatHeight || 0) : 0;
+  const isStandType = spaceInfo.baseConfig?.type === 'stand';
+  const modHasBaseOff = currentMod.hasBase === false && !isStandType;
+  const railOrBaseH = modHasBaseOff ? 0
+    : (currentMod.baseFrameHeight !== undefined && !isStandType) ? currentMod.baseFrameHeight
+    : isStandType ? (isFloating ? 0 : (spaceInfo.baseConfig?.height || 0))
+    : calculateBaseFrameHeight(spaceInfo);
+  const indivFloat = modHasBaseOff ? (currentMod.individualFloatHeight ?? 0) : 0;
+  const baseH = isFloating ? floatH : (railOrBaseH + indivFloat);
+  const floorH = spaceInfo.hasFloorFinish && spaceInfo.floorFinish ? spaceInfo.floorFinish.height : 0;
+  const lowerBodyH = currentMod.cabinetBodyHeight ?? moduleData?.dimensions?.height ?? 785;
+  const lowerTopWithStone = floorH + baseH + lowerBodyH + stoneT;
+
+  // 같은 슬롯 상부장 찾기
+  const upperInSlot = placedModules.find((m: any) => {
+    if (m.id === currentMod.id) return false;
+    if (m.slotIndex !== currentMod.slotIndex) return false;
+    const md = getModuleById(m.moduleId, internalSpace, spaceInfo) || buildModuleDataFromPlacedModule(m);
+    return md?.category === 'upper';
+  });
+
+  let targetMm: number;
+  if (upperInSlot) {
+    const upperMd = getModuleById(upperInSlot.moduleId, internalSpace, spaceInfo) || buildModuleDataFromPlacedModule(upperInSlot);
+    const upperH = upperInSlot.cabinetBodyHeight ?? upperMd?.dimensions?.height ?? 785;
+    const topFrame = upperInSlot.topFrameThickness ?? (spaceInfo.frameSize?.top ?? 30);
+    targetMm = (spaceInfo.height || 2400) - topFrame - upperH;
+  } else {
+    targetMm = spaceInfo.height || 2400;
+  }
+
+  return Math.max(0, Math.round(targetMm - lowerTopWithStone));
+};
+
 const PlacedModulePropertiesPanel: React.FC = () => {
   const { t } = useTranslation();
   const [showDetails, setShowDetails] = useState(false);
@@ -3947,63 +3990,15 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                         <input
                           type="checkbox"
                           checked={(() => {
-                            const stoneT = currentPlacedModule.stoneTopThickness || 0;
-                            const bodyH = currentPlacedModule.cabinetBodyHeight ?? moduleData.dimensions.height ?? 785;
-                            const baseH = spaceInfo.baseConfig?.type === 'rail' ? (spaceInfo.baseConfig?.height || 65) : (spaceInfo.baseConfig?.type === 'stand' ? (spaceInfo.baseConfig?.height || 100) : 0);
-                            const floatH = spaceInfo.baseConfig?.type === 'stand' && spaceInfo.baseConfig?.placementType === 'float' ? (spaceInfo.baseConfig.floatHeight || 0) : 0;
-                            const floorH = spaceInfo.floorFinish?.enabled ? (spaceInfo.floorFinish.height || 0) : 0;
-                            const lowerTopMm = floorH + (floatH || baseH) + bodyH + stoneT;
-
-                            const internalSpace = calculateInternalSpace(spaceInfo);
-                            const upperInSlot = placedModules.find(m => {
-                              if (m.id === currentPlacedModule.id) return false;
-                              if (m.slotIndex !== currentPlacedModule.slotIndex) return false;
-                              const md = getModuleById(m.moduleId, internalSpace, spaceInfo) || buildModuleDataFromPlacedModule(m);
-                              return md?.category === 'upper';
-                            });
-
-                            let targetMm: number;
-                            if (upperInSlot) {
-                              const upperMd = getModuleById(upperInSlot.moduleId, internalSpace, spaceInfo) || buildModuleDataFromPlacedModule(upperInSlot);
-                              const upperH = upperInSlot.cabinetBodyHeight ?? upperMd?.dimensions.height ?? 785;
-                              const topFrame = upperInSlot.topFrameThickness ?? (spaceInfo.frameSize?.top ?? 30);
-                              targetMm = (spaceInfo.height || 2400) - topFrame - upperH;
-                            } else {
-                              targetMm = spaceInfo.height || 2400;
-                            }
-
-                            const fullH = Math.round(targetMm - lowerTopMm);
-                            return (currentPlacedModule.stoneTopBackLip || 0) === fullH && fullH > 0;
+                            const fullH = calcBackLipFillHeight(currentPlacedModule, moduleData, spaceInfo, placedModules);
+                            return fullH > 0 && (currentPlacedModule.stoneTopBackLip || 0) === fullH;
                           })()}
                           onChange={(e) => {
                             if (e.target.checked) {
-                              const stoneT = currentPlacedModule.stoneTopThickness || 0;
-                              const bodyH = currentPlacedModule.cabinetBodyHeight ?? moduleData.dimensions.height ?? 785;
-                              const baseH = spaceInfo.baseConfig?.type === 'rail' ? (spaceInfo.baseConfig?.height || 65) : (spaceInfo.baseConfig?.type === 'stand' ? (spaceInfo.baseConfig?.height || 100) : 0);
-                              const floatH = spaceInfo.baseConfig?.type === 'stand' && spaceInfo.baseConfig?.placementType === 'float' ? (spaceInfo.baseConfig.floatHeight || 0) : 0;
-                              const floorH = spaceInfo.floorFinish?.enabled ? (spaceInfo.floorFinish.height || 0) : 0;
-                              const lowerTopMm = floorH + (floatH || baseH) + bodyH + stoneT;
-
-                              const internalSpace = calculateInternalSpace(spaceInfo);
-                              const upperInSlot = placedModules.find(m => {
-                                if (m.id === currentPlacedModule.id) return false;
-                                if (m.slotIndex !== currentPlacedModule.slotIndex) return false;
-                                const md = getModuleById(m.moduleId, internalSpace, spaceInfo) || buildModuleDataFromPlacedModule(m);
-                                return md?.category === 'upper';
-                              });
-
-                              let targetMm: number;
-                              if (upperInSlot) {
-                                const upperMd = getModuleById(upperInSlot.moduleId, internalSpace, spaceInfo) || buildModuleDataFromPlacedModule(upperInSlot);
-                                const upperH = upperInSlot.cabinetBodyHeight ?? upperMd?.dimensions.height ?? 785;
-                                const topFrame = upperInSlot.topFrameThickness ?? (spaceInfo.frameSize?.top ?? 30);
-                                targetMm = (spaceInfo.height || 2400) - topFrame - upperH;
-                              } else {
-                                targetMm = spaceInfo.height || 2400;
+                              const fullH = calcBackLipFillHeight(currentPlacedModule, moduleData, spaceInfo, placedModules);
+                              if (fullH > 0) {
+                                updatePlacedModule(currentPlacedModule.id, { stoneTopBackLip: fullH });
                               }
-
-                              const fullH = Math.max(1, Math.round(targetMm - lowerTopMm));
-                              updatePlacedModule(currentPlacedModule.id, { stoneTopBackLip: fullH });
                             }
                           }}
                         />
