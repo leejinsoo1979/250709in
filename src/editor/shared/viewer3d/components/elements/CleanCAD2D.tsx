@@ -3705,6 +3705,15 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             }
           }
 
+          // 하부장 인조대리석 상판 두께 포함
+          if (hasDualCabinet) {
+            const lowerMod = leftCategoryResolved === 'lower' ? leftmostMod : leftCompanionMod;
+            const stoneH = lowerMod?.stoneTopThickness || 0;
+            if (stoneH > 0) lowerCabinetH += stoneH;
+          } else if (leftCategoryResolved === 'lower' && leftmostMod?.stoneTopThickness) {
+            furnitureH += leftmostMod.stoneTopThickness;
+          }
+
           // 바닥마감재 차감: 키큰장(full)만 (하부장/상부장은 고정 높이이므로 차감 불필요)
           const floorFinishForHeight = (spaceInfo.hasFloorFinish && spaceInfo.floorFinish)
             ? spaceInfo.floorFinish.height : 0;
@@ -3718,8 +3727,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           const bottomFrameH = leftLowerMod?.hasBase === false
             ? (leftLowerMod.individualFloatHeight ?? 0)
             : actualBottomSize;
-          // 상부프레임 높이: 하부장/상부장은 고정값(actualTopSize), 키큰장은 나머지에서 계산
-          const topFrameH = (leftCategoryResolved === 'lower' || leftCategoryResolved === 'upper' || hasDualCabinet)
+          // 상부프레임 높이: 상부장/상하부장 동시배치는 고정값(actualTopSize), 하부장 단독은 남은 공간, 키큰장은 나머지에서 계산
+          const topFrameH = (leftCategoryResolved === 'upper' || hasDualCabinet)
             ? actualTopSize
             : Math.max(0, effectiveH - floorFinishForHeight - bottomFrameH - furnitureH);
 
@@ -4311,6 +4320,15 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             }
           }
 
+          // 하부장 인조대리석 상판 두께 포함
+          if (rHasDualCabinet) {
+            const rLowerMod = rightCategoryResolved === 'lower' ? rightmostMod : rightCompanionMod;
+            const rStoneH = rLowerMod?.stoneTopThickness || 0;
+            if (rStoneH > 0) rLowerCabinetH += rStoneH;
+          } else if (rightCategoryResolved === 'lower' && rightmostMod?.stoneTopThickness) {
+            rFurnitureH += rightmostMod.stoneTopThickness;
+          }
+
           // 바닥마감재 차감: 키큰장(full)만 (하부장/상부장은 고정 높이이므로 차감 불필요)
           const rFloorFinishForHeight = (spaceInfo.hasFloorFinish && spaceInfo.floorFinish)
             ? spaceInfo.floorFinish.height : 0;
@@ -4323,8 +4341,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           const rBottomFrameH = rightLowerMod?.hasBase === false
             ? (rightLowerMod.individualFloatHeight ?? 0)
             : rActualBottomSize;
-          // 상부프레임 높이: 하부장/상부장은 고정값, 키큰장은 나머지에서 계산
-          const rTopFrameH = (rightCategoryResolved === 'lower' || rightCategoryResolved === 'upper' || rHasDualCabinet)
+          // 상부프레임 높이: 상부장/상하부장 동시배치는 고정값, 하부장 단독은 남은 공간, 키큰장은 나머지에서 계산
+          const rTopFrameH = (rightCategoryResolved === 'upper' || rHasDualCabinet)
             ? rActualTopSize
             : Math.max(0, rEffectiveH - rFloorFinishForHeight - rBottomFrameH - rFurnitureH);
 

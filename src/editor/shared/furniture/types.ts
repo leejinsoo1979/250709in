@@ -227,8 +227,13 @@ export interface PlacedModule {
   stoneTopRightOffset?: number;                 // 우 오프셋 (mm, 기본: 0)
   stoneTopBackLip?: number;                      // 뒷턱 높이 (mm, 0=없음, 기본: 0)
   stoneTopBackLipThickness?: number;             // 뒷턱 두께 (mm, 미설정 시 stoneTopThickness 사용)
-  stoneTopBackLipLeftOffset?: number;            // 뒷턱 좌측 오프셋 (mm, 미설정 시 stoneTopLeftOffset 사용)
-  stoneTopBackLipRightOffset?: number;           // 뒷턱 우측 오프셋 (mm, 미설정 시 stoneTopRightOffset 사용)
+  stoneTopBackLipDepthOffset?: number;            // 뒷턱 전체 뒤→앞 옵셋 (mm, 기본: 0)
+  stoneTopBackLipTopOffset?: number;             // 뒷턱 상판(덮개) 앞 옵셋 (mm, 돌출 길이, 기본: 20)
+  stoneTopBackLipTopBackOffset?: number;         // 뒷턱 상판(덮개) 뒤 옵셋 (mm, 돌출 길이, 기본: 0)
+  stoneTopBackLipFullFill?: boolean;             // 다채움 활성화 여부 (true 시, 옵셋된 뒷턱 덮개 뒤쪽으로만 상판을 천장까지 올림)
+  stoneTopBackLipFillHeight?: number;            // 다채움 시 뒷벽을 채워야 할 전체 절대 높이 목표값 (mm)
+  stoneTopBackLipLeftOffset?: number;            // (deprecated) 뒷턱 좌측 오프셋
+  stoneTopBackLipRightOffset?: number;           // (deprecated) 뒷턱 우측 오프셋
 
   // 서라운드 패널 속성
   isSurroundPanel?: boolean;              // 서라운드 패널 여부

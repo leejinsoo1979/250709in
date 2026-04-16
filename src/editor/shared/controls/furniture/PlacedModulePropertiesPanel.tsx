@@ -3906,82 +3906,34 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                       </div>
                     </div>
                   </div>
-                  <div className={styles.epRow}>
-                    <div className={styles.epField}>
-                      <label className={styles.epFieldLabel}>좌</label>
-                      <div className={styles.inputWithUnit}>
-                        <input
-                          type="text"
-                          inputMode="numeric"
-                          value={currentPlacedModule.stoneTopLeftOffset ?? 0}
-                          onChange={(e) => {
-                            const v = e.target.value;
-                            if (v === '' || v === '-' || /^-?\d+$/.test(v)) {
-                              const num = (v === '' || v === '-') ? 0 : Math.max(-200, Math.min(200, parseInt(v, 10)));
-                              updatePlacedModule(currentPlacedModule.id, { stoneTopLeftOffset: num });
-                            }
-                          }}
-                          onKeyDown={(e) => {
-                            if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
-                              e.preventDefault();
-                              const cur = currentPlacedModule.stoneTopLeftOffset ?? 0;
-                              const next = Math.max(-200, Math.min(200, cur + (e.key === 'ArrowUp' ? 1 : -1)));
-                              updatePlacedModule(currentPlacedModule.id, { stoneTopLeftOffset: next });
-                            }
-                          }}
-                          className={styles.epInput}
-                        />
-                        <span className={styles.unit}>mm</span>
-                      </div>
-                    </div>
-                    <div className={styles.epField}>
-                      <label className={styles.epFieldLabel}>우</label>
-                      <div className={styles.inputWithUnit}>
-                        <input
-                          type="text"
-                          inputMode="numeric"
-                          value={currentPlacedModule.stoneTopRightOffset ?? 0}
-                          onChange={(e) => {
-                            const v = e.target.value;
-                            if (v === '' || v === '-' || /^-?\d+$/.test(v)) {
-                              const num = (v === '' || v === '-') ? 0 : Math.max(-200, Math.min(200, parseInt(v, 10)));
-                              updatePlacedModule(currentPlacedModule.id, { stoneTopRightOffset: num });
-                            }
-                          }}
-                          onKeyDown={(e) => {
-                            if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
-                              e.preventDefault();
-                              const cur = currentPlacedModule.stoneTopRightOffset ?? 0;
-                              const next = Math.max(-200, Math.min(200, cur + (e.key === 'ArrowUp' ? 1 : -1)));
-                              updatePlacedModule(currentPlacedModule.id, { stoneTopRightOffset: next });
-                            }
-                          }}
-                          className={styles.epInput}
-                        />
-                        <span className={styles.unit}>mm</span>
-                      </div>
-                    </div>
-                  </div>
-                  {/* 뒷턱 옵션 */}
+
+                  {/* 뒷턱 옵션 — 상판 설정과 동일 패턴 */}
                   <div style={{ marginTop: '8px' }}>
                     <label className={styles.epFieldLabel}>뒷턱</label>
                     <div className={styles.doorTabSelector} style={{ marginTop: '4px' }}>
-                      <button
-                        className={`${styles.doorTab} ${!(currentPlacedModule.stoneTopBackLip) ? styles.activeDoorTab : ''}`}
-                        onClick={() => updatePlacedModule(currentPlacedModule.id, { stoneTopBackLip: 0, stoneTopBackLipThickness: 0 })}
-                      >
-                        없음
-                      </button>
-                      <button
-                        className={`${styles.doorTab} ${(currentPlacedModule.stoneTopBackLip || 0) > 0 ? styles.activeDoorTab : ''}`}
-                        onClick={() => {
-                          if (!(currentPlacedModule.stoneTopBackLip)) {
-                            updatePlacedModule(currentPlacedModule.id, { stoneTopBackLip: 100 });
-                          }
-                        }}
-                      >
-                        있음
-                      </button>
+                      {([0, 10, 20, 30] as const).map(thickness => (
+                        <button
+                          key={thickness}
+                          className={`${styles.doorTab} ${
+                            thickness === 0
+                              ? !(currentPlacedModule.stoneTopBackLip) ? styles.activeDoorTab : ''
+                              : (currentPlacedModule.stoneTopBackLip || 0) > 0 && (currentPlacedModule.stoneTopBackLipThickness || currentPlacedModule.stoneTopThickness || 20) === thickness ? styles.activeDoorTab : ''
+                          }`}
+                          onClick={() => {
+                            if (thickness === 0) {
+                              updatePlacedModule(currentPlacedModule.id, { stoneTopBackLip: 0, stoneTopBackLipThickness: 0 });
+                            } else {
+                              const updates: Record<string, unknown> = { stoneTopBackLipThickness: thickness };
+                              if (!(currentPlacedModule.stoneTopBackLip)) {
+                                updates.stoneTopBackLip = 100;
+                              }
+                              updatePlacedModule(currentPlacedModule.id, updates);
+                            }
+                          }}
+                        >
+                          {thickness === 0 ? '없음' : `${thickness}mm`}
+                        </button>
+                      ))}
                     </div>
                   </div>
                   {(currentPlacedModule.stoneTopBackLip || 0) > 0 && (
@@ -3994,7 +3946,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                             inputMode="numeric"
                             disabled={(() => {
                               const fullH = calcBackLipFillHeight(currentPlacedModule, moduleData, spaceInfo, placedModules);
-                              return fullH > 0 && (currentPlacedModule.stoneTopBackLip || 0) === fullH;
+                              return currentPlacedModule.stoneTopBackLipFullFill || (fullH > 0 && (currentPlacedModule.stoneTopBackLip || 0) === fullH);
                             })()}
                             value={currentPlacedModule.stoneTopBackLip ?? 100}
                             onChange={(e) => {
@@ -4017,10 +3969,10 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                           <span className={styles.unit}>mm</span>
                         </div>
                       </div>
-                      <label style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px', cursor: 'pointer', whiteSpace: 'nowrap', marginLeft: '8px' }}>
+                      <label style={{ display: 'flex', alignItems: 'center', gap: '3px', fontSize: '11px', cursor: 'pointer', whiteSpace: 'nowrap', marginLeft: '8px' }}>
                         <input
                           type="checkbox"
-                          checked={(() => {
+                          checked={currentPlacedModule.stoneTopBackLipFullFill || (() => {
                             const fullH = calcBackLipFillHeight(currentPlacedModule, moduleData, spaceInfo, placedModules);
                             return fullH > 0 && (currentPlacedModule.stoneTopBackLip || 0) === fullH;
                           })()}
@@ -4028,10 +3980,17 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                             if (e.target.checked) {
                               const fullH = calcBackLipFillHeight(currentPlacedModule, moduleData, spaceInfo, placedModules);
                               if (fullH > 0) {
-                                updatePlacedModule(currentPlacedModule.id, { stoneTopBackLip: fullH });
+                                // 다채움 시, 기존 뒷턱 높이는 유지하고 채울 높이와 상태만 기록
+                                updatePlacedModule(currentPlacedModule.id, { 
+                                  stoneTopBackLipFillHeight: fullH,
+                                  stoneTopBackLipFullFill: true 
+                                });
                               }
                             } else {
-                              updatePlacedModule(currentPlacedModule.id, { stoneTopBackLip: 100 });
+                              updatePlacedModule(currentPlacedModule.id, { 
+                                stoneTopBackLipFillHeight: 0,
+                                stoneTopBackLipFullFill: false 
+                              });
                             }
                           }}
                         />
@@ -4042,61 +4001,29 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                   {(currentPlacedModule.stoneTopBackLip || 0) > 0 && (
                     <div className={styles.epRow} style={{ marginTop: '6px' }}>
                       <div className={styles.epField}>
-                        <label className={styles.epFieldLabel}>뒷턱 두께</label>
+                        <label className={styles.epFieldLabel}>뒷턱 앞옵셋</label>
                         <div className={styles.inputWithUnit}>
                           <input
                             type="text"
                             inputMode="numeric"
-                            value={currentPlacedModule.stoneTopBackLipThickness || currentPlacedModule.stoneTopThickness || 20}
-                            onChange={(e) => {
-                              const v = e.target.value;
-                              if (v === '' || /^\d+$/.test(v)) {
-                                const num = v === '' ? 0 : Math.max(1, parseInt(v, 10));
-                                updatePlacedModule(currentPlacedModule.id, { stoneTopBackLipThickness: num });
-                              }
-                            }}
-                            onKeyDown={(e) => {
-                              if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
-                                e.preventDefault();
-                                const cur = currentPlacedModule.stoneTopBackLipThickness || currentPlacedModule.stoneTopThickness || 20;
-                                const next = Math.max(1, cur + (e.key === 'ArrowUp' ? 1 : -1));
-                                updatePlacedModule(currentPlacedModule.id, { stoneTopBackLipThickness: next });
-                              }
-                            }}
-                            className={styles.epInput}
-                          />
-                          <span className={styles.unit}>mm</span>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                  {(currentPlacedModule.stoneTopBackLip || 0) > 0 && (
-                    <div className={styles.epRow} style={{ marginTop: '6px' }}>
-                      <div className={styles.epField}>
-                        <label className={styles.epFieldLabel}>뒷턱 좌</label>
-                        <div className={styles.inputWithUnit}>
-                          <input
-                            type="text"
-                            inputMode="numeric"
-                            placeholder={`${currentPlacedModule.stoneTopLeftOffset ?? 0}`}
-                            value={currentPlacedModule.stoneTopBackLipLeftOffset ?? ''}
+                            disabled={(() => {
+                              const fullH = calcBackLipFillHeight(currentPlacedModule, moduleData, spaceInfo, placedModules);
+                              return fullH > 0 && (currentPlacedModule.stoneTopBackLip || 0) === fullH;
+                            })()}
+                            value={currentPlacedModule.stoneTopBackLipDepthOffset ?? 0}
                             onChange={(e) => {
                               const v = e.target.value;
                               if (v === '' || v === '-' || /^-?\d+$/.test(v)) {
-                                if (v === '' || v === '-') {
-                                  updatePlacedModule(currentPlacedModule.id, { stoneTopBackLipLeftOffset: undefined });
-                                } else {
-                                  const num = Math.max(-200, Math.min(200, parseInt(v, 10)));
-                                  updatePlacedModule(currentPlacedModule.id, { stoneTopBackLipLeftOffset: num });
-                                }
+                                const num = (v === '' || v === '-') ? 0 : Math.max(-200, Math.min(200, parseInt(v, 10)));
+                                updatePlacedModule(currentPlacedModule.id, { stoneTopBackLipDepthOffset: num });
                               }
                             }}
                             onKeyDown={(e) => {
                               if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
                                 e.preventDefault();
-                                const cur = currentPlacedModule.stoneTopBackLipLeftOffset ?? currentPlacedModule.stoneTopLeftOffset ?? 0;
+                                const cur = currentPlacedModule.stoneTopBackLipDepthOffset ?? 0;
                                 const next = Math.max(-200, Math.min(200, cur + (e.key === 'ArrowUp' ? 1 : -1)));
-                                updatePlacedModule(currentPlacedModule.id, { stoneTopBackLipLeftOffset: next });
+                                updatePlacedModule(currentPlacedModule.id, { stoneTopBackLipDepthOffset: next });
                               }
                             }}
                             className={styles.epInput}
@@ -4105,30 +4032,52 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                         </div>
                       </div>
                       <div className={styles.epField}>
-                        <label className={styles.epFieldLabel}>뒷턱 우</label>
+                        <label className={styles.epFieldLabel}>상판 앞돌출</label>
                         <div className={styles.inputWithUnit}>
                           <input
                             type="text"
                             inputMode="numeric"
-                            placeholder={`${currentPlacedModule.stoneTopRightOffset ?? 0}`}
-                            value={currentPlacedModule.stoneTopBackLipRightOffset ?? ''}
+                            value={currentPlacedModule.stoneTopBackLipTopOffset ?? 20}
                             onChange={(e) => {
                               const v = e.target.value;
                               if (v === '' || v === '-' || /^-?\d+$/.test(v)) {
-                                if (v === '' || v === '-') {
-                                  updatePlacedModule(currentPlacedModule.id, { stoneTopBackLipRightOffset: undefined });
-                                } else {
-                                  const num = Math.max(-200, Math.min(200, parseInt(v, 10)));
-                                  updatePlacedModule(currentPlacedModule.id, { stoneTopBackLipRightOffset: num });
-                                }
+                                const num = (v === '' || v === '-') ? 0 : Math.max(-200, Math.min(200, parseInt(v, 10)));
+                                updatePlacedModule(currentPlacedModule.id, { stoneTopBackLipTopOffset: num });
                               }
                             }}
                             onKeyDown={(e) => {
                               if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
                                 e.preventDefault();
-                                const cur = currentPlacedModule.stoneTopBackLipRightOffset ?? currentPlacedModule.stoneTopRightOffset ?? 0;
+                                const cur = currentPlacedModule.stoneTopBackLipTopOffset ?? 20;
                                 const next = Math.max(-200, Math.min(200, cur + (e.key === 'ArrowUp' ? 1 : -1)));
-                                updatePlacedModule(currentPlacedModule.id, { stoneTopBackLipRightOffset: next });
+                                updatePlacedModule(currentPlacedModule.id, { stoneTopBackLipTopOffset: next });
+                              }
+                            }}
+                            className={styles.epInput}
+                          />
+                          <span className={styles.unit}>mm</span>
+                        </div>
+                      </div>
+                      <div className={styles.epField}>
+                        <label className={styles.epFieldLabel}>상판 뒤돌출</label>
+                        <div className={styles.inputWithUnit}>
+                          <input
+                            type="text"
+                            inputMode="numeric"
+                            value={currentPlacedModule.stoneTopBackLipTopBackOffset ?? 0}
+                            onChange={(e) => {
+                              const v = e.target.value;
+                              if (v === '' || v === '-' || /^-?\d+$/.test(v)) {
+                                const num = (v === '' || v === '-') ? 0 : Math.max(-200, Math.min(200, parseInt(v, 10)));
+                                updatePlacedModule(currentPlacedModule.id, { stoneTopBackLipTopBackOffset: num });
+                              }
+                            }}
+                            onKeyDown={(e) => {
+                              if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                                e.preventDefault();
+                                const cur = currentPlacedModule.stoneTopBackLipTopBackOffset ?? 0;
+                                const next = Math.max(-200, Math.min(200, cur + (e.key === 'ArrowUp' ? 1 : -1)));
+                                updatePlacedModule(currentPlacedModule.id, { stoneTopBackLipTopBackOffset: next });
                               }
                             }}
                             className={styles.epInput}

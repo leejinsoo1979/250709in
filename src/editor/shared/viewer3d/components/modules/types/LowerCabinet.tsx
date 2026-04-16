@@ -529,6 +529,31 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
     const pm = state.placedModules.find(m => m.id === placedFurnitureId);
     return pm?.stoneTopBackLipThickness || 0; // 0이면 상판 두께 사용
   });
+  const stoneBackLipDepthOff = useFurnitureStore(state => {
+    if (!placedFurnitureId) return 0;
+    const pm = state.placedModules.find(m => m.id === placedFurnitureId);
+    return pm?.stoneTopBackLipDepthOffset || 0;
+  });
+  const stoneBackLipTopOff = useFurnitureStore(state => {
+    if (!placedFurnitureId) return 20; // 기본 20mm
+    const pm = state.placedModules.find(m => m.id === placedFurnitureId);
+    return pm?.stoneTopBackLipTopOffset ?? 20;
+  });
+  const stoneBackLipTopBackOff = useFurnitureStore(state => {
+    if (!placedFurnitureId) return 0;
+    const pm = state.placedModules.find(m => m.id === placedFurnitureId);
+    return pm?.stoneTopBackLipTopBackOffset ?? 0;
+  });
+  const stoneBackLipFullFill = useFurnitureStore(state => {
+    if (!placedFurnitureId) return false;
+    const pm = state.placedModules.find(m => m.id === placedFurnitureId);
+    return pm?.stoneTopBackLipFullFill || false;
+  });
+  const stoneBackLipFillHeightOff = useFurnitureStore(state => {
+    if (!placedFurnitureId) return 0;
+    const pm = state.placedModules.find(m => m.id === placedFurnitureId);
+    return pm?.stoneTopBackLipFillHeight ?? 0;
+  });
 
   // 상판내림 모듈 여부
   const isTopDown = moduleData.id.includes('lower-top-down-') || moduleData.id.includes('dual-lower-top-down-');
@@ -550,8 +575,13 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
       zOffset: (fo - bo) / 2,
       backLipHeight: stoneBackLip * 0.01, // mm → m
       backLipThickness: lipThicknessMm * 0.01, // mm → m
+      backLipDepthOffset: stoneBackLipDepthOff * 0.01, // mm → m
+      backLipTopOffset: stoneBackLipTopOff * 0.01,    // mm → m
+      backLipTopBackOffset: stoneBackLipTopBackOff * 0.01, // mm → m
+      backLipFullFill: stoneBackLipFullFill,
+      backLipFillHeight: stoneBackLipFillHeightOff * 0.01, // mm → m
     };
-  }, [stoneThickness, stoneFrontOff, stoneBackOff, stoneLeftOff, stoneRightOff, stoneBackLip, stoneBackLipThickness, adjustedWidth, baseFurniture.width, baseFurniture.depth]);
+  }, [stoneThickness, stoneFrontOff, stoneBackOff, stoneLeftOff, stoneRightOff, stoneBackLip, stoneBackLipThickness, stoneBackLipDepthOff, stoneBackLipTopOff, stoneBackLipTopBackOff, stoneBackLipFullFill, stoneBackLipFillHeightOff, adjustedWidth, baseFurniture.width, baseFurniture.depth]);
 
   // 인조대리석 상판 재질 — 전체 6면 동일 텍스처
   const countertopTextureUrl = spaceInfo?.materialConfig?.countertopTexture;
@@ -1252,19 +1282,69 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
       {/* 인조대리석 뒷턱 (back lip) — 상판 뒤쪽 수직판 */}
       {/* 2D 정면뷰에서는 상판과 같은 Z(중심)에 배치하여 정면에서 보이게 함 */}
       {showFurniture && stoneTopData && stoneTopData.backLipHeight > 0 && stoneTopMaterial && !(viewMode === '2D' && view2DDirection === 'top') && (
-        <BoxWithEdges
-          args={[stoneTopData.width, stoneTopData.backLipHeight, stoneTopData.backLipThickness]}
-          position={[
-            stoneTopData.xOffset,
-            cabinetYPosition + adjustedHeight / 2 + stoneTopData.thickness + stoneTopData.backLipHeight / 2,
-            (is2DMode && view2DDirection === 'front')
-              ? stoneTopData.zOffset
-              : stoneTopData.zOffset - stoneTopData.depth / 2 + stoneTopData.backLipThickness / 2
-          ]}
-          material={stoneTopMaterial}
-          renderMode={renderMode}
-          panelName="인조대리석 뒷턱"
-        />
+        stoneTopData.backLipDepthOffset > 0 ? (
+          <>
+            {/* 수직 측판 (현재 사용자가 설정한 뒷턱 높이 적용) */}
+            <BoxWithEdges
+              args={[stoneTopData.width, stoneTopData.backLipHeight - stoneTopData.backLipThickness, stoneTopData.backLipThickness]}
+              position={[
+                stoneTopData.xOffset,
+                cabinetYPosition + adjustedHeight / 2 + stoneTopData.thickness + (stoneTopData.backLipHeight - stoneTopData.backLipThickness) / 2,
+                (is2DMode && view2DDirection === 'front')
+                  ? stoneTopData.zOffset
+                  : stoneTopData.zOffset - stoneTopData.depth / 2 + stoneTopData.backLipThickness / 2 + stoneTopData.backLipDepthOffset
+              ]}
+              material={stoneTopMaterial}
+              renderMode={renderMode}
+              panelName="인조대리석 뒷턱 전면부"
+            />
+            {/* 수평 덮개판 (뒷벽까지 채움 + 상판 앞뒤 돌출 반영, 높이는 젠다이 상단 기준) */}
+            <BoxWithEdges
+              args={[stoneTopData.width, stoneTopData.backLipThickness, stoneTopData.backLipDepthOffset + stoneTopData.backLipThickness + stoneTopData.backLipTopOffset + stoneTopData.backLipTopBackOffset]}
+              position={[
+                stoneTopData.xOffset,
+                cabinetYPosition + adjustedHeight / 2 + stoneTopData.thickness + stoneTopData.backLipHeight - stoneTopData.backLipThickness / 2,
+                (is2DMode && view2DDirection === 'front')
+                  ? stoneTopData.zOffset
+                  : stoneTopData.zOffset - stoneTopData.depth / 2 + (stoneTopData.backLipDepthOffset + stoneTopData.backLipThickness + stoneTopData.backLipTopOffset - stoneTopData.backLipTopBackOffset) / 2
+              ]}
+              material={stoneTopMaterial}
+              renderMode={renderMode}
+              panelName="인조대리석 뒷턱 상단부"
+            />
+            {/* 다채움인 경우, Main Stone Top에서부터 올라가는 뒷벽 추가 대리석 패널 (후면 미드웨이 전체) */}
+            {stoneTopData.backLipFullFill && stoneTopData.backLipFillHeight > 0 && (
+              <BoxWithEdges
+                args={[stoneTopData.width, stoneTopData.backLipFillHeight, stoneTopData.backLipThickness]}
+                position={[
+                  stoneTopData.xOffset,
+                  cabinetYPosition + adjustedHeight / 2 + stoneTopData.thickness + stoneTopData.backLipFillHeight / 2,
+                  (is2DMode && view2DDirection === 'front')
+                    ? stoneTopData.zOffset
+                    : stoneTopData.zOffset - stoneTopData.depth / 2 + stoneTopData.backLipThickness / 2 // 가장 뒷벽에 밀착
+                ]}
+                material={stoneTopMaterial}
+                renderMode={renderMode}
+                panelName="인조대리석 벽체 미드웨이"
+              />
+            )}
+          </>
+        ) : (
+          /* 기존 (단일 뒷턱) */
+          <BoxWithEdges
+            args={[stoneTopData.width, stoneTopData.backLipHeight, stoneTopData.backLipThickness]}
+            position={[
+              stoneTopData.xOffset,
+              cabinetYPosition + adjustedHeight / 2 + stoneTopData.thickness + stoneTopData.backLipHeight / 2,
+              (is2DMode && view2DDirection === 'front')
+                ? stoneTopData.zOffset
+                : stoneTopData.zOffset - stoneTopData.depth / 2 + stoneTopData.backLipThickness / 2 + stoneTopData.backLipDepthOffset
+            ]}
+            material={stoneTopMaterial}
+            renderMode={renderMode}
+            panelName="인조대리석 뒷턱"
+          />
+        )
       )}
 
       {/* 상판내림: 졸리컷 L자 (수평판 + 수직 앞판) — 탑뷰에서는 숨김 */}

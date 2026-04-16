@@ -680,18 +680,27 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
               cabinetTopMm = cabinetBottomMm + moduleHeightMm;
             }
 
-            // 하부장 + 인조대리석: 가구 높이에 상판 두께 포함
+            // 하부장 + 인조대리석: 장 높이와 상판 두께를 분리하여 표시
             const stoneThicknessL2 = mod.stoneTopThickness || 0;
             const includeStoneInHeight = modCat_l2 === 'lower' && stoneThicknessL2 > 0;
-            const displayHeightMm = includeStoneInHeight ? moduleHeightMm + stoneThicknessL2 : moduleHeightMm;
-            const displayTopMm = includeStoneInHeight ? cabinetTopMm + stoneThicknessL2 : cabinetTopMm;
 
+            // 장 높이 세그먼트 (상판 제외 순수 캐비넷 높이)
             segments_l2.push({
               bottomY: mmToThreeUnits(cabinetBottomMm),
-              topY: mmToThreeUnits(displayTopMm),
-              heightMm: Math.round(displayHeightMm),
+              topY: mmToThreeUnits(cabinetTopMm),
+              heightMm: Math.round(moduleHeightMm),
               key: `furniture-${moduleIndex}`
             });
+
+            // 상판 두께 세그먼트 (분리 표시)
+            if (includeStoneInHeight) {
+              segments_l2.push({
+                bottomY: mmToThreeUnits(cabinetTopMm),
+                topY: mmToThreeUnits(cabinetTopMm + stoneThicknessL2),
+                heightMm: stoneThicknessL2,
+                key: `stone-top-${moduleIndex}`
+              });
+            }
 
             // 상부장: 상부프레임 치수 세그먼트 추가 (캐비넷 상단 ~ 천장)
             if (modCat_l2 === 'upper') {
