@@ -1635,6 +1635,7 @@ export const calculatePanelDetails = (
   }
 
   // === 터치 레그라박스 서랍 패널 (도어올림 터치 + 상판내림 터치) ===
+  console.log('[터치서랍 디버그] moduleId:', moduleData.id, '| touch check:', moduleData.id.includes('lower-door-lift-touch-') || moduleData.id.includes('lower-top-down-touch-'), '| innerWidth:', innerWidth, '| customWidth:', customWidth);
   if (moduleData.id.includes('lower-door-lift-touch-') || moduleData.id.includes('lower-top-down-touch-')) {
     // 도어올림 터치
     const isTouch2A = moduleData.id.includes('lower-door-lift-touch-2tier-a');
@@ -1711,9 +1712,11 @@ export const calculatePanelDetails = (
         { name: `터치서랍${drawerNum}(마이다)`, width: customWidth - 3, height: maidaH, thickness: 18.5, material: 'PET' },
       );
     });
+    console.log('[터치서랍 디버그] 터치서랍 패널 생성완료:', extDrawerPanels.filter(p => p.name.includes('터치서랍')).map(p => ({ name: p.name, w: p.width, h: p.height, d: p.depth, t: p.thickness, m: p.material })));
   }
 
   // 하부장: 외부서랍 + 도어를 "서랍 및 도어"로 합산 출력
+  console.log('[터치서랍 디버그] extDrawerPanels.length:', extDrawerPanels.length, '| isLowerCabinetModule:', isLowerCabinetModule, '| effectiveHasDoor:', effectiveHasDoor);
   if (isLowerCabinetModule && (extDrawerPanels.length > 0 || (panels.door.length > 0 && effectiveHasDoor))) {
     result.push({ name: '=== 서랍 및 도어 ===' });
     result.push(...extDrawerPanels);
