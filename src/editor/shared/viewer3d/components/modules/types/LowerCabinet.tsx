@@ -407,13 +407,7 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
       loader.load(countertopTextureUrl, (texture) => {
         texture.wrapS = THREE.RepeatWrapping;
         texture.wrapT = THREE.RepeatWrapping;
-        // 상판 실제 크기(Three.js 단위)에 비례하여 repeat — 0.6m(60cm) 기준 1회 반복
-        const baseUnit = 0.6;
-        const w = stoneTopData ? stoneTopData.width : 0.6;
-        const d = stoneTopData ? stoneTopData.depth : 0.6;
-        texture.repeat.set(w / baseUnit, d / baseUnit);
-        texture.center.set(0.5, 0.5);
-        texture.rotation = Math.PI / 2;
+        texture.repeat.set(1, 1);
         texture.colorSpace = THREE.SRGBColorSpace;
         faceMat.map = texture;
         faceMat.color.set('#ffffff');
