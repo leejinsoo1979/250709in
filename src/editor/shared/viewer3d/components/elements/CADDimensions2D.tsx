@@ -680,10 +680,9 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
               cabinetTopMm = cabinetBottomMm + moduleHeightMm;
             }
 
-            // 하부장 + 인조대리석: 가구 높이에 상판 두께 포함 (도어올림 제외)
-            const isDoorLiftL2 = moduleData.id?.includes('lower-door-lift-');
+            // 하부장 + 인조대리석: 가구 높이에 상판 두께 포함
             const stoneThicknessL2 = mod.stoneTopThickness || 0;
-            const includeStoneInHeight = modCat_l2 === 'lower' && !isDoorLiftL2 && stoneThicknessL2 > 0;
+            const includeStoneInHeight = modCat_l2 === 'lower' && stoneThicknessL2 > 0;
             const displayHeightMm = includeStoneInHeight ? moduleHeightMm + stoneThicknessL2 : moduleHeightMm;
             const displayTopMm = includeStoneInHeight ? cabinetTopMm + stoneThicknessL2 : cabinetTopMm;
 
@@ -721,41 +720,9 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
               }
             }
 
-            // 하부장 상판 두께 및 도어올림 갭 치수
+            // 하부장: 뒷턱 치수만 (상판 두께는 몸통에 합산됨)
             if (modCat_l2 === 'lower') {
               const stoneThickness = mod.stoneTopThickness || 0;
-              const isDoorLift = moduleData.id?.includes('lower-door-lift-');
-
-              if (isDoorLift) {
-                if (stoneThickness > 0) {
-                  // 도어올림 + 상판: 상판 두께만 표시 (도어 갭은 도어 치수에서 처리)
-                  const doorLiftTopGap = mod.doorTopGap ?? 30;
-                  segments_l2.push({
-                    bottomY: mmToThreeUnits(cabinetTopMm),
-                    topY: mmToThreeUnits(cabinetTopMm + stoneThickness),
-                    heightMm: stoneThickness,
-                    key: `stone-top-thickness-${moduleIndex}`
-                  });
-                  const gapAboveStone = doorLiftTopGap - stoneThickness;
-                  if (gapAboveStone > 0) {
-                    innerGapSegments_l2.push({
-                      bottomY: mmToThreeUnits(cabinetTopMm + stoneThickness),
-                      topY: mmToThreeUnits(cabinetTopMm + doorLiftTopGap),
-                      heightMm: Math.round(gapAboveStone),
-                      key: `door-lift-topgap-inner-${moduleIndex}`
-                    });
-                  }
-                }
-                // 도어올림 상판 미설치: 도어 갭 치수는 도어 치수 블록에서 표시 → 여기서 미표시
-              } else if (stoneThickness > 0 && !includeStoneInHeight) {
-                // 상판 두께 별도 표시 (일반 하부장은 가구 높이에 포함되므로 여기 도달하지 않음)
-                segments_l2.push({
-                  bottomY: mmToThreeUnits(cabinetTopMm),
-                  topY: mmToThreeUnits(cabinetTopMm + stoneThickness),
-                  heightMm: stoneThickness,
-                  key: `stone-top-thickness-${moduleIndex}`
-                });
-              }
 
               // 뒷턱 치수 (상판 위에 추가)
               if (stoneThickness > 0) {
@@ -2005,10 +1972,9 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
               cabinetTopMm = cabinetBottomMm + moduleHeightMm;
             }
 
-            // 하부장 + 인조대리석: 가구 높이에 상판 두께 포함 (도어올림 제외)
-            const isDoorLiftRL2 = moduleData.id?.includes('lower-door-lift-');
+            // 하부장 + 인조대리석: 가구 높이에 상판 두께 포함
             const stoneThicknessRL2 = mod.stoneTopThickness || 0;
-            const includeStoneInHeightRL2 = modCat_rl2 === 'lower' && !isDoorLiftRL2 && stoneThicknessRL2 > 0;
+            const includeStoneInHeightRL2 = modCat_rl2 === 'lower' && stoneThicknessRL2 > 0;
             const displayHeightMmRL2 = includeStoneInHeightRL2 ? moduleHeightMm + stoneThicknessRL2 : moduleHeightMm;
             const displayTopMmRL2 = includeStoneInHeightRL2 ? cabinetTopMm + stoneThicknessRL2 : cabinetTopMm;
 
@@ -2019,41 +1985,9 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
               key: `furniture-${moduleIndex}`
             });
 
-            // 하부장 상판 두께 및 도어올림 갭 치수
+            // 하부장: 뒷턱 치수만 (상판 두께는 몸통에 합산됨)
             if (modCat_rl2 === 'lower') {
               const stoneThickness = mod.stoneTopThickness || 0;
-              const isDoorLift = moduleData.id?.includes('lower-door-lift-');
-
-              if (isDoorLift) {
-                if (stoneThickness > 0) {
-                  // 도어올림 + 상판: 상판 두께만 표시 (도어 갭은 도어 치수에서 처리)
-                  const doorLiftTopGap = mod.doorTopGap ?? 30;
-                  segments_rl2.push({
-                    bottomY: mmToThreeUnits(cabinetTopMm),
-                    topY: mmToThreeUnits(cabinetTopMm + stoneThickness),
-                    heightMm: stoneThickness,
-                    key: `stone-top-thickness-${moduleIndex}`
-                  });
-                  const gapAboveStone = doorLiftTopGap - stoneThickness;
-                  if (gapAboveStone > 0) {
-                    innerGapSegments_rl2.push({
-                      bottomY: mmToThreeUnits(cabinetTopMm + stoneThickness),
-                      topY: mmToThreeUnits(cabinetTopMm + doorLiftTopGap),
-                      heightMm: Math.round(gapAboveStone),
-                      key: `door-lift-topgap-inner-${moduleIndex}`
-                    });
-                  }
-                }
-                // 도어올림 상판 미설치: 도어 갭 치수는 도어 치수 블록에서 표시 → 여기서 미표시
-              } else if (stoneThickness > 0 && !includeStoneInHeightRL2) {
-                // 상판 두께 별도 표시 (일반 하부장은 가구 높이에 포함되므로 여기 도달하지 않음)
-                segments_rl2.push({
-                  bottomY: mmToThreeUnits(cabinetTopMm),
-                  topY: mmToThreeUnits(cabinetTopMm + stoneThickness),
-                  heightMm: stoneThickness,
-                  key: `stone-top-thickness-${moduleIndex}`
-                });
-              }
 
               // 뒷턱 치수 (상판 위에 추가)
               if (stoneThickness > 0) {
