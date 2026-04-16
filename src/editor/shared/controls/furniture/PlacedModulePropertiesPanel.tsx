@@ -466,13 +466,13 @@ const getFurnitureImagePath = (moduleId: string): string | null => {
 };
 */
 
-// 뒷턱 다채움 높이 계산: 하부장 상단 ~ 상부장 하단 (또는 천장)
+// 뒷턱 다채움 높이 계산: 상판 윗면 ~ 상부장 하단 (또는 천장)
 const calcBackLipFillHeight = (
   currentMod: any, moduleData: any, spaceInfo: any, placedModules: any[]
 ): number => {
   const internalSpace = calculateInternalSpace(spaceInfo);
 
-  // 하부장 상단 절대 위치
+  // 상판 윗면 절대 위치
   const isFloating = spaceInfo.baseConfig?.type === 'stand' && spaceInfo.baseConfig?.placementType === 'float';
   const floatH = isFloating ? (spaceInfo.baseConfig?.floatHeight || 0) : 0;
   const isStandType = spaceInfo.baseConfig?.type === 'stand';
@@ -485,7 +485,8 @@ const calcBackLipFillHeight = (
   const baseH = isFloating ? floatH : (railOrBaseH + indivFloat);
   const floorH = spaceInfo.hasFloorFinish && spaceInfo.floorFinish ? spaceInfo.floorFinish.height : 0;
   const lowerBodyH = currentMod.cabinetBodyHeight ?? moduleData?.dimensions?.height ?? 785;
-  const lowerTopMm = floorH + baseH + lowerBodyH;
+  const stoneT = currentMod.stoneTopThickness || 0;
+  const lowerTopMm = floorH + baseH + lowerBodyH + stoneT;
 
   // 같은 슬롯 상부장 찾기
   const upperInSlot = placedModules.find((m: any) => {
@@ -3948,7 +3949,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                         className={`${styles.doorTab} ${(currentPlacedModule.stoneTopBackLip || 0) > 0 ? styles.activeDoorTab : ''}`}
                         onClick={() => {
                           if (!(currentPlacedModule.stoneTopBackLip)) {
-                            updatePlacedModule(currentPlacedModule.id, { stoneTopBackLip: 10 });
+                            updatePlacedModule(currentPlacedModule.id, { stoneTopBackLip: 100 });
                           }
                         }}
                       >
@@ -3964,7 +3965,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                           <input
                             type="text"
                             inputMode="numeric"
-                            value={currentPlacedModule.stoneTopBackLip ?? 10}
+                            value={currentPlacedModule.stoneTopBackLip ?? 100}
                             onChange={(e) => {
                               const v = e.target.value;
                               if (v === '' || /^\d+$/.test(v)) {
@@ -3975,7 +3976,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                             onKeyDown={(e) => {
                               if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
                                 e.preventDefault();
-                                const cur = currentPlacedModule.stoneTopBackLip ?? 10;
+                                const cur = currentPlacedModule.stoneTopBackLip ?? 100;
                                 const next = Math.max(1, cur + (e.key === 'ArrowUp' ? 1 : -1));
                                 updatePlacedModule(currentPlacedModule.id, { stoneTopBackLip: next });
                               }
@@ -3999,7 +4000,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                                 updatePlacedModule(currentPlacedModule.id, { stoneTopBackLip: fullH });
                               }
                             } else {
-                              updatePlacedModule(currentPlacedModule.id, { stoneTopBackLip: 10 });
+                              updatePlacedModule(currentPlacedModule.id, { stoneTopBackLip: 100 });
                             }
                           }}
                         />
