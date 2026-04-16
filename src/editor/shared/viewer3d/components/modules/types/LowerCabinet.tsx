@@ -64,6 +64,8 @@ const JollyCutHorizontalPlate: React.FC<{
     geometry.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
     geometry.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2));
     geometry.computeVertexNormals();
+    geometry.computeBoundingBox();
+    geometry.computeBoundingSphere();
     return geometry;
   }, [width, t, d]);
 
@@ -150,6 +152,8 @@ const JollyCutVerticalPlate: React.FC<{
     geometry.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
     geometry.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2));
     geometry.computeVertexNormals();
+    geometry.computeBoundingBox();
+    geometry.computeBoundingSphere();
     return geometry;
   }, [width, h, t]);
 
@@ -1232,46 +1236,37 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
         />
       )}
 
-      {/* 상판내림: 수평판(45도 연귀) + 수직 앞판(45도 연귀) — 졸리컷 */}
+      {/* 상판내림: 졸리컷 L자 (수평판 + 수직 앞판) */}
       {showFurniture && stoneTopData && stoneTopMaterial && isTopDown && (() => {
         const t = stoneTopData.thickness;
         const absDoorTopGap = Math.abs(doorTopGap ?? -80);
         const doorGapMm = 20;
         const frontPlateH = (absDoorTopGap - doorGapMm) * 0.01;
         const cabinetTopY = cabinetYPosition + adjustedHeight / 2;
-        const W = stoneTopData.width;
-        const D = stoneTopData.depth;
-        const halfW = W / 2;
-        const halfT = t / 2;
-        const halfD = D / 2;
-        const halfFH = frontPlateH / 2;
-        const xOff = stoneTopData.xOffset;
-        const zOff = stoneTopData.zOffset;
-        // 수평판 앞면 Z
-        const frontZ = zOff + halfD;
-
+        // 수평판: 중심Y = 캐비넷 상단 + 두께/2
+        const hPosY = cabinetTopY + t / 2;
+        // 수직 앞판: 높이 = frontPlateH + t (45도면 겹침 포함)
+        // 상단 = cabinetTopY + t (수평판 상면과 동일)
+        const vTotalH = frontPlateH + t;
+        const vPosY = cabinetTopY + t - vTotalH / 2;
+        // 수직 앞판 Z: 앞면 = 수평판 앞면
+        const frontZ = stoneTopData.zOffset + stoneTopData.depth / 2;
+        const vPosZ = frontZ - t / 2;
         return (
           <>
-            {/* 수평 상판 — 앞면 하단이 45도로 잘린 형태 (측면에서 보면 사다리꼴)
-                상면: 전체 depth, 하면: depth-t (앞쪽 t만큼 짧음)
-                45도 경사면: 상면 앞끝(frontZ) → 하면 앞끝(frontZ-t) */}
             <JollyCutHorizontalPlate
-              width={W}
+              width={stoneTopData.width}
               thickness={t}
-              depth={D}
-              position={[xOff, cabinetTopY + halfT, zOff]}
+              depth={stoneTopData.depth}
+              position={[stoneTopData.xOffset, hPosY, stoneTopData.zOffset]}
               material={stoneTopMaterial}
               renderMode={renderMode}
             />
-            {/* 수직 앞판 — 뒤면 상단이 45도로 잘린 형태
-                앞면: 전체 높이(frontPlateH+t), 뒷면: frontPlateH (위쪽 t만큼 짧음)
-                45도 경사면이 수평판 45도면과 정확히 맞물림
-                수직판 상단 = 수평판 상면(cabinetTopY+t), 앞면 높이 = frontPlateH+t */}
             <JollyCutVerticalPlate
-              width={W}
-              height={frontPlateH + t}
+              width={stoneTopData.width}
+              height={vTotalH}
               thickness={t}
-              position={[xOff, cabinetTopY + t - (frontPlateH + t) / 2, frontZ - halfT]}
+              position={[stoneTopData.xOffset, vPosY, vPosZ]}
               material={stoneTopMaterial}
               renderMode={renderMode}
             />
