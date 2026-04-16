@@ -362,14 +362,55 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
     };
   }, [stoneThickness, stoneFrontOff, stoneBackOff, stoneLeftOff, stoneRightOff, adjustedWidth, baseFurniture.width, baseFurniture.depth]);
 
+  // 인조대리석 상판 재질 — spaceInfo.materialConfig.countertopTexture/countertopColor 사용
+  const countertopTextureUrl = spaceInfo?.materialConfig?.countertopTexture;
+  const countertopColorVal = spaceInfo?.materialConfig?.countertopColor || '#e8e0d4';
+  const stoneTopMatRef = useRef<THREE.MeshStandardMaterial | null>(null);
+
   const stoneTopMaterial = useMemo(() => {
     if (!stoneTopData) return null;
-    return new THREE.MeshStandardMaterial({
-      color: new THREE.Color('#e8e0d4'), // 인조대리석 색상
+    const mat = new THREE.MeshStandardMaterial({
+      color: new THREE.Color(countertopColorVal),
       metalness: 0.1,
       roughness: 0.3,
     });
+    stoneTopMatRef.current = mat;
+    return mat;
   }, [!!stoneTopData]);
+
+  // countertop 색상 변경 반영
+  useEffect(() => {
+    if (stoneTopMatRef.current) {
+      if (!stoneTopMatRef.current.map) {
+        stoneTopMatRef.current.color.set(countertopColorVal);
+      }
+      stoneTopMatRef.current.needsUpdate = true;
+    }
+  }, [countertopColorVal]);
+
+  // countertop 텍스처 로딩
+  useEffect(() => {
+    const mat = stoneTopMatRef.current;
+    if (!mat) return;
+    if (countertopTextureUrl) {
+      const loader = new THREE.TextureLoader();
+      loader.load(countertopTextureUrl, (texture) => {
+        texture.wrapS = THREE.RepeatWrapping;
+        texture.wrapT = THREE.RepeatWrapping;
+        texture.repeat.set(1, 1);
+        mat.map = texture;
+        mat.color.set('#ffffff');
+        mat.needsUpdate = true;
+      });
+    } else {
+      if (mat.map) {
+        mat.map.dispose();
+        mat.map = null;
+      }
+      mat.color.set(countertopColorVal);
+      mat.needsUpdate = true;
+    }
+  }, [countertopTextureUrl, countertopColorVal]);
 
   // 상판내림 반통/한통 L프레임용 도어 재질 (텍스처 로드 포함)
   const doorTextureUrl = spaceInfo?.materialConfig?.doorTexture;
