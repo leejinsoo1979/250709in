@@ -55,8 +55,27 @@ const materialSwatches = [
   { id: "i8", name: "Cabinet Texture1", type: "텍스처", category: "커스텀", color: "#FFFFFF", texture: "image", image: "/materials/solid/cabinet texture1.jpeg" },
 ];
 
+// 상판 재질 데이터
+const countertopSwatches = [
+  // 현대칸스톤
+  { id: "ct1", name: "루나쉐도우", type: "인조대리석", category: "현대칸스톤", color: "#FFFFFF", texture: "image", image: "/materials/countertop/루나쉐도우_현대칸스톤.png" },
+  { id: "ct2", name: "루나화이트", type: "인조대리석", category: "현대칸스톤", color: "#FFFFFF", texture: "image", image: "/materials/countertop/루나화이트_현대칸스톤.png" },
+  { id: "ct3", name: "애쉬콘크리트", type: "인조대리석", category: "현대칸스톤", color: "#FFFFFF", texture: "image", image: "/materials/countertop/애쉬콘크리트_현대칸스톤.png" },
+
+  // 사일스톤(AAM)
+  { id: "ct4", name: "노리타", type: "인조대리석", category: "사일스톤", color: "#FFFFFF", texture: "image", image: "/materials/countertop/노리타_사일스톤(aam).png" },
+  { id: "ct5", name: "시포트", type: "인조대리석", category: "사일스톤", color: "#FFFFFF", texture: "image", image: "/materials/countertop/시포트_사일스톤(aam).png" },
+  { id: "ct6", name: "퍼블레노", type: "인조대리석", category: "사일스톤", color: "#FFFFFF", texture: "image", image: "/materials/countertop/퍼블레노_사일스톤(aam).png" },
+
+  // LX하이막스
+  { id: "ct7", name: "스노우콘크리트", type: "인조대리석", category: "LX하이막스", color: "#FFFFFF", texture: "image", image: "/materials/countertop/스노우콘크리트_Lx하이막스.png" },
+  { id: "ct8", name: "어반콘크리트", type: "인조대리석", category: "LX하이막스", color: "#FFFFFF", texture: "image", image: "/materials/countertop/어반콘크리트_Lx하이막스.png" },
+  { id: "ct9", name: "클라우드콘크리트", type: "인조대리석", category: "LX하이막스", color: "#FFFFFF", texture: "image", image: "/materials/countertop/클라우드콘크리트_Lx하이막스.png" },
+];
+
 // 필터 탭 고정 순서
 const categories = ['메라톤', '한솔', '예림', '커스텀'] as const;
+const countertopCategories = ['현대칸스톤', '사일스톤', 'LX하이막스'] as const;
 
 const MaterialPanel: React.FC = () => {
   const { t } = useTranslation();
@@ -127,9 +146,12 @@ const MaterialPanel: React.FC = () => {
     return selectedMaterial === materialName;
   };
 
+  const currentSwatches = materialTab === 'countertop' ? countertopSwatches : materialSwatches;
+  const currentCategories = materialTab === 'countertop' ? countertopCategories : categories;
+
   const filteredMaterials = categoryFilter
-    ? materialSwatches.filter(m => m.category === categoryFilter)
-    : materialSwatches;
+    ? currentSwatches.filter(m => m.category === categoryFilter)
+    : currentSwatches;
 
   return (
     <div className={styles.container}>
@@ -139,6 +161,7 @@ const MaterialPanel: React.FC = () => {
           className={cn(styles.tab, materialTab === 'interior' && styles.activeTab)}
           onClick={() => {
             setMaterialTab('interior');
+            setCategoryFilter(null);
           }}
         >
           <span className={styles.tabLabel}>{t('material.interior')}</span>
@@ -147,6 +170,7 @@ const MaterialPanel: React.FC = () => {
           className={cn(styles.tab, materialTab === 'door' && styles.activeTab)}
           onClick={() => {
             setMaterialTab('door');
+            setCategoryFilter(null);
           }}
         >
           <span className={styles.tabLabel}>{t('material.door')}</span>
@@ -155,6 +179,7 @@ const MaterialPanel: React.FC = () => {
           className={cn(styles.tab, materialTab === 'countertop' && styles.activeTab)}
           onClick={() => {
             setMaterialTab('countertop');
+            setCategoryFilter(null);
           }}
         >
           <span className={styles.tabLabel}>상판</span>
@@ -169,7 +194,7 @@ const MaterialPanel: React.FC = () => {
         >
           전체
         </button>
-        {categories.map((cat) => (
+        {currentCategories.map((cat) => (
           <button
             key={cat}
             className={cn(styles.filterChip, categoryFilter === cat && styles.filterChipActive)}
