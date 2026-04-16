@@ -371,8 +371,9 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
     if (!stoneTopData) return null;
     const mat = new THREE.MeshStandardMaterial({
       color: new THREE.Color(countertopColorVal),
-      metalness: 0.1,
-      roughness: 0.3,
+      metalness: 0.0,
+      roughness: 0.6,
+      envMapIntensity: 0.0,
     });
     stoneTopMatRef.current = mat;
     return mat;
