@@ -501,8 +501,8 @@ function PageInner(){
     });
     stoneThicknesses.forEach(t => {
       defaultStock.push({
-        label: `인조대리석_${t}T_3000x1500`,
-        width: 1500, length: 3000, thickness: t,
+        label: `인조대리석_${t}T_3680x760`,
+        width: 760, length: 3680, thickness: t,
         quantity: 999, material: '인조대리석'
       });
     });
