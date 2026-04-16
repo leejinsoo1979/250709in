@@ -795,12 +795,17 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                 );
               })}
 
-              {/* 도어 안쪽 갭 치수 (상판 윗면~도어 상단) */}
-              {innerGapSegments_l2.map((seg) => {
-                // 도어 안쪽 = 바깥 치수선 반대 방향 (leftInnerZ보다 +Z 방향, 가구 쪽)
-                const innerExtStart = leftInnerZ + mmToThreeUnits(50);
-                const innerDimZ = leftInnerZ + mmToThreeUnits(150);
-                return (
+              {/* 도어 안쪽 갭 치수 (상판 윗면~도어 상단) — 도어 전면(마이다) 쪽 */}
+              {innerGapSegments_l2.length > 0 && (() => {
+                // 도어 전면 Z 계산 (우측 도어 치수와 동일 기준)
+                const panelDepthMm_ig = spaceInfo.depth || 1500;
+                const furnitureDepthMm_ig = Math.min(panelDepthMm_ig, 600);
+                const zOff_ig = -mmToThreeUnits(panelDepthMm_ig) / 2;
+                const fzOff_ig = zOff_ig + (mmToThreeUnits(panelDepthMm_ig) - mmToThreeUnits(furnitureDepthMm_ig)) / 2;
+                const doorFrontZ_ig = fzOff_ig + mmToThreeUnits(furnitureDepthMm_ig) / 2;
+                const innerDimZ = doorFrontZ_ig + mmToThreeUnits(150);
+                const innerExtStart = doorFrontZ_ig + mmToThreeUnits(30);
+                return innerGapSegments_l2.map((seg) => (
                   <group key={`inner-gap-${seg.key}`}>
                     <ExtLine points={[[0, seg.bottomY, innerExtStart], [0, seg.bottomY, innerDimZ]]} color={dimensionColor} />
                     <ExtLine points={[[0, seg.topY, innerExtStart], [0, seg.topY, innerDimZ]]} color={dimensionColor} />
@@ -826,8 +831,8 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                       {seg.heightMm}
                     </Text>
                   </group>
-                );
-              })}
+                ));
+              })()}
 
               {/* 하부프레임 높이: 바닥마감재 상단 ~ 받침대 상단 */}
               {hasLower && baseFrameHeightMm > 0 && (
@@ -1990,11 +1995,16 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                 </group>
               ))}
 
-              {/* 도어 안쪽 갭 치수 (상판 윗면~도어 상단) — 우측뷰 */}
-              {innerGapSegments_rl2.map((seg) => {
-                const innerExtStart = leftInnerZ + mmToThreeUnits(50);
-                const innerDimZ = leftInnerZ + mmToThreeUnits(150);
-                return (
+              {/* 도어 안쪽 갭 치수 (상판 윗면~도어 상단) — 우측뷰: 도어 전면(마이다) 쪽 */}
+              {innerGapSegments_rl2.length > 0 && (() => {
+                const panelDepthMm_ig = spaceInfo.depth || 1500;
+                const furnitureDepthMm_ig = Math.min(panelDepthMm_ig, 600);
+                const zOff_ig = -mmToThreeUnits(panelDepthMm_ig) / 2;
+                const fzOff_ig = zOff_ig + (mmToThreeUnits(panelDepthMm_ig) - mmToThreeUnits(furnitureDepthMm_ig)) / 2;
+                const doorFrontZ_ig = fzOff_ig + mmToThreeUnits(furnitureDepthMm_ig) / 2;
+                const innerDimZ = doorFrontZ_ig + mmToThreeUnits(150);
+                const innerExtStart = doorFrontZ_ig + mmToThreeUnits(30);
+                return innerGapSegments_rl2.map((seg) => (
                   <group key={`inner-gap-${seg.key}`}>
                     <ExtLine points={[[0, seg.bottomY, innerExtStart], [0, seg.bottomY, innerDimZ]]} color={dimensionColor} />
                     <ExtLine points={[[0, seg.topY, innerExtStart], [0, seg.topY, innerDimZ]]} color={dimensionColor} />
@@ -2005,8 +2015,8 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                       {seg.heightMm}
                     </Text>
                   </group>
-                );
-              })}
+                ));
+              })()}
 
               {hasLower_r && baseFrameHeightMm > 0 && (
                 <>
