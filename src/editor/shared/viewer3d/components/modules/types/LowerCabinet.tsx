@@ -1061,71 +1061,38 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
         />
       )}
 
-      {/* 상판내림 졸리컷 L자 상판 (수평판 + 수직 앞판, 45도 연귀 접합) */}
+      {/* 상판내림: 수평판 + 수직 앞판 (BoxWithEdges 2개로 L자 구성) */}
       {showFurniture && stoneTopData && stoneTopMaterial && isTopDown && (() => {
-        const t = stoneTopData.thickness; // 인조대리석 두께 (Three 단위)
-        // 상판내림 doorTopGap은 음수 (예: -80 → 도어 상단이 캐비넷 상면보다 80mm 아래)
-        const absDoorTopGap = Math.abs(doorTopGap ?? -80); // mm
-        const doorGapMm = 20; // 도어 상단과 수직 앞판 하단 사이 갭 (mm)
-        // 수직 앞판 높이: 수평판 상면 ~ 도어상단+20mm 위
-        const dropH = t + (absDoorTopGap - doorGapMm) * 0.01;
-        const hW = stoneTopData.width; // 폭
-        const hD = stoneTopData.depth; // 수평판 깊이
-        // 기준점: 캐비넷 상면
+        const t = stoneTopData.thickness;
+        const absDoorTopGap = Math.abs(doorTopGap ?? -80);
+        const doorGapMm = 20;
+        const frontPlateH = (absDoorTopGap - doorGapMm) * 0.01; // 수직 앞판 높이 (수평판 하면 ~ 도어+20mm)
         const cabinetTopY = cabinetYPosition + adjustedHeight / 2;
-        // 수평판 상면 = 캐비넷 상면 + 두께
-        const topSurface = cabinetTopY + t;
-        // 수평판 앞면 Z
-        const frontZ = stoneTopData.zOffset + hD / 2;
-
-        // 졸리컷 L자 단면 (ZY 평면에 그리고 X축으로 extrude)
-        // Shape XY 평면: X → Z축(깊이, 뒤=-, 앞=+), Y → Y축(높이)
-        // 원점: 수평판 중심Z, 수평판 하면Y
-        // 수직 앞판 앞면 = 수평판 앞면 (같은 Z), 45도 면은 안쪽에서 만남
-        const shape = new THREE.Shape();
-        const halfD = hD / 2;
-        // 뒤쪽 하단
-        shape.moveTo(-halfD, 0);
-        // 뒤쪽 상단
-        shape.lineTo(-halfD, t);
-        // 앞쪽 상단 (수평판 앞면 = 수직 앞판 앞면)
-        shape.lineTo(halfD, t);
-        // 수직 앞판 앞면 하단
-        shape.lineTo(halfD, t - dropH);
-        // 졸리컷 45도: 수직 앞판 뒷면 하단
-        shape.lineTo(halfD - t, t - dropH);
-        // 수평판 앞면 하면에서 45도로 올라옴
-        shape.lineTo(halfD - t, 0);
-        // 닫기
-        shape.lineTo(-halfD, 0);
-
-        const extrudeSettings = { steps: 1, depth: hW, bevelEnabled: false };
-        const geometry = new THREE.ExtrudeGeometry(shape, extrudeSettings);
-        // extrude는 Z축 방향 → X축으로 회전
-        geometry.translate(0, 0, -hW / 2); // extrude 중심 맞춤
-        geometry.rotateY(-Math.PI / 2); // Shape X(깊이)→Z, extrude(Z)→X
-
-        const posY = cabinetTopY; // 수평판 하면
-        const posZ = stoneTopData.zOffset; // 깊이 중심
-
-        // 졸리컷 전용 단색 재질 (ExtrudeGeometry UV 호환 문제 방지)
-        const jollyMat = new THREE.MeshStandardMaterial({
-          color: new THREE.Color(countertopColorVal),
-          metalness: 0.0, roughness: 0.6, envMapIntensity: 0.0,
-        });
-
+        // 수평판: 캐비넷 상면 위
+        const hPosY = cabinetTopY + t / 2;
+        // 수직 앞판: 수평판 하면에서 아래로
+        const vPosY = cabinetTopY - frontPlateH / 2;
+        // 수직 앞판 Z: 수평판 앞면에 맞닿음
+        const vPosZ = stoneTopData.zOffset + stoneTopData.depth / 2 + t / 2;
         return (
-          <group position={[stoneTopData.xOffset, posY, posZ]}>
-            {renderMode === 'solid' && (
-              <mesh geometry={geometry} material={jollyMat} />
-            )}
-            {renderMode === 'wireframe' && (
-              <lineSegments>
-                <edgesGeometry args={[geometry]} />
-                <lineBasicMaterial color="#ffffff" />
-              </lineSegments>
-            )}
-          </group>
+          <>
+            {/* 수평판 */}
+            <BoxWithEdges
+              args={[stoneTopData.width, t, stoneTopData.depth]}
+              position={[stoneTopData.xOffset, hPosY, stoneTopData.zOffset]}
+              material={stoneTopMaterial}
+              renderMode={renderMode}
+              panelName="인조대리석 상판"
+            />
+            {/* 수직 앞판 */}
+            <BoxWithEdges
+              args={[stoneTopData.width, frontPlateH, t]}
+              position={[stoneTopData.xOffset, vPosY, vPosZ]}
+              material={stoneTopMaterial}
+              renderMode={renderMode}
+              panelName="인조대리석 앞판"
+            />
+          </>
         );
       })()}
 
