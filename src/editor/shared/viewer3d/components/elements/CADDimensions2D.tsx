@@ -276,6 +276,8 @@ const computeLowerCabinetMaidaHeights = (
   const notchHeights = is3Tier ? [65, 65] : isDoorLift3Tier ? [65, 65] : isDoorLift2Tier ? [65] : isTopDown3Tier ? [65, 65, 65] : isTopDown2Tier ? [65, 65] : [65];
   const hideTopNotch = isDoorLift2Tier || isDoorLift3Tier || isTopDown2Tier || isTopDown3Tier;
   const fixedMaidaHeights = isDoorLift2Tier ? [400, 400] : isDoorLift3Tier ? [360, 210, 210] : undefined;
+  // 실제 서랍 개수 (ExternalDrawerRenderer drawerCount와 동일)
+  const drawerCount = (is3Tier || isDoorLift3Tier || isTopDown3Tier) ? 3 : 2;
 
   // 모듈별 기본 doorTopGap/doorBottomGap (LowerCabinet.tsx line 379-381)
   const defaultDoorTopGap = isTopDown2Tier || isTopDown3Tier ? -80 : isDoorLift2Tier || isDoorLift3Tier ? 30 : -20;
@@ -306,7 +308,9 @@ const computeLowerCabinetMaidaHeights = (
     cursor = notch.fromBottom + notch.height;
   }
   // hideTopNotch일 때 마지막 노치 위 남은 공간을 추가 zone으로 생성
-  if (cursor < moduleHeightMm) {
+  // 단, zone이 이미 drawerCount만큼 있으면 추가하지 않음 (ExternalDrawerRenderer와 동일)
+  // 상판내림: 마지막 노치 위 55mm는 전대+상판 영역이지 서랍 zone이 아님
+  if (cursor < moduleHeightMm && zones.length < drawerCount) {
     const lastNotch = allNotches[allNotches.length - 1];
     zones.push({
       bottomMm: cursor,
