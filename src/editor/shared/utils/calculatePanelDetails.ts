@@ -38,7 +38,15 @@ export const calculatePanelDetails = (
   stoneTopFrontOffset?: number, // 앞 오프셋 (mm)
   stoneTopBackOffset?: number, // 뒤 오프셋 (mm)
   stoneTopLeftOffset?: number, // 좌 오프셋 (mm)
-  stoneTopRightOffset?: number // 우 오프셋 (mm)
+  stoneTopRightOffset?: number, // 우 오프셋 (mm)
+  // 인조대리석 뒷턱
+  stoneTopBackLipHeight?: number,
+  stoneTopBackLipThickness?: number,
+  stoneTopBackLipDepthOffset?: number,
+  stoneTopBackLipTopOffset?: number,
+  stoneTopBackLipTopBackOffset?: number,
+  stoneTopBackLipFullFill?: boolean,
+  stoneTopBackLipFillHeight?: number
 ) => {
   const panels: { upper: any[]; lower: any[]; door: any[]; frame: any[] } = {
     upper: [],     // 상부장 패널
@@ -1951,10 +1959,63 @@ export const calculatePanelDetails = (
       result.push({
         name: '인조대리석 앞판',
         width: customWidth + (stoneTopLeftOffset || 0) + (stoneTopRightOffset || 0),
-        height: frontPlateHeight,
+        height: frontPlateHeight, // height = 깊이/높이 방향 (W방향)
         thickness: stoneTopThickness,
         material: '인조대리석',
       });
+    }
+
+    // 인조대리석 뒷턱 옵션이 있는 경우 뒷턱 패널들 추가
+    const backLipT = stoneTopBackLipThickness || 12; // 뒷턱 두께 기본값
+    if (stoneTopBackLipHeight && stoneTopBackLipHeight > 0) {
+      const topWidth = customWidth + (stoneTopLeftOffset || 0) + (stoneTopRightOffset || 0);
+      
+      if (stoneTopBackLipDepthOffset && stoneTopBackLipDepthOffset > 0) {
+        // 옵셋이 있는 경우 3분할 렌더링 (전면, 상단 덮개판, 다채움 시 미드웨이)
+        // 1. 전면 수직 젠다이 (높이 = backLipHeight - backLipThickness)
+        result.push({
+          name: '인조대리석 뒷턱 전면부',
+          width: topWidth,
+          height: stoneTopBackLipHeight - backLipT, // 수직 높이
+          thickness: backLipT,
+          material: '인조대리석',
+        });
+        
+        // 2. 상단 덮개판 (수평판) - 깊이 = 돌출오프셋 + 두께 + 돌출보정
+        const coverDepth = stoneTopBackLipDepthOffset + backLipT + (stoneTopBackLipTopOffset || 0) + (stoneTopBackLipTopBackOffset || 0);
+        result.push({
+          name: '인조대리석 뒷턱 상단부',
+          width: topWidth,
+          depth: coverDepth, // 깊이
+          thickness: backLipT,
+          material: '인조대리석',
+        });
+
+        // 3. 다채움 옵션 시 미드웨이 패널
+        if (stoneTopBackLipFullFill && stoneTopBackLipFillHeight && stoneTopBackLipFillHeight > 0) {
+          result.push({
+            name: '인조대리석 벽체 미드웨이',
+            width: topWidth,
+            height: stoneTopBackLipFillHeight, // 수직 높이
+            thickness: backLipT,
+            material: '인조대리석',
+          });
+        }
+      } else {
+        // 옵셋 없는 기본 형태 (단일 뒷턱)
+        // 다채움 옵션인 경우 미드웨이 전체 높이로 한 판을 출력
+        const finalBackLipHeight = (stoneTopBackLipFullFill && stoneTopBackLipFillHeight && stoneTopBackLipFillHeight > 0) 
+            ? stoneTopBackLipFillHeight 
+            : stoneTopBackLipHeight;
+            
+        result.push({
+          name: '인조대리석 뒷턱',
+          width: topWidth,
+          height: finalBackLipHeight,
+          thickness: backLipT,
+          material: '인조대리석',
+        });
+      }
     }
   }
 

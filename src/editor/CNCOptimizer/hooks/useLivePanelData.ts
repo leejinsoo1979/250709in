@@ -7,7 +7,7 @@ import { calculateTopBottomFrameHeight, calculateBaseFrameHeight } from '@/edito
 import { Panel } from '../types';
 import { normalizePanels, NormalizedPanel } from '@/utils/cutlist/normalize';
 import { calculateShelfBoringPositions } from '@/domain/boring/utils/calculateShelfBoringPositions';
-import { computeFrameMergeGroups } from '@/editor/shared/utils/frameMergeUtils';
+import { computeFrameMergeGroups, computeStoneTopMergeGroups } from '@/editor/shared/utils/frameMergeUtils';
 import { getDefaultGrainDirection } from '@/editor/shared/utils/materialConstants';
 
 /**
@@ -246,7 +246,14 @@ export function useLivePanelData() {
           })(),
           placedModule.stoneTopBackOffset,
           placedModule.stoneTopLeftOffset,
-          placedModule.stoneTopRightOffset
+          placedModule.stoneTopRightOffset,
+          placedModule.stoneTopBackLip,
+          placedModule.stoneTopBackLipThickness,
+          placedModule.stoneTopBackLipDepthOffset,
+          placedModule.stoneTopBackLipTopOffset,
+          placedModule.stoneTopBackLipTopBackOffset,
+          placedModule.stoneTopBackLipFullFill,
+          placedModule.stoneTopBackLipFillHeight
         );
 
         console.log(`Module ${moduleIndex}: All panels list received:`, allPanelsList);
@@ -769,6 +776,164 @@ export function useLivePanelData() {
         });
 
         console.log(`🔗 프레임 병합: 상부 ${topGroups.length}그룹, 하부 ${baseGroups.length}그룹 (개별 ${framePanelIndices.length}개 제거)`);
+
+        // =========================================================
+        // ★ 인조대리석 상판 병합 처리
+        // 상하부 프레임과 마찬가지로 병합 후 내보내기 (stoneTopMergeGroups 활용)
+        // =========================================================
+        const stoneTopGroups = computeStoneTopMergeGroups(placedModules, 3680);
+        
+        if (stoneTopGroups.length > 0) {
+          const stonePanelIndices: number[] = [];
+          
+          // 먼저, 병합 그룹에 속하는 모듈들의 ID 목록 추출
+          const mergedModuleIds = new Set<string>();
+          stoneTopGroups.forEach(g => g.moduleIds.forEach(id => mergedModuleIds.add(id)));
+
+          // 병합 대상 모듈에서 개별로 생성된 인조대리석 패널의 인덱스 수집
+          allPanels.forEach((p, idx) => {
+            // 인조대리석 패널이면서, 이 패널의 주인이 병합 그룹에 속해 있다면 제거 대상
+            // furnitureId가 없고 id만 있는 경우(기존) 대비를 위해 id에서 추출해서 확인
+            const pModIdxMatch = p.id.match(/^m(\d+)_/);
+            if (pModIdxMatch) {
+              const pModIdx = parseInt(pModIdxMatch[1]);
+              const ownerModule = placedModules[pModIdx];
+              if (ownerModule && mergedModuleIds.has(ownerModule.id) && p.name.includes('인조대리석')) {
+                stonePanelIndices.push(idx);
+              }
+            }
+          });
+
+          // 뒤에서부터 제거 (인덱스 밀림 방지)
+          for (let i = stonePanelIndices.length - 1; i >= 0; i--) {
+            allPanels.splice(stonePanelIndices[i], 1);
+          }
+
+          // 병합된 인조대리석 패널 생성
+          stoneTopGroups.forEach((group, gIdx) => {
+            // 그룹의 첫번째 모듈 설정값을 기준 모델로 가져옴
+            const firstModuleId = group.moduleIds[0];
+            const firstModIndex = placedModules.findIndex(m => m.id === firstModuleId);
+            if (firstModIndex < 0) return;
+            const refMod = placedModules[firstModIndex];
+
+            // 1. 수평 상판
+            const defaultDepth = refMod.customDepth || 600; // dimensions 대신 customDepth 활용
+            allPanels.push({
+              id: `merged_stone_top_${gIdx}`,
+              name: `${group.label} 인조대리석 상판`,
+              width: Math.round(group.totalWidthMm * 10) / 10,
+              height: defaultDepth + (refMod.stoneTopFrontOffset || 0) + (refMod.stoneTopBackOffset || 0),
+              thickness: refMod.stoneTopThickness || 12,
+              material: '인조대리석',
+              color: (refMod as any).color || 'MW',
+              quantity: 1,
+              grain: 'H' as any,
+              meshName: 'stone-top',
+              furnitureId: refMod.id,
+            });
+
+            // 2. 앞판 (상판내림 전용)
+            // 상판내림 모듈인 경우 앞판 추가 (이 구분을 위해 refMod.id 패턴 확인)
+            const isTopDownForStone = refMod.id.includes('lower-top-down-') || refMod.id.includes('dual-lower-top-down-');
+            if (isTopDownForStone) {
+              const effectiveDoorTopGap = (spaceInfo.doorTopGap === undefined || spaceInfo.doorTopGap === 0) ? -80 : spaceInfo.doorTopGap;
+              const absDoorTopGapForStone = Math.abs(effectiveDoorTopGap);
+              const doorGapForStone = 20; 
+              const frontPlateHeight = (absDoorTopGapForStone - doorGapForStone) + (refMod.stoneTopThickness || 12);
+              allPanels.push({
+                id: `merged_stone_front_${gIdx}`,
+                name: `${group.label} 인조대리석 앞판`,
+                width: Math.round(group.totalWidthMm * 10) / 10,
+                height: frontPlateHeight,
+                thickness: refMod.stoneTopThickness || 12,
+                material: '인조대리석',
+                color: (refMod as any).color || 'MW',
+                quantity: 1,
+                grain: 'H' as any,
+                meshName: 'stone-front',
+                furnitureId: refMod.id,
+              });
+            }
+
+            // 3. 뒷턱 관련 패널들
+            const backLipH = refMod.stoneTopBackLip || 0;
+            const backLipT = refMod.stoneTopBackLipThickness || 12;
+            if (backLipH > 0) {
+              const mergedWidth = Math.round(group.totalWidthMm * 10) / 10;
+              
+              if (refMod.stoneTopBackLipDepthOffset && refMod.stoneTopBackLipDepthOffset > 0) {
+                // 전면부
+                allPanels.push({
+                  id: `merged_stone_backlip_front_${gIdx}`,
+                  name: `${group.label} 인조대리석 뒷턱 전면부`,
+                  width: mergedWidth,
+                  height: backLipH - backLipT,
+                  thickness: backLipT,
+                  material: '인조대리석',
+                  color: (refMod as any).color || 'MW',
+                  quantity: 1,
+                  grain: 'H' as any,
+                  meshName: 'stone-backlip',
+                  furnitureId: refMod.id,
+                });
+                
+                // 상단부
+                const coverDepth = refMod.stoneTopBackLipDepthOffset + backLipT + (refMod.stoneTopBackLipTopOffset || 0) + (refMod.stoneTopBackLipTopBackOffset || 0);
+                allPanels.push({
+                  id: `merged_stone_backlip_top_${gIdx}`,
+                  name: `${group.label} 인조대리석 뒷턱 상단부`,
+                  width: mergedWidth,
+                  height: coverDepth, // depth가 height로 변환
+                  thickness: backLipT,
+                  material: '인조대리석',
+                  color: (refMod as any).color || 'MW',
+                  quantity: 1,
+                  grain: 'H' as any,
+                  meshName: 'stone-backlip',
+                  furnitureId: refMod.id,
+                });
+
+                // 다채움
+                if (refMod.stoneTopBackLipFullFill && refMod.stoneTopBackLipFillHeight && refMod.stoneTopBackLipFillHeight > 0) {
+                  allPanels.push({
+                    id: `merged_stone_backlip_midway_${gIdx}`,
+                    name: `${group.label} 인조대리석 벽체 미드웨이`,
+                    width: mergedWidth,
+                    height: refMod.stoneTopBackLipFillHeight,
+                    thickness: backLipT,
+                    material: '인조대리석',
+                    color: (refMod as any).color || 'MW',
+                    quantity: 1,
+                    grain: 'H' as any,
+                    meshName: 'stone-backlip',
+                    furnitureId: refMod.id,
+                  });
+                }
+              } else {
+                const finalBackLipHeight = (refMod.stoneTopBackLipFullFill && refMod.stoneTopBackLipFillHeight && refMod.stoneTopBackLipFillHeight > 0) 
+                    ? refMod.stoneTopBackLipFillHeight 
+                    : backLipH;
+
+                allPanels.push({
+                  id: `merged_stone_backlip_${gIdx}`,
+                  name: `${group.label} 인조대리석 뒷턱`,
+                  width: mergedWidth,
+                  height: finalBackLipHeight,
+                  thickness: backLipT,
+                  material: '인조대리석',
+                  color: (refMod as any).color || 'MW',
+                  quantity: 1,
+                  grain: 'H' as any,
+                  meshName: 'stone-backlip',
+                  furnitureId: refMod.id,
+                });
+              }
+            }
+          });
+
+          console.log(`🔗 상판 병합: 상판 ${stoneTopGroups.length}그룹 (개별 ${stonePanelIndices.length}개 제거)`);
+        }
       }
 
       setPanels(allPanels);

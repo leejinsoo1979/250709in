@@ -133,3 +133,87 @@ function buildGroup(
   const label = `${letters.join('+')}(${suffix})`;
   return { moduleIds, totalWidthMm, label, frameHeight };
 }
+
+/**
+ * 인조대리석 상판 병합 그룹 계산 유틸리티
+ * - 인접한 모듈(X축 정렬 기준 빈틈없음)
+ * - 상판 관련된 설정(두께, 옵셋, 뒷턱)이 모두 동일해야 병합
+ * - 결합 너비 최대 3680mm(인조대리석 기본 원장 L사이즈) 허용
+ */
+export function computeStoneTopMergeGroups(
+  modules: PlacedModule[],
+  maxWidthMm: number = 3680
+): FrameMergeGroup[] {
+  if (modules.length === 0) return [];
+  
+  // 돌출/두께가 있는 유효한 상판을 가진 모듈만 추출
+  const eligibleModules = modules.filter(mod => (mod.stoneTopThickness || 0) > 0);
+  if (eligibleModules.length === 0) return [];
+
+  const sorted = [...eligibleModules].sort((a, b) => a.position.x - b.position.x);
+
+  const alphaMap = new Map<string, string>();
+  sorted.forEach((mod, idx) => {
+    alphaMap.set(mod.id, String.fromCharCode(65 + idx)); // A, B, C...
+  });
+
+  const groups: FrameMergeGroup[] = [];
+  let currentGroup: PlacedModule[] = [];
+  let currentSum = 0;
+
+  for (const mod of sorted) {
+    const widthMm = getEpCorrectedWidth(mod) + (mod.stoneTopLeftOffset || 0) + (mod.stoneTopRightOffset || 0);
+
+    if (currentGroup.length === 0) {
+      currentGroup.push(mod);
+      currentSum = widthMm;
+      continue;
+    }
+
+    const prevMod = currentGroup[currentGroup.length - 1];
+    
+    // 병합 조건 검사
+    const sameThickness = prevMod.stoneTopThickness === mod.stoneTopThickness;
+    const sameOffsets = 
+      (prevMod.stoneTopFrontOffset || 0) === (mod.stoneTopFrontOffset || 0) &&
+      (prevMod.stoneTopBackOffset || 0) === (mod.stoneTopBackOffset || 0);
+    const sameBackLip = 
+      (prevMod.stoneTopBackLip || 0) === (mod.stoneTopBackLip || 0) &&
+      (prevMod.stoneTopBackLipThickness || 0) === (mod.stoneTopBackLipThickness || 0) &&
+      (prevMod.stoneTopBackLipDepthOffset || 0) === (mod.stoneTopBackLipDepthOffset || 0) &&
+      (prevMod.stoneTopBackLipTopOffset || 0) === (mod.stoneTopBackLipTopOffset || 0) &&
+      (prevMod.stoneTopBackLipTopBackOffset || 0) === (mod.stoneTopBackLipTopBackOffset || 0) &&
+      (prevMod.stoneTopBackLipFullFill || false) === (mod.stoneTopBackLipFullFill || false) &&
+      (prevMod.stoneTopBackLipFillHeight || 0) === (mod.stoneTopBackLipFillHeight || 0);
+      
+    // Z좌표 검사 (앞뒤로 튀어나온 정도가 다르면 병합 불가) - 동일 선상이려면 zOffset이 같아야 함
+    const sameZ = Math.abs(prevMod.position.z - mod.position.z) < 0.1;
+    // Y좌표 검사 (높이가 다르면 병합 불가)
+    const sameY = Math.abs(prevMod.position.y - mod.position.y) < 0.1;
+    // X좌표(인접) 검사 - 이전 모듈의 우측 끝과 현재 모듈의 좌측 끝이 맞닿아 있는지 검사
+    const prevBounds = getModuleBoundsX(prevMod);
+    const currBounds = getModuleBoundsX(mod);
+    const isAdjacent = Math.abs(currBounds.left - prevBounds.right) < 1.0; 
+
+    // 상판 좌우 돌출이 있으면 인접 병합이 어색해지므로, 사이에 돌출값이 없는지도 확인
+    const noInnerOffsets = (prevMod.stoneTopRightOffset || 0) === 0 && (mod.stoneTopLeftOffset || 0) === 0;
+
+    const fitsWidth = currentSum + widthMm <= maxWidthMm;
+
+    if (sameThickness && sameOffsets && sameBackLip && sameZ && sameY && isAdjacent && noInnerOffsets && fitsWidth) {
+      currentGroup.push(mod);
+      currentSum += widthMm;
+    } else {
+      groups.push(buildGroup(currentGroup, currentSum, 0, alphaMap, '상판'));
+      currentGroup = [mod];
+      currentSum = widthMm;
+    }
+  }
+
+  if (currentGroup.length > 0) {
+    groups.push(buildGroup(currentGroup, currentSum, 0, alphaMap, '상판'));
+  }
+
+  // 그룹에 2개 이상의 모듈이 포함된 것만 반환 (1개짜리는 병합 불필요)
+  return groups.filter(g => g.moduleIds.length > 1);
+}

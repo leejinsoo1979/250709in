@@ -13,6 +13,7 @@ import { AdjustableFootsRenderer } from '../components/AdjustableFootsRenderer';
 import { ExternalDrawerRenderer } from '../ExternalDrawerRenderer';
 import { isCabinetTexture1, applyCabinetTexture1Settings, isOakTexture, applyOakTextureSettings, applyDefaultImageTextureSettings } from '@/editor/shared/utils/materialConstants';
 import LegraSideRail from '../components/LegraSideRail';
+import { Line } from '@react-three/drei';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
 
 /**
@@ -189,6 +190,305 @@ const JollyCutVerticalPlate: React.FC<{
     </group>
   );
 });
+
+/**
+ * 인덕션장 레그라박스 서랍 + 마이다 (인출 애니메이션 포함)
+ * - 바닥판 + 뒷판 + 레그라 측판(GLB) + 마이다 2장
+ * - 도어 오픈 시 서랍 본체 + 마이다가 Z축으로 300mm 슬라이드
+ * - 2D 모드에서 마이다 오버레이 + V자 점선 인출 표시
+ */
+interface InductionDrawerAnimatedProps {
+  moduleId: string;
+  moduleHeightMm: number;
+  adjustedHeight: number;
+  adjustedWidth: number;
+  basicThickness: number;   // Three.js units
+  furnitureDepth: number;   // Three.js units
+  furnitureMaterial: THREE.Material;
+  doorMaterial: THREE.Material;
+  backPanelThicknessProp?: number;
+  renderMode: 'solid' | 'wireframe';
+  cabinetYPosition: number;
+  placedFurnitureId?: string;
+  showFurniture: boolean;
+  hasDoor: boolean;
+  panelGrainDirections?: { [panelName: string]: 'horizontal' | 'vertical' };
+  doorTopGap?: number;
+  doorBottomGap?: number;
+}
+
+const InductionDrawerAnimated: React.FC<InductionDrawerAnimatedProps> = ({
+  adjustedHeight,
+  adjustedWidth,
+  basicThickness,
+  furnitureDepth,
+  furnitureMaterial,
+  doorMaterial,
+  renderMode,
+  cabinetYPosition,
+  placedFurnitureId,
+  showFurniture,
+  hasDoor,
+  panelGrainDirections,
+  doorTopGap,
+  doorBottomGap,
+}) => {
+  const { doorsOpen, isIndividualDoorOpen, isInteriorMaterialMode } = useUIStore();
+  const { gl } = useThree();
+  const { viewMode } = useSpace3DView();
+  const view2DDirection = useUIStore(s => s.view2DDirection);
+  const view2DTheme = useUIStore(s => s.view2DTheme);
+
+  // 도어 오픈 상태 (ExternalDrawerRenderer와 동일 로직)
+  const isDoorOpen = (doorsOpen !== null && !isInteriorMaterialMode)
+    ? doorsOpen
+    : placedFurnitureId ? isIndividualDoorOpen(placedFurnitureId, 0) : false;
+
+  // 애니메이션 중 렌더링 갱신
+  const [isAnimating, setIsAnimating] = useState(false);
+  useEffect(() => {
+    if (isDoorOpen !== undefined) {
+      setIsAnimating(true);
+      const timer = setTimeout(() => setIsAnimating(false), 1200);
+      return () => clearTimeout(timer);
+    }
+  }, [isDoorOpen]);
+  useFrame(() => {
+    if (isAnimating && gl && 'invalidate' in gl) {
+      (gl as any).invalidate();
+    }
+  });
+
+  const mmToThreeUnits = (mm: number) => mm * 0.01;
+  const DRAWER_OPEN_DISTANCE = mmToThreeUnits(300);
+
+  const spring = useSpring({
+    z: isDoorOpen ? DRAWER_OPEN_DISTANCE : 0,
+    config: { tension: 90, friction: 16, clamp: true },
+  });
+
+  const cabinetHeight = adjustedHeight;
+  const cabinetBottomY = -cabinetHeight / 2;
+  const basicThicknessMm = basicThickness / 0.01;
+  const drawerThicknessMm = 15;
+  const bottomSideGapMm = 17;
+  const backSideGapMm = 18.5;
+  const widthMm = adjustedWidth;
+  const drawerBottomWidthMm = widthMm - basicThicknessMm * 2 - bottomSideGapMm * 2;
+  const drawerBackWidthMm = widthMm - basicThicknessMm * 2 - backSideGapMm * 2;
+  const drawerDepthMm = 490;
+  const bottomGapMm = 28;
+  const drawer1BottomY = cabinetBottomY + mmToThreeUnits(basicThicknessMm + bottomGapMm);
+  const drawer1TotalH = 228;
+  const drawer1BackH = drawer1TotalH - drawerThicknessMm;
+  const drawer2FromBottomPanelTopMm = 338;
+  const drawer2BottomY = cabinetBottomY + mmToThreeUnits(drawer2FromBottomPanelTopMm + basicThicknessMm);
+  const drawer2TotalH = 164;
+  const drawer2BackH = drawer2TotalH - drawerThicknessMm;
+
+  const drawerBottomWidth = mmToThreeUnits(drawerBottomWidthMm);
+  const drawerBackWidth = mmToThreeUnits(drawerBackWidthMm);
+  const drawerDepth = mmToThreeUnits(drawerDepthMm);
+  const drawerThickness = mmToThreeUnits(drawerThicknessMm);
+  const drawerFrontZ = furnitureDepth / 2;
+  const drawerZ = drawerFrontZ - drawerDepth / 2;
+  const drawerBackZ = drawerFrontZ - drawerDepth + drawerThickness / 2;
+  const rebateWidth = mmToThreeUnits(38);
+  const rebateHeight = mmToThreeUnits(7.5);
+
+  // 마이다 관련 계산
+  const moduleDepthMm = furnitureDepth / 0.01;
+  const maidaWidthMm = widthMm - 3;
+  const maidaWidth = mmToThreeUnits(maidaWidthMm);
+  const maidaThickness = basicThickness;
+  const maidaZ = mmToThreeUnits((moduleDepthMm + 28) / 2);
+
+  const defaultDTG = -20;
+  const defaultDBG = 5;
+  const gapTopExt = (doorTopGap ?? defaultDTG) - defaultDTG;
+  const gapBottomExt = (doorBottomGap ?? defaultDBG) - defaultDBG;
+
+  const maida1HeightMm = 340 + gapBottomExt;
+  const maida1BottomMm = -5 - gapBottomExt;
+  const maida1CenterY = cabinetBottomY + mmToThreeUnits(maida1BottomMm) + mmToThreeUnits(maida1HeightMm) / 2;
+
+  const maida2HeightMm = 427 + gapTopExt;
+  const gapMm = 3;
+  const maida2BottomMm = -5 + 340 + gapMm;
+  const maida2CenterY = cabinetBottomY + mmToThreeUnits(maida2BottomMm) + mmToThreeUnits(maida2HeightMm) / 2;
+
+  // 2D 오버레이 표시 조건
+  const showMaidaOverlay = viewMode === '2D' && view2DDirection === 'front';
+  const maidaOverlayColor = view2DTheme === 'dark' ? '#3a5a7a' : '#a0b8d0';
+
+  // V자 점선 생성 함수
+  const makeDashedLine = (s: [number, number, number], e: [number, number, number], keyPrefix: string) => {
+    const dx = e[0] - s[0], dy = e[1] - s[1];
+    const totalLen = Math.sqrt(dx * dx + dy * dy);
+    const longDash = 2.4, shortDash = 0.9, gap = 0.9;
+    const segments: React.ReactElement[] = [];
+    let pos = 0;
+    let isLong = true;
+    while (pos < totalLen) {
+      const dashLen = isLong ? longDash : shortDash;
+      const actual = Math.min(dashLen, totalLen - pos);
+      const t1 = pos / totalLen;
+      const t2 = (pos + actual) / totalLen;
+      segments.push(
+        <Line
+          key={`${keyPrefix}-${pos}`}
+          points={[
+            [s[0] + dx * t1, s[1] + dy * t1, s[2]],
+            [s[0] + dx * t2, s[1] + dy * t2, s[2]]
+          ]}
+          color="#FF8800"
+          lineWidth={1}
+          transparent
+          opacity={1.0}
+        />
+      );
+      if (pos + actual >= totalLen) break;
+      pos += actual + gap;
+      isLong = !isLong;
+    }
+    return segments;
+  };
+
+  // V자 렌더링 헬퍼
+  const renderMaidaVLines = (maidaCY: number, maidaH: number, idx: number) => {
+    const hw = maidaWidth / 2;
+    const hh = mmToThreeUnits(maidaH) / 2;
+    const frontZPos = maidaZ + maidaThickness / 2 + 0.002;
+    const leftTop: [number, number, number] = [0 - hw, maidaCY + hh, frontZPos];
+    const centerBottom: [number, number, number] = [0, maidaCY - hh, frontZPos];
+    const rightTop: [number, number, number] = [0 + hw, maidaCY + hh, frontZPos];
+    return (
+      <>
+        {makeDashedLine(leftTop, centerBottom, `ind-maida-v1-${idx}`)}
+        {makeDashedLine(centerBottom, rightTop, `ind-maida-v2-${idx}`)}
+      </>
+    );
+  };
+
+  return (
+    <group position={[0, cabinetYPosition, 0]}>
+      {/* 서랍 본체 (바닥판 + 뒷판 + 레그라 측판) — 인출 애니메이션 */}
+      {showFurniture && (
+        <animated.group position-z={spring.z}>
+          {/* 1단 서랍 바닥판 */}
+          <BoxWithEdges
+            args={[drawerBottomWidth, drawerThickness, drawerDepth]}
+            position={[0, drawer1BottomY + drawerThickness / 2, drawerZ]}
+            material={furnitureMaterial}
+            renderMode={renderMode}
+            isHighlighted={false}
+            panelName="인덕션 1단서랍 바닥판"
+            furnitureId={placedFurnitureId}
+            bottomRebate={{ width: rebateWidth, height: rebateHeight }}
+          />
+          {/* 1단 서랍 뒷판 */}
+          <BoxWithEdges
+            args={[drawerBackWidth, mmToThreeUnits(drawer1BackH), drawerThickness]}
+            position={[0, drawer1BottomY + drawerThickness + mmToThreeUnits(drawer1BackH) / 2, drawerBackZ]}
+            material={furnitureMaterial}
+            renderMode={renderMode}
+            isHighlighted={false}
+            panelName="인덕션 1단서랍 뒷판"
+            furnitureId={placedFurnitureId}
+          />
+          {/* 2단 서랍 바닥판 */}
+          <BoxWithEdges
+            args={[drawerBottomWidth, drawerThickness, drawerDepth]}
+            position={[0, drawer2BottomY + drawerThickness / 2, drawerZ]}
+            material={furnitureMaterial}
+            renderMode={renderMode}
+            isHighlighted={false}
+            panelName="인덕션 2단서랍 바닥판"
+            furnitureId={placedFurnitureId}
+            bottomRebate={{ width: rebateWidth, height: rebateHeight }}
+          />
+          {/* 2단 서랍 뒷판 */}
+          <BoxWithEdges
+            args={[drawerBackWidth, mmToThreeUnits(drawer2BackH), drawerThickness]}
+            position={[0, drawer2BottomY + drawerThickness + mmToThreeUnits(drawer2BackH) / 2, drawerBackZ]}
+            material={furnitureMaterial}
+            renderMode={renderMode}
+            isHighlighted={false}
+            panelName="인덕션 2단서랍 뒷판"
+            furnitureId={placedFurnitureId}
+          />
+          {/* 1단 서랍 레그라 측판 (GLB 모델) */}
+          <LegraSideRail
+            drawerTier={1}
+            drawerBottomY={drawer1BottomY}
+            drawerBottomThickness={drawerThickness}
+            backPanelHeight={mmToThreeUnits(drawer1BackH)}
+            drawerFrontZ={drawerFrontZ}
+            sidePanelInnerX={mmToThreeUnits(widthMm / 2 - basicThicknessMm)}
+            renderMode={renderMode}
+          />
+          {/* 2단 서랍 레그라 측판 (GLB 모델) */}
+          <LegraSideRail
+            drawerTier={2}
+            drawerBottomY={drawer2BottomY}
+            drawerBottomThickness={drawerThickness}
+            backPanelHeight={mmToThreeUnits(drawer2BackH)}
+            drawerFrontZ={drawerFrontZ}
+            sidePanelInnerX={mmToThreeUnits(widthMm / 2 - basicThicknessMm)}
+            renderMode={renderMode}
+          />
+        </animated.group>
+      )}
+
+      {/* 마이다 (도어면) — 인출 애니메이션 + 2D 오버레이/V자 */}
+      {hasDoor && (
+        <animated.group position-z={spring.z}>
+          {/* 1단 서랍 마이다 */}
+          <BoxWithEdges
+            args={[maidaWidth, mmToThreeUnits(maida1HeightMm), maidaThickness]}
+            position={[0, maida1CenterY, maidaZ]}
+            material={doorMaterial}
+            renderMode={renderMode}
+            isHighlighted={false}
+            panelName="인덕션 1단서랍(마이다)"
+            panelGrainDirections={panelGrainDirections}
+            furnitureId={placedFurnitureId}
+          />
+          {/* 1단 마이다 2D 오버레이 */}
+          {showMaidaOverlay && (
+            <mesh position={[0, maida1CenterY, maidaZ + maidaThickness / 2 + 0.001]} renderOrder={9999}>
+              <planeGeometry args={[maidaWidth, mmToThreeUnits(maida1HeightMm)]} />
+              <meshBasicMaterial color={maidaOverlayColor} transparent opacity={0.2} side={THREE.DoubleSide} depthTest={false} depthWrite={false} />
+            </mesh>
+          )}
+          {/* 1단 마이다 V자 인출 표시 */}
+          {showMaidaOverlay && renderMaidaVLines(maida1CenterY, maida1HeightMm, 0)}
+
+          {/* 2단 서랍 마이다 */}
+          <BoxWithEdges
+            args={[maidaWidth, mmToThreeUnits(maida2HeightMm), maidaThickness]}
+            position={[0, maida2CenterY, maidaZ]}
+            material={doorMaterial}
+            renderMode={renderMode}
+            isHighlighted={false}
+            panelName="인덕션 2단서랍(마이다)"
+            panelGrainDirections={panelGrainDirections}
+            furnitureId={placedFurnitureId}
+          />
+          {/* 2단 마이다 2D 오버레이 */}
+          {showMaidaOverlay && (
+            <mesh position={[0, maida2CenterY, maidaZ + maidaThickness / 2 + 0.001]} renderOrder={9999}>
+              <planeGeometry args={[maidaWidth, mmToThreeUnits(maida2HeightMm)]} />
+              <meshBasicMaterial color={maidaOverlayColor} transparent opacity={0.2} side={THREE.DoubleSide} depthTest={false} depthWrite={false} />
+            </mesh>
+          )}
+          {/* 2단 마이다 V자 인출 표시 */}
+          {showMaidaOverlay && renderMaidaVLines(maida2CenterY, maida2HeightMm, 1)}
+        </animated.group>
+      )}
+    </group>
+  );
+};
 
 /**
  * 터치 레그라박스 서랍 + 마이다 (인출 애니메이션 포함)
@@ -1047,172 +1347,28 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
         );
       })()}
 
-      {/* 인덕션장 블럼 레그라박스 서랍 렌더링 (바닥판 + 뒷판만, 측판 없음) */}
-      {showFurniture && (moduleData.id.includes('lower-induction-cabinet') || moduleData.id.includes('dual-lower-induction-cabinet')) && (() => {
-        const mmToThreeUnits = (mm: number) => mm * 0.01;
-        const cabinetHeight = adjustedHeight;
-        const cabinetBottomY = -cabinetHeight / 2;
-        const basicThicknessMm = baseFurniture.basicThickness / 0.01; // 18mm
-        const depthMm = baseFurniture.depth / 0.01;
-        const backPanelMm = backPanelThickness || 9;
-        const drawerThicknessMm = 15; // 서랍재 두께
-        const bottomSideGapMm = 17; // 바닥판: 양쪽 17mm 갭
-        const backSideGapMm = 18.5; // 뒷판: 양쪽 18.5mm 갭
-        const widthMm = adjustedWidth || moduleData.dimensions.width;
-        const drawerBottomWidthMm = widthMm - basicThicknessMm * 2 - bottomSideGapMm * 2;
-        const drawerBackWidthMm = widthMm - basicThicknessMm * 2 - backSideGapMm * 2;
-        const drawerDepthMm = 490; // 레그라박스 서랍 바닥판 깊이 고정
-        // 1단 서랍: 총 높이 228mm, 바닥판(18) + 갭(28) = 46mm에서 시작
-        const bottomGapMm = 28;
-        const drawer1BottomY = cabinetBottomY + mmToThreeUnits(basicThicknessMm + bottomGapMm);
-        const drawer1TotalH = 228;
-        const drawer1BackH = drawer1TotalH - drawerThicknessMm; // 뒷판 높이 = 228 - 15 = 213mm
-
-        // 2단 서랍: 바닥판 위 기준 338mm에서 시작
-        // cabinetBottomY는 바닥판 하단 기준이므로 +바닥판 두께 필요
-        const drawer2FromBottomPanelTopMm = 338; // 바닥판 위에서 338mm
-        const drawer2BottomY = cabinetBottomY + mmToThreeUnits(drawer2FromBottomPanelTopMm + basicThicknessMm);
-        const drawer2TotalH = 164;
-        const drawer2BackH = drawer2TotalH - drawerThicknessMm; // 뒷판 높이 = 164 - 15 = 149mm
-
-        const drawerBottomWidth = mmToThreeUnits(drawerBottomWidthMm);
-        const drawerBackWidth = mmToThreeUnits(drawerBackWidthMm);
-        const drawerDepth = mmToThreeUnits(drawerDepthMm);
-        const drawerThickness = mmToThreeUnits(drawerThicknessMm);
-        // 서랍 바닥판 Z: 캐비넷 앞면에서 시작하여 뒤로 490mm
-        const drawerFrontZ = baseFurniture.depth / 2;
-        const drawerZ = drawerFrontZ - drawerDepth / 2;
-        // 서랍 뒷판 Z: 바닥판 뒤쪽 끝에 위치
-        const drawerBackZ = drawerFrontZ - drawerDepth + drawerThickness / 2;
-
-        // 반턱 따내기: 양쪽 하단 안쪽 38mm, 위로 7.5mm (단일 메시)
-        const rebateWidth = mmToThreeUnits(38);
-        const rebateHeight = mmToThreeUnits(7.5);
-
-        return (
-          <group position={[0, cabinetYPosition, 0]}>
-            {/* 1단 서랍 바닥판 (반턱 단일 메시) */}
-            <BoxWithEdges
-              args={[drawerBottomWidth, drawerThickness, drawerDepth]}
-              position={[0, drawer1BottomY + drawerThickness / 2, drawerZ]}
-              material={baseFurniture.material}
-              renderMode={renderMode}
-              isHighlighted={false}
-              panelName="인덕션 1단서랍 바닥판"
-              furnitureId={placedFurnitureId}
-              bottomRebate={{ width: rebateWidth, height: rebateHeight }}
-            />
-            {/* 1단 서랍 뒷판 */}
-            <BoxWithEdges
-              args={[drawerBackWidth, mmToThreeUnits(drawer1BackH), drawerThickness]}
-              position={[0, drawer1BottomY + drawerThickness + mmToThreeUnits(drawer1BackH) / 2, drawerBackZ]}
-              material={baseFurniture.material}
-              renderMode={renderMode}
-              isHighlighted={false}
-              panelName="인덕션 1단서랍 뒷판"
-              furnitureId={placedFurnitureId}
-            />
-            {/* 2단 서랍 바닥판 (반턱 단일 메시) */}
-            <BoxWithEdges
-              args={[drawerBottomWidth, drawerThickness, drawerDepth]}
-              position={[0, drawer2BottomY + drawerThickness / 2, drawerZ]}
-              material={baseFurniture.material}
-              renderMode={renderMode}
-              isHighlighted={false}
-              panelName="인덕션 2단서랍 바닥판"
-              furnitureId={placedFurnitureId}
-              bottomRebate={{ width: rebateWidth, height: rebateHeight }}
-            />
-            {/* 2단 서랍 뒷판 */}
-            <BoxWithEdges
-              args={[drawerBackWidth, mmToThreeUnits(drawer2BackH), drawerThickness]}
-              position={[0, drawer2BottomY + drawerThickness + mmToThreeUnits(drawer2BackH) / 2, drawerBackZ]}
-              material={baseFurniture.material}
-              renderMode={renderMode}
-              isHighlighted={false}
-              panelName="인덕션 2단서랍 뒷판"
-              furnitureId={placedFurnitureId}
-            />
-            {/* 1단 서랍 레그라 측판 (GLB 모델) */}
-            <LegraSideRail
-              drawerTier={1}
-              drawerBottomY={drawer1BottomY}
-              drawerBottomThickness={drawerThickness}
-              backPanelHeight={mmToThreeUnits(drawer1BackH)}
-              drawerFrontZ={drawerFrontZ}
-              sidePanelInnerX={mmToThreeUnits(widthMm / 2 - basicThicknessMm)}
-              renderMode={renderMode}
-            />
-            {/* 2단 서랍 레그라 측판 (GLB 모델) */}
-            <LegraSideRail
-              drawerTier={2}
-              drawerBottomY={drawer2BottomY}
-              drawerBottomThickness={drawerThickness}
-              backPanelHeight={mmToThreeUnits(drawer2BackH)}
-              drawerFrontZ={drawerFrontZ}
-              sidePanelInnerX={mmToThreeUnits(widthMm / 2 - basicThicknessMm)}
-              renderMode={renderMode}
-            />
-          </group>
-        );
-      })()}
-
-      {/* 인덕션장 마이다 렌더링 (도어 대신 마이다 2개) */}
-      {hasDoor && (moduleData.id.includes('lower-induction-cabinet') || moduleData.id.includes('dual-lower-induction-cabinet')) && (() => {
-        const mmToThreeUnits = (mm: number) => mm * 0.01;
-        const cabinetHeight = adjustedHeight;
-        const cabinetBottomY = -cabinetHeight / 2;
-        const moduleWidthMm = adjustedWidth || moduleData.dimensions.width;
-        const maidaWidthMm = moduleWidthMm - 3; // 좌우 1.5mm씩 갭
-        const maidaWidth = mmToThreeUnits(maidaWidthMm);
-        const maidaThickness = baseFurniture.basicThickness; // 마이다 두께 = 도어 두께 (18mm)
-        const moduleDepthMm = baseFurniture.depth / 0.01;
-        const maidaZ = mmToThreeUnits((moduleDepthMm + 28) / 2); // ExternalDrawerRenderer와 동일 위치
-
-        // doorTopGap/doorBottomGap 반영 (ExternalDrawerRenderer와 동일 방식)
-        const defaultDTG = -20;
-        const defaultDBG = 5;
-        const gapTopExt = (doorTopGap ?? defaultDTG) - defaultDTG;   // 2단(최상단) 마이다 상단 확장
-        const gapBottomExt = (doorBottomGap ?? defaultDBG) - defaultDBG; // 1단(최하단) 마이다 하단 확장
-
-        // 1단 마이다: 기본 340mm, 바닥 -5mm (doorBottomGap으로 하단 위치/높이 조정)
-        const maida1HeightMm = 340 + gapBottomExt;
-        const maida1BottomMm = -5 - gapBottomExt;
-        const maida1CenterY = cabinetBottomY + mmToThreeUnits(maida1BottomMm) + mmToThreeUnits(maida1HeightMm) / 2;
-
-        // 2단 마이다: 기본 427mm (doorTopGap으로 상단 높이 조정)
-        const maida2HeightMm = 427 + gapTopExt;
-        const gapMm = 3;
-        const maida2BottomMm = -5 + 340 + gapMm; // 바닥 위치는 1단 기본 상단 기준
-        const maida2CenterY = cabinetBottomY + mmToThreeUnits(maida2BottomMm) + mmToThreeUnits(maida2HeightMm) / 2;
-
-        return (
-          <group position={[0, cabinetYPosition, 0]}>
-            {/* 1단 서랍 마이다 */}
-            <BoxWithEdges
-              args={[maidaWidth, mmToThreeUnits(maida1HeightMm), maidaThickness]}
-              position={[0, maida1CenterY, maidaZ]}
-              material={lFrameDoorMaterial}
-              renderMode={renderMode}
-              isHighlighted={false}
-              panelName="인덕션 1단서랍(마이다)"
-              panelGrainDirections={panelGrainDirections}
-              furnitureId={placedFurnitureId}
-            />
-            {/* 2단 서랍 마이다 */}
-            <BoxWithEdges
-              args={[maidaWidth, mmToThreeUnits(maida2HeightMm), maidaThickness]}
-              position={[0, maida2CenterY, maidaZ]}
-              material={lFrameDoorMaterial}
-              renderMode={renderMode}
-              isHighlighted={false}
-              panelName="인덕션 2단서랍(마이다)"
-              panelGrainDirections={panelGrainDirections}
-              furnitureId={placedFurnitureId}
-            />
-          </group>
-        );
-      })()}
+      {/* 인덕션장 블럼 레그라박스 서랍 + 마이다 (인출 애니메이션 + 2D V자 점선 포함) */}
+      {(moduleData.id.includes('lower-induction-cabinet') || moduleData.id.includes('dual-lower-induction-cabinet')) && (showFurniture || hasDoor) && (
+        <InductionDrawerAnimated
+          moduleId={moduleData.id}
+          moduleHeightMm={moduleData.dimensions.height || 785}
+          adjustedHeight={adjustedHeight}
+          adjustedWidth={adjustedWidth || moduleData.dimensions.width}
+          basicThickness={baseFurniture.basicThickness}
+          furnitureDepth={baseFurniture.depth}
+          furnitureMaterial={baseFurniture.material}
+          doorMaterial={lFrameDoorMaterial}
+          backPanelThicknessProp={backPanelThickness}
+          renderMode={renderMode}
+          cabinetYPosition={cabinetYPosition}
+          placedFurnitureId={placedFurnitureId}
+          showFurniture={showFurniture}
+          hasDoor={hasDoor}
+          panelGrainDirections={panelGrainDirections}
+          doorTopGap={doorTopGap}
+          doorBottomGap={doorBottomGap}
+        />
+      )}
 
       {/* 터치 레그라박스 서랍 + 마이다 (도어올림 터치 + 상판내림 터치) — 인출 애니메이션 포함 */}
       {(moduleData.id.includes('lower-door-lift-touch-') || moduleData.id.includes('lower-top-down-touch-')) && (showFurniture || hasDoor) && (
