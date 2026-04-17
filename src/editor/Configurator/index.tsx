@@ -2479,12 +2479,9 @@ const Configurator: React.FC = () => {
 
               // 공간 설정
               if (designFile.spaceConfig) {
-                // mainDoorCount와 customColumnCount를 undefined로 초기화하여 자동 계산 활성화
+                // 저장된 설정을 유지하되 baseConfig의 기본값만 보장
                 const spaceConfig = {
                   ...designFile.spaceConfig,
-                  mainDoorCount: undefined,
-                  droppedCeilingDoorCount: undefined,
-                  customColumnCount: undefined,
                   // baseConfig.type 기본값 보장 — Firebase에 type 없이 저장된 경우 대비
                   baseConfig: {
                     type: 'floor' as const,

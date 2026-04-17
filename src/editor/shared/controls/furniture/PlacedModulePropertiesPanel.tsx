@@ -3803,6 +3803,19 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                           } else if ((currentPlacedModule.stoneTopThickness || 0) === 0 && !isDoorLift) {
                             updates.stoneTopFrontOffset = 23;
                           }
+                          // 상판 최초 설치 시 (0→두께): 상판 재질이 미설정이면 루나쉐도우를 기본값으로 적용
+                          if ((currentPlacedModule.stoneTopThickness || 0) === 0) {
+                            const mc = spaceInfo.materialConfig;
+                            if (!mc?.countertopTexture && !mc?.countertopColor) {
+                              setSpaceInfo({
+                                materialConfig: {
+                                  ...mc,
+                                  countertopColor: '#FFFFFF',
+                                  countertopTexture: '/materials/countertop/luna_shadow_hanwha.png',
+                                } as any
+                              });
+                            }
+                          }
                           // 도어올림: 상판 두께별 도어 상단갭 (10mm→25, 20mm→35, 30mm→45)
                           if (isDoorLift) {
                             const newGap = thickness + 15;

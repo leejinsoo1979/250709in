@@ -7,6 +7,10 @@ import { SpaceInfo } from '@/store/core/spaceConfigStore';
 import { useBaseFurniture, BaseFurnitureShell, SectionsRenderer, FurnitureTypeProps } from '../shared';
 import { useSpace3DView } from '../../../context/useSpace3DView';
 import { useUIStore } from '@/store/uiStore';
+import IndirectLight from '../IndirectLight';
+import DimensionText from '../components/DimensionText';
+import { useDimensionColor } from '../hooks/useDimensionColor';
+
 import DoorModule from '../DoorModule';
 import BoxWithEdges from '../components/BoxWithEdges';
 import { AdjustableFootsRenderer } from '../components/AdjustableFootsRenderer';
@@ -238,6 +242,8 @@ const InductionDrawerAnimated: React.FC<InductionDrawerAnimatedProps> = ({
   const { viewMode } = useSpace3DView();
   const view2DDirection = useUIStore(s => s.view2DDirection);
   const view2DTheme = useUIStore(s => s.view2DTheme);
+  const showDimensions = useUIStore(s => s.showDimensions);
+  const { dimensionColor } = useDimensionColor();
 
   // 도어 오픈 상태 (ExternalDrawerRenderer와 동일 로직)
   const isDoorOpen = (doorsOpen !== null && !isInteriorMaterialMode)
@@ -484,6 +490,43 @@ const InductionDrawerAnimated: React.FC<InductionDrawerAnimatedProps> = ({
           )}
           {/* 2단 마이다 V자 인출 표시 */}
           {showMaidaOverlay && renderMaidaVLines(maida2CenterY, maida2HeightMm, 1)}
+
+          {/* 마이다 하단 폭 치수 (1단 마이다 기준) */}
+          {showDimensions && (viewMode === '3D' || (viewMode === '2D' && view2DDirection === 'front')) && (
+            <group position={[0, maida1CenterY - mmToThreeUnits(maida1HeightMm) / 2, maidaZ]}>
+              {(() => {
+                const is3D = viewMode === '3D';
+                const extensionLineStart = mmToThreeUnits(70);
+                const extensionLineLength = mmToThreeUnits(110);
+                const tickSize = 0.008;
+                const zPos = is3D ? mmToThreeUnits(moduleDepthMm / 2 + 14 + 1) : mmToThreeUnits(10);
+                const dimColor = is3D ? '#000000' : dimensionColor;
+                const halfW = maidaWidth / 2;
+
+                const dimLineY = -extensionLineLength - extensionLineStart;
+                const extStartY = -extensionLineStart;
+
+                return (
+                  <>
+                    <Line name="maida-dimension" points={[[-halfW, -mmToThreeUnits(2), zPos], [-halfW, dimLineY, zPos]]} color={dimColor} lineWidth={1} />
+                    <Line name="maida-dimension" points={[[halfW, -mmToThreeUnits(2), zPos], [halfW, dimLineY, zPos]]} color={dimColor} lineWidth={1} />
+                    <Line name="maida-dimension" points={[[-halfW, dimLineY, zPos], [halfW, dimLineY, zPos]]} color={dimColor} lineWidth={1} />
+                    <Line name="maida-dimension" points={[[-halfW - tickSize, dimLineY, zPos], [-halfW + tickSize, dimLineY, zPos]]} color={dimColor} lineWidth={1} />
+                    <Line name="maida-dimension" points={[[halfW - tickSize, dimLineY, zPos], [halfW + tickSize, dimLineY, zPos]]} color={dimColor} lineWidth={1} />
+                    <DimensionText
+                      name="maida-dimension-text"
+                      value={maidaWidthMm}
+                      position={[0, dimLineY + mmToThreeUnits(15), zPos]}
+                      color={dimColor}
+                      anchorX="center"
+                      anchorY="bottom"
+                      forceShow={true}
+                    />
+                  </>
+                );
+              })()}
+            </group>
+          )}
         </animated.group>
       )}
     </group>
@@ -531,6 +574,11 @@ const TouchDrawerAnimated: React.FC<TouchDrawerAnimatedProps> = ({
 }) => {
   const { doorsOpen, isIndividualDoorOpen, isInteriorMaterialMode } = useUIStore();
   const { gl } = useThree();
+  const { viewMode } = useSpace3DView();
+  const view2DDirection = useUIStore(s => s.view2DDirection);
+  const view2DTheme = useUIStore(s => s.view2DTheme);
+  const showDimensions = useUIStore(s => s.showDimensions);
+  const { dimensionColor } = useDimensionColor();
 
   // 도어 오픈 상태 (ExternalDrawerRenderer와 동일 로직)
   const isDoorOpen = (doorsOpen !== null && !isInteriorMaterialMode)
@@ -709,6 +757,46 @@ const TouchDrawerAnimated: React.FC<TouchDrawerAnimatedProps> = ({
             furnitureId={placedFurnitureId}
           />
         ))}
+
+        {/* 마이다 하단 폭 치수 (맨 아래 마이다 기준) */}
+        {hasDoor && maidas.length > 0 && showDimensions && (viewMode === '3D' || (viewMode === '2D' && view2DDirection === 'front')) && (() => {
+          const m = maidas[0]; // 1단 서랍
+          return (
+            <group position={[0, m.centerY - mmToThreeUnits(m.height) / 2, maidaZ]}>
+              {(() => {
+                const is3D = viewMode === '3D';
+                const extensionLineStart = mmToThreeUnits(70);
+                const extensionLineLength = mmToThreeUnits(110);
+                const tickSize = 0.008;
+                const zPos = is3D ? mmToThreeUnits(moduleDepthMm / 2 + 14 + 1) : mmToThreeUnits(10);
+                const dimColor = is3D ? '#000000' : dimensionColor;
+                const halfW = maidaWidth / 2;
+
+                const dimLineY = -extensionLineLength - extensionLineStart;
+                const extStartY = -extensionLineStart;
+
+                return (
+                  <>
+                    <Line name="maida-dimension" points={[[-halfW, -mmToThreeUnits(2), zPos], [-halfW, dimLineY, zPos]]} color={dimColor} lineWidth={1} />
+                    <Line name="maida-dimension" points={[[halfW, -mmToThreeUnits(2), zPos], [halfW, dimLineY, zPos]]} color={dimColor} lineWidth={1} />
+                    <Line name="maida-dimension" points={[[-halfW, dimLineY, zPos], [halfW, dimLineY, zPos]]} color={dimColor} lineWidth={1} />
+                    <Line name="maida-dimension" points={[[-halfW - tickSize, dimLineY, zPos], [-halfW + tickSize, dimLineY, zPos]]} color={dimColor} lineWidth={1} />
+                    <Line name="maida-dimension" points={[[halfW - tickSize, dimLineY, zPos], [halfW + tickSize, dimLineY, zPos]]} color={dimColor} lineWidth={1} />
+                    <DimensionText
+                      name="maida-dimension-text"
+                      value={maidaWidthMm}
+                      position={[0, dimLineY + mmToThreeUnits(15), zPos]}
+                      color={dimColor}
+                      anchorX="center"
+                      anchorY="bottom"
+                      forceShow={true}
+                    />
+                  </>
+                );
+              })()}
+            </group>
+          );
+        })()}
       </group>
     </animated.group>
   );
@@ -883,9 +971,10 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
     };
   }, [stoneThickness, stoneFrontOff, stoneBackOff, stoneLeftOff, stoneRightOff, stoneBackLip, stoneBackLipThickness, stoneBackLipDepthOff, stoneBackLipTopOff, stoneBackLipTopBackOff, stoneBackLipFullFill, stoneBackLipFillHeightOff, adjustedWidth, baseFurniture.width, baseFurniture.depth]);
 
-  // 인조대리석 상판 재질 — 전체 6면 동일 텍스처
-  const countertopTextureUrl = spaceInfo?.materialConfig?.countertopTexture;
-  const countertopColorVal = spaceInfo?.materialConfig?.countertopColor || '#e8e0d4';
+  // 인조대리석 상판 재질 — 전체 6면 동일 텍스처 (기본: 루나쉐도우)
+  const LUNA_SHADOW_TEXTURE = '/materials/countertop/luna_shadow_hanwha.png';
+  const countertopTextureUrl = spaceInfo?.materialConfig?.countertopTexture ?? LUNA_SHADOW_TEXTURE;
+  const countertopColorVal = spaceInfo?.materialConfig?.countertopColor || '#FFFFFF';
   const stoneTopMatRef = useRef<THREE.MeshStandardMaterial | null>(null);
 
   const stoneTopMaterial = useMemo(() => {
@@ -904,7 +993,7 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
       stoneTopMatRef.current.color.set(countertopColorVal);
       stoneTopMatRef.current.needsUpdate = true;
     }
-  }, [countertopColorVal]);
+  }, [countertopColorVal, stoneTopMaterial]);
 
   // countertop 텍스처 로딩
   useEffect(() => {
@@ -933,7 +1022,7 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
       mat.color.set(countertopColorVal);
       mat.needsUpdate = true;
     }
-  }, [countertopTextureUrl, countertopColorVal]);
+  }, [countertopTextureUrl, countertopColorVal, stoneTopMaterial]);
 
   // 상판내림 반통/한통 L프레임용 도어 재질 (텍스처 로드 포함)
   const doorTextureUrl = spaceInfo?.materialConfig?.doorTexture;

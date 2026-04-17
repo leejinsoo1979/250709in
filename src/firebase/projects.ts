@@ -872,14 +872,14 @@ export const updateDesignFile = async (
       }
     }
 
-    // spaceConfig가 있는 경우 자동 계산 필드들을 제거
+    // spaceConfig가 있는 경우 자동 계산 필드들을 제거 (단, undefined일 경우에만)
     let spaceConfigClean = undefined;
     if (updates.spaceConfig) {
       spaceConfigClean = { ...updates.spaceConfig };
       // Firebase는 undefined 값을 허용하지 않으므로 필드를 제거
-      delete spaceConfigClean.mainDoorCount;
-      delete spaceConfigClean.droppedCeilingDoorCount;
-      delete spaceConfigClean.customColumnCount;
+      if (spaceConfigClean.mainDoorCount === undefined) delete spaceConfigClean.mainDoorCount;
+      if (spaceConfigClean.droppedCeilingDoorCount === undefined) delete spaceConfigClean.droppedCeilingDoorCount;
+      if (spaceConfigClean.customColumnCount === undefined) delete spaceConfigClean.customColumnCount;
     }
     
     const updateDataRaw = {
