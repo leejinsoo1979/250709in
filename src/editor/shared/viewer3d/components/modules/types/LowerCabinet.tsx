@@ -499,7 +499,7 @@ const InductionDrawerAnimated: React.FC<InductionDrawerAnimatedProps> = ({
                 const extensionLineStart = mmToThreeUnits(70);
                 const extensionLineLength = mmToThreeUnits(110);
                 const tickSize = 0.008;
-                const zPos = is3D ? mmToThreeUnits(moduleDepthMm / 2 + 14 + 1) : mmToThreeUnits(10);
+                const zPos = is3D ? mmToThreeUnits(moduleDepthMm / 2 + 14 + 1) : maidaZ + mmToThreeUnits(10);
                 const dimColor = is3D ? '#000000' : dimensionColor;
                 const halfW = maidaWidth / 2;
 
@@ -508,8 +508,8 @@ const InductionDrawerAnimated: React.FC<InductionDrawerAnimatedProps> = ({
 
                 return (
                   <>
-                    <Line name="maida-dimension" points={[[-halfW, -mmToThreeUnits(2), zPos], [-halfW, dimLineY, zPos]]} color={dimColor} lineWidth={1} />
-                    <Line name="maida-dimension" points={[[halfW, -mmToThreeUnits(2), zPos], [halfW, dimLineY, zPos]]} color={dimColor} lineWidth={1} />
+                    <Line name="maida-dimension" points={[[-halfW, extStartY, zPos], [-halfW, dimLineY, zPos]]} color={dimColor} lineWidth={1} />
+                    <Line name="maida-dimension" points={[[halfW, extStartY, zPos], [halfW, dimLineY, zPos]]} color={dimColor} lineWidth={1} />
                     <Line name="maida-dimension" points={[[-halfW, dimLineY, zPos], [halfW, dimLineY, zPos]]} color={dimColor} lineWidth={1} />
                     <Line name="maida-dimension" points={[[-halfW - tickSize, dimLineY, zPos], [-halfW + tickSize, dimLineY, zPos]]} color={dimColor} lineWidth={1} />
                     <Line name="maida-dimension" points={[[halfW - tickSize, dimLineY, zPos], [halfW + tickSize, dimLineY, zPos]]} color={dimColor} lineWidth={1} />
@@ -768,7 +768,7 @@ const TouchDrawerAnimated: React.FC<TouchDrawerAnimatedProps> = ({
                 const extensionLineStart = mmToThreeUnits(70);
                 const extensionLineLength = mmToThreeUnits(110);
                 const tickSize = 0.008;
-                const zPos = is3D ? mmToThreeUnits(moduleDepthMm / 2 + 14 + 1) : mmToThreeUnits(10);
+                const zPos = is3D ? mmToThreeUnits(moduleDepthMm / 2 + 14 + 1) : maidaZ + mmToThreeUnits(10);
                 const dimColor = is3D ? '#000000' : dimensionColor;
                 const halfW = maidaWidth / 2;
 
@@ -777,8 +777,8 @@ const TouchDrawerAnimated: React.FC<TouchDrawerAnimatedProps> = ({
 
                 return (
                   <>
-                    <Line name="maida-dimension" points={[[-halfW, -mmToThreeUnits(2), zPos], [-halfW, dimLineY, zPos]]} color={dimColor} lineWidth={1} />
-                    <Line name="maida-dimension" points={[[halfW, -mmToThreeUnits(2), zPos], [halfW, dimLineY, zPos]]} color={dimColor} lineWidth={1} />
+                    <Line name="maida-dimension" points={[[-halfW, extStartY, zPos], [-halfW, dimLineY, zPos]]} color={dimColor} lineWidth={1} />
+                    <Line name="maida-dimension" points={[[halfW, extStartY, zPos], [halfW, dimLineY, zPos]]} color={dimColor} lineWidth={1} />
                     <Line name="maida-dimension" points={[[-halfW, dimLineY, zPos], [halfW, dimLineY, zPos]]} color={dimColor} lineWidth={1} />
                     <Line name="maida-dimension" points={[[-halfW - tickSize, dimLineY, zPos], [-halfW + tickSize, dimLineY, zPos]]} color={dimColor} lineWidth={1} />
                     <Line name="maida-dimension" points={[[halfW - tickSize, dimLineY, zPos], [halfW + tickSize, dimLineY, zPos]]} color={dimColor} lineWidth={1} />
