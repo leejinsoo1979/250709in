@@ -820,6 +820,24 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   // 커스텀 가구인 경우 customFurnitureStore에서 데이터를 가져와 ModuleData 생성
   const isCustomFurniture = isCustomFurnitureId(placedModule.moduleId);
 
+  // 도어 위치 고정을 위한 원래 슬롯 정보 계산 - zone별 처리
+  // (모듈 검색 로직에서 indexing이 필요하므로 상단으로 이동)
+  const indexing = React.useMemo(() => {
+    if (spaceInfo.droppedCeiling?.enabled && placedModule.zone) {
+      // 단내림이 있을 때는 전체 indexing 정보를 가져와서 zones 포함
+      return calculateSpaceIndexing(spaceInfo);
+    } else {
+      return calculateSpaceIndexing(zoneSpaceInfo);
+    }
+  }, [spaceInfo, zoneSpaceInfo, placedModule.zone]);
+
+  const zoneSlotInfo = React.useMemo(() => {
+    if (!spaceInfo.droppedCeiling?.enabled) {
+      return null;
+    }
+    return ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
+  }, [spaceInfo.droppedCeiling?.enabled, spaceInfo.customColumnCount, spaceInfo.width, spaceInfo.installType, spaceInfo.gapConfig, spaceInfo.surroundType]);
+
   let moduleData: ModuleData | null = null;
 
   if (isCustomFurniture) {
@@ -1037,23 +1055,6 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
 
   // moduleData가 없을 때 체크 - 단순 변수로 처리
   const moduleNotFound = !moduleData;
-
-  // 도어 위치 고정을 위한 원래 슬롯 정보 계산 - zone별 처리
-  const indexing = React.useMemo(() => {
-    if (spaceInfo.droppedCeiling?.enabled && placedModule.zone) {
-      // 단내림이 있을 때는 전체 indexing 정보를 가져와서 zones 포함
-      return calculateSpaceIndexing(spaceInfo);
-    } else {
-      return calculateSpaceIndexing(zoneSpaceInfo);
-    }
-  }, [spaceInfo, zoneSpaceInfo, placedModule.zone]);
-
-  const zoneSlotInfo = React.useMemo(() => {
-    if (!spaceInfo.droppedCeiling?.enabled) {
-      return null;
-    }
-    return ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
-  }, [spaceInfo.droppedCeiling?.enabled, spaceInfo.customColumnCount, spaceInfo.width, spaceInfo.installType, spaceInfo.gapConfig, spaceInfo.surroundType]);
 
   const convertGlobalToZoneIndex = React.useCallback((
     index: number | undefined,
@@ -1548,7 +1549,14 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       // 기둥이 없으면 슬롯 너비 사용 (이격거리가 반영된 실제 슬롯 너비)
       const slotWidth = indexing.slotWidths[placedModule.slotIndex];
       const isDual = placedModule.isDualSlot || placedModule.moduleId.startsWith('dual-');
-      furnitureWidthMm = isDual ? slotWidth * 2 : slotWidth;
+      
+      if (isDual) {
+        // 듀얼 가구인 경우 현재 슬롯과 다음 슬롯의 너비를 합산
+        const nextSlotWidth = indexing.slotWidths[placedModule.slotIndex + 1] || slotWidth;
+        furnitureWidthMm = slotWidth + nextSlotWidth;
+      } else {
+        furnitureWidthMm = slotWidth;
+      }
     }
     // slotIndex도 없으면 기본값 그대로 사용 (이미 위에서 설정됨)
   }
@@ -1838,7 +1846,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     const isAtBoundary = spaceInfo.droppedCeiling?.enabled && indexing.zones && placedModule.zone && (() => {
       const droppedPosition = spaceInfo.droppedCeiling.position;
       const isDual = placedModule.isDualSlot || false;
-      const currentZoneData = placedModule.zone === 'dropped' ? indexing.zones.dropped : indexing.zones.normal;
+      const currentZoneData = placedModule.zone === 'dropped' ? indexing.zones?.dropped : indexing.zones?.normal;
       let result = false;
 
       if (droppedPosition === 'right') {

@@ -244,6 +244,10 @@ export interface PlacedModule {
   surroundOffsetTop?: number;             // 상단 옵셋 (mm)
   surroundOffsetBottom?: number;          // 하단 옵셋 (mm)
   surroundOffsetDepth?: number;           // 깊이 옵셋 (mm)
+
+  // 린트 오류 해결을 위한 추가 누락 속성들
+  isLocked?: boolean;                     // 잠금 상태
+  doorSplit?: 'none' | 'vertical' | 'horizontal'; // 도어 분할 방식
 }
 
 // 네이티브 드래그앤드롭용 현재 드래그 데이터 타입
