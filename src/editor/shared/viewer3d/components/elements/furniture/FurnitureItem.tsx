@@ -2701,11 +2701,10 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   if (isFrontSpaceFurniture) {
     furnitureZ = placedModule.position.z;
   } else if (isUpperForZ) {
-    // 하부장 기본 깊이 650mm 기준 뒷면 맞춤
-    const lowerDepth = mmToThreeUnits(650);
-    // 하부장 뒷면 = furnitureZOffset + furnitureDepth/2 - doorThickness - lowerDepth
-    // 상부장 Z = 하부장 뒷면 + upperDepth/2
-    furnitureZ = furnitureZOffset + furnitureDepth / 2 - doorThickness - lowerDepth + depth / 2;
+    // 상부장: 뒷면을 하부장 뒷면에 정렬
+    // 하부장 뒷면 Z = furnitureZOffset - furnitureDepth/2
+    // 상부장 중심 Z = 하부장 뒷면 + 상부장 깊이/2
+    furnitureZ = furnitureZOffset - furnitureDepth / 2 + depth / 2;
   } else {
     furnitureZ = furnitureZOffset + furnitureDepth / 2 - doorThickness - depth / 2 + baseDepthOffset;
   }

@@ -2457,7 +2457,6 @@ const QuadrantContent: React.FC<{
         showFurniture={showFurniture}
         readOnly={readOnly}
         onFurnitureClick={onFurnitureClick}
-        islandSideFilter={islandViewSide}
       />
     </React.Suspense>
   );
