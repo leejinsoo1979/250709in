@@ -387,9 +387,8 @@ const Configurator: React.FC = () => {
   const [fileTreeSelectedProjectId, setFileTreeSelectedProjectId] = useState<string | null>(null);
   const [fileTreeSelectedFolderId, setFileTreeSelectedFolderId] = useState<string | null>(null);
   const [fileTreeDesignFiles, setFileTreeDesignFiles] = useState<DesignFileSummary[]>([]);
-  const [moduleCategory, setModuleCategory] = useState<'clothing' | 'shoes' | 'kitchen' | 'island'>('clothing'); // 의류장/신발장/주방/아일랜드 토글
+  const [moduleCategory, setModuleCategory] = useState<'clothing' | 'shoes' | 'kitchen'>('clothing'); // 의류장/신발장/주방 토글
   const [kitchenSub, setKitchenSub] = useState<'basic' | 'door-raise' | 'top-down' | 'upper'>('basic'); // 주방 서브카테고리
-  const [islandSub, setIslandSub] = useState<'basic' | 'door-raise' | 'top-down'>('basic'); // 아일랜드 서브카테고리
   const [islandSetupOpen, setIslandSetupOpen] = useState(false); // 아일랜드 팝업 열림 여부
   const [islandSetupMode, setIslandSetupMode] = useState<'create' | 'edit'>('create');
   const [moduleType, setModuleType] = useState<ModuleType>('all'); // 전체/싱글/듀얼 탭
@@ -2888,6 +2887,12 @@ const Configurator: React.FC = () => {
 
   // 사이드바 탭 클릭 핸들러
   const handleSidebarTabClick = (tab: SidebarTab) => {
+    // 아일랜드 탭: 사이드바를 열지 않고 곧바로 아일랜드 설계 팝업을 띄운다
+    if (tab === 'island') {
+      setIslandSetupMode('create');
+      setIslandSetupOpen(true);
+      return;
+    }
     if (activeSidebarTab === tab) {
       setActiveSidebarTab(null); // 같은 탭 클릭 시 닫기
     } else {
@@ -3450,7 +3455,7 @@ const Configurator: React.FC = () => {
         return (
           <div className={styles.sidebarPanel}>
             <div className={styles.modulePanelContent}>
-              {/* 의류장/신발장/주방/아일랜드 토글 탭 */}
+              {/* 의류장/신발장/주방 토글 탭 */}
               <div className={styles.moduleCategoryTabs}>
                 <button
                   className={`${styles.moduleCategoryTab} ${moduleCategory === 'clothing' ? styles.active : ''}`}
@@ -3469,21 +3474,6 @@ const Configurator: React.FC = () => {
                   onClick={() => setModuleCategory('kitchen')}
                 >
                   주방
-                </button>
-                <button
-                  className={`${styles.moduleCategoryTab} ${moduleCategory === 'island' ? styles.active : ''}`}
-                  onClick={() => {
-                    // 이미 아일랜드 모드(디자인)인 경우에는 탭만 활성화
-                    if (spaceInfo?.isIsland) {
-                      setModuleCategory('island');
-                      return;
-                    }
-                    // 일반 모드에서 클릭 시: 팝업을 띄워 새 아일랜드 디자인 생성
-                    setIslandSetupMode('create');
-                    setIslandSetupOpen(true);
-                  }}
-                >
-                  아일랜드
                 </button>
               </div>
 
@@ -3517,32 +3507,8 @@ const Configurator: React.FC = () => {
                 </div>
               )}
 
-              {/* 아일랜드 선택 시: 기본장/도어올림/상판내림 서브 탭 (상부장 제외) */}
-              {moduleCategory === 'island' && (
-                <div className={styles.moduleCategoryTabs}>
-                  <button
-                    className={`${styles.moduleCategoryTab} ${islandSub === 'basic' ? styles.active : ''}`}
-                    onClick={() => setIslandSub('basic')}
-                  >
-                    기본장
-                  </button>
-                  <button
-                    className={`${styles.moduleCategoryTab} ${islandSub === 'door-raise' ? styles.active : ''}`}
-                    onClick={() => setIslandSub('door-raise')}
-                  >
-                    도어올림
-                  </button>
-                  <button
-                    className={`${styles.moduleCategoryTab} ${islandSub === 'top-down' ? styles.active : ''}`}
-                    onClick={() => setIslandSub('top-down')}
-                  >
-                    상판내림
-                  </button>
-                </div>
-              )}
-
               {/* 전체/싱글/듀얼 탭 - 의류장/신발장에서만 표시 */}
-              {moduleCategory !== 'kitchen' && moduleCategory !== 'island' && (
+              {moduleCategory !== 'kitchen' && (
                 <div className={styles.moduleCategoryTabs}>
                   <button
                     className={`${styles.moduleCategoryTab} ${moduleType === 'all' ? styles.active : ''}`}
@@ -3567,8 +3533,8 @@ const Configurator: React.FC = () => {
 
               <div className={styles.moduleSection}>
                 <ModuleGallery
-                  moduleCategory={moduleCategory}
-                  kitchenSubCategory={moduleCategory === 'island' ? islandSub : kitchenSub}
+                  moduleCategory={moduleCategory === 'island' ? 'kitchen' : moduleCategory}
+                  kitchenSubCategory={kitchenSub}
                   selectedType={moduleType}
                   onSelectedTypeChange={setModuleType}
                   hideTabMenu

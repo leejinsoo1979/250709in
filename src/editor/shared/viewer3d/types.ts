@@ -47,6 +47,8 @@ export interface Space3DViewProps extends ViewerBaseProps {
   sceneRef?: React.MutableRefObject<any>;
   /** 가구 클릭 시 콜백 (미리보기에서 측면뷰로 전환용) */
   onFurnitureClick?: (furnitureId: string, slotIndex: number) => void;
+  /** 아일랜드 분할 뷰에서 강제 카메라 방향 (front=앞면, back=반대편) */
+  islandViewSide?: 'front' | 'back';
 }
 
 /**

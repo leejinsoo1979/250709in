@@ -7,7 +7,7 @@ import { MdOutlineDashboardCustomize } from 'react-icons/md';
 import { Sun, Moon } from 'lucide-react';
 import { useTranslation } from '@/i18n/useTranslation';
 
-export type SidebarTab = 'module' | 'material' | 'structure' | 'etc' | 'upload' | 'myCabinet';
+export type SidebarTab = 'module' | 'material' | 'structure' | 'etc' | 'upload' | 'myCabinet' | 'island';
 
 interface SidebarProps {
   activeTab: SidebarTab | null;
@@ -66,6 +66,18 @@ const Sidebar: React.FC<SidebarProps> = ({
       id: 'myCabinet' as SidebarTab,
       icon: <MdOutlineDashboardCustomize size={22} />,
       label: '커스텀'
+    },
+    {
+      id: 'island' as SidebarTab,
+      icon: (
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+          {/* 아일랜드(섬) 형태: 상판 + 두 기둥 */}
+          <rect x="3" y="7" width="18" height="3" rx="1" stroke="currentColor" strokeWidth="1.8"/>
+          <rect x="5" y="10" width="5" height="11" rx="1" stroke="currentColor" strokeWidth="1.8"/>
+          <rect x="14" y="10" width="5" height="11" rx="1" stroke="currentColor" strokeWidth="1.8"/>
+        </svg>
+      ),
+      label: '아일랜드'
     }
   ];
 
