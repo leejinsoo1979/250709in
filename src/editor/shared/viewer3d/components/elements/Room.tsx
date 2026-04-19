@@ -1228,9 +1228,17 @@ const Room: React.FC<RoomProps> = ({
 
   // 공간 메쉬 확장 깊이 (300mm = 3 Three.js units)
   const extensionDepth = mmToThreeUnits(300);
-  const extendedPanelDepth = panelDepth + extensionDepth;
-  // 뒷쪽은 고정하고 앞쪽으로만 확장 (기존 zOffset 사용)
-  const extendedZOffset = zOffset;
+  // ── 그라데이션 메쉬를 가구 뒷면까지만 당기는 옵션 ──
+  // true: 공간 그라데이션(바닥/벽/천장) 뒷쪽 경계가 가구 뒷면에 맞춰 렌더링
+  //       (가구/프레임/치수 좌표는 영향 없음 — 순수 시각 효과)
+  // false: 기존 동작 (공간 전체 깊이 기준)
+  const SHRINK_MESH_TO_FURNITURE_BACK = true;
+  const meshDepth = SHRINK_MESH_TO_FURNITURE_BACK ? furnitureDepth : panelDepth;
+  const extendedPanelDepth = meshDepth + extensionDepth;
+  // 뒷쪽 경계: 축소 시 가구 뒷면(furnitureZOffset - furnitureDepth/2), 아니면 기존 zOffset
+  const extendedZOffset = SHRINK_MESH_TO_FURNITURE_BACK
+    ? (furnitureZOffset - furnitureDepth / 2)
+    : zOffset;
 
   // 상단/하단 패널의 너비 (좌우 프레임 사이의 공간)
   const topBottomPanelWidth = baseFrame.width;
@@ -1386,8 +1394,9 @@ const Room: React.FC<RoomProps> = ({
   return (
     <group position={[0, 0, groupZOffset]}>
       {/* 주변 벽면들 - ShaderMaterial 기반 그라데이션 (3D perspective 모드에서만 표시) */}
+      {/* 아일랜드 모드에서는 벽/천장/바닥 그라데이션 숨김 */}
       {/* console.log('🔍 Room viewMode 체크:', viewMode, typeof viewMode) */}
-      {viewMode !== '2D' && cameraMode === 'perspective' && (
+      {!spaceInfo.isIsland && viewMode !== '2D' && cameraMode === 'perspective' && (
         <>
           {/* 왼쪽 외부 벽면 - 단내림 고려 */}
           {/* 프리스탠딩이 아니고 (세미스탠딩에서 왼쪽 벽이 있거나 빌트인)일 때만 표시 */}
@@ -2462,8 +2471,8 @@ const Room: React.FC<RoomProps> = ({
             );
           })()}
 
-          {/* 바닥면 - ShaderMaterial 그라데이션 (앞쪽: 흰색, 뒤쪽: 회색) - 탑뷰에서는 숨김 */}
-          {viewMode !== '2D' && renderMode === 'solid' && (
+          {/* 바닥면 - ShaderMaterial 그라데이션 (앞쪽: 흰색, 뒤쪽: 회색) - 탑뷰/아일랜드에서는 숨김 */}
+          {!spaceInfo.isIsland && viewMode !== '2D' && renderMode === 'solid' && (
               <mesh
                 position={[xOffset + width / 2, panelStartY - 0.001, extendedZOffset + extendedPanelDepth / 2]}
                 rotation={[-Math.PI / 2, 0, 0]}
@@ -3030,8 +3039,8 @@ const Room: React.FC<RoomProps> = ({
         </>
       )}
 
-      {/* 공간 윤곽선: wireframe 또는 orthographic 모드에서 표시 */}
-      {viewMode !== '2D' && (renderMode === 'wireframe' || cameraMode === 'orthographic') && (() => {
+      {/* 공간 윤곽선: wireframe 또는 orthographic 모드에서 표시 (아일랜드 모드에서는 숨김) */}
+      {!spaceInfo.isIsland && viewMode !== '2D' && (renderMode === 'wireframe' || cameraMode === 'orthographic') && (() => {
             const wfLineColor = theme?.mode === 'dark' ? "#ffffff" : "#333333";
             const hasLeftWall = spaceInfo.installType === 'builtin' || spaceInfo.installType === 'built-in' ||
               (spaceInfo.installType === 'semistanding' && wallConfig?.left);
