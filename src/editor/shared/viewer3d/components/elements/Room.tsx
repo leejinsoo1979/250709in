@@ -4330,12 +4330,14 @@ const Room: React.FC<RoomProps> = ({
                     const topFrameZRetract = needsTopFrameRetract ? -mmToThreeUnits(DOOR_THICKNESS_MM) : 0;
 
                     // FurnitureItem.tsx와 동일하게 furnitureDepthMm = min(panelDepthMm, 600) 사용
+                    // 전체서라운드: 상부 프레임이 도어 두께만큼 앞으로 나와야 함 (+23mm 보정)
                     const upperModDepthMm = mod.freeDepth || mod.customDepth || 300;
                     const fiFurnitureDepthMm = Math.min(spaceInfo.depth || 1500, 600);
                     const fiFurnitureDepth = mmToThreeUnits(fiFurnitureDepthMm);
                     const fiZOffset = -mmToThreeUnits(spaceInfo.depth || 1500) / 2 + (mmToThreeUnits(spaceInfo.depth || 1500) - fiFurnitureDepth) / 2;
                     const upperFrontZ = fiZOffset - fiFurnitureDepth / 2 - mmToThreeUnits(20) + mmToThreeUnits(upperModDepthMm);
-                    const upperFrameZ = upperFrontZ - mmToThreeUnits(END_PANEL_THICKNESS) / 2;
+                    const upperFullSurroundOffset = isFullSurround ? mmToThreeUnits(23) : 0;
+                    const upperFrameZ = upperFrontZ - mmToThreeUnits(END_PANEL_THICKNESS) / 2 + upperFullSurroundOffset;
                     allTopSegments.push({
                       widthMm: modWidthMM,
                       centerXmm: modCenterXmm,
@@ -5202,13 +5204,14 @@ const Room: React.FC<RoomProps> = ({
                   let slotFrameZ = topZPos;
                   if (slotModCategory === 'upper') {
                     // FurnitureItem.tsx와 동일하게 furnitureDepthMm = min(panelDepthMm, 600) 사용
-                    // (Room.tsx의 furnitureDepth는 노서라운드면 580으로 다를 수 있음 → 20mm 오차 원인)
+                    // 전체서라운드: 상부 프레임 +23mm 보정
                     const slotUpperDepthMm = mod.freeDepth || mod.customDepth || 300;
                     const fiFurnitureDepthMm = Math.min(spaceInfo.depth || 1500, 600);
                     const fiFurnitureDepth = mmToThreeUnits(fiFurnitureDepthMm);
                     const fiZOffset = -mmToThreeUnits(spaceInfo.depth || 1500) / 2 + (mmToThreeUnits(spaceInfo.depth || 1500) - fiFurnitureDepth) / 2;
                     const slotUpperFrontZ = fiZOffset - fiFurnitureDepth / 2 - mmToThreeUnits(20) + mmToThreeUnits(slotUpperDepthMm);
-                    slotFrameZ = slotUpperFrontZ - mmToThreeUnits(END_PANEL_THICKNESS) / 2;
+                    const slotFullSurroundOffset = isFullSurround ? mmToThreeUnits(23) : 0;
+                    slotFrameZ = slotUpperFrontZ - mmToThreeUnits(END_PANEL_THICKNESS) / 2 + slotFullSurroundOffset;
                   }
                   slotTopSegments.push({
                     widthMm: modWidthMM,
