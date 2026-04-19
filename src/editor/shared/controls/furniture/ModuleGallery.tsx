@@ -122,22 +122,24 @@ const isShoeModuleId = (id: string): boolean => {
 /**
  * 썸네일 하단에 표시할 이름 포맷팅
  * - 뒤에 붙은 "XXmm" 제거
- * - 듀얼: "듀얼 " 접두어 제거 → "(한통)" 접미어
- * - 싱글: "(반통)" 접미어
- * - 이미 반통/한통이 이름에 포함되어 있으면 그대로 사용
+ * - 듀얼: "듀얼 " 접두어 제거, "한통" 제거 (접미어 없음)
+ * - 싱글: "반통"을 항상 "(반통)" 형태로 감싸서 표시 (이름 안에 있어도 괄호로 변환)
  */
 const formatThumbnailName = (module: ModuleData): string => {
   let name = module.name.replace(/\s*[\d.]+mm$/, '');
   const isDual = module.id.includes('dual-');
 
   // "한통" 제거, "듀얼 " 접두어 제거
-  name = name.replace(/\s*한통/, '').replace(/^��얼\s*/, '');
+  name = name.replace(/\s*한통/, '').replace(/^듀얼\s*/, '');
 
-  // 싱글만 (반통) 표기, 이미 반통이 있으면 그대로
-  if (!isDual && !name.includes('반통')) {
-    return `${name}(반통)`;
-  }
-  return name;
+  if (isDual) return name.trim();
+
+  // 싱글: 이름 안의 "반통" 또는 "(반통)"을 모두 제거한 뒤, 끝에 "(반통)" 하나만 붙임
+  name = name
+    .replace(/\s*\(반통\)/g, '')
+    .replace(/\s*반통/g, '')
+    .trim();
+  return `${name}(반통)`;
 };
 
 // 썸네일 아이�� 컴포넌트
