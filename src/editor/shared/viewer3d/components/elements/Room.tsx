@@ -4316,11 +4316,11 @@ const Room: React.FC<RoomProps> = ({
                     // 하부장 뒷면 = 하부장 앞면 - furnitureDepth
                     // 상부장 앞면 = 하부장 뒷면 + upperDepth
                     // 옵셋 0 = 프레임 앞면이 상부장 앞면과 일치
-                    // 상부장 실제 앞면 Z (FurnitureItem.tsx와 동일):
-                    //   furnitureZ_center = furnitureZOffset - furnitureDepth/2 - 20 + upperDepth/2
-                    //   upperFrontZ = furnitureZ_center + upperDepth/2 = furnitureZOffset - furnitureDepth/2 - 20 + upperDepth
+                    // 상부장 자체 정보만 사용 (키큰장/하부장 무관)
+                    // 상부장 앞면 Z = mod.position.z(중심) + 상부장 깊이/2
                     const upperModDepthMm = mod.freeDepth || mod.customDepth || 300;
-                    const upperFrontZ = furnitureZOffset - furnitureDepth / 2 - mmToThreeUnits(20) + mmToThreeUnits(upperModDepthMm);
+                    const upperDepthThree = mmToThreeUnits(upperModDepthMm);
+                    const upperFrontZ = (mod.position?.z ?? 0) + upperDepthThree / 2;
                     const upperFrameZ = upperFrontZ - mmToThreeUnits(END_PANEL_THICKNESS) / 2;
                     allTopSegments.push({
                       widthMm: modWidthMM,
@@ -5187,9 +5187,11 @@ const Room: React.FC<RoomProps> = ({
                   const slotModCategory = getModuleCategory(mod);
                   let slotFrameZ = topZPos;
                   if (slotModCategory === 'upper') {
-                    // 옵셋 0 = 프레임 앞면이 상부장 앞면과 일치 (상부장 실제 앞면 기준)
+                    // 옵셋 0 = 프레임 앞면이 상부장 앞면과 일치
+                    // 상부장 자체 정보만 사용 (키큰장/하부장 무관)
                     const slotUpperDepthMm = mod.freeDepth || mod.customDepth || 300;
-                    const slotUpperFrontZ = furnitureZOffset - furnitureDepth / 2 - mmToThreeUnits(20) + mmToThreeUnits(slotUpperDepthMm);
+                    const slotUpperDepthThree = mmToThreeUnits(slotUpperDepthMm);
+                    const slotUpperFrontZ = (mod.position?.z ?? 0) + slotUpperDepthThree / 2;
                     slotFrameZ = slotUpperFrontZ - mmToThreeUnits(END_PANEL_THICKNESS) / 2;
                   }
                   slotTopSegments.push({
