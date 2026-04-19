@@ -5500,10 +5500,12 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               const canMoveLeft = leftGapMm >= 1; // 벽 or 인접가구와 1mm 이상 떨어져야 화살표 표시
               const canMoveRight = rightGapMm >= 1;
               const stopAll = (e: any) => {
-                e.stopPropagation(); e.preventDefault();
+                e.stopPropagation();
                 e.nativeEvent?.stopImmediatePropagation?.();
-                // 캔버스 클릭 → 선택해제 방지
+                // 캔버스 클릭 → 선택해제 방지 (R3F mesh handleClick이 뒤이어 실행되어도 무시)
                 (window as any).__r3fClickHandled = true;
+                // 다음 tick에 해제하여 씬 onClick 한 번만 차단
+                setTimeout(() => { (window as any).__r3fClickHandled = false; }, 50);
               };
               const halfW = moduleWidth / 2;
               // 좌측 한계: 벽 또는 인접 가구 우측 끝

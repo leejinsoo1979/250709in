@@ -635,6 +635,11 @@ const FreePlacementDropZone: React.FC = () => {
   // R3F onClick - 클릭하면 즉시 배치, 배치 모드가 아니면 선택 해제
   const handleClick = useCallback(
     (e: any) => {
+      // HTML 버튼(좌/우 이동 화살표 등)이 이미 클릭을 처리한 경우 선택 해제하지 않음
+      if ((window as any).__r3fClickHandled) {
+        e.stopPropagation();
+        return;
+      }
       if (!activeModuleId || !activeModuleData || !effectiveDimensions || hoverXmm === null || isColliding) {
         // 배치 모드가 아닌 경우: 허공 클릭 시 선택 해제 및 팝업 닫기
         e.stopPropagation();
