@@ -293,6 +293,16 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
       const newModuleData = getModuleById(module.moduleId, internalSpace, spaceInfo);
       const newCategory = newModuleData?.category;
 
+      // 아일랜드 모드: islandSide 미지정이면 현재 활성 면으로 자동 태깅
+      if (spaceInfo.isIsland && !module.islandSide) {
+        try {
+          const { useUIStore } = require('@/store/uiStore');
+          module.islandSide = useUIStore.getState().activeIslandSide || 'front';
+        } catch {
+          module.islandSide = 'front';
+        }
+      }
+
       // 도어 바닥 이격거리 초기화 (카테고리별 기본값)
       const isBasicLowerCabinet = module.moduleId?.includes('lower-half-cabinet') || module.moduleId?.includes('dual-lower-half-cabinet') || module.moduleId?.includes('lower-drawer-') || module.moduleId?.includes('dual-lower-drawer-') || module.moduleId?.includes('lower-sink-cabinet') || module.moduleId?.includes('dual-lower-sink-cabinet') || module.moduleId?.includes('lower-induction-cabinet') || module.moduleId?.includes('dual-lower-induction-cabinet');
       const isDoorLift = module.moduleId?.includes('lower-door-lift-');

@@ -95,7 +95,7 @@ const SunLight: React.FC<{ sunAngle: number; castShadow: boolean }> = ({ sunAngl
  * 2D 모드에서는 orthographic 카메라로 정면 뷰 제공
  */
 const Space3DView: React.FC<Space3DViewProps> = (props) => {
-  const { spaceInfo, svgSize, viewMode = '3D', setViewMode, renderMode = 'solid', showAll = true, showFrame = true, showDimensions: showDimensionsProp, isEmbedded, isStep2, activeZone, hideEdges = false, readOnly = false, sceneRef, showFurniture: showFurnitureProp, onFurnitureClick } = props;
+  const { spaceInfo, svgSize, viewMode = '3D', setViewMode, renderMode = 'solid', showAll = true, showFrame = true, showDimensions: showDimensionsProp, isEmbedded, isStep2, activeZone, hideEdges = false, readOnly = false, sceneRef, showFurniture: showFurnitureProp, onFurnitureClick, islandViewSide } = props;
   const location = useLocation();
   const { spaceInfo: storeSpaceInfo, updateColumn, removeColumn, updateWall, removeWall, addWall, removePanelB, updatePanelB } = useSpaceConfigStore();
   const { placedModules, updateFurnitureForColumns } = useFurnitureStore();
@@ -1802,6 +1802,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
                 readOnly={readOnly}
                 onFurnitureClick={onFurnitureClick || (isEmbedded ? handleEmbeddedFurnitureClick : undefined)}
                 ghostHighlightSlotIndex={previewGhostSlotIndex}
+                islandSideFilter={islandViewSide}
               />
 
               {/* 단내림 공간 렌더링 */}
@@ -2456,6 +2457,7 @@ const QuadrantContent: React.FC<{
         showFurniture={showFurniture}
         readOnly={readOnly}
         onFurnitureClick={onFurnitureClick}
+        islandSideFilter={islandViewSide}
       />
     </React.Suspense>
   );

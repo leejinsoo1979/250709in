@@ -21,6 +21,8 @@ interface PlacedFurnitureContainerProps {
   readOnly?: boolean; // 읽기 전용 모드 (viewer 권한)
   onFurnitureClick?: (furnitureId: string, slotIndex: number) => void; // 가구 클릭 콜백 (미리보기용)
   ghostHighlightSlotIndex?: number | null;
+  /** 아일랜드 모드에서 이 뷰어가 렌더할 면 (front/back). undefined면 필터링 안 함. */
+  islandSideFilter?: 'front' | 'back';
 }
 
 const PlacedFurnitureContainer: React.FC<PlacedFurnitureContainerProps> = ({
@@ -32,7 +34,8 @@ const PlacedFurnitureContainer: React.FC<PlacedFurnitureContainerProps> = ({
   showFurniture,
   readOnly = false,
   onFurnitureClick,
-  ghostHighlightSlotIndex
+  ghostHighlightSlotIndex,
+  islandSideFilter,
 }) => {
   const { spaceInfo } = useSpaceConfigStore();
   const { activePopup, view2DDirection: contextView2DDirection, selectedSlotIndex, selectedFurnitureId } = useUIStore();
@@ -42,6 +45,14 @@ const PlacedFurnitureContainer: React.FC<PlacedFurnitureContainerProps> = ({
 
   // 슬롯 필터링 적용
   let basePlacedModules = propPlacedModules || storePlacedModules;
+
+  // 아일랜드 모드 면별 필터: 같은 면(islandSide === filter)만, islandSide 없는 가구는 기본 'front'로 취급
+  if (spaceInfo.isIsland && islandSideFilter) {
+    basePlacedModules = basePlacedModules.filter(m => {
+      const side = (m as any).islandSide ?? 'front';
+      return side === islandSideFilter;
+    });
+  }
 
   // 측면뷰이고 selectedSlotIndex가 있는 경우 필터링
   const finalView2DDirection = view2DDirection || contextView2DDirection;

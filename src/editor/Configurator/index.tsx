@@ -6600,7 +6600,11 @@ const Configurator: React.FC = () => {
             {spaceInfo.isIsland ? (
               <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column' }}>
                 {/* 상단: 앞면 */}
-                <div style={{ flex: 1, position: 'relative', borderBottom: '2px solid var(--theme-border-strong, #cccccc)', minHeight: 0 }}>
+                <div
+                  style={{ flex: 1, position: 'relative', borderBottom: '2px solid var(--theme-border-strong, #cccccc)', minHeight: 0 }}
+                  onMouseEnter={() => useUIStore.getState().setActiveIslandSide('front')}
+                  onDragEnter={() => useUIStore.getState().setActiveIslandSide('front')}
+                >
                   <div style={{ position: 'absolute', top: 10, left: 12, padding: '4px 10px', fontSize: 11, fontWeight: 600, letterSpacing: 0.5, background: 'rgba(0,0,0,0.65)', color: '#fff', borderRadius: 4, zIndex: 5, pointerEvents: 'none' }}>앞면</div>
                   <Space3DView
                     key="island-front"
@@ -6618,7 +6622,11 @@ const Configurator: React.FC = () => {
                   />
                 </div>
                 {/* 하단: 반대편 */}
-                <div style={{ flex: 1, position: 'relative', minHeight: 0 }}>
+                <div
+                  style={{ flex: 1, position: 'relative', minHeight: 0 }}
+                  onMouseEnter={() => useUIStore.getState().setActiveIslandSide('back')}
+                  onDragEnter={() => useUIStore.getState().setActiveIslandSide('back')}
+                >
                   <div style={{ position: 'absolute', top: 10, left: 12, padding: '4px 10px', fontSize: 11, fontWeight: 600, letterSpacing: 0.5, background: 'rgba(0,0,0,0.65)', color: '#fff', borderRadius: 4, zIndex: 5, pointerEvents: 'none' }}>반대편</div>
                   <Space3DView
                     key="island-back"
