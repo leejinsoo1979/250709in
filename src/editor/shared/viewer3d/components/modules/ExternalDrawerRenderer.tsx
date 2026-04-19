@@ -7,6 +7,7 @@ import { useUIStore } from '@/store/uiStore';
 import { Line } from '@react-three/drei';
 import BoxWithEdges from './components/BoxWithEdges';
 import DimensionText from './components/DimensionText';
+import MaidaWidthDimension from './components/MaidaWidthDimension';
 import { useDimensionColor } from './hooks/useDimensionColor';
 import { isCabinetTexture1, applyCabinetTexture1Settings, isOakTexture, applyOakTextureSettings, applyDefaultImageTextureSettings } from '@/editor/shared/utils/materialConstants';
 
@@ -657,57 +658,24 @@ export const ExternalDrawerRenderer: React.FC<ExternalDrawerRendererProps> = ({
         );
       })}
 
-      {/* 마이다 하단 폭 치수 (1단 마이다 기준) */}
-      {showDimensions && showMaida && zones.length > 0 && (viewMode === '3D' || (viewMode === '2D' && view2DDirection === 'front')) && (() => {
+      {/* 마이다 하단 폭 치수 (1단 마이다 기준) — 공통 컴포넌트 */}
+      {showDimensions && showMaida && zones.length > 0 && (() => {
         const zone0 = zones[0];
         const maidaBottomMm0 = zone0.notchBelowTop != null ? (zone0.notchBelowTop - 5) : -5;
-        const maidaHeightMm0 = maidaHeightsMm ? maidaHeightsMm[0] : ((zone0.notchAboveBottom + 40) - maidaBottomMm0);
         const maidaBottomY = cabinetBottomY + mmToThreeUnits(maidaBottomMm0);
-
-        const is3D = viewMode === '3D';
-        const extensionLineStart = mmToThreeUnits(70);
-        const extensionLineLength = mmToThreeUnits(110);
-        const tickSize = 0.008;
-        const zPos = is3D ? mmToThreeUnits(moduleDepthMm / 2 + 14 + 1) : maidaZ + mmToThreeUnits(10);
-        const dimColor = is3D ? '#000000' : dimensionColor;
-        const maidaWidthMm = moduleWidth - 3;
-        const halfW = maidaWidth / 2;
-
-        const dimLineY = maidaBottomY - extensionLineStart - extensionLineLength;
-        const extStartY = maidaBottomY - extensionLineStart;
-
         return (
-          <>
-            <Line name="maida-dimension" points={[
-              [-halfW, extStartY, zPos],
-              [-halfW, dimLineY, zPos]
-            ]} color={dimColor} lineWidth={1} />
-            <Line name="maida-dimension" points={[
-              [halfW, extStartY, zPos],
-              [halfW, dimLineY, zPos]
-            ]} color={dimColor} lineWidth={1} />
-            <Line name="maida-dimension" points={[
-              [-halfW, dimLineY, zPos],
-              [halfW, dimLineY, zPos]
-            ]} color={dimColor} lineWidth={1} />
-            <Line name="maida-dimension" points={[
-              [-halfW - tickSize, dimLineY, zPos],
-              [-halfW + tickSize, dimLineY, zPos]
-            ]} color={dimColor} lineWidth={1} />
-            <Line name="maida-dimension" points={[
-              [halfW - tickSize, dimLineY, zPos],
-              [halfW + tickSize, dimLineY, zPos]
-            ]} color={dimColor} lineWidth={1} />
-            <DimensionText
-              name="maida-dimension-text"
-              value={maidaWidthMm}
-              position={[0, dimLineY + mmToThreeUnits(15), zPos]}
-              color={dimColor}
-              anchorX="center"
-              anchorY="bottom"
-              forceShow={true}
+          <group position={[0, maidaBottomY, 0]}>
+            <MaidaWidthDimension
+              maidaWidthMm={moduleWidth - 3}
+              maidaWidth={maidaWidth}
+              moduleDepthMm={moduleDepthMm}
+              maidaZ={maidaZ}
+              viewMode={viewMode as '3D' | '2D'}
+              view2DDirection={view2DDirection as any}
+              dimensionColor={dimensionColor}
+              mmToThreeUnits={mmToThreeUnits}
             />
-          </>
+          </group>
         );
       })()}
     </group>

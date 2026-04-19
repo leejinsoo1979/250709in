@@ -9,6 +9,7 @@ import { useSpace3DView } from '../../../context/useSpace3DView';
 import { useUIStore } from '@/store/uiStore';
 import IndirectLight from '../IndirectLight';
 import DimensionText from '../components/DimensionText';
+import MaidaWidthDimension from '../components/MaidaWidthDimension';
 import { useDimensionColor } from '../hooks/useDimensionColor';
 
 import DoorModule from '../DoorModule';
@@ -490,44 +491,23 @@ const InductionDrawerAnimated: React.FC<InductionDrawerAnimatedProps> = ({
           )}
           {/* 2단 마이다 V자 인출 표시 */}
           {showMaidaOverlay && renderMaidaVLines(maida2CenterY, maida2HeightMm, 1)}
-
-          {/* 마이다 하단 폭 치수 (1단 마이다 기준) */}
-          {showDimensions && (viewMode === '3D' || (viewMode === '2D' && view2DDirection === 'front')) && (
-            <group position={[0, maida1CenterY - mmToThreeUnits(maida1HeightMm) / 2, maidaZ]}>
-              {(() => {
-                const is3D = viewMode === '3D';
-                const extensionLineStart = mmToThreeUnits(70);
-                const extensionLineLength = mmToThreeUnits(110);
-                const tickSize = 0.008;
-                const zPos = is3D ? mmToThreeUnits(moduleDepthMm / 2 + 14 + 1) : maidaZ + mmToThreeUnits(10);
-                const dimColor = is3D ? '#000000' : dimensionColor;
-                const halfW = maidaWidth / 2;
-
-                const dimLineY = -extensionLineLength - extensionLineStart;
-                const extStartY = -extensionLineStart;
-
-                return (
-                  <>
-                    <Line name="maida-dimension" points={[[-halfW, extStartY, zPos], [-halfW, dimLineY, zPos]]} color={dimColor} lineWidth={1} />
-                    <Line name="maida-dimension" points={[[halfW, extStartY, zPos], [halfW, dimLineY, zPos]]} color={dimColor} lineWidth={1} />
-                    <Line name="maida-dimension" points={[[-halfW, dimLineY, zPos], [halfW, dimLineY, zPos]]} color={dimColor} lineWidth={1} />
-                    <Line name="maida-dimension" points={[[-halfW - tickSize, dimLineY, zPos], [-halfW + tickSize, dimLineY, zPos]]} color={dimColor} lineWidth={1} />
-                    <Line name="maida-dimension" points={[[halfW - tickSize, dimLineY, zPos], [halfW + tickSize, dimLineY, zPos]]} color={dimColor} lineWidth={1} />
-                    <DimensionText
-                      name="maida-dimension-text"
-                      value={maidaWidthMm}
-                      position={[0, dimLineY + mmToThreeUnits(15), zPos]}
-                      color={dimColor}
-                      anchorX="center"
-                      anchorY="bottom"
-                      forceShow={true}
-                    />
-                  </>
-                );
-              })()}
-            </group>
-          )}
         </animated.group>
+      )}
+
+      {/* 마이다 하단 폭 치수 (1단 마이다 기준) — 서랍 애니메이션 밖에서 고정, 공통 컴포넌트 사용 */}
+      {hasDoor && showDimensions && (
+        <group position={[0, maida1CenterY - mmToThreeUnits(maida1HeightMm) / 2, 0]}>
+          <MaidaWidthDimension
+            maidaWidthMm={maidaWidthMm}
+            maidaWidth={maidaWidth}
+            moduleDepthMm={moduleDepthMm}
+            maidaZ={maidaZ}
+            viewMode={viewMode as '3D' | '2D'}
+            view2DDirection={view2DDirection as any}
+            dimensionColor={dimensionColor}
+            mmToThreeUnits={mmToThreeUnits}
+          />
+        </group>
       )}
     </group>
   );
@@ -703,8 +683,9 @@ const TouchDrawerAnimated: React.FC<TouchDrawerAnimatedProps> = ({
   });
 
   return (
+    <group position={[0, cabinetYPosition, 0]}>
     <animated.group position-z={spring.z}>
-      <group position={[0, cabinetYPosition, 0]}>
+      <group>
         {/* 서랍 본체 + 레그라 레일 (showFurniture true일 때만) */}
         {showFurniture && drawers.map((d, i) => (
           <React.Fragment key={`touch-drawer-${i}`}>
@@ -757,48 +738,28 @@ const TouchDrawerAnimated: React.FC<TouchDrawerAnimatedProps> = ({
             furnitureId={placedFurnitureId}
           />
         ))}
-
-        {/* 마이다 하단 폭 치수 (맨 아래 마이다 기준) */}
-        {hasDoor && maidas.length > 0 && showDimensions && (viewMode === '3D' || (viewMode === '2D' && view2DDirection === 'front')) && (() => {
-          const m = maidas[0]; // 1단 서랍
-          return (
-            <group position={[0, m.centerY - mmToThreeUnits(m.height) / 2, maidaZ]}>
-              {(() => {
-                const is3D = viewMode === '3D';
-                const extensionLineStart = mmToThreeUnits(70);
-                const extensionLineLength = mmToThreeUnits(110);
-                const tickSize = 0.008;
-                const zPos = is3D ? mmToThreeUnits(moduleDepthMm / 2 + 14 + 1) : maidaZ + mmToThreeUnits(10);
-                const dimColor = is3D ? '#000000' : dimensionColor;
-                const halfW = maidaWidth / 2;
-
-                const dimLineY = -extensionLineLength - extensionLineStart;
-                const extStartY = -extensionLineStart;
-
-                return (
-                  <>
-                    <Line name="maida-dimension" points={[[-halfW, extStartY, zPos], [-halfW, dimLineY, zPos]]} color={dimColor} lineWidth={1} />
-                    <Line name="maida-dimension" points={[[halfW, extStartY, zPos], [halfW, dimLineY, zPos]]} color={dimColor} lineWidth={1} />
-                    <Line name="maida-dimension" points={[[-halfW, dimLineY, zPos], [halfW, dimLineY, zPos]]} color={dimColor} lineWidth={1} />
-                    <Line name="maida-dimension" points={[[-halfW - tickSize, dimLineY, zPos], [-halfW + tickSize, dimLineY, zPos]]} color={dimColor} lineWidth={1} />
-                    <Line name="maida-dimension" points={[[halfW - tickSize, dimLineY, zPos], [halfW + tickSize, dimLineY, zPos]]} color={dimColor} lineWidth={1} />
-                    <DimensionText
-                      name="maida-dimension-text"
-                      value={maidaWidthMm}
-                      position={[0, dimLineY + mmToThreeUnits(15), zPos]}
-                      color={dimColor}
-                      anchorX="center"
-                      anchorY="bottom"
-                      forceShow={true}
-                    />
-                  </>
-                );
-              })()}
-            </group>
-          );
-        })()}
       </group>
     </animated.group>
+
+    {/* 마이다 하단 폭 치수 (맨 아래 마이다 기준) — 서랍 애니메이션 밖에서 고정, 공통 컴포넌트 사용 */}
+    {hasDoor && maidas.length > 0 && showDimensions && (() => {
+      const m = maidas[0]; // 1단 서랍
+      return (
+        <group position={[0, m.centerY - mmToThreeUnits(m.height) / 2, 0]}>
+          <MaidaWidthDimension
+            maidaWidthMm={maidaWidthMm}
+            maidaWidth={maidaWidth}
+            moduleDepthMm={moduleDepthMm}
+            maidaZ={maidaZ}
+            viewMode={viewMode as '3D' | '2D'}
+            view2DDirection={view2DDirection as any}
+            dimensionColor={dimensionColor}
+            mmToThreeUnits={mmToThreeUnits}
+          />
+        </group>
+      );
+    })()}
+    </group>
   );
 };
 
