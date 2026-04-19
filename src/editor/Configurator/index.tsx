@@ -386,8 +386,9 @@ const Configurator: React.FC = () => {
   const [fileTreeSelectedProjectId, setFileTreeSelectedProjectId] = useState<string | null>(null);
   const [fileTreeSelectedFolderId, setFileTreeSelectedFolderId] = useState<string | null>(null);
   const [fileTreeDesignFiles, setFileTreeDesignFiles] = useState<DesignFileSummary[]>([]);
-  const [moduleCategory, setModuleCategory] = useState<'clothing' | 'shoes' | 'kitchen'>('clothing'); // 의류장/신발장/주방 토글
+  const [moduleCategory, setModuleCategory] = useState<'clothing' | 'shoes' | 'kitchen' | 'island'>('clothing'); // 의류장/신발장/주방/아일랜드 토글
   const [kitchenSub, setKitchenSub] = useState<'basic' | 'door-raise' | 'top-down' | 'upper'>('basic'); // 주방 서브카테고리
+  const [islandSub, setIslandSub] = useState<'basic' | 'door-raise' | 'top-down'>('basic'); // 아일랜드 서브카테고리
   const [moduleType, setModuleType] = useState<ModuleType>('all'); // 전체/싱글/듀얼 탭
   const [customCategory, setCustomCategory] = useState<'full' | 'upper' | 'lower'>('full'); // 커스텀 전체장/상부장/하부장 토글
   const [myCabinetCategory, setMyCabinetCategory] = useState<'full' | 'upper' | 'lower'>('full'); // My캐비닛 카테고리 필터
@@ -3446,7 +3447,7 @@ const Configurator: React.FC = () => {
         return (
           <div className={styles.sidebarPanel}>
             <div className={styles.modulePanelContent}>
-              {/* 의류장/신발장/주방 토글 탭 */}
+              {/* 의류장/신발장/주방/아일랜드 토글 탭 */}
               <div className={styles.moduleCategoryTabs}>
                 <button
                   className={`${styles.moduleCategoryTab} ${moduleCategory === 'clothing' ? styles.active : ''}`}
@@ -3465,6 +3466,12 @@ const Configurator: React.FC = () => {
                   onClick={() => setModuleCategory('kitchen')}
                 >
                   주방
+                </button>
+                <button
+                  className={`${styles.moduleCategoryTab} ${moduleCategory === 'island' ? styles.active : ''}`}
+                  onClick={() => setModuleCategory('island')}
+                >
+                  아일랜드
                 </button>
               </div>
 

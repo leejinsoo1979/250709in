@@ -971,6 +971,12 @@ const FreePlacementDropZone: React.FC = () => {
       if (lowerMods.length > 0) result.push(...computeGapsFor(lowerMods, gapLabelYBottom, 'lower'));
       // full 가구가 있으면 상단 기준으로 추가 표시
       if (fullMods.length > 0 && upperMods.length === 0) result.push(...computeGapsFor(fullMods, gapLabelYTop, 'all'));
+      console.log('🔍 [remainingGaps 분리]', {
+        upperCount: upperMods.length,
+        lowerCount: lowerMods.length,
+        fullCount: fullMods.length,
+        gaps: result.map(g => ({ width: g.width, startX: g.startX, endX: g.endX, centerY: g.centerY, type: g.gapType })),
+      });
       return result;
     }
 
