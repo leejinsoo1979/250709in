@@ -638,6 +638,10 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
         // 좌측부터 순서대로 빈 자리 찾기
         let furnitureWidth = dims.width;
         const newCategory = (moduleData.category || 'full') as 'full' | 'upper' | 'lower';
+        const isNewDual = module.id.includes('dual-');
+        const MAX_SINGLE = 600;
+        const MAX_DUAL = 1200;
+        const maxAllowedWidth = isNewDual ? MAX_DUAL : MAX_SINGLE;
 
         const freeModules = placedModules.filter(m => m.isFreePlacement && !m.isSurroundPanel);
         const allBounds = freeModules.map(m => getModuleBoundsX(m)).sort((a, b) => a.left - b.left);
@@ -674,7 +678,7 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
             }
           }
 
-          // 자유배치: 가구를 남은 빈 공간에 딱 맞춰 배치 (작으면 확장, 크면 축소)
+          // 자유배치: 가구를 남은 빈 공간에 맞춰 배치 (단, 싱글 600 / 듀얼 1200 상한)
           // 가장 큰 빈 공간을 찾아 그 크기만큼 가구 너비를 맞춤
           if (candidates.length > 0) {
             const largestGap = candidates.reduce((max, g) => {
@@ -683,8 +687,10 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
             }, candidates[0]);
             const gapW = Math.floor(largestGap.right - largestGap.left);
             if (gapW >= 200) {
-              furnitureWidth = gapW; // 남은 공간 전체를 채움
+              // 빈 공간이 최대치보다 크면 최대치, 작으면 빈 공간 전체 사용
+              furnitureWidth = Math.min(gapW, maxAllowedWidth);
               dims = { ...dims, width: furnitureWidth };
+              // 가구를 빈 공간 좌측에 붙여 배치
               targetX = largestGap.left + furnitureWidth / 2;
               break;
             }
