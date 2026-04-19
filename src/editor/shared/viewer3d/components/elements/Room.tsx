@@ -4310,18 +4310,12 @@ const Room: React.FC<RoomProps> = ({
                     const needsTopFrameRetract = isDoorBase && isSpaceFitDoor && mod.hasDoor;
                     const topFrameZRetract = needsTopFrameRetract ? -mmToThreeUnits(DOOR_THICKNESS_MM) : 0;
 
-                    // 상부장: 뒷면을 하부장 뒷면에 정렬 → 앞면은 상부장 깊이만큼 앞으로
-                    const upperModDepthMm = mod.freeDepth || mod.customDepth || 300;
-                    // 하부장 앞면 Z = furnitureZOffset + furnitureDepth/2 - doorThickness(20mm)
-                    // 하부장 뒷면 Z = 하부장 앞면 - furnitureDepth = furnitureZOffset - furnitureDepth/2 - doorThickness
-                    // 상부장 앞면 Z = 하부장 뒷면 + 상부장 깊이
-                    // 상부 서라운드(EP) 앞면 = 상부장 앞면 → 프레임 중심 = 상부장 앞면 - EP/2
-                    const upperFrontZ = furnitureZOffset - furnitureDepth / 2 - mmToThreeUnits(20) + mmToThreeUnits(upperModDepthMm);
-                    const upperFrameZ = upperFrontZ - mmToThreeUnits(END_PANEL_THICKNESS) / 2;
+                    // 상부 프레임 Z는 공간 기준(노서라운드/전체서라운드) 평면에 고정
+                    // 상부장이어도 프레임은 공간 평면에 머무름 (상부장 앞면을 따라가지 않음)
                     allTopSegments.push({
                       widthMm: modWidthMM,
                       centerXmm: modCenterXmm,
-                      zPosition: (modCategory === 'upper' ? upperFrameZ : topZPosition) + modTopZOffset + topFrameZRetract,
+                      zPosition: topZPosition + modTopZOffset + topFrameZRetract,
                       height: modFrameHeight,
                       yPosition: modFrameCenterY,
                       material: topSurrMat,
@@ -5181,15 +5175,8 @@ const Room: React.FC<RoomProps> = ({
 
                   // 상부장: 뒷면을 하부장 뒷면에 정렬 → 프레임 Z도 상부장 앞면 기준
                   const slotModCategory = getModuleCategory(mod);
-                  let slotFrameZ = topZPos;
-                  if (slotModCategory === 'upper') {
-                    const slotUpperDepthMm = mod.freeDepth || mod.customDepth || 300;
-                    // 하부장 뒷면 Z = furnitureZOffset - furnitureDepth/2 - doorThickness(20mm)
-                    // 상부장 앞면 Z = 하부장 뒷면 + 상부장 깊이
-                    // 상부 서라운드(EP) 뒷면 = 상부장 앞면 → 프레임 중심 = 상부장 앞면 + EP/2
-                    const slotUpperFrontZ = furnitureZOffset - furnitureDepth / 2 - mmToThreeUnits(20) + mmToThreeUnits(slotUpperDepthMm);
-                    slotFrameZ = slotUpperFrontZ + mmToThreeUnits(END_PANEL_THICKNESS) / 2;
-                  }
+                  // 상부 프레임은 가구 카테고리와 무관하게 공간 기준 평면(topZPos)에 고정
+                  const slotFrameZ = topZPos;
                   slotTopSegments.push({
                     widthMm: modWidthMM,
                     centerXmm: modCenterXmm,
