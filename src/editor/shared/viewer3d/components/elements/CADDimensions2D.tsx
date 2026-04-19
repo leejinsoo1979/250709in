@@ -1339,9 +1339,10 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           const furnitureZOffset = zOffset + (panelDepth - furnitureDepth) / 2;
           let furnitureZ: number;
           if (isUpperMod) {
-            // 상부장: 하부장 뒷면에 맞춤 (FurnitureItem.tsx line 2659-2664)
-            const lowerDepth = mmToThreeUnits(650);
-            furnitureZ = furnitureZOffset + furnitureDepth / 2 - doorThickness - lowerDepth + moduleDepth / 2;
+            // 상부장: 하부장 뒷면에 맞춤 (FurnitureItem.tsx와 동일 공식)
+            // 하부장 뒷면 Z = furnitureZOffset - furnitureDepth/2 - doorThickness
+            // 상부장 중심 Z = 하부장 뒷면 + 상부장 깊이/2
+            furnitureZ = furnitureZOffset - furnitureDepth / 2 - doorThickness + moduleDepth / 2;
           } else {
             furnitureZ = furnitureZOffset + furnitureDepth/2 - doorThickness - moduleDepth/2;
           }
@@ -2413,7 +2414,11 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           const doorThickness = mmToThreeUnits(20);
           const zOffset = -panelDepth / 2;
           const furnitureZOffset = zOffset + (panelDepth - furnitureDepth) / 2;
-          const furnitureZ = furnitureZOffset + furnitureDepth/2 - doorThickness - moduleDepth/2;
+          // 상부장은 하부장 뒷면 정렬, 그 외는 앞면 정렬
+          const isUpperMod_d2 = getModuleCategory(module as PlacedModule) === 'upper';
+          const furnitureZ = isUpperMod_d2
+            ? (furnitureZOffset - furnitureDepth/2 - doorThickness + moduleDepth/2)
+            : (furnitureZOffset + furnitureDepth/2 - doorThickness - moduleDepth/2);
 
           return (
             <group key={`furniture-depth-${index}`}>
