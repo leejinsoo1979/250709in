@@ -4310,12 +4310,15 @@ const Room: React.FC<RoomProps> = ({
                     const needsTopFrameRetract = isDoorBase && isSpaceFitDoor && mod.hasDoor;
                     const topFrameZRetract = needsTopFrameRetract ? -mmToThreeUnits(DOOR_THICKNESS_MM) : 0;
 
-                    // 상부 프레임 Z는 공간 기준(노서라운드/전체서라운드) 평면에 고정
-                    // 상부장이어도 프레임은 공간 평면에 머무름 (상부장 앞면을 따라가지 않음)
+                    // 상부장은 프레임이 상부장 앞면에 맞춰 붙어야 함 (프레임 앞면 = 상부장 앞면)
+                    // 그 외(키큰장 등)는 공간 기준 평면
+                    const upperModDepthMm = mod.freeDepth || mod.customDepth || 300;
+                    const upperFrontZ = furnitureZOffset - furnitureDepth / 2 - mmToThreeUnits(20) + mmToThreeUnits(upperModDepthMm);
+                    const upperFrameZ = upperFrontZ - mmToThreeUnits(END_PANEL_THICKNESS) / 2;
                     allTopSegments.push({
                       widthMm: modWidthMM,
                       centerXmm: modCenterXmm,
-                      zPosition: topZPosition + modTopZOffset + topFrameZRetract,
+                      zPosition: (modCategory === 'upper' ? upperFrameZ : topZPosition) + modTopZOffset + topFrameZRetract,
                       height: modFrameHeight,
                       yPosition: modFrameCenterY,
                       material: topSurrMat,
@@ -5175,8 +5178,14 @@ const Room: React.FC<RoomProps> = ({
 
                   // 상부장: 뒷면을 하부장 뒷면에 정렬 → 프레임 Z도 상부장 앞면 기준
                   const slotModCategory = getModuleCategory(mod);
-                  // 상부 프레임은 가구 카테고리와 무관하게 공간 기준 평면(topZPos)에 고정
-                  const slotFrameZ = topZPos;
+                  // 상부장은 프레임이 상부장 앞면에 맞춰 붙어야 함 (프레임 앞면 = 상부장 앞면)
+                  const slotModCategory = getModuleCategory(mod);
+                  let slotFrameZ = topZPos;
+                  if (slotModCategory === 'upper') {
+                    const slotUpperDepthMm = mod.freeDepth || mod.customDepth || 300;
+                    const slotUpperFrontZ = furnitureZOffset - furnitureDepth / 2 - mmToThreeUnits(20) + mmToThreeUnits(slotUpperDepthMm);
+                    slotFrameZ = slotUpperFrontZ - mmToThreeUnits(END_PANEL_THICKNESS) / 2;
+                  }
                   slotTopSegments.push({
                     widthMm: modWidthMM,
                     centerXmm: modCenterXmm,
