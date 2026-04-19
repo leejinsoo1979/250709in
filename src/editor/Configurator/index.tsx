@@ -3455,30 +3455,32 @@ const Configurator: React.FC = () => {
         return (
           <div className={styles.sidebarPanel}>
             <div className={styles.modulePanelContent}>
-              {/* 의류장/신발장/주방 토글 탭 */}
-              <div className={styles.moduleCategoryTabs}>
-                <button
-                  className={`${styles.moduleCategoryTab} ${moduleCategory === 'clothing' ? styles.active : ''}`}
-                  onClick={() => setModuleCategory('clothing')}
-                >
-                  의류장
-                </button>
-                <button
-                  className={`${styles.moduleCategoryTab} ${moduleCategory === 'shoes' ? styles.active : ''}`}
-                  onClick={() => setModuleCategory('shoes')}
-                >
-                  신발장
-                </button>
-                <button
-                  className={`${styles.moduleCategoryTab} ${moduleCategory === 'kitchen' ? styles.active : ''}`}
-                  onClick={() => setModuleCategory('kitchen')}
-                >
-                  주방
-                </button>
-              </div>
+              {/* 의류장/신발장/주방 토글 탭 — 아일랜드 모드에서는 숨김 */}
+              {!spaceInfo.isIsland && (
+                <div className={styles.moduleCategoryTabs}>
+                  <button
+                    className={`${styles.moduleCategoryTab} ${moduleCategory === 'clothing' ? styles.active : ''}`}
+                    onClick={() => setModuleCategory('clothing')}
+                  >
+                    의류장
+                  </button>
+                  <button
+                    className={`${styles.moduleCategoryTab} ${moduleCategory === 'shoes' ? styles.active : ''}`}
+                    onClick={() => setModuleCategory('shoes')}
+                  >
+                    신발장
+                  </button>
+                  <button
+                    className={`${styles.moduleCategoryTab} ${moduleCategory === 'kitchen' ? styles.active : ''}`}
+                    onClick={() => setModuleCategory('kitchen')}
+                  >
+                    주방
+                  </button>
+                </div>
+              )}
 
-              {/* 주방 선택 시: 기본장/도어올림/상판내림/상부장 서브 탭 */}
-              {moduleCategory === 'kitchen' && (
+              {/* 주방 선택 시 서브 탭: 아일랜드 모드에서는 상부장 제외 */}
+              {(moduleCategory === 'kitchen' || spaceInfo.isIsland) && (
                 <div className={styles.moduleCategoryTabs}>
                   <button
                     className={`${styles.moduleCategoryTab} ${kitchenSub === 'basic' ? styles.active : ''}`}
@@ -3498,12 +3500,14 @@ const Configurator: React.FC = () => {
                   >
                     상판내림
                   </button>
-                  <button
-                    className={`${styles.moduleCategoryTab} ${kitchenSub === 'upper' ? styles.active : ''}`}
-                    onClick={() => setKitchenSub('upper')}
-                  >
-                    상부장
-                  </button>
+                  {!spaceInfo.isIsland && (
+                    <button
+                      className={`${styles.moduleCategoryTab} ${kitchenSub === 'upper' ? styles.active : ''}`}
+                      onClick={() => setKitchenSub('upper')}
+                    >
+                      상부장
+                    </button>
+                  )}
                 </div>
               )}
 
@@ -3533,8 +3537,8 @@ const Configurator: React.FC = () => {
 
               <div className={styles.moduleSection}>
                 <ModuleGallery
-                  moduleCategory={moduleCategory}
-                  kitchenSubCategory={kitchenSub}
+                  moduleCategory={spaceInfo.isIsland ? 'kitchen' : moduleCategory}
+                  kitchenSubCategory={spaceInfo.isIsland && kitchenSub === 'upper' ? 'basic' : kitchenSub}
                   selectedType={moduleType}
                   onSelectedTypeChange={setModuleType}
                   hideTabMenu
@@ -6638,6 +6642,8 @@ const Configurator: React.FC = () => {
                   style={{ flex: 1, position: 'relative', borderBottom: '2px solid var(--theme-border-strong, #cccccc)', minHeight: 0 }}
                   onMouseEnter={() => useUIStore.getState().setActiveIslandSide('front')}
                   onDragEnter={() => useUIStore.getState().setActiveIslandSide('front')}
+                  onMouseDown={() => useUIStore.getState().setActiveIslandSide('front')}
+                  onClick={() => useUIStore.getState().setActiveIslandSide('front')}
                 >
                   <div style={{ position: 'absolute', top: 10, left: 12, padding: '4px 10px', fontSize: 11, fontWeight: 600, letterSpacing: 0.5, background: 'rgba(0,0,0,0.65)', color: '#fff', borderRadius: 4, zIndex: 5, pointerEvents: 'none' }}>앞면</div>
                   <Space3DView
@@ -6655,13 +6661,15 @@ const Configurator: React.FC = () => {
                     islandViewSide="front"
                   />
                 </div>
-                {/* 하단: 반대편 — scaleX(-1)로 좌우 반전하여 뒷면을 보이게 한다 */}
+                {/* 하단: 반대편 */}
                 <div
-                  style={{ flex: 1, position: 'relative', minHeight: 0, transform: 'scaleX(-1)' }}
+                  style={{ flex: 1, position: 'relative', minHeight: 0 }}
                   onMouseEnter={() => useUIStore.getState().setActiveIslandSide('back')}
                   onDragEnter={() => useUIStore.getState().setActiveIslandSide('back')}
+                  onMouseDown={() => useUIStore.getState().setActiveIslandSide('back')}
+                  onClick={() => useUIStore.getState().setActiveIslandSide('back')}
                 >
-                  <div style={{ position: 'absolute', top: 10, left: 12, padding: '4px 10px', fontSize: 11, fontWeight: 600, letterSpacing: 0.5, background: 'rgba(0,0,0,0.65)', color: '#fff', borderRadius: 4, zIndex: 5, pointerEvents: 'none', transform: 'scaleX(-1)' }}>반대편</div>
+                  <div style={{ position: 'absolute', top: 10, left: 12, padding: '4px 10px', fontSize: 11, fontWeight: 600, letterSpacing: 0.5, background: 'rgba(0,0,0,0.65)', color: '#fff', borderRadius: 4, zIndex: 5, pointerEvents: 'none' }}>반대편</div>
                   <Space3DView
                     key="island-back"
                     spaceInfo={spaceInfo}
