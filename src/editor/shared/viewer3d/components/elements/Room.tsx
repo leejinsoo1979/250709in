@@ -4324,9 +4324,9 @@ const Room: React.FC<RoomProps> = ({
                       ? effectiveTopY - modTopGapThreeUnits - modFrameHeight / 2
                       : effectiveTopY - modTopGapThreeUnits - modFrameHeight / 2;
 
-                    // 전체서라운드 + 상부장이면 topFrameOffset 기본값 23mm
-                    const upperDefaultOffset = (isFullSurround && modCategory === 'upper') ? 23 : 0;
-                    const effectiveTopFrameOffset = mod.topFrameOffset ?? upperDefaultOffset;
+                    // 전체서라운드 + 상부장이면 UI 옵셋에 +23mm 자동 보정 적용
+                    const upperAutoOffsetMm = (isFullSurround && modCategory === 'upper') ? 23 : 0;
+                    const effectiveTopFrameOffset = (mod.topFrameOffset ?? 0) + upperAutoOffsetMm;
                     const modTopZOffset = effectiveTopFrameOffset ? mmToThreeUnits(effectiveTopFrameOffset) : 0;
                     const DOOR_THICKNESS_MM = 18.5; // PET 재질
                     const needsTopFrameRetract = isDoorBase && isSpaceFitDoor && mod.hasDoor;
@@ -5199,9 +5199,9 @@ const Room: React.FC<RoomProps> = ({
                   // 상부프레임 하단(가구쪽) 고정, 상단(천장쪽)이 gap만큼 내려옴
                   const modTopY = panelStartY + ceilingHeight - slotTopGapThreeUnits - modTopHeight / 2;
                   const slotModCategory = getModuleCategory(mod);
-                  // 전체서라운드 + 상부장이면 topFrameOffset 기본값 23mm
-                  const slotUpperDefaultOffset = (isFullSurround && slotModCategory === 'upper') ? 23 : 0;
-                  const slotEffectiveTopFrameOffset = mod.topFrameOffset ?? slotUpperDefaultOffset;
+                  // 전체서라운드 + 상부장이면 UI 옵셋에 +23mm 자동 보정 적용
+                  const slotUpperAutoOffsetMm = (isFullSurround && slotModCategory === 'upper') ? 23 : 0;
+                  const slotEffectiveTopFrameOffset = (mod.topFrameOffset ?? 0) + slotUpperAutoOffsetMm;
                   const modTopZOffset = slotEffectiveTopFrameOffset ? mmToThreeUnits(slotEffectiveTopFrameOffset) : 0;
 
                   // 상부장은 프레임이 상부장 앞면에 맞춰 붙어야 함 (프레임 앞면 = 상부장 앞면)
