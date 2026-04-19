@@ -21,6 +21,8 @@ interface SidebarProps {
   onAddCollaborator?: () => void;
   onFileTreeToggle?: () => void;
   isFileTreeOpen?: boolean;
+  /** 아일랜드 모드일 때 기둥 탭을 숨긴다 */
+  isIsland?: boolean;
 }
 
 const Sidebar: React.FC<SidebarProps> = ({
@@ -35,6 +37,7 @@ const Sidebar: React.FC<SidebarProps> = ({
   onAddCollaborator,
   onFileTreeToggle,
   isFileTreeOpen,
+  isIsland = false,
 }) => {
   const { theme, toggleMode } = useTheme();
   const { t } = useTranslation();
@@ -81,7 +84,11 @@ const Sidebar: React.FC<SidebarProps> = ({
     }
   ];
 
-  const tabs = readOnly ? allTabs.filter(tab => tab.id === 'material') : allTabs;
+  let tabs = readOnly ? allTabs.filter(tab => tab.id === 'material') : allTabs;
+  if (isIsland) {
+    // 아일랜드 모드: 기둥/아일랜드 탭 숨김 (이미 아일랜드 디자인이므로)
+    tabs = tabs.filter(tab => tab.id !== 'structure' && tab.id !== 'island');
+  }
 
   return (
     <aside className={`${styles.sidebar} ${isOpen ? styles.open : ''}`}>

@@ -2446,12 +2446,6 @@ const Configurator: React.FC = () => {
                 // spaceConfig: !!designFile.spaceConfig
               // });
 
-              // 아일랜드 디자인이면 IslandEditor 라우트로 이동
-              if ((designFile.spaceConfig as any)?.isIsland && mode !== 'readonly') {
-                navigate(`/island-editor?projectId=${designFile.projectId || ''}&designFileId=${designFile.id}`, { replace: true });
-                return;
-              }
-
               // 프로젝트 기본 정보 설정 - projectId로 프로젝트 정보 가져오기
               if (designFile.projectId) {
                 const { project, error: projectError } = await getProjectByIdPublic(designFile.projectId);
@@ -3884,7 +3878,8 @@ const Configurator: React.FC = () => {
           </div>
         )}
 
-        {/* 공간 유형 - 공간 설정과 단내림 사이 */}
+        {/* 공간 유형 - 공간 설정과 단내림 사이 (아일랜드 모드에서는 숨김) */}
+        {!spaceInfo.isIsland && (
         <div className={styles.configSection}>
           <div className={styles.sectionHeader}>
             <span className={styles.sectionDot}></span>
@@ -3896,9 +3891,10 @@ const Configurator: React.FC = () => {
             onUpdate={handleSpaceInfoUpdate}
           />
         </div>
+        )}
 
         {/* 단내림 설정 (자유배치 전용 — 커튼박스 안쪽, 천장이 내려오는 구간) */}
-        {isFreeMode && (<div className={styles.configSection}>
+        {!spaceInfo.isIsland && isFreeMode && (<div className={styles.configSection}>
           <div className={styles.sectionHeader}>
             <span className={styles.sectionDot}></span>
             <h3 className={styles.sectionTitle}>단내림</h3>
@@ -3957,7 +3953,7 @@ const Configurator: React.FC = () => {
         </div>)}
 
         {/* 자유배치: 커튼박스 설정 */}
-        {isFreeMode && (<div className={styles.configSection}>
+        {!spaceInfo.isIsland && isFreeMode && (<div className={styles.configSection}>
           <div className={styles.sectionHeader}>
             <span className={styles.sectionDot}></span>
             <h3 className={styles.sectionTitle}>커튼박스</h3>
@@ -6339,6 +6335,7 @@ const Configurator: React.FC = () => {
               onAddCollaborator={() => setIsShareModalOpen(true)}
               onFileTreeToggle={handleFileTreeToggle}
               isFileTreeOpen={isFileTreeOpen}
+              isIsland={!!spaceInfo.isIsland}
             />
           )}
 
@@ -7311,7 +7308,7 @@ const Configurator: React.FC = () => {
               return;
             }
 
-            navigate(`/island-editor?projectId=${projectIdToUse}&designFileId=${designFileId}`, { replace: true });
+            navigate(`/configurator?projectId=${projectIdToUse}&designFileId=${designFileId}`, { replace: true });
           } catch (err) {
             console.error('아일랜드 디자인 생성 오류:', err);
             alert('아일랜드 디자인 생성 중 오류가 발생했습니다.');
