@@ -1019,8 +1019,9 @@ const ModuleGallery: React.FC<ModuleGalleryProps> = ({ moduleCategory = 'tall', 
     // 하부장 카테고리 선택시
     categoryModules = getModulesByCategory('lower', adjustedInternalSpace, spaceInfoWithSlotWidths);
   } else if (moduleCategory === 'clothing') {
-    // 의류장 = 키큰장(full) 전체
-    categoryModules = getModulesByCategory('full', adjustedInternalSpace, spaceInfoWithSlotWidths);
+    // 의류장 = 키큰장(full) 중 현관장(entryway) 제외
+    categoryModules = getModulesByCategory('full', adjustedInternalSpace, spaceInfoWithSlotWidths)
+      .filter(m => !m.id.includes('entryway'));
   } else if (moduleCategory === 'shoes') {
     // 신발장 = 현관장(entryway) 계열만
     const all = [
