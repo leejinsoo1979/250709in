@@ -5495,8 +5495,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               const gapLeftX = leftX - mmToThreeUnits(leftGapMm);
               // 우측 갭: (오른쪽 인접 가구 또는 구간 경계) ~ 가구 오른쪽
               const gapRightX = rightX + mmToThreeUnits(rightGapMm);
-              // 가구 이동 핸들러: 화살표 클릭 시 10mm씩 이동
-              const MOVE_STEP = 0.1; // 10mm = 0.1 Three.js 단위
+              // 가구 이동 핸들러: 화살표 클릭 시 벽/인접가구까지 한번에 붙임
               const isSelected = selectedFurnitureId === module.id;
               const canMoveLeft = leftGapMm >= 1; // 벽 or 인접가구와 1mm 이상 떨어져야 화살표 표시
               const canMoveRight = rightGapMm >= 1;
@@ -5513,14 +5512,15 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               const rightLimit = rightX + mmToThreeUnits(rightGapMm); // gapRightX = 벽 or 인접가구 경계
               // 1mm(0.01) 단위로 스냅하여 부동소수점 오차 방지
               const snap = (v: number) => Math.round(v * 100) / 100;
+              // 좌/우 한계(벽 또는 인접 가구)까지 한번에 붙이기 (1mm 단위로 스냅하여 부동소수점 오차 방지)
               const moveLeft = (e: any) => {
                 stopAll(e);
-                const newX = snap(Math.max(leftLimit + halfW, module.position.x - MOVE_STEP));
+                const newX = snap(leftLimit + halfW);
                 updatePlacedModule(module.id, { position: { ...module.position, x: newX } });
               };
               const moveRight = (e: any) => {
                 stopAll(e);
-                const newX = snap(Math.min(rightLimit - halfW, module.position.x + MOVE_STEP));
+                const newX = snap(rightLimit - halfW);
                 updatePlacedModule(module.id, { position: { ...module.position, x: newX } });
               };
               return (<>
