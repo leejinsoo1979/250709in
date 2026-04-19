@@ -5518,16 +5518,32 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               const rightLimit = rightX + mmToThreeUnits(realRightGapMm);
               // 1mm(0.01) 단위로 스냅하여 부동소수점 오차 방지
               const snap = (v: number) => Math.round(v * 100) / 100;
-              // 좌/우 한계(벽 또는 인접 가구)까지 한번에 붙이기
+              // 좌/우 한계(벽 또는 인접 가구)까지 한번에 붙이기 + 가구 너비 자동 확장
+              // (기본값: 싱글 600, 듀얼 1200 상한까지 빈 공간만큼 확장)
+              const isModDual = module.moduleId?.includes('dual-');
+              const maxModWidth = isModDual ? 1200 : 600;
+              const currentWidthMm = (module.freeWidth || module.customWidth || module.moduleWidth || 0);
+              const totalAvailableMm = realLeftGapMm + currentWidthMm + realRightGapMm;
+              const newWidthMm = Math.min(maxModWidth, Math.floor(totalAvailableMm));
+              const newHalfWThree = mmToThreeUnits(newWidthMm) / 2;
+
               const moveLeft = (e: any) => {
                 stopAll(e);
-                const newX = snap(leftLimit + halfW);
-                updatePlacedModule(module.id, { position: { ...module.position, x: newX } });
+                const newX = snap(leftLimit + newHalfWThree);
+                updatePlacedModule(module.id, {
+                  position: { ...module.position, x: newX },
+                  freeWidth: newWidthMm,
+                  moduleWidth: newWidthMm,
+                });
               };
               const moveRight = (e: any) => {
                 stopAll(e);
-                const newX = snap(rightLimit - halfW);
-                updatePlacedModule(module.id, { position: { ...module.position, x: newX } });
+                const newX = snap(rightLimit - newHalfWThree);
+                updatePlacedModule(module.id, {
+                  position: { ...module.position, x: newX },
+                  freeWidth: newWidthMm,
+                  moduleWidth: newWidthMm,
+                });
               };
               return (<>
                 {/* 좌측 이동 화살표 — 가구 선택 + 이격 여유 있을 때만 */}
