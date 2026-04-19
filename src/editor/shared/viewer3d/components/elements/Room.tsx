@@ -5194,7 +5194,8 @@ const Room: React.FC<RoomProps> = ({
                     const slotLowerFrontZ = isFullSurround
                       ? furnitureZOffset + furnitureDepth / 2 + mmToThreeUnits(3)
                       : furnitureZOffset + furnitureDepth / 2 - mmToThreeUnits(20);
-                    const slotUpperFrontZ = slotLowerFrontZ - furnitureDepth + mmToThreeUnits(slotUpperDepthMm);
+                    // 상부장 몸체 앞면 = 도어 두께(18.5mm)만큼 뒤로
+                    const slotUpperFrontZ = slotLowerFrontZ - furnitureDepth + mmToThreeUnits(slotUpperDepthMm) - mmToThreeUnits(18.5);
                     slotFrameZ = slotUpperFrontZ - mmToThreeUnits(END_PANEL_THICKNESS) / 2;
                   }
                   slotTopSegments.push({
