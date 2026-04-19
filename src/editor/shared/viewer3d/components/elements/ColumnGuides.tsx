@@ -480,10 +480,16 @@ const ColumnGuides: React.FC<ColumnGuidesProps> = ({ viewMode: viewModeProp }) =
       );
     }
     
-    // 각 슬롯 경계의 수직 가이드
+    // 각 슬롯 경계의 수직 가이드 (양쪽 슬롯 모두 배치된 경계는 숨김)
+    const occupiedSetForLines = getOccupiedSlots(zoneType);
     boundaries.forEach((xPos, index) => {
-      // 모든 경계선을 표시 (스킵 조건 제거)
-      
+      // 양쪽 슬롯(index-1, index)이 모두 배치됐으면 경계선 숨김
+      // 끝 경계는 한쪽만 체크
+      const leftOccupied = index > 0 && occupiedSetForLines.has(index - 1);
+      const rightOccupied = index < columnCount && occupiedSetForLines.has(index);
+      const isInnerBoundary = index > 0 && index < columnCount;
+      if (isInnerBoundary && leftOccupied && rightOccupied) return;
+
       // 2D 상부뷰에서는 수평선으로 표시
       if (viewMode === '2D' && view2DDirection === 'top') {
         guides.push(
@@ -526,9 +532,12 @@ const ColumnGuides: React.FC<ColumnGuidesProps> = ({ viewMode: viewModeProp }) =
       }
     });
     
-    // 각 슬롯 중앙에 내경 사이즈 텍스트 표시
+    // 각 슬롯 중앙에 내경 사이즈 텍스트 표시 (배치된 슬롯은 숨김)
     if (showDimensions) {
+      const occupiedSetForText = getOccupiedSlots(zoneType);
       positions.forEach((xPos, index) => {
+        // 가구가 배치된 슬롯은 가이드 숫자 숨김 (백패널 뚫고 보이는 문제 방지)
+        if (occupiedSetForText.has(index)) return;
         // 컬럼 너비 표시 — slotWidths 우선 (실제 배치폭과 일치)
         const actualWidth = (slotWidths && slotWidths[index] !== undefined)
           ? slotWidths[index]
