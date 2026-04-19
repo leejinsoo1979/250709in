@@ -6597,19 +6597,59 @@ const Configurator: React.FC = () => {
                 </div>
               );
             })()}
-            <Space3DView
-              key={`space3d-${spaceInfo.droppedCeiling?.enabled}-${spaceInfo.droppedCeiling?.position}-${spaceInfo.droppedCeiling?.width}-${spaceInfo.droppedCeiling?.dropHeight}-${spaceInfo.curtainBoxFinished}-${spaceInfo.stepCeiling?.enabled}-${spaceInfo.stepCeiling?.position}-${spaceInfo.stepCeiling?.width}-${spaceInfo.stepCeiling?.dropHeight}-${spaceInfo.curtainBox?.enabled}-${spaceInfo.curtainBox?.position}-${spaceInfo.curtainBox?.width}-${spaceInfo.curtainBox?.dropHeight}`}
-              spaceInfo={spaceInfo}
-              viewMode={viewMode}
-              setViewMode={setViewMode}
-              renderMode={renderMode}
-              showAll={showAll}
-              showFrame={showFrame}
-              svgSize={{ width: 800, height: 600 }}
-              activeZone={undefined} // 두 구간 모두 배치 가능하도록 undefined 전달
-              readOnly={isReadOnly} // 읽기 전용 모드
-              sceneRef={sceneRef} // GLB 내보내기용 씬 참조
-            />
+            {spaceInfo.isIsland ? (
+              <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column' }}>
+                {/* 상단: 앞면 */}
+                <div style={{ flex: 1, position: 'relative', borderBottom: '2px solid var(--theme-border-strong, #cccccc)', minHeight: 0 }}>
+                  <div style={{ position: 'absolute', top: 10, left: 12, padding: '4px 10px', fontSize: 11, fontWeight: 600, letterSpacing: 0.5, background: 'rgba(0,0,0,0.65)', color: '#fff', borderRadius: 4, zIndex: 5, pointerEvents: 'none' }}>앞면</div>
+                  <Space3DView
+                    key="island-front"
+                    spaceInfo={spaceInfo}
+                    viewMode={viewMode}
+                    setViewMode={setViewMode}
+                    renderMode={renderMode}
+                    showAll={showAll}
+                    showFrame={showFrame}
+                    svgSize={{ width: 800, height: 300 }}
+                    activeZone={undefined}
+                    readOnly={isReadOnly}
+                    sceneRef={sceneRef}
+                    islandViewSide="front"
+                  />
+                </div>
+                {/* 하단: 반대편 */}
+                <div style={{ flex: 1, position: 'relative', minHeight: 0 }}>
+                  <div style={{ position: 'absolute', top: 10, left: 12, padding: '4px 10px', fontSize: 11, fontWeight: 600, letterSpacing: 0.5, background: 'rgba(0,0,0,0.65)', color: '#fff', borderRadius: 4, zIndex: 5, pointerEvents: 'none' }}>반대편</div>
+                  <Space3DView
+                    key="island-back"
+                    spaceInfo={spaceInfo}
+                    viewMode={viewMode}
+                    setViewMode={setViewMode}
+                    renderMode={renderMode}
+                    showAll={showAll}
+                    showFrame={showFrame}
+                    svgSize={{ width: 800, height: 300 }}
+                    activeZone={undefined}
+                    readOnly={isReadOnly}
+                    islandViewSide="back"
+                  />
+                </div>
+              </div>
+            ) : (
+              <Space3DView
+                key={`space3d-${spaceInfo.droppedCeiling?.enabled}-${spaceInfo.droppedCeiling?.position}-${spaceInfo.droppedCeiling?.width}-${spaceInfo.droppedCeiling?.dropHeight}-${spaceInfo.curtainBoxFinished}-${spaceInfo.stepCeiling?.enabled}-${spaceInfo.stepCeiling?.position}-${spaceInfo.stepCeiling?.width}-${spaceInfo.stepCeiling?.dropHeight}-${spaceInfo.curtainBox?.enabled}-${spaceInfo.curtainBox?.position}-${spaceInfo.curtainBox?.width}-${spaceInfo.curtainBox?.dropHeight}`}
+                spaceInfo={spaceInfo}
+                viewMode={viewMode}
+                setViewMode={setViewMode}
+                renderMode={renderMode}
+                showAll={showAll}
+                showFrame={showFrame}
+                svgSize={{ width: 800, height: 600 }}
+                activeZone={undefined} // 두 구간 모두 배치 가능하도록 undefined 전달
+                readOnly={isReadOnly} // 읽기 전용 모드
+                sceneRef={sceneRef} // GLB 내보내기용 씬 참조
+              />
+            )}
 
             {/* 커스텀 가구 설계모드 종료 버튼 — 뷰어 중앙 하단 */}
             {isLayoutBuilderOpen && (
