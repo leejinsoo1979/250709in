@@ -6554,7 +6554,7 @@ const Configurator: React.FC = () => {
               if (!hasUpper && !hasLower) return null;
               const Pill = ({ equalOn, onToggle, topOffset }: { equalOn: boolean; onToggle: () => void; topOffset: string }) => (
                 <div
-                  style={{ position: 'absolute', top: topOffset, right: '160px', zIndex: 100, width: 90, height: 28, borderRadius: 14, background: dark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.1)', display: 'flex', alignItems: 'center', padding: 2, boxSizing: 'border-box', userSelect: 'none' }}
+                  style={{ position: 'absolute', top: topOffset, right: '120px', zIndex: 100, width: 90, height: 28, borderRadius: 14, background: dark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.1)', display: 'flex', alignItems: 'center', padding: 2, boxSizing: 'border-box', userSelect: 'none' }}
                 >
                   <div style={{ position: 'absolute', top: 2, left: equalOn ? 46 : 2, width: 42, height: 24, borderRadius: 12, background: 'var(--theme-primary)', transition: 'left 0.2s', pointerEvents: 'none' }} />
                   <span onClick={() => { if (equalOn) onToggle(); }} style={{ position: 'relative', flex: 1, textAlign: 'center', fontSize: 10, fontWeight: 600, color: !equalOn ? '#fff' : dark ? 'rgba(255,255,255,0.8)' : 'rgba(0,0,0,0.6)', zIndex: 1, lineHeight: '24px', cursor: 'pointer' }}>자유</span>
