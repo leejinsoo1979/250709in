@@ -5226,7 +5226,14 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         const moduleWidth = mmToThreeUnits(actualWidth);
         const leftX = actualPositionX - moduleWidth / 2;
         const rightX = actualPositionX + moduleWidth / 2;
-        const dimY = slotDimensionY; // 개별 가구 치수선은 가장 아래 (slotDimensionY)
+        // 가구 카테고리: 하부장은 공간 하단에, 상부장/키큰장은 공간 상단에 너비 치수 표시
+        const moduleCategoryForDim = moduleData.category
+          ?? (module.moduleId?.includes('upper') ? 'upper'
+            : module.moduleId?.includes('lower') ? 'lower' : 'full');
+        const isLowerDim = moduleCategoryForDim === 'lower';
+        // 하단 치수선 Y: 공간 바닥(0)보다 DIM_GAP만큼 아래
+        const bottomSlotDimensionY = -mmToThreeUnits(DIM_GAP);
+        const dimY = isLowerDim ? bottomSlotDimensionY : slotDimensionY;
         
         // 듀얼 가구인지 확인 (이름에 'dual' 포함)
         const isDualModule = moduleData.id.includes('dual');
@@ -5390,25 +5397,50 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               </React.Fragment>
             ))}
 
-            {/* 연장선 - 가구 상단에서 슬롯합계 치수선까지 (단내림시) 또는 구간사이즈 치수선까지 */}
-            <NativeLine name="dimension_line"
-              points={[[leftX, spaceHeight, 0.001], [leftX, (hasDroppedCeiling || hasStepDown) ? slotTotalDimensionY : columnDimensionY, 0.001]]}
-              color={dimensionColor}
-              lineWidth={0.6}
-              renderOrder={1000000}
-              depthTest={false}
-              depthWrite={false}
-              transparent={true}
-            />
-            <NativeLine name="dimension_line"
-              points={[[rightX, spaceHeight, 0.001], [rightX, (hasDroppedCeiling || hasStepDown) ? slotTotalDimensionY : columnDimensionY, 0.001]]}
-              color={dimensionColor}
-              lineWidth={0.6}
-              renderOrder={1000000}
-              depthTest={false}
-              depthWrite={false}
-              transparent={true}
-            />
+            {/* 연장선 - 하부장은 공간 하단에서 하단 치수선까지, 그 외는 가구 상단에서 상단 치수선까지 */}
+            {isLowerDim ? (
+              <>
+                <NativeLine name="dimension_line"
+                  points={[[leftX, 0, 0.001], [leftX, dimY, 0.001]]}
+                  color={dimensionColor}
+                  lineWidth={0.6}
+                  renderOrder={1000000}
+                  depthTest={false}
+                  depthWrite={false}
+                  transparent={true}
+                />
+                <NativeLine name="dimension_line"
+                  points={[[rightX, 0, 0.001], [rightX, dimY, 0.001]]}
+                  color={dimensionColor}
+                  lineWidth={0.6}
+                  renderOrder={1000000}
+                  depthTest={false}
+                  depthWrite={false}
+                  transparent={true}
+                />
+              </>
+            ) : (
+              <>
+                <NativeLine name="dimension_line"
+                  points={[[leftX, spaceHeight, 0.001], [leftX, (hasDroppedCeiling || hasStepDown) ? slotTotalDimensionY : columnDimensionY, 0.001]]}
+                  color={dimensionColor}
+                  lineWidth={0.6}
+                  renderOrder={1000000}
+                  depthTest={false}
+                  depthWrite={false}
+                  transparent={true}
+                />
+                <NativeLine name="dimension_line"
+                  points={[[rightX, spaceHeight, 0.001], [rightX, (hasDroppedCeiling || hasStepDown) ? slotTotalDimensionY : columnDimensionY, 0.001]]}
+                  color={dimensionColor}
+                  lineWidth={0.6}
+                  renderOrder={1000000}
+                  depthTest={false}
+                  depthWrite={false}
+                  transparent={true}
+                />
+              </>
+            )}
 
             {/* 자유배치: 구간 내 좌/우 이격 치수선 (가구~구간경계 거리) */}
             {isFreePlacement && (() => {
