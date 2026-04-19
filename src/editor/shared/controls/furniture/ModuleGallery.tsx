@@ -677,7 +677,8 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
 
           // 정확히 들어가는 첫 빈 공간 (gap 전체 사용 — 잔여 공간 낭비 없음)
           for (const gap of candidates) {
-            const gapW = gap.right - gap.left;
+            // 실수 오차 방지: gap 너비를 정수 mm로 내림
+            const gapW = Math.floor(gap.right - gap.left);
             if (gapW >= furnitureWidth) {
               // gap 좌측에 딱 붙여 배치
               targetX = gap.left + furnitureWidth / 2;
@@ -685,7 +686,7 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
             }
             // gap이 가구보다 작지만 충분히 크면: 가구 너비를 gap에 맞춰 축소
             if (gapW >= 200) {
-              furnitureWidth = Math.floor(gapW);
+              furnitureWidth = gapW;
               dims = { ...dims, width: furnitureWidth };
               targetX = gap.left + furnitureWidth / 2;
               break;
