@@ -1410,11 +1410,19 @@ const FreePlacementDropZone: React.FC = () => {
         return;
       }
 
-      // 이동할 가구: movingModuleId 또는 편집 중인 자유배치 가구
-      const targetId = movingModuleId || editingFreeModuleId;
+      // 이동할 가구: movingModuleId > 편집 중인 자유배치 가구 > 단순 선택된 자유배치 가구
+      const selectedId = useFurnitureStore.getState().selectedFurnitureId;
+      const selectedMod = selectedId ? placedModules.find(m => m.id === selectedId && m.isFreePlacement) : null;
+      const targetId = movingModuleId || editingFreeModuleId || (selectedMod ? selectedId : null);
       if (!targetId) return;
       const mod = placedModules.find(m => m.id === targetId && m.isFreePlacement);
       if (!mod) return;
+
+      // input/textarea 포커스 중에는 방향키 무시 (숫자 입력 등 방해 방지)
+      const active = document.activeElement;
+      if (active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA' || (active as HTMLElement).isContentEditable)) {
+        return;
+      }
 
       // 화살표 키는 input 포커스와 무관하게 가구 이동 처리
       e.preventDefault();
