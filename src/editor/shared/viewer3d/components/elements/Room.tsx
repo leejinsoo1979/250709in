@@ -4324,7 +4324,10 @@ const Room: React.FC<RoomProps> = ({
                       ? effectiveTopY - modTopGapThreeUnits - modFrameHeight / 2
                       : effectiveTopY - modTopGapThreeUnits - modFrameHeight / 2;
 
-                    const modTopZOffset = mod.topFrameOffset ? mmToThreeUnits(mod.topFrameOffset) : 0;
+                    // 전체서라운드 + 상부장이면 topFrameOffset 기본값 23mm
+                    const upperDefaultOffset = (isFullSurround && modCategory === 'upper') ? 23 : 0;
+                    const effectiveTopFrameOffset = mod.topFrameOffset ?? upperDefaultOffset;
+                    const modTopZOffset = effectiveTopFrameOffset ? mmToThreeUnits(effectiveTopFrameOffset) : 0;
                     const DOOR_THICKNESS_MM = 18.5; // PET 재질
                     const needsTopFrameRetract = isDoorBase && isSpaceFitDoor && mod.hasDoor;
                     const topFrameZRetract = needsTopFrameRetract ? -mmToThreeUnits(DOOR_THICKNESS_MM) : 0;
@@ -5195,10 +5198,13 @@ const Room: React.FC<RoomProps> = ({
                   const ceilingHeight = isInDroppedZone ? droppedCeilingHeight : height;
                   // 상부프레임 하단(가구쪽) 고정, 상단(천장쪽)이 gap만큼 내려옴
                   const modTopY = panelStartY + ceilingHeight - slotTopGapThreeUnits - modTopHeight / 2;
-                  const modTopZOffset = mod.topFrameOffset ? mmToThreeUnits(mod.topFrameOffset) : 0;
+                  const slotModCategory = getModuleCategory(mod);
+                  // 전체서라운드 + 상부장이면 topFrameOffset 기본값 23mm
+                  const slotUpperDefaultOffset = (isFullSurround && slotModCategory === 'upper') ? 23 : 0;
+                  const slotEffectiveTopFrameOffset = mod.topFrameOffset ?? slotUpperDefaultOffset;
+                  const modTopZOffset = slotEffectiveTopFrameOffset ? mmToThreeUnits(slotEffectiveTopFrameOffset) : 0;
 
                   // 상부장은 프레임이 상부장 앞면에 맞춰 붙어야 함 (프레임 앞면 = 상부장 앞면)
-                  const slotModCategory = getModuleCategory(mod);
                   let slotFrameZ = topZPos;
                   if (slotModCategory === 'upper') {
                     // FurnitureItem.tsx와 동일하게 furnitureDepthMm = min(panelDepthMm, 600) 사용
