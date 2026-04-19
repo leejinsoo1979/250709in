@@ -943,8 +943,8 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   }, [isEditMode, doorsOpen, moduleData?.id]);
 
   // 도어 열림 상태 계산 - 성능 최적화
-  // 2D 모드에서는 편집 모드여도 도어를 열지 않음 (치수 측정 방해 방지)
-  const shouldOpenDoors = useMemo(() => isDoorOpen || (isEditMode && viewMode !== '2D'), [isDoorOpen, isEditMode, viewMode]);
+  // 편집 모드(가구 클릭 팝업)에서도 도어는 사용자의 명시적 Open/Close 토글만 따름
+  const shouldOpenDoors = useMemo(() => isDoorOpen, [isDoorOpen]);
   
   // 도어 애니메이션 상태 추적
   const [isAnimating, setIsAnimating] = useState(false);
