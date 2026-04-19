@@ -925,24 +925,25 @@ const FreePlacementDropZone: React.FC = () => {
       }
     }
 
-    // 가구 사이 갭 — 가구 중심 간 거리에서 양쪽 halfWidth를 뺀 정확한 정수 값
+    // 가구 사이 갭 — 실수 오차 없이 정확히 내림(Math.floor)으로 계산
     for (let i = 0; i < bounds.length - 1; i++) {
       const gapStart = bounds[i].right;
       const gapEnd = bounds[i + 1].left;
       if (gapEnd - gapStart > 0.5) {
-        // 정확 계산: 우측 가구.left - 좌측 가구.right
-        // freeWidth 기반 정수 너비로 left/right 재계산
-        const moduleA = freeModules.find(m => m.id === bounds[i].id);
-        const moduleB = freeModules.find(m => m.id === bounds[i + 1].id);
-        const widthA = moduleA ? Math.round(moduleA.freeWidth || moduleA.customWidth || moduleA.moduleWidth || 0) : 0;
-        const widthB = moduleB ? Math.round(moduleB.freeWidth || moduleB.customWidth || moduleB.moduleWidth || 0) : 0;
-        const centerA = moduleA ? Math.round(moduleA.position.x * 100) : 0;
-        const centerB = moduleB ? Math.round(moduleB.position.x * 100) : 0;
-        const exactGap = Math.max(0, (centerB - widthB / 2) - (centerA + widthA / 2));
+        const rawGap = gapEnd - gapStart;
+        // 디버그: 가구 사이 실제 거리
+        console.log('🔍 [가구 사이 갭]', {
+          leftId: bounds[i].id.slice(0, 8),
+          rightId: bounds[i + 1].id.slice(0, 8),
+          leftRight: bounds[i].right,
+          rightLeft: bounds[i + 1].left,
+          rawGap,
+          floored: Math.floor(rawGap),
+        });
         gaps.push({
           startX: gapStart,
           endX: gapEnd,
-          width: Math.round(exactGap),
+          width: Math.floor(rawGap),
           centerX: ((gapStart + gapEnd) / 2) * 0.01,
           centerY: gapLabelY,
           adjacentModuleId: bounds[i + 1].id,
