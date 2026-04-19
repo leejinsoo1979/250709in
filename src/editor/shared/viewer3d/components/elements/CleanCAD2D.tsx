@@ -5508,13 +5508,17 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 setTimeout(() => { (window as any).__r3fClickHandled = false; }, 50);
               };
               const halfW = moduleWidth / 2;
+              // 실제 이동 거리: nearestLeftDistance/nearestRightDistance는 가구/벽까지 실거리 (mm)
+              // 벽 인접일 때도 gapConfig 폴백 대신 실거리 사용 (그래야 벽까지 붙일 수 있음)
+              const realLeftGapMm = nearestLeftDistance || leftGapMm;
+              const realRightGapMm = nearestRightDistance || rightGapMm;
               // 좌측 한계: 벽 또는 인접 가구 우측 끝
-              const leftLimit = leftX - mmToThreeUnits(leftGapMm); // gapLeftX = 벽 or 인접가구 경계
+              const leftLimit = leftX - mmToThreeUnits(realLeftGapMm);
               // 우측 한계: 벽 또는 인접 가구 좌측 끝
-              const rightLimit = rightX + mmToThreeUnits(rightGapMm); // gapRightX = 벽 or 인접가구 경계
+              const rightLimit = rightX + mmToThreeUnits(realRightGapMm);
               // 1mm(0.01) 단위로 스냅하여 부동소수점 오차 방지
               const snap = (v: number) => Math.round(v * 100) / 100;
-              // 좌/우 한계(벽 또는 인접 가구)까지 한번에 붙이기 (1mm 단위로 스냅하여 부동소수점 오차 방지)
+              // 좌/우 한계(벽 또는 인접 가구)까지 한번에 붙이기
               const moveLeft = (e: any) => {
                 stopAll(e);
                 const newX = snap(leftLimit + halfW);
