@@ -6505,15 +6505,20 @@ const Configurator: React.FC = () => {
               const dark = viewMode === '2D' && view2DTheme === 'dark';
               return (
                 <div
-                  onClick={() => setDoorsOpen(!isOpen)}
-                  style={{ position: 'absolute', top: 10, left: '50%', transform: 'translateX(-50%)', zIndex: 100, width: 90, height: 28, borderRadius: 14, background: dark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.1)', cursor: 'pointer', transition: 'all 0.2s', display: 'flex', alignItems: 'center', padding: 2, boxSizing: 'border-box', position: 'absolute', userSelect: 'none' }}
+                  style={{ position: 'absolute', top: 10, left: '50%', transform: 'translateX(-50%)', zIndex: 100, width: 90, height: 28, borderRadius: 14, background: dark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.1)', transition: 'all 0.2s', display: 'flex', alignItems: 'center', padding: 2, boxSizing: 'border-box', userSelect: 'none' }}
                 >
                   {/* 슬라이딩 활성 배경 */}
-                  <div style={{ position: 'absolute', top: 2, left: isOpen ? 46 : 2, width: 42, height: 24, borderRadius: 12, background: 'var(--theme-primary)', transition: 'left 0.2s' }} />
-                  {/* Close 라벨 */}
-                  <span style={{ position: 'relative', flex: 1, textAlign: 'center', fontSize: 10, fontWeight: 600, color: !isOpen ? '#fff' : dark ? 'rgba(255,255,255,0.8)' : 'rgba(0,0,0,0.6)', zIndex: 1, lineHeight: '24px' }}>Close</span>
-                  {/* Open 라벨 */}
-                  <span style={{ position: 'relative', flex: 1, textAlign: 'center', fontSize: 10, fontWeight: 600, color: isOpen ? '#fff' : dark ? 'rgba(255,255,255,0.8)' : 'rgba(0,0,0,0.6)', zIndex: 1, lineHeight: '24px' }}>Open</span>
+                  <div style={{ position: 'absolute', top: 2, left: isOpen ? 46 : 2, width: 42, height: 24, borderRadius: 12, background: 'var(--theme-primary)', transition: 'left 0.2s', pointerEvents: 'none' }} />
+                  {/* Close 라벨 — 닫기 전용 */}
+                  <span
+                    onClick={() => setDoorsOpen(false)}
+                    style={{ position: 'relative', flex: 1, textAlign: 'center', fontSize: 10, fontWeight: 600, color: !isOpen ? '#fff' : dark ? 'rgba(255,255,255,0.8)' : 'rgba(0,0,0,0.6)', zIndex: 1, lineHeight: '24px', cursor: 'pointer' }}
+                  >Close</span>
+                  {/* Open 라벨 — 열기 전용 */}
+                  <span
+                    onClick={() => setDoorsOpen(true)}
+                    style={{ position: 'relative', flex: 1, textAlign: 'center', fontSize: 10, fontWeight: 600, color: isOpen ? '#fff' : dark ? 'rgba(255,255,255,0.8)' : 'rgba(0,0,0,0.6)', zIndex: 1, lineHeight: '24px', cursor: 'pointer' }}
+                  >Open</span>
                 </div>
               );
             })()}
