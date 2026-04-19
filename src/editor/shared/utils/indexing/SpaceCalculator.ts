@@ -200,24 +200,26 @@ export class SpaceCalculator {
     if (spaceInfo.surroundType === 'no-surround') {
       // 노서라운드 모드
       if (spaceInfo.installType === 'builtin' || spaceInfo.installType === 'built-in') {
-        // 빌트인: 이격 1.5 우선 시도, 0.5mm 단위로 안 떨어지면 이격 조정
+        // 빌트인: 사용자가 설정한 이격(또는 기본 1.5mm)을 최대한 존중.
+        // 슬롯폭 정수화를 위해 이격을 자동 변경하지 않음.
         const baseWidth = spaceInfo.width;
 
         const isValidSlotWidth = (val: number) => Math.abs(val * 2 - Math.round(val * 2)) < 0.001;
         const roundSlotWidth = (val: number) => Math.round(val * 2) / 2;
 
-        // 1단계: 기본 이격 1.5mm 시도
-        const defaultGap = 1.5;
-        const defaultInternalWidth = baseWidth - (defaultGap * 2);
-        const defaultSlotWidth = defaultInternalWidth / columnCount;
+        // 1단계: 기존 이격 (없으면 1.5mm) 그대로 유지
+        const userLeft = spaceInfo.gapConfig?.left ?? 1.5;
+        const userRight = spaceInfo.gapConfig?.right ?? 1.5;
+        const userInternalWidth = baseWidth - userLeft - userRight;
+        const userSlotWidth = userInternalWidth / columnCount;
 
-        if (isValidSlotWidth(defaultSlotWidth) && defaultSlotWidth >= 400 && defaultSlotWidth <= 600) {
+        if (userSlotWidth >= 400 && userSlotWidth <= 600) {
           return {
             adjustedSpaceInfo: {
               ...spaceInfo,
-              gapConfig: { left: defaultGap, right: defaultGap }
+              gapConfig: { ...spaceInfo.gapConfig, left: userLeft, right: userRight }
             },
-            slotWidth: roundSlotWidth(defaultSlotWidth),
+            slotWidth: roundSlotWidth(userSlotWidth),
             adjustmentMade: true
           };
         }

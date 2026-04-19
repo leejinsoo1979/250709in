@@ -1187,6 +1187,23 @@ const Configurator: React.FC = () => {
           spaceConfig.frameSize.top = 30;
         }
 
+        // 이격: 사용자가 설정에 저장한 기본값으로 맞추기 (노서라운드일 때만)
+        // 양쪽 벽이 실제로 있는 쪽에만 적용
+        if (spaceConfig.surroundType === 'no-surround') {
+          try {
+            const defaults = await getSpaceConfigDefaults();
+            if (defaults) {
+              const defLeft = defaults.gapLeft ?? 1.5;
+              const defRight = defaults.gapRight ?? 1.5;
+              spaceConfig.gapConfig = {
+                ...spaceConfig.gapConfig,
+                left: spaceConfig.wallConfig?.left ? defLeft : (spaceConfig.gapConfig?.left ?? 0),
+                right: spaceConfig.wallConfig?.right ? defRight : (spaceConfig.gapConfig?.right ?? 0),
+              };
+            }
+          } catch { /* noop */ }
+        }
+
         // 이전 프로젝트 상태 완전 초기화 후 새 데이터 로드
         // 로드 중 플래그 설정 — useEffect에서 가구 재배치 방지
         isLoadingProjectRef.current = true;
