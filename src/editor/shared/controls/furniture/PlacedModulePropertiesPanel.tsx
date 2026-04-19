@@ -2907,16 +2907,10 @@ const PlacedModulePropertiesPanel: React.FC = () => {
             const bfMax = isLowerMod ? 150 : 100;
             const bfDefault = isLowerMod ? 100 : 60;
 
-            // 너비 계산 (슬롯배치 / 자유배치 공통)
-            const isSlotMode = spaceInfo.layoutMode !== 'free-placement';
-            let modWidthMM = 0;
-            if (isSlotMode) {
-              const indexing = calculateSpaceIndexing(spaceInfo);
-              const slotColWidth = indexing.columnWidth || 0;
-              modWidthMM = Math.round((mod.isDualSlot ? slotColWidth * 2 : slotColWidth) * 10) / 10;
-            } else {
-              modWidthMM = Math.round((mod.adjustedWidth ?? mod.freeWidth ?? mod.customWidth ?? moduleData?.dimensions.width ?? 0) * 10) / 10;
-            }
+            // 너비 = 실제 가구 폭 (팝업 상단 "가구 치수 W"와 동일)
+            const modWidthMM = Math.round(
+              (mod.adjustedWidth ?? mod.slotCustomWidth ?? mod.customWidth ?? mod.freeWidth ?? moduleData?.dimensions.width ?? 0) * 10
+            ) / 10;
 
             const topEnabled = mod.hasTopFrame !== false;
             const baseEnabled = mod.hasBase !== false;
