@@ -4330,11 +4330,12 @@ const Room: React.FC<RoomProps> = ({
                     const topFrameZRetract = needsTopFrameRetract ? -mmToThreeUnits(DOOR_THICKNESS_MM) : 0;
 
                     // 옵셋 0 = 프레임이 상부장 앞면 위치
-                    // 도어 두께(가구재 두께와 동일) + EP/2 만큼 뒤로 보정
+                    // 도어(패널두께) × 1.5 + EP/2 만큼 뒤로 보정
+                    // (18mm 재질 기준 29mm = 18*1.5 + 2, 사용자 정답 -29에 맞춤)
                     const upperModDepthMm = mod.freeDepth || mod.customDepth || 300;
                     const doorThk = spaceInfo.panelThickness ?? 18;
                     const upperFrontZ = furnitureZOffset - furnitureDepth / 2 - mmToThreeUnits(doorThk) + mmToThreeUnits(upperModDepthMm);
-                    const upperFrameZ = upperFrontZ - mmToThreeUnits(doorThk) - mmToThreeUnits(END_PANEL_THICKNESS) / 2;
+                    const upperFrameZ = upperFrontZ - mmToThreeUnits(doorThk * 1.5 + 2);
                     allTopSegments.push({
                       widthMm: modWidthMM,
                       centerXmm: modCenterXmm,
@@ -5200,12 +5201,11 @@ const Room: React.FC<RoomProps> = ({
                   const slotModCategory = getModuleCategory(mod);
                   let slotFrameZ = topZPos;
                   if (slotModCategory === 'upper') {
-                    // 옵셋 0 = 프레임이 상부장 앞면 위치
-                    // 도어 두께(가구재 두께와 동일) + EP/2 만큼 뒤로 보정
+                    // 옵셋 0 = 프레임이 상부장 앞면 위치 (18mm 재질 기준 -29mm 보정)
                     const slotUpperDepthMm = mod.freeDepth || mod.customDepth || 300;
                     const slotDoorThk = spaceInfo.panelThickness ?? 18;
                     const slotUpperFrontZ = furnitureZOffset - furnitureDepth / 2 - mmToThreeUnits(slotDoorThk) + mmToThreeUnits(slotUpperDepthMm);
-                    slotFrameZ = slotUpperFrontZ - mmToThreeUnits(slotDoorThk) - mmToThreeUnits(END_PANEL_THICKNESS) / 2;
+                    slotFrameZ = slotUpperFrontZ - mmToThreeUnits(slotDoorThk * 1.5 + 2);
                   }
                   slotTopSegments.push({
                     widthMm: modWidthMM,
