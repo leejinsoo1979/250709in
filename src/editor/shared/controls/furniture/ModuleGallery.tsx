@@ -674,20 +674,19 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
             }
           }
 
-          // 정확히 들어가는 첫 빈 공간 (1mm 안전마진 — 부동소수점 오차로 인한 충돌 방지)
-          const SAFE_MARGIN = 1;
+          // 정확히 들어가는 첫 빈 공간 (gap 전체 사용 — 잔여 공간 낭비 없음)
           for (const gap of candidates) {
             const gapW = gap.right - gap.left;
-            const effectiveGapW = gapW - SAFE_MARGIN; // 좌우 각 0.5mm 여유
-            if (effectiveGapW >= furnitureWidth) {
-              targetX = gap.left + SAFE_MARGIN / 2 + furnitureWidth / 2;
+            if (gapW >= furnitureWidth) {
+              // gap 좌측에 딱 붙여 배치
+              targetX = gap.left + furnitureWidth / 2;
               break;
             }
             // gap이 가구보다 작지만 충분히 크면: 가구 너비를 gap에 맞춰 축소
-            if (effectiveGapW >= 200) {
-              furnitureWidth = Math.floor(effectiveGapW);
+            if (gapW >= 200) {
+              furnitureWidth = Math.floor(gapW);
               dims = { ...dims, width: furnitureWidth };
-              targetX = gap.left + SAFE_MARGIN / 2 + furnitureWidth / 2;
+              targetX = gap.left + furnitureWidth / 2;
               break;
             }
           }
