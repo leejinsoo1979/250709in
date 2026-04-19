@@ -3725,40 +3725,70 @@ const Configurator: React.FC = () => {
     const isFreeMode = (spaceInfo.layoutMode || 'equal-division') === 'free-placement';
     return (
       <div className={`${styles.spaceControls} ${isFreeMode ? styles.spaceControlsRelaxed : ''}`}>
-        {/* 공간 설정 */}
+        {/* 공간 설정 / 아일랜드: 가구 사이즈 */}
         <div className={styles.configSection}>
           <div className={styles.sectionHeader}>
             <span className={styles.sectionDot}></span>
-            <h3 className={styles.sectionTitle}>공간 설정</h3>
-            <HelpBtn title="공간 설정" text="가구가 설치될 공간의 전체 너비(W)와 높이(H)를 mm 단위로 입력합니다. 벽 안쪽 실측 치수를 기준으로 하며, 너비는 1,000~8,000mm, 높이는 2,000~3,000mm 범위에서 설정 가능합니다. 이 값에 따라 슬롯 너비, 가구 높이, 프레임 사이즈가 자동 계산됩니다." />
+            <h3 className={styles.sectionTitle}>{spaceInfo.isIsland ? '가구 사이즈' : '공간 설정'}</h3>
+            {!spaceInfo.isIsland && (
+              <HelpBtn title="공간 설정" text="가구가 설치될 공간의 전체 너비(W)와 높이(H)를 mm 단위로 입력합니다. 벽 안쪽 실측 치수를 기준으로 하며, 너비는 1,000~8,000mm, 높이는 2,000~3,000mm 범위에서 설정 가능합니다. 이 값에 따라 슬롯 너비, 가구 높이, 프레임 사이즈가 자동 계산됩니다." />
+            )}
           </div>
 
-          <div style={{ display: 'flex', gap: '8px' }}>
-            <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <span style={{ minWidth: '16px', color: 'var(--theme-primary)' }}>W</span>
-              <div style={{ flex: 1 }}>
-                <WidthControl
-                  spaceInfo={spaceInfo}
-                  onUpdate={handleSpaceInfoUpdate}
-                  disabled={hasSpecialDualFurniture}
-                />
-              </div>
+          {spaceInfo.isIsland ? (
+            // 아일랜드: W / D / H 직접 입력 (mm)
+            <div style={{ display: 'flex', gap: '8px' }}>
+              {(['width', 'depth', 'height'] as const).map((dim) => {
+                const label = dim === 'width' ? 'W' : dim === 'depth' ? 'D' : 'H';
+                const min = 300;
+                const max = dim === 'width' ? 6000 : dim === 'depth' ? 2000 : 2400;
+                return (
+                  <div key={dim} style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <span style={{ minWidth: '16px', color: 'var(--theme-primary)' }}>{label}</span>
+                    <input
+                      type="number"
+                      value={spaceInfo[dim] ?? ''}
+                      min={min}
+                      max={max}
+                      onChange={(e) => {
+                        const v = Number(e.target.value);
+                        if (!v || v < min || v > max) return;
+                        handleSpaceInfoUpdate({ [dim]: v } as any);
+                      }}
+                      style={{ flex: 1, width: '100%', padding: '6px 8px', border: '1px solid var(--theme-border)', borderRadius: 4, background: 'var(--theme-surface)', color: 'var(--theme-text)', fontSize: 13, outline: 'none', boxSizing: 'border-box' }}
+                    />
+                  </div>
+                );
+              })}
             </div>
+          ) : (
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <span style={{ minWidth: '16px', color: 'var(--theme-primary)' }}>W</span>
+                <div style={{ flex: 1 }}>
+                  <WidthControl
+                    spaceInfo={spaceInfo}
+                    onUpdate={handleSpaceInfoUpdate}
+                    disabled={hasSpecialDualFurniture}
+                  />
+                </div>
+              </div>
 
-            <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <span style={{ minWidth: '16px', color: 'var(--theme-primary)' }}>H</span>
-              <div style={{ flex: 1 }}>
-                <HeightControl
-                  spaceInfo={spaceInfo}
-                  onUpdate={handleSpaceInfoUpdate}
-                />
+              <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <span style={{ minWidth: '16px', color: 'var(--theme-primary)' }}>H</span>
+                <div style={{ flex: 1 }}>
+                  <HeightControl
+                    spaceInfo={spaceInfo}
+                    onUpdate={handleSpaceInfoUpdate}
+                  />
+                </div>
               </div>
             </div>
-          </div>
+          )}
         </div>
 
-        {/* 단내림/커튼박스/stepCeiling이 있을 때 메인 구간 사이즈 표시 */}
-        {(spaceInfo.droppedCeiling?.enabled || (isFreeMode && spaceInfo.stepCeiling?.enabled) || spaceInfo.curtainBox?.enabled) && (
+        {/* 단내림/커튼박스/stepCeiling이 있을 때 메인 구간 사이즈 표시 (아일랜드 모드 숨김) */}
+        {!spaceInfo.isIsland && (spaceInfo.droppedCeiling?.enabled || (isFreeMode && spaceInfo.stepCeiling?.enabled) || spaceInfo.curtainBox?.enabled) && (
           <div className={styles.configSection}>
             <div className={styles.sectionHeader}>
               <span className={styles.sectionDot}></span>
@@ -4062,7 +4092,7 @@ const Configurator: React.FC = () => {
         </div>)}
 
         {/* 슬롯배치: 단내림 설정 (독립 섹션) */}
-        {!isFreeMode && (<div className={styles.configSection}>
+        {!spaceInfo.isIsland && !isFreeMode && (<div className={styles.configSection}>
           <div className={styles.sectionHeader}>
             <span className={styles.sectionDot}></span>
             <h3 className={styles.sectionTitle}>단내림</h3>
@@ -4159,7 +4189,7 @@ const Configurator: React.FC = () => {
         </div>)}
 
         {/* 슬롯배치: 커튼박스 설정 (단내림과 독립된 별도 curtainBox 필드) */}
-        {!isFreeMode && (<div className={styles.configSection}>
+        {!spaceInfo.isIsland && !isFreeMode && (<div className={styles.configSection}>
           <div className={styles.sectionHeader}>
             <span className={styles.sectionDot}></span>
             <h3 className={styles.sectionTitle}>커튼박스</h3>
