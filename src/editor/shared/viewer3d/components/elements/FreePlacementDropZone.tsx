@@ -914,7 +914,7 @@ const FreePlacementDropZone: React.FC = () => {
         gaps.push({
           startX,
           endX: bounds[0].left,
-          width: Math.round(bounds[0].left - startX),
+          width: Math.floor(bounds[0].left - startX),
           centerX: ((startX + bounds[0].left) / 2) * 0.01,
           centerY: gapLabelY,
           adjacentModuleId: bounds[0].id,
@@ -933,7 +933,7 @@ const FreePlacementDropZone: React.FC = () => {
         gaps.push({
           startX: gapStart,
           endX: gapEnd,
-          width: Math.round(gapEnd - gapStart),
+          width: Math.floor(gapEnd - gapStart),
           centerX: ((gapStart + gapEnd) / 2) * 0.01,
           centerY: gapLabelY,
           adjacentModuleId: bounds[i + 1].id,
@@ -957,7 +957,7 @@ const FreePlacementDropZone: React.FC = () => {
           gaps.push({
             startX: lastBound.right,
             endX: lockStartX,
-            width: Math.round(extraGap),
+            width: Math.floor(extraGap),
             centerX: ((lastBound.right + lockStartX) / 2) * 0.01,
             centerY: gapLabelY,
             adjacentModuleId: lastBound.id,
@@ -983,7 +983,7 @@ const FreePlacementDropZone: React.FC = () => {
         gaps.push({
           startX: lastBound.right,
           endX,
-          width: Math.round(endX - lastBound.right),
+          width: Math.floor(endX - lastBound.right),
           centerX: ((lastBound.right + endX) / 2) * 0.01,
           centerY: gapLabelY,
           adjacentModuleId: lastBound.id,
