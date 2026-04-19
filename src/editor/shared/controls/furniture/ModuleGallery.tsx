@@ -637,6 +637,7 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
         // 좌측부터 순서대로 빈 자리 찾기
         let furnitureWidth = dims.width;
         const newCategory = (moduleData.category || 'full') as 'full' | 'upper' | 'lower';
+        const isNewDual = module.id.includes('dual-');
 
         const freeModules = placedModules.filter(m => m.isFreePlacement && !m.isSurroundPanel);
         const allBounds = freeModules.map(m => getModuleBoundsX(m)).sort((a, b) => a.left - b.left);
@@ -689,14 +690,27 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
           if (targetX !== null) break;
 
           // 들어갈 곳이 없으면 가장 큰 빈 공간에 맞춰 가구 너비 축소 (≥200mm 보장)
+          // 싱글: 큰 gap의 절반까지 축소 가능 (옆에 또 다른 가구 들어갈 수 있도록)
+          // 듀얼: gap 전체 사용
           if (candidates.length > 0) {
             const largestGap = candidates.reduce((max, g) => {
               const w = g.right - g.left;
               return w > (max.right - max.left) ? g : max;
             }, candidates[0]);
             const gapWidth = Math.floor(largestGap.right - largestGap.left);
-            if (gapWidth >= 200) {
-              furnitureWidth = gapWidth;
+            // 싱글이고 빈 공간이 600 이상이면 599로 축소, 듀얼은 gap 그대로
+            let shrunkWidth: number;
+            if (!isNewDual && gapWidth >= 600) {
+              shrunkWidth = Math.min(furnitureWidth, 599);
+            } else if (!isNewDual && gapWidth >= 200) {
+              shrunkWidth = gapWidth;
+            } else if (isNewDual && gapWidth >= 400) {
+              shrunkWidth = gapWidth;
+            } else {
+              shrunkWidth = 0;
+            }
+            if (shrunkWidth >= 200) {
+              furnitureWidth = shrunkWidth;
               dims = { ...dims, width: furnitureWidth };
               targetX = largestGap.left + furnitureWidth / 2;
               break;
