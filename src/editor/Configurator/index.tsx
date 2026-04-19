@@ -6554,7 +6554,7 @@ const Configurator: React.FC = () => {
               if (!hasUpper && !hasLower) return null;
               const Pill = ({ equalOn, onToggle, topOffset }: { equalOn: boolean; onToggle: () => void; topOffset: string }) => (
                 <div
-                  style={{ position: 'absolute', top: topOffset, left: '50%', transform: 'translateX(-50%)', zIndex: 100, width: 90, height: 28, borderRadius: 14, background: dark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.1)', display: 'flex', alignItems: 'center', padding: 2, boxSizing: 'border-box', userSelect: 'none' }}
+                  style={{ position: 'absolute', top: topOffset, right: '20px', zIndex: 100, width: 90, height: 28, borderRadius: 14, background: dark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.1)', display: 'flex', alignItems: 'center', padding: 2, boxSizing: 'border-box', userSelect: 'none' }}
                 >
                   <div style={{ position: 'absolute', top: 2, left: equalOn ? 46 : 2, width: 42, height: 24, borderRadius: 12, background: 'var(--theme-primary)', transition: 'left 0.2s', pointerEvents: 'none' }} />
                   <span onClick={() => { if (equalOn) onToggle(); }} style={{ position: 'relative', flex: 1, textAlign: 'center', fontSize: 10, fontWeight: 600, color: !equalOn ? '#fff' : dark ? 'rgba(255,255,255,0.8)' : 'rgba(0,0,0,0.6)', zIndex: 1, lineHeight: '24px', cursor: 'pointer' }}>자유</span>
@@ -6563,8 +6563,10 @@ const Configurator: React.FC = () => {
               );
               return (
                 <>
-                  {hasUpper && <Pill equalOn={equalDistributionUpper} onToggle={toggleEqualDistributionUpper} topOffset="50px" />}
-                  {hasLower && <Pill equalOn={equalDistributionLower} onToggle={toggleEqualDistributionLower} topOffset="calc(100% - 80px)" />}
+                  {/* 상부장 토글: 상부장 높이 중간쯤 우측 (공간 높이 30% 지점) */}
+                  {hasUpper && <Pill equalOn={equalDistributionUpper} onToggle={toggleEqualDistributionUpper} topOffset="30%" />}
+                  {/* 하부장 토글: 하부장 높이 중간쯤 우측 (공간 높이 70% 지점) */}
+                  {hasLower && <Pill equalOn={equalDistributionLower} onToggle={toggleEqualDistributionLower} topOffset="70%" />}
                 </>
               );
             })()}
