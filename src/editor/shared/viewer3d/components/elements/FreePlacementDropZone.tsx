@@ -349,10 +349,14 @@ const FreePlacementDropZone: React.FC = () => {
     const groupKey = getStandardDimensionKey(selectedFurnitureId);
     const lastDims = lastCustomDimensions[groupKey];
     if (lastDims) {
+      // 이전 치수가 남은 공간보다 크면 남은 공간 기준으로 축소 (배치 불가 방지)
+      const effectiveWidth = lastDims.width > maxRemainingWidth
+        ? Math.max(200, maxRemainingWidth)
+        : lastDims.width;
       return {
         ...baseModule,
         dimensions: {
-          width: lastDims.width,
+          width: effectiveWidth,
           height: lastDims.height,
           depth: lastDims.depth,
         },
@@ -365,7 +369,7 @@ const FreePlacementDropZone: React.FC = () => {
         ...baseModule,
         dimensions: {
           ...baseModule.dimensions,
-          width: maxRemainingWidth,
+          width: Math.max(200, maxRemainingWidth),
         },
       };
     }
