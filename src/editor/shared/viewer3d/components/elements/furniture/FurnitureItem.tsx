@@ -2702,9 +2702,10 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     furnitureZ = placedModule.position.z;
   } else if (isUpperForZ) {
     // 상부장: 뒷면을 하부장 뒷면에 정렬
-    // 하부장 뒷면 Z = furnitureZOffset - furnitureDepth/2
+    // 하부장 앞면 Z = furnitureZOffset + furnitureDepth/2 - doorThickness
+    // 하부장 뒷면 Z = 하부장 앞면 - furnitureDepth = furnitureZOffset - furnitureDepth/2 - doorThickness
     // 상부장 중심 Z = 하부장 뒷면 + 상부장 깊이/2
-    furnitureZ = furnitureZOffset - furnitureDepth / 2 + depth / 2;
+    furnitureZ = furnitureZOffset - furnitureDepth / 2 - doorThickness + depth / 2;
   } else {
     furnitureZ = furnitureZOffset + furnitureDepth / 2 - doorThickness - depth / 2 + baseDepthOffset;
   }
