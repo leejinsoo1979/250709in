@@ -2446,6 +2446,12 @@ const Configurator: React.FC = () => {
                 // spaceConfig: !!designFile.spaceConfig
               // });
 
+              // 아일랜드 디자인이면 IslandEditor 라우트로 이동
+              if ((designFile.spaceConfig as any)?.isIsland && mode !== 'readonly') {
+                navigate(`/island-editor?projectId=${designFile.projectId || ''}&designFileId=${designFile.id}`, { replace: true });
+                return;
+              }
+
               // 프로젝트 기본 정보 설정 - projectId로 프로젝트 정보 가져오기
               if (designFile.projectId) {
                 const { project, error: projectError } = await getProjectByIdPublic(designFile.projectId);
@@ -3533,7 +3539,7 @@ const Configurator: React.FC = () => {
 
               <div className={styles.moduleSection}>
                 <ModuleGallery
-                  moduleCategory={moduleCategory === 'island' ? 'kitchen' : moduleCategory}
+                  moduleCategory={moduleCategory}
                   kitchenSubCategory={kitchenSub}
                   selectedType={moduleType}
                   onSelectedTypeChange={setModuleType}
@@ -7305,7 +7311,7 @@ const Configurator: React.FC = () => {
               return;
             }
 
-            navigate(`/configurator?projectId=${projectIdToUse}&designFileId=${designFileId}`, { replace: true });
+            navigate(`/island-editor?projectId=${projectIdToUse}&designFileId=${designFileId}`, { replace: true });
           } catch (err) {
             console.error('아일랜드 디자인 생성 오류:', err);
             alert('아일랜드 디자인 생성 중 오류가 발생했습니다.');

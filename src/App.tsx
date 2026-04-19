@@ -9,6 +9,7 @@ import ErrorBoundary from '@/components/common/ErrorBoundary';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 import Step1 from '@/editor/Step1';
 import Configurator from '@/editor/Configurator';
+import IslandEditor from '@/editor/IslandEditor';
 import SimpleDashboard from '@/pages/SimpleDashboard';
 import TestDashboard from '@/pages/TestDashboard';
 import ViewerPage from '@/pages/ViewerPage';
@@ -159,6 +160,7 @@ function AppContent() {
         {/* 에디터 라우트 */}
         <Route path="/step1" element={<Step1 />} />
         <Route path="/configurator" element={<Configurator />} />
+        <Route path="/island-editor" element={<IslandEditor />} />
         <Route path="/preview-popout" element={<PreviewPopout />} />
         <Route path="/cnc-optimizer" element={<CNCOptimizerPro />} />
         <Route path="/cnc-test" element={<CNCOptimizerTest />} />
