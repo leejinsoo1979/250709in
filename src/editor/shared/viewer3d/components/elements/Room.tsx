@@ -4321,7 +4321,9 @@ const Room: React.FC<RoomProps> = ({
                     //   upperFrontZ = furnitureZ_center + upperDepth/2 = furnitureZOffset - furnitureDepth/2 - 20 + upperDepth
                     const upperModDepthMm = mod.freeDepth || mod.customDepth || 300;
                     const upperFrontZ = furnitureZOffset - furnitureDepth / 2 - mmToThreeUnits(20) + mmToThreeUnits(upperModDepthMm);
-                    const upperFrameZ = upperFrontZ - mmToThreeUnits(END_PANEL_THICKNESS) / 2;
+                    // 프레임 뒷면 = 상부장 앞면 → 프레임 중심 = 앞면 - EP 전체 + EP/2 = 앞면 - EP/2
+                    // 이미 -EP/2인데 앞으로 나온다면 전체를 EP만큼 뒤로 (프레임이 상부장 몸체 속으로 숨도록)
+                    const upperFrameZ = upperFrontZ - mmToThreeUnits(END_PANEL_THICKNESS) * 3 / 2;
                     allTopSegments.push({
                       widthMm: modWidthMM,
                       centerXmm: modCenterXmm,
@@ -5190,7 +5192,8 @@ const Room: React.FC<RoomProps> = ({
                     // 옵셋 0 = 프레임 앞면이 상부장 앞면과 일치 (상부장 실제 앞면 기준)
                     const slotUpperDepthMm = mod.freeDepth || mod.customDepth || 300;
                     const slotUpperFrontZ = furnitureZOffset - furnitureDepth / 2 - mmToThreeUnits(20) + mmToThreeUnits(slotUpperDepthMm);
-                    slotFrameZ = slotUpperFrontZ - mmToThreeUnits(END_PANEL_THICKNESS) / 2;
+                    // 프레임이 상부장 앞면보다 앞으로 나오지 않도록 EP 전체만큼 뒤로 숨김
+                    slotFrameZ = slotUpperFrontZ - mmToThreeUnits(END_PANEL_THICKNESS) * 3 / 2;
                   }
                   slotTopSegments.push({
                     widthMm: modWidthMM,
