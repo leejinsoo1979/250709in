@@ -1046,8 +1046,24 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         // 오른쪽: 현재 가구 우측 ~ (오른쪽에 인접한 가구의 좌측 또는 구간 오른쪽 경계)
         let rightEdge = zoneLimitRight;
 
+        // 현재 가구의 카테고리 판별 (상부/하부 공존 허용 — 서로 장애물 아님)
+        const currentCat = module.isSurroundPanel ? 'full'
+          : (module.moduleId?.startsWith('upper-') || module.moduleId?.includes('-upper-')) ? 'upper'
+          : (module.moduleId?.startsWith('lower-') || module.moduleId?.includes('-lower-')) ? 'lower'
+          : 'full';
+
         for (const otherModule of placedModules) {
           if (otherModule.id === module.id) continue;
+          if (otherModule.isSurroundPanel) continue;
+
+          // 다른 가구 카테고리
+          const otherCat = (otherModule.moduleId?.startsWith('upper-') || otherModule.moduleId?.includes('-upper-')) ? 'upper'
+            : (otherModule.moduleId?.startsWith('lower-') || otherModule.moduleId?.includes('-lower-')) ? 'lower'
+            : 'full';
+          // upper↔lower는 공존 가능이므로 서로 장애물로 취급하지 않음
+          const canCoexist = (currentCat === 'upper' && otherCat === 'lower') || (currentCat === 'lower' && otherCat === 'upper');
+          if (canCoexist) continue;
+
           // otherW: mm 단위 → Three.js 단위로 변환 (position.xはThree.js単位)
           const otherWmm = (otherModule.isFreePlacement && otherModule.freeWidth)
             ? otherModule.freeWidth
