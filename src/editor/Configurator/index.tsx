@@ -5328,6 +5328,7 @@ const Configurator: React.FC = () => {
         {isFreeMode && (() => {
           const freeMods = placedModules.filter(m => m.isFreePlacement);
           if (freeMods.length === 0) return null;
+          if (spaceInfo.isIsland) return null;
           const sorted = [...freeMods].sort((a, b) => a.position.x - b.position.x);
           const toAlpha = (n: number) => String.fromCharCode(64 + n);
 
@@ -5749,6 +5750,7 @@ const Configurator: React.FC = () => {
 
           // 병합 모드: computeFrameMergeGroups 사용
           if (isMergeMode) {
+            if (spaceInfo.isIsland) return null;
             const topGroups = computeFrameMergeGroups(slotMods, 'top');
             const baseGroups = computeFrameMergeGroups(slotMods, 'base');
 
@@ -5822,6 +5824,7 @@ const Configurator: React.FC = () => {
           }
 
           // 비병합 모드: 기존 개별 행
+          if (spaceInfo.isIsland) return null;
           let topNum = 0;
           let baseNum = 0;
           return (
