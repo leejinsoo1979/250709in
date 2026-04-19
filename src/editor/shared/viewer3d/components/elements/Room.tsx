@@ -4329,13 +4329,13 @@ const Room: React.FC<RoomProps> = ({
                     const needsTopFrameRetract = isDoorBase && isSpaceFitDoor && mod.hasDoor;
                     const topFrameZRetract = needsTopFrameRetract ? -mmToThreeUnits(DOOR_THICKNESS_MM) : 0;
 
-                    // 옵셋 0 = 프레임이 상부장 앞면 위치
-                    // 도어(패널두께) × 1.5 + EP/2 만큼 뒤로 보정
-                    // (18mm 재질 기준 29mm = 18*1.5 + 2, 사용자 정답 -29에 맞춤)
+                    // 상부장 앞면 좌표 = furnitureZOffset - furnitureDepth/2 - doorThickness + upperDepth
+                    // (FurnitureItem.tsx furnitureZ_center + depth/2 과 완전 동일)
+                    // 프레임 Z(중심) = 상부장 앞면 좌표 (옵셋 0)
                     const upperModDepthMm = mod.freeDepth || mod.customDepth || 300;
                     const doorThk = spaceInfo.panelThickness ?? 18;
                     const upperFrontZ = furnitureZOffset - furnitureDepth / 2 - mmToThreeUnits(doorThk) + mmToThreeUnits(upperModDepthMm);
-                    const upperFrameZ = upperFrontZ - mmToThreeUnits(doorThk * 1.5 + 2);
+                    const upperFrameZ = upperFrontZ;
                     allTopSegments.push({
                       widthMm: modWidthMM,
                       centerXmm: modCenterXmm,
@@ -5205,7 +5205,7 @@ const Room: React.FC<RoomProps> = ({
                     const slotUpperDepthMm = mod.freeDepth || mod.customDepth || 300;
                     const slotDoorThk = spaceInfo.panelThickness ?? 18;
                     const slotUpperFrontZ = furnitureZOffset - furnitureDepth / 2 - mmToThreeUnits(slotDoorThk) + mmToThreeUnits(slotUpperDepthMm);
-                    slotFrameZ = slotUpperFrontZ - mmToThreeUnits(slotDoorThk * 1.5 + 2);
+                    slotFrameZ = slotUpperFrontZ;
                   }
                   slotTopSegments.push({
                     widthMm: modWidthMM,
