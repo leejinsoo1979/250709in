@@ -2643,6 +2643,21 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
 
   // 단내림 구간 최종 높이 디버깅
   if (placedModule.zone === 'dropped') {
+    console.log('🟠 [단내림 FurnitureItem]', {
+      moduleId: placedModule.moduleId,
+      zone: placedModule.zone,
+      furnitureHeightMm,
+      furnitureWidthMm,
+      'moduleData.h': actualModuleData?.dimensions.height,
+      'moduleData.w': actualModuleData?.dimensions.width,
+      'internalSpace.h': internalSpace.height,
+      'internalSpace.w': internalSpace.width,
+      customHeight: placedModule.customHeight,
+      customWidth: placedModule.customWidth,
+      'spaceInfo.height': spaceInfo.height,
+      'dropHeight': spaceInfo.droppedCeiling?.dropHeight,
+      effectiveZone,
+    });
   }
 
   // 깊이 계산: 기둥 앞에 배치 모드면 adjustedDepthMm 강제 적용, 아니면 customDepth 우선

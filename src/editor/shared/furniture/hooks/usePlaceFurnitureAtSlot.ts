@@ -438,6 +438,21 @@ export function placeFurnitureAtSlot(params: PlaceFurnitureParams): PlaceFurnitu
     moduleDataWidth: moduleData?.dimensions.width,
   });
 
+  // 단내림 디버깅
+  if (zone === 'dropped') {
+    console.log('🟠 [단내림 배치]', {
+      zone,
+      droppedCustomHeight,
+      'moduleData.height': moduleData?.dimensions.height,
+      'moduleData.width': moduleData?.dimensions.width,
+      'zoneInternalSpace.height': zoneInternalSpace.height,
+      'zoneInternalSpace.width': zoneInternalSpace.width,
+      'spaceInfo.height': spaceInfo.height,
+      'dropHeight': spaceInfo.droppedCeiling?.dropHeight,
+      yPosition,
+    });
+  }
+
   const newModule: PlacedModule = {
     id: uuidv4(),
     moduleId: furnitureId,
