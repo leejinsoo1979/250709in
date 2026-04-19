@@ -2907,11 +2907,6 @@ const PlacedModulePropertiesPanel: React.FC = () => {
             const bfMax = isLowerMod ? 150 : 100;
             const bfDefault = isLowerMod ? 100 : 60;
 
-            // 너비 = 실제 가구 폭 (팝업 상단 "가구 치수 W"와 동일)
-            const modWidthMM = Math.round(
-              (mod.adjustedWidth ?? mod.slotCustomWidth ?? mod.customWidth ?? mod.freeWidth ?? moduleData?.dimensions.width ?? 0) * 10
-            ) / 10;
-
             const topEnabled = mod.hasTopFrame !== false;
             const baseEnabled = mod.hasBase !== false;
             const topSize = mod.topFrameThickness ?? globalTop;
@@ -2937,9 +2932,6 @@ const PlacedModulePropertiesPanel: React.FC = () => {
               width: '100%', border: 'none', outline: 'none', fontSize: '12px', textAlign: 'center',
               background: 'transparent', color: 'var(--theme-text-primary)',
             };
-            const readOnlyInputStyle: React.CSSProperties = {
-              ...inputStyle, color: 'var(--theme-text-secondary)', cursor: 'default',
-            };
             const rowStyle: React.CSSProperties = { display: 'flex', alignItems: 'center', gap: '6px', padding: '3px 0' };
             const labelStyle: React.CSSProperties = { minWidth: '50px', fontSize: '11px', color: 'var(--theme-text-secondary)', fontWeight: 500 };
 
@@ -2958,16 +2950,6 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                   </button>
                   {topEnabled && (
                     <div style={{ display: 'flex', flex: 1, gap: '4px' }}>
-                      <div style={cellStyle}>
-                        <span style={cellLabelStyle}>너비</span>
-                        <input type="text" inputMode="numeric"
-                          value={modWidthMM ? (Number.isInteger(modWidthMM) ? modWidthMM : Number(modWidthMM.toFixed(1))) : ''}
-                          readOnly
-                          onFocus={() => setHighlightedFrame(`top-${mod.id}` as any)}
-                          onBlur={() => setHighlightedFrame(null)}
-                          style={readOnlyInputStyle}
-                        />
-                      </div>
                       <div style={cellStyle}>
                         <span style={cellLabelStyle}>높이</span>
                         <input type="text" inputMode="numeric"
@@ -3051,16 +3033,6 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                     </button>
                     {baseEnabled ? (
                       <div style={{ display: 'flex', flex: 1, gap: '4px' }}>
-                        <div style={cellStyle}>
-                          <span style={cellLabelStyle}>너비</span>
-                          <input type="text" inputMode="numeric"
-                            value={modWidthMM ? (Number.isInteger(modWidthMM) ? modWidthMM : Number(modWidthMM.toFixed(1))) : ''}
-                            readOnly
-                            onFocus={() => setHighlightedFrame(`base-${mod.id}` as any)}
-                            onBlur={() => setHighlightedFrame(null)}
-                            style={readOnlyInputStyle}
-                          />
-                        </div>
                         <div style={cellStyle}>
                           <span style={cellLabelStyle}>높이</span>
                           <input type="text" inputMode="numeric"
