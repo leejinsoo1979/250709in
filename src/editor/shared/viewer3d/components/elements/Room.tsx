@@ -4320,9 +4320,7 @@ const Room: React.FC<RoomProps> = ({
                       ? furnitureZOffset + furnitureDepth / 2 + mmToThreeUnits(3)
                       : furnitureZOffset + furnitureDepth / 2 - mmToThreeUnits(20);
                     const upperFrontZ = lowerFrontZ - furnitureDepth + mmToThreeUnits(upperModDepthMm);
-                    // 상부장에 도어가 있으면 프레임을 도어 두께만큼 뒤로 밀어 겹침 방지
-                    const upperDoorRetract = mod.hasDoor ? mmToThreeUnits(DOOR_THICKNESS_MM) : 0;
-                    const upperFrameZ = upperFrontZ - upperDoorRetract - mmToThreeUnits(END_PANEL_THICKNESS) / 2;
+                    const upperFrameZ = upperFrontZ - mmToThreeUnits(END_PANEL_THICKNESS) / 2;
                     allTopSegments.push({
                       widthMm: modWidthMM,
                       centerXmm: modCenterXmm,
@@ -5194,9 +5192,7 @@ const Room: React.FC<RoomProps> = ({
                       ? furnitureZOffset + furnitureDepth / 2 + mmToThreeUnits(3)
                       : furnitureZOffset + furnitureDepth / 2 - mmToThreeUnits(20);
                     const slotUpperFrontZ = slotLowerFrontZ - furnitureDepth + mmToThreeUnits(slotUpperDepthMm);
-                    // 상부장에 도어가 있으면 프레임을 도어 두께만큼 뒤로 밀어 겹침 방지 (PET 18.5mm)
-                    const slotUpperDoorRetract = mod.hasDoor ? mmToThreeUnits(18.5) : 0;
-                    slotFrameZ = slotUpperFrontZ - slotUpperDoorRetract - mmToThreeUnits(END_PANEL_THICKNESS) / 2;
+                    slotFrameZ = slotUpperFrontZ - mmToThreeUnits(END_PANEL_THICKNESS) / 2;
                   }
                   slotTopSegments.push({
                     widthMm: modWidthMM,
