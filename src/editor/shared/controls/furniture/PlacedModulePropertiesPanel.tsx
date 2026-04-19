@@ -2911,8 +2911,10 @@ const PlacedModulePropertiesPanel: React.FC = () => {
             const baseEnabled = mod.hasBase !== false;
             const topSize = mod.topFrameThickness ?? globalTop;
             const topOffset = mod.topFrameOffset ?? 0;
+            const topGap = mod.topFrameGap ?? 0;
             const baseSize = mod.baseFrameHeight ?? bfDefault;
             const baseOffset = mod.baseFrameOffset ?? 0;
+            const baseGap = mod.baseFrameGap ?? 0;
 
             const toggleStyle = (on: boolean): React.CSSProperties => ({
               width: '36px', height: '20px', borderRadius: '10px', border: 'none', cursor: 'pointer',
@@ -3007,6 +3009,38 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                           style={inputStyle}
                         />
                       </div>
+                      <div style={cellStyle}>
+                        <span style={cellLabelStyle}>갭</span>
+                        <input type="text" inputMode="numeric"
+                          value={topGap !== 0 ? topGap : ''} placeholder="0"
+                          onFocus={() => setHighlightedFrame(`top-${mod.id}` as any)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                              e.preventDefault();
+                              const maxGap = Math.max(0, topSize - 1);
+                              const next = Math.max(0, Math.min(maxGap, (topGap || 0) + (e.key === 'ArrowUp' ? 1 : -1)));
+                              updatePlacedModule(mod.id, { topFrameGap: next });
+                            } else if (e.key === 'Enter') {
+                              (e.target as HTMLInputElement).blur();
+                            }
+                          }}
+                          onChange={(e) => {
+                            const v = e.target.value;
+                            if (v === '' || /^\d+$/.test(v)) {
+                              const num = v === '' ? 0 : parseInt(v, 10);
+                              const maxGap = Math.max(0, topSize - 1);
+                              updatePlacedModule(mod.id, { topFrameGap: Math.max(0, Math.min(maxGap, num)) });
+                            }
+                          }}
+                          onBlur={(e) => {
+                            setHighlightedFrame(null);
+                            const maxGap = Math.max(0, topSize - 1);
+                            const clamped = Math.max(0, Math.min(maxGap, parseInt(e.target.value) || 0));
+                            updatePlacedModule(mod.id, { topFrameGap: clamped });
+                          }}
+                          style={inputStyle}
+                        />
+                      </div>
                     </div>
                   )}
                 </div>
@@ -3084,6 +3118,38 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                             onBlur={(e) => {
                               setHighlightedFrame(null);
                               updatePlacedModule(mod.id, { baseFrameOffset: Math.max(-200, Math.min(200, parseInt(e.target.value) || 0)) });
+                            }}
+                            style={inputStyle}
+                          />
+                        </div>
+                        <div style={cellStyle}>
+                          <span style={cellLabelStyle}>갭</span>
+                          <input type="text" inputMode="numeric"
+                            value={baseGap !== 0 ? baseGap : ''} placeholder="0"
+                            onFocus={() => setHighlightedFrame(`base-${mod.id}` as any)}
+                            onKeyDown={(e) => {
+                              if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                                e.preventDefault();
+                                const maxGap = Math.max(0, baseSize - 1);
+                                const next = Math.max(0, Math.min(maxGap, (baseGap || 0) + (e.key === 'ArrowUp' ? 1 : -1)));
+                                updatePlacedModule(mod.id, { baseFrameGap: next });
+                              } else if (e.key === 'Enter') {
+                                (e.target as HTMLInputElement).blur();
+                              }
+                            }}
+                            onChange={(e) => {
+                              const v = e.target.value;
+                              if (v === '' || /^\d+$/.test(v)) {
+                                const num = v === '' ? 0 : parseInt(v, 10);
+                                const maxGap = Math.max(0, baseSize - 1);
+                                updatePlacedModule(mod.id, { baseFrameGap: Math.max(0, Math.min(maxGap, num)) });
+                              }
+                            }}
+                            onBlur={(e) => {
+                              setHighlightedFrame(null);
+                              const maxGap = Math.max(0, baseSize - 1);
+                              const clamped = Math.max(0, Math.min(maxGap, parseInt(e.target.value) || 0));
+                              updatePlacedModule(mod.id, { baseFrameGap: clamped });
                             }}
                             style={inputStyle}
                           />

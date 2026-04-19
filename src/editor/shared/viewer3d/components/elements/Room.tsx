@@ -4280,11 +4280,15 @@ const Room: React.FC<RoomProps> = ({
                     } else {
                       totalFrameHeightMM = Math.max(0, effectiveCeilingToBase - modFreeHeight);
                     }
-                    const modFrameHeight = mmToThreeUnits(totalFrameHeightMM);
-                    // 상부장: 프레임 Y = 천장에서 프레임 높이의 절반만큼 내려온 위치
+                    // 상부프레임 갭: 천장 쪽에서 gap만큼 비우고 프레임 높이 축소 (가구쪽 하단은 고정)
+                    const modTopFrameGapMM = Math.max(0, Math.min(totalFrameHeightMM - 1, mod.topFrameGap ?? 0));
+                    const effectiveTotalFrameHeightMM = Math.max(0, totalFrameHeightMM - modTopFrameGapMM);
+                    const modFrameHeight = mmToThreeUnits(effectiveTotalFrameHeightMM);
+                    const modTopGapThreeUnits = mmToThreeUnits(modTopFrameGapMM);
+                    // 상부장: 프레임 Y = 천장에서 (gap + 프레임 높이의 절반)만큼 내려온 위치
                     const modFrameCenterY = modCategory === 'upper'
-                      ? effectiveTopY - modFrameHeight / 2
-                      : effectiveTopY - modFrameHeight / 2;
+                      ? effectiveTopY - modTopGapThreeUnits - modFrameHeight / 2
+                      : effectiveTopY - modTopGapThreeUnits - modFrameHeight / 2;
 
                     const modTopZOffset = mod.topFrameOffset ? mmToThreeUnits(mod.topFrameOffset) : 0;
                     const DOOR_THICKNESS_MM = 18.5; // PET 재질
@@ -5135,8 +5139,12 @@ const Room: React.FC<RoomProps> = ({
                     if (mod.hasLeftEndPanel) { modWidthMM -= epThk; modCenterXmm += epThk / 2; }
                     if (mod.hasRightEndPanel) { modWidthMM -= epThk; modCenterXmm -= epThk / 2; }
                   }
-                  const modTopThickness = mod.topFrameThickness ?? globalTopFrameMm;
+                  const rawTopThickness = mod.topFrameThickness ?? globalTopFrameMm;
+                  // 상부프레임 갭: 천장 쪽에서 gap만큼 비우고 프레임 높이 축소 (가구쪽 하단은 고정)
+                  const slotTopFrameGapMm = Math.max(0, Math.min(rawTopThickness - 1, mod.topFrameGap ?? 0));
+                  const modTopThickness = Math.max(0, rawTopThickness - slotTopFrameGapMm);
                   const modTopHeight = mmToThreeUnits(modTopThickness);
+                  const slotTopGapThreeUnits = mmToThreeUnits(slotTopFrameGapMm);
                   const modCenterForZone = (bounds.left + bounds.right) / 2;
                   const isInDroppedZone = hasDroppedCeiling && (
                     isLeftDropped
@@ -5150,7 +5158,8 @@ const Room: React.FC<RoomProps> = ({
                       : modCenterForZone > cbBoundaryMm
                   );
                   const ceilingHeight = isInDroppedZone ? droppedCeilingHeight : height;
-                  const modTopY = panelStartY + ceilingHeight - modTopHeight / 2;
+                  // 상부프레임 하단(가구쪽) 고정, 상단(천장쪽)이 gap만큼 내려옴
+                  const modTopY = panelStartY + ceilingHeight - slotTopGapThreeUnits - modTopHeight / 2;
                   const modTopZOffset = mod.topFrameOffset ? mmToThreeUnits(mod.topFrameOffset) : 0;
 
                   // 상부장: 뒷면 정렬이므로 프레임 Z도 상부장 앞면 기준
@@ -6095,8 +6104,14 @@ const Room: React.FC<RoomProps> = ({
               const freeIsLower = getModuleCategory(mod) === 'lower';
               const modBaseZInset = mod.baseFrameOffset ? mmToThreeUnits(mod.baseFrameOffset) : (freeIsLower ? mmToThreeUnits(65) : 0);
               const baseZPosition = baseZBase - mmToThreeUnits(depthZOffsetMM) - modBaseZInset;
-              const modBaseHeightMm = mod.baseFrameHeight ?? (spaceInfo.baseConfig?.height ?? (freeIsLower ? 100 : 60));
+              const rawBaseHeightMm = mod.baseFrameHeight ?? (spaceInfo.baseConfig?.height ?? (freeIsLower ? 100 : 60));
+              // 하부프레임 갭: 바닥 쪽에서 gap만큼 비우고 프레임 높이 축소 (가구쪽 상단은 고정)
+              const modBaseFrameGapMm = Math.max(0, Math.min(rawBaseHeightMm - 1, mod.baseFrameGap ?? 0));
+              const modBaseHeightMm = Math.max(0, rawBaseHeightMm - modBaseFrameGapMm);
               const modBaseH = mmToThreeUnits(modBaseHeightMm);
+              const modBaseGapThreeUnits = mmToThreeUnits(modBaseFrameGapMm);
+              // 중심 Y: panelStartY + floatHeight + gap + H/2
+              const modBaseYCenter = panelStartY + floatHeight + modBaseGapThreeUnits + modBaseH / 2;
 
               // 커스터마이즈 가구 좌우분할: 무조건 하부프레임도 영역별 분할
               const customSec0 = (mod as any).customConfig?.sections?.[0];
@@ -6144,7 +6159,7 @@ const Room: React.FC<RoomProps> = ({
                       centerXmm: modLeftMm + leftPieceW / 2,
                       zPosition: baseZPosition,
                       height: modBaseH,
-                      yPosition: panelStartY + floatHeight + modBaseH / 2,
+                      yPosition: modBaseYCenter,
                       material: baseMat,
                       key: `free-base-strip-${group.id}-${mod.id}-left`,
                       placedModuleId: mod.id,
@@ -6161,7 +6176,7 @@ const Room: React.FC<RoomProps> = ({
                       centerXmm: rightPieceStartX + rightPieceW / 2,
                       zPosition: baseZPosition,
                       height: modBaseH,
-                      yPosition: panelStartY + floatHeight + modBaseH / 2,
+                      yPosition: modBaseYCenter,
                       material: baseMat,
                       key: `free-base-strip-${group.id}-${mod.id}-right`,
                       placedModuleId: mod.id,
@@ -6181,7 +6196,7 @@ const Room: React.FC<RoomProps> = ({
                       centerXmm: modLeftMm + leftPieceW / 2,
                       zPosition: baseZPosition,
                       height: modBaseH,
-                      yPosition: panelStartY + floatHeight + modBaseH / 2,
+                      yPosition: modBaseYCenter,
                       material: baseMat,
                       key: `free-base-strip-${group.id}-${mod.id}-left`,
                       placedModuleId: mod.id,
@@ -6199,7 +6214,7 @@ const Room: React.FC<RoomProps> = ({
                       centerXmm: centerPieceStartX + centerPieceW / 2,
                       zPosition: baseZPosition,
                       height: modBaseH,
-                      yPosition: panelStartY + floatHeight + modBaseH / 2,
+                      yPosition: modBaseYCenter,
                       material: baseMat,
                       key: `free-base-strip-${group.id}-${mod.id}-center`,
                       placedModuleId: mod.id,
@@ -6216,7 +6231,7 @@ const Room: React.FC<RoomProps> = ({
                       centerXmm: rightPieceStartX + rightPieceW / 2,
                       zPosition: baseZPosition,
                       height: modBaseH,
-                      yPosition: panelStartY + floatHeight + modBaseH / 2,
+                      yPosition: modBaseYCenter,
                       material: baseMat,
                       key: `free-base-strip-${group.id}-${mod.id}-right`,
                       placedModuleId: mod.id,
@@ -6234,7 +6249,7 @@ const Room: React.FC<RoomProps> = ({
                 centerXmm: modCenterXmm,
                 zPosition: baseZPosition,
                 height: modBaseH,
-                yPosition: panelStartY + floatHeight + modBaseH / 2,
+                yPosition: modBaseYCenter,
                 material: baseMat,
                 key: `free-base-strip-${group.id}-${mod.id}`,
                 placedModuleId: mod.id,
@@ -6404,8 +6419,13 @@ const Room: React.FC<RoomProps> = ({
                       const epThk = mod.endPanelThickness || 18.5;
                       if (mod.hasLeftEndPanel) { modWidthMM -= epThk; modCenterXmm += epThk / 2; }
                       if (mod.hasRightEndPanel) { modWidthMM -= epThk; modCenterXmm -= epThk / 2; }
-                      const modBaseHeight = mod.baseFrameHeight ?? globalBaseHeightMm;
+                      const rawBaseHeight = mod.baseFrameHeight ?? globalBaseHeightMm;
+                      // 하부프레임 갭: 바닥 쪽에서 gap만큼 비우고 프레임 높이 축소 (가구쪽 상단은 고정)
+                      const baseFrameGapMm = Math.max(0, Math.min(rawBaseHeight - 1, mod.baseFrameGap ?? 0));
+                      const modBaseHeight = Math.max(0, rawBaseHeight - baseFrameGapMm);
                       const modBaseH = mmToThreeUnits(modBaseHeight);
+                      const baseGapThreeUnits = mmToThreeUnits(baseFrameGapMm);
+                      const modBaseYCenter = panelStartY + floatHeight + baseGapThreeUnits + modBaseH / 2;
                       const modCategory = getModuleCategory(mod);
                       const isLowerMod = modCategory === 'lower';
                       const modBaseZInset = mod.baseFrameOffset ? mmToThreeUnits(mod.baseFrameOffset) : (isLowerMod ? mmToThreeUnits(65) : 0);
@@ -6454,7 +6474,7 @@ const Room: React.FC<RoomProps> = ({
                               centerXmm: modLeftMm + leftPieceW / 2,
                               zPosition: baseZPos - modBaseZInset,
                               height: modBaseH,
-                              yPosition: panelStartY + floatHeight + modBaseH / 2,
+                              yPosition: modBaseYCenter,
                               material: baseMat,
                               key: `slot-base-${mod.id}-left`,
                               placedModuleId: mod.id,
@@ -6470,7 +6490,7 @@ const Room: React.FC<RoomProps> = ({
                               centerXmm: rightPieceStartX + rightPieceW / 2,
                               zPosition: baseZPos - modBaseZInset,
                               height: modBaseH,
-                              yPosition: panelStartY + floatHeight + modBaseH / 2,
+                              yPosition: modBaseYCenter,
                               material: baseMat,
                               key: `slot-base-${mod.id}-right`,
                               placedModuleId: mod.id,
@@ -6489,7 +6509,7 @@ const Room: React.FC<RoomProps> = ({
                               centerXmm: modLeftMm + leftPieceW / 2,
                               zPosition: baseZPos - modBaseZInset,
                               height: modBaseH,
-                              yPosition: panelStartY + floatHeight + modBaseH / 2,
+                              yPosition: modBaseYCenter,
                               material: baseMat,
                               key: `slot-base-${mod.id}-left`,
                               placedModuleId: mod.id,
@@ -6506,7 +6526,7 @@ const Room: React.FC<RoomProps> = ({
                               centerXmm: centerPieceStartX + centerPieceW / 2,
                               zPosition: baseZPos - modBaseZInset,
                               height: modBaseH,
-                              yPosition: panelStartY + floatHeight + modBaseH / 2,
+                              yPosition: modBaseYCenter,
                               material: baseMat,
                               key: `slot-base-${mod.id}-center`,
                               placedModuleId: mod.id,
@@ -6522,7 +6542,7 @@ const Room: React.FC<RoomProps> = ({
                               centerXmm: rightPieceStartX + rightPieceW / 2,
                               zPosition: baseZPos - modBaseZInset,
                               height: modBaseH,
-                              yPosition: panelStartY + floatHeight + modBaseH / 2,
+                              yPosition: modBaseYCenter,
                               material: baseMat,
                               key: `slot-base-${mod.id}-right`,
                               placedModuleId: mod.id,
@@ -6540,7 +6560,7 @@ const Room: React.FC<RoomProps> = ({
                         centerXmm: modCenterXmm,
                         zPosition: baseZPos - modBaseZInset,
                         height: modBaseH,
-                        yPosition: panelStartY + floatHeight + modBaseH / 2,
+                        yPosition: modBaseYCenter,
                         material: baseMat,
                         key: `slot-base-${mod.id}`,
                         placedModuleId: mod.id,
