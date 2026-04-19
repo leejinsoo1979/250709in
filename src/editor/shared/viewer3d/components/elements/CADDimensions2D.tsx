@@ -708,15 +708,17 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
               if (topFrameVal > 0) {
                 // 상부프레임 연장선은 가구 뒷면까지 연장
                 // 상부장 뒷면을 하부장 뒷면에 정렬
+                // 하부장 뒷면 Z = fzOff - furnitureDepth/2 - doorThickness(20mm)
                 const upperDepthMm_tf = module.upperSectionDepth || module.customDepth || moduleData.dimensions.depth;
                 const upperModDepth_tf = mmToThreeUnits(upperDepthMm_tf);
                 const panelDepthMm_tf = spaceInfo.depth || 1500;
                 const panelDepth_tf = mmToThreeUnits(panelDepthMm_tf);
                 const furnitureDepth_tf = mmToThreeUnits(Math.min(panelDepthMm_tf, 600));
+                const doorThk_tf = mmToThreeUnits(20);
                 const zOff_tf = -panelDepth_tf / 2;
                 const fzOff_tf = zOff_tf + (panelDepth_tf - furnitureDepth_tf) / 2;
-                // 상부장 앞면 Z = 하부장 뒷면 + 상부장 깊이 (중심 Z는 앞면 - 깊이/2)
-                const upperFurnitureZ_tf = fzOff_tf - furnitureDepth_tf / 2 + upperModDepth_tf / 2;
+                // 상부장 중심 Z = 하부장 뒷면 + 상부장 깊이/2
+                const upperFurnitureZ_tf = fzOff_tf - furnitureDepth_tf / 2 - doorThk_tf + upperModDepth_tf / 2;
                 const upperFrontZ = upperFurnitureZ_tf + upperModDepth_tf / 2;
 
                 segments_l2.push({
@@ -895,13 +897,13 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           // 도어 치수선: 도어 앞면에서 150mm 바깥, 연장선: 30mm부터
           const dimZ = lowerDoorFrontZ + mmToThreeUnits(150);
           const dimExtZ = lowerDoorFrontZ + mmToThreeUnits(30);
-          // 상부장 Z: 하부장 뒷면에 정렬 (상부장 뒷면 = 하부장 뒷면 = fzOff_ud - furnitureDepth_ud/2)
+          // 상부장 Z: 하부장 뒷면에 정렬 (하부장 뒷면 = fzOff_ud - furnitureDepth_ud/2 - doorThk_ud)
           // 상부장 깊이 (첫 번째 상부장 모듈 기준)
           const firstUpperMod = visibleFurniture.find(m => getModuleCategory(m as PlacedModule) === 'upper') as PlacedModule | undefined;
           const upperModDepthMm = firstUpperMod?.upperSectionDepth || firstUpperMod?.customDepth || 300;
           const upperModDepth_ud = mmToThreeUnits(upperModDepthMm);
           // 상부장 중심 Z = 하부장 뒷면 + 상부장 깊이/2
-          const upperFurnitureZ = fzOff_ud - furnitureDepth_ud / 2 + upperModDepth_ud / 2;
+          const upperFurnitureZ = fzOff_ud - furnitureDepth_ud / 2 - doorThk_ud + upperModDepth_ud / 2;
           const upperFrontZ = upperFurnitureZ + upperModDepth_ud / 2;
           const upperDimZ = upperFrontZ + mmToThreeUnits(200);
           const upperDimExtZ = upperFrontZ + mmToThreeUnits(20);
