@@ -925,25 +925,24 @@ const FreePlacementDropZone: React.FC = () => {
       }
     }
 
-    // 가구 사이 갭 — 실수 오차 없이 정확히 내림(Math.floor)으로 계산
+    // 가구 사이 갭 — 가구 저장된 정수 너비로 정확히 계산
     for (let i = 0; i < bounds.length - 1; i++) {
       const gapStart = bounds[i].right;
       const gapEnd = bounds[i + 1].left;
       if (gapEnd - gapStart > 0.5) {
-        const rawGap = gapEnd - gapStart;
-        // 디버그: 가구 사이 실제 거리
-        console.log('🔍 [가구 사이 갭]', {
-          leftId: bounds[i].id.slice(0, 8),
-          rightId: bounds[i + 1].id.slice(0, 8),
-          leftRight: bounds[i].right,
-          rightLeft: bounds[i + 1].left,
-          rawGap,
-          floored: Math.floor(rawGap),
-        });
+        // 저장된 가구 너비(정수)와 위치로부터 정확한 거리 재계산
+        const modA = freeModules.find(m => m.id === bounds[i].id);
+        const modB = freeModules.find(m => m.id === bounds[i + 1].id);
+        const wA = modA ? Math.round(modA.freeWidth || modA.customWidth || modA.moduleWidth || (bounds[i].right - bounds[i].left)) : (bounds[i].right - bounds[i].left);
+        const wB = modB ? Math.round(modB.freeWidth || modB.customWidth || modB.moduleWidth || (bounds[i + 1].right - bounds[i + 1].left)) : (bounds[i + 1].right - bounds[i + 1].left);
+        const cA = modA ? modA.position.x * 100 : (bounds[i].left + bounds[i].right) / 2;
+        const cB = modB ? modB.position.x * 100 : (bounds[i + 1].left + bounds[i + 1].right) / 2;
+        // 실수 center 그대로, 정수 width로 계산하여 정확한 gap 산출
+        const exactGap = (cB - wB / 2) - (cA + wA / 2);
         gaps.push({
           startX: gapStart,
           endX: gapEnd,
-          width: Math.floor(rawGap),
+          width: Math.round(exactGap),
           centerX: ((gapStart + gapEnd) / 2) * 0.01,
           centerY: gapLabelY,
           adjacentModuleId: bounds[i + 1].id,
