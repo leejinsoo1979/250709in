@@ -600,23 +600,6 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
           ? { width: module.dimensions.width, height: lastDims.height, depth: lastDims.depth }
           : { ...module.dimensions };
         const fullBounds = getInternalSpaceBoundsX(spaceInfo);
-        console.log('🔍 [더블클릭 배치 진단]', {
-          installType: spaceInfo.installType,
-          spaceWidth: spaceInfo.width,
-          gapConfig: spaceInfo.gapConfig,
-          wallConfig: spaceInfo.wallConfig,
-          fullBounds,
-          innerWidth: fullBounds.endX - fullBounds.startX,
-          lastDims,
-          moduleBaseDims: module.dimensions,
-          existingModules: placedModules.filter(m => m.isFreePlacement).map(m => ({
-            id: m.id.slice(0, 6),
-            posX: m.position.x,
-            posXmm: m.position.x * 100,
-            freeWidth: m.freeWidth,
-            moduleWidth: m.moduleWidth,
-          })),
-        });
 
         // 단내림(stepCeiling) 활성 시: 메인 구간 + 단내림 구간을 별도로 검색
         const hasStepCeiling = !!spaceInfo.stepCeiling?.enabled;

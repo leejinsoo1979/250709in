@@ -5511,12 +5511,18 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               };
               const halfW = moduleWidth / 2;
               // 실제 이동 거리: nearestLeftDistance/nearestRightDistance는 가구/벽까지 실거리 (mm)
-              // 벽 인접일 때도 gapConfig 폴백 대신 실거리 사용 (그래야 벽까지 붙일 수 있음)
-              const realLeftGapMm = nearestLeftDistance || leftGapMm;
-              const realRightGapMm = nearestRightDistance || rightGapMm;
-              // 좌측 한계: 벽 또는 인접 가구 우측 끝
+              // 단, nearestDistance는 물리적 벽까지 거리이므로, 벽 인접 시 이격(gapConfig)을 빼야 함
+              const wallGapLeft = spaceInfo.gapConfig?.left ?? 1.5;
+              const wallGapRight = spaceInfo.gapConfig?.right ?? 1.5;
+              const realLeftGapMm = hasAdjacentLeft
+                ? (nearestLeftDistance || 0)
+                : Math.max(0, (nearestLeftDistance || 0) - wallGapLeft);
+              const realRightGapMm = hasAdjacentRight
+                ? (nearestRightDistance || 0)
+                : Math.max(0, (nearestRightDistance || 0) - wallGapRight);
+              // 좌측 한계: 벽 이격 경계 또는 인접 가구 우측 끝
               const leftLimit = leftX - mmToThreeUnits(realLeftGapMm);
-              // 우측 한계: 벽 또는 인접 가구 좌측 끝
+              // 우측 한계: 벽 이격 경계 또는 인접 가구 좌측 끝
               const rightLimit = rightX + mmToThreeUnits(realRightGapMm);
               // 1mm(0.01) 단위로 스냅하여 부동소수점 오차 방지
               const snap = (v: number) => Math.round(v * 100) / 100;
