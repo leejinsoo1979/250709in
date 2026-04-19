@@ -6655,13 +6655,13 @@ const Configurator: React.FC = () => {
                     islandViewSide="front"
                   />
                 </div>
-                {/* 하단: 반대편 */}
+                {/* 하단: 반대편 — scaleX(-1)로 좌우 반전하여 뒷면을 보이게 한다 */}
                 <div
-                  style={{ flex: 1, position: 'relative', minHeight: 0 }}
+                  style={{ flex: 1, position: 'relative', minHeight: 0, transform: 'scaleX(-1)' }}
                   onMouseEnter={() => useUIStore.getState().setActiveIslandSide('back')}
                   onDragEnter={() => useUIStore.getState().setActiveIslandSide('back')}
                 >
-                  <div style={{ position: 'absolute', top: 10, left: 12, padding: '4px 10px', fontSize: 11, fontWeight: 600, letterSpacing: 0.5, background: 'rgba(0,0,0,0.65)', color: '#fff', borderRadius: 4, zIndex: 5, pointerEvents: 'none' }}>반대편</div>
+                  <div style={{ position: 'absolute', top: 10, left: 12, padding: '4px 10px', fontSize: 11, fontWeight: 600, letterSpacing: 0.5, background: 'rgba(0,0,0,0.65)', color: '#fff', borderRadius: 4, zIndex: 5, pointerEvents: 'none', transform: 'scaleX(-1)' }}>반대편</div>
                   <Space3DView
                     key="island-back"
                     spaceInfo={spaceInfo}
