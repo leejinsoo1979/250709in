@@ -5226,14 +5226,16 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         const moduleWidth = mmToThreeUnits(actualWidth);
         const leftX = actualPositionX - moduleWidth / 2;
         const rightX = actualPositionX + moduleWidth / 2;
-        // 가구 카테고리: 하부장은 공간 하단에, 상부장/키큰장은 공간 상단에 너비 치수 표시
+        // 가구 카테고리: 하부장은 하부장 바로 위에, 상부장/키큰장은 공간 상단에 너비 치수 표시
         const moduleCategoryForDim = moduleData.category
           ?? (module.moduleId?.includes('upper') ? 'upper'
             : module.moduleId?.includes('lower') ? 'lower' : 'full');
         const isLowerDim = moduleCategoryForDim === 'lower';
-        // 하단 치수선 Y: 공간 바닥(0)보다 DIM_GAP만큼 아래
-        const bottomSlotDimensionY = -mmToThreeUnits(DIM_GAP);
-        const dimY = isLowerDim ? bottomSlotDimensionY : slotDimensionY;
+        // 하부장 너비 치수 Y: 가구 상단(= moduleY + 높이/2) 바로 위 DIM_GAP 만큼 오프셋
+        const moduleHeightMm = (module.freeHeight ?? module.customHeight ?? moduleData.dimensions.height) || 0;
+        const lowerTopY = (moduleY || 0) + mmToThreeUnits(moduleHeightMm / 2);
+        const lowerDimY = lowerTopY + mmToThreeUnits(DIM_GAP);
+        const dimY = isLowerDim ? lowerDimY : slotDimensionY;
         
         // 듀얼 가구인지 확인 (이름에 'dual' 포함)
         const isDualModule = moduleData.id.includes('dual');
@@ -5397,11 +5399,11 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               </React.Fragment>
             ))}
 
-            {/* 연장선 - 하부장은 공간 하단에서 하단 치수선까지, 그 외는 가구 상단에서 상단 치수선까지 */}
+            {/* 연장선 - 하부장은 가구 상단에서 바로 위 치수선까지, 그 외는 가구 상단에서 공간 상단 치수선까지 */}
             {isLowerDim ? (
               <>
                 <NativeLine name="dimension_line"
-                  points={[[leftX, 0, 0.001], [leftX, dimY, 0.001]]}
+                  points={[[leftX, lowerTopY, 0.001], [leftX, dimY, 0.001]]}
                   color={dimensionColor}
                   lineWidth={0.6}
                   renderOrder={1000000}
@@ -5410,7 +5412,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   transparent={true}
                 />
                 <NativeLine name="dimension_line"
-                  points={[[rightX, 0, 0.001], [rightX, dimY, 0.001]]}
+                  points={[[rightX, lowerTopY, 0.001], [rightX, dimY, 0.001]]}
                   color={dimensionColor}
                   lineWidth={0.6}
                   renderOrder={1000000}
