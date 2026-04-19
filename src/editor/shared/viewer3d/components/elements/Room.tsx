@@ -4329,30 +4329,13 @@ const Room: React.FC<RoomProps> = ({
                     const needsTopFrameRetract = isDoorBase && isSpaceFitDoor && mod.hasDoor;
                     const topFrameZRetract = needsTopFrameRetract ? -mmToThreeUnits(DOOR_THICKNESS_MM) : 0;
 
+                    // FurnitureItem.tsx와 동일하게 furnitureDepthMm = min(panelDepthMm, 600) 사용
                     const upperModDepthMm = mod.freeDepth || mod.customDepth || 300;
-                    const upperFrontZ = furnitureZOffset - furnitureDepth / 2 - mmToThreeUnits(20) + mmToThreeUnits(upperModDepthMm);
+                    const fiFurnitureDepthMm = Math.min(spaceInfo.depth || 1500, 600);
+                    const fiFurnitureDepth = mmToThreeUnits(fiFurnitureDepthMm);
+                    const fiZOffset = -mmToThreeUnits(spaceInfo.depth || 1500) / 2 + (mmToThreeUnits(spaceInfo.depth || 1500) - fiFurnitureDepth) / 2;
+                    const upperFrontZ = fiZOffset - fiFurnitureDepth / 2 - mmToThreeUnits(20) + mmToThreeUnits(upperModDepthMm);
                     const upperFrameZ = upperFrontZ - mmToThreeUnits(END_PANEL_THICKNESS) / 2;
-                    if (modCategory === 'upper' && typeof window !== 'undefined') {
-                      const zOffset_mm = Math.round(furnitureZOffset / 0.01);
-                      const fDepth_mm = Math.round(furnitureDepth / 0.01);
-                      const uFront_mm = Math.round(upperFrontZ / 0.01);
-                      const uFrame_mm = Math.round(upperFrameZ / 0.01);
-                      const modCenter_mm = Math.round((mod.position?.z ?? 0) / 0.01);
-                      const actualUpperFront_mm = modCenter_mm + Math.round(upperModDepthMm / 2);
-                      console.log('🔍[상부프레임진단]', {
-                        mod_id: mod.id,
-                        mod_moduleId: mod.moduleId,
-                        upperDepth: upperModDepthMm,
-                        furnitureZOffset_mm: zOffset_mm,
-                        furnitureDepth_mm: fDepth_mm,
-                        upperFrontZ_mm: uFront_mm,
-                        upperFrameZ_mm: uFrame_mm,
-                        mod_position_z_mm: modCenter_mm,
-                        '실제_상부장앞면_mm': actualUpperFront_mm,
-                        '차이_프레임_vs_실제앞면': uFrame_mm - actualUpperFront_mm,
-                        '차이_upperFront_vs_실제앞면': uFront_mm - actualUpperFront_mm,
-                      });
-                    }
                     allTopSegments.push({
                       widthMm: modWidthMM,
                       centerXmm: modCenterXmm,
@@ -5218,31 +5201,14 @@ const Room: React.FC<RoomProps> = ({
                   const slotModCategory = getModuleCategory(mod);
                   let slotFrameZ = topZPos;
                   if (slotModCategory === 'upper') {
-                    // 하부장 뒷면 = furnitureZOffset - furnitureDepth/2 - doorThickness(20mm)
+                    // FurnitureItem.tsx와 동일하게 furnitureDepthMm = min(panelDepthMm, 600) 사용
+                    // (Room.tsx의 furnitureDepth는 노서라운드면 580으로 다를 수 있음 → 20mm 오차 원인)
                     const slotUpperDepthMm = mod.freeDepth || mod.customDepth || 300;
-                    const slotUpperFrontZ = furnitureZOffset - furnitureDepth / 2 - mmToThreeUnits(20) + mmToThreeUnits(slotUpperDepthMm);
+                    const fiFurnitureDepthMm = Math.min(spaceInfo.depth || 1500, 600);
+                    const fiFurnitureDepth = mmToThreeUnits(fiFurnitureDepthMm);
+                    const fiZOffset = -mmToThreeUnits(spaceInfo.depth || 1500) / 2 + (mmToThreeUnits(spaceInfo.depth || 1500) - fiFurnitureDepth) / 2;
+                    const slotUpperFrontZ = fiZOffset - fiFurnitureDepth / 2 - mmToThreeUnits(20) + mmToThreeUnits(slotUpperDepthMm);
                     slotFrameZ = slotUpperFrontZ - mmToThreeUnits(END_PANEL_THICKNESS) / 2;
-                    if (typeof window !== 'undefined') {
-                      const zOffset_mm = Math.round(furnitureZOffset / 0.01);
-                      const fDepth_mm = Math.round(furnitureDepth / 0.01);
-                      const sFront_mm = Math.round(slotUpperFrontZ / 0.01);
-                      const sFrame_mm = Math.round(slotFrameZ / 0.01);
-                      const modCenter_mm = Math.round((mod.position?.z ?? 0) / 0.01);
-                      const actualFront_mm = modCenter_mm + Math.round(slotUpperDepthMm / 2);
-                      console.log('🔍[슬롯상부프레임진단]', {
-                        mod_id: mod.id,
-                        mod_moduleId: mod.moduleId,
-                        upperDepth: slotUpperDepthMm,
-                        furnitureZOffset_mm: zOffset_mm,
-                        furnitureDepth_mm: fDepth_mm,
-                        slotUpperFrontZ_mm: sFront_mm,
-                        slotFrameZ_mm: sFrame_mm,
-                        mod_position_z_mm: modCenter_mm,
-                        '실제_상부장앞면_mm': actualFront_mm,
-                        '차이_프레임_vs_실제앞면': sFrame_mm - actualFront_mm,
-                        '차이_slotUpperFront_vs_실제앞면': sFront_mm - actualFront_mm,
-                      });
-                    }
                   }
                   slotTopSegments.push({
                     widthMm: modWidthMM,
