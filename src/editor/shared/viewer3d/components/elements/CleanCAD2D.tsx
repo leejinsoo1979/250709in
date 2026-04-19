@@ -5526,24 +5526,28 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               return (<>
                 {/* 좌측 이동 화살표 — 가구 선택 + 이격 여유 있을 때만 */}
                 {isSelected && canMoveLeft && (
-                  <Html position={[leftX - mmToThreeUnits(20), gapDimY, 0.01]}
+                  <Html position={[leftX - mmToThreeUnits(30), gapDimY, 0.01]}
                     center style={{ pointerEvents: 'auto' }} zIndexRange={[10001, 10002]}>
                     <div
+                      onPointerDown={stopAll}
                       onMouseDown={stopAll}
                       onClick={moveLeft}
+                      onPointerUp={stopAll}
                       style={{
-                        width: '20px', height: '32px',
+                        width: '32px', height: '40px',
                         background: '#2196F3',
-                        borderRadius: '4px 0 0 4px',
+                        borderRadius: '6px 0 0 6px',
                         cursor: 'pointer',
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
                         boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
                         transition: 'background 0.15s',
+                        pointerEvents: 'auto',
+                        userSelect: 'none',
                       }}
                       onMouseEnter={(e) => { (e.currentTarget as HTMLDivElement).style.background = '#1976D2'; }}
                       onMouseLeave={(e) => { (e.currentTarget as HTMLDivElement).style.background = '#2196F3'; }}
                     >
-                      <svg width="10" height="14" viewBox="0 0 10 14" fill="none"><path d="M8 1L2 7L8 13" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                      <svg width="14" height="18" viewBox="0 0 10 14" fill="none" style={{ pointerEvents: 'none' }}><path d="M8 1L2 7L8 13" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
                     </div>
                   </Html>
                 )}
@@ -5572,24 +5576,28 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 </>)}
                 {/* 우측 이동 화살표 — 가구 선택 + 이격 여유 있을 때만 */}
                 {isSelected && canMoveRight && (
-                  <Html position={[rightX + mmToThreeUnits(20), gapDimY, 0.01]}
+                  <Html position={[rightX + mmToThreeUnits(30), gapDimY, 0.01]}
                     center style={{ pointerEvents: 'auto' }} zIndexRange={[10001, 10002]}>
                     <div
+                      onPointerDown={stopAll}
                       onMouseDown={stopAll}
                       onClick={moveRight}
+                      onPointerUp={stopAll}
                       style={{
-                        width: '20px', height: '32px',
+                        width: '32px', height: '40px',
                         background: '#2196F3',
-                        borderRadius: '0 4px 4px 0',
+                        borderRadius: '0 6px 6px 0',
                         cursor: 'pointer',
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
                         boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
                         transition: 'background 0.15s',
+                        pointerEvents: 'auto',
+                        userSelect: 'none',
                       }}
                       onMouseEnter={(e) => { (e.currentTarget as HTMLDivElement).style.background = '#1976D2'; }}
                       onMouseLeave={(e) => { (e.currentTarget as HTMLDivElement).style.background = '#2196F3'; }}
                     >
-                      <svg width="10" height="14" viewBox="0 0 10 14" fill="none"><path d="M2 1L8 7L2 13" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                      <svg width="14" height="18" viewBox="0 0 10 14" fill="none" style={{ pointerEvents: 'none' }}><path d="M2 1L8 7L2 13" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
                     </div>
                   </Html>
                 )}
