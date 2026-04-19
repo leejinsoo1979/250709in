@@ -6,6 +6,10 @@ import { TbBoxAlignRight } from 'react-icons/tb';
 import { MdOutlineDashboardCustomize } from 'react-icons/md';
 import { Sun, Moon } from 'lucide-react';
 import { useTranslation } from '@/i18n/useTranslation';
+import { useAuth } from '@/auth/AuthProvider';
+
+// 개발자 계정 이메일 — 아일랜드 메뉴는 이 계정에서만 노출
+const DEV_EMAIL = 'sbbc212@gmail.com';
 
 export type SidebarTab = 'module' | 'material' | 'structure' | 'etc' | 'upload' | 'myCabinet' | 'island';
 
@@ -41,6 +45,8 @@ const Sidebar: React.FC<SidebarProps> = ({
 }) => {
   const { theme, toggleMode } = useTheme();
   const { t } = useTranslation();
+  const { user } = useAuth();
+  const isDeveloper = user?.email === DEV_EMAIL;
 
   const allTabs = [
     {
@@ -85,6 +91,10 @@ const Sidebar: React.FC<SidebarProps> = ({
   ];
 
   let tabs = readOnly ? allTabs.filter(tab => tab.id === 'material') : allTabs;
+  // 아일랜드 탭은 개발자 계정에서만 노출
+  if (!isDeveloper) {
+    tabs = tabs.filter(tab => tab.id !== 'island');
+  }
   if (isIsland) {
     // 아일랜드 모드: 기둥/아일랜드 탭 숨김 (이미 아일랜드 디자인이므로)
     tabs = tabs.filter(tab => tab.id !== 'structure' && tab.id !== 'island');
