@@ -4312,8 +4312,14 @@ const Room: React.FC<RoomProps> = ({
 
                     // 상부장은 프레임이 상부장 앞면에 맞춰 붙어야 함 (프레임 앞면 = 상부장 앞면)
                     // 그 외(키큰장 등)는 공간 기준 평면
+                    // 하부장 앞면 Z = 전체서라운드는 +3mm, 노서라운드는 -doorThickness(20mm)
+                    // 하부장 뒷면 = 하부장 앞면 - furnitureDepth
+                    // 상부장 앞면 = 하부장 뒷면 + upperDepth
                     const upperModDepthMm = mod.freeDepth || mod.customDepth || 300;
-                    const upperFrontZ = furnitureZOffset - furnitureDepth / 2 - mmToThreeUnits(20) + mmToThreeUnits(upperModDepthMm);
+                    const lowerFrontZ = isFullSurround
+                      ? furnitureZOffset + furnitureDepth / 2 + mmToThreeUnits(3)
+                      : furnitureZOffset + furnitureDepth / 2 - mmToThreeUnits(20);
+                    const upperFrontZ = lowerFrontZ - furnitureDepth + mmToThreeUnits(upperModDepthMm);
                     const upperFrameZ = upperFrontZ - mmToThreeUnits(END_PANEL_THICKNESS) / 2;
                     allTopSegments.push({
                       widthMm: modWidthMM,
@@ -5176,14 +5182,16 @@ const Room: React.FC<RoomProps> = ({
                   const modTopY = panelStartY + ceilingHeight - slotTopGapThreeUnits - modTopHeight / 2;
                   const modTopZOffset = mod.topFrameOffset ? mmToThreeUnits(mod.topFrameOffset) : 0;
 
-                  // 상부장: 뒷면을 하부장 뒷면에 정렬 → 프레임 Z도 상부장 앞면 기준
-                  const slotModCategory = getModuleCategory(mod);
                   // 상부장은 프레임이 상부장 앞면에 맞춰 붙어야 함 (프레임 앞면 = 상부장 앞면)
                   const slotModCategory = getModuleCategory(mod);
                   let slotFrameZ = topZPos;
                   if (slotModCategory === 'upper') {
                     const slotUpperDepthMm = mod.freeDepth || mod.customDepth || 300;
-                    const slotUpperFrontZ = furnitureZOffset - furnitureDepth / 2 - mmToThreeUnits(20) + mmToThreeUnits(slotUpperDepthMm);
+                    // 전체서라운드/노서라운드 모드별 하부장 앞면 Z 분기
+                    const slotLowerFrontZ = isFullSurround
+                      ? furnitureZOffset + furnitureDepth / 2 + mmToThreeUnits(3)
+                      : furnitureZOffset + furnitureDepth / 2 - mmToThreeUnits(20);
+                    const slotUpperFrontZ = slotLowerFrontZ - furnitureDepth + mmToThreeUnits(slotUpperDepthMm);
                     slotFrameZ = slotUpperFrontZ - mmToThreeUnits(END_PANEL_THICKNESS) / 2;
                   }
                   slotTopSegments.push({
