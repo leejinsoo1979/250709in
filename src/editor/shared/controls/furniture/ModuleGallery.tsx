@@ -105,6 +105,20 @@ const FURNITURE_ICONS: Record<string, string> = {
 // 모듈 타입 정의
 export type ModuleType = 'all' | 'single' | 'dual';
 
+// 신발장 판별 (full 카테고리 내)
+// - 선반장 계열: single-shelf-*, dual-shelf-*, single-Ndrawer-shelf-*, dual-Ndrawer-shelf-*
+// - 현관장 계열: single-entryway-*, dual-entryway-*
+// 주의: upper-cabinet-shelf-*, dual-upper-cabinet-shelf-* 는 upper 카테고리이므로 여기 해당 없음
+const isShoeModuleId = (id: string): boolean => {
+  if (id.includes('entryway')) return true;
+  // -shelf로 끝나는 ID 키 (폭 제거 후) 또는 중간에 -shelf-가 포함된 full 모듈
+  // full 카테고리 기준이므로 upper/lower 접두어가 없음
+  // 예: single-shelf-600, single-4drawer-shelf-600
+  // 구분: upper-cabinet-shelf 계열은 upper 카테고리라 여기로 안 옴
+  const key = id.replace(/-[\d.]+$/, '');
+  return /(^|-)shelf$/.test(key) || /-shelf$/.test(key);
+};
+
 /**
  * 썸네일 하단에 표시할 이름 포맷팅
  * - 뒤에 붙은 "XXmm" 제거
@@ -1019,17 +1033,13 @@ const ModuleGallery: React.FC<ModuleGalleryProps> = ({ moduleCategory = 'tall', 
     // 하부장 카테고리 선택시
     categoryModules = getModulesByCategory('lower', adjustedInternalSpace, spaceInfoWithSlotWidths);
   } else if (moduleCategory === 'clothing') {
-    // 의류장 = 키큰장(full) 중 현관장(entryway) 제외
+    // 의류장 = 키큰장(full) 중 신발장(선반장/현관장) 제외
     categoryModules = getModulesByCategory('full', adjustedInternalSpace, spaceInfoWithSlotWidths)
-      .filter(m => !m.id.includes('entryway'));
+      .filter(m => !isShoeModuleId(m.id));
   } else if (moduleCategory === 'shoes') {
-    // 신발장 = 현관장(entryway) 계열만
-    const all = [
-      ...getModulesByCategory('full', adjustedInternalSpace, spaceInfoWithSlotWidths),
-      ...getModulesByCategory('lower', adjustedInternalSpace, spaceInfoWithSlotWidths),
-      ...getModulesByCategory('upper', adjustedInternalSpace, spaceInfoWithSlotWidths),
-    ];
-    categoryModules = all.filter(m => m.id.includes('entryway'));
+    // 신발장 = full 카테고리 내 선반장 계열 + 현관장
+    categoryModules = getModulesByCategory('full', adjustedInternalSpace, spaceInfoWithSlotWidths)
+      .filter(m => isShoeModuleId(m.id));
   } else if (moduleCategory === 'kitchen') {
     // 주방 = 서브카테고리별 필터링
     if (kitchenSubCategory === 'upper') {
