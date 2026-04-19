@@ -4329,11 +4329,30 @@ const Room: React.FC<RoomProps> = ({
                     const needsTopFrameRetract = isDoorBase && isSpaceFitDoor && mod.hasDoor;
                     const topFrameZRetract = needsTopFrameRetract ? -mmToThreeUnits(DOOR_THICKNESS_MM) : 0;
 
-                    // 상부장 앞면 = 하부장 뒷면 + 상부장 깊이
-                    // 하부장 뒷면 Z = furnitureZOffset - furnitureDepth/2 - doorThickness(20mm)
                     const upperModDepthMm = mod.freeDepth || mod.customDepth || 300;
                     const upperFrontZ = furnitureZOffset - furnitureDepth / 2 - mmToThreeUnits(20) + mmToThreeUnits(upperModDepthMm);
                     const upperFrameZ = upperFrontZ - mmToThreeUnits(END_PANEL_THICKNESS) / 2;
+                    if (modCategory === 'upper' && typeof window !== 'undefined') {
+                      const zOffset_mm = Math.round(furnitureZOffset / 0.01);
+                      const fDepth_mm = Math.round(furnitureDepth / 0.01);
+                      const uFront_mm = Math.round(upperFrontZ / 0.01);
+                      const uFrame_mm = Math.round(upperFrameZ / 0.01);
+                      const modCenter_mm = Math.round((mod.position?.z ?? 0) / 0.01);
+                      const actualUpperFront_mm = modCenter_mm + Math.round(upperModDepthMm / 2);
+                      console.log('🔍[상부프레임진단]', {
+                        mod_id: mod.id,
+                        mod_moduleId: mod.moduleId,
+                        upperDepth: upperModDepthMm,
+                        furnitureZOffset_mm: zOffset_mm,
+                        furnitureDepth_mm: fDepth_mm,
+                        upperFrontZ_mm: uFront_mm,
+                        upperFrameZ_mm: uFrame_mm,
+                        mod_position_z_mm: modCenter_mm,
+                        '실제_상부장앞면_mm': actualUpperFront_mm,
+                        '차이_프레임_vs_실제앞면': uFrame_mm - actualUpperFront_mm,
+                        '차이_upperFront_vs_실제앞면': uFront_mm - actualUpperFront_mm,
+                      });
+                    }
                     allTopSegments.push({
                       widthMm: modWidthMM,
                       centerXmm: modCenterXmm,
