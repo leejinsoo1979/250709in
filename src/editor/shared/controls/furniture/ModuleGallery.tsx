@@ -673,16 +673,22 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
             }
           }
 
-          // 정확히 들어가는 첫 빈 공간
+          // 정확히 들어가는 첫 빈 공간 (1mm 허용오차)
           for (const gap of candidates) {
-            if ((gap.right - gap.left) >= furnitureWidth) {
+            const gapW = gap.right - gap.left;
+            if (gapW + 1 >= furnitureWidth) {
+              // gap이 가구보다 살짝 작거나 같을 때: 가구 너비를 gap에 맞춰 축소
+              if (gapW < furnitureWidth) {
+                furnitureWidth = Math.floor(gapW);
+                dims = { ...dims, width: furnitureWidth };
+              }
               targetX = gap.left + furnitureWidth / 2;
               break;
             }
           }
           if (targetX !== null) break;
 
-          // 축소 배치 시도
+          // 들어갈 곳이 없으면 가장 큰 빈 공간에 맞춰 가구 너비 축소 (≥200mm 보장)
           if (candidates.length > 0) {
             const largestGap = candidates.reduce((max, g) => {
               const w = g.right - g.left;
