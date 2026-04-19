@@ -4316,14 +4316,10 @@ const Room: React.FC<RoomProps> = ({
                     // 하부장 뒷면 = 하부장 앞면 - furnitureDepth
                     // 상부장 앞면 = 하부장 뒷면 + upperDepth
                     const upperModDepthMm = mod.freeDepth || mod.customDepth || 300;
-                    // 하부장 앞면 Z: 전체서라운드는 +3mm, 양쪽서라운드/노서라운드는 -20mm
                     const lowerFrontZ = isFullSurround
                       ? furnitureZOffset + furnitureDepth / 2 + mmToThreeUnits(3)
                       : furnitureZOffset + furnitureDepth / 2 - mmToThreeUnits(20);
-                    // 전체서라운드 OR 도어 있음: 프레임 앞면 = 도어 앞면
-                    // (양쪽서라운드/노서라운드) + 도어 없음: 프레임 앞면 = 상부장 몸체 앞면 (도어 두께 18.5mm 빼기)
-                    const upperBodyOffset = (!isFullSurround && !mod.hasDoor) ? mmToThreeUnits(18.5) : 0;
-                    const upperFrontZ = lowerFrontZ - furnitureDepth + mmToThreeUnits(upperModDepthMm) - upperBodyOffset;
+                    const upperFrontZ = lowerFrontZ - furnitureDepth + mmToThreeUnits(upperModDepthMm);
                     const upperFrameZ = upperFrontZ - mmToThreeUnits(END_PANEL_THICKNESS) / 2;
                     allTopSegments.push({
                       widthMm: modWidthMM,
@@ -5191,14 +5187,10 @@ const Room: React.FC<RoomProps> = ({
                   let slotFrameZ = topZPos;
                   if (slotModCategory === 'upper') {
                     const slotUpperDepthMm = mod.freeDepth || mod.customDepth || 300;
-                    // 하부장 앞면 Z: 전체서라운드는 +3mm, 양쪽서라운드/노서라운드는 -20mm
                     const slotLowerFrontZ = isFullSurround
                       ? furnitureZOffset + furnitureDepth / 2 + mmToThreeUnits(3)
                       : furnitureZOffset + furnitureDepth / 2 - mmToThreeUnits(20);
-                    // 전체서라운드 OR 도어 있음: 프레임 앞면 = 도어 앞면
-                    // (양쪽서라운드/노서라운드) + 도어 없음: 프레임 앞면 = 상부장 몸체 앞면
-                    const slotUpperBodyOffset = (!isFullSurround && !mod.hasDoor) ? mmToThreeUnits(18.5) : 0;
-                    const slotUpperFrontZ = slotLowerFrontZ - furnitureDepth + mmToThreeUnits(slotUpperDepthMm) - slotUpperBodyOffset;
+                    const slotUpperFrontZ = slotLowerFrontZ - furnitureDepth + mmToThreeUnits(slotUpperDepthMm);
                     slotFrameZ = slotUpperFrontZ - mmToThreeUnits(END_PANEL_THICKNESS) / 2;
                   }
                   slotTopSegments.push({
