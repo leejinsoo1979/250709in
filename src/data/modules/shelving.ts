@@ -1333,7 +1333,7 @@ const createDualLowerCabinet2 = (dualWidth: number): ModuleData => {
 // ============================================================================
 
 /**
- * 기본하부장 반통 - 조절발 65mm + 캐비넷 W500xD650xH785
+ * 기본하부장 반통 - 조절발 65mm + 캐비넷 W500xD600xH785
  * 전체 높이: 850mm (65 + 785)
  */
 const createLowerHalfCabinet = (columnWidth: number): ModuleData => {
@@ -1345,17 +1345,17 @@ const createLowerHalfCabinet = (columnWidth: number): ModuleData => {
     `기본하부장 반통 ${widthForId}mm`,
     columnWidth,
     cabinetHeight, // 캐비넷 높이 (조절발 제외)
-    650, // 깊이 650mm
+    600, // 깊이 600mm
     '#fff3e0', // 연한 오렌지색
-    `기본하부장 반통 W${widthForId}xH785xD650 (조절발 65mm)`,
-    650, // 기본 깊이
+    `기본하부장 반통 W${widthForId}xH785xD600 (조절발 65mm)`,
+    600, // 기본 깊이
     'lower' // 하부장 카테고리
   );
 
   return {
     ...base,
     isDynamic: true,
-    defaultDepth: 650,
+    defaultDepth: 600,
     hasDoor: false,
     thumbnail: '/images/furniture-thumbnails/하부장 반통.png',
     modelConfig: {
@@ -1375,7 +1375,7 @@ const createLowerHalfCabinet = (columnWidth: number): ModuleData => {
 };
 
 /**
- * 기본하부장 한통 (듀얼) - 조절발 65mm + 캐비넷 W(듀얼)xD650xH785
+ * 기본하부장 한통 (듀얼) - 조절발 65mm + 캐비넷 W(듀얼)xD600xH785
  * 기본하부장 반통의 듀얼 버전 (좌우 도어 2개, 칸막이 없음)
  */
 const createDualLowerHalfCabinet = (dualWidth: number, slotWidths?: number[]): ModuleData => {
@@ -1387,17 +1387,17 @@ const createDualLowerHalfCabinet = (dualWidth: number, slotWidths?: number[]): M
     `기본하부장 한통 ${widthForId}mm`,
     dualWidth,
     cabinetHeight,
-    650, // 깊이 650mm
+    600, // 깊이 600mm
     '#fff3e0', // 연한 오렌지색 (싱글과 동일)
-    `기본하부장 한통 W${widthForId}xH785xD650 (조절발 65mm)`,
-    650,
+    `기본하부장 한통 W${widthForId}xH785xD600 (조절발 65mm)`,
+    600,
     'lower'
   );
 
   return {
     ...base,
     isDynamic: true,
-    defaultDepth: 650,
+    defaultDepth: 600,
     hasDoor: false,
     slotWidths,
     thumbnail: '/images/furniture-thumbnails/듀얼 하부장 한통.png',
@@ -1418,7 +1418,7 @@ const createDualLowerHalfCabinet = (dualWidth: number, slotWidths?: number[]): M
 };
 
 /**
- * 싱크장 반통 - 조절발 65mm + 캐비넷 W500xD650xH785
+ * 싱크장 반통 - 조절발 65mm + 캐비넷 W500xD600xH785
  * 기본하부장과 동일한 디자인이지만 내부 선반 없음
  */
 const createLowerSinkCabinet = (columnWidth: number): ModuleData => {
@@ -1430,17 +1430,17 @@ const createLowerSinkCabinet = (columnWidth: number): ModuleData => {
     `싱크장 반통 ${widthForId}mm`,
     columnWidth,
     cabinetHeight,
-    650,
+    600,
     '#fff3e0',
-    `싱크장 반통 W${widthForId}xH785xD650 (조절발 65mm)`,
-    650,
+    `싱크장 반통 W${widthForId}xH785xD600 (조절발 65mm)`,
+    600,
     'lower'
   );
 
   return {
     ...base,
     isDynamic: true,
-    defaultDepth: 650,
+    defaultDepth: 600,
     hasDoor: false,
     thumbnail: '',
     modelConfig: {
@@ -1459,7 +1459,7 @@ const createLowerSinkCabinet = (columnWidth: number): ModuleData => {
 };
 
 /**
- * 싱크장 한통 (듀얼) - 조절발 65mm + 캐비넷 W(듀얼)xD650xH785
+ * 싱크장 한통 (듀얼) - 조절발 65mm + 캐비넷 W(듀얼)xD600xH785
  * 싱크장 반통의 듀얼 버전 (칸막이 없음, 내부 선반 없음)
  */
 const createDualLowerSinkCabinet = (dualWidth: number, slotWidths?: number[]): ModuleData => {
@@ -1471,17 +1471,17 @@ const createDualLowerSinkCabinet = (dualWidth: number, slotWidths?: number[]): M
     `싱크장 한통 ${widthForId}mm`,
     dualWidth,
     cabinetHeight,
-    650,
+    600,
     '#fff3e0',
-    `싱크장 한통 W${widthForId}xH785xD650 (조절발 65mm)`,
-    650,
+    `싱크장 한통 W${widthForId}xH785xD600 (조절발 65mm)`,
+    600,
     'lower'
   );
 
   return {
     ...base,
     isDynamic: true,
-    defaultDepth: 650,
+    defaultDepth: 600,
     hasDoor: false,
     slotWidths,
     thumbnail: '',
@@ -1501,7 +1501,7 @@ const createDualLowerSinkCabinet = (dualWidth: number, slotWidths?: number[]): M
 };
 
 /**
- * 인덕션장 반통 - 조절발 65mm + 캐비넷 W500xD650xH785
+ * 인덕션장 반통 - 조절발 65mm + 캐비넷 W500xD600xH785
  * 싱크장과 동일 디자인 + 블럼 레그라박스 서랍 2개
  * 서랍: 좌우 측판 없음 (바닥판 + 뒷판만), 따내기 fromBottom=338
  */
@@ -1514,17 +1514,17 @@ const createLowerInductionCabinet = (columnWidth: number): ModuleData => {
     `인덕션장 반통 ${widthForId}mm`,
     columnWidth,
     cabinetHeight,
-    650,
+    600,
     '#fff3e0',
-    `인덕션장 반통 W${widthForId}xH785xD650 (조절발 65mm)`,
-    650,
+    `인덕션장 반통 W${widthForId}xH785xD600 (조절발 65mm)`,
+    600,
     'lower'
   );
 
   return {
     ...base,
     isDynamic: true,
-    defaultDepth: 650,
+    defaultDepth: 600,
     hasDoor: false,
     thumbnail: '',
     modelConfig: {
@@ -1543,7 +1543,7 @@ const createLowerInductionCabinet = (columnWidth: number): ModuleData => {
 };
 
 /**
- * 인덕션장 한통 (듀얼) - 조절발 65mm + 캐비넷 W(듀얼)xD650xH785
+ * 인덕션장 한통 (듀얼) - 조절발 65mm + 캐비넷 W(듀얼)xD600xH785
  * 인덕션장 반통의 듀얼 버전
  */
 const createDualLowerInductionCabinet = (dualWidth: number, slotWidths?: number[]): ModuleData => {
@@ -1555,17 +1555,17 @@ const createDualLowerInductionCabinet = (dualWidth: number, slotWidths?: number[
     `인덕션장 한통 ${widthForId}mm`,
     dualWidth,
     cabinetHeight,
-    650,
+    600,
     '#fff3e0',
-    `인덕션장 한통 W${widthForId}xH785xD650 (조절발 65mm)`,
-    650,
+    `인덕션장 한통 W${widthForId}xH785xD600 (조절발 65mm)`,
+    600,
     'lower'
   );
 
   return {
     ...base,
     isDynamic: true,
-    defaultDepth: 650,
+    defaultDepth: 600,
     hasDoor: false,
     slotWidths,
     thumbnail: '',
@@ -1585,7 +1585,7 @@ const createDualLowerInductionCabinet = (dualWidth: number, slotWidths?: number[
 };
 
 /**
- * 3단서랍장한통 - 조절발 65mm + 캐비넷 W(듀얼)xD650xH785
+ * 3단서랍장한통 - 조절발 65mm + 캐비넷 W(듀얼)xD600xH785
  * 3단서랍장반통의 듀얼 버전
  * 측판에 상단+중단(510mm)+하단(295mm) 3개의 따내기 홈이 있음
  */
@@ -1598,17 +1598,17 @@ const createDualLowerDrawer3Tier = (dualWidth: number, slotWidths?: number[]): M
     `3단서랍장한통 ${widthForId}mm`,
     dualWidth,
     cabinetHeight,
-    650,
+    600,
     '#e3f2fd',
-    `3단서랍장한통 W${widthForId}xH785xD650 (조절발 65mm)`,
-    650,
+    `3단서랍장한통 W${widthForId}xH785xD600 (조절발 65mm)`,
+    600,
     'lower'
   );
 
   return {
     ...base,
     isDynamic: true,
-    defaultDepth: 650,
+    defaultDepth: 600,
     slotWidths,
     thumbnail: '',
     modelConfig: {
@@ -1628,7 +1628,7 @@ const createDualLowerDrawer3Tier = (dualWidth: number, slotWidths?: number[]): M
 };
 
 /**
- * 3단서랍장반통 - 조절발 65mm + 캐비넷 W가변xD650xH785
+ * 3단서랍장반통 - 조절발 65mm + 캐비넷 W가변xD600xH785
  * 전체 높이: 850mm (65 + 785)
  * 측판에 상단+중단(510mm)+하단(295mm) 3개의 따내기 홈이 있음
  */
@@ -1641,17 +1641,17 @@ const createLowerDrawer3Tier = (columnWidth: number): ModuleData => {
     `3단서랍장반통 ${widthForId}mm`,
     columnWidth,
     cabinetHeight,
-    650,
+    600,
     '#e3f2fd',
-    `3단서랍장반통 W${widthForId}xH785xD650 (조절발 65mm)`,
-    650,
+    `3단서랍장반통 W${widthForId}xH785xD600 (조절발 65mm)`,
+    600,
     'lower'
   );
 
   return {
     ...base,
     isDynamic: true,
-    defaultDepth: 650,
+    defaultDepth: 600,
     thumbnail: '',
     modelConfig: {
       ...base.modelConfig,
@@ -1670,7 +1670,7 @@ const createLowerDrawer3Tier = (columnWidth: number): ModuleData => {
 };
 
 /**
- * 2단서랍장한통 - 조절발 65mm + 캐비넷 W(듀얼)xD650xH785
+ * 2단서랍장한통 - 조절발 65mm + 캐비넷 W(듀얼)xD600xH785
  * 2단서랍장반통의 듀얼 버전
  * 측판에 상단+하단(330mm) 2개의 따내기 홈이 있음
  */
@@ -1683,17 +1683,17 @@ const createDualLowerDrawer2Tier = (dualWidth: number, slotWidths?: number[]): M
     `2단서랍장한통 ${widthForId}mm`,
     dualWidth,
     cabinetHeight,
-    650,
+    600,
     '#e3f2fd',
-    `2단서랍장한통 W${widthForId}xH785xD650 (조절발 65mm)`,
-    650,
+    `2단서랍장한통 W${widthForId}xH785xD600 (조절발 65mm)`,
+    600,
     'lower'
   );
 
   return {
     ...base,
     isDynamic: true,
-    defaultDepth: 650,
+    defaultDepth: 600,
     slotWidths,
     thumbnail: '',
     modelConfig: {
@@ -1713,7 +1713,7 @@ const createDualLowerDrawer2Tier = (dualWidth: number, slotWidths?: number[]): M
 };
 
 /**
- * 2단서랍장반통 - 조절발 65mm + 캐비넷 W500xD650xH785
+ * 2단서랍장반통 - 조절발 65mm + 캐비넷 W500xD600xH785
  * 전체 높이: 850mm (65 + 785)
  * 측판에 상단+하단(330mm) 2개의 따내기 홈이 있음
  */
@@ -1726,17 +1726,17 @@ const createLowerDrawer2Tier = (columnWidth: number): ModuleData => {
     `2단서랍장반통 ${widthForId}mm`,
     columnWidth,
     cabinetHeight,
-    650,
+    600,
     '#e3f2fd', // 연한 파란색
-    `2단서랍장반통 W${widthForId}xH785xD650 (조절발 65mm)`,
-    650,
+    `2단서랍장반통 W${widthForId}xH785xD600 (조절발 65mm)`,
+    600,
     'lower'
   );
 
   return {
     ...base,
     isDynamic: true,
-    defaultDepth: 650,
+    defaultDepth: 600,
     thumbnail: '/images/furniture-thumbnails/하부장 2단.png',
     modelConfig: {
       ...base.modelConfig,
@@ -1759,7 +1759,7 @@ const createLowerDrawer2Tier = (columnWidth: number): ModuleData => {
 // ============================================================================
 
 /**
- * 도어올림 반통 - 조절발 65mm + 캐비넷 W가변xD650xH785
+ * 도어올림 반통 - 조절발 65mm + 캐비넷 W가변xD600xH785
  * 기본하부장과 동일 구조 + 상판 있음. 따내기 없음.
  */
 const createLowerDoorLiftHalf = (columnWidth: number): ModuleData => {
@@ -1771,17 +1771,17 @@ const createLowerDoorLiftHalf = (columnWidth: number): ModuleData => {
     `도어올림 반통 ${widthForId}mm`,
     columnWidth,
     cabinetHeight,
-    650,
+    600,
     '#e8f5e9', // 연한 초록색
-    `도어올림 반통 W${widthForId}xH785xD650 (조절발 65mm)`,
-    650,
+    `도어올림 반통 W${widthForId}xH785xD600 (조절발 65mm)`,
+    600,
     'lower'
   );
 
   return {
     ...base,
     isDynamic: true,
-    defaultDepth: 650,
+    defaultDepth: 600,
     thumbnail: '',
     modelConfig: {
       ...base.modelConfig,
@@ -1800,7 +1800,7 @@ const createLowerDoorLiftHalf = (columnWidth: number): ModuleData => {
 };
 
 /**
- * 도어올림 한통 (듀얼) - 조절발 65mm + 캐비넷 W(듀얼)xD650xH785
+ * 도어올림 한통 (듀얼) - 조절발 65mm + 캐비넷 W(듀얼)xD600xH785
  * 도어올림 반통의 듀얼 버전. 상판 있음, 따내기 없음.
  */
 const createDualLowerDoorLiftHalf = (dualWidth: number, slotWidths?: number[]): ModuleData => {
@@ -1812,17 +1812,17 @@ const createDualLowerDoorLiftHalf = (dualWidth: number, slotWidths?: number[]): 
     `도어올림 한통 ${widthForId}mm`,
     dualWidth,
     cabinetHeight,
-    650,
+    600,
     '#e8f5e9',
-    `도어올림 한통 W${widthForId}xH785xD650 (조절발 65mm)`,
-    650,
+    `도어올림 한통 W${widthForId}xH785xD600 (조절발 65mm)`,
+    600,
     'lower'
   );
 
   return {
     ...base,
     isDynamic: true,
-    defaultDepth: 650,
+    defaultDepth: 600,
     slotWidths,
     thumbnail: '',
     modelConfig: {
@@ -1842,7 +1842,7 @@ const createDualLowerDoorLiftHalf = (dualWidth: number, slotWidths?: number[]): 
 };
 
 /**
- * 도어올림 2단 한통 (듀얼) - 조절발 65mm + 캐비넷 W(듀얼)xD650xH785
+ * 도어올림 2단 한통 (듀얼) - 조절발 65mm + 캐비넷 W(듀얼)xD600xH785
  * 도어올림 2단의 듀얼 버전. 상판 있음.
  */
 const createDualLowerDoorLift2Tier = (dualWidth: number, slotWidths?: number[]): ModuleData => {
@@ -1854,17 +1854,17 @@ const createDualLowerDoorLift2Tier = (dualWidth: number, slotWidths?: number[]):
     `도어올림 2단 한통 ${widthForId}mm`,
     dualWidth,
     cabinetHeight,
-    650,
+    600,
     '#e8f5e9',
-    `도어올림 2단 한통 W${widthForId}xH785xD650 (조절발 65mm)`,
-    650,
+    `도어올림 2단 한통 W${widthForId}xH785xD600 (조절발 65mm)`,
+    600,
     'lower'
   );
 
   return {
     ...base,
     isDynamic: true,
-    defaultDepth: 650,
+    defaultDepth: 600,
     slotWidths,
     thumbnail: '',
     modelConfig: {
@@ -1884,7 +1884,7 @@ const createDualLowerDoorLift2Tier = (dualWidth: number, slotWidths?: number[]):
 };
 
 /**
- * 도어올림 3단 한통 (듀얼) - 조절발 65mm + 캐비넷 W(듀얼)xD650xH785
+ * 도어올림 3단 한통 (듀얼) - 조절발 65mm + 캐비넷 W(듀얼)xD600xH785
  * 도어올림 3단의 듀얼 버전. 상판 있음.
  */
 const createDualLowerDoorLift3Tier = (dualWidth: number, slotWidths?: number[]): ModuleData => {
@@ -1896,17 +1896,17 @@ const createDualLowerDoorLift3Tier = (dualWidth: number, slotWidths?: number[]):
     `도어올림 3단 한통 ${widthForId}mm`,
     dualWidth,
     cabinetHeight,
-    650,
+    600,
     '#e8f5e9',
-    `도어올림 3단 한통 W${widthForId}xH785xD650 (조절발 65mm)`,
-    650,
+    `도어올림 3단 한통 W${widthForId}xH785xD600 (조절발 65mm)`,
+    600,
     'lower'
   );
 
   return {
     ...base,
     isDynamic: true,
-    defaultDepth: 650,
+    defaultDepth: 600,
     slotWidths,
     thumbnail: '',
     modelConfig: {
@@ -1926,7 +1926,7 @@ const createDualLowerDoorLift3Tier = (dualWidth: number, slotWidths?: number[]):
 };
 
 /**
- * 도어올림 2단 - 조절발 65mm + 캐비넷 W가변xD650xH785
+ * 도어올림 2단 - 조절발 65mm + 캐비넷 W가변xD600xH785
  * 서랍 2단. 따내기 1개: fromBottom 354mm(65mm). 상단 따내기 없음. 상판 있음.
  */
 const createLowerDoorLift2Tier = (columnWidth: number): ModuleData => {
@@ -1938,17 +1938,17 @@ const createLowerDoorLift2Tier = (columnWidth: number): ModuleData => {
     `도어올림 2단 반통 ${widthForId}mm`,
     columnWidth,
     cabinetHeight,
-    650,
+    600,
     '#e8f5e9',
-    `도어올림 2단 반통 W${widthForId}xH785xD650 (조절발 65mm)`,
-    650,
+    `도어올림 2단 반통 W${widthForId}xH785xD600 (조절발 65mm)`,
+    600,
     'lower'
   );
 
   return {
     ...base,
     isDynamic: true,
-    defaultDepth: 650,
+    defaultDepth: 600,
     thumbnail: '',
     modelConfig: {
       ...base.modelConfig,
@@ -1967,7 +1967,7 @@ const createLowerDoorLift2Tier = (columnWidth: number): ModuleData => {
 };
 
 /**
- * 도어올림 3단 - 조절발 65mm + 캐비넷 W가변xD650xH785
+ * 도어올림 3단 - 조절발 65mm + 캐비넷 W가변xD600xH785
  * 서랍 3단. 따내기 2개: fromBottom 314mm(65mm), 544mm(65mm). 상단 따내기 없음. 상판 있음.
  */
 const createLowerDoorLift3Tier = (columnWidth: number): ModuleData => {
@@ -1979,17 +1979,17 @@ const createLowerDoorLift3Tier = (columnWidth: number): ModuleData => {
     `도어올림 3단 반통 ${widthForId}mm`,
     columnWidth,
     cabinetHeight,
-    650,
+    600,
     '#e8f5e9',
-    `도어올림 3단 반통 W${widthForId}xH785xD650 (조절발 65mm)`,
-    650,
+    `도어올림 3단 반통 W${widthForId}xH785xD600 (조절발 65mm)`,
+    600,
     'lower'
   );
 
   return {
     ...base,
     isDynamic: true,
-    defaultDepth: 650,
+    defaultDepth: 600,
     thumbnail: '',
     modelConfig: {
       ...base.modelConfig,
@@ -2012,7 +2012,7 @@ const createLowerDoorLift3Tier = (columnWidth: number): ModuleData => {
 // ============================================================================
 
 /**
- * 도어올림 터치 2단A 반통 - 조절발 65mm + 캐비넷 W가변xD650xH785
+ * 도어올림 터치 2단A 반통 - 조절발 65mm + 캐비넷 W가변xD600xH785
  * 레그라박스 서랍 2단 (228+228). 따내기 없음. 상판 있음.
  * 마이다: 상단 +30mm, 하단 -5mm, 간격 3mm.
  */
@@ -2025,17 +2025,17 @@ const createLowerDoorLiftTouch2TierA = (columnWidth: number): ModuleData => {
     `도어올림터치2단A 반통 ${widthForId}mm`,
     columnWidth,
     cabinetHeight,
-    650,
+    600,
     '#e8f5e9',
-    `도어올림터치2단A 반통 W${widthForId}xH785xD650 (조절발 65mm)`,
-    650,
+    `도어올림터치2단A 반통 W${widthForId}xH785xD600 (조절발 65mm)`,
+    600,
     'lower'
   );
 
   return {
     ...base,
     isDynamic: true,
-    defaultDepth: 650,
+    defaultDepth: 600,
     thumbnail: '',
     modelConfig: {
       ...base.modelConfig,
@@ -2062,17 +2062,17 @@ const createDualLowerDoorLiftTouch2TierA = (dualWidth: number, slotWidths?: numb
     `도어올림터치2단A 한통 ${widthForId}mm`,
     dualWidth,
     cabinetHeight,
-    650,
+    600,
     '#e8f5e9',
-    `도어올림터치2단A 한통 W${widthForId}xH785xD650 (조절발 65mm)`,
-    650,
+    `도어올림터치2단A 한통 W${widthForId}xH785xD600 (조절발 65mm)`,
+    600,
     'lower'
   );
 
   return {
     ...base,
     isDynamic: true,
-    defaultDepth: 650,
+    defaultDepth: 600,
     slotWidths,
     thumbnail: '',
     modelConfig: {
@@ -2092,7 +2092,7 @@ const createDualLowerDoorLiftTouch2TierA = (dualWidth: number, slotWidths?: numb
 };
 
 /**
- * 도어올림 터치 2단B 반통 - 조절발 65mm + 캐비넷 W가변xD650xH785
+ * 도어올림 터치 2단B 반통 - 조절발 65mm + 캐비넷 W가변xD600xH785
  * 레그라박스 서랍 2단 (하단228+상단164). 따내기 없음. 상판 있음.
  * 마이다: 상단 +30mm, 하단 -5mm, 간격 3mm.
  */
@@ -2105,17 +2105,17 @@ const createLowerDoorLiftTouch2TierB = (columnWidth: number): ModuleData => {
     `도어올림터치2단B 반통 ${widthForId}mm`,
     columnWidth,
     cabinetHeight,
-    650,
+    600,
     '#e8f5e9',
-    `도어올림터치2단B 반통 W${widthForId}xH785xD650 (조절발 65mm)`,
-    650,
+    `도어올림터치2단B 반통 W${widthForId}xH785xD600 (조절발 65mm)`,
+    600,
     'lower'
   );
 
   return {
     ...base,
     isDynamic: true,
-    defaultDepth: 650,
+    defaultDepth: 600,
     thumbnail: '',
     modelConfig: {
       ...base.modelConfig,
@@ -2142,17 +2142,17 @@ const createDualLowerDoorLiftTouch2TierB = (dualWidth: number, slotWidths?: numb
     `도어올림터치2단B 한통 ${widthForId}mm`,
     dualWidth,
     cabinetHeight,
-    650,
+    600,
     '#e8f5e9',
-    `도어올림터치2단B 한통 W${widthForId}xH785xD650 (조절발 65mm)`,
-    650,
+    `도어올림터치2단B 한통 W${widthForId}xH785xD600 (조절발 65mm)`,
+    600,
     'lower'
   );
 
   return {
     ...base,
     isDynamic: true,
-    defaultDepth: 650,
+    defaultDepth: 600,
     slotWidths,
     thumbnail: '',
     modelConfig: {
@@ -2172,7 +2172,7 @@ const createDualLowerDoorLiftTouch2TierB = (dualWidth: number, slotWidths?: numb
 };
 
 /**
- * 도어올림 터치 3단 반통 - 조절발 65mm + 캐비넷 W가변xD650xH785
+ * 도어올림 터치 3단 반통 - 조절발 65mm + 캐비넷 W가변xD600xH785
  * 레그라박스 서랍 3단 (하단228+중단117+상단117). 따내기 없음. 상판 있음.
  * 마이다: 상단 +30mm, 하단 -5mm, 간격 3mm.
  */
@@ -2185,17 +2185,17 @@ const createLowerDoorLiftTouch3Tier = (columnWidth: number): ModuleData => {
     `도어올림터치3단 반통 ${widthForId}mm`,
     columnWidth,
     cabinetHeight,
-    650,
+    600,
     '#e8f5e9',
-    `도어올림터치3단 반통 W${widthForId}xH785xD650 (조절발 65mm)`,
-    650,
+    `도어올림터치3단 반통 W${widthForId}xH785xD600 (조절발 65mm)`,
+    600,
     'lower'
   );
 
   return {
     ...base,
     isDynamic: true,
-    defaultDepth: 650,
+    defaultDepth: 600,
     thumbnail: '',
     modelConfig: {
       ...base.modelConfig,
@@ -2222,17 +2222,17 @@ const createDualLowerDoorLiftTouch3Tier = (dualWidth: number, slotWidths?: numbe
     `도어올림터치3단 한통 ${widthForId}mm`,
     dualWidth,
     cabinetHeight,
-    650,
+    600,
     '#e8f5e9',
-    `도어올림터치3단 한통 W${widthForId}xH785xD650 (조절발 65mm)`,
-    650,
+    `도어올림터치3단 한통 W${widthForId}xH785xD600 (조절발 65mm)`,
+    600,
     'lower'
   );
 
   return {
     ...base,
     isDynamic: true,
-    defaultDepth: 650,
+    defaultDepth: 600,
     slotWidths,
     thumbnail: '',
     modelConfig: {
@@ -2256,7 +2256,7 @@ const createDualLowerDoorLiftTouch3Tier = (dualWidth: number, slotWidths?: numbe
 // ============================================================================
 
 /**
- * 상판내림 반통 - 조절발 65mm + 캐비넷 W가변xD650xH785
+ * 상판내림 반통 - 조절발 65mm + 캐비넷 W가변xD600xH785
  * 도어 타입. 상판 있음. 상단 따내기: fromBottom=665(65mm). 도어높이 710mm.
  */
 const createLowerTopDownHalf = (columnWidth: number): ModuleData => {
@@ -2268,17 +2268,17 @@ const createLowerTopDownHalf = (columnWidth: number): ModuleData => {
     `상판내림 반통 ${widthForId}mm`,
     columnWidth,
     cabinetHeight,
-    650,
+    600,
     '#e8f5e9',
-    `상판내림 반통 W${widthForId}xH785xD650 (조절발 65mm)`,
-    650,
+    `상판내림 반통 W${widthForId}xH785xD600 (조절발 65mm)`,
+    600,
     'lower'
   );
 
   return {
     ...base,
     isDynamic: true,
-    defaultDepth: 650,
+    defaultDepth: 600,
     thumbnail: '',
     modelConfig: {
       ...base.modelConfig,
@@ -2297,7 +2297,7 @@ const createLowerTopDownHalf = (columnWidth: number): ModuleData => {
 };
 
 /**
- * 상판내림 한통 (듀얼) - 조절발 65mm + 캐비넷 W(듀얼)xD650xH785
+ * 상판내림 한통 (듀얼) - 조절발 65mm + 캐비넷 W(듀얼)xD600xH785
  * 도어 타입. 상판 있음. 상단 따내기: fromBottom=665(65mm). 도어높이 710mm.
  */
 const createDualLowerTopDownHalf = (dualWidth: number, slotWidths?: number[]): ModuleData => {
@@ -2309,17 +2309,17 @@ const createDualLowerTopDownHalf = (dualWidth: number, slotWidths?: number[]): M
     `상판내림 한통 ${widthForId}mm`,
     dualWidth,
     cabinetHeight,
-    650,
+    600,
     '#e8f5e9',
-    `상판내림 한통 W${widthForId}xH785xD650 (조절발 65mm)`,
-    650,
+    `상판내림 한통 W${widthForId}xH785xD600 (조절발 65mm)`,
+    600,
     'lower'
   );
 
   return {
     ...base,
     isDynamic: true,
-    defaultDepth: 650,
+    defaultDepth: 600,
     slotWidths,
     thumbnail: '',
     modelConfig: {
@@ -2339,7 +2339,7 @@ const createDualLowerTopDownHalf = (dualWidth: number, slotWidths?: number[]): M
 };
 
 /**
- * 상판내림 2단 반통 - 조절발 65mm + 캐비넷 W가변xD650xH785
+ * 상판내림 2단 반통 - 조절발 65mm + 캐비넷 W가변xD600xH785
  * 서랍 2단. 따내기: fromBottom=300(65mm), 665(65mm). 서랍 측판 240mm.
  */
 const createLowerTopDown2Tier = (columnWidth: number): ModuleData => {
@@ -2351,17 +2351,17 @@ const createLowerTopDown2Tier = (columnWidth: number): ModuleData => {
     `상판내림 2단 ${widthForId}mm`,
     columnWidth,
     cabinetHeight,
-    650,
+    600,
     '#e8f5e9',
-    `상판내림 2단 W${widthForId}xH785xD650 (조절발 65mm)`,
-    650,
+    `상판내림 2단 W${widthForId}xH785xD600 (조절발 65mm)`,
+    600,
     'lower'
   );
 
   return {
     ...base,
     isDynamic: true,
-    defaultDepth: 650,
+    defaultDepth: 600,
     thumbnail: '',
     modelConfig: {
       ...base.modelConfig,
@@ -2380,7 +2380,7 @@ const createLowerTopDown2Tier = (columnWidth: number): ModuleData => {
 };
 
 /**
- * 상판내림 2단 한통 (듀얼) - 조절발 65mm + 캐비넷 W(듀얼)xD650xH785
+ * 상판내림 2단 한통 (듀얼) - 조절발 65mm + 캐비넷 W(듀얼)xD600xH785
  * 서랍 2단. 따내기: fromBottom=300(65mm), 665(65mm). 서랍 측판 240mm.
  */
 const createDualLowerTopDown2Tier = (dualWidth: number, slotWidths?: number[]): ModuleData => {
@@ -2392,17 +2392,17 @@ const createDualLowerTopDown2Tier = (dualWidth: number, slotWidths?: number[]): 
     `상판내림 2단 한통 ${widthForId}mm`,
     dualWidth,
     cabinetHeight,
-    650,
+    600,
     '#e8f5e9',
-    `상판내림 2단 한통 W${widthForId}xH785xD650 (조절발 65mm)`,
-    650,
+    `상판내림 2단 한통 W${widthForId}xH785xD600 (조절발 65mm)`,
+    600,
     'lower'
   );
 
   return {
     ...base,
     isDynamic: true,
-    defaultDepth: 650,
+    defaultDepth: 600,
     slotWidths,
     thumbnail: '',
     modelConfig: {
@@ -2422,7 +2422,7 @@ const createDualLowerTopDown2Tier = (dualWidth: number, slotWidths?: number[]): 
 };
 
 /**
- * 상판내림 3단 반통 - 조절발 65mm + 캐비넷 W가변xD650xH785
+ * 상판내림 3단 반통 - 조절발 65mm + 캐비넷 W가변xD600xH785
  * 서랍 3단. 따내기: fromBottom=225(65mm), 445(65mm), 665(65mm). 서랍 측판 1단=180, 2단이상=130.
  */
 const createLowerTopDown3Tier = (columnWidth: number): ModuleData => {
@@ -2434,17 +2434,17 @@ const createLowerTopDown3Tier = (columnWidth: number): ModuleData => {
     `상판내림 3단 ${widthForId}mm`,
     columnWidth,
     cabinetHeight,
-    650,
+    600,
     '#e8f5e9',
-    `상판내림 3단 W${widthForId}xH785xD650 (조절발 65mm)`,
-    650,
+    `상판내림 3단 W${widthForId}xH785xD600 (조절발 65mm)`,
+    600,
     'lower'
   );
 
   return {
     ...base,
     isDynamic: true,
-    defaultDepth: 650,
+    defaultDepth: 600,
     thumbnail: '',
     modelConfig: {
       ...base.modelConfig,
@@ -2463,7 +2463,7 @@ const createLowerTopDown3Tier = (columnWidth: number): ModuleData => {
 };
 
 /**
- * 상판내림 3단 한통 (듀얼) - 조절발 65mm + 캐비넷 W(듀얼)xD650xH785
+ * 상판내림 3단 한통 (듀얼) - 조절발 65mm + 캐비넷 W(듀얼)xD600xH785
  * 서랍 3단. 따내기: fromBottom=225(65mm), 445(65mm), 665(65mm). 서랍 측판 1단=180, 2단이상=130.
  */
 const createDualLowerTopDown3Tier = (dualWidth: number, slotWidths?: number[]): ModuleData => {
@@ -2475,17 +2475,17 @@ const createDualLowerTopDown3Tier = (dualWidth: number, slotWidths?: number[]): 
     `상판내림 3단 한통 ${widthForId}mm`,
     dualWidth,
     cabinetHeight,
-    650,
+    600,
     '#e8f5e9',
-    `상판내림 3단 한통 W${widthForId}xH785xD650 (조절발 65mm)`,
-    650,
+    `상판내림 3단 한통 W${widthForId}xH785xD600 (조절발 65mm)`,
+    600,
     'lower'
   );
 
   return {
     ...base,
     isDynamic: true,
-    defaultDepth: 650,
+    defaultDepth: 600,
     slotWidths,
     thumbnail: '',
     modelConfig: {
@@ -2505,7 +2505,7 @@ const createDualLowerTopDown3Tier = (dualWidth: number, slotWidths?: number[]): 
 };
 
 /**
- * 상판내림 터치 2단 반통 - 조절발 65mm + 캐비넷 W가변xD650xH785
+ * 상판내림 터치 2단 반통 - 조절발 65mm + 캐비넷 W가변xD600xH785
  * 레그라박스 서랍: SL(228)+SL(228), 이격 28/356. 따내기 없음, 전대 없음.
  */
 const createLowerTopDownTouch2Tier = (columnWidth: number): ModuleData => {
@@ -2517,17 +2517,17 @@ const createLowerTopDownTouch2Tier = (columnWidth: number): ModuleData => {
     `상판내림터치2단 반통 ${widthForId}mm`,
     columnWidth,
     cabinetHeight,
-    650,
+    600,
     '#e8f5e9',
-    `상판내림터치2단 반통 W${widthForId}xH785xD650 (조절발 65mm)`,
-    650,
+    `상판내림터치2단 반통 W${widthForId}xH785xD600 (조절발 65mm)`,
+    600,
     'lower'
   );
 
   return {
     ...base,
     isDynamic: true,
-    defaultDepth: 650,
+    defaultDepth: 600,
     thumbnail: '',
     modelConfig: {
       ...base.modelConfig,
@@ -2547,17 +2547,17 @@ const createDualLowerTopDownTouch2Tier = (dualWidth: number, slotWidths?: number
     `상판내림터치2단 한통 ${widthForId}mm`,
     dualWidth,
     cabinetHeight,
-    650,
+    600,
     '#e8f5e9',
-    `상판내림터치2단 한통 W${widthForId}xH785xD650 (조절발 65mm)`,
-    650,
+    `상판내림터치2단 한통 W${widthForId}xH785xD600 (조절발 65mm)`,
+    600,
     'lower'
   );
 
   return {
     ...base,
     isDynamic: true,
-    defaultDepth: 650,
+    defaultDepth: 600,
     slotWidths,
     thumbnail: '',
     modelConfig: {
@@ -2570,7 +2570,7 @@ const createDualLowerTopDownTouch2Tier = (dualWidth: number, slotWidths?: number
 };
 
 /**
- * 상판내림 터치 3단 반통 - 조절발 65mm + 캐비넷 W가변xD650xH785
+ * 상판내림 터치 3단 반통 - 조절발 65mm + 캐비넷 W가변xD600xH785
  * 레그라박스 서랍: L(164)+M(117)+M(117), 이격 28/281/494. 따내기 없음, 전대 없음.
  */
 const createLowerTopDownTouch3Tier = (columnWidth: number): ModuleData => {
@@ -2582,17 +2582,17 @@ const createLowerTopDownTouch3Tier = (columnWidth: number): ModuleData => {
     `상판내림터치3단 반통 ${widthForId}mm`,
     columnWidth,
     cabinetHeight,
-    650,
+    600,
     '#e8f5e9',
-    `상판내림터치3단 반통 W${widthForId}xH785xD650 (조절발 65mm)`,
-    650,
+    `상판내림터치3단 반통 W${widthForId}xH785xD600 (조절발 65mm)`,
+    600,
     'lower'
   );
 
   return {
     ...base,
     isDynamic: true,
-    defaultDepth: 650,
+    defaultDepth: 600,
     thumbnail: '',
     modelConfig: {
       ...base.modelConfig,
@@ -2612,17 +2612,17 @@ const createDualLowerTopDownTouch3Tier = (dualWidth: number, slotWidths?: number
     `상판내림터치3단 한통 ${widthForId}mm`,
     dualWidth,
     cabinetHeight,
-    650,
+    600,
     '#e8f5e9',
-    `상판내림터치3단 한통 W${widthForId}xH785xD650 (조절발 65mm)`,
-    650,
+    `상판내림터치3단 한통 W${widthForId}xH785xD600 (조절발 65mm)`,
+    600,
     'lower'
   );
 
   return {
     ...base,
     isDynamic: true,
-    defaultDepth: 650,
+    defaultDepth: 600,
     slotWidths,
     thumbnail: '',
     modelConfig: {
