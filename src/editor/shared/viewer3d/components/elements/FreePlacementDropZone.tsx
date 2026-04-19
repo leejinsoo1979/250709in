@@ -942,7 +942,7 @@ const FreePlacementDropZone: React.FC = () => {
         gaps.push({
           startX: gapStart,
           endX: gapEnd,
-          width: Math.round(exactGap),
+          width: Math.floor(exactGap),
           centerX: ((gapStart + gapEnd) / 2) * 0.01,
           centerY: gapLabelY,
           adjacentModuleId: bounds[i + 1].id,
