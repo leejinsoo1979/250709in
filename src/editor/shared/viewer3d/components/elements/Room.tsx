@@ -1397,6 +1397,25 @@ const Room: React.FC<RoomProps> = ({
     return null;
   }
 
+  // 아일랜드 모드: 벽/바닥/천장/프레임/받침대/엔드패널 전부 제거하고 가구만 렌더
+  if (spaceInfo.isIsland) {
+    return (
+      <group position={[0, 0, groupZOffset]}>
+        <PlacedFurnitureContainer
+          viewMode={viewMode}
+          view2DDirection={view2DDirection}
+          renderMode={renderMode}
+          activeZone={activeZone}
+          showFurniture={showFurniture}
+          readOnly={readOnly}
+          onFurnitureClick={onFurnitureClick}
+          ghostHighlightSlotIndex={ghostHighlightSlotIndex}
+          islandSideFilter={islandSideFilter}
+        />
+      </group>
+    );
+  }
+
   return (
     <group position={[0, 0, groupZOffset]}>
       {/* 주변 벽면들 - ShaderMaterial 기반 그라데이션 (3D perspective 모드에서만 표시) */}
