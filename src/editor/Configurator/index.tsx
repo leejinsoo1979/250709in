@@ -7271,8 +7271,82 @@ const Configurator: React.FC = () => {
         </>
       )}
 
+      {/* 아일랜드 설계 모달 — create: 새 디자인 생성 / edit: 현재 디자인의 사이즈 편집 */}
+      <IslandSetupModal
+        isOpen={islandSetupOpen}
+        mode={islandSetupMode}
+        initialValues={
+          islandSetupMode === 'edit'
+            ? {
+                name: currentDesignFileName || '',
+                width: spaceInfo.width,
+                depth: spaceInfo.depth,
+                height: spaceInfo.height,
+              }
+            : undefined
+        }
+        onCancel={() => setIslandSetupOpen(false)}
+        onConfirm={async (values: IslandSetupValues) => {
+          setIslandSetupOpen(false);
+          if (islandSetupMode === 'edit') {
+            setSpaceInfo({
+              width: values.width,
+              depth: values.depth,
+              height: values.height,
+            });
+            return;
+          }
+
+          try {
+            let projectIdToUse = currentProjectId;
+            if (!projectIdToUse) {
+              const { id: newProjectId, error: projectError } = await createProject({
+                title: basicInfo.title || '새 프로젝트',
+              });
+              if (projectError || !newProjectId) {
+                alert('프로젝트 생성 실패: ' + (projectError || ''));
+                return;
+              }
+              projectIdToUse = newProjectId;
+              setCurrentProjectId(newProjectId);
+            }
+
+            const islandSpaceConfig = {
+              ...spaceInfo,
+              width: values.width,
+              depth: values.depth,
+              height: values.height,
+              isIsland: true,
+              installType: 'freestanding' as const,
+              wallConfig: { left: false, right: false },
+              surroundType: 'no-surround' as const,
+              hasFloorFinish: false,
+              droppedCeiling: { ...(spaceInfo.droppedCeiling || {}), enabled: false },
+            };
+
+            const { id: designFileId, error } = await createDesignFile({
+              name: values.name,
+              projectId: projectIdToUse,
+              spaceConfig: removeUndefinedValues(stripSessionOnlyFields(islandSpaceConfig)),
+              furniture: { placedModules: [] },
+              thumbnail: null as any,
+            });
+
+            if (error || !designFileId) {
+              alert('아일랜드 디자인 생성 실패: ' + (error || ''));
+              return;
+            }
+
+            navigate(`/configurator?projectId=${projectIdToUse}&designFileId=${designFileId}`, { replace: true });
+          } catch (err) {
+            console.error('아일랜드 디자인 생성 오류:', err);
+            alert('아일랜드 디자인 생성 중 오류가 발생했습니다.');
+          }
+        }}
+      />
+
     </div>
   );
 };
 
-export default Configurator; 
+export default Configurator;
