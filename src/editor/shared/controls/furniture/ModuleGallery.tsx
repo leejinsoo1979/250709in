@@ -968,7 +968,7 @@ export type KitchenSubCategory = 'basic' | 'door-raise' | 'top-down' | 'upper';
 interface ModuleGalleryProps {
   // clothing=키큰장(full), shoes=신발장(전용 모듈), kitchen=주방(하부장+상부장)
   // tall/upper/lower는 기존 호환용으로 유지
-  moduleCategory?: 'tall' | 'upper' | 'lower' | 'clothing' | 'shoes' | 'kitchen';
+  moduleCategory?: 'tall' | 'upper' | 'lower' | 'clothing' | 'shoes' | 'kitchen' | 'island';
   // 주방 서브카테고리 (moduleCategory가 'kitchen'일 때만 사용)
   kitchenSubCategory?: KitchenSubCategory;
   selectedType?: ModuleType;
@@ -1060,6 +1060,17 @@ const ModuleGallery: React.FC<ModuleGalleryProps> = ({ moduleCategory = 'tall', 
         return !isDoorRaise && !isTopDown;
       });
     }
+  } else if (moduleCategory === 'island') {
+    // 아일랜드 = 주방 하부장 모듈 재사용 (기본장/도어올림/상판내림만, 상부장 제외)
+    const lowerMods = getModulesByCategory('lower', adjustedInternalSpace, spaceInfoWithSlotWidths);
+    categoryModules = lowerMods.filter(m => {
+      const id = m.id;
+      const isDoorRaise = id.includes('door-lift') || id.includes('door-raise');
+      const isTopDown = id.includes('top-down');
+      if (kitchenSubCategory === 'door-raise') return isDoorRaise;
+      if (kitchenSubCategory === 'top-down') return isTopDown;
+      return !isDoorRaise && !isTopDown;
+    });
   } else {
     // 키큰장(전체형) 모듈 (기존 'tall' 호환)
     categoryModules = getModulesByCategory('full', adjustedInternalSpace, spaceInfoWithSlotWidths);

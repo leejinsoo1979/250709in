@@ -3505,8 +3505,32 @@ const Configurator: React.FC = () => {
                 </div>
               )}
 
+              {/* 아일랜드 선택 시: 기본장/도어올림/상판내림 서브 탭 (상부장 제외) */}
+              {moduleCategory === 'island' && (
+                <div className={styles.moduleCategoryTabs}>
+                  <button
+                    className={`${styles.moduleCategoryTab} ${islandSub === 'basic' ? styles.active : ''}`}
+                    onClick={() => setIslandSub('basic')}
+                  >
+                    기본장
+                  </button>
+                  <button
+                    className={`${styles.moduleCategoryTab} ${islandSub === 'door-raise' ? styles.active : ''}`}
+                    onClick={() => setIslandSub('door-raise')}
+                  >
+                    도어올림
+                  </button>
+                  <button
+                    className={`${styles.moduleCategoryTab} ${islandSub === 'top-down' ? styles.active : ''}`}
+                    onClick={() => setIslandSub('top-down')}
+                  >
+                    상판내림
+                  </button>
+                </div>
+              )}
+
               {/* 전체/싱글/듀얼 탭 - 의류장/신발장에서만 표시 */}
-              {moduleCategory !== 'kitchen' && (
+              {moduleCategory !== 'kitchen' && moduleCategory !== 'island' && (
                 <div className={styles.moduleCategoryTabs}>
                   <button
                     className={`${styles.moduleCategoryTab} ${moduleType === 'all' ? styles.active : ''}`}
@@ -3532,7 +3556,7 @@ const Configurator: React.FC = () => {
               <div className={styles.moduleSection}>
                 <ModuleGallery
                   moduleCategory={moduleCategory}
-                  kitchenSubCategory={kitchenSub}
+                  kitchenSubCategory={moduleCategory === 'island' ? islandSub : kitchenSub}
                   selectedType={moduleType}
                   onSelectedTypeChange={setModuleType}
                   hideTabMenu
