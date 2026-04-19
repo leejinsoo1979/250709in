@@ -258,15 +258,21 @@ const ColumnGuides: React.FC<ColumnGuidesProps> = ({ viewMode: viewModeProp }) =
   }
   
   // Room.tsx와 동일한 계산 사용하여 바닥 슬롯 메쉬와 일치시킴
-  const backZ = -mmToThreeUnits(internalSpace.depth / 2); // 내경의 뒤쪽 좌표
-  
   // 가구 깊이 및 위치 계산 (Room.tsx와 동일)
   const panelDepthMm = spaceInfo.depth || 1500;
   const furnitureDepthMm = 600; // 가구 깊이 고정값
   const zOffset = -mmToThreeUnits(panelDepthMm) / 2;
   const furnitureZOffset = zOffset + (mmToThreeUnits(panelDepthMm) - mmToThreeUnits(furnitureDepthMm)) / 2;
   const frameEndZ = furnitureZOffset + mmToThreeUnits(furnitureDepthMm) / 2;
-  
+
+  // ── 그라데이션 메쉬 축소와 동기화 — Room.tsx SHRINK_MESH_TO_FURNITURE_BACK와 연동 ──
+  // true: 가이드의 뒷쪽 경계를 가구 뒷면으로 맞춤 (공간 그라데이션 메쉬와 일치)
+  // false: 기존 동작 (공간 내경 뒷쪽)
+  const SHRINK_GUIDES_TO_FURNITURE_BACK = true;
+  const backZ = SHRINK_GUIDES_TO_FURNITURE_BACK
+    ? (furnitureZOffset - mmToThreeUnits(furnitureDepthMm) / 2) // 가구 뒷면
+    : -mmToThreeUnits(internalSpace.depth / 2); // 내경의 뒤쪽 좌표
+
   // 바닥 슬롯 메쉬와 동일한 앞쪽 좌표
   const frontZ = frameEndZ;
   
