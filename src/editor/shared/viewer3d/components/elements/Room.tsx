@@ -4315,19 +4315,17 @@ const Room: React.FC<RoomProps> = ({
                     // 하부장 앞면 Z = 전체서라운드는 +3mm, 노서라운드는 -doorThickness(20mm)
                     // 하부장 뒷면 = 하부장 앞면 - furnitureDepth
                     // 상부장 앞면 = 하부장 뒷면 + upperDepth
+                    // 옵셋 0 = 프레임 앞면이 상부장 앞면과 일치
+                    // 상부장 실제 앞면 Z (FurnitureItem.tsx와 동일):
+                    //   furnitureZ_center = furnitureZOffset - furnitureDepth/2 - 20 + upperDepth/2
+                    //   upperFrontZ = furnitureZ_center + upperDepth/2 = furnitureZOffset - furnitureDepth/2 - 20 + upperDepth
                     const upperModDepthMm = mod.freeDepth || mod.customDepth || 300;
-                    const lowerFrontZ = isFullSurround
-                      ? furnitureZOffset + furnitureDepth / 2 + mmToThreeUnits(3)
-                      : furnitureZOffset + furnitureDepth / 2 - mmToThreeUnits(20);
-                    const upperFrontZ = lowerFrontZ - furnitureDepth + mmToThreeUnits(upperModDepthMm);
+                    const upperFrontZ = furnitureZOffset - furnitureDepth / 2 - mmToThreeUnits(20) + mmToThreeUnits(upperModDepthMm);
                     const upperFrameZ = upperFrontZ - mmToThreeUnits(END_PANEL_THICKNESS) / 2;
-                    // 노서라운드/양쪽서라운드 상부장 프레임은 공간 프레임 평면(topZPosition)에 고정
-                    // 전체서라운드만 상부장 앞면 기준
-                    const upperFrameZFinal = isFullSurround ? upperFrameZ : topZPosition;
                     allTopSegments.push({
                       widthMm: modWidthMM,
                       centerXmm: modCenterXmm,
-                      zPosition: (modCategory === 'upper' ? upperFrameZFinal : topZPosition) + modTopZOffset + topFrameZRetract,
+                      zPosition: (modCategory === 'upper' ? upperFrameZ : topZPosition) + modTopZOffset + topFrameZRetract,
                       height: modFrameHeight,
                       yPosition: modFrameCenterY,
                       material: topSurrMat,
@@ -5189,14 +5187,10 @@ const Room: React.FC<RoomProps> = ({
                   const slotModCategory = getModuleCategory(mod);
                   let slotFrameZ = topZPos;
                   if (slotModCategory === 'upper') {
-                    // 전체서라운드만 상부장 앞면 기준, 노서라운드/양쪽서라운드는 공간 프레임 평면(topZPos) 유지
-                    if (isFullSurround) {
-                      const slotUpperDepthMm = mod.freeDepth || mod.customDepth || 300;
-                      const slotLowerFrontZ = furnitureZOffset + furnitureDepth / 2 + mmToThreeUnits(3);
-                      const slotUpperFrontZ = slotLowerFrontZ - furnitureDepth + mmToThreeUnits(slotUpperDepthMm);
-                      slotFrameZ = slotUpperFrontZ - mmToThreeUnits(END_PANEL_THICKNESS) / 2;
-                    }
-                    // else: slotFrameZ = topZPos (기본값 유지)
+                    // 옵셋 0 = 프레임 앞면이 상부장 앞면과 일치 (상부장 실제 앞면 기준)
+                    const slotUpperDepthMm = mod.freeDepth || mod.customDepth || 300;
+                    const slotUpperFrontZ = furnitureZOffset - furnitureDepth / 2 - mmToThreeUnits(20) + mmToThreeUnits(slotUpperDepthMm);
+                    slotFrameZ = slotUpperFrontZ - mmToThreeUnits(END_PANEL_THICKNESS) / 2;
                   }
                   slotTopSegments.push({
                     widthMm: modWidthMM,
