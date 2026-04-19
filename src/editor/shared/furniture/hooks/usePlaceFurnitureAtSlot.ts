@@ -91,16 +91,8 @@ export function placeFurnitureAtSlot(params: PlaceFurnitureParams): PlaceFurnitu
   // 단, slotWidths는 Math.floor로 내림되어 있어 합산 시 내부 폭보다 -1~-N mm 손실 가능.
   // 해결: zone의 실제 내부 폭(width)을 기준으로 2슬롯 비율만큼 사용 → floor 손실 방지.
   const getActualDualWidth = (): number => {
-    // 단내림 + zone 지정 시 해당 zone 기준
+    // 단내림 + zone 지정 시 해당 zone 기준 (★ top-level slotWidths는 전체 공간 인덱스이므로 사용 금지)
     if (hasDroppedCeiling && zone && indexing.zones) {
-      // recalculateWithCustomWidths()는 top-level slotWidths를 zone 기준으로 재계산하므로
-      // 재분배된 slotWidths가 있으면 우선 사용
-      const topLevelSw = indexing.slotWidths;
-      if (topLevelSw && slotIndex < topLevelSw.length - 1) {
-        return topLevelSw[slotIndex] + topLevelSw[slotIndex + 1];
-      }
-
-      // top-level slotWidths 없으면 zone 데이터에서 계산
       const zoneData = zone === 'dropped' ? indexing.zones.dropped : indexing.zones.normal;
       const zoneSlotWidths = zoneData?.slotWidths;
       if (zoneSlotWidths && slotIndex < zoneSlotWidths.length - 1) {
@@ -143,18 +135,12 @@ export function placeFurnitureAtSlot(params: PlaceFurnitureParams): PlaceFurnitu
       const dualWidth = getActualDualWidth();
       furnitureId = `${baseId}-${dualWidth}`;
     } else {
-      // 싱글 가구: 재분배된 top-level slotWidths 우선, 없으면 zone 데이터
-      const topSw = indexing.slotWidths;
-      let singleWidth: number;
-      if (topSw && slotIndex < topSw.length) {
-        singleWidth = topSw[slotIndex];
-      } else {
-        const zoneData = zone === 'dropped' ? indexing.zones.dropped : indexing.zones.normal;
-        const zoneSlotWidths = zoneData?.slotWidths;
-        singleWidth = zoneSlotWidths && slotIndex < zoneSlotWidths.length
-          ? zoneSlotWidths[slotIndex]
-          : columnWidth;
-      }
+      // 싱글 가구: 해당 zone의 slotWidths 기준 (top-level slotWidths는 전체 공간 인덱스이므로 사용 금지)
+      const zoneData = zone === 'dropped' ? indexing.zones.dropped : indexing.zones.normal;
+      const zoneSlotWidths = zoneData?.slotWidths;
+      const singleWidth = zoneSlotWidths && slotIndex < zoneSlotWidths.length
+        ? zoneSlotWidths[slotIndex]
+        : columnWidth;
       furnitureId = `${baseId}-${singleWidth}`;
     }
   } else {
@@ -177,11 +163,19 @@ export function placeFurnitureAtSlot(params: PlaceFurnitureParams): PlaceFurnitu
 
   if (params.moduleData) {
     // 전달된 moduleData의 너비가 현재 계산된 너비와 일치하는지 확인
-    const expectedWidth = isDualFurnitureId ? getActualDualWidth() : (
-      indexing.slotWidths && slotIndex < indexing.slotWidths.length
+    // 단내림+zone 지정 시 zone의 slotWidths 사용 (top-level은 전체 공간 인덱스)
+    const expectedSingleWidth = (() => {
+      if (hasDroppedCeiling && zone && indexing.zones) {
+        const zoneData = zone === 'dropped' ? indexing.zones.dropped : indexing.zones.normal;
+        const zoneSw = zoneData?.slotWidths;
+        if (zoneSw && slotIndex < zoneSw.length) return zoneSw[slotIndex];
+        return columnWidth;
+      }
+      return indexing.slotWidths && slotIndex < indexing.slotWidths.length
         ? indexing.slotWidths[slotIndex]
-        : columnWidth
-    );
+        : columnWidth;
+    })();
+    const expectedWidth = isDualFurnitureId ? getActualDualWidth() : expectedSingleWidth;
     if (Math.abs(params.moduleData.dimensions.width - expectedWidth) < 2) {
       moduleData = params.moduleData;
     } else {
@@ -217,7 +211,6 @@ export function placeFurnitureAtSlot(params: PlaceFurnitureParams): PlaceFurnitu
   }
 
   // 듀얼 판별: ID 기반 우선, 또는 가구 너비가 단일 슬롯의 1.5배 초과인지 확인
-  const actualDualWidth = getActualDualWidth();
   const isDualFurniture = isDualFurnitureId || (moduleData.dimensions.width > columnWidth * 1.5);
 
   // 슬롯 위치 계산
@@ -326,11 +319,8 @@ export function placeFurnitureAtSlot(params: PlaceFurnitureParams): PlaceFurnitu
     slotWidths?: number[];
   };
 
-  // recalculateWithCustomWidths()는 top-level slotWidths를 zone 기준으로 재계산하므로
-  // 재분배된 경우 항상 top-level indexing 사용 (zone 내부 데이터는 stale일 수 있음)
-  if (hasCustomWidthModules) {
-    targetIndexing = indexing;
-  } else if (hasDroppedCeiling && zone === 'dropped' && indexing.zones?.dropped) {
+  // 단내림+zone 지정 시 zone 데이터 최우선 (top-level slotWidths는 전체 공간 인덱스)
+  if (hasDroppedCeiling && zone === 'dropped' && indexing.zones?.dropped) {
     targetIndexing = indexing.zones.dropped;
   } else if (hasDroppedCeiling && zone === 'normal' && indexing.zones?.normal) {
     targetIndexing = indexing.zones.normal;

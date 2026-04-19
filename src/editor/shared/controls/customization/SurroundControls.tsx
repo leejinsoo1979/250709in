@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { SpaceInfo } from '@/store/core/spaceConfigStore';
 import styles from '../styles/common.module.css';
 import { useDerivedSpaceStore } from '@/store/derivedSpaceStore';
@@ -8,6 +8,7 @@ import SurroundTypeSelector from './components/SurroundTypeSelector';
 import GapControls from './components/GapControls';
 import FrameSizeControls from './components/FrameSizeControls';
 import { inferFrameConfig } from '@/editor/shared/utils/frameConfigBridge';
+import { getSpaceConfigDefaults } from '@/firebase/userProfiles';
 
 interface SurroundControlsProps {
   spaceInfo: SpaceInfo;
@@ -21,6 +22,19 @@ const SurroundControls: React.FC<SurroundControlsProps> = ({ spaceInfo, onUpdate
 
   // 이전 spaceInfo 값을 추적하여 불필요한 재계산 방지
   const prevSpaceInfoRef = useRef(spaceInfo);
+
+  // 사용자 저장 기본 이격값 (프레임 타입 전환 시 적용)
+  const [userDefaultGaps, setUserDefaultGaps] = useState<{ left: number; right: number }>({ left: 1.5, right: 1.5 });
+  useEffect(() => {
+    getSpaceConfigDefaults().then(defaults => {
+      if (defaults) {
+        setUserDefaultGaps({
+          left: defaults.gapLeft ?? 1.5,
+          right: defaults.gapRight ?? 1.5,
+        });
+      }
+    }).catch(() => { /* noop: 기본값 1.5 유지 */ });
+  }, []);
 
   // 기존 로컬 상태들
   const frameConfig = inferFrameConfig(spaceInfo);
@@ -102,7 +116,11 @@ const SurroundControls: React.FC<SurroundControlsProps> = ({ spaceInfo, onUpdate
         updates.frameSize = { left: END_PANEL_WIDTH, right: END_PANEL_WIDTH, top: currentTop };
       }
 
-      updates.gapConfig = { left: 2, right: 2, middle: spaceInfo.gapConfig?.middle ?? 1.5 };
+      updates.gapConfig = {
+        left: userDefaultGaps.left,
+        right: userDefaultGaps.right,
+        middle: spaceInfo.gapConfig?.middle ?? 1.5,
+      };
       updates.frameConfig = { left: true, right: true, top: true, bottom: true };
       // 전체서라운드 시 도어 상단갭 = 상부프레임 두께 + 3mm
       updates.doorTopGap = currentTop + 3;
@@ -150,10 +168,18 @@ const SurroundControls: React.FC<SurroundControlsProps> = ({ spaceInfo, onUpdate
         top: spaceInfo.frameSize?.top || 30
       };
 
+      // 노서라운드 전환 시 이격을 사용자 저장 기본값으로 초기화 (벽이 없는 쪽은 0)
       if (spaceInfo.installType !== 'builtin' && spaceInfo.installType !== 'built-in') {
         updates.gapConfig = {
-          left: hasLeftWall ? 1.5 : 0,
-          right: hasRightWall ? 1.5 : 0,
+          left: hasLeftWall ? userDefaultGaps.left : 0,
+          right: hasRightWall ? userDefaultGaps.right : 0,
+          middle: spaceInfo.gapConfig?.middle ?? 1.5,
+        };
+      } else {
+        // 빌트인: 양쪽 벽 모두 사용자 저장 기본값 사용
+        updates.gapConfig = {
+          left: userDefaultGaps.left,
+          right: userDefaultGaps.right,
           middle: spaceInfo.gapConfig?.middle ?? 1.5,
         };
       }

@@ -4744,6 +4744,62 @@ const Configurator: React.FC = () => {
                   );
                 })()}
 
+                {/* 단내림 바깥벽 이격 - 좌단내림 시 좌측벽(left), 우단내림 시 우측벽(right) */}
+                {spaceInfo.droppedCeiling?.enabled && (() => {
+                  const pos = spaceInfo.droppedCeiling?.position;
+                  const gapKey = pos === 'left' ? 'left' : 'right';
+                  const curVal = gapKey === 'left'
+                    ? (spaceInfo.gapConfig?.left ?? 1.5)
+                    : (spaceInfo.gapConfig?.right ?? 1.5);
+                  const wallSide = gapKey === 'left' ? spaceInfo.wallConfig?.left : spaceInfo.wallConfig?.right;
+                  const isDisabled = !wallSide;
+                  const label = pos === 'left' ? '단내림 좌이격' : '단내림 우이격';
+                  return (
+                <div className={styles.frameItem}>
+                  <label className={styles.frameItemLabel}>{label}</label>
+                  <div className={styles.frameItemInput}>
+                    <button
+                      className={styles.frameButton}
+                      onClick={() => {
+                        const val = Math.max(0, Math.round((curVal - 0.5) * 10) / 10);
+                        handleSpaceInfoUpdate({ gapConfig: { ...spaceInfo.gapConfig, [gapKey]: val } });
+                      }}
+                      disabled={isDisabled}
+                    >
+                      −
+                    </button>
+                    <input
+                      type="text"
+                      inputMode="decimal"
+                      value={isDisabled ? 0 : curVal}
+                      onChange={(e) => {
+                        const val = parseFloat(e.target.value);
+                        if (!isNaN(val)) {
+                          handleSpaceInfoUpdate({ gapConfig: { ...spaceInfo.gapConfig, [gapKey]: Math.max(0, Math.min(5, val)) } });
+                        }
+                      }}
+                      onBlur={(e) => {
+                        const val = Math.max(0, Math.min(5, Math.round((parseFloat(e.target.value) || 0) * 2) / 2));
+                        handleSpaceInfoUpdate({ gapConfig: { ...spaceInfo.gapConfig, [gapKey]: val } });
+                      }}
+                      className={styles.frameNumberInput}
+                      disabled={isDisabled}
+                    />
+                    <button
+                      className={styles.frameButton}
+                      onClick={() => {
+                        const val = Math.min(5, Math.round((curVal + 0.5) * 10) / 10);
+                        handleSpaceInfoUpdate({ gapConfig: { ...spaceInfo.gapConfig, [gapKey]: val } });
+                      }}
+                      disabled={isDisabled}
+                    >
+                      +
+                    </button>
+                  </div>
+                </div>
+                  );
+                })()}
+
                 {/* 단내림↔커튼박스 경계이격 (단내림+커튼박스 동시 활성 시) */}
                 {spaceInfo.droppedCeiling?.enabled && spaceInfo.curtainBox?.enabled && (() => {
                   const curVal = spaceInfo.gapConfig?.middle2 ?? 1.5;

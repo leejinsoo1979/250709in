@@ -2884,8 +2884,12 @@ export const generateShelvingModules = (
   // 단내림 구간이어도 듀얼 가구는 갤러리에 표시해야 함
   // 실제 배치 가능 여부는 ModuleGallery의 isModuleValid에서 체크
   const isDroppedZone = (indexingSpaceInfo as any).zone === 'dropped';
-  
-  if (dualWidth <= internalSpace.width || isDroppedZone) {
+  const isNormalZone = (indexingSpaceInfo as any).zone === 'normal';
+  // zone 지정 시 (단내림 활성) 소수점 오차 허용. 슬롯 2개면 dualWidth ≈ internalWidth가 정상.
+  const WIDTH_TOLERANCE = 1; // 1mm 여유
+  const dualFits = dualWidth <= internalSpace.width + WIDTH_TOLERANCE;
+
+  if (dualFits || isDroppedZone || isNormalZone) {
     // 듀얼 가구 생성 시 개별 슬롯 너비 전달
     const dualSlotWidths = slotWidths && slotWidths.length >= 2 ? 
       [slotWidths[0], slotWidths[1]] : 
