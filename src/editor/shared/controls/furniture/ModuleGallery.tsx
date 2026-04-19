@@ -592,11 +592,12 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
           return;
         }
 
-        // 이전 배치 치수 적용 (lastCustomDimensions)
+        // 이전 배치 치수 적용 (lastCustomDimensions) — 단, 너비는 모듈 기본값 우선
+        // (lastDims는 이전에 자동 축소된 값일 수 있어 그대로 쓰면 공간 낭비)
         const stdKey = getStandardDimensionKey(module.id);
         const lastDims = useFurnitureStore.getState().lastCustomDimensions[stdKey];
         let dims = lastDims
-          ? { width: lastDims.width, height: lastDims.height, depth: lastDims.depth }
+          ? { width: module.dimensions.width, height: lastDims.height, depth: lastDims.depth }
           : { ...module.dimensions };
         const fullBounds = getInternalSpaceBoundsX(spaceInfo);
 
