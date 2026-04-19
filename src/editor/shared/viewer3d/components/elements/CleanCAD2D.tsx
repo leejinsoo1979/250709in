@@ -5231,10 +5231,11 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           ?? (module.moduleId?.includes('upper') ? 'upper'
             : module.moduleId?.includes('lower') ? 'lower' : 'full');
         const isLowerDim = moduleCategoryForDim === 'lower';
-        // 하부장 너비 치수 Y: 가구 상단(= moduleY + 높이/2) 바로 위 DIM_GAP 만큼 오프셋
+        // 하부장 너비 치수 Y: 가구 상단(= moduleY + 높이/2)에서 소폭 위
         const moduleHeightMm = (module.freeHeight ?? module.customHeight ?? moduleData.dimensions.height) || 0;
         const lowerTopY = (moduleY || 0) + mmToThreeUnits(moduleHeightMm / 2);
-        const lowerDimY = lowerTopY + mmToThreeUnits(DIM_GAP);
+        const LOWER_DIM_OFFSET_MM = 40; // 하부장 상단 위로 40mm만 띄움 (기존 DIM_GAP=120에서 축소)
+        const lowerDimY = lowerTopY + mmToThreeUnits(LOWER_DIM_OFFSET_MM);
         const dimY = isLowerDim ? lowerDimY : slotDimensionY;
         
         // 듀얼 가구인지 확인 (이름에 'dual' 포함)
