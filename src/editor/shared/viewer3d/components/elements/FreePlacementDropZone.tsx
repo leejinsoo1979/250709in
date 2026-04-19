@@ -881,7 +881,101 @@ const FreePlacementDropZone: React.FC = () => {
   const remainingGaps = useMemo(() => {
     // spaceBounds(getInternalSpaceBoundsX)에서 이미 이격거리 반영됨
     const { startX, endX } = spaceBounds;
-    const gapLabelY = spaceInfo.height * 0.01 + 120 * 0.01;
+    const gapLabelYTop = spaceInfo.height * 0.01 + 120 * 0.01; // 상부장용: 공간 위쪽
+    const gapLabelYBottom = -120 * 0.01; // 하부장용: 공간 아래쪽
+
+    // 카테고리 판별
+    const isUpperModL = (m: any) => !m.isSurroundPanel && (m.moduleId?.startsWith('upper-') || m.moduleId?.includes('-upper-'));
+    const isLowerModL = (m: any) => !m.isSurroundPanel && (m.moduleId?.startsWith('lower-') || m.moduleId?.includes('-lower-'));
+    const hasUpperL = freeModules.some(isUpperModL);
+    const hasLowerL = freeModules.some(isLowerModL);
+    const hasSplit = hasUpperL || hasLowerL;
+
+    // 특정 가구 집합 기준으로 빈공간 계산
+    const computeGapsFor = (mods: typeof freeModules, gapLabelY: number, tag: 'upper' | 'lower' | 'all'): GapInfo[] => {
+      const localBounds = mods.map(m => ({ ...getModuleBoundsX(m), id: m.id })).sort((a, b) => a.left - b.left);
+      const g: GapInfo[] = [];
+      if (localBounds.length === 0) return g;
+
+      // 왼쪽 벽 ~ 첫 가구
+      if (localBounds[0].left - startX > 0.5) {
+        g.push({
+          startX,
+          endX: localBounds[0].left,
+          width: Math.floor(localBounds[0].left - startX),
+          centerX: ((startX + localBounds[0].left) / 2) * 0.01,
+          centerY: gapLabelY,
+          adjacentModuleId: localBounds[0].id,
+          isWallGap: 'left',
+          gapType: 'left-wall',
+          anchorX: startX,
+        });
+      }
+
+      // 가구 사이 갭
+      for (let i = 0; i < localBounds.length - 1; i++) {
+        const gapStart = localBounds[i].right;
+        const gapEnd = localBounds[i + 1].left;
+        if (gapEnd - gapStart > 0.5) {
+          const modA = freeModules.find(m => m.id === localBounds[i].id);
+          const modB = freeModules.find(m => m.id === localBounds[i + 1].id);
+          const wA = modA ? Math.round(modA.freeWidth || modA.customWidth || modA.moduleWidth || (localBounds[i].right - localBounds[i].left)) : (localBounds[i].right - localBounds[i].left);
+          const wB = modB ? Math.round(modB.freeWidth || modB.customWidth || modB.moduleWidth || (localBounds[i + 1].right - localBounds[i + 1].left)) : (localBounds[i + 1].right - localBounds[i + 1].left);
+          const cA = modA ? modA.position.x * 100 : (localBounds[i].left + localBounds[i].right) / 2;
+          const cB = modB ? modB.position.x * 100 : (localBounds[i + 1].left + localBounds[i + 1].right) / 2;
+          const exactGap = (cB - wB / 2) - (cA + wA / 2);
+          g.push({
+            startX: gapStart,
+            endX: gapEnd,
+            width: Math.floor(exactGap),
+            centerX: ((gapStart + gapEnd) / 2) * 0.01,
+            centerY: gapLabelY,
+            adjacentModuleId: localBounds[i + 1].id,
+            leftModuleId: localBounds[i].id,
+            isWallGap: null,
+            gapType: 'between',
+            anchorX: gapStart,
+          });
+        }
+      }
+
+      // 마지막 가구 ~ 오른쪽 벽
+      const lastBound = localBounds[localBounds.length - 1];
+      if (endX - lastBound.right > 0.5) {
+        const totalInner = endX - startX;
+        const moduleSum = localBounds.reduce((s, b) => s + (b.right - b.left), 0);
+        const gapSum = g.reduce((s, gi) => s + (gi.endX - gi.startX), 0);
+        const exactRightGap = Math.max(0, Math.floor(totalInner - moduleSum - gapSum));
+        g.push({
+          startX: lastBound.right,
+          endX,
+          width: exactRightGap,
+          centerX: ((lastBound.right + endX) / 2) * 0.01,
+          centerY: gapLabelY,
+          adjacentModuleId: lastBound.id,
+          isWallGap: 'right',
+          gapType: 'right-wall',
+          anchorX: endX,
+        });
+      }
+      return g;
+    };
+
+    // 상/하부 분리 표시: 각각 카테고리 가구만 기준으로 빈 공간 계산
+    if (hasSplit) {
+      const upperMods = freeModules.filter(isUpperModL);
+      const lowerMods = freeModules.filter(isLowerModL);
+      const fullMods = freeModules.filter(m => !m.isSurroundPanel && !isUpperModL(m) && !isLowerModL(m));
+      const result: GapInfo[] = [];
+      if (upperMods.length > 0) result.push(...computeGapsFor(upperMods, gapLabelYTop, 'upper'));
+      if (lowerMods.length > 0) result.push(...computeGapsFor(lowerMods, gapLabelYBottom, 'lower'));
+      // full 가구가 있으면 상단 기준으로 추가 표시
+      if (fullMods.length > 0 && upperMods.length === 0) result.push(...computeGapsFor(fullMods, gapLabelYTop, 'all'));
+      return result;
+    }
+
+    // 상/하부 분리가 아닌 경우(의류장/기존 호환): 기존 전체 공간 계산 사용
+    const gapLabelY = gapLabelYTop;
 
     // 가구가 없어도 잠금이 있으면 벽 갭 표시
     if (freeModules.length === 0) {
