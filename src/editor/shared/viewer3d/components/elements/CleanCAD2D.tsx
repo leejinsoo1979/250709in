@@ -5497,8 +5497,10 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               const gapRightX = rightX + mmToThreeUnits(rightGapMm);
               // 가구 이동 핸들러: 화살표 클릭 시 벽/인접가구까지 한번에 붙임
               const isSelected = selectedFurnitureId === module.id;
-              const canMoveLeft = leftGapMm >= 1; // 벽 or 인접가구와 1mm 이상 떨어져야 화살표 표시
-              const canMoveRight = rightGapMm >= 1;
+              // 실거리(nearestDistance) 기준으로 버튼 표시 — 벽/인접가구에서 3mm 이상 떨어져야 표시
+              // (기본 이격 1.5mm로 붙어있으면 버튼 숨김)
+              const canMoveLeft = (nearestLeftDistance || 0) >= 3;
+              const canMoveRight = (nearestRightDistance || 0) >= 3;
               const stopAll = (e: any) => {
                 e.stopPropagation();
                 e.nativeEvent?.stopImmediatePropagation?.();
