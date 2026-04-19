@@ -4271,7 +4271,8 @@ const Configurator: React.FC = () => {
 
         {/* 배치 방식 - 좌측 사이드바 상단으로 이동됨 */}
 
-        {/* 프레임 설정 (슬롯/자유배치 공통) */}
+        {/* 프레임 설정 (슬롯/자유배치 공통) - 아일랜드 모드 숨김 */}
+        {!spaceInfo.isIsland && (
         <div className={styles.configSection}>
           <div className={styles.sectionHeader}>
             <span className={styles.sectionDot}></span>
@@ -5129,6 +5130,7 @@ const Configurator: React.FC = () => {
           )}
 
         </div>
+        )}
 
         {/* 서라운드 섹션 — freeSurround 존재 시 표시 */}
         {isFreeMode && (() => {
@@ -5950,7 +5952,8 @@ const Configurator: React.FC = () => {
           />
         </div> */}
 
-        {/* 바닥마감재 */}
+        {/* 바닥마감재 (아일랜드 모드 숨김) */}
+        {!spaceInfo.isIsland && (
         <div className={styles.configSection}>
           <div className={styles.sectionHeader}>
             <span className={styles.sectionDot}></span>
@@ -5962,6 +5965,7 @@ const Configurator: React.FC = () => {
             onUpdate={handleSpaceInfoUpdate}
           />
         </div>
+        )}
 
         {/* 가구재 두께 설정 (15 / 15.5 / 18 / 18.5 mm) */}
         {(
