@@ -4329,8 +4329,8 @@ const Room: React.FC<RoomProps> = ({
                     const needsTopFrameRetract = isDoorBase && isSpaceFitDoor && mod.hasDoor;
                     const topFrameZRetract = needsTopFrameRetract ? -mmToThreeUnits(DOOR_THICKNESS_MM) : 0;
 
-                    // 원본 공식 (7f7a45603)
-                    const upperModDepthMm = mod.freeDepth || mod.customDepth || 300;
+                    // 상부장 깊이는 upperSectionDepth 우선 (사용자 입력값)
+                    const upperModDepthMm = mod.upperSectionDepth || mod.freeDepth || mod.customDepth || 300;
                     const upperFrontZ = furnitureZOffset - furnitureDepth / 2 + mmToThreeUnits(upperModDepthMm);
                     const upperFrameZ = upperFrontZ - mmToThreeUnits(END_PANEL_THICKNESS) / 2;
                     allTopSegments.push({
@@ -5198,8 +5198,8 @@ const Room: React.FC<RoomProps> = ({
                   const slotModCategory = getModuleCategory(mod);
                   let slotFrameZ = topZPos;
                   if (slotModCategory === 'upper') {
-                    // 원본 공식 (7f7a45603)
-                    const slotUpperDepthMm = mod.freeDepth || mod.customDepth || 300;
+                    // 상부장 깊이는 upperSectionDepth 우선 (사용자 입력값)
+                    const slotUpperDepthMm = mod.upperSectionDepth || mod.freeDepth || mod.customDepth || 300;
                     const slotUpperFrontZ = furnitureZOffset - furnitureDepth / 2 + mmToThreeUnits(slotUpperDepthMm);
                     slotFrameZ = slotUpperFrontZ - mmToThreeUnits(END_PANEL_THICKNESS) / 2;
                   }
