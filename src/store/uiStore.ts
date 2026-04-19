@@ -298,6 +298,14 @@ interface UIState {
   equalDistribution: boolean;
   setEqualDistribution: (enabled: boolean) => void;
   toggleEqualDistribution: () => void;
+  // 상부장 전용 균등배치 (자유배치에서 상하부 분리 균등)
+  equalDistributionUpper: boolean;
+  setEqualDistributionUpper: (enabled: boolean) => void;
+  toggleEqualDistributionUpper: () => void;
+  // 하부장 전용 균등배치
+  equalDistributionLower: boolean;
+  setEqualDistributionLower: (enabled: boolean) => void;
+  toggleEqualDistributionLower: () => void;
 
   resetUI: () => void;
 }
@@ -357,6 +365,8 @@ const initialUIState = {
   isEraserMode: false,  // 기본값: 지우개 모드 비활성화
   hoveredMeasureLineId: null,  // 기본값: 호버 중인 측정선 없음
   equalDistribution: false,  // 기본값: 균등배치 비활성화
+  equalDistributionUpper: false,  // 상부장 전용 균등
+  equalDistributionLower: false,  // 하부장 전용 균등
   isInteriorMaterialMode: false,  // 기본값: 속장 재질 모드 비활성
   isLayoutBuilderOpen: false,  // 기본값: 레이아웃 빌더 닫힘
   layoutBuilderRevision: 0,
@@ -802,6 +812,18 @@ export const useUIStore = create<UIState>()(
 
       toggleEqualDistribution: () =>
         set((state) => ({ equalDistribution: !state.equalDistribution })),
+
+      setEqualDistributionUpper: (enabled: boolean) =>
+        set({ equalDistributionUpper: enabled }),
+
+      toggleEqualDistributionUpper: () =>
+        set((state) => ({ equalDistributionUpper: !state.equalDistributionUpper })),
+
+      setEqualDistributionLower: (enabled: boolean) =>
+        set({ equalDistributionLower: enabled }),
+
+      toggleEqualDistributionLower: () =>
+        set((state) => ({ equalDistributionLower: !state.equalDistributionLower })),
 
       setIsInteriorMaterialMode: (mode) =>
         set({ isInteriorMaterialMode: mode }),

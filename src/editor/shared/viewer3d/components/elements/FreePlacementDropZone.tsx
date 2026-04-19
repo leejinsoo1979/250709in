@@ -66,6 +66,8 @@ const FreePlacementDropZone: React.FC = () => {
   const { theme } = useTheme();
   const activePopup = useUIStore(state => state.activePopup);
   const equalDistribution = useUIStore(state => state.equalDistribution);
+  const equalDistributionUpper = useUIStore(state => state.equalDistributionUpper);
+  const equalDistributionLower = useUIStore(state => state.equalDistributionLower);
   const viewMode = useUIStore(state => state.viewMode);
   const view2DDirection = useUIStore(state => state.view2DDirection);
   const showFurnitureEditHandles = useUIStore(state => state.showFurnitureEditHandles);
@@ -195,8 +197,25 @@ const FreePlacementDropZone: React.FC = () => {
 
   // ── 균등배치 모드: 구간별로 분리하여 균등 배분 ──
   // 메인 구간 가구는 메인 범위 내에서, 단내림 구간 가구는 단내림 범위 내에서 균등
+  // 상부장/하부장이 있으면 카테고리별로 독립 균등 (equalDistributionUpper/Lower 플래그)
   useEffect(() => {
-    if (!equalDistribution || !isFreePlacement || freeModules.length === 0) return;
+    if (!isFreePlacement || freeModules.length === 0) return;
+
+    // 카테고리 판별
+    const isUpperMod = (m: any) => !m.isSurroundPanel && (m.moduleId?.startsWith('upper-') || m.moduleId?.includes('-upper-'));
+    const isLowerMod = (m: any) => !m.isSurroundPanel && (m.moduleId?.startsWith('lower-') || m.moduleId?.includes('-lower-'));
+    const isFullMod = (m: any) => !m.isSurroundPanel && !isUpperMod(m) && !isLowerMod(m);
+
+    const hasUpper = freeModules.some(isUpperMod);
+    const hasLower = freeModules.some(isLowerMod);
+    const hasUpperLower = hasUpper || hasLower;
+
+    // 상/하부가 배치된 경우: 중앙 equalDistribution은 무시, 카테고리별 플래그 사용
+    // 상/하부가 없는 경우: 기존 중앙 equalDistribution만 적용
+    const shouldRun = hasUpperLower
+      ? (equalDistributionUpper || equalDistributionLower)
+      : equalDistribution;
+    if (!shouldRun) return;
 
     const lockedWallGaps = spaceInfo.lockedWallGaps;
     const MAX_SINGLE = 600;
@@ -245,22 +264,43 @@ const FreePlacementDropZone: React.FC = () => {
       });
     };
 
-    // 메인 구간 균등배분 (zonePlacementBounds에 이격 이미 반영됨)
-    if (mainZone && mainModules.length > 0) {
-      distributeInZone(mainModules, mainZone.placementStartXmm, mainZone.placementEndXmm);
-    } else if (!mainZone && mainModules.length > 0) {
-      // 단내림/커튼박스 없는 경우: 전체 spaceBounds 사용
-      const { startX, endX } = spaceBounds;
-      const effectiveStartX = lockedWallGaps?.left != null ? startX + lockedWallGaps.left : startX;
-      const effectiveEndX = lockedWallGaps?.right != null ? endX - lockedWallGaps.right : endX;
-      distributeInZone(mainModules, effectiveStartX, effectiveEndX);
-    }
+    // 메인 구간 균등배분 헬퍼
+    const runMain = (mods: typeof mainModules) => {
+      if (mainZone) {
+        distributeInZone(mods, mainZone.placementStartXmm, mainZone.placementEndXmm);
+      } else {
+        const { startX, endX } = spaceBounds;
+        const effectiveStartX = lockedWallGaps?.left != null ? startX + lockedWallGaps.left : startX;
+        const effectiveEndX = lockedWallGaps?.right != null ? endX - lockedWallGaps.right : endX;
+        distributeInZone(mods, effectiveStartX, effectiveEndX);
+      }
+    };
+    const runDropped = (mods: typeof droppedModules) => {
+      if (scZone && mods.length > 0) {
+        distributeInZone(mods, scZone.placementStartXmm, scZone.placementEndXmm);
+      }
+    };
 
-    // 단내림 구간 균등배분
-    if (scZone && droppedModules.length > 0) {
-      distributeInZone(droppedModules, scZone.placementStartXmm, scZone.placementEndXmm);
+    if (hasUpperLower) {
+      // 상/하부 카테고리별 독립 균등
+      if (equalDistributionUpper) {
+        const upperMain = mainModules.filter(isUpperMod);
+        const upperDropped = droppedModules.filter(isUpperMod);
+        if (upperMain.length > 0) runMain(upperMain);
+        runDropped(upperDropped);
+      }
+      if (equalDistributionLower) {
+        const lowerMain = mainModules.filter(isLowerMod);
+        const lowerDropped = droppedModules.filter(isLowerMod);
+        if (lowerMain.length > 0) runMain(lowerMain);
+        runDropped(lowerDropped);
+      }
+    } else {
+      // 기존 동작: 전체 메인/단내림 구간 균등
+      if (mainModules.length > 0) runMain(mainModules);
+      runDropped(droppedModules);
     }
-  }, [equalDistribution, isFreePlacement, zonePlacementBounds, spaceBounds]);
+  }, [equalDistribution, equalDistributionUpper, equalDistributionLower, isFreePlacement, zonePlacementBounds, spaceBounds]);
 
   // ── 서라운드 패널 자동 배치 (선택 즉시 배치, 클릭 위치 불필요) ──
   useEffect(() => {

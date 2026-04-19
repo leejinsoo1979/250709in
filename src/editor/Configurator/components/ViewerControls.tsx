@@ -275,22 +275,32 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
 
       {/* ─── Center: absolute-centered 3D/2D toggle ─── */}
       <div className={styles.centerAbsolute}>
-        {isFreePlacement && (
-          <div className={styles.segmentedControl}>
-            <button
-              className={`${styles.segmentButton} ${styles.segmentAccent} ${!equalDistribution ? styles.segmentAccentActive : ''}`}
-              onClick={() => { if (equalDistribution) toggleEqualDistribution(); }}
-            >
-              자유
-            </button>
-            <button
-              className={`${styles.segmentButton} ${styles.segmentAccent} ${equalDistribution ? styles.segmentAccentActive : ''}`}
-              onClick={() => { if (!equalDistribution) toggleEqualDistribution(); }}
-            >
-              균등
-            </button>
-          </div>
-        )}
+        {isFreePlacement && (() => {
+          // 자유배치에서 상부장/하부장이 하나라도 배치되면 중앙 자유/균등 토글 숨김
+          // (대신 상부장은 위쪽, 하부장은 아래쪽에 각각 전용 토글이 표시됨)
+          const hasUpperOrLower = placedModules.some(m => {
+            if (m.isSurroundPanel) return false;
+            const id = m.moduleId || '';
+            return id.startsWith('upper-') || id.includes('-upper-') || id.startsWith('lower-') || id.includes('-lower-');
+          });
+          if (hasUpperOrLower) return null;
+          return (
+            <div className={styles.segmentedControl}>
+              <button
+                className={`${styles.segmentButton} ${styles.segmentAccent} ${!equalDistribution ? styles.segmentAccentActive : ''}`}
+                onClick={() => { if (equalDistribution) toggleEqualDistribution(); }}
+              >
+                자유
+              </button>
+              <button
+                className={`${styles.segmentButton} ${styles.segmentAccent} ${equalDistribution ? styles.segmentAccentActive : ''}`}
+                onClick={() => { if (!equalDistribution) toggleEqualDistribution(); }}
+              >
+                균등
+              </button>
+            </div>
+          );
+        })()}
 
         <div className={styles.segmentedControl}>
           {viewModes.map((mode) => (
