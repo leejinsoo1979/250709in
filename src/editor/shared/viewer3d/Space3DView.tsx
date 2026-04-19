@@ -709,15 +709,13 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
     const centerZ = 0;
 
     // 2D front 위치 계산 - 3D와 동일한 거리 사용
-    // 아일랜드 'back' 면은 Z를 반전해 뒤에서 앞쪽을 보도록 한다
-    const zSign = islandViewSide === 'back' ? -1 : 1;
-    const frontPosition = [centerX, centerY, distance * zSign] as [number, number, number];
+    const frontPosition = [centerX, centerY, distance] as [number, number, number];
 
     // 3D 모드에서는 원근 모드 기존 유지
     if (viewMode === '3D') {
       // 모바일에서는 1.5배 거리
       if (isMobile) {
-        return [centerX, centerY, distance * 1.5 * zSign] as [number, number, number];
+        return [centerX, centerY, distance * 1.5] as [number, number, number];
       }
       return frontPosition;
     }
@@ -727,8 +725,8 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
     const distanceMultiplier = baseDistanceMultiplier;
     switch (view2DDirection) {
       case 'front':
-        // 정면: Z축에서 깊이를 고려한 최적 거리 (아일랜드 back은 반전)
-        return [centerX, centerY, distance * distanceMultiplier * zSign] as [number, number, number];
+        // 정면: Z축에서 깊이를 고려한 최적 거리
+        return [centerX, centerY, distance * distanceMultiplier] as [number, number, number];
       case 'left':
         // 좌측: X축에서 너비를 고려한 최적 거리
         const leftDistance = calculateOptimalDistance(depth, height, width, placedModules.length);
@@ -748,7 +746,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
       default:
         return frontPosition;
     }
-  }, [spaceInfo?.width, spaceInfo?.height, spaceInfo?.depth, viewMode, view2DDirection, placedModules.length, baseDistanceMultiplier, targetY, isMobile, islandViewSide]);
+  }, [spaceInfo?.width, spaceInfo?.height, spaceInfo?.depth, viewMode, view2DDirection, placedModules.length, baseDistanceMultiplier, targetY, isMobile]);
 
   // Canvas key를 완전히 제거하여 재생성 방지
   // viewMode나 view2DDirection 변경 시에도 Canvas를 재생성하지 않음
