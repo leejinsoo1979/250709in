@@ -980,10 +980,16 @@ const FreePlacementDropZone: React.FC = () => {
           anchorX: endX,
         });
       } else {
+        // 정확한 공식: 내경 - 좌측이격부터 누적한 가구 너비 - 누적 갭 = 우측 남은 공간
+        // 내경(spaceBounds) 자체는 좌우 이격이 이미 반영됨
+        const totalInner = endX - startX;
+        const moduleSum = bounds.reduce((s, b) => s + (b.right - b.left), 0);
+        const gapSum = gaps.reduce((s, g) => s + (g.endX - g.startX), 0);
+        const exactRightGap = Math.max(0, Math.floor(totalInner - moduleSum - gapSum));
         gaps.push({
           startX: lastBound.right,
           endX,
-          width: Math.floor(endX - lastBound.right),
+          width: exactRightGap,
           centerX: ((lastBound.right + endX) / 2) * 0.01,
           centerY: gapLabelY,
           adjacentModuleId: lastBound.id,
