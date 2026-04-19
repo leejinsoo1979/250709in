@@ -113,6 +113,9 @@ export interface SpaceInfo {
   // 배치 방식 설정
   layoutMode?: 'equal-division' | 'free-placement';
 
+  // 아일랜드 설계 모드 플래그 (true일 때 상/하 분할 뷰어, 그라데이션 제거, 우측바 축소)
+  isIsland?: boolean;
+
   // 컬럼 수 사용자 지정 속성
   customColumnCount?: number;
   columnMode?: 'auto' | 'custom';

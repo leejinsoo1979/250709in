@@ -24,6 +24,7 @@ import { getModuleCategory } from '@/editor/shared/utils/freePlacementUtils';
 import { computeFrameMergeGroups } from '@/editor/shared/utils/frameMergeUtils';
 import { getModuleById } from '@/data/modules';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
+import IslandSetupModal, { IslandSetupValues } from '@/components/common/IslandSetupModal';
 import { useHistoryStore } from '@/store/historyStore';
 import { useHistoryTracking } from './hooks/useHistoryTracking';
 import { use3DExport, type ExportFormat } from '@/editor/shared/hooks/use3DExport';
@@ -389,6 +390,8 @@ const Configurator: React.FC = () => {
   const [moduleCategory, setModuleCategory] = useState<'clothing' | 'shoes' | 'kitchen' | 'island'>('clothing'); // 의류장/신발장/주방/아일랜드 토글
   const [kitchenSub, setKitchenSub] = useState<'basic' | 'door-raise' | 'top-down' | 'upper'>('basic'); // 주방 서브카테고리
   const [islandSub, setIslandSub] = useState<'basic' | 'door-raise' | 'top-down'>('basic'); // 아일랜드 서브카테고리
+  const [islandSetupOpen, setIslandSetupOpen] = useState(false); // 아일랜드 팝업 열림 여부
+  const [islandSetupMode, setIslandSetupMode] = useState<'create' | 'edit'>('create');
   const [moduleType, setModuleType] = useState<ModuleType>('all'); // 전체/싱글/듀얼 탭
   const [customCategory, setCustomCategory] = useState<'full' | 'upper' | 'lower'>('full'); // 커스텀 전체장/상부장/하부장 토글
   const [myCabinetCategory, setMyCabinetCategory] = useState<'full' | 'upper' | 'lower'>('full'); // My캐비닛 카테고리 필터
@@ -3469,7 +3472,16 @@ const Configurator: React.FC = () => {
                 </button>
                 <button
                   className={`${styles.moduleCategoryTab} ${moduleCategory === 'island' ? styles.active : ''}`}
-                  onClick={() => setModuleCategory('island')}
+                  onClick={() => {
+                    // 이미 아일랜드 모드(디자인)인 경우에는 탭만 활성화
+                    if (spaceInfo?.isIsland) {
+                      setModuleCategory('island');
+                      return;
+                    }
+                    // 일반 모드에서 클릭 시: 팝업을 띄워 새 아일랜드 디자인 생성
+                    setIslandSetupMode('create');
+                    setIslandSetupOpen(true);
+                  }}
                 >
                   아일랜드
                 </button>
@@ -6585,8 +6597,8 @@ const Configurator: React.FC = () => {
               );
               return (
                 <>
-                  {hasUpper && <Pill equalOn={equalDistributionUpper} onToggle={toggleEqualDistributionUpper} topOffset="10px" />}
-                  {hasLower && <Pill equalOn={equalDistributionLower} onToggle={toggleEqualDistributionLower} topOffset="calc(100% - 40px)" />}
+                  {hasUpper && <Pill equalOn={equalDistributionUpper} onToggle={toggleEqualDistributionUpper} topOffset="50px" />}
+                  {hasLower && <Pill equalOn={equalDistributionLower} onToggle={toggleEqualDistributionLower} topOffset="calc(100% - 80px)" />}
                 </>
               );
             })()}
