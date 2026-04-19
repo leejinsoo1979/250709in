@@ -4310,20 +4310,10 @@ const Room: React.FC<RoomProps> = ({
                     const needsTopFrameRetract = isDoorBase && isSpaceFitDoor && mod.hasDoor;
                     const topFrameZRetract = needsTopFrameRetract ? -mmToThreeUnits(DOOR_THICKNESS_MM) : 0;
 
-                    // 상부장은 프레임이 상부장 앞면에 맞춰 붙어야 함 (프레임 앞면 = 상부장 앞면)
-                    // 그 외(키큰장 등)는 공간 기준 평면
-                    // 하부장 앞면 Z = 전체서라운드는 +3mm, 노서라운드는 -doorThickness(20mm)
-                    // 하부장 뒷면 = 하부장 앞면 - furnitureDepth
-                    // 상부장 앞면 = 하부장 뒷면 + upperDepth
-                    // 옵셋 0 = 프레임 앞면이 상부장 앞면과 일치
-                    // 상부장 실제 앞면 Z (FurnitureItem.tsx와 동일):
-                    //   furnitureZ_center = furnitureZOffset - furnitureDepth/2 - 20 + upperDepth/2
-                    //   upperFrontZ = furnitureZ_center + upperDepth/2 = furnitureZOffset - furnitureDepth/2 - 20 + upperDepth
+                    // 원본 공식 복원 (7f7a45603 커밋 기준)
                     const upperModDepthMm = mod.freeDepth || mod.customDepth || 300;
-                    const upperFrontZ = furnitureZOffset - furnitureDepth / 2 - mmToThreeUnits(20) + mmToThreeUnits(upperModDepthMm);
-                    // 프레임 뒷면 = 상부장 앞면 → 프레임 중심 = 앞면 - EP 전체 + EP/2 = 앞면 - EP/2
-                    // 이미 -EP/2인데 앞으로 나온다면 전체를 EP만큼 뒤로 (프레임이 상부장 몸체 속으로 숨도록)
-                    const upperFrameZ = upperFrontZ - mmToThreeUnits(END_PANEL_THICKNESS) * 3 / 2;
+                    const upperFrontZ = furnitureZOffset - furnitureDepth / 2 + mmToThreeUnits(upperModDepthMm);
+                    const upperFrameZ = upperFrontZ - mmToThreeUnits(END_PANEL_THICKNESS) / 2;
                     allTopSegments.push({
                       widthMm: modWidthMM,
                       centerXmm: modCenterXmm,
@@ -5189,11 +5179,10 @@ const Room: React.FC<RoomProps> = ({
                   const slotModCategory = getModuleCategory(mod);
                   let slotFrameZ = topZPos;
                   if (slotModCategory === 'upper') {
-                    // 옵셋 0 = 프레임 앞면이 상부장 앞면과 일치 (상부장 실제 앞면 기준)
+                    // 원본 공식 복원 (7f7a45603 커밋 기준)
                     const slotUpperDepthMm = mod.freeDepth || mod.customDepth || 300;
-                    const slotUpperFrontZ = furnitureZOffset - furnitureDepth / 2 - mmToThreeUnits(20) + mmToThreeUnits(slotUpperDepthMm);
-                    // 프레임이 상부장 앞면보다 앞으로 나오지 않도록 EP 전체만큼 뒤로 숨김
-                    slotFrameZ = slotUpperFrontZ - mmToThreeUnits(END_PANEL_THICKNESS) * 3 / 2;
+                    const slotUpperFrontZ = furnitureZOffset - furnitureDepth / 2 + mmToThreeUnits(slotUpperDepthMm);
+                    slotFrameZ = slotUpperFrontZ - mmToThreeUnits(END_PANEL_THICKNESS) / 2;
                   }
                   slotTopSegments.push({
                     widthMm: modWidthMM,
