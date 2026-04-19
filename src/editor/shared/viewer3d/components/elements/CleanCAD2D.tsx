@@ -5241,7 +5241,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         const floatMmForDim = module.hasBase === false ? (module.individualFloatHeight ?? 0) : 0;
         const moduleHeightMm = (module.freeHeight ?? module.customHeight ?? moduleData.dimensions.height) || 0;
         const lowerTopYMm = floorFinishMmForDim + baseFrameMmForDim + floatMmForDim + moduleHeightMm;
-        const LOWER_DIM_OFFSET_MM = 40; // 하부장 상단 바로 위 오프셋
+        const LOWER_DIM_OFFSET_MM = 150; // 하부장 상단에서 치수선까지 거리 (연장선 길이)
         const lowerDimY = mmToThreeUnits(lowerTopYMm + LOWER_DIM_OFFSET_MM);
         const dimY = isLowerDim ? lowerDimY : slotDimensionY;
         
