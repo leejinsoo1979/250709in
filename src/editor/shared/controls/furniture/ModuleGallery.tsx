@@ -946,14 +946,21 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
   );
 };
 
+// 주방 서브카테고리 (기본장/도어올림/상판내림/상부장)
+export type KitchenSubCategory = 'basic' | 'door-raise' | 'top-down' | 'upper';
+
 interface ModuleGalleryProps {
-  moduleCategory?: 'tall' | 'upper' | 'lower';
+  // clothing=키큰장(full), shoes=신발장(전용 모듈), kitchen=주방(하부장+상부장)
+  // tall/upper/lower는 기존 호환용으로 유지
+  moduleCategory?: 'tall' | 'upper' | 'lower' | 'clothing' | 'shoes' | 'kitchen';
+  // 주방 서브카테고리 (moduleCategory가 'kitchen'일 때만 사용)
+  kitchenSubCategory?: KitchenSubCategory;
   selectedType?: ModuleType;
   onSelectedTypeChange?: (type: ModuleType) => void;
   hideTabMenu?: boolean;
 }
 
-const ModuleGallery: React.FC<ModuleGalleryProps> = ({ moduleCategory = 'tall', selectedType: externalSelectedType, onSelectedTypeChange, hideTabMenu = false }) => {
+const ModuleGallery: React.FC<ModuleGalleryProps> = ({ moduleCategory = 'tall', kitchenSubCategory = 'basic', selectedType: externalSelectedType, onSelectedTypeChange, hideTabMenu = false }) => {
   const { t } = useTranslation();
   // 선택된 탭 상태 (전체/싱글/듀얼/커스텀)
   const [internalSelectedType, setInternalSelectedType] = useState<ModuleType>('all');
@@ -1011,13 +1018,44 @@ const ModuleGallery: React.FC<ModuleGalleryProps> = ({ moduleCategory = 'tall', 
   } else if (moduleCategory === 'lower') {
     // 하부장 카테고리 선택시
     categoryModules = getModulesByCategory('lower', adjustedInternalSpace, spaceInfoWithSlotWidths);
+  } else if (moduleCategory === 'clothing') {
+    // 의류장 = 키큰장(full) 전체
+    categoryModules = getModulesByCategory('full', adjustedInternalSpace, spaceInfoWithSlotWidths);
+  } else if (moduleCategory === 'shoes') {
+    // 신발장 = 현관장(entryway) 계열만
+    const all = [
+      ...getModulesByCategory('full', adjustedInternalSpace, spaceInfoWithSlotWidths),
+      ...getModulesByCategory('lower', adjustedInternalSpace, spaceInfoWithSlotWidths),
+      ...getModulesByCategory('upper', adjustedInternalSpace, spaceInfoWithSlotWidths),
+    ];
+    categoryModules = all.filter(m => m.id.includes('entryway'));
+  } else if (moduleCategory === 'kitchen') {
+    // 주방 = 서브카테고리별 필터링
+    if (kitchenSubCategory === 'upper') {
+      // 상부장 = upper 전체
+      categoryModules = getModulesByCategory('upper', adjustedInternalSpace, spaceInfoWithSlotWidths);
+    } else {
+      // 기본장/도어올림/상판내림 = lower 중 ID 패턴으로 분기
+      const lowerMods = getModulesByCategory('lower', adjustedInternalSpace, spaceInfoWithSlotWidths);
+      categoryModules = lowerMods.filter(m => {
+        const id = m.id;
+        const isDoorRaise = id.includes('door-lift') || id.includes('door-raise');
+        const isTopDown = id.includes('top-down');
+        if (kitchenSubCategory === 'door-raise') return isDoorRaise;
+        if (kitchenSubCategory === 'top-down') return isTopDown;
+        // 기본장 = 도어올림/상판내림 제외한 나머지
+        return !isDoorRaise && !isTopDown;
+      });
+    }
   } else {
-    // 키큰장(전체형) 모듈
+    // 키큰장(전체형) 모듈 (기존 'tall' 호환)
     categoryModules = getModulesByCategory('full', adjustedInternalSpace, spaceInfoWithSlotWidths);
   }
 
-  // 현관장 H 임시 숨김 (싱글/듀얼 모두)
-  categoryModules = categoryModules.filter(m => !m.id.includes('entryway-h'));
+  // 현관장 H 임시 숨김 (신발장 카테고리 제외)
+  if (moduleCategory !== 'shoes') {
+    categoryModules = categoryModules.filter(m => !m.id.includes('entryway-h'));
+  }
 
   const fullModules = categoryModules;
   console.log('🏗️ ModuleGallery 렌더링:', {
@@ -1151,11 +1189,13 @@ const ModuleGallery: React.FC<ModuleGalleryProps> = ({ moduleCategory = 'tall', 
             })
           ) : (
             <div className={styles.emptyMessage}>
-              {moduleCategory === 'upper'
-                ? `${t('furniture.upperCabinet')} ${t('furniture.moduleNotReady')}`
-                : moduleCategory === 'lower'
-                  ? `${t('furniture.lowerCabinet')} ${t('furniture.moduleNotReady')}`
-                  : t('furniture.noModulesAvailable')}
+              {moduleCategory === 'shoes'
+                ? `신발장 ${t('furniture.moduleNotReady')}`
+                : moduleCategory === 'upper'
+                  ? `${t('furniture.upperCabinet')} ${t('furniture.moduleNotReady')}`
+                  : moduleCategory === 'lower'
+                    ? `${t('furniture.lowerCabinet')} ${t('furniture.moduleNotReady')}`
+                    : t('furniture.noModulesAvailable')}
             </div>
           )}
         </div>

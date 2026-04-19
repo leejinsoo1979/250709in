@@ -382,7 +382,8 @@ const Configurator: React.FC = () => {
   const [fileTreeSelectedProjectId, setFileTreeSelectedProjectId] = useState<string | null>(null);
   const [fileTreeSelectedFolderId, setFileTreeSelectedFolderId] = useState<string | null>(null);
   const [fileTreeDesignFiles, setFileTreeDesignFiles] = useState<DesignFileSummary[]>([]);
-  const [moduleCategory, setModuleCategory] = useState<'tall' | 'upper' | 'lower'>('tall'); // 키큰장/상부장/하부장 토글
+  const [moduleCategory, setModuleCategory] = useState<'clothing' | 'shoes' | 'kitchen'>('clothing'); // 의류장/신발장/주방 토글
+  const [kitchenSub, setKitchenSub] = useState<'basic' | 'door-raise' | 'top-down' | 'upper'>('basic'); // 주방 서브카테고리
   const [moduleType, setModuleType] = useState<ModuleType>('all'); // 전체/싱글/듀얼 탭
   const [customCategory, setCustomCategory] = useState<'full' | 'upper' | 'lower'>('full'); // 커스텀 전체장/상부장/하부장 토글
   const [myCabinetCategory, setMyCabinetCategory] = useState<'full' | 'upper' | 'lower'>('full'); // My캐비닛 카테고리 필터
@@ -3441,53 +3442,86 @@ const Configurator: React.FC = () => {
         return (
           <div className={styles.sidebarPanel}>
             <div className={styles.modulePanelContent}>
-              {/* 키큰장/상부장/하부장 토글 탭 */}
+              {/* 의류장/신발장/주방 토글 탭 */}
               <div className={styles.moduleCategoryTabs}>
                 <button
-                  className={`${styles.moduleCategoryTab} ${moduleCategory === 'tall' ? styles.active : ''}`}
-                  onClick={() => setModuleCategory('tall')}
+                  className={`${styles.moduleCategoryTab} ${moduleCategory === 'clothing' ? styles.active : ''}`}
+                  onClick={() => setModuleCategory('clothing')}
                 >
-                  키큰장
+                  의류장
                 </button>
                 <button
-                  className={`${styles.moduleCategoryTab} ${moduleCategory === 'upper' ? styles.active : ''}`}
-                  onClick={() => setModuleCategory('upper')}
+                  className={`${styles.moduleCategoryTab} ${moduleCategory === 'shoes' ? styles.active : ''}`}
+                  onClick={() => setModuleCategory('shoes')}
                 >
-                  상부장
+                  신발장
                 </button>
                 <button
-                  className={`${styles.moduleCategoryTab} ${moduleCategory === 'lower' ? styles.active : ''}`}
-                  onClick={() => setModuleCategory('lower')}
+                  className={`${styles.moduleCategoryTab} ${moduleCategory === 'kitchen' ? styles.active : ''}`}
+                  onClick={() => setModuleCategory('kitchen')}
                 >
-                  하부장
+                  주방
                 </button>
               </div>
 
-              {/* 전체/싱글/듀얼 탭 - 스크롤 영역 밖에 고정 */}
-              <div className={styles.moduleCategoryTabs}>
-                <button
-                  className={`${styles.moduleCategoryTab} ${moduleType === 'all' ? styles.active : ''}`}
-                  onClick={() => setModuleType('all')}
-                >
-                  전체
-                </button>
-                <button
-                  className={`${styles.moduleCategoryTab} ${moduleType === 'single' ? styles.active : ''}`}
-                  onClick={() => setModuleType('single')}
-                >
-                  싱글
-                </button>
-                <button
-                  className={`${styles.moduleCategoryTab} ${moduleType === 'dual' ? styles.active : ''}`}
-                  onClick={() => setModuleType('dual')}
-                >
-                  듀얼
-                </button>
-              </div>
+              {/* 주방 선택 시: 기본장/도어올림/상판내림/상부장 서브 탭 */}
+              {moduleCategory === 'kitchen' && (
+                <div className={styles.moduleCategoryTabs}>
+                  <button
+                    className={`${styles.moduleCategoryTab} ${kitchenSub === 'basic' ? styles.active : ''}`}
+                    onClick={() => setKitchenSub('basic')}
+                  >
+                    기본장
+                  </button>
+                  <button
+                    className={`${styles.moduleCategoryTab} ${kitchenSub === 'door-raise' ? styles.active : ''}`}
+                    onClick={() => setKitchenSub('door-raise')}
+                  >
+                    도어올림
+                  </button>
+                  <button
+                    className={`${styles.moduleCategoryTab} ${kitchenSub === 'top-down' ? styles.active : ''}`}
+                    onClick={() => setKitchenSub('top-down')}
+                  >
+                    상판내림
+                  </button>
+                  <button
+                    className={`${styles.moduleCategoryTab} ${kitchenSub === 'upper' ? styles.active : ''}`}
+                    onClick={() => setKitchenSub('upper')}
+                  >
+                    상부장
+                  </button>
+                </div>
+              )}
+
+              {/* 전체/싱글/듀얼 탭 - 의류장/신발장에서만 표시 */}
+              {moduleCategory !== 'kitchen' && (
+                <div className={styles.moduleCategoryTabs}>
+                  <button
+                    className={`${styles.moduleCategoryTab} ${moduleType === 'all' ? styles.active : ''}`}
+                    onClick={() => setModuleType('all')}
+                  >
+                    전체
+                  </button>
+                  <button
+                    className={`${styles.moduleCategoryTab} ${moduleType === 'single' ? styles.active : ''}`}
+                    onClick={() => setModuleType('single')}
+                  >
+                    싱글
+                  </button>
+                  <button
+                    className={`${styles.moduleCategoryTab} ${moduleType === 'dual' ? styles.active : ''}`}
+                    onClick={() => setModuleType('dual')}
+                  >
+                    듀얼
+                  </button>
+                </div>
+              )}
 
               <div className={styles.moduleSection}>
                 <ModuleGallery
                   moduleCategory={moduleCategory}
+                  kitchenSubCategory={kitchenSub}
                   selectedType={moduleType}
                   onSelectedTypeChange={setModuleType}
                   hideTabMenu
