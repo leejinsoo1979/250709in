@@ -1233,11 +1233,15 @@ const Room: React.FC<RoomProps> = ({
   //       (가구/프레임/치수 좌표는 영향 없음 — 순수 시각 효과)
   // false: 기존 동작 (공간 전체 깊이 기준)
   const SHRINK_MESH_TO_FURNITURE_BACK = true;
-  const meshDepth = SHRINK_MESH_TO_FURNITURE_BACK ? furnitureDepth : panelDepth;
+  // 가구 뒷면과 공간 뒷벽 사이 여유 간격 (너무 딱 붙어 보이지 않게)
+  const BACK_MESH_GAP = mmToThreeUnits(10);
+  const meshDepth = SHRINK_MESH_TO_FURNITURE_BACK
+    ? (furnitureDepth + BACK_MESH_GAP)
+    : panelDepth;
   const extendedPanelDepth = meshDepth + extensionDepth;
-  // 뒷쪽 경계: 축소 시 가구 뒷면(furnitureZOffset - furnitureDepth/2), 아니면 기존 zOffset
+  // 뒷쪽 경계: 축소 시 가구 뒷면에서 GAP만큼 더 뒤로, 아니면 기존 zOffset
   const extendedZOffset = SHRINK_MESH_TO_FURNITURE_BACK
-    ? (furnitureZOffset - furnitureDepth / 2)
+    ? (furnitureZOffset - furnitureDepth / 2 - BACK_MESH_GAP)
     : zOffset;
 
   // 상단/하단 패널의 너비 (좌우 프레임 사이의 공간)
