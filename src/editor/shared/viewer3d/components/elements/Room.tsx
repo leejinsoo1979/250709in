@@ -5222,6 +5222,27 @@ const Room: React.FC<RoomProps> = ({
                     const slotUpperDepthMm = mod.freeDepth || mod.customDepth || 300;
                     const slotUpperFrontZ = furnitureZOffset - furnitureDepth / 2 - mmToThreeUnits(20) + mmToThreeUnits(slotUpperDepthMm);
                     slotFrameZ = slotUpperFrontZ - mmToThreeUnits(END_PANEL_THICKNESS) / 2;
+                    if (typeof window !== 'undefined') {
+                      const zOffset_mm = Math.round(furnitureZOffset / 0.01);
+                      const fDepth_mm = Math.round(furnitureDepth / 0.01);
+                      const sFront_mm = Math.round(slotUpperFrontZ / 0.01);
+                      const sFrame_mm = Math.round(slotFrameZ / 0.01);
+                      const modCenter_mm = Math.round((mod.position?.z ?? 0) / 0.01);
+                      const actualFront_mm = modCenter_mm + Math.round(slotUpperDepthMm / 2);
+                      console.log('🔍[슬롯상부프레임진단]', {
+                        mod_id: mod.id,
+                        mod_moduleId: mod.moduleId,
+                        upperDepth: slotUpperDepthMm,
+                        furnitureZOffset_mm: zOffset_mm,
+                        furnitureDepth_mm: fDepth_mm,
+                        slotUpperFrontZ_mm: sFront_mm,
+                        slotFrameZ_mm: sFrame_mm,
+                        mod_position_z_mm: modCenter_mm,
+                        '실제_상부장앞면_mm': actualFront_mm,
+                        '차이_프레임_vs_실제앞면': sFrame_mm - actualFront_mm,
+                        '차이_slotUpperFront_vs_실제앞면': sFront_mm - actualFront_mm,
+                      });
+                    }
                   }
                   slotTopSegments.push({
                     widthMm: modWidthMM,
