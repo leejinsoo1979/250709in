@@ -925,15 +925,24 @@ const FreePlacementDropZone: React.FC = () => {
       }
     }
 
-    // 가구 사이 갭
+    // 가구 사이 갭 — 가구 중심 간 거리에서 양쪽 halfWidth를 뺀 정확한 정수 값
     for (let i = 0; i < bounds.length - 1; i++) {
       const gapStart = bounds[i].right;
       const gapEnd = bounds[i + 1].left;
       if (gapEnd - gapStart > 0.5) {
+        // 정확 계산: 우측 가구.left - 좌측 가구.right
+        // freeWidth 기반 정수 너비로 left/right 재계산
+        const moduleA = freeModules.find(m => m.id === bounds[i].id);
+        const moduleB = freeModules.find(m => m.id === bounds[i + 1].id);
+        const widthA = moduleA ? Math.round(moduleA.freeWidth || moduleA.customWidth || moduleA.moduleWidth || 0) : 0;
+        const widthB = moduleB ? Math.round(moduleB.freeWidth || moduleB.customWidth || moduleB.moduleWidth || 0) : 0;
+        const centerA = moduleA ? Math.round(moduleA.position.x * 100) : 0;
+        const centerB = moduleB ? Math.round(moduleB.position.x * 100) : 0;
+        const exactGap = Math.max(0, (centerB - widthB / 2) - (centerA + widthA / 2));
         gaps.push({
           startX: gapStart,
           endX: gapEnd,
-          width: Math.floor(gapEnd - gapStart),
+          width: Math.round(exactGap),
           centerX: ((gapStart + gapEnd) / 2) * 0.01,
           centerY: gapLabelY,
           adjacentModuleId: bounds[i + 1].id,
