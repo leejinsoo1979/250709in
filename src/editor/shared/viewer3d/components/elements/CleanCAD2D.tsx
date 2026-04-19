@@ -5231,11 +5231,18 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           ?? (module.moduleId?.includes('upper') ? 'upper'
             : module.moduleId?.includes('lower') ? 'lower' : 'full');
         const isLowerDim = moduleCategoryForDim === 'lower';
-        // 하부장 너비 치수 Y: 가구 상단(= moduleY + 높이/2) 바로 위에 붙임
+        // 하부장 상단 Y(mm) = 바닥마감재 + 하부프레임(받침대) + 개별 띄움 + 가구 높이
+        // 3D 배치 좌표계(바닥=0)에서 계산
+        const floorFinishMmForDim = spaceInfo.hasFloorFinish && spaceInfo.floorFinish?.height
+          ? (spaceInfo.floorFinish.height || 0) : 0;
+        const baseFrameMmForDim = module.hasBase === false
+          ? 0
+          : (module.baseFrameHeight ?? (spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height || 65) : 0));
+        const floatMmForDim = module.hasBase === false ? (module.individualFloatHeight ?? 0) : 0;
         const moduleHeightMm = (module.freeHeight ?? module.customHeight ?? moduleData.dimensions.height) || 0;
-        const lowerTopY = (moduleY || 0) + mmToThreeUnits(moduleHeightMm / 2);
-        const LOWER_DIM_OFFSET_MM = 15; // 하부장 상단 위로 15mm만 띄움
-        const lowerDimY = lowerTopY + mmToThreeUnits(LOWER_DIM_OFFSET_MM);
+        const lowerTopYMm = floorFinishMmForDim + baseFrameMmForDim + floatMmForDim + moduleHeightMm;
+        const LOWER_DIM_OFFSET_MM = 40; // 하부장 상단 바로 위 오프셋
+        const lowerDimY = mmToThreeUnits(lowerTopYMm + LOWER_DIM_OFFSET_MM);
         const dimY = isLowerDim ? lowerDimY : slotDimensionY;
         
         // 듀얼 가구인지 확인 (이름에 'dual' 포함)
@@ -5404,7 +5411,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             {isLowerDim ? (
               <>
                 <NativeLine name="dimension_line"
-                  points={[[leftX, lowerTopY, 0.001], [leftX, dimY, 0.001]]}
+                  points={[[leftX, mmToThreeUnits(lowerTopYMm), 0.001], [leftX, dimY, 0.001]]}
                   color={dimensionColor}
                   lineWidth={0.6}
                   renderOrder={1000000}
@@ -5413,7 +5420,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   transparent={true}
                 />
                 <NativeLine name="dimension_line"
-                  points={[[rightX, lowerTopY, 0.001], [rightX, dimY, 0.001]]}
+                  points={[[rightX, mmToThreeUnits(lowerTopYMm), 0.001], [rightX, dimY, 0.001]]}
                   color={dimensionColor}
                   lineWidth={0.6}
                   renderOrder={1000000}
