@@ -3881,15 +3881,10 @@ const Room: React.FC<RoomProps> = ({
               {leftOuterMods.map((om, idx) => {
                 const segH = mmToThreeUnits(om.heightMm);
                 const segCY = panelStartY + mmToThreeUnits(om.bottomMm) + segH / 2;
-                // 가구 앞면 Z: FurnitureItem/upperFrameZ와 동일한 공식
-                const spDepthMm = spaceInfo.depth || 1500;
-                const fiFurnitureDepthMm = Math.min(spDepthMm, 600);
-                const fiFurnitureDepth = mmToThreeUnits(fiFurnitureDepthMm);
-                const fiZOffset = -mmToThreeUnits(spDepthMm) / 2 + (mmToThreeUnits(spDepthMm) - fiFurnitureDepth) / 2;
-                const modFrontZ = fiZOffset - fiFurnitureDepth / 2 - mmToThreeUnits(20) + mmToThreeUnits(om.depthMm);
-                // 프레임 앞면을 도어 앞면(가구 앞면 + 도어 두께 18.5mm)에 맞춤
-                const DOOR_THK_MM = 18.5;
-                const segCZ = modFrontZ + mmToThreeUnits(DOOR_THK_MM) - mmToThreeUnits(END_PANEL_THICKNESS) / 2;
+                // 기본 Z(표준 600mm 깊이 가구 도어 앞면 기준)에서, 가구 깊이 차이만큼 뒤로 이동
+                const refDepthMm = 600;
+                const depthDiff = mmToThreeUnits(refDepthMm - om.depthMm);
+                const segCZ = leftPosition[2] - depthDiff;
                 return (
                   <BoxWithEdges
                     key={`left-frame-split-${idx}-${om.category}-${materialConfig?.doorColor}-${materialConfig?.doorTexture}`}
@@ -3897,7 +3892,7 @@ const Room: React.FC<RoomProps> = ({
                     isOuterFrame
                     name="left-surround-ep"
                     isEndPanel={!wallConfig?.left}
-                    args={[frameRenderThickness.left, segH, mmToThreeUnits(END_PANEL_THICKNESS)]}
+                    args={[frameRenderThickness.left, segH, leftFrameDepth]}
                     position={[leftPosition[0], segCY, segCZ]}
                     material={leftFrameMat}
                     renderMode={renderMode}
@@ -4287,14 +4282,9 @@ const Room: React.FC<RoomProps> = ({
               {rightOuterMods.map((om, idx) => {
                 const segH = mmToThreeUnits(om.heightMm);
                 const segCY = panelStartY + mmToThreeUnits(om.bottomMm) + segH / 2;
-                const spDepthMm = spaceInfo.depth || 1500;
-                const fiFurnitureDepthMm = Math.min(spDepthMm, 600);
-                const fiFurnitureDepth = mmToThreeUnits(fiFurnitureDepthMm);
-                const fiZOffset = -mmToThreeUnits(spDepthMm) / 2 + (mmToThreeUnits(spDepthMm) - fiFurnitureDepth) / 2;
-                const modFrontZ = fiZOffset - fiFurnitureDepth / 2 - mmToThreeUnits(20) + mmToThreeUnits(om.depthMm);
-                // 프레임 앞면을 도어 앞면(가구 앞면 + 도어 두께 18.5mm)에 맞춤
-                const DOOR_THK_MM = 18.5;
-                const segCZ = modFrontZ + mmToThreeUnits(DOOR_THK_MM) - mmToThreeUnits(END_PANEL_THICKNESS) / 2;
+                const refDepthMm = 600;
+                const depthDiff = mmToThreeUnits(refDepthMm - om.depthMm);
+                const segCZ = rightFrameZ - depthDiff;
                 return (
                   <BoxWithEdges
                     key={`right-frame-split-${idx}-${om.category}-${materialConfig?.doorColor}-${materialConfig?.doorTexture}`}
@@ -4302,7 +4292,7 @@ const Room: React.FC<RoomProps> = ({
                     isOuterFrame
                     name="right-surround-ep"
                     isEndPanel={!wallConfig?.right}
-                    args={[frameRenderThickness.right, segH, mmToThreeUnits(END_PANEL_THICKNESS)]}
+                    args={[frameRenderThickness.right, segH, rightFrameDepth]}
                     position={[rightFrameX, segCY, segCZ]}
                     material={rightFrameMat}
                     renderMode={renderMode}
@@ -6012,12 +6002,9 @@ const Room: React.FC<RoomProps> = ({
                     {leftOuterMods.map((om, idx) => {
                       const segH = mmToThreeUnits(om.heightMm);
                       const segCY = panelStartY + mmToThreeUnits(om.bottomMm) + segH / 2;
-                      const spDepthMm = spaceInfo.depth || 1500;
-                      const fiFurnitureDepthMm = Math.min(spDepthMm, 600);
-                      const fiFurnitureDepth = mmToThreeUnits(fiFurnitureDepthMm);
-                      const fiZOffset = -mmToThreeUnits(spDepthMm) / 2 + (mmToThreeUnits(spDepthMm) - fiFurnitureDepth) / 2;
-                      const modFrontZ = fiZOffset - fiFurnitureDepth / 2 - mmToThreeUnits(20) + mmToThreeUnits(om.depthMm);
-                      const segSubZ = modFrontZ - mmToThreeUnits(END_PANEL_THICKNESS) / 2 - mmToThreeUnits(28);
+                      const refDepthMm = 600;
+                      const depthDiff = mmToThreeUnits(refDepthMm - om.depthMm);
+                      const segSubZ = subFrameZ - depthDiff;
                       return (
                         <group
                           key={`left-normal-vertical-split-${idx}-${om.category}`}
@@ -6227,12 +6214,9 @@ const Room: React.FC<RoomProps> = ({
                     {rightOuterMods.map((om, idx) => {
                       const segH = mmToThreeUnits(om.heightMm);
                       const segCY = panelStartY + mmToThreeUnits(om.bottomMm) + segH / 2;
-                      const spDepthMm = spaceInfo.depth || 1500;
-                      const fiFurnitureDepthMm = Math.min(spDepthMm, 600);
-                      const fiFurnitureDepth = mmToThreeUnits(fiFurnitureDepthMm);
-                      const fiZOffset = -mmToThreeUnits(spDepthMm) / 2 + (mmToThreeUnits(spDepthMm) - fiFurnitureDepth) / 2;
-                      const modFrontZ = fiZOffset - fiFurnitureDepth / 2 - mmToThreeUnits(20) + mmToThreeUnits(om.depthMm);
-                      const segSubZ = modFrontZ - mmToThreeUnits(END_PANEL_THICKNESS) / 2 - mmToThreeUnits(28);
+                      const refDepthMm = 600;
+                      const depthDiff = mmToThreeUnits(refDepthMm - om.depthMm);
+                      const segSubZ = subFrameZ - depthDiff;
                       return (
                         <group
                           key={`right-normal-vertical-split-${idx}-${om.category}`}
