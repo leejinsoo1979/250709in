@@ -5705,24 +5705,20 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             sectionBottomMm += sectionHeight;
             return;
           }
-          const rawPosArr: number[] = [...((section.shelfPositions || []) as number[])].sort((a, b) => a - b);
-          const n = rawPosArr.length;
+          const posArr: number[] = [...((section.shelfPositions || []) as number[])].sort((a, b) => a - b);
+          const n = posArr.length;
           if (n === 0) { sectionBottomMm += sectionHeight; return; }
           const halfT = basicThickness / 2;
-          // 칸 내경 = (섹션높이 - 선반두께*(선반갯수+2)) / 칸갯수
-          const compartmentCount = n + 1;
-          const evenGap = (sectionHeight - basicThickness * (n + 2)) / compartmentCount;
-          // 균등 배치로 강제 표시 (모든 칸이 같은 값)
+          // 실제 렌더 공식: pos[i]는 섹션 바닥에서 선반 중심까지 거리
+          //  첫 칸 = pos[0] - halfT
+          //  중간 = pos[i+1] - pos[i] - t
+          //  마지막 = sectionHeight - pos[N-1] - halfT
           const gaps: number[] = [];
-          for (let i = 0; i < compartmentCount; i++) {
-            gaps.push(Math.max(0, Math.round(evenGap)));
+          gaps.push(Math.max(0, Math.round(posArr[0] - halfT)));
+          for (let i = 0; i < n - 1; i++) {
+            gaps.push(Math.max(0, Math.round(posArr[i + 1] - posArr[i] - basicThickness)));
           }
-          // 선반 위치도 균등 기준으로 재계산 (렌더/편집 용)
-          const posArr: number[] = [];
-          for (let k = 0; k < n; k++) {
-            // k번째 선반 중심 Y = 바닥판(t) + (gap + t) * (k+1) - t/2
-            posArr.push(Math.round(basicThickness + (evenGap + basicThickness) * (k + 1) - halfT));
-          }
+          gaps.push(Math.max(0, Math.round(sectionHeight - posArr[n - 1] - halfT)));
           // 각 칸 중심 Y
           const centerYs: number[] = [];
           // 칸1 중심: 바닥에서 gaps[0]/2
