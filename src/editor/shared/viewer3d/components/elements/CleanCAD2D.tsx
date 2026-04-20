@@ -5667,7 +5667,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           공식: 첫칸=pos[0]-t/2, 중간=pos[i+1]-pos[i]-t, 마지막=sectionH-pos[N-1]-t/2 */}
       {showDimensions && currentViewDirection === 'front' && placedModules.map((module) => {
         const mid = module.moduleId || '';
-        const isShelf = mid.includes('-shelf-') && !mid.includes('drawer');
+        // 신발장 카테고리: 현관장 H, 선반장, 선반장+4단서랍, 선반장+2단서랍 모두 포함
+        const isShelf = mid.includes('-shelf-') || mid.includes('-entryway-');
         if (!isShelf) return null;
         const moduleData = getModuleById(mid, calculateInternalSpace(spaceInfo), spaceInfo);
         if (!moduleData) return null;

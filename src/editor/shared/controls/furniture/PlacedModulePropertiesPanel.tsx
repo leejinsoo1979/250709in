@@ -1191,7 +1191,8 @@ const PlacedModulePropertiesPanel: React.FC = () => {
       // 선반장 모듈 초기화 (2섹션: 하단/상단 각각)
       const isShelfModule = currentPlacedModule.moduleId.includes('-shelf-') ||
         currentPlacedModule.moduleId.includes('-4drawer-shelf-') ||
-        currentPlacedModule.moduleId.includes('-2drawer-shelf-');
+        currentPlacedModule.moduleId.includes('-2drawer-shelf-') ||
+        currentPlacedModule.moduleId.includes('-entryway-');
       if (isShelfModule) {
         const effectiveSections = currentPlacedModule.customSections || moduleData.modelConfig?.sections || [];
         // 하단(섹션0) shelf
