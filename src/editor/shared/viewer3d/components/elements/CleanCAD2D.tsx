@@ -5727,10 +5727,14 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           const innerH = Math.max(0, sectionOuterH - 2 * basicThickness);
           // eslint-disable-next-line no-console
           console.log('[FINAL]', { sIdx: sectionIdx, outerH: sectionOuterH, innerH, pos: posArr, baseFrame: baseFrameRuntime, topFrame: topFrameRuntime, spaceH: spaceInfo.height });
-          // 치수 라벨: 균등 공식, 소수점 1자리까지
-          const gEvenRaw = (innerH - n * basicThickness) / (n + 1);
-          const gEven = Math.round(gEvenRaw * 10) / 10;
-          const gaps: number[] = Array(n + 1).fill(gEven);
+          // 치수 라벨: 정수 균등, 오차는 맨 아래 칸에 흡수
+          const totalInner = innerH - n * basicThickness;
+          const baseGap = Math.floor(totalInner / (n + 1));
+          const remainder = totalInner - baseGap * (n + 1);
+          // 위→아래 순서: gaps[0]=맨위, gaps[n]=맨아래 (CleanCAD2D는 pos 기준 아래→위로 push하므로 실제로는 gaps 마지막이 맨위)
+          // SectionsRenderer와 CleanCAD2D에서 gaps[0]은 섹션 바닥(맨아래) 칸
+          const gaps: number[] = Array(n + 1).fill(baseGap);
+          gaps[0] += remainder; // 맨 아래 칸(섹션 바닥)에 오차 흡수
           // 각 칸 중심 Y
           const centerYs: number[] = [];
           // 칸1 중심: 바닥에서 gaps[0]/2

@@ -4519,10 +4519,12 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                     const halfT = basicThickness / 2;
                     // 섹션 내경: sectionHeight(외경) - 2t
                     const innerH = Math.max(0, sectionHeight - 2 * basicThickness);
-                    // 치수 라벨: 균등 공식, 소수점 1자리까지
-                    const gEvenRaw = (innerH - n * basicThickness) / (n + 1);
-                    const gEven = Math.round(gEvenRaw * 10) / 10;
-                    const gaps: number[] = Array(n + 1).fill(gEven);
+                    // 치수 라벨: 정수 균등, 오차는 맨 아래 칸에 흡수
+                    const totalInner = innerH - n * basicThickness;
+                    const baseGap = Math.floor(totalInner / (n + 1));
+                    const remainder = totalInner - baseGap * (n + 1);
+                    const gaps: number[] = Array(n + 1).fill(baseGap);
+                    gaps[0] += remainder; // 맨 아래 칸 (gaps[0]=섹션 바닥 칸)에 오차 흡수
                     return (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                       <div style={{ padding: '6px 8px', background: 'var(--theme-surface-alt, #f7f7f7)', borderRadius: '4px' }}>
