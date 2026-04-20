@@ -1278,7 +1278,7 @@ const Room: React.FC<RoomProps> = ({
 
   // 좌/우 서라운드 프레임 분절용 — 최외곽 가구들의 카테고리/높이/Y 추출
   // 같은 X극단 위치에 상부장+하부장 공존 가능하므로 여러 개 반환
-  type OuterMod = { category: 'full' | 'upper' | 'lower'; heightMm: number; bottomMm: number; topMm: number };
+  type OuterMod = { category: 'full' | 'upper' | 'lower'; heightMm: number; bottomMm: number; topMm: number; depthMm: number };
   const computeOuterMods = (side: 'left' | 'right'): OuterMod[] => {
     const mods = placedModulesFromStore.filter(m => !m.isSurroundPanel);
     if (mods.length === 0) return [];
@@ -1339,7 +1339,8 @@ const Room: React.FC<RoomProps> = ({
         topMm = spaceInfo.height;
       }
       const heightMm = topMm - bottomMm;
-      return { category: cat, heightMm, bottomMm, topMm };
+      const depthMm = m.freeDepth || m.customDepth || (cat === 'upper' ? 300 : 600);
+      return { category: cat, heightMm, bottomMm, topMm, depthMm };
     });
   };
   const leftOuterMods = useMemo(() => computeOuterMods('left'), [placedModulesFromStore, spaceInfo]);
@@ -3873,13 +3874,20 @@ const Room: React.FC<RoomProps> = ({
             ? surroundEndPanelDepth : mmToThreeUnits(END_PANEL_THICKNESS));
         const leftFrameMat = leftFrameMaterial ?? createFrameMaterial('left');
 
-        // 분절 모드: 좌측 최외곽이 upper/lower만 (full 없음) → 각 가구 높이에 맞춰 프레임 조각들
+        // 분절 모드: 좌측 최외곽이 upper/lower만 (full 없음) → 각 가구 높이/Z/깊이에 맞춰 프레임 조각들
         if (isLeftFrameSplit && spaceInfo.surroundType !== 'no-surround') {
           return (
             <>
               {leftOuterMods.map((om, idx) => {
                 const segH = mmToThreeUnits(om.heightMm);
                 const segCY = panelStartY + mmToThreeUnits(om.bottomMm) + segH / 2;
+                // 가구 앞면 Z: FurnitureItem/upperFrameZ와 동일한 공식
+                const spDepthMm = spaceInfo.depth || 1500;
+                const fiFurnitureDepthMm = Math.min(spDepthMm, 600);
+                const fiFurnitureDepth = mmToThreeUnits(fiFurnitureDepthMm);
+                const fiZOffset = -mmToThreeUnits(spDepthMm) / 2 + (mmToThreeUnits(spDepthMm) - fiFurnitureDepth) / 2;
+                const modFrontZ = fiZOffset - fiFurnitureDepth / 2 - mmToThreeUnits(20) + mmToThreeUnits(om.depthMm);
+                const segCZ = modFrontZ - mmToThreeUnits(END_PANEL_THICKNESS) / 2 + mmToThreeUnits(3);
                 return (
                   <BoxWithEdges
                     key={`left-frame-split-${idx}-${om.category}-${materialConfig?.doorColor}-${materialConfig?.doorTexture}`}
@@ -3887,8 +3895,8 @@ const Room: React.FC<RoomProps> = ({
                     isOuterFrame
                     name="left-surround-ep"
                     isEndPanel={!wallConfig?.left}
-                    args={[frameRenderThickness.left, segH, leftFrameDepth]}
-                    position={[leftPosition[0], segCY, leftPosition[2]]}
+                    args={[frameRenderThickness.left, segH, mmToThreeUnits(END_PANEL_THICKNESS)]}
+                    position={[leftPosition[0], segCY, segCZ]}
                     material={leftFrameMat}
                     renderMode={renderMode}
                     shadowEnabled={shadowEnabled}
@@ -4270,13 +4278,19 @@ const Room: React.FC<RoomProps> = ({
             : furnitureZOffset + furnitureDepth / 2 - mmToThreeUnits(END_PANEL_THICKNESS) / 2 + mmToThreeUnits(3));
         const rightFrameMat = rightFrameMaterial ?? createFrameMaterial('right');
 
-        // 분절 모드: 우측 최외곽이 upper/lower만 → 각 가구 높이에 맞춰 프레임 조각들
+        // 분절 모드: 우측 최외곽이 upper/lower만 → 각 가구 높이/Z/깊이에 맞춰 프레임 조각들
         if (isRightFrameSplit && spaceInfo.surroundType !== 'no-surround') {
           return (
             <>
               {rightOuterMods.map((om, idx) => {
                 const segH = mmToThreeUnits(om.heightMm);
                 const segCY = panelStartY + mmToThreeUnits(om.bottomMm) + segH / 2;
+                const spDepthMm = spaceInfo.depth || 1500;
+                const fiFurnitureDepthMm = Math.min(spDepthMm, 600);
+                const fiFurnitureDepth = mmToThreeUnits(fiFurnitureDepthMm);
+                const fiZOffset = -mmToThreeUnits(spDepthMm) / 2 + (mmToThreeUnits(spDepthMm) - fiFurnitureDepth) / 2;
+                const modFrontZ = fiZOffset - fiFurnitureDepth / 2 - mmToThreeUnits(20) + mmToThreeUnits(om.depthMm);
+                const segCZ = modFrontZ - mmToThreeUnits(END_PANEL_THICKNESS) / 2 + mmToThreeUnits(3);
                 return (
                   <BoxWithEdges
                     key={`right-frame-split-${idx}-${om.category}-${materialConfig?.doorColor}-${materialConfig?.doorTexture}`}
@@ -4284,8 +4298,8 @@ const Room: React.FC<RoomProps> = ({
                     isOuterFrame
                     name="right-surround-ep"
                     isEndPanel={!wallConfig?.right}
-                    args={[frameRenderThickness.right, segH, rightFrameDepth]}
-                    position={[rightFrameX, segCY, rightFrameZ]}
+                    args={[frameRenderThickness.right, segH, mmToThreeUnits(END_PANEL_THICKNESS)]}
+                    position={[rightFrameX, segCY, segCZ]}
                     material={rightFrameMat}
                     renderMode={renderMode}
                     shadowEnabled={shadowEnabled}
