@@ -312,27 +312,34 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
         }
       } catch {}
 
-      // 뒷면 자동 정렬: 기존 가구 중 가장 깊은 가구 기준으로 backWallGap 자동 계산
+      // 뒷면 자동 정렬: 전체 가구 중 가장 깊은 가구 기준으로 backWallGap 자동 계산
       // backWallGap = 기준 깊이 - 본인 깊이 (앞으로 밀려나가 뒷면이 맞춰짐)
       try {
-        if (module.backWallGap === undefined) {
-          const getDepth = (m: any): number => {
-            if (m.customDepth) return m.customDepth;
-            if (m.freeDepth) return m.freeDepth;
-            const md = getModuleById(m.moduleId, internalSpace, spaceInfo);
-            return md?.dimensions?.depth || 600;
-          };
-          const myDepth = getDepth(module);
-          // 기존 가구 중 가장 깊은 값 (서라운드/EP 제외)
-          const maxOtherDepth = state.placedModules.reduce((max, m) => {
-            if ((m as any).isSurroundPanel) return max;
+        const getDepth = (m: any): number => {
+          if (m.customDepth) return m.customDepth;
+          if (m.freeDepth) return m.freeDepth;
+          const md = getModuleById(m.moduleId, internalSpace, spaceInfo);
+          return md?.dimensions?.depth || 600;
+        };
+        const myDepth = getDepth(module);
+        const maxOtherDepth = state.placedModules.reduce((max, m) => {
+          if ((m as any).isSurroundPanel) return max;
+          const d = getDepth(m);
+          return Math.max(max, d);
+        }, 0);
+        const reference = Math.max(myDepth, maxOtherDepth);
+        // 본인 backWallGap 자동 계산 (이격이 기본값이거나 undefined일 때만)
+        if (module.backWallGap === undefined || module.backWallGap === 0 || module.backWallGap === (maxOtherDepth - myDepth)) {
+          module.backWallGap = reference > myDepth ? reference - myDepth : 0;
+        }
+        // 기존 가구들 backWallGap도 재계산 (새 가구가 더 깊으면 기존 얕은 가구들 업데이트)
+        if (myDepth > maxOtherDepth) {
+          state.placedModules.forEach((m: any) => {
+            if (m.isSurroundPanel) return;
             const d = getDepth(m);
-            return Math.max(max, d);
-          }, 0);
-          const reference = Math.max(myDepth, maxOtherDepth);
-          if (reference > myDepth) {
-            module.backWallGap = reference - myDepth;
-          }
+            const correctGap = myDepth > d ? myDepth - d : 0;
+            m.backWallGap = correctGap;
+          });
         }
       } catch {}
 
