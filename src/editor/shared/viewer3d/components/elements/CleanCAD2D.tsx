@@ -5706,6 +5706,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           const posArr: number[] = [...((section.shelfPositions || []) as number[])].sort((a, b) => a - b);
           const n = posArr.length;
           const sectionHeight = section.height;
+          console.log('🔴 [2D 선반 debug]', { moduleId: module.moduleId, sectionIdx, sectionHeight, posArr, basicThickness });
           const gaps: number[] = [];
           gaps.push(Math.max(0, Math.round(posArr[0] ?? sectionHeight)));
           for (let i = 0; i < n - 1; i++) {
