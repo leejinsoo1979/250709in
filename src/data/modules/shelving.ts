@@ -121,6 +121,9 @@ const FURNITURE_SPECS = {
   ENTRYWAY_DEPTH: 400,          // 현관장 기본 깊이
   ENTRYWAY_BOTTOM_HEIGHT: 1200, // 현관장 H 하부섹션(선반+서랍) 고정 높이
   // ENTRYWAY_I_BOTTOM_HEIGHT: 1400, // 현관장 I 하부섹션 고정 높이
+
+  // 선반장+서랍 스펙
+  SHELF_DRAWER_DEPTH: 380,     // 선반장+서랍 기본 깊이
 };
 
 // ============================================================================
@@ -561,10 +564,10 @@ const createSingle4DrawerShelf = (columnWidth: number, maxHeight: number): Modul
     `선반장+4단서랍 ${widthForId}mm`,
     columnWidth,
     maxHeight,
-    FURNITURE_SPECS.DEFAULT_DEPTH,
+    FURNITURE_SPECS.SHELF_DRAWER_DEPTH,
     '#546E7A', // blue-grey darker
     `하단 4단서랍 + 상단 선반 ${defaultShelfCount}개`,
-    FURNITURE_SPECS.DEFAULT_DEPTH
+    FURNITURE_SPECS.SHELF_DRAWER_DEPTH
   );
 
   return {
@@ -609,10 +612,10 @@ const createSingle2DrawerShelf = (columnWidth: number, maxHeight: number): Modul
     `선반장+2단서랍 ${widthForId}mm`,
     columnWidth,
     maxHeight,
-    FURNITURE_SPECS.DEFAULT_DEPTH,
+    FURNITURE_SPECS.SHELF_DRAWER_DEPTH,
     '#78909C', // blue-grey lighter
     `하단 2단서랍 + 상단 선반 ${defaultShelfCount}개`,
-    FURNITURE_SPECS.DEFAULT_DEPTH
+    FURNITURE_SPECS.SHELF_DRAWER_DEPTH
   );
 
   return {
@@ -1078,10 +1081,10 @@ const createDual4DrawerShelf = (dualColumnWidth: number, maxHeight: number, slot
     `선반장+4단서랍 ${widthForId}mm`,
     dualColumnWidth,
     maxHeight,
-    FURNITURE_SPECS.DEFAULT_DEPTH,
+    FURNITURE_SPECS.SHELF_DRAWER_DEPTH,
     '#546E7A',
     `듀얼 하단 4단서랍 + 상단 선반 ${defaultShelfCount}개`,
-    FURNITURE_SPECS.DEFAULT_DEPTH
+    FURNITURE_SPECS.SHELF_DRAWER_DEPTH
   );
 
   return {

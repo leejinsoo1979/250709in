@@ -6864,7 +6864,7 @@ const Room: React.FC<RoomProps> = ({
                       slotBaseSegments.push({
                         widthMm: modWidthMM,
                         centerXmm: modCenterXmm,
-                        zPosition: baseZPos - modBaseZInset,
+                        zPosition: slotShoeBaseZ !== null ? effectiveBaseZ : (effectiveBaseZ - modBaseZInset),
                         height: modBaseH,
                         yPosition: modBaseYCenter,
                         material: baseMat,
