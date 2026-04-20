@@ -22,6 +22,7 @@ import CustomFurnitureModule from './types/CustomFurnitureModule';
 import CustomizableBoxModule from './types/CustomizableBoxModule';
 import { CustomFurnitureConfig } from '@/editor/shared/furniture/types';
 import { AdjustableFootsRenderer } from './components/AdjustableFootsRenderer';
+import { withUpperSafetyShelfRemoved } from '@/editor/shared/utils/upperSafetyShelf';
 
 interface BoxModuleProps {
   moduleData: ModuleData;
@@ -187,8 +188,17 @@ const BoxModule: React.FC<BoxModuleProps> = ({
   const spaceConfigStore = useSpaceConfigStore();
   const { indirectLightEnabled, indirectLightIntensity, indirectLightColor } = useUIStore();
   const placedModules = useFurnitureStore(state => state.placedModules);
-  
-  
+
+  // 상부 안전선반 제거 옵션 적용 (코트장/붙박이장B/D)
+  const removeUpperSafetyShelf = useMemo(() => {
+    const pm = placedFurnitureId ? placedModules.find(p => p.id === placedFurnitureId) : undefined;
+    return !!pm?.removeUpperSafetyShelf;
+  }, [placedFurnitureId, placedModules]);
+  moduleData = useMemo(
+    () => withUpperSafetyShelfRemoved(moduleData, removeUpperSafetyShelf),
+    [moduleData, removeUpperSafetyShelf]
+  );
+
   // 공통 로직도 항상 호출 (조건부 사용)
   const baseFurniture = useBaseFurniture(moduleData, {
     color,

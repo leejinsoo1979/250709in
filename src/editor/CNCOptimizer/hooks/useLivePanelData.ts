@@ -9,6 +9,7 @@ import { normalizePanels, NormalizedPanel } from '@/utils/cutlist/normalize';
 import { calculateShelfBoringPositions } from '@/domain/boring/utils/calculateShelfBoringPositions';
 import { computeFrameMergeGroups, computeStoneTopMergeGroups } from '@/editor/shared/utils/frameMergeUtils';
 import { getDefaultGrainDirection } from '@/editor/shared/utils/materialConstants';
+import { withUpperSafetyShelfRemoved } from '@/editor/shared/utils/upperSafetyShelf';
 
 /**
  * CNC 패널 이름 → 3D panelName 변환
@@ -147,6 +148,8 @@ export function useLivePanelData() {
           };
           console.log(`Module ${moduleIndex}: Using customSections from placed module`, placedModule.customSections);
         }
+        // 상부 안전선반 제거 옵션 적용 (코트장/붙박이장B/D)
+        moduleData = withUpperSafetyShelfRemoved(moduleData, (placedModule as any).removeUpperSafetyShelf);
         console.log(`Module ${moduleIndex}: Found module data`, moduleData);
 
         // 가구 식별 라벨: "[1]" 형태 (간결하게)
@@ -1067,6 +1070,8 @@ export function usePanelSubscription(callback: (panels: Panel[]) => void) {
           }
         };
       }
+      // 상부 안전선반 제거 옵션 적용 (코트장/붙박이장B/D)
+      moduleData = withUpperSafetyShelfRemoved(moduleData, (placedModule as any).removeUpperSafetyShelf);
 
       // 가구 식별 라벨 생성 (간결하게)
       const furnitureNumber2 = moduleIndex + 1;

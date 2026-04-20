@@ -10,6 +10,7 @@ import { analyzeColumnSlots } from '../../utils/columnSlotProcessor';
 import { calculateSpaceIndexing } from '../../utils/indexing';
 import { useTranslation } from '@/i18n/useTranslation';
 import { calculatePanelDetails, calculateSurroundPanels } from '@/editor/shared/utils/calculatePanelDetails';
+import { withUpperSafetyShelfRemoved, isUpperSafetyShelfModule } from '@/editor/shared/utils/upperSafetyShelf';
 import { getDefaultGrainDirection } from '@/editor/shared/utils/materialConstants';
 import { isCustomizableModuleId, getCustomDimensionKey, getStandardDimensionKey } from './CustomizableFurnitureLibrary';
 import { calcResizedPositionX } from '@/editor/shared/utils/freePlacementUtils';
@@ -822,8 +823,9 @@ const PlacedModulePropertiesPanel: React.FC = () => {
         if (currentPlacedModule.zone === 'dropped') {
           effectiveSpaceInfo = { ...spaceInfo, zone: 'dropped' as const };
         }
-        return getModuleById(targetModuleId, calculateInternalSpace(effectiveSpaceInfo), effectiveSpaceInfo)
+        const data = getModuleById(targetModuleId, calculateInternalSpace(effectiveSpaceInfo), effectiveSpaceInfo)
           || buildModuleDataFromPlacedModule(currentPlacedModule);
+        return withUpperSafetyShelfRemoved(data as ModuleData, currentPlacedModule.removeUpperSafetyShelf);
       })()
     : null;
 
@@ -4589,6 +4591,37 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                 <h5 className={styles.sectionTitle}>선반 설정</h5>
                 {renderShelfEditor(1, '상단 섹션', upperShelfCount, setUpperShelfCount, upperShelfPositionInputs, setUpperShelfPositionInputs)}
                 {renderShelfEditor(0, '하단 섹션', lowerShelfCount, setLowerShelfCount, lowerShelfPositionInputs, setLowerShelfPositionInputs)}
+              </div>
+            );
+          })()}
+
+          {/* 상부 선반 제거 토글: 코트장/붙박이장B/붙박이장D 전용 */}
+          {!showDetails && currentPlacedModule && isUpperSafetyShelfModule(currentPlacedModule.moduleId) && (() => {
+            const removed = !!currentPlacedModule.removeUpperSafetyShelf;
+            const toggleStyle: React.CSSProperties = {
+              width: '36px', height: '20px', borderRadius: '10px', border: 'none', cursor: 'pointer',
+              backgroundColor: removed ? 'var(--theme-primary, #4a90d9)' : '#ccc',
+              position: 'relative', transition: 'background-color 0.2s', flexShrink: 0,
+            };
+            const knobStyle: React.CSSProperties = {
+              position: 'absolute', top: '2px', width: '16px', height: '16px', borderRadius: '50%',
+              backgroundColor: '#fff', transition: 'left 0.2s', left: removed ? '18px' : '2px',
+            };
+            return (
+              <div className={styles.propertySection}>
+                <h5 className={styles.sectionTitle}>상부 선반</h5>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '4px 0' }}>
+                  <button
+                    onClick={() => updatePlacedModule(currentPlacedModule.id, { removeUpperSafetyShelf: !removed })}
+                    style={toggleStyle}
+                    aria-label="상부 선반 제거"
+                  >
+                    <span style={knobStyle} />
+                  </button>
+                  <span style={{ fontSize: '12px', color: 'var(--theme-text-primary)' }}>
+                    선반 제거 (옷봉을 상판에 부착)
+                  </span>
+                </div>
               </div>
             );
           })()}
