@@ -5696,7 +5696,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         const cxX = module.position.x;
         const labelX = cxX;
 
-        let sectionY0 = furnitureBottomMm + basicThickness;
+        let sectionY0 = furnitureBottomMm;
         const output: React.ReactNode[] = [];
         effectiveSections.forEach((section: any, sectionIdx: number) => {
           if (section.type !== 'shelf') {

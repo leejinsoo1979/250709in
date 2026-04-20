@@ -4498,18 +4498,16 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                       }}
                     >+</button>
                   </div>
-                  {posInputs.length > 0 && (() => {
-                    // 뷰어와 동일한 공식: 선반 사이 순수 거리 (basicThickness 차감 없음)
-                    const posNums = posInputs.map(s => parseInt(s, 10) || 0);
+                  {(() => {
+                    // 뷰어와 동일한 공식: section.shelfPositions에서 직접 계산 (posInputs 무시)
+                    const shelfPos: number[] = [...((section.shelfPositions || []) as number[])].sort((a, b) => a - b);
+                    if (shelfPos.length === 0) return null;
                     const gaps: number[] = [];
-                    const sorted = [...posNums].sort((a, b) => a - b);
-                    // 칸 0: 섹션 바닥 ~ 선반1
+                    const sorted = shelfPos;
                     gaps.push(Math.max(0, Math.round(sorted[0])));
-                    // 중간 칸: 선반 i ~ 선반 i+1
                     for (let i = 0; i < sorted.length - 1; i++) {
                       gaps.push(Math.max(0, Math.round(sorted[i + 1] - sorted[i])));
                     }
-                    // 마지막 칸: 마지막선반 ~ 섹션 상단
                     gaps.push(Math.max(0, Math.round(sectionHeight - sorted[sorted.length - 1])));
                     return (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
