@@ -1320,17 +1320,16 @@ const Room: React.FC<RoomProps> = ({
         : 'full';
       const hMm = (m.freeHeight || m.customHeight || 0);
       const cabHeight = hMm > 0 ? hMm : (cat === 'lower' ? 785 : cat === 'upper' ? 785 : (spaceInfo.height - topFrameMM - floorFinishMM - baseH));
-      // 좌/우 서라운드 프레임 Y 범위: 도어 앞면/상단/하단과 정렬
-      //  - upper: 도어 하단(가구 바닥) ~ 도어 상단(상부 프레임 아래)
-      //  - lower: 도어 하단(받침대 위 - 5mm) ~ 도어 상단(가구 상단)
+      // 좌/우 서라운드 프레임 Y 범위
+      //  - upper: 상부장 하단(도어 하단) ~ 공간 천장(상부 프레임까지 커버)
+      //  - lower: 도어 하단(가구 바닥 - 5mm) ~ 도어 상단(가구 상단)
       const DOOR_BOTTOM_GAP_MM = 5;
       let bottomMm: number;
       let topMm: number;
       if (cat === 'upper') {
         const cabBottom = spaceInfo.height - topFrameMM - cabHeight;
-        const cabTop = spaceInfo.height - topFrameMM;
         bottomMm = cabBottom; // 도어 하단 = 상부장 하단
-        topMm = cabTop; // 도어 상단 = 상부장 상단 (상부 프레임 하단)
+        topMm = spaceInfo.height; // 천장까지 (상부 프레임 영역 포함)
       } else if (cat === 'lower') {
         const cabBottom = floorFinishMM + baseH;
         const cabTop = cabBottom + cabHeight;
