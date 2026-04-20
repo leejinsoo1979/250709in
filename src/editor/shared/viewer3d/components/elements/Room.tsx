@@ -1321,22 +1321,19 @@ const Room: React.FC<RoomProps> = ({
       const hMm = (m.freeHeight || m.customHeight || 0);
       const defaultCabH = cat === 'lower' ? 864 : cat === 'upper' ? 785 : (spaceInfo.height - topFrameMM - floorFinishMM - baseH);
       const cabHeight = hMm > 0 ? hMm : defaultCabH;
-      const doorBotGap = (m as any).doorBottomGap ?? (spaceInfo as any).doorBottomGap ?? 0;
-      const doorTopGapMM = (m as any).doorTopGap ?? (spaceInfo as any).doorTopGap ?? 0;
       // position.y (three.js, floorFinish 기준 mm): 가구 중심 Y
       const posYmm = Math.round((m.position?.y ?? 0) * 100);
-      // 좌/우 서라운드 프레임 Y 범위 (도어 확장 영역까지 커버)
+      // 좌/우 서라운드 프레임 Y 범위
+      //  - upper: 상부장 하단 ~ 공간 천장 (상부 프레임까지 커버)
+      //  - lower: 공간 바닥(0) ~ 하부장 상단 (하부 받침대 포함)
       let bottomMm: number;
       let topMm: number;
       if (cat === 'upper') {
-        const cabBottom = posYmm - cabHeight / 2;
-        bottomMm = cabBottom - doorBotGap; // 도어 하단까지 확장
-        topMm = spaceInfo.height; // 천장까지
+        bottomMm = posYmm - cabHeight / 2;
+        topMm = spaceInfo.height;
       } else if (cat === 'lower') {
-        const cabTop = posYmm + cabHeight / 2;
-        const cabBottom = posYmm - cabHeight / 2;
-        bottomMm = cabBottom - doorBotGap; // 도어 하단까지 확장
-        topMm = cabTop + doorTopGapMM; // 도어 상단까지 확장
+        bottomMm = 0;
+        topMm = posYmm + cabHeight / 2;
       } else {
         bottomMm = 0;
         topMm = spaceInfo.height;
