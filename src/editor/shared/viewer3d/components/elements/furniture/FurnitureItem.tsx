@@ -2710,6 +2710,12 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     furnitureZ = furnitureZOffset + furnitureDepth / 2 - doorThickness - depth / 2 + baseDepthOffset;
   }
 
+  // 뒷벽과 이격: 설정값만큼 앞쪽(+Z)으로 이동
+  const backWallGapMm = placedModule.backWallGap ?? 0;
+  if (backWallGapMm > 0 && !isFrontSpaceFurniture) {
+    furnitureZ += mmToThreeUnits(backWallGapMm);
+  }
+
 
   // EP 비대칭 보정: 좌EP만 → 본체 오른쪽으로, 우EP만 → 본체 왼쪽으로
   // 본체 너비가 EP만큼 줄었으므로 본체+EP 전체가 슬롯/위치 중앙에 오도록 보정

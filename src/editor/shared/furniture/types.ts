@@ -122,6 +122,7 @@ export interface PlacedModule {
   
   // 사용자 정의 속성들
   customDepth?: number; // 사용자가 선택한 깊이 (mm)
+  backWallGap?: number; // 뒷벽과의 이격 (mm, 기본값: 0)
   customHeight?: number; // 사용자가 선택한 높이 (mm)
   customWidth?: number; // 사용자가 선택한 너비 (mm) - 기둥 C 분할 시 사용
   adjustedWidth?: number; // 기둥 침범으로 조정된 폭 (mm)

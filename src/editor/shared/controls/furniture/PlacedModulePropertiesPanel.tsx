@@ -2397,6 +2397,42 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                   })()}
                 </span>
               </div>
+              {/* 뒷벽과 이격 */}
+              {currentPlacedModule && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '6px' }}>
+                  <span style={{ fontSize: '11px', color: 'var(--theme-text-secondary)', flexShrink: 0 }}>뒷벽 이격</span>
+                  <div className={styles.inputWithUnit} style={{ flex: 1 }}>
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      value={String(currentPlacedModule.backWallGap ?? 0)}
+                      onChange={(e) => {
+                        const raw = e.target.value;
+                        if (raw === '' || /^-?\d+$/.test(raw)) {
+                          const v = parseInt(raw, 10);
+                          if (!isNaN(v) && v >= 0 && v <= 500) {
+                            updatePlacedModule(currentPlacedModule.id, { backWallGap: v });
+                          } else if (raw === '') {
+                            updatePlacedModule(currentPlacedModule.id, { backWallGap: 0 });
+                          }
+                        }
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') (e.target as HTMLInputElement).blur();
+                        else if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                          e.preventDefault();
+                          const cur = currentPlacedModule.backWallGap ?? 0;
+                          const next = Math.max(0, Math.min(500, cur + (e.key === 'ArrowUp' ? 1 : -1)));
+                          updatePlacedModule(currentPlacedModule.id, { backWallGap: next });
+                        }
+                      }}
+                      className={styles.depthInput}
+                      style={{ color: '#000', backgroundColor: '#fff', WebkitTextFillColor: '#000', opacity: 1, width: '70px', textAlign: 'center' }}
+                    />
+                    <span className={styles.unit}>mm</span>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
           
