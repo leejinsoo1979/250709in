@@ -912,9 +912,7 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
   const placedModulesForOuter = useFurnitureStore(state => state.placedModules);
   const outerExtendLeft = useMemo(() => {
     if (!placedFurnitureId || !spaceInfo) return 0;
-    const mods = placedModulesForOuter.filter(mm => !mm.isSurroundPanel);
-    if (mods.length === 0) return 0;
-    const self = mods.find(mm => mm.id === placedFurnitureId);
+    const self = placedModulesForOuter.find(mm => mm.id === placedFurnitureId);
     if (!self) return 0;
     const selfId = self.moduleId || '';
     const isLowerCat = selfId.startsWith('lower-') || selfId.includes('-lower-');
@@ -922,20 +920,16 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
     const selfW = (self.isFreePlacement && self.freeWidth) ? self.freeWidth : (self.customWidth || self.adjustedWidth || self.moduleWidth || 0);
     const selfCx = Math.round(self.position.x * 100);
     const selfLeft = selfCx - selfW / 2;
-    let minLeft = Infinity;
-    mods.forEach(mm => {
-      const w = (mm.isFreePlacement && mm.freeWidth) ? mm.freeWidth : (mm.customWidth || mm.adjustedWidth || mm.moduleWidth || 0);
-      const cx = Math.round(mm.position.x * 100);
-      if (cx - w / 2 < minLeft) minLeft = cx - w / 2;
-    });
-    const isLeftmost = Math.abs(selfLeft - minLeft) <= 1;
-    return isLeftmost ? (spaceInfo.frameSize?.left || 0) : 0;
-  }, [placedModulesForOuter, placedFurnitureId, spaceInfo?.frameSize?.left]);
+    // 자기 좌측 edge가 공간 내경 좌측 경계에 1mm 이내 인접한 경우에만 확장
+    const halfSpaceMm = (spaceInfo.width || 0) / 2;
+    const leftFrameMM = spaceInfo.frameSize?.left || 0;
+    const leftBoundaryMm = -halfSpaceMm + leftFrameMM;
+    const isAdjLeft = Math.abs(selfLeft - leftBoundaryMm) <= 1;
+    return isAdjLeft ? leftFrameMM : 0;
+  }, [placedModulesForOuter, placedFurnitureId, spaceInfo?.frameSize?.left, spaceInfo?.width]);
   const outerExtendRight = useMemo(() => {
     if (!placedFurnitureId || !spaceInfo) return 0;
-    const mods = placedModulesForOuter.filter(mm => !mm.isSurroundPanel);
-    if (mods.length === 0) return 0;
-    const self = mods.find(mm => mm.id === placedFurnitureId);
+    const self = placedModulesForOuter.find(mm => mm.id === placedFurnitureId);
     if (!self) return 0;
     const selfId = self.moduleId || '';
     const isLowerCat = selfId.startsWith('lower-') || selfId.includes('-lower-');
@@ -943,15 +937,12 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
     const selfW = (self.isFreePlacement && self.freeWidth) ? self.freeWidth : (self.customWidth || self.adjustedWidth || self.moduleWidth || 0);
     const selfCx = Math.round(self.position.x * 100);
     const selfRight = selfCx + selfW / 2;
-    let maxRight = -Infinity;
-    mods.forEach(mm => {
-      const w = (mm.isFreePlacement && mm.freeWidth) ? mm.freeWidth : (mm.customWidth || mm.adjustedWidth || mm.moduleWidth || 0);
-      const cx = Math.round(mm.position.x * 100);
-      if (cx + w / 2 > maxRight) maxRight = cx + w / 2;
-    });
-    const isRightmost = Math.abs(selfRight - maxRight) <= 1;
-    return isRightmost ? (spaceInfo.frameSize?.right || 0) : 0;
-  }, [placedModulesForOuter, placedFurnitureId, spaceInfo?.frameSize?.right]);
+    const halfSpaceMm = (spaceInfo.width || 0) / 2;
+    const rightFrameMM = spaceInfo.frameSize?.right || 0;
+    const rightBoundaryMm = halfSpaceMm - rightFrameMM;
+    const isAdjRight = Math.abs(selfRight - rightBoundaryMm) <= 1;
+    return isAdjRight ? rightFrameMM : 0;
+  }, [placedModulesForOuter, placedFurnitureId, spaceInfo?.frameSize?.right, spaceInfo?.width]);
 
   const stoneTopData = useMemo(() => {
     if (stoneThickness <= 0) return null;
