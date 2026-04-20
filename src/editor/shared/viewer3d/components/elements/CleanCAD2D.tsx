@@ -5811,15 +5811,15 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                       padding: '1px 2px', outline: 'none',
                     }}
                   />
-                  <div style={{ display: 'flex', flexDirection: 'column', marginLeft: '2px' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', marginLeft: '3px' }}>
                     <button
                       type="button"
                       onClick={() => applyGapEdit(i, g + 1)}
                       style={{
-                        width: '14px', height: '10px', fontSize: '8px', lineHeight: '8px',
+                        width: '22px', height: '16px', fontSize: '11px', lineHeight: '1',
                         padding: 0, cursor: 'pointer',
                         color: dimensionColor, background: 'transparent',
-                        border: `1px solid ${dimensionColor}`, borderRadius: '2px 2px 0 0',
+                        border: `1px solid ${dimensionColor}`, borderRadius: '3px 3px 0 0',
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
                       }}
                     >▲</button>
@@ -5827,11 +5827,11 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                       type="button"
                       onClick={() => applyGapEdit(i, Math.max(0, g - 1))}
                       style={{
-                        width: '14px', height: '10px', fontSize: '8px', lineHeight: '8px',
+                        width: '22px', height: '16px', fontSize: '11px', lineHeight: '1',
                         padding: 0, cursor: 'pointer',
                         color: dimensionColor, background: 'transparent',
                         border: `1px solid ${dimensionColor}`, borderTop: 'none',
-                        borderRadius: '0 0 2px 2px',
+                        borderRadius: '0 0 3px 3px',
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
                       }}
                     >▼</button>
