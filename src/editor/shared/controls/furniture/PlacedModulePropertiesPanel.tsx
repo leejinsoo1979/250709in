@@ -4521,7 +4521,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                           const g = gaps[i];
                           const applyGap = (newGap: number) => {
                             const safeGap = Math.max(0, Math.round(newGap));
-                            const newPositions = [...sorted];
+                            const newPositions = [...shelfPos];
                             const updatedGaps = [...gaps];
                             updatedGaps[i] = safeGap;
                             const n = newPositions.length;
