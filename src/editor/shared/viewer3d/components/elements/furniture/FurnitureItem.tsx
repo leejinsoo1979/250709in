@@ -3671,7 +3671,9 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
 
               const epThicknessMm = placedModule.endPanelThickness || 18.5; // 물리적 렌더링 두께 (PET)
               const epW = mmToThreeUnits(epThicknessMm);
-              const epDepthMm = placedModule.endPanelDepth ?? (actualDepthMm || 580);
+              // EP 깊이: 사용자 지정 > 본인 customDepth > 표준 580 (신발장 380 등으로 쪼그라들지 않게 본인 customDepth 우선)
+              const epOwnDepth = placedModule.customDepth || actualDepthMm || 580;
+              const epDepthMm = placedModule.endPanelDepth ?? epOwnDepth;
               const epD = mmToThreeUnits(epDepthMm);
               // 앞/뒤 옵셋: + 늘림, - 줄임. 깊이 = base + front + back, Z = (front - back) / 2
               const leftFront = mmToThreeUnits(placedModule.leftEndPanelOffset ?? 0);
