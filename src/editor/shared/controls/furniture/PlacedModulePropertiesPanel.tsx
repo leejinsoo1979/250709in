@@ -4499,15 +4499,14 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                     >+</button>
                   </div>
                   {(() => {
-                    // 뷰어와 동일한 공식: section.shelfPositions에서 직접 계산
-                    // 저장된 값이 비정상(마지막 선반이 섹션 높이의 50% 미만)이면 균등 분할로 자동 복구
                     let shelfPos: number[] = [...((section.shelfPositions || []) as number[])].sort((a, b) => a - b);
+                    console.log('🟣 [팝업 선반 debug]', { sectionIdx, sectionHeight, rawShelfPos: [...shelfPos], count });
                     if (shelfPos.length === 0) return null;
                     const maxPos = shelfPos[shelfPos.length - 1];
                     if (maxPos < sectionHeight * 0.5) {
-                      // 균등 분할: 각 칸 = sectionHeight / (count+1)
                       const even = sectionHeight / (shelfPos.length + 1);
                       shelfPos = shelfPos.map((_, i) => Math.round(even * (i + 1)));
+                      console.log('🟣 [팝업 복구됨]', shelfPos);
                     }
                     const gaps: number[] = [];
                     const sorted = shelfPos;
