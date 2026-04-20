@@ -3650,9 +3650,15 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                 m.id !== placedModule.id && !m.isFreePlacement && (m.zone || 'normal') === myZone &&
                 m.slotIndex !== undefined && (m.slotIndex === targetSlot || (m.isDualSlot && m.slotIndex === targetSlot - 1));
               const isSameHeightAdjacent = (m: typeof placedModule) => {
+                // 인접 가구가 본인보다 얕으면(앞면 일치 안함) 측면 노출 → 측판 필요
+                const adjData = getModuleById(m.moduleId, internalSpace, spaceInfo);
+                const adjDepth = (m as any).customDepth || (m as any).freeDepth || adjData?.dimensions?.depth || 0;
+                const myDepth = placedModule.customDepth || (placedModule as any).freeDepth || actualModuleData?.dimensions?.depth || 0;
+                if (adjDepth > 0 && myDepth > 0 && adjDepth < myDepth - 1) {
+                  return false; // 인접이 얕음 → 본인 측면 일부 노출 → 측판 필요
+                }
                 // full(키큰장)의 EP → 인접도 full이어야 측판 생략
                 if (furnitureCategory === 'full') {
-                  const adjData = getModuleById(m.moduleId, internalSpace, spaceInfo);
                   return adjData?.category === 'full';
                 }
                 // upper/lower는 기존 로직 유지 (인접 가구 있으면 측판 생략)
