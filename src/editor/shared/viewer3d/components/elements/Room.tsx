@@ -1282,7 +1282,12 @@ const Room: React.FC<RoomProps> = ({
   const computeOuterMods = (side: 'left' | 'right'): OuterMod[] => {
     const mods = placedModulesFromStore.filter(m => !m.isSurroundPanel);
     if (mods.length === 0) return [];
-    // 자유배치: position.x 기준, 슬롯배치: slotIndex 기준
+    // 공간 내경 경계 (mm, 중심 0 기준)
+    const halfSpaceMm = (spaceInfo.width || 0) / 2;
+    const frameLeftMm = spaceInfo.frameSize?.left || 0;
+    const frameRightMm = spaceInfo.frameSize?.right || 0;
+    const boundaryMm = side === 'left' ? -halfSpaceMm + frameLeftMm : halfSpaceMm - frameRightMm;
+    // 자유배치: position.x 기준
     let extremeX: number | null = null;
     mods.forEach((m) => {
       const w = (m.isFreePlacement && m.freeWidth) ? m.freeWidth : (m.customWidth || m.adjustedWidth || m.moduleWidth || 0);
@@ -1293,6 +1298,9 @@ const Room: React.FC<RoomProps> = ({
       else if (side === 'right' && edgeMm > extremeX) extremeX = edgeMm;
     });
     if (extremeX === null) return [];
+    // 내경 경계로부터 최외곽 가구까지 거리 — 50mm 초과면 "해당 측면에 가구 없음"으로 간주해 분절 스킵
+    const distToBoundary = Math.abs((extremeX as number) - boundaryMm);
+    if (distToBoundary > 50) return [];
     // 최외곽 좌표와 1mm 이내로 인접한 가구들만 후보
     const outermost = mods.filter((m) => {
       const w = (m.isFreePlacement && m.freeWidth) ? m.freeWidth : (m.customWidth || m.adjustedWidth || m.moduleWidth || 0);
@@ -1311,19 +1319,26 @@ const Room: React.FC<RoomProps> = ({
         : (id.startsWith('lower-') || id.includes('-lower-')) ? 'lower'
         : 'full';
       const hMm = (m.freeHeight || m.customHeight || 0);
-      const heightMm = hMm > 0 ? hMm : (cat === 'lower' ? 785 : cat === 'upper' ? 785 : (spaceInfo.height - topFrameMM - floorFinishMM - baseH));
+      const cabHeight = hMm > 0 ? hMm : (cat === 'lower' ? 785 : cat === 'upper' ? 785 : (spaceInfo.height - topFrameMM - floorFinishMM - baseH));
+      // 좌/우 서라운드 프레임 Y 범위:
+      //  - upper 인접 → 천장(공간 전체 높이)까지 확장하여 상부 프레임 영역까지 커버
+      //  - lower 인접 → 바닥(0)까지 확장하여 하부 받침대 영역까지 커버
+      //  - full → 공간 전체
       let bottomMm: number;
       let topMm: number;
       if (cat === 'upper') {
-        topMm = spaceInfo.height - topFrameMM;
-        bottomMm = topMm - heightMm;
+        topMm = spaceInfo.height; // 공간 천장까지
+        const cabBottom = spaceInfo.height - topFrameMM - cabHeight;
+        bottomMm = cabBottom; // 상부장 하단까지
       } else if (cat === 'lower') {
-        bottomMm = floorFinishMM + baseH;
-        topMm = bottomMm + heightMm;
+        bottomMm = 0; // 공간 바닥까지
+        const cabTop = floorFinishMM + baseH + cabHeight;
+        topMm = cabTop; // 하부장 상단까지
       } else {
-        bottomMm = floorFinishMM + baseH;
-        topMm = bottomMm + heightMm;
+        bottomMm = 0;
+        topMm = spaceInfo.height;
       }
+      const heightMm = topMm - bottomMm;
       return { category: cat, heightMm, bottomMm, topMm };
     });
   };
