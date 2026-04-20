@@ -1312,17 +1312,6 @@ const Room: React.FC<RoomProps> = ({
     const floorFinishMM = spaceInfo.hasFloorFinish && spaceInfo.floorFinish ? spaceInfo.floorFinish.height : 0;
     const baseH = spaceInfo.baseConfig?.type === 'stand' ? 0 : (spaceInfo.baseConfig?.height || 65);
     const topFrameMM = spaceInfo.frameSize?.top || 30;
-    // 같은 쪽에 있는 상부장의 최저 하단 Y (mm) — 하부장 프레임이 여기까지 이어짐
-    let upperMinBottomMm: number | null = null;
-    outermost.forEach(m => {
-      const id = m.moduleId || '';
-      const isUpper = id.startsWith('upper-') || id.includes('-upper-');
-      if (!isUpper) return;
-      const hMm = (m.freeHeight || m.customHeight || 0) || 785;
-      const posYmm = Math.round((m.position?.y ?? 0) * 100);
-      const cabBottom = posYmm - hMm / 2;
-      if (upperMinBottomMm === null || cabBottom < upperMinBottomMm) upperMinBottomMm = cabBottom;
-    });
     return outermost.map((m): OuterMod => {
       const id = m.moduleId || '';
       const cat: 'full' | 'upper' | 'lower' =
@@ -1347,8 +1336,7 @@ const Room: React.FC<RoomProps> = ({
         topMm = spaceInfo.height;
       } else if (cat === 'lower') {
         bottomMm = 0;
-        // 같은 쪽에 상부장이 있으면 상부장 하단까지 이어지도록 확장
-        topMm = upperMinBottomMm !== null ? upperMinBottomMm : (posYmm + cabHeight / 2);
+        topMm = posYmm + cabHeight / 2;
       } else {
         bottomMm = 0;
         topMm = spaceInfo.height;
