@@ -104,6 +104,12 @@ const ModuleGalleryNew: React.FC<ModuleGalleryNewProps> = ({
       
       // 기본 깊이 계산
       const getDefaultDepth = (moduleData: any) => {
+        // 신발장 카테고리: 기본 380mm
+        const mid = moduleData?.id || moduleId || '';
+        const isShoeCabinet = mid.includes('-entryway-') || mid.includes('-shelf-') || mid.includes('-4drawer-shelf-') || mid.includes('-2drawer-shelf-');
+        if (isShoeCabinet) {
+          return Math.min(380, spaceInfo.depth);
+        }
         if (moduleData?.defaultDepth) {
           return Math.min(moduleData.defaultDepth, spaceInfo.depth);
         }

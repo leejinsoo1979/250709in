@@ -483,6 +483,12 @@ export function placeFurnitureAtSlot(params: PlaceFurnitureParams): PlaceFurnitu
  * 기본 가구 깊이 계산
  */
 export function getDefaultFurnitureDepth(spaceInfo: SpaceInfo, moduleData?: ModuleData): number {
+  // 신발장 카테고리: 기본 깊이 380mm
+  const mid = moduleData?.id || '';
+  const isShoeCabinet = mid.includes('-entryway-') || mid.includes('-shelf-') || mid.includes('-4drawer-shelf-') || mid.includes('-2drawer-shelf-');
+  if (isShoeCabinet) {
+    return Math.min(380, spaceInfo.depth);
+  }
   if (moduleData?.defaultDepth) {
     return Math.min(moduleData.defaultDepth, spaceInfo.depth);
   }
