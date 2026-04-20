@@ -5681,15 +5681,17 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         const furnitureBottomMm = floorFinishMm + baseFrameMm + floatMm;
         const cxX = module.position.x;
         const labelX = cxX;
-        // 가구 실제 외경 기반 섹션 높이 재계산
-        // 유효 가구 내부 = 공간높이 - 상부프레임 - 받침대
+        // 실제 렌더링 공식 동일 (SectionsRenderer)
+        // 가구 외경 H = 공간높이 - 상부프레임 - 받침대
+        // availableHeight = H - 2*t (가구 상하판)
+        // 마지막 섹션 = availableHeight - 나머지섹션합
         const topFrameMm = spaceInfo.frameSize?.top ?? 30;
         const spaceHeightMm = spaceInfo.height || 0;
-        const totalInnerMm = spaceHeightMm - topFrameMm - baseFrameMm;
-        // 첫 섹션(하부)은 원본 유지, 나머지 섹션(상부)은 남은 공간 분배
+        const furnitureOuterH = spaceHeightMm - topFrameMm - baseFrameMm;
+        const availableHeight = furnitureOuterH - 2 * basicThickness;
         const fixedSections = effectiveSections.slice(0, -1);
         const fixedSum = fixedSections.reduce((s: number, sec: any) => s + (sec.height || 0), 0);
-        const lastEffective = Math.max(0, totalInnerMm - fixedSum);
+        const lastEffective = Math.max(0, availableHeight - fixedSum);
         const getEffectiveSectionHeight = (sec: any, idx: number) => {
           return idx === effectiveSections.length - 1 ? lastEffective : (sec.height || 0);
         };
