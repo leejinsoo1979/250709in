@@ -2711,7 +2711,17 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   }
 
   // 뒷벽과 이격: 설정값만큼 앞쪽(+Z)으로 이동
-  const backWallGapMm = placedModule.backWallGap ?? 0;
+  // 상부장은 같은 슬롯의 하부장/키큰장 backWallGap을 상속 (뒷면 정렬 유지)
+  let backWallGapMm = placedModule.backWallGap ?? 0;
+  if (isUpperForZ && backWallGapMm === 0 && placedModule.slotIndex !== undefined) {
+    const companion = placedModules.find((m: any) => {
+      if (m.id === placedModule.id) return false;
+      if (m.slotIndex !== placedModule.slotIndex) return false;
+      const isUpperM = m.moduleId?.includes('upper-cabinet');
+      return !isUpperM && (m.backWallGap ?? 0) > 0;
+    });
+    if (companion) backWallGapMm = (companion as any).backWallGap || 0;
+  }
   if (backWallGapMm > 0 && !isFrontSpaceFurniture) {
     furnitureZ += mmToThreeUnits(backWallGapMm);
   }
