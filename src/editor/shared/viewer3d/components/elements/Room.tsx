@@ -6015,7 +6015,7 @@ const Room: React.FC<RoomProps> = ({
                 return (
                   <>
                     {leftOuterMods.map((om, idx) => {
-                      const BOTTOM_PANEL_MM = 18;
+                      const BOTTOM_PANEL_MM = 27.5;
                       const isUpperSub = om.category === 'upper';
                       const adjustedHeightMm = isUpperSub ? Math.max(0, om.heightMm - BOTTOM_PANEL_MM) : om.heightMm;
                       const adjustedBottomMm = isUpperSub ? om.bottomMm + BOTTOM_PANEL_MM : om.bottomMm;
@@ -6231,7 +6231,7 @@ const Room: React.FC<RoomProps> = ({
                 return (
                   <>
                     {rightOuterMods.map((om, idx) => {
-                      const BOTTOM_PANEL_MM = 18;
+                      const BOTTOM_PANEL_MM = 27.5;
                       const isUpperSub = om.category === 'upper';
                       const adjustedHeightMm = isUpperSub ? Math.max(0, om.heightMm - BOTTOM_PANEL_MM) : om.heightMm;
                       const adjustedBottomMm = isUpperSub ? om.bottomMm + BOTTOM_PANEL_MM : om.bottomMm;
