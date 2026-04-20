@@ -1343,8 +1343,11 @@ const Room: React.FC<RoomProps> = ({
         topMm = spaceInfo.height;
       } else if (cat === 'lower') {
         bottomMm = 0;
-        // 하부장 프레임 상단 = floorFinish + 받침대 + 실제 하부장 높이
-        topMm = floorFinishMM + baseH + cabHeight;
+        // 하부장 프레임 상단 = floorFinish + 받침대(가구별) + 실제 하부장 높이
+        //  - 가구에 baseFrameHeight가 있으면 그 값, 없으면 spaceInfo.baseConfig.height, 그것도 없으면 하부장 기본 100
+        const modBaseH = spaceInfo.baseConfig?.type === 'stand' ? 0
+          : ((m as any).baseFrameHeight ?? spaceInfo.baseConfig?.height ?? 100);
+        topMm = floorFinishMM + modBaseH + cabHeight;
       } else {
         bottomMm = 0;
         topMm = spaceInfo.height;
