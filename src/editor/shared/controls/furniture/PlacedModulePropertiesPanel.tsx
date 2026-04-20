@@ -4518,7 +4518,9 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                       {/* 칸별 내경 입력 (칸 i 변경 시 선반 i 위치 재계산) */}
                       <div style={{ padding: '6px 8px', background: 'var(--theme-surface-alt, #f7f7f7)', borderRadius: '4px' }}>
                         <div style={{ fontSize: '11px', color: 'var(--theme-text-secondary)', marginBottom: '4px' }}>칸 내경</div>
-                        {gaps.map((g, i) => {
+                        {gaps.map((_ignored, dispIdx) => {
+                          const i = gaps.length - 1 - dispIdx; // 위(높은 칸) → 아래(낮은 칸) 순서로 표시
+                          const g = gaps[i];
                           const applyGap = (newGap: number) => {
                             const safeGap = Math.max(0, Math.round(newGap));
                             const newPositions = [...sorted];
@@ -4543,7 +4545,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                             newSections[sectionIdx] = { ...section, shelfPositions: resultPositions };
                             updatePlacedModule(currentPlacedModule.id, { customSections: newSections });
                           };
-                          const gapLabel = sectionIdx === 1 ? `상부선반 ${i + 1}` : `하부선반 ${i + 1}`;
+                          const gapLabel = sectionIdx === 1 ? `상부선반 ${dispIdx + 1}` : `하부선반 ${dispIdx + 1}`;
                           return (
                             <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '11px', color: 'var(--theme-text-primary)', marginBottom: '3px' }}>
                               <span>{gapLabel}</span>
