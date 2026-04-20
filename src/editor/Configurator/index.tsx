@@ -532,6 +532,27 @@ const Configurator: React.FC = () => {
     setRenderMode('solid');
   }, []);
 
+  // 상부장 topFrameOffset 자동 동기화:
+  // - 서라운드: 상부장 옵셋 미설정/0 → 23 저장
+  // - 노서라운드: 상부장에 0이 아닌 잔재값 남아있으면 → 0 저장
+  useEffect(() => {
+    if (isLoadingProjectRef.current) return;
+    const isSurround = spaceInfo.surroundType === 'surround';
+    placedModules.forEach(m => {
+      const isUpper = m.moduleId?.includes('upper-cabinet') || m.moduleId?.startsWith('upper-');
+      if (!isUpper) return;
+      if (isSurround) {
+        if (m.topFrameOffset === undefined || m.topFrameOffset === 0) {
+          updatePlacedModule(m.id, { topFrameOffset: 23 });
+        }
+      } else {
+        if (m.topFrameOffset !== undefined && m.topFrameOffset !== 0) {
+          updatePlacedModule(m.id, { topFrameOffset: 0 });
+        }
+      }
+    });
+  }, [spaceInfo.surroundType, placedModules, updatePlacedModule]);
+
   // 보링 데이터 생성 훅
   const { panels: boringPanels, totalBorings, furnitureCount: boringFurnitureCount } = useFurnitureBoring();
 
@@ -1218,12 +1239,18 @@ const Configurator: React.FC = () => {
         resetSpaceInfo();
         setSpaceInfo(spaceConfig);
         setPreviousSpaceInfo(spaceConfig);
-        // 서라운드 + 상부장 기존 프로젝트 마이그레이션: topFrameOffset 미설정/0이면 23 적용
+        // 상부장 topFrameOffset 마이그레이션:
+        // - 서라운드: 미설정/0 → 23
+        // - 노서라운드: 23 등 잔재값이 남아있으면 → 0 (UI/렌더와 데이터 일치)
         const isSurroundLoaded = spaceConfig.surroundType === 'surround';
         const migratedModules = (project.furniture?.placedModules || []).map((m: any) => {
           const isUpper = m.moduleId?.includes('upper-cabinet') || m.moduleId?.startsWith('upper-');
-          if (isSurroundLoaded && isUpper && (m.topFrameOffset === undefined || m.topFrameOffset === 0)) {
+          if (!isUpper) return m;
+          if (isSurroundLoaded && (m.topFrameOffset === undefined || m.topFrameOffset === 0)) {
             return { ...m, topFrameOffset: 23 };
+          }
+          if (!isSurroundLoaded && m.topFrameOffset !== undefined && m.topFrameOffset !== 0) {
+            return { ...m, topFrameOffset: 0 };
           }
           return m;
         });

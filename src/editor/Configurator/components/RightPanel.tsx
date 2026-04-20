@@ -1344,12 +1344,8 @@ const RightPanel: React.FC<RightPanelProps> = ({
               const isMergeMode = spaceInfo.frameMergeEnabled ?? false;
               const indexing = calculateSpaceIndexing(spaceInfo);
               const slotColWidth = indexing.columnWidth || 0;
-              // 서라운드(전체/양쪽 포함) + 상부장일 때 상부 프레임 옵셋 기본 23mm
-              const isSurroundForOffset = spaceInfo.surroundType === 'surround';
-              const getTopOffsetDefault = (m: any) => {
-                const isUpperCat = m?.moduleId?.includes('upper-cabinet') || m?.moduleId?.startsWith('upper-');
-                return (isUpperCat && isSurroundForOffset) ? 23 : 0;
-              };
+              // 저장된 topFrameOffset 그대로 표시 (Configurator effect가 surroundType별로 동기화)
+              const getTopOffsetDisplay = (m: any) => m?.topFrameOffset ?? 0;
 
               // 병합 모드: computeFrameMergeGroups 사용
               if (isMergeMode) {
@@ -1375,7 +1371,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
                           enabled={allEnabled}
                           widthMM={group.totalWidthMm}
                           heightMM={firstMod?.topFrameThickness ?? globalTop}
-                          offset={firstMod?.topFrameOffset ?? getTopOffsetDefault(firstMod)}
+                          offset={getTopOffsetDisplay(firstMod)}
                           onToggle={() => {
                             const newVal = !allEnabled;
                             group.moduleIds.forEach(id => updatePlacedModule(id, { hasTopFrame: newVal }));
@@ -1453,7 +1449,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
                         enabled={mod.hasTopFrame !== false}
                         widthMM={modWidthMM}
                         sizeMM={mod.topFrameThickness ?? globalTop}
-                        offset={mod.topFrameOffset ?? getTopOffsetDefault(mod)}
+                        offset={getTopOffsetDisplay(mod)}
                         onToggle={() => updatePlacedModule(mod.id, { hasTopFrame: !(mod.hasTopFrame !== false) })}
                         onSizeChange={(v) => {
                           updatePlacedModule(mod.id, { topFrameThickness: v });

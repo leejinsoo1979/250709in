@@ -4463,7 +4463,9 @@ const Room: React.FC<RoomProps> = ({
                       ? effectiveTopY - modTopGapThreeUnits - modFrameHeight / 2
                       : effectiveTopY - modTopGapThreeUnits - modFrameHeight / 2;
 
-                    const modTopZOffset = mod.topFrameOffset ? mmToThreeUnits(mod.topFrameOffset) : 0;
+                    // 저장된 topFrameOffset 그대로 사용 (Configurator effect가 surroundType별로 0/23 동기화)
+                    const modTopOffsetMM = mod.topFrameOffset ?? 0;
+                    const modTopZOffset = modTopOffsetMM ? mmToThreeUnits(modTopOffsetMM) : 0;
                     const DOOR_THICKNESS_MM = 18.5; // PET 재질
                     const needsTopFrameRetract = isDoorBase && isSpaceFitDoor && mod.hasDoor;
                     const topFrameZRetract = needsTopFrameRetract ? -mmToThreeUnits(DOOR_THICKNESS_MM) : 0;
@@ -5335,7 +5337,9 @@ const Room: React.FC<RoomProps> = ({
                   // 상부프레임 하단(가구쪽) 고정, 상단(천장쪽)이 gap만큼 내려옴
                   const modTopY = panelStartY + ceilingHeight - slotTopGapThreeUnits - modTopHeight / 2;
                   const slotModCategory = getModuleCategory(mod);
-                  const modTopZOffset = mod.topFrameOffset ? mmToThreeUnits(mod.topFrameOffset) : 0;
+                  // 저장된 topFrameOffset 그대로 사용 (Configurator effect가 surroundType별로 0/23 동기화)
+                  const modTopOffsetMM = mod.topFrameOffset ?? 0;
+                  const modTopZOffset = modTopOffsetMM ? mmToThreeUnits(modTopOffsetMM) : 0;
 
                   // 상부장은 프레임이 상부장 앞면에 맞춰 붙어야 함 (프레임 앞면 = 상부장 앞면)
                   let slotFrameZ = topZPos;

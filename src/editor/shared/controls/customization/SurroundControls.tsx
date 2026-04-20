@@ -127,15 +127,18 @@ const SurroundControls: React.FC<SurroundControlsProps> = ({ spaceInfo, onUpdate
 
       onUpdate(updates);
 
-      // 전체서라운드: EP 있는 가구의 옵셋을 23으로 설정
+      // 전체서라운드: EP 있는 가구의 옵셋을 23으로 설정 + 상부장 topFrameOffset=23
       const { placedModules, updatePlacedModule } = useFurnitureStore.getState();
-      console.log('🔧 전체서라운드 EP 옵셋 업데이트:', placedModules.length, '개 가구');
+      console.log('🔧 전체서라운드 옵셋 업데이트:', placedModules.length, '개 가구');
       placedModules.forEach(m => {
         const epUpdate: Record<string, number> = {};
         if (m.hasLeftEndPanel) epUpdate.leftEndPanelOffset = 23;
         if (m.hasRightEndPanel) epUpdate.rightEndPanelOffset = 23;
+        // 상부장(upper-*/upper-cabinet): 상부 프레임 옵셋 23mm 저장
+        const isUpper = m.moduleId?.includes('upper-cabinet') || m.moduleId?.startsWith('upper-');
+        if (isUpper) epUpdate.topFrameOffset = 23;
         if (Object.keys(epUpdate).length > 0) {
-          console.log('🔧 EP 옵셋 설정:', m.id, epUpdate);
+          console.log('🔧 옵셋 설정:', m.id, epUpdate);
           updatePlacedModule(m.id, epUpdate);
         }
       });
@@ -147,15 +150,17 @@ const SurroundControls: React.FC<SurroundControlsProps> = ({ spaceInfo, onUpdate
         doorTopGap: 5, // 양쪽서라운드: 상단갭 5mm (사용자 수정 가능)
       });
 
-      // 양쪽서라운드: EP 옵셋을 0으로 리셋
+      // 양쪽서라운드: EP 옵셋을 0으로 리셋 + 상부장 topFrameOffset 0으로 리셋
       const { placedModules, updatePlacedModule } = useFurnitureStore.getState();
-      console.log('🔧 양쪽서라운드 EP 옵셋 리셋:', placedModules.length, '개 가구');
+      console.log('🔧 양쪽서라운드 옵셋 리셋:', placedModules.length, '개 가구');
       placedModules.forEach(m => {
         const epUpdate: Record<string, number> = {};
         if (m.hasLeftEndPanel) epUpdate.leftEndPanelOffset = 0;
         if (m.hasRightEndPanel) epUpdate.rightEndPanelOffset = 0;
+        const isUpper = m.moduleId?.includes('upper-cabinet') || m.moduleId?.startsWith('upper-');
+        if (isUpper) epUpdate.topFrameOffset = 0;
         if (Object.keys(epUpdate).length > 0) {
-          console.log('🔧 EP 옵셋 리셋:', m.id, epUpdate);
+          console.log('🔧 옵셋 리셋:', m.id, epUpdate);
           updatePlacedModule(m.id, epUpdate);
         }
       });
@@ -188,12 +193,14 @@ const SurroundControls: React.FC<SurroundControlsProps> = ({ spaceInfo, onUpdate
       updates.doorTopGap = 5; // 노서라운드: 기본 상단갭 5mm
       onUpdate(updates);
 
-      // 노서라운드: EP 옵셋을 0으로 리셋
+      // 노서라운드: EP 옵셋을 0으로 리셋 + 상부장 topFrameOffset 0으로 리셋
       const { placedModules, updatePlacedModule } = useFurnitureStore.getState();
       placedModules.forEach(m => {
         const epUpdate: Record<string, number> = {};
         if (m.hasLeftEndPanel) epUpdate.leftEndPanelOffset = 0;
         if (m.hasRightEndPanel) epUpdate.rightEndPanelOffset = 0;
+        const isUpper = m.moduleId?.includes('upper-cabinet') || m.moduleId?.startsWith('upper-');
+        if (isUpper) epUpdate.topFrameOffset = 0;
         if (Object.keys(epUpdate).length > 0) updatePlacedModule(m.id, epUpdate);
       });
     }
