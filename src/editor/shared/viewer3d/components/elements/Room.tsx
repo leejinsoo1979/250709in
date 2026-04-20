@@ -3887,7 +3887,9 @@ const Room: React.FC<RoomProps> = ({
                 const fiFurnitureDepth = mmToThreeUnits(fiFurnitureDepthMm);
                 const fiZOffset = -mmToThreeUnits(spDepthMm) / 2 + (mmToThreeUnits(spDepthMm) - fiFurnitureDepth) / 2;
                 const modFrontZ = fiZOffset - fiFurnitureDepth / 2 - mmToThreeUnits(20) + mmToThreeUnits(om.depthMm);
-                const segCZ = modFrontZ - mmToThreeUnits(END_PANEL_THICKNESS) / 2 + mmToThreeUnits(3);
+                // 프레임 앞면을 도어 앞면(가구 앞면 + 도어 두께 18.5mm)에 맞춤
+                const DOOR_THK_MM = 18.5;
+                const segCZ = modFrontZ + mmToThreeUnits(DOOR_THK_MM) - mmToThreeUnits(END_PANEL_THICKNESS) / 2;
                 return (
                   <BoxWithEdges
                     key={`left-frame-split-${idx}-${om.category}-${materialConfig?.doorColor}-${materialConfig?.doorTexture}`}
@@ -4290,7 +4292,9 @@ const Room: React.FC<RoomProps> = ({
                 const fiFurnitureDepth = mmToThreeUnits(fiFurnitureDepthMm);
                 const fiZOffset = -mmToThreeUnits(spDepthMm) / 2 + (mmToThreeUnits(spDepthMm) - fiFurnitureDepth) / 2;
                 const modFrontZ = fiZOffset - fiFurnitureDepth / 2 - mmToThreeUnits(20) + mmToThreeUnits(om.depthMm);
-                const segCZ = modFrontZ - mmToThreeUnits(END_PANEL_THICKNESS) / 2 + mmToThreeUnits(3);
+                // 프레임 앞면을 도어 앞면(가구 앞면 + 도어 두께 18.5mm)에 맞춤
+                const DOOR_THK_MM = 18.5;
+                const segCZ = modFrontZ + mmToThreeUnits(DOOR_THK_MM) - mmToThreeUnits(END_PANEL_THICKNESS) / 2;
                 return (
                   <BoxWithEdges
                     key={`right-frame-split-${idx}-${om.category}-${materialConfig?.doorColor}-${materialConfig?.doorTexture}`}
