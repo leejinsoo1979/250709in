@@ -907,14 +907,46 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
   // 상판내림 모듈 여부
   const isTopDown = moduleData.id.includes('lower-top-down-') || moduleData.id.includes('dual-lower-top-down-');
 
+  // 좌/우 최외곽 하부장 자동 판별 — 분절 서라운드 프레임 옆이면 상판을 프레임 위로 확장
+  const outerExtendMm = useFurnitureStore(state => {
+    if (!placedFurnitureId || !spaceInfo) return { left: 0, right: 0 };
+    const mods = state.placedModules.filter(mm => !mm.isSurroundPanel);
+    if (mods.length === 0) return { left: 0, right: 0 };
+    const self = mods.find(mm => mm.id === placedFurnitureId);
+    if (!self) return { left: 0, right: 0 };
+    const selfId = self.moduleId || '';
+    const isLowerCat = selfId.startsWith('lower-') || selfId.includes('-lower-');
+    if (!isLowerCat) return { left: 0, right: 0 };
+    const selfW = (self.isFreePlacement && self.freeWidth) ? self.freeWidth : (self.customWidth || self.adjustedWidth || self.moduleWidth || 0);
+    const selfCx = Math.round(self.position.x * 100);
+    const selfLeft = selfCx - selfW / 2;
+    const selfRight = selfCx + selfW / 2;
+    let minLeft = Infinity, maxRight = -Infinity;
+    mods.forEach(mm => {
+      const w = (mm.isFreePlacement && mm.freeWidth) ? mm.freeWidth : (mm.customWidth || mm.adjustedWidth || mm.moduleWidth || 0);
+      const cx = Math.round(mm.position.x * 100);
+      if (cx - w / 2 < minLeft) minLeft = cx - w / 2;
+      if (cx + w / 2 > maxRight) maxRight = cx + w / 2;
+    });
+    const leftFrameMM = spaceInfo.frameSize?.left || 0;
+    const rightFrameMM = spaceInfo.frameSize?.right || 0;
+    const isLeftmost = Math.abs(selfLeft - minLeft) <= 1;
+    const isRightmost = Math.abs(selfRight - maxRight) <= 1;
+    // 최외곽이 상/하 구성(모두 full 아님)일 때만 확장 — 간단히 최외곽이면 확장
+    return {
+      left: isLeftmost ? leftFrameMM : 0,
+      right: isRightmost ? rightFrameMM : 0,
+    };
+  });
+
   const stoneTopData = useMemo(() => {
     if (stoneThickness <= 0) return null;
     const furW = adjustedWidth ? adjustedWidth * 0.01 : baseFurniture.width;
     const furD = baseFurniture.depth;
     const fo = stoneFrontOff * 0.01;
     const bo = stoneBackOff * 0.01;
-    const lo = stoneLeftOff * 0.01;
-    const ro = stoneRightOff * 0.01;
+    const lo = (stoneLeftOff + outerExtendMm.left) * 0.01;
+    const ro = (stoneRightOff + outerExtendMm.right) * 0.01;
     const lipThicknessMm = stoneBackLipThickness || stoneThickness; // 미설정 시 상판 두께 사용
     return {
       thickness: stoneThickness * 0.01,
@@ -930,7 +962,7 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
       backLipFullFill: stoneBackLipFullFill,
       backLipFillHeight: stoneBackLipFillHeightOff * 0.01, // mm → m
     };
-  }, [stoneThickness, stoneFrontOff, stoneBackOff, stoneLeftOff, stoneRightOff, stoneBackLip, stoneBackLipThickness, stoneBackLipDepthOff, stoneBackLipTopOff, stoneBackLipTopBackOff, stoneBackLipFullFill, stoneBackLipFillHeightOff, adjustedWidth, baseFurniture.width, baseFurniture.depth]);
+  }, [stoneThickness, stoneFrontOff, stoneBackOff, stoneLeftOff, stoneRightOff, outerExtendMm.left, outerExtendMm.right, stoneBackLip, stoneBackLipThickness, stoneBackLipDepthOff, stoneBackLipTopOff, stoneBackLipTopBackOff, stoneBackLipFullFill, stoneBackLipFillHeightOff, adjustedWidth, baseFurniture.width, baseFurniture.depth]);
 
   // 인조대리석 상판 재질 — 전체 6면 동일 텍스처 (기본: 루나쉐도우)
   const LUNA_SHADOW_TEXTURE = '/materials/countertop/luna_shadow_hanwha.png';

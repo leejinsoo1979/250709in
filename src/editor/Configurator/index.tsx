@@ -5364,9 +5364,10 @@ const Configurator: React.FC = () => {
                   // 키큰장(full)은 상부프레임 = 공간높이 - 받침대 - 가구높이
                   if (cat === 'upper') {
                     const upperTopFrame = mod.topFrameThickness ?? globalTop;
+                    const upperOffsetDefault = spaceInfo.surroundType === 'surround' ? 23 : 0;
                     return <FrameOffsetRow key={`top-${mod.id}`}
                       num={tn} label="(상)"
-                      enabled={mod.hasTopFrame !== false} sizeMM={upperTopFrame} offset={mod.topFrameOffset ?? 0}
+                      enabled={mod.hasTopFrame !== false} sizeMM={upperTopFrame} offset={mod.topFrameOffset ?? upperOffsetDefault}
                       onToggle={() => updatePlacedModule(mod.id, { hasTopFrame: !(mod.hasTopFrame !== false) })}
                       onSizeChange={(v) => updatePlacedModule(mod.id, { topFrameThickness: Math.max(0, v) })}
                       onOffsetChange={(v) => updatePlacedModule(mod.id, { topFrameOffset: v })}
@@ -5778,12 +5779,14 @@ const Configurator: React.FC = () => {
                       const groupMods = group.moduleIds.map(id => slotMods.find(m => m.id === id)!).filter(Boolean);
                       const firstMod = groupMods[0];
                       const allEnabled = groupMods.every(m => m.hasTopFrame !== false);
+                      const firstIsUpper = firstMod?.moduleId?.includes('upper-cabinet') || firstMod?.moduleId?.startsWith('upper-');
+                      const topOffsetDefault = (firstIsUpper && spaceInfo.surroundType === 'surround') ? 23 : 0;
                       return <React.Fragment key={`merged-top-${gIdx}`}>{renderMergedFrameRow(
                         group.label,
                         allEnabled,
                         group.totalWidthMm,
                         firstMod?.topFrameThickness ?? globalTop,
-                        firstMod?.topFrameOffset ?? 0,
+                        firstMod?.topFrameOffset ?? topOffsetDefault,
                         () => { const newVal = !allEnabled; group.moduleIds.forEach(id => updatePlacedModule(id, { hasTopFrame: newVal })); },
                         (v) => { group.moduleIds.forEach(id => updatePlacedModule(id, { topFrameThickness: v })); },
                         (v) => { group.moduleIds.forEach(id => updatePlacedModule(id, { topFrameOffset: v })); },
@@ -5851,11 +5854,12 @@ const Configurator: React.FC = () => {
                     const cat = getModuleCategory(mod);
                     if (cat === 'lower') return null;
                     topNum++;
+                    const topOffsetDefault = (cat === 'upper' && spaceInfo.surroundType === 'surround') ? 23 : 0;
                     return <React.Fragment key={`top-${mod.id}`}>{renderSlotFrameRow(
                       `${toAlpha(topNum)}(상)`,
                       mod.hasTopFrame !== false,
                       mod.topFrameThickness ?? globalTop,
-                      mod.topFrameOffset ?? 0,
+                      mod.topFrameOffset ?? topOffsetDefault,
                       () => updatePlacedModule(mod.id, { hasTopFrame: !(mod.hasTopFrame !== false) }),
                       (v) => updatePlacedModule(mod.id, { topFrameThickness: v }),
                       (v) => updatePlacedModule(mod.id, { topFrameOffset: v }),
