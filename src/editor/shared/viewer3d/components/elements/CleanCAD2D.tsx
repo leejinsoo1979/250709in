@@ -5706,38 +5706,41 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           const posArr: number[] = [...((section.shelfPositions || []) as number[])].sort((a, b) => a - b);
           const n = posArr.length;
           const sectionHeight = section.height;
-          // 뷰어와 동일: 선반 사이 순수 거리 (차감 없음)
+          // 실제 칸 내경: 중간 칸은 선반 두께를 빼야 순수 내부 높이
           const gaps: number[] = [];
           gaps.push(Math.max(0, Math.round(posArr[0] ?? sectionHeight)));
           for (let i = 0; i < n - 1; i++) {
-            gaps.push(Math.max(0, Math.round(posArr[i + 1] - posArr[i])));
+            gaps.push(Math.max(0, Math.round(posArr[i + 1] - posArr[i] - basicThickness)));
           }
           if (n > 0) {
-            gaps.push(Math.max(0, Math.round(sectionHeight - posArr[n - 1])));
+            gaps.push(Math.max(0, Math.round(sectionHeight - posArr[n - 1] - basicThickness)));
           }
-          // 칸 누적: 선반 사이 순수 거리이므로 basicThickness 추가 없이 그대로 누적
+          // 칸 누적: 중간 칸은 선반두께만큼 빠진 순수 내부높이이므로 누적 시 basicThickness 추가
           const gapCenterMms: number[] = [];
           let bottomYmm = sectionY0;
           for (let i = 0; i < gaps.length; i++) {
             const gapH = gaps[i];
             gapCenterMms.push(bottomYmm + gapH / 2);
-            bottomYmm += gapH;
+            // 마지막 칸 외에는 칸 위에 선반이 있으므로 basicThickness 추가
+            bottomYmm += gapH + (i < gaps.length - 1 ? basicThickness : 0);
           }
 
           const applyGapEdit = (gapIdx: number, newGap: number) => {
             const safeGap = Math.max(0, Math.round(newGap));
             const updated = [...gaps];
             updated[gapIdx] = safeGap;
+            // sectionHeight = sum(gaps) + n*basicThickness
             if (gapIdx !== updated.length - 1) {
               const lastIdx = updated.length - 1;
               const sumOthers = updated.reduce((s, v, idx) => idx === lastIdx ? s : s + v, 0);
-              updated[lastIdx] = Math.max(0, Math.round(sectionHeight - sumOthers));
+              updated[lastIdx] = Math.max(0, Math.round(sectionHeight - sumOthers - n * basicThickness));
             }
+            // pos[k] = 누적(gaps[0..k]) + k*basicThickness
             const newPositions: number[] = [];
             let acc = 0;
             for (let k = 0; k < n; k++) {
               acc += updated[k];
-              newPositions.push(acc);
+              newPositions.push(acc + k * basicThickness);
             }
             const newSections = [...effectiveSections];
             newSections[sectionIdx] = { ...section, shelfPositions: newPositions };

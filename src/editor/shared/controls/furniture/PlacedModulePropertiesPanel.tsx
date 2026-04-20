@@ -4510,9 +4510,9 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                     const sorted = shelfPos;
                     gaps.push(Math.max(0, Math.round(sorted[0])));
                     for (let i = 0; i < sorted.length - 1; i++) {
-                      gaps.push(Math.max(0, Math.round(sorted[i + 1] - sorted[i])));
+                      gaps.push(Math.max(0, Math.round(sorted[i + 1] - sorted[i] - basicThickness)));
                     }
-                    gaps.push(Math.max(0, Math.round(sectionHeight - sorted[sorted.length - 1])));
+                    gaps.push(Math.max(0, Math.round(sectionHeight - sorted[sorted.length - 1] - basicThickness)));
                     return (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                       {/* 칸별 내경 입력 (칸 i 변경 시 선반 i 위치 재계산) */}
@@ -4527,18 +4527,18 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                             const updatedGaps = [...gaps];
                             updatedGaps[i] = safeGap;
                             const n = newPositions.length;
-                            // 마지막 칸 자동 보정(뷰어 공식: 합이 sectionHeight이면 됨, 차감 없음)
+                            // sectionHeight = sum(gaps) + n*basicThickness
                             if (i !== updatedGaps.length - 1) {
                               const lastIdx = updatedGaps.length - 1;
                               const sumOthers = updatedGaps.reduce((s, v, idx) => idx === lastIdx ? s : s + v, 0);
-                              updatedGaps[lastIdx] = Math.max(0, Math.round(sectionHeight - sumOthers));
+                              updatedGaps[lastIdx] = Math.max(0, Math.round(sectionHeight - sumOthers - n * basicThickness));
                             }
-                            // 각 선반 위치 = 누적(칸 0 ~ 칸 k) (차감 없음)
+                            // pos[k] = 누적(gaps[0..k]) + k*basicThickness
                             const resultPositions: number[] = [];
                             let acc = 0;
                             for (let k = 0; k < n; k++) {
                               acc += updatedGaps[k];
-                              resultPositions.push(acc);
+                              resultPositions.push(acc + k * basicThickness);
                             }
                             setPosInputs(resultPositions.map(p => Math.round(p).toString()));
                             const newSections = [...effectiveSections];
