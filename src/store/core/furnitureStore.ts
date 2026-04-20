@@ -312,6 +312,30 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
         }
       } catch {}
 
+      // 뒷면 자동 정렬: 기존 가구 중 가장 깊은 가구 기준으로 backWallGap 자동 계산
+      // backWallGap = 기준 깊이 - 본인 깊이 (앞으로 밀려나가 뒷면이 맞춰짐)
+      try {
+        if (module.backWallGap === undefined) {
+          const getDepth = (m: any): number => {
+            if (m.customDepth) return m.customDepth;
+            if (m.freeDepth) return m.freeDepth;
+            const md = getModuleById(m.moduleId, internalSpace, spaceInfo);
+            return md?.dimensions?.depth || 600;
+          };
+          const myDepth = getDepth(module);
+          // 기존 가구 중 가장 깊은 값 (서라운드/EP 제외)
+          const maxOtherDepth = state.placedModules.reduce((max, m) => {
+            if ((m as any).isSurroundPanel) return max;
+            const d = getDepth(m);
+            return Math.max(max, d);
+          }, 0);
+          const reference = Math.max(myDepth, maxOtherDepth);
+          if (reference > myDepth) {
+            module.backWallGap = reference - myDepth;
+          }
+        }
+      } catch {}
+
       // 도어 설치 토글 상태를 신규 가구에 자동 반영
       let intent = false;
       let doorsOpen: boolean | null = null;
