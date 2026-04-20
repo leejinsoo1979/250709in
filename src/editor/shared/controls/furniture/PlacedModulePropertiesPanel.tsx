@@ -4511,6 +4511,37 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                         color: count >= 10 ? 'var(--theme-text-disabled)' : 'var(--theme-text-primary)'
                       }}
                     >+</button>
+                    <button
+                      onClick={() => {
+                        if (count <= 0) return;
+                        const halfT = basicThickness / 2;
+                        const innerH = Math.max(0, sectionHeight - 2 * basicThickness);
+                        const totalInner = innerH - count * basicThickness;
+                        const baseGap = Math.floor(totalInner / (count + 1));
+                        const remainder = totalInner - baseGap * (count + 1);
+                        const evenGaps: number[] = Array(count + 1).fill(baseGap);
+                        evenGaps[0] += remainder;
+                        const newPositions: number[] = [];
+                        let acc = 0;
+                        for (let k = 0; k < count; k++) {
+                          acc += evenGaps[k];
+                          newPositions.push(Math.round(acc + k * basicThickness + halfT));
+                        }
+                        setPosInputs(newPositions.map(p => Math.round(p).toString()));
+                        const newSections = [...effectiveSections];
+                        newSections[sectionIdx] = { ...section, shelfPositions: newPositions };
+                        updatePlacedModule(currentPlacedModule.id, { customSections: newSections });
+                      }}
+                      disabled={count <= 0}
+                      style={{
+                        marginLeft: '8px', height: '28px', padding: '0 10px',
+                        border: '1px solid var(--theme-border)', borderRadius: '4px',
+                        background: 'var(--theme-surface)',
+                        cursor: count <= 0 ? 'not-allowed' : 'pointer',
+                        fontSize: '11px',
+                        color: count <= 0 ? 'var(--theme-text-disabled)' : 'var(--theme-text-primary)',
+                      }}
+                    >초기화</button>
                   </div>
                   {(() => {
                     const shelfPos: number[] = [...((section.shelfPositions || []) as number[])].sort((a, b) => a - b);
