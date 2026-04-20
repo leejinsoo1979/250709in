@@ -5715,12 +5715,13 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           if (n > 0) {
             gaps.push(Math.max(0, Math.round(sectionHeight - posArr[n - 1])));
           }
+          // 칸 누적: 선반 사이 순수 거리이므로 basicThickness 추가 없이 그대로 누적
           const gapCenterMms: number[] = [];
           let bottomYmm = sectionY0;
           for (let i = 0; i < gaps.length; i++) {
             const gapH = gaps[i];
             gapCenterMms.push(bottomYmm + gapH / 2);
-            bottomYmm += gapH + basicThickness;
+            bottomYmm += gapH;
           }
 
           const applyGapEdit = (gapIdx: number, newGap: number) => {
@@ -5785,7 +5786,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               </Html>
             );
           });
-          sectionY0 += sectionHeight + basicThickness;
+          sectionY0 += sectionHeight;
         });
         return <React.Fragment key={`shelf-gaps-${module.id}`}>{output}</React.Fragment>;
       })}
