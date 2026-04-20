@@ -5706,14 +5706,14 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           const posArr: number[] = [...((section.shelfPositions || []) as number[])].sort((a, b) => a - b);
           const n = posArr.length;
           const sectionHeight = section.height;
-          console.log('🔴 [2D 선반 debug]', { moduleId: module.moduleId, sectionIdx, sectionHeight, posArr, basicThickness });
+          // 뷰어와 동일: 선반 사이 순수 거리 (차감 없음)
           const gaps: number[] = [];
           gaps.push(Math.max(0, Math.round(posArr[0] ?? sectionHeight)));
           for (let i = 0; i < n - 1; i++) {
-            gaps.push(Math.max(0, Math.round(posArr[i + 1] - posArr[i] - basicThickness)));
+            gaps.push(Math.max(0, Math.round(posArr[i + 1] - posArr[i])));
           }
           if (n > 0) {
-            gaps.push(Math.max(0, Math.round(sectionHeight - posArr[n - 1] - basicThickness)));
+            gaps.push(Math.max(0, Math.round(sectionHeight - posArr[n - 1])));
           }
           const gapCenterMms: number[] = [];
           let bottomYmm = sectionY0;
@@ -5730,13 +5730,13 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             if (gapIdx !== updated.length - 1) {
               const lastIdx = updated.length - 1;
               const sumOthers = updated.reduce((s, v, idx) => idx === lastIdx ? s : s + v, 0);
-              updated[lastIdx] = Math.max(0, Math.round(sectionHeight - sumOthers - n * basicThickness));
+              updated[lastIdx] = Math.max(0, Math.round(sectionHeight - sumOthers));
             }
             const newPositions: number[] = [];
             let acc = 0;
             for (let k = 0; k < n; k++) {
               acc += updated[k];
-              newPositions.push(acc + k * basicThickness);
+              newPositions.push(acc);
             }
             const newSections = [...effectiveSections];
             newSections[sectionIdx] = { ...section, shelfPositions: newPositions };

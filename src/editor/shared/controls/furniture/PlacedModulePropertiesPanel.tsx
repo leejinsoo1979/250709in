@@ -4499,19 +4499,18 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                     >+</button>
                   </div>
                   {posInputs.length > 0 && (() => {
-                    // 각 칸 내경 계산 (선반 사이 간격 - 선반 두께 만큼 빼는 건 선반 위치가 선반 중심이면 불필요)
-                    // shelfPositions은 섹션 바닥에서 선반 바닥까지 거리로 가정. 칸 내경 = 다음위치 - 현재위치 - basicThickness
+                    // 뷰어와 동일한 공식: 선반 사이 순수 거리 (basicThickness 차감 없음)
                     const posNums = posInputs.map(s => parseInt(s, 10) || 0);
                     const gaps: number[] = [];
                     const sorted = [...posNums].sort((a, b) => a - b);
-                    // 칸 0: 섹션 바닥 ~ 선반1 바닥
+                    // 칸 0: 섹션 바닥 ~ 선반1
                     gaps.push(Math.max(0, Math.round(sorted[0])));
-                    // 중간 칸
+                    // 중간 칸: 선반 i ~ 선반 i+1
                     for (let i = 0; i < sorted.length - 1; i++) {
-                      gaps.push(Math.max(0, Math.round(sorted[i + 1] - sorted[i] - basicThickness)));
+                      gaps.push(Math.max(0, Math.round(sorted[i + 1] - sorted[i])));
                     }
                     // 마지막 칸: 마지막선반 ~ 섹션 상단
-                    gaps.push(Math.max(0, Math.round(sectionHeight - sorted[sorted.length - 1] - basicThickness)));
+                    gaps.push(Math.max(0, Math.round(sectionHeight - sorted[sorted.length - 1])));
                     return (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                       {/* 칸별 내경 입력 (칸 i 변경 시 선반 i 위치 재계산) */}
@@ -4521,24 +4520,21 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                           const applyGap = (newGap: number) => {
                             const safeGap = Math.max(0, Math.round(newGap));
                             const newPositions = [...sorted];
-                            // 칸 i 아래 선반 위치 재계산 (i번째 선반 = 이전선반 + basicThickness + 이전 칸까지 고정 + safeGap 누적)
-                            // 간단 접근: 위치 = 첫 칸부터 누적 (누적합 + (i) * basicThickness)
                             const updatedGaps = [...gaps];
                             updatedGaps[i] = safeGap;
-                            // 마지막 칸은 자동 보정(섹션 높이 - sum(gaps[0..n-1]) - n*basicThickness)
                             const n = newPositions.length;
+                            // 마지막 칸 자동 보정(뷰어 공식: 합이 sectionHeight이면 됨, 차감 없음)
                             if (i !== updatedGaps.length - 1) {
-                              // 마지막 칸 재계산
                               const lastIdx = updatedGaps.length - 1;
                               const sumOthers = updatedGaps.reduce((s, v, idx) => idx === lastIdx ? s : s + v, 0);
-                              updatedGaps[lastIdx] = Math.max(0, Math.round(sectionHeight - sumOthers - n * basicThickness));
+                              updatedGaps[lastIdx] = Math.max(0, Math.round(sectionHeight - sumOthers));
                             }
-                            // 각 선반 위치 = 누적(칸 0 ~ 칸 k) + k*basicThickness
+                            // 각 선반 위치 = 누적(칸 0 ~ 칸 k) (차감 없음)
                             const resultPositions: number[] = [];
                             let acc = 0;
                             for (let k = 0; k < n; k++) {
                               acc += updatedGaps[k];
-                              resultPositions.push(acc + k * basicThickness);
+                              resultPositions.push(acc);
                             }
                             setPosInputs(resultPositions.map(p => Math.round(p).toString()));
                             const newSections = [...effectiveSections];

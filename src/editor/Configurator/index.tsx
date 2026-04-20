@@ -313,6 +313,98 @@ const ZoneSizeCurtainBoxRow: React.FC<{
   </div>
 );
 
+/** 메인 구간 사이즈 한 줄 */
+const ZoneSizeMainRow: React.FC<{
+  spaceInfo: any; isFreeMode: boolean; handleSpaceInfoUpdate: (u: any) => void; styles: any;
+}> = ({ spaceInfo, isFreeMode, handleSpaceInfoUpdate, styles }) => (
+  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+    <span style={{ width: '52px', flexShrink: 0, fontSize: '11px', color: 'var(--theme-text-muted)', fontWeight: 500 }}>메인</span>
+    <div className={styles.inputWithUnit} style={{ width: '80px' }}>
+      <input
+        type="text"
+        defaultValue={Math.round((spaceInfo.width || 4800) - (spaceInfo.droppedCeiling?.enabled ? (spaceInfo.droppedCeiling.width || (isFreeMode ? 150 : 900)) : 0) - (isFreeMode && spaceInfo.stepCeiling?.enabled ? (spaceInfo.stepCeiling.width || 900) : 0) - (spaceInfo.curtainBox?.enabled ? (spaceInfo.curtainBox.width || 150) : 0))}
+        key={`main-width-${(spaceInfo.width || 4800) - (spaceInfo.droppedCeiling?.enabled ? (spaceInfo.droppedCeiling.width || 0) : 0) - (spaceInfo.stepCeiling?.enabled ? (spaceInfo.stepCeiling.width || 0) : 0) - (spaceInfo.curtainBox?.enabled ? (spaceInfo.curtainBox.width || 0) : 0)}`}
+        onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); (e.target as HTMLInputElement).blur(); } }}
+        onBlur={(e) => {
+          const inputValue = e.target.value;
+          const totalWidth = spaceInfo.width || 4800;
+          const cbW = spaceInfo.curtainBox?.enabled ? (spaceInfo.curtainBox.width || 150) : 0;
+          const scW = isFreeMode && spaceInfo.stepCeiling?.enabled ? (spaceInfo.stepCeiling.width || 900) : 0;
+          const currentDroppedW = spaceInfo.droppedCeiling?.width || (isFreeMode ? 150 : 900);
+          const currentMainOuter = totalWidth - currentDroppedW - cbW - scW;
+          if (inputValue === '' || isNaN(parseInt(inputValue))) { e.target.value = Math.round(currentMainOuter).toString(); return; }
+          const newMainOuter = parseInt(inputValue);
+          const newDroppedWidth = totalWidth - newMainOuter - cbW - scW;
+          if (newDroppedWidth < 100) {
+            handleSpaceInfoUpdate({ droppedCeiling: { ...spaceInfo.droppedCeiling, enabled: true, width: 100 } });
+          } else if (newDroppedWidth > totalWidth - 100 - cbW - scW) {
+            handleSpaceInfoUpdate({ droppedCeiling: { ...spaceInfo.droppedCeiling, enabled: true, width: totalWidth - 100 - cbW - scW } });
+          } else {
+            handleSpaceInfoUpdate({ droppedCeiling: { ...spaceInfo.droppedCeiling, enabled: true, width: newDroppedWidth } });
+          }
+        }}
+        className={styles.input}
+        style={{ textAlign: 'center', fontSize: '12px' }}
+      />
+    </div>
+    <span style={{ fontSize: '11px', color: 'var(--theme-text-muted)' }}>×</span>
+    <div className={styles.inputWithUnit} style={{ width: '80px' }}>
+      <input
+        type="text"
+        defaultValue={spaceInfo.height || 2400}
+        key={`main-height-${spaceInfo.height || 2400}`}
+        readOnly={isFreeMode}
+        style={isFreeMode ? { textAlign: 'center', fontSize: '12px', opacity: 0.6, cursor: 'default' } : { textAlign: 'center', fontSize: '12px' }}
+        onKeyDown={(e) => {
+          if (isFreeMode) return;
+          if (e.key === 'Enter') { e.preventDefault(); (e.target as HTMLInputElement).blur(); }
+        }}
+        onBlur={(e) => {
+          if (isFreeMode) return;
+          const value = e.target.value;
+          const totalHeight = spaceInfo.height || 2400;
+          if (value === '' || isNaN(parseInt(value))) { e.target.value = totalHeight.toString(); return; }
+          const numValue = parseInt(value);
+          if (numValue < 1800) { e.target.value = '1800'; handleSpaceInfoUpdate({ height: 1800 }); }
+          else if (numValue > 3000) { e.target.value = '3000'; handleSpaceInfoUpdate({ height: 3000 }); }
+          else { handleSpaceInfoUpdate({ height: numValue }); }
+        }}
+        className={styles.input}
+      />
+    </div>
+    <span style={{ fontSize: '11px', color: 'var(--theme-text-muted)' }}>mm</span>
+  </div>
+);
+
+/** stepCeiling(자유배치 전용 단내림) 구간 사이즈 한 줄 */
+const ZoneSizeStepCeilingRow: React.FC<{ spaceInfo: any; styles: any; }> = ({ spaceInfo, styles }) => (
+  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+    <span style={{ width: '52px', flexShrink: 0, fontSize: '11px', color: 'var(--theme-text-muted)', fontWeight: 500 }}>단내림</span>
+    <div className={styles.inputWithUnit} style={{ width: '80px' }}>
+      <input
+        type="text"
+        defaultValue={spaceInfo.stepCeiling?.width}
+        key={`sc-zone-w-${spaceInfo.stepCeiling?.width}`}
+        readOnly
+        style={{ textAlign: 'center', fontSize: '12px', opacity: 0.6, cursor: 'default' }}
+        className={styles.input}
+      />
+    </div>
+    <span style={{ fontSize: '11px', color: 'var(--theme-text-muted)' }}>×</span>
+    <div className={styles.inputWithUnit} style={{ width: '80px' }}>
+      <input
+        type="text"
+        defaultValue={(spaceInfo.height || 2400) - (spaceInfo.stepCeiling?.dropHeight || 200)}
+        key={`sc-zone-h-${spaceInfo.height}-${spaceInfo.stepCeiling?.dropHeight}`}
+        readOnly
+        style={{ textAlign: 'center', fontSize: '12px', opacity: 0.6, cursor: 'default' }}
+        className={styles.input}
+      />
+    </div>
+    <span style={{ fontSize: '11px', color: 'var(--theme-text-muted)' }}>mm</span>
+  </div>
+);
+
 const Configurator: React.FC = () => {
   const { user } = useAuth();
   const [searchParams] = useSearchParams();
@@ -3827,127 +3919,6 @@ const Configurator: React.FC = () => {
           )}
         </div>
 
-        {/* 단내림/커튼박스/stepCeiling이 있을 때 메인 구간 사이즈 표시 (아일랜드 모드 숨김) */}
-        {!spaceInfo.isIsland && (spaceInfo.droppedCeiling?.enabled || (isFreeMode && spaceInfo.stepCeiling?.enabled) || spaceInfo.curtainBox?.enabled) && (
-          <div className={styles.configSection}>
-            <div className={styles.sectionHeader}>
-              <span className={styles.sectionDot}></span>
-              <h3 className={styles.sectionTitle}>구간 사이즈</h3>
-              <HelpBtn title="구간 사이즈" text="메인 구간과 단내림 구간의 실제 사용 가능한 너비×높이를 표시합니다. 너비를 직접 입력하면 구간 비율이 조정됩니다." />
-            </div>
-
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-            {/* 좌측 커튼박스 먼저 표시 */}
-            {spaceInfo.curtainBox?.enabled && spaceInfo.curtainBox?.position === 'left' && (
-              <ZoneSizeCurtainBoxRow spaceInfo={spaceInfo} handleSpaceInfoUpdate={handleSpaceInfoUpdate} styles={styles} />
-            )}
-
-            {/* 좌단내림이면 단내림→메인, 우단내림이면 메인→단내림 순서 */}
-            {spaceInfo.droppedCeiling?.position === 'left' && (
-              <ZoneSizeDroppedRow spaceInfo={spaceInfo} isFreeMode={isFreeMode} handleSpaceInfoUpdate={handleSpaceInfoUpdate} styles={styles} />
-            )}
-
-            {/* 메인구간 한 줄 */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span style={{ width: '52px', flexShrink: 0, fontSize: '11px', color: 'var(--theme-text-muted)', fontWeight: 500 }}>메인</span>
-              <div className={styles.inputWithUnit} style={{ width: '80px' }}>
-                <input
-                  type="text"
-                  defaultValue={Math.round((spaceInfo.width || 4800) - (spaceInfo.droppedCeiling?.enabled ? (spaceInfo.droppedCeiling.width || (isFreeMode ? 150 : 900)) : 0) - (isFreeMode && spaceInfo.stepCeiling?.enabled ? (spaceInfo.stepCeiling.width || 900) : 0) - (spaceInfo.curtainBox?.enabled ? (spaceInfo.curtainBox.width || 150) : 0))}
-                  key={`main-width-${(spaceInfo.width || 4800) - (spaceInfo.droppedCeiling?.enabled ? (spaceInfo.droppedCeiling.width || 0) : 0) - (spaceInfo.stepCeiling?.enabled ? (spaceInfo.stepCeiling.width || 0) : 0) - (spaceInfo.curtainBox?.enabled ? (spaceInfo.curtainBox.width || 0) : 0)}`}
-                  onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); (e.target as HTMLInputElement).blur(); } }}
-                  onBlur={(e) => {
-                    const inputValue = e.target.value;
-                    const totalWidth = spaceInfo.width || 4800;
-                    const cbW = spaceInfo.curtainBox?.enabled ? (spaceInfo.curtainBox.width || 150) : 0;
-                    const scW = isFreeMode && spaceInfo.stepCeiling?.enabled ? (spaceInfo.stepCeiling.width || 900) : 0;
-                    const currentDroppedW = spaceInfo.droppedCeiling?.width || (isFreeMode ? 150 : 900);
-                    const currentMainOuter = totalWidth - currentDroppedW - cbW - scW;
-                    if (inputValue === '' || isNaN(parseInt(inputValue))) { e.target.value = Math.round(currentMainOuter).toString(); return; }
-                    const newMainOuter = parseInt(inputValue);
-                    const newDroppedWidth = totalWidth - newMainOuter - cbW - scW;
-                    if (newDroppedWidth < 100) {
-                      handleSpaceInfoUpdate({ droppedCeiling: { ...spaceInfo.droppedCeiling, enabled: true, width: 100 } });
-                    } else if (newDroppedWidth > totalWidth - 100 - cbW - scW) {
-                      handleSpaceInfoUpdate({ droppedCeiling: { ...spaceInfo.droppedCeiling, enabled: true, width: totalWidth - 100 - cbW - scW } });
-                    } else {
-                      handleSpaceInfoUpdate({ droppedCeiling: { ...spaceInfo.droppedCeiling, enabled: true, width: newDroppedWidth } });
-                    }
-                  }}
-                  className={styles.input}
-                  style={{ textAlign: 'center', fontSize: '12px' }}
-                />
-              </div>
-              <span style={{ fontSize: '11px', color: 'var(--theme-text-muted)' }}>×</span>
-              <div className={styles.inputWithUnit} style={{ width: '80px' }}>
-                <input
-                  type="text"
-                  defaultValue={spaceInfo.height || 2400}
-                  key={`main-height-${spaceInfo.height || 2400}`}
-                  readOnly={isFreeMode}
-                  style={isFreeMode ? { textAlign: 'center', fontSize: '12px', opacity: 0.6, cursor: 'default' } : { textAlign: 'center', fontSize: '12px' }}
-                  onKeyDown={(e) => {
-                    if (isFreeMode) return;
-                    if (e.key === 'Enter') { e.preventDefault(); (e.target as HTMLInputElement).blur(); }
-                  }}
-                  onBlur={(e) => {
-                    if (isFreeMode) return;
-                    const value = e.target.value;
-                    const totalHeight = spaceInfo.height || 2400;
-                    if (value === '' || isNaN(parseInt(value))) { e.target.value = totalHeight.toString(); return; }
-                    const numValue = parseInt(value);
-                    if (numValue < 1800) { e.target.value = '1800'; handleSpaceInfoUpdate({ height: 1800 }); }
-                    else if (numValue > 3000) { e.target.value = '3000'; handleSpaceInfoUpdate({ height: 3000 }); }
-                    else { handleSpaceInfoUpdate({ height: numValue }); }
-                  }}
-                  className={styles.input}
-                />
-              </div>
-              <span style={{ fontSize: '11px', color: 'var(--theme-text-muted)' }}>mm</span>
-            </div>
-
-            {/* 우단내림이면 메인 다음에 표시 */}
-            {spaceInfo.droppedCeiling?.enabled && spaceInfo.droppedCeiling?.position !== 'left' && (
-              <ZoneSizeDroppedRow spaceInfo={spaceInfo} isFreeMode={isFreeMode} handleSpaceInfoUpdate={handleSpaceInfoUpdate} styles={styles} />
-            )}
-
-            {/* 커튼박스 구간 (우측이면 메인 다음에 표시) */}
-            {spaceInfo.curtainBox?.enabled && spaceInfo.curtainBox?.position !== 'left' && (
-              <ZoneSizeCurtainBoxRow spaceInfo={spaceInfo} handleSpaceInfoUpdate={handleSpaceInfoUpdate} styles={styles} />
-            )}
-
-            {/* stepCeiling 구간 사이즈 (자유배치 전용) */}
-            {isFreeMode && spaceInfo.stepCeiling?.enabled && (
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <span style={{ width: '52px', flexShrink: 0, fontSize: '11px', color: 'var(--theme-text-muted)', fontWeight: 500 }}>단내림</span>
-                <div className={styles.inputWithUnit} style={{ width: '80px' }}>
-                  <input
-                    type="text"
-                    defaultValue={spaceInfo.stepCeiling.width}
-                    key={`sc-zone-w-${spaceInfo.stepCeiling.width}`}
-                    readOnly
-                    style={{ textAlign: 'center', fontSize: '12px', opacity: 0.6, cursor: 'default' }}
-                    className={styles.input}
-                  />
-                </div>
-                <span style={{ fontSize: '11px', color: 'var(--theme-text-muted)' }}>×</span>
-                <div className={styles.inputWithUnit} style={{ width: '80px' }}>
-                  <input
-                    type="text"
-                    defaultValue={(spaceInfo.height || 2400) - (spaceInfo.stepCeiling.dropHeight || 200)}
-                    key={`sc-zone-h-${spaceInfo.height}-${spaceInfo.stepCeiling.dropHeight}`}
-                    readOnly
-                    style={{ textAlign: 'center', fontSize: '12px', opacity: 0.6, cursor: 'default' }}
-                    className={styles.input}
-                  />
-                </div>
-                <span style={{ fontSize: '11px', color: 'var(--theme-text-muted)' }}>mm</span>
-              </div>
-            )}
-            </div>
-          </div>
-        )}
-
         {/* 공간 유형 - 공간 설정과 단내림 사이 (아일랜드 모드에서는 숨김) */}
         {!spaceInfo.isIsland && (
         <div className={styles.configSection}>
@@ -4019,6 +3990,14 @@ const Configurator: React.FC = () => {
               우단내림
             </button>
           </div>
+
+          {/* 단내림(stepCeiling)이 활성화되어 있으면 메인 + 단내림 구간 사이즈 표시 */}
+          {isFreeMode && spaceInfo.stepCeiling?.enabled && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginTop: '8px' }}>
+              <ZoneSizeMainRow spaceInfo={spaceInfo} isFreeMode={isFreeMode} handleSpaceInfoUpdate={handleSpaceInfoUpdate} styles={styles} />
+              <ZoneSizeStepCeilingRow spaceInfo={spaceInfo} styles={styles} />
+            </div>
+          )}
 
         </div>)}
 
@@ -4129,6 +4108,19 @@ const Configurator: React.FC = () => {
               우측
             </button>
           </div>
+
+          {/* 자유배치 커튼박스(droppedCeiling) 활성화 시 메인 + 커튼박스(droppedCeiling) 구간 사이즈 표시 */}
+          {isFreeMode && spaceInfo.droppedCeiling?.enabled && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginTop: '8px' }}>
+              {spaceInfo.droppedCeiling?.position === 'left' && (
+                <ZoneSizeDroppedRow spaceInfo={spaceInfo} isFreeMode={isFreeMode} handleSpaceInfoUpdate={handleSpaceInfoUpdate} styles={styles} />
+              )}
+              <ZoneSizeMainRow spaceInfo={spaceInfo} isFreeMode={isFreeMode} handleSpaceInfoUpdate={handleSpaceInfoUpdate} styles={styles} />
+              {spaceInfo.droppedCeiling?.position !== 'left' && (
+                <ZoneSizeDroppedRow spaceInfo={spaceInfo} isFreeMode={isFreeMode} handleSpaceInfoUpdate={handleSpaceInfoUpdate} styles={styles} />
+              )}
+            </div>
+          )}
         </div>)}
 
         {/* 슬롯배치: 단내림 설정 (독립 섹션) */}
@@ -4226,6 +4218,19 @@ const Configurator: React.FC = () => {
               우단내림
             </button>
           </div>
+
+          {/* 단내림 활성화 시 메인 + 단내림 구간 사이즈 표시 */}
+          {!isFreeMode && spaceInfo.droppedCeiling?.enabled && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginTop: '8px' }}>
+              {spaceInfo.droppedCeiling?.position === 'left' && (
+                <ZoneSizeDroppedRow spaceInfo={spaceInfo} isFreeMode={isFreeMode} handleSpaceInfoUpdate={handleSpaceInfoUpdate} styles={styles} />
+              )}
+              <ZoneSizeMainRow spaceInfo={spaceInfo} isFreeMode={isFreeMode} handleSpaceInfoUpdate={handleSpaceInfoUpdate} styles={styles} />
+              {spaceInfo.droppedCeiling?.position !== 'left' && (
+                <ZoneSizeDroppedRow spaceInfo={spaceInfo} isFreeMode={isFreeMode} handleSpaceInfoUpdate={handleSpaceInfoUpdate} styles={styles} />
+              )}
+            </div>
+          )}
         </div>)}
 
         {/* 슬롯배치: 커튼박스 설정 (단내림과 독립된 별도 curtainBox 필드) */}
