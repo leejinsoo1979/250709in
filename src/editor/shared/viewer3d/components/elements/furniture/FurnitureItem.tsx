@@ -2710,7 +2710,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     furnitureZ = furnitureZOffset + furnitureDepth / 2 - doorThickness - depth / 2 + baseDepthOffset;
   }
 
-  // 뒷벽과 이격: 사용자가 수동 입력한 값만 반영
+  // 뒷벽과 이격: 기본 위치 유지(0=앞면정렬). 양수면 앞으로 이동.
   const backWallGapMm = placedModule.backWallGap ?? 0;
   if (backWallGapMm > 0 && !isFrontSpaceFurniture) {
     furnitureZ += mmToThreeUnits(backWallGapMm);

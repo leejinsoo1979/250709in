@@ -312,39 +312,10 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
         }
       } catch {}
 
-      // 뒷벽 이격 자동 계산: 본인 가구 기준만 (상부장 제외)
-      // backWallGap = 전체 최대 깊이 - 본인 깊이 → 뒷면 정렬
-      try {
-        const isUpperCat = (m: any): boolean => {
-          const mid = m.moduleId || '';
-          return mid.includes('upper-cabinet');
-        };
-        const getDepth = (m: any): number => {
-          if (m.customDepth) return m.customDepth;
-          if (m.freeDepth) return m.freeDepth;
-          const md = getModuleById(m.moduleId, internalSpace, spaceInfo);
-          return md?.dimensions?.depth || 600;
-        };
-        const myIsUpper = isUpperCat(module);
-        const myDepth = getDepth(module);
-        // 상부장 제외 전체 깊이 (본인 포함)
-        const nonUpperDepths = [
-          ...(!myIsUpper ? [myDepth] : []),
-          ...state.placedModules.filter((m: any) => !m.isSurroundPanel && !isUpperCat(m)).map(getDepth),
-        ];
-        const reference = nonUpperDepths.length > 0 ? Math.max(...nonUpperDepths) : myDepth;
-        if (!myIsUpper) {
-          module.backWallGap = reference > myDepth ? reference - myDepth : 0;
-        } else {
-          module.backWallGap = 0;
-        }
-        // 기존 가구들도 재계산 (상부장 제외)
-        state.placedModules.forEach((m: any) => {
-          if (m.isSurroundPanel || isUpperCat(m)) return;
-          const d = getDepth(m);
-          m.backWallGap = reference > d ? reference - d : 0;
-        });
-      } catch {}
+      // 뒷벽 이격: 기본값 0 (뒷벽 붙음). 사용자가 팝업에서 수동 입력하면 앞으로 이동.
+      if (module.backWallGap === undefined) {
+        module.backWallGap = 0;
+      }
 
       // 도어 설치 토글 상태를 신규 가구에 자동 반영
       let intent = false;
