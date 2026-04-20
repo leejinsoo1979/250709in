@@ -1789,7 +1789,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         );
       })()}
 
-      {/* 노서라운드 모드 우측 엔드패널/이격거리 치수선 — 우측 커튼박스일 때만 숨김 */}
+      {/* 노서라운드 모드 우측 엔드패널/이격거리 치수선 — 우측 커튼박스면 숨김 */}
       {showDimensions && !isStep2 && spaceInfo.surroundType === 'no-surround' && !(spaceInfo.curtainBox?.enabled && spaceInfo.curtainBox?.position === 'right') && (() => {
 
         // 벽없음(freestanding)이면 이격거리/엔드패널 치수선 미표시
@@ -5697,6 +5697,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           // 칸 내경 = (섹션높이 - 선반두께*(선반갯수+2)) / 칸갯수
           const compartmentCount = n + 1;
           const evenGap = (sectionHeight - basicThickness * (n + 2)) / compartmentCount;
+          console.log('🟢 [2D 칸내경]', { mid, sectionIdx, sectionHeight, basicThickness, n, compartmentCount, evenGap });
           // 균등 배치로 강제 표시 (모든 칸이 같은 값)
           const gaps: number[] = [];
           for (let i = 0; i < compartmentCount; i++) {
@@ -8240,14 +8241,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                       })()),
                     subDimensionZ
                   )}
-                  {hasCB && (() => {
-                    const cbInner = cbWidth - 3; // 커튼박스 양쪽 1.5mm 이격 고정 (하드코딩)
-                    const isCBLeft = spaceInfo.curtainBox?.position === 'left';
-                    // CB가 좌측이면 벽쪽(좌)만 이격, 우측이면 벽쪽(우)만 이격
-                    const cbInnerStartX = isCBLeft ? cbStartX + mmToThreeUnits(1.5) : cbStartX;
-                    const cbInnerEndX = isCBLeft ? cbEndX : cbEndX - mmToThreeUnits(1.5);
-                    return renderZoneDim(cbInnerStartX, cbInnerEndX, String(cbInner % 1 === 0 ? cbInner : cbInner.toFixed(1)), subDimensionZ);
-                  })()}
+                  {/* 커튼박스 내경 치수 — 뷰어에 표시 안 함 (사용자 요청) */}
 
                   {/* 구간 분리 가이드라인 */}
                   <NativeLine name="dimension_line"
