@@ -4564,8 +4564,8 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                           };
                           const gapLabel = sectionIdx === 1 ? `상부 칸 ${dispIdx + 1}` : `하부 칸 ${dispIdx + 1}`;
                           return (
-                            <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '11px', color: 'var(--theme-text-primary)', marginBottom: '3px' }}>
-                              <span>{gapLabel}</span>
+                            <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '11px', color: 'var(--theme-text-primary)', marginBottom: '3px' }}>
+                              <span style={{ minWidth: '56px' }}>{gapLabel}</span>
                               <div className={styles.inputWithUnit}>
                                 <input
                                   type="text"
@@ -4588,10 +4588,10 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                                   className={styles.depthInput}
                                   style={{
                                     color: '#000000', backgroundColor: '#ffffff',
-                                    WebkitTextFillColor: '#000000', opacity: 1, width: '60px'
+                                    WebkitTextFillColor: '#000000', opacity: 1, width: '70px', textAlign: 'center'
                                   }}
                                 />
-                                <div style={{ display: 'flex', flexDirection: 'column', marginLeft: '2px' }}>
+                                <div style={{ display: 'flex', flexDirection: 'column', marginLeft: '4px', marginRight: '6px' }}>
                                   <button
                                     type="button"
                                     onClick={() => applyGap((typeof g === 'number' ? g : parseFloat(String(g))) + 1)}
