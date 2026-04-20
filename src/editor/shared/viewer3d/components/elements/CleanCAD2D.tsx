@@ -5814,7 +5814,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   <div style={{ display: 'flex', flexDirection: 'column', marginLeft: '3px' }}>
                     <button
                       type="button"
-                      onClick={() => applyGapEdit(i, g + 1)}
+                      onMouseDown={(e) => e.preventDefault()}
+                      onClick={(e) => { e.stopPropagation(); applyGapEdit(i, g + 1); }}
                       style={{
                         width: '22px', height: '16px', fontSize: '11px', lineHeight: '1',
                         padding: 0, cursor: 'pointer',
@@ -5825,7 +5826,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     >▲</button>
                     <button
                       type="button"
-                      onClick={() => applyGapEdit(i, Math.max(0, g - 1))}
+                      onMouseDown={(e) => e.preventDefault()}
+                      onClick={(e) => { e.stopPropagation(); applyGapEdit(i, Math.max(0, g - 1)); }}
                       style={{
                         width: '22px', height: '16px', fontSize: '11px', lineHeight: '1',
                         padding: 0, cursor: 'pointer',
