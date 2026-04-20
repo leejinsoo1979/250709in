@@ -5677,6 +5677,118 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         );
       })}
 
+      {/* 선반장(-shelf-) 모듈 입면뷰 각 칸 내경 편집 라벨 */}
+      {showDimensions && currentViewDirection === 'front' && placedModules.map((module) => {
+        const mid = module.moduleId || '';
+        const isShelf = mid.includes('-shelf-') && !mid.includes('drawer');
+        if (!isShelf) return null;
+        const moduleData = getModuleById(mid, { width: spaceInfo.width, height: spaceInfo.height, depth: spaceInfo.depth }, spaceInfo);
+        if (!moduleData) return null;
+        const effectiveSections = ((module as any).customSections || moduleData.modelConfig?.sections || []) as any[];
+        if (!effectiveSections || effectiveSections.length === 0) return null;
+        const basicThickness = (moduleData.modelConfig as any)?.basicThickness || 18;
+        const floorFinishMm = spaceInfo.hasFloorFinish && spaceInfo.floorFinish?.height ? spaceInfo.floorFinish.height : 0;
+        const baseFrameMm = (module as any).hasBase === false ? 0
+          : ((module as any).baseFrameHeight ?? (spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height || 65) : 0));
+        const floatMm = (module as any).hasBase === false ? ((module as any).individualFloatHeight ?? 0) : 0;
+        const furnitureBottomMm = floorFinishMm + baseFrameMm + floatMm;
+        const actualWidth = (module.isFreePlacement && (module as any).freeWidth) ? (module as any).freeWidth : ((module as any).customWidth || (module as any).adjustedWidth || (module as any).moduleWidth || moduleData.dimensions.width);
+        const cxX = module.position.x;
+        const labelX = cxX;
+
+        let sectionY0 = furnitureBottomMm + basicThickness;
+        const output: React.ReactNode[] = [];
+        effectiveSections.forEach((section: any, sectionIdx: number) => {
+          if (section.type !== 'shelf') {
+            sectionY0 += section.height;
+            return;
+          }
+          const posArr: number[] = [...((section.shelfPositions || []) as number[])].sort((a, b) => a - b);
+          const n = posArr.length;
+          const sectionHeight = section.height;
+          const gaps: number[] = [];
+          gaps.push(Math.max(0, Math.round(posArr[0] ?? sectionHeight)));
+          for (let i = 0; i < n - 1; i++) {
+            gaps.push(Math.max(0, Math.round(posArr[i + 1] - posArr[i] - basicThickness)));
+          }
+          if (n > 0) {
+            gaps.push(Math.max(0, Math.round(sectionHeight - posArr[n - 1] - basicThickness)));
+          }
+          const gapCenterMms: number[] = [];
+          let bottomYmm = sectionY0;
+          for (let i = 0; i < gaps.length; i++) {
+            const gapH = gaps[i];
+            gapCenterMms.push(bottomYmm + gapH / 2);
+            bottomYmm += gapH + basicThickness;
+          }
+
+          const applyGapEdit = (gapIdx: number, newGap: number) => {
+            const safeGap = Math.max(0, Math.round(newGap));
+            const updated = [...gaps];
+            updated[gapIdx] = safeGap;
+            if (gapIdx !== updated.length - 1) {
+              const lastIdx = updated.length - 1;
+              const sumOthers = updated.reduce((s, v, idx) => idx === lastIdx ? s : s + v, 0);
+              updated[lastIdx] = Math.max(0, Math.round(sectionHeight - sumOthers - n * basicThickness));
+            }
+            const newPositions: number[] = [];
+            let acc = 0;
+            for (let k = 0; k < n; k++) {
+              acc += updated[k];
+              newPositions.push(acc + k * basicThickness);
+            }
+            const newSections = [...effectiveSections];
+            newSections[sectionIdx] = { ...section, shelfPositions: newPositions };
+            updatePlacedModule(module.id, { customSections: newSections });
+          };
+
+          gaps.forEach((g, i) => {
+            const cyThree = mmToThreeUnits(gapCenterMms[i]);
+            output.push(
+              <Html
+                key={`shelf-gap-${module.id}-${sectionIdx}-${i}`}
+                position={[labelX, cyThree, 0.02]}
+                center
+                style={{ pointerEvents: 'auto' }}
+                zIndexRange={[5000, 0]}
+                transform={false}
+              >
+                <input
+                  type="text"
+                  defaultValue={String(g)}
+                  key={`inp-${module.id}-${sectionIdx}-${i}-${g}`}
+                  onBlur={(e) => {
+                    const v = parseInt(e.target.value, 10);
+                    if (!isNaN(v) && v !== g) applyGapEdit(i, v);
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') (e.target as HTMLInputElement).blur();
+                    else if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                      e.preventDefault();
+                      const cur = parseInt((e.target as HTMLInputElement).value, 10) || 0;
+                      applyGapEdit(i, cur + (e.key === 'ArrowUp' ? 1 : -1));
+                    }
+                  }}
+                  style={{
+                    width: '48px',
+                    fontSize: '11px',
+                    textAlign: 'center',
+                    color: dimensionColor,
+                    background: 'transparent',
+                    border: `1px solid ${dimensionColor}`,
+                    borderRadius: '2px',
+                    padding: '1px 2px',
+                    outline: 'none',
+                  }}
+                />
+              </Html>
+            );
+          });
+          sectionY0 += sectionHeight + basicThickness;
+        });
+        return <React.Fragment key={`shelf-gaps-${module.id}`}>{output}</React.Fragment>;
+      })}
+
       {/* 자유배치: 가구 없는 구간의 전체 폭 치수 (slotDimensionY 레벨) — 가구 있을 때만 */}
       {isFreePlacement && showDimensions && hasPlacedModules && (spaceInfo.stepCeiling?.enabled) && (() => {
         // 각 구간(메인/단내림)에 가구가 있는지 확인
