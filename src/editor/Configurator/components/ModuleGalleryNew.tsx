@@ -124,7 +124,7 @@ const ModuleGalleryNew: React.FC<ModuleGalleryNewProps> = ({
           z: 0
         },
         rotation: 0,
-        hasDoor: false,
+        hasDoor: useUIStore.getState().doorInstallIntent || placedModules.some((m: any) => m.hasDoor === true),
         customDepth: getDefaultDepth(moduleData),
         slotIndex: availableSlotIndex,
         isDualSlot: isDualFurniture,

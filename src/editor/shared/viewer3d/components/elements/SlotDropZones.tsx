@@ -863,7 +863,7 @@ const SlotDropZones: React.FC<SlotDropZonesProps> = ({ spaceInfo, showAll = true
         baseModuleType: baseModuleType, // 기본 모듈 타입 저장
         position: finalPosition,
         rotation: 0,
-        hasDoor: false,
+        hasDoor: hasDoorNow,
         customDepth: customDepth,
         slotIndex: zoneSlotIndex,
         zone: zone,
@@ -1020,7 +1020,7 @@ const SlotDropZones: React.FC<SlotDropZonesProps> = ({ spaceInfo, showAll = true
       moduleId: actualModuleId, // 변환된 모듈 ID 사용
       position: finalPosition,
       rotation: 0,
-      hasDoor: false, // 배치 시 항상 도어 없음 (오픈형)
+      hasDoor: hasDoorNow, // 배치 시 도어 설치 토글 상태 반영
       customDepth: adjustedDepth, // 가구별 기본 깊이 설정 (Column C의 경우 조정됨)
       slotIndex: zoneSlotIndex,
       isDualSlot: actualIsDual, // 변환 후 실제 상태 반영
@@ -1297,7 +1297,7 @@ const SlotDropZones: React.FC<SlotDropZonesProps> = ({ spaceInfo, showAll = true
         moduleId: cabinet.moduleId,
         position: { x: cabinet.position[0], y: cabinet.position[1], z: cabinet.position[2] },
         rotation: 0,
-        hasDoor: false,
+        hasDoor: hasDoorNow,
         customDepth: cabinet.depth,
         slotIndex: slotIndex, // 분할 배치도 같은 슬롯에 배치 (위치는 다름)
         isDualSlot: false,

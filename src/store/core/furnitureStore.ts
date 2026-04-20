@@ -303,6 +303,16 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
         }
       }
 
+      // 도어 설치 토글 상태를 신규 가구에 자동 반영
+      try {
+        const { useUIStore } = require('@/store/uiStore');
+        const intent = useUIStore.getState().doorInstallIntent;
+        const othersHaveDoor = state.placedModules.some((m: any) => m.hasDoor === true);
+        if (intent || othersHaveDoor) {
+          module.hasDoor = true;
+        }
+      } catch {}
+
       // 도어 바닥 이격거리 초기화 (카테고리별 기본값)
       const isBasicLowerCabinet = module.moduleId?.includes('lower-half-cabinet') || module.moduleId?.includes('dual-lower-half-cabinet') || module.moduleId?.includes('lower-drawer-') || module.moduleId?.includes('dual-lower-drawer-') || module.moduleId?.includes('lower-sink-cabinet') || module.moduleId?.includes('dual-lower-sink-cabinet') || module.moduleId?.includes('lower-induction-cabinet') || module.moduleId?.includes('dual-lower-induction-cabinet');
       const isDoorLift = module.moduleId?.includes('lower-door-lift-');
