@@ -5806,9 +5806,11 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     }}
                     style={{
                       width: '56px', fontSize: '11px', textAlign: 'center',
-                      color: dimensionColor, background: 'transparent',
+                      color: 'var(--theme-text-primary)',
+                      background: 'var(--theme-surface)',
                       border: `1px solid ${dimensionColor}`, borderRadius: '2px',
                       padding: '1px 2px', outline: 'none',
+                      WebkitTextFillColor: 'var(--theme-text-primary)', opacity: 1,
                     }}
                   />
                   <div style={{ display: 'flex', flexDirection: 'column', marginLeft: '3px' }}>
@@ -5819,7 +5821,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                       style={{
                         width: '22px', height: '16px', fontSize: '11px', lineHeight: '1',
                         padding: 0, cursor: 'pointer',
-                        color: dimensionColor, background: 'transparent',
+                        color: 'var(--theme-text-primary)',
+                        background: 'var(--theme-surface)',
                         border: `1px solid ${dimensionColor}`, borderRadius: '3px 3px 0 0',
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
                       }}
@@ -5831,7 +5834,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                       style={{
                         width: '22px', height: '16px', fontSize: '11px', lineHeight: '1',
                         padding: 0, cursor: 'pointer',
-                        color: dimensionColor, background: 'transparent',
+                        color: 'var(--theme-text-primary)',
+                        background: 'var(--theme-surface)',
                         border: `1px solid ${dimensionColor}`, borderTop: 'none',
                         borderRadius: '0 0 3px 3px',
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
