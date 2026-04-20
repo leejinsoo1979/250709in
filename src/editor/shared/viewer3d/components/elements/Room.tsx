@@ -6001,17 +6001,23 @@ const Room: React.FC<RoomProps> = ({
               const subFrameZ = furnitureZOffset + furnitureDepth / 2 - mmToThreeUnits(END_PANEL_THICKNESS) / 2 - mmToThreeUnits(28);
               const subFrameMat = leftSubFrameMaterial ?? createFrameMaterial('left');
 
-              // 분절 모드: 좌측 최외곽이 상/하부만 → 각 가구 높이에 맞춰 세로 서브프레임 조각들
+              // 분절 모드: 좌측 최외곽이 상/하부만 → 각 가구 높이/Z/깊이에 맞춰 세로 서브프레임 조각들
               if (isLeftFrameSplit && spaceInfo.surroundType !== 'no-surround') {
                 return (
                   <>
                     {leftOuterMods.map((om, idx) => {
                       const segH = mmToThreeUnits(om.heightMm);
                       const segCY = panelStartY + mmToThreeUnits(om.bottomMm) + segH / 2;
+                      const spDepthMm = spaceInfo.depth || 1500;
+                      const fiFurnitureDepthMm = Math.min(spDepthMm, 600);
+                      const fiFurnitureDepth = mmToThreeUnits(fiFurnitureDepthMm);
+                      const fiZOffset = -mmToThreeUnits(spDepthMm) / 2 + (mmToThreeUnits(spDepthMm) - fiFurnitureDepth) / 2;
+                      const modFrontZ = fiZOffset - fiFurnitureDepth / 2 - mmToThreeUnits(20) + mmToThreeUnits(om.depthMm);
+                      const segSubZ = modFrontZ - mmToThreeUnits(END_PANEL_THICKNESS) / 2 - mmToThreeUnits(28);
                       return (
                         <group
                           key={`left-normal-vertical-split-${idx}-${om.category}`}
-                          position={[subFrameX, segCY, subFrameZ]}
+                          position={[subFrameX, segCY, segSubZ]}
                           rotation={[0, Math.PI / 2, 0]}
                         >
                           <BoxWithEdges
@@ -6210,17 +6216,23 @@ const Room: React.FC<RoomProps> = ({
               const subFrameZ = furnitureZOffset + furnitureDepth / 2 - mmToThreeUnits(END_PANEL_THICKNESS) / 2 - mmToThreeUnits(28);
               const subFrameMat = rightSubFrameMaterial ?? createFrameMaterial('right');
 
-              // 분절 모드
+              // 분절 모드: 우측 최외곽이 상/하부만 → 각 가구 높이/Z/깊이에 맞춰
               if (isRightFrameSplit && spaceInfo.surroundType !== 'no-surround') {
                 return (
                   <>
                     {rightOuterMods.map((om, idx) => {
                       const segH = mmToThreeUnits(om.heightMm);
                       const segCY = panelStartY + mmToThreeUnits(om.bottomMm) + segH / 2;
+                      const spDepthMm = spaceInfo.depth || 1500;
+                      const fiFurnitureDepthMm = Math.min(spDepthMm, 600);
+                      const fiFurnitureDepth = mmToThreeUnits(fiFurnitureDepthMm);
+                      const fiZOffset = -mmToThreeUnits(spDepthMm) / 2 + (mmToThreeUnits(spDepthMm) - fiFurnitureDepth) / 2;
+                      const modFrontZ = fiZOffset - fiFurnitureDepth / 2 - mmToThreeUnits(20) + mmToThreeUnits(om.depthMm);
+                      const segSubZ = modFrontZ - mmToThreeUnits(END_PANEL_THICKNESS) / 2 - mmToThreeUnits(28);
                       return (
                         <group
                           key={`right-normal-vertical-split-${idx}-${om.category}`}
-                          position={[subFrameX, segCY, subFrameZ]}
+                          position={[subFrameX, segCY, segSubZ]}
                           rotation={[0, Math.PI / 2, 0]}
                         >
                           <BoxWithEdges
