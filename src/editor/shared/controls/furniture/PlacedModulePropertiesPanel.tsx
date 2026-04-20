@@ -4586,8 +4586,8 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                                     }
                                   }}
                                   style={{
-                                    color: '#000000', backgroundColor: '#ffffff',
-                                    WebkitTextFillColor: '#000000', opacity: 1,
+                                    color: 'var(--theme-text-primary)',
+                                    backgroundColor: 'var(--theme-surface)',
                                     width: '60px', height: '28px', textAlign: 'center', boxSizing: 'border-box',
                                     border: '1px solid var(--theme-border)', borderRadius: '4px',
                                     fontSize: '12px', padding: '0 4px', flexShrink: 0,
