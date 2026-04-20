@@ -1763,8 +1763,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         );
       })()}
 
-      {/* 좌측 이격거리 치수선 (단내림 활성 시, 서라운드 전용) — 4단 아래 배치 */}
-      {showDimensions && !isStep2 && spaceInfo.surroundType !== 'no-surround' && !isFreePlacement && spaceInfo.droppedCeiling?.enabled && (() => {
+      {/* 좌측 이격거리 치수선 (단내림 활성 시, 서라운드 전용) — 커튼박스 활성 시 숨김 */}
+      {showDimensions && !isStep2 && spaceInfo.surroundType !== 'no-surround' && !isFreePlacement && spaceInfo.droppedCeiling?.enabled && !spaceInfo.curtainBox?.enabled && (() => {
         const leftGap = spaceInfo.gapConfig?.left ?? 0;
         if (leftGap <= 0) return null;
         const frameThk = calculateFrameThickness(spaceInfo, hasLeftFurniture, hasRightFurniture);
@@ -1920,8 +1920,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         );
       })()}
 
-      {/* 좌측 이격거리 치수선 (단내림 활성 시, 서라운드 전용) — 4단 아래 배치 */}
-      {showDimensions && !isStep2 && spaceInfo.surroundType !== 'no-surround' && !isFreePlacement && spaceInfo.droppedCeiling?.enabled && (() => {
+      {/* 좌측 이격거리 치수선 (단내림 활성 시, 서라운드 전용) — 커튼박스 활성 시 숨김 */}
+      {showDimensions && !isStep2 && spaceInfo.surroundType !== 'no-surround' && !isFreePlacement && spaceInfo.droppedCeiling?.enabled && !spaceInfo.curtainBox?.enabled && (() => {
         const rightGap = spaceInfo.gapConfig?.right ?? 0;
         if (rightGap <= 0) return null;
         const frameThk = calculateFrameThickness(spaceInfo, hasLeftFurniture, hasRightFurniture);
@@ -2990,7 +2990,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           })()}
       
       {/* 좌측 커튼박스 프레임 너비 치수선 — 커튼박스는 공간과 별개 취급하므로 숨김 */}
-      {showDimensions && !isStep2 && !isFreePlacement && spaceInfo.curtainBox?.enabled && spaceInfo.curtainBox?.position === 'left' && (
+      {false && showDimensions && !isStep2 && !isFreePlacement && spaceInfo.curtainBox?.enabled && spaceInfo.curtainBox?.position === 'left' && (
       <group>
             {(() => {
               const cbW = spaceInfo.curtainBox!.width || 150;
@@ -3019,8 +3019,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
       </group>
       )}
 
-      {/* 서라운드 모드 좌측 프레임 치수선 (2단: columnDimensionY) */}
-      {showDimensions && !isStep2 && spaceInfo.surroundType === 'surround' && !(spaceInfo.curtainBox?.enabled && spaceInfo.curtainBox?.position === 'left') && (
+      {/* 서라운드 모드 좌측 프레임 치수선 (2단: columnDimensionY) — 커튼박스 활성 시 전체 숨김 */}
+      {showDimensions && !isStep2 && spaceInfo.surroundType === 'surround' && !spaceInfo.curtainBox?.enabled && (
       <group>
             {/* 치수선 */}
             <Line
@@ -3296,8 +3296,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
       </group>
       )}
 
-      {/* 서라운드 모드 우측 프레임 치수선 (2단: columnDimensionY) - 커튼박스 우측 시 숨김 */}
-      {showDimensions && !isStep2 && spaceInfo.surroundType === 'surround' && !(spaceInfo.curtainBox?.enabled && spaceInfo.curtainBox?.position === 'right') && (
+      {/* 서라운드 모드 우측 프레임 치수선 (2단: columnDimensionY) — 커튼박스 활성 시 전체 숨김 */}
+      {showDimensions && !isStep2 && spaceInfo.surroundType === 'surround' && !spaceInfo.curtainBox?.enabled && (
       <group>
             {/* 치수선 */}
             <Line
@@ -5694,17 +5694,16 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           const n = posArr.length;
           if (n === 0) { sectionBottomMm += sectionHeight; return; }
           const halfT = basicThickness / 2;
-          // 칸 내경 공식: 각 칸 = (섹션높이 - 선반두께*선반갯수) / 칸갯수 (균등 분할 기준)
-          // 저장된 shelfPositions의 실제 차이가 있으면 반영:
-          //  첫 칸 = pos[0] - t     (섹션 바닥 ~ 선반1 아랫면, 선반은 중심Y)
-          //  중간  = pos[i+1]-pos[i] - t
-          //  마지막 = sectionHeight - pos[N-1] - t
+          // 칸 내경 = (섹션높이 - 선반두께*(선반갯수+2)) / 칸갯수 (+2는 섹션 상하판)
+          //  첫 칸 = pos[0] - halfT - basicThickness (밑판 윗면 ~ 선반1 아랫면)
+          //  중간 = pos[i+1] - pos[i] - basicThickness
+          //  마지막 = sectionHeight - pos[N-1] - halfT - basicThickness (선반N 윗면 ~ 상판 아랫면)
           const gaps: number[] = [];
-          gaps.push(Math.max(0, Math.round(posArr[0] - basicThickness)));
+          gaps.push(Math.max(0, Math.round(posArr[0] - halfT - basicThickness)));
           for (let i = 0; i < n - 1; i++) {
             gaps.push(Math.max(0, Math.round(posArr[i + 1] - posArr[i] - basicThickness)));
           }
-          gaps.push(Math.max(0, Math.round(sectionHeight - posArr[n - 1] - basicThickness)));
+          gaps.push(Math.max(0, Math.round(sectionHeight - posArr[n - 1] - halfT - basicThickness)));
           // 각 칸 중심 Y
           const centerYs: number[] = [];
           // 칸1 중심: 바닥에서 gaps[0]/2
