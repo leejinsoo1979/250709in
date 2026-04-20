@@ -4566,7 +4566,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                           return (
                             <div key={i} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '11px', color: 'var(--theme-text-primary)', marginBottom: '3px' }}>
                               <span style={{ flexShrink: 0 }}>{gapLabel}</span>
-                              <div className={styles.inputWithUnit} style={{ flexShrink: 0 }}>
+                              <div className={styles.inputWithUnit} style={{ flexShrink: 0, display: 'inline-flex', alignItems: 'center' }}>
                                 <input
                                   type="text"
                                   inputMode="numeric"
@@ -4588,10 +4588,10 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                                   className={styles.depthInput}
                                   style={{
                                     color: '#000000', backgroundColor: '#ffffff',
-                                    WebkitTextFillColor: '#000000', opacity: 1, width: '70px', textAlign: 'center'
+                                    WebkitTextFillColor: '#000000', opacity: 1, width: '56px', textAlign: 'center', boxSizing: 'border-box'
                                   }}
                                 />
-                                <div style={{ display: 'flex', flexDirection: 'column', marginLeft: '4px', marginRight: '6px' }}>
+                                <div style={{ display: 'flex', flexDirection: 'column', marginLeft: '4px', marginRight: '4px', flexShrink: 0 }}>
                                   <button
                                     type="button"
                                     onClick={() => applyGap((typeof g === 'number' ? g : parseFloat(String(g))) + 1)}
