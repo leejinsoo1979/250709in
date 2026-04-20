@@ -5787,29 +5787,56 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 zIndexRange={[5000, 0]}
                 transform={false}
               >
-                <input
-                  type="text"
-                  defaultValue={String(g)}
-                  key={`inp-${module.id}-${sectionIdx}-${i}-${g}`}
-                  onBlur={(e) => {
-                    const v = parseInt(e.target.value, 10);
-                    if (!isNaN(v) && v !== g) applyGapEdit(i, v);
-                  }}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') (e.target as HTMLInputElement).blur();
-                    else if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
-                      e.preventDefault();
-                      const cur = parseInt((e.target as HTMLInputElement).value, 10) || 0;
-                      applyGapEdit(i, cur + (e.key === 'ArrowUp' ? 1 : -1));
-                    }
-                  }}
-                  style={{
-                    width: '56px', fontSize: '11px', textAlign: 'center',
-                    color: dimensionColor, background: 'transparent',
-                    border: `1px solid ${dimensionColor}`, borderRadius: '2px',
-                    padding: '1px 2px', outline: 'none',
-                  }}
-                />
+                <div style={{ display: 'inline-flex', alignItems: 'center' }}>
+                  <input
+                    type="text"
+                    defaultValue={String(g)}
+                    key={`inp-${module.id}-${sectionIdx}-${i}-${g}`}
+                    onBlur={(e) => {
+                      const v = parseInt(e.target.value, 10);
+                      if (!isNaN(v) && v !== g) applyGapEdit(i, v);
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') (e.target as HTMLInputElement).blur();
+                      else if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                        e.preventDefault();
+                        const cur = parseInt((e.target as HTMLInputElement).value, 10) || 0;
+                        applyGapEdit(i, cur + (e.key === 'ArrowUp' ? 1 : -1));
+                      }
+                    }}
+                    style={{
+                      width: '56px', fontSize: '11px', textAlign: 'center',
+                      color: dimensionColor, background: 'transparent',
+                      border: `1px solid ${dimensionColor}`, borderRadius: '2px',
+                      padding: '1px 2px', outline: 'none',
+                    }}
+                  />
+                  <div style={{ display: 'flex', flexDirection: 'column', marginLeft: '2px' }}>
+                    <button
+                      type="button"
+                      onClick={() => applyGapEdit(i, g + 1)}
+                      style={{
+                        width: '14px', height: '10px', fontSize: '8px', lineHeight: '8px',
+                        padding: 0, cursor: 'pointer',
+                        color: dimensionColor, background: 'transparent',
+                        border: `1px solid ${dimensionColor}`, borderRadius: '2px 2px 0 0',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      }}
+                    >▲</button>
+                    <button
+                      type="button"
+                      onClick={() => applyGapEdit(i, Math.max(0, g - 1))}
+                      style={{
+                        width: '14px', height: '10px', fontSize: '8px', lineHeight: '8px',
+                        padding: 0, cursor: 'pointer',
+                        color: dimensionColor, background: 'transparent',
+                        border: `1px solid ${dimensionColor}`, borderTop: 'none',
+                        borderRadius: '0 0 2px 2px',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      }}
+                    >▼</button>
+                  </div>
+                </div>
               </Html>
             );
           });
