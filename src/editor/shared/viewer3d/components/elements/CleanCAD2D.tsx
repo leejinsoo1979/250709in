@@ -2989,7 +2989,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             );
           })()}
       
-      {/* 좌측 커튼박스 프레임 너비 치수선 (3단) — cbW - 1.5 (벽쪽 이격만 제외) */}
+      {/* 좌측 커튼박스 프레임 너비 치수선 — 커튼박스는 공간과 별개 취급하므로 숨김 */}
       {showDimensions && !isStep2 && !isFreePlacement && spaceInfo.curtainBox?.enabled && spaceInfo.curtainBox?.position === 'left' && (
       <group>
             {(() => {
@@ -3265,8 +3265,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             );
           })()}
       
-      {/* 우측 커튼박스 프레임 너비 치수선 (3단) — cbW - 1.5 (벽쪽 이격만 제외) */}
-      {showDimensions && !isStep2 && !isFreePlacement && spaceInfo.curtainBox?.enabled && spaceInfo.curtainBox?.position === 'right' && (
+      {/* 우측 커튼박스 프레임 너비 치수선 — 커튼박스는 공간과 별개 취급하므로 숨김 */}
+      {false && showDimensions && !isStep2 && !isFreePlacement && spaceInfo.curtainBox?.enabled && spaceInfo.curtainBox?.position === 'right' && (
       <group>
             {(() => {
               const cbW = spaceInfo.curtainBox!.width || 150;
@@ -5661,6 +5661,115 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
 
           </group>
         );
+      })}
+
+      {/* 선반장(-shelf-) 모듈 입면뷰 각 칸 내경 편집 라벨
+          공식: 첫칸=pos[0]-t/2, 중간=pos[i+1]-pos[i]-t, 마지막=sectionH-pos[N-1]-t/2 */}
+      {showDimensions && currentViewDirection === 'front' && placedModules.map((module) => {
+        const mid = module.moduleId || '';
+        const isShelf = mid.includes('-shelf-') && !mid.includes('drawer');
+        if (!isShelf) return null;
+        const moduleData = getModuleById(mid, { width: spaceInfo.width, height: spaceInfo.height, depth: spaceInfo.depth }, spaceInfo);
+        if (!moduleData) return null;
+        const effectiveSections = ((module as any).customSections || moduleData.modelConfig?.sections || []) as any[];
+        if (!effectiveSections || effectiveSections.length === 0) return null;
+        const basicThickness = (moduleData.modelConfig as any)?.basicThickness || 18;
+        const floorFinishMm = spaceInfo.hasFloorFinish && spaceInfo.floorFinish?.height ? spaceInfo.floorFinish.height : 0;
+        const baseFrameMm = (module as any).hasBase === false ? 0
+          : ((module as any).baseFrameHeight ?? (spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height || 65) : 0));
+        const floatMm = (module as any).hasBase === false ? ((module as any).individualFloatHeight ?? 0) : 0;
+        const furnitureBottomMm = floorFinishMm + baseFrameMm + floatMm;
+        const cxX = module.position.x;
+        const labelX = cxX;
+        // 가구 내부 바닥(밑판 윗면)에서 섹션 시작
+        let sectionBottomMm = furnitureBottomMm + basicThickness;
+        const output: React.ReactNode[] = [];
+        effectiveSections.forEach((section: any, sectionIdx: number) => {
+          const sectionHeight = section.height;
+          if (section.type !== 'shelf') {
+            sectionBottomMm += sectionHeight;
+            return;
+          }
+          const posArr: number[] = [...((section.shelfPositions || []) as number[])].sort((a, b) => a - b);
+          const n = posArr.length;
+          if (n === 0) { sectionBottomMm += sectionHeight; return; }
+          const halfT = basicThickness / 2;
+          // 각 칸 내경
+          const gaps: number[] = [];
+          gaps.push(Math.max(0, Math.round(posArr[0] - halfT)));
+          for (let i = 0; i < n - 1; i++) {
+            gaps.push(Math.max(0, Math.round(posArr[i + 1] - posArr[i] - basicThickness)));
+          }
+          gaps.push(Math.max(0, Math.round(sectionHeight - posArr[n - 1] - halfT)));
+          // 각 칸 중심 Y
+          const centerYs: number[] = [];
+          // 칸1 중심: 바닥에서 gaps[0]/2
+          centerYs.push(sectionBottomMm + gaps[0] / 2);
+          // 칸2..마지막: 아래 선반 윗면 + gap/2 = (sectionBottomMm + pos[i-1] + halfT) + gap[i]/2
+          for (let i = 1; i < gaps.length; i++) {
+            const below = sectionBottomMm + posArr[i - 1] + halfT;
+            centerYs.push(below + gaps[i] / 2);
+          }
+          const applyGapEdit = (gapIdx: number, newGap: number) => {
+            const safeGap = Math.max(0, Math.round(newGap));
+            const updated = [...gaps];
+            updated[gapIdx] = safeGap;
+            if (gapIdx !== updated.length - 1) {
+              const lastIdx = updated.length - 1;
+              const sumOthers = updated.reduce((s, v, idx) => idx === lastIdx ? s : s + v, 0);
+              updated[lastIdx] = Math.max(0, Math.round(sectionHeight - sumOthers - n * basicThickness));
+            }
+            // pos[k] = sum(gaps[0..k]) + k*basicThickness + halfT
+            const newPositions: number[] = [];
+            let acc = 0;
+            for (let k = 0; k < n; k++) {
+              acc += updated[k];
+              newPositions.push(Math.round(acc + k * basicThickness + halfT));
+            }
+            const newSections = [...effectiveSections];
+            newSections[sectionIdx] = { ...section, shelfPositions: newPositions };
+            updatePlacedModule(module.id, { customSections: newSections });
+          };
+          gaps.forEach((g, i) => {
+            const cyThree = mmToThreeUnits(centerYs[i]);
+            output.push(
+              <Html
+                key={`shelf-gap-${module.id}-${sectionIdx}-${i}`}
+                position={[labelX, cyThree, 0.02]}
+                center
+                style={{ pointerEvents: 'auto' }}
+                zIndexRange={[5000, 0]}
+                transform={false}
+              >
+                <input
+                  type="text"
+                  defaultValue={String(g)}
+                  key={`inp-${module.id}-${sectionIdx}-${i}-${g}`}
+                  onBlur={(e) => {
+                    const v = parseInt(e.target.value, 10);
+                    if (!isNaN(v) && v !== g) applyGapEdit(i, v);
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') (e.target as HTMLInputElement).blur();
+                    else if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                      e.preventDefault();
+                      const cur = parseInt((e.target as HTMLInputElement).value, 10) || 0;
+                      applyGapEdit(i, cur + (e.key === 'ArrowUp' ? 1 : -1));
+                    }
+                  }}
+                  style={{
+                    width: '56px', fontSize: '11px', textAlign: 'center',
+                    color: dimensionColor, background: 'transparent',
+                    border: `1px solid ${dimensionColor}`, borderRadius: '2px',
+                    padding: '1px 2px', outline: 'none',
+                  }}
+                />
+              </Html>
+            );
+          });
+          sectionBottomMm += sectionHeight;
+        });
+        return <React.Fragment key={`shelf-gaps-${module.id}`}>{output}</React.Fragment>;
       })}
 
       {/* 자유배치: 가구 없는 구간의 전체 폭 치수 (slotDimensionY 레벨) — 가구 있을 때만 */}

@@ -4506,13 +4506,17 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                       const even = sectionHeight / (shelfPos.length + 1);
                       shelfPos = shelfPos.map((_, i) => Math.round(even * (i + 1)));
                     }
+                    const halfT = basicThickness / 2;
                     const gaps: number[] = [];
                     const sorted = shelfPos;
-                    gaps.push(Math.max(0, Math.round(sorted[0])));
+                    // 첫 칸: pos[0] - t/2 (선반 중심 기준)
+                    gaps.push(Math.max(0, Math.round(sorted[0] - halfT)));
+                    // 중간: pos[i+1] - pos[i] - t
                     for (let i = 0; i < sorted.length - 1; i++) {
                       gaps.push(Math.max(0, Math.round(sorted[i + 1] - sorted[i] - basicThickness)));
                     }
-                    gaps.push(Math.max(0, Math.round(sectionHeight - sorted[sorted.length - 1] - basicThickness)));
+                    // 마지막: sectionHeight - pos[last] - t/2
+                    gaps.push(Math.max(0, Math.round(sectionHeight - sorted[sorted.length - 1] - halfT)));
                     return (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                       {/* 칸별 내경 입력 (칸 i 변경 시 선반 i 위치 재계산) */}
