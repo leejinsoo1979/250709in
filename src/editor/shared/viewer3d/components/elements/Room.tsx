@@ -1320,21 +1320,22 @@ const Room: React.FC<RoomProps> = ({
         : 'full';
       const hMm = (m.freeHeight || m.customHeight || 0);
       const cabHeight = hMm > 0 ? hMm : (cat === 'lower' ? 785 : cat === 'upper' ? 785 : (spaceInfo.height - topFrameMM - floorFinishMM - baseH));
-      // 좌/우 서라운드 프레임 Y 범위
-      //  - upper: 상부장 하단(도어 하단) ~ 공간 천장(상부 프레임까지 커버)
-      //  - lower: 도어 하단(가구 바닥 - 5mm) ~ 도어 상단(가구 상단)
-      const DOOR_BOTTOM_GAP_MM = 5;
+      const doorBotGap = (m as any).doorBottomGap ?? (spaceInfo as any).doorBottomGap ?? 0;
+      const doorTopGapMM = (m as any).doorTopGap ?? (spaceInfo as any).doorTopGap ?? 0;
+      // 좌/우 서라운드 프레임 Y 범위 (도어 확장 영역까지 커버)
+      //  - upper: (상부장 하단 - doorBottomGap) ~ 공간 천장
+      //  - lower: (가구 바닥 - doorBottomGap) ~ (가구 상단 + doorTopGap)
       let bottomMm: number;
       let topMm: number;
       if (cat === 'upper') {
         const cabBottom = spaceInfo.height - topFrameMM - cabHeight;
-        bottomMm = cabBottom; // 도어 하단 = 상부장 하단
-        topMm = spaceInfo.height; // 천장까지 (상부 프레임 영역 포함)
+        bottomMm = cabBottom - doorBotGap; // 도어 하단까지 확장
+        topMm = spaceInfo.height; // 천장까지
       } else if (cat === 'lower') {
         const cabBottom = floorFinishMM + baseH;
         const cabTop = cabBottom + cabHeight;
-        bottomMm = cabBottom - DOOR_BOTTOM_GAP_MM; // 도어 하단 = 가구 바닥 - 5mm
-        topMm = cabTop; // 도어 상단 = 가구 상단
+        bottomMm = cabBottom - doorBotGap; // 도어 하단까지 확장
+        topMm = cabTop + doorTopGapMM; // 도어 상단까지 확장
       } else {
         bottomMm = 0;
         topMm = spaceInfo.height;
