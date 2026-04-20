@@ -1276,6 +1276,63 @@ const Room: React.FC<RoomProps> = ({
   const sideFrameStartY = panelStartY + floatHeight;
   const sideFrameCenterY = sideFrameStartY + adjustedPanelHeight / 2;
 
+  // 좌/우 서라운드 프레임 분절용 — 최외곽 가구들의 카테고리/높이/Y 추출
+  // 같은 X극단 위치에 상부장+하부장 공존 가능하므로 여러 개 반환
+  type OuterMod = { category: 'full' | 'upper' | 'lower'; heightMm: number; bottomMm: number; topMm: number };
+  const computeOuterMods = (side: 'left' | 'right'): OuterMod[] => {
+    const mods = placedModulesFromStore.filter(m => !m.isSurroundPanel);
+    if (mods.length === 0) return [];
+    // 자유배치: position.x 기준, 슬롯배치: slotIndex 기준
+    let extremeX: number | null = null;
+    mods.forEach((m) => {
+      const w = (m.isFreePlacement && m.freeWidth) ? m.freeWidth : (m.customWidth || m.adjustedWidth || m.moduleWidth || 0);
+      const centerXmm = Math.round(m.position.x * 100);
+      const edgeMm = side === 'left' ? centerXmm - w / 2 : centerXmm + w / 2;
+      if (extremeX === null) extremeX = edgeMm;
+      else if (side === 'left' && edgeMm < extremeX) extremeX = edgeMm;
+      else if (side === 'right' && edgeMm > extremeX) extremeX = edgeMm;
+    });
+    if (extremeX === null) return [];
+    // 최외곽 좌표와 1mm 이내로 인접한 가구들만 후보
+    const outermost = mods.filter((m) => {
+      const w = (m.isFreePlacement && m.freeWidth) ? m.freeWidth : (m.customWidth || m.adjustedWidth || m.moduleWidth || 0);
+      const centerXmm = Math.round(m.position.x * 100);
+      const edgeMm = side === 'left' ? centerXmm - w / 2 : centerXmm + w / 2;
+      return Math.abs(edgeMm - (extremeX as number)) <= 1;
+    });
+    // 카테고리 판별 + Y 범위 계산
+    const floorFinishMM = spaceInfo.hasFloorFinish && spaceInfo.floorFinish ? spaceInfo.floorFinish.height : 0;
+    const baseH = spaceInfo.baseConfig?.type === 'stand' ? 0 : (spaceInfo.baseConfig?.height || 65);
+    const topFrameMM = spaceInfo.frameSize?.top || 30;
+    return outermost.map((m): OuterMod => {
+      const id = m.moduleId || '';
+      const cat: 'full' | 'upper' | 'lower' =
+        (id.startsWith('upper-') || id.includes('-upper-')) ? 'upper'
+        : (id.startsWith('lower-') || id.includes('-lower-')) ? 'lower'
+        : 'full';
+      const hMm = (m.freeHeight || m.customHeight || 0);
+      const heightMm = hMm > 0 ? hMm : (cat === 'lower' ? 785 : cat === 'upper' ? 785 : (spaceInfo.height - topFrameMM - floorFinishMM - baseH));
+      let bottomMm: number;
+      let topMm: number;
+      if (cat === 'upper') {
+        topMm = spaceInfo.height - topFrameMM;
+        bottomMm = topMm - heightMm;
+      } else if (cat === 'lower') {
+        bottomMm = floorFinishMM + baseH;
+        topMm = bottomMm + heightMm;
+      } else {
+        bottomMm = floorFinishMM + baseH;
+        topMm = bottomMm + heightMm;
+      }
+      return { category: cat, heightMm, bottomMm, topMm };
+    });
+  };
+  const leftOuterMods = useMemo(() => computeOuterMods('left'), [placedModulesFromStore, spaceInfo]);
+  const rightOuterMods = useMemo(() => computeOuterMods('right'), [placedModulesFromStore, spaceInfo]);
+  // 분절 조건: 최외곽 가구가 1개 이상, full 없음, 그리고 upper/lower만
+  const isLeftFrameSplit = leftOuterMods.length > 0 && leftOuterMods.every(o => o.category !== 'full');
+  const isRightFrameSplit = rightOuterMods.length > 0 && rightOuterMods.every(o => o.category !== 'full');
+
 
   // 벽 여부 확인
   const { wallConfig = { left: true, right: true } } = spaceInfo;
@@ -3792,34 +3849,59 @@ const Room: React.FC<RoomProps> = ({
               ? surroundEndPanelZ
               : furnitureZOffset + furnitureDepth / 2 - mmToThreeUnits(END_PANEL_THICKNESS) / 2 + mmToThreeUnits(3))
         ];
-        return (!(hasDroppedCeiling && isLeftDropped) ? (
+        if (hasDroppedCeiling && isLeftDropped) return null;
+
+        const leftFrameDepth = spaceInfo.surroundType === 'no-surround'
+          ? (wallConfig?.left ? mmToThreeUnits(END_PANEL_THICKNESS) : noSurroundEndPanelDepth)
+          : (((spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') && !wallConfig?.left) ||
+            (spaceInfo.installType === 'freestanding' || spaceInfo.installType === 'free-standing')
+            ? surroundEndPanelDepth : mmToThreeUnits(END_PANEL_THICKNESS));
+        const leftFrameMat = leftFrameMaterial ?? createFrameMaterial('left');
+
+        // 분절 모드: 좌측 최외곽이 upper/lower만 (full 없음) → 각 가구 높이에 맞춰 프레임 조각들
+        if (isLeftFrameSplit && spaceInfo.surroundType !== 'no-surround') {
+          return (
+            <>
+              {leftOuterMods.map((om, idx) => {
+                const segH = mmToThreeUnits(om.heightMm);
+                const segCY = panelStartY + mmToThreeUnits(om.bottomMm) + segH / 2;
+                return (
+                  <BoxWithEdges
+                    key={`left-frame-split-${idx}-${om.category}-${materialConfig?.doorColor}-${materialConfig?.doorTexture}`}
+                    hideEdges={hideEdges}
+                    isOuterFrame
+                    name="left-surround-ep"
+                    isEndPanel={!wallConfig?.left}
+                    args={[frameRenderThickness.left, segH, leftFrameDepth]}
+                    position={[leftPosition[0], segCY, leftPosition[2]]}
+                    material={leftFrameMat}
+                    renderMode={renderMode}
+                    shadowEnabled={shadowEnabled}
+                    excludeKey={`${leftMostModuleId}::left-surround-ep`}
+                    excludeKeys={[`${leftMostModuleId}::left-surround-lshape-side`, `${leftMostModuleId}::left-surround-lshape-front`]}
+                  />
+                );
+              })}
+            </>
+          );
+        }
+
+        return (
           <BoxWithEdges
             hideEdges={hideEdges}
             isOuterFrame
             name="left-surround-ep"
             key={`left-frame-${materialConfig?.doorColor}-${materialConfig?.doorTexture}`}
-            isEndPanel={!wallConfig?.left} // 왼쪽 벽이 없으면 엔드패널
-            args={[
-              frameRenderThickness.left,
-              adjustedPanelHeight,
-              // 노서라운드 모드에서 엔드패널/프레임 깊이 결정
-              spaceInfo.surroundType === 'no-surround'
-                ? (wallConfig?.left
-                  ? mmToThreeUnits(END_PANEL_THICKNESS)  // 벽이 있는 경우: 얇은 프레임 (18mm)
-                  : noSurroundEndPanelDepth)  // 벽이 없는 경우: 공간 뒷벽부터 가구 앞면-20mm까지
-                : (((spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') && !wallConfig?.left) ||
-                  (spaceInfo.installType === 'freestanding' || spaceInfo.installType === 'free-standing')
-                  ? surroundEndPanelDepth  // 서라운드 엔드패널: 뒷벽까지 보정된 깊이
-                  : mmToThreeUnits(END_PANEL_THICKNESS))  // 서라운드 프레임 (18mm)
-            ]}
+            isEndPanel={!wallConfig?.left}
+            args={[frameRenderThickness.left, adjustedPanelHeight, leftFrameDepth]}
             position={leftPosition}
-            material={leftFrameMaterial ?? createFrameMaterial('left')}
+            material={leftFrameMat}
             renderMode={renderMode}
             shadowEnabled={shadowEnabled}
             excludeKey={`${leftMostModuleId}::left-surround-ep`}
             excludeKeys={[`${leftMostModuleId}::left-surround-lshape-side`, `${leftMostModuleId}::left-surround-lshape-front`]}
           />
-        ) : null);
+        );
       })()}
 
 
@@ -4149,54 +4231,74 @@ const Room: React.FC<RoomProps> = ({
 // console.log('🛑🛑🛑 [일반 구간 스킵] 단내림이 오른쪽이므로 일반 구간 렌더링 건너뜀');
         }
 
-        return (!(hasDroppedCeiling && isRightDropped) ? (
+        if (hasDroppedCeiling && isRightDropped) return null;
+
+        const rightFrameDepth = spaceInfo.surroundType === 'no-surround'
+          ? (wallConfig?.right ? mmToThreeUnits(END_PANEL_THICKNESS) : noSurroundEndPanelDepth)
+          : (((spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') && !wallConfig?.right) ||
+            (spaceInfo.installType === 'freestanding' || spaceInfo.installType === 'free-standing')
+            ? surroundEndPanelDepth : mmToThreeUnits(END_PANEL_THICKNESS));
+        const rightFrameX = spaceInfo.surroundType === 'no-surround'
+          ? (indexingForCheck.threeUnitBoundaries.length > lastSlotIndex + 1
+            ? indexingForCheck.threeUnitBoundaries[lastSlotIndex + 1] - frameRenderThickness.right / 2
+            : xOffset + width - frameRenderThickness.right / 2)
+          : (hasRightFurniture && indexingForCheck.threeUnitBoundaries.length > lastSlotIndex + 1
+            ? indexingForCheck.threeUnitBoundaries[lastSlotIndex + 1] + frameRenderThickness.right
+            : xOffset + width - frameRenderThickness.right / 2);
+        const rightFrameZ = spaceInfo.surroundType === 'no-surround'
+          ? (wallConfig?.right
+            ? furnitureZOffset + furnitureDepth / 2 - mmToThreeUnits(END_PANEL_THICKNESS) / 2 + mmToThreeUnits(3)
+            : noSurroundEndPanelZ)
+          : (((spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') && !wallConfig?.right) ||
+            (spaceInfo.installType === 'freestanding' || spaceInfo.installType === 'free-standing')
+            ? surroundEndPanelZ
+            : furnitureZOffset + furnitureDepth / 2 - mmToThreeUnits(END_PANEL_THICKNESS) / 2 + mmToThreeUnits(3));
+        const rightFrameMat = rightFrameMaterial ?? createFrameMaterial('right');
+
+        // 분절 모드: 우측 최외곽이 upper/lower만 → 각 가구 높이에 맞춰 프레임 조각들
+        if (isRightFrameSplit && spaceInfo.surroundType !== 'no-surround') {
+          return (
+            <>
+              {rightOuterMods.map((om, idx) => {
+                const segH = mmToThreeUnits(om.heightMm);
+                const segCY = panelStartY + mmToThreeUnits(om.bottomMm) + segH / 2;
+                return (
+                  <BoxWithEdges
+                    key={`right-frame-split-${idx}-${om.category}-${materialConfig?.doorColor}-${materialConfig?.doorTexture}`}
+                    hideEdges={hideEdges}
+                    isOuterFrame
+                    name="right-surround-ep"
+                    isEndPanel={!wallConfig?.right}
+                    args={[frameRenderThickness.right, segH, rightFrameDepth]}
+                    position={[rightFrameX, segCY, rightFrameZ]}
+                    material={rightFrameMat}
+                    renderMode={renderMode}
+                    shadowEnabled={shadowEnabled}
+                    excludeKey={`${rightMostModuleId}::right-surround-ep`}
+                    excludeKeys={[`${rightMostModuleId}::right-surround-lshape-side`, `${rightMostModuleId}::right-surround-lshape-front`]}
+                  />
+                );
+              })}
+            </>
+          );
+        }
+
+        return (
           <BoxWithEdges
             hideEdges={hideEdges}
             isOuterFrame
             name="right-surround-ep"
             key={`right-frame-${materialConfig?.doorColor}-${materialConfig?.doorTexture}`}
-            isEndPanel={!wallConfig?.right} // 오른쪽 벽이 없으면 엔드패널
-            args={[
-              frameRenderThickness.right,
-              adjustedPanelHeight,
-              // 노서라운드 모드에서 엔드패널/프레임 깊이 결정
-              spaceInfo.surroundType === 'no-surround'
-                ? (wallConfig?.right
-                  ? mmToThreeUnits(END_PANEL_THICKNESS)  // 벽이 있는 경우: 얇은 프레임 (18mm)
-                  : noSurroundEndPanelDepth)  // 벽이 없는 경우: 공간 뒷벽부터 가구 앞면-20mm까지
-                : (((spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') && !wallConfig?.right) ||
-                  (spaceInfo.installType === 'freestanding' || spaceInfo.installType === 'free-standing')
-                  ? surroundEndPanelDepth  // 서라운드 엔드패널: 뒷벽까지 보정된 깊이
-                  : mmToThreeUnits(END_PANEL_THICKNESS))  // 서라운드 프레임 (18mm)
-            ]}
-            position={[
-              // 노서라운드 모드: 마지막 슬롯 경계에서 엔드패널 반만큼 안쪽
-              // 일반 모드: 끝 슬롯에 가구가 있을 때는 가구 옆에 붙여서 렌더링
-              spaceInfo.surroundType === 'no-surround'
-                ? (indexingForCheck.threeUnitBoundaries.length > lastSlotIndex + 1
-                  ? indexingForCheck.threeUnitBoundaries[lastSlotIndex + 1] - frameRenderThickness.right / 2
-                  : xOffset + width - frameRenderThickness.right / 2)
-                : (hasRightFurniture && indexingForCheck.threeUnitBoundaries.length > lastSlotIndex + 1
-                  ? indexingForCheck.threeUnitBoundaries[lastSlotIndex + 1] + frameRenderThickness.right
-                  : xOffset + width - frameRenderThickness.right / 2),
-              sideFrameCenterY,
-              // 노서라운드 모드에서 엔드패널/프레임 위치 결정
-              spaceInfo.surroundType === 'no-surround'
-                ? (wallConfig?.right
-                  ? furnitureZOffset + furnitureDepth / 2 - mmToThreeUnits(END_PANEL_THICKNESS) / 2 + mmToThreeUnits(3)  // 일반 구간: 가구 앞면에서 3mm 앞
-                  : noSurroundEndPanelZ)  // 벽이 없는 경우: 공간 뒷벽과 가구 앞면-20mm의 중심
-                : (((spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') && !wallConfig?.right) ||
-                  (spaceInfo.installType === 'freestanding' || spaceInfo.installType === 'free-standing')
-                  ? surroundEndPanelZ  // 서라운드 엔드패널: 뒷벽까지 보정된 위치
-                  : furnitureZOffset + furnitureDepth / 2 - mmToThreeUnits(END_PANEL_THICKNESS) / 2 + mmToThreeUnits(3))  // 일반 구간: 가구 앞면에서 3mm 앞
-            ]}
-            material={rightFrameMaterial ?? createFrameMaterial('right')}
+            isEndPanel={!wallConfig?.right}
+            args={[frameRenderThickness.right, adjustedPanelHeight, rightFrameDepth]}
+            position={[rightFrameX, sideFrameCenterY, rightFrameZ]}
+            material={rightFrameMat}
             renderMode={renderMode}
             shadowEnabled={shadowEnabled}
             excludeKey={`${rightMostModuleId}::right-surround-ep`}
             excludeKeys={[`${rightMostModuleId}::right-surround-lshape-side`, `${rightMostModuleId}::right-surround-lshape-front`]}
           />
-        ) : null);
+        );
       })()}
 
 
