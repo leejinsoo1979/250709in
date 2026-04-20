@@ -7,6 +7,7 @@ import { useSpace3DView } from '../../../context/useSpace3DView';
 import DoorModule from '../DoorModule';
 import FinishingPanelWithTexture from '../components/FinishingPanelWithTexture';
 import BoxWithEdges from '../components/BoxWithEdges';
+import { useFurnitureStore } from '@/store/core/furnitureStore';
 
 /**
  * 상부장 컴포넌트
@@ -59,6 +60,41 @@ const UpperCabinet: React.FC<FurnitureTypeProps> = ({
     adjustedWidth,
     backPanelThicknessMm: backPanelThickness
   });
+
+  // 좌/우 최외곽 상부장 자동 판별 — 서라운드 프레임 옆이면 하부마감판을 프레임 위로 확장
+  const placedModulesForOuter = useFurnitureStore(state => state.placedModules);
+  const outerExtendLeftUpper = useMemo(() => {
+    if (!placedFurnitureId || !spaceInfo) return 0;
+    const self = placedModulesForOuter.find(mm => mm.id === placedFurnitureId);
+    if (!self) return 0;
+    const selfId = self.moduleId || '';
+    const isUpperCat = selfId.startsWith('upper-') || selfId.includes('-upper-');
+    if (!isUpperCat) return 0;
+    const selfW = (self.isFreePlacement && self.freeWidth) ? self.freeWidth : (self.customWidth || self.adjustedWidth || self.moduleWidth || 0);
+    const selfCx = Math.round(self.position.x * 100);
+    const selfLeft = selfCx - selfW / 2;
+    const halfSpaceMm = (spaceInfo.width || 0) / 2;
+    const leftFrameMM = spaceInfo.frameSize?.left || 0;
+    const leftBoundaryMm = -halfSpaceMm + leftFrameMM;
+    const isAdjLeft = Math.abs(selfLeft - leftBoundaryMm) <= 1;
+    return isAdjLeft ? leftFrameMM : 0;
+  }, [placedModulesForOuter, placedFurnitureId, spaceInfo?.frameSize?.left, spaceInfo?.width]);
+  const outerExtendRightUpper = useMemo(() => {
+    if (!placedFurnitureId || !spaceInfo) return 0;
+    const self = placedModulesForOuter.find(mm => mm.id === placedFurnitureId);
+    if (!self) return 0;
+    const selfId = self.moduleId || '';
+    const isUpperCat = selfId.startsWith('upper-') || selfId.includes('-upper-');
+    if (!isUpperCat) return 0;
+    const selfW = (self.isFreePlacement && self.freeWidth) ? self.freeWidth : (self.customWidth || self.adjustedWidth || self.moduleWidth || 0);
+    const selfCx = Math.round(self.position.x * 100);
+    const selfRight = selfCx + selfW / 2;
+    const halfSpaceMm = (spaceInfo.width || 0) / 2;
+    const rightFrameMM = spaceInfo.frameSize?.right || 0;
+    const rightBoundaryMm = halfSpaceMm - rightFrameMM;
+    const isAdjRight = Math.abs(selfRight - rightBoundaryMm) <= 1;
+    return isAdjRight ? rightFrameMM : 0;
+  }, [placedModulesForOuter, placedFurnitureId, spaceInfo?.frameSize?.right, spaceInfo?.width]);
 
   // 간접조명은 UpperCabinetIndirectLight 컴포넌트에서 통합 관리
   // 개별 상부장에서는 간접조명을 렌더링하지 않음
@@ -129,12 +165,20 @@ const UpperCabinet: React.FC<FurnitureTypeProps> = ({
           </BaseFurnitureShell>
 
           {/* 상부장 하단 마감재 (18mm) - 도어 색상과 동일 */}
+            {(() => {
+              const leftExtMm = outerExtendLeftUpper;
+              const rightExtMm = outerExtendRightUpper;
+              const leftExt = leftExtMm * 0.01;
+              const rightExt = rightExtMm * 0.01;
+              const extendedWidth = baseFurniture.width + leftExt + rightExt;
+              const xOffset = (rightExt - leftExt) / 2;
+              return (
             <FinishingPanelWithTexture
-              width={baseFurniture.width}
+              width={extendedWidth}
               height={0.18}
               depth={baseFurniture.depth - 0.35} // 깊이 35mm 줄임
               position={[
-                0,
+                xOffset,
                 -(baseFurniture.height / 2) - 0.09, // 하단에 위치 (18mm의 절반만큼 아래로)
                 0.175 // z축 앞으로 17.5mm 이동
               ]}
@@ -146,6 +190,8 @@ const UpperCabinet: React.FC<FurnitureTypeProps> = ({
               isEditMode={isEditMode}
               panelName="하부마감판"
             />
+              );
+            })()}
         </>
       )}
       
