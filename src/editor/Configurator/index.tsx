@@ -1218,7 +1218,17 @@ const Configurator: React.FC = () => {
         resetSpaceInfo();
         setSpaceInfo(spaceConfig);
         setPreviousSpaceInfo(spaceConfig);
-        setPlacedModules(project.furniture?.placedModules || []);
+        // 전체서라운드 + 상부장 기존 프로젝트 마이그레이션: topFrameOffset 미설정이면 23 적용
+        const isFullSurroundLoaded = spaceConfig.surroundType === 'surround' &&
+          spaceConfig.frameConfig?.top === true && spaceConfig.frameConfig?.bottom === true;
+        const migratedModules = (project.furniture?.placedModules || []).map((m: any) => {
+          const isUpper = m.moduleId?.includes('upper-cabinet') || m.moduleId?.startsWith('upper-');
+          if (isFullSurroundLoaded && isUpper && (m.topFrameOffset === undefined || m.topFrameOffset === 0)) {
+            return { ...m, topFrameOffset: 23 };
+          }
+          return m;
+        });
+        setPlacedModules(migratedModules);
         setCurrentProjectId(projectId);
         // 다음 렌더 사이클 이후 플래그 해제
         requestAnimationFrame(() => {
