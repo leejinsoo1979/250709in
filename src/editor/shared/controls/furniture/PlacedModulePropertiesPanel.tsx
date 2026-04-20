@@ -2899,380 +2899,6 @@ const PlacedModulePropertiesPanel: React.FC = () => {
             </div>
           )}
 
-          {/* 상,하부 프레임 — 우측바와 동일 형태 (해당 가구 단일) */}
-          {currentPlacedModule && !currentPlacedModule.isSurroundPanel && (() => {
-            const mod = currentPlacedModule;
-            const globalTop = spaceInfo.frameSize?.top ?? 30;
-            const globalBase = spaceInfo.baseConfig?.height ?? 65;
-            const isStandType = spaceInfo.baseConfig?.type === 'stand';
-            const isLowerMod = mod.moduleId?.startsWith('lower-') || mod.moduleId?.includes('-lower-');
-            const bfMin = isLowerMod ? 60 : 40;
-            const bfMax = isLowerMod ? 150 : 100;
-            const bfDefault = isLowerMod ? 100 : 60;
-
-            const topEnabled = mod.hasTopFrame !== false;
-            const baseEnabled = mod.hasBase !== false;
-            const topSize = mod.topFrameThickness ?? globalTop;
-            // 서라운드(전체/양쪽 포함) + 상부장일 때 기본 옵셋 23mm
-            const isUpperCat = mod.moduleId?.includes('upper-cabinet') || mod.moduleId?.startsWith('upper-');
-            const isSurroundForOffset = spaceInfo.surroundType === 'surround';
-            const topOffsetDefault = (isUpperCat && isSurroundForOffset) ? 23 : 0;
-            const topOffset = mod.topFrameOffset ?? topOffsetDefault;
-            const topGap = mod.topFrameGap ?? 0;
-            const baseSize = mod.baseFrameHeight ?? bfDefault;
-            const baseOffset = mod.baseFrameOffset ?? 0;
-            const baseGap = mod.baseFrameGap ?? 0;
-
-            const toggleStyle = (on: boolean): React.CSSProperties => ({
-              width: '36px', height: '20px', borderRadius: '10px', border: 'none', cursor: 'pointer',
-              backgroundColor: on ? 'var(--theme-primary, #4a90d9)' : '#ccc',
-              position: 'relative', transition: 'background-color 0.2s', flexShrink: 0,
-            });
-            const knobStyle = (on: boolean): React.CSSProperties => ({
-              position: 'absolute', top: '2px', width: '16px', height: '16px', borderRadius: '50%',
-              backgroundColor: '#fff', transition: 'left 0.2s', left: on ? '18px' : '2px',
-            });
-            const cellStyle: React.CSSProperties = {
-              flex: 1, display: 'flex', alignItems: 'center', gap: '2px',
-              border: '1px solid var(--theme-border)', borderRadius: '4px', padding: '2px 4px',
-            };
-            const cellLabelStyle: React.CSSProperties = { fontSize: '10px', color: 'var(--theme-text-secondary)', flexShrink: 0 };
-            const inputStyle: React.CSSProperties = {
-              width: '100%', border: 'none', outline: 'none', fontSize: '12px', textAlign: 'center',
-              background: 'transparent', color: 'var(--theme-text-primary)',
-            };
-            const rowStyle: React.CSSProperties = { display: 'flex', alignItems: 'center', gap: '6px', padding: '3px 0' };
-            const labelStyle: React.CSSProperties = { minWidth: '50px', fontSize: '11px', color: 'var(--theme-text-secondary)', fontWeight: 500 };
-
-            return (
-              <div className={styles.propertySection}>
-                <h5 className={styles.sectionTitle}>상,하부프레임</h5>
-
-                {/* 상부 프레임 */}
-                <div style={rowStyle}>
-                  <span style={labelStyle}>상부</span>
-                  <button
-                    onClick={() => updatePlacedModule(mod.id, { hasTopFrame: !topEnabled })}
-                    style={toggleStyle(topEnabled)}
-                  >
-                    <span style={knobStyle(topEnabled)} />
-                  </button>
-                  {topEnabled && (
-                    <div style={{ display: 'flex', flex: 1, gap: '4px' }}>
-                      <div style={cellStyle}>
-                        <span style={cellLabelStyle}>높이</span>
-                        <input type="text" inputMode="numeric"
-                          value={topSize || ''} placeholder="0"
-                          onFocus={() => setHighlightedFrame(`top-${mod.id}` as any)}
-                          onKeyDown={(e) => {
-                            if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
-                              e.preventDefault();
-                              const next = Math.max(0, Math.min(9999, (topSize || 0) + (e.key === 'ArrowUp' ? 1 : -1)));
-                              updatePlacedModule(mod.id, { topFrameThickness: next });
-                            } else if (e.key === 'Enter') {
-                              (e.target as HTMLInputElement).blur();
-                            }
-                          }}
-                          onChange={(e) => {
-                            const v = e.target.value;
-                            if (v === '' || /^\d+$/.test(v)) {
-                              const num = v === '' ? 0 : parseInt(v, 10);
-                              updatePlacedModule(mod.id, { topFrameThickness: Math.max(0, Math.min(9999, num)) });
-                            }
-                          }}
-                          onBlur={(e) => {
-                            setHighlightedFrame(null);
-                            const clamped = Math.max(0, Math.min(9999, parseInt(e.target.value) || 0));
-                            updatePlacedModule(mod.id, { topFrameThickness: clamped });
-                          }}
-                          style={inputStyle}
-                        />
-                      </div>
-                      <div style={cellStyle}>
-                        <span style={cellLabelStyle}>옵셋</span>
-                        <input type="text" inputMode="numeric"
-                          value={topOffset !== 0 ? topOffset : ''} placeholder="0"
-                          onFocus={() => setHighlightedFrame(`top-${mod.id}` as any)}
-                          onKeyDown={(e) => {
-                            if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
-                              e.preventDefault();
-                              const next = Math.max(-200, Math.min(200, (topOffset || 0) + (e.key === 'ArrowUp' ? 1 : -1)));
-                              updatePlacedModule(mod.id, { topFrameOffset: next });
-                            } else if (e.key === 'Enter') {
-                              (e.target as HTMLInputElement).blur();
-                            }
-                          }}
-                          onChange={(e) => {
-                            const v = e.target.value;
-                            if (v === '' || v === '-' || /^-?\d+$/.test(v)) {
-                              updatePlacedModule(mod.id, { topFrameOffset: v === '' || v === '-' ? 0 : parseInt(v, 10) });
-                            }
-                          }}
-                          onBlur={(e) => {
-                            setHighlightedFrame(null);
-                            const clamped = Math.max(-200, Math.min(200, parseInt(e.target.value) || 0));
-                            updatePlacedModule(mod.id, { topFrameOffset: clamped });
-                          }}
-                          style={inputStyle}
-                        />
-                      </div>
-                      <div style={cellStyle}>
-                        <span style={cellLabelStyle}>갭</span>
-                        <input type="text" inputMode="numeric"
-                          value={topGap !== 0 ? topGap : ''} placeholder="0"
-                          onFocus={() => setHighlightedFrame(`top-${mod.id}` as any)}
-                          onKeyDown={(e) => {
-                            if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
-                              e.preventDefault();
-                              const maxGap = Math.max(0, topSize - 1);
-                              const next = Math.max(0, Math.min(maxGap, (topGap || 0) + (e.key === 'ArrowUp' ? 1 : -1)));
-                              updatePlacedModule(mod.id, { topFrameGap: next });
-                            } else if (e.key === 'Enter') {
-                              (e.target as HTMLInputElement).blur();
-                            }
-                          }}
-                          onChange={(e) => {
-                            const v = e.target.value;
-                            if (v === '' || /^\d+$/.test(v)) {
-                              const num = v === '' ? 0 : parseInt(v, 10);
-                              const maxGap = Math.max(0, topSize - 1);
-                              updatePlacedModule(mod.id, { topFrameGap: Math.max(0, Math.min(maxGap, num)) });
-                            }
-                          }}
-                          onBlur={(e) => {
-                            setHighlightedFrame(null);
-                            const maxGap = Math.max(0, topSize - 1);
-                            const clamped = Math.max(0, Math.min(maxGap, parseInt(e.target.value) || 0));
-                            updatePlacedModule(mod.id, { topFrameGap: clamped });
-                          }}
-                          style={inputStyle}
-                        />
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                {/* 상하부 구분선 — stand 타입이 아닐 때만 */}
-                {!isStandType && (
-                  <div style={{ borderTop: '1px solid var(--theme-border, #e0e0e0)', margin: '6px 0' }} />
-                )}
-
-                {/* 하부 프레임 — stand 타입이면 숨김 */}
-                {!isStandType && (
-                  <div style={rowStyle}>
-                    <span style={labelStyle}>하부</span>
-                    <button
-                      onClick={() => updatePlacedModule(mod.id, {
-                        hasBase: !baseEnabled,
-                        ...(baseEnabled
-                          ? { individualFloatHeight: 0 }
-                          : { doorBottomGap: 25 }),
-                      })}
-                      style={toggleStyle(baseEnabled)}
-                    >
-                      <span style={knobStyle(baseEnabled)} />
-                    </button>
-                    {baseEnabled ? (
-                      <div style={{ display: 'flex', flex: 1, gap: '4px' }}>
-                        <div style={cellStyle}>
-                          <span style={cellLabelStyle}>높이</span>
-                          <input type="text" inputMode="numeric"
-                            value={baseSize || ''} placeholder="0"
-                            onFocus={() => setHighlightedFrame(`base-${mod.id}` as any)}
-                            onKeyDown={(e) => {
-                              if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
-                                e.preventDefault();
-                                const cur = mod.baseFrameHeight ?? bfDefault;
-                                updatePlacedModule(mod.id, { baseFrameHeight: Math.max(bfMin, Math.min(bfMax, cur + (e.key === 'ArrowUp' ? 1 : -1))) });
-                              } else if (e.key === 'Enter') {
-                                (e.target as HTMLInputElement).blur();
-                              }
-                            }}
-                            onChange={(e) => {
-                              const v = e.target.value;
-                              if (v === '' || /^\d+$/.test(v)) {
-                                const num = v === '' ? 0 : parseInt(v, 10);
-                                updatePlacedModule(mod.id, { baseFrameHeight: num > bfMax ? bfMax : num });
-                              }
-                            }}
-                            onBlur={(e) => {
-                              setHighlightedFrame(null);
-                              updatePlacedModule(mod.id, { baseFrameHeight: Math.max(bfMin, Math.min(bfMax, parseInt(e.target.value) || bfDefault)) });
-                            }}
-                            style={inputStyle}
-                          />
-                        </div>
-                        <div style={cellStyle}>
-                          <span style={cellLabelStyle}>옵셋</span>
-                          <input type="text" inputMode="numeric"
-                            value={baseOffset !== 0 ? baseOffset : ''} placeholder="0"
-                            onFocus={() => setHighlightedFrame(`base-${mod.id}` as any)}
-                            onKeyDown={(e) => {
-                              if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
-                                e.preventDefault();
-                                const cur = mod.baseFrameOffset ?? 0;
-                                updatePlacedModule(mod.id, { baseFrameOffset: Math.max(-200, Math.min(200, cur + (e.key === 'ArrowUp' ? 1 : -1))) });
-                              } else if (e.key === 'Enter') {
-                                (e.target as HTMLInputElement).blur();
-                              }
-                            }}
-                            onChange={(e) => {
-                              const v = e.target.value;
-                              if (v === '' || v === '-' || /^-?\d+$/.test(v)) {
-                                updatePlacedModule(mod.id, { baseFrameOffset: v === '' || v === '-' ? 0 : parseInt(v, 10) });
-                              }
-                            }}
-                            onBlur={(e) => {
-                              setHighlightedFrame(null);
-                              updatePlacedModule(mod.id, { baseFrameOffset: Math.max(-200, Math.min(200, parseInt(e.target.value) || 0)) });
-                            }}
-                            style={inputStyle}
-                          />
-                        </div>
-                        <div style={cellStyle}>
-                          <span style={cellLabelStyle}>갭</span>
-                          <input type="text" inputMode="numeric"
-                            value={baseGap !== 0 ? baseGap : ''} placeholder="0"
-                            onFocus={() => setHighlightedFrame(`base-${mod.id}` as any)}
-                            onKeyDown={(e) => {
-                              if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
-                                e.preventDefault();
-                                const maxGap = Math.max(0, baseSize - 1);
-                                const next = Math.max(0, Math.min(maxGap, (baseGap || 0) + (e.key === 'ArrowUp' ? 1 : -1)));
-                                updatePlacedModule(mod.id, { baseFrameGap: next });
-                              } else if (e.key === 'Enter') {
-                                (e.target as HTMLInputElement).blur();
-                              }
-                            }}
-                            onChange={(e) => {
-                              const v = e.target.value;
-                              if (v === '' || /^\d+$/.test(v)) {
-                                const num = v === '' ? 0 : parseInt(v, 10);
-                                const maxGap = Math.max(0, baseSize - 1);
-                                updatePlacedModule(mod.id, { baseFrameGap: Math.max(0, Math.min(maxGap, num)) });
-                              }
-                            }}
-                            onBlur={(e) => {
-                              setHighlightedFrame(null);
-                              const maxGap = Math.max(0, baseSize - 1);
-                              const clamped = Math.max(0, Math.min(maxGap, parseInt(e.target.value) || 0));
-                              updatePlacedModule(mod.id, { baseFrameGap: clamped });
-                            }}
-                            style={inputStyle}
-                          />
-                        </div>
-                      </div>
-                    ) : (
-                      <div style={{ display: 'flex', flex: 1, gap: '4px' }}>
-                        <div style={cellStyle}>
-                          <span style={cellLabelStyle}>띄움</span>
-                          <input type="text" inputMode="numeric"
-                            value={(mod.individualFloatHeight ?? 0) || ''} placeholder="0"
-                            onKeyDown={(e) => {
-                              if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
-                                e.preventDefault();
-                                const cur = mod.individualFloatHeight ?? 0;
-                                const nv = Math.max(0, Math.min(500, cur + (e.key === 'ArrowUp' ? 1 : -1)));
-                                updatePlacedModule(mod.id, { individualFloatHeight: nv, doorBottomGap: nv });
-                              } else if (e.key === 'Enter') {
-                                (e.target as HTMLInputElement).blur();
-                              }
-                            }}
-                            onChange={(e) => {
-                              const v = e.target.value;
-                              if (v === '' || /^\d+$/.test(v)) {
-                                const nv = v === '' ? 0 : parseInt(v, 10);
-                                updatePlacedModule(mod.id, { individualFloatHeight: nv, doorBottomGap: nv });
-                              }
-                            }}
-                            onBlur={() => { /* blur 시 doorBottomGap 덮어쓰기 방지 */ }}
-                            style={inputStyle}
-                          />
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-            );
-          })()}
-
-          {/* 하부장(1섹션) 깊이 + 뒤고정/앞고정 */}
-          {currentPlacedModule && moduleData?.category === 'lower' && !isTwoSectionFurniture && (() => {
-            const depthDir = currentPlacedModule.lowerSectionDepthDirection || 'front';
-            const curDepth = currentPlacedModule.freeDepth || currentPlacedModule.customDepth || moduleData.dimensions.depth;
-            return (
-              <div className={styles.propertySection}>
-                <div className={styles.inputWithUnit}>
-                  <input
-                    type="text"
-                    inputMode="numeric"
-                    value={freeDepthInput}
-                    onChange={(e) => setFreeDepthInput(e.target.value)}
-                    onBlur={() => {
-                      const val = parseInt(freeDepthInput, 10);
-                      const isLowerDrawer = currentPlacedModule?.moduleId?.includes('lower-drawer-');
-                      const minDepth = isLowerDrawer ? 400 : 100;
-                      if (!isNaN(val) && val >= minDepth && val <= 800 && currentPlacedModule) {
-                        updatePlacedModule(currentPlacedModule.id, { freeDepth: val, customDepth: val });
-                        setFreeDepthInput(val.toString());
-                      }
-                    }}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') { (e.target as HTMLInputElement).blur(); }
-                      else if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
-                        e.preventDefault();
-                        const cur = parseInt(freeDepthInput, 10) || curDepth;
-                        const isLowerDrawerArrow = currentPlacedModule?.moduleId?.includes('lower-drawer-');
-                        const minDepthArrow = isLowerDrawerArrow ? 400 : 100;
-                        const next = Math.max(minDepthArrow, Math.min(800, cur + (e.key === 'ArrowUp' ? 1 : -1)));
-                        setFreeDepthInput(next.toString());
-                        if (currentPlacedModule) {
-                          updatePlacedModule(currentPlacedModule.id, { freeDepth: next, customDepth: next });
-                        }
-                      }
-                    }}
-                    className={styles.depthInput}
-                    style={{ fontSize: '14px' }}
-                  />
-                  <span className={styles.unit}>mm</span>
-                </div>
-                <div style={{ display: 'flex', gap: '4px', marginTop: '6px' }}>
-                  <button
-                    style={{
-                      flex: 1, padding: '6px 8px', border: '1px solid var(--theme-border)', borderRadius: '4px',
-                      background: depthDir === 'front' ? 'var(--theme-primary)' : 'var(--theme-surface)',
-                      color: depthDir === 'front' ? '#fff' : 'var(--theme-text-secondary)',
-                      fontSize: '12px', cursor: 'pointer', transition: 'all 0.2s', fontWeight: depthDir === 'front' ? 600 : 400
-                    }}
-                    onClick={() => {
-                      if (currentPlacedModule) {
-                        updatePlacedModule(currentPlacedModule.id, { lowerSectionDepthDirection: 'front' });
-                      }
-                    }}
-                  >
-                    뒤고정
-                  </button>
-                  <button
-                    style={{
-                      flex: 1, padding: '6px 8px', border: '1px solid var(--theme-border)', borderRadius: '4px',
-                      background: depthDir === 'back' ? 'var(--theme-primary)' : 'var(--theme-surface)',
-                      color: depthDir === 'back' ? '#fff' : 'var(--theme-text-secondary)',
-                      fontSize: '12px', cursor: 'pointer', transition: 'all 0.2s', fontWeight: depthDir === 'back' ? 600 : 400
-                    }}
-                    onClick={() => {
-                      if (currentPlacedModule) {
-                        updatePlacedModule(currentPlacedModule.id, { lowerSectionDepthDirection: 'back' });
-                      }
-                    }}
-                  >
-                    앞고정
-                  </button>
-                </div>
-              </div>
-            );
-          })()}
-
           {/* 섹션별 치수 설정 (2섹션 이상 가구: customConfig 또는 modelConfig) */}
           {currentPlacedModule && (() => {
             const cc = currentPlacedModule.customConfig;
@@ -3695,6 +3321,381 @@ const PlacedModulePropertiesPanel: React.FC = () => {
             </div>
             );
           })()}
+
+          {/* 상,하부 프레임 — 우측바와 동일 형태 (해당 가구 단일) */}
+          {currentPlacedModule && !currentPlacedModule.isSurroundPanel && (() => {
+            const mod = currentPlacedModule;
+            const globalTop = spaceInfo.frameSize?.top ?? 30;
+            const globalBase = spaceInfo.baseConfig?.height ?? 65;
+            const isStandType = spaceInfo.baseConfig?.type === 'stand';
+            const isLowerMod = mod.moduleId?.startsWith('lower-') || mod.moduleId?.includes('-lower-');
+            const bfMin = isLowerMod ? 60 : 40;
+            const bfMax = isLowerMod ? 150 : 100;
+            const bfDefault = isLowerMod ? 100 : 60;
+
+            const topEnabled = mod.hasTopFrame !== false;
+            const baseEnabled = mod.hasBase !== false;
+            const topSize = mod.topFrameThickness ?? globalTop;
+            // 서라운드(전체/양쪽 포함) + 상부장일 때 기본 옵셋 23mm
+            const isUpperCat = mod.moduleId?.includes('upper-cabinet') || mod.moduleId?.startsWith('upper-');
+            const isSurroundForOffset = spaceInfo.surroundType === 'surround';
+            const topOffsetDefault = (isUpperCat && isSurroundForOffset) ? 23 : 0;
+            const topOffset = mod.topFrameOffset ?? topOffsetDefault;
+            const topGap = mod.topFrameGap ?? 0;
+            const baseSize = mod.baseFrameHeight ?? bfDefault;
+            const baseOffset = mod.baseFrameOffset ?? 0;
+            const baseGap = mod.baseFrameGap ?? 0;
+
+            const toggleStyle = (on: boolean): React.CSSProperties => ({
+              width: '36px', height: '20px', borderRadius: '10px', border: 'none', cursor: 'pointer',
+              backgroundColor: on ? 'var(--theme-primary, #4a90d9)' : '#ccc',
+              position: 'relative', transition: 'background-color 0.2s', flexShrink: 0,
+            });
+            const knobStyle = (on: boolean): React.CSSProperties => ({
+              position: 'absolute', top: '2px', width: '16px', height: '16px', borderRadius: '50%',
+              backgroundColor: '#fff', transition: 'left 0.2s', left: on ? '18px' : '2px',
+            });
+            const cellStyle: React.CSSProperties = {
+              flex: 1, display: 'flex', alignItems: 'center', gap: '2px',
+              border: '1px solid var(--theme-border)', borderRadius: '4px', padding: '2px 4px',
+            };
+            const cellLabelStyle: React.CSSProperties = { fontSize: '10px', color: 'var(--theme-text-secondary)', flexShrink: 0 };
+            const inputStyle: React.CSSProperties = {
+              width: '100%', border: 'none', outline: 'none', fontSize: '12px', textAlign: 'center',
+              background: 'transparent', color: 'var(--theme-text-primary)',
+            };
+            const rowStyle: React.CSSProperties = { display: 'flex', alignItems: 'center', gap: '6px', padding: '3px 0' };
+            const labelStyle: React.CSSProperties = { minWidth: '50px', fontSize: '11px', color: 'var(--theme-text-secondary)', fontWeight: 500 };
+
+            return (
+              <div className={styles.propertySection}>
+                <h5 className={styles.sectionTitle}>상,하부프레임</h5>
+
+                {/* 상부 프레임 */}
+                <div style={rowStyle}>
+                  <span style={labelStyle}>상부</span>
+                  <button
+                    onClick={() => updatePlacedModule(mod.id, { hasTopFrame: !topEnabled })}
+                    style={toggleStyle(topEnabled)}
+                  >
+                    <span style={knobStyle(topEnabled)} />
+                  </button>
+                  {topEnabled && (
+                    <div style={{ display: 'flex', flex: 1, gap: '4px' }}>
+                      <div style={cellStyle}>
+                        <span style={cellLabelStyle}>높이</span>
+                        <input type="text" inputMode="numeric"
+                          value={topSize || ''} placeholder="0"
+                          onFocus={() => setHighlightedFrame(`top-${mod.id}` as any)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                              e.preventDefault();
+                              const next = Math.max(0, Math.min(9999, (topSize || 0) + (e.key === 'ArrowUp' ? 1 : -1)));
+                              updatePlacedModule(mod.id, { topFrameThickness: next });
+                            } else if (e.key === 'Enter') {
+                              (e.target as HTMLInputElement).blur();
+                            }
+                          }}
+                          onChange={(e) => {
+                            const v = e.target.value;
+                            if (v === '' || /^\d+$/.test(v)) {
+                              const num = v === '' ? 0 : parseInt(v, 10);
+                              updatePlacedModule(mod.id, { topFrameThickness: Math.max(0, Math.min(9999, num)) });
+                            }
+                          }}
+                          onBlur={(e) => {
+                            setHighlightedFrame(null);
+                            const clamped = Math.max(0, Math.min(9999, parseInt(e.target.value) || 0));
+                            updatePlacedModule(mod.id, { topFrameThickness: clamped });
+                          }}
+                          style={inputStyle}
+                        />
+                      </div>
+                      <div style={cellStyle}>
+                        <span style={cellLabelStyle}>옵셋</span>
+                        <input type="text" inputMode="numeric"
+                          value={topOffset !== 0 ? topOffset : ''} placeholder="0"
+                          onFocus={() => setHighlightedFrame(`top-${mod.id}` as any)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                              e.preventDefault();
+                              const next = Math.max(-200, Math.min(200, (topOffset || 0) + (e.key === 'ArrowUp' ? 1 : -1)));
+                              updatePlacedModule(mod.id, { topFrameOffset: next });
+                            } else if (e.key === 'Enter') {
+                              (e.target as HTMLInputElement).blur();
+                            }
+                          }}
+                          onChange={(e) => {
+                            const v = e.target.value;
+                            if (v === '' || v === '-' || /^-?\d+$/.test(v)) {
+                              updatePlacedModule(mod.id, { topFrameOffset: v === '' || v === '-' ? 0 : parseInt(v, 10) });
+                            }
+                          }}
+                          onBlur={(e) => {
+                            setHighlightedFrame(null);
+                            const clamped = Math.max(-200, Math.min(200, parseInt(e.target.value) || 0));
+                            updatePlacedModule(mod.id, { topFrameOffset: clamped });
+                          }}
+                          style={inputStyle}
+                        />
+                      </div>
+                      <div style={cellStyle}>
+                        <span style={cellLabelStyle}>갭</span>
+                        <input type="text" inputMode="numeric"
+                          value={topGap !== 0 ? topGap : ''} placeholder="0"
+                          onFocus={() => setHighlightedFrame(`top-${mod.id}` as any)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                              e.preventDefault();
+                              const maxGap = Math.max(0, topSize - 1);
+                              const next = Math.max(0, Math.min(maxGap, (topGap || 0) + (e.key === 'ArrowUp' ? 1 : -1)));
+                              updatePlacedModule(mod.id, { topFrameGap: next });
+                            } else if (e.key === 'Enter') {
+                              (e.target as HTMLInputElement).blur();
+                            }
+                          }}
+                          onChange={(e) => {
+                            const v = e.target.value;
+                            if (v === '' || /^\d+$/.test(v)) {
+                              const num = v === '' ? 0 : parseInt(v, 10);
+                              const maxGap = Math.max(0, topSize - 1);
+                              updatePlacedModule(mod.id, { topFrameGap: Math.max(0, Math.min(maxGap, num)) });
+                            }
+                          }}
+                          onBlur={(e) => {
+                            setHighlightedFrame(null);
+                            const maxGap = Math.max(0, topSize - 1);
+                            const clamped = Math.max(0, Math.min(maxGap, parseInt(e.target.value) || 0));
+                            updatePlacedModule(mod.id, { topFrameGap: clamped });
+                          }}
+                          style={inputStyle}
+                        />
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* 상하부 구분선 — stand 타입이 아닐 때만 */}
+                {!isStandType && (
+                  <div style={{ borderTop: '1px solid var(--theme-border, #e0e0e0)', margin: '6px 0' }} />
+                )}
+
+                {/* 하부 프레임 — stand 타입이면 숨김 */}
+                {!isStandType && (
+                  <div style={rowStyle}>
+                    <span style={labelStyle}>하부</span>
+                    <button
+                      onClick={() => updatePlacedModule(mod.id, {
+                        hasBase: !baseEnabled,
+                        ...(baseEnabled
+                          ? { individualFloatHeight: 0 }
+                          : { doorBottomGap: 25 }),
+                      })}
+                      style={toggleStyle(baseEnabled)}
+                    >
+                      <span style={knobStyle(baseEnabled)} />
+                    </button>
+                    {baseEnabled ? (
+                      <div style={{ display: 'flex', flex: 1, gap: '4px' }}>
+                        <div style={cellStyle}>
+                          <span style={cellLabelStyle}>높이</span>
+                          <input type="text" inputMode="numeric"
+                            value={baseSize || ''} placeholder="0"
+                            onFocus={() => setHighlightedFrame(`base-${mod.id}` as any)}
+                            onKeyDown={(e) => {
+                              if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                                e.preventDefault();
+                                const cur = mod.baseFrameHeight ?? bfDefault;
+                                updatePlacedModule(mod.id, { baseFrameHeight: Math.max(bfMin, Math.min(bfMax, cur + (e.key === 'ArrowUp' ? 1 : -1))) });
+                              } else if (e.key === 'Enter') {
+                                (e.target as HTMLInputElement).blur();
+                              }
+                            }}
+                            onChange={(e) => {
+                              const v = e.target.value;
+                              if (v === '' || /^\d+$/.test(v)) {
+                                const num = v === '' ? 0 : parseInt(v, 10);
+                                updatePlacedModule(mod.id, { baseFrameHeight: num > bfMax ? bfMax : num });
+                              }
+                            }}
+                            onBlur={(e) => {
+                              setHighlightedFrame(null);
+                              updatePlacedModule(mod.id, { baseFrameHeight: Math.max(bfMin, Math.min(bfMax, parseInt(e.target.value) || bfDefault)) });
+                            }}
+                            style={inputStyle}
+                          />
+                        </div>
+                        <div style={cellStyle}>
+                          <span style={cellLabelStyle}>옵셋</span>
+                          <input type="text" inputMode="numeric"
+                            value={baseOffset !== 0 ? baseOffset : ''} placeholder="0"
+                            onFocus={() => setHighlightedFrame(`base-${mod.id}` as any)}
+                            onKeyDown={(e) => {
+                              if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                                e.preventDefault();
+                                const cur = mod.baseFrameOffset ?? 0;
+                                updatePlacedModule(mod.id, { baseFrameOffset: Math.max(-200, Math.min(200, cur + (e.key === 'ArrowUp' ? 1 : -1))) });
+                              } else if (e.key === 'Enter') {
+                                (e.target as HTMLInputElement).blur();
+                              }
+                            }}
+                            onChange={(e) => {
+                              const v = e.target.value;
+                              if (v === '' || v === '-' || /^-?\d+$/.test(v)) {
+                                updatePlacedModule(mod.id, { baseFrameOffset: v === '' || v === '-' ? 0 : parseInt(v, 10) });
+                              }
+                            }}
+                            onBlur={(e) => {
+                              setHighlightedFrame(null);
+                              updatePlacedModule(mod.id, { baseFrameOffset: Math.max(-200, Math.min(200, parseInt(e.target.value) || 0)) });
+                            }}
+                            style={inputStyle}
+                          />
+                        </div>
+                        <div style={cellStyle}>
+                          <span style={cellLabelStyle}>갭</span>
+                          <input type="text" inputMode="numeric"
+                            value={baseGap !== 0 ? baseGap : ''} placeholder="0"
+                            onFocus={() => setHighlightedFrame(`base-${mod.id}` as any)}
+                            onKeyDown={(e) => {
+                              if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                                e.preventDefault();
+                                const maxGap = Math.max(0, baseSize - 1);
+                                const next = Math.max(0, Math.min(maxGap, (baseGap || 0) + (e.key === 'ArrowUp' ? 1 : -1)));
+                                updatePlacedModule(mod.id, { baseFrameGap: next });
+                              } else if (e.key === 'Enter') {
+                                (e.target as HTMLInputElement).blur();
+                              }
+                            }}
+                            onChange={(e) => {
+                              const v = e.target.value;
+                              if (v === '' || /^\d+$/.test(v)) {
+                                const num = v === '' ? 0 : parseInt(v, 10);
+                                const maxGap = Math.max(0, baseSize - 1);
+                                updatePlacedModule(mod.id, { baseFrameGap: Math.max(0, Math.min(maxGap, num)) });
+                              }
+                            }}
+                            onBlur={(e) => {
+                              setHighlightedFrame(null);
+                              const maxGap = Math.max(0, baseSize - 1);
+                              const clamped = Math.max(0, Math.min(maxGap, parseInt(e.target.value) || 0));
+                              updatePlacedModule(mod.id, { baseFrameGap: clamped });
+                            }}
+                            style={inputStyle}
+                          />
+                        </div>
+                      </div>
+                    ) : (
+                      <div style={{ display: 'flex', flex: 1, gap: '4px' }}>
+                        <div style={cellStyle}>
+                          <span style={cellLabelStyle}>띄움</span>
+                          <input type="text" inputMode="numeric"
+                            value={(mod.individualFloatHeight ?? 0) || ''} placeholder="0"
+                            onKeyDown={(e) => {
+                              if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                                e.preventDefault();
+                                const cur = mod.individualFloatHeight ?? 0;
+                                const nv = Math.max(0, Math.min(500, cur + (e.key === 'ArrowUp' ? 1 : -1)));
+                                updatePlacedModule(mod.id, { individualFloatHeight: nv, doorBottomGap: nv });
+                              } else if (e.key === 'Enter') {
+                                (e.target as HTMLInputElement).blur();
+                              }
+                            }}
+                            onChange={(e) => {
+                              const v = e.target.value;
+                              if (v === '' || /^\d+$/.test(v)) {
+                                const nv = v === '' ? 0 : parseInt(v, 10);
+                                updatePlacedModule(mod.id, { individualFloatHeight: nv, doorBottomGap: nv });
+                              }
+                            }}
+                            onBlur={() => { /* blur 시 doorBottomGap 덮어쓰기 방지 */ }}
+                            style={inputStyle}
+                          />
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            );
+          })()}
+
+          {/* 하부장(1섹션) 깊이 + 뒤고정/앞고정 */}
+          {currentPlacedModule && moduleData?.category === 'lower' && !isTwoSectionFurniture && (() => {
+            const depthDir = currentPlacedModule.lowerSectionDepthDirection || 'front';
+            const curDepth = currentPlacedModule.freeDepth || currentPlacedModule.customDepth || moduleData.dimensions.depth;
+            return (
+              <div className={styles.propertySection}>
+                <div className={styles.inputWithUnit}>
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    value={freeDepthInput}
+                    onChange={(e) => setFreeDepthInput(e.target.value)}
+                    onBlur={() => {
+                      const val = parseInt(freeDepthInput, 10);
+                      const isLowerDrawer = currentPlacedModule?.moduleId?.includes('lower-drawer-');
+                      const minDepth = isLowerDrawer ? 400 : 100;
+                      if (!isNaN(val) && val >= minDepth && val <= 800 && currentPlacedModule) {
+                        updatePlacedModule(currentPlacedModule.id, { freeDepth: val, customDepth: val });
+                        setFreeDepthInput(val.toString());
+                      }
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') { (e.target as HTMLInputElement).blur(); }
+                      else if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                        e.preventDefault();
+                        const cur = parseInt(freeDepthInput, 10) || curDepth;
+                        const isLowerDrawerArrow = currentPlacedModule?.moduleId?.includes('lower-drawer-');
+                        const minDepthArrow = isLowerDrawerArrow ? 400 : 100;
+                        const next = Math.max(minDepthArrow, Math.min(800, cur + (e.key === 'ArrowUp' ? 1 : -1)));
+                        setFreeDepthInput(next.toString());
+                        if (currentPlacedModule) {
+                          updatePlacedModule(currentPlacedModule.id, { freeDepth: next, customDepth: next });
+                        }
+                      }
+                    }}
+                    className={styles.depthInput}
+                    style={{ fontSize: '14px' }}
+                  />
+                  <span className={styles.unit}>mm</span>
+                </div>
+                <div style={{ display: 'flex', gap: '4px', marginTop: '6px' }}>
+                  <button
+                    style={{
+                      flex: 1, padding: '6px 8px', border: '1px solid var(--theme-border)', borderRadius: '4px',
+                      background: depthDir === 'front' ? 'var(--theme-primary)' : 'var(--theme-surface)',
+                      color: depthDir === 'front' ? '#fff' : 'var(--theme-text-secondary)',
+                      fontSize: '12px', cursor: 'pointer', transition: 'all 0.2s', fontWeight: depthDir === 'front' ? 600 : 400
+                    }}
+                    onClick={() => {
+                      if (currentPlacedModule) {
+                        updatePlacedModule(currentPlacedModule.id, { lowerSectionDepthDirection: 'front' });
+                      }
+                    }}
+                  >
+                    뒤고정
+                  </button>
+                  <button
+                    style={{
+                      flex: 1, padding: '6px 8px', border: '1px solid var(--theme-border)', borderRadius: '4px',
+                      background: depthDir === 'back' ? 'var(--theme-primary)' : 'var(--theme-surface)',
+                      color: depthDir === 'back' ? '#fff' : 'var(--theme-text-secondary)',
+                      fontSize: '12px', cursor: 'pointer', transition: 'all 0.2s', fontWeight: depthDir === 'back' ? 600 : 400
+                    }}
+                    onClick={() => {
+                      if (currentPlacedModule) {
+                        updatePlacedModule(currentPlacedModule.id, { lowerSectionDepthDirection: 'back' });
+                      }
+                    }}
+                  >
+                    앞고정
+                  </button>
+                </div>
+              </div>
+            );
+          })()}
+
 
           {/* 엔드패널(EP) 설정 */}
           {currentPlacedModule && moduleData && (
