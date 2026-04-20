@@ -6381,7 +6381,7 @@ const Room: React.FC<RoomProps> = ({
               const depthZOffsetMM = getLowerDepthZOffsetMM(mod);
               const freeIsLower = getModuleCategory(mod) === 'lower';
               const modBaseZInset = mod.baseFrameOffset ? mmToThreeUnits(mod.baseFrameOffset) : (freeIsLower ? mmToThreeUnits(65) : 0);
-              // 신발장: 하부프레임 Z를 신발장 앞면에 맞춤
+              // 신발장: 하부프레임 Z를 신발장 앞면에 맞춤 (inset 무시)
               const baseShoeMid = mod.moduleId || '';
               const isShoeBase = baseShoeMid.includes('-entryway-') || baseShoeMid.includes('-shelf-') || baseShoeMid.includes('-4drawer-shelf-') || baseShoeMid.includes('-2drawer-shelf-');
               let baseZPosition: number;
@@ -6392,7 +6392,7 @@ const Room: React.FC<RoomProps> = ({
                 const fiZOffset = -mmToThreeUnits(spaceInfo.depth || 1500) / 2 + (mmToThreeUnits(spaceInfo.depth || 1500) - fiFurnitureDepth) / 2;
                 const shoeBackZ = fiZOffset - fiFurnitureDepth / 2 - mmToThreeUnits(20);
                 const shoeFrontZ = shoeBackZ + mmToThreeUnits(shoeDepthMm);
-                baseZPosition = shoeFrontZ - mmToThreeUnits(END_PANEL_THICKNESS) / 2 - modBaseZInset;
+                baseZPosition = shoeFrontZ - mmToThreeUnits(END_PANEL_THICKNESS) / 2;
               } else {
                 baseZPosition = baseZBase - mmToThreeUnits(depthZOffsetMM) - modBaseZInset;
               }
@@ -6778,7 +6778,7 @@ const Room: React.FC<RoomProps> = ({
                             slotBaseSegments.push({
                               widthMm: leftPieceW,
                               centerXmm: modLeftMm + leftPieceW / 2,
-                              zPosition: effectiveBaseZ - modBaseZInset,
+                              zPosition: slotShoeBaseZ !== null ? effectiveBaseZ : (effectiveBaseZ - modBaseZInset),
                               height: modBaseH,
                               yPosition: modBaseYCenter,
                               material: baseMat,
@@ -6794,7 +6794,7 @@ const Room: React.FC<RoomProps> = ({
                             slotBaseSegments.push({
                               widthMm: rightPieceW,
                               centerXmm: rightPieceStartX + rightPieceW / 2,
-                              zPosition: effectiveBaseZ - modBaseZInset,
+                              zPosition: slotShoeBaseZ !== null ? effectiveBaseZ : (effectiveBaseZ - modBaseZInset),
                               height: modBaseH,
                               yPosition: modBaseYCenter,
                               material: baseMat,
@@ -6813,7 +6813,7 @@ const Room: React.FC<RoomProps> = ({
                             slotBaseSegments.push({
                               widthMm: leftPieceW,
                               centerXmm: modLeftMm + leftPieceW / 2,
-                              zPosition: effectiveBaseZ - modBaseZInset,
+                              zPosition: slotShoeBaseZ !== null ? effectiveBaseZ : (effectiveBaseZ - modBaseZInset),
                               height: modBaseH,
                               yPosition: modBaseYCenter,
                               material: baseMat,
@@ -6830,7 +6830,7 @@ const Room: React.FC<RoomProps> = ({
                             slotBaseSegments.push({
                               widthMm: centerPieceW,
                               centerXmm: centerPieceStartX + centerPieceW / 2,
-                              zPosition: effectiveBaseZ - modBaseZInset,
+                              zPosition: slotShoeBaseZ !== null ? effectiveBaseZ : (effectiveBaseZ - modBaseZInset),
                               height: modBaseH,
                               yPosition: modBaseYCenter,
                               material: baseMat,
@@ -6846,7 +6846,7 @@ const Room: React.FC<RoomProps> = ({
                             slotBaseSegments.push({
                               widthMm: rightPieceW,
                               centerXmm: rightPieceStartX + rightPieceW / 2,
-                              zPosition: effectiveBaseZ - modBaseZInset,
+                              zPosition: slotShoeBaseZ !== null ? effectiveBaseZ : (effectiveBaseZ - modBaseZInset),
                               height: modBaseH,
                               yPosition: modBaseYCenter,
                               material: baseMat,
