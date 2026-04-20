@@ -4769,10 +4769,10 @@ const PlacedModulePropertiesPanel: React.FC = () => {
           })()}
 
 
-          {/* 하부장 상부패널 옵셋 (2섹션 가구만, 상세보기 아닐 때만) */}
+          {/* 하부섹션 상판 옵셋 (2섹션 가구만, 상세보기 아닐 때만) */}
           {!showDetails && isTwoSectionFurniture && (
             <div className={styles.propertySection}>
-              <h5 className={styles.sectionTitle}>하부장 상부패널 옵셋</h5>
+              <h5 className={styles.sectionTitle}>하부섹션 상판 옵셋</h5>
               <div className={styles.inputWithUnit}>
                 <input
                   type="text"
