@@ -1130,10 +1130,10 @@ const createDual2DrawerShelf = (dualColumnWidth: number, maxHeight: number, slot
     `선반장+2단서랍 ${widthForId}mm`,
     dualColumnWidth,
     maxHeight,
-    FURNITURE_SPECS.DEFAULT_DEPTH,
+    FURNITURE_SPECS.SHELF_DRAWER_DEPTH,
     '#78909C',
     `듀얼 하단 2단서랍 + 상단 선반 ${defaultShelfCount}개`,
-    FURNITURE_SPECS.DEFAULT_DEPTH
+    FURNITURE_SPECS.SHELF_DRAWER_DEPTH
   );
 
   return {
