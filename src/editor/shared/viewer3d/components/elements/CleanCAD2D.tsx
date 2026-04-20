@@ -1640,8 +1640,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         })()}
       </group>
 
-      {/* 노서라운드 모드 좌측 엔드패널/이격거리 치수선 — 커튼박스 활성 시 뷰어에 이격 표시 안 함 */}
-      {showDimensions && !isStep2 && spaceInfo.surroundType === 'no-surround' && !spaceInfo.curtainBox?.enabled && (() => {
+      {/* 노서라운드 모드 좌측 엔드패널/이격거리 치수선 — 좌측 커튼박스일 때만 숨김 */}
+      {showDimensions && !isStep2 && spaceInfo.surroundType === 'no-surround' && !(spaceInfo.curtainBox?.enabled && spaceInfo.curtainBox?.position === 'left') && (() => {
         // 벽없음(freestanding)이면 이격거리/엔드패널 치수선 미표시
         if (spaceInfo.installType === 'freestanding') return null;
 
@@ -1789,8 +1789,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         );
       })()}
 
-      {/* 노서라운드 모드 우측 엔드패널/이격거리 치수선 — 커튼박스 활성 시 뷰어에 이격 표시 안 함 */}
-      {showDimensions && !isStep2 && spaceInfo.surroundType === 'no-surround' && !spaceInfo.curtainBox?.enabled && (() => {
+      {/* 노서라운드 모드 우측 엔드패널/이격거리 치수선 — 우측 커튼박스일 때만 숨김 */}
+      {showDimensions && !isStep2 && spaceInfo.surroundType === 'no-surround' && !(spaceInfo.curtainBox?.enabled && spaceInfo.curtainBox?.position === 'right') && (() => {
 
         // 벽없음(freestanding)이면 이격거리/엔드패널 치수선 미표시
         if (spaceInfo.installType === 'freestanding') return null;
@@ -5690,20 +5690,24 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             sectionBottomMm += sectionHeight;
             return;
           }
-          const posArr: number[] = [...((section.shelfPositions || []) as number[])].sort((a, b) => a - b);
-          const n = posArr.length;
+          const rawPosArr: number[] = [...((section.shelfPositions || []) as number[])].sort((a, b) => a - b);
+          const n = rawPosArr.length;
           if (n === 0) { sectionBottomMm += sectionHeight; return; }
           const halfT = basicThickness / 2;
-          // 칸 내경 = (섹션높이 - 선반두께*(선반갯수+2)) / 칸갯수 (+2는 섹션 상하판)
-          //  첫 칸 = pos[0] - halfT - basicThickness (밑판 윗면 ~ 선반1 아랫면)
-          //  중간 = pos[i+1] - pos[i] - basicThickness
-          //  마지막 = sectionHeight - pos[N-1] - halfT - basicThickness (선반N 윗면 ~ 상판 아랫면)
+          // 칸 내경 = (섹션높이 - 선반두께*(선반갯수+2)) / 칸갯수
+          const compartmentCount = n + 1;
+          const evenGap = (sectionHeight - basicThickness * (n + 2)) / compartmentCount;
+          // 균등 배치로 강제 표시 (모든 칸이 같은 값)
           const gaps: number[] = [];
-          gaps.push(Math.max(0, Math.round(posArr[0] - halfT - basicThickness)));
-          for (let i = 0; i < n - 1; i++) {
-            gaps.push(Math.max(0, Math.round(posArr[i + 1] - posArr[i] - basicThickness)));
+          for (let i = 0; i < compartmentCount; i++) {
+            gaps.push(Math.max(0, Math.round(evenGap)));
           }
-          gaps.push(Math.max(0, Math.round(sectionHeight - posArr[n - 1] - halfT - basicThickness)));
+          // 선반 위치도 균등 기준으로 재계산 (렌더/편집 용)
+          const posArr: number[] = [];
+          for (let k = 0; k < n; k++) {
+            // k번째 선반 중심 Y = 바닥판(t) + (gap + t) * (k+1) - t/2
+            posArr.push(Math.round(basicThickness + (evenGap + basicThickness) * (k + 1) - halfT));
+          }
           // 각 칸 중심 Y
           const centerYs: number[] = [];
           // 칸1 중심: 바닥에서 gaps[0]/2

@@ -4506,16 +4506,11 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                       const even = sectionHeight / (shelfPos.length + 1);
                       shelfPos = shelfPos.map((_, i) => Math.round(even * (i + 1)));
                     }
-                    // 칸 내경 = (섹션높이 - 선반두께*(선반갯수+2)) / 칸갯수 (+2는 섹션 상하판)
-                    //  첫 = pos[0] - halfT - t, 중간 = pos[i+1]-pos[i] - t, 마지막 = sectionH - pos[N-1] - halfT - t
-                    const halfTp = basicThickness / 2;
+                    // 칸 내경 = (섹션높이 - 선반두께*(선반갯수+2)) / 칸갯수 — 균등 분할
+                    const compCount = shelfPos.length + 1;
+                    const evenGap = (sectionHeight - basicThickness * (shelfPos.length + 2)) / compCount;
                     const gaps: number[] = [];
-                    const sorted = shelfPos;
-                    gaps.push(Math.max(0, Math.round(sorted[0] - halfTp - basicThickness)));
-                    for (let i = 0; i < sorted.length - 1; i++) {
-                      gaps.push(Math.max(0, Math.round(sorted[i + 1] - sorted[i] - basicThickness)));
-                    }
-                    gaps.push(Math.max(0, Math.round(sectionHeight - sorted[sorted.length - 1] - halfTp - basicThickness)));
+                    for (let i = 0; i < compCount; i++) gaps.push(Math.max(0, Math.round(evenGap)));
                     return (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                       {/* 칸별 내경 입력 (칸 i 변경 시 선반 i 위치 재계산) */}
