@@ -2970,10 +2970,17 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     const surroundDepth = placedModule.freeDepth || spaceInfo.depth;
     // group position이 이미 패널 중심이므로, 아이콘은 로컬 (0,0,앞쪽)
     const surroundFrontZ = surroundDepth * 0.01 / 2 + 0.3;
+    // 서라운드 패널도 인접 가구(같은 슬롯)의 backWallGap 상속
+    let surroundExtraZ = placedModule.backWallGap ?? 0;
+    if (surroundExtraZ === 0 && placedModule.slotIndex !== undefined) {
+      const comp = placedModules.find((m: any) => m.id !== placedModule.id && m.slotIndex === placedModule.slotIndex && (m.backWallGap ?? 0) > 0);
+      if (comp) surroundExtraZ = (comp as any).backWallGap || 0;
+    }
+    const surroundZ = placedModule.position.z + (surroundExtraZ > 0 ? mmToThreeUnits(surroundExtraZ) : 0);
     return (
       <group
         userData={{ furnitureId: placedModule.id }}
-        position={[placedModule.position.x, placedModule.position.y, placedModule.position.z]}
+        position={[placedModule.position.x, placedModule.position.y, surroundZ]}
         onClick={(e) => {
           e.stopPropagation();
           (window as any).__r3fClickHandled = true;
