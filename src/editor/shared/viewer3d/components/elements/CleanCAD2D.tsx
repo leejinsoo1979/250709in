@@ -5681,11 +5681,24 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         const furnitureBottomMm = floorFinishMm + baseFrameMm + floatMm;
         const cxX = module.position.x;
         const labelX = cxX;
+        // 가구 실제 외경 기반 섹션 높이 재계산 (section.height가 잘못 저장된 경우 대응)
+        // 유효 가구 내부 = 공간높이 - 상부프레임 - 받침대 (받침대=hasBase 기준)
+        const topFrameMm = spaceInfo.frameSize?.top ?? 30;
+        const spaceHeightMm = spaceInfo.height || 0;
+        const totalInnerMm = spaceHeightMm - topFrameMm - baseFrameMm;
+        // 섹션 높이 합 대비 각 섹션 비율로 외경 분배
+        const sumRawSectionHeights = effectiveSections.reduce((s: number, sec: any) => s + (sec.height || 0), 0);
+        const getEffectiveSectionHeight = (sec: any) => {
+          if (sumRawSectionHeights <= 0) return sec.height;
+          // 다른 섹션들(절대 높이 가진 비선반 섹션 등)은 그대로, 해당 선반 섹션은 나머지
+          return sec.height * (totalInnerMm / sumRawSectionHeights);
+        };
+
         // 가구 내부 바닥(밑판 윗면)에서 섹션 시작
         let sectionBottomMm = furnitureBottomMm + basicThickness;
         const output: React.ReactNode[] = [];
         effectiveSections.forEach((section: any, sectionIdx: number) => {
-          const sectionHeight = section.height;
+          const sectionHeight = getEffectiveSectionHeight(section);
           if (section.type !== 'shelf') {
             sectionBottomMm += sectionHeight;
             return;
@@ -5697,7 +5710,6 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           // 칸 내경 = (섹션높이 - 선반두께*(선반갯수+2)) / 칸갯수
           const compartmentCount = n + 1;
           const evenGap = (sectionHeight - basicThickness * (n + 2)) / compartmentCount;
-          console.log('🟢 [2D 칸내경]', { mid, sectionIdx, sectionHeight, basicThickness, n, compartmentCount, evenGap });
           // 균등 배치로 강제 표시 (모든 칸이 같은 값)
           const gaps: number[] = [];
           for (let i = 0; i < compartmentCount; i++) {
@@ -7777,66 +7789,67 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         {/* 탑뷰 치수선들 - 좌측면도가 아닐 때만 표시 */}
         {showDimensions && currentViewDirection !== 'left' && (
           <>
-        {/* 상단 전체 폭 치수선 (상부 프레임의 가로 길이) - 외부로 이동 */}
+        {/* 상단 전체 폭 치수선 (상부 프레임의 가로 길이) - 외부로 이동 / 커튼박스 분리 표시 */}
         <group>
           {(() => {
-            // 전체 가로 치수선 — DIM_GAP 기반 균등 간격 (입면과 동일)
             const mainDimZ = topMainDimZ;
-            
-            return (
+            const cbEnabledTop = !!spaceInfo.curtainBox?.enabled;
+            const cbWidthTopMm = cbEnabledTop ? (spaceInfo.curtainBox?.width || 150) : 0;
+            const cbPositionTop = spaceInfo.curtainBox?.position || 'right';
+            const furnitureLeftX = spaceXOffset + (cbEnabledTop && cbPositionTop === 'left' ? mmToThreeUnits(cbWidthTopMm) : 0);
+            const furnitureRightX = spaceXOffset + spaceWidth - (cbEnabledTop && cbPositionTop === 'right' ? mmToThreeUnits(cbWidthTopMm) : 0);
+            const furnitureWidthMm = spaceInfo.width - cbWidthTopMm;
+
+            const DimSegmentTop: React.FC<{ left: number; right: number; label: number; }> = ({ left, right, label }) => (
               <>
                 <NativeLine name="dimension_line"
-                  points={[[spaceXOffset, spaceHeight, mainDimZ], [spaceXOffset + spaceWidth, spaceHeight, mainDimZ]]}
-                  color={dimensionColor}
-                  lineWidth={0.6}
-                  renderOrder={100000}
-                  depthTest={false}
+                  points={[[left, spaceHeight, mainDimZ], [right, spaceHeight, mainDimZ]]}
+                  color={dimensionColor} lineWidth={0.6} renderOrder={100000} depthTest={false}
                 />
-
-                {/* 좌측 화살표 */}
                 <NativeLine name="dimension_line"
-                  points={createArrowHead([spaceXOffset, spaceHeight, mainDimZ], [spaceXOffset + 0.05, spaceHeight, mainDimZ])}
-                  color={dimensionColor}
-                  lineWidth={0.6}
-                  renderOrder={100000}
-                  depthTest={false}
+                  points={createArrowHead([left, spaceHeight, mainDimZ], [left + 0.05, spaceHeight, mainDimZ])}
+                  color={dimensionColor} lineWidth={0.6} renderOrder={100000} depthTest={false}
                 />
-
-                {/* 우측 화살표 */}
                 <NativeLine name="dimension_line"
-                  points={createArrowHead([spaceXOffset + spaceWidth, spaceHeight, mainDimZ], [spaceXOffset + spaceWidth - 0.05, spaceHeight, mainDimZ])}
-                  color={dimensionColor}
-                  lineWidth={0.6}
-                  renderOrder={100000}
-                  depthTest={false}
+                  points={createArrowHead([right, spaceHeight, mainDimZ], [right - 0.05, spaceHeight, mainDimZ])}
+                  color={dimensionColor} lineWidth={0.6} renderOrder={100000} depthTest={false}
                 />
-
-                {/* 전체 폭 치수 텍스트 - 상단뷰용 회전 적용 */}
                 <Text
-                  renderOrder={100000}
-                  depthTest={false}
-                  position={[0, spaceHeight + 0.1, mainDimZ - mmToThreeUnits(40)]}
-                  fontSize={largeFontSize}
-                  color={textColor}
-                  anchorX="center"
-                  anchorY="middle"
-                  outlineWidth={textOutlineWidth}
-                  outlineColor={textOutlineColor}
+                  renderOrder={100000} depthTest={false}
+                  position={[(left + right) / 2, spaceHeight + 0.1, mainDimZ - mmToThreeUnits(40)]}
+                  fontSize={largeFontSize} color={textColor} anchorX="center" anchorY="middle"
+                  outlineWidth={textOutlineWidth} outlineColor={textOutlineColor}
                   rotation={[-Math.PI / 2, 0, 0]}
                 >
-                  {Math.round(spaceInfo.width)}
+                  {Math.round(label)}
                 </Text>
-                
-                {/* 연장선 - 좌우 프레임 앞쪽으로 더 연장 */}
+              </>
+            );
+
+            return (
+              <>
+                {/* 좌측 커튼박스 구간 치수 */}
+                {cbEnabledTop && cbPositionTop === 'left' && (
+                  <DimSegmentTop left={spaceXOffset} right={furnitureLeftX} label={cbWidthTopMm} />
+                )}
+
+                {/* 가구 배치 공간 치수 */}
+                <DimSegmentTop left={furnitureLeftX} right={furnitureRightX} label={furnitureWidthMm} />
+
+                {/* 우측 커튼박스 구간 치수 */}
+                {cbEnabledTop && cbPositionTop === 'right' && (
+                  <DimSegmentTop left={furnitureRightX} right={spaceXOffset + spaceWidth} label={cbWidthTopMm} />
+                )}
+
+                {/* 연장선 - 좌우 프레임 앞쪽으로 더 연장 + 커튼박스/가구공간 경계선 */}
                 {(() => {
-                  // 프레임 앞선 위치 계산 - 더 앞쪽으로 연장 (실제 공간 깊이 사용)
                   const panelDepthMm = spaceInfo.depth || 600;
                   const furnitureDepthMm = Math.min(panelDepthMm, 600);
                   const panelDepth = mmToThreeUnits(panelDepthMm);
                   const furnitureDepth = mmToThreeUnits(furnitureDepthMm);
                   const furnitureZOffset = spaceZOffset + (panelDepth - furnitureDepth) / 2;
-                  const frameZ = furnitureZOffset + furnitureDepth/2; // 30mm 더 앞으로 (- 30mm 제거)
-                  
+                  const frameZ = furnitureZOffset + furnitureDepth/2;
+
                   return (
                     <>
                       <NativeLine name="dimension_line"
@@ -7844,19 +7857,34 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                           [spaceXOffset, spaceHeight, frameZ],
                           [spaceXOffset, spaceHeight, mainDimZ - mmToThreeUnits(20)]
                         ]}
-                        color={dimensionColor}
-                        renderOrder={100000}
-                        depthTest={false}
+                        color={dimensionColor} renderOrder={100000} depthTest={false}
                       />
                       <NativeLine name="dimension_line"
                         points={[
                           [spaceXOffset + spaceWidth, spaceHeight, frameZ],
                           [spaceXOffset + spaceWidth, spaceHeight, mainDimZ - mmToThreeUnits(20)]
                         ]}
-                        color={dimensionColor}
-                        renderOrder={100000}
-                        depthTest={false}
+                        color={dimensionColor} renderOrder={100000} depthTest={false}
                       />
+                      {/* 커튼박스/가구공간 경계 연장선 */}
+                      {cbEnabledTop && cbPositionTop === 'left' && (
+                        <NativeLine name="dimension_line"
+                          points={[
+                            [furnitureLeftX, spaceHeight, frameZ],
+                            [furnitureLeftX, spaceHeight, mainDimZ - mmToThreeUnits(20)]
+                          ]}
+                          color={dimensionColor} renderOrder={100000} depthTest={false}
+                        />
+                      )}
+                      {cbEnabledTop && cbPositionTop === 'right' && (
+                        <NativeLine name="dimension_line"
+                          points={[
+                            [furnitureRightX, spaceHeight, frameZ],
+                            [furnitureRightX, spaceHeight, mainDimZ - mmToThreeUnits(20)]
+                          ]}
+                          color={dimensionColor} renderOrder={100000} depthTest={false}
+                        />
+                      )}
                     </>
                   );
                 })()}
@@ -8241,7 +8269,13 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                       })()),
                     subDimensionZ
                   )}
-                  {/* 커튼박스 내경 치수 — 뷰어에 표시 안 함 (사용자 요청) */}
+                  {hasCB && (() => {
+                    const cbInner = cbWidth - 3;
+                    const isCBLeft = spaceInfo.curtainBox?.position === 'left';
+                    const cbInnerStartX = isCBLeft ? cbStartX + mmToThreeUnits(1.5) : cbStartX;
+                    const cbInnerEndX = isCBLeft ? cbEndX : cbEndX - mmToThreeUnits(1.5);
+                    return renderZoneDim(cbInnerStartX, cbInnerEndX, String(cbInner % 1 === 0 ? cbInner : cbInner.toFixed(1)), subDimensionZ);
+                  })()}
 
                   {/* 구간 분리 가이드라인 */}
                   <NativeLine name="dimension_line"
