@@ -4543,9 +4543,10 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                             newSections[sectionIdx] = { ...section, shelfPositions: resultPositions };
                             updatePlacedModule(currentPlacedModule.id, { customSections: newSections });
                           };
+                          const gapLabel = sectionIdx === 1 ? `상부선반 ${i + 1}` : `하부선반 ${i + 1}`;
                           return (
                             <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '11px', color: 'var(--theme-text-primary)', marginBottom: '3px' }}>
-                              <span>칸 {i + 1}</span>
+                              <span>{gapLabel}</span>
                               <div className={styles.inputWithUnit}>
                                 <input
                                   type="text"
