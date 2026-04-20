@@ -2910,11 +2910,10 @@ const PlacedModulePropertiesPanel: React.FC = () => {
             const topEnabled = mod.hasTopFrame !== false;
             const baseEnabled = mod.hasBase !== false;
             const topSize = mod.topFrameThickness ?? globalTop;
-            // 전체서라운드 + 상부장일 때 기본 옵셋 23mm
+            // 서라운드(전체/양쪽 포함) + 상부장일 때 기본 옵셋 23mm
             const isUpperCat = mod.moduleId?.includes('upper-cabinet') || mod.moduleId?.startsWith('upper-');
-            const isFullSurroundForOffset = spaceInfo.surroundType === 'surround'
-              && spaceInfo.frameConfig?.top === true && spaceInfo.frameConfig?.bottom === true;
-            const topOffsetDefault = (isUpperCat && isFullSurroundForOffset) ? 23 : 0;
+            const isSurroundForOffset = spaceInfo.surroundType === 'surround';
+            const topOffsetDefault = (isUpperCat && isSurroundForOffset) ? 23 : 0;
             const topOffset = mod.topFrameOffset ?? topOffsetDefault;
             const topGap = mod.topFrameGap ?? 0;
             const baseSize = mod.baseFrameHeight ?? bfDefault;
