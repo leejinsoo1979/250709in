@@ -2697,15 +2697,18 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   // 상부장: 뒷면을 하부장 뒷면에 맞춤 (하부장과 동일한 뒷면 Z)
   // 하부장/키큰장: 앞면(도어 뒷면) 정렬
   const isUpperForZ = actualModuleData?.category === 'upper' || placedModule.moduleId?.includes('upper-cabinet');
+  // 신발장 카테고리: 뒷벽에 뒷면 정렬 (의류장과 앞면 맞추는 로직 제거)
+  const midForZ = placedModule.moduleId || '';
+  const isShoeCabinet = midForZ.includes('-entryway-') || midForZ.includes('-shelf-') || midForZ.includes('-4drawer-shelf-') || midForZ.includes('-2drawer-shelf-');
   let furnitureZ: number;
   if (isFrontSpaceFurniture) {
     furnitureZ = placedModule.position.z;
   } else if (isUpperForZ) {
     // 상부장: 뒷면을 하부장 뒷면에 정렬
-    // 하부장 앞면 Z = furnitureZOffset + furnitureDepth/2 - doorThickness
-    // 하부장 뒷면 Z = 하부장 앞면 - furnitureDepth = furnitureZOffset - furnitureDepth/2 - doorThickness
-    // 상부장 중심 Z = 하부장 뒷면 + 상부장 깊이/2
     furnitureZ = furnitureZOffset - furnitureDepth / 2 - doorThickness + depth / 2;
+  } else if (isShoeCabinet) {
+    // 신발장: 뒷면을 공간 뒷벽(zOffset)에 정렬
+    furnitureZ = zOffset + depth / 2 + baseDepthOffset;
   } else {
     furnitureZ = furnitureZOffset + furnitureDepth / 2 - doorThickness - depth / 2 + baseDepthOffset;
   }
