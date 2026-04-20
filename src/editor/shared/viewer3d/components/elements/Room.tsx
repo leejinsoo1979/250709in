@@ -4477,10 +4477,21 @@ const Room: React.FC<RoomProps> = ({
                     const fiZOffset = -mmToThreeUnits(spaceInfo.depth || 1500) / 2 + (mmToThreeUnits(spaceInfo.depth || 1500) - fiFurnitureDepth) / 2;
                     const upperFrontZ = fiZOffset - fiFurnitureDepth / 2 - mmToThreeUnits(20) + mmToThreeUnits(upperModDepthMm);
                     const upperFrameZ = upperFrontZ - mmToThreeUnits(END_PANEL_THICKNESS) / 2;
+                    // 신발장: 뒷면이 뒷벽+0, 앞면 = 뒷벽 + customDepth. 상부프레임은 앞면 기준
+                    const modMidShoe = mod.moduleId || '';
+                    const isShoeMod = modMidShoe.includes('-entryway-') || modMidShoe.includes('-shelf-') || modMidShoe.includes('-4drawer-shelf-') || modMidShoe.includes('-2drawer-shelf-');
+                    let shoeFrameZ: number | null = null;
+                    if (isShoeMod) {
+                      const shoeDepthMm = mod.customDepth || mod.freeDepth || 380;
+                      // 신발장 앞면 Z = 의류장 뒷면 Z + shoeDepth (FurnitureItem 공식)
+                      const shoeBackZ = fiZOffset - fiFurnitureDepth / 2 - mmToThreeUnits(20);
+                      const shoeFrontZ = shoeBackZ + mmToThreeUnits(shoeDepthMm);
+                      shoeFrameZ = shoeFrontZ - mmToThreeUnits(END_PANEL_THICKNESS) / 2;
+                    }
                     allTopSegments.push({
                       widthMm: modWidthMM,
                       centerXmm: modCenterXmm,
-                      zPosition: (modCategory === 'upper' ? upperFrameZ : topZPosition) + modTopZOffset + topFrameZRetract,
+                      zPosition: (modCategory === 'upper' ? upperFrameZ : (shoeFrameZ !== null ? shoeFrameZ : topZPosition)) + modTopZOffset + topFrameZRetract,
                       height: modFrameHeight,
                       yPosition: modFrameCenterY,
                       material: topSurrMat,
@@ -5343,14 +5354,24 @@ const Room: React.FC<RoomProps> = ({
 
                   // 상부장은 프레임이 상부장 앞면에 맞춰 붙어야 함 (프레임 앞면 = 상부장 앞면)
                   let slotFrameZ = topZPos;
+                  const slotModMid = mod.moduleId || '';
+                  const isShoeSlot = slotModMid.includes('-entryway-') || slotModMid.includes('-shelf-') || slotModMid.includes('-4drawer-shelf-') || slotModMid.includes('-2drawer-shelf-');
                   if (slotModCategory === 'upper') {
-                    // FurnitureItem.tsx와 동일하게 furnitureDepthMm = min(panelDepthMm, 600) 사용
                     const slotUpperDepthMm = mod.freeDepth || mod.customDepth || 300;
                     const fiFurnitureDepthMm = Math.min(spaceInfo.depth || 1500, 600);
                     const fiFurnitureDepth = mmToThreeUnits(fiFurnitureDepthMm);
                     const fiZOffset = -mmToThreeUnits(spaceInfo.depth || 1500) / 2 + (mmToThreeUnits(spaceInfo.depth || 1500) - fiFurnitureDepth) / 2;
                     const slotUpperFrontZ = fiZOffset - fiFurnitureDepth / 2 - mmToThreeUnits(20) + mmToThreeUnits(slotUpperDepthMm);
                     slotFrameZ = slotUpperFrontZ - mmToThreeUnits(END_PANEL_THICKNESS) / 2;
+                  } else if (isShoeSlot) {
+                    // 신발장: 앞면 Z = 의류장 뒷면 + customDepth
+                    const slotShoeDepthMm = mod.customDepth || mod.freeDepth || 380;
+                    const fiFurnitureDepthMm = Math.min(spaceInfo.depth || 1500, 600);
+                    const fiFurnitureDepth = mmToThreeUnits(fiFurnitureDepthMm);
+                    const fiZOffset = -mmToThreeUnits(spaceInfo.depth || 1500) / 2 + (mmToThreeUnits(spaceInfo.depth || 1500) - fiFurnitureDepth) / 2;
+                    const shoeBackZ = fiZOffset - fiFurnitureDepth / 2 - mmToThreeUnits(20);
+                    const shoeFrontZ = shoeBackZ + mmToThreeUnits(slotShoeDepthMm);
+                    slotFrameZ = shoeFrontZ - mmToThreeUnits(END_PANEL_THICKNESS) / 2;
                   }
                   slotTopSegments.push({
                     widthMm: modWidthMM,
