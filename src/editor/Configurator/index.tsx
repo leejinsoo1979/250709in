@@ -4247,8 +4247,10 @@ const Configurator: React.FC = () => {
               onClick={() => {
                 if (spaceInfo.curtainBox?.enabled) {
                   clearAllModules();
+                  const prevCbW = spaceInfo.curtainBox.width || 150;
                   handleSpaceInfoUpdate({
                     curtainBox: { enabled: false, position: 'right', width: 150, dropHeight: 20 },
+                    width: (spaceInfo.width || 0) - prevCbW, // 커튼박스 제거 → 총 너비 감소
                   });
                   setActiveRightPanelTab('placement');
                 }
@@ -4264,8 +4266,11 @@ const Configurator: React.FC = () => {
 
                 clearAllModules();
                 const cbDropHeight = Math.max(10, 2420 - (spaceInfo.height || 2400));
+                const wasEnabled = !!spaceInfo.curtainBox?.enabled;
+                const widthDelta = wasEnabled ? 0 : 150; // 비활성→활성 시 150 추가, 위치 변경만이면 유지
                 handleSpaceInfoUpdate({
                   curtainBox: { enabled: true, position: 'left', width: 150, dropHeight: cbDropHeight },
+                  ...(widthDelta ? { width: (spaceInfo.width || 0) + widthDelta } : {}),
                 });
                 setActiveRightPanelTab('placement');
               }}
@@ -4280,8 +4285,11 @@ const Configurator: React.FC = () => {
 
                 clearAllModules();
                 const cbDropHeight = Math.max(10, 2420 - (spaceInfo.height || 2400));
+                const wasEnabled = !!spaceInfo.curtainBox?.enabled;
+                const widthDelta = wasEnabled ? 0 : 150;
                 handleSpaceInfoUpdate({
                   curtainBox: { enabled: true, position: 'right', width: 150, dropHeight: cbDropHeight },
+                  ...(widthDelta ? { width: (spaceInfo.width || 0) + widthDelta } : {}),
                 });
                 setActiveRightPanelTab('placement');
               }}
