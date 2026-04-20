@@ -4564,8 +4564,8 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                           };
                           const gapLabel = sectionIdx === 1 ? `상부 칸 ${dispIdx + 1}` : `하부 칸 ${dispIdx + 1}`;
                           return (
-                            <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '11px', color: 'var(--theme-text-primary)', marginBottom: '3px' }}>
-                              <span style={{ minWidth: '56px' }}>{gapLabel}</span>
+                            <div key={i} style={{ display: 'flex', alignItems: 'center', fontSize: '11px', color: 'var(--theme-text-primary)', marginBottom: '3px' }}>
+                              <span style={{ flex: 1 }}>{gapLabel}</span>
                               <div className={styles.inputWithUnit}>
                                 <input
                                   type="text"
