@@ -1337,11 +1337,13 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           const doorThickness = mmToThreeUnits(20);
           const zOffset = -panelDepth / 2;
           const furnitureZOffset = zOffset + (panelDepth - furnitureDepth) / 2;
+          const midSide = mod.moduleId || '';
+          const isShoeSide = midSide.includes('-entryway-') || midSide.includes('-shelf-') || midSide.includes('-4drawer-shelf-') || midSide.includes('-2drawer-shelf-');
           let furnitureZ: number;
           if (isUpperMod) {
-            // 상부장: 하부장 뒷면에 맞춤 (FurnitureItem.tsx와 동일 공식)
-            // 하부장 뒷면 Z = furnitureZOffset - furnitureDepth/2 - doorThickness
-            // 상부장 중심 Z = 하부장 뒷면 + 상부장 깊이/2
+            furnitureZ = furnitureZOffset - furnitureDepth / 2 - doorThickness + moduleDepth / 2;
+          } else if (isShoeSide) {
+            // 신발장: 뒷면 정렬 (FurnitureItem과 동일)
             furnitureZ = furnitureZOffset - furnitureDepth / 2 - doorThickness + moduleDepth / 2;
           } else {
             furnitureZ = furnitureZOffset + furnitureDepth/2 - doorThickness - moduleDepth/2;
@@ -2414,9 +2416,11 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           const doorThickness = mmToThreeUnits(20);
           const zOffset = -panelDepth / 2;
           const furnitureZOffset = zOffset + (panelDepth - furnitureDepth) / 2;
-          // 상부장은 하부장 뒷면 정렬, 그 외는 앞면 정렬
+          // 상부장/신발장은 하부장 뒷면 정렬, 그 외는 앞면 정렬
           const isUpperMod_d2 = getModuleCategory(module as PlacedModule) === 'upper';
-          const furnitureZ = isUpperMod_d2
+          const midSide_d2 = module.moduleId || '';
+          const isShoeSide_d2 = midSide_d2.includes('-entryway-') || midSide_d2.includes('-shelf-') || midSide_d2.includes('-4drawer-shelf-') || midSide_d2.includes('-2drawer-shelf-');
+          const furnitureZ = (isUpperMod_d2 || isShoeSide_d2)
             ? (furnitureZOffset - furnitureDepth/2 - doorThickness + moduleDepth/2)
             : (furnitureZOffset + furnitureDepth/2 - doorThickness - moduleDepth/2);
 
