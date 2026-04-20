@@ -304,12 +304,21 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
       }
 
       // 도어 설치 토글 상태를 신규 가구에 자동 반영
+      // 1) intent=true (명시적 토글 ON)
+      // 2) 기존 가구 중 하나라도 도어 있음 (설치 상태)
+      // 3) 초기값이 설정되지 않은 상태면 uiStore의 doorsOpen이 true일 때도 포함
       try {
-        const { useUIStore } = require('@/store/uiStore');
-        const intent = useUIStore.getState().doorInstallIntent;
-        const othersHaveDoor = state.placedModules.some((m: any) => m.hasDoor === true);
-        if (intent || othersHaveDoor) {
+        const uiModule = require('@/store/uiStore');
+        const uiState = uiModule.useUIStore.getState();
+        const intent = uiState.doorInstallIntent;
+        const doorsOpen = uiState.doorsOpen; // null | true | false
+        const othersHaveDoor = state.placedModules.length > 0 && state.placedModules.every((m: any) => m.hasDoor === true);
+        const anyOtherHasDoor = state.placedModules.some((m: any) => m.hasDoor === true);
+        const shouldInstall = intent === true || othersHaveDoor || (state.placedModules.length === 0 ? false : anyOtherHasDoor) || doorsOpen === true;
+        if (shouldInstall) {
           module.hasDoor = true;
+          // intent도 동기화해 다음 배치부터 일관성 유지
+          if (!intent) uiState.setDoorInstallIntent?.(true);
         }
       } catch {}
 
