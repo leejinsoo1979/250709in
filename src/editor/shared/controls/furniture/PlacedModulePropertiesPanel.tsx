@@ -4519,12 +4519,17 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                     const halfT = basicThickness / 2;
                     // 섹션 내경: sectionHeight(외경) - 2t
                     const innerH = Math.max(0, sectionHeight - 2 * basicThickness);
-                    // 치수 라벨: 정수 균등, 오차는 맨 아래 칸에 흡수
-                    const totalInner = innerH - n * basicThickness;
-                    const baseGap = Math.floor(totalInner / (n + 1));
-                    const remainder = totalInner - baseGap * (n + 1);
-                    const gaps: number[] = Array(n + 1).fill(baseGap);
-                    gaps[0] += remainder; // 맨 아래 칸 (gaps[0]=섹션 바닥 칸)에 오차 흡수
+                    // gaps를 실제 저장된 shelfPositions에서 파생 (뷰어 스피너로 선반 이동 시 즉시 반영)
+                    const gaps: number[] = [];
+                    for (let k = 0; k <= n; k++) {
+                      if (k === 0) {
+                        gaps.push(Math.max(0, Math.round(shelfPos[0] - halfT)));
+                      } else if (k === n) {
+                        gaps.push(Math.max(0, Math.round(innerH - shelfPos[n - 1] - halfT)));
+                      } else {
+                        gaps.push(Math.max(0, Math.round(shelfPos[k] - shelfPos[k - 1] - basicThickness)));
+                      }
+                    }
                     return (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                       <div style={{ padding: '6px 8px', background: 'var(--theme-background)', border: '1px solid var(--theme-border)', borderRadius: '4px' }}>
