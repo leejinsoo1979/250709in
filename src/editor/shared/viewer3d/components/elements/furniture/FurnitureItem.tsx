@@ -3671,8 +3671,10 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
 
               const epThicknessMm = placedModule.endPanelThickness || 18.5; // 물리적 렌더링 두께 (PET)
               const epW = mmToThreeUnits(epThicknessMm);
-              // EP 깊이: 본인 customDepth/actualDepth 우선 (저장된 endPanelDepth가 stale 380 등이면 무시)
-              const epOwnDepth = placedModule.customDepth || actualDepthMm || 580;
+              // EP 깊이: 모듈 템플릿 깊이(의류장 600) 기준. 본인이 신발장류면 모듈 원본 depth 그대로 사용
+              // 측면이 뒤쪽까지 노출되므로 EP는 본인 가구 전체 깊이를 덮어야 함
+              const epTemplateDepth = actualModuleData?.dimensions?.depth || 600;
+              const epOwnDepth = Math.max(placedModule.customDepth || 0, actualDepthMm || 0, epTemplateDepth);
               const epDepthMm = epOwnDepth;
               const epD = mmToThreeUnits(epDepthMm);
               // 앞/뒤 옵셋: + 늘림, - 줄임. 깊이 = base + front + back, Z = (front - back) / 2
@@ -3913,7 +3915,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         // 엔드패널 위치 계산 (물리적 렌더링은 18.5mm)
         const endPanelWidth = mmToThreeUnits(END_PANEL_RENDER_THICKNESS);
         const endPanelHeight = height; // 가구와 동일한 높이
-        const epDepthMmSlot = placedModule.customDepth || actualDepthMm || 580;
+        const epDepthMmSlot = Math.max(placedModule.customDepth || 0, actualDepthMm || 0, actualModuleData?.dimensions?.depth || 600);
         const endPanelDepth = mmToThreeUnits(epDepthMmSlot);
 
         // 엔드패널 X 위치 계산
