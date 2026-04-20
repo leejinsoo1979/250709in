@@ -4586,9 +4586,29 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                                   className={styles.depthInput}
                                   style={{
                                     color: '#000000', backgroundColor: '#ffffff',
-                                    WebkitTextFillColor: '#000000', opacity: 1, width: '80px'
+                                    WebkitTextFillColor: '#000000', opacity: 1, width: '60px'
                                   }}
                                 />
+                                <div style={{ display: 'flex', flexDirection: 'column', marginLeft: '2px' }}>
+                                  <button
+                                    type="button"
+                                    onClick={() => applyGap((typeof g === 'number' ? g : parseFloat(String(g))) + 1)}
+                                    style={{
+                                      width: '16px', height: '11px', padding: 0, fontSize: '8px',
+                                      border: '1px solid var(--theme-border)', background: 'var(--theme-surface)',
+                                      cursor: 'pointer', borderRadius: '2px 2px 0 0', lineHeight: '8px'
+                                    }}
+                                  >▲</button>
+                                  <button
+                                    type="button"
+                                    onClick={() => applyGap((typeof g === 'number' ? g : parseFloat(String(g))) - 1)}
+                                    style={{
+                                      width: '16px', height: '11px', padding: 0, fontSize: '8px',
+                                      border: '1px solid var(--theme-border)', background: 'var(--theme-surface)',
+                                      cursor: 'pointer', borderRadius: '0 0 2px 2px', lineHeight: '8px', borderTop: 'none'
+                                    }}
+                                  >▼</button>
+                                </div>
                                 <span className={styles.unit}>mm</span>
                               </div>
                             </div>
