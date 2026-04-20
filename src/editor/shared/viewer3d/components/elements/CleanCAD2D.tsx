@@ -5681,24 +5681,24 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         const furnitureBottomMm = floorFinishMm + baseFrameMm + floatMm;
         const cxX = module.position.x;
         const labelX = cxX;
-        // 가구 실제 외경 기반 섹션 높이 재계산 (section.height가 잘못 저장된 경우 대응)
-        // 유효 가구 내부 = 공간높이 - 상부프레임 - 받침대 (받침대=hasBase 기준)
+        // 가구 실제 외경 기반 섹션 높이 재계산
+        // 유효 가구 내부 = 공간높이 - 상부프레임 - 받침대
         const topFrameMm = spaceInfo.frameSize?.top ?? 30;
         const spaceHeightMm = spaceInfo.height || 0;
         const totalInnerMm = spaceHeightMm - topFrameMm - baseFrameMm;
-        // 섹션 높이 합 대비 각 섹션 비율로 외경 분배
-        const sumRawSectionHeights = effectiveSections.reduce((s: number, sec: any) => s + (sec.height || 0), 0);
-        const getEffectiveSectionHeight = (sec: any) => {
-          if (sumRawSectionHeights <= 0) return sec.height;
-          // 다른 섹션들(절대 높이 가진 비선반 섹션 등)은 그대로, 해당 선반 섹션은 나머지
-          return sec.height * (totalInnerMm / sumRawSectionHeights);
+        // 첫 섹션(하부)은 원본 유지, 나머지 섹션(상부)은 남은 공간 분배
+        const fixedSections = effectiveSections.slice(0, -1);
+        const fixedSum = fixedSections.reduce((s: number, sec: any) => s + (sec.height || 0), 0);
+        const lastEffective = Math.max(0, totalInnerMm - fixedSum);
+        const getEffectiveSectionHeight = (sec: any, idx: number) => {
+          return idx === effectiveSections.length - 1 ? lastEffective : (sec.height || 0);
         };
 
         // 가구 내부 바닥(밑판 윗면)에서 섹션 시작
         let sectionBottomMm = furnitureBottomMm + basicThickness;
         const output: React.ReactNode[] = [];
         effectiveSections.forEach((section: any, sectionIdx: number) => {
-          const sectionHeight = getEffectiveSectionHeight(section);
+          const sectionHeight = getEffectiveSectionHeight(section, sectionIdx);
           if (section.type !== 'shelf') {
             sectionBottomMm += sectionHeight;
             return;
