@@ -5815,13 +5815,28 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               </Html>
             );
           });
+          // 스피너 전용: 선반 k만 1mm 이동 (인접 위 칸만 반대로 조정)
+          const moveShelf = (k: number, delta: number) => {
+            const newLower = gaps[k] + delta;
+            const newUpper = gaps[k + 1] - delta;
+            if (newLower < 0 || newUpper < 0) return;
+            const updated = [...gaps];
+            updated[k] = newLower;
+            updated[k + 1] = newUpper;
+            const newPositions: number[] = [];
+            let acc = 0;
+            for (let kk = 0; kk < n; kk++) {
+              acc += updated[kk];
+              newPositions.push(Math.round(acc + kk * basicThickness + halfT));
+            }
+            const newSections = [...effectiveSections];
+            newSections[sectionIdx] = { ...section, shelfPositions: newPositions };
+            updatePlacedModule(module.id, { customSections: newSections });
+          };
           // 스피너: 각 선반(posArr[k]) 위에 배치 — 선반 위로/아래로 1mm 이동
           posArr.forEach((pos, k) => {
             const shelfYmm = sectionBottomMm + pos;
             const shelfYThree = mmToThreeUnits(shelfYmm);
-            // 선반 k는 gaps[k](아래 칸)과 gaps[k+1](위 칸) 사이
-            // ▲: 선반을 위로 = 위 칸(gaps[k+1]) 축소, 아래 칸(gaps[k]) 확장 → gaps[k] + 1
-            // ▼: 선반을 아래로 = 위 칸(gaps[k+1]) 확장, 아래 칸(gaps[k]) 축소 → gaps[k] - 1
             output.push(
               <Html
                 key={`shelf-spinner-${module.id}-${sectionIdx}-${k}`}
@@ -5835,7 +5850,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   <button
                     type="button"
                     onMouseDown={(e) => e.preventDefault()}
-                    onClick={(e) => { e.stopPropagation(); applyGapEdit(k, gaps[k] + 1); }}
+                    onClick={(e) => { e.stopPropagation(); moveShelf(k, 1); }}
                     style={{
                       width: '24px', height: '14px', fontSize: '10px', lineHeight: '1',
                       padding: 0, cursor: 'pointer', margin: 0, boxSizing: 'border-box',
@@ -5848,7 +5863,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   <button
                     type="button"
                     onMouseDown={(e) => e.preventDefault()}
-                    onClick={(e) => { e.stopPropagation(); applyGapEdit(k, Math.max(0, gaps[k] - 1)); }}
+                    onClick={(e) => { e.stopPropagation(); moveShelf(k, -1); }}
                     style={{
                       width: '24px', height: '14px', fontSize: '10px', lineHeight: '1',
                       padding: 0, cursor: 'pointer', margin: 0, boxSizing: 'border-box',
