@@ -91,9 +91,9 @@ const Sidebar: React.FC<SidebarProps> = ({
   ];
 
   let tabs = readOnly ? allTabs.filter(tab => tab.id === 'material') : allTabs;
-  // 아일랜드 탭은 개발자 계정에서만 노출
+  // 아일랜드/커스텀 탭은 개발자 계정에서만 노출
   if (!isDeveloper) {
-    tabs = tabs.filter(tab => tab.id !== 'island');
+    tabs = tabs.filter(tab => tab.id !== 'island' && tab.id !== 'myCabinet');
   }
   if (isIsland) {
     // 아일랜드 모드: 기둥/아일랜드 탭 숨김 (이미 아일랜드 디자인이므로)
