@@ -2899,129 +2899,6 @@ const PlacedModulePropertiesPanel: React.FC = () => {
             </div>
           )}
 
-          {/* 섹션 깊이 설정 (2섹션 가구만, 상세보기 아닐 때만) — 가구 치수 바로 아래로 이동 */}
-          {!showDetails && isTwoSectionFurniture && (() => {
-            return (
-            <div className={styles.propertySection}>
-              <h5 className={styles.sectionTitle}>섹션 깊이 설정</h5>
-              <div style={{ display: 'flex', gap: '12px' }}>
-                {/* 하부 섹션 */}
-                <div style={{ flex: 1 }}>
-                  <label style={{ display: 'block', marginBottom: '4px', fontSize: '12px', color: 'var(--theme-text-secondary)' }}>하부 섹션</label>
-                  <div className={styles.inputWithUnit}>
-                    <input
-                      type="text"
-                      inputMode="numeric"
-                      value={lowerDepthInput}
-                      onChange={(e) => handleLowerDepthChange(e.target.value)}
-                      onFocus={() => useUIStore.getState().setHighlightedSection(`${currentPlacedModule?.id}-0`)}
-                      onBlur={() => useUIStore.getState().setHighlightedSection(null)}
-                      onKeyDown={(e) => {
-                        if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
-                          e.preventDefault();
-                          const cur = parseInt(lowerDepthInput, 10) || 0;
-                          const next = Math.max(100, Math.min(800, cur + (e.key === 'ArrowUp' ? 1 : -1)));
-                          handleLowerDepthChange(next.toString());
-                        }
-                      }}
-                      className={styles.depthInput}
-                      placeholder="580"
-                      style={{ color: '#000000', backgroundColor: '#ffffff', WebkitTextFillColor: '#000000', opacity: 1 }}
-                    />
-                    <span className={styles.unit}>mm</span>
-                  </div>
-                  <div style={{ display: 'flex', gap: '4px', marginTop: '4px' }}>
-                    <button
-                      style={{
-                        flex: 1, padding: '4px 8px', border: '1px solid var(--theme-border)', borderRadius: '4px',
-                        background: lowerDepthDirection === 'front' ? 'var(--theme-primary)' : 'var(--theme-surface)',
-                        color: lowerDepthDirection === 'front' ? '#fff' : 'var(--theme-text-secondary)',
-                        fontSize: '11px', cursor: 'pointer', transition: 'all 0.2s'
-                      }}
-                      onClick={() => {
-                        setLowerDepthDirection('front');
-                        if (currentPlacedModule) {
-                          updatePlacedModule(currentPlacedModule.id, { lowerSectionDepthDirection: 'front' });
-                        }
-                      }}
-                    >뒤고정</button>
-                    <button
-                      style={{
-                        flex: 1, padding: '4px 8px', border: '1px solid var(--theme-border)', borderRadius: '4px',
-                        background: lowerDepthDirection === 'back' ? 'var(--theme-primary)' : 'var(--theme-surface)',
-                        color: lowerDepthDirection === 'back' ? '#fff' : 'var(--theme-text-secondary)',
-                        fontSize: '11px', cursor: 'pointer', transition: 'all 0.2s'
-                      }}
-                      onClick={() => {
-                        setLowerDepthDirection('back');
-                        if (currentPlacedModule) {
-                          updatePlacedModule(currentPlacedModule.id, { lowerSectionDepthDirection: 'back' });
-                        }
-                      }}
-                    >앞고정</button>
-                  </div>
-                </div>
-                {/* 상부 섹션 */}
-                <div style={{ flex: 1 }}>
-                  <label style={{ display: 'block', marginBottom: '4px', fontSize: '12px', color: 'var(--theme-text-secondary)' }}>상부 섹션</label>
-                  <div className={styles.inputWithUnit}>
-                    <input
-                      type="text"
-                      inputMode="numeric"
-                      value={upperDepthInput}
-                      onChange={(e) => handleUpperDepthChange(e.target.value)}
-                      onFocus={() => useUIStore.getState().setHighlightedSection(`${currentPlacedModule?.id}-1`)}
-                      onBlur={() => useUIStore.getState().setHighlightedSection(null)}
-                      onKeyDown={(e) => {
-                        if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
-                          e.preventDefault();
-                          const cur = parseInt(upperDepthInput, 10) || 0;
-                          const next = Math.max(100, Math.min(800, cur + (e.key === 'ArrowUp' ? 1 : -1)));
-                          handleUpperDepthChange(next.toString());
-                        }
-                      }}
-                      className={styles.depthInput}
-                      placeholder="580"
-                      style={{ color: '#000000', backgroundColor: '#ffffff', WebkitTextFillColor: '#000000', opacity: 1 }}
-                    />
-                    <span className={styles.unit}>mm</span>
-                  </div>
-                  <div style={{ display: 'flex', gap: '4px', marginTop: '4px' }}>
-                    <button
-                      style={{
-                        flex: 1, padding: '4px 8px', border: '1px solid var(--theme-border)', borderRadius: '4px',
-                        background: upperDepthDirection === 'front' ? 'var(--theme-primary)' : 'var(--theme-surface)',
-                        color: upperDepthDirection === 'front' ? '#fff' : 'var(--theme-text-secondary)',
-                        fontSize: '11px', cursor: 'pointer', transition: 'all 0.2s'
-                      }}
-                      onClick={() => {
-                        setUpperDepthDirection('front');
-                        if (currentPlacedModule) {
-                          updatePlacedModule(currentPlacedModule.id, { upperSectionDepthDirection: 'front' });
-                        }
-                      }}
-                    >뒤고정</button>
-                    <button
-                      style={{
-                        flex: 1, padding: '4px 8px', border: '1px solid var(--theme-border)', borderRadius: '4px',
-                        background: upperDepthDirection === 'back' ? 'var(--theme-primary)' : 'var(--theme-surface)',
-                        color: upperDepthDirection === 'back' ? '#fff' : 'var(--theme-text-secondary)',
-                        fontSize: '11px', cursor: 'pointer', transition: 'all 0.2s'
-                      }}
-                      onClick={() => {
-                        setUpperDepthDirection('back');
-                        if (currentPlacedModule) {
-                          updatePlacedModule(currentPlacedModule.id, { upperSectionDepthDirection: 'back' });
-                        }
-                      }}
-                    >앞고정</button>
-                  </div>
-                </div>
-              </div>
-            </div>
-            );
-          })()}
-
           {/* 상,하부 프레임 — 우측바와 동일 형태 (해당 가구 단일) */}
           {currentPlacedModule && !currentPlacedModule.isSurroundPanel && (() => {
             const mod = currentPlacedModule;
@@ -3605,7 +3482,65 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                       </div>
                         );
                       })()}
-                      {/* 섹션 깊이: 아래 "섹션 깊이 설정"에서 관리하므로 여기서는 제거 */}
+                      {/* 섹션 깊이 (2섹션 가구 한정) */}
+                      {(sectionCount === 2) && (() => {
+                        const isLowerSec = sIdx === 0;
+                        const depthVal = isLowerSec ? lowerDepthInput : upperDepthInput;
+                        const onDepthChange = isLowerSec ? handleLowerDepthChange : handleUpperDepthChange;
+                        const dir = isLowerSec ? lowerDepthDirection : upperDepthDirection;
+                        const setDir = isLowerSec ? setLowerDepthDirection : setUpperDepthDirection;
+                        const dirField = isLowerSec ? 'lowerSectionDepthDirection' : 'upperSectionDepthDirection';
+                        return (
+                        <div style={{ flex: 1, minWidth: '70px' }}>
+                          <label style={{ fontSize: '10px', color: 'var(--theme-text-secondary)', display: 'block', lineHeight: 1 }}>깊이</label>
+                          <div className={styles.inputWithUnit}>
+                            <input
+                              type="text" inputMode="numeric"
+                              value={depthVal}
+                              onChange={(e) => onDepthChange(e.target.value)}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') { (e.target as HTMLInputElement).blur(); }
+                                else if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                                  e.preventDefault();
+                                  const cur = parseInt(depthVal, 10) || 0;
+                                  const next = Math.max(100, Math.min(800, cur + (e.key === 'ArrowUp' ? 1 : -1)));
+                                  onDepthChange(next.toString());
+                                }
+                              }}
+                              className={styles.depthInput}
+                              style={{ color: '#000', backgroundColor: '#fff', WebkitTextFillColor: '#000', opacity: 1 }}
+                            />
+                            <span className={styles.unit}>mm</span>
+                          </div>
+                          <div style={{ display: 'flex', gap: '4px', marginTop: '4px' }}>
+                            <button
+                              style={{
+                                flex: 1, padding: '3px 6px', border: '1px solid var(--theme-border)', borderRadius: '4px',
+                                background: dir === 'front' ? 'var(--theme-primary)' : 'var(--theme-surface)',
+                                color: dir === 'front' ? '#fff' : 'var(--theme-text-secondary)',
+                                fontSize: '10px', cursor: 'pointer',
+                              }}
+                              onClick={() => {
+                                setDir('front');
+                                if (currentPlacedModule) updatePlacedModule(currentPlacedModule.id, { [dirField]: 'front' } as any);
+                              }}
+                            >뒤고정</button>
+                            <button
+                              style={{
+                                flex: 1, padding: '3px 6px', border: '1px solid var(--theme-border)', borderRadius: '4px',
+                                background: dir === 'back' ? 'var(--theme-primary)' : 'var(--theme-surface)',
+                                color: dir === 'back' ? '#fff' : 'var(--theme-text-secondary)',
+                                fontSize: '10px', cursor: 'pointer',
+                              }}
+                              onClick={() => {
+                                setDir('back');
+                                if (currentPlacedModule) updatePlacedModule(currentPlacedModule.id, { [dirField]: 'back' } as any);
+                              }}
+                            >앞고정</button>
+                          </div>
+                        </div>
+                        );
+                      })()}
                     </div>
 
                     {/* 좌우 분할 서브박스 치수 (커스텀 가구 전용) */}
