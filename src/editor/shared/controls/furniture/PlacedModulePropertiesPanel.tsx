@@ -4508,13 +4508,11 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                     }
                     const gaps: number[] = [];
                     const sorted = shelfPos;
-                    // 칸 0: 섹션 바닥 ~ 선반1 아랫면 (선반은 중심 기준)
-                    gaps.push(Math.max(0, Math.round(sorted[0] - basicThickness / 2)));
+                    gaps.push(Math.max(0, Math.round(sorted[0])));
                     for (let i = 0; i < sorted.length - 1; i++) {
                       gaps.push(Math.max(0, Math.round(sorted[i + 1] - sorted[i] - basicThickness)));
                     }
-                    // 마지막 칸: 마지막선반 윗면 ~ 섹션 상단
-                    gaps.push(Math.max(0, Math.round(sectionHeight - sorted[sorted.length - 1] - basicThickness / 2)));
+                    gaps.push(Math.max(0, Math.round(sectionHeight - sorted[sorted.length - 1] - basicThickness)));
                     return (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                       {/* 칸별 내경 입력 (칸 i 변경 시 선반 i 위치 재계산) */}

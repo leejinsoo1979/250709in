@@ -1555,90 +1555,75 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
       {/* 정면도 치수선들 */}
       {showDimensions && (
         <>
-          {/* 상단 전체 프레임 포함 폭 치수선 - 커튼박스 활성화 시 가구공간/커튼박스 분리 표시 */}
+          {/* 상단 전체 프레임 포함 폭 치수선 - 항상 공간 너비 표시 */}
           <group>
         {(() => {
           const actualLeftEdge = leftOffset;
           const actualRightEdge = mmToThreeUnits(spaceInfo.width) + leftOffset;
-          const cbEnabled = !!spaceInfo.curtainBox?.enabled;
-          const cbWidthMm = cbEnabled ? (spaceInfo.curtainBox?.width || 150) : 0;
-          const cbPosition = spaceInfo.curtainBox?.position || 'right';
-          // 가구 배치 공간(= 전체 - 커튼박스) 경계
-          const furnitureLeftEdge = cbEnabled && cbPosition === 'left'
-            ? actualLeftEdge + mmToThreeUnits(cbWidthMm)
-            : actualLeftEdge;
-          const furnitureRightEdge = cbEnabled && cbPosition === 'right'
-            ? actualRightEdge - mmToThreeUnits(cbWidthMm)
-            : actualRightEdge;
-          const furnitureWidthMm = spaceInfo.width - cbWidthMm;
-
-          // 가구 공간 + (있을 때) 커튼박스 치수를 각각 렌더링
-          const DimSegment: React.FC<{ left: number; right: number; label: number; }> = ({ left, right, label }) => (
-            <>
-              <NativeLine name="dimension_line"
-                points={[[left, topDimensionY, 0.002], [right, topDimensionY, 0.002]]}
-                color={dimensionColor} lineWidth={0.6} renderOrder={100000} depthTest={false}
-              />
-              <NativeLine name="dimension_line"
-                points={createArrowHead([left, topDimensionY, 0.002], [left + 0.05, topDimensionY, 0.002])}
-                color={dimensionColor} lineWidth={0.6} renderOrder={100000} depthTest={false}
-              />
-              <NativeLine name="dimension_line"
-                points={createArrowHead([right, topDimensionY, 0.002], [right - 0.05, topDimensionY, 0.002])}
-                color={dimensionColor} lineWidth={0.6} renderOrder={100000} depthTest={false}
-              />
-              {(showDimensionsText || isStep2) && (
-                <Text
-                  renderOrder={1000} depthTest={false}
-                  position={[(left + right) / 2, topDimensionY + mmToThreeUnits(40), 0.01]}
-                  fontSize={largeFontSize} color={textColor} anchorX="center" anchorY="middle"
-                  outlineWidth={textOutlineWidth} outlineColor={textOutlineColor}
-                >
-                  {Math.round(label)}
-                </Text>
-              )}
-            </>
-          );
+          const displayWidth = spaceInfo.width;
 
           return (
             <>
-              {/* 좌측 커튼박스 구간 치수 */}
-              {cbEnabled && cbPosition === 'left' && (
-                <DimSegment left={actualLeftEdge} right={furnitureLeftEdge} label={cbWidthMm} />
-              )}
-
-              {/* 가구 배치 공간 치수 */}
-              <DimSegment left={furnitureLeftEdge} right={furnitureRightEdge} label={furnitureWidthMm} />
-
-              {/* 우측 커튼박스 구간 치수 */}
-              {cbEnabled && cbPosition === 'right' && (
-                <DimSegment left={furnitureRightEdge} right={actualRightEdge} label={cbWidthMm} />
-              )}
-
-              {/* 연장선 (최좌측) */}
+              {/* 치수선 */}
               <NativeLine name="dimension_line"
-                points={[[actualLeftEdge, spaceHeight, 0.001], [actualLeftEdge, topDimensionY + mmToThreeUnits(40), 0.001]]}
-                color={dimensionColor} lineWidth={0.6} renderOrder={100000} depthTest={false}
+                points={[[actualLeftEdge, topDimensionY, 0.002], [actualRightEdge, topDimensionY, 0.002]]}
+                color={dimensionColor}
+                lineWidth={0.6}
+                renderOrder={100000}
+                depthTest={false}
               />
 
-              {/* 연장선 (커튼박스/가구 경계) */}
-              {cbEnabled && cbPosition === 'left' && (
-                <NativeLine name="dimension_line"
-                  points={[[furnitureLeftEdge, spaceHeight, 0.001], [furnitureLeftEdge, topDimensionY + mmToThreeUnits(40), 0.001]]}
-                  color={dimensionColor} lineWidth={0.6} renderOrder={100000} depthTest={false}
-                />
-              )}
-              {cbEnabled && cbPosition === 'right' && (
-                <NativeLine name="dimension_line"
-                  points={[[furnitureRightEdge, spaceHeight, 0.001], [furnitureRightEdge, topDimensionY + mmToThreeUnits(40), 0.001]]}
-                  color={dimensionColor} lineWidth={0.6} renderOrder={100000} depthTest={false}
-                />
+              {/* 좌측 화살표 */}
+              <NativeLine name="dimension_line"
+                points={createArrowHead([actualLeftEdge, topDimensionY, 0.002], [actualLeftEdge + 0.05, topDimensionY, 0.002])}
+                color={dimensionColor}
+                lineWidth={0.6}
+                renderOrder={100000}
+                depthTest={false}
+              />
+
+              {/* 우측 화살표 */}
+              <NativeLine name="dimension_line"
+                points={createArrowHead([actualRightEdge, topDimensionY, 0.002], [actualRightEdge - 0.05, topDimensionY, 0.002])}
+                color={dimensionColor}
+                lineWidth={0.6}
+                renderOrder={100000}
+                depthTest={false}
+              />
+
+              {/* 전체 폭 치수 텍스트 */}
+              {(showDimensionsText || isStep2) && (
+                <Text
+                  renderOrder={1000}
+                  depthTest={false}
+                  position={[(actualLeftEdge + actualRightEdge) / 2, topDimensionY + mmToThreeUnits(40), 0.01]}
+                  fontSize={largeFontSize}
+                  color={textColor}
+                  anchorX="center"
+                  anchorY="middle"
+                  outlineWidth={textOutlineWidth}
+                  outlineColor={textOutlineColor}
+                >
+                  {Math.round(displayWidth)}
+                </Text>
               )}
 
-              {/* 연장선 (최우측) */}
+              {/* 연장선 (좌측 프레임) — 상부프레임 상단부터 치수선까지 */}
+              <NativeLine name="dimension_line"
+                points={[[actualLeftEdge, spaceHeight, 0.001], [actualLeftEdge, topDimensionY + mmToThreeUnits(40), 0.001]]}
+                color={dimensionColor}
+                lineWidth={0.6}
+                renderOrder={100000}
+                depthTest={false}
+              />
+
+              {/* 연장선 (우측 프레임) — 상부프레임 상단부터 치수선까지 */}
               <NativeLine name="dimension_line"
                 points={[[actualRightEdge, spaceHeight, 0.001], [actualRightEdge, topDimensionY + mmToThreeUnits(40), 0.001]]}
-                color={dimensionColor} lineWidth={0.6} renderOrder={100000} depthTest={false}
+                color={dimensionColor}
+                lineWidth={0.6}
+                renderOrder={100000}
+                depthTest={false}
               />
             </>
           );
@@ -5721,18 +5706,14 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           const posArr: number[] = [...((section.shelfPositions || []) as number[])].sort((a, b) => a - b);
           const n = posArr.length;
           const sectionHeight = section.height;
-          // 선반 위치는 섹션 하단에서 선반 중심까지 거리 (ShelfRenderer 기준)
-          // 칸 내경 = 인접 선반 표면 간 거리
+          // 칸 내경: 중간 칸은 선반 두께 차감, 첫/마지막 칸은 차감 없음
           const gaps: number[] = [];
-          // 칸 0: 섹션 바닥 ~ 선반1 아랫면
-          gaps.push(Math.max(0, Math.round((posArr[0] ?? sectionHeight) - basicThickness / 2)));
-          // 중간 칸: 선반i 윗면 ~ 선반i+1 아랫면
+          gaps.push(Math.max(0, Math.round(posArr[0] ?? sectionHeight)));
           for (let i = 0; i < n - 1; i++) {
             gaps.push(Math.max(0, Math.round(posArr[i + 1] - posArr[i] - basicThickness)));
           }
-          // 마지막 칸: 마지막선반 윗면 ~ 섹션 상단
           if (n > 0) {
-            gaps.push(Math.max(0, Math.round(sectionHeight - posArr[n - 1] - basicThickness / 2)));
+            gaps.push(Math.max(0, Math.round(sectionHeight - posArr[n - 1] - basicThickness)));
           }
           // 칸 누적: 중간 칸은 선반두께만큼 빠진 순수 내부높이이므로 누적 시 basicThickness 추가
           const gapCenterMms: number[] = [];

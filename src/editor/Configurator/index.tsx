@@ -280,7 +280,11 @@ const ZoneSizeCurtainBoxRow: React.FC<{
           const currentW = spaceInfo.curtainBox?.width || 150;
           if (inputValue === '' || isNaN(parseInt(inputValue))) { e.target.value = currentW.toString(); return; }
           const newW = Math.max(100, Math.min(200, parseInt(inputValue)));
-          handleSpaceInfoUpdate({ curtainBox: { ...spaceInfo.curtainBox, width: newW } });
+          const delta = newW - currentW;
+          handleSpaceInfoUpdate({
+            curtainBox: { ...spaceInfo.curtainBox, width: newW },
+            ...(delta !== 0 ? { width: (spaceInfo.width || 0) + delta } : {}),
+          });
         }}
         className={styles.input}
         style={{ textAlign: 'center', fontSize: '12px' }}
