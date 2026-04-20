@@ -4527,7 +4527,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                     gaps[0] += remainder; // 맨 아래 칸 (gaps[0]=섹션 바닥 칸)에 오차 흡수
                     return (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                      <div style={{ padding: '6px 8px', background: 'var(--theme-background-secondary, var(--theme-surface))', border: '1px solid var(--theme-border)', borderRadius: '4px' }}>
+                      <div style={{ padding: '6px 8px', background: 'var(--theme-background)', border: '1px solid var(--theme-border)', borderRadius: '4px' }}>
                         <div style={{ fontSize: '11px', color: 'var(--theme-text-secondary)', marginBottom: '4px' }}>칸 내경</div>
                         {gaps.map((_ignored, dispIdx) => {
                           const i = gaps.length - 1 - dispIdx; // 위(높은 칸) → 아래(낮은 칸) 순서로 표시
