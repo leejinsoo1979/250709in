@@ -479,6 +479,7 @@ export const calculateEvenShelfPositions = (
 /**
  * 싱글 선반장: 하단 선반 + 상단 선반 (2섹션 구조)
  * 하단 1000mm (선반 2개) + 상단 나머지 (선반 3개)
+ * 하부 섹션 최상단에 상판(고정선반) 추가
  */
 const createSingleShelf = (columnWidth: number, maxHeight: number): ModuleData => {
   const widthForId = Math.round(columnWidth * 100) / 100;

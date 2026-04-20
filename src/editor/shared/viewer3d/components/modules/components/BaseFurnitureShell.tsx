@@ -610,7 +610,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
         {/* 다중 섹션 가구인 경우 중간 구분 패널 렌더링 */}
         {isMultiSectionFurniture() && getSectionHeights().length > 1 && (
           <>
-            {(moduleData?.id?.includes('4drawer-hanging') || moduleData?.id?.includes('4drawer-shelf')) ? (
+            {(moduleData?.id?.includes('4drawer-hanging') || moduleData?.id?.includes('4drawer-shelf') || moduleData?.id?.includes('single-shelf-') || moduleData?.id?.includes('dual-shelf-')) ? (
               // 4drawer-hanging/4drawer-shelf: 상부 바닥판 18mm 위로, 하부 상판 18mm 위로
               (() => {
                 return getSectionHeights().map((sectionHeight: number, index: number) => {
