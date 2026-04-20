@@ -1640,8 +1640,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         })()}
       </group>
 
-      {/* 노서라운드 모드 좌측 엔드패널/이격거리 치수선 (surround/both-sides에서는 프레임이 담당) */}
-      {showDimensions && !isStep2 && spaceInfo.surroundType === 'no-surround' && (() => {
+      {/* 노서라운드 모드 좌측 엔드패널/이격거리 치수선 — 커튼박스 활성 시 뷰어에 이격 표시 안 함 */}
+      {showDimensions && !isStep2 && spaceInfo.surroundType === 'no-surround' && !spaceInfo.curtainBox?.enabled && (() => {
         // 벽없음(freestanding)이면 이격거리/엔드패널 치수선 미표시
         if (spaceInfo.installType === 'freestanding') return null;
 
@@ -1789,8 +1789,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         );
       })()}
 
-      {/* 노서라운드 모드 우측 엔드패널/이격거리 치수선 (surround/both-sides에서는 프레임이 담당) */}
-      {showDimensions && !isStep2 && spaceInfo.surroundType === 'no-surround' && (() => {
+      {/* 노서라운드 모드 우측 엔드패널/이격거리 치수선 — 커튼박스 활성 시 뷰어에 이격 표시 안 함 */}
+      {showDimensions && !isStep2 && spaceInfo.surroundType === 'no-surround' && !spaceInfo.curtainBox?.enabled && (() => {
 
         // 벽없음(freestanding)이면 이격거리/엔드패널 치수선 미표시
         if (spaceInfo.installType === 'freestanding') return null;
@@ -2994,9 +2994,9 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
       <group>
             {(() => {
               const cbW = spaceInfo.curtainBox!.width || 150;
-              const cbFrameW = cbW - 1.5; // 프레임 너비 = CB 폭 - 벽쪽 1.5mm 이격 (경계쪽 이격은 단내림 내경에 포함)
-              const cbFrameStartX = leftOffset + mmToThreeUnits(1.5); // 벽쪽 1.5mm 이격 후
-              const cbFrameEndX = leftOffset + mmToThreeUnits(cbW); // 경계쪽은 이격 없음 (단내림 내경에 포함)
+              const cbFrameW = cbW - 3; // 커튼박스 양쪽 1.5mm 이격 고정 (하드코딩)
+              const cbFrameStartX = leftOffset + mmToThreeUnits(1.5);
+              const cbFrameEndX = leftOffset + mmToThreeUnits(cbW - 1.5);
               return (<>
                 <Line points={[[cbFrameStartX, slotTotalDimensionY, 0.002], [cbFrameEndX, slotTotalDimensionY, 0.002]]} color={dimensionColor} lineWidth={0.3} />
                 <Line points={createArrowHead([cbFrameStartX, slotTotalDimensionY, 0.002], [cbFrameStartX + 0.02, slotTotalDimensionY, 0.002])} color={dimensionColor} lineWidth={0.3} />
@@ -3270,10 +3270,10 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
       <group>
             {(() => {
               const cbW = spaceInfo.curtainBox!.width || 150;
-              const cbFrameW = cbW - 1.5; // 프레임 너비 = CB 폭 - 벽쪽 1.5mm 이격 (경계쪽 이격은 단내림 내경에 포함)
+              const cbFrameW = cbW - 3; // 커튼박스 양쪽 1.5mm 이격 고정 (하드코딩)
               const rightEdge = mmToThreeUnits(spaceInfo.width) + leftOffset;
-              const cbFrameStartX = rightEdge - mmToThreeUnits(cbW); // 경계쪽은 이격 없음 (단내림 내경에 포함)
-              const cbFrameEndX = rightEdge - mmToThreeUnits(1.5); // 벽쪽 1.5mm 이격 전
+              const cbFrameStartX = rightEdge - mmToThreeUnits(cbW - 1.5);
+              const cbFrameEndX = rightEdge - mmToThreeUnits(1.5);
               return (<>
                 <Line points={[[cbFrameStartX, slotTotalDimensionY, 0.002], [cbFrameEndX, slotTotalDimensionY, 0.002]]} color={dimensionColor} lineWidth={0.3} />
                 <Line points={createArrowHead([cbFrameStartX, slotTotalDimensionY, 0.002], [cbFrameStartX + 0.02, slotTotalDimensionY, 0.002])} color={dimensionColor} lineWidth={0.3} />
@@ -5694,13 +5694,17 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           const n = posArr.length;
           if (n === 0) { sectionBottomMm += sectionHeight; return; }
           const halfT = basicThickness / 2;
-          // 각 칸 내경
+          // 칸 내경 공식: 각 칸 = (섹션높이 - 선반두께*선반갯수) / 칸갯수 (균등 분할 기준)
+          // 저장된 shelfPositions의 실제 차이가 있으면 반영:
+          //  첫 칸 = pos[0] - t     (섹션 바닥 ~ 선반1 아랫면, 선반은 중심Y)
+          //  중간  = pos[i+1]-pos[i] - t
+          //  마지막 = sectionHeight - pos[N-1] - t
           const gaps: number[] = [];
-          gaps.push(Math.max(0, Math.round(posArr[0] - halfT)));
+          gaps.push(Math.max(0, Math.round(posArr[0] - basicThickness)));
           for (let i = 0; i < n - 1; i++) {
             gaps.push(Math.max(0, Math.round(posArr[i + 1] - posArr[i] - basicThickness)));
           }
-          gaps.push(Math.max(0, Math.round(sectionHeight - posArr[n - 1] - halfT)));
+          gaps.push(Math.max(0, Math.round(sectionHeight - posArr[n - 1] - basicThickness)));
           // 각 칸 중심 Y
           const centerYs: number[] = [];
           // 칸1 중심: 바닥에서 gaps[0]/2
@@ -8234,7 +8238,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     subDimensionZ
                   )}
                   {hasCB && (() => {
-                    const cbInner = cbWidth - 1.5; // 벽쪽 1.5mm 이격만 (경계쪽 이격은 단내림 내경에 포함)
+                    const cbInner = cbWidth - 3; // 커튼박스 양쪽 1.5mm 이격 고정 (하드코딩)
                     const isCBLeft = spaceInfo.curtainBox?.position === 'left';
                     // CB가 좌측이면 벽쪽(좌)만 이격, 우측이면 벽쪽(우)만 이격
                     const cbInnerStartX = isCBLeft ? cbStartX + mmToThreeUnits(1.5) : cbStartX;
