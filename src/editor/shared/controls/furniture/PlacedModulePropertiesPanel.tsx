@@ -4564,9 +4564,9 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                           };
                           const gapLabel = sectionIdx === 1 ? `상부 칸 ${dispIdx + 1}` : `하부 칸 ${dispIdx + 1}`;
                           return (
-                            <div key={i} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '11px', color: 'var(--theme-text-primary)', marginBottom: '3px' }}>
+                            <div key={i} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '11px', color: 'var(--theme-text-primary)', marginBottom: '3px', gap: '6px' }}>
                               <span style={{ flexShrink: 0 }}>{gapLabel}</span>
-                              <div className={styles.inputWithUnit} style={{ flexShrink: 0, display: 'inline-flex', alignItems: 'center' }}>
+                              <div style={{ flexShrink: 0, display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
                                 <input
                                   type="text"
                                   inputMode="numeric"
@@ -4585,33 +4585,41 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                                       applyGap(cur + (e.key === 'ArrowUp' ? 1 : -1));
                                     }
                                   }}
-                                  className={styles.depthInput}
                                   style={{
                                     color: '#000000', backgroundColor: '#ffffff',
-                                    WebkitTextFillColor: '#000000', opacity: 1, width: '56px', textAlign: 'center', boxSizing: 'border-box'
+                                    WebkitTextFillColor: '#000000', opacity: 1,
+                                    width: '60px', height: '28px', textAlign: 'center', boxSizing: 'border-box',
+                                    border: '1px solid var(--theme-border)', borderRadius: '4px',
+                                    fontSize: '12px', padding: '0 4px', flexShrink: 0,
                                   }}
                                 />
-                                <div style={{ display: 'flex', flexDirection: 'column', marginLeft: '4px', marginRight: '4px', flexShrink: 0 }}>
+                                <div style={{ display: 'flex', flexDirection: 'column', flexShrink: 0 }}>
                                   <button
                                     type="button"
+                                    onMouseDown={(e) => e.preventDefault()}
                                     onClick={() => applyGap((typeof g === 'number' ? g : parseFloat(String(g))) + 1)}
                                     style={{
-                                      width: '16px', height: '11px', padding: 0, fontSize: '8px',
+                                      width: '20px', height: '14px', padding: 0, fontSize: '10px',
                                       border: '1px solid var(--theme-border)', background: 'var(--theme-surface)',
-                                      cursor: 'pointer', borderRadius: '2px 2px 0 0', lineHeight: '8px'
+                                      color: 'var(--theme-text-primary)',
+                                      cursor: 'pointer', borderRadius: '3px 3px 0 0', lineHeight: '1',
+                                      display: 'flex', alignItems: 'center', justifyContent: 'center',
                                     }}
                                   >▲</button>
                                   <button
                                     type="button"
+                                    onMouseDown={(e) => e.preventDefault()}
                                     onClick={() => applyGap((typeof g === 'number' ? g : parseFloat(String(g))) - 1)}
                                     style={{
-                                      width: '16px', height: '11px', padding: 0, fontSize: '8px',
+                                      width: '20px', height: '14px', padding: 0, fontSize: '10px',
                                       border: '1px solid var(--theme-border)', background: 'var(--theme-surface)',
-                                      cursor: 'pointer', borderRadius: '0 0 2px 2px', lineHeight: '8px', borderTop: 'none'
+                                      color: 'var(--theme-text-primary)',
+                                      cursor: 'pointer', borderRadius: '0 0 3px 3px', lineHeight: '1', borderTop: 'none',
+                                      display: 'flex', alignItems: 'center', justifyContent: 'center',
                                     }}
                                   >▼</button>
                                 </div>
-                                <span className={styles.unit}>mm</span>
+                                <span style={{ fontSize: '11px', color: 'var(--theme-text-secondary)', flexShrink: 0, minWidth: '18px' }}>mm</span>
                               </div>
                             </div>
                           );
