@@ -2707,8 +2707,10 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     // 상부장: 뒷면을 하부장 뒷면에 정렬
     furnitureZ = furnitureZOffset - furnitureDepth / 2 - doorThickness + depth / 2;
   } else if (isShoeCabinet) {
-    // 신발장: 뒷면을 공간 뒷벽(zOffset)에 정렬
-    furnitureZ = zOffset + depth / 2 + baseDepthOffset;
+    // 신발장: 뒷면을 의류장/키큰장의 뒷면과 동일하게 정렬
+    // 600 기준 뒷면 Z = furnitureZOffset - furnitureDepth/2 - doorThickness
+    // 신발장 중심 Z = 이 뒷면 + depth/2
+    furnitureZ = furnitureZOffset - furnitureDepth / 2 - doorThickness + depth / 2 + baseDepthOffset;
   } else {
     furnitureZ = furnitureZOffset + furnitureDepth / 2 - doorThickness - depth / 2 + baseDepthOffset;
   }
