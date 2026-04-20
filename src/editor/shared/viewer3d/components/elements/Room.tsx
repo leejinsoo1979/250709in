@@ -5968,15 +5968,45 @@ const Room: React.FC<RoomProps> = ({
             // 단내림이 없거나 오른쪽에 있는 경우 (일반구간)
             // 왼쪽이 단내림이면 이미 위에서 렌더링했으므로 여기서는 스킵
             if (!droppedCeilingEnabled || droppedCeilingPosition !== 'left') {
+              const subFrameX = xOffset + frameThickness.left - mmToThreeUnits(9);
+              const subFrameZ = furnitureZOffset + furnitureDepth / 2 - mmToThreeUnits(END_PANEL_THICKNESS) / 2 - mmToThreeUnits(28);
+              const subFrameMat = leftSubFrameMaterial ?? createFrameMaterial('left');
+
+              // 분절 모드: 좌측 최외곽이 상/하부만 → 각 가구 높이에 맞춰 세로 서브프레임 조각들
+              if (isLeftFrameSplit && spaceInfo.surroundType !== 'no-surround') {
+                return (
+                  <>
+                    {leftOuterMods.map((om, idx) => {
+                      const segH = mmToThreeUnits(om.heightMm);
+                      const segCY = panelStartY + mmToThreeUnits(om.bottomMm) + segH / 2;
+                      return (
+                        <group
+                          key={`left-normal-vertical-split-${idx}-${om.category}`}
+                          position={[subFrameX, segCY, subFrameZ]}
+                          rotation={[0, Math.PI / 2, 0]}
+                        >
+                          <BoxWithEdges
+                            hideEdges={hideEdges}
+                            key={`left-normal-vertical-split-inner-${idx}-${om.category}-${materialConfig?.doorColor}-${materialConfig?.doorTexture}`}
+                            args={[mmToThreeUnits(44), segH, mmToThreeUnits(END_PANEL_THICKNESS)]}
+                            position={[0, 0, 0]}
+                            material={subFrameMat}
+                            renderMode={renderMode}
+                            shadowEnabled={shadowEnabled}
+                            excludeKeys={[`${leftMostModuleId}::left-surround-lshape-side`, `${leftMostModuleId}::left-surround-lshape-front`]}
+                          />
+                        </group>
+                      );
+                    })}
+                  </>
+                );
+              }
+
               return (
                 <>
                   {/* 세로 서브프레임 (슬롯 가이드 끝선에 맞춤: x축 +1mm 이동) */}
                   <group
-                    position={[
-                      xOffset + frameThickness.left - mmToThreeUnits(9),
-                      sideFrameCenterY,
-                      furnitureZOffset + furnitureDepth / 2 - mmToThreeUnits(END_PANEL_THICKNESS) / 2 - mmToThreeUnits(28)
-                    ]}
+                    position={[subFrameX, sideFrameCenterY, subFrameZ]}
                     rotation={[0, Math.PI / 2, 0]}
                   >
                     <BoxWithEdges
@@ -5988,7 +6018,7 @@ const Room: React.FC<RoomProps> = ({
                         mmToThreeUnits(END_PANEL_THICKNESS)
                       ]}
                       position={[0, 0, 0]}
-                      material={leftSubFrameMaterial ?? createFrameMaterial('left')}
+                      material={subFrameMat}
                       renderMode={renderMode}
                       shadowEnabled={shadowEnabled}
                       excludeKeys={[`${leftMostModuleId}::left-surround-lshape-side`, `${leftMostModuleId}::left-surround-lshape-front`]}
@@ -6147,15 +6177,45 @@ const Room: React.FC<RoomProps> = ({
             // 단내림이 없거나 왼쪽에 있는 경우 (일반구간)
             // 오른쪽이 단내림이면 이미 위에서 렌더링했으므로 여기서는 스킵
             if (!droppedCeilingEnabled || droppedCeilingPosition !== 'right') {
+              const subFrameX = xOffset + width - frameThickness.right + mmToThreeUnits(9);
+              const subFrameZ = furnitureZOffset + furnitureDepth / 2 - mmToThreeUnits(END_PANEL_THICKNESS) / 2 - mmToThreeUnits(28);
+              const subFrameMat = rightSubFrameMaterial ?? createFrameMaterial('right');
+
+              // 분절 모드
+              if (isRightFrameSplit && spaceInfo.surroundType !== 'no-surround') {
+                return (
+                  <>
+                    {rightOuterMods.map((om, idx) => {
+                      const segH = mmToThreeUnits(om.heightMm);
+                      const segCY = panelStartY + mmToThreeUnits(om.bottomMm) + segH / 2;
+                      return (
+                        <group
+                          key={`right-normal-vertical-split-${idx}-${om.category}`}
+                          position={[subFrameX, segCY, subFrameZ]}
+                          rotation={[0, Math.PI / 2, 0]}
+                        >
+                          <BoxWithEdges
+                            hideEdges={hideEdges}
+                            key={`right-normal-vertical-split-inner-${idx}-${om.category}-${materialConfig?.doorColor}-${materialConfig?.doorTexture}`}
+                            args={[mmToThreeUnits(44), segH, mmToThreeUnits(END_PANEL_THICKNESS)]}
+                            position={[0, 0, 0]}
+                            material={subFrameMat}
+                            renderMode={renderMode}
+                            shadowEnabled={shadowEnabled}
+                            excludeKeys={[`${rightMostModuleId}::right-surround-lshape-side`, `${rightMostModuleId}::right-surround-lshape-front`]}
+                          />
+                        </group>
+                      );
+                    })}
+                  </>
+                );
+              }
+
               return (
                 <>
                   {/* 세로 서브프레임 (슬롯 가이드 끝선에 맞춤: x축 -1mm 이동) */}
                   <group
-                    position={[
-                      xOffset + width - frameThickness.right + mmToThreeUnits(9),
-                      sideFrameCenterY,
-                      furnitureZOffset + furnitureDepth / 2 - mmToThreeUnits(END_PANEL_THICKNESS) / 2 - mmToThreeUnits(28)
-                    ]}
+                    position={[subFrameX, sideFrameCenterY, subFrameZ]}
                     rotation={[0, Math.PI / 2, 0]}
                   >
                     <BoxWithEdges
@@ -6167,7 +6227,7 @@ const Room: React.FC<RoomProps> = ({
                         mmToThreeUnits(END_PANEL_THICKNESS)
                       ]}
                       position={[0, 0, 0]}
-                      material={rightSubFrameMaterial ?? createFrameMaterial('right')}
+                      material={subFrameMat}
                       renderMode={renderMode}
                       shadowEnabled={shadowEnabled}
                       excludeKeys={[`${rightMostModuleId}::right-surround-lshape-side`, `${rightMostModuleId}::right-surround-lshape-front`]}
