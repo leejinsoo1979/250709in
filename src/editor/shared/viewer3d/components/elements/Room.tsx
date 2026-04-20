@@ -1336,7 +1336,7 @@ const Room: React.FC<RoomProps> = ({
         topMm = spaceInfo.height;
       } else if (cat === 'lower') {
         bottomMm = 0;
-        topMm = floorFinishMM + baseH + cabHeight;
+        topMm = posYmm + cabHeight / 2;
       } else {
         bottomMm = 0;
         topMm = spaceInfo.height;
