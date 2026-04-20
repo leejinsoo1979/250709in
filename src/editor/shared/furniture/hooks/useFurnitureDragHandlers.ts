@@ -156,7 +156,7 @@ export const useFurnitureDragHandlers = (spaceInfo: SpaceInfo) => {
               slotIndex: targetSlotIndex,
               subSlotPosition: 'left' as const,
               isDualSlot: false,
-              hasDoor: useUIStore.getState().doorInstallIntent,
+              hasDoor: useUIStore.getState().doorInstallIntent || placedModules.some((m: any) => m.hasDoor === true),
               customDepth: customDepth,
               adjustedWidth: targetSlotInfo.subSlots.left.availableWidth,
               zone: dropPosition.zone || 'normal'
@@ -176,7 +176,7 @@ export const useFurnitureDragHandlers = (spaceInfo: SpaceInfo) => {
               slotIndex: targetSlotIndex,
               subSlotPosition: 'right' as const,
               isDualSlot: false,
-              hasDoor: useUIStore.getState().doorInstallIntent,
+              hasDoor: useUIStore.getState().doorInstallIntent || placedModules.some((m: any) => m.hasDoor === true),
               customDepth: customDepth,
               adjustedWidth: targetSlotInfo.subSlots.right.availableWidth,
               zone: dropPosition.zone || 'normal'

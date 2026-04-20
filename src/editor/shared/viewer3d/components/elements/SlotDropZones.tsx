@@ -91,7 +91,7 @@ const SlotDropZones: React.FC<SlotDropZonesProps> = ({ spaceInfo, showAll = true
           },
           color: '#8B7355',
           description: `커스텀 가구: ${customFurniture.name}`,
-          hasDoor: doorInstallIntent,
+          hasDoor: hasDoorNow,
           isDynamic: false,
           type: 'box',
           defaultDepth: customFurniture.originalDimensions.depth,
@@ -116,6 +116,8 @@ const SlotDropZones: React.FC<SlotDropZonesProps> = ({ spaceInfo, showAll = true
   // UIStore에서 activeDroppedCeilingTab 가져오기
   const { activeDroppedCeilingTab } = useUIStore();
   const doorInstallIntent = useUIStore(s => s.doorInstallIntent);
+  // 배치 시 도어 유무: 의도값 또는 이미 배치된 가구 중 하나라도 도어 있으면 true (토글이 "도어제거" 표시 상태)
+  const hasDoorNow = doorInstallIntent || placedModules.some(m => (m as any).hasDoor === true);
   
   // 캐비넷 배치 선택 팝업 상태
   const [showPlacementPopup, setShowPlacementPopup] = useState(false);
@@ -1187,7 +1189,7 @@ const SlotDropZones: React.FC<SlotDropZonesProps> = ({ spaceInfo, showAll = true
           moduleId: baseModuleId,
           position: { x: leftCabinetCenterX, y: 0, z: 0 },
           rotation: 0,
-          hasDoor: doorInstallIntent,
+          hasDoor: hasDoorNow,
           customDepth: adjustedDepth,
           slotIndex: slotIndex,
           isDualSlot: false,
@@ -1204,7 +1206,7 @@ const SlotDropZones: React.FC<SlotDropZonesProps> = ({ spaceInfo, showAll = true
           moduleId: baseModuleId,
           position: { x: rightCabinetCenterX, y: 0, z: 0 },
           rotation: 0,
-          hasDoor: doorInstallIntent,
+          hasDoor: hasDoorNow,
           customDepth: adjustedDepth,
           slotIndex: slotIndex,
           isDualSlot: false,
@@ -1226,7 +1228,7 @@ const SlotDropZones: React.FC<SlotDropZonesProps> = ({ spaceInfo, showAll = true
           moduleId: baseModuleId,
           position: { x: frontCabinetCenterX, y: 0, z: frontCabinetZ },
           rotation: 0,
-          hasDoor: doorInstallIntent,
+          hasDoor: hasDoorNow,
           customDepth: frontCabinetDepth,
           slotIndex: slotIndex,
           isDualSlot: false,
