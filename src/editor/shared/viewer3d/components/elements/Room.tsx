@@ -1311,7 +1311,7 @@ const Room: React.FC<RoomProps> = ({
     });
     // 카테고리 판별 + Y 범위 계산
     const floorFinishMM = spaceInfo.hasFloorFinish && spaceInfo.floorFinish ? spaceInfo.floorFinish.height : 0;
-    const baseH = spaceInfo.baseConfig?.type === 'stand' ? 0 : (spaceInfo.baseConfig?.height || 65);
+    const baseH = spaceInfo.baseConfig?.type === 'stand' ? 0 : (spaceInfo.baseConfig?.height ?? 0);
     const topFrameMM = spaceInfo.frameSize?.top || 30;
     return outermost.map((m): OuterMod => {
       const id = m.moduleId || '';
