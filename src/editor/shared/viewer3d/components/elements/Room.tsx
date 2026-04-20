@@ -1324,14 +1324,15 @@ const Room: React.FC<RoomProps> = ({
       const cabHeight = hMm > 0 ? hMm : defaultCabH;
       // position.y (three.js, floorFinish 기준 mm): 가구 중심 Y
       const posYmm = Math.round((m.position?.y ?? 0) * 100);
+      // 상부장 도어 하단 확장 갭 (가구 바닥보다 아래로 확장)
+      const doorBotGap = (m as any).doorBottomGap ?? (spaceInfo as any).doorBottomGap ?? 0;
       // 좌/우 서라운드 프레임 Y 범위
-      //  - upper: 상부장 하단 ~ 공간 천장
-      //  - lower: 공간 바닥(0) ~ 받침대 상단 + 측판 높이(cabHeight는 가구 총높이; 상판은 별도로 처리하지 않고 cabHeight 전체 높이 사용하되 넘치지 않도록 측판=cabHeight로 간주)
-      // 하부장은 cabHeight가 측판(=가구 총) 높이. 가구 상단 = floorFinishMM + baseH + cabHeight
+      //  - upper: (상부장 하단 - doorBottomGap) ~ 공간 천장
+      //  - lower: 공간 바닥(0) ~ 가구 상단 (floorFinish + base + cabHeight)
       let bottomMm: number;
       let topMm: number;
       if (cat === 'upper') {
-        bottomMm = posYmm - cabHeight / 2;
+        bottomMm = posYmm - cabHeight / 2 - doorBotGap;
         topMm = spaceInfo.height;
       } else if (cat === 'lower') {
         bottomMm = 0;
