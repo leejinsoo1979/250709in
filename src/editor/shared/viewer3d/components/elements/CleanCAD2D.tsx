@@ -5727,14 +5727,18 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           const innerH = Math.max(0, sectionOuterH - 2 * basicThickness);
           // eslint-disable-next-line no-console
           console.log('[FINAL]', { sIdx: sectionIdx, outerH: sectionOuterH, innerH, pos: posArr, baseFrame: baseFrameRuntime, topFrame: topFrameRuntime, spaceH: spaceInfo.height });
-          // 치수 라벨: 정수 균등, 오차는 맨 아래 칸에 흡수
-          const totalInner = innerH - n * basicThickness;
-          const baseGap = Math.floor(totalInner / (n + 1));
-          const remainder = totalInner - baseGap * (n + 1);
-          // 위→아래 순서: gaps[0]=맨위, gaps[n]=맨아래 (CleanCAD2D는 pos 기준 아래→위로 push하므로 실제로는 gaps 마지막이 맨위)
-          // SectionsRenderer와 CleanCAD2D에서 gaps[0]은 섹션 바닥(맨아래) 칸
-          const gaps: number[] = Array(n + 1).fill(baseGap);
-          gaps[0] += remainder; // 맨 아래 칸(섹션 바닥)에 오차 흡수
+          // gaps를 실제 저장된 shelfPositions에서 파생 (스피너로 선반 이동 시 즉시 반영되도록)
+          // gaps[k] = posArr[k]가 있으면 (k==0 ? posArr[0]-halfT : posArr[k]-posArr[k-1]-basicThickness), 마지막은 innerH-posArr[n-1]-halfT
+          const gaps: number[] = [];
+          for (let k = 0; k <= n; k++) {
+            if (k === 0) {
+              gaps.push(Math.max(0, Math.round(posArr[0] - halfT)));
+            } else if (k === n) {
+              gaps.push(Math.max(0, Math.round(innerH - posArr[n - 1] - halfT)));
+            } else {
+              gaps.push(Math.max(0, Math.round(posArr[k] - posArr[k - 1] - basicThickness)));
+            }
+          }
           // 각 칸 중심 Y
           const centerYs: number[] = [];
           // 칸1 중심: 바닥에서 gaps[0]/2
