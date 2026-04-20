@@ -4539,15 +4539,69 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                           </div>
                         </div>
                       ))}
-                      {/* 칸별 내경 표시 */}
+                      {/* 칸별 내경 입력 (칸 i 변경 시 선반 i 위치 재계산) */}
                       <div style={{ marginTop: '6px', padding: '6px 8px', background: 'var(--theme-surface-alt, #f7f7f7)', borderRadius: '4px' }}>
                         <div style={{ fontSize: '11px', color: 'var(--theme-text-secondary)', marginBottom: '4px' }}>칸 내경</div>
-                        {gaps.map((g, i) => (
-                          <div key={i} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: 'var(--theme-text-primary)' }}>
-                            <span>칸 {i + 1}</span>
-                            <span>{g} mm</span>
-                          </div>
-                        ))}
+                        {gaps.map((g, i) => {
+                          const applyGap = (newGap: number) => {
+                            const safeGap = Math.max(0, Math.round(newGap));
+                            const newPositions = [...sorted];
+                            // 칸 i 아래 선반 위치 재계산 (i번째 선반 = 이전선반 + basicThickness + 이전 칸까지 고정 + safeGap 누적)
+                            // 간단 접근: 위치 = 첫 칸부터 누적 (누적합 + (i) * basicThickness)
+                            const updatedGaps = [...gaps];
+                            updatedGaps[i] = safeGap;
+                            // 마지막 칸은 자동 보정(섹션 높이 - sum(gaps[0..n-1]) - n*basicThickness)
+                            const n = newPositions.length;
+                            if (i !== updatedGaps.length - 1) {
+                              // 마지막 칸 재계산
+                              const lastIdx = updatedGaps.length - 1;
+                              const sumOthers = updatedGaps.reduce((s, v, idx) => idx === lastIdx ? s : s + v, 0);
+                              updatedGaps[lastIdx] = Math.max(0, Math.round(sectionHeight - sumOthers - n * basicThickness));
+                            }
+                            // 각 선반 위치 = 누적(칸 0 ~ 칸 k) + k*basicThickness
+                            const resultPositions: number[] = [];
+                            let acc = 0;
+                            for (let k = 0; k < n; k++) {
+                              acc += updatedGaps[k];
+                              resultPositions.push(acc + k * basicThickness);
+                            }
+                            setPosInputs(resultPositions.map(p => Math.round(p).toString()));
+                            const newSections = [...effectiveSections];
+                            newSections[sectionIdx] = { ...section, shelfPositions: resultPositions };
+                            updatePlacedModule(currentPlacedModule.id, { customSections: newSections });
+                          };
+                          return (
+                            <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '11px', color: 'var(--theme-text-primary)', marginBottom: '3px' }}>
+                              <span>칸 {i + 1}</span>
+                              <div className={styles.inputWithUnit}>
+                                <input
+                                  type="text"
+                                  inputMode="numeric"
+                                  defaultValue={g}
+                                  key={`gap-${sectionIdx}-${i}-${g}`}
+                                  onBlur={(e) => {
+                                    const v = parseInt(e.target.value, 10);
+                                    if (!isNaN(v)) applyGap(v);
+                                  }}
+                                  onKeyDown={(e) => {
+                                    if (e.key === 'Enter') { (e.target as HTMLInputElement).blur(); }
+                                    else if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                                      e.preventDefault();
+                                      const cur = parseInt((e.target as HTMLInputElement).value, 10) || 0;
+                                      applyGap(cur + (e.key === 'ArrowUp' ? 1 : -1));
+                                    }
+                                  }}
+                                  className={styles.depthInput}
+                                  style={{
+                                    color: '#000000', backgroundColor: '#ffffff',
+                                    WebkitTextFillColor: '#000000', opacity: 1, width: '60px'
+                                  }}
+                                />
+                                <span className={styles.unit}>mm</span>
+                              </div>
+                            </div>
+                          );
+                        })}
                       </div>
                     </div>
                     );
