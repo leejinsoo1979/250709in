@@ -37,27 +37,44 @@ const BaseControls: React.FC<BaseControlsProps> = ({ spaceInfo, onUpdate, disabl
   // 로컬 상태들 - 항상 string으로 관리
   // 받침대 높이는 바닥마감재와 무관하게 원래 값 그대로 표시
   const [baseHeight, setBaseHeight] = useState<string>(
-    String(spaceInfo.baseConfig?.height || 65)
+    String(spaceInfo.baseConfig?.height || 60)
   );
   const [baseDepth, setBaseDepth] = useState<string>(
     String(spaceInfo.baseConfig?.depth ?? 0)
   );
 
   // baseConfig 변경 시 로컬 상태 동기화
+  // UI 표시값은 항상 60 이상으로 보정 (기본값 60)
   useEffect(() => {
-    setBaseHeight(String(spaceInfo.baseConfig?.height || 65));
+    const stored = spaceInfo.baseConfig?.height;
+    const displayH = (stored === undefined || stored < 60) ? 60 : stored;
+    setBaseHeight(String(displayH));
     setBaseDepth(String(spaceInfo.baseConfig?.depth ?? 0));
+    // UI 표시값과 저장값이 다르면 store 동기화 (UI가 진실의 원천)
+    if (stored !== displayH) {
+      const currentBaseConfig = spaceInfo.baseConfig || { type: 'floor' as const, height: 60 };
+      onUpdate({ baseConfig: { ...currentBaseConfig, height: displayH } });
+    }
   }, [spaceInfo.baseConfig]);
 
-  // 높이 입력 처리 (로컬 상태만 변경, store는 blur에서 업데이트)
+  // 높이 입력 처리 — 즉시 store 업데이트 (실시간 반영)
   const handleHeightChange = (value: string) => {
     if (value === '' || /^\d+$/.test(value)) {
-      // 입력 중 최대값 초과 방지 (3자리 이상이면 즉시 클램핑)
       if (value !== '' && parseInt(value) > 150) {
         setBaseHeight('150');
         return;
       }
       setBaseHeight(value);
+      // 유효한 숫자면 즉시 store 업데이트
+      if (value !== '') {
+        const num = parseInt(value);
+        if (num >= 60 && num <= 150) {
+          const currentBaseConfig = spaceInfo.baseConfig || { type: 'floor' as const, height: 60 };
+          if (num !== currentBaseConfig.height) {
+            onUpdate({ baseConfig: { ...currentBaseConfig, height: num } });
+          }
+        }
+      }
     }
   };
 
@@ -75,7 +92,7 @@ const BaseControls: React.FC<BaseControlsProps> = ({ spaceInfo, onUpdate, disabl
     let value: any = baseHeight;
 
     if (typeof value === 'string') {
-      value = value === '' ? 65 : parseInt(value);
+      value = value === '' ? 60 : parseInt(value);
     }
 
     if (value < 60) value = 60;

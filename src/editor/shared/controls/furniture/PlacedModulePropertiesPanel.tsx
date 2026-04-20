@@ -1214,7 +1214,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
         }
       }
     }
-  }, [currentPlacedModule?.id, moduleData?.id, currentPlacedModule?.customDepth, currentPlacedModule?.customWidth, currentPlacedModule?.adjustedWidth, currentPlacedModule?.hasDoor, currentPlacedModule?.doorTopGap, currentPlacedModule?.doorBottomGap, moduleDefaultLowerTopOffset]); // 실제 값이 바뀔 때만 실행
+  }, [currentPlacedModule?.id, moduleData?.id, currentPlacedModule?.customDepth, currentPlacedModule?.customWidth, currentPlacedModule?.adjustedWidth, currentPlacedModule?.hasDoor, currentPlacedModule?.doorTopGap, currentPlacedModule?.doorBottomGap, moduleDefaultLowerTopOffset, currentPlacedModule?.customSections]); // customSections 변경 시 즉시 반영
 
   // 도어 상하갭은 바닥/천장 기준 (받침대/띄움 무관)
   // 배치 타입 변경 시 갭값을 자동으로 바꾸지 않음 — 사용자가 도어갭에서 직접 조정
@@ -4426,12 +4426,26 @@ const PlacedModulePropertiesPanel: React.FC = () => {
             ) => {
               const section = effectiveSections[sectionIdx];
               if (!section || section.type !== 'shelf') return null;
-              const sectionHeight = section.height;
+              // 섹션 외경을 spaceInfo 실시간 값으로 재계산
+              // 마지막 섹션: 가구외경 - 고정섹션합, 첫 섹션: section.height 그대로
+              const topFrameR = spaceInfo.frameSize?.top ?? 30;
+              // 가구 개별 baseFrameHeight 우선, 없으면 글로벌 spaceInfo 사용
+              const baseFrameR = currentPlacedModule?.baseFrameHeight !== undefined
+                ? currentPlacedModule.baseFrameHeight
+                : (spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height ?? 60) : 0);
+              const furnitureOuterR = (spaceInfo.height || 0) - topFrameR - baseFrameR;
+              const fixedSumR = effectiveSections.slice(0, -1).reduce((s: number, sec: any) => s + (sec.height || 0), 0);
+              const isLastR = sectionIdx === effectiveSections.length - 1;
+              const sectionHeight = isLastR
+                ? Math.max(0, furnitureOuterR - fixedSumR)
+                : ((section.height as number) || 0);
 
               const handleCountChange = (delta: number) => {
                 const newCount = Math.max(0, Math.min(10, count + delta));
                 setCount(newCount);
-                const newPositions = calculateEvenShelfPositions(sectionHeight, newCount, basicThickness);
+                // 내경 기반(섹션 외경 - 2t)으로 균등 선반 위치 계산
+                const innerH = sectionHeight - 2 * basicThickness;
+                const newPositions = calculateEvenShelfPositions(innerH, newCount, basicThickness);
                 setPosInputs(newPositions.map(p => Math.round(p).toString()));
                 const newSections = [...effectiveSections];
                 newSections[sectionIdx] = { ...section, count: newCount, shelfPositions: newPositions };
@@ -4499,21 +4513,18 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                     >+</button>
                   </div>
                   {(() => {
-                    let shelfPos: number[] = [...((section.shelfPositions || []) as number[])].sort((a, b) => a - b);
+                    const shelfPos: number[] = [...((section.shelfPositions || []) as number[])].sort((a, b) => a - b);
                     if (shelfPos.length === 0) return null;
-                    const maxPos = shelfPos[shelfPos.length - 1];
-                    if (maxPos < sectionHeight * 0.5) {
-                      const even = sectionHeight / (shelfPos.length + 1);
-                      shelfPos = shelfPos.map((_, i) => Math.round(even * (i + 1)));
-                    }
-                    // 칸 내경 = (섹션높이 - 선반두께*(선반갯수+2)) / 칸갯수 — 균등 분할
-                    const compCount = shelfPos.length + 1;
-                    const evenGap = (sectionHeight - basicThickness * (shelfPos.length + 2)) / compCount;
-                    const gaps: number[] = [];
-                    for (let i = 0; i < compCount; i++) gaps.push(Math.max(0, Math.round(evenGap)));
+                    const n = shelfPos.length;
+                    const halfT = basicThickness / 2;
+                    // 섹션 내경: sectionHeight(외경) - 2t
+                    const innerH = Math.max(0, sectionHeight - 2 * basicThickness);
+                    // 치수 라벨: 균등 공식, 소수점 1자리까지
+                    const gEvenRaw = (innerH - n * basicThickness) / (n + 1);
+                    const gEven = Math.round(gEvenRaw * 10) / 10;
+                    const gaps: number[] = Array(n + 1).fill(gEven);
                     return (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                      {/* 칸별 내경 입력 (칸 i 변경 시 선반 i 위치 재계산) */}
                       <div style={{ padding: '6px 8px', background: 'var(--theme-surface-alt, #f7f7f7)', borderRadius: '4px' }}>
                         <div style={{ fontSize: '11px', color: 'var(--theme-text-secondary)', marginBottom: '4px' }}>칸 내경</div>
                         {gaps.map((_ignored, dispIdx) => {
@@ -4521,29 +4532,35 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                           const g = gaps[i];
                           const applyGap = (newGap: number) => {
                             const safeGap = Math.max(0, Math.round(newGap));
-                            const newPositions = [...shelfPos];
                             const updatedGaps = [...gaps];
                             updatedGaps[i] = safeGap;
-                            const n = newPositions.length;
-                            // sectionHeight = sum(gaps) + n*basicThickness
-                            if (i !== updatedGaps.length - 1) {
-                              const lastIdx = updatedGaps.length - 1;
-                              const sumOthers = updatedGaps.reduce((s, v, idx) => idx === lastIdx ? s : s + v, 0);
-                              updatedGaps[lastIdx] = Math.max(0, Math.round(sectionHeight - sumOthers - n * basicThickness));
+                            // 변경된 칸 제외 나머지를 내경 내에서 균등 재분배
+                            const otherCount = updatedGaps.length - 1;
+                            if (otherCount > 0) {
+                              const remaining = innerH - safeGap - n * basicThickness;
+                              const eachOther = Math.max(0, Math.round(remaining / otherCount));
+                              for (let k = 0; k < updatedGaps.length; k++) {
+                                if (k !== i) updatedGaps[k] = eachOther;
+                              }
+                              // 반올림 오차 흡수
+                              const lastIdx = i === updatedGaps.length - 1 ? updatedGaps.length - 2 : updatedGaps.length - 1;
+                              const sumAll = updatedGaps.reduce((s, v) => s + v, 0);
+                              updatedGaps[lastIdx] += Math.round(innerH - sumAll - n * basicThickness);
+                              updatedGaps[lastIdx] = Math.max(0, updatedGaps[lastIdx]);
                             }
-                            // pos[k] = 누적(gaps[0..k]) + k*basicThickness
+                            // pos[k] = 누적(gaps[0..k]) + k*t + t/2 (선반 중심)
                             const resultPositions: number[] = [];
                             let acc = 0;
                             for (let k = 0; k < n; k++) {
                               acc += updatedGaps[k];
-                              resultPositions.push(acc + k * basicThickness);
+                              resultPositions.push(Math.round(acc + k * basicThickness + halfT));
                             }
                             setPosInputs(resultPositions.map(p => Math.round(p).toString()));
                             const newSections = [...effectiveSections];
                             newSections[sectionIdx] = { ...section, shelfPositions: resultPositions };
                             updatePlacedModule(currentPlacedModule.id, { customSections: newSections });
                           };
-                          const gapLabel = sectionIdx === 1 ? `상부선반 ${dispIdx + 1}` : `하부선반 ${dispIdx + 1}`;
+                          const gapLabel = sectionIdx === 1 ? `상부 칸 ${dispIdx + 1}` : `하부 칸 ${dispIdx + 1}`;
                           return (
                             <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '11px', color: 'var(--theme-text-primary)', marginBottom: '3px' }}>
                               <span>{gapLabel}</span>
@@ -4551,10 +4568,11 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                                 <input
                                   type="text"
                                   inputMode="numeric"
-                                  defaultValue={g}
-                                  key={`gap-${sectionIdx}-${i}-${g}`}
-                                  onBlur={(e) => {
-                                    const v = parseInt(e.target.value, 10);
+                                  value={g}
+                                  onChange={(e) => {
+                                    const raw = e.target.value;
+                                    if (raw === '' || raw === '-') return;
+                                    const v = parseInt(raw, 10);
                                     if (!isNaN(v)) applyGap(v);
                                   }}
                                   onKeyDown={(e) => {

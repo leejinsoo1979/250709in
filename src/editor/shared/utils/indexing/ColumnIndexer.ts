@@ -289,7 +289,12 @@ export class ColumnIndexer {
       // 서라운드 모드 또는 노서라운드 빌트인/세미스탠딩: 균등 분할 — 0.5mm 단위 내림
       let actualInternalWidth = internalWidth;
       if (isNoSurround && (spaceInfo.installType === 'builtin') && optimizedGapConfig) {
-        actualInternalWidth = totalWidth - (optimizedGapConfig.left || 0) - (optimizedGapConfig.right || 0) - curtainBoxWidth;
+        // 커튼박스 있는 쪽 이격은 제외 (커튼박스 별도 취급)
+        const cbOnLeft = !!(spaceInfo.curtainBox?.enabled && spaceInfo.curtainBox?.position === 'left');
+        const cbOnRight = !!(spaceInfo.curtainBox?.enabled && spaceInfo.curtainBox?.position === 'right');
+        const leftReduce = cbOnLeft ? 0 : (optimizedGapConfig.left || 0);
+        const rightReduce = cbOnRight ? 0 : (optimizedGapConfig.right || 0);
+        actualInternalWidth = totalWidth - leftReduce - rightReduce - curtainBoxWidth;
       }
       const rawSlotWidth = actualInternalWidth / columnCount;
       const flooredSlotWidth = Math.floor(rawSlotWidth * 2) / 2;
@@ -692,6 +697,11 @@ export class ColumnIndexer {
           // 사용자 설정값 또는 기본값 2mm 사용
           leftGap = spaceInfo.gapConfig?.left ?? 2;
           rightGap = spaceInfo.gapConfig?.right ?? 2;
+          // 커튼박스 있는 쪽 이격은 제외 (커튼박스 별도 취급)
+          if (spaceInfo.curtainBox?.enabled) {
+            if (spaceInfo.curtainBox?.position === 'left') leftGap = 0;
+            if (spaceInfo.curtainBox?.position === 'right') rightGap = 0;
+          }
 
           // console.log('📐 빌트인 이격거리 (gapConfig 사용):', {
           //   좌측이격거리: leftGap,

@@ -4275,6 +4275,8 @@ const Configurator: React.FC = () => {
                 handleSpaceInfoUpdate({
                   curtainBox: { enabled: true, position: 'left', width: 150, dropHeight: cbDropHeight },
                   ...(widthDelta ? { width: (spaceInfo.width || 0) + widthDelta } : {}),
+                  // 좌측 커튼박스: 좌측 이격 0 (가구공간~커튼박스 경계 이격 없음)
+                  gapConfig: { ...(spaceInfo.gapConfig || {}), left: 0 },
                 });
                 setActiveRightPanelTab('placement');
               }}
@@ -4294,6 +4296,8 @@ const Configurator: React.FC = () => {
                 handleSpaceInfoUpdate({
                   curtainBox: { enabled: true, position: 'right', width: 150, dropHeight: cbDropHeight },
                   ...(widthDelta ? { width: (spaceInfo.width || 0) + widthDelta } : {}),
+                  // 우측 커튼박스: 우측 이격 0 (가구공간~커튼박스 경계 이격 없음)
+                  gapConfig: { ...(spaceInfo.gapConfig || {}), right: 0 },
                 });
                 setActiveRightPanelTab('placement');
               }}
@@ -4801,12 +4805,12 @@ const Configurator: React.FC = () => {
             <div className={styles.subSetting}>
               <div className={styles.frameGrid}>
                 {/* 좌측 이격거리 - 좌단내림 시 경계이격(middle), 그 외 벽이격(left) */}
-                {(() => {
+                {/* 좌측 커튼박스 활성 시 좌이격 숨김 (커튼박스가 벽 경계 차지) */}
+                {!(spaceInfo.curtainBox?.enabled && spaceInfo.curtainBox?.position === 'left') && (() => {
                   const isLeftBoundary = spaceInfo.droppedCeiling?.enabled && spaceInfo.droppedCeiling?.position === 'left';
                   const gapKey = isLeftBoundary ? 'middle' : 'left';
                   const curVal = isLeftBoundary ? (spaceInfo.gapConfig?.middle ?? 1.5) : (spaceInfo.gapConfig?.left ?? 1.5);
                   const isDisabled = !isLeftBoundary && !spaceInfo.wallConfig?.left;
-                  console.log('🔍 [우측바 이격 디버그] 좌측:', { curVal, gapConfig: spaceInfo.gapConfig, isLeftBoundary, gapKey });
                   return (
                 <div className={styles.frameItem}>
                   <label className={styles.frameItemLabel}>{isLeftBoundary ? '좌이격(경계)' : '좌이격'}</label>
@@ -4854,7 +4858,8 @@ const Configurator: React.FC = () => {
                 })()}
 
                 {/* 우측 이격거리 - 우단내림 시 경계이격(middle), 그 외 벽이격(right) */}
-                {(() => {
+                {/* 우측 커튼박스 활성 시 우이격 숨김 (커튼박스가 벽 경계 차지) */}
+                {!(spaceInfo.curtainBox?.enabled && spaceInfo.curtainBox?.position === 'right') && (() => {
                   const isRightBoundary = spaceInfo.droppedCeiling?.enabled && spaceInfo.droppedCeiling?.position === 'right';
                   const gapKey = isRightBoundary ? 'middle' : 'right';
                   const curVal = isRightBoundary ? (spaceInfo.gapConfig?.middle ?? 1.5) : (spaceInfo.gapConfig?.right ?? 1.5);

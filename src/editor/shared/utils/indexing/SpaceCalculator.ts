@@ -19,13 +19,16 @@ export class SpaceCalculator {
   static calculateInternalWidth(spaceInfo: SpaceInfo, hasLeftFurniture: boolean = false, hasRightFurniture: boolean = false): number {
     // 프레임 두께 계산 (surroundType, frameSize 등 고려)
     const frameThickness = calculateFrameThickness(spaceInfo, hasLeftFurniture, hasRightFurniture);
-    
-    // 전체 폭
+
+    // 전체 폭 (사용자가 입력한 width는 가구공간. 커튼박스는 별도로 저장되므로 차감하지 않음)
     const totalWidth = spaceInfo.width;
-    
+
+    // 커튼박스 있는 쪽 이격은 가구공간에서 빼지 않음 (커튼박스 별도 취급)
+    const cbOnLeft = !!(spaceInfo.curtainBox?.enabled && spaceInfo.curtainBox?.position === 'left');
+    const cbOnRight = !!(spaceInfo.curtainBox?.enabled && spaceInfo.curtainBox?.position === 'right');
+
     // 내경 계산: 노서라운드인 경우 전체 너비 사용, 서라운드인 경우 프레임 두께 고려
     if (spaceInfo.surroundType === 'no-surround') {
-      // 노서라운드: gapConfig를 기반으로 내경 계산 (엔드패널 및 벽 이격 반영)
       const leftGap = spaceInfo.gapConfig?.left;
       const rightGap = spaceInfo.gapConfig?.right;
 
@@ -33,23 +36,17 @@ export class SpaceCalculator {
       let rightReduction = 0;
 
       if (spaceInfo.installType === 'builtin' || spaceInfo.installType === 'built-in') {
-        // 빌트인은 최소 2mm 이격을 유지하고 나머지는 gapConfig 사용
-        leftReduction = leftGap ?? 2;
-        rightReduction = rightGap ?? 2;
+        leftReduction = cbOnLeft ? 0 : (leftGap ?? 2);
+        rightReduction = cbOnRight ? 0 : (rightGap ?? 2);
       } else if (spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') {
-        // 세미스탠딩: 벽이 있는 쪽만 이격거리, 반대쪽은 엔드패널
-        // wallConfig를 확인하여 어느 쪽에 벽이 있는지 판단
         if (spaceInfo.wallConfig?.left) {
-          // 좌측 벽: 좌측은 이격거리, 우측은 엔드패널
-          leftReduction = leftGap || 0;
-          rightReduction = 0;  // 우측은 엔드패널이므로 내경에서 빼지 않음
+          leftReduction = cbOnLeft ? 0 : (leftGap || 0);
+          rightReduction = 0;
         } else {
-          // 우측 벽: 우측은 이격거리, 좌측은 엔드패널
-          leftReduction = 0;  // 좌측은 엔드패널이므로 내경에서 빼지 않음
-          rightReduction = rightGap || 0;
+          leftReduction = 0;
+          rightReduction = cbOnRight ? 0 : (rightGap || 0);
         }
       } else {
-        // 프리스탠딩: 양쪽 모두 엔드패널이므로 내경에서 빼지 않음
         leftReduction = 0;
         rightReduction = 0;
       }

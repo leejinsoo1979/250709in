@@ -455,7 +455,18 @@ export const useSpaceConfigStore = create<SpaceConfigState>()((set) => ({
 
       // 자유배치 모드에서는 슬롯 정수화 불필요 — gapConfig 보존
       const isFreeMode = tempSpaceInfo.layoutMode === 'free-placement';
-      if (shouldAdjust && !isGapConfigOnly && !isFreeMode) {
+      // 커튼박스 활성 시에도 정수 슬롯 자동 조정 스킵 (커튼박스쪽 이격 자동 변경 방지)
+      const hasCurtainBox = !!tempSpaceInfo.curtainBox?.enabled;
+      // 커튼박스 있는 쪽 이격은 항상 0으로 강제 (가구공간↔커튼박스 경계 이격 없음)
+      if (hasCurtainBox && tempSpaceInfo.gapConfig) {
+        const cbPos = tempSpaceInfo.curtainBox?.position;
+        if (cbPos === 'left' && tempSpaceInfo.gapConfig.left !== 0) {
+          tempSpaceInfo.gapConfig = { ...tempSpaceInfo.gapConfig, left: 0 };
+        } else if (cbPos === 'right' && tempSpaceInfo.gapConfig.right !== 0) {
+          tempSpaceInfo.gapConfig = { ...tempSpaceInfo.gapConfig, right: 0 };
+        }
+      }
+      if (shouldAdjust && !isGapConfigOnly && !isFreeMode && !hasCurtainBox) {
         console.log('🔍 [이격 디버그] adjustForIntegerSlotWidth 호출 전:', {
           gapConfig: tempSpaceInfo.gapConfig,
           width: tempSpaceInfo.width,

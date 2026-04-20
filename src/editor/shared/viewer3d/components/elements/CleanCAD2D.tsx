@@ -5669,7 +5669,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         const mid = module.moduleId || '';
         const isShelf = mid.includes('-shelf-') && !mid.includes('drawer');
         if (!isShelf) return null;
-        const moduleData = getModuleById(mid, { width: spaceInfo.width, height: spaceInfo.height, depth: spaceInfo.depth }, spaceInfo);
+        const moduleData = getModuleById(mid, calculateInternalSpace(spaceInfo), spaceInfo);
         if (!moduleData) return null;
         const effectiveSections = ((module as any).customSections || moduleData.modelConfig?.sections || []) as any[];
         if (!effectiveSections || effectiveSections.length === 0) return null;
@@ -5709,16 +5709,28 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           const n = posArr.length;
           if (n === 0) { sectionBottomMm += sectionHeight; return; }
           const halfT = basicThickness / 2;
-          // 실제 렌더 공식: pos[i]는 섹션 바닥에서 선반 중심까지 거리
-          //  첫 칸 = pos[0] - halfT
-          //  중간 = pos[i+1] - pos[i] - t
-          //  마지막 = sectionHeight - pos[N-1] - halfT
-          const gaps: number[] = [];
-          gaps.push(Math.max(0, Math.round(posArr[0] - halfT)));
-          for (let i = 0; i < n - 1; i++) {
-            gaps.push(Math.max(0, Math.round(posArr[i + 1] - posArr[i] - basicThickness)));
-          }
-          gaps.push(Math.max(0, Math.round(sectionHeight - posArr[n - 1] - halfT)));
+          // 섹션 외경을 spaceInfo의 실시간 값으로 재계산
+          // 가구 외경 = 공간높이 - 상부프레임 - 받침대
+          // 마지막(상부) 섹션 외경 = 가구 외경 - 고정섹션합
+          // 첫(하부) 섹션 외경 = section.height 그대로 (고정 섹션)
+          const topFrameRuntime = spaceInfo.frameSize?.top ?? 30;
+          // 가구 개별 baseFrameHeight 우선, 없으면 글로벌 spaceInfo 사용
+          const baseFrameRuntime = (module as any).baseFrameHeight !== undefined
+            ? (module as any).baseFrameHeight
+            : (spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height ?? 60) : 0);
+          const furnitureOuterRuntime = (spaceInfo.height || 0) - topFrameRuntime - baseFrameRuntime;
+          const fixedSumRuntime = effectiveSections.slice(0, -1).reduce((s: number, sec: any) => s + (sec.height || 0), 0);
+          const isLastSectionRuntime = sectionIdx === effectiveSections.length - 1;
+          const sectionOuterH = isLastSectionRuntime
+            ? Math.max(0, furnitureOuterRuntime - fixedSumRuntime)
+            : ((section.height as number) || sectionHeight);
+          const innerH = Math.max(0, sectionOuterH - 2 * basicThickness);
+          // eslint-disable-next-line no-console
+          console.log('[FINAL]', { sIdx: sectionIdx, outerH: sectionOuterH, innerH, pos: posArr, baseFrame: baseFrameRuntime, topFrame: topFrameRuntime, spaceH: spaceInfo.height });
+          // 치수 라벨: 균등 공식, 소수점 1자리까지
+          const gEvenRaw = (innerH - n * basicThickness) / (n + 1);
+          const gEven = Math.round(gEvenRaw * 10) / 10;
+          const gaps: number[] = Array(n + 1).fill(gEven);
           // 각 칸 중심 Y
           const centerYs: number[] = [];
           // 칸1 중심: 바닥에서 gaps[0]/2
@@ -5732,12 +5744,24 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             const safeGap = Math.max(0, Math.round(newGap));
             const updated = [...gaps];
             updated[gapIdx] = safeGap;
-            if (gapIdx !== updated.length - 1) {
-              const lastIdx = updated.length - 1;
-              const sumOthers = updated.reduce((s, v, idx) => idx === lastIdx ? s : s + v, 0);
-              updated[lastIdx] = Math.max(0, Math.round(sectionHeight - sumOthers - n * basicThickness));
+            // 섹션 외경을 spaceInfo 실시간 값으로 재계산 (받침/프레임 변경 즉시 반영)
+            const isLastSec2 = sectionIdx === effectiveSections.length - 1;
+            const sectionOuterH2 = isLastSec2 ? sectionOuterH : ((section.height as number) || sectionHeight);
+            const innerH = Math.max(0, sectionOuterH2 - 2 * basicThickness);
+            const otherCount = updated.length - 1;
+            if (otherCount > 0) {
+              const remaining = innerH - safeGap - n * basicThickness;
+              const eachOther = Math.max(0, Math.round(remaining / otherCount));
+              for (let k = 0; k < updated.length; k++) {
+                if (k !== gapIdx) updated[k] = eachOther;
+              }
+              // 반올림 오차 흡수
+              const lastIdx = gapIdx === updated.length - 1 ? updated.length - 2 : updated.length - 1;
+              const sumAll = updated.reduce((s, v) => s + v, 0);
+              updated[lastIdx] += Math.round(innerH - sumAll - n * basicThickness);
+              updated[lastIdx] = Math.max(0, updated[lastIdx]);
             }
-            // pos[k] = sum(gaps[0..k]) + k*basicThickness + halfT
+            // pos[k] = sum(gaps[0..k]) + k*basicThickness + halfT (선반 중심)
             const newPositions: number[] = [];
             let acc = 0;
             for (let k = 0; k < n; k++) {

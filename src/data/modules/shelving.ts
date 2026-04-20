@@ -384,23 +384,24 @@ const createSingleType4 = (columnWidth: number, maxHeight: number): ModuleData =
 const createSingleEntrywayH = (columnWidth: number, maxHeight: number): ModuleData => {
   const bottomHeight = FURNITURE_SPECS.ENTRYWAY_BOTTOM_HEIGHT; // 1200
   const topHeight = maxHeight - bottomHeight;
+  const _t = FURNITURE_SPECS.BASIC_THICKNESS;
 
   const baseSections: SectionConfig[] = [
-    // 섹션0: 하부 — 신발선반 4개 (177mm 간격) + 속서랍 포함 (1200mm 통합)
+    // 섹션0: 하부 — 신발선반 4개 (균등분할) + 속서랍 포함 (1200mm 통합)
     {
       type: 'shelf',
       heightType: 'absolute',
       height: bottomHeight,
       count: 4,
-      shelfPositions: [177, 354, 531, 708]
+      shelfPositions: calculateEvenShelfPositions(bottomHeight - 2 * _t, 4)
     },
-    // 섹션1: 상부 — 다보선반 4개 (내경: 205, 171, 171, 171, 나머지)
+    // 섹션1: 상부 — 다보선반 4개 (균등분할)
     {
       type: 'shelf',
       heightType: 'absolute',
       height: topHeight,
       count: 4,
-      shelfPositions: [205, 376, 547, 718]
+      shelfPositions: calculateEvenShelfPositions(topHeight - 2 * _t, 4)
     }
   ];
 
@@ -466,13 +467,13 @@ export const calculateEvenShelfPositions = (
   basicThickness: number = FURNITURE_SPECS.BASIC_THICKNESS
 ): number[] => {
   if (shelfCount <= 0) return [];
-  // 선반이 차지하는 두께를 고려한 균등 분할
-  const totalShelfThickness = shelfCount * basicThickness;
-  const availableSpace = sectionHeight - totalShelfThickness;
-  const spacing = availableSpace / (shelfCount + 1);
-
+  // 호출부에서 이미 내경(sectionHeight - 2t)을 전달한다고 가정
+  // 균등 칸 내경 g = (내경 - N*t) / (N+1)
+  // pos[i] = (i+1)*g + i*t + t/2 (섹션 바닥 기준)
+  const halfT = basicThickness / 2;
+  const g = (sectionHeight - shelfCount * basicThickness) / (shelfCount + 1);
   return Array.from({ length: shelfCount }, (_, i) => {
-    return Math.round(spacing * (i + 1) + basicThickness * i);
+    return Math.round((i + 1) * g + i * basicThickness + halfT);
   });
 };
 
@@ -487,8 +488,8 @@ const createSingleShelf = (columnWidth: number, maxHeight: number): ModuleData =
   const topHeight = maxHeight - bottomHeight;
   const bottomShelfCount = 2;
   const topShelfCount = 3;
-  const bottomPositions = calculateEvenShelfPositions(bottomHeight, bottomShelfCount);
-  const topPositions = calculateEvenShelfPositions(topHeight, topShelfCount);
+  const bottomPositions = calculateEvenShelfPositions(bottomHeight - 2 * FURNITURE_SPECS.BASIC_THICKNESS, bottomShelfCount);
+  const topPositions = calculateEvenShelfPositions(topHeight - 2 * FURNITURE_SPECS.BASIC_THICKNESS, topShelfCount);
 
   const baseSections: SectionConfig[] = [
     {
@@ -535,7 +536,7 @@ const createSingle4DrawerShelf = (columnWidth: number, maxHeight: number): Modul
   const drawerHeight = FURNITURE_SPECS.TYPE4_DRAWER_HEIGHT; // 1000mm
   const shelfSectionHeight = maxHeight - drawerHeight;
   const defaultShelfCount = 3;
-  const shelfPositions = calculateEvenShelfPositions(shelfSectionHeight, defaultShelfCount);
+  const shelfPositions = calculateEvenShelfPositions(shelfSectionHeight - 2 * FURNITURE_SPECS.BASIC_THICKNESS, defaultShelfCount);
 
   const baseSections: SectionConfig[] = [
     {
@@ -583,7 +584,7 @@ const createSingle2DrawerShelf = (columnWidth: number, maxHeight: number): Modul
   const drawerHeight = FURNITURE_SPECS.TYPE1_DRAWER_HEIGHT; // 600mm
   const shelfSectionHeight = maxHeight - drawerHeight;
   const defaultShelfCount = 3;
-  const shelfPositions = calculateEvenShelfPositions(shelfSectionHeight, defaultShelfCount);
+  const shelfPositions = calculateEvenShelfPositions(shelfSectionHeight - 2 * FURNITURE_SPECS.BASIC_THICKNESS, defaultShelfCount);
 
   const baseSections: SectionConfig[] = [
     {
@@ -922,14 +923,13 @@ const createDualType6 = (dualColumnWidth: number, maxHeight: number, slotWidths?
 const createDualEntrywayH = (dualColumnWidth: number, maxHeight: number, slotWidths?: number[]): ModuleData => {
   const bottomHeight = FURNITURE_SPECS.ENTRYWAY_BOTTOM_HEIGHT;
   const topHeight = maxHeight - bottomHeight;
+  const _t = FURNITURE_SPECS.BASIC_THICKNESS;
 
   const baseSections: SectionConfig[] = [
-    // 섹션0: 하부 — 신발선반 4개 + 속서랍 포함 (1200mm 통합)
     { type: 'shelf', heightType: 'absolute', height: bottomHeight, count: 4,
-      shelfPositions: [177, 354, 531, 708] },
-    // 섹션1: 상부 — 다보선반 4개
+      shelfPositions: calculateEvenShelfPositions(bottomHeight - 2 * _t, 4) },
     { type: 'shelf', heightType: 'absolute', height: topHeight, count: 4,
-      shelfPositions: [205, 376, 547, 718] }
+      shelfPositions: calculateEvenShelfPositions(topHeight - 2 * _t, 4) }
   ];
 
   const widthForId = Math.round(dualColumnWidth * 100) / 100;
@@ -1004,8 +1004,8 @@ const createDualShelf = (dualColumnWidth: number, maxHeight: number, slotWidths?
   const topHeight = maxHeight - bottomHeight;
   const bottomShelfCount = 2;
   const topShelfCount = 3;
-  const bottomPositions = calculateEvenShelfPositions(bottomHeight, bottomShelfCount);
-  const topPositions = calculateEvenShelfPositions(topHeight, topShelfCount);
+  const bottomPositions = calculateEvenShelfPositions(bottomHeight - 2 * FURNITURE_SPECS.BASIC_THICKNESS, bottomShelfCount);
+  const topPositions = calculateEvenShelfPositions(topHeight - 2 * FURNITURE_SPECS.BASIC_THICKNESS, topShelfCount);
 
   const baseSections: SectionConfig[] = [
     {
@@ -1053,7 +1053,7 @@ const createDual4DrawerShelf = (dualColumnWidth: number, maxHeight: number, slot
   const drawerHeight = FURNITURE_SPECS.TYPE4_DRAWER_HEIGHT;
   const shelfSectionHeight = maxHeight - drawerHeight;
   const defaultShelfCount = 3;
-  const shelfPositions = calculateEvenShelfPositions(shelfSectionHeight, defaultShelfCount);
+  const shelfPositions = calculateEvenShelfPositions(shelfSectionHeight - 2 * FURNITURE_SPECS.BASIC_THICKNESS, defaultShelfCount);
 
   const baseSections: SectionConfig[] = [
     {
@@ -1102,7 +1102,7 @@ const createDual2DrawerShelf = (dualColumnWidth: number, maxHeight: number, slot
   const drawerHeight = FURNITURE_SPECS.TYPE1_DRAWER_HEIGHT;
   const shelfSectionHeight = maxHeight - drawerHeight;
   const defaultShelfCount = 3;
-  const shelfPositions = calculateEvenShelfPositions(shelfSectionHeight, defaultShelfCount);
+  const shelfPositions = calculateEvenShelfPositions(shelfSectionHeight - 2 * FURNITURE_SPECS.BASIC_THICKNESS, defaultShelfCount);
 
   const baseSections: SectionConfig[] = [
     {

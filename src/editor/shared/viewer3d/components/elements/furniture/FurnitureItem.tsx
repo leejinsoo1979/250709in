@@ -3501,8 +3501,13 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                 furnitureId: placedModule.id
               });
 
+              // customSections의 선반 갯수 변경 시 BoxModule 리마운트 (고스트 포함 즉시 반영)
+              const customSectionsKey = adjustedCustomSections
+                ? adjustedCustomSections.map((s: any) => `${s.count || 0}`).join('|')
+                : '';
               return (
                 <BoxModule
+                  key={`boxmodule-${placedModule.id}-${customSectionsKey}`}
                   moduleData={actualModuleData}
                   isDragging={isDraggingThis} // 드래그 중에만 고스트 투명 표시 (내부 선반/서랍 숨김)
                   isEditMode={isEditModeForView} // 편집 모드 고스트: 측면/상면뷰에서는 숨김
