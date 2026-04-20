@@ -21,6 +21,7 @@ import {
 import { calculateSpaceIndexing, ColumnIndexer } from '@/editor/shared/utils/indexing';
 import { computeBaseStripGroups, computeTopStripGroups, getBaseFrameBoundsX, getLowerDepthZOffsetMM } from '@/editor/shared/utils/baseStripUtils';
 import { getModuleBoundsX, getModuleCategory } from '@/editor/shared/utils/freePlacementUtils';
+import { getModuleById } from '@/data/modules';
 import { MaterialFactory } from '../../utils/materials/MaterialFactory';
 import { useSpace3DView } from '../../context/useSpace3DView';
 import PlacedFurnitureContainer from './furniture/PlacedFurnitureContainer';
@@ -1319,9 +1320,15 @@ const Room: React.FC<RoomProps> = ({
         : (id.startsWith('lower-') || id.includes('-lower-')) ? 'lower'
         : 'full';
       const hMm = (m.freeHeight || m.customHeight || 0);
-      // 실제 측판 높이: freeHeight/customHeight가 있으면 사용, 없으면 785(기본 하부장 측판)
+      // 모듈 데이터에서 실제 높이 가져오기 (freeHeight/customHeight > 모듈 정의 height > 기본)
+      let moduleDataH = 0;
+      try {
+        const internalSp = { width: spaceInfo.width, height: spaceInfo.height, depth: spaceInfo.depth || 1500 };
+        const md = getModuleById(m.moduleId, internalSp, spaceInfo);
+        if (md?.dimensions?.height) moduleDataH = md.dimensions.height;
+      } catch { /* noop */ }
       const defaultCabH = cat === 'lower' ? 785 : cat === 'upper' ? 785 : (spaceInfo.height - topFrameMM - floorFinishMM - baseH);
-      const cabHeight = hMm > 0 ? hMm : defaultCabH;
+      const cabHeight = hMm > 0 ? hMm : (moduleDataH > 0 ? moduleDataH : defaultCabH);
       // position.y (three.js, floorFinish 기준 mm): 가구 중심 Y
       const posYmm = Math.round((m.position?.y ?? 0) * 100);
       // 상부장 도어 하단 확장 갭 (가구 바닥보다 아래로 확장)
@@ -1336,7 +1343,8 @@ const Room: React.FC<RoomProps> = ({
         topMm = spaceInfo.height;
       } else if (cat === 'lower') {
         bottomMm = 0;
-        topMm = posYmm + cabHeight / 2;
+        // 하부장 프레임 상단 = floorFinish + 받침대 + 실제 하부장 높이
+        topMm = floorFinishMM + baseH + cabHeight;
       } else {
         bottomMm = 0;
         topMm = spaceInfo.height;
