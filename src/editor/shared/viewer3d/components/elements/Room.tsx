@@ -6010,12 +6010,17 @@ const Room: React.FC<RoomProps> = ({
               const subFrameMat = leftSubFrameMaterial ?? createFrameMaterial('left');
 
               // 분절 모드: 좌측 최외곽이 상/하부만 → 각 가구 높이/Z/깊이에 맞춰 세로 서브프레임 조각들
+              //  - 상부장 옆 내측 서브프레임은 하단 18mm(하부마감판 두께)만큼 위로 올려 마감판 위에 얹음
               if (isLeftFrameSplit && spaceInfo.surroundType !== 'no-surround') {
                 return (
                   <>
                     {leftOuterMods.map((om, idx) => {
-                      const segH = mmToThreeUnits(om.heightMm);
-                      const segCY = panelStartY + mmToThreeUnits(om.bottomMm) + segH / 2;
+                      const BOTTOM_PANEL_MM = 18;
+                      const isUpperSub = om.category === 'upper';
+                      const adjustedHeightMm = isUpperSub ? Math.max(0, om.heightMm - BOTTOM_PANEL_MM) : om.heightMm;
+                      const adjustedBottomMm = isUpperSub ? om.bottomMm + BOTTOM_PANEL_MM : om.bottomMm;
+                      const segH = mmToThreeUnits(adjustedHeightMm);
+                      const segCY = panelStartY + mmToThreeUnits(adjustedBottomMm) + segH / 2;
                       const refDepthMm = 600;
                       const depthDiff = mmToThreeUnits(refDepthMm - om.depthMm);
                       const segSubZ = subFrameZ - depthDiff;
@@ -6226,8 +6231,12 @@ const Room: React.FC<RoomProps> = ({
                 return (
                   <>
                     {rightOuterMods.map((om, idx) => {
-                      const segH = mmToThreeUnits(om.heightMm);
-                      const segCY = panelStartY + mmToThreeUnits(om.bottomMm) + segH / 2;
+                      const BOTTOM_PANEL_MM = 18;
+                      const isUpperSub = om.category === 'upper';
+                      const adjustedHeightMm = isUpperSub ? Math.max(0, om.heightMm - BOTTOM_PANEL_MM) : om.heightMm;
+                      const adjustedBottomMm = isUpperSub ? om.bottomMm + BOTTOM_PANEL_MM : om.bottomMm;
+                      const segH = mmToThreeUnits(adjustedHeightMm);
+                      const segCY = panelStartY + mmToThreeUnits(adjustedBottomMm) + segH / 2;
                       const refDepthMm = 600;
                       const depthDiff = mmToThreeUnits(refDepthMm - om.depthMm);
                       const segSubZ = subFrameZ - depthDiff;
