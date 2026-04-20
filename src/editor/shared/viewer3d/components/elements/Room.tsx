@@ -1323,9 +1323,10 @@ const Room: React.FC<RoomProps> = ({
       const cabHeight = hMm > 0 ? hMm : defaultCabH;
       // position.y (three.js, floorFinish 기준 mm): 가구 중심 Y
       const posYmm = Math.round((m.position?.y ?? 0) * 100);
+      const TOP_PANEL_THK_MM = 18; // 하부장 상판 두께
       // 좌/우 서라운드 프레임 Y 범위
       //  - upper: 상부장 하단 ~ 공간 천장 (상부 프레임까지 커버)
-      //  - lower: 공간 바닥(0) ~ 하부장 상단 (하부 받침대 포함)
+      //  - lower: 공간 바닥(0) ~ 하부장 상단 - 상판 두께 (상판이 프레임을 덮음)
       let bottomMm: number;
       let topMm: number;
       if (cat === 'upper') {
@@ -1333,7 +1334,7 @@ const Room: React.FC<RoomProps> = ({
         topMm = spaceInfo.height;
       } else if (cat === 'lower') {
         bottomMm = 0;
-        topMm = posYmm + cabHeight / 2;
+        topMm = posYmm + cabHeight / 2 - TOP_PANEL_THK_MM;
       } else {
         bottomMm = 0;
         topMm = spaceInfo.height;
