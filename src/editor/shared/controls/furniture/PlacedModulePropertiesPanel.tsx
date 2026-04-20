@@ -4500,13 +4500,11 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                   </div>
                   {(() => {
                     let shelfPos: number[] = [...((section.shelfPositions || []) as number[])].sort((a, b) => a - b);
-                    console.log('🟣 [팝업 선반 debug]', { sectionIdx, sectionHeight, rawShelfPos: [...shelfPos], count });
                     if (shelfPos.length === 0) return null;
                     const maxPos = shelfPos[shelfPos.length - 1];
                     if (maxPos < sectionHeight * 0.5) {
                       const even = sectionHeight / (shelfPos.length + 1);
                       shelfPos = shelfPos.map((_, i) => Math.round(even * (i + 1)));
-                      console.log('🟣 [팝업 복구됨]', shelfPos);
                     }
                     const gaps: number[] = [];
                     const sorted = shelfPos;
@@ -4570,7 +4568,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                                   className={styles.depthInput}
                                   style={{
                                     color: '#000000', backgroundColor: '#ffffff',
-                                    WebkitTextFillColor: '#000000', opacity: 1, width: '60px'
+                                    WebkitTextFillColor: '#000000', opacity: 1, width: '80px'
                                   }}
                                 />
                                 <span className={styles.unit}>mm</span>
