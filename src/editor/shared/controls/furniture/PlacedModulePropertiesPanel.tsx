@@ -966,7 +966,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
         const cc = currentPlacedModule.customConfig;
         if (cc && cc.sections && cc.sections.length > 0) {
           const pt = cc.panelThickness || 18;
-          const totalDepth = currentPlacedModule.freeDepth || moduleData.dimensions.depth;
+          const totalDepth = currentPlacedModule.customDepth || currentPlacedModule.freeDepth || moduleData.dimensions.depth;
           const totalWidth = currentPlacedModule.freeWidth || currentPlacedModule.customWidth || moduleData.dimensions.width;
           const hInputs: Record<number, string> = {};
           const dInputs: Record<number, string> = {};
@@ -1018,7 +1018,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
             const pt = moduleData.modelConfig?.basicThickness || 18;
             // moduleData는 zone 반영된 getModuleById로 조회되므로 dimensions.height에 단내림이 반영됨
             const totalH = currentPlacedModule.freeHeight || moduleData.dimensions.height;
-            const totalD = currentPlacedModule.freeDepth || moduleData.dimensions.depth;
+            const totalD = currentPlacedModule.customDepth || currentPlacedModule.freeDepth || moduleData.dimensions.depth;
             const totalW = currentPlacedModule.freeWidth || moduleData.dimensions.width;
             const dimH = moduleData.dimensions.height; // 원래 모듈 높이
             const hInputs: Record<number, string> = {};
@@ -1146,7 +1146,10 @@ const PlacedModulePropertiesPanel: React.FC = () => {
       // 2섹션 가구의 섹션 깊이 초기화
       const sections = currentPlacedModule.customSections || moduleData.modelConfig?.sections || [];
       if (sections.length === 2) {
-        const defaultDepth = moduleData.dimensions.depth;
+        // customDepth/freeDepth 우선 (신발장 380 등), 없으면 모듈 템플릿 깊이
+        const defaultDepth = currentPlacedModule.customDepth
+          ?? currentPlacedModule.freeDepth
+          ?? moduleData.dimensions.depth;
 
         // 저장된 섹션별 깊이가 있으면 사용, 없으면 defaultDepth 사용하고 저장
         const lowerDepth = currentPlacedModule.lowerSectionDepth ?? defaultDepth;
@@ -2058,7 +2061,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
     if (!sec?.horizontalSplit) return;
     const inputMap = { left: hsLeftDepthInput, right: hsRightDepthInput, center: hsCenterDepthInput };
     const val = parseInt(inputMap[side][sIdx] || '0', 10);
-    const totalDepth = currentPlacedModule.freeDepth || 580;
+    const totalDepth = currentPlacedModule.customDepth || currentPlacedModule.freeDepth || 580;
     if (isNaN(val) || val < 100 || val > 800) {
       const orig = (sec.horizontalSplit as any)[`${side}Depth`] || totalDepth;
       const setMap = { left: setHsLeftDepthInput, right: setHsRightDepthInput, center: setHsCenterDepthInput };
@@ -2913,7 +2916,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
             const pt = isCustom ? (cc!.panelThickness || 18) : (moduleData?.modelConfig?.basicThickness || 18);
             const totalH = currentPlacedModule.freeHeight || moduleData?.dimensions?.height || 2200;
             const totalW = currentPlacedModule.freeWidth || moduleData?.dimensions?.width || 600;
-            const totalD = currentPlacedModule.freeDepth || moduleData?.dimensions?.depth || 580;
+            const totalD = currentPlacedModule.customDepth || currentPlacedModule.freeDepth || moduleData?.dimensions?.depth || 580;
 
             // 표준 가구의 섹션 높이: shelving.ts에서 정의한 sec.height 그대로 사용
             // freeHeight로 높이 변경 시 마지막 섹션만 차이를 흡수
