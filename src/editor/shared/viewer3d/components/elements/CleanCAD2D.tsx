@@ -1568,8 +1568,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           const furnitureRight = spaceRight - (cbEnabledTop && cbPositionTop === 'right' ? mmToThreeUnits(cbWidthTop) : 0);
           const furnitureWidth = spaceInfo.width - cbWidthTop;
 
-          const DimSegment: React.FC<{ left: number; right: number; label: number; }> = ({ left, right, label }) => (
-            <>
+          const renderDimSegment = (left: number, right: number, label: number, keyId: string) => (
+            <React.Fragment key={keyId}>
               <NativeLine name="dimension_line"
                 points={[[left, topDimensionY, 0.002], [right, topDimensionY, 0.002]]}
                 color={dimensionColor} lineWidth={0.6} renderOrder={100000} depthTest={false}
@@ -1592,23 +1592,21 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   {Math.round(label)}
                 </Text>
               )}
-            </>
+            </React.Fragment>
           );
 
           return (
             <>
               {/* 좌측 커튼박스 구간 치수 */}
-              {cbEnabledTop && cbPositionTop === 'left' && (
-                <DimSegment left={spaceLeft} right={furnitureLeft} label={cbWidthTop} />
-              )}
+              {cbEnabledTop && cbPositionTop === 'left' &&
+                renderDimSegment(spaceLeft, furnitureLeft, cbWidthTop, 'dim-cb-left')}
 
               {/* 가구 배치 공간 치수 */}
-              <DimSegment left={furnitureLeft} right={furnitureRight} label={furnitureWidth} />
+              {renderDimSegment(furnitureLeft, furnitureRight, furnitureWidth, 'dim-furniture')}
 
               {/* 우측 커튼박스 구간 치수 */}
-              {cbEnabledTop && cbPositionTop === 'right' && (
-                <DimSegment left={furnitureRight} right={spaceRight} label={cbWidthTop} />
-              )}
+              {cbEnabledTop && cbPositionTop === 'right' &&
+                renderDimSegment(furnitureRight, spaceRight, cbWidthTop, 'dim-cb-right')}
 
               {/* 연장선 (최좌측) */}
               <NativeLine name="dimension_line"

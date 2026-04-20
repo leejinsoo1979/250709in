@@ -1151,9 +1151,14 @@ const PlacedModulePropertiesPanel: React.FC = () => {
           ?? currentPlacedModule.freeDepth
           ?? moduleData.dimensions.depth;
 
-        // 저장된 섹션별 깊이가 있으면 사용, 없으면 defaultDepth 사용하고 저장
-        const lowerDepth = currentPlacedModule.lowerSectionDepth ?? defaultDepth;
-        const upperDepth = currentPlacedModule.upperSectionDepth ?? defaultDepth;
+        // customDepth가 있으면 저장된 섹션 깊이보다 우선 (신발장 380 등 전체 깊이 변경 반영)
+        // 단, 기존에 사용자가 개별 섹션 깊이를 다르게 설정한 경우는 존중
+        const storedLower = currentPlacedModule.lowerSectionDepth;
+        const storedUpper = currentPlacedModule.upperSectionDepth;
+        const hasCustomDepth = currentPlacedModule.customDepth !== undefined;
+        const sectionsDiffer = storedLower !== undefined && storedUpper !== undefined && storedLower !== storedUpper;
+        const lowerDepth = (hasCustomDepth && !sectionsDiffer) ? defaultDepth : (storedLower ?? defaultDepth);
+        const upperDepth = (hasCustomDepth && !sectionsDiffer) ? defaultDepth : (storedUpper ?? defaultDepth);
 
         // placedModule에 값이 없었다면 기본값을 실제로 저장
         if (currentPlacedModule.lowerSectionDepth === undefined || currentPlacedModule.upperSectionDepth === undefined) {
@@ -2955,11 +2960,14 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                   || (isCustom
                     ? Math.round((sec as any).height + 2 * pt).toString()
                     : Math.round(getStdSectionHeightMM(sIdx)).toString());
-                // 깊이 표시값
+                // 깊이 표시값: customDepth가 설정된 경우(신발장 380 등) customDepth 우선
+                const cDepth = currentPlacedModule.customDepth;
                 const displayD = sectionDepthInputs[sIdx]
-                  || (sIdx === 0
-                    ? Math.round(currentPlacedModule.lowerSectionDepth || totalD).toString()
-                    : Math.round(currentPlacedModule.upperSectionDepth || totalD).toString());
+                  || (cDepth !== undefined
+                    ? Math.round(cDepth).toString()
+                    : (sIdx === 0
+                      ? Math.round(currentPlacedModule.lowerSectionDepth || totalD).toString()
+                      : Math.round(currentPlacedModule.upperSectionDepth || totalD).toString()));
                 // 너비 표시값
                 const displayW = sectionWidthInputs[sIdx]
                   || (() => { const v = Math.round(((sec as any).width || totalW) * 10) / 10; return v % 1 === 0 ? v.toString() : v.toFixed(1); })();
