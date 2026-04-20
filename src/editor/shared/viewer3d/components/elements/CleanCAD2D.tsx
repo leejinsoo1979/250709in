@@ -5831,14 +5831,14 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 zIndexRange={[5000, 0]}
                 transform={false}
               >
-                <div style={{ display: 'inline-flex', flexDirection: 'column' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '24px', lineHeight: 0 }}>
                   <button
                     type="button"
                     onMouseDown={(e) => e.preventDefault()}
                     onClick={(e) => { e.stopPropagation(); applyGapEdit(k, gaps[k] + 1); }}
                     style={{
                       width: '24px', height: '14px', fontSize: '10px', lineHeight: '1',
-                      padding: 0, cursor: 'pointer',
+                      padding: 0, cursor: 'pointer', margin: 0, boxSizing: 'border-box',
                       color: dimensionColor,
                       background: (typeof document !== 'undefined' && document.documentElement.getAttribute('data-theme') === 'dark') ? '#141414' : '#ffffff',
                       border: `1px solid ${dimensionColor}`, borderRadius: '3px 3px 0 0',
@@ -5851,7 +5851,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     onClick={(e) => { e.stopPropagation(); applyGapEdit(k, Math.max(0, gaps[k] - 1)); }}
                     style={{
                       width: '24px', height: '14px', fontSize: '10px', lineHeight: '1',
-                      padding: 0, cursor: 'pointer',
+                      padding: 0, cursor: 'pointer', margin: 0, boxSizing: 'border-box',
                       color: dimensionColor,
                       background: (typeof document !== 'undefined' && document.documentElement.getAttribute('data-theme') === 'dark') ? '#141414' : '#ffffff',
                       border: `1px solid ${dimensionColor}`, borderTop: 'none',
