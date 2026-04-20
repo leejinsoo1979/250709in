@@ -443,6 +443,14 @@ export function placeFurnitureAtSlot(params: PlaceFurnitureParams): PlaceFurnitu
     });
   }
 
+  // 신발장 카테고리: 기본 깊이 380mm
+  if (customDepth === undefined) {
+    const isShoeCabinet = furnitureId.includes('-entryway-') || furnitureId.includes('-shelf-') || furnitureId.includes('-4drawer-shelf-') || furnitureId.includes('-2drawer-shelf-');
+    if (isShoeCabinet) {
+      customDepth = Math.min(380, spaceInfo.depth);
+    }
+  }
+
   const newModule: PlacedModule = {
     id: uuidv4(),
     moduleId: furnitureId,

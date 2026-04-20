@@ -303,6 +303,15 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
         }
       }
 
+      // 신발장 카테고리 기본 깊이 380mm (customDepth 미설정 시)
+      try {
+        const mid = module.moduleId || '';
+        const isShoeCabinet = mid.includes('-entryway-') || mid.includes('-shelf-') || mid.includes('-4drawer-shelf-') || mid.includes('-2drawer-shelf-');
+        if (isShoeCabinet && (module.customDepth === undefined || module.customDepth === null)) {
+          module.customDepth = Math.min(380, spaceInfo.depth || 600);
+        }
+      } catch {}
+
       // 도어 설치 토글 상태를 신규 가구에 자동 반영
       let intent = false;
       let doorsOpen: boolean | null = null;
