@@ -5787,58 +5787,78 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 zIndexRange={[5000, 0]}
                 transform={false}
               >
-                <div style={{ display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
+                <input
+                  type="text"
+                  defaultValue={String(g)}
+                  key={`inp-${module.id}-${sectionIdx}-${i}-${g}`}
+                  onBlur={(e) => {
+                    const v = parseInt(e.target.value, 10);
+                    if (!isNaN(v) && v !== g) applyGapEdit(i, v);
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') (e.target as HTMLInputElement).blur();
+                    else if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                      e.preventDefault();
+                      const cur = parseInt((e.target as HTMLInputElement).value, 10) || 0;
+                      applyGapEdit(i, cur + (e.key === 'ArrowUp' ? 1 : -1));
+                    }
+                  }}
+                  style={{
+                    width: '56px', fontSize: '11px', textAlign: 'center',
+                    color: dimensionColor,
+                    background: (typeof document !== 'undefined' && document.documentElement.getAttribute('data-theme') === 'dark') ? '#141414' : '#ffffff',
+                    border: `1px solid ${dimensionColor}`, borderRadius: '2px',
+                    padding: '1px 2px', outline: 'none',
+                    WebkitTextFillColor: dimensionColor, opacity: 1,
+                  }}
+                />
+              </Html>
+            );
+          });
+          // 스피너: 각 선반(posArr[k]) 위에 배치 — 선반 위로/아래로 1mm 이동
+          posArr.forEach((pos, k) => {
+            const shelfYmm = sectionBottomMm + pos;
+            const shelfYThree = mmToThreeUnits(shelfYmm);
+            // 선반 k는 gaps[k](아래 칸)과 gaps[k+1](위 칸) 사이
+            // ▲: 선반을 위로 = 위 칸(gaps[k+1]) 축소, 아래 칸(gaps[k]) 확장 → gaps[k] + 1
+            // ▼: 선반을 아래로 = 위 칸(gaps[k+1]) 확장, 아래 칸(gaps[k]) 축소 → gaps[k] - 1
+            output.push(
+              <Html
+                key={`shelf-spinner-${module.id}-${sectionIdx}-${k}`}
+                position={[labelX, shelfYThree, 0.02]}
+                center
+                style={{ pointerEvents: 'auto' }}
+                zIndexRange={[5000, 0]}
+                transform={false}
+              >
+                <div style={{ display: 'inline-flex', flexDirection: 'column' }}>
                   <button
                     type="button"
                     onMouseDown={(e) => e.preventDefault()}
-                    onClick={(e) => { e.stopPropagation(); applyGapEdit(i, Math.max(0, g - 1)); }}
+                    onClick={(e) => { e.stopPropagation(); applyGapEdit(k, gaps[k] + 1); }}
                     style={{
-                      width: '18px', height: '20px', fontSize: '11px', lineHeight: '1',
+                      width: '24px', height: '14px', fontSize: '10px', lineHeight: '1',
                       padding: 0, cursor: 'pointer',
                       color: dimensionColor,
                       background: (typeof document !== 'undefined' && document.documentElement.getAttribute('data-theme') === 'dark') ? '#141414' : '#ffffff',
-                      border: `1px solid ${dimensionColor}`, borderRadius: '3px',
+                      border: `1px solid ${dimensionColor}`, borderRadius: '3px 3px 0 0',
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
                     }}
-                  >◀</button>
-                  <input
-                    type="text"
-                    defaultValue={String(g)}
-                    key={`inp-${module.id}-${sectionIdx}-${i}-${g}`}
-                    onBlur={(e) => {
-                      const v = parseInt(e.target.value, 10);
-                      if (!isNaN(v) && v !== g) applyGapEdit(i, v);
-                    }}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') (e.target as HTMLInputElement).blur();
-                      else if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
-                        e.preventDefault();
-                        const cur = parseInt((e.target as HTMLInputElement).value, 10) || 0;
-                        applyGapEdit(i, cur + (e.key === 'ArrowUp' ? 1 : -1));
-                      }
-                    }}
-                    style={{
-                      width: '50px', fontSize: '11px', textAlign: 'center',
-                      color: dimensionColor,
-                      background: (typeof document !== 'undefined' && document.documentElement.getAttribute('data-theme') === 'dark') ? '#141414' : '#ffffff',
-                      border: `1px solid ${dimensionColor}`, borderRadius: '2px',
-                      padding: '1px 2px', outline: 'none',
-                      WebkitTextFillColor: dimensionColor, opacity: 1,
-                    }}
-                  />
+                  >▲</button>
                   <button
                     type="button"
                     onMouseDown={(e) => e.preventDefault()}
-                    onClick={(e) => { e.stopPropagation(); applyGapEdit(i, g + 1); }}
+                    onClick={(e) => { e.stopPropagation(); applyGapEdit(k, Math.max(0, gaps[k] - 1)); }}
                     style={{
-                      width: '18px', height: '20px', fontSize: '11px', lineHeight: '1',
+                      width: '24px', height: '14px', fontSize: '10px', lineHeight: '1',
                       padding: 0, cursor: 'pointer',
                       color: dimensionColor,
                       background: (typeof document !== 'undefined' && document.documentElement.getAttribute('data-theme') === 'dark') ? '#141414' : '#ffffff',
-                      border: `1px solid ${dimensionColor}`, borderRadius: '3px',
+                      border: `1px solid ${dimensionColor}`, borderTop: 'none',
+                      borderRadius: '0 0 3px 3px',
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
                     }}
-                  >▶</button>
+                  >▼</button>
                 </div>
               </Html>
             );
