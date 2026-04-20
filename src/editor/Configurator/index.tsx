@@ -3410,13 +3410,13 @@ const Configurator: React.FC = () => {
 //     });
 
     if (hasDoorsInstalled) {
-      // 도어 제거: 모든 가구에서 도어 제거
-// console.log('🚪 도어 제거 시도');
+      // 도어 제거: 모든 가구에서 도어 제거 + 앞으로 배치될 가구도 도어 없이
       setAllDoors(false);
+      useUIStore.getState().setDoorInstallIntent(false);
     } else {
-      // 도어 설치: 모든 가구에 도어 설치 (닫힌 상태로 설치)
-// console.log('🚪 도어 설치 시도');
+      // 도어 설치: 모든 가구에 도어 설치 (닫힌 상태로 설치) + 앞으로 배치될 가구도 도어 포함
       setAllDoors(true);
+      useUIStore.getState().setDoorInstallIntent(true);
 
       // 도어 설치 시 닫힌 상태로 유지
       if (doorsOpen !== null) {

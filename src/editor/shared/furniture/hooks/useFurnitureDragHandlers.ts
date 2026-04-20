@@ -3,6 +3,7 @@ import { useThree } from '@react-three/fiber';
 import { SpaceInfo } from '@/store/core/spaceConfigStore';
 import { calculateSpaceIndexing, ColumnIndexer } from '@/editor/shared/utils/indexing';
 import { useFurnitureStore } from '@/store';
+import { useUIStore } from '@/store/uiStore';
 import { useDropPositioning } from './useDropPositioning';
 import { getModuleById } from '@/data/modules';
 import { calculateInternalSpace } from '../../viewer3d/utils/geometry';
@@ -155,7 +156,7 @@ export const useFurnitureDragHandlers = (spaceInfo: SpaceInfo) => {
               slotIndex: targetSlotIndex,
               subSlotPosition: 'left' as const,
               isDualSlot: false,
-              hasDoor: false,
+              hasDoor: useUIStore.getState().doorInstallIntent,
               customDepth: customDepth,
               adjustedWidth: targetSlotInfo.subSlots.left.availableWidth,
               zone: dropPosition.zone || 'normal'
@@ -175,7 +176,7 @@ export const useFurnitureDragHandlers = (spaceInfo: SpaceInfo) => {
               slotIndex: targetSlotIndex,
               subSlotPosition: 'right' as const,
               isDualSlot: false,
-              hasDoor: false,
+              hasDoor: useUIStore.getState().doorInstallIntent,
               customDepth: customDepth,
               adjustedWidth: targetSlotInfo.subSlots.right.availableWidth,
               zone: dropPosition.zone || 'normal'

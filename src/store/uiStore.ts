@@ -44,6 +44,10 @@ interface UIState {
   // 문 열림/닫힘 상태 (전역 오버라이드: true=전체열기, false=전체닫기, null=개별상태)
   doorsOpen: boolean | null;
 
+  // 도어 설치 의도 (토글 상태): 새 가구 배치 시 도어 유무 기본값
+  doorInstallIntent: boolean;
+  setDoorInstallIntent: (v: boolean) => void;
+
   // 개별 도어 열림 상태 (furnitureId-sectionIndex 키로 관리)
   individualDoorsOpen: Record<string, boolean>;
   
@@ -320,6 +324,7 @@ const initialUIState = {
   view2DDirection: 'front' as const,  // 기본값은 정면 뷰
   activeIslandSide: 'front' as const,  // 아일랜드 모드 기본 활성 면
   doorsOpen: null,  // 기본값: null (개별 도어 상태 사용)
+  doorInstallIntent: false,  // 기본값: 도어 없음 배치
   individualDoorsOpen: {} as Record<string, boolean>,  // 개별 도어 열림 상태
   showDimensions: true,  // 기본값: 치수 표시
   showDimensionsText: true,  // 기본값: 치수 텍스트 표시
@@ -448,6 +453,9 @@ export const useUIStore = create<UIState>()(
 
       setDoorsOpen: (open: boolean | null) => {
         set({ doorsOpen: open });
+      },
+      setDoorInstallIntent: (v: boolean) => {
+        set({ doorInstallIntent: v });
       },
 
       toggleIndividualDoor: (furnitureId: string, sectionIndex: number) => {
