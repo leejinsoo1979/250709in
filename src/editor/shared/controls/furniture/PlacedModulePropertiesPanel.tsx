@@ -4496,7 +4496,21 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                       }}
                     >+</button>
                   </div>
-                  {posInputs.length > 0 && (
+                  {posInputs.length > 0 && (() => {
+                    // 각 칸 내경 계산 (선반 사이 간격 - 선반 두께 만큼 빼는 건 선반 위치가 선반 중심이면 불필요)
+                    // shelfPositions은 섹션 바닥에서 선반 바닥까지 거리로 가정. 칸 내경 = 다음위치 - 현재위치 - basicThickness
+                    const posNums = posInputs.map(s => parseInt(s, 10) || 0);
+                    const gaps: number[] = [];
+                    const sorted = [...posNums].sort((a, b) => a - b);
+                    // 칸 0: 섹션 바닥 ~ 선반1 바닥
+                    gaps.push(Math.max(0, Math.round(sorted[0])));
+                    // 중간 칸
+                    for (let i = 0; i < sorted.length - 1; i++) {
+                      gaps.push(Math.max(0, Math.round(sorted[i + 1] - sorted[i] - basicThickness)));
+                    }
+                    // 마지막 칸: 마지막선반 ~ 섹션 상단
+                    gaps.push(Math.max(0, Math.round(sectionHeight - sorted[sorted.length - 1] - basicThickness)));
+                    return (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                       {posInputs.map((posInput, i) => (
                         <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
@@ -4525,8 +4539,19 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                           </div>
                         </div>
                       ))}
+                      {/* 칸별 내경 표시 */}
+                      <div style={{ marginTop: '6px', padding: '6px 8px', background: 'var(--theme-surface-alt, #f7f7f7)', borderRadius: '4px' }}>
+                        <div style={{ fontSize: '11px', color: 'var(--theme-text-secondary)', marginBottom: '4px' }}>칸 내경</div>
+                        {gaps.map((g, i) => (
+                          <div key={i} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: 'var(--theme-text-primary)' }}>
+                            <span>칸 {i + 1}</span>
+                            <span>{g} mm</span>
+                          </div>
+                        ))}
+                      </div>
                     </div>
-                  )}
+                    );
+                  })()}
                 </div>
               );
             };
