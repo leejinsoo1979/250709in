@@ -456,6 +456,9 @@ export const useUIStore = create<UIState>()(
       },
       setDoorInstallIntent: (v: boolean) => {
         set({ doorInstallIntent: v });
+        if (typeof window !== 'undefined') {
+          (window as any).__doorInstallIntent = v;
+        }
       },
 
       toggleIndividualDoor: (furnitureId: string, sectionIndex: number) => {

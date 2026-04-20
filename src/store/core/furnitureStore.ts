@@ -304,23 +304,29 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
       }
 
       // 도어 설치 토글 상태를 신규 가구에 자동 반영
-      // 1) intent=true (명시적 토글 ON)
-      // 2) 기존 가구 중 하나라도 도어 있음 (설치 상태)
-      // 3) 초기값이 설정되지 않은 상태면 uiStore의 doorsOpen이 true일 때도 포함
+      let intent = false;
+      let doorsOpen: boolean | null = null;
       try {
         const uiModule = require('@/store/uiStore');
         const uiState = uiModule.useUIStore.getState();
-        const intent = uiState.doorInstallIntent;
-        const doorsOpen = uiState.doorsOpen; // null | true | false
-        const othersHaveDoor = state.placedModules.length > 0 && state.placedModules.every((m: any) => m.hasDoor === true);
-        const anyOtherHasDoor = state.placedModules.some((m: any) => m.hasDoor === true);
-        const shouldInstall = intent === true || othersHaveDoor || (state.placedModules.length === 0 ? false : anyOtherHasDoor) || doorsOpen === true;
-        if (shouldInstall) {
-          module.hasDoor = true;
-          // intent도 동기화해 다음 배치부터 일관성 유지
-          if (!intent) uiState.setDoorInstallIntent?.(true);
-        }
+        intent = !!uiState.doorInstallIntent;
+        doorsOpen = uiState.doorsOpen;
       } catch {}
+      // window 글로벌 fallback
+      if (typeof window !== 'undefined' && (window as any).__doorInstallIntent === true) {
+        intent = true;
+      }
+      const anyOtherHasDoor = state.placedModules.some((m: any) => m.hasDoor === true);
+      if (intent === true || doorsOpen === true || anyOtherHasDoor) {
+        module.hasDoor = true;
+      }
+      // intent 동기화
+      if (module.hasDoor === true && typeof window !== 'undefined') {
+        (window as any).__doorInstallIntent = true;
+      }
+      // 디버그: 실제 적용 값 확인
+      // eslint-disable-next-line no-console
+      console.log('[addModule hasDoor]', { moduleId: module.moduleId, intent, doorsOpen, anyOtherHasDoor, final: module.hasDoor });
 
       // 도어 바닥 이격거리 초기화 (카테고리별 기본값)
       const isBasicLowerCabinet = module.moduleId?.includes('lower-half-cabinet') || module.moduleId?.includes('dual-lower-half-cabinet') || module.moduleId?.includes('lower-drawer-') || module.moduleId?.includes('dual-lower-drawer-') || module.moduleId?.includes('lower-sink-cabinet') || module.moduleId?.includes('dual-lower-sink-cabinet') || module.moduleId?.includes('lower-induction-cabinet') || module.moduleId?.includes('dual-lower-induction-cabinet');
