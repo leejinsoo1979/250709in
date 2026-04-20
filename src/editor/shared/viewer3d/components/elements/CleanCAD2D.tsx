@@ -5787,7 +5787,20 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 zIndexRange={[5000, 0]}
                 transform={false}
               >
-                <div style={{ display: 'inline-flex', alignItems: 'center' }}>
+                <div style={{ display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
+                  <button
+                    type="button"
+                    onMouseDown={(e) => e.preventDefault()}
+                    onClick={(e) => { e.stopPropagation(); applyGapEdit(i, Math.max(0, g - 1)); }}
+                    style={{
+                      width: '18px', height: '20px', fontSize: '11px', lineHeight: '1',
+                      padding: 0, cursor: 'pointer',
+                      color: dimensionColor,
+                      background: (typeof document !== 'undefined' && document.documentElement.getAttribute('data-theme') === 'dark') ? '#141414' : '#ffffff',
+                      border: `1px solid ${dimensionColor}`, borderRadius: '3px',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    }}
+                  >◀</button>
                   <input
                     type="text"
                     defaultValue={String(g)}
@@ -5805,7 +5818,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                       }
                     }}
                     style={{
-                      width: '56px', fontSize: '11px', textAlign: 'center',
+                      width: '50px', fontSize: '11px', textAlign: 'center',
                       color: dimensionColor,
                       background: (typeof document !== 'undefined' && document.documentElement.getAttribute('data-theme') === 'dark') ? '#141414' : '#ffffff',
                       border: `1px solid ${dimensionColor}`, borderRadius: '2px',
@@ -5813,35 +5826,19 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                       WebkitTextFillColor: dimensionColor, opacity: 1,
                     }}
                   />
-                  <div style={{ display: 'flex', flexDirection: 'column', marginLeft: '3px' }}>
-                    <button
-                      type="button"
-                      onMouseDown={(e) => e.preventDefault()}
-                      onClick={(e) => { e.stopPropagation(); applyGapEdit(i, g + 1); }}
-                      style={{
-                        width: '22px', height: '16px', fontSize: '11px', lineHeight: '1',
-                        padding: 0, cursor: 'pointer',
-                        color: dimensionColor,
-                        background: (typeof document !== 'undefined' && document.documentElement.getAttribute('data-theme') === 'dark') ? '#141414' : '#ffffff',
-                        border: `1px solid ${dimensionColor}`, borderRadius: '3px 3px 0 0',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      }}
-                    >▲</button>
-                    <button
-                      type="button"
-                      onMouseDown={(e) => e.preventDefault()}
-                      onClick={(e) => { e.stopPropagation(); applyGapEdit(i, Math.max(0, g - 1)); }}
-                      style={{
-                        width: '22px', height: '16px', fontSize: '11px', lineHeight: '1',
-                        padding: 0, cursor: 'pointer',
-                        color: dimensionColor,
-                        background: (typeof document !== 'undefined' && document.documentElement.getAttribute('data-theme') === 'dark') ? '#141414' : '#ffffff',
-                        border: `1px solid ${dimensionColor}`, borderTop: 'none',
-                        borderRadius: '0 0 3px 3px',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      }}
-                    >▼</button>
-                  </div>
+                  <button
+                    type="button"
+                    onMouseDown={(e) => e.preventDefault()}
+                    onClick={(e) => { e.stopPropagation(); applyGapEdit(i, g + 1); }}
+                    style={{
+                      width: '18px', height: '20px', fontSize: '11px', lineHeight: '1',
+                      padding: 0, cursor: 'pointer',
+                      color: dimensionColor,
+                      background: (typeof document !== 'undefined' && document.documentElement.getAttribute('data-theme') === 'dark') ? '#141414' : '#ffffff',
+                      border: `1px solid ${dimensionColor}`, borderRadius: '3px',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    }}
+                  >▶</button>
                 </div>
               </Html>
             );
