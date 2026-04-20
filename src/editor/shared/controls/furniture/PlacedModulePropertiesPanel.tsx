@@ -4512,35 +4512,8 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                     gaps.push(Math.max(0, Math.round(sectionHeight - sorted[sorted.length - 1] - basicThickness)));
                     return (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                      {posInputs.map((posInput, i) => (
-                        <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                          <span style={{ fontSize: '11px', color: 'var(--theme-text-secondary)', minWidth: '50px' }}>선반 {i + 1}</span>
-                          <div className={styles.inputWithUnit}>
-                            <input
-                              type="text"
-                              inputMode="numeric"
-                              value={posInput}
-                              onChange={(e) => handlePosChange(i, e.target.value)}
-                              onBlur={() => handlePosBlur(i)}
-                              onKeyDown={(e) => {
-                                if (e.key === 'Enter') { (e.target as HTMLInputElement).blur(); }
-                                else if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
-                                  e.preventDefault();
-                                  handlePosArrow(i, e.key === 'ArrowUp' ? 'up' : 'down');
-                                }
-                              }}
-                              className={styles.depthInput}
-                              style={{
-                                color: '#000000', backgroundColor: '#ffffff',
-                                WebkitTextFillColor: '#000000', opacity: 1, width: '60px'
-                              }}
-                            />
-                            <span className={styles.unit}>mm</span>
-                          </div>
-                        </div>
-                      ))}
                       {/* 칸별 내경 입력 (칸 i 변경 시 선반 i 위치 재계산) */}
-                      <div style={{ marginTop: '6px', padding: '6px 8px', background: 'var(--theme-surface-alt, #f7f7f7)', borderRadius: '4px' }}>
+                      <div style={{ padding: '6px 8px', background: 'var(--theme-surface-alt, #f7f7f7)', borderRadius: '4px' }}>
                         <div style={{ fontSize: '11px', color: 'var(--theme-text-secondary)', marginBottom: '4px' }}>칸 내경</div>
                         {gaps.map((g, i) => {
                           const applyGap = (newGap: number) => {
