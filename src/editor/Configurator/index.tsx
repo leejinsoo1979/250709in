@@ -4289,6 +4289,13 @@ const Configurator: React.FC = () => {
               우측
             </button>
           </div>
+
+          {/* 슬롯배치 커튼박스 활성화 시 커튼박스 구간 사이즈 표시 */}
+          {!isFreeMode && spaceInfo.curtainBox?.enabled && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginTop: '8px' }}>
+              <ZoneSizeCurtainBoxRow spaceInfo={spaceInfo} handleSpaceInfoUpdate={handleSpaceInfoUpdate} styles={styles} />
+            </div>
+          )}
         </div>)}
 
         {/* 컬럼수 표시 - 단내림 아래 */}
