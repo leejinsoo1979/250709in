@@ -176,8 +176,8 @@ export const captureFrontViewThumbnail = async (): Promise<string | null> => {
       썸네일크기: `${thumbnailWidth}x${thumbnailHeight}`
     });
 
-    // 썸네일 캡처
-    const thumbnail = captureCanvasThumbnail(canvas, {
+    // 썸네일 캡처 (재탐색한 캔버스 사용)
+    const thumbnail = captureCanvasThumbnail(freshCanvas, {
       width: thumbnailWidth,
       height: thumbnailHeight,
       quality: 0.9

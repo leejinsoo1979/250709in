@@ -452,7 +452,7 @@ const ContentPane: React.FC<ContentPaneProps> = ({
                   </div>
                 ) : item.type === 'design' ? (
                   <ThumbnailImage
-                    project={{ id: item.parentId || item.id, title: item.name } as any}
+                    project={{ id: (item as any).parentId || (item as any).projectId || item.id, title: item.name } as any}
                     designFile={{
                       thumbnail: item.thumbnail,
                       updatedAt: item.updatedAt,
