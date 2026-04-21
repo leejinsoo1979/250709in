@@ -8558,7 +8558,14 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           );
           if (!moduleData || !moduleData.dimensions) return;
 
-          const moduleWidthMm = (module.isFreePlacement && module.freeWidth) ? module.freeWidth : (module.customWidth || module.adjustedWidth || moduleData.dimensions.width);
+          // 기둥 앞 배치(front) 모드는 슬롯 전체 너비 사용
+          const isColFront = (module as any).columnPlacementMode === 'front';
+          const slotFullW = module.slotIndex !== undefined ? (indexing.slotWidths?.[module.slotIndex] ?? indexing.columnWidth) : undefined;
+          const moduleWidthMm = (module.isFreePlacement && module.freeWidth)
+            ? module.freeWidth
+            : isColFront
+              ? (slotFullW || moduleData.dimensions.width)
+              : (module.customWidth || module.adjustedWidth || moduleData.dimensions.width);
           const isStylerModule = moduleData.id.includes('dual-2drawer-styler');
           const moduleWidth = mmToThreeUnits(moduleWidthMm);
           const rightX = module.position.x + moduleWidth / 2;
@@ -8731,7 +8738,13 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             );
             if (!moduleData || !moduleData.dimensions) return;
 
-            const moduleWidthMm = (module.isFreePlacement && module.freeWidth) ? module.freeWidth : (module.customWidth || module.adjustedWidth || moduleData.dimensions.width);
+            const isColFront = (module as any).columnPlacementMode === 'front';
+            const slotFullW = module.slotIndex !== undefined ? (indexing.slotWidths?.[module.slotIndex] ?? indexing.columnWidth) : undefined;
+            const moduleWidthMm = (module.isFreePlacement && module.freeWidth)
+              ? module.freeWidth
+              : isColFront
+                ? (slotFullW || moduleData.dimensions.width)
+                : (module.customWidth || module.adjustedWidth || moduleData.dimensions.width);
             const isStylerModule = moduleData.id.includes('dual-2drawer-styler');
             const moduleWidth = mmToThreeUnits(moduleWidthMm);
             const leftX = module.position.x - moduleWidth / 2;
@@ -9108,12 +9121,19 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           if (!moduleData) return null;
 
           // 자유배치 가구는 freeWidth 우선, 그 외 customWidth/adjustedWidth/기본너비
+          // 기둥 앞 배치(front) 모드는 슬롯 전체 너비
+          const isColFrontTop = (module as any).columnPlacementMode === 'front';
+          const slotFullWTop = module.slotIndex !== undefined ? (indexing.slotWidths?.[module.slotIndex] ?? indexing.columnWidth) : undefined;
           const actualWidth = (module.isFreePlacement && module.freeWidth)
             ? module.freeWidth
-            : (module.customWidth || module.adjustedWidth || moduleData.dimensions.width);
+            : isColFrontTop
+              ? (slotFullWTop || moduleData.dimensions.width)
+              : (module.customWidth || module.adjustedWidth || moduleData.dimensions.width);
           const moduleWidth = mmToThreeUnits(actualWidth);
-          // 조정된 위치가 있으면 사용, 없으면 원래 위치 사용
-          const actualPositionX = module.adjustedPosition?.x || module.position.x;
+          // 조정된 위치가 있으면 사용, 없으면 원래 위치 사용 (front 모드는 슬롯 중심 X)
+          const actualPositionX = isColFrontTop
+            ? (module.slotIndex !== undefined ? (indexing.threeUnitPositions?.[module.slotIndex] ?? module.position.x) : module.position.x)
+            : (module.adjustedPosition?.x || module.position.x);
           const leftX = actualPositionX - moduleWidth / 2;
           const rightX = actualPositionX + moduleWidth / 2;
 
@@ -9426,12 +9446,20 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           
           const actualDepthMm = module.customDepth || moduleData.dimensions.depth;
           // 자유배치 가구는 freeWidth 우선, 기둥 조정 너비 사용
+          // 기둥 앞 배치(front) 모드는 슬롯 전체 너비 + 슬롯 중심
+          const isColFrontDoor = (module as any).columnPlacementMode === 'front';
+          const slotFullWDoor = module.slotIndex !== undefined ? (indexing.slotWidths?.[module.slotIndex] ?? indexing.columnWidth) : undefined;
           const actualWidthMm = (module.isFreePlacement && module.freeWidth)
             ? module.freeWidth
-            : (module.customWidth || module.adjustedWidth || moduleData.dimensions.width);
+            : isColFrontDoor
+              ? (slotFullWDoor || moduleData.dimensions.width)
+              : (module.customWidth || module.adjustedWidth || moduleData.dimensions.width);
           const moduleWidth = mmToThreeUnits(actualWidthMm);
-          const leftX = module.position.x - moduleWidth / 2;
-          const rightX = module.position.x + moduleWidth / 2;
+          const moduleCenterX = isColFrontDoor
+            ? (module.slotIndex !== undefined ? (indexing.threeUnitPositions?.[module.slotIndex] ?? module.position.x) : module.position.x)
+            : module.position.x;
+          const leftX = moduleCenterX - moduleWidth / 2;
+          const rightX = moduleCenterX + moduleWidth / 2;
           
           // 스타일러장인지 확인 (듀얼 서랍+스타일러 타입)
           const isStylerType = moduleData.id.includes('dual-2drawer-styler');
