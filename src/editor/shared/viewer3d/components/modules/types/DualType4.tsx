@@ -49,6 +49,10 @@ const DualType4: React.FC<FurnitureTypeProps> = ({
   upperSectionDepth,
   lowerSectionDepthDirection = 'front',
   upperSectionDepthDirection = 'front',
+  lowerSectionWidth,
+  upperSectionWidth,
+  lowerSectionWidthDirection = 'left',
+  upperSectionWidthDirection = 'left',
   lowerSectionTopOffset,
   zone, // 단내림 영역 정보
   hasBase,
@@ -578,6 +582,11 @@ const DualType4: React.FC<FurnitureTypeProps> = ({
               panelGrainDirections={panelGrainDirections}
             sectionDepths={sectionDepths}
             sectionDepthDirections={[lowerSectionDepthDirection, upperSectionDepthDirection]}
+            sectionWidths={[
+              lowerSectionWidth !== undefined ? baseFurniture.mmToThreeUnits(lowerSectionWidth) : baseFurniture.innerWidth,
+              upperSectionWidth !== undefined ? baseFurniture.mmToThreeUnits(upperSectionWidth) : baseFurniture.innerWidth,
+            ]}
+            sectionWidthDirections={[lowerSectionWidthDirection, upperSectionWidthDirection]}
             lowerSectionTopOffsetMm={lowerSectionTopOffset}
             isFloatingPlacement={spaceInfo?.baseConfig?.placementType === 'float'}
           />

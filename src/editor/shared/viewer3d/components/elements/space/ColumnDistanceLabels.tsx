@@ -5,6 +5,7 @@ import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
 import { useTheme } from '@/contexts/ThemeContext';
 import { Column } from '@/types/space';
 import { useUIStore } from '@/store/uiStore';
+import { calculateSpaceIndexing } from '@/editor/shared/utils/indexing';
 
 interface ColumnDistanceLabelsProps {
   column: Column;
@@ -244,6 +245,39 @@ const ColumnDistanceLabels: React.FC<ColumnDistanceLabelsProps> = ({ column, spa
     });
   };
 
+  // 화살표 클릭 → 슬롯 경계로 스냅 이동 (좌우 한 슬롯씩)
+  const snapToSlotBoundary = (direction: 'left' | 'right', event?: any) => {
+    if (event) event.stopPropagation();
+    if (!onPositionChange || !spaceInfo) return;
+    try {
+      const indexing = calculateSpaceIndexing(spaceInfo);
+      const boundaries: number[] = indexing?.threeUnitBoundaries || [];
+      if (!boundaries || boundaries.length === 0) return;
+      const columnCenterX = currentColumn.position[0];
+      const colHalfW = (currentColumn.width * 0.01) / 2;
+      // 현재 기둥 좌/우 끝 위치
+      const colLeftEdge = columnCenterX - colHalfW;
+      const colRightEdge = columnCenterX + colHalfW;
+      let targetX = columnCenterX;
+      if (direction === 'left') {
+        // 현재 좌측 엣지보다 왼쪽에 있는 가장 가까운 경계
+        const candidates = boundaries.filter(b => b < colLeftEdge - 0.001);
+        if (candidates.length === 0) return;
+        const snap = Math.max(...candidates);
+        targetX = snap + colHalfW;
+      } else {
+        // 현재 우측 엣지보다 오른쪽에 있는 가장 가까운 경계
+        const candidates = boundaries.filter(b => b > colRightEdge + 0.001);
+        if (candidates.length === 0) return;
+        const snap = Math.min(...candidates);
+        targetX = snap - colHalfW;
+      }
+      onPositionChange(currentColumn.id, [targetX, 0, currentColumn.position[2]]);
+    } catch (e) {
+      console.error('기둥 슬롯 스냅 이동 실패:', e);
+    }
+  };
+
   // 클릭 핸들러 - 즉시 편집 모드 활성화
   const handleClick = (direction: 'left' | 'right' | 'width', event?: any) => {
     if (event) {
@@ -305,22 +339,33 @@ const ColumnDistanceLabels: React.FC<ColumnDistanceLabelsProps> = ({ column, spa
           <meshBasicMaterial color={themeColors.primary} transparent opacity={0.8} />
         </mesh>
 
-        {/* 왼쪽 화살표 - 벽 쪽 */}
-        <mesh position={[
-          -spaceWidthM / 2, 
-          columnHeightM / 2, 
-          currentColumn.position[2] + (viewMode === '2D' ? 0.1 : 0)
-        ]}>
+        {/* 왼쪽 화살표 - 벽 쪽 (클릭 시 왼쪽 슬롯 경계로 스냅) */}
+        <mesh
+          position={[
+            -spaceWidthM / 2,
+            columnHeightM / 2,
+            currentColumn.position[2] + (viewMode === '2D' ? 0.1 : 0)
+          ]}
+          onClick={(e) => snapToSlotBoundary('left', e)}
+          onPointerOver={() => { document.body.style.cursor = 'pointer'; }}
+          onPointerOut={() => { document.body.style.cursor = 'default'; }}
+        >
           <coneGeometry args={[0.05, 0.2, 3]} />
           <meshBasicMaterial color={themeColors.primary} />
         </mesh>
 
-        {/* 왼쪽 화살표 - 기둥 쪽 */}
-        <mesh position={[
-          currentColumn.position[0] - columnWidthM / 2, 
-          columnHeightM / 2, 
-          currentColumn.position[2] + (viewMode === '2D' ? 0.1 : 0)
-        ]} rotation={[0, 0, Math.PI]}>
+        {/* 왼쪽 화살표 - 기둥 쪽 (클릭 시 왼쪽 슬롯 경계로 스냅) */}
+        <mesh
+          position={[
+            currentColumn.position[0] - columnWidthM / 2,
+            columnHeightM / 2,
+            currentColumn.position[2] + (viewMode === '2D' ? 0.1 : 0)
+          ]}
+          rotation={[0, 0, Math.PI]}
+          onClick={(e) => snapToSlotBoundary('left', e)}
+          onPointerOver={() => { document.body.style.cursor = 'pointer'; }}
+          onPointerOut={() => { document.body.style.cursor = 'default'; }}
+        >
           <coneGeometry args={[0.05, 0.2, 3]} />
           <meshBasicMaterial color={themeColors.primary} />
         </mesh>
@@ -478,22 +523,33 @@ const ColumnDistanceLabels: React.FC<ColumnDistanceLabelsProps> = ({ column, spa
           <meshBasicMaterial color={themeColors.primary} transparent opacity={0.8} />
         </mesh>
 
-        {/* 오른쪽 화살표 - 벽 쪽 */}
-        <mesh position={[
-          spaceWidthM / 2, 
-          columnHeightM / 2, 
-          currentColumn.position[2] + (viewMode === '2D' ? 0.1 : 0)
-        ]} rotation={[0, 0, Math.PI]}>
+        {/* 오른쪽 화살표 - 벽 쪽 (클릭 시 오른쪽 슬롯 경계로 스냅) */}
+        <mesh
+          position={[
+            spaceWidthM / 2,
+            columnHeightM / 2,
+            currentColumn.position[2] + (viewMode === '2D' ? 0.1 : 0)
+          ]}
+          rotation={[0, 0, Math.PI]}
+          onClick={(e) => snapToSlotBoundary('right', e)}
+          onPointerOver={() => { document.body.style.cursor = 'pointer'; }}
+          onPointerOut={() => { document.body.style.cursor = 'default'; }}
+        >
           <coneGeometry args={[0.05, 0.2, 3]} />
           <meshBasicMaterial color={themeColors.primary} />
         </mesh>
 
-        {/* 오른쪽 화살표 - 기둥 쪽 */}
-        <mesh position={[
-          currentColumn.position[0] + columnWidthM / 2, 
-          columnHeightM / 2, 
-          currentColumn.position[2] + (viewMode === '2D' ? 0.1 : 0)
-        ]}>
+        {/* 오른쪽 화살표 - 기둥 쪽 (클릭 시 오른쪽 슬롯 경계로 스냅) */}
+        <mesh
+          position={[
+            currentColumn.position[0] + columnWidthM / 2,
+            columnHeightM / 2,
+            currentColumn.position[2] + (viewMode === '2D' ? 0.1 : 0)
+          ]}
+          onClick={(e) => snapToSlotBoundary('right', e)}
+          onPointerOver={() => { document.body.style.cursor = 'pointer'; }}
+          onPointerOut={() => { document.body.style.cursor = 'default'; }}
+        >
           <coneGeometry args={[0.05, 0.2, 3]} />
           <meshBasicMaterial color={themeColors.primary} />
         </mesh>

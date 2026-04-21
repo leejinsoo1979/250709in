@@ -47,6 +47,10 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
   upperSectionDepth,
   lowerSectionDepthDirection = 'front',
   upperSectionDepthDirection = 'front',
+  lowerSectionWidth,
+  upperSectionWidth,
+  lowerSectionWidthDirection = 'left',
+  upperSectionWidthDirection = 'left',
   lowerSectionTopOffset,
   zone, // 단내림 영역 정보
   hasBase,

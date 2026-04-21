@@ -45,6 +45,10 @@ const DualType2: React.FC<FurnitureTypeProps> = ({
   upperSectionDepth,
   lowerSectionDepthDirection = 'front',
   upperSectionDepthDirection = 'front',
+  lowerSectionWidth,
+  upperSectionWidth,
+  lowerSectionWidthDirection = 'left',
+  upperSectionWidthDirection = 'left',
   lowerSectionTopOffset,
   panelGrainDirections: propsPanelGrainDirections,
   backPanelThickness: backPanelThicknessProp,
@@ -540,6 +544,11 @@ const DualType2: React.FC<FurnitureTypeProps> = ({
               placedFurnitureId={placedFurnitureId}
               sectionDepths={sectionDepths}
               sectionDepthDirections={[lowerSectionDepthDirection, upperSectionDepthDirection]}
+              sectionWidths={[
+                lowerSectionWidth !== undefined ? baseFurniture.mmToThreeUnits(lowerSectionWidth) : baseFurniture.innerWidth,
+                upperSectionWidth !== undefined ? baseFurniture.mmToThreeUnits(upperSectionWidth) : baseFurniture.innerWidth,
+              ]}
+              sectionWidthDirections={[lowerSectionWidthDirection, upperSectionWidthDirection]}
               textureUrl={spaceInfo.materialConfig?.doorTexture}
               panelGrainDirections={panelGrainDirections}
               lowerSectionTopOffsetMm={lowerSectionTopOffset}

@@ -34,6 +34,10 @@ const SingleType1: React.FC<FurnitureTypeProps> = ({
   upperSectionDepth,
   lowerSectionDepthDirection = 'front',
   upperSectionDepthDirection = 'front',
+  lowerSectionWidth,
+  upperSectionWidth,
+  lowerSectionWidthDirection = 'left',
+  upperSectionWidthDirection = 'left',
   doorTopGap = 5,
   doorBottomGap = 25,
   lowerSectionTopOffset,
@@ -229,6 +233,11 @@ const SingleType1: React.FC<FurnitureTypeProps> = ({
                 panelGrainDirections={panelGrainDirections}
                 sectionDepths={sectionDepths}
                 sectionDepthDirections={[lowerSectionDepthDirection, upperSectionDepthDirection]}
+                sectionWidths={[
+                  lowerSectionWidth !== undefined ? baseFurniture.mmToThreeUnits(lowerSectionWidth) : baseFurniture.innerWidth,
+                  upperSectionWidth !== undefined ? baseFurniture.mmToThreeUnits(upperSectionWidth) : baseFurniture.innerWidth,
+                ]}
+                sectionWidthDirections={[lowerSectionWidthDirection, upperSectionWidthDirection]}
                 lowerSectionTopOffsetMm={lowerSectionTopOffset}
                 isFloatingPlacement={spaceInfo?.baseConfig?.placementType === 'float'}
               />
