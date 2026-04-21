@@ -6222,11 +6222,13 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               floatHeight,
               floorFinishHeightMm,
               bottomFrameHeight: globalBottomFrame,
-              topFrameHeight
+              topFrameHeight: globalTopFrame
             } = furnitureHeights;
 
             // 개별 모듈의 baseFrameHeight 우선 사용 (선택된 슬롯 기준 가구)
             const viewMod = sideViewMod || leftmostModules[0];
+            // 가구별 상부프레임 우선 (하부 OFF 시 상부프레임이 확장된 값 반영)
+            const topFrameHeight = viewMod?.topFrameThickness ?? globalTopFrame;
             // hasBase=false → 하부프레임 0 (individualFloatHeight만 반영)
             const bottomFrameHeight = viewMod?.hasBase === false
               ? (viewMod.individualFloatHeight ?? 0)
@@ -7319,11 +7321,13 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               floatHeight,
               floorFinishHeightMm,
               bottomFrameHeight: globalBottomFrame,
-              topFrameHeight
+              topFrameHeight: globalTopFrame
             } = furnitureHeights;
 
             // 개별 모듈의 baseFrameHeight 우선 사용 (선택된 슬롯 기준 가구)
             const viewMod = sideViewMod || rightmostModules[0];
+            // 가구별 상부프레임 우선 (하부 OFF 시 상부프레임이 확장된 값 반영)
+            const topFrameHeight = viewMod?.topFrameThickness ?? globalTopFrame;
             // hasBase=false → 하부프레임 0 (individualFloatHeight만 반영)
             const bottomFrameHeight = viewMod?.hasBase === false
               ? (viewMod.individualFloatHeight ?? 0)
