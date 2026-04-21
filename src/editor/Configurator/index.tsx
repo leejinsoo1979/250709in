@@ -5906,21 +5906,17 @@ const Configurator: React.FC = () => {
           const toggleAllTop = () => {
             const next = !topFrameAllMode;
             setTopFrameAllMode(next);
-            if (next) {
-              // 통합 모드 진입: 모든 가구 상부 프레임 ON
-              topSortedMods.forEach(m => updatePlacedModule(m.id, { hasTopFrame: true }));
-            }
+            // 통합모드 진입/해제 모두 개별행 ON 상태로 복구
+            topSortedMods.forEach(m => updatePlacedModule(m.id, { hasTopFrame: true }));
           };
           const toggleAllBase = () => {
             const next = !baseFrameAllMode;
             setBaseFrameAllMode(next);
-            if (next) {
-              // 통합 모드 진입: 모든 가구 하부 프레임 ON
-              baseSortedMods.forEach(m => updatePlacedModule(m.id, {
-                hasBase: true,
-                doorBottomGap: 25,
-              }));
-            }
+            // 통합모드 진입/해제 모두 개별행 ON 상태로 복구
+            baseSortedMods.forEach(m => updatePlacedModule(m.id, {
+              hasBase: true,
+              doorBottomGap: 25,
+            }));
           };
           return (
             <>
