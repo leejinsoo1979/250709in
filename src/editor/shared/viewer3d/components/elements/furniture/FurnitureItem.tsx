@@ -3477,11 +3477,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                         upperSectionDepth: targetDepth,
                         lowerSectionDepthDirection: 'back',
                         upperSectionDepthDirection: 'back',
-                        // 폭을 슬롯 전체로 복원 (기둥을 덮도록)
-                        customWidth: undefined,
-                        adjustedWidth: undefined,
-                        columnPlacementMode: 'front',
-                      } as any);
+                      });
                     }}
                     onMouseEnter={(e) => (e.currentTarget.style.opacity = '0.8')}
                     onMouseLeave={(e) => (e.currentTarget.style.opacity = '1')}
