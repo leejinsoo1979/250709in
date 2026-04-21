@@ -1896,8 +1896,11 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
                         throttledUpdateColumn(id, updates);
                       }}
                     />
-                    {/* 기둥 벽면 간격 라벨 (기둥 선택 시 또는 편집 모달 열렸을 때) */}
-                    {(selectedColumnId === column.id || (activePopup.type === 'columnEdit' && activePopup.id === column.id)) && (
+                    {/* 기둥 벽면 간격 라벨 (기둥 선택/팝업/편집 모달 중 하나라도 활성) */}
+                    {(
+                      selectedColumnId === column.id ||
+                      ((activePopup.type === 'column' || activePopup.type === 'columnEdit') && activePopup.id === column.id)
+                    ) && (
                       <ColumnDistanceLabels
                         column={column}
                         spaceInfo={spaceInfo}

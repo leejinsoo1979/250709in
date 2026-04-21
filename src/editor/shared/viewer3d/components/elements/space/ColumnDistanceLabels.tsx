@@ -165,8 +165,8 @@ const ColumnDistanceLabels: React.FC<ColumnDistanceLabelsProps> = ({ column, spa
   //   spaceInfo: {width: spaceInfo?.width, depth: spaceInfo?.depth}
   // });
 
-  // 라벨을 숨기는 경우 또는 showDimensions가 false인 경우 null 반환
-  if (!showLabels || !showDimensions) {
+  // 라벨을 숨기는 경우에만 null 반환 (showLabels가 true면 치수 설정 무관하게 표시)
+  if (!showLabels) {
     return null;
   }
 
