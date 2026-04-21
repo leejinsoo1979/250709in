@@ -809,11 +809,9 @@ const ColumnAsset: React.FC<ColumnAssetProps> = ({
                 const cols = spaceInfoNow.columns || [];
                 const col = cols.find((c: any) => c.id === id);
                 if (!col || col.isLocked) return;
-                const step = 0.1;
                 const spaceWidthM = (spaceInfoNow.width || 3000) * 0.01;
                 const halfW = (col.width * 0.01) / 2;
-                const minX = -spaceWidthM / 2 + halfW;
-                const newX = Math.max(minX, col.position[0] - step);
+                const newX = -spaceWidthM / 2 + halfW; // 좌측 벽에 붙이기
                 const updated = cols.map((c: any) =>
                   c.id === id ? { ...c, position: [newX, c.position[1], c.position[2]] } : c
                 );
@@ -828,7 +826,7 @@ const ColumnAsset: React.FC<ColumnAssetProps> = ({
                 cursor: 'pointer', boxShadow: '0 3px 12px rgba(0,0,0,0.25)',
                 pointerEvents: 'auto', padding: 0, transition: 'opacity 0.2s',
               }}
-              title="왼쪽으로 100mm 이동"
+              title="좌측 벽으로 이동"
             >
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <polyline points="15 18 9 12 15 6" />
@@ -848,11 +846,9 @@ const ColumnAsset: React.FC<ColumnAssetProps> = ({
                 const cols = spaceInfoNow.columns || [];
                 const col = cols.find((c: any) => c.id === id);
                 if (!col || col.isLocked) return;
-                const step = 0.1;
                 const spaceWidthM = (spaceInfoNow.width || 3000) * 0.01;
                 const halfW = (col.width * 0.01) / 2;
-                const maxX = spaceWidthM / 2 - halfW;
-                const newX = Math.min(maxX, col.position[0] + step);
+                const newX = spaceWidthM / 2 - halfW; // 우측 벽에 붙이기
                 const updated = cols.map((c: any) =>
                   c.id === id ? { ...c, position: [newX, c.position[1], c.position[2]] } : c
                 );
@@ -867,7 +863,7 @@ const ColumnAsset: React.FC<ColumnAssetProps> = ({
                 cursor: 'pointer', boxShadow: '0 3px 12px rgba(0,0,0,0.25)',
                 pointerEvents: 'auto', padding: 0, transition: 'opacity 0.2s',
               }}
-              title="오른쪽으로 100mm 이동"
+              title="우측 벽으로 이동"
             >
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <polyline points="9 18 15 12 9 6" />
