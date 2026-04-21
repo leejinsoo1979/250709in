@@ -1368,31 +1368,12 @@ const RightPanel: React.FC<RightPanelProps> = ({
                 const topGroups = computeFrameMergeGroups(slotMods, 'top');
                 const baseGroups = computeFrameMergeGroups(slotMods, 'base');
 
-                const allTopOn = slotMods.every(m => m.hasTopFrame !== false);
-                const allBaseOn = slotMods.every(m => m.hasBase !== false);
-                const allOn = allTopOn && allBaseOn;
-                const toggleAll = () => {
-                  const newVal = !allOn;
-                  slotMods.forEach(m => {
-                    updatePlacedModule(m.id, {
-                      hasTopFrame: newVal,
-                      hasBase: newVal,
-                      ...(newVal ? { doorBottomGap: 25 } : { individualFloatHeight: 0 }),
-                    });
-                  });
-                };
                 return (
                   <FormControl
                     label="상,하부프레임"
                     expanded={expandedSections.has('slotFrame')}
                     onToggle={() => toggleSection('slotFrame')}
                     helpText="프레임 병합 모드: 병합 그룹 단위로 프레임을 설정합니다. 너비는 병합된 총 너비(읽기전용), 높이와 옵셋은 그룹 내 모든 가구에 일괄 적용됩니다."
-                    headerAccessory={
-                      <label style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11px', color: 'var(--theme-text-secondary)', cursor: 'pointer' }}>
-                        <input type="checkbox" checked={allOn} onChange={toggleAll} />
-                        <span>전체</span>
-                      </label>
-                    }
                   >
                     {/* 상부프레임 병합 그룹 */}
                     {topGroups.map((group, gIdx) => {
@@ -1467,32 +1448,30 @@ const RightPanel: React.FC<RightPanelProps> = ({
               // 비병합 모드: 기존 개별 행 렌더링
               let topNum = 0;
               let baseNum = 0;
-              const allTopOn = slotMods.every(m => m.hasTopFrame !== false);
-              const allBaseOn = slotMods.every(m => m.hasBase !== false);
-              const allOn = allTopOn && allBaseOn;
-              const toggleAll = () => {
-                const newVal = !allOn;
-                slotMods.forEach(m => {
-                  updatePlacedModule(m.id, {
-                    hasTopFrame: newVal,
-                    hasBase: newVal,
-                    ...(newVal ? { doorBottomGap: 25 } : { individualFloatHeight: 0 }),
-                  });
-                });
-              };
               return (
                 <FormControl
                   label="상,하부프레임"
                   expanded={expandedSections.has('slotFrame')}
                   onToggle={() => toggleSection('slotFrame')}
                   helpText="각 가구별 상부/하부 프레임을 개별 설정합니다. 너비(읽기전용), 높이, 옵셋으로 Z축 위치를 조정합니다."
-                  headerAccessory={
-                    <label style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11px', color: 'var(--theme-text-secondary)', cursor: 'pointer' }}>
-                      <input type="checkbox" checked={allOn} onChange={toggleAll} />
-                      <span>전체</span>
-                    </label>
-                  }
                 >
+                  {/* 상부프레임 타이틀 + 전체 체크박스 */}
+                  {(() => {
+                    const allTopOn = sorted.length > 0 && sorted.every(m => m.hasTopFrame !== false);
+                    const toggleAllTop = () => {
+                      const newVal = !allTopOn;
+                      sorted.forEach(m => updatePlacedModule(m.id, { hasTopFrame: newVal }));
+                    };
+                    return (
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
+                        <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--theme-text-secondary)' }}>상부프레임</div>
+                        <label style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11px', color: 'var(--theme-text-secondary)', cursor: 'pointer' }}>
+                          <input type="checkbox" checked={allTopOn} onChange={toggleAllTop} style={{ cursor: 'pointer', accentColor: 'var(--theme-primary, #4a90d9)' }} />
+                          <span>전체</span>
+                        </label>
+                      </div>
+                    );
+                  })()}
                   {/* 상부프레임 — 좌→우 순서 */}
                   {sorted.map((mod) => {
                     topNum++;
@@ -1519,6 +1498,26 @@ const RightPanel: React.FC<RightPanelProps> = ({
                   {spaceInfo.baseConfig?.type !== 'stand' && sorted.length > 0 && (
                     <div style={{ borderTop: '1px solid var(--theme-border, #e0e0e0)', margin: '6px 0' }} />
                   )}
+                  {/* 하부프레임 타이틀 + 전체 체크박스 */}
+                  {spaceInfo.baseConfig?.type !== 'stand' && (() => {
+                    const allBaseOn = sorted.length > 0 && sorted.every(m => m.hasBase !== false);
+                    const toggleAllBase = () => {
+                      const newVal = !allBaseOn;
+                      sorted.forEach(m => updatePlacedModule(m.id, {
+                        hasBase: newVal,
+                        ...(newVal ? { doorBottomGap: 25 } : { individualFloatHeight: 0 }),
+                      }));
+                    };
+                    return (
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
+                        <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--theme-text-secondary)' }}>하부프레임</div>
+                        <label style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11px', color: 'var(--theme-text-secondary)', cursor: 'pointer' }}>
+                          <input type="checkbox" checked={allBaseOn} onChange={toggleAllBase} style={{ cursor: 'pointer', accentColor: 'var(--theme-primary, #4a90d9)' }} />
+                          <span>전체</span>
+                        </label>
+                      </div>
+                    );
+                  })()}
                   {/* 하부프레임 — stand 타입이면 숨김 */}
                   {spaceInfo.baseConfig?.type !== 'stand' && sorted.map((mod) => {
                     baseNum++;
