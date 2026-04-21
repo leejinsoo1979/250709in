@@ -159,6 +159,8 @@ function AppContent() {
         {/* 에디터 라우트 */}
         <Route path="/step1" element={<Step1 />} />
         <Route path="/configurator" element={<Configurator />} />
+        {/* 데모 라우트 (로그인/저장 없음, 새로고침 시 초기화) */}
+        <Route path="/demo" element={<Configurator />} />
         <Route path="/preview-popout" element={<PreviewPopout />} />
         <Route path="/cnc-optimizer" element={<CNCOptimizerPro />} />
         <Route path="/cnc-test" element={<CNCOptimizerTest />} />

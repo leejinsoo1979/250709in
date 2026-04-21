@@ -414,13 +414,16 @@ const Configurator: React.FC = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
 
+  // 데모 모드: /demo 경로일 때 로그인/저장/Firebase 없이 빈 에디터
+  const isDemoMode = typeof window !== 'undefined' && window.location.pathname.startsWith('/demo');
+
   // URL 파라미터 미리 추출
   const modeParam = searchParams.get('mode');
   const isReadOnlyMode = modeParam === 'readonly';
-  const isNewDesign = searchParams.get('design') === 'new';
-  const projectIdParam = searchParams.get('projectId') || searchParams.get('id') || searchParams.get('project');
+  const isNewDesign = isDemoMode ? true : searchParams.get('design') === 'new';
+  const projectIdParam = isDemoMode ? null : (searchParams.get('projectId') || searchParams.get('id') || searchParams.get('project'));
 
-  const [loading, setLoading] = useState(!isNewDesign && !isReadOnlyMode); // 새 디자인이나 readonly 모드인 경우 로딩 건너뛰기
+  const [loading, setLoading] = useState(!isNewDesign && !isReadOnlyMode && !isDemoMode); // 데모/새 디자인/readonly 모드인 경우 로딩 건너뛰기
   const [saving, setSaving] = useState(false);
   const [saveStatus, setSaveStatus] = useState<'idle' | 'success' | 'error'>('idle');
   const saveInProgressRef = useRef(false);
