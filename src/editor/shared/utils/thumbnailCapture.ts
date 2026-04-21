@@ -146,18 +146,26 @@ export const captureFrontViewThumbnail = async (): Promise<string | null> => {
     uiStoreState.setCameraMode('perspective');  // 원근 투영으로 강제 설정
     console.log('🔄 3D 정면 뷰 + perspective 카메라로 강제 전환 완료');
 
-    // 뷰 전환 후 렌더링 완료 대기
-    await new Promise(resolve => setTimeout(resolve, 250));
+    // 뷰 전환 후 렌더링 완료 대기 (2D→3D 전환은 더 오래 걸림)
+    const isConvertingFrom2D = originalViewMode === '2D';
+    await new Promise(resolve => setTimeout(resolve, isConvertingFrom2D ? 800 : 400));
 
     // 카메라를 중앙으로 정렬 (ThreeCanvas의 resetCamera 호출)
     console.log('🎯 카메라 중앙 정렬 중...');
     window.dispatchEvent(new Event('reset-camera-for-settings'));
 
     // 카메라 리셋 후 렌더링 완료 대기
-    await new Promise(resolve => setTimeout(resolve, 250));
+    await new Promise(resolve => setTimeout(resolve, 400));
+
+    // 캔버스 재탐색 (2D→3D 전환 시 캔버스 ref가 바뀔 수 있음)
+    const freshCanvas = findThreeCanvas();
+    if (!freshCanvas) {
+      console.warn('3D 전환 후 캔버스 재탐색 실패');
+      return null;
+    }
 
     // 원본 캔버스의 비율 유지하여 썸네일 캡처
-    const aspectRatio = canvas.width / canvas.height;
+    const aspectRatio = freshCanvas.width / freshCanvas.height;
     const maxWidth = 400;
     const thumbnailWidth = maxWidth;
     const thumbnailHeight = Math.round(maxWidth / aspectRatio);
@@ -221,14 +229,15 @@ export const captureProjectThumbnail = async (): Promise<string | null> => {
   try {
     uiStoreState.setShowDimensions(false);
     uiStoreState.setShowDimensionsText(false);
-    // showGuides/showAxis/showAll setter 있으면 호출
     (uiStoreState as any).setShowGuides?.(false);
     (uiStoreState as any).setShowAxis?.(false);
     (uiStoreState as any).setShowAll?.(false);
+    // 썸네일 캡처 중 showAll 등 로컬 state도 강제로 숨기라는 이벤트
+    window.dispatchEvent(new CustomEvent('thumbnail-capture-start'));
     console.log('📸 썸네일 캡처를 위해 치수/가이드/축 숨김');
 
-    // 렌더링 업데이트 시간 대기
-    await new Promise(resolve => setTimeout(resolve, 200));
+    // 렌더링 업데이트 시간 대기 (재렌더 + 3D 캔버스 repaint)
+    await new Promise(resolve => setTimeout(resolve, 500));
   } catch (e) {
     console.warn('UI Store 접근 실패:', e);
   }
@@ -268,6 +277,7 @@ export const captureProjectThumbnail = async (): Promise<string | null> => {
       (uiStoreState as any).setShowGuides?.(originalShowGuides);
       (uiStoreState as any).setShowAxis?.(originalShowAxis);
       (uiStoreState as any).setShowAll?.(originalShowAll);
+      window.dispatchEvent(new CustomEvent('thumbnail-capture-end'));
       console.log('📸 치수/가이드/축 원래 상태로 복원');
     } catch (e) {
       console.warn('UI Store 복원 실패:', e);

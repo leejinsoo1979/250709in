@@ -450,6 +450,18 @@ const ContentPane: React.FC<ContentPaneProps> = ({
                   <div className={styles.projectGridEmpty}>
                     <FileText size={24} strokeWidth={1} style={{ color: 'var(--theme-text-muted)', opacity: 0.4 }} />
                   </div>
+                ) : item.type === 'design' ? (
+                  <ThumbnailImage
+                    project={{ id: item.parentId || item.id, title: item.name } as any}
+                    designFile={{
+                      thumbnail: item.thumbnail,
+                      updatedAt: item.updatedAt,
+                      spaceConfig: (item as any).spaceConfig,
+                      furniture: (item as any).furniture,
+                    }}
+                    className={styles.saasSingleThumb}
+                    alt={item.name}
+                  />
                 ) : item.thumbnail ? (
                   <img src={item.thumbnail} alt={item.name} className={styles.saasSingleThumb} />
                 ) : (
