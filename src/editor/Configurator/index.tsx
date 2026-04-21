@@ -5967,9 +5967,13 @@ const Configurator: React.FC = () => {
                           'top-all',
                         );
                         }
-                        // OFF 상태: 상단갭 = 상부프레임 크기만 편집 (하부 OFF 표시는 별개)
-                        // 사용자 입력값 = topFrameThickness
-                        const currentGap = firstTop.topFrameThickness ?? globalTop;
+                        // OFF 상태: 상단갭 = 상부프레임 + (하부 OFF 시 하부프레임)
+                        // 상부 OFF/하부 ON → 30 / 상부 OFF/하부 OFF → 90 (30+60)
+                        const topSize = firstTop.topFrameThickness ?? globalTop;
+                        const baseSize = firstTop.hasBase === false
+                          ? (firstTop.baseFrameHeight ?? globalBase)
+                          : 0;
+                        const currentGap = topSize + baseSize;
                         return (
                           <div style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '3px 0' }}>
                             <span className={styles.frameItemLabel} style={{ minWidth: '34px', textAlign: 'left', margin: 0 }}>전체</span>
@@ -5989,19 +5993,23 @@ const Configurator: React.FC = () => {
                                     if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
                                       e.preventDefault();
                                       const nextGap = Math.max(0, Math.min(2000, currentGap + (e.key === 'ArrowUp' ? 1 : -1)));
-                                      topSortedMods.forEach(m => updatePlacedModule(m.id, { topFrameThickness: nextGap }));
+                                      // 입력한 총 갭에서 하부프레임(OFF 시)만큼 빼서 topFrameThickness로 저장
+                                      const newTop = Math.max(0, nextGap - baseSize);
+                                      topSortedMods.forEach(m => updatePlacedModule(m.id, { topFrameThickness: newTop }));
                                     }
                                   }}
                                   onChange={(e) => {
                                     const v = e.target.value;
                                     if (v === '' || /^\d+$/.test(v)) {
                                       const nextGap = v === '' ? 0 : parseInt(v, 10);
-                                      topSortedMods.forEach(m => updatePlacedModule(m.id, { topFrameThickness: nextGap }));
+                                      const newTop = Math.max(0, nextGap - baseSize);
+                                      topSortedMods.forEach(m => updatePlacedModule(m.id, { topFrameThickness: newTop }));
                                     }
                                   }}
                                   onBlur={(e) => {
                                     const nextGap = Math.max(0, Math.min(2000, parseInt(e.target.value) || 0));
-                                    topSortedMods.forEach(m => updatePlacedModule(m.id, { topFrameThickness: nextGap }));
+                                    const newTop = Math.max(0, nextGap - baseSize);
+                                    topSortedMods.forEach(m => updatePlacedModule(m.id, { topFrameThickness: newTop }));
                                   }}
                                   className={styles.frameNumberInput}
                                 />
