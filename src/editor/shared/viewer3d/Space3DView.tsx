@@ -99,7 +99,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
   const location = useLocation();
   const { spaceInfo: storeSpaceInfo, updateColumn, removeColumn, updateWall, removeWall, addWall, removePanelB, updatePanelB } = useSpaceConfigStore();
   const { placedModules, updateFurnitureForColumns } = useFurnitureStore();
-  const { view2DDirection, showDimensions: storeShowDimensions, showDimensionsText, showGuides, showAxis, activePopup, setView2DDirection, setViewMode: setUIViewMode, isColumnCreationMode, isWallCreationMode, isPanelBCreationMode, view2DTheme, showFurniture: storeShowFurniture, isMeasureMode, toggleMeasureMode, isEraserMode, selectedSlotIndex, setSelectedSlotIndex, cameraMode, isLayoutBuilderOpen, sunAngle } = useUIStore();
+  const { view2DDirection, showDimensions: storeShowDimensions, showDimensionsText, showGuides, showAxis, activePopup, setView2DDirection, setViewMode: setUIViewMode, isColumnCreationMode, isWallCreationMode, isPanelBCreationMode, view2DTheme, showFurniture: storeShowFurniture, isMeasureMode, toggleMeasureMode, isEraserMode, selectedSlotIndex, setSelectedSlotIndex, cameraMode, isLayoutBuilderOpen, sunAngle, selectedColumnId } = useUIStore();
 
   // props로 전달된 showFurniture가 있으면 사용, 없으면 store 값 사용
   const showFurniture = showFurnitureProp !== undefined ? showFurnitureProp : storeShowFurniture;
@@ -1896,8 +1896,8 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
                         throttledUpdateColumn(id, updates);
                       }}
                     />
-                    {/* 기둥 벽면 간격 라벨 (2D 모드에서 기둥 편집 모달이 열렸을 때만 표시) */}
-                    {activePopup.type === 'columnEdit' && activePopup.id === column.id && (
+                    {/* 기둥 벽면 간격 라벨 (기둥 선택 시 또는 편집 모달 열렸을 때) */}
+                    {(selectedColumnId === column.id || (activePopup.type === 'columnEdit' && activePopup.id === column.id)) && (
                       <ColumnDistanceLabels
                         column={column}
                         spaceInfo={spaceInfo}
