@@ -5967,13 +5967,9 @@ const Configurator: React.FC = () => {
                           'top-all',
                         );
                         }
-                        // OFF 상태: 상단갭 = 상부프레임 크기 + (하부 OFF 시 하부프레임 크기)
-                        // 상부 OFF+하부 ON → 상단갭=30 / 상부 OFF+하부 OFF → 상단갭=90 (30+60)
-                        const topSize = firstTop.topFrameThickness ?? globalTop;
-                        const baseSize = firstTop.hasBase === false
-                          ? (firstTop.baseFrameHeight ?? globalBase)
-                          : 0;
-                        const currentGap = topSize + baseSize;
+                        // OFF 상태: 상단갭 = 상부프레임 크기만 편집 (하부 OFF 표시는 별개)
+                        // 사용자 입력값 = topFrameThickness
+                        const currentGap = firstTop.topFrameThickness ?? globalTop;
                         return (
                           <div style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '3px 0' }}>
                             <span className={styles.frameItemLabel} style={{ minWidth: '34px', textAlign: 'left', margin: 0 }}>전체</span>
