@@ -209,19 +209,25 @@ export const captureFrontViewThumbnail = async (): Promise<string | null> => {
 
 // 프로젝트 저장 시 자동 썸네일 캡처 (base64 문자열 반환)
 export const captureProjectThumbnail = async (): Promise<string | null> => {
-  // UI Store에서 치수 표시 상태 가져오기
+  // UI Store에서 현재 상태 가져오기
   const uiStoreState = useUIStore.getState();
   const originalShowDimensions = uiStoreState.showDimensions;
   const originalShowDimensionsText = uiStoreState.showDimensionsText;
+  const originalShowGuides = (uiStoreState as any).showGuides;
+  const originalShowAxis = (uiStoreState as any).showAxis;
+  const originalShowAll = (uiStoreState as any).showAll;
 
-  // 치수 및 슬롯 가이드 임시 숨기기
+  // 치수/가이드/축 모두 숨기기 → 가구만 깨끗하게 캡처
   try {
-    // 썸네일 캡처를 위해 일시적으로 숨기기
     uiStoreState.setShowDimensions(false);
     uiStoreState.setShowDimensionsText(false);
-    console.log('📸 썸네일 캡처를 위해 치수 및 슬롯 가이드 숨김');
+    // showGuides/showAxis/showAll setter 있으면 호출
+    (uiStoreState as any).setShowGuides?.(false);
+    (uiStoreState as any).setShowAxis?.(false);
+    (uiStoreState as any).setShowAll?.(false);
+    console.log('📸 썸네일 캡처를 위해 치수/가이드/축 숨김');
 
-    // 치수가 사라지고 렌더링이 업데이트될 시간 대기
+    // 렌더링 업데이트 시간 대기
     await new Promise(resolve => setTimeout(resolve, 200));
   } catch (e) {
     console.warn('UI Store 접근 실패:', e);
@@ -259,7 +265,10 @@ export const captureProjectThumbnail = async (): Promise<string | null> => {
       const uiStoreState = useUIStore.getState();
       uiStoreState.setShowDimensions(originalShowDimensions);
       uiStoreState.setShowDimensionsText(originalShowDimensionsText);
-      console.log('📸 치수 및 슬롯 가이드 원래 상태로 복원');
+      (uiStoreState as any).setShowGuides?.(originalShowGuides);
+      (uiStoreState as any).setShowAxis?.(originalShowAxis);
+      (uiStoreState as any).setShowAll?.(originalShowAll);
+      console.log('📸 치수/가이드/축 원래 상태로 복원');
     } catch (e) {
       console.warn('UI Store 복원 실패:', e);
     }

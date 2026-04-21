@@ -1367,112 +1367,146 @@ const RightPanel: React.FC<RightPanelProps> = ({
               if (isMergeMode) {
                 const topGroups = computeFrameMergeGroups(slotMods, 'top');
                 const baseGroups = computeFrameMergeGroups(slotMods, 'base');
+                const allTopOnMerge = slotMods.length > 0 && slotMods.every(m => m.hasTopFrame !== false);
+                const allBaseOnMerge = slotMods.length > 0 && slotMods.every(m => m.hasBase !== false);
+                const toggleAllTopMerge = () => {
+                  const newVal = !allTopOnMerge;
+                  slotMods.forEach(m => updatePlacedModule(m.id, { hasTopFrame: newVal }));
+                };
+                const toggleAllBaseMerge = () => {
+                  const newVal = !allBaseOnMerge;
+                  slotMods.forEach(m => updatePlacedModule(m.id, {
+                    hasBase: newVal,
+                    ...(newVal ? { doorBottomGap: 25 } : { individualFloatHeight: 0 }),
+                  }));
+                };
 
                 return (
-                  <FormControl
-                    label="상,하부프레임"
-                    expanded={expandedSections.has('slotFrame')}
-                    onToggle={() => toggleSection('slotFrame')}
-                    helpText="프레임 병합 모드: 병합 그룹 단위로 프레임을 설정합니다. 너비는 병합된 총 너비(읽기전용), 높이와 옵셋은 그룹 내 모든 가구에 일괄 적용됩니다."
-                  >
-                    {/* 상부프레임 병합 그룹 */}
-                    {topGroups.map((group, gIdx) => {
-                      const groupMods = group.moduleIds.map(id => slotMods.find(m => m.id === id)!).filter(Boolean);
-                      const firstMod = groupMods[0];
-                      const allEnabled = groupMods.every(m => m.hasTopFrame !== false);
-                      const hlKey = `merged-top-${gIdx}`;
-                      return (
-                        <MergedFrameRow key={hlKey}
-                          label={group.label}
-                          enabled={allEnabled}
-                          widthMM={group.totalWidthMm}
-                          heightMM={firstMod?.topFrameThickness ?? globalTop}
-                          offset={getTopOffsetDisplay(firstMod)}
-                          onToggle={() => {
-                            const newVal = !allEnabled;
-                            group.moduleIds.forEach(id => updatePlacedModule(id, { hasTopFrame: newVal }));
-                          }}
-                          onHeightChange={(v) => {
-                            group.moduleIds.forEach(id => updatePlacedModule(id, { topFrameThickness: v }));
-                            // doorTopGap 동기화는 FurnitureItem의 useEffect에서 자동 처리
-                          }}
-                          onOffsetChange={(v) => {
-                            group.moduleIds.forEach(id => updatePlacedModule(id, { topFrameOffset: v }));
-                          }}
-                          hlKey={hlKey}
-                          setHighlightedFrame={setHighlightedFrame}
-                        />
-                      );
-                    })}
-                    {/* 상하부 구분선 */}
-                    {spaceInfo.baseConfig?.type !== 'stand' && baseGroups.length > 0 && (
-                      <div style={{ borderTop: '1px solid var(--theme-border, #e0e0e0)', margin: '6px 0' }} />
+                  <>
+                    {/* 상부프레임 섹션 */}
+                    <FormControl
+                      label="상부프레임"
+                      expanded={expandedSections.has('slotFrame')}
+                      onToggle={() => toggleSection('slotFrame')}
+                      helpText="프레임 병합 모드: 병합 그룹 단위로 프레임을 설정합니다."
+                      headerAccessory={
+                        <label style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11px', color: 'var(--theme-text-secondary)', cursor: 'pointer' }}>
+                          <input type="checkbox" checked={allTopOnMerge} onChange={toggleAllTopMerge} style={{ cursor: 'pointer', accentColor: 'var(--theme-primary, #4a90d9)' }} />
+                          <span>전체</span>
+                        </label>
+                      }
+                    >
+                      {topGroups.map((group, gIdx) => {
+                        const groupMods = group.moduleIds.map(id => slotMods.find(m => m.id === id)!).filter(Boolean);
+                        const firstMod = groupMods[0];
+                        const allEnabled = groupMods.every(m => m.hasTopFrame !== false);
+                        const hlKey = `merged-top-${gIdx}`;
+                        return (
+                          <MergedFrameRow key={hlKey}
+                            label={group.label}
+                            enabled={allEnabled}
+                            widthMM={group.totalWidthMm}
+                            heightMM={firstMod?.topFrameThickness ?? globalTop}
+                            offset={getTopOffsetDisplay(firstMod)}
+                            onToggle={() => {
+                              const newVal = !allEnabled;
+                              group.moduleIds.forEach(id => updatePlacedModule(id, { hasTopFrame: newVal }));
+                            }}
+                            onHeightChange={(v) => {
+                              group.moduleIds.forEach(id => updatePlacedModule(id, { topFrameThickness: v }));
+                            }}
+                            onOffsetChange={(v) => {
+                              group.moduleIds.forEach(id => updatePlacedModule(id, { topFrameOffset: v }));
+                            }}
+                            hlKey={hlKey}
+                            setHighlightedFrame={setHighlightedFrame}
+                          />
+                        );
+                      })}
+                    </FormControl>
+                    {/* 하부프레임 섹션 (stand 타입 제외) */}
+                    {spaceInfo.baseConfig?.type !== 'stand' && (
+                      <FormControl
+                        label="하부프레임"
+                        expanded={expandedSections.has('slotFrame')}
+                        onToggle={() => toggleSection('slotFrame')}
+                        helpText="프레임 병합 모드: 하부 프레임 병합 그룹 단위로 프레임을 설정합니다."
+                        headerAccessory={
+                          <label style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11px', color: 'var(--theme-text-secondary)', cursor: 'pointer' }}>
+                            <input type="checkbox" checked={allBaseOnMerge} onChange={toggleAllBaseMerge} style={{ cursor: 'pointer', accentColor: 'var(--theme-primary, #4a90d9)' }} />
+                            <span>전체</span>
+                          </label>
+                        }
+                      >
+                        {baseGroups.map((group, gIdx) => {
+                          const groupMods = group.moduleIds.map(id => slotMods.find(m => m.id === id)!).filter(Boolean);
+                          const firstMod = groupMods[0];
+                          const allEnabled = groupMods.every(m => m.hasBase !== false);
+                          const hlKey = `merged-base-${gIdx}`;
+                          const isLowerGroup = firstMod?.moduleId?.startsWith('lower-') || firstMod?.moduleId?.includes('-lower-');
+                          return (
+                            <MergedFrameRow key={hlKey}
+                              label={group.label}
+                              enabled={allEnabled}
+                              widthMM={group.totalWidthMm}
+                              heightMM={firstMod?.baseFrameHeight ?? globalBase}
+                              offset={firstMod?.baseFrameOffset ?? 0}
+                              onToggle={() => {
+                                const newVal = !allEnabled;
+                                group.moduleIds.forEach(id => updatePlacedModule(id, {
+                                  hasBase: newVal,
+                                  ...(newVal ? { doorBottomGap: 25 } : { individualFloatHeight: 0 }),
+                                }));
+                              }}
+                              onHeightChange={(v) => {
+                                group.moduleIds.forEach(id => updatePlacedModule(id, { baseFrameHeight: v }));
+                              }}
+                              onOffsetChange={(v) => {
+                                group.moduleIds.forEach(id => updatePlacedModule(id, { baseFrameOffset: v }));
+                              }}
+                              hlKey={hlKey}
+                              setHighlightedFrame={setHighlightedFrame}
+                              isLowerCategory={!!isLowerGroup}
+                            />
+                          );
+                        })}
+                      </FormControl>
                     )}
-                    {/* 하부프레임 병합 그룹 — stand 타입이면 숨김 */}
-                    {spaceInfo.baseConfig?.type !== 'stand' && baseGroups.map((group, gIdx) => {
-                      const groupMods = group.moduleIds.map(id => slotMods.find(m => m.id === id)!).filter(Boolean);
-                      const firstMod = groupMods[0];
-                      const allEnabled = groupMods.every(m => m.hasBase !== false);
-                      const hlKey = `merged-base-${gIdx}`;
-                      const isLowerGroup = firstMod?.moduleId?.startsWith('lower-') || firstMod?.moduleId?.includes('-lower-');
-                      return (
-                        <MergedFrameRow key={hlKey}
-                          label={group.label}
-                          enabled={allEnabled}
-                          widthMM={group.totalWidthMm}
-                          heightMM={firstMod?.baseFrameHeight ?? globalBase}
-                          offset={firstMod?.baseFrameOffset ?? 0}
-                          onToggle={() => {
-                            const newVal = !allEnabled;
-                            group.moduleIds.forEach(id => updatePlacedModule(id, {
-                              hasBase: newVal,
-                              ...(newVal ? { doorBottomGap: 25 } : { individualFloatHeight: 0 }),
-                            }));
-                          }}
-                          onHeightChange={(v) => {
-                            group.moduleIds.forEach(id => updatePlacedModule(id, { baseFrameHeight: v }));
-                          }}
-                          onOffsetChange={(v) => {
-                            group.moduleIds.forEach(id => updatePlacedModule(id, { baseFrameOffset: v }));
-                          }}
-                          hlKey={hlKey}
-                          setHighlightedFrame={setHighlightedFrame}
-                          isLowerCategory={!!isLowerGroup}
-                        />
-                      );
-                    })}
-                  </FormControl>
+                  </>
                 );
               }
 
-              // 비병합 모드: 기존 개별 행 렌더링
+              // 비병합 모드: 상부/하부 섹션 분리
               let topNum = 0;
               let baseNum = 0;
+              const allTopOn = sorted.length > 0 && sorted.every(m => m.hasTopFrame !== false);
+              const allBaseOn = sorted.length > 0 && sorted.every(m => m.hasBase !== false);
+              const toggleAllTop = () => {
+                const newVal = !allTopOn;
+                sorted.forEach(m => updatePlacedModule(m.id, { hasTopFrame: newVal }));
+              };
+              const toggleAllBase = () => {
+                const newVal = !allBaseOn;
+                sorted.forEach(m => updatePlacedModule(m.id, {
+                  hasBase: newVal,
+                  ...(newVal ? { doorBottomGap: 25 } : { individualFloatHeight: 0 }),
+                }));
+              };
               return (
-                <FormControl
-                  label="상,하부프레임"
-                  expanded={expandedSections.has('slotFrame')}
-                  onToggle={() => toggleSection('slotFrame')}
-                  helpText="각 가구별 상부/하부 프레임을 개별 설정합니다. 너비(읽기전용), 높이, 옵셋으로 Z축 위치를 조정합니다."
-                >
-                  {/* 상부프레임 타이틀 + 전체 체크박스 */}
-                  {(() => {
-                    const allTopOn = sorted.length > 0 && sorted.every(m => m.hasTopFrame !== false);
-                    const toggleAllTop = () => {
-                      const newVal = !allTopOn;
-                      sorted.forEach(m => updatePlacedModule(m.id, { hasTopFrame: newVal }));
-                    };
-                    return (
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
-                        <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--theme-text-secondary)' }}>상부프레임</div>
-                        <label style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11px', color: 'var(--theme-text-secondary)', cursor: 'pointer' }}>
-                          <input type="checkbox" checked={allTopOn} onChange={toggleAllTop} style={{ cursor: 'pointer', accentColor: 'var(--theme-primary, #4a90d9)' }} />
-                          <span>전체</span>
-                        </label>
-                      </div>
-                    );
-                  })()}
-                  {/* 상부프레임 — 좌→우 순서 */}
+                <>
+                  {/* 상부프레임 섹션 */}
+                  <FormControl
+                    label="상부프레임"
+                    expanded={expandedSections.has('slotFrame')}
+                    onToggle={() => toggleSection('slotFrame')}
+                    helpText="각 가구별 상부 프레임을 개별 설정합니다. 너비(읽기전용), 높이, 옵셋으로 Z축 위치를 조정합니다."
+                    headerAccessory={
+                      <label style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11px', color: 'var(--theme-text-secondary)', cursor: 'pointer' }}>
+                        <input type="checkbox" checked={allTopOn} onChange={toggleAllTop} style={{ cursor: 'pointer', accentColor: 'var(--theme-primary, #4a90d9)' }} />
+                        <span>전체</span>
+                      </label>
+                    }
+                  >
                   {sorted.map((mod) => {
                     topNum++;
                     const modWidthMM = Math.round((mod.isDualSlot ? slotColWidth * 2 : slotColWidth) * 10) / 10;
@@ -1486,7 +1520,6 @@ const RightPanel: React.FC<RightPanelProps> = ({
                         onToggle={() => updatePlacedModule(mod.id, { hasTopFrame: !(mod.hasTopFrame !== false) })}
                         onSizeChange={(v) => {
                           updatePlacedModule(mod.id, { topFrameThickness: v });
-                          // doorTopGap 동기화는 FurnitureItem의 useEffect에서 자동 처리
                         }}
                         onOffsetChange={(v) => updatePlacedModule(mod.id, { topFrameOffset: v })}
                         hlKey={`top-${mod.id}`}
@@ -1494,32 +1527,22 @@ const RightPanel: React.FC<RightPanelProps> = ({
                       />
                     );
                   })}
-                  {/* 상하부 구분선 */}
-                  {spaceInfo.baseConfig?.type !== 'stand' && sorted.length > 0 && (
-                    <div style={{ borderTop: '1px solid var(--theme-border, #e0e0e0)', margin: '6px 0' }} />
-                  )}
-                  {/* 하부프레임 타이틀 + 전체 체크박스 */}
-                  {spaceInfo.baseConfig?.type !== 'stand' && (() => {
-                    const allBaseOn = sorted.length > 0 && sorted.every(m => m.hasBase !== false);
-                    const toggleAllBase = () => {
-                      const newVal = !allBaseOn;
-                      sorted.forEach(m => updatePlacedModule(m.id, {
-                        hasBase: newVal,
-                        ...(newVal ? { doorBottomGap: 25 } : { individualFloatHeight: 0 }),
-                      }));
-                    };
-                    return (
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
-                        <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--theme-text-secondary)' }}>하부프레임</div>
-                        <label style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11px', color: 'var(--theme-text-secondary)', cursor: 'pointer' }}>
-                          <input type="checkbox" checked={allBaseOn} onChange={toggleAllBase} style={{ cursor: 'pointer', accentColor: 'var(--theme-primary, #4a90d9)' }} />
-                          <span>전체</span>
-                        </label>
-                      </div>
-                    );
-                  })()}
-                  {/* 하부프레임 — stand 타입이면 숨김 */}
-                  {spaceInfo.baseConfig?.type !== 'stand' && sorted.map((mod) => {
+                  </FormControl>
+                  {/* 하부프레임 섹션 (stand 타입 제외) */}
+                  {spaceInfo.baseConfig?.type !== 'stand' && (
+                  <FormControl
+                    label="하부프레임"
+                    expanded={expandedSections.has('slotFrame')}
+                    onToggle={() => toggleSection('slotFrame')}
+                    helpText="각 가구별 하부 프레임(베이스)을 개별 설정합니다. 너비(읽기전용), 높이, 옵셋으로 Z축 위치를 조정합니다."
+                    headerAccessory={
+                      <label style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11px', color: 'var(--theme-text-secondary)', cursor: 'pointer' }}>
+                        <input type="checkbox" checked={allBaseOn} onChange={toggleAllBase} style={{ cursor: 'pointer', accentColor: 'var(--theme-primary, #4a90d9)' }} />
+                        <span>전체</span>
+                      </label>
+                    }
+                  >
+                  {sorted.map((mod) => {
                     baseNum++;
                     const baseEnabled = mod.hasBase !== false;
                     const baseModWidthMM = Math.round((mod.isDualSlot ? slotColWidth * 2 : slotColWidth) * 10) / 10;
@@ -1601,8 +1624,9 @@ const RightPanel: React.FC<RightPanelProps> = ({
                       </div>
                     );
                   })}
-                  {/* 도어갭은 index.tsx의 상,하부프레임 섹션에서 처리 */}
-                </FormControl>
+                  </FormControl>
+                  )}
+                </>
               );
             })()}
 
