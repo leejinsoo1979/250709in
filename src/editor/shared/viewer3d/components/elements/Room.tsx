@@ -4405,6 +4405,16 @@ const Room: React.FC<RoomProps> = ({
                     return true;
                   }).forEach((mod) => {
                     const bounds = getModuleBoundsX(mod);
+                    // 기둥 회피로 인한 adjustedWidth/adjustedPosition 반영 (슬롯배치)
+                    const adjW = (mod as any).adjustedWidth;
+                    const adjPosX = (mod as any).adjustedPosition?.x;
+                    let modLeft = bounds.left;
+                    let modRight = bounds.right;
+                    if (adjW != null && adjW > 0) {
+                      const cx = (adjPosX != null ? adjPosX * 100 : (bounds.left + bounds.right) / 2);
+                      modLeft = cx - adjW / 2;
+                      modRight = cx + adjW / 2;
+                    }
                     const leftEpOffset = mod.leftEndPanelOffset ?? mod.endPanelOffset ?? 0;
                     const rightEpOffset = mod.rightEndPanelOffset ?? mod.endPanelOffset ?? 0;
                     let leftEpAdj = 0;
@@ -4417,8 +4427,8 @@ const Room: React.FC<RoomProps> = ({
                       if (mod.hasLeftEndPanel) leftEpAdj = endPanelRenderThickness;
                       if (mod.hasRightEndPanel) rightEpAdj = endPanelRenderThickness;
                     }
-                    const modWidthMM = (bounds.right - bounds.left) - leftEpAdj - rightEpAdj;
-                    const modCenterXmm = (bounds.left + leftEpAdj + bounds.right - rightEpAdj) / 2;
+                    const modWidthMM = (modRight - modLeft) - leftEpAdj - rightEpAdj;
+                    const modCenterXmm = (modLeft + leftEpAdj + modRight - rightEpAdj) / 2;
                     const modCategory = getModuleCategory(mod);
                     let modFreeHeight: number;
                     if (modCategory === 'full') {

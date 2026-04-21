@@ -87,16 +87,16 @@ const ColumnAsset: React.FC<ColumnAssetProps> = ({
 
   // 기둥 재질 생성 - 드래그 중에는 업데이트하지 않음
   const material = React.useMemo(() => {
-    // 선택된 기둥은 연두색으로 표시
-    const displayColor = isSelected ? '#4CAF50' : color;
+    // 잠긴 기둥: 붉은 반투명, 선택된 기둥: 연두색, 그 외: 기본 색상
+    const displayColor = isLocked ? '#ff3333' : (isSelected ? '#4CAF50' : color);
     return new THREE.MeshStandardMaterial({
       color: new THREE.Color(displayColor),
       metalness: 0.1,
       roughness: 0.7,
       transparent: true,
-      opacity: 1.0,
+      opacity: isLocked ? 0.35 : 1.0,
     });
-  }, [color, isSelected]); // isDragging 제거
+  }, [color, isSelected, isLocked]);
 
   // 와이어프레임용 윤곽선 재질
   const wireframeMaterial = React.useMemo(() => {
@@ -649,19 +649,14 @@ const ColumnAsset: React.FC<ColumnAssetProps> = ({
         </>
       )}
 
-      {/* 잠긴 기둥 중앙 자물쇠 표시 */}
+      {/* 잠긴 기둥 중앙 자물쇠 표시 (배경 없음) */}
       {isLocked && (
-        <Html position={[0, (height * 0.01) / 2, 0]} center zIndexRange={[50, 0]} style={{ pointerEvents: 'none' }}>
-          <div style={{
-            background: 'rgba(70,70,70,0.85)', borderRadius: '50%', width: 32, height: 32,
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
-          }}>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <rect x="5" y="11" width="14" height="10" rx="2" />
-              <path d="M7 11V7a5 5 0 0110 0v4" />
-            </svg>
-          </div>
+        <Html position={[0, (height * 0.01) / 2, 0]} center zIndexRange={[50, 0]} style={{ pointerEvents: 'none', background: 'transparent' }}>
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ff3333" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
+            style={{ filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.5))' }}>
+            <rect x="5" y="11" width="14" height="10" rx="2" />
+            <path d="M7 11V7a5 5 0 0110 0v4" />
+          </svg>
         </Html>
       )}
 
