@@ -843,6 +843,10 @@ const RightPanel: React.FC<RightPanelProps> = ({
     new Set(['space', 'layoutMode', 'layout'])
   );
 
+  // 상부/하부 프레임 '전체' 통합 모드 (기본 true: 통합 행 표시)
+  const [topFrameAllMode, setTopFrameAllMode] = useState<boolean>(true);
+  const [baseFrameAllMode, setBaseFrameAllMode] = useState<boolean>(true);
+
   // 초기 렌더링 시 UIStore 동기화
   useEffect(() => {
     if (spaceInfo.droppedCeiling?.enabled) {
@@ -1479,18 +1483,28 @@ const RightPanel: React.FC<RightPanelProps> = ({
               // 비병합 모드: 상부/하부 섹션 분리
               let topNum = 0;
               let baseNum = 0;
-              const allTopOn = sorted.length > 0 && sorted.every(m => m.hasTopFrame !== false);
-              const allBaseOn = sorted.length > 0 && sorted.every(m => m.hasBase !== false);
+              // 통합 모드: '전체' 체크박스로 제어 (개별 hasTopFrame 값은 유지)
+              const allTopOn = topFrameAllMode;
+              const allBaseOn = baseFrameAllMode;
               const toggleAllTop = () => {
-                const newVal = !allTopOn;
-                sorted.forEach(m => updatePlacedModule(m.id, { hasTopFrame: newVal }));
+                const next = !topFrameAllMode;
+                setTopFrameAllMode(next);
+                if (next) {
+                  // 통합 모드 진입 시: 모든 가구 상부 프레임 ON
+                  sorted.forEach(m => updatePlacedModule(m.id, { hasTopFrame: true }));
+                }
+                // 해제 시: 개별 값 그대로 유지
               };
               const toggleAllBase = () => {
-                const newVal = !allBaseOn;
-                sorted.forEach(m => updatePlacedModule(m.id, {
-                  hasBase: newVal,
-                  ...(newVal ? { doorBottomGap: 25 } : { individualFloatHeight: 0 }),
-                }));
+                const next = !baseFrameAllMode;
+                setBaseFrameAllMode(next);
+                if (next) {
+                  // 통합 모드 진입 시: 모든 가구 하부 프레임 ON
+                  sorted.forEach(m => updatePlacedModule(m.id, {
+                    hasBase: true,
+                    doorBottomGap: 25,
+                  }));
+                }
               };
               return (
                 <>
@@ -1507,26 +1521,48 @@ const RightPanel: React.FC<RightPanelProps> = ({
                       </label>
                     }
                   >
-                  {sorted.map((mod) => {
-                    topNum++;
-                    const modWidthMM = Math.round((mod.isDualSlot ? slotColWidth * 2 : slotColWidth) * 10) / 10;
-                    return (
-                      <FrameRow key={`top-${mod.id}`}
-                        label={`${toAlpha(topNum)}(상)`}
-                        enabled={mod.hasTopFrame !== false}
-                        widthMM={modWidthMM}
-                        sizeMM={mod.topFrameThickness ?? globalTop}
-                        offset={getTopOffsetDisplay(mod)}
-                        onToggle={() => updatePlacedModule(mod.id, { hasTopFrame: !(mod.hasTopFrame !== false) })}
-                        onSizeChange={(v) => {
-                          updatePlacedModule(mod.id, { topFrameThickness: v });
-                        }}
-                        onOffsetChange={(v) => updatePlacedModule(mod.id, { topFrameOffset: v })}
-                        hlKey={`top-${mod.id}`}
-                        setHighlightedFrame={setHighlightedFrame}
-                      />
-                    );
-                  })}
+                  {allTopOn && sorted.length > 0 ? (
+                    // 전체 ON: 통합 행 1개만 표시 (토글은 전체 모드 해제만, 값은 유지)
+                    (() => {
+                      const first = sorted[0];
+                      const totalWidthMM = sorted.reduce((sum, m) => sum + (m.isDualSlot ? slotColWidth * 2 : slotColWidth), 0);
+                      return (
+                        <FrameRow key="top-all"
+                          label="전체"
+                          enabled={true}
+                          widthMM={Math.round(totalWidthMM * 10) / 10}
+                          sizeMM={first.topFrameThickness ?? globalTop}
+                          offset={getTopOffsetDisplay(first)}
+                          onToggle={() => setTopFrameAllMode(false)}
+                          onSizeChange={(v) => sorted.forEach(m => updatePlacedModule(m.id, { topFrameThickness: v }))}
+                          onOffsetChange={(v) => sorted.forEach(m => updatePlacedModule(m.id, { topFrameOffset: v }))}
+                          hlKey="top-all"
+                          setHighlightedFrame={setHighlightedFrame}
+                        />
+                      );
+                    })()
+                  ) : (
+                    sorted.map((mod) => {
+                      topNum++;
+                      const modWidthMM = Math.round((mod.isDualSlot ? slotColWidth * 2 : slotColWidth) * 10) / 10;
+                      return (
+                        <FrameRow key={`top-${mod.id}`}
+                          label={`${toAlpha(topNum)}(상)`}
+                          enabled={mod.hasTopFrame !== false}
+                          widthMM={modWidthMM}
+                          sizeMM={mod.topFrameThickness ?? globalTop}
+                          offset={getTopOffsetDisplay(mod)}
+                          onToggle={() => updatePlacedModule(mod.id, { hasTopFrame: !(mod.hasTopFrame !== false) })}
+                          onSizeChange={(v) => {
+                            updatePlacedModule(mod.id, { topFrameThickness: v });
+                          }}
+                          onOffsetChange={(v) => updatePlacedModule(mod.id, { topFrameOffset: v })}
+                          hlKey={`top-${mod.id}`}
+                          setHighlightedFrame={setHighlightedFrame}
+                        />
+                      );
+                    })
+                  )}
                   </FormControl>
                   {/* 하부프레임 섹션 (stand 타입 제외) */}
                   {spaceInfo.baseConfig?.type !== 'stand' && (

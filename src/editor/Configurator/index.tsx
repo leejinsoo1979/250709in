@@ -475,6 +475,9 @@ const Configurator: React.FC = () => {
     return panelClosed !== 'true';
   });
   const [isFrameSectionCollapsed, setIsFrameSectionCollapsed] = useState(false);
+  // 상부/하부 프레임 '전체' 통합 모드 (기본 true: 통합 행 표시)
+  const [topFrameAllMode, setTopFrameAllMode] = useState<boolean>(true);
+  const [baseFrameAllMode, setBaseFrameAllMode] = useState<boolean>(true);
   const [isFileTreeOpen, setIsFileTreeOpen] = useState(false);
   const [fileTreeProjects, setFileTreeProjects] = useState<ProjectSummary[]>([]);
   const [fileTreeActiveMenu, setFileTreeActiveMenu] = useState<QuickAccessMenu>('in-progress');
@@ -5897,18 +5900,27 @@ const Configurator: React.FC = () => {
           let baseNum = 0;
           const topSortedMods = sorted.filter(m => getModuleCategory(m) !== 'lower');
           const baseSortedMods = sorted.filter(m => getModuleCategory(m) !== 'upper');
-          const allTopOn = topSortedMods.length > 0 && topSortedMods.every(m => m.hasTopFrame !== false);
-          const allBaseOn = baseSortedMods.length > 0 && baseSortedMods.every(m => m.hasBase !== false);
+          // 통합 모드: '전체' 체크박스로 제어
+          const allTopOn = topFrameAllMode;
+          const allBaseOn = baseFrameAllMode;
           const toggleAllTop = () => {
-            const newVal = !allTopOn;
-            topSortedMods.forEach(m => updatePlacedModule(m.id, { hasTopFrame: newVal }));
+            const next = !topFrameAllMode;
+            setTopFrameAllMode(next);
+            if (next) {
+              // 통합 모드 진입: 모든 가구 상부 프레임 ON
+              topSortedMods.forEach(m => updatePlacedModule(m.id, { hasTopFrame: true }));
+            }
           };
           const toggleAllBase = () => {
-            const newVal = !allBaseOn;
-            baseSortedMods.forEach(m => updatePlacedModule(m.id, {
-              hasBase: newVal,
-              ...(newVal ? { doorBottomGap: 25 } : { individualFloatHeight: 0 }),
-            }));
+            const next = !baseFrameAllMode;
+            setBaseFrameAllMode(next);
+            if (next) {
+              // 통합 모드 진입: 모든 가구 하부 프레임 ON
+              baseSortedMods.forEach(m => updatePlacedModule(m.id, {
+                hasBase: true,
+                doorBottomGap: 25,
+              }));
+            }
           };
           return (
             <>
@@ -5929,22 +5941,45 @@ const Configurator: React.FC = () => {
                 </div>
                 {!isFrameSectionCollapsed && (
                   <div className={styles.subSetting}>
-                    {sorted.map((mod) => {
-                      const cat = getModuleCategory(mod);
-                      if (cat === 'lower') return null;
-                      topNum++;
-                      const topOffsetDefault = (cat === 'upper' && spaceInfo.surroundType === 'surround') ? 23 : 0;
-                      return <React.Fragment key={`top-${mod.id}`}>{renderSlotFrameRow(
-                        `${toAlpha(topNum)}(상)`,
-                        mod.hasTopFrame !== false,
-                        mod.topFrameThickness ?? globalTop,
-                        mod.topFrameOffset ?? topOffsetDefault,
-                        () => updatePlacedModule(mod.id, { hasTopFrame: !(mod.hasTopFrame !== false) }),
-                        (v) => updatePlacedModule(mod.id, { topFrameThickness: v }),
-                        (v) => updatePlacedModule(mod.id, { topFrameOffset: v }),
-                        `top-${mod.id}`,
-                      )}</React.Fragment>;
-                    })}
+                    {allTopOn && topSortedMods.length > 0 ? (
+                      // 전체 ON: 통합 행 1개만 표시 (토글은 전체 모드 해제만, 값은 유지)
+                      (() => {
+                        const firstTop = topSortedMods[0];
+                        const catFirst = getModuleCategory(firstTop);
+                        const topOffsetDefaultU = (catFirst === 'upper' && spaceInfo.surroundType === 'surround') ? 23 : 0;
+                        return renderSlotFrameRow(
+                          '전체',
+                          true,
+                          firstTop.topFrameThickness ?? globalTop,
+                          firstTop.topFrameOffset ?? topOffsetDefaultU,
+                          () => setTopFrameAllMode(false),
+                          (v) => {
+                            topSortedMods.forEach(m => updatePlacedModule(m.id, { topFrameThickness: v }));
+                          },
+                          (v) => {
+                            topSortedMods.forEach(m => updatePlacedModule(m.id, { topFrameOffset: v }));
+                          },
+                          'top-all',
+                        );
+                      })()
+                    ) : (
+                      sorted.map((mod) => {
+                        const cat = getModuleCategory(mod);
+                        if (cat === 'lower') return null;
+                        topNum++;
+                        const topOffsetDefault = (cat === 'upper' && spaceInfo.surroundType === 'surround') ? 23 : 0;
+                        return <React.Fragment key={`top-${mod.id}`}>{renderSlotFrameRow(
+                          `${toAlpha(topNum)}(상)`,
+                          mod.hasTopFrame !== false,
+                          mod.topFrameThickness ?? globalTop,
+                          mod.topFrameOffset ?? topOffsetDefault,
+                          () => updatePlacedModule(mod.id, { hasTopFrame: !(mod.hasTopFrame !== false) }),
+                          (v) => updatePlacedModule(mod.id, { topFrameThickness: v }),
+                          (v) => updatePlacedModule(mod.id, { topFrameOffset: v }),
+                          `top-${mod.id}`,
+                        )}</React.Fragment>;
+                      })
+                    )}
                   </div>
                 )}
               </div>
@@ -5966,15 +6001,37 @@ const Configurator: React.FC = () => {
                   </div>
                   {!isFrameSectionCollapsed && (
                     <div className={styles.subSetting}>
-                      {sorted.map((mod) => {
-                        const cat = getModuleCategory(mod);
-                        if (cat === 'upper') return null;
-                        baseNum++;
-                        return <React.Fragment key={`base-${mod.id}`}>{renderSlotBaseFrameRow(
-                          mod,
-                          `${toAlpha(baseNum)}(하)`,
-                        )}</React.Fragment>;
-                      })}
+                      {allBaseOn && baseSortedMods.length > 0 ? (
+                        // 전체 ON: 통합 행 1개만 표시 (토글은 전체 모드 해제만, 값은 유지)
+                        (() => {
+                          const first = baseSortedMods[0];
+                          const firstOffsetDefault = ((first.moduleId?.startsWith('lower-') || first.moduleId?.includes('-lower-')) ? 65 : 0);
+                          return renderSlotFrameRow(
+                            '전체',
+                            true,
+                            first.baseFrameHeight ?? globalBase,
+                            first.baseFrameOffset ?? firstOffsetDefault,
+                            () => setBaseFrameAllMode(false),
+                            (v) => {
+                              baseSortedMods.forEach(m => updatePlacedModule(m.id, { baseFrameHeight: v }));
+                            },
+                            (v) => {
+                              baseSortedMods.forEach(m => updatePlacedModule(m.id, { baseFrameOffset: v }));
+                            },
+                            'base-all',
+                          );
+                        })()
+                      ) : (
+                        sorted.map((mod) => {
+                          const cat = getModuleCategory(mod);
+                          if (cat === 'upper') return null;
+                          baseNum++;
+                          return <React.Fragment key={`base-${mod.id}`}>{renderSlotBaseFrameRow(
+                            mod,
+                            `${toAlpha(baseNum)}(하)`,
+                          )}</React.Fragment>;
+                        })
+                      )}
                     </div>
                   )}
                 </div>
