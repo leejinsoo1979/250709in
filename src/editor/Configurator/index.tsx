@@ -5942,12 +5942,13 @@ const Configurator: React.FC = () => {
                 {!isFrameSectionCollapsed && (
                   <div className={styles.subSetting}>
                     {allTopOn && topSortedMods.length > 0 ? (
-                      // 전체 ON: 통합 행 1개만 표시 (토글로 일괄 ON/OFF)
+                      // 전체 ON: 통합 행 1개만 표시 — OFF 시 상단갭 필드 표시
                       (() => {
                         const firstTop = topSortedMods[0];
                         const catFirst = getModuleCategory(firstTop);
                         const topOffsetDefaultU = (catFirst === 'upper' && spaceInfo.surroundType === 'surround') ? 23 : 0;
                         const unifiedEnabled = topSortedMods.every(m => m.hasTopFrame !== false);
+                        if (unifiedEnabled) {
                         return renderSlotFrameRow(
                           '전체',
                           unifiedEnabled,
@@ -5964,6 +5965,49 @@ const Configurator: React.FC = () => {
                             topSortedMods.forEach(m => updatePlacedModule(m.id, { topFrameOffset: v }));
                           },
                           'top-all',
+                        );
+                        }
+                        // OFF 상태: 토글 + 상단갭 입력
+                        const currentGap = firstTop.topFrameGap ?? 0;
+                        return (
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '3px 0' }}>
+                            <span className={styles.frameItemLabel} style={{ minWidth: '34px', textAlign: 'left', margin: 0 }}>전체</span>
+                            <button
+                              onClick={() => {
+                                topSortedMods.forEach(m => updatePlacedModule(m.id, { hasTopFrame: true }));
+                              }}
+                              className={styles.miniToggle}
+                            />
+                            <div style={{ display: 'flex', flex: 1, gap: '4px' }}>
+                              <div className={styles.frameItemInput} style={{ flex: 1 }}>
+                                <span style={{ fontSize: '10px', color: 'var(--theme-text-secondary)', padding: '0 2px', flexShrink: 0 }}>상단갭</span>
+                                <input
+                                  type="text" inputMode="numeric"
+                                  value={currentGap || ''} placeholder="0"
+                                  onKeyDown={(e) => {
+                                    if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                                      e.preventDefault();
+                                      const cur = firstTop.topFrameGap ?? 0;
+                                      const next = Math.max(0, Math.min(2000, cur + (e.key === 'ArrowUp' ? 1 : -1)));
+                                      topSortedMods.forEach(m => updatePlacedModule(m.id, { topFrameGap: next }));
+                                    }
+                                  }}
+                                  onChange={(e) => {
+                                    const v = e.target.value;
+                                    if (v === '' || /^\d+$/.test(v)) {
+                                      const num = v === '' ? 0 : parseInt(v, 10);
+                                      topSortedMods.forEach(m => updatePlacedModule(m.id, { topFrameGap: num }));
+                                    }
+                                  }}
+                                  onBlur={(e) => {
+                                    const num = Math.max(0, Math.min(2000, parseInt(e.target.value) || 0));
+                                    topSortedMods.forEach(m => updatePlacedModule(m.id, { topFrameGap: num }));
+                                  }}
+                                  className={styles.frameNumberInput}
+                                />
+                              </div>
+                            </div>
+                          </div>
                         );
                       })()
                     ) : (
@@ -6006,30 +6050,76 @@ const Configurator: React.FC = () => {
                   {!isFrameSectionCollapsed && (
                     <div className={styles.subSetting}>
                       {allBaseOn && baseSortedMods.length > 0 ? (
-                        // 전체 ON: 통합 행 1개만 표시 (토글로 일괄 ON/OFF)
+                        // 전체 ON: 통합 행 1개만 표시 — OFF 시 띄움 높이 필드 표시
                         (() => {
                           const first = baseSortedMods[0];
                           const firstOffsetDefault = ((first.moduleId?.startsWith('lower-') || first.moduleId?.includes('-lower-')) ? 65 : 0);
                           const unifiedEnabled = baseSortedMods.every(m => m.hasBase !== false);
-                          return renderSlotFrameRow(
-                            '전체',
-                            unifiedEnabled,
-                            first.baseFrameHeight ?? globalBase,
-                            first.baseFrameOffset ?? firstOffsetDefault,
-                            () => {
-                              const newVal = !unifiedEnabled;
-                              baseSortedMods.forEach(m => updatePlacedModule(m.id, {
-                                hasBase: newVal,
-                                ...(newVal ? { doorBottomGap: 25 } : { individualFloatHeight: 0 }),
-                              }));
-                            },
-                            (v) => {
-                              baseSortedMods.forEach(m => updatePlacedModule(m.id, { baseFrameHeight: v }));
-                            },
-                            (v) => {
-                              baseSortedMods.forEach(m => updatePlacedModule(m.id, { baseFrameOffset: v }));
-                            },
-                            'base-all',
+                          if (unifiedEnabled) {
+                            return renderSlotFrameRow(
+                              '전체',
+                              unifiedEnabled,
+                              first.baseFrameHeight ?? globalBase,
+                              first.baseFrameOffset ?? firstOffsetDefault,
+                              () => {
+                                baseSortedMods.forEach(m => updatePlacedModule(m.id, {
+                                  hasBase: false,
+                                  individualFloatHeight: 0,
+                                }));
+                              },
+                              (v) => {
+                                baseSortedMods.forEach(m => updatePlacedModule(m.id, { baseFrameHeight: v }));
+                              },
+                              (v) => {
+                                baseSortedMods.forEach(m => updatePlacedModule(m.id, { baseFrameOffset: v }));
+                              },
+                              'base-all',
+                            );
+                          }
+                          // OFF 상태: 토글 + 띄움 높이 입력
+                          const currentFloat = first.individualFloatHeight ?? 0;
+                          return (
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '3px 0' }}>
+                              <span className={styles.frameItemLabel} style={{ minWidth: '34px', textAlign: 'left', margin: 0 }}>전체</span>
+                              <button
+                                onClick={() => {
+                                  baseSortedMods.forEach(m => updatePlacedModule(m.id, {
+                                    hasBase: true,
+                                    doorBottomGap: 25,
+                                  }));
+                                }}
+                                className={styles.miniToggle}
+                              />
+                              <div style={{ display: 'flex', flex: 1, gap: '4px' }}>
+                                <div className={styles.frameItemInput} style={{ flex: 1 }}>
+                                  <span style={{ fontSize: '10px', color: 'var(--theme-text-secondary)', padding: '0 2px', flexShrink: 0 }}>띄움</span>
+                                  <input
+                                    type="text" inputMode="numeric"
+                                    value={currentFloat || ''} placeholder="0"
+                                    onKeyDown={(e) => {
+                                      if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                                        e.preventDefault();
+                                        const cur = first.individualFloatHeight ?? 0;
+                                        const next = Math.max(0, Math.min(500, cur + (e.key === 'ArrowUp' ? 1 : -1)));
+                                        baseSortedMods.forEach(m => updatePlacedModule(m.id, { individualFloatHeight: next, doorBottomGap: next }));
+                                      }
+                                    }}
+                                    onChange={(e) => {
+                                      const v = e.target.value;
+                                      if (v === '' || /^\d+$/.test(v)) {
+                                        const num = v === '' ? 0 : parseInt(v, 10);
+                                        baseSortedMods.forEach(m => updatePlacedModule(m.id, { individualFloatHeight: num, doorBottomGap: num }));
+                                      }
+                                    }}
+                                    onBlur={(e) => {
+                                      const num = Math.max(0, Math.min(500, parseInt(e.target.value) || 0));
+                                      baseSortedMods.forEach(m => updatePlacedModule(m.id, { individualFloatHeight: num, doorBottomGap: num }));
+                                    }}
+                                    className={styles.frameNumberInput}
+                                  />
+                                </div>
+                              </div>
+                            </div>
                           );
                         })()
                       ) : (
