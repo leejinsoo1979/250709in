@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { getModulesByCategory, getModuleById, ModuleData } from '@/data/modules';
 import { useSpaceConfigStore, SpaceInfo } from '@/store/core/spaceConfigStore';
 import { calculateInternalSpace } from '@/editor/shared/viewer3d/utils/geometry';
@@ -980,8 +980,18 @@ const ModuleGallery: React.FC<ModuleGalleryProps> = ({ moduleCategory = 'tall', 
   const { t } = useTranslation();
   // 선택된 탭 상태 (전체/싱글/듀얼/커스텀)
   const [internalSelectedType, setInternalSelectedType] = useState<ModuleType>('all');
-  const selectedType = externalSelectedType ?? internalSelectedType;
+  // 주방 카테고리는 싱글/듀얼 구분 없이 항상 'all'로 고정
+  const rawSelectedType = externalSelectedType ?? internalSelectedType;
+  const selectedType: ModuleType = moduleCategory === 'kitchen' ? 'all' : rawSelectedType;
   const setSelectedType = onSelectedTypeChange ?? setInternalSelectedType;
+
+  // 주방 진입 시 외부 selectedType도 'all'로 동기화
+  useEffect(() => {
+    if (moduleCategory === 'kitchen' && rawSelectedType !== 'all') {
+      setSelectedType('all');
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [moduleCategory]);
 
   // 에디터 스토어에서 공간 정보 가져오기
   const { spaceInfo } = useSpaceConfigStore();
