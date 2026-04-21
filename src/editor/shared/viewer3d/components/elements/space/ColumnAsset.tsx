@@ -780,7 +780,7 @@ const ColumnAsset: React.FC<ColumnAssetProps> = ({
         </Html>
       )}
 
-      {/* 선택 시 좌/우 이동 화살표 (가구와 동일한 스타일) */}
+      {/* 선택 시 좌/우 이동 화살표 (가구 툴바와 동일한 다크 그레이 라운드) */}
       {isSelected && !isLocked && (
         <Html
           position={[0, (height * 0.01) / 2, 0]}
@@ -792,7 +792,7 @@ const ColumnAsset: React.FC<ColumnAssetProps> = ({
             style={{
               display: 'flex',
               alignItems: 'center',
-              gap: `${Math.max(60, width * 0.6)}px`,
+              gap: '60px',
               pointerEvents: 'none',
             }}
           >
@@ -819,16 +819,18 @@ const ColumnAsset: React.FC<ColumnAssetProps> = ({
                 );
                 useSpaceConfigStore.getState().setSpaceInfo({ columns: updated });
               }}
+              onMouseEnter={(e) => e.currentTarget.style.opacity = '0.8'}
+              onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}
               style={{
-                width: '44px', height: '44px', borderRadius: '8px', border: 'none',
-                background: '#4f7fff', color: 'white',
+                width: '30px', height: '30px', borderRadius: '18px', border: 'none',
+                background: 'rgba(70, 70, 70, 0.7)',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                cursor: 'pointer', boxShadow: '0 2px 6px rgba(0,0,0,0.25)',
-                pointerEvents: 'auto',
+                cursor: 'pointer', boxShadow: '0 3px 12px rgba(0,0,0,0.25)',
+                pointerEvents: 'auto', padding: 0, transition: 'opacity 0.2s',
               }}
               title="왼쪽으로 100mm 이동"
             >
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <polyline points="15 18 9 12 15 6" />
               </svg>
             </button>
@@ -856,16 +858,18 @@ const ColumnAsset: React.FC<ColumnAssetProps> = ({
                 );
                 useSpaceConfigStore.getState().setSpaceInfo({ columns: updated });
               }}
+              onMouseEnter={(e) => e.currentTarget.style.opacity = '0.8'}
+              onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}
               style={{
-                width: '44px', height: '44px', borderRadius: '8px', border: 'none',
-                background: '#4f7fff', color: 'white',
+                width: '30px', height: '30px', borderRadius: '18px', border: 'none',
+                background: 'rgba(70, 70, 70, 0.7)',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                cursor: 'pointer', boxShadow: '0 2px 6px rgba(0,0,0,0.25)',
-                pointerEvents: 'auto',
+                cursor: 'pointer', boxShadow: '0 3px 12px rgba(0,0,0,0.25)',
+                pointerEvents: 'auto', padding: 0, transition: 'opacity 0.2s',
               }}
               title="오른쪽으로 100mm 이동"
             >
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <polyline points="9 18 15 12 9 6" />
               </svg>
             </button>
