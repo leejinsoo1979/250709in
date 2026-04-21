@@ -4406,13 +4406,21 @@ const Room: React.FC<RoomProps> = ({
                   }).forEach((mod) => {
                     const bounds = getModuleBoundsX(mod);
                     // 기둥 회피로 인한 adjustedWidth/adjustedPosition 반영 (슬롯배치)
-                    // 단, 기둥 앞 배치(front) 모드는 슬롯 전체 너비로 복원
+                    // 단, 기둥 앞 배치(front) 모드는 슬롯 전체 너비/슬롯 중심으로 복원
                     const isFrontMode = (mod as any).columnPlacementMode === 'front';
                     const adjW = (mod as any).adjustedWidth;
                     const adjPosX = (mod as any).adjustedPosition?.x;
                     let modLeft = bounds.left;
                     let modRight = bounds.right;
-                    if (!isFrontMode && adjW != null && adjW > 0) {
+                    if (isFrontMode && mod.slotIndex !== undefined) {
+                      const slotW = indexingForCheck.slotWidths?.[mod.slotIndex] ?? indexingForCheck.columnWidth;
+                      const slotCx = indexingForCheck.threeUnitPositions?.[mod.slotIndex];
+                      if (slotW != null && slotCx != null) {
+                        const cxMm = slotCx * 100;
+                        modLeft = cxMm - slotW / 2;
+                        modRight = cxMm + slotW / 2;
+                      }
+                    } else if (adjW != null && adjW > 0) {
                       const cx = (adjPosX != null ? adjPosX * 100 : (bounds.left + bounds.right) / 2);
                       modLeft = cx - adjW / 2;
                       modRight = cx + adjW / 2;
@@ -5327,11 +5335,18 @@ const Room: React.FC<RoomProps> = ({
                   let modWidthMM = bounds.right - bounds.left;
                   let modCenterXmm = (bounds.left + bounds.right) / 2;
                   // 기둥 회피로 인한 adjustedWidth/adjustedPosition 반영 (슬롯배치)
-                  // 단, 기둥 앞 배치(front) 모드는 슬롯 전체 너비로 복원 — adjustedWidth 무시
+                  // 단, 기둥 앞 배치(front) 모드는 슬롯 전체 너비/슬롯 중심으로 복원
                   const isFrontMode = (mod as any).columnPlacementMode === 'front';
                   const adjW = (mod as any).adjustedWidth;
                   const adjPosX = (mod as any).adjustedPosition?.x;
-                  if (!isFrontMode && adjW != null && adjW > 0) {
+                  if (isFrontMode && mod.slotIndex !== undefined) {
+                    const slotW = indexingForCheck.slotWidths?.[mod.slotIndex] ?? indexingForCheck.columnWidth;
+                    const slotCx = indexingForCheck.threeUnitPositions?.[mod.slotIndex];
+                    if (slotW != null && slotCx != null) {
+                      modWidthMM = slotW;
+                      modCenterXmm = slotCx * 100;
+                    }
+                  } else if (adjW != null && adjW > 0) {
                     modWidthMM = adjW;
                     if (adjPosX != null) modCenterXmm = adjPosX * 100;
                   }
@@ -6730,11 +6745,18 @@ const Room: React.FC<RoomProps> = ({
                       let modWidthMM = bounds.right - bounds.left;
                       let modCenterXmm = (bounds.left + bounds.right) / 2;
                       // 기둥 회피로 인한 adjustedWidth/adjustedPosition 반영 (슬롯배치)
-                      // 단, 기둥 앞 배치(front) 모드는 슬롯 전체 너비로 복원
+                      // 단, 기둥 앞 배치(front) 모드는 슬롯 전체 너비/슬롯 중심으로 복원
                       const isFrontMode = (mod as any).columnPlacementMode === 'front';
                       const adjW = (mod as any).adjustedWidth;
                       const adjPosX = (mod as any).adjustedPosition?.x;
-                      if (!isFrontMode && adjW != null && adjW > 0) {
+                      if (isFrontMode && mod.slotIndex !== undefined) {
+                        const slotW = indexingForCheck.slotWidths?.[mod.slotIndex] ?? indexingForCheck.columnWidth;
+                        const slotCx = indexingForCheck.threeUnitPositions?.[mod.slotIndex];
+                        if (slotW != null && slotCx != null) {
+                          modWidthMM = slotW;
+                          modCenterXmm = slotCx * 100;
+                        }
+                      } else if (adjW != null && adjW > 0) {
                         modWidthMM = adjW;
                         if (adjPosX != null) modCenterXmm = adjPosX * 100;
                       }
