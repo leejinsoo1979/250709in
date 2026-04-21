@@ -5967,8 +5967,14 @@ const Configurator: React.FC = () => {
                           'top-all',
                         );
                         }
-                        // OFF 상태: 상단갭 = 상부프레임 두께 (topFrameThickness)
-                        const currentGap = firstTop.topFrameThickness ?? globalTop;
+                        // OFF 상태: 상단갭 = 공간 내부 높이 - 가구 높이 (천장~상부섹션 상단 거리)
+                        const internalH = calculateInternalSpace(spaceInfo).height;
+                        const modData = getModuleById(firstTop.moduleId, calculateInternalSpace(spaceInfo), spaceInfo);
+                        const modHeight = firstTop.freeHeight
+                          || firstTop.customHeight
+                          || modData?.dimensions.height
+                          || internalH;
+                        const currentGap = Math.max(0, Math.round(internalH - modHeight));
                         return (
                           <div style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '3px 0' }}>
                             <span className={styles.frameItemLabel} style={{ minWidth: '34px', textAlign: 'left', margin: 0 }}>전체</span>
@@ -5987,21 +5993,23 @@ const Configurator: React.FC = () => {
                                   onKeyDown={(e) => {
                                     if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
                                       e.preventDefault();
-                                      const cur = firstTop.topFrameThickness ?? globalTop;
-                                      const next = Math.max(0, Math.min(2000, cur + (e.key === 'ArrowUp' ? 1 : -1)));
-                                      topSortedMods.forEach(m => updatePlacedModule(m.id, { topFrameThickness: next }));
+                                      const nextGap = Math.max(0, Math.min(2000, currentGap + (e.key === 'ArrowUp' ? 1 : -1)));
+                                      const newHeight = Math.max(100, internalH - nextGap);
+                                      topSortedMods.forEach(m => updatePlacedModule(m.id, { freeHeight: newHeight }));
                                     }
                                   }}
                                   onChange={(e) => {
                                     const v = e.target.value;
                                     if (v === '' || /^\d+$/.test(v)) {
-                                      const num = v === '' ? 0 : parseInt(v, 10);
-                                      topSortedMods.forEach(m => updatePlacedModule(m.id, { topFrameThickness: num }));
+                                      const nextGap = v === '' ? 0 : parseInt(v, 10);
+                                      const newHeight = Math.max(100, internalH - nextGap);
+                                      topSortedMods.forEach(m => updatePlacedModule(m.id, { freeHeight: newHeight }));
                                     }
                                   }}
                                   onBlur={(e) => {
-                                    const num = Math.max(0, Math.min(2000, parseInt(e.target.value) || 0));
-                                    topSortedMods.forEach(m => updatePlacedModule(m.id, { topFrameThickness: num }));
+                                    const nextGap = Math.max(0, Math.min(2000, parseInt(e.target.value) || 0));
+                                    const newHeight = Math.max(100, internalH - nextGap);
+                                    topSortedMods.forEach(m => updatePlacedModule(m.id, { freeHeight: newHeight }));
                                   }}
                                   className={styles.frameNumberInput}
                                 />
