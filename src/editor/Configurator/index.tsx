@@ -960,8 +960,15 @@ const Configurator: React.FC = () => {
 
       // Backspace 또는 Delete 키로 선택된 기둥/가구 삭제
       if (event.key === 'Backspace' || event.key === 'Delete') {
-        // 기둥이 선택되어 있으면 기둥 삭제 우선
+        // 가구가 선택되어 있으면 가구 삭제 우선 (기둥 옆 가구 삭제 시 기둥 함께 지워지는 문제 방지)
         const { selectedColumnId, selectedFurnitureId, setSelectedColumnId, setSelectedFurnitureId } = useUIStore.getState();
+        if (selectedFurnitureId) {
+          event.preventDefault();
+          const { removeModule } = useFurnitureStore.getState();
+          removeModule(selectedFurnitureId);
+          setSelectedFurnitureId(null);
+          return;
+        }
         if (selectedColumnId) {
           event.preventDefault();
           const { spaceInfo, removeColumn } = useSpaceConfigStore.getState();
@@ -969,13 +976,6 @@ const Configurator: React.FC = () => {
           if (targetColumn?.isLocked) return;
           removeColumn(selectedColumnId);
           setSelectedColumnId(null);
-          return;
-        }
-        if (selectedFurnitureId) {
-          event.preventDefault();
-          const { removeModule } = useFurnitureStore.getState();
-          removeModule(selectedFurnitureId);
-          setSelectedFurnitureId(null);
           return;
         }
       }
