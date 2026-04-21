@@ -3470,8 +3470,11 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                       (window as any).__r3fClickHandled = true;
                       updatePlacedModule(placedModule.id, {
                         customDepth: targetDepth,
-                        lowerSectionDepth: undefined,
-                        upperSectionDepth: undefined,
+                        lowerSectionDepth: targetDepth,
+                        upperSectionDepth: targetDepth,
+                        // 내부값 'back' = UI "앞고정" (가구 앞면 고정, 뒷면이 앞으로 당겨짐)
+                        lowerSectionDepthDirection: 'back',
+                        upperSectionDepthDirection: 'back',
                         customWidth: undefined,
                         adjustedWidth: undefined,
                         columnPlacementMode: 'front',
