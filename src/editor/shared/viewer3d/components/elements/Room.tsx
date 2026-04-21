@@ -5324,6 +5324,13 @@ const Room: React.FC<RoomProps> = ({
                   const bounds = getModuleBoundsX(mod);
                   let modWidthMM = bounds.right - bounds.left;
                   let modCenterXmm = (bounds.left + bounds.right) / 2;
+                  // 기둥 회피로 인한 adjustedWidth/adjustedPosition 반영 (슬롯배치)
+                  const adjW = (mod as any).adjustedWidth;
+                  const adjPosX = (mod as any).adjustedPosition?.x;
+                  if (adjW != null && adjW > 0) {
+                    modWidthMM = adjW;
+                    if (adjPosX != null) modCenterXmm = adjPosX * 100;
+                  }
                   const epThk = mod.endPanelThickness || 18.5;
                   const leftEpOffset = mod.leftEndPanelOffset ?? mod.endPanelOffset ?? 0;
                   const rightEpOffset = mod.rightEndPanelOffset ?? mod.endPanelOffset ?? 0;
@@ -6718,6 +6725,13 @@ const Room: React.FC<RoomProps> = ({
                       const bounds = getModuleBoundsX(mod);
                       let modWidthMM = bounds.right - bounds.left;
                       let modCenterXmm = (bounds.left + bounds.right) / 2;
+                      // 기둥 회피로 인한 adjustedWidth/adjustedPosition 반영 (슬롯배치)
+                      const adjW = (mod as any).adjustedWidth;
+                      const adjPosX = (mod as any).adjustedPosition?.x;
+                      if (adjW != null && adjW > 0) {
+                        modWidthMM = adjW;
+                        if (adjPosX != null) modCenterXmm = adjPosX * 100;
+                      }
                       const epThk = mod.endPanelThickness || 18.5;
                       if (mod.hasLeftEndPanel) { modWidthMM -= epThk; modCenterXmm += epThk / 2; }
                       if (mod.hasRightEndPanel) { modWidthMM -= epThk; modCenterXmm -= epThk / 2; }

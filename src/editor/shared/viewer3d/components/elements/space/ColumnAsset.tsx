@@ -666,7 +666,7 @@ const ColumnAsset: React.FC<ColumnAssetProps> = ({
           position={[0, (height * 0.01) + 0.3, 0]}
           center
           zIndexRange={[100, 0]}
-          style={{ pointerEvents: 'auto', userSelect: 'none' }}
+          style={{ pointerEvents: 'auto', userSelect: 'none', background: 'transparent' }}
         >
           <div
             onPointerDown={(e) => {
