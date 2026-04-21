@@ -410,12 +410,14 @@ const ZoneSizeStepCeilingRow: React.FC<{ spaceInfo: any; styles: any; }> = ({ sp
 );
 
 const Configurator: React.FC = () => {
-  const { user } = useAuth();
+  const { user: authUser } = useAuth();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
 
   // 데모 모드: /demo 경로일 때 로그인/저장/Firebase 없이 빈 에디터
   const isDemoMode = typeof window !== 'undefined' && window.location.pathname.startsWith('/demo');
+  // 데모 모드에서는 user를 null로 취급 (계정 정보 표시 차단)
+  const user = isDemoMode ? null : authUser;
 
   // URL 파라미터 미리 추출
   const modeParam = searchParams.get('mode');
@@ -1485,6 +1487,12 @@ const Configurator: React.FC = () => {
   const saveProject = async () => {
 // console.log('💾 [DEBUG] saveProject 함수 시작');
 
+    // 데모 모드: 저장 완전 차단
+    if (isDemoMode) {
+      console.log('🎭 데모 모드 - 저장 차단');
+      return;
+    }
+
     // 중복 저장 방지
     if (saveInProgressRef.current) {
 // console.log('⚠️ 저장이 이미 진행 중 - 중복 호출 무시');
@@ -2132,6 +2140,10 @@ const Configurator: React.FC = () => {
 
   // 다른이름으로 저장 함수 (디자인 파일로 저장)
   const handleSaveAs = async () => {
+    if (isDemoMode) {
+      console.log('🎭 데모 모드 - 다른 이름으로 저장 차단');
+      return;
+    }
     const newTitle = prompt('새 디자인 파일 이름을 입력하세요:', (currentDesignFileName || basicInfo.title) + ' 사본');
     if (newTitle && newTitle.trim()) {
       setSaving(true);
