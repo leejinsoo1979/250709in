@@ -3091,5 +3091,10 @@ export const generateShelvingModules = (
     }
   }
 
+  // === 멍장 (맨 마지막에 표시) ===
+  modules.push(createSingleDummyFull(columnWidth, maxHeight));
+  modules.push(createSingleDummyUpper(columnWidth));
+  modules.push(createSingleDummyLower(columnWidth));
+
   return modules;
 };

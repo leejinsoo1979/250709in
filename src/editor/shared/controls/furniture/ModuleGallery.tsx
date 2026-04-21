@@ -938,7 +938,7 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
               }}
             />
           ) : (
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', height: '100%', fontSize: '11px', color: 'var(--theme-text)', textAlign: 'center', padding: '4px', wordBreak: 'keep-all' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', height: '100%', fontSize: '11px', color: 'var(--theme-primary)', backgroundColor: 'color-mix(in srgb, var(--theme-primary) 20%, transparent)', textAlign: 'center', padding: '4px', wordBreak: 'keep-all', borderRadius: '4px' }}>
               {module.name.replace(/\s*[\d.]+mm$/, '')}
             </div>
           )}
@@ -1134,6 +1134,8 @@ const ModuleGallery: React.FC<ModuleGalleryProps> = ({ moduleCategory = 'tall', 
 
   // 가구 ID에서 키 추출하여 아이콘 경로 결정
   const getIconPath = (moduleId: string): string => {
+    // 멍장은 텍스트 썸네일 사용
+    if (moduleId.includes('dummy')) return '';
     const moduleKey = moduleId.replace(/-[\d.]+$/, ''); // 폭 정보 제거
     return moduleKey in FURNITURE_ICONS ? FURNITURE_ICONS[moduleKey] : FURNITURE_ICONS['single-2drawer-hanging'];
   };
