@@ -3437,19 +3437,20 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
               </Html>
             )}
 
-            {/* 기둥C(medium) 앞 배치 전환 화살표 — 가구 선택 시 가구↔기둥 사이 표시 */}
+            {/* 기둥C(medium) 앞↔측면 배치 전환 화살표 — 가구 선택 시 가구↔기둥 사이 표시 */}
             {isSelected && !readOnly && slotInfo?.hasColumn && slotInfo?.columnType === 'medium' && slotInfo.column && (() => {
               const columnDepthMm = slotInfo.column.depth;
-              const currentFurnitureDepth = placedModule.customDepth ?? (actualModuleData?.dimensions.depth || 600);
-              const depthDiff = currentFurnitureDepth - columnDepthMm;
-              if (depthDiff < 290) return null;
+              const originalDepth = actualModuleData?.dimensions.depth || 600;
+              const isFrontMode = (placedModule as any).columnPlacementMode === 'front';
+              // front 모드가 아닐 때: 가구깊이 - 기둥깊이 >= 290 필요
+              if (!isFrontMode) {
+                const depthDiff = (placedModule.customDepth ?? originalDepth) - columnDepthMm;
+                if (depthDiff < 290) return null;
+              }
 
-              const targetDepth = depthDiff;
-              const isAlreadyFront =
-                placedModule.customDepth === targetDepth &&
-                (placedModule as any).columnPlacementMode === 'front';
-              if (isAlreadyFront) return null;
-
+              // front 모드면 화살표 반대 방향 (측면배치 방향으로 표시)
+              // 측면배치 모드면 기둥 쪽 방향으로 표시
+              const showReverse = isFrontMode;
               const arrowZ = depth / 2 + 0.05;
               const arrowX = slotInfo.intrusionDirection === 'from-left' ? -mmToThreeUnits(100) : mmToThreeUnits(100);
 
@@ -3468,17 +3469,31 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                     onClick={(e) => {
                       e.stopPropagation();
                       (window as any).__r3fClickHandled = true;
-                      updatePlacedModule(placedModule.id, {
-                        customDepth: targetDepth,
-                        lowerSectionDepth: targetDepth,
-                        upperSectionDepth: targetDepth,
-                        // 내부값 'back' = UI "앞고정" (가구 앞면 고정, 뒷면이 앞으로 당겨짐)
-                        lowerSectionDepthDirection: 'back',
-                        upperSectionDepthDirection: 'back',
-                        customWidth: undefined,
-                        adjustedWidth: undefined,
-                        columnPlacementMode: 'front',
-                      } as any);
+                      if (isFrontMode) {
+                        // 측면 배치로 복원: 원래 깊이로 되돌리고 섹션 설정 초기화
+                        updatePlacedModule(placedModule.id, {
+                          customDepth: undefined,
+                          lowerSectionDepth: undefined,
+                          upperSectionDepth: undefined,
+                          lowerSectionDepthDirection: undefined,
+                          upperSectionDepthDirection: undefined,
+                          columnPlacementMode: undefined,
+                        } as any);
+                      } else {
+                        // 기둥 앞 배치로 전환
+                        const targetDepth = (placedModule.customDepth ?? originalDepth) - columnDepthMm;
+                        updatePlacedModule(placedModule.id, {
+                          customDepth: targetDepth,
+                          lowerSectionDepth: targetDepth,
+                          upperSectionDepth: targetDepth,
+                          // 내부값 'back' = UI "앞고정"
+                          lowerSectionDepthDirection: 'back',
+                          upperSectionDepthDirection: 'back',
+                          customWidth: undefined,
+                          adjustedWidth: undefined,
+                          columnPlacementMode: 'front',
+                        } as any);
+                      }
                     }}
                     onMouseEnter={(e) => (e.currentTarget.style.opacity = '0.8')}
                     onMouseLeave={(e) => (e.currentTarget.style.opacity = '1')}
@@ -3489,14 +3504,22 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                       cursor: 'pointer', boxShadow: '0 3px 12px rgba(0,0,0,0.25)',
                       padding: 0, transition: 'opacity 0.2s',
                     }}
-                    title="기둥 앞으로 배치"
+                    title={isFrontMode ? '기둥 측면 배치로 복원' : '기둥 앞으로 배치'}
                   >
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      {slotInfo.intrusionDirection === 'from-left' ? (
-                        <polyline points="15 18 9 12 15 6" />
-                      ) : (
-                        <polyline points="9 18 15 12 9 6" />
-                      )}
+                      {(() => {
+                        // intrusionDirection=from-left: 측면배치 모드는 ← (기둥쪽=왼쪽)
+                        //                               front 모드는 → (원래위치=오른쪽)
+                        // intrusionDirection=from-right: 반대
+                        const leftChev = !showReverse
+                          ? slotInfo.intrusionDirection === 'from-left'
+                          : slotInfo.intrusionDirection !== 'from-left';
+                        return leftChev ? (
+                          <polyline points="15 18 9 12 15 6" />
+                        ) : (
+                          <polyline points="9 18 15 12 9 6" />
+                        );
+                      })()}
                     </svg>
                   </button>
                 </Html>
