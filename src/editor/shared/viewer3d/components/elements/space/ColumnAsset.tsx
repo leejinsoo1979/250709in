@@ -2,7 +2,7 @@ import React, { useRef, useState, useEffect, useMemo } from 'react';
 import { ThreeEvent, useThree } from '@react-three/fiber';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
-import { Line } from '@react-three/drei';
+import { Line, Html } from '@react-three/drei';
 import { useSpace3DView } from '../../../context/useSpace3DView';
 import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
 import { useDerivedSpaceStore } from '@/store/derivedSpaceStore';
@@ -647,6 +647,86 @@ const ColumnAsset: React.FC<ColumnAssetProps> = ({
             return null;
           })()}
         </>
+      )}
+
+      {/* 선택 시 툴바 (가구와 동일한 UI) */}
+      {isSelected && (
+        <Html
+          position={[0, (height * 0.01) + 0.3, 0]}
+          center
+          zIndexRange={[100, 0]}
+          style={{ pointerEvents: 'auto', userSelect: 'none' }}
+        >
+          <div
+            onPointerDown={(e) => {
+              e.stopPropagation();
+              (window as any).__r3fClickHandled = true;
+            }}
+            onPointerUp={(e) => {
+              e.stopPropagation();
+              e.nativeEvent.stopImmediatePropagation();
+            }}
+            onClick={(e) => {
+              e.stopPropagation();
+              e.nativeEvent.stopImmediatePropagation();
+            }}
+            style={{
+              display: 'flex',
+              gap: '8px',
+              background: 'rgba(70, 70, 70, 0.7)',
+              borderRadius: '18px',
+              padding: '6px 12px',
+              boxShadow: '0 3px 12px rgba(0,0,0,0.25)'
+            }}
+          >
+            {/* 삭제 버튼 */}
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                (window as any).__r3fClickHandled = true;
+                if (onRemove) onRemove(id);
+              }}
+              style={{
+                width: '24px', height: '24px', background: 'transparent', border: 'none',
+                cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                padding: 0, transition: 'opacity 0.2s',
+              }}
+              onMouseEnter={(e) => e.currentTarget.style.opacity = '0.7'}
+              onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}
+              title="삭제"
+            >
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M3 6h18" />
+                <path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6" />
+                <path d="M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2" />
+                <line x1="10" y1="11" x2="10" y2="17" />
+                <line x1="14" y1="11" x2="14" y2="17" />
+              </svg>
+            </button>
+
+            {/* 복제 버튼 */}
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                (window as any).__r3fClickHandled = true;
+                window.dispatchEvent(new CustomEvent('duplicate-column', { detail: { columnId: id } }));
+              }}
+              style={{
+                width: '24px', height: '24px', background: 'transparent', border: 'none',
+                cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                padding: 0, transition: 'opacity 0.2s',
+              }}
+              onMouseEnter={(e) => e.currentTarget.style.opacity = '0.7'}
+              onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}
+              title="복제"
+            >
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="9" y="9" width="13" height="13" rx="2" />
+                <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
+              </svg>
+            </button>
+          </div>
+        </Html>
       )}
     </group>
   );

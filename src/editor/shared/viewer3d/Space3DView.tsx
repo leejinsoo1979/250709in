@@ -489,8 +489,29 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
     };
 
     window.addEventListener('duplicate-furniture', handleDuplicateFurniture);
+
+    // 기둥 복제 이벤트
+    const handleDuplicateColumn = (event: any) => {
+      const { columnId } = event.detail || {};
+      if (!columnId) return;
+      const columns = useSpaceConfigStore.getState().spaceInfo.columns || [];
+      const column = columns.find((c: any) => c.id === columnId);
+      if (!column) return;
+      const newId = `column-${Date.now()}`;
+      // 약간 우측(+200mm)으로 이동시켜 복제
+      const newPosition: [number, number, number] = [
+        (column.position[0] || 0) + 0.2,
+        column.position[1] || 0,
+        column.position[2] || 0,
+      ];
+      const newColumn = { ...column, id: newId, position: newPosition };
+      useSpaceConfigStore.getState().setSpaceInfo({ columns: [...columns, newColumn] });
+    };
+    window.addEventListener('duplicate-column', handleDuplicateColumn);
+
     return () => {
       window.removeEventListener('duplicate-furniture', handleDuplicateFurniture);
+      window.removeEventListener('duplicate-column', handleDuplicateColumn);
     };
   }, [spaceInfo]);
 

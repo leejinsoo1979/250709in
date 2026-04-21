@@ -852,7 +852,7 @@ const Room: React.FC<RoomProps> = ({
       const columnLeftX = column.position[0] - columnWidthM / 2;
       const columnRightX = column.position[0] + columnWidthM / 2;
 
-      if (columnLeftX < frameEndX && columnRightX > frameStartX && column.depth >= 730) {
+      if (columnLeftX < frameEndX && columnRightX > frameStartX && column.depth > 200) {
         const leftSegmentWidth = Math.max(0, columnLeftX - currentX);
         if (leftSegmentWidth > 0) {
           segments.push({
