@@ -30,8 +30,18 @@ const ColumnControl: React.FC<ColumnControlProps> = ({ columns, onColumnsChange,
     if (!spaceInfo) return;
 
     // 공간 중앙에 기둥 배치
+    // 가구(의류장/키큰장)와 동일한 Z 정렬: 가구 공식 기준 뒷면을 맞춤
+    // furnitureZOffset = zOffset + (panelDepth - furnitureDepth)/2
+    // 가구 뒷면 Z = furnitureZOffset - furnitureDepth/2 - doorThickness
+    // 기둥 중심 Z = 가구 뒷면 Z + columnDepth/2
     const centerX = 0;
-    const centerZ = -(spaceInfo.depth || 1500) * 0.01 / 2 + (columnData.depth * 0.01) / 2;
+    const panelDepthM = (spaceInfo.depth || 1500) * 0.01;
+    const furnitureDepthM = Math.min(panelDepthM, 6); // 600mm
+    const doorThicknessM = 0.2; // 20mm
+    const zOffset = -panelDepthM / 2;
+    const furnitureZOffset = zOffset + (panelDepthM - furnitureDepthM) / 2;
+    const furnitureBackZ = furnitureZOffset - furnitureDepthM / 2 - doorThicknessM;
+    const centerZ = furnitureBackZ + (columnData.depth * 0.01) / 2;
 
     const newColumn: Column = {
       id: `column-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
@@ -70,7 +80,7 @@ const ColumnControl: React.FC<ColumnControlProps> = ({ columns, onColumnsChange,
           <ColumnThumbnail
             width={300}
             height={2400}
-            depth={712}
+            depth={600}
             material="concrete"
             color="#888888"
             onDragStart={handleThumbnailDragStart}
