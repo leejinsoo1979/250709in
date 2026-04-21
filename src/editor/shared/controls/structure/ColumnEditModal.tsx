@@ -292,6 +292,49 @@ const ColumnEditModal: React.FC<ColumnEditModalProps> = ({
             </div>
           </div>
 
+          {/* 충돌 옵션 */}
+          <div className={styles.section}>
+            <h4 className={styles.sectionTitle}>충돌 옵션</h4>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '4px 0' }}>
+              <span style={{ fontSize: '13px', color: 'var(--theme-text, #333)' }}>
+                충돌 방지 {(column as any).noCollision ? 'OFF (가구 무시)' : 'ON'}
+              </span>
+              <button
+                type="button"
+                role="switch"
+                aria-checked={!(column as any).noCollision}
+                onClick={() => handleInputChange('noCollision' as any, !((column as any).noCollision ?? false))}
+                style={{
+                  position: 'relative',
+                  width: '42px',
+                  height: '24px',
+                  borderRadius: '12px',
+                  border: 'none',
+                  background: !(column as any).noCollision
+                    ? 'var(--theme-primary, #10b981)'
+                    : 'var(--theme-border, #d1d5db)',
+                  cursor: 'pointer',
+                  transition: 'background 0.2s ease',
+                  padding: 0,
+                }}
+              >
+                <span
+                  style={{
+                    position: 'absolute',
+                    top: '2px',
+                    left: !(column as any).noCollision ? '20px' : '2px',
+                    width: '20px',
+                    height: '20px',
+                    borderRadius: '50%',
+                    background: '#fff',
+                    boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
+                    transition: 'left 0.2s ease',
+                  }}
+                />
+              </button>
+            </div>
+          </div>
+
           {/* 삭제 버튼 */}
           <div className={styles.section}>
             <button className={styles.deleteButton} onClick={handleDelete}>

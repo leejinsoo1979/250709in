@@ -897,14 +897,13 @@ const Header: React.FC<HeaderProps> = ({
                       const currentSpaceInfo = useSpaceConfigStore.getState().spaceInfo;
                       const isFrameMerged = currentSpaceInfo.frameMergeEnabled ?? false;
 
-                      // 프레임 병합 안 된 상태면 커스텀 모달로 병합 여부 확인
-                      // 단, 슬롯 배치 가구가 2개 이상일 때만 (1개면 병합 대상 없음)
+                      // 슬롯 배치 가구 2개 이상일 때 자동 병합 처리 (팝업 없음)
+                      // computeFrameMergeGroups가 높이/너비 기준으로 병합 가능한 것만 묶으므로
+                      // 단순히 frameMergeEnabled = true로 설정하면 동일 높이/사이즈만 자동 병합됨
                       const slotModules = useFurnitureStore.getState().placedModules
                         .filter(m => !m.isFreePlacement);
                       if (!isFrameMerged && slotModules.length >= 2) {
-                        setIsConvertMenuOpen(false);
-                        setIsFrameMergeModalOpen(true);
-                        return;
+                        useSpaceConfigStore.getState().setSpaceInfo({ frameMergeEnabled: true });
                       }
 
                       navigateToCncOptimizer();

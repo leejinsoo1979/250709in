@@ -69,6 +69,12 @@ const ColumnEditModal: React.FC<ColumnEditModalProps> = ({
     updateColumn(column.id, { hasFrontPanelFinish });
   };
 
+  const handleNoCollisionChange = (noCollision: boolean) => {
+    const updated: any = { ...editedColumn, noCollision };
+    setEditedColumn(updated);
+    updateColumn(column.id, { noCollision } as any);
+  };
+
   const handleDelete = () => {
     if (window.confirm('기둥을 삭제하시겠습니까?')) {
       removeColumn(column.id);
@@ -344,6 +350,17 @@ const ColumnEditModal: React.FC<ColumnEditModalProps> = ({
                     onChange={(e) => handleFrontPanelFinishChange(e.target.checked)}
                   />
                   전면 패널 마감
+                </label>
+              </div>
+
+              <div className={styles.inputGroup}>
+                <label>
+                  <input
+                    type="checkbox"
+                    checked={(editedColumn as any).noCollision ?? false}
+                    onChange={(e) => handleNoCollisionChange(e.target.checked)}
+                  />
+                  충돌 방지 OFF (가구 무시)
                 </label>
               </div>
             </div>

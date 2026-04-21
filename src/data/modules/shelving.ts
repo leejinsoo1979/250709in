@@ -2639,6 +2639,84 @@ const createDualLowerTopDownTouch3Tier = (dualWidth: number, slotWidths?: number
 };
 
 // ============================================================================
+// 멍장 (도어만 달린 더미 가구) 생성 함수
+// ============================================================================
+
+// 싱글 키큰장 멍장
+const createSingleDummyFull = (columnWidth: number, maxHeight: number): ModuleData => {
+  const widthForId = Math.round(columnWidth * 100) / 100;
+  const base = createFurnitureBase(
+    `single-dummy-full-${widthForId}`,
+    `멍장 ${widthForId}mm`,
+    columnWidth, maxHeight, FURNITURE_SPECS.DEFAULT_DEPTH,
+    '#eeeeee',
+    `멍장 (키큰장)`,
+    FURNITURE_SPECS.DEFAULT_DEPTH,
+    'full'
+  );
+  return {
+    ...base,
+    hasDoor: true,
+    thumbnail: '/images/furniture-thumbnails/싱글장.png',
+    modelConfig: {
+      ...base.modelConfig,
+      hasOpenFront: false,
+      sections: [{ type: 'open', heightType: 'percentage', height: 100 }]
+    }
+  } as ModuleData;
+};
+
+// 싱글 상부장 멍장
+const createSingleDummyUpper = (columnWidth: number): ModuleData => {
+  const widthForId = Math.round(columnWidth * 100) / 100;
+  const base = createFurnitureBase(
+    `single-dummy-upper-${widthForId}`,
+    `멍장 ${widthForId}mm`,
+    columnWidth, 785, 300,
+    '#eeeeee',
+    `멍장 (상부)`,
+    300,
+    'upper'
+  );
+  return {
+    ...base,
+    hasDoor: true,
+    thumbnail: '/images/furniture-thumbnails/상부장 기본.png',
+    modelConfig: {
+      ...base.modelConfig,
+      hasOpenFront: false,
+      sections: [{ type: 'open', heightType: 'percentage', height: 100 }]
+    }
+  } as ModuleData;
+};
+
+// 싱글 하부장 멍장
+const createSingleDummyLower = (columnWidth: number): ModuleData => {
+  const widthForId = Math.round(columnWidth * 100) / 100;
+  const base = createFurnitureBase(
+    `single-dummy-lower-${widthForId}`,
+    `멍장 ${widthForId}mm`,
+    columnWidth, 1000, FURNITURE_SPECS.DEFAULT_DEPTH,
+    '#eeeeee',
+    `멍장 (하부)`,
+    FURNITURE_SPECS.DEFAULT_DEPTH,
+    'lower'
+  );
+  return {
+    ...base,
+    hasDoor: true,
+    isDynamic: true,
+    thumbnail: '/images/furniture-thumbnails/하부장.png',
+    modelConfig: {
+      ...base.modelConfig,
+      basicThickness: FURNITURE_SPECS.BASIC_THICKNESS,
+      hasOpenFront: false,
+      sections: [{ type: 'open', heightType: 'percentage', height: 100 }]
+    }
+  } as ModuleData;
+};
+
+// ============================================================================
 // 메인 생성 함수 (기존 인터페이스 유지)
 // ============================================================================
 

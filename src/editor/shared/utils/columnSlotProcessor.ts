@@ -169,7 +169,8 @@ export const analyzeColumnDepthPlacement = (column: Column, slotWidthMm: number,
  */
 export const analyzeColumnSlots = (spaceInfo: SpaceInfo): ColumnSlotInfo[] => {
   const indexing = calculateSpaceIndexing(spaceInfo);
-  const columns = spaceInfo.columns || [];
+  // noCollision(충돌 방지 OFF) 기둥은 가구 회피 판단에서 제외
+  const columns = (spaceInfo.columns || []).filter((c: any) => !c.noCollision);
   const slotInfos: ColumnSlotInfo[] = [];
 
   console.log('🔍🔍🔍 [analyzeColumnSlots] 함수 시작:', {

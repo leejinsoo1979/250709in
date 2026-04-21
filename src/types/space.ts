@@ -9,6 +9,7 @@ export interface Column {
   hasBackPanelFinish?: boolean; // 뒷면 패널 마감 여부
   hasFrontPanelFinish?: boolean; // 전면 패널 마감 여부
   isLocked?: boolean; // 잠금 상태 (드래그/삭제/편집 방지)
+  noCollision?: boolean; // 충돌 방지 OFF (가구가 기둥 무시하고 그대로 배치, 기둥 투명 렌더)
 }
 
 export interface Wall {

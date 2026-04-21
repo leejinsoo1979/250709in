@@ -172,17 +172,33 @@ const ColumnAsset: React.FC<ColumnAssetProps> = ({
   }, [isSelected, isLocked, id]);
 
   // 기둥 재질 생성 - 드래그 중에는 업데이트하지 않음
+  const noCollision = (currentColumn as any)?.noCollision ?? false;
+  // CSS 변수에서 테마 primary 색상 읽기
+  const getThemePrimary = (): string => {
+    try {
+      const root = document.documentElement;
+      const c = getComputedStyle(root).getPropertyValue('--theme-primary').trim();
+      return c || '#10b981';
+    } catch {
+      return '#10b981';
+    }
+  };
   const material = React.useMemo(() => {
-    // 잠긴 기둥: 붉은 반투명, 선택된 기둥: 연두색, 그 외: 기본 색상
-    const displayColor = isLocked ? '#ff3333' : (isSelected ? '#4CAF50' : color);
+    // 잠긴 기둥: 붉은 반투명, 선택된: 연두색, 충돌 방지 OFF: 테마 색 투명, 그 외: 기본
+    let displayColor: string;
+    if (isLocked) displayColor = '#ff3333';
+    else if (isSelected) displayColor = '#4CAF50';
+    else if (noCollision) displayColor = getThemePrimary();
+    else displayColor = color;
+    const opacity = isLocked ? 0.35 : (noCollision ? 0.35 : 1.0);
     return new THREE.MeshStandardMaterial({
       color: new THREE.Color(displayColor),
       metalness: 0.1,
       roughness: 0.7,
       transparent: true,
-      opacity: isLocked ? 0.35 : 1.0,
+      opacity,
     });
-  }, [color, isSelected, isLocked]);
+  }, [color, isSelected, isLocked, noCollision]);
 
   // 와이어프레임용 윤곽선 재질
   const wireframeMaterial = React.useMemo(() => {
