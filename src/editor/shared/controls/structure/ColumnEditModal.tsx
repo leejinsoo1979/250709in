@@ -158,13 +158,19 @@ const ColumnEditModal: React.FC<ColumnEditModalProps> = ({
         ...prev,
         [field]: value
       };
-      // 깊이 변경 시 Z 위치 자동 조정
+      // 깊이 변경 시 Z 위치 자동 조정 - 가구 뒷면 기준으로 기둥 뒷면 고정
       if (field === 'depth') {
         const spaceDepth = spaceInfo.depth || 1500;
         const newDepth = value;
-        const newZ = -(spaceDepth / 2) + (newDepth / 2);
+        const panelDepthM = spaceDepth * 0.01;
+        const furnitureDepthM = Math.min(panelDepthM, 6);
+        const doorThicknessM = 0.2;
+        const zOffset = -panelDepthM / 2;
+        const furnitureZOffset = zOffset + (panelDepthM - furnitureDepthM) / 2;
+        const furnitureBackZ = furnitureZOffset - furnitureDepthM / 2 - doorThicknessM;
+        const newZ = furnitureBackZ + (newDepth * 0.01) / 2;
         const currentPosition = prev.position || column.position;
-        newValues.position = [currentPosition[0], currentPosition[1], newZ / 100];
+        newValues.position = [currentPosition[0], currentPosition[1], newZ];
       }
       // store에 즉시 반영
       updateColumnInStore({ ...column, ...newValues });
