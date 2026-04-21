@@ -3437,58 +3437,6 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
               </Html>
             )}
 
-            {/* 기둥C(medium) 앞 배치 전환 화살표 — 가구 선택 시 가구↔기둥 사이 표시 */}
-            {isSelected && !readOnly && slotInfo?.hasColumn && slotInfo?.columnType === 'medium' && slotInfo.column && placedModule.columnPlacementMode !== 'front' && (() => {
-              const spaceDepthMm = spaceInfo.depth || 1500;
-              const columnDepthMm = slotInfo.column.depth;
-              const depthDiff = spaceDepthMm - columnDepthMm;
-              if (depthDiff < 290) return null; // 깊이 차이 290mm 이상일 때만 표시
-
-              // 화살표는 가구와 기둥 사이 앞쪽(가구 앞면 기준)에 배치
-              const arrowZ = depth / 2 + 0.05;
-              // 침범 방향에 따라 화살표 X 배치 (기둥 쪽 방향)
-              const arrowX = slotInfo.intrusionDirection === 'from-left' ? -mmToThreeUnits(100) : mmToThreeUnits(100);
-
-              return (
-                <Html
-                  position={[arrowX, 0, arrowZ]}
-                  center
-                  zIndexRange={[10000, 10001]}
-                  style={{ pointerEvents: 'auto', userSelect: 'none', background: 'transparent' }}
-                >
-                  <button
-                    onPointerDown={(e) => {
-                      e.stopPropagation();
-                      (window as any).__r3fClickHandled = true;
-                    }}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      (window as any).__r3fClickHandled = true;
-                      updatePlacedModule(placedModule.id, { columnPlacementMode: 'front' });
-                    }}
-                    onMouseEnter={(e) => (e.currentTarget.style.opacity = '0.8')}
-                    onMouseLeave={(e) => (e.currentTarget.style.opacity = '1')}
-                    style={{
-                      width: '32px', height: '32px', borderRadius: '20px', border: 'none',
-                      background: 'rgba(70, 70, 70, 0.75)',
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      cursor: 'pointer', boxShadow: '0 3px 12px rgba(0,0,0,0.25)',
-                      padding: 0, transition: 'opacity 0.2s',
-                    }}
-                    title="기둥 앞으로 배치 (깊이 축소)"
-                  >
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      {slotInfo.intrusionDirection === 'from-left' ? (
-                        <polyline points="15 18 9 12 15 6" />
-                      ) : (
-                        <polyline points="9 18 15 12 9 6" />
-                      )}
-                    </svg>
-                  </button>
-                </Html>
-              );
-            })()}
-
           </>
         )}
 
