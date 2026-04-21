@@ -780,110 +780,110 @@ const ColumnAsset: React.FC<ColumnAssetProps> = ({
         </Html>
       )}
 
-      {/* 선택 시 좌/우 이동 화살표 (가구 툴바와 동일한 다크 그레이 라운드) */}
+      {/* 선택 시 좌/우 이동 화살표 (기둥 바깥 좌/우측에 배치) */}
       {(() => {
         if (!isSelected || isLocked) return null;
         const spaceWidthM = (spaceConfig.spaceInfo.width || 3000) * 0.01;
         const halfW = (width * 0.01) / 2;
-        const tolerance = 0.001; // 1mm
+        const tolerance = 0.001;
         const atLeftWall = position[0] <= -spaceWidthM / 2 + halfW + tolerance;
         const atRightWall = position[0] >= spaceWidthM / 2 - halfW - tolerance;
+        const midY = (height * 0.01) / 2;
+        const arrowOffset = halfW + 0.2; // 기둥 측면에서 20cm 바깥
         return (
-        <Html
-          position={[0, (height * 0.01) / 2, 0]}
-          center
-          zIndexRange={[100, 0]}
-          style={{ pointerEvents: 'none', userSelect: 'none', background: 'transparent' }}
-        >
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '60px',
-              pointerEvents: 'none',
-              minWidth: '120px',
-            }}
-          >
-            {/* 좌측 화살표 */}
+          <>
+            {/* 좌측 화살표 (기둥 왼쪽 바깥) */}
             {!atLeftWall && (
-            <button
-              onPointerDown={(e) => {
-                e.stopPropagation();
-                (window as any).__r3fClickHandled = true;
-              }}
-              onClick={(e) => {
-                e.stopPropagation();
-                (window as any).__r3fClickHandled = true;
-                const spaceInfoNow = useSpaceConfigStore.getState().spaceInfo;
-                const cols = spaceInfoNow.columns || [];
-                const col = cols.find((c: any) => c.id === id);
-                if (!col || col.isLocked) return;
-                const spaceWidthM = (spaceInfoNow.width || 3000) * 0.01;
-                const halfW = (col.width * 0.01) / 2;
-                const newX = -spaceWidthM / 2 + halfW; // 좌측 벽에 붙이기
-                const updated = cols.map((c: any) =>
-                  c.id === id ? { ...c, position: [newX, c.position[1], c.position[2]] } : c
-                );
-                useSpaceConfigStore.getState().setSpaceInfo({ columns: updated });
-              }}
-              onMouseEnter={(e) => e.currentTarget.style.opacity = '0.8'}
-              onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}
-              style={{
-                width: '30px', height: '30px', borderRadius: '18px', border: 'none',
-                background: 'rgba(70, 70, 70, 0.7)',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                cursor: 'pointer', boxShadow: '0 3px 12px rgba(0,0,0,0.25)',
-                pointerEvents: 'auto', padding: 0, transition: 'opacity 0.2s',
-              }}
-              title="좌측 벽으로 이동"
-            >
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <polyline points="15 18 9 12 15 6" />
-              </svg>
-            </button>
+              <Html
+                position={[-arrowOffset, midY, 0]}
+                center
+                zIndexRange={[100, 0]}
+                style={{ pointerEvents: 'auto', userSelect: 'none', background: 'transparent' }}
+              >
+                <button
+                  onPointerDown={(e) => {
+                    e.stopPropagation();
+                    (window as any).__r3fClickHandled = true;
+                  }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    (window as any).__r3fClickHandled = true;
+                    const spaceInfoNow = useSpaceConfigStore.getState().spaceInfo;
+                    const cols = spaceInfoNow.columns || [];
+                    const col = cols.find((c: any) => c.id === id);
+                    if (!col || col.isLocked) return;
+                    const sw = (spaceInfoNow.width || 3000) * 0.01;
+                    const hw = (col.width * 0.01) / 2;
+                    const newX = -sw / 2 + hw;
+                    const updated = cols.map((c: any) =>
+                      c.id === id ? { ...c, position: [newX, c.position[1], c.position[2]] } : c
+                    );
+                    useSpaceConfigStore.getState().setSpaceInfo({ columns: updated });
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.opacity = '0.8'}
+                  onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}
+                  style={{
+                    width: '30px', height: '30px', borderRadius: '18px', border: 'none',
+                    background: 'rgba(70, 70, 70, 0.7)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    cursor: 'pointer', boxShadow: '0 3px 12px rgba(0,0,0,0.25)',
+                    padding: 0, transition: 'opacity 0.2s',
+                  }}
+                  title="좌측 벽으로 이동"
+                >
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="15 18 9 12 15 6" />
+                  </svg>
+                </button>
+              </Html>
             )}
 
-            {/* 우측 화살표 */}
+            {/* 우측 화살표 (기둥 오른쪽 바깥) */}
             {!atRightWall && (
-            <button
-              onPointerDown={(e) => {
-                e.stopPropagation();
-                (window as any).__r3fClickHandled = true;
-              }}
-              onClick={(e) => {
-                e.stopPropagation();
-                (window as any).__r3fClickHandled = true;
-                const spaceInfoNow = useSpaceConfigStore.getState().spaceInfo;
-                const cols = spaceInfoNow.columns || [];
-                const col = cols.find((c: any) => c.id === id);
-                if (!col || col.isLocked) return;
-                const spaceWidthM = (spaceInfoNow.width || 3000) * 0.01;
-                const halfW = (col.width * 0.01) / 2;
-                const newX = spaceWidthM / 2 - halfW; // 우측 벽에 붙이기
-                const updated = cols.map((c: any) =>
-                  c.id === id ? { ...c, position: [newX, c.position[1], c.position[2]] } : c
-                );
-                useSpaceConfigStore.getState().setSpaceInfo({ columns: updated });
-              }}
-              onMouseEnter={(e) => e.currentTarget.style.opacity = '0.8'}
-              onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}
-              style={{
-                width: '30px', height: '30px', borderRadius: '18px', border: 'none',
-                background: 'rgba(70, 70, 70, 0.7)',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                cursor: 'pointer', boxShadow: '0 3px 12px rgba(0,0,0,0.25)',
-                pointerEvents: 'auto', padding: 0, transition: 'opacity 0.2s',
-              }}
-              title="우측 벽으로 이동"
-            >
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <polyline points="9 18 15 12 9 6" />
-              </svg>
-            </button>
+              <Html
+                position={[arrowOffset, midY, 0]}
+                center
+                zIndexRange={[100, 0]}
+                style={{ pointerEvents: 'auto', userSelect: 'none', background: 'transparent' }}
+              >
+                <button
+                  onPointerDown={(e) => {
+                    e.stopPropagation();
+                    (window as any).__r3fClickHandled = true;
+                  }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    (window as any).__r3fClickHandled = true;
+                    const spaceInfoNow = useSpaceConfigStore.getState().spaceInfo;
+                    const cols = spaceInfoNow.columns || [];
+                    const col = cols.find((c: any) => c.id === id);
+                    if (!col || col.isLocked) return;
+                    const sw = (spaceInfoNow.width || 3000) * 0.01;
+                    const hw = (col.width * 0.01) / 2;
+                    const newX = sw / 2 - hw;
+                    const updated = cols.map((c: any) =>
+                      c.id === id ? { ...c, position: [newX, c.position[1], c.position[2]] } : c
+                    );
+                    useSpaceConfigStore.getState().setSpaceInfo({ columns: updated });
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.opacity = '0.8'}
+                  onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}
+                  style={{
+                    width: '30px', height: '30px', borderRadius: '18px', border: 'none',
+                    background: 'rgba(70, 70, 70, 0.7)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    cursor: 'pointer', boxShadow: '0 3px 12px rgba(0,0,0,0.25)',
+                    padding: 0, transition: 'opacity 0.2s',
+                  }}
+                  title="우측 벽으로 이동"
+                >
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="9 18 15 12 9 6" />
+                  </svg>
+                </button>
+              </Html>
             )}
-          </div>
-        </Html>
+          </>
         );
       })()}
     </group>
