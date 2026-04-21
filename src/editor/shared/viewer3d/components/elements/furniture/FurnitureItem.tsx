@@ -3445,13 +3445,12 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
               if (depthDiff < 290) return null; // 깊이 차이 290mm 이상일 때만 표시
 
               // 이미 섹션 깊이가 조정되어 기둥 앞 상태이면 화살표 숨김
-              // 내부 값: 'back' = 앞고정, 'front' = 뒤고정 (UI 라벨은 반대)
               const targetSectionDepth = depthDiff; // spaceDepth - columnDepth
               const isAlreadyFront =
                 placedModule.lowerSectionDepth === targetSectionDepth &&
                 placedModule.upperSectionDepth === targetSectionDepth &&
-                placedModule.lowerSectionDepthDirection === 'back' &&
-                placedModule.upperSectionDepthDirection === 'back';
+                (placedModule.lowerSectionDepthDirection ?? 'front') === 'front' &&
+                (placedModule.upperSectionDepthDirection ?? 'front') === 'front';
               if (isAlreadyFront) return null;
 
               // 화살표는 가구와 기둥 사이 앞쪽(가구 앞면 기준)에 배치
@@ -3474,13 +3473,12 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                     onClick={(e) => {
                       e.stopPropagation();
                       (window as any).__r3fClickHandled = true;
-                      // 섹션별 깊이를 기둥 앞 공간만큼으로 축소, 앞고정('back')으로 설정
+                      // 섹션별 깊이를 기둥 앞 공간만큼으로 축소, 앞고정으로 설정
                       updatePlacedModule(placedModule.id, {
-                        customDepth: targetSectionDepth,
                         lowerSectionDepth: targetSectionDepth,
                         upperSectionDepth: targetSectionDepth,
-                        lowerSectionDepthDirection: 'back',
-                        upperSectionDepthDirection: 'back',
+                        lowerSectionDepthDirection: 'front',
+                        upperSectionDepthDirection: 'front',
                       });
                     }}
                     onMouseEnter={(e) => (e.currentTarget.style.opacity = '0.8')}
