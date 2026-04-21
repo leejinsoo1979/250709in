@@ -190,10 +190,10 @@ const ColumnAsset: React.FC<ColumnAssetProps> = ({
     // console.log('🎯 기둥 클릭 - 기둥 선택 및 팝업 열기:', id);
     // console.log('🎯 현재 selectedColumnId:', selectedColumnId);
     
-    // 기둥 선택 및 기둥 팝업 열기 (가구 선택 해제)
+    // 기둥 선택 및 편집 팝업 열기 (가구 선택 해제) - 원클릭으로 편집 모달 열림
     setSelectedFurnitureId(null);
     setSelectedColumnId(id);
-    openColumnPopup(id);
+    openColumnEditModal(id);
     
     // console.log('✅ setSelectedColumnId 및 openColumnPopup 호출됨:', id);
     // console.log('✅ 변경 후 selectedColumnId:', id);
