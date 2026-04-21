@@ -2405,9 +2405,9 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     if (columnProcessingMethod === 'width-adjustment') {
       // 기둥 C(300mm)에서 'front' 모드: 폭은 슬롯 전체, 깊이만 줄임, 기둥 앞으로 배치
       if (slotInfo.columnType === 'medium' && placedModule.columnPlacementMode === 'front') {
-        const slotDepth = 730;
+        const spaceDepthMm = spaceInfo.depth || 730;
         const columnDepth = slotInfo.column?.depth || 300;
-        const remainingDepth = slotDepth - columnDepth; // 430mm
+        const remainingDepth = Math.max(150, spaceDepthMm - columnDepth); // 공간깊이 - 기둥깊이
 
         furnitureWidthMm = indexing.columnWidth; // 슬롯 전체 너비
         adjustedDepthMm = remainingDepth; // 깊이 조정
@@ -2504,9 +2504,9 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       } // end of else (기둥 측면 배치 모드)
     } else if (columnProcessingMethod === 'depth-adjustment') {
       // 깊이 조정 방식 (기둥 C(300mm) 및 얕은 기둥)
-      const slotDepth = 730; // 슬롯 기본 깊이
+      const spaceDepthMm = spaceInfo.depth || 730;
       const columnDepth = slotInfo.column.depth;
-      const remainingDepth = slotDepth - columnDepth; // 430mm
+      const remainingDepth = Math.max(150, spaceDepthMm - columnDepth);
 
       // '기둥 앞에 배치' 모드: 폭은 슬롯 전체, 깊이만 줄임
       if (placedModule.columnPlacementMode === 'front') {
@@ -2516,8 +2516,8 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
           ...adjustedPosition,
           x: originalSlotCenterX // 슬롯 중심
         };
-        // 깊이 = 슬롯깊이 - 기둥깊이 = 730 - 300 = 430mm
-        adjustedDepthMm = remainingDepth; // 430mm
+        // 깊이 = 공간깊이 - 기둥깊이
+        adjustedDepthMm = remainingDepth;
       } else {
         // '기둥 측면 배치' 모드 (기본값): 폭 줄임, 깊이는 원래대로
         // 폭 조정 로직 적용 (width-adjustment와 유사)
