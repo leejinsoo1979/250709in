@@ -19,7 +19,7 @@ import { useProjectPermission } from '@/hooks/useProjectPermission';
 import { getProjectCollaborators, type ProjectCollaborator } from '@/firebase/shareLinks';
 import { getSpaceConfigDefaults } from '@/firebase/userProfiles';
 import { SpaceCalculator, calculateSpaceIndexing } from '@/editor/shared/utils/indexing';
-import { calculateInternalSpace } from '@/editor/shared/viewer3d/utils/geometry';
+import { calculateInternalSpace, calculateTopBottomFrameHeight } from '@/editor/shared/viewer3d/utils/geometry';
 import { getModuleCategory } from '@/editor/shared/utils/freePlacementUtils';
 import { computeFrameMergeGroups } from '@/editor/shared/utils/frameMergeUtils';
 import { getModuleById } from '@/data/modules';
@@ -5967,8 +5967,17 @@ const Configurator: React.FC = () => {
                           'top-all',
                         );
                         }
-                        // OFF 상태: 토글 + 상단갭(= 원래 상부프레임 높이) 입력
-                        const currentGap = firstTop.topFrameThickness ?? globalTop;
+                        // OFF 상태: 실제 천장~가구 최상단 거리를 계산해 상단갭으로 표시
+                        const internalSpaceH = calculateInternalSpace(spaceInfo).height;
+                        const topBotFrameH = calculateTopBottomFrameHeight(spaceInfo);
+                        const floatH = spaceInfo.baseConfig?.type === 'stand' && spaceInfo.baseConfig?.placementType === 'float'
+                          ? (spaceInfo.baseConfig.floatHeight || 0) : 0;
+                        const ceilingToBaseTopMM = internalSpaceH + topBotFrameH - floatH;
+                        const modCategory = getModuleCategory(firstTop);
+                        const modFreeH = firstTop.freeHeight || internalSpaceH;
+                        const currentGap = modCategory === 'upper'
+                          ? (firstTop.topFrameThickness ?? globalTop)
+                          : Math.max(0, Math.round(ceilingToBaseTopMM - modFreeH));
                         return (
                           <div style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '3px 0' }}>
                             <span className={styles.frameItemLabel} style={{ minWidth: '34px', textAlign: 'left', margin: 0 }}>전체</span>
