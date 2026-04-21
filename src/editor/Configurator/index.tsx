@@ -5942,17 +5942,21 @@ const Configurator: React.FC = () => {
                 {!isFrameSectionCollapsed && (
                   <div className={styles.subSetting}>
                     {allTopOn && topSortedMods.length > 0 ? (
-                      // 전체 ON: 통합 행 1개만 표시 (토글은 전체 모드 해제만, 값은 유지)
+                      // 전체 ON: 통합 행 1개만 표시 (토글로 일괄 ON/OFF)
                       (() => {
                         const firstTop = topSortedMods[0];
                         const catFirst = getModuleCategory(firstTop);
                         const topOffsetDefaultU = (catFirst === 'upper' && spaceInfo.surroundType === 'surround') ? 23 : 0;
+                        const unifiedEnabled = topSortedMods.every(m => m.hasTopFrame !== false);
                         return renderSlotFrameRow(
                           '전체',
-                          true,
+                          unifiedEnabled,
                           firstTop.topFrameThickness ?? globalTop,
                           firstTop.topFrameOffset ?? topOffsetDefaultU,
-                          () => setTopFrameAllMode(false),
+                          () => {
+                            const newVal = !unifiedEnabled;
+                            topSortedMods.forEach(m => updatePlacedModule(m.id, { hasTopFrame: newVal }));
+                          },
                           (v) => {
                             topSortedMods.forEach(m => updatePlacedModule(m.id, { topFrameThickness: v }));
                           },
@@ -6002,16 +6006,23 @@ const Configurator: React.FC = () => {
                   {!isFrameSectionCollapsed && (
                     <div className={styles.subSetting}>
                       {allBaseOn && baseSortedMods.length > 0 ? (
-                        // 전체 ON: 통합 행 1개만 표시 (토글은 전체 모드 해제만, 값은 유지)
+                        // 전체 ON: 통합 행 1개만 표시 (토글로 일괄 ON/OFF)
                         (() => {
                           const first = baseSortedMods[0];
                           const firstOffsetDefault = ((first.moduleId?.startsWith('lower-') || first.moduleId?.includes('-lower-')) ? 65 : 0);
+                          const unifiedEnabled = baseSortedMods.every(m => m.hasBase !== false);
                           return renderSlotFrameRow(
                             '전체',
-                            true,
+                            unifiedEnabled,
                             first.baseFrameHeight ?? globalBase,
                             first.baseFrameOffset ?? firstOffsetDefault,
-                            () => setBaseFrameAllMode(false),
+                            () => {
+                              const newVal = !unifiedEnabled;
+                              baseSortedMods.forEach(m => updatePlacedModule(m.id, {
+                                hasBase: newVal,
+                                ...(newVal ? { doorBottomGap: 25 } : { individualFloatHeight: 0 }),
+                              }));
+                            },
                             (v) => {
                               baseSortedMods.forEach(m => updatePlacedModule(m.id, { baseFrameHeight: v }));
                             },

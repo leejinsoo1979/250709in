@@ -1522,18 +1522,22 @@ const RightPanel: React.FC<RightPanelProps> = ({
                     }
                   >
                   {allTopOn && sorted.length > 0 ? (
-                    // 전체 ON: 통합 행 1개만 표시 (토글은 전체 모드 해제만, 값은 유지)
+                    // 전체 ON: 통합 행 1개만 표시 (토글로 일괄 ON/OFF)
                     (() => {
                       const first = sorted[0];
                       const totalWidthMM = sorted.reduce((sum, m) => sum + (m.isDualSlot ? slotColWidth * 2 : slotColWidth), 0);
+                      const unifiedEnabled = sorted.every(m => m.hasTopFrame !== false);
                       return (
                         <FrameRow key="top-all"
                           label="전체"
-                          enabled={true}
+                          enabled={unifiedEnabled}
                           widthMM={Math.round(totalWidthMM * 10) / 10}
                           sizeMM={first.topFrameThickness ?? globalTop}
                           offset={getTopOffsetDisplay(first)}
-                          onToggle={() => setTopFrameAllMode(false)}
+                          onToggle={() => {
+                            const newVal = !unifiedEnabled;
+                            sorted.forEach(m => updatePlacedModule(m.id, { hasTopFrame: newVal }));
+                          }}
                           onSizeChange={(v) => sorted.forEach(m => updatePlacedModule(m.id, { topFrameThickness: v }))}
                           onOffsetChange={(v) => sorted.forEach(m => updatePlacedModule(m.id, { topFrameOffset: v }))}
                           hlKey="top-all"
