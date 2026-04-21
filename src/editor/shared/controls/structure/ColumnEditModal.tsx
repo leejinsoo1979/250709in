@@ -173,24 +173,6 @@ const ColumnEditModal: React.FC<ColumnEditModalProps> = ({
   };
 
 
-  // 확인(저장) 버튼: 모달만 닫음
-  const handleSave = () => {
-    onClose();
-  };
-
-  // 취소 버튼: 원본 값으로 복원
-  const handleCancel = () => {
-    if (originalColumnRef.current) {
-      const updatedColumns = columns.map(col =>
-        col.id === column.id ? { ...originalColumnRef.current! } : col
-      );
-      setSpaceInfo({ columns: updatedColumns });
-    }
-    setEditValues({});
-    onClose();
-  };
-
-
   const handleDelete = () => {
     if (window.confirm(t('column.deleteConfirm'))) {
       const updatedColumns = columns.filter(col => col.id !== column.id);
@@ -303,18 +285,11 @@ const ColumnEditModal: React.FC<ColumnEditModalProps> = ({
               </label>
             </div>
           </div>
-        </div>
 
-        <div className={styles.modalFooter}>
-          <button className={styles.deleteButton} onClick={handleDelete}>
-            {t('common.delete')}
-          </button>
-          <div className={styles.actionButtons}>
-            <button className={styles.cancelButton} onClick={handleCancel}>
-              {t('common.cancel')}
-            </button>
-            <button className={styles.saveButton} onClick={handleSave}>
-              {t('common.confirm')}
+          {/* 삭제 버튼 */}
+          <div className={styles.section}>
+            <button className={styles.deleteButton} onClick={handleDelete}>
+              🗑 {t('common.delete')}
             </button>
           </div>
         </div>
