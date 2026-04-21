@@ -5967,13 +5967,10 @@ const Configurator: React.FC = () => {
                           'top-all',
                         );
                         }
-                        // OFF 상태: 상단갭 = 공간 내부 높이 - 가구 높이 (천장~상부섹션 상단 거리)
+                        // OFF 상태: 상단갭 = 공간 내부 높이 - 가구 높이
+                        // 갭 0 → 가구가 천장까지 확장, 갭 90 → 가구 90mm 축소
                         const internalH = calculateInternalSpace(spaceInfo).height;
-                        const modData = getModuleById(firstTop.moduleId, calculateInternalSpace(spaceInfo), spaceInfo);
-                        const modHeight = firstTop.freeHeight
-                          || firstTop.customHeight
-                          || modData?.dimensions.height
-                          || internalH;
+                        const modHeight = firstTop.freeHeight ?? internalH;
                         const currentGap = Math.max(0, Math.round(internalH - modHeight));
                         return (
                           <div style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '3px 0' }}>
