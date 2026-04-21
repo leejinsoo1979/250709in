@@ -132,19 +132,22 @@ export const captureFrontViewThumbnail = async (): Promise<string | null> => {
   const originalViewMode = uiStoreState.viewMode;
   const originalView2DDirection = uiStoreState.view2DDirection;
   const originalCameraMode = uiStoreState.cameraMode;
+  const originalRenderMode = (uiStoreState as any).renderMode;
 
   try {
-    // UIStore를 사용하여 3D 정면 뷰 + 원근 투영으로 강제 전환
+    // UIStore를 사용하여 3D 정면 뷰 + 원근 투영 + 솔리드 렌더링으로 강제 전환
     console.log('📸 원래 뷰 상태:', {
       viewMode: originalViewMode,
       view2DDirection: originalView2DDirection,
-      cameraMode: originalCameraMode
+      cameraMode: originalCameraMode,
+      renderMode: originalRenderMode
     });
 
     uiStoreState.setViewMode('3D');
     uiStoreState.setView2DDirection('front');
     uiStoreState.setCameraMode('perspective');  // 원근 투영으로 강제 설정
-    console.log('🔄 3D 정면 뷰 + perspective 카메라로 강제 전환 완료');
+    (uiStoreState as any).setRenderMode?.('solid'); // 솔리드로 강제 → 2D 와이어프레임 방지
+    console.log('🔄 3D 정면 뷰 + perspective + solid 강제 전환 완료');
 
     // 뷰 전환 후 렌더링 완료 대기 (2D→3D 전환은 더 오래 걸림)
     const isConvertingFrom2D = originalViewMode === '2D';
@@ -203,6 +206,7 @@ export const captureFrontViewThumbnail = async (): Promise<string | null> => {
       uiStoreState.setViewMode(originalViewMode);
       uiStoreState.setView2DDirection(originalView2DDirection);
       uiStoreState.setCameraMode(originalCameraMode);  // 카메라 모드도 복원
+      (uiStoreState as any).setRenderMode?.(originalRenderMode); // 렌더 모드 복원
 
       // 복원 후 렌더링 대기
       await new Promise(resolve => setTimeout(resolve, 100));

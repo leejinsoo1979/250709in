@@ -5917,15 +5917,15 @@ const Configurator: React.FC = () => {
                 <div className={styles.sectionHeader} onClick={() => setIsFrameSectionCollapsed(prev => !prev)} style={{ cursor: 'pointer', userSelect: 'none' }}>
                   <span className={styles.sectionDot}></span>
                   <h3 className={styles.sectionTitle}>상부프레임</h3>
-                  <HelpBtn title="상부프레임" text="각 가구별 상부 프레임을 개별 설정합니다. 토글로 표시/숨김, size로 높이, 옵셋으로 Z축 위치를 조정합니다." />
                   <label
                     onClick={(e) => e.stopPropagation()}
-                    style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11px', color: 'var(--theme-text-secondary)', cursor: 'pointer', marginRight: '8px' }}
+                    style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11px', color: 'var(--theme-text-secondary)', cursor: 'pointer', marginLeft: '8px' }}
                   >
                     <input type="checkbox" checked={allTopOn} onChange={toggleAllTop} style={{ cursor: 'pointer', accentColor: 'var(--theme-primary, #4a90d9)' }} />
                     <span>전체</span>
                   </label>
-                  <IoIosArrowDropup style={{ fontSize: '14px', color: 'var(--theme-text-secondary)', transition: 'transform 0.2s', transform: isFrameSectionCollapsed ? 'rotate(180deg)' : 'rotate(0deg)' }} />
+                  <HelpBtn title="상부프레임" text="각 가구별 상부 프레임을 개별 설정합니다. 토글로 표시/숨김, size로 높이, 옵셋으로 Z축 위치를 조정합니다." />
+                  <IoIosArrowDropup style={{ marginLeft: 'auto', fontSize: '14px', color: 'var(--theme-text-secondary)', transition: 'transform 0.2s', transform: isFrameSectionCollapsed ? 'rotate(180deg)' : 'rotate(0deg)' }} />
                 </div>
                 {!isFrameSectionCollapsed && (
                   <div className={styles.subSetting}>
@@ -5954,15 +5954,15 @@ const Configurator: React.FC = () => {
                   <div className={styles.sectionHeader} onClick={() => setIsFrameSectionCollapsed(prev => !prev)} style={{ cursor: 'pointer', userSelect: 'none' }}>
                     <span className={styles.sectionDot}></span>
                     <h3 className={styles.sectionTitle}>하부프레임</h3>
-                    <HelpBtn title="하부프레임" text="각 가구별 하부 프레임(베이스)을 개별 설정합니다. 토글로 표시/숨김, size로 높이, 옵셋으로 Z축 위치를 조정합니다." />
                     <label
                       onClick={(e) => e.stopPropagation()}
-                      style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11px', color: 'var(--theme-text-secondary)', cursor: 'pointer', marginRight: '8px' }}
+                      style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11px', color: 'var(--theme-text-secondary)', cursor: 'pointer', marginLeft: '8px' }}
                     >
                       <input type="checkbox" checked={allBaseOn} onChange={toggleAllBase} style={{ cursor: 'pointer', accentColor: 'var(--theme-primary, #4a90d9)' }} />
                       <span>전체</span>
                     </label>
-                    <IoIosArrowDropup style={{ fontSize: '14px', color: 'var(--theme-text-secondary)', transition: 'transform 0.2s', transform: isFrameSectionCollapsed ? 'rotate(180deg)' : 'rotate(0deg)' }} />
+                    <HelpBtn title="하부프레임" text="각 가구별 하부 프레임(베이스)을 개별 설정합니다. 토글로 표시/숨김, size로 높이, 옵셋으로 Z축 위치를 조정합니다." />
+                    <IoIosArrowDropup style={{ marginLeft: 'auto', fontSize: '14px', color: 'var(--theme-text-secondary)', transition: 'transform 0.2s', transform: isFrameSectionCollapsed ? 'rotate(180deg)' : 'rotate(0deg)' }} />
                   </div>
                   {!isFrameSectionCollapsed && (
                     <div className={styles.subSetting}>

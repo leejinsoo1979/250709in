@@ -269,12 +269,11 @@ const FormControl: React.FC<FormControlProps> = ({
       <div className={styles.formHeader} onClick={onToggle}>
         <div className={styles.formIndicator}></div>
         <h3 className={styles.formLabel}>{label}</h3>
-        <div style={{ flex: 1 }} />
         {headerAccessory && (
           <div
             onClick={(e) => e.stopPropagation()}
             style={{
-              marginRight: '8px',
+              marginLeft: '8px',
               display: 'flex',
               alignItems: 'center',
               zIndex: 10,
@@ -284,6 +283,7 @@ const FormControl: React.FC<FormControlProps> = ({
             {headerAccessory}
           </div>
         )}
+        <div style={{ flex: 1 }} />
         {helpText && (
           <div ref={helpRef} style={{ position: 'relative' }}>
             <button
