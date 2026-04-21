@@ -478,6 +478,25 @@ const Configurator: React.FC = () => {
   // 상부/하부 프레임 '전체' 통합 모드 (기본 true: 통합 행 표시)
   const [topFrameAllMode, setTopFrameAllMode] = useState<boolean>(true);
   const [baseFrameAllMode, setBaseFrameAllMode] = useState<boolean>(true);
+
+  // hasBase 상태에 따라 topFrameThickness 자동 보정
+  // 하부 OFF → topFrameThickness = globalTop + baseFrame
+  // 하부 ON → topFrameThickness = globalTop
+  useEffect(() => {
+    if ((spaceInfo.layoutMode || 'equal-division') === 'free-placement') return;
+    const globalTopMm = spaceInfo.frameSize?.top ?? 30;
+    const globalBaseMm = spaceInfo.baseConfig?.height ?? 65;
+    const slotMods = placedModules.filter(m => !m.isSurroundPanel);
+    slotMods.forEach(m => {
+      const cat = getModuleCategory(m);
+      if (cat === 'lower') return; // 하부장은 해당 없음
+      const baseH = m.baseFrameHeight ?? globalBaseMm;
+      const expected = m.hasBase === false ? globalTopMm + baseH : globalTopMm;
+      if (m.topFrameThickness !== expected) {
+        updatePlacedModule(m.id, { topFrameThickness: expected });
+      }
+    });
+  }, [placedModules.map(m => `${m.id}:${m.hasBase}:${m.baseFrameHeight}`).join('|'), spaceInfo.frameSize?.top, spaceInfo.baseConfig?.height, spaceInfo.layoutMode]);
   const [isFileTreeOpen, setIsFileTreeOpen] = useState(false);
   const [fileTreeProjects, setFileTreeProjects] = useState<ProjectSummary[]>([]);
   const [fileTreeActiveMenu, setFileTreeActiveMenu] = useState<QuickAccessMenu>('in-progress');
