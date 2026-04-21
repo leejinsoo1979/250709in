@@ -3652,8 +3652,9 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             }
             return leftmostMod;
           })();
-          const actualBottomSize = leftLowerMod?.baseFrameHeight !== undefined ? leftLowerMod.baseFrameHeight : globalBottomFrameH;
-          const actualTopSize = leftmostMod?.topFrameThickness !== undefined ? leftmostMod.topFrameThickness : globalTopFrame;
+          // 상부/하부 프레임 치수 = 토글 OFF면 0, ON이면 저장값
+          const actualBottomSize = leftmostMod?.hasBase === false ? 0 : (leftLowerMod?.baseFrameHeight !== undefined ? leftLowerMod.baseFrameHeight : globalBottomFrameH);
+          const actualTopSize = leftmostMod?.hasTopFrame === false ? 0 : (leftmostMod?.topFrameThickness !== undefined ? leftmostMod.topFrameThickness : globalTopFrame);
 
           // 가구 내경 높이 — FurnitureItem.tsx와 동일한 로직 적용
           let furnitureH: number;
@@ -3675,13 +3676,30 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               if (leftCategoryResolved === 'lower' || leftCategoryResolved === 'upper') {
                 furnitureH = leftModDataForCat?.dimensions.height ?? Math.max(0, effectiveH - actualBottomSize - actualTopSize);
               } else {
+                // 키큰장(full): 공간 - 하부프레임 - 상부프레임
                 furnitureH = Math.max(0, effectiveH - actualBottomSize - actualTopSize);
               }
             }
-            // hasBase=false → 가구 높이 유지 (FurnitureItem.tsx와 동일하게 높이 증가 제거)
           } else {
             furnitureH = _internalHeight;
           }
+          console.log('🔍 [상부섹션 furnitureH 좌]', {
+            id: leftmostMod?.id,
+            moduleId: leftmostMod?.moduleId,
+            category: leftCategoryResolved,
+            freeHeight: leftmostMod?.freeHeight,
+            customHeight: leftmostMod?.customHeight,
+            dimensionsHeight: leftModDataForCat?.dimensions.height,
+            effectiveH,
+            actualBottomSize,
+            actualTopSize,
+            topFrameThickness: leftmostMod?.topFrameThickness,
+            hasTopFrame: leftmostMod?.hasTopFrame,
+            hasBase: leftmostMod?.hasBase,
+            baseFrameHeight: leftmostMod?.baseFrameHeight,
+            furnitureH,
+            expected_calc: `${effectiveH} - ${actualBottomSize} - ${actualTopSize} = ${effectiveH - actualBottomSize - actualTopSize}`,
+          });
 
           // companion 모듈(상부장+하부장 동시 배치) 높이 계산
           let companionH = 0;
@@ -3755,24 +3773,33 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             );
             const sections = modData?.modelConfig?.sections;
             if (sections && sections.length >= 2) {
+              // 섹션 기준 furnitureH = 실제 가구 내경 (공간 - 실제 상부프레임 - 실제 하부프레임)
+              const realTopFrame = leftmostMod.hasTopFrame === false ? 0 : (leftmostMod.topFrameThickness ?? globalTopFrame);
+              const realBottomFrame = leftLowerMod?.hasBase === false ? 0 : (leftLowerMod?.baseFrameHeight ?? globalBottomFrameH);
+              const realFloorFinish = floorFinishForHeight;
+              const sectionBasisH = Math.max(0, effectiveH - realTopFrame - realBottomFrame - realFloorFinish);
               const rawHeights = sections.map(s => {
                 if (s.heightType === 'absolute') return s.height;
-                return Math.round(furnitureH * s.height / 100);
+                return Math.round(sectionBasisH * s.height / 100);
               });
-              const rawSum = rawHeights.reduce((a, b) => a + b, 0);
-              if (rawSum > 0 && Math.abs(rawSum - furnitureH) > 1) {
-                // 하부 섹션 고정, 마지막(상부) 섹션이 차이 흡수
-                const fixedSum = rawHeights.slice(0, -1).reduce((a, b) => a + b, 0);
-                sectionHeights = [
-                  ...rawHeights.slice(0, -1),
-                  Math.max(0, furnitureH - fixedSum)
-                ];
-              } else {
-                sectionHeights = rawHeights;
-              }
+              // 하부 섹션 고정, 마지막(상부) 섹션은 항상 남은 공간 흡수
+              const fixedSum = rawHeights.slice(0, -1).reduce((a, b) => a + b, 0);
+              sectionHeights = [
+                ...rawHeights.slice(0, -1),
+                Math.max(0, sectionBasisH - fixedSum)
+              ];
             }
           }
           const hasSectionSplit = sectionHeights.length >= 2;
+          console.log('🔍 [sectionHeights 좌]', {
+            id: leftmostMod?.id,
+            furnitureH,
+            sectionHeights,
+            hasSectionSplit,
+            actualTopSize,
+            actualBottomSize,
+            effectiveH,
+          });
 
           // Y 좌표 (1단용)
           const floorFinishBaseY = mmToThreeUnits(floorFinishForHeight);
@@ -4269,8 +4296,9 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             }
             return rightmostMod;
           })();
-          const rActualBottomSize = rightLowerMod?.baseFrameHeight !== undefined ? rightLowerMod.baseFrameHeight : rGlobalBottomFrameH;
-          const rActualTopSize = rightmostMod?.topFrameThickness !== undefined ? rightmostMod.topFrameThickness : rGlobalTopFrame;
+          // 상부/하부 프레임 치수 = 토글 OFF면 0, ON이면 저장값
+          const rActualBottomSize = rightmostMod?.hasBase === false ? 0 : (rightLowerMod?.baseFrameHeight !== undefined ? rightLowerMod.baseFrameHeight : rGlobalBottomFrameH);
+          const rActualTopSize = rightmostMod?.hasTopFrame === false ? 0 : (rightmostMod?.topFrameThickness !== undefined ? rightmostMod.topFrameThickness : rGlobalTopFrame);
 
           // 가구 내경 높이 — FurnitureItem.tsx와 동일한 로직 적용
           let rFurnitureH: number;
@@ -4295,10 +4323,26 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 rFurnitureH = Math.max(0, rEffectiveH - rActualBottomSize - rActualTopSize);
               }
             }
-            // hasBase=false → 가구 높이 유지 (FurnitureItem.tsx와 동일하게 높이 증가 제거)
           } else {
             rFurnitureH = rInternalHeight;
           }
+          console.log('🔍 [상부섹션 furnitureH 우]', {
+            id: rightmostMod?.id,
+            moduleId: rightmostMod?.moduleId,
+            category: rightCategoryResolved,
+            freeHeight: rightmostMod?.freeHeight,
+            customHeight: rightmostMod?.customHeight,
+            dimensionsHeight: rightModDataForCat?.dimensions.height,
+            rEffectiveH,
+            rActualBottomSize,
+            rActualTopSize,
+            topFrameThickness: rightmostMod?.topFrameThickness,
+            hasTopFrame: rightmostMod?.hasTopFrame,
+            hasBase: rightmostMod?.hasBase,
+            baseFrameHeight: rightmostMod?.baseFrameHeight,
+            rFurnitureH,
+            expected_calc: `${rEffectiveH} - ${rActualBottomSize} - ${rActualTopSize} = ${rEffectiveH - rActualBottomSize - rActualTopSize}`,
+          });
 
           // companion 모듈(상부장+하부장 동시 배치) 높이 계산
           let rCompanionH = 0;
@@ -4366,21 +4410,21 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             );
             const rSections = rModData?.modelConfig?.sections;
             if (rSections && rSections.length >= 2) {
+              // 섹션 기준 furnitureH = 실제 가구 내경 (공간 - 실제 상부프레임 - 실제 하부프레임)
+              const rRealTopFrame = rightmostMod.hasTopFrame === false ? 0 : (rightmostMod.topFrameThickness ?? rGlobalTopFrame);
+              const rRealBottomFrame = rightLowerMod?.hasBase === false ? 0 : (rightLowerMod?.baseFrameHeight ?? rGlobalBottomFrameH);
+              const rRealFloorFinish = rFloorFinishForHeight;
+              const rSectionBasisH = Math.max(0, rEffectiveH - rRealTopFrame - rRealBottomFrame - rRealFloorFinish);
               const rRawHeights = rSections.map(s => {
                 if (s.heightType === 'absolute') return s.height;
-                return Math.round(rFurnitureH * s.height / 100);
+                return Math.round(rSectionBasisH * s.height / 100);
               });
-              const rRawSum = rRawHeights.reduce((a, b) => a + b, 0);
-              if (rRawSum > 0 && Math.abs(rRawSum - rFurnitureH) > 1) {
-                // 하부 섹션 고정, 마지막(상부) 섹션이 차이 흡수
-                const rFixedSum = rRawHeights.slice(0, -1).reduce((a, b) => a + b, 0);
-                rSectionHeights = [
-                  ...rRawHeights.slice(0, -1),
-                  Math.max(0, rFurnitureH - rFixedSum)
-                ];
-              } else {
-                rSectionHeights = rRawHeights;
-              }
+              // 하부 섹션 고정, 마지막(상부) 섹션은 항상 남은 공간 흡수
+              const rFixedSum = rRawHeights.slice(0, -1).reduce((a, b) => a + b, 0);
+              rSectionHeights = [
+                ...rRawHeights.slice(0, -1),
+                Math.max(0, rSectionBasisH - rFixedSum)
+              ];
             }
           }
           const rHasSectionSplit = rSectionHeights.length >= 2;
@@ -6228,7 +6272,20 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             // 개별 모듈의 baseFrameHeight 우선 사용 (선택된 슬롯 기준 가구)
             const viewMod = sideViewMod || leftmostModules[0];
             // 가구별 상부프레임 우선 (하부 OFF 시 상부프레임이 확장된 값 반영)
-            const topFrameHeight = viewMod?.topFrameThickness ?? globalTopFrame;
+            const rawTopFrame = viewMod?.topFrameThickness ?? globalTopFrame;
+            // 하부 OFF 시 상부프레임에 흡수된 하부프레임 크기 (FurnitureItem의 topDelta 계산과 동일)
+            const globalBaseMm = spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height ?? 60) : 0;
+            const baseFrameAbsorbed = viewMod?.hasBase === false
+              ? (viewMod.baseFrameHeight ?? globalBaseMm)
+              : 0;
+            const topFrameHeight = Math.max(0, rawTopFrame - baseFrameAbsorbed);
+            console.log('🔍 [CleanCAD2D 좌측 치수]', {
+              viewModId: viewMod?.id,
+              rawTopFrame,
+              baseFrameAbsorbed,
+              topFrameHeight,
+              hasBase: viewMod?.hasBase,
+            });
             // hasBase=false → 하부프레임 0 (individualFloatHeight만 반영)
             const bottomFrameHeight = viewMod?.hasBase === false
               ? (viewMod.individualFloatHeight ?? 0)
@@ -6528,7 +6585,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     outlineColor={textOutlineColor}
                     rotation={[0, -Math.PI / 2, -Math.PI / 2]}
                   >
-                    {topFrameHeight}
+                    {(() => { console.log('🔍 [치수 150 추적]', { topFrameHeight, stack: new Error().stack?.split('\n').slice(1, 4).join('\n') }); return topFrameHeight; })()}
                   </Text>
                 </group>
                 )}
@@ -7326,8 +7383,14 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
 
             // 개별 모듈의 baseFrameHeight 우선 사용 (선택된 슬롯 기준 가구)
             const viewMod = sideViewMod || rightmostModules[0];
-            // 가구별 상부프레임 우선 (하부 OFF 시 상부프레임이 확장된 값 반영)
-            const topFrameHeight = viewMod?.topFrameThickness ?? globalTopFrame;
+            // 가구별 상부프레임 우선 (하부 OFF 시 상부프레임에 흡수된 베이스 분 빼서 표시)
+            const rawTopFrame = viewMod?.topFrameThickness ?? globalTopFrame;
+            const globalBaseMm = spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height ?? 60) : 0;
+            const baseFrameAbsorbed = viewMod?.hasBase === false
+              ? (viewMod.baseFrameHeight ?? globalBaseMm)
+              : 0;
+            const topFrameHeight = Math.max(0, rawTopFrame - baseFrameAbsorbed);
+            console.log('🔍 [CleanCAD2D 우측 치수]', { viewModId: viewMod?.id, rawTopFrame, baseFrameAbsorbed, topFrameHeight, hasBase: viewMod?.hasBase });
             // hasBase=false → 하부프레임 0 (individualFloatHeight만 반영)
             const bottomFrameHeight = viewMod?.hasBase === false
               ? (viewMod.individualFloatHeight ?? 0)
@@ -7636,7 +7699,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     outlineColor={textOutlineColor}
                     rotation={[0, 0, 0]}
                   >
-                    {topFrameHeight}
+                    {(() => { console.log('🔍 [치수 150 추적]', { topFrameHeight, stack: new Error().stack?.split('\n').slice(1, 4).join('\n') }); return topFrameHeight; })()}
                 </Text>
               </group>
                 )}

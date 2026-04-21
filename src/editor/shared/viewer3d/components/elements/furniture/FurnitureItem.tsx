@@ -1399,11 +1399,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       // 단, 하부프레임이 OFF일 때는 그 공간을 가구가 차지하므로 차감하지 않는 delta 계산
       if (!placedModule.freeHeight && placedModule.topFrameThickness !== undefined) {
         const globalTop = spaceInfo.frameSize?.top ?? 30;
-        const globalBaseMm = spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height ?? 65) : 0;
-        const baseFrameAbsorbed = placedModule.hasBase === false
-          ? (placedModule.baseFrameHeight ?? globalBaseMm)
-          : 0;
-        const topDelta = placedModule.topFrameThickness - globalTop - baseFrameAbsorbed;
+        const topDelta = placedModule.topFrameThickness - globalTop;
         furnitureHeightMm -= topDelta;
       }
       // 개별 baseFrameHeight 보정: 키큰장(full)만 적용
@@ -1413,6 +1409,13 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       if (placedModule.baseFrameHeight !== undefined && !isStandType && isTallCabinetForY) {
         const globalBase = spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height ?? 65) : 0;
         furnitureHeightMm -= (placedModule.baseFrameHeight - globalBase);
+      }
+      // 하부프레임 OFF: 하부프레임 자리를 가구가 흡수 - 띄움만큼은 빈 공간으로 제외
+      if (!placedModule.freeHeight && placedModule.hasBase === false && isTallCabinetForY) {
+        const globalBaseMm = spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height ?? 60) : 0;
+        const absorbedBase = placedModule.baseFrameHeight ?? globalBaseMm;
+        const floatH = placedModule.individualFloatHeight ?? 0;
+        furnitureHeightMm += (absorbedBase - floatH);
       }
     }
   }

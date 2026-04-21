@@ -2976,26 +2976,33 @@ const PlacedModulePropertiesPanel: React.FC = () => {
             const totalW = currentPlacedModule.freeWidth || moduleData?.dimensions?.width || 600;
             const totalD = currentPlacedModule.customDepth || currentPlacedModule.freeDepth || moduleData?.dimensions?.depth || 580;
 
-            // 표준 가구의 섹션 높이: shelving.ts에서 정의한 sec.height 그대로 사용
-            // freeHeight로 높이 변경 시 마지막 섹션만 차이를 흡수
+            // 표준 가구의 섹션 높이: 마지막(상부) 섹션은 실제 공간에서 하부섹션/프레임 빼서 계산
+            const realTopFrame = currentPlacedModule.hasTopFrame === false
+              ? 0
+              : (currentPlacedModule.topFrameThickness ?? spaceInfo.frameSize?.top ?? 30);
+            const realBottomFrame = currentPlacedModule.hasBase === false
+              ? 0
+              : (currentPlacedModule.baseFrameHeight ?? (spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height ?? 60) : 0));
+            const realFloorFinish = spaceInfo.hasFloorFinish && spaceInfo.floorFinish?.height ? spaceInfo.floorFinish.height : 0;
+            const sectionBasisH = Math.max(0, spaceInfo.height - realTopFrame - realBottomFrame - realFloorFinish);
+
             const getStdSectionHeightMM = (sIdx: number): number => {
               if (!mcSections || mcSections.length < 2) return totalH;
               const sec = mcSections[sIdx];
               const ht = sec.heightType || 'percentage';
-              if (ht === 'absolute') {
-                const isLast = sIdx === mcSections.length - 1;
-                if (isLast) {
-                  // freeHeight가 있으면 마지막 섹션이 차이 흡수
-                  // sec.height는 원래 moduleData 기준이므로 freeHeight 반영 필요
-                  const dimH = moduleData?.dimensions?.height || totalH;
-                  const diff = totalH - dimH; // freeHeight에 의한 높이 차이
-                  return (sec.height || 0) + diff;
-                }
-                return sec.height || 0;
+              const isLast = sIdx === mcSections.length - 1;
+              if (isLast) {
+                // 마지막(상부) 섹션 = sectionBasisH - 이전 섹션 합
+                const fixedSum = mcSections.slice(0, -1).reduce((acc, s) => {
+                  if (s.heightType === 'absolute') return acc + (s.height || 0);
+                  const r = (s.height || s.heightRatio || 50) / 100;
+                  return acc + Math.round(sectionBasisH * r);
+                }, 0);
+                return Math.max(0, sectionBasisH - fixedSum);
               }
-              // percentage 타입
+              if (ht === 'absolute') return sec.height || 0;
               const ratio = (sec.height || sec.heightRatio || 50) / 100;
-              return Math.round(totalH * ratio);
+              return Math.round(sectionBasisH * ratio);
             };
 
             return (

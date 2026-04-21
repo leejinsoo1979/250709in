@@ -479,24 +479,6 @@ const Configurator: React.FC = () => {
   const [topFrameAllMode, setTopFrameAllMode] = useState<boolean>(true);
   const [baseFrameAllMode, setBaseFrameAllMode] = useState<boolean>(true);
 
-  // hasBase 상태에 따라 topFrameThickness 자동 보정
-  // 하부 OFF → topFrameThickness = globalTop + baseFrame
-  // 하부 ON → topFrameThickness = globalTop
-  useEffect(() => {
-    if ((spaceInfo.layoutMode || 'equal-division') === 'free-placement') return;
-    const globalTopMm = spaceInfo.frameSize?.top ?? 30;
-    const globalBaseMm = spaceInfo.baseConfig?.height ?? 65;
-    const slotMods = placedModules.filter(m => !m.isSurroundPanel);
-    slotMods.forEach(m => {
-      const cat = getModuleCategory(m);
-      if (cat === 'lower') return; // 하부장은 해당 없음
-      const baseH = m.baseFrameHeight ?? globalBaseMm;
-      const expected = m.hasBase === false ? globalTopMm + baseH : globalTopMm;
-      if (m.topFrameThickness !== expected) {
-        updatePlacedModule(m.id, { topFrameThickness: expected });
-      }
-    });
-  }, [placedModules.map(m => `${m.id}:${m.hasBase}:${m.baseFrameHeight}`).join('|'), spaceInfo.frameSize?.top, spaceInfo.baseConfig?.height, spaceInfo.layoutMode]);
   const [isFileTreeOpen, setIsFileTreeOpen] = useState(false);
   const [fileTreeProjects, setFileTreeProjects] = useState<ProjectSummary[]>([]);
   const [fileTreeActiveMenu, setFileTreeActiveMenu] = useState<QuickAccessMenu>('in-progress');
@@ -5982,8 +5964,19 @@ const Configurator: React.FC = () => {
                           'top-all',
                         );
                         }
-                        // OFF 상태: 상단갭 = topFrameThickness (하부 OFF 시 이미 확장됨)
-                        const currentGap = firstTop.topFrameThickness ?? globalTop;
+                        // OFF 상태: 상단갭 = 공간높이 - 가구높이 - 하부프레임 - 바닥마감재 - 띄움 (실제 빈 공간)
+                        const floorFinishH = spaceInfo.hasFloorFinish && spaceInfo.floorFinish?.height ? spaceInfo.floorFinish.height : 0;
+                        const bottomPortion = firstTop.hasBase === false
+                          ? (firstTop.individualFloatHeight ?? 0)
+                          : (firstTop.baseFrameHeight ?? globalBase);
+                        const furnitureActualH = firstTop.freeHeight
+                          ?? firstTop.customHeight
+                          ?? (() => {
+                            const md = getModuleById(firstTop.moduleId, { width: spaceInfo.width, height: spaceInfo.height, depth: spaceInfo.depth }, spaceInfo);
+                            return md?.dimensions.height ?? 0;
+                          })();
+                        const computedGap = Math.max(0, spaceInfo.height - furnitureActualH - bottomPortion - floorFinishH);
+                        const currentGap = firstTop.topFrameThickness !== undefined ? firstTop.topFrameThickness : computedGap;
                         return (
                           <div style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '3px 0' }}>
                             <span className={styles.frameItemLabel} style={{ minWidth: '34px', textAlign: 'left', margin: 0 }}>전체</span>
@@ -6076,15 +6069,11 @@ const Configurator: React.FC = () => {
                               first.baseFrameHeight ?? globalBase,
                               first.baseFrameOffset ?? firstOffsetDefault,
                               () => {
-                                // 하부 OFF: 하부프레임 크기가 상부프레임에 포함됨 (절대값으로 덮어씀)
-                                const baseH = first.baseFrameHeight ?? globalBase;
+                                // 하부 OFF (상부프레임 건드리지 않음)
                                 baseSortedMods.forEach(m => updatePlacedModule(m.id, {
                                   hasBase: false,
                                   individualFloatHeight: 0,
                                 }));
-                                topSortedMods.forEach(m => {
-                                  updatePlacedModule(m.id, { topFrameThickness: globalTop + baseH });
-                                });
                               },
                               (v) => {
                                 baseSortedMods.forEach(m => updatePlacedModule(m.id, { baseFrameHeight: v }));
@@ -6102,14 +6091,11 @@ const Configurator: React.FC = () => {
                               <span className={styles.frameItemLabel} style={{ minWidth: '34px', textAlign: 'left', margin: 0 }}>전체</span>
                               <button
                                 onClick={() => {
-                                  // 하부 ON 복귀: 상부프레임을 기본값으로 리셋
+                                  // 하부 ON 복귀 (상부프레임 건드리지 않음)
                                   baseSortedMods.forEach(m => updatePlacedModule(m.id, {
                                     hasBase: true,
                                     doorBottomGap: 25,
                                   }));
-                                  topSortedMods.forEach(m => {
-                                    updatePlacedModule(m.id, { topFrameThickness: globalTop });
-                                  });
                                 }}
                                 className={styles.miniToggle}
                               />
