@@ -2243,8 +2243,10 @@ const PlacedModulePropertiesPanel: React.FC = () => {
     if (activePopup.id && slotInfo && currentPlacedModule) {
       const indexing = calculateSpaceIndexing(spaceInfo);
       const slotWidth = indexing.columnWidth; // 슬롯 전체 너비 (586mm)
-      const columnDepth = slotInfo.column?.depth || 300; // 기둥 깊이 (300mm)
-      const remainingDepth = 730 - columnDepth; // 남은 깊이 (430mm)
+      const columnDepth = slotInfo.column?.depth || 300; // 기둥 깊이
+      // 가구 기본 깊이(moduleData 기준) - 기둥 깊이 = 기둥 앞에 배치할 수 있는 남은 깊이
+      const baseFurnitureDepth = moduleData?.dimensions?.depth || moduleData?.defaultDepth || 600;
+      const remainingDepth = Math.max(50, baseFurnitureDepth - columnDepth); // 최소 50mm 보장
 
       // 슬롯 중심 위치 계산 (치수가이드 동기화용)
       const slotIndex = currentPlacedModule.slotIndex;
@@ -2253,21 +2255,23 @@ const PlacedModulePropertiesPanel: React.FC = () => {
         : currentPlacedModule.position.x;
 
       if (mode === 'front') {
-        // 기둥 앞에 배치: 폭은 슬롯 전체, 깊이는 줄임, 위치는 슬롯 중심
-        // 도어가 BoxModule 내부에서 렌더링되도록 adjustedWidth와 columnSlotInfo 클리어
+        // 기둥 앞에 배치: 화살표 버튼과 동일한 로직
+        // customDepth 축소 + sectionDepthDirection='back'으로 뒷면 고정 (가구 앞쪽으로 이동)
         updatePlacedModule(activePopup.id, {
           columnPlacementMode: mode,
-          customWidth: slotWidth, // 586mm (슬롯 전체)
-          customDepth: remainingDepth, // 430mm (730 - 300)
-          lowerSectionDepth: remainingDepth, // 하부 섹션 깊이도 430mm
-          upperSectionDepth: remainingDepth, // 상부 섹션 깊이도 430mm
-          adjustedWidth: undefined, // 폭 조정 해제 (도어가 BoxModule 내부에서 렌더링되도록)
-          columnSlotInfo: undefined, // 기둥 슬롯 정보 클리어
+          customWidth: slotWidth,
+          customDepth: remainingDepth,
+          lowerSectionDepth: remainingDepth,
+          upperSectionDepth: remainingDepth,
+          lowerSectionDepthDirection: 'back',
+          upperSectionDepthDirection: 'back',
+          adjustedWidth: undefined,
+          columnSlotInfo: undefined,
           position: {
             ...currentPlacedModule.position,
-            x: slotCenterX // 슬롯 중심으로 위치 업데이트 (치수가이드 동기화)
+            x: slotCenterX
           }
-        });
+        } as any);
         // UI 입력 필드도 업데이트
         setCustomWidth(slotWidth.toString());
         setLowerSectionDepth(remainingDepth.toString());
