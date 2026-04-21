@@ -44,6 +44,10 @@ export interface FurnitureTypeProps {
   upperSectionDepth?: number; // 상부 섹션 깊이 (mm)
   lowerSectionDepthDirection?: 'front' | 'back'; // 하부 깊이 줄이는 방향
   upperSectionDepthDirection?: 'front' | 'back'; // 상부 깊이 줄이는 방향
+  lowerSectionWidth?: number; // 하부 섹션 너비 (mm)
+  upperSectionWidth?: number; // 상부 섹션 너비 (mm)
+  lowerSectionWidthDirection?: 'left' | 'right'; // 하부 너비 줄이는 방향 (기본: left = 좌고정)
+  upperSectionWidthDirection?: 'left' | 'right'; // 상부 너비 줄이는 방향
   lowerSectionTopOffset?: number; // 하부 섹션 상판 Z축 오프셋 (mm)
   grainDirection?: 'horizontal' | 'vertical'; // 텍스처 결 방향 (기본값: horizontal) - 하위 호환성
   panelGrainDirections?: { [panelName: string]: 'horizontal' | 'vertical' }; // 패널별 개별 결 방향

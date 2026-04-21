@@ -198,6 +198,10 @@ export interface PlacedModule {
   upperSectionDepth?: number; // 상부 섹션 깊이 (mm)
   lowerSectionDepthDirection?: 'front' | 'back'; // 하부 섹션 깊이 줄이는 방향 (front: 앞에서, back: 뒤에서, 기본: front)
   upperSectionDepthDirection?: 'front' | 'back'; // 상부 섹션 깊이 줄이는 방향 (front: 앞에서, back: 뒤에서, 기본: front)
+  lowerSectionWidth?: number; // 하부 섹션 너비 (mm)
+  upperSectionWidth?: number; // 상부 섹션 너비 (mm)
+  lowerSectionWidthDirection?: 'left' | 'right'; // 하부 섹션 너비 줄이는 방향 (left: 좌고정, right: 우고정, 기본: left)
+  upperSectionWidthDirection?: 'left' | 'right'; // 상부 섹션 너비 줄이는 방향 (left: 좌고정, right: 우고정, 기본: left)
 
   // 하부 섹션 칸막이 좌/우 독립 깊이 (칸막이가 있을 때만 사용)
   lowerLeftSectionDepth?: number;  // 하부 좌측 영역 깊이 (mm)

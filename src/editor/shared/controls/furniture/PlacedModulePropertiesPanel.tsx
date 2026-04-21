@@ -617,6 +617,10 @@ const PlacedModulePropertiesPanel: React.FC = () => {
   const [upperDepthInput, setUpperDepthInput] = useState<string>(''); // 상부 섹션 깊이 입력 필드
   const [lowerDepthDirection, setLowerDepthDirection] = useState<'front' | 'back'>('front'); // 하부 깊이 줄이는 방향
   const [upperDepthDirection, setUpperDepthDirection] = useState<'front' | 'back'>('front'); // 상부 깊이 줄이는 방향
+  const [lowerWidthInput, setLowerWidthInput] = useState<string>(''); // 하부 섹션 너비 입력 필드
+  const [upperWidthInput, setUpperWidthInput] = useState<string>(''); // 상부 섹션 너비 입력 필드
+  const [lowerWidthDirection, setLowerWidthDirection] = useState<'left' | 'right'>('left'); // 하부 너비 줄이는 방향 (left: 좌고정, right: 우고정)
+  const [upperWidthDirection, setUpperWidthDirection] = useState<'left' | 'right'>('left'); // 상부 너비 줄이는 방향
   const [lowerTopOffset, setLowerTopOffset] = useState<number>(0); // 하부 섹션 상판 옵셋 (mm)
   const [lowerTopOffsetInput, setLowerTopOffsetInput] = useState<string>('0'); // 하부 섹션 상판 옵셋 입력
   const [customWidth, setCustomWidth] = useState<number>(600); // 기본 컬럼 너비로 변경
@@ -1178,6 +1182,15 @@ const PlacedModulePropertiesPanel: React.FC = () => {
         setUpperDepthDirection(currentPlacedModule.upperSectionDepthDirection || 'front');
         setOriginalLowerDepthDirection(currentPlacedModule.lowerSectionDepthDirection || 'front');
         setOriginalUpperDepthDirection(currentPlacedModule.upperSectionDepthDirection || 'front');
+
+        // 섹션별 너비 초기화 (기둥 침범 시 adjustedWidth 기준)
+        const baseW = currentPlacedModule.adjustedWidth || currentPlacedModule.customWidth || initialWidth;
+        const lw = currentPlacedModule.lowerSectionWidth ?? baseW;
+        const uw = currentPlacedModule.upperSectionWidth ?? baseW;
+        setLowerWidthInput(Math.round(lw).toString());
+        setUpperWidthInput(Math.round(uw).toString());
+        setLowerWidthDirection(currentPlacedModule.lowerSectionWidthDirection || 'left');
+        setUpperWidthDirection(currentPlacedModule.upperSectionWidthDirection || 'left');
 
         if (currentPlacedModule.lowerSectionTopOffset === undefined) {
           updatePlacedModule(currentPlacedModule.id, { lowerSectionTopOffset: moduleDefaultLowerTopOffset });
@@ -3020,16 +3033,53 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                       {sectionLabel}
                     </div>
                     <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
-                      {/* 섹션 너비 */}
+                      {/* 섹션 너비 — 기둥 침범이 있는 슬롯 모드에서는 섹션별 너비 편집 + 좌/우고정 방향 */}
+                      {(() => {
+                        const hasColumnIntrusion =
+                          spaceInfo.layoutMode !== 'free-placement' &&
+                          (currentPlacedModule.adjustedWidth !== undefined && currentPlacedModule.adjustedWidth !== null);
+                        const isLowerSec = sIdx === 0;
+                        const isUpperSec = sIdx === 1;
+                        const sectionWidthVal = isLowerSec
+                          ? lowerWidthInput
+                          : isUpperSec
+                            ? upperWidthInput
+                            : displayW;
+                        const setSectionWidthVal = isLowerSec
+                          ? setLowerWidthInput
+                          : setUpperWidthInput;
+                        const widthDir = isLowerSec ? lowerWidthDirection : upperWidthDirection;
+                        const setWidthDir = isLowerSec ? setLowerWidthDirection : setUpperWidthDirection;
+                        const widthField = isLowerSec ? 'lowerSectionWidth' : 'upperSectionWidth';
+                        const widthDirField = isLowerSec ? 'lowerSectionWidthDirection' : 'upperSectionWidthDirection';
+                        const baseAdjW = currentPlacedModule.adjustedWidth || currentPlacedModule.customWidth || totalW;
+
+                        const commitWidth = (raw: string) => {
+                          const v = parseInt(raw, 10);
+                          if (isNaN(v) || v < 100 || v > 2400) {
+                            setSectionWidthVal(Math.round(baseAdjW).toString());
+                            return;
+                          }
+                          updatePlacedModule(currentPlacedModule.id, { [widthField]: v } as any);
+                        };
+
+                        return (
                       <div style={{ flex: 1, minWidth: '70px' }}>
                         <label style={{ fontSize: '10px', color: 'var(--theme-text-secondary)', display: 'block', lineHeight: 1 }}>너비</label>
                         <div className={styles.inputWithUnit}>
                           <input
                             type="text" inputMode="numeric"
-                            value={displayW}
-                            disabled={spaceInfo.layoutMode !== 'free-placement'}
-                            onChange={(e) => setSectionWidthInputs(prev => ({ ...prev, [sIdx]: e.target.value }))}
+                            value={hasColumnIntrusion ? sectionWidthVal : displayW}
+                            disabled={spaceInfo.layoutMode !== 'free-placement' && !hasColumnIntrusion}
+                            onChange={(e) => {
+                              if (hasColumnIntrusion) setSectionWidthVal(e.target.value);
+                              else setSectionWidthInputs(prev => ({ ...prev, [sIdx]: e.target.value }));
+                            }}
                             onBlur={() => {
+                              if (hasColumnIntrusion) {
+                                commitWidth(sectionWidthVal);
+                                return;
+                              }
                               // 너비 변경 → 전체 가구 너비 변경 (모든 섹션 연동)
                               const val = parseInt(sectionWidthInputs[sIdx] || displayW, 10);
                               if (!isNaN(val) && val >= 100 && val <= 2400) {
@@ -3059,6 +3109,13 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                               if (e.key === 'Enter') { (e.target as HTMLInputElement).blur(); }
                               else if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
                                 e.preventDefault();
+                                if (hasColumnIntrusion) {
+                                  const cur = parseInt(sectionWidthVal, 10) || Math.round(baseAdjW);
+                                  const next = Math.max(100, Math.min(2400, cur + (e.key === 'ArrowUp' ? 1 : -1)));
+                                  setSectionWidthVal(next.toString());
+                                  updatePlacedModule(currentPlacedModule.id, { [widthField]: next } as any);
+                                  return;
+                                }
                                 const fm2 = useFurnitureStore.getState().placedModules.find(m => m.id === currentPlacedModule.id) || currentPlacedModule;
                                 const curW2 = fm2.freeWidth || parseInt(displayW, 10) || Math.round(totalW);
                                 const next = Math.max(100, Math.min(2400, curW2 + (e.key === 'ArrowUp' ? 1 : -1)));
@@ -3077,15 +3134,46 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                             }}
                             className={styles.depthInput}
                             style={{
-                              color: spaceInfo.layoutMode !== 'free-placement' ? '#999' : '#000',
-                              backgroundColor: spaceInfo.layoutMode !== 'free-placement' ? '#f0f0f0' : '#fff',
-                              WebkitTextFillColor: spaceInfo.layoutMode !== 'free-placement' ? '#999' : '#000',
+                              color: (spaceInfo.layoutMode !== 'free-placement' && !hasColumnIntrusion) ? '#999' : '#000',
+                              backgroundColor: (spaceInfo.layoutMode !== 'free-placement' && !hasColumnIntrusion) ? '#f0f0f0' : '#fff',
+                              WebkitTextFillColor: (spaceInfo.layoutMode !== 'free-placement' && !hasColumnIntrusion) ? '#999' : '#000',
                               opacity: 1,
                             }}
                           />
                           <span className={styles.unit}>mm</span>
                         </div>
+                        {/* 좌고정/우고정 (기둥 침범 시에만 표시) */}
+                        {hasColumnIntrusion && sectionCount === 2 && (
+                          <div style={{ display: 'flex', gap: '4px', marginTop: '4px' }}>
+                            <button
+                              style={{
+                                flex: 1, padding: '3px 6px', border: '1px solid var(--theme-border)', borderRadius: '4px',
+                                background: widthDir === 'left' ? 'var(--theme-primary)' : 'var(--theme-surface)',
+                                color: widthDir === 'left' ? '#fff' : 'var(--theme-text-secondary)',
+                                fontSize: '10px', cursor: 'pointer',
+                              }}
+                              onClick={() => {
+                                setWidthDir('left');
+                                updatePlacedModule(currentPlacedModule.id, { [widthDirField]: 'left' } as any);
+                              }}
+                            >좌고정</button>
+                            <button
+                              style={{
+                                flex: 1, padding: '3px 6px', border: '1px solid var(--theme-border)', borderRadius: '4px',
+                                background: widthDir === 'right' ? 'var(--theme-primary)' : 'var(--theme-surface)',
+                                color: widthDir === 'right' ? '#fff' : 'var(--theme-text-secondary)',
+                                fontSize: '10px', cursor: 'pointer',
+                              }}
+                              onClick={() => {
+                                setWidthDir('right');
+                                updatePlacedModule(currentPlacedModule.id, { [widthDirField]: 'right' } as any);
+                              }}
+                            >우고정</button>
+                          </div>
+                        )}
                       </div>
+                        );
+                      })()}
                       {/* 섹션 높이 — 표준 가구: 마지막(상부) 섹션만 편집 가능 (전체 높이 역계산), 커스텀: 모두 편집 가능 */}
                       {(() => {
                         // 표준 가구에서 마지막 섹션(상부=가변)만 편집 가능

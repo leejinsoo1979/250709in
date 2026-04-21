@@ -67,6 +67,12 @@ interface SectionsRendererProps {
   // 섹션별 깊이 방향 (앞에서/뒤에서)
   sectionDepthDirections?: ('front' | 'back')[];
 
+  // 섹션별 너비 배열 (Three.js 단위) — 기둥 침범 시 섹션별 다른 너비
+  sectionWidths?: number[];
+
+  // 섹션별 너비 방향 (좌고정/우고정)
+  sectionWidthDirections?: ('left' | 'right')[];
+
   // 텍스처 URL과 패널별 결 방향
   textureUrl?: string;
   panelGrainDirections?: { [panelName: string]: 'horizontal' | 'vertical' };
@@ -110,6 +116,8 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
   placedFurnitureId,
   sectionDepths,
   sectionDepthDirections,
+  sectionWidths,
+  sectionWidthDirections,
   textureUrl,
   panelGrainDirections,
   lowerSectionTopOffsetMm = 0,
@@ -315,6 +323,14 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
       const directionOffset = depthDiff === 0 ? 0 : sectionDir === 'back' ? depthDiff / 2 : -depthDiff / 2;
       const currentShelfZOffset = shelfZOffset + directionOffset;
 
+      // 섹션별 너비 및 X 오프셋 (기둥 침범 시 섹션별 다른 너비 + 좌/우 고정)
+      const currentSectionInnerWidth = (sectionWidths && sectionWidths[index]) ? sectionWidths[index] : innerWidth;
+      const widthDiff = innerWidth - currentSectionInnerWidth;
+      const widthDir = sectionWidthDirections?.[index] || 'left';
+      // left = 좌고정: 우측을 줄임 → 섹션 중심 X 음수(왼쪽) 이동
+      // right = 우고정: 좌측을 줄임 → 섹션 중심 X 양수(오른쪽) 이동
+      const sectionXOffset = widthDiff === 0 ? 0 : widthDir === 'right' ? widthDiff / 2 : -widthDiff / 2;
+
       // 섹션 이름 결정 (상부/하부 구분)
       const sectionName = allSections.length >= 2
         ? (index === 0 ? '(하)' : '(상)')
@@ -339,7 +355,7 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
             sectionContent = (
               <ShelfRenderer
                 shelfCount={section.count}
-                innerWidth={innerWidth}
+                innerWidth={currentSectionInnerWidth}
                 innerHeight={sectionHeight}
                 depth={currentAdjustedDepthForShelves}
                 originalDepth={adjustedDepthForShelves}
@@ -422,7 +438,7 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
             sectionContent = (
               <DrawerRenderer
                 drawerCount={section.count}
-                innerWidth={innerWidth}
+                innerWidth={currentSectionInnerWidth}
                 innerHeight={drawerInnerHeight}
                 depth={currentSectionDepth}
                 basicThickness={basicThickness}
@@ -455,7 +471,7 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
       currentYPosition += sectionHeight;
       
       return (
-        <group key={`section-${index}`}>
+        <group key={`section-${index}`} position={[sectionXOffset, 0, 0]}>
           {sectionContent}
 
           {/* 섹션 내경 치수 표시 - 2단 옷장은 하부 섹션만 표시 (상부는 안전선반 있을 때만), 듀얼 타입 중복 방지 */}

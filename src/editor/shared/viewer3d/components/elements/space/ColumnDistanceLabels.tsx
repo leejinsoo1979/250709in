@@ -642,8 +642,8 @@ const ColumnDistanceLabels: React.FC<ColumnDistanceLabelsProps> = ({ column, spa
       {/* 기둥 너비 표시 (3D 모드에서만, 2D는 상단에 표시) */}
       {viewMode === '3D' && (
         <group position={[
-          currentColumn.position[0], 
-          columnHeightM + 0.8, 
+          currentColumn.position[0],
+          columnHeightM + 2.0,
           currentColumn.position[2]
         ]}>
           {editingDistance === 'width' ? (
@@ -766,32 +766,11 @@ const ColumnDistanceLabels: React.FC<ColumnDistanceLabelsProps> = ({ column, spa
         </group>
       )}
 
-      {/* 기둥 정면 중앙에 깊이 표시 - showDimensions 체크 추가 */}
-      {showDimensions && (
-        <group position={[currentColumn.position[0], columnHeightM / 2, currentColumn.position[2] + columnDepthM / 2 + 0.1]}>
-          <Text
-            fontSize={0.5}
-            color="#000000"
-            anchorX="center"
-            anchorY="middle"
-            rotation={[0, 0, 0]}
-          >
-            D {currentColumn.depth}
-          </Text>
-          <mesh position={[0, 0, -0.01]}>
-            <planeGeometry args={[3.0, 1.0]} />
-            <meshBasicMaterial color={themeColors.background} transparent opacity={0.95} />
-          </mesh>
-          <mesh position={[0, 0, -0.005]}>
-            <planeGeometry args={[3.2, 1.2]} />
-            <meshBasicMaterial color={theme?.mode === 'dark' ? '#555555' : '#cccccc'} transparent opacity={0.8} />
-          </mesh>
-        </group>
-      )}
+      {/* 기둥 정면 중앙 깊이 표시(D 600) — 사용자 요청으로 제거 */}
 
       {/* 정면뷰(2D)에서는 기둥 상단에 가로폭 표시 - showDimensions 체크 추가 */}
       {viewMode === '2D' && showDimensions ? (
-        <group position={[currentColumn.position[0], columnHeightM + 0.8, currentColumn.position[2]]}>
+        <group position={[currentColumn.position[0], columnHeightM + 2.0, currentColumn.position[2]]}>
           <Text
             fontSize={0.5}
             color="#000000"

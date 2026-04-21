@@ -58,6 +58,10 @@ interface BoxModuleProps {
   upperSectionDepth?: number; // 상부 섹션 깊이 (mm)
   lowerSectionDepthDirection?: 'front' | 'back'; // 하부 깊이 줄이는 방향
   upperSectionDepthDirection?: 'front' | 'back'; // 상부 깊이 줄이는 방향
+  lowerSectionWidth?: number; // 하부 섹션 너비 (mm)
+  upperSectionWidth?: number; // 상부 섹션 너비 (mm)
+  lowerSectionWidthDirection?: 'left' | 'right'; // 하부 너비 줄이는 방향
+  upperSectionWidthDirection?: 'left' | 'right'; // 상부 너비 줄이는 방향
   lowerLeftSectionDepth?: number; // 하부 좌측 영역 깊이 (mm)
   lowerRightSectionDepth?: number; // 하부 우측 영역 깊이 (mm)
   lowerSectionTopOffset?: number; // 하부 섹션 상판 오프셋 (mm) - 띄움 배치 시 사용
@@ -142,6 +146,10 @@ const BoxModule: React.FC<BoxModuleProps> = ({
   upperSectionDepth, // 상부 섹션 깊이 (mm)
   lowerSectionDepthDirection, // 하부 깊이 줄이는 방향
   upperSectionDepthDirection, // 상부 깊이 줄이는 방향
+  lowerSectionWidth, // 하부 섹션 너비 (mm)
+  upperSectionWidth, // 상부 섹션 너비 (mm)
+  lowerSectionWidthDirection, // 하부 너비 줄이는 방향
+  upperSectionWidthDirection, // 상부 너비 줄이는 방향
   lowerLeftSectionDepth, // 하부 좌측 영역 깊이 (mm)
   lowerRightSectionDepth, // 하부 우측 영역 깊이 (mm)
   lowerSectionTopOffset, // 하부 섹션 상판 오프셋 (mm) - 띄움 배치 시 사용
@@ -243,6 +251,10 @@ const BoxModule: React.FC<BoxModuleProps> = ({
           upperSectionDepth={upperSectionDepth}
           lowerSectionDepthDirection={lowerSectionDepthDirection}
           upperSectionDepthDirection={upperSectionDepthDirection}
+          lowerSectionWidth={lowerSectionWidth}
+          upperSectionWidth={upperSectionWidth}
+          lowerSectionWidthDirection={lowerSectionWidthDirection}
+          upperSectionWidthDirection={upperSectionWidthDirection}
           lowerLeftSectionDepth={lowerLeftSectionDepth}
           lowerRightSectionDepth={lowerRightSectionDepth}
           backPanelThickness={backPanelThicknessProp}
@@ -358,6 +370,10 @@ const BoxModule: React.FC<BoxModuleProps> = ({
           upperSectionDepth={upperSectionDepth}
           lowerSectionDepthDirection={lowerSectionDepthDirection}
           upperSectionDepthDirection={upperSectionDepthDirection}
+          lowerSectionWidth={lowerSectionWidth}
+          upperSectionWidth={upperSectionWidth}
+          lowerSectionWidthDirection={lowerSectionWidthDirection}
+          upperSectionWidthDirection={upperSectionWidthDirection}
           lowerSectionTopOffset={lowerSectionTopOffset}
           backPanelThickness={backPanelThicknessProp}
           onPointerDown={onPointerDown}
