@@ -443,14 +443,19 @@ export function placeFurnitureAtSlot(params: PlaceFurnitureParams): PlaceFurnitu
     });
   }
 
-  // 카테고리별 기본 깊이 (신발장 380 / 상부장 300)
+  // 카테고리별 기본 깊이 (상부장 300 먼저, 신발장 380)
   if (customDepth === undefined) {
-    const isShoeCabinet = furnitureId.includes('-entryway-') || furnitureId.includes('-shelf-') || furnitureId.includes('-4drawer-shelf-') || furnitureId.includes('-2drawer-shelf-');
     const isUpperCabinet = furnitureId.includes('upper-cabinet');
-    if (isShoeCabinet) {
-      customDepth = Math.min(380, spaceInfo.depth);
-    } else if (isUpperCabinet) {
+    const isShoeCabinet = !isUpperCabinet && (
+      furnitureId.includes('-entryway-') ||
+      furnitureId.includes('-shelf-') ||
+      furnitureId.includes('-4drawer-shelf-') ||
+      furnitureId.includes('-2drawer-shelf-')
+    );
+    if (isUpperCabinet) {
       customDepth = Math.min(300, spaceInfo.depth);
+    } else if (isShoeCabinet) {
+      customDepth = Math.min(380, spaceInfo.depth);
     }
   }
 
@@ -495,15 +500,15 @@ export function placeFurnitureAtSlot(params: PlaceFurnitureParams): PlaceFurnitu
  */
 export function getDefaultFurnitureDepth(spaceInfo: SpaceInfo, moduleData?: ModuleData): number {
   const mid = moduleData?.id || '';
+  // 상부장: 300mm (먼저 검사)
+  const isUpperCabinet = mid.includes('upper-cabinet');
+  if (isUpperCabinet) {
+    return Math.min(300, spaceInfo.depth);
+  }
   // 신발장: 380mm
   const isShoeCabinet = mid.includes('-entryway-') || mid.includes('-shelf-') || mid.includes('-4drawer-shelf-') || mid.includes('-2drawer-shelf-');
   if (isShoeCabinet) {
     return Math.min(380, spaceInfo.depth);
-  }
-  // 상부장: 300mm
-  const isUpperCabinet = mid.includes('upper-cabinet');
-  if (isUpperCabinet) {
-    return Math.min(300, spaceInfo.depth);
   }
   if (moduleData?.defaultDepth) {
     return Math.min(moduleData.defaultDepth, spaceInfo.depth);

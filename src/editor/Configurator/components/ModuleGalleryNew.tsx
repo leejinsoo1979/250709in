@@ -102,18 +102,16 @@ const ModuleGalleryNew: React.FC<ModuleGalleryNewProps> = ({
         positionX = indexing.threeUnitPositions[availableSlotIndex];
       }
       
-      // 기본 깊이 계산
+      // 기본 깊이 계산 (상부장 300 먼저, 신발장 380)
       const getDefaultDepth = (moduleData: any) => {
         const mid = moduleData?.id || moduleId || '';
-        // 신발장: 380
-        const isShoeCabinet = mid.includes('-entryway-') || mid.includes('-shelf-') || mid.includes('-4drawer-shelf-') || mid.includes('-2drawer-shelf-');
-        if (isShoeCabinet) {
-          return Math.min(380, spaceInfo.depth);
-        }
-        // 상부장: 300
         const isUpperCabinet = mid.includes('upper-cabinet');
         if (isUpperCabinet) {
           return Math.min(300, spaceInfo.depth);
+        }
+        const isShoeCabinet = mid.includes('-entryway-') || mid.includes('-shelf-') || mid.includes('-4drawer-shelf-') || mid.includes('-2drawer-shelf-');
+        if (isShoeCabinet) {
+          return Math.min(380, spaceInfo.depth);
         }
         if (moduleData?.defaultDepth) {
           return Math.min(moduleData.defaultDepth, spaceInfo.depth);

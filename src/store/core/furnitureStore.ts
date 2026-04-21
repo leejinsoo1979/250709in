@@ -304,17 +304,22 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
       }
 
       // 카테고리별 기본 깊이 (customDepth 미설정 시)
+      // - 상부장: 300mm (먼저 검사 — upper-cabinet-shelf 등 shelf 포함 ID 구분)
       // - 신발장: 380mm
-      // - 상부장: 300mm
       try {
         const mid = module.moduleId || '';
-        const isShoeCabinet = mid.includes('-entryway-') || mid.includes('-shelf-') || mid.includes('-4drawer-shelf-') || mid.includes('-2drawer-shelf-');
         const isUpperCabinet = mid.includes('upper-cabinet');
+        const isShoeCabinet = !isUpperCabinet && (
+          mid.includes('-entryway-') ||
+          mid.includes('-shelf-') ||
+          mid.includes('-4drawer-shelf-') ||
+          mid.includes('-2drawer-shelf-')
+        );
         if (module.customDepth === undefined || module.customDepth === null) {
-          if (isShoeCabinet) {
-            module.customDepth = Math.min(380, spaceInfo.depth || 600);
-          } else if (isUpperCabinet) {
+          if (isUpperCabinet) {
             module.customDepth = Math.min(300, spaceInfo.depth || 600);
+          } else if (isShoeCabinet) {
+            module.customDepth = Math.min(380, spaceInfo.depth || 600);
           }
         }
       } catch {}
