@@ -5820,13 +5820,33 @@ const Configurator: React.FC = () => {
             const topGroups = computeFrameMergeGroups(slotMods, 'top');
             const baseGroups = computeFrameMergeGroups(slotMods, 'base');
 
+            const allTopOnMerge = slotMods.every(m => m.hasTopFrame !== false);
+            const allBaseOnMerge = slotMods.every(m => m.hasBase !== false);
+            const allOnMerge = allTopOnMerge && allBaseOnMerge;
+            const toggleAllMerge = () => {
+              const newVal = !allOnMerge;
+              slotMods.forEach(m => {
+                updatePlacedModule(m.id, {
+                  hasTopFrame: newVal,
+                  hasBase: newVal,
+                  ...(newVal ? { doorBottomGap: 25 } : { individualFloatHeight: 0 }),
+                });
+              });
+            };
             return (
               <div className={styles.configSection}>
                 <div className={styles.sectionHeader} onClick={() => setIsFrameSectionCollapsed(prev => !prev)} style={{ cursor: 'pointer', userSelect: 'none' }}>
                   <span className={styles.sectionDot}></span>
                   <h3 className={styles.sectionTitle}>상,하부프레임</h3>
                   <HelpBtn title="상,하부프레임" text="프레임 병합 모드: 병합 그룹 단위로 프레임을 설정합니다. 너비는 병합된 총 너비(읽기전용), 높이와 옵셋은 그룹 내 모든 가구에 일괄 적용됩니다." />
-                  <IoIosArrowDropup style={{ marginLeft: 'auto', fontSize: '14px', color: 'var(--theme-text-secondary)', transition: 'transform 0.2s', transform: isFrameSectionCollapsed ? 'rotate(180deg)' : 'rotate(0deg)' }} />
+                  <label
+                    onClick={(e) => e.stopPropagation()}
+                    style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11px', color: 'var(--theme-text-secondary)', cursor: 'pointer', marginRight: '8px' }}
+                  >
+                    <input type="checkbox" checked={allOnMerge} onChange={toggleAllMerge} />
+                    <span>전체</span>
+                  </label>
+                  <IoIosArrowDropup style={{ fontSize: '14px', color: 'var(--theme-text-secondary)', transition: 'transform 0.2s', transform: isFrameSectionCollapsed ? 'rotate(180deg)' : 'rotate(0deg)' }} />
                 </div>
                 {!isFrameSectionCollapsed && (
                   <div className={styles.subSetting}>
@@ -5895,16 +5915,40 @@ const Configurator: React.FC = () => {
           if (spaceInfo.isIsland) return null;
           let topNum = 0;
           let baseNum = 0;
+          const allTopOnInd = sorted.every(m => m.hasTopFrame !== false);
+          const allBaseOnInd = sorted.every(m => m.hasBase !== false);
+          const allOnInd = allTopOnInd && allBaseOnInd;
+          const toggleAllInd = () => {
+            const newVal = !allOnInd;
+            sorted.forEach(m => {
+              updatePlacedModule(m.id, {
+                hasTopFrame: newVal,
+                hasBase: newVal,
+                ...(newVal ? { doorBottomGap: 25 } : { individualFloatHeight: 0 }),
+              });
+            });
+          };
           return (
             <div className={styles.configSection}>
               <div className={styles.sectionHeader} onClick={() => setIsFrameSectionCollapsed(prev => !prev)} style={{ cursor: 'pointer', userSelect: 'none' }}>
                 <span className={styles.sectionDot}></span>
                 <h3 className={styles.sectionTitle}>상,하부프레임</h3>
                 <HelpBtn title="상,하부프레임" text="각 가구별 상부/하부 프레임을 개별 설정합니다. 토글로 표시/숨김, size로 높이, 옵셋으로 Z축 위치를 조정합니다." />
-                <IoIosArrowDropup style={{ marginLeft: 'auto', fontSize: '14px', color: 'var(--theme-text-secondary)', transition: 'transform 0.2s', transform: isFrameSectionCollapsed ? 'rotate(180deg)' : 'rotate(0deg)' }} />
+                <label
+                  onClick={(e) => e.stopPropagation()}
+                  style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11px', color: 'var(--theme-text-secondary)', cursor: 'pointer', marginRight: '8px' }}
+                >
+                  <input type="checkbox" checked={allOnInd} onChange={toggleAllInd} />
+                  <span>전체</span>
+                </label>
+                <IoIosArrowDropup style={{ fontSize: '14px', color: 'var(--theme-text-secondary)', transition: 'transform 0.2s', transform: isFrameSectionCollapsed ? 'rotate(180deg)' : 'rotate(0deg)' }} />
               </div>
               {!isFrameSectionCollapsed && (
                 <div className={styles.subSetting}>
+                  {/* 상부프레임 타이틀 */}
+                  <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--theme-text-secondary)', marginBottom: '4px' }}>
+                    상부프레임
+                  </div>
                   {/* 상부프레임 — 좌→우 순서 (하부장만 배치된 슬롯은 숨김) */}
                   {sorted.map((mod) => {
                     const cat = getModuleCategory(mod);
@@ -5924,7 +5968,13 @@ const Configurator: React.FC = () => {
                   })}
                   {/* 상하부 구분선 */}
                   {spaceInfo.baseConfig?.type !== 'stand' && sorted.length > 0 && (
-                    <div style={{ borderTop: '1px solid var(--theme-border, #e0e0e0)', margin: '6px 0' }} />
+                    <div style={{ borderTop: '1px solid var(--theme-border, #e0e0e0)', margin: '10px 0 6px' }} />
+                  )}
+                  {/* 하부프레임 타이틀 */}
+                  {spaceInfo.baseConfig?.type !== 'stand' && (
+                    <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--theme-text-secondary)', marginBottom: '4px' }}>
+                      하부프레임
+                    </div>
                   )}
                   {/* 하부프레임 — stand 타입이면 숨김, 상부장만 배치된 슬롯은 숨김 */}
                   {spaceInfo.baseConfig?.type !== 'stand' && sorted.map((mod) => {

@@ -271,7 +271,16 @@ const FormControl: React.FC<FormControlProps> = ({
         <h3 className={styles.formLabel}>{label}</h3>
         <div style={{ flex: 1 }} />
         {headerAccessory && (
-          <div onClick={(e) => e.stopPropagation()} style={{ marginRight: '8px' }}>
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              marginRight: '8px',
+              display: 'flex',
+              alignItems: 'center',
+              zIndex: 10,
+              position: 'relative',
+            }}
+          >
             {headerAccessory}
           </div>
         )}
