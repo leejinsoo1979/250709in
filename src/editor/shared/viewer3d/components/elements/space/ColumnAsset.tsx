@@ -779,6 +779,99 @@ const ColumnAsset: React.FC<ColumnAssetProps> = ({
           </div>
         </Html>
       )}
+
+      {/* 선택 시 좌/우 이동 화살표 (가구와 동일한 스타일) */}
+      {isSelected && !isLocked && (
+        <Html
+          position={[0, (height * 0.01) / 2, 0]}
+          center
+          zIndexRange={[100, 0]}
+          style={{ pointerEvents: 'none', userSelect: 'none', background: 'transparent' }}
+        >
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: `${Math.max(60, width * 0.6)}px`,
+              pointerEvents: 'none',
+            }}
+          >
+            {/* 좌측 화살표 */}
+            <button
+              onPointerDown={(e) => {
+                e.stopPropagation();
+                (window as any).__r3fClickHandled = true;
+              }}
+              onClick={(e) => {
+                e.stopPropagation();
+                (window as any).__r3fClickHandled = true;
+                const spaceInfoNow = useSpaceConfigStore.getState().spaceInfo;
+                const cols = spaceInfoNow.columns || [];
+                const col = cols.find((c: any) => c.id === id);
+                if (!col || col.isLocked) return;
+                const step = 0.1;
+                const spaceWidthM = (spaceInfoNow.width || 3000) * 0.01;
+                const halfW = (col.width * 0.01) / 2;
+                const minX = -spaceWidthM / 2 + halfW;
+                const newX = Math.max(minX, col.position[0] - step);
+                const updated = cols.map((c: any) =>
+                  c.id === id ? { ...c, position: [newX, c.position[1], c.position[2]] } : c
+                );
+                useSpaceConfigStore.getState().setSpaceInfo({ columns: updated });
+              }}
+              style={{
+                width: '44px', height: '44px', borderRadius: '8px', border: 'none',
+                background: '#4f7fff', color: 'white',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                cursor: 'pointer', boxShadow: '0 2px 6px rgba(0,0,0,0.25)',
+                pointerEvents: 'auto',
+              }}
+              title="왼쪽으로 100mm 이동"
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="15 18 9 12 15 6" />
+              </svg>
+            </button>
+
+            {/* 우측 화살표 */}
+            <button
+              onPointerDown={(e) => {
+                e.stopPropagation();
+                (window as any).__r3fClickHandled = true;
+              }}
+              onClick={(e) => {
+                e.stopPropagation();
+                (window as any).__r3fClickHandled = true;
+                const spaceInfoNow = useSpaceConfigStore.getState().spaceInfo;
+                const cols = spaceInfoNow.columns || [];
+                const col = cols.find((c: any) => c.id === id);
+                if (!col || col.isLocked) return;
+                const step = 0.1;
+                const spaceWidthM = (spaceInfoNow.width || 3000) * 0.01;
+                const halfW = (col.width * 0.01) / 2;
+                const maxX = spaceWidthM / 2 - halfW;
+                const newX = Math.min(maxX, col.position[0] + step);
+                const updated = cols.map((c: any) =>
+                  c.id === id ? { ...c, position: [newX, c.position[1], c.position[2]] } : c
+                );
+                useSpaceConfigStore.getState().setSpaceInfo({ columns: updated });
+              }}
+              style={{
+                width: '44px', height: '44px', borderRadius: '8px', border: 'none',
+                background: '#4f7fff', color: 'white',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                cursor: 'pointer', boxShadow: '0 2px 6px rgba(0,0,0,0.25)',
+                pointerEvents: 'auto',
+              }}
+              title="오른쪽으로 100mm 이동"
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="9 18 15 12 9 6" />
+              </svg>
+            </button>
+          </div>
+        </Html>
+      )}
     </group>
   );
 };
