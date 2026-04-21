@@ -679,11 +679,49 @@ const ColumnAsset: React.FC<ColumnAssetProps> = ({
               boxShadow: '0 3px 12px rgba(0,0,0,0.25)'
             }}
           >
+            {/* 잠금 버튼 */}
+            {(() => {
+              const colData = (spaceInfo?.columns || []).find((c: any) => c.id === id);
+              const locked = !!colData?.isLocked;
+              return (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    (window as any).__r3fClickHandled = true;
+                    const cols = useSpaceConfigStore.getState().spaceInfo.columns || [];
+                    const updated = cols.map((c: any) => c.id === id ? { ...c, isLocked: !c.isLocked } : c);
+                    useSpaceConfigStore.getState().setSpaceInfo({ columns: updated });
+                  }}
+                  style={{
+                    width: '24px', height: '24px', background: 'transparent', border: 'none',
+                    cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    padding: 0, transition: 'opacity 0.2s',
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.opacity = '0.7'}
+                  onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}
+                  title={locked ? '잠금 해제' : '잠금'}
+                >
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="5" y="11" width="14" height="10" rx="2" />
+                    <path d="M12 17a1 1 0 100-2 1 1 0 000 2z" fill="white" />
+                    {locked ? (
+                      <path d="M7 11V7a5 5 0 0110 0v4" />
+                    ) : (
+                      <path d="M7 11V7a5 5 0 019.9-1" />
+                    )}
+                  </svg>
+                </button>
+              );
+            })()}
+
             {/* 삭제 버튼 */}
             <button
               onClick={(e) => {
                 e.stopPropagation();
                 (window as any).__r3fClickHandled = true;
+                const cols = useSpaceConfigStore.getState().spaceInfo.columns || [];
+                const colData = cols.find((c: any) => c.id === id);
+                if (colData?.isLocked) return;
                 if (onRemove) onRemove(id);
               }}
               style={{
@@ -709,6 +747,9 @@ const ColumnAsset: React.FC<ColumnAssetProps> = ({
               onClick={(e) => {
                 e.stopPropagation();
                 (window as any).__r3fClickHandled = true;
+                const cols = useSpaceConfigStore.getState().spaceInfo.columns || [];
+                const colData = cols.find((c: any) => c.id === id);
+                if (colData?.isLocked) return;
                 window.dispatchEvent(new CustomEvent('duplicate-column', { detail: { columnId: id } }));
               }}
               style={{
