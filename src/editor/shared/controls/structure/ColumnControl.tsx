@@ -30,7 +30,7 @@ const ColumnControl: React.FC<ColumnControlProps> = ({ columns, onColumnsChange,
     if (!spaceInfo) return;
 
     // 공간 중앙에 기둥 배치
-    // 가구(의류장/키큰장)와 동일한 Z 정렬: 가구 공식 기준 뒷면을 맞춤
+    // 가구(의류장/키큰장)와 동일한 Z 정렬: 가구 뒷면과 기둥 뒷면을 맞춤
     // furnitureZOffset = zOffset + (panelDepth - furnitureDepth)/2
     // 가구 뒷면 Z = furnitureZOffset - furnitureDepth/2 - doorThickness
     // 기둥 중심 Z = 가구 뒷면 Z + columnDepth/2
@@ -78,7 +78,7 @@ const ColumnControl: React.FC<ColumnControlProps> = ({ columns, onColumnsChange,
         <h4>{t('sidebar.structureTypes')}</h4>
         <div className={styles.thumbnailGrid}>
           <ColumnThumbnail
-            width={300}
+            width={250}
             height={2400}
             depth={600}
             material="concrete"
@@ -88,7 +88,7 @@ const ColumnControl: React.FC<ColumnControlProps> = ({ columns, onColumnsChange,
             title={t('sidebar.columnA')}
           />
           <ColumnThumbnail
-            width={300}
+            width={250}
             height={2400}
             depth={300}
             material="concrete"

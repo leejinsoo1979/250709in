@@ -896,8 +896,8 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
     set((state) => {
       const columnSlots = analyzeColumnSlots(spaceInfo);
 
-      const updatedModules = state.placedModules.map(module => {
-        if (module.slotIndex === undefined) return module;
+      const updatedModules = state.placedModules.flatMap(module => {
+        if (module.slotIndex === undefined) return [module];
 
         // zone이 있는 경우 글로벌 슬롯 인덱스로 변환
         let globalSlotIndex = module.slotIndex;
@@ -909,15 +909,14 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
         }
 
         const slotInfo = columnSlots[globalSlotIndex];
-        // 기둥이 있는 슬롯인 경우 adjustedWidth 설정 (소수점 2자리로 반올림)
+        // 기둥이 있는 슬롯 → adjustedWidth 설정 (가구가 기둥 회피하여 폭 축소)
         if (slotInfo?.hasColumn) {
           const rawWidth = slotInfo.adjustedWidth || slotInfo.availableWidth;
           const newAdjustedWidth = Math.round(rawWidth * 100) / 100;
-
-          return {
+          return [{
             ...module,
             adjustedWidth: newAdjustedWidth
-          };
+          }];
         } else {
           // 기둥이 없는 슬롯인 경우 adjustedWidth 제거하고 위치 복원
           if (module.adjustedWidth !== undefined) {
@@ -946,19 +945,19 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
               originalX = indexing.threeUnitPositions[module.slotIndex];
             }
 
-            return {
+            return [{
               ...module,
               adjustedWidth: undefined,
               position: {
                 ...module.position,
                 x: originalX
               }
-            };
+            }];
           }
-          return {
+          return [{
             ...module,
             adjustedWidth: undefined
-          };
+          }];
         }
       });
 

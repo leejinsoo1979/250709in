@@ -86,6 +86,23 @@ const ColumnAsset: React.FC<ColumnAssetProps> = ({
   // 기둥이 선택되었는지 확인 (편집 모달이 열렸을 때만)
   const isSelected = activePopup.type === 'columnEdit' && activePopup.id === id;
 
+  // 다른 기둥과의 X축 충돌 체크 헬퍼 (Three.js 단위)
+  const wouldCollideWithOtherColumns = (targetX: number, myHalfWidthM: number, myId: string, allCols: any[]) => {
+    const EPS = 0.0005; // 0.5mm 허용 오차
+    for (const other of allCols) {
+      if (other.id === myId) continue;
+      const otherHalfW = (other.width * 0.01) / 2;
+      const otherLeft = other.position[0] - otherHalfW;
+      const otherRight = other.position[0] + otherHalfW;
+      const myLeft = targetX - myHalfWidthM;
+      const myRight = targetX + myHalfWidthM;
+      if (myLeft < otherRight - EPS && myRight > otherLeft + EPS) {
+        return true;
+      }
+    }
+    return false;
+  };
+
   // 키보드 이동: 슬롯배치 → 슬롯 경계 스냅, 자유배치 → 1mm씩
   useEffect(() => {
     if (!isSelected || isLocked) return;
@@ -129,6 +146,8 @@ const ColumnAsset: React.FC<ColumnAssetProps> = ({
       // 벽 경계 체크
       if (newX < -sw / 2 + hw) newX = -sw / 2 + hw;
       if (newX > sw / 2 - hw) newX = sw / 2 - hw;
+      // 다른 기둥과 충돌 체크 → 충돌하면 이동 안 함
+      if (wouldCollideWithOtherColumns(newX, hw, id, cols)) return;
       const updated = cols.map((c: any) =>
         c.id === id ? { ...c, position: [newX, c.position[1], c.position[2]] } : c
       );
@@ -350,10 +369,30 @@ const ColumnAsset: React.FC<ColumnAssetProps> = ({
       // 간단한 X축 이동만 허용 (Y, Z는 고정)
       const normalizedX = (x / rect.width) * 2 - 1;
       const worldX = normalizedX * spaceWidthHalf;
-      
+
       // X축만 이동, Y는 현재 위치 유지, Z는 뒷벽에 고정
-      const newX = Math.max(minX, Math.min(maxX, worldX));
-      
+      let newX = Math.max(minX, Math.min(maxX, worldX));
+
+      // 다른 기둥과 충돌 체크 → 충돌하면 이전 위치 유지
+      const otherColsForDrag = (useSpaceConfigStore.getState().spaceInfo.columns || []).filter((c: any) => c.id !== id);
+      const myHalfW = (width * 0.01) / 2;
+      const EPS_DRAG = 0.0005;
+      for (const other of otherColsForDrag) {
+        const otherHalfW = (other.width * 0.01) / 2;
+        const otherLeft = other.position[0] - otherHalfW;
+        const otherRight = other.position[0] + otherHalfW;
+        const myLeft = newX - myHalfW;
+        const myRight = newX + myHalfW;
+        if (myLeft < otherRight - EPS_DRAG && myRight > otherLeft + EPS_DRAG) {
+          // 충돌 방향에 따라 바로 옆에 붙임
+          if (tempPositionRef.current[0] < other.position[0]) {
+            newX = otherLeft - myHalfW;
+          } else {
+            newX = otherRight + myHalfW;
+          }
+          break;
+        }
+      }
       // 임시 위치 업데이트
       tempPositionRef.current = [newX, position[1], position[2]];
       
@@ -870,13 +909,23 @@ const ColumnAsset: React.FC<ColumnAssetProps> = ({
                     const hw = (col.width * 0.01) / 2;
                     let newX: number;
                     if (isFree) {
-                      // 자유배치: 좌측 벽 끝까지 이동
-                      newX = -sw / 2 + hw;
+                      // 자유배치: 좌측 벽 끝까지 이동 (다른 기둥에 막히면 바로 앞까지)
+                      let candidate = -sw / 2 + hw;
+                      // 이동 경로상 다른 기둥에 부딪히면 그 기둥 우측면 + hw에서 멈춤
+                      for (const other of cols) {
+                        if (other.id === id) continue;
+                        const otherRight = other.position[0] + (other.width * 0.01) / 2;
+                        if (otherRight <= col.position[0] - hw && otherRight + hw > candidate) {
+                          candidate = otherRight + hw;
+                        }
+                      }
+                      newX = candidate;
                     } else {
                       // 슬롯배치: 1mm씩 좌측 이동
                       newX = col.position[0] - 0.01;
-                      // 좌측 벽 경계 체크
                       if (newX < -sw / 2 + hw) newX = -sw / 2 + hw;
+                      // 충돌 체크 → 충돌하면 이동 안 함
+                      if (wouldCollideWithOtherColumns(newX, hw, id, cols)) return;
                     }
                     const updated = cols.map((c: any) =>
                       c.id === id ? { ...c, position: [newX, c.position[1], c.position[2]] } : c
@@ -926,12 +975,21 @@ const ColumnAsset: React.FC<ColumnAssetProps> = ({
                     const hw = (col.width * 0.01) / 2;
                     let newX: number;
                     if (isFree) {
-                      // 자유배치: 우측 벽 끝까지 이동
-                      newX = sw / 2 - hw;
+                      // 자유배치: 우측 벽 끝까지 이동 (다른 기둥에 막히면 바로 앞까지)
+                      let candidate = sw / 2 - hw;
+                      for (const other of cols) {
+                        if (other.id === id) continue;
+                        const otherLeft = other.position[0] - (other.width * 0.01) / 2;
+                        if (otherLeft >= col.position[0] + hw && otherLeft - hw < candidate) {
+                          candidate = otherLeft - hw;
+                        }
+                      }
+                      newX = candidate;
                     } else {
                       // 슬롯배치: 1mm씩 우측 이동
                       newX = col.position[0] + 0.01;
                       if (newX > sw / 2 - hw) newX = sw / 2 - hw;
+                      if (wouldCollideWithOtherColumns(newX, hw, id, cols)) return;
                     }
                     const updated = cols.map((c: any) =>
                       c.id === id ? { ...c, position: [newX, c.position[1], c.position[2]] } : c
