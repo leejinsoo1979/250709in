@@ -245,43 +245,54 @@ const ColumnDistanceLabels: React.FC<ColumnDistanceLabelsProps> = ({ column, spa
     });
   };
 
-  // 화살표 클릭 → 해당 방향의 다음 슬롯 경계로 이동 (한 경계씩 순차 이동)
+  // 화살표 클릭 → 해당 방향의 다음 슬롯 경계로 이동
   const snapToSlotBoundary = (direction: 'left' | 'right', event?: any) => {
     if (event) event.stopPropagation();
-    if (!onPositionChange || !spaceInfo) return;
+    console.log('🎯 [기둥 스냅] 호출:', { direction, hasOnPositionChange: !!onPositionChange, hasSpaceInfo: !!spaceInfo });
+    if (!onPositionChange) {
+      console.warn('❌ onPositionChange 없음 → 이동 불가');
+      return;
+    }
+    if (!spaceInfo) {
+      console.warn('❌ spaceInfo 없음');
+      return;
+    }
     try {
       const indexing = calculateSpaceIndexing(spaceInfo);
       const boundaries: number[] = indexing?.threeUnitBoundaries || [];
-      if (!boundaries || boundaries.length < 2) return;
+      console.log('🎯 [기둥 스냅] boundaries:', boundaries);
+      if (!boundaries || boundaries.length < 2) {
+        console.warn('❌ 경계 배열 부족');
+        return;
+      }
 
       const columnCenterX = currentColumn.position[0];
       const colHalfW = (currentColumn.width * 0.01) / 2;
       const colLeftEdge = columnCenterX - colHalfW;
       const colRightEdge = columnCenterX + colHalfW;
-      const EPS = 0.005; // 5mm 허용 오차
+      const EPS = 0.005;
+      console.log('🎯 [기둥 스냅] 현재 기둥:', { columnCenterX, colLeftEdge, colRightEdge, colHalfW });
 
       let targetX: number | null = null;
 
       if (direction === 'right') {
-        // 기둥 우측면(colRightEdge)보다 오른쪽에 있는 가장 가까운 경계
         const next = boundaries.find(b => b > colRightEdge + EPS);
-        if (next !== undefined) {
-          // 해당 경계에 기둥 우측면을 맞춤
-          targetX = next - colHalfW;
-        }
+        console.log('🎯 [기둥 스냅] 다음 우측 경계:', next);
+        if (next !== undefined) targetX = next - colHalfW;
       } else {
-        // 기둥 좌측면(colLeftEdge)보다 왼쪽에 있는 가장 가까운 경계
         const prev = [...boundaries].reverse().find(b => b < colLeftEdge - EPS);
-        if (prev !== undefined) {
-          // 해당 경계에 기둥 좌측면을 맞춤
-          targetX = prev + colHalfW;
-        }
+        console.log('🎯 [기둥 스냅] 이전 좌측 경계:', prev);
+        if (prev !== undefined) targetX = prev + colHalfW;
       }
 
-      if (targetX === null) return;
+      if (targetX === null) {
+        console.warn('❌ 이동할 경계 없음');
+        return;
+      }
+      console.log('🎯 [기둥 스냅] 이동 타겟 X:', targetX);
       onPositionChange(currentColumn.id, [targetX, 0, currentColumn.position[2]]);
     } catch (e) {
-      console.error('기둥 슬롯 스냅 이동 실패:', e);
+      console.error('❌ 기둥 슬롯 스냅 이동 실패:', e);
     }
   };
 

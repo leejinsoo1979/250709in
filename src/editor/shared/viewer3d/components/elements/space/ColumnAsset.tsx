@@ -13,6 +13,7 @@ import {
   isOakTexture,
   applyOakTextureSettings
 } from '@/editor/shared/utils/materialConstants';
+import { calculateSpaceIndexing } from '@/editor/shared/utils/indexing';
 
 
 interface ColumnAssetProps {
@@ -84,6 +85,58 @@ const ColumnAsset: React.FC<ColumnAssetProps> = ({
 
   // 기둥이 선택되었는지 확인 (편집 모달이 열렸을 때만)
   const isSelected = activePopup.type === 'columnEdit' && activePopup.id === id;
+
+  // 키보드 이동: 슬롯배치 → 슬롯 경계 스냅, 자유배치 → 1mm씩
+  useEffect(() => {
+    if (!isSelected || isLocked) return;
+    const handleKeyDown = (event: KeyboardEvent) => {
+      const activeElement = document.activeElement;
+      if (activeElement && (activeElement.tagName === 'INPUT' || activeElement.tagName === 'TEXTAREA')) return;
+      if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return;
+      event.preventDefault();
+      const spaceInfoNow = useSpaceConfigStore.getState().spaceInfo;
+      const cols = spaceInfoNow.columns || [];
+      const col = cols.find((c: any) => c.id === id);
+      if (!col || col.isLocked) return;
+      const isFree = spaceInfoNow.layoutMode === 'free-placement';
+      const sw = (spaceInfoNow.width || 3000) * 0.01;
+      const hw = (col.width * 0.01) / 2;
+      let newX: number;
+      if (isFree) {
+        // 자유배치: 1mm씩 (Shift 10mm)
+        const step = event.shiftKey ? 0.01 : 0.001;
+        newX = col.position[0] + (event.key === 'ArrowRight' ? step : -step);
+      } else {
+        // 슬롯배치: 슬롯 경계 스냅
+        const indexing = calculateSpaceIndexing(spaceInfoNow);
+        const boundaries: number[] = indexing?.threeUnitBoundaries || [];
+        const EPS = 0.005;
+        const candidates: number[] = [-sw / 2 + hw, sw / 2 - hw];
+        for (let i = 0; i < boundaries.length - 1; i++) {
+          const left = boundaries[i] + hw;
+          const right = boundaries[i + 1] - hw;
+          if (left < right - EPS) candidates.push(left, right);
+          else candidates.push((boundaries[i] + boundaries[i + 1]) / 2);
+        }
+        const uniqSorted = Array.from(new Set(candidates.map(v => Math.round(v * 1000) / 1000))).sort((a, b) => a - b);
+        const currentX = col.position[0];
+        const target = event.key === 'ArrowRight'
+          ? uniqSorted.find(x => x > currentX + EPS)
+          : [...uniqSorted].reverse().find(x => x < currentX - EPS);
+        if (target === undefined) return;
+        newX = target;
+      }
+      // 벽 경계 체크
+      if (newX < -sw / 2 + hw) newX = -sw / 2 + hw;
+      if (newX > sw / 2 - hw) newX = sw / 2 - hw;
+      const updated = cols.map((c: any) =>
+        c.id === id ? { ...c, position: [newX, c.position[1], c.position[2]] } : c
+      );
+      useSpaceConfigStore.getState().setSpaceInfo({ columns: updated });
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [isSelected, isLocked, id]);
 
   // 기둥 재질 생성 - 드래그 중에는 업데이트하지 않음
   const material = React.useMemo(() => {
@@ -812,9 +865,19 @@ const ColumnAsset: React.FC<ColumnAssetProps> = ({
                     const cols = spaceInfoNow.columns || [];
                     const col = cols.find((c: any) => c.id === id);
                     if (!col || col.isLocked) return;
+                    const isFree = spaceInfoNow.layoutMode === 'free-placement';
                     const sw = (spaceInfoNow.width || 3000) * 0.01;
                     const hw = (col.width * 0.01) / 2;
-                    const newX = -sw / 2 + hw;
+                    let newX: number;
+                    if (isFree) {
+                      // 자유배치: 좌측 벽 끝까지 이동
+                      newX = -sw / 2 + hw;
+                    } else {
+                      // 슬롯배치: 1mm씩 좌측 이동
+                      newX = col.position[0] - 0.01;
+                      // 좌측 벽 경계 체크
+                      if (newX < -sw / 2 + hw) newX = -sw / 2 + hw;
+                    }
                     const updated = cols.map((c: any) =>
                       c.id === id ? { ...c, position: [newX, c.position[1], c.position[2]] } : c
                     );
@@ -829,7 +892,7 @@ const ColumnAsset: React.FC<ColumnAssetProps> = ({
                     cursor: 'pointer', boxShadow: '0 3px 12px rgba(0,0,0,0.25)',
                     padding: 0, transition: 'opacity 0.2s',
                   }}
-                  title="좌측 벽으로 이동"
+                  title="좌측 슬롯 경계로 이동"
                 >
                   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <polyline points="15 18 9 12 15 6" />
@@ -858,9 +921,18 @@ const ColumnAsset: React.FC<ColumnAssetProps> = ({
                     const cols = spaceInfoNow.columns || [];
                     const col = cols.find((c: any) => c.id === id);
                     if (!col || col.isLocked) return;
+                    const isFree = spaceInfoNow.layoutMode === 'free-placement';
                     const sw = (spaceInfoNow.width || 3000) * 0.01;
                     const hw = (col.width * 0.01) / 2;
-                    const newX = sw / 2 - hw;
+                    let newX: number;
+                    if (isFree) {
+                      // 자유배치: 우측 벽 끝까지 이동
+                      newX = sw / 2 - hw;
+                    } else {
+                      // 슬롯배치: 1mm씩 우측 이동
+                      newX = col.position[0] + 0.01;
+                      if (newX > sw / 2 - hw) newX = sw / 2 - hw;
+                    }
                     const updated = cols.map((c: any) =>
                       c.id === id ? { ...c, position: [newX, c.position[1], c.position[2]] } : c
                     );
