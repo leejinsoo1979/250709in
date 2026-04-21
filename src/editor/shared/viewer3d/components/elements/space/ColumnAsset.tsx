@@ -781,7 +781,8 @@ const ColumnAsset: React.FC<ColumnAssetProps> = ({
       )}
 
       {/* 선택 시 좌/우 이동 화살표 (가구 툴바와 동일한 다크 그레이 라운드) */}
-      {isSelected && !isLocked && (() => {
+      {(() => {
+        if (!isSelected || isLocked) return null;
         const spaceWidthM = (spaceConfig.spaceInfo.width || 3000) * 0.01;
         const halfW = (width * 0.01) / 2;
         const tolerance = 0.001; // 1mm
