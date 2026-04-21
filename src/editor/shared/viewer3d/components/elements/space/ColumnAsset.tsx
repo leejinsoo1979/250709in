@@ -649,6 +649,22 @@ const ColumnAsset: React.FC<ColumnAssetProps> = ({
         </>
       )}
 
+      {/* 잠긴 기둥 중앙 자물쇠 표시 */}
+      {isLocked && (
+        <Html position={[0, (height * 0.01) / 2, 0]} center zIndexRange={[50, 0]} style={{ pointerEvents: 'none' }}>
+          <div style={{
+            background: 'rgba(70,70,70,0.85)', borderRadius: '50%', width: 32, height: 32,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
+          }}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="5" y="11" width="14" height="10" rx="2" />
+              <path d="M7 11V7a5 5 0 0110 0v4" />
+            </svg>
+          </div>
+        </Html>
+      )}
+
       {/* 선택 시 툴바 (가구와 동일한 UI) */}
       {isSelected && (
         <Html
@@ -681,8 +697,7 @@ const ColumnAsset: React.FC<ColumnAssetProps> = ({
           >
             {/* 잠금 버튼 */}
             {(() => {
-              const colData = (spaceInfo?.columns || []).find((c: any) => c.id === id);
-              const locked = !!colData?.isLocked;
+              const locked = isLocked;
               return (
                 <button
                   onClick={(e) => {
