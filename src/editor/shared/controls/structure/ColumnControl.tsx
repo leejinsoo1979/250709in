@@ -88,16 +88,6 @@ const ColumnControl: React.FC<ColumnControlProps> = ({ columns, onColumnsChange,
             title={t('sidebar.columnA')}
           />
           <ColumnThumbnail
-            width={120}
-            height={2400}
-            depth={730}
-            material="concrete"
-            color="#888888"
-            onDragStart={handleThumbnailDragStart}
-            onDoubleClick={handleThumbnailDoubleClick}
-            title={t('sidebar.columnB')}
-          />
-          <ColumnThumbnail
             width={300}
             height={2400}
             depth={300}

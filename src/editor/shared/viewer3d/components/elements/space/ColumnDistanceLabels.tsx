@@ -245,33 +245,40 @@ const ColumnDistanceLabels: React.FC<ColumnDistanceLabelsProps> = ({ column, spa
     });
   };
 
-  // 화살표 클릭 → 슬롯 경계로 스냅 이동 (좌우 한 슬롯씩)
+  // 화살표 클릭 → 해당 방향의 다음 슬롯 경계로 이동 (한 경계씩 순차 이동)
   const snapToSlotBoundary = (direction: 'left' | 'right', event?: any) => {
     if (event) event.stopPropagation();
     if (!onPositionChange || !spaceInfo) return;
     try {
       const indexing = calculateSpaceIndexing(spaceInfo);
       const boundaries: number[] = indexing?.threeUnitBoundaries || [];
-      if (!boundaries || boundaries.length === 0) return;
+      if (!boundaries || boundaries.length < 2) return;
+
       const columnCenterX = currentColumn.position[0];
       const colHalfW = (currentColumn.width * 0.01) / 2;
-      // 현재 기둥 좌/우 끝 위치
       const colLeftEdge = columnCenterX - colHalfW;
       const colRightEdge = columnCenterX + colHalfW;
-      let targetX = columnCenterX;
-      if (direction === 'left') {
-        // 현재 좌측 엣지보다 왼쪽에 있는 가장 가까운 경계
-        const candidates = boundaries.filter(b => b < colLeftEdge - 0.001);
-        if (candidates.length === 0) return;
-        const snap = Math.max(...candidates);
-        targetX = snap + colHalfW;
+      const EPS = 0.005; // 5mm 허용 오차
+
+      let targetX: number | null = null;
+
+      if (direction === 'right') {
+        // 기둥 우측면(colRightEdge)보다 오른쪽에 있는 가장 가까운 경계
+        const next = boundaries.find(b => b > colRightEdge + EPS);
+        if (next !== undefined) {
+          // 해당 경계에 기둥 우측면을 맞춤
+          targetX = next - colHalfW;
+        }
       } else {
-        // 현재 우측 엣지보다 오른쪽에 있는 가장 가까운 경계
-        const candidates = boundaries.filter(b => b > colRightEdge + 0.001);
-        if (candidates.length === 0) return;
-        const snap = Math.min(...candidates);
-        targetX = snap - colHalfW;
+        // 기둥 좌측면(colLeftEdge)보다 왼쪽에 있는 가장 가까운 경계
+        const prev = [...boundaries].reverse().find(b => b < colLeftEdge - EPS);
+        if (prev !== undefined) {
+          // 해당 경계에 기둥 좌측면을 맞춤
+          targetX = prev + colHalfW;
+        }
       }
+
+      if (targetX === null) return;
       onPositionChange(currentColumn.id, [targetX, 0, currentColumn.position[2]]);
     } catch (e) {
       console.error('기둥 슬롯 스냅 이동 실패:', e);
