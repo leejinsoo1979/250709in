@@ -35,7 +35,7 @@ interface ContentToolbarProps {
 }
 
 const VIEW_OPTIONS: { mode: ViewMode; label: string; icon: React.ReactNode }[] = [
-  { mode: 'extra-large', label: '아주 큰 아이콘', icon: <Image size={15} /> },
+  { mode: 'large', label: '큰 아이콘', icon: <LayoutGrid size={15} /> },
   { mode: 'medium', label: '보통 아이콘', icon: <Grid3X3 size={15} /> },
   { mode: 'details', label: '자세히', icon: <Table size={15} /> },
   { mode: 'tiles', label: '타일', icon: <LayoutGrid size={15} /> },
