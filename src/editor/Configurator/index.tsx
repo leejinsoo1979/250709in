@@ -6057,10 +6057,15 @@ const Configurator: React.FC = () => {
                               first.baseFrameHeight ?? globalBase,
                               first.baseFrameOffset ?? firstOffsetDefault,
                               () => {
+                                // 하부 OFF: 하부프레임 크기가 상부프레임에 포함됨 (절대값으로 덮어씀)
+                                const baseH = first.baseFrameHeight ?? globalBase;
                                 baseSortedMods.forEach(m => updatePlacedModule(m.id, {
                                   hasBase: false,
                                   individualFloatHeight: 0,
                                 }));
+                                topSortedMods.forEach(m => {
+                                  updatePlacedModule(m.id, { topFrameThickness: globalTop + baseH });
+                                });
                               },
                               (v) => {
                                 baseSortedMods.forEach(m => updatePlacedModule(m.id, { baseFrameHeight: v }));
@@ -6078,10 +6083,14 @@ const Configurator: React.FC = () => {
                               <span className={styles.frameItemLabel} style={{ minWidth: '34px', textAlign: 'left', margin: 0 }}>전체</span>
                               <button
                                 onClick={() => {
+                                  // 하부 ON 복귀: 상부프레임을 기본값으로 리셋
                                   baseSortedMods.forEach(m => updatePlacedModule(m.id, {
                                     hasBase: true,
                                     doorBottomGap: 25,
                                   }));
+                                  topSortedMods.forEach(m => {
+                                    updatePlacedModule(m.id, { topFrameThickness: globalTop });
+                                  });
                                 }}
                                 className={styles.miniToggle}
                               />
