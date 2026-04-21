@@ -781,7 +781,13 @@ const ColumnAsset: React.FC<ColumnAssetProps> = ({
       )}
 
       {/* 선택 시 좌/우 이동 화살표 (가구 툴바와 동일한 다크 그레이 라운드) */}
-      {isSelected && !isLocked && (
+      {isSelected && !isLocked && (() => {
+        const spaceWidthM = (spaceConfig.spaceInfo.width || 3000) * 0.01;
+        const halfW = (width * 0.01) / 2;
+        const tolerance = 0.001; // 1mm
+        const atLeftWall = position[0] <= -spaceWidthM / 2 + halfW + tolerance;
+        const atRightWall = position[0] >= spaceWidthM / 2 - halfW - tolerance;
+        return (
         <Html
           position={[0, (height * 0.01) / 2, 0]}
           center
@@ -792,11 +798,14 @@ const ColumnAsset: React.FC<ColumnAssetProps> = ({
             style={{
               display: 'flex',
               alignItems: 'center',
+              justifyContent: 'center',
               gap: '60px',
               pointerEvents: 'none',
+              minWidth: '120px',
             }}
           >
             {/* 좌측 화살표 */}
+            {!atLeftWall && (
             <button
               onPointerDown={(e) => {
                 e.stopPropagation();
@@ -832,8 +841,10 @@ const ColumnAsset: React.FC<ColumnAssetProps> = ({
                 <polyline points="15 18 9 12 15 6" />
               </svg>
             </button>
+            )}
 
             {/* 우측 화살표 */}
+            {!atRightWall && (
             <button
               onPointerDown={(e) => {
                 e.stopPropagation();
@@ -869,9 +880,11 @@ const ColumnAsset: React.FC<ColumnAssetProps> = ({
                 <polyline points="9 18 15 12 9 6" />
               </svg>
             </button>
+            )}
           </div>
         </Html>
-      )}
+        );
+      })()}
     </group>
   );
 };
