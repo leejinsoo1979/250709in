@@ -941,15 +941,10 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
       
       // 기본 너비 설정 - 자유배치 가구는 freeWidth 우선, 그 외 adjustedWidth(기둥 회피) 우선, customWidth, slotAvailable 순
       // slotInfo.availableWidth는 이격거리가 반영된 실제 슬롯 너비
-      // 기둥 앞 배치(front) 모드는 슬롯 전체 너비 사용
       const slotAvailableWidth = slotInfo?.availableWidth;
-      const isColumnFrontMode = (module as any).columnPlacementMode === 'front';
-      const slotFullWidth = indexing.slotWidths?.[module.slotIndex as number] ?? indexing.columnWidth;
       let actualWidth = (module.isFreePlacement && module.freeWidth)
         ? module.freeWidth
-        : isColumnFrontMode
-          ? (slotFullWidth || moduleData.dimensions.width)
-          : (module.adjustedWidth || module.customWidth || slotAvailableWidth || moduleData.dimensions.width);
+        : (module.adjustedWidth || module.customWidth || slotAvailableWidth || moduleData.dimensions.width);
       // 기둥 회피로 adjustedPosition이 있으면 반영
       let actualPositionX = (module as any).adjustedPosition?.x ?? module.position.x;
       
