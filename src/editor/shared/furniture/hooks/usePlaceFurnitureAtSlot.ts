@@ -443,11 +443,14 @@ export function placeFurnitureAtSlot(params: PlaceFurnitureParams): PlaceFurnitu
     });
   }
 
-  // 신발장 카테고리: 기본 깊이 380mm
+  // 카테고리별 기본 깊이 (신발장 380 / 상부장 300)
   if (customDepth === undefined) {
     const isShoeCabinet = furnitureId.includes('-entryway-') || furnitureId.includes('-shelf-') || furnitureId.includes('-4drawer-shelf-') || furnitureId.includes('-2drawer-shelf-');
+    const isUpperCabinet = furnitureId.includes('upper-cabinet');
     if (isShoeCabinet) {
       customDepth = Math.min(380, spaceInfo.depth);
+    } else if (isUpperCabinet) {
+      customDepth = Math.min(300, spaceInfo.depth);
     }
   }
 
@@ -491,11 +494,16 @@ export function placeFurnitureAtSlot(params: PlaceFurnitureParams): PlaceFurnitu
  * 기본 가구 깊이 계산
  */
 export function getDefaultFurnitureDepth(spaceInfo: SpaceInfo, moduleData?: ModuleData): number {
-  // 신발장 카테고리: 기본 깊이 380mm
   const mid = moduleData?.id || '';
+  // 신발장: 380mm
   const isShoeCabinet = mid.includes('-entryway-') || mid.includes('-shelf-') || mid.includes('-4drawer-shelf-') || mid.includes('-2drawer-shelf-');
   if (isShoeCabinet) {
     return Math.min(380, spaceInfo.depth);
+  }
+  // 상부장: 300mm
+  const isUpperCabinet = mid.includes('upper-cabinet');
+  if (isUpperCabinet) {
+    return Math.min(300, spaceInfo.depth);
   }
   if (moduleData?.defaultDepth) {
     return Math.min(moduleData.defaultDepth, spaceInfo.depth);
