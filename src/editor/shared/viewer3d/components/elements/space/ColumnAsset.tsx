@@ -120,11 +120,23 @@ const ColumnAsset: React.FC<ColumnAssetProps> = ({
       const hw = (col.width * 0.01) / 2;
       let newX: number;
       if (isFree) {
-        // 자유배치: 1mm씩 (Shift 10mm)
+        // 자유배치: 1mm씩 (Shift 10mm) - 다른 기둥 만나면 그 반대편으로 건너뛰기
         const step = event.shiftKey ? 0.01 : 0.001;
-        newX = col.position[0] + (event.key === 'ArrowRight' ? step : -step);
+        const candidate = col.position[0] + (event.key === 'ArrowRight' ? step : -step);
+        if (wouldCollideWithOtherColumns(candidate, hw, id, cols)) {
+          // 충돌한 기둥을 건너뛰어 반대편으로 이동
+          const EPS = 0.0005;
+          const blockers = cols.filter((c: any) => c.id !== id)
+            .map((c: any) => ({ left: c.position[0] - (c.width * 0.01) / 2, right: c.position[0] + (c.width * 0.01) / 2 }));
+          // 후보 위치 겹치는 기둥 찾기
+          const blocker = blockers.find(b => candidate - hw < b.right - EPS && candidate + hw > b.left + EPS);
+          if (!blocker) return;
+          newX = event.key === 'ArrowRight' ? blocker.right + hw : blocker.left - hw;
+        } else {
+          newX = candidate;
+        }
       } else {
-        // 슬롯배치: 슬롯 경계 스냅
+        // 슬롯배치: 슬롯 경계 스냅 - 충돌 시 다음 후보로 건너뛰기
         const indexing = calculateSpaceIndexing(spaceInfoNow);
         const boundaries: number[] = indexing?.threeUnitBoundaries || [];
         const EPS = 0.005;
@@ -137,16 +149,18 @@ const ColumnAsset: React.FC<ColumnAssetProps> = ({
         }
         const uniqSorted = Array.from(new Set(candidates.map(v => Math.round(v * 1000) / 1000))).sort((a, b) => a - b);
         const currentX = col.position[0];
-        const target = event.key === 'ArrowRight'
-          ? uniqSorted.find(x => x > currentX + EPS)
-          : [...uniqSorted].reverse().find(x => x < currentX - EPS);
-        if (target === undefined) return;
-        newX = target;
+        const ordered = event.key === 'ArrowRight'
+          ? uniqSorted.filter(x => x > currentX + EPS)
+          : [...uniqSorted].reverse().filter(x => x < currentX - EPS);
+        // 충돌 안 하는 첫 후보 선택 (건너뛰기)
+        const found = ordered.find(x => !wouldCollideWithOtherColumns(x, hw, id, cols));
+        if (found === undefined) return;
+        newX = found;
       }
       // 벽 경계 체크
       if (newX < -sw / 2 + hw) newX = -sw / 2 + hw;
       if (newX > sw / 2 - hw) newX = sw / 2 - hw;
-      // 다른 기둥과 충돌 체크 → 충돌하면 이동 안 함
+      // 최종 충돌 체크 (방어)
       if (wouldCollideWithOtherColumns(newX, hw, id, cols)) return;
       const updated = cols.map((c: any) =>
         c.id === id ? { ...c, position: [newX, c.position[1], c.position[2]] } : c
