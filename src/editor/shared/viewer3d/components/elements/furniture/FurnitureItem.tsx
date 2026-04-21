@@ -3438,20 +3438,11 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
             )}
 
             {/* 기둥C(medium) 앞 배치 전환 화살표 — 가구 선택 시 가구↔기둥 사이 표시 */}
-            {isSelected && !readOnly && slotInfo?.hasColumn && slotInfo?.columnType === 'medium' && slotInfo.column && (() => {
+            {isSelected && !readOnly && slotInfo?.hasColumn && slotInfo?.columnType === 'medium' && slotInfo.column && placedModule.columnPlacementMode !== 'front' && (() => {
               const spaceDepthMm = spaceInfo.depth || 1500;
               const columnDepthMm = slotInfo.column.depth;
               const depthDiff = spaceDepthMm - columnDepthMm;
               if (depthDiff < 290) return null; // 깊이 차이 290mm 이상일 때만 표시
-
-              // 이미 섹션 깊이가 조정되어 기둥 앞 상태이면 화살표 숨김
-              const targetSectionDepth = depthDiff; // spaceDepth - columnDepth
-              const isAlreadyFront =
-                placedModule.lowerSectionDepth === targetSectionDepth &&
-                placedModule.upperSectionDepth === targetSectionDepth &&
-                (placedModule.lowerSectionDepthDirection ?? 'front') === 'front' &&
-                (placedModule.upperSectionDepthDirection ?? 'front') === 'front';
-              if (isAlreadyFront) return null;
 
               // 화살표는 가구와 기둥 사이 앞쪽(가구 앞면 기준)에 배치
               const arrowZ = depth / 2 + 0.05;
@@ -3473,13 +3464,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                     onClick={(e) => {
                       e.stopPropagation();
                       (window as any).__r3fClickHandled = true;
-                      // 섹션별 깊이를 기둥 앞 공간만큼으로 축소, 앞고정으로 설정
-                      updatePlacedModule(placedModule.id, {
-                        lowerSectionDepth: targetSectionDepth,
-                        upperSectionDepth: targetSectionDepth,
-                        lowerSectionDepthDirection: 'front',
-                        upperSectionDepthDirection: 'front',
-                      });
+                      updatePlacedModule(placedModule.id, { columnPlacementMode: 'front' });
                     }}
                     onMouseEnter={(e) => (e.currentTarget.style.opacity = '0.8')}
                     onMouseLeave={(e) => (e.currentTarget.style.opacity = '1')}
@@ -3490,7 +3475,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                       cursor: 'pointer', boxShadow: '0 3px 12px rgba(0,0,0,0.25)',
                       padding: 0, transition: 'opacity 0.2s',
                     }}
-                    title="섹션 깊이를 기둥 앞 공간으로 축소 (앞고정)"
+                    title="기둥 앞으로 배치 (깊이 축소)"
                   >
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       {slotInfo.intrusionDirection === 'from-left' ? (
