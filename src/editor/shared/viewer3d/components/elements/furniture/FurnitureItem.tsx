@@ -3447,7 +3447,10 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
               const targetDepth = depthDiff; // 가구깊이 - 기둥깊이
               const isAlreadyFront =
                 placedModule.customDepth === targetDepth &&
-                (placedModule as any).columnPlacementMode === 'front';
+                placedModule.lowerSectionDepth === targetDepth &&
+                placedModule.upperSectionDepth === targetDepth &&
+                placedModule.lowerSectionDepthDirection === 'back' &&
+                placedModule.upperSectionDepthDirection === 'back';
               if (isAlreadyFront) return null;
 
               const arrowZ = depth / 2 + 0.05;
@@ -3470,9 +3473,10 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                       (window as any).__r3fClickHandled = true;
                       updatePlacedModule(placedModule.id, {
                         customDepth: targetDepth,
-                        // 섹션 깊이는 undefined로 초기화 (전체 깊이 = customDepth 적용)
-                        lowerSectionDepth: undefined,
-                        upperSectionDepth: undefined,
+                        lowerSectionDepth: targetDepth,
+                        upperSectionDepth: targetDepth,
+                        lowerSectionDepthDirection: 'back',
+                        upperSectionDepthDirection: 'back',
                         // 폭을 슬롯 전체로 복원 (기둥을 덮도록)
                         customWidth: undefined,
                         adjustedWidth: undefined,
