@@ -1396,9 +1396,15 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     // freeHeight가 없을 때만 topFrameThickness delta로 보정
     if (!placedModule.isFreePlacement && furnitureHeightMm > 0) {
       // freeHeight가 없을 때만 topFrameThickness delta 보정
+      // 단, 하부프레임이 OFF일 때는 그 공간을 가구가 차지하므로 차감하지 않는 delta 계산
       if (!placedModule.freeHeight && placedModule.topFrameThickness !== undefined) {
         const globalTop = spaceInfo.frameSize?.top ?? 30;
-        furnitureHeightMm -= (placedModule.topFrameThickness - globalTop);
+        const globalBaseMm = spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height ?? 65) : 0;
+        const baseFrameAbsorbed = placedModule.hasBase === false
+          ? (placedModule.baseFrameHeight ?? globalBaseMm)
+          : 0;
+        const topDelta = placedModule.topFrameThickness - globalTop - baseFrameAbsorbed;
+        furnitureHeightMm -= topDelta;
       }
       // 개별 baseFrameHeight 보정: 키큰장(full)만 적용
       // moduleData.dimensions.height는 글로벌 baseFrame 기준이므로 개별 차이를 반영
