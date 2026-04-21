@@ -238,6 +238,7 @@ interface FormControlProps {
   onToggle?: () => void;
   helpText?: string;
   style?: React.CSSProperties;
+  headerAccessory?: React.ReactNode;
 }
 
 const FormControl: React.FC<FormControlProps> = ({
@@ -246,7 +247,8 @@ const FormControl: React.FC<FormControlProps> = ({
   expanded = true,
   onToggle,
   helpText,
-  style
+  style,
+  headerAccessory
 }) => {
   const [showHelp, setShowHelp] = useState(false);
   const helpRef = React.useRef<HTMLDivElement>(null);
@@ -268,6 +270,11 @@ const FormControl: React.FC<FormControlProps> = ({
         <div className={styles.formIndicator}></div>
         <h3 className={styles.formLabel}>{label}</h3>
         <div style={{ flex: 1 }} />
+        {headerAccessory && (
+          <div onClick={(e) => e.stopPropagation()} style={{ marginRight: '8px' }}>
+            {headerAccessory}
+          </div>
+        )}
         {helpText && (
           <div ref={helpRef} style={{ position: 'relative' }}>
             <button
@@ -1352,12 +1359,31 @@ const RightPanel: React.FC<RightPanelProps> = ({
                 const topGroups = computeFrameMergeGroups(slotMods, 'top');
                 const baseGroups = computeFrameMergeGroups(slotMods, 'base');
 
+                const allTopOn = slotMods.every(m => m.hasTopFrame !== false);
+                const allBaseOn = slotMods.every(m => m.hasBase !== false);
+                const allOn = allTopOn && allBaseOn;
+                const toggleAll = () => {
+                  const newVal = !allOn;
+                  slotMods.forEach(m => {
+                    updatePlacedModule(m.id, {
+                      hasTopFrame: newVal,
+                      hasBase: newVal,
+                      ...(newVal ? { doorBottomGap: 25 } : { individualFloatHeight: 0 }),
+                    });
+                  });
+                };
                 return (
                   <FormControl
                     label="상,하부프레임"
                     expanded={expandedSections.has('slotFrame')}
                     onToggle={() => toggleSection('slotFrame')}
                     helpText="프레임 병합 모드: 병합 그룹 단위로 프레임을 설정합니다. 너비는 병합된 총 너비(읽기전용), 높이와 옵셋은 그룹 내 모든 가구에 일괄 적용됩니다."
+                    headerAccessory={
+                      <label style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11px', color: 'var(--theme-text-secondary)', cursor: 'pointer' }}>
+                        <input type="checkbox" checked={allOn} onChange={toggleAll} />
+                        <span>전체</span>
+                      </label>
+                    }
                   >
                     {/* 상부프레임 병합 그룹 */}
                     {topGroups.map((group, gIdx) => {
@@ -1432,12 +1458,31 @@ const RightPanel: React.FC<RightPanelProps> = ({
               // 비병합 모드: 기존 개별 행 렌더링
               let topNum = 0;
               let baseNum = 0;
+              const allTopOn = slotMods.every(m => m.hasTopFrame !== false);
+              const allBaseOn = slotMods.every(m => m.hasBase !== false);
+              const allOn = allTopOn && allBaseOn;
+              const toggleAll = () => {
+                const newVal = !allOn;
+                slotMods.forEach(m => {
+                  updatePlacedModule(m.id, {
+                    hasTopFrame: newVal,
+                    hasBase: newVal,
+                    ...(newVal ? { doorBottomGap: 25 } : { individualFloatHeight: 0 }),
+                  });
+                });
+              };
               return (
                 <FormControl
                   label="상,하부프레임"
                   expanded={expandedSections.has('slotFrame')}
                   onToggle={() => toggleSection('slotFrame')}
                   helpText="각 가구별 상부/하부 프레임을 개별 설정합니다. 너비(읽기전용), 높이, 옵셋으로 Z축 위치를 조정합니다."
+                  headerAccessory={
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11px', color: 'var(--theme-text-secondary)', cursor: 'pointer' }}>
+                      <input type="checkbox" checked={allOn} onChange={toggleAll} />
+                      <span>전체</span>
+                    </label>
+                  }
                 >
                   {/* 상부프레임 — 좌→우 순서 */}
                   {sorted.map((mod) => {

@@ -220,8 +220,8 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
         const droppedColumnWidth = zoneInfo.dropped.columnWidth;
 
         // 특수 듀얼 가구 체크
-        const isSpecialDualFurniture = module.id.includes('dual-2drawer-styler') ||
-          module.id.includes('dual-4drawer-pantshanger');
+        // 스타일러장 배치 제한 해제 (바지걸이장만 제한 유지)
+        const isSpecialDualFurniture = module.id.includes('dual-4drawer-pantshanger');
 
         // 듀얼 가구는 2개 슬롯을 사용하므로 2개 슬롯의 합계 너비로 확인
         if (isSpecialDualFurniture) {
@@ -269,8 +269,8 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
         const normalColumnWidth = zoneInfo.normal.columnWidth;
 
         // 특수 듀얼 가구 체크
-        const isSpecialDualFurniture = module.id.includes('dual-2drawer-styler') ||
-          module.id.includes('dual-4drawer-pantshanger');
+        // 스타일러장 배치 제한 해제 (바지걸이장만 제한 유지)
+        const isSpecialDualFurniture = module.id.includes('dual-4drawer-pantshanger');
 
         if (isSpecialDualFurniture) {
           // 싱글 슬롯 525mm 미만 체크
@@ -314,8 +314,8 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
       }
     } else {
       // 단내림이 없는 경우 기존 로직
-      const isSpecialDualFurniture = module.id.includes('dual-2drawer-styler') ||
-        module.id.includes('dual-4drawer-pantshanger');
+      // 스타일러장 배치 제한 해제 (바지걸이장만 제한 유지)
+      const isSpecialDualFurniture = module.id.includes('dual-4drawer-pantshanger');
 
       if (isSpecialDualFurniture) {
         const totalSlots = indexing.columnCount;
@@ -463,9 +463,8 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
           const droppedSlotWidths = zoneInfo.dropped.slotWidths || [];
           const droppedColumnWidth = zoneInfo.dropped.columnWidth;
 
-          // 특수 듀얼 가구 체크
-          const isSpecialDualFurniture = module.id.includes('dual-2drawer-styler') ||
-            module.id.includes('dual-4drawer-pantshanger');
+          // 특수 듀얼 가구 체크 (스타일러장 제한 해제, 바지걸이장만 제한 유지)
+          const isSpecialDualFurniture = module.id.includes('dual-4drawer-pantshanger');
 
           if (isSpecialDualFurniture) {
             // 싱글 슬롯 525mm 미만 체크
@@ -753,9 +752,8 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
       const indexing = calculateSpaceIndexing(fullSpaceInfo);
       const internalSpace = fullInternalSpace;
 
-      // 특수 듀얼 가구 체크 (바지걸이장, 스타일러장)
-      const isSpecialDualFurniture = module.id.includes('dual-2drawer-styler') ||
-        module.id.includes('dual-4drawer-pantshanger');
+      // 특수 듀얼 가구 체크 (바지걸이장만 제한, 스타일러장 해제)
+      const isSpecialDualFurniture = module.id.includes('dual-4drawer-pantshanger');
 
       // 특수 듀얼 가구이고 슬롯폭이 부족한 경우
       if (isSpecialDualFurniture) {
