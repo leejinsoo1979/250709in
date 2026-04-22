@@ -616,3 +616,261 @@ const renderToPdfWithSlotInfo = (
   pdf.setTextColor(128, 128, 128);
   pdf.text(`${spaceInfo.width}mm × ${spaceInfo.height}mm × ${furnitureDepth}mm`, pageWidth / 2, pageHeight - margin / 2, { align: 'center' });
 };
+
+// ========================================================================
+// 🆕 한 장 레이아웃 장표 (Multi-view Drawing Sheet) — A3 가로 한 페이지에 조합
+// ========================================================================
+
+interface SheetRect { x: number; y: number; w: number; h: number; }
+
+const renderViewToRect = (
+  pdf: jsPDF,
+  rect: SheetRect,
+  title: string,
+  lines: ParsedLine[],
+  texts: ParsedText[],
+  padding = 6,
+) => {
+  pdf.setFontSize(9);
+  pdf.setTextColor(0, 0, 0);
+  pdf.text(title, rect.x + 3, rect.y + 4);
+
+  let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+  lines.forEach(l => {
+    minX = Math.min(minX, l.x1, l.x2);
+    minY = Math.min(minY, l.y1, l.y2);
+    maxX = Math.max(maxX, l.x1, l.x2);
+    maxY = Math.max(maxY, l.y1, l.y2);
+  });
+  texts.forEach(t => {
+    minX = Math.min(minX, t.x);
+    minY = Math.min(minY, t.y);
+    maxX = Math.max(maxX, t.x);
+    maxY = Math.max(maxY, t.y);
+  });
+  if (minX === Infinity) {
+    pdf.setFontSize(7);
+    pdf.setTextColor(160, 160, 160);
+    pdf.text('no data', rect.x + rect.w / 2, rect.y + rect.h / 2, { align: 'center' });
+    return;
+  }
+  const dxfW = maxX - minX;
+  const dxfH = maxY - minY;
+  const titleBar = 7;
+  const drawW = rect.w - padding * 2;
+  const drawH = rect.h - padding * 2 - titleBar;
+  const scale = Math.min(drawW / dxfW, drawH / dxfH) * 0.92;
+  const cx = rect.x + rect.w / 2;
+  const cy = rect.y + titleBar + (rect.h - titleBar) / 2;
+  const toX = (x: number) => cx + (x - (minX + maxX) / 2) * scale;
+  const toY = (y: number) => cy - (y - (minY + maxY) / 2) * scale;
+
+  pdf.setDrawColor(0, 0, 0);
+  lines.forEach(line => {
+    let lw = 0.08;
+    if (line.layer === 'DIMENSIONS') lw = 0.06;
+    else if (line.layer === 'SPACE_FRAME') lw = 0.12;
+    else if (line.layer === 'FURNITURE_PANEL') lw = 0.1;
+    else if (line.layer === 'BACK_PANEL') lw = 0.04;
+    pdf.setLineWidth(lw);
+    pdf.line(toX(line.x1), toY(line.y1), toX(line.x2), toY(line.y2));
+  });
+
+  pdf.setTextColor(0, 0, 0);
+  texts.forEach(t => {
+    const fs = Math.max(Math.min(t.height * scale * 0.45, 7), 4);
+    pdf.setFontSize(fs);
+    pdf.text(t.text, toX(t.x), toY(t.y), { align: 'center' });
+  });
+};
+
+export interface SheetMetadata {
+  projectName?: string;
+  designName?: string;
+  materialName?: string;
+}
+
+export const downloadDxfAsSheetPdf = async (
+  spaceInfo: SpaceInfo,
+  placedModules: PlacedModule[],
+  metadata: SheetMetadata = {},
+): Promise<void> => {
+  const uiState = useUIStore.getState();
+  const originalViewMode = uiState.viewMode;
+  const originalView2DDirection = uiState.view2DDirection;
+  const originalRenderMode = uiState.renderMode;
+
+  await switchSceneViewMode('2D', 'front', 'wireframe');
+
+  const pdf = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a3' });
+  const pageW = pdf.internal.pageSize.getWidth();
+  const pageH = pdf.internal.pageSize.getHeight();
+  const margin = 8;
+  const titleBlockW = 55;
+
+  const areaX = margin;
+  const areaY = margin;
+  const areaW = pageW - margin * 2 - titleBlockW;
+  const areaH = pageH - margin * 2;
+  const topH = areaH * 0.5;
+  const botH = areaH - topH;
+
+  pdf.setDrawColor(0, 0, 0);
+  pdf.setLineWidth(0.4);
+  pdf.rect(margin, margin, pageW - margin * 2, pageH - margin * 2);
+  pdf.setLineWidth(0.2);
+  pdf.line(areaX, areaY + topH, areaX + areaW, areaY + topH);
+  pdf.line(pageW - margin - titleBlockW, margin, pageW - margin - titleBlockW, pageH - margin);
+
+  try {
+    // ═══════════════════════════════════════════════════════════
+    // 각 뷰 추출 — 원본 downloadDxfAsPdf와 동일한 씬 전환 흐름
+    // ═══════════════════════════════════════════════════════════
+
+    // ─ Front (with doors): 씬을 front로 전환 후 추출
+    await switchSceneViewMode('2D', 'front', 'wireframe');
+    const frontWith = generateViewDataFromDxf(spaceInfo, placedModules, 'front', false);
+
+    // ─ Front (without doors): 같은 front 뷰에서 excludeDoor=true
+    const frontNo = generateViewDataFromDxf(spaceInfo, placedModules, 'front', true);
+
+    // ─ Door-only: front 뷰에서 DOOR 레이어만 필터링
+    const doorAll = generateViewDataFromDxf(spaceInfo, placedModules, 'front');
+    const doorOnlyLines = doorAll.lines.filter(l => l.layer === 'DOOR');
+    const doorOnlyTexts = doorAll.texts.filter(t => t.layer === 'DOOR' || t.layer === 'DOOR_DIMENSIONS');
+
+    // ─ Top view: 씬을 top으로 전환 후 추출
+    await switchSceneViewMode('2D', 'top', 'wireframe');
+    const topView = generateViewDataFromDxf(spaceInfo, placedModules, 'top');
+
+    // ─ Side views: 씬을 left로 전환 + 가구 1개씩 추출 (원본 downloadDxfAsPdf와 동일)
+    const sortedModules = [...placedModules].sort((a, b) =>
+      (a.position?.x ?? 0) - (b.position?.x ?? 0)
+    );
+    const sideDataList: Array<{ module: PlacedModule; lines: ParsedLine[]; texts: ParsedText[] }> = [];
+    for (const m of sortedModules) {
+      // 각 가구별로 씬 전환 (가구별 레이아웃 차이 반영)
+      await switchSceneViewMode('2D', 'left', 'wireframe');
+      const data = generateViewDataFromDxf(spaceInfo, [m], 'left');
+      // renderToPdfWithSlotInfo와 동일한 필터: DOOR/DOOR_DIMENSIONS 제외
+      const fLines = data.lines.filter(l => l.layer !== 'DOOR' && l.layer !== 'DOOR_DIMENSIONS');
+      const fTexts = data.texts.filter(t => t.layer !== 'DOOR' && t.layer !== 'DOOR_DIMENSIONS');
+      sideDataList.push({ module: m, lines: fLines, texts: fTexts });
+    }
+
+    const topColW = areaW / 3;
+    const frontWithRect: SheetRect = { x: areaX, y: areaY, w: topColW, h: topH };
+    const frontNoRect:   SheetRect = { x: areaX + topColW, y: areaY, w: topColW, h: topH };
+    const topViewRect:   SheetRect = { x: areaX + topColW * 2, y: areaY, w: topColW, h: topH };
+
+    renderViewToRect(pdf, frontWithRect, 'Front View (With Doors)', frontWith.lines, frontWith.texts);
+    renderViewToRect(pdf, frontNoRect,   'Front View (Without Doors)', frontNo.lines, frontNo.texts);
+    renderViewToRect(pdf, topViewRect,   'Top View (Plan)', topView.lines, topView.texts);
+
+    pdf.setLineWidth(0.15);
+    pdf.setDrawColor(200, 200, 200);
+    pdf.line(frontNoRect.x, areaY, frontNoRect.x, areaY + topH);
+    pdf.line(topViewRect.x, areaY, topViewRect.x, areaY + topH);
+    pdf.setDrawColor(0, 0, 0);
+
+    const sideN = Math.max(1, sideDataList.length);
+    const botY = areaY + topH;
+
+    // 최대 5개 가구까지 한 페이지, 초과 시 첫 페이지는 5개 + Door, 나머지는 다음 페이지로
+    const MAX_SIDE_PER_PAGE = 5;
+    const sidesInFirstPage = Math.min(sideN, MAX_SIDE_PER_PAGE);
+
+    const sideAreaW = areaW * 0.65;
+    const doorAreaW = areaW - sideAreaW;
+    const sideColW = sideAreaW / sidesInFirstPage;
+
+    for (let idx = 0; idx < sidesInFirstPage; idx++) {
+      const sd = sideDataList[idx];
+      const rect: SheetRect = { x: areaX + sideColW * idx, y: botY, w: sideColW, h: botH };
+      renderViewToRect(pdf, rect, `Side View (Slot ${idx + 1})`, sd.lines, sd.texts);
+      if (idx > 0) {
+        pdf.setLineWidth(0.15);
+        pdf.setDrawColor(200, 200, 200);
+        pdf.line(rect.x, botY, rect.x, botY + botH);
+        pdf.setDrawColor(0, 0, 0);
+      }
+    }
+    const doorRect: SheetRect = { x: areaX + sideAreaW, y: botY, w: doorAreaW, h: botH };
+    pdf.setLineWidth(0.15);
+    pdf.setDrawColor(200, 200, 200);
+    pdf.line(doorRect.x, botY, doorRect.x, botY + botH);
+    pdf.setDrawColor(0, 0, 0);
+    renderViewToRect(pdf, doorRect, 'Door Drawing (Doors Only)', doorOnlyLines, doorOnlyTexts);
+
+    // ─ 추가 페이지: 5개 초과 측면도
+    if (sideN > MAX_SIDE_PER_PAGE) {
+      for (let start = MAX_SIDE_PER_PAGE; start < sideN; start += MAX_SIDE_PER_PAGE * 2) {
+        pdf.addPage();
+        const pageCount = Math.min(MAX_SIDE_PER_PAGE * 2, sideN - start);
+        const pageColW = areaW / pageCount;
+        // 외곽선
+        pdf.setDrawColor(0, 0, 0);
+        pdf.setLineWidth(0.4);
+        pdf.rect(margin, margin, pageW - margin * 2, pageH - margin * 2);
+        pdf.setLineWidth(0.2);
+        pdf.line(pageW - margin - titleBlockW, margin, pageW - margin - titleBlockW, pageH - margin);
+
+        for (let k = 0; k < pageCount; k++) {
+          const idx = start + k;
+          const sd = sideDataList[idx];
+          const rect: SheetRect = { x: areaX + pageColW * k, y: areaY, w: pageColW, h: areaH };
+          renderViewToRect(pdf, rect, `Side View (Slot ${idx + 1})`, sd.lines, sd.texts);
+          if (k > 0) {
+            pdf.setLineWidth(0.15);
+            pdf.setDrawColor(200, 200, 200);
+            pdf.line(rect.x, areaY, rect.x, areaY + areaH);
+            pdf.setDrawColor(0, 0, 0);
+          }
+        }
+      }
+    }
+
+    const tbX = pageW - margin - titleBlockW;
+    const tbY = margin;
+    const tbHeight = pageH - margin * 2;
+    let maxDepth = spaceInfo.depth;
+    if (placedModules.length > 0) {
+      maxDepth = Math.max(...placedModules.map(m => (m as any).customDepth || spaceInfo.depth));
+    }
+    const today = new Date().toISOString().slice(0, 10);
+    const rows = [
+      { label: 'PROJECT', value: metadata.projectName || '-' },
+      { label: 'DESIGN', value: metadata.designName || '-' },
+      { label: 'DRAWING', value: 'WARDROBE\nDESIGN DRAWING' },
+      { label: 'SIZE', value: `${spaceInfo.width} × ${spaceInfo.height}\n× ${maxDepth} mm` },
+      { label: 'DATE', value: today },
+      { label: 'SCALE', value: 'FIT TO A3' },
+      { label: 'MODULES', value: String(placedModules.length) },
+      { label: 'DOORS', value: String(placedModules.filter(m => m.hasDoor).length) },
+      { label: 'SHEET', value: '1 / 1' },
+    ];
+    const rowH = tbHeight / rows.length;
+    rows.forEach((r, idx) => {
+      const y = tbY + rowH * idx;
+      if (idx > 0) {
+        pdf.setLineWidth(0.2);
+        pdf.line(tbX, y, tbX + titleBlockW, y);
+      }
+      pdf.setFontSize(6);
+      pdf.setTextColor(100, 100, 100);
+      pdf.text(r.label, tbX + 2, y + 4);
+      pdf.setFontSize(8);
+      pdf.setTextColor(0, 0, 0);
+      r.value.split('\n').forEach((line, i) => {
+        pdf.text(line, tbX + 2, y + 10 + i * 3.5);
+      });
+    });
+
+    pdf.save(`drawing_sheet_${today}.pdf`);
+  } finally {
+    const restore = useUIStore.getState();
+    restore.setViewMode(originalViewMode);
+    restore.setView2DDirection(originalView2DDirection);
+    restore.setRenderMode(originalRenderMode);
+  }
+};

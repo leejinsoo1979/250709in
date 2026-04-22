@@ -6,7 +6,7 @@ import { useTranslation } from '@/i18n/useTranslation';
 import { useDXFExport, type DrawingType } from '@/editor/shared/hooks/useDXFExport';
 import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
-import { downloadDxfAsPdf, type PdfViewDirection } from '@/editor/shared/utils/dxfToPdf';
+import { downloadDxfAsPdf, downloadDxfAsSheetPdf, type PdfViewDirection } from '@/editor/shared/utils/dxfToPdf';
 
 interface ConvertModalProps {
   isOpen: boolean;
@@ -38,7 +38,8 @@ const ConvertModal: React.FC<ConvertModalProps> = ({ isOpen, onClose, showAll, s
     '2d-front-no-door': false,  // 입면도 (도어 없음)
     '2d-top': false,            // 평면도
     '2d-left': false,           // 측면도
-    '2d-door-only': false       // 도어 입면도 (가구 없이 도어만)
+    '2d-door-only': false,      // 도어 입면도 (가구 없이 도어만)
+    'sheet-all-in-one': false,  // 한 장 레이아웃 (모든 뷰 조합)
   });
   const [selectedDXFTypes, setSelectedDXFTypes] = useState<DrawingType[]>(['front', 'plan', 'sideLeft', 'door']);
   
@@ -342,6 +343,19 @@ const ConvertModal: React.FC<ConvertModalProps> = ({ isOpen, onClose, showAll, s
       setLoadingProgress(30);
       setLoadingStatus('도면 생성 중...');
 
+      // "한 장 레이아웃" 옵션 선택 시 → sheet PDF 생성 (A3 한장)
+      if (selectedViews['sheet-all-in-one']) {
+        setLoadingProgress(60);
+        await downloadDxfAsSheetPdf(spaceInfo, placedModules, {});
+        setLoadingProgress(100);
+        console.log('✅ Sheet PDF 다운로드 성공');
+        setTimeout(() => {
+          setIsCapturing(false);
+          onClose();
+        }, 500);
+        return;
+      }
+
       // 선택된 뷰를 PdfViewDirection으로 변환
       const pdfViews: PdfViewDirection[] = [];
       if (selectedViews['2d-front']) pdfViews.push('front');
@@ -547,6 +561,15 @@ const ConvertModal: React.FC<ConvertModalProps> = ({ isOpen, onClose, showAll, s
                       />
                       <span>측면도 (Side View)</span>
                       <button className={styles.viewDetail}>치수 포함</button>
+                    </label>
+                    <label className={`${styles.viewOption} ${selectedViews['sheet-all-in-one'] ? styles.selected : ''}`}>
+                      <input
+                        type="checkbox"
+                        checked={selectedViews['sheet-all-in-one']}
+                        onChange={() => handleViewToggle('sheet-all-in-one')}
+                      />
+                      <span>한 장 레이아웃 (A3 All-in-One)</span>
+                      <button className={styles.viewDetail}>모든 뷰 조합</button>
                     </label>
                   </div>
                 </div>

@@ -765,16 +765,41 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
             const stoneThicknessL2 = mod.stoneTopThickness || 0;
             const includeStoneInHeight = modCat_l2 === 'lower' && stoneThicknessL2 > 0;
 
-            // 장 높이 세그먼트 (상판 제외 순수 캐비넷 높이)
-            segments_l2.push({
-              bottomY: mmToThreeUnits(cabinetBottomMm),
-              topY: mmToThreeUnits(cabinetTopMm),
-              heightMm: Math.round(moduleHeightMm),
-              key: `furniture-${moduleIndex}`,
-              // 상부장이면 미드웨이 편집 시 참조할 id/현재높이 기록
-              upperModuleId: modCat_l2 === 'upper' ? mod.id : undefined,
-              currentHeightMm: modCat_l2 === 'upper' ? moduleHeightMm : undefined,
-            });
+            // 2섹션 가구(의류장: 코트장/붙박이장B/D)는 섹션별로 분할하여 표시
+            // 하부장/상부장은 단일 표시, full 카테고리만 섹션 분할 적용
+            let didSplitSections = false;
+            if (modCat_l2 === 'full') {
+              const sectionInfo = computeSectionHeightsInfo(mod, moduleData, moduleHeightMm, 'left');
+              if (sectionInfo.heightsMm.length >= 2) {
+                // 하부 → 상부 순서로 누적 쌓기
+                let cursorMm = cabinetBottomMm;
+                sectionInfo.heightsMm.forEach((hMm, sIdx) => {
+                  const sBottom = cursorMm;
+                  const sTop = cursorMm + hMm;
+                  segments_l2.push({
+                    bottomY: mmToThreeUnits(sBottom),
+                    topY: mmToThreeUnits(sTop),
+                    heightMm: Math.round(hMm),
+                    key: `furniture-${moduleIndex}-sec${sIdx}`,
+                  });
+                  cursorMm = sTop;
+                });
+                didSplitSections = true;
+              }
+            }
+
+            // 섹션 분할이 아니면 장 높이 세그먼트 1개 (상판 제외 순수 캐비넷 높이)
+            if (!didSplitSections) {
+              segments_l2.push({
+                bottomY: mmToThreeUnits(cabinetBottomMm),
+                topY: mmToThreeUnits(cabinetTopMm),
+                heightMm: Math.round(moduleHeightMm),
+                key: `furniture-${moduleIndex}`,
+                // 상부장이면 미드웨이 편집 시 참조할 id/현재높이 기록
+                upperModuleId: modCat_l2 === 'upper' ? mod.id : undefined,
+                currentHeightMm: modCat_l2 === 'upper' ? moduleHeightMm : undefined,
+              });
+            }
 
             // 상판 두께 세그먼트 (분리 표시)
             if (includeStoneInHeight) {
@@ -2099,12 +2124,35 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
             const displayHeightMmRL2 = includeStoneInHeightRL2 ? moduleHeightMm + stoneThicknessRL2 : moduleHeightMm;
             const displayTopMmRL2 = includeStoneInHeightRL2 ? cabinetTopMm + stoneThicknessRL2 : cabinetTopMm;
 
-            segments_rl2.push({
-              bottomY: mmToThreeUnits(cabinetBottomMm),
-              topY: mmToThreeUnits(displayTopMmRL2),
-              heightMm: Math.round(displayHeightMmRL2),
-              key: `furniture-${moduleIndex}`
-            });
+            // 2섹션 가구(의류장: 코트장/붙박이장B/D)는 섹션별로 분할하여 표시
+            let didSplitSectionsRL2 = false;
+            if (modCat_rl2 === 'full') {
+              const sectionInfo = computeSectionHeightsInfo(mod, moduleData, moduleHeightMm, 'right');
+              if (sectionInfo.heightsMm.length >= 2) {
+                let cursorMm = cabinetBottomMm;
+                sectionInfo.heightsMm.forEach((hMm, sIdx) => {
+                  const sBottom = cursorMm;
+                  const sTop = cursorMm + hMm;
+                  segments_rl2.push({
+                    bottomY: mmToThreeUnits(sBottom),
+                    topY: mmToThreeUnits(sTop),
+                    heightMm: Math.round(hMm),
+                    key: `furniture-${moduleIndex}-sec${sIdx}`
+                  });
+                  cursorMm = sTop;
+                });
+                didSplitSectionsRL2 = true;
+              }
+            }
+
+            if (!didSplitSectionsRL2) {
+              segments_rl2.push({
+                bottomY: mmToThreeUnits(cabinetBottomMm),
+                topY: mmToThreeUnits(displayTopMmRL2),
+                heightMm: Math.round(displayHeightMmRL2),
+                key: `furniture-${moduleIndex}`
+              });
+            }
 
             // 하부장: 뒷턱 치수만 (상판 두께는 몸통에 합산됨)
             if (modCat_rl2 === 'lower') {
