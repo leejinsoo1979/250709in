@@ -1100,10 +1100,17 @@ export const extractFromScene = (
                              lowerNameForFilter.includes('조절발') ||
                              lowerNameForFilter.includes('leveler');
 
+    // 서랍 좌/우 측판은 가구 중심에서 좌우로 벌어진 X 위치에 있어서 allowedXRange(가구 중심 ±width/2)를
+    // 살짝 벗어날 수 있음. 서랍 geometry를 보존하기 위해 X 위치 필터링에서 제외.
+    const isDrawerPart = lowerNameForFilter.includes('drawer') ||
+                         lowerNameForFilter.includes('서랍') ||
+                         lowerNameForFilter.includes('마이다');
+
     if (allowedXRange &&
         (viewDirection === 'left' || viewDirection === 'right') &&
         layer !== 'SPACE_FRAME' &&
-        !isAdjustableFoot) {
+        !isAdjustableFoot &&
+        !isDrawerPart) {
 
       // 가구 관련 객체인 경우 X 위치 필터링 적용
       const isFurnitureObject = lowerNameForFilter.includes('furniture') ||
@@ -1476,16 +1483,24 @@ export const extractFromScene = (
 
         const projPos = projectTo2D(worldPos, scale);
 
-        // 자신 또는 부모 계층에서 door-dimension 확인
+        // 자신 또는 부모 계층에서 door-dimension / door-maida / maida 확인
+        // 하부장 서랍 마이다(앞판) 치수는 CADDimensions2D가 door-maida-group-* 로
+        // 감싸서 렌더하므로, 이것도 도어도면에 포함되도록 DOOR 레이어로 분류.
+        const isDoorRelatedName = (n: string): boolean => {
+          const ln = n.toLowerCase();
+          return ln.includes('door-dimension') ||
+                 ln.includes('door_dimension') ||
+                 ln.includes('door-maida') ||
+                 ln.includes('door_maida') ||
+                 ln.includes('마이다');
+        };
         let textLayer = 'DIMENSIONS';
-        const textName = name.toLowerCase();
-        if (textName.includes('door-dimension')) {
+        if (isDoorRelatedName(name)) {
           textLayer = 'DOOR';
         } else {
-          // 부모 계층에서 door-dimension 확인
           let current: THREE.Object3D | null = mesh.parent;
           while (current) {
-            if (current.name && current.name.toLowerCase().includes('door-dimension')) {
+            if (current.name && isDoorRelatedName(current.name)) {
               textLayer = 'DOOR';
               break;
             }

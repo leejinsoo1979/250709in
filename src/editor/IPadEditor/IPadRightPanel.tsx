@@ -168,7 +168,8 @@ const Toggle: React.FC<{ checked: boolean; onChange: (v: boolean) => void }> = (
   </button>
 );
 
-/** 프레임 행: 토글 + 'size' 라벨 + 숫자 input + '옵션' 라벨 + 숫자 input */
+/** 프레임 행: [라벨 | 토글] [size | input] [옵션 | input]
+ * 공간이 좁을 때 겹치지 않도록 충분한 최소 폭 보장 */
 const FrameRow: React.FC<{
   label: string;
   enabled: boolean;
@@ -179,43 +180,57 @@ const FrameRow: React.FC<{
   onOptionChange: (v: number) => void;
 }> = ({ label, enabled, onToggle, sizeValue, onSizeChange, optionValue, onOptionChange }) => (
   <div style={{
-    display: 'grid',
-    gridTemplateColumns: '48px 40px 1fr 40px 1fr',
-    gap: 8, alignItems: 'center',
+    display: 'flex',
+    alignItems: 'center',
+    gap: 8,
     padding: '8px 14px',
   }}>
-    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-      <span style={{ fontSize: 12, color: T.ink2, fontWeight: 500 }}>{label}</span>
+    {/* 라벨 + 토글 그룹 */}
+    <div style={{
+      display: 'flex', alignItems: 'center', gap: 8,
+      flexShrink: 0, minWidth: 80,
+    }}>
+      <span style={{ fontSize: 12, color: T.ink2, fontWeight: 500, minWidth: 34 }}>{label}</span>
       <Toggle checked={enabled} onChange={onToggle} />
     </div>
-    <span style={{ fontSize: 11, color: T.ink3 }}>size</span>
-    <input
-      type="number"
-      value={sizeValue}
-      onChange={(e) => onSizeChange(Number(e.target.value))}
-      disabled={!enabled}
-      style={{
-        height: 28, border: `1px solid ${T.line}`, borderRadius: 5,
-        outline: 'none', fontSize: 12, textAlign: 'center',
-        background: enabled ? T.surface : T.bg2,
-        color: enabled ? T.ink : T.ink3,
-        padding: '0 4px', width: '100%',
-      }}
-    />
-    <span style={{ fontSize: 11, color: T.ink3 }}>옵션</span>
-    <input
-      type="number"
-      value={optionValue}
-      onChange={(e) => onOptionChange(Number(e.target.value))}
-      disabled={!enabled}
-      style={{
-        height: 28, border: `1px solid ${T.line}`, borderRadius: 5,
-        outline: 'none', fontSize: 12, textAlign: 'center',
-        background: enabled ? T.surface : T.bg2,
-        color: enabled ? T.ink : T.ink3,
-        padding: '0 4px', width: '100%',
-      }}
-    />
+
+    {/* size 그룹 */}
+    <div style={{ display: 'flex', alignItems: 'center', gap: 4, flex: '1 1 0', minWidth: 0 }}>
+      <span style={{ fontSize: 11, color: T.ink3, flexShrink: 0 }}>size</span>
+      <input
+        type="number"
+        value={sizeValue}
+        onChange={(e) => onSizeChange(Number(e.target.value))}
+        disabled={!enabled}
+        style={{
+          flex: 1, minWidth: 0,
+          height: 28, border: `1px solid ${T.line}`, borderRadius: 5,
+          outline: 'none', fontSize: 12, textAlign: 'center',
+          background: enabled ? T.surface : T.bg2,
+          color: enabled ? T.ink : T.ink3,
+          padding: '0 4px',
+        }}
+      />
+    </div>
+
+    {/* 옵션 그룹 */}
+    <div style={{ display: 'flex', alignItems: 'center', gap: 4, flex: '1 1 0', minWidth: 0 }}>
+      <span style={{ fontSize: 11, color: T.ink3, flexShrink: 0 }}>옵션</span>
+      <input
+        type="number"
+        value={optionValue}
+        onChange={(e) => onOptionChange(Number(e.target.value))}
+        disabled={!enabled}
+        style={{
+          flex: 1, minWidth: 0,
+          height: 28, border: `1px solid ${T.line}`, borderRadius: 5,
+          outline: 'none', fontSize: 12, textAlign: 'center',
+          background: enabled ? T.surface : T.bg2,
+          color: enabled ? T.ink : T.ink3,
+          padding: '0 4px',
+        }}
+      />
+    </div>
   </div>
 );
 
