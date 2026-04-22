@@ -493,12 +493,15 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                   });
                 }
 
-                // 상판내림: 상단 전대 영역(55mm)은 하단 sideNotch와 동일한 z=40 따내기
-                // (전대를 감싸는 영역도 동일 깊이 따내기 → 측판 앞면이 원장 앞까지 튀어나오지 않음)
+                // 상판내림: 상단 전대 영역에 앞쪽 따내기 (10mm→8, 30mm→10)
                 const topDownNotches: Array<{ y: number; z: number; fromBottom: number }> = [];
                 if (isTopDownShell) {
                   const stretcherH = mmToThreeUnits(topStretcher!.heightMm); // 55mm
-                  topDownNotches.push({ y: stretcherH, z: mmToThreeUnits(40), fromBottom: height - stretcherH });
+                  if (stoneTopThickness === 10) {
+                    topDownNotches.push({ y: stretcherH, z: mmToThreeUnits(8), fromBottom: height - stretcherH });
+                  } else if (stoneTopThickness === 30) {
+                    topDownNotches.push({ y: stretcherH, z: mmToThreeUnits(10), fromBottom: height - stretcherH });
+                  }
                 }
 
                 // 다중 노치 (sideNotches가 있으면 추가 노치 포함)
