@@ -493,34 +493,62 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                   });
                 }
 
-                // 상판내림: 10mm 상판일 때 측판 원장 618mm (앞으로 +18 연장)
-                //   - 상단 55mm는 원장 앞면까지 (전대 감싸는 부분이 앞으로 돌출)
-                //   - 그 아래부터는 앞쪽 18mm 따내기 → 본체 600 유지
-                // 30mm 상판: 상단 55mm 앞쪽 10mm 따내기
+                // 상판내림 30mm: 상단 55mm 앞쪽 10mm 따내기
                 const topDownNotches: Array<{ y: number; z: number; fromBottom: number }> = [];
                 if (isTopDownShell) {
                   const stretcherH = mmToThreeUnits(topStretcher!.heightMm); // 55mm
                   if (stoneTopThickness === 30) {
                     topDownNotches.push({ y: stretcherH, z: mmToThreeUnits(10), fromBottom: height - stretcherH });
-                  } else if (stoneTopThickness === 10) {
-                    // 상단 55mm를 제외한 하단 전체에 앞쪽 10mm 따내기 → 본체 600 유지
-                    topDownNotches.push({ y: height - stretcherH, z: mmToThreeUnits(10), fromBottom: 0 });
                   }
                 }
 
+                // 상판내림 10mm: 측판 원장 610, 상단 55mm 제외 하단 전체에 10mm 따내기
+                // 기존 sideNotches와 겹치는 구간은 sideNotches z+=10으로 통합하고,
+                // 나머지 구간에 z=10 따내기를 별도로 삽입
+                const stretcherHMm = topStretcher ? topStretcher.heightMm : 0;
+                const isTen = isTopDownShell && stoneTopThickness === 10;
+                const sideNotchesAdjusted = isTen && sideNotches
+                  ? sideNotches.map(n => ({ ...n, z: n.z + 10 }))
+                  : sideNotches;
+
                 // 다중 노치 (sideNotches가 있으면 추가 노치 포함)
-                const allNotches = (sideNotches || topDownNotches.length > 0) ? [
-                  // 상단 노치: hideTopPanel일 때만 (도어올림은 상판이 있으므로 상단 따내기 없음)
+                const baseNotches: Array<{ y: number; z: number; fromBottom: number }> = [
                   ...(hideTopPanel ? [{ y: notchY, z: notchZ, fromBottom: height - notchY }] : []),
-                  // 추가 노치들 (mm → Three.js 단위 변환)
-                  ...(sideNotches || []).map(n => ({
+                  ...(sideNotchesAdjusted || []).map(n => ({
                     y: mmToThreeUnits(n.y),
                     z: mmToThreeUnits(n.z),
                     fromBottom: mmToThreeUnits(n.fromBottom)
                   })),
-                  // 상판내림 계단형 따내기 (앞으로 평행이동된 좌표계 기준 — notch는 패널 앞면 기준이므로 그대로)
                   ...topDownNotches
-                ] : undefined;
+                ];
+
+                // 10mm: 노치 사이 빈 구간에 z=10 얕은 따내기 추가 (상단 55mm 제외)
+                if (isTen) {
+                  const sorted = [...(sideNotchesAdjusted || [])].sort((a, b) => a.fromBottom - b.fromBottom);
+                  const gaps: Array<{ fromBottom: number; y: number }> = [];
+                  let cursor = 0; // mm
+                  for (const n of sorted) {
+                    if (n.fromBottom > cursor) {
+                      gaps.push({ fromBottom: cursor, y: n.fromBottom - cursor });
+                    }
+                    cursor = Math.max(cursor, n.fromBottom + n.y);
+                  }
+                  // 마지막 노치 위부터 상단 55mm 바로 아래까지
+                  const heightMm = height / 0.01;
+                  const topLimitMm = heightMm - stretcherHMm;
+                  if (cursor < topLimitMm) {
+                    gaps.push({ fromBottom: cursor, y: topLimitMm - cursor });
+                  }
+                  for (const g of gaps) {
+                    baseNotches.push({
+                      y: mmToThreeUnits(g.y),
+                      z: mmToThreeUnits(10),
+                      fromBottom: mmToThreeUnits(g.fromBottom)
+                    });
+                  }
+                }
+
+                const allNotches = baseNotches.length > 0 ? baseNotches : undefined;
 
                 return (
                   <>
