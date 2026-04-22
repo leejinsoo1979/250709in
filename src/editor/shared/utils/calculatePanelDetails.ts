@@ -266,18 +266,11 @@ export const calculatePanelDetails = (
       // 측판 윗부분 길이: 10mm→613, 20mm→600, 30mm→593
       // 측판 본체 길이: 항상 600 (customDepth)
       // 원장 깊이 = max(윗부분, 본체)
+      // 상판내림: 측판 원장 깊이 (임시 — 10mm도 20mm와 동일하게 600, 30mm도 600)
       const isTopDownForSide = moduleData.id.includes('lower-top-down-') || moduleData.id.includes('dual-lower-top-down-');
       if (isTopDownForSide) {
-        const stT = stoneTopThickness || 0;
-        let topSegmentExtension = 0; // 상판이 있을 때만 적용
-        if (stT === 10) topSegmentExtension = 13;
-        else if (stT === 20) topSegmentExtension = 0;
-        else if (stT === 30) topSegmentExtension = -7;
-        // 원장 깊이는 가장 긴 쪽 (윗부분 연장이 양수면 그만큼 커짐, 음수면 본체 유지)
-        const topSegmentDepth = customDepth + topSegmentExtension;
-        const ingotDepth = Math.max(customDepth, topSegmentDepth);
-        leftSideDepth = ingotDepth;
-        rightSideDepth = ingotDepth;
+        leftSideDepth = customDepth;
+        rightSideDepth = customDepth;
       }
 
       // Type5 스타일러장(2drawer-styler): 3D에서 우측판은 분할 안됨 (전체 높이 통짜)
@@ -466,11 +459,9 @@ export const calculatePanelDetails = (
           || moduleData.id.includes('lower-induction-cabinet') || moduleData.id.includes('dual-lower-induction-cabinet')
           || moduleData.id.includes('lower-drawer-');
         if (!noTopPanel) {
-          // 상판내림: 30mm → 앞에서 10mm 추가 축소, 10mm → 앞으로 13mm 연장
+          // 상판내림: 30mm → 앞에서 10mm 추가 축소, 10mm는 20mm와 동일
           const isTopDownForTop = moduleData.id.includes('lower-top-down-') || moduleData.id.includes('dual-lower-top-down-');
-          const topDownExtraFrontReductionMm = isTopDownForTop
-            ? (stoneTopThickness === 30 ? 10 : stoneTopThickness === 10 ? -13 : 0)
-            : 0;
+          const topDownExtraFrontReductionMm = (isTopDownForTop && stoneTopThickness === 30) ? 10 : 0;
           const topPanelEntry: any = {
             name: `${sectionPrefix}상판`,
             width: horizontalPanelWidth,

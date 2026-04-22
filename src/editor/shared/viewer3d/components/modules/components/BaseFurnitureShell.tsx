@@ -470,11 +470,11 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                 // 20mm: 측판 600, 따내기 없음
                 // 30mm: 측판 본체 600, 윗부분 앞쪽 10mm 따내기 → 윗부분 590
                 const isTopDownShell = !!topStretcher && (moduleData?.id?.includes('lower-top-down-') || moduleData?.id?.includes('dual-lower-top-down-'));
-                let topDownTopExtensionMm = 0; // 10mm용: 상단 앞쪽 돌출
+                let topDownTopExtensionMm = 0; // 10mm용 돌출 (임시 0 — 20mm와 동일 처리)
                 let topDownTopRecessMm = 0;    // 30mm용: 상단 앞쪽 따내기
                 if (isTopDownShell) {
-                  if (stoneTopThickness === 10) topDownTopExtensionMm = 13;
-                  else if (stoneTopThickness === 30) topDownTopRecessMm = 10;
+                  if (stoneTopThickness === 30) topDownTopRecessMm = 10;
+                  // 10mm는 20mm와 동일 (임시)
                 }
                 // 측판 본체는 항상 원장 depth(600) 그대로, 평행이동 없음
                 const sideDepth = depth;
@@ -552,46 +552,6 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                       textureUrl={textureUrl}
                       {...(allNotches ? { notches: allNotches } : { notch: { y: notchY, z: notchZ } })}
                     />
-
-                    {/* 상판내림 10mm: 측판 상단 앞쪽 돌출 조각 (전대 높이 55mm × 13mm × 측판 두께) */}
-                    {isTopDownShell && stoneTopThickness === 10 && (() => {
-                      const stretcherH = mmToThreeUnits(topStretcher!.heightMm);
-                      const extZ = mmToThreeUnits(13);
-                      const protrudeY = height/2 - stretcherH/2; // 상단 전대 영역 중심
-                      const protrudeZ = depth/2 + extZ/2; // 원장 앞면에서 +13/2 앞으로
-                      return (
-                        <>
-                          <BoxWithEdges
-                            key={`left-panel-protrude-${getSidePanelMaterial('좌측판').uuid}`}
-                            args={[basicThickness, stretcherH, extZ]}
-                            position={[-innerWidth/2 - basicThickness/2, protrudeY, protrudeZ]}
-                            material={getSidePanelMaterial('좌측판')}
-                            renderMode={renderMode}
-                            isDragging={isDragging}
-                            isEditMode={isEditMode}
-                            isEndPanel={isLeftEndPanel}
-                            panelName="좌측판(돌출)"
-                            panelGrainDirections={panelGrainDirections}
-                            furnitureId={placedFurnitureId}
-                            textureUrl={textureUrl}
-                          />
-                          <BoxWithEdges
-                            key={`right-panel-protrude-${getSidePanelMaterial('우측판').uuid}`}
-                            args={[basicThickness, stretcherH, extZ]}
-                            position={[innerWidth/2 + basicThickness/2, protrudeY, protrudeZ]}
-                            material={getSidePanelMaterial('우측판')}
-                            renderMode={renderMode}
-                            isDragging={isDragging}
-                            isEditMode={isEditMode}
-                            isEndPanel={isRightEndPanel}
-                            panelName="우측판(돌출)"
-                            panelGrainDirections={panelGrainDirections}
-                            furnitureId={placedFurnitureId}
-                            textureUrl={textureUrl}
-                          />
-                        </>
-                      );
-                    })()}
 
                     {/* 가로전대 (상단) - 상판이 없는 하부장만 (도어올림은 상판이 있으므로 제외) */}
                     {hideTopPanel && (
