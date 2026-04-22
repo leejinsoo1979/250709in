@@ -571,8 +571,8 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                       />
                     )}
 
-                    {/* 상단 가로전대 (상판내림: 캐비넷 앞면에 부착, 30mm 상판 시 7mm 뒤로 후퇴) */}
-                    {topStretcher && (
+                    {/* 상단 가로전대 (상판내림: 캐비넷 앞면에 부착, 30mm 상판 시 7mm 뒤로 후퇴) — 10mm는 외경 전대로 대체 */}
+                    {topStretcher && stoneTopThickness !== 10 && (
                       <BoxWithEdges
                         key={`front-stretcher-top-${material instanceof THREE.Material ? material.uuid : 'mat'}`}
                         args={[innerWidth, mmToThreeUnits(topStretcher.heightMm), basicThickness]}
