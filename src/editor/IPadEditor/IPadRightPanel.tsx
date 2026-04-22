@@ -358,25 +358,29 @@ const IPadRightPanel: React.FC<IPadRightPanelProps> = ({ spaceInfo }) => {
         <SegBtn flex active={curtain === 'right'} onClick={() => setCurtain('right')}>우측</SegBtn>
       </SegRow>
 
-      {/* ─ 프레임 및 이격설정 ─ */}
-      <SectionHeader title="프레임 및 이격설정" help="서라운드 / 노서라운드" />
-      <SegRow>
-        <SegBtn flex active={surround === 'surround'}       onClick={() => setSurround('surround')}>전체서라운드</SegBtn>
-        <SegBtn flex active={surround === 'both-surround' as any} onClick={() => setSurround('both-surround')}>양쪽서라운드</SegBtn>
-        <SegBtn flex active={surround === 'no-surround'}    onClick={() => setSurround('no-surround')}>노서라운드</SegBtn>
-      </SegRow>
+      {/* ─ 프레임 및 이격설정 (자유배치 전용 — 슬롯배치에는 해당 없음) ─ */}
+      {spaceInfo.layoutMode === 'free-placement' && (
+        <>
+          <SectionHeader title="프레임 및 이격설정" help="서라운드 / 노서라운드" />
+          <SegRow>
+            <SegBtn flex active={surround === 'surround'}       onClick={() => setSurround('surround')}>전체서라운드</SegBtn>
+            <SegBtn flex active={surround === 'both-surround' as any} onClick={() => setSurround('both-surround')}>양쪽서라운드</SegBtn>
+            <SegBtn flex active={surround === 'no-surround'}    onClick={() => setSurround('no-surround')}>노서라운드</SegBtn>
+          </SegRow>
 
-      {/* 좌이격 / 우이격 */}
-      <div style={{ padding: '0 14px 14px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-        <div>
-          <div style={{ fontSize: 11, color: T.ink3, marginBottom: 4, textAlign: 'center' }}>좌이격</div>
-          <Stepper value={leftGap} onChange={setLeftGap} step={0.5} min={0} max={20} />
-        </div>
-        <div>
-          <div style={{ fontSize: 11, color: T.ink3, marginBottom: 4, textAlign: 'center' }}>우이격</div>
-          <Stepper value={rightGap} onChange={setRightGap} step={0.5} min={0} max={20} />
-        </div>
-      </div>
+          {/* 좌이격 / 우이격 */}
+          <div style={{ padding: '0 14px 14px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+            <div>
+              <div style={{ fontSize: 11, color: T.ink3, marginBottom: 4, textAlign: 'center' }}>좌이격</div>
+              <Stepper value={leftGap} onChange={setLeftGap} step={0.5} min={0} max={20} />
+            </div>
+            <div>
+              <div style={{ fontSize: 11, color: T.ink3, marginBottom: 4, textAlign: 'center' }}>우이격</div>
+              <Stepper value={rightGap} onChange={setRightGap} step={0.5} min={0} max={20} />
+            </div>
+          </div>
+        </>
+      )}
 
       {/* ─ 상,하부프레임 (시안: A/B/C 상 + A/B/C 하) ─ */}
       <SectionHeader title="상,하부프레임" help="각 프레임의 size / 옵션" />
