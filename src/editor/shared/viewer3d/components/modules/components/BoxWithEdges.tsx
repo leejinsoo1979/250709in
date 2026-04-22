@@ -645,11 +645,15 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
         const n = sortedNotches[ni];
         const notchBottom = -halfH + n.fromBottom;
         const notchTop = notchBottom + n.y;
-        const isUppermostNotch = Math.abs(notchTop - halfH) < 0.01; // 최상단 노치 여부 (부동소수 오차 허용)
-        // 이전 노치와 맞닿아 있으면 앞면 중복 이동 스킵
+        const isUppermostNotch = Math.abs(notchTop - halfH) < 0.01;
+        // 다음 노치와 맞닿아 있는지 (있으면 "다시 앞면으로" 스킵)
+        const next = ni < sortedNotches.length - 1 ? sortedNotches[ni + 1] : null;
+        const nextBottom = next ? -halfH + next.fromBottom : null;
+        const adjacentToNext = next && nextBottom !== null && Math.abs(notchTop - nextBottom) < 0.01;
+        // 이전 노치와 맞닿아 있는지 (있으면 "노치 하단 앞면" 스킵)
         const prev = ni > 0 ? sortedNotches[ni - 1] : null;
         const prevTop = prev ? -halfH + prev.fromBottom + prev.y : null;
-        const adjacentToPrev = prev && prevTop !== null && Math.abs(prevTop - notchBottom) < 0.001;
+        const adjacentToPrev = prev && prevTop !== null && Math.abs(prevTop - notchBottom) < 0.01;
 
         if (!adjacentToPrev) {
           profileVertices.push([notchBottom, halfD]);           // 노치 하단 시작점 (앞면)
@@ -660,8 +664,8 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
         if (isUppermostNotch) {
           // 최상단 노치: 앞면으로 돌아가지 않고 바로 뒤쪽으로
           profileVertices.push([halfH, -halfD]); // top-back
-        } else {
-          profileVertices.push([notchTop, halfD]); // 다시 앞면으로
+        } else if (!adjacentToNext) {
+          profileVertices.push([notchTop, halfD]); // 다시 앞면으로 (다음 노치와 인접하지 않을 때만)
         }
       }
 
@@ -893,10 +897,12 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
         const notchBottom = -halfH + n.fromBottom;
         const notchTop = notchBottom + n.y;
         const isUppermostNotch = Math.abs(notchTop - halfH) < 0.01;
-        // 이전 노치와 맞닿아 있으면 앞면 중복 이동 스킵
+        const next = ni < sortedNotches.length - 1 ? sortedNotches[ni + 1] : null;
+        const nextBottom = next ? -halfH + next.fromBottom : null;
+        const adjacentToNext = next && nextBottom !== null && Math.abs(notchTop - nextBottom) < 0.01;
         const prev = ni > 0 ? sortedNotches[ni - 1] : null;
         const prevTop = prev ? -halfH + prev.fromBottom + prev.y : null;
-        const adjacentToPrev = prev && prevTop !== null && Math.abs(prevTop - notchBottom) < 0.001;
+        const adjacentToPrev = prev && prevTop !== null && Math.abs(prevTop - notchBottom) < 0.01;
 
         if (!adjacentToPrev) {
           shape.lineTo(notchBottom, halfD);         // 노치 하단 (앞면)
@@ -905,9 +911,8 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
         shape.lineTo(notchTop, halfD - n.z);        // 위로 올라감
 
         if (isUppermostNotch) {
-          // 최상단 노치: 앞면으로 돌아가지 않고 바로 뒤쪽으로
           shape.lineTo(halfH, -halfD);
-        } else {
+        } else if (!adjacentToNext) {
           shape.lineTo(notchTop, halfD);             // 다시 앞면으로
         }
       }
