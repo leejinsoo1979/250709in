@@ -243,6 +243,10 @@ interface UIState {
   setShowFurniture: (show: boolean) => void;
   setRenderMode: (mode: 'solid' | 'wireframe') => void;
   setView2DTheme: (theme: 'dark' | 'light') => void;
+
+  // 도어 갭 하이라이트 (상단갭/하단갭 입력 포커스 시 뷰어에 빨강 반투명 표시)
+  highlightedDoorGap: { moduleIds: string[]; side: 'top' | 'bottom' } | null;
+  setHighlightedDoorGap: (h: { moduleIds: string[]; side: 'top' | 'bottom' } | null) => void;
   
   // 팝업 관리 액션들
   openFurniturePopup: (moduleId: string) => void;
@@ -330,6 +334,7 @@ const initialUIState = {
   showDimensionsText: true,  // 기본값: 치수 텍스트 표시
   showGuides: false, // 기본값: 그리드(가이드) 숨김
   showAxis: true, // 기본값: 축 표시
+  highlightedDoorGap: null,  // 도어 갭 하이라이트
   showFrame: true, // 기본값: 프레임 표시
   showAll: true, // 기본값: 모든 가이드 표시
   dimensionOptionsBackup: null,
@@ -571,6 +576,8 @@ export const useUIStore = create<UIState>()(
       
       setShowAxis: (show) =>
         set({ showAxis: show }),
+
+      setHighlightedDoorGap: (h) => set({ highlightedDoorGap: h }),
 
       setShowFrame: (show) =>
         set({ showFrame: show }),

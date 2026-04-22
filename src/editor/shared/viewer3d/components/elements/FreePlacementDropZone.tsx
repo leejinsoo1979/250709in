@@ -25,6 +25,7 @@ import { useTheme } from '@/contexts/ThemeContext';
 import { useUIStore } from '@/store/uiStore';
 import { isCustomizableModuleId, getCustomizableCategory, getCustomDimensionKey, getStandardDimensionKey, CUSTOMIZABLE_DEFAULTS } from '@/editor/shared/controls/furniture/CustomizableFurnitureLibrary';
 import { useMyCabinetStore } from '@/store/core/myCabinetStore';
+import { withUpperSafetyShelfRemoved } from '@/editor/shared/utils/upperSafetyShelf';
 
 import { isSurroundPanelId } from '@/data/modules/surroundPanels';
 
@@ -825,16 +826,26 @@ const FreePlacementDropZone: React.FC = () => {
     return { leftObstacle, rightObstacle, leftDistance, rightDistance, modLeft, modRight, guideY, modTop, modBottom };
   }, [movingModuleId, editingFreeModuleId, placedModules, spaceBounds]);
 
+  // 편집 중인 모듈의 removeUpperSafetyShelf 상태 (고스트 실시간 반영용)
+  const editingRemoveUpperSafetyShelf = useMemo(() => {
+    if (!editingFreeModuleId) return false;
+    const mod = placedModules.find(m => m.id === editingFreeModuleId);
+    return !!mod?.removeUpperSafetyShelf;
+  }, [editingFreeModuleId, placedModules]);
+
   // 고스트 모듈 데이터 (BoxModule에 전달)
   const ghostModuleData = useMemo(() => {
     if (!activeModuleId) return null;
     // getModuleById로 실제 모듈 데이터를 가져옴
-    const modData = getModuleById(activeModuleId, internalSpace, spaceInfo);
-    if (modData) return modData;
-    // 못 찾으면 activeModuleData에서 생성
-    if (!activeModuleData) return null;
-    return activeModuleData;
-  }, [activeModuleId, internalSpace, spaceInfo, activeModuleData]);
+    let modData = getModuleById(activeModuleId, internalSpace, spaceInfo);
+    if (!modData) {
+      // 못 찾으면 activeModuleData에서 생성
+      if (!activeModuleData) return null;
+      modData = activeModuleData;
+    }
+    // 편집 중 선반제거 토글 상태 실시간 반영
+    return withUpperSafetyShelfRemoved(modData, editingRemoveUpperSafetyShelf);
+  }, [activeModuleId, internalSpace, spaceInfo, activeModuleData, editingRemoveUpperSafetyShelf]);
 
   // 고스트 Z 위치 계산 (SlotDropZonesSimple과 동일한 로직)
   const ghostZPosition = useMemo(() => {

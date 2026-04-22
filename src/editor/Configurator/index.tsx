@@ -92,7 +92,8 @@ const DoorGapInput: React.FC<{
   field: 'doorTopGap' | 'doorBottomGap';
   storeValue: number;
   onCommit: (moduleId: string, field: 'doorTopGap' | 'doorBottomGap', val: string) => void;
-}> = ({ moduleId, field, storeValue, onCommit }) => {
+  highlightModuleIds?: string[]; // 전체 동기화 시 전체 도어 ID들
+}> = ({ moduleId, field, storeValue, onCommit, highlightModuleIds }) => {
   const [localVal, setLocalVal] = useState(String(storeValue));
   const [isFocused, setIsFocused] = useState(false);
 
@@ -106,6 +107,15 @@ const DoorGapInput: React.FC<{
   const commit = () => {
     setIsFocused(false);
     onCommit(moduleId, field, localVal);
+    // 하이라이트 해제
+    useUIStore.getState().setHighlightedDoorGap && useUIStore.getState().setHighlightedDoorGap(null);
+  };
+
+  const handleFocus = () => {
+    setIsFocused(true);
+    const ids = highlightModuleIds && highlightModuleIds.length > 0 ? highlightModuleIds : [moduleId];
+    const side = field === 'doorTopGap' ? 'top' : 'bottom';
+    useUIStore.getState().setHighlightedDoorGap && useUIStore.getState().setHighlightedDoorGap({ moduleIds: ids, side });
   };
 
   return (
@@ -114,7 +124,7 @@ const DoorGapInput: React.FC<{
         type="number"
         value={localVal}
         onChange={(e) => setLocalVal(e.target.value)}
-        onFocus={() => setIsFocused(true)}
+        onFocus={handleFocus}
         onBlur={commit}
         onKeyDown={(e) => { if (e.key === 'Enter') { e.currentTarget.blur(); } }}
         style={{
@@ -6181,8 +6191,58 @@ const Configurator: React.FC = () => {
 
             {/* Close/Open 토글 → ViewerControls 상단바로 이동됨 */}
 
-            {/* 키큰장 도어 테이블 */}
-            {fullDoorIndices.length > 0 && (
+            {/* 전체 ON: 통합 상단갭/하단갭 입력 1쌍 */}
+            {doorGapAllSync && doorFurnitureList.length > 0 && (
+              <div style={{ marginTop: '8px' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed' }}>
+                  <thead>
+                    <tr>
+                      <th style={{ width: '52px', padding: '2px 4px', fontSize: '10px', fontWeight: 500, color: 'var(--theme-text-secondary, #999)', textAlign: 'center', whiteSpace: 'nowrap' }}>
+                        <label style={{ display: 'flex', alignItems: 'center', gap: '2px', cursor: 'pointer', justifyContent: 'center' }}>
+                          <input
+                            type="checkbox"
+                            checked={doorGapAllSync}
+                            onChange={(e) => setDoorGapAllSync(e.target.checked)}
+                            style={{ width: '13px', height: '13px', cursor: 'pointer', accentColor: 'var(--theme-primary, #4a90d9)' }}
+                          />
+                          <span style={{ fontSize: '9px', color: 'var(--theme-text-secondary, #999)' }}>전체</span>
+                        </label>
+                      </th>
+                      <th style={{ padding: '2px 2px', fontSize: '10px', fontWeight: 600, color: 'var(--theme-text-secondary, #666)', textAlign: 'center' }}>
+                        통합
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td style={{ padding: '3px 4px', fontSize: '11px', color: 'var(--theme-text-secondary, #999)', whiteSpace: 'nowrap' }}>상단갭</td>
+                      {(() => {
+                        const firstMod = doorFurnitureList[0];
+                        const allIds = doorFurnitureList.map(m => m.id);
+                        return <DoorGapInput key={`top-all`} moduleId={firstMod.id} field="doorTopGap"
+                          storeValue={firstMod.doorTopGap ?? 5}
+                          onCommit={handleIndividualDoorGapChange}
+                          highlightModuleIds={allIds} />;
+                      })()}
+                    </tr>
+                    <tr>
+                      <td style={{ padding: '3px 4px', fontSize: '11px', color: 'var(--theme-text-secondary, #999)', whiteSpace: 'nowrap' }}>하단갭</td>
+                      {(() => {
+                        const firstMod = doorFurnitureList[0];
+                        const allIds = doorFurnitureList.map(m => m.id);
+                        return <DoorGapInput key={`bot-all`} moduleId={firstMod.id} field="doorBottomGap"
+                          storeValue={firstMod.doorBottomGap ?? 25}
+                          onCommit={handleIndividualDoorGapChange}
+                          highlightModuleIds={allIds} />;
+                      })()}
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            )}
+
+            {/* 키큰장 도어 테이블 (전체 OFF 시에만) */}
+            {!doorGapAllSync && fullDoorIndices.length > 0 && (
               <div style={{ marginTop: '8px', overflowX: 'auto' }}>
                 {partialDoorIndices.length > 0 && <div style={{ fontSize: '11px', fontWeight: 600, color: 'var(--theme-text-secondary, #666)', marginBottom: '4px' }}>키큰장</div>}
                 <table style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed' }}>
@@ -6230,8 +6290,8 @@ const Configurator: React.FC = () => {
               </div>
             )}
 
-            {/* 상하부장 도어 테이블 */}
-            {partialDoorIndices.length > 0 && (
+            {/* 상하부장 도어 테이블 (전체 OFF 시에만) */}
+            {!doorGapAllSync && partialDoorIndices.length > 0 && (
               <div style={{ marginTop: fullDoorIndices.length > 0 ? '12px' : '8px', overflowX: 'auto' }}>
                 {fullDoorIndices.length > 0 && <div style={{ fontSize: '11px', fontWeight: 600, color: 'var(--theme-text-secondary, #666)', marginBottom: '4px' }}>상하부장</div>}
                 <table style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed' }}>

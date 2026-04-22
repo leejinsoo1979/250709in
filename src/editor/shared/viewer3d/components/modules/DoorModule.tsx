@@ -174,7 +174,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   const floatHeightSource = storeFloatHeight !== undefined ? storeFloatHeight : (propFloatHeight ?? 0);
   const floatHeight = placementType === 'float' ? floatHeightSource : 0;
   // Store에서 재질 설정과 도어 상태 가져오기
-  const { doorsOpen, view2DDirection, view2DTheme, isIndividualDoorOpen, toggleIndividualDoor, selectedSlotIndex, showDimensions } = useUIStore();
+  const { doorsOpen, view2DDirection, view2DTheme, isIndividualDoorOpen, toggleIndividualDoor, selectedSlotIndex, showDimensions, highlightedDoorGap } = useUIStore() as any;
   const { renderMode, viewMode, plainMaterial: isPlainMaterial } = useSpace3DView(); // context에서 renderMode와 viewMode 가져오기
   const { gl } = useThree(); // Three.js renderer 가져오기
   const { dimensionColor } = useDimensionColor(); // 치수 색상
@@ -1990,6 +1990,23 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                 <meshBasicMaterial color={singleDoorLocked ? '#FF0000' : doorOverlayColor} transparent opacity={singleDoorLocked ? 0.12 : 0.2} side={THREE.DoubleSide} depthTest={false} depthWrite={false} />
               </mesh>
             )}
+            {/* 도어 갭 하이라이트 (상단갭/하단갭 입력 포커스 시) */}
+            {highlightedDoorGap && furnitureId && highlightedDoorGap.moduleIds?.includes(furnitureId) && (() => {
+              const gapMm = highlightedDoorGap.side === 'top'
+                ? ((doorTopGapProp ?? 5))
+                : ((doorBottomGapProp ?? 25));
+              const gapUnits = mmToThreeUnits(Math.abs(gapMm));
+              if (gapUnits <= 0.001) return null;
+              const yOffset = highlightedDoorGap.side === 'top'
+                ? (doorHeight / 2 + gapUnits / 2)
+                : -(doorHeight / 2 + gapUnits / 2);
+              return (
+                <mesh position={[0, yOffset, doorThicknessUnits / 2 + 0.002]} renderOrder={10000}>
+                  <planeGeometry args={[doorWidthUnits, gapUnits]} />
+                  <meshBasicMaterial color="#FF0000" transparent opacity={0.35} side={THREE.DoubleSide} depthTest={false} depthWrite={false} />
+                </mesh>
+              );
+            })()}
             {/* BoxWithEdges 사용하여 도어 렌더링 */}
             <BoxWithEdges
               key={`single-door-${doorMaterial.uuid}`}
