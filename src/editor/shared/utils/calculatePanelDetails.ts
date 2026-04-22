@@ -262,15 +262,20 @@ export const calculatePanelDetails = (
       let leftSideDepth = customDepth;
       let rightSideDepth = rightAbsoluteDepthForSide || customDepth;
 
-      // 상판내림: 측판 원장 깊이 (CNC)
-      // 10mm: 원장 610 (상단 60mm만 원장, 나머지 앞 10mm 따내기 → 본체 600)
-      // 20mm: 원장 600
-      // 30mm: 원장 600 (상단 55mm만 앞 10mm 따내기 → 윗부분 590)
+      // 상판내림: 상판 두께별로 측판 상단 윗부분이 달라짐 → 원장 깊이 조정
+      // 측판 윗부분 길이: 10mm→613, 20mm→600, 30mm→593
+      // 측판 본체 길이: 항상 600 (customDepth)
+      // 원장 깊이 = max(윗부분, 본체)
       const isTopDownForSide = moduleData.id.includes('lower-top-down-') || moduleData.id.includes('dual-lower-top-down-');
       if (isTopDownForSide) {
         const stT = stoneTopThickness || 0;
-        let ingotDepth = customDepth;
-        if (stT === 10) ingotDepth = customDepth + 10;
+        let topSegmentExtension = 0; // 상판이 있을 때만 적용
+        if (stT === 10) topSegmentExtension = 13;
+        else if (stT === 20) topSegmentExtension = 0;
+        else if (stT === 30) topSegmentExtension = -7;
+        // 원장 깊이는 가장 긴 쪽 (윗부분 연장이 양수면 그만큼 커짐, 음수면 본체 유지)
+        const topSegmentDepth = customDepth + topSegmentExtension;
+        const ingotDepth = Math.max(customDepth, topSegmentDepth);
         leftSideDepth = ingotDepth;
         rightSideDepth = ingotDepth;
       }
@@ -461,10 +466,10 @@ export const calculatePanelDetails = (
           || moduleData.id.includes('lower-induction-cabinet') || moduleData.id.includes('dual-lower-induction-cabinet')
           || moduleData.id.includes('lower-drawer-');
         if (!noTopPanel) {
-          // 상판내림: 30mm → 앞에서 10mm 추가 축소, 10mm → 앞으로 10mm 연장
+          // 상판내림: 30mm → 앞에서 10mm 추가 축소, 10mm → 앞으로 13mm 연장
           const isTopDownForTop = moduleData.id.includes('lower-top-down-') || moduleData.id.includes('dual-lower-top-down-');
           const topDownExtraFrontReductionMm = isTopDownForTop
-            ? (stoneTopThickness === 30 ? 10 : stoneTopThickness === 10 ? -10 : 0)
+            ? (stoneTopThickness === 30 ? 10 : stoneTopThickness === 10 ? -13 : 0)
             : 0;
           const topPanelEntry: any = {
             name: `${sectionPrefix}상판`,
