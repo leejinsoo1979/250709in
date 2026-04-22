@@ -224,7 +224,7 @@ const MidwayGapEditor: React.FC<{
     return (
       <div
         style={{
-          background: 'rgba(255,255,255,0.98)',
+          background: 'var(--theme-surface, #ffffff)',
           border: `2px solid ${color}`,
           borderRadius: 4,
           padding: 4,
@@ -245,8 +245,10 @@ const MidwayGapEditor: React.FC<{
           onClick={(e) => e.stopPropagation()}
           style={{
             width: 60, padding: '2px 4px', fontSize: 13,
-            border: '1px solid #ccc', borderRadius: 2, textAlign: 'center',
+            border: '1px solid var(--theme-border, #ccc)', borderRadius: 2, textAlign: 'center',
             outline: 'none', fontWeight: 'bold',
+            background: 'var(--theme-background, #ffffff)',
+            color: 'var(--theme-text, #000000)',
           }}
         />
       </div>
@@ -266,7 +268,7 @@ const MidwayGapEditor: React.FC<{
         color,
         fontSize: 13,
         fontWeight: 'bold',
-        background: 'rgba(255,255,255,0.92)',
+        background: 'var(--theme-surface, rgba(255,255,255,0.92))',
         border: `1px dashed ${color}`,
         borderRadius: 3,
         userSelect: 'none',
@@ -4202,7 +4204,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 </>
               ) : (
                 <>
-                  {/* 단일 내경 높이 표시 */}
+                  {/* 단일 내경 높이 표시 — 상부장 단독이면 하부마감판(18mm) 포함하여 표시 */}
                   <NativeLine name="dimension_line"
                     points={[[innerX - mmToThreeUnits(15), furnitureTopY, 0.002], [innerX + mmToThreeUnits(15), furnitureTopY, 0.002]]}
                     color={dimensionColor} lineWidth={0.6} renderOrder={100000} depthTest={false}
@@ -4212,7 +4214,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     fontSize={baseFontSize} color={textColor} anchorX="right" anchorY="middle"
                     outlineWidth={textOutlineWidth} outlineColor={textOutlineColor}
                   >
-                    {furnitureH}
+                    {leftCategoryResolved === 'upper' ? (furnitureH + UPPER_BOTTOM_FINISH_MM) : furnitureH}
                   </Text>
                 </>
               )}
@@ -4866,7 +4868,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     fontSize={baseFontSize} color={textColor} anchorX="left" anchorY="middle"
                     outlineWidth={textOutlineWidth} outlineColor={textOutlineColor}
                   >
-                    {rFurnitureH}
+                    {rightCategoryResolved === 'upper' ? (rFurnitureH + R_UPPER_BOTTOM_FINISH_MM) : rFurnitureH}
                   </Text>
                 </>
               )}
