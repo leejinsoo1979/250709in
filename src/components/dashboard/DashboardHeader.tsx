@@ -4,6 +4,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import Logo from '@/components/common/Logo';
 import { NotificationCenter } from '@/components/NotificationCenter';
 import { useAuth } from '@/auth/AuthProvider';
+import { useAdmin } from '@/hooks/useAdmin';
 import { useTheme } from '@/contexts/ThemeContext';
 import styles from './DashboardHeader.module.css';
 
@@ -22,12 +23,14 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
   searchTerm,
   onSearchChange,
 }) => {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
+  const { isAdmin } = useAdmin(user, authLoading);
   const { theme, toggleMode } = useTheme();
   const navigate = useNavigate();
   const location = useLocation();
   const isDashboard = location.pathname.startsWith('/dashboard');
   const isGallery = location.pathname.startsWith('/gallery');
+  const isNews = location.pathname.startsWith('/news');
 
   return (
     <header className={styles.header}>
@@ -53,6 +56,15 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
           >
             <span>Gallery</span>
           </button>
+          {isAdmin && (
+            <button
+              className={`${styles.navBtn} ${isNews ? styles.active : ''}`}
+              onClick={() => navigate('/news')}
+              title="News"
+            >
+              <span>News</span>
+            </button>
+          )}
         </nav>
         {onSearchChange !== undefined && (
           <div className={styles.searchBox}>

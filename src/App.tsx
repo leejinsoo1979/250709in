@@ -15,6 +15,7 @@ import SimpleDashboard from '@/pages/SimpleDashboard';
 import TestDashboard from '@/pages/TestDashboard';
 import ViewerPage from '@/pages/ViewerPage';
 import GalleryPage from '@/pages/GalleryPage';
+import NewsPage from '@/pages/NewsPage';
 import GalleryDetailPage from '@/pages/GalleryDetailPage';
 import LandingPage from '@/pages/LandingPage';
 import SignUpPage from '@/pages/SignUpPage';
@@ -188,6 +189,11 @@ function AppContent() {
         {/* 갤러리 */}
         <Route path="/gallery" element={<GalleryPage />} />
         <Route path="/gallery/:postId" element={<GalleryDetailPage />} />
+        {/* 공지 및 업데이트 (관리자 전용) */}
+        <Route path="/news" element={<NewsPage mode="list" />} />
+        <Route path="/news/new" element={<NewsPage mode="new" />} />
+        <Route path="/news/:id" element={<NewsPage mode="detail" />} />
+        <Route path="/news/:id/edit" element={<NewsPage mode="edit" />} />
         {/* 공유 링크 접근 라우트 */}
         <Route path="/share/:token" element={<ShareLinkAccess />} />
         <Route path="*" element={<Navigate to="/dashboard" replace />} />

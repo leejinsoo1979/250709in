@@ -196,7 +196,6 @@ const IPadEditor: React.FC = () => {
   const [moduleType, setModuleType] = useState<ModuleType>('all');
   const [moduleCategory, setModuleCategory] = useState<'clothing' | 'shoes' | 'kitchen'>('clothing');
   const [kitchenSub, setKitchenSub] = useState<'basic' | 'door-raise' | 'top-down' | 'upper'>('basic');
-  const [doorToggle, setDoorToggle] = useState<'install' | 'surround'>('install');
 
   const layoutMode = (spaceInfo.layoutMode || 'equal-division') as 'equal-division' | 'free-placement';
 
@@ -422,45 +421,18 @@ const IPadEditor: React.FC = () => {
           background: T.bg2, position: 'relative', minWidth: 0,
         }}>
 
-          {/* 중앙 상단 툴바 — 자유/공동 + 3D/2D + 도어설치/서라운드 */}
+          {/* 중앙 상단 툴바 — 3D/2D 뷰 전환만 (자유/공동은 좌측 카탈로그에 있음, 서라운드는 우측 패널에 있음) */}
           <div style={{
             height: 48, padding: '0 16px',
-            display: 'flex', alignItems: 'center', gap: 10,
+            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
             background: T.surface,
             borderBottom: `1px solid ${T.line}`, flexShrink: 0,
           }}>
-            {/* 자유/공동 */}
-            <div style={{ display: 'flex', gap: 4 }}>
-              <SegBtn active={layoutMode === 'free-placement'} onClick={() => {
-                if (layoutMode === 'free-placement') return;
-                if (placedModules.length > 0 && !window.confirm('배치 방식을 변경하면 가구가 초기화됩니다.')) return;
-                setSpaceInfo({ layoutMode: 'free-placement' });
-              }}>자유</SegBtn>
-              <SegBtn active={layoutMode === 'equal-division'} onClick={() => {
-                if (layoutMode === 'equal-division') return;
-                if (placedModules.length > 0 && !window.confirm('배치 방식을 변경하면 가구가 초기화됩니다.')) return;
-                setSpaceInfo({ layoutMode: 'equal-division' });
-              }}>공동</SegBtn>
-            </div>
-
-            <div style={{ width: 1, height: 24, background: T.line, margin: '0 4px' }}/>
-
-            {/* 3D/2D */}
-            <div style={{ display: 'flex', gap: 4 }}>
+            <div style={{ display: 'flex', gap: 6 }}>
               {(['3D', '2D'] as ViewerMode[]).map(m => (
                 <SegBtn key={m} active={mode === m} onClick={() => { setMode(m); setViewMode(m); }}>{m}</SegBtn>
               ))}
             </div>
-
-            <div style={{ width: 1, height: 24, background: T.line, margin: '0 4px' }}/>
-
-            {/* 도어설치/서라운드 */}
-            <div style={{ display: 'flex', gap: 4 }}>
-              <SegBtn active={doorToggle === 'install'} onClick={() => setDoorToggle('install')}>도어설치</SegBtn>
-              <SegBtn active={doorToggle === 'surround'} onClick={() => setDoorToggle('surround')}>서라운드</SegBtn>
-            </div>
-
-            <div style={{ flex: 1 }}/>
           </div>
 
           {/* 3D 뷰어 */}
