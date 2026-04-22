@@ -468,13 +468,13 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                 // 상판내림: 상판 두께별 측판 원장 깊이 + 계단형 따내기
                 // 10mm: 원장 613 (앞으로 13 연장) + 하단부(전대 높이 아래) 앞쪽 13mm 따내기 → 본체 600
                 // 20mm: 원장 600, 따내기 없음
-                // 30mm: 원장 600, 상단부(전대 높이) 앞쪽 7mm 따내기 → 윗부분 593
+                // 30mm: 원장 600, 상단부(전대 높이) 앞쪽 10mm 따내기 → 윗부분 590
                 const isTopDownShell = !!topStretcher && (moduleData?.id?.includes('lower-top-down-') || moduleData?.id?.includes('dual-lower-top-down-'));
                 let topDownExtensionMm = 0;
                 let topDownTopRecessMm = 0; // 30mm용: 상단 앞 따내기 깊이
                 if (isTopDownShell) {
                   if (stoneTopThickness === 10) topDownExtensionMm = 13;
-                  else if (stoneTopThickness === 30) topDownTopRecessMm = 7;
+                  else if (stoneTopThickness === 30) topDownTopRecessMm = 10;
                 }
                 const sideDepth = depth + mmToThreeUnits(topDownExtensionMm);
                 const sideZOffset = mmToThreeUnits(topDownExtensionMm) / 2; // 앞쪽으로만 확장
@@ -501,8 +501,8 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                     // 원장은 앞으로 13mm 연장되어 613이므로, 하단부 앞을 13mm 따내면 본체 600 유지
                     topDownNotches.push({ y: height - stretcherH, z: mmToThreeUnits(13), fromBottom: 0 });
                   } else if (stoneTopThickness === 30) {
-                    // 상단부 앞쪽 7mm 따내기: 전대 높이(55mm)만큼 앞 7mm 축소 → 윗부분 593
-                    topDownNotches.push({ y: stretcherH, z: mmToThreeUnits(7), fromBottom: height - stretcherH });
+                    // 상단부 앞쪽 10mm 따내기: 전대 높이(55mm)만큼 앞 10mm 축소 → 윗부분 590
+                    topDownNotches.push({ y: stretcherH, z: mmToThreeUnits(10), fromBottom: height - stretcherH });
                   }
                 }
 

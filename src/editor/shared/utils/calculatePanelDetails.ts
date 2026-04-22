@@ -1956,8 +1956,10 @@ export const calculatePanelDetails = (
   const isLowerForStone = moduleData.id.includes('lower-') || moduleData.id.includes('dual-lower-') || moduleData.category === 'lower';
   if (stoneTopThickness && stoneTopThickness > 0 && isLowerForStone) {
     const isTopDownForStone = moduleData.id.includes('lower-top-down-') || moduleData.id.includes('dual-lower-top-down-');
-    // 상판내림: 상판 깊이 = customDepth + 23 (두께 무관 623 고정). 기존 저장값 덮어쓰기.
-    const effectiveFrontOffsetForStone = isTopDownForStone ? 23 : (stoneTopFrontOffset || 0);
+    // 상판내림: 10/20mm → 623 (frontOffset 23), 30mm → 613 (frontOffset 13, 측판 10mm 따내기 반영)
+    const effectiveFrontOffsetForStone = isTopDownForStone
+      ? (stoneTopThickness === 30 ? 13 : 23)
+      : (stoneTopFrontOffset || 0);
     result.push({ name: '=== 인조대리석 ===' });
     // 수평 상판 (모든 하부장 공통)
     result.push({
