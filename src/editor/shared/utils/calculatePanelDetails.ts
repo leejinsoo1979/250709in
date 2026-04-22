@@ -466,13 +466,15 @@ export const calculatePanelDetails = (
           || moduleData.id.includes('lower-induction-cabinet') || moduleData.id.includes('dual-lower-induction-cabinet')
           || moduleData.id.includes('lower-drawer-');
         if (!noTopPanel) {
-          // 상판내림 + 30mm: 앞에서 10mm 추가 축소 (전대가 10mm 뒤로 밀린 만큼 상판도 앞에서 줄어듦)
+          // 상판내림: 30mm → 앞에서 10mm 추가 축소, 10mm → 앞으로 13mm 연장
           const isTopDownForTop = moduleData.id.includes('lower-top-down-') || moduleData.id.includes('dual-lower-top-down-');
-          const topDownExtraFrontReductionMm = (isTopDownForTop && stoneTopThickness === 30) ? 10 : 0;
+          const topDownExtraFrontReductionMm = isTopDownForTop
+            ? (stoneTopThickness === 30 ? 10 : stoneTopThickness === 10 ? -13 : 0)
+            : 0;
           const topPanelEntry: any = {
             name: `${sectionPrefix}상판`,
             width: horizontalPanelWidth,
-            depth: customDepth - 26 - topDownExtraFrontReductionMm, // 백패널과 맞닿게 26mm 감소 + 상판내림 30mm 시 10mm 추가
+            depth: customDepth - 26 - topDownExtraFrontReductionMm, // 백패널과 맞닿게 26mm 감소 + 두께별 조정
             thickness: basicThickness,
             material: 'PB'
           };
