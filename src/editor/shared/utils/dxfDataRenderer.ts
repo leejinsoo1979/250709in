@@ -2836,19 +2836,27 @@ export const generateExternalDimensions = (
         const moduleHeightForSections = targetMod.customHeight ?? furnitureHeightMm;
         const sectionInfo = computeSectionHeightsInfo(targetMod, modData, moduleHeightForSections, viewDirection);
 
+        const bt = sectionInfo.basicThicknessMm; // 기본 판재 두께 (18mm)
+        // 섹션 시작 Y 위치 (하판 상단)
+        const sectionStartY: number[] = []; // 각 섹션의 바닥 Y (하판 위부터 누적)
+        {
+          let cursor = furnitureBaseY + bt;
+          for (let i = 0; i < sectionInfo.heightsMm.length; i++) {
+            sectionStartY.push(cursor);
+            cursor += sectionInfo.heightsMm[i] + (i < sectionInfo.heightsMm.length - 1 ? bt : 0);
+          }
+        }
+
         if (sectionInfo.heightsMm.length > 1) {
-          const bt = sectionInfo.basicThicknessMm; // 기본 판재 두께 (18mm)
-          // 섹션 경계에 수평선 그리기 (하판 위부터 누적)
+          // 섹션 경계에 수평선 그리기
           let currentY = furnitureBaseY + bt; // 하판 위
           for (let i = 0; i < sectionInfo.heightsMm.length - 1; i++) {
             currentY += sectionInfo.heightsMm[i];
-            // 칸막이 수평선 (섹션 경계 = 선반 판재)
             const shelfY = currentY;
             lines.push({ x1: minX, y1: shelfY, x2: maxX, y2: shelfY, layer: 'FURNITURE_PANEL', color: lineColor });
-            // 칸막이 두께 표현 (판재 상단)
             const shelfTopY = shelfY + bt;
             lines.push({ x1: minX, y1: shelfTopY, x2: maxX, y2: shelfTopY, layer: 'FURNITURE_PANEL', color: lineColor });
-            currentY += bt; // 판재 두께만큼 추가
+            currentY += bt;
           }
           console.log(`📐 내부 선반 ${sectionInfo.heightsMm.length - 1}개 경계선 추가`);
         }
@@ -2859,6 +2867,56 @@ export const generateExternalDimensions = (
         lines.push({ x1: minX, y1: furnitureBaseY + btLine, x2: maxX, y2: furnitureBaseY + btLine, layer: 'FURNITURE_PANEL', color: lineColor });
         // 상판 하단
         lines.push({ x1: minX, y1: panelTop - btLine, x2: maxX, y2: panelTop - btLine, layer: 'FURNITURE_PANEL', color: lineColor });
+
+        // ========================================
+        // 6-B. 서랍(drawer) 섹션 내부 geometry
+        // 각 drawer 섹션에 대해 서랍 개수만큼 수평 경계선을 그림
+        // (서랍 앞판은 정면뷰에서 보이고, 측면뷰에서는 서랍 박스/선반의 수평선으로 표현)
+        // ========================================
+        sectionInfo.sections.forEach((section, sIdx) => {
+          if (section.type !== 'drawer') return;
+
+          const sBottom = sectionStartY[sIdx];
+          const sHeight = sectionInfo.heightsMm[sIdx];
+          const sTop = sBottom + sHeight;
+
+          // 서랍 개수: drawerHeights 우선, 없으면 count, 기본 1
+          const drawerCount = section.drawerHeights?.length ?? section.count ?? 1;
+          if (drawerCount < 1) return;
+
+          // 사용자가 지정한 drawerHeights가 있으면 그대로 사용, 아니면 균등 분할
+          let drawerHeights: number[];
+          const gap = section.gapHeight ?? 0;
+          if (section.drawerHeights && section.drawerHeights.length > 0) {
+            drawerHeights = [...section.drawerHeights];
+          } else {
+            const totalGaps = (drawerCount - 1) * gap;
+            const available = Math.max(0, sHeight - totalGaps);
+            const each = available / drawerCount;
+            drawerHeights = Array(drawerCount).fill(each);
+          }
+
+          // 서랍 박스를 아래부터 쌓으며 그림
+          let y = sBottom;
+          for (let i = 0; i < drawerHeights.length; i++) {
+            const dBottom = y;
+            const dTop = y + drawerHeights[i];
+            if (dTop > sTop + 0.1) break; // 섹션 경계 넘어가면 중단
+
+            // 서랍 박스 외곽 (수평 경계만 - 측면뷰는 좌/우가 이미 가구 외곽과 일치)
+            lines.push({ x1: minX, y1: dBottom, x2: maxX, y2: dBottom, layer: 'DRAWER', color: lineColor });
+            lines.push({ x1: minX, y1: dTop, x2: maxX, y2: dTop, layer: 'DRAWER', color: lineColor });
+
+            // 서랍 앞판(마이다) 두께 표현 - 하단에 얇은 수평선 추가 (18mm 안쪽)
+            if (drawerHeights[i] > bt * 2) {
+              lines.push({ x1: minX, y1: dBottom + bt, x2: maxX, y2: dBottom + bt, layer: 'DRAWER', color: lineColor });
+              lines.push({ x1: minX, y1: dTop - bt, x2: maxX, y2: dTop - bt, layer: 'DRAWER', color: lineColor });
+            }
+
+            y = dTop + gap;
+          }
+          console.log(`📐 서랍 섹션 ${sIdx}: ${drawerHeights.length}개 서랍 박스 추가 (높이: ${drawerHeights.map(h => Math.round(h)).join(', ')}mm)`);
+        });
       }
 
       console.log(`✅ ${viewDirection}뷰 가구 형상 생성 완료: ${lines.length}개 라인`);
