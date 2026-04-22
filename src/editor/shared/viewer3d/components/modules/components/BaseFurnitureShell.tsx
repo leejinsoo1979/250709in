@@ -493,14 +493,16 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                   });
                 }
 
-                // 상판내림: 상단 전대 영역에 앞쪽 따내기 (10mm→8, 30mm→10)
+                // 상판내림: 상단 전대 영역(55mm)에 앞쪽 따내기
+                // sideNotches의 z=40mm(하단 전대 끼움)와 계단형으로 이어짐
+                // 10mm: 상단 z=32 (40-8), 30mm: 상단 z=30 (40-10)
                 const topDownNotches: Array<{ y: number; z: number; fromBottom: number }> = [];
                 if (isTopDownShell) {
                   const stretcherH = mmToThreeUnits(topStretcher!.heightMm); // 55mm
                   if (stoneTopThickness === 10) {
-                    topDownNotches.push({ y: stretcherH, z: mmToThreeUnits(8), fromBottom: height - stretcherH });
+                    topDownNotches.push({ y: stretcherH, z: mmToThreeUnits(32), fromBottom: height - stretcherH });
                   } else if (stoneTopThickness === 30) {
-                    topDownNotches.push({ y: stretcherH, z: mmToThreeUnits(10), fromBottom: height - stretcherH });
+                    topDownNotches.push({ y: stretcherH, z: mmToThreeUnits(30), fromBottom: height - stretcherH });
                   }
                 }
 
