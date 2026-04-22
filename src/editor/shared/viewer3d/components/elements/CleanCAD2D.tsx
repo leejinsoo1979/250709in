@@ -204,7 +204,8 @@ const MidwayGapEditor: React.FC<{
   value: number;
   color: string;
   onChange: (v: number) => void;
-}> = ({ value, color, onChange }) => {
+  isDark?: boolean;
+}> = ({ value, color, onChange, isDark }) => {
   const [editing, setEditing] = useState(false);
   const [text, setText] = useState(String(value));
   const inputRef = useRef<HTMLInputElement>(null);
@@ -220,11 +221,16 @@ const MidwayGapEditor: React.FC<{
     setEditing(false);
   };
 
+  // 2D 다크모드 대응 (기존 EditableLabel 패턴과 동일)
+  const bgBox = isDark ? 'rgba(31,41,55,0.98)' : 'rgba(255,255,255,0.98)';
+  const bgInput = isDark ? '#1f2937' : '#ffffff';
+  const fgInput = isDark ? '#ffffff' : '#000000';
+
   if (editing) {
     return (
       <div
         style={{
-          background: 'var(--theme-surface, #ffffff)',
+          background: bgBox,
           border: `2px solid ${color}`,
           borderRadius: 4,
           padding: 4,
@@ -245,10 +251,10 @@ const MidwayGapEditor: React.FC<{
           onClick={(e) => e.stopPropagation()}
           style={{
             width: 60, padding: '2px 4px', fontSize: 13,
-            border: '1px solid var(--theme-border, #ccc)', borderRadius: 2, textAlign: 'center',
+            border: `1px solid ${isDark ? '#4b5563' : '#ccc'}`, borderRadius: 2, textAlign: 'center',
             outline: 'none', fontWeight: 'bold',
-            background: 'var(--theme-background, #ffffff)',
-            color: 'var(--theme-text, #000000)',
+            background: bgInput,
+            color: fgInput,
           }}
         />
       </div>
@@ -268,7 +274,7 @@ const MidwayGapEditor: React.FC<{
         color,
         fontSize: 13,
         fontWeight: 'bold',
-        background: 'var(--theme-surface, rgba(255,255,255,0.92))',
+        background: isDark ? 'rgba(31,41,55,0.85)' : 'rgba(255,255,255,0.92)',
         border: `1px dashed ${color}`,
         borderRadius: 3,
         userSelect: 'none',
@@ -4142,6 +4148,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                             <MidwayGapEditor
                               value={middleGapH}
                               color={textColor}
+                              isDark={currentViewDirection !== '3D' && view2DTheme === 'dark'}
                               onChange={(newGap) => {
                                 const delta = middleGapH - newGap;
                                 // currentUpperH는 하부마감판(18mm) 포함 값이므로 body 높이로 변환 후 저장
@@ -4797,6 +4804,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                             <MidwayGapEditor
                               value={rMiddleGapH}
                               color={textColor}
+                              isDark={currentViewDirection !== '3D' && view2DTheme === 'dark'}
                               onChange={(newGap) => {
                                 const delta = rMiddleGapH - newGap;
                                 // currentRUpperH는 하부마감판(18mm) 포함 값이므로 body 높이로 변환 후 저장
