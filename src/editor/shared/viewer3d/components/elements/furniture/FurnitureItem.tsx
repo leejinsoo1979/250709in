@@ -3639,9 +3639,11 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
               const customSectionsKey = adjustedCustomSections
                 ? adjustedCustomSections.map((s: any) => `${s.count || 0}`).join('|')
                 : '';
+              // removeUpperSafetyShelf 토글 변경 시에도 BoxModule 리마운트 (편집 중 고스트 실시간 반영)
+              const removeUpperSafetyShelfKey = placedModule.removeUpperSafetyShelf ? '1' : '0';
               return (
                 <BoxModule
-                  key={`boxmodule-${placedModule.id}-${customSectionsKey}`}
+                  key={`boxmodule-${placedModule.id}-${customSectionsKey}-rus${removeUpperSafetyShelfKey}`}
                   moduleData={actualModuleData}
                   isDragging={isDraggingThis} // 드래그 중에만 고스트 투명 표시 (내부 선반/서랍 숨김)
                   isEditMode={isEditModeForView} // 편집 모드 고스트: 측면/상면뷰에서는 숨김
