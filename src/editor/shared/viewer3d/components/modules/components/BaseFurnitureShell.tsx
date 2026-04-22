@@ -1703,6 +1703,11 @@ export default React.memo(BaseFurnitureShell, (prevProps, nextProps) => {
     prevProps.backPanelThickness === nextProps.backPanelThickness &&
     prevProps.topPanelNotchSize === nextProps.topPanelNotchSize &&
     prevProps.topPanelNotchSide === nextProps.topPanelNotchSide &&
+    prevProps.stoneTopThickness === nextProps.stoneTopThickness &&
+    prevProps.topPanelFrontReduction === nextProps.topPanelFrontReduction &&
+    prevProps.hideTopPanel === nextProps.hideTopPanel &&
+    JSON.stringify(prevProps.topStretcher) === JSON.stringify(nextProps.topStretcher) &&
+    JSON.stringify(prevProps.sideNotches) === JSON.stringify(nextProps.sideNotches) &&
     JSON.stringify(prevProps.panelGrainDirections) === JSON.stringify(nextProps.panelGrainDirections);
 
   // 모든 중요 props가 같으면 true 반환 (리렌더링 방지)
