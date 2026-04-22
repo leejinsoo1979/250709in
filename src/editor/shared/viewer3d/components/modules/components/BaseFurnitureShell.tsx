@@ -475,6 +475,16 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                 }
                 const sideDepth = depth + mmToThreeUnits(topDownExtensionMm);
                 const sideZOffset = mmToThreeUnits(topDownExtensionMm) / 2; // 앞쪽으로만 확장
+                if (isTopDownShell) {
+                  console.log('🔧 상판내림 측판 원장 깊이 계산:', {
+                    moduleId: moduleData?.id,
+                    stoneTopThickness,
+                    topDownExtensionMm,
+                    depth,
+                    sideDepth,
+                    sideZOffset
+                  });
+                }
 
                 // 다중 노치 (sideNotches가 있으면 추가 노치 포함)
                 const allNotches = sideNotches ? [

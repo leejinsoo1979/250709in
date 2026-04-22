@@ -4305,8 +4305,8 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                         } else {
                           // 두께 선택/변경 시 기본 앞 오프셋 적용
                           if (isTopDown) {
-                            // 상판내림: 두께별 앞 오프셋 (10mm→23, 20mm→23, 30mm→33)
-                            updates.stoneTopFrontOffset = thickness === 30 ? 33 : 23;
+                            // 상판내림: 두께 무관 앞 오프셋 23mm (상판 깊이 623 고정)
+                            updates.stoneTopFrontOffset = 23;
                           } else if ((currentPlacedModule.stoneTopThickness || 0) === 0 && !isDoorLift) {
                             updates.stoneTopFrontOffset = 23;
                           }

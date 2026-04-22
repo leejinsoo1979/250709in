@@ -1956,12 +1956,14 @@ export const calculatePanelDetails = (
   const isLowerForStone = moduleData.id.includes('lower-') || moduleData.id.includes('dual-lower-') || moduleData.category === 'lower';
   if (stoneTopThickness && stoneTopThickness > 0 && isLowerForStone) {
     const isTopDownForStone = moduleData.id.includes('lower-top-down-') || moduleData.id.includes('dual-lower-top-down-');
+    // 상판내림: 상판 깊이 = customDepth + 23 (두께 무관). 기존 저장된 33도 23으로 강제.
+    const effectiveFrontOffsetForStone = isTopDownForStone ? 23 : (stoneTopFrontOffset || 0);
     result.push({ name: '=== 인조대리석 ===' });
     // 수평 상판 (모든 하부장 공통)
     result.push({
       name: '인조대리석 상판',
       width: customWidth + (stoneTopLeftOffset || 0) + (stoneTopRightOffset || 0),
-      depth: customDepth + (stoneTopFrontOffset || 0) + (stoneTopBackOffset || 0),
+      depth: customDepth + effectiveFrontOffsetForStone + (stoneTopBackOffset || 0),
       thickness: stoneTopThickness,
       material: '인조대리석',
     });

@@ -851,6 +851,9 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
   const stoneFrontOff = useFurnitureStore(state => {
     if (!placedFurnitureId) return 0;
     const pm = state.placedModules.find(m => m.id === placedFurnitureId);
+    // 상판내림은 두께 무관 23으로 고정 (기존 저장된 33도 강제 보정)
+    const isTopDownFO = moduleData.id.includes('lower-top-down-') || moduleData.id.includes('dual-lower-top-down-');
+    if (isTopDownFO && (pm?.stoneTopThickness || 0) > 0) return 23;
     return pm?.stoneTopFrontOffset || 0;
   });
   const stoneBackOff = useFurnitureStore(state => {
