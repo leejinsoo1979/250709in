@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { X, User, Mail, Calendar, Shield, LogOut, Settings, ChevronRight, CreditCard, Coins } from 'lucide-react';
+import { X, User, Mail, Calendar, Shield, LogOut, Settings, ChevronRight, CreditCard, Coins, Edit2, Check } from 'lucide-react';
 import { useAuth } from '@/auth/AuthProvider';
-import { signOutUser } from '@/firebase/auth';
+import { signOutUser, auth } from '@/firebase/auth';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from '@/i18n/useTranslation';
-import { getUsageStats, UsageStats, getUserProfile } from '@/firebase/userProfiles';
+import { getUsageStats, UsageStats, getUserProfile, updateUserProfile } from '@/firebase/userProfiles';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '@/firebase/config';
 import styles from './ProfilePopup.module.css';
@@ -22,6 +22,11 @@ const ProfilePopup: React.FC<ProfilePopupProps> = ({ isOpen, onClose, position }
   const [usageStats, setUsageStats] = useState<UsageStats | null>(null);
   const [credits, setCredits] = useState<number>(0);
   const [isSuperAdmin, setIsSuperAdmin] = useState<boolean>(false);
+  // 닉네임 편집 상태
+  const [isEditingName, setIsEditingName] = useState(false);
+  const [nameInput, setNameInput] = useState('');
+  const [nameSaving, setNameSaving] = useState(false);
+  const [displayNameLocal, setDisplayNameLocal] = useState<string | null>(null);
 
   // 사용량 통계 및 크레딧 가져오기
   useEffect(() => {
@@ -68,6 +73,38 @@ const ProfilePopup: React.FC<ProfilePopupProps> = ({ isOpen, onClose, position }
       });
     }
   }, [isOpen, user]);
+
+  // 닉네임 저장
+  const handleSaveName = async () => {
+    const trimmed = nameInput.trim();
+    if (!trimmed || !user) return;
+    if (trimmed === (displayNameLocal ?? user.displayName ?? '')) {
+      setIsEditingName(false);
+      return;
+    }
+    if (trimmed.length > 30) {
+      alert('닉네임은 30자 이내로 입력해주세요');
+      return;
+    }
+    setNameSaving(true);
+    try {
+      const { error } = await updateUserProfile({ displayName: trimmed });
+      if (error) {
+        alert(`닉네임 변경 실패: ${error}`);
+      } else {
+        // Firebase Auth user 객체 갱신
+        if (auth.currentUser) {
+          await auth.currentUser.reload();
+        }
+        setDisplayNameLocal(trimmed);
+        setIsEditingName(false);
+      }
+    } catch (e: any) {
+      alert(`닉네임 변경 중 오류: ${e?.message || e}`);
+    } finally {
+      setNameSaving(false);
+    }
+  };
 
   if (!isOpen || !user) return null;
 
@@ -118,7 +155,75 @@ const ProfilePopup: React.FC<ProfilePopupProps> = ({ isOpen, onClose, position }
                 </div>
               )}
               <div className={styles.headerInfo}>
-                <h3 className={styles.headerName}>{user.displayName || '사용자'}</h3>
+                {isEditingName ? (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                    <input
+                      type="text"
+                      autoFocus
+                      value={nameInput}
+                      onChange={(e) => setNameInput(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') handleSaveName();
+                        else if (e.key === 'Escape') setIsEditingName(false);
+                      }}
+                      disabled={nameSaving}
+                      maxLength={30}
+                      placeholder="닉네임 입력"
+                      style={{
+                        fontSize: 15, fontWeight: 600,
+                        padding: '4px 8px', borderRadius: 4,
+                        border: '1px solid var(--theme-primary, #3b82f6)',
+                        background: 'var(--theme-surface, #fff)',
+                        color: 'var(--theme-text, #000)',
+                        outline: 'none', width: 140,
+                      }}
+                    />
+                    <button
+                      onClick={handleSaveName}
+                      disabled={nameSaving}
+                      title="저장"
+                      style={{
+                        padding: 4, borderRadius: 4, border: 'none',
+                        background: 'var(--theme-primary, #3b82f6)', color: '#fff',
+                        cursor: nameSaving ? 'wait' : 'pointer', display: 'flex',
+                      }}
+                    >
+                      <Check size={14} />
+                    </button>
+                    <button
+                      onClick={() => setIsEditingName(false)}
+                      disabled={nameSaving}
+                      title="취소"
+                      style={{
+                        padding: 4, borderRadius: 4, border: '1px solid var(--theme-border, #ddd)',
+                        background: 'transparent', color: 'var(--theme-text-muted, #888)',
+                        cursor: 'pointer', display: 'flex',
+                      }}
+                    >
+                      <X size={14} />
+                    </button>
+                  </div>
+                ) : (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <h3 className={styles.headerName}>{displayNameLocal ?? user.displayName ?? '사용자'}</h3>
+                    <button
+                      onClick={() => {
+                        setNameInput(displayNameLocal ?? user.displayName ?? '');
+                        setIsEditingName(true);
+                      }}
+                      title="닉네임 수정"
+                      style={{
+                        padding: 2, borderRadius: 3, border: 'none',
+                        background: 'transparent', color: 'var(--theme-text-muted, #888)',
+                        cursor: 'pointer', display: 'flex',
+                      }}
+                      onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.color = 'var(--theme-primary, #3b82f6)'; }}
+                      onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.color = 'var(--theme-text-muted, #888)'; }}
+                    >
+                      <Edit2 size={12} />
+                    </button>
+                  </div>
+                )}
                 <p className={styles.headerEmail}>{user.email}</p>
               </div>
             </div>
