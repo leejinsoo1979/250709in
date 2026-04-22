@@ -465,37 +465,59 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                 const notchY = mmToThreeUnits(notchYmm);
                 const notchZ = mmToThreeUnits(notchZmm);
 
-                // 상판내림: 상판 두께별 측판 원장 깊이 조정 (상단 앞부분만 늘어남 → 앞쪽으로 평행이동)
+                // 상판내림: 상판 두께별 측판 원장 깊이 + 계단형 따내기
+                // 10mm: 원장 613 (앞으로 13 연장) + 하단부(전대 높이 아래) 앞쪽 13mm 따내기 → 본체 600
+                // 20mm: 원장 600, 따내기 없음
+                // 30mm: 원장 600, 상단부(전대 높이) 앞쪽 7mm 따내기 → 윗부분 593
                 const isTopDownShell = !!topStretcher && (moduleData?.id?.includes('lower-top-down-') || moduleData?.id?.includes('dual-lower-top-down-'));
                 let topDownExtensionMm = 0;
+                let topDownTopRecessMm = 0; // 30mm용: 상단 앞 따내기 깊이
                 if (isTopDownShell) {
                   if (stoneTopThickness === 10) topDownExtensionMm = 13;
-                  else if (stoneTopThickness === 30) topDownExtensionMm = 0; // 30은 연장 없음(본체 600, 윗부분 593는 축소)
-                  else topDownExtensionMm = 0; // 20 기준
+                  else if (stoneTopThickness === 30) topDownTopRecessMm = 7;
                 }
                 const sideDepth = depth + mmToThreeUnits(topDownExtensionMm);
                 const sideZOffset = mmToThreeUnits(topDownExtensionMm) / 2; // 앞쪽으로만 확장
+                // topStretcher Z 위치 오프셋: 30mm일 때 전대가 7mm 뒤로, 10mm일 때 13mm 앞으로
+                const topStretcherZRecess = mmToThreeUnits(topDownTopRecessMm) - mmToThreeUnits(topDownExtensionMm);
                 if (isTopDownShell) {
                   console.log('🔧 상판내림 측판 원장 깊이 계산:', {
                     moduleId: moduleData?.id,
                     stoneTopThickness,
                     topDownExtensionMm,
+                    topDownTopRecessMm,
                     depth,
                     sideDepth,
                     sideZOffset
                   });
                 }
 
+                // 상판내림 계단형 따내기 추가 노치 생성
+                const topDownNotches: Array<{ y: number; z: number; fromBottom: number }> = [];
+                if (isTopDownShell) {
+                  const stretcherH = mmToThreeUnits(topStretcher!.heightMm); // 55mm
+                  if (stoneTopThickness === 10) {
+                    // 하단부 앞쪽 13mm 따내기: 전대 아래(fromBottom=0부터 height-55까지)를 13mm 축소
+                    // 원장은 앞으로 13mm 연장되어 613이므로, 하단부 앞을 13mm 따내면 본체 600 유지
+                    topDownNotches.push({ y: height - stretcherH, z: mmToThreeUnits(13), fromBottom: 0 });
+                  } else if (stoneTopThickness === 30) {
+                    // 상단부 앞쪽 7mm 따내기: 전대 높이(55mm)만큼 앞 7mm 축소 → 윗부분 593
+                    topDownNotches.push({ y: stretcherH, z: mmToThreeUnits(7), fromBottom: height - stretcherH });
+                  }
+                }
+
                 // 다중 노치 (sideNotches가 있으면 추가 노치 포함)
-                const allNotches = sideNotches ? [
+                const allNotches = (sideNotches || topDownNotches.length > 0) ? [
                   // 상단 노치: hideTopPanel일 때만 (도어올림은 상판이 있으므로 상단 따내기 없음)
                   ...(hideTopPanel ? [{ y: notchY, z: notchZ, fromBottom: height - notchY }] : []),
                   // 추가 노치들 (mm → Three.js 단위 변환)
-                  ...sideNotches.map(n => ({
+                  ...(sideNotches || []).map(n => ({
                     y: mmToThreeUnits(n.y),
                     z: mmToThreeUnits(n.z),
                     fromBottom: mmToThreeUnits(n.fromBottom)
-                  }))
+                  })),
+                  // 상판내림 계단형 따내기 (앞으로 평행이동된 좌표계 기준 — notch는 패널 앞면 기준이므로 그대로)
+                  ...topDownNotches
                 ] : undefined;
 
                 return (
@@ -551,12 +573,12 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                       />
                     )}
 
-                    {/* 상단 가로전대 (상판내림: 따내기 없이 전대만, 캐비넷 앞면에 부착) */}
+                    {/* 상단 가로전대 (상판내림: 캐비넷 앞면에 부착, 30mm 상판 시 7mm 뒤로 후퇴) */}
                     {topStretcher && (
                       <BoxWithEdges
                         key={`front-stretcher-top-${material instanceof THREE.Material ? material.uuid : 'mat'}`}
                         args={[innerWidth, mmToThreeUnits(topStretcher.heightMm), basicThickness]}
-                        position={[0, height/2 - mmToThreeUnits(topStretcher.heightMm)/2, depth/2 - basicThickness/2]}
+                        position={[0, height/2 - mmToThreeUnits(topStretcher.heightMm)/2, depth/2 - basicThickness/2 - topStretcherZRecess]}
                         material={material}
                         renderMode={renderMode}
                         isDragging={isDragging}
