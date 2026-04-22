@@ -588,6 +588,23 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                       />
                     )}
 
+                    {/* 상판내림 10mm 전용: 외경 전대 (가구 전체 폭, 기존 전대 바로 앞면에 부착) */}
+                    {isTopDownShell && stoneTopThickness === 10 && topStretcher && (
+                      <BoxWithEdges
+                        key={`front-stretcher-outer-${material instanceof THREE.Material ? material.uuid : 'mat'}`}
+                        args={[innerWidth + basicThickness * 2, mmToThreeUnits(topStretcher.heightMm), basicThickness]}
+                        position={[0, height/2 - mmToThreeUnits(topStretcher.heightMm)/2, depth/2 + basicThickness/2]}
+                        material={material}
+                        renderMode={renderMode}
+                        isDragging={isDragging}
+                        isEditMode={isEditMode}
+                        panelName="가로전대(외경)"
+                        panelGrainDirections={panelGrainDirections}
+                        furnitureId={placedFurnitureId}
+                        textureUrl={textureUrl}
+                      />
+                    )}
+
                     {/* 하단 가로전대 (sideNotches가 있을 때) - 하단 노치 위치에 가로 부재 */}
                     {sideNotches && sideNotches.map((n, idx) => {
                       const lowerNotchY = mmToThreeUnits(n.y);
