@@ -35,11 +35,11 @@ const ConvertModal: React.FC<ConvertModalProps> = ({ isOpen, onClose, showAll, s
   const [selectedViews, setSelectedViews] = useState({
     '3d': true,
     '2d-front': true,           // 입면도 (도어 있음)
-    '2d-front-no-door': false,  // 입면도 (도어 없음)
-    '2d-top': false,            // 평면도
-    '2d-left': false,           // 측면도
-    '2d-door-only': false,      // 도어 입면도 (가구 없이 도어만)
-    'sheet-all-in-one': false,  // 한 장 레이아웃 (모든 뷰 조합)
+    '2d-front-no-door': true,   // 입면도 (도어 없음)
+    '2d-top': true,             // 평면도
+    '2d-left': true,            // 측면도
+    '2d-door-only': true,       // 도어 입면도 (가구 없이 도어만)
+    'sheet-all-in-one': true,   // 한 장 레이아웃 (모든 뷰 조합)
   });
   const [selectedDXFTypes, setSelectedDXFTypes] = useState<DrawingType[]>(['front', 'plan', 'sideLeft', 'door']);
   
