@@ -6,7 +6,7 @@ import { useTranslation } from '@/i18n/useTranslation';
 import { useDXFExport, type DrawingType } from '@/editor/shared/hooks/useDXFExport';
 import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
-import { downloadDxfAsPdf, downloadDxfAsSheetPdf, type PdfViewDirection } from '@/editor/shared/utils/dxfToPdf';
+import { downloadDxfAsPdf, type PdfViewDirection } from '@/editor/shared/utils/dxfToPdf';
 
 interface ConvertModalProps {
   isOpen: boolean;
@@ -351,21 +351,22 @@ const ConvertModal: React.FC<ConvertModalProps> = ({ isOpen, onClose, showAll, s
       if (selectedViews['2d-left']) pdfViews.push('left');
       if (selectedViews['2d-door-only']) pdfViews.push('door-only');
 
-      // 2D 뷰가 선택되지 않았으면 입면도 기본 추가
+      // 2D 뷰가 선택되지 않았고 장표도 선택 안 됐으면 입면도 기본 추가
       if (pdfViews.length === 0 && !selectedViews['sheet-all-in-one']) {
         pdfViews.push('front');
       }
 
       setLoadingProgress(60);
 
-      // 1. 기존 페이지별 PDF 먼저 생성
-      if (pdfViews.length > 0) {
-        await downloadDxfAsPdf(spaceInfo, placedModules, pdfViews);
-      }
-
-      // 2. "한 장 레이아웃" 선택 시 별도 파일로 장표 한 장 추가 다운로드
-      if (selectedViews['sheet-all-in-one']) {
-        await downloadDxfAsSheetPdf(spaceInfo, placedModules, {});
+      // 페이지별 도면 + (옵션) 한 장 레이아웃을 하나의 PDF로 생성
+      // pdfViews가 비어있고 장표만 선택된 경우에도 downloadDxfAsPdf 내부에서 sheet 페이지만 추가됨
+      if (pdfViews.length > 0 || selectedViews['sheet-all-in-one']) {
+        await downloadDxfAsPdf(
+          spaceInfo,
+          placedModules,
+          pdfViews,
+          selectedViews['sheet-all-in-one'],
+        );
       }
 
       setLoadingProgress(100);
