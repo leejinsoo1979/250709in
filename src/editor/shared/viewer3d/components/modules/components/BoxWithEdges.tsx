@@ -658,8 +658,9 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
         profileVertices.push([notchTop, halfD - n.z]);          // 위로 올라감
 
         if (isUppermostNotch) {
-          // 최상단 노치: 앞면으로 돌아가지 않고 바로 뒤쪽으로
-          profileVertices.push([halfH, -halfD]); // top-back
+          // 최상단 노치: 안쪽 z를 따라 상단까지 올라간 후 뒤쪽으로
+          profileVertices.push([halfH, halfD - n.z]);  // 안쪽 z에서 상단까지
+          profileVertices.push([halfH, -halfD]);       // 상단에서 뒤쪽으로
         } else {
           profileVertices.push([notchTop, halfD]); // 다시 앞면으로
         }
@@ -905,7 +906,8 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
         shape.lineTo(notchTop, halfD - n.z);        // 위로 올라감
 
         if (isUppermostNotch) {
-          // 최상단 노치: 앞면으로 돌아가지 않고 바로 뒤쪽으로
+          // 최상단 노치: 안쪽 z를 따라 상단까지 올라간 후 뒤쪽으로
+          shape.lineTo(halfH, halfD - n.z);
           shape.lineTo(halfH, -halfD);
         } else {
           shape.lineTo(notchTop, halfD);             // 다시 앞면으로
