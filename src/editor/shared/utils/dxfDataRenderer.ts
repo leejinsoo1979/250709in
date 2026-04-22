@@ -3222,8 +3222,16 @@ export const generateDxfFromData = (
     lines = [...externalDimensions.lines];
     texts = [...externalDimensions.texts];
     console.log(`📐 측면뷰 (${viewDirection}): 데이터 기반 ${lines.length}개 라인, ${texts.length}개 텍스트`);
+  } else if (viewDirection === 'front') {
+    // 정면뷰: 2D 뷰어의 CleanCAD2D/CADDimensions2D가 씬에 그린 치수를 그대로 사용.
+    // (좌/우 세로 치수 스택 30/1270/1000/60/2360, 내부 섹션 라벨 191/1025/964,
+    //  바닥 슬롯 너비, 상단 너비 등 모든 치수가 씬에 렌더됨 → 그대로 추출)
+    // generateExternalDimensions 호출 제거 (중복 방지).
+    lines = [...extracted.lines];
+    texts = [...extracted.texts];
+    console.log(`📐 front뷰: 씬 추출 그대로 사용 (라인 ${lines.length}개, 텍스트 ${texts.length}개)`);
   } else {
-    // 정면뷰/탑뷰: 씬에서 추출한 치수선(DIMENSIONS 레이어)을 제외하고
+    // 탑뷰: 씬에서 추출한 치수선(DIMENSIONS 레이어)을 제외하고
     // generateExternalDimensions()에서 생성한 치수선만 사용 (중복 방지)
     const externalDimensions = generateExternalDimensions(spaceInfo, placedModules, viewDirection, sideViewFilter);
 
