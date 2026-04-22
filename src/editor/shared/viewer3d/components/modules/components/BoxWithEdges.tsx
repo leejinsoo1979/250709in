@@ -646,8 +646,14 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
         const notchBottom = -halfH + n.fromBottom;
         const notchTop = notchBottom + n.y;
         const isUppermostNotch = Math.abs(notchTop - halfH) < 0.001; // 최상단 노치 여부
+        // 이전 노치와 맞닿아 있으면 앞면 중복 이동 스킵
+        const prev = ni > 0 ? sortedNotches[ni - 1] : null;
+        const prevTop = prev ? -halfH + prev.fromBottom + prev.y : null;
+        const adjacentToPrev = prev && prevTop !== null && Math.abs(prevTop - notchBottom) < 0.001;
 
-        profileVertices.push([notchBottom, halfD]);             // 노치 하단 시작점 (앞면)
+        if (!adjacentToPrev) {
+          profileVertices.push([notchBottom, halfD]);           // 노치 하단 시작점 (앞면)
+        }
         profileVertices.push([notchBottom, halfD - n.z]);       // 안쪽으로 꺾임
         profileVertices.push([notchTop, halfD - n.z]);          // 위로 올라감
 
@@ -887,16 +893,22 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
         const notchBottom = -halfH + n.fromBottom;
         const notchTop = notchBottom + n.y;
         const isUppermostNotch = Math.abs(notchTop - halfH) < 0.001;
+        // 이전 노치와 맞닿아 있으면 앞면 중복 이동 스킵
+        const prev = ni > 0 ? sortedNotches[ni - 1] : null;
+        const prevTop = prev ? -halfH + prev.fromBottom + prev.y : null;
+        const adjacentToPrev = prev && prevTop !== null && Math.abs(prevTop - notchBottom) < 0.001;
 
-        shape.lineTo(notchBottom, halfD);         // 노치 하단 (앞면)
-        shape.lineTo(notchBottom, halfD - n.z);   // 안쪽으로 꺾임
-        shape.lineTo(notchTop, halfD - n.z);      // 위로 올라감
+        if (!adjacentToPrev) {
+          shape.lineTo(notchBottom, halfD);         // 노치 하단 (앞면)
+        }
+        shape.lineTo(notchBottom, halfD - n.z);     // 안쪽으로 꺾임
+        shape.lineTo(notchTop, halfD - n.z);        // 위로 올라감
 
         if (isUppermostNotch) {
           // 최상단 노치: 앞면으로 돌아가지 않고 바로 뒤쪽으로
           shape.lineTo(halfH, -halfD);
         } else {
-          shape.lineTo(notchTop, halfD);           // 다시 앞면으로
+          shape.lineTo(notchTop, halfD);             // 다시 앞면으로
         }
       }
 
