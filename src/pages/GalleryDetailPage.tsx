@@ -40,36 +40,20 @@ export default function GalleryDetailPage() {
   const viewMode = useUIStore(s => s.viewMode);
   const setViewMode = useUIStore(s => s.setViewMode);
 
-  // 마운트 즉시(초기 렌더 전) 치수/가이드 OFF — useEffect보다 빨리 실행
+  // 갤러리 진입 시 치수선/도어를 OFF + 이탈 시 복원 (설정의 치수선 토글 하나면 충분)
   useMemo(() => {
     const ui: any = useUIStore.getState();
     ui.setShowDimensions && ui.setShowDimensions(false);
-    ui.setShowDimensionsText && ui.setShowDimensionsText(false);
-    ui.setShowGuides && ui.setShowGuides(false);
-    ui.setShowAxis && ui.setShowAxis(false);
-    ui.setShowAll && ui.setShowAll(false);
     ui.setDoorsOpen && ui.setDoorsOpen(false);
     return null;
   }, []);
 
-  // 이탈 시 복원
   useEffect(() => {
     const ui: any = useUIStore.getState();
-    const prev = {
-      showDimensions: ui.showDimensions,
-      showDimensionsText: ui.showDimensionsText,
-      showGuides: ui.showGuides,
-      showAxis: ui.showAxis,
-      showAll: ui.showAll,
-      doorsOpen: ui.doorsOpen,
-    };
+    const prev = { showDimensions: ui.showDimensions, doorsOpen: ui.doorsOpen };
     return () => {
       const u: any = useUIStore.getState();
       u.setShowDimensions && u.setShowDimensions(prev.showDimensions);
-      u.setShowDimensionsText && u.setShowDimensionsText(prev.showDimensionsText);
-      u.setShowGuides && u.setShowGuides(prev.showGuides);
-      u.setShowAxis && u.setShowAxis(prev.showAxis);
-      u.setShowAll && u.setShowAll(prev.showAll);
       u.setDoorsOpen && u.setDoorsOpen(prev.doorsOpen);
     };
   }, []);
@@ -232,33 +216,33 @@ export default function GalleryDetailPage() {
                   onClick={toggleDoors}
                   role="button"
                   style={{
-                    position: 'absolute', top: 16, left: '50%',
+                    position: 'absolute', top: 12, left: '50%',
                     transform: 'translateX(-50%)', zIndex: 10,
                     display: 'flex', alignItems: 'center',
-                    height: 44, borderRadius: 999,
+                    height: 30, borderRadius: 999,
                     background: '#E5E7EB',
                     cursor: 'pointer',
-                    boxShadow: '0 2px 8px rgba(0,0,0,0.12)',
+                    boxShadow: '0 2px 6px rgba(0,0,0,0.1)',
                     userSelect: 'none',
-                    padding: 4, gap: 0,
+                    padding: 3, gap: 0,
                   }}
                 >
                   <div style={{
-                    padding: '0 24px', height: 36, minWidth: 88,
+                    padding: '0 14px', height: 24, minWidth: 54,
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                     borderRadius: 999,
                     background: !doorsOpen ? '#6B5CFF' : 'transparent',
                     color: !doorsOpen ? '#FFFFFF' : '#6B7280',
-                    fontSize: 14, fontWeight: 600,
+                    fontSize: 11, fontWeight: 600,
                     transition: 'background 0.18s, color 0.18s',
                   }}>Close</div>
                   <div style={{
-                    padding: '0 24px', height: 36, minWidth: 88,
+                    padding: '0 14px', height: 24, minWidth: 54,
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                     borderRadius: 999,
                     background: doorsOpen ? '#6B5CFF' : 'transparent',
                     color: doorsOpen ? '#FFFFFF' : '#6B7280',
-                    fontSize: 14, fontWeight: 600,
+                    fontSize: 11, fontWeight: 600,
                     transition: 'background 0.18s, color 0.18s',
                   }}>Open</div>
                 </div>

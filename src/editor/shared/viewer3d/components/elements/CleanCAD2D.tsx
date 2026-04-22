@@ -196,6 +196,88 @@ const EditableLabel: React.FC<{
 };
 
 /**
+ * 미드웨이(상부장~하부장 사이 갭) 편집 UI
+ * - 2D 정면뷰 치수선 위에 HTML 오버레이로 배치
+ * - 클릭 시 input, Enter/blur 확정, ESC 취소
+ */
+const MidwayGapEditor: React.FC<{
+  value: number;
+  color: string;
+  onChange: (v: number) => void;
+}> = ({ value, color, onChange }) => {
+  const [editing, setEditing] = useState(false);
+  const [text, setText] = useState(String(value));
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => { setText(String(value)); }, [value]);
+  useEffect(() => {
+    if (editing && inputRef.current) { inputRef.current.focus(); inputRef.current.select(); }
+  }, [editing]);
+
+  const commit = () => {
+    const n = parseFloat(text);
+    if (!isNaN(n) && n > 0 && n !== value) onChange(Math.round(n));
+    setEditing(false);
+  };
+
+  if (editing) {
+    return (
+      <div
+        style={{
+          background: 'rgba(255,255,255,0.98)',
+          border: `2px solid ${color}`,
+          borderRadius: 4,
+          padding: 4,
+          boxShadow: '0 2px 10px rgba(0,0,0,0.3)',
+        }}
+        onMouseDown={(e) => e.stopPropagation()}
+      >
+        <input
+          ref={inputRef}
+          type="number"
+          value={text}
+          onChange={(e) => setText(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') commit();
+            else if (e.key === 'Escape') { setText(String(value)); setEditing(false); }
+          }}
+          onBlur={commit}
+          onClick={(e) => e.stopPropagation()}
+          style={{
+            width: 60, padding: '2px 4px', fontSize: 13,
+            border: '1px solid #ccc', borderRadius: 2, textAlign: 'center',
+            outline: 'none', fontWeight: 'bold',
+          }}
+        />
+      </div>
+    );
+  }
+
+  return (
+    <div
+      onClick={(e) => { e.stopPropagation(); setEditing(true); }}
+      onMouseDown={(e) => e.stopPropagation()}
+      title="클릭하여 미드웨이 편집 (상부장 하단 확장)"
+      style={{
+        cursor: 'pointer',
+        padding: '3px 8px',
+        minWidth: 34,
+        textAlign: 'center',
+        color,
+        fontSize: 13,
+        fontWeight: 'bold',
+        background: 'rgba(255,255,255,0.92)',
+        border: `1px dashed ${color}`,
+        borderRadius: 3,
+        userSelect: 'none',
+      }}
+    >
+      {value}
+    </div>
+  );
+};
+
+/**
  * 깔끔한 CAD 스타일 2D 뷰어 (그리드 없음)
  * 이미지와 동일한 스타일의 치수선과 가이드라인만 표시
  */
@@ -4027,22 +4109,47 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   >
                     {lowerCabinetH}
                   </Text>
-                  {/* 중간 빈공간 (있는 경우) */}
-                  {middleGapH > 0 && (
-                    <>
-                      <NativeLine name="dimension_line"
-                        points={[[innerX - mmToThreeUnits(15), upperCabinetBottomY, 0.002], [innerX + mmToThreeUnits(15), upperCabinetBottomY, 0.002]]}
-                        color={dimensionColor} lineWidth={0.6} renderOrder={100000} depthTest={false}
-                      />
-                      <Text renderOrder={1000} depthTest={false}
-                        position={[innerX - mmToThreeUnits(25), (furnitureTopY + upperCabinetBottomY) / 2, 0.01]}
-                        fontSize={baseFontSize} color={textColor} anchorX="right" anchorY="middle"
-                        outlineWidth={textOutlineWidth} outlineColor={textOutlineColor}
-                      >
-                        {middleGapH}
-                      </Text>
-                    </>
-                  )}
+                  {/* 중간 빈공간 (있는 경우) — 클릭 편집 가능 (상부장 하단 확장) */}
+                  {middleGapH > 0 && (() => {
+                    // 상부장 모듈 찾기 (leftmostMod 또는 leftCompanionMod 중 upper 카테고리)
+                    const upperMod = leftCategoryResolved === 'upper' ? leftmostMod : leftCompanionMod;
+                    const currentUpperH = upperCabinetH;
+                    return (
+                      <>
+                        <NativeLine name="dimension_line"
+                          points={[[innerX - mmToThreeUnits(15), upperCabinetBottomY, 0.002], [innerX + mmToThreeUnits(15), upperCabinetBottomY, 0.002]]}
+                          color={dimensionColor} lineWidth={0.6} renderOrder={100000} depthTest={false}
+                        />
+                        <Text renderOrder={1000} depthTest={false}
+                          position={[innerX - mmToThreeUnits(25), (furnitureTopY + upperCabinetBottomY) / 2, 0.01]}
+                          fontSize={baseFontSize} color={textColor} anchorX="right" anchorY="middle"
+                          outlineWidth={textOutlineWidth} outlineColor={textOutlineColor}
+                        >
+                          {middleGapH}
+                        </Text>
+                        {upperMod && (
+                          <Html
+                            position={[innerX - mmToThreeUnits(25), (furnitureTopY + upperCabinetBottomY) / 2, 0.02]}
+                            center
+                            zIndexRange={[200, 0]}
+                            style={{ pointerEvents: 'auto', userSelect: 'none' }}
+                          >
+                            <MidwayGapEditor
+                              value={middleGapH}
+                              color={textColor}
+                              onChange={(newGap) => {
+                                const delta = middleGapH - newGap;
+                                const newHeight = Math.round(currentUpperH + delta);
+                                if (newHeight > 0) {
+                                  updatePlacedModule(upperMod.id, { customHeight: newHeight });
+                                }
+                              }}
+                            />
+                          </Html>
+                        )}
+                      </>
+                    );
+                  })()}
                   {/* 상부장 높이 */}
                   <NativeLine name="dimension_line"
                     points={[[innerX - mmToThreeUnits(15), upperCabinetTopY, 0.002], [innerX + mmToThreeUnits(15), upperCabinetTopY, 0.002]]}
@@ -4654,22 +4761,46 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   >
                     {rLowerCabinetH}
                   </Text>
-                  {/* 중간 빈공간 (있는 경우) */}
-                  {rMiddleGapH > 0 && (
-                    <>
-                      <NativeLine name="dimension_line"
-                        points={[[rightInnerX - mmToThreeUnits(15), rUpperCabinetBottomY, 0.002], [rightInnerX + mmToThreeUnits(15), rUpperCabinetBottomY, 0.002]]}
-                        color={dimensionColor} lineWidth={0.6} renderOrder={100000} depthTest={false}
-                      />
-                      <Text renderOrder={1000} depthTest={false}
-                        position={[rightInnerX + mmToThreeUnits(10), (rFurnitureTopY + rUpperCabinetBottomY) / 2, 0.01]}
-                        fontSize={baseFontSize} color={textColor} anchorX="left" anchorY="middle"
-                        outlineWidth={textOutlineWidth} outlineColor={textOutlineColor}
-                      >
-                        {rMiddleGapH}
-                      </Text>
-                    </>
-                  )}
+                  {/* 중간 빈공간 (있는 경우) — 클릭 편집 가능 (상부장 하단 확장) */}
+                  {rMiddleGapH > 0 && (() => {
+                    const rUpperMod = rightCategoryResolved === 'upper' ? rightmostMod : rightCompanionMod;
+                    const currentRUpperH = rUpperCabinetH;
+                    return (
+                      <>
+                        <NativeLine name="dimension_line"
+                          points={[[rightInnerX - mmToThreeUnits(15), rUpperCabinetBottomY, 0.002], [rightInnerX + mmToThreeUnits(15), rUpperCabinetBottomY, 0.002]]}
+                          color={dimensionColor} lineWidth={0.6} renderOrder={100000} depthTest={false}
+                        />
+                        <Text renderOrder={1000} depthTest={false}
+                          position={[rightInnerX + mmToThreeUnits(10), (rFurnitureTopY + rUpperCabinetBottomY) / 2, 0.01]}
+                          fontSize={baseFontSize} color={textColor} anchorX="left" anchorY="middle"
+                          outlineWidth={textOutlineWidth} outlineColor={textOutlineColor}
+                        >
+                          {rMiddleGapH}
+                        </Text>
+                        {rUpperMod && (
+                          <Html
+                            position={[rightInnerX + mmToThreeUnits(10), (rFurnitureTopY + rUpperCabinetBottomY) / 2, 0.02]}
+                            center
+                            zIndexRange={[200, 0]}
+                            style={{ pointerEvents: 'auto', userSelect: 'none' }}
+                          >
+                            <MidwayGapEditor
+                              value={rMiddleGapH}
+                              color={textColor}
+                              onChange={(newGap) => {
+                                const delta = rMiddleGapH - newGap;
+                                const newHeight = Math.round(currentRUpperH + delta);
+                                if (newHeight > 0) {
+                                  updatePlacedModule(rUpperMod.id, { customHeight: newHeight });
+                                }
+                              }}
+                            />
+                          </Html>
+                        )}
+                      </>
+                    );
+                  })()}
                   {/* 상부장 높이 */}
                   <NativeLine name="dimension_line"
                     points={[[rightInnerX - mmToThreeUnits(15), rUpperCabinetTopY, 0.002], [rightInnerX + mmToThreeUnits(15), rUpperCabinetTopY, 0.002]]}
