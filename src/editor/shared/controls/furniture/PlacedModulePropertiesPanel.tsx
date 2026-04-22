@@ -4345,7 +4345,11 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                             }
                           }
                         }
-                        updatePlacedModule(currentPlacedModule.id, updates);
+                        // 팝업 내 클릭 이벤트가 R3F Canvas 리렌더링과 배칭되어 팝업을 닫아야 반영되는 문제 회피
+                        // microtask로 분리하여 Zustand 구독 알림이 바로 다음 프레임에 반영되도록 함
+                        Promise.resolve().then(() => {
+                          updatePlacedModule(currentPlacedModule.id, updates);
+                        });
                       }
                     }}
                   >
