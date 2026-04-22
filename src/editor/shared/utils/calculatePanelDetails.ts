@@ -462,7 +462,7 @@ export const calculatePanelDetails = (
           // 상판내림: 10mm → 앞에서 8mm 추가 축소, 30mm → 앞에서 10mm 추가 축소
           const isTopDownForTop = moduleData.id.includes('lower-top-down-') || moduleData.id.includes('dual-lower-top-down-');
           const topDownExtraFrontReductionMm = isTopDownForTop
-            ? (stoneTopThickness === 30 ? 10 : stoneTopThickness === 10 ? -18 : 0)
+            ? (stoneTopThickness === 30 ? 10 : stoneTopThickness === 10 ? -10.5 : 0)
             : 0;
           const topPanelEntry: any = {
             name: `${sectionPrefix}상판`,

@@ -1115,7 +1115,14 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
               isFloating={isFloating}
               hideVentilationCap={true}
               hideTopPanel={!moduleData.id.includes('lower-door-lift-') && !moduleData.id.includes('lower-top-down-')}
-              topPanelFrontReduction={moduleData.id.includes('lower-top-down-') ? (stoneThickness === 30 ? 28.5 : stoneThickness === 10 ? 0.5 : 18.5) : 0}
+              topPanelFrontReduction={(() => {
+                if (!moduleData.id.includes('lower-top-down-')) return 0;
+                const btMm = baseFurniture.basicThickness / 0.01; // 가구재 두께 mm
+                const baseReduction = btMm + 0.5; // 기본: 전대 두께 + 0.5 여유 (예: 18+0.5=18.5, 15+0.5=15.5)
+                if (stoneThickness === 30) return baseReduction + 10; // 30mm: 추가 10mm 축소
+                if (stoneThickness === 10) return baseReduction - 10.5; // 10mm: 10.5mm 앞으로 확장 (기존 18mm 확장에서 7.5mm 축소)
+                return baseReduction;
+              })()}
               topStretcher={moduleData.id.includes('lower-top-down-') ? { heightMm: 55, depthMm: 40 } : undefined}
               stoneTopThickness={stoneThickness}
               {...(moduleData.id.includes('lower-door-lift-touch-') ? {
