@@ -1331,9 +1331,12 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     } else {
       // 상부장은 상부프레임 하단에 붙어야 함
       // 자유배치 모드에서는 사용자 지정 높이를 우선 사용
+      // 미드웨이 편집: customHeight가 있으면 상단 고정, 하단 확장
       const upperCabinetHeight = (placedModule.isFreePlacement && placedModule.freeHeight)
         ? placedModule.freeHeight
-        : (actualModuleData?.dimensions.height || 0); // 상부장 높이
+        : (placedModule.customHeight
+          ? placedModule.customHeight
+          : (actualModuleData?.dimensions.height || 0)); // 상부장 높이
 
       // 띄워서 배치 모드와 관계없이 상부장은 항상 상부프레임 하단에 붙어야 함
       // 상부프레임 높이: 개별 가구 설정(topFrameThickness) 우선, 없으면 전역 설정
@@ -1389,7 +1392,12 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   } else if (placedModule.isFreePlacement && placedModule.freeHeight) {
     furnitureHeightMm = placedModule.freeHeight;
   } else {
-    furnitureHeightMm = actualModuleData?.dimensions.height || 0;
+    // 상부장 미드웨이 편집: customHeight 우선 (상단 고정, 하단만 확장)
+    if (isUpperCabinetForY && placedModule.customHeight) {
+      furnitureHeightMm = placedModule.customHeight;
+    } else {
+      furnitureHeightMm = actualModuleData?.dimensions.height || 0;
+    }
     // 슬롯모드: 개별 가구 프레임 높이 변경 시 가구 body 높이 보정
     // freeHeight가 있으면 사용자가 직접 높이를 지정한 것이므로 topFrameThickness delta 보정 불필요
     // (freeHeight 자체에 이미 줄어든 높이가 반영되어 있음 — 이중 차감 방지)

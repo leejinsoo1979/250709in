@@ -12,6 +12,7 @@ import { getModuleCategory } from '@/editor/shared/utils/freePlacementUtils';
 import type { PlacedModule } from '@/editor/shared/furniture/types';
 import type { SectionConfig } from '@/data/modules/shelving';
 import type { SpaceInfo } from '@/store/core/spaceConfigStore';
+import EditableDimensionText from '../modules/components/EditableDimensionText';
 
 const DEFAULT_BASIC_THICKNESS_MM = 18;
 
@@ -71,6 +72,9 @@ const computeFurnitureHeightMm = (
     // cabinetBodyHeight가 있으면 2단서랍장 몸통 높이 오버라이드 (FurnitureItem.tsx와 동기화)
     if (mod.cabinetBodyHeight && (mod.moduleId.includes('lower-drawer-2tier') || mod.moduleId.includes('dual-lower-drawer-2tier'))) {
       heightMm = mod.cabinetBodyHeight;
+    } else if (category === 'upper' && mod.customHeight) {
+      // 상부장 미드웨이 편집: customHeight 우선 (상단 고정, 하단만 확장)
+      heightMm = mod.customHeight;
     } else {
       heightMm = moduleData?.dimensions.height || 0;
     }
@@ -649,7 +653,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           const leftInnerExtStartZ = leftExtStartZ;
           const effectiveH_l2 = isSelectedSlotInDroppedZone ? (spaceInfo.height - dropHeightMm) : spaceInfo.height;
 
-          const segments_l2: { bottomY: number; topY: number; heightMm: number; key: string; extStartZ?: number }[] = [];
+          const segments_l2: { bottomY: number; topY: number; heightMm: number; key: string; extStartZ?: number; upperModuleId?: string; currentHeightMm?: number }[] = [];
           // 도어 안쪽에 표시할 갭 치수 (상판 윗면~도어 상단)
           const innerGapSegments_l2: { bottomY: number; topY: number; heightMm: number; key: string }[] = [];
 
@@ -689,7 +693,10 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
               bottomY: mmToThreeUnits(cabinetBottomMm),
               topY: mmToThreeUnits(cabinetTopMm),
               heightMm: Math.round(moduleHeightMm),
-              key: `furniture-${moduleIndex}`
+              key: `furniture-${moduleIndex}`,
+              // 상부장이면 미드웨이 편집 시 참조할 id/현재높이 기록
+              upperModuleId: modCat_l2 === 'upper' ? mod.id : undefined,
+              currentHeightMm: modCat_l2 === 'upper' ? moduleHeightMm : undefined,
             });
 
             // 상판 두께 세그먼트 (분리 표시)
@@ -762,11 +769,16 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
               const gapTopY = segments_l2[i + 1].bottomY;
               const gapMm = Math.round((gapTopY - gapBottomY) / 0.01);
               if (gapMm > 0) {
+                // 상부장이 바로 위에 있으면 (미드웨이) upperModuleId 전달 → 편집 가능
+                const upperAbove = segments_l2[i + 1].upperModuleId;
+                const upperCurH = segments_l2[i + 1].currentHeightMm;
                 allSegments_l2.push({
                   bottomY: gapBottomY,
                   topY: gapTopY,
                   heightMm: gapMm,
-                  key: `gap-${i}`
+                  key: `gap-${i}`,
+                  upperModuleId: upperAbove,
+                  currentHeightMm: upperCurH,
                 });
               }
             }
@@ -795,15 +807,37 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                     points={[[-0.008, seg.topY, leftInnerZ], [0.008, seg.topY, leftInnerZ]]}
                     color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
                   />
-                  <Text
-                    position={[0, (seg.bottomY + seg.topY) / 2, leftInnerZ - mmToThreeUnits(60)]}
-                    fontSize={largeFontSize} color={textColor}
-                    anchorX="center" anchorY="middle"
-                    renderOrder={1000} depthTest={false}
-                    rotation={[0, -Math.PI / 2, Math.PI / 2]}
-                  >
-                    {seg.heightMm}
-                  </Text>
+                  {seg.upperModuleId && seg.currentHeightMm ? (
+                    <EditableDimensionText
+                      position={[0, (seg.bottomY + seg.topY) / 2, leftInnerZ - mmToThreeUnits(60)]}
+                      fontSize={largeFontSize}
+                      color={textColor}
+                      rotation={[0, -Math.PI / 2, Math.PI / 2]}
+                      value={seg.heightMm}
+                      onValueChange={(newGap) => {
+                        // 미드웨이 변경 → 상부장 상단 고정, 하단만 확장 (customHeight 증가)
+                        const delta = seg.heightMm - newGap; // 양수: 갭 줄임 → 상부장 확장
+                        const newHeight = Math.round((seg.currentHeightMm || 0) + delta);
+                        if (newHeight > 0 && seg.upperModuleId) {
+                          useFurnitureStore.getState().updatePlacedModule(seg.upperModuleId, {
+                            customHeight: newHeight,
+                          });
+                        }
+                      }}
+                      sectionIndex={0}
+                      furnitureId={seg.upperModuleId}
+                    />
+                  ) : (
+                    <Text
+                      position={[0, (seg.bottomY + seg.topY) / 2, leftInnerZ - mmToThreeUnits(60)]}
+                      fontSize={largeFontSize} color={textColor}
+                      anchorX="center" anchorY="middle"
+                      renderOrder={1000} depthTest={false}
+                      rotation={[0, -Math.PI / 2, Math.PI / 2]}
+                    >
+                      {seg.heightMm}
+                    </Text>
+                  )}
                 </group>
                 );
               })}
