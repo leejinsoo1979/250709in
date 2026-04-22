@@ -473,7 +473,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                 let topDownTopExtensionMm = 0; // 10mm 상판: 측판 원장 앞으로 확장량
                 let topDownTopRecessMm = 0;    // 30mm 상판: 상단 앞쪽 따내기 깊이
                 if (isTopDownShell) {
-                  if (stoneTopThickness === 10) topDownTopExtensionMm = 10;
+                  if (stoneTopThickness === 10) topDownTopExtensionMm = 18;
                   else if (stoneTopThickness === 30) topDownTopRecessMm = 10;
                 }
                 // 10mm: 측판 원장 618mm + 앞으로 9mm 평행이동 (하단 본체가 원래 자리)
@@ -503,8 +503,8 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                   if (stoneTopThickness === 30) {
                     topDownNotches.push({ y: stretcherH, z: mmToThreeUnits(10), fromBottom: height - stretcherH });
                   } else if (stoneTopThickness === 10) {
-                    // 상단 55mm를 제외한 하단 전체에 앞쪽 10mm 따내기 → 본체 600 유지
-                    topDownNotches.push({ y: height - stretcherH, z: mmToThreeUnits(10), fromBottom: 0 });
+                    // 상단 55mm를 제외한 하단 전체에 앞쪽 18mm 따내기
+                    topDownNotches.push({ y: height - stretcherH, z: mmToThreeUnits(18), fromBottom: 0 });
                   }
                 }
 
