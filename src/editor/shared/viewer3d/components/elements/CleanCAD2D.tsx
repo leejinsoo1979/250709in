@@ -3900,8 +3900,9 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             furnitureTopY = mmToThreeUnits(floorFinishForHeight + bottomFrameH + lowerCabinetH);
           } else if (isUpperCategory) {
             // 상부장: 가구는 천장 - 상부프레임 아래에 붙음
+            // 치수 표시는 하부마감판(18mm) 포함하여 상부장 body 하단보다 18mm 아래까지
             furnitureTopY = mmToThreeUnits(effectiveH - actualTopSize); // 상부프레임 하단 = 가구 상단
-            bottomFrameTopY = furnitureTopY - mmToThreeUnits(furnitureH); // 가구 하단 (bottomFrame 개념 없음, 빈공간 경계)
+            bottomFrameTopY = furnitureTopY - mmToThreeUnits(furnitureH + UPPER_BOTTOM_FINISH_MM); // 가구 하단 + 하부마감판
           } else {
             bottomFrameTopY = mmToThreeUnits(floorFinishForHeight + bottomFrameH);
             furnitureTopY = mmToThreeUnits(floorFinishForHeight + bottomFrameH + furnitureH);
@@ -4556,8 +4557,9 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             rFurnitureTopY = mmToThreeUnits(rFloorFinishForHeight + rBottomFrameH + rLowerCabinetH);
           } else if (rIsUpperCategory) {
             // 상부장: 가구는 천장 - 상부프레임 아래에 붙음
+            // 치수 표시는 하부마감판(18mm) 포함하여 상부장 body 하단보다 18mm 아래까지
             rFurnitureTopY = mmToThreeUnits(rEffectiveH - rActualTopSize); // 상부프레임 하단 = 가구 상단
-            rBottomFrameTopY = rFurnitureTopY - mmToThreeUnits(rFurnitureH); // 가구 하단 (빈공간 경계)
+            rBottomFrameTopY = rFurnitureTopY - mmToThreeUnits(rFurnitureH + R_UPPER_BOTTOM_FINISH_MM); // 가구 하단 + 하부마감판
           } else {
             rBottomFrameTopY = mmToThreeUnits(rFloorFinishForHeight + rBottomFrameH);
             rFurnitureTopY = mmToThreeUnits(rFloorFinishForHeight + rBottomFrameH + rFurnitureH);
