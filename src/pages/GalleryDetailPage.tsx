@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Eye, Heart, ArrowLeft } from 'lucide-react';
 import DashboardHeader from '@/components/dashboard/DashboardHeader';
@@ -40,23 +40,30 @@ export default function GalleryDetailPage() {
   const viewMode = useUIStore(s => s.viewMode);
   const setViewMode = useUIStore(s => s.setViewMode);
 
-  // 갤러리 진입 시 치수선/도어를 OFF + 이탈 시 복원 (설정의 치수선 토글 하나면 충분)
-  useMemo(() => {
-    const ui: any = useUIStore.getState();
-    ui.setShowDimensions && ui.setShowDimensions(false);
-    ui.setDoorsOpen && ui.setDoorsOpen(false);
-    return null;
-  }, []);
+  const [viewerReady, setViewerReady] = useState(false);
 
+  // 마운트 즉시 store 값 false로 설정 후 뷰어 활성화
   useEffect(() => {
     const ui: any = useUIStore.getState();
     const prev = { showDimensions: ui.showDimensions, doorsOpen: ui.doorsOpen };
+    ui.setShowDimensions && ui.setShowDimensions(false);
+    ui.setDoorsOpen && ui.setDoorsOpen(false);
+    setViewerReady(true);
     return () => {
       const u: any = useUIStore.getState();
       u.setShowDimensions && u.setShowDimensions(prev.showDimensions);
       u.setDoorsOpen && u.setDoorsOpen(prev.doorsOpen);
     };
   }, []);
+
+  // store.showDimensions가 진입 후에도 true로 돌아가면 다시 false 강제
+  const storeShowDim = useUIStore(s => s.showDimensions);
+  useEffect(() => {
+    if (viewerReady && storeShowDim) {
+      const ui: any = useUIStore.getState();
+      ui.setShowDimensions && ui.setShowDimensions(false);
+    }
+  }, [storeShowDim, viewerReady]);
 
   const toggleDoors = () => {
     const next = !doorsOpen;
@@ -210,8 +217,8 @@ export default function GalleryDetailPage() {
               border: '1px solid var(--theme-border, #333)',
               position: 'relative',
             }}>
-              {/* 뷰어 상단 중앙: 도어 Close/Open 토글 (pill) */}
-              {designFile && (
+              {/* 뷰어 상단 중앙: 도어 Close/Open 토글 (pill) — 도어 달린 가구가 있을 때만 */}
+              {designFile && (designFile.furniture?.placedModules || (designFile as any).placedModules || []).some((m: any) => m.hasDoor) && (
                 <div
                   onClick={toggleDoors}
                   role="button"
@@ -247,7 +254,7 @@ export default function GalleryDetailPage() {
                   }}>Open</div>
                 </div>
               )}
-              {designFile ? (
+              {designFile && viewerReady ? (
                 <Space3DView
                   spaceInfo={designFile.spaceConfig || (designFile as any).spaceInfo}
                   viewMode={viewMode}
@@ -259,11 +266,11 @@ export default function GalleryDetailPage() {
                   readOnly={true}
                   svgSize={{ width: 800, height: 640 }}
                 />
-              ) : (
+              ) : !designFile ? (
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: '#666' }}>
                   디자인 파일을 불러올 수 없습니다
                 </div>
-              )}
+              ) : null}
             </div>
 
             {/* 메타 */}

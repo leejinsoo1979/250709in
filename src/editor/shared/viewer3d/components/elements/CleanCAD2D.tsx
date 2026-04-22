@@ -3802,15 +3802,17 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           }
           // hasDualCabinet: 상부장+하부장 동시 배치
           const hasDualCabinet = leftCompanionMod !== null && companionH > 0;
-          // 하부장/상부장 높이 분리
+          // 상부장 하부마감판 두께 (UpperCabinet.tsx FinishingPanelWithTexture 18mm)
+          const UPPER_BOTTOM_FINISH_MM = 18;
+          // 하부장/상부장 높이 분리 (상부장은 하부마감판 포함)
           let lowerCabinetH = 0;
           let upperCabinetH = 0;
           if (hasDualCabinet) {
             if (leftCategoryResolved === 'lower') {
               lowerCabinetH = furnitureH;
-              upperCabinetH = companionH;
+              upperCabinetH = companionH + UPPER_BOTTOM_FINISH_MM;
             } else if (leftCategoryResolved === 'upper') {
-              upperCabinetH = furnitureH;
+              upperCabinetH = furnitureH + UPPER_BOTTOM_FINISH_MM;
               lowerCabinetH = companionH;
             }
           }
@@ -4139,9 +4141,10 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                               color={textColor}
                               onChange={(newGap) => {
                                 const delta = middleGapH - newGap;
-                                const newHeight = Math.round(currentUpperH + delta);
-                                if (newHeight > 0) {
-                                  updatePlacedModule(upperMod.id, { customHeight: newHeight });
+                                // currentUpperH는 하부마감판(18mm) 포함 값이므로 body 높이로 변환 후 저장
+                                const newBodyHeight = Math.round(currentUpperH + delta - UPPER_BOTTOM_FINISH_MM);
+                                if (newBodyHeight > 0) {
+                                  updatePlacedModule(upperMod.id, { customHeight: newBodyHeight });
                                 }
                               }}
                             />
@@ -4469,14 +4472,16 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               ?? 0;
           }
           const rHasDualCabinet = rightCompanionMod !== null && rCompanionH > 0;
+          // 상부장 하부마감판 두께 (UpperCabinet.tsx FinishingPanelWithTexture 18mm)
+          const R_UPPER_BOTTOM_FINISH_MM = 18;
           let rLowerCabinetH = 0;
           let rUpperCabinetH = 0;
           if (rHasDualCabinet) {
             if (rightCategoryResolved === 'lower') {
               rLowerCabinetH = rFurnitureH;
-              rUpperCabinetH = rCompanionH;
+              rUpperCabinetH = rCompanionH + R_UPPER_BOTTOM_FINISH_MM;
             } else if (rightCategoryResolved === 'upper') {
-              rUpperCabinetH = rFurnitureH;
+              rUpperCabinetH = rFurnitureH + R_UPPER_BOTTOM_FINISH_MM;
               rLowerCabinetH = rCompanionH;
             }
           }
@@ -4790,9 +4795,10 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                               color={textColor}
                               onChange={(newGap) => {
                                 const delta = rMiddleGapH - newGap;
-                                const newHeight = Math.round(currentRUpperH + delta);
-                                if (newHeight > 0) {
-                                  updatePlacedModule(rUpperMod.id, { customHeight: newHeight });
+                                // currentRUpperH는 하부마감판(18mm) 포함 값이므로 body 높이로 변환 후 저장
+                                const newBodyHeight = Math.round(currentRUpperH + delta - R_UPPER_BOTTOM_FINISH_MM);
+                                if (newBodyHeight > 0) {
+                                  updatePlacedModule(rUpperMod.id, { customHeight: newBodyHeight });
                                 }
                               }}
                             />
