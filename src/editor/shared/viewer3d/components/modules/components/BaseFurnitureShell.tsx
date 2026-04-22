@@ -485,7 +485,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                   console.log('🔧 상판내림 측판 원장 깊이 계산:', {
                     moduleId: moduleData?.id,
                     stoneTopThickness,
-                    topDownExtensionMm,
+                    topDownTopExtensionMm,
                     topDownTopRecessMm,
                     depth,
                     sideDepth,
