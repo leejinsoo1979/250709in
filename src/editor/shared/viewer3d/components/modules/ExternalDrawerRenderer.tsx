@@ -611,7 +611,7 @@ export const ExternalDrawerRenderer: React.FC<ExternalDrawerRendererProps> = ({
       ))}
 
       {/* L자 PET 프레임 — 따내기 위치에 고정 (서랍 오픈과 무관) */}
-      {allNotches.map((notch, ni) => {
+      {false && allNotches.map((notch, ni) => {
         if (notch.height <= 0) return null;
         const frameWidth = mmToThreeUnits(moduleWidth); // 캐비넷 전체 폭
         const notchHMm = notch.height;
