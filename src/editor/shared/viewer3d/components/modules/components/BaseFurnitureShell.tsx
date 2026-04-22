@@ -504,12 +504,27 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                   }
                 }
 
+                // 상판내림: 가장 위쪽 sideNotch(전대 바로 아래)의 z를 상단 따내기와 같게 맞춤
+                // 10mm→32, 30mm→30 (40 → 32/30으로 줄여 단턱 제거)
+                const adjustedSideNotches = (isTopDownShell && sideNotches && sideNotches.length > 0)
+                  ? (() => {
+                      const adjusted = [...sideNotches];
+                      const lastIdx = adjusted.length - 1;
+                      const last = adjusted[lastIdx];
+                      if (last && last.fromBottom >= 600) { // 상단 전대 바로 아래 노치
+                        const newZ = stoneTopThickness === 10 ? 32 : stoneTopThickness === 30 ? 30 : last.z;
+                        adjusted[lastIdx] = { ...last, z: newZ };
+                      }
+                      return adjusted;
+                    })()
+                  : sideNotches;
+
                 // 다중 노치 (sideNotches가 있으면 추가 노치 포함)
-                const allNotches = (sideNotches || topDownNotches.length > 0) ? [
+                const allNotches = (adjustedSideNotches || topDownNotches.length > 0) ? [
                   // 상단 노치: hideTopPanel일 때만 (도어올림은 상판이 있으므로 상단 따내기 없음)
                   ...(hideTopPanel ? [{ y: notchY, z: notchZ, fromBottom: height - notchY }] : []),
                   // 추가 노치들 (mm → Three.js 단위 변환)
-                  ...(sideNotches || []).map(n => ({
+                  ...(adjustedSideNotches || []).map(n => ({
                     y: mmToThreeUnits(n.y),
                     z: mmToThreeUnits(n.z),
                     fromBottom: mmToThreeUnits(n.fromBottom)
