@@ -364,6 +364,27 @@ const IPadRightPanel: React.FC<IPadRightPanelProps> = ({ spaceInfo }) => {
         <SegBtn flex active={getDrop() === 'left'}  onClick={() => setDrop('left')}>좌단내림</SegBtn>
         <SegBtn flex active={getDrop() === 'right'} onClick={() => setDrop('right')}>우단내림</SegBtn>
       </SegRow>
+      {/* 단내림 하위 옵션 — 활성 시에만 표시 */}
+      {dropEnabled && (
+        <div style={{ padding: '0 14px 14px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+          <div>
+            <div style={{ fontSize: 11, color: T.ink3, marginBottom: 4 }}>너비(mm)</div>
+            <NumInput
+              value={spaceInfo.droppedCeiling?.width ?? 900}
+              onChange={(v) => handleSpaceInfoUpdate({ droppedCeiling: { ...(spaceInfo.droppedCeiling ?? {}), width: v } as any })}
+              flex
+            />
+          </div>
+          <div>
+            <div style={{ fontSize: 11, color: T.ink3, marginBottom: 4 }}>내림 높이(mm)</div>
+            <NumInput
+              value={spaceInfo.droppedCeiling?.dropHeight ?? 200}
+              onChange={(v) => handleSpaceInfoUpdate({ droppedCeiling: { ...(spaceInfo.droppedCeiling ?? {}), dropHeight: v } as any })}
+              flex
+            />
+          </div>
+        </div>
+      )}
 
       {/* ─ 커튼박스 ─ */}
       <SectionHeader title="커튼박스" />
@@ -372,6 +393,27 @@ const IPadRightPanel: React.FC<IPadRightPanelProps> = ({ spaceInfo }) => {
         <SegBtn flex active={curtain === 'left'}  onClick={() => setCurtain('left')}>좌측</SegBtn>
         <SegBtn flex active={curtain === 'right'} onClick={() => setCurtain('right')}>우측</SegBtn>
       </SegRow>
+      {/* 커튼박스 하위 옵션 — 활성 시에만 표시 */}
+      {curtain !== 'none' && (
+        <div style={{ padding: '0 14px 14px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+          <div>
+            <div style={{ fontSize: 11, color: T.ink3, marginBottom: 4 }}>너비(mm)</div>
+            <NumInput
+              value={(spaceInfo.curtainBox as any)?.width ?? 200}
+              onChange={(v) => handleSpaceInfoUpdate({ curtainBox: { ...(spaceInfo.curtainBox ?? {}), width: v } as any })}
+              flex
+            />
+          </div>
+          <div>
+            <div style={{ fontSize: 11, color: T.ink3, marginBottom: 4 }}>깊이(mm)</div>
+            <NumInput
+              value={(spaceInfo.curtainBox as any)?.depth ?? 200}
+              onChange={(v) => handleSpaceInfoUpdate({ curtainBox: { ...(spaceInfo.curtainBox ?? {}), depth: v } as any })}
+              flex
+            />
+          </div>
+        </div>
+      )}
 
       {/* ─ 프레임 및 이격설정 (자유배치 전용 — 슬롯배치에는 해당 없음) ─ */}
       {spaceInfo.layoutMode === 'free-placement' && (
