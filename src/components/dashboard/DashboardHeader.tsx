@@ -1,5 +1,5 @@
 import React from 'react';
-import { User, Settings, Search, Sun, Moon, Image as ImageIcon, Home } from 'lucide-react';
+import { User, Settings, Search, Sun, Moon } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import Logo from '@/components/common/Logo';
 import { NotificationCenter } from '@/components/NotificationCenter';
@@ -35,27 +35,25 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
         <div className={styles.logoWrap}>
           <Logo size="large" onClick={onLogoClick} />
         </div>
+      </div>
+
+      <div className={styles.right}>
         <nav className={styles.nav}>
           <button
             className={`${styles.navBtn} ${isDashboard ? styles.active : ''}`}
             onClick={() => navigate('/dashboard')}
-            title="대시보드"
+            title="Home"
           >
-            <Home size={15} strokeWidth={1.9} />
-            <span>대시보드</span>
+            <span>Home</span>
           </button>
           <button
             className={`${styles.navBtn} ${isGallery ? styles.active : ''}`}
             onClick={() => navigate('/gallery')}
-            title="갤러리"
+            title="Gallery"
           >
-            <ImageIcon size={15} strokeWidth={1.9} />
-            <span>갤러리</span>
+            <span>Gallery</span>
           </button>
         </nav>
-      </div>
-
-      <div className={styles.right}>
         {onSearchChange !== undefined && (
           <div className={styles.searchBox}>
             <Search size={14} className={styles.searchIcon} />

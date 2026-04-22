@@ -1127,14 +1127,26 @@ const SimpleDashboard: React.FC = () => {
       )}
 
       {/* 우클릭 컨텍스트 메뉴 */}
-      {contextMenu && (
+      {contextMenu && (() => {
+        // 뷰포트 경계 넘지 않도록 위치 계산
+        const estMenuW = 220;
+        const estMenuH = 400; // 대략적 메뉴 높이
+        const vw = window.innerWidth;
+        const vh = window.innerHeight;
+        const left = Math.min(contextMenu.x, vw - estMenuW - 8);
+        const top = contextMenu.y + estMenuH > vh
+          ? Math.max(8, vh - estMenuH - 8)
+          : contextMenu.y;
+        return (
         <>
           <div
             ref={contextMenuRef}
             style={{
               position: 'fixed',
-              left: contextMenu.x,
-              top: contextMenu.y,
+              left,
+              top,
+              maxHeight: `calc(100vh - 16px)`,
+              overflowY: 'auto',
               minWidth: 200,
               background: 'var(--theme-surface, #1e1e1e)',
               border: '1px solid var(--theme-border, #333)',
@@ -1534,7 +1546,8 @@ const SimpleDashboard: React.FC = () => {
             )}
           </div>
         </>
-      )}
+        );
+      })()}
 
       {/* 빈 영역 우클릭 컨텍스트 메뉴 */}
       {blankContextMenu && (
