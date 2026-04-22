@@ -1,5 +1,6 @@
 import React from 'react';
-import { User, Settings, Search, Sun, Moon } from 'lucide-react';
+import { User, Settings, Search, Sun, Moon, Image as ImageIcon, Home } from 'lucide-react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import Logo from '@/components/common/Logo';
 import { NotificationCenter } from '@/components/NotificationCenter';
 import { useAuth } from '@/auth/AuthProvider';
@@ -23,11 +24,41 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
 }) => {
   const { user } = useAuth();
   const { theme, toggleMode } = useTheme();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const isDashboard = location.pathname.startsWith('/dashboard');
+  const isGallery = location.pathname.startsWith('/gallery');
+
+  const navBtnStyle = (active: boolean): React.CSSProperties => ({
+    display: 'inline-flex', alignItems: 'center', gap: 6,
+    padding: '6px 12px', borderRadius: 6,
+    border: '1px solid transparent',
+    background: active ? 'var(--theme-primary, #3b82f6)' : 'transparent',
+    color: active ? '#fff' : 'var(--theme-text, inherit)',
+    fontSize: 13, fontWeight: active ? 600 : 500,
+    cursor: 'pointer',
+  });
 
   return (
     <header className={styles.header}>
       <div className={styles.left}>
         <Logo size="large" onClick={onLogoClick} />
+        <nav style={{ display: 'inline-flex', gap: 4, marginLeft: 16 }}>
+          <button
+            style={navBtnStyle(isDashboard)}
+            onClick={() => navigate('/dashboard')}
+            title="대시보드"
+          >
+            <Home size={14} /> 대시보드
+          </button>
+          <button
+            style={navBtnStyle(isGallery)}
+            onClick={() => navigate('/gallery')}
+            title="갤러리"
+          >
+            <ImageIcon size={14} /> 갤러리
+          </button>
+        </nav>
       </div>
 
       <div className={styles.right}>

@@ -9,9 +9,12 @@ import ErrorBoundary from '@/components/common/ErrorBoundary';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 import Step1 from '@/editor/Step1';
 import Configurator from '@/editor/Configurator';
+import IPadEditor from '@/editor/IPadEditor';
 import SimpleDashboard from '@/pages/SimpleDashboard';
 import TestDashboard from '@/pages/TestDashboard';
 import ViewerPage from '@/pages/ViewerPage';
+import GalleryPage from '@/pages/GalleryPage';
+import GalleryDetailPage from '@/pages/GalleryDetailPage';
 import LandingPage from '@/pages/LandingPage';
 import SignUpPage from '@/pages/SignUpPage';
 import EnterpriseSignUpPage from '@/pages/EnterpriseSignUpPage';
@@ -159,6 +162,9 @@ function AppContent() {
         {/* 에디터 라우트 */}
         <Route path="/step1" element={<Step1 />} />
         <Route path="/configurator" element={<Configurator />} />
+        {/* iPad 전용 에디터 (3컬럼 레이아웃) */}
+        <Route path="/ipad" element={<IPadEditor />} />
+        <Route path="/ipad/configurator" element={<IPadEditor />} />
         {/* 데모 라우트 (로그인/저장 없음, 새로고침 시 초기화) */}
         <Route path="/demo" element={<Configurator />} />
         <Route path="/preview-popout" element={<PreviewPopout />} />
@@ -175,6 +181,9 @@ function AppContent() {
         } />
         {/* 공유 뷰어 라우트 */}
         <Route path="/viewer/:projectId" element={<ViewerPage />} />
+        {/* 갤러리 */}
+        <Route path="/gallery" element={<GalleryPage />} />
+        <Route path="/gallery/:postId" element={<GalleryDetailPage />} />
         {/* 공유 링크 접근 라우트 */}
         <Route path="/share/:token" element={<ShareLinkAccess />} />
         <Route path="*" element={<Navigate to="/dashboard" replace />} />

@@ -12,6 +12,7 @@ import Step1 from '../editor/Step1';
 import ProjectViewerModal from '../components/common/ProjectViewerModal';
 import ProfilePopup from '../editor/Configurator/components/ProfilePopup';
 import { ShareLinkModal } from '@/components/ShareLinkModal';
+import GalleryPublishModal from '@/components/gallery/GalleryPublishModal';
 import RenameModal from '../components/common/RenameModal';
 import CreditErrorModal from '@/components/common/CreditErrorModal';
 import { PopupManager } from '@/components/PopupManager';
@@ -109,6 +110,10 @@ const SimpleDashboard: React.FC = () => {
   const [shareProjectName, setShareProjectName] = useState('');
   const [shareDesignFileId, setShareDesignFileId] = useState<string | null>(null);
   const [shareDesignFileName, setShareDesignFileName] = useState('');
+
+  // 갤러리 게시 모달
+  const [galleryPublishOpen, setGalleryPublishOpen] = useState(false);
+  const [galleryPublishItem, setGalleryPublishItem] = useState<ExplorerItem | null>(null);
 
   // 모바일 뷰모드 강제 (중간 아이콘)
   const effectiveViewMode = isMobile ? 'medium' as ViewMode : viewMode;
@@ -1065,6 +1070,19 @@ const SimpleDashboard: React.FC = () => {
         />
       )}
 
+      {/* 갤러리 게시 모달 */}
+      {galleryPublishOpen && galleryPublishItem && (
+        <GalleryPublishModal
+          open={galleryPublishOpen}
+          onClose={() => { setGalleryPublishOpen(false); setGalleryPublishItem(null); }}
+          designFileId={galleryPublishItem.id}
+          designFileName={galleryPublishItem.name}
+          projectId={galleryPublishItem.projectId || nav.currentProjectId || ''}
+          thumbnail={(galleryPublishItem as any).thumbnail || (galleryPublishItem as any).thumbnailUrl || ''}
+          dimensions={(galleryPublishItem as any).dimensions}
+        />
+      )}
+
       {/* 이름 바꾸기 모달 */}
       <RenameModal
         isOpen={isRenameModalOpen}
@@ -1308,6 +1326,28 @@ const SimpleDashboard: React.FC = () => {
               >
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
                 공유
+              </button>
+            )}
+
+            {/* 갤러리 게시 (디자인만) */}
+            {contextMenu.item.type === 'design' && (
+              <button
+                style={{
+                  width: '100%', padding: '8px 16px', border: 'none', background: 'none',
+                  color: 'var(--theme-text, #fff)', textAlign: 'left',
+                  display: 'flex', alignItems: 'center', gap: 10, fontSize: 13,
+                }}
+                onMouseEnter={e => (e.currentTarget.style.background = 'var(--theme-primary, #3b82f6)')}
+                onMouseLeave={e => (e.currentTarget.style.background = 'none')}
+                onClick={() => {
+                  const item = contextMenu.item;
+                  setGalleryPublishItem(item);
+                  setGalleryPublishOpen(true);
+                  setContextMenu(null);
+                }}
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                갤러리 게시
               </button>
             )}
 

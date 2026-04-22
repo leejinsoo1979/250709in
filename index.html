@@ -20,6 +20,30 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@700;800&display=swap" rel="stylesheet">
+    <!-- Service Worker 강제 제거 (이전 캐시 문제 해결) -->
+    <script>
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.getRegistrations().then(function(registrations) {
+          for (let registration of registrations) {
+            // 오래된 SW 등록 취소
+            const swUrl = registration.active?.scriptURL || '';
+            if (!swUrl.endsWith('/sw.js')) {
+              registration.unregister();
+            }
+          }
+        });
+        if (window.caches) {
+          caches.keys().then(function(names) {
+            names.forEach(function(name) {
+              // workbox가 관리하지 않는 옛날 캐시 삭제
+              if (!name.startsWith('workbox-')) {
+                caches.delete(name);
+              }
+            });
+          });
+        }
+      }
+    </script>
     <!-- 초기 테마 설정 스크립트 - 깜빡임 방지 -->
     <script>
       (function() {

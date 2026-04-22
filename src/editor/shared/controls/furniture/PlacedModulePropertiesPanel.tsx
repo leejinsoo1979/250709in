@@ -4345,7 +4345,33 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                             }
                           }
                         }
+                        // 현재 가구 적용
                         updatePlacedModule(currentPlacedModule.id, updates);
+                        // 배치된 모든 하부장에 동일하게 일괄 적용
+                        placedModules.forEach(m => {
+                          if (m.id === currentPlacedModule.id) return;
+                          const mid = m.moduleId || '';
+                          const isLower = mid.startsWith('lower-') || mid.includes('-lower-') ||
+                                          mid.includes('lower-door-lift') || mid.includes('lower-top-down') ||
+                                          mid.includes('lower-drawer') || mid.includes('lower-sink') ||
+                                          mid.includes('lower-induction');
+                          if (!isLower) return;
+                          const bulk: Record<string, unknown> = { stoneTopThickness: thickness };
+                          if (thickness === 0) {
+                            bulk.stoneTopFrontOffset = 0;
+                            bulk.stoneTopBackOffset = 0;
+                            bulk.stoneTopLeftOffset = 0;
+                            bulk.stoneTopRightOffset = 0;
+                            bulk.stoneTopBackLip = 0;
+                            bulk.stoneTopBackLipThickness = 0;
+                          } else {
+                            // 처음 설치되는 하부장은 기본 앞 오프셋 23 적용
+                            if ((m.stoneTopThickness || 0) === 0) {
+                              bulk.stoneTopFrontOffset = 23;
+                            }
+                          }
+                          updatePlacedModule(m.id, bulk);
+                        });
                       }
                     }}
                   >
