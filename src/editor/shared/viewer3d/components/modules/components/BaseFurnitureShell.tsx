@@ -470,16 +470,16 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                 // 20mm: 측판 600, 따내기 없음
                 // 30mm: 측판 본체 600, 윗부분 앞쪽 10mm 따내기 → 윗부분 590
                 const isTopDownShell = !!topStretcher && (moduleData?.id?.includes('lower-top-down-') || moduleData?.id?.includes('dual-lower-top-down-'));
-                let topDownTopExtensionMm = 0;
-                let topDownTopRecessMm = 0;    // 상단 앞쪽 따내기 깊이 (10mm→8, 30mm→10)
+                let topDownTopExtensionMm = 0; // 10mm 상판: 측판 원장 앞으로 확장량
+                let topDownTopRecessMm = 0;    // 30mm 상판: 상단 앞쪽 따내기 깊이
                 if (isTopDownShell) {
-                  if (stoneTopThickness === 10) topDownTopRecessMm = 8;
+                  if (stoneTopThickness === 10) topDownTopExtensionMm = 18;
                   else if (stoneTopThickness === 30) topDownTopRecessMm = 10;
                 }
-                // 측판 본체는 항상 원장 depth(600) 그대로, 평행이동 없음
-                const sideDepth = depth;
-                const sideZOffset = 0;
-                // topStretcher Z 위치: 10mm→13 앞, 30mm→10 뒤
+                // 10mm: 측판 원장 618mm + 앞으로 9mm 평행이동 (하단 본체가 원래 자리)
+                const sideDepth = depth + mmToThreeUnits(topDownTopExtensionMm);
+                const sideZOffset = mmToThreeUnits(topDownTopExtensionMm) / 2;
+                // topStretcher Z 위치: 10mm→18 앞, 30mm→10 뒤
                 const topStretcherZRecess = mmToThreeUnits(topDownTopRecessMm) - mmToThreeUnits(topDownTopExtensionMm);
                 if (isTopDownShell) {
                   console.log('🔧 상판내림 측판 원장 깊이 계산:', {
@@ -493,14 +493,18 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                   });
                 }
 
-                // 상판내림: 상단 전대 영역에 앞쪽 따내기 (10mm→8, 30mm→10)
+                // 상판내림: 10mm 상판일 때 측판 원장 618mm (앞으로 +18 연장)
+                //   - 상단 55mm는 원장 앞면까지 (전대 감싸는 부분이 앞으로 돌출)
+                //   - 그 아래부터는 앞쪽 18mm 따내기 → 본체 600 유지
+                // 30mm 상판: 상단 55mm 앞쪽 10mm 따내기
                 const topDownNotches: Array<{ y: number; z: number; fromBottom: number }> = [];
                 if (isTopDownShell) {
                   const stretcherH = mmToThreeUnits(topStretcher!.heightMm); // 55mm
-                  if (stoneTopThickness === 10) {
-                    topDownNotches.push({ y: stretcherH, z: mmToThreeUnits(8), fromBottom: height - stretcherH });
-                  } else if (stoneTopThickness === 30) {
+                  if (stoneTopThickness === 30) {
                     topDownNotches.push({ y: stretcherH, z: mmToThreeUnits(10), fromBottom: height - stretcherH });
+                  } else if (stoneTopThickness === 10) {
+                    // 상단 55mm를 제외한 하단 전체에 앞쪽 18mm 따내기
+                    topDownNotches.push({ y: height - stretcherH, z: mmToThreeUnits(18), fromBottom: 0 });
                   }
                 }
 
