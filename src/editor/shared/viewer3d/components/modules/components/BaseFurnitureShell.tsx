@@ -465,27 +465,26 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                 const notchY = mmToThreeUnits(notchYmm);
                 const notchZ = mmToThreeUnits(notchZmm);
 
-                // 상판내림: 상판 두께별 계단형 따내기 (측판 본체는 항상 600, 윗부분만 변함)
-                // 10mm: 측판 본체 600, 윗부분(전대 55mm 구간)만 앞으로 +13mm 돌출 → 원장 613
-                // 20mm: 측판 600, 따내기 없음
-                // 30mm: 측판 본체 600, 윗부분 앞쪽 10mm 따내기 → 윗부분 590
+                // 상판내림: 상판 두께별 측판 원장 깊이 + 계단형 따내기
+                // 10mm: 원장 610 (앞으로 +10 연장). 상단 60mm 구간은 원장 그대로(전대 끼움), 그 아래 전체는 앞쪽 10mm 따내기 → 본체 600
+                // 20mm: 원장 600, 따내기 없음
+                // 30mm: 원장 600. 상단 전대 영역 55mm에 앞쪽 10mm 따내기 → 윗부분 590
                 const isTopDownShell = !!topStretcher && (moduleData?.id?.includes('lower-top-down-') || moduleData?.id?.includes('dual-lower-top-down-'));
-                let topDownTopExtensionMm = 0; // 10mm용: 상단 앞쪽 돌출
-                let topDownTopRecessMm = 0;    // 30mm용: 상단 앞쪽 따내기
+                let topDownExtensionMm = 0;   // 10mm용: 측판 원장을 앞으로 연장
+                let topDownTopRecessMm = 0;   // 30mm용: 상단 앞쪽 따내기
                 if (isTopDownShell) {
-                  if (stoneTopThickness === 10) topDownTopExtensionMm = 13;
+                  if (stoneTopThickness === 10) topDownExtensionMm = 10;
                   else if (stoneTopThickness === 30) topDownTopRecessMm = 10;
                 }
-                // 측판 본체는 항상 원장 depth(600) 그대로, 평행이동 없음
-                const sideDepth = depth;
-                const sideZOffset = 0;
-                // topStretcher Z 위치: 10mm→13 앞, 30mm→10 뒤
-                const topStretcherZRecess = mmToThreeUnits(topDownTopRecessMm) - mmToThreeUnits(topDownTopExtensionMm);
+                const sideDepth = depth + mmToThreeUnits(topDownExtensionMm);
+                const sideZOffset = mmToThreeUnits(topDownExtensionMm) / 2; // 앞쪽으로 절반만큼 평행이동
+                // topStretcher Z: 10mm→10 앞, 30mm→10 뒤
+                const topStretcherZRecess = mmToThreeUnits(topDownTopRecessMm) - mmToThreeUnits(topDownExtensionMm);
                 if (isTopDownShell) {
                   console.log('🔧 상판내림 측판 원장 깊이 계산:', {
                     moduleId: moduleData?.id,
                     stoneTopThickness,
-                    topDownTopExtensionMm,
+                    topDownExtensionMm,
                     topDownTopRecessMm,
                     depth,
                     sideDepth,
@@ -493,14 +492,19 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                   });
                 }
 
-                // 상판내림 30mm: 상단 앞쪽 따내기 (윗부분 590)
+                // 상판내림 계단형 따내기
+                // 10mm: 원장 610에서 "상단 60mm 제외한 나머지 전체"를 앞쪽 10mm 따내기 (본체 600)
+                // 30mm: 원장 600에서 "상단 전대 55mm 영역"을 앞쪽 10mm 따내기 (윗부분 590)
                 const topDownNotches: Array<{ y: number; z: number; fromBottom: number }> = [];
                 if (isTopDownShell) {
                   const stretcherH = mmToThreeUnits(topStretcher!.heightMm); // 55mm
-                  if (stoneTopThickness === 30) {
+                  const topKeepH = mmToThreeUnits(60); // 10mm용: 상단 60mm는 원장 유지
+                  if (stoneTopThickness === 10) {
+                    // fromBottom=0 ~ height-60 구간 전체를 앞쪽 10mm 따내기
+                    topDownNotches.push({ y: height - topKeepH, z: mmToThreeUnits(10), fromBottom: 0 });
+                  } else if (stoneTopThickness === 30) {
                     topDownNotches.push({ y: stretcherH, z: mmToThreeUnits(10), fromBottom: height - stretcherH });
                   }
-                  // 10mm는 따내기 대신 별도 돌출 조각 렌더링 (하단 참조)
                 }
 
                 // 다중 노치 (sideNotches가 있으면 추가 노치 포함)
@@ -553,45 +557,6 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                       {...(allNotches ? { notches: allNotches } : { notch: { y: notchY, z: notchZ } })}
                     />
 
-                    {/* 상판내림 10mm: 측판 상단 앞쪽 돌출 조각 (전대 높이 55mm × 13mm × 측판 두께) */}
-                    {isTopDownShell && stoneTopThickness === 10 && (() => {
-                      const stretcherH = mmToThreeUnits(topStretcher!.heightMm);
-                      const extZ = mmToThreeUnits(13);
-                      const protrudeY = height/2 - stretcherH/2; // 상단 전대 영역 중심
-                      const protrudeZ = depth/2 + extZ/2; // 원장 앞면에서 +13/2 앞으로
-                      return (
-                        <>
-                          <BoxWithEdges
-                            key={`left-panel-protrude-${getSidePanelMaterial('좌측판').uuid}`}
-                            args={[basicThickness, stretcherH, extZ]}
-                            position={[-innerWidth/2 - basicThickness/2, protrudeY, protrudeZ]}
-                            material={getSidePanelMaterial('좌측판')}
-                            renderMode={renderMode}
-                            isDragging={isDragging}
-                            isEditMode={isEditMode}
-                            isEndPanel={isLeftEndPanel}
-                            panelName="좌측판(돌출)"
-                            panelGrainDirections={panelGrainDirections}
-                            furnitureId={placedFurnitureId}
-                            textureUrl={textureUrl}
-                          />
-                          <BoxWithEdges
-                            key={`right-panel-protrude-${getSidePanelMaterial('우측판').uuid}`}
-                            args={[basicThickness, stretcherH, extZ]}
-                            position={[innerWidth/2 + basicThickness/2, protrudeY, protrudeZ]}
-                            material={getSidePanelMaterial('우측판')}
-                            renderMode={renderMode}
-                            isDragging={isDragging}
-                            isEditMode={isEditMode}
-                            isEndPanel={isRightEndPanel}
-                            panelName="우측판(돌출)"
-                            panelGrainDirections={panelGrainDirections}
-                            furnitureId={placedFurnitureId}
-                            textureUrl={textureUrl}
-                          />
-                        </>
-                      );
-                    })()}
 
                     {/* 가로전대 (상단) - 상판이 없는 하부장만 (도어올림은 상판이 있으므로 제외) */}
                     {hideTopPanel && (
