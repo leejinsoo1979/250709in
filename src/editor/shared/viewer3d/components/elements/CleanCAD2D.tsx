@@ -6909,7 +6909,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   const doorMidY = (doorBottomY + doorTopY) / 2;
 
                   return (
-                    <group>
+                    <group name="door-dimension-height">
                       <Line
                         points={[[0, doorBottomY, doorDimZ], [0, doorTopY, doorDimZ]]}
                         color={doorColor} lineWidth={0.6}
@@ -6923,6 +6923,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                         color={doorColor} lineWidth={0.6}
                       />
                       <Text
+                        name="door-dimension-height-text"
                         renderOrder={1000} depthTest={false}
                         position={[0, doorMidY, doorDimZ + mmToThreeUnits(60)]}
                         fontSize={baseFontSize}
