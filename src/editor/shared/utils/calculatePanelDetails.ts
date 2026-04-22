@@ -466,10 +466,13 @@ export const calculatePanelDetails = (
           || moduleData.id.includes('lower-induction-cabinet') || moduleData.id.includes('dual-lower-induction-cabinet')
           || moduleData.id.includes('lower-drawer-');
         if (!noTopPanel) {
+          // 상판내림 + 30mm: 앞에서 10mm 추가 축소 (전대가 10mm 뒤로 밀린 만큼 상판도 앞에서 줄어듦)
+          const isTopDownForTop = moduleData.id.includes('lower-top-down-') || moduleData.id.includes('dual-lower-top-down-');
+          const topDownExtraFrontReductionMm = (isTopDownForTop && stoneTopThickness === 30) ? 10 : 0;
           const topPanelEntry: any = {
             name: `${sectionPrefix}상판`,
             width: horizontalPanelWidth,
-            depth: customDepth - 26, // 백패널과 맞닿게 26mm 감소
+            depth: customDepth - 26 - topDownExtraFrontReductionMm, // 백패널과 맞닿게 26mm 감소 + 상판내림 30mm 시 10mm 추가
             thickness: basicThickness,
             material: 'PB'
           };
@@ -1956,10 +1959,8 @@ export const calculatePanelDetails = (
   const isLowerForStone = moduleData.id.includes('lower-') || moduleData.id.includes('dual-lower-') || moduleData.category === 'lower';
   if (stoneTopThickness && stoneTopThickness > 0 && isLowerForStone) {
     const isTopDownForStone = moduleData.id.includes('lower-top-down-') || moduleData.id.includes('dual-lower-top-down-');
-    // 상판내림: 10/20mm → 23 (623), 30mm → 13 (613, 앞에서 10mm 축소). 기존 저장값 강제 보정.
-    const effectiveFrontOffsetForStone = isTopDownForStone
-      ? (stoneTopThickness === 30 ? 13 : 23)
-      : (stoneTopFrontOffset || 0);
+    // 상판내림: 인조대리석 상판 깊이 = customDepth + 23 (두께 무관 623 고정)
+    const effectiveFrontOffsetForStone = isTopDownForStone ? 23 : (stoneTopFrontOffset || 0);
     result.push({ name: '=== 인조대리석 ===' });
     // 수평 상판 (모든 하부장 공통)
     result.push({

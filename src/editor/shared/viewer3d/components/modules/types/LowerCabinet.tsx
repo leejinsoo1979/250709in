@@ -851,10 +851,9 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
   const stoneFrontOff = useFurnitureStore(state => {
     if (!placedFurnitureId) return 0;
     const pm = state.placedModules.find(m => m.id === placedFurnitureId);
-    // 상판내림: 10/20mm → 23 (623), 30mm → 13 (613, 앞 10mm 축소). 기존 저장값 강제 보정.
+    // 상판내림은 두께 무관 23으로 고정 (인조대리석 상판 623)
     const isTopDownFO = moduleData.id.includes('lower-top-down-') || moduleData.id.includes('dual-lower-top-down-');
-    const t = pm?.stoneTopThickness || 0;
-    if (isTopDownFO && t > 0) return t === 30 ? 13 : 23;
+    if (isTopDownFO && (pm?.stoneTopThickness || 0) > 0) return 23;
     return pm?.stoneTopFrontOffset || 0;
   });
   const stoneBackOff = useFurnitureStore(state => {
@@ -1116,7 +1115,7 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
               isFloating={isFloating}
               hideVentilationCap={true}
               hideTopPanel={!moduleData.id.includes('lower-door-lift-') && !moduleData.id.includes('lower-top-down-')}
-              topPanelFrontReduction={moduleData.id.includes('lower-top-down-') ? 18.5 : 0}
+              topPanelFrontReduction={moduleData.id.includes('lower-top-down-') ? (stoneThickness === 30 ? 28.5 : 18.5) : 0}
               topStretcher={moduleData.id.includes('lower-top-down-') ? { heightMm: 55, depthMm: 40 } : undefined}
               stoneTopThickness={stoneThickness}
               {...(moduleData.id.includes('lower-door-lift-touch-') ? {
