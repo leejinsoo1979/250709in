@@ -12,6 +12,12 @@ interface EditableDimensionTextProps {
   fontSize: number;
   color: string;
   rotation?: [number, number, number];
+  // 클릭 영역 회전 (생략 시 rotation 사용)
+  clickRotation?: [number, number, number];
+  // 클릭 영역 크기 (생략 시 1.0 x 0.5)
+  clickSize?: [number, number];
+  // 최소값 (생략 시 200)
+  minValue?: number;
 
   // 치수 값
   value: number;
@@ -40,6 +46,9 @@ const EditableDimensionText: React.FC<EditableDimensionTextProps> = ({
   fontSize,
   color,
   rotation = [0, 0, Math.PI / 2],
+  clickRotation,
+  clickSize,
+  minValue,
   value,
   onValueChange,
   sectionIndex,
@@ -82,9 +91,10 @@ const EditableDimensionText: React.FC<EditableDimensionTextProps> = ({
       return;
     }
 
-    // 최소/최대값 검증 (200mm ~ 3000mm)
-    if (newValue < 200 || newValue > 3000) {
-      alert('치수는 200mm ~ 3000mm 범위 내로 입력해주세요');
+    // 최소/최대값 검증 (기본 200mm ~ 3000mm, minValue로 오버라이드 가능)
+    const minBound = minValue ?? 200;
+    if (newValue < minBound || newValue > 3000) {
+      alert(`치수는 ${minBound}mm ~ 3000mm 범위 내로 입력해주세요`);
       return;
     }
 
@@ -207,12 +217,12 @@ const EditableDimensionText: React.FC<EditableDimensionTextProps> = ({
           <mesh
             ref={meshRef}
             position={position}
-            rotation={rotation}
+            rotation={clickRotation ?? rotation}
             onClick={handleClick}
             onPointerOver={handlePointerOver}
             onPointerOut={handlePointerOut}
           >
-            <planeGeometry args={[1.0, 0.5]} />
+            <planeGeometry args={clickSize ?? [1.0, 0.5]} />
             <meshBasicMaterial
               transparent
               opacity={0.01}

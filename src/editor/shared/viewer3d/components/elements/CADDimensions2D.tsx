@@ -813,6 +813,9 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                       fontSize={largeFontSize}
                       color={textColor}
                       rotation={[0, -Math.PI / 2, Math.PI / 2]}
+                      clickRotation={[0, 0, 0]}
+                      clickSize={[1.5, Math.max(0.6, (seg.topY - seg.bottomY) * 0.9)]}
+                      minValue={1}
                       value={seg.heightMm}
                       onValueChange={(newGap) => {
                         // 미드웨이 변경 → 상부장 상단 고정, 하단만 확장 (customHeight 증가)

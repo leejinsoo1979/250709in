@@ -3,6 +3,7 @@ import {
   doc,
   getDoc,
   setDoc,
+  addDoc,
   updateDoc,
   deleteDoc,
   query,
@@ -121,4 +122,87 @@ export async function incrementGalleryView(designFileId: string): Promise<void> 
 /** 좋아요 토글 (단순 카운트) */
 export async function incrementGalleryLike(designFileId: string, delta = 1): Promise<void> {
   await updateDoc(doc(db, COL, designFileId), { likes: increment(delta) });
+}
+
+// ────────── 댓글 ──────────
+const COMMENTS_COL = 'galleryComments';
+
+export interface GalleryComment {
+  id: string;
+  postId: string;          // galleryPosts 문서 ID (= designFileId)
+  parentId?: string | null; // 대댓글이면 부모 댓글 ID, 최상위는 null
+  userId: string;
+  userName: string;
+  userPhotoURL?: string;
+  text: string;
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
+}
+
+/** 댓글 목록 (최신순) */
+export async function listGalleryComments(postId: string): Promise<GalleryComment[]> {
+  const q = query(
+    collection(db, COMMENTS_COL),
+    where('postId', '==', postId),
+    orderBy('createdAt', 'desc'),
+    fsLimit(200),
+  );
+  const snap = await getDocs(q);
+  return snap.docs.map(d => ({ id: d.id, ...(d.data() as Omit<GalleryComment, 'id'>) }));
+}
+
+/** 댓글 작성 */
+export async function addGalleryComment(params: {
+  postId: string;
+  parentId?: string | null;
+  userId: string;
+  userName: string;
+  userPhotoURL?: string;
+  text: string;
+}): Promise<string> {
+  const now = Timestamp.now();
+  const ref = await addDoc(collection(db, COMMENTS_COL), {
+    postId: params.postId,
+    parentId: params.parentId || null,
+    userId: params.userId,
+    userName: params.userName,
+    userPhotoURL: params.userPhotoURL || null,
+    text: params.text,
+    createdAt: now,
+    updatedAt: now,
+  });
+  return ref.id;
+}
+
+/** 댓글 수정 */
+export async function updateGalleryComment(commentId: string, text: string): Promise<void> {
+  await updateDoc(doc(db, COMMENTS_COL, commentId), {
+    text,
+    updatedAt: Timestamp.now(),
+  });
+}
+
+/** 댓글 삭제 */
+export async function deleteGalleryComment(commentId: string): Promise<void> {
+  await deleteDoc(doc(db, COMMENTS_COL, commentId));
+}
+
+/** 여러 게시물의 댓글 수 맵 반환 */
+export async function getCommentCounts(postIds: string[]): Promise<Record<string, number>> {
+  if (postIds.length === 0) return {};
+  const results: Record<string, number> = {};
+  // Firestore 'in' 쿼리는 10개 제한 → 배치
+  const chunks: string[][] = [];
+  for (let i = 0; i < postIds.length; i += 10) {
+    chunks.push(postIds.slice(i, i + 10));
+  }
+  await Promise.all(chunks.map(async (chunk) => {
+    const q = query(collection(db, COMMENTS_COL), where('postId', 'in', chunk));
+    const snap = await getDocs(q);
+    snap.forEach((d) => {
+      const pid = (d.data() as any).postId as string;
+      results[pid] = (results[pid] || 0) + 1;
+    });
+  }));
+  return results;
 }

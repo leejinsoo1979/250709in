@@ -56,6 +56,14 @@
         { "fieldPath": "isPublic", "order": "ASCENDING" },
         { "fieldPath": "views", "order": "DESCENDING" }
       ]
+    },
+    {
+      "collectionGroup": "galleryComments",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "postId", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
+      ]
     }
   ],
   "fieldOverrides": []

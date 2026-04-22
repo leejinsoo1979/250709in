@@ -1,19 +1,28 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Eye, Heart } from 'lucide-react';
+import { Eye, Heart, MessageCircle } from 'lucide-react';
 import DashboardHeader from '@/components/dashboard/DashboardHeader';
-import { listPublicGalleryPosts, GalleryPost } from '@/firebase/gallery';
+import { listPublicGalleryPosts, getCommentCounts, GalleryPost } from '@/firebase/gallery';
 
 export default function GalleryPage() {
   const navigate = useNavigate();
   const [posts, setPosts] = useState<GalleryPost[]>([]);
   const [loading, setLoading] = useState(true);
   const [sortBy, setSortBy] = useState<'latest' | 'likes' | 'views'>('latest');
+  const [commentCounts, setCommentCounts] = useState<Record<string, number>>({});
 
   useEffect(() => {
     setLoading(true);
     listPublicGalleryPosts({ sortBy, limit: 60 })
-      .then(setPosts)
+      .then(async (list) => {
+        setPosts(list);
+        if (list.length > 0) {
+          try {
+            const counts = await getCommentCounts(list.map(p => p.id));
+            setCommentCounts(counts);
+          } catch (e) { console.error('댓글 수 로드 실패', e); }
+        }
+      })
       .catch(err => console.error('갤러리 로드 실패', err))
       .finally(() => setLoading(false));
   }, [sortBy]);
@@ -106,6 +115,9 @@ export default function GalleryPage() {
                     </span>
                     <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
                       <Heart size={12} /> {post.likes}
+                    </span>
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                      <MessageCircle size={12} /> {commentCounts[post.id] || 0}
                     </span>
                   </div>
                 </div>
