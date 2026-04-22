@@ -645,7 +645,7 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
         const n = sortedNotches[ni];
         const notchBottom = -halfH + n.fromBottom;
         const notchTop = notchBottom + n.y;
-        const isUppermostNotch = Math.abs(notchTop - halfH) < 0.001; // 최상단 노치 여부
+        const isUppermostNotch = Math.abs(notchTop - halfH) < 0.01; // 최상단 노치 여부 (부동소수 오차 허용)
         // 이전 노치와 맞닿아 있으면 앞면 중복 이동 스킵
         const prev = ni > 0 ? sortedNotches[ni - 1] : null;
         const prevTop = prev ? -halfH + prev.fromBottom + prev.y : null;
@@ -892,7 +892,7 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
         const n = sortedNotches[ni];
         const notchBottom = -halfH + n.fromBottom;
         const notchTop = notchBottom + n.y;
-        const isUppermostNotch = Math.abs(notchTop - halfH) < 0.001;
+        const isUppermostNotch = Math.abs(notchTop - halfH) < 0.01;
         // 이전 노치와 맞닿아 있으면 앞면 중복 이동 스킵
         const prev = ni > 0 ? sortedNotches[ni - 1] : null;
         const prevTop = prev ? -halfH + prev.fromBottom + prev.y : null;
