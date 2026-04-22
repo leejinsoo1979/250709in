@@ -459,9 +459,11 @@ export const calculatePanelDetails = (
           || moduleData.id.includes('lower-induction-cabinet') || moduleData.id.includes('dual-lower-induction-cabinet')
           || moduleData.id.includes('lower-drawer-');
         if (!noTopPanel) {
-          // 상판내림: 30mm → 앞에서 10mm 추가 축소, 10mm는 20mm와 동일
+          // 상판내림: 10mm → 앞에서 8mm 추가 축소, 30mm → 앞에서 10mm 추가 축소
           const isTopDownForTop = moduleData.id.includes('lower-top-down-') || moduleData.id.includes('dual-lower-top-down-');
-          const topDownExtraFrontReductionMm = (isTopDownForTop && stoneTopThickness === 30) ? 10 : 0;
+          const topDownExtraFrontReductionMm = isTopDownForTop
+            ? (stoneTopThickness === 30 ? 10 : stoneTopThickness === 10 ? 8 : 0)
+            : 0;
           const topPanelEntry: any = {
             name: `${sectionPrefix}상판`,
             width: horizontalPanelWidth,

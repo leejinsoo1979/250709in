@@ -470,11 +470,11 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                 // 20mm: 측판 600, 따내기 없음
                 // 30mm: 측판 본체 600, 윗부분 앞쪽 10mm 따내기 → 윗부분 590
                 const isTopDownShell = !!topStretcher && (moduleData?.id?.includes('lower-top-down-') || moduleData?.id?.includes('dual-lower-top-down-'));
-                let topDownTopExtensionMm = 0; // 10mm용 돌출 (임시 0 — 20mm와 동일 처리)
-                let topDownTopRecessMm = 0;    // 30mm용: 상단 앞쪽 따내기
+                let topDownTopExtensionMm = 0;
+                let topDownTopRecessMm = 0;    // 상단 앞쪽 따내기 깊이 (10mm→8, 30mm→10)
                 if (isTopDownShell) {
-                  if (stoneTopThickness === 30) topDownTopRecessMm = 10;
-                  // 10mm는 20mm와 동일 (임시)
+                  if (stoneTopThickness === 10) topDownTopRecessMm = 8;
+                  else if (stoneTopThickness === 30) topDownTopRecessMm = 10;
                 }
                 // 측판 본체는 항상 원장 depth(600) 그대로, 평행이동 없음
                 const sideDepth = depth;
@@ -493,14 +493,15 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                   });
                 }
 
-                // 상판내림 30mm: 상단 앞쪽 따내기 (윗부분 590)
+                // 상판내림: 상단 전대 영역에 앞쪽 따내기 (10mm→8, 30mm→10)
                 const topDownNotches: Array<{ y: number; z: number; fromBottom: number }> = [];
                 if (isTopDownShell) {
                   const stretcherH = mmToThreeUnits(topStretcher!.heightMm); // 55mm
-                  if (stoneTopThickness === 30) {
+                  if (stoneTopThickness === 10) {
+                    topDownNotches.push({ y: stretcherH, z: mmToThreeUnits(8), fromBottom: height - stretcherH });
+                  } else if (stoneTopThickness === 30) {
                     topDownNotches.push({ y: stretcherH, z: mmToThreeUnits(10), fromBottom: height - stretcherH });
                   }
-                  // 10mm는 따내기 대신 별도 돌출 조각 렌더링 (하단 참조)
                 }
 
                 // 다중 노치 (sideNotches가 있으면 추가 노치 포함)
