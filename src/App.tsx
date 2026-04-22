@@ -8,7 +8,7 @@ import { TeamProvider } from '@/contexts/TeamContext';
 import ErrorBoundary from '@/components/common/ErrorBoundary';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 import Step1 from '@/editor/Step1';
-import Configurator from '@/editor/Configurator';
+import ConfiguratorWrapper from '@/editor/Configurator/ConfiguratorWrapper';
 import IPadEditor from '@/editor/IPadEditor';
 import SimpleDashboard from '@/pages/SimpleDashboard';
 import TestDashboard from '@/pages/TestDashboard';
@@ -161,12 +161,12 @@ function AppContent() {
         <Route path="/test-canvas" element={<CanvasDuplicateTest />} />
         {/* 에디터 라우트 */}
         <Route path="/step1" element={<Step1 />} />
-        <Route path="/configurator" element={<Configurator />} />
+        <Route path="/configurator" element={<ConfiguratorWrapper />} />
         {/* iPad 전용 에디터 (3컬럼 레이아웃) */}
         <Route path="/ipad" element={<IPadEditor />} />
         <Route path="/ipad/configurator" element={<IPadEditor />} />
         {/* 데모 라우트 (로그인/저장 없음, 새로고침 시 초기화) */}
-        <Route path="/demo" element={<Configurator />} />
+        <Route path="/demo" element={<ConfiguratorWrapper />} />
         <Route path="/preview-popout" element={<PreviewPopout />} />
         <Route path="/cnc-optimizer" element={<CNCOptimizerPro />} />
         <Route path="/cnc-test" element={<CNCOptimizerTest />} />

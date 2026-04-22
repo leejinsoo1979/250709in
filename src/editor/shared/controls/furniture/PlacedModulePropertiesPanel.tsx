@@ -4466,14 +4466,38 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                               : (currentPlacedModule.stoneTopBackLip || 0) > 0 && (currentPlacedModule.stoneTopBackLipThickness || currentPlacedModule.stoneTopThickness || 20) === thickness ? styles.activeDoorTab : ''
                           }`}
                           onClick={() => {
+                            // 일괄 적용: 배치된 모든 하부장에 동일 적용
+                            const applyToLowers = (updates: Record<string, unknown>, fillHeightFor: (m: any) => number) => {
+                              // 현재 가구
+                              updatePlacedModule(currentPlacedModule.id, updates);
+                              // 다른 하부장들
+                              placedModules.forEach(m => {
+                                if (m.id === currentPlacedModule.id) return;
+                                const mid = m.moduleId || '';
+                                const isLower = mid.startsWith('lower-') || mid.includes('-lower-') ||
+                                                mid.includes('lower-door-lift') || mid.includes('lower-top-down') ||
+                                                mid.includes('lower-drawer') || mid.includes('lower-sink') ||
+                                                mid.includes('lower-induction');
+                                if (!isLower) return;
+                                // 상판이 없는 하부장은 뒷턱도 의미 없음 — 상판 있는 것만
+                                if (!(m.stoneTopThickness || 0)) return;
+                                const bulk: Record<string, unknown> = { ...updates };
+                                // stoneTopBackLip 값이 포함되어 있고 100이면, 다채움이었던 가구는 재계산
+                                if (bulk.stoneTopBackLip === 100 && m.stoneTopBackLipFullFill) {
+                                  const h = fillHeightFor(m);
+                                  if (h > 0) bulk.stoneTopBackLip = h;
+                                }
+                                updatePlacedModule(m.id, bulk);
+                              });
+                            };
                             if (thickness === 0) {
-                              updatePlacedModule(currentPlacedModule.id, { stoneTopBackLip: 0, stoneTopBackLipThickness: 0 });
+                              applyToLowers({ stoneTopBackLip: 0, stoneTopBackLipThickness: 0 }, () => 0);
                             } else {
                               const updates: Record<string, unknown> = { stoneTopBackLipThickness: thickness };
                               if (!(currentPlacedModule.stoneTopBackLip)) {
                                 updates.stoneTopBackLip = 100;
                               }
-                              updatePlacedModule(currentPlacedModule.id, updates);
+                              applyToLowers(updates, (m) => calcBackLipFillHeight(m, moduleData, spaceInfo, placedModules));
                             }
                           }}
                         >
@@ -4523,21 +4547,53 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                             return fullH > 0 && (currentPlacedModule.stoneTopBackLip || 0) === fullH;
                           })()}
                           onChange={(e) => {
-                            if (e.target.checked) {
+                            const checked = e.target.checked;
+                            const applyFullFill = (m: any) => {
+                              const mid = m.moduleId || '';
+                              const isLower = mid.startsWith('lower-') || mid.includes('-lower-') ||
+                                              mid.includes('lower-door-lift') || mid.includes('lower-top-down') ||
+                                              mid.includes('lower-drawer') || mid.includes('lower-sink') ||
+                                              mid.includes('lower-induction');
+                              if (!isLower) return;
+                              // 상판과 뒷턱이 있는 하부장만 다채움 적용
+                              if (!(m.stoneTopThickness || 0)) return;
+                              if (!(m.stoneTopBackLip || 0)) return;
+
+                              if (checked) {
+                                const fullH = calcBackLipFillHeight(m, moduleData, spaceInfo, placedModules);
+                                if (fullH > 0) {
+                                  updatePlacedModule(m.id, {
+                                    stoneTopBackLipFillHeight: fullH,
+                                    stoneTopBackLipFullFill: true,
+                                  });
+                                }
+                              } else {
+                                updatePlacedModule(m.id, {
+                                  stoneTopBackLipFillHeight: 0,
+                                  stoneTopBackLipFullFill: false,
+                                });
+                              }
+                            };
+                            // 현재 가구 (뒷턱 없어도 체크 동작 보장)
+                            if (checked) {
                               const fullH = calcBackLipFillHeight(currentPlacedModule, moduleData, spaceInfo, placedModules);
                               if (fullH > 0) {
-                                // 다채움 시, 기존 뒷턱 높이는 유지하고 채울 높이와 상태만 기록
-                                updatePlacedModule(currentPlacedModule.id, { 
+                                updatePlacedModule(currentPlacedModule.id, {
                                   stoneTopBackLipFillHeight: fullH,
-                                  stoneTopBackLipFullFill: true 
+                                  stoneTopBackLipFullFill: true,
                                 });
                               }
                             } else {
-                              updatePlacedModule(currentPlacedModule.id, { 
+                              updatePlacedModule(currentPlacedModule.id, {
                                 stoneTopBackLipFillHeight: 0,
-                                stoneTopBackLipFullFill: false 
+                                stoneTopBackLipFullFill: false,
                               });
                             }
+                            // 나머지 모든 하부장에 일괄 적용
+                            placedModules.forEach(m => {
+                              if (m.id === currentPlacedModule.id) return;
+                              applyFullFill(m);
+                            });
                           }}
                         />
                         다채움
