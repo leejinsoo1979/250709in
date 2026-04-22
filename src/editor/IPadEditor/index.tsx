@@ -110,6 +110,31 @@ const IconSettings = () => (
     <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 01-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9c.38.95 1.14 1.55 2 1.7z"/>
   </svg>
 );
+const IconFile = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7">
+    <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+    <polyline points="14 2 14 8 20 8"/>
+  </svg>
+);
+const IconSave = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7">
+    <path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/>
+    <polyline points="17 21 17 13 7 13 7 21"/>
+    <polyline points="7 3 7 8 15 8"/>
+  </svg>
+);
+const IconExit = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7">
+    <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/>
+    <polyline points="16 17 21 12 16 7"/>
+    <line x1="21" y1="12" x2="9" y2="12"/>
+  </svg>
+);
+const IconRender = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+    <polygon points="5 3 19 12 5 21 5 3"/>
+  </svg>
+);
 const IconCube = () => (
   <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7">
     <path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/>
@@ -226,15 +251,21 @@ const IPadEditor: React.FC = () => {
         <div style={{ flex: 1 }}/>
 
         {/* 우측 액션 */}
-        <button style={{ fontSize: 13, color: T.ink2, background: 'none', border: 'none', cursor: 'pointer', padding: '6px 10px' }}>📄 파일</button>
-        <button style={{ fontSize: 13, color: T.ink2, background: 'none', border: 'none', cursor: 'pointer', padding: '6px 10px' }}>💾 저장</button>
-        <button style={{ fontSize: 13, color: T.ink2, background: 'none', border: 'none', cursor: 'pointer', padding: '6px 10px' }}>↩ 저장하고 나가기</button>
+        <button style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, color: T.ink2, background: 'none', border: 'none', cursor: 'pointer', padding: '6px 10px' }}>
+          <IconFile /> 파일
+        </button>
+        <button style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, color: T.ink2, background: 'none', border: 'none', cursor: 'pointer', padding: '6px 10px' }}>
+          <IconSave /> 저장
+        </button>
+        <button style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, color: T.ink2, background: 'none', border: 'none', cursor: 'pointer', padding: '6px 10px' }}>
+          <IconExit /> 저장하고 나가기
+        </button>
         <button style={{
           display: 'flex', alignItems: 'center', gap: 6, padding: '7px 14px',
           background: T.blueAct, color: '#FFF', border: 'none', borderRadius: 8,
           fontSize: 13, fontWeight: 600, cursor: 'pointer',
         }}>
-          <span style={{ fontSize: 14 }}>🔄</span> 렌더링
+          <IconRender /> 렌더링
         </button>
         <button style={{ background: 'none', border: 'none', cursor: 'pointer', color: T.ink2, display: 'flex', padding: 6 }}>
           <IconSettings />
