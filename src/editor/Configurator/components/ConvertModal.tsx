@@ -343,19 +343,6 @@ const ConvertModal: React.FC<ConvertModalProps> = ({ isOpen, onClose, showAll, s
       setLoadingProgress(30);
       setLoadingStatus('도면 생성 중...');
 
-      // "한 장 레이아웃" 옵션 선택 시 → sheet PDF 생성 (A3 한장)
-      if (selectedViews['sheet-all-in-one']) {
-        setLoadingProgress(60);
-        await downloadDxfAsSheetPdf(spaceInfo, placedModules, {});
-        setLoadingProgress(100);
-        console.log('✅ Sheet PDF 다운로드 성공');
-        setTimeout(() => {
-          setIsCapturing(false);
-          onClose();
-        }, 500);
-        return;
-      }
-
       // 선택된 뷰를 PdfViewDirection으로 변환
       const pdfViews: PdfViewDirection[] = [];
       if (selectedViews['2d-front']) pdfViews.push('front');
@@ -365,14 +352,21 @@ const ConvertModal: React.FC<ConvertModalProps> = ({ isOpen, onClose, showAll, s
       if (selectedViews['2d-door-only']) pdfViews.push('door-only');
 
       // 2D 뷰가 선택되지 않았으면 입면도 기본 추가
-      if (pdfViews.length === 0) {
+      if (pdfViews.length === 0 && !selectedViews['sheet-all-in-one']) {
         pdfViews.push('front');
       }
 
       setLoadingProgress(60);
 
-      // DXF 내보내기와 동일한 방식으로 PDF 생성
-      await downloadDxfAsPdf(spaceInfo, placedModules, pdfViews);
+      // 1. 기존 페이지별 PDF 먼저 생성
+      if (pdfViews.length > 0) {
+        await downloadDxfAsPdf(spaceInfo, placedModules, pdfViews);
+      }
+
+      // 2. "한 장 레이아웃" 선택 시 별도 파일로 장표 한 장 추가 다운로드
+      if (selectedViews['sheet-all-in-one']) {
+        await downloadDxfAsSheetPdf(spaceInfo, placedModules, {});
+      }
 
       setLoadingProgress(100);
       console.log('✅ PDF 다운로드 성공');

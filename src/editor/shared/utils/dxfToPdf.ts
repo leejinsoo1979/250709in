@@ -339,7 +339,8 @@ export const generateViewDataFromDxf = (
 export const downloadDxfAsPdf = async (
   spaceInfo: SpaceInfo,
   placedModules: PlacedModule[],
-  views: PdfViewDirection[] = ['front', 'top', 'left', 'door']
+  views: PdfViewDirection[] = ['front', 'top', 'left', 'door-only'],
+  appendSheetPage: boolean = false,
 ): Promise<void> => {
   console.log('[PDF] DXF to PDF conversion starting...');
   console.log('[PDF] Views to convert: ' + views.join(', '));
@@ -506,6 +507,11 @@ export const downloadDxfAsPdf = async (
       console.log('[DXF] ' + viewDirection + ': final ' + lines.length + ' lines, ' + texts.length + ' texts');
       renderToPdf(pdf, lines, texts, spaceInfo, viewDirection, pageWidth, pageHeight, placedModules);
     }
+  }
+
+  // "한 장 레이아웃" 요청 시 마지막에 장표 페이지 추가
+  if (appendSheetPage) {
+    await appendSheetPageToPdf(pdf, spaceInfo, placedModules);
   }
 
   pdf.save(`drawing_${new Date().toISOString().slice(0, 10)}.pdf`);
@@ -690,19 +696,28 @@ export interface SheetMetadata {
   materialName?: string;
 }
 
-export const downloadDxfAsSheetPdf = async (
+/**
+ * 기존 PDF 인스턴스에 "한 장 레이아웃" 페이지 추가
+ * (downloadDxfAsPdf 내부에서 호출)
+ */
+export const appendSheetPageToPdf = async (
+  pdf: jsPDF,
   spaceInfo: SpaceInfo,
   placedModules: PlacedModule[],
   metadata: SheetMetadata = {},
 ): Promise<void> => {
-  const uiState = useUIStore.getState();
-  const originalViewMode = uiState.viewMode;
-  const originalView2DDirection = uiState.view2DDirection;
-  const originalRenderMode = uiState.renderMode;
+  // 현재 포맷과 다르면 A3 landscape 페이지 추가
+  pdf.addPage('a3', 'landscape');
+  await renderSheetContent(pdf, spaceInfo, placedModules, metadata);
+};
 
-  await switchSceneViewMode('2D', 'front', 'wireframe');
-
-  const pdf = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a3' });
+/** 현재 페이지에 "한 장 장표" 렌더링 — 기존 PDF에 append 가능 */
+const renderSheetContent = async (
+  pdf: jsPDF,
+  spaceInfo: SpaceInfo,
+  placedModules: PlacedModule[],
+  metadata: SheetMetadata = {},
+): Promise<void> => {
   const pageW = pdf.internal.pageSize.getWidth();
   const pageH = pdf.internal.pageSize.getHeight();
   const margin = 8;
@@ -724,35 +739,29 @@ export const downloadDxfAsSheetPdf = async (
 
   try {
     // ═══════════════════════════════════════════════════════════
-    // 각 뷰 추출 — 원본 downloadDxfAsPdf와 동일한 씬 전환 흐름
+    // 각 뷰 추출 — 원본 downloadDxfAsPdf와 동일한 순서로 씬 전환
     // ═══════════════════════════════════════════════════════════
 
-    // ─ Front (with doors): 씬을 front로 전환 후 추출
+    // ─ 1) Front (with/without doors + door-only)
     await switchSceneViewMode('2D', 'front', 'wireframe');
     const frontWith = generateViewDataFromDxf(spaceInfo, placedModules, 'front', false);
-
-    // ─ Front (without doors): 같은 front 뷰에서 excludeDoor=true
-    const frontNo = generateViewDataFromDxf(spaceInfo, placedModules, 'front', true);
-
-    // ─ Door-only: front 뷰에서 DOOR 레이어만 필터링
-    const doorAll = generateViewDataFromDxf(spaceInfo, placedModules, 'front');
+    const frontNo   = generateViewDataFromDxf(spaceInfo, placedModules, 'front', true);
+    const doorAll   = generateViewDataFromDxf(spaceInfo, placedModules, 'front');
     const doorOnlyLines = doorAll.lines.filter(l => l.layer === 'DOOR');
     const doorOnlyTexts = doorAll.texts.filter(t => t.layer === 'DOOR' || t.layer === 'DOOR_DIMENSIONS');
 
-    // ─ Top view: 씬을 top으로 전환 후 추출
+    // ─ 2) Top view
     await switchSceneViewMode('2D', 'top', 'wireframe');
     const topView = generateViewDataFromDxf(spaceInfo, placedModules, 'top');
 
-    // ─ Side views: 씬을 left로 전환 + 가구 1개씩 추출 (원본 downloadDxfAsPdf와 동일)
+    // ─ 3) Side views (가구별) — 원본 downloadDxfAsPdf와 동일하게 left 씬 한 번만 전환
+    await switchSceneViewMode('2D', 'left', 'wireframe');
     const sortedModules = [...placedModules].sort((a, b) =>
       (a.position?.x ?? 0) - (b.position?.x ?? 0)
     );
     const sideDataList: Array<{ module: PlacedModule; lines: ParsedLine[]; texts: ParsedText[] }> = [];
     for (const m of sortedModules) {
-      // 각 가구별로 씬 전환 (가구별 레이아웃 차이 반영)
-      await switchSceneViewMode('2D', 'left', 'wireframe');
       const data = generateViewDataFromDxf(spaceInfo, [m], 'left');
-      // renderToPdfWithSlotInfo와 동일한 필터: DOOR/DOOR_DIMENSIONS 제외
       const fLines = data.lines.filter(l => l.layer !== 'DOOR' && l.layer !== 'DOOR_DIMENSIONS');
       const fTexts = data.texts.filter(t => t.layer !== 'DOOR' && t.layer !== 'DOOR_DIMENSIONS');
       sideDataList.push({ module: m, lines: fLines, texts: fTexts });
