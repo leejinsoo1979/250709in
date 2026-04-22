@@ -268,16 +268,12 @@ const projectTo2D = (p: THREE.Vector3, scale: number): { x: number; y: number } 
     case 'top':
       return { x: p.x * scale, y: -p.z * scale }; // z축을 y로, 뒤집어서
     case 'left':
-      // 좌측뷰: 카메라가 -X 방향에서 +X 방향을 봄
-      // 3D에서: 백패널(Z-)은 뒤쪽, 앞판/서랍(Z+)은 앞쪽
-      // 왼쪽에서 볼 때: 백패널(Z-)이 오른쪽에 보임, 앞판(Z+)이 왼쪽에 보임
-      // DXF X = (depth/2 - Z) * scale → Z-가 큰 X (오른쪽), Z+가 작은 X (왼쪽)
-      return { x: (currentSpaceDepthMm / 200 - p.z) * scale, y: p.y * scale };
-    case 'right':
-      // 우측뷰: 카메라가 +X 방향에서 -X 방향을 봄
-      // 오른쪽에서 볼 때: 백패널(Z-)이 왼쪽에 보임, 앞판(Z+)이 오른쪽에 보임
-      // DXF X = (Z + depth/2) * scale → Z-가 작은 X (왼쪽), Z+가 큰 X (오른쪽)
+      // 좌측뷰 (이 프로젝트 컨벤션): 서랍 앞판(Z+)이 오른쪽에 보임, 백패널(Z-)이 왼쪽
+      // DXF X = (Z + depth/2) * scale → Z+가 큰 X (오른쪽), Z-가 작은 X (왼쪽)
       return { x: (p.z + currentSpaceDepthMm / 200) * scale, y: p.y * scale };
+    case 'right':
+      // 우측뷰 (좌측뷰의 미러): 서랍 앞판(Z+)이 왼쪽, 백패널(Z-)이 오른쪽
+      return { x: (currentSpaceDepthMm / 200 - p.z) * scale, y: p.y * scale };
     default:
       return { x: p.x * scale, y: p.y * scale };
   }

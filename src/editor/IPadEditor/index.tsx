@@ -449,20 +449,6 @@ const IPadEditor: React.FC = () => {
               showFrame={showFrame}
               svgSize={viewerSize}
             />
-
-            {/* 하단 플로팅 버튼 4개 (편집/복사/회전/전체화면) */}
-            <div style={{
-              position: 'absolute', bottom: 18, left: 0, right: 0,
-              display: 'flex', justifyContent: 'center', gap: 14,
-              pointerEvents: 'none',
-            }}>
-              <div style={{ display: 'flex', gap: 14, pointerEvents: 'auto' }}>
-                <FloatBtn title="편집"><IconEdit /></FloatBtn>
-                <FloatBtn title="복사"><IconDuplicate /></FloatBtn>
-                <FloatBtn title="회전"><IconRotate /></FloatBtn>
-                <FloatBtn title="전체화면"><IconFullscreen /></FloatBtn>
-              </div>
-            </div>
           </div>
         </div>
 
