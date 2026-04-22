@@ -1899,9 +1899,12 @@ export const calculatePanelDetails = (
 
   // === 상판내림 전대 (topStretcher: 높이 55mm, 깊이 40mm) — 3D BaseFurnitureShell L530 ===
   if (moduleId.includes('lower-top-down-')) {
+    // 10mm 상판: 외경 전대 (가구 전체 폭, 측판 앞면에 부착)
+    // 20/30mm: 내경 전대 (측판 사이 끼움)
+    const isOuterStretcher = stoneTopThickness === 10;
     panels.frame.push({
       name: '전대',
-      width: innerWidth - apronGap, // 상판/바닥판과 동일 너비
+      width: isOuterStretcher ? customWidth : (innerWidth - apronGap),
       height: 55,        // topStretcher.heightMm
       thickness: basicThickness,
       material: 'PB',
