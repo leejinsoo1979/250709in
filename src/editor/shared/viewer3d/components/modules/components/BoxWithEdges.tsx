@@ -536,6 +536,8 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
     if (view2DDirection === 'left' || view2DDirection === 'right') {
       // 가구 측판 (가장 앞)
       if (!isDrawerPanel && !isDrawerFrame && (panelName.includes('측판') || panelName.includes('좌측') || panelName.includes('우측'))) return 1.0;
+      // 가로전대 / 목찬넬 프레임 (측판 안쪽에 있어 측면뷰에서 가려짐)
+      if (panelName.includes('가로전대') || panelName.includes('목찬넬')) return 0.3;
       // 인덕션 서랍 (전대 뒤로 직접 보임)
       if (isInductionDrawer) return 0.6;
       // 마이다, 상판, 바닥, 선반

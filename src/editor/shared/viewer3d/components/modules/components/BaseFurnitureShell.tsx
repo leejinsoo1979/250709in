@@ -555,7 +555,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                     />
 
                     {/* 가로전대 (상단) - 상판이 없는 하부장만 (도어올림은 상판이 있으므로 제외) */}
-                    {false && hideTopPanel && (
+                    {hideTopPanel && (
                       <BoxWithEdges
                         key={`front-stretcher-${material instanceof THREE.Material ? material.uuid : 'mat'}`}
                         args={[innerWidth, notchY, basicThickness]}
@@ -572,7 +572,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                     )}
 
                     {/* 상단 가로전대 (상판내림: 캐비넷 앞면에 부착, 30mm 상판 시 7mm 뒤로 후퇴) */}
-                    {false && topStretcher && (
+                    {topStretcher && (
                       <BoxWithEdges
                         key={`front-stretcher-top-${material instanceof THREE.Material ? material.uuid : 'mat'}`}
                         args={[innerWidth, mmToThreeUnits(topStretcher.heightMm), basicThickness]}
@@ -589,7 +589,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                     )}
 
                     {/* 하단 가로전대 (sideNotches가 있을 때) - 하단 노치 위치에 가로 부재 */}
-                    {false && sideNotches && sideNotches.map((n, idx) => {
+                    {sideNotches && sideNotches.map((n, idx) => {
                       const lowerNotchY = mmToThreeUnits(n.y);
                       const lowerNotchZ = mmToThreeUnits(n.z);
                       const lowerFromBottom = mmToThreeUnits(n.fromBottom);
