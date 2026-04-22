@@ -95,10 +95,12 @@ let notifyR3FTimer: ReturnType<typeof setTimeout> | null = null;
 const notifyR3F = (modules: PlacedModule[]) => {
   // 이전 타이머를 취소하여 최신 상태만 R3F에 전달 (race condition 방지)
   if (notifyR3FTimer) clearTimeout(notifyR3FTimer);
+  // 50ms → 0ms: 팝업이 열린 상태에서 즉시 반영되도록 지연 제거
+  // (50ms였던 이유는 race condition 방지였으나, clearTimeout으로 이미 해결됨)
   notifyR3FTimer = setTimeout(() => {
     notifyR3FTimer = null;
     storeRef?.setState({ placedModules: [...modules] });
-  }, 50);
+  }, 0);
 };
 
 /**
