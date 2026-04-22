@@ -2721,15 +2721,15 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     // 신발장 중심 Z = 이 뒷면 + depth/2
     furnitureZ = furnitureZOffset - furnitureDepth / 2 - doorThickness + depth / 2 + baseDepthOffset;
   } else {
-    // 기본은 앞면 정렬 (앞고정)
+    // 기본은 앞면 정렬 (앞고정: 앞면 고정, 깊이 감소 시 뒷면이 앞으로)
     furnitureZ = furnitureZOffset + furnitureDepth / 2 - doorThickness - depth / 2 + baseDepthOffset;
-    // 뒤고정(lowerSectionDepthDirection='front'): 기본 깊이 기준 뒷면을 유지하도록 중심 Z를 앞으로 이동
-    // 깊이가 줄어든 만큼 앞쪽으로 이동해 뒷면 위치를 고정시킴
+    // 뒤고정(lowerSectionDepthDirection='front'): 뒷면 고정, 깊이 감소 시 앞면이 뒤로 이동
+    // → 중심 Z를 감소량만큼 뒤로 이동
     if (placedModule.lowerSectionDepthDirection === 'front') {
       const baseDepthMm = actualModuleData?.dimensions.depth || actualDepthMm;
       const depthDiffMm = baseDepthMm - actualDepthMm;
       if (depthDiffMm !== 0) {
-        furnitureZ += mmToThreeUnits(depthDiffMm);
+        furnitureZ -= mmToThreeUnits(depthDiffMm);
       }
     }
   }
