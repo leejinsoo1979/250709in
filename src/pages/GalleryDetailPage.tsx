@@ -35,7 +35,7 @@ export default function GalleryDetailPage() {
   const [doorsOpen, setDoorsOpenLocal] = useState(false);
   const { user } = useAuth();
 
-  const { setSpaceInfo } = useSpaceConfigStore();
+  const { setSpaceInfo, resetSpaceInfo } = useSpaceConfigStore();
   const { setPlacedModules } = useFurnitureStore();
   const viewMode = useUIStore(s => s.viewMode);
   const setViewMode = useUIStore(s => s.setViewMode);
@@ -99,6 +99,8 @@ export default function GalleryDetailPage() {
         if (res.designFile) {
           const spaceCfg = res.designFile.spaceConfig || (res.designFile as any).spaceInfo;
           const modules = res.designFile.furniture?.placedModules || (res.designFile as any).placedModules || [];
+          // 이전 사용자 설정(재질/색상 등) 초기화 후 저장된 값 완전 적용
+          resetSpaceInfo && resetSpaceInfo();
           if (spaceCfg) setSpaceInfo(spaceCfg);
           setPlacedModules(modules);
           setViewMode('3D');

@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { Text } from '@react-three/drei';
+import { Text, Html } from '@react-three/drei';
 import NativeLine from './NativeLine';
 import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
@@ -12,7 +12,6 @@ import { getModuleCategory } from '@/editor/shared/utils/freePlacementUtils';
 import type { PlacedModule } from '@/editor/shared/furniture/types';
 import type { SectionConfig } from '@/data/modules/shelving';
 import type { SpaceInfo } from '@/store/core/spaceConfigStore';
-import EditableDimensionText from '../modules/components/EditableDimensionText';
 
 const DEFAULT_BASIC_THICKNESS_MM = 18;
 
@@ -33,6 +32,84 @@ const ExtLine: React.FC<{
 );
 
 const mmToThreeUnits = (mm: number) => mm * 0.01;
+
+/**
+ * 미드웨이 치수 편집 UI (HTML 오버레이)
+ * - 2D 치수선 위에 투명 HTML div를 덮어 확실히 클릭 가능하게 함
+ * - 클릭 시 input으로 전환, Enter/blur로 확정, ESC로 취소
+ */
+const MidwayEditableNumber: React.FC<{
+  position: [number, number, number];
+  value: number;
+  onChange: (v: number) => void;
+  color: string;
+  fontSize: number; // Three 단위 폰트사이즈 (참고용)
+  rotated90?: boolean; // 텍스트처럼 세로로 90도 회전 표시
+}> = ({ position, value, onChange, color, rotated90 }) => {
+  const [editing, setEditing] = React.useState(false);
+  const [text, setText] = React.useState(String(value));
+  const inputRef = React.useRef<HTMLInputElement>(null);
+
+  React.useEffect(() => { setText(String(value)); }, [value]);
+  React.useEffect(() => {
+    if (editing && inputRef.current) { inputRef.current.focus(); inputRef.current.select(); }
+  }, [editing]);
+
+  const commit = React.useCallback(() => {
+    const n = parseFloat(text);
+    if (!isNaN(n) && n > 0 && n !== value) onChange(Math.round(n));
+    setEditing(false);
+  }, [text, value, onChange]);
+
+  return (
+    <Html
+      position={position}
+      center
+      zIndexRange={[200, 0]}
+      style={{ pointerEvents: 'auto', userSelect: 'none' }}
+    >
+      {editing ? (
+        <input
+          ref={inputRef}
+          type="number"
+          value={text}
+          onChange={e => setText(e.target.value)}
+          onBlur={commit}
+          onKeyDown={e => {
+            if (e.key === 'Enter') commit();
+            else if (e.key === 'Escape') { setText(String(value)); setEditing(false); }
+          }}
+          style={{
+            width: 64, padding: '2px 4px', fontSize: 13,
+            border: `1px solid ${color}`, borderRadius: 3, textAlign: 'center',
+            background: 'rgba(255,255,255,0.95)', color: '#000',
+          }}
+        />
+      ) : (
+        <div
+          onClick={(e) => { e.stopPropagation(); setEditing(true); }}
+          title="클릭하여 편집"
+          style={{
+            cursor: 'pointer',
+            padding: '2px 8px',
+            minWidth: 36,
+            textAlign: 'center',
+            color,
+            fontSize: 13,
+            fontWeight: 500,
+            background: 'transparent',
+            transform: rotated90 ? 'rotate(-90deg)' : undefined,
+            whiteSpace: 'nowrap',
+          }}
+          onMouseEnter={(e) => { (e.currentTarget as HTMLDivElement).style.background = 'rgba(0,0,0,0.08)'; }}
+          onMouseLeave={(e) => { (e.currentTarget as HTMLDivElement).style.background = 'transparent'; }}
+        >
+          {value}
+        </div>
+      )}
+    </Html>
+  );
+};
 
 type SectionWithCalc = SectionConfig & { calculatedHeight?: number };
 
@@ -808,17 +885,13 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                     color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
                   />
                   {seg.upperModuleId && seg.currentHeightMm ? (
-                    <EditableDimensionText
+                    <MidwayEditableNumber
                       position={[0, (seg.bottomY + seg.topY) / 2, leftInnerZ - mmToThreeUnits(60)]}
-                      fontSize={largeFontSize}
-                      color={textColor}
-                      rotation={[0, -Math.PI / 2, Math.PI / 2]}
-                      clickRotation={[0, 0, 0]}
-                      clickSize={[1.5, Math.max(0.6, (seg.topY - seg.bottomY) * 0.9)]}
-                      minValue={1}
                       value={seg.heightMm}
-                      onValueChange={(newGap) => {
-                        // 미드웨이 변경 → 상부장 상단 고정, 하단만 확장 (customHeight 증가)
+                      color={textColor}
+                      fontSize={largeFontSize}
+                      rotated90
+                      onChange={(newGap) => {
                         const delta = seg.heightMm - newGap; // 양수: 갭 줄임 → 상부장 확장
                         const newHeight = Math.round((seg.currentHeightMm || 0) + delta);
                         if (newHeight > 0 && seg.upperModuleId) {
@@ -827,8 +900,6 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                           });
                         }
                       }}
-                      sectionIndex={0}
-                      furnitureId={seg.upperModuleId}
                     />
                   ) : (
                     <Text
