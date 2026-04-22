@@ -1114,6 +1114,7 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
               hideTopPanel={!moduleData.id.includes('lower-door-lift-') && !moduleData.id.includes('lower-top-down-')}
               topPanelFrontReduction={moduleData.id.includes('lower-top-down-') ? 18.5 : 0}
               topStretcher={moduleData.id.includes('lower-top-down-') ? { heightMm: 55, depthMm: 40 } : undefined}
+              stoneTopThickness={stoneThickness}
               {...(moduleData.id.includes('lower-door-lift-touch-') ? {
                 // 도어올림 터치: 따내기 없음
               } : moduleData.id.includes('lower-top-down-touch-') ? {

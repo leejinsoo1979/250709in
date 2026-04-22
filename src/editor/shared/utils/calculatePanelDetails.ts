@@ -259,8 +259,26 @@ export const calculatePanelDetails = (
       // Type5 스타일러장: 우측 절대깊이 (660mm), 좌측은 customDepth 그대로
       // 3D DualType5.tsx line 170-184와 동일한 로직
       const rightAbsoluteDepthForSide = moduleData.modelConfig?.rightAbsoluteDepth;
-      const leftSideDepth = customDepth;
-      const rightSideDepth = rightAbsoluteDepthForSide || customDepth;
+      let leftSideDepth = customDepth;
+      let rightSideDepth = rightAbsoluteDepthForSide || customDepth;
+
+      // 상판내림: 상판 두께별로 측판 상단 윗부분이 달라짐 → 원장 깊이 조정
+      // 측판 윗부분 길이: 10mm→613, 20mm→600, 30mm→593
+      // 측판 본체 길이: 항상 600 (customDepth)
+      // 원장 깊이 = max(윗부분, 본체)
+      const isTopDownForSide = moduleData.id.includes('lower-top-down-') || moduleData.id.includes('dual-lower-top-down-');
+      if (isTopDownForSide) {
+        const stT = stoneTopThickness || 0;
+        let topSegmentExtension = 0; // 상판이 있을 때만 적용
+        if (stT === 10) topSegmentExtension = 13;
+        else if (stT === 20) topSegmentExtension = 0;
+        else if (stT === 30) topSegmentExtension = -7;
+        // 원장 깊이는 가장 긴 쪽 (윗부분 연장이 양수면 그만큼 커짐, 음수면 본체 유지)
+        const topSegmentDepth = customDepth + topSegmentExtension;
+        const ingotDepth = Math.max(customDepth, topSegmentDepth);
+        leftSideDepth = ingotDepth;
+        rightSideDepth = ingotDepth;
+      }
 
       // Type5 스타일러장(2drawer-styler): 3D에서 우측판은 분할 안됨 (전체 높이 통짜)
       // 좌측판만 섹션별로 분할. DualType5.tsx line 921-932 주석 참조

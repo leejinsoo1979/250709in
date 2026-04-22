@@ -119,6 +119,9 @@ interface BaseFurnitureShellProps {
   // 배치된 가구 ID (섹션 강조용)
   placedFurnitureId?: string;
 
+  // 인조대리석 상판 두께 (상판내림 측판 상단 깊이 조정용)
+  stoneTopThickness?: number;
+
   // 띄움배치 여부
   isFloating?: boolean;
 
@@ -208,6 +211,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
   hasBackPanel = true, // 기본값은 true (백패널 있음)
   moduleData,
   placedFurnitureId,
+  stoneTopThickness = 0,
   isFloating = false, // 기본값은 false (바닥 배치)
   spaceInfo,
   showFurniture = true, // 기본값은 true (가구 본체 표시)
@@ -461,6 +465,17 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                 const notchY = mmToThreeUnits(notchYmm);
                 const notchZ = mmToThreeUnits(notchZmm);
 
+                // 상판내림: 상판 두께별 측판 원장 깊이 조정 (상단 앞부분만 늘어남 → 앞쪽으로 평행이동)
+                const isTopDownShell = !!topStretcher && (moduleData?.id?.includes('lower-top-down-') || moduleData?.id?.includes('dual-lower-top-down-'));
+                let topDownExtensionMm = 0;
+                if (isTopDownShell) {
+                  if (stoneTopThickness === 10) topDownExtensionMm = 13;
+                  else if (stoneTopThickness === 30) topDownExtensionMm = 0; // 30은 연장 없음(본체 600, 윗부분 593는 축소)
+                  else topDownExtensionMm = 0; // 20 기준
+                }
+                const sideDepth = depth + mmToThreeUnits(topDownExtensionMm);
+                const sideZOffset = mmToThreeUnits(topDownExtensionMm) / 2; // 앞쪽으로만 확장
+
                 // 다중 노치 (sideNotches가 있으면 추가 노치 포함)
                 const allNotches = sideNotches ? [
                   // 상단 노치: hideTopPanel일 때만 (도어올림은 상판이 있으므로 상단 따내기 없음)
@@ -478,8 +493,8 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                     {/* 좌측판 - L자형 단일 메시 (따내기 포함) */}
                     <BoxWithEdges
                       key={`left-panel-notch-${getSidePanelMaterial('좌측판').uuid}`}
-                      args={[basicThickness, height, depth]}
-                      position={[-innerWidth/2 - basicThickness/2, 0, 0]}
+                      args={[basicThickness, height, sideDepth]}
+                      position={[-innerWidth/2 - basicThickness/2, 0, sideZOffset]}
                       material={getSidePanelMaterial('좌측판')}
                       renderMode={renderMode}
                       isDragging={isDragging}
@@ -495,8 +510,8 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                     {/* 우측판 - L자형 단일 메시 (따내기 포함) */}
                     <BoxWithEdges
                       key={`right-panel-notch-${getSidePanelMaterial('우측판').uuid}`}
-                      args={[basicThickness, height, depth]}
-                      position={[innerWidth/2 + basicThickness/2, 0, 0]}
+                      args={[basicThickness, height, sideDepth]}
+                      position={[innerWidth/2 + basicThickness/2, 0, sideZOffset]}
                       material={getSidePanelMaterial('우측판')}
                       renderMode={renderMode}
                       isDragging={isDragging}
