@@ -3209,19 +3209,12 @@ export const generateDxfFromData = (
   let texts: DxfText[];
 
   if (viewDirection === 'left' || viewDirection === 'right') {
-    console.log(`📐 측면뷰 (${viewDirection}): 완전 데이터 기반 생성`);
-
-    const externalDimensions = generateExternalDimensions(
-      spaceInfo,
-      placedModules,
-      viewDirection,
-      sideViewFilter,
-      false // dimensionsOnly=false: 가구 형상 + 내부구조 + 치수선 모두 생성
-    );
-
-    lines = [...externalDimensions.lines];
-    texts = [...externalDimensions.texts];
-    console.log(`📐 측면뷰 (${viewDirection}): 데이터 기반 ${lines.length}개 라인, ${texts.length}개 텍스트`);
+    // 측면뷰: 2D 뷰어가 씬에 그린 가구 형상(서랍 박스, 옷봉, 선반 등) + CADDimensions2D의
+    // 치수를 그대로 추출. 씬에 이미 leftmost/rightmost 가구 + 모든 geometry가 렌더됨.
+    // generateExternalDimensions 호출 제거 (씬과 중복).
+    lines = [...extracted.lines];
+    texts = [...extracted.texts];
+    console.log(`📐 ${viewDirection}뷰: 씬 추출 그대로 사용 (라인 ${lines.length}개, 텍스트 ${texts.length}개)`);
   } else if (viewDirection === 'front') {
     // 정면뷰: 2D 뷰어의 CleanCAD2D/CADDimensions2D가 씬에 그린 치수를 그대로 사용.
     // (좌/우 세로 치수 스택 30/1270/1000/60/2360, 내부 섹션 라벨 191/1025/964,
