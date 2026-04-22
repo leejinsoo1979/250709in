@@ -29,34 +29,28 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
   const isDashboard = location.pathname.startsWith('/dashboard');
   const isGallery = location.pathname.startsWith('/gallery');
 
-  const navBtnStyle = (active: boolean): React.CSSProperties => ({
-    display: 'inline-flex', alignItems: 'center', gap: 6,
-    padding: '6px 12px', borderRadius: 6,
-    border: '1px solid transparent',
-    background: active ? 'var(--theme-primary, #3b82f6)' : 'transparent',
-    color: active ? '#fff' : 'var(--theme-text, inherit)',
-    fontSize: 13, fontWeight: active ? 600 : 500,
-    cursor: 'pointer',
-  });
-
   return (
     <header className={styles.header}>
       <div className={styles.left}>
-        <Logo size="large" onClick={onLogoClick} />
-        <nav style={{ display: 'inline-flex', gap: 4, marginLeft: 16 }}>
+        <div className={styles.logoWrap}>
+          <Logo size="large" onClick={onLogoClick} />
+        </div>
+        <nav className={styles.nav}>
           <button
-            style={navBtnStyle(isDashboard)}
+            className={`${styles.navBtn} ${isDashboard ? styles.active : ''}`}
             onClick={() => navigate('/dashboard')}
             title="대시보드"
           >
-            <Home size={14} /> 대시보드
+            <Home size={15} strokeWidth={1.9} />
+            <span>대시보드</span>
           </button>
           <button
-            style={navBtnStyle(isGallery)}
+            className={`${styles.navBtn} ${isGallery ? styles.active : ''}`}
             onClick={() => navigate('/gallery')}
             title="갤러리"
           >
-            <ImageIcon size={14} /> 갤러리
+            <ImageIcon size={15} strokeWidth={1.9} />
+            <span>갤러리</span>
           </button>
         </nav>
       </div>
