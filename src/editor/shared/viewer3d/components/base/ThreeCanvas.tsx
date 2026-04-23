@@ -1015,14 +1015,7 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
                 : defaultCursor,
             touchAction: 'none'
           }}
-          // OS 별 DPR 상한: Windows 는 ANGLE D3D11 오버헤드로 고DPR 시 체감 큰 폭 저하
-          // → Mac/iOS 는 Retina(2) 유지, Windows 는 1.5 로 상한 (실제 렌더 픽셀 수 약 44% 감소)
-          dpr={(() => {
-            if (typeof window === 'undefined') return [1, 2];
-            const ua = navigator.userAgent;
-            const isWindows = /Windows NT/i.test(ua);
-            return isWindows ? [1, 1.5] : [1, 2];
-          })()}
+          dpr={[1, 2]}
           frameloop="always"
           gl={{
             powerPreference: 'high-performance',
