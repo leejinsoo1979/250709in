@@ -148,6 +148,7 @@ const Stepper: React.FC<{
 /** iOS 스타일 토글 스위치 (파란색) */
 const Toggle: React.FC<{ checked: boolean; onChange: (v: boolean) => void }> = ({ checked, onChange }) => (
   <button
+    className="ipad-toggle-switch"
     onClick={() => onChange(!checked)}
     style={{
       width: 36, height: 20, borderRadius: 12,

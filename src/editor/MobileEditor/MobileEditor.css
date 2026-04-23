@@ -24,12 +24,19 @@
   font-size: 11px !important;
 }
 
-/* 가로 모드 좌측 사이드 패널: 버튼/텍스트 크기 컴팩트 */
-.mobile-editor-root .mobile-landscape-panel button {
+/* 가로 모드 좌측 사이드 패널: 세그먼트 버튼만 컴팩트 (토글 스위치 제외) */
+.mobile-editor-root .mobile-landscape-panel button:not(.ipad-toggle-switch) {
   height: 26px !important;
   padding: 3px 6px !important;
   font-size: 11px !important;
   border-radius: 5px !important;
+}
+/* 토글 스위치는 원래 크기 유지 */
+.mobile-editor-root .mobile-landscape-panel .ipad-toggle-switch {
+  width: 36px !important;
+  height: 20px !important;
+  padding: 0 !important;
+  border-radius: 12px !important;
 }
 .mobile-editor-root .mobile-landscape-panel [class*="thumbnailGrid"] {
   grid-template-columns: repeat(2, 1fr) !important;
