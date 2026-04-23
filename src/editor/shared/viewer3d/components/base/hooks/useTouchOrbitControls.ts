@@ -286,8 +286,16 @@ export const useTouchOrbitControls = (
           if (Math.abs(curDist - lastDist) > 1 && lastDist > 0) {
             const scale = curDist / lastDist;
             const adjusted = Math.pow(scale, zoomSensitivity);
-            // dollyIn은 카메라를 가깝게. scale>1 = 손가락 벌림 = 확대 = dollyIn 필요
-            controlsRef.current.dollyIn(adjusted);
+            // Three.js OrbitControls 동작:
+            //   _dollyIn(factor)  → this._scale *= factor  → 거리 증가(factor>1일 때) = 축소
+            //   _dollyOut(factor) → this._scale /= factor  → 거리 감소(factor>1일 때) = 확대
+            // 손가락 벌림 (curDist>lastDist, scale>1) = 확대 기대 → dollyOut 사용
+            if (scale > 1) {
+              controlsRef.current.dollyOut(adjusted);
+            } else if (scale < 1) {
+              // 손가락 모음 = 축소 기대 → dollyIn (factor는 1보다 크게 전달)
+              controlsRef.current.dollyIn(1 / adjusted);
+            }
           }
 
           // 팬: 중심점 이동

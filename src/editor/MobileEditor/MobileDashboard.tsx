@@ -169,7 +169,8 @@ const MobileDashboard: React.FC = () => {
   }, [designs, query]);
 
   const handleOpenDesign = useCallback((d: DesignFileSummary & { projectId: string }) => {
-    navigate(`/mobile/configurator?designId=${d.id}&projectId=${d.projectId}`);
+    // 웹 Configurator와 동일한 파라미터 이름 사용 (designFileId, projectId)
+    navigate(`/mobile/configurator?designFileId=${d.id}&projectId=${d.projectId}`);
   }, [navigate]);
 
   const handleNew = useCallback(() => {

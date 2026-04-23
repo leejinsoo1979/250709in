@@ -115,6 +115,9 @@ const MobileEditor: React.FC = () => {
   const navigate = useNavigate();
   const projectName = searchParams.get('projectName') || '리얼프로젝트';
   const projectNumber = searchParams.get('projectNumber') || '3050';
+  const designFileIdParam = searchParams.get('designFileId') || searchParams.get('designId');
+  const projectIdParam = searchParams.get('projectId') || searchParams.get('id') || searchParams.get('project');
+  const isNewParam = searchParams.get('new') === '1' || searchParams.get('design') === 'new';
 
   const spaceInfo = useSpaceConfigStore(s => s.spaceInfo);
   const setSpaceInfo = useSpaceConfigStore(s => s.setSpaceInfo);
@@ -190,6 +193,42 @@ const MobileEditor: React.FC = () => {
     dragStateRef.current = { startY: clientY, startHeight: sheetHeight };
     setIsDragging(true);
   }, [sheetHeight]);
+
+  // 디자인 파일 로드 — URL 의 ?designFileId=… &projectId=… 기반
+  useEffect(() => {
+    // new=1 이면 초기화 후 종료
+    if (isNewParam) {
+      useFurnitureStore.getState().setPlacedModules([]);
+      return;
+    }
+    if (!designFileIdParam) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const { getDesignFileById } = await import('@/firebase/projects');
+        const { designFile, error } = await getDesignFileById(designFileIdParam);
+        if (cancelled || error || !designFile) {
+          if (error) console.warn('[MobileEditor] 디자인 로드 실패:', error);
+          return;
+        }
+        const df: any = designFile;
+        // spaceConfig → spaceInfo
+        if (df.spaceConfig) setSpaceInfo(df.spaceConfig);
+        else if (df.spaceInfo) setSpaceInfo(df.spaceInfo);
+        // 가구 배치
+        if (Array.isArray(df.furniture?.placedModules)) {
+          useFurnitureStore.getState().setPlacedModules(df.furniture.placedModules);
+        } else if (Array.isArray(df.placedModules)) {
+          useFurnitureStore.getState().setPlacedModules(df.placedModules);
+        } else {
+          useFurnitureStore.getState().setPlacedModules([]);
+        }
+      } catch (e) {
+        console.warn('[MobileEditor] 디자인 로드 예외:', e);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [designFileIdParam, isNewParam, setSpaceInfo]);
 
   useEffect(() => {
     if (!isDragging) return; // 드래그 중일 때만 전역 리스너 활성
