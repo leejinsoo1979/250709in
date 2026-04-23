@@ -778,17 +778,26 @@ const renderSheetContent = async (
   await switchSceneViewMode('2D', 'top', 'wireframe');
   const topView = generateViewDataFromDxf(spaceInfo, placedModules, 'top');
 
-  // ─ 3) Side views (가구별) — 원본 downloadDxfAsPdf와 동일하게 left 씬 한 번만 전환
+  // ─ 3) Side views (가구별) — 각 가구마다 씬에 그 가구만 렌더되도록 store 교체 + 대기
   await switchSceneViewMode('2D', 'left', 'wireframe');
   const sortedModules = [...placedModules].sort((a, b) =>
     (a.position?.x ?? 0) - (b.position?.x ?? 0)
   );
   const sideDataList: Array<{ module: PlacedModule; lines: ParsedLine[]; texts: ParsedText[] }> = [];
-  for (const m of sortedModules) {
-    const data = generateViewDataFromDxf(spaceInfo, [m], 'left');
-    const fLines = data.lines.filter(l => l.layer !== 'DOOR' && l.layer !== 'DOOR_DIMENSIONS');
-    const fTexts = data.texts.filter(t => t.layer !== 'DOOR' && t.layer !== 'DOOR_DIMENSIONS');
-    sideDataList.push({ module: m, lines: fLines, texts: fTexts });
+  const furnitureStoreForSheet = useFurnitureStore.getState();
+  const originalModulesForSheet = furnitureStoreForSheet.placedModules;
+  try {
+    for (const m of sortedModules) {
+      useFurnitureStore.setState({ placedModules: [m] });
+      await new Promise(resolve => setTimeout(resolve, 600));
+      const data = generateViewDataFromDxf(spaceInfo, [m], 'left');
+      const fLines = data.lines.filter(l => l.layer !== 'DOOR' && l.layer !== 'DOOR_DIMENSIONS');
+      const fTexts = data.texts.filter(t => t.layer !== 'DOOR' && t.layer !== 'DOOR_DIMENSIONS');
+      sideDataList.push({ module: m, lines: fLines, texts: fTexts });
+    }
+  } finally {
+    useFurnitureStore.setState({ placedModules: originalModulesForSheet });
+    await new Promise(resolve => setTimeout(resolve, 300));
   }
 
   const topColW = areaW / 3;
