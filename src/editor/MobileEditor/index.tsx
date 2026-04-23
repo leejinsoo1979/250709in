@@ -47,19 +47,23 @@ const SegBtn: React.FC<{
   onClick?: () => void;
   children: React.ReactNode;
   flex?: boolean;
-}> = ({ active, onClick, children, flex }) => (
+  size?: 'sm' | 'md';
+}> = ({ active, onClick, children, flex, size = 'sm' }) => (
   <button
     onClick={onClick}
     style={{
       flex: flex ? '1 1 0' : undefined,
-      minWidth: 0, padding: '8px 14px',
+      minWidth: 0,
+      padding: size === 'md' ? '8px 14px' : '6px 10px',
+      height: size === 'md' ? undefined : 32,
       background: active ? T.blueAct : T.surface,
       color: active ? '#fff' : T.ink2,
       border: `1px solid ${active ? T.blueAct : T.line}`,
-      borderRadius: 8,
-      fontSize: 13, fontWeight: active ? 600 : 500,
+      borderRadius: 6,
+      fontSize: 12, fontWeight: active ? 600 : 500,
       cursor: 'pointer', whiteSpace: 'nowrap',
       transition: 'all 0.12s ease',
+      lineHeight: 1,
     }}
   >{children}</button>
 );
@@ -303,14 +307,14 @@ const MobileEditor: React.FC = () => {
       {/* 프로젝트명 + 3D/2D/도면 토글 */}
       <div style={{
         background: T.surface,
-        padding: '8px 16px 12px',
-        display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12,
+        padding: '6px 16px 10px',
+        display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8,
         flexShrink: 0,
       }}>
-        <div style={{ fontSize: 13, color: T.ink2 }}>
+        <div style={{ fontSize: 12, color: T.ink2 }}>
           {projectName} / <span style={{ color: T.primary, fontWeight: 600 }}>{projectNumber}</span> ▾
         </div>
-        <div style={{ display: 'flex', gap: 6, width: '100%', maxWidth: 320 }}>
+        <div style={{ display: 'flex', gap: 4, width: '100%', maxWidth: 240 }}>
           {([
             { k: '3D', label: '3D' },
             { k: '2D', label: '2D' },
@@ -431,7 +435,7 @@ const MobileEditor: React.FC = () => {
           <div style={{ flex: 1, overflow: 'auto', padding: 12 }}>
             {bottomTab === 'module' && (
               <>
-                <div style={{ display: 'flex', gap: 6, marginBottom: 10 }}>
+                <div style={{ display: 'flex', gap: 4, marginBottom: 8 }}>
                   <SegBtn active={layoutMode === 'equal-division'} flex onClick={() => {
                     if (layoutMode === 'equal-division') return;
                     if (placedModules.length > 0 && !window.confirm('가구가 초기화됩니다.')) return;
@@ -443,14 +447,14 @@ const MobileEditor: React.FC = () => {
                     setSpaceInfo({ layoutMode: 'free-placement' });
                   }}>자유배치</SegBtn>
                 </div>
-                <div style={{ display: 'flex', gap: 6, marginBottom: 10 }}>
+                <div style={{ display: 'flex', gap: 4, marginBottom: 8 }}>
                   <SegBtn active={moduleCategory === 'clothing'} flex onClick={() => setModuleCategory('clothing')}>의류장</SegBtn>
                   <SegBtn active={moduleCategory === 'shoes'} flex onClick={() => setModuleCategory('shoes')}>신발장</SegBtn>
                   <SegBtn active={moduleCategory === 'kitchen'} flex onClick={() => setModuleCategory('kitchen')}>주방</SegBtn>
                 </div>
 
                 {moduleCategory === 'kitchen' && (
-                  <div style={{ display: 'flex', gap: 6, marginBottom: 10, flexWrap: 'wrap' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 4, marginBottom: 8 }}>
                     <SegBtn active={kitchenSub === 'basic'} onClick={() => setKitchenSub('basic')}>기본장</SegBtn>
                     <SegBtn active={kitchenSub === 'door-raise'} onClick={() => setKitchenSub('door-raise')}>도어올림</SegBtn>
                     <SegBtn active={kitchenSub === 'top-down'} onClick={() => setKitchenSub('top-down')}>상판내림</SegBtn>
@@ -459,7 +463,7 @@ const MobileEditor: React.FC = () => {
                 )}
 
                 {moduleCategory !== 'kitchen' && (
-                  <div style={{ display: 'flex', gap: 6, marginBottom: 10 }}>
+                  <div style={{ display: 'flex', gap: 4, marginBottom: 8 }}>
                     <SegBtn active={moduleType === 'all'} flex onClick={() => setModuleType('all')}>전체</SegBtn>
                     <SegBtn active={moduleType === 'single'} flex onClick={() => setModuleType('single')}>싱글</SegBtn>
                     <SegBtn active={moduleType === 'dual'} flex onClick={() => setModuleType('dual')}>듀얼</SegBtn>
