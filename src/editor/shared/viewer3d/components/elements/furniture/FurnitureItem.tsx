@@ -1579,22 +1579,10 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   }
 
 
-  // 듀얼 가구 렌더링 너비 확인용
-  if (placedModule.isDualSlot || placedModule.moduleId.startsWith('dual-')) {
-    console.log('📐 [렌더링너비]', {
-      moduleId: placedModule.moduleId,
-      targetModuleId,
-      furnitureWidthMm,
-      customWidth: placedModule.customWidth,
-      adjustedWidth: placedModule.adjustedWidth,
-      slotCustomWidth: placedModule.slotCustomWidth,
-      moduleDataId: moduleData?.id,
-      moduleDataWidth: moduleData?.dimensions.width,
-      slotIndex: placedModule.slotIndex,
-      indexingColumnWidth: indexing.columnWidth,
-      indexingSlotWidths: indexing.slotWidths,
-    });
-  }
+  // 듀얼 가구 렌더링 너비 확인용 로그 제거 (성능)
+  // if (placedModule.isDualSlot || placedModule.moduleId.startsWith('dual-')) {
+  //   console.log('📐 [렌더링너비]', { ... });
+  // }
 
   // 기둥에 의한 자동 깊이 조정을 위한 플래그와 값 저장
   // customWidth가 있어도 기둥이 있으면 깊이 조정 필요
@@ -2659,23 +2647,10 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   const height = mmToThreeUnits(furnitureHeightMm);
 
   // 단내림 구간 최종 높이 디버깅
-  if (placedModule.zone === 'dropped') {
-    console.log('🟠 [단내림 FurnitureItem]', {
-      moduleId: placedModule.moduleId,
-      zone: placedModule.zone,
-      furnitureHeightMm,
-      furnitureWidthMm,
-      'moduleData.h': actualModuleData?.dimensions.height,
-      'moduleData.w': actualModuleData?.dimensions.width,
-      'internalSpace.h': internalSpace.height,
-      'internalSpace.w': internalSpace.width,
-      customHeight: placedModule.customHeight,
-      customWidth: placedModule.customWidth,
-      'spaceInfo.height': spaceInfo.height,
-      'dropHeight': spaceInfo.droppedCeiling?.dropHeight,
-      effectiveZone,
-    });
-  }
+  // 단내림 진단용 로그 제거 (성능)
+  // if (placedModule.zone === 'dropped') {
+  //   console.log('🟠 [단내림 FurnitureItem]', { ... });
+  // }
 
   // 깊이 계산: 기둥 앞에 배치 모드면 adjustedDepthMm 강제 적용, 아니면 customDepth 우선
   const moduleDepth = actualModuleData?.dimensions?.depth || 0;
@@ -2762,7 +2737,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   }
 
   // 🔴 Z축 디버그
-  console.log('🔴 Z', placedModule.moduleId, { depthMm: actualDepthMm, Z_mm: furnitureZ * 100, 뒷면: (furnitureZ - depth/2) * 100, 앞면: (furnitureZ + depth/2) * 100, panelDepthMm, furnitureDepthMm });
+  // console.log('🔴 Z', ...); // 진단용 로그 제거 (성능)
 
   const furnitureGroupPosition: [number, number, number] = [
     adjustedPosition.x + positionAdjustmentForEndPanel + epOffsetX,
