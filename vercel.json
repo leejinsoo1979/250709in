@@ -13,7 +13,7 @@
       "destination": "/api/$1"
     },
     {
-      "source": "/((?!models/)(?!assets/).*)",
+      "source": "/((?!models/)(?!assets/)(?!images/)(?!materials/)(?!templates/)(?!video/)(?!help/)(?!sw\\.js)(?!manifest\\.webmanifest)(?!robots\\.txt)(?!sitemap\\.xml)(?!_redirects)(?!.*\\.(?:png|jpg|jpeg|svg|ico|webp|gif|webmanifest|js|css|woff|woff2|ttf|otf|map|txt|xml|html)$).*)",
       "destination": "/index.html"
     }
   ],
@@ -58,6 +58,21 @@
           "key": "Access-Control-Allow-Headers",
           "value": "X-Requested-With, Content-Type, Authorization"
         }
+      ]
+    },
+    {
+      "source": "/sw.js",
+      "headers": [
+        { "key": "Content-Type", "value": "application/javascript; charset=utf-8" },
+        { "key": "Cache-Control", "value": "public, max-age=0, must-revalidate" },
+        { "key": "Service-Worker-Allowed", "value": "/" }
+      ]
+    },
+    {
+      "source": "/manifest.webmanifest",
+      "headers": [
+        { "key": "Content-Type", "value": "application/manifest+json; charset=utf-8" },
+        { "key": "Cache-Control", "value": "public, max-age=3600" }
       ]
     }
   ]
