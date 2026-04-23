@@ -8862,6 +8862,19 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             const upperBackZ = upperZ - upperDepth/2;
             const upperFrontZ = upperZ + upperDepth/2;
             const upperKey = Math.round(upperDepthMm);
+            // 🔍 진단 로그: 실제 Z 좌표와 FurnitureItem.tsx 계산 비교
+            console.log('🧭[탑뷰 좌측 2섹션 상부장]', {
+              moduleId: module.moduleId,
+              upperDepthMm, lowerRefDepthMm: 650,
+              panelDepthMm: spaceInfo.depth,
+              furnitureZOffset_threeUnits: furnitureZOffset.toFixed(4),
+              furnitureDepth_threeUnits: furnitureDepth.toFixed(4),
+              doorThickness_threeUnits: doorThickness.toFixed(4),
+              '현재공식_upperBackZ': upperBackZ.toFixed(4),
+              '현재공식_upperFrontZ': upperFrontZ.toFixed(4),
+              'FurnitureItem공식_backZ': (furnitureZOffset - furnitureDepth/2 - doorThickness).toFixed(4),
+              'FurnitureItem공식_frontZ': (furnitureZOffset - furnitureDepth/2 - doorThickness + upperDepth).toFixed(4),
+            });
             if (upperKey !== lowerKey) {
               const existingUpper = depthGroups.get(upperKey);
               if (existingUpper) {
