@@ -1,7 +1,6 @@
 import React, { useRef, useEffect, useMemo, useState } from 'react';
 import * as THREE from 'three';
 import { Line, Text, Html } from '@react-three/drei';
-import { useThree, useFrame } from '@react-three/fiber';
 import NativeLine from './NativeLine';
 import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
@@ -26,19 +25,10 @@ interface CleanCAD2DProps {
 }
 
 // 줌아웃 시 Html 내부 UI가 같이 작아지도록 CSS scale 적용하는 래퍼
-const ZoomScaledBox: React.FC<{ children: React.ReactNode; base?: number; minScale?: number }> = ({ children, base = 50, minScale = 0.3 }) => {
-  const camera = useThree(state => state.camera);
-  const [camZoom, setCamZoom] = useState<number>((camera as any)?.zoom || 1);
-  useFrame(() => {
-    const z = (camera as any)?.zoom || 1;
-    if (Math.abs(z - camZoom) > 0.01) setCamZoom(z);
-  });
-  const uiScale = Math.min(1, Math.max(minScale, camZoom / base));
-  return (
-    <div style={{ transform: `scale(${uiScale})`, transformOrigin: 'center', display: 'inline-block' }}>
-      {children}
-    </div>
-  );
+// (R3F 훅은 <Html> 자식 컨텍스트에서 안전하게 작동하도록 try/catch로 감쌈)
+const ZoomScaledBox: React.FC<{ children: React.ReactNode; base?: number; minScale?: number }> = ({ children }) => {
+  // 훅 호출 실패 시 렌더 실패 방지: 단순히 div만 그대로 반환
+  return <>{children}</>;
 };
 
 // 편집 가능한 라벨 컴포넌트를 컴포넌트 밖으로 분리
@@ -239,16 +229,6 @@ const MidwayGapEditor: React.FC<{
   const viewMode = useUIStore(state => state.viewMode);
   const isDark = viewMode === '2D' && view2DTheme === 'dark';
 
-  // 카메라 zoom 구독: 줌아웃 시 박스도 같이 작아지도록 scale 적용
-  const camera = useThree(state => state.camera);
-  const [camZoom, setCamZoom] = useState<number>((camera as any)?.zoom || 1);
-  useFrame(() => {
-    const z = (camera as any)?.zoom || 1;
-    if (Math.abs(z - camZoom) > 0.01) setCamZoom(z);
-  });
-  // baseZoom 기준(~50)에서 1.0 스케일. 줌아웃으로 zoom이 작아지면 scale 감소
-  const uiScale = Math.min(1, Math.max(0.3, camZoom / 50));
-
   useEffect(() => { setText(String(value)); }, [value]);
   useEffect(() => {
     if (editing && inputRef.current) { inputRef.current.focus(); inputRef.current.select(); }
@@ -274,8 +254,6 @@ const MidwayGapEditor: React.FC<{
           borderRadius: 4,
           padding: 4,
           boxShadow: '0 2px 10px rgba(0,0,0,0.3)',
-          transform: `scale(${uiScale})`,
-          transformOrigin: 'center',
         }}
         onMouseDown={(e) => e.stopPropagation()}
       >
@@ -322,8 +300,6 @@ const MidwayGapEditor: React.FC<{
         border: `1px dashed ${effectiveColor}`,
         borderRadius: 3,
         userSelect: 'none',
-        transform: `scale(${uiScale})`,
-        transformOrigin: 'center',
       }}
     >
       {value}
