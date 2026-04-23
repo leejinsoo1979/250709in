@@ -282,18 +282,18 @@ export const useTouchOrbitControls = (
           const curDist = Math.hypot(t1.clientX - t2.clientX, t1.clientY - t2.clientY);
           const lastDist = Math.hypot(lp1.x - lp2.x, lp1.y - lp2.y);
 
-          // 줌: 거리비 — 최소 변화 1px 이상일 때만
-          if (Math.abs(curDist - lastDist) > 1 && lastDist > 0) {
-            const scale = curDist / lastDist;
-            const adjusted = Math.pow(scale, zoomSensitivity);
-            // Three.js OrbitControls 동작:
-            //   _dollyIn(factor)  → this._scale *= factor  → 거리 증가(factor>1일 때) = 축소
-            //   _dollyOut(factor) → this._scale /= factor  → 거리 감소(factor>1일 때) = 확대
-            // 손가락 벌림 (curDist>lastDist, scale>1) = 확대 기대 → dollyOut 사용
-            if (scale > 1) {
+          // 줌: 거리비 — 자연스러운 속도를 위해 이중 감쇠 적용
+          //   1) 지수(0.35)로 변화 커브 완만화 (손가락 벌림 20% → 실제 줌 ~6.5%)
+          //   2) 사용자 설정 zoomSensitivity 반영 (기본 1.0)
+          //   3) 최소 임계값 2px 로 잔진동 무시
+          if (Math.abs(curDist - lastDist) > 2 && lastDist > 0) {
+            const raw = curDist / lastDist;
+            // 1보다 크면 확대, 작으면 축소 — 양쪽 모두 1 로 수렴하도록 감쇠
+            const DAMP = 0.35 * zoomSensitivity;
+            const adjusted = Math.pow(raw, DAMP);
+            if (adjusted > 1.0005) {
               controlsRef.current.dollyOut(adjusted);
-            } else if (scale < 1) {
-              // 손가락 모음 = 축소 기대 → dollyIn (factor는 1보다 크게 전달)
+            } else if (adjusted < 0.9995) {
               controlsRef.current.dollyIn(1 / adjusted);
             }
           }
