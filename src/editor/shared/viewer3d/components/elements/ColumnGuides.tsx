@@ -443,13 +443,16 @@ const ColumnGuides: React.FC<ColumnGuidesProps> = ({ viewMode: viewModeProp }) =
         ? Math.min(zoneEndX, internalEndX) 
         : zoneEndX;
       
+      // 뒷벽과 Z-fighting 회피를 위해 가이드를 뒷벽 바로 앞쪽으로 1mm 오프셋
+      const guideZ = backZ + 0.01;
+
       // 바닥 가이드
       guides.push(
         <Line
           key={`${zoneType}-floor-horizontal`}
           points={[
-            new THREE.Vector3(startBoundaryX, floorY, backZ),
-            new THREE.Vector3(endBoundaryX, floorY, backZ)
+            new THREE.Vector3(startBoundaryX, floorY, guideZ),
+            new THREE.Vector3(endBoundaryX, floorY, guideZ)
           ]}
           color={zoneColor}
           lineWidth={zoneLineWidth}
@@ -458,8 +461,6 @@ const ColumnGuides: React.FC<ColumnGuidesProps> = ({ viewMode: viewModeProp }) =
           gapSize={0.1}
           opacity={zoneOpacity}
           transparent
-          depthTest={false}
-          renderOrder={9999}
         />
       );
 
@@ -468,8 +469,8 @@ const ColumnGuides: React.FC<ColumnGuidesProps> = ({ viewMode: viewModeProp }) =
         <Line
           key={`${zoneType}-ceiling-horizontal`}
           points={[
-            new THREE.Vector3(startBoundaryX, ceilingY, backZ),
-            new THREE.Vector3(endBoundaryX, ceilingY, backZ)
+            new THREE.Vector3(startBoundaryX, ceilingY, guideZ),
+            new THREE.Vector3(endBoundaryX, ceilingY, guideZ)
           ]}
           color={zoneColor}
           lineWidth={zoneLineWidth}
@@ -478,8 +479,6 @@ const ColumnGuides: React.FC<ColumnGuidesProps> = ({ viewMode: viewModeProp }) =
           gapSize={0.1}
           opacity={zoneOpacity}
           transparent
-          depthTest={false}
-          renderOrder={9999}
         />
       );
     }
@@ -494,7 +493,7 @@ const ColumnGuides: React.FC<ColumnGuidesProps> = ({ viewMode: viewModeProp }) =
       const isInnerBoundary = index > 0 && index < columnCount;
       if (isInnerBoundary && leftOccupied && rightOccupied) return;
 
-      // 2D 상부뷰에서는 수평선으로 표시
+      // 2D 상부뷰에서는 수평선으로 표시 (탑뷰는 Z-fight 없음)
       if (viewMode === '2D' && view2DDirection === 'top') {
         guides.push(
           <Line
@@ -510,19 +509,17 @@ const ColumnGuides: React.FC<ColumnGuidesProps> = ({ viewMode: viewModeProp }) =
             gapSize={0.1}
             opacity={zoneOpacity}
             transparent
-            depthTest={false}
-            renderOrder={9999}
           />
         );
       } else {
-        // 3D 및 2D 정면뷰
-        // 수직 가이드
+        // 3D 및 2D 정면뷰 — 뒷벽과 Z-fighting 회피 위해 1mm 앞쪽 오프셋
+        const guideZV = backZ + 0.01;
         guides.push(
           <Line
             key={`${zoneType}-vertical-guide-${index}`}
             points={[
-              new THREE.Vector3(xPos, floorY, backZ),
-              new THREE.Vector3(xPos, ceilingY, backZ)
+              new THREE.Vector3(xPos, floorY, guideZV),
+              new THREE.Vector3(xPos, ceilingY, guideZV)
             ]}
             color={zoneColor}
             lineWidth={zoneLineWidth}
@@ -531,8 +528,6 @@ const ColumnGuides: React.FC<ColumnGuidesProps> = ({ viewMode: viewModeProp }) =
             gapSize={0.1}
             opacity={zoneOpacity}
             transparent
-            depthTest={false}
-            renderOrder={9999}
           />
         );
         
