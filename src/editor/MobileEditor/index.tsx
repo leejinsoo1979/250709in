@@ -290,25 +290,74 @@ const MobileEditor: React.FC = () => {
       background: T.bg2, color: T.ink, fontFamily: FONT_SANS,
       display: 'flex', flexDirection: 'column', position: 'relative',
     }}>
-      {/* ═══════════════ Top Header ═══════════════ */}
+      {/* ═══════════════ Top Header (프로젝트명/토글 포함 통합) ═══════════════ */}
       <div style={{
-        height: 52, background: T.surface,
+        height: isLandscape ? 44 : 52, background: T.surface,
         borderBottom: `1px solid ${T.line}`,
-        display: 'flex', alignItems: 'center', gap: 10,
-        padding: '0 14px', flexShrink: 0,
+        display: 'flex', alignItems: 'center', gap: 8,
+        padding: isLandscape ? '0 10px' : '0 14px', flexShrink: 0,
       }}>
         <button style={{ background: 'none', border: 'none', cursor: 'pointer', color: T.ink, padding: 4, display: 'flex' }}>
           <IconHamburger />
         </button>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginLeft: 4 }}>
-          <div style={{ display: 'flex', gap: 2.5 }}>
-            <span style={{ width: 6, height: 6, borderRadius: '50%', background: T.ink }}/>
-            <span style={{ width: 6, height: 6, borderRadius: '50%', background: T.ink }}/>
-            <span style={{ width: 6, height: 6, borderRadius: '50%', background: T.ink }}/>
+        {!isLandscape && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginLeft: 4 }}>
+            <div style={{ display: 'flex', gap: 2.5 }}>
+              <span style={{ width: 6, height: 6, borderRadius: '50%', background: T.ink }}/>
+              <span style={{ width: 6, height: 6, borderRadius: '50%', background: T.ink }}/>
+              <span style={{ width: 6, height: 6, borderRadius: '50%', background: T.ink }}/>
+            </div>
+            <span style={{ fontSize: 13, fontWeight: 700, letterSpacing: 1.2, color: T.ink }}>CRAFT</span>
           </div>
-          <span style={{ fontSize: 13, fontWeight: 700, letterSpacing: 1.2, color: T.ink }}>CRAFT</span>
-        </div>
+        )}
+        {/* 프로젝트명 (가로에서는 헤더에 직접, 세로에서는 별도 줄) */}
+        {isLandscape && (
+          <div style={{
+            fontSize: 11, color: T.ink2,
+            whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+            minWidth: 0, marginLeft: 4,
+          }}>
+            {projectName} / <span style={{ color: T.primary, fontWeight: 600 }}>{projectNumber}</span> ▾
+          </div>
+        )}
         <div style={{ flex: 1 }}/>
+        {/* 가로에서는 헤더 우측에 토글 통합 */}
+        {isLandscape && (
+          <div style={{
+            display: 'flex', gap: 2,
+            padding: 2, background: T.bg2, borderRadius: 6,
+            flexShrink: 0, marginRight: 4,
+          }}>
+            {([
+              { k: '3D', label: '3D' },
+              { k: '2D', label: '2D' },
+              { k: 'drawing', label: '도면' },
+            ] as const).map(item => {
+              const active = topMode === item.k;
+              return (
+                <button key={item.k}
+                  onClick={() => {
+                    setTopMode(item.k);
+                    if (item.k === '2D' || item.k === '3D') setViewMode(item.k);
+                    if (item.k === 'drawing') {
+                      setBottomTab('drawing');
+                      setSheetOpen(true);
+                    }
+                  }}
+                  style={{
+                    padding: '3px 10px', minWidth: 38, height: 24,
+                    background: active ? T.surface : 'transparent',
+                    color: active ? T.primary : T.ink3,
+                    border: 'none', borderRadius: 4,
+                    fontSize: 11, fontWeight: active ? 600 : 500,
+                    cursor: 'pointer', whiteSpace: 'nowrap',
+                    boxShadow: active ? '0 1px 2px rgba(0,0,0,0.08)' : 'none',
+                  }}
+                >{item.label}</button>
+              );
+            })}
+          </div>
+        )}
         <button style={{
           display: 'flex', alignItems: 'center', gap: 5,
           background: 'none', border: 'none', cursor: 'pointer',
@@ -318,8 +367,8 @@ const MobileEditor: React.FC = () => {
         </button>
       </div>
 
-      {/* 프로젝트명 + 3D/2D/도면 토글 — 한 줄에 컴팩트 배치 */}
-      <div style={{
+      {/* 프로젝트명 + 3D/2D/도면 토글 — 세로 모드에서만 표시 */}
+      {!isLandscape && (<div style={{
         background: T.surface,
         padding: '6px 12px',
         display: 'flex', alignItems: 'center', gap: 8,
@@ -371,13 +420,13 @@ const MobileEditor: React.FC = () => {
             );
           })}
         </div>
-      </div>
+      </div>)}
 
       {/* ═══════════════ 3D Viewer (전체 화면) ═══════════════ */}
       <div style={{
         flex: 1, position: 'relative', minHeight: 0, overflow: 'hidden',
-        // 가로 모드에서 사이드 패널 열리면 좌측 여백 확보
-        marginLeft: isLandscape && sheetOpen ? 'min(340px, 45vw)' : 0,
+        // 가로 모드: 좌측 사이드바(64) + 사이드 패널(열려있을 때)
+        marginLeft: isLandscape ? (sheetOpen ? 'calc(64px + min(300px, 42vw))' : '64px') : 0,
         transition: 'margin-left 0.2s ease',
       }}>
         <div ref={viewerRef} style={{ width: '100%', height: '100%' }}>
@@ -429,12 +478,54 @@ const MobileEditor: React.FC = () => {
         </button>
       </div>
 
+      {/* 가로 모드: 좌측 세로 사이드바 (탭바) */}
+      {isLandscape && (
+        <div style={{
+          position: 'absolute',
+          left: 0,
+          top: isLandscape ? 44 : 52,
+          bottom: 0,
+          width: 64,
+          background: T.surface,
+          borderRight: `1px solid ${T.line}`,
+          display: 'flex', flexDirection: 'column', alignItems: 'stretch',
+          paddingTop: 6,
+          paddingBottom: 'env(safe-area-inset-bottom, 0)',
+          zIndex: 11,
+          boxShadow: '1px 0 3px rgba(0,0,0,0.04)',
+        }}>
+          {([
+            { k: 'module',    label: '모듈', icon: <IconModules /> },
+            { k: 'material',  label: '재질', icon: <HiOutlineColorSwatch size={20} /> },
+            { k: 'settings',  label: '설정', icon: <IconSettings /> },
+            { k: 'drawing',   label: '도면', icon: <IconDrawing /> },
+          ] as const).map(tab => {
+            const isA = bottomTab === tab.k && sheetOpen;
+            return (
+              <button key={tab.k}
+                onClick={() => handleTabClick(tab.k as BottomTab)}
+                style={{
+                  height: 58,
+                  display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+                  gap: 2, background: isA ? T.primary50 : 'transparent', border: 'none', cursor: 'pointer',
+                  color: isA ? T.primary : T.ink3,
+                  borderLeft: isA ? `3px solid ${T.primary}` : '3px solid transparent',
+                }}
+              >
+                {tab.icon}
+                <span style={{ fontSize: 10, fontWeight: isA ? 600 : 500 }}>{tab.label}</span>
+              </button>
+            );
+          })}
+        </div>
+      )}
+
       {/* ═══════════════ Bottom Sheet (세로) / Side Panel (가로) ═══════════════ */}
       {sheetOpen && (
         <div style={isLandscape ? {
-          // 가로: 좌측 사이드 패널 (하단 탭바 위까지)
-          position: 'absolute', left: 0, top: 0, bottom: 60,
-          width: 'min(340px, 45vw)',
+          // 가로: 사이드바(64) 옆에 사이드 패널
+          position: 'absolute', left: 64, top: 44, bottom: 0,
+          width: 'min(300px, 42vw)',
           background: T.surface,
           borderRight: `1px solid ${T.line}`,
           display: 'flex', flexDirection: 'column',
@@ -571,8 +662,8 @@ const MobileEditor: React.FC = () => {
         </div>
       )}
 
-      {/* ═══════════════ Bottom Tab Bar ═══════════════ */}
-      <div style={{
+      {/* ═══════════════ Bottom Tab Bar — 세로 모드에서만 표시 ═══════════════ */}
+      {!isLandscape && (<div style={{
         height: 60, background: T.surface,
         borderTop: `1px solid ${T.line}`,
         display: 'flex', alignItems: 'stretch',
@@ -601,7 +692,7 @@ const MobileEditor: React.FC = () => {
             </button>
           );
         })}
-      </div>
+      </div>)}
     </div>
   );
 };
