@@ -6010,11 +6010,11 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                       }
                     }}
                     style={{
-                      width: '56px', fontSize: '11px', textAlign: 'center',
+                      width: '72px', fontSize: '14px', textAlign: 'center',
                       color: dimensionColor,
                       background: view2DTheme === 'dark' ? '#141414' : '#ffffff',
-                      border: `1px solid ${dimensionColor}`, borderRadius: '2px',
-                      padding: '1px 2px', outline: 'none',
+                      border: `1px solid ${dimensionColor}`, borderRadius: '3px',
+                      padding: '4px 6px', outline: 'none', fontWeight: 'bold',
                       WebkitTextFillColor: dimensionColor, opacity: 1,
                     }}
                   />
@@ -6051,32 +6051,66 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 transform={false}
               >
                 <div style={uiScaleStyle}>
-                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '24px', lineHeight: 0 }}>
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '32px', lineHeight: 0 }}>
                   <button
                     type="button"
-                    onMouseDown={(e) => e.preventDefault()}
-                    onClick={(e) => { e.stopPropagation(); moveShelf(k, 1); }}
+                    onMouseDown={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      // 즉시 이동 (클릭 반응 딜레이 제거)
+                      moveShelf(k, 1);
+                      // 길게 누르면 연속 이동: 400ms 후 80ms 간격으로 반복
+                      const startHold = setTimeout(() => {
+                        (e.currentTarget as any)._repeat = setInterval(() => moveShelf(k, 1), 80);
+                      }, 400);
+                      (e.currentTarget as any)._startHold = startHold;
+                    }}
+                    onMouseUp={(e) => {
+                      clearTimeout((e.currentTarget as any)?._startHold);
+                      clearInterval((e.currentTarget as any)?._repeat);
+                    }}
+                    onMouseLeave={(e) => {
+                      clearTimeout((e.currentTarget as any)?._startHold);
+                      clearInterval((e.currentTarget as any)?._repeat);
+                    }}
                     style={{
-                      width: '24px', height: '14px', fontSize: '10px', lineHeight: '1',
+                      width: '32px', height: '20px', fontSize: '14px', lineHeight: '1',
                       padding: 0, cursor: 'pointer', margin: 0, boxSizing: 'border-box',
                       color: dimensionColor,
                       background: view2DTheme === 'dark' ? '#141414' : '#ffffff',
                       border: `1px solid ${dimensionColor}`, borderRadius: '3px 3px 0 0',
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      fontWeight: 'bold',
                     }}
                   >▲</button>
                   <button
                     type="button"
-                    onMouseDown={(e) => e.preventDefault()}
-                    onClick={(e) => { e.stopPropagation(); moveShelf(k, -1); }}
+                    onMouseDown={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      moveShelf(k, -1);
+                      const startHold = setTimeout(() => {
+                        (e.currentTarget as any)._repeat = setInterval(() => moveShelf(k, -1), 80);
+                      }, 400);
+                      (e.currentTarget as any)._startHold = startHold;
+                    }}
+                    onMouseUp={(e) => {
+                      clearTimeout((e.currentTarget as any)?._startHold);
+                      clearInterval((e.currentTarget as any)?._repeat);
+                    }}
+                    onMouseLeave={(e) => {
+                      clearTimeout((e.currentTarget as any)?._startHold);
+                      clearInterval((e.currentTarget as any)?._repeat);
+                    }}
                     style={{
-                      width: '24px', height: '14px', fontSize: '10px', lineHeight: '1',
+                      width: '32px', height: '20px', fontSize: '14px', lineHeight: '1',
                       padding: 0, cursor: 'pointer', margin: 0, boxSizing: 'border-box',
                       color: dimensionColor,
                       background: view2DTheme === 'dark' ? '#141414' : '#ffffff',
                       border: `1px solid ${dimensionColor}`, borderTop: 'none',
                       borderRadius: '0 0 3px 3px',
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      fontWeight: 'bold',
                     }}
                   >▼</button>
                 </div>
