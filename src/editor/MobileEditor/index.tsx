@@ -182,14 +182,19 @@ const MobileEditor: React.FC = () => {
     return () => { ro.disconnect(); window.removeEventListener('resize', update); };
   }, []);
 
-  // 바텀 시트 드래그 제스처
+  // 바텀 시트 드래그 제스처 (드래그 핸들에서 시작된 경우에만 동작)
   const dragStateRef = useRef<{ startY: number; startHeight: number } | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
+
   const handleSheetDragStart = useCallback((e: React.TouchEvent | React.MouseEvent) => {
     const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
     dragStateRef.current = { startY: clientY, startHeight: sheetHeight };
+    setIsDragging(true);
   }, [sheetHeight]);
 
   useEffect(() => {
+    if (!isDragging) return; // 드래그 중일 때만 전역 리스너 활성
+
     const handleMove = (e: TouchEvent | MouseEvent) => {
       if (!dragStateRef.current) return;
       const clientY = 'touches' in e ? (e as TouchEvent).touches[0].clientY : (e as MouseEvent).clientY;
@@ -202,7 +207,8 @@ const MobileEditor: React.FC = () => {
     const handleEnd = () => {
       if (!dragStateRef.current) return;
       dragStateRef.current = null;
-      // 가장 가까운 스냅 포인트로 이동
+      setIsDragging(false);
+      // 가장 가까운 스냅 포인트로 정착
       setSheetHeight(cur => {
         if (cur < (SHEET_HEIGHTS.medium / 2)) {
           setSheetOpen(false);
@@ -214,15 +220,17 @@ const MobileEditor: React.FC = () => {
     };
     window.addEventListener('touchmove', handleMove, { passive: true });
     window.addEventListener('touchend', handleEnd);
+    window.addEventListener('touchcancel', handleEnd);
     window.addEventListener('mousemove', handleMove);
     window.addEventListener('mouseup', handleEnd);
     return () => {
       window.removeEventListener('touchmove', handleMove);
       window.removeEventListener('touchend', handleEnd);
+      window.removeEventListener('touchcancel', handleEnd);
       window.removeEventListener('mousemove', handleMove);
       window.removeEventListener('mouseup', handleEnd);
     };
-  }, []);
+  }, [isDragging]);
 
   const handleTabClick = (tab: BottomTab) => {
     if (tab === bottomTab && sheetOpen) {
@@ -381,7 +389,7 @@ const MobileEditor: React.FC = () => {
           display: 'flex', flexDirection: 'column',
           boxShadow: '0 -4px 20px rgba(0,0,0,0.1)',
           zIndex: 10,
-          transition: dragStateRef.current ? 'none' : 'height 0.2s ease',
+          transition: isDragging ? 'none' : 'height 0.2s ease',
         }}>
           {/* 드래그 핸들 (터치/마우스 드래그 가능) */}
           <div
