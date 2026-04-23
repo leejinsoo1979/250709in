@@ -45,7 +45,8 @@ const MidwayEditableNumber: React.FC<{
   color: string;
   fontSize: number; // Three 단위 폰트사이즈 (참고용)
   rotated90?: boolean; // 텍스트처럼 세로로 90도 회전 표시
-}> = ({ position, value, onChange, color, rotated90 }) => {
+  isDark?: boolean; // 2D 다크모드 여부
+}> = ({ position, value, onChange, color, rotated90, isDark }) => {
   const [editing, setEditing] = React.useState(false);
   const [text, setText] = React.useState(String(value));
   const inputRef = React.useRef<HTMLInputElement>(null);
@@ -60,6 +61,12 @@ const MidwayEditableNumber: React.FC<{
     if (!isNaN(n) && n > 0 && n !== value) onChange(Math.round(n));
     setEditing(false);
   }, [text, value, onChange]);
+
+  // 다크모드 대응 색상
+  const bgInput = isDark ? '#1f2937' : 'rgba(255,255,255,0.95)';
+  const fgInput = isDark ? '#ffffff' : '#000000';
+  const borderInput = isDark ? '#4b5563' : color;
+  const hoverBg = isDark ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.08)';
 
   return (
     <Html
@@ -81,8 +88,8 @@ const MidwayEditableNumber: React.FC<{
           }}
           style={{
             width: 64, padding: '2px 4px', fontSize: 13,
-            border: `1px solid ${color}`, borderRadius: 3, textAlign: 'center',
-            background: 'rgba(255,255,255,0.95)', color: '#000',
+            border: `1px solid ${borderInput}`, borderRadius: 3, textAlign: 'center',
+            background: bgInput, color: fgInput,
           }}
         />
       ) : (
@@ -101,7 +108,7 @@ const MidwayEditableNumber: React.FC<{
             transform: rotated90 ? 'rotate(-90deg)' : undefined,
             whiteSpace: 'nowrap',
           }}
-          onMouseEnter={(e) => { (e.currentTarget as HTMLDivElement).style.background = 'rgba(0,0,0,0.08)'; }}
+          onMouseEnter={(e) => { (e.currentTarget as HTMLDivElement).style.background = hoverBg; }}
           onMouseLeave={(e) => { (e.currentTarget as HTMLDivElement).style.background = 'transparent'; }}
         >
           {value}
@@ -916,6 +923,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                       color={textColor}
                       fontSize={largeFontSize}
                       rotated90
+                      isDark={view2DTheme === 'dark'}
                       onChange={(newGap) => {
                         const delta = seg.heightMm - newGap; // 양수: 갭 줄임 → 상부장 확장
                         const newHeight = Math.round((seg.currentHeightMm || 0) + delta);
