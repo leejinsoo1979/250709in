@@ -753,14 +753,15 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
               />
             )}
             
-            {/* 서랍 깊이 표시 - DimensionText 컴포넌트 사용 (3D에서는 숨김) */}
+            {/* 서랍 깊이 표시 - DimensionText 컴포넌트 사용 (3D에서는 숨김)
+                측면뷰에서 서랍 박스 중앙에 보이도록 Z는 서랍 중앙(centerZ)에 배치 */}
             {viewMode !== '3D' && (
               <DimensionText
                 value={(actualDrawerDepth - HANDLE_PLATE_THICKNESS) * 100}
                 position={[
                   centerX,
                   centerY,
-                  centerZ + actualDrawerDepth/2 + 0.1
+                  centerZ
                 ]}
                 prefix="D"
                 color="#008B8B"
