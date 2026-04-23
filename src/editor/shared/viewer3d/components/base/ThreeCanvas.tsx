@@ -1015,7 +1015,7 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
                 : defaultCursor,
             touchAction: 'none'
           }}
-          dpr={[1, typeof window !== 'undefined' ? Math.min(window.devicePixelRatio || 1, 2.5) : 2]}
+          dpr={[1, 2]}
           frameloop="always"
           gl={{
             powerPreference: 'high-performance',  // 고성능 GPU 사용
