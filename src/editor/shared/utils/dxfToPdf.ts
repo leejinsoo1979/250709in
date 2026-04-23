@@ -342,6 +342,7 @@ export const downloadDxfAsPdf = async (
   placedModules: PlacedModule[],
   views: PdfViewDirection[] = ['front', 'top', 'left', 'door-only'],
   appendSheetPage: boolean = false,
+  sheetMetadata: SheetMetadata = {},
 ): Promise<void> => {
   console.log('[PDF] DXF to PDF conversion starting...');
   console.log('[PDF] Views to convert: ' + views.join(', '));
@@ -533,9 +534,9 @@ export const downloadDxfAsPdf = async (
       // 초기 빈 A4 페이지를 A3 landscape로 교체 (첫 페이지이자 유일한 페이지가 장표)
       pdf.deletePage(1);
       pdf.addPage('a3', 'landscape');
-      await renderSheetContent(pdf, spaceInfo, placedModules);
+      await renderSheetContent(pdf, spaceInfo, placedModules, sheetMetadata);
     } else {
-      await appendSheetPageToPdf(pdf, spaceInfo, placedModules);
+      await appendSheetPageToPdf(pdf, spaceInfo, placedModules, sheetMetadata);
     }
   }
 
@@ -875,11 +876,30 @@ const renderSheetContent = async (
   const tbX = pageW - margin - titleBlockW;
   const tbY = margin;
   const tbHeight = pageH - margin * 2;
-  let maxDepth = spaceInfo.depth;
+  // 가구 깊이 계산: upperSectionDepth / lowerSectionDepth / customDepth 중 최댓값
+  // (공간 깊이가 아니라 실제 가구 깊이를 표기)
+  let maxDepth = 600;
   if (placedModules.length > 0) {
-    maxDepth = Math.max(...placedModules.map(m => (m as any).customDepth || spaceInfo.depth));
+    const depths: number[] = [];
+    placedModules.forEach((m: any) => {
+      if (typeof m.upperSectionDepth === 'number') depths.push(m.upperSectionDepth);
+      if (typeof m.lowerSectionDepth === 'number') depths.push(m.lowerSectionDepth);
+      if (typeof m.customDepth === 'number') depths.push(m.customDepth);
+    });
+    if (depths.length > 0) {
+      maxDepth = Math.max(...depths);
+    }
   }
   const today = new Date().toISOString().slice(0, 10);
+
+  // 도어 짝 수 계산: 듀얼 가구(isDualSlot 또는 moduleId에 'dual-' 포함)는 2짝, 싱글은 1짝
+  const doorCount = placedModules.reduce((sum, m) => {
+    if (!m.hasDoor) return sum;
+    const isDual = (m as any).isDualSlot === true ||
+                   (typeof m.moduleId === 'string' && m.moduleId.includes('dual-'));
+    return sum + (isDual ? 2 : 1);
+  }, 0);
+
   const rows = [
     { label: 'PROJECT', value: metadata.projectName || '-' },
     { label: 'DESIGN', value: metadata.designName || '-' },
@@ -888,7 +908,7 @@ const renderSheetContent = async (
     { label: 'DATE', value: today },
     { label: 'SCALE', value: 'FIT TO A3' },
     { label: 'MODULES', value: String(placedModules.length) },
-    { label: 'DOORS', value: String(placedModules.filter(m => m.hasDoor).length) },
+    { label: 'DOORS', value: String(doorCount) },
     { label: 'SHEET', value: '1 / 1' },
   ];
   const rowH = tbHeight / rows.length;

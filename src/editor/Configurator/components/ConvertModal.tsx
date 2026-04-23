@@ -6,6 +6,7 @@ import { useTranslation } from '@/i18n/useTranslation';
 import { useDXFExport, type DrawingType } from '@/editor/shared/hooks/useDXFExport';
 import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
+import { useProjectStore } from '@/store/core/projectStore';
 import { downloadDxfAsPdf, type PdfViewDirection } from '@/editor/shared/utils/dxfToPdf';
 
 interface ConvertModalProps {
@@ -361,11 +362,21 @@ const ConvertModal: React.FC<ConvertModalProps> = ({ isOpen, onClose, showAll, s
       // 페이지별 도면 + (옵션) 한 장 레이아웃을 하나의 PDF로 생성
       // pdfViews가 비어있고 장표만 선택된 경우에도 downloadDxfAsPdf 내부에서 sheet 페이지만 추가됨
       if (pdfViews.length > 0 || selectedViews['sheet-all-in-one']) {
+        // URL 쿼리에서 designFileName 추출 (디자인명)
+        const urlParams = new URLSearchParams(window.location.search);
+        const designFromUrl = urlParams.get('designFileName') || '';
+        const projectState = useProjectStore.getState();
+        const sheetMetadata = {
+          projectName: projectState.projectTitle || projectState.basicInfo?.title || '-',
+          designName: designFromUrl || '-',
+        };
+
         await downloadDxfAsPdf(
           spaceInfo,
           placedModules,
           pdfViews,
           selectedViews['sheet-all-in-one'],
+          sheetMetadata,
         );
       }
 
