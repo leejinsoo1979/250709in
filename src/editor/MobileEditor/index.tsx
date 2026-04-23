@@ -76,23 +76,6 @@ const SegBtn: React.FC<{
   );
 };
 
-/** 뷰어 우측 플로팅 버튼 */
-const SideFloatBtn: React.FC<{ onClick?: () => void; children: React.ReactNode; active?: boolean; title?: string }> = ({ onClick, children, active, title }) => (
-  <button
-    onClick={onClick}
-    title={title}
-    style={{
-      width: 40, height: 40, borderRadius: 10,
-      border: `1px solid ${active ? T.blueAct : T.line}`,
-      background: active ? T.primary50 : T.surface,
-      color: active ? T.blueAct : T.ink2,
-      display: 'flex', alignItems: 'center', justifyContent: 'center',
-      cursor: 'pointer',
-      boxShadow: '0 1px 3px rgba(0,0,0,0.08)',
-    }}
-  >{children}</button>
-);
-
 // 아이콘들
 const IconHamburger = () => (
   <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
@@ -102,27 +85,6 @@ const IconHamburger = () => (
 const IconSave = () => (
   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
     <path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/>
-  </svg>
-);
-const IconCube = () => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
-    <path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/>
-    <polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/>
-  </svg>
-);
-const IconSquare = () => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
-    <rect x="3" y="3" width="18" height="18" rx="2"/>
-  </svg>
-);
-const IconRotate = () => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
-    <polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 102.13-9.36L1 10"/>
-  </svg>
-);
-const IconFullscreen = () => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
-    <path d="M3 9V3h6M21 9V3h-6M3 15v6h6M21 15v6h-6"/>
   </svg>
 );
 const IconEdit = () => (
@@ -280,27 +242,6 @@ const MobileEditor: React.FC = () => {
     setBottomTab(tab);
     setSheetOpen(true);
     if (sheetHeight < SHEET_HEIGHTS.medium) setSheetHeight(SHEET_HEIGHTS.medium);
-  };
-
-  // 플로팅 버튼: 회전 → 2D 방향 순환 (front→left→top→right→front)
-  const handleRotate2D = () => {
-    if (viewMode !== '2D') {
-      setViewMode('2D');
-      setTopMode('2D');
-      return;
-    }
-    const order: Array<'front' | 'left' | 'top' | 'right'> = ['front', 'left', 'top', 'right'];
-    const idx = order.indexOf(view2DDirection as any);
-    const next = order[(idx + 1) % order.length];
-    setView2DDirection(next);
-  };
-
-  const handleFullscreen = () => {
-    if (document.fullscreenElement) {
-      document.exitFullscreen().catch(() => {});
-    } else {
-      document.documentElement.requestFullscreen().catch(() => {});
-    }
   };
 
   return (
@@ -477,27 +418,7 @@ const MobileEditor: React.FC = () => {
           />
         </div>
 
-        {/* 우측 플로팅 버튼 — 세로 모드에서만 표시 (가로는 상단 헤더에 토글 있음) */}
-        {!isLandscape && (
-          <div style={{
-            position: 'absolute', top: 14, right: 14,
-            display: 'flex', flexDirection: 'column', gap: 8,
-            zIndex: 5,
-          }}>
-            <SideFloatBtn
-              title="3D 뷰"
-              active={viewMode === '3D'}
-              onClick={() => { setViewMode('3D'); setTopMode('3D'); }}
-            ><IconCube /></SideFloatBtn>
-            <SideFloatBtn
-              title="2D 뷰 전환"
-              active={viewMode === '2D'}
-              onClick={() => { setViewMode('2D'); setTopMode('2D'); }}
-            ><IconSquare /></SideFloatBtn>
-            <SideFloatBtn title="2D 방향 회전" onClick={handleRotate2D}><IconRotate /></SideFloatBtn>
-            <SideFloatBtn title="전체화면" onClick={handleFullscreen}><IconFullscreen /></SideFloatBtn>
-          </div>
-        )}
+        {/* 우측 플로팅 버튼 제거 — 상단 헤더에 3D/2D/도면 토글 있음 */}
 
         {/* 우측 하단 파란 편집 FAB */}
         <button
