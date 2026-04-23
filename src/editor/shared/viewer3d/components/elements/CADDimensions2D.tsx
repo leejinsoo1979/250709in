@@ -1424,10 +1424,22 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           const modCategory = getModuleCategory(mod);
           const isLowerMod = modCategory === 'lower';
 
+          // 신발장/현관장 등 2섹션 가구 감지 (상부/하부 섹션 깊이 분리 표시 대상)
+          const midSideCheck = mod.moduleId || '';
+          const isShoeTwoSection = midSideCheck.includes('-entryway-') || midSideCheck.includes('-shelf-') || midSideCheck.includes('-4drawer-shelf-') || midSideCheck.includes('-2drawer-shelf-');
+          // 신발장은 도어 두께(20mm) 포함값 → 실제 가구 깊이는 도어 제외
+          const DOOR_THK_MM = 20;
+
           // 상부섹션 깊이 우선 사용
-          const upperDepth = module.upperSectionDepth || module.customDepth || depthModuleData.dimensions.depth;
+          const upperDepthRaw = module.upperSectionDepth || module.customDepth || depthModuleData.dimensions.depth;
+          // 하부섹션 깊이 (2섹션 가구만 유효; 없으면 상부와 동일값)
+          const lowerDepthRaw = module.lowerSectionDepth || module.customDepth || depthModuleData.dimensions.depth;
+          // 신발장: 도어 두께 제거하여 실제 패널(가구) 깊이로 보정
+          const upperDepth = isShoeTwoSection ? Math.max(0, upperDepthRaw - DOOR_THK_MM) : upperDepthRaw;
+          const lowerDepth = isShoeTwoSection ? Math.max(0, lowerDepthRaw - DOOR_THK_MM) : lowerDepthRaw;
           const customDepth = upperDepth;
           const moduleDepth = mmToThreeUnits(customDepth);
+          const moduleDepthLower = mmToThreeUnits(lowerDepth);
 
           // 가구 위치 계산 (FurnitureItem.tsx와 동일)
           const indexing = calculateSpaceIndexing(spaceInfo);
@@ -1462,6 +1474,10 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
             : furnitureTopEdge + mmToThreeUnits(200); // 키큰장/상부장: 가구 상단 위
           const depthDimEdge = isLowerMod ? furnitureBottomEdge : furnitureTopEdge;
 
+          // 신발장 하부섹션 치수 위치 (가구 바닥 아래)
+          const depthDimYLower = furnitureBottomEdge - mmToThreeUnits(200);
+          const depthDimEdgeLower = furnitureBottomEdge;
+
           // Z축 위치 계산 (FurnitureItem.tsx와 동일)
           const panelDepthMm = spaceInfo.depth || 1500;
           const furnitureDepthMm = Math.min(panelDepthMm, 600); // 가구 공간 깊이
@@ -1482,6 +1498,12 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
             furnitureZ = furnitureZOffset + furnitureDepth/2 - doorThickness - moduleDepth/2;
           }
 
+          // 신발장 하부섹션 Z 위치: 뒷면 정렬(기본) 기준으로 하부 깊이(lowerDepth)에 맞춰 계산
+          const cabinetBackZ_ref = furnitureZOffset - furnitureDepth / 2 - doorThickness;
+          const furnitureZLower = isShoeTwoSection
+            ? (cabinetBackZ_ref + moduleDepthLower / 2)
+            : furnitureZ;
+
           // 하부프레임 옵셋 깊이 (하부장 전용)
           const baseFrameOffsetMm = isLowerMod
             ? (mod.baseFrameOffset ?? 65)
@@ -1490,61 +1512,71 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
 
           return (
             <group key={`furniture-depth-${index}`}>
+              {/* 상부섹션(또는 단일) 가구 깊이 — 상단 */}
               {/* 보조 가이드 연장선 - 앞쪽 */}
               <ExtLine points={[[0, depthDimEdge, furnitureZ + moduleDepth/2], [0, depthDimY, furnitureZ + moduleDepth/2]]} color={dimensionColor} />
-
               {/* 보조 가이드 연장선 - 뒤쪽 */}
               <ExtLine points={[[0, depthDimEdge, furnitureZ - moduleDepth/2], [0, depthDimY, furnitureZ - moduleDepth/2]]} color={dimensionColor} />
-
               {/* 가구 깊이 치수선 */}
               <NativeLine name="dimension_line"
-                points={[
-                  [0, depthDimY, furnitureZ - moduleDepth/2],
-                  [0, depthDimY, furnitureZ + moduleDepth/2]
-                ]}
-                color={dimensionColor}
-                lineWidth={0.5}
-                renderOrder={100000}
-                depthTest={false}
+                points={[[0, depthDimY, furnitureZ - moduleDepth/2], [0, depthDimY, furnitureZ + moduleDepth/2]]}
+                color={dimensionColor} lineWidth={0.5} renderOrder={100000} depthTest={false}
               />
-
               {/* 앞쪽 티크 */}
               <NativeLine name="dimension_line"
-                points={[
-                  [0 - 0.02, depthDimY, furnitureZ + moduleDepth/2],
-                  [0 + 0.02, depthDimY, furnitureZ + moduleDepth/2]
-                ]}
-                color={dimensionColor}
-                lineWidth={0.5}
-                renderOrder={100000}
-                depthTest={false}
+                points={[[0 - 0.02, depthDimY, furnitureZ + moduleDepth/2], [0 + 0.02, depthDimY, furnitureZ + moduleDepth/2]]}
+                color={dimensionColor} lineWidth={0.5} renderOrder={100000} depthTest={false}
               />
-
               {/* 뒤쪽 티크 */}
               <NativeLine name="dimension_line"
-                points={[
-                  [0 - 0.02, depthDimY, furnitureZ - moduleDepth/2],
-                  [0 + 0.02, depthDimY, furnitureZ - moduleDepth/2]
-                ]}
-                color={dimensionColor}
-                lineWidth={0.5}
-                renderOrder={100000}
-                depthTest={false}
+                points={[[0 - 0.02, depthDimY, furnitureZ - moduleDepth/2], [0 + 0.02, depthDimY, furnitureZ - moduleDepth/2]]}
+                color={dimensionColor} lineWidth={0.5} renderOrder={100000} depthTest={false}
               />
-
-              {/* 가구 깊이 텍스트: 하부장은 가이드선 아래, 키큰장/상부장은 가이드선 위 */}
+              {/* 가구 깊이 텍스트 */}
               <Text
                 position={[0, depthDimY + mmToThreeUnits(isLowerMod ? -40 : 40), furnitureZ]}
-                fontSize={largeFontSize}
-                color={textColor}
-                anchorX="center"
-                anchorY="middle"
-                renderOrder={1000}
-                depthTest={false}
+                fontSize={largeFontSize} color={textColor}
+                anchorX="center" anchorY="middle"
+                renderOrder={1000} depthTest={false}
                 rotation={[0, -Math.PI / 2, 0]}
               >
                 {customDepth}
               </Text>
+
+              {/* ─── 신발장/현관장 등 2섹션 가구 하부섹션 깊이 — 하단 별도 표시 ─── */}
+              {isShoeTwoSection && (
+                <>
+                  {/* 보조 가이드 연장선 - 앞쪽 */}
+                  <ExtLine points={[[0, depthDimEdgeLower, furnitureZLower + moduleDepthLower/2], [0, depthDimYLower, furnitureZLower + moduleDepthLower/2]]} color={dimensionColor} />
+                  {/* 보조 가이드 연장선 - 뒤쪽 */}
+                  <ExtLine points={[[0, depthDimEdgeLower, furnitureZLower - moduleDepthLower/2], [0, depthDimYLower, furnitureZLower - moduleDepthLower/2]]} color={dimensionColor} />
+                  {/* 하부섹션 깊이 치수선 */}
+                  <NativeLine name="dimension_line"
+                    points={[[0, depthDimYLower, furnitureZLower - moduleDepthLower/2], [0, depthDimYLower, furnitureZLower + moduleDepthLower/2]]}
+                    color={dimensionColor} lineWidth={0.5} renderOrder={100000} depthTest={false}
+                  />
+                  {/* 앞쪽 티크 */}
+                  <NativeLine name="dimension_line"
+                    points={[[0 - 0.02, depthDimYLower, furnitureZLower + moduleDepthLower/2], [0 + 0.02, depthDimYLower, furnitureZLower + moduleDepthLower/2]]}
+                    color={dimensionColor} lineWidth={0.5} renderOrder={100000} depthTest={false}
+                  />
+                  {/* 뒤쪽 티크 */}
+                  <NativeLine name="dimension_line"
+                    points={[[0 - 0.02, depthDimYLower, furnitureZLower - moduleDepthLower/2], [0 + 0.02, depthDimYLower, furnitureZLower - moduleDepthLower/2]]}
+                    color={dimensionColor} lineWidth={0.5} renderOrder={100000} depthTest={false}
+                  />
+                  {/* 하부섹션 깊이 텍스트 */}
+                  <Text
+                    position={[0, depthDimYLower - mmToThreeUnits(40), furnitureZLower]}
+                    fontSize={largeFontSize} color={textColor}
+                    anchorX="center" anchorY="middle"
+                    renderOrder={1000} depthTest={false}
+                    rotation={[0, -Math.PI / 2, 0]}
+                  >
+                    {lowerDepth}
+                  </Text>
+                </>
+              )}
 
               {/* 상부장 하부마감판 깊이 치수 + 뒤쪽 갭 치수 */}
               {isUpperMod && (() => {
@@ -2556,14 +2588,22 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
 
           if (!moduleData) return null;
 
-          // 상부섹션 깊이 우선 사용
-          const upperDepth = module.upperSectionDepth || module.customDepth || moduleData.dimensions.depth;
+          // 신발장/현관장 2섹션 감지 + 도어 두께 차감
+          const midSide_d2 = module.moduleId || '';
+          const isShoeSide_d2 = midSide_d2.includes('-entryway-') || midSide_d2.includes('-shelf-') || midSide_d2.includes('-4drawer-shelf-') || midSide_d2.includes('-2drawer-shelf-');
+          const DOOR_THK_MM_D2 = 20;
+          const upperDepthRaw_d2 = module.upperSectionDepth || module.customDepth || moduleData.dimensions.depth;
+          const lowerDepthRaw_d2 = module.lowerSectionDepth || module.customDepth || moduleData.dimensions.depth;
+          const upperDepth = isShoeSide_d2 ? Math.max(0, upperDepthRaw_d2 - DOOR_THK_MM_D2) : upperDepthRaw_d2;
+          const lowerDepth_d2 = isShoeSide_d2 ? Math.max(0, lowerDepthRaw_d2 - DOOR_THK_MM_D2) : lowerDepthRaw_d2;
           const customDepth = upperDepth;
           const moduleDepth = mmToThreeUnits(customDepth);
+          const moduleDepthLower_d2 = mmToThreeUnits(lowerDepth_d2);
 
           const indexing = calculateSpaceIndexing(spaceInfo);
           const slotX = -spaceWidth / 2 + indexing.columnWidth * module.slotIndex + indexing.columnWidth / 2;
           const furnitureTopY = furnitureBaseY + internalHeight + mmToThreeUnits(200);
+          const furnitureBottomDimY_d2 = furnitureBaseY - mmToThreeUnits(200);
 
           const panelDepthMm = spaceInfo.depth || 1500;
           const furnitureDepthMm = 600;
@@ -2574,11 +2614,14 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           const furnitureZOffset = zOffset + (panelDepth - furnitureDepth) / 2;
           // 상부장/신발장은 하부장 뒷면 정렬, 그 외는 앞면 정렬
           const isUpperMod_d2 = getModuleCategory(module as PlacedModule) === 'upper';
-          const midSide_d2 = module.moduleId || '';
-          const isShoeSide_d2 = midSide_d2.includes('-entryway-') || midSide_d2.includes('-shelf-') || midSide_d2.includes('-4drawer-shelf-') || midSide_d2.includes('-2drawer-shelf-');
           const furnitureZ = (isUpperMod_d2 || isShoeSide_d2)
             ? (furnitureZOffset - furnitureDepth/2 - doorThickness + moduleDepth/2)
             : (furnitureZOffset + furnitureDepth/2 - doorThickness - moduleDepth/2);
+          // 신발장 하부섹션 Z (뒷면 정렬 + 하부 깊이)
+          const cabinetBackZ_ref_d2 = furnitureZOffset - furnitureDepth / 2 - doorThickness;
+          const furnitureZLower_d2 = isShoeSide_d2
+            ? (cabinetBackZ_ref_d2 + moduleDepthLower_d2 / 2)
+            : furnitureZ;
 
           return (
             <group key={`furniture-depth-${index}`}>
@@ -2630,6 +2673,35 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
               >
                 {customDepth}
               </Text>
+
+              {/* ─── 신발장 하부섹션 깊이 — 우측뷰 하단 별도 표시 ─── */}
+              {isShoeSide_d2 && (
+                <>
+                  <ExtLine points={[[0, furnitureBaseY, furnitureZLower_d2 + moduleDepthLower_d2/2], [0, furnitureBottomDimY_d2, furnitureZLower_d2 + moduleDepthLower_d2/2]]} color={dimensionColor} />
+                  <ExtLine points={[[0, furnitureBaseY, furnitureZLower_d2 - moduleDepthLower_d2/2], [0, furnitureBottomDimY_d2, furnitureZLower_d2 - moduleDepthLower_d2/2]]} color={dimensionColor} />
+                  <NativeLine name="dimension_line"
+                    points={[[0, furnitureBottomDimY_d2, furnitureZLower_d2 - moduleDepthLower_d2/2], [0, furnitureBottomDimY_d2, furnitureZLower_d2 + moduleDepthLower_d2/2]]}
+                    color={dimensionColor} lineWidth={0.5} renderOrder={100000} depthTest={false}
+                  />
+                  <NativeLine name="dimension_line"
+                    points={[[0 - 0.02, furnitureBottomDimY_d2, furnitureZLower_d2 + moduleDepthLower_d2/2], [0 + 0.02, furnitureBottomDimY_d2, furnitureZLower_d2 + moduleDepthLower_d2/2]]}
+                    color={dimensionColor} lineWidth={0.5} renderOrder={100000} depthTest={false}
+                  />
+                  <NativeLine name="dimension_line"
+                    points={[[0 - 0.02, furnitureBottomDimY_d2, furnitureZLower_d2 - moduleDepthLower_d2/2], [0 + 0.02, furnitureBottomDimY_d2, furnitureZLower_d2 - moduleDepthLower_d2/2]]}
+                    color={dimensionColor} lineWidth={0.5} renderOrder={100000} depthTest={false}
+                  />
+                  <Text
+                    position={[0, furnitureBottomDimY_d2 - mmToThreeUnits(40), furnitureZLower_d2]}
+                    fontSize={largeFontSize} color={textColor}
+                    anchorX="center" anchorY="middle"
+                    renderOrder={1000} depthTest={false}
+                    rotation={[0, Math.PI / 2, 0]}
+                  >
+                    {lowerDepth_d2}
+                  </Text>
+                </>
+              )}
 
               {/* 상부장 하부마감판 깊이 치수 (우측뷰) */}
               {(() => {
