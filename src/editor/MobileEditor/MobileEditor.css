@@ -35,6 +35,32 @@
   width: 16px !important;
   height: 16px !important;
 }
+
+/* 가로 모드 사이드 패널 내 MaterialPanel 탭/필터 축소 */
+.mobile-editor-root .mobile-landscape-panel [class*="tab_"],
+.mobile-editor-root .mobile-landscape-panel [class*="filterChip_"] {
+  padding: 3px 8px !important;
+  font-size: 10px !important;
+  min-height: 22px !important;
+  height: 22px !important;
+  line-height: 1 !important;
+  border-radius: 4px !important;
+}
+.mobile-editor-root .mobile-landscape-panel [class*="tabNavigation_"] {
+  gap: 4px !important;
+  margin-bottom: 6px !important;
+}
+.mobile-editor-root .mobile-landscape-panel [class*="filterBar_"] {
+  gap: 4px !important;
+  margin-bottom: 6px !important;
+  padding: 0 !important;
+}
+.mobile-editor-root .mobile-landscape-panel [class*="tabIcon_"] {
+  display: none !important;
+}
+.mobile-editor-root .mobile-landscape-panel [class*="header_"] {
+  display: none !important;
+}
 .mobile-editor-root .mobile-landscape-panel [class*="thumbnailLabel"],
 .mobile-editor-root .mobile-landscape-panel [class*="thumbnailName"] {
   font-size: 10px !important;

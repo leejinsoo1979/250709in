@@ -51,7 +51,7 @@ const SegBtn: React.FC<{
   size?: 'sm' | 'md' | 'xs';
 }> = ({ active, onClick, children, flex, size = 'sm' }) => {
   const dims = size === 'xs'
-    ? { padding: '2px 4px', height: 22, fontSize: 10, radius: 4 }
+    ? { padding: '1px 3px', height: 18, fontSize: 9, radius: 3 }
     : size === 'md'
     ? { padding: '8px 14px', height: undefined, fontSize: 12, radius: 6 }
     : { padding: '6px 10px', height: 32, fontSize: 12, radius: 6 };
