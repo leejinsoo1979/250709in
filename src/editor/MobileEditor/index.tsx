@@ -10,6 +10,7 @@ import Space3DView from '@/editor/shared/viewer3d/Space3DView';
 import ModuleGallery, { type ModuleType } from '@/editor/shared/controls/furniture/ModuleGallery';
 import MaterialPanel from '@/editor/shared/controls/styling/MaterialPanel';
 import IPadRightPanel from '@/editor/IPadEditor/IPadRightPanel';
+import './MobileEditor.css';
 
 // ─── 디자인 토큰 ──────────────────────────────────────────────
 const T = {
@@ -33,10 +34,11 @@ type ViewerMode = '3D' | '2D' | 'drawing';
 type BottomTab = 'module' | 'material' | 'settings' | 'drawing';
 
 // 바텀시트 높이 스냅 포인트 (vh 단위)
+// 뷰어를 최대한 보이도록 기본값(medium)을 낮게 설정
 const SHEET_HEIGHTS = {
   collapsed: 0,     // 닫힘
-  medium:    45,    // 중간
-  full:      80,    // 전체 확장
+  medium:    30,    // 기본 (뷰어 70% 유지)
+  full:      75,    // 전체 확장 (하단 탭바/safe-area 고려)
 } as const;
 
 // ─── 작은 공용 컴포넌트 ───────────────────────────────────────
@@ -265,7 +267,7 @@ const MobileEditor: React.FC = () => {
   };
 
   return (
-    <div style={{
+    <div className="mobile-editor-root" style={{
       width: '100vw', height: '100vh', overflow: 'hidden',
       background: T.bg2, color: T.ink, fontFamily: FONT_SANS,
       display: 'flex', flexDirection: 'column', position: 'relative',

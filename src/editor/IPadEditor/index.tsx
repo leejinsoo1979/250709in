@@ -13,6 +13,7 @@ import Space3DView from '@/editor/shared/viewer3d/Space3DView';
 import ModuleGallery, { type ModuleType } from '@/editor/shared/controls/furniture/ModuleGallery';
 import MaterialPanel from '@/editor/shared/controls/styling/MaterialPanel';
 import IPadRightPanel from './IPadRightPanel';
+import '@/editor/MobileEditor/MobileEditor.css';
 
 // ─── 시안 기준 디자인 토큰 ──────────────────────────────────────
 const T = {
@@ -217,7 +218,7 @@ const IPadEditor: React.FC = () => {
   }, []);
 
   return (
-    <div style={{
+    <div className="ipad-editor-root" style={{
       width: '100vw', height: '100vh', overflow: 'hidden',
       background: T.bg2, color: T.ink, fontFamily: FONT_SANS,
       display: 'flex', flexDirection: 'column',

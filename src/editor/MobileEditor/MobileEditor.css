@@ -1,0 +1,25 @@
+/* MobileEditor 전용 오버라이드 — 웹 UI 파일은 건드리지 않고 이 래퍼 하위에서만 적용 */
+
+/* 모바일 바텀시트 내부의 ModuleGallery 썸네일을 3열로 강제 */
+.mobile-editor-root [class*="thumbnailGrid"] {
+  grid-template-columns: repeat(3, 1fr) !important;
+  gap: 6px !important;
+}
+
+/* 태블릿 레이아웃에서도 동일하게 3열 */
+.ipad-editor-root [class*="thumbnailGrid"] {
+  grid-template-columns: repeat(3, 1fr) !important;
+  gap: 6px !important;
+}
+
+/* 모바일 썸네일은 크기 조금 줄여 3열에 맞춤 */
+.mobile-editor-root [class*="thumbnailItem"] img,
+.mobile-editor-root [class*="thumbnailItem"] > div:first-child {
+  max-width: 100%;
+  height: auto;
+}
+
+.mobile-editor-root [class*="thumbnailLabel"],
+.mobile-editor-root [class*="thumbnailName"] {
+  font-size: 11px !important;
+}
