@@ -1,6 +1,7 @@
 import React, { useRef, useEffect, useMemo, useState } from 'react';
 import * as THREE from 'three';
 import { Line, Text, Html } from '@react-three/drei';
+import { useThree, useFrame } from '@react-three/fiber';
 import NativeLine from './NativeLine';
 import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
@@ -312,6 +313,18 @@ const MidwayGapEditor: React.FC<{
  * 이미지와 동일한 스타일의 치수선과 가이드라인만 표시
  */
 const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: showDimensionsProp, isStep2 }) => {
+  // 카메라 zoom 구독 — 줌아웃 시 편집 UI가 함께 축소되도록 CSS scale 계산
+  // (Canvas 컨텍스트 내부이므로 R3F 훅 사용 가능)
+  const camera = useThree(state => state.camera);
+  const [camZoom, setCamZoom] = useState<number>((camera as any)?.zoom || 1);
+  useFrame(() => {
+    const z = (camera as any)?.zoom || 1;
+    if (Math.abs(z - camZoom) > 0.01) setCamZoom(z);
+  });
+  // 기준 zoom 50에서 100%, 최소 25%까지. zoom이 높아도 1.0으로 clamp.
+  const uiScale = Math.min(1, Math.max(0.25, camZoom / 50));
+  const uiScaleStyle: React.CSSProperties = { transform: `scale(${uiScale})`, transformOrigin: 'center', display: 'inline-block' };
+
   const { spaceInfo } = useSpaceConfigStore();
   const placedModulesStore = useFurnitureStore(state => state.placedModules);
   const updatePlacedModule = useFurnitureStore(state => state.updatePlacedModule);
@@ -5979,7 +5992,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 zIndexRange={[5000, 0]}
                 transform={false}
               >
-                <ZoomScaledBox>
+                <div style={uiScaleStyle}>
                   <input
                     type="text"
                     defaultValue={String(g)}
@@ -6005,7 +6018,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                       WebkitTextFillColor: dimensionColor, opacity: 1,
                     }}
                   />
-                </ZoomScaledBox>
+                </div>
               </Html>
             );
           });
@@ -6037,7 +6050,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 zIndexRange={[5000, 0]}
                 transform={false}
               >
-                <ZoomScaledBox>
+                <div style={uiScaleStyle}>
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '24px', lineHeight: 0 }}>
                   <button
                     type="button"
@@ -6067,7 +6080,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     }}
                   >▼</button>
                 </div>
-                </ZoomScaledBox>
+                </div>
               </Html>
             );
           });
