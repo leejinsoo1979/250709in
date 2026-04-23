@@ -324,6 +324,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
   // 기준 zoom 50에서 100%, 최소 25%까지. zoom이 높아도 1.0으로 clamp.
   const uiScale = Math.min(1, Math.max(0.25, camZoom / 50));
   const uiScaleStyle: React.CSSProperties = { transform: `scale(${uiScale})`, transformOrigin: 'center', display: 'inline-block' };
+  // 줌아웃이 과도하면 편집 UI 숨김 (너무 작아져서 시인성/조작성 나빠짐)
+  const showShelfEditUi = camZoom >= 20;
 
   const { spaceInfo } = useSpaceConfigStore();
   const placedModulesStore = useFurnitureStore(state => state.placedModules);
@@ -5981,6 +5983,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             newSections[sectionIdx] = { ...section, shelfPositions: newPositions };
             updatePlacedModule(module.id, { customSections: newSections });
           };
+          if (showShelfEditUi)
           gaps.forEach((g, i) => {
             const cyThree = mmToThreeUnits(centerYs[i]);
             output.push(
@@ -6038,6 +6041,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             updatePlacedModule(module.id, { customSections: newSections });
           };
           // 스피너: 각 선반(posArr[k]) 위에 배치 — 선반 위로/아래로 1mm 이동
+          if (showShelfEditUi)
           posArr.forEach((pos, k) => {
             const shelfYmm = sectionBottomMm + pos;
             const shelfYThree = mmToThreeUnits(shelfYmm);
