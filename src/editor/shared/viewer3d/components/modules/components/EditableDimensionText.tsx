@@ -2,6 +2,7 @@ import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { Text, Html } from '@react-three/drei';
 import * as THREE from 'three';
 import { getThemeHex } from '@/theme';
+import { useUIStore } from '@/store/uiStore';
 
 // 소수점 1자리 포맷 (.0이면 정수)
 const formatDim = (v: number) => { const r = Math.round(v * 10) / 10; return r % 1 === 0 ? String(r) : r.toFixed(1); };
@@ -57,6 +58,9 @@ const EditableDimensionText: React.FC<EditableDimensionTextProps> = ({
   depthTest = false,
   onHoverChange
 }) => {
+  const view2DTheme = useUIStore(state => state.view2DTheme);
+  const viewMode = useUIStore(state => state.viewMode);
+  const isDark = viewMode !== '3D' && view2DTheme === 'dark';
   const [isEditing, setIsEditing] = useState(false);
   const [editValue, setEditValue] = useState(formatDim(value));
   const [isHovered, setIsHovered] = useState(false);
@@ -163,11 +167,11 @@ const EditableDimensionText: React.FC<EditableDimensionTextProps> = ({
               display: 'flex',
               flexDirection: 'column',
               gap: '4px',
-              background: 'rgba(255, 255, 255, 0.95)',
+              background: isDark ? 'rgba(31,41,55,0.98)' : 'rgba(255, 255, 255, 0.95)',
               padding: '8px',
               borderRadius: '4px',
               boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
-              border: '1px solid #ddd'
+              border: `1px solid ${isDark ? '#4b5563' : '#ddd'}`
             }}
           >
             <input
@@ -181,15 +185,17 @@ const EditableDimensionText: React.FC<EditableDimensionTextProps> = ({
                 width: '80px',
                 padding: '4px 8px',
                 fontSize: '14px',
-                border: '1px solid #999',
+                border: `1px solid ${isDark ? '#6b7280' : '#999'}`,
                 borderRadius: '2px',
-                textAlign: 'center'
+                textAlign: 'center',
+                background: isDark ? '#1f2937' : '#ffffff',
+                color: isDark ? '#ffffff' : '#000000',
               }}
               step="1"
               min="200"
               max="3000"
             />
-            <div style={{ fontSize: '10px', color: '#666', textAlign: 'center' }}>
+            <div style={{ fontSize: '10px', color: isDark ? '#9ca3af' : '#666', textAlign: 'center' }}>
               Enter: 확정 / ESC: 취소
             </div>
           </div>
