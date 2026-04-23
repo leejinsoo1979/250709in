@@ -484,7 +484,7 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
       if (effectiveRenderMode === 'wireframe') {
         return view2DTheme === 'dark' ? "#ffffff" : "#000000"; // 3D 은선모드에서는 최대 대비 색상
       }
-      return "#3a3a3a"; // 3D 솔리드 모드에서는 진한 회색 엣지
+      return "#5a5a5a"; // 3D 솔리드 모드: 진한 회색이 Windows 저DPR에서 뭉개져 보여 살짝 밝게
     } else if (effectiveRenderMode === 'wireframe') {
       return view2DTheme === 'dark' ? "#FFFFFF" : "#000000"; // 2D 와이어프레임 다크모드는 흰색(최대 대비), 라이트모드는 검정색
     } else {
