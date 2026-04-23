@@ -25,10 +25,12 @@ const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
   };
 
   const imageSrc = platform === 'mac' ? '/help/shortcuts-mac.png' : '/help/shortcuts-win.png';
+  // 이미지 원본 비율 (mac: 1196x1315, win: 1148x1370)
+  const aspect = platform === 'mac' ? 1196 / 1315 : 1148 / 1370;
 
   return (
     <div className={styles.overlay} onClick={handleOverlayClick}>
-      <div className={styles.modal}>
+      <div className={styles.modal} style={{ aspectRatio: String(aspect) }}>
         <div className={styles.header}>
           <h3 className={styles.title}>조작법</h3>
           <button className={styles.closeButton} onClick={onClose} aria-label="닫기">✕</button>
