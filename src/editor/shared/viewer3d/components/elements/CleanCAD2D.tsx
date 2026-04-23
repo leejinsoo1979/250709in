@@ -8878,14 +8878,18 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               }
             }
           } else {
-            const actualDepthMm = module.customDepth || moduleData.dimensions.depth;
+            const mid = module.moduleId || '';
+            const isShoeCabinet = mid.includes('-entryway-') || mid.includes('-shelf-') ||
+                                  mid.includes('-4drawer-shelf-') || mid.includes('-2drawer-shelf-');
+            // 신발장은 upper/lowerSectionDepth 도 실제 깊이 반영 (2섹션 가구지만 is2Section 분기에 안 걸리는 경우 대비)
+            // 우선순위: customDepth > upper/lowerSectionDepth > dimensions.depth
+            const actualDepthMm = module.customDepth
+              || (isShoeCabinet ? (module.upperSectionDepth || module.lowerSectionDepth) : undefined)
+              || moduleData.dimensions.depth;
             const depth = mmToThreeUnits(actualDepthMm);
             const isFloating = spaceInfo.baseConfig?.type === 'stand' && spaceInfo.baseConfig?.placementType === 'float';
             const baseDepthOffset = isFloating ? mmToThreeUnits(spaceInfo.baseConfig?.depth || 0) : 0;
             const isUpperCat = moduleData.category === 'upper' || module.moduleId?.includes('upper-cabinet');
-            const mid = module.moduleId || '';
-            const isShoeCabinet = mid.includes('-entryway-') || mid.includes('-shelf-') ||
-                                  mid.includes('-4drawer-shelf-') || mid.includes('-2drawer-shelf-');
             let furnitureBackZ: number;
             let furnitureFrontZ: number;
             if (isUpperCat) {
