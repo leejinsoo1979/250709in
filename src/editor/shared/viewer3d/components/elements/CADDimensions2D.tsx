@@ -1456,6 +1456,24 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           const moduleDepth = mmToThreeUnits(customDepth);
           const moduleDepthLower = mmToThreeUnits(lowerDepth);
 
+          // 디버그: 배치된 가구 깊이 확인
+          // eslint-disable-next-line no-console
+          console.log('🔍 [신발장 깊이 디버그]', {
+            moduleId: midSideCheck,
+            keyForShoe,
+            isEntrywayH,
+            isShelfDrawer,
+            isPlainShelf,
+            isShoeCategory,
+            'module.customDepth': module.customDepth,
+            'module.upperSectionDepth': module.upperSectionDepth,
+            'module.lowerSectionDepth': module.lowerSectionDepth,
+            'dimensions.depth': depthModuleData.dimensions.depth,
+            upperDepth,
+            lowerDepth,
+            isShoeTwoSection,
+          });
+
           // 가구 위치 계산 (FurnitureItem.tsx와 동일)
           const indexing = calculateSpaceIndexing(spaceInfo);
           const slotX = -spaceWidth / 2 + indexing.columnWidth * module.slotIndex + indexing.columnWidth / 2;
