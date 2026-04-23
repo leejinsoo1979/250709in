@@ -1424,20 +1424,26 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           const modCategory = getModuleCategory(mod);
           const isLowerMod = modCategory === 'lower';
 
-          // 현관장(신발장)만 2섹션 깊이 분리 + 도어 두께 차감 대상
-          // (다른 `-shelf-`는 기본 깊이 600mm이므로 차감하지 않음)
+          // 신발장 계열 판별 (entryway / shelf / Ndrawer-shelf — upper-cabinet-shelf 제외)
           const midSideCheck = mod.moduleId || '';
-          const isShoeTwoSection = midSideCheck.includes('-entryway-');
-          // 현관장은 도어 두께(20mm) 포함값 → 실제 가구 깊이는 도어 제외
+          const keyForShoe = midSideCheck.replace(/-[\d.]+$/, '');
+          const isEntrywayH = midSideCheck.includes('-entryway-');
+          const isShelfDrawer = midSideCheck.includes('-4drawer-shelf-') || midSideCheck.includes('-2drawer-shelf-');
+          const isPlainShelf = /(^|-)shelf$/.test(keyForShoe) && !midSideCheck.includes('upper-cabinet-');
+          const isShoeCategory = (isEntrywayH || isShelfDrawer || isPlainShelf) && !midSideCheck.includes('upper-cabinet-');
+
+          // 현관장 H(entryway-h)는 dimensions.depth가 도어 포함 400mm → 도어 20 차감
           const DOOR_THK_MM = 20;
 
-          // 상부섹션 깊이 우선 사용
+          // 상부/하부 섹션 깊이 (2섹션 가구 기준; 없으면 기본 깊이)
           const upperDepthRaw = module.upperSectionDepth || module.customDepth || depthModuleData.dimensions.depth;
-          // 하부섹션 깊이 (2섹션 가구만 유효; 없으면 상부와 동일값)
           const lowerDepthRaw = module.lowerSectionDepth || module.customDepth || depthModuleData.dimensions.depth;
-          // 신발장: 도어 두께 제거하여 실제 패널(가구) 깊이로 보정
-          const upperDepth = isShoeTwoSection ? Math.max(0, upperDepthRaw - DOOR_THK_MM) : upperDepthRaw;
-          const lowerDepth = isShoeTwoSection ? Math.max(0, lowerDepthRaw - DOOR_THK_MM) : lowerDepthRaw;
+          // 현관장 H만 도어 차감
+          const upperDepth = isEntrywayH ? Math.max(0, upperDepthRaw - DOOR_THK_MM) : upperDepthRaw;
+          const lowerDepth = isEntrywayH ? Math.max(0, lowerDepthRaw - DOOR_THK_MM) : lowerDepthRaw;
+          // 상/하부섹션 분리 표시는 깊이가 실제로 다를 때만 (신발장 계열 범위 내)
+          const isShoeTwoSection = isShoeCategory && upperDepth !== lowerDepth;
+
           const customDepth = upperDepth;
           const moduleDepth = mmToThreeUnits(customDepth);
           const moduleDepthLower = mmToThreeUnits(lowerDepth);
@@ -2523,16 +2529,21 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
 
           if (!moduleData) return null;
 
-          // 현관장(신발장)만 2섹션 깊이 분리 + 도어 두께 차감 (다른 -shelf-는 기본 600mm)
+          // 신발장 계열 판별 + 현관장만 도어 차감
           const midSide_d2 = module.moduleId || '';
-          const isShoeSide_d2 = midSide_d2.includes('-entryway-'); // 깊이 분리/도어 차감 판정은 현관장만
-          // 기존 뒷면 정렬 판정은 좀 더 넓게(신발장 계열 전부) 유지
-          const isBackAlign_d2 = midSide_d2.includes('-entryway-') || midSide_d2.includes('-shelf-') || midSide_d2.includes('-4drawer-shelf-') || midSide_d2.includes('-2drawer-shelf-');
+          const keyForShoe_d2 = midSide_d2.replace(/-[\d.]+$/, '');
+          const isEntrywayH_d2 = midSide_d2.includes('-entryway-');
+          const isShelfDrawer_d2 = midSide_d2.includes('-4drawer-shelf-') || midSide_d2.includes('-2drawer-shelf-');
+          const isPlainShelf_d2 = /(^|-)shelf$/.test(keyForShoe_d2) && !midSide_d2.includes('upper-cabinet-');
+          const isShoeCategory_d2 = (isEntrywayH_d2 || isShelfDrawer_d2 || isPlainShelf_d2) && !midSide_d2.includes('upper-cabinet-');
+          // 뒷면 정렬 판정은 신발장 계열 전부 유지
+          const isBackAlign_d2 = isEntrywayH_d2 || isShelfDrawer_d2 || isPlainShelf_d2 || midSide_d2.includes('-shelf-');
           const DOOR_THK_MM_D2 = 20;
           const upperDepthRaw_d2 = module.upperSectionDepth || module.customDepth || moduleData.dimensions.depth;
           const lowerDepthRaw_d2 = module.lowerSectionDepth || module.customDepth || moduleData.dimensions.depth;
-          const upperDepth = isShoeSide_d2 ? Math.max(0, upperDepthRaw_d2 - DOOR_THK_MM_D2) : upperDepthRaw_d2;
-          const lowerDepth_d2 = isShoeSide_d2 ? Math.max(0, lowerDepthRaw_d2 - DOOR_THK_MM_D2) : lowerDepthRaw_d2;
+          const upperDepth = isEntrywayH_d2 ? Math.max(0, upperDepthRaw_d2 - DOOR_THK_MM_D2) : upperDepthRaw_d2;
+          const lowerDepth_d2 = isEntrywayH_d2 ? Math.max(0, lowerDepthRaw_d2 - DOOR_THK_MM_D2) : lowerDepthRaw_d2;
+          const isShoeSide_d2 = isShoeCategory_d2 && upperDepth !== lowerDepth_d2;
           const customDepth = upperDepth;
           const moduleDepth = mmToThreeUnits(customDepth);
           const moduleDepthLower_d2 = mmToThreeUnits(lowerDepth_d2);
