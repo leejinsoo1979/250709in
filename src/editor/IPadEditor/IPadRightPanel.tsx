@@ -2,8 +2,6 @@
 // 웹 Configurator/* 건드리지 않음
 import React, { useState } from 'react';
 import type { SpaceInfo } from '@/store/core/spaceConfigStore';
-import { useFurnitureStore } from '@/store/core/furnitureStore';
-import { useUIStore } from '@/store/uiStore';
 import { useSpaceInfoHandler } from './useSpaceInfoHandler';
 
 // ─── 디자인 토큰 ───────────────────────────────────────────────
@@ -313,15 +311,6 @@ const IPadRightPanel: React.FC<IPadRightPanelProps> = ({ spaceInfo }) => {
   const setTopOffset = (v: number) => setTopOffsetLocal(v);
   const setBottomOffset = (v: number) => setBottomOffsetLocal(v);
 
-  // 도어 설치 — 전역 토글
-  const placedModules = useFurnitureStore((s) => s.placedModules);
-  const setAllDoors = useFurnitureStore((s) => s.setAllDoors);
-  const hasDoorsInstalled = placedModules.some((m) => m.hasDoor);
-  const handleDoorToggle = (v: boolean) => {
-    setAllDoors(v);
-    useUIStore.getState().setDoorInstallIntent(v);
-  };
-
   return (
     <div style={{
       width: '100%', height: '100%', overflow: 'auto',
@@ -460,18 +449,6 @@ const IPadRightPanel: React.FC<IPadRightPanelProps> = ({ spaceInfo }) => {
       <FrameRow label="A(하)" enabled={bottomEnabled} onToggle={setBottomEnabled} sizeValue={bottomSize} onSizeChange={setBottomSize} optionValue={bottomOffset} onOptionChange={setBottomOffset} />
       <FrameRow label="B(하)" enabled={bottomEnabled} onToggle={setBottomEnabled} sizeValue={bottomSize} onSizeChange={setBottomSize} optionValue={bottomOffset} onOptionChange={setBottomOffset} />
       <FrameRow label="C(하)" enabled={bottomEnabled} onToggle={setBottomEnabled} sizeValue={bottomSize} onSizeChange={setBottomSize} optionValue={bottomOffset} onOptionChange={setBottomOffset} />
-
-      {/* ─ 도어 설치 ─ */}
-      <SectionHeader title="도어 설치" help="배치된 모든 가구에 도어 일괄 설치/제거" />
-      <div style={{
-        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        padding: '6px 14px 14px',
-      }}>
-        <span style={{ fontSize: 12, color: T.ink2, fontWeight: 500 }}>
-          도어 일괄 설치
-        </span>
-        <Toggle checked={hasDoorsInstalled} onChange={handleDoorToggle} />
-      </div>
 
       <div style={{ height: 24 }}/>
     </div>

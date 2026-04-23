@@ -162,6 +162,17 @@ const MobileEditor: React.FC = () => {
   const spaceInfo = useSpaceConfigStore(s => s.spaceInfo);
   const setSpaceInfo = useSpaceConfigStore(s => s.setSpaceInfo);
   const placedModules = useFurnitureStore(s => s.placedModules);
+  const setAllDoors = useFurnitureStore(s => s.setAllDoors);
+  const hasDoorsInstalled = placedModules.some(m => m.hasDoor);
+  const handleDoorInstallation = () => {
+    if (hasDoorsInstalled) {
+      setAllDoors(false);
+      useUIStore.getState().setDoorInstallIntent(false);
+    } else {
+      setAllDoors(true);
+      useUIStore.getState().setDoorInstallIntent(true);
+    }
+  };
   const viewMode = useUIStore(s => s.viewMode);
   const setViewMode = useUIStore(s => s.setViewMode);
   const renderMode = useUIStore(s => s.renderMode);
@@ -366,6 +377,23 @@ const MobileEditor: React.FC = () => {
             })}
           </div>
         )}
+        {/* 도어 설치/제거 토글 */}
+        <button
+          onClick={handleDoorInstallation}
+          title={hasDoorsInstalled ? '도어 제거' : '도어 설치'}
+          style={{
+            display: 'flex', alignItems: 'center', gap: 5,
+            padding: '4px 9px', height: 28,
+            background: hasDoorsInstalled ? T.primary : T.surface,
+            color: hasDoorsInstalled ? '#fff' : T.ink2,
+            border: `1px solid ${hasDoorsInstalled ? T.primary : T.line}`,
+            borderRadius: 6, cursor: 'pointer',
+            fontSize: 11, fontWeight: 600, whiteSpace: 'nowrap',
+            marginRight: 4,
+          }}
+        >
+          {hasDoorsInstalled ? '도어제거' : '도어설치'}
+        </button>
         <button style={{
           display: 'flex', alignItems: 'center', gap: 5,
           background: 'none', border: 'none', cursor: 'pointer',

@@ -187,6 +187,17 @@ const IPadEditor: React.FC = () => {
   const spaceInfo = useSpaceConfigStore(s => s.spaceInfo);
   const setSpaceInfo = useSpaceConfigStore(s => s.setSpaceInfo);
   const placedModules = useFurnitureStore(s => s.placedModules);
+  const setAllDoors = useFurnitureStore(s => s.setAllDoors);
+  const hasDoorsInstalled = placedModules.some(m => m.hasDoor);
+  const handleDoorInstallation = () => {
+    if (hasDoorsInstalled) {
+      setAllDoors(false);
+      useUIStore.getState().setDoorInstallIntent(false);
+    } else {
+      setAllDoors(true);
+      useUIStore.getState().setDoorInstallIntent(true);
+    }
+  };
   const viewMode = useUIStore(s => s.viewMode);
   const setViewMode = useUIStore(s => s.setViewMode);
   const renderMode = useUIStore(s => s.renderMode);
@@ -254,6 +265,22 @@ const IPadEditor: React.FC = () => {
         {/* 우측 액션 */}
         <button style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, color: T.ink2, background: 'none', border: 'none', cursor: 'pointer', padding: '6px 10px' }}>
           <IconFile /> 파일
+        </button>
+        {/* 도어 설치/제거 토글 */}
+        <button
+          onClick={handleDoorInstallation}
+          title={hasDoorsInstalled ? '도어 제거' : '도어 설치'}
+          style={{
+            display: 'flex', alignItems: 'center', gap: 6,
+            padding: '6px 12px', height: 30,
+            background: hasDoorsInstalled ? T.blueAct : T.surface,
+            color: hasDoorsInstalled ? '#fff' : T.ink2,
+            border: `1px solid ${hasDoorsInstalled ? T.blueAct : T.line}`,
+            borderRadius: 6, cursor: 'pointer',
+            fontSize: 12, fontWeight: 600, whiteSpace: 'nowrap',
+          }}
+        >
+          {hasDoorsInstalled ? '도어제거' : '도어설치'}
         </button>
         <button style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, color: T.ink2, background: 'none', border: 'none', cursor: 'pointer', padding: '6px 10px' }}>
           <IconSave /> 저장
