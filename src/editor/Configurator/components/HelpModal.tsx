@@ -38,9 +38,11 @@ const SECTIONS: Section[] = [
   {
     title: '가구 배치 · 편집',
     rows: [
-      { action: '가구 배치',              text: '좌측 목록 → 뷰어로 드래그' },
-      { action: '가구 선택',              text: '클릭' },
-      { action: '편집 모드 진입',         text: '더블 클릭' },
+      { action: '가구 선택',              text: '좌측 목록에서 가구 썸네일 클릭 (또는 더블 클릭)' },
+      { action: '슬롯에 배치',            text: '뷰어의 슬롯 + 아이콘 클릭' },
+      { action: '배치 취소',              keys: { win: ['Esc'], mac: ['Esc'] } },
+      { action: '배치된 가구 선택',       text: '가구 클릭' },
+      { action: '편집 모드 진입',         text: '배치된 가구 더블 클릭' },
       { action: '미세 이동',              keys: { win: ['←', '→', '↑', '↓'], mac: ['←', '→', '↑', '↓'] } },
       { action: '가구 삭제',              keys: { win: ['Delete'], mac: ['Delete'] } },
       { action: '편집 모드 종료',         keys: { win: ['Esc'], mac: ['Esc'] } },
@@ -68,7 +70,7 @@ const SECTIONS: Section[] = [
 ];
 
 const TIPS = [
-  '좌측 가구 목록에서 빈 슬롯으로 드래그하면 자동 배치됩니다.',
+  '좌측 가구 목록에서 썸네일을 클릭하면 배치 모드로 진입합니다. 이어서 뷰어의 슬롯 + 아이콘을 클릭해 원하는 위치에 배치하세요.',
   '배치된 가구를 더블 클릭하면 편집 팝업이 열립니다.',
   '기둥을 클릭하면 기둥 편집 팝업이 열립니다.',
   '도어 설치는 상단 Open / Close 토글로 변경하실 수 있습니다.',
