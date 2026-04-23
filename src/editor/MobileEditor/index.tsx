@@ -418,9 +418,8 @@ const MobileEditor: React.FC = () => {
           }}>
             {([
               { k: 'front', label: '정면' },
-              { k: 'left',  label: '좌측' },
-              { k: 'right', label: '우측' },
               { k: 'top',   label: '평면' },
+              { k: 'left',  label: '측면' },
             ] as const).map(v => {
               const active = view2DDirection === v.k;
               return (
@@ -635,9 +634,8 @@ const MobileEditor: React.FC = () => {
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 8 }}>
                   {([
                     { k: 'front', label: '정면도' },
-                    { k: 'left',  label: '좌측도' },
-                    { k: 'right', label: '우측도' },
                     { k: 'top',   label: '평면도' },
+                    { k: 'left',  label: '측면도' },
                   ] as const).map(v => (
                     <SegBtn
                       key={v.k}
