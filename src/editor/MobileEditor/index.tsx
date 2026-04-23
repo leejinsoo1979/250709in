@@ -315,13 +315,19 @@ const MobileEditor: React.FC = () => {
           <IconHamburger />
         </button>
         {!isLandscape && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginLeft: 4 }}>
-            <div style={{ display: 'flex', gap: 2.5 }}>
-              <span style={{ width: 6, height: 6, borderRadius: '50%', background: T.ink }}/>
-              <span style={{ width: 6, height: 6, borderRadius: '50%', background: T.ink }}/>
-              <span style={{ width: 6, height: 6, borderRadius: '50%', background: T.ink }}/>
+          <div style={{
+            display: 'flex', alignItems: 'center', gap: 4, marginLeft: 2,
+            flexShrink: 1, minWidth: 0, overflow: 'hidden',
+          }}>
+            <div style={{ display: 'flex', gap: 2, flexShrink: 0 }}>
+              <span style={{ width: 5, height: 5, borderRadius: '50%', background: T.ink }}/>
+              <span style={{ width: 5, height: 5, borderRadius: '50%', background: T.ink }}/>
+              <span style={{ width: 5, height: 5, borderRadius: '50%', background: T.ink }}/>
             </div>
-            <span style={{ fontSize: 13, fontWeight: 700, letterSpacing: 1.2, color: T.ink }}>CRAFT</span>
+            <span style={{
+              fontSize: 12, fontWeight: 700, letterSpacing: 1, color: T.ink,
+              whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+            }}>CRAFT</span>
           </div>
         )}
         {/* 프로젝트명 (가로에서는 헤더에 직접, 세로에서는 별도 줄) */}
@@ -372,22 +378,23 @@ const MobileEditor: React.FC = () => {
           onClick={handleDoorInstallation}
           title={hasDoorsInstalled ? '도어 제거' : '도어 설치'}
           style={{
-            display: 'flex', alignItems: 'center', gap: 5,
-            padding: '4px 9px', height: 28,
+            display: 'flex', alignItems: 'center', gap: 4,
+            padding: '3px 8px', height: 26,
             background: hasDoorsInstalled ? T.primary : T.surface,
             color: hasDoorsInstalled ? '#fff' : T.ink2,
             border: `1px solid ${hasDoorsInstalled ? T.primary : T.line}`,
             borderRadius: 6, cursor: 'pointer',
-            fontSize: 11, fontWeight: 600, whiteSpace: 'nowrap',
-            marginRight: 4,
+            fontSize: 10.5, fontWeight: 600, whiteSpace: 'nowrap',
+            marginRight: 2, flexShrink: 0,
           }}
         >
           {hasDoorsInstalled ? '도어제거' : '도어설치'}
         </button>
         <button style={{
-          display: 'flex', alignItems: 'center', gap: 5,
+          display: 'flex', alignItems: 'center', gap: 4,
           background: 'none', border: 'none', cursor: 'pointer',
-          color: T.ink2, fontSize: 13, padding: '6px 8px',
+          color: T.ink2, fontSize: 12, padding: '4px 6px',
+          flexShrink: 0,
         }}>
           <IconSave /> 저장
         </button>
