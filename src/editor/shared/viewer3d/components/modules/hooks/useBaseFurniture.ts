@@ -139,36 +139,40 @@ export const useBaseFurniture = (
     const lastSectionRatio = lastSection.height > 0 ? lastSectionNewHeight / lastSection.height : 1;
 
     const basicThicknessMm = originalModelConfig.basicThickness || 18;
+    // 섹션 내경(sectionHeightMm) 기준 shelf 균등 재분할 헬퍼
+    const evenShelfPositions = (sectionHeightMm: number, count: number): number[] => {
+      const sectionInner = sectionHeightMm - 2 * basicThicknessMm;
+      if (sectionInner <= 0 || count <= 0) return [];
+      const halfT = basicThicknessMm / 2;
+      const g = (sectionInner - count * basicThicknessMm) / (count + 1);
+      return Array.from({ length: count }, (_, i) =>
+        Math.round((i + 1) * g + i * basicThicknessMm + halfT)
+      );
+    };
     const scaledSections = sections.map((section: SectionConfig, idx: number) => {
-      if (idx < sections.length - 1) {
-        // 하부 섹션: 높이는 고정이되, shelfPositions는 현재 섹션 내경 기준으로 균등 재분할
-        // (띄움 배치 등 렌더 높이 변화 시 기존 절대 위치가 비균등으로 보이는 문제 방지)
-        if (section.shelfPositions && section.shelfPositions.length > 0 && section.count && section.count > 0) {
-          // [0]은 치수 표시용 sentinel 이므로 유지, 실제 선반 갯수 = count 로 균등 재계산
-          const realCount = section.count;
-          const sectionInner = section.height - 2 * basicThicknessMm;
-          if (sectionInner > 0 && realCount > 0) {
-            const halfT = basicThicknessMm / 2;
-            const g = (sectionInner - realCount * basicThicknessMm) / (realCount + 1);
-            const newPositions = Array.from({ length: realCount }, (_, i) =>
-              Math.round((i + 1) * g + i * basicThicknessMm + halfT)
-            );
-            // 원본이 [0]으로 시작하면 유지 (치수 표시용)
-            const hasZeroSentinel = section.shelfPositions.includes(0);
-            return {
-              ...section,
-              shelfPositions: hasZeroSentinel ? [0, ...newPositions] : newPositions,
-            };
-          }
-        }
-        return section;
+      // 마지막 섹션은 높이도 조정, 나머지는 높이 고정
+      const finalHeight = idx < sections.length - 1
+        ? section.height
+        : Math.round(lastSectionNewHeight);
+      // shelf 타입 + count가 있으면 현재 내경 기준으로 균등 재분할
+      if (section.shelfPositions && section.count && section.count > 0) {
+        const newPositions = evenShelfPositions(finalHeight, section.count);
+        const hasZeroSentinel = section.shelfPositions.includes(0);
+        return {
+          ...section,
+          height: finalHeight,
+          shelfPositions: hasZeroSentinel ? [0, ...newPositions] : newPositions,
+        };
       }
-      // 마지막(상부) 섹션만 조정
-      return {
-        ...section,
-        height: Math.round(lastSectionNewHeight),
-        shelfPositions: section.shelfPositions?.map((pos: number) => Math.round(pos * lastSectionRatio))
-      };
+      // count가 없는 섹션(drawer 등)은 기존 동작 유지 — 마지막이면 비례 조정
+      if (idx === sections.length - 1) {
+        return {
+          ...section,
+          height: finalHeight,
+          shelfPositions: section.shelfPositions?.map((pos: number) => Math.round(pos * lastSectionRatio))
+        };
+      }
+      return section;
     });
 
     return {
