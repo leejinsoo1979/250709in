@@ -3880,9 +3880,13 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             );
             const sections = modData?.modelConfig?.sections;
             if (sections && sections.length >= 2) {
-              // 섹션 기준 furnitureH = 실제 가구 내경 (공간 - 실제 상부프레임 - 실제 하부프레임)
+              // 섹션 기준 furnitureH = 실제 가구 내경 (공간 - 실제 상부프레임 - 실제 하부프레임 - 띄움)
               const realTopFrame = leftmostMod.hasTopFrame === false ? 0 : (leftmostMod.topFrameThickness ?? globalTopFrame);
-              const realBottomFrame = leftLowerMod?.hasBase === false ? 0 : (leftLowerMod?.baseFrameHeight ?? globalBottomFrameH);
+              // 띄움 배치: hasBase=false 이면 하부프레임 자리가 띄움 공간으로 대체됨
+              // → individualFloatHeight 가 없으면 baseFrameHeight (= 띄움 기본) 사용
+              const realBottomFrame = leftLowerMod?.hasBase === false
+                ? (leftLowerMod?.individualFloatHeight ?? leftLowerMod?.baseFrameHeight ?? globalBottomFrameH)
+                : (leftLowerMod?.baseFrameHeight ?? globalBottomFrameH);
               const realFloorFinish = floorFinishForHeight;
               const sectionBasisH = Math.max(0, effectiveH - realTopFrame - realBottomFrame - realFloorFinish);
               const rawHeights = sections.map(s => {
