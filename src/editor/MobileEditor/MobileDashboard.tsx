@@ -11,17 +11,17 @@ import './MobileEditor.css';
 
 // ─── 디자인 토큰 ──────────────────────────────────────────────
 const T = {
-  primary:   '#7C5CFF', // 시안 보라
-  primary50: '#EFEBFF',
-  primarySoft: '#F3F1FF',
-  ink:       '#111827',
-  ink2:      '#4B5563',
-  ink3:      '#9CA3AF',
-  line:      '#E5E7EB',
-  line2:     '#F3F4F6',
-  bg:        '#F9FAFB',
-  surface:   '#FFFFFF',
-  success:   '#10B981',
+  primary:     '#000000', // 브랜드 블랙
+  primary50:   '#F3F4F6',
+  primarySoft: '#F3F4F6',
+  ink:         '#111827',
+  ink2:        '#4B5563',
+  ink3:        '#9CA3AF',
+  line:        '#E5E7EB',
+  line2:       '#F3F4F6',
+  bg:          '#F9FAFB',
+  surface:     '#FFFFFF',
+  success:     '#10B981',
 };
 
 const FONT = `-apple-system, BlinkMacSystemFont, "SF Pro Text", "Apple SD Gothic Neo", "Noto Sans KR", system-ui, sans-serif`;
@@ -233,7 +233,7 @@ const MobileDashboard: React.FC = () => {
         background: T.primary, color: '#fff',
         display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
         fontSize: 15, fontWeight: 700, cursor: 'pointer',
-        boxShadow: '0 6px 20px rgba(124,92,255,0.28)',
+        boxShadow: '0 6px 20px rgba(0,0,0,0.18)',
       }}>
         <IconPlus/> 새 디자인 시작하기
       </button>
