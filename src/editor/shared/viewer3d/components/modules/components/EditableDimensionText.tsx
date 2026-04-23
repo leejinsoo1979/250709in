@@ -188,8 +188,13 @@ const EditableDimensionText: React.FC<EditableDimensionTextProps> = ({
                 border: `1px solid ${isDark ? '#6b7280' : '#999'}`,
                 borderRadius: '2px',
                 textAlign: 'center',
-                background: isDark ? '#1f2937' : '#ffffff',
+                backgroundColor: isDark ? '#1f2937' : '#ffffff',
                 color: isDark ? '#ffffff' : '#000000',
+                // 브라우저 기본 스타일 억제
+                colorScheme: isDark ? 'dark' : 'light',
+                outline: 'none',
+                WebkitAppearance: 'none',
+                appearance: 'none',
               }}
               step="1"
               min="200"

@@ -89,7 +89,13 @@ const MidwayEditableNumber: React.FC<{
           style={{
             width: 64, padding: '2px 4px', fontSize: 13,
             border: `1px solid ${borderInput}`, borderRadius: 3, textAlign: 'center',
-            background: bgInput, color: fgInput,
+            backgroundColor: bgInput,
+            color: fgInput,
+            // 브라우저 기본 스타일 억제 (다크/라이트 모드 명시적 제어)
+            colorScheme: isDark ? 'dark' : 'light',
+            outline: 'none',
+            WebkitAppearance: 'none',
+            appearance: 'none',
           }}
         />
       ) : (
