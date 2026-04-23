@@ -292,7 +292,9 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
       rendererRef.current.shadowMap.enabled = shadowEnabled;
       if (shadowEnabled) {
         rendererRef.current.shadowMap.type = THREE.PCFSoftShadowMap;
-        rendererRef.current.shadowMap.autoUpdate = true;
+        // autoUpdate=false: 매 프레임 shadow re-render 방지 (정적 씬이라 불필요)
+        // 필요 시 needsUpdate=true 로 1회 갱신. 가구/공간 변경 시 이 effect 재실행으로 동기화됨.
+        rendererRef.current.shadowMap.autoUpdate = false;
       }
       rendererRef.current.shadowMap.needsUpdate = true;
 
@@ -321,7 +323,7 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
             r3f.gl.shadowMap.enabled = shadowEnabled;
             if (shadowEnabled) {
               r3f.gl.shadowMap.type = THREE.PCFSoftShadowMap;
-              r3f.gl.shadowMap.autoUpdate = true;
+              r3f.gl.shadowMap.autoUpdate = false; // 수동 갱신 방식으로 변경
             }
             r3f.gl.shadowMap.needsUpdate = true;
           }
@@ -331,7 +333,7 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
       // 2D 모드에서는 그림자 비활성화
       rendererRef.current.shadowMap.enabled = false;
     }
-  }, [viewMode, shadowEnabled]);
+  }, [viewMode, shadowEnabled, placedModules.length]);
 
   // 배경색 업데이트 (라이트 테마 강제)
   useEffect(() => {
