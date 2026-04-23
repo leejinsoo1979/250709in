@@ -138,9 +138,30 @@ export const useBaseFurniture = (
     const lastSectionNewHeight = Math.max(0, renderHeightMm - fixedSum);
     const lastSectionRatio = lastSection.height > 0 ? lastSectionNewHeight / lastSection.height : 1;
 
+    const basicThicknessMm = originalModelConfig.basicThickness || 18;
     const scaledSections = sections.map((section: SectionConfig, idx: number) => {
       if (idx < sections.length - 1) {
-        return section; // 하부 섹션은 고정
+        // 하부 섹션: 높이는 고정이되, shelfPositions는 현재 섹션 내경 기준으로 균등 재분할
+        // (띄움 배치 등 렌더 높이 변화 시 기존 절대 위치가 비균등으로 보이는 문제 방지)
+        if (section.shelfPositions && section.shelfPositions.length > 0 && section.count && section.count > 0) {
+          // [0]은 치수 표시용 sentinel 이므로 유지, 실제 선반 갯수 = count 로 균등 재계산
+          const realCount = section.count;
+          const sectionInner = section.height - 2 * basicThicknessMm;
+          if (sectionInner > 0 && realCount > 0) {
+            const halfT = basicThicknessMm / 2;
+            const g = (sectionInner - realCount * basicThicknessMm) / (realCount + 1);
+            const newPositions = Array.from({ length: realCount }, (_, i) =>
+              Math.round((i + 1) * g + i * basicThicknessMm + halfT)
+            );
+            // 원본이 [0]으로 시작하면 유지 (치수 표시용)
+            const hasZeroSentinel = section.shelfPositions.includes(0);
+            return {
+              ...section,
+              shelfPositions: hasZeroSentinel ? [0, ...newPositions] : newPositions,
+            };
+          }
+        }
+        return section;
       }
       // 마지막(상부) 섹션만 조정
       return {
