@@ -29,6 +29,12 @@
   grid-template-columns: repeat(2, 1fr) !important;
   gap: 4px !important;
 }
+
+/* 가로 모드 좌측 사이드바(44px)의 SVG 아이콘 크기 축소 */
+.mobile-editor-root [style*="width: 44px"][style*="top: 44px"] svg {
+  width: 16px !important;
+  height: 16px !important;
+}
 .mobile-editor-root .mobile-landscape-panel [class*="thumbnailLabel"],
 .mobile-editor-root .mobile-landscape-panel [class*="thumbnailName"] {
   font-size: 10px !important;

@@ -388,8 +388,8 @@ const MobileEditor: React.FC = () => {
       {/* ═══════════════ 3D Viewer (전체 화면) ═══════════════ */}
       <div style={{
         flex: 1, position: 'relative', minHeight: 0, overflow: 'hidden',
-        // 가로 모드: 좌측 사이드바(64) + 사이드 패널(열려있을 때)
-        marginLeft: isLandscape ? (sheetOpen ? 'calc(64px + min(300px, 42vw))' : '64px') : 0,
+        // 가로 모드: 좌측 사이드바(44) + 사이드 패널(열려있을 때)
+        marginLeft: isLandscape ? (sheetOpen ? 'calc(44px + min(240px, 38vw))' : '44px') : 0,
         transition: 'margin-left 0.2s ease',
       }}>
         {/* 도어 Open/Close 토글 — 도어 설치 시 뷰어 상단 중앙 */}
@@ -496,25 +496,25 @@ const MobileEditor: React.FC = () => {
         </button>
       </div>
 
-      {/* 가로 모드: 좌측 세로 사이드바 (탭바) */}
+      {/* 가로 모드: 좌측 세로 사이드바 (탭바) — 휴대폰에 맞춰 얇게 */}
       {isLandscape && (
         <div style={{
           position: 'absolute',
           left: 0,
-          top: isLandscape ? 44 : 52,
+          top: 44,
           bottom: 0,
-          width: 64,
+          width: 44,
           background: T.surface,
           borderRight: `1px solid ${T.line}`,
           display: 'flex', flexDirection: 'column', alignItems: 'stretch',
-          paddingTop: 6,
+          paddingTop: 4,
           paddingBottom: 'env(safe-area-inset-bottom, 0)',
           zIndex: 11,
           boxShadow: '1px 0 3px rgba(0,0,0,0.04)',
         }}>
           {([
             { k: 'module',    label: '모듈', icon: <IconModules /> },
-            { k: 'material',  label: '재질', icon: <HiOutlineColorSwatch size={20} /> },
+            { k: 'material',  label: '재질', icon: <HiOutlineColorSwatch size={16} /> },
             { k: 'settings',  label: '설정', icon: <IconSettings /> },
           ] as const).map(tab => {
             const isA = bottomTab === tab.k && sheetOpen;
@@ -522,15 +522,16 @@ const MobileEditor: React.FC = () => {
               <button key={tab.k}
                 onClick={() => handleTabClick(tab.k as BottomTab)}
                 style={{
-                  height: 58,
+                  height: 42,
                   display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-                  gap: 2, background: isA ? T.primary50 : 'transparent', border: 'none', cursor: 'pointer',
+                  gap: 1, background: isA ? T.primary50 : 'transparent', border: 'none', cursor: 'pointer',
                   color: isA ? T.primary : T.ink3,
-                  borderLeft: isA ? `3px solid ${T.primary}` : '3px solid transparent',
+                  borderLeft: isA ? `2px solid ${T.primary}` : '2px solid transparent',
+                  padding: 0,
                 }}
               >
                 {tab.icon}
-                <span style={{ fontSize: 10, fontWeight: isA ? 600 : 500 }}>{tab.label}</span>
+                <span style={{ fontSize: 9, fontWeight: isA ? 600 : 500, lineHeight: 1 }}>{tab.label}</span>
               </button>
             );
           })}
@@ -540,9 +541,9 @@ const MobileEditor: React.FC = () => {
       {/* ═══════════════ Bottom Sheet (세로) / Side Panel (가로) ═══════════════ */}
       {sheetOpen && (
         <div style={isLandscape ? {
-          // 가로: 사이드바(64) 옆에 사이드 패널
-          position: 'absolute', left: 64, top: 44, bottom: 0,
-          width: 'min(300px, 42vw)',
+          // 가로: 사이드바(44) 옆에 사이드 패널
+          position: 'absolute', left: 44, top: 44, bottom: 0,
+          width: 'min(240px, 38vw)',
           background: T.surface,
           borderRight: `1px solid ${T.line}`,
           display: 'flex', flexDirection: 'column',
