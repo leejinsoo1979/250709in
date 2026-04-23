@@ -212,10 +212,15 @@ const MidwayGapEditor: React.FC<{
   color: string;
   onChange: (v: number) => void;
   isDark?: boolean;
-}> = ({ value, color, onChange, isDark }) => {
+}> = ({ value, color, onChange, isDark: isDarkProp }) => {
   const [editing, setEditing] = useState(false);
   const [text, setText] = useState(String(value));
   const inputRef = useRef<HTMLInputElement>(null);
+
+  // 2D 테마/뷰모드 직접 구독 → prop 전달 누락이나 지연 이슈 회피
+  const view2DTheme = useUIStore(state => state.view2DTheme);
+  const viewMode = useUIStore(state => state.viewMode);
+  const isDark = isDarkProp !== undefined ? isDarkProp : (viewMode === '2D' && view2DTheme === 'dark');
 
   useEffect(() => { setText(String(value)); }, [value]);
   useEffect(() => {
