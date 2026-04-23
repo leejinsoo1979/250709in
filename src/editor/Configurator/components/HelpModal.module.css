@@ -13,9 +13,10 @@
   background: var(--theme-surface, #fff);
   border-radius: 14px;
   box-shadow: var(--theme-shadow-lg, 0 10px 40px rgba(0, 0, 0, 0.2));
-  width: 1180px;
-  max-width: 96vw;
-  max-height: 92vh;
+  width: 96vw;
+  max-width: 1180px;
+  height: 96vh;
+  max-height: 96vh;
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -27,9 +28,10 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 18px 24px;
+  padding: 10px 20px;
   background: linear-gradient(135deg, var(--theme-primary, #121212) 0%, var(--theme-primary-hover, #333) 100%);
   color: #fff;
+  flex-shrink: 0;
 }
 
 .title {
@@ -62,11 +64,12 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 10px 24px;
+  padding: 6px 20px;
   background: var(--theme-background, #fafafa);
   border-bottom: 1px solid var(--theme-border, #e0e0e0);
   font-size: 12px;
   color: var(--theme-text-secondary, #666);
+  flex-shrink: 0;
 }
 
 .envCurrent {
