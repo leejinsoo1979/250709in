@@ -244,7 +244,6 @@ interface IPadRightPanelProps {
 
 const IPadRightPanel: React.FC<IPadRightPanelProps> = ({ spaceInfo }) => {
   const { handleSpaceInfoUpdate } = useSpaceInfoHandler();
-  const [previewOpen, setPreviewOpen] = useState(false);
 
   // 공간 유형 매핑
   const installType = spaceInfo.installType || 'builtin';
@@ -317,30 +316,6 @@ const IPadRightPanel: React.FC<IPadRightPanelProps> = ({ spaceInfo }) => {
       background: T.surface,
       fontFamily: '-apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Noto Sans KR", system-ui, sans-serif',
     }}>
-
-      {/* ─ 2D 미리보기 (접힘 토글) ─ */}
-      <button
-        onClick={() => setPreviewOpen(!previewOpen)}
-        style={{
-          width: '100%', display: 'flex', alignItems: 'center', gap: 8,
-          padding: '14px 14px',
-          background: 'none', border: 'none', borderBottom: `1px solid ${T.line2}`,
-          cursor: 'pointer', color: T.ink, fontSize: 13, fontWeight: 600,
-          textAlign: 'left',
-        }}
-      >
-        <span style={{
-          display: 'inline-block',
-          transform: previewOpen ? 'rotate(90deg)' : 'rotate(0deg)',
-          transition: 'transform 0.15s',
-          fontSize: 10, color: T.ink2,
-        }}>▶</span>
-        <span>2D 미리보기</span>
-        <div style={{ flex: 1 }}/>
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-          <path d="M15 3h6v6M10 14L21 3M21 14v7H3V3h7"/>
-        </svg>
-      </button>
 
       {/* ─ 공간 설정 ─ */}
       <SectionHeader title="공간 설정" help="공간 치수 입력" />
