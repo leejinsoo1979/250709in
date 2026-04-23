@@ -211,16 +211,16 @@ const MidwayGapEditor: React.FC<{
   value: number;
   color: string;
   onChange: (v: number) => void;
-  isDark?: boolean;
-}> = ({ value, color, onChange, isDark: isDarkProp }) => {
+  isDark?: boolean; // deprecated — store에서 직접 구독하므로 무시됨
+}> = ({ value, color, onChange }) => {
   const [editing, setEditing] = useState(false);
   const [text, setText] = useState(String(value));
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // 2D 테마/뷰모드 직접 구독 → prop 전달 누락이나 지연 이슈 회피
+  // store에서 직접 구독 (prop 전달 지연/누락 차단)
   const view2DTheme = useUIStore(state => state.view2DTheme);
   const viewMode = useUIStore(state => state.viewMode);
-  const isDark = isDarkProp !== undefined ? isDarkProp : (viewMode === '2D' && view2DTheme === 'dark');
+  const isDark = viewMode === '2D' && view2DTheme === 'dark';
 
   useEffect(() => { setText(String(value)); }, [value]);
   useEffect(() => {
@@ -273,6 +273,9 @@ const MidwayGapEditor: React.FC<{
     );
   }
 
+  // 다크모드에서 텍스트/테두리 색이 검정이면 흰색으로 강제
+  const effectiveColor = isDark && (color === '#000000' || color === 'black' || color === '#000') ? '#ffffff' : color;
+
   return (
     <div
       onClick={(e) => { e.stopPropagation(); setEditing(true); }}
@@ -283,11 +286,11 @@ const MidwayGapEditor: React.FC<{
         padding: '3px 8px',
         minWidth: 34,
         textAlign: 'center',
-        color,
+        color: effectiveColor,
         fontSize: 13,
         fontWeight: 'bold',
         background: isDark ? 'rgba(31,41,55,0.85)' : 'rgba(255,255,255,0.92)',
-        border: `1px dashed ${color}`,
+        border: `1px dashed ${effectiveColor}`,
         borderRadius: 3,
         userSelect: 'none',
       }}
