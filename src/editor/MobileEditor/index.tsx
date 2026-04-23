@@ -166,6 +166,20 @@ const MobileEditor: React.FC = () => {
   const [bottomTab, setBottomTab] = useState<BottomTab>('module');
   const [sheetOpen, setSheetOpen] = useState(false);
   const [sheetHeight, setSheetHeight] = useState<number>(SHEET_HEIGHTS.medium);
+
+  // 가로/세로 모드 감지 (가로에서는 사이드 패널로 전환)
+  const [isLandscape, setIsLandscape] = useState<boolean>(() =>
+    typeof window !== 'undefined' ? window.innerWidth > window.innerHeight : false
+  );
+  useEffect(() => {
+    const onResize = () => setIsLandscape(window.innerWidth > window.innerHeight);
+    window.addEventListener('resize', onResize);
+    window.addEventListener('orientationchange', onResize);
+    return () => {
+      window.removeEventListener('resize', onResize);
+      window.removeEventListener('orientationchange', onResize);
+    };
+  }, []);
   const [moduleType, setModuleType] = useState<ModuleType>('all');
   const [moduleCategory, setModuleCategory] = useState<'clothing' | 'shoes' | 'kitchen'>('clothing');
   const [kitchenSub, setKitchenSub] = useState<'basic' | 'door-raise' | 'top-down' | 'upper'>('basic');
@@ -334,7 +348,12 @@ const MobileEditor: React.FC = () => {
       </div>
 
       {/* ═══════════════ 3D Viewer (전체 화면) ═══════════════ */}
-      <div style={{ flex: 1, position: 'relative', minHeight: 0, overflow: 'hidden' }}>
+      <div style={{
+        flex: 1, position: 'relative', minHeight: 0, overflow: 'hidden',
+        // 가로 모드에서 사이드 패널 열리면 좌측 여백 확보
+        marginLeft: isLandscape && sheetOpen ? 'min(340px, 45vw)' : 0,
+        transition: 'margin-left 0.2s ease',
+      }}>
         <div ref={viewerRef} style={{ width: '100%', height: '100%' }}>
           <Space3DView
             spaceInfo={spaceInfo}
@@ -384,12 +403,22 @@ const MobileEditor: React.FC = () => {
         </button>
       </div>
 
-      {/* ═══════════════ Bottom Sheet ═══════════════ */}
+      {/* ═══════════════ Bottom Sheet (세로) / Side Panel (가로) ═══════════════ */}
       {sheetOpen && (
-        <div style={{
+        <div style={isLandscape ? {
+          // 가로: 좌측 사이드 패널 (하단 탭바 위까지)
+          position: 'absolute', left: 0, top: 0, bottom: 60,
+          width: 'min(340px, 45vw)',
+          background: T.surface,
+          borderRight: `1px solid ${T.line}`,
+          display: 'flex', flexDirection: 'column',
+          boxShadow: '2px 0 12px rgba(0,0,0,0.08)',
+          zIndex: 10,
+        } : {
+          // 세로: 하단 바텀시트
           position: 'absolute', left: 0, right: 0, bottom: 60,
           background: T.surface,
-          borderTop: `1px solid ${T.line}`,
+          borderTop: `2px solid ${T.line}`,
           borderTopLeftRadius: 16, borderTopRightRadius: 16,
           height: `${sheetHeight}vh`,
           display: 'flex', flexDirection: 'column',
@@ -397,24 +426,26 @@ const MobileEditor: React.FC = () => {
           zIndex: 10,
           transition: isDragging ? 'none' : 'height 0.2s ease',
         }}>
-          {/* 드래그 핸들 (터치/마우스 드래그 가능) */}
-          <div
-            onTouchStart={handleSheetDragStart}
-            onMouseDown={handleSheetDragStart}
-            style={{
-              padding: '10px 0 6px',
-              display: 'flex',
-              justifyContent: 'center',
-              cursor: 'grab',
-              touchAction: 'none',
-            }}
-          >
-            <div style={{ width: 48, height: 5, background: T.bg3, borderRadius: 3 }}/>
-          </div>
+          {/* 드래그 핸들 — 세로 모드에서만 표시 */}
+          {!isLandscape && (
+            <div
+              onTouchStart={handleSheetDragStart}
+              onMouseDown={handleSheetDragStart}
+              style={{
+                padding: '10px 0 6px',
+                display: 'flex',
+                justifyContent: 'center',
+                cursor: 'grab',
+                touchAction: 'none',
+              }}
+            >
+              <div style={{ width: 48, height: 5, background: T.bg3, borderRadius: 3 }}/>
+            </div>
+          )}
 
           {/* 헤더 */}
           <div style={{
-            padding: '4px 16px 10px',
+            padding: isLandscape ? '14px 16px 10px' : '4px 16px 10px',
             display: 'flex', alignItems: 'center', justifyContent: 'space-between',
             borderBottom: `1px solid ${T.line2}`,
           }}>
