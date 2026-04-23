@@ -2657,7 +2657,7 @@ const createSingleDummyFull = (columnWidth: number, maxHeight: number): ModuleDa
   return {
     ...base,
     hasDoor: true,
-    thumbnail: '/images/furniture-thumbnails/싱글장.png',
+    thumbnail: '/images/furniture-thumbnails/멍장.png',
     modelConfig: {
       ...base.modelConfig,
       hasOpenFront: false,
@@ -2681,7 +2681,7 @@ const createSingleDummyUpper = (columnWidth: number): ModuleData => {
   return {
     ...base,
     hasDoor: true,
-    thumbnail: '/images/furniture-thumbnails/상부장 기본.png',
+    thumbnail: '/images/furniture-thumbnails/멍장.png',
     modelConfig: {
       ...base.modelConfig,
       hasOpenFront: false,
@@ -2706,7 +2706,7 @@ const createSingleDummyLower = (columnWidth: number): ModuleData => {
     ...base,
     hasDoor: true,
     isDynamic: true,
-    thumbnail: '/images/furniture-thumbnails/하부장.png',
+    thumbnail: '/images/furniture-thumbnails/멍장.png',
     modelConfig: {
       ...base.modelConfig,
       basicThickness: FURNITURE_SPECS.BASIC_THICKNESS,
