@@ -1095,22 +1095,37 @@ export const extractFromScene = (
 
     // 측면뷰에서 가구 및 치수선 X 위치 필터링 (allowedXRange가 있으면 해당 범위만 포함)
     // 공간 프레임만 필터링 제외 (항상 포함)
-    // 조절발은 X 위치 필터링에서 제외 (가구와 함께 항상 표시)
-    const isAdjustableFoot = lowerNameForFilter.includes('adjustable-foot') ||
-                             lowerNameForFilter.includes('조절발') ||
-                             lowerNameForFilter.includes('leveler');
+    // 자기 이름 + 부모 계층 이름까지 모두 확인 (하위 엣지 mesh는 자기 이름에 키워드가 없을 수 있음)
+    const parentNamesForXFilter = getParentNamesForFilter(object);
+    const combinedNamesForXFilter = lowerNameForFilter + parentNamesForXFilter;
 
-    // 서랍 좌/우 측판은 가구 중심에서 좌우로 벌어진 X 위치에 있어서 allowedXRange(가구 중심 ±width/2)를
-    // 살짝 벗어날 수 있음. 서랍 geometry를 보존하기 위해 X 위치 필터링에서 제외.
-    const isDrawerPart = lowerNameForFilter.includes('drawer') ||
-                         lowerNameForFilter.includes('서랍') ||
-                         lowerNameForFilter.includes('마이다');
+    // 조절발은 X 위치 필터링에서 제외 (가구와 함께 항상 표시)
+    const isAdjustableFoot = combinedNamesForXFilter.includes('adjustable-foot') ||
+                             combinedNamesForXFilter.includes('조절발') ||
+                             combinedNamesForXFilter.includes('leveler');
+
+    // 서랍/옷봉/선반/도어 등 가구 내부 구성요소는 가구 중심에서 좌우로 벌어진 X 위치에 있어서
+    // allowedXRange(가구 중심 ±width/2)를 벗어날 수 있음. 측면뷰 geometry 보존을 위해 제외.
+    const isFurnitureInternal = combinedNamesForXFilter.includes('drawer') ||
+                                combinedNamesForXFilter.includes('서랍') ||
+                                combinedNamesForXFilter.includes('마이다') ||
+                                combinedNamesForXFilter.includes('clothing-rod') ||
+                                combinedNamesForXFilter.includes('옷봉') ||
+                                combinedNamesForXFilter.includes('shelf') ||
+                                combinedNamesForXFilter.includes('선반') ||
+                                combinedNamesForXFilter.includes('다보') ||
+                                combinedNamesForXFilter.includes('back-panel') ||
+                                combinedNamesForXFilter.includes('백패널') ||
+                                combinedNamesForXFilter.includes('door') ||
+                                combinedNamesForXFilter.includes('도어') ||
+                                combinedNamesForXFilter.includes('furniture-edge') ||
+                                combinedNamesForXFilter.includes('furniture-mesh');
 
     if (allowedXRange &&
         (viewDirection === 'left' || viewDirection === 'right') &&
         layer !== 'SPACE_FRAME' &&
         !isAdjustableFoot &&
-        !isDrawerPart) {
+        !isFurnitureInternal) {
 
       // 가구 관련 객체인 경우 X 위치 필터링 적용
       const isFurnitureObject = lowerNameForFilter.includes('furniture') ||
