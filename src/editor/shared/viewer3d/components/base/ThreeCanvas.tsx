@@ -1018,15 +1018,15 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
           dpr={[1, 2]}
           frameloop="always"
           gl={{
-            powerPreference: 'high-performance',  // 고성능 GPU 사용
+            powerPreference: 'high-performance',
             antialias: true,
             alpha: false,
-            stencil: true,  // 더 정확한 스텐실 버퍼
+            stencil: false,                // 스텐실 미사용 → 메모리·CPU 절약
             depth: true,
-            preserveDrawingBuffer: true, // 썸네일 캡처를 위해 true로 변경
+            preserveDrawingBuffer: true,   // 썸네일 캡처 호환성 유지
             failIfMajorPerformanceCaveat: false,
-            logarithmicDepthBuffer: true,  // 더 정확한 깊이 버퍼
-            precision: 'highp',  // 고정밀도 셰이더
+            logarithmicDepthBuffer: false, // 모든 vertex 로그 연산 제거 → 셰이더 부하 큰 폭 감소
+            precision: 'mediump',          // 내장 그래픽·모바일에서 2~3배 빠름 (가구 치수엔 영향 없음)
           }}
           onCreated={({ gl, scene }) => {
             try {
