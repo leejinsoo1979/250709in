@@ -1016,7 +1016,7 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
             touchAction: 'none'
           }}
           dpr={[1, 2]}
-          frameloop="always"
+          frameloop="demand"
           gl={{
             powerPreference: 'high-performance',
             antialias: true,
