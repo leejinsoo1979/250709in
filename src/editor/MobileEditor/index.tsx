@@ -406,6 +406,40 @@ const MobileEditor: React.FC = () => {
         marginLeft: isLandscape ? (sheetOpen ? 'calc(64px + min(300px, 42vw))' : '64px') : 0,
         transition: 'margin-left 0.2s ease',
       }}>
+        {/* 2D 뷰 방향 선택 버튼 — 2D 모드일 때만 상단 좌측에 표시 */}
+        {viewMode === '2D' && (
+          <div style={{
+            position: 'absolute', top: 10, left: 10, zIndex: 20,
+            display: 'flex', gap: 4,
+            padding: 3, background: 'rgba(255,255,255,0.92)',
+            border: '1px solid rgba(0,0,0,0.12)',
+            borderRadius: 6,
+            boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+          }}>
+            {([
+              { k: 'front', label: '정면' },
+              { k: 'left',  label: '좌측' },
+              { k: 'right', label: '우측' },
+              { k: 'top',   label: '평면' },
+            ] as const).map(v => {
+              const active = view2DDirection === v.k;
+              return (
+                <button
+                  key={v.k}
+                  onClick={() => setView2DDirection(v.k)}
+                  style={{
+                    padding: '4px 9px', height: 26, minWidth: 38,
+                    background: active ? T.blueAct : 'transparent',
+                    color: active ? '#fff' : T.ink2,
+                    border: 'none', borderRadius: 4,
+                    fontSize: 11, fontWeight: active ? 600 : 500,
+                    cursor: 'pointer', whiteSpace: 'nowrap',
+                  }}
+                >{v.label}</button>
+              );
+            })}
+          </div>
+        )}
         <div ref={viewerRef} style={{ width: '100%', height: '100%' }}>
           <Space3DView
             spaceInfo={spaceInfo}
