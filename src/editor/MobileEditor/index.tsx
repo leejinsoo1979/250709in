@@ -47,26 +47,33 @@ const SegBtn: React.FC<{
   onClick?: () => void;
   children: React.ReactNode;
   flex?: boolean;
-  size?: 'sm' | 'md';
-}> = ({ active, onClick, children, flex, size = 'sm' }) => (
-  <button
-    onClick={onClick}
-    style={{
-      flex: flex ? '1 1 0' : undefined,
-      minWidth: 0,
-      padding: size === 'md' ? '8px 14px' : '6px 10px',
-      height: size === 'md' ? undefined : 32,
-      background: active ? T.blueAct : T.surface,
-      color: active ? '#fff' : T.ink2,
-      border: `1px solid ${active ? T.blueAct : T.line}`,
-      borderRadius: 6,
-      fontSize: 12, fontWeight: active ? 600 : 500,
-      cursor: 'pointer', whiteSpace: 'nowrap',
-      transition: 'all 0.12s ease',
-      lineHeight: 1,
-    }}
-  >{children}</button>
-);
+  size?: 'sm' | 'md' | 'xs';
+}> = ({ active, onClick, children, flex, size = 'sm' }) => {
+  const dims = size === 'xs'
+    ? { padding: '3px 6px', height: 26, fontSize: 11, radius: 5 }
+    : size === 'md'
+    ? { padding: '8px 14px', height: undefined, fontSize: 12, radius: 6 }
+    : { padding: '6px 10px', height: 32, fontSize: 12, radius: 6 };
+  return (
+    <button
+      onClick={onClick}
+      style={{
+        flex: flex ? '1 1 0' : undefined,
+        minWidth: 0,
+        padding: dims.padding,
+        height: dims.height,
+        background: active ? T.blueAct : T.surface,
+        color: active ? '#fff' : T.ink2,
+        border: `1px solid ${active ? T.blueAct : T.line}`,
+        borderRadius: dims.radius,
+        fontSize: dims.fontSize, fontWeight: active ? 600 : 500,
+        cursor: 'pointer', whiteSpace: 'nowrap',
+        transition: 'all 0.12s ease',
+        lineHeight: 1,
+      }}
+    >{children}</button>
+  );
+};
 
 /** 뷰어 우측 플로팅 버튼 */
 const SideFloatBtn: React.FC<{ onClick?: () => void; children: React.ReactNode; active?: boolean; title?: string }> = ({ onClick, children, active, title }) => (
@@ -586,37 +593,37 @@ const MobileEditor: React.FC = () => {
             {bottomTab === 'module' && (
               <>
                 <div style={{ display: 'flex', gap: 4, marginBottom: isLandscape ? 5 : 8 }}>
-                  <SegBtn active={layoutMode === 'equal-division'} flex onClick={() => {
+                  <SegBtn size={isLandscape ? 'xs' : 'sm'} active={layoutMode === 'equal-division'} flex onClick={() => {
                     if (layoutMode === 'equal-division') return;
                     if (placedModules.length > 0 && !window.confirm('가구가 초기화됩니다.')) return;
                     setSpaceInfo({ layoutMode: 'equal-division' });
                   }}>슬롯배치</SegBtn>
-                  <SegBtn active={layoutMode === 'free-placement'} flex onClick={() => {
+                  <SegBtn size={isLandscape ? 'xs' : 'sm'} active={layoutMode === 'free-placement'} flex onClick={() => {
                     if (layoutMode === 'free-placement') return;
                     if (placedModules.length > 0 && !window.confirm('가구가 초기화됩니다.')) return;
                     setSpaceInfo({ layoutMode: 'free-placement' });
                   }}>자유배치</SegBtn>
                 </div>
                 <div style={{ display: 'flex', gap: 4, marginBottom: isLandscape ? 5 : 8 }}>
-                  <SegBtn active={moduleCategory === 'clothing'} flex onClick={() => setModuleCategory('clothing')}>의류장</SegBtn>
-                  <SegBtn active={moduleCategory === 'shoes'} flex onClick={() => setModuleCategory('shoes')}>신발장</SegBtn>
-                  <SegBtn active={moduleCategory === 'kitchen'} flex onClick={() => setModuleCategory('kitchen')}>주방</SegBtn>
+                  <SegBtn size={isLandscape ? 'xs' : 'sm'} active={moduleCategory === 'clothing'} flex onClick={() => setModuleCategory('clothing')}>의류장</SegBtn>
+                  <SegBtn size={isLandscape ? 'xs' : 'sm'} active={moduleCategory === 'shoes'} flex onClick={() => setModuleCategory('shoes')}>신발장</SegBtn>
+                  <SegBtn size={isLandscape ? 'xs' : 'sm'} active={moduleCategory === 'kitchen'} flex onClick={() => setModuleCategory('kitchen')}>주방</SegBtn>
                 </div>
 
                 {moduleCategory === 'kitchen' && (
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 4, marginBottom: isLandscape ? 5 : 8 }}>
-                    <SegBtn active={kitchenSub === 'basic'} onClick={() => setKitchenSub('basic')}>기본장</SegBtn>
-                    <SegBtn active={kitchenSub === 'door-raise'} onClick={() => setKitchenSub('door-raise')}>도어올림</SegBtn>
-                    <SegBtn active={kitchenSub === 'top-down'} onClick={() => setKitchenSub('top-down')}>상판내림</SegBtn>
-                    <SegBtn active={kitchenSub === 'upper'} onClick={() => setKitchenSub('upper')}>상부장</SegBtn>
+                    <SegBtn size={isLandscape ? 'xs' : 'sm'} active={kitchenSub === 'basic'} onClick={() => setKitchenSub('basic')}>기본장</SegBtn>
+                    <SegBtn size={isLandscape ? 'xs' : 'sm'} active={kitchenSub === 'door-raise'} onClick={() => setKitchenSub('door-raise')}>도어올림</SegBtn>
+                    <SegBtn size={isLandscape ? 'xs' : 'sm'} active={kitchenSub === 'top-down'} onClick={() => setKitchenSub('top-down')}>상판내림</SegBtn>
+                    <SegBtn size={isLandscape ? 'xs' : 'sm'} active={kitchenSub === 'upper'} onClick={() => setKitchenSub('upper')}>상부장</SegBtn>
                   </div>
                 )}
 
                 {moduleCategory !== 'kitchen' && (
                   <div style={{ display: 'flex', gap: 4, marginBottom: isLandscape ? 5 : 8 }}>
-                    <SegBtn active={moduleType === 'all'} flex onClick={() => setModuleType('all')}>전체</SegBtn>
-                    <SegBtn active={moduleType === 'single'} flex onClick={() => setModuleType('single')}>싱글</SegBtn>
-                    <SegBtn active={moduleType === 'dual'} flex onClick={() => setModuleType('dual')}>듀얼</SegBtn>
+                    <SegBtn size={isLandscape ? 'xs' : 'sm'} active={moduleType === 'all'} flex onClick={() => setModuleType('all')}>전체</SegBtn>
+                    <SegBtn size={isLandscape ? 'xs' : 'sm'} active={moduleType === 'single'} flex onClick={() => setModuleType('single')}>싱글</SegBtn>
+                    <SegBtn size={isLandscape ? 'xs' : 'sm'} active={moduleType === 'dual'} flex onClick={() => setModuleType('dual')}>듀얼</SegBtn>
                   </div>
                 )}
 
