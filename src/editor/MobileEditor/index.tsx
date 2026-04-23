@@ -1,6 +1,6 @@
 // MobileEditor — iPhone 14 Pro 전용 에디터 (시안 Image #78 기준)
 // 웹 UI 절대 불침범. /mobile, /mobile/configurator 라우트 전용
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { HiOutlineColorSwatch } from 'react-icons/hi';
 import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
@@ -9,6 +9,7 @@ import { useUIStore } from '@/store/uiStore';
 import Space3DView from '@/editor/shared/viewer3d/Space3DView';
 import ModuleGallery, { type ModuleType } from '@/editor/shared/controls/furniture/ModuleGallery';
 import MaterialPanel from '@/editor/shared/controls/styling/MaterialPanel';
+import IPadRightPanel from '@/editor/IPadEditor/IPadRightPanel';
 
 // ─── 디자인 토큰 ──────────────────────────────────────────────
 const T = {
@@ -30,6 +31,13 @@ const FONT_SANS = `-apple-system, BlinkMacSystemFont, "SF Pro Text", "Apple SD G
 
 type ViewerMode = '3D' | '2D' | 'drawing';
 type BottomTab = 'module' | 'material' | 'settings' | 'drawing';
+
+// 바텀시트 높이 스냅 포인트 (vh 단위)
+const SHEET_HEIGHTS = {
+  collapsed: 0,     // 닫힘
+  medium:    45,    // 중간
+  full:      80,    // 전체 확장
+} as const;
 
 // ─── 작은 공용 컴포넌트 ───────────────────────────────────────
 const SegBtn: React.FC<{
@@ -55,14 +63,15 @@ const SegBtn: React.FC<{
 );
 
 /** 뷰어 우측 플로팅 버튼 */
-const SideFloatBtn: React.FC<{ onClick?: () => void; children: React.ReactNode }> = ({ onClick, children }) => (
+const SideFloatBtn: React.FC<{ onClick?: () => void; children: React.ReactNode; active?: boolean; title?: string }> = ({ onClick, children, active, title }) => (
   <button
     onClick={onClick}
+    title={title}
     style={{
       width: 40, height: 40, borderRadius: 10,
-      border: `1px solid ${T.line}`,
-      background: T.surface,
-      color: T.ink2,
+      border: `1px solid ${active ? T.blueAct : T.line}`,
+      background: active ? T.primary50 : T.surface,
+      color: active ? T.blueAct : T.ink2,
       display: 'flex', alignItems: 'center', justifyContent: 'center',
       cursor: 'pointer',
       boxShadow: '0 1px 3px rgba(0,0,0,0.08)',
@@ -85,6 +94,11 @@ const IconCube = () => (
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
     <path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/>
     <polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/>
+  </svg>
+);
+const IconSquare = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+    <rect x="3" y="3" width="18" height="18" rx="2"/>
   </svg>
 );
 const IconRotate = () => (
@@ -139,10 +153,13 @@ const MobileEditor: React.FC = () => {
   const renderMode = useUIStore(s => s.renderMode);
   const showAll = useUIStore(s => s.showAll);
   const showFrame = useUIStore(s => s.showFrame);
+  const view2DDirection = useUIStore(s => s.view2DDirection);
+  const setView2DDirection = useUIStore(s => s.setView2DDirection);
 
   const [topMode, setTopMode] = useState<ViewerMode>('3D');
   const [bottomTab, setBottomTab] = useState<BottomTab>('module');
   const [sheetOpen, setSheetOpen] = useState(false);
+  const [sheetHeight, setSheetHeight] = useState<number>(SHEET_HEIGHTS.medium);
   const [moduleType, setModuleType] = useState<ModuleType>('all');
   const [moduleCategory, setModuleCategory] = useState<'clothing' | 'shoes' | 'kitchen'>('clothing');
   const [kitchenSub, setKitchenSub] = useState<'basic' | 'door-raise' | 'top-down' | 'upper'>('basic');
@@ -165,13 +182,78 @@ const MobileEditor: React.FC = () => {
     return () => { ro.disconnect(); window.removeEventListener('resize', update); };
   }, []);
 
+  // 바텀 시트 드래그 제스처
+  const dragStateRef = useRef<{ startY: number; startHeight: number } | null>(null);
+  const handleSheetDragStart = useCallback((e: React.TouchEvent | React.MouseEvent) => {
+    const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
+    dragStateRef.current = { startY: clientY, startHeight: sheetHeight };
+  }, [sheetHeight]);
+
+  useEffect(() => {
+    const handleMove = (e: TouchEvent | MouseEvent) => {
+      if (!dragStateRef.current) return;
+      const clientY = 'touches' in e ? (e as TouchEvent).touches[0].clientY : (e as MouseEvent).clientY;
+      const deltaY = dragStateRef.current.startY - clientY;
+      const vh = window.innerHeight;
+      const deltaVh = (deltaY / vh) * 100;
+      const newHeight = Math.max(0, Math.min(SHEET_HEIGHTS.full, dragStateRef.current.startHeight + deltaVh));
+      setSheetHeight(newHeight);
+    };
+    const handleEnd = () => {
+      if (!dragStateRef.current) return;
+      dragStateRef.current = null;
+      // 가장 가까운 스냅 포인트로 이동
+      setSheetHeight(cur => {
+        if (cur < (SHEET_HEIGHTS.medium / 2)) {
+          setSheetOpen(false);
+          return SHEET_HEIGHTS.collapsed;
+        }
+        if (cur < (SHEET_HEIGHTS.medium + SHEET_HEIGHTS.full) / 2) return SHEET_HEIGHTS.medium;
+        return SHEET_HEIGHTS.full;
+      });
+    };
+    window.addEventListener('touchmove', handleMove, { passive: true });
+    window.addEventListener('touchend', handleEnd);
+    window.addEventListener('mousemove', handleMove);
+    window.addEventListener('mouseup', handleEnd);
+    return () => {
+      window.removeEventListener('touchmove', handleMove);
+      window.removeEventListener('touchend', handleEnd);
+      window.removeEventListener('mousemove', handleMove);
+      window.removeEventListener('mouseup', handleEnd);
+    };
+  }, []);
+
   const handleTabClick = (tab: BottomTab) => {
     if (tab === bottomTab && sheetOpen) {
       setSheetOpen(false);
+      setSheetHeight(SHEET_HEIGHTS.collapsed);
       return;
     }
     setBottomTab(tab);
     setSheetOpen(true);
+    if (sheetHeight < SHEET_HEIGHTS.medium) setSheetHeight(SHEET_HEIGHTS.medium);
+  };
+
+  // 플로팅 버튼: 회전 → 2D 방향 순환 (front→left→top→right→front)
+  const handleRotate2D = () => {
+    if (viewMode !== '2D') {
+      setViewMode('2D');
+      setTopMode('2D');
+      return;
+    }
+    const order: Array<'front' | 'left' | 'top' | 'right'> = ['front', 'left', 'top', 'right'];
+    const idx = order.indexOf(view2DDirection as any);
+    const next = order[(idx + 1) % order.length];
+    setView2DDirection(next);
+  };
+
+  const handleFullscreen = () => {
+    if (document.fullscreenElement) {
+      document.exitFullscreen().catch(() => {});
+    } else {
+      document.documentElement.requestFullscreen().catch(() => {});
+    }
   };
 
   return (
@@ -227,6 +309,11 @@ const MobileEditor: React.FC = () => {
             <SegBtn key={item.k} active={topMode === item.k} flex onClick={() => {
               setTopMode(item.k);
               if (item.k === '2D' || item.k === '3D') setViewMode(item.k);
+              if (item.k === 'drawing') {
+                setBottomTab('drawing');
+                setSheetOpen(true);
+                setSheetHeight(SHEET_HEIGHTS.full);
+              }
             }}>{item.label}</SegBtn>
           ))}
         </div>
@@ -246,15 +333,24 @@ const MobileEditor: React.FC = () => {
           />
         </div>
 
-        {/* 우측 플로팅 버튼 (큐브/회전/전체화면) */}
+        {/* 우측 플로팅 버튼 */}
         <div style={{
           position: 'absolute', top: 14, right: 14,
           display: 'flex', flexDirection: 'column', gap: 8,
           zIndex: 5,
         }}>
-          <SideFloatBtn><IconCube /></SideFloatBtn>
-          <SideFloatBtn><IconRotate /></SideFloatBtn>
-          <SideFloatBtn><IconFullscreen /></SideFloatBtn>
+          <SideFloatBtn
+            title="3D 뷰"
+            active={viewMode === '3D'}
+            onClick={() => { setViewMode('3D'); setTopMode('3D'); }}
+          ><IconCube /></SideFloatBtn>
+          <SideFloatBtn
+            title="2D 뷰 전환"
+            active={viewMode === '2D'}
+            onClick={() => { setViewMode('2D'); setTopMode('2D'); }}
+          ><IconSquare /></SideFloatBtn>
+          <SideFloatBtn title="2D 방향 회전" onClick={handleRotate2D}><IconRotate /></SideFloatBtn>
+          <SideFloatBtn title="전체화면" onClick={handleFullscreen}><IconFullscreen /></SideFloatBtn>
         </div>
 
         {/* 우측 하단 파란 편집 FAB */}
@@ -281,18 +377,30 @@ const MobileEditor: React.FC = () => {
           background: T.surface,
           borderTop: `1px solid ${T.line}`,
           borderTopLeftRadius: 16, borderTopRightRadius: 16,
-          maxHeight: '65vh', display: 'flex', flexDirection: 'column',
+          height: `${sheetHeight}vh`,
+          display: 'flex', flexDirection: 'column',
           boxShadow: '0 -4px 20px rgba(0,0,0,0.1)',
           zIndex: 10,
+          transition: dragStateRef.current ? 'none' : 'height 0.2s ease',
         }}>
-          {/* 드래그 핸들 */}
-          <div style={{ padding: '8px 0 4px', display: 'flex', justifyContent: 'center' }}>
-            <div style={{ width: 40, height: 4, background: T.bg3, borderRadius: 2 }}/>
+          {/* 드래그 핸들 (터치/마우스 드래그 가능) */}
+          <div
+            onTouchStart={handleSheetDragStart}
+            onMouseDown={handleSheetDragStart}
+            style={{
+              padding: '10px 0 6px',
+              display: 'flex',
+              justifyContent: 'center',
+              cursor: 'grab',
+              touchAction: 'none',
+            }}
+          >
+            <div style={{ width: 48, height: 5, background: T.bg3, borderRadius: 3 }}/>
           </div>
 
           {/* 헤더 */}
           <div style={{
-            padding: '8px 16px 10px',
+            padding: '4px 16px 10px',
             display: 'flex', alignItems: 'center', justifyContent: 'space-between',
             borderBottom: `1px solid ${T.line2}`,
           }}>
@@ -302,7 +410,7 @@ const MobileEditor: React.FC = () => {
               {bottomTab === 'settings' && '설정'}
               {bottomTab === 'drawing' && '도면'}
             </div>
-            <button onClick={() => setSheetOpen(false)} style={{
+            <button onClick={() => { setSheetOpen(false); setSheetHeight(SHEET_HEIGHTS.collapsed); }} style={{
               background: 'none', border: 'none', cursor: 'pointer', color: T.ink2, padding: 4, display: 'flex',
             }}>
               <IconClose />
@@ -319,10 +427,26 @@ const MobileEditor: React.FC = () => {
                     if (placedModules.length > 0 && !window.confirm('가구가 초기화됩니다.')) return;
                     setSpaceInfo({ layoutMode: 'equal-division' });
                   }}>슬롯배치</SegBtn>
-                  <SegBtn active={moduleCategory === 'clothing'} onClick={() => setModuleCategory('clothing')}>의류장</SegBtn>
-                  <SegBtn active={moduleCategory === 'shoes'} onClick={() => setModuleCategory('shoes')}>신발장</SegBtn>
-                  <SegBtn active={moduleCategory === 'kitchen'} onClick={() => setModuleCategory('kitchen')}>주방</SegBtn>
+                  <SegBtn active={layoutMode === 'free-placement'} flex onClick={() => {
+                    if (layoutMode === 'free-placement') return;
+                    if (placedModules.length > 0 && !window.confirm('가구가 초기화됩니다.')) return;
+                    setSpaceInfo({ layoutMode: 'free-placement' });
+                  }}>자유배치</SegBtn>
                 </div>
+                <div style={{ display: 'flex', gap: 6, marginBottom: 10 }}>
+                  <SegBtn active={moduleCategory === 'clothing'} flex onClick={() => setModuleCategory('clothing')}>의류장</SegBtn>
+                  <SegBtn active={moduleCategory === 'shoes'} flex onClick={() => setModuleCategory('shoes')}>신발장</SegBtn>
+                  <SegBtn active={moduleCategory === 'kitchen'} flex onClick={() => setModuleCategory('kitchen')}>주방</SegBtn>
+                </div>
+
+                {moduleCategory === 'kitchen' && (
+                  <div style={{ display: 'flex', gap: 6, marginBottom: 10, flexWrap: 'wrap' }}>
+                    <SegBtn active={kitchenSub === 'basic'} onClick={() => setKitchenSub('basic')}>기본장</SegBtn>
+                    <SegBtn active={kitchenSub === 'door-raise'} onClick={() => setKitchenSub('door-raise')}>도어올림</SegBtn>
+                    <SegBtn active={kitchenSub === 'top-down'} onClick={() => setKitchenSub('top-down')}>상판내림</SegBtn>
+                    <SegBtn active={kitchenSub === 'upper'} onClick={() => setKitchenSub('upper')}>상부장</SegBtn>
+                  </div>
+                )}
 
                 {moduleCategory !== 'kitchen' && (
                   <div style={{ display: 'flex', gap: 6, marginBottom: 10 }}>
@@ -341,18 +465,35 @@ const MobileEditor: React.FC = () => {
                 />
               </>
             )}
+
             {bottomTab === 'material' && <MaterialPanel />}
+
             {bottomTab === 'settings' && (
-              <div style={{ padding: 20, textAlign: 'center', color: T.ink3, fontSize: 13 }}>
-                공간 / 프레임 설정 (모바일)
-                <div style={{ marginTop: 12, fontSize: 12 }}>
-                  추후 모바일 전용 설정 UI 구현 예정
-                </div>
-              </div>
+              <IPadRightPanel spaceInfo={spaceInfo} setSpaceInfo={setSpaceInfo} />
             )}
+
             {bottomTab === 'drawing' && (
-              <div style={{ padding: 20, textAlign: 'center', color: T.ink3, fontSize: 13 }}>
-                도면 (모바일)
+              <div style={{ padding: '20px 10px', color: T.ink2, fontSize: 13 }}>
+                <div style={{ marginBottom: 12, fontSize: 14, fontWeight: 600, color: T.ink }}>
+                  2D 도면 뷰
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 8 }}>
+                  {([
+                    { k: 'front', label: '정면도' },
+                    { k: 'left',  label: '좌측도' },
+                    { k: 'right', label: '우측도' },
+                    { k: 'top',   label: '평면도' },
+                  ] as const).map(v => (
+                    <SegBtn
+                      key={v.k}
+                      active={viewMode === '2D' && view2DDirection === v.k}
+                      onClick={() => { setViewMode('2D'); setView2DDirection(v.k); setTopMode('2D'); }}
+                    >{v.label}</SegBtn>
+                  ))}
+                </div>
+                <div style={{ marginTop: 14, color: T.ink3, fontSize: 12 }}>
+                  도면 선택 후 바텀시트를 닫으면 뷰어에 표시됩니다.
+                </div>
               </div>
             )}
           </div>
