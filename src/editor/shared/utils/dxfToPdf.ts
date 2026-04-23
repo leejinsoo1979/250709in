@@ -723,6 +723,92 @@ export interface SheetMetadata {
 }
 
 /**
+ * 한글 포함 텍스트를 Canvas로 렌더 후 PNG dataURL 반환
+ * jsPDF 기본 폰트가 한글을 지원하지 않아 PDF에서 깨지는 문제 회피용
+ */
+const renderKoreanTextToImage = (
+  text: string,
+  fontSize: number = 18,
+  color: string = '#000000',
+  fontWeight: string = 'normal',
+): { dataUrl: string; widthPx: number; heightPx: number } | null => {
+  if (!text) return null;
+  try {
+    // 고해상도 렌더를 위해 scale 2x
+    const scale = 2;
+    const padding = 4;
+    const fontStack = `${fontWeight} ${fontSize * scale}px "Pretendard", "Noto Sans KR", "Malgun Gothic", "AppleSDGothicNeo", sans-serif`;
+
+    // 측정용 canvas
+    const measure = document.createElement('canvas');
+    const mCtx = measure.getContext('2d');
+    if (!mCtx) return null;
+    mCtx.font = fontStack;
+    const metrics = mCtx.measureText(text);
+    const textW = Math.ceil(metrics.width);
+    const textH = Math.ceil(fontSize * scale * 1.3);
+
+    const canvas = document.createElement('canvas');
+    canvas.width = textW + padding * 2;
+    canvas.height = textH + padding * 2;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return null;
+    ctx.fillStyle = 'rgba(255,255,255,0)';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.font = fontStack;
+    ctx.fillStyle = color;
+    ctx.textBaseline = 'top';
+    ctx.fillText(text, padding, padding);
+
+    return {
+      dataUrl: canvas.toDataURL('image/png'),
+      widthPx: canvas.width,
+      heightPx: canvas.height,
+    };
+  } catch (err) {
+    console.warn('[PDF] 한글 텍스트 이미지 변환 실패:', text, err);
+    return null;
+  }
+};
+
+/**
+ * PDF에 한글 포함 텍스트를 렌더 — 한글이 포함되면 이미지로, 순수 ASCII면 기본 text()
+ */
+const drawTextSafe = (
+  pdf: jsPDF,
+  text: string,
+  xMm: number,
+  yMm: number,
+  fontSizePt: number = 8,
+  color: [number, number, number] = [0, 0, 0],
+) => {
+  // eslint-disable-next-line no-control-regex
+  const hasNonAscii = /[^\x00-\x7F]/.test(text);
+  if (!hasNonAscii) {
+    pdf.setFontSize(fontSizePt);
+    pdf.setTextColor(color[0], color[1], color[2]);
+    pdf.text(text, xMm, yMm);
+    return;
+  }
+  // 한글 포함 → Canvas 이미지로
+  const colorHex = '#' + color.map(c => c.toString(16).padStart(2, '0')).join('');
+  // fontSizePt(PDF pt) → Canvas px: 대략 pt*2.5px 크기로 렌더 후 동일 mm 치수 유지
+  const img = renderKoreanTextToImage(text, Math.round(fontSizePt * 2.5), colorHex);
+  if (!img) return;
+  // 1pt ≈ 0.353mm → 실제 폰트 크기 = fontSizePt * 0.353mm 높이
+  const targetHmm = fontSizePt * 0.45;
+  const aspect = img.widthPx / img.heightPx;
+  const targetWmm = targetHmm * aspect;
+  // baseline 보정: pdf.text는 y가 baseline, Canvas는 top → y - targetHmm*0.75
+  const yAdjustedMm = yMm - targetHmm * 0.75;
+  try {
+    pdf.addImage(img.dataUrl, 'PNG', xMm, yAdjustedMm, targetWmm, targetHmm);
+  } catch (err) {
+    console.warn('[PDF] 한글 텍스트 이미지 삽입 실패:', text, err);
+  }
+};
+
+/**
  * 텍스처 이미지 URL을 PNG dataURL로 변환 (jsPDF addImage용)
  * 실패 시 null 반환
  */
@@ -994,13 +1080,13 @@ const renderSheetContent = async (
       pdf.setLineWidth(0.2);
       pdf.line(tbX, y, tbX + titleBlockW, y);
     }
+    // label (영문만) — 기본 text
     pdf.setFontSize(6);
     pdf.setTextColor(100, 100, 100);
     pdf.text(r.label, tbX + 2, y + 4);
-    pdf.setFontSize(8);
-    pdf.setTextColor(0, 0, 0);
+    // value (한글 가능) — drawTextSafe
     r.value.split('\n').forEach((line, i) => {
-      pdf.text(line, tbX + 2, y + 10 + i * 3.5);
+      drawTextSafe(pdf, line, tbX + 2, y + 10 + i * 3.5, 8, [0, 0, 0]);
     });
   });
 
@@ -1086,19 +1172,15 @@ const renderSheetContent = async (
       }
     }
 
-    // 재질명/브랜드 텍스트 (섬네일 우측)
+    // 재질명/브랜드 텍스트 (섬네일 우측) — 한글 가능
     const parsed = parseMaterialName(m.texture);
     const textX = thumbX + thumbSize + 2;
     const textY = thumbY + 4;
-    pdf.setFontSize(7);
-    pdf.setTextColor(0, 0, 0);
     if (parsed.brand) {
-      pdf.text(parsed.brand, textX, textY);
-      pdf.setFontSize(6);
-      pdf.setTextColor(80, 80, 80);
-      pdf.text(parsed.name, textX, textY + 4);
+      drawTextSafe(pdf, parsed.brand, textX, textY, 7, [0, 0, 0]);
+      drawTextSafe(pdf, parsed.name, textX, textY + 4, 6, [80, 80, 80]);
     } else if (parsed.name) {
-      pdf.text(parsed.name, textX, textY);
+      drawTextSafe(pdf, parsed.name, textX, textY, 7, [0, 0, 0]);
     } else {
       pdf.setFontSize(6);
       pdf.setTextColor(150, 150, 150);
