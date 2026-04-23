@@ -31,6 +31,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
   const isDashboard = location.pathname.startsWith('/dashboard');
   const isGallery = location.pathname.startsWith('/gallery');
   const isNews = location.pathname.startsWith('/news');
+  const isQnA = location.pathname.startsWith('/qna');
 
   return (
     <header className={styles.header}>
@@ -65,6 +66,13 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
               <span>News</span>
             </button>
           )}
+          <button
+            className={`${styles.navBtn} ${isQnA ? styles.active : ''}`}
+            onClick={() => navigate('/qna')}
+            title="Q&A"
+          >
+            <span>Q&amp;A</span>
+          </button>
         </nav>
         {onSearchChange !== undefined && (
           <div className={styles.searchBox}>

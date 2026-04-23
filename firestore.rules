@@ -30,6 +30,33 @@ service cloud.firestore {
       allow create, update, delete: if isAdmin();
     }
 
+    // qna - Q&A 게시판
+    // - 질문 작성: 로그인 사용자 누구나
+    // - 읽기: 작성자 본인 또는 관리자
+    // - 수정(본문): 작성자 본인만
+    // - 답변 필드 업데이트: 관리자만
+    // - 삭제: 작성자 또는 관리자
+    match /qna/{qnaId} {
+      allow read: if isSignedIn() && (
+        isAdmin() || resource.data.authorId == request.auth.uid
+      );
+      // 목록(list) 쿼리: 관리자는 전체, 일반 사용자는 본인 것만 (where authorId == uid)
+      allow list: if isSignedIn();
+      allow create: if isSignedIn() &&
+                    request.resource.data.authorId == request.auth.uid &&
+                    request.resource.data.status == 'pending';
+      allow update: if isSignedIn() && (
+        isAdmin() ||
+        // 작성자 본인: title/body만 수정 가능 (status, answer 등은 불가)
+        (resource.data.authorId == request.auth.uid &&
+         request.resource.data.authorId == resource.data.authorId &&
+         request.resource.data.status == resource.data.status)
+      );
+      allow delete: if isSignedIn() && (
+        isAdmin() || resource.data.authorId == request.auth.uid
+      );
+    }
+
     // organizations - 조직 정보 (관리자만 모든 조직 읽기 가능)
     match /organizations/{orgId} {
       allow read, list: if isAdmin();

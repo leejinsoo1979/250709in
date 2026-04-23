@@ -16,6 +16,7 @@ import TestDashboard from '@/pages/TestDashboard';
 import ViewerPage from '@/pages/ViewerPage';
 import GalleryPage from '@/pages/GalleryPage';
 import NewsPage from '@/pages/NewsPage';
+import QnAPage from '@/pages/QnAPage';
 import GalleryDetailPage from '@/pages/GalleryDetailPage';
 import LandingPage from '@/pages/LandingPage';
 import SignUpPage from '@/pages/SignUpPage';
@@ -194,6 +195,11 @@ function AppContent() {
         <Route path="/news/new" element={<NewsPage mode="new" />} />
         <Route path="/news/:id" element={<NewsPage mode="detail" />} />
         <Route path="/news/:id/edit" element={<NewsPage mode="edit" />} />
+        {/* Q&A 게시판 (로그인 사용자) */}
+        <Route path="/qna" element={<QnAPage mode="list" />} />
+        <Route path="/qna/new" element={<QnAPage mode="new" />} />
+        <Route path="/qna/:id" element={<QnAPage mode="detail" />} />
+        <Route path="/qna/:id/edit" element={<QnAPage mode="edit" />} />
         {/* 공유 링크 접근 라우트 */}
         <Route path="/share/:token" element={<ShareLinkAccess />} />
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
