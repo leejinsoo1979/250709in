@@ -1063,13 +1063,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         : ((module as any).adjustedPosition?.x ?? module.position.x);
       
       // 커스텀 깊이가 있는 경우 전용 가구로 취급
-      // 현관장 H(entryway-h)는 dimensions.depth가 도어 포함 400mm → customDepth 없을 때 도어 20 차감
-      const modIdForDepth = module.moduleId || '';
-      const isEntrywayH_depth = modIdForDepth.includes('-entryway-');
-      const rawDefaultDepth_cd = moduleData.dimensions.depth;
-      const effectiveDefaultDepth_cd = isEntrywayH_depth ? Math.max(0, rawDefaultDepth_cd - 20) : rawDefaultDepth_cd;
-      const actualDepth = module.customDepth || effectiveDefaultDepth_cd;
-      const hasCustomDepth = module.customDepth && module.customDepth !== rawDefaultDepth_cd;
+      const actualDepth = module.customDepth || moduleData.dimensions.depth;
+      const hasCustomDepth = module.customDepth && module.customDepth !== moduleData.dimensions.depth;
       
       // customWidth가 있으면 우선 사용 (이미 위에서 처리됨)
       // adjustedWidth는 두 번째 우선순위 (이미 위에서 처리됨)
@@ -8883,16 +8878,12 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               }
             }
           } else {
-            const mid = module.moduleId || '';
-            const isEntrywayH_top = mid.includes('-entryway-');
-            // 현관장 H(entryway-h)는 dimensions.depth가 도어 포함 400mm → customDepth 없을 때 도어 20mm 차감
-            const rawDefaultDepth_top = moduleData.dimensions.depth;
-            const defaultDepthForGuide = isEntrywayH_top ? Math.max(0, rawDefaultDepth_top - 20) : rawDefaultDepth_top;
-            const actualDepthMm = module.customDepth || defaultDepthForGuide;
+            const actualDepthMm = module.customDepth || moduleData.dimensions.depth;
             const depth = mmToThreeUnits(actualDepthMm);
             const isFloating = spaceInfo.baseConfig?.type === 'stand' && spaceInfo.baseConfig?.placementType === 'float';
             const baseDepthOffset = isFloating ? mmToThreeUnits(spaceInfo.baseConfig?.depth || 0) : 0;
             const isUpperCat = moduleData.category === 'upper' || module.moduleId?.includes('upper-cabinet');
+            const mid = module.moduleId || '';
             const isShoeCabinet = mid.includes('-entryway-') || mid.includes('-shelf-') ||
                                   mid.includes('-4drawer-shelf-') || mid.includes('-2drawer-shelf-');
             let furnitureBackZ: number;
