@@ -66,25 +66,28 @@ const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
           </div>
         </div>
 
-        {/* 이미지 */}
+        {/* 이미지 — 모달 안에 꽉 차게 (스크롤 없이 contain) */}
         <div
           style={{
             flex: 1,
-            overflow: 'auto',
+            minHeight: 0,
+            overflow: 'hidden',
             background: '#fff',
-            padding: 16,
+            padding: 12,
             display: 'flex',
             justifyContent: 'center',
-            alignItems: 'flex-start',
+            alignItems: 'center',
           }}
         >
           <img
             src={imageSrc}
             alt={platform === 'mac' ? 'macOS 조작법' : 'Windows 조작법'}
             style={{
-              width: '100%',
-              maxWidth: 1100,
+              maxWidth: '100%',
+              maxHeight: '100%',
+              width: 'auto',
               height: 'auto',
+              objectFit: 'contain',
               display: 'block',
               borderRadius: 6,
             }}
