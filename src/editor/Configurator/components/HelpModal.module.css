@@ -13,9 +13,9 @@
   background: var(--theme-surface, #fff);
   border-radius: 14px;
   box-shadow: var(--theme-shadow-lg, 0 10px 40px rgba(0, 0, 0, 0.2));
-  width: 860px;
+  width: 1180px;
   max-width: 96vw;
-  max-height: 88vh;
+  max-height: 92vh;
   overflow: hidden;
   display: flex;
   flex-direction: column;
