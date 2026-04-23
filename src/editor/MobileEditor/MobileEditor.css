@@ -23,3 +23,19 @@
 .mobile-editor-root [class*="thumbnailName"] {
   font-size: 11px !important;
 }
+
+/* 가로 모드 좌측 사이드 패널: 버튼/텍스트 크기 컴팩트 */
+.mobile-editor-root .mobile-landscape-panel button {
+  height: 26px !important;
+  padding: 3px 6px !important;
+  font-size: 11px !important;
+  border-radius: 5px !important;
+}
+.mobile-editor-root .mobile-landscape-panel [class*="thumbnailGrid"] {
+  grid-template-columns: repeat(2, 1fr) !important;
+  gap: 4px !important;
+}
+.mobile-editor-root .mobile-landscape-panel [class*="thumbnailLabel"],
+.mobile-editor-root .mobile-landscape-panel [class*="thumbnailName"] {
+  font-size: 10px !important;
+}

@@ -441,25 +441,27 @@ const MobileEditor: React.FC = () => {
           />
         </div>
 
-        {/* 우측 플로팅 버튼 */}
-        <div style={{
-          position: 'absolute', top: 14, right: 14,
-          display: 'flex', flexDirection: 'column', gap: 8,
-          zIndex: 5,
-        }}>
-          <SideFloatBtn
-            title="3D 뷰"
-            active={viewMode === '3D'}
-            onClick={() => { setViewMode('3D'); setTopMode('3D'); }}
-          ><IconCube /></SideFloatBtn>
-          <SideFloatBtn
-            title="2D 뷰 전환"
-            active={viewMode === '2D'}
-            onClick={() => { setViewMode('2D'); setTopMode('2D'); }}
-          ><IconSquare /></SideFloatBtn>
-          <SideFloatBtn title="2D 방향 회전" onClick={handleRotate2D}><IconRotate /></SideFloatBtn>
-          <SideFloatBtn title="전체화면" onClick={handleFullscreen}><IconFullscreen /></SideFloatBtn>
-        </div>
+        {/* 우측 플로팅 버튼 — 세로 모드에서만 표시 (가로는 상단 헤더에 토글 있음) */}
+        {!isLandscape && (
+          <div style={{
+            position: 'absolute', top: 14, right: 14,
+            display: 'flex', flexDirection: 'column', gap: 8,
+            zIndex: 5,
+          }}>
+            <SideFloatBtn
+              title="3D 뷰"
+              active={viewMode === '3D'}
+              onClick={() => { setViewMode('3D'); setTopMode('3D'); }}
+            ><IconCube /></SideFloatBtn>
+            <SideFloatBtn
+              title="2D 뷰 전환"
+              active={viewMode === '2D'}
+              onClick={() => { setViewMode('2D'); setTopMode('2D'); }}
+            ><IconSquare /></SideFloatBtn>
+            <SideFloatBtn title="2D 방향 회전" onClick={handleRotate2D}><IconRotate /></SideFloatBtn>
+            <SideFloatBtn title="전체화면" onClick={handleFullscreen}><IconFullscreen /></SideFloatBtn>
+          </div>
+        )}
 
         {/* 우측 하단 파란 편집 FAB */}
         <button
@@ -562,11 +564,11 @@ const MobileEditor: React.FC = () => {
 
           {/* 헤더 */}
           <div style={{
-            padding: isLandscape ? '14px 16px 10px' : '4px 16px 10px',
+            padding: isLandscape ? '6px 10px 6px' : '4px 16px 10px',
             display: 'flex', alignItems: 'center', justifyContent: 'space-between',
             borderBottom: `1px solid ${T.line2}`,
           }}>
-            <div style={{ fontSize: 15, fontWeight: 700, color: T.ink }}>
+            <div style={{ fontSize: isLandscape ? 13 : 15, fontWeight: 700, color: T.ink }}>
               {bottomTab === 'module' && '모듈'}
               {bottomTab === 'material' && '재질'}
               {bottomTab === 'settings' && '설정'}
@@ -580,10 +582,10 @@ const MobileEditor: React.FC = () => {
           </div>
 
           {/* 바텀 시트 콘텐츠 */}
-          <div style={{ flex: 1, overflow: 'auto', padding: 12 }}>
+          <div className={isLandscape ? 'mobile-landscape-panel' : ''} style={{ flex: 1, overflow: 'auto', padding: isLandscape ? 8 : 12 }}>
             {bottomTab === 'module' && (
               <>
-                <div style={{ display: 'flex', gap: 4, marginBottom: 8 }}>
+                <div style={{ display: 'flex', gap: 4, marginBottom: isLandscape ? 5 : 8 }}>
                   <SegBtn active={layoutMode === 'equal-division'} flex onClick={() => {
                     if (layoutMode === 'equal-division') return;
                     if (placedModules.length > 0 && !window.confirm('가구가 초기화됩니다.')) return;
@@ -595,14 +597,14 @@ const MobileEditor: React.FC = () => {
                     setSpaceInfo({ layoutMode: 'free-placement' });
                   }}>자유배치</SegBtn>
                 </div>
-                <div style={{ display: 'flex', gap: 4, marginBottom: 8 }}>
+                <div style={{ display: 'flex', gap: 4, marginBottom: isLandscape ? 5 : 8 }}>
                   <SegBtn active={moduleCategory === 'clothing'} flex onClick={() => setModuleCategory('clothing')}>의류장</SegBtn>
                   <SegBtn active={moduleCategory === 'shoes'} flex onClick={() => setModuleCategory('shoes')}>신발장</SegBtn>
                   <SegBtn active={moduleCategory === 'kitchen'} flex onClick={() => setModuleCategory('kitchen')}>주방</SegBtn>
                 </div>
 
                 {moduleCategory === 'kitchen' && (
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 4, marginBottom: 8 }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 4, marginBottom: isLandscape ? 5 : 8 }}>
                     <SegBtn active={kitchenSub === 'basic'} onClick={() => setKitchenSub('basic')}>기본장</SegBtn>
                     <SegBtn active={kitchenSub === 'door-raise'} onClick={() => setKitchenSub('door-raise')}>도어올림</SegBtn>
                     <SegBtn active={kitchenSub === 'top-down'} onClick={() => setKitchenSub('top-down')}>상판내림</SegBtn>
@@ -611,7 +613,7 @@ const MobileEditor: React.FC = () => {
                 )}
 
                 {moduleCategory !== 'kitchen' && (
-                  <div style={{ display: 'flex', gap: 4, marginBottom: 8 }}>
+                  <div style={{ display: 'flex', gap: 4, marginBottom: isLandscape ? 5 : 8 }}>
                     <SegBtn active={moduleType === 'all'} flex onClick={() => setModuleType('all')}>전체</SegBtn>
                     <SegBtn active={moduleType === 'single'} flex onClick={() => setModuleType('single')}>싱글</SegBtn>
                     <SegBtn active={moduleType === 'dual'} flex onClick={() => setModuleType('dual')}>듀얼</SegBtn>
