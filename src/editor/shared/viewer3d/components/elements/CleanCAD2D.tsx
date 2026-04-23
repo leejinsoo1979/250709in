@@ -8842,14 +8842,21 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             //   isFloating = baseConfig.type==='stand' && placementType==='float'
             //   baseDepthOffset = isFloating ? baseConfig.depth : 0
             //   상부장: backZ = furnitureZOffset - furnitureDepth/2 - doorThickness  (+ 0)
-            //   하부장: backZ = furnitureZOffset + furnitureDepth/2 - doorThickness - depth + baseDepthOffset
+            //   신발장: backZ = furnitureZOffset - furnitureDepth/2 - doorThickness + baseDepthOffset (상/하부 모두 뒷면 정렬)
+            //   하부장/의류장: backZ = furnitureZOffset + furnitureDepth/2 - doorThickness - depth + baseDepthOffset
             const isFloating = spaceInfo.baseConfig?.type === 'stand' && spaceInfo.baseConfig?.placementType === 'float';
             const baseDepthOffset = isFloating ? mmToThreeUnits(spaceInfo.baseConfig?.depth || 0) : 0;
+            const mid2 = module.moduleId || '';
+            const isShoeCabinet2 = mid2.includes('-entryway-') || mid2.includes('-shelf-') ||
+                                   mid2.includes('-4drawer-shelf-') || mid2.includes('-2drawer-shelf-');
 
             // 하부장 깊이
             const lowerDepthMm = module.lowerSectionDepth || module.customDepth || moduleData.dimensions.depth;
             const lowerDepth = mmToThreeUnits(lowerDepthMm);
-            const lowerBackZ = furnitureZOffset + furnitureDepth/2 - doorThickness - lowerDepth + baseDepthOffset;
+            // 신발장이면 하부도 뒷면 정렬, 아니면 앞면 정렬
+            const lowerBackZ = isShoeCabinet2
+              ? furnitureZOffset - furnitureDepth/2 - doorThickness + baseDepthOffset
+              : furnitureZOffset + furnitureDepth/2 - doorThickness - lowerDepth + baseDepthOffset;
             const lowerFrontZ = lowerBackZ + lowerDepth;
             const lowerKey = Math.round(lowerDepthMm);
             const existingLower = depthGroups.get(lowerKey);
@@ -8861,10 +8868,12 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               depthGroups.set(lowerKey, { backZ: lowerBackZ, frontZ: lowerFrontZ, edgeX: rightX });
             }
 
-            // 상부장 깊이 (isUpperForZ: 공간 뒷면 정렬)
+            // 상부장 깊이 — 의류장/상부장(+0) vs 신발장(+baseDepthOffset)
             const upperDepthMm = module.upperSectionDepth || module.customDepth || moduleData.dimensions.depth;
             const upperDepth = mmToThreeUnits(upperDepthMm);
-            const upperBackZ = furnitureZOffset - furnitureDepth/2 - doorThickness;
+            const upperBackZ = isShoeCabinet2
+              ? furnitureZOffset - furnitureDepth/2 - doorThickness + baseDepthOffset
+              : furnitureZOffset - furnitureDepth/2 - doorThickness;
             const upperFrontZ = upperBackZ + upperDepth;
             const upperKey = Math.round(upperDepthMm);
             if (upperKey !== lowerKey) {
@@ -9035,14 +9044,19 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 depthGroups.set(depthKey, { backZ: furnitureBackZ, frontZ: furnitureFrontZ, edgeX: leftX });
               }
             } else if (is2Section) {
-              // FurnitureItem.tsx와 동일 공식
+              // FurnitureItem.tsx와 동일 공식 — 신발장은 상/하부 모두 뒷면 정렬
               const isFloating = spaceInfo.baseConfig?.type === 'stand' && spaceInfo.baseConfig?.placementType === 'float';
               const baseDepthOffset = isFloating ? mmToThreeUnits(spaceInfo.baseConfig?.depth || 0) : 0;
+              const mid2 = module.moduleId || '';
+              const isShoeCabinet2 = mid2.includes('-entryway-') || mid2.includes('-shelf-') ||
+                                     mid2.includes('-4drawer-shelf-') || mid2.includes('-2drawer-shelf-');
 
               // 하부장 깊이
               const lowerDepthMm = module.lowerSectionDepth || module.customDepth || moduleData.dimensions.depth;
               const lowerDepth = mmToThreeUnits(lowerDepthMm);
-              const lowerBackZ = furnitureZOffset + furnitureDepth/2 - doorThickness - lowerDepth + baseDepthOffset;
+              const lowerBackZ = isShoeCabinet2
+                ? furnitureZOffset - furnitureDepth/2 - doorThickness + baseDepthOffset
+                : furnitureZOffset + furnitureDepth/2 - doorThickness - lowerDepth + baseDepthOffset;
               const lowerFrontZ = lowerBackZ + lowerDepth;
               const lowerKey = Math.round(lowerDepthMm);
               const existingLower = depthGroups.get(lowerKey);
@@ -9054,10 +9068,12 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 depthGroups.set(lowerKey, { backZ: lowerBackZ, frontZ: lowerFrontZ, edgeX: leftX });
               }
 
-              // 상부장 깊이 (isUpperForZ: 공간 뒷면 정렬)
+              // 상부장 깊이 — 의류장/상부장(+0) vs 신발장(+baseDepthOffset)
               const upperDepthMm = module.upperSectionDepth || module.customDepth || moduleData.dimensions.depth;
               const upperDepth = mmToThreeUnits(upperDepthMm);
-              const upperBackZ = furnitureZOffset - furnitureDepth/2 - doorThickness;
+              const upperBackZ = isShoeCabinet2
+                ? furnitureZOffset - furnitureDepth/2 - doorThickness + baseDepthOffset
+                : furnitureZOffset - furnitureDepth/2 - doorThickness;
               const upperFrontZ = upperBackZ + upperDepth;
               const upperKey = Math.round(upperDepthMm);
               if (upperKey !== lowerKey) {
@@ -9071,7 +9087,10 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 }
               }
             } else {
-              const actualDepthMm = module.customDepth || moduleData.dimensions.depth;
+              const actualDepthMm = module.customDepth
+                || module.upperSectionDepth
+                || module.lowerSectionDepth
+                || moduleData.dimensions.depth;
               const depth = mmToThreeUnits(actualDepthMm);
               const isFloating = spaceInfo.baseConfig?.type === 'stand' && spaceInfo.baseConfig?.placementType === 'float';
               const baseDepthOffset = isFloating ? mmToThreeUnits(spaceInfo.baseConfig?.depth || 0) : 0;
