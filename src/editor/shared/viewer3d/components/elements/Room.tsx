@@ -4654,7 +4654,7 @@ const Room: React.FC<RoomProps> = ({
                           style={{
                             cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
                             width: '32px', height: '32px', border: `2px solid ${colors.primary}`, borderRadius: '50%',
-                            backgroundColor: '#ffffff', transition: 'all 0.2s ease', boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+                            backgroundColor: (viewMode === '2D' && view2DTheme === 'dark') ? '#1f2937' : '#ffffff', transition: 'all 0.2s ease', boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
                           }}
                           onClick={(e) => {
                             e.stopPropagation();
@@ -4822,7 +4822,7 @@ const Room: React.FC<RoomProps> = ({
                           style={{
                             cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
                             width: '32px', height: '32px', border: `2px solid ${colors.primary}`, borderRadius: '50%',
-                            backgroundColor: '#ffffff', transition: 'all 0.2s ease', boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+                            backgroundColor: (viewMode === '2D' && view2DTheme === 'dark') ? '#1f2937' : '#ffffff', transition: 'all 0.2s ease', boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
                           }}
                           onClick={(e) => {
                             e.stopPropagation();
@@ -4980,7 +4980,7 @@ const Room: React.FC<RoomProps> = ({
                           style={{
                             cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
                             width: '32px', height: '32px', border: `2px solid ${colors.primary}`, borderRadius: '50%',
-                            backgroundColor: '#ffffff', transition: 'all 0.2s ease', boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+                            backgroundColor: (viewMode === '2D' && view2DTheme === 'dark') ? '#1f2937' : '#ffffff', transition: 'all 0.2s ease', boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
                           }}
                           onClick={(e) => {
                             e.stopPropagation();
@@ -5013,7 +5013,7 @@ const Room: React.FC<RoomProps> = ({
                           style={{
                             cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
                             width: '32px', height: '32px', border: `2px solid ${colors.primary}`, borderRadius: '50%',
-                            backgroundColor: '#ffffff', transition: 'all 0.2s ease', boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+                            backgroundColor: (viewMode === '2D' && view2DTheme === 'dark') ? '#1f2937' : '#ffffff', transition: 'all 0.2s ease', boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
                             opacity: 0.8,
                           }}
                           onClick={(e) => {

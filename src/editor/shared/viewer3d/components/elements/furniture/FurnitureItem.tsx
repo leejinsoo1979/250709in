@@ -3033,7 +3033,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                 height: '32px',
                 border: `2px solid ${getThemeColor()}`,
                 borderRadius: '50%',
-                backgroundColor: '#ffffff',
+                backgroundColor: (viewMode === '2D' && view2DTheme === 'dark') ? '#1f2937' : '#ffffff',
                 transition: 'all 0.2s ease',
                 boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
               }}
@@ -4195,7 +4195,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
               height: '32px',
               border: `2px solid ${getThemeColor()}`,
               borderRadius: '50%',
-              backgroundColor: '#ffffff',
+              backgroundColor: (viewMode === '2D' && view2DTheme === 'dark') ? '#1f2937' : '#ffffff',
               transition: 'all 0.2s ease',
               boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
             }}
@@ -4390,7 +4390,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                 height: '32px',
                 border: `2px solid ${getThemeColor()}`,
                 borderRadius: '50%',
-                backgroundColor: '#ffffff',
+                backgroundColor: (viewMode === '2D' && view2DTheme === 'dark') ? '#1f2937' : '#ffffff',
                 transition: 'all 0.2s ease',
                 opacity: isHovered ? 1 : 0.8,
                 transform: isHovered ? 'scale(1.1)' : 'scale(1)',
