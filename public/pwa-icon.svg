@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="96" fill="#3B82F6"/>
+  <g fill="#FFFFFF" font-family="-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Apple SD Gothic Neo', sans-serif" font-weight="800" text-anchor="middle">
+    <text x="256" y="230" font-size="88" letter-spacing="4">CRAFT</text>
+    <g transform="translate(256 310)">
+      <circle cx="-56" cy="0" r="10"/>
+      <circle cx="0" cy="0" r="10"/>
+      <circle cx="56" cy="0" r="10"/>
+    </g>
+    <text x="256" y="400" font-size="42" letter-spacing="2" opacity="0.85">think thing thank</text>
+  </g>
+</svg>

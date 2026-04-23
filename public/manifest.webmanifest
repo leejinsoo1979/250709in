@@ -1,0 +1,18 @@
+{
+  "name": "CRAFT - 가구 에디터",
+  "short_name": "CRAFT",
+  "description": "think thing thank : 가구 디자인 에디터",
+  "lang": "ko",
+  "theme_color": "#3B82F6",
+  "background_color": "#FFFFFF",
+  "display": "standalone",
+  "orientation": "any",
+  "scope": "/",
+  "start_url": "/mobile",
+  "icons": [
+    { "src": "/pwa-icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/pwa-icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "/pwa-icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" },
+    { "src": "/pwa-icon.svg", "sizes": "any", "type": "image/svg+xml" }
+  ]
+}

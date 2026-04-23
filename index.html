@@ -11,6 +11,10 @@
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="CRAFT" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="mask-icon" href="/pwa-icon.svg" color="#3B82F6" />
+    <link rel="manifest" href="/manifest.webmanifest" />
     <meta name="description" content="think thing thank : CRAFT" />
     <meta property="og:title" content="think thing thank : CRAFT" />
     <meta property="og:description" content="think thing thank : CRAFT" />
@@ -20,28 +24,21 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@700;800&display=swap" rel="stylesheet">
-    <!-- Service Worker 강제 제거 (이전 캐시 문제 해결) -->
+    <!-- PWA Service Worker 등록 (prod 전용) -->
     <script>
-      if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.getRegistrations().then(function(registrations) {
-          for (let registration of registrations) {
-            // 오래된 SW 등록 취소
-            const swUrl = registration.active?.scriptURL || '';
-            if (!swUrl.endsWith('/sw.js')) {
-              registration.unregister();
-            }
-          }
-        });
-        if (window.caches) {
-          caches.keys().then(function(names) {
-            names.forEach(function(name) {
-              // workbox가 관리하지 않는 옛날 캐시 삭제
-              if (!name.startsWith('workbox-')) {
-                caches.delete(name);
-              }
+      if ('serviceWorker' in navigator && location.hostname !== 'localhost' && location.hostname !== '127.0.0.1') {
+        window.addEventListener('load', function() {
+          // 과거에 등록된 /sw.js 아닌 SW 는 정리
+          navigator.serviceWorker.getRegistrations().then(function(regs) {
+            regs.forEach(function(reg) {
+              var url = reg.active && reg.active.scriptURL || '';
+              if (url && !url.endsWith('/sw.js')) reg.unregister();
             });
           });
-        }
+          navigator.serviceWorker.register('/sw.js').catch(function(err) {
+            console.warn('[PWA] SW 등록 실패:', err);
+          });
+        });
       }
     </script>
     <!-- 초기 테마 설정 스크립트 - 깜빡임 방지 -->

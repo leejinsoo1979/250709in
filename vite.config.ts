@@ -1,7 +1,6 @@
 /// <reference types="vitest" />
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
-import { VitePWA } from 'vite-plugin-pwa'
 import { fileURLToPath } from 'node:url'
 import { dirname } from 'node:path'
 import path from 'node:path'
@@ -13,35 +12,6 @@ const __dirname = dirname(__filename)
 export default defineConfig({
   plugins: [
     react(),
-    VitePWA({
-      registerType: 'autoUpdate',
-      includeAssets: ['favicon.ico', 'favicon.svg', 'logo.png'],
-      manifest: {
-        name: 'CRAFT - 가구 에디터',
-        short_name: 'CRAFT',
-        description: '가구 디자인 에디터 - 모바일/태블릿',
-        theme_color: '#7C5CFF',
-        background_color: '#FFFFFF',
-        display: 'standalone',
-        orientation: 'any',
-        scope: '/',
-        start_url: '/',
-        icons: [
-          { src: '/logo.png', sizes: '192x192', type: 'image/png' },
-          { src: '/logo.png', sizes: '512x512', type: 'image/png' },
-          { src: '/logo.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
-        ],
-      },
-      workbox: {
-        maximumFileSizeToCacheInBytes: 10 * 1024 * 1024,
-        globPatterns: ['**/*.{js,css,html,svg,png,ico,woff,woff2}'],
-        cleanupOutdatedCaches: true,
-        skipWaiting: true,
-        clientsClaim: true,
-        navigateFallback: '/index.html',
-        navigateFallbackDenylist: [/^\/assets\//],
-      },
-    }),
   ],
   base: process.env.GH_PAGES ? '/250709in/' : '/',
   resolve: {

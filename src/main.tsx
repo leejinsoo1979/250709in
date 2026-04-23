@@ -15,6 +15,9 @@ if (import.meta.env.DEV) {
 // 모든 console 메시지 비활성화 - 디버깅을 위해 임시 비활성화
 // disableAllConsole()
 
+// PWA Service Worker는 vite-plugin-pwa의 injectRegister: 'auto' 가
+// index.html 에 registerSW 스크립트를 자동 주입하여 등록됨 (vite.config.ts)
+
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <App />
 )
