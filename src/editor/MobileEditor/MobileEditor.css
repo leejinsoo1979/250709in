@@ -36,27 +36,27 @@
   height: 16px !important;
 }
 
-/* 가로 모드 사이드 패널 내 MaterialPanel 탭/필터 축소 */
+/* 가로 모드 사이드 패널 내 MaterialPanel 탭/필터 — SegBtn xs와 동일 스펙 */
 .mobile-editor-root .mobile-landscape-panel [class*="tab_"],
 .mobile-editor-root .mobile-landscape-panel [class*="filterChip_"] {
-  padding: 0 6px !important;
-  font-size: 9px !important;
+  padding: 0 8px !important;
+  font-size: 11px !important;
   font-weight: 500 !important;
-  min-height: 18px !important;
-  height: 18px !important;
+  min-height: 24px !important;
+  height: 24px !important;
   line-height: 1 !important;
-  border-radius: 3px !important;
+  border-radius: 4px !important;
   border-width: 1px !important;
 }
 .mobile-editor-root .mobile-landscape-panel [class*="tabNavigation_"] {
-  gap: 3px !important;
-  margin-bottom: 4px !important;
+  gap: 4px !important;
+  margin-bottom: 6px !important;
   padding: 0 !important;
   border: none !important;
 }
 .mobile-editor-root .mobile-landscape-panel [class*="filterBar_"] {
-  gap: 3px !important;
-  margin-bottom: 4px !important;
+  gap: 4px !important;
+  margin-bottom: 6px !important;
   padding: 0 !important;
 }
 .mobile-editor-root .mobile-landscape-panel [class*="tabIcon_"] {

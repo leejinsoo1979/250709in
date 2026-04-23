@@ -42,7 +42,7 @@ const SectionHeader: React.FC<{ title: string; help?: string }> = ({ title, help
   </div>
 );
 
-/** 세그먼트 버튼 (시안 기준: 활성=파란배경/흰글자, 비활성=흰배경/회색글자+보더) */
+/** 세그먼트 버튼 — 모바일/태블릿 공용 통일 스펙 (h:24, padding 0x8, font:11, radius:4) */
 const SegBtn: React.FC<{
   active?: boolean;
   onClick?: () => void;
@@ -51,15 +51,16 @@ const SegBtn: React.FC<{
 }> = ({ active, onClick, children, flex }) => (
   <button onClick={onClick} style={{
     flex: flex ? '1 1 0' : undefined,
-    minWidth: 0, minHeight: 30,
-    padding: '6px 10px',
+    minWidth: 0, height: 24,
+    padding: '0 8px',
     display: 'flex', alignItems: 'center', justifyContent: 'center',
     background: active ? T.blueAct : T.surface,
     color: active ? '#fff' : T.ink2,
     border: `1px solid ${active ? T.blueAct : T.line}`,
-    borderRadius: 6, cursor: 'pointer',
-    fontSize: 12, fontWeight: active ? 600 : 500,
+    borderRadius: 4, cursor: 'pointer',
+    fontSize: 11, fontWeight: active ? 600 : 500,
     whiteSpace: 'nowrap', transition: 'all 0.12s',
+    lineHeight: 1,
   }}>{children}</button>
 );
 
