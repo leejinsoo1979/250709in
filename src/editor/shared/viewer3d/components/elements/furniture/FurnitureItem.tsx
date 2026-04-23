@@ -3610,9 +3610,10 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                 furnitureId: placedModule.id
               });
 
-              // customSections의 선반 갯수 변경 시 BoxModule 리마운트 (고스트 포함 즉시 반영)
+              // customSections의 선반 갯수/위치 변경 시 BoxModule 리마운트 (고스트 포함 즉시 반영)
+              // shelfPositions까지 포함해 ▲▼ 스피너로 선반 1mm 이동 시에도 즉시 3D에 반영
               const customSectionsKey = adjustedCustomSections
-                ? adjustedCustomSections.map((s: any) => `${s.count || 0}`).join('|')
+                ? adjustedCustomSections.map((s: any) => `${s.count || 0}:${(s.shelfPositions || []).join(',')}`).join('|')
                 : '';
               // removeUpperSafetyShelf 토글 변경 시에도 BoxModule 리마운트 (편집 중 고스트 실시간 반영)
               const removeUpperSafetyShelfKey = placedModule.removeUpperSafetyShelf ? '1' : '0';
