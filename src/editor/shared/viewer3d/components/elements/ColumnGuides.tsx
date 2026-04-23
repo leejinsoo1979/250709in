@@ -458,9 +458,11 @@ const ColumnGuides: React.FC<ColumnGuidesProps> = ({ viewMode: viewModeProp }) =
           gapSize={0.1}
           opacity={zoneOpacity}
           transparent
+          depthTest={false}
+          renderOrder={9999}
         />
       );
-      
+
       // 천장 가이드
       guides.push(
         <Line
@@ -476,6 +478,8 @@ const ColumnGuides: React.FC<ColumnGuidesProps> = ({ viewMode: viewModeProp }) =
           gapSize={0.1}
           opacity={zoneOpacity}
           transparent
+          depthTest={false}
+          renderOrder={9999}
         />
       );
     }
@@ -506,6 +510,8 @@ const ColumnGuides: React.FC<ColumnGuidesProps> = ({ viewMode: viewModeProp }) =
             gapSize={0.1}
             opacity={zoneOpacity}
             transparent
+            depthTest={false}
+            renderOrder={9999}
           />
         );
       } else {
@@ -525,6 +531,8 @@ const ColumnGuides: React.FC<ColumnGuidesProps> = ({ viewMode: viewModeProp }) =
             gapSize={0.1}
             opacity={zoneOpacity}
             transparent
+            depthTest={false}
+            renderOrder={9999}
           />
         );
         
