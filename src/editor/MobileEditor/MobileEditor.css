@@ -68,3 +68,35 @@
 .mobile-furniture-popup-skin [class*="headerTabs_"] {
   display: none !important;
 }
+
+/* ───────────────────────────────────────────────────────────
+   Space3DView 2D 뷰어 플로팅 버튼 — 모바일/태블릿에서 불필요한 것 숨김
+   웹 UI 원본(Space3DView.tsx)은 건드리지 않고 CSS로만 숨김 처리.
+   버튼들은 인라인 \`position:absolute; right:10px; top:<N>px\` 형태로 렌더됨:
+     top:10px  = 분할 모드 (4분할 아이콘)
+     top:56px  = 치수 측정
+     top:102px = 치수 지우개
+     top:148px = 다크/라이트 토글 ← 이건 남김
+   ─────────────────────────────────────────────────────────── */
+.mobile-editor-root button[style*="top: 10px"][style*="right"],
+.mobile-editor-root button[style*="top:10px"][style*="right"],
+.mobile-editor-root button[style*="top: 56px"][style*="right"],
+.mobile-editor-root button[style*="top:56px"][style*="right"],
+.mobile-editor-root button[style*="top: 102px"][style*="right"],
+.mobile-editor-root button[style*="top:102px"][style*="right"],
+.ipad-editor-root button[style*="top: 10px"][style*="right"],
+.ipad-editor-root button[style*="top:10px"][style*="right"],
+.ipad-editor-root button[style*="top: 56px"][style*="right"],
+.ipad-editor-root button[style*="top:56px"][style*="right"],
+.ipad-editor-root button[style*="top: 102px"][style*="right"],
+.ipad-editor-root button[style*="top:102px"][style*="right"] {
+  display: none !important;
+}
+
+/* 다크/라이트 토글(top:148)은 유일하게 남겨야 하므로 top값 조정해서 상단으로 끌어올림 */
+.mobile-editor-root button[style*="top: 148px"][style*="right"],
+.mobile-editor-root button[style*="top:148px"][style*="right"],
+.ipad-editor-root button[style*="top: 148px"][style*="right"],
+.ipad-editor-root button[style*="top:148px"][style*="right"] {
+  top: 10px !important;
+}
