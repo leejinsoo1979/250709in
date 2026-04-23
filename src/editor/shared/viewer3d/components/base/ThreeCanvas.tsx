@@ -1015,7 +1015,14 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
                 : defaultCursor,
             touchAction: 'none'
           }}
-          dpr={[1, 2]}
+          // OS 별 DPR 상한: Windows 는 ANGLE D3D11 오버헤드로 고DPR 시 체감 큰 폭 저하
+          // → Mac/iOS 는 Retina(2) 유지, Windows 는 1.5 로 상한 (실제 렌더 픽셀 수 약 44% 감소)
+          dpr={(() => {
+            if (typeof window === 'undefined') return [1, 2];
+            const ua = navigator.userAgent;
+            const isWindows = /Windows NT/i.test(ua);
+            return isWindows ? [1, 1.5] : [1, 2];
+          })()}
           frameloop="always"
           gl={{
             powerPreference: 'high-performance',
@@ -1023,9 +1030,9 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
             alpha: false,
             stencil: true,
             depth: true,
-            preserveDrawingBuffer: true,
+            preserveDrawingBuffer: true,   // 썸네일 캡처 호환성 유지
             failIfMajorPerformanceCaveat: false,
-            logarithmicDepthBuffer: true,
+            logarithmicDepthBuffer: false, // Windows ANGLE 에서 특히 부하 큰 셰이더 연산. 씬 스케일(수m)에서 z-fighting 미미
             precision: 'highp',
           }}
           onCreated={({ gl, scene }) => {
