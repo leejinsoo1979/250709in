@@ -19,6 +19,7 @@ import {
 } from './dxfDataRenderer';
 import { ColumnIndexer } from './indexing/ColumnIndexer';
 import { useUIStore } from '@/store/uiStore';
+import { useFurnitureStore } from '@/store/core/furnitureStore';
 
 /**
  * PDF 생성 전 씬을 올바른 뷰 모드로 전환하는 헬퍼
@@ -438,21 +439,37 @@ export const downloadDxfAsPdf = async (
         (a.position?.x ?? 0) - (b.position?.x ?? 0)
       );
 
-      for (let moduleIdx = 0; moduleIdx < sortedModules.length; moduleIdx++) {
-        const singleModule = sortedModules[moduleIdx];
+      // 각 가구별 측면뷰를 생성하려면 씬에 그 가구만 렌더돼야 함.
+      // PlacedFurnitureContainer는 view2DDirection='left'일 때 "leftmost X 가구"만 렌더 →
+      // furnitureStore의 placedModules를 해당 가구 하나로 교체하면 씬에 그 가구만 나타남.
+      const furnitureStore = useFurnitureStore.getState();
+      const originalPlacedModules = furnitureStore.placedModules;
 
-        if (!isFirstPage) pdf.addPage();
-        isFirstPage = false;
+      try {
+        for (let moduleIdx = 0; moduleIdx < sortedModules.length; moduleIdx++) {
+          const singleModule = sortedModules[moduleIdx];
 
-        console.log(`[DXF] left (가구 ${moduleIdx + 1}/${sortedModules.length}): moduleId=${singleModule.moduleId}`);
+          if (!isFirstPage) pdf.addPage();
+          isFirstPage = false;
 
-        // 각 가구 1개만 전달하여 해당 가구의 측면뷰 생성
-        const dxfViewDirection = pdfViewToViewDirection(viewDirection);
-        const { lines, texts } = generateViewDataFromDxf(spaceInfo, [singleModule], dxfViewDirection);
-        console.log(`[DXF] left (가구 ${moduleIdx + 1}): ${lines.length} lines, ${texts.length} texts`);
+          console.log(`[DXF] left (가구 ${moduleIdx + 1}/${sortedModules.length}): moduleId=${singleModule.moduleId}`);
 
-        // 가구 번호를 제목에 포함
-        renderToPdfWithSlotInfo(pdf, lines, texts, spaceInfo, viewDirection, pageWidth, pageHeight, moduleIdx + 1, [singleModule]);
+          // store에 해당 가구 하나만 남겨 씬 재렌더
+          useFurnitureStore.setState({ placedModules: [singleModule] });
+          // 씬 갱신 대기 (React 렌더 + R3F 반영)
+          await new Promise(resolve => setTimeout(resolve, 600));
+
+          // 씬 추출 - 씬에는 현재 singleModule만 있음
+          const dxfViewDirection = pdfViewToViewDirection(viewDirection);
+          const { lines, texts } = generateViewDataFromDxf(spaceInfo, [singleModule], dxfViewDirection);
+          console.log(`[DXF] left (가구 ${moduleIdx + 1}): ${lines.length} lines, ${texts.length} texts`);
+
+          renderToPdfWithSlotInfo(pdf, lines, texts, spaceInfo, viewDirection, pageWidth, pageHeight, moduleIdx + 1, [singleModule]);
+        }
+      } finally {
+        // 원본 placedModules 복원
+        useFurnitureStore.setState({ placedModules: originalPlacedModules });
+        await new Promise(resolve => setTimeout(resolve, 300));
       }
     }
     // 도어 입면도 (DOOR 레이어만 표시 - 2D 뷰어에서 가구 필터 끈 것과 동일)
