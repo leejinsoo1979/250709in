@@ -1063,13 +1063,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         : ((module as any).adjustedPosition?.x ?? module.position.x);
       
       // 커스텀 깊이가 있는 경우 전용 가구로 취급
-      // 현관장 H(entryway-h)는 dimensions.depth가 도어 포함 400mm → 도어 20 차감하여 실제 가구 깊이 사용
-      const topModuleId = module.moduleId || '';
-      const isEntrywayH_top = topModuleId.includes('-entryway-');
-      const rawDefaultDepth = moduleData.dimensions.depth;
-      const effectiveDefaultDepth = isEntrywayH_top ? Math.max(0, rawDefaultDepth - 20) : rawDefaultDepth;
-      const actualDepth = module.customDepth || effectiveDefaultDepth;
-      const hasCustomDepth = module.customDepth && module.customDepth !== rawDefaultDepth;
+      const actualDepth = module.customDepth || moduleData.dimensions.depth;
+      const hasCustomDepth = module.customDepth && module.customDepth !== moduleData.dimensions.depth;
       
       // customWidth가 있으면 우선 사용 (이미 위에서 처리됨)
       // adjustedWidth는 두 번째 우선순위 (이미 위에서 처리됨)
