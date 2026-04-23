@@ -170,7 +170,7 @@ const Toggle: React.FC<{ checked: boolean; onChange: (v: boolean) => void }> = (
   </button>
 );
 
-/** 프레임 행: [라벨 | 토글] [size | input] [옵션 | input]
+/** 프레임 행: [라벨 | 토글] [size | input] [옵셋 | input]
  * 공간이 좁을 때 겹치지 않도록 충분한 최소 폭 보장 */
 const FrameRow: React.FC<{
   label: string;
@@ -215,9 +215,9 @@ const FrameRow: React.FC<{
       />
     </div>
 
-    {/* 옵션 그룹 */}
+    {/* 옵셋 그룹 */}
     <div style={{ display: 'flex', alignItems: 'center', gap: 4, flex: '1 1 0', minWidth: 0 }}>
-      <span style={{ fontSize: 11, color: T.ink3, flexShrink: 0 }}>옵션</span>
+      <span style={{ fontSize: 11, color: T.ink3, flexShrink: 0 }}>옵셋</span>
       <input
         type="number"
         value={optionValue}
@@ -417,7 +417,7 @@ const IPadRightPanel: React.FC<IPadRightPanelProps> = ({ spaceInfo }) => {
       )}
 
       {/* ─ 상,하부프레임 (시안: A/B/C 상 + A/B/C 하) ─ */}
-      <SectionHeader title="상,하부프레임" help="각 프레임의 size / 옵션" />
+      <SectionHeader title="상,하부프레임" help="각 프레임의 size / 옵셋" />
       <FrameRow label="A(상)" enabled={topEnabled}    onToggle={setTopEnabled}    sizeValue={topSize}    onSizeChange={setTopSize}    optionValue={topOffset}    onOptionChange={setTopOffset} />
       <FrameRow label="B(상)" enabled={topEnabled}    onToggle={setTopEnabled}    sizeValue={topSize}    onSizeChange={setTopSize}    optionValue={topOffset}    onOptionChange={setTopOffset} />
       <FrameRow label="C(상)" enabled={topEnabled}    onToggle={setTopEnabled}    sizeValue={topSize}    onSizeChange={setTopSize}    optionValue={topOffset}    onOptionChange={setTopOffset} />
