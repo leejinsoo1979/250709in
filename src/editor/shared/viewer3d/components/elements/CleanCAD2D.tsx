@@ -8854,40 +8854,51 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             const isShoeCabinet2 = mid2.includes('-entryway-') || mid2.includes('-shelf-') ||
                                    mid2.includes('-4drawer-shelf-') || mid2.includes('-2drawer-shelf-');
 
-            // 하부장 깊이
-            const lowerDepthMm = module.lowerSectionDepth || module.customDepth || moduleData.dimensions.depth;
-            const lowerDepth = mmToThreeUnits(lowerDepthMm);
-            // 신발장이면 하부도 뒷면 정렬, 아니면 앞면 정렬
-            const lowerBackZ = isShoeCabinet2
-              ? furnitureZOffset - furnitureDepth/2 - doorThickness + baseDepthOffset
-              : furnitureZOffset + furnitureDepth/2 - doorThickness - lowerDepth + baseDepthOffset;
-            const lowerFrontZ = lowerBackZ + lowerDepth;
-            const lowerKey = Math.round(lowerDepthMm);
-            const existingLower = depthGroups.get(lowerKey);
-            if (existingLower) {
-              existingLower.backZ = Math.min(existingLower.backZ, lowerBackZ);
-              existingLower.frontZ = Math.max(existingLower.frontZ, lowerFrontZ);
-              existingLower.edgeX = Math.max(existingLower.edgeX, rightX);
-            } else {
-              depthGroups.set(lowerKey, { backZ: lowerBackZ, frontZ: lowerFrontZ, edgeX: rightX });
-            }
-
-            // 상부장 깊이 — 의류장/상부장(+0) vs 신발장(+baseDepthOffset)
-            const upperDepthMm = module.upperSectionDepth || module.customDepth || moduleData.dimensions.depth;
-            const upperDepth = mmToThreeUnits(upperDepthMm);
-            const upperBackZ = isShoeCabinet2
-              ? furnitureZOffset - furnitureDepth/2 - doorThickness + baseDepthOffset
-              : furnitureZOffset - furnitureDepth/2 - doorThickness;
-            const upperFrontZ = upperBackZ + upperDepth;
-            const upperKey = Math.round(upperDepthMm);
-            if (upperKey !== lowerKey) {
-              const existingUpper = depthGroups.get(upperKey);
-              if (existingUpper) {
-                existingUpper.backZ = Math.min(existingUpper.backZ, upperBackZ);
-                existingUpper.frontZ = Math.max(existingUpper.frontZ, upperFrontZ);
-                existingUpper.edgeX = Math.max(existingUpper.edgeX, rightX);
+            if (isShoeCabinet2) {
+              // 신발장(선반장): FurnitureItem.tsx처럼 customDepth를 최우선으로 사용 (단일 깊이)
+              const depthMm = module.customDepth || module.upperSectionDepth || module.lowerSectionDepth || moduleData.dimensions.depth;
+              const depth = mmToThreeUnits(depthMm);
+              const backZ = furnitureZOffset - furnitureDepth/2 - doorThickness + baseDepthOffset;
+              const frontZ = backZ + depth;
+              const key = Math.round(depthMm);
+              const existing = depthGroups.get(key);
+              if (existing) {
+                existing.backZ = Math.min(existing.backZ, backZ);
+                existing.frontZ = Math.max(existing.frontZ, frontZ);
+                existing.edgeX = Math.max(existing.edgeX, rightX);
               } else {
-                depthGroups.set(upperKey, { backZ: upperBackZ, frontZ: upperFrontZ, edgeX: rightX });
+                depthGroups.set(key, { backZ, frontZ, edgeX: rightX });
+              }
+            } else {
+              // 의류장(2섹션): 하부=앞면정렬, 상부=뒷면정렬
+              const lowerDepthMm = module.lowerSectionDepth || module.customDepth || moduleData.dimensions.depth;
+              const lowerDepth = mmToThreeUnits(lowerDepthMm);
+              const lowerBackZ = furnitureZOffset + furnitureDepth/2 - doorThickness - lowerDepth + baseDepthOffset;
+              const lowerFrontZ = lowerBackZ + lowerDepth;
+              const lowerKey = Math.round(lowerDepthMm);
+              const existingLower = depthGroups.get(lowerKey);
+              if (existingLower) {
+                existingLower.backZ = Math.min(existingLower.backZ, lowerBackZ);
+                existingLower.frontZ = Math.max(existingLower.frontZ, lowerFrontZ);
+                existingLower.edgeX = Math.max(existingLower.edgeX, rightX);
+              } else {
+                depthGroups.set(lowerKey, { backZ: lowerBackZ, frontZ: lowerFrontZ, edgeX: rightX });
+              }
+
+              const upperDepthMm = module.upperSectionDepth || module.customDepth || moduleData.dimensions.depth;
+              const upperDepth = mmToThreeUnits(upperDepthMm);
+              const upperBackZ = furnitureZOffset - furnitureDepth/2 - doorThickness;
+              const upperFrontZ = upperBackZ + upperDepth;
+              const upperKey = Math.round(upperDepthMm);
+              if (upperKey !== lowerKey) {
+                const existingUpper = depthGroups.get(upperKey);
+                if (existingUpper) {
+                  existingUpper.backZ = Math.min(existingUpper.backZ, upperBackZ);
+                  existingUpper.frontZ = Math.max(existingUpper.frontZ, upperFrontZ);
+                  existingUpper.edgeX = Math.max(existingUpper.edgeX, rightX);
+                } else {
+                  depthGroups.set(upperKey, { backZ: upperBackZ, frontZ: upperFrontZ, edgeX: rightX });
+                }
               }
             }
           } else {
@@ -9048,46 +9059,58 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 depthGroups.set(depthKey, { backZ: furnitureBackZ, frontZ: furnitureFrontZ, edgeX: leftX });
               }
             } else if (is2Section) {
-              // FurnitureItem.tsx와 동일 공식 — 신발장은 상/하부 모두 뒷면 정렬
+              // FurnitureItem.tsx와 동일 공식 — 신발장은 customDepth 우선 단일 깊이
               const isFloating = spaceInfo.baseConfig?.type === 'stand' && spaceInfo.baseConfig?.placementType === 'float';
               const baseDepthOffset = isFloating ? mmToThreeUnits(spaceInfo.baseConfig?.depth || 0) : 0;
               const mid2 = module.moduleId || '';
               const isShoeCabinet2 = mid2.includes('-entryway-') || mid2.includes('-shelf-') ||
                                      mid2.includes('-4drawer-shelf-') || mid2.includes('-2drawer-shelf-');
 
-              // 하부장 깊이
-              const lowerDepthMm = module.lowerSectionDepth || module.customDepth || moduleData.dimensions.depth;
-              const lowerDepth = mmToThreeUnits(lowerDepthMm);
-              const lowerBackZ = isShoeCabinet2
-                ? furnitureZOffset - furnitureDepth/2 - doorThickness + baseDepthOffset
-                : furnitureZOffset + furnitureDepth/2 - doorThickness - lowerDepth + baseDepthOffset;
-              const lowerFrontZ = lowerBackZ + lowerDepth;
-              const lowerKey = Math.round(lowerDepthMm);
-              const existingLower = depthGroups.get(lowerKey);
-              if (existingLower) {
-                existingLower.backZ = Math.min(existingLower.backZ, lowerBackZ);
-                existingLower.frontZ = Math.max(existingLower.frontZ, lowerFrontZ);
-                existingLower.edgeX = Math.min(existingLower.edgeX, leftX);
-              } else {
-                depthGroups.set(lowerKey, { backZ: lowerBackZ, frontZ: lowerFrontZ, edgeX: leftX });
-              }
-
-              // 상부장 깊이 — 의류장/상부장(+0) vs 신발장(+baseDepthOffset)
-              const upperDepthMm = module.upperSectionDepth || module.customDepth || moduleData.dimensions.depth;
-              const upperDepth = mmToThreeUnits(upperDepthMm);
-              const upperBackZ = isShoeCabinet2
-                ? furnitureZOffset - furnitureDepth/2 - doorThickness + baseDepthOffset
-                : furnitureZOffset - furnitureDepth/2 - doorThickness;
-              const upperFrontZ = upperBackZ + upperDepth;
-              const upperKey = Math.round(upperDepthMm);
-              if (upperKey !== lowerKey) {
-                const existingUpper = depthGroups.get(upperKey);
-                if (existingUpper) {
-                  existingUpper.backZ = Math.min(existingUpper.backZ, upperBackZ);
-                  existingUpper.frontZ = Math.max(existingUpper.frontZ, upperFrontZ);
-                  existingUpper.edgeX = Math.min(existingUpper.edgeX, leftX);
+              if (isShoeCabinet2) {
+                // 신발장: customDepth 최우선(FurnitureItem.tsx와 동일)
+                const depthMm = module.customDepth || module.upperSectionDepth || module.lowerSectionDepth || moduleData.dimensions.depth;
+                const depth = mmToThreeUnits(depthMm);
+                const backZ = furnitureZOffset - furnitureDepth/2 - doorThickness + baseDepthOffset;
+                const frontZ = backZ + depth;
+                const key = Math.round(depthMm);
+                const existing = depthGroups.get(key);
+                if (existing) {
+                  existing.backZ = Math.min(existing.backZ, backZ);
+                  existing.frontZ = Math.max(existing.frontZ, frontZ);
+                  existing.edgeX = Math.min(existing.edgeX, leftX);
                 } else {
-                  depthGroups.set(upperKey, { backZ: upperBackZ, frontZ: upperFrontZ, edgeX: leftX });
+                  depthGroups.set(key, { backZ, frontZ, edgeX: leftX });
+                }
+              } else {
+                // 의류장(2섹션): 하부=앞면정렬, 상부=뒷면정렬
+                const lowerDepthMm = module.lowerSectionDepth || module.customDepth || moduleData.dimensions.depth;
+                const lowerDepth = mmToThreeUnits(lowerDepthMm);
+                const lowerBackZ = furnitureZOffset + furnitureDepth/2 - doorThickness - lowerDepth + baseDepthOffset;
+                const lowerFrontZ = lowerBackZ + lowerDepth;
+                const lowerKey = Math.round(lowerDepthMm);
+                const existingLower = depthGroups.get(lowerKey);
+                if (existingLower) {
+                  existingLower.backZ = Math.min(existingLower.backZ, lowerBackZ);
+                  existingLower.frontZ = Math.max(existingLower.frontZ, lowerFrontZ);
+                  existingLower.edgeX = Math.min(existingLower.edgeX, leftX);
+                } else {
+                  depthGroups.set(lowerKey, { backZ: lowerBackZ, frontZ: lowerFrontZ, edgeX: leftX });
+                }
+
+                const upperDepthMm = module.upperSectionDepth || module.customDepth || moduleData.dimensions.depth;
+                const upperDepth = mmToThreeUnits(upperDepthMm);
+                const upperBackZ = furnitureZOffset - furnitureDepth/2 - doorThickness;
+                const upperFrontZ = upperBackZ + upperDepth;
+                const upperKey = Math.round(upperDepthMm);
+                if (upperKey !== lowerKey) {
+                  const existingUpper = depthGroups.get(upperKey);
+                  if (existingUpper) {
+                    existingUpper.backZ = Math.min(existingUpper.backZ, upperBackZ);
+                    existingUpper.frontZ = Math.max(existingUpper.frontZ, upperFrontZ);
+                    existingUpper.edgeX = Math.min(existingUpper.edgeX, leftX);
+                  } else {
+                    depthGroups.set(upperKey, { backZ: upperBackZ, frontZ: upperFrontZ, edgeX: leftX });
+                  }
                 }
               }
             } else {
