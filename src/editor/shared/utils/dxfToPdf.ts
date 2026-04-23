@@ -723,6 +723,51 @@ export interface SheetMetadata {
 }
 
 /**
+ * 텍스처 이미지 URL을 PNG dataURL로 변환 (jsPDF addImage용)
+ * 실패 시 null 반환
+ */
+const loadTextureAsDataUrl = async (
+  url: string,
+  maxSize: number = 256,
+): Promise<{ dataUrl: string; w: number; h: number } | null> => {
+  if (!url) return null;
+  return new Promise((resolve) => {
+    try {
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      img.onload = () => {
+        try {
+          // 최대 256px로 축소 (PDF 용량 제한)
+          const ratio = Math.min(maxSize / img.width, maxSize / img.height, 1);
+          const w = Math.round(img.width * ratio);
+          const h = Math.round(img.height * ratio);
+          const canvas = document.createElement('canvas');
+          canvas.width = w;
+          canvas.height = h;
+          const ctx = canvas.getContext('2d');
+          if (!ctx) {
+            resolve(null);
+            return;
+          }
+          ctx.drawImage(img, 0, 0, w, h);
+          resolve({ dataUrl: canvas.toDataURL('image/png'), w, h });
+        } catch (err) {
+          console.warn('[PDF] 텍스처 변환 실패:', url, err);
+          resolve(null);
+        }
+      };
+      img.onerror = () => {
+        console.warn('[PDF] 텍스처 로드 실패:', url);
+        resolve(null);
+      };
+      img.src = url;
+    } catch {
+      resolve(null);
+    }
+  });
+};
+
+/**
  * 기존 PDF 인스턴스에 "한 장 레이아웃" 페이지 추가
  * (downloadDxfAsPdf 내부에서 호출)
  */
@@ -911,7 +956,11 @@ const renderSheetContent = async (
     { label: 'DOORS', value: String(doorCount) },
     { label: 'SHEET', value: '1 / 1' },
   ];
-  const rowH = tbHeight / rows.length;
+
+  // 재질 섬네일 영역을 타이틀 블록 하단 40mm로 확보, 나머지 위쪽을 텍스트 행 분할
+  const materialAreaH = 60; // 재질 섹션 총 높이(mm) — 2개 섬네일 각 약 22mm
+  const textAreaH = tbHeight - materialAreaH;
+  const rowH = textAreaH / rows.length;
   rows.forEach((r, idx) => {
     const y = tbY + rowH * idx;
     if (idx > 0) {
@@ -927,4 +976,71 @@ const renderSheetContent = async (
       pdf.text(line, tbX + 2, y + 10 + i * 3.5);
     });
   });
+
+  // ═══════════════════════════════════════════════════════════
+  // 재질 섬네일 섹션 (INTERIOR / DOOR)
+  // ═══════════════════════════════════════════════════════════
+  const materialsY = tbY + textAreaH;
+  // 섹션 헤더 구분선
+  pdf.setLineWidth(0.3);
+  pdf.line(tbX, materialsY, tbX + titleBlockW, materialsY);
+
+  // 재질 경로 (spaceInfo.materialConfig)
+  const materialCfg = spaceInfo.materialConfig;
+  const interiorTex = materialCfg?.interiorTexture;
+  const doorTex = materialCfg?.doorTexture;
+
+  // 각 재질 행: label 4mm + 섬네일 18mm × 18mm + 텍스트
+  const materialRowH = materialAreaH / 2;
+  const thumbSize = 18;
+
+  const materials: Array<{ label: string; texture?: string; fallbackColor?: string }> = [
+    { label: 'INTERIOR', texture: interiorTex, fallbackColor: materialCfg?.interiorColor },
+    { label: 'DOOR', texture: doorTex, fallbackColor: materialCfg?.doorColor },
+  ];
+
+  for (let i = 0; i < materials.length; i++) {
+    const m = materials[i];
+    const rowY = materialsY + materialRowH * i;
+    // 상단 구분선 (두 번째 행만)
+    if (i > 0) {
+      pdf.setLineWidth(0.2);
+      pdf.line(tbX, rowY, tbX + titleBlockW, rowY);
+    }
+    // 라벨
+    pdf.setFontSize(6);
+    pdf.setTextColor(100, 100, 100);
+    pdf.text(m.label, tbX + 2, rowY + 4);
+
+    // 섬네일 위치 (라벨 아래 중앙)
+    const thumbX = tbX + (titleBlockW - thumbSize) / 2;
+    const thumbY = rowY + 6;
+
+    // 테두리
+    pdf.setLineWidth(0.15);
+    pdf.setDrawColor(150, 150, 150);
+    pdf.rect(thumbX, thumbY, thumbSize, thumbSize);
+    pdf.setDrawColor(0, 0, 0);
+
+    if (m.texture) {
+      const img = await loadTextureAsDataUrl(m.texture, 256);
+      if (img) {
+        try {
+          pdf.addImage(img.dataUrl, 'PNG', thumbX, thumbY, thumbSize, thumbSize);
+        } catch (err) {
+          console.warn('[PDF] 재질 섬네일 삽입 실패:', m.label, err);
+        }
+      }
+    } else if (m.fallbackColor) {
+      // 텍스처 없으면 색상 스와치
+      const hex = m.fallbackColor.replace('#', '');
+      if (hex.length === 6) {
+        const r = parseInt(hex.substring(0, 2), 16);
+        const g = parseInt(hex.substring(2, 4), 16);
+        const b = parseInt(hex.substring(4, 6), 16);
+        pdf.setFillColor(r, g, b);
+        pdf.rect(thumbX, thumbY, thumbSize, thumbSize, 'F');
+      }
+    }
+  }
 };
