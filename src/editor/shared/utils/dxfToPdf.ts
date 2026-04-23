@@ -488,10 +488,10 @@ export const downloadDxfAsPdf = async (
       console.log('[DXF] door-only: total texts ' + texts.length, texts.map(t => ({ text: t.text, layer: t.layer })));
       console.log('[DXF] door-only: line layers:', [...new Set(lines.map(l => l.layer))]);
 
-      // DOOR 레이어만 필터링 (도어 형상 + 도어 치수선)
-      const doorOnlyLines = lines.filter(line => line.layer === 'DOOR');
+      // DOOR + DOOR_DIMENSIONS 레이어 필터링 (도어 형상 + 도어 높이/너비 치수선)
+      const doorOnlyLines = lines.filter(line => line.layer === 'DOOR' || line.layer === 'DOOR_DIMENSIONS');
 
-      // 도어 치수 텍스트도 포함 (DOOR 레이어 또는 door-dimension 관련 텍스트)
+      // 도어 치수 텍스트도 포함
       const doorTexts = texts.filter(text => text.layer === 'DOOR' || text.layer === 'DOOR_DIMENSIONS');
 
       console.log('[DXF] door-only: original ' + lines.length + ' lines -> DOOR layer ' + doorOnlyLines.length + ' lines, ' + doorTexts.length + ' texts');
@@ -772,7 +772,7 @@ const renderSheetContent = async (
   const frontWith = generateViewDataFromDxf(spaceInfo, placedModules, 'front', false);
   const frontNo   = generateViewDataFromDxf(spaceInfo, placedModules, 'front', true);
   const doorAll   = generateViewDataFromDxf(spaceInfo, placedModules, 'front');
-  const doorOnlyLines = doorAll.lines.filter(l => l.layer === 'DOOR');
+  const doorOnlyLines = doorAll.lines.filter(l => l.layer === 'DOOR' || l.layer === 'DOOR_DIMENSIONS');
   const doorOnlyTexts = doorAll.texts.filter(t => t.layer === 'DOOR' || t.layer === 'DOOR_DIMENSIONS');
 
   // ─ 2) Top view
