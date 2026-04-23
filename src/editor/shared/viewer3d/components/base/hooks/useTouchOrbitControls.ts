@@ -238,134 +238,115 @@ export const useTouchOrbitControls = (
 
     const handleTouchStart = (e: TouchEvent) => {
       if (isFurnitureDrag.current) return;
-      
+
       e.preventDefault();
       startTouches = Array.from(e.touches);
       lastTouchPositions = startTouches.map(touch => ({ x: touch.clientX, y: touch.clientY }));
       touchCount.current = e.touches.length;
-      
-      console.log('🖐️ 터치 시작:', {
-        touchCount: e.touches.length,
-        positions: lastTouchPositions
-      });
-      
-      // 두 손가락 터치 시작 시 팬 모드 활성화
+
       if (e.touches.length === 2) {
         isPanning.current = true;
       }
     };
 
-    const handleTouchMove = (e: TouchEvent) => {
-      if (isFurnitureDrag.current || !controlsRef.current) return;
-      
-      e.preventDefault();
-      const currentTouches = Array.from(e.touches);
-      
-      if (e.touches.length === 1 && touchCount.current === 1) {
-        // 한 손가락: 팬 (회전은 휠 클릭+드래그로만)
+    // rAF throttle — 모바일 터치 이벤트는 초당 120~240회까지 발생
+    // OrbitControls.update() 매번 호출하면 버벅임. 프레임당 1회로 제한.
+    let rafPending = false;
+    let pendingTouches: Touch[] | null = null;
+    const flushMove = () => {
+      rafPending = false;
+      if (!pendingTouches || !controlsRef.current) return;
+      const currentTouches = pendingTouches;
+      pendingTouches = null;
+
+      if (currentTouches.length === 1 && touchCount.current === 1) {
+        // 한 손가락: 팬
         const touch = currentTouches[0];
         const lastPos = lastTouchPositions[0];
-
         if (lastPos) {
           const deltaX = touch.clientX - lastPos.x;
           const deltaY = touch.clientY - lastPos.y;
-
           const panSpeed = panSensitivity * 0.01;
           controlsRef.current.pan(-deltaX * panSpeed, deltaY * panSpeed, 0);
           controlsRef.current.update();
         }
-
         lastTouchPositions[0] = { x: touch.clientX, y: touch.clientY };
-      } else if (e.touches.length === 2 && touchCount.current === 2) {
-        // 두 손가락: 줌 또는 팬
-        const touch1 = currentTouches[0];
-        const touch2 = currentTouches[1];
-        const lastPos1 = lastTouchPositions[0];
-        const lastPos2 = lastTouchPositions[1];
-        
-        if (lastPos1 && lastPos2) {
-          // 현재 거리와 이전 거리 계산
-          const currentDistance = Math.sqrt(
-            Math.pow(touch1.clientX - touch2.clientX, 2) + 
-            Math.pow(touch1.clientY - touch2.clientY, 2)
-          );
-          const lastDistance = Math.sqrt(
-            Math.pow(lastPos1.x - lastPos2.x, 2) + 
-            Math.pow(lastPos1.y - lastPos2.y, 2)
-          );
-          
-          // 거리 변화가 크면 줌, 작으면 팬
-          const distanceChange = Math.abs(currentDistance - lastDistance);
-          const avgDistance = (currentDistance + lastDistance) / 2;
-          const zoomThreshold = avgDistance * 0.1; // 10% 변화를 줌으로 간주
-          
-          if (distanceChange > zoomThreshold) {
-            // 줌 처리
-            const zoomScale = currentDistance / lastDistance;
-            const adjustedZoomScale = Math.pow(zoomScale, zoomSensitivity);
-            controlsRef.current.dollyIn(adjustedZoomScale);
-            
-            console.log('🔍 두 손가락 줌:', {
-              currentDistance: currentDistance.toFixed(2),
-              lastDistance: lastDistance.toFixed(2),
-              zoomScale: zoomScale.toFixed(3),
-              adjustedZoomScale: adjustedZoomScale.toFixed(3)
-            });
-          } else {
-            // 팬 처리
-            const centerX = (touch1.clientX + touch2.clientX) / 2;
-            const centerY = (touch1.clientY + touch2.clientY) / 2;
-            const lastCenterX = (lastPos1.x + lastPos2.x) / 2;
-            const lastCenterY = (lastPos1.y + lastPos2.y) / 2;
-            
-            const deltaX = centerX - lastCenterX;
-            const deltaY = centerY - lastCenterY;
-            
-            // 팬 민감도 조정
-            const panSpeed = panSensitivity * 0.01;
-            controlsRef.current.pan(-deltaX * panSpeed, -deltaY * panSpeed, 0);
-            
-            console.log('📱 두 손가락 팬:', {
-              deltaX: deltaX.toFixed(2),
-              deltaY: deltaY.toFixed(2),
-              panSpeed: panSpeed.toFixed(4)
-            });
+      } else if (currentTouches.length === 2 && touchCount.current === 2) {
+        // 두 손가락: 핀치 줌 + 팬 동시 적용 (분기하지 않음 — 더 자연스러움)
+        const t1 = currentTouches[0];
+        const t2 = currentTouches[1];
+        const lp1 = lastTouchPositions[0];
+        const lp2 = lastTouchPositions[1];
+
+        if (lp1 && lp2) {
+          const curDist = Math.hypot(t1.clientX - t2.clientX, t1.clientY - t2.clientY);
+          const lastDist = Math.hypot(lp1.x - lp2.x, lp1.y - lp2.y);
+
+          // 줌: 거리비 — 최소 변화 1px 이상일 때만
+          if (Math.abs(curDist - lastDist) > 1 && lastDist > 0) {
+            const scale = curDist / lastDist;
+            const adjusted = Math.pow(scale, zoomSensitivity);
+            // dollyIn은 카메라를 가깝게. scale>1 = 손가락 벌림 = 확대 = dollyIn 필요
+            controlsRef.current.dollyIn(adjusted);
           }
-          
+
+          // 팬: 중심점 이동
+          const cx = (t1.clientX + t2.clientX) / 2;
+          const cy = (t1.clientY + t2.clientY) / 2;
+          const lcx = (lp1.x + lp2.x) / 2;
+          const lcy = (lp1.y + lp2.y) / 2;
+          const dx = cx - lcx;
+          const dy = cy - lcy;
+          if (Math.abs(dx) > 0.5 || Math.abs(dy) > 0.5) {
+            const panSpeed = panSensitivity * 0.01;
+            controlsRef.current.pan(-dx * panSpeed, dy * panSpeed, 0);
+          }
+
           controlsRef.current.update();
         }
-        
-        lastTouchPositions[0] = { x: touch1.clientX, y: touch1.clientY };
-        lastTouchPositions[1] = { x: touch2.clientX, y: touch2.clientY };
+
+        lastTouchPositions[0] = { x: t1.clientX, y: t1.clientY };
+        lastTouchPositions[1] = { x: t2.clientX, y: t2.clientY };
+      }
+    };
+
+    const handleTouchMove = (e: TouchEvent) => {
+      if (isFurnitureDrag.current || !controlsRef.current) return;
+      e.preventDefault();
+      // touchCount 동기화 (한↔두 손가락 전환 안전)
+      touchCount.current = e.touches.length;
+      // 최신 touches만 rAF에 전달 — 중간 이벤트는 자연스럽게 drop됨
+      pendingTouches = Array.from(e.touches);
+      if (!rafPending) {
+        rafPending = true;
+        requestAnimationFrame(flushMove);
       }
     };
 
     const handleTouchEnd = (e: TouchEvent) => {
       if (isFurnitureDrag.current) return;
-      
       e.preventDefault();
-      console.log('🖐️ 터치 종료:', {
-        remainingTouches: e.touches.length
-      });
-      
-      touchCount.current = 0;
-      isPanning.current = false;
-      startTouches = [];
-      lastTouchPositions = [];
+      touchCount.current = e.touches.length; // 남은 터치 반영 (두 손가락 중 하나만 떼도 처리)
+      if (e.touches.length === 0) {
+        isPanning.current = false;
+        startTouches = [];
+        lastTouchPositions = [];
+      } else {
+        // 남은 터치 기준으로 위치 재설정 (떼는 순간 점프 방지)
+        lastTouchPositions = Array.from(e.touches).map(t => ({ x: t.clientX, y: t.clientY }));
+      }
     };
 
-    // 터치 이벤트 리스너 추가
     canvas.addEventListener('touchstart', handleTouchStart, { passive: false });
     canvas.addEventListener('touchmove', handleTouchMove, { passive: false });
     canvas.addEventListener('touchend', handleTouchEnd, { passive: false });
-
-    console.log('🎮 터치 컨트롤 활성화됨');
+    canvas.addEventListener('touchcancel', handleTouchEnd, { passive: false });
 
     return () => {
       canvas.removeEventListener('touchstart', handleTouchStart);
       canvas.removeEventListener('touchmove', handleTouchMove);
       canvas.removeEventListener('touchend', handleTouchEnd);
-      console.log('🎮 터치 컨트롤 비활성화됨');
+      canvas.removeEventListener('touchcancel', handleTouchEnd);
     };
   }, [enabled, sensitivity, zoomSensitivity, panSensitivity, controlsRef, gl.domElement]);
 

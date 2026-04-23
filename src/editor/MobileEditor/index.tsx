@@ -1,7 +1,7 @@
 // MobileEditor — iPhone 14 Pro 전용 에디터 (시안 Image #78 기준)
 // 웹 UI 절대 불침범. /mobile, /mobile/configurator 라우트 전용
 import React, { useEffect, useRef, useState, useCallback } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import { HiOutlineColorSwatch } from 'react-icons/hi';
 import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
@@ -112,6 +112,7 @@ const IconClose = () => (
 
 const MobileEditor: React.FC = () => {
   const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
   const projectName = searchParams.get('projectName') || '리얼프로젝트';
   const projectNumber = searchParams.get('projectNumber') || '3050';
 
@@ -260,7 +261,18 @@ const MobileEditor: React.FC = () => {
         paddingRight: `calc(${isLandscape ? 10 : 14}px + env(safe-area-inset-right, 0))`,
         flexShrink: 0,
       }}>
-        <button style={{ background: 'none', border: 'none', cursor: 'pointer', color: T.ink, padding: 4, display: 'flex' }}>
+        <button
+          onClick={() => navigate('/mobile')}
+          aria-label="대시보드로"
+          style={{
+            background: 'none', border: 'none', cursor: 'pointer',
+            color: T.ink, padding: 6, display: 'flex',
+            width: 36, height: 36, alignItems: 'center', justifyContent: 'center',
+            WebkitTapHighlightColor: 'rgba(0,0,0,0.08)',
+            touchAction: 'manipulation',
+            zIndex: 2,
+          }}
+        >
           <IconHamburger />
         </button>
         {!isLandscape && (
