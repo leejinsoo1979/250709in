@@ -1561,8 +1561,8 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                 {customDepth}
               </Text>
 
-              {/* ─── 신발장/현관장 등 2섹션 가구 하부섹션 깊이 — 하단 별도 표시 ─── */}
-              {isShoeTwoSection && (
+              {/* ─── 신발장/현관장 등 2섹션 가구 하부섹션 깊이 — 상/하부 깊이가 다를 때만 하단에 별도 표시 ─── */}
+              {isShoeTwoSection && upperDepth !== lowerDepth && (
                 <>
                   {/* 보조 가이드 연장선 - 앞쪽 */}
                   <ExtLine points={[[0, depthDimEdgeLower, furnitureZLower + moduleDepthLower/2], [0, depthDimYLower, furnitureZLower + moduleDepthLower/2]]} color={dimensionColor} />
@@ -2642,8 +2642,8 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                 {customDepth}
               </Text>
 
-              {/* ─── 신발장 하부섹션 깊이 — 우측뷰 하단 별도 표시 ─── */}
-              {isShoeSide_d2 && (
+              {/* ─── 신발장 하부섹션 깊이 — 우측뷰 하단, 상/하부 깊이가 다를 때만 ─── */}
+              {isShoeSide_d2 && upperDepth !== lowerDepth_d2 && (
                 <>
                   <ExtLine points={[[0, furnitureBaseY, furnitureZLower_d2 + moduleDepthLower_d2/2], [0, furnitureBottomDimY_d2, furnitureZLower_d2 + moduleDepthLower_d2/2]]} color={dimensionColor} />
                   <ExtLine points={[[0, furnitureBaseY, furnitureZLower_d2 - moduleDepthLower_d2/2], [0, furnitureBottomDimY_d2, furnitureZLower_d2 - moduleDepthLower_d2/2]]} color={dimensionColor} />
