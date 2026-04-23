@@ -8881,10 +8881,12 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             const mid = module.moduleId || '';
             const isShoeCabinet = mid.includes('-entryway-') || mid.includes('-shelf-') ||
                                   mid.includes('-4drawer-shelf-') || mid.includes('-2drawer-shelf-');
-            // 신발장은 upper/lowerSectionDepth 도 실제 깊이 반영 (2섹션 가구지만 is2Section 분기에 안 걸리는 경우 대비)
-            // 우선순위: customDepth > upper/lowerSectionDepth > dimensions.depth
+            // 모든 가구 공통: 사용자가 편집 팝업에서 설정한 실제 깊이 우선
+            // 우선순위: customDepth > upperSectionDepth || lowerSectionDepth > dimensions.depth
+            // (의류장/신발장 모두 섹션 깊이가 저장될 수 있음)
             const actualDepthMm = module.customDepth
-              || (isShoeCabinet ? (module.upperSectionDepth || module.lowerSectionDepth) : undefined)
+              || module.upperSectionDepth
+              || module.lowerSectionDepth
               || moduleData.dimensions.depth;
             const depth = mmToThreeUnits(actualDepthMm);
             const isFloating = spaceInfo.baseConfig?.type === 'stand' && spaceInfo.baseConfig?.placementType === 'float';
