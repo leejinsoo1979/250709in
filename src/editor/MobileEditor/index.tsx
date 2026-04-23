@@ -249,10 +249,16 @@ const MobileEditor: React.FC = () => {
     }}>
       {/* ═══════════════ Top Header (프로젝트명/토글 포함 통합) ═══════════════ */}
       <div style={{
-        height: isLandscape ? 44 : 52, background: T.surface,
+        minHeight: isLandscape ? 44 : 52,
+        height: `calc(${isLandscape ? 44 : 52}px + env(safe-area-inset-top, 0))`,
+        background: T.surface,
         borderBottom: `1px solid ${T.line}`,
         display: 'flex', alignItems: 'center', gap: 8,
-        padding: isLandscape ? '0 10px' : '0 14px', flexShrink: 0,
+        padding: isLandscape ? '0 10px' : '0 14px',
+        paddingTop: 'env(safe-area-inset-top, 0)',
+        paddingLeft: `calc(${isLandscape ? 10 : 14}px + env(safe-area-inset-left, 0))`,
+        paddingRight: `calc(${isLandscape ? 10 : 14}px + env(safe-area-inset-right, 0))`,
+        flexShrink: 0,
       }}>
         <button style={{ background: 'none', border: 'none', cursor: 'pointer', color: T.ink, padding: 4, display: 'flex' }}>
           <IconHamburger />
@@ -500,8 +506,8 @@ const MobileEditor: React.FC = () => {
       {isLandscape && (
         <div style={{
           position: 'absolute',
-          left: 0,
-          top: 44,
+          left: 'env(safe-area-inset-left, 0)',
+          top: `calc(44px + env(safe-area-inset-top, 0))`,
           bottom: 0,
           width: 44,
           background: T.surface,
@@ -542,7 +548,10 @@ const MobileEditor: React.FC = () => {
       {sheetOpen && (
         <div style={isLandscape ? {
           // 가로: 사이드바(44) 옆에 사이드 패널
-          position: 'absolute', left: 44, top: 44, bottom: 0,
+          position: 'absolute',
+          left: `calc(44px + env(safe-area-inset-left, 0))`,
+          top: `calc(44px + env(safe-area-inset-top, 0))`,
+          bottom: 0,
           width: 'min(240px, 38vw)',
           background: T.surface,
           borderRight: `1px solid ${T.line}`,

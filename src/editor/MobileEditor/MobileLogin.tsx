@@ -61,7 +61,11 @@ const MobileLogin: React.FC = () => {
       background: '#000000', color: '#FFFFFF',
       fontFamily: `-apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", system-ui, sans-serif`,
       display: 'flex', flexDirection: 'column',
-      padding: '44px 24px 32px',
+      padding: '24px 24px 32px',
+      paddingTop: 'calc(24px + env(safe-area-inset-top, 0))',
+      paddingLeft: 'calc(24px + env(safe-area-inset-left, 0))',
+      paddingRight: 'calc(24px + env(safe-area-inset-right, 0))',
+      paddingBottom: 'calc(32px + env(safe-area-inset-bottom, 0))',
       boxSizing: 'border-box',
     }}>
       {/* 로고 영역 */}

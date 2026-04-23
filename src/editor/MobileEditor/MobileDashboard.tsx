@@ -184,8 +184,12 @@ const MobileDashboard: React.FC = () => {
   // ── 공통 헤더 ──
   const Header = () => (
     <div style={{
-      height: 56, flexShrink: 0, background: T.surface,
-      display: 'flex', alignItems: 'center', padding: '0 14px',
+      flexShrink: 0, background: T.surface,
+      display: 'flex', alignItems: 'center',
+      padding: '0 14px',
+      paddingTop: 'env(safe-area-inset-top, 0)',
+      minHeight: 56,
+      height: 'calc(56px + env(safe-area-inset-top, 0))',
       borderBottom: `1px solid ${T.line2}`,
     }}>
       <button style={iconBtn}>
@@ -427,6 +431,10 @@ const MobileDashboard: React.FC = () => {
         width: '100vw', height: '100vh', overflow: 'hidden',
         background: T.surface, color: T.ink, fontFamily: FONT,
         display: 'flex', flexDirection: 'row',
+        paddingTop: 'env(safe-area-inset-top, 0)',
+        paddingLeft: 'env(safe-area-inset-left, 0)',
+        paddingRight: 'env(safe-area-inset-right, 0)',
+        boxSizing: 'border-box',
       }}>
         {/* 좌측 세로 사이드바 */}
         <div style={{
