@@ -9,6 +9,7 @@ import { useUIStore } from '@/store/uiStore';
 import Space3DView from '@/editor/shared/viewer3d/Space3DView';
 import ModuleGallery, { type ModuleType } from '@/editor/shared/controls/furniture/ModuleGallery';
 import MaterialPanel from '@/editor/shared/controls/styling/MaterialPanel';
+import PlacedModulePropertiesPanel from '@/editor/shared/controls/furniture/PlacedModulePropertiesPanel';
 import IPadRightPanel from '@/editor/IPadEditor/IPadRightPanel';
 import './MobileEditor.css';
 
@@ -702,6 +703,9 @@ const MobileEditor: React.FC = () => {
           );
         })}
       </div>)}
+
+      {/* 가구 편집 팝업 — 배치된 가구 탭 시 우측에 속성 패널 표시 */}
+      <PlacedModulePropertiesPanel />
     </div>
   );
 };
