@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '@/auth/AuthProvider';
 import { useAdmin } from '@/hooks/useAdmin';
 import DashboardHeader from '@/components/dashboard/DashboardHeader';
+import BoardImageUploader from '@/components/common/BoardImageUploader';
 import styles from './NewsPage.module.css';
 import {
   listMyQnA,
@@ -44,10 +45,12 @@ const QnAPage: React.FC<Props> = ({ mode }) => {
   // 폼 상태 (질문 작성/수정)
   const [title, setTitle] = useState('');
   const [body, setBody] = useState('');
+  const [images, setImages] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
 
   // 답변 입력 (관리자용)
   const [answerText, setAnswerText] = useState('');
+  const [answerImages, setAnswerImages] = useState<string[]>([]);
   const [savingAnswer, setSavingAnswer] = useState(false);
 
   // 로그인 체크
@@ -77,7 +80,9 @@ const QnAPage: React.FC<Props> = ({ mode }) => {
         setCurrentItem(item);
         setTitle(item.title);
         setBody(item.body);
+        setImages(item.images || []);
         setAnswerText(item.answer || '');
+        setAnswerImages(item.answerImages || []);
       }
       setLoading(false);
     });
@@ -110,7 +115,7 @@ const QnAPage: React.FC<Props> = ({ mode }) => {
     }
     setSaving(true);
     if (mode === 'new') {
-      const { id: newId, error } = await createQnA({ title: title.trim(), body });
+      const { id: newId, error } = await createQnA({ title: title.trim(), body, images });
       setSaving(false);
       if (error || !newId) {
         alert('작성 실패: ' + (error || ''));
@@ -118,7 +123,7 @@ const QnAPage: React.FC<Props> = ({ mode }) => {
       }
       navigate(`/qna/${newId}`);
     } else if (mode === 'edit' && id) {
-      const { error } = await updateQnA(id, { title: title.trim(), body });
+      const { error } = await updateQnA(id, { title: title.trim(), body, images });
       setSaving(false);
       if (error) {
         alert('수정 실패: ' + error);
@@ -146,7 +151,7 @@ const QnAPage: React.FC<Props> = ({ mode }) => {
       return;
     }
     setSavingAnswer(true);
-    const { error } = await answerQnA(id, answerText.trim());
+    const { error } = await answerQnA(id, answerText.trim(), answerImages);
     setSavingAnswer(false);
     if (error) {
       alert('답변 등록 실패: ' + error);
@@ -256,6 +261,19 @@ const QnAPage: React.FC<Props> = ({ mode }) => {
                   <span>{formatDate(currentItem.createdAt)}</span>
                 </div>
                 <div className={styles.detailBody}>{currentItem.body}</div>
+                {currentItem.images && currentItem.images.length > 0 && (
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 16 }}>
+                    {currentItem.images.map((url, i) => (
+                      <a key={url + i} href={url} target="_blank" rel="noopener noreferrer" style={{ display: 'block' }}>
+                        <img
+                          src={url}
+                          alt=""
+                          style={{ maxWidth: 240, maxHeight: 240, borderRadius: 6, border: '1px solid var(--theme-border, #e0e0e0)', display: 'block' }}
+                        />
+                      </a>
+                    ))}
+                  </div>
+                )}
                 <div className={styles.detailActions}>
                   <button className={styles.secondaryBtn} onClick={() => navigate('/qna')}>
                     목록으로
@@ -288,6 +306,19 @@ const QnAPage: React.FC<Props> = ({ mode }) => {
                       <span>{formatDate(currentItem.answeredAt)}</span>
                     </div>
                     <div className={styles.detailBody}>{currentItem.answer}</div>
+                    {currentItem.answerImages && currentItem.answerImages.length > 0 && (
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 16 }}>
+                        {currentItem.answerImages.map((url, i) => (
+                          <a key={url + i} href={url} target="_blank" rel="noopener noreferrer" style={{ display: 'block' }}>
+                            <img
+                              src={url}
+                              alt=""
+                              style={{ maxWidth: 240, maxHeight: 240, borderRadius: 6, border: '1px solid var(--theme-border, #e0e0e0)', display: 'block' }}
+                            />
+                          </a>
+                        ))}
+                      </div>
+                    )}
                     {isAdmin && (
                       <div className={styles.detailActions}>
                         <div />
@@ -316,6 +347,14 @@ const QnAPage: React.FC<Props> = ({ mode }) => {
                         value={answerText}
                         onChange={e => setAnswerText(e.target.value)}
                         placeholder="답변을 입력하세요"
+                      />
+                    </div>
+                    <div className={styles.formRow}>
+                      <label className={styles.label}>이미지 첨부</label>
+                      <BoardImageUploader
+                        value={answerImages}
+                        onChange={setAnswerImages}
+                        prefix="qna"
                       />
                     </div>
                     <div className={styles.formActions}>
@@ -355,6 +394,14 @@ const QnAPage: React.FC<Props> = ({ mode }) => {
                 value={body}
                 onChange={e => setBody(e.target.value)}
                 placeholder="자세한 상황을 적어주시면 더 정확한 답변이 가능합니다."
+              />
+            </div>
+            <div className={styles.formRow}>
+              <label className={styles.label}>이미지 첨부</label>
+              <BoardImageUploader
+                value={images}
+                onChange={setImages}
+                prefix="qna"
               />
             </div>
             <div className={styles.formActions}>

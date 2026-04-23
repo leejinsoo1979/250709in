@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '@/auth/AuthProvider';
 import { useAdmin } from '@/hooks/useAdmin';
 import DashboardHeader from '@/components/dashboard/DashboardHeader';
+import BoardImageUploader from '@/components/common/BoardImageUploader';
 import styles from './NewsPage.module.css';
 import {
   listNews,
@@ -44,6 +45,7 @@ const NewsPage: React.FC<Props> = ({ mode }) => {
   const [title, setTitle] = useState('');
   const [body, setBody] = useState('');
   const [category, setCategory] = useState<NewsCategory>('notice');
+  const [images, setImages] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
 
   // 권한 체크: 로딩 끝나고 관리자 아니면 대시보드로
@@ -73,6 +75,7 @@ const NewsPage: React.FC<Props> = ({ mode }) => {
         setTitle(item.title);
         setBody(item.body);
         setCategory(item.category);
+        setImages(item.images || []);
       }
       setLoading(false);
     });
@@ -90,7 +93,7 @@ const NewsPage: React.FC<Props> = ({ mode }) => {
     }
     setSaving(true);
     if (mode === 'new') {
-      const { id: newId, error } = await createNews({ title: title.trim(), body, category });
+      const { id: newId, error } = await createNews({ title: title.trim(), body, category, images });
       setSaving(false);
       if (error || !newId) {
         alert('작성 실패: ' + (error || ''));
@@ -98,7 +101,7 @@ const NewsPage: React.FC<Props> = ({ mode }) => {
       }
       navigate(`/news/${newId}`);
     } else if (mode === 'edit' && id) {
-      const { error } = await updateNews(id, { title: title.trim(), body, category });
+      const { error } = await updateNews(id, { title: title.trim(), body, category, images });
       setSaving(false);
       if (error) {
         alert('수정 실패: ' + error);
@@ -213,6 +216,19 @@ const NewsPage: React.FC<Props> = ({ mode }) => {
                 <span>{formatDate(currentItem.createdAt)}</span>
               </div>
               <div className={styles.detailBody}>{currentItem.body}</div>
+              {currentItem.images && currentItem.images.length > 0 && (
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 16 }}>
+                  {currentItem.images.map((url, i) => (
+                    <a key={url + i} href={url} target="_blank" rel="noopener noreferrer" style={{ display: 'block' }}>
+                      <img
+                        src={url}
+                        alt=""
+                        style={{ maxWidth: 240, maxHeight: 240, borderRadius: 6, border: '1px solid var(--theme-border, #e0e0e0)', display: 'block' }}
+                      />
+                    </a>
+                  ))}
+                </div>
+              )}
               <div className={styles.detailActions}>
                 <button className={styles.secondaryBtn} onClick={() => navigate('/news')}>
                   목록으로
@@ -262,6 +278,14 @@ const NewsPage: React.FC<Props> = ({ mode }) => {
                 value={body}
                 onChange={e => setBody(e.target.value)}
                 placeholder="내용을 입력하세요"
+              />
+            </div>
+            <div className={styles.formRow}>
+              <label className={styles.label}>이미지 첨부</label>
+              <BoardImageUploader
+                value={images}
+                onChange={setImages}
+                prefix="news"
               />
             </div>
             <div className={styles.formActions}>

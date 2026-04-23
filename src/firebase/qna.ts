@@ -21,6 +21,8 @@ export interface QnAItem {
   id: string;
   title: string;
   body: string;
+  images?: string[]; // 질문 첨부 이미지 URL 배열
+  answerImages?: string[]; // 답변 첨부 이미지 URL 배열
   authorId: string;
   authorName: string;
   status: QnAStatus;
@@ -35,6 +37,7 @@ export interface QnAItem {
 export interface CreateQnAData {
   title: string;
   body: string;
+  images?: string[];
 }
 
 const QNA_COLLECTION = 'qna';
@@ -105,6 +108,7 @@ export const createQnA = async (data: CreateQnAData): Promise<{ id: string | nul
     const ref = await addDoc(collection(db, QNA_COLLECTION), {
       title: data.title,
       body: data.body,
+      images: data.images ?? [],
       authorId: user.uid,
       authorName: user.displayName || user.email || '사용자',
       status: 'pending' as QnAStatus,
@@ -144,13 +148,18 @@ export const deleteQnA = async (id: string): Promise<{ error: string | null }> =
 };
 
 /** 답변 등록/수정 (관리자만) */
-export const answerQnA = async (id: string, answer: string): Promise<{ error: string | null }> => {
+export const answerQnA = async (
+  id: string,
+  answer: string,
+  answerImages: string[] = []
+): Promise<{ error: string | null }> => {
   try {
     const user = await getCurrentUserAsync();
     if (!user) return { error: '로그인이 필요합니다.' };
 
     await updateDoc(doc(db, QNA_COLLECTION, id), {
       answer,
+      answerImages,
       status: 'answered' as QnAStatus,
       answeredBy: user.uid,
       answeredByName: user.displayName || user.email || '관리자',

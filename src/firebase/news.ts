@@ -76,6 +76,7 @@ export const createNews = async (data: CreateNewsData): Promise<{ id: string | n
       title: data.title,
       body: data.body,
       category: data.category,
+      images: data.images ?? [],
       authorId: user.uid,
       authorName: user.displayName || user.email || '관리자',
       createdAt: now,
