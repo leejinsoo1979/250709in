@@ -362,13 +362,28 @@ const ConvertModal: React.FC<ConvertModalProps> = ({ isOpen, onClose, showAll, s
       // 페이지별 도면 + (옵션) 한 장 레이아웃을 하나의 PDF로 생성
       // pdfViews가 비어있고 장표만 선택된 경우에도 downloadDxfAsPdf 내부에서 sheet 페이지만 추가됨
       if (pdfViews.length > 0 || selectedViews['sheet-all-in-one']) {
-        // URL 쿼리에서 designFileName 추출 (디자인명)
-        const urlParams = new URLSearchParams(window.location.search);
-        const designFromUrl = urlParams.get('designFileName') || '';
         const projectState = useProjectStore.getState();
+
+        // 디자인명: 먼저 uiStore의 활성 탭에서 찾기 (가장 정확), 없으면 URL 쿼리에서 안전하게 디코딩
+        const uiState = useUIStore.getState();
+        const activeTab = uiState.openTabs?.find((t: any) => t.id === uiState.activeTabId);
+        let designName = activeTab?.designFileName || '';
+
+        if (!designName) {
+          // URL 쿼리에서 fallback — 이중 인코딩 대응
+          const urlParams = new URLSearchParams(window.location.search);
+          const raw = urlParams.get('designFileName') || '';
+          try {
+            // URLSearchParams가 한 번 디코딩한 결과에 여전히 %XX가 남아있으면 한번 더 디코딩
+            designName = /%[0-9A-Fa-f]{2}/.test(raw) ? decodeURIComponent(raw) : raw;
+          } catch {
+            designName = raw;
+          }
+        }
+
         const sheetMetadata = {
           projectName: projectState.projectTitle || projectState.basicInfo?.title || '-',
-          designName: designFromUrl || '-',
+          designName: designName || '-',
         };
 
         await downloadDxfAsPdf(
