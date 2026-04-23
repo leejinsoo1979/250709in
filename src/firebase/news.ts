@@ -21,6 +21,7 @@ export interface NewsItem {
   title: string;
   body: string;
   category: NewsCategory;
+  images?: string[]; // Firebase Storage URL 배열
   authorId: string;
   authorName: string;
   createdAt: Timestamp | null;
@@ -31,6 +32,7 @@ export interface CreateNewsData {
   title: string;
   body: string;
   category: NewsCategory;
+  images?: string[];
 }
 
 const NEWS_COLLECTION = 'news';

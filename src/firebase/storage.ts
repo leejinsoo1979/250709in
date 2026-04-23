@@ -158,3 +158,32 @@ export const compressImage = (
     img.src = objectUrl;
   });
 };
+
+/**
+ * 게시판(News / Q&A)용 이미지 업로드
+ * - prefix: 'news' | 'qna'
+ * - 최대 5MB, JPEG/PNG/GIF/WebP
+ */
+export const uploadBoardImage = async (
+  file: File,
+  prefix: 'news' | 'qna'
+): Promise<string> => {
+  const user = auth.currentUser;
+  if (!user) throw new Error('로그인이 필요합니다.');
+
+  const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+  if (!allowedTypes.includes(file.type)) {
+    throw new Error('JPEG, PNG, GIF, WebP 형식만 지원됩니다.');
+  }
+  if (file.size > 5 * 1024 * 1024) {
+    throw new Error('파일 크기는 5MB 이하여야 합니다.');
+  }
+
+  const timestamp = Date.now();
+  const random = Math.random().toString(36).slice(2, 8);
+  const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+  const path = `board-images/${prefix}/${user.uid}/${timestamp}_${random}_${safeName}`;
+  const storageRef = ref(storage, path);
+  await uploadBytes(storageRef, file);
+  return await getDownloadURL(storageRef);
+};

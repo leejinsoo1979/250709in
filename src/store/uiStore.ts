@@ -895,8 +895,9 @@ export const useUIStore = create<UIState>()(
               };
             }
           }
+          // 새 탭은 맨 앞(왼쪽)에 추가하고 활성화
           return {
-            openTabs: [...state.openTabs, { ...tab, id, addedAt: Date.now() }],
+            openTabs: [{ ...tab, id, addedAt: Date.now() }, ...state.openTabs],
             activeTabId: id,
           };
         });
