@@ -31,8 +31,8 @@ const T = {
 
 const FONT_SANS = `-apple-system, BlinkMacSystemFont, "SF Pro Text", "Apple SD Gothic Neo", "Noto Sans KR", system-ui, sans-serif`;
 
-type ViewerMode = '3D' | '2D' | 'drawing';
-type BottomTab = 'module' | 'material' | 'settings' | 'drawing';
+type ViewerMode = '3D' | '2D';
+type BottomTab = 'module' | 'material' | 'settings';
 
 // 바텀시트 높이 스냅 포인트 (vh 단위)
 // 뷰어를 최대한 보이도록 기본값(medium)을 낮게 설정
@@ -104,12 +104,6 @@ const IconSettings = () => (
     <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 01-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9c.38.95 1.14 1.55 2 1.7z"/>
   </svg>
 );
-const IconDrawing = () => (
-  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
-    <rect x="3" y="3" width="18" height="18" rx="2"/>
-    <line x1="9" y1="3" x2="9" y2="21"/><line x1="15" y1="3" x2="15" y2="21"/>
-  </svg>
-);
 const IconClose = () => (
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
     <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
@@ -137,6 +131,9 @@ const MobileEditor: React.FC = () => {
   };
   const viewMode = useUIStore(s => s.viewMode);
   const setViewMode = useUIStore(s => s.setViewMode);
+  const doorsOpen = useUIStore(s => s.doorsOpen);
+  const setDoorsOpen = useUIStore(s => s.setDoorsOpen);
+  const view2DTheme = useUIStore(s => s.view2DTheme);
   const renderMode = useUIStore(s => s.renderMode);
   const showAll = useUIStore(s => s.showAll);
   const showFrame = useUIStore(s => s.showFrame);
@@ -291,18 +288,13 @@ const MobileEditor: React.FC = () => {
             {([
               { k: '3D', label: '3D' },
               { k: '2D', label: '2D' },
-              { k: 'drawing', label: '도면' },
             ] as const).map(item => {
               const active = topMode === item.k;
               return (
                 <button key={item.k}
                   onClick={() => {
                     setTopMode(item.k);
-                    if (item.k === '2D' || item.k === '3D') setViewMode(item.k);
-                    if (item.k === 'drawing') {
-                      setBottomTab('drawing');
-                      setSheetOpen(true);
-                    }
+                    setViewMode(item.k);
                   }}
                   style={{
                     padding: '3px 10px', minWidth: 38, height: 24,
@@ -369,19 +361,13 @@ const MobileEditor: React.FC = () => {
           {([
             { k: '3D', label: '3D' },
             { k: '2D', label: '2D' },
-            { k: 'drawing', label: '도면' },
           ] as const).map(item => {
             const active = topMode === item.k;
             return (
               <button key={item.k}
                 onClick={() => {
                   setTopMode(item.k);
-                  if (item.k === '2D' || item.k === '3D') setViewMode(item.k);
-                  if (item.k === 'drawing') {
-                    setBottomTab('drawing');
-                    setSheetOpen(true);
-                    setSheetHeight(SHEET_HEIGHTS.medium);
-                  }
+                  setViewMode(item.k);
                 }}
                 style={{
                   padding: '4px 12px', minWidth: 42, height: 26,
@@ -406,6 +392,46 @@ const MobileEditor: React.FC = () => {
         marginLeft: isLandscape ? (sheetOpen ? 'calc(64px + min(300px, 42vw))' : '64px') : 0,
         transition: 'margin-left 0.2s ease',
       }}>
+        {/* 도어 Open/Close 토글 — 도어 설치 시 뷰어 상단 중앙 */}
+        {hasDoorsInstalled && (() => {
+          const isOpen = doorsOpen === true;
+          const dark = viewMode === '2D' && view2DTheme === 'dark';
+          return (
+            <div style={{
+              position: 'absolute', top: 10, left: '50%', transform: 'translateX(-50%)',
+              zIndex: 20, width: 90, height: 28, borderRadius: 14,
+              background: dark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.1)',
+              display: 'flex', alignItems: 'center', padding: 2,
+              boxSizing: 'border-box', userSelect: 'none',
+            }}>
+              {/* 슬라이딩 활성 배경 */}
+              <div style={{
+                position: 'absolute', top: 2, left: isOpen ? 46 : 2,
+                width: 42, height: 24, borderRadius: 12,
+                background: T.blueAct, transition: 'left 0.2s', pointerEvents: 'none',
+              }} />
+              <span
+                onClick={() => setDoorsOpen(false)}
+                style={{
+                  position: 'relative', flex: 1, textAlign: 'center',
+                  fontSize: 10, fontWeight: 600,
+                  color: !isOpen ? '#fff' : (dark ? 'rgba(255,255,255,0.8)' : 'rgba(0,0,0,0.6)'),
+                  zIndex: 1, lineHeight: '24px', cursor: 'pointer',
+                }}
+              >Close</span>
+              <span
+                onClick={() => setDoorsOpen(true)}
+                style={{
+                  position: 'relative', flex: 1, textAlign: 'center',
+                  fontSize: 10, fontWeight: 600,
+                  color: isOpen ? '#fff' : (dark ? 'rgba(255,255,255,0.8)' : 'rgba(0,0,0,0.6)'),
+                  zIndex: 1, lineHeight: '24px', cursor: 'pointer',
+                }}
+              >Open</span>
+            </div>
+          );
+        })()}
+
         {/* 2D 뷰 방향 선택 버튼 — 2D 모드일 때만 상단 좌측에 표시 */}
         {viewMode === '2D' && (
           <div style={{
@@ -490,7 +516,6 @@ const MobileEditor: React.FC = () => {
             { k: 'module',    label: '모듈', icon: <IconModules /> },
             { k: 'material',  label: '재질', icon: <HiOutlineColorSwatch size={20} /> },
             { k: 'settings',  label: '설정', icon: <IconSettings /> },
-            { k: 'drawing',   label: '도면', icon: <IconDrawing /> },
           ] as const).map(tab => {
             const isA = bottomTab === tab.k && sheetOpen;
             return (
@@ -562,7 +587,6 @@ const MobileEditor: React.FC = () => {
               {bottomTab === 'module' && '모듈'}
               {bottomTab === 'material' && '재질'}
               {bottomTab === 'settings' && '설정'}
-              {bottomTab === 'drawing' && '도면'}
             </div>
             <button onClick={() => { setSheetOpen(false); setSheetHeight(SHEET_HEIGHTS.collapsed); }} style={{
               background: 'none', border: 'none', cursor: 'pointer', color: T.ink2, padding: 4, display: 'flex',
@@ -625,30 +649,6 @@ const MobileEditor: React.FC = () => {
             {bottomTab === 'settings' && (
               <IPadRightPanel spaceInfo={spaceInfo} setSpaceInfo={setSpaceInfo} />
             )}
-
-            {bottomTab === 'drawing' && (
-              <div style={{ padding: '20px 10px', color: T.ink2, fontSize: 13 }}>
-                <div style={{ marginBottom: 12, fontSize: 14, fontWeight: 600, color: T.ink }}>
-                  2D 도면 뷰
-                </div>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 8 }}>
-                  {([
-                    { k: 'front', label: '정면도' },
-                    { k: 'top',   label: '평면도' },
-                    { k: 'left',  label: '측면도' },
-                  ] as const).map(v => (
-                    <SegBtn
-                      key={v.k}
-                      active={viewMode === '2D' && view2DDirection === v.k}
-                      onClick={() => { setViewMode('2D'); setView2DDirection(v.k); setTopMode('2D'); }}
-                    >{v.label}</SegBtn>
-                  ))}
-                </div>
-                <div style={{ marginTop: 14, color: T.ink3, fontSize: 12 }}>
-                  도면 선택 후 바텀시트를 닫으면 뷰어에 표시됩니다.
-                </div>
-              </div>
-            )}
           </div>
         </div>
       )}
@@ -665,7 +665,6 @@ const MobileEditor: React.FC = () => {
           { k: 'module',    label: '모듈', icon: <IconModules /> },
           { k: 'material',  label: '재질', icon: <HiOutlineColorSwatch size={22} /> },
           { k: 'settings',  label: '설정', icon: <IconSettings /> },
-          { k: 'drawing',   label: '도면', icon: <IconDrawing /> },
         ] as const).map(tab => {
           const isA = bottomTab === tab.k && sheetOpen;
           return (
