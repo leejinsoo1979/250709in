@@ -661,7 +661,11 @@ const MobileEditor: React.FC = () => {
               </>
             )}
 
-            {bottomTab === 'material' && <MaterialPanel />}
+            {bottomTab === 'material' && (
+              <div className="mobile-material-panel-scope">
+                <MaterialPanel />
+              </div>
+            )}
 
             {bottomTab === 'settings' && (
               <IPadRightPanel spaceInfo={spaceInfo} setSpaceInfo={setSpaceInfo} />

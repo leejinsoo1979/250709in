@@ -36,9 +36,9 @@
   height: 16px !important;
 }
 
-/* 가로 모드 사이드 패널 내 MaterialPanel 탭/필터 — SegBtn xs와 동일 스펙 */
-.mobile-editor-root .mobile-landscape-panel [class*="tab_"],
-.mobile-editor-root .mobile-landscape-panel [class*="filterChip_"] {
+/* MaterialPanel 전용 스코프 — IPadRightPanel/ModuleGallery에는 영향 없음 */
+.mobile-editor-root .mobile-material-panel-scope [class*="tab_"],
+.mobile-editor-root .mobile-material-panel-scope [class*="filterChip_"] {
   padding: 0 8px !important;
   font-size: 11px !important;
   font-weight: 500 !important;
@@ -48,21 +48,21 @@
   border-radius: 4px !important;
   border-width: 1px !important;
 }
-.mobile-editor-root .mobile-landscape-panel [class*="tabNavigation_"] {
+.mobile-editor-root .mobile-material-panel-scope [class*="tabNavigation_"] {
   gap: 4px !important;
   margin-bottom: 6px !important;
   padding: 0 !important;
   border: none !important;
 }
-.mobile-editor-root .mobile-landscape-panel [class*="filterBar_"] {
+.mobile-editor-root .mobile-material-panel-scope [class*="filterBar_"] {
   gap: 4px !important;
   margin-bottom: 6px !important;
   padding: 0 !important;
 }
-.mobile-editor-root .mobile-landscape-panel [class*="tabIcon_"] {
+.mobile-editor-root .mobile-material-panel-scope [class*="tabIcon_"] {
   display: none !important;
 }
-.mobile-editor-root .mobile-landscape-panel [class*="header_"] {
+.mobile-editor-root .mobile-material-panel-scope [class*="header_"] {
   display: none !important;
 }
 .mobile-editor-root .mobile-landscape-panel [class*="thumbnailLabel"],
