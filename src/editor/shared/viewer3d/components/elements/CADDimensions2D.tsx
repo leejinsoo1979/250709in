@@ -1424,10 +1424,11 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           const modCategory = getModuleCategory(mod);
           const isLowerMod = modCategory === 'lower';
 
-          // 신발장/현관장 등 2섹션 가구 감지 (상부/하부 섹션 깊이 분리 표시 대상)
+          // 현관장(신발장)만 2섹션 깊이 분리 + 도어 두께 차감 대상
+          // (다른 `-shelf-`는 기본 깊이 600mm이므로 차감하지 않음)
           const midSideCheck = mod.moduleId || '';
-          const isShoeTwoSection = midSideCheck.includes('-entryway-') || midSideCheck.includes('-shelf-') || midSideCheck.includes('-4drawer-shelf-') || midSideCheck.includes('-2drawer-shelf-');
-          // 신발장은 도어 두께(20mm) 포함값 → 실제 가구 깊이는 도어 제외
+          const isShoeTwoSection = midSideCheck.includes('-entryway-');
+          // 현관장은 도어 두께(20mm) 포함값 → 실제 가구 깊이는 도어 제외
           const DOOR_THK_MM = 20;
 
           // 상부섹션 깊이 우선 사용
@@ -2522,9 +2523,11 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
 
           if (!moduleData) return null;
 
-          // 신발장/현관장 2섹션 감지 + 도어 두께 차감
+          // 현관장(신발장)만 2섹션 깊이 분리 + 도어 두께 차감 (다른 -shelf-는 기본 600mm)
           const midSide_d2 = module.moduleId || '';
-          const isShoeSide_d2 = midSide_d2.includes('-entryway-') || midSide_d2.includes('-shelf-') || midSide_d2.includes('-4drawer-shelf-') || midSide_d2.includes('-2drawer-shelf-');
+          const isShoeSide_d2 = midSide_d2.includes('-entryway-'); // 깊이 분리/도어 차감 판정은 현관장만
+          // 기존 뒷면 정렬 판정은 좀 더 넓게(신발장 계열 전부) 유지
+          const isBackAlign_d2 = midSide_d2.includes('-entryway-') || midSide_d2.includes('-shelf-') || midSide_d2.includes('-4drawer-shelf-') || midSide_d2.includes('-2drawer-shelf-');
           const DOOR_THK_MM_D2 = 20;
           const upperDepthRaw_d2 = module.upperSectionDepth || module.customDepth || moduleData.dimensions.depth;
           const lowerDepthRaw_d2 = module.lowerSectionDepth || module.customDepth || moduleData.dimensions.depth;
@@ -2548,10 +2551,10 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           const furnitureZOffset = zOffset + (panelDepth - furnitureDepth) / 2;
           // 상부장/신발장은 하부장 뒷면 정렬, 그 외는 앞면 정렬
           const isUpperMod_d2 = getModuleCategory(module as PlacedModule) === 'upper';
-          const furnitureZ = (isUpperMod_d2 || isShoeSide_d2)
+          const furnitureZ = (isUpperMod_d2 || isBackAlign_d2)
             ? (furnitureZOffset - furnitureDepth/2 - doorThickness + moduleDepth/2)
             : (furnitureZOffset + furnitureDepth/2 - doorThickness - moduleDepth/2);
-          // 신발장 하부섹션 Z (뒷면 정렬 + 하부 깊이)
+          // 현관장 하부섹션 Z (뒷면 정렬 + 하부 깊이, 깊이 분리 표시 대상만)
           const cabinetBackZ_ref_d2 = furnitureZOffset - furnitureDepth / 2 - doorThickness;
           const furnitureZLower_d2 = isShoeSide_d2
             ? (cabinetBackZ_ref_d2 + moduleDepthLower_d2 / 2)
