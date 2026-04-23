@@ -578,23 +578,36 @@ const MobileEditor: React.FC = () => {
             </div>
           )}
 
-          {/* 헤더 */}
-          <div style={{
-            padding: isLandscape ? '6px 10px 6px' : '4px 16px 10px',
-            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-            borderBottom: `1px solid ${T.line2}`,
-          }}>
-            <div style={{ fontSize: isLandscape ? 13 : 15, fontWeight: 700, color: T.ink }}>
-              {bottomTab === 'module' && '모듈'}
-              {bottomTab === 'material' && '재질'}
-              {bottomTab === 'settings' && '설정'}
-            </div>
-            <button onClick={() => { setSheetOpen(false); setSheetHeight(SHEET_HEIGHTS.collapsed); }} style={{
-              background: 'none', border: 'none', cursor: 'pointer', color: T.ink2, padding: 4, display: 'flex',
+          {/* 헤더 — 가로 모드는 X 버튼만 있는 얇은 줄, 세로 모드는 제목 유지 */}
+          {isLandscape ? (
+            <div style={{
+              display: 'flex', justifyContent: 'flex-end',
+              padding: '2px 6px 0',
             }}>
-              <IconClose />
-            </button>
-          </div>
+              <button onClick={() => { setSheetOpen(false); setSheetHeight(SHEET_HEIGHTS.collapsed); }} style={{
+                background: 'none', border: 'none', cursor: 'pointer', color: T.ink3, padding: 2, display: 'flex',
+              }}>
+                <IconClose />
+              </button>
+            </div>
+          ) : (
+            <div style={{
+              padding: '4px 16px 10px',
+              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+              borderBottom: `1px solid ${T.line2}`,
+            }}>
+              <div style={{ fontSize: 15, fontWeight: 700, color: T.ink }}>
+                {bottomTab === 'module' && '모듈'}
+                {bottomTab === 'material' && '재질'}
+                {bottomTab === 'settings' && '설정'}
+              </div>
+              <button onClick={() => { setSheetOpen(false); setSheetHeight(SHEET_HEIGHTS.collapsed); }} style={{
+                background: 'none', border: 'none', cursor: 'pointer', color: T.ink2, padding: 4, display: 'flex',
+              }}>
+                <IconClose />
+              </button>
+            </div>
+          )}
 
           {/* 바텀 시트 콘텐츠 */}
           <div className={isLandscape ? 'mobile-landscape-panel' : ''} style={{ flex: 1, overflow: 'auto', padding: isLandscape ? 8 : 12 }}>
