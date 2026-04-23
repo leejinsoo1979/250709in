@@ -51,7 +51,7 @@ const SegBtn: React.FC<{
   size?: 'sm' | 'md' | 'xs';
 }> = ({ active, onClick, children, flex, size = 'sm' }) => {
   const dims = size === 'xs'
-    ? { padding: '3px 6px', height: 26, fontSize: 11, radius: 5 }
+    ? { padding: '2px 4px', height: 22, fontSize: 10, radius: 4 }
     : size === 'md'
     ? { padding: '8px 14px', height: undefined, fontSize: 12, radius: 6 }
     : { padding: '6px 10px', height: 32, fontSize: 12, radius: 6 };
@@ -578,19 +578,8 @@ const MobileEditor: React.FC = () => {
             </div>
           )}
 
-          {/* 헤더 — 가로 모드는 X 버튼만 있는 얇은 줄, 세로 모드는 제목 유지 */}
-          {isLandscape ? (
-            <div style={{
-              display: 'flex', justifyContent: 'flex-end',
-              padding: '2px 6px 0',
-            }}>
-              <button onClick={() => { setSheetOpen(false); setSheetHeight(SHEET_HEIGHTS.collapsed); }} style={{
-                background: 'none', border: 'none', cursor: 'pointer', color: T.ink3, padding: 2, display: 'flex',
-              }}>
-                <IconClose />
-              </button>
-            </div>
-          ) : (
+          {/* 헤더 — 가로 모드에서는 헤더 줄 자체 제거 (X는 콘텐츠 우상단 absolute) */}
+          {!isLandscape && (
             <div style={{
               padding: '4px 16px 10px',
               display: 'flex', alignItems: 'center', justifyContent: 'space-between',
@@ -609,8 +598,22 @@ const MobileEditor: React.FC = () => {
             </div>
           )}
 
-          {/* 바텀 시트 콘텐츠 */}
-          <div className={isLandscape ? 'mobile-landscape-panel' : ''} style={{ flex: 1, overflow: 'auto', padding: isLandscape ? 8 : 12 }}>
+          {/* 가로 모드: 콘텐츠 우상단에 플로팅 X 버튼 */}
+          {isLandscape && (
+            <button
+              onClick={() => { setSheetOpen(false); setSheetHeight(SHEET_HEIGHTS.collapsed); }}
+              style={{
+                position: 'absolute', top: 4, right: 4, zIndex: 5,
+                background: 'none', border: 'none', cursor: 'pointer',
+                color: T.ink3, padding: 2, display: 'flex',
+              }}
+            >
+              <IconClose />
+            </button>
+          )}
+
+          {/* 바텀 시트 콘텐츠 — 가로 모드는 우측 X 버튼 공간 확보 */}
+          <div className={isLandscape ? 'mobile-landscape-panel' : ''} style={{ flex: 1, overflow: 'auto', padding: isLandscape ? '24px 8px 8px' : 12 }}>
             {bottomTab === 'module' && (
               <>
                 <div style={{ display: 'flex', gap: 4, marginBottom: isLandscape ? 5 : 8 }}>
