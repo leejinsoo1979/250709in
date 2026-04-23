@@ -292,9 +292,7 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
       rendererRef.current.shadowMap.enabled = shadowEnabled;
       if (shadowEnabled) {
         rendererRef.current.shadowMap.type = THREE.PCFSoftShadowMap;
-        // autoUpdate=false: 매 프레임 shadow re-render 방지 (정적 씬이라 불필요)
-        // 필요 시 needsUpdate=true 로 1회 갱신. 가구/공간 변경 시 이 effect 재실행으로 동기화됨.
-        rendererRef.current.shadowMap.autoUpdate = false;
+        rendererRef.current.shadowMap.autoUpdate = true;
       }
       rendererRef.current.shadowMap.needsUpdate = true;
 
@@ -323,7 +321,7 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
             r3f.gl.shadowMap.enabled = shadowEnabled;
             if (shadowEnabled) {
               r3f.gl.shadowMap.type = THREE.PCFSoftShadowMap;
-              r3f.gl.shadowMap.autoUpdate = false; // 수동 갱신 방식으로 변경
+              r3f.gl.shadowMap.autoUpdate = true;
             }
             r3f.gl.shadowMap.needsUpdate = true;
           }
@@ -333,7 +331,7 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
       // 2D 모드에서는 그림자 비활성화
       rendererRef.current.shadowMap.enabled = false;
     }
-  }, [viewMode, shadowEnabled, placedModules.length]);
+  }, [viewMode, shadowEnabled]);
 
   // 배경색 업데이트 (라이트 테마 강제)
   useEffect(() => {
@@ -1023,12 +1021,12 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
             powerPreference: 'high-performance',
             antialias: true,
             alpha: false,
-            stencil: false,                // 스텐실 미사용 → 메모리·CPU 절약
+            stencil: true,
             depth: true,
-            preserveDrawingBuffer: true,   // 썸네일 캡처 호환성 유지
+            preserveDrawingBuffer: true,
             failIfMajorPerformanceCaveat: false,
-            logarithmicDepthBuffer: false, // 모든 vertex 로그 연산 제거 → 셰이더 부하 큰 폭 감소
-            precision: 'mediump',          // 내장 그래픽·모바일에서 2~3배 빠름 (가구 치수엔 영향 없음)
+            logarithmicDepthBuffer: true,
+            precision: 'highp',
           }}
           onCreated={({ gl, scene }) => {
             try {
