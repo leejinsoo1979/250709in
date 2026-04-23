@@ -318,32 +318,58 @@ const MobileEditor: React.FC = () => {
         </button>
       </div>
 
-      {/* 프로젝트명 + 3D/2D/도면 토글 */}
+      {/* 프로젝트명 + 3D/2D/도면 토글 — 한 줄에 컴팩트 배치 */}
       <div style={{
         background: T.surface,
-        padding: '6px 16px 10px',
-        display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8,
-        flexShrink: 0,
+        padding: '6px 12px',
+        display: 'flex', alignItems: 'center', gap: 8,
+        borderBottom: `1px solid ${T.line}`,
+        flexShrink: 0, minHeight: 40,
       }}>
-        <div style={{ fontSize: 12, color: T.ink2 }}>
+        <div style={{
+          fontSize: 11, color: T.ink2,
+          whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+          flexShrink: 1, minWidth: 0,
+        }}>
           {projectName} / <span style={{ color: T.primary, fontWeight: 600 }}>{projectNumber}</span> ▾
         </div>
-        <div style={{ display: 'flex', gap: 4, width: '100%', maxWidth: 240 }}>
+        <div style={{ flex: 1 }}/>
+        {/* 컴팩트한 토글 그룹 — 배경으로 묶고 버튼은 더 작게 */}
+        <div style={{
+          display: 'flex', gap: 2,
+          padding: 2, background: T.bg2, borderRadius: 6,
+          flexShrink: 0,
+        }}>
           {([
             { k: '3D', label: '3D' },
             { k: '2D', label: '2D' },
             { k: 'drawing', label: '도면' },
-          ] as const).map(item => (
-            <SegBtn key={item.k} active={topMode === item.k} flex onClick={() => {
-              setTopMode(item.k);
-              if (item.k === '2D' || item.k === '3D') setViewMode(item.k);
-              if (item.k === 'drawing') {
-                setBottomTab('drawing');
-                setSheetOpen(true);
-                setSheetHeight(SHEET_HEIGHTS.full);
-              }
-            }}>{item.label}</SegBtn>
-          ))}
+          ] as const).map(item => {
+            const active = topMode === item.k;
+            return (
+              <button key={item.k}
+                onClick={() => {
+                  setTopMode(item.k);
+                  if (item.k === '2D' || item.k === '3D') setViewMode(item.k);
+                  if (item.k === 'drawing') {
+                    setBottomTab('drawing');
+                    setSheetOpen(true);
+                    setSheetHeight(SHEET_HEIGHTS.medium);
+                  }
+                }}
+                style={{
+                  padding: '4px 12px', minWidth: 42, height: 26,
+                  background: active ? T.surface : 'transparent',
+                  color: active ? T.primary : T.ink3,
+                  border: 'none', borderRadius: 4,
+                  fontSize: 11, fontWeight: active ? 600 : 500,
+                  cursor: 'pointer', whiteSpace: 'nowrap',
+                  boxShadow: active ? '0 1px 2px rgba(0,0,0,0.08)' : 'none',
+                  transition: 'all 0.12s',
+                }}
+              >{item.label}</button>
+            );
+          })}
         </div>
       </div>
 
