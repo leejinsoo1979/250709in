@@ -730,14 +730,18 @@ const loadTextureAsDataUrl = async (
   url: string,
   maxSize: number = 256,
 ): Promise<{ dataUrl: string; w: number; h: number } | null> => {
-  if (!url) return null;
+  if (!url) {
+    console.log('[PDF] 텍스처 URL 없음');
+    return null;
+  }
+  console.log('[PDF] 텍스처 로드 시작:', url);
   return new Promise((resolve) => {
     try {
       const img = new Image();
+      // CORS: 같은 origin이면 무관, 외부면 필요 — 둘 다 시도
       img.crossOrigin = 'anonymous';
       img.onload = () => {
         try {
-          // 최대 256px로 축소 (PDF 용량 제한)
           const ratio = Math.min(maxSize / img.width, maxSize / img.height, 1);
           const w = Math.round(img.width * ratio);
           const h = Math.round(img.height * ratio);
@@ -746,22 +750,45 @@ const loadTextureAsDataUrl = async (
           canvas.height = h;
           const ctx = canvas.getContext('2d');
           if (!ctx) {
+            console.warn('[PDF] Canvas 2D context 없음');
             resolve(null);
             return;
           }
           ctx.drawImage(img, 0, 0, w, h);
-          resolve({ dataUrl: canvas.toDataURL('image/png'), w, h });
+          const dataUrl = canvas.toDataURL('image/png');
+          console.log('[PDF] 텍스처 변환 성공:', url, `${w}x${h}`);
+          resolve({ dataUrl, w, h });
         } catch (err) {
-          console.warn('[PDF] 텍스처 변환 실패:', url, err);
+          console.warn('[PDF] 텍스처 Canvas 변환 실패 (tainted?):', url, err);
           resolve(null);
         }
       };
-      img.onerror = () => {
-        console.warn('[PDF] 텍스처 로드 실패:', url);
-        resolve(null);
+      img.onerror = (err) => {
+        console.warn('[PDF] 텍스처 로드 실패 (404 또는 네트워크):', url, err);
+        // crossOrigin 없이 재시도
+        const img2 = new Image();
+        img2.onload = () => {
+          try {
+            const ratio = Math.min(maxSize / img2.width, maxSize / img2.height, 1);
+            const w = Math.round(img2.width * ratio);
+            const h = Math.round(img2.height * ratio);
+            const canvas = document.createElement('canvas');
+            canvas.width = w;
+            canvas.height = h;
+            const ctx = canvas.getContext('2d');
+            if (!ctx) { resolve(null); return; }
+            ctx.drawImage(img2, 0, 0, w, h);
+            resolve({ dataUrl: canvas.toDataURL('image/png'), w, h });
+          } catch {
+            resolve(null);
+          }
+        };
+        img2.onerror = () => resolve(null);
+        img2.src = url;
       };
       img.src = url;
-    } catch {
+    } catch (err) {
+      console.warn('[PDF] 텍스처 로드 예외:', err);
       resolve(null);
     }
   });
@@ -994,6 +1021,19 @@ const renderSheetContent = async (
   const materialRowH = materialAreaH / 2;
   const thumbSize = 18;
 
+  // 텍스처 경로에서 재질명 파싱: '/materials/solid/MELATONE_4319.png' → { brand: 'MELATONE', name: '4319' }
+  const parseMaterialName = (texPath?: string): { brand: string; name: string } => {
+    if (!texPath) return { brand: '', name: '' };
+    const fileName = texPath.split('/').pop() || '';
+    const nameOnly = fileName.replace(/\.(png|jpg|jpeg|webp)$/i, '');
+    // 언더스코어 첫 번째를 기준으로 브랜드/이름 분리
+    const idx = nameOnly.indexOf('_');
+    if (idx > 0) {
+      return { brand: nameOnly.substring(0, idx), name: nameOnly.substring(idx + 1).replace(/_/g, ' ') };
+    }
+    return { brand: '', name: nameOnly };
+  };
+
   const materials: Array<{ label: string; texture?: string; fallbackColor?: string }> = [
     { label: 'INTERIOR', texture: interiorTex, fallbackColor: materialCfg?.interiorColor },
     { label: 'DOOR', texture: doorTex, fallbackColor: materialCfg?.doorColor },
@@ -1007,13 +1047,13 @@ const renderSheetContent = async (
       pdf.setLineWidth(0.2);
       pdf.line(tbX, rowY, tbX + titleBlockW, rowY);
     }
-    // 라벨
+    // 라벨 (INTERIOR / DOOR)
     pdf.setFontSize(6);
     pdf.setTextColor(100, 100, 100);
     pdf.text(m.label, tbX + 2, rowY + 4);
 
-    // 섬네일 위치 (라벨 아래 중앙)
-    const thumbX = tbX + (titleBlockW - thumbSize) / 2;
+    // 섬네일 위치 (라벨 아래, 좌측 정렬)
+    const thumbX = tbX + 3;
     const thumbY = rowY + 6;
 
     // 테두리
@@ -1022,17 +1062,20 @@ const renderSheetContent = async (
     pdf.rect(thumbX, thumbY, thumbSize, thumbSize);
     pdf.setDrawColor(0, 0, 0);
 
+    let imgLoaded = false;
     if (m.texture) {
       const img = await loadTextureAsDataUrl(m.texture, 256);
       if (img) {
         try {
           pdf.addImage(img.dataUrl, 'PNG', thumbX, thumbY, thumbSize, thumbSize);
+          imgLoaded = true;
         } catch (err) {
           console.warn('[PDF] 재질 섬네일 삽입 실패:', m.label, err);
         }
       }
-    } else if (m.fallbackColor) {
-      // 텍스처 없으면 색상 스와치
+    }
+    if (!imgLoaded && m.fallbackColor) {
+      // 텍스처 없거나 실패 시 색상 스와치
       const hex = m.fallbackColor.replace('#', '');
       if (hex.length === 6) {
         const r = parseInt(hex.substring(0, 2), 16);
@@ -1041,6 +1084,25 @@ const renderSheetContent = async (
         pdf.setFillColor(r, g, b);
         pdf.rect(thumbX, thumbY, thumbSize, thumbSize, 'F');
       }
+    }
+
+    // 재질명/브랜드 텍스트 (섬네일 우측)
+    const parsed = parseMaterialName(m.texture);
+    const textX = thumbX + thumbSize + 2;
+    const textY = thumbY + 4;
+    pdf.setFontSize(7);
+    pdf.setTextColor(0, 0, 0);
+    if (parsed.brand) {
+      pdf.text(parsed.brand, textX, textY);
+      pdf.setFontSize(6);
+      pdf.setTextColor(80, 80, 80);
+      pdf.text(parsed.name, textX, textY + 4);
+    } else if (parsed.name) {
+      pdf.text(parsed.name, textX, textY);
+    } else {
+      pdf.setFontSize(6);
+      pdf.setTextColor(150, 150, 150);
+      pdf.text('-', textX, textY);
     }
   }
 };
