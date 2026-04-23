@@ -1134,8 +1134,8 @@ const ModuleGallery: React.FC<ModuleGalleryProps> = ({ moduleCategory = 'tall', 
 
   // 가구 ID에서 키 추출하여 아이콘 경로 결정
   const getIconPath = (moduleId: string): string => {
-    // 멍장은 텍스트 썸네일 사용
-    if (moduleId.includes('dummy')) return '';
+    // 멍장(더미 가구) 3종 전용 썸네일
+    if (moduleId.includes('dummy')) return '/images/furniture-thumbnails/멍장.png';
     const moduleKey = moduleId.replace(/-[\d.]+$/, ''); // 폭 정보 제거
     return moduleKey in FURNITURE_ICONS ? FURNITURE_ICONS[moduleKey] : FURNITURE_ICONS['single-2drawer-hanging'];
   };
