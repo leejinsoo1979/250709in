@@ -58,9 +58,11 @@ const EditableLabel: React.FC<{
   inputRef,
   setEditingValue
 }) => {
+  const view2DTheme = useUIStore(state => state.view2DTheme);
+  const isDark = currentViewDirection !== '3D' && view2DTheme === 'dark';
   const isEditing = editingColumnId === columnId && editingSide === side;
   const finalColor = color || (currentViewDirection === '3D' ? '#000000' : '#4CAF50');
-  
+
   if (isEditing) {
     return (
       <Html
@@ -71,13 +73,13 @@ const EditableLabel: React.FC<{
         zIndexRange={[10000, 10.01]}
         transform={false}
       >
-        <div 
+        <div
           style={{
             position: 'relative',
             zIndex: 10000,
-            background: currentViewDirection === '3D'
-              ? 'rgba(255, 255, 255, 0.98)'
-              : 'rgba(255, 255, 255, 0.95)',
+            background: isDark
+              ? 'rgba(31,41,55,0.98)'
+              : (currentViewDirection === '3D' ? 'rgba(255, 255, 255, 0.98)' : 'rgba(255, 255, 255, 0.95)'),
             padding: '4px',
             borderRadius: '4px',
             border: `2px solid ${finalColor}`,
@@ -101,21 +103,26 @@ const EditableLabel: React.FC<{
             style={{
               width: '60px',
               padding: '2px 4px',
-              border: '1px solid #ccc',
+              border: `1px solid ${isDark ? '#6b7280' : '#ccc'}`,
               borderRadius: '2px',
               fontSize: '12px',
               fontWeight: 'bold',
               textAlign: 'center',
-              outline: 'none'
+              outline: 'none',
+              backgroundColor: isDark ? '#1f2937' : '#ffffff',
+              color: isDark ? '#ffffff' : '#000000',
+              colorScheme: isDark ? 'dark' : 'light',
+              WebkitAppearance: 'none',
+              appearance: 'none',
             }}
             autoFocus
             onClick={(e) => e.stopPropagation()}
           />
-          <span style={{ 
-            marginLeft: '4px', 
-            fontSize: '12px', 
+          <span style={{
+            marginLeft: '4px',
+            fontSize: '12px',
             fontWeight: 'bold',
-            color: '#666'
+            color: isDark ? '#9ca3af' : '#666'
           }}>
             mm
           </span>
@@ -142,8 +149,8 @@ const EditableLabel: React.FC<{
     >
       <div
         style={{
-          background: 'rgba(255, 255, 255, 0.95)',
-          color: currentViewDirection === '3D' ? '#000000' : (finalColor === '#4CAF50' ? '#2E7D32' : '#2196F3'),
+          background: isDark ? 'rgba(31,41,55,0.95)' : 'rgba(255, 255, 255, 0.95)',
+          color: isDark ? '#ffffff' : (currentViewDirection === '3D' ? '#000000' : (finalColor === '#4CAF50' ? '#2E7D32' : '#2196F3')),
           padding: '4px 8px',
           borderRadius: '4px',
           fontSize: '14px',
