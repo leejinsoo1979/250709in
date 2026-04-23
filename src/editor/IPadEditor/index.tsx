@@ -491,8 +491,10 @@ const IPadEditor: React.FC = () => {
         </div>
       </div>
 
-      {/* 가구 편집 팝업 — 배치된 가구 탭 시 우측에 속성 패널 표시 */}
-      <PlacedModulePropertiesPanel />
+      {/* 가구 편집 팝업 — 배치된 가구 탭 시 우측에 속성 패널 표시 (태블릿 스킨) */}
+      <div className="mobile-furniture-popup-skin">
+        <PlacedModulePropertiesPanel />
+      </div>
     </div>
   );
 };

@@ -33,3 +33,38 @@
 .mobile-editor-root .mobile-landscape-panel [class*="thumbnailName"] {
   font-size: 10px !important;
 }
+
+/* ───────────────────────────────────────────────────────────
+   가구 편집 팝업 (PlacedModulePropertiesPanel) — 모바일/태블릿 우측 도킹
+   Vite CSS Module 클래스명은 \`<className>_<hash>_<line>\` 형태이므로
+   \`[class*="overlay_"]\` 같은 접두 매칭으로 타겟팅.
+   충돌 방지를 위해 .mobile-furniture-popup-skin 래퍼 범위로 제한.
+   ─────────────────────────────────────────────────────────── */
+
+/* 오버레이: 우측 전체 높이 도킹 */
+.mobile-furniture-popup-skin [class*="overlay_"] {
+  padding-top: 0 !important;
+  padding-right: 0 !important;
+  height: 100vh !important;
+}
+
+/* 패널: 우측에 붙이고 100vh */
+.mobile-furniture-popup-skin [class*="panel_"] {
+  width: min(340px, 92vw) !important;
+  max-height: 100vh !important;
+  height: 100vh !important;
+  border-radius: 0 !important;
+  border-right: none !important;
+  border-top: none !important;
+  border-bottom: none !important;
+}
+
+/* 상단 이미지 영역(modulePreview) 숨김 */
+.mobile-furniture-popup-skin [class*="modulePreview_"] {
+  display: none !important;
+}
+
+/* 탭 헤더(가구 편집/패널 목록) 숨김 — 모바일에선 한 화면에 다 보이므로 불필요 */
+.mobile-furniture-popup-skin [class*="headerTabs_"] {
+  display: none !important;
+}
