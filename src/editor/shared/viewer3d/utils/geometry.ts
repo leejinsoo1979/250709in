@@ -215,34 +215,40 @@ export const calculatePanelDepth = (spaceInfo?: SpaceInfo) => {
 
 /**
  * 가구/프레임 배치용 깊이 계산
- * 배치된 가구 중 가장 깊은 가구의 깊이를 반환
- * 가구가 없으면 기본값 600mm 반환
+ * - 스타일러 같은 특수 가구가 있으면 그 가구 깊이(660/640)를 우선
+ * - 그 외에는 "배치된 가구 중 가장 깊은 것"을 반환하되, 기본값(600)보다 얕아도 반영
+ *   → 신발장(기본 380)만 배치한 경우 380이 반환되어 프레임이 가구 앞면에 붙음
+ * - 가구가 없으면 기본값 600mm
  */
 export const calculateFurnitureDepth = (placedModules?: any[], spaceInfo?: any) => {
-  // 노서라운드 모드에서는 도어가 없으므로 580mm
   const baseDepth = spaceInfo?.surroundType === 'no-surround' ? 580 : 600;
-  
+
   if (!placedModules || placedModules.length === 0) {
-    return baseDepth; // 기본 가구 깊이
+    return baseDepth;
   }
-  
-  // 동적 import를 피하기 위해 직접 깊이 확인
-  let maxDepth = baseDepth;
-  
-  placedModules.forEach(module => {
-    // customDepth가 있으면 우선 사용
-    if (module.customDepth && module.customDepth > maxDepth) {
-      maxDepth = module.customDepth;
-    }
-    // 스타일러는 660mm 깊이 (노서라운드에서는 640mm)
-    else if (module.moduleId && module.moduleId.includes('styler')) {
-      const stylerDepth = spaceInfo?.surroundType === 'no-surround' ? 640 : 660;
-      maxDepth = Math.max(maxDepth, stylerDepth);
-    }
-    // 기타 특수 가구 깊이 처리 가능
-  });
-  
-  return maxDepth;
+
+  // 스타일러 우선 처리 (항상 가장 깊음)
+  const hasStyler = placedModules.some(m => m.moduleId && m.moduleId.includes('styler'));
+  if (hasStyler) {
+    return spaceInfo?.surroundType === 'no-surround' ? 640 : 660;
+  }
+
+  // 모듈별 실제 깊이 수집 (customDepth > upperSectionDepth/lowerSectionDepth > 타입별 기본값)
+  const resolveDepthMm = (m: any): number => {
+    if (m.customDepth) return m.customDepth;
+    const mid = m.moduleId || '';
+    const isShoe = mid.includes('-entryway-') || mid.includes('-shelf-') ||
+                   mid.includes('-4drawer-shelf-') || mid.includes('-2drawer-shelf-');
+    if (isShoe) return m.upperSectionDepth || m.lowerSectionDepth || 380;
+    const isUpper = mid.includes('upper-cabinet');
+    if (isUpper) return 300;
+    return baseDepth; // 그 외는 기본
+  };
+
+  const depths = placedModules.map(resolveDepthMm).filter(d => d > 0);
+  if (depths.length === 0) return baseDepth;
+  // 배치된 가구 중 가장 깊은 것을 기준으로 프레임 배치
+  return Math.max(...depths);
 };
 
 /**

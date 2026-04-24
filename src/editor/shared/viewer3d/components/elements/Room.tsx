@@ -245,13 +245,6 @@ const BoxWithEdges: React.FC<{
   excludeKey?: string; // CNC 옵티마이저 패널 제외용 복합키 (furnitureId::meshName)
   excludeKeys?: string[]; // 복수 excludeKey (L자 서라운드: 전면+측면 중 어느 쪽이든 제외 시 숨김)
 }> = ({ args, position, material, renderMode, onBeforeRender, viewMode: viewModeProp, view2DTheme, isEndPanel = false, shadowEnabled = true, hideEdges = false, isOuterFrame = false, name, renderOrder, excludeKey, excludeKeys }) => {
-  // Debug: 측면 프레임 확인
-  if (args[0] < 1 && args[1] > 15) {
-    const bottom = position[1] - args[1] / 2;
-    const top = position[1] + args[1] / 2;
-// console.log('📍 Room BoxWithEdges 측면 프레임 - Y:', position[1], 'H:', args[1], '하단:', bottom, '상단:', top, 'position:', position, 'args:', args);
-
-  }
 
   // CNC 옵티마이저 패널 제외 체크: excludeKey 또는 excludeKeys 중 하나라도 매칭되면 숨김
   const isExcludedByOptimizer = useExcludedPanelsStore((s) => {
