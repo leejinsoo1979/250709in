@@ -95,6 +95,7 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
   const { theme } = useViewerTheme();
   const { view2DTheme } = useUIStore();
   const interiorColorHex = useSpaceConfigStore(state => state.spaceInfo?.materialConfig?.interiorColor);
+  const interiorTextureUrl = useSpaceConfigStore(state => state.spaceInfo?.materialConfig?.interiorTexture);
   const { theme: appTheme } = useTheme();
 
   // 전역 스토어에서 직접 편집 상태 감지 (Context bridge 문제 회피)
@@ -482,10 +483,24 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
       }
     }
 
-    // 어두운 속장 재질 판별: 텍스처가 있는 MeshStandardMaterial은 color가 흰색이라 부족하므로
-    // spaceInfo.materialConfig.interiorColor(설정 색상)를 기준으로 Rec.709 luminance 계산
-    // (HP4319, 8832 같은 어두운 무늬재 대응)
-    const isDarkInteriorMaterial = (() => {
+    // 어두운 속장 재질 판별:
+    // 1) 어두운 텍스처 화이트리스트 (HPL 컴팩트 등 무늬재는 color가 #FFFFFF라 RGB 판정 불가 → 파일명으로 판별)
+    // 2) 설정 색상이 실제로 어두운 경우
+    // 3) baseMaterial이 텍스처 없이 어두운 RGB인 경우
+    const DARK_INTERIOR_TEXTURES = [
+      'MELATONE_4319',    // HP4319
+      'MELATONE_8832',    // 8832
+      'MELATONE_TAUPE',   // 다크 토프
+      'HANSOL_HSB117006', // 한솔 다크
+      'HANSOL_HSB120512',
+      'HANSOL_HSB121004',
+      'cabinet texture1', // Cabinet Texture1 (다크그레이)
+    ];
+    const isDarkInteriorByTexture = (() => {
+      if (!interiorTextureUrl || typeof interiorTextureUrl !== 'string') return false;
+      return DARK_INTERIOR_TEXTURES.some(key => interiorTextureUrl.includes(key));
+    })();
+    const isDarkInteriorByColor = (() => {
       if (!interiorColorHex || typeof interiorColorHex !== 'string') return false;
       try {
         const col = new THREE.Color(interiorColorHex);
@@ -495,10 +510,9 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
         return false;
       }
     })();
-    // 또는 baseMaterial이 텍스처 없이 어두운 RGB인 경우도 포함
-    const isDarkBaseMaterial = isDarkInteriorMaterial || (() => {
+    const isDarkBaseMaterial = isDarkInteriorByTexture || isDarkInteriorByColor || (() => {
       if (!(baseMaterial instanceof THREE.MeshStandardMaterial)) return false;
-      if (baseMaterial.map) return false; // 텍스처 있으면 color 값은 신뢰하지 않음 (interiorColor로만 판정)
+      if (baseMaterial.map) return false; // 텍스처 있으면 color 값은 신뢰하지 않음
       const c = baseMaterial.color;
       const lum = 0.2126 * c.r + 0.7152 * c.g + 0.0722 * c.b;
       return lum < 0.35;
@@ -525,7 +539,7 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
         return view2DTheme === 'dark' ? "#FF4500" : "#444444"; // 다크모드는 붉은 주황색
       }
     }
-  }, [viewMode, effectiveRenderMode, view2DTheme, view2DDirection, baseMaterial, isHighlighted, highlightColor, panelName, interiorColorHex]);
+  }, [viewMode, effectiveRenderMode, view2DTheme, view2DDirection, baseMaterial, isHighlighted, highlightColor, panelName, interiorColorHex, interiorTextureUrl]);
 
   // Debug log for position
 
