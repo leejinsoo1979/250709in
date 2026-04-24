@@ -2654,11 +2654,18 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
 
   // 깊이 계산: 기둥 앞에 배치 모드면 adjustedDepthMm 강제 적용, 아니면 customDepth 우선
   const moduleDepth = actualModuleData?.dimensions?.depth || 0;
-  const actualDepthMm = (placedModule.columnPlacementMode === 'front' && adjustedDepthMm !== moduleDepth)
+  let actualDepthMm = (placedModule.columnPlacementMode === 'front' && adjustedDepthMm !== moduleDepth)
     ? adjustedDepthMm  // front 모드: 깊이 강제 적용
     : (placedModule.customDepth ||
       (autoAdjustedDepthMm !== null ? autoAdjustedDepthMm :
         (adjustedDepthMm !== moduleDepth ? adjustedDepthMm : moduleDepth)));
+  // 상/하부 섹션 depth가 있으면 "덜 줄어든 쪽"(= max)에 맞춤
+  // 도어는 하나로 전체 커버하므로 깊은 쪽 앞면 기준으로 위치해야 함
+  const upperSecDepthMm = (placedModule as any).upperSectionDepth;
+  const lowerSecDepthMm = (placedModule as any).lowerSectionDepth;
+  if (upperSecDepthMm || lowerSecDepthMm) {
+    actualDepthMm = Math.max(upperSecDepthMm || 0, lowerSecDepthMm || 0, actualDepthMm);
+  }
   const depth = mmToThreeUnits(actualDepthMm);
 
 
