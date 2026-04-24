@@ -5401,6 +5401,15 @@ const Room: React.FC<RoomProps> = ({
                     const shoeBackZ = fiZOffset - fiFurnitureDepth / 2 - mmToThreeUnits(20);
                     const shoeFrontZ = shoeBackZ + mmToThreeUnits(slotShoeDepthMm);
                     slotFrameZ = shoeFrontZ - mmToThreeUnits(END_PANEL_THICKNESS) / 2;
+                  } else {
+                    // 일반 가구(의류장/키큰장 등): 상부 섹션 depth + direction에 따라 상부프레임 Z 이동
+                    const upperSecDepth = (mod as any).upperSectionDepth;
+                    if (upperSecDepth && upperSecDepth < 600) {
+                      const diff = 600 - upperSecDepth;
+                      const dir = (mod as any).upperSectionDepthDirection || 'front';
+                      // 뒤고정(front): -diff/2 (뒤로), 앞고정(back): 0 (앞면 유지)
+                      slotFrameZ = topZPos + (dir === 'back' ? 0 : -mmToThreeUnits(diff) / 2);
+                    }
                   }
                   slotTopSegments.push({
                     widthMm: modWidthMM,
