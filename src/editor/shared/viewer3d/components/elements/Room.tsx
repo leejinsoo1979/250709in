@@ -409,17 +409,19 @@ const Room: React.FC<RoomProps> = ({
     return 600;
   };
   // 해당 가구의 "줄어든 만큼" Z 이동량 계산 (direction=back이면 0, front이면 -diff)
+  // 신발장 카테고리는 무조건 앞고정 동작 (프레임이 가구 앞면에 붙음 = offset 0)
   const computeDepthZOffset = (mod: any, useSection: 'upper' | 'lower' | 'any' = 'any'): number => {
     if (!mod) return 0;
     const mid = mod.moduleId || '';
     const baseDepth = getModBaseDepthMm(mid);
     const isShoe = mid.includes('-entryway-') || mid.includes('-shelf-') ||
                    mid.includes('-4drawer-shelf-') || mid.includes('-2drawer-shelf-');
+    // 신발장은 앞고정 강제 → 프레임 항상 가구 앞면(=기본 깊이 기준) 위치 유지
+    if (isShoe) return 0;
     let curDepth: number | undefined;
     if (useSection === 'upper') curDepth = mod.upperSectionDepth;
     else if (useSection === 'lower') curDepth = mod.lowerSectionDepth;
     else curDepth = mod.lowerSectionDepth || mod.upperSectionDepth;
-    if (!curDepth && isShoe) curDepth = mod.customDepth || mod.freeDepth;
     if (!curDepth || curDepth >= baseDepth) return 0;
     const diff = baseDepth - curDepth;
     const dir = useSection === 'upper'
