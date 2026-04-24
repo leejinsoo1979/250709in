@@ -2685,7 +2685,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
           {currentPlacedModule && (
             <div className={styles.propertySection}>
               <h5 className={styles.sectionTitle}>가구 치수</h5>
-              <div style={{ display: 'flex', gap: '4px', alignItems: 'center', marginTop: '2px' }}>
+              <div style={{ display: 'flex', gap: '4px', alignItems: 'flex-start', marginTop: '2px' }}>
                 {/* 너비 — 슬롯배치/자유배치 모두 편집 가능 */}
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <label style={{ fontSize: '10px', color: 'var(--theme-text-tertiary)', display: 'block', lineHeight: 1 }}>W</label>
@@ -2795,7 +2795,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                     <span className={styles.unit}>mm</span>
                   </div>
                 </div>
-                <span style={{ color: 'var(--theme-text-tertiary)', fontSize: '11px', flexShrink: 0 }}>×</span>
+                <span style={{ color: 'var(--theme-text-tertiary)', fontSize: '11px', flexShrink: 0, marginTop: '14px' }}>×</span>
                 {/* 높이 — 2단서랍장은 '몸통 높이'로만 조절, H는 읽기전용 */}
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <label style={{ fontSize: '10px', color: 'var(--theme-text-tertiary)', display: 'block', lineHeight: 1 }}>H</label>
@@ -2885,7 +2885,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                     <span className={styles.unit}>mm</span>
                   </div>
                 </div>
-                <span style={{ color: 'var(--theme-text-tertiary)', fontSize: '11px', flexShrink: 0 }}>×</span>
+                <span style={{ color: 'var(--theme-text-tertiary)', fontSize: '11px', flexShrink: 0, marginTop: '14px' }}>×</span>
                 {/* 깊이 */}
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <label style={{ fontSize: '10px', color: 'var(--theme-text-tertiary)', display: 'block', lineHeight: 1 }}>D</label>
