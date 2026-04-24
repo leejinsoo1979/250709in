@@ -2955,45 +2955,6 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                     />
                     <span className={styles.unit}>mm</span>
                   </div>
-                  {/* 전체 가구 깊이 뒤고정/앞고정 토글 — 섹션별 토글이 없는(단일 섹션) 가구에서 표시 */}
-                  {currentPlacedModule && (() => {
-                    const mid = currentPlacedModule.moduleId || '';
-                    const hasUpperSec = currentPlacedModule.upperSectionDepth !== undefined;
-                    const hasLowerSec = currentPlacedModule.lowerSectionDepth !== undefined;
-                    const is2Section = hasUpperSec || hasLowerSec;
-                    const isShoe = mid.includes('-entryway-') || mid.includes('-shelf-') ||
-                                   mid.includes('-4drawer-shelf-') || mid.includes('-2drawer-shelf-');
-                    const isUpper = mid.includes('upper-cabinet');
-                    // 2섹션/상부장/신발장은 각자 고유 정렬 정책이 있어 전체 토글 비노출
-                    if (is2Section || isUpper || isShoe) return null;
-                    const dir = currentPlacedModule.lowerSectionDepthDirection || 'front';
-                    return (
-                      <div style={{ display: 'flex', gap: '4px', marginTop: '4px' }}>
-                        <button
-                          style={{
-                            flex: 1, padding: '3px 6px', border: '1px solid var(--theme-border)', borderRadius: '4px',
-                            background: dir === 'front' ? 'var(--theme-primary)' : 'var(--theme-surface)',
-                            color: dir === 'front' ? '#fff' : 'var(--theme-text-secondary)',
-                            fontSize: '10px', cursor: 'pointer',
-                          }}
-                          onClick={() => {
-                            if (currentPlacedModule) updatePlacedModule(currentPlacedModule.id, { lowerSectionDepthDirection: 'front' } as any);
-                          }}
-                        >뒤고정</button>
-                        <button
-                          style={{
-                            flex: 1, padding: '3px 6px', border: '1px solid var(--theme-border)', borderRadius: '4px',
-                            background: dir === 'back' ? 'var(--theme-primary)' : 'var(--theme-surface)',
-                            color: dir === 'back' ? '#fff' : 'var(--theme-text-secondary)',
-                            fontSize: '10px', cursor: 'pointer',
-                          }}
-                          onClick={() => {
-                            if (currentPlacedModule) updatePlacedModule(currentPlacedModule.id, { lowerSectionDepthDirection: 'back' } as any);
-                          }}
-                        >앞고정</button>
-                      </div>
-                    );
-                  })()}
                 </div>
               </div>
             </div>
