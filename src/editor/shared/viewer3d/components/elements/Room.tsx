@@ -6097,7 +6097,10 @@ const Room: React.FC<RoomProps> = ({
             // 왼쪽이 단내림이면 이미 위에서 렌더링했으므로 여기서는 스킵
             if (!droppedCeilingEnabled || droppedCeilingPosition !== 'left') {
               const subFrameX = xOffset + frameThickness.left - mmToThreeUnits(9);
-              const subFrameZ = furnitureZOffset + furnitureDepth / 2 - mmToThreeUnits(END_PANEL_THICKNESS) / 2 - mmToThreeUnits(28);
+              // 좌측 최외곽 가구(신발장 등)의 depth에 맞춰 서브프레임 Z 이동
+              const leftSubEdgeMod = placedModulesFromStore.find((pm) => pm.id === leftMostModuleId);
+              const leftSubEdgeZOffset = computeDepthZOffset(leftSubEdgeMod, 'any');
+              const subFrameZ = furnitureZOffset + furnitureDepth / 2 - mmToThreeUnits(END_PANEL_THICKNESS) / 2 - mmToThreeUnits(28) + leftSubEdgeZOffset;
               const subFrameMat = leftSubFrameMaterial ?? createFrameMaterial('left');
 
               // 분절 모드: 좌측 최외곽이 상/하부만 → 각 가구 높이/Z/깊이에 맞춰 세로 서브프레임 조각들
@@ -6314,7 +6317,10 @@ const Room: React.FC<RoomProps> = ({
             // 오른쪽이 단내림이면 이미 위에서 렌더링했으므로 여기서는 스킵
             if (!droppedCeilingEnabled || droppedCeilingPosition !== 'right') {
               const subFrameX = xOffset + width - frameThickness.right + mmToThreeUnits(9);
-              const subFrameZ = furnitureZOffset + furnitureDepth / 2 - mmToThreeUnits(END_PANEL_THICKNESS) / 2 - mmToThreeUnits(28);
+              // 우측 최외곽 가구(신발장 등)의 depth에 맞춰 서브프레임 Z 이동
+              const rightSubEdgeMod = placedModulesFromStore.find((pm) => pm.id === rightMostModuleId);
+              const rightSubEdgeZOffset = computeDepthZOffset(rightSubEdgeMod, 'any');
+              const subFrameZ = furnitureZOffset + furnitureDepth / 2 - mmToThreeUnits(END_PANEL_THICKNESS) / 2 - mmToThreeUnits(28) + rightSubEdgeZOffset;
               const subFrameMat = rightSubFrameMaterial ?? createFrameMaterial('right');
 
               // 분절 모드: 우측 최외곽이 상/하부만 → 각 가구 높이/Z/깊이에 맞춰
