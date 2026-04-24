@@ -5403,12 +5403,13 @@ const Room: React.FC<RoomProps> = ({
                     slotFrameZ = shoeFrontZ - mmToThreeUnits(END_PANEL_THICKNESS) / 2;
                   } else {
                     // 일반 가구(의류장/키큰장 등): 상부 섹션 depth + direction에 따라 상부프레임 Z 이동
+                    // 앞고정(back): 프레임 제자리 유지
+                    // 뒤고정(front): 줄어든 만큼(diff) 그대로 뒤로 이동
                     const upperSecDepth = (mod as any).upperSectionDepth;
                     if (upperSecDepth && upperSecDepth < 600) {
                       const diff = 600 - upperSecDepth;
                       const dir = (mod as any).upperSectionDepthDirection || 'front';
-                      // 뒤고정(front): -diff/2 (뒤로), 앞고정(back): 0 (앞면 유지)
-                      slotFrameZ = topZPos + (dir === 'back' ? 0 : -mmToThreeUnits(diff) / 2);
+                      slotFrameZ = topZPos + (dir === 'back' ? 0 : -mmToThreeUnits(diff));
                     }
                   }
                   slotTopSegments.push({
@@ -6779,15 +6780,15 @@ const Room: React.FC<RoomProps> = ({
                       const slotBaseShoeMid = mod.moduleId || '';
                       const isShoeSlotBase = slotBaseShoeMid.includes('-entryway-') || slotBaseShoeMid.includes('-shelf-') || slotBaseShoeMid.includes('-4drawer-shelf-') || slotBaseShoeMid.includes('-2drawer-shelf-');
                       // 모든 가구 공통: 하부 섹션 depth direction에 따라 하부프레임 Z 이동
-                      // - 뒤고정(front): 섹션이 뒷벽에 붙음 → 프레임이 뒤로 -diff/2 이동
                       // - 앞고정(back): 섹션 앞면 유지 → 프레임도 앞면 유지 (0)
+                      // - 뒤고정(front): 줄어든 만큼(diff) 그대로 뒤로 이동
                       let unifiedBaseZOffset = 0;
                       const lowerSecDepth = (mod as any).lowerSectionDepth
                         || (isShoeSlotBase ? (mod.customDepth || mod.freeDepth) : undefined);
                       if (lowerSecDepth && lowerSecDepth < 600) {
                         const diff = 600 - lowerSecDepth;
                         const dir = (mod as any).lowerSectionDepthDirection || 'front';
-                        unifiedBaseZOffset = dir === 'back' ? 0 : -mmToThreeUnits(diff) / 2;
+                        unifiedBaseZOffset = dir === 'back' ? 0 : -mmToThreeUnits(diff);
                       }
                       const effectiveBaseZ = baseZPos + unifiedBaseZOffset;
 
