@@ -506,7 +506,16 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
       if ('zoom' in controls.object) {
         controls.object.zoom = initialZoom;
         if (typeof (controls.object as THREE.OrthographicCamera).updateProjectionMatrix === 'function') {
-          (controls.object as THREE.OrthographicCamera).updateProjectionMatrix();
+          const ortho = controls.object as THREE.OrthographicCamera;
+          const canvas = controls.domElement;
+          if (canvas) {
+            const rect = canvas.getBoundingClientRect();
+            ortho.left = rect.width / -2;
+            ortho.right = rect.width / 2;
+            ortho.top = rect.height / 2;
+            ortho.bottom = rect.height / -2;
+          }
+          ortho.updateProjectionMatrix();
         }
       }
 
@@ -852,7 +861,16 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
       if ('zoom' in controls.object && camera.zoom) {
         controls.object.zoom = camera.zoom;
         if (typeof (controls.object as THREE.OrthographicCamera).updateProjectionMatrix === 'function') {
-          (controls.object as THREE.OrthographicCamera).updateProjectionMatrix();
+          const ortho = controls.object as THREE.OrthographicCamera;
+          const canvas = controls.domElement;
+          if (canvas) {
+            const rect = canvas.getBoundingClientRect();
+            ortho.left = rect.width / -2;
+            ortho.right = rect.width / 2;
+            ortho.top = rect.height / 2;
+            ortho.bottom = rect.height / -2;
+          }
+          ortho.updateProjectionMatrix();
         }
       }
 
@@ -869,7 +887,7 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
         up: controls.object.up.toArray(),
       });
     }
-  }, [viewMode, view2DDirection, cameraPosition, cameraTarget, cameraUp, camera.target, camera.zoom]);
+  }, [viewMode, view2DDirection]); // 불필요한 의존성 제거 (cameraPosition, cameraTarget, camera.zoom 등)로 끝없는 리셋 방지
 
   // OrbitControls 팬 범위 제한 (그리드 영역)
   useEffect(() => {
@@ -1237,6 +1255,7 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
               maxDistance={controlsConfig.maxDistance}
               viewMode={viewMode}
               zoomSpeed={0.1}
+              controlsRef={controlsRef}
             />
           )}
 

@@ -7,6 +7,7 @@ interface CustomZoomControllerProps {
   maxDistance: number;
   viewMode: '2D' | '3D';
   zoomSpeed?: number;
+  controlsRef?: React.MutableRefObject<any>;
 }
 
 /**
@@ -17,9 +18,10 @@ export const CustomZoomController: React.FC<CustomZoomControllerProps> = ({
   minDistance, 
   maxDistance, 
   viewMode,
-  zoomSpeed = 1.0 
+  zoomSpeed = 1.0,
+  controlsRef
 }) => {
-  const { camera, gl, scene } = useThree();
+  const { camera, gl, scene, invalidate } = useThree();
   const currentCameraRef = useRef(camera);
   
   useEffect(() => {
@@ -68,7 +70,7 @@ export const CustomZoomController: React.FC<CustomZoomControllerProps> = ({
         newZoom = currentZoom * zoomOutFactor;
       }
 
-      // 줌 범위 제한: 축소는 0.95에서 멈춤, 확대는 무제한
+      // 줌 범위 제한: 축소는 0.95에서 멈춤 (너무 작게 축소되어 화면 밖으로 날아가는 현상 방지)
       newZoom = Math.max(0.95, newZoom);
       
       if (newZoom !== currentZoom) {
@@ -96,14 +98,21 @@ export const CustomZoomController: React.FC<CustomZoomControllerProps> = ({
         worldAfter.x = mouseNDC.x * newFrustumWidth / 2;
         worldAfter.y = mouseNDC.y * newFrustumHeight / 2;
 
-        // 차이만큼 뷰포트 조정하여 마우스 포인터 위치 고정
+        // 차이만큼 실제 카메라 위치(position)와 중심점(target)을 이동하여 마우스 포인터 위치 고정
         const deltaX = worldBefore.x - worldAfter.x;
         const deltaY = worldBefore.y - worldAfter.y;
         
-        camera.left += deltaX;
-        camera.right += deltaX;
-        camera.top += deltaY;
-        camera.bottom += deltaY;
+        if (controlsRef && controlsRef.current) {
+          const controls = controlsRef.current;
+          controls.target.x += deltaX;
+          controls.target.y += deltaY;
+          camera.position.x += deltaX;
+          camera.position.y += deltaY;
+          controls.update();
+        } else {
+          camera.position.x += deltaX;
+          camera.position.y += deltaY;
+        }
       } else {
         // 줌이 변경되지 않은 경우에도 적용
         camera.zoom = newZoom;
@@ -124,8 +133,8 @@ export const CustomZoomController: React.FC<CustomZoomControllerProps> = ({
       // 카메라 매트릭스 업데이트
       camera.updateProjectionMatrix();
       
-      // 렌더링 강제 업데이트
-      gl.render(scene, camera);
+      // 버벅거림(Stuttering) 방지: gl.render() 강제 호출 대신 비동기 렌더링 큐(invalidate) 사용
+      invalidate();
     };
 
     // 휠 이벤트 등록 (passive: false로 preventDefault 허용)

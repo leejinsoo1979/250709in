@@ -769,6 +769,9 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
     }
   }, [spaceInfo?.width, spaceInfo?.height, spaceInfo?.depth, viewMode, view2DDirection, placedModules.length, baseDistanceMultiplier, targetY, isMobile]);
 
+  // 카메라 타겟 배열 memoization (하위 컴포넌트의 불필요한 useEffect 재실행 방지)
+  const cameraTargetArr = useMemo<[number, number, number]>(() => [0, targetY, 0], [targetY]);
+
   // Canvas key를 완전히 제거하여 재생성 방지
   // viewMode나 view2DDirection 변경 시에도 Canvas를 재생성하지 않음
 
@@ -1755,7 +1758,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
         >
           <ThreeCanvas
             cameraPosition={cameraPosition}
-            cameraTarget={[0, targetY, 0]}
+            cameraTarget={cameraTargetArr}
             viewMode={viewMode}
             view2DDirection={view2DDirection}
             renderMode={renderMode}
