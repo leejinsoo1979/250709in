@@ -689,33 +689,51 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
         </group>
       )}
       
-      {/* 도어 렌더링 */}
+      {/* 도어 렌더링 — 섹션 depth 상/하부 다르면 "덜 줄어든 쪽"(max) 기준 Z 이동 */}
       {hasDoor && spaceInfo &&
-       !(slotInfo && slotInfo.hasColumn && (slotInfo.columnType === 'deep' || adjustedWidth !== undefined)) && (
-        <DoorModule
-          moduleWidth={doorWidth || moduleData.dimensions.width}
-          moduleDepth={baseFurniture.actualDepthMm}
-          hingePosition={hingePosition}
-          spaceInfo={spaceInfo}
-          color={baseFurniture.doorColor}
-          isDragging={isDragging}
-          isEditMode={isEditMode}
-          moduleData={moduleData}
-          originalSlotWidth={originalSlotWidth}
-          slotCenterX={slotCenterX || 0}
-          slotIndex={slotIndex}
-          textureUrl={spaceInfo.materialConfig?.doorTexture}
-          panelGrainDirections={panelGrainDirections}
-          furnitureId={placedFurnitureId}
-          floatHeight={spaceInfo.baseConfig?.placementType === 'float' ? floatHeight : 0}
-          doorTopGap={doorTopGap}
-          doorBottomGap={doorBottomGap}
-          zone={zone}
-          hasBase={hasBase}
-          individualFloatHeight={individualFloatHeight}
-          parentGroupY={parentGroupY}
-        />
-      )}
+       !(slotInfo && slotInfo.hasColumn && (slotInfo.columnType === 'deep' || adjustedWidth !== undefined)) && (() => {
+        const baseDepthMm = baseFurniture.actualDepthMm || 600;
+        const maxSec = Math.max(upperSectionDepth || 0, lowerSectionDepth || 0);
+        let doorLocalZ = 0;
+        let effectiveDoorDepth = baseDepthMm;
+        if (maxSec > 0 && maxSec < baseDepthMm) {
+          const isMaxUpper = (upperSectionDepth || 0) >= (lowerSectionDepth || 0);
+          const dir = isMaxUpper
+            ? (upperSectionDepthDirection || 'front')
+            : (lowerSectionDepthDirection || 'front');
+          if (dir === 'front') {
+            doorLocalZ = -(baseDepthMm - maxSec) * 0.01;
+          }
+          effectiveDoorDepth = maxSec;
+        }
+        return (
+          <group position={[0, 0, doorLocalZ]}>
+            <DoorModule
+              moduleWidth={doorWidth || moduleData.dimensions.width}
+              moduleDepth={effectiveDoorDepth}
+              hingePosition={hingePosition}
+              spaceInfo={spaceInfo}
+              color={baseFurniture.doorColor}
+              isDragging={isDragging}
+              isEditMode={isEditMode}
+              moduleData={moduleData}
+              originalSlotWidth={originalSlotWidth}
+              slotCenterX={slotCenterX || 0}
+              slotIndex={slotIndex}
+              textureUrl={spaceInfo.materialConfig?.doorTexture}
+              panelGrainDirections={panelGrainDirections}
+              furnitureId={placedFurnitureId}
+              floatHeight={spaceInfo.baseConfig?.placementType === 'float' ? floatHeight : 0}
+              doorTopGap={doorTopGap}
+              doorBottomGap={doorBottomGap}
+              zone={zone}
+              hasBase={hasBase}
+              individualFloatHeight={individualFloatHeight}
+              parentGroupY={parentGroupY}
+            />
+          </group>
+        );
+      })()}
 
       {/* 조절발통 (네 모서리) - showFurniture가 true이고 띄움배치가 아닐 때만 렌더링 */}
       {showFurniture && !isFloating && !(lowerSectionTopOffset && lowerSectionTopOffset > 0) && (() => {
