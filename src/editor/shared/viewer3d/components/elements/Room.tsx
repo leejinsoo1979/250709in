@@ -3853,6 +3853,24 @@ const Room: React.FC<RoomProps> = ({
         }
 
 // console.log('❓❓❓ [왼쪽 일반 구간] 렌더링 여부:', !(hasDroppedCeiling && isLeftDropped), 'hasDroppedCeiling:', hasDroppedCeiling, 'isLeftDropped:', isLeftDropped);
+        // 좌측 최외곽 가구의 섹션 depth가 줄어들었으면 좌측 서라운드 프레임도 줄인 만큼 뒤로
+        const leftEdgeMod = placedModulesFromStore.find((pm) => pm.id === leftMostModuleId);
+        let leftEdgeZOffset = 0;
+        if (leftEdgeMod) {
+          const midL = leftEdgeMod.moduleId || '';
+          const isShoeL = midL.includes('-entryway-') || midL.includes('-shelf-') ||
+                          midL.includes('-4drawer-shelf-') || midL.includes('-2drawer-shelf-');
+          const edgeSecDepth = (leftEdgeMod as any).lowerSectionDepth
+            || (leftEdgeMod as any).upperSectionDepth
+            || (isShoeL ? (leftEdgeMod.customDepth || leftEdgeMod.freeDepth) : undefined);
+          if (edgeSecDepth && edgeSecDepth < 600) {
+            const diff = 600 - edgeSecDepth;
+            const dir = (leftEdgeMod as any).lowerSectionDepthDirection
+              || (leftEdgeMod as any).upperSectionDepthDirection || 'front';
+            leftEdgeZOffset = dir === 'back' ? 0 : -mmToThreeUnits(diff);
+          }
+        }
+
         const leftPosition: [number, number, number] = [
           // X 위치
           spaceInfo.surroundType === 'no-surround'
@@ -3865,12 +3883,12 @@ const Room: React.FC<RoomProps> = ({
           // Z 위치
           spaceInfo.surroundType === 'no-surround'
             ? (wallConfig?.left
-              ? furnitureZOffset + furnitureDepth / 2 - mmToThreeUnits(END_PANEL_THICKNESS) / 2 + mmToThreeUnits(3)
+              ? furnitureZOffset + furnitureDepth / 2 - mmToThreeUnits(END_PANEL_THICKNESS) / 2 + mmToThreeUnits(3) + leftEdgeZOffset
               : noSurroundEndPanelZ)
             : (((spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') && !wallConfig?.left) ||
               (spaceInfo.installType === 'freestanding' || spaceInfo.installType === 'free-standing')
               ? surroundEndPanelZ
-              : furnitureZOffset + furnitureDepth / 2 - mmToThreeUnits(END_PANEL_THICKNESS) / 2 + mmToThreeUnits(3))
+              : furnitureZOffset + furnitureDepth / 2 - mmToThreeUnits(END_PANEL_THICKNESS) / 2 + mmToThreeUnits(3) + leftEdgeZOffset)
         ];
         if (hasDroppedCeiling && isLeftDropped) return null;
 
@@ -4272,14 +4290,31 @@ const Room: React.FC<RoomProps> = ({
           : (hasRightFurniture && indexingForCheck.threeUnitBoundaries.length > lastSlotIndex + 1
             ? indexingForCheck.threeUnitBoundaries[lastSlotIndex + 1] + frameRenderThickness.right
             : xOffset + width - frameRenderThickness.right / 2);
+        // 우측 최외곽 가구의 섹션 depth가 줄어들었으면 우측 서라운드 프레임도 줄인 만큼 뒤로
+        const rightEdgeMod = placedModulesFromStore.find((pm) => pm.id === rightMostModuleId);
+        let rightEdgeZOffset = 0;
+        if (rightEdgeMod) {
+          const midR = rightEdgeMod.moduleId || '';
+          const isShoeR = midR.includes('-entryway-') || midR.includes('-shelf-') ||
+                          midR.includes('-4drawer-shelf-') || midR.includes('-2drawer-shelf-');
+          const edgeSecDepthR = (rightEdgeMod as any).lowerSectionDepth
+            || (rightEdgeMod as any).upperSectionDepth
+            || (isShoeR ? (rightEdgeMod.customDepth || rightEdgeMod.freeDepth) : undefined);
+          if (edgeSecDepthR && edgeSecDepthR < 600) {
+            const diffR = 600 - edgeSecDepthR;
+            const dirR = (rightEdgeMod as any).lowerSectionDepthDirection
+              || (rightEdgeMod as any).upperSectionDepthDirection || 'front';
+            rightEdgeZOffset = dirR === 'back' ? 0 : -mmToThreeUnits(diffR);
+          }
+        }
         const rightFrameZ = spaceInfo.surroundType === 'no-surround'
           ? (wallConfig?.right
-            ? furnitureZOffset + furnitureDepth / 2 - mmToThreeUnits(END_PANEL_THICKNESS) / 2 + mmToThreeUnits(3)
+            ? furnitureZOffset + furnitureDepth / 2 - mmToThreeUnits(END_PANEL_THICKNESS) / 2 + mmToThreeUnits(3) + rightEdgeZOffset
             : noSurroundEndPanelZ)
           : (((spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') && !wallConfig?.right) ||
             (spaceInfo.installType === 'freestanding' || spaceInfo.installType === 'free-standing')
             ? surroundEndPanelZ
-            : furnitureZOffset + furnitureDepth / 2 - mmToThreeUnits(END_PANEL_THICKNESS) / 2 + mmToThreeUnits(3));
+            : furnitureZOffset + furnitureDepth / 2 - mmToThreeUnits(END_PANEL_THICKNESS) / 2 + mmToThreeUnits(3) + rightEdgeZOffset);
         const rightFrameMat = rightFrameMaterial ?? createFrameMaterial('right');
 
         // 분절 모드: 우측 최외곽이 upper/lower만 → 각 가구 높이/Z/깊이에 맞춰 프레임 조각들
@@ -5393,14 +5428,16 @@ const Room: React.FC<RoomProps> = ({
                     const slotUpperFrontZ = fiZOffset - fiFurnitureDepth / 2 - mmToThreeUnits(20) + mmToThreeUnits(slotUpperDepthMm);
                     slotFrameZ = slotUpperFrontZ - mmToThreeUnits(END_PANEL_THICKNESS) / 2;
                   } else if (isShoeSlot) {
-                    // 신발장: 앞면 Z = 의류장 뒷면 + customDepth
-                    const slotShoeDepthMm = mod.customDepth || mod.freeDepth || 380;
-                    const fiFurnitureDepthMm = Math.min(spaceInfo.depth || 1500, 600);
-                    const fiFurnitureDepth = mmToThreeUnits(fiFurnitureDepthMm);
-                    const fiZOffset = -mmToThreeUnits(spaceInfo.depth || 1500) / 2 + (mmToThreeUnits(spaceInfo.depth || 1500) - fiFurnitureDepth) / 2;
-                    const shoeBackZ = fiZOffset - fiFurnitureDepth / 2 - mmToThreeUnits(20);
-                    const shoeFrontZ = shoeBackZ + mmToThreeUnits(slotShoeDepthMm);
-                    slotFrameZ = shoeFrontZ - mmToThreeUnits(END_PANEL_THICKNESS) / 2;
+                    // 신발장: 상부 섹션 depth 또는 customDepth(없으면 380) + direction 반영
+                    // 앞고정(back): 프레임 제자리, 뒤고정(front): 줄인 만큼 뒤로
+                    const slotShoeDepthMm = (mod as any).upperSectionDepth
+                      || mod.customDepth || mod.freeDepth || 380;
+                    if (slotShoeDepthMm < 600) {
+                      const diff = 600 - slotShoeDepthMm;
+                      const dir = (mod as any).upperSectionDepthDirection
+                        || (mod as any).lowerSectionDepthDirection || 'front';
+                      slotFrameZ = topZPos + (dir === 'back' ? 0 : -mmToThreeUnits(diff));
+                    }
                   } else {
                     // 일반 가구(의류장/키큰장 등): 상부 섹션 depth + direction에 따라 상부프레임 Z 이동
                     // 앞고정(back): 프레임 제자리 유지
