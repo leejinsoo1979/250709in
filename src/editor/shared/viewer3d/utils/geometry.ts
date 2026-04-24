@@ -251,7 +251,6 @@ export const calculateFurnitureDepth = (placedModules?: any[], spaceInfo?: any) 
 
   const depths = placedModules.map(resolveDepthMm).filter(d => d > 0);
   if (depths.length === 0) return baseDepth;
-  // 배치된 가구 중 가장 깊은 것을 기준으로 프레임 배치
   return Math.max(...depths);
 };
 
