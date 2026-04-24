@@ -3440,12 +3440,13 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
               </Html>
             )}
 
-            {/* 기둥C(medium) 앞↔측면 배치 전환 화살표 — 가구 선택 시 가구↔기둥 사이 표시 */}
-            {isSelected && !readOnly && slotInfo?.hasColumn && slotInfo?.columnType === 'medium' && slotInfo.column && (() => {
+            {/* 앞↔측면 배치 전환 화살표 — 가구 선택 시 가구↔기둥 사이 표시 */}
+            {/* 기둥 타입(columnType)과 무관하게 기둥이 있고 가구 앞 여유가 있으면 전환 가능 */}
+            {isSelected && !readOnly && slotInfo?.hasColumn && slotInfo.column && (() => {
               const columnDepthMm = slotInfo.column.depth;
               const originalDepth = actualModuleData?.dimensions.depth || 600;
               const isFrontMode = (placedModule as any).columnPlacementMode === 'front';
-              // front 모드가 아닐 때: 가구깊이 - 기둥깊이 >= 290 필요
+              // front 모드가 아닐 때: 가구깊이 - 기둥깊이 >= 290 필요 (앞 배치 후 최소 깊이 확보)
               if (!isFrontMode) {
                 const depthDiff = (placedModule.customDepth ?? originalDepth) - columnDepthMm;
                 if (depthDiff < 290) return null;
