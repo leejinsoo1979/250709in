@@ -692,9 +692,13 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
       {/* 도어 렌더링 — 섹션 depth 상/하부 다르면 "덜 줄어든 쪽"(max) 기준 Z 이동 */}
       {hasDoor && spaceInfo &&
        !(slotInfo && slotInfo.hasColumn && (slotInfo.columnType === 'deep' || adjustedWidth !== undefined)) && (() => {
-        // 도어 Z 이동: "덜 줄어든 쪽(max)" 기준으로 줄어든 만큼만 뒤로
-        // moduleDepth는 원본 유지 (DoorModule 내부 보정 간섭 방지)
-        const baseDepthMm = baseFurniture.actualDepthMm || 600;
+        // 도어 Z 이동: 가구 "기본 깊이" 기준으로 "덜 줄어든 섹션"(max) 만큼만 뒤로
+        // 신발장 380, 상부장 300, 기타 600
+        const mid = moduleData.id || '';
+        const isShoeMod = mid.includes('-entryway-') || mid.includes('-shelf-') ||
+                          mid.includes('-4drawer-shelf-') || mid.includes('-2drawer-shelf-');
+        const isUpperMod = mid.includes('upper-cabinet');
+        const baseDepthMm = isShoeMod ? 380 : isUpperMod ? 300 : 600;
         const maxSec = Math.max(upperSectionDepth || 0, lowerSectionDepth || 0);
         let doorLocalZ = 0;
         if (maxSec > 0 && maxSec < baseDepthMm) {

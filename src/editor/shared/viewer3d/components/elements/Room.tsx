@@ -401,6 +401,33 @@ const Room: React.FC<RoomProps> = ({
   const isFullSurround = spaceInfo.surroundType === 'surround' &&
     spaceInfo.frameConfig?.top === true && spaceInfo.frameConfig?.bottom === true;
 
+  // 가구별 기본 깊이 (신발장 380, 상부장 300, 기타 600)
+  const getModBaseDepthMm = (moduleId: string): number => {
+    if (moduleId.includes('-entryway-') || moduleId.includes('-shelf-') ||
+        moduleId.includes('-4drawer-shelf-') || moduleId.includes('-2drawer-shelf-')) return 380;
+    if (moduleId.includes('upper-cabinet')) return 300;
+    return 600;
+  };
+  // 해당 가구의 "줄어든 만큼" Z 이동량 계산 (direction=back이면 0, front이면 -diff)
+  const computeDepthZOffset = (mod: any, useSection: 'upper' | 'lower' | 'any' = 'any'): number => {
+    if (!mod) return 0;
+    const mid = mod.moduleId || '';
+    const baseDepth = getModBaseDepthMm(mid);
+    const isShoe = mid.includes('-entryway-') || mid.includes('-shelf-') ||
+                   mid.includes('-4drawer-shelf-') || mid.includes('-2drawer-shelf-');
+    let curDepth: number | undefined;
+    if (useSection === 'upper') curDepth = mod.upperSectionDepth;
+    else if (useSection === 'lower') curDepth = mod.lowerSectionDepth;
+    else curDepth = mod.lowerSectionDepth || mod.upperSectionDepth;
+    if (!curDepth && isShoe) curDepth = mod.customDepth || mod.freeDepth;
+    if (!curDepth || curDepth >= baseDepth) return 0;
+    const diff = baseDepth - curDepth;
+    const dir = useSection === 'upper'
+      ? (mod.upperSectionDepthDirection || 'front')
+      : (mod.lowerSectionDepthDirection || mod.upperSectionDepthDirection || 'front');
+    return dir === 'back' ? 0 : -mmToThreeUnits(diff);
+  };
+
   // props로 전달된 cameraMode가 있으면 우선 사용, 없으면 UIStore 값 사용
   const cameraMode = cameraModeOverride || cameraModeFromStore;
 
@@ -3853,23 +3880,9 @@ const Room: React.FC<RoomProps> = ({
         }
 
 // console.log('❓❓❓ [왼쪽 일반 구간] 렌더링 여부:', !(hasDroppedCeiling && isLeftDropped), 'hasDroppedCeiling:', hasDroppedCeiling, 'isLeftDropped:', isLeftDropped);
-        // 좌측 최외곽 가구의 섹션 depth가 줄어들었으면 좌측 서라운드 프레임도 줄인 만큼 뒤로
+        // 좌측 최외곽 가구의 섹션 depth 변화 반영 (가구 기본 깊이 기준으로 "줄어든 만큼" 뒤로)
         const leftEdgeMod = placedModulesFromStore.find((pm) => pm.id === leftMostModuleId);
-        let leftEdgeZOffset = 0;
-        if (leftEdgeMod) {
-          const midL = leftEdgeMod.moduleId || '';
-          const isShoeL = midL.includes('-entryway-') || midL.includes('-shelf-') ||
-                          midL.includes('-4drawer-shelf-') || midL.includes('-2drawer-shelf-');
-          const edgeSecDepth = (leftEdgeMod as any).lowerSectionDepth
-            || (leftEdgeMod as any).upperSectionDepth
-            || (isShoeL ? (leftEdgeMod.customDepth || leftEdgeMod.freeDepth) : undefined);
-          if (edgeSecDepth && edgeSecDepth < 600) {
-            const diff = 600 - edgeSecDepth;
-            const dir = (leftEdgeMod as any).lowerSectionDepthDirection
-              || (leftEdgeMod as any).upperSectionDepthDirection || 'front';
-            leftEdgeZOffset = dir === 'back' ? 0 : -mmToThreeUnits(diff);
-          }
-        }
+        const leftEdgeZOffset = computeDepthZOffset(leftEdgeMod, 'any');
 
         const leftPosition: [number, number, number] = [
           // X 위치
@@ -4290,23 +4303,9 @@ const Room: React.FC<RoomProps> = ({
           : (hasRightFurniture && indexingForCheck.threeUnitBoundaries.length > lastSlotIndex + 1
             ? indexingForCheck.threeUnitBoundaries[lastSlotIndex + 1] + frameRenderThickness.right
             : xOffset + width - frameRenderThickness.right / 2);
-        // 우측 최외곽 가구의 섹션 depth가 줄어들었으면 우측 서라운드 프레임도 줄인 만큼 뒤로
+        // 우측 최외곽 가구의 섹션 depth 변화 반영
         const rightEdgeMod = placedModulesFromStore.find((pm) => pm.id === rightMostModuleId);
-        let rightEdgeZOffset = 0;
-        if (rightEdgeMod) {
-          const midR = rightEdgeMod.moduleId || '';
-          const isShoeR = midR.includes('-entryway-') || midR.includes('-shelf-') ||
-                          midR.includes('-4drawer-shelf-') || midR.includes('-2drawer-shelf-');
-          const edgeSecDepthR = (rightEdgeMod as any).lowerSectionDepth
-            || (rightEdgeMod as any).upperSectionDepth
-            || (isShoeR ? (rightEdgeMod.customDepth || rightEdgeMod.freeDepth) : undefined);
-          if (edgeSecDepthR && edgeSecDepthR < 600) {
-            const diffR = 600 - edgeSecDepthR;
-            const dirR = (rightEdgeMod as any).lowerSectionDepthDirection
-              || (rightEdgeMod as any).upperSectionDepthDirection || 'front';
-            rightEdgeZOffset = dirR === 'back' ? 0 : -mmToThreeUnits(diffR);
-          }
-        }
+        const rightEdgeZOffset = computeDepthZOffset(rightEdgeMod, 'any');
         const rightFrameZ = spaceInfo.surroundType === 'no-surround'
           ? (wallConfig?.right
             ? furnitureZOffset + furnitureDepth / 2 - mmToThreeUnits(END_PANEL_THICKNESS) / 2 + mmToThreeUnits(3) + rightEdgeZOffset
@@ -5427,27 +5426,9 @@ const Room: React.FC<RoomProps> = ({
                     const fiZOffset = -mmToThreeUnits(spaceInfo.depth || 1500) / 2 + (mmToThreeUnits(spaceInfo.depth || 1500) - fiFurnitureDepth) / 2;
                     const slotUpperFrontZ = fiZOffset - fiFurnitureDepth / 2 - mmToThreeUnits(20) + mmToThreeUnits(slotUpperDepthMm);
                     slotFrameZ = slotUpperFrontZ - mmToThreeUnits(END_PANEL_THICKNESS) / 2;
-                  } else if (isShoeSlot) {
-                    // 신발장: 상부 섹션 depth 또는 customDepth(없으면 380) + direction 반영
-                    // 앞고정(back): 프레임 제자리, 뒤고정(front): 줄인 만큼 뒤로
-                    const slotShoeDepthMm = (mod as any).upperSectionDepth
-                      || mod.customDepth || mod.freeDepth || 380;
-                    if (slotShoeDepthMm < 600) {
-                      const diff = 600 - slotShoeDepthMm;
-                      const dir = (mod as any).upperSectionDepthDirection
-                        || (mod as any).lowerSectionDepthDirection || 'front';
-                      slotFrameZ = topZPos + (dir === 'back' ? 0 : -mmToThreeUnits(diff));
-                    }
                   } else {
-                    // 일반 가구(의류장/키큰장 등): 상부 섹션 depth + direction에 따라 상부프레임 Z 이동
-                    // 앞고정(back): 프레임 제자리 유지
-                    // 뒤고정(front): 줄어든 만큼(diff) 그대로 뒤로 이동
-                    const upperSecDepth = (mod as any).upperSectionDepth;
-                    if (upperSecDepth && upperSecDepth < 600) {
-                      const diff = 600 - upperSecDepth;
-                      const dir = (mod as any).upperSectionDepthDirection || 'front';
-                      slotFrameZ = topZPos + (dir === 'back' ? 0 : -mmToThreeUnits(diff));
-                    }
+                    // 신발장/의류장 공통: 상부 섹션 depth 변화를 가구 기본 깊이 기준으로 반영
+                    slotFrameZ = topZPos + computeDepthZOffset(mod, 'upper');
                   }
                   slotTopSegments.push({
                     widthMm: modWidthMM,
@@ -6816,17 +6797,8 @@ const Room: React.FC<RoomProps> = ({
                       // 신발장 하부프레임 Z (앞면 기준)
                       const slotBaseShoeMid = mod.moduleId || '';
                       const isShoeSlotBase = slotBaseShoeMid.includes('-entryway-') || slotBaseShoeMid.includes('-shelf-') || slotBaseShoeMid.includes('-4drawer-shelf-') || slotBaseShoeMid.includes('-2drawer-shelf-');
-                      // 모든 가구 공통: 하부 섹션 depth direction에 따라 하부프레임 Z 이동
-                      // - 앞고정(back): 섹션 앞면 유지 → 프레임도 앞면 유지 (0)
-                      // - 뒤고정(front): 줄어든 만큼(diff) 그대로 뒤로 이동
-                      let unifiedBaseZOffset = 0;
-                      const lowerSecDepth = (mod as any).lowerSectionDepth
-                        || (isShoeSlotBase ? (mod.customDepth || mod.freeDepth) : undefined);
-                      if (lowerSecDepth && lowerSecDepth < 600) {
-                        const diff = 600 - lowerSecDepth;
-                        const dir = (mod as any).lowerSectionDepthDirection || 'front';
-                        unifiedBaseZOffset = dir === 'back' ? 0 : -mmToThreeUnits(diff);
-                      }
+                      // 모든 가구 공통: 하부 섹션 depth 변화를 가구 기본 깊이 기준으로 반영
+                      const unifiedBaseZOffset = computeDepthZOffset(mod, 'lower');
                       const effectiveBaseZ = baseZPos + unifiedBaseZOffset;
 
                       // 커스터마이즈 가구 좌우분할: 무조건 하부프레임도 영역별 분할
