@@ -263,30 +263,50 @@ const SingleType4: React.FC<FurnitureTypeProps> = ({
       
       {/* 도어는 showFurniture와 관계없이 hasDoor가 true이면 항상 렌더링 (도어만 보기 위해) - 단, 기둥 A(deep) 침범 시에는 FurnitureItem에서 별도 렌더링 */}
       {hasDoor && spaceInfo &&
-       !(slotInfo && slotInfo.hasColumn && (slotInfo.columnType === 'deep' || adjustedWidth !== undefined)) && (
-        <DoorModule
-          moduleWidth={doorWidth || moduleData.dimensions.width}
-          moduleDepth={baseFurniture.actualDepthMm}
-          hingePosition={hingePosition}
-          spaceInfo={spaceInfo}
-          color={baseFurniture.doorColor}
-          isDragging={isDragging}
-          isEditMode={isEditMode}
-          moduleData={moduleData}
-          originalSlotWidth={originalSlotWidth}
-          slotCenterX={slotCenterX || 0}
-          slotIndex={slotIndex}
-          textureUrl={spaceInfo.materialConfig?.doorTexture}
-          panelGrainDirections={panelGrainDirections}
-          furnitureId={placedFurnitureId}
-          doorTopGap={doorTopGap}
-          doorBottomGap={doorBottomGap}
-          zone={zone}
-          hasBase={hasBase}
-          individualFloatHeight={individualFloatHeight}
-          parentGroupY={parentGroupY}
-        />
-      )}
+       !(slotInfo && slotInfo.hasColumn && (slotInfo.columnType === 'deep' || adjustedWidth !== undefined)) && (() => {
+        // 상/하부 섹션 depth가 다르면 도어는 "덜 줄어든 쪽"(max) 앞면 기준으로 위치 이동
+        // 뒤고정(front)일 때만 뒤로 이동, 앞고정(back)은 제자리
+        const baseDepthMm = baseFurniture.actualDepthMm || 600;
+        const maxSec = Math.max(upperSectionDepth || 0, lowerSectionDepth || 0);
+        let doorLocalZ = 0;
+        let effectiveDoorDepth = baseDepthMm;
+        if (maxSec > 0 && maxSec < baseDepthMm) {
+          const isMaxUpper = (upperSectionDepth || 0) >= (lowerSectionDepth || 0);
+          const dir = isMaxUpper
+            ? (upperSectionDepthDirection || 'front')
+            : (lowerSectionDepthDirection || 'front');
+          if (dir === 'front') {
+            doorLocalZ = -(baseDepthMm - maxSec) * 0.01;
+          }
+          effectiveDoorDepth = maxSec;
+        }
+        return (
+          <group position={[0, 0, doorLocalZ]}>
+            <DoorModule
+              moduleWidth={doorWidth || moduleData.dimensions.width}
+              moduleDepth={effectiveDoorDepth}
+              hingePosition={hingePosition}
+              spaceInfo={spaceInfo}
+              color={baseFurniture.doorColor}
+              isDragging={isDragging}
+              isEditMode={isEditMode}
+              moduleData={moduleData}
+              originalSlotWidth={originalSlotWidth}
+              slotCenterX={slotCenterX || 0}
+              slotIndex={slotIndex}
+              textureUrl={spaceInfo.materialConfig?.doorTexture}
+              panelGrainDirections={panelGrainDirections}
+              furnitureId={placedFurnitureId}
+              doorTopGap={doorTopGap}
+              doorBottomGap={doorBottomGap}
+              zone={zone}
+              hasBase={hasBase}
+              individualFloatHeight={individualFloatHeight}
+              parentGroupY={parentGroupY}
+            />
+          </group>
+        );
+      })()}
     </>
   );
 };
