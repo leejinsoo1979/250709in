@@ -2652,13 +2652,14 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   //   console.log('🟠 [단내림 FurnitureItem]', { ... });
   // }
 
-  // 깊이 계산: 기둥 앞에 배치 모드면 adjustedDepthMm 강제 적용, 아니면 customDepth 우선
+  // 깊이 계산: customDepth(사용자 지정) > adjustedDepthMm(슬롯-기둥 남는 공간) > moduleDepth
+  // 기둥 앞 배치 front 모드도 customDepth를 존중 (사용자가 기둥과 같은 깊이로 줄인 경우 등)
   const moduleDepth = actualModuleData?.dimensions?.depth || 0;
-  const actualDepthMm = (placedModule.columnPlacementMode === 'front' && adjustedDepthMm !== moduleDepth)
-    ? adjustedDepthMm  // front 모드: 깊이 강제 적용
-    : (placedModule.customDepth ||
-      (autoAdjustedDepthMm !== null ? autoAdjustedDepthMm :
-        (adjustedDepthMm !== moduleDepth ? adjustedDepthMm : moduleDepth)));
+  const actualDepthMm = placedModule.customDepth ||
+    (placedModule.columnPlacementMode === 'front' && adjustedDepthMm !== moduleDepth
+      ? adjustedDepthMm
+      : (autoAdjustedDepthMm !== null ? autoAdjustedDepthMm :
+          (adjustedDepthMm !== moduleDepth ? adjustedDepthMm : moduleDepth)));
   const depth = mmToThreeUnits(actualDepthMm);
 
 
