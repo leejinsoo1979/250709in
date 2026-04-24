@@ -5,7 +5,6 @@ import { useSpace3DView } from '../../../context/useSpace3DView';
 import { useViewerTheme } from '../../../context/ViewerThemeContext';
 import { useUIStore } from '@/store/uiStore';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
-import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
 import { useTheme } from '@/contexts/ThemeContext';
 import { getDefaultGrainDirection, resolvePanelGrainDirection } from '@/editor/shared/utils/materialConstants';
 import { useTexture } from '@react-three/drei';
@@ -94,8 +93,6 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
   const { view2DDirection, shadowEnabled, edgeOutlineEnabled } = useUIStore(); // view2DDirection, shadowEnabled, edgeOutlineEnabled 추가
   const { theme } = useViewerTheme();
   const { view2DTheme } = useUIStore();
-  const interiorColorHex = useSpaceConfigStore(state => state.spaceInfo?.materialConfig?.interiorColor);
-  const interiorTextureUrl = useSpaceConfigStore(state => state.spaceInfo?.materialConfig?.interiorTexture);
   const { theme: appTheme } = useTheme();
 
   // 전역 스토어에서 직접 편집 상태 감지 (Context bridge 문제 회피)
@@ -483,54 +480,15 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
       }
     }
 
-    // 어두운 속장 재질 판별:
-    // 1) 어두운 텍스처 화이트리스트 (HPL 컴팩트 등 무늬재는 color가 #FFFFFF라 RGB 판정 불가 → 파일명으로 판별)
-    // 2) 설정 색상이 실제로 어두운 경우
-    // 3) baseMaterial이 텍스처 없이 어두운 RGB인 경우
-    const DARK_INTERIOR_TEXTURES = [
-      'MELATONE_4319',    // HP4319
-      'MELATONE_8832',    // 8832
-      'MELATONE_TAUPE',   // 다크 토프
-      'HANSOL_HSB117006', // 한솔 다크
-      'HANSOL_HSB120512',
-      'HANSOL_HSB121004',
-      'cabinet texture1', // Cabinet Texture1 (다크그레이)
-    ];
-    const isDarkInteriorByTexture = (() => {
-      if (!interiorTextureUrl || typeof interiorTextureUrl !== 'string') return false;
-      return DARK_INTERIOR_TEXTURES.some(key => interiorTextureUrl.includes(key));
-    })();
-    const isDarkInteriorByColor = (() => {
-      if (!interiorColorHex || typeof interiorColorHex !== 'string') return false;
-      try {
-        const col = new THREE.Color(interiorColorHex);
-        const lum = 0.2126 * col.r + 0.7152 * col.g + 0.0722 * col.b;
-        return lum < 0.35;
-      } catch {
-        return false;
-      }
-    })();
-    const isDarkBaseMaterial = isDarkInteriorByTexture || isDarkInteriorByColor || (() => {
-      if (!(baseMaterial instanceof THREE.MeshStandardMaterial)) return false;
-      if (baseMaterial.map) return false; // 텍스처 있으면 color 값은 신뢰하지 않음
-      const c = baseMaterial.color;
-      const lum = 0.2126 * c.r + 0.7152 * c.g + 0.0722 * c.b;
-      return lum < 0.35;
-    })();
-
     if (viewMode === '3D') {
       if (effectiveRenderMode === 'wireframe') {
         return view2DTheme === 'dark' ? "#ffffff" : "#000000"; // 3D 은선모드에서는 최대 대비 색상
       }
-      // 3D 솔리드 모드: 어두운 재질이면 연한 회색으로 대비 확보
-      if (isDarkBaseMaterial) return "#4a4a4a";
-      return "#5a5a5a"; // 진한 회색이 Windows 저DPR에서 뭉개져 보여 살짝 밝게
+      return "#5a5a5a"; // 3D 솔리드 모드: 진한 회색이 Windows 저DPR에서 뭉개져 보여 살짝 밝게
     } else if (effectiveRenderMode === 'wireframe') {
       return view2DTheme === 'dark' ? "#FFFFFF" : "#000000"; // 2D 와이어프레임 다크모드는 흰색(최대 대비), 라이트모드는 검정색
     } else {
       // 2D 솔리드 모드
-      // 어두운 재질이면서 라이트 테마일 때는 연한 회색 (어두운 재질 위 윤곽선 대비)
-      if (isDarkBaseMaterial && view2DTheme !== 'dark') return "#4a4a4a";
       if (view2DDirection === 'front') {
         // 정면 뷰에서는 선반과 동일한 색상
         return view2DTheme === 'dark' ? "#FF4500" : "#444444"; // 다크모드는 붉은 주황색
@@ -539,7 +497,7 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
         return view2DTheme === 'dark' ? "#FF4500" : "#444444"; // 다크모드는 붉은 주황색
       }
     }
-  }, [viewMode, effectiveRenderMode, view2DTheme, view2DDirection, baseMaterial, isHighlighted, highlightColor, panelName, interiorColorHex, interiorTextureUrl]);
+  }, [viewMode, effectiveRenderMode, view2DTheme, view2DDirection, baseMaterial, isHighlighted, highlightColor, panelName]);
 
   // Debug log for position
 
