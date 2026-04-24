@@ -3846,13 +3846,19 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             }
           }
 
-          // 하부장 인조대리석 상판 두께 포함
+          // 하부장 상판 두께 포함 (PET 재질이면 도어 두께, 인조대리석이면 사용자 선택값)
+          const _petThk_l = spaceInfo?.panelThickness || 18;
+          const getStoneH = (m: any): number => {
+            const t = m?.stoneTopThickness || 0;
+            if (t <= 0) return 0;
+            return (m?.stoneTopMaterial === 'pet') ? _petThk_l : t;
+          };
           if (hasDualCabinet) {
             const lowerMod = leftCategoryResolved === 'lower' ? leftmostMod : leftCompanionMod;
-            const stoneH = lowerMod?.stoneTopThickness || 0;
+            const stoneH = getStoneH(lowerMod);
             if (stoneH > 0) lowerCabinetH += stoneH;
           } else if (leftCategoryResolved === 'lower' && leftmostMod?.stoneTopThickness) {
-            furnitureH += leftmostMod.stoneTopThickness;
+            furnitureH += getStoneH(leftmostMod);
           }
 
           // 바닥마감재 차감: 키큰장(full)만 (하부장/상부장은 고정 높이이므로 차감 불필요)
@@ -4497,13 +4503,19 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             }
           }
 
-          // 하부장 인조대리석 상판 두께 포함
+          // 하부장 상판 두께 포함 (PET 재질이면 도어 두께, 인조대리석이면 사용자 선택값)
+          const _petThk_r = spaceInfo?.panelThickness || 18;
+          const getStoneH_r = (m: any): number => {
+            const t = m?.stoneTopThickness || 0;
+            if (t <= 0) return 0;
+            return (m?.stoneTopMaterial === 'pet') ? _petThk_r : t;
+          };
           if (rHasDualCabinet) {
             const rLowerMod = rightCategoryResolved === 'lower' ? rightmostMod : rightCompanionMod;
-            const rStoneH = rLowerMod?.stoneTopThickness || 0;
+            const rStoneH = getStoneH_r(rLowerMod);
             if (rStoneH > 0) rLowerCabinetH += rStoneH;
           } else if (rightCategoryResolved === 'lower' && rightmostMod?.stoneTopThickness) {
-            rFurnitureH += rightmostMod.stoneTopThickness;
+            rFurnitureH += getStoneH_r(rightmostMod);
           }
 
           // 바닥마감재 차감: 키큰장(full)만 (하부장/상부장은 고정 높이이므로 차감 불필요)
@@ -9891,9 +9903,9 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                       depthTest={false}
                     />
                     <Text
-                  renderOrder={1000}
+                  renderOrder={100001}
                   depthTest={false}
-                      position={[(leftDoorLeftX + leftDoorRightX) / 2, spaceHeight + 0.1, leftDoorFrontZ + mmToThreeUnits(hasPlacedModules ? 120 : 100)]}
+                      position={[(leftDoorLeftX + leftDoorRightX) / 2, spaceHeight + 1.0, leftDoorFrontZ + mmToThreeUnits(hasPlacedModules ? 120 : 100)]}
                       fontSize={baseFontSize}
                       color={dimensionColor}
                       anchorX="center"
@@ -9942,9 +9954,9 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                       depthTest={false}
                     />
                     <Text
-                  renderOrder={1000}
+                  renderOrder={100001}
                   depthTest={false}
-                      position={[(rightDoorLeftX + rightDoorRightX) / 2, spaceHeight + 0.1, leftDoorFrontZ + mmToThreeUnits(hasPlacedModules ? 120 : 100)]}
+                      position={[(rightDoorLeftX + rightDoorRightX) / 2, spaceHeight + 1.0, leftDoorFrontZ + mmToThreeUnits(hasPlacedModules ? 120 : 100)]}
                       fontSize={baseFontSize}
                       color={dimensionColor}
                       anchorX="center"
@@ -10005,9 +10017,9 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     depthTest={false}
                   />
                   <Text
-                  renderOrder={1000}
+                  renderOrder={100001}
                   depthTest={false}
-                    position={[(leftDoorLeftX + rightDoorRightX) / 2, spaceHeight + 0.1, doorFrontZ + mmToThreeUnits(hasPlacedModules ? 120 : 100)]}
+                    position={[(leftDoorLeftX + rightDoorRightX) / 2, spaceHeight + 1.0, doorFrontZ + mmToThreeUnits(hasPlacedModules ? 120 : 100)]}
                     fontSize={baseFontSize}
                     color={dimensionColor}
                     anchorX="center"

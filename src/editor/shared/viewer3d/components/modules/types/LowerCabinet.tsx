@@ -848,14 +848,15 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
     const pm = state.placedModules.find(m => m.id === placedFurnitureId);
     return (pm?.stoneTopMaterial as 'stone' | 'pet' | undefined) || 'stone';
   });
-  // 상판 두께 — PET 재질이면 18.5mm 고정(도어 두께), stone이면 사용자 선택값
+  // 상판 두께 — PET 재질이면 도어 두께(spaceInfo.panelThickness, 기본 18), stone이면 사용자 선택값
+  const doorPanelThk = spaceInfo?.panelThickness || 18;
   const stoneThickness = useFurnitureStore(state => {
     if (!placedFurnitureId) return 0;
     const pm = state.placedModules.find(m => m.id === placedFurnitureId);
     const mat = (pm?.stoneTopMaterial as 'stone' | 'pet' | undefined) || 'stone';
     const userThk = pm?.stoneTopThickness || 0;
-    // PET: 두께 0이면 상판 없음, 그 외는 18.5 고정
-    if (mat === 'pet') return userThk > 0 ? 18.5 : 0;
+    // PET: 두께 0이면 상판 없음, 그 외는 도어 두께
+    if (mat === 'pet') return userThk > 0 ? doorPanelThk : 0;
     return userThk;
   });
   const stoneFrontOff = useFurnitureStore(state => {
