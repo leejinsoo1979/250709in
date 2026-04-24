@@ -1465,9 +1465,16 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           const lowerUsesDimDepth = module.lowerSectionDepth === undefined && !hasCustomDepth;
           const upperDepth = (upperUsesDimDepth && isEntrywayH) ? Math.max(0, upperDepthRaw - DOOR_THK_MM) : upperDepthRaw;
           const lowerDepth = (lowerUsesDimDepth && isEntrywayH) ? Math.max(0, lowerDepthRaw - DOOR_THK_MM) : lowerDepthRaw;
-          // 2섹션 구조(신발장 또는 upper/lowerSectionDepth 둘 다 정의)면 상/하부 분리 표시
+          // 2섹션 구조면 상/하부 분리 표시
+          // 판정: 신발장 카테고리 / upper·lowerSectionDepth 둘 다 정의 /
+          //      customSections 길이>=2 / modelConfig.sections 길이>=2 (의류장 붙박이장 B 등)
+          const cfgSections = (module as any).customSections;
+          const mdSections = depthModuleData.modelConfig?.sections;
+          const hasTwoSections = (Array.isArray(cfgSections) && cfgSections.length >= 2)
+            || (Array.isArray(mdSections) && mdSections.length >= 2);
           const isShoeTwoSection = isShoeCategory
-            || (module.upperSectionDepth !== undefined && module.lowerSectionDepth !== undefined);
+            || (module.upperSectionDepth !== undefined && module.lowerSectionDepth !== undefined)
+            || hasTwoSections;
 
           const customDepth = upperDepth;
           const moduleDepth = mmToThreeUnits(customDepth);
@@ -1575,8 +1582,8 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                 {customDepth}
               </Text>
 
-              {/* ─── 신발장/현관장 등 2섹션 가구 하부섹션 깊이 — 상/하부 깊이가 다를 때만 하단에 별도 표시 ─── */}
-              {isShoeTwoSection && upperDepth !== lowerDepth && (
+              {/* ─── 2섹션 가구 하부섹션 깊이 — 하단에 별도 표시 ─── */}
+              {isShoeTwoSection && (
                 <>
                   {/* 보조 가이드 연장선 - 앞쪽 */}
                   <ExtLine points={[[0, depthDimEdgeLower, furnitureZLower + moduleDepthLower/2], [0, depthDimYLower, furnitureZLower + moduleDepthLower/2]]} color={dimensionColor} />
