@@ -1451,23 +1451,14 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           // 신발장 하부섹션 기본 깊이 (실제 가구 패널 기준)
           const SHOE_LOWER_DEFAULT_MM = 380;
 
-          // 우선순위:
-          // - 신발장 계열: customDepth > upper/lowerSectionDepth > 380 기본
-          //   (저장된 upper/lowerSectionDepth가 600으로 초기값 남아있는 케이스 방지)
-          // - 기타 가구: upper/lowerSectionDepth > customDepth > dimensions.depth
+          // 우선순위: upper/lowerSectionDepth > customDepth > 가구 기본값
+          // 신발장 기본 380 / 기타 600 (dimensions.depth)
           const hasCustomDepth = typeof module.customDepth === 'number' && module.customDepth > 0;
-          let upperDepthRaw: number;
-          let lowerDepthRaw: number;
-          if (isShoeCategory) {
-            const base = hasCustomDepth ? module.customDepth! : 380;
-            upperDepthRaw = module.upperSectionDepth && module.upperSectionDepth !== 600 ? module.upperSectionDepth : base;
-            lowerDepthRaw = module.lowerSectionDepth && module.lowerSectionDepth !== 600 ? module.lowerSectionDepth : base;
-          } else {
-            upperDepthRaw = module.upperSectionDepth
-              ?? (hasCustomDepth ? module.customDepth! : depthModuleData.dimensions.depth);
-            lowerDepthRaw = module.lowerSectionDepth
-              ?? (hasCustomDepth ? module.customDepth! : depthModuleData.dimensions.depth);
-          }
+          const baseFallback = isShoeCategory ? 380 : depthModuleData.dimensions.depth;
+          const upperDepthRaw = module.upperSectionDepth
+            ?? (hasCustomDepth ? module.customDepth! : baseFallback);
+          const lowerDepthRaw = module.lowerSectionDepth
+            ?? (hasCustomDepth ? module.customDepth! : baseFallback);
 
           // 현관장 H는 dimensions.depth(400 도어포함) 기반일 때만 20 차감
           // 섹션별 depth 또는 customDepth는 이미 실제값
