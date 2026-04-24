@@ -4481,7 +4481,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                 ))}
               </div>
               )}
-              {/* 높이 제한 경고 */}
+              {/* 높이 제한 경고 — 800mm 초과 시에만 표시 */}
               {(currentPlacedModule.stoneTopThickness || 0) > 0 && (() => {
                 const bodyH = currentPlacedModule.cabinetBodyHeight ?? moduleData.dimensions.height ?? 785;
                 const totalH = bodyH + (currentPlacedModule.stoneTopThickness || 0);
@@ -4489,11 +4489,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                   <div style={{ color: '#e53e3e', fontSize: '11px', marginTop: '4px' }}>
                     ⚠ 총 높이 {totalH}mm (본체 {bodyH} + 상판 {currentPlacedModule.stoneTopThickness}) — 800mm 초과
                   </div>
-                ) : (
-                  <div style={{ color: 'var(--theme-text-secondary)', fontSize: '11px', marginTop: '4px' }}>
-                    총 높이 {totalH}mm (본체 {bodyH} + 상판 {currentPlacedModule.stoneTopThickness})
-                  </div>
-                );
+                ) : null;
               })()}
               {/* 오프셋 입력 (상판이 있을 때만) */}
               {(currentPlacedModule.stoneTopThickness || 0) > 0 && (
