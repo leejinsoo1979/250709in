@@ -6769,28 +6769,18 @@ const Room: React.FC<RoomProps> = ({
                       // 신발장 하부프레임 Z (앞면 기준)
                       const slotBaseShoeMid = mod.moduleId || '';
                       const isShoeSlotBase = slotBaseShoeMid.includes('-entryway-') || slotBaseShoeMid.includes('-shelf-') || slotBaseShoeMid.includes('-4drawer-shelf-') || slotBaseShoeMid.includes('-2drawer-shelf-');
-                      let slotShoeBaseZ: number | null = null;
-                      if (isShoeSlotBase) {
-                        const slotShoeDepthMm = mod.customDepth || mod.freeDepth || 380;
-                        const fiFurnitureDepthMm = Math.min(spaceInfo.depth || 1500, 600);
-                        const fiFurnitureDepth = mmToThreeUnits(fiFurnitureDepthMm);
-                        const fiZOffset = -mmToThreeUnits(spaceInfo.depth || 1500) / 2 + (mmToThreeUnits(spaceInfo.depth || 1500) - fiFurnitureDepth) / 2;
-                        const shoeBackZ = fiZOffset - fiFurnitureDepth / 2 - mmToThreeUnits(20);
-                        const shoeFrontZ = shoeBackZ + mmToThreeUnits(slotShoeDepthMm);
-                        slotShoeBaseZ = shoeFrontZ - mmToThreeUnits(END_PANEL_THICKNESS) / 2;
+                      // 모든 가구 공통: 하부 섹션 depth direction에 따라 하부프레임 Z 이동
+                      // - 뒤고정(front): 섹션이 뒷벽에 붙음 → 프레임이 뒤로 -diff/2 이동
+                      // - 앞고정(back): 섹션 앞면 유지 → 프레임도 앞면 유지 (0)
+                      let unifiedBaseZOffset = 0;
+                      const lowerSecDepth = (mod as any).lowerSectionDepth
+                        || (isShoeSlotBase ? (mod.customDepth || mod.freeDepth) : undefined);
+                      if (lowerSecDepth && lowerSecDepth < 600) {
+                        const diff = 600 - lowerSecDepth;
+                        const dir = (mod as any).lowerSectionDepthDirection || 'front';
+                        unifiedBaseZOffset = dir === 'back' ? 0 : -mmToThreeUnits(diff) / 2;
                       }
-                      // 일반 가구(의류장 등): 하부 섹션 depth direction에 따라 하부프레임 Z 이동
-                      let generalBaseZOffset = 0;
-                      if (!isShoeSlotBase && isLowerMod) {
-                        const lowerSecDepth = (mod as any).lowerSectionDepth;
-                        if (lowerSecDepth && lowerSecDepth < 600) {
-                          const diff = 600 - lowerSecDepth;
-                          const dir = (mod as any).lowerSectionDepthDirection || 'front';
-                          // front(뒤고정) → -diff/2, back(앞고정) → +diff/2
-                          generalBaseZOffset = dir === 'back' ? mmToThreeUnits(diff) / 2 : -mmToThreeUnits(diff) / 2;
-                        }
-                      }
-                      const effectiveBaseZ = (slotShoeBaseZ !== null ? slotShoeBaseZ : baseZPos) + generalBaseZOffset;
+                      const effectiveBaseZ = baseZPos + unifiedBaseZOffset;
 
                       // 커스터마이즈 가구 좌우분할: 무조건 하부프레임도 영역별 분할
                       const customSec0 = (mod as any).customConfig?.sections?.[0];
