@@ -5991,11 +5991,11 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 key={`shelf-gap-${module.id}-${sectionIdx}-${i}`}
                 position={[labelX, cyThree, 0.02]}
                 center
-                style={{ pointerEvents: 'auto' }}
+                style={{ pointerEvents: 'auto', background: 'transparent' }}
                 zIndexRange={[5000, 0]}
                 transform={false}
               >
-                <div style={uiScaleStyle}>
+                <div style={{ ...uiScaleStyle, background: 'transparent' }}>
                   <input
                     type="text"
                     defaultValue={String(g)}
@@ -6013,15 +6013,16 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                       }
                     }}
                     style={{
-                      width: '72px', fontSize: '14px', textAlign: 'center',
+                      width: '88px', fontSize: '18px', textAlign: 'center',
                       color: dimensionColor,
-                      background: view2DTheme === 'dark' ? '#1a1a1a' : '#ffffff',
+                      background: 'transparent',
+                      backgroundColor: 'transparent',
                       border: `1px solid ${dimensionColor}`, borderRadius: '3px',
-                      padding: '4px 6px', outline: 'none', fontWeight: 'bold',
+                      padding: '6px 8px', outline: 'none', fontWeight: 'bold',
                       WebkitTextFillColor: dimensionColor, opacity: 1,
-                      colorScheme: view2DTheme === 'dark' ? 'dark' : 'light',
                       WebkitAppearance: 'none',
                       appearance: 'none',
+                      boxShadow: 'none',
                     }}
                   />
                 </div>
@@ -6053,12 +6054,12 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 key={`shelf-spinner-${module.id}-${sectionIdx}-${k}`}
                 position={[labelX, shelfYThree, 0.02]}
                 center
-                style={{ pointerEvents: 'auto' }}
+                style={{ pointerEvents: 'auto', background: 'transparent' }}
                 zIndexRange={[5000, 0]}
                 transform={false}
               >
-                <div style={uiScaleStyle}>
-                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '32px', lineHeight: 0 }}>
+                <div style={{ ...uiScaleStyle, background: 'transparent' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '40px', lineHeight: 0, background: 'transparent' }}>
                   <button
                     type="button"
                     onMouseDown={(e) => {
@@ -6081,10 +6082,10 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                       clearInterval((e.currentTarget as any)?._repeat);
                     }}
                     style={{
-                      width: '32px', height: '20px', fontSize: '14px', lineHeight: '1',
+                      width: '40px', height: '24px', fontSize: '16px', lineHeight: '1',
                       padding: 0, cursor: 'pointer', margin: 0, boxSizing: 'border-box',
                       color: dimensionColor,
-                      background: view2DTheme === 'dark' ? '#1a1a1a' : '#ffffff',
+                      background: 'transparent',
                       border: `1px solid ${dimensionColor}`, borderRadius: '3px 3px 0 0',
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
                       fontWeight: 'bold',
@@ -6110,10 +6111,10 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                       clearInterval((e.currentTarget as any)?._repeat);
                     }}
                     style={{
-                      width: '32px', height: '20px', fontSize: '14px', lineHeight: '1',
+                      width: '40px', height: '24px', fontSize: '16px', lineHeight: '1',
                       padding: 0, cursor: 'pointer', margin: 0, boxSizing: 'border-box',
                       color: dimensionColor,
-                      background: view2DTheme === 'dark' ? '#1a1a1a' : '#ffffff',
+                      background: 'transparent',
                       border: `1px solid ${dimensionColor}`, borderTop: 'none',
                       borderRadius: '0 0 3px 3px',
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
