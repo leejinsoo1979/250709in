@@ -2958,25 +2958,15 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                   {/* 전체 가구 깊이 뒤고정/앞고정 토글 — 섹션별 토글이 없는(단일 섹션) 가구에서 표시 */}
                   {currentPlacedModule && (() => {
                     const mid = currentPlacedModule.moduleId || '';
+                    const hasUpperSec = currentPlacedModule.upperSectionDepth !== undefined;
+                    const hasLowerSec = currentPlacedModule.lowerSectionDepth !== undefined;
+                    const is2Section = hasUpperSec || hasLowerSec;
                     const isShoe = mid.includes('-entryway-') || mid.includes('-shelf-') ||
                                    mid.includes('-4drawer-shelf-') || mid.includes('-2drawer-shelf-');
                     const isUpper = mid.includes('upper-cabinet');
-                    // 상부장/신발장은 뒷면 정렬 고정이라 토글 의미 없음 → 비노출
-                    if (isUpper || isShoe) return null;
-                    // 상/하부 중 하나라도 'front'(뒤고정)면 현재 상태는 front
-                    const lowerDir = currentPlacedModule.lowerSectionDepthDirection || 'front';
-                    const upperDir = currentPlacedModule.upperSectionDepthDirection || 'front';
-                    const dir = (lowerDir === 'front' || upperDir === 'front') ? 'front' : 'back';
-                    // 전체 토글: 상/하부 섹션 방향을 일괄 변경 (섹션별 개별 토글과 연동)
-                    const setAllDir = (d: 'front' | 'back') => {
-                      if (!currentPlacedModule) return;
-                      updatePlacedModule(currentPlacedModule.id, {
-                        lowerSectionDepthDirection: d,
-                        upperSectionDepthDirection: d,
-                      } as any);
-                      setLowerDepthDirection(d);
-                      setUpperDepthDirection(d);
-                    };
+                    // 2섹션/상부장/신발장은 각자 고유 정렬 정책이 있어 전체 토글 비노출
+                    if (is2Section || isUpper || isShoe) return null;
+                    const dir = currentPlacedModule.lowerSectionDepthDirection || 'front';
                     return (
                       <div style={{ display: 'flex', gap: '4px', marginTop: '4px' }}>
                         <button
@@ -2986,7 +2976,9 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                             color: dir === 'front' ? '#fff' : 'var(--theme-text-secondary)',
                             fontSize: '10px', cursor: 'pointer',
                           }}
-                          onClick={() => setAllDir('front')}
+                          onClick={() => {
+                            if (currentPlacedModule) updatePlacedModule(currentPlacedModule.id, { lowerSectionDepthDirection: 'front' } as any);
+                          }}
                         >뒤고정</button>
                         <button
                           style={{
@@ -2995,7 +2987,9 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                             color: dir === 'back' ? '#fff' : 'var(--theme-text-secondary)',
                             fontSize: '10px', cursor: 'pointer',
                           }}
-                          onClick={() => setAllDir('back')}
+                          onClick={() => {
+                            if (currentPlacedModule) updatePlacedModule(currentPlacedModule.id, { lowerSectionDepthDirection: 'back' } as any);
+                          }}
                         >앞고정</button>
                       </div>
                     );
