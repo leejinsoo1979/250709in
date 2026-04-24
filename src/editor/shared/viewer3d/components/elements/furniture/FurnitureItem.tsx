@@ -3628,13 +3628,12 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                   viewMode={viewMode}
                   renderMode={effectiveRenderMode}
                   hasDoor={
-                    // 기둥 앞 배치(front 모드)는 가구 내장 도어를 그대로 사용 — 다른 조건 무시
-                    placedModule.columnPlacementMode === 'front'
-                      ? (placedModule.hasDoor ?? false)
-                      // 기둥 A(deep) 또는 기둥 측면 배치로 adjustedWidth가 있는 경우 또는 엔드패널 조정: cover-door 블록에서 별도 렌더
-                      : ((slotInfo && slotInfo.hasColumn && (slotInfo.columnType === 'deep' || (placedModule.adjustedWidth !== undefined && placedModule.adjustedWidth !== null))) || needsEndPanelAdjustment
-                          ? false
-                          : (placedModule.hasDoor ?? false))
+                    // 기둥 앞 배치(front 모드)는 가구가 슬롯 중앙에 정상 배치되고 깊이만 줄어드므로
+                    // 가구 내장 도어를 그대로 사용 (커버도어 불필요)
+                    // 기둥 A(deep) 또는 기둥 측면 배치로 adjustedWidth가 있는 경우 또는 엔드패널 조정: cover-door 블록에서 별도 렌더
+                    (slotInfo && slotInfo.hasColumn && (slotInfo.columnType === 'deep' || (placedModule.adjustedWidth !== undefined && placedModule.adjustedWidth !== null))) || needsEndPanelAdjustment
+                      ? false
+                      : (placedModule.hasDoor ?? false)
                   }
                   customDepth={actualDepthMm}
                   hingePosition={optimalHingePosition}
