@@ -2704,11 +2704,22 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     // 신발장 중심 Z = 이 뒷면 + depth/2
     furnitureZ = furnitureZOffset - furnitureDepth / 2 - doorThickness + depth / 2 + baseDepthOffset;
   } else {
+    // 2섹션 가구는 customDepth 반영을 섹션 그룹에서 처리하므로
+    // 전체 가구 Z는 기본 깊이(600) 기준으로 고정 (서랍 등 내부 요소 이중 이동 방지)
+    const hasSectionDepth = placedModule.upperSectionDepth !== undefined || placedModule.lowerSectionDepth !== undefined;
+    const mdSections = (actualModuleData as any)?.modelConfig?.sections;
+    const cfgSections = (placedModule as any)?.customSections;
+    const is2SectionCab = hasSectionDepth
+      || (Array.isArray(cfgSections) && cfgSections.length >= 2)
+      || (Array.isArray(mdSections) && mdSections.length >= 2);
+    const zDepth = is2SectionCab ? (actualModuleData?.dimensions.depth || depth * 100) / 100 : depth;
+    const zDepthUnits = is2SectionCab ? mmToThreeUnits(actualModuleData?.dimensions.depth || actualDepthMm) : depth;
+
     // 기본은 앞면 정렬 (앞고정: 앞면 고정, 깊이 감소 시 뒷면이 앞으로)
-    furnitureZ = furnitureZOffset + furnitureDepth / 2 - doorThickness - depth / 2 + baseDepthOffset;
+    furnitureZ = furnitureZOffset + furnitureDepth / 2 - doorThickness - zDepthUnits / 2 + baseDepthOffset;
     // 뒤고정(lowerSectionDepthDirection='front'): 뒷면 고정, 깊이 감소 시 앞면이 뒤로 이동
-    // → 중심 Z를 감소량만큼 뒤로 이동
-    if (placedModule.lowerSectionDepthDirection === 'front') {
+    // → 중심 Z를 감소량만큼 뒤로 이동 (2섹션 가구는 섹션 그룹에서 처리하므로 스킵)
+    if (!is2SectionCab && placedModule.lowerSectionDepthDirection === 'front') {
       const baseDepthMm = actualModuleData?.dimensions.depth || actualDepthMm;
       const depthDiffMm = baseDepthMm - actualDepthMm;
       if (depthDiffMm !== 0) {
