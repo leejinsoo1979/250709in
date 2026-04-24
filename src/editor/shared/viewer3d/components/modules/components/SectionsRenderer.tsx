@@ -432,8 +432,9 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
               ? sectionCenterY - basicThickness
               : sectionCenterY;
 
-            // 섹션 깊이에 따른 Z 오프셋 계산
-            const drawerZOffset = depth - currentSectionDepth !== 0 ? (depth - currentSectionDepth) / 2 : 0;
+            // 섹션 깊이에 따른 Z 오프셋 계산 (방향에 따라 앞/뒤)
+            // 섹션 박스 이동(directionOffset)과 동일한 값 사용 → 서랍이 섹션과 함께 이동
+            const drawerZOffset = directionOffset;
 
             sectionContent = (
               <DrawerRenderer
