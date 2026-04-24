@@ -515,6 +515,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
   const [showDetails, setShowDetails] = useState(false);
   const [selectedPanelIndex, setSelectedPanelIndex] = useState<number | null>(null);
   const setHighlightedPanel = useUIStore(state => state.setHighlightedPanel);
+  const setHighlightedSection = useUIStore(state => state.setHighlightedSection);
   const setSelectedFurnitureId = useUIStore(state => state.setSelectedFurnitureId);
   const setPanelListTabActive = useUIStore(state => state.setPanelListTabActive);
   const activePopup = useUIStore(state => state.activePopup);
@@ -1199,9 +1200,12 @@ const PlacedModulePropertiesPanel: React.FC = () => {
         const lowerDepth = storedLower ?? defaultDepth;
         const upperDepth = storedUpper ?? defaultDepth;
 
-        // placedModule에 값이 없거나 stale(모듈 기본값과 같음) 이었다면 올바른 기본값을 저장
-        if (storedLower === undefined || storedUpper === undefined) {
-// console.log('🔧 [섹션 깊이 초기화] 기본값을 placedModule에 저장:', { lowerDepth, upperDepth });
+        // placedModule에 값이 없거나 stale(신발장인데 600 저장됨)이면 올바른 값을 실제로 저장
+        const needsLowerFix = currentPlacedModule.lowerSectionDepth === undefined
+          || (isShoeCategory && hasCustomDepth && currentPlacedModule.lowerSectionDepth === modDimDepth);
+        const needsUpperFix = currentPlacedModule.upperSectionDepth === undefined
+          || (isShoeCategory && hasCustomDepth && currentPlacedModule.upperSectionDepth === modDimDepth);
+        if (needsLowerFix || needsUpperFix) {
           updatePlacedModule(currentPlacedModule.id, {
             lowerSectionDepth: lowerDepth,
             upperSectionDepth: upperDepth,
@@ -3081,13 +3085,18 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                   || (() => { const v = Math.round(((sec as any).width || totalW) * 10) / 10; return v % 1 === 0 ? v.toString() : v.toFixed(1); })();
 
                 return (
-                  <div key={sIdx} style={{
-                    background: 'var(--theme-background)',
-                    border: '1px solid var(--theme-border)',
-                    borderRadius: '5px',
-                    padding: '6px 8px',
-                    marginBottom: sIdx < sectionCount - 1 ? '6px' : 0,
-                  }}>
+                  <div
+                    key={sIdx}
+                    onMouseEnter={() => currentPlacedModule && setHighlightedSection(`${currentPlacedModule.id}-${sIdx}`)}
+                    onMouseLeave={() => setHighlightedSection(null)}
+                    style={{
+                      background: 'var(--theme-background)',
+                      border: '1px solid var(--theme-border)',
+                      borderRadius: '5px',
+                      padding: '6px 8px',
+                      marginBottom: sIdx < sectionCount - 1 ? '6px' : 0,
+                    }}
+                  >
                     <div style={{ fontSize: '11px', fontWeight: 600, color: 'var(--theme-text)', marginBottom: '4px' }}>
                       {sectionLabel}
                     </div>
@@ -3318,6 +3327,8 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                               type="text" inputMode="numeric"
                               value={depthVal}
                               onChange={(e) => onDepthChange(e.target.value)}
+                              onFocus={() => currentPlacedModule && setHighlightedSection(`${currentPlacedModule.id}-${sIdx}`)}
+                              onBlur={() => setHighlightedSection(null)}
                               onKeyDown={(e) => {
                                 if (e.key === 'Enter') { (e.target as HTMLInputElement).blur(); }
                                 else if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
