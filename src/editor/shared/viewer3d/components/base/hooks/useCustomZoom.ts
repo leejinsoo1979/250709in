@@ -98,21 +98,14 @@ export const CustomZoomController: React.FC<CustomZoomControllerProps> = ({
         worldAfter.x = mouseNDC.x * newFrustumWidth / 2;
         worldAfter.y = mouseNDC.y * newFrustumHeight / 2;
 
-        // 차이만큼 실제 카메라 위치(position)와 중심점(target)을 이동하여 마우스 포인터 위치 고정
+        // 차이만큼 뷰포트 조정하여 마우스 포인터 위치 고정
         const deltaX = worldBefore.x - worldAfter.x;
         const deltaY = worldBefore.y - worldAfter.y;
         
-        if (controlsRef && controlsRef.current) {
-          const controls = controlsRef.current;
-          controls.target.x += deltaX;
-          controls.target.y += deltaY;
-          camera.position.x += deltaX;
-          camera.position.y += deltaY;
-          controls.update();
-        } else {
-          camera.position.x += deltaX;
-          camera.position.y += deltaY;
-        }
+        camera.left += deltaX;
+        camera.right += deltaX;
+        camera.top += deltaY;
+        camera.bottom += deltaY;
       } else {
         // 줌이 변경되지 않은 경우에도 적용
         camera.zoom = newZoom;
@@ -133,8 +126,8 @@ export const CustomZoomController: React.FC<CustomZoomControllerProps> = ({
       // 카메라 매트릭스 업데이트
       camera.updateProjectionMatrix();
       
-      // 버벅거림(Stuttering) 방지: gl.render() 강제 호출 대신 비동기 렌더링 큐(invalidate) 사용
-      invalidate();
+      // 사용자 드래그의 즉각적인 반영을 위해 동기식 강제 업데이트 (버벅거림 해소)
+      gl.render(scene, camera);
     };
 
     // 휠 이벤트 등록 (passive: false로 preventDefault 허용)
