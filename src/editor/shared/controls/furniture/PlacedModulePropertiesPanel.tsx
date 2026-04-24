@@ -2900,7 +2900,20 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                         const isLowerDrawer = currentPlacedModule?.moduleId?.includes('lower-drawer-');
                         const minDepth = isLowerDrawer ? 400 : 100;
                         if (!isNaN(val) && val >= minDepth && val <= 800 && currentPlacedModule) {
-                          updatePlacedModule(currentPlacedModule.id, { freeDepth: val, customDepth: val });
+                          const hasUpperSec = currentPlacedModule.upperSectionDepth !== undefined;
+                          const hasLowerSec = currentPlacedModule.lowerSectionDepth !== undefined;
+                          const is2Section = hasUpperSec || hasLowerSec;
+                          const updates: any = { freeDepth: val, customDepth: val };
+                          // 2섹션 가구: 섹션별 depth도 같이 일괄 변경 (D 입력은 전체 일괄)
+                          if (is2Section) {
+                            updates.upperSectionDepth = val;
+                            updates.lowerSectionDepth = val;
+                          }
+                          updatePlacedModule(currentPlacedModule.id, updates);
+                          if (is2Section) {
+                            setUpperDepthInput(val.toString());
+                            setLowerDepthInput(val.toString());
+                          }
                           setFreeDepthInput(val.toString());
                           const store = useFurnitureStore.getState();
                           const dims = {
@@ -2945,7 +2958,17 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                           const next = Math.max(minDepthArrow, Math.min(800, cur + (e.key === 'ArrowUp' ? 1 : -1)));
                           setFreeDepthInput(next.toString());
                           if (currentPlacedModule) {
-                            updatePlacedModule(currentPlacedModule.id, { freeDepth: next, customDepth: next });
+                            const hasUpperSec = currentPlacedModule.upperSectionDepth !== undefined;
+                            const hasLowerSec = currentPlacedModule.lowerSectionDepth !== undefined;
+                            const is2Section = hasUpperSec || hasLowerSec;
+                            const updates: any = { freeDepth: next, customDepth: next };
+                            if (is2Section) {
+                              updates.upperSectionDepth = next;
+                              updates.lowerSectionDepth = next;
+                              setUpperDepthInput(next.toString());
+                              setLowerDepthInput(next.toString());
+                            }
+                            updatePlacedModule(currentPlacedModule.id, updates);
                           }
                         }
                       }}
