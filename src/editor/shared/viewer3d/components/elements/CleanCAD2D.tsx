@@ -1851,7 +1851,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     onChange={(e) => setEditingGapValue(e.target.value)}
                     onKeyDown={(e) => { if (e.key === 'Enter') handleGapEditSubmit(); else if (e.key === 'Escape') handleGapEditCancel(); }}
                     onBlur={handleGapEditSubmit}
-                    style={{ width: '50px', padding: '2px 4px', border: '1px solid #555', borderRadius: '2px', fontSize: '12px', fontWeight: 'bold', textAlign: 'center', outline: 'none', background: '#1a1a1a', color: '#ffffff' }}
+                    style={{ width: '50px', padding: '2px 4px', border: '1px solid #555', borderRadius: '2px', fontSize: '12px', fontWeight: 'bold', textAlign: 'center', outline: 'none', background: currentViewDirection !== '3D' && view2DTheme === 'dark' ? '#1f2937' : '#fff', color: currentViewDirection !== '3D' && view2DTheme === 'dark' ? '#fff' : '#000' }}
                     autoFocus
                     onClick={(e) => e.stopPropagation()}
                   />
@@ -2008,7 +2008,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     onChange={(e) => setEditingGapValue(e.target.value)}
                     onKeyDown={(e) => { if (e.key === 'Enter') handleGapEditSubmit(); else if (e.key === 'Escape') handleGapEditCancel(); }}
                     onBlur={handleGapEditSubmit}
-                    style={{ width: '50px', padding: '2px 4px', border: '1px solid #555', borderRadius: '2px', fontSize: '12px', fontWeight: 'bold', textAlign: 'center', outline: 'none', background: '#1a1a1a', color: '#ffffff' }}
+                    style={{ width: '50px', padding: '2px 4px', border: '1px solid #555', borderRadius: '2px', fontSize: '12px', fontWeight: 'bold', textAlign: 'center', outline: 'none', background: currentViewDirection !== '3D' && view2DTheme === 'dark' ? '#1f2937' : '#fff', color: currentViewDirection !== '3D' && view2DTheme === 'dark' ? '#fff' : '#000' }}
                     autoFocus
                     onClick={(e) => e.stopPropagation()}
                   />
@@ -2900,7 +2900,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                                 onChange={(e) => setEditingGapValue(e.target.value)}
                                 onKeyDown={(e) => { if (e.key === 'Enter') handleGapEditSubmit(); else if (e.key === 'Escape') handleGapEditCancel(); }}
                                 onBlur={handleGapEditSubmit}
-                                style={{ width: '50px', padding: '2px 4px', border: '1px solid #555', borderRadius: '2px', fontSize: '12px', fontWeight: 'bold', textAlign: 'center', outline: 'none', background: '#1a1a1a', color: '#ffffff' }}
+                                style={{ width: '50px', padding: '2px 4px', border: '1px solid #555', borderRadius: '2px', fontSize: '12px', fontWeight: 'bold', textAlign: 'center', outline: 'none', background: currentViewDirection !== '3D' && view2DTheme === 'dark' ? '#1f2937' : '#fff', color: currentViewDirection !== '3D' && view2DTheme === 'dark' ? '#fff' : '#000' }}
                                 autoFocus
                                 onClick={(e) => e.stopPropagation()}
                               />
@@ -3042,7 +3042,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                         onChange={(e) => setEditingGapValue(e.target.value)}
                         onKeyDown={(e) => { if (e.key === 'Enter') handleGapEditSubmit(); else if (e.key === 'Escape') handleGapEditCancel(); }}
                         onBlur={handleGapEditSubmit}
-                        style={{ width: '50px', padding: '2px 4px', border: '1px solid #555', borderRadius: '2px', fontSize: '12px', fontWeight: 'bold', textAlign: 'center', outline: 'none', background: '#1a1a1a', color: '#ffffff' }}
+                        style={{ width: '50px', padding: '2px 4px', border: '1px solid #555', borderRadius: '2px', fontSize: '12px', fontWeight: 'bold', textAlign: 'center', outline: 'none', background: currentViewDirection !== '3D' && view2DTheme === 'dark' ? '#1f2937' : '#fff', color: currentViewDirection !== '3D' && view2DTheme === 'dark' ? '#fff' : '#000' }}
                         autoFocus
                         onClick={(e) => e.stopPropagation()}
                       />
@@ -3065,7 +3065,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                         onChange={(e) => setEditingFurnitureGapValue(e.target.value)}
                         onKeyDown={(e) => { if (e.key === 'Enter') handleFurnitureGapSubmit(); else if (e.key === 'Escape') handleFurnitureGapCancel(); }}
                         onBlur={handleFurnitureGapSubmit}
-                        style={{ width: '60px', padding: '2px 4px', border: '1px solid #555', borderRadius: '2px', fontSize: '12px', fontWeight: 'bold', textAlign: 'center', outline: 'none', background: '#1a1a1a', color: '#ffffff' }}
+                        style={{ width: '60px', padding: '2px 4px', border: '1px solid #555', borderRadius: '2px', fontSize: '12px', fontWeight: 'bold', textAlign: 'center', outline: 'none', background: currentViewDirection !== '3D' && view2DTheme === 'dark' ? '#1f2937' : '#fff', color: currentViewDirection !== '3D' && view2DTheme === 'dark' ? '#fff' : '#000' }}
                         autoFocus
                         onClick={(e) => e.stopPropagation()}
                       />
@@ -3317,7 +3317,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                         onChange={(e) => setEditingGapValue(e.target.value)}
                         onKeyDown={(e) => { if (e.key === 'Enter') handleGapEditSubmit(); else if (e.key === 'Escape') handleGapEditCancel(); }}
                         onBlur={handleGapEditSubmit}
-                        style={{ width: '50px', padding: '2px 4px', border: '1px solid #555', borderRadius: '2px', fontSize: '12px', fontWeight: 'bold', textAlign: 'center', outline: 'none', background: '#1a1a1a', color: '#ffffff' }}
+                        style={{ width: '50px', padding: '2px 4px', border: '1px solid #555', borderRadius: '2px', fontSize: '12px', fontWeight: 'bold', textAlign: 'center', outline: 'none', background: currentViewDirection !== '3D' && view2DTheme === 'dark' ? '#1f2937' : '#fff', color: currentViewDirection !== '3D' && view2DTheme === 'dark' ? '#fff' : '#000' }}
                         autoFocus
                         onClick={(e) => e.stopPropagation()}
                       />
@@ -3340,7 +3340,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                         onChange={(e) => setEditingFurnitureGapValue(e.target.value)}
                         onKeyDown={(e) => { if (e.key === 'Enter') handleFurnitureGapSubmit(); else if (e.key === 'Escape') handleFurnitureGapCancel(); }}
                         onBlur={handleFurnitureGapSubmit}
-                        style={{ width: '60px', padding: '2px 4px', border: '1px solid #555', borderRadius: '2px', fontSize: '12px', fontWeight: 'bold', textAlign: 'center', outline: 'none', background: '#1a1a1a', color: '#ffffff' }}
+                        style={{ width: '60px', padding: '2px 4px', border: '1px solid #555', borderRadius: '2px', fontSize: '12px', fontWeight: 'bold', textAlign: 'center', outline: 'none', background: currentViewDirection !== '3D' && view2DTheme === 'dark' ? '#1f2937' : '#fff', color: currentViewDirection !== '3D' && view2DTheme === 'dark' ? '#fff' : '#000' }}
                         autoFocus
                         onClick={(e) => e.stopPropagation()}
                       />
@@ -5550,7 +5550,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     onChange={(e) => setEditingFurnitureWidthValue(e.target.value)}
                     onKeyDown={(e) => { if (e.key === 'Enter') handleFurnitureWidthSubmit(); else if (e.key === 'Escape') handleFurnitureWidthCancel(); }}
                     onBlur={handleFurnitureWidthSubmit}
-                    style={{ width: '60px', padding: '2px 4px', border: '1px solid #555', borderRadius: '2px', fontSize: '12px', fontWeight: 'bold', textAlign: 'center', outline: 'none', background: '#1a1a1a', color: '#ffffff' }}
+                    style={{ width: '60px', padding: '2px 4px', border: '1px solid #555', borderRadius: '2px', fontSize: '12px', fontWeight: 'bold', textAlign: 'center', outline: 'none', background: currentViewDirection !== '3D' && view2DTheme === 'dark' ? '#1f2937' : '#fff', color: currentViewDirection !== '3D' && view2DTheme === 'dark' ? '#fff' : '#000' }}
                     autoFocus
                     onClick={(e) => e.stopPropagation()}
                   />
@@ -6015,7 +6015,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     style={{
                       width: '72px', fontSize: '14px', textAlign: 'center',
                       color: dimensionColor,
-                      background: '#1a1a1a',
+                      background: view2DTheme === 'dark' ? '#1a1a1a' : '#ffffff',
                       border: `1px solid ${dimensionColor}`, borderRadius: '3px',
                       padding: '4px 6px', outline: 'none', fontWeight: 'bold',
                       WebkitTextFillColor: dimensionColor, opacity: 1,
@@ -6084,7 +6084,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                       width: '32px', height: '20px', fontSize: '14px', lineHeight: '1',
                       padding: 0, cursor: 'pointer', margin: 0, boxSizing: 'border-box',
                       color: dimensionColor,
-                      background: '#1a1a1a',
+                      background: view2DTheme === 'dark' ? '#1a1a1a' : '#ffffff',
                       border: `1px solid ${dimensionColor}`, borderRadius: '3px 3px 0 0',
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
                       fontWeight: 'bold',
@@ -6113,7 +6113,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                       width: '32px', height: '20px', fontSize: '14px', lineHeight: '1',
                       padding: 0, cursor: 'pointer', margin: 0, boxSizing: 'border-box',
                       color: dimensionColor,
-                      background: '#1a1a1a',
+                      background: view2DTheme === 'dark' ? '#1a1a1a' : '#ffffff',
                       border: `1px solid ${dimensionColor}`, borderTop: 'none',
                       borderRadius: '0 0 3px 3px',
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -8734,7 +8734,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                                 onChange={(e) => setEditingGapValue(e.target.value)}
                                 onKeyDown={(e) => { if (e.key === 'Enter') handleGapEditSubmit(); else if (e.key === 'Escape') handleGapEditCancel(); }}
                                 onBlur={handleGapEditSubmit}
-                                style={{ width: '50px', padding: '2px 4px', border: '1px solid #555', borderRadius: '2px', fontSize: '12px', fontWeight: 'bold', textAlign: 'center', outline: 'none', background: '#1a1a1a', color: '#ffffff' }}
+                                style={{ width: '50px', padding: '2px 4px', border: '1px solid #555', borderRadius: '2px', fontSize: '12px', fontWeight: 'bold', textAlign: 'center', outline: 'none', background: currentViewDirection !== '3D' && view2DTheme === 'dark' ? '#1f2937' : '#fff', color: currentViewDirection !== '3D' && view2DTheme === 'dark' ? '#fff' : '#000' }}
                                 autoFocus
                                 onClick={(e) => e.stopPropagation()}
                               />
