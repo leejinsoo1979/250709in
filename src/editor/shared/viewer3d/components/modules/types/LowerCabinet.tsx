@@ -842,8 +842,8 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
   const furnitureBottomY = cabinetYPosition - adjustedHeight/2;
   const lightY = furnitureBottomY - 0.5; // 가구 바닥에서 50cm 아래
 
-  // 상판 재질 (stone=인조대리석 / pet=도어재질 동일)
-  const stoneMaterial = useFurnitureStore(state => {
+  // 상판 재질 종류 (stone=인조대리석 / pet=도어재질 동일)
+  const stoneTopKind = useFurnitureStore(state => {
     if (!placedFurnitureId) return 'stone';
     const pm = state.placedModules.find(m => m.id === placedFurnitureId);
     return (pm?.stoneTopMaterial as 'stone' | 'pet' | undefined) || 'stone';
@@ -982,10 +982,15 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
     };
   }, [stoneThickness, stoneFrontOff, stoneBackOff, stoneLeftOff, stoneRightOff, outerExtendLeft, outerExtendRight, stoneBackLip, stoneBackLipThickness, stoneBackLipDepthOff, stoneBackLipTopOff, stoneBackLipTopBackOff, stoneBackLipFullFill, stoneBackLipFillHeightOff, adjustedWidth, baseFurniture.width, baseFurniture.depth]);
 
-  // 인조대리석 상판 재질 — 전체 6면 동일 텍스처 (기본: 루나쉐도우)
+  // 상판 재질 — PET이면 도어 재질 동일, stone이면 countertop(루나쉐도우 기본)
   const LUNA_SHADOW_TEXTURE = '/materials/countertop/luna_shadow_hanwha.png';
-  const countertopTextureUrl = spaceInfo?.materialConfig?.countertopTexture ?? LUNA_SHADOW_TEXTURE;
-  const countertopColorVal = spaceInfo?.materialConfig?.countertopColor || '#FFFFFF';
+  const isPetTop = stoneTopKind === 'pet';
+  const countertopTextureUrl = isPetTop
+    ? (spaceInfo?.materialConfig?.doorTexture ?? spaceInfo?.materialConfig?.interiorTexture ?? null)
+    : (spaceInfo?.materialConfig?.countertopTexture ?? LUNA_SHADOW_TEXTURE);
+  const countertopColorVal = isPetTop
+    ? (spaceInfo?.materialConfig?.doorColor || spaceInfo?.materialConfig?.interiorColor || '#FFFFFF')
+    : (spaceInfo?.materialConfig?.countertopColor || '#FFFFFF');
   const stoneTopMatRef = useRef<THREE.MeshStandardMaterial | null>(null);
 
   const stoneTopMaterial = useMemo(() => {
@@ -996,7 +1001,7 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
     });
     stoneTopMatRef.current = mat;
     return mat;
-  }, [!!stoneTopData]);
+  }, [!!stoneTopData, isPetTop]);
 
   // countertop 색상 변경 반영
   useEffect(() => {
