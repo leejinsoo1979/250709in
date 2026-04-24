@@ -2654,20 +2654,11 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
 
   // 깊이 계산: 기둥 앞에 배치 모드면 adjustedDepthMm 강제 적용, 아니면 customDepth 우선
   const moduleDepth = actualModuleData?.dimensions?.depth || 0;
-  let actualDepthMm = (placedModule.columnPlacementMode === 'front' && adjustedDepthMm !== moduleDepth)
+  const actualDepthMm = (placedModule.columnPlacementMode === 'front' && adjustedDepthMm !== moduleDepth)
     ? adjustedDepthMm  // front 모드: 깊이 강제 적용
     : (placedModule.customDepth ||
       (autoAdjustedDepthMm !== null ? autoAdjustedDepthMm :
         (adjustedDepthMm !== moduleDepth ? adjustedDepthMm : moduleDepth)));
-  // 상/하부 섹션 depth가 있으면 "덜 줄어든 쪽"(=max)로 actualDepthMm 덮어씀
-  // 도어는 하나로 전체 커버하므로 깊은 쪽 앞면 기준으로 위치해야 함.
-  // customDepth(600)가 섹션 depth보다 크게 남아있어도 섹션 기준으로 갱신.
-  const upperSecDepthMm = (placedModule as any).upperSectionDepth;
-  const lowerSecDepthMm = (placedModule as any).lowerSectionDepth;
-  if (upperSecDepthMm || lowerSecDepthMm) {
-    const maxSec = Math.max(upperSecDepthMm || 0, lowerSecDepthMm || 0);
-    if (maxSec > 0) actualDepthMm = maxSec;
-  }
   const depth = mmToThreeUnits(actualDepthMm);
 
 
@@ -3976,13 +3967,33 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
             position={[
               originalSlotCenterX + doorXOffset, // 도어 중심에 오프셋 적용
               finalYPosition, // 상부장은 14, 나머지는 adjustedPosition.y
-              furnitureZ // 다른 도어들과 동일한 z축 위치
+              (() => {
+                // 상/하부 섹션 depth가 있으면 도어 Z를 "덜 줄어든 쪽"(max) 기준 + direction 반영
+                const uS = (placedModule as any).upperSectionDepth;
+                const lS = (placedModule as any).lowerSectionDepth;
+                const maxSec = Math.max(uS || 0, lS || 0);
+                if (maxSec > 0 && maxSec < actualDepthMm) {
+                  const isMaxUpper = (uS || 0) >= (lS || 0);
+                  const dir = isMaxUpper
+                    ? ((placedModule as any).upperSectionDepthDirection || 'front')
+                    : ((placedModule as any).lowerSectionDepthDirection || 'front');
+                  if (dir === 'front') {
+                    return furnitureZ - mmToThreeUnits(actualDepthMm - maxSec);
+                  }
+                }
+                return furnitureZ;
+              })()
             ]}
             rotation={[0, (placedModule.rotation * Math.PI) / 180, 0]}
           >
             <DoorModule
               moduleWidth={doorWidth}
-              moduleDepth={actualDepthMm}
+              moduleDepth={(() => {
+                const uS = (placedModule as any).upperSectionDepth;
+                const lS = (placedModule as any).lowerSectionDepth;
+                const maxSec = Math.max(uS || 0, lS || 0);
+                return maxSec > 0 ? maxSec : actualDepthMm;
+              })()}
               hingePosition={optimalHingePosition}
               spaceInfo={spaceInfo}
               color={isDraggingThis ? '#ff6600' : actualModuleData?.category === 'full' ? undefined : spaceInfo.materialConfig?.doorColor}

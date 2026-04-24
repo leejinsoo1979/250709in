@@ -280,36 +280,56 @@ const BoxModule: React.FC<BoxModuleProps> = ({
           onDoubleClick={onDoubleClick}
         />
         {/* 커스터마이징 가구에도 도어 렌더링 (hasDoor가 true인 경우) */}
-        {hasDoor && spaceInfo && (
-          <DoorModule
-            moduleWidth={adjustedWidth || moduleData.dimensions.width}
-            moduleDepth={baseFurniture.actualDepthMm}
-            hingePosition={hingePosition}
-            spaceInfo={spaceInfo}
-            color={baseFurniture.doorColor}
-            doorXOffset={doorXOffset}
-            originalSlotWidth={originalSlotWidth}
-            slotCenterX={slotCenterX}
-            slotWidths={slotWidths}
-            slotIndex={slotIndex}
-            moduleData={moduleData}
-            isDragging={isDragging}
-            isEditMode={isEditMode}
-            textureUrl={baseFurniture.textureUrl}
-            panelGrainDirections={baseFurniture.panelGrainDirections}
-            furnitureId={placedFurnitureId}
-            floatHeight={spaceInfo?.baseConfig?.floatHeight}
-            doorTopGap={doorTopGap}
-            doorBottomGap={doorBottomGap}
-            zone={zone}
-            internalHeight={internalHeight}
-            isFreePlacement={isFreePlacement}
-            topFrameThickness={topFrameThickness}
-            hasBase={hasBase}
-            individualFloatHeight={individualFloatHeight}
-            parentGroupY={parentGroupY}
-          />
-        )}
+        {hasDoor && spaceInfo && (() => {
+          // 상/하부 섹션 depth가 다르면 도어는 "덜 줄어든 쪽"(max) 앞면에 맞춤
+          // 가구 전체는 customDepth(600) 기준이므로 도어만 로컬 Z에서 뒤로 이동
+          const maxSec = Math.max(upperSectionDepth || 0, lowerSectionDepth || 0);
+          let doorLocalZ = 0;
+          if (maxSec > 0 && maxSec < (baseFurniture.actualDepthMm || 600)) {
+            // 가장 덜 줄어든 쪽의 direction이 'front'(뒤고정)이면 그만큼 뒤로 이동
+            const isMaxUpper = (upperSectionDepth || 0) >= (lowerSectionDepth || 0);
+            const dir = isMaxUpper
+              ? (upperSectionDepthDirection || 'front')
+              : (lowerSectionDepthDirection || 'front');
+            if (dir === 'front') {
+              // 뒤고정: 600-maxSec 만큼 뒤로
+              const diffMm = (baseFurniture.actualDepthMm || 600) - maxSec;
+              doorLocalZ = -diffMm * 0.01; // mm→three unit
+            }
+          }
+          return (
+            <group position={[0, 0, doorLocalZ]}>
+              <DoorModule
+                moduleWidth={adjustedWidth || moduleData.dimensions.width}
+                moduleDepth={maxSec > 0 ? maxSec : baseFurniture.actualDepthMm}
+                hingePosition={hingePosition}
+                spaceInfo={spaceInfo}
+                color={baseFurniture.doorColor}
+                doorXOffset={doorXOffset}
+                originalSlotWidth={originalSlotWidth}
+                slotCenterX={slotCenterX}
+                slotWidths={slotWidths}
+                slotIndex={slotIndex}
+                moduleData={moduleData}
+                isDragging={isDragging}
+                isEditMode={isEditMode}
+                textureUrl={baseFurniture.textureUrl}
+                panelGrainDirections={baseFurniture.panelGrainDirections}
+                furnitureId={placedFurnitureId}
+                floatHeight={spaceInfo?.baseConfig?.floatHeight}
+                doorTopGap={doorTopGap}
+                doorBottomGap={doorBottomGap}
+                zone={zone}
+                internalHeight={internalHeight}
+                isFreePlacement={isFreePlacement}
+                topFrameThickness={topFrameThickness}
+                hasBase={hasBase}
+                individualFloatHeight={individualFloatHeight}
+                parentGroupY={parentGroupY}
+              />
+            </group>
+          );
+        })()}
       </>
     );
   }
