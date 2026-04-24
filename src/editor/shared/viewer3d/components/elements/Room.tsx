@@ -392,24 +392,40 @@ const Room: React.FC<RoomProps> = ({
     return rightId;
   }, [placedModulesFromStore]);
 
-  // 신발장(선반장 계열)인지 판정 (FurnitureItem.tsx의 isShoeCabinet와 동일 규칙)
-  const isShoeCabinetId = (mid: string) =>
-    mid.includes('-entryway-') || mid.includes('-shelf-') ||
-    mid.includes('-4drawer-shelf-') || mid.includes('-2drawer-shelf-');
+  // 좌/우 최외곽 가구의 실제 "앞면 Z 오프셋(mm)"을 반환
+  // 기본 가구 깊이(600) 기준 앞면 대비 얼마나 뒤쪽에 있는지 (양수 = 뒤로 이동)
+  // 서라운드 프레임이 가구 앞면에 자동으로 따라붙도록 하는 용도
+  const { leftEdgePullBackMm, rightEdgePullBackMm } = useMemo(() => {
+    const isShoeCabinetId = (mid: string) =>
+      mid.includes('-entryway-') || mid.includes('-shelf-') ||
+      mid.includes('-4drawer-shelf-') || mid.includes('-2drawer-shelf-');
+    const isUpperCabinetId = (mid: string) => mid.includes('upper-cabinet');
 
-  // 좌/우 최외곽 가구가 신발장이면 해당 쪽 서라운드 프레임을 신발장 앞면으로 당기기 위한 정보
-  const { leftEdgeShoeDepthMm, rightEdgeShoeDepthMm } = useMemo(() => {
+    // 가구 앞면 Z 오프셋(mm) 계산. 기본(600, 앞면정렬) 대비 뒤로 이동해야 하는 거리.
+    // 모든 가구 앞면 정렬 가정:
+    //   - 앞면정렬(하부/키큰/의류): frontZ = 공간앞면 - (600 - depth)   → pullBack = 600 - depth
+    //   - 뒷면정렬(상부/신발): frontZ = 공간뒷면 + depth + baseDepthOffset
+    //     공간앞면 - frontZ = 600 - depth - baseDepthOffset            → pullBack = 600 - depth - baseDepthOffset
+    const computePullBack = (pm: any): number => {
+      if (!pm) return 0;
+      const mid = pm.moduleId || '';
+      const depthMm = pm.customDepth || pm.upperSectionDepth || pm.lowerSectionDepth || 600;
+      // 최소 600 이상이면 기본 위치 유지 (깊어져도 앞면은 공간 앞면과 같음)
+      if (depthMm >= 600) return 0;
+      const isFloating = spaceInfo.baseConfig?.type === 'stand' && spaceInfo.baseConfig?.placementType === 'float';
+      const baseDepthOffsetMm = isFloating ? (spaceInfo.baseConfig?.depth || 0) : 0;
+      const isBackAligned = isUpperCabinetId(mid) || isShoeCabinetId(mid);
+      const pull = isBackAligned
+        ? (600 - depthMm - baseDepthOffsetMm)
+        : (600 - depthMm);
+      return Math.max(0, pull);
+    };
     const find = (id: string) => placedModulesFromStore.find((pm) => pm.id === id);
-    const resolveDepthMm = (pm: any): number | null => {
-      if (!pm) return null;
-      if (!isShoeCabinetId(pm.moduleId || '')) return null;
-      return (pm.customDepth || pm.upperSectionDepth || pm.lowerSectionDepth || 0) || null;
-    };
     return {
-      leftEdgeShoeDepthMm: resolveDepthMm(find(leftMostModuleId)),
-      rightEdgeShoeDepthMm: resolveDepthMm(find(rightMostModuleId)),
+      leftEdgePullBackMm: computePullBack(find(leftMostModuleId)),
+      rightEdgePullBackMm: computePullBack(find(rightMostModuleId)),
     };
-  }, [placedModulesFromStore, leftMostModuleId, rightMostModuleId]);
+  }, [placedModulesFromStore, leftMostModuleId, rightMostModuleId, spaceInfo.baseConfig]);
   const layoutMode = useSpaceConfigStore((state) => state.spaceInfo.layoutMode); // 배치 모드 직접 구독
   const isFreePlacement = layoutMode === 'free-placement';
   // 슬롯배치 커튼박스: curtainBox 필드에서 확인 (단내림과 독립)
@@ -3879,12 +3895,8 @@ const Room: React.FC<RoomProps> = ({
         }
 
 // console.log('❓❓❓ [왼쪽 일반 구간] 렌더링 여부:', !(hasDroppedCeiling && isLeftDropped), 'hasDroppedCeiling:', hasDroppedCeiling, 'isLeftDropped:', isLeftDropped);
-        // 신발장이 좌측 최외곽이면 서라운드 프레임을 신발장 앞면으로 당김 (옵션 1: 얇은 판을 신발장 앞면에 맞춤)
-        // 보정량 = 가구 기본 깊이(600) - 신발장 실제 깊이. three unit으로 뒤로 이동
-        const leftShoePullBackMm = leftEdgeShoeDepthMm && leftEdgeShoeDepthMm < 600
-          ? (600 - leftEdgeShoeDepthMm)
-          : 0;
-        const leftShoePullBack = mmToThreeUnits(leftShoePullBackMm);
+        // 좌측 최외곽 가구의 실제 앞면에 프레임이 자동으로 붙도록 뒤로 당길 거리
+        const leftShoePullBack = mmToThreeUnits(leftEdgePullBackMm);
 
         const leftPosition: [number, number, number] = [
           // X 위치
@@ -4305,11 +4317,8 @@ const Room: React.FC<RoomProps> = ({
           : (hasRightFurniture && indexingForCheck.threeUnitBoundaries.length > lastSlotIndex + 1
             ? indexingForCheck.threeUnitBoundaries[lastSlotIndex + 1] + frameRenderThickness.right
             : xOffset + width - frameRenderThickness.right / 2);
-        // 신발장이 우측 최외곽이면 서라운드 프레임을 신발장 앞면으로 당김
-        const rightShoePullBackMm = rightEdgeShoeDepthMm && rightEdgeShoeDepthMm < 600
-          ? (600 - rightEdgeShoeDepthMm)
-          : 0;
-        const rightShoePullBack = mmToThreeUnits(rightShoePullBackMm);
+        // 우측 최외곽 가구의 실제 앞면에 프레임이 자동으로 붙도록 뒤로 당길 거리
+        const rightShoePullBack = mmToThreeUnits(rightEdgePullBackMm);
 
         const rightFrameZ = spaceInfo.surroundType === 'no-surround'
           ? (wallConfig?.right
