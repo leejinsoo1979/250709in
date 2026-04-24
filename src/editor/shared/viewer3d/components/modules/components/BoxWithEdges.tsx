@@ -523,14 +523,14 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
         return view2DTheme === 'dark' ? "#ffffff" : "#000000"; // 3D 은선모드에서는 최대 대비 색상
       }
       // 3D 솔리드 모드: 어두운 재질이면 연한 회색으로 대비 확보
-      if (isDarkBaseMaterial) return "#808080";
+      if (isDarkBaseMaterial) return "#4a4a4a";
       return "#5a5a5a"; // 진한 회색이 Windows 저DPR에서 뭉개져 보여 살짝 밝게
     } else if (effectiveRenderMode === 'wireframe') {
       return view2DTheme === 'dark' ? "#FFFFFF" : "#000000"; // 2D 와이어프레임 다크모드는 흰색(최대 대비), 라이트모드는 검정색
     } else {
       // 2D 솔리드 모드
       // 어두운 재질이면서 라이트 테마일 때는 연한 회색 (어두운 재질 위 윤곽선 대비)
-      if (isDarkBaseMaterial && view2DTheme !== 'dark') return "#808080";
+      if (isDarkBaseMaterial && view2DTheme !== 'dark') return "#4a4a4a";
       if (view2DDirection === 'front') {
         // 정면 뷰에서는 선반과 동일한 색상
         return view2DTheme === 'dark' ? "#FF4500" : "#444444"; // 다크모드는 붉은 주황색
