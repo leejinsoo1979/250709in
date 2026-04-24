@@ -3846,12 +3846,14 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             }
           }
 
-          // 하부장 상판 두께 포함 (PET 재질이면 도어 두께, 인조대리석이면 사용자 선택값)
-          const _petThk_l = spaceInfo?.panelThickness || 18;
+          // 하부장 상판 두께 포함 (PET 재질이면 가구재 기반 PET 매핑, 인조대리석이면 사용자 선택값)
+          // PET 매핑: 15→18, 15.5→18.5, 18→18, 18.5→18.5
+          const _basicThk_l = spaceInfo?.panelThickness || 18;
+          const _petMapped_l = _basicThk_l === 15 ? 18 : _basicThk_l === 15.5 ? 18.5 : _basicThk_l;
           const getStoneH = (m: any): number => {
             const t = m?.stoneTopThickness || 0;
             if (t <= 0) return 0;
-            return (m?.stoneTopMaterial === 'pet') ? _petThk_l : t;
+            return (m?.stoneTopMaterial === 'pet') ? _petMapped_l : t;
           };
           if (hasDualCabinet) {
             const lowerMod = leftCategoryResolved === 'lower' ? leftmostMod : leftCompanionMod;
@@ -4503,12 +4505,14 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             }
           }
 
-          // 하부장 상판 두께 포함 (PET 재질이면 도어 두께, 인조대리석이면 사용자 선택값)
-          const _petThk_r = spaceInfo?.panelThickness || 18;
+          // 하부장 상판 두께 포함 (PET 재질이면 가구재 기반 PET 매핑, 인조대리석이면 사용자 선택값)
+          // PET 매핑: 15→18, 15.5→18.5, 18→18, 18.5→18.5
+          const _basicThk_r = spaceInfo?.panelThickness || 18;
+          const _petMapped_r = _basicThk_r === 15 ? 18 : _basicThk_r === 15.5 ? 18.5 : _basicThk_r;
           const getStoneH_r = (m: any): number => {
             const t = m?.stoneTopThickness || 0;
             if (t <= 0) return 0;
-            return (m?.stoneTopMaterial === 'pet') ? _petThk_r : t;
+            return (m?.stoneTopMaterial === 'pet') ? _petMapped_r : t;
           };
           if (rHasDualCabinet) {
             const rLowerMod = rightCategoryResolved === 'lower' ? rightmostMod : rightCompanionMod;
@@ -9903,9 +9907,11 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                       depthTest={false}
                     />
                     <Text
-                  renderOrder={100001}
-                  depthTest={false}
-                      position={[(leftDoorLeftX + leftDoorRightX) / 2, spaceHeight + 1.0, leftDoorFrontZ + mmToThreeUnits(hasPlacedModules ? 120 : 100)]}
+                      renderOrder={999999}
+                      material-depthTest={false}
+                      material-depthWrite={false}
+                      material-transparent={true}
+                      position={[(leftDoorLeftX + leftDoorRightX) / 2, spaceHeight + 0.1, leftDoorFrontZ + mmToThreeUnits(hasPlacedModules ? 120 : 100)]}
                       fontSize={baseFontSize}
                       color={dimensionColor}
                       anchorX="center"
@@ -9954,9 +9960,11 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                       depthTest={false}
                     />
                     <Text
-                  renderOrder={100001}
-                  depthTest={false}
-                      position={[(rightDoorLeftX + rightDoorRightX) / 2, spaceHeight + 1.0, leftDoorFrontZ + mmToThreeUnits(hasPlacedModules ? 120 : 100)]}
+                      renderOrder={999999}
+                      material-depthTest={false}
+                      material-depthWrite={false}
+                      material-transparent={true}
+                      position={[(rightDoorLeftX + rightDoorRightX) / 2, spaceHeight + 0.1, leftDoorFrontZ + mmToThreeUnits(hasPlacedModules ? 120 : 100)]}
                       fontSize={baseFontSize}
                       color={dimensionColor}
                       anchorX="center"
@@ -10017,9 +10025,11 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     depthTest={false}
                   />
                   <Text
-                  renderOrder={100001}
-                  depthTest={false}
-                    position={[(leftDoorLeftX + rightDoorRightX) / 2, spaceHeight + 1.0, doorFrontZ + mmToThreeUnits(hasPlacedModules ? 120 : 100)]}
+                    renderOrder={999999}
+                    material-depthTest={false}
+                    material-depthWrite={false}
+                    material-transparent={true}
+                    position={[(leftDoorLeftX + rightDoorRightX) / 2, spaceHeight + 0.1, doorFrontZ + mmToThreeUnits(hasPlacedModules ? 120 : 100)]}
                     fontSize={baseFontSize}
                     color={dimensionColor}
                     anchorX="center"

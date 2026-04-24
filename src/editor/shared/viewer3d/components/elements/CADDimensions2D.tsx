@@ -15,11 +15,18 @@ import type { SpaceInfo } from '@/store/core/spaceConfigStore';
 
 const DEFAULT_BASIC_THICKNESS_MM = 18;
 
-// 상판 실효 두께 계산 — PET 재질이면 도어 두께(spaceInfo.panelThickness, 기본 18), 인조대리석이면 사용자 선택값
-const getStoneTopThicknessMm = (mod: any, doorThicknessMm: number = 18): number => {
+// PET 실효 두께 매핑: 가구재 15→18, 15.5→18.5, 18→18, 18.5→18.5
+// (15mm 계열은 PB+PET 코팅 시 PET 도어/상판이 18mm 규격 적용)
+const getPetThicknessMm = (basicThicknessMm: number): number => {
+  if (basicThicknessMm === 15) return 18;
+  if (basicThicknessMm === 15.5) return 18.5;
+  return basicThicknessMm; // 18, 18.5는 그대로
+};
+// 상판 실효 두께 계산 — PET 재질이면 PET 매핑, 인조대리석이면 사용자 선택값
+const getStoneTopThicknessMm = (mod: any, basicThicknessMm: number = 18): number => {
   const t = mod?.stoneTopThickness || 0;
   if (t <= 0) return 0;
-  return (mod?.stoneTopMaterial === 'pet') ? doorThicknessMm : t;
+  return (mod?.stoneTopMaterial === 'pet') ? getPetThicknessMm(basicThicknessMm) : t;
 };
 
 /** 연장선 + 양쪽 꼭지점 점 표시 */
