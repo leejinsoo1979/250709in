@@ -573,7 +573,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
     );
   }
 
-  if (moduleData.id.includes('dual-2hanging')) {
+  if (moduleData.id.includes('dual-2hanging') || moduleData.id.includes('dual-entryway-h-') || moduleData.id.includes('dual-shelf-')) {
     return (
       <>
         {/* 모든 타입에서 간접조명 렌더링 */}
@@ -830,7 +830,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
     );
   }
 
-  if (moduleData.id.includes('single-2hanging')) {
+  if (moduleData.id.includes('single-2hanging') || moduleData.id.includes('single-entryway-h-') || moduleData.id.includes('single-shelf-')) {
     return (
       <>
         {/* 모든 타입에서 간접조명 렌더링 */}

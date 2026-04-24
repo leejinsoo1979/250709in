@@ -329,7 +329,8 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
               upperSectionWidth !== undefined ? baseFurniture.mmToThreeUnits(upperSectionWidth) : baseFurniture.innerWidth,
             ]}
             sectionWidthDirections={[lowerSectionWidthDirection, upperSectionWidthDirection]}
-            lowerSectionTopOffsetMm={lowerSectionTopOffset}
+            lowerSectionTopOffsetMm={(moduleData?.id?.includes('entryway-h')) ? 85 : lowerSectionTopOffset}
+            shelfFrontInsetMm={(moduleData?.id?.includes('entryway-h') || moduleData?.id?.includes('-shelf-') || moduleData?.id?.includes('-4drawer-shelf-') || moduleData?.id?.includes('-2drawer-shelf-')) ? 30 : 0}
             isFloatingPlacement={spaceInfo?.baseConfig?.placementType === 'float'}
           />
 
