@@ -235,21 +235,27 @@ const SingleType4: React.FC<FurnitureTypeProps> = ({
               return null;
             }
 
+            // 조절발은 하부 섹션 깊이에 맞춰 크기/위치 조정
+            const footDepth = sectionDepths && sectionDepths[0] ? sectionDepths[0] : depth;
+            const footDiff = depth - footDepth;
+            // front(뒤고정): 섹션 뒤로 이동 → -diff/2, back(앞고정): 앞으로 이동 → +diff/2
+            const footZOffset = footDiff === 0 ? 0 : lowerSectionDepthDirection === 'back' ? footDiff / 2 : -footDiff / 2;
             return (
-              <AdjustableFootsRenderer
-                width={width}
-                depth={depth}
-                yOffset={-height / 2}
-                backZOffset={sectionDepths && sectionDepths[0] ? (lowerSectionDepthDirection === 'back' ? (depth - sectionDepths[0]) : 0) : 0}
-                placedFurnitureId={placedFurnitureId}
-                renderMode={renderMode}
-                isHighlighted={false}
-                isFloating={isFloating}
-                baseHeight={spaceInfo?.baseConfig?.height || 65}
-                baseDepth={spaceInfo?.baseConfig?.depth || 0}
-                viewMode={viewMode}
-                view2DDirection={view2DDirection}
-              />
+              <group position={[0, 0, footZOffset]}>
+                <AdjustableFootsRenderer
+                  width={width}
+                  depth={footDepth}
+                  yOffset={-height / 2}
+                  placedFurnitureId={placedFurnitureId}
+                  renderMode={renderMode}
+                  isHighlighted={false}
+                  isFloating={isFloating}
+                  baseHeight={spaceInfo?.baseConfig?.height || 65}
+                  baseDepth={spaceInfo?.baseConfig?.depth || 0}
+                  viewMode={viewMode}
+                  view2DDirection={view2DDirection}
+                />
+              </group>
             );
           })()}
         </BaseFurnitureShell>
