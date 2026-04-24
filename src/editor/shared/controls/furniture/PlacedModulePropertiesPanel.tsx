@@ -1155,14 +1155,12 @@ const PlacedModulePropertiesPanel: React.FC = () => {
           ?? currentPlacedModule.freeDepth
           ?? moduleData.dimensions.depth;
 
-        // customDepth가 있으면 저장된 섹션 깊이보다 우선 (신발장 380 등 전체 깊이 변경 반영)
-        // 단, 기존에 사용자가 개별 섹션 깊이를 다르게 설정한 경우는 존중
+        // 저장된 섹션 깊이가 있으면 그대로 존중 (상/하 동기화 금지)
+        // 없을 때만 defaultDepth로 초기화
         const storedLower = currentPlacedModule.lowerSectionDepth;
         const storedUpper = currentPlacedModule.upperSectionDepth;
-        const hasCustomDepth = currentPlacedModule.customDepth !== undefined;
-        const sectionsDiffer = storedLower !== undefined && storedUpper !== undefined && storedLower !== storedUpper;
-        const lowerDepth = (hasCustomDepth && !sectionsDiffer) ? defaultDepth : (storedLower ?? defaultDepth);
-        const upperDepth = (hasCustomDepth && !sectionsDiffer) ? defaultDepth : (storedUpper ?? defaultDepth);
+        const lowerDepth = storedLower ?? defaultDepth;
+        const upperDepth = storedUpper ?? defaultDepth;
 
         // placedModule에 값이 없었다면 기본값을 실제로 저장
         if (currentPlacedModule.lowerSectionDepth === undefined || currentPlacedModule.upperSectionDepth === undefined) {
