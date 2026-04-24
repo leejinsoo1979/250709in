@@ -396,32 +396,27 @@ const Room: React.FC<RoomProps> = ({
   // 기본 가구 깊이(600) 기준 앞면 대비 얼마나 뒤쪽에 있는지 (양수 = 뒤로 이동)
   // 서라운드 프레임이 가구 앞면에 자동으로 따라붙도록 하는 용도
   const { leftEdgePullBackMm, rightEdgePullBackMm } = useMemo(() => {
-    const DOOR_THICKNESS_MM = 20;
     const isShoeCabinetId = (mid: string) =>
       mid.includes('-entryway-') || mid.includes('-shelf-') ||
       mid.includes('-4drawer-shelf-') || mid.includes('-2drawer-shelf-');
     const isUpperCabinetId = (mid: string) => mid.includes('upper-cabinet');
 
-    // FurnitureItem.tsx 공식 (모두 도어 두께 20mm 포함):
-    //   앞면정렬(하부/키큰/의류): frontZ = 공간앞면 - doorThickness - (600 - depth)
-    //                             → pullBack = 600 - depth
-    //   뒷면정렬(상부/신발): frontZ = 공간뒷면 + depth + baseDepthOffset - doorThickness
-    //                       공간앞면 = 공간뒷면 + 600
-    //                       ⇒ 공간앞면 - frontZ = 600 - depth - baseDepthOffset
-    //                         + 도어두께 고려해야 함? → 공간앞면(mesh 기준)과 frontZ 차이를
-    //                         프레임 기준 동일하게 비교하기 위해 baseDepthOffset만 빼 적용
-    //   실측 로그 결과, 뒷면정렬은 pullBack = (600 - depth) + doorThickness - baseDepthOffset 가 맞음
-    //   (뒷벽이 공간 뒷면 그 자체이므로 도어두께만큼 더 뒤로 들어가있음)
+    // 가구 앞면 Z 오프셋(mm) 계산. 기본(600, 앞면정렬) 대비 뒤로 이동해야 하는 거리.
+    // 모든 가구 앞면 정렬 가정:
+    //   - 앞면정렬(하부/키큰/의류): frontZ = 공간앞면 - (600 - depth)   → pullBack = 600 - depth
+    //   - 뒷면정렬(상부/신발): frontZ = 공간뒷면 + depth + baseDepthOffset
+    //     공간앞면 - frontZ = 600 - depth - baseDepthOffset            → pullBack = 600 - depth - baseDepthOffset
     const computePullBack = (pm: any): number => {
       if (!pm) return 0;
       const mid = pm.moduleId || '';
       const depthMm = pm.customDepth || pm.upperSectionDepth || pm.lowerSectionDepth || 600;
+      // 최소 600 이상이면 기본 위치 유지 (깊어져도 앞면은 공간 앞면과 같음)
       if (depthMm >= 600) return 0;
       const isFloating = spaceInfo.baseConfig?.type === 'stand' && spaceInfo.baseConfig?.placementType === 'float';
       const baseDepthOffsetMm = isFloating ? (spaceInfo.baseConfig?.depth || 0) : 0;
       const isBackAligned = isUpperCabinetId(mid) || isShoeCabinetId(mid);
       const pull = isBackAligned
-        ? (600 - depthMm - baseDepthOffsetMm + DOOR_THICKNESS_MM)
+        ? (600 - depthMm - baseDepthOffsetMm)
         : (600 - depthMm);
       return Math.max(0, pull);
     };
