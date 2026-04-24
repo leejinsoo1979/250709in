@@ -4376,22 +4376,10 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                   );
                 })}
               </div>
-              {/* 두께 선택 (PET일 때는 18.5mm 고정 표시, 클릭 비활성) */}
+              {/* 두께 선택 — 인조대리석(stone)일 때만 표시, PET은 가구재 기반 자동 매핑 */}
+              {(currentPlacedModule.stoneTopMaterial || 'stone') !== 'pet' && (
               <div className={styles.doorTabSelector}>
-                {(() => {
-                  const isPet = (currentPlacedModule.stoneTopMaterial || 'stone') === 'pet';
-                  if (isPet) {
-                    return (
-                      <button
-                        className={`${styles.doorTab} ${styles.activeDoorTab}`}
-                        disabled
-                        style={{ opacity: 0.85, cursor: 'not-allowed' }}
-                      >
-                        18.5mm (도어재질 동일)
-                      </button>
-                    );
-                  }
-                  return ([0, 10, 20, 30] as const).map(thickness => (
+                {([0, 10, 20, 30] as const).map(thickness => (
                   <button
                     key={thickness}
                     className={`${styles.doorTab} ${(currentPlacedModule.stoneTopThickness || 0) === thickness ? styles.activeDoorTab : ''}`}
@@ -4490,9 +4478,9 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                   >
                     {thickness === 0 ? '없음' : `${thickness}mm`}
                   </button>
-                  ));
-                })()}
+                ))}
               </div>
+              )}
               {/* 높이 제한 경고 */}
               {(currentPlacedModule.stoneTopThickness || 0) > 0 && (() => {
                 const bodyH = currentPlacedModule.cabinetBodyHeight ?? moduleData.dimensions.height ?? 785;
