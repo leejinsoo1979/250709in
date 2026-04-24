@@ -3055,14 +3055,27 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                   || (isCustom
                     ? Math.round((sec as any).height + 2 * pt).toString()
                     : Math.round(getStdSectionHeightMM(sIdx)).toString());
-                // 깊이 표시값: customDepth가 설정된 경우(신발장 380 등) customDepth 우선
+                // 깊이 표시값: 섹션별 저장값 우선, 없으면 customDepth(신발장 380 등), 최후 totalD
+                // 옛 데이터의 stale 값(moduleDim과 일치) 무시
                 const cDepth = currentPlacedModule.customDepth;
+                const _isShoeCat3 =
+                  currentPlacedModule.moduleId.includes('-entryway-') ||
+                  currentPlacedModule.moduleId.includes('-shelf-') ||
+                  currentPlacedModule.moduleId.includes('-4drawer-shelf-') ||
+                  currentPlacedModule.moduleId.includes('-2drawer-shelf-');
+                const _modDimD = moduleData.dimensions.depth;
+                const _hasCustomD = typeof cDepth === 'number' && cDepth > 0;
+                const _validSec = (v: number | undefined) =>
+                  (_isShoeCat3 && _hasCustomD && v === _modDimD) ? undefined : v;
+                const secStored = sIdx === 0
+                  ? _validSec(currentPlacedModule.lowerSectionDepth)
+                  : _validSec(currentPlacedModule.upperSectionDepth);
                 const displayD = sectionDepthInputs[sIdx]
-                  || (cDepth !== undefined
-                    ? Math.round(cDepth).toString()
-                    : (sIdx === 0
-                      ? Math.round(currentPlacedModule.lowerSectionDepth || totalD).toString()
-                      : Math.round(currentPlacedModule.upperSectionDepth || totalD).toString()));
+                  || (secStored !== undefined
+                    ? Math.round(secStored).toString()
+                    : (cDepth !== undefined
+                      ? Math.round(cDepth).toString()
+                      : Math.round(totalD).toString()));
                 // 너비 표시값
                 const displayW = sectionWidthInputs[sIdx]
                   || (() => { const v = Math.round(((sec as any).width || totalW) * 10) / 10; return v % 1 === 0 ? v.toString() : v.toFixed(1); })();
