@@ -418,15 +418,6 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
 
   const highlightColor = themeColorMap[appTheme.color] || '#3b82f6';
 
-  const hasLowContrastTexture = React.useMemo(() => {
-    if (!textureUrl) return false;
-    return /MELATONE_(4319|8832)/i.test(textureUrl);
-  }, [textureUrl]);
-
-  const shouldLiftSolidEdge = hasLowContrastTexture;
-  const solidEdgeOpacity = 0.65;
-  const solidEdgeDepthTest = effectiveRenderMode !== 'wireframe';
-
   // 엣지 색상 결정
   const edgeColor = React.useMemo(() => {
     // 인조대리석 상판은 연한 그레이 윤곽선
@@ -484,7 +475,7 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
           }
           return view2DTheme === 'dark' ? "#FF4500" : "#444444";
         }
-        // 3D 모드: 기존 어두운 텍스처 색상 유지
+        // 3D 모드: 원래 색상 유지
         return "#" + new THREE.Color(0.12, 0.12, 0.12).getHexString();
       }
     }
@@ -506,7 +497,7 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
         return view2DTheme === 'dark' ? "#FF4500" : "#444444"; // 다크모드는 붉은 주황색
       }
     }
-  }, [viewMode, effectiveRenderMode, view2DTheme, view2DDirection, baseMaterial, isHighlighted, highlightColor, panelName, isClothingRod, isEndPanel]);
+  }, [viewMode, effectiveRenderMode, view2DTheme, view2DDirection, baseMaterial, isHighlighted, highlightColor, panelName]);
 
   // Debug log for position
 
@@ -808,7 +799,7 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
         ? `back-panel-edge${panelName ? `-${panelName}` : ''}`
         : `furniture-edge${panelName ? `-${panelName}` : ''}`;
 
-    const baseLineWidth = isHighlighted ? 3 : 1.5;
+    const baseLineWidth = isHighlighted ? 2 : 1;
 
     // 깊이감 표현: 다크모드는 배경색과 color 블렌딩, 라이트모드는 opacity만으로 깊이감
     const blendedColor = (view2DTheme === 'light' || panelDepthOpacity >= 1.0) ? edgeColor : (() => {
@@ -1077,7 +1068,7 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
           return (
             <>
               {notchLines.map((line, i) => (
-                <line key={`${notchEdgeName}-${i}-${line[0].join(',')}-${line[1].join(',')}`} name={`${notchEdgeName}-${i}`} renderOrder={shouldLiftSolidEdge ? 1000 : undefined}>
+                <line key={`${notchEdgeName}-${i}-${line[0].join(',')}-${line[1].join(',')}`} name={`${notchEdgeName}-${i}`}>
                   <bufferGeometry>
                     <bufferAttribute
                       attach="attributes-position"
@@ -1089,8 +1080,8 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
                   <lineBasicMaterial
                     color={edgeColor}
                     transparent={effectiveRenderMode !== 'wireframe'}
-                    opacity={isHighlighted ? 1.0 : (effectiveRenderMode === 'wireframe' ? 1.0 : solidEdgeOpacity)}
-                    depthTest={solidEdgeDepthTest}
+                    opacity={isHighlighted ? 1.0 : (effectiveRenderMode === 'wireframe' ? 1.0 : 0.65)}
+                    depthTest={effectiveRenderMode !== 'wireframe'}
                     depthWrite={false}
                     linewidth={isHighlighted ? 3 : 1}
                   />
@@ -1138,7 +1129,7 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
           return (
             <>
               {lines.map((line, i) => (
-                <line key={i} name={`${partialEdgeName}-${i}`} renderOrder={shouldLiftSolidEdge ? 1000 : undefined}>
+                <line key={i} name={`${partialEdgeName}-${i}`}>
                   <bufferGeometry>
                     <bufferAttribute
                       attach="attributes-position"
@@ -1150,8 +1141,8 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
                   <lineBasicMaterial
                     color={edgeColor}
                     transparent={effectiveRenderMode !== 'wireframe'}
-                    opacity={isHighlighted ? 1.0 : (effectiveRenderMode === 'wireframe' ? 1.0 : solidEdgeOpacity)}
-                    depthTest={solidEdgeDepthTest}
+                    opacity={isHighlighted ? 1.0 : (effectiveRenderMode === 'wireframe' ? 1.0 : 0.65)}
+                    depthTest={effectiveRenderMode !== 'wireframe'}
                     depthWrite={false}
                     linewidth={isHighlighted ? 3 : 1}
                   />
@@ -1163,18 +1154,18 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
           // 전체 엣지 표시
           const edgeName = isClothingRod
             ? 'clothing-rod-edge'
-              : isBackPanel
-                ? `back-panel-edge${panelName ? `-${panelName}` : ''}`
-                : `furniture-edge${panelName ? `-${panelName}` : ''}`;
+            : isBackPanel
+              ? `back-panel-edge${panelName ? `-${panelName}` : ''}`
+              : `furniture-edge${panelName ? `-${panelName}` : ''}`;
           return (
             <>
-              <lineSegments name={edgeName} scale={shouldLiftSolidEdge ? [1.002, 1.002, 1.002] : undefined} renderOrder={shouldLiftSolidEdge ? 1000 : undefined}>
+              <lineSegments name={edgeName}>
                 <edgesGeometry key={`${args[0]}-${args[1]}-${args[2]}`} args={[new THREE.BoxGeometry(...args)]} />
                 <lineBasicMaterial
                   color={edgeColor}
                   transparent={effectiveRenderMode !== 'wireframe'}
-                  opacity={isHighlighted ? 1.0 : (effectiveRenderMode === 'wireframe' ? 1.0 : solidEdgeOpacity)}
-                  depthTest={solidEdgeDepthTest}
+                  opacity={isHighlighted ? 1.0 : (effectiveRenderMode === 'wireframe' ? 1.0 : 0.65)}
+                  depthTest={effectiveRenderMode !== 'wireframe'}
                   depthWrite={false}
                   polygonOffset={true}
                   polygonOffsetFactor={-10}
