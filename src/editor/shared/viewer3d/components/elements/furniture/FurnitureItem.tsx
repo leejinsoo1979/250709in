@@ -2408,11 +2408,11 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
 
     // 기둥 침범 시에는 가구 폭을 조정하여 기둥과 겹치지 않도록 함
     if (columnProcessingMethod === 'width-adjustment') {
-      // 기둥 C(300mm)에서 'front' 모드: 폭은 슬롯 전체, 깊이만 줄임, 기둥 앞으로 배치
-      if (slotInfo.columnType === 'medium' && placedModule.columnPlacementMode === 'front') {
+      // 'front' 모드: 기둥 타입(medium/shallow/deep) 무관하게 폭은 슬롯 전체, 깊이만 줄임, 기둥 앞으로 배치
+      if (placedModule.columnPlacementMode === 'front') {
         const slotDepth = 730;
         const columnDepth = slotInfo.column?.depth || 300;
-        const remainingDepth = slotDepth - columnDepth; // 430mm
+        const remainingDepth = Math.max(100, slotDepth - columnDepth); // 최소 100mm 보장
 
         furnitureWidthMm = indexing.columnWidth; // 슬롯 전체 너비
         adjustedDepthMm = remainingDepth; // 깊이 조정
