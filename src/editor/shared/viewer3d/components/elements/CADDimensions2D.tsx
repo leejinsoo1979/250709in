@@ -1451,11 +1451,13 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           // 신발장 하부섹션 기본 깊이 (실제 가구 패널 기준)
           const SHOE_LOWER_DEFAULT_MM = 380;
 
-          // 우선순위: upper/lowerSectionDepth(섹션별 설정) > customDepth(전체) > 기본값
+          // 우선순위: upper/lowerSectionDepth(섹션별 설정) > customDepth(전체) > 가구 기본값
           // 섹션별 depth가 있으면 각각 그 값을 표시. 없으면 customDepth로 폴백.
+          // 신발장 계열은 기본값이 380 (dimensions.depth는 공간 기본 600이라 사용 금지)
           const hasCustomDepth = typeof module.customDepth === 'number' && module.customDepth > 0;
+          const defaultDepthForCategory = isShoeCategory ? 380 : depthModuleData.dimensions.depth;
           const upperDepthRaw = module.upperSectionDepth
-            ?? (hasCustomDepth ? module.customDepth! : depthModuleData.dimensions.depth);
+            ?? (hasCustomDepth ? module.customDepth! : defaultDepthForCategory);
           const lowerDepthRaw = module.lowerSectionDepth
             ?? (hasCustomDepth ? module.customDepth! : (isShoeCategory ? SHOE_LOWER_DEFAULT_MM : depthModuleData.dimensions.depth));
 
