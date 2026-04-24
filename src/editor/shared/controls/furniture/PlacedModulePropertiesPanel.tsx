@@ -972,6 +972,17 @@ const PlacedModulePropertiesPanel: React.FC = () => {
           const pt = cc.panelThickness || 18;
           const totalDepth = currentPlacedModule.customDepth || currentPlacedModule.freeDepth || moduleData.dimensions.depth;
           const totalWidth = currentPlacedModule.freeWidth || currentPlacedModule.customWidth || moduleData.dimensions.width;
+          // 신발장: 옛 데이터의 섹션 깊이가 moduleData.dimensions.depth(600)로 stale 저장된 경우 무시
+          const _isShoeCat =
+            currentPlacedModule.moduleId.includes('-entryway-') ||
+            currentPlacedModule.moduleId.includes('-shelf-') ||
+            currentPlacedModule.moduleId.includes('-4drawer-shelf-') ||
+            currentPlacedModule.moduleId.includes('-2drawer-shelf-');
+          const _modDim = moduleData.dimensions.depth;
+          const _hasCustom = typeof currentPlacedModule.customDepth === 'number' && currentPlacedModule.customDepth > 0;
+          const _sec = (v: number | undefined) => (_isShoeCat && _hasCustom && v === _modDim) ? undefined : v;
+          const _lowerSec = _sec(currentPlacedModule.lowerSectionDepth);
+          const _upperSec = _sec(currentPlacedModule.upperSectionDepth);
           const hInputs: Record<number, string> = {};
           const dInputs: Record<number, string> = {};
           const wInputs: Record<number, string> = {};
@@ -985,8 +996,8 @@ const PlacedModulePropertiesPanel: React.FC = () => {
             // 섹션 높이 (내경 + 상하판 = 외경)
             hInputs[i] = Math.round(sec.height + 2 * pt).toString();
             // 섹션 깊이 (개별 깊이가 없으면 전체 깊이)
-            if (i === 0) dInputs[i] = Math.round(currentPlacedModule.lowerSectionDepth || totalDepth).toString();
-            else if (i === 1) dInputs[i] = Math.round(currentPlacedModule.upperSectionDepth || totalDepth).toString();
+            if (i === 0) dInputs[i] = Math.round(_lowerSec ?? totalDepth).toString();
+            else if (i === 1) dInputs[i] = Math.round(_upperSec ?? totalDepth).toString();
             else dInputs[i] = Math.round(totalDepth).toString();
             // 섹션 너비 (개별 너비가 없으면 전체 너비)
             wInputs[i] = (() => { const v = Math.round((sec.width || totalWidth) * 10) / 10; return v % 1 === 0 ? v.toString() : v.toFixed(1); })();
@@ -1025,6 +1036,17 @@ const PlacedModulePropertiesPanel: React.FC = () => {
             const totalD = currentPlacedModule.customDepth || currentPlacedModule.freeDepth || moduleData.dimensions.depth;
             const totalW = currentPlacedModule.freeWidth || moduleData.dimensions.width;
             const dimH = moduleData.dimensions.height; // 원래 모듈 높이
+            // 신발장: 옛 데이터의 섹션 깊이가 moduleData.dimensions.depth(600)로 stale 저장된 경우 무시
+            const _isShoeCat2 =
+              currentPlacedModule.moduleId.includes('-entryway-') ||
+              currentPlacedModule.moduleId.includes('-shelf-') ||
+              currentPlacedModule.moduleId.includes('-4drawer-shelf-') ||
+              currentPlacedModule.moduleId.includes('-2drawer-shelf-');
+            const _modDim2 = moduleData.dimensions.depth;
+            const _hasCustom2 = typeof currentPlacedModule.customDepth === 'number' && currentPlacedModule.customDepth > 0;
+            const _sec2 = (v: number | undefined) => (_isShoeCat2 && _hasCustom2 && v === _modDim2) ? undefined : v;
+            const _lowerSec2 = _sec2(currentPlacedModule.lowerSectionDepth);
+            const _upperSec2 = _sec2(currentPlacedModule.upperSectionDepth);
             const hInputs: Record<number, string> = {};
             const dInputs: Record<number, string> = {};
             const wInputs: Record<number, string> = {};
@@ -1044,8 +1066,8 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                 sH = Math.round(totalH * ((sec.height || sec.heightRatio || 50) / 100));
               }
               hInputs[i] = Math.round(sH).toString();
-              if (i === 0) dInputs[i] = Math.round(currentPlacedModule.lowerSectionDepth || totalD).toString();
-              else if (i === 1) dInputs[i] = Math.round(currentPlacedModule.upperSectionDepth || totalD).toString();
+              if (i === 0) dInputs[i] = Math.round(_lowerSec2 ?? totalD).toString();
+              else if (i === 1) dInputs[i] = Math.round(_upperSec2 ?? totalD).toString();
               else dInputs[i] = Math.round(totalD).toString();
               wInputs[i] = Math.round(totalW).toString();
             });
@@ -1155,15 +1177,30 @@ const PlacedModulePropertiesPanel: React.FC = () => {
           ?? currentPlacedModule.freeDepth
           ?? moduleData.dimensions.depth;
 
+        // 신발장(entryway/shelf) 카테고리 판별 — 옛 데이터에 섹션 깊이가 모듈 기본(600)으로
+        // 잘못 저장된 경우가 있어 무효값으로 간주하고 customDepth(380)로 대체
+        const isShoeCategory =
+          currentPlacedModule.moduleId.includes('-entryway-') ||
+          currentPlacedModule.moduleId.includes('-shelf-') ||
+          currentPlacedModule.moduleId.includes('-4drawer-shelf-') ||
+          currentPlacedModule.moduleId.includes('-2drawer-shelf-');
+        const modDimDepth = moduleData.dimensions.depth;
+        const hasCustomDepth = typeof currentPlacedModule.customDepth === 'number' && currentPlacedModule.customDepth > 0;
+        const resolveStored = (v: number | undefined): number | undefined => {
+          if (v === undefined) return undefined;
+          if (isShoeCategory && hasCustomDepth && v === modDimDepth) return undefined; // stale 값 무시
+          return v;
+        };
+
         // 저장된 섹션 깊이가 있으면 그대로 존중 (상/하 동기화 금지)
         // 없을 때만 defaultDepth로 초기화
-        const storedLower = currentPlacedModule.lowerSectionDepth;
-        const storedUpper = currentPlacedModule.upperSectionDepth;
+        const storedLower = resolveStored(currentPlacedModule.lowerSectionDepth);
+        const storedUpper = resolveStored(currentPlacedModule.upperSectionDepth);
         const lowerDepth = storedLower ?? defaultDepth;
         const upperDepth = storedUpper ?? defaultDepth;
 
-        // placedModule에 값이 없었다면 기본값을 실제로 저장
-        if (currentPlacedModule.lowerSectionDepth === undefined || currentPlacedModule.upperSectionDepth === undefined) {
+        // placedModule에 값이 없거나 stale(모듈 기본값과 같음) 이었다면 올바른 기본값을 저장
+        if (storedLower === undefined || storedUpper === undefined) {
 // console.log('🔧 [섹션 깊이 초기화] 기본값을 placedModule에 저장:', { lowerDepth, upperDepth });
           updatePlacedModule(currentPlacedModule.id, {
             lowerSectionDepth: lowerDepth,
