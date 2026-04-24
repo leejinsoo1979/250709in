@@ -13,6 +13,7 @@ import { useViewerTheme } from '../../context/ViewerThemeContext';
 import { isCabinetTexture1, applyCabinetTexture1Settings, isOakTexture, applyOakTextureSettings, applyDefaultImageTextureSettings, getDefaultGrainDirection, resolvePanelGrainDirection } from '@/editor/shared/utils/materialConstants';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
 import { Line, Html } from '@react-three/drei';
+import NativeLine from '../elements/NativeLine';
 import { Hinge } from '../Hinge';
 import DimensionText from './components/DimensionText';
 import { useDimensionColor } from './hooks/useDimensionColor';
@@ -1526,30 +1527,30 @@ const DoorModule: React.FC<DoorModuleProps> = ({
 
                 return (
                   <>
-                    <Line name="door-dimension" points={[
+                    <NativeLine name="door-dimension" points={[
                       [-leftDoorWidthUnits / 2, extensionStart, zPos],
                       [-leftDoorWidthUnits / 2, dimensionLinePos, zPos]
-                    ]} color={dimColor} lineWidth={1} />
+                    ]} color={dimColor} lineWidth={1} renderOrder={100001} depthTest={false} depthWrite={false} transparent={true} />
 
-                    <Line name="door-dimension" points={[
+                    <NativeLine name="door-dimension" points={[
                       [leftDoorWidthUnits / 2, extensionStart, zPos],
                       [leftDoorWidthUnits / 2, dimensionLinePos, zPos]
-                    ]} color={dimColor} lineWidth={1} />
+                    ]} color={dimColor} lineWidth={1} renderOrder={100001} depthTest={false} depthWrite={false} transparent={true} />
 
-                    <Line name="door-dimension" points={[
+                    <NativeLine name="door-dimension" points={[
                       [-leftDoorWidthUnits / 2, dimensionLinePos, zPos],
                       [leftDoorWidthUnits / 2, dimensionLinePos, zPos]
-                    ]} color={dimColor} lineWidth={1} />
+                    ]} color={dimColor} lineWidth={1} renderOrder={100001} depthTest={false} depthWrite={false} transparent={true} />
 
-                    <Line name="door-dimension" points={[
+                    <NativeLine name="door-dimension" points={[
                       [-leftDoorWidthUnits / 2 - tickSize, dimensionLinePos, zPos],
                       [-leftDoorWidthUnits / 2 + tickSize, dimensionLinePos, zPos]
-                    ]} color={dimColor} lineWidth={1} />
+                    ]} color={dimColor} lineWidth={1} renderOrder={100001} depthTest={false} depthWrite={false} transparent={true} />
 
-                    <Line name="door-dimension" points={[
+                    <NativeLine name="door-dimension" points={[
                       [leftDoorWidthUnits / 2 - tickSize, dimensionLinePos, zPos],
                       [leftDoorWidthUnits / 2 + tickSize, dimensionLinePos, zPos]
-                    ]} color={dimColor} lineWidth={1} />
+                    ]} color={dimColor} lineWidth={1} renderOrder={100001} depthTest={false} depthWrite={false} transparent={true} />
 
                     <DimensionText
                       name="door-dimension-text"
@@ -1858,7 +1859,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
 
                 return (
                   <>
-                    <Line
+                    <NativeLine
                       name="door-dimension"
                       points={[
                         [-rightDoorWidthUnits / 2, extensionStart, zPos],
@@ -1866,9 +1867,13 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                       ]}
                       color={dimColor}
                       lineWidth={1}
+                      renderOrder={100001}
+                      depthTest={false}
+                      depthWrite={false}
+                      transparent={true}
                     />
 
-                    <Line
+                    <NativeLine
                       name="door-dimension"
                       points={[
                         [rightDoorWidthUnits / 2, extensionStart, zPos],
@@ -1876,9 +1881,13 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                       ]}
                       color={dimColor}
                       lineWidth={1}
+                      renderOrder={100001}
+                      depthTest={false}
+                      depthWrite={false}
+                      transparent={true}
                     />
 
-                    <Line
+                    <NativeLine
                       name="door-dimension"
                       points={[
                         [-rightDoorWidthUnits / 2, dimensionLinePos, zPos],
@@ -1886,9 +1895,13 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                       ]}
                       color={dimColor}
                       lineWidth={1}
+                      renderOrder={100001}
+                      depthTest={false}
+                      depthWrite={false}
+                      transparent={true}
                     />
 
-                    <Line
+                    <NativeLine
                       name="door-dimension"
                       points={[
                         [-rightDoorWidthUnits / 2 - tickSize, dimensionLinePos, zPos],
@@ -1896,9 +1909,13 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                       ]}
                       color={dimColor}
                       lineWidth={1}
+                      renderOrder={100001}
+                      depthTest={false}
+                      depthWrite={false}
+                      transparent={true}
                     />
 
-                    <Line
+                    <NativeLine
                       name="door-dimension"
                       points={[
                         [rightDoorWidthUnits / 2 - tickSize, dimensionLinePos, zPos],
@@ -1906,6 +1923,10 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                       ]}
                       color={dimColor}
                       lineWidth={1}
+                      renderOrder={100001}
+                      depthTest={false}
+                      depthWrite={false}
+                      transparent={true}
                     />
 
                     <DimensionText
@@ -2391,7 +2412,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
 
               return (
                 <>
-                  <Line
+                  <NativeLine
                     name="door-dimension"
                     points={[
                       [-doorWidthUnits / 2, extensionStart, zPos],
@@ -2399,9 +2420,13 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                     ]}
                     color={dimColor}
                     lineWidth={1}
+                    renderOrder={100001}
+                    depthTest={false}
+                    depthWrite={false}
+                    transparent={true}
                   />
 
-                  <Line
+                  <NativeLine
                     name="door-dimension"
                     points={[
                       [doorWidthUnits / 2, extensionStart, zPos],
@@ -2409,9 +2434,13 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                     ]}
                     color={dimColor}
                     lineWidth={1}
+                    renderOrder={100001}
+                    depthTest={false}
+                    depthWrite={false}
+                    transparent={true}
                   />
 
-                  <Line
+                  <NativeLine
                     name="door-dimension"
                     points={[
                       [-doorWidthUnits / 2, dimensionLinePos, zPos],
@@ -2419,9 +2448,13 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                     ]}
                     color={dimColor}
                     lineWidth={1}
+                    renderOrder={100001}
+                    depthTest={false}
+                    depthWrite={false}
+                    transparent={true}
                   />
 
-                  <Line
+                  <NativeLine
                     name="door-dimension"
                     points={[
                       [-doorWidthUnits / 2 - tickSize, dimensionLinePos, zPos],
@@ -2429,9 +2462,13 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                     ]}
                     color={dimColor}
                     lineWidth={1}
+                    renderOrder={100001}
+                    depthTest={false}
+                    depthWrite={false}
+                    transparent={true}
                   />
 
-                  <Line
+                  <NativeLine
                     name="door-dimension"
                     points={[
                       [doorWidthUnits / 2 - tickSize, dimensionLinePos, zPos],
@@ -2439,6 +2476,10 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                     ]}
                     color={dimColor}
                     lineWidth={1}
+                    renderOrder={100001}
+                    depthTest={false}
+                    depthWrite={false}
+                    transparent={true}
                   />
 
                   <DimensionText

@@ -117,8 +117,10 @@ const DimensionText: React.FC<DimensionTextProps> = ({
   return (
     <Text
       name={name}
-      renderOrder={999}
-      depthTest={false}
+      renderOrder={100001}
+      material-depthTest={false}
+      material-depthWrite={false}
+      material-transparent={true}
       position={position}
       fontSize={fontSize}
       color={textColor}
