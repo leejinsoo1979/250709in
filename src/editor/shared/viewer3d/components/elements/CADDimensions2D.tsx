@@ -1536,11 +1536,14 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           const furnitureZOffset = zOffset + (panelDepth - furnitureDepth) / 2;
           const midSide = mod.moduleId || '';
           const isShoeSide = midSide.includes('-entryway-') || midSide.includes('-shelf-') || midSide.includes('-4drawer-shelf-') || midSide.includes('-2drawer-shelf-');
-          // 가구 기본 공간 기준 깊이(600)로 섹션 중심 Z 기본 공식 계산 후
+          // 가구 기본 공간 기준 깊이로 섹션 중심 Z 기본 공식 계산 후
           // direction에 따라 추가 오프셋을 적용 (SectionsRenderer 로직과 일치)
           // - 앞면 정렬(의류장/하부장 기본): frontZ 고정, depth 줄이면 중심이 앞쪽 부근 유지
           // - 뒷면 정렬(상부장/신발장/뒤고정): backZ 고정, depth 줄이면 중심이 뒤쪽 부근 유지
-          const baseModuleDepthMm = depthModuleData.dimensions.depth; // 가구 기본 깊이 (보통 600)
+          // 신발장은 실제 가구 기본 depth 380 기준 (의류장은 600)
+          const baseModuleDepthMm = isShoeSide
+            ? (module.customDepth || 380)
+            : depthModuleData.dimensions.depth;
           const baseModuleDepth = mmToThreeUnits(baseModuleDepthMm);
           const baseFrontZ = furnitureZOffset + furnitureDepth / 2 - doorThickness - baseModuleDepth / 2;
           const baseBackZ = furnitureZOffset - furnitureDepth / 2 - doorThickness + baseModuleDepth / 2;
@@ -2628,13 +2631,26 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           const furnitureZOffset = zOffset + (panelDepth - furnitureDepth) / 2;
           // 상부장/신발장은 하부장 뒷면 정렬, 그 외는 앞면 정렬
           const isUpperMod_d2 = getModuleCategory(module as PlacedModule) === 'upper';
+          // 신발장 실제 기본 깊이 (380) 또는 의류장/일반 (600) 기준
+          const baseModuleDepthMm_d2 = isShoeSide_d2
+            ? (module.customDepth || 380)
+            : moduleData.dimensions.depth;
+          const baseModuleDepth_d2 = mmToThreeUnits(baseModuleDepthMm_d2);
+          const baseFrontZ_d2 = furnitureZOffset + furnitureDepth/2 - doorThickness - baseModuleDepth_d2/2;
+          const baseBackZ_d2 = furnitureZOffset - furnitureDepth/2 - doorThickness + baseModuleDepth_d2/2;
+          // 상부 방향 오프셋
+          const upperDir_d2 = (module.upperSectionDepthDirection as 'front' | 'back' | undefined) || 'front';
+          const upperDiff_d2 = baseModuleDepth_d2 - moduleDepth;
+          const upperOffset_d2 = upperDiff_d2 === 0 ? 0 : upperDir_d2 === 'back' ? upperDiff_d2/2 : -upperDiff_d2/2;
           const furnitureZ = (isUpperMod_d2 || isBackAlign_d2)
-            ? (furnitureZOffset - furnitureDepth/2 - doorThickness + moduleDepth/2)
-            : (furnitureZOffset + furnitureDepth/2 - doorThickness - moduleDepth/2);
-          // 현관장 하부섹션 Z (뒷면 정렬 + 하부 깊이, 깊이 분리 표시 대상만)
-          const cabinetBackZ_ref_d2 = furnitureZOffset - furnitureDepth / 2 - doorThickness;
+            ? (baseBackZ_d2 + upperOffset_d2)
+            : (baseFrontZ_d2 + upperOffset_d2);
+          // 현관장 하부섹션 Z (하부 섹션 direction 반영)
+          const lowerDir_d2 = (module.lowerSectionDepthDirection as 'front' | 'back' | undefined) || 'front';
+          const lowerDiff_d2 = baseModuleDepth_d2 - moduleDepthLower_d2;
+          const lowerOffset_d2 = lowerDiff_d2 === 0 ? 0 : lowerDir_d2 === 'back' ? lowerDiff_d2/2 : -lowerDiff_d2/2;
           const furnitureZLower_d2 = isShoeSide_d2
-            ? (cabinetBackZ_ref_d2 + moduleDepthLower_d2 / 2)
+            ? (baseBackZ_d2 + lowerOffset_d2)
             : furnitureZ;
 
           return (
