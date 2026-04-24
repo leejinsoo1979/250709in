@@ -317,11 +317,12 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
   // (Canvas 컨텍스트 내부이므로 R3F 훅 사용 가능)
   const camera = useThree(state => state.camera);
   const [camZoom, setCamZoom] = useState<number>((camera as any)?.zoom || 1);
-  // 리렌더 빈도 완화: 줌 변화가 2.0 이상 누적될 때만 setState
-  // (125+ <Text>/<Html> 라벨 재계산이 매 setState마다 발생하므로 임계값을 크게)
+  // 리렌더 빈도 완화: 줌 변화가 0.5 이상 누적될 때만 setState
+  // (임계값을 2.0으로 크게 하면 showShelfEditUi(zoom>=20) 경계에서
+  //  선반 편집 UI 수십 개가 한 프레임에 몰려 mount → "뚝 끊김" 발생)
   useFrame(() => {
     const z = (camera as any)?.zoom || 1;
-    if (Math.abs(z - camZoom) > 2.0) setCamZoom(z);
+    if (Math.abs(z - camZoom) > 0.5) setCamZoom(z);
   });
   // 기준 zoom 50에서 100%, 최소 25%까지. zoom이 높아도 1.0으로 clamp.
   const uiScale = Math.min(1, Math.max(0.25, camZoom / 50));
