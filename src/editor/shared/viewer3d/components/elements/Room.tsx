@@ -408,16 +408,23 @@ const Room: React.FC<RoomProps> = ({
     if (moduleId.includes('upper-cabinet')) return 300;
     return 600;
   };
-  // 해당 가구의 "줄어든 만큼" Z 이동량 계산 (direction=back이면 0, front이면 -diff)
-  // 신발장 카테고리는 무조건 앞고정 동작 (프레임이 가구 앞면에 붙음 = offset 0)
+  // 해당 가구의 프레임 Z 이동량 계산 (공간 기본 깊이 600 기준)
+  // - 신발장: 뒷벽 정렬 기본 380 → 무조건 220mm 뒤로 (customDepth 더 줄이면 그만큼 더)
+  // - 기타 가구: 섹션 depth 줄인 만큼 뒤로 (direction=back이면 0, front이면 -diff)
+  const SPACE_BASE_DEPTH_MM = 600;
   const computeDepthZOffset = (mod: any, useSection: 'upper' | 'lower' | 'any' = 'any'): number => {
     if (!mod) return 0;
     const mid = mod.moduleId || '';
-    const baseDepth = getModBaseDepthMm(mid);
     const isShoe = mid.includes('-entryway-') || mid.includes('-shelf-') ||
                    mid.includes('-4drawer-shelf-') || mid.includes('-2drawer-shelf-');
-    // 신발장은 앞고정 강제 → 프레임 항상 가구 앞면(=기본 깊이 기준) 위치 유지
-    if (isShoe) return 0;
+    if (isShoe) {
+      // 신발장: 실제 가구 depth = customDepth(사용자 조절) 또는 380 기본
+      const shoeDepth = mod.customDepth || mod.upperSectionDepth || mod.lowerSectionDepth || mod.freeDepth || 380;
+      if (shoeDepth >= SPACE_BASE_DEPTH_MM) return 0;
+      return -mmToThreeUnits(SPACE_BASE_DEPTH_MM - shoeDepth); // 220mm (또는 더)
+    }
+    // 기타 가구: 섹션 depth 기반
+    const baseDepth = getModBaseDepthMm(mid);
     let curDepth: number | undefined;
     if (useSection === 'upper') curDepth = mod.upperSectionDepth;
     else if (useSection === 'lower') curDepth = mod.lowerSectionDepth;
