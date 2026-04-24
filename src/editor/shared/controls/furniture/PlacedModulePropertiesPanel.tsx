@@ -2903,12 +2903,12 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                           const hasUpperSec = currentPlacedModule.upperSectionDepth !== undefined;
                           const hasLowerSec = currentPlacedModule.lowerSectionDepth !== undefined;
                           const is2Section = hasUpperSec || hasLowerSec;
-                          const updates: any = is2Section
-                            // 2섹션: customDepth(=전체 외형 D)는 유지하고 섹션 depth만 변경
-                            //   → CustomizableBoxModule의 diff(= D - sectionD)가 살아있어 방향 오프셋 동작
-                            ? { upperSectionDepth: val, lowerSectionDepth: val }
-                            // 단일 섹션: customDepth/freeDepth 직접 변경
-                            : { freeDepth: val, customDepth: val };
+                          const updates: any = { freeDepth: val, customDepth: val };
+                          // 2섹션 가구: 섹션별 depth도 같이 일괄 변경 (D 입력은 전체 일괄)
+                          if (is2Section) {
+                            updates.upperSectionDepth = val;
+                            updates.lowerSectionDepth = val;
+                          }
                           updatePlacedModule(currentPlacedModule.id, updates);
                           if (is2Section) {
                             setUpperDepthInput(val.toString());
@@ -2961,10 +2961,10 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                             const hasUpperSec = currentPlacedModule.upperSectionDepth !== undefined;
                             const hasLowerSec = currentPlacedModule.lowerSectionDepth !== undefined;
                             const is2Section = hasUpperSec || hasLowerSec;
-                            const updates: any = is2Section
-                              ? { upperSectionDepth: next, lowerSectionDepth: next }
-                              : { freeDepth: next, customDepth: next };
+                            const updates: any = { freeDepth: next, customDepth: next };
                             if (is2Section) {
+                              updates.upperSectionDepth = next;
+                              updates.lowerSectionDepth = next;
                               setUpperDepthInput(next.toString());
                               setLowerDepthInput(next.toString());
                             }
