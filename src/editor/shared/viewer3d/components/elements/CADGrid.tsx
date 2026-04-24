@@ -102,23 +102,6 @@ const CADGrid: React.FC<CADGridProps> = ({ viewMode, view2DDirection = 'front', 
     const major = 1.0; // 1m 간격 (라이트/다크 동일)
     const minor = 0.1; // 10cm 간격 (라이트/다크 동일)
     
-    console.log('🔲 CADGrid 렌더링:', {
-      theme: theme.mode,
-      viewMode,
-      view2DDirection,
-      enabled,
-      major,
-      minor,
-      size,
-      gridColors: {
-        minor: gridColors.minor,
-        major: gridColors.major,
-        origin: gridColors.origin
-      },
-      majorPointsLength: 'generating...',
-      minorPointsLength: 'generating...'
-    });
-    
     const majorPoints: number[] = [];
     const minorPoints: number[] = [];
 
@@ -220,11 +203,6 @@ const CADGrid: React.FC<CADGridProps> = ({ viewMode, view2DDirection = 'front', 
         break;
     }
     
-    console.log('🔲 그리드 라인 생성 완료:', {
-      majorCount: majorPoints.length / 6,
-      minorCount: minorPoints.length / 6
-    });
-    
     return {
       majorLines: new Float32Array(majorPoints),
       minorLines: new Float32Array(minorPoints), 
@@ -299,19 +277,6 @@ const CADGrid: React.FC<CADGridProps> = ({ viewMode, view2DDirection = 'front', 
       majorMaterialRef.current.needsUpdate = true;
     }
     
-    // 디버깅용 로그 (0.1% 확률로만 출력)
-    if (Math.random() < 0.001) {
-      console.log('🔲 Grid opacity:', { 
-        distance, 
-        opacity, 
-        minorOpacity: 0.3 * opacity,
-        majorOpacity: 0.5 * opacity,
-        zoom: 'zoom' in camera ? (camera as THREE.OrthographicCamera).zoom : 'N/A',
-        gridSize,
-        viewportSize,
-        gridToViewportRatio
-      });
-    }
   });
   
   if (viewMode === '3D' || !axis1Lines || !axis2Lines) {
