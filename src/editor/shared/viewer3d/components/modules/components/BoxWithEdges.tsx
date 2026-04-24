@@ -480,38 +480,15 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
       }
     }
 
-    // 어두운 속장 재질 판별: baseMaterial에 로드된 텍스처 이미지의 src URL을 직접 확인
-    // (스토어 구독 없이 props로 받은 material만 참조 → 리렌더 체인 영향 없음)
-    const DARK_INTERIOR_TEXTURES = [
-      'MELATONE_4319', 'MELATONE_8832', 'MELATONE_TAUPE',
-      'HANSOL_HSB117006', 'HANSOL_HSB120512', 'HANSOL_HSB121004',
-      'cabinet texture1',
-    ];
-    const isDarkBaseMaterial = (() => {
-      if (!(baseMaterial instanceof THREE.MeshStandardMaterial)) return false;
-      // 텍스처가 있으면 이미지 src로 판별
-      const tex = baseMaterial.map as any;
-      const src: string | undefined = tex?.source?.data?.src || tex?.image?.src;
-      if (src && typeof src === 'string') {
-        return DARK_INTERIOR_TEXTURES.some(k => src.includes(k));
-      }
-      // 텍스처가 없으면 color로 luminance 판별
-      const c = baseMaterial.color;
-      const lum = 0.2126 * c.r + 0.7152 * c.g + 0.0722 * c.b;
-      return lum < 0.35;
-    })();
-
     if (viewMode === '3D') {
       if (effectiveRenderMode === 'wireframe') {
         return view2DTheme === 'dark' ? "#ffffff" : "#000000"; // 3D 은선모드에서는 최대 대비 색상
       }
-      if (isDarkBaseMaterial) return "#4a4a4a"; // 어두운 재질 위 윤곽선 대비 확보
       return "#5a5a5a"; // 3D 솔리드 모드: 진한 회색이 Windows 저DPR에서 뭉개져 보여 살짝 밝게
     } else if (effectiveRenderMode === 'wireframe') {
       return view2DTheme === 'dark' ? "#FFFFFF" : "#000000"; // 2D 와이어프레임 다크모드는 흰색(최대 대비), 라이트모드는 검정색
     } else {
       // 2D 솔리드 모드
-      if (isDarkBaseMaterial && view2DTheme !== 'dark') return "#4a4a4a";
       if (view2DDirection === 'front') {
         // 정면 뷰에서는 선반과 동일한 색상
         return view2DTheme === 'dark' ? "#FF4500" : "#444444"; // 다크모드는 붉은 주황색
