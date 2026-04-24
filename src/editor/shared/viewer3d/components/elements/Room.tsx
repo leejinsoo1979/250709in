@@ -6824,7 +6824,7 @@ const Room: React.FC<RoomProps> = ({
                             slotBaseSegments.push({
                               widthMm: leftPieceW,
                               centerXmm: modLeftMm + leftPieceW / 2,
-                              zPosition: slotShoeBaseZ !== null ? effectiveBaseZ : (effectiveBaseZ - modBaseZInset),
+                              zPosition: isShoeSlotBase ? effectiveBaseZ : (effectiveBaseZ - modBaseZInset),
                               height: modBaseH,
                               yPosition: modBaseYCenter,
                               material: baseMat,
@@ -6840,7 +6840,7 @@ const Room: React.FC<RoomProps> = ({
                             slotBaseSegments.push({
                               widthMm: rightPieceW,
                               centerXmm: rightPieceStartX + rightPieceW / 2,
-                              zPosition: slotShoeBaseZ !== null ? effectiveBaseZ : (effectiveBaseZ - modBaseZInset),
+                              zPosition: isShoeSlotBase ? effectiveBaseZ : (effectiveBaseZ - modBaseZInset),
                               height: modBaseH,
                               yPosition: modBaseYCenter,
                               material: baseMat,
@@ -6859,7 +6859,7 @@ const Room: React.FC<RoomProps> = ({
                             slotBaseSegments.push({
                               widthMm: leftPieceW,
                               centerXmm: modLeftMm + leftPieceW / 2,
-                              zPosition: slotShoeBaseZ !== null ? effectiveBaseZ : (effectiveBaseZ - modBaseZInset),
+                              zPosition: isShoeSlotBase ? effectiveBaseZ : (effectiveBaseZ - modBaseZInset),
                               height: modBaseH,
                               yPosition: modBaseYCenter,
                               material: baseMat,
@@ -6876,7 +6876,7 @@ const Room: React.FC<RoomProps> = ({
                             slotBaseSegments.push({
                               widthMm: centerPieceW,
                               centerXmm: centerPieceStartX + centerPieceW / 2,
-                              zPosition: slotShoeBaseZ !== null ? effectiveBaseZ : (effectiveBaseZ - modBaseZInset),
+                              zPosition: isShoeSlotBase ? effectiveBaseZ : (effectiveBaseZ - modBaseZInset),
                               height: modBaseH,
                               yPosition: modBaseYCenter,
                               material: baseMat,
@@ -6892,7 +6892,7 @@ const Room: React.FC<RoomProps> = ({
                             slotBaseSegments.push({
                               widthMm: rightPieceW,
                               centerXmm: rightPieceStartX + rightPieceW / 2,
-                              zPosition: slotShoeBaseZ !== null ? effectiveBaseZ : (effectiveBaseZ - modBaseZInset),
+                              zPosition: isShoeSlotBase ? effectiveBaseZ : (effectiveBaseZ - modBaseZInset),
                               height: modBaseH,
                               yPosition: modBaseYCenter,
                               material: baseMat,
@@ -6910,7 +6910,7 @@ const Room: React.FC<RoomProps> = ({
                       slotBaseSegments.push({
                         widthMm: modWidthMM,
                         centerXmm: modCenterXmm,
-                        zPosition: slotShoeBaseZ !== null ? effectiveBaseZ : (effectiveBaseZ - modBaseZInset),
+                        zPosition: isShoeSlotBase ? effectiveBaseZ : (effectiveBaseZ - modBaseZInset),
                         height: modBaseH,
                         yPosition: modBaseYCenter,
                         material: baseMat,
