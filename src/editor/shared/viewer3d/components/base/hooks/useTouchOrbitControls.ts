@@ -70,12 +70,8 @@ export const useTouchOrbitControls = (
       const key = event.key.toLowerCase();
       pressedKeys.current.add(key);
       
-      // Space 키로 초기 뷰 리셋
-      if (key === ' ') {
-        event.preventDefault();
-        controlsRef.current?.reset();
-        return;
-      }
+      // Space 키는 ThreeCanvas에서 resetCamera()로 처리 (중복 방지)
+      if (key === ' ') return;
     };
 
     const handleKeyUp = (event: KeyboardEvent) => {

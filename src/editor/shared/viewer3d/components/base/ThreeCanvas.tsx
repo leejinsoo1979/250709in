@@ -487,15 +487,22 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
         storedPosition: positionVec.toArray(),
       });
 
-      // damping 임시 비활성화 — update() 시 panOffset이 즉시 0으로 리셋되도록
+      // OrbitControls 내부 상태를 모두 직접 초기화하여 완전한 리셋 수행
       const prevDamping = controls.enableDamping;
       controls.enableDamping = false;
 
+      // 모든 내부 누적 상태 직접 초기화
+      if (controls._panOffset) controls._panOffset.set(0, 0, 0);
+      if (controls._sphericalDelta) controls._sphericalDelta.set(0, 0, 0);
+      if (controls._dollyDirection) controls._dollyDirection.set(0, 0, 0);
+      if (controls._scale !== undefined) controls._scale = 1;
+      controls._performCursorZoom = false;
+
+      // 원하는 카메라 상태 설정
       controls.target.copy(targetVec);
       controls.object.position.copy(positionVec);
       controls.object.up.copy(upVec);
 
-      // 줌도 초기값으로 리셋
       if ('zoom' in controls.object) {
         controls.object.zoom = initialZoom;
         if (typeof (controls.object as THREE.OrthographicCamera).updateProjectionMatrix === 'function') {
@@ -814,39 +821,55 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
 
     const controls = controlsRef.current;
 
-    // 2D 모드로 전환 시 카메라 각도만 리셋 (줌/팬 상태는 유지)
+    // 2D 모드로 전환 시 카메라 완전 리셋
     if (viewMode === '2D' && controls.object) {
-      canvasLog('🔄 2D 모드 전환 - 카메라 각도만 리셋 (줌/팬 유지)');
+      canvasLog('🔄 2D 모드 전환 - 카메라 완전 리셋');
 
-      // controls.reset() 제거 - 줌/팬 상태 초기화 방지
-      // 대신 카메라 위치와 타겟만 업데이트
+      const prevDamping = controls.enableDamping;
+      controls.enableDamping = false;
 
-      // 카메라 위치와 타겟을 현재 설정된 값으로 업데이트
-      controls.object.position.set(cameraPosition[0], cameraPosition[1], cameraPosition[2]);
+      // OrbitControls 내부 상태 직접 초기화
+      if (controls._panOffset) controls._panOffset.set(0, 0, 0);
+      if (controls._sphericalDelta) controls._sphericalDelta.set(0, 0, 0);
+      if (controls._dollyDirection) controls._dollyDirection.set(0, 0, 0);
+      if (controls._scale !== undefined) controls._scale = 1;
+      controls._performCursorZoom = false;
+
+      // 올바른 위치 설정
+      if (cameraPosition) {
+        controls.object.position.set(cameraPosition[0], cameraPosition[1], cameraPosition[2]);
+      }
       if (cameraTarget) {
         controls.target.set(cameraTarget[0], cameraTarget[1], cameraTarget[2]);
+      } else {
+        controls.target.set(...camera.target);
       }
       if (cameraUp) {
         controls.object.up.set(cameraUp[0], cameraUp[1], cameraUp[2]);
       }
 
+      // 줌도 초기값으로 리셋
+      if ('zoom' in controls.object && camera.zoom) {
+        controls.object.zoom = camera.zoom;
+        if (typeof (controls.object as THREE.OrthographicCamera).updateProjectionMatrix === 'function') {
+          (controls.object as THREE.OrthographicCamera).updateProjectionMatrix();
+        }
+      }
+
       // 카메라 quaternion(회전) 완전 초기화
       controls.object.quaternion.set(0, 0, 0, 1);
-
-      // 카메라가 타겟을 정확히 바라보도록 설정
       controls.object.lookAt(controls.target);
-
-      // OrbitControls 업데이트
       controls.update();
 
-      canvasLog('✅ 2D 카메라 각도 리셋 완료 (줌/팬 유지):', {
+      controls.enableDamping = prevDamping;
+
+      canvasLog('✅ 2D 카메라 리셋 완료:', {
         position: controls.object.position.toArray(),
         target: controls.target.toArray(),
         up: controls.object.up.toArray(),
-        quaternion: controls.object.quaternion.toArray()
       });
     }
-  }, [viewMode, view2DDirection, cameraPosition, cameraTarget, cameraUp]);
+  }, [viewMode, view2DDirection, cameraPosition, cameraTarget, cameraUp, camera.target, camera.zoom]);
 
   // OrbitControls 팬 범위 제한 (그리드 영역)
   useEffect(() => {

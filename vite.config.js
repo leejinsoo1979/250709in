@@ -8,14 +8,18 @@ var __filename = fileURLToPath(import.meta.url);
 var __dirname = dirname(__filename);
 // https://vitejs.dev/config/
 export default defineConfig({
-    plugins: [react()],
-    base: process.env.VERCEL ? '/' : (process.env.NODE_ENV === 'production' ? '/250709in/' : '/'),
+    plugins: [
+        react(),
+    ],
+    base: process.env.GH_PAGES ? '/250709in/' : '/',
     resolve: {
         alias: {
             '@': path.resolve(__dirname, './src'),
         },
     },
     build: {
+        minify: 'esbuild',
+        target: 'esnext',
         rollupOptions: {
             external: [
                 // AR 관련 파일들을 빌드에서 제외
@@ -38,6 +42,9 @@ export default defineConfig({
         },
         // 청크 크기 경고 임계값 늘리기 (당장은 경고만 숨김)
         chunkSizeWarningLimit: 1500
+    },
+    esbuild: {
+        drop: ['console', 'debugger'],
     },
     test: {
         globals: true,
