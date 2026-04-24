@@ -234,15 +234,19 @@ export const calculateFurnitureDepth = (placedModules?: any[], spaceInfo?: any) 
   }
 
   // 모듈별 실제 깊이 수집 (customDepth > upperSectionDepth/lowerSectionDepth > 타입별 기본값)
+  // 의류장(앞면정렬) 등 일반 가구: 앞면 기준인 lowerSectionDepth 최우선
+  //   (하부 섹션이 앞면에 붙어 있으므로 프레임은 하부 섹션 앞면에 맞춰야 함)
+  // 신발장(뒷면정렬): customDepth 또는 upper/lowerSectionDepth (380 기본)
+  // 상부장: 300
   const resolveDepthMm = (m: any): number => {
-    if (m.customDepth) return m.customDepth;
     const mid = m.moduleId || '';
     const isShoe = mid.includes('-entryway-') || mid.includes('-shelf-') ||
                    mid.includes('-4drawer-shelf-') || mid.includes('-2drawer-shelf-');
-    if (isShoe) return m.upperSectionDepth || m.lowerSectionDepth || 380;
     const isUpper = mid.includes('upper-cabinet');
-    if (isUpper) return 300;
-    return baseDepth; // 그 외는 기본
+    if (isShoe) return m.customDepth || m.upperSectionDepth || m.lowerSectionDepth || 380;
+    if (isUpper) return m.customDepth || 300;
+    // 일반 가구: lowerSectionDepth(앞면 기준) 최우선 → customDepth → baseDepth
+    return m.lowerSectionDepth || m.customDepth || baseDepth;
   };
 
   const depths = placedModules.map(resolveDepthMm).filter(d => d > 0);
