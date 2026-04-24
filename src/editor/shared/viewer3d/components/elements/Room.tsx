@@ -391,25 +391,6 @@ const Room: React.FC<RoomProps> = ({
     });
     return rightId;
   }, [placedModulesFromStore]);
-
-  // 신발장(선반장 계열)인지 판정 (FurnitureItem.tsx의 isShoeCabinet와 동일 규칙)
-  const isShoeCabinetId = (mid: string) =>
-    mid.includes('-entryway-') || mid.includes('-shelf-') ||
-    mid.includes('-4drawer-shelf-') || mid.includes('-2drawer-shelf-');
-
-  // 좌/우 최외곽 가구가 신발장이면 해당 쪽 서라운드 프레임을 신발장 앞면으로 당기기 위한 정보
-  const { leftEdgeShoeDepthMm, rightEdgeShoeDepthMm } = useMemo(() => {
-    const find = (id: string) => placedModulesFromStore.find((pm) => pm.id === id);
-    const resolveDepthMm = (pm: any): number | null => {
-      if (!pm) return null;
-      if (!isShoeCabinetId(pm.moduleId || '')) return null;
-      return (pm.customDepth || pm.upperSectionDepth || pm.lowerSectionDepth || 0) || null;
-    };
-    return {
-      leftEdgeShoeDepthMm: resolveDepthMm(find(leftMostModuleId)),
-      rightEdgeShoeDepthMm: resolveDepthMm(find(rightMostModuleId)),
-    };
-  }, [placedModulesFromStore, leftMostModuleId, rightMostModuleId]);
   const layoutMode = useSpaceConfigStore((state) => state.spaceInfo.layoutMode); // 배치 모드 직접 구독
   const isFreePlacement = layoutMode === 'free-placement';
   // 슬롯배치 커튼박스: curtainBox 필드에서 확인 (단내림과 독립)
@@ -3879,13 +3860,6 @@ const Room: React.FC<RoomProps> = ({
         }
 
 // console.log('❓❓❓ [왼쪽 일반 구간] 렌더링 여부:', !(hasDroppedCeiling && isLeftDropped), 'hasDroppedCeiling:', hasDroppedCeiling, 'isLeftDropped:', isLeftDropped);
-        // 신발장이 좌측 최외곽이면 서라운드 프레임을 신발장 앞면으로 당김 (옵션 1: 얇은 판을 신발장 앞면에 맞춤)
-        // 보정량 = 가구 기본 깊이(600) - 신발장 실제 깊이. three unit으로 뒤로 이동
-        const leftShoePullBackMm = leftEdgeShoeDepthMm && leftEdgeShoeDepthMm < 600
-          ? (600 - leftEdgeShoeDepthMm)
-          : 0;
-        const leftShoePullBack = mmToThreeUnits(leftShoePullBackMm);
-
         const leftPosition: [number, number, number] = [
           // X 위치
           spaceInfo.surroundType === 'no-surround'
@@ -3903,7 +3877,7 @@ const Room: React.FC<RoomProps> = ({
             : (((spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') && !wallConfig?.left) ||
               (spaceInfo.installType === 'freestanding' || spaceInfo.installType === 'free-standing')
               ? surroundEndPanelZ
-              : furnitureZOffset + furnitureDepth / 2 - mmToThreeUnits(END_PANEL_THICKNESS) / 2 + mmToThreeUnits(3) - leftShoePullBack)
+              : furnitureZOffset + furnitureDepth / 2 - mmToThreeUnits(END_PANEL_THICKNESS) / 2 + mmToThreeUnits(3))
         ];
         if (hasDroppedCeiling && isLeftDropped) return null;
 
@@ -4305,12 +4279,6 @@ const Room: React.FC<RoomProps> = ({
           : (hasRightFurniture && indexingForCheck.threeUnitBoundaries.length > lastSlotIndex + 1
             ? indexingForCheck.threeUnitBoundaries[lastSlotIndex + 1] + frameRenderThickness.right
             : xOffset + width - frameRenderThickness.right / 2);
-        // 신발장이 우측 최외곽이면 서라운드 프레임을 신발장 앞면으로 당김
-        const rightShoePullBackMm = rightEdgeShoeDepthMm && rightEdgeShoeDepthMm < 600
-          ? (600 - rightEdgeShoeDepthMm)
-          : 0;
-        const rightShoePullBack = mmToThreeUnits(rightShoePullBackMm);
-
         const rightFrameZ = spaceInfo.surroundType === 'no-surround'
           ? (wallConfig?.right
             ? furnitureZOffset + furnitureDepth / 2 - mmToThreeUnits(END_PANEL_THICKNESS) / 2 + mmToThreeUnits(3)
@@ -4318,7 +4286,7 @@ const Room: React.FC<RoomProps> = ({
           : (((spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') && !wallConfig?.right) ||
             (spaceInfo.installType === 'freestanding' || spaceInfo.installType === 'free-standing')
             ? surroundEndPanelZ
-            : furnitureZOffset + furnitureDepth / 2 - mmToThreeUnits(END_PANEL_THICKNESS) / 2 + mmToThreeUnits(3) - rightShoePullBack);
+            : furnitureZOffset + furnitureDepth / 2 - mmToThreeUnits(END_PANEL_THICKNESS) / 2 + mmToThreeUnits(3));
         const rightFrameMat = rightFrameMaterial ?? createFrameMaterial('right');
 
         // 분절 모드: 우측 최외곽이 upper/lower만 → 각 가구 높이/Z/깊이에 맞춰 프레임 조각들
