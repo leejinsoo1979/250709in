@@ -6779,7 +6779,18 @@ const Room: React.FC<RoomProps> = ({
                         const shoeFrontZ = shoeBackZ + mmToThreeUnits(slotShoeDepthMm);
                         slotShoeBaseZ = shoeFrontZ - mmToThreeUnits(END_PANEL_THICKNESS) / 2;
                       }
-                      const effectiveBaseZ = slotShoeBaseZ !== null ? slotShoeBaseZ : baseZPos;
+                      // 일반 가구(의류장 등): 하부 섹션 depth direction에 따라 하부프레임 Z 이동
+                      let generalBaseZOffset = 0;
+                      if (!isShoeSlotBase && isLowerMod) {
+                        const lowerSecDepth = (mod as any).lowerSectionDepth;
+                        if (lowerSecDepth && lowerSecDepth < 600) {
+                          const diff = 600 - lowerSecDepth;
+                          const dir = (mod as any).lowerSectionDepthDirection || 'front';
+                          // front(뒤고정) → -diff/2, back(앞고정) → +diff/2
+                          generalBaseZOffset = dir === 'back' ? mmToThreeUnits(diff) / 2 : -mmToThreeUnits(diff) / 2;
+                        }
+                      }
+                      const effectiveBaseZ = (slotShoeBaseZ !== null ? slotShoeBaseZ : baseZPos) + generalBaseZOffset;
 
                       // 커스터마이즈 가구 좌우분할: 무조건 하부프레임도 영역별 분할
                       const customSec0 = (mod as any).customConfig?.sections?.[0];
