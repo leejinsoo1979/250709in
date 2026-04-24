@@ -4335,9 +4335,63 @@ const PlacedModulePropertiesPanel: React.FC = () => {
           {/* 인조대리석 상판설치 (하부장 전용) */}
           {!showDetails && currentPlacedModule && moduleData && (moduleData.id?.includes('lower-') || moduleData.id?.includes('dual-lower-') || moduleData.category === 'lower') && (
             <div className={styles.propertySection}>
-              <h5 className={styles.sectionTitle}>상판설치 (인조대리석)</h5>
+              <h5 className={styles.sectionTitle}>상판설치</h5>
+              {/* 재질 선택 (인조대리석 / PET) */}
+              <div className={styles.doorTabSelector} style={{ marginBottom: '6px' }}>
+                {([
+                  { key: 'stone', label: '인조대리석' },
+                  { key: 'pet', label: 'PET' },
+                ] as const).map(({ key, label }) => {
+                  const currentMaterial = currentPlacedModule.stoneTopMaterial || 'stone';
+                  const isActive = currentMaterial === key;
+                  return (
+                    <button
+                      key={key}
+                      className={`${styles.doorTab} ${isActive ? styles.activeDoorTab : ''}`}
+                      onClick={() => {
+                        if (!currentPlacedModule) return;
+                        const updates: Record<string, unknown> = { stoneTopMaterial: key };
+                        // PET 선택 시 두께 선택 UI는 무시되고 18.5 고정 (내부 계산에서 처리)
+                        // 기존 두께가 0이면 기본 10으로 설정 (재질 전환 시 상판이 나타나도록)
+                        if ((currentPlacedModule.stoneTopThickness || 0) === 0) {
+                          updates.stoneTopThickness = 10;
+                          updates.stoneTopFrontOffset = (currentPlacedModule.moduleId || '').includes('lower-top-down') ? 23 : 23;
+                        }
+                        updatePlacedModule(currentPlacedModule.id, updates);
+                        // 배치된 모든 하부장에 재질 일괄 적용
+                        placedModules.forEach(m => {
+                          if (m.id === currentPlacedModule.id) return;
+                          const mid = m.moduleId || '';
+                          const isLower = mid.startsWith('lower-') || mid.includes('-lower-') ||
+                                          mid.includes('lower-door-lift') || mid.includes('lower-top-down') ||
+                                          mid.includes('lower-drawer') || mid.includes('lower-sink') ||
+                                          mid.includes('lower-induction');
+                          if (!isLower) return;
+                          updatePlacedModule(m.id, { stoneTopMaterial: key } as any);
+                        });
+                      }}
+                    >
+                      {label}
+                    </button>
+                  );
+                })}
+              </div>
+              {/* 두께 선택 (PET일 때는 18.5mm 고정 표시, 클릭 비활성) */}
               <div className={styles.doorTabSelector}>
-                {([0, 10, 20, 30] as const).map(thickness => (
+                {(() => {
+                  const isPet = (currentPlacedModule.stoneTopMaterial || 'stone') === 'pet';
+                  if (isPet) {
+                    return (
+                      <button
+                        className={`${styles.doorTab} ${styles.activeDoorTab}`}
+                        disabled
+                        style={{ opacity: 0.85, cursor: 'not-allowed' }}
+                      >
+                        18.5mm (도어재질 동일)
+                      </button>
+                    );
+                  }
+                  return ([0, 10, 20, 30] as const).map(thickness => (
                   <button
                     key={thickness}
                     className={`${styles.doorTab} ${(currentPlacedModule.stoneTopThickness || 0) === thickness ? styles.activeDoorTab : ''}`}
@@ -4436,7 +4490,8 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                   >
                     {thickness === 0 ? '없음' : `${thickness}mm`}
                   </button>
-                ))}
+                  ));
+                })()}
               </div>
               {/* 높이 제한 경고 */}
               {(currentPlacedModule.stoneTopThickness || 0) > 0 && (() => {
