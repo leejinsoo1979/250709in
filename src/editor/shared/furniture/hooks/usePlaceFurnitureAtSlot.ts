@@ -459,6 +459,12 @@ export function placeFurnitureAtSlot(params: PlaceFurnitureParams): PlaceFurnitu
     }
   }
 
+  // 빌트인 냉장고장: 슬롯 너비와 무관하게 600 고정 + slotCustomWidth로 슬롯 재분배 트리거
+  const BUILT_IN_FRIDGE_FIXED_WIDTH = 600;
+  const isBuiltInFridge = (moduleId.includes('built-in-fridge')) || (furnitureId.includes('built-in-fridge'));
+  const finalCustomWidth = isBuiltInFridge ? BUILT_IN_FRIDGE_FIXED_WIDTH : customWidth;
+  const finalAdjustedWidth = isBuiltInFridge ? BUILT_IN_FRIDGE_FIXED_WIDTH : adjustedWidth;
+
   const newModule: PlacedModule = {
     id: uuidv4(),
     moduleId: furnitureId,
@@ -473,8 +479,10 @@ export function placeFurnitureAtSlot(params: PlaceFurnitureParams): PlaceFurnitu
     isDualSlot: isDualFurniture,
     customHeight: droppedCustomHeight,
     customDepth: customDepth,
-    customWidth: customWidth,
-    adjustedWidth: adjustedWidth,
+    customWidth: finalCustomWidth,
+    adjustedWidth: finalAdjustedWidth,
+    // 빌트인 냉장고장: slotCustomWidth로 슬롯 자동 재분배 트리거
+    ...(isBuiltInFridge ? { slotCustomWidth: BUILT_IN_FRIDGE_FIXED_WIDTH } : {}),
     lowerSectionDepth: undefined,
     upperSectionDepth: undefined,
     lowerSectionTopOffset: defaultLowerTopOffset,
