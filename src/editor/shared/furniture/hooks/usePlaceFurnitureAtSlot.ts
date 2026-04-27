@@ -51,12 +51,14 @@ export function placeFurnitureAtSlot(params: PlaceFurnitureParams): PlaceFurnitu
       setSpaceInfo({
         customColumnCount: newColumnCount,
         columnMode: 'custom',
+        customSlotWidths: undefined,
       } as any);
       // params.spaceInfo도 신규 컬럼수 반영하여 indexing 재계산
       spaceInfo = {
         ...spaceInfo,
         customColumnCount: newColumnCount,
         columnMode: 'custom',
+        customSlotWidths: undefined,
       } as any;
       // 새 마지막 슬롯 index = newColumnCount - 1
       slotIndex = newColumnCount - 1;
@@ -100,14 +102,18 @@ export function placeFurnitureAtSlot(params: PlaceFurnitureParams): PlaceFurnitu
     slotIndex = insertSlotIndex;
 
     const setSpaceInfo = useSpaceConfigStore.getState().setSpaceInfo;
+    // customSlotWidths 리셋 — 새 컬럼수에 맞춰 recalculateWithCustomWidths가 재계산하도록
+    // (이전 값이 남아있으면 빌트인 냉장고장 슬롯이 줄어드는 문제 발생)
     setSpaceInfo({
       customColumnCount: newColumnCount,
       columnMode: 'custom',
+      customSlotWidths: undefined,
     } as any);
     spaceInfo = {
       ...spaceInfo,
       customColumnCount: newColumnCount,
       columnMode: 'custom',
+      customSlotWidths: undefined,
     } as any;
 
     // 같은 zone에서 insertSlotIndex >= 인 기존 가구들의 slotIndex를 +1
