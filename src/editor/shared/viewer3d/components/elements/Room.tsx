@@ -4441,6 +4441,8 @@ const Room: React.FC<RoomProps> = ({
                     if (mod.hasTopFrame === false) return false;
                     // 하부장 모듈은 상부프레임 불필요
                     if (getModuleCategory(mod) === 'lower') return false;
+                    // Insert 프레임은 상하부프레임 불필요 (자유배치/단내림 자유배치 포함)
+                    if (mod.moduleId?.includes('insert-frame')) return false;
                     const isSideViewLocal = viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right');
                     if (isSideViewLocal && selectedSlotIndex !== null && mod.slotIndex !== undefined) {
                       const isDual = mod.isDualSlot || mod.moduleId?.includes('dual-');
@@ -6461,7 +6463,12 @@ const Room: React.FC<RoomProps> = ({
             : rawBaseMat;
 
           stripGroups.forEach((group) => {
-            group.modules.filter((mod) => mod.hasBase !== false).forEach((mod) => {
+            group.modules.filter((mod) => {
+              if (mod.hasBase === false) return false;
+              // Insert 프레임은 하부프레임(받침대) 불필요
+              if (mod.moduleId?.includes('insert-frame')) return false;
+              return true;
+            }).forEach((mod) => {
               const bounds = getBaseFrameBoundsX(mod);
               const modWidthMM = bounds.right - bounds.left;
               const modCenterXmm = (bounds.left + bounds.right) / 2;
