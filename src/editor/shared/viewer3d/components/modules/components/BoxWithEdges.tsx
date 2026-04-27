@@ -370,16 +370,16 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
     return panelMaterial;
   }, [processedMaterial, panelName, activePanelGrainDirectionsStr, isDragging, effectiveEditMode, textureSignature, viewMode, effectiveRenderMode, isPlainMaterial]);
 
-  // cornerNotch ExtrudeGeometry는 축 스왑으로 일부 면 winding이 뒤집힘 → DoubleSide로 양면 렌더링
+  // cornerNotch / backCenterNotch ExtrudeGeometry는 축 스왑으로 일부 면 winding이 뒤집힘 → DoubleSide로 양면 렌더링
   const finalMaterial = React.useMemo(() => {
-    if (cornerNotch && panelSpecificMaterial instanceof THREE.MeshStandardMaterial) {
+    if ((cornerNotch || backCenterNotch) && panelSpecificMaterial instanceof THREE.MeshStandardMaterial) {
       const mat = panelSpecificMaterial.clone();
       mat.side = THREE.DoubleSide;
       mat.needsUpdate = true;
       return mat;
     }
     return panelSpecificMaterial;
-  }, [panelSpecificMaterial, cornerNotch]);
+  }, [panelSpecificMaterial, cornerNotch, backCenterNotch]);
 
   // useEffect 제거: useMemo에서 이미 모든 회전 로직을 처리하므로 중복 실행 방지
 
@@ -1024,38 +1024,46 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
       return geom;
     } else if (backCenterNotch) {
       // 뒷면 가운데 따내기: XZ 평면 ㄷ자 Shape → Y축 extrude
-      const ss = backCenterNotch.sideStrip; // 좌/우 띠 폭 (Three.js 단위)
-      const nd = backCenterNotch.depth;     // 뒤에서 앞으로 따내기 깊이
-      // XZ 평면, 시계방향(CW)으로 정의 — cornerNotch와 동일 winding 규칙
-      shape.moveTo(-halfW, -halfD);              // 좌측 뒤
-      shape.lineTo(-halfW + ss, -halfD);         // 좌띠 우측 (뒤)
-      shape.lineTo(-halfW + ss, -halfD + nd);    // 좌띠 우측 (안쪽)
-      shape.lineTo(halfW - ss, -halfD + nd);     // 우띠 좌측 (안쪽)
-      shape.lineTo(halfW - ss, -halfD);          // 우띠 좌측 (뒤)
-      shape.lineTo(halfW, -halfD);               // 우측 뒤
-      shape.lineTo(halfW, halfD);                // 우측 앞
-      shape.lineTo(-halfW, halfD);               // 좌측 앞
+      // 단순히 BufferGeometry를 직접 만드는 방식으로 변경 (winding 문제 회피)
+      const ss = backCenterNotch.sideStrip;
+      const nd = backCenterNotch.depth;
+      // ㄷ자 외곽 8개 정점 (XZ 평면, 시계방향 = 위에서 봤을 때의 외곽)
+      // CCW 순서: 좌하 → 좌띠우하 → 좌띠우상(안쪽) → 우띠좌상(안쪽) → 우띠좌하 → 우하 → 우상 → 좌상
+      const xzPoints: Array<[number, number]> = [
+        [-halfW, -halfD],
+        [-halfW + ss, -halfD],
+        [-halfW + ss, -halfD + nd],
+        [halfW - ss, -halfD + nd],
+        [halfW - ss, -halfD],
+        [halfW, -halfD],
+        [halfW, halfD],
+        [-halfW, halfD],
+      ];
+
+      // shape 정의 (UV 생성/face triangulation용)
+      shape.moveTo(xzPoints[0][0], xzPoints[0][1]);
+      for (let i = 1; i < xzPoints.length; i++) shape.lineTo(xzPoints[i][0], xzPoints[i][1]);
       shape.closePath();
 
       const extrudeSettings = { depth: h, bevelEnabled: false };
       const geom = new THREE.ExtrudeGeometry(shape, extrudeSettings);
 
-      // 좌표 변환 (cornerNotch와 동일): shapeX→X, shapeY→Z, extrudeZ→Y, 중심 맞춤
+      // ExtrudeGeometry는 shape를 XY 평면에 만들고 Z축으로 extrude함
+      // 우리는 shape Y → 월드 Z, extrude Z → 월드 Y 로 변환 + Y 중심 맞춤
+      // (shapeX, shapeY, extZ) → (X, extZ - halfH, shapeY)
       const pos = geom.attributes.position;
       const arr = pos.array as Float32Array;
-      const temp = new Float32Array(arr.length);
       for (let i = 0; i < pos.count; i++) {
         const sx = arr[i * 3];
         const sy = arr[i * 3 + 1];
         const sz = arr[i * 3 + 2];
-        temp[i * 3]     = sx;
-        temp[i * 3 + 1] = sz - halfH;
-        temp[i * 3 + 2] = sy;
+        arr[i * 3]     = sx;
+        arr[i * 3 + 1] = sz - halfH;
+        arr[i * 3 + 2] = sy;
       }
-      pos.array.set(temp);
       pos.needsUpdate = true;
 
-      // face winding 뒤집기 (Y↔Z 스왑 보정)
+      // 위 변환은 (Y,Z) 스왑 = 거울 변환(det = -1) → 모든 face의 winding 반전 필요
       const index = geom.index;
       if (index) {
         const idxArr = index.array as Uint16Array | Uint32Array;
