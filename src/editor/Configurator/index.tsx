@@ -3694,6 +3694,14 @@ const Configurator: React.FC = () => {
                       상부장
                     </button>
                   )}
+                  {!spaceInfo.isIsland && (
+                    <button
+                      className={`${styles.moduleCategoryTab} ${kitchenSub === 'tall' ? styles.active : ''}`}
+                      onClick={() => setKitchenSub('tall')}
+                    >
+                      키큰장
+                    </button>
+                  )}
                 </div>
               )}
 

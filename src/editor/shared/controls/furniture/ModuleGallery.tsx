@@ -960,8 +960,8 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
   );
 };
 
-// 주방 서브카테고리 (기본장/도어올림/상판내림/상부장)
-export type KitchenSubCategory = 'basic' | 'door-raise' | 'top-down' | 'upper';
+// 주방 서브카테고리 (기본장/도어올림/상판내림/상부장/키큰장)
+export type KitchenSubCategory = 'basic' | 'door-raise' | 'top-down' | 'upper' | 'tall';
 
 interface ModuleGalleryProps {
   // clothing=키큰장(full), shoes=신발장(전용 모듈), kitchen=주방(하부장+상부장)
@@ -1055,6 +1055,10 @@ const ModuleGallery: React.FC<ModuleGalleryProps> = ({ moduleCategory = 'tall', 
     if (kitchenSubCategory === 'upper') {
       // 상부장 = upper 전체
       categoryModules = getModulesByCategory('upper', adjustedInternalSpace, spaceInfoWithSlotWidths);
+    } else if (kitchenSubCategory === 'tall') {
+      // 키큰장 = full 카테고리 중 키큰장 전용 모듈 (예: 빌트인 냉장고장)
+      categoryModules = getModulesByCategory('full', adjustedInternalSpace, spaceInfoWithSlotWidths)
+        .filter(m => m.id.includes('built-in-fridge'));
     } else {
       // 기본장/도어올림/상판내림 = lower 중 ID 패턴으로 분기
       const lowerMods = getModulesByCategory('lower', adjustedInternalSpace, spaceInfoWithSlotWidths);
