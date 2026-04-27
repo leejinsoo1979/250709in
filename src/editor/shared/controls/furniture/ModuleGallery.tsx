@@ -1174,15 +1174,26 @@ const ModuleGallery: React.FC<ModuleGalleryProps> = ({ moduleCategory = 'tall', 
     // 슬롯 개수 제한 없음 → 마지막 빈 영역에도 배치 가능
     if (module.id.includes('built-in-fridge')) {
       const fridgeWidth = module.dimensions.width; // 582
+      // 같은 zone & 슬롯 배치 가구만 카운트 (자유배치 가구 제외)
+      const sameZoneSlot = (m: any) => !m.isFreePlacement &&
+        ((m.zone || 'normal') === (activeDroppedCeilingTab === 'dropped' ? 'dropped' : 'normal'));
       const fridges = placedModulesForValid.filter((m: any) =>
-        typeof m.moduleId === 'string' && m.moduleId.includes('built-in-fridge')
+        typeof m.moduleId === 'string' && m.moduleId.includes('built-in-fridge') && sameZoneSlot(m)
       );
       const inserts = placedModulesForValid.filter((m: any) =>
-        typeof m.moduleId === 'string' && m.moduleId.includes('insert-frame')
+        typeof m.moduleId === 'string' && m.moduleId.includes('insert-frame') && sameZoneSlot(m)
       );
       const fridgesWidth = fridges.reduce((s: number, m: any) => s + (m.slotCustomWidth ?? fridgeWidth), 0);
       const insertsWidth = inserts.reduce((s: number, m: any) => s + (m.slotCustomWidth ?? 136), 0);
-      const occupiedWidth = fridgesWidth + insertsWidth;
+      // 일반 슬롯 가구가 차지한 폭 (빌트인/인서트가 아닌 가구들)
+      const others = placedModulesForValid.filter((m: any) =>
+        sameZoneSlot(m) &&
+        typeof m.moduleId === 'string' &&
+        !m.moduleId.includes('built-in-fridge') &&
+        !m.moduleId.includes('insert-frame')
+      );
+      const othersWidth = others.reduce((s: number, m: any) => s + (m.slotCustomWidth ?? m.customWidth ?? 0), 0);
+      const occupiedWidth = fridgesWidth + insertsWidth + othersWidth;
       const remainingWidth = zoneInternalSpace.width - occupiedWidth;
       // 인서트가 흡수 가능한 최대 축소량 = (인서트 폭 - 36) 합
       const maxInsertShrink = inserts.reduce((s: number, m: any) => {
