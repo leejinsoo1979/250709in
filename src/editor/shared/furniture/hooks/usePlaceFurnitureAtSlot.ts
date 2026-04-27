@@ -281,6 +281,15 @@ export function placeFurnitureAtSlot(params: PlaceFurnitureParams): PlaceFurnitu
     });
   }
 
+  // 빌트인 냉장고장: 가상 모듈 추가된 indexing의 threeUnitPositions가 600 슬롯 중심을 갖도록
+  // recalculateWithCustomWidths를 거쳤지만, allSlotPositions은 그 결과를 사용하지 않을 수 있어
+  // targetSlot.position을 indexing.threeUnitPositions[slotIndex]로 직접 덮어쓰기
+  if (moduleId.includes('built-in-fridge')
+      && indexing.threeUnitPositions
+      && indexing.threeUnitPositions[slotIndex] !== undefined) {
+    targetSlot.position = indexing.threeUnitPositions[slotIndex];
+  }
+
   // X 위치 계산
   let xPosition: number;
   if (isDualFurniture) {
