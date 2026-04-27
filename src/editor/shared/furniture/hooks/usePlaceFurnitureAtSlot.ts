@@ -39,22 +39,27 @@ export function placeFurnitureAtSlot(params: PlaceFurnitureParams): PlaceFurnitu
   const baseIndexing = calculateSpaceIndexing(spaceInfo);
   const hasDroppedCeiling = spaceInfo.droppedCeiling?.enabled || false;
 
-  // 빌트인 냉장고장: 자기 자신을 미리 가상 모듈로 추가해 indexing 재계산
-  //   → 새 슬롯 중심(600)에 배치되어 슬롯 경계 벗어남 방지
+  // 빌트인 냉장고장(600) / Insert 프레임(100): 자기 자신을 미리 가상 모듈로 추가해 indexing 재계산
   const BUILT_IN_FRIDGE_FIXED_WIDTH = 600;
+  const INSERT_FRAME_FIXED_WIDTH = 100;
   const isBuiltInFridgeForIndex = moduleId.includes('built-in-fridge');
+  const isInsertFrameForIndex = moduleId.includes('insert-frame');
+  const fixedWidthForIndex = isBuiltInFridgeForIndex
+    ? BUILT_IN_FRIDGE_FIXED_WIDTH
+    : (isInsertFrameForIndex ? INSERT_FRAME_FIXED_WIDTH : 0);
+  const needsVirtualModule = fixedWidthForIndex > 0;
 
   // slotCustomWidth가 있는 기존 모듈이 있으면 재분할된 indexing 사용
   const existingModules = useFurnitureStore.getState().placedModules;
-  const virtualModulesForIndex = isBuiltInFridgeForIndex
+  const virtualModulesForIndex = needsVirtualModule
     ? [
         ...existingModules,
-        // 가상 모듈: 이번에 배치할 빌트인 냉장고장
+        // 가상 모듈: 이번에 배치할 고정폭 모듈
         {
-          id: '__virtual_fridge__',
+          id: '__virtual_fixed__',
           moduleId,
           slotIndex,
-          slotCustomWidth: BUILT_IN_FRIDGE_FIXED_WIDTH,
+          slotCustomWidth: fixedWidthForIndex,
           isDualSlot: false,
           zone: zone || 'normal',
         } as any,

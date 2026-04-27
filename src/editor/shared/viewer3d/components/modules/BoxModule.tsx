@@ -2,6 +2,7 @@ import React, { useEffect, useState, useMemo } from 'react';
 import { ModuleData } from '../../../../../data/modules/shelving';
 import { SpaceInfo, useSpaceConfigStore } from '@/store/core/spaceConfigStore';
 import { useBaseFurniture, BaseFurnitureShell, SectionsRenderer } from './shared';
+import BoxWithEdges from './components/BoxWithEdges';
 import DoorModule from './DoorModule';
 import { useSpace3DView } from '../../context/useSpace3DView';
 import { useUIStore } from '@/store/uiStore';
@@ -1063,6 +1064,83 @@ const BoxModule: React.FC<BoxModuleProps> = ({
         doorTopGap={doorTopGap}
         doorBottomGap={doorBottomGap}
       />
+      </>
+    );
+  }
+
+  // === Insert 프레임 (ㄷ자 구조) 전용 렌더링 ===
+  // 본체/백패널/상하판/조절발/도어/공간상하부프레임 모두 없음
+  // 앞면 프레임(100×18) + 좌 EP(18×58) + 우 EP(18×58), 모두 PET 재질, 바닥~천장
+  const isInsertFrame = (moduleData?.modelConfig as any)?.isInsertFrame === true;
+  if (isInsertFrame && showFurniture && spaceInfo) {
+    const mmTo = baseFurniture.mmToThreeUnits;
+    const PT = (moduleData?.modelConfig?.basicThickness || 18); // 판재 두께 (PET 18)
+    const FRAME_DEPTH = mmTo(58); // 프레임 두께 18 + frontInset 40 = EP 깊이 58 (앞부터 58까지)
+    const PT_THREE = mmTo(PT);
+
+    // 공간 전체 높이로 그림. 가구 그룹은 가구 중심 기준이므로 공간 중심으로 Y 시프트.
+    const spaceTotalHeightMm = spaceInfo.height || 0;
+    const floorFinishMm = (spaceInfo.hasFloorFinish && spaceInfo.floorFinish?.height) || 0;
+    const baseHeightMm = spaceInfo.baseConfig?.type === 'floor'
+      ? (spaceInfo.baseConfig?.height ?? 65)
+      : 0;
+    const floatHeightMmIF = spaceInfo.baseConfig?.placementType === 'float'
+      ? (spaceInfo.baseConfig?.floatHeight ?? 0)
+      : 0;
+    const furnitureCenterYmm = floorFinishMm + baseHeightMm + floatHeightMmIF + (baseFurniture.height * 100) / 2;
+    const spaceCenterYmm = spaceTotalHeightMm / 2;
+    const fullYOffset = mmTo(spaceCenterYmm - furnitureCenterYmm);
+    const fullHeight = mmTo(spaceTotalHeightMm);
+
+    const moduleW = baseFurniture.width; // 100mm
+    const moduleD = baseFurniture.depth; // 58mm
+
+    // 앞면 프레임: 폭 100, 높이 공간 높이, 두께 18
+    //   가구 앞면(z = +depth/2)에서 40mm 안쪽 들임 → 프레임 앞면 위치 = depth/2 - 40
+    //   프레임 두께 중심 = 프레임 앞면 - 두께/2 = depth/2 - 40 - 18/2
+    const FRONT_FRAME_INSET = mmTo(40);
+    const frontFrameZ = moduleD / 2 - FRONT_FRAME_INSET - PT_THREE / 2;
+    // 좌 EP: 두께 18, 깊이 58, 위치 좌측 끝
+    const leftEpX = -moduleW / 2 + PT_THREE / 2;
+    // 우 EP: 두께 18, 깊이 58, 위치 우측 끝
+    const rightEpX = moduleW / 2 - PT_THREE / 2;
+    // EP Z 중심: EP 앞면이 가구 앞면(z=+depth/2)과 일치, EP 깊이 58 → 중심 = depth/2 - 58/2
+    const epZ = moduleD / 2 - FRAME_DEPTH / 2;
+
+    return (
+      <>
+        {/* 앞면 프레임 (PET) - 윤곽선 포함 */}
+        <BoxWithEdges
+          args={[moduleW, fullHeight, PT_THREE]}
+          position={[0, fullYOffset, frontFrameZ]}
+          material={baseFurniture.material}
+          isDragging={isDragging}
+          isEditMode={isEditMode}
+          panelName="Insert전면프레임"
+          furnitureId={placedFurnitureId}
+        />
+        {/* 좌측 EP (PET) - 윤곽선 포함 */}
+        <BoxWithEdges
+          args={[PT_THREE, fullHeight, FRAME_DEPTH]}
+          position={[leftEpX, fullYOffset, epZ]}
+          material={baseFurniture.material}
+          isDragging={isDragging}
+          isEditMode={isEditMode}
+          isEndPanel={true}
+          panelName="Insert좌EP"
+          furnitureId={placedFurnitureId}
+        />
+        {/* 우측 EP (PET) - 윤곽선 포함 */}
+        <BoxWithEdges
+          args={[PT_THREE, fullHeight, FRAME_DEPTH]}
+          position={[rightEpX, fullYOffset, epZ]}
+          material={baseFurniture.material}
+          isDragging={isDragging}
+          isEditMode={isEditMode}
+          isEndPanel={true}
+          panelName="Insert우EP"
+          furnitureId={placedFurnitureId}
+        />
       </>
     );
   }
