@@ -402,12 +402,12 @@ const createBuiltInFridge = (maxHeight: number, slotWidthForId: number = BUILT_I
 };
 
 // Insert 프레임 (ㄷ자 구조) — 도어 없음
-//   - 외경 100 × 가구 전체 높이 × 깊이 58
-//   - 앞면: 전면 프레임 (100 × 가구높이 × 18)
+//   - 외경 136 × 가구 전체 높이 × 깊이 58
+//   - 앞면: 전면 프레임 (좌우 EP 사이, 너비 = 외경 - EP×2 = 100 × 가구높이 × 18)
 //   - 양 측면: 좌/우 EP (18 × 가구높이 × 58)
 //   - 뒤는 열림 (ㄷ자)
 //   - 키큰장 탭 노출 위해 ID에 'insert-frame' 키워드
-const INSERT_FRAME_OUTER_WIDTH = 100;
+const INSERT_FRAME_OUTER_WIDTH = 136;
 const INSERT_FRAME_DEPTH = 58;
 
 const createInsertFrame = (maxHeight: number, slotWidthForId: number = INSERT_FRAME_OUTER_WIDTH): ModuleData => {
@@ -419,7 +419,7 @@ const createInsertFrame = (maxHeight: number, slotWidthForId: number = INSERT_FR
     maxHeight,
     INSERT_FRAME_DEPTH,
     FURNITURE_SPECS.COLORS.TYPE2,
-    `ㄷ자 구조 — 앞 100×18 프레임 + 좌/우 EP(18×${INSERT_FRAME_DEPTH}). 도어 없음.`,
+    `ㄷ자 구조 — 좌/우 EP(18×${INSERT_FRAME_DEPTH}) 사이 전면 프레임(100×18). 도어 없음.`,
     INSERT_FRAME_DEPTH,
     'full'
   );

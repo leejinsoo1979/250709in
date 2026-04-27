@@ -39,9 +39,9 @@ export function placeFurnitureAtSlot(params: PlaceFurnitureParams): PlaceFurnitu
   const baseIndexing = calculateSpaceIndexing(spaceInfo);
   const hasDroppedCeiling = spaceInfo.droppedCeiling?.enabled || false;
 
-  // 빌트인 냉장고장(582) / Insert 프레임(100): 자기 자신을 미리 가상 모듈로 추가해 indexing 재계산
+  // 빌트인 냉장고장(582) / Insert 프레임(136): 자기 자신을 미리 가상 모듈로 추가해 indexing 재계산
   const BUILT_IN_FRIDGE_FIXED_WIDTH = 582;
-  const INSERT_FRAME_FIXED_WIDTH = 100;
+  const INSERT_FRAME_FIXED_WIDTH = 136;
   const isBuiltInFridgeForIndex = moduleId.includes('built-in-fridge');
   const isInsertFrameForIndex = moduleId.includes('insert-frame');
   const fixedWidthForIndex = isBuiltInFridgeForIndex
