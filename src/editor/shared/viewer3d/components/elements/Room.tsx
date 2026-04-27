@@ -5368,6 +5368,8 @@ const Room: React.FC<RoomProps> = ({
                   if (mod.hasTopFrame === false) return false;
                   // 하부장 모듈은 상부프레임 불필요
                   if (getModuleCategory(mod) === 'lower') return false;
+                  // Insert 프레임: 자체적으로 바닥~천장 ㄷ자 구조이므로 공간 상부 프레임 불필요
+                  if (mod.moduleId?.includes('insert-frame')) return false;
                   const isSideViewLocal = viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right');
                   if (isSideViewLocal && selectedSlotIndex !== null && mod.slotIndex !== undefined) {
                     const isDual = mod.isDualSlot || mod.moduleId?.includes('dual-');
@@ -6780,6 +6782,8 @@ const Room: React.FC<RoomProps> = ({
                   slotModsForBase
                     .filter(mod => {
                       if (mod.hasBase === false) return false;
+                      // Insert 프레임: 자체적으로 바닥~천장 ㄷ자 구조이므로 공간 하부 프레임 불필요
+                      if (mod.moduleId?.includes('insert-frame')) return false;
                       if (isSideViewBase && selectedSlotIndex !== null && mod.slotIndex !== undefined) {
                         const isDual = mod.isDualSlot || mod.moduleId?.includes('dual-');
                         if (isDual) {
