@@ -34,7 +34,6 @@ import Header from './components/Header';
 import TabBar from './components/TabBar';
 import Sidebar, { SidebarTab } from './components/Sidebar';
 import ViewerControls, { ViewMode, ViewDirection, RenderMode } from './components/ViewerControls';
-import SlotWidthInlineEditor from './components/SlotWidthInlineEditor';
 import RightPanel, { RightPanelTab, DoorCountSlider as DoorSlider } from './components/RightPanel';
 import { ModuleContent } from './components/RightPanel';
 import NavigationPane from '@/components/dashboard/NavigationPane';
@@ -505,6 +504,34 @@ const Configurator: React.FC = () => {
   const [fileTreeDesignFiles, setFileTreeDesignFiles] = useState<DesignFileSummary[]>([]);
   const [moduleCategory, setModuleCategory] = useState<'clothing' | 'shoes' | 'kitchen'>('clothing'); // 의류장/신발장/주방 토글
   const [kitchenSub, setKitchenSub] = useState<'basic' | 'door-raise' | 'top-down' | 'upper' | 'tall'>('basic'); // 주방 서브카테고리
+  const kitchenTabsRef = useRef<HTMLDivElement>(null);
+  const [kitchenTabsScroll, setKitchenTabsScroll] = useState({ canLeft: false, canRight: false });
+
+  const updateKitchenTabsScroll = useCallback(() => {
+    const el = kitchenTabsRef.current;
+    if (!el) return;
+    const canLeft = el.scrollLeft > 1;
+    const canRight = el.scrollLeft + el.clientWidth < el.scrollWidth - 1;
+    setKitchenTabsScroll(prev =>
+      prev.canLeft === canLeft && prev.canRight === canRight ? prev : { canLeft, canRight }
+    );
+  }, []);
+
+  const scrollKitchenTabs = useCallback((dir: 'left' | 'right') => {
+    const el = kitchenTabsRef.current;
+    if (!el) return;
+    el.scrollBy({ left: dir === 'left' ? -100 : 100, behavior: 'smooth' });
+  }, []);
+
+  useEffect(() => {
+    // 주방 탭이 보일 때만 갱신
+    updateKitchenTabsScroll();
+    const el = kitchenTabsRef.current;
+    if (!el) return;
+    const ro = new ResizeObserver(updateKitchenTabsScroll);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [moduleCategory, kitchenSub, updateKitchenTabsScroll]);
   const [islandSetupOpen, setIslandSetupOpen] = useState(false); // 아일랜드 팝업 열림 여부
   const [islandSetupMode, setIslandSetupMode] = useState<'create' | 'edit'>('create');
   const [moduleType, setModuleType] = useState<ModuleType>('all'); // 전체/싱글/듀얼 탭
@@ -3668,41 +3695,71 @@ const Configurator: React.FC = () => {
 
               {/* 주방 선택 시 서브 탭: 아일랜드 모드에서는 상부장 제외 */}
               {(moduleCategory === 'kitchen' || spaceInfo.isIsland) && (
-                <div className={`${styles.moduleCategoryTabs} ${styles.scrollableTabs}`}>
-                  <button
-                    className={`${styles.moduleCategoryTab} ${kitchenSub === 'basic' ? styles.active : ''}`}
-                    onClick={() => setKitchenSub('basic')}
+                <div className={styles.scrollableTabsWrapper}>
+                  <div
+                    ref={kitchenTabsRef}
+                    className={`${styles.moduleCategoryTabs} ${styles.scrollableTabs}`}
+                    onScroll={updateKitchenTabsScroll}
                   >
-                    기본장
-                  </button>
-                  <button
-                    className={`${styles.moduleCategoryTab} ${kitchenSub === 'door-raise' ? styles.active : ''}`}
-                    onClick={() => setKitchenSub('door-raise')}
-                  >
-                    도어올림
-                  </button>
-                  <button
-                    className={`${styles.moduleCategoryTab} ${kitchenSub === 'top-down' ? styles.active : ''}`}
-                    onClick={() => setKitchenSub('top-down')}
-                  >
-                    상판내림
-                  </button>
-                  {!spaceInfo.isIsland && (
                     <button
-                      className={`${styles.moduleCategoryTab} ${kitchenSub === 'upper' ? styles.active : ''}`}
-                      onClick={() => setKitchenSub('upper')}
+                      className={`${styles.moduleCategoryTab} ${kitchenSub === 'basic' ? styles.active : ''}`}
+                      onClick={() => setKitchenSub('basic')}
                     >
-                      상부장
+                      기본장
                     </button>
-                  )}
-                  {!spaceInfo.isIsland && (
                     <button
-                      className={`${styles.moduleCategoryTab} ${kitchenSub === 'tall' ? styles.active : ''}`}
-                      onClick={() => setKitchenSub('tall')}
+                      className={`${styles.moduleCategoryTab} ${kitchenSub === 'door-raise' ? styles.active : ''}`}
+                      onClick={() => setKitchenSub('door-raise')}
                     >
-                      키큰장
+                      도어올림
                     </button>
-                  )}
+                    <button
+                      className={`${styles.moduleCategoryTab} ${kitchenSub === 'top-down' ? styles.active : ''}`}
+                      onClick={() => setKitchenSub('top-down')}
+                    >
+                      상판내림
+                    </button>
+                    {!spaceInfo.isIsland && (
+                      <button
+                        className={`${styles.moduleCategoryTab} ${kitchenSub === 'upper' ? styles.active : ''}`}
+                        onClick={() => setKitchenSub('upper')}
+                      >
+                        상부장
+                      </button>
+                    )}
+                    {!spaceInfo.isIsland && (
+                      <button
+                        className={`${styles.moduleCategoryTab} ${kitchenSub === 'tall' ? styles.active : ''}`}
+                        onClick={() => setKitchenSub('tall')}
+                      >
+                        키큰장
+                      </button>
+                    )}
+                  </div>
+                  {/* 좌측 페이드 + 화살표 */}
+                  <div
+                    className={`${styles.scrollFadeLeft} ${kitchenTabsScroll.canLeft ? '' : styles.scrollArrowHidden}`}
+                  />
+                  <button
+                    type="button"
+                    className={`${styles.scrollArrow} ${styles.scrollArrowLeft} ${kitchenTabsScroll.canLeft ? '' : styles.scrollArrowHidden}`}
+                    onClick={() => scrollKitchenTabs('left')}
+                    aria-label="이전 탭"
+                  >
+                    ‹
+                  </button>
+                  {/* 우측 페이드 + 화살표 */}
+                  <div
+                    className={`${styles.scrollFadeRight} ${kitchenTabsScroll.canRight ? '' : styles.scrollArrowHidden}`}
+                  />
+                  <button
+                    type="button"
+                    className={`${styles.scrollArrow} ${styles.scrollArrowRight} ${kitchenTabsScroll.canRight ? '' : styles.scrollArrowHidden}`}
+                    onClick={() => scrollKitchenTabs('right')}
+                    aria-label="다음 탭"
+                  >
+                    ›
+                  </button>
                 </div>
               )}
 
@@ -7094,9 +7151,6 @@ const Configurator: React.FC = () => {
                 sceneRef={sceneRef} // GLB 내보내기용 씬 참조
               />
             )}
-
-            {/* 슬롯배치 모드의 자유 토글 활성 시: 뷰어 위에 슬롯 너비 입력 오버레이 */}
-            <SlotWidthInlineEditor />
 
             {/* 커스텀 가구 설계모드 종료 버튼 — 뷰어 중앙 하단 */}
             {isLayoutBuilderOpen && (

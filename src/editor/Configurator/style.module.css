@@ -596,6 +596,12 @@
   gap: 1px;
 }
 
+/* 가로 스크롤 탭 래퍼 - 좌우 화살표 + 페이드 효과 */
+.scrollableTabsWrapper {
+  position: relative;
+  margin-bottom: 4px;
+}
+
 /* 가로 스크롤 가능한 탭 (탭 개수 많을 때) - 스크롤바 숨김 */
 .scrollableTabs {
   overflow-x: auto;
@@ -605,6 +611,7 @@
   scroll-snap-type: x proximity;
   scrollbar-width: none; /* Firefox */
   -ms-overflow-style: none; /* IE/Edge */
+  margin-bottom: 0;
 }
 
 .scrollableTabs::-webkit-scrollbar {
@@ -619,6 +626,85 @@
   padding-left: 12px;
   padding-right: 12px;
   scroll-snap-align: start;
+}
+
+/* 좌/우 페이드 그라데이션 (스크롤 가능 표시) */
+.scrollFadeLeft,
+.scrollFadeRight {
+  position: absolute;
+  top: 2px;
+  bottom: 2px;
+  width: 24px;
+  pointer-events: none;
+  z-index: 2;
+  transition: opacity 0.2s ease;
+}
+
+.scrollFadeLeft {
+  left: 2px;
+  border-radius: 4px 0 0 4px;
+  background: linear-gradient(
+    to right,
+    var(--theme-background-secondary) 0%,
+    var(--theme-background-secondary) 30%,
+    transparent 100%
+  );
+}
+
+.scrollFadeRight {
+  right: 2px;
+  border-radius: 0 4px 4px 0;
+  background: linear-gradient(
+    to left,
+    var(--theme-background-secondary) 0%,
+    var(--theme-background-secondary) 30%,
+    transparent 100%
+  );
+}
+
+/* 좌/우 스크롤 화살표 버튼 */
+.scrollArrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 20px;
+  height: 20px;
+  border: none;
+  background: var(--theme-background-secondary);
+  color: var(--theme-text-secondary);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 3;
+  font-size: 14px;
+  line-height: 1;
+  font-weight: 600;
+  box-shadow: 0 0 0 1px var(--theme-border, rgba(255, 255, 255, 0.12));
+  transition: opacity 0.2s ease, background 0.15s ease;
+}
+
+.scrollArrow:hover {
+  color: var(--theme-primary);
+  background: var(--theme-background-secondary);
+}
+
+.scrollArrow:active {
+  transform: translateY(-50%) scale(0.92);
+}
+
+.scrollArrowLeft {
+  left: 4px;
+}
+
+.scrollArrowRight {
+  right: 4px;
+}
+
+.scrollArrowHidden {
+  opacity: 0;
+  pointer-events: none;
 }
 
 .moduleCategoryTab {
