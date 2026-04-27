@@ -735,8 +735,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                       />
 
                       {/* 하부 섹션 상판 - 뒤에서 26mm 줄여서 백패널과 맞닿게 + 사용자 오프셋 적용 (앞에서 줄어듦), 좌우 각 0.5mm씩 줄임 */}
-                      {/* 빌트인 냉장고장: 하부섹션 백패널 없음 → 상판은 측판과 동일한 풀 깊이로 렌더
-                          + 뒷면 가운데 따내기 (좌우 측판에서 31.5mm 안쪽, 뒤에서 앞으로 40mm 깊이, 관통) */}
+                      {/* 빌트인 냉장고장: 하부섹션 백패널 없음 → 상판은 측판과 동일한 풀 깊이 + 뒷면 가운데 따내기(31.5mm 띠, 40mm 깊이) */}
                       {(() => {
                         const isBuiltInFridge = !!moduleData?.id?.includes('built-in-fridge');
                         const lowerTopDepth = isBuiltInFridge
@@ -748,72 +747,6 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                         const panelW = innerWidth - sidePanelGap;
                         const panelH = basicThickness - mmToThreeUnits(0.1);
                         const panelY = lowerTopPanelY - mmToThreeUnits(0.05);
-
-                        if (isBuiltInFridge) {
-                          // 따내기 치수
-                          const sideStripMm = 31.5;       // 좌/우 측판 안쪽에서 띠 폭
-                          const notchDepthMm = 40;        // 뒷면에서 앞쪽으로 깎는 깊이
-                          const sideStripW = mmToThreeUnits(sideStripMm);
-                          const notchD = mmToThreeUnits(notchDepthMm);
-                          const middleW = panelW - sideStripW * 2;
-                          const frontPartD = lowerTopDepth - notchD;
-                          // 패널은 가구 z 중심을 기준으로 lowerTopZ에 위치
-                          // 풀깊이 박스의 앞면 z = lowerTopZ + lowerTopDepth/2, 뒷면 z = lowerTopZ - lowerTopDepth/2
-                          // 따내기 후 가운데 조각의 중심 z = (앞면 + (뒷면 + notchD))/2 = lowerTopZ + notchD/2
-                          const middleZ = lowerTopZ + notchD / 2;
-                          const sideLeftX = -panelW / 2 + sideStripW / 2;
-                          const sideRightX = panelW / 2 - sideStripW / 2;
-                          return (
-                            <>
-                              {/* 좌측 띠 (풀깊이) */}
-                              <BoxWithEdges
-                                key={`lower-top-L-${getPanelMaterial('(하)상판').uuid}`}
-                                args={[sideStripW, panelH, lowerTopDepth]}
-                                position={[sideLeftX, panelY, lowerTopZ]}
-                                material={getPanelMaterial('(하)상판')}
-                                renderMode={renderMode}
-                                isDragging={isDragging}
-                                isEditMode={isEditMode}
-                                isHighlighted={isLowerTopPanelHighlighted || isLowerSectionHighlighted}
-                                panelName="(하)상판"
-                                panelGrainDirections={panelGrainDirections}
-                                furnitureId={placedFurnitureId}
-                                textureUrl={textureUrl}
-                              />
-                              {/* 우측 띠 (풀깊이) */}
-                              <BoxWithEdges
-                                key={`lower-top-R-${getPanelMaterial('(하)상판').uuid}`}
-                                args={[sideStripW, panelH, lowerTopDepth]}
-                                position={[sideRightX, panelY, lowerTopZ]}
-                                material={getPanelMaterial('(하)상판')}
-                                renderMode={renderMode}
-                                isDragging={isDragging}
-                                isEditMode={isEditMode}
-                                isHighlighted={isLowerTopPanelHighlighted || isLowerSectionHighlighted}
-                                panelName="(하)상판"
-                                panelGrainDirections={panelGrainDirections}
-                                furnitureId={placedFurnitureId}
-                                textureUrl={textureUrl}
-                              />
-                              {/* 가운데 앞쪽 조각 (뒷면 40mm 따내기 적용) */}
-                              <BoxWithEdges
-                                key={`lower-top-M-${getPanelMaterial('(하)상판').uuid}`}
-                                args={[middleW, panelH, frontPartD]}
-                                position={[0, panelY, middleZ]}
-                                material={getPanelMaterial('(하)상판')}
-                                renderMode={renderMode}
-                                isDragging={isDragging}
-                                isEditMode={isEditMode}
-                                isHighlighted={isLowerTopPanelHighlighted || isLowerSectionHighlighted}
-                                panelName="(하)상판"
-                                panelGrainDirections={panelGrainDirections}
-                                furnitureId={placedFurnitureId}
-                                textureUrl={textureUrl}
-                              />
-                            </>
-                          );
-                        }
-
                         return (
                           <BoxWithEdges
                             key={`lower-top-${getPanelMaterial('(하)상판').uuid}`}
@@ -828,6 +761,10 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                             panelGrainDirections={panelGrainDirections}
                             furnitureId={placedFurnitureId}
                             textureUrl={textureUrl}
+                            backCenterNotch={isBuiltInFridge ? {
+                              sideStrip: mmToThreeUnits(31.5),
+                              depth: mmToThreeUnits(40),
+                            } : undefined}
                           />
                         );
                       })()}
@@ -1462,65 +1399,6 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
           })();
           const isHighlightedBottom = isMultiSectionFurniture() ? highlightedSection === `${placedFurnitureId}-0` : false;
 
-          if (isBuiltInFridge) {
-            // 빌트인 냉장고장 (하)바닥: 뒷면 가운데 따내기 (좌우 31.5mm 띠, 뒤에서 40mm 깊이)
-            const sideStripMm = 31.5;
-            const notchDepthMm = 40;
-            const sideStripW = mmToThreeUnits(sideStripMm);
-            const notchD = mmToThreeUnits(notchDepthMm);
-            const middleW = panelW - sideStripW * 2;
-            const frontPartD = panelD - notchD;
-            const middleZ = panelZ + notchD / 2;
-            const sideLeftX = -panelW / 2 + sideStripW / 2;
-            const sideRightX = panelW / 2 - sideStripW / 2;
-            return (
-              <>
-                <BoxWithEdges
-                  key={`bottom-panel-L-${bottomPanelMat.uuid}`}
-                  args={[sideStripW, panelH, panelD]}
-                  position={[sideLeftX, panelY, panelZ]}
-                  material={bottomPanelMat}
-                  renderMode={renderMode}
-                  isDragging={isDragging}
-                  isEditMode={isEditMode}
-                  isHighlighted={isHighlightedBottom}
-                  panelName={panelName}
-                  panelGrainDirections={panelGrainDirections}
-                  furnitureId={placedFurnitureId}
-                  textureUrl={textureUrl}
-                />
-                <BoxWithEdges
-                  key={`bottom-panel-R-${bottomPanelMat.uuid}`}
-                  args={[sideStripW, panelH, panelD]}
-                  position={[sideRightX, panelY, panelZ]}
-                  material={bottomPanelMat}
-                  renderMode={renderMode}
-                  isDragging={isDragging}
-                  isEditMode={isEditMode}
-                  isHighlighted={isHighlightedBottom}
-                  panelName={panelName}
-                  panelGrainDirections={panelGrainDirections}
-                  furnitureId={placedFurnitureId}
-                  textureUrl={textureUrl}
-                />
-                <BoxWithEdges
-                  key={`bottom-panel-M-${bottomPanelMat.uuid}`}
-                  args={[middleW, panelH, frontPartD]}
-                  position={[0, panelY, middleZ]}
-                  material={bottomPanelMat}
-                  renderMode={renderMode}
-                  isDragging={isDragging}
-                  isEditMode={isEditMode}
-                  isHighlighted={isHighlightedBottom}
-                  panelName={panelName}
-                  panelGrainDirections={panelGrainDirections}
-                  furnitureId={placedFurnitureId}
-                  textureUrl={textureUrl}
-                />
-              </>
-            );
-          }
-
           return (
             <BoxWithEdges
               key={`bottom-panel-${bottomPanelMat.uuid}`}
@@ -1535,6 +1413,10 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
               panelGrainDirections={panelGrainDirections}
               furnitureId={placedFurnitureId}
               textureUrl={textureUrl}
+              backCenterNotch={isBuiltInFridge ? {
+                sideStrip: mmToThreeUnits(31.5),
+                depth: mmToThreeUnits(40),
+              } : undefined}
             />
           );
         })()}
