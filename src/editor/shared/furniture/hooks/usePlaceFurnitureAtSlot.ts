@@ -479,7 +479,7 @@ export function placeFurnitureAtSlot(params: PlaceFurnitureParams): PlaceFurnitu
   }
 
   // 빌트인 냉장고장: 슬롯 너비와 무관하게 600 고정 + slotCustomWidth로 슬롯 재분배 트리거
-  const BUILT_IN_FRIDGE_FIXED_WIDTH = 600;
+  // (BUILT_IN_FRIDGE_FIXED_WIDTH는 함수 상단에서 이미 선언됨)
   const isBuiltInFridge = (moduleId.includes('built-in-fridge')) || (furnitureId.includes('built-in-fridge'));
   const finalCustomWidth = isBuiltInFridge ? BUILT_IN_FRIDGE_FIXED_WIDTH : customWidth;
   const finalAdjustedWidth = isBuiltInFridge ? BUILT_IN_FRIDGE_FIXED_WIDTH : adjustedWidth;
