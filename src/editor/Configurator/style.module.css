@@ -596,27 +596,21 @@
   gap: 1px;
 }
 
-/* 가로 스크롤 가능한 탭 (탭 개수 많을 때) */
+/* 가로 스크롤 가능한 탭 (탭 개수 많을 때) - 스크롤바 숨김 */
 .scrollableTabs {
   overflow-x: auto;
   overflow-y: hidden;
   flex-wrap: nowrap;
-  scrollbar-width: thin;
   -webkit-overflow-scrolling: touch;
   scroll-snap-type: x proximity;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE/Edge */
 }
 
 .scrollableTabs::-webkit-scrollbar {
-  height: 4px;
-}
-
-.scrollableTabs::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.scrollableTabs::-webkit-scrollbar-thumb {
-  background: var(--theme-border, rgba(255, 255, 255, 0.15));
-  border-radius: 2px;
+  display: none; /* Chrome/Safari */
+  width: 0;
+  height: 0;
 }
 
 .scrollableTabs .moduleCategoryTab {
