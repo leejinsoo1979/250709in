@@ -708,7 +708,8 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   }
 
   // === Insert 프레임 인접 시 도어 24.5mm 확장 ===
-  const INSERT_FRAME_DOOR_EXTENSION_MM = 24.5;
+  // Insert 프레임 외경 136 위로 양쪽 도어가 각 45.5mm 확장 → 두 도어 사이 간격 45mm (136 - 45.5*2)
+  const INSERT_FRAME_DOOR_EXTENSION_MM = 45.5;
   const insertFrameAdjacency = useMemo(() => {
     if (!storePlacedModule || storePlacedModule.isFreePlacement) {
       return { left: false, right: false };
