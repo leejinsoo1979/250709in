@@ -1170,42 +1170,18 @@ const ModuleGallery: React.FC<ModuleGalleryProps> = ({ moduleCategory = 'tall', 
     // 듀얼 가구인지 확인
     const isDualModule = module.id.includes('dual-');
 
-    // 빌트인 냉장고장: 폭이 들어갈 수 있는지만 체크 (인서트 흡수 가능량 포함)
-    // 슬롯 개수 제한 없음 → 마지막 빈 영역에도 배치 가능
+    // 빌트인 냉장고장: 빈 공간에 들어갈 수 있는지만 체크 (인서트 흡수 가정 제거)
     if (module.id.includes('built-in-fridge')) {
       const fridgeWidth = module.dimensions.width; // 582
-      // 같은 zone & 슬롯 배치 가구만 카운트 (자유배치 가구 제외)
       const sameZoneSlot = (m: any) => !m.isFreePlacement &&
         ((m.zone || 'normal') === (activeDroppedCeilingTab === 'dropped' ? 'dropped' : 'normal'));
-      const fridges = placedModulesForValid.filter((m: any) =>
-        typeof m.moduleId === 'string' && m.moduleId.includes('built-in-fridge') && sameZoneSlot(m)
-      );
-      const inserts = placedModulesForValid.filter((m: any) =>
-        typeof m.moduleId === 'string' && m.moduleId.includes('insert-frame') && sameZoneSlot(m)
-      );
-      const fridgesWidth = fridges.reduce((s: number, m: any) => s + (m.slotCustomWidth ?? fridgeWidth), 0);
-      const insertsWidth = inserts.reduce((s: number, m: any) => s + (m.slotCustomWidth ?? 136), 0);
-      // 일반 슬롯 가구가 차지한 폭 (빌트인/인서트가 아닌 가구들)
-      const others = placedModulesForValid.filter((m: any) =>
-        sameZoneSlot(m) &&
-        typeof m.moduleId === 'string' &&
-        !m.moduleId.includes('built-in-fridge') &&
-        !m.moduleId.includes('insert-frame')
-      );
-      const othersWidth = others.reduce((s: number, m: any) => s + (m.slotCustomWidth ?? m.customWidth ?? 0), 0);
-      const occupiedWidth = fridgesWidth + insertsWidth + othersWidth;
+      const occupied = placedModulesForValid.filter(sameZoneSlot);
+      const occupiedWidth = occupied.reduce((s: number, m: any) =>
+        s + (m.slotCustomWidth ?? m.customWidth ?? 0), 0);
       const remainingWidth = zoneInternalSpace.width - occupiedWidth;
-      // 인서트가 흡수 가능한 최대 축소량 = (인서트 폭 - 36) 합
-      const maxInsertShrink = inserts.reduce((s: number, m: any) => {
-        const w = m.slotCustomWidth ?? 136;
-        return s + Math.max(0, w - 36);
-      }, 0);
-      // 새 빌트인 추가 후 부족분 = 582 - 남은공간. 양수면 인서트가 흡수해야 함.
-      const shortfall = fridgeWidth - remainingWidth;
-      const canFit = shortfall <= maxInsertShrink + 0.01;
       const fitsHeightDepth = module.dimensions.height <= zoneInternalSpace.height
         && module.dimensions.depth <= zoneInternalSpace.depth;
-      return canFit && fitsHeightDepth;
+      return remainingWidth >= fridgeWidth - 0.01 && fitsHeightDepth;
     }
 
     // 단내림 활성화 시 영역별 검증

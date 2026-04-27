@@ -145,67 +145,8 @@ export function placeFurnitureAtSlot(params: PlaceFurnitureParams): PlaceFurnitu
   // slotCustomWidth가 있는 기존 모듈이 있으면 재분할된 indexing 사용
   const existingModules = useFurnitureStore.getState().placedModules;
 
-  // 빌트인 냉장고장 배치 시: 마지막 빈 슬롯에 배치할 때만 인서트 프레임 폭 균등 흡수
-  // 중간 배치(빈 슬롯이 여러 개 남아있을 때)에는 인서트 손대지 않음 → 빈 슬롯이 자연스럽게 흡수
-  let adjustedExistingModules = existingModules;
-  if (isBuiltInFridgeForIndex) {
-    const sameZoneModules = existingModules.filter(
-      m => (m.zone || 'normal') === (zone || 'normal') && !m.isFreePlacement
-    );
-    const insertFrames = sameZoneModules.filter(
-      m => typeof m.moduleId === 'string' && m.moduleId.includes('insert-frame')
-    );
-    const existingFridges = sameZoneModules.filter(
-      m => typeof m.moduleId === 'string' && m.moduleId.includes('built-in-fridge')
-    );
-
-    // zone의 슬롯 개수 (기본 indexing 기준)
-    let zoneSlotCount: number;
-    if (hasDroppedCeiling && zone && baseIndexing.zones) {
-      const zoneData = zone === 'dropped' ? baseIndexing.zones.dropped : baseIndexing.zones.normal;
-      zoneSlotCount = zoneData?.columnCount ?? baseIndexing.columnCount;
-    } else {
-      zoneSlotCount = baseIndexing.columnCount;
-    }
-
-    // 점유된 슬롯 = 기존 빌트인 + 기존 인서트 + 이번에 배치할 빌트인 1개
-    const occupiedSlotsAfterPlace = existingFridges.length + insertFrames.length + 1;
-    const isLastSlotPlacement = occupiedSlotsAfterPlace >= zoneSlotCount;
-
-    if (insertFrames.length > 0 && isLastSlotPlacement) {
-      // 마지막 빈 슬롯 채우기 → 부족분/잉여분을 모든 인서트가 균등 흡수
-      // zone 내경
-      let zoneInnerWidthMm: number;
-      if (hasDroppedCeiling && zone && baseIndexing.zones) {
-        const zoneData = zone === 'dropped' ? baseIndexing.zones.dropped : baseIndexing.zones.normal;
-        zoneInnerWidthMm = zoneData?.width ?? baseIndexing.internalWidth;
-      } else {
-        zoneInnerWidthMm = baseIndexing.internalWidth;
-      }
-
-      // 새 빌트인까지 포함한 빌트인 총 개수
-      const totalFridgeCount = existingFridges.length + 1;
-      const totalFridgeWidth = totalFridgeCount * BUILT_IN_FRIDGE_FIXED_WIDTH;
-      const remainForInserts = zoneInnerWidthMm - totalFridgeWidth;
-      const newInsertWidth = remainForInserts / insertFrames.length;
-      const safeWidth = Math.max(36, newInsertWidth);
-
-      adjustedExistingModules = existingModules.map(m => {
-        if (
-          typeof m.moduleId === 'string' &&
-          m.moduleId.includes('insert-frame') &&
-          (m.zone || 'normal') === (zone || 'normal')
-        ) {
-          return {
-            ...m,
-            slotCustomWidth: safeWidth,
-            customWidth: safeWidth,
-          } as typeof m;
-        }
-        return m;
-      });
-    }
-  }
+  // 인서트 프레임 균등 흡수 로직 제거 — 인서트 프레임 폭은 사용자가 직접 설정 (136 고정 또는 클릭 팝업)
+  const adjustedExistingModules = existingModules;
 
   const virtualModulesForIndex = needsVirtualModule
     ? [
@@ -227,17 +168,14 @@ export function placeFurnitureAtSlot(params: PlaceFurnitureParams): PlaceFurnitu
     : baseIndexing;
 
   // 빌트인 냉장고장 배치 시: 같은 zone의 모든 기존 가구 position.x를 새 indexing 기반으로 갱신
-  //   (1) 인서트 프레임: slotCustomWidth 흡수 + 새 슬롯 중심으로 이동
-  //   (2) 일반 가구: 슬롯 너비 변경에 따라 슬롯 중심이 이동했으므로 position.x 재계산 필수
+  //   (슬롯 너비가 변경되면 슬롯 중심도 이동하므로 position.x 재계산 필요)
   if (isBuiltInFridgeForIndex) {
     const updatePlacedModule = useFurnitureStore.getState().updatePlacedModule;
     const sameZoneOnly = (m: PlacedModule) => (m.zone || 'normal') === (zone || 'normal') && !m.isFreePlacement;
 
-    // 새 슬롯 중심 X (Three.js 단위) 계산 헬퍼
     const getNewSlotCenterX = (modZone: 'normal' | 'dropped' | undefined, slotIdx: number, isDual: boolean | undefined): number | undefined => {
       if (typeof slotIdx !== 'number') return undefined;
       const z = modZone || 'normal';
-      // 단내림 구간: zone 내 local index 기반
       if (hasDroppedCeiling && indexing.zones) {
         const zoneData = z === 'dropped' ? indexing.zones.dropped : indexing.zones.normal;
         const zoneNormalCount = indexing.zones.normal?.columnCount ?? 0;
@@ -252,7 +190,6 @@ export function placeFurnitureAtSlot(params: PlaceFurnitureParams): PlaceFurnitu
         }
         return undefined;
       }
-      // 단내림 없음
       const positions = indexing.threeUnitPositions;
       if (!positions) return undefined;
       if (isDual && slotIdx >= 0 && slotIdx + 1 < positions.length) {
@@ -264,27 +201,14 @@ export function placeFurnitureAtSlot(params: PlaceFurnitureParams): PlaceFurnitu
       return undefined;
     };
 
-    adjustedExistingModules.forEach((adjusted, i) => {
-      const original = existingModules[i];
-      if (!original || !sameZoneOnly(original)) return;
-
-      const widthChanged = adjusted.slotCustomWidth !== original.slotCustomWidth;
-      const slotIdx = adjusted.slotIndex;
-      const newX = getNewSlotCenterX(adjusted.zone as any, slotIdx as number, adjusted.isDualSlot);
-
-      const updates: any = {};
-      if (widthChanged) {
-        updates.slotCustomWidth = adjusted.slotCustomWidth;
-        updates.customWidth = adjusted.customWidth;
-      }
-      if (newX !== undefined && original.position && Math.abs((original.position.x ?? 0) - newX) > 1e-6) {
-        updates.position = {
-          ...original.position,
-          x: newX,
-        };
-      }
-      if (Object.keys(updates).length > 0) {
-        updatePlacedModule(adjusted.id, updates);
+    existingModules.forEach(m => {
+      if (!sameZoneOnly(m)) return;
+      const slotIdx = m.slotIndex;
+      const newX = getNewSlotCenterX(m.zone as any, slotIdx as number, m.isDualSlot);
+      if (newX !== undefined && m.position && Math.abs((m.position.x ?? 0) - newX) > 1e-6) {
+        updatePlacedModule(m.id, {
+          position: { ...m.position, x: newX },
+        } as any);
       }
     });
   }
