@@ -1170,39 +1170,16 @@ const ModuleGallery: React.FC<ModuleGalleryProps> = ({ moduleCategory = 'tall', 
     // 듀얼 가구인지 확인
     const isDualModule = module.id.includes('dual-');
 
-    // 빌트인 냉장고장: 슬롯 너비와 무관하게 582 고정으로 배치되며 나머지 슬롯이 재분배됨
-    // 부족/잉여분은 모든 Insert 프레임 폭이 균등하게 흡수 (인서트 프레임 EP 36 최소)
+    // 빌트인 냉장고장: 슬롯 1개 점유 가능하면 항상 OK
+    // 부족/잉여 검증은 마지막 빈 슬롯 시점에 인서트가 흡수하므로 갤러리 단에서는 막지 않음
     if (module.id.includes('built-in-fridge')) {
-      const fridgeWidth = module.dimensions.width; // 582
-      const fixedFridges = placedModulesForValid.filter((m: any) =>
-        typeof m.moduleId === 'string' && m.moduleId.includes('built-in-fridge') && m.slotCustomWidth !== undefined
-      );
-      const fixedFridgeTotal = fixedFridges.reduce((sum: number, m: any) => sum + (m.slotCustomWidth || 0), 0);
-      const insertFrames = placedModulesForValid.filter((m: any) =>
-        typeof m.moduleId === 'string' && m.moduleId.includes('insert-frame')
-      );
-      const insertFrameCount = insertFrames.length;
-      // 인서트 프레임이 흡수 가능한 최대 축소량 = (현재 인서트 폭 - 36) 의 합
-      const maxInsertShrink = insertFrames.reduce((sum: number, m: any) => {
-        const w = m.slotCustomWidth ?? 136;
-        return sum + Math.max(0, w - 36);
-      }, 0);
       const slotsTotal = indexing.columnCount ?? 1;
-      const fixedSlotsCount = placedModulesForValid.filter((m: any) => m.slotCustomWidth !== undefined).length;
-      const remainingSlots = slotsTotal - fixedSlotsCount;
-      // 새 빌트인 추가 후 점유 폭 = fixedFridgeTotal + 기존 인서트 슬롯 너비 합 + 새 빌트인 582
-      const insertTotal = insertFrames.reduce((sum: number, m: any) => sum + (m.slotCustomWidth || 136), 0);
-      const totalAfterPlace = fixedFridgeTotal + insertTotal + fridgeWidth;
-      // 부족분 = totalAfterPlace - 내경 (양수면 인서트로 흡수해야 함)
-      const shortfall = totalAfterPlace - zoneInternalSpace.width;
-      // shortfall이 음수면 잉여(인서트가 늘어나서 흡수) → 항상 OK
-      // shortfall이 양수면 인서트가 흡수 가능한 양 이내여야 OK
-      const canAbsorb = shortfall <= maxInsertShrink + 0.01;
-      const canFit = (remainingSlots - 1) >= 0
-        && canAbsorb
-        && module.dimensions.height <= zoneInternalSpace.height
+      // slotCustomWidth가 박힌 모듈 = 이미 슬롯 점유한 빌트인/인서트 (1슬롯씩)
+      const occupiedSlots = placedModulesForValid.filter((m: any) => m.slotCustomWidth !== undefined).length;
+      const hasFreeSlot = slotsTotal - occupiedSlots >= 1;
+      const fitsHeightDepth = module.dimensions.height <= zoneInternalSpace.height
         && module.dimensions.depth <= zoneInternalSpace.depth;
-      return canFit;
+      return hasFreeSlot && fitsHeightDepth;
     }
 
     // 단내림 활성화 시 영역별 검증
