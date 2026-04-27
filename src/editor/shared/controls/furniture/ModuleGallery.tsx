@@ -1069,9 +1069,11 @@ const ModuleGallery: React.FC<ModuleGalleryProps> = ({ moduleCategory = 'tall', 
       // 상부장 = upper 전체
       categoryModules = getModulesByCategory('upper', adjustedInternalSpace, spaceInfoWithSlotWidths);
     } else if (kitchenSubCategory === 'tall') {
-      // 키큰장 = full 카테고리 중 키큰장 전용 모듈 (예: 빌트인 냉장고장)
+      // 키큰장 = full 카테고리 중 키큰장 전용 모듈 (빌트인 냉장고장, Insert 프레임 등)
       const allFullModules = getModulesByCategory('full', adjustedInternalSpace, spaceInfoWithSlotWidths);
-      categoryModules = allFullModules.filter(m => m.id.includes('built-in-fridge'));
+      categoryModules = allFullModules.filter(m =>
+        m.id.includes('built-in-fridge') || m.id.includes('insert-frame')
+      );
       console.log('[키큰장 탭] full 모듈 전체:', allFullModules.map(m => m.id));
       console.log('[키큰장 탭] 필터링 후:', categoryModules.map(m => m.id));
     } else {

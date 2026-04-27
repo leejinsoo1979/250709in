@@ -401,6 +401,41 @@ const createBuiltInFridge = (maxHeight: number, slotWidthForId: number = BUILT_I
   } as ModuleData;
 };
 
+// Insert 프레임 (ㄷ자 구조) — 도어 없음
+//   - 외경 100 × 가구 전체 높이 × 깊이 58
+//   - 앞면: 전면 프레임 (100 × 가구높이 × 18)
+//   - 양 측면: 좌/우 EP (18 × 가구높이 × 58)
+//   - 뒤는 열림 (ㄷ자)
+//   - 키큰장 탭 노출 위해 ID에 'insert-frame' 키워드
+const INSERT_FRAME_OUTER_WIDTH = 100;
+const INSERT_FRAME_DEPTH = 58;
+
+const createInsertFrame = (maxHeight: number, slotWidthForId: number = INSERT_FRAME_OUTER_WIDTH): ModuleData => {
+  const widthForId = Math.round(slotWidthForId * 100) / 100;
+  const base = createFurnitureBase(
+    `insert-frame-${widthForId}`,
+    `Insert 프레임 ${INSERT_FRAME_OUTER_WIDTH}mm`,
+    INSERT_FRAME_OUTER_WIDTH,
+    maxHeight,
+    INSERT_FRAME_DEPTH,
+    FURNITURE_SPECS.COLORS.TYPE2,
+    `ㄷ자 구조 — 앞 100×18 프레임 + 좌/우 EP(18×${INSERT_FRAME_DEPTH}). 도어 없음.`,
+    INSERT_FRAME_DEPTH,
+    'full'
+  );
+  return {
+    ...base,
+    widthOptions: [INSERT_FRAME_OUTER_WIDTH],
+    dimensions: { width: INSERT_FRAME_OUTER_WIDTH, height: maxHeight, depth: INSERT_FRAME_DEPTH },
+    hasDoor: false,
+    modelConfig: {
+      ...base.modelConfig,
+      sections: [{ type: 'open', heightType: 'percentage', height: 100 }],
+      isInsertFrame: true,
+    } as any,
+  } as ModuleData;
+};
+
 /**
  * 싱글 타입4: 4단서랍+옷장 복합형 생성
  */
@@ -3006,6 +3041,10 @@ export const generateShelvingModules = (
   // 단, dimensions.width는 항상 600 (실제 가구 폭 고정)
   // 슬롯 배치 후 SlotDropZonesSimple에서 slotCustomWidth=600 설정 → 자동 재분배
   modules.push(createBuiltInFridge(maxHeight, columnWidth));
+
+  // === 키큰장: Insert 프레임 (ㄷ자 구조, 도어 없음) ===
+  modules.push(createInsertFrame(maxHeight, columnWidth));
+
   modules.push(createSingleEntrywayH(columnWidth, maxHeight));
   // modules.push(createSingleEntrywayI(columnWidth, maxHeight));
 
