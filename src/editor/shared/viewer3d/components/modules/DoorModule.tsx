@@ -707,6 +707,32 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     }
   }
 
+  // === Insert 프레임 인접 시 도어 24.5mm 확장 ===
+  const INSERT_FRAME_DOOR_EXTENSION_MM = 24.5;
+  const insertFrameAdjacency = useMemo(() => {
+    if (!storePlacedModule || storePlacedModule.isFreePlacement) {
+      return { left: false, right: false };
+    }
+    const myZone = storePlacedModule.zone || 'normal';
+    const mySlot = storePlacedModule.slotIndex;
+    if (mySlot === undefined) return { left: false, right: false };
+
+    const isInsert = (m: any) => typeof m?.moduleId === 'string' && m.moduleId.includes('insert-frame');
+    const inSameZone = (m: any) => (m.zone || 'normal') === myZone && !m.isFreePlacement;
+    const isDualSelf = !!storePlacedModule.isDualSlot;
+    const rightEdge = isDualSelf ? mySlot + 1 : mySlot;
+
+    const left = allPlacedModules.some(m =>
+      m.id !== storePlacedModule.id && inSameZone(m) && isInsert(m) &&
+      (m.slotIndex === mySlot - 1 || (m.isDualSlot && m.slotIndex === mySlot - 2))
+    );
+    const right = allPlacedModules.some(m =>
+      m.id !== storePlacedModule.id && inSameZone(m) && isInsert(m) &&
+      m.slotIndex === rightEdge + 1
+    );
+    return { left, right };
+  }, [allPlacedModules, storePlacedModule]);
+
   const effectiveFurnitureWidth = actualDoorWidth;
   const isDualFurniture = isDualByModuleId || Math.round(effectiveFurnitureWidth) >= 601;
   
@@ -1195,6 +1221,18 @@ const DoorModule: React.FC<DoorModuleProps> = ({
       }
     }
 
+    // Insert 프레임 인접 시 도어 24.5mm 확장 (해당 쪽으로)
+    let leftInsertExtendShift = 0;
+    let rightInsertExtendShift = 0;
+    if (insertFrameAdjacency.left) {
+      leftDoorWidth += INSERT_FRAME_DOOR_EXTENSION_MM;
+      leftInsertExtendShift = -mmToThreeUnits(INSERT_FRAME_DOOR_EXTENSION_MM) / 2;
+    }
+    if (insertFrameAdjacency.right) {
+      rightDoorWidth += INSERT_FRAME_DOOR_EXTENSION_MM;
+      rightInsertExtendShift = mmToThreeUnits(INSERT_FRAME_DOOR_EXTENSION_MM) / 2;
+    }
+
     const leftDoorWidthUnits = mmToThreeUnits(leftDoorWidth);
     const rightDoorWidthUnits = mmToThreeUnits(rightDoorWidth);
     
@@ -1238,7 +1276,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
       <group position={[doorGroupX, 0, 0]}> {/* 듀얼 캐비넷도 원래 슬롯 중심에 배치 */}
         {/* 왼쪽 도어 - 왼쪽 힌지 (왼쪽 가장자리에서 회전) */}
         {showLeftDoor && (
-        <group position={[leftHingeX + leftEpTrimShift, doorYPosition, doorDepth / 2]}>
+        <group position={[leftHingeX + leftEpTrimShift + leftInsertExtendShift, doorYPosition, doorDepth / 2]}>
           <animated.group rotation-y={leftDoorLocked ? 0 : dualLeftDoorSpring.rotation}>
             <group position={[leftDoorWidthUnits / 2 - hingeOffsetUnits, 0, 0]}>
               {/* 2D 정면뷰: 좌측 도어 반투명 overlay (잠금 시 붉은색) */}
@@ -1571,7 +1609,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
 
         {/* 오른쪽 도어 - 오른쪽 힌지 (오른쪽 가장자리에서 회전) */}
         {showRightDoor && (
-        <group position={[rightHingeX + rightEpTrimShift, doorYPosition, doorDepth / 2]}>
+        <group position={[rightHingeX + rightEpTrimShift + rightInsertExtendShift, doorYPosition, doorDepth / 2]}>
           <animated.group rotation-y={rightDoorLocked ? 0 : dualRightDoorSpring.rotation}>
             <group position={[-rightDoorWidthUnits / 2 + hingeOffsetUnits, 0, 0]}>
               {/* 2D 정면뷰: 우측 도어 반투명 overlay (잠금 시 붉은색) */}
@@ -1982,6 +2020,20 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     // X 위치 보정: 좌측 trim은 오른쪽으로, 우측 trim은 왼쪽으로 밀기
     const epTrimShiftX = mmToThreeUnits(epTrimLeft - epTrimRight) / 2;
 
+    // Insert 프레임 인접 시 도어 24.5mm 확장 (해당 쪽으로)
+    let insertExtendLeft = 0;
+    let insertExtendRight = 0;
+    if (insertFrameAdjacency.left) {
+      doorWidth += INSERT_FRAME_DOOR_EXTENSION_MM;
+      insertExtendLeft = INSERT_FRAME_DOOR_EXTENSION_MM;
+    }
+    if (insertFrameAdjacency.right) {
+      doorWidth += INSERT_FRAME_DOOR_EXTENSION_MM;
+      insertExtendRight = INSERT_FRAME_DOOR_EXTENSION_MM;
+    }
+    // 좌측 확장은 도어를 좌측으로(-X), 우측 확장은 우측으로(+X) 시프트
+    const insertExtendShiftX = mmToThreeUnits(insertExtendRight - insertExtendLeft) / 2;
+
     const doorWidthUnits = mmToThreeUnits(doorWidth);
 
 // console.log('🚪 싱글 도어 크기:', {
@@ -2001,7 +2053,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     const doorPositionX = -hingeAxisOffset; // 회전축 보정을 위한 도어 위치 조정
 
     return (
-      <group position={[doorGroupX + hingeAxisOffset + epTrimShiftX, doorYPosition, doorDepth / 2]}>
+      <group position={[doorGroupX + hingeAxisOffset + epTrimShiftX + insertExtendShiftX, doorYPosition, doorDepth / 2]}>
         <animated.group rotation-y={singleDoorLocked ? 0 : (adjustedHingePosition === 'left' ? leftHingeDoorSpring.rotation : rightHingeDoorSpring.rotation)}>
           <group position={[doorPositionX, 0, 0]}>
             {/* 2D 정면뷰: 싱글 도어 반투명 overlay (잠금 시 붉은색) */}
