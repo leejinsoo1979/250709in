@@ -519,6 +519,31 @@ export function placeFurnitureAtSlot(params: PlaceFurnitureParams): PlaceFurnitu
     useMyCabinetStore.getState().setPendingPlacement(null);
   }
 
+  // 빌트인 냉장고장: spaceInfo.customSlotWidths를 직접 갱신해
+  //   ColumnGuides/SlotPlacementIndicators/FurnitureItem 등 모든 인덱싱이
+  //   새 슬롯 너비를 즉시 사용하도록 보장
+  if (isBuiltInFridge && !hasDroppedCeiling) {
+    try {
+      const { useSpaceConfigStore } = require('@/store/core/spaceConfigStore');
+      const currentSpaceInfo = useSpaceConfigStore.getState().spaceInfo;
+      // 모든 가구의 slotCustomWidth 수집 (이번에 추가될 빌트인 냉장고장 포함)
+      const allModulesWithFridge = [
+        ...useFurnitureStore.getState().placedModules,
+        newModule,
+      ];
+      // baseIndexing 다시 계산 후 가상 재분배 적용 → 실제 슬롯 너비 배열
+      const baseIdx = calculateSpaceIndexing(currentSpaceInfo);
+      const recalcResult = recalculateWithCustomWidths(baseIdx, allModulesWithFridge, 'normal');
+      if (recalcResult.slotWidths && recalcResult.slotWidths.length === baseIdx.columnCount) {
+        useSpaceConfigStore.getState().setSpaceInfo({
+          customSlotWidths: recalcResult.slotWidths,
+        });
+      }
+    } catch (e) {
+      console.warn('[빌트인 냉장고장] spaceInfo.customSlotWidths 갱신 실패', e);
+    }
+  }
+
   return { success: true, module: newModule };
 }
 
