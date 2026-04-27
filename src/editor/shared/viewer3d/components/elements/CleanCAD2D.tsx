@@ -6227,6 +6227,57 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
 
       {/* 서라운드 모드 프레임 실제 사이즈 — 제거됨 (프레임 내경 치수는 불필요) */}
 
+      {/* 슬롯배치: 빈 슬롯 치수 표시 (4단: slotDimensionY) — 가구가 없는 슬롯 폭 */}
+      {showDimensions && !isFreePlacement && currentViewDirection !== '3D' && (() => {
+        const boundaries = indexing.threeUnitBoundaries;
+        const slotWidthsArr = indexing.slotWidths;
+        if (!boundaries || boundaries.length < 2 || !slotWidthsArr) return null;
+
+        // 점유 슬롯 인덱스 집합 (자유배치 제외)
+        const occupiedSet = new Set<number>();
+        placedModules.forEach(m => {
+          if (m.isFreePlacement) return;
+          if (typeof m.slotIndex !== 'number') return;
+          occupiedSet.add(m.slotIndex);
+          if (m.isDualSlot) occupiedSet.add(m.slotIndex + 1);
+        });
+
+        const dimY = slotDimensionY;
+        const elements: JSX.Element[] = [];
+        for (let i = 0; i < slotWidthsArr.length; i++) {
+          if (occupiedSet.has(i)) continue;
+          const startX = boundaries[i];
+          const endX = boundaries[i + 1];
+          if (startX === undefined || endX === undefined) continue;
+          const widthMm = slotWidthsArr[i];
+          elements.push(
+            <group key={`empty-slot-dim-${i}`}>
+              <NativeLine name="dimension_line"
+                points={[[startX, dimY, 0.002], [endX, dimY, 0.002]]}
+                color={dimensionColor} lineWidth={0.6} renderOrder={1000000} depthTest={false}
+              />
+              <NativeLine name="dimension_line"
+                points={createArrowHead([startX, dimY, 0.002], [startX + 0.015, dimY, 0.002], 0.01)}
+                color={dimensionColor} lineWidth={0.6} renderOrder={1000000} depthTest={false}
+              />
+              <NativeLine name="dimension_line"
+                points={createArrowHead([endX, dimY, 0.002], [endX - 0.015, dimY, 0.002], 0.01)}
+                color={dimensionColor} lineWidth={0.6} renderOrder={1000000} depthTest={false}
+              />
+              <Text renderOrder={1000000} depthTest={false}
+                position={[(startX + endX) / 2, dimY + mmToThreeUnits(20), 0.01]}
+                fontSize={baseFontSize} color={textColor}
+                anchorX="center" anchorY="middle"
+                outlineWidth={textOutlineWidth} outlineColor={textOutlineColor}
+              >
+                {(() => { const v = Math.round(widthMm * 2) / 2; return v % 1 === 0 ? v : v.toFixed(1); })()}
+              </Text>
+            </group>
+          );
+        }
+        return <>{elements}</>;
+      })()}
+
       {/* 슬롯배치 커튼박스 내경 치수선 (4단: slotDimensionY) — cbWidth - 경계이격 */}
       {showDimensions && !isStep2 && !isFreePlacement && spaceInfo.curtainBox?.enabled && (() => {
         const cbW = spaceInfo.curtainBox!.width || 150;
