@@ -531,8 +531,12 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
       }
     }
 
+    // 그룹 모듈 (예: 듀얼 빌트인 냉장고장 세트): 같은 groupId 가진 모든 모듈 함께 삭제
+    const groupId = module?.groupId;
     set((state) => ({
-      placedModules: state.placedModules.filter(m => m.id !== id)
+      placedModules: state.placedModules.filter(m =>
+        m.id !== id && (!groupId || m.groupId !== groupId)
+      )
     }));
 
     // 삭제 후 인접 키큰장 EP 해제 (비동기: 삭제 set과 분리하여 리렌더 충돌 방지)

@@ -768,6 +768,9 @@ function placeDualBuiltInFridgeSet(params: PlaceFurnitureParams): PlaceFurniture
     slotIndex = newColumnCount - 2;
   }
 
+  // 같은 groupId로 3개 모듈을 묶음 — 삭제 시 함께 제거됨
+  const groupId = `dual-built-in-fridge-${uuidv4()}`;
+
   // 좌힌지 빌트인 → slotIndex
   const leftFridgeResult = placeFurnitureAtSlot({
     ...params,
@@ -778,11 +781,11 @@ function placeDualBuiltInFridgeSet(params: PlaceFurnitureParams): PlaceFurniture
   if (!leftFridgeResult.success || !leftFridgeResult.module) {
     return { success: false, error: leftFridgeResult.error || '좌힌지 빌트인 배치 실패' };
   }
-  // 좌힌지 강제 설정
   leftFridgeResult.module.hingePosition = 'left';
+  leftFridgeResult.module.groupId = groupId;
   useFurnitureStore.getState().addModule(leftFridgeResult.module);
 
-  // 인서트 프레임 → slotIndex (좌힌지 빌트인 다음에 위치, 자동 컬럼 +1)
+  // 인서트 프레임 → slotIndex+1 (자동 컬럼 +1)
   const insertResult = placeFurnitureAtSlot({
     ...params,
     moduleId: 'insert-frame-136',
@@ -792,9 +795,10 @@ function placeDualBuiltInFridgeSet(params: PlaceFurnitureParams): PlaceFurniture
   if (!insertResult.success || !insertResult.module) {
     return { success: false, error: insertResult.error || '인서트 배치 실패' };
   }
+  insertResult.module.groupId = groupId;
   useFurnitureStore.getState().addModule(insertResult.module);
 
-  // 우힌지 빌트인 → slotIndex (인서트 다음에 위치, 자동 컬럼 +1)
+  // 우힌지 빌트인 → slotIndex+2 (자동 컬럼 +1)
   const rightFridgeResult = placeFurnitureAtSlot({
     ...params,
     moduleId: 'built-in-fridge-582',
@@ -805,8 +809,8 @@ function placeDualBuiltInFridgeSet(params: PlaceFurnitureParams): PlaceFurniture
     return { success: false, error: rightFridgeResult.error || '우힌지 빌트인 배치 실패' };
   }
   rightFridgeResult.module.hingePosition = 'right';
+  rightFridgeResult.module.groupId = groupId;
 
-  // 마지막 모듈만 반환 (caller가 store에 추가) — 좌/인서트는 위에서 직접 추가
   return { success: true, module: rightFridgeResult.module };
 }
 

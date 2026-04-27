@@ -259,6 +259,10 @@ export interface PlacedModule {
   // 린트 오류 해결을 위한 추가 누락 속성들
   isLocked?: boolean;                     // 잠금 상태
   doorSplit?: 'none' | 'vertical' | 'horizontal'; // 도어 분할 방식
+
+  // 그룹 ID (예: 듀얼 빌트인 냉장고장 세트)
+  // 같은 groupId를 가진 모듈은 함께 삭제됨
+  groupId?: string;
 }
 
 // 네이티브 드래그앤드롭용 현재 드래그 데이터 타입
