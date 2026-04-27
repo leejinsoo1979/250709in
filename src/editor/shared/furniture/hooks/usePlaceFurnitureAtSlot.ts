@@ -38,11 +38,41 @@ export function placeFurnitureAtSlot(params: PlaceFurnitureParams): PlaceFurnitu
   let spaceInfo = params.spaceInfo;
   let slotIndex = paramSlotIndex;
 
-  // 빌트인 냉장고장 자동 컬럼수 +1 로직 제거 — 사용자가 컬럼수를 직접 조정해야 함
-  // (자동 증가 시 빌트인이 무한 늘어나 슬롯 폭이 균등 분할되던 문제 방지)
-
-  // 인서트 프레임 자동 컬럼수 +1 로직 제거 — 사용자가 컬럼수를 직접 조정해야 함
-  // (자동 증가 시 슬롯 폭이 균등 분할되어 빌트인 냉장고장이 줄어드는 문제 방지)
+  // 빌트인 냉장고장/인서트 프레임 자동 컬럼수 +1 — 빈 슬롯이 부족할 때만 증가
+  const isBuiltInFridgeAuto = moduleId.includes('built-in-fridge');
+  const isInsertFrameAuto = moduleId.includes('insert-frame');
+  if (isBuiltInFridgeAuto || isInsertFrameAuto) {
+    const initialIndexing = calculateSpaceIndexing(spaceInfo);
+    const placedNow = useFurnitureStore.getState().placedModules.filter(m =>
+      !m.isFreePlacement && (m.zone || 'normal') === (zone || 'normal') && typeof m.slotIndex === 'number'
+    );
+    // 점유된 슬롯 인덱스
+    const occupiedIndices = new Set<number>();
+    placedNow.forEach(m => {
+      occupiedIndices.add(m.slotIndex as number);
+      if (m.isDualSlot) occupiedIndices.add((m.slotIndex as number) + 1);
+    });
+    const totalCols = initialIndexing.columnCount;
+    const emptySlotCount = totalCols - occupiedIndices.size;
+    // 빈 슬롯이 0이면 컬럼수 +1 자동 증가
+    if (emptySlotCount <= 0) {
+      const newColumnCount = totalCols + 1;
+      const setSpaceInfo = useSpaceConfigStore.getState().setSpaceInfo;
+      setSpaceInfo({
+        customColumnCount: newColumnCount,
+        columnMode: 'custom',
+        customSlotWidths: undefined,
+      } as any);
+      spaceInfo = {
+        ...spaceInfo,
+        customColumnCount: newColumnCount,
+        columnMode: 'custom',
+        customSlotWidths: undefined,
+      } as any;
+      // 새 마지막 슬롯에 배치
+      slotIndex = newColumnCount - 1;
+    }
+  }
 
   const baseIndexing = calculateSpaceIndexing(spaceInfo);
   const hasDroppedCeiling = spaceInfo.droppedCeiling?.enabled || false;

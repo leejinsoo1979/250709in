@@ -69,17 +69,32 @@ const ColumnCountControlsWrapper: React.FC<ColumnCountControlsWrapperProps> = ({
       // 단내림 구간 도어 개수 변경
       onUpdate({ droppedCeilingDoorCount: newCount });
     } else {
-      // 슬롯 배치 가구가 있으면 확인 팝업
-      if (hasSlotPlacedFurniture) {
-        if (!window.confirm('슬롯 수를 변경하면 배치된 가구가 모두 초기화됩니다. 계속하시겠습니까?')) {
-          return;
+      // 슬롯 수가 늘어나면 기존 가구 유지 (slotIndex 유효함)
+      // 줄어들면 newCount 이상의 slotIndex 가구만 제거, 나머지는 유지
+      if (hasSlotPlacedFurniture && newCount < columnCount) {
+        // 슬롯 수 감소 시 — 영향 받는 가구가 있는지 확인
+        const affectedCount = placedModules.filter(m =>
+          !m.isFreePlacement && typeof m.slotIndex === 'number' && m.slotIndex >= newCount
+        ).length;
+        if (affectedCount > 0) {
+          if (!window.confirm(`슬롯 수 감소로 ${affectedCount}개의 가구가 제거됩니다. 계속하시겠습니까?`)) {
+            return;
+          }
+          // 영향 받는 가구만 제거
+          const { removeModule } = useFurnitureStore.getState();
+          placedModules.forEach(m => {
+            if (!m.isFreePlacement && typeof m.slotIndex === 'number' && m.slotIndex >= newCount) {
+              removeModule(m.id);
+            }
+          });
         }
-        clearAllModules();
       }
 
       const updates: Partial<SpaceInfo> = {
         customColumnCount: newCount,
         mainDoorCount: undefined,
+        // 슬롯 수 변경 시 customSlotWidths 리셋 (재분배되도록)
+        customSlotWidths: undefined,
       };
       onUpdate(updates);
     }
