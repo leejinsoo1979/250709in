@@ -3,7 +3,7 @@
  * 클릭+고스트, 드래그앤드랍, 더블클릭 모두 이 함수를 사용
  */
 
-import { SpaceInfo } from '@/store/core/spaceConfigStore';
+import { SpaceInfo, useSpaceConfigStore } from '@/store/core/spaceConfigStore';
 import { PlacedModule, CustomFurnitureConfig } from '@/editor/shared/furniture/types';
 import { getModuleById, ModuleData } from '@/data/modules';
 import { calculateSpaceIndexing, recalculateWithCustomWidths } from '@/editor/shared/utils/indexing';
@@ -34,7 +34,34 @@ export interface PlaceFurnitureResult {
  * 클릭+고스트 방식의 로직을 기준으로 함
  */
 export function placeFurnitureAtSlot(params: PlaceFurnitureParams): PlaceFurnitureResult {
-  const { moduleId, slotIndex, zone, spaceInfo } = params;
+  const { moduleId, slotIndex: paramSlotIndex, zone } = params;
+  let spaceInfo = params.spaceInfo;
+  let slotIndex = paramSlotIndex;
+
+  // 빌트인 냉장고장 배치 시 빈 슬롯이 없으면 컬럼수 +1 자동 증가 (선처리 — baseIndexing 재계산 위해)
+  const isBuiltInFridgeCheck = moduleId.includes('built-in-fridge');
+  if (isBuiltInFridgeCheck) {
+    const initialIndexing = calculateSpaceIndexing(spaceInfo);
+    const initialOccupied = useFurnitureStore.getState().placedModules.filter(m =>
+      m.slotCustomWidth !== undefined && (m.zone || 'normal') === (zone || 'normal') && !m.isFreePlacement
+    ).length;
+    if (initialOccupied >= initialIndexing.columnCount) {
+      const newColumnCount = initialIndexing.columnCount + 1;
+      const setSpaceInfo = useSpaceConfigStore.getState().setSpaceInfo;
+      setSpaceInfo({
+        customColumnCount: newColumnCount,
+        columnMode: 'custom',
+      } as any);
+      // params.spaceInfo도 신규 컬럼수 반영하여 indexing 재계산
+      spaceInfo = {
+        ...spaceInfo,
+        customColumnCount: newColumnCount,
+        columnMode: 'custom',
+      } as any;
+      // 새 마지막 슬롯 index = newColumnCount - 1
+      slotIndex = newColumnCount - 1;
+    }
+  }
 
   const baseIndexing = calculateSpaceIndexing(spaceInfo);
   const hasDroppedCeiling = spaceInfo.droppedCeiling?.enabled || false;
