@@ -22,6 +22,11 @@ import { analyzeColumnSlots, canPlaceFurnitureInColumnSlot, calculateFurnitureBo
 import { useUIStore } from '@/store/uiStore';
 import { PlacedModule } from '@/editor/shared/furniture/types';
 
+// 빌트인 냉장고장: 폭 600 / 깊이 600 고정 모듈
+// 슬롯 너비와 무관하게 600으로 점유, 나머지 슬롯은 ColumnIndexer.recalculateWithCustomWidths로 재분배
+const BUILT_IN_FRIDGE_FIXED_WIDTH = 600;
+const isBuiltInFridgeModule = (moduleId: string): boolean => moduleId.includes('built-in-fridge');
+
 interface SlotDropZonesSimpleProps {
   spaceInfo: SpaceInfo;
   showAll?: boolean;
@@ -244,8 +249,19 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
       return false;
     }
 
+    // [디버그] 빌트인 냉장고장 드롭 추적
+    if (dragData.moduleData?.id?.includes('built-in-fridge')) {
+      console.log('[FRIDGE DROP] 핸들러 진입:', {
+        moduleId: dragData.moduleData.id,
+        needsWarning: dragData.moduleData?.needsWarning,
+      });
+    }
+
     // needsWarning 확인
     if (dragData.moduleData?.needsWarning) {
+      if (dragData.moduleData?.id?.includes('built-in-fridge')) {
+        console.log('[FRIDGE DROP] 차단: needsWarning=true');
+      }
       showAlert('배치슬롯의 사이즈를 늘려주세요', { title: '배치 불가' });
       return false;
     }
@@ -767,9 +783,14 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         zoneSlotIndex,
       });
 
+      // 빌트인 냉장고장: 슬롯 너비와 무관하게 600 고정
+      const isBuiltInFridgeDragZ = isBuiltInFridgeModule(dragData.moduleData.id);
+
       // 영역에 맞는 너비의 동일 타입 모듈 찾기 - 실제 슬롯 너비 사용
       let targetWidth: number;
-      if (isDual && zoneIndexing.slotWidths && zoneSlotIndex < zoneIndexing.slotWidths.length - 1) {
+      if (isBuiltInFridgeDragZ) {
+        targetWidth = BUILT_IN_FRIDGE_FIXED_WIDTH;
+      } else if (isDual && zoneIndexing.slotWidths && zoneSlotIndex < zoneIndexing.slotWidths.length - 1) {
         targetWidth = zoneIndexing.slotWidths[zoneSlotIndex] + zoneIndexing.slotWidths[zoneSlotIndex + 1];
       } else if (zoneIndexing.slotWidths && zoneIndexing.slotWidths[zoneSlotIndex] !== undefined) {
         targetWidth = zoneIndexing.slotWidths[zoneSlotIndex];
@@ -1782,11 +1803,19 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
     // 베이스 타입 추출 (소수점 포함한 숫자 제거)
     const moduleBaseType = dragData.moduleData.id.replace(/-[\d.]+$/, '');
 
+    // 빌트인 냉장고장: 슬롯 너비와 무관하게 600 고정 (사이즈 변경 불가)
+    const isBuiltInFridgeDrag = isBuiltInFridgeModule(dragData.moduleData.id);
+
     // 듀얼 가구인 경우 너비를 2배로 계산
-    const finalWidth = isDual ? targetWidth * 2 : targetWidth;
+    const finalWidth = isBuiltInFridgeDrag
+      ? BUILT_IN_FRIDGE_FIXED_WIDTH
+      : (isDual ? targetWidth * 2 : targetWidth);
 
     // 정확한 너비를 포함한 ID 생성
     const targetModuleId = `${moduleBaseType}-${finalWidth}`;
+    if (isBuiltInFridgeDrag) {
+      console.log('[FRIDGE DROP] targetModuleId 결정:', { targetModuleId, targetWidth, finalWidth });
+    }
 
     debugLog('🎯 [SlotDropZones] Non-dropped module lookup:', {
       originalId: dragData.moduleData.id,
@@ -2072,10 +2101,29 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
       furnitureY = (startHeightMm + furnitureHeightMm / 2) / 100; // mm를 m로 변환
     }
 
+    // 빌트인 냉장고장: 슬롯 너비와 무관하게 600 고정 + slotCustomWidth로 재분배 트리거
+    const builtInFridgeModuleId = isDual ? dualTargetModuleId : targetModuleId;
+    const isBuiltInFridge = isBuiltInFridgeModule(builtInFridgeModuleId);
+    const finalCustomWidth = isBuiltInFridge
+      ? BUILT_IN_FRIDGE_FIXED_WIDTH
+      : (spaceInfo.surroundType === 'no-surround' ? undefined : adjustedCustomWidth);
+    const finalAdjustedWidth = isBuiltInFridge
+      ? BUILT_IN_FRIDGE_FIXED_WIDTH
+      : (slotInfo?.hasColumn && slotInfo.columnType !== 'medium' ? adjustedWidthValue : undefined);
+    if (isBuiltInFridge) {
+      console.log('[FRIDGE DROP] newModule 생성:', {
+        moduleId: builtInFridgeModuleId,
+        slotCustomWidth: BUILT_IN_FRIDGE_FIXED_WIDTH,
+        customWidth: finalCustomWidth,
+        adjustedWidth: finalAdjustedWidth,
+        slotIndex: globalSlotIndex,
+      });
+    }
+
     // 새 모듈 배치
     const newModule: any = {
       id: placedId,
-      moduleId: isDual ? dualTargetModuleId : targetModuleId, // 듀얼의 경우 합계 너비 ID 사용
+      moduleId: builtInFridgeModuleId, // 듀얼의 경우 합계 너비 ID 사용
       position: { x: adjustedPosition, y: furnitureY, z: 0 },
       rotation: 0,
       hasDoor: false,
@@ -2083,10 +2131,12 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
       slotIndex: globalSlotIndex,
       isDualSlot: isDual,
       isValidInCurrentSpace: true,
-      adjustedWidth: slotInfo?.hasColumn && slotInfo.columnType !== 'medium' ? adjustedWidthValue : undefined, // 기둥 C를 제외한 모든 기둥에서 조정된 너비 사용
+      adjustedWidth: finalAdjustedWidth,
       hingePosition: 'right' as 'left' | 'right',
       // 노서라운드 모드에서는 customWidth를 설정하지 않음 - FurnitureItem이 직접 slotWidths 사용
-      customWidth: spaceInfo.surroundType === 'no-surround' ? undefined : adjustedCustomWidth,
+      customWidth: finalCustomWidth,
+      // 빌트인 냉장고장: slotCustomWidth로 슬롯 재분배 트리거
+      ...(isBuiltInFridge ? { slotCustomWidth: BUILT_IN_FRIDGE_FIXED_WIDTH } : {}),
       zone: zoneToUse, // 단내림 영역 정보 저장
       lowerSectionTopOffset: moduleData.id.includes('2drawer') || moduleData.id.includes('4drawer') ? 85 : 0 // 2단/4단 서랍장 85mm, 나머지 0mm
     };
