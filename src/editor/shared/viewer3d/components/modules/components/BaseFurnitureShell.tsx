@@ -341,7 +341,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
       {showFurniture && (
         <>
           {/* 좌우 측면 판재 - 다중 섹션은 상하 분할, 나머지는 통짜 */}
-          {(moduleData?.id?.includes('4drawer-hanging') || moduleData?.id?.includes('2drawer-hanging') || moduleData?.id?.includes('2hanging') || moduleData?.id?.includes('entryway-h') || moduleData?.id?.includes('-shelf-') || moduleData?.id?.includes('-4drawer-shelf-') || moduleData?.id?.includes('-2drawer-shelf-')) && isMultiSectionFurniture() && getSectionHeights().length === 2 ? (
+          {(moduleData?.id?.includes('4drawer-hanging') || moduleData?.id?.includes('2drawer-hanging') || moduleData?.id?.includes('2hanging') || moduleData?.id?.includes('entryway-h') || moduleData?.id?.includes('-shelf-') || moduleData?.id?.includes('-4drawer-shelf-') || moduleData?.id?.includes('-2drawer-shelf-') || moduleData?.id?.includes('built-in-fridge')) && isMultiSectionFurniture() && getSectionHeights().length === 2 ? (
           // 다중 섹션: 좌우 측판을 상부/하부로 분할
           <>
             {(() => {
@@ -672,7 +672,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
         {/* 다중 섹션 가구인 경우 중간 구분 패널 렌더링 */}
         {isMultiSectionFurniture() && getSectionHeights().length > 1 && (
           <>
-            {(moduleData?.id?.includes('4drawer-hanging') || moduleData?.id?.includes('4drawer-shelf') || moduleData?.id?.includes('single-shelf-') || moduleData?.id?.includes('dual-shelf-')) ? (
+            {(moduleData?.id?.includes('4drawer-hanging') || moduleData?.id?.includes('4drawer-shelf') || moduleData?.id?.includes('single-shelf-') || moduleData?.id?.includes('dual-shelf-') || moduleData?.id?.includes('built-in-fridge')) ? (
               // 4drawer-hanging/4drawer-shelf: 상부 바닥판 18mm 위로, 하부 상판 18mm 위로
               (() => {
                 return getSectionHeights().map((sectionHeight: number, index: number) => {
@@ -1517,62 +1517,72 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                       const isLowerModule = moduleData?.id?.includes('lower-');
                       return (
                         <>
-                          {/* 하부 섹션 하단 보강대 — 하부장은 생략 */}
-                          {!isLowerModule && (
-                            <BoxWithEdges
-                              key="lower-reinforcement-bottom"
-                              args={[reinforcementWidth, reinforcementHeight, reinforcementDepth]}
-                              position={[0, lowerBackPanelY - lowerBackPanelHeight/2 + reinforcementHeight/2, lowerReinforcementZ]}
-                              material={material}
-                              renderMode={renderMode}
-                              isDragging={isDragging}
-                              isEditMode={isEditMode}
-                              isHighlighted={highlightedSection === `${placedFurnitureId}-0`}
-                              panelName="(하)보강대 1"
-                              furnitureId={placedFurnitureId}
-                            />
+                          {/* 하부 섹션 보강대 — 백패널 없는 섹션은 보강대도 없음 */}
+                          {lowerHasBackPanel && (
+                            <>
+                              {/* 하부 섹션 하단 보강대 — 하부장은 생략 */}
+                              {!isLowerModule && (
+                                <BoxWithEdges
+                                  key="lower-reinforcement-bottom"
+                                  args={[reinforcementWidth, reinforcementHeight, reinforcementDepth]}
+                                  position={[0, lowerBackPanelY - lowerBackPanelHeight/2 + reinforcementHeight/2, lowerReinforcementZ]}
+                                  material={material}
+                                  renderMode={renderMode}
+                                  isDragging={isDragging}
+                                  isEditMode={isEditMode}
+                                  isHighlighted={highlightedSection === `${placedFurnitureId}-0`}
+                                  panelName="(하)보강대 1"
+                                  furnitureId={placedFurnitureId}
+                                />
+                              )}
+                              {/* 하부 섹션 상단 보강대 */}
+                              <BoxWithEdges
+                                key="lower-reinforcement-top"
+                                args={[reinforcementWidth, reinforcementHeight, reinforcementDepth]}
+                                position={[0, lowerBackPanelY + lowerBackPanelHeight/2 - reinforcementHeight/2, lowerReinforcementZ]}
+                                material={material}
+                                renderMode={renderMode}
+                                isDragging={isDragging}
+                                isEditMode={isEditMode}
+                                isHighlighted={highlightedSection === `${placedFurnitureId}-0`}
+                                panelName="(하)보강대 2"
+                                furnitureId={placedFurnitureId}
+                              />
+                            </>
                           )}
-                          {/* 하부 섹션 상단 보강대 */}
-                          <BoxWithEdges
-                            key="lower-reinforcement-top"
-                            args={[reinforcementWidth, reinforcementHeight, reinforcementDepth]}
-                            position={[0, lowerBackPanelY + lowerBackPanelHeight/2 - reinforcementHeight/2, lowerReinforcementZ]}
-                            material={material}
-                            renderMode={renderMode}
-                            isDragging={isDragging}
-                            isEditMode={isEditMode}
-                            isHighlighted={highlightedSection === `${placedFurnitureId}-0`}
-                            panelName="(하)보강대 2"
-                            furnitureId={placedFurnitureId}
-                          />
-                          {/* 상부 섹션 하단 보강대 — 하부장은 생략 */}
-                          {!isLowerModule && (
-                            <BoxWithEdges
-                              key="upper-reinforcement-bottom"
-                              args={[reinforcementWidth, reinforcementHeight, reinforcementDepth]}
-                              position={[0, upperBackPanelY - upperBackPanelHeight/2 + reinforcementHeight/2, upperReinforcementZ]}
-                              material={material}
-                              renderMode={renderMode}
-                              isDragging={isDragging}
-                              isEditMode={isEditMode}
-                              isHighlighted={highlightedSection === `${placedFurnitureId}-1`}
-                              panelName="(상)보강대 1"
-                              furnitureId={placedFurnitureId}
-                            />
+                          {/* 상부 섹션 보강대 — 백패널 없는 섹션은 보강대도 없음 */}
+                          {upperHasBackPanel && (
+                            <>
+                              {/* 상부 섹션 하단 보강대 — 하부장은 생략 */}
+                              {!isLowerModule && (
+                                <BoxWithEdges
+                                  key="upper-reinforcement-bottom"
+                                  args={[reinforcementWidth, reinforcementHeight, reinforcementDepth]}
+                                  position={[0, upperBackPanelY - upperBackPanelHeight/2 + reinforcementHeight/2, upperReinforcementZ]}
+                                  material={material}
+                                  renderMode={renderMode}
+                                  isDragging={isDragging}
+                                  isEditMode={isEditMode}
+                                  isHighlighted={highlightedSection === `${placedFurnitureId}-1`}
+                                  panelName="(상)보강대 1"
+                                  furnitureId={placedFurnitureId}
+                                />
+                              )}
+                              {/* 상부 섹션 상단 보강대 */}
+                              <BoxWithEdges
+                                key="upper-reinforcement-top"
+                                args={[reinforcementWidth, reinforcementHeight, reinforcementDepth]}
+                                position={[0, upperBackPanelY + upperBackPanelHeight/2 - reinforcementHeight/2, upperReinforcementZ]}
+                                material={material}
+                                renderMode={renderMode}
+                                isDragging={isDragging}
+                                isEditMode={isEditMode}
+                                isHighlighted={highlightedSection === `${placedFurnitureId}-1`}
+                                panelName="(상)보강대 2"
+                                furnitureId={placedFurnitureId}
+                              />
+                            </>
                           )}
-                          {/* 상부 섹션 상단 보강대 */}
-                          <BoxWithEdges
-                            key="upper-reinforcement-top"
-                            args={[reinforcementWidth, reinforcementHeight, reinforcementDepth]}
-                            position={[0, upperBackPanelY + upperBackPanelHeight/2 - reinforcementHeight/2, upperReinforcementZ]}
-                            material={material}
-                            renderMode={renderMode}
-                            isDragging={isDragging}
-                            isEditMode={isEditMode}
-                            isHighlighted={highlightedSection === `${placedFurnitureId}-1`}
-                            panelName="(상)보강대 2"
-                            furnitureId={placedFurnitureId}
-                          />
                         </>
                       );
                     })()}

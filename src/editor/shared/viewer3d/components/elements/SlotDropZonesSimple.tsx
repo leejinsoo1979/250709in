@@ -1546,14 +1546,6 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
 
       // 빌트인 냉장고장: 슬롯 너비와 무관하게 600 고정 + slotCustomWidth로 재분배 트리거
       const _isBuiltInFridge1 = isBuiltInFridgeModule(zoneTargetModuleId);
-      console.log('[FRIDGE 1548분기 newModule 생성]', {
-        zoneTargetModuleId,
-        _isBuiltInFridge1,
-        adjustedWidth_orig: adjustedWidth,
-        customWidth_orig: customWidth,
-        finalAdjustedWidth: _isBuiltInFridge1 ? BUILT_IN_FRIDGE_FIXED_WIDTH : adjustedWidth,
-        finalCustomWidth: _isBuiltInFridge1 ? BUILT_IN_FRIDGE_FIXED_WIDTH : customWidth,
-      });
 
       // 새 모듈 배치
       const newModule: any = {
@@ -2118,15 +2110,6 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
     const finalAdjustedWidth = isBuiltInFridge
       ? undefined
       : (slotInfo?.hasColumn && slotInfo.columnType !== 'medium' ? adjustedWidthValue : undefined);
-    // 강제 항상 출력 (디버그)
-    console.log('[FRIDGE 메인분기 newModule 생성]', {
-      moduleId: builtInFridgeModuleId,
-      isBuiltInFridge,
-      finalCustomWidth,
-      finalAdjustedWidth,
-      slotCustomWidth: isBuiltInFridge ? BUILT_IN_FRIDGE_FIXED_WIDTH : undefined,
-      slotIndex: globalSlotIndex,
-    });
 
     // 새 모듈 배치
     const newModule: any = {

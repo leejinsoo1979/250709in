@@ -270,17 +270,6 @@ export function placeFurnitureAtSlot(params: PlaceFurnitureParams): PlaceFurnitu
     return { success: false, error: `슬롯을 찾을 수 없습니다: slotIndex=${slotIndex}, zone=${zone}` };
   }
 
-  // [디버그] 빌트인 냉장고장 위치 계산 직전 indexing 확인
-  if (moduleId.includes('built-in-fridge')) {
-    console.log('[FRIDGE 위치계산]', {
-      slotIndex,
-      'indexing.slotWidths': indexing.slotWidths,
-      'indexing.threeUnitPositions': indexing.threeUnitPositions,
-      'targetSlot.position(three.js)': targetSlot.position,
-      '예상xPositionMM': targetSlot.position * 100,
-    });
-  }
-
   // 빌트인 냉장고장: 가상 모듈 추가된 indexing의 threeUnitPositions가 600 슬롯 중심을 갖도록
   // recalculateWithCustomWidths를 거쳤지만, allSlotPositions은 그 결과를 사용하지 않을 수 있어
   // targetSlot.position을 indexing.threeUnitPositions[slotIndex]로 직접 덮어쓰기
