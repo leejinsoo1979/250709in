@@ -341,14 +341,20 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
 
       // 동적 가구인 경우 - 너비를 제외한 기본 타입만 전달
       if (module.isDynamic) {
-        // 너비 정보를 제거한 기본 타입 ID만 사용
-        // 실제 너비는 배치 시점에 SlotDropZones에서 계산
-        const baseType = module.id.replace(/-[\d.]+$/, '');
-        dragModuleId = baseType; // 너비 없이 기본 타입만
+        // 빌트인 냉장고장: 폭 600 고정 (사이즈 변경 불가) — 항상 'built-in-fridge-600' 유지
+        if (module.id.includes('built-in-fridge')) {
+          dragModuleId = module.id; // 'built-in-fridge-600' 그대로
+          adjustedDimensions.width = 600;
+        } else {
+          // 너비 정보를 제거한 기본 타입 ID만 사용
+          // 실제 너비는 배치 시점에 SlotDropZones에서 계산
+          const baseType = module.id.replace(/-[\d.]+$/, '');
+          dragModuleId = baseType; // 너비 없이 기본 타입만
 
-        // dimensions는 기본값 사용 (실제 배치 시 재계산됨)
-        const isDualFurniture = module.id.startsWith('dual-');
-        adjustedDimensions.width = isDualFurniture ? 1000 : 500; // 임시값
+          // dimensions는 기본값 사용 (실제 배치 시 재계산됨)
+          const isDualFurniture = module.id.startsWith('dual-');
+          adjustedDimensions.width = isDualFurniture ? 1000 : 500; // 임시값
+        }
       }
     }
 
@@ -484,23 +490,29 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
 
           // 동적 가구인 경우 크기 조정
           if (module.isDynamic) {
-            const isDualFurniture = module.dimensions.width > droppedColumnWidth * 1.5;
+            // 빌트인 냉장고장: 폭 600 고정 (사이즈 변경 불가)
+            if (module.id.includes('built-in-fridge')) {
+              dragModuleId = module.id; // 'built-in-fridge-600' 그대로
+              adjustedDimensions.width = 600;
+            } else {
+              const isDualFurniture = module.dimensions.width > droppedColumnWidth * 1.5;
 
-            if (droppedSlotWidths.length > 0) {
-              if (isDualFurniture && droppedSlotWidths.length >= 2) {
-                const targetWidth = droppedSlotWidths[0] + droppedSlotWidths[1];
-                // 소수점 1자리로 반올림하여 부동소수점 정밀도 문제 해결
-                const widthForId = Math.round(targetWidth * 10) / 10;
-                const baseType = module.id.replace(/-[\d.]+$/, '');
-                dragModuleId = `${baseType}-${widthForId}`;
-                adjustedDimensions.width = targetWidth;
-              } else if (!isDualFurniture && droppedSlotWidths.length > 0) {
-                const targetWidth = droppedSlotWidths[0];
-                // 소수점 1자리로 반올림하여 부동소수점 정밀도 문제 해결
-                const widthForId = Math.round(targetWidth * 10) / 10;
-                const baseType = module.id.replace(/-[\d.]+$/, '');
-                dragModuleId = `${baseType}-${widthForId}`;
-                adjustedDimensions.width = targetWidth;
+              if (droppedSlotWidths.length > 0) {
+                if (isDualFurniture && droppedSlotWidths.length >= 2) {
+                  const targetWidth = droppedSlotWidths[0] + droppedSlotWidths[1];
+                  // 소수점 1자리로 반올림하여 부동소수점 정밀도 문제 해결
+                  const widthForId = Math.round(targetWidth * 10) / 10;
+                  const baseType = module.id.replace(/-[\d.]+$/, '');
+                  dragModuleId = `${baseType}-${widthForId}`;
+                  adjustedDimensions.width = targetWidth;
+                } else if (!isDualFurniture && droppedSlotWidths.length > 0) {
+                  const targetWidth = droppedSlotWidths[0];
+                  // 소수점 1자리로 반올림하여 부동소수점 정밀도 문제 해결
+                  const widthForId = Math.round(targetWidth * 10) / 10;
+                  const baseType = module.id.replace(/-[\d.]+$/, '');
+                  dragModuleId = `${baseType}-${widthForId}`;
+                  adjustedDimensions.width = targetWidth;
+                }
               }
             }
           }
@@ -508,28 +520,34 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
       } else {
         // 단내림이 없는 일반 경우에도 정확한 슬롯 너비로 ID 조정
         if (module.isDynamic) {
-          const isDualFurniture = module.id.startsWith('dual-');
-
-          if (indexing.slotWidths && indexing.slotWidths.length > 0) {
-            let targetWidth;
-            if (isDualFurniture && indexing.slotWidths.length >= 2) {
-              targetWidth = indexing.slotWidths[0] + indexing.slotWidths[1];
-            } else {
-              targetWidth = indexing.slotWidths[0];
-            }
-            // 소수점 1자리로 반올림하여 부동소수점 정밀도 문제 해결
-            const widthForId = Math.round(targetWidth * 10) / 10;
-            const baseType = module.id.replace(/-[\d.]+$/, '');
-            dragModuleId = `${baseType}-${widthForId}`;
-            adjustedDimensions.width = targetWidth;
+          // 빌트인 냉장고장: 폭 600 고정 (사이즈 변경 불가) — 슬롯 너비 무시
+          if (module.id.includes('built-in-fridge')) {
+            dragModuleId = module.id; // 'built-in-fridge-600' 그대로
+            adjustedDimensions.width = 600;
           } else {
-            // fallback: 평균 너비 사용
-            const targetWidth = isDualFurniture ? indexing.columnWidth * 2 : indexing.columnWidth;
-            // 소수점 1자리로 반올림하여 부동소수점 정밀도 문제 해결
-            const widthForId = Math.round(targetWidth * 10) / 10;
-            const baseType = module.id.replace(/-[\d.]+$/, '');
-            dragModuleId = `${baseType}-${widthForId}`;
-            adjustedDimensions.width = targetWidth;
+            const isDualFurniture = module.id.startsWith('dual-');
+
+            if (indexing.slotWidths && indexing.slotWidths.length > 0) {
+              let targetWidth;
+              if (isDualFurniture && indexing.slotWidths.length >= 2) {
+                targetWidth = indexing.slotWidths[0] + indexing.slotWidths[1];
+              } else {
+                targetWidth = indexing.slotWidths[0];
+              }
+              // 소수점 1자리로 반올림하여 부동소수점 정밀도 문제 해결
+              const widthForId = Math.round(targetWidth * 10) / 10;
+              const baseType = module.id.replace(/-[\d.]+$/, '');
+              dragModuleId = `${baseType}-${widthForId}`;
+              adjustedDimensions.width = targetWidth;
+            } else {
+              // fallback: 평균 너비 사용
+              const targetWidth = isDualFurniture ? indexing.columnWidth * 2 : indexing.columnWidth;
+              // 소수점 1자리로 반올림하여 부동소수점 정밀도 문제 해결
+              const widthForId = Math.round(targetWidth * 10) / 10;
+              const baseType = module.id.replace(/-[\d.]+$/, '');
+              dragModuleId = `${baseType}-${widthForId}`;
+              adjustedDimensions.width = targetWidth;
+            }
           }
         }
       }
@@ -1059,8 +1077,10 @@ const ModuleGallery: React.FC<ModuleGalleryProps> = ({ moduleCategory = 'tall', 
       categoryModules = getModulesByCategory('upper', adjustedInternalSpace, spaceInfoWithSlotWidths);
     } else if (kitchenSubCategory === 'tall') {
       // 키큰장 = full 카테고리 중 키큰장 전용 모듈 (예: 빌트인 냉장고장)
-      categoryModules = getModulesByCategory('full', adjustedInternalSpace, spaceInfoWithSlotWidths)
-        .filter(m => m.id.includes('built-in-fridge'));
+      const allFullModules = getModulesByCategory('full', adjustedInternalSpace, spaceInfoWithSlotWidths);
+      categoryModules = allFullModules.filter(m => m.id.includes('built-in-fridge'));
+      console.log('[키큰장 탭] full 모듈 전체:', allFullModules.map(m => m.id));
+      console.log('[키큰장 탭] 필터링 후:', categoryModules.map(m => m.id));
     } else {
       // 기본장/도어올림/상판내림 = lower 중 ID 패턴으로 분기
       const lowerMods = getModulesByCategory('lower', adjustedInternalSpace, spaceInfoWithSlotWidths);
@@ -1166,6 +1186,17 @@ const ModuleGallery: React.FC<ModuleGalleryProps> = ({ moduleCategory = 'tall', 
         && (remainingSlots - 1) >= 0
         && module.dimensions.height <= zoneInternalSpace.height
         && module.dimensions.depth <= zoneInternalSpace.depth;
+      console.log('[빌트인 냉장고장 isValid]', {
+        moduleId: module.id,
+        fridgeWidth,
+        fixedTotal,
+        slotsTotal,
+        fixedSlotsCount,
+        remainingSlots,
+        zoneInternalSpace,
+        moduleDimensions: module.dimensions,
+        canFit
+      });
       return canFit;
     }
 

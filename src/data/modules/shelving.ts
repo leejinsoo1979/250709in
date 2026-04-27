@@ -390,7 +390,8 @@ const createBuiltInFridge = (maxHeight: number): ModuleData => {
     // 폭/깊이 고정 - widthOptions 단일값으로 잠금
     widthOptions: [BUILT_IN_FRIDGE_WIDTH],
     dimensions: { width: BUILT_IN_FRIDGE_WIDTH, height: maxHeight, depth: BUILT_IN_FRIDGE_DEPTH },
-    isDynamic: false, // 사이즈 변경 불가
+    // isDynamic 유지 — 갤러리/드래그 시스템이 동적 가구 경로로 처리하게 함
+    // 폭 600 고정은 SlotDropZonesSimple에서 별도 분기로 강제
     modelConfig: {
       ...base.modelConfig,
       sections,
