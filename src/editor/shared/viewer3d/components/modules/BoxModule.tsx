@@ -24,6 +24,13 @@ import CustomizableBoxModule from './types/CustomizableBoxModule';
 import { CustomFurnitureConfig } from '@/editor/shared/furniture/types';
 import { AdjustableFootsRenderer } from './components/AdjustableFootsRenderer';
 import { withUpperSafetyShelfRemoved } from '@/editor/shared/utils/upperSafetyShelf';
+import {
+  isOakTexture,
+  applyOakTextureSettings,
+  isCabinetTexture1,
+  applyCabinetTexture1Settings,
+  applyDefaultImageTextureSettings,
+} from '@/editor/shared/utils/materialConstants';
 
 interface BoxModuleProps {
   moduleData: ModuleData;
@@ -237,13 +244,29 @@ const BoxModule: React.FC<BoxModuleProps> = ({
       metalness: 0.0,
       roughness: 0.6,
     });
+    // 텍스처 URL에 따라 도어와 동일한 텍스처별 머티리얼 설정 미리 적용 (rgb/toneMapped/roughness 등)
     if (insertDoorTextureRaw) {
+      if (isOakTexture(insertDoorTextureRaw)) {
+        applyOakTextureSettings(mat, false); // 회전은 텍스처 로드 후 별도 처리
+      } else if (isCabinetTexture1(insertDoorTextureRaw)) {
+        applyCabinetTexture1Settings(mat);
+      }
       const loader = new THREE.TextureLoader();
       loader.load(insertDoorTextureRaw, (texture) => {
         texture.wrapS = THREE.RepeatWrapping;
         texture.wrapT = THREE.RepeatWrapping;
         texture.colorSpace = THREE.SRGBColorSpace;
+        // 도어 기본 결 방향(vertical)에 맞춰 90도 회전
+        texture.rotation = Math.PI / 2;
+        texture.center.set(0.5, 0.5);
         mat.map = texture;
+        if (isOakTexture(insertDoorTextureRaw)) {
+          applyOakTextureSettings(mat, true);
+        } else if (isCabinetTexture1(insertDoorTextureRaw)) {
+          applyCabinetTexture1Settings(mat);
+        } else {
+          applyDefaultImageTextureSettings(mat);
+        }
         mat.needsUpdate = true;
       });
     }
