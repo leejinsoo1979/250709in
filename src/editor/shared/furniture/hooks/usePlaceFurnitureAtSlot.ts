@@ -65,10 +65,12 @@ export function placeFurnitureAtSlot(params: PlaceFurnitureParams): PlaceFurnitu
 
   // 인서트 프레임 배치 시 항상 컬럼수 +1 자동 증가
   //   인서트 프레임은 가구 사이를 메우는 역할 — 기존 슬롯을 갉아먹지 않고 새 슬롯으로 추가
+  //   사용자가 클릭한 slotIndex 위치에 끼워넣고, 그 이후 기존 가구는 한 칸씩 뒤로 밀어냄
   const isInsertFrameCheck = moduleId.includes('insert-frame');
   if (isInsertFrameCheck) {
     const initialIndexing = calculateSpaceIndexing(spaceInfo);
     const newColumnCount = initialIndexing.columnCount + 1;
+    const insertSlotIndex = slotIndex; // 사용자가 클릭한 위치
     const setSpaceInfo = useSpaceConfigStore.getState().setSpaceInfo;
     setSpaceInfo({
       customColumnCount: newColumnCount,
@@ -79,8 +81,18 @@ export function placeFurnitureAtSlot(params: PlaceFurnitureParams): PlaceFurnitu
       customColumnCount: newColumnCount,
       columnMode: 'custom',
     } as any;
-    // 인서트 프레임은 새 마지막 슬롯에 들어감 (이후 사용자가 위치 조정 가능)
-    slotIndex = newColumnCount - 1;
+
+    // 같은 zone에서 insertSlotIndex >= 인 기존 가구들의 slotIndex를 +1
+    const updatePlacedModule = useFurnitureStore.getState().updatePlacedModule;
+    const existingForShift = useFurnitureStore.getState().placedModules;
+    existingForShift.forEach(m => {
+      if ((m.zone || 'normal') !== (zone || 'normal')) return;
+      if (m.isFreePlacement) return;
+      if (typeof m.slotIndex !== 'number') return;
+      if (m.slotIndex >= insertSlotIndex) {
+        updatePlacedModule(m.id, { slotIndex: m.slotIndex + 1 } as any);
+      }
+    });
   }
 
   const baseIndexing = calculateSpaceIndexing(spaceInfo);
