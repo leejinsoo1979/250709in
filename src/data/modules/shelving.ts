@@ -345,7 +345,10 @@ const BUILT_IN_FRIDGE_WIDTH = 600;
 const BUILT_IN_FRIDGE_DEPTH = 600;
 const BUILT_IN_FRIDGE_LOWER_HEIGHT = 1838;
 
-const createBuiltInFridge = (maxHeight: number): ModuleData => {
+// slotWidthForId: 슬롯 너비를 ID에 반영 (다른 모듈과 동일한 패턴 유지)
+//   → 어떤 슬롯에서도 getModuleById가 모듈을 찾을 수 있게 함
+// dimensions.width: 항상 600 고정 (실제 가구 폭)
+const createBuiltInFridge = (maxHeight: number, slotWidthForId: number = BUILT_IN_FRIDGE_WIDTH): ModuleData => {
   const lowerHeight = BUILT_IN_FRIDGE_LOWER_HEIGHT;
   const upperHeight = Math.max(maxHeight - lowerHeight, 0);
 
@@ -373,10 +376,11 @@ const createBuiltInFridge = (maxHeight: number): ModuleData => {
     },
   ];
 
+  const widthForId = Math.round(slotWidthForId * 100) / 100;
   const base = createFurnitureBase(
-    `built-in-fridge-${BUILT_IN_FRIDGE_WIDTH}`,
+    `built-in-fridge-${widthForId}`,
     `빌트인 냉장고장 ${BUILT_IN_FRIDGE_WIDTH}mm`,
-    BUILT_IN_FRIDGE_WIDTH,
+    BUILT_IN_FRIDGE_WIDTH, // 표시 폭은 항상 600
     maxHeight,
     BUILT_IN_FRIDGE_DEPTH,
     FURNITURE_SPECS.COLORS.TYPE2,
@@ -387,11 +391,9 @@ const createBuiltInFridge = (maxHeight: number): ModuleData => {
 
   return {
     ...base,
-    // 폭/깊이 고정 - widthOptions 단일값으로 잠금
+    // 실제 dimensions는 항상 600 × 600 고정
     widthOptions: [BUILT_IN_FRIDGE_WIDTH],
     dimensions: { width: BUILT_IN_FRIDGE_WIDTH, height: maxHeight, depth: BUILT_IN_FRIDGE_DEPTH },
-    // isDynamic 유지 — 갤러리/드래그 시스템이 동적 가구 경로로 처리하게 함
-    // 폭 600 고정은 SlotDropZonesSimple에서 별도 분기로 강제
     modelConfig: {
       ...base.modelConfig,
       sections,
@@ -2999,8 +3001,11 @@ export const generateShelvingModules = (
   modules.push(createSingleType2(columnWidth, maxHeight));
   modules.push(createSingleType4(columnWidth, maxHeight));
 
-  // === 키큰장: 빌트인 냉장고장 (폭/깊이 600 고정) ===
-  modules.push(createBuiltInFridge(maxHeight));
+  // === 키큰장: 빌트인 냉장고장 (폭/깊이 600 고정, ID는 슬롯 너비 패턴) ===
+  // ID는 슬롯 너비를 따라 변형 (e.g., built-in-fridge-519) → 어떤 슬롯에서도 매칭 OK
+  // 단, dimensions.width는 항상 600 (실제 가구 폭 고정)
+  // 슬롯 배치 후 SlotDropZonesSimple에서 slotCustomWidth=600 설정 → 자동 재분배
+  modules.push(createBuiltInFridge(maxHeight, columnWidth));
   modules.push(createSingleEntrywayH(columnWidth, maxHeight));
   // modules.push(createSingleEntrywayI(columnWidth, maxHeight));
 

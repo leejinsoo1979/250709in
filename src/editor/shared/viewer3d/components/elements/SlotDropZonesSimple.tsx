@@ -783,14 +783,10 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         zoneSlotIndex,
       });
 
-      // 빌트인 냉장고장: 슬롯 너비와 무관하게 600 고정
-      const isBuiltInFridgeDragZ = isBuiltInFridgeModule(dragData.moduleData.id);
-
       // 영역에 맞는 너비의 동일 타입 모듈 찾기 - 실제 슬롯 너비 사용
+      // 빌트인 냉장고장도 슬롯 너비 그대로 (모듈 데이터가 그 패턴으로 등록됨)
       let targetWidth: number;
-      if (isBuiltInFridgeDragZ) {
-        targetWidth = BUILT_IN_FRIDGE_FIXED_WIDTH;
-      } else if (isDual && zoneIndexing.slotWidths && zoneSlotIndex < zoneIndexing.slotWidths.length - 1) {
+      if (isDual && zoneIndexing.slotWidths && zoneSlotIndex < zoneIndexing.slotWidths.length - 1) {
         targetWidth = zoneIndexing.slotWidths[zoneSlotIndex] + zoneIndexing.slotWidths[zoneSlotIndex + 1];
       } else if (zoneIndexing.slotWidths && zoneIndexing.slotWidths[zoneSlotIndex] !== undefined) {
         targetWidth = zoneIndexing.slotWidths[zoneSlotIndex];
@@ -1803,19 +1799,15 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
     // 베이스 타입 추출 (소수점 포함한 숫자 제거)
     const moduleBaseType = dragData.moduleData.id.replace(/-[\d.]+$/, '');
 
-    // 빌트인 냉장고장: 슬롯 너비와 무관하게 600 고정 (사이즈 변경 불가)
+    // 빌트인 냉장고장: 슬롯 너비를 ID에 그대로 사용 (모듈 데이터도 슬롯 너비 패턴으로 등록됨)
+    // 실제 가구 폭 600 고정은 newModule의 customWidth/slotCustomWidth로 처리
     const isBuiltInFridgeDrag = isBuiltInFridgeModule(dragData.moduleData.id);
 
     // 듀얼 가구인 경우 너비를 2배로 계산
-    const finalWidth = isBuiltInFridgeDrag
-      ? BUILT_IN_FRIDGE_FIXED_WIDTH
-      : (isDual ? targetWidth * 2 : targetWidth);
+    const finalWidth = isDual ? targetWidth * 2 : targetWidth;
 
     // 정확한 너비를 포함한 ID 생성
     const targetModuleId = `${moduleBaseType}-${finalWidth}`;
-    if (isBuiltInFridgeDrag) {
-      console.log('[FRIDGE DROP] targetModuleId 결정:', { targetModuleId, targetWidth, finalWidth });
-    }
 
     debugLog('🎯 [SlotDropZones] Non-dropped module lookup:', {
       originalId: dragData.moduleData.id,
