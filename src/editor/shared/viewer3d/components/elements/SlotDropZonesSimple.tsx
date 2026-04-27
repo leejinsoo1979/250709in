@@ -1546,6 +1546,14 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
 
       // 빌트인 냉장고장: 슬롯 너비와 무관하게 600 고정 + slotCustomWidth로 재분배 트리거
       const _isBuiltInFridge1 = isBuiltInFridgeModule(zoneTargetModuleId);
+      console.log('[FRIDGE 1548분기 newModule 생성]', {
+        zoneTargetModuleId,
+        _isBuiltInFridge1,
+        adjustedWidth_orig: adjustedWidth,
+        customWidth_orig: customWidth,
+        finalAdjustedWidth: _isBuiltInFridge1 ? BUILT_IN_FRIDGE_FIXED_WIDTH : adjustedWidth,
+        finalCustomWidth: _isBuiltInFridge1 ? BUILT_IN_FRIDGE_FIXED_WIDTH : customWidth,
+      });
 
       // 새 모듈 배치
       const newModule: any = {
@@ -1558,7 +1566,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         slotIndex: globalSlotIndex,  // 전체 공간 기준 슬롯 인덱스 사용
         isDualSlot: isDual,
         isValidInCurrentSpace: true,
-        adjustedWidth: _isBuiltInFridge1 ? BUILT_IN_FRIDGE_FIXED_WIDTH : adjustedWidth,
+        adjustedWidth: _isBuiltInFridge1 ? undefined : adjustedWidth,
         hingePosition: hingePosition, // 기둥 위치에 따른 최적 힌지 방향
         zone: zoneToUse, // 영역 정보 저장
         customWidth: _isBuiltInFridge1 ? BUILT_IN_FRIDGE_FIXED_WIDTH : customWidth, // 실제 슬롯 너비 사용 (소수점 2자리)
@@ -1705,7 +1713,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
           depth: defaultDepth,
           isDualSlot: isDual,
           isValidInCurrentSpace: true,
-          adjustedWidth: _isBuiltInFridge2 ? BUILT_IN_FRIDGE_FIXED_WIDTH : moduleData.dimensions.width,
+          adjustedWidth: _isBuiltInFridge2 ? undefined : moduleData.dimensions.width,
           hingePosition: 'right' as 'left' | 'right',
           customWidth: _isBuiltInFridge2 ? BUILT_IN_FRIDGE_FIXED_WIDTH : customWidth,
           ...(_isBuiltInFridge2 ? { slotCustomWidth: BUILT_IN_FRIDGE_FIXED_WIDTH } : {}),
@@ -2106,18 +2114,19 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
     const finalCustomWidth = isBuiltInFridge
       ? BUILT_IN_FRIDGE_FIXED_WIDTH
       : (spaceInfo.surroundType === 'no-surround' ? undefined : adjustedCustomWidth);
+    // adjustedWidth는 기둥 침범 케이스 전용 → 빌트인 냉장고장은 undefined로 (FurnitureItem 위치 보정 회피)
     const finalAdjustedWidth = isBuiltInFridge
-      ? BUILT_IN_FRIDGE_FIXED_WIDTH
+      ? undefined
       : (slotInfo?.hasColumn && slotInfo.columnType !== 'medium' ? adjustedWidthValue : undefined);
-    if (isBuiltInFridge) {
-      console.log('[FRIDGE DROP] newModule 생성:', {
-        moduleId: builtInFridgeModuleId,
-        slotCustomWidth: BUILT_IN_FRIDGE_FIXED_WIDTH,
-        customWidth: finalCustomWidth,
-        adjustedWidth: finalAdjustedWidth,
-        slotIndex: globalSlotIndex,
-      });
-    }
+    // 강제 항상 출력 (디버그)
+    console.log('[FRIDGE 메인분기 newModule 생성]', {
+      moduleId: builtInFridgeModuleId,
+      isBuiltInFridge,
+      finalCustomWidth,
+      finalAdjustedWidth,
+      slotCustomWidth: isBuiltInFridge ? BUILT_IN_FRIDGE_FIXED_WIDTH : undefined,
+      slotIndex: globalSlotIndex,
+    });
 
     // 새 모듈 배치
     const newModule: any = {
