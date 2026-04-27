@@ -52,9 +52,8 @@ export function placeFurnitureAtSlot(params: PlaceFurnitureParams): PlaceFurnitu
   // slotCustomWidth가 있는 기존 모듈이 있으면 재분할된 indexing 사용
   const existingModules = useFurnitureStore.getState().placedModules;
 
-  // 빌트인 냉장고장 배치 시: 모든 Insert 프레임의 폭을 처음부터 다시 균등 계산
-  // 공식: 인서트 폭 = (zone 내경 - 모든 빌트인×582) / 인서트 개수
-  //   (이번에 배치할 빌트인도 포함하여 계산)
+  // 빌트인 냉장고장 배치 시: 마지막 빈 슬롯에 배치할 때만 인서트 프레임 폭 균등 흡수
+  // 중간 배치(빈 슬롯이 여러 개 남아있을 때)에는 인서트 손대지 않음 → 빈 슬롯이 자연스럽게 흡수
   let adjustedExistingModules = existingModules;
   if (isBuiltInFridgeForIndex) {
     const sameZoneModules = existingModules.filter(
@@ -67,8 +66,22 @@ export function placeFurnitureAtSlot(params: PlaceFurnitureParams): PlaceFurnitu
       m => typeof m.moduleId === 'string' && m.moduleId.includes('built-in-fridge')
     );
 
-    if (insertFrames.length > 0) {
-      // zone 내경 가져오기
+    // zone의 슬롯 개수 (기본 indexing 기준)
+    let zoneSlotCount: number;
+    if (hasDroppedCeiling && zone && baseIndexing.zones) {
+      const zoneData = zone === 'dropped' ? baseIndexing.zones.dropped : baseIndexing.zones.normal;
+      zoneSlotCount = zoneData?.columnCount ?? baseIndexing.columnCount;
+    } else {
+      zoneSlotCount = baseIndexing.columnCount;
+    }
+
+    // 점유된 슬롯 = 기존 빌트인 + 기존 인서트 + 이번에 배치할 빌트인 1개
+    const occupiedSlotsAfterPlace = existingFridges.length + insertFrames.length + 1;
+    const isLastSlotPlacement = occupiedSlotsAfterPlace >= zoneSlotCount;
+
+    if (insertFrames.length > 0 && isLastSlotPlacement) {
+      // 마지막 빈 슬롯 채우기 → 부족분/잉여분을 모든 인서트가 균등 흡수
+      // zone 내경
       let zoneInnerWidthMm: number;
       if (hasDroppedCeiling && zone && baseIndexing.zones) {
         const zoneData = zone === 'dropped' ? baseIndexing.zones.dropped : baseIndexing.zones.normal;
@@ -77,7 +90,7 @@ export function placeFurnitureAtSlot(params: PlaceFurnitureParams): PlaceFurnitu
         zoneInnerWidthMm = baseIndexing.internalWidth;
       }
 
-      // 새 빌트인까지 포함하여 빌트인 총 개수
+      // 새 빌트인까지 포함한 빌트인 총 개수
       const totalFridgeCount = existingFridges.length + 1;
       const totalFridgeWidth = totalFridgeCount * BUILT_IN_FRIDGE_FIXED_WIDTH;
       const remainForInserts = zoneInnerWidthMm - totalFridgeWidth;
