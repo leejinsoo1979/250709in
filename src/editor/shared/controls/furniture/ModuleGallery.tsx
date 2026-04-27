@@ -1059,9 +1059,9 @@ const ModuleGallery: React.FC<ModuleGalleryProps> = ({ moduleCategory = 'tall', 
     // 하부장 카테고리 선택시
     categoryModules = getModulesByCategory('lower', adjustedInternalSpace, spaceInfoWithSlotWidths);
   } else if (moduleCategory === 'clothing') {
-    // 의류장 = 키큰장(full) 중 신발장(선반장/현관장) 제외
+    // 의류장 = 키큰장(full) 중 신발장(선반장/현관장)/주방 키큰장(빌트인 냉장고장/인서트 프레임) 제외
     categoryModules = getModulesByCategory('full', adjustedInternalSpace, spaceInfoWithSlotWidths)
-      .filter(m => !isShoeModuleId(m.id));
+      .filter(m => !isShoeModuleId(m.id) && !m.id.includes('built-in-fridge') && !m.id.includes('insert-frame'));
   } else if (moduleCategory === 'shoes') {
     // 신발장 = full 카테고리 내 선반장 계열 + 현관장
     categoryModules = getModulesByCategory('full', adjustedInternalSpace, spaceInfoWithSlotWidths)
@@ -1104,8 +1104,9 @@ const ModuleGallery: React.FC<ModuleGalleryProps> = ({ moduleCategory = 'tall', 
       return !isDoorRaise && !isTopDown;
     });
   } else {
-    // 키큰장(전체형) 모듈 (기존 'tall' 호환)
-    categoryModules = getModulesByCategory('full', adjustedInternalSpace, spaceInfoWithSlotWidths);
+    // 키큰장(전체형) 모듈 (기존 'tall' 호환) — 주방 전용 모듈(빌트인 냉장고장/인서트 프레임) 제외
+    categoryModules = getModulesByCategory('full', adjustedInternalSpace, spaceInfoWithSlotWidths)
+      .filter(m => !m.id.includes('built-in-fridge') && !m.id.includes('insert-frame'));
   }
 
   // 현관장 H 임시 숨김 (신발장 카테고리 제외)
@@ -1170,31 +1171,37 @@ const ModuleGallery: React.FC<ModuleGalleryProps> = ({ moduleCategory = 'tall', 
     const isDualModule = module.id.includes('dual-');
 
     // 빌트인 냉장고장: 슬롯 너비와 무관하게 582 고정으로 배치되며 나머지 슬롯이 재분배됨
-    // → 슬롯 단위 비교가 아니라, "현재까지 고정 점유된 폭 + 582 ≤ 내경" + "남은 슬롯이 1개 이상" 조건
+    // 부족/잉여분은 모든 Insert 프레임 폭이 균등하게 흡수 (인서트 프레임 EP 36 최소)
     if (module.id.includes('built-in-fridge')) {
       const fridgeWidth = module.dimensions.width; // 582
-      const fixedTotal = placedModulesForValid
-        .filter((m: any) => m.slotCustomWidth !== undefined)
-        .reduce((sum: number, m: any) => sum + (m.slotCustomWidth || 0), 0);
+      const fixedFridges = placedModulesForValid.filter((m: any) =>
+        typeof m.moduleId === 'string' && m.moduleId.includes('built-in-fridge') && m.slotCustomWidth !== undefined
+      );
+      const fixedFridgeTotal = fixedFridges.reduce((sum: number, m: any) => sum + (m.slotCustomWidth || 0), 0);
+      const insertFrames = placedModulesForValid.filter((m: any) =>
+        typeof m.moduleId === 'string' && m.moduleId.includes('insert-frame')
+      );
+      const insertFrameCount = insertFrames.length;
+      // 인서트 프레임이 흡수 가능한 최대 축소량 = (현재 인서트 폭 - 36) 의 합
+      const maxInsertShrink = insertFrames.reduce((sum: number, m: any) => {
+        const w = m.slotCustomWidth ?? 136;
+        return sum + Math.max(0, w - 36);
+      }, 0);
       const slotsTotal = indexing.columnCount ?? 1;
       const fixedSlotsCount = placedModulesForValid.filter((m: any) => m.slotCustomWidth !== undefined).length;
       const remainingSlots = slotsTotal - fixedSlotsCount;
-      // 빌트인 냉장고장은 1슬롯 점유 → 추가 후 남은 슬롯 = remainingSlots - 1
-      const canFit = fixedTotal + fridgeWidth <= zoneInternalSpace.width
-        && (remainingSlots - 1) >= 0
+      // 새 빌트인 추가 후 점유 폭 = fixedFridgeTotal + 기존 인서트 슬롯 너비 합 + 새 빌트인 582
+      const insertTotal = insertFrames.reduce((sum: number, m: any) => sum + (m.slotCustomWidth || 136), 0);
+      const totalAfterPlace = fixedFridgeTotal + insertTotal + fridgeWidth;
+      // 부족분 = totalAfterPlace - 내경 (양수면 인서트로 흡수해야 함)
+      const shortfall = totalAfterPlace - zoneInternalSpace.width;
+      // shortfall이 음수면 잉여(인서트가 늘어나서 흡수) → 항상 OK
+      // shortfall이 양수면 인서트가 흡수 가능한 양 이내여야 OK
+      const canAbsorb = shortfall <= maxInsertShrink + 0.01;
+      const canFit = (remainingSlots - 1) >= 0
+        && canAbsorb
         && module.dimensions.height <= zoneInternalSpace.height
         && module.dimensions.depth <= zoneInternalSpace.depth;
-      console.log('[빌트인 냉장고장 isValid]', {
-        moduleId: module.id,
-        fridgeWidth,
-        fixedTotal,
-        slotsTotal,
-        fixedSlotsCount,
-        remainingSlots,
-        zoneInternalSpace,
-        moduleDimensions: module.dimensions,
-        canFit
-      });
       return canFit;
     }
 
