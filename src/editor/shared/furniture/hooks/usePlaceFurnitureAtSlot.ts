@@ -270,6 +270,17 @@ export function placeFurnitureAtSlot(params: PlaceFurnitureParams): PlaceFurnitu
     return { success: false, error: `슬롯을 찾을 수 없습니다: slotIndex=${slotIndex}, zone=${zone}` };
   }
 
+  // [디버그] 빌트인 냉장고장 위치 계산 직전 indexing 확인
+  if (moduleId.includes('built-in-fridge')) {
+    console.log('[FRIDGE 위치계산]', {
+      slotIndex,
+      'indexing.slotWidths': indexing.slotWidths,
+      'indexing.threeUnitPositions': indexing.threeUnitPositions,
+      'targetSlot.position(three.js)': targetSlot.position,
+      '예상xPositionMM': targetSlot.position * 100,
+    });
+  }
+
   // X 위치 계산
   let xPosition: number;
   if (isDualFurniture) {
@@ -522,6 +533,7 @@ export function placeFurnitureAtSlot(params: PlaceFurnitureParams): PlaceFurnitu
   // 빌트인 냉장고장: spaceInfo.customSlotWidths를 직접 갱신해
   //   ColumnGuides/SlotPlacementIndicators/FurnitureItem 등 모든 인덱싱이
   //   새 슬롯 너비를 즉시 사용하도록 보장
+  //   추가로 newModule의 xPosition도 새 슬롯 중심으로 강제 보정
   if (isBuiltInFridge && !hasDroppedCeiling) {
     try {
       const { useSpaceConfigStore } = require('@/store/core/spaceConfigStore');
@@ -538,6 +550,13 @@ export function placeFurnitureAtSlot(params: PlaceFurnitureParams): PlaceFurnitu
         useSpaceConfigStore.getState().setSpaceInfo({
           customSlotWidths: recalcResult.slotWidths,
         });
+        // newModule.position.x를 재분배된 새 슬롯 중심으로 강제 보정
+        if (recalcResult.threeUnitPositions && recalcResult.threeUnitPositions[slotIndex] !== undefined) {
+          newModule.position = {
+            ...newModule.position,
+            x: recalcResult.threeUnitPositions[slotIndex],
+          };
+        }
       }
     } catch (e) {
       console.warn('[빌트인 냉장고장] spaceInfo.customSlotWidths 갱신 실패', e);
