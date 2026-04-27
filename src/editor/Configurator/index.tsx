@@ -34,6 +34,7 @@ import Header from './components/Header';
 import TabBar from './components/TabBar';
 import Sidebar, { SidebarTab } from './components/Sidebar';
 import ViewerControls, { ViewMode, ViewDirection, RenderMode } from './components/ViewerControls';
+import SlotWidthInlineEditor from './components/SlotWidthInlineEditor';
 import RightPanel, { RightPanelTab, DoorCountSlider as DoorSlider } from './components/RightPanel';
 import { ModuleContent } from './components/RightPanel';
 import NavigationPane from '@/components/dashboard/NavigationPane';
@@ -503,7 +504,7 @@ const Configurator: React.FC = () => {
   const [fileTreeSelectedFolderId, setFileTreeSelectedFolderId] = useState<string | null>(null);
   const [fileTreeDesignFiles, setFileTreeDesignFiles] = useState<DesignFileSummary[]>([]);
   const [moduleCategory, setModuleCategory] = useState<'clothing' | 'shoes' | 'kitchen'>('clothing'); // 의류장/신발장/주방 토글
-  const [kitchenSub, setKitchenSub] = useState<'basic' | 'door-raise' | 'top-down' | 'upper'>('basic'); // 주방 서브카테고리
+  const [kitchenSub, setKitchenSub] = useState<'basic' | 'door-raise' | 'top-down' | 'upper' | 'tall'>('basic'); // 주방 서브카테고리
   const [islandSetupOpen, setIslandSetupOpen] = useState(false); // 아일랜드 팝업 열림 여부
   const [islandSetupMode, setIslandSetupMode] = useState<'create' | 'edit'>('create');
   const [moduleType, setModuleType] = useState<ModuleType>('all'); // 전체/싱글/듀얼 탭
@@ -3667,7 +3668,7 @@ const Configurator: React.FC = () => {
 
               {/* 주방 선택 시 서브 탭: 아일랜드 모드에서는 상부장 제외 */}
               {(moduleCategory === 'kitchen' || spaceInfo.isIsland) && (
-                <div className={styles.moduleCategoryTabs}>
+                <div className={`${styles.moduleCategoryTabs} ${styles.scrollableTabs}`}>
                   <button
                     className={`${styles.moduleCategoryTab} ${kitchenSub === 'basic' ? styles.active : ''}`}
                     onClick={() => setKitchenSub('basic')}
@@ -7093,6 +7094,9 @@ const Configurator: React.FC = () => {
                 sceneRef={sceneRef} // GLB 내보내기용 씬 참조
               />
             )}
+
+            {/* 슬롯배치 모드의 자유 토글 활성 시: 뷰어 위에 슬롯 너비 입력 오버레이 */}
+            <SlotWidthInlineEditor />
 
             {/* 커스텀 가구 설계모드 종료 버튼 — 뷰어 중앙 하단 */}
             {isLayoutBuilderOpen && (
