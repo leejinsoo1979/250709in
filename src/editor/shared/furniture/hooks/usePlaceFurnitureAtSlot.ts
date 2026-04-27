@@ -121,15 +121,40 @@ export function placeFurnitureAtSlot(params: PlaceFurnitureParams): PlaceFurnitu
     : baseIndexing;
 
   // 인서트 프레임 폭 조정사항을 실제 store에도 반영 (빌트인 냉장고장 배치 시에만)
+  // + 새 슬롯 중심으로 position.x 갱신 (슬롯 너비 변경에 따라 슬롯 중심도 이동)
   if (isBuiltInFridgeForIndex && adjustedExistingModules !== existingModules) {
     const updatePlacedModule = useFurnitureStore.getState().updatePlacedModule;
     adjustedExistingModules.forEach((adjusted, i) => {
       const original = existingModules[i];
       if (original && adjusted.slotCustomWidth !== original.slotCustomWidth) {
-        updatePlacedModule(adjusted.id, {
+        const insertSlotIndex = adjusted.slotIndex;
+        // 새 indexing 기반 슬롯 중심 X (Three.js 단위)
+        let newPositionX: number | undefined;
+        if (typeof insertSlotIndex === 'number') {
+          if (hasDroppedCeiling && (adjusted.zone === 'dropped' || adjusted.zone === 'normal') && indexing.zones) {
+            const zoneData = adjusted.zone === 'dropped' ? indexing.zones.dropped : indexing.zones.normal;
+            const zoneNormalCount = indexing.zones.normal?.columnCount ?? 0;
+            const localIndex = adjusted.zone === 'dropped' ? insertSlotIndex - zoneNormalCount : insertSlotIndex;
+            const positions = zoneData?.threeUnitPositions;
+            if (positions && localIndex >= 0 && localIndex < positions.length) {
+              newPositionX = positions[localIndex];
+            }
+          } else if (indexing.threeUnitPositions && insertSlotIndex < indexing.threeUnitPositions.length) {
+            newPositionX = indexing.threeUnitPositions[insertSlotIndex];
+          }
+        }
+
+        const updates: any = {
           slotCustomWidth: adjusted.slotCustomWidth,
           customWidth: adjusted.customWidth,
-        } as any);
+        };
+        if (newPositionX !== undefined && original.position) {
+          updates.position = {
+            ...original.position,
+            x: newPositionX,
+          };
+        }
+        updatePlacedModule(adjusted.id, updates);
       }
     });
   }
