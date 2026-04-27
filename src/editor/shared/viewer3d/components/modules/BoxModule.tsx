@@ -1107,11 +1107,13 @@ const BoxModule: React.FC<BoxModuleProps> = ({
     // EP Z 중심: EP 앞면이 가구 앞면(z=+depth/2)과 일치, EP 깊이 58 → 중심 = depth/2 - 58/2
     const epZ = moduleD / 2 - FRAME_DEPTH / 2;
 
+    // 전면 프레임 폭: 좌우 EP 사이에 끼이는 폭 = 외경 - 좌EP 두께 - 우EP 두께
+    const frontFrameWidth = moduleW - PT_THREE * 2;
     return (
       <>
-        {/* 앞면 프레임 (PET) - 윤곽선 포함 */}
+        {/* 앞면 프레임 (PET) - 좌우 EP 사이, 가구 중앙에 위치, 윤곽선 포함 */}
         <BoxWithEdges
-          args={[moduleW, fullHeight, PT_THREE]}
+          args={[frontFrameWidth, fullHeight, PT_THREE]}
           position={[0, fullYOffset, frontFrameZ]}
           material={baseFurniture.material}
           isDragging={isDragging}
