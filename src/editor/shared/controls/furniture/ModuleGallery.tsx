@@ -27,6 +27,7 @@ const FURNITURE_ICONS: Record<string, string> = {
   // 키큰장 (주방)
   'built-in-fridge': getImagePath('built_in.png'),
   'insert-frame': getImagePath('insert_frame.png'),
+  'dual-built-in-fridge': getImagePath('built_in_dual.png'),
   'single-2drawer-hanging': getImagePath('single-2drawer-hanging.png'),
   'single-2hanging': getImagePath('single-2hanging.png'),
   'single-4drawer-hanging': getImagePath('single-4drawer-hanging.png'),

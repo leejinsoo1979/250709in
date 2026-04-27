@@ -38,6 +38,14 @@ export function placeFurnitureAtSlot(params: PlaceFurnitureParams): PlaceFurnitu
   let spaceInfo = params.spaceInfo;
   let slotIndex = paramSlotIndex;
 
+  // 듀얼 빌트인 냉장고장: 좌힌지 빌트인(582) + 인서트(136) + 우힌지 빌트인(582)을 차례로 자동 배치
+  if (moduleId.includes('dual-built-in-fridge')) {
+    return placeDualBuiltInFridgeSet({
+      ...params,
+      slotIndex: paramSlotIndex,
+    });
+  }
+
   // 빌트인 냉장고장/인서트 프레임 자동 컬럼수 조정
   //   - 점유된 fixed 슬롯의 합이 internalWidth와 일치하지 않으면 컬럼수를 늘려서
   //     비고정(잔여) 슬롯이 만들어지도록 함
@@ -712,6 +720,94 @@ export function placeFurnitureAtSlot(params: PlaceFurnitureParams): PlaceFurnitu
   }
 
   return { success: true, module: newModule };
+}
+
+/**
+ * 듀얼 빌트인 냉장고장 세트 배치
+ *   - 좌힌지 빌트인(582) + 인서트(136) + 우힌지 빌트인(582) = 1300
+ *   - 슬롯 2개를 점유 (각 650mm)
+ *   - 점유 슬롯이 부족하면 컬럼수 자동 증가
+ */
+function placeDualBuiltInFridgeSet(params: PlaceFurnitureParams): PlaceFurnitureResult {
+  const { slotIndex: paramSlotIndex, zone } = params;
+  let spaceInfo = params.spaceInfo;
+  let slotIndex = paramSlotIndex;
+
+  // 듀얼 슬롯 2개 필요 — 사용자가 클릭한 슬롯과 그 다음 슬롯
+  // 빈 슬롯 2개가 연속으로 없으면 컬럼수를 부족분만큼 +
+  const initialIndexing = calculateSpaceIndexing(spaceInfo);
+  const placedNow = useFurnitureStore.getState().placedModules.filter(m =>
+    !m.isFreePlacement && (m.zone || 'normal') === (zone || 'normal') && typeof m.slotIndex === 'number'
+  );
+  const occupiedIndices = new Set<number>();
+  placedNow.forEach(m => {
+    occupiedIndices.add(m.slotIndex as number);
+    if (m.isDualSlot) occupiedIndices.add((m.slotIndex as number) + 1);
+  });
+
+  // 클릭한 슬롯 + 다음 슬롯 모두 비어 있어야 함
+  const totalCols = initialIndexing.columnCount;
+  const slotAFree = !occupiedIndices.has(slotIndex);
+  const slotBFree = (slotIndex + 1 < totalCols) && !occupiedIndices.has(slotIndex + 1);
+
+  // 두 슬롯이 비어있지 않으면 컬럼수 +2 자동 증가하여 마지막 두 슬롯에 배치
+  if (!slotAFree || !slotBFree) {
+    const newColumnCount = totalCols + 2;
+    const setSpaceInfo = useSpaceConfigStore.getState().setSpaceInfo;
+    setSpaceInfo({
+      customColumnCount: newColumnCount,
+      columnMode: 'custom',
+      customSlotWidths: undefined,
+    } as any);
+    spaceInfo = {
+      ...spaceInfo,
+      customColumnCount: newColumnCount,
+      columnMode: 'custom',
+      customSlotWidths: undefined,
+    } as any;
+    slotIndex = newColumnCount - 2;
+  }
+
+  // 좌힌지 빌트인 → slotIndex
+  const leftFridgeResult = placeFurnitureAtSlot({
+    ...params,
+    moduleId: 'built-in-fridge-582',
+    slotIndex,
+    spaceInfo,
+  });
+  if (!leftFridgeResult.success || !leftFridgeResult.module) {
+    return { success: false, error: leftFridgeResult.error || '좌힌지 빌트인 배치 실패' };
+  }
+  // 좌힌지 강제 설정
+  leftFridgeResult.module.hingePosition = 'left';
+  useFurnitureStore.getState().addModule(leftFridgeResult.module);
+
+  // 인서트 프레임 → slotIndex (좌힌지 빌트인 다음에 위치, 자동 컬럼 +1)
+  const insertResult = placeFurnitureAtSlot({
+    ...params,
+    moduleId: 'insert-frame-136',
+    slotIndex: slotIndex + 1,
+    spaceInfo: useSpaceConfigStore.getState().spaceInfo,
+  });
+  if (!insertResult.success || !insertResult.module) {
+    return { success: false, error: insertResult.error || '인서트 배치 실패' };
+  }
+  useFurnitureStore.getState().addModule(insertResult.module);
+
+  // 우힌지 빌트인 → slotIndex (인서트 다음에 위치, 자동 컬럼 +1)
+  const rightFridgeResult = placeFurnitureAtSlot({
+    ...params,
+    moduleId: 'built-in-fridge-582',
+    slotIndex: slotIndex + 2,
+    spaceInfo: useSpaceConfigStore.getState().spaceInfo,
+  });
+  if (!rightFridgeResult.success || !rightFridgeResult.module) {
+    return { success: false, error: rightFridgeResult.error || '우힌지 빌트인 배치 실패' };
+  }
+  rightFridgeResult.module.hingePosition = 'right';
+
+  // 마지막 모듈만 반환 (caller가 store에 추가) — 좌/인서트는 위에서 직접 추가
+  return { success: true, module: rightFridgeResult.module };
 }
 
 /**

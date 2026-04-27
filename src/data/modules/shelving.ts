@@ -436,6 +436,35 @@ const createInsertFrame = (maxHeight: number, slotWidthForId: number = INSERT_FR
   } as ModuleData;
 };
 
+// 듀얼 빌트인 냉장고장: 갤러리 마커 모듈 — 클릭 시 좌힌지 빌트인 + 인서트 + 우힌지 빌트인 3개로 분해 배치
+//   - 슬롯 폭 1300 (582 + 136 + 582)
+//   - 듀얼 슬롯 (isDualSlot)
+//   - 실제 3D는 분해된 3개 모듈로 그려짐 (배치 로직에서 처리)
+const DUAL_BUILT_IN_FRIDGE_WIDTH = 1300;
+const createDualBuiltInFridge = (maxHeight: number): ModuleData => {
+  const base = createFurnitureBase(
+    `dual-built-in-fridge-${DUAL_BUILT_IN_FRIDGE_WIDTH}`,
+    `듀얼 빌트인 냉장고장 ${DUAL_BUILT_IN_FRIDGE_WIDTH}mm`,
+    DUAL_BUILT_IN_FRIDGE_WIDTH,
+    maxHeight,
+    BUILT_IN_FRIDGE_DEPTH,
+    FURNITURE_SPECS.COLORS.TYPE2,
+    `좌힌지 빌트인(582) + 인서트(136) + 우힌지 빌트인(582) 자동 배치 — 슬롯 2개(${DUAL_BUILT_IN_FRIDGE_WIDTH}) 점유.`,
+    BUILT_IN_FRIDGE_DEPTH,
+    'full'
+  );
+  return {
+    ...base,
+    widthOptions: [DUAL_BUILT_IN_FRIDGE_WIDTH],
+    dimensions: { width: DUAL_BUILT_IN_FRIDGE_WIDTH, height: maxHeight, depth: BUILT_IN_FRIDGE_DEPTH },
+    modelConfig: {
+      ...base.modelConfig,
+      sections: [{ type: 'open', heightType: 'percentage', height: 100 }],
+      isDualBuiltInFridge: true,
+    } as any,
+  } as ModuleData;
+};
+
 /**
  * 싱글 타입4: 4단서랍+옷장 복합형 생성
  */
@@ -3044,6 +3073,9 @@ export const generateShelvingModules = (
 
   // === 키큰장: Insert 프레임 (ㄷ자 구조, 도어 없음) ===
   modules.push(createInsertFrame(maxHeight, columnWidth));
+
+  // === 키큰장: 듀얼 빌트인 냉장고장 (좌힌지 빌트인 + 인서트 + 우힌지 빌트인 자동 배치) ===
+  modules.push(createDualBuiltInFridge(maxHeight));
 
   modules.push(createSingleEntrywayH(columnWidth, maxHeight));
   // modules.push(createSingleEntrywayI(columnWidth, maxHeight));
