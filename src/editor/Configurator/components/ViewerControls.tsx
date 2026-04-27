@@ -73,7 +73,7 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
   frameMergeEnabled = false,
   onFrameMergeToggle
 }) => {
-  const { view2DDirection, setView2DDirection, view2DTheme, toggleView2DTheme, setView2DTheme, isMeasureMode, toggleMeasureMode, showFurnitureEditHandles, setShowFurnitureEditHandles, shadowEnabled, setShadowEnabled, edgeOutlineEnabled, setEdgeOutlineEnabled, isLayoutBuilderOpen, equalDistribution, toggleEqualDistribution, setDoorsOpen } = useUIStore();
+  const { view2DDirection, setView2DDirection, view2DTheme, toggleView2DTheme, setView2DTheme, isMeasureMode, toggleMeasureMode, showFurnitureEditHandles, setShowFurnitureEditHandles, shadowEnabled, setShadowEnabled, edgeOutlineEnabled, setEdgeOutlineEnabled, isLayoutBuilderOpen, equalDistribution, toggleEqualDistribution, setDoorsOpen, slotWidthEditMode, setSlotWidthEditMode, slotEditOriginalColumnCount, setSlotEditOriginalColumnCount } = useUIStore();
   const { spaceInfo } = useSpaceConfigStore();
   const { placedModules, isFurniturePlacementMode } = useFurnitureStore();
   const derivedColumnCount = useDerivedSpaceStore((state) => state.columnCount);
@@ -295,6 +295,56 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
               <button
                 className={`${styles.segmentButton} ${styles.segmentAccent} ${equalDistribution ? styles.segmentAccentActive : ''}`}
                 onClick={() => { if (!equalDistribution) toggleEqualDistribution(); }}
+              >
+                균등
+              </button>
+            </div>
+          );
+        })()}
+
+        {/* 슬롯배치 모드: 자유=슬롯 너비 직접 입력, 균등=균등분할 */}
+        {!isFreePlacement && !spaceInfo?.droppedCeiling?.enabled && !spaceInfo?.curtainBox?.enabled && (() => {
+          const isSlotCustom = Array.isArray(spaceInfo?.customSlotWidths) && spaceInfo.customSlotWidths.length > 0;
+          const hasSlotPlaced = placedModules.some(m => !m.isFreePlacement);
+          const isCustomActive = isSlotCustom || slotWidthEditMode;
+          const handleSwitchToCustom = () => {
+            if (isCustomActive) return;
+            // 자유 진입 직전 컬럼 수 저장 (균등 복귀 시 복원용)
+            const currentColumnCount = spaceInfo?.customColumnCount;
+            setSlotEditOriginalColumnCount(currentColumnCount ?? null);
+            setSlotWidthEditMode(true);
+          };
+          const handleSwitchToEqual = () => {
+            if (!isCustomActive) return;
+            if (isSlotCustom) {
+              if (hasSlotPlaced && !window.confirm('슬롯 너비를 균등분할로 되돌리면 배치된 가구가 모두 초기화됩니다. 계속하시겠습니까?')) {
+                return;
+              }
+              if (hasSlotPlaced) {
+                useFurnitureStore.getState().clearAllModules();
+              }
+              // 자유 진입 전 컬럼 수로 복귀, customSlotWidths 제거
+              useSpaceConfigStore.getState().setSpaceInfo({
+                customSlotWidths: undefined,
+                customColumnCount: slotEditOriginalColumnCount ?? undefined,
+              });
+            }
+            setSlotEditOriginalColumnCount(null);
+            setSlotWidthEditMode(false);
+          };
+          return (
+            <div className={styles.segmentedControl}>
+              <button
+                type="button"
+                className={`${styles.segmentButton} ${styles.segmentAccent} ${isCustomActive ? styles.segmentAccentActive : ''}`}
+                onClick={handleSwitchToCustom}
+              >
+                자유
+              </button>
+              <button
+                type="button"
+                className={`${styles.segmentButton} ${styles.segmentAccent} ${!isCustomActive ? styles.segmentAccentActive : ''}`}
+                onClick={handleSwitchToEqual}
               >
                 균등
               </button>

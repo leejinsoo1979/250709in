@@ -141,6 +141,11 @@ export interface SpaceInfo {
   // 임시 슬롯 너비 (getModuleById에서 특정 너비로 검색할 때 사용)
   _tempSlotWidths?: number[];
 
+  // 사용자가 슬롯별 너비를 직접 지정한 경우 (메인 구간 전용)
+  // 길이는 customColumnCount(또는 자동 컬럼 수)와 일치해야 하며
+  // 합은 내경(또는 노서라운드 프리스탠딩의 전체 너비)과 일치해야 함
+  customSlotWidths?: number[];
+
   // 개별 프레임 선택 설정
   frameConfig?: FrameConfig;
 
@@ -436,6 +441,27 @@ export const useSpaceConfigStore = create<SpaceConfigState>()((set) => ({
         tempSpaceInfo.frameSize = { ...tempSpaceInfo.frameSize, top: 30 };
       }
       
+      // customSlotWidths 무효화: 컬럼 수/너비/배치/이격 등이 바뀌면 사용자 지정 슬롯 너비를 리셋
+      // (단, 호출자가 명시적으로 customSlotWidths를 같이 보낸 경우는 보존)
+      const customSlotInvalidatingChange =
+        processedInfo.width !== undefined ||
+        // customColumnCount 변경은 무효화 트리거에서 제외 — 자유 모드 자동 분할 시 둘이 함께 변경됨
+        processedInfo.mainDoorCount !== undefined ||
+        processedInfo.installType !== undefined ||
+        processedInfo.surroundType !== undefined ||
+        processedInfo.wallConfig !== undefined ||
+        processedInfo.gapConfig !== undefined ||
+        processedInfo.frameSize !== undefined ||
+        processedInfo.droppedCeiling !== undefined ||
+        processedInfo.curtainBox !== undefined;
+      if (customSlotInvalidatingChange && processedInfo.customSlotWidths === undefined) {
+        tempSpaceInfo.customSlotWidths = undefined;
+      }
+      // customSlotWidths가 있으면 customColumnCount를 그 길이로 강제 동기화
+      if (Array.isArray(tempSpaceInfo.customSlotWidths) && tempSpaceInfo.customSlotWidths.length > 0) {
+        tempSpaceInfo.customColumnCount = tempSpaceInfo.customSlotWidths.length;
+      }
+
       // 슬롯 개수나 공간 크기가 변경된 경우 정수 슬롯 너비를 위한 자동 조정
       const shouldAdjust =
         processedInfo.width !== undefined ||
@@ -466,7 +492,9 @@ export const useSpaceConfigStore = create<SpaceConfigState>()((set) => ({
           tempSpaceInfo.gapConfig = { ...tempSpaceInfo.gapConfig, right: 0 };
         }
       }
-      if (shouldAdjust && !isGapConfigOnly && !isFreeMode && !hasCurtainBox) {
+      // 사용자가 슬롯 너비를 직접 지정한 상태에서는 정수화로 프레임/이격이 바뀌면 합이 깨지므로 스킵
+      const hasCustomSlotWidths = Array.isArray(tempSpaceInfo.customSlotWidths) && tempSpaceInfo.customSlotWidths.length > 0;
+      if (shouldAdjust && !isGapConfigOnly && !isFreeMode && !hasCurtainBox && !hasCustomSlotWidths) {
         console.log('🔍 [이격 디버그] adjustForIntegerSlotWidth 호출 전:', {
           gapConfig: tempSpaceInfo.gapConfig,
           width: tempSpaceInfo.width,

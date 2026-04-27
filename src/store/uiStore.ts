@@ -319,6 +319,13 @@ interface UIState {
   setEqualDistributionLower: (enabled: boolean) => void;
   toggleEqualDistributionLower: () => void;
 
+  // 슬롯배치 모드: 슬롯 너비 직접 입력 모드 (자유 토글 활성 시 true)
+  slotWidthEditMode: boolean;
+  setSlotWidthEditMode: (enabled: boolean) => void;
+  // 자유 모드 진입 직전의 컬럼 수 (균등 복귀 시 사용)
+  slotEditOriginalColumnCount: number | null;
+  setSlotEditOriginalColumnCount: (n: number | null) => void;
+
   resetUI: () => void;
 }
 
@@ -382,6 +389,8 @@ const initialUIState = {
   equalDistribution: false,  // 기본값: 균등배치 비활성화
   equalDistributionUpper: false,  // 상부장 전용 균등
   equalDistributionLower: false,  // 하부장 전용 균등
+  slotWidthEditMode: false,  // 슬롯배치 모드의 자유(슬롯 너비 직접 입력) 토글
+  slotEditOriginalColumnCount: null,  // 자유 모드 진입 전 컬럼 수 (복귀용)
   isInteriorMaterialMode: false,  // 기본값: 속장 재질 모드 비활성
   isLayoutBuilderOpen: false,  // 기본값: 레이아웃 빌더 닫힘
   layoutBuilderRevision: 0,
@@ -849,6 +858,12 @@ export const useUIStore = create<UIState>()(
 
       toggleEqualDistributionLower: () =>
         set((state) => ({ equalDistributionLower: !state.equalDistributionLower })),
+
+      setSlotWidthEditMode: (enabled: boolean) =>
+        set({ slotWidthEditMode: enabled }),
+
+      setSlotEditOriginalColumnCount: (n: number | null) =>
+        set({ slotEditOriginalColumnCount: n }),
 
       setIsInteriorMaterialMode: (mode) =>
         set({ isInteriorMaterialMode: mode }),

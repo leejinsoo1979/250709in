@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import * as THREE from 'three';
-import { Line, Text } from '@react-three/drei';
+import { Line, Text, Html } from '@react-three/drei';
 import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
 import { useUIStore } from '@/store/uiStore';
@@ -18,9 +18,9 @@ interface ColumnGuidesProps {
  * step0 이후로는 모든 step에서 configurator로 통일 처리
  */
 const ColumnGuides: React.FC<ColumnGuidesProps> = ({ viewMode: viewModeProp }) => {
-  const { spaceInfo } = useSpaceConfigStore();
-  const { placedModules } = useFurnitureStore();
-  const { viewMode: contextViewMode, showDimensions, view2DDirection, activeDroppedCeilingTab, setActiveDroppedCeilingTab, view2DTheme } = useUIStore();
+  const { spaceInfo, setSpaceInfo } = useSpaceConfigStore();
+  const { placedModules, clearAllModules } = useFurnitureStore();
+  const { viewMode: contextViewMode, showDimensions, view2DDirection, activeDroppedCeilingTab, setActiveDroppedCeilingTab, view2DTheme, slotWidthEditMode } = useUIStore();
   
   // prop으로 받은 viewMode를 우선 사용, 없으면 context의 viewMode 사용
   const viewMode = viewModeProp || contextViewMode;
@@ -32,6 +32,170 @@ const ColumnGuides: React.FC<ColumnGuidesProps> = ({ viewMode: viewModeProp }) =
     const hasCustomWidths = placedModules.some(m => m.slotCustomWidth !== undefined);
     return hasCustomWidths ? recalculateWithCustomWidths(baseIndexing, placedModules) : baseIndexing;
   }, [baseIndexing, placedModules]);
+
+  // ── 슬롯 너비 자유 입력 모드 ──
+  // 슬롯배치 + 슬롯폭 편집 토글 + 단내림/커튼박스 비활성일 때만 활성
+  const isSlotMode = spaceInfo?.layoutMode !== 'free-placement';
+  const slotEditActive =
+    isSlotMode &&
+    !!slotWidthEditMode &&
+    !spaceInfo?.droppedCeiling?.enabled &&
+    !spaceInfo?.curtainBox?.enabled;
+
+  // 합 검증 기준 너비 (ColumnIndexer 내부 규칙과 동일)
+  const isNoSurround = spaceInfo?.surroundType === 'no-surround';
+  const isFreestandingNoSurround = isNoSurround && spaceInfo?.installType === 'freestanding';
+  let referenceWidth = indexing.internalWidth;
+  if (isFreestandingNoSurround) {
+    referenceWidth = spaceInfo?.width ?? indexing.internalWidth;
+  } else if (isNoSurround && spaceInfo?.installType === 'builtin') {
+    const gap = spaceInfo?.gapConfig;
+    if (gap) {
+      referenceWidth = (spaceInfo?.width ?? 0) - (gap.left || 0) - (gap.right || 0);
+    }
+  }
+  referenceWidth = Math.round(referenceWidth * 10) / 10;
+
+  // 메인 zone(normal) 슬롯 개수 — 단내림 비활성이면 indexing.columnCount 사용
+  const editableColumnCount = indexing.columnCount;
+  const editableSlotWidths = indexing.slotWidths ?? [];
+
+  // 입력 중인 값 보관 (자유 모드일 때만 사용)
+  const [slotDraft, setSlotDraft] = useState<string[]>([]);
+  // 사용자가 고정한 슬롯 인덱스 집합 (한 번 입력한 슬롯은 다른 슬롯 입력 시 변경되지 않음)
+  const [lockedSlots, setLockedSlots] = useState<Set<number>>(new Set());
+
+  useEffect(() => {
+    if (!slotEditActive) {
+      setLockedSlots(new Set());
+      return;
+    }
+    setSlotDraft(
+      Array.from({ length: editableColumnCount }, (_, i) =>
+        String(editableSlotWidths[i] ?? Math.round(referenceWidth / Math.max(editableColumnCount, 1)))
+      )
+    );
+  }, [slotEditActive, editableColumnCount, referenceWidth, editableSlotWidths.join(',')]);
+
+  // 슬롯 편집 모드가 꺼지면 잠금 해제 (컬럼 수 변경은 자동 분할 결과일 수 있어 잠금 유지)
+  useEffect(() => {
+    if (!slotEditActive) setLockedSlots(new Set());
+  }, [slotEditActive]);
+
+  const slotParsed = useMemo(
+    () => slotDraft.map(v => {
+      const n = parseFloat(v);
+      return Number.isFinite(n) ? n : 0;
+    }),
+    [slotDraft]
+  );
+  const slotSum = useMemo(() => slotParsed.reduce((s, w) => s + w, 0), [slotParsed]);
+  const slotIsValid =
+    slotParsed.length === editableColumnCount &&
+    slotParsed.every(w => w > 0) &&
+    Math.abs(slotSum - referenceWidth) <= 0.5;
+
+  // 슬롯당 최대 너비 (시스템 제약)
+  const MAX_SLOT_WIDTH = 600;
+
+  // 잠긴 슬롯(고정값) + 잔여 너비를 600 이하로 자동 분할한 슬롯들의 합
+  // 결과 배열 길이가 입력 widths 길이보다 늘어날 수 있음 (자동 슬롯 추가)
+  // 입력값과 잠금은 widths/locked 배열의 인덱스 기반 — 변경 인덱스/잠금은 결과 배열 앞쪽에 보존
+  const distributeWithAutoSplit = (
+    widths: number[],
+    changedIndex: number,
+    locked: Set<number>
+  ): { widths: number[]; lockedIndices: Set<number> } => {
+    // 1. 잠긴 슬롯들 + 변경 슬롯을 앞쪽에 모음 (순서 보존)
+    const fixedList: number[] = [];
+    const fixedLockedSet = new Set<number>();
+    for (let i = 0; i < widths.length; i++) {
+      if (i === changedIndex || locked.has(i)) {
+        const newIdx = fixedList.length;
+        fixedList.push(widths[i]);
+        fixedLockedSet.add(newIdx);
+      }
+    }
+    // 2. 잔여 너비 계산
+    const fixedSum = fixedList.reduce((s, w) => s + w, 0);
+    const remaining = Math.round((referenceWidth - fixedSum) * 10) / 10;
+
+    // 3. 잔여가 0 이하면 — 잔여 슬롯 없이 잠금만 (변경값을 줄여야 할 수도)
+    if (remaining <= 0.5) {
+      return { widths: fixedList, lockedIndices: fixedLockedSet };
+    }
+
+    // 4. 잔여를 600 이하로 만드는 최소 슬롯 개수
+    const remainSlotCount = Math.max(1, Math.ceil(remaining / MAX_SLOT_WIDTH));
+    const each = Math.round((remaining / remainSlotCount) * 10) / 10;
+    const remainList = Array.from({ length: remainSlotCount }, () => each);
+
+    // 5. 0.1mm 오차는 마지막 잔여 슬롯에 흡수
+    const totalSum = fixedSum + remainList.reduce((s, w) => s + w, 0);
+    const diff = Math.round((referenceWidth - totalSum) * 10) / 10;
+    if (Math.abs(diff) > 0.0001 && remainList.length > 0) {
+      remainList[remainList.length - 1] = Math.round((remainList[remainList.length - 1] + diff) * 10) / 10;
+    }
+
+    return {
+      widths: [...fixedList, ...remainList],
+      lockedIndices: fixedLockedSet,
+    };
+  };
+
+  const applySlotWidthsImmediate = (widths: number[]) => {
+    if (widths.some(w => w <= 0)) return;
+    setSpaceInfo({ customSlotWidths: widths });
+  };
+
+  const handleSlotInputChange = (i: number, v: string) => {
+    setSlotDraft(prev => {
+      const next = [...prev];
+      next[i] = v;
+      return next;
+    });
+  };
+
+  // 입력한 슬롯 너비를 받아 즉시 적용
+  // 잠긴 슬롯들 + 변경 슬롯을 앞쪽에 보존, 잔여를 600 이하로 자동 분할 (컬럼 수 자동 증가 가능)
+  const handleSlotInputCommit = (i: number) => {
+    // 입력값 캡: 600 초과는 600으로 제한
+    const parsed = slotDraft.map(v => {
+      const n = parseFloat(v);
+      const clamped = Number.isFinite(n) ? Math.min(n, MAX_SLOT_WIDTH) : 0;
+      return clamped;
+    });
+    if (!(parsed[i] > 0)) return;
+
+    const result = distributeWithAutoSplit(parsed, i, lockedSlots);
+    setSlotDraft(result.widths.map(w => String(w)));
+    setLockedSlots(result.lockedIndices);
+
+    const hasSlotPlaced = placedModules.some(m => !m.isFreePlacement);
+    if (hasSlotPlaced) {
+      if (!window.confirm('슬롯 너비를 변경하면 배치된 가구가 모두 초기화됩니다. 계속하시겠습니까?')) {
+        return;
+      }
+      clearAllModules();
+    }
+
+    // 컬럼 수가 바뀌면 customColumnCount도 업데이트
+    if (result.widths.length !== editableColumnCount) {
+      setSpaceInfo({
+        customColumnCount: result.widths.length,
+        customSlotWidths: result.widths,
+      });
+    } else {
+      applySlotWidthsImmediate(result.widths);
+    }
+  };
+
+  const handleSlotInputKeyDown = (i: number) => (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      (e.target as HTMLInputElement).blur();
+      handleSlotInputCommit(i);
+    }
+  };
   
   // 노서라운드 모드에서 가구 위치별 엔드패널 표시 여부 결정
   const hasLeftFurniture = spaceInfo.surroundType === 'no-surround' && 
@@ -536,20 +700,22 @@ const ColumnGuides: React.FC<ColumnGuidesProps> = ({ viewMode: viewModeProp }) =
     });
     
     // 각 슬롯 중앙에 내경 사이즈 텍스트 표시 (배치된 슬롯은 숨김)
+    // 슬롯 자유 입력 모드 + 메인 zone일 때는 Text 대신 HTML input으로 교체
     if (showDimensions) {
       const occupiedSetForText = getOccupiedSlots(zoneType);
+      const isEditableZone = slotEditActive && (zoneType === 'main' || zoneType === 'full');
       positions.forEach((xPos, index) => {
-        // 가구가 배치된 슬롯은 가이드 숫자 숨김 (백패널 뚫고 보이는 문제 방지)
-        if (occupiedSetForText.has(index)) return;
+        // 가구가 배치된 슬롯은 가이드 숫자 숨김 (자유 입력 모드에선 입력칸을 항상 표시)
+        if (!isEditableZone && occupiedSetForText.has(index)) return;
         // 컬럼 너비 표시 — slotWidths 우선 (실제 배치폭과 일치)
         const actualWidth = (slotWidths && slotWidths[index] !== undefined)
           ? slotWidths[index]
           : Math.round(columnWidth * 2) / 2;
-        
+
         // 탑뷰와 다른 뷰에 따라 텍스트 위치와 회전 조정
         let textPosition: [number, number, number];
         let textRotation: [number, number, number];
-        
+
         if (viewMode === '2D' && view2DDirection === 'top') {
           // 탑뷰: Y축은 바닥 약간 위로, Z축은 슬롯의 정중앙으로
           const slotCenterZ = (frontZ + backZ) / 2; // 슬롯의 전후 중앙
@@ -562,20 +728,61 @@ const ColumnGuides: React.FC<ColumnGuidesProps> = ({ viewMode: viewModeProp }) =
           textPosition = [xPos, textY, textZ];
           textRotation = [0, 0, 0];
         }
-        
-        guides.push(
-          <Text
-            key={`${zoneType}-slot-size-${index}`}
-            position={textPosition}
-            fontSize={0.5}
-            color={zoneColor}
-            anchorX="center"
-            anchorY="middle"
-            rotation={textRotation}
-          >
-            {actualWidth % 1 === 0 ? actualWidth : actualWidth.toFixed(1)}
-          </Text>
-        );
+
+        if (isEditableZone) {
+          // 자유 입력 모드: 슬롯 중앙에 input 필드 (Html 사용 — 카메라 따라다님)
+          const draftValue = slotDraft[index] ?? String(actualWidth);
+          guides.push(
+            <Html
+              key={`${zoneType}-slot-input-${index}`}
+              position={textPosition}
+              center
+              distanceFactor={10}
+              zIndexRange={[100, 0]}
+              style={{ pointerEvents: 'auto' }}
+            >
+              <input
+                type="number"
+                value={draftValue}
+                onChange={e => handleSlotInputChange(index, e.target.value)}
+                onKeyDown={handleSlotInputKeyDown(index)}
+                onBlur={() => handleSlotInputCommit(index)}
+                onPointerDown={e => e.stopPropagation()}
+                onWheel={e => e.stopPropagation()}
+                min={1}
+                step={0.5}
+                style={{
+                  width: 130,
+                  padding: '6px 8px',
+                  fontSize: 40,
+                  fontWeight: 500,
+                  textAlign: 'center',
+                  border: `2px solid ${slotIsValid ? zoneColor : '#d33'}`,
+                  borderRadius: 6,
+                  outline: 'none',
+                  background: 'rgba(255,255,255,0.98)',
+                  color: zoneColor,
+                  boxShadow: '0 2px 6px rgba(0,0,0,0.15)',
+                  lineHeight: 1.1,
+                }}
+              />
+            </Html>
+          );
+        } else {
+          guides.push(
+            <Text
+              key={`${zoneType}-slot-size-${index}`}
+              position={textPosition}
+              fontSize={0.5}
+              color={zoneColor}
+              anchorX="center"
+              anchorY="middle"
+              rotation={textRotation}
+            >
+              {actualWidth % 1 === 0 ? actualWidth : actualWidth.toFixed(1)}
+            </Text>
+          );
+        }
       });
     }
 

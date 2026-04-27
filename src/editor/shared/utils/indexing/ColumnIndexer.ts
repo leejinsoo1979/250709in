@@ -276,8 +276,37 @@ export class ColumnIndexer {
     
     // 슬롯별 실제 너비 배열 생성
     const slotWidths: number[] = [];
-    
-    if (isNoSurround && spaceInfo.installType === 'freestanding') {
+
+    // 사용자 지정 슬롯 너비 적용 가능 여부 판단
+    // - 단내림 비활성화 (메인 구간 전용 — 단내림 분기는 위에서 이미 return됨)
+    // - 커튼박스 비활성화 (간섭 방지)
+    // - 길이가 columnCount와 일치
+    // - 합이 기준 너비와 ±0.5mm 이내로 일치
+    const isFreestandingNoSurround = isNoSurround && spaceInfo.installType === 'freestanding';
+    let referenceWidthForCustom = internalWidth;
+    if (isFreestandingNoSurround) {
+      referenceWidthForCustom = totalWidth;
+    } else if (isNoSurround && spaceInfo.installType === 'builtin' && optimizedGapConfig) {
+      const cbOnLeft = !!(spaceInfo.curtainBox?.enabled && spaceInfo.curtainBox?.position === 'left');
+      const cbOnRight = !!(spaceInfo.curtainBox?.enabled && spaceInfo.curtainBox?.position === 'right');
+      const leftReduce = cbOnLeft ? 0 : (optimizedGapConfig.left || 0);
+      const rightReduce = cbOnRight ? 0 : (optimizedGapConfig.right || 0);
+      referenceWidthForCustom = totalWidth - leftReduce - rightReduce - curtainBoxWidth;
+    }
+    const customSlotWidths = spaceInfo.customSlotWidths;
+    const isCustomSlotWidthsValid =
+      Array.isArray(customSlotWidths) &&
+      customSlotWidths.length === columnCount &&
+      customSlotWidths.every(w => typeof w === 'number' && w > 0) &&
+      Math.abs(customSlotWidths.reduce((s, w) => s + w, 0) - referenceWidthForCustom) <= 2 &&
+      !hasCurtainBox;
+
+    if (isCustomSlotWidthsValid) {
+      // 사용자가 직접 지정한 슬롯 너비 사용
+      for (let i = 0; i < columnCount; i++) {
+        slotWidths.push(customSlotWidths![i]);
+      }
+    } else if (isFreestandingNoSurround) {
       // 노서라운드 프리스탠딩: 전체너비를 균등 분할 — 0.5mm 단위 내림
       const rawSlotWidth = totalWidth / columnCount;
       const flooredSlotWidth = Math.floor(rawSlotWidth * 2) / 2;
@@ -800,8 +829,22 @@ export class ColumnIndexer {
       
       // 슬롯별 실제 너비 배열 생성
       const slotWidths: number[] = [];
-      
-      if (spaceInfo.surroundType === 'no-surround') {
+
+      // 사용자 지정 슬롯 너비 적용 가능 여부 (calculateSpaceIndexing과 동일 규칙)
+      const customSlotWidthsZ = spaceInfo.customSlotWidths;
+      const referenceWidthZ = spaceInfo.surroundType === 'no-surround' ? actualInternalWidth : internalWidth;
+      const isCustomSlotWidthsValidZ =
+        Array.isArray(customSlotWidthsZ) &&
+        customSlotWidthsZ.length === columnCount &&
+        customSlotWidthsZ.every(w => typeof w === 'number' && w > 0) &&
+        Math.abs(customSlotWidthsZ.reduce((s, w) => s + w, 0) - referenceWidthZ) <= 2 &&
+        !hasCurtainBox;
+
+      if (isCustomSlotWidthsValidZ) {
+        for (let i = 0; i < columnCount; i++) {
+          slotWidths.push(customSlotWidthsZ![i]);
+        }
+      } else if (spaceInfo.surroundType === 'no-surround') {
         // 노서라운드: actualInternalWidth를 균등 분할 — 0.5mm 단위 내림
         const rawSlotWidth = actualInternalWidth / columnCount;
         const flooredSlotWidth = Math.floor(rawSlotWidth * 2) / 2;

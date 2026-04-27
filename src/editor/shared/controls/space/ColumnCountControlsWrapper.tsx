@@ -1,7 +1,8 @@
 import React from 'react';
-import { SpaceInfo, DEFAULT_DROPPED_CEILING_VALUES } from '@/store/core/spaceConfigStore';
-import { SpaceCalculator, ColumnIndexer } from '@/editor/shared/utils/indexing';
+import { SpaceInfo } from '@/store/core/spaceConfigStore';
+import { SpaceCalculator } from '@/editor/shared/utils/indexing';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
+import { useUIStore } from '@/store/uiStore';
 import ColumnCountControls from '../customization/components/ColumnCountControls';
 
 interface ColumnCountControlsWrapperProps {
@@ -49,7 +50,12 @@ const ColumnCountControlsWrapper: React.FC<ColumnCountControlsWrapperProps> = ({
   }
   
   // 컬럼 제한 계산
-  const columnLimits = SpaceCalculator.getColumnCountLimits(internalWidth);
+  const baseColumnLimits = SpaceCalculator.getColumnCountLimits(internalWidth);
+  // 자유(슬롯 너비 직접 입력) 모드 시 좁은 슬롯도 허용 → 슬라이더 최대값을 현재 컬럼수까지 확장
+  const slotWidthEditMode = useUIStore(s => s.slotWidthEditMode);
+  const columnLimits = slotWidthEditMode
+    ? { ...baseColumnLimits, maxColumns: Math.max(baseColumnLimits.maxColumns, columnCount) }
+    : baseColumnLimits;
   // 소수점 1자리까지 정확히 계산
   const currentColumnWidth = Math.round((internalWidth / columnCount) * 10) / 10;
   

@@ -473,9 +473,16 @@ const DoorSlider: React.FC<DoorSliderProps> = ({ value, onChange, width, label }
     // 이상적인 도어 개수 (500mm 기준)
     const idealDoorCount = Math.max(limits.minColumns, Math.round(internalWidth / 500));
 
+    // 자유(슬롯 너비 직접 입력) 모드: 좁은 슬롯 허용 → 현재 컬럼수까지 max 확장
+    const slotWidthEdit = useUIStore.getState().slotWidthEditMode;
+    const currentCustomCount = spaceInfo.customColumnCount || 0;
+    const maxColumns = slotWidthEdit
+      ? Math.max(limits.maxColumns, currentCustomCount)
+      : limits.maxColumns;
+
     return {
       min: limits.minColumns,
-      max: limits.maxColumns,
+      max: maxColumns,
       ideal: idealDoorCount
     };
   };
