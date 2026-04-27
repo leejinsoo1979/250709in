@@ -160,40 +160,64 @@ export function placeFurnitureAtSlot(params: PlaceFurnitureParams): PlaceFurnitu
     ? recalculateWithCustomWidths(baseIndexing, virtualModulesForIndex, zone || 'normal')
     : baseIndexing;
 
-  // 인서트 프레임 폭 조정사항을 실제 store에도 반영 (빌트인 냉장고장 배치 시에만)
-  // + 새 슬롯 중심으로 position.x 갱신 (슬롯 너비 변경에 따라 슬롯 중심도 이동)
-  if (isBuiltInFridgeForIndex && adjustedExistingModules !== existingModules) {
+  // 빌트인 냉장고장 배치 시: 같은 zone의 모든 기존 가구 position.x를 새 indexing 기반으로 갱신
+  //   (1) 인서트 프레임: slotCustomWidth 흡수 + 새 슬롯 중심으로 이동
+  //   (2) 일반 가구: 슬롯 너비 변경에 따라 슬롯 중심이 이동했으므로 position.x 재계산 필수
+  if (isBuiltInFridgeForIndex) {
     const updatePlacedModule = useFurnitureStore.getState().updatePlacedModule;
+    const sameZoneOnly = (m: PlacedModule) => (m.zone || 'normal') === (zone || 'normal') && !m.isFreePlacement;
+
+    // 새 슬롯 중심 X (Three.js 단위) 계산 헬퍼
+    const getNewSlotCenterX = (modZone: 'normal' | 'dropped' | undefined, slotIdx: number, isDual: boolean | undefined): number | undefined => {
+      if (typeof slotIdx !== 'number') return undefined;
+      const z = modZone || 'normal';
+      // 단내림 구간: zone 내 local index 기반
+      if (hasDroppedCeiling && indexing.zones) {
+        const zoneData = z === 'dropped' ? indexing.zones.dropped : indexing.zones.normal;
+        const zoneNormalCount = indexing.zones.normal?.columnCount ?? 0;
+        const localIndex = z === 'dropped' ? slotIdx - zoneNormalCount : slotIdx;
+        const positions = zoneData?.threeUnitPositions;
+        if (!positions) return undefined;
+        if (isDual && localIndex >= 0 && localIndex + 1 < positions.length) {
+          return (positions[localIndex] + positions[localIndex + 1]) / 2;
+        }
+        if (localIndex >= 0 && localIndex < positions.length) {
+          return positions[localIndex];
+        }
+        return undefined;
+      }
+      // 단내림 없음
+      const positions = indexing.threeUnitPositions;
+      if (!positions) return undefined;
+      if (isDual && slotIdx >= 0 && slotIdx + 1 < positions.length) {
+        return (positions[slotIdx] + positions[slotIdx + 1]) / 2;
+      }
+      if (slotIdx >= 0 && slotIdx < positions.length) {
+        return positions[slotIdx];
+      }
+      return undefined;
+    };
+
     adjustedExistingModules.forEach((adjusted, i) => {
       const original = existingModules[i];
-      if (original && adjusted.slotCustomWidth !== original.slotCustomWidth) {
-        const insertSlotIndex = adjusted.slotIndex;
-        // 새 indexing 기반 슬롯 중심 X (Three.js 단위)
-        let newPositionX: number | undefined;
-        if (typeof insertSlotIndex === 'number') {
-          if (hasDroppedCeiling && (adjusted.zone === 'dropped' || adjusted.zone === 'normal') && indexing.zones) {
-            const zoneData = adjusted.zone === 'dropped' ? indexing.zones.dropped : indexing.zones.normal;
-            const zoneNormalCount = indexing.zones.normal?.columnCount ?? 0;
-            const localIndex = adjusted.zone === 'dropped' ? insertSlotIndex - zoneNormalCount : insertSlotIndex;
-            const positions = zoneData?.threeUnitPositions;
-            if (positions && localIndex >= 0 && localIndex < positions.length) {
-              newPositionX = positions[localIndex];
-            }
-          } else if (indexing.threeUnitPositions && insertSlotIndex < indexing.threeUnitPositions.length) {
-            newPositionX = indexing.threeUnitPositions[insertSlotIndex];
-          }
-        }
+      if (!original || !sameZoneOnly(original)) return;
 
-        const updates: any = {
-          slotCustomWidth: adjusted.slotCustomWidth,
-          customWidth: adjusted.customWidth,
+      const widthChanged = adjusted.slotCustomWidth !== original.slotCustomWidth;
+      const slotIdx = adjusted.slotIndex;
+      const newX = getNewSlotCenterX(adjusted.zone as any, slotIdx as number, adjusted.isDualSlot);
+
+      const updates: any = {};
+      if (widthChanged) {
+        updates.slotCustomWidth = adjusted.slotCustomWidth;
+        updates.customWidth = adjusted.customWidth;
+      }
+      if (newX !== undefined && original.position && Math.abs((original.position.x ?? 0) - newX) > 1e-6) {
+        updates.position = {
+          ...original.position,
+          x: newX,
         };
-        if (newPositionX !== undefined && original.position) {
-          updates.position = {
-            ...original.position,
-            x: newPositionX,
-          };
-        }
+      }
+      if (Object.keys(updates).length > 0) {
         updatePlacedModule(adjusted.id, updates);
       }
     });
