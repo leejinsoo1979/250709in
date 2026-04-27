@@ -994,6 +994,8 @@ const ModuleGallery: React.FC<ModuleGalleryProps> = ({ moduleCategory = 'tall', 
   // 에디터 스토어에서 공간 정보 가져오기
   const { spaceInfo } = useSpaceConfigStore();
   const { activeDroppedCeilingTab } = useUIStore();
+  // 빌트인 냉장고장 검증용 - 이미 배치된 가구들의 고정 폭 합산에 사용
+  const placedModulesForValid = useFurnitureStore(state => state.placedModules);
 
   // 단내림이 활성화되어 있고 단내림 탭이 선택된 경우 영역별 공간 정보 사용
   let zoneSpaceInfo = spaceInfo;
@@ -1148,6 +1150,24 @@ const ModuleGallery: React.FC<ModuleGalleryProps> = ({ moduleCategory = 'tall', 
   const isModuleValid = (module: ModuleData): boolean => {
     // 듀얼 가구인지 확인
     const isDualModule = module.id.includes('dual-');
+
+    // 빌트인 냉장고장: 슬롯 너비와 무관하게 600 고정으로 배치되며 나머지 슬롯이 재분배됨
+    // → 슬롯 단위 비교가 아니라, "현재까지 고정 점유된 폭 + 600 ≤ 내경" + "남은 슬롯이 1개 이상" 조건
+    if (module.id.includes('built-in-fridge')) {
+      const fridgeWidth = module.dimensions.width; // 600
+      const fixedTotal = placedModulesForValid
+        .filter((m: any) => m.slotCustomWidth !== undefined)
+        .reduce((sum: number, m: any) => sum + (m.slotCustomWidth || 0), 0);
+      const slotsTotal = indexing.columnCount ?? 1;
+      const fixedSlotsCount = placedModulesForValid.filter((m: any) => m.slotCustomWidth !== undefined).length;
+      const remainingSlots = slotsTotal - fixedSlotsCount;
+      // 빌트인 냉장고장은 1슬롯 점유 → 추가 후 남은 슬롯 = remainingSlots - 1
+      const canFit = fixedTotal + fridgeWidth <= zoneInternalSpace.width
+        && (remainingSlots - 1) >= 0
+        && module.dimensions.height <= zoneInternalSpace.height
+        && module.dimensions.depth <= zoneInternalSpace.depth;
+      return canFit;
+    }
 
     // 단내림 활성화 시 영역별 검증
     if (spaceInfo.droppedCeiling?.enabled) {

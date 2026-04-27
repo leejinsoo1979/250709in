@@ -25,6 +25,11 @@ import CabinetPlacementPopup from '@/editor/shared/controls/CabinetPlacementPopu
 import { useTheme } from '@/contexts/ThemeContext';
 import { useAlert } from '@/contexts/AlertContext';
 
+// 빌트인 냉장고장: 폭 600 / 깊이 600 고정 모듈
+// 슬롯 너비와 무관하게 600으로 점유, 나머지 슬롯은 ColumnIndexer.recalculateWithCustomWidths로 재분배
+const BUILT_IN_FRIDGE_FIXED_WIDTH = 600;
+const isBuiltInFridgeModule = (moduleId: string): boolean => moduleId.includes('built-in-fridge');
+
 // currentDragData에서 모듈 ID 추출 헬퍼 함수
 const getDragModuleId = (dragData: CurrentDragData | null): string | null => {
   if (!dragData) return null;
@@ -854,6 +859,11 @@ const SlotDropZones: React.FC<SlotDropZonesProps> = ({ spaceInfo, showAll = true
       let finalPosition = { x: finalX, y: 0, z: 0 };
       let adjustedFurnitureWidth = actualModuleData.dimensions.width;
       
+      // 빌트인 냉장고장: 슬롯 너비와 무관하게 600 고정 + slotCustomWidth로 재분배 트리거
+      const isBuiltInFridge = isBuiltInFridgeModule(actualModuleId);
+      const finalCustomWidth = isBuiltInFridge ? BUILT_IN_FRIDGE_FIXED_WIDTH : customWidth;
+      const finalAdjustedWidth = isBuiltInFridge ? BUILT_IN_FRIDGE_FIXED_WIDTH : adjustedFurnitureWidth;
+
       // 새 모듈 배치
       // 소수점 포함 숫자만 정확히 제거하는 패턴
       const baseModuleType = actualModuleId.replace(/-[\d.]+$/, ''); // 너비를 제외한 기본 타입
@@ -867,10 +877,11 @@ const SlotDropZones: React.FC<SlotDropZonesProps> = ({ spaceInfo, showAll = true
         customDepth: customDepth,
         slotIndex: zoneSlotIndex,
         zone: zone,
-        customWidth: customWidth,
+        customWidth: finalCustomWidth,
+        ...(isBuiltInFridge ? { slotCustomWidth: BUILT_IN_FRIDGE_FIXED_WIDTH } : {}),
         isDualSlot: actualIsDual,
         isValidInCurrentSpace: true,
-        adjustedWidth: adjustedFurnitureWidth,
+        adjustedWidth: finalAdjustedWidth,
         hingePosition: 'right',
         columnSlotInfo: { hasColumn: false }
       };
@@ -1014,6 +1025,11 @@ const SlotDropZones: React.FC<SlotDropZonesProps> = ({ spaceInfo, showAll = true
       finalPosition = { x: furnitureBounds.center, y: 0, z: 0 };
     }
     
+    // 빌트인 냉장고장: 슬롯 너비와 무관하게 600 고정 + slotCustomWidth로 재분배 트리거
+    const isBuiltInFridge = isBuiltInFridgeModule(actualModuleId);
+    const finalCustomWidth = isBuiltInFridge ? BUILT_IN_FRIDGE_FIXED_WIDTH : customWidth;
+    const finalSlotCustomWidth = isBuiltInFridge ? BUILT_IN_FRIDGE_FIXED_WIDTH : undefined;
+
     // 새 모듈 배치
     const newModule = {
       id: placedId,
@@ -1025,7 +1041,8 @@ const SlotDropZones: React.FC<SlotDropZonesProps> = ({ spaceInfo, showAll = true
       slotIndex: zoneSlotIndex,
       isDualSlot: actualIsDual, // 변환 후 실제 상태 반영
       zone: zone,
-      customWidth: customWidth,
+      customWidth: finalCustomWidth,
+      ...(finalSlotCustomWidth !== undefined ? { slotCustomWidth: finalSlotCustomWidth } : {}),
       dimensions: {
         ...actualModuleData.dimensions,
         height: effectiveHeight
