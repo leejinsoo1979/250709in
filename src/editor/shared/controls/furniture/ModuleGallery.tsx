@@ -655,6 +655,8 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
         const MAX_SINGLE = 600;
         const MAX_DUAL = 1200;
         const maxAllowedWidth = isNewDual ? MAX_DUAL : MAX_SINGLE;
+        // 빌트인 냉장고장(582) / 인서트 프레임(136): 고정폭 — 빈 공간에 맞춰 확장하지 않음
+        const isFixedWidth = module.id.includes('built-in-fridge') || module.id.includes('insert-frame');
 
         const freeModules = placedModules.filter(m => m.isFreePlacement && !m.isSurroundPanel);
         const allBounds = freeModules.map(m => getModuleBoundsX(m)).sort((a, b) => a.left - b.left);
@@ -699,9 +701,16 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
               return w > (max.right - max.left) ? g : max;
             }, candidates[0]);
             const gapW = Math.floor(largestGap.right - largestGap.left);
-            if (gapW >= 200) {
-              // 빈 공간이 최대치보다 크면 최대치, 작으면 빈 공간 전체 사용
-              furnitureWidth = Math.min(gapW, maxAllowedWidth);
+            // 고정폭 모듈은 모듈 기본 너비를 그대로 사용 (확장 안 함)
+            const minRequired = isFixedWidth ? dims.width : 200;
+            if (gapW >= minRequired) {
+              if (isFixedWidth) {
+                // 고정폭: 모듈 기본 너비 유지
+                furnitureWidth = dims.width;
+              } else {
+                // 일반: 빈 공간이 최대치보다 크면 최대치, 작으면 빈 공간 전체 사용
+                furnitureWidth = Math.min(gapW, maxAllowedWidth);
+              }
               dims = { ...dims, width: furnitureWidth };
               // 가구를 빈 공간 좌측에 붙여 배치
               targetX = largestGap.left + furnitureWidth / 2;

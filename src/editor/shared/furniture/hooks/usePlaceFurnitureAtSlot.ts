@@ -38,7 +38,10 @@ export function placeFurnitureAtSlot(params: PlaceFurnitureParams): PlaceFurnitu
   let spaceInfo = params.spaceInfo;
   let slotIndex = paramSlotIndex;
 
-  // 빌트인 냉장고장/인서트 프레임 자동 컬럼수 +1 — 빈 슬롯이 부족할 때만 증가
+  // 빌트인 냉장고장/인서트 프레임 자동 컬럼수 조정
+  //   - 점유된 fixed 슬롯의 합이 internalWidth와 일치하지 않으면 컬럼수를 늘려서
+  //     비고정(잔여) 슬롯이 만들어지도록 함
+  //   - 이번에 배치할 모듈 폭도 사전 합산
   const isBuiltInFridgeAuto = moduleId.includes('built-in-fridge');
   const isInsertFrameAuto = moduleId.includes('insert-frame');
   if (isBuiltInFridgeAuto || isInsertFrameAuto) {
@@ -46,7 +49,7 @@ export function placeFurnitureAtSlot(params: PlaceFurnitureParams): PlaceFurnitu
     const placedNow = useFurnitureStore.getState().placedModules.filter(m =>
       !m.isFreePlacement && (m.zone || 'normal') === (zone || 'normal') && typeof m.slotIndex === 'number'
     );
-    // 점유된 슬롯 인덱스
+    // 점유된 슬롯 인덱스 (이번 배치 + 1 포함)
     const occupiedIndices = new Set<number>();
     placedNow.forEach(m => {
       occupiedIndices.add(m.slotIndex as number);
@@ -54,7 +57,7 @@ export function placeFurnitureAtSlot(params: PlaceFurnitureParams): PlaceFurnitu
     });
     const totalCols = initialIndexing.columnCount;
     const emptySlotCount = totalCols - occupiedIndices.size;
-    // 빈 슬롯이 0이면 컬럼수 +1 자동 증가
+    // 1) 빈 슬롯이 0이면 컬럼수 +1
     if (emptySlotCount <= 0) {
       const newColumnCount = totalCols + 1;
       const setSpaceInfo = useSpaceConfigStore.getState().setSpaceInfo;
@@ -69,7 +72,6 @@ export function placeFurnitureAtSlot(params: PlaceFurnitureParams): PlaceFurnitu
         columnMode: 'custom',
         customSlotWidths: undefined,
       } as any;
-      // 새 마지막 슬롯에 배치
       slotIndex = newColumnCount - 1;
     }
   }
@@ -661,6 +663,49 @@ export function placeFurnitureAtSlot(params: PlaceFurnitureParams): PlaceFurnitu
       }
     } catch (e) {
       console.warn('[빌트인 냉장고장] spaceInfo.customSlotWidths 갱신 실패', e);
+    }
+  }
+
+  // 빌트인/인서트 배치 후: fixed 슬롯 합이 internalWidth보다 작으면 비고정 슬롯이 만들어지도록 컬럼수 +1
+  //   (잔여 영역이 슬롯 밖에 떠 있는 것 방지 — 항상 슬롯이 internalWidth를 모두 차지하도록)
+  if ((isBuiltInFridgeAuto || isInsertFrameAuto) && !hasDroppedCeiling) {
+    try {
+      const { useSpaceConfigStore } = require('@/store/core/spaceConfigStore');
+      const currentSpaceInfo = useSpaceConfigStore.getState().spaceInfo;
+      const allModulesAfter = [
+        ...useFurnitureStore.getState().placedModules.filter(m => m.id !== newModule.id),
+        newModule,
+      ];
+      const baseIdxAfter = calculateSpaceIndexing(currentSpaceInfo);
+      // 같은 zone에서 fixed(slotCustomWidth) 슬롯 인덱스 + 폭 합산
+      const fixedIndices = new Set<number>();
+      let fixedSum = 0;
+      allModulesAfter.forEach(m => {
+        if (m.isFreePlacement) return;
+        if ((m.zone || 'normal') !== 'normal') return;
+        if (m.slotCustomWidth === undefined) return;
+        if (typeof m.slotIndex !== 'number') return;
+        if (m.isDualSlot) {
+          fixedIndices.add(m.slotIndex);
+          fixedIndices.add(m.slotIndex + 1);
+        } else {
+          fixedIndices.add(m.slotIndex);
+        }
+        fixedSum += m.slotCustomWidth;
+      });
+      const totalCols = baseIdxAfter.columnCount;
+      const nonFixedCount = totalCols - fixedIndices.size;
+      const remainForNonFixed = baseIdxAfter.internalWidth - fixedSum;
+      // 비고정 슬롯이 0개인데 잔여 폭이 양수면 → 컬럼수 +1로 비고정 슬롯 1개 만들어 잔여 흡수
+      if (nonFixedCount <= 0 && remainForNonFixed > 0.5) {
+        useSpaceConfigStore.getState().setSpaceInfo({
+          customColumnCount: totalCols + 1,
+          columnMode: 'custom',
+          customSlotWidths: undefined,
+        } as any);
+      }
+    } catch (e) {
+      console.warn('[빌트인/인서트] 잔여 폭 흡수 컬럼 추가 실패', e);
     }
   }
 
