@@ -735,20 +735,32 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                       />
 
                       {/* 하부 섹션 상판 - 뒤에서 26mm 줄여서 백패널과 맞닿게 + 사용자 오프셋 적용 (앞에서 줄어듦), 좌우 각 0.5mm씩 줄임 */}
-                      <BoxWithEdges
-                        key={`lower-top-${getPanelMaterial('(하)상판').uuid}`}
-                        args={[innerWidth - sidePanelGap, basicThickness - mmToThreeUnits(0.1), lowerSectionDepth - backReductionForPanels - mmToThreeUnits(lowerSectionTopOffsetMm || 0)]}
-                        position={[0, lowerTopPanelY - mmToThreeUnits(0.05), lowerZOffset + panelZOffset - mmToThreeUnits(lowerSectionTopOffsetMm || 0)/2]}
-                        material={getPanelMaterial('(하)상판')}
-                        renderMode={renderMode}
-                        isDragging={isDragging}
-                        isEditMode={isEditMode}
-                        isHighlighted={isLowerTopPanelHighlighted || isLowerSectionHighlighted}
-                        panelName="(하)상판"
-                        panelGrainDirections={panelGrainDirections}
-                        furnitureId={placedFurnitureId}
-                        textureUrl={textureUrl}
-                      />
+                      {/* 빌트인 냉장고장: 하부섹션 백패널 없음 → 상판은 측판과 동일한 풀 깊이로 렌더 */}
+                      {(() => {
+                        const isBuiltInFridge = !!moduleData?.id?.includes('built-in-fridge');
+                        const lowerTopDepth = isBuiltInFridge
+                          ? lowerSectionDepth - mmToThreeUnits(lowerSectionTopOffsetMm || 0)
+                          : lowerSectionDepth - backReductionForPanels - mmToThreeUnits(lowerSectionTopOffsetMm || 0);
+                        const lowerTopZ = isBuiltInFridge
+                          ? lowerZOffset - mmToThreeUnits(lowerSectionTopOffsetMm || 0)/2
+                          : lowerZOffset + panelZOffset - mmToThreeUnits(lowerSectionTopOffsetMm || 0)/2;
+                        return (
+                          <BoxWithEdges
+                            key={`lower-top-${getPanelMaterial('(하)상판').uuid}`}
+                            args={[innerWidth - sidePanelGap, basicThickness - mmToThreeUnits(0.1), lowerTopDepth]}
+                            position={[0, lowerTopPanelY - mmToThreeUnits(0.05), lowerTopZ]}
+                            material={getPanelMaterial('(하)상판')}
+                            renderMode={renderMode}
+                            isDragging={isDragging}
+                            isEditMode={isEditMode}
+                            isHighlighted={isLowerTopPanelHighlighted || isLowerSectionHighlighted}
+                            panelName="(하)상판"
+                            panelGrainDirections={panelGrainDirections}
+                            furnitureId={placedFurnitureId}
+                            textureUrl={textureUrl}
+                          />
+                        );
+                      })()}
                     </React.Fragment>
                   );
                 });
@@ -1356,30 +1368,30 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
         {/* Type4 상단 상판 두께 치수 표시 - 제거됨 (2D에서 18mm 두께 표시 불필요) */}
 
         {/* 하단 판재 - 뒤에서 26mm 줄여서 백패널과 맞닿게, 좌우 각 0.5mm씩 줄임 */}
+        {/* 빌트인 냉장고장: 하부섹션 백패널 없음 → 풀깊이 (측판과 동일) */}
         {(() => {
           const panelName = isMultiSectionFurniture() ? '(하)바닥' : '바닥판';
           const bottomPanelMat = getPanelMaterial(panelName);
-          const backReduction = backReductionForPanels; // 뒤에서 26mm 줄임
-          const widthReduction = sidePanelGap; // 좌우 각 0.5mm씩 총 1mm 줄임 (18.5/15.5mm는 0)
+          const isBuiltInFridge = !!moduleData?.id?.includes('built-in-fridge');
+          const backReduction = isBuiltInFridge ? 0 : backReductionForPanels;
+          const widthReduction = sidePanelGap;
           return (
             <BoxWithEdges
               key={`bottom-panel-${bottomPanelMat.uuid}`}
               args={[innerWidth - widthReduction, basicThickness, (() => {
-                // 다중 섹션이고 하부 깊이가 있으면 하부 섹션 깊이 사용
                 if (isMultiSectionFurniture() && lowerSectionDepthMm !== undefined) {
                   return mmToThreeUnits(lowerSectionDepthMm) - backReduction;
                 }
                 return depth - backReduction;
               })()]}
               position={[0, -height/2 + basicThickness/2, (() => {
-                // 다중 섹션이고 하부 깊이가 있으면 Z 오프셋 적용
                 if (isMultiSectionFurniture() && lowerSectionDepthMm !== undefined) {
                   const lowerDepth = mmToThreeUnits(lowerSectionDepthMm);
                   const depthDiff = depth - lowerDepth;
                   const dirOffset = lowerSectionDepthDirection === 'back' ? depthDiff / 2 : -depthDiff / 2;
-                  return dirOffset + backReduction / 2; // 방향에 따른 오프셋 + 백패널 맞춤
+                  return dirOffset + backReduction / 2;
                 }
-                return backReduction / 2; // 앞쪽 고정, 뒤에서 26mm 줄임
+                return backReduction / 2;
               })()]}
               material={bottomPanelMat}
               renderMode={renderMode}
