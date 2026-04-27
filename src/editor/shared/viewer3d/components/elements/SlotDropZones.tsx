@@ -25,9 +25,9 @@ import CabinetPlacementPopup from '@/editor/shared/controls/CabinetPlacementPopu
 import { useTheme } from '@/contexts/ThemeContext';
 import { useAlert } from '@/contexts/AlertContext';
 
-// 빌트인 냉장고장: 폭 600 / 깊이 600 고정 모듈
-// 슬롯 너비와 무관하게 600으로 점유, 나머지 슬롯은 ColumnIndexer.recalculateWithCustomWidths로 재분배
-const BUILT_IN_FRIDGE_FIXED_WIDTH = 600;
+// 빌트인 냉장고장: 폭 582 / 깊이 600 고정 모듈
+// 슬롯 너비와 무관하게 582로 점유, 나머지 슬롯은 ColumnIndexer.recalculateWithCustomWidths로 재분배
+const BUILT_IN_FRIDGE_FIXED_WIDTH = 582;
 const isBuiltInFridgeModule = (moduleId: string): boolean => moduleId.includes('built-in-fridge');
 
 // currentDragData에서 모듈 ID 추출 헬퍼 함수

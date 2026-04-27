@@ -341,13 +341,13 @@ const createSingleType2 = (columnWidth: number, maxHeight: number): ModuleData =
  * - 상부섹션 = maxHeight - 1838: 백패널 O, 도어 1장, 내경 절반에 선반 1개
  * - 모듈 ID에 'built-in-fridge' 포함 (키큰장 탭 필터 매칭용)
  */
-const BUILT_IN_FRIDGE_WIDTH = 600;
+const BUILT_IN_FRIDGE_WIDTH = 582;
 const BUILT_IN_FRIDGE_DEPTH = 600;
 const BUILT_IN_FRIDGE_LOWER_HEIGHT = 1838;
 
 // slotWidthForId: 슬롯 너비를 ID에 반영 (다른 모듈과 동일한 패턴 유지)
 //   → 어떤 슬롯에서도 getModuleById가 모듈을 찾을 수 있게 함
-// dimensions.width: 항상 600 고정 (실제 가구 폭)
+// dimensions.width: 항상 582 고정 (실제 가구 폭)
 const createBuiltInFridge = (maxHeight: number, slotWidthForId: number = BUILT_IN_FRIDGE_WIDTH): ModuleData => {
   const lowerHeight = BUILT_IN_FRIDGE_LOWER_HEIGHT;
   const upperHeight = Math.max(maxHeight - lowerHeight, 0);
@@ -380,7 +380,7 @@ const createBuiltInFridge = (maxHeight: number, slotWidthForId: number = BUILT_I
   const base = createFurnitureBase(
     `built-in-fridge-${widthForId}`,
     `빌트인 냉장고장 ${BUILT_IN_FRIDGE_WIDTH}mm`,
-    BUILT_IN_FRIDGE_WIDTH, // 표시 폭은 항상 600
+    BUILT_IN_FRIDGE_WIDTH, // 표시 폭은 항상 582
     maxHeight,
     BUILT_IN_FRIDGE_DEPTH,
     FURNITURE_SPECS.COLORS.TYPE2,
@@ -391,7 +391,7 @@ const createBuiltInFridge = (maxHeight: number, slotWidthForId: number = BUILT_I
 
   return {
     ...base,
-    // 실제 dimensions는 항상 600 × 600 고정
+    // 실제 dimensions는 항상 582 × 600 고정
     widthOptions: [BUILT_IN_FRIDGE_WIDTH],
     dimensions: { width: BUILT_IN_FRIDGE_WIDTH, height: maxHeight, depth: BUILT_IN_FRIDGE_DEPTH },
     modelConfig: {

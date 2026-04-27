@@ -486,10 +486,10 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
 
           // 동적 가구인 경우 크기 조정
           if (module.isDynamic) {
-            // 빌트인 냉장고장: 폭 600 고정 (사이즈 변경 불가)
+            // 빌트인 냉장고장: 폭 582 고정 (사이즈 변경 불가)
             if (module.id.includes('built-in-fridge')) {
-              dragModuleId = module.id; // 'built-in-fridge-600' 그대로
-              adjustedDimensions.width = 600;
+              dragModuleId = module.id; // 'built-in-fridge-582' 그대로
+              adjustedDimensions.width = 582;
             } else {
               const isDualFurniture = module.dimensions.width > droppedColumnWidth * 1.5;
 
@@ -1166,10 +1166,10 @@ const ModuleGallery: React.FC<ModuleGalleryProps> = ({ moduleCategory = 'tall', 
     // 듀얼 가구인지 확인
     const isDualModule = module.id.includes('dual-');
 
-    // 빌트인 냉장고장: 슬롯 너비와 무관하게 600 고정으로 배치되며 나머지 슬롯이 재분배됨
-    // → 슬롯 단위 비교가 아니라, "현재까지 고정 점유된 폭 + 600 ≤ 내경" + "남은 슬롯이 1개 이상" 조건
+    // 빌트인 냉장고장: 슬롯 너비와 무관하게 582 고정으로 배치되며 나머지 슬롯이 재분배됨
+    // → 슬롯 단위 비교가 아니라, "현재까지 고정 점유된 폭 + 582 ≤ 내경" + "남은 슬롯이 1개 이상" 조건
     if (module.id.includes('built-in-fridge')) {
-      const fridgeWidth = module.dimensions.width; // 600
+      const fridgeWidth = module.dimensions.width; // 582
       const fixedTotal = placedModulesForValid
         .filter((m: any) => m.slotCustomWidth !== undefined)
         .reduce((sum: number, m: any) => sum + (m.slotCustomWidth || 0), 0);
