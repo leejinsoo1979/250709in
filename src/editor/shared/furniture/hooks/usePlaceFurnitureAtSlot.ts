@@ -41,69 +41,8 @@ export function placeFurnitureAtSlot(params: PlaceFurnitureParams): PlaceFurnitu
   // 빌트인 냉장고장 자동 컬럼수 +1 로직 제거 — 사용자가 컬럼수를 직접 조정해야 함
   // (자동 증가 시 빌트인이 무한 늘어나 슬롯 폭이 균등 분할되던 문제 방지)
 
-  // 인서트 프레임 배치 시 항상 컬럼수 +1 자동 증가
-  //   인서트 프레임은 가구 옆에 무조건 붙는 역할 — 기존 슬롯을 갉아먹지 않고 새 슬롯으로 추가
-  //   클릭한 슬롯 위치를 점유된 가구 바로 옆으로 snap (떨어져 배치되는 것 방지)
-  const isInsertFrameCheck = moduleId.includes('insert-frame');
-  if (isInsertFrameCheck) {
-    const initialIndexing = calculateSpaceIndexing(spaceInfo);
-    const newColumnCount = initialIndexing.columnCount + 1;
-
-    // 같은 zone의 점유된 슬롯 인덱스 수집
-    const sameZoneOccupied = useFurnitureStore.getState().placedModules
-      .filter(m => (m.zone || 'normal') === (zone || 'normal') && !m.isFreePlacement && typeof m.slotIndex === 'number')
-      .map(m => m.slotIndex as number)
-      .sort((a, b) => a - b);
-
-    // 클릭한 slot이 점유되어 있지 않으면 가장 가까운 점유 슬롯의 옆자리로 snap
-    let insertSlotIndex = slotIndex;
-    if (sameZoneOccupied.length > 0 && !sameZoneOccupied.includes(slotIndex)) {
-      // 좌/우 가장 가까운 점유 슬롯 찾기
-      let leftNeighbor = -1;
-      let rightNeighbor = Infinity;
-      for (const occ of sameZoneOccupied) {
-        if (occ < slotIndex && occ > leftNeighbor) leftNeighbor = occ;
-        if (occ > slotIndex && occ < rightNeighbor) rightNeighbor = occ;
-      }
-      const distLeft = leftNeighbor >= 0 ? slotIndex - leftNeighbor : Infinity;
-      const distRight = rightNeighbor !== Infinity ? rightNeighbor - slotIndex : Infinity;
-      if (distLeft <= distRight && leftNeighbor >= 0) {
-        // 왼쪽 가구 바로 오른쪽에 붙임 → leftNeighbor + 1 위치에 삽입
-        insertSlotIndex = leftNeighbor + 1;
-      } else if (rightNeighbor !== Infinity) {
-        // 오른쪽 가구 바로 왼쪽에 붙임 → rightNeighbor 위치에 삽입 (오른쪽 가구는 +1 시프트)
-        insertSlotIndex = rightNeighbor;
-      }
-    }
-    slotIndex = insertSlotIndex;
-
-    const setSpaceInfo = useSpaceConfigStore.getState().setSpaceInfo;
-    // customSlotWidths 리셋 — 새 컬럼수에 맞춰 recalculateWithCustomWidths가 재계산하도록
-    // (이전 값이 남아있으면 빌트인 냉장고장 슬롯이 줄어드는 문제 발생)
-    setSpaceInfo({
-      customColumnCount: newColumnCount,
-      columnMode: 'custom',
-      customSlotWidths: undefined,
-    } as any);
-    spaceInfo = {
-      ...spaceInfo,
-      customColumnCount: newColumnCount,
-      columnMode: 'custom',
-      customSlotWidths: undefined,
-    } as any;
-
-    // 같은 zone에서 insertSlotIndex >= 인 기존 가구들의 slotIndex를 +1
-    const updatePlacedModule = useFurnitureStore.getState().updatePlacedModule;
-    const existingForShift = useFurnitureStore.getState().placedModules;
-    existingForShift.forEach(m => {
-      if ((m.zone || 'normal') !== (zone || 'normal')) return;
-      if (m.isFreePlacement) return;
-      if (typeof m.slotIndex !== 'number') return;
-      if (m.slotIndex >= insertSlotIndex) {
-        updatePlacedModule(m.id, { slotIndex: m.slotIndex + 1 } as any);
-      }
-    });
-  }
+  // 인서트 프레임 자동 컬럼수 +1 로직 제거 — 사용자가 컬럼수를 직접 조정해야 함
+  // (자동 증가 시 슬롯 폭이 균등 분할되어 빌트인 냉장고장이 줄어드는 문제 방지)
 
   const baseIndexing = calculateSpaceIndexing(spaceInfo);
   const hasDroppedCeiling = spaceInfo.droppedCeiling?.enabled || false;
