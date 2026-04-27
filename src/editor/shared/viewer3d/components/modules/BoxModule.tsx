@@ -1134,15 +1134,14 @@ const BoxModule: React.FC<BoxModuleProps> = ({
 
   // === Insert 프레임 (ㄷ자 구조) 전용 렌더링 ===
   // 본체/백패널/상하판/조절발/도어/공간상하부프레임 모두 없음
-  // 앞면 프레임(100×18) + 좌 EP(18×58) + 우 EP(18×58), 모두 PET 재질, 바닥~천장
+  // 앞면 프레임 + 좌 EP(18×58) + 우 EP(18×58), 모두 PET 재질, 바닥~천장
+  // 외경은 customWidth(빌트인 냉장고장 배치 시 자동 조정) 우선, 없으면 moduleData 기본값(136)
   const isInsertFrame = (moduleData?.modelConfig as any)?.isInsertFrame === true;
   if (isInsertFrame && showFurniture && spaceInfo) {
     const mmTo = baseFurniture.mmToThreeUnits;
     const PT = (moduleData?.modelConfig?.basicThickness || 18); // 판재 두께 (PET 18)
-    const FRAME_DEPTH = mmTo(58); // 프레임 두께 18 + frontInset 40 = EP 깊이 58 (앞부터 58까지)
+    const FRAME_DEPTH = mmTo(58);
     const PT_THREE = mmTo(PT);
-
-    // 인서트 프레임 머티리얼: 컴포넌트 상단 useMemo에서 생성된 것 사용 (도어와 동일)
 
     // 공간 전체 높이로 그림. 가구 그룹은 가구 중심 기준이므로 공간 중심으로 Y 시프트.
     const spaceTotalHeightMm = spaceInfo.height || 0;
@@ -1158,7 +1157,10 @@ const BoxModule: React.FC<BoxModuleProps> = ({
     const fullYOffset = mmTo(spaceCenterYmm - furnitureCenterYmm);
     const fullHeight = mmTo(spaceTotalHeightMm);
 
-    const moduleW = baseFurniture.width; // 100mm
+    // 외경 폭: PlacedModule의 customWidth/slotCustomWidth 우선 (빌트인 냉장고장 배치 시 자동 조정됨)
+    const placedInsert = placedFurnitureId ? placedModules.find(p => p.id === placedFurnitureId) : undefined;
+    const insertOuterWidthMm = (placedInsert?.slotCustomWidth ?? placedInsert?.customWidth ?? customWidth ?? moduleData.dimensions.width);
+    const moduleW = mmTo(insertOuterWidthMm);
     const moduleD = baseFurniture.depth; // 58mm
 
     // 앞면 프레임: 폭 100, 높이 공간 높이, 두께 18
