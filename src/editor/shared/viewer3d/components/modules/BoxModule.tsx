@@ -1159,7 +1159,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
 
     // 외경 폭: PlacedModule의 customWidth/slotCustomWidth 우선 (빌트인 냉장고장 배치 시 자동 조정됨)
     const placedInsert = placedFurnitureId ? placedModules.find(p => p.id === placedFurnitureId) : undefined;
-    const insertOuterWidthMm = (placedInsert?.slotCustomWidth ?? placedInsert?.customWidth ?? customWidth ?? moduleData.dimensions.width);
+    const insertOuterWidthMm = (placedInsert?.slotCustomWidth ?? placedInsert?.customWidth ?? moduleData.dimensions.width);
     const moduleW = mmTo(insertOuterWidthMm);
     const moduleD = baseFurniture.depth; // 58mm
 
