@@ -1453,9 +1453,18 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                 // 환기캡 Z 위치 계산 (상부 백패널 앞쪽 표면에 붙음)
                 const ventCapZ = upperBackPanelZ + backPanelThickness/2 + 0.01;
 
+                // 섹션별 백패널 유무 (sections[0]=하부, sections[1]=상부)
+                // hasBackPanel이 명시적으로 false인 섹션만 백패널을 안 그림 (기본값은 true 유지)
+                // moduleData 타입이 { id: string }로 좁아 modelConfig 직접 접근 불가 → 모듈 ID 패턴으로 분기
+                const isBuiltInFridge = moduleData?.id?.includes('built-in-fridge');
+                // 빌트인 냉장고장: 하부섹션(인덱스 0) = 백패널 없음, 상부섹션(인덱스 1) = 백패널 있음
+                const lowerHasBackPanel = !isBuiltInFridge;
+                const upperHasBackPanel = true;
+
                 return (
                   <>
                     {/* 하부 섹션 백패널 */}
+                    {lowerHasBackPanel && (
                     <BoxWithEdges
                       key={`lower-back-${getPanelMaterial('(하)백패널').uuid}`}
                       args={[innerWidth + mmToThreeUnits(backPanelConfig.widthExtension), lowerBackPanelHeight, backPanelThickness]}
@@ -1471,8 +1480,10 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                       furnitureId={placedFurnitureId}
                       textureUrl={textureUrl}
                     />
+                    )}
 
                     {/* 상부 섹션 백패널 */}
+                    {upperHasBackPanel && (
                     <BoxWithEdges
                       key={`upper-back-${getPanelMaterial('(상)백패널').uuid}`}
                       args={[innerWidth + mmToThreeUnits(backPanelConfig.widthExtension), upperBackPanelHeight, backPanelThickness]}
@@ -1488,6 +1499,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                       furnitureId={placedFurnitureId}
                       textureUrl={textureUrl}
                     />
+                    )}
 
                     {/* 보강대 (각 섹션 백패널 상/하단) - 60mm 높이, 15.5mm 두께
                         2D 정면도에서는 숨김 (백패널 뒤에 위치하지만 선 렌더링으로 보임)

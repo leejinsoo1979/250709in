@@ -19,6 +19,10 @@ export interface SectionConfig {
   // 선반 전용 상세 설정 (절대 위치 지정용)
   shelfPositions?: number[]; // 각 선반의 Y 위치 (mm, 섹션 하단 기준)
   isTopFinishPanel?: boolean; // 최상단 마감 패널 여부
+
+  // 섹션별 백패널 유무 (기본값 true). false면 백패널 없음 + 측판 우측 홈파기 없음
+  // 예: 빌트인 냉장고장 하부섹션 (냉장고 통풍/콘센트용 개방)
+  hasBackPanel?: boolean;
 }
 
 // 타입 가드 함수: Firebase에서 불러온 데이터 검증
@@ -327,6 +331,70 @@ const createSingleType2 = (columnWidth: number, maxHeight: number): ModuleData =
       ...base.modelConfig,
       sections
     }
+  } as ModuleData;
+};
+
+/**
+ * 빌트인 냉장고장 생성 (키큰장)
+ * - 폭 600 / 깊이 600 고정 (사이즈 변경 불가)
+ * - 하부섹션 외경 1838 고정: 백패널 X, 측판 우측 홈파기 X, 도어 1장, 냉장고 자리(개방)
+ * - 상부섹션 = maxHeight - 1838: 백패널 O, 도어 1장, 내경 절반에 선반 1개
+ * - 모듈 ID에 'built-in-fridge' 포함 (키큰장 탭 필터 매칭용)
+ */
+const BUILT_IN_FRIDGE_WIDTH = 600;
+const BUILT_IN_FRIDGE_DEPTH = 600;
+const BUILT_IN_FRIDGE_LOWER_HEIGHT = 1838;
+
+const createBuiltInFridge = (maxHeight: number): ModuleData => {
+  const lowerHeight = BUILT_IN_FRIDGE_LOWER_HEIGHT;
+  const upperHeight = Math.max(maxHeight - lowerHeight, 0);
+
+  // 상부 섹션 내경(상하판 두께 제외) 절반에 선반 1개
+  const basicThickness = FURNITURE_SPECS.BASIC_THICKNESS;
+  const upperInnerHeight = Math.max(upperHeight - basicThickness * 2, 0);
+  const upperShelfPos = upperInnerHeight / 2;
+
+  const sections: SectionConfig[] = [
+    // 하부섹션: 냉장고 자리 (백패널 없음)
+    {
+      type: 'open',
+      heightType: 'absolute',
+      height: lowerHeight,
+      hasBackPanel: false,
+    },
+    // 상부섹션: 백패널 있음, 가운데 선반 1개
+    {
+      type: 'shelf',
+      heightType: 'absolute',
+      height: upperHeight,
+      count: 1,
+      shelfPositions: [upperShelfPos],
+      hasBackPanel: true,
+    },
+  ];
+
+  const base = createFurnitureBase(
+    `built-in-fridge-${BUILT_IN_FRIDGE_WIDTH}`,
+    `빌트인 냉장고장 ${BUILT_IN_FRIDGE_WIDTH}mm`,
+    BUILT_IN_FRIDGE_WIDTH,
+    maxHeight,
+    BUILT_IN_FRIDGE_DEPTH,
+    FURNITURE_SPECS.COLORS.TYPE2,
+    `폭 ${BUILT_IN_FRIDGE_WIDTH} / 깊이 ${BUILT_IN_FRIDGE_DEPTH} 고정. 하부 ${lowerHeight}mm 냉장고 자리(백패널 없음).`,
+    BUILT_IN_FRIDGE_DEPTH,
+    'full'
+  );
+
+  return {
+    ...base,
+    // 폭/깊이 고정 - widthOptions 단일값으로 잠금
+    widthOptions: [BUILT_IN_FRIDGE_WIDTH],
+    dimensions: { width: BUILT_IN_FRIDGE_WIDTH, height: maxHeight, depth: BUILT_IN_FRIDGE_DEPTH },
+    isDynamic: false, // 사이즈 변경 불가
+    modelConfig: {
+      ...base.modelConfig,
+      sections,
+    },
   } as ModuleData;
 };
 
@@ -2929,6 +2997,9 @@ export const generateShelvingModules = (
   modules.push(createSingleType1(columnWidth, maxHeight));
   modules.push(createSingleType2(columnWidth, maxHeight));
   modules.push(createSingleType4(columnWidth, maxHeight));
+
+  // === 키큰장: 빌트인 냉장고장 (폭/깊이 600 고정) ===
+  modules.push(createBuiltInFridge(maxHeight));
   modules.push(createSingleEntrywayH(columnWidth, maxHeight));
   // modules.push(createSingleEntrywayI(columnWidth, maxHeight));
 
