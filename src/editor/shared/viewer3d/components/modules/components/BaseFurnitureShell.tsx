@@ -1746,7 +1746,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
 
           const offset = mmToThreeUnits(435);
           const braceThickness = basicThickness;     // 18mm 두께
-          const braceHeight = mmToThreeUnits(80);     // 80mm 높이
+          const braceHeight = mmToThreeUnits(60);     // 60mm 높이
           const braceWidth = innerWidth - sidePanelGap;
 
           // 보강대 1: 위 (윗면이 (하)상판 아랫면에서 435mm 아래)
