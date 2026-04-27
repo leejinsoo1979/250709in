@@ -225,7 +225,39 @@ const BoxModule: React.FC<BoxModuleProps> = ({
 
 
   // debug useEffects removed for perf
-  
+
+  // 인서트 프레임 머티리얼 (도어와 동일: 색상 + 텍스처)
+  // 의존성을 spaceInfo.materialConfig 원본 값으로만 한정하여 깜빡임 방지
+  const insertDoorColorRaw = (spaceInfo?.materialConfig as any)?.doorColor as string | undefined;
+  const insertDoorTextureRaw = (spaceInfo?.materialConfig as any)?.doorTexture as string | undefined;
+  const insertFrameMaterial = useMemo(() => {
+    const colorStr = insertDoorColorRaw || '#E0E0E0';
+    const mat = new THREE.MeshStandardMaterial({
+      color: new THREE.Color(colorStr),
+      metalness: 0.0,
+      roughness: 0.6,
+    });
+    if (insertDoorTextureRaw) {
+      const loader = new THREE.TextureLoader();
+      loader.load(insertDoorTextureRaw, (texture) => {
+        texture.wrapS = THREE.RepeatWrapping;
+        texture.wrapT = THREE.RepeatWrapping;
+        texture.colorSpace = THREE.SRGBColorSpace;
+        mat.map = texture;
+        mat.needsUpdate = true;
+      });
+    }
+    return mat;
+  }, [insertDoorColorRaw, insertDoorTextureRaw]);
+
+  // 머티리얼 dispose (언마운트/재생성 시 메모리 정리)
+  useEffect(() => {
+    return () => {
+      if (insertFrameMaterial.map) insertFrameMaterial.map.dispose();
+      insertFrameMaterial.dispose();
+    };
+  }, [insertFrameMaterial]);
+
   // 모든 간접조명은 UpperCabinetIndirectLight에서 통합 처리하므로 BoxModule에서는 렌더링하지 않음
   const showIndirectLight = false;
 
@@ -1078,6 +1110,8 @@ const BoxModule: React.FC<BoxModuleProps> = ({
     const FRAME_DEPTH = mmTo(58); // 프레임 두께 18 + frontInset 40 = EP 깊이 58 (앞부터 58까지)
     const PT_THREE = mmTo(PT);
 
+    // 인서트 프레임 머티리얼: 컴포넌트 상단 useMemo에서 생성된 것 사용 (도어와 동일)
+
     // 공간 전체 높이로 그림. 가구 그룹은 가구 중심 기준이므로 공간 중심으로 Y 시프트.
     const spaceTotalHeightMm = spaceInfo.height || 0;
     const floorFinishMm = (spaceInfo.hasFloorFinish && spaceInfo.floorFinish?.height) || 0;
@@ -1115,7 +1149,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
         <BoxWithEdges
           args={[frontFrameWidth, fullHeight, PT_THREE]}
           position={[0, fullYOffset, frontFrameZ]}
-          material={baseFurniture.material}
+          material={insertFrameMaterial}
           isDragging={isDragging}
           isEditMode={isEditMode}
           panelName="Insert전면프레임"
@@ -1125,7 +1159,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
         <BoxWithEdges
           args={[PT_THREE, fullHeight, FRAME_DEPTH]}
           position={[leftEpX, fullYOffset, epZ]}
-          material={baseFurniture.material}
+          material={insertFrameMaterial}
           isDragging={isDragging}
           isEditMode={isEditMode}
           isEndPanel={true}
@@ -1136,7 +1170,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
         <BoxWithEdges
           args={[PT_THREE, fullHeight, FRAME_DEPTH]}
           position={[rightEpX, fullYOffset, epZ]}
-          material={baseFurniture.material}
+          material={insertFrameMaterial}
           isDragging={isDragging}
           isEditMode={isEditMode}
           isEndPanel={true}
