@@ -234,41 +234,50 @@ const BoxModule: React.FC<BoxModuleProps> = ({
   // debug useEffects removed for perf
 
   // 인서트 프레임 머티리얼 (도어와 동일: 색상 + 텍스처)
-  // 의존성을 spaceInfo.materialConfig 원본 값으로만 한정하여 깜빡임 방지
+  // DoorModule.applyTextureToMaterial과 동일한 순서/속성으로 처리하여 색감 일치
   const insertDoorColorRaw = (spaceInfo?.materialConfig as any)?.doorColor as string | undefined;
   const insertDoorTextureRaw = (spaceInfo?.materialConfig as any)?.doorTexture as string | undefined;
   const insertFrameMaterial = useMemo(() => {
-    const colorStr = insertDoorColorRaw || '#E0E0E0';
+    // 도어 createDoorMaterial과 동일한 초기 속성
     const mat = new THREE.MeshStandardMaterial({
-      color: new THREE.Color(colorStr),
+      color: new THREE.Color('#E0E0E0'),
       metalness: 0.0,
       roughness: 0.6,
+      envMapIntensity: 0.0,
+      emissive: new THREE.Color(0x000000),
     });
-    // 텍스처 URL에 따라 도어와 동일한 텍스처별 머티리얼 설정 미리 적용 (rgb/toneMapped/roughness 등)
+
     if (insertDoorTextureRaw) {
+      // 텍스처 로드 전에 도어와 동일하게 즉시 텍스처별 사전 설정
       if (isOakTexture(insertDoorTextureRaw)) {
-        applyOakTextureSettings(mat, false); // 회전은 텍스처 로드 후 별도 처리
+        applyOakTextureSettings(mat);
       } else if (isCabinetTexture1(insertDoorTextureRaw)) {
         applyCabinetTexture1Settings(mat);
       }
+
       const loader = new THREE.TextureLoader();
       loader.load(insertDoorTextureRaw, (texture) => {
         texture.wrapS = THREE.RepeatWrapping;
         texture.wrapT = THREE.RepeatWrapping;
-        texture.colorSpace = THREE.SRGBColorSpace;
-        // 도어 기본 결 방향(vertical)에 맞춰 90도 회전
+        texture.repeat.set(1, 1);
+        // 결 방향: vertical = PI/2, horizontal = 0 (도어 패널은 vertical 기본)
         texture.rotation = Math.PI / 2;
         texture.center.set(0.5, 0.5);
         mat.map = texture;
+
         if (isOakTexture(insertDoorTextureRaw)) {
-          applyOakTextureSettings(mat, true);
+          applyOakTextureSettings(mat);
         } else if (isCabinetTexture1(insertDoorTextureRaw)) {
           applyCabinetTexture1Settings(mat);
         } else {
           applyDefaultImageTextureSettings(mat);
         }
+
         mat.needsUpdate = true;
       });
+    } else {
+      // 텍스처 없을 때만 doorColor 적용
+      mat.color.set(insertDoorColorRaw || '#E0E0E0');
     }
     return mat;
   }, [insertDoorColorRaw, insertDoorTextureRaw]);
