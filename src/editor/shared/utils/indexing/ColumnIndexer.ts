@@ -592,12 +592,21 @@ export class ColumnIndexer {
     }
 
     // 3. 남은 공간 계산
+    // customSlotWidths가 적용된 baseIndexing이면 fixed가 아닌 슬롯의 너비도 그대로 유지
+    // (사용자 지정 너비를 균등 분할로 덮어쓰지 않음)
+    // 단, fixed 슬롯의 합이 너무 커서 남은 공간이 음수가 되면 균등 분배로 강제 재계산
     const fixedTotal = slots.filter(s => s.fixed).reduce((sum, s) => sum + s.width, 0);
     const remainingCount = slots.filter(s => !s.fixed).length;
+    const baseRemainingTotal = slots.filter(s => !s.fixed).reduce((sum, s) => sum + s.width, 0);
+    const expectedRemaining = internalWidth - fixedTotal;
 
-    if (remainingCount > 0) {
-      const remainingWidth = internalWidth - fixedTotal;
-      const remainingSlotWidth = Math.floor(remainingWidth / remainingCount);
+    // baseIndexing의 슬롯 너비가 이미 정상이면 그대로 사용
+    // (합이 internalWidth와 ±2mm 이내로 일치)
+    const baseSumOk = Math.abs((fixedTotal + baseRemainingTotal) - internalWidth) <= 2;
+
+    if (remainingCount > 0 && !baseSumOk) {
+      // 합이 안 맞으면 비고정 슬롯에 잔여를 균등 분배
+      const remainingSlotWidth = Math.floor(expectedRemaining / remainingCount);
       slots.forEach(s => {
         if (!s.fixed) s.width = remainingSlotWidth;
       });

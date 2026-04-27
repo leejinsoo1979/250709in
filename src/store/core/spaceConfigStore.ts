@@ -458,8 +458,10 @@ export const useSpaceConfigStore = create<SpaceConfigState>()((set) => ({
         tempSpaceInfo.customSlotWidths = undefined;
       }
       // customSlotWidths가 있으면 customColumnCount를 그 길이로 강제 동기화
+      // 그리고 mainDoorCount는 무효화 (mainDoorCount가 우선이라 customColumnCount를 가림)
       if (Array.isArray(tempSpaceInfo.customSlotWidths) && tempSpaceInfo.customSlotWidths.length > 0) {
         tempSpaceInfo.customColumnCount = tempSpaceInfo.customSlotWidths.length;
+        tempSpaceInfo.mainDoorCount = undefined;
       }
 
       // 슬롯 개수나 공간 크기가 변경된 경우 정수 슬롯 너비를 위한 자동 조정

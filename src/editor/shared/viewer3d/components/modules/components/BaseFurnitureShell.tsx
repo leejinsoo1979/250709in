@@ -1730,6 +1730,84 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
         </>
         )}
 
+        {/* 빌트인 냉장고장 후면 보강대 3개 (하부섹션 백패널 없는 구간) */}
+        {/* - 위: (하)상판 아랫면에서 435mm 아래에 보강대 윗면
+            - 아래: (하)바닥 윗면에서 435mm 위에 보강대 아랫면
+            - 가운데: 위 둘 사이 정중앙
+           사이즈: 폭=내경, 높이=80mm, 두께=18mm. Z=가구 후면(측판 뒷면 안쪽). */}
+        {moduleData?.id?.includes('built-in-fridge') && showFurniture && isMultiSectionFurniture() && (() => {
+          const lowerSectionHeight = getSectionHeights()[0]; // 1838mm
+          // (하)바닥 윗면 Y (가구 좌표계, 가구 중심 기준)
+          const lowerBottomTopY = -height/2 + basicThickness;
+          // (하)상판 아랫면 Y = 하부섹션 시작점(=lowerBottomTopY) + 하부섹션 외경 - 상판두께*2
+          //                   = (-height/2 + basicThickness) + lowerSectionHeight - basicThickness*2
+          //                   = -height/2 + lowerSectionHeight - basicThickness
+          const lowerTopBottomY = -height/2 + lowerSectionHeight - basicThickness;
+
+          const offset = mmToThreeUnits(435);
+          const braceThickness = basicThickness;     // 18mm 두께
+          const braceHeight = mmToThreeUnits(80);     // 80mm 높이
+          const braceWidth = innerWidth - sidePanelGap;
+
+          // 보강대 1: 위 (윗면이 (하)상판 아랫면에서 435mm 아래)
+          const topBraceTopY = lowerTopBottomY - offset;
+          const topBraceCenterY = topBraceTopY - braceHeight/2;
+          // 보강대 3: 아래 (아랫면이 (하)바닥 윗면에서 435mm 위)
+          const bottomBraceBottomY = lowerBottomTopY + offset;
+          const bottomBraceCenterY = bottomBraceBottomY + braceHeight/2;
+          // 보강대 2: 가운데 (위 둘의 정중앙)
+          const middleBraceCenterY = (topBraceCenterY + bottomBraceCenterY) / 2;
+
+          // Z 위치: 가구 후면 (측판 뒷면 = -depth/2 + braceThickness/2, 보강대 뒷면이 측판 뒷면과 일치)
+          const braceZ = -depth/2 + braceThickness/2;
+
+          const braceMat = getPanelMaterial('(하)후면보강대');
+
+          return (
+            <>
+              <BoxWithEdges
+                key={`fridge-brace-top-${braceMat.uuid}`}
+                args={[braceWidth, braceHeight, braceThickness]}
+                position={[0, topBraceCenterY, braceZ]}
+                material={braceMat}
+                renderMode={renderMode}
+                isDragging={isDragging}
+                isEditMode={isEditMode}
+                panelName="(하)후면보강대상"
+                panelGrainDirections={panelGrainDirections}
+                furnitureId={placedFurnitureId}
+                textureUrl={textureUrl}
+              />
+              <BoxWithEdges
+                key={`fridge-brace-mid-${braceMat.uuid}`}
+                args={[braceWidth, braceHeight, braceThickness]}
+                position={[0, middleBraceCenterY, braceZ]}
+                material={braceMat}
+                renderMode={renderMode}
+                isDragging={isDragging}
+                isEditMode={isEditMode}
+                panelName="(하)후면보강대중"
+                panelGrainDirections={panelGrainDirections}
+                furnitureId={placedFurnitureId}
+                textureUrl={textureUrl}
+              />
+              <BoxWithEdges
+                key={`fridge-brace-bot-${braceMat.uuid}`}
+                args={[braceWidth, braceHeight, braceThickness]}
+                position={[0, bottomBraceCenterY, braceZ]}
+                material={braceMat}
+                renderMode={renderMode}
+                isDragging={isDragging}
+                isEditMode={isEditMode}
+                panelName="(하)후면보강대하"
+                panelGrainDirections={panelGrainDirections}
+                furnitureId={placedFurnitureId}
+                textureUrl={textureUrl}
+              />
+            </>
+          );
+        })()}
+
         {/* 내부 구조 (타입별로 다른 내용) */}
         {showFurniture ? children : null}
       </>
