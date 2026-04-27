@@ -492,12 +492,16 @@ export function placeFurnitureAtSlot(params: PlaceFurnitureParams): PlaceFurnitu
     }
   }
 
-  // 빌트인 냉장고장: 슬롯 너비와 무관하게 600 고정 + slotCustomWidth로 슬롯 재분배 트리거
-  // (BUILT_IN_FRIDGE_FIXED_WIDTH는 함수 상단에서 이미 선언됨)
-  // adjustedWidth는 기둥 침범 케이스 전용(FurnitureItem이 그걸로 위치 보정함)이므로 빌트인 냉장고장에는 박지 않음
+  // 고정폭 모듈 (빌트인 냉장고장 600 / Insert 프레임 100): 슬롯 너비 무관 고정 + slotCustomWidth로 슬롯 재분배
+  // adjustedWidth는 기둥 침범 케이스 전용이라 박지 않음
   const isBuiltInFridge = (moduleId.includes('built-in-fridge')) || (furnitureId.includes('built-in-fridge'));
-  const finalCustomWidth = isBuiltInFridge ? BUILT_IN_FRIDGE_FIXED_WIDTH : customWidth;
-  const finalAdjustedWidth = isBuiltInFridge ? undefined : adjustedWidth;
+  const isInsertFrame = (moduleId.includes('insert-frame')) || (furnitureId.includes('insert-frame'));
+  const fixedWidthForFinal = isBuiltInFridge
+    ? BUILT_IN_FRIDGE_FIXED_WIDTH
+    : (isInsertFrame ? INSERT_FRAME_FIXED_WIDTH : 0);
+  const isFixedWidthModule = fixedWidthForFinal > 0;
+  const finalCustomWidth = isFixedWidthModule ? fixedWidthForFinal : customWidth;
+  const finalAdjustedWidth = isFixedWidthModule ? undefined : adjustedWidth;
 
   const newModule: PlacedModule = {
     id: uuidv4(),
@@ -515,8 +519,8 @@ export function placeFurnitureAtSlot(params: PlaceFurnitureParams): PlaceFurnitu
     customDepth: customDepth,
     customWidth: finalCustomWidth,
     adjustedWidth: finalAdjustedWidth,
-    // 빌트인 냉장고장: slotCustomWidth로 슬롯 자동 재분배 트리거
-    ...(isBuiltInFridge ? { slotCustomWidth: BUILT_IN_FRIDGE_FIXED_WIDTH } : {}),
+    // 고정폭 모듈: slotCustomWidth로 슬롯 자동 재분배 트리거
+    ...(isFixedWidthModule ? { slotCustomWidth: fixedWidthForFinal } : {}),
     lowerSectionDepth: undefined,
     upperSectionDepth: undefined,
     lowerSectionTopOffset: defaultLowerTopOffset,
@@ -534,11 +538,10 @@ export function placeFurnitureAtSlot(params: PlaceFurnitureParams): PlaceFurnitu
     useMyCabinetStore.getState().setPendingPlacement(null);
   }
 
-  // 빌트인 냉장고장: spaceInfo.customSlotWidths를 직접 갱신해
-  //   ColumnGuides/SlotPlacementIndicators/FurnitureItem 등 모든 인덱싱이
-  //   새 슬롯 너비를 즉시 사용하도록 보장
+  // 고정폭 모듈(빌트인 냉장고장/Insert 프레임): spaceInfo.customSlotWidths를 직접 갱신
+  //   ColumnGuides/SlotPlacementIndicators/FurnitureItem 등 모든 인덱싱이 새 슬롯 너비 즉시 사용
   //   추가로 newModule의 xPosition도 새 슬롯 중심으로 강제 보정
-  if (isBuiltInFridge && !hasDroppedCeiling) {
+  if (isFixedWidthModule && !hasDroppedCeiling) {
     try {
       const { useSpaceConfigStore } = require('@/store/core/spaceConfigStore');
       const currentSpaceInfo = useSpaceConfigStore.getState().spaceInfo;
