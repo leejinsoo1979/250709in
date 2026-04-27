@@ -1170,16 +1170,31 @@ const ModuleGallery: React.FC<ModuleGalleryProps> = ({ moduleCategory = 'tall', 
     // 듀얼 가구인지 확인
     const isDualModule = module.id.includes('dual-');
 
-    // 빌트인 냉장고장: 슬롯 1개 점유 가능하면 항상 OK
-    // 부족/잉여 검증은 마지막 빈 슬롯 시점에 인서트가 흡수하므로 갤러리 단에서는 막지 않음
+    // 빌트인 냉장고장: 폭이 들어갈 수 있는지만 체크 (인서트 흡수 가능량 포함)
+    // 슬롯 개수 제한 없음 → 마지막 빈 영역에도 배치 가능
     if (module.id.includes('built-in-fridge')) {
-      const slotsTotal = indexing.columnCount ?? 1;
-      // slotCustomWidth가 박힌 모듈 = 이미 슬롯 점유한 빌트인/인서트 (1슬롯씩)
-      const occupiedSlots = placedModulesForValid.filter((m: any) => m.slotCustomWidth !== undefined).length;
-      const hasFreeSlot = slotsTotal - occupiedSlots >= 1;
+      const fridgeWidth = module.dimensions.width; // 582
+      const fridges = placedModulesForValid.filter((m: any) =>
+        typeof m.moduleId === 'string' && m.moduleId.includes('built-in-fridge')
+      );
+      const inserts = placedModulesForValid.filter((m: any) =>
+        typeof m.moduleId === 'string' && m.moduleId.includes('insert-frame')
+      );
+      const fridgesWidth = fridges.reduce((s: number, m: any) => s + (m.slotCustomWidth ?? fridgeWidth), 0);
+      const insertsWidth = inserts.reduce((s: number, m: any) => s + (m.slotCustomWidth ?? 136), 0);
+      const occupiedWidth = fridgesWidth + insertsWidth;
+      const remainingWidth = zoneInternalSpace.width - occupiedWidth;
+      // 인서트가 흡수 가능한 최대 축소량 = (인서트 폭 - 36) 합
+      const maxInsertShrink = inserts.reduce((s: number, m: any) => {
+        const w = m.slotCustomWidth ?? 136;
+        return s + Math.max(0, w - 36);
+      }, 0);
+      // 새 빌트인 추가 후 부족분 = 582 - 남은공간. 양수면 인서트가 흡수해야 함.
+      const shortfall = fridgeWidth - remainingWidth;
+      const canFit = shortfall <= maxInsertShrink + 0.01;
       const fitsHeightDepth = module.dimensions.height <= zoneInternalSpace.height
         && module.dimensions.depth <= zoneInternalSpace.depth;
-      return hasFreeSlot && fitsHeightDepth;
+      return canFit && fitsHeightDepth;
     }
 
     // 단내림 활성화 시 영역별 검증
