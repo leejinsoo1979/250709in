@@ -38,32 +38,8 @@ export function placeFurnitureAtSlot(params: PlaceFurnitureParams): PlaceFurnitu
   let spaceInfo = params.spaceInfo;
   let slotIndex = paramSlotIndex;
 
-  // 빌트인 냉장고장 배치 시 빈 슬롯이 없으면 컬럼수 +1 자동 증가 (선처리 — baseIndexing 재계산 위해)
-  const isBuiltInFridgeCheck = moduleId.includes('built-in-fridge');
-  if (isBuiltInFridgeCheck) {
-    const initialIndexing = calculateSpaceIndexing(spaceInfo);
-    const initialOccupied = useFurnitureStore.getState().placedModules.filter(m =>
-      m.slotCustomWidth !== undefined && (m.zone || 'normal') === (zone || 'normal') && !m.isFreePlacement
-    ).length;
-    if (initialOccupied >= initialIndexing.columnCount) {
-      const newColumnCount = initialIndexing.columnCount + 1;
-      const setSpaceInfo = useSpaceConfigStore.getState().setSpaceInfo;
-      setSpaceInfo({
-        customColumnCount: newColumnCount,
-        columnMode: 'custom',
-        customSlotWidths: undefined,
-      } as any);
-      // params.spaceInfo도 신규 컬럼수 반영하여 indexing 재계산
-      spaceInfo = {
-        ...spaceInfo,
-        customColumnCount: newColumnCount,
-        columnMode: 'custom',
-        customSlotWidths: undefined,
-      } as any;
-      // 새 마지막 슬롯 index = newColumnCount - 1
-      slotIndex = newColumnCount - 1;
-    }
-  }
+  // 빌트인 냉장고장 자동 컬럼수 +1 로직 제거 — 사용자가 컬럼수를 직접 조정해야 함
+  // (자동 증가 시 빌트인이 무한 늘어나 슬롯 폭이 균등 분할되던 문제 방지)
 
   // 인서트 프레임 배치 시 항상 컬럼수 +1 자동 증가
   //   인서트 프레임은 가구 옆에 무조건 붙는 역할 — 기존 슬롯을 갉아먹지 않고 새 슬롯으로 추가
