@@ -63,6 +63,26 @@ export function placeFurnitureAtSlot(params: PlaceFurnitureParams): PlaceFurnitu
     }
   }
 
+  // 인서트 프레임 배치 시 항상 컬럼수 +1 자동 증가
+  //   인서트 프레임은 가구 사이를 메우는 역할 — 기존 슬롯을 갉아먹지 않고 새 슬롯으로 추가
+  const isInsertFrameCheck = moduleId.includes('insert-frame');
+  if (isInsertFrameCheck) {
+    const initialIndexing = calculateSpaceIndexing(spaceInfo);
+    const newColumnCount = initialIndexing.columnCount + 1;
+    const setSpaceInfo = useSpaceConfigStore.getState().setSpaceInfo;
+    setSpaceInfo({
+      customColumnCount: newColumnCount,
+      columnMode: 'custom',
+    } as any);
+    spaceInfo = {
+      ...spaceInfo,
+      customColumnCount: newColumnCount,
+      columnMode: 'custom',
+    } as any;
+    // 인서트 프레임은 새 마지막 슬롯에 들어감 (이후 사용자가 위치 조정 가능)
+    slotIndex = newColumnCount - 1;
+  }
+
   const baseIndexing = calculateSpaceIndexing(spaceInfo);
   const hasDroppedCeiling = spaceInfo.droppedCeiling?.enabled || false;
 
