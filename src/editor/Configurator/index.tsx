@@ -510,10 +510,17 @@ const Configurator: React.FC = () => {
   const updateKitchenTabsScroll = useCallback(() => {
     const el = kitchenTabsRef.current;
     if (!el) return;
-    const canLeft = el.scrollLeft > 1;
-    const canRight = el.scrollLeft + el.clientWidth < el.scrollWidth - 1;
+    // 임계값 4px - 부동소수점/zoom/snap 보정 오차 흡수
+    const THRESHOLD = 4;
+    const canLeft = el.scrollLeft > THRESHOLD;
+    const canRight = el.scrollLeft + el.clientWidth < el.scrollWidth - THRESHOLD;
+    // 스크롤이 필요 없는 경우(콘텐츠가 컨테이너보다 작음)에는 둘 다 false
+    const noOverflow = el.scrollWidth <= el.clientWidth + THRESHOLD;
+    const next = noOverflow
+      ? { canLeft: false, canRight: false }
+      : { canLeft, canRight };
     setKitchenTabsScroll(prev =>
-      prev.canLeft === canLeft && prev.canRight === canRight ? prev : { canLeft, canRight }
+      prev.canLeft === next.canLeft && prev.canRight === next.canRight ? prev : next
     );
   }, []);
 
