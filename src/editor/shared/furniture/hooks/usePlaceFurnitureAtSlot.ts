@@ -52,48 +52,52 @@ export function placeFurnitureAtSlot(params: PlaceFurnitureParams): PlaceFurnitu
   // slotCustomWidth가 있는 기존 모듈이 있으면 재분할된 indexing 사용
   const existingModules = useFurnitureStore.getState().placedModules;
 
-  // 빌트인 냉장고장 배치 시: 타겟 슬롯이 582에 부족/잉여 → 모든 Insert 프레임 폭을 균등 조정해서 흡수
-  // 이 단계에서 미리 Insert 프레임의 slotCustomWidth를 조정한 가상 모듈 배열을 만듦
+  // 빌트인 냉장고장 배치 시: 모든 Insert 프레임의 폭을 처음부터 다시 균등 계산
+  // 공식: 인서트 폭 = (zone 내경 - 모든 빌트인×582) / 인서트 개수
+  //   (이번에 배치할 빌트인도 포함하여 계산)
   let adjustedExistingModules = existingModules;
   if (isBuiltInFridgeForIndex) {
-    // 현재 slotCustomWidth 반영된 indexing으로 타겟 슬롯 너비 측정
-    const currentIndexing = existingModules.some(m => m.slotCustomWidth !== undefined)
-      ? recalculateWithCustomWidths(baseIndexing, existingModules, zone || 'normal')
-      : baseIndexing;
-    const targetSlotWidth = currentIndexing.slotWidths?.[slotIndex] ?? currentIndexing.columnWidth;
-    const diff = BUILT_IN_FRIDGE_FIXED_WIDTH - targetSlotWidth; // 양수=부족(인서트 줄여서 흡수), 음수=잉여(인서트 늘려서 흡수)
+    const sameZoneModules = existingModules.filter(
+      m => (m.zone || 'normal') === (zone || 'normal') && !m.isFreePlacement
+    );
+    const insertFrames = sameZoneModules.filter(
+      m => typeof m.moduleId === 'string' && m.moduleId.includes('insert-frame')
+    );
+    const existingFridges = sameZoneModules.filter(
+      m => typeof m.moduleId === 'string' && m.moduleId.includes('built-in-fridge')
+    );
 
-    if (Math.abs(diff) > 0.01) {
-      const insertFrames = existingModules.filter(m =>
-        typeof m.moduleId === 'string' &&
-        m.moduleId.includes('insert-frame') &&
-        (m.zone || 'normal') === (zone || 'normal')
-      );
-
-      if (insertFrames.length > 0) {
-        // 부족분/잉여분을 모든 인서트 프레임에 균등 분배
-        // diff > 0 (부족): 인서트 프레임이 줄어야 함 → 각 인서트 폭 -= diff/N
-        // diff < 0 (잉여): 인서트 프레임이 늘어야 함 → 각 인서트 폭 += |diff|/N
-        const adjustPerInsert = diff / insertFrames.length;
-        adjustedExistingModules = existingModules.map(m => {
-          if (
-            typeof m.moduleId === 'string' &&
-            m.moduleId.includes('insert-frame') &&
-            (m.zone || 'normal') === (zone || 'normal')
-          ) {
-            const currentInsertWidth = m.slotCustomWidth ?? INSERT_FRAME_FIXED_WIDTH;
-            const newInsertWidth = currentInsertWidth - adjustPerInsert;
-            // EP 18*2 = 36 보다 작아지면 안 됨 (최소 외경 = EP만 남는 36)
-            const safeWidth = Math.max(36, newInsertWidth);
-            return {
-              ...m,
-              slotCustomWidth: safeWidth,
-              customWidth: safeWidth,
-            } as typeof m;
-          }
-          return m;
-        });
+    if (insertFrames.length > 0) {
+      // zone 내경 가져오기
+      let zoneInnerWidthMm: number;
+      if (hasDroppedCeiling && zone && baseIndexing.zones) {
+        const zoneData = zone === 'dropped' ? baseIndexing.zones.dropped : baseIndexing.zones.normal;
+        zoneInnerWidthMm = zoneData?.width ?? baseIndexing.internalWidth;
+      } else {
+        zoneInnerWidthMm = baseIndexing.internalWidth;
       }
+
+      // 새 빌트인까지 포함하여 빌트인 총 개수
+      const totalFridgeCount = existingFridges.length + 1;
+      const totalFridgeWidth = totalFridgeCount * BUILT_IN_FRIDGE_FIXED_WIDTH;
+      const remainForInserts = zoneInnerWidthMm - totalFridgeWidth;
+      const newInsertWidth = remainForInserts / insertFrames.length;
+      const safeWidth = Math.max(36, newInsertWidth);
+
+      adjustedExistingModules = existingModules.map(m => {
+        if (
+          typeof m.moduleId === 'string' &&
+          m.moduleId.includes('insert-frame') &&
+          (m.zone || 'normal') === (zone || 'normal')
+        ) {
+          return {
+            ...m,
+            slotCustomWidth: safeWidth,
+            customWidth: safeWidth,
+          } as typeof m;
+        }
+        return m;
+      });
     }
   }
 
