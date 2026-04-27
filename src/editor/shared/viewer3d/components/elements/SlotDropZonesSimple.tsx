@@ -1544,6 +1544,9 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         expectedBottomY: furnitureY - mmToThreeUnits((moduleData?.dimensions?.height || 600) / 2)
       });
 
+      // 빌트인 냉장고장: 슬롯 너비와 무관하게 600 고정 + slotCustomWidth로 재분배 트리거
+      const _isBuiltInFridge1 = isBuiltInFridgeModule(zoneTargetModuleId);
+
       // 새 모듈 배치
       const newModule: any = {
         id: placedId,
@@ -1555,10 +1558,11 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         slotIndex: globalSlotIndex,  // 전체 공간 기준 슬롯 인덱스 사용
         isDualSlot: isDual,
         isValidInCurrentSpace: true,
-        adjustedWidth: adjustedWidth,
+        adjustedWidth: _isBuiltInFridge1 ? BUILT_IN_FRIDGE_FIXED_WIDTH : adjustedWidth,
         hingePosition: hingePosition, // 기둥 위치에 따른 최적 힌지 방향
         zone: zoneToUse, // 영역 정보 저장
-        customWidth: customWidth, // 실제 슬롯 너비 사용 (소수점 2자리)
+        customWidth: _isBuiltInFridge1 ? BUILT_IN_FRIDGE_FIXED_WIDTH : customWidth, // 실제 슬롯 너비 사용 (소수점 2자리)
+        ...(_isBuiltInFridge1 ? { slotCustomWidth: BUILT_IN_FRIDGE_FIXED_WIDTH } : {}),
         customHeight: zoneToUse === 'dropped' && zoneInternalSpace ? zoneInternalSpace.height : undefined, // 단내림 구간의 줄어든 높이 저장
         lowerSectionTopOffset: moduleData.id.includes('2drawer') || moduleData.id.includes('4drawer') ? 85 : 0 // 2단/4단 서랍장 85mm, 나머지 0mm
       };
@@ -1690,6 +1694,8 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
           furnitureY = (startHeightMm + furnitureHeightMm / 2) / 100;
         }
 
+        // 빌트인 냉장고장: 슬롯 너비와 무관하게 600 고정
+        const _isBuiltInFridge2 = isBuiltInFridgeModule(moduleData.id);
         const newModule = {
           id: placedId,
           moduleId: moduleData.id,
@@ -1699,9 +1705,10 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
           depth: defaultDepth,
           isDualSlot: isDual,
           isValidInCurrentSpace: true,
-          adjustedWidth: moduleData.dimensions.width,
+          adjustedWidth: _isBuiltInFridge2 ? BUILT_IN_FRIDGE_FIXED_WIDTH : moduleData.dimensions.width,
           hingePosition: 'right' as 'left' | 'right',
-          customWidth: customWidth,
+          customWidth: _isBuiltInFridge2 ? BUILT_IN_FRIDGE_FIXED_WIDTH : customWidth,
+          ...(_isBuiltInFridge2 ? { slotCustomWidth: BUILT_IN_FRIDGE_FIXED_WIDTH } : {}),
           zone: targetZone, // 클릭한 슬롯의 영역 사용
           lowerSectionTopOffset: moduleData.id.includes('2drawer') || moduleData.id.includes('4drawer') ? 85 : 0 // 2단/4단 서랍장 85mm, 나머지 0mm
         };
