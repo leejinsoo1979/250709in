@@ -11,6 +11,9 @@ import { useDerivedSpaceStore } from '@/store/derivedSpaceStore';
 import styles from './ViewerControls.module.css';
 import QRCodeGenerator from '@/editor/shared/ar/components/QRCodeGenerator';
 import { useTheme } from '@/contexts/ThemeContext';
+import { useAuth } from '@/auth/AuthProvider';
+
+const ALLOWED_EMAIL = 'sbbc212@gmail.com';
 
 export type ViewMode = '2D' | '3D';
 export type ViewDirection = 'front' | 'top' | 'left' | 'right' | 'all';
@@ -74,6 +77,8 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
   onFrameMergeToggle
 }) => {
   const { view2DDirection, setView2DDirection, view2DTheme, toggleView2DTheme, setView2DTheme, isMeasureMode, toggleMeasureMode, showFurnitureEditHandles, setShowFurnitureEditHandles, shadowEnabled, setShadowEnabled, edgeOutlineEnabled, setEdgeOutlineEnabled, isLayoutBuilderOpen, equalDistribution, toggleEqualDistribution, setDoorsOpen, slotWidthEditMode, setSlotWidthEditMode, slotEditOriginalColumnCount, setSlotEditOriginalColumnCount } = useUIStore();
+  const { user } = useAuth();
+  const isAllowedUser = user?.email === ALLOWED_EMAIL;
   const { spaceInfo } = useSpaceConfigStore();
   const { placedModules, isFurniturePlacementMode } = useFurnitureStore();
   const derivedColumnCount = useDerivedSpaceStore((state) => state.columnCount);
@@ -302,8 +307,8 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
           );
         })()}
 
-        {/* 슬롯배치 모드: 자유=슬롯 너비 직접 입력, 균등=균등분할 */}
-        {!isFreePlacement && !spaceInfo?.droppedCeiling?.enabled && !spaceInfo?.curtainBox?.enabled && (() => {
+        {/* 슬롯배치 모드: 자유=슬롯 너비 직접 입력, 균등=균등분할 (sbbc212@gmail.com 전용) */}
+        {isAllowedUser && !isFreePlacement && !spaceInfo?.droppedCeiling?.enabled && !spaceInfo?.curtainBox?.enabled && (() => {
           const isSlotCustom = Array.isArray(spaceInfo?.customSlotWidths) && spaceInfo.customSlotWidths.length > 0;
           const hasSlotPlaced = placedModules.some(m => !m.isFreePlacement);
           const isCustomActive = isSlotCustom || slotWidthEditMode;

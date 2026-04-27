@@ -714,14 +714,42 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   // 양쪽 합 = 91 → 인서트 136 - 91 = 두 도어 사이 45mm
   const INSERT_FRAME_DOOR_EXTENSION_MM = 47;
   const insertFrameAdjacency = useMemo(() => {
-    if (!storePlacedModule || storePlacedModule.isFreePlacement) {
-      return { left: false, right: false };
+    if (!storePlacedModule) return { left: false, right: false };
+
+    const isInsert = (m: any) => typeof m?.moduleId === 'string' && m.moduleId.includes('insert-frame');
+
+    // 자유배치 모드: x좌표 기반 인접성 판단
+    if (storePlacedModule.isFreePlacement) {
+      const myX = storePlacedModule.position?.x ?? 0;
+      const myWidth = (storePlacedModule.customWidth ?? 0) * 0.01; // mm → three units
+      const myLeft = myX - myWidth / 2;
+      const myRight = myX + myWidth / 2;
+      const TOL = 0.05; // 5mm 허용 오차 (three units)
+
+      const isAdjFree = (m: any) =>
+        m.isFreePlacement && isInsert(m) && m.id !== storePlacedModule.id;
+
+      const left = allPlacedModules.some(m => {
+        if (!isAdjFree(m)) return false;
+        const mx = m.position?.x ?? 0;
+        const mw = (m.customWidth ?? 0) * 0.01;
+        const mRight = mx + mw / 2;
+        return Math.abs(mRight - myLeft) <= TOL;
+      });
+      const right = allPlacedModules.some(m => {
+        if (!isAdjFree(m)) return false;
+        const mx = m.position?.x ?? 0;
+        const mw = (m.customWidth ?? 0) * 0.01;
+        const mLeft = mx - mw / 2;
+        return Math.abs(mLeft - myRight) <= TOL;
+      });
+      return { left, right };
     }
+
     const myZone = storePlacedModule.zone || 'normal';
     const mySlot = storePlacedModule.slotIndex;
     if (mySlot === undefined) return { left: false, right: false };
 
-    const isInsert = (m: any) => typeof m?.moduleId === 'string' && m.moduleId.includes('insert-frame');
     const inSameZone = (m: any) => (m.zone || 'normal') === myZone && !m.isFreePlacement;
     const isDualSelf = !!storePlacedModule.isDualSlot;
     const rightEdge = isDualSelf ? mySlot + 1 : mySlot;

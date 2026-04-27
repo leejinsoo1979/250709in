@@ -588,13 +588,15 @@ export function placeFurnitureAtSlot(params: PlaceFurnitureParams): PlaceFurnitu
     }
   }
 
-  // 고정폭 모듈 (빌트인 냉장고장 600 / Insert 프레임 100): 슬롯 너비 무관 고정 + slotCustomWidth로 슬롯 재분배
+  // 고정폭 모듈 (빌트인 냉장고장 582 / Insert 프레임 136): 슬롯 너비 무관 고정 + slotCustomWidth로 슬롯 재분배
   // adjustedWidth는 기둥 침범 케이스 전용이라 박지 않음
+  // 단, 자유 모드(customSlotWidths)에서는 슬롯 너비를 그대로 따라가도록 고정폭 무시
   const isBuiltInFridge = (moduleId.includes('built-in-fridge')) || (furnitureId.includes('built-in-fridge'));
   const isInsertFrame = (moduleId.includes('insert-frame')) || (furnitureId.includes('insert-frame'));
-  const fixedWidthForFinal = isBuiltInFridge
+  const isCustomSlotMode = Array.isArray(spaceInfo.customSlotWidths) && spaceInfo.customSlotWidths.length > 0;
+  const fixedWidthForFinal = !isCustomSlotMode && isBuiltInFridge
     ? BUILT_IN_FRIDGE_FIXED_WIDTH
-    : (isInsertFrame ? INSERT_FRAME_FIXED_WIDTH : 0);
+    : (!isCustomSlotMode && isInsertFrame ? INSERT_FRAME_FIXED_WIDTH : 0);
   const isFixedWidthModule = fixedWidthForFinal > 0;
   const finalCustomWidth = isFixedWidthModule ? fixedWidthForFinal : customWidth;
   const finalAdjustedWidth = isFixedWidthModule ? undefined : adjustedWidth;
