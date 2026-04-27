@@ -39,11 +39,30 @@ export function placeFurnitureAtSlot(params: PlaceFurnitureParams): PlaceFurnitu
   const baseIndexing = calculateSpaceIndexing(spaceInfo);
   const hasDroppedCeiling = spaceInfo.droppedCeiling?.enabled || false;
 
+  // 빌트인 냉장고장: 자기 자신을 미리 가상 모듈로 추가해 indexing 재계산
+  //   → 새 슬롯 중심(600)에 배치되어 슬롯 경계 벗어남 방지
+  const BUILT_IN_FRIDGE_FIXED_WIDTH = 600;
+  const isBuiltInFridgeForIndex = moduleId.includes('built-in-fridge');
+
   // slotCustomWidth가 있는 기존 모듈이 있으면 재분할된 indexing 사용
   const existingModules = useFurnitureStore.getState().placedModules;
-  const hasCustomWidthModules = existingModules.some(m => m.slotCustomWidth !== undefined);
+  const virtualModulesForIndex = isBuiltInFridgeForIndex
+    ? [
+        ...existingModules,
+        // 가상 모듈: 이번에 배치할 빌트인 냉장고장
+        {
+          id: '__virtual_fridge__',
+          moduleId,
+          slotIndex,
+          slotCustomWidth: BUILT_IN_FRIDGE_FIXED_WIDTH,
+          isDualSlot: false,
+          zone: zone || 'normal',
+        } as any,
+      ]
+    : existingModules;
+  const hasCustomWidthModules = virtualModulesForIndex.some(m => m.slotCustomWidth !== undefined);
   const indexing = hasCustomWidthModules
-    ? recalculateWithCustomWidths(baseIndexing, existingModules, zone || 'normal')
+    ? recalculateWithCustomWidths(baseIndexing, virtualModulesForIndex, zone || 'normal')
     : baseIndexing;
 
   // zone별 spaceInfo 생성
