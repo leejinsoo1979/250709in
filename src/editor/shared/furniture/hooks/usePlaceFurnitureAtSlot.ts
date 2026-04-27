@@ -235,7 +235,13 @@ export function placeFurnitureAtSlot(params: PlaceFurnitureParams): PlaceFurnitu
   }
 
   // 듀얼 판별: ID 기반 우선, 또는 가구 너비가 단일 슬롯의 1.5배 초과인지 확인
-  const isDualFurniture = isDualFurnitureId || (moduleData.dimensions.width > columnWidth * 1.5);
+  // 빌트인 냉장고장/Insert 프레임은 고정폭이라 슬롯 비교 무관 — 항상 싱글 처리
+  const isFixedWidthFurniture = moduleId.includes('built-in-fridge') || moduleId.includes('insert-frame');
+  // 슬롯 비교 기준: 자유 모드(slotWidths가 다양한 너비)이면 해당 슬롯 너비, 아니면 columnWidth
+  const targetSlotWidth = (indexing.slotWidths && slotIndex < indexing.slotWidths.length)
+    ? indexing.slotWidths[slotIndex]
+    : columnWidth;
+  const isDualFurniture = isDualFurnitureId || (!isFixedWidthFurniture && moduleData.dimensions.width > targetSlotWidth * 1.5);
 
   // 슬롯 위치 계산
   let allSlotPositions: Array<{ position: number; zone: 'normal' | 'dropped'; index: number }> = [];

@@ -235,19 +235,19 @@ export class ColumnIndexer {
 
     // 컬럼 수 결정 로직
     let columnCount: number;
-    
-    // mainDoorCount가 설정되어 있으면 최우선 사용 (4분할 창 등)
-    if (spaceInfo.mainDoorCount !== undefined && spaceInfo.mainDoorCount > 0) {
+
+    // customSlotWidths가 있으면 그 길이를 최우선 (자유 모드)
+    if (Array.isArray(spaceInfo.customSlotWidths) && spaceInfo.customSlotWidths.length > 0) {
+      columnCount = spaceInfo.customSlotWidths.length;
+    } else if (spaceInfo.mainDoorCount !== undefined && spaceInfo.mainDoorCount > 0) {
+      // mainDoorCount가 설정되어 있으면 사용 (4분할 창 등)
       columnCount = spaceInfo.mainDoorCount;
-      // console.log('📐 Using mainDoorCount:', columnCount);
     } else if (spaceInfo.customColumnCount) {
       // 사용자 지정 컬럼 수가 있으면 사용
       columnCount = spaceInfo.customColumnCount;
-      // console.log('📐 Using customColumnCount:', columnCount);
     } else {
       // 기존 자동 계산 로직
       columnCount = SpaceCalculator.getDefaultColumnCount(internalWidth);
-      // console.log('📐 Using auto-calculated columnCount:', columnCount);
     }
     
     // 노서라운드 모드에서 최적 이격거리 자동 선택 (벽이 있는 경우만 적용)
@@ -560,6 +560,21 @@ export class ColumnIndexer {
     const { columnCount, internalWidth, internalStartX } = baseIndexing;
     if (columnCount <= 0) return baseIndexing;
 
+    // 자유 모드(baseIndexing이 customSlotWidths 기반으로 만들어진 경우):
+    // baseIndexing.slotWidths의 합이 internalWidth와 거의 같으면 그대로 유지
+    // (slotCustomWidth 기반 재분배가 사용자 지정 슬롯 너비를 덮어쓰지 않도록)
+    if (baseIndexing.slotWidths && baseIndexing.slotWidths.length === columnCount) {
+      const baseSum = baseIndexing.slotWidths.reduce((s, w) => s + w, 0);
+      // 균등 분할이 아닌 사용자 지정 너비인지 판단: 표준편차로 판단
+      const avg = baseSum / columnCount;
+      const variance = baseIndexing.slotWidths.reduce((s, w) => s + (w - avg) * (w - avg), 0) / columnCount;
+      const stddev = Math.sqrt(variance);
+      // 슬롯 너비가 균등(stddev < 1mm)이 아니면 사용자 지정 모드로 간주 → 그대로 반환
+      if (stddev > 1 && Math.abs(baseSum - internalWidth) <= 2) {
+        return baseIndexing;
+      }
+    }
+
     // 1. 각 슬롯을 {fixed, width}로 매핑
     const slots: { fixed: boolean; width: number }[] = Array.from({ length: columnCount }, (_, i) => ({
       fixed: false,
@@ -700,9 +715,12 @@ export class ColumnIndexer {
       }
 
       let columnCount: number;
-      
-      // mainDoorCount가 설정되어 있으면 최우선 사용
-      if (spaceInfo.mainDoorCount !== undefined && spaceInfo.mainDoorCount > 0) {
+
+      // customSlotWidths가 있으면 그 길이를 최우선 (자유 모드)
+      if (Array.isArray(spaceInfo.customSlotWidths) && spaceInfo.customSlotWidths.length > 0) {
+        columnCount = spaceInfo.customSlotWidths.length;
+      } else if (spaceInfo.mainDoorCount !== undefined && spaceInfo.mainDoorCount > 0) {
+        // mainDoorCount가 설정되어 있으면 사용
         columnCount = spaceInfo.mainDoorCount;
       } else if (customColumnCount) {
         columnCount = customColumnCount;
