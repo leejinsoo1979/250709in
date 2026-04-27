@@ -64,13 +64,41 @@ export function placeFurnitureAtSlot(params: PlaceFurnitureParams): PlaceFurnitu
   }
 
   // 인서트 프레임 배치 시 항상 컬럼수 +1 자동 증가
-  //   인서트 프레임은 가구 사이를 메우는 역할 — 기존 슬롯을 갉아먹지 않고 새 슬롯으로 추가
-  //   사용자가 클릭한 slotIndex 위치에 끼워넣고, 그 이후 기존 가구는 한 칸씩 뒤로 밀어냄
+  //   인서트 프레임은 가구 옆에 무조건 붙는 역할 — 기존 슬롯을 갉아먹지 않고 새 슬롯으로 추가
+  //   클릭한 슬롯 위치를 점유된 가구 바로 옆으로 snap (떨어져 배치되는 것 방지)
   const isInsertFrameCheck = moduleId.includes('insert-frame');
   if (isInsertFrameCheck) {
     const initialIndexing = calculateSpaceIndexing(spaceInfo);
     const newColumnCount = initialIndexing.columnCount + 1;
-    const insertSlotIndex = slotIndex; // 사용자가 클릭한 위치
+
+    // 같은 zone의 점유된 슬롯 인덱스 수집
+    const sameZoneOccupied = useFurnitureStore.getState().placedModules
+      .filter(m => (m.zone || 'normal') === (zone || 'normal') && !m.isFreePlacement && typeof m.slotIndex === 'number')
+      .map(m => m.slotIndex as number)
+      .sort((a, b) => a - b);
+
+    // 클릭한 slot이 점유되어 있지 않으면 가장 가까운 점유 슬롯의 옆자리로 snap
+    let insertSlotIndex = slotIndex;
+    if (sameZoneOccupied.length > 0 && !sameZoneOccupied.includes(slotIndex)) {
+      // 좌/우 가장 가까운 점유 슬롯 찾기
+      let leftNeighbor = -1;
+      let rightNeighbor = Infinity;
+      for (const occ of sameZoneOccupied) {
+        if (occ < slotIndex && occ > leftNeighbor) leftNeighbor = occ;
+        if (occ > slotIndex && occ < rightNeighbor) rightNeighbor = occ;
+      }
+      const distLeft = leftNeighbor >= 0 ? slotIndex - leftNeighbor : Infinity;
+      const distRight = rightNeighbor !== Infinity ? rightNeighbor - slotIndex : Infinity;
+      if (distLeft <= distRight && leftNeighbor >= 0) {
+        // 왼쪽 가구 바로 오른쪽에 붙임 → leftNeighbor + 1 위치에 삽입
+        insertSlotIndex = leftNeighbor + 1;
+      } else if (rightNeighbor !== Infinity) {
+        // 오른쪽 가구 바로 왼쪽에 붙임 → rightNeighbor 위치에 삽입 (오른쪽 가구는 +1 시프트)
+        insertSlotIndex = rightNeighbor;
+      }
+    }
+    slotIndex = insertSlotIndex;
+
     const setSpaceInfo = useSpaceConfigStore.getState().setSpaceInfo;
     setSpaceInfo({
       customColumnCount: newColumnCount,
