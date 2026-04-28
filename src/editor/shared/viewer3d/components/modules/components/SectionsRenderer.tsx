@@ -309,10 +309,14 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
       const isType4DrawerSection = (furnitureId?.includes('4drawer-hanging') || furnitureId?.includes('4drawer-shelf')) && section.type === 'drawer' && index === 0;
       const sectionCenterY = currentYPosition + sectionHeight / 2 - (isType4DrawerSection ? basicThickness : 0);
 
-      // 현재 섹션의 깊이 가져오기 (sectionDepths가 mm 단위 → Three.js 단위 변환)
-      // sectionDepths[index] === undefined면 기본 depth 사용
-      const currentSectionDepth = (sectionDepths && sectionDepths[index] !== undefined && sectionDepths[index] > 0)
-        ? mmToThreeUnits(sectionDepths[index])
+      // 현재 섹션의 깊이 가져오기 (sectionDepths가 없으면 기본 depth 사용)
+      // sectionDepths는 호출자(BoxModule)가 어떤 단위로 넣는지에 따라 다름:
+      //  - 인출장/팬트리장/냉장고장: mm 단위 (placedModule.sectionDepths)
+      //  - 그 외: Three.js 단위 (이전 코드 호환)
+      // 큰 값(10 이상)이면 mm로 간주하여 변환
+      const rawSecDepth = sectionDepths?.[index];
+      const currentSectionDepth = (rawSecDepth !== undefined && rawSecDepth > 0)
+        ? (rawSecDepth > 10 ? mmToThreeUnits(rawSecDepth) : rawSecDepth)
         : depth;
 
       // adjustedDepthForShelves 계산 (백패널 두께 고려)
