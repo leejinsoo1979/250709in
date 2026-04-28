@@ -805,12 +805,21 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                       {/* 빌트인 냉장고장: 하부섹션 백패널 없음 → 상판은 측판과 동일한 풀 깊이 + 뒷면 가운데 따내기(31.5mm 띠, 40mm 깊이) */}
                       {(() => {
                         const isBuiltInFridge = !!moduleData?.id?.includes('built-in-fridge');
+                        // 냉장고장: 1단 백패널 없음 → 보강대 앞면까지 확장 (depthOffset 17mm만 줄임)
+                        const isFridgeNoBack = !!moduleData?.id?.includes('fridge-cabinet') && !isBuiltInFridge;
+                        // 빌트인 냉장고장: 풀깊이 (특수 사양)
+                        // 냉장고장: depth - depthOffset (= 보강대 앞면까지)
+                        const fridgeBackReduction = mmToThreeUnits(backPanelConfig.depthOffset);
                         const lowerTopDepth = isBuiltInFridge
                           ? lowerSectionDepth - mmToThreeUnits(lowerSectionTopOffsetMm || 0)
-                          : lowerSectionDepth - backReductionForPanels - mmToThreeUnits(lowerSectionTopOffsetMm || 0);
+                          : isFridgeNoBack
+                            ? lowerSectionDepth - fridgeBackReduction - mmToThreeUnits(lowerSectionTopOffsetMm || 0)
+                            : lowerSectionDepth - backReductionForPanels - mmToThreeUnits(lowerSectionTopOffsetMm || 0);
                         const lowerTopZ = isBuiltInFridge
                           ? lowerZOffset - mmToThreeUnits(lowerSectionTopOffsetMm || 0)/2
-                          : lowerZOffset + panelZOffset - mmToThreeUnits(lowerSectionTopOffsetMm || 0)/2;
+                          : isFridgeNoBack
+                            ? lowerZOffset + fridgeBackReduction / 2 - mmToThreeUnits(lowerSectionTopOffsetMm || 0)/2
+                            : lowerZOffset + panelZOffset - mmToThreeUnits(lowerSectionTopOffsetMm || 0)/2;
                         const panelW = innerWidth - sidePanelGap;
                         const panelH = basicThickness - mmToThreeUnits(0.1);
                         const panelY = lowerTopPanelY - mmToThreeUnits(0.05);
@@ -1447,7 +1456,13 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
           const panelName = isMultiSectionFurniture() ? '(하)바닥' : '바닥판';
           const bottomPanelMat = getPanelMaterial(panelName);
           const isBuiltInFridge = !!moduleData?.id?.includes('built-in-fridge');
-          const backReduction = isBuiltInFridge ? 0 : backReductionForPanels;
+          // 냉장고장 1단도 백패널 없음 → 보강대 앞면까지 확장 (depthOffset 17mm만 줄임)
+          const isFridgeCabinetForBottom = !!moduleData?.id?.includes('fridge-cabinet') && !isBuiltInFridge;
+          const backReduction = isBuiltInFridge
+            ? 0
+            : isFridgeCabinetForBottom
+              ? mmToThreeUnits(backPanelConfig.depthOffset)
+              : backReductionForPanels;
           const widthReduction = sidePanelGap;
           const panelW = innerWidth - widthReduction;
           const panelH = basicThickness;
