@@ -1557,12 +1557,14 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                 if (isFridgeNoBackSection) {
                   const sectionTopY = backPanelY + sh / 2;     // 1단 섹션 외경 상단 (= 2단 바닥과 맞닿음)
                   const sectionBottomY = backPanelY - sh / 2;  // 1단 섹션 외경 하단 (= 가구 바닥)
-                  // 상단 보강대: 섹션 외경 상단에 윗면 맞닿음 (위 = 상부섹션 바닥과 맞닿음)
+                  // 상단 보강대: 섹션 외경 상단에 윗면 맞닿음
                   const topReinforcementY = sectionTopY - reinforcementHeight / 2;
-                  // 하단 보강대: 섹션 외경 하단에 밑면 맞닿음 (아래 = 가구 바닥)
+                  // 하단 보강대: 섹션 외경 하단에 밑면 맞닿음
                   const bottomReinforcementY = sectionBottomY + reinforcementHeight / 2;
-                  // 중간 보강대: 위/아래 평균
-                  const middleReinforcementY = (topReinforcementY + bottomReinforcementY) / 2;
+                  // 중간 보강대: 하단 보강대 윗면에서 702mm 위에 밑면이 위치
+                  const D702 = mmToThreeUnits(702);
+                  const bottomReinforcementTopY = bottomReinforcementY + reinforcementHeight / 2;
+                  const middleReinforcementY = bottomReinforcementTopY + D702 + reinforcementHeight / 2;
                   [
                     { y: bottomReinforcementY, name: `(${idx + 1}단)보강대 1` },
                     { y: middleReinforcementY, name: `(${idx + 1}단)보강대 2` },
