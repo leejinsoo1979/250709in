@@ -3902,7 +3902,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               // 띄움 배치: hasBase=false 이면 하부프레임 자리가 띄움 공간으로 대체됨
               // → individualFloatHeight 가 없으면 baseFrameHeight (= 띄움 기본) 사용
               const realBottomFrame = leftLowerMod?.hasBase === false
-                ? (leftLowerMod?.individualFloatHeight ?? leftLowerMod?.baseFrameHeight ?? globalBottomFrameH)
+                ? (leftLowerMod?.individualFloatHeight ?? 0)
                 : (leftLowerMod?.baseFrameHeight ?? globalBottomFrameH);
               const realFloorFinish = floorFinishForHeight;
               const sectionBasisH = Math.max(0, effectiveH - realTopFrame - realBottomFrame - realFloorFinish);
