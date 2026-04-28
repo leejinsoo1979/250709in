@@ -1310,20 +1310,31 @@ const BoxModule: React.FC<BoxModuleProps> = ({
       )}
 
       {/* 폴백 케이스 조절발 (현관장 H/I, 바지걸이장 등) */}
-      {showFurniture && (
-        <AdjustableFootsRenderer
-          width={baseFurniture.width}
-          depth={baseFurniture.depth}
-          yOffset={-baseFurniture.height / 2}
-          placedFurnitureId={placedFurnitureId}
-          renderMode={renderMode}
-          isHighlighted={false}
-          isFloating={spaceInfo?.baseConfig?.placementType === 'float'}
-          baseHeight={spaceInfo?.baseConfig?.height || 65}
-          baseDepth={spaceInfo?.baseConfig?.depth || 0}
-          viewMode={viewMode}
-        />
-      )}
+      {showFurniture && (() => {
+        // 인출장/팬트리장/냉장고장: 1단(하부) sectionDepth가 줄어들면 조절발도 앞으로
+        const isNSectionFoot = !!(moduleData?.id?.includes('pull-out-cabinet') ||
+          moduleData?.id?.includes('pantry-cabinet') ||
+          (moduleData?.id?.includes('fridge-cabinet') && !moduleData?.id?.includes('built-in-fridge')));
+        const lowerSectionDepthMm = isNSectionFoot ? placedSectionDepths?.[0] : undefined;
+        const moduleDepthMmForFoot = baseFurniture.depth * 100;
+        const footDepth = (lowerSectionDepthMm && lowerSectionDepthMm > 0)
+          ? baseFurniture.mmToThreeUnits(lowerSectionDepthMm)
+          : baseFurniture.depth;
+        return (
+          <AdjustableFootsRenderer
+            width={baseFurniture.width}
+            depth={footDepth}
+            yOffset={-baseFurniture.height / 2}
+            placedFurnitureId={placedFurnitureId}
+            renderMode={renderMode}
+            isHighlighted={false}
+            isFloating={spaceInfo?.baseConfig?.placementType === 'float'}
+            baseHeight={spaceInfo?.baseConfig?.height || 65}
+            baseDepth={spaceInfo?.baseConfig?.depth || 0}
+            viewMode={viewMode}
+          />
+        );
+      })()}
 
       {/* 도어는 showFurniture와 관계없이 hasDoor가 true이면 항상 렌더링 (도어만 보기 위해) */}
       {(() => {
