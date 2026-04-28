@@ -217,14 +217,20 @@ const BoxModule: React.FC<BoxModuleProps> = ({
   );
 
   // sectionDepths/sectionDepthDirections는 사용자 입력 시 reactive 업데이트되어야 하므로 셀렉터 사용
-  const placedModuleForReactive = useFurnitureStore(s => {
-    if (!placedFurnitureId) return null;
+  // 셀렉터에서 매번 새 객체 반환하면 무한 루프 → 배열 자체를 그대로 반환 (참조 안정성)
+  const placedSectionDepths = useFurnitureStore(s => {
+    if (!placedFurnitureId) return undefined;
     const m = s.placedModules.find(p => p.id === placedFurnitureId);
-    return m ? {
-      sectionDepths: (m as any).sectionDepths as number[] | undefined,
-      sectionDepthDirections: (m as any).sectionDepthDirections as ('front' | 'back')[] | undefined,
-    } : null;
+    return (m as any)?.sectionDepths as number[] | undefined;
   });
+  const placedSectionDepthDirections = useFurnitureStore(s => {
+    if (!placedFurnitureId) return undefined;
+    const m = s.placedModules.find(p => p.id === placedFurnitureId);
+    return (m as any)?.sectionDepthDirections as ('front' | 'back')[] | undefined;
+  });
+  const placedModuleForReactive = (placedSectionDepths || placedSectionDepthDirections)
+    ? { sectionDepths: placedSectionDepths, sectionDepthDirections: placedSectionDepthDirections }
+    : null;
 
   // 공통 로직도 항상 호출 (조건부 사용)
   const baseFurniture = useBaseFurniture(moduleData, {
