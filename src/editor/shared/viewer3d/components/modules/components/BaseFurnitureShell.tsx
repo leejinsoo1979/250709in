@@ -4,6 +4,7 @@ import { useSpace3DView } from '../../../context/useSpace3DView';
 import { useThree } from '@react-three/fiber';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useUIStore } from '@/store/uiStore';
+import { useFurnitureStore } from '@/store/core/furnitureStore';
 import { SpaceInfo } from '@/store/core/spaceConfigStore';
 import BoxWithEdges from './BoxWithEdges';
 import { Text, Line } from '@react-three/drei';
@@ -637,7 +638,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                 const sectionHeights = getSectionHeights();
                 // placedModule.sectionDepths 가져오기
                 const placedMod = placedFurnitureId
-                  ? require('@/store/core/furnitureStore').useFurnitureStore.getState().placedModules.find((m: any) => m.id === placedFurnitureId)
+                  ? useFurnitureStore.getState().placedModules.find((m: any) => m.id === placedFurnitureId)
                   : null;
                 const sectionDepthsArr = placedMod?.sectionDepths as number[] | undefined;
                 const sectionDirArr = placedMod?.sectionDepthDirections as ('front'|'back')[] | undefined;
