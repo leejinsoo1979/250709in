@@ -100,9 +100,9 @@ const MicrowavePullOut: React.FC<MicrowavePullOutProps> = ({
   const trayFrontZMm = trayBackZMm + TRAY_DEPTH_MM;
   const trayCenterZMm = (trayBackZMm + trayFrontZMm) / 2;
 
-  // 전면프레임 Z: 트레이 바닥판 앞면에 부착 (서랍 앞판처럼)
-  // 트레이 앞면 + 두께/2 = 전면프레임 중심
-  const frontFrameCenterZMm = trayFrontZMm + FRONT_THICKNESS_MM / 2;
+  // 전면프레임 Z: 앞면 = 좌/우 날개프레임 앞쪽 끝과 일치 (= wingStartZMm)
+  // 전면프레임 중심 = wingStartZMm - 두께/2
+  const frontFrameCenterZMm = wingStartZMm - FRONT_THICKNESS_MM / 2;
   // 트레이 가로 = 날개프레임 안쪽 사이 - 좌우 갭
   const trayWidthMm = (wingsInnerRightMm - wingsInnerLeftMm) - TRAY_SIDE_GAP_MM * 2;
   // 트레이 Y: 윗면 = 날개프레임 윗면 - 22
