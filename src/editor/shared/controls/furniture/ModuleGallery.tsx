@@ -1073,14 +1073,15 @@ const ModuleGallery: React.FC<ModuleGalleryProps> = ({ moduleCategory = 'tall', 
     // 하부장 카테고리 선택시
     categoryModules = getModulesByCategory('lower', adjustedInternalSpace, spaceInfoWithSlotWidths);
   } else if (moduleCategory === 'clothing') {
-    // 의류장 = 키큰장(full) 중 신발장/주방 키큰장(빌트인 냉장고장/인서트 프레임/인출장/팬트리장) 제외
+    // 의류장 = 키큰장(full) 중 신발장/주방 키큰장 제외
     categoryModules = getModulesByCategory('full', adjustedInternalSpace, spaceInfoWithSlotWidths)
       .filter(m =>
         !isShoeModuleId(m.id) &&
         !m.id.includes('built-in-fridge') &&
         !m.id.includes('insert-frame') &&
         !m.id.includes('pull-out-cabinet') &&
-        !m.id.includes('pantry-cabinet')
+        !m.id.includes('pantry-cabinet') &&
+        !m.id.includes('fridge-cabinet')
       );
   } else if (moduleCategory === 'shoes') {
     // 신발장 = full 카테고리 내 선반장 계열 + 현관장
@@ -1092,13 +1093,14 @@ const ModuleGallery: React.FC<ModuleGalleryProps> = ({ moduleCategory = 'tall', 
       // 상부장 = upper 전체
       categoryModules = getModulesByCategory('upper', adjustedInternalSpace, spaceInfoWithSlotWidths);
     } else if (kitchenSubCategory === 'tall') {
-      // 키큰장 = full 카테고리 중 키큰장 전용 모듈 (빌트인 냉장고장, Insert 프레임, 인출장, 팬트리장 등)
+      // 키큰장 = full 카테고리 중 키큰장 전용 모듈 (빌트인 냉장고장, Insert 프레임, 인출장, 팬트리장, 냉장고장 등)
       const allFullModules = getModulesByCategory('full', adjustedInternalSpace, spaceInfoWithSlotWidths);
       categoryModules = allFullModules.filter(m =>
         m.id.includes('built-in-fridge') ||
         m.id.includes('insert-frame') ||
         m.id.includes('pull-out-cabinet') ||
-        m.id.includes('pantry-cabinet')
+        m.id.includes('pantry-cabinet') ||
+        m.id.includes('fridge-cabinet')
       );
       console.log('[키큰장 탭] full 모듈 전체:', allFullModules.map(m => m.id));
       console.log('[키큰장 탭] 필터링 후:', categoryModules.map(m => m.id));
@@ -1133,7 +1135,8 @@ const ModuleGallery: React.FC<ModuleGalleryProps> = ({ moduleCategory = 'tall', 
         !m.id.includes('built-in-fridge') &&
         !m.id.includes('insert-frame') &&
         !m.id.includes('pull-out-cabinet') &&
-        !m.id.includes('pantry-cabinet')
+        !m.id.includes('pantry-cabinet') &&
+        !m.id.includes('fridge-cabinet')
       );
   }
 

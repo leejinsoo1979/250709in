@@ -589,6 +589,65 @@ const createPantryCabinet = (maxHeight: number, slotWidthForId: number = PANTRY_
   } as ModuleData;
 };
 
+// 일반 냉장고장: 2섹션 (팬트리장과 외형 동일하지만 측판 15mm + 하부 백패널 없음)
+//   - 외경: W600 × H가변 × D600
+//   - 좌/우 측판: 15mm (basic 18.5 → 15.5mm) — BaseFurnitureShell에서 모듈 ID 기반 분기
+//   - 1단(H1825 고정): 오픈, 백패널 없음 (냉장고 통풍/콘센트)
+//   - 2단(H가변): 가운데 다보선반 1개, 백패널 있음
+const FRIDGE_CABINET_WIDTH = 600;
+const FRIDGE_CABINET_DEPTH = 600;
+const FRIDGE_SECTION1_HEIGHT = 1825;
+const createFridgeCabinet = (maxHeight: number, slotWidthForId: number = FRIDGE_CABINET_WIDTH): ModuleData => {
+  const section1Height = FRIDGE_SECTION1_HEIGHT;
+  const section2Height = Math.max(maxHeight - section1Height, 0);
+
+  const basicThickness = FURNITURE_SPECS.BASIC_THICKNESS;
+  const section2InnerHeight = Math.max(section2Height - basicThickness * 2, 0);
+  const shelfY = section2InnerHeight / 2;
+
+  const sections: SectionConfig[] = [
+    // 1단(아래): 비어있음 (오픈) — 백패널 없음
+    {
+      type: 'open',
+      heightType: 'absolute',
+      height: section1Height,
+      hasBackPanel: false,
+    },
+    // 2단(위): 가운데 다보선반 1개 (백패널 있음)
+    {
+      type: 'shelf',
+      heightType: 'absolute',
+      height: section2Height,
+      count: 1,
+      shelfPositions: [shelfY],
+    },
+  ];
+
+  const widthForId = Math.round(slotWidthForId * 100) / 100;
+  const base = createFurnitureBase(
+    `single-fridge-cabinet-${widthForId}`,
+    `냉장고장 ${FRIDGE_CABINET_WIDTH}mm`,
+    FRIDGE_CABINET_WIDTH,
+    maxHeight,
+    FRIDGE_CABINET_DEPTH,
+    FURNITURE_SPECS.COLORS.TYPE2,
+    `폭 ${FRIDGE_CABINET_WIDTH} × 깊이 ${FRIDGE_CABINET_DEPTH}. 측판 15mm. 1단 오픈(${section1Height}, 백패널X) + 2단 다보선반(가변).`,
+    FRIDGE_CABINET_DEPTH,
+    'full'
+  );
+
+  return {
+    ...base,
+    widthOptions: [FRIDGE_CABINET_WIDTH],
+    dimensions: { width: FRIDGE_CABINET_WIDTH, height: maxHeight, depth: FRIDGE_CABINET_DEPTH },
+    modelConfig: {
+      ...base.modelConfig,
+      sections,
+      isFridgeCabinet: true,
+    } as any,
+  } as ModuleData;
+};
+
 // 듀얼 빌트인 냉장고장: 갤러리 마커 모듈 — 클릭 시 좌힌지 빌트인 + 인서트 + 우힌지 빌트인 3개로 분해 배치
 //   - 슬롯 폭 1300 (582 + 136 + 582)
 //   - 듀얼 슬롯 (isDualSlot)
@@ -3235,6 +3294,9 @@ export const generateShelvingModules = (
 
   // === 키큰장: 팬트리장 (1단 오픈 + 2단 다보선반 가운데) ===
   modules.push(createPantryCabinet(maxHeight, columnWidth));
+
+  // === 키큰장: 냉장고장 (1단 오픈+백패널X + 2단 다보선반, 측판 15mm) ===
+  modules.push(createFridgeCabinet(maxHeight, columnWidth));
 
   modules.push(createSingleEntrywayH(columnWidth, maxHeight));
   // modules.push(createSingleEntrywayI(columnWidth, maxHeight));

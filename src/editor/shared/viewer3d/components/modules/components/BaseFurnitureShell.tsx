@@ -632,11 +632,17 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                   </>
                 );
               })()
-            ) : (moduleData?.id?.includes('pull-out-cabinet') || moduleData?.id?.includes('pantry-cabinet')) && isMultiSectionFurniture() && getSectionHeights().length >= 2 ? (
-              // 인출장/팬트리장: N섹션 측판 분할 (각 섹션 외경 높이만큼, 각 섹션 깊이 적용)
+            ) : (moduleData?.id?.includes('pull-out-cabinet') || moduleData?.id?.includes('pantry-cabinet') || moduleData?.id?.includes('fridge-cabinet')) && isMultiSectionFurniture() && getSectionHeights().length >= 2 ? (
+              // 인출장/팬트리장/냉장고장: N섹션 측판 분할
+              //   - 냉장고장: 측판 두께 = basicThickness - 3 (15 또는 15.5mm)
+              //   - 인출장/팬트리장: 측판 두께 = basicThickness (18 또는 18.5mm)
               (() => {
                 const sectionHeights = getSectionHeights();
-                // placedModule.sectionDepths 가져오기
+                const isFridgeCabinet = !!moduleData?.id?.includes('fridge-cabinet');
+                // 냉장고장 측판 두께: basic 18 → 15, basic 18.5 → 15.5
+                const sidePanelThickness = isFridgeCabinet
+                  ? mmToThreeUnits(basicThicknessMm - 3)
+                  : basicThickness;
                 const placedMod = placedFurnitureId
                   ? useFurnitureStore.getState().placedModules.find((m: any) => m.id === placedFurnitureId)
                   : null;
@@ -648,18 +654,21 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                 return sectionHeights.map((sh: number, idx: number) => {
                   const panelY = cursorY + sh / 2;
                   cursorY += sh;
-                  // sectionDepths 미설정 시 가구 외경 그대로 (측판 어긋남 방지)
                   const secDepthMm = hasCustomSectionDepths ? (sectionDepthsArr![idx] ?? moduleDepthMm) : moduleDepthMm;
                   const secDepth = hasCustomSectionDepths ? mmToThreeUnits(secDepthMm) : depth;
                   const dir = sectionDirArr?.[idx] ?? 'front';
                   const depthDiff = depth - secDepth;
                   const sectionZOffset = depthDiff === 0 ? 0 : dir === 'back' ? depthDiff / 2 : -depthDiff / 2;
+                  // 측판 X 위치: 가구 외경 끝 ± (측판 두께/2)
+                  const halfWidth = innerWidth / 2 + basicThickness / 2; // 가구 외경 절반
+                  const leftPanelX = -halfWidth + sidePanelThickness / 2;
+                  const rightPanelX = halfWidth - sidePanelThickness / 2;
                   return (
                     <React.Fragment key={`side-panel-section-${idx}`}>
                       <BoxWithEdges
                         key={`left-panel-sec-${idx}-${getSidePanelMaterial('좌측판').uuid}`}
-                        args={[basicThickness, sh, secDepth]}
-                        position={[-innerWidth / 2 - basicThickness / 2, panelY, sectionZOffset]}
+                        args={[sidePanelThickness, sh, secDepth]}
+                        position={[leftPanelX, panelY, sectionZOffset]}
                         material={getSidePanelMaterial('좌측판')}
                         renderMode={renderMode}
                         isDragging={isDragging}
@@ -672,8 +681,8 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                       />
                       <BoxWithEdges
                         key={`right-panel-sec-${idx}-${getSidePanelMaterial('우측판').uuid}`}
-                        args={[basicThickness, sh, secDepth]}
-                        position={[innerWidth / 2 + basicThickness / 2, panelY, sectionZOffset]}
+                        args={[sidePanelThickness, sh, secDepth]}
+                        position={[rightPanelX, panelY, sectionZOffset]}
                         material={getSidePanelMaterial('우측판')}
                         renderMode={renderMode}
                         isDragging={isDragging}
@@ -1483,44 +1492,49 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
         {/* 뒷면 판재 (9mm 백패널) - hasBackPanel이 true일 때만 렌더링 */}
         {hasBackPanel && (
         <>
-          {(moduleData?.id?.includes('pull-out-cabinet') || moduleData?.id?.includes('pantry-cabinet')) && isMultiSectionFurniture() && getSectionHeights().length >= 2 ? (
-            // 인출장/팬트리장: N섹션 백패널 분할 + 후면 보강대 (각 섹션 위/아래)
+          {(moduleData?.id?.includes('pull-out-cabinet') || moduleData?.id?.includes('pantry-cabinet') || moduleData?.id?.includes('fridge-cabinet')) && isMultiSectionFurniture() && getSectionHeights().length >= 2 ? (
+            // 인출장/팬트리장/냉장고장: N섹션 백패널 분할 + 후면 보강대 (각 섹션 위/아래)
+            //   - 냉장고장 1단(인덱스 0): 백패널 없음 (sections[0].hasBackPanel = false)
             (() => {
               const sectionHeights = getSectionHeights();
               const reinforcementHeight = mmToThreeUnits(60);
               const reinforcementDepth = mmToThreeUnits((basicThicknessMm === 18.5 || basicThicknessMm === 15.5) ? 15.5 : 15);
               const reinforcementWidth = innerWidth - sidePanelGap;
+              // sections에서 hasBackPanel 체크 (냉장고장 1단 = false)
+              const sectionConfigs = ((moduleData as any)?.modelConfig as any)?.sections as { hasBackPanel?: boolean }[] | undefined;
               const elements: React.ReactNode[] = [];
               let cursorY = -height / 2;
               sectionHeights.forEach((sh: number, idx: number) => {
+                const sectionHasBackPanel = sectionConfigs?.[idx]?.hasBackPanel !== false;
                 // 백패널 높이 = 섹션 외경 높이 그대로 (측판과 동일)
                 const backPanelHeight = sh;
                 const backPanelY = cursorY + sh / 2;
                 const backPanelZ = -depth / 2 + backPanelThickness / 2 + mmToThreeUnits(backPanelConfig.depthOffset);
                 const reinforcementZ = backPanelZ - backPanelThickness / 2 - reinforcementDepth / 2;
-                // 백패널 상/하단에 정렬 (다른 가구와 동일 패턴)
                 const lowerReinforcementY = backPanelY - backPanelHeight / 2 + reinforcementHeight / 2;
                 const upperReinforcementY = backPanelY + backPanelHeight / 2 - reinforcementHeight / 2;
 
-                elements.push(
-                  <BoxWithEdges
-                    key={`back-panel-sec-${idx}-${getPanelMaterial(`(${idx + 1}단)백패널`).uuid}`}
-                    args={[innerWidth + mmToThreeUnits(backPanelConfig.widthExtension), backPanelHeight, backPanelThickness]}
-                    position={[0, backPanelY, backPanelZ]}
-                    material={getPanelMaterial(`(${idx + 1}단)백패널`)}
-                    renderMode={renderMode}
-                    isDragging={isDragging}
-                    isEditMode={isEditMode}
-                    isBackPanel={true}
-                    isHighlighted={highlightedSection === `${placedFurnitureId}-${idx}`}
-                    panelName={`(${idx + 1}단)백패널`}
-                    panelGrainDirections={panelGrainDirections}
-                    furnitureId={placedFurnitureId}
-                    textureUrl={textureUrl}
-                  />
-                );
-                // 후면 보강대 (하단 + 상단)
-                if (!(viewMode === '2D' && view2DDirection === 'front')) {
+                if (sectionHasBackPanel) {
+                  elements.push(
+                    <BoxWithEdges
+                      key={`back-panel-sec-${idx}-${getPanelMaterial(`(${idx + 1}단)백패널`).uuid}`}
+                      args={[innerWidth + mmToThreeUnits(backPanelConfig.widthExtension), backPanelHeight, backPanelThickness]}
+                      position={[0, backPanelY, backPanelZ]}
+                      material={getPanelMaterial(`(${idx + 1}단)백패널`)}
+                      renderMode={renderMode}
+                      isDragging={isDragging}
+                      isEditMode={isEditMode}
+                      isBackPanel={true}
+                      isHighlighted={highlightedSection === `${placedFurnitureId}-${idx}`}
+                      panelName={`(${idx + 1}단)백패널`}
+                      panelGrainDirections={panelGrainDirections}
+                      furnitureId={placedFurnitureId}
+                      textureUrl={textureUrl}
+                    />
+                  );
+                }
+                // 후면 보강대 (하단 + 상단) — 백패널 없는 섹션은 보강대도 없음
+                if (sectionHasBackPanel && !(viewMode === '2D' && view2DDirection === 'front')) {
                   elements.push(
                     <BoxWithEdges
                       key={`reinforcement-bottom-sec-${idx}`}
