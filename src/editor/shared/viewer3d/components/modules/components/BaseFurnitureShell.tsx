@@ -1469,13 +1469,13 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
         {hasBackPanel && (
         <>
           {(moduleData?.id?.includes('pull-out-cabinet') || moduleData?.id?.includes('pantry-cabinet')) && isMultiSectionFurniture() && getSectionHeights().length >= 2 ? (
-            // 인출장/팬트리장: N섹션 백패널 분할
+            // 인출장/팬트리장: N섹션 백패널 분할 — 백패널 높이 = 섹션 측판 외경 높이 (sh)
             (() => {
               const sectionHeights = getSectionHeights();
               let cursorY = -height / 2;
               return sectionHeights.map((sh: number, idx: number) => {
-                const sectionInnerHeight = sh - basicThickness * 2;
-                const backPanelHeight = sectionInnerHeight + mmToThreeUnits(backPanelConfig.heightExtension);
+                // 백패널 높이 = 섹션 외경 높이 그대로 (측판과 동일)
+                const backPanelHeight = sh;
                 const backPanelY = cursorY + sh / 2;
                 const backPanelZ = -depth / 2 + backPanelThickness / 2 + mmToThreeUnits(backPanelConfig.depthOffset);
                 cursorY += sh;
