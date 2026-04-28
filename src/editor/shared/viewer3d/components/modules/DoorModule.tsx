@@ -1032,44 +1032,44 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   
   // 도어 클릭 핸들러 제거됨 - Close/Open 버튼으로만 도어 열고닫기
   
-  // 애니메이션 설정 - 적당한 속도 (80도 열림)
+  // 애니메이션 설정 - 적당한 속도 (90도 열림)
   // 부드럽고 자연스러운 애니메이션을 위해 tension/friction 조정
   const leftHingeDoorSpring = useSpring({
-    // 왼쪽 힌지: 반시계방향으로 열림 (오른쪽으로 열림) - 80도
-    rotation: shouldOpenDoors ? -4 * Math.PI / 9 : 0,
-    config: { 
-      tension: 90,   // 적당한 반응 (기존 60에서 90으로 증가)
-      friction: 16,  // 적당한 감속 (기존 20에서 16으로 감소)
-      clamp: true    // 오버슈팅 방지
+    // 왼쪽 힌지: 반시계방향으로 열림 (오른쪽으로 열림) - 90도
+    rotation: shouldOpenDoors ? -Math.PI / 2 : 0,
+    config: {
+      tension: 90,
+      friction: 16,
+      clamp: true
     },
   });
-  
+
   const rightHingeDoorSpring = useSpring({
-    // 오른쪽 힌지: 시계방향으로 열림 (왼쪽으로 열림) - 80도
-    rotation: shouldOpenDoors ? 4 * Math.PI / 9 : 0,
-    config: { 
-      tension: 90,   // 적당한 반응 (기존 60에서 90으로 증가)
-      friction: 16,  // 적당한 감속 (기존 20에서 16으로 감소)
-      clamp: true    // 오버슈팅 방지
+    // 오른쪽 힌지: 시계방향으로 열림 (왼쪽으로 열림) - 90도
+    rotation: shouldOpenDoors ? Math.PI / 2 : 0,
+    config: {
+      tension: 90,
+      friction: 16,
+      clamp: true
     },
   });
-  
-  // 듀얼 가구용 애니메이션 설정 (80도 열림) - 적당한 속도
+
+  // 듀얼 가구용 애니메이션 설정 (90도 열림)
   const dualLeftDoorSpring = useSpring({
-    rotation: shouldOpenDoors ? -4 * Math.PI / 9 : 0, // 왼쪽 문: 반시계방향 (바깥쪽으로) - 80도
-    config: { 
-      tension: 90,   // 적당한 반응 (기존 60에서 90으로 증가)
-      friction: 16,  // 적당한 감속 (기존 20에서 16으로 감소)
-      clamp: true    // 오버슈팅 방지
+    rotation: shouldOpenDoors ? -Math.PI / 2 : 0, // 왼쪽 문: 반시계방향 (바깥쪽으로) - 90도
+    config: {
+      tension: 90,
+      friction: 16,
+      clamp: true
     },
   });
-  
+
   const dualRightDoorSpring = useSpring({
-    rotation: shouldOpenDoors ? 4 * Math.PI / 9 : 0, // 오른쪽 문: 시계방향 (바깥쪽으로) - 80도
-    config: { 
-      tension: 90,   // 적당한 반응 (기존 60에서 90으로 증가)
-      friction: 16,  // 적당한 감속 (기존 20에서 16으로 감소)
-      clamp: true    // 오버슈팅 방지
+    rotation: shouldOpenDoors ? Math.PI / 2 : 0, // 오른쪽 문: 시계방향 (바깥쪽으로) - 90도
+    config: {
+      tension: 90,
+      friction: 16,
+      clamp: true
     },
   });
 
