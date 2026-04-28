@@ -1203,11 +1203,11 @@ const PlacedModulePropertiesPanel: React.FC = () => {
         const lowerDepth = storedLower ?? defaultDepth;
         const upperDepth = storedUpper ?? defaultDepth;
 
-        // placedModule에 값이 없거나 stale(신발장인데 600 저장됨)이면 올바른 값을 실제로 저장
-        const needsLowerFix = currentPlacedModule.lowerSectionDepth === undefined
-          || (isShoeCategory && hasCustomDepth && currentPlacedModule.lowerSectionDepth === modDimDepth);
-        const needsUpperFix = currentPlacedModule.upperSectionDepth === undefined
-          || (isShoeCategory && hasCustomDepth && currentPlacedModule.upperSectionDepth === modDimDepth);
+        // 인출장/팬트리장은 sectionDepths 배열 사용 — lowerSectionDepth/upperSectionDepth 자동 설정 안 함
+        const needsLowerFix = !isPullOutOrPantryInit && (currentPlacedModule.lowerSectionDepth === undefined
+          || (isShoeCategory && hasCustomDepth && currentPlacedModule.lowerSectionDepth === modDimDepth));
+        const needsUpperFix = !isPullOutOrPantryInit && (currentPlacedModule.upperSectionDepth === undefined
+          || (isShoeCategory && hasCustomDepth && currentPlacedModule.upperSectionDepth === modDimDepth));
         if (needsLowerFix || needsUpperFix) {
           updatePlacedModule(currentPlacedModule.id, {
             lowerSectionDepth: lowerDepth,
