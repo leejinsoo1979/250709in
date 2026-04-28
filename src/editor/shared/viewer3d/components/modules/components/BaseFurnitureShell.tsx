@@ -631,6 +631,48 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                   </>
                 );
               })()
+            ) : (moduleData?.id?.includes('pull-out-cabinet') || moduleData?.id?.includes('pantry-cabinet')) && isMultiSectionFurniture() && getSectionHeights().length >= 2 ? (
+              // 인출장/팬트리장: N섹션 측판 분할 (각 섹션 외경 높이만큼)
+              (() => {
+                const sectionHeights = getSectionHeights();
+                let cursorY = -height / 2;
+                return sectionHeights.map((sh: number, idx: number) => {
+                  const panelY = cursorY + sh / 2;
+                  cursorY += sh;
+                  return (
+                    <React.Fragment key={`side-panel-section-${idx}`}>
+                      <BoxWithEdges
+                        key={`left-panel-sec-${idx}-${getSidePanelMaterial('좌측판').uuid}`}
+                        args={[basicThickness, sh, depth]}
+                        position={[-innerWidth / 2 - basicThickness / 2, panelY, 0]}
+                        material={getSidePanelMaterial('좌측판')}
+                        renderMode={renderMode}
+                        isDragging={isDragging}
+                        isEditMode={isEditMode}
+                        isEndPanel={isLeftEndPanel}
+                        panelName={`좌측판${idx + 1}`}
+                        panelGrainDirections={panelGrainDirections}
+                        furnitureId={placedFurnitureId}
+                        textureUrl={textureUrl}
+                      />
+                      <BoxWithEdges
+                        key={`right-panel-sec-${idx}-${getSidePanelMaterial('우측판').uuid}`}
+                        args={[basicThickness, sh, depth]}
+                        position={[innerWidth / 2 + basicThickness / 2, panelY, 0]}
+                        material={getSidePanelMaterial('우측판')}
+                        renderMode={renderMode}
+                        isDragging={isDragging}
+                        isEditMode={isEditMode}
+                        isEndPanel={isRightEndPanel}
+                        panelName={`우측판${idx + 1}`}
+                        panelGrainDirections={panelGrainDirections}
+                        furnitureId={placedFurnitureId}
+                        textureUrl={textureUrl}
+                      />
+                    </React.Fragment>
+                  );
+                });
+              })()
             ) : (
               <>
                 {/* 왼쪽 측면 판재 */}
@@ -1426,7 +1468,37 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
         {/* 뒷면 판재 (9mm 백패널) - hasBackPanel이 true일 때만 렌더링 */}
         {hasBackPanel && (
         <>
-          {isMultiSectionFurniture() && getSectionHeights().length === 2 ? (
+          {(moduleData?.id?.includes('pull-out-cabinet') || moduleData?.id?.includes('pantry-cabinet')) && isMultiSectionFurniture() && getSectionHeights().length >= 2 ? (
+            // 인출장/팬트리장: N섹션 백패널 분할
+            (() => {
+              const sectionHeights = getSectionHeights();
+              let cursorY = -height / 2;
+              return sectionHeights.map((sh: number, idx: number) => {
+                const sectionInnerHeight = sh - basicThickness * 2;
+                const backPanelHeight = sectionInnerHeight + mmToThreeUnits(backPanelConfig.heightExtension);
+                const backPanelY = cursorY + sh / 2;
+                const backPanelZ = -depth / 2 + backPanelThickness / 2 + mmToThreeUnits(backPanelConfig.depthOffset);
+                cursorY += sh;
+                return (
+                  <BoxWithEdges
+                    key={`back-panel-sec-${idx}-${getPanelMaterial(`(${idx + 1}단)백패널`).uuid}`}
+                    args={[innerWidth + mmToThreeUnits(backPanelConfig.widthExtension), backPanelHeight, backPanelThickness]}
+                    position={[0, backPanelY, backPanelZ]}
+                    material={getPanelMaterial(`(${idx + 1}단)백패널`)}
+                    renderMode={renderMode}
+                    isDragging={isDragging}
+                    isEditMode={isEditMode}
+                    isBackPanel={true}
+                    isHighlighted={highlightedSection === `${placedFurnitureId}-${idx}`}
+                    panelName={`(${idx + 1}단)백패널`}
+                    panelGrainDirections={panelGrainDirections}
+                    furnitureId={placedFurnitureId}
+                    textureUrl={textureUrl}
+                  />
+                );
+              });
+            })()
+          ) : isMultiSectionFurniture() && getSectionHeights().length === 2 ? (
             // 다중 섹션: 하부/상부 백패널 분리
             <>
               {(() => {
