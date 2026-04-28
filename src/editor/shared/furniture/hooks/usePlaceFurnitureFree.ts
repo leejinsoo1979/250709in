@@ -128,8 +128,8 @@ export function placeFurnitureFree(params: PlaceFurnitureFreeParams): PlaceFurni
     }
   }
 
-  // 서랍장(2단/4단) 하부섹션 상판 85mm 들여쓰기 기본값
-  const defaultLowerTopOffset = (moduleId.includes('2drawer') || moduleId.includes('4drawer')) ? 85 : undefined;
+  // 서랍장(2단/4단)/인출장 하부섹션 상판 85mm 들여쓰기 기본값
+  const defaultLowerTopOffset = (moduleId.includes('2drawer') || moduleId.includes('4drawer') || moduleId.includes('pull-out-cabinet')) ? 85 : undefined;
 
   const newModule: PlacedModule = {
     id: uuidv4(),
