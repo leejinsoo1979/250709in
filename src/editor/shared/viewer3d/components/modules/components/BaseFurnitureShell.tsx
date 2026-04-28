@@ -1534,15 +1534,15 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                     />
                   );
                 }
-                // 냉장고장 1단(백패널 없음): 후면 보강대 3개 — 위/아래는 섹션 상하단에 붙음 + 중간
+                // 냉장고장 1단(백패널 없음): 후면 보강대 3개 — 위/아래는 섹션 외경 상하단에 붙음 + 중간
                 const isFridgeNoBackSection = !sectionHasBackPanel && !!moduleData?.id?.includes('fridge-cabinet');
                 if (isFridgeNoBackSection && !(viewMode === '2D' && view2DDirection === 'front')) {
-                  const sectionTopY = backPanelY + sh / 2;
-                  const sectionBottomY = backPanelY - sh / 2;
-                  // 상단 보강대: 섹션 윗면 측판에 붙음 (윗면 - 보강대두께/2)
-                  const topReinforcementY = sectionTopY - basicThickness - reinforcementHeight / 2;
-                  // 하단 보강대: 섹션 바닥면 측판에 붙음 (바닥면 + 보강대두께/2)
-                  const bottomReinforcementY = sectionBottomY + basicThickness + reinforcementHeight / 2;
+                  const sectionTopY = backPanelY + sh / 2;     // 1단 섹션 외경 상단 (= 2단 바닥과 맞닿음)
+                  const sectionBottomY = backPanelY - sh / 2;  // 1단 섹션 외경 하단 (= 가구 바닥)
+                  // 상단 보강대: 섹션 외경 상단에 윗면 맞닿음 (위 = 상부섹션 바닥과 맞닿음)
+                  const topReinforcementY = sectionTopY - reinforcementHeight / 2;
+                  // 하단 보강대: 섹션 외경 하단에 밑면 맞닿음 (아래 = 가구 바닥)
+                  const bottomReinforcementY = sectionBottomY + reinforcementHeight / 2;
                   // 중간 보강대: 위/아래 평균
                   const middleReinforcementY = (topReinforcementY + bottomReinforcementY) / 2;
                   [
