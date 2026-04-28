@@ -40,6 +40,7 @@ interface BoxWithEdgesProps {
   bottomRebate?: { width: number; height: number }; // 하단 양쪽 반턱 따내기 (width: 양쪽 폭, height: 따내기 높이, Three.js 단위)
   cornerNotch?: { width: number; depth: number; side: 'left' | 'right' }; // 상판 코너 따내기 (XZ평면, 위에서 본 ㄴ자형)
   backCenterNotch?: { sideStrip: number; depth: number }; // 뒷면 가운데 따내기 (XZ평면, 위에서 본 ㄷ자형) — sideStrip: 좌우 띠 폭, depth: 뒤에서 앞으로 깊이
+  circleHoles?: Array<{ x: number; y: number; radius: number }>; // 백패널 등 평면 패널의 원형 타공 (Three.js 단위, 패널 중심 기준 X/Y)
 }
 
 /**
@@ -73,7 +74,8 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
   notches,
   bottomRebate,
   cornerNotch,
-  backCenterNotch
+  backCenterNotch,
+  circleHoles
 }) => {
 
   // CNC 옵티마이저에서 체크 해제된 패널이면 렌더링 생략 (furnitureId::panelName 복합키)
@@ -571,7 +573,8 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
 
 
   // 다중 노치 여부 판별 (notches가 있으면 우선 사용)
-  const hasAnyNotch = !!(notch || (notches && notches.length > 0) || bottomRebate || cornerNotch || backCenterNotch);
+  const hasCircleHoles = !!(circleHoles && circleHoles.length > 0);
+  const hasAnyNotch = !!(notch || (notches && notches.length > 0) || bottomRebate || cornerNotch || backCenterNotch || hasCircleHoles);
 
   // L자형 노치 엣지 라인 생성 (2D/3D 공용) — 단일 및 다중 노치 지원
   const getNotchEdgeLines = React.useCallback((): [number, number, number][][] => {
@@ -1077,6 +1080,31 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
 
       geom.computeVertexNormals();
       return geom;
+    } else if (hasCircleHoles && circleHoles) {
+      // 백패널 등 평면 패널의 원형 타공: XY 평면 사각형 + 원형 hole(s) → Z축 extrude
+      // args = [width, height, thickness] — thickness 방향이 Z축
+      const sheet = new THREE.Shape();
+      sheet.moveTo(-halfW, -halfH);
+      sheet.lineTo(halfW, -halfH);
+      sheet.lineTo(halfW, halfH);
+      sheet.lineTo(-halfW, halfH);
+      sheet.closePath();
+      circleHoles.forEach(({ x, y, radius }) => {
+        const hole = new THREE.Path();
+        hole.absarc(x, y, radius, 0, Math.PI * 2, true);
+        sheet.holes.push(hole);
+      });
+      const extrudeSettings = { depth: d, bevelEnabled: false };
+      const geom = new THREE.ExtrudeGeometry(sheet, extrudeSettings);
+      // ExtrudeGeometry는 shape XY 평면을 Z축으로 돌출 → 그대로 두고 Z 중심만 맞춤
+      const pos = geom.attributes.position;
+      const arr = pos.array as Float32Array;
+      for (let i = 0; i < pos.count; i++) {
+        arr[i * 3 + 2] = arr[i * 3 + 2] - halfD;
+      }
+      pos.needsUpdate = true;
+      geom.computeVertexNormals();
+      return geom;
     }
 
     if (!notch && !(notches && notches.length > 0) && !bottomRebate) {
@@ -1108,7 +1136,7 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
     geom.computeVertexNormals();
 
     return geom;
-  }, [notch, notches, bottomRebate, cornerNotch, backCenterNotch, hasAnyNotch, args]);
+  }, [notch, notches, bottomRebate, cornerNotch, backCenterNotch, hasCircleHoles, circleHoles, hasAnyNotch, args]);
 
   // 옵티마이저에서 제외된 패널이면 렌더링하지 않음
   // useFrame 폴링으로 visible 제어 — R3F reconciler/DOM reconciler 간 Zustand 구독 호환 문제 회피
@@ -1130,7 +1158,7 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
         material={finalMaterial}
       >
         {notchGeometry ? (
-          <primitive key={`notch-${args[0]}-${args[1]}-${args[2]}-${JSON.stringify(notch || notches || cornerNotch)}`} object={notchGeometry} attach="geometry" />
+          <primitive key={`notch-${args[0]}-${args[1]}-${args[2]}-${JSON.stringify(notch || notches || cornerNotch || backCenterNotch || circleHoles)}`} object={notchGeometry} attach="geometry" />
         ) : (
           <boxGeometry key={`${args[0]}-${args[1]}-${args[2]}`} args={args} />
         )}
@@ -1262,6 +1290,41 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
           );
         }
       })()}
+      {/* circleHoles 윤곽선: 백패널 앞/뒤 양면 + 중앙(2D 정면뷰용)에 원형 라인 표시 */}
+      {hasCircleHoles && circleHoles && circleHoles.map((hole, hi) => {
+        const segments = 64;
+        // lineSegments용 — 인접한 두 점씩 쌍으로 배치
+        const pairs: number[] = [];
+        for (let i = 0; i < segments; i++) {
+          const a1 = (i / segments) * Math.PI * 2;
+          const a2 = ((i + 1) / segments) * Math.PI * 2;
+          pairs.push(
+            hole.x + Math.cos(a1) * hole.radius, hole.y + Math.sin(a1) * hole.radius, 0,
+            hole.x + Math.cos(a2) * hole.radius, hole.y + Math.sin(a2) * hole.radius, 0,
+          );
+        }
+        const halfD = args[2] / 2;
+        const renderCircle = (zPos: number, keySuffix: string) => (
+          <lineSegments key={keySuffix} position={[0, 0, zPos]}>
+            <bufferGeometry>
+              <bufferAttribute
+                attach="attributes-position"
+                count={segments * 2}
+                array={new Float32Array(pairs)}
+                itemSize={3}
+              />
+            </bufferGeometry>
+            <lineBasicMaterial color={edgeColor} transparent={false} depthTest={false} depthWrite={false} />
+          </lineSegments>
+        );
+        return (
+          <React.Fragment key={`hole-outline-${hi}`}>
+            {renderCircle(halfD + 0.002, `hole-${hi}-front`)}
+            {renderCircle(-halfD - 0.002, `hole-${hi}-back`)}
+            {renderCircle(0, `hole-${hi}-mid`)}
+          </React.Fragment>
+        );
+      })}
     </group>
   );
 };

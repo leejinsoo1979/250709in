@@ -275,6 +275,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
     }
   }, [panelGrainDirections, textureUrl, moduleData?.id]);
 
+
   // 백패널 두께 기반 상/하판/선반 깊이 줄임량 (백패널 + (가구재두께 - 1mm) 오프셋)
   const backReductionForPanels = backPanelThickness + basicThickness - mmToThreeUnits(1);
   // 상/하판/칸막이 Z축 오프셋 (backReduction의 절반 = 앞쪽 고정, 뒤에서 줄임)
@@ -1609,6 +1610,19 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                 const upperReinforcementY = backPanelY + backPanelHeight / 2 - reinforcementHeight / 2;
 
                 if (sectionHasBackPanel) {
+                  // 인출장 백패널 원형 타공 (52mm 직경)
+                  // - 2단(idx=1): 섹션 바닥판 상면에서 위 131mm 중앙
+                  // - 3단(idx=2): 섹션 하부 보강대(60mm 높이) 윗면에서 위 89mm 중앙
+                  // 두 위치 모두 백패널 중심 좌표계에서 Y = -sh/2 + 149mm
+                  const isPullOutForHole = !!moduleData?.id?.includes('pull-out-cabinet');
+                  const sectionCircleHoles: Array<{ x: number; y: number; radius: number }> | undefined =
+                    (isPullOutForHole && (idx === 1 || idx === 2))
+                      ? [{
+                          x: 0,
+                          y: -sh / 2 + mmToThreeUnits(149),
+                          radius: mmToThreeUnits(26), // 52파이 → 반지름 26mm
+                        }]
+                      : undefined;
                   elements.push(
                     <BoxWithEdges
                       key={`back-panel-sec-${idx}-${getPanelMaterial(`(${idx + 1}단)백패널`).uuid}`}
@@ -1623,6 +1637,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                       panelName={`(${idx + 1}단)백패널`}
                       panelGrainDirections={panelGrainDirections}
                       furnitureId={placedFurnitureId}
+                      circleHoles={sectionCircleHoles}
                       textureUrl={textureUrl}
                     />
                   );
