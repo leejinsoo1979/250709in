@@ -1564,7 +1564,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         customWidth: _isBuiltInFridge1 ? BUILT_IN_FRIDGE_FIXED_WIDTH : customWidth, // 실제 슬롯 너비 사용 (소수점 2자리)
         ...(_isBuiltInFridge1 ? { slotCustomWidth: BUILT_IN_FRIDGE_FIXED_WIDTH } : {}),
         customHeight: zoneToUse === 'dropped' && zoneInternalSpace ? zoneInternalSpace.height : undefined, // 단내림 구간의 줄어든 높이 저장
-        lowerSectionTopOffset: moduleData.id.includes('2drawer') || moduleData.id.includes('4drawer') ? 85 : 0 // 2단/4단 서랍장 85mm, 나머지 0mm
+        lowerSectionTopOffset: moduleData.id.includes('2drawer') || moduleData.id.includes('4drawer') || moduleData.id.includes('pull-out-cabinet') ? 85 : 0 // 2단/4단 서랍장/인출장 85mm, 나머지 0mm
       };
 
       // 기둥 정보가 있으면 추가
@@ -1710,7 +1710,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
           customWidth: _isBuiltInFridge2 ? BUILT_IN_FRIDGE_FIXED_WIDTH : customWidth,
           ...(_isBuiltInFridge2 ? { slotCustomWidth: BUILT_IN_FRIDGE_FIXED_WIDTH } : {}),
           zone: targetZone, // 클릭한 슬롯의 영역 사용
-          lowerSectionTopOffset: moduleData.id.includes('2drawer') || moduleData.id.includes('4drawer') ? 85 : 0 // 2단/4단 서랍장 85mm, 나머지 0mm
+          lowerSectionTopOffset: moduleData.id.includes('2drawer') || moduleData.id.includes('4drawer') || moduleData.id.includes('pull-out-cabinet') ? 85 : 0 // 2단/4단 서랍장/인출장 85mm, 나머지 0mm
         };
 
         addModule(newModule);
@@ -2129,7 +2129,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
       // 빌트인 냉장고장: slotCustomWidth로 슬롯 재분배 트리거
       ...(isBuiltInFridge ? { slotCustomWidth: BUILT_IN_FRIDGE_FIXED_WIDTH } : {}),
       zone: zoneToUse, // 단내림 영역 정보 저장
-      lowerSectionTopOffset: moduleData.id.includes('2drawer') || moduleData.id.includes('4drawer') ? 85 : 0 // 2단/4단 서랍장 85mm, 나머지 0mm
+      lowerSectionTopOffset: moduleData.id.includes('2drawer') || moduleData.id.includes('4drawer') || moduleData.id.includes('pull-out-cabinet') ? 85 : 0 // 2단/4단 서랍장/인출장 85mm, 나머지 0mm
     };
 
     // 기둥 정보가 있으면 추가
