@@ -1,5 +1,7 @@
 import React from 'react';
 import * as THREE from 'three';
+import { useSpring, animated } from '@react-spring/three';
+import { useUIStore } from '@/store/uiStore';
 import BoxWithEdges from './BoxWithEdges';
 
 /**
@@ -114,36 +116,49 @@ const MicrowavePullOut: React.FC<MicrowavePullOutProps> = ({
   // mm → Three.js 단위 변환
   const toUnit = mmToThreeUnits;
 
+  // 도어 열림 시 인출 애니메이션 (전면프레임 + 트레이 바닥판만 인출, 날개프레임은 가구에 고정)
+  // 도어가 먼저 열린 후 500ms 지연하고 인출, 닫힐 때는 즉시 닫힘
+  const { doorsOpen } = useUIStore();
+  const shouldOpenDrawer = doorsOpen === true;
+  const slideSpring = useSpring({
+    offset: shouldOpenDrawer ? toUnit(200) : 0,
+    config: { tension: 90, friction: 16, clamp: true },
+    delay: shouldOpenDrawer ? 500 : 0,
+  });
+
   return (
     <group>
-      {/* 좌 날개프레임 */}
+      {/* 좌 날개프레임 (가구에 고정) */}
       <BoxWithEdges
         args={[toUnit(WING_THICKNESS_MM), toUnit(WING_HEIGHT_MM), toUnit(wingDepthMm)]}
         position={[toUnit(leftWingXMm), toUnit(wingCenterYMm), toUnit(wingCenterZMm)]}
         material={material}
         panelName="전자렌지 좌날개"
       />
-      {/* 우 날개프레임 */}
+      {/* 우 날개프레임 (가구에 고정) */}
       <BoxWithEdges
         args={[toUnit(WING_THICKNESS_MM), toUnit(WING_HEIGHT_MM), toUnit(wingDepthMm)]}
         position={[toUnit(rightWingXMm), toUnit(wingCenterYMm), toUnit(wingCenterZMm)]}
         material={material}
         panelName="전자렌지 우날개"
       />
-      {/* 전면프레임 */}
-      <BoxWithEdges
-        args={[toUnit(frontFrameWidthMm), toUnit(FRONT_HEIGHT_MM), toUnit(FRONT_THICKNESS_MM)]}
-        position={[toUnit(frontFrameCenterXMm), toUnit(frontFrameCenterYMm), toUnit(frontFrameCenterZMm)]}
-        material={material}
-        panelName="전자렌지 전면프레임"
-      />
-      {/* 인출 트레이 바닥판 */}
-      <BoxWithEdges
-        args={[toUnit(trayWidthMm), toUnit(TRAY_THICKNESS_MM), toUnit(TRAY_DEPTH_MM)]}
-        position={[0, toUnit(trayCenterYMm), toUnit(trayCenterZMm)]}
-        material={material}
-        panelName="전자렌지 인출 트레이 바닥판"
-      />
+      {/* 인출되는 부재: 전면프레임 + 트레이 바닥판 */}
+      <animated.group position-z={slideSpring.offset}>
+        {/* 전면프레임 */}
+        <BoxWithEdges
+          args={[toUnit(frontFrameWidthMm), toUnit(FRONT_HEIGHT_MM), toUnit(FRONT_THICKNESS_MM)]}
+          position={[toUnit(frontFrameCenterXMm), toUnit(frontFrameCenterYMm), toUnit(frontFrameCenterZMm)]}
+          material={material}
+          panelName="전자렌지 전면프레임"
+        />
+        {/* 인출 트레이 바닥판 */}
+        <BoxWithEdges
+          args={[toUnit(trayWidthMm), toUnit(TRAY_THICKNESS_MM), toUnit(TRAY_DEPTH_MM)]}
+          position={[0, toUnit(trayCenterYMm), toUnit(trayCenterZMm)]}
+          material={material}
+          panelName="전자렌지 인출 트레이 바닥판"
+        />
+      </animated.group>
     </group>
   );
 };
