@@ -642,16 +642,16 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                   : null;
                 const sectionDepthsArr = placedMod?.sectionDepths as number[] | undefined;
                 const sectionDirArr = placedMod?.sectionDepthDirections as ('front'|'back')[] | undefined;
-                const moduleDepthMm = depth * 100; // Three.js 단위 → mm (1 unit = 100mm)
+                const hasCustomSectionDepths = !!sectionDepthsArr && sectionDepthsArr.some(d => typeof d === 'number');
+                const moduleDepthMm = depth * 100;
                 let cursorY = -height / 2;
                 return sectionHeights.map((sh: number, idx: number) => {
                   const panelY = cursorY + sh / 2;
                   cursorY += sh;
-                  // 섹션별 깊이 (mm → Three.js 단위)
-                  const secDepthMm = sectionDepthsArr?.[idx] ?? moduleDepthMm;
-                  const secDepth = mmToThreeUnits(secDepthMm);
+                  // sectionDepths 미설정 시 가구 외경 그대로 (측판 어긋남 방지)
+                  const secDepthMm = hasCustomSectionDepths ? (sectionDepthsArr![idx] ?? moduleDepthMm) : moduleDepthMm;
+                  const secDepth = hasCustomSectionDepths ? mmToThreeUnits(secDepthMm) : depth;
                   const dir = sectionDirArr?.[idx] ?? 'front';
-                  // 깊이 차이에 따른 Z 오프셋 (front=뒤로 정렬, back=앞으로 정렬)
                   const depthDiff = depth - secDepth;
                   const sectionZOffset = depthDiff === 0 ? 0 : dir === 'back' ? depthDiff / 2 : -depthDiff / 2;
                   return (
