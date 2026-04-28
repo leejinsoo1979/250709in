@@ -41,20 +41,16 @@ export const find3DViewerContainer = (): HTMLElement | null => {
 // 현재 화면에서 Three.js 캔버스 찾기
 export const findThreeCanvas = (): HTMLCanvasElement | null => {
   // React Three Fiber가 생성한 캔버스 찾기
+  // ⚠️ canvas.getContext()를 호출하면 옵션이 다를 경우 R3F의 WebGL 생성을 깨뜨림
+  // 따라서 크기/data 속성 기반으로만 판별하고, getContext 호출은 절대 하지 말 것
   const canvases = document.querySelectorAll('canvas');
 
   for (const canvas of canvases) {
-    // Three.js 캔버스인지 확인 (WebGL 컨텍스트 존재 여부로 판단)
-    try {
-      // WebGL 컨텍스트가 이미 사용 중일 수 있으므로 try-catch로 처리
-      const gl = canvas.getContext('webgl', { preserveDrawingBuffer: true }) ||
-        canvas.getContext('webgl2', { preserveDrawingBuffer: true });
-      if (gl && canvas.offsetWidth > 100 && canvas.offsetHeight > 100) {
-        return canvas;
-      }
-    } catch (e) {
-      // WebGL 컨텍스트를 가져올 수 없으면 해당 캔버스는 건너뜀
-      console.warn('캔버스 WebGL 컨텍스트 접근 실패:', e);
+    // 가장 큰 canvas를 R3F 메인 캔버스로 추정 (R3F는 보통 화면 가득 차는 큰 canvas)
+    if (canvas.offsetWidth > 100 && canvas.offsetHeight > 100) {
+      // data-engine 속성이 있으면 R3F 확정 (R3F가 자동 부착)
+      // 없어도 큰 canvas는 R3F일 가능성 높음
+      return canvas;
     }
   }
 

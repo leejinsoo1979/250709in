@@ -1027,30 +1027,12 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
   };
 
   // 컴포넌트 언마운트 시 정리
+  // ⚠️ canvas.getContext()를 어떤 type으로든 호출하면 그 canvas는 영구적으로 그 type으로 잠김
+  // R3F가 자체적으로 WebGL 정리하므로 여기서 수동 정리 불필요 → no-op으로 변경
   useEffect(() => {
     return () => {
-      // 컴포넌트 언마운트 시 캔버스 정리
       const cleanupCanvases = () => {
-        const canvases = document.querySelectorAll('canvas');
-        canvases.forEach(canvas => {
-          // 2D 컨텍스트를 사용하여 캔버스 지우기
-          const ctx = canvas.getContext('2d');
-          if (ctx) ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-          // WebGL 컨텍스트 정리
-          const gl = canvas.getContext('webgl') || canvas.getContext('webgl2');
-          if (gl && !gl.isContextLost()) {
-            try {
-              // 타입 안전하게 WebGL 컨텍스트 손실 처리
-              const ext = gl.getExtension('WEBGL_lose_context');
-              if (ext) {
-                ext.loseContext();
-              }
-            } catch (e) {
-              console.log('WebGL context cleanup error:', e);
-            }
-          }
-        });
+        // 의도적으로 비워둠 — getContext 호출 시 다음 렌더의 WebGL 생성이 실패함
       };
 
       cleanupCanvases();

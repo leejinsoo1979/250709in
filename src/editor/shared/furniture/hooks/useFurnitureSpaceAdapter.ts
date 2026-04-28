@@ -60,8 +60,11 @@ export const useFurnitureSpaceAdapter = ({ setPlacedModules }: UseFurnitureSpace
           }
 
           // 공간 폭이 변경된 경우: 비례 리사이징 + 재배치
+          // ⚠️ surroundType 변경(서라운드 ↔ 노서라운드)처럼 작은 폭 변화는 비례 리사이징하지 않음
+          //    리사이징 시 moduleId 너비 변경 → 모듈 데이터 깨짐 → 본체 사라짐
           const ratio = oldSpaceWidth > 0 ? newSpaceWidth / oldSpaceWidth : 1;
-          const needsResize = Math.abs(ratio - 1) > 0.01; // 1% 이상 변경 시
+          // 5% 이상 변경 시에만 리사이징 (surroundType 변경은 보통 100mm 이내 = 5% 미만)
+          const needsResize = Math.abs(ratio - 1) > 0.05;
 
           let newWidth = moduleWidth;
           let newCenterX = centerXmm;

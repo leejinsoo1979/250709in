@@ -720,28 +720,53 @@ const DoorModule: React.FC<DoorModuleProps> = ({
 
     // 자유배치 모드: x좌표 기반 인접성 판단
     if (storePlacedModule.isFreePlacement) {
+      // groupId가 같으면 무조건 인접 (듀얼 빌트인 냉장고장 그룹: 좌힌지+인서트+우힌지)
+      const myGroupId = (storePlacedModule as any).groupId;
+      if (myGroupId) {
+        const groupInsertFrames = allPlacedModules.filter(m =>
+          (m as any).groupId === myGroupId && isInsert(m) && m.id !== storePlacedModule.id
+        );
+        if (groupInsertFrames.length > 0) {
+          // 같은 그룹의 인서트 프레임이 있으면 위치 비교로 좌/우 판단
+          const myX = storePlacedModule.position?.x ?? 0;
+          let leftAdj = false, rightAdj = false;
+          groupInsertFrames.forEach(m => {
+            const mx = m.position?.x ?? 0;
+            if (mx < myX) leftAdj = true;
+            else rightAdj = true;
+          });
+          return { left: leftAdj, right: rightAdj };
+        }
+      }
+
       const myX = storePlacedModule.position?.x ?? 0;
       const myWidth = (storePlacedModule.customWidth ?? 0) * 0.01; // mm → three units
       const myLeft = myX - myWidth / 2;
       const myRight = myX + myWidth / 2;
-      const TOL = 0.05; // 5mm 허용 오차 (three units)
+      const TOL = 0.5; // 50mm 허용 오차 (three units) — 자유배치 가구 사이 여유분/도어 두께 대응
 
       const isAdjFree = (m: any) =>
         m.isFreePlacement && isInsert(m) && m.id !== storePlacedModule.id;
+
+      // 빌트인 냉장고장 자체에서 호출되는 경우만 적용 (인서트 프레임 자기 자신은 제외)
+      const isInsertSelf = isInsert(storePlacedModule);
+      if (isInsertSelf) {
+        return { left: false, right: false };
+      }
 
       const left = allPlacedModules.some(m => {
         if (!isAdjFree(m)) return false;
         const mx = m.position?.x ?? 0;
         const mw = (m.customWidth ?? 0) * 0.01;
-        const mRight = mx + mw / 2;
-        return Math.abs(mRight - myLeft) <= TOL;
+        // 인서트 프레임이 내 왼쪽에 있으면 도어 좌측 확장
+        return mx < myX && Math.abs((mx + mw / 2) - myLeft) <= TOL;
       });
       const right = allPlacedModules.some(m => {
         if (!isAdjFree(m)) return false;
         const mx = m.position?.x ?? 0;
         const mw = (m.customWidth ?? 0) * 0.01;
-        const mLeft = mx - mw / 2;
-        return Math.abs(mLeft - myRight) <= TOL;
+        // 인서트 프레임이 내 오른쪽에 있으면 도어 우측 확장
+        return mx > myX && Math.abs((mx - mw / 2) - myRight) <= TOL;
       });
       return { left, right };
     }

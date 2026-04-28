@@ -660,8 +660,11 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
         const MAX_SINGLE = 600;
         const MAX_DUAL = 1200;
         const maxAllowedWidth = isNewDual ? MAX_DUAL : MAX_SINGLE;
-        // 빌트인 냉장고장(582) / 인서트 프레임(136): 고정폭 — 빈 공간에 맞춰 확장하지 않음
-        const isFixedWidth = module.id.includes('built-in-fridge') || module.id.includes('insert-frame');
+        // 빌트인 냉장고장(582) / 인서트 프레임(136) / 듀얼 빌트인(1300): 고정폭 — 빈 공간에 맞춰 확장하지 않음
+        const isDualBuiltIn = module.id.includes('dual-built-in-fridge');
+        const isFixedWidth = module.id.includes('built-in-fridge') || module.id.includes('insert-frame') || isDualBuiltIn;
+        // 듀얼 빌트인 냉장고장 고정 너비 1300mm (582 + 136 + 582)
+        const dualBuiltInTotalWidth = 1300;
 
         const freeModules = placedModules.filter(m => m.isFreePlacement && !m.isSurroundPanel);
         const allBounds = freeModules.map(m => getModuleBoundsX(m)).sort((a, b) => a.left - b.left);
@@ -706,18 +709,17 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
               return w > (max.right - max.left) ? g : max;
             }, candidates[0]);
             const gapW = Math.floor(largestGap.right - largestGap.left);
-            // 고정폭 모듈은 모듈 기본 너비를 그대로 사용 (확장 안 함)
-            const minRequired = isFixedWidth ? dims.width : 200;
+            // 듀얼 빌트인은 1300 고정. 그 외 고정폭은 모듈 기본값. 일반은 200 최소.
+            const minRequired = isDualBuiltIn ? dualBuiltInTotalWidth : (isFixedWidth ? dims.width : 200);
             if (gapW >= minRequired) {
-              if (isFixedWidth) {
-                // 고정폭: 모듈 기본 너비 유지
+              if (isDualBuiltIn) {
+                furnitureWidth = dualBuiltInTotalWidth;
+              } else if (isFixedWidth) {
                 furnitureWidth = dims.width;
               } else {
-                // 일반: 빈 공간이 최대치보다 크면 최대치, 작으면 빈 공간 전체 사용
                 furnitureWidth = Math.min(gapW, maxAllowedWidth);
               }
               dims = { ...dims, width: furnitureWidth };
-              // 가구를 빈 공간 좌측에 붙여 배치
               targetX = largestGap.left + furnitureWidth / 2;
               break;
             }
@@ -726,7 +728,12 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
         }
 
         if (targetX === null) {
-          showAlert('배치할 공간이 부족합니다', { title: '배치 불가' });
+          if (isDualBuiltIn) {
+            console.error('[듀얼냉장고장 자유배치 실패] targetX===null. dims.width=', dims.width, 'minRequired=', dualBuiltInTotalWidth, 'zones=', zones, 'sortedBounds=', sortedBounds);
+          }
+          showAlert(isDualBuiltIn
+            ? `배치 공간이 부족합니다. 듀얼 빌트인 냉장고장은 ${dualBuiltInTotalWidth}mm 이상의 빈 공간이 필요합니다.`
+            : '배치할 공간이 부족합니다', { title: '배치 불가' });
           return;
         }
 
@@ -741,6 +748,10 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
 
         if (result.success && result.module) {
           addModule(result.module);
+          // 듀얼 빌트인 등 분할 배치된 추가 모듈도 함께 추가
+          if (result.additionalModules && result.additionalModules.length > 0) {
+            result.additionalModules.forEach(m => addModule(m));
+          }
           const setSelectedPlacedModuleId = useFurnitureStore.getState().setSelectedPlacedModuleId;
           setSelectedPlacedModuleId(result.module.id);
         } else {
@@ -1201,7 +1212,14 @@ const ModuleGallery: React.FC<ModuleGalleryProps> = ({ moduleCategory = 'tall', 
     // 듀얼 가구인지 확인
     const isDualModule = module.id.includes('dual-');
 
-    // 빌트인 냉장고장: 빈 공간에 들어갈 수 있는지만 체크 (인서트 흡수 가정 제거)
+    // 듀얼 빌트인 냉장고장: 자유배치/슬롯배치 모두 지원
+    if (module.id.includes('dual-built-in-fridge')) {
+      const fitsHeightDepth = module.dimensions.height <= zoneInternalSpace.height
+        && module.dimensions.depth <= zoneInternalSpace.depth;
+      return module.dimensions.width <= zoneInternalSpace.width && fitsHeightDepth;
+    }
+
+    // 빌트인 냉장고장(싱글): 빈 공간에 들어갈 수 있는지만 체크
     if (module.id.includes('built-in-fridge')) {
       const fridgeWidth = module.dimensions.width; // 582
       const sameZoneSlot = (m: any) => !m.isFreePlacement &&

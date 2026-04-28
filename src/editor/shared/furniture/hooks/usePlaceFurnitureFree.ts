@@ -39,6 +39,8 @@ export interface PlaceFurnitureFreeParams {
 export interface PlaceFurnitureFreeResult {
   success: boolean;
   module?: PlacedModule;
+  /** 듀얼 빌트인 냉장고장처럼 1개 모듈이 여러 개로 분할 배치되는 경우 추가 모듈들 */
+  additionalModules?: PlacedModule[];
   error?: string;
 }
 
@@ -51,6 +53,11 @@ export function placeFurnitureFree(params: PlaceFurnitureFreeParams): PlaceFurni
   // ── 서라운드 패널 전용 배치 ──
   if (isSurroundPanelId(moduleId)) {
     return placeSurroundPanel(moduleId, spaceInfo, dimensions, existingModules);
+  }
+
+  // ── 듀얼 빌트인 냉장고장: 1개 모듈 → 3개(좌힌지 빌트인 + 인서트 + 우힌지 빌트인) 분할 배치 ──
+  if (moduleId.includes('dual-built-in-fridge')) {
+    return placeDualBuiltInFridgeFree(params);
   }
 
   const internalSpace = calculateInternalSpace(spaceInfo);
@@ -303,4 +310,96 @@ function placeSurroundPanel(
   };
 
   return { success: true, module: newModule };
+}
+
+/**
+ * 자유배치 — 듀얼 빌트인 냉장고장: 1300mm 너비를 좌힌지 빌트인(582) + 인서트 프레임(136) + 우힌지 빌트인(582)로 분할 배치
+ * 사용자가 클릭한 X 위치를 듀얼 세트의 중앙으로 사용
+ */
+function placeDualBuiltInFridgeFree(params: PlaceFurnitureFreeParams): PlaceFurnitureFreeResult {
+  const { xPositionMM, spaceInfo } = params;
+
+  const LEFT_W = 582;
+  const INSERT_W = 136;
+  const RIGHT_W = 582;
+  const TOTAL_W = LEFT_W + INSERT_W + RIGHT_W; // 1300
+
+  // 빌트인 냉장고장/인서트 프레임의 실제 모듈 dimensions를 모듈 데이터에서 직접 가져옴
+  // _tempSlotWidths로 원하는 너비 모듈을 동적 생성하도록 spaceInfo를 임시 수정
+  const internalSpace = calculateInternalSpace(spaceInfo);
+  const fridgeModuleData = getModuleById(
+    `built-in-fridge-${LEFT_W}`,
+    internalSpace,
+    { ...spaceInfo, _tempSlotWidths: [LEFT_W] } as SpaceInfo
+  );
+  const insertModuleData = getModuleById(
+    `insert-frame-${INSERT_W}`,
+    internalSpace,
+    { ...spaceInfo, _tempSlotWidths: [INSERT_W] } as SpaceInfo
+  );
+  if (!fridgeModuleData || !insertModuleData) {
+    return { success: false, error: '빌트인 냉장고장/인서트 프레임 모듈을 찾을 수 없습니다' };
+  }
+  const fridgeDims = { width: LEFT_W, height: fridgeModuleData.dimensions.height, depth: fridgeModuleData.dimensions.depth };
+  const insertDims = { width: INSERT_W, height: insertModuleData.dimensions.height, depth: insertModuleData.dimensions.depth };
+
+  // 듀얼 세트 중심을 1300mm 너비로 공간에 클램프 (좌우 가장자리 자동 조정)
+  const clampedSetCenter = clampToSpaceBoundsX(xPositionMM, TOTAL_W, spaceInfo);
+  const setLeftEdge = clampedSetCenter - TOTAL_W / 2;
+  const leftCenterX = setLeftEdge + LEFT_W / 2;
+  const insertCenterX = setLeftEdge + LEFT_W + INSERT_W / 2;
+  const rightCenterX = setLeftEdge + LEFT_W + INSERT_W + RIGHT_W / 2;
+
+  const groupId = `dual-built-in-fridge-${uuidv4()}`;
+
+  // 좌힌지 빌트인 — 분할 함수 내부는 store 추가 없이 module만 생성
+  const leftRes = placeFurnitureFree({
+    ...params,
+    moduleId: 'built-in-fridge-582',
+    xPositionMM: leftCenterX,
+    dimensions: fridgeDims,
+    moduleData: fridgeModuleData,
+    skipCollisionCheck: true,
+  });
+  if (!leftRes.success || !leftRes.module) {
+    return { success: false, error: leftRes.error || '좌힌지 빌트인 배치 실패' };
+  }
+  leftRes.module.hingePosition = 'left';
+  leftRes.module.groupId = groupId;
+
+  // 인서트 프레임
+  const insertRes = placeFurnitureFree({
+    ...params,
+    moduleId: 'insert-frame-136',
+    xPositionMM: insertCenterX,
+    dimensions: insertDims,
+    moduleData: insertModuleData,
+    skipCollisionCheck: true,
+  });
+  if (!insertRes.success || !insertRes.module) {
+    return { success: false, error: insertRes.error || '인서트 배치 실패' };
+  }
+  insertRes.module.groupId = groupId;
+
+  // 우힌지 빌트인
+  const rightRes = placeFurnitureFree({
+    ...params,
+    moduleId: 'built-in-fridge-582',
+    xPositionMM: rightCenterX,
+    dimensions: { width: RIGHT_W, height: fridgeDims.height, depth: fridgeDims.depth },
+    moduleData: fridgeModuleData,
+    skipCollisionCheck: true,
+  });
+  if (!rightRes.success || !rightRes.module) {
+    return { success: false, error: rightRes.error || '우힌지 빌트인 배치 실패' };
+  }
+  rightRes.module.hingePosition = 'right';
+  rightRes.module.groupId = groupId;
+
+  // 첫 번째 module + 추가 모듈 2개를 반환 — caller가 일괄 추가
+  return {
+    success: true,
+    module: leftRes.module,
+    additionalModules: [insertRes.module, rightRes.module],
+  };
 }

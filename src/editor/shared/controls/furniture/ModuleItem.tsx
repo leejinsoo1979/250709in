@@ -219,6 +219,10 @@ const ModuleItem: React.FC<ModuleItemProps> = ({ module, internalSpace }) => {
 
     if (result.success && result.module) {
       furnitureStore.addModule(result.module);
+      // 듀얼 빌트인 등 분할 배치된 추가 모듈도 함께 추가
+      if (result.additionalModules && result.additionalModules.length > 0) {
+        result.additionalModules.forEach(m => furnitureStore.addModule(m));
+      }
       console.log('✅ [자동배치] 배치 완료:', result.module.id, 'at X=', targetX);
 
       // 배치 모드 해제 및 선택 해제

@@ -398,10 +398,11 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     return placedModule.topFrameThickness ?? spaceInfo.frameSize?.top ?? 30;
   })();
   // 슬롯배치: 전체서라운드(surround)일 때만 doorTopGap 연동 (양쪽서라운드/노서라운드는 연동 안 함)
-  // 자유배치: freeSurround.top이 활성화된 경우에만 연동
-  const isSlotSurround = spaceInfo.surroundType === 'surround' && spaceInfo.frameConfig?.top !== false;
-  const isFreeSurroundActive = placedModule.isFreePlacement && spaceInfo.freeSurround?.top?.enabled === true;
-  const hasTopFrameActive = isSlotSurround || isFreeSurroundActive;
+  // 자유배치는 슬롯배치와 동일한 기본값(5)을 유지 — 자동 동기화 안 함
+  const isSlotSurround = !placedModule.isFreePlacement
+    && spaceInfo.surroundType === 'surround'
+    && spaceInfo.frameConfig?.top !== false;
+  const hasTopFrameActive = isSlotSurround;
   // 하부장은 상부프레임과 무관한 자체 doorTopGap을 사용하므로 서라운드 연동 제외
   const isLowerModule = placedModule.moduleId?.includes('lower-');
   useEffect(() => {
@@ -815,6 +816,12 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       targetModuleId = `${baseType}-${placedModule.customWidth}`;
     }
   }
+  // 자유배치 가구: freeWidth 기반으로 targetModuleId 재계산 (customWidth가 없을 때)
+  // surroundType 변경으로 internalSpace.width가 바뀌어도 자유배치는 freeWidth가 기준
+  else if (placedModule.isFreePlacement && placedModule.freeWidth && !placedModule.customWidth) {
+    const baseType = placedModule.baseModuleType || targetModuleId.replace(/-[\d.]+$/, '');
+    targetModuleId = `${baseType}-${placedModule.freeWidth}`;
+  }
 
   // === 커스텀 가구 처리 ===
   // 커스텀 가구인 경우 customFurnitureStore에서 데이터를 가져와 ModuleData 생성
@@ -894,7 +901,18 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     };
   } else {
     // 일반 가구: getModuleById 호출
-    moduleData = getModuleById(targetModuleId, internalSpace, zoneSpaceInfo);
+    // 자유배치 가구는 freeWidth/freeHeight/freeDepth 기반으로 internalSpace 보정
+    // (surroundType 변경으로 internalSpace가 줄어들어도 모듈을 정확히 매칭)
+    if (placedModule.isFreePlacement && placedModule.freeWidth) {
+      const fpInternalSpace = {
+        width: placedModule.freeWidth,
+        height: placedModule.freeHeight || internalSpace.height,
+        depth: placedModule.freeDepth || internalSpace.depth,
+      };
+      moduleData = getModuleById(targetModuleId, fpInternalSpace, zoneSpaceInfo);
+    } else {
+      moduleData = getModuleById(targetModuleId, internalSpace, zoneSpaceInfo);
+    }
   }
 
   if ((isUpperCabinet || isLowerCabinet) && !isDualCabinet && !isCustomFurniture) {
@@ -4165,8 +4183,8 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
 
       {/* 도어는 BoxModule 내부에서 렌더링하도록 변경 */}
 
-      {/* 자유배치 도어 설정 톱니 아이콘 — 캐비넷 중심에 하나만 표시 (하부장 제외, 측면뷰 상부장 제외) */}
-      {placedModule.isFreePlacement && placedModule.hasDoor && !isLowerCabinet && !isDraggingThis && !isEditMode && showFurnitureEditHandles && showDimensions && !(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right') && isUpperCabinet) && (
+      {/* 자유배치 도어 설정 톱니 아이콘 — 캐비넷 중심에 하나만 표시 (하부장/인서트 프레임 제외, 측면뷰 상부장 제외) */}
+      {placedModule.isFreePlacement && placedModule.hasDoor && !isLowerCabinet && !placedModule.moduleId?.includes('insert-frame') && !isDraggingThis && !isEditMode && showFurnitureEditHandles && showDimensions && !(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right') && isUpperCabinet) && (
         <Html
           position={[
             adjustedPosition.x,
@@ -4360,8 +4378,9 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         </Html>
       )}
 
-      {/* 편집 아이콘 표시 (하단 연필 아이콘) — 설계모드, 2D 측면/평면에서는 숨김 */}
+      {/* 편집 아이콘 표시 (하단 연필 아이콘) — 설계모드, 2D 측면/평면, 인서트 프레임에서는 숨김 */}
       {!readOnly && showFurnitureEditHandles && showDimensions && !isLayoutBuilderOpen &&
+        !placedModule.moduleId?.includes('insert-frame') &&
         !(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right' || view2DDirection === 'top')) && (
         <Html
           position={[

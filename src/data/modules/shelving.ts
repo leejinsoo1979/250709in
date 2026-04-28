@@ -3256,7 +3256,8 @@ export const generateShelvingModules = (
   }
   
   // 자유배치 모드: 사용자 설정 기본 너비로 오버라이드
-  if (indexingSpaceInfo.layoutMode === 'free-placement') {
+  // 단, _tempSlotWidths가 명시적으로 설정된 경우(getModuleById에서 특정 너비로 검색)는 그대로 유지
+  if (indexingSpaceInfo.layoutMode === 'free-placement' && !('_tempSlotWidths' in indexingSpaceInfo && indexingSpaceInfo._tempSlotWidths)) {
     if (indexingSpaceInfo.furnitureSingleWidth) {
       columnWidth = indexingSpaceInfo.furnitureSingleWidth;
     }

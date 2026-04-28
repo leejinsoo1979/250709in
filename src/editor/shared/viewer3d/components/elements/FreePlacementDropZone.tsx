@@ -649,6 +649,10 @@ const FreePlacementDropZone: React.FC = () => {
 
     if (result.success && result.module) {
       addModule(result.module);
+      // 듀얼 빌트인 등 분할 배치된 추가 모듈도 함께 추가
+      if (result.additionalModules && result.additionalModules.length > 0) {
+        result.additionalModules.forEach(m => addModule(m));
+      }
       console.log('✅ [FreePlacement] 배치 완료:', result.module.id);
       return result.module.id;
     } else {

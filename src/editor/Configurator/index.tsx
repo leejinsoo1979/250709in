@@ -809,7 +809,6 @@ const Configurator: React.FC = () => {
 
       try {
         hasGeneratedInitialThumbnailRef.current = true;
-// console.log('📸 최초 썸네일 자동 생성 시작');
 
         const thumbnail = await captureProjectThumbnail();
         if (thumbnail) {
@@ -819,8 +818,6 @@ const Configurator: React.FC = () => {
           await updateProject(currentProjectId, {
             thumbnail: thumbnailBlob
           });
-
-// console.log('📸 최초 썸네일 자동 생성 완료');
         }
       } catch (error) {
         console.error('📸 최초 썸네일 생성 실패:', error);
