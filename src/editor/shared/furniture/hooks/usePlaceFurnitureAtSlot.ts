@@ -538,7 +538,8 @@ export function placeFurnitureAtSlot(params: PlaceFurnitureParams): PlaceFurnitu
   // 새 가구 모듈 생성
   // baseId는 이미 위에서 계산됨 (moduleId.replace(/-[\d.]+$/, ''))
   // 서랍 모듈은 하부 섹션 상판 85mm 들여쓰기 기본값 적용
-  const defaultLowerTopOffset = (furnitureId.includes('2drawer') || furnitureId.includes('4drawer') || furnitureId.includes('pull-out-cabinet') || furnitureId.includes('pantry-cabinet')) ? 85 : undefined;
+  // 팬트리장은 1단 상판 옵셋 X (전체 풀 깊이) — 인출장만 1·2단 상판 85옵셋
+  const defaultLowerTopOffset = (furnitureId.includes('2drawer') || furnitureId.includes('4drawer') || furnitureId.includes('pull-out-cabinet')) ? 85 : undefined;
   // 단내림 구간 가구 높이 계산: 공간높이 - 단내림높이 - 프레임 - 받침대
   let droppedCustomHeight: number | undefined;
   if (hasDroppedCeiling && zone === 'dropped' && spaceInfo.droppedCeiling?.dropHeight) {
