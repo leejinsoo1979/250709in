@@ -436,6 +436,159 @@ const createInsertFrame = (maxHeight: number, slotWidthForId: number = INSERT_FR
   } as ModuleData;
 };
 
+// 인출장: 3섹션 키큰장 (주방)
+//   - 외경: W620 × D570 (가변)
+//   - 1단(H600 고정): 속서랍 2개 (마이다 535×255×2, 갭 24mm)
+//   - 2단(H500 고정): 전자렌지 인출서랍
+//       · 좌/우 날개프레임 18t × 65mm (앞 35옵셋 ~ 백패널)
+//       · 전면프레임 18 × 63mm (좌우 2mm 갭, 하단 3mm 갭)
+//       · 인출 트레이 바닥판 18t × 깊이 450 (백패널 -39.5, 좌우 2mm 갭, 날개프레임 윗면 -22)
+//   - 3단(H가변): 다보 선반 2개 균등 3칸
+//   - 도어 1장 (일반 힌지)
+const PULL_OUT_CABINET_WIDTH = 620;
+const PULL_OUT_CABINET_DEPTH = 570;
+const PULL_OUT_SECTION1_HEIGHT = 600;
+const PULL_OUT_SECTION2_HEIGHT = 500;
+const createPullOutCabinet = (maxHeight: number, slotWidthForId: number = PULL_OUT_CABINET_WIDTH): ModuleData => {
+  const section1Height = PULL_OUT_SECTION1_HEIGHT;
+  const section2Height = PULL_OUT_SECTION2_HEIGHT;
+  const section3Height = Math.max(maxHeight - section1Height - section2Height, 0);
+
+  // 3단 다보선반 위치: 균등 3칸 분할
+  const basicThickness = FURNITURE_SPECS.BASIC_THICKNESS;
+  const section3InnerHeight = Math.max(section3Height - basicThickness * 2, 0);
+  const shelf1Y = section3InnerHeight / 3;
+  const shelf2Y = (section3InnerHeight / 3) * 2;
+
+  const sections: SectionConfig[] = [
+    // 1단(아래): 속서랍 2개
+    {
+      type: 'drawer',
+      heightType: 'absolute',
+      height: section1Height,
+      count: 2,
+      drawerHeights: [255, 255],
+      gapHeight: 24,
+    },
+    // 2단(중간): 전자렌지 인출서랍 — 'open' 섹션, 실제 부재는 BoxModule에서 isPullOutMicrowave 분기로 그림
+    {
+      type: 'open',
+      heightType: 'absolute',
+      height: section2Height,
+    } as any,
+    // 3단(위): 다보선반 2개로 3칸 균등 분할
+    {
+      type: 'shelf',
+      heightType: 'absolute',
+      height: section3Height,
+      count: 2,
+      shelfPositions: [shelf1Y, shelf2Y],
+    },
+  ];
+
+  const widthForId = Math.round(slotWidthForId * 100) / 100;
+  const base = createFurnitureBase(
+    `single-pull-out-cabinet-${widthForId}`,
+    `인출장 ${PULL_OUT_CABINET_WIDTH}mm`,
+    PULL_OUT_CABINET_WIDTH,
+    maxHeight,
+    PULL_OUT_CABINET_DEPTH,
+    FURNITURE_SPECS.COLORS.TYPE2,
+    `폭 ${PULL_OUT_CABINET_WIDTH} × 깊이 ${PULL_OUT_CABINET_DEPTH}. 1단 속서랍2 + 2단 전자렌지인출 + 3단 다보선반 균등3칸.`,
+    PULL_OUT_CABINET_DEPTH,
+    'full'
+  );
+
+  return {
+    ...base,
+    widthOptions: [PULL_OUT_CABINET_WIDTH],
+    dimensions: { width: PULL_OUT_CABINET_WIDTH, height: maxHeight, depth: PULL_OUT_CABINET_DEPTH },
+    modelConfig: {
+      ...base.modelConfig,
+      sections,
+      isPullOutCabinet: true,
+      // 2단 전자렌지 인출 섹션 인덱스 (sections 배열에서 1번)
+      pullOutMicrowaveSectionIndex: 1,
+      // 마이다 사양 (1단)
+      drawerMaidaWidth: 535,
+      drawerMaidaHeight: 255,
+      drawerMaidaGap: 24,
+      // 전자렌지 인출 사양 (2단)
+      microwaveWingFrameThickness: 18,
+      microwaveWingFrameHeight: 65,
+      microwaveWingFrameFrontInset: 35,
+      microwaveFrontFrameThickness: 18,
+      microwaveFrontFrameHeight: 63,
+      microwaveFrontFrameSideGap: 2,
+      microwaveFrontFrameBottomGap: 3,
+      microwaveTrayBottomThickness: 18,
+      microwaveTrayBottomDepth: 450,
+      microwaveTrayBackOffset: 39.5,
+      microwaveTraySideGap: 2,
+      microwaveTrayBottomBelowWing: 22,
+    } as any,
+  } as ModuleData;
+};
+
+// 팬트리장: 2섹션 키큰장 (주방)
+//   - 외경: W600 × D600 (가변)
+//   - 1단(H1825 고정): 비어있음 (오픈)
+//   - 2단(H가변, 기본 490): 가운데 다보선반 1개
+//   - 도어 1장
+const PANTRY_CABINET_WIDTH = 600;
+const PANTRY_CABINET_DEPTH = 600;
+const PANTRY_SECTION1_HEIGHT = 1825;
+const createPantryCabinet = (maxHeight: number, slotWidthForId: number = PANTRY_CABINET_WIDTH): ModuleData => {
+  const section1Height = PANTRY_SECTION1_HEIGHT;
+  const section2Height = Math.max(maxHeight - section1Height, 0);
+
+  // 2단 다보선반 위치: 가운데
+  const basicThickness = FURNITURE_SPECS.BASIC_THICKNESS;
+  const section2InnerHeight = Math.max(section2Height - basicThickness * 2, 0);
+  const shelfY = section2InnerHeight / 2;
+
+  const sections: SectionConfig[] = [
+    // 1단(아래): 비어있음 (오픈)
+    {
+      type: 'open',
+      heightType: 'absolute',
+      height: section1Height,
+    },
+    // 2단(위): 가운데 다보선반 1개
+    {
+      type: 'shelf',
+      heightType: 'absolute',
+      height: section2Height,
+      count: 1,
+      shelfPositions: [shelfY],
+    },
+  ];
+
+  const widthForId = Math.round(slotWidthForId * 100) / 100;
+  const base = createFurnitureBase(
+    `single-pantry-cabinet-${widthForId}`,
+    `팬트리장 ${PANTRY_CABINET_WIDTH}mm`,
+    PANTRY_CABINET_WIDTH,
+    maxHeight,
+    PANTRY_CABINET_DEPTH,
+    FURNITURE_SPECS.COLORS.TYPE2,
+    `폭 ${PANTRY_CABINET_WIDTH} × 깊이 ${PANTRY_CABINET_DEPTH}. 1단 오픈(${section1Height}) + 2단 다보선반 가운데(가변).`,
+    PANTRY_CABINET_DEPTH,
+    'full'
+  );
+
+  return {
+    ...base,
+    widthOptions: [PANTRY_CABINET_WIDTH],
+    dimensions: { width: PANTRY_CABINET_WIDTH, height: maxHeight, depth: PANTRY_CABINET_DEPTH },
+    modelConfig: {
+      ...base.modelConfig,
+      sections,
+      isPantryCabinet: true,
+    } as any,
+  } as ModuleData;
+};
+
 // 듀얼 빌트인 냉장고장: 갤러리 마커 모듈 — 클릭 시 좌힌지 빌트인 + 인서트 + 우힌지 빌트인 3개로 분해 배치
 //   - 슬롯 폭 1300 (582 + 136 + 582)
 //   - 듀얼 슬롯 (isDualSlot)
@@ -3076,6 +3229,12 @@ export const generateShelvingModules = (
 
   // === 키큰장: 듀얼 빌트인 냉장고장 (좌힌지 빌트인 + 인서트 + 우힌지 빌트인 자동 배치) ===
   modules.push(createDualBuiltInFridge(maxHeight));
+
+  // === 키큰장: 인출장 (1단 속서랍2 + 2단 전자렌지인출 + 3단 다보선반 균등3칸) ===
+  modules.push(createPullOutCabinet(maxHeight, columnWidth));
+
+  // === 키큰장: 팬트리장 (1단 오픈 + 2단 다보선반 가운데) ===
+  modules.push(createPantryCabinet(maxHeight, columnWidth));
 
   modules.push(createSingleEntrywayH(columnWidth, maxHeight));
   // modules.push(createSingleEntrywayI(columnWidth, maxHeight));
