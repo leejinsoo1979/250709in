@@ -26,9 +26,9 @@ const getImagePath = (filename: string) => {
 
 const FURNITURE_ICONS: Record<string, string> = {
   // 키큰장 (주방)
-  'built-in-fridge': getImagePath('built_in.png'),
+  'built-in-fridge': getImagePath('single_builtin.png'),
   'insert-frame': getImagePath('insert_frame.png'),
-  'dual-built-in-fridge': getImagePath('built_in_dual.png'),
+  'dual-built-in-fridge': getImagePath('dual_builtin.png'),
   // TODO: 인출장/팬트리장 전용 썸네일 — 사용자가 이미지 제공할 때까지 임시로 빌트인 아이콘 사용
   'pull-out-cabinet': getImagePath('built_in.png'),
   'pantry-cabinet': getImagePath('built_in.png'),
