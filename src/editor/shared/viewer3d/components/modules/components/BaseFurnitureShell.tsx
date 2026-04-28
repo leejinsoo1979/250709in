@@ -642,7 +642,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                   : null;
                 const sectionDepthsArr = placedMod?.sectionDepths as number[] | undefined;
                 const sectionDirArr = placedMod?.sectionDepthDirections as ('front'|'back')[] | undefined;
-                const moduleDepthMm = depth / mmToThreeUnits(1);
+                const moduleDepthMm = depth * 100; // Three.js 단위 → mm (1 unit = 100mm)
                 let cursorY = -height / 2;
                 return sectionHeights.map((sh: number, idx: number) => {
                   const panelY = cursorY + sh / 2;
