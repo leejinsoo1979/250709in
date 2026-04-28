@@ -4,6 +4,7 @@ import { useSpace3DView } from '../../context/useSpace3DView';
 import { Text, useGLTF, Line } from '@react-three/drei';
 import NativeLine from '../elements/NativeLine';
 import { useUIStore } from '@/store/uiStore';
+import { useFurnitureStore } from '@/store/core/furnitureStore';
 import { useSpring, animated } from '@react-spring/three';
 import BoxWithEdges from './components/BoxWithEdges';
 import DimensionText from './components/DimensionText';
@@ -395,17 +396,25 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
   // 서랍 높이 계산 로직 선택
   const mmToThreeUnits = (mm: number) => mm * 0.01;
 
-  // 도어 열림 상태에 따라 속서랍 인출 애니메이션 (인출장 1단 속서랍 등)
+  // 도어 열림 상태에 따라 속서랍 인출 애니메이션 (인출장 1단 속서랍만 해당)
   // 순차 애니메이션:
   //   - 도어 열릴 때: 도어 90도 회전(약 500ms) → 그 후 서랍 인출
   //   - 도어 닫힐 때: 서랍이 먼저 들어감 → 그 후 도어 회전
+  // 일반 서랍장(외부 서랍)은 인출 애니메이션 없음
   const { doorsOpen } = useUIStore();
   const shouldOpenDrawers = doorsOpen === true;
+  // 현재 가구가 인출장(속서랍 보유)인지 확인
+  const isInnerDrawerModule = useFurnitureStore(state => {
+    if (!furnitureId) return false;
+    const m = state.placedModules.find(p => p.id === furnitureId);
+    return !!(m && typeof m.moduleId === 'string' && m.moduleId.includes('pull-out-cabinet'));
+  });
   const drawerSlideSpring = useSpring({
-    offset: shouldOpenDrawers ? mmToThreeUnits(200) : 0,
+    // 인출장만 인출, 다른 서랍은 0
+    offset: (isInnerDrawerModule && shouldOpenDrawers) ? mmToThreeUnits(200) : 0,
     config: { tension: 90, friction: 16, clamp: true },
-    // 열릴 때 500ms 지연 (도어가 먼저 열린 후), 닫힐 때 즉시 (서랍이 먼저 들어감)
-    delay: shouldOpenDrawers ? 500 : 0,
+    // 인출장만 지연: 열릴 때 500ms (도어가 먼저), 닫힐 때 즉시
+    delay: isInnerDrawerModule && shouldOpenDrawers ? 500 : 0,
   });
   const drawerZOffset = mmToThreeUnits(0);
   

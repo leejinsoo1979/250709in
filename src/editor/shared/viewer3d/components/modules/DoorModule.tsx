@@ -1033,10 +1033,15 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   // 도어 클릭 핸들러 제거됨 - Close/Open 버튼으로만 도어 열고닫기
   
   // 애니메이션 설정 - 적당한 속도 (90도 열림)
-  // 순차 애니메이션:
+  // 순차 애니메이션 (속서랍 있는 가구가 있을 때만 적용):
   //   - 열릴 때: 도어가 먼저 회전(즉시) → 그 후 서랍이 인출(500ms 지연)
   //   - 닫힐 때: 서랍이 먼저 들어감(즉시) → 그 후 도어 회전(500ms 지연)
-  const doorDelay = shouldOpenDoors ? 0 : 500; // 닫힐 때만 지연 (서랍이 먼저 들어가도록)
+  // 속서랍 가구 = 인출장 (pull-out-cabinet) — 다른 가구들은 지연 불필요
+  const hasInnerDrawerModule = useMemo(() =>
+    allPlacedModules.some(m => typeof m.moduleId === 'string' && m.moduleId.includes('pull-out-cabinet')),
+    [allPlacedModules]
+  );
+  const doorDelay = (hasInnerDrawerModule && !shouldOpenDoors) ? 500 : 0;
 
   const leftHingeDoorSpring = useSpring({
     rotation: shouldOpenDoors ? -Math.PI / 2 : 0,
