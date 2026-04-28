@@ -867,7 +867,9 @@ const PlacedModulePropertiesPanel: React.FC = () => {
 
   const moduleDefaultLowerTopOffset = React.useMemo(() => {
     if (!moduleData?.id) return 0;
-    return moduleData.id.includes('2drawer') || moduleData.id.includes('4drawer') ? 85 : 0;
+    // 2단/4단 서랍장, 인출장: 85mm 기본 (1·2단 상판 앞 옵셋)
+    // 팬트리장: 0 (1단 상판 풀깊이)
+    return moduleData.id.includes('2drawer') || moduleData.id.includes('4drawer') || moduleData.id.includes('pull-out-cabinet') ? 85 : 0;
   }, [moduleData?.id]);
 
   // 초기값 설정 - 의존성에서 getDefaultDepth 제거하여 불필요한 재실행 방지
