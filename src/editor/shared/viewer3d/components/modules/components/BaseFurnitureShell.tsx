@@ -1469,17 +1469,26 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
         {hasBackPanel && (
         <>
           {(moduleData?.id?.includes('pull-out-cabinet') || moduleData?.id?.includes('pantry-cabinet')) && isMultiSectionFurniture() && getSectionHeights().length >= 2 ? (
-            // 인출장/팬트리장: N섹션 백패널 분할 — 백패널 높이 = 섹션 측판 외경 높이 (sh)
+            // 인출장/팬트리장: N섹션 백패널 분할 + 후면 보강대 (각 섹션 위/아래)
             (() => {
               const sectionHeights = getSectionHeights();
+              const reinforcementHeight = mmToThreeUnits(60);
+              const reinforcementDepth = mmToThreeUnits((basicThicknessMm === 18.5 || basicThicknessMm === 15.5) ? 15.5 : 15);
+              const reinforcementWidth = innerWidth - sidePanelGap;
+              const elements: React.ReactNode[] = [];
               let cursorY = -height / 2;
-              return sectionHeights.map((sh: number, idx: number) => {
+              sectionHeights.forEach((sh: number, idx: number) => {
                 // 백패널 높이 = 섹션 외경 높이 그대로 (측판과 동일)
                 const backPanelHeight = sh;
                 const backPanelY = cursorY + sh / 2;
                 const backPanelZ = -depth / 2 + backPanelThickness / 2 + mmToThreeUnits(backPanelConfig.depthOffset);
-                cursorY += sh;
-                return (
+                const reinforcementZ = backPanelZ - backPanelThickness / 2 - reinforcementDepth / 2;
+                const sectionTopY = cursorY + sh;
+                const sectionBottomY = cursorY;
+                const lowerReinforcementY = sectionBottomY + basicThickness + reinforcementHeight / 2;
+                const upperReinforcementY = sectionTopY - basicThickness - reinforcementHeight / 2;
+
+                elements.push(
                   <BoxWithEdges
                     key={`back-panel-sec-${idx}-${getPanelMaterial(`(${idx + 1}단)백패널`).uuid}`}
                     args={[innerWidth + mmToThreeUnits(backPanelConfig.widthExtension), backPanelHeight, backPanelThickness]}
@@ -1496,7 +1505,40 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                     textureUrl={textureUrl}
                   />
                 );
+                // 후면 보강대 (하단 + 상단)
+                if (!(viewMode === '2D' && view2DDirection === 'front')) {
+                  elements.push(
+                    <BoxWithEdges
+                      key={`reinforcement-bottom-sec-${idx}`}
+                      args={[reinforcementWidth, reinforcementHeight, reinforcementDepth]}
+                      position={[0, lowerReinforcementY, reinforcementZ]}
+                      material={material}
+                      renderMode={renderMode}
+                      isDragging={isDragging}
+                      isEditMode={isEditMode}
+                      isHighlighted={highlightedSection === `${placedFurnitureId}-${idx}`}
+                      panelName={`(${idx + 1}단)보강대 1`}
+                      furnitureId={placedFurnitureId}
+                    />
+                  );
+                  elements.push(
+                    <BoxWithEdges
+                      key={`reinforcement-top-sec-${idx}`}
+                      args={[reinforcementWidth, reinforcementHeight, reinforcementDepth]}
+                      position={[0, upperReinforcementY, reinforcementZ]}
+                      material={material}
+                      renderMode={renderMode}
+                      isDragging={isDragging}
+                      isEditMode={isEditMode}
+                      isHighlighted={highlightedSection === `${placedFurnitureId}-${idx}`}
+                      panelName={`(${idx + 1}단)보강대 2`}
+                      furnitureId={placedFurnitureId}
+                    />
+                  );
+                }
+                cursorY += sh;
               });
+              return <>{elements}</>;
             })()
           ) : isMultiSectionFurniture() && getSectionHeights().length === 2 ? (
             // 다중 섹션: 하부/상부 백패널 분리
