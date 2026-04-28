@@ -1293,7 +1293,12 @@ const PlacedModulePropertiesPanel: React.FC = () => {
   // 2섹션 가구 여부 확인
   const sections = moduleData?.modelConfig?.sections || [];
   // 인출장(3섹션)/팬트리장(2섹션) 모두 상판 옵셋 입력 필드 노출
-  const isPullOutOrPantry = !!(moduleData?.id?.includes('pull-out-cabinet') || moduleData?.id?.includes('pantry-cabinet'));
+  // 인출장/팬트리장/냉장고장: sectionDepths 배열 사용
+  const isPullOutOrPantry = !!(
+    moduleData?.id?.includes('pull-out-cabinet') ||
+    moduleData?.id?.includes('pantry-cabinet') ||
+    (moduleData?.id?.includes('fridge-cabinet') && !moduleData?.id?.includes('built-in-fridge'))
+  );
   const isTwoSectionFurniture = sections.length === 2 || (isPullOutOrPantry && sections.length >= 2);
 
   // 도어용 원래 너비 계산 (adjustedWidth가 없으면 slotCustomWidth → customWidth → 기본 너비)

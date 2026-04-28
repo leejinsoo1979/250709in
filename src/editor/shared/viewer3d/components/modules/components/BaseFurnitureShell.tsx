@@ -664,6 +664,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                   const halfOuterWidth = width / 2;
                   const leftPanelX = -halfOuterWidth + sidePanelThickness / 2;
                   const rightPanelX = halfOuterWidth - sidePanelThickness / 2;
+                  const sectionHighlighted = highlightedSection === `${placedFurnitureId}-${idx}`;
                   return (
                     <React.Fragment key={`side-panel-section-${idx}`}>
                       <BoxWithEdges
@@ -674,6 +675,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                         renderMode={renderMode}
                         isDragging={isDragging}
                         isEditMode={isEditMode}
+                        isHighlighted={sectionHighlighted}
                         isEndPanel={isLeftEndPanel}
                         panelName={`좌측판${idx + 1}`}
                         panelGrainDirections={panelGrainDirections}
@@ -688,6 +690,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                         renderMode={renderMode}
                         isDragging={isDragging}
                         isEditMode={isEditMode}
+                        isHighlighted={sectionHighlighted}
                         isEndPanel={isRightEndPanel}
                         panelName={`우측판${idx + 1}`}
                         panelGrainDirections={panelGrainDirections}
