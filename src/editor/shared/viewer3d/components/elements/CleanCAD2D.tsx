@@ -3901,8 +3901,12 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               const realTopFrame = leftmostMod.hasTopFrame === false ? 0 : (leftmostMod.topFrameThickness ?? globalTopFrame);
               // 띄움 배치: hasBase=false 이면 하부프레임 자리가 띄움 공간으로 대체됨
               // → individualFloatHeight 가 없으면 baseFrameHeight (= 띄움 기본) 사용
-              const realBottomFrame = leftLowerMod?.hasBase === false
-                ? (leftLowerMod?.individualFloatHeight ?? 0)
+              // 하부프레임 OFF (hasBase=false) → 하부프레임 자리를 마지막 섹션이 흡수
+              //   → realBottomFrame = individualFloatHeight (있으면) 또는 0
+              // 하부프레임 ON → baseFrameHeight (있으면) 또는 globalBottomFrameH
+              const leftLowerHasBase = (leftLowerMod as any)?.hasBase;
+              const realBottomFrame = leftLowerHasBase === false
+                ? ((leftLowerMod as any)?.individualFloatHeight ?? 0)
                 : (leftLowerMod?.baseFrameHeight ?? globalBottomFrameH);
               const realFloorFinish = floorFinishForHeight;
               const sectionBasisH = Math.max(0, effectiveH - realTopFrame - realBottomFrame - realFloorFinish);
