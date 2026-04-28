@@ -3318,12 +3318,43 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                       })()}
                       {/* 섹션 깊이 (2섹션 가구 + 인출장/팬트리장 N섹션 한정) */}
                       {(sectionCount === 2 || isPullOutOrPantry) && (() => {
+                        // 인출장/팬트리장: sectionDepths 배열 사용 (각 섹션 독립)
+                        const sectionDepths = (currentPlacedModule as any)?.sectionDepths as number[] | undefined;
+                        const sectionDirs = (currentPlacedModule as any)?.sectionDepthDirections as ('front'|'back')[] | undefined;
+                        const moduleDefaultDepth = moduleData?.dimensions.depth || 600;
+                        const sectionDepthVal = isPullOutOrPantry
+                          ? (sectionDepths?.[sIdx] ?? currentPlacedModule?.customDepth ?? moduleDefaultDepth).toString()
+                          : '';
+                        const sectionDirVal = isPullOutOrPantry
+                          ? (sectionDirs?.[sIdx] ?? 'front')
+                          : 'front';
+                        // 2섹션 가구: 기존 매핑 사용
                         // N섹션 가구: 마지막 섹션을 "상부"로 매핑, 그 외 모든 섹션은 "하부" 사용
                         const isLowerSec = sIdx < sectionCount - 1;
-                        const depthVal = isLowerSec ? lowerDepthInput : upperDepthInput;
-                        const onDepthChange = isLowerSec ? handleLowerDepthChange : handleUpperDepthChange;
-                        const dir = isLowerSec ? lowerDepthDirection : upperDepthDirection;
-                        const setDir = isLowerSec ? setLowerDepthDirection : setUpperDepthDirection;
+                        const onSectionDepthChange = (val: string) => {
+                          if (isPullOutOrPantry && currentPlacedModule) {
+                            const numV = parseInt(val);
+                            if (!isNaN(numV) && numV > 0) {
+                              const arr = [...(sectionDepths ?? new Array(sectionCount).fill(moduleDefaultDepth))];
+                              arr[sIdx] = numV;
+                              updatePlacedModule(currentPlacedModule.id, { sectionDepths: arr } as any);
+                            }
+                          } else {
+                            (isLowerSec ? handleLowerDepthChange : handleUpperDepthChange)(val);
+                          }
+                        };
+                        const depthVal = isPullOutOrPantry ? sectionDepthVal : (isLowerSec ? lowerDepthInput : upperDepthInput);
+                        const onDepthChange = onSectionDepthChange;
+                        const dir = isPullOutOrPantry ? sectionDirVal : (isLowerSec ? lowerDepthDirection : upperDepthDirection);
+                        const setDir = isPullOutOrPantry
+                          ? (newDir: 'front' | 'back') => {
+                              if (currentPlacedModule) {
+                                const arr = [...(sectionDirs ?? new Array(sectionCount).fill('front'))];
+                                arr[sIdx] = newDir;
+                                updatePlacedModule(currentPlacedModule.id, { sectionDepthDirections: arr } as any);
+                              }
+                            }
+                          : (isLowerSec ? setLowerDepthDirection : setUpperDepthDirection);
                         const dirField = isLowerSec ? 'lowerSectionDepthDirection' : 'upperSectionDepthDirection';
                         return (
                         <div style={{ flex: 1, minWidth: '70px' }}>

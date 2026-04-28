@@ -632,19 +632,33 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                 );
               })()
             ) : (moduleData?.id?.includes('pull-out-cabinet') || moduleData?.id?.includes('pantry-cabinet')) && isMultiSectionFurniture() && getSectionHeights().length >= 2 ? (
-              // 인출장/팬트리장: N섹션 측판 분할 (각 섹션 외경 높이만큼)
+              // 인출장/팬트리장: N섹션 측판 분할 (각 섹션 외경 높이만큼, 각 섹션 깊이 적용)
               (() => {
                 const sectionHeights = getSectionHeights();
+                // placedModule.sectionDepths 가져오기
+                const placedMod = placedFurnitureId
+                  ? require('@/store/core/furnitureStore').useFurnitureStore.getState().placedModules.find((m: any) => m.id === placedFurnitureId)
+                  : null;
+                const sectionDepthsArr = placedMod?.sectionDepths as number[] | undefined;
+                const sectionDirArr = placedMod?.sectionDepthDirections as ('front'|'back')[] | undefined;
+                const moduleDepthMm = depth / mmToThreeUnits(1);
                 let cursorY = -height / 2;
                 return sectionHeights.map((sh: number, idx: number) => {
                   const panelY = cursorY + sh / 2;
                   cursorY += sh;
+                  // 섹션별 깊이 (mm → Three.js 단위)
+                  const secDepthMm = sectionDepthsArr?.[idx] ?? moduleDepthMm;
+                  const secDepth = mmToThreeUnits(secDepthMm);
+                  const dir = sectionDirArr?.[idx] ?? 'front';
+                  // 깊이 차이에 따른 Z 오프셋 (front=뒤로 정렬, back=앞으로 정렬)
+                  const depthDiff = depth - secDepth;
+                  const sectionZOffset = depthDiff === 0 ? 0 : dir === 'back' ? depthDiff / 2 : -depthDiff / 2;
                   return (
                     <React.Fragment key={`side-panel-section-${idx}`}>
                       <BoxWithEdges
                         key={`left-panel-sec-${idx}-${getSidePanelMaterial('좌측판').uuid}`}
-                        args={[basicThickness, sh, depth]}
-                        position={[-innerWidth / 2 - basicThickness / 2, panelY, 0]}
+                        args={[basicThickness, sh, secDepth]}
+                        position={[-innerWidth / 2 - basicThickness / 2, panelY, sectionZOffset]}
                         material={getSidePanelMaterial('좌측판')}
                         renderMode={renderMode}
                         isDragging={isDragging}
@@ -657,8 +671,8 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                       />
                       <BoxWithEdges
                         key={`right-panel-sec-${idx}-${getSidePanelMaterial('우측판').uuid}`}
-                        args={[basicThickness, sh, depth]}
-                        position={[innerWidth / 2 + basicThickness / 2, panelY, 0]}
+                        args={[basicThickness, sh, secDepth]}
+                        position={[innerWidth / 2 + basicThickness / 2, panelY, sectionZOffset]}
                         material={getSidePanelMaterial('우측판')}
                         renderMode={renderMode}
                         isDragging={isDragging}
