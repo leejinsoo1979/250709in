@@ -65,6 +65,9 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
   // 듀얼 가구 여부 확인
   const isDualFurniture = useMemo(() => {
     if (!selectedModuleData) return false;
+    // ID 기반: dual- 접두어 또는 듀얼 빌트인 냉장고장
+    if (selectedModuleData.id?.startsWith('dual-')) return true;
+    if ((selectedModuleData.modelConfig as any)?.isDualBuiltInFridge) return true;
     const indexing = calculateSpaceIndexing(spaceInfo);
     const columnWidth = indexing.columnWidth;
     return Math.abs(selectedModuleData.dimensions.width - (columnWidth * 2)) < 50;
