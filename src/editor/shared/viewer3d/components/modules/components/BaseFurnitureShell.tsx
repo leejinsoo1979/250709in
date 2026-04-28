@@ -738,7 +738,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
         {/* 다중 섹션 가구인 경우 중간 구분 패널 렌더링 */}
         {isMultiSectionFurniture() && getSectionHeights().length > 1 && (
           <>
-            {(moduleData?.id?.includes('4drawer-hanging') || moduleData?.id?.includes('4drawer-shelf') || moduleData?.id?.includes('single-shelf-') || moduleData?.id?.includes('dual-shelf-') || moduleData?.id?.includes('built-in-fridge') || moduleData?.id?.includes('pull-out-cabinet') || moduleData?.id?.includes('pantry-cabinet')) ? (
+            {(moduleData?.id?.includes('4drawer-hanging') || moduleData?.id?.includes('4drawer-shelf') || moduleData?.id?.includes('single-shelf-') || moduleData?.id?.includes('dual-shelf-') || moduleData?.id?.includes('built-in-fridge') || moduleData?.id?.includes('pull-out-cabinet') || moduleData?.id?.includes('pantry-cabinet') || moduleData?.id?.includes('fridge-cabinet')) ? (
               // 4drawer-hanging/4drawer-shelf: 상부 바닥판 18mm 위로, 하부 상판 18mm 위로
               (() => {
                 return getSectionHeights().map((sectionHeight: number, index: number) => {
@@ -1533,7 +1533,38 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                     />
                   );
                 }
-                // 후면 보강대 (하단 + 상단) — 백패널 없는 섹션은 보강대도 없음
+                // 냉장고장 1단(백패널 없음): 후면 보강대 3개 (위에서 435 아래, 아래에서 435 위, 중간)
+                const isFridgeNoBackSection = !sectionHasBackPanel && !!moduleData?.id?.includes('fridge-cabinet');
+                if (isFridgeNoBackSection && !(viewMode === '2D' && view2DDirection === 'front')) {
+                  // 빌트인 냉장고장 사양과 동일: 천장 측판에서 435mm 아래 / 바닥 측판에서 435mm 위 / 중간
+                  const D435 = mmToThreeUnits(435);
+                  const sectionTopY = backPanelY + sh / 2;
+                  const sectionBottomY = backPanelY - sh / 2;
+                  const topReinforcementY = sectionTopY - D435 - reinforcementHeight / 2;
+                  const bottomReinforcementY = sectionBottomY + D435 + reinforcementHeight / 2;
+                  const middleReinforcementY = (topReinforcementY + bottomReinforcementY) / 2;
+                  [
+                    { y: bottomReinforcementY, name: `(${idx + 1}단)보강대 1` },
+                    { y: middleReinforcementY, name: `(${idx + 1}단)보강대 2` },
+                    { y: topReinforcementY, name: `(${idx + 1}단)보강대 3` },
+                  ].forEach((r, ridx) => {
+                    elements.push(
+                      <BoxWithEdges
+                        key={`reinforcement-fridge-${idx}-${ridx}`}
+                        args={[reinforcementWidth, reinforcementHeight, reinforcementDepth]}
+                        position={[0, r.y, reinforcementZ]}
+                        material={material}
+                        renderMode={renderMode}
+                        isDragging={isDragging}
+                        isEditMode={isEditMode}
+                        isHighlighted={highlightedSection === `${placedFurnitureId}-${idx}`}
+                        panelName={r.name}
+                        furnitureId={placedFurnitureId}
+                      />
+                    );
+                  });
+                }
+                // 후면 보강대 (하단 + 상단) — 백패널 있는 섹션만
                 if (sectionHasBackPanel && !(viewMode === '2D' && view2DDirection === 'front')) {
                   elements.push(
                     <BoxWithEdges
