@@ -216,6 +216,16 @@ const BoxModule: React.FC<BoxModuleProps> = ({
     [moduleData, removeUpperSafetyShelf]
   );
 
+  // sectionDepths/sectionDepthDirections는 사용자 입력 시 reactive 업데이트되어야 하므로 셀렉터 사용
+  const placedModuleForReactive = useFurnitureStore(s => {
+    if (!placedFurnitureId) return null;
+    const m = s.placedModules.find(p => p.id === placedFurnitureId);
+    return m ? {
+      sectionDepths: (m as any).sectionDepths as number[] | undefined,
+      sectionDepthDirections: (m as any).sectionDepthDirections as ('front' | 'back')[] | undefined,
+    } : null;
+  });
+
   // 공통 로직도 항상 호출 (조건부 사용)
   const baseFurniture = useBaseFurniture(moduleData, {
     color,
@@ -1254,11 +1264,11 @@ const BoxModule: React.FC<BoxModuleProps> = ({
               textureUrl={baseFurniture.textureUrl}
               panelGrainDirections={panelGrainDirections}
               isFloatingPlacement={spaceInfo?.baseConfig?.placementType === 'float'}
-              shelfFrontInsetMm={(moduleData?.id?.includes('entryway-h') || moduleData?.id?.includes('-shelf-') || moduleData?.id?.includes('-4drawer-shelf-') || moduleData?.id?.includes('-2drawer-shelf-') || moduleData?.id?.includes('pull-out-cabinet') || moduleData?.id?.includes('pantry-cabinet')) ? 30 : 0}
+              shelfFrontInsetMm={(moduleData?.id?.includes('entryway-h') || moduleData?.id?.includes('-shelf-') || moduleData?.id?.includes('-4drawer-shelf-') || moduleData?.id?.includes('-2drawer-shelf-') || moduleData?.id?.includes('pull-out-cabinet') || moduleData?.id?.includes('pantry-cabinet') || (moduleData?.id?.includes('fridge-cabinet') && !moduleData?.id?.includes('built-in-fridge'))) ? 30 : 0}
               doorTopGap={doorTopGap}
               doorBottomGap={doorBottomGap}
-              sectionDepths={(useFurnitureStore.getState().placedModules.find(p => p.id === placedFurnitureId) as any)?.sectionDepths}
-              sectionDepthDirections={(useFurnitureStore.getState().placedModules.find(p => p.id === placedFurnitureId) as any)?.sectionDepthDirections}
+              sectionDepths={placedModuleForReactive?.sectionDepths}
+              sectionDepthDirections={placedModuleForReactive?.sectionDepthDirections}
             />
           )}
           {/* 인출장 2단: 전자렌지 인출서랍 부재 */}
