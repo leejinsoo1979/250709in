@@ -3,7 +3,6 @@ import { ModuleData } from '../../../../../data/modules/shelving';
 import { SpaceInfo, useSpaceConfigStore } from '@/store/core/spaceConfigStore';
 import { useBaseFurniture, BaseFurnitureShell, SectionsRenderer } from './shared';
 import BoxWithEdges from './components/BoxWithEdges';
-import SectionedCabinetShell from './components/SectionedCabinetShell';
 import DoorModule from './DoorModule';
 import { useSpace3DView } from '../../context/useSpace3DView';
 import { useUIStore } from '@/store/uiStore';
@@ -1129,54 +1128,6 @@ const BoxModule: React.FC<BoxModuleProps> = ({
         doorTopGap={doorTopGap}
         doorBottomGap={doorBottomGap}
       />
-      </>
-    );
-  }
-
-  // === 인출장 / 팬트리장 (섹션별 독립 박스) 전용 렌더링 ===
-  const isPullOutCabinet = (moduleData?.modelConfig as any)?.isPullOutCabinet === true;
-  const isPantryCabinet = (moduleData?.modelConfig as any)?.isPantryCabinet === true;
-  if ((isPullOutCabinet || isPantryCabinet) && showFurniture) {
-    const mmTo = baseFurniture.mmToThreeUnits;
-    const sections = (baseFurniture.modelConfig as any)?.sections || [];
-    const basicThicknessLocal = baseFurniture.basicThickness;
-    // 백패널 두께: 다른 가구와 동일 (서랍 바닥판 두께와 동기화)
-    const backPanelThicknessMm = (baseFurniture.basicThickness / 0.01) === 18.5 ? 9.5 : 9;
-    const backPanelThicknessLocal = mmTo(backPanelThicknessMm);
-
-    return (
-      <>
-        <SectionedCabinetShell
-          width={baseFurniture.width}
-          height={baseFurniture.height}
-          depth={baseFurniture.depth}
-          basicThickness={basicThicknessLocal}
-          backPanelThickness={backPanelThicknessLocal}
-          material={baseFurniture.material}
-          mmToThreeUnits={mmTo}
-          sections={sections}
-          modelConfig={baseFurniture.modelConfig}
-          isDragging={isDragging}
-          isEditMode={isEditMode}
-          isHighlighted={isHighlighted}
-        />
-        {/* 도어 렌더링 */}
-        {hasDoor && spaceInfo && (
-          <DoorModule
-            moduleWidth={moduleData.dimensions.width}
-            moduleDepth={baseFurniture.actualDepthMm || moduleData.dimensions.depth}
-            hingePosition={hingePosition}
-            color={baseFurniture.doorColor}
-            originalSlotWidth={originalSlotWidth}
-            slotCenterX={slotCenterX}
-            moduleData={moduleData}
-            isDragging={isDragging}
-            isEditMode={isEditMode}
-            spaceInfo={spaceInfo}
-            textureUrl={baseFurniture.textureUrl}
-            panelGrainDirections={baseFurniture.panelGrainDirections}
-          />
-        )}
       </>
     );
   }
