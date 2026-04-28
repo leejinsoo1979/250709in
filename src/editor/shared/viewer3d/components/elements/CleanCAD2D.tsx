@@ -3908,7 +3908,9 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               const realBottomFrame = leftLowerHasBase === false
                 ? ((leftLowerMod as any)?.individualFloatHeight ?? 0)
                 : (leftLowerMod?.baseFrameHeight ?? globalBottomFrameH);
-              const realFloorFinish = floorFinishForHeight;
+              // 인출장/팬트리장: 바닥마감재도 가구 외경에 포함 (마지막 섹션이 흡수)
+              const isPullOutOrPantryHere = !!(leftmostMod?.moduleId?.includes('pull-out-cabinet') || leftmostMod?.moduleId?.includes('pantry-cabinet'));
+              const realFloorFinish = isPullOutOrPantryHere ? 0 : floorFinishForHeight;
               const sectionBasisH = Math.max(0, effectiveH - realTopFrame - realBottomFrame - realFloorFinish);
               const rawHeights = sections.map(s => {
                 if (s.heightType === 'absolute') return s.height;
@@ -4561,7 +4563,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               const rRealBottomFrame = (rightLowerMod as any)?.hasBase === false
                 ? ((rightLowerMod as any)?.individualFloatHeight ?? 0)
                 : (rightLowerMod?.baseFrameHeight ?? rGlobalBottomFrameH);
-              const rRealFloorFinish = rFloorFinishForHeight;
+              const rIsPullOutOrPantryHere = !!(rightmostMod?.moduleId?.includes('pull-out-cabinet') || rightmostMod?.moduleId?.includes('pantry-cabinet'));
+              const rRealFloorFinish = rIsPullOutOrPantryHere ? 0 : rFloorFinishForHeight;
               const rSectionBasisH = Math.max(0, rEffectiveH - rRealTopFrame - rRealBottomFrame - rRealFloorFinish);
               const rRawHeights = rSections.map(s => {
                 if (s.heightType === 'absolute') return s.height;
