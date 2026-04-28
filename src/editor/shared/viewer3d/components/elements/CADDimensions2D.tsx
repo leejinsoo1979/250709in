@@ -200,7 +200,18 @@ const computeFurnitureHeightMm = (
     heightMm -= floorFinishH;
   }
 
-  // hasBase=false → 가구 높이 유지 (FurnitureItem.tsx와 동일하게 높이 증가 제거)
+  // 인출장/팬트리장: hasBase=false → 가구가 하부프레임 자리 흡수 (FurnitureItem.tsx와 동일)
+  const isPullOutOrPantry = !!(mod.moduleId?.includes('pull-out-cabinet') || mod.moduleId?.includes('pantry-cabinet'));
+  if (!mod.isFreePlacement && (mod as any).hasBase === false && isTall && isPullOutOrPantry) {
+    const globalBaseMm = spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height ?? 60) : 0;
+    const absorbedBase = mod.baseFrameHeight ?? globalBaseMm;
+    const floatH = (mod as any).individualFloatHeight ?? 0;
+    heightMm += (absorbedBase - floatH);
+    // 인출장/팬트리장은 바닥마감재도 흡수
+    if (floorFinishH > 0) {
+      heightMm += floorFinishH;
+    }
+  }
 
   return heightMm;
 };
