@@ -361,6 +361,7 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
 
             sectionContent = (
               <ShelfRenderer
+                key={`shelf-section-${index}-d${currentSectionDepth.toFixed(4)}-z${currentShelfZOffset.toFixed(4)}`}
                 shelfCount={section.count}
                 innerWidth={currentSectionInnerWidth}
                 innerHeight={sectionHeight}

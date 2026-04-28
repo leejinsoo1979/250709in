@@ -1254,6 +1254,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
           {/* 내부 구조 렌더링 (드래그/고스트 중에도 표시) */}
           {(
             <SectionsRenderer
+              key={`sections-${placedFurnitureId}-${JSON.stringify(placedSectionDepths)}-${JSON.stringify(placedSectionDepthDirections)}`}
               modelConfig={baseFurniture.modelConfig}
               height={baseFurniture.height}
               innerWidth={baseFurniture.innerWidth}
@@ -1311,28 +1312,35 @@ const BoxModule: React.FC<BoxModuleProps> = ({
 
       {/* 폴백 케이스 조절발 (현관장 H/I, 바지걸이장 등) */}
       {showFurniture && (() => {
-        // 인출장/팬트리장/냉장고장: 1단(하부) sectionDepth가 줄어들면 조절발도 앞으로
+        // 인출장/팬트리장/냉장고장: 1단(하부) sectionDepth가 줄어들면 조절발도 앞으로/뒤로 통째로 이동
         const isNSectionFoot = !!(moduleData?.id?.includes('pull-out-cabinet') ||
           moduleData?.id?.includes('pantry-cabinet') ||
           (moduleData?.id?.includes('fridge-cabinet') && !moduleData?.id?.includes('built-in-fridge')));
         const lowerSectionDepthMm = isNSectionFoot ? placedSectionDepths?.[0] : undefined;
-        const moduleDepthMmForFoot = baseFurniture.depth * 100;
+        const lowerDir = isNSectionFoot ? (placedSectionDepthDirections?.[0] ?? 'front') : 'front';
+        // 짧아진 섹션 길이로 발 간격 그리고, 의류장과 동일 컨벤션으로 그룹 통째 ±depthDiff/2 이동
         const footDepth = (lowerSectionDepthMm && lowerSectionDepthMm > 0)
           ? baseFurniture.mmToThreeUnits(lowerSectionDepthMm)
           : baseFurniture.depth;
+        const depthDiffFoot = baseFurniture.depth - footDepth;
+        const sectionZOffsetFoot = depthDiffFoot === 0
+          ? 0
+          : (lowerDir === 'back' ? depthDiffFoot / 2 : -depthDiffFoot / 2);
         return (
-          <AdjustableFootsRenderer
-            width={baseFurniture.width}
-            depth={footDepth}
-            yOffset={-baseFurniture.height / 2}
-            placedFurnitureId={placedFurnitureId}
-            renderMode={renderMode}
-            isHighlighted={false}
-            isFloating={spaceInfo?.baseConfig?.placementType === 'float'}
-            baseHeight={spaceInfo?.baseConfig?.height || 65}
-            baseDepth={spaceInfo?.baseConfig?.depth || 0}
-            viewMode={viewMode}
-          />
+          <group position={[0, 0, sectionZOffsetFoot]}>
+            <AdjustableFootsRenderer
+              width={baseFurniture.width}
+              depth={footDepth}
+              yOffset={-baseFurniture.height / 2}
+              placedFurnitureId={placedFurnitureId}
+              renderMode={renderMode}
+              isHighlighted={false}
+              isFloating={spaceInfo?.baseConfig?.placementType === 'float'}
+              baseHeight={spaceInfo?.baseConfig?.height || 65}
+              baseDepth={spaceInfo?.baseConfig?.depth || 0}
+              viewMode={viewMode}
+            />
+          </group>
         );
       })()}
 

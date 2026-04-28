@@ -406,6 +406,11 @@ const Room: React.FC<RoomProps> = ({
     if (moduleId.includes('-entryway-') || moduleId.includes('-shelf-') ||
         moduleId.includes('-4drawer-shelf-') || moduleId.includes('-2drawer-shelf-')) return 380;
     if (moduleId.includes('upper-cabinet')) return 300;
+    // 인출장: 모듈 기본 깊이 570 (W620×D570)
+    if (moduleId.includes('pull-out-cabinet')) return 570;
+    // 팬트리장/냉장고장: 600 (기본 분기에서 처리되지만 명시)
+    if (moduleId.includes('pantry-cabinet')) return 600;
+    if (moduleId.includes('fridge-cabinet') && !moduleId.includes('built-in-fridge')) return 600;
     return 600;
   };
   // 해당 가구의 프레임 Z 이동량 계산 (공간 기본 깊이 600 기준)
@@ -434,6 +439,22 @@ const Room: React.FC<RoomProps> = ({
       }
       if (shoeDepth >= SPACE_BASE_DEPTH_MM) return 0;
       return -mmToThreeUnits(SPACE_BASE_DEPTH_MM - shoeDepth);
+    }
+    // 인출장/팬트리장/냉장고장: sectionDepths 배열 사용 (마지막 섹션 = 상부 = 도어/프레임 기준)
+    const isNSecMod = mid.includes('pull-out-cabinet') ||
+      mid.includes('pantry-cabinet') ||
+      (mid.includes('fridge-cabinet') && !mid.includes('built-in-fridge'));
+    if (isNSecMod) {
+      const sectionDepthsArr = mod.sectionDepths as number[] | undefined;
+      const sectionDirArr = mod.sectionDepthDirections as ('front'|'back')[] | undefined;
+      const baseDepth = getModBaseDepthMm(mid);
+      // 'upper' 요청: 마지막 섹션, 'lower' 요청: 첫 섹션
+      const idx = useSection === 'lower' ? 0 : (sectionDepthsArr ? sectionDepthsArr.length - 1 : 0);
+      const curDepth = sectionDepthsArr?.[idx];
+      if (!curDepth || curDepth >= baseDepth) return 0;
+      const diff = baseDepth - curDepth;
+      const dir = sectionDirArr?.[idx] || 'front';
+      return dir === 'back' ? 0 : -mmToThreeUnits(diff);
     }
     // 기타 가구: 섹션 depth 기반
     const baseDepth = getModBaseDepthMm(mid);

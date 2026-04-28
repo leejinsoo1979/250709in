@@ -1508,15 +1508,29 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
           const widthReduction = sidePanelGap;
           const panelW = innerWidth - widthReduction;
           const panelH = basicThickness;
-          const panelD = (isMultiSectionFurniture() && lowerSectionDepthMm !== undefined)
-            ? mmToThreeUnits(lowerSectionDepthMm) - backReduction
+          // 인출장/팬트리장/냉장고장(N섹션): sectionDepths[0] 우선 사용 (lowerSectionDepthMm prop 미전달)
+          const isNSecBottom = !!(moduleData?.id?.includes('pull-out-cabinet') ||
+            moduleData?.id?.includes('pantry-cabinet') ||
+            (moduleData?.id?.includes('fridge-cabinet') && !isBuiltInFridge));
+          const placedModForBottom = (isNSecBottom && placedFurnitureId)
+            ? useFurnitureStore.getState().placedModules.find((m: any) => m.id === placedFurnitureId)
+            : null;
+          const sectionDepthsArrBottom = (placedModForBottom as any)?.sectionDepths as number[] | undefined;
+          const sectionDirArrBottom = (placedModForBottom as any)?.sectionDepthDirections as ('front'|'back')[] | undefined;
+          const nSecLowerDepthMm = isNSecBottom ? sectionDepthsArrBottom?.[0] : undefined;
+          const nSecLowerDir = isNSecBottom ? (sectionDirArrBottom?.[0] ?? 'front') : 'front';
+          const effectiveLowerDepth = (nSecLowerDepthMm && nSecLowerDepthMm > 0)
+            ? mmToThreeUnits(nSecLowerDepthMm)
+            : (lowerSectionDepthMm !== undefined ? mmToThreeUnits(lowerSectionDepthMm) : undefined);
+          const effectiveLowerDir = isNSecBottom ? nSecLowerDir : lowerSectionDepthDirection;
+          const panelD = (isMultiSectionFurniture() && effectiveLowerDepth !== undefined)
+            ? effectiveLowerDepth - backReduction
             : depth - backReduction;
           const panelY = -height/2 + basicThickness/2;
           const panelZ = (() => {
-            if (isMultiSectionFurniture() && lowerSectionDepthMm !== undefined) {
-              const lowerDepth = mmToThreeUnits(lowerSectionDepthMm);
-              const depthDiff = depth - lowerDepth;
-              const dirOffset = lowerSectionDepthDirection === 'back' ? depthDiff / 2 : -depthDiff / 2;
+            if (isMultiSectionFurniture() && effectiveLowerDepth !== undefined) {
+              const depthDiff = depth - effectiveLowerDepth;
+              const dirOffset = effectiveLowerDir === 'back' ? depthDiff / 2 : -depthDiff / 2;
               return dirOffset + backReduction / 2;
             }
             return backReduction / 2;
@@ -1560,14 +1574,36 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
               const reinforcementWidth = innerWidth - sidePanelGap;
               // sections에서 hasBackPanel 체크 (냉장고장 1단 = false)
               const sectionConfigs = ((moduleData as any)?.modelConfig as any)?.sections as { hasBackPanel?: boolean }[] | undefined;
+              // sectionDepths/sectionDepthDirections 읽기 (앞고정/뒷고정에 따라 백패널·보강대 Z 위치 이동)
+              const placedModForBackN = placedFurnitureId
+                ? useFurnitureStore.getState().placedModules.find((m: any) => m.id === placedFurnitureId)
+                : undefined;
+              const sectionDepthsArrBackN = (placedModForBackN as any)?.sectionDepths as number[] | undefined;
+              const sectionDirArrBackN = (placedModForBackN as any)?.sectionDepthDirections as ('front'|'back')[] | undefined;
               const elements: React.ReactNode[] = [];
               let cursorY = -height / 2;
               sectionHeights.forEach((sh: number, idx: number) => {
                 const sectionHasBackPanel = sectionConfigs?.[idx]?.hasBackPanel !== false;
+                // 섹션별 깊이 + 방향에 따른 Z 오프셋 계산
+                // 'front' = 앞고정(앞면 유지, 뒷면 앞으로 당겨짐 → 백패널/보강대도 앞으로 이동)
+                // 'back'  = 뒷고정(뒷면 유지, 앞면 뒤로 밀림 → 백패널 위치 그대로)
+                const rawSecDepth = sectionDepthsArrBackN?.[idx];
+                const secDepth = (rawSecDepth !== undefined && rawSecDepth > 0)
+                  ? (rawSecDepth > 10 ? mmToThreeUnits(rawSecDepth) : rawSecDepth)
+                  : depth;
+                const secDir = sectionDirArrBackN?.[idx] ?? 'front';
+                const depthDiffSec = depth - secDepth;
+                // 의류장(2섹션) 공식과 동일: -secDepth/2 기준 + 절반 오프셋
+                // UI "뒤고정"(='front') → -depthDiff/2  (섹션이 뒤쪽으로 줄어듦)
+                // UI "앞고정"(='back')  → +depthDiff/2  (섹션이 앞쪽으로 이동)
+                const sectionZOffsetBackN = depthDiffSec === 0
+                  ? 0
+                  : (secDir === 'back' ? depthDiffSec / 2 : -depthDiffSec / 2);
                 // 백패널 높이 = 섹션 외경 높이 그대로 (측판과 동일)
                 const backPanelHeight = sh;
                 const backPanelY = cursorY + sh / 2;
-                const backPanelZ = -depth / 2 + backPanelThickness / 2 + mmToThreeUnits(backPanelConfig.depthOffset);
+                // 의류장 공식: -secDepth/2 + backThk/2 + depthOffset + ±depthDiff/2
+                const backPanelZ = -secDepth / 2 + backPanelThickness / 2 + mmToThreeUnits(backPanelConfig.depthOffset) + sectionZOffsetBackN;
                 const reinforcementZ = backPanelZ - backPanelThickness / 2 - reinforcementDepth / 2;
                 const lowerReinforcementY = backPanelY - backPanelHeight / 2 + reinforcementHeight / 2;
                 const upperReinforcementY = backPanelY + backPanelHeight / 2 - reinforcementHeight / 2;
@@ -2086,6 +2122,17 @@ export default React.memo(BaseFurnitureShell, (prevProps, nextProps) => {
     JSON.stringify(prevProps.sideNotches) === JSON.stringify(nextProps.sideNotches) &&
     JSON.stringify(prevProps.panelGrainDirections) === JSON.stringify(nextProps.panelGrainDirections);
 
+  // 인출장/팬트리장/냉장고장(N섹션 가구): sectionDepths/sectionDepthDirections는 store에서 직접 읽으므로
+  // memo를 우회하여 항상 리렌더링되게 함 (성능 손실 미미 — 해당 가구만 적용)
+  const isNSectionForMemo = !!(
+    nextProps.moduleData?.id?.includes('pull-out-cabinet') ||
+    nextProps.moduleData?.id?.includes('pantry-cabinet') ||
+    (nextProps.moduleData?.id?.includes('fridge-cabinet') && !nextProps.moduleData?.id?.includes('built-in-fridge'))
+  );
+  if (isNSectionForMemo) {
+    return false; // 항상 리렌더 → store sectionDepths 변경 즉시 반영
+  }
+
   // 모든 중요 props가 같으면 true 반환 (리렌더링 방지)
   return materialPropsEqual && otherPropsEqual;
-}); 
+});
