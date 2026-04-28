@@ -1172,9 +1172,10 @@ const PlacedModulePropertiesPanel: React.FC = () => {
       setOriginalDoorOverlayTop(overlayTop);
       setOriginalDoorOverlayBottom(overlayBottom);
 
-      // 2섹션 가구의 섹션 깊이 초기화
+      // 2섹션 가구의 섹션 깊이 초기화 (인출장/팬트리장은 N섹션도 포함)
       const sections = currentPlacedModule.customSections || moduleData.modelConfig?.sections || [];
-      if (sections.length === 2) {
+      const isPullOutOrPantryInit = !!(currentPlacedModule.moduleId?.includes('pull-out-cabinet') || currentPlacedModule.moduleId?.includes('pantry-cabinet'));
+      if (sections.length === 2 || (isPullOutOrPantryInit && sections.length >= 2)) {
         // customDepth/freeDepth 우선 (신발장 380 등), 없으면 모듈 템플릿 깊이
         const defaultDepth = currentPlacedModule.customDepth
           ?? currentPlacedModule.freeDepth
