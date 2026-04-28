@@ -12,6 +12,7 @@ import { getInternalSpaceBoundsX, getModuleBoundsX } from '@/editor/shared/utils
 import styles from './ModuleGallery.module.css';
 import { useAlert } from '@/hooks/useAlert';
 import { useUIStore } from '@/store/uiStore';
+import { useTheme } from '@/contexts/ThemeContext';
 import { useTranslation } from '@/i18n/useTranslation';
 import { getStandardDimensionKey } from './CustomizableFurnitureLibrary';
 
@@ -166,6 +167,13 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
   const setSelectedFurnitureId = useFurnitureStore(state => state.setSelectedFurnitureId);
   const { showAlert, AlertComponent } = useAlert();
   const { activeDroppedCeilingTab, setIsSlotDragging } = useUIStore();
+  const { theme } = useTheme();
+  // 빌트인 냉장고장(싱글/듀얼) 다크모드: 썸네일 배경 검정
+  const isDarkMode = theme?.mode === 'dark';
+  const isBuiltInFridgeThumb = !!(module?.id && module.id.includes('built-in-fridge'));
+  const thumbnailImageStyle = (isDarkMode && isBuiltInFridgeThumb)
+    ? { backgroundColor: '#000000' as const }
+    : undefined;
 
   // 드래그용 이미지 ref (각 썸네일마다 독립적인 DOM 요소)
   const dragImageRef = React.useRef<HTMLImageElement>(null);
@@ -951,7 +959,7 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
         onDoubleClick={handleDoubleClick}
         title={isValid ? `클릭하여 선택 또는 드래그하여 배치: ${module.name}` : '현재 공간에 배치할 수 없습니다'}
       >
-        <div className={styles.thumbnailImage}>
+        <div className={styles.thumbnailImage} style={thumbnailImageStyle}>
           {iconPath ? (
             <img
               src={iconPath}
