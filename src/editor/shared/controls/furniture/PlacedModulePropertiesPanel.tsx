@@ -1289,7 +1289,9 @@ const PlacedModulePropertiesPanel: React.FC = () => {
 
   // 2섹션 가구 여부 확인
   const sections = moduleData?.modelConfig?.sections || [];
-  const isTwoSectionFurniture = sections.length === 2;
+  // 인출장(3섹션)/팬트리장(2섹션) 모두 상판 옵셋 입력 필드 노출
+  const isPullOutOrPantry = !!(moduleData?.id?.includes('pull-out-cabinet') || moduleData?.id?.includes('pantry-cabinet'));
+  const isTwoSectionFurniture = sections.length === 2 || (isPullOutOrPantry && sections.length >= 2);
 
   // 도어용 원래 너비 계산 (adjustedWidth가 없으면 slotCustomWidth → customWidth → 기본 너비)
   const doorOriginalWidth = currentPlacedModule?.slotCustomWidth ?? currentPlacedModule?.customWidth ?? moduleData?.dimensions.width;
