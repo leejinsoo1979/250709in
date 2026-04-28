@@ -6582,10 +6582,18 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   ?? (viewMod.moduleId.includes('upper') ? 'upper'
                     : viewMod.moduleId.includes('lower') ? 'lower' : 'full');
                 if (category !== 'upper') {
-                  const moduleHeight = viewMod.freeHeight
+                  let moduleHeight = viewMod.freeHeight
                     ?? viewMod.customHeight
                     ?? moduleData?.dimensions.height
                     ?? (viewMod.customConfig?.totalHeight || 2000);
+                  // 하부프레임 OFF (hasBase=false): 가구가 하부프레임 자리를 흡수 — moduleHeight 보정
+                  // (FurnitureItem.tsx의 furnitureHeightMm 보정과 동일)
+                  if (!viewMod.freeHeight && (viewMod as any).hasBase === false && category === 'full') {
+                    const globalBase = spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height ?? 60) : 0;
+                    const absorbedBase = (viewMod as any).baseFrameHeight ?? globalBase;
+                    const floatH = (viewMod as any).individualFloatHeight ?? 0;
+                    moduleHeight += (absorbedBase - floatH);
+                  }
                   const furnitureStartY = isFloating ? mmToThreeUnits(floorFinishHeightMm + floatHeight) : bottomFrameTopY;
                   const moduleTopY = furnitureStartY + mmToThreeUnits(moduleHeight);
                   maxFurnitureTop = moduleTopY;
@@ -7688,10 +7696,18 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   ?? (viewMod.moduleId.includes('upper') ? 'upper'
                     : viewMod.moduleId.includes('lower') ? 'lower' : 'full');
                 if (category !== 'upper') {
-                  const moduleHeight = viewMod.freeHeight
+                  let moduleHeight = viewMod.freeHeight
                     ?? viewMod.customHeight
                     ?? moduleData?.dimensions.height
                     ?? (viewMod.customConfig?.totalHeight || 2000);
+                  // 하부프레임 OFF (hasBase=false): 가구가 하부프레임 자리를 흡수 — moduleHeight 보정
+                  // (FurnitureItem.tsx의 furnitureHeightMm 보정과 동일)
+                  if (!viewMod.freeHeight && (viewMod as any).hasBase === false && category === 'full') {
+                    const globalBase = spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height ?? 60) : 0;
+                    const absorbedBase = (viewMod as any).baseFrameHeight ?? globalBase;
+                    const floatH = (viewMod as any).individualFloatHeight ?? 0;
+                    moduleHeight += (absorbedBase - floatH);
+                  }
                   const furnitureStartY = isFloating ? mmToThreeUnits(floorFinishHeightMm + floatHeight) : bottomFrameTopY;
                   const moduleTopY = furnitureStartY + mmToThreeUnits(moduleHeight);
                   maxFurnitureTop = moduleTopY;
