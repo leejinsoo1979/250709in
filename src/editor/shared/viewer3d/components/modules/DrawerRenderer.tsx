@@ -396,12 +396,16 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
   const mmToThreeUnits = (mm: number) => mm * 0.01;
 
   // 도어 열림 상태에 따라 속서랍 인출 애니메이션 (인출장 1단 속서랍 등)
+  // 순차 애니메이션:
+  //   - 도어 열릴 때: 도어 90도 회전(약 500ms) → 그 후 서랍 인출
+  //   - 도어 닫힐 때: 서랍이 먼저 들어감 → 그 후 도어 회전
   const { doorsOpen } = useUIStore();
   const shouldOpenDrawers = doorsOpen === true;
-  // 도어 열리면 서랍이 앞으로 200mm 슬라이드 인출
   const drawerSlideSpring = useSpring({
     offset: shouldOpenDrawers ? mmToThreeUnits(200) : 0,
     config: { tension: 90, friction: 16, clamp: true },
+    // 열릴 때 500ms 지연 (도어가 먼저 열린 후), 닫힐 때 즉시 (서랍이 먼저 들어감)
+    delay: shouldOpenDrawers ? 500 : 0,
   });
   const drawerZOffset = mmToThreeUnits(0);
   

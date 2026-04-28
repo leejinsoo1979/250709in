@@ -1033,44 +1033,33 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   // 도어 클릭 핸들러 제거됨 - Close/Open 버튼으로만 도어 열고닫기
   
   // 애니메이션 설정 - 적당한 속도 (90도 열림)
-  // 부드럽고 자연스러운 애니메이션을 위해 tension/friction 조정
+  // 순차 애니메이션:
+  //   - 열릴 때: 도어가 먼저 회전(즉시) → 그 후 서랍이 인출(500ms 지연)
+  //   - 닫힐 때: 서랍이 먼저 들어감(즉시) → 그 후 도어 회전(500ms 지연)
+  const doorDelay = shouldOpenDoors ? 0 : 500; // 닫힐 때만 지연 (서랍이 먼저 들어가도록)
+
   const leftHingeDoorSpring = useSpring({
-    // 왼쪽 힌지: 반시계방향으로 열림 (오른쪽으로 열림) - 90도
     rotation: shouldOpenDoors ? -Math.PI / 2 : 0,
-    config: {
-      tension: 90,
-      friction: 16,
-      clamp: true
-    },
+    config: { tension: 90, friction: 16, clamp: true },
+    delay: doorDelay,
   });
 
   const rightHingeDoorSpring = useSpring({
-    // 오른쪽 힌지: 시계방향으로 열림 (왼쪽으로 열림) - 90도
     rotation: shouldOpenDoors ? Math.PI / 2 : 0,
-    config: {
-      tension: 90,
-      friction: 16,
-      clamp: true
-    },
+    config: { tension: 90, friction: 16, clamp: true },
+    delay: doorDelay,
   });
 
-  // 듀얼 가구용 애니메이션 설정 (90도 열림)
   const dualLeftDoorSpring = useSpring({
-    rotation: shouldOpenDoors ? -Math.PI / 2 : 0, // 왼쪽 문: 반시계방향 (바깥쪽으로) - 90도
-    config: {
-      tension: 90,
-      friction: 16,
-      clamp: true
-    },
+    rotation: shouldOpenDoors ? -Math.PI / 2 : 0,
+    config: { tension: 90, friction: 16, clamp: true },
+    delay: doorDelay,
   });
 
   const dualRightDoorSpring = useSpring({
-    rotation: shouldOpenDoors ? Math.PI / 2 : 0, // 오른쪽 문: 시계방향 (바깥쪽으로) - 90도
-    config: {
-      tension: 90,
-      friction: 16,
-      clamp: true
-    },
+    rotation: shouldOpenDoors ? Math.PI / 2 : 0,
+    config: { tension: 90, friction: 16, clamp: true },
+    delay: doorDelay,
   });
 
   // 도어 위치 계산: slotCenterX가 제공되면 사용, 아니면 기본값 0
