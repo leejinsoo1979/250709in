@@ -29,8 +29,8 @@ const FURNITURE_ICONS: Record<string, string> = {
   'built-in-fridge': getImagePath('single_builtin.png'),
   'insert-frame': getImagePath('insert_frame.png'),
   'dual-built-in-fridge': getImagePath('dual_builtin.png'),
-  'pull-out-cabinet': getImagePath('microwave.png'),
-  'pantry-cabinet': getImagePath('pantry.png'),
+  'single-pull-out-cabinet': getImagePath('microwave.png'),
+  'single-pantry-cabinet': getImagePath('pantry.png'),
   'single-2drawer-hanging': getImagePath('single-2drawer-hanging.png'),
   'single-2hanging': getImagePath('single-2hanging.png'),
   'single-4drawer-hanging': getImagePath('single-4drawer-hanging.png'),
@@ -166,17 +166,7 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
   const setSelectedFurnitureId = useFurnitureStore(state => state.setSelectedFurnitureId);
   const { showAlert, AlertComponent } = useAlert();
   const { activeDroppedCeilingTab, setIsSlotDragging } = useUIStore();
-  const { theme } = useTheme();
-  // 빌트인 냉장고장/인출장/팬트리장 (누끼 처리된 PNG) 다크모드: 썸네일 배경 검정
-  const isDarkMode = theme?.mode === 'dark';
-  const isTransparentThumb = !!(module?.id && (
-    module.id.includes('built-in-fridge') ||
-    module.id.includes('pull-out-cabinet') ||
-    module.id.includes('pantry-cabinet')
-  ));
-  const thumbnailImageStyle = (isDarkMode && isTransparentThumb)
-    ? { backgroundColor: '#000000' as const }
-    : undefined;
+  // (다크모드 검정 배경 처리 제거 — 누끼 처리된 PNG로 사용자가 직접 작업함)
 
   // 드래그용 이미지 ref (각 썸네일마다 독립적인 DOM 요소)
   const dragImageRef = React.useRef<HTMLImageElement>(null);
@@ -962,7 +952,7 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
         onDoubleClick={handleDoubleClick}
         title={isValid ? `클릭하여 선택 또는 드래그하여 배치: ${module.name}` : '현재 공간에 배치할 수 없습니다'}
       >
-        <div className={styles.thumbnailImage} style={thumbnailImageStyle}>
+        <div className={styles.thumbnailImage}>
           {iconPath ? (
             <img
               src={iconPath}
