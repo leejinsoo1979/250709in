@@ -217,7 +217,10 @@ export const useBaseFurniture = (
 
 
   // 내경 치수 계산
-  const innerWidth = width - basicThickness * 2;
+  // 냉장고장: 측판 두께 = basicThickness - 3 (15mm 또는 15.5mm) → innerWidth는 측판 두께 기준으로 재계산
+  const isFridgeCabinetForInner = !!moduleData?.id?.includes('fridge-cabinet') && !moduleData?.id?.includes('built-in-fridge');
+  const sidePanelThicknessForInner = isFridgeCabinetForInner ? (basicThickness - mmToThreeUnits(3)) : basicThickness;
+  const innerWidth = width - sidePanelThicknessForInner * 2;
   const innerHeight = height - basicThickness * 2;
   
   // 선반용 조정된 깊이 계산 (백패널 두께에 따라 동적으로 조정)
