@@ -4558,7 +4558,9 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             if (rSections && rSections.length >= 2) {
               // 섹션 기준 furnitureH = 실제 가구 내경 (공간 - 실제 상부프레임 - 실제 하부프레임)
               const rRealTopFrame = rightmostMod.hasTopFrame === false ? 0 : (rightmostMod.topFrameThickness ?? rGlobalTopFrame);
-              const rRealBottomFrame = rightLowerMod?.hasBase === false ? 0 : (rightLowerMod?.baseFrameHeight ?? rGlobalBottomFrameH);
+              const rRealBottomFrame = (rightLowerMod as any)?.hasBase === false
+                ? ((rightLowerMod as any)?.individualFloatHeight ?? 0)
+                : (rightLowerMod?.baseFrameHeight ?? rGlobalBottomFrameH);
               const rRealFloorFinish = rFloorFinishForHeight;
               const rSectionBasisH = Math.max(0, rEffectiveH - rRealTopFrame - rRealBottomFrame - rRealFloorFinish);
               const rRawHeights = rSections.map(s => {
