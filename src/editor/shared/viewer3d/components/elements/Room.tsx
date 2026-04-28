@@ -4552,17 +4552,30 @@ const Room: React.FC<RoomProps> = ({
                     const isShoeMod = modMidShoe.includes('-entryway-') || modMidShoe.includes('-shelf-') || modMidShoe.includes('-4drawer-shelf-') || modMidShoe.includes('-2drawer-shelf-');
                     let shoeFrameZ: number | null = null;
                     if (isShoeMod) {
-                      // 상부프레임: 상부 섹션 깊이 우선, 없으면 customDepth, 최후 380
                       const shoeDepthMm = mod.upperSectionDepth || mod.customDepth || mod.freeDepth || 380;
-                      // 신발장 앞면 Z = 의류장 뒷면 Z + shoeDepth (FurnitureItem 공식)
                       const shoeBackZ = fiZOffset - fiFurnitureDepth / 2 - mmToThreeUnits(20);
                       const shoeFrontZ = shoeBackZ + mmToThreeUnits(shoeDepthMm);
                       shoeFrameZ = shoeFrontZ - mmToThreeUnits(END_PANEL_THICKNESS) / 2;
                     }
+                    // 인출장/팬트리장/냉장고장: 마지막 섹션의 sectionDepths 우선
+                    const isNSectionMod = modMidShoe.includes('pull-out-cabinet') ||
+                      modMidShoe.includes('pantry-cabinet') ||
+                      (modMidShoe.includes('fridge-cabinet') && !modMidShoe.includes('built-in-fridge'));
+                    let nSectionFrameZ: number | null = null;
+                    if (isNSectionMod) {
+                      const sectionDepthsArr = (mod as any).sectionDepths as number[] | undefined;
+                      const lastIdx = sectionDepthsArr ? sectionDepthsArr.length - 1 : -1;
+                      const topSectionDepthMm = (sectionDepthsArr && lastIdx >= 0 && sectionDepthsArr[lastIdx])
+                        ? sectionDepthsArr[lastIdx]
+                        : (mod.customDepth || mod.freeDepth || 600);
+                      const nBackZ = fiZOffset - fiFurnitureDepth / 2 - mmToThreeUnits(20);
+                      const nFrontZ = nBackZ + mmToThreeUnits(topSectionDepthMm);
+                      nSectionFrameZ = nFrontZ - mmToThreeUnits(END_PANEL_THICKNESS) / 2;
+                    }
                     allTopSegments.push({
                       widthMm: modWidthMM,
                       centerXmm: modCenterXmm,
-                      zPosition: (modCategory === 'upper' ? upperFrameZ : (shoeFrameZ !== null ? shoeFrameZ : topZPosition)) + modTopZOffset + topFrameZRetract,
+                      zPosition: (modCategory === 'upper' ? upperFrameZ : (nSectionFrameZ !== null ? nSectionFrameZ : (shoeFrameZ !== null ? shoeFrameZ : topZPosition))) + modTopZOffset + topFrameZRetract,
                       height: modFrameHeight,
                       yPosition: modFrameCenterY,
                       material: topSurrMat,

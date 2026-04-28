@@ -309,8 +309,11 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
       const isType4DrawerSection = (furnitureId?.includes('4drawer-hanging') || furnitureId?.includes('4drawer-shelf')) && section.type === 'drawer' && index === 0;
       const sectionCenterY = currentYPosition + sectionHeight / 2 - (isType4DrawerSection ? basicThickness : 0);
 
-      // 현재 섹션의 깊이 가져오기 (sectionDepths가 없으면 기본 depth 사용)
-      const currentSectionDepth = (sectionDepths && sectionDepths[index]) ? sectionDepths[index] : depth;
+      // 현재 섹션의 깊이 가져오기 (sectionDepths가 mm 단위 → Three.js 단위 변환)
+      // sectionDepths[index] === undefined면 기본 depth 사용
+      const currentSectionDepth = (sectionDepths && sectionDepths[index] !== undefined && sectionDepths[index] > 0)
+        ? mmToThreeUnits(sectionDepths[index])
+        : depth;
 
       // adjustedDepthForShelves 계산 (백패널 두께 고려)
       // depth와 adjustedDepthForShelves의 차이를 계산해서 비율적용
