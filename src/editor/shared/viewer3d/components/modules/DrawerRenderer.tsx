@@ -472,9 +472,9 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
     const drawerBodyDepth = actualDrawerDepth - HANDLE_PLATE_THICKNESS;
     // 서랍 본체 중심 (뒤쪽으로 10mm 이동)
     const drawerBodyCenterZ = centerZ - HANDLE_PLATE_THICKNESS / 2;
-    
+
     return (
-      <group key={key}>
+      <animated.group key={key} position-z={drawerSlideSpring.offset}>
         {/* === 서랍 본체 (깊이 20mm 줄임) === */}
         
         {/* 바닥면 - 앞면 판에 맞춰 15mm 위로 */}
@@ -778,10 +778,10 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
             )}
           </group>
         )}
-      </group>
+      </animated.group>
     );
   };
-  
+
   if (drawerHeights && drawerHeights.length === drawerCount && gapHeight > 0) {
     // 개별 서랍 높이 지정된 가구: 높이 + 공백 적용
     
@@ -792,7 +792,7 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
     currentY += mmToThreeUnits(gapHeight);
     
     return (
-      <animated.group position-x={0} position-y={yOffset} position-z={drawerSlideSpring.offset.to((o: number) => drawerZOffset + zOffset + o)}>
+      <group position={[0, yOffset, drawerZOffset + zOffset]}>
         {/* === 서랍속장 ㄷ자 프레임 (좌/우 각각 3개 패널 = 총 6개) === */}
 
         {/* 1. 좌측 수직 패널 (전체 높이, 측판에서 27mm 떨어짐) */}
@@ -935,14 +935,14 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
 
           return drawer;
         })}
-      </animated.group>
+      </group>
     );
   } else {
     // 기존 방식: 균등 분할
     const drawerHeight = innerHeight / drawerCount;
 
     return (
-      <animated.group position-x={0} position-y={yOffset} position-z={drawerSlideSpring.offset.to((o: number) => drawerZOffset + zOffset + o)}>
+      <group position={[0, yOffset, drawerZOffset + zOffset]}>
         {/* === 서랍속장 ㄷ자 프레임 (좌/우 각각 3개 패널 = 총 6개) === */}
 
         {/* 1. 좌측 수직 패널 (전체 높이, 측판에서 27mm 떨어짐) */}
@@ -1079,7 +1079,7 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
             i === 0 // 첫 번째 인덱스가 최하단 서랍
           );
         })}
-      </animated.group>
+      </group>
     );
   }
 };
