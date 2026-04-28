@@ -3,6 +3,7 @@ import { ModuleData } from '../../../../../data/modules/shelving';
 import { SpaceInfo, useSpaceConfigStore } from '@/store/core/spaceConfigStore';
 import { useBaseFurniture, BaseFurnitureShell, SectionsRenderer } from './shared';
 import BoxWithEdges from './components/BoxWithEdges';
+import MicrowavePullOut from './components/MicrowavePullOut';
 import DoorModule from './DoorModule';
 import { useSpace3DView } from '../../context/useSpace3DView';
 import { useUIStore } from '@/store/uiStore';
@@ -1258,6 +1259,34 @@ const BoxModule: React.FC<BoxModuleProps> = ({
               doorBottomGap={doorBottomGap}
             />
           )}
+          {/* 인출장 2단: 전자렌지 인출서랍 부재 */}
+          {moduleData?.id?.includes('pull-out-cabinet') && (() => {
+            const sections = (baseFurniture.modelConfig as any)?.sections || [];
+            if (sections.length < 2) return null;
+            const sec1H = sections[0].height || 600; // 1단 외경 높이 600
+            const sec2H = sections[1].height || 500; // 2단 외경 높이 500
+            const heightMm = baseFurniture.height * 100; // 가구 외경 높이 mm
+            const halfHeightMm = heightMm / 2;
+            // 2단 섹션 바닥 (가구 그룹 중심 기준 mm)
+            // 가구 바닥 = -halfHeight, 1단 끝 = -halfHeight + sec1H
+            const sec2BottomMm = -halfHeightMm + sec1H;
+            const innerWidthMm = baseFurniture.innerWidth * 100;
+            const outerDepthMm = baseFurniture.depth * 100;
+            const backPanelThicknessMm = (baseFurniture.basicThickness / 0.01) === 18.5 ? 9.5 : 9;
+            const basicThicknessMm = baseFurniture.basicThickness * 100;
+            return (
+              <MicrowavePullOut
+                sectionBottomMm={sec2BottomMm}
+                sectionHeightMm={sec2H}
+                innerWidthMm={innerWidthMm}
+                outerDepthMm={outerDepthMm}
+                backPanelThicknessMm={backPanelThicknessMm}
+                basicThicknessMm={basicThicknessMm}
+                material={baseFurniture.material}
+                mmToThreeUnits={baseFurniture.mmToThreeUnits}
+              />
+            );
+          })()}
         </BaseFurnitureShell>
       )}
 
