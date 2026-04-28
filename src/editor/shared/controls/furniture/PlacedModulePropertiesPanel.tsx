@@ -3342,7 +3342,14 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                             if (!isNaN(numV) && numV > 0) {
                               const arr = [...(sectionDepths ?? new Array(sectionCount).fill(moduleDefaultDepth))];
                               arr[sIdx] = numV;
-                              updatePlacedModule(currentPlacedModule.id, { sectionDepths: arr } as any);
+                              // 마지막 섹션 변경 시 upperSectionDepth도 동기화 (Room/CleanCAD2D 등 다른 가구 인터페이스와 호환)
+                              const updates: any = { sectionDepths: arr };
+                              if (sIdx === sectionCount - 1) {
+                                updates.upperSectionDepth = numV;
+                              } else if (sIdx === 0) {
+                                updates.lowerSectionDepth = numV;
+                              }
+                              updatePlacedModule(currentPlacedModule.id, updates);
                             }
                           } else {
                             (isLowerSec ? handleLowerDepthChange : handleUpperDepthChange)(val);
