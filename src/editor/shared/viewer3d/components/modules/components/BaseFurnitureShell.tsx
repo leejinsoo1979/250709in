@@ -659,10 +659,11 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                   const dir = sectionDirArr?.[idx] ?? 'front';
                   const depthDiff = depth - secDepth;
                   const sectionZOffset = depthDiff === 0 ? 0 : dir === 'back' ? depthDiff / 2 : -depthDiff / 2;
-                  // 측판 X 위치: 가구 외경 끝 ± (측판 두께/2)
-                  const halfWidth = innerWidth / 2 + basicThickness / 2; // 가구 외경 절반
-                  const leftPanelX = -halfWidth + sidePanelThickness / 2;
-                  const rightPanelX = halfWidth - sidePanelThickness / 2;
+                  // 측판 X 위치: 가구 외경(width) 끝 ± (측판 두께/2)
+                  // width: BaseFurnitureShell prop으로 전달된 가구 외경 (Three.js 단위, 600mm = 6.0)
+                  const halfOuterWidth = width / 2;
+                  const leftPanelX = -halfOuterWidth + sidePanelThickness / 2;
+                  const rightPanelX = halfOuterWidth - sidePanelThickness / 2;
                   return (
                     <React.Fragment key={`side-panel-section-${idx}`}>
                       <BoxWithEdges
