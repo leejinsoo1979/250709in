@@ -91,18 +91,15 @@ const MicrowavePullOut: React.FC<MicrowavePullOutProps> = ({
   const frontFrameBottomMm = sectionBottomTopMm + FRONT_BOTTOM_GAP_MM;
   const frontFrameTopMm = frontFrameBottomMm + FRONT_HEIGHT_MM;
   const frontFrameCenterYMm = (frontFrameBottomMm + frontFrameTopMm) / 2;
-  // 전면프레임 Z: 가구 앞면에 위치 (인출 트레이 앞면)
-  // 가구 앞면 + (날개프레임 앞쪽 끝 = 가구 앞 - 35mm) → 전면프레임은 트레이 앞면이므로 가구 앞면에 있어야 함
-  // 트레이 앞면 = 가구 앞면 (인출 시 앞으로 나옴), 닫힌 상태에서는 가구 앞면과 같은 위치
-  // 전면프레임 두께 18 → 중심 = 가구 앞면 - 18/2
-  const frontFrameCenterZMm = furnitureFrontZMm - FRONT_THICKNESS_MM / 2;
-
-  // === 3) 인출 트레이 바닥판 ===
+  // === 3) 인출 트레이 바닥판 (먼저 계산해서 전면프레임 Z 위치 결정에 사용) ===
   // 깊이 450, 백패널 앞면에서 39.5mm 앞쪽까지
-  // 트레이 뒤쪽 Z = 백패널 앞면 + 39.5
   const trayBackZMm = backPanelFrontZMm + TRAY_BACK_OFFSET_MM;
   const trayFrontZMm = trayBackZMm + TRAY_DEPTH_MM;
   const trayCenterZMm = (trayBackZMm + trayFrontZMm) / 2;
+
+  // 전면프레임 Z: 트레이 바닥판 앞면에 부착 (서랍 앞판처럼)
+  // 트레이 앞면 + 두께/2 = 전면프레임 중심
+  const frontFrameCenterZMm = trayFrontZMm + FRONT_THICKNESS_MM / 2;
   // 트레이 가로 = 날개프레임 안쪽 사이 - 좌우 갭
   const trayWidthMm = (wingsInnerRightMm - wingsInnerLeftMm) - TRAY_SIDE_GAP_MM * 2;
   // 트레이 Y: 윗면 = 날개프레임 윗면 - 22
