@@ -57,9 +57,12 @@ const MicrowavePullOut: React.FC<MicrowavePullOutProps> = ({
   const outerWidthMm = innerWidthMm + basicThicknessMm * 2;
   const halfOuterWidthMm = outerWidthMm / 2;
   const halfOuterDepthMm = outerDepthMm / 2;
-  // 백패널 앞면 Z (mm, 가구 중심 기준): 백패널이 가구 뒤끝에 있고 두께 backPanelThicknessMm
-  // 백패널 앞면 = -outerDepth/2 + backPanelThickness
-  const backPanelFrontZMm = -halfOuterDepthMm + backPanelThicknessMm;
+  // 백패널 앞면 Z (mm, 가구 중심 기준)
+  // BaseFurnitureShell의 backPanelConfig.depthOffset = basicThickness - 1 (= 17mm)
+  // 백패널 Z 중심 = -outerDepth/2 + thickness/2 + depthOffset
+  // 백패널 앞면 = 중심 + thickness/2 = -outerDepth/2 + thickness + depthOffset
+  const BACK_PANEL_DEPTH_OFFSET_MM = basicThicknessMm - 1; // 17mm (가구재 두께 - 1)
+  const backPanelFrontZMm = -halfOuterDepthMm + backPanelThicknessMm + BACK_PANEL_DEPTH_OFFSET_MM;
   // 가구 앞면 Z = outerDepth/2
   const furnitureFrontZMm = halfOuterDepthMm;
 
