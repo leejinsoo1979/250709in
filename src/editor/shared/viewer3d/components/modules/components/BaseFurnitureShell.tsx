@@ -821,8 +821,11 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                             ? lowerZOffset + fridgeBackReduction / 2 - mmToThreeUnits(lowerSectionTopOffsetMm || 0)/2
                             : lowerZOffset + panelZOffset - mmToThreeUnits(lowerSectionTopOffsetMm || 0)/2;
                         const panelW = innerWidth - sidePanelGap;
-                        const panelH = basicThickness - mmToThreeUnits(0.1);
-                        const panelY = lowerTopPanelY - mmToThreeUnits(0.05);
+                        // 옵셋이 적용된 경우만 z-fighting 회피용 0.1mm 축소 (흐림 효과)
+                        // 옵셋 0이면 정상 두께로 그림
+                        const hasTopOffset = !!lowerSectionTopOffsetMm && lowerSectionTopOffsetMm > 0;
+                        const panelH = hasTopOffset ? (basicThickness - mmToThreeUnits(0.1)) : basicThickness;
+                        const panelY = hasTopOffset ? (lowerTopPanelY - mmToThreeUnits(0.05)) : lowerTopPanelY;
                         return (
                           <BoxWithEdges
                             key={`lower-top-${getPanelMaterial('(하)상판').uuid}`}
