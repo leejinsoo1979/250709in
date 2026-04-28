@@ -1272,7 +1272,8 @@ const BoxModule: React.FC<BoxModuleProps> = ({
             const sec2BottomMm = -halfHeightMm + sec1H;
             const innerWidthMm = baseFurniture.innerWidth * 100;
             const outerDepthMm = baseFurniture.depth * 100;
-            const backPanelThicknessMm = (baseFurniture.basicThickness / 0.01) === 18.5 ? 9.5 : 9;
+            // 백패널 두께: useBaseFurniture에서 계산된 값(사용자 설정 반영) 사용 → 백패널 두께 변경 시 자동 동기화
+            const backPanelThicknessMm = baseFurniture.backPanelThickness * 100;
             const basicThicknessMm = baseFurniture.basicThickness * 100;
             return (
               <MicrowavePullOut
