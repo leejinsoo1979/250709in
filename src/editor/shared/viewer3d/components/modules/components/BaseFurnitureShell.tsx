@@ -1483,10 +1483,9 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                 const backPanelY = cursorY + sh / 2;
                 const backPanelZ = -depth / 2 + backPanelThickness / 2 + mmToThreeUnits(backPanelConfig.depthOffset);
                 const reinforcementZ = backPanelZ - backPanelThickness / 2 - reinforcementDepth / 2;
-                const sectionTopY = cursorY + sh;
-                const sectionBottomY = cursorY;
-                const lowerReinforcementY = sectionBottomY + basicThickness + reinforcementHeight / 2;
-                const upperReinforcementY = sectionTopY - basicThickness - reinforcementHeight / 2;
+                // 백패널 상/하단에 정렬 (다른 가구와 동일 패턴)
+                const lowerReinforcementY = backPanelY - backPanelHeight / 2 + reinforcementHeight / 2;
+                const upperReinforcementY = backPanelY + backPanelHeight / 2 - reinforcementHeight / 2;
 
                 elements.push(
                   <BoxWithEdges
