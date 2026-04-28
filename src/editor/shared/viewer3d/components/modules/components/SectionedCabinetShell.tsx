@@ -145,11 +145,15 @@ const SectionedCabinetShell: React.FC<SectionedCabinetShellProps> = ({
         const backPanelZ = -halfDepth + backPanelThickness / 2;
         const backPanelY = info.centerY;
 
-        // 후면 보강대 (위/아래) — 섹션 내경 폭, 깊이 15.5mm, 백패널 뒤쪽에 부착 (다른 가구와 동일)
-        const reinforcementWidth = innerWidth;
+        // 후면 보강대 (위/아래) — 섹션 내경 폭(양쪽 0.5mm씩 축소), 깊이 15.5mm, 백패널 뒤쪽에 부착 (다른 가구와 동일)
+        const sidePanelGap = mmToThreeUnits(1); // 좌/우 측판과 0.5mm씩 갭 (총 1mm)
+        const reinforcementWidth = innerWidth - sidePanelGap;
         const reinforcementZ = backPanelZ - backPanelThickness / 2 - reinforcementDepth / 2;
-        const lowerReinforcementY = info.bottomTopY + reinforcementHeight / 2;
-        const upperReinforcementY = info.topBottomY - reinforcementHeight / 2;
+        // 백패널 내경 상/하단에 보강대 정렬
+        const backPanelTopY = backPanelY + backPanelHeight / 2;
+        const backPanelBottomY = backPanelY - backPanelHeight / 2;
+        const lowerReinforcementY = backPanelBottomY + reinforcementHeight / 2;
+        const upperReinforcementY = backPanelTopY - reinforcementHeight / 2;
 
         return (
           <group key={`section-${idx}`}>
