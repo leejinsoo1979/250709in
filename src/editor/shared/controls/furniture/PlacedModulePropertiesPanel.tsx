@@ -3315,9 +3315,10 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                       </div>
                         );
                       })()}
-                      {/* 섹션 깊이 (2섹션 가구 한정) */}
-                      {(sectionCount === 2) && (() => {
-                        const isLowerSec = sIdx === 0;
+                      {/* 섹션 깊이 (2섹션 가구 + 인출장/팬트리장 N섹션 한정) */}
+                      {(sectionCount === 2 || isPullOutOrPantry) && (() => {
+                        // N섹션 가구: 마지막 섹션을 "상부"로 매핑, 그 외 모든 섹션은 "하부" 사용
+                        const isLowerSec = sIdx < sectionCount - 1;
                         const depthVal = isLowerSec ? lowerDepthInput : upperDepthInput;
                         const onDepthChange = isLowerSec ? handleLowerDepthChange : handleUpperDepthChange;
                         const dir = isLowerSec ? lowerDepthDirection : upperDepthDirection;

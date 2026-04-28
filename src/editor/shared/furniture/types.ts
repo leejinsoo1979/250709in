@@ -209,6 +209,8 @@ export interface PlacedModule {
 
   // 하부장 상부패널 오프셋 (2섹션 가구용)
   lowerSectionTopOffset?: number; // 하부 섹션 상판 Z축 오프셋 (mm) - 0: 상부섹션 바닥판과 같은 위치, 양수: 앞쪽으로 줄어듦
+  // N섹션 가구(인출장) — 각 섹션의 상판 옵셋 (mm). 인덱스: 0=1단 상판, 1=2단 상판
+  sectionTopOffsets?: number[];
 
   // 백패널 두께 설정 (기본값: 9mm)
   backPanelThickness?: number; // 백패널 두께 (mm) - 3, 5, 9 중 선택
