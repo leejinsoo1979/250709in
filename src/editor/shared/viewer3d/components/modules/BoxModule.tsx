@@ -227,8 +227,12 @@ const BoxModule: React.FC<BoxModuleProps> = ({
     grainDirection,
     panelGrainDirections,
     backPanelThicknessMm: backPanelThicknessProp,
-    customSections
-  });
+    customSections,
+    lowerSectionDepth,
+    upperSectionDepth,
+    lowerSectionDepthDirection,
+    upperSectionDepthDirection,
+  } as any);
 
 
   // debug useEffects removed for perf
