@@ -765,17 +765,36 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                   const isLowerHighlighted = isLowerSectionHighlighted || isLowerTopPanelHighlighted;
                   const isUpperHighlighted = highlightedSection === `${placedFurnitureId}-1`;
 
-                  // 섹션별 깊이 가져오기
-                  const lowerSectionDepth = lowerSectionDepthMm !== undefined ? mmToThreeUnits(lowerSectionDepthMm) : depth;
-                  const upperSectionDepth = upperSectionDepthMm !== undefined ? mmToThreeUnits(upperSectionDepthMm) : depth;
+                  // 인출장/팬트리장/냉장고장: sectionDepths 배열 사용 (각 섹션 독립 깊이)
+                  // 그 외 가구: lowerSectionDepthMm/upperSectionDepthMm props 사용
+                  const isNSectionFurniture = !!(moduleData?.id?.includes('pull-out-cabinet') ||
+                    moduleData?.id?.includes('pantry-cabinet') ||
+                    (moduleData?.id?.includes('fridge-cabinet') && !moduleData?.id?.includes('built-in-fridge')));
+                  const placedModForSection = (isNSectionFurniture && placedFurnitureId)
+                    ? useFurnitureStore.getState().placedModules.find((m: any) => m.id === placedFurnitureId)
+                    : null;
+                  const sectionDepthsArrInDivider = (placedModForSection as any)?.sectionDepths as number[] | undefined;
+                  const sectionDirArrInDivider = (placedModForSection as any)?.sectionDepthDirections as ('front'|'back')[] | undefined;
+
+                  // 섹션별 깊이 가져오기 (N섹션 가구면 sectionDepths[idx] 우선)
+                  const lowerSectionDepth = isNSectionFurniture && sectionDepthsArrInDivider?.[index] !== undefined
+                    ? mmToThreeUnits(sectionDepthsArrInDivider[index]!)
+                    : (lowerSectionDepthMm !== undefined ? mmToThreeUnits(lowerSectionDepthMm) : depth);
+                  const upperSectionDepth = isNSectionFurniture && sectionDepthsArrInDivider?.[index + 1] !== undefined
+                    ? mmToThreeUnits(sectionDepthsArrInDivider[index + 1]!)
+                    : (upperSectionDepthMm !== undefined ? mmToThreeUnits(upperSectionDepthMm) : depth);
+
+                  // 깊이 줄임 방향 (N섹션이면 sectionDepthDirections 우선)
+                  const lowerDir = (isNSectionFurniture && sectionDirArrInDivider?.[index]) || lowerSectionDepthDirection;
+                  const upperDir = (isNSectionFurniture && sectionDirArrInDivider?.[index + 1]) || upperSectionDepthDirection;
 
                   // 하부 섹션 깊이 차이 (방향에 따라 줄어듦)
                   const lowerDepthDiff = depth - lowerSectionDepth;
-                  const lowerZOffset = lowerDepthDiff === 0 ? 0 : lowerSectionDepthDirection === 'back' ? lowerDepthDiff / 2 : -lowerDepthDiff / 2;
+                  const lowerZOffset = lowerDepthDiff === 0 ? 0 : lowerDir === 'back' ? lowerDepthDiff / 2 : -lowerDepthDiff / 2;
 
                   // 상부 섹션 깊이 차이
                   const upperDepthDiff = depth - upperSectionDepth;
-                  const upperZOffset = upperDepthDiff === 0 ? 0 : upperSectionDepthDirection === 'back' ? upperDepthDiff / 2 : -upperDepthDiff / 2;
+                  const upperZOffset = upperDepthDiff === 0 ? 0 : upperDir === 'back' ? upperDepthDiff / 2 : -upperDepthDiff / 2;
 
                   // 백패널 두께
                   const backPanelThickness = depth - adjustedDepthForShelves;
