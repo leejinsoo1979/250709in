@@ -1257,6 +1257,8 @@ const BoxModule: React.FC<BoxModuleProps> = ({
               shelfFrontInsetMm={(moduleData?.id?.includes('entryway-h') || moduleData?.id?.includes('-shelf-') || moduleData?.id?.includes('-4drawer-shelf-') || moduleData?.id?.includes('-2drawer-shelf-') || moduleData?.id?.includes('pull-out-cabinet') || moduleData?.id?.includes('pantry-cabinet')) ? 30 : 0}
               doorTopGap={doorTopGap}
               doorBottomGap={doorBottomGap}
+              sectionDepths={(useFurnitureStore.getState().placedModules.find(p => p.id === placedFurnitureId) as any)?.sectionDepths}
+              sectionDepthDirections={(useFurnitureStore.getState().placedModules.find(p => p.id === placedFurnitureId) as any)?.sectionDepthDirections}
             />
           )}
           {/* 인출장 2단: 전자렌지 인출서랍 부재 */}

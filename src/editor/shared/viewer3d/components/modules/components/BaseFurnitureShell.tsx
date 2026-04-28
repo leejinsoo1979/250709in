@@ -1432,31 +1432,48 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
           const backReduction = backReductionForPanels; // 뒤에서 26mm 줄임
           const frontReduction = topPanelFrontReduction ? mmToThreeUnits(topPanelFrontReduction) : 0; // 앞쪽 감소 (상판내림: 전대 뒤로)
           const widthReduction = sidePanelGap; // 좌우 각 0.5mm씩 총 1mm 줄임 (18.5/15.5mm는 0)
+
+          // 인출장/팬트리장/냉장고장: sectionDepths 배열 마지막 인덱스(상부) 우선 적용
+          const isNSectionTop = !!(moduleData?.id?.includes('pull-out-cabinet') ||
+            moduleData?.id?.includes('pantry-cabinet') ||
+            (moduleData?.id?.includes('fridge-cabinet') && !moduleData?.id?.includes('built-in-fridge')));
+          const placedModForTop = (isNSectionTop && placedFurnitureId)
+            ? useFurnitureStore.getState().placedModules.find((m: any) => m.id === placedFurnitureId)
+            : null;
+          const sectionDepthsArrTop = (placedModForTop as any)?.sectionDepths as number[] | undefined;
+          const sectionDirArrTop = (placedModForTop as any)?.sectionDepthDirections as ('front'|'back')[] | undefined;
+          const sectionsCount = ((moduleData as any)?.modelConfig?.sections?.length) || 0;
+          const topSectionIdx = sectionsCount > 0 ? sectionsCount - 1 : -1;
+          const topSectionDepthMm = (isNSectionTop && topSectionIdx >= 0 && sectionDepthsArrTop?.[topSectionIdx] !== undefined)
+            ? sectionDepthsArrTop[topSectionIdx]!
+            : (upperSectionDepthMm !== undefined ? upperSectionDepthMm : undefined);
+          const topSectionDir = (isNSectionTop && topSectionIdx >= 0 && sectionDirArrTop?.[topSectionIdx])
+            || upperSectionDepthDirection
+            || 'front';
+
           return (
             <BoxWithEdges
               key={`top-panel-${topPanelMat.uuid}`}
               args={[innerWidth - widthReduction, basicThickness, (() => {
-                // 다중 섹션이고 상부 깊이가 있으면 상부 섹션 깊이 사용
-                if (isMultiSectionFurniture() && upperSectionDepthMm !== undefined) {
-                  return mmToThreeUnits(upperSectionDepthMm) - backReduction - frontReduction;
+                if ((isMultiSectionFurniture() || isNSectionTop) && topSectionDepthMm !== undefined) {
+                  return mmToThreeUnits(topSectionDepthMm) - backReduction - frontReduction;
                 }
                 return depth - backReduction - frontReduction;
               })()]}
               position={[0, height/2 - basicThickness/2, (() => {
-                // 다중 섹션이고 상부 깊이가 있으면 Z 오프셋 적용
-                if (isMultiSectionFurniture() && upperSectionDepthMm !== undefined) {
-                  const upperDepth = mmToThreeUnits(upperSectionDepthMm);
+                if ((isMultiSectionFurniture() || isNSectionTop) && topSectionDepthMm !== undefined) {
+                  const upperDepth = mmToThreeUnits(topSectionDepthMm);
                   const depthDiff = depth - upperDepth;
-                  const dirOffset = upperSectionDepthDirection === 'back' ? depthDiff / 2 : -depthDiff / 2;
-                  return dirOffset + (backReduction - frontReduction) / 2; // 방향에 따른 오프셋 + 백패널/전대 맞춤
+                  const dirOffset = topSectionDir === 'back' ? depthDiff / 2 : -depthDiff / 2;
+                  return dirOffset + (backReduction - frontReduction) / 2;
                 }
-                return (backReduction - frontReduction) / 2; // 뒤에서 26mm 줄임 + 앞에서 전대만큼 줄임
+                return (backReduction - frontReduction) / 2;
               })()]}
               material={topPanelMat}
               renderMode={renderMode}
               isDragging={isDragging}
               isEditMode={isEditMode}
-              isHighlighted={isMultiSectionFurniture() ? highlightedSection === `${placedFurnitureId}-1` : false}
+              isHighlighted={isMultiSectionFurniture() ? highlightedSection === `${placedFurnitureId}-${topSectionIdx >= 0 ? topSectionIdx : 1}` : false}
               panelName={panelName}
               panelGrainDirections={panelGrainDirections}
               furnitureId={placedFurnitureId}
