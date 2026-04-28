@@ -4,6 +4,7 @@ import { useSpace3DView } from '../../context/useSpace3DView';
 import { Text, useGLTF, Line } from '@react-three/drei';
 import NativeLine from '../elements/NativeLine';
 import { useUIStore } from '@/store/uiStore';
+import { useSpring, animated } from '@react-spring/three';
 import BoxWithEdges from './components/BoxWithEdges';
 import DimensionText from './components/DimensionText';
 import { useLoader } from '@react-three/fiber';
@@ -393,8 +394,15 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
 
   // 서랍 높이 계산 로직 선택
   const mmToThreeUnits = (mm: number) => mm * 0.01;
-  
-  // 서랍을 앞으로 100mm 이동
+
+  // 도어 열림 상태에 따라 속서랍 인출 애니메이션 (인출장 1단 속서랍 등)
+  const { doorsOpen } = useUIStore();
+  const shouldOpenDrawers = doorsOpen === true;
+  // 도어 열리면 서랍이 앞으로 200mm 슬라이드 인출
+  const drawerSlideSpring = useSpring({
+    offset: shouldOpenDrawers ? mmToThreeUnits(200) : 0,
+    config: { tension: 90, friction: 16, clamp: true },
+  });
   const drawerZOffset = mmToThreeUnits(0);
   
   // 서랍 구조 상수 - PB+PET 코팅 시 15.5mm
@@ -784,7 +792,7 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
     currentY += mmToThreeUnits(gapHeight);
     
     return (
-      <group position={[0, yOffset, drawerZOffset + zOffset]}>
+      <animated.group position-x={0} position-y={yOffset} position-z={drawerSlideSpring.offset.to((o: number) => drawerZOffset + zOffset + o)}>
         {/* === 서랍속장 ㄷ자 프레임 (좌/우 각각 3개 패널 = 총 6개) === */}
 
         {/* 1. 좌측 수직 패널 (전체 높이, 측판에서 27mm 떨어짐) */}
@@ -927,14 +935,14 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
 
           return drawer;
         })}
-      </group>
+      </animated.group>
     );
   } else {
     // 기존 방식: 균등 분할
     const drawerHeight = innerHeight / drawerCount;
 
     return (
-      <group position={[0, yOffset, drawerZOffset + zOffset]}>
+      <animated.group position-x={0} position-y={yOffset} position-z={drawerSlideSpring.offset.to((o: number) => drawerZOffset + zOffset + o)}>
         {/* === 서랍속장 ㄷ자 프레임 (좌/우 각각 3개 패널 = 총 6개) === */}
 
         {/* 1. 좌측 수직 패널 (전체 높이, 측판에서 27mm 떨어짐) */}
@@ -1071,7 +1079,7 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
             i === 0 // 첫 번째 인덱스가 최하단 서랍
           );
         })}
-      </group>
+      </animated.group>
     );
   }
 };
