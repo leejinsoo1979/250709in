@@ -31,6 +31,7 @@ const FURNITURE_ICONS: Record<string, string> = {
   'dual-built-in-fridge': getImagePath('dual_builtin.png'),
   'single-pull-out-cabinet': getImagePath('microwave.png'),
   'single-pantry-cabinet': getImagePath('pantry.png'),
+  'single-fridge-cabinet': getImagePath('single_builtin.png'),
   'single-2drawer-hanging': getImagePath('single-2drawer-hanging.png'),
   'single-2hanging': getImagePath('single-2hanging.png'),
   'single-4drawer-hanging': getImagePath('single-4drawer-hanging.png'),
@@ -1104,11 +1105,13 @@ const ModuleGallery: React.FC<ModuleGalleryProps> = ({ moduleCategory = 'tall', 
       // 상부장 = upper 전체
       categoryModules = getModulesByCategory('upper', adjustedInternalSpace, spaceInfoWithSlotWidths);
     } else if (kitchenSubCategory === 'tall') {
-      // 키큰장 = full 카테고리 전체 노출 (빌트인 냉장고장 / Insert 프레임 제외)
+      // 키큰장 = 주방 키큰장 전용 모듈 (인출장, 팬트리장, 냉장고장)
+      // 빌트인 냉장고장 / Insert 프레임은 별도 처리 → 키큰장 카테고리에서 제외
       const allFullModules = getModulesByCategory('full', adjustedInternalSpace, spaceInfoWithSlotWidths);
       categoryModules = allFullModules.filter(m =>
-        !m.id.includes('built-in-fridge') &&
-        !m.id.includes('insert-frame')
+        m.id.includes('pull-out-cabinet') ||
+        m.id.includes('pantry-cabinet') ||
+        m.id.includes('fridge-cabinet')
       );
     } else {
       // 기본장/도어올림/상판내림 = lower 중 ID 패턴으로 분기
