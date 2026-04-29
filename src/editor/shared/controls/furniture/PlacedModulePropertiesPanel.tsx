@@ -24,18 +24,25 @@ const getImagePath = (filename: string) => {
 
 const FURNITURE_ICONS: Record<string, string> = {
   'single-2drawer-hanging': getImagePath('single-2drawer-hanging.png'),
-  'single-2hanging': getImagePath('single-2hanging.png'), 
+  'single-2hanging': getImagePath('single-2hanging.png'),
   'single-4drawer-hanging': getImagePath('single-4drawer-hanging.png'),
   'dual-2drawer-hanging': getImagePath('dual-2drawer-hanging.png'),
   'dual-2hanging': getImagePath('dual-2hanging.png'),
   'dual-4drawer-hanging': getImagePath('dual-4drawer-hanging.png'),
   'dual-2drawer-styler': getImagePath('dual-2drawer-styler.png'),
   'dual-4drawer-pantshanger': getImagePath('dual-4drawer-pantshanger.png'),
+  // 키큰장 (주방): ModuleGallery의 매핑과 일치
+  'single-pull-out-cabinet': getImagePath('microwave.png'),
+  'single-pantry-cabinet': getImagePath('pantry.png'),
+  'single-fridge-cabinet': getImagePath('single_builtin.png'),
+  'built-in-fridge': getImagePath('single_builtin.png'),
+  'dual-built-in-fridge': getImagePath('dual_builtin.png'),
 };
 
 // 가구 이미지 매핑 함수 — 매핑에 없으면 null 반환 (텍스트 썸네일로 대체)
 const getFurnitureImagePath = (moduleId: string): string | null => {
-  const baseModuleType = moduleId.replace(/-\d+$/, '');
+  // 너비 접미사 제거 (정수/소수 모두 처리: e.g., -586, -586.4)
+  const baseModuleType = moduleId.replace(/-[\d.]+$/, '');
   return FURNITURE_ICONS[baseModuleType] || null;
 };
 
