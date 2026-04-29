@@ -3731,7 +3731,7 @@ const Configurator: React.FC = () => {
                         상부장
                       </button>
                     )}
-                    {!spaceInfo.isIsland && authUser?.email === 'sbbc212@gmail.com' && (
+                    {!spaceInfo.isIsland && (
                       <button
                         className={`${styles.moduleCategoryTab} ${kitchenSub === 'tall' ? styles.active : ''}`}
                         onClick={() => setKitchenSub('tall')}
