@@ -10,21 +10,14 @@ interface FurniturePlacementPlaneProps {
 }
 
 const FurniturePlacementPlane: React.FC<FurniturePlacementPlaneProps> = ({ spaceInfo }) => {
-  const isFurniturePlacementMode = useFurnitureStore(state => state.isFurniturePlacementMode);
   const placedModules = useFurnitureStore(state => state.placedModules);
   const { theme } = useTheme();
-  
+
   // 내경 공간 계산
   const internalSpace = calculateInternalSpace(spaceInfo);
-  
+
   // mm를 Three.js 단위로 변환
   const mmToThreeUnits = (mm: number) => mm * 0.01;
-  
-  // 내경 공간의 중심 X 좌표 계산 (이격거리 고려)
-  const totalWidth = spaceInfo.width;
-  // internalSpace.startX는 이미 이격거리를 고려한 시작점
-  const internalCenterX = -(totalWidth / 2) + internalSpace.startX + (internalSpace.width / 2);
-  const internalCenterXThreeUnits = mmToThreeUnits(internalCenterX);
   
   // 바닥재 높이 계산
   const floorFinishHeightMm = spaceInfo.hasFloorFinish && spaceInfo.floorFinish ? spaceInfo.floorFinish.height : 0;
@@ -52,7 +45,6 @@ const FurniturePlacementPlane: React.FC<FurniturePlacementPlaneProps> = ({ space
   }
   
   // 내경 공간 크기 - 공간 뒷면에 정확히 맞춤
-  const planeWidth = mmToThreeUnits(internalSpace.width);
   const planeDepth = mmToThreeUnits(internalSpace.depth - 200 - 20); // 내경 공간에서 220mm 줄인 깊이 사용 (앞쪽에서 20mm 추가)
   
   // 기준면을 내경 공간 중앙에 정확히 배치 (Z=0이 공간 앞면, -depth가 뒷면)
@@ -61,7 +53,7 @@ const FurniturePlacementPlane: React.FC<FurniturePlacementPlaneProps> = ({ space
   
   // placedModules 중 도어가 장착된 모듈이 하나라도 있으면 바닥 슬롯 매쉬를 숨김
   const hasAnyDoor = placedModules.some(module => module.hasDoor);
-  
+
   // 테마 색상을 실제 hex 값으로 변환
   const themeColorHex = useMemo(() => {
     if (typeof window !== 'undefined') {
@@ -73,81 +65,118 @@ const FurniturePlacementPlane: React.FC<FurniturePlacementPlaneProps> = ({ space
     }
     return '#10b981'; // 기본값 (green)
   }, [theme.color]);
-  
+
   // 단내림 영역 정보 계산
   const indexing = calculateSpaceIndexing(spaceInfo);
   const hasDroppedCeiling = spaceInfo.droppedCeiling?.enabled && indexing.zones;
+
+  // 영역(zone)별로 차지된 슬롯 인덱스 Set 생성
+  // SlotDropZonesSimple.getOccupiedSlots와 동일한 규칙 사용
+  const getOccupiedSlots = (zoneType: 'full' | 'normal' | 'dropped'): Set<number> => {
+    const occupied = new Set<number>();
+    placedModules.forEach(mod => {
+      const matchesZone = zoneType === 'full'
+        || (zoneType === 'normal' && (!mod.zone || mod.zone === 'normal'))
+        || (zoneType === 'dropped' && mod.zone === 'dropped');
+      if (!matchesZone) return;
+      if (mod.slotIndex === undefined || mod.slotIndex === null) return;
+      occupied.add(mod.slotIndex);
+      const isDual = mod.isDualSlot || mod.moduleId?.includes('dual-');
+      if (isDual) occupied.add(mod.slotIndex + 1);
+    });
+    return occupied;
+  };
+
+  // 단일 zone 영역을 슬롯별 메쉬로 분할 렌더링 (차지된 슬롯은 제외)
+  const renderZoneSlotMeshes = (
+    zoneStartXmm: number,
+    zoneColumnCount: number,
+    zoneColumnWidth: number,
+    zoneSlotWidths: number[] | undefined,
+    zoneType: 'full' | 'normal' | 'dropped',
+    keyPrefix: string
+  ) => {
+    const occupied = getOccupiedSlots(zoneType);
+    const totalWidth = spaceInfo.width;
+    const meshes: React.ReactNode[] = [];
+    let currentXmm = zoneStartXmm;
+
+    for (let i = 0; i < zoneColumnCount; i++) {
+      const slotWmm = zoneSlotWidths?.[i] ?? zoneColumnWidth;
+      if (!occupied.has(i)) {
+        const slotCenterXmm = currentXmm + slotWmm / 2;
+        const slotCenterX = -(totalWidth / 2) + slotCenterXmm;
+        meshes.push(
+          <mesh
+            key={`${keyPrefix}-slot-${i}`}
+            position={[mmToThreeUnits(slotCenterX), planeY - 0.1, planeZ]}
+            rotation={[-Math.PI / 2, 0, 0]}
+          >
+            <planeGeometry args={[mmToThreeUnits(slotWmm), planeDepth]} />
+            <meshBasicMaterial
+              color={themeColorHex}
+              transparent
+              opacity={0.05}
+              side={2}
+            />
+          </mesh>
+        );
+      }
+      currentXmm += slotWmm;
+    }
+    return meshes;
+  };
   
-  // 단내림이 있을 때 영역별 메시 생성
+  // 도어가 하나라도 장착되면 바닥 슬롯 매쉬를 모두 숨김 (기존 동작 유지)
+  if (hasAnyDoor) {
+    return null;
+  }
+
+  // 단내림이 있을 때: 영역별로 슬롯 단위 메쉬 생성 (배치된 슬롯 제외)
   if (hasDroppedCeiling && indexing.zones) {
-    const meshes = [];
-    
-    // 메인 구간 메시
+    const meshes: React.ReactNode[] = [];
+
     if (indexing.zones.normal) {
-      const normalCenterX = indexing.zones.normal.startX + indexing.zones.normal.width / 2;
-      const normalWidth = mmToThreeUnits(indexing.zones.normal.width);
-      
       meshes.push(
-        <group key="normal-zone" position={[mmToThreeUnits(normalCenterX), planeY - 0.1, planeZ]}>
-          {!hasAnyDoor && (
-            <mesh rotation={[-Math.PI / 2, 0, 0]}>
-              <planeGeometry args={[normalWidth, planeDepth]} />
-              <meshBasicMaterial 
-                color={themeColorHex}
-                transparent 
-                opacity={0.05}
-                side={2}
-              />
-            </mesh>
-          )}
-        </group>
+        ...renderZoneSlotMeshes(
+          indexing.zones.normal.startX,
+          indexing.zones.normal.columnCount,
+          indexing.zones.normal.columnWidth,
+          indexing.zones.normal.slotWidths,
+          'normal',
+          'normal-zone'
+        )
       );
     }
-    
-    // 단내림 구간 메시
+
     if (indexing.zones.dropped) {
-      const droppedCenterX = indexing.zones.dropped.startX + indexing.zones.dropped.width / 2;
-      const droppedWidth = mmToThreeUnits(indexing.zones.dropped.width);
-      
       meshes.push(
-        <group key="dropped-zone" position={[mmToThreeUnits(droppedCenterX), planeY - 0.1, planeZ]}>
-          {!hasAnyDoor && (
-            <mesh rotation={[-Math.PI / 2, 0, 0]}>
-              <planeGeometry args={[droppedWidth, planeDepth]} />
-              <meshBasicMaterial 
-                color={themeColorHex}
-                transparent 
-                opacity={0.05}
-                side={2}
-              />
-            </mesh>
-          )}
-        </group>
+        ...renderZoneSlotMeshes(
+          indexing.zones.dropped.startX,
+          indexing.zones.dropped.columnCount,
+          indexing.zones.dropped.columnWidth,
+          indexing.zones.dropped.slotWidths,
+          'dropped',
+          'dropped-zone'
+        )
       );
     }
-    
+
     return <>{meshes}</>;
   }
-  
-  // 단내림이 없으면 기존처럼 전체 영역 하나의 메시
+
+  // 단내림이 없을 때: 내경 영역을 슬롯 단위로 분할하여 배치된 슬롯 제외
   return (
-    <group position={[internalCenterXThreeUnits, planeY - 0.1, planeZ]}>
-      {/* 도어가 하나라도 장착되어 있으면 바닥 슬롯 매쉬를 렌더링하지 않음 */}
-      {!hasAnyDoor && (
-        <mesh 
-          key={`slot-mesh-${theme.color}-${theme.mode}`} // 테마 변경시 전체 재생성
-          rotation={[-Math.PI / 2, 0, 0]}
-        >
-          <planeGeometry args={[planeWidth, planeDepth]} />
-          <meshBasicMaterial 
-            color={themeColorHex}
-            transparent 
-            opacity={0.05}
-            side={2} // DoubleSide
-          />
-        </mesh>
+    <>
+      {renderZoneSlotMeshes(
+        internalSpace.startX,
+        indexing.columnCount,
+        indexing.columnWidth,
+        indexing.slotWidths,
+        'full',
+        `slot-mesh-${theme.color}-${theme.mode}`
       )}
-    </group>
+    </>
   );
 };
 
