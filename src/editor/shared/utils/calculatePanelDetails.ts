@@ -195,6 +195,17 @@ export const calculatePanelDetails = (
           targetPanel = panels.upper;
         }
       }
+      // 인출장/팬트리장/냉장고장: sections 배열은 아래→위 순서 (0=하부, 1=상부, 2=상부 추가)
+      // 섹션 UI(PlacedModulePropertiesPanel)의 인덱스 규칙(sIdx===0이 '하부')과 일치
+      else if (
+        moduleData.id.includes('pull-out-cabinet') ||
+        moduleData.id.includes('pantry-cabinet') ||
+        moduleData.id.includes('fridge-cabinet')
+      ) {
+        const isLowerSection = sectionIndex === 0;
+        sectionName = isLowerSection ? '하부장' : '상부장';
+        targetPanel = isLowerSection ? panels.lower : panels.upper;
+      }
       // 일반 서랍장 (상하부장 구분 없음)
       else if (section.type === 'drawer') {
         targetPanel = panels.lower;
