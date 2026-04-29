@@ -1037,7 +1037,10 @@ const PlacedModulePropertiesPanel: React.FC = () => {
             // moduleData는 zone 반영된 getModuleById로 조회되므로 dimensions.height에 단내림이 반영됨
             const totalH = currentPlacedModule.freeHeight || moduleData.dimensions.height;
             const totalD = currentPlacedModule.customDepth || currentPlacedModule.freeDepth || moduleData.dimensions.depth;
-            const totalW = currentPlacedModule.freeWidth || moduleData.dimensions.width;
+            const totalW = currentPlacedModule.freeWidth
+              ?? currentPlacedModule.adjustedWidth
+              ?? currentPlacedModule.customWidth
+              ?? moduleData.dimensions.width;
             const dimH = moduleData.dimensions.height; // 원래 모듈 높이
             // 신발장: 옛 데이터의 섹션 깊이가 moduleData.dimensions.depth(600)로 stale 저장된 경우 무시
             const _isShoeCat2 =
