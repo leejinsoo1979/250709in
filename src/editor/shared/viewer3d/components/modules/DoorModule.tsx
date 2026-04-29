@@ -1061,9 +1061,13 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   // 순차 애니메이션 (속서랍 있는 가구가 있을 때만 적용):
   //   - 열릴 때: 도어가 먼저 회전(즉시) → 그 후 서랍이 인출(500ms 지연)
   //   - 닫힐 때: 서랍이 먼저 들어감(즉시) → 그 후 도어 회전(500ms 지연)
-  // 속서랍 가구 = 인출장 (pull-out-cabinet) — 다른 가구들은 지연 불필요
+  // 속서랍 가구 = 인출장 + 의류장 서랍 가구(2drawer-hanging, 4drawer-hanging)
   const hasInnerDrawerModule = useMemo(() =>
-    allPlacedModules.some(m => typeof m.moduleId === 'string' && m.moduleId.includes('pull-out-cabinet')),
+    allPlacedModules.some(m => typeof m.moduleId === 'string' && (
+      m.moduleId.includes('pull-out-cabinet') ||
+      m.moduleId.includes('2drawer-hanging') ||
+      m.moduleId.includes('4drawer-hanging')
+    )),
     [allPlacedModules]
   );
   const doorDelay = (hasInnerDrawerModule && !shouldOpenDoors) ? 500 : 0;

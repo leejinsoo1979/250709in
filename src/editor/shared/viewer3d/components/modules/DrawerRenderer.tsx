@@ -403,11 +403,18 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
   // 일반 서랍장(외부 서랍)은 인출 애니메이션 없음
   const { doorsOpen } = useUIStore();
   const shouldOpenDrawers = doorsOpen === true;
-  // 현재 가구가 인출장(속서랍 보유)인지 확인
+  // 현재 가구가 속서랍 인출 애니메이션 대상인지 확인
+  // - 인출장(pull-out-cabinet): 1단 속서랍 인출
+  // - 의류장 서랍 가구(2drawer-hanging, 4drawer-hanging 등): 도어 안쪽 서랍 인출
   const isInnerDrawerModule = useFurnitureStore(state => {
     if (!furnitureId) return false;
     const m = state.placedModules.find(p => p.id === furnitureId);
-    return !!(m && typeof m.moduleId === 'string' && m.moduleId.includes('pull-out-cabinet'));
+    if (!m || typeof m.moduleId !== 'string') return false;
+    return (
+      m.moduleId.includes('pull-out-cabinet') ||
+      m.moduleId.includes('2drawer-hanging') ||
+      m.moduleId.includes('4drawer-hanging')
+    );
   });
   const drawerSlideSpring = useSpring({
     // 인출장만 인출, 다른 서랍은 0
