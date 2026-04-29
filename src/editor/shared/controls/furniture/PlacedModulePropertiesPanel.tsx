@@ -3026,7 +3026,11 @@ const PlacedModulePropertiesPanel: React.FC = () => {
             const sectionCount = isCustom ? ccSections!.length : mcSections!.length;
             const pt = isCustom ? (cc!.panelThickness || 18) : (moduleData?.modelConfig?.basicThickness || 18);
             const totalH = currentPlacedModule.freeHeight || moduleData?.dimensions?.height || 2200;
-            const totalW = currentPlacedModule.freeWidth || moduleData?.dimensions?.width || 600;
+            const totalW = currentPlacedModule.freeWidth
+              ?? currentPlacedModule.adjustedWidth
+              ?? currentPlacedModule.customWidth
+              ?? moduleData?.dimensions?.width
+              ?? 600;
             const totalD = currentPlacedModule.customDepth || currentPlacedModule.freeDepth || moduleData?.dimensions?.depth || 580;
 
             // 표준 가구의 섹션 높이: 마지막(상부) 섹션은 실제 공간에서 하부섹션/프레임 빼서 계산
