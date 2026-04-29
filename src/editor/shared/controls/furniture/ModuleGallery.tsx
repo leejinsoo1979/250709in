@@ -1105,12 +1105,10 @@ const ModuleGallery: React.FC<ModuleGalleryProps> = ({ moduleCategory = 'tall', 
       categoryModules = getModulesByCategory('upper', adjustedInternalSpace, spaceInfoWithSlotWidths);
     } else if (kitchenSubCategory === 'tall') {
       // 키큰장 = full 카테고리 전체 노출 (빌트인 냉장고장 / Insert 프레임 제외)
-      // 신발장은 별도 카테고리이므로 함께 제외
       const allFullModules = getModulesByCategory('full', adjustedInternalSpace, spaceInfoWithSlotWidths);
       categoryModules = allFullModules.filter(m =>
         !m.id.includes('built-in-fridge') &&
-        !m.id.includes('insert-frame') &&
-        !isShoeModuleId(m.id)
+        !m.id.includes('insert-frame')
       );
     } else {
       // 기본장/도어올림/상판내림 = lower 중 ID 패턴으로 분기
