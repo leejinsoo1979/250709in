@@ -2138,14 +2138,14 @@ export default React.memo(BaseFurnitureShell, (prevProps, nextProps) => {
     JSON.stringify(prevProps.panelGrainDirections) === JSON.stringify(nextProps.panelGrainDirections);
 
   // 인출장/팬트리장/냉장고장(N섹션 가구): sectionDepths/sectionDepthDirections는 store에서 직접 읽으므로
-  // memo를 우회하여 항상 리렌더링되게 함 (성능 손실 미미 — 해당 가구만 적용)
+  // memo를 우회하여 항상 리렌더링되게 함
   const isNSectionForMemo = !!(
     nextProps.moduleData?.id?.includes('pull-out-cabinet') ||
     nextProps.moduleData?.id?.includes('pantry-cabinet') ||
     (nextProps.moduleData?.id?.includes('fridge-cabinet') && !nextProps.moduleData?.id?.includes('built-in-fridge'))
   );
   if (isNSectionForMemo) {
-    return false; // 항상 리렌더 → store sectionDepths 변경 즉시 반영
+    return false;
   }
 
   // 모든 중요 props가 같으면 true 반환 (리렌더링 방지)
