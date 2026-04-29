@@ -241,6 +241,7 @@ export const calculatePanelDetails = (
       const sectionPrefix = sectionName === '상부장' ? '(상)' : sectionName === '하부장' ? '(하)' : '';
 
       // 상하 분리 측판 가구 여부 확인
+      // (3D 렌더링 BaseFurnitureShell의 측판 분할 조건과 일치해야 패널목록과 3D가 매칭됨)
       const isSplitSidePanelFurniture =
         moduleData.id.includes('4drawer-hanging') ||
         moduleData.id.includes('2drawer-hanging') ||
@@ -251,7 +252,10 @@ export const calculatePanelDetails = (
         moduleData.id.includes('single-shelf-') ||
         moduleData.id.includes('dual-shelf-') ||
         moduleData.id.includes('4drawer-pantshanger') ||
-        moduleData.id.includes('2drawer-styler');
+        moduleData.id.includes('2drawer-styler') ||
+        moduleData.id.includes('pull-out-cabinet') ||
+        moduleData.id.includes('pantry-cabinet') ||
+        moduleData.id.includes('fridge-cabinet');
 
       // 측판 높이는 섹션 높이 그대로 사용 (3D 렌더링의 getSectionHeights와 동일)
       const adjustedSectionHeight = sectionHeightMm;
@@ -281,12 +285,19 @@ export const calculatePanelDetails = (
       // 그 외는 통짜로 첫 번째 섹션에만 추가
       if (sections.length >= 2 && isSplitSidePanelFurniture) {
         const sidePanelHeight = adjustedSectionHeight;
+        // 냉장고장(반통/built-in 제외): 좌우 측판은 가구재 두께 −3mm (18→15, 18.5→15.5)
+        // 3D BaseFurnitureShell line 644 와 동일한 분기
+        const isFridgeCabinetSplitSide =
+          moduleData.id.includes('fridge-cabinet') && !moduleData.id.includes('built-in-fridge');
+        const splitSideThickness = isFridgeCabinetSplitSide
+          ? Math.max(basicThickness - 3, 1)
+          : basicThickness;
         // 상하 분리: 각 섹션마다 좌측판 추가
         targetPanel.push({
           name: `${sectionPrefix}좌측`,
           width: leftSideDepth,
           height: sidePanelHeight,
-          thickness: basicThickness,
+          thickness: splitSideThickness,
           material: 'PB'
         });
 
@@ -297,7 +308,7 @@ export const calculatePanelDetails = (
               name: '우측판',
               width: rightSideDepth,
               height: height,
-              thickness: basicThickness,
+              thickness: splitSideThickness,
               material: 'PB'
             });
           }
@@ -307,7 +318,7 @@ export const calculatePanelDetails = (
             name: `${sectionPrefix}우측`,
             width: rightSideDepth,
             height: sidePanelHeight,
-            thickness: basicThickness,
+            thickness: splitSideThickness,
             material: 'PB'
           });
         }
