@@ -17,12 +17,20 @@ import { calcResizedPositionX } from '@/editor/shared/utils/freePlacementUtils';
 import { SURROUND_PANEL_THICKNESS } from '@/data/modules/surroundPanels';
 import styles from './PlacedModulePropertiesPanel.module.css';
 
-// 가구 썸네일 이미지 경로
+// 가구 썸네일 이미지 경로 — ModuleGallery와 동일한 규칙
 const getImagePath = (filename: string) => {
-  return `${import.meta.env.BASE_URL}images/furniture-thumbnails/${filename}`;
+  return `/images/furniture-thumbnails/${filename}`;
 };
 
+// ModuleGallery의 FURNITURE_ICONS와 동일하게 동기화 유지 (수정 시 양쪽 함께 변경)
 const FURNITURE_ICONS: Record<string, string> = {
+  // 키큰장 (주방)
+  'built-in-fridge': getImagePath('single_builtin.png'),
+  'insert-frame': getImagePath('insert_frame.png'),
+  'dual-built-in-fridge': getImagePath('dual_builtin.png'),
+  'single-pull-out-cabinet': getImagePath('microwave.png'),
+  'single-pantry-cabinet': getImagePath('pantry.png'),
+  'single-fridge-cabinet': getImagePath('single_builtin.png'),
   'single-2drawer-hanging': getImagePath('single-2drawer-hanging.png'),
   'single-2hanging': getImagePath('single-2hanging.png'),
   'single-4drawer-hanging': getImagePath('single-4drawer-hanging.png'),
@@ -31,12 +39,65 @@ const FURNITURE_ICONS: Record<string, string> = {
   'dual-4drawer-hanging': getImagePath('dual-4drawer-hanging.png'),
   'dual-2drawer-styler': getImagePath('dual-2drawer-styler.png'),
   'dual-4drawer-pantshanger': getImagePath('dual-4drawer-pantshanger.png'),
-  // 키큰장 (주방): ModuleGallery의 매핑과 일치
-  'single-pull-out-cabinet': getImagePath('microwave.png'),
-  'single-pantry-cabinet': getImagePath('pantry.png'),
-  'single-fridge-cabinet': getImagePath('single_builtin.png'),
-  'built-in-fridge': getImagePath('single_builtin.png'),
-  'dual-built-in-fridge': getImagePath('dual_builtin.png'),
+  // 싱글 상부장
+  'upper-cabinet-shelf': getImagePath('upper-cabinet-shelf.png'),
+  'upper-cabinet-2tier': getImagePath('upper-cabinet-2tier.png'),
+  'upper-cabinet-open': getImagePath('upper-cabinet-open.png'),
+  'upper-cabinet-mixed': getImagePath('upper-cabinet-mixed.png'),
+  // 싱글 하부장 (새)
+  'lower-half-cabinet': getImagePath('lower-half-cabinet.png'),
+  'lower-sink-cabinet': getImagePath('lower-sink-cabinet.png'),
+  'lower-induction-cabinet': getImagePath('lower-induction-cabinet.png'),
+  // 듀얼 상부장
+  'dual-upper-cabinet-shelf': getImagePath('dual-upper-cabinet-shelf.png'),
+  'dual-upper-cabinet-2tier': getImagePath('dual-upper-cabinet-2tier.png'),
+  'dual-upper-cabinet-open': getImagePath('dual-upper-cabinet-open.png'),
+  'dual-upper-cabinet-mixed': getImagePath('dual-upper-cabinet-mixed.png'),
+  // 듀얼 하부장 (새)
+  'dual-lower-half-cabinet': getImagePath('dual-lower-half-cabinet.png'),
+  'dual-lower-sink-cabinet': getImagePath('dual-lower-sink-cabinet.png'),
+  'dual-lower-induction-cabinet': getImagePath('dual-lower-induction-cabinet.png'),
+  // 기본 하부장 서랍
+  'lower-drawer-2tier': getImagePath('lower-drawer-2tier.png'),
+  'dual-lower-drawer-2tier': getImagePath('dual-lower-drawer-2tier.png'),
+  'lower-drawer-3tier': getImagePath('lower-drawer-3tier.png'),
+  'dual-lower-drawer-3tier': getImagePath('dual-lower-drawer-3tier.png'),
+  // 도어올림 하부장
+  'lower-door-lift-half': getImagePath('lower-door-lift-half.png'),
+  'dual-lower-door-lift-half': getImagePath('dual-lower-door-lift-half.png'),
+  'lower-door-lift-2tier': getImagePath('lower-door-lift-2tier.png'),
+  'dual-lower-door-lift-2tier': getImagePath('dual-lower-door-lift-2tier.png'),
+  'lower-door-lift-3tier': getImagePath('lower-door-lift-3tier.png'),
+  'dual-lower-door-lift-3tier': getImagePath('dual-lower-door-lift-3tier.png'),
+  // 도어올림 터치 하부장
+  'lower-door-lift-touch-2tier-a': getImagePath('lower-door-lift-touch-2tier-a.png'),
+  'dual-lower-door-lift-touch-2tier-a': getImagePath('dual-lower-door-lift-touch-2tier-a.png'),
+  'lower-door-lift-touch-2tier-b': getImagePath('lower-door-lift-touch-2tier-b.png'),
+  'dual-lower-door-lift-touch-2tier-b': getImagePath('dual-lower-door-lift-touch-2tier-b.png'),
+  'lower-door-lift-touch-3tier': getImagePath('lower-door-lift-touch-3tier.png'),
+  'dual-lower-door-lift-touch-3tier': getImagePath('dual-lower-door-lift-touch-3tier.png'),
+  // 상판내림 하부장
+  'lower-top-down-half': getImagePath('lower-top-down-half.png'),
+  'dual-lower-top-down-half': getImagePath('dual-lower-top-down-half.png'),
+  'lower-top-down-2tier': getImagePath('lower-top-down-2tier.png'),
+  'dual-lower-top-down-2tier': getImagePath('dual-lower-top-down-2tier.png'),
+  'lower-top-down-3tier': getImagePath('lower-top-down-3tier.png'),
+  'dual-lower-top-down-3tier': getImagePath('dual-lower-top-down-3tier.png'),
+  'lower-top-down-touch-2tier': getImagePath('lower-top-down-touch-2tier.png'),
+  'dual-lower-top-down-touch-2tier': getImagePath('dual-lower-top-down-touch-2tier.png'),
+  'lower-top-down-touch-3tier': getImagePath('lower-top-down-touch-3tier.png'),
+  'dual-lower-top-down-touch-3tier': getImagePath('dual-lower-top-down-touch-3tier.png'),
+  // 싱글 선반장
+  'single-2drawer-shelf': getImagePath('7.png'),
+  'single-4drawer-shelf': getImagePath('8.png'),
+  'single-shelf': getImagePath('9.png'),
+  // 듀얼 선반장
+  'dual-4drawer-shelf': getImagePath('18.png'),
+  'dual-2drawer-shelf': getImagePath('19.png'),
+  'dual-shelf': getImagePath('20.png'),
+  // 현관장 H
+  'single-entryway-h': getImagePath('entrance_single-H.png'),
+  'dual-entryway-h': getImagePath('entrance_duel-H.png'),
 };
 
 // 가구 이미지 매핑 함수 — 매핑에 없으면 null 반환 (텍스트 썸네일로 대체)
