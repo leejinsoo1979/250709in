@@ -740,7 +740,12 @@ const DoorModule: React.FC<DoorModuleProps> = ({
       }
 
       const myX = storePlacedModule.position?.x ?? 0;
-      const myWidth = (storePlacedModule.customWidth ?? 0) * 0.01; // mm → three units
+      // 자유배치 가구는 freeWidth, 그 외에는 customWidth 사용
+      const getWidthThree = (m: any) => {
+        const w = m.freeWidth ?? m.customWidth ?? m.moduleWidth ?? 0;
+        return w * 0.01;
+      };
+      const myWidth = getWidthThree(storePlacedModule);
       const myLeft = myX - myWidth / 2;
       const myRight = myX + myWidth / 2;
       const TOL = 0.5; // 50mm 허용 오차 (three units) — 자유배치 가구 사이 여유분/도어 두께 대응
@@ -757,14 +762,14 @@ const DoorModule: React.FC<DoorModuleProps> = ({
       const left = allPlacedModules.some(m => {
         if (!isAdjFree(m)) return false;
         const mx = m.position?.x ?? 0;
-        const mw = (m.customWidth ?? 0) * 0.01;
+        const mw = getWidthThree(m);
         // 인서트 프레임이 내 왼쪽에 있으면 도어 좌측 확장
         return mx < myX && Math.abs((mx + mw / 2) - myLeft) <= TOL;
       });
       const right = allPlacedModules.some(m => {
         if (!isAdjFree(m)) return false;
         const mx = m.position?.x ?? 0;
-        const mw = (m.customWidth ?? 0) * 0.01;
+        const mw = getWidthThree(m);
         // 인서트 프레임이 내 오른쪽에 있으면 도어 우측 확장
         return mx > myX && Math.abs((mx - mw / 2) - myRight) <= TOL;
       });

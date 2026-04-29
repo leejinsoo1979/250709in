@@ -351,18 +351,21 @@ export const calculatePanelDetails = (
           if (notches.length > 0) sidePanelNotches = notches;
         }
 
+        // 냉장고장(반통/built-in 제외): 좌우 측판은 가구재 두께 −3mm (18→15, 18.5→15.5)
+        const isFridgeCabinetSidePanel = id.includes('fridge-cabinet') && !id.includes('built-in-fridge');
+        const sideThickness = isFridgeCabinetSidePanel ? Math.max(basicThickness - 3, 1) : basicThickness;
         const leftSideEntry: any = {
           name: '좌측판',
           width: leftSideDepth,
           height: height,
-          thickness: basicThickness,
+          thickness: sideThickness,
           material: 'PB'
         };
         const rightSideEntry: any = {
           name: '우측판',
           width: rightSideDepth,
           height: height,
-          thickness: basicThickness,
+          thickness: sideThickness,
           material: 'PB'
         };
         if (sidePanelNotches) {

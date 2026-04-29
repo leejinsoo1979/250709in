@@ -15,6 +15,7 @@ import { useUIStore } from '@/store/uiStore';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useTranslation } from '@/i18n/useTranslation';
 import { getStandardDimensionKey } from './CustomizableFurnitureLibrary';
+import { useAuth } from '@/auth/AuthProvider';
 
 // 가구 아이콘 매핑 - 각 가구 타입에 맞는 이미지 사용
 // import.meta.env.BASE_URL을 사용하여 GitHub Pages base path 자동 적용
@@ -1016,6 +1017,8 @@ interface ModuleGalleryProps {
 
 const ModuleGallery: React.FC<ModuleGalleryProps> = ({ moduleCategory = 'tall', kitchenSubCategory = 'basic', selectedType: externalSelectedType, onSelectedTypeChange, hideTabMenu = false }) => {
   const { t } = useTranslation();
+  const { user: authUser } = useAuth();
+  const isDevAccount = authUser?.email === 'sbbc212@gmail.com';
   // 선택된 탭 상태 (전체/싱글/듀얼/커스텀)
   const [internalSelectedType, setInternalSelectedType] = useState<ModuleType>('all');
   // 주방 카테고리는 싱글/듀얼 구분 없이 항상 'all'로 고정
@@ -1106,12 +1109,13 @@ const ModuleGallery: React.FC<ModuleGalleryProps> = ({ moduleCategory = 'tall', 
       categoryModules = getModulesByCategory('upper', adjustedInternalSpace, spaceInfoWithSlotWidths);
     } else if (kitchenSubCategory === 'tall') {
       // 키큰장 = 주방 키큰장 전용 모듈 (인출장, 팬트리장, 냉장고장)
-      // 빌트인 냉장고장 / Insert 프레임은 별도 처리 → 키큰장 카테고리에서 제외
+      // 개발자 계정(sbbc212@gmail.com)에서는 빌트인 냉장고장 / Insert 프레임도 함께 노출
       const allFullModules = getModulesByCategory('full', adjustedInternalSpace, spaceInfoWithSlotWidths);
       categoryModules = allFullModules.filter(m =>
         m.id.includes('pull-out-cabinet') ||
         m.id.includes('pantry-cabinet') ||
-        m.id.includes('fridge-cabinet')
+        m.id.includes('fridge-cabinet') ||
+        (isDevAccount && (m.id.includes('built-in-fridge') || m.id.includes('insert-frame')))
       );
     } else {
       // 기본장/도어올림/상판내림 = lower 중 ID 패턴으로 분기
