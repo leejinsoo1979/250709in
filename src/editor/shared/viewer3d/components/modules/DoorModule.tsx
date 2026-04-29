@@ -796,7 +796,14 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   }, [allPlacedModules, storePlacedModule]);
 
   const effectiveFurnitureWidth = actualDoorWidth;
-  const isDualFurniture = isDualByModuleId || Math.round(effectiveFurnitureWidth) >= 601;
+  // 팬트리장/인출장/냉장고장(빌트인 포함)은 600mm 초과해도 도어 1짝 유지 (단일 도어 전용 키큰장)
+  const isSingleDoorOnlyCabinet = !!(
+    moduleData?.id?.includes('pantry-cabinet') ||
+    moduleData?.id?.includes('pull-out-cabinet') ||
+    moduleData?.id?.includes('fridge-cabinet') ||
+    moduleData?.id?.includes('built-in-fridge')
+  );
+  const isDualFurniture = isDualByModuleId || (!isSingleDoorOnlyCabinet && Math.round(effectiveFurnitureWidth) >= 601);
   
   // mm를 Three.js 단위로 변환
   const mmToThreeUnits = (mm: number) => mm * 0.01;
