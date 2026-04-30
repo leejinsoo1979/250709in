@@ -542,7 +542,7 @@ const Header: React.FC<HeaderProps> = ({
                   </button>
                   <div
                     className={styles.dropdownItemWithSubmenu}
-                    style={{ display: 'none' }}
+                    style={{ display: user?.email === 'sbbc212@gmail.com' ? undefined : 'none' }}
                     onMouseEnter={() => {
                       if (submenuTimeoutRef.current) {
                         clearTimeout(submenuTimeoutRef.current);
