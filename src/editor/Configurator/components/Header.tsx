@@ -603,19 +603,6 @@ const Header: React.FC<HeaderProps> = ({
                           onClick={(e) => {
                             e.preventDefault();
                             e.stopPropagation();
-                            console.log('📦 Header - STL로 다운로드 버튼 클릭됨');
-                            setIsFileMenuOpen(false);
-                            setIs3DExportSubmenuOpen(false);
-                            onExport3D?.('stl');
-                          }}
-                        >
-                          STL 파일 (.stl)
-                        </button>
-                        <button
-                          className={styles.submenuItem}
-                          onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
                             console.log('📦 Header - DAE로 다운로드 버튼 클릭됨');
                             setIsFileMenuOpen(false);
                             setIs3DExportSubmenuOpen(false);
