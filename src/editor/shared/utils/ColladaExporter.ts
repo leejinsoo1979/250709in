@@ -15,6 +15,7 @@ export class ColladaExporter {
 
   /**
    * Three.js 객체를 Collada XML 문자열로 변환
+   * 같은 패널 이름끼리 부모 그룹 노드로 묶어서 SketchUp에서 패널별 그룹/태그로 임포트되게 한다.
    */
   parse(object: THREE.Object3D): string {
     this.geometryId = 0;
@@ -24,77 +25,88 @@ export class ColladaExporter {
     const geometries: string[] = [];
     const materials: string[] = [];
     const materialEffects: string[] = [];
-    const nodes: string[] = [];
     const materialMap = new Map<string, string>();
+
+    // 패널 이름별로 자식 노드 모음 (같은 이름 = 같은 그룹)
+    const panelGroups = new Map<string, string[]>();
+    const unnamedNodes: string[] = [];
 
     console.log('🔧 ColladaExporter.parse 시작');
     console.log('📦 입력 객체:', object.name, object.type);
 
-    // 먼저 전체 월드 매트릭스 업데이트
     object.updateMatrixWorld(true);
 
     let meshCount = 0;
 
-    // 메쉬 수집
     object.traverse((child) => {
       if ((child as THREE.Mesh).isMesh) {
         meshCount++;
         const mesh = child as THREE.Mesh;
         const geometry = mesh.geometry;
 
-        console.log(`  🔍 메쉬 발견: ${mesh.name || '(unnamed)'}, geometry:`, geometry ? 'exists' : 'null');
-
         if (!geometry) return;
 
-        // Y-up → Z-up 변환을 적용한 월드 매트릭스
         const worldMatrix = new THREE.Matrix4();
         worldMatrix.multiplyMatrices(this.yUpToZUpMatrix, mesh.matrixWorld);
 
-        // 지오메트리 처리
         const geoId = `geometry_${this.geometryId++}`;
         const geoXml = this.processGeometry(geometry, geoId, worldMatrix);
-        if (geoXml) {
-          geometries.push(geoXml);
+        if (!geoXml) return;
+        geometries.push(geoXml);
 
-          // 재질 처리
-          let matId = 'default_material';
-          if (mesh.material) {
-            const mat = Array.isArray(mesh.material) ? mesh.material[0] : mesh.material;
-            const matKey = this.getMaterialKey(mat);
+        let matId = 'default_material';
+        if (mesh.material) {
+          const mat = Array.isArray(mesh.material) ? mesh.material[0] : mesh.material;
+          const matKey = this.getMaterialKey(mat);
 
-            if (!materialMap.has(matKey)) {
-              matId = `material_${this.materialId++}`;
-              materialMap.set(matKey, matId);
-              const { material, effect } = this.processMaterial(mat, matId);
-              materials.push(material);
-              materialEffects.push(effect);
-            } else {
-              matId = materialMap.get(matKey)!;
-            }
+          if (!materialMap.has(matKey)) {
+            matId = `material_${this.materialId++}`;
+            materialMap.set(matKey, matId);
+            const { material, effect } = this.processMaterial(mat, matId);
+            materials.push(material);
+            materialEffects.push(effect);
+          } else {
+            matId = materialMap.get(matKey)!;
           }
+        }
 
-          // 노드 생성 - mesh.name 또는 부모 그룹 이름을 layer로 사용
-          const layerName = this.resolveLayerName(mesh);
-          const nodeXml = this.createNode(geoId, matId, layerName);
-          nodes.push(nodeXml);
+        const panelName = this.resolveLayerName(mesh);
+        const childNodeXml = this.createInstanceNode(geoId, matId, panelName);
+
+        if (panelName) {
+          let arr = panelGroups.get(panelName);
+          if (!arr) {
+            arr = [];
+            panelGroups.set(panelName, arr);
+          }
+          arr.push(childNodeXml);
+        } else {
+          unnamedNodes.push(childNodeXml);
         }
       }
     });
 
-    console.log(`📊 메쉬 총 개수: ${meshCount}, 처리된 지오메트리: ${geometries.length}`);
+    console.log(`📊 메쉬 총 개수: ${meshCount}, 패널 그룹: ${panelGroups.size}, 이름없는 노드: ${unnamedNodes.length}`);
 
-    // 기본 재질 추가
     if (!materialMap.has('default')) {
       const { material, effect } = this.processMaterial(null, 'default_material');
       materials.push(material);
       materialEffects.push(effect);
     }
 
+    // 패널 이름별로 부모 <node> 그룹 생성. 부모 노드에도 layer/name 부여.
+    const groupedNodes: string[] = [];
+    for (const [panelName, childNodes] of panelGroups.entries()) {
+      groupedNodes.push(this.createGroupNode(panelName, childNodes));
+    }
+    // 이름 없는 메시는 그대로 최상위에 둠
+    groupedNodes.push(...unnamedNodes);
+
     if (geometries.length === 0) {
       console.warn('⚠️ 내보낼 지오메트리가 없습니다!');
     }
 
-    return this.buildDocument(geometries, materials, materialEffects, nodes);
+    return this.buildDocument(geometries, materials, materialEffects, groupedNodes);
   }
 
   /**
@@ -250,11 +262,13 @@ export class ColladaExporter {
   /**
    * 노드 생성
    */
-  private createNode(geometryId: string, materialId: string, layerName?: string): string {
+  /**
+   * 단일 mesh를 담는 leaf 노드 (geometry instance 포함).
+   */
+  private createInstanceNode(geometryId: string, materialId: string, layerName?: string): string {
     const nodeId = `node_${this.nodeId++}`;
     const safeName = this.escapeXmlAttr(layerName || nodeId);
-    // layer 속성: SketchUp이 DAE 임포트 시 Tag(레이어)로 인식
-    const layerAttr = layerName ? ` layer="${safeName}"` : '';
+    const layerAttr = layerName ? ` layer="${this.escapeXmlAttr(layerName)}"` : '';
     return `
       <node id="${nodeId}" name="${safeName}"${layerAttr} type="NODE">
         <instance_geometry url="#${geometryId}">
@@ -264,6 +278,19 @@ export class ColladaExporter {
             </technique_common>
           </bind_material>
         </instance_geometry>
+      </node>`;
+  }
+
+  /**
+   * 같은 패널 이름의 자식 노드들을 묶는 부모 그룹 노드.
+   * SketchUp이 DAE 임포트 시 그룹 + layer로 인식한다.
+   */
+  private createGroupNode(panelName: string, childNodes: string[]): string {
+    const groupId = `group_${this.nodeId++}`;
+    const safeName = this.escapeXmlAttr(panelName);
+    return `
+      <node id="${groupId}" name="${safeName}" layer="${safeName}" type="NODE">
+        ${childNodes.join('\n')}
       </node>`;
   }
 
