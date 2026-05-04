@@ -48,6 +48,45 @@ const THREE_UNIT_TO_MM = 100;
 const Y_UP_TO_Z_UP = new THREE.Matrix4().makeRotationX(Math.PI / 2);
 
 /**
+ * Export 대상에서 제외해야 하는 보조 메시 패턴.
+ * - 치수/치수텍스트
+ * - 도어 대각선(인테리어/외부 구분 표시)
+ * - 가이드/축/그리드/라벨/타공점 등
+ */
+const AUX_PATTERNS = [
+  'dimension', 'measure', '치수',
+  'diagonal',                    // door-diagonal
+  'guide', 'helper', 'axis', 'grid',
+  'label', 'text',
+  'ghost', 'preview', 'overlay', 'outline', 'bounds',
+  'indicator',
+  'boring', 'drill',             // 타공 표시
+  'ventilation', '환기',
+  'clothing-rod-line',
+  'nativeline',
+];
+
+/**
+ * 메시 또는 그 조상 트리에 보조 메시 패턴이 포함되어 있는지 검사.
+ */
+const isAuxiliaryMesh = (mesh: THREE.Mesh): boolean => {
+  const check = (name: string | undefined): boolean => {
+    if (!name) return false;
+    const lower = name.toLowerCase();
+    return AUX_PATTERNS.some(p => lower.includes(p));
+  };
+
+  if (check(mesh.name)) return true;
+
+  let cur: THREE.Object3D | null = mesh.parent;
+  while (cur) {
+    if (check(cur.name)) return true;
+    cur = cur.parent;
+  }
+  return false;
+};
+
+/**
  * mesh 이름에서 prefix 정리 → 패널 이름 추출.
  * ColladaExporter.cleanPanelName과 동일 규칙.
  */
@@ -77,6 +116,11 @@ export const sceneToPanelJSON = (
     const mesh = obj as THREE.Mesh;
     if (!mesh.isMesh) return;
     if (!mesh.geometry) return;
+
+    // === export 제외 대상 ===
+    // 치수/가이드/대각선 등 보조 표시용 메시는 SketchUp으로 보내지 않는다.
+    // 자기 자신의 이름 또는 부모 트리의 이름에 매칭되면 제외.
+    if (isAuxiliaryMesh(mesh)) return;
 
     const panelMesh = serializeMesh(mesh);
     if (!panelMesh) return;
