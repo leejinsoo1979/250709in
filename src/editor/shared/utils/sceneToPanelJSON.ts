@@ -107,6 +107,33 @@ export const sceneToPanelJSON = (
     }
   });
 
+  // === 원점 이동: 가구의 좌측 하단(min x, min y, min z)을 (0,0,0)으로 ===
+  // SketchUp 좌표(Z-up): X=좌우, Y=앞뒤(깊이), Z=위아래
+  // 사용자가 임포트 시 가구의 좌측 하단 모서리가 원점에 오도록 모든 정점에서 min을 뺀다.
+  let minX = Infinity, minY = Infinity, minZ = Infinity;
+
+  const collectMin = (m: PanelMesh) => {
+    for (let i = 0; i < m.vertices.length; i += 3) {
+      if (m.vertices[i] < minX) minX = m.vertices[i];
+      if (m.vertices[i + 1] < minY) minY = m.vertices[i + 1];
+      if (m.vertices[i + 2] < minZ) minZ = m.vertices[i + 2];
+    }
+  };
+  groupMap.forEach((meshes) => meshes.forEach(collectMin));
+  unnamed.forEach(collectMin);
+
+  if (Number.isFinite(minX) && Number.isFinite(minY) && Number.isFinite(minZ)) {
+    const shift = (m: PanelMesh) => {
+      for (let i = 0; i < m.vertices.length; i += 3) {
+        m.vertices[i] -= minX;
+        m.vertices[i + 1] -= minY;
+        m.vertices[i + 2] -= minZ;
+      }
+    };
+    groupMap.forEach((meshes) => meshes.forEach(shift));
+    unnamed.forEach(shift);
+  }
+
   const groups: PanelGroup[] = Array.from(groupMap.entries()).map(([name, meshes]) => ({
     name,
     meshes,
