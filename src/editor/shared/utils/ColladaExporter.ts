@@ -73,8 +73,9 @@ export class ColladaExporter {
             }
           }
 
-          // 노드 생성
-          const nodeXml = this.createNode(geoId, matId);
+          // 노드 생성 - mesh.name 또는 부모 그룹 이름을 layer로 사용
+          const layerName = this.resolveLayerName(mesh);
+          const nodeXml = this.createNode(geoId, matId, layerName);
           nodes.push(nodeXml);
         }
       }
@@ -249,10 +250,13 @@ export class ColladaExporter {
   /**
    * 노드 생성
    */
-  private createNode(geometryId: string, materialId: string): string {
+  private createNode(geometryId: string, materialId: string, layerName?: string): string {
     const nodeId = `node_${this.nodeId++}`;
+    const safeName = this.escapeXmlAttr(layerName || nodeId);
+    // layer 속성: SketchUp이 DAE 임포트 시 Tag(레이어)로 인식
+    const layerAttr = layerName ? ` layer="${safeName}"` : '';
     return `
-      <node id="${nodeId}" name="${nodeId}" type="NODE">
+      <node id="${nodeId}" name="${safeName}"${layerAttr} type="NODE">
         <instance_geometry url="#${geometryId}">
           <bind_material>
             <technique_common>
@@ -261,6 +265,56 @@ export class ColladaExporter {
           </bind_material>
         </instance_geometry>
       </node>`;
+  }
+
+  /**
+   * 메시 또는 부모 그룹의 이름에서 layer로 사용할 이름 추출.
+   * 가구 메시는 "furniture-mesh-좌측판" 같이 prefix가 붙어있으므로 정리한다.
+   *
+   * 매칭되는 형태:
+   *   - "furniture-mesh-좌측판"      → "좌측판"
+   *   - "back-panel-mesh-백패널"     → "백패널"
+   *   - "furniture-edge-좌측판-0"    → 무시 (edge 메시는 가구 본체 아님)
+   *   - "*-mesh"                     → 접미사 제거
+   *   - 위 패턴 아니면 부모 그룹의 이름을 따라간다
+   */
+  private resolveLayerName(mesh: THREE.Mesh): string | undefined {
+    const cleaned = this.cleanPanelName(mesh.name);
+    if (cleaned) return cleaned;
+
+    let current: THREE.Object3D | null = mesh.parent;
+    while (current) {
+      const parentCleaned = this.cleanPanelName(current.name);
+      if (parentCleaned &&
+          parentCleaned !== 'FurnitureContainer' &&
+          parentCleaned !== 'Scene') {
+        return parentCleaned;
+      }
+      current = current.parent;
+    }
+    return undefined;
+  }
+
+  private cleanPanelName(rawName: string | undefined | null): string | undefined {
+    if (!rawName || rawName.trim() === '') return undefined;
+    let n = rawName.trim();
+
+    // CNC 옵티마이저와 동일한 prefix 정리
+    n = n.replace(/^(furniture-mesh-|back-panel-mesh-)/, '');
+    n = n.replace(/^(furniture-edge-|back-panel-edge-)/, '');
+    if (n.endsWith('-mesh')) n = n.slice(0, -5);
+    // edge에 붙은 라인 인덱스 제거 ("좌측판-0" → "좌측판")
+    n = n.replace(/-\d+$/, '');
+
+    return n.trim() || undefined;
+  }
+
+  private escapeXmlAttr(s: string): string {
+    return s
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
   }
 
   /**
