@@ -412,7 +412,9 @@ export const use3DExport = () => {
 
       console.log('📦 Scene 확인:', scene.name, scene.type);
 
-      const exportGroup = prepareExportGroup(scene);
+      // DAE는 자체적으로 mm 단위 출력 + 좌측 하단 시프트 처리하므로
+      // prepareExportGroup의 scale은 1.0으로 (기본 0.1은 GLB/OBJ/STL용)
+      const exportGroup = prepareExportGroup(scene, 1);
       console.log('📦 Export Group children:', exportGroup.children.length);
 
       if (exportGroup.children.length === 0) {
