@@ -175,8 +175,9 @@ module TTTCraft
 
       # SketchUp Ruby API 가장자리 플래그 비트:
       #   1 = SOFTEN, 2 = HIDE, 4 = SMOOTH, 8 = SOFTEN_BASED_ON_INDEX
-      # 12 = SMOOTH(4) + SOFTEN_BASED_ON_INDEX(8): PolygonMesh 내부에서 부드럽게
-      smooth_flags = 12
+      # 0 = 평평한 면 (smooth shading 없음, 모든 가장자리 보임)
+      # 후처리에서 공평면 가장자리만 hide → smooth shading 없는 깔끔한 박스
+      smooth_flags = 0
 
       added = entities.add_faces_from_mesh(mesh, smooth_flags, material, material)
       face_count = added if added.is_a?(Integer)
@@ -200,9 +201,10 @@ module TTTCraft
         n2 = faces[1].normal
         next if n1.length == 0 || n2.length == 0
         if n1.dot(n2).abs >= PLANAR_DOT_THRESHOLD
+          # hidden만 true (soft/smooth는 그라데이션 셰이딩을 일으키므로 사용 안 함)
           edge.hidden = true
-          edge.soft = true
-          edge.smooth = true
+          edge.soft = false
+          edge.smooth = false
         end
       end
     rescue StandardError => e
