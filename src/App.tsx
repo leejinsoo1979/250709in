@@ -15,6 +15,7 @@ import MobileDashboard from '@/editor/MobileEditor/MobileDashboard';
 import MobileLogin from '@/editor/MobileEditor/MobileLogin';
 import MobileAuthGuard from '@/editor/MobileEditor/MobileAuthGuard';
 import SimpleDashboard from '@/pages/SimpleDashboard';
+import SketchUpDashboard from '@/pages/SketchUpDashboard';
 import TestDashboard from '@/pages/TestDashboard';
 import ViewerPage from '@/pages/ViewerPage';
 import GalleryPage from '@/pages/GalleryPage';
@@ -175,6 +176,9 @@ function AppContent() {
         <Route path="/mobile/login" element={<MobileLogin />} />
         <Route path="/mobile" element={<MobileAuthGuard><MobileDashboard /></MobileAuthGuard>} />
         <Route path="/mobile/configurator" element={<MobileAuthGuard><MobileEditor /></MobileAuthGuard>} />
+        {/* SketchUp 플러그인 전용 대시보드 */}
+        <Route path="/sketchup" element={<SketchUpDashboard />} />
+        <Route path="/sketchup-dashboard" element={<SketchUpDashboard />} />
         {/* 데모 라우트 (로그인/저장 없음, 새로고침 시 초기화) */}
         <Route path="/demo" element={<ConfiguratorWrapper />} />
         <Route path="/preview-popout" element={<PreviewPopout />} />

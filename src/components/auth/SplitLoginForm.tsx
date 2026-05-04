@@ -1,8 +1,9 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/auth/AuthProvider';
 import { signInWithEmail, signUpWithEmail, signInWithGoogle, handleRedirectResult } from '@/firebase/auth';
 import { SignInFlo } from '@/components/ui/sign-in-flo';
+import { isSketchUpEnvironment } from '@/editor/shared/utils/sketchupBridge';
 
 interface SplitLoginFormProps {
   onSuccess?: () => void;
@@ -16,17 +17,23 @@ export const SplitLoginForm: React.FC<SplitLoginFormProps> = ({ onSuccess, defau
   const [googleLoading, setGoogleLoading] = useState(false);
   const [loading, setLoading] = useState(false);
 
+  // SketchUp HtmlDialog 환경이면 로그인 후 SketchUp 전용 대시보드로 이동
+  const postLoginPath = useMemo(
+    () => (isSketchUpEnvironment() ? '/sketchup' : '/dashboard'),
+    []
+  );
+
   useEffect(() => {
     const checkRedirectResult = async () => {
       const result = await handleRedirectResult();
       if (result.user) {
-        navigate('/dashboard');
+        navigate(postLoginPath);
       } else if (result.error) {
         setError(result.error);
       }
     };
     checkRedirectResult();
-  }, [navigate]);
+  }, [navigate, postLoginPath]);
 
   const handleSubmit = async (data: {
     email: string;
@@ -46,7 +53,7 @@ export const SplitLoginForm: React.FC<SplitLoginFormProps> = ({ onSuccess, defau
         setError(result.error);
       } else if (result.user) {
         onSuccess?.();
-        navigate('/dashboard');
+        navigate(postLoginPath);
       }
     } catch {
       setError('예상치 못한 오류가 발생했습니다.');
@@ -65,7 +72,7 @@ export const SplitLoginForm: React.FC<SplitLoginFormProps> = ({ onSuccess, defau
       if (result.error) {
         setError(result.error);
       } else if (result.user) {
-        navigate('/dashboard');
+        navigate(postLoginPath);
       }
       // result.user가 null이면 redirect 진행 중 - 페이지가 곧 떠나므로 대기
     } catch {

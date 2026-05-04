@@ -1,0 +1,306 @@
+/* SketchUp 전용 대시보드 - 기존 테마 변수 재사용 */
+
+.root {
+  min-height: 100vh;
+  background: var(--theme-background, #ffffff);
+  color: var(--theme-text, #1f2937);
+  font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", system-ui, sans-serif;
+  display: flex;
+  flex-direction: column;
+}
+
+/* === 미니 헤더 === */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 24px;
+  border-bottom: 1px solid var(--theme-border, #e5e7eb);
+  background: var(--theme-surface, #ffffff);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.headerLeft {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.brand {
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--theme-text, #1f2937);
+}
+
+.modeBadge {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: var(--theme-primary, #10b981);
+  color: #ffffff;
+  text-transform: uppercase;
+}
+
+.headerRight {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.iconBtn {
+  background: transparent;
+  border: 1px solid var(--theme-border, #e5e7eb);
+  border-radius: 8px;
+  padding: 6px 10px;
+  cursor: pointer;
+  color: var(--theme-text-secondary, #6b7280);
+  font-size: 13px;
+  transition: background 0.15s, border-color 0.15s;
+}
+.iconBtn:hover {
+  background: var(--theme-surface-hover, #f9fafb);
+  border-color: var(--theme-border-strong, #d1d5db);
+}
+
+.userChip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 10px 4px 4px;
+  border-radius: 999px;
+  background: var(--theme-surface-2, #f3f4f6);
+  font-size: 13px;
+  color: var(--theme-text, #1f2937);
+}
+.avatar {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  object-fit: cover;
+  background: var(--theme-border, #e5e7eb);
+}
+.avatarFallback {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--theme-primary, #10b981);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+/* === 본문 === */
+.body {
+  flex: 1;
+  padding: 28px 24px 40px;
+  max-width: 1400px;
+  width: 100%;
+  margin: 0 auto;
+  box-sizing: border-box;
+}
+
+.titleBar {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.pageTitle {
+  font-size: 22px;
+  font-weight: 700;
+  margin: 0;
+  letter-spacing: -0.02em;
+  color: var(--theme-text, #1f2937);
+}
+
+.pageSubtitle {
+  font-size: 13px;
+  color: var(--theme-text-tertiary, #9ca3af);
+  margin-top: 4px;
+}
+
+.refreshBtn {
+  background: transparent;
+  border: 1px solid var(--theme-border, #e5e7eb);
+  border-radius: 8px;
+  padding: 6px 14px;
+  font-size: 13px;
+  cursor: pointer;
+  color: var(--theme-text-secondary, #6b7280);
+}
+.refreshBtn:hover {
+  background: var(--theme-surface-hover, #f9fafb);
+}
+
+/* === 그리드 === */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 16px;
+}
+
+.card {
+  background: var(--theme-surface, #ffffff);
+  border: 1px solid var(--theme-border, #e5e7eb);
+  border-radius: 12px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  transition: border-color 0.15s, transform 0.15s, box-shadow 0.15s;
+}
+.card:hover {
+  border-color: var(--theme-primary, #10b981);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px -10px rgba(0, 0, 0, 0.15);
+}
+
+.thumb {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  background: var(--theme-surface-2, #f3f4f6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  position: relative;
+}
+.thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.thumbPlaceholder {
+  font-size: 12px;
+  color: var(--theme-text-tertiary, #9ca3af);
+}
+
+.cardBody {
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.cardTitle {
+  font-size: 14px;
+  font-weight: 600;
+  margin: 0;
+  color: var(--theme-text, #1f2937);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.cardMeta {
+  font-size: 11px;
+  color: var(--theme-text-tertiary, #9ca3af);
+}
+
+.cardActions {
+  padding: 0 14px 14px;
+  display: flex;
+  gap: 8px;
+}
+
+.primaryBtn {
+  flex: 1;
+  background: var(--theme-primary, #10b981);
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, opacity 0.15s;
+}
+.primaryBtn:hover {
+  background: var(--theme-primary-hover, #059669);
+}
+.primaryBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.secondaryBtn {
+  background: transparent;
+  color: var(--theme-text-secondary, #6b7280);
+  border: 1px solid var(--theme-border, #e5e7eb);
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+.secondaryBtn:hover {
+  background: var(--theme-surface-hover, #f9fafb);
+  color: var(--theme-text, #1f2937);
+}
+
+/* === 빈 상태 / 로딩 / 에러 === */
+.stateBox {
+  border: 1px dashed var(--theme-border, #e5e7eb);
+  border-radius: 12px;
+  padding: 60px 20px;
+  text-align: center;
+  color: var(--theme-text-tertiary, #9ca3af);
+  font-size: 14px;
+}
+
+/* === 푸터 작은 안내 === */
+.footerHint {
+  margin-top: 32px;
+  padding-top: 16px;
+  border-top: 1px solid var(--theme-border, #e5e7eb);
+  font-size: 12px;
+  color: var(--theme-text-tertiary, #9ca3af);
+  line-height: 1.6;
+}
+
+/* === 임포트 진행 오버레이 === */
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+.overlayCard {
+  background: var(--theme-surface, #ffffff);
+  border-radius: 12px;
+  padding: 28px 36px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  min-width: 280px;
+}
+.spinner {
+  width: 36px;
+  height: 36px;
+  border: 3px solid var(--theme-border, #e5e7eb);
+  border-top-color: var(--theme-primary, #10b981);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+.overlayText {
+  font-size: 14px;
+  color: var(--theme-text, #1f2937);
+  font-weight: 500;
+}
+.overlaySubtext {
+  font-size: 12px;
+  color: var(--theme-text-tertiary, #9ca3af);
+}

@@ -6,7 +6,7 @@ require 'sketchup.rb'
 require_relative 'importer'
 
 module TTTCraft
-  EDITOR_URL = 'https://tttcraft.com/?sketchup=1'.freeze
+  EDITOR_URL = 'https://tttcraft.com/sketchup?sketchup=1'.freeze
   DIALOG_PREF_KEY = 'com.tttcraft.editor'.freeze
 
   @dialog = nil
