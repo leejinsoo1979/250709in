@@ -20,9 +20,12 @@ import type { ProjectSummary, DesignFileSummary, DesignFile } from '@/firebase/t
 import {
   isSketchUpEnvironment,
   canImportDaeToSketchUp,
+  canImportPanelsToSketchUp,
   sendDaeToSketchUp,
+  sendPanelsToSketchUp,
 } from '@/editor/shared/utils/sketchupBridge';
 import { ColladaExporter } from '@/editor/shared/utils/ColladaExporter';
+import { sceneToPanelJSON } from '@/editor/shared/utils/sceneToPanelJSON';
 import Space3DView from '@/editor/shared/viewer3d/Space3DView';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
 import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
@@ -226,8 +229,6 @@ const SketchUpDashboard: React.FC = () => {
       }
 
       try {
-        setImportStatus('DAE 파일 생성 중…');
-
         // 가구만 추출하기 위해 FurnitureContainer를 찾는다.
         // 없으면 전체 Scene에서 라이트/카메라 등을 제외하고 export.
         const exportTarget = findFurnitureGroup(scene) || cleanupScene(scene);
@@ -236,6 +237,28 @@ const SketchUpDashboard: React.FC = () => {
           throw new Error('내보낼 가구가 없습니다.');
         }
 
+        // 1순위: 루비가 패널 JSON을 직접 받아 Sketchup::Group/Layer 생성 가능한 경우
+        //         → 패널별 그룹/태그 100% 보장
+        if (canImportPanelsToSketchUp()) {
+          setImportStatus('패널 정보 직렬화 중…');
+          const payload = sceneToPanelJSON(exportTarget, importingDesign.name);
+
+          if (payload.groups.length === 0 && payload.unnamed.length === 0) {
+            throw new Error('내보낼 메시가 없습니다.');
+          }
+
+          const jsonString = JSON.stringify(payload);
+          setImportStatus('SketchUp으로 전송 중…');
+          const sent = sendPanelsToSketchUp(jsonString);
+          if (!sent) {
+            throw new Error('SketchUp으로 전송하지 못했습니다.');
+          }
+          setImportStatus('SketchUp이 모델을 가져오는 중…');
+          return;
+        }
+
+        // 2순위 폴백: 구버전 루비 플러그인은 DAE만 지원
+        setImportStatus('DAE 파일 생성 중…');
         const exporter = new ColladaExporter();
         const xml = exporter.parse(exportTarget);
         if (!xml || xml.length === 0) {

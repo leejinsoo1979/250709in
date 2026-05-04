@@ -13,6 +13,7 @@
 
 export interface SketchUpBridge {
   import_dae?: (base64Data: string, filename: string) => void;
+  import_panels?: (jsonString: string) => void;
   open_external_oauth?: (state: string) => void;
   sketchup_ready?: () => void;
 }
@@ -94,6 +95,28 @@ export const sendDaeToSketchUp = async (
     return true;
   } catch (err) {
     console.error('❌ SketchUp 전송 실패:', err);
+    return false;
+  }
+};
+
+/**
+ * 루비 측 import_panels 콜백 가능 여부.
+ */
+export const canImportPanelsToSketchUp = (): boolean => {
+  return Boolean(window.sketchup?.import_panels);
+};
+
+/**
+ * 패널 JSON을 SketchUp 루비로 전송.
+ * 루비가 Sketchup::Group + Sketchup::Layer를 직접 생성한다.
+ */
+export const sendPanelsToSketchUp = (jsonString: string): boolean => {
+  if (!canImportPanelsToSketchUp()) return false;
+  try {
+    window.sketchup!.import_panels!(jsonString);
+    return true;
+  } catch (err) {
+    console.error('❌ SketchUp 패널 전송 실패:', err);
     return false;
   }
 };

@@ -4,6 +4,7 @@
 
 require 'sketchup.rb'
 require_relative 'importer'
+require_relative 'panel_importer'
 require_relative 'oauth_bridge'
 
 module TTTCraft
@@ -34,9 +35,14 @@ module TTTCraft
 
     @dialog.set_url(EDITOR_URL)
 
-    # JS → Ruby: DAE base64 데이터를 받아 SketchUp에 import
+    # JS → Ruby: DAE base64 데이터를 받아 SketchUp에 import (구버전 호환)
     @dialog.add_action_callback('import_dae') do |_action_context, base64_data, filename|
       Importer.import_from_base64(base64_data, filename, @dialog)
+    end
+
+    # JS → Ruby: 패널 그룹 JSON을 받아 SketchUp에 직접 그룹/태그로 생성
+    @dialog.add_action_callback('import_panels') do |_action_context, json_string|
+      PanelImporter.import_from_json(json_string, @dialog)
     end
 
     # JS → Ruby: 외부 브라우저로 OAuth 위임 시작
