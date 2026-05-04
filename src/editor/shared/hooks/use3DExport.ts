@@ -3,6 +3,7 @@ import { GLTFExporter } from 'three/examples/jsm/exporters/GLTFExporter.js';
 import { OBJExporter } from 'three/examples/jsm/exporters/OBJExporter.js';
 import { STLExporter } from 'three/examples/jsm/exporters/STLExporter.js';
 import { ColladaExporter } from '../utils/ColladaExporter';
+import { canImportDaeToSketchUp, sendDaeToSketchUp } from '../utils/sketchupBridge';
 import * as THREE from 'three';
 import type { Group, Scene } from 'three';
 
@@ -401,6 +402,17 @@ export const use3DExport = () => {
       }
 
       const blob = new Blob([result], { type: 'model/vnd.collada+xml' });
+
+      // SketchUp HtmlDialog 환경이면 다운로드 대신 루비로 직접 전송하여 즉시 import
+      if (canImportDaeToSketchUp()) {
+        const sent = await sendDaeToSketchUp(blob, filename);
+        if (sent) {
+          console.log('✅ SketchUp으로 직접 임포트 요청 완료:', filename);
+          return { success: true };
+        }
+        console.warn('⚠️ SketchUp 전송 실패 - 일반 다운로드로 폴백');
+      }
+
       downloadBlob(blob, filename);
 
       console.log('✅ DAE 파일 다운로드 완료:', filename);
