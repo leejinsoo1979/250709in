@@ -6,7 +6,6 @@ import DashboardHeader from '@/components/dashboard/DashboardHeader';
 import BoardImageUploader from '@/components/common/BoardImageUploader';
 import styles from './NewsPage.module.css';
 import {
-  listMyQnA,
   listAllQnA,
   getQnA,
   createQnA,
@@ -60,16 +59,15 @@ const QnAPage: React.FC<Props> = ({ mode }) => {
     }
   }, [authLoading, user, navigate]);
 
-  // 목록 로드 (관리자는 전체, 일반 사용자는 본인만)
+  // 목록 로드 (모든 로그인 회원이 전체 질문/답변 조회 가능)
   useEffect(() => {
     if (mode !== 'list' || !user || adminLoading) return;
     setLoading(true);
-    const load = isAdmin ? listAllQnA() : listMyQnA();
-    load.then(({ items }) => {
+    listAllQnA().then(({ items }) => {
       setItems(items);
       setLoading(false);
     });
-  }, [mode, user, isAdmin, adminLoading]);
+  }, [mode, user, adminLoading]);
 
   // 상세 / 수정 로드
   useEffect(() => {
@@ -98,15 +96,7 @@ const QnAPage: React.FC<Props> = ({ mode }) => {
     return currentItem.authorId === user.uid || isAdmin;
   }, [currentItem, user, isAdmin]);
 
-  // 상세 접근 권한 체크 (작성자 또는 관리자)
-  useEffect(() => {
-    if (mode === 'detail' && currentItem && user && !adminLoading) {
-      if (currentItem.authorId !== user.uid && !isAdmin) {
-        alert('접근 권한이 없습니다.');
-        navigate('/qna', { replace: true });
-      }
-    }
-  }, [mode, currentItem, user, isAdmin, adminLoading, navigate]);
+  // 상세 접근 권한: 로그인 회원 누구나 조회 가능 (수정/삭제는 작성자/관리자만)
 
   const handleSubmit = async () => {
     if (!title.trim()) {

@@ -32,16 +32,12 @@ service cloud.firestore {
 
     // qna - Q&A 게시판
     // - 질문 작성: 로그인 사용자 누구나
-    // - 읽기: 작성자 본인 또는 관리자
+    // - 읽기/목록: 로그인 사용자 누구나 (전체 공개)
     // - 수정(본문): 작성자 본인만
     // - 답변 필드 업데이트: 관리자만
     // - 삭제: 작성자 또는 관리자
     match /qna/{qnaId} {
-      allow read: if isSignedIn() && (
-        isAdmin() || resource.data.authorId == request.auth.uid
-      );
-      // 목록(list) 쿼리: 관리자는 전체, 일반 사용자는 본인 것만 (where authorId == uid)
-      allow list: if isSignedIn();
+      allow read, list: if isSignedIn();
       allow create: if isSignedIn() &&
                     request.resource.data.authorId == request.auth.uid &&
                     request.resource.data.status == 'pending';
