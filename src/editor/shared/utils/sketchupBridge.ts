@@ -13,6 +13,7 @@
 
 export interface SketchUpBridge {
   import_dae?: (base64Data: string, filename: string) => void;
+  open_external_oauth?: (state: string) => void;
   sketchup_ready?: () => void;
 }
 
@@ -20,6 +21,8 @@ declare global {
   interface Window {
     sketchup?: SketchUpBridge;
     __sketchupImportDone?: (success: boolean) => void;
+    __sketchupOAuthToken?: (idToken: string) => void;
+    __sketchupOAuthError?: (reason: string) => void;
   }
 }
 
@@ -94,3 +97,38 @@ export const sendDaeToSketchUp = async (
     return false;
   }
 };
+
+/**
+ * 루비 측 open_external_oauth 콜백을 호출 가능 여부.
+ */
+export const canDelegateOAuthToSketchUp = (): boolean => {
+  return Boolean(window.sketchup?.open_external_oauth);
+};
+
+/**
+ * 외부 브라우저로 OAuth 위임을 시작.
+ *
+ * 이 함수는 시스템 브라우저를 띄우는 트리거만 담당하고,
+ * 실제 토큰 수신은 window.__sketchupOAuthToken 콜백에서 처리해야 한다.
+ *
+ * @returns CSRF 방지용 state 문자열 (브라우저 흐름과 매칭에 사용)
+ */
+export const delegateGoogleOAuthToSketchUp = (): string | null => {
+  if (!canDelegateOAuthToSketchUp()) return null;
+
+  // CSRF 방지용 state (32바이트 hex)
+  const buf = new Uint8Array(16);
+  (window.crypto || (window as any).msCrypto).getRandomValues(buf);
+  const state = Array.from(buf)
+    .map(b => b.toString(16).padStart(2, '0'))
+    .join('');
+
+  try {
+    window.sketchup!.open_external_oauth!(state);
+    return state;
+  } catch (err) {
+    console.error('❌ open_external_oauth 호출 실패:', err);
+    return null;
+  }
+};
+

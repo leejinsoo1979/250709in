@@ -4,6 +4,7 @@
 
 require 'sketchup.rb'
 require_relative 'importer'
+require_relative 'oauth_bridge'
 
 module TTTCraft
   EDITOR_URL = 'https://tttcraft.com/sketchup?sketchup=1'.freeze
@@ -36,6 +37,14 @@ module TTTCraft
     # JS → Ruby: DAE base64 데이터를 받아 SketchUp에 import
     @dialog.add_action_callback('import_dae') do |_action_context, base64_data, filename|
       Importer.import_from_base64(base64_data, filename, @dialog)
+    end
+
+    # JS → Ruby: 외부 브라우저로 OAuth 위임 시작
+    @dialog.add_action_callback('open_external_oauth') do |_action_context, state|
+      port = OAuthBridge.start(@dialog, state)
+      if port.nil?
+        @dialog.execute_script("window.__sketchupOAuthError && window.__sketchupOAuthError('failed_to_start_local_server');")
+      end
     end
 
     # JS → Ruby: 환경 핑 (디버그용)
