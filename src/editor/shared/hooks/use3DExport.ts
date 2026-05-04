@@ -178,6 +178,14 @@ export const use3DExport = () => {
         }
       }
 
+      // 상부/하부 프레임 포함 (Room의 직접 자식)
+      if (obj.name === 'top-frame' || obj.name === 'base-frame' || obj.name === 'bottom-frame') {
+        result.push(obj);
+        addedUuids.add(obj.uuid);
+        console.log(`${indent}✅ Frame 포함: ${obj.name}`);
+        return;
+      }
+
       // 자식 탐색
       if (obj.children && obj.children.length > 0) {
         obj.children.forEach(child => traverse(child, depth + 1));
