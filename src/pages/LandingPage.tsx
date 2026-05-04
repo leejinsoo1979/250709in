@@ -5,12 +5,21 @@ import { Button } from '@/components/ui/button';
 import { Sun, Moon } from 'lucide-react';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useResponsive } from '@/hooks/useResponsive';
+import { isSketchUpEnvironment } from '@/editor/shared/utils/sketchupBridge';
 
 export default function LandingPage() {
   const navigate = useNavigate();
   const { theme, toggleMode } = useTheme();
   const isDark = theme.mode === 'dark';
   const { isMobile, isTouchDevice } = useResponsive();
+
+  // SketchUp HtmlDialog 환경에서는 랜딩페이지를 표시하지 않고
+  // 즉시 SketchUp 전용 대시보드로 이동 (대시보드가 알아서 로그인 화면으로 보냄)
+  useEffect(() => {
+    if (isSketchUpEnvironment()) {
+      navigate('/sketchup', { replace: true });
+    }
+  }, [navigate]);
 
   // think thing thank 애니메이션 상태
   const [tttAnimating, setTttAnimating] = useState(false);
