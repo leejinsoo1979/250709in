@@ -35,6 +35,15 @@ if (auth) {
   console.log('🚫 Firebase Auth null - persistence 설정 건너뜀 (readonly 모드)');
 }
 
+// Firebase Auth 언어를 한글로 고정 (구글 OAuth 페이지 한글 표시)
+if (auth) {
+  try {
+    auth.languageCode = 'ko';
+  } catch {
+    // 일부 환경에서 setter 차단될 수 있음 - 무시
+  }
+}
+
 // 구글 인증 제공자 생성
 const googleProvider = new GoogleAuthProvider();
 
@@ -42,7 +51,8 @@ const googleProvider = new GoogleAuthProvider();
 googleProvider.setCustomParameters({
   prompt: 'select_account', // 항상 계정 선택 화면 표시
   auth_type: 'rerequest',
-  access_type: 'offline'
+  access_type: 'offline',
+  hl: 'ko' // 구글 OAuth 페이지 한글로 강제
 });
 
 // 추가 스코프 설정
