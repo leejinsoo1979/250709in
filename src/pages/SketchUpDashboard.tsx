@@ -1,7 +1,7 @@
 /**
  * SketchUp 전용 대시보드
  * - SketchUp HtmlDialog 안에서 표시되는 단순화된 대시보드
- * - "SketchUp으로 가져오기" 클릭 시 에디터를 거치지 않고
+ * - "불러오기" 클릭 시 에디터를 거치지 않고
  *   화면 밖 헤드리스 Three.js 씬을 렌더하여 DAE를 즉시 SketchUp에 임포트
  * - "편집" 버튼은 일반 에디터 열기
  */
@@ -253,12 +253,12 @@ const SketchUpDashboard: React.FC = () => {
           }
 
           const jsonString = JSON.stringify(payload);
-          setImportStatus('SketchUp으로 전송 중…');
+          setImportStatus('전송 중…');
           const sent = sendPanelsToSketchUp(jsonString);
           if (!sent) {
             throw new Error('SketchUp으로 전송하지 못했습니다.');
           }
-          setImportStatus('SketchUp이 모델을 가져오는 중…');
+          setImportStatus('모델에 추가하는 중…');
           return;
         }
 
@@ -273,14 +273,14 @@ const SketchUpDashboard: React.FC = () => {
         const blob = new Blob([xml], { type: 'model/vnd.collada+xml' });
         const filename = `${(importingDesign.name || 'tttcraft').replace(/[^A-Za-z0-9_\-가-힣]/g, '_')}.dae`;
 
-        setImportStatus('SketchUp으로 전송 중…');
+        setImportStatus('전송 중…');
         const sent = await sendDaeToSketchUp(blob, filename);
         if (!sent) {
           throw new Error('SketchUp으로 전송하지 못했습니다.');
         }
 
         // 결과는 __sketchupImportDone 콜백에서 처리됨
-        setImportStatus('SketchUp이 모델을 가져오는 중…');
+        setImportStatus('모델에 추가하는 중…');
       } catch (err: any) {
         console.error('[SketchUpDashboard] export 실패:', err);
         alert(`가져오기 실패: ${err?.message || err}`);
@@ -355,7 +355,7 @@ const SketchUpDashboard: React.FC = () => {
           <div>
             <h1 className={styles.pageTitle}>내 디자인</h1>
             <div className={styles.pageSubtitle}>
-              가져오기 버튼을 누르면 SketchUp 모델에 즉시 추가됩니다.
+              불러오기 버튼을 누르면 작업 중인 모델에 즉시 추가됩니다.
             </div>
           </div>
         </div>
@@ -391,7 +391,7 @@ const SketchUpDashboard: React.FC = () => {
                     onClick={() => handleImport(d)}
                     disabled={!!importingId}
                   >
-                    {importingId === d.id ? '가져오는 중…' : 'SketchUp으로 가져오기'}
+                    {importingId === d.id ? '불러오는 중…' : '불러오기'}
                   </button>
                   <button className={styles.secondaryBtn} onClick={() => handleEdit(d)}>
                     편집
@@ -404,7 +404,7 @@ const SketchUpDashboard: React.FC = () => {
 
         <div className={styles.footerHint}>
           {inSketchUp ? (
-            <>SketchUp 플러그인 안에서 실행 중입니다. 가져오기를 누르면 활성 모델에 가구가 즉시 추가됩니다.</>
+            <>SketchUp 플러그인 안에서 실행 중입니다. 불러오기를 누르면 활성 모델에 가구가 즉시 추가됩니다.</>
           ) : (
             <>SketchUp 플러그인이 감지되지 않았습니다. 브라우저에서 미리보기 중입니다.</>
           )}
@@ -416,7 +416,7 @@ const SketchUpDashboard: React.FC = () => {
         <div className={styles.overlay}>
           <div className={styles.overlayCard}>
             <div className={styles.spinner} />
-            <div className={styles.overlayText}>SketchUp으로 가져오는 중…</div>
+            <div className={styles.overlayText}>불러오는 중…</div>
             <div className={styles.overlaySubtext}>{importStatus || '잠시만 기다려 주세요'}</div>
           </div>
         </div>
