@@ -29,6 +29,7 @@ import { sceneToPanelJSON } from '@/editor/shared/utils/sceneToPanelJSON';
 import Space3DView from '@/editor/shared/viewer3d/Space3DView';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
 import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
+import { useUIStore } from '@/store/uiStore';
 import styles from './SketchUpDashboard.module.css';
 
 interface DesignEntry extends DesignFileSummary {
@@ -162,6 +163,10 @@ const SketchUpDashboard: React.FC = () => {
         useFurnitureStore.getState().setPlacedModules(
           designFile.furniture?.placedModules || []
         );
+        // 치수/텍스트/가이드 등 export 대상이 아닌 보조 표시 모두 끄기
+        const ui = useUIStore.getState();
+        ui.setShowDimensions(false);
+        ui.setShowDimensionsText(false);
       } catch (storeErr) {
         console.warn('[SketchUpDashboard] store 주입 경고:', storeErr);
       }
