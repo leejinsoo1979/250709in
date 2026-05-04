@@ -24,9 +24,9 @@ service cloud.firestore {
       allow write: if isSuperAdmin();
     }
 
-    // news - 공지 및 업데이트 게시판 (관리자만 쓰기, 관리자만 읽기)
+    // news - 공지 및 업데이트 게시판 (모두 읽기 가능, 관리자만 쓰기)
     match /news/{newsId} {
-      allow read, list: if isAdmin();
+      allow read, list: if true;
       allow create, update, delete: if isAdmin();
     }
 

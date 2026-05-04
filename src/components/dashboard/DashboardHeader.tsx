@@ -4,7 +4,6 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import Logo from '@/components/common/Logo';
 import { NotificationCenter } from '@/components/NotificationCenter';
 import { useAuth } from '@/auth/AuthProvider';
-import { useAdmin } from '@/hooks/useAdmin';
 import { useTheme } from '@/contexts/ThemeContext';
 import styles from './DashboardHeader.module.css';
 
@@ -23,8 +22,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
   searchTerm,
   onSearchChange,
 }) => {
-  const { user, loading: authLoading } = useAuth();
-  const { isAdmin } = useAdmin(user, authLoading);
+  const { user } = useAuth();
   const { theme, toggleMode } = useTheme();
   const navigate = useNavigate();
   const location = useLocation();
@@ -57,15 +55,13 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
           >
             <span>Gallery</span>
           </button>
-          {isAdmin && (
-            <button
-              className={`${styles.navBtn} ${isNews ? styles.active : ''}`}
-              onClick={() => navigate('/news')}
-              title="News"
-            >
-              <span>News</span>
-            </button>
-          )}
+          <button
+            className={`${styles.navBtn} ${isNews ? styles.active : ''}`}
+            onClick={() => navigate('/news')}
+            title="News"
+          >
+            <span>News</span>
+          </button>
           <button
             className={`${styles.navBtn} ${isQnA ? styles.active : ''}`}
             onClick={() => navigate('/qna')}

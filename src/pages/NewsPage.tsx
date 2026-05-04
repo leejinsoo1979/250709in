@@ -48,12 +48,13 @@ const NewsPage: React.FC<Props> = ({ mode }) => {
   const [images, setImages] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
 
-  // 권한 체크: 로딩 끝나고 관리자 아니면 대시보드로
+  // 권한 체크: 작성/수정 모드는 관리자만 접근 가능 (조회는 모두 허용)
   useEffect(() => {
-    if (!authLoading && !adminLoading && !isAdmin) {
-      navigate('/dashboard', { replace: true });
+    const isWriteMode = mode === 'new' || mode === 'edit';
+    if (isWriteMode && !authLoading && !adminLoading && !isAdmin) {
+      navigate('/news', { replace: true });
     }
-  }, [authLoading, adminLoading, isAdmin, navigate]);
+  }, [mode, authLoading, adminLoading, isAdmin, navigate]);
 
   // 목록 로드
   useEffect(() => {
@@ -162,11 +163,13 @@ const NewsPage: React.FC<Props> = ({ mode }) => {
               >업데이트</button>
             </div>
 
-            <div className={styles.toolbar}>
-              <button className={styles.primaryBtn} onClick={() => navigate('/news/new')}>
-                + 새 글 작성
-              </button>
-            </div>
+            {isAdmin && (
+              <div className={styles.toolbar}>
+                <button className={styles.primaryBtn} onClick={() => navigate('/news/new')}>
+                  + 새 글 작성
+                </button>
+              </div>
+            )}
 
             {loading ? (
               <div className={styles.loadingWrap}>로딩 중...</div>
@@ -233,14 +236,16 @@ const NewsPage: React.FC<Props> = ({ mode }) => {
                 <button className={styles.secondaryBtn} onClick={() => navigate('/news')}>
                   목록으로
                 </button>
-                <div style={{ display: 'flex', gap: 8 }}>
-                  <button className={styles.secondaryBtn} onClick={() => navigate(`/news/${currentItem.id}/edit`)}>
-                    수정
-                  </button>
-                  <button className={styles.dangerBtn} onClick={handleDelete}>
-                    삭제
-                  </button>
-                </div>
+                {isAdmin && (
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    <button className={styles.secondaryBtn} onClick={() => navigate(`/news/${currentItem.id}/edit`)}>
+                      수정
+                    </button>
+                    <button className={styles.dangerBtn} onClick={handleDelete}>
+                      삭제
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
           )
