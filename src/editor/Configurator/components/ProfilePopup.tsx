@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { X, User, Mail, Calendar, Shield, LogOut, Settings, ChevronRight, CreditCard, Coins, Edit2, Check } from 'lucide-react';
+import { X, User, Calendar, Shield, LogOut, Settings, ChevronRight, Edit2, Check } from 'lucide-react';
 import { useAuth } from '@/auth/AuthProvider';
 import { signOutUser, auth } from '@/firebase/auth';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from '@/i18n/useTranslation';
-import { getUsageStats, UsageStats, getUserProfile, updateUserProfile } from '@/firebase/userProfiles';
+import { updateUserProfile } from '@/firebase/userProfiles';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '@/firebase/config';
 import styles from './ProfilePopup.module.css';
@@ -18,9 +18,7 @@ interface ProfilePopupProps {
 const ProfilePopup: React.FC<ProfilePopupProps> = ({ isOpen, onClose, position }) => {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const { t, currentLanguage } = useTranslation();
-  const [usageStats, setUsageStats] = useState<UsageStats | null>(null);
-  const [credits, setCredits] = useState<number>(0);
+  const { t } = useTranslation();
   const [isSuperAdmin, setIsSuperAdmin] = useState<boolean>(false);
   // 닉네임 편집 상태
   const [isEditingName, setIsEditingName] = useState(false);
@@ -28,50 +26,19 @@ const ProfilePopup: React.FC<ProfilePopupProps> = ({ isOpen, onClose, position }
   const [nameSaving, setNameSaving] = useState(false);
   const [displayNameLocal, setDisplayNameLocal] = useState<string | null>(null);
 
-  // 사용량 통계 및 크레딧 가져오기
+  // 슈퍼 관리자 권한 체크
   useEffect(() => {
-    if (isOpen && user) {
-      // 슈퍼 관리자 권한 체크 (이메일로도 확인)
-      const superAdminEmails = ['sbbc212@gmail.com'];
-      const isEmailSuperAdmin = superAdminEmails.includes(user.email || '');
-
-      if (isEmailSuperAdmin) {
-        console.log('✅ 슈퍼 관리자 이메일 감지:', user.email);
-        setIsSuperAdmin(true);
-        setCredits(999999); // 무제한 크레딧 표시
-      } else {
-        // users 컬렉션에서도 role 체크
-        getDoc(doc(db, 'users', user.uid)).then((userDoc) => {
-          if (userDoc.exists()) {
-            const userData = userDoc.data();
-            const isSuperAdminUser = userData.role === 'superadmin';
-            setIsSuperAdmin(isSuperAdminUser);
-
-            if (isSuperAdminUser) {
-              setCredits(999999); // 무제한 크레딧 표시
-            } else {
-              getUserProfile().then(({ profile }) => {
-                if (profile) {
-                  setCredits(profile.credits ?? 200);
-                }
-              });
-            }
-          } else {
-            getUserProfile().then(({ profile }) => {
-              if (profile) {
-                setCredits(profile.credits ?? 200);
-              }
-            });
-          }
-        });
-      }
-
-      getUsageStats().then(({ stats }) => {
-        if (stats) {
-          setUsageStats(stats);
-        }
-      });
+    if (!isOpen || !user) return;
+    const superAdminEmails = ['sbbc212@gmail.com'];
+    if (superAdminEmails.includes(user.email || '')) {
+      setIsSuperAdmin(true);
+      return;
     }
+    getDoc(doc(db, 'users', user.uid)).then((userDoc) => {
+      if (userDoc.exists()) {
+        setIsSuperAdmin(userDoc.data().role === 'superadmin');
+      }
+    });
   }, [isOpen, user]);
 
   // 닉네임 저장
@@ -313,54 +280,6 @@ const ProfilePopup: React.FC<ProfilePopupProps> = ({ isOpen, onClose, position }
             </div>
           </div>
 
-          {/* 구독 정보 */}
-          <div className={styles.subscriptionSection}>
-            <div className={styles.subscriptionHeader}>
-              <CreditCard size={16} />
-              <span className={styles.subscriptionLabel}>구독 플랜</span>
-            </div>
-            <div className={styles.subscriptionContent}>
-              <div className={styles.planBadge}>{isSuperAdmin ? '무제한 플랜' : '무료 플랜'}</div>
-
-              {/* 크레딧 정보 */}
-              <div className={styles.creditInfo}>
-                <div className={styles.creditLeft}>
-                  <div className={styles.creditHeader}>
-                    <Coins size={14} />
-                    <span>보유 크레딧</span>
-                  </div>
-                  <div className={styles.creditNote}>
-                    {isSuperAdmin ? '무제한 사용 가능' : '디자인 파일당 20 소모'}
-                  </div>
-                </div>
-                <div className={styles.creditAmount}>
-                  {isSuperAdmin ? '∞' : credits} <span className={styles.creditUnit}>{isSuperAdmin ? '' : '크레딧'}</span>
-                </div>
-              </div>
-
-              {usageStats && !isSuperAdmin && (
-                <div className={styles.planStats}>
-                  <div className={styles.planStat}>
-                    <span className={styles.statLabel}>프로젝트</span>
-                    <span className={styles.statValue}>
-                      {usageStats.projectCount} / {usageStats.maxProjects === -1 ? '∞' : usageStats.maxProjects}
-                    </span>
-                  </div>
-                </div>
-              )}
-              {!isSuperAdmin && (
-                <button
-                  className={styles.upgradeButton}
-                  onClick={() => {
-                    onClose();
-                    navigate('/dashboard/profile?section=subscription');
-                  }}
-                >
-                  플랜 업그레이드
-                </button>
-              )}
-            </div>
-          </div>
         </div>
       </div>
     </>
