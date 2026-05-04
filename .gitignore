@@ -55,3 +55,6 @@ out/
 
 # Local Netlify folder
 .netlify
+
+# SketchUp plugin build artifacts
+sketchup-plugin/*.rbz
