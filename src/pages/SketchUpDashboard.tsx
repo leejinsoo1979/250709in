@@ -24,6 +24,8 @@ import {
 } from '@/editor/shared/utils/sketchupBridge';
 import { ColladaExporter } from '@/editor/shared/utils/ColladaExporter';
 import Space3DViewerReadOnly from '@/editor/shared/viewer3d/Space3DViewerReadOnly';
+import { useFurnitureStore } from '@/store/core/furnitureStore';
+import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
 import styles from './SketchUpDashboard.module.css';
 
 interface DesignEntry extends DesignFileSummary {
@@ -151,7 +153,17 @@ const SketchUpDashboard: React.FC = () => {
         throw new Error(dErr || '디자인 데이터를 불러오지 못했습니다.');
       }
 
-      // 2) 헤드리스 Canvas에 마운트 → useEffect에서 렌더 완료 후 export 실행
+      // 2) Room 컴포넌트가 store에서 직접 읽으므로 헤드리스 마운트 전에 store에 주입
+      try {
+        useSpaceConfigStore.getState().setSpaceInfo(designFile.spaceConfig);
+        useFurnitureStore.getState().setPlacedModules(
+          designFile.furniture?.placedModules || []
+        );
+      } catch (storeErr) {
+        console.warn('[SketchUpDashboard] store 주입 경고:', storeErr);
+      }
+
+      // 3) 헤드리스 Canvas에 마운트 → useEffect에서 렌더 완료 후 export 실행
       setImportStatus('3D 모델 구성 중…');
       headlessSceneRef.current = null;
       setImportingDesign(designFile);
@@ -171,22 +183,45 @@ const SketchUpDashboard: React.FC = () => {
 
     let cancelled = false;
     let attempts = 0;
-    const MAX_ATTEMPTS = 60; // 약 6초 (100ms × 60)
+    let firstMeshSeenAt: number | null = null;
+    const MAX_ATTEMPTS = 150; // 약 15초 (100ms × 150)
+    const STABILIZE_MS = 1500; // 첫 메시 발견 후 추가 대기 (전체 가구 마운트 보장)
+
+    const countMeshes = (scene: THREE.Scene): number => {
+      let n = 0;
+      scene.traverse((o) => {
+        if ((o as any).isMesh) n++;
+      });
+      return n;
+    };
 
     const tryExport = async () => {
       if (cancelled) return;
       attempts++;
 
       const scene = headlessSceneRef.current;
-      if (!scene || scene.children.length === 0) {
+      const meshCount = scene ? countMeshes(scene) : 0;
+
+      // 가구 메시가 한 개라도 들어올 때까지 대기
+      if (!scene || meshCount === 0) {
         if (attempts < MAX_ATTEMPTS) {
           setTimeout(tryExport, 100);
         } else {
-          alert('3D 모델 렌더링 시간 초과. 다시 시도해 주세요.');
+          alert(`3D 모델 렌더링 시간 초과 (mesh=${meshCount}). 다시 시도해 주세요.`);
           setImportingId(null);
           setImportingDesign(null);
           setImportStatus('');
         }
+        return;
+      }
+
+      // 첫 메시 등장 시점 기록 후, STABILIZE_MS 만큼 추가 대기 (가구 전체 마운트)
+      const now = Date.now();
+      if (firstMeshSeenAt === null) {
+        firstMeshSeenAt = now;
+      }
+      if (now - firstMeshSeenAt < STABILIZE_MS) {
+        setTimeout(tryExport, 100);
         return;
       }
 
