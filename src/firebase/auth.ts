@@ -20,6 +20,7 @@ import {
 import { FirebaseError } from 'firebase/app';
 import { auth } from './config';
 import { FLAGS } from '@/flags';
+import { isSketchUpEnvironment } from '@/editor/shared/utils/sketchupBridge';
 
 // Re-export auth for convenience
 export { auth };
@@ -123,13 +124,14 @@ export const signInWithGoogle = async () => {
 
     const mobile = isMobileDevice();
     const inApp = isInAppBrowser();
+    const sketchup = isSketchUpEnvironment();
 
     // 디버깅: 현재 환경 정보 출력
     console.log('🔐 구글 로그인 시도');
     console.log('🔐 현재 도메인:', window.location.hostname);
     console.log('🔐 Auth Domain:', import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || 'in-f8873.firebaseapp.com');
     console.log('🔐 환경:', import.meta.env.MODE);
-    console.log('🔐 모바일 여부:', mobile, '/ 인앱 브라우저:', inApp);
+    console.log('🔐 모바일:', mobile, '/ 인앱:', inApp, '/ SketchUp:', sketchup);
 
     // 인앱 브라우저(카톡/인스타/페북 등)는 구글이 OAuth를 차단함
     if (inApp) {
@@ -139,9 +141,12 @@ export const signInWithGoogle = async () => {
       };
     }
 
-    // 모바일: redirect 방식 (팝업 차단/3rd-party cookie 이슈 회피)
-    if (mobile) {
-      console.log('🔐 모바일 환경 → signInWithRedirect 사용');
+    // 모바일/SketchUp HtmlDialog: redirect 방식
+    // - 모바일: 팝업 차단/3rd-party cookie 이슈
+    // - SketchUp: HtmlDialog가 띄운 popup이 자기 자신을 close 못하는 이슈
+    //   ("Scripts may close only the windows that were opened by them")
+    if (mobile || sketchup) {
+      console.log(`🔐 ${sketchup ? 'SketchUp' : '모바일'} 환경 → signInWithRedirect 사용`);
       await signInWithRedirect(auth, googleProvider);
       // redirect 후 페이지가 떠나므로 결과는 handleRedirectResult에서 처리됨
       return { user: null, error: null };
