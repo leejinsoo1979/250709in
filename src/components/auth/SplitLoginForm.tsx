@@ -67,6 +67,7 @@ export const SplitLoginForm: React.FC<SplitLoginFormProps> = ({ onSuccess, defau
       } else if (result.user) {
         navigate('/dashboard');
       }
+      // result.user가 null이면 redirect 진행 중 - 페이지가 곧 떠나므로 대기
     } catch {
       setError('구글 로그인 중 오류가 발생했습니다.');
     } finally {

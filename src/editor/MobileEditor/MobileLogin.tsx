@@ -1,7 +1,7 @@
 // MobileLogin — /mobile/login 전용 로그인 화면 (브랜드 블랙 배경)
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
-import { signInWithEmail, signInWithGoogle, signUpWithEmail } from '@/firebase/auth';
+import { signInWithEmail, signInWithGoogle, signUpWithEmail, handleRedirectResult } from '@/firebase/auth';
 import './MobileEditor.css';
 
 type Mode = 'login' | 'signup';
@@ -17,6 +17,22 @@ const MobileLogin: React.FC = () => {
   const [name, setName] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // 모바일 구글 로그인은 redirect 방식 → 페이지 복귀 시 결과 처리
+  useEffect(() => {
+    (async () => {
+      try {
+        const result = await handleRedirectResult();
+        if (result.user) {
+          navigate(redirectTo, { replace: true });
+        } else if (result.error) {
+          setError(result.error);
+        }
+      } catch (err: any) {
+        // redirect 결과 없음 - 무시
+      }
+    })();
+  }, [navigate, redirectTo]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -47,7 +63,10 @@ const MobileLogin: React.FC = () => {
         setError(result.error);
         return;
       }
-      navigate(redirectTo, { replace: true });
+      // redirect 방식(모바일)이면 user가 null로 돌아옴 → 페이지가 곧 떠나므로 navigate 호출하지 않음
+      if (result.user) {
+        navigate(redirectTo, { replace: true });
+      }
     } catch (err: any) {
       setError(err?.message || '구글 로그인에 실패했습니다.');
     } finally {

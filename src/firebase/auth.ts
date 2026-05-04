@@ -2,6 +2,7 @@ import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   signInWithPopup,
+  signInWithRedirect,
   GoogleAuthProvider,
   signOut,
   onAuthStateChanged,
@@ -98,20 +99,56 @@ export const signInWithEmail = async (email: string, password: string) => {
   }
 };
 
-// 구글로 로그인 (팝업 방식 - 데스크톱)
+// 모바일/인앱 브라우저 감지
+const isMobileDevice = (): boolean => {
+  if (typeof window === 'undefined' || typeof navigator === 'undefined') return false;
+  const ua = navigator.userAgent || '';
+  const isMobileUA = /Android|iPhone|iPad|iPod|Mobile|webOS|BlackBerry|IEMobile|Opera Mini/i.test(ua);
+  const isTouch = typeof window.matchMedia === 'function' && window.matchMedia('(pointer: coarse)').matches;
+  const isNarrow = window.innerWidth <= 768;
+  return isMobileUA || (isTouch && isNarrow);
+};
+
+const isInAppBrowser = (): boolean => {
+  if (typeof navigator === 'undefined') return false;
+  const ua = navigator.userAgent || '';
+  return /KAKAOTALK|Instagram|FBAN|FBAV|Line\/|NAVER|wv\)|; wv |everytimeApp/i.test(ua);
+};
+
+// 구글로 로그인 (모바일: redirect, 데스크톱: popup)
 export const signInWithGoogle = async () => {
   try {
     // 인증 상태 유지 설정 (새로고침 시에도 로그인 유지)
     await setPersistence(auth, browserLocalPersistence);
+
+    const mobile = isMobileDevice();
+    const inApp = isInAppBrowser();
 
     // 디버깅: 현재 환경 정보 출력
     console.log('🔐 구글 로그인 시도');
     console.log('🔐 현재 도메인:', window.location.hostname);
     console.log('🔐 Auth Domain:', import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || 'in-f8873.firebaseapp.com');
     console.log('🔐 환경:', import.meta.env.MODE);
+    console.log('🔐 모바일 여부:', mobile, '/ 인앱 브라우저:', inApp);
 
-    // 팝업 방식 통일 (모바일/데스크톱 모두)
-    // signInWithRedirect는 모바일 Safari/Chrome에서 3rd-party cookie 차단으로 실패하는 경우가 많음
+    // 인앱 브라우저(카톡/인스타/페북 등)는 구글이 OAuth를 차단함
+    if (inApp) {
+      return {
+        user: null,
+        error: '인앱 브라우저에서는 구글 로그인이 제한됩니다. 우측 상단 메뉴에서 "다른 브라우저로 열기"(Safari/Chrome)를 선택해 주세요.'
+      };
+    }
+
+    // 모바일: redirect 방식 (팝업 차단/3rd-party cookie 이슈 회피)
+    if (mobile) {
+      console.log('🔐 모바일 환경 → signInWithRedirect 사용');
+      await signInWithRedirect(auth, googleProvider);
+      // redirect 후 페이지가 떠나므로 결과는 handleRedirectResult에서 처리됨
+      return { user: null, error: null };
+    }
+
+    // 데스크톱: popup 방식
+    console.log('🔐 데스크톱 환경 → signInWithPopup 사용');
     const result = await signInWithPopup(auth, googleProvider);
 
     // 개발 모드에서 로그 출력
