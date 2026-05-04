@@ -20,9 +20,12 @@ import type { ProjectSummary, DesignFileSummary, DesignFile } from '@/firebase/t
 import {
   isSketchUpEnvironment,
   canImportDaeToSketchUp,
+  canImportPanelsToSketchUp,
   sendDaeToSketchUp,
+  sendPanelsToSketchUp,
 } from '@/editor/shared/utils/sketchupBridge';
 import { ColladaExporter } from '@/editor/shared/utils/ColladaExporter';
+import { sceneToPanelJSON } from '@/editor/shared/utils/sceneToPanelJSON';
 import Space3DView from '@/editor/shared/viewer3d/Space3DView';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
 import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
@@ -231,33 +234,42 @@ const SketchUpDashboard: React.FC = () => {
       }
 
       try {
-        // 가구만 추출하기 위해 FurnitureContainer를 찾는다.
-        // 없으면 전체 Scene에서 라이트/카메라 등을 제외하고 export.
         const exportTarget = findFurnitureGroup(scene) || cleanupScene(scene);
-
         if (exportTarget.children.length === 0) {
           throw new Error('내보낼 가구가 없습니다.');
         }
 
-        // DAE 흐름만 사용 - SketchUp 임포터가 메시 모양/단위/평면 자동 처리
-        // (panel JSON 직접 생성 방식은 박스/원기둥/프레임 모양을 망가뜨려서 폐기)
+        // 1순위: panel JSON 흐름 - 루비가 직접 그룹/태그 생성, 모든 mesh 정보 보존
+        if (canImportPanelsToSketchUp()) {
+          setImportStatus('패널 정보 직렬화 중…');
+          const payload = sceneToPanelJSON(exportTarget, importingDesign.name);
+          if (payload.groups.length === 0 && payload.unnamed.length === 0) {
+            throw new Error('내보낼 메시가 없습니다.');
+          }
+          const jsonString = JSON.stringify(payload);
+          setImportStatus('전송 중…');
+          const sent = sendPanelsToSketchUp(jsonString);
+          if (!sent) {
+            throw new Error('SketchUp으로 전송하지 못했습니다.');
+          }
+          setImportStatus('모델에 추가하는 중…');
+          return;
+        }
+
+        // 2순위: DAE 폴백 (구버전 플러그인)
         setImportStatus('DAE 파일 생성 중…');
         const exporter = new ColladaExporter();
         const xml = exporter.parse(exportTarget);
         if (!xml || xml.length === 0) {
           throw new Error('DAE 변환 실패');
         }
-
         const blob = new Blob([xml], { type: 'model/vnd.collada+xml' });
         const filename = `${(importingDesign.name || 'tttcraft').replace(/[^A-Za-z0-9_\-가-힣]/g, '_')}.dae`;
-
         setImportStatus('전송 중…');
         const sent = await sendDaeToSketchUp(blob, filename);
         if (!sent) {
           throw new Error('SketchUp으로 전송하지 못했습니다.');
         }
-
-        // 결과는 __sketchupImportDone 콜백에서 처리됨
         setImportStatus('모델에 추가하는 중…');
       } catch (err: any) {
         console.error('[SketchUpDashboard] export 실패:', err);
