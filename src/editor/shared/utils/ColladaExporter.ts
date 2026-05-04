@@ -13,6 +13,10 @@ export class ColladaExporter {
   // Three.js Y-up: (0,1,0)이 위 → SketchUp Z-up: (0,0,1)이 위
   private yUpToZUpMatrix = new THREE.Matrix4().makeRotationX(Math.PI / 2);
 
+  // 프로젝트 단위: 1 three unit = 100 mm (MM_TO_THREE_UNITS = 0.01)
+  // DAE는 mm로 출력하고 <unit name="millimeter" meter="0.001"/> 로 명시
+  private static readonly THREE_UNIT_TO_MM = 100;
+
   /**
    * Three.js 객체를 Collada XML 문자열로 변환
    * 같은 패널 이름끼리 부모 그룹 노드로 묶어서 SketchUp에서 패널별 그룹/태그로 임포트되게 한다.
@@ -136,7 +140,12 @@ export class ColladaExporter {
         position.getZ(i)
       );
       tempVec.applyMatrix4(worldMatrix);
-      vertices.push(tempVec.x, tempVec.y, tempVec.z);
+      // Three.js unit → mm 변환 (1 unit = 100mm)
+      vertices.push(
+        tempVec.x * ColladaExporter.THREE_UNIT_TO_MM,
+        tempVec.y * ColladaExporter.THREE_UNIT_TO_MM,
+        tempVec.z * ColladaExporter.THREE_UNIT_TO_MM
+      );
 
       if (normal) {
         tempVec.set(
@@ -360,7 +369,7 @@ export class ColladaExporter {
   <asset>
     <created>${now}</created>
     <modified>${now}</modified>
-    <unit name="meter" meter="1"/>
+    <unit name="millimeter" meter="0.001"/>
     <up_axis>Z_UP</up_axis>
   </asset>
   <library_effects>
