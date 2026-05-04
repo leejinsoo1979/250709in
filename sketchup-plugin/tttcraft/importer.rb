@@ -128,32 +128,41 @@ module TTTCraft
     end
 
     # 재귀 traverse:
-    #  - Group/ComponentInstance 이름에서 패널 이름 추출하면 → 그 객체에 태그 할당
-    #  - 자식이 면(Face)들이면 그 면들에도 태그 할당
-    #  - 깊이 우선 traverse
+    #  - Group / ComponentInstance / ComponentDefinition 이름에서 패널 이름 추출
+    #  - 추출되면 객체와 내부 면들에 태그 할당
+    #  - 자식까지 깊이 우선 traverse
     def self.traverse_for_tags(obj, model, created)
-      panel_name = nil
+      # 패널 이름 후보: 인스턴스 자체 이름, 정의 이름 둘 다 검사
+      candidate_names = []
+      candidate_names << obj.name if obj.respond_to?(:name)
+      if obj.respond_to?(:definition) && obj.definition
+        candidate_names << obj.definition.name if obj.definition.respond_to?(:name)
+      end
 
-      if obj.respond_to?(:name)
-        panel_name = extract_panel_name(obj.name)
+      panel_name = nil
+      candidate_names.compact.each do |raw|
+        panel_name = extract_panel_name(raw)
+        break if panel_name
       end
 
       if panel_name
         layer = ensure_layer(model, panel_name)
         created[panel_name] = true
 
-        # Group/ComponentInstance 자체에 layer 부여 (Tag 패널에 표시됨)
+        # 자기 자신에 layer 부여
         obj.layer = layer if obj.respond_to?(:layer=)
 
-        # 내부 면들에도 같은 layer 부여
+        # 내부 entities (Group이면 obj.entities, ComponentInstance면 obj.definition.entities)
         sub_entities =
           if obj.respond_to?(:entities)
             obj.entities
-          elsif obj.respond_to?(:definition)
+          elsif obj.respond_to?(:definition) && obj.definition
             obj.definition.entities
           end
+
         if sub_entities
           sub_entities.each do |e|
+            # Face/Edge에 layer 부여 (태그 패널에 표시되도록)
             e.layer = layer if e.respond_to?(:layer=)
           end
         end
@@ -163,7 +172,7 @@ module TTTCraft
       sub =
         if obj.respond_to?(:entities)
           obj.entities
-        elsif obj.respond_to?(:definition)
+        elsif obj.respond_to?(:definition) && obj.definition
           obj.definition.entities
         end
       return unless sub
