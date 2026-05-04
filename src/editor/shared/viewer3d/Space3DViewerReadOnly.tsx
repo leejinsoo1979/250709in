@@ -1,4 +1,6 @@
 import React, { useMemo, useEffect } from 'react';
+import { useThree } from '@react-three/fiber';
+import type * as THREE from 'three';
 import { Space3DViewProvider } from './context/Space3DViewContext';
 import ThreeCanvas from './components/base/ThreeCanvas';
 import Room from './components/elements/Room';
@@ -12,7 +14,21 @@ interface Space3DViewerReadOnlyProps {
   viewMode?: '2D' | '3D';
   renderMode?: 'solid' | 'wireframe';
   cameraMode?: 'perspective' | 'orthographic';
+  /** Canvas 내부에서 R3F Scene을 외부로 노출 (헤드리스 export 용) */
+  onSceneReady?: (scene: THREE.Scene) => void;
 }
+
+/**
+ * Canvas 내부에서 R3F Scene을 외부 콜백으로 전달.
+ * useThree는 Canvas 컨텍스트 안에서만 사용 가능하므로 별도 컴포넌트로 분리.
+ */
+const SceneBridge: React.FC<{ onSceneReady?: (scene: THREE.Scene) => void }> = ({ onSceneReady }) => {
+  const { scene } = useThree();
+  useEffect(() => {
+    if (onSceneReady) onSceneReady(scene);
+  }, [scene, onSceneReady]);
+  return null;
+};
 
 /**
  * 읽기 전용 3D 뷰어 컴포넌트
@@ -23,7 +39,8 @@ const Space3DViewerReadOnly: React.FC<Space3DViewerReadOnlyProps> = ({
   placedModules = [],
   viewMode = '3D',
   renderMode = 'solid',
-  cameraMode = 'perspective'
+  cameraMode = 'perspective',
+  onSceneReady
 }) => {
   console.log('🔍 Space3DViewerReadOnly 렌더링:', {
     hasSpaceConfig: !!spaceConfig,
@@ -121,6 +138,9 @@ const Space3DViewerReadOnly: React.FC<Space3DViewerReadOnlyProps> = ({
           zoomMultiplier={cameraMode === 'orthographic' ? 0.65 : undefined}
         >
           <React.Suspense fallback={null}>
+            {/* 헤드리스 export용 Scene 노출 */}
+            {onSceneReady && <SceneBridge onSceneReady={onSceneReady} />}
+
             {/* 조명 시스템 */}
             <directionalLight 
               position={[5, 15, 20]} 

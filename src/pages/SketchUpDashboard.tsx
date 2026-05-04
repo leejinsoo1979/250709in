@@ -399,37 +399,8 @@ const HeadlessExportViewer: React.FC<HeadlessExportViewerProps> = ({
   designFile,
   onSceneReady,
 }) => {
-  // Space3DViewerReadOnly가 자체적으로 Canvas를 만들지만 sceneRef를 노출하지 않으므로,
-  // R3F의 onCreated 트릭 대신 mount 후 Scene을 찾는 방식으로 처리.
-  // → DOM에서 canvas를 찾아 __r3f 인터널에서 scene 객체 추출
-  useEffect(() => {
-    let cancelled = false;
-    let timer: ReturnType<typeof setTimeout> | null = null;
-
-    const tryFindScene = (attempt = 0) => {
-      if (cancelled) return;
-      const canvases = document.querySelectorAll('canvas');
-      for (const c of Array.from(canvases)) {
-        const root = (c as any).__r3f?.root || (c as any).__r3f;
-        const scene: THREE.Scene | undefined =
-          root?.scene || root?.getState?.()?.scene;
-        if (scene && scene.children.length > 0) {
-          onSceneReady(scene);
-          return;
-        }
-      }
-      if (attempt < 60) {
-        timer = setTimeout(() => tryFindScene(attempt + 1), 100);
-      }
-    };
-
-    timer = setTimeout(() => tryFindScene(0), 200);
-    return () => {
-      cancelled = true;
-      if (timer) clearTimeout(timer);
-    };
-  }, [designFile.id, onSceneReady]);
-
+  // Space3DViewerReadOnly의 onSceneReady prop으로 R3F의 useThree 훅을 통해
+  // 안전하게 Scene을 받는다. (DOM/__r3f 인터널 탐색 불필요)
   return (
     <Space3DViewerReadOnly
       spaceConfig={designFile.spaceConfig}
@@ -437,6 +408,7 @@ const HeadlessExportViewer: React.FC<HeadlessExportViewerProps> = ({
       viewMode="3D"
       renderMode="solid"
       cameraMode="perspective"
+      onSceneReady={onSceneReady}
     />
   );
 };
