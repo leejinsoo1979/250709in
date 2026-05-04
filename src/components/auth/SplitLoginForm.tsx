@@ -44,14 +44,30 @@ export const SplitLoginForm: React.FC<SplitLoginFormProps> = ({ onSuccess, defau
   useEffect(() => {
     if (!isSketchUpEnvironment()) return;
 
-    (window as any).__sketchupOAuthToken = async (idToken: string) => {
+    (window as any).__sketchupOAuthToken = async (
+      payload: string | { idToken?: string; accessToken?: string }
+    ) => {
       try {
         if (!auth) {
           setError('Firebase Auth가 초기화되지 않았습니다.');
           return;
         }
-        // ID 토큰을 Firebase Credential로 변환
-        const credential = GoogleAuthProvider.credential(idToken);
+
+        // 구버전 호환: 문자열로 들어오면 idToken으로 간주
+        const tokens = typeof payload === 'string'
+          ? { idToken: payload, accessToken: undefined }
+          : payload;
+
+        const idToken = tokens.idToken || null;
+        const accessToken = tokens.accessToken || null;
+
+        if (!idToken && !accessToken) {
+          throw new Error('구글 OAuth 토큰이 비어 있습니다.');
+        }
+
+        // GoogleAuthProvider.credential(idToken, accessToken)
+        // 둘 중 하나만 있어도 Firebase가 처리 가능
+        const credential = GoogleAuthProvider.credential(idToken, accessToken);
         const userCred = await signInWithCredential(auth, credential);
         if (userCred.user) {
           navigate(postLoginPath);

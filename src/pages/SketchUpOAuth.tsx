@@ -61,10 +61,22 @@ const SketchUpOAuth: React.FC = () => {
         if (cancelled) return;
 
         if (result?.user) {
-          // ID 토큰 가져와서 루비 로컬 서버로 전달
+          // 구글 OAuth ID 토큰 추출 (Firebase ID 토큰 아님!)
+          // signInWithCredential을 다시 호출하려면 Google OAuth credential이 필요
           setStatus('sending_token');
-          const idToken = await result.user.getIdToken(true);
-          await sendTokenToLocalBridge(port, state, idToken);
+
+          const credential = GoogleAuthProvider.credentialFromResult(result);
+          const googleIdToken = credential?.idToken;
+          const accessToken = credential?.accessToken;
+
+          if (!googleIdToken && !accessToken) {
+            throw new Error('구글 OAuth credential 추출 실패');
+          }
+
+          await sendTokenToLocalBridge(port, state, {
+            idToken: googleIdToken,
+            accessToken: accessToken,
+          });
           if (!cancelled) setStatus('done');
           return;
         }
@@ -143,12 +155,20 @@ const SketchUpOAuth: React.FC = () => {
   );
 };
 
-async function sendTokenToLocalBridge(port: string, state: string, idToken: string): Promise<void> {
+async function sendTokenToLocalBridge(
+  port: string,
+  state: string,
+  tokens: { idToken?: string | null; accessToken?: string | null }
+): Promise<void> {
   const url = `http://127.0.0.1:${port}/oauth-callback`;
   const res = await fetch(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ token: idToken, state }),
+    body: JSON.stringify({
+      idToken: tokens.idToken || '',
+      accessToken: tokens.accessToken || '',
+      state,
+    }),
   });
   if (!res.ok) {
     throw new Error(`로컬 브릿지 응답 오류: ${res.status}`);

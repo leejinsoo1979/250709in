@@ -100,16 +100,18 @@ module TTTCraft
       end
 
       payload = parse_payload(req)
-      token = payload['token'].to_s
+      id_token = payload['idToken'].to_s
+      access_token = payload['accessToken'].to_s
       state = payload['state'].to_s
 
       if @expected_state.nil? || @expected_state.empty? || state != @expected_state
+        warn "[tttcraft] state_mismatch: expected=#{@expected_state.inspect} got=#{state.inspect}"
         res.status = 400
         res.body = '{"ok":false,"error":"state_mismatch"}'
         return
       end
 
-      if token.empty?
+      if id_token.empty? && access_token.empty?
         res.status = 400
         res.body = '{"ok":false,"error":"empty_token"}'
         return
@@ -118,9 +120,12 @@ module TTTCraft
       # 다이얼로그가 떠 있을 때만 토큰 주입
       if @dialog && @dialog.respond_to?(:execute_script)
         # JSON 직렬화로 안전하게 escape
-        safe_token = JSON.dump(token)
-        js = "window.__sketchupOAuthToken && window.__sketchupOAuthToken(#{safe_token});"
+        payload_js = JSON.dump({ 'idToken' => id_token, 'accessToken' => access_token })
+        js = "window.__sketchupOAuthToken && window.__sketchupOAuthToken(#{payload_js});"
         @dialog.execute_script(js)
+        puts "[tttcraft] OAuth token injected into HtmlDialog (idToken length=#{id_token.length}, accessToken length=#{access_token.length})"
+      else
+        warn '[tttcraft] dialog not available - cannot inject token'
       end
 
       res.status = 200
