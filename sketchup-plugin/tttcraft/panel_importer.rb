@@ -173,17 +173,40 @@ module TTTCraft
       # 재질 준비
       material = make_material(color, opacity)
 
-      # SOFTEN(0): 같은 평면 삼각형 자동 병합 (대각선 가장자리 자동 숨김)
-      # SMOOTH(1): smooth shading
-      # NO_SMOOTH_OR_HIDE(2): 그대로
-      # SOFTEN_BASED_ON_INDEX(3): index 기반
-      # 0 + 1 + 4 = 5 (SMOOTH_SOFT_EDGES) - SketchUp이 공평면 자동 병합
-      smooth_flags = Geom::PolygonMesh::SMOOTH_SOFT_EDGES rescue 5
+      # SketchUp Ruby API 가장자리 플래그 비트:
+      #   1 = SOFTEN, 2 = HIDE, 4 = SMOOTH, 8 = SOFTEN_BASED_ON_INDEX
+      # 12 = SMOOTH(4) + SOFTEN_BASED_ON_INDEX(8): PolygonMesh 내부에서 부드럽게
+      smooth_flags = 12
 
       added = entities.add_faces_from_mesh(mesh, smooth_flags, material, material)
       face_count = added if added.is_a?(Integer)
 
+      # 공평면 가장자리(같은 평면의 두 면을 가르는 edge)를 hide + soft + smooth 처리
+      # → 대각선/내부 분할선이 시각적으로 사라짐
+      hide_coplanar_edges(entities)
+
       face_count
+    end
+
+    # 그룹/엔티티 안에서 양쪽에 면이 있고 두 면이 같은 평면(또는 거의 같은 법선)인
+    # 가장자리를 hide + soft + smooth 처리.
+    PLANAR_DOT_THRESHOLD = 0.9999  # cos(약 0.8°)
+
+    def self.hide_coplanar_edges(entities)
+      entities.grep(Sketchup::Edge).each do |edge|
+        faces = edge.faces
+        next unless faces.length == 2
+        n1 = faces[0].normal
+        n2 = faces[1].normal
+        next if n1.length == 0 || n2.length == 0
+        if n1.dot(n2).abs >= PLANAR_DOT_THRESHOLD
+          edge.hidden = true
+          edge.soft = true
+          edge.smooth = true
+        end
+      end
+    rescue StandardError => e
+      warn "[tttcraft] hide_coplanar_edges error: #{e.message}"
     end
 
     def self.make_material(color, opacity)
