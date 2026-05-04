@@ -17,9 +17,17 @@ export class ColladaExporter {
   // DAE는 mm로 출력하고 <unit name="millimeter" meter="0.001"/> 로 명시
   private static readonly THREE_UNIT_TO_MM = 100;
 
+  // 좌측 하단 원점 시프트(mm). parse() 시작 시 계산되고 processGeometry에서 차감.
+  private shiftMmX = 0;
+  private shiftMmY = 0;
+  private shiftMmZ = 0;
+
   /**
    * Three.js 객체를 Collada XML 문자열로 변환
    * 같은 패널 이름끼리 부모 그룹 노드로 묶어서 SketchUp에서 패널별 그룹/태그로 임포트되게 한다.
+   *
+   * 좌표계: Three.js Y-up → SketchUp Z-up 변환 + mm 단위 출력
+   * 원점: 가구의 좌측 하단(min x, y, z)을 (0,0,0)으로 시프트
    */
   parse(object: THREE.Object3D): string {
     this.geometryId = 0;
@@ -39,6 +47,37 @@ export class ColladaExporter {
     console.log('📦 입력 객체:', object.name, object.type);
 
     object.updateMatrixWorld(true);
+
+    // === 1차 traverse: 정점 bounds 계산 (좌측 하단 시프트 용) ===
+    // mm 단위 + Z-up 변환된 좌표계 기준으로 min(x,y,z) 산출
+    let minX = Infinity, minY = Infinity, minZ = Infinity;
+    const tmpVec = new THREE.Vector3();
+    object.traverse((child) => {
+      const m = child as THREE.Mesh;
+      if (!m.isMesh || !m.geometry) return;
+      const wm = new THREE.Matrix4().multiplyMatrices(this.yUpToZUpMatrix, m.matrixWorld);
+      const pos = m.geometry.getAttribute('position');
+      if (!pos) return;
+      for (let i = 0; i < pos.count; i++) {
+        tmpVec.set(pos.getX(i), pos.getY(i), pos.getZ(i)).applyMatrix4(wm);
+        const x = tmpVec.x * ColladaExporter.THREE_UNIT_TO_MM;
+        const y = tmpVec.y * ColladaExporter.THREE_UNIT_TO_MM;
+        const z = tmpVec.z * ColladaExporter.THREE_UNIT_TO_MM;
+        if (x < minX) minX = x;
+        if (y < minY) minY = y;
+        if (z < minZ) minZ = z;
+      }
+    });
+    if (!Number.isFinite(minX)) { minX = 0; }
+    if (!Number.isFinite(minY)) { minY = 0; }
+    if (!Number.isFinite(minZ)) { minZ = 0; }
+
+    // 시프트 매트릭스 (mm 단위) → Three.js unit으로 환산해서 적용
+    // ColladaExporter의 processGeometry는 worldMatrix를 받아서 정점 변환 후 mm 곱셈을 하므로,
+    // 시프트는 mm 적용 단계에서 빼주는 게 가장 안전함 → 이를 위해 minX/Y/Z 인스턴스에 저장
+    this.shiftMmX = minX;
+    this.shiftMmY = minY;
+    this.shiftMmZ = minZ;
 
     let meshCount = 0;
 
@@ -140,11 +179,11 @@ export class ColladaExporter {
         position.getZ(i)
       );
       tempVec.applyMatrix4(worldMatrix);
-      // Three.js unit → mm 변환 (1 unit = 100mm)
+      // Three.js unit → mm 변환 + 좌측 하단 원점 시프트
       vertices.push(
-        tempVec.x * ColladaExporter.THREE_UNIT_TO_MM,
-        tempVec.y * ColladaExporter.THREE_UNIT_TO_MM,
-        tempVec.z * ColladaExporter.THREE_UNIT_TO_MM
+        tempVec.x * ColladaExporter.THREE_UNIT_TO_MM - this.shiftMmX,
+        tempVec.y * ColladaExporter.THREE_UNIT_TO_MM - this.shiftMmY,
+        tempVec.z * ColladaExporter.THREE_UNIT_TO_MM - this.shiftMmZ
       );
 
       if (normal) {

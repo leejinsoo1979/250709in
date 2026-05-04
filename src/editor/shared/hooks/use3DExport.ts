@@ -178,27 +178,40 @@ export const use3DExport = () => {
         }
       }
 
-      // 상부/하부 프레임 포함 (Room이 그리는 BoxWithEdges 메시)
+      // 상부/하부 프레임 포함 (Room이 그리는 BoxWithEdges 메시 트리)
       // BoxWithEdges는 mesh 이름을 "furniture-mesh-{name}" 형태로 만들기 때문에
       // top-frame / base-frame / bottom-frame을 prefix까지 포함해서 매칭한다.
-      if (obj.name && (
-          obj.name === 'top-frame' ||
-          obj.name === 'base-frame' ||
-          obj.name === 'bottom-frame' ||
-          obj.name.includes('furniture-mesh-top-frame') ||
-          obj.name.includes('furniture-mesh-base-frame') ||
-          obj.name.includes('furniture-mesh-bottom-frame'))) {
+      const lowerName = (obj.name || '').toLowerCase();
+      const isFrame =
+        lowerName === 'top-frame' ||
+        lowerName === 'base-frame' ||
+        lowerName === 'bottom-frame' ||
+        lowerName.includes('top-frame') ||
+        lowerName.includes('base-frame') ||
+        lowerName.includes('bottom-frame');
+      if (isFrame) {
         result.push(obj);
         addedUuids.add(obj.uuid);
         console.log(`${indent}✅ Frame 포함: ${obj.name}`);
-        return;
+        // frame은 mesh 자체일 수도 있고 그룹일 수도 있으므로 자식 탐색 계속
       }
 
-      // 자식 탐색
+      // 자식 탐색 (frame이 깊이 어디 있든 찾도록 항상 재귀)
       if (obj.children && obj.children.length > 0) {
         obj.children.forEach(child => traverse(child, depth + 1));
       }
     };
+
+    // scene 자체부터 traverse (scene.traverse 대체)
+    scene.traverse((child) => {
+      if (addedUuids.has(child.uuid)) return;
+      const lower = (child.name || '').toLowerCase();
+      if (lower.includes('top-frame') || lower.includes('base-frame') || lower.includes('bottom-frame')) {
+        result.push(child);
+        addedUuids.add(child.uuid);
+        console.log(`✅ Frame 직접 매칭: ${child.name}`);
+      }
+    });
 
     scene.children.forEach(child => traverse(child, 0));
 
