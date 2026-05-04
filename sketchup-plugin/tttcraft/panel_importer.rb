@@ -113,80 +113,80 @@ module TTTCraft
       layer
     end
 
-    # 메시 데이터에서 정점/면을 entities에 추가.
-    # Geom::PolygonMesh를 사용하여 SketchUp이 같은 평면 삼각형을 자동 병합하고
-    # soft/smooth 가장자리 처리를 적용한 깔끔한 메시를 생성하게 한다.
+    # 메시 데이터에서 박스(축 정렬 직육면체)를 추출하여 깔끔한 6개 사각형 면으로 추가.
+    # 입력 메시는 임의의 정점/삼각형 모음이지만, 가구 패널은 모두 축 정렬 박스이므로
+    # 정점들의 min/max만 구하면 박스 8개 꼭짓점이 나온다.
+    # 결과: 박스마다 6개 사각형 면 (삼각형 분할 없음, 평범한 4각형)
     # @return [Integer] 생성된 face 개수
     def self.add_mesh_to_entities(entities, mesh_data)
       vertices_flat = mesh_data['vertices']
-      indices = mesh_data['indices']
-      return 0 unless vertices_flat && indices
+      return 0 unless vertices_flat && vertices_flat.length >= 9
 
       color = mesh_data['color'] || {}
       opacity = (mesh_data['opacity'] || 1.0).to_f
 
-      vertex_count = vertices_flat.length / 3
-      tri_count = indices.length / 3
-      return 0 if vertex_count == 0 || tri_count == 0
+      # 정점들의 min/max (mm 단위)
+      min_x = Float::INFINITY; min_y = Float::INFINITY; min_z = Float::INFINITY
+      max_x = -Float::INFINITY; max_y = -Float::INFINITY; max_z = -Float::INFINITY
 
-      # PolygonMesh 빌드
-      mesh = Geom::PolygonMesh.new(vertex_count, tri_count)
-
-      # add_point는 1-based index 반환 → 우리도 1-based로 매핑
-      point_indices = []
       i = 0
       while i < vertices_flat.length
-        x_mm = vertices_flat[i].to_f
-        y_mm = vertices_flat[i + 1].to_f
-        z_mm = vertices_flat[i + 2].to_f
-        pt = Geom::Point3d.new(
-          x_mm * MM_TO_INCH,
-          y_mm * MM_TO_INCH,
-          z_mm * MM_TO_INCH
-        )
-        point_indices << mesh.add_point(pt)
+        x = vertices_flat[i].to_f
+        y = vertices_flat[i + 1].to_f
+        z = vertices_flat[i + 2].to_f
+        min_x = x if x < min_x
+        min_y = y if y < min_y
+        min_z = z if z < min_z
+        max_x = x if x > max_x
+        max_y = y if y > max_y
+        max_z = z if z > max_z
         i += 3
       end
 
-      tri_count.times do |t|
-        idx_a = indices[t * 3]
-        idx_b = indices[t * 3 + 1]
-        idx_c = indices[t * 3 + 2]
-        next if idx_a.nil? || idx_b.nil? || idx_c.nil?
+      # 박스 두께가 0이면 (평면 메시 등) 추가 안 함
+      return 0 if (max_x - min_x).abs < 1e-6 && (max_y - min_y).abs < 1e-6
+      return 0 if (max_y - min_y).abs < 1e-6 && (max_z - min_z).abs < 1e-6
+      return 0 if (max_x - min_x).abs < 1e-6 && (max_z - min_z).abs < 1e-6
 
-        # JSON은 0-based, PolygonMesh는 1-based index를 add_polygon에 요구
-        pa = point_indices[idx_a]
-        pb = point_indices[idx_b]
-        pc = point_indices[idx_c]
-        next if pa.nil? || pb.nil? || pc.nil?
-        next if pa == pb || pb == pc || pa == pc  # degenerate
+      # mm → inch 변환
+      x0 = min_x * MM_TO_INCH; x1 = max_x * MM_TO_INCH
+      y0 = min_y * MM_TO_INCH; y1 = max_y * MM_TO_INCH
+      z0 = min_z * MM_TO_INCH; z1 = max_z * MM_TO_INCH
 
-        begin
-          mesh.add_polygon(pa, pb, pc)
-        rescue ArgumentError
-          # 잘못된 폴리곤 - 무시
-        end
-      end
+      # 박스 8개 꼭짓점
+      p000 = Geom::Point3d.new(x0, y0, z0)
+      p100 = Geom::Point3d.new(x1, y0, z0)
+      p110 = Geom::Point3d.new(x1, y1, z0)
+      p010 = Geom::Point3d.new(x0, y1, z0)
+      p001 = Geom::Point3d.new(x0, y0, z1)
+      p101 = Geom::Point3d.new(x1, y0, z1)
+      p111 = Geom::Point3d.new(x1, y1, z1)
+      p011 = Geom::Point3d.new(x0, y1, z1)
 
-      face_count = mesh.polygons.length
-
-      # 재질 준비
       material = make_material(color, opacity)
 
-      # SketchUp Ruby API 가장자리 플래그 비트:
-      #   1 = SOFTEN, 2 = HIDE, 4 = SMOOTH, 8 = SOFTEN_BASED_ON_INDEX
-      # 0 = 평평한 면 (smooth shading 없음, 모든 가장자리 보임)
-      # 후처리에서 공평면 가장자리만 hide → smooth shading 없는 깔끔한 박스
-      smooth_flags = 0
+      # 박스 6면을 사각형 face로 추가
+      faces = []
+      faces << safe_add_face(entities, [p000, p100, p110, p010])  # bottom (-Z)
+      faces << safe_add_face(entities, [p001, p011, p111, p101])  # top (+Z)
+      faces << safe_add_face(entities, [p000, p001, p101, p100])  # front (-Y)
+      faces << safe_add_face(entities, [p010, p110, p111, p011])  # back (+Y)
+      faces << safe_add_face(entities, [p000, p010, p011, p001])  # left (-X)
+      faces << safe_add_face(entities, [p100, p101, p111, p110])  # right (+X)
 
-      added = entities.add_faces_from_mesh(mesh, smooth_flags, material, material)
-      face_count = added if added.is_a?(Integer)
+      faces.compact!
+      faces.each do |face|
+        face.material = material if material
+        face.back_material = material if material
+      end
 
-      # 공평면 가장자리(같은 평면의 두 면을 가르는 edge)를 hide + soft + smooth 처리
-      # → 대각선/내부 분할선이 시각적으로 사라짐
-      hide_coplanar_edges(entities)
+      faces.length
+    end
 
-      face_count
+    def self.safe_add_face(entities, points)
+      entities.add_face(*points)
+    rescue ArgumentError
+      nil
     end
 
     # 그룹/엔티티 안에서 양쪽에 면이 있고 두 면이 같은 평면(또는 거의 같은 법선)인
