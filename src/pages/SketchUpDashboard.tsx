@@ -23,7 +23,7 @@ import {
   sendDaeToSketchUp,
 } from '@/editor/shared/utils/sketchupBridge';
 import { ColladaExporter } from '@/editor/shared/utils/ColladaExporter';
-import Space3DViewerReadOnly from '@/editor/shared/viewer3d/Space3DViewerReadOnly';
+import Space3DView from '@/editor/shared/viewer3d/Space3DView';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
 import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
 import styles from './SketchUpDashboard.module.css';
@@ -434,16 +434,39 @@ const HeadlessExportViewer: React.FC<HeadlessExportViewerProps> = ({
   designFile,
   onSceneReady,
 }) => {
-  // Space3DViewerReadOnly의 onSceneReady prop으로 R3F의 useThree 훅을 통해
-  // 안전하게 Scene을 받는다. (DOM/__r3f 인터널 탐색 불필요)
+  // 에디터의 검증된 Space3DView를 그대로 헤드리스로 마운트.
+  // store에 spaceInfo / placedModules가 이미 주입되어 있어야 가구가 그려진다.
+  // sceneRef로 Three.js Scene을 직접 받음.
+  const sceneRef = useRef<THREE.Scene | null>(null);
+
+  useEffect(() => {
+    // sceneRef가 채워질 때까지 기다리다가 한번 콜백 호출
+    let cancelled = false;
+    const tick = () => {
+      if (cancelled) return;
+      if (sceneRef.current) {
+        onSceneReady(sceneRef.current);
+        return;
+      }
+      setTimeout(tick, 50);
+    };
+    tick();
+    return () => {
+      cancelled = true;
+    };
+  }, [designFile.id, onSceneReady]);
+
   return (
-    <Space3DViewerReadOnly
-      spaceConfig={designFile.spaceConfig}
-      placedModules={designFile.furniture?.placedModules || []}
+    <Space3DView
+      spaceInfo={designFile.spaceConfig}
+      svgSize={{ width: 800, height: 600 }}
       viewMode="3D"
       renderMode="solid"
-      cameraMode="perspective"
-      onSceneReady={onSceneReady}
+      showAll={false}
+      showFrame={true}
+      showDimensions={false}
+      readOnly={true}
+      sceneRef={sceneRef}
     />
   );
 };
