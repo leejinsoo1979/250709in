@@ -131,7 +131,7 @@ const NewsPage: React.FC<Props> = ({ mode }) => {
       </div>
     );
   }
-  if (!isAdmin) return null;
+  if ((mode === 'new' || mode === 'edit') && !isAdmin) return null;
 
   return (
     <div className={styles.root}>
