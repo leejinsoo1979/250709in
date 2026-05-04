@@ -114,6 +114,8 @@ module TTTCraft
     end
 
     # 메시 데이터에서 정점/면을 entities에 추가.
+    # Geom::PolygonMesh를 사용하여 SketchUp이 같은 평면 삼각형을 자동 병합하고
+    # soft/smooth 가장자리 처리를 적용한 깔끔한 메시를 생성하게 한다.
     # @return [Integer] 생성된 face 개수
     def self.add_mesh_to_entities(entities, mesh_data)
       vertices_flat = mesh_data['vertices']
@@ -123,26 +125,28 @@ module TTTCraft
       color = mesh_data['color'] || {}
       opacity = (mesh_data['opacity'] || 1.0).to_f
 
-      # 정점 배열을 [Point3d, Point3d, ...] 로 변환
-      points = []
+      vertex_count = vertices_flat.length / 3
+      tri_count = indices.length / 3
+      return 0 if vertex_count == 0 || tri_count == 0
+
+      # PolygonMesh 빌드
+      mesh = Geom::PolygonMesh.new(vertex_count, tri_count)
+
+      # add_point는 1-based index 반환 → 우리도 1-based로 매핑
+      point_indices = []
       i = 0
       while i < vertices_flat.length
         x_mm = vertices_flat[i].to_f
         y_mm = vertices_flat[i + 1].to_f
         z_mm = vertices_flat[i + 2].to_f
-        points << Geom::Point3d.new(
+        pt = Geom::Point3d.new(
           x_mm * MM_TO_INCH,
           y_mm * MM_TO_INCH,
           z_mm * MM_TO_INCH
         )
+        point_indices << mesh.add_point(pt)
         i += 3
       end
-
-      # 재질 준비
-      material = make_material(color, opacity)
-
-      face_count = 0
-      tri_count = indices.length / 3
 
       tri_count.times do |t|
         idx_a = indices[t * 3]
@@ -150,23 +154,34 @@ module TTTCraft
         idx_c = indices[t * 3 + 2]
         next if idx_a.nil? || idx_b.nil? || idx_c.nil?
 
-        a = points[idx_a]
-        b = points[idx_b]
-        c = points[idx_c]
-        next if a.nil? || b.nil? || c.nil?
-        next if degenerate_triangle?(a, b, c)
+        # JSON은 0-based, PolygonMesh는 1-based index를 add_polygon에 요구
+        pa = point_indices[idx_a]
+        pb = point_indices[idx_b]
+        pc = point_indices[idx_c]
+        next if pa.nil? || pb.nil? || pc.nil?
+        next if pa == pb || pb == pc || pa == pc  # degenerate
 
         begin
-          face = entities.add_face(a, b, c)
-          if face
-            face.material = material if material
-            face.back_material = material if material
-            face_count += 1
-          end
+          mesh.add_polygon(pa, pb, pc)
         rescue ArgumentError
-          # 동일 평면 면 중복 등 SketchUp 거부 - 무시
+          # 잘못된 폴리곤 - 무시
         end
       end
+
+      face_count = mesh.polygons.length
+
+      # 재질 준비
+      material = make_material(color, opacity)
+
+      # SOFTEN(0): 같은 평면 삼각형 자동 병합 (대각선 가장자리 자동 숨김)
+      # SMOOTH(1): smooth shading
+      # NO_SMOOTH_OR_HIDE(2): 그대로
+      # SOFTEN_BASED_ON_INDEX(3): index 기반
+      # 0 + 1 + 4 = 5 (SMOOTH_SOFT_EDGES) - SketchUp이 공평면 자동 병합
+      smooth_flags = Geom::PolygonMesh::SMOOTH_SOFT_EDGES rescue 5
+
+      added = entities.add_faces_from_mesh(mesh, smooth_flags, material, material)
+      face_count = added if added.is_a?(Integer)
 
       face_count
     end
