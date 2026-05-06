@@ -135,22 +135,22 @@ const SpaceDefaultsModal: React.FC<SpaceDefaultsModalProps> = ({ onClose, onSave
   const h = (key: keyof SpaceConfigDefaults) => (v: number) => set(key, v);
 
   const handleSave = async () => {
-    console.log('🟢 [SpaceDefaultsModal] handleSave 시작, values:', values);
     setSaving(true);
     const { error } = await updateSpaceConfigDefaults(values);
     setSaving(false);
-    console.log('🟢 [SpaceDefaultsModal] 저장 결과 error:', error, 'onSaved 존재여부:', !!onSaved);
+    // 화면에 직접 띄워서 진단
+    alert(
+      '[저장 시도]\n' +
+      'baseHeight=' + values.baseHeight + ', frameTop=' + values.frameTop + '\n' +
+      '저장 결과: ' + (error ? '실패 — ' + error : '성공') + '\n' +
+      'onSaved 콜백: ' + (onSaved ? '있음' : '없음')
+    );
     if (error) {
       setMessage({ text: error, type: 'error' });
     } else {
       const cb = onSaved;
       onClose();
-      if (cb) {
-        console.log('🟢 [SpaceDefaultsModal] onSaved 호출');
-        cb();
-      } else {
-        console.log('🔴 [SpaceDefaultsModal] onSaved 없음 — 자동 새 디자인 트리거 안 됨');
-      }
+      if (cb) cb();
     }
   };
 
