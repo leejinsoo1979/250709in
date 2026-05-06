@@ -1985,8 +1985,6 @@ const Configurator: React.FC = () => {
       // 유저 공간설정 기본값 로드 후 병합
       try {
         const defaults = await getSpaceConfigDefaults();
-        alert('[에디터 새디자인] firebase에서 받은 baseHeight: ' + (defaults?.baseHeight ?? '없음'));
-        console.log('🟡 [에디터-새디자인] getSpaceConfigDefaults:', defaults);
         if (defaults) {
           defaultSpaceConfig = {
             ...defaultSpaceConfig,
@@ -2058,12 +2056,6 @@ const Configurator: React.FC = () => {
       } catch (e) {
         console.error('유저 공간설정 기본값 로드 실패:', e);
       }
-
-      console.log('🟡 [에디터-새디자인] firebase 저장 직전 spaceConfig:', {
-        baseConfigHeight: defaultSpaceConfig.baseConfig?.height,
-        frameTop: defaultSpaceConfig.frameSize?.top,
-        full: defaultSpaceConfig,
-      });
 
       const createData: any = {
         name: newDesignName.trim(),
@@ -2273,8 +2265,6 @@ const Configurator: React.FC = () => {
               };
             }
           }
-          alert('[다른이름저장] 적용 baseHeight: ' + (baseSpaceInfo.baseConfig?.height ?? '없음') + ', frameTop: ' + (baseSpaceInfo.frameSize?.top ?? '없음'));
-
           // Firebase에 새 디자인 파일로 저장
           const { createDesignFile } = await import('@/firebase/projects');
           const { id: designFileId, error } = await createDesignFile({
@@ -2753,16 +2743,6 @@ const Configurator: React.FC = () => {
 
               // 공간 설정
               if (designFile.spaceConfig) {
-                alert(
-                  '[디자인 로드] firebase에서 받은 값\n' +
-                  'width=' + designFile.spaceConfig.width + '\n' +
-                  'baseHeight=' + (designFile.spaceConfig.baseConfig?.height ?? '없음') + '\n' +
-                  'frameTop=' + (designFile.spaceConfig.frameSize?.top ?? '없음')
-                );
-                console.log('🟢 [Configurator 로드] firebase에서 받은 designFile.spaceConfig:', {
-                  baseConfigHeight: designFile.spaceConfig.baseConfig?.height,
-                  frameTop: designFile.spaceConfig.frameSize?.top,
-                });
                 // 저장된 설정을 유지하되 baseConfig의 기본값만 보장
                 const spaceConfig = {
                   ...designFile.spaceConfig,

@@ -138,13 +138,6 @@ const SpaceDefaultsModal: React.FC<SpaceDefaultsModalProps> = ({ onClose, onSave
     setSaving(true);
     const { error } = await updateSpaceConfigDefaults(values);
     setSaving(false);
-    // 화면에 직접 띄워서 진단
-    alert(
-      '[저장 시도]\n' +
-      'baseHeight=' + values.baseHeight + ', frameTop=' + values.frameTop + '\n' +
-      '저장 결과: ' + (error ? '실패 — ' + error : '성공') + '\n' +
-      'onSaved 콜백: ' + (onSaved ? '있음' : '없음')
-    );
     if (error) {
       setMessage({ text: error, type: 'error' });
     } else {
