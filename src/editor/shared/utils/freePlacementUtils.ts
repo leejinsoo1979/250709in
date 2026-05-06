@@ -386,8 +386,8 @@ export function calcResizedPositionX(
     // 우측에 붙어있으면 우측 고정
     newCenterMm = oldBounds.right - halfNew;
   } else {
-    // 어디에도 안 붙어있으면 중심 유지
-    newCenterMm = currentCenterMm;
+    // 어디에도 안 붙어있어도 좌측 고정 (왼쪽이 제자리, 오른쪽으로만 확장/축소)
+    newCenterMm = oldBounds.left + halfNew;
   }
 
   let clampedMm = clampToSpaceBoundsX(newCenterMm, newWidthMm, spaceInfo);
