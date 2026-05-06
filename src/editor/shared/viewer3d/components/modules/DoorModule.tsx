@@ -132,10 +132,10 @@ interface DoorModuleProps {
   zone?: 'normal' | 'dropped'; // 단내림 영역 정보
   internalHeight?: number; // 자유배치 시 실제 가구 높이 (mm) - freeHeight
   isFreePlacement?: boolean; // 자유배치 모드 여부
-  topFrameThickness?: number; // 개별 가구 상부프레임 두께 (mm) — 도어 상단 갭 계산용
-  hasBase?: boolean; // 하부프레임 존재 여부 (false면 받침대 없음)
+  topFrameThickness?: number; // 개별 가구 상단몰딩 두께 (mm) — 도어 상단 갭 계산용
+  hasBase?: boolean; // 걸래받이 존재 여부 (false면 받침대 없음)
   individualFloatHeight?: number; // 개별 띄움 높이 (mm) - hasBase=false일 때 가구 Y오프셋 보정용
-  individualBaseFrameHeight?: number; // 개별 받침대 높이 (mm) - 슬롯별 하부프레임 높이 조정용
+  individualBaseFrameHeight?: number; // 개별 받침대 높이 (mm) - 슬롯별 걸래받이 높이 조정용
   parentGroupY?: number; // 부모 그룹(가구)의 Y 위치 (Three.js 단위) — 도어 Y 보정용
 }
 
@@ -162,8 +162,8 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   zone, // 단내림 영역 정보
   internalHeight, // 자유배치 시 실제 가구 높이 (mm)
   isFreePlacement = false, // 자유배치 모드 여부
-  topFrameThickness: perFurnitureTopFrame, // 개별 가구 상부프레임 두께
-  hasBase: hasBaseProp, // 하부프레임 존재 여부
+  topFrameThickness: perFurnitureTopFrame, // 개별 가구 상단몰딩 두께
+  hasBase: hasBaseProp, // 걸래받이 존재 여부
   individualFloatHeight: individualFloatHeightProp, // 개별 띄움 높이
   individualBaseFrameHeight: individualBaseFrameHeightProp, // 개별 받침대 높이
   parentGroupY: parentGroupYProp, // 부모 그룹 Y 위치
@@ -883,7 +883,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     // fullSpaceHeight는 zone prop에 따라 단내림 구간 높이 또는 일반 구간 높이 사용
 
     const floorHeightValue = originalSpaceInfo.hasFloorFinish ? (originalSpaceInfo.floorFinish?.height || 0) : 0;
-    // 개별 가구 상부프레임 두께가 설정된 경우 해당 값 사용 (FurnitureItem의 furnitureHeightMm과 일치시키기 위해)
+    // 개별 가구 상단몰딩 두께가 설정된 경우 해당 값 사용 (FurnitureItem의 furnitureHeightMm과 일치시키기 위해)
     const topFrameHeightValue = perFurnitureTopFrame ?? (originalSpaceInfo.frameSize?.top || 30);
     // 도어 높이 계산용 받침대: hasBase 토글에 관계없이 항상 기본 받침대 높이 사용
     // (hasBase=false 시 가구 본체가 받침대를 흡수하지만, 도어는 공간 기준이므로 불변)
@@ -908,7 +908,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     const cabinetTopLocal = tallCabinetFurnitureHeight / 2;
 
     // ── 자유배치 / 슬롯 배치 공통: 천장/바닥 기준 도어 이격 적용 ──
-    // 전체서라운드: 상부프레임이 도어 앞까지 나오므로 도어 상단이 프레임 아래에서 시작
+    // 전체서라운드: 상단몰딩이 도어 앞까지 나오므로 도어 상단이 프레임 아래에서 시작
     // gap=0이면 도어 상단이 천장에 맞닿음 → 도어 높이 = 공간 높이
     const topGap = doorTopGap;
     // 도어 위치 계산용 받침대: hasBase 토글에 관계없이 항상 기본값 사용
@@ -2058,7 +2058,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
         </group>
         )}
 
-        {/* 측면뷰 하부장/하부프레임 치수는 CADDimensions2D 왼쪽 2단에서 처리 */}
+        {/* 측면뷰 하부장/걸래받이 치수는 CADDimensions2D 왼쪽 2단에서 처리 */}
       </group>
     );
   } else {
@@ -2623,7 +2623,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
           </group>
         </animated.group>
 
-        {/* 측면뷰 하부장/하부프레임 치수는 CADDimensions2D 왼쪽 2단에서 처리 */}
+        {/* 측면뷰 하부장/걸래받이 치수는 CADDimensions2D 왼쪽 2단에서 처리 */}
       </group>
     );
   }

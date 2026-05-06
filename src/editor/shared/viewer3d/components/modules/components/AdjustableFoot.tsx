@@ -68,7 +68,7 @@ export const AdjustableFoot: React.FC<AdjustableFootProps> = ({
   // 2D 모드에서는 투명 재질 사용, 3D 모드에서는 기본 재질 사용
   const meshMaterial = viewMode === '2D' ? transparentMaterial : finalMaterial;
 
-  // 엣지 라인 색상 (정면뷰: 하부프레임 뒤이므로 흐리게)
+  // 엣지 라인 색상 (정면뷰: 걸래받이 뒤이므로 흐리게)
   const footDepthOpacity = viewMode === '2D' && view2DDirection === 'front' ? 0.05 : 1.0;
   const edgeColor = useMemo(() => {
     if (viewMode === '3D') {

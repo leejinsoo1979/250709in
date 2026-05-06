@@ -69,7 +69,7 @@ interface UIState {
   // 축 표시 상태
   showAxis: boolean;
 
-  // 프레임 표시 상태 (상부/하부 프레임)
+  // 프레임 표시 상태 (상부/걸래받이)
   showFrame: boolean;
 
   // 가이드 표시 상태 (showAll 체크박스용)

@@ -34,7 +34,7 @@ export const TOTAL_DEPTH = 598;
 export const INNER_DEPTH = 580;
 
 /**
- * 서라운드 상부 프레임 두께 기본값 (30mm)
+ * 서라운드 상단 몰딩 두께 기본값 (30mm)
  */
 export const SURROUND_FRAME_THICKNESS = 30;
 

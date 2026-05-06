@@ -848,7 +848,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
     new Set(['space', 'layoutMode', 'layout'])
   );
 
-  // 상부/하부 프레임 '전체' 통합 모드 (기본 true: 통합 행 표시)
+  // 상부/걸래받이 '전체' 통합 모드 (기본 true: 통합 행 표시)
   const [topFrameAllMode, setTopFrameAllMode] = useState<boolean>(true);
   const [baseFrameAllMode, setBaseFrameAllMode] = useState<boolean>(true);
 
@@ -1340,13 +1340,13 @@ const RightPanel: React.FC<RightPanelProps> = ({
               />
             </FormControl>
             
-            {/* 노서라운드 모드에서 상부프레임 설정 표시 */}
+            {/* 노서라운드 모드에서 상단몰딩 설정 표시 */}
             {frameType === 'no-surround' && (
               <FormControl
                 label={t('space.topFrame')}
                 expanded={expandedSections.has('topFrame')}
                 onToggle={() => toggleSection('topFrame')}
-                helpText="노서라운드 모드에서 상부 프레임의 높이를 설정합니다. 가구 위쪽 마감 처리에 사용됩니다."
+                helpText="노서라운드 모드에서 상단 몰딩의 높이를 설정합니다. 가구 위쪽 마감 처리에 사용됩니다."
               >
                 <NumberInput
                   label={t('space.frameHeight')}
@@ -1368,7 +1368,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
               </FormControl>
             )}
 
-            {/* 슬롯배치: 모든 가구의 상,하부프레임 개별 설정 (자유배치와 동일 형태) */}
+            {/* 슬롯배치: 모든 가구의 상,걸래받이 개별 설정 (자유배치와 동일 형태) */}
             {(() => {
               if (spaceInfo.layoutMode === 'free-placement') return null;
               const slotMods = placedModules.filter(m => !m.isSurroundPanel);
@@ -1403,9 +1403,9 @@ const RightPanel: React.FC<RightPanelProps> = ({
 
                 return (
                   <>
-                    {/* 상부프레임 섹션 */}
+                    {/* 상단몰딩 섹션 */}
                     <FormControl
-                      label="상부프레임"
+                      label="상단몰딩"
                       expanded={expandedSections.has('slotFrame')}
                       onToggle={() => toggleSection('slotFrame')}
                       helpText="프레임 병합 모드: 병합 그룹 단위로 프레임을 설정합니다."
@@ -1445,13 +1445,13 @@ const RightPanel: React.FC<RightPanelProps> = ({
                         );
                       })}
                     </FormControl>
-                    {/* 하부프레임 섹션 (stand 타입 제외) */}
+                    {/* 걸래받이 섹션 (stand 타입 제외) */}
                     {spaceInfo.baseConfig?.type !== 'stand' && (
                       <FormControl
-                        label="하부프레임"
+                        label="걸래받이"
                         expanded={expandedSections.has('slotFrame')}
                         onToggle={() => toggleSection('slotFrame')}
-                        helpText="프레임 병합 모드: 하부 프레임 병합 그룹 단위로 프레임을 설정합니다."
+                        helpText="프레임 병합 모드: 걸래받이 병합 그룹 단위로 프레임을 설정합니다."
                         headerAccessory={
                           <label style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11px', color: 'var(--theme-text-secondary)', cursor: 'pointer' }}>
                             <input type="checkbox" checked={allBaseOnMerge} onChange={toggleAllBaseMerge} style={{ cursor: 'pointer', accentColor: 'var(--theme-primary, #4a90d9)' }} />
@@ -1521,12 +1521,12 @@ const RightPanel: React.FC<RightPanelProps> = ({
               };
               return (
                 <>
-                  {/* 상부프레임 섹션 */}
+                  {/* 상단몰딩 섹션 */}
                   <FormControl
-                    label="상부프레임"
+                    label="상단몰딩"
                     expanded={expandedSections.has('slotFrame')}
                     onToggle={() => toggleSection('slotFrame')}
-                    helpText="각 가구별 상부 프레임을 개별 설정합니다. 너비(읽기전용), 높이, 옵셋으로 Z축 위치를 조정합니다."
+                    helpText="각 가구별 상단 몰딩을 개별 설정합니다. 너비(읽기전용), 높이, 옵셋으로 Z축 위치를 조정합니다."
                     headerAccessory={
                       <label style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11px', color: 'var(--theme-text-secondary)', cursor: 'pointer' }}>
                         <input type="checkbox" checked={allTopOn} onChange={toggleAllTop} style={{ cursor: 'pointer', accentColor: 'var(--theme-primary, #4a90d9)' }} />
@@ -1581,13 +1581,13 @@ const RightPanel: React.FC<RightPanelProps> = ({
                     })
                   )}
                   </FormControl>
-                  {/* 하부프레임 섹션 (stand 타입 제외) */}
+                  {/* 걸래받이 섹션 (stand 타입 제외) */}
                   {spaceInfo.baseConfig?.type !== 'stand' && (
                   <FormControl
-                    label="하부프레임"
+                    label="걸래받이"
                     expanded={expandedSections.has('slotFrame')}
                     onToggle={() => toggleSection('slotFrame')}
-                    helpText="각 가구별 하부 프레임(베이스)을 개별 설정합니다. 너비(읽기전용), 높이, 옵셋으로 Z축 위치를 조정합니다."
+                    helpText="각 가구별 걸래받이(베이스)을 개별 설정합니다. 너비(읽기전용), 높이, 옵셋으로 Z축 위치를 조정합니다."
                     headerAccessory={
                       <label style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11px', color: 'var(--theme-text-secondary)', cursor: 'pointer' }}>
                         <input type="checkbox" checked={allBaseOn} onChange={toggleAllBase} style={{ cursor: 'pointer', accentColor: 'var(--theme-primary, #4a90d9)' }} />
@@ -1696,7 +1696,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
                 <p style={{ fontSize: '11px', color: 'var(--theme-text-secondary)', margin: '4px 0 0 0' }}>
                   {(spaceInfo.doorSetupMode || 'default') === 'default'
                     ? '각 가구 높이에 맞게 도어가 개별 적용됩니다.'
-                    : '상부 프레임을 가리도록 모든 도어 높이가 통일됩니다.'}
+                    : '상단 몰딩을 가리도록 모든 도어 높이가 통일됩니다.'}
                 </p>
               </FormControl>
             )}

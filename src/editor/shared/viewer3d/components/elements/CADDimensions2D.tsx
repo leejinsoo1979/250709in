@@ -163,7 +163,7 @@ const computeFurnitureHeightMm = (
     const baseFreeHeight = mod.freeHeight || internalSpace.height;
     const maxFreeHeight = internalSpace.height - floatHeightMm;
     heightMm = Math.min(baseFreeHeight, maxFreeHeight);
-    // 개별 상부프레임 두께 변경 시 보정
+    // 개별 상단몰딩 두께 변경 시 보정
     if (mod.topFrameThickness !== undefined) {
       const globalTopFrame = spaceInfo.frameSize?.top || 30;
       heightMm -= (mod.topFrameThickness - globalTopFrame);
@@ -200,7 +200,7 @@ const computeFurnitureHeightMm = (
     heightMm -= floorFinishH;
   }
 
-  // 인출장/팬트리장: hasBase=false → 가구가 하부프레임 자리 흡수 (FurnitureItem.tsx와 동일)
+  // 인출장/팬트리장: hasBase=false → 가구가 걸래받이 자리 흡수 (FurnitureItem.tsx와 동일)
   const isPullOutOrPantry = !!(mod.moduleId?.includes('pull-out-cabinet') || mod.moduleId?.includes('pantry-cabinet'));
   if (!mod.isFreePlacement && (mod as any).hasBase === false && isTall && isPullOutOrPantry) {
     const globalBaseMm = spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height ?? 60) : 0;
@@ -643,7 +643,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
   const visibleFurniture = getVisibleFurnitureForSideView();
 
   // 선택된 가구의 개별 프레임 값 우선 사용 (자유배치/슬롯 공통)
-  // 하부장/키큰장 우선 선택 — 받침대·하부프레임 치수의 기준이 되어야 함
+  // 하부장/키큰장 우선 선택 — 받침대·걸래받이 치수의 기준이 되어야 함
   const selectedMod = (() => {
     if (visibleFurniture.length === 0) return undefined;
     const lowerOrFull = visibleFurniture.find(m => {
@@ -659,7 +659,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
   // 개별 가구 hasBase/individualFloatHeight 반영 (FurnitureItem.tsx 1392-1395와 동기화)
   const modHasBaseOff = selectedMod?.hasBase === false && !isStandType;
   const railOrBaseHeightMm = modHasBaseOff
-    ? 0  // 하부프레임 OFF → 받침대 0
+    ? 0  // 걸래받이 OFF → 받침대 0
     : (selectedMod?.baseFrameHeight !== undefined && !isStandType)
       ? selectedMod.baseFrameHeight
       : globalRailOrBaseHeightMm;
@@ -668,7 +668,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
 
   // per-furniture 받침대/치수 변수
   const baseFrameHeightMm = isFloating ? floatHeightMm : (railOrBaseHeightMm + indivFloatMm);
-  // 하부프레임 표시값: 바닥마감재와 별개로 표시 (바닥마감재는 별도 치수선으로 표시)
+  // 걸래받이 표시값: 바닥마감재와 별개로 표시 (바닥마감재는 별도 치수선으로 표시)
   const baseFrameDisplayMm = baseFrameHeightMm;
   const baseFrameHeight = mmToThreeUnits(baseFrameHeightMm);
   const floorFinishY = isFloating ? 0 : mmToThreeUnits(floorFinishHeightMm);
@@ -851,11 +851,11 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
               });
             }
 
-            // 상부장: 상부프레임 치수 세그먼트 추가 (캐비넷 상단 ~ 천장)
+            // 상부장: 상단몰딩 치수 세그먼트 추가 (캐비넷 상단 ~ 천장)
             if (modCat_l2 === 'upper') {
               const topFrameVal = mod.topFrameThickness ?? (spaceInfo.frameSize?.top ?? 30);
               if (topFrameVal > 0) {
-                // 상부프레임 연장선은 가구 뒷면까지 연장
+                // 상단몰딩 연장선은 가구 뒷면까지 연장
                 // 상부장 뒷면을 하부장 뒷면에 정렬
                 // 하부장 뒷면 Z = fzOff - furnitureDepth/2 - doorThickness(20mm)
                 const upperDepthMm_tf = module.upperSectionDepth || module.customDepth || moduleData.dimensions.depth;
@@ -1022,7 +1022,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                 ));
               })()}
 
-              {/* 하부프레임 높이: 바닥마감재 상단 ~ 받침대 상단 */}
+              {/* 걸래받이 높이: 바닥마감재 상단 ~ 받침대 상단 */}
               {hasLower && baseFrameHeightMm > 0 && (
                 <>
                   <ExtLine points={[[0, floorFinishY, leftInnerExtStartZ], [0, floorFinishY, leftInnerZ]]} color={dimensionColor} />
@@ -1055,7 +1055,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           );
         })()}
 
-        {/* ===== 오른쪽: 상부프레임 치수 제거됨 (좌측 세그먼트로 이동) ===== */}
+        {/* ===== 오른쪽: 상단몰딩 치수 제거됨 (좌측 세그먼트로 이동) ===== */}
 
         {/* 우측 도어 사이즈 (hasDoor 가구만) */}
         {(() => {
@@ -1389,7 +1389,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
         )}
 
 
-        {/* 하부장/상부장: 바닥 ~ 가구 상단 합산 치수 (바닥마감재 + 하부프레임 + 가구높이) */}
+        {/* 하부장/상부장: 바닥 ~ 가구 상단 합산 치수 (바닥마감재 + 걸래받이 + 가구높이) */}
         {(selectedModCategory === 'lower' || selectedModCategory === 'upper') && selectedMod && (() => {
           let selModData = getModuleById(
             selectedMod.moduleId,
@@ -1599,7 +1599,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                 : baseFrontZ + lowerOffset) // 의류장 하부: 앞면 정렬
             : furnitureZ;
 
-          // 하부프레임 옵셋 깊이 (하부장 전용)
+          // 걸래받이 옵셋 깊이 (하부장 전용)
           const baseFrameOffsetMm = isLowerMod
             ? (mod.baseFrameOffset ?? 65)
             : 0;
@@ -1744,9 +1744,9 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                 );
               })()}
 
-              {/* 하부프레임 옵셋 깊이 치수 (하부장 전용) — hasBase=false이면 숨김 */}
+              {/* 걸래받이 옵셋 깊이 치수 (하부장 전용) — hasBase=false이면 숨김 */}
               {isLowerMod && baseFrameOffsetMm > 0 && mod.hasBase !== false && (() => {
-                // 하부프레임은 가구 앞면(도어면)에서 옵셋만큼 뒤로 들어감
+                // 걸래받이은 가구 앞면(도어면)에서 옵셋만큼 뒤로 들어감
                 const frontZ = furnitureZOffset + furnitureDepth/2 - doorThickness;
                 const offsetBackZ = frontZ - baseFrameOffsetDepth;
 
@@ -1757,7 +1757,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                     {/* 보조 가이드 연장선 - 뒤쪽 (절반 길이, 위에서 시작) */}
                     <ExtLine points={[[0, depthDimEdge, offsetBackZ], [0, (depthDimEdge + depthDimY) / 2, offsetBackZ]]} color={dimensionColor} />
 
-                    {/* 하부프레임 옵셋 깊이 치수선 (연장선 끝점 = 중간) */}
+                    {/* 걸래받이 옵셋 깊이 치수선 (연장선 끝점 = 중간) */}
                     <NativeLine name="dimension_line"
                       points={[[0, (depthDimEdge + depthDimY) / 2, offsetBackZ], [0, (depthDimEdge + depthDimY) / 2, frontZ]]}
                       color={dimensionColor}
@@ -1781,7 +1781,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                       renderOrder={100000}
                       depthTest={false}
                     />
-                    {/* 하부프레임 옵셋 깊이 텍스트 */}
+                    {/* 걸래받이 옵셋 깊이 텍스트 */}
                     <Text
                       position={[0, (depthDimEdge + depthDimY) / 2 - mmToThreeUnits(40), (frontZ + offsetBackZ) / 2]}
                       fontSize={largeFontSize}
@@ -2306,7 +2306,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           );
         })()}
 
-        {/* ===== 오른쪽: 상부프레임 치수 제거됨 (좌측으로 이동) ===== */}
+        {/* ===== 오른쪽: 상단몰딩 치수 제거됨 (좌측으로 이동) ===== */}
 
         {/* 우측뷰 — 우측 도어 사이즈 */}
         {(() => {
@@ -2547,7 +2547,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
         </group>
         )}
 
-        {/* 하부장/상부장: 바닥 ~ 가구 상단 합산 치수 (바닥마감재 + 하부프레임 + 가구높이) — 우측뷰 */}
+        {/* 하부장/상부장: 바닥 ~ 가구 상단 합산 치수 (바닥마감재 + 걸래받이 + 가구높이) — 우측뷰 */}
         {(selectedModCategory === 'lower' || selectedModCategory === 'upper') && selectedMod && (() => {
           let selModData_r = getModuleById(
             selectedMod.moduleId,

@@ -26,13 +26,13 @@ function sectionPriority(label: string): number {
 
 /**
  * 패널 유형 우선순위 (낮을수록 먼저)
- * 본체 → 서랍 → 상하부프레임 → 서라운드 → 도어
+ * 본체 → 서랍 → 상걸래받이 → 서라운드 → 도어
  */
 function panelTypePriority(label: string, material?: string): number {
   const name = label.toLowerCase();
-  // 하단 분리: 상부프레임 → 좌우서라운드/커튼박스 → 하부프레임 → 기타서라운드 → 도어(맨 마지막)
+  // 하단 분리: 상단몰딩 → 좌우서라운드/커튼박스 → 걸래받이 → 기타서라운드 → 도어(맨 마지막)
   if (name.includes('도어') || name.includes('door')) return 99;
-  if ((name.includes('상부프레임') || name.includes('상부 프레임') || name.includes('상부프래임')) && material === 'PET') return 90;
+  if ((name.includes('상단몰딩') || name.includes('상단 몰딩') || name.includes('상부프래임')) && material === 'PET') return 90;
   // 좌서라운드 측면판 → 전면판 → 우서라운드 측면판 → 전면판
   if (name.includes('좌측') && (name.includes('서라운드') || name.includes('커튼박스')) && name.includes('측면판')) return 91;
   if (name.includes('좌측') && (name.includes('서라운드') || name.includes('커튼박스')) && name.includes('전면판')) return 91.1;
@@ -40,7 +40,7 @@ function panelTypePriority(label: string, material?: string): number {
   if (name.includes('우측') && (name.includes('서라운드') || name.includes('커튼박스')) && name.includes('측면판')) return 92;
   if (name.includes('우측') && (name.includes('서라운드') || name.includes('커튼박스')) && name.includes('전면판')) return 92.1;
   if (name.includes('우측') && (name.includes('서라운드') || name.includes('프레임') || name.includes('커튼박스'))) return 92.2;
-  if ((name.includes('하부프레임') || name.includes('하부 프레임') || name.includes('하부프래임')) && material === 'PET') return 93;
+  if ((name.includes('걸래받이') || name.includes('걸래받이') || name.includes('하부프래임')) && material === 'PET') return 93;
   if (name.includes('서라운드') || name.includes('surround') || name.includes('커튼박스')) return 94;
   if ((name.includes('프레임') || name.includes('프래임')) && material === 'PET') return 95;
   // 서랍속장(날개벽)은 서랍보다 위: 후면 → 본체 → 전면
@@ -138,7 +138,7 @@ export default function PanelsTable(){
         };
       })
       .sort((a, b) => {
-        // 하단 그룹(tp>=90): tp 우선 정렬 (상부프레임→서라운드→하부프레임→도어)
+        // 하단 그룹(tp>=90): tp 우선 정렬 (상단몰딩→서라운드→걸래받이→도어)
         const aBottom = a.tp >= 90 ? 1 : 0;
         const bBottom = b.tp >= 90 ? 1 : 0;
         if (aBottom !== bBottom) return aBottom - bBottom;

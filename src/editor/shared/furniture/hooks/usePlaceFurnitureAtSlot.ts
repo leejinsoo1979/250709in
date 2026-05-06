@@ -629,7 +629,7 @@ export function placeFurnitureAtSlot(params: PlaceFurnitureParams): PlaceFurnitu
     lowerSectionDepth: undefined,
     upperSectionDepth: undefined,
     lowerSectionTopOffset: defaultLowerTopOffset,
-    // 서라운드 + 상부장은 상부 프레임 옵셋 기본 23mm
+    // 서라운드 + 상부장은 상단 몰딩 옵셋 기본 23mm
     ...((moduleData.category === 'upper' && spaceInfo.surroundType === 'surround')
          ? { topFrameOffset: 23 } : {}),
     zone: targetSlot.zone,

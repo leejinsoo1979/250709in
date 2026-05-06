@@ -118,7 +118,7 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
     if (viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right')) {
       // 측면뷰: Z축 오른쪽으로 324mm (3.24) 이동
       const baseZ = sectionDepth/2 + 1.0 + 3.24;
-      // 하부 프레임은 왼쪽으로 6mm (0.06) 추가 이동 (2mm + 4mm)
+      // 걸래받이은 왼쪽으로 6mm (0.06) 추가 이동 (2mm + 4mm)
       return isBottomFrame ? baseZ - 0.06 : baseZ;
     }
     // 3D 모드: 우측 섹션(스타일러장)은 rightShelfZOffset + rightAdjustedDepthForShelves/2
@@ -499,7 +499,7 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
                   );
                 })()}
 
-                {/* 첫 번째 섹션(서랍)의 하부 프레임 두께 표시 - 제거됨 (2D에서 18mm 두께 표시 불필요) */}
+                {/* 첫 번째 섹션(서랍)의 걸래받이 두께 표시 - 제거됨 (2D에서 18mm 두께 표시 불필요) */}
               </>
             )}
           </group>
@@ -612,7 +612,7 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
              !(viewMode === '2D' && view2DDirection === 'top') &&
              !(viewMode === '2D' && view2DDirection === 'left') && (
               <group>
-                {/* 우측 하부 프레임 / 상판 두께 표시 - 제거됨 (2D에서 18mm 두께 표시 불필요) */}
+                {/* 우측 걸래받이 / 상판 두께 표시 - 제거됨 (2D에서 18mm 두께 표시 불필요) */}
                 
                 {/* 세로 내경 높이 표시 */}
                 {(() => {

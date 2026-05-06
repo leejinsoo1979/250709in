@@ -270,7 +270,7 @@ export const generateDXF = (data: DXFExportData): string => {
  * 정면도 전체 그리기 - 2D 뷰어와 동일한 깔끔한 가구 객체와 치수만 표시
  */
 const drawFrontElevation = (dxf: DxfWriter, spaceInfo: SpaceInfo, placedModules: DXFPlacedModule[]): void => {
-  // 하부 프레임 그리기 (있는 경우)
+  // 걸래받이 그리기 (있는 경우)
   drawBaseFrame(dxf, spaceInfo, 'front');
   
   // 가구 모듈들 그리기 (FURNITURE 레이어로 전환됨)
@@ -561,7 +561,7 @@ const drawSideSpaceBoundary = (dxf: DxfWriter, spaceInfo: SpaceInfo): void => {
 };
 
 /**
- * 하부 프레임(Base Frame) 그리기 - 모든 뷰에서 사용
+ * 걸래받이(Base Frame) 그리기 - 모든 뷰에서 사용
  */
 const drawBaseFrame = (dxf: DxfWriter, spaceInfo: SpaceInfo, viewType: 'front' | 'plan' | 'side'): void => {
   if (spaceInfo.baseConfig?.type !== 'base_frame') {
@@ -674,7 +674,7 @@ const drawFrontFurnitureModules = (dxf: DxfWriter, placedModules: DXFPlacedModul
     // 가구 외곽 좌표 계산
     const x1 = dxfXPosition - (dimensions.width / 2); // 좌측 끝
     const baseFrameHeight = spaceInfo.baseConfig?.type === 'base_frame' ? (spaceInfo.baseConfig?.height || 100) : 0;
-    const y1 = baseFrameHeight; // 하부 프레임 위의 가구 바닥
+    const y1 = baseFrameHeight; // 걸래받이 위의 가구 바닥
     const x2 = x1 + dimensions.width; // 우측 끝
     const y2 = y1 + dimensions.height; // 상단
 

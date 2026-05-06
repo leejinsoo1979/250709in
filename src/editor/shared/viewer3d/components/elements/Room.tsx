@@ -397,7 +397,7 @@ const Room: React.FC<RoomProps> = ({
 
   // hideEdges: PDF 캡처용 외곽선 숨김 (prop으로 제어)
 
-  // 전체서라운드 여부: surround + frameConfig.top/bottom 모두 명시적 true → 상부 프레임이 좌우와 같은 Z축
+  // 전체서라운드 여부: surround + frameConfig.top/bottom 모두 명시적 true → 상단 몰딩이 좌우와 같은 Z축
   const isFullSurround = spaceInfo.surroundType === 'surround' &&
     spaceInfo.frameConfig?.top === true && spaceInfo.frameConfig?.bottom === true;
 
@@ -4460,11 +4460,11 @@ const Room: React.FC<RoomProps> = ({
       {/* 상단 패널 - ㄱ자 모양으로 구성 */}
       {/* 수평 상단 프레임 - 좌우 프레임 사이에만 배치 (가구 앞면에 배치, 문 안쪽에 숨김) */}
       {/* 노서라운드 모드에서는 전체 너비로 확장하지만 좌우 프레임이 없을 때만 표시 */}
-      {/* 상부 프레임 - 균등분할: 전체 너비, 자유배치: 가구별 세그먼트 */}
+      {/* 상단 몰딩 - 균등분할: 전체 너비, 자유배치: 가구별 세그먼트 */}
       {effectiveShowFrame && !(viewMode === '2D' && view2DDirection === 'top') && (() => {
-        // 슬롯배치: 가구가 하나도 없으면 상부프레임 렌더링 안 함
+        // 슬롯배치: 가구가 하나도 없으면 상단몰딩 렌더링 안 함
         if (!isFreePlacement && placedModulesFromStore.filter(m => !m.isSurroundPanel).length === 0) return null;
-        // 자유배치 모드: 가구별 세그먼트로 상부 프레임 렌더링
+        // 자유배치 모드: 가구별 세그먼트로 상단 몰딩 렌더링
         if (isFreePlacement) {
           const topStripGroups = computeTopStripGroups(placedModulesFromStore);
 
@@ -4477,7 +4477,7 @@ const Room: React.FC<RoomProps> = ({
 
           // 도어기준 시: 앞면 = 도어 앞면 (실측 diff = 23mm)
           const DOOR_FRONT_OFFSET_MM = 23;
-          // 서라운드와 상하부프레임 각각 독립적으로 도어기준 적용
+          // 서라운드와 상걸래받이 각각 독립적으로 도어기준 적용
           const surroundDoorOffset = spaceInfo.surroundOffsetBase === 'door'
             ? mmToThreeUnits(DOOR_FRONT_OFFSET_MM)
             : 0;
@@ -4493,7 +4493,7 @@ const Room: React.FC<RoomProps> = ({
 
           return (
             <>
-              {/* 상부 프레임 스트립 — 개별 가구의 hasTopFrame에 따라 렌더링 */}
+              {/* 상단 몰딩 스트립 — 개별 가구의 hasTopFrame에 따라 렌더링 */}
               {(() => {
                 // 모든 세그먼트를 수집
                 const allTopSegments: (FrameRenderSegment & { key: string })[] = [];
@@ -4509,9 +4509,9 @@ const Room: React.FC<RoomProps> = ({
 
                   group.modules.filter((mod) => {
                     if (mod.hasTopFrame === false) return false;
-                    // 하부장 모듈은 상부프레임 불필요
+                    // 하부장 모듈은 상단몰딩 불필요
                     if (getModuleCategory(mod) === 'lower') return false;
-                    // Insert 프레임은 상하부프레임 불필요 (자유배치/단내림 자유배치 포함)
+                    // Insert 프레임은 상걸래받이 불필요 (자유배치/단내림 자유배치 포함)
                     if (mod.moduleId?.includes('insert-frame')) return false;
                     const isSideViewLocal = viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right');
                     if (isSideViewLocal && selectedSlotIndex !== null && mod.slotIndex !== undefined) {
@@ -4585,7 +4585,7 @@ const Room: React.FC<RoomProps> = ({
                       effectiveCeilingToBase = ceilingToBaseTopMM - dropH;
                       effectiveTopY = panelStartY + height - mmToThreeUnits(dropH);
                     }
-                    // 상부장(upper): 상부프레임 = topFrameThickness (캐비넷 위 작은 띠)
+                    // 상부장(upper): 상단몰딩 = topFrameThickness (캐비넷 위 작은 띠)
                     // 키큰장(full)/기타: 공간 기반 계산 (공간높이 - 가구높이)
                     let totalFrameHeightMM: number;
                     if (modCategory === 'upper') {
@@ -4593,7 +4593,7 @@ const Room: React.FC<RoomProps> = ({
                     } else {
                       totalFrameHeightMM = Math.max(0, effectiveCeilingToBase - modFreeHeight);
                     }
-                    // 상부프레임 갭: 천장 쪽에서 gap만큼 비우고 프레임 높이 축소 (가구쪽 하단은 고정)
+                    // 상단몰딩 갭: 천장 쪽에서 gap만큼 비우고 프레임 높이 축소 (가구쪽 하단은 고정)
                     const modTopFrameGapMM = Math.max(0, Math.min(totalFrameHeightMM - 1, mod.topFrameGap ?? 0));
                     const effectiveTotalFrameHeightMM = Math.max(0, totalFrameHeightMM - modTopFrameGapMM);
                     const modFrameHeight = mmToThreeUnits(effectiveTotalFrameHeightMM);
@@ -4617,7 +4617,7 @@ const Room: React.FC<RoomProps> = ({
                     const fiZOffset = -mmToThreeUnits(spaceInfo.depth || 1500) / 2 + (mmToThreeUnits(spaceInfo.depth || 1500) - fiFurnitureDepth) / 2;
                     const upperFrontZ = fiZOffset - fiFurnitureDepth / 2 - mmToThreeUnits(20) + mmToThreeUnits(upperModDepthMm);
                     const upperFrameZ = upperFrontZ - mmToThreeUnits(END_PANEL_THICKNESS) / 2;
-                    // 신발장: 뒷면이 뒷벽+0, 앞면 = 뒷벽 + customDepth. 상부프레임은 앞면 기준
+                    // 신발장: 뒷면이 뒷벽+0, 앞면 = 뒷벽 + customDepth. 상단몰딩은 앞면 기준
                     const modMidShoe = mod.moduleId || '';
                     const isShoeMod = modMidShoe.includes('-entryway-') || modMidShoe.includes('-shelf-') || modMidShoe.includes('-4drawer-shelf-') || modMidShoe.includes('-2drawer-shelf-');
                     let shoeFrameZ: number | null = null;
@@ -5413,9 +5413,9 @@ const Room: React.FC<RoomProps> = ({
             const hasDeepColumns = columns.some(column => column.depth >= 730);
 
             if (columns.length === 0 || !hasDeepColumns) {
-              // 슬롯배치: 항상 가구별 개별 상부프레임 렌더링 (가구 없으면 프레임 없음)
+              // 슬롯배치: 항상 가구별 개별 상단몰딩 렌더링 (가구 없으면 프레임 없음)
               const slotModsForFrame = placedModulesFromStore.filter(m => !m.isSurroundPanel);
-              if (slotModsForFrame.length === 0) return null; // 가구 없으면 상부프레임 없음
+              if (slotModsForFrame.length === 0) return null; // 가구 없으면 상단몰딩 없음
 
               const topZPos = isFullSurround
                 ? furnitureZOffset + furnitureDepth / 2 - mmToThreeUnits(END_PANEL_THICKNESS) / 2 + mmToThreeUnits(3)
@@ -5451,9 +5451,9 @@ const Room: React.FC<RoomProps> = ({
               slotModsForFrame
                 .filter(mod => {
                   if (mod.hasTopFrame === false) return false;
-                  // 하부장 모듈은 상부프레임 불필요
+                  // 하부장 모듈은 상단몰딩 불필요
                   if (getModuleCategory(mod) === 'lower') return false;
-                  // Insert 프레임: 자체적으로 바닥~천장 ㄷ자 구조이므로 공간 상부 프레임 불필요
+                  // Insert 프레임: 자체적으로 바닥~천장 ㄷ자 구조이므로 공간 상단 몰딩 불필요
                   if (mod.moduleId?.includes('insert-frame')) return false;
                   const isSideViewLocal = viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right');
                   if (isSideViewLocal && selectedSlotIndex !== null && mod.slotIndex !== undefined) {
@@ -5499,7 +5499,7 @@ const Room: React.FC<RoomProps> = ({
                     if (mod.hasRightEndPanel) { modWidthMM -= epThk; modCenterXmm -= epThk / 2; }
                   }
                   const rawTopThickness = mod.topFrameThickness ?? globalTopFrameMm;
-                  // 상부프레임 갭: 천장 쪽에서 gap만큼 비우고 프레임 높이 축소 (가구쪽 하단은 고정)
+                  // 상단몰딩 갭: 천장 쪽에서 gap만큼 비우고 프레임 높이 축소 (가구쪽 하단은 고정)
                   const slotTopFrameGapMm = Math.max(0, Math.min(rawTopThickness - 1, mod.topFrameGap ?? 0));
                   const modTopThickness = Math.max(0, rawTopThickness - slotTopFrameGapMm);
                   const modTopHeight = mmToThreeUnits(modTopThickness);
@@ -5517,7 +5517,7 @@ const Room: React.FC<RoomProps> = ({
                       : modCenterForZone > cbBoundaryMm
                   );
                   const ceilingHeight = isInDroppedZone ? droppedCeilingHeight : height;
-                  // 상부프레임 하단(가구쪽) 고정, 상단(천장쪽)이 gap만큼 내려옴
+                  // 상단몰딩 하단(가구쪽) 고정, 상단(천장쪽)이 gap만큼 내려옴
                   const modTopY = panelStartY + ceilingHeight - slotTopGapThreeUnits - modTopHeight / 2;
                   const slotModCategory = getModuleCategory(mod);
                   // 저장된 topFrameOffset 그대로 사용 (Configurator effect가 surroundType별로 0/23 동기화)
@@ -5678,7 +5678,7 @@ const Room: React.FC<RoomProps> = ({
               const droppedX = droppedStartX + droppedFrameWidth / 2;
               const normalX = normalStartX + normalFrameWidth / 2;
 
-// console.log('🔥 상부 프레임 너비 상세 계산:', {
+// console.log('🔥 상단 몰딩 너비 상세 계산:', {
                 // 전체너비mm: width / 0.01,
                 // frameWidth_mm: frameWidth / 0.01,
                 // droppedWidth_mm: droppedWidth / 0.01,
@@ -5714,7 +5714,7 @@ const Room: React.FC<RoomProps> = ({
               // 단내림 영역과 일반 영역 프레임 렌더링
               return (
                 <>
-                  {/* 단내림 영역 상부 프레임 - 측면뷰에서 단내림 구간 선택시만 표시 */}
+                  {/* 단내림 영역 상단 몰딩 - 측면뷰에서 단내림 구간 선택시만 표시 */}
                   {showDroppedFrame && (
                     <BoxWithEdges
                       hideEdges={hideEdges}
@@ -5737,7 +5737,7 @@ const Room: React.FC<RoomProps> = ({
                       shadowEnabled={shadowEnabled}
                     />
                   )}
-                  {/* 일반 영역 상부 프레임 - 측면뷰에서 일반 구간 선택시만 표시 */}
+                  {/* 일반 영역 상단 몰딩 - 측면뷰에서 일반 구간 선택시만 표시 */}
                   {showNormalFrame && (
                     <BoxWithEdges
                       hideEdges={hideEdges}
@@ -5773,7 +5773,7 @@ const Room: React.FC<RoomProps> = ({
             const adjustedFrameStartX = frameStartX;
             const adjustedFrameEndX = frameEndX;
 
-// console.log('🔧 상부프레임 분절 엔드패널 조정:', {
+// console.log('🔧 상단몰딩 분절 엔드패널 조정:', {
               // 조정된시작: adjustedFrameStartX,
               // 조정된끝: adjustedFrameEndX,
               // 왼쪽엔드패널: endPanelPositions.left,
@@ -5908,9 +5908,9 @@ const Room: React.FC<RoomProps> = ({
 
               if (spaceInfo.surroundType === 'no-surround') {
                 // 엔드패널이 있는 쪽의 서브프레임 조정
-                // EP(18.5mm)일 때 상부프레임은 EP방향으로 1mm 확장 → 18 - 1 = 17mm 줄임
+                // EP(18.5mm)일 때 상단몰딩은 EP방향으로 1mm 확장 → 18 - 1 = 17mm 줄임
                 const isFreestanding = spaceInfo.installType === 'freestanding';
-                const EP_FRAME_EXTEND = 1; // EP 방향 상부프레임 확장량 (mm)
+                const EP_FRAME_EXTEND = 1; // EP 방향 상단몰딩 확장량 (mm)
                 const leftAdjustment = (isFreestanding || endPanelPositions.left) ? mmToThreeUnits(END_PANEL_THICKNESS - EP_FRAME_EXTEND) : 0;
                 const rightAdjustment = (isFreestanding || endPanelPositions.right) ? mmToThreeUnits(END_PANEL_THICKNESS - EP_FRAME_EXTEND) : 0;
 
@@ -6492,13 +6492,13 @@ const Room: React.FC<RoomProps> = ({
       {/* 받침대가 있는 경우에만 렌더링 */}
       {/* 하부 베이스프레임 - 균등분할: 전체 너비, 자유배치: 가구별 세그먼트 */}
       {effectiveShowFrame && baseFrameHeightMm > 0 && spaceInfo.baseConfig?.type === 'floor' && !(viewMode === '2D' && view2DDirection === 'top') && (() => {
-        // 슬롯배치: 하부장/키큰장이 없으면 하부프레임 렌더링 안 함 (상부장만 있을 때는 숨김)
+        // 슬롯배치: 하부장/키큰장이 없으면 걸래받이 렌더링 안 함 (상부장만 있을 때는 숨김)
         const hasNonUpperFurniture = placedModulesFromStore.some(m =>
           !m.isSurroundPanel && !(m.moduleId || '').includes('upper-cabinet')
         );
         if (!isFreePlacement && !hasNonUpperFurniture) return null;
-        // 모든 하부/키큰장 가구가 bottomPanelRaise 활성이면 하부프레임 전체 숨김
-        // 일부만 활성이면 조절발 있는 가구용 하부프레임은 유지
+        // 모든 하부/키큰장 가구가 bottomPanelRaise 활성이면 걸래받이 전체 숨김
+        // 일부만 활성이면 조절발 있는 가구용 걸래받이은 유지
         // 좌우분할 시 영역별 areaFinish도 확인
         const lowerFullModules = placedModulesFromStore.filter(m => {
           const id = m.moduleId || '';
@@ -6528,12 +6528,12 @@ const Room: React.FC<RoomProps> = ({
         return true;
       })() && (() => {
 
-        // 자유배치 모드: 가구별 개별 하부프레임 렌더링 (상부프레임과 동일 패턴)
+        // 자유배치 모드: 가구별 개별 걸래받이 렌더링 (상단몰딩과 동일 패턴)
         if (isFreePlacement) {
           const stripGroups = computeBaseStripGroups(placedModulesFromStore);
           if (stripGroups.length === 0) return null;
 
-          // 하부프레임은 항상 가구 몸통 앞면 기준 (슬롯배치와 동일, doorOffset 미적용)
+          // 걸래받이은 항상 가구 몸통 앞면 기준 (슬롯배치와 동일, doorOffset 미적용)
           const baseZBase = furnitureZOffset + furnitureDepth / 2 - mmToThreeUnits(END_PANEL_THICKNESS) / 2 -
             mmToThreeUnits(calculateMaxNoSurroundOffset(spaceInfo)) -
             mmToThreeUnits(spaceInfo.baseConfig?.depth ?? 0);
@@ -6548,7 +6548,7 @@ const Room: React.FC<RoomProps> = ({
           stripGroups.forEach((group) => {
             group.modules.filter((mod) => {
               if (mod.hasBase === false) return false;
-              // Insert 프레임은 하부프레임(받침대) 불필요
+              // Insert 프레임은 걸래받이(받침대) 불필요
               if (mod.moduleId?.includes('insert-frame')) return false;
               return true;
             }).forEach((mod) => {
@@ -6558,12 +6558,12 @@ const Room: React.FC<RoomProps> = ({
               const depthZOffsetMM = getLowerDepthZOffsetMM(mod);
               const freeIsLower = getModuleCategory(mod) === 'lower';
               const modBaseZInset = mod.baseFrameOffset ? mmToThreeUnits(mod.baseFrameOffset) : (freeIsLower ? mmToThreeUnits(65) : 0);
-              // 신발장: 하부프레임 Z를 신발장 앞면에 맞춤 (inset 무시)
+              // 신발장: 걸래받이 Z를 신발장 앞면에 맞춤 (inset 무시)
               const baseShoeMid = mod.moduleId || '';
               const isShoeBase = baseShoeMid.includes('-entryway-') || baseShoeMid.includes('-shelf-') || baseShoeMid.includes('-4drawer-shelf-') || baseShoeMid.includes('-2drawer-shelf-');
               let baseZPosition: number;
               if (isShoeBase) {
-                // 하부프레임: 하부 섹션 깊이 우선, 없으면 customDepth, 최후 380
+                // 걸래받이: 하부 섹션 깊이 우선, 없으면 customDepth, 최후 380
                 const shoeDepthMm = mod.lowerSectionDepth || mod.customDepth || mod.freeDepth || 380;
                 const fiFurnitureDepthMm = Math.min(spaceInfo.depth || 1500, 600);
                 const fiFurnitureDepth = mmToThreeUnits(fiFurnitureDepthMm);
@@ -6575,7 +6575,7 @@ const Room: React.FC<RoomProps> = ({
                 baseZPosition = baseZBase - mmToThreeUnits(depthZOffsetMM) - modBaseZInset;
               }
               const rawBaseHeightMm = mod.baseFrameHeight ?? (spaceInfo.baseConfig?.height ?? (freeIsLower ? 100 : 60));
-              // 하부프레임 갭: 바닥 쪽에서 gap만큼 비우고 프레임 높이 축소 (가구쪽 상단은 고정)
+              // 걸래받이 갭: 바닥 쪽에서 gap만큼 비우고 프레임 높이 축소 (가구쪽 상단은 고정)
               const modBaseFrameGapMm = Math.max(0, Math.min(rawBaseHeightMm - 1, mod.baseFrameGap ?? 0));
               const modBaseHeightMm = Math.max(0, rawBaseHeightMm - modBaseFrameGapMm);
               const modBaseH = mmToThreeUnits(modBaseHeightMm);
@@ -6583,7 +6583,7 @@ const Room: React.FC<RoomProps> = ({
               // 중심 Y: panelStartY + floatHeight + gap + H/2
               const modBaseYCenter = panelStartY + floatHeight + modBaseGapThreeUnits + modBaseH / 2;
 
-              // 커스터마이즈 가구 좌우분할: 무조건 하부프레임도 영역별 분할
+              // 커스터마이즈 가구 좌우분할: 무조건 걸래받이도 영역별 분할
               const customSec0 = (mod as any).customConfig?.sections?.[0];
               if (customSec0?.horizontalSplit && customSec0.areaFinish) {
                 const hs = customSec0.horizontalSplit;
@@ -6598,7 +6598,7 @@ const Room: React.FC<RoomProps> = ({
                 const rightRaise = customSec0.areaFinish['right']?.bottomPanelRaise ?? 0;
                 const centerRaise = is3split ? (customSec0.areaFinish['center']?.bottomPanelRaise ?? 0) : 0;
 
-                // 상하분할 하부 비움 체크: 비움이면 해당 영역 하부프레임도 숨김
+                // 상하분할 하부 비움 체크: 비움이면 해당 영역 걸래받이도 숨김
                 const subSplits = customSec0.areaSubSplits;
                 const isSubLowerDeleted = (side: string) => {
                   const sub = subSplits?.[side];
@@ -6609,9 +6609,9 @@ const Room: React.FC<RoomProps> = ({
                 const centerHidden = is3split ? (centerRaise > 0 || isSubLowerDeleted('center')) : false;
                 const allHidden = leftHidden && rightHidden && (!is3split || centerHidden);
 
-                if (allHidden) return; // 전체 숨김 → 하부프레임 없음
+                if (allHidden) return; // 전체 숨김 → 걸래받이 없음
 
-                // 좌우분할 시 무조건 영역별로 하부프레임 분할
+                // 좌우분할 시 무조건 영역별로 걸래받이 분할
                 // 칸막이 귀속: non-raised 영역이 칸막이를 흡수 (raised 영역 옆 갭 방지)
                 // 양쪽 모두 non-raised면 칸막이 중심에서 분할
                 const modLeftMm = modCenterXmm - modWidthMM / 2;
@@ -6710,7 +6710,7 @@ const Room: React.FC<RoomProps> = ({
                 }
                 return;
               }
-              // 섹션 전체 bottomPanelRaise → 하부프레임 없음
+              // 섹션 전체 bottomPanelRaise → 걸래받이 없음
               if (customSec0?.bottomPanelRaise && customSec0.bottomPanelRaise > 0) return;
 
               // baseFrameOffset은 이미 baseZPosition에 반영됨 (modBaseZInset)
@@ -6769,17 +6769,17 @@ const Room: React.FC<RoomProps> = ({
         // 균등분할 모드: 기존 전체 너비 렌더링
         return (
           <>
-            {/* 노서라운드 모드에서 하부프레임 폭 디버깅 */}
-            {/* spaceInfo.surroundType === 'no-surround' && spaceInfo.gapConfig && console.log(`🔧 [하부프레임] 좌측이격거리${spaceInfo.gapConfig.left}mm, 우측이격거리${spaceInfo.gapConfig.right}mm: 실제폭=${baseFrameMm.width}mm, Three.js=${baseFrame.width.toFixed(2)}`) */}
+            {/* 노서라운드 모드에서 걸래받이 폭 디버깅 */}
+            {/* spaceInfo.surroundType === 'no-surround' && spaceInfo.gapConfig && console.log(`🔧 [걸래받이] 좌측이격거리${spaceInfo.gapConfig.left}mm, 우측이격거리${spaceInfo.gapConfig.right}mm: 실제폭=${baseFrameMm.width}mm, Three.js=${baseFrame.width.toFixed(2)}`) */}
 
-            {/* 기둥이 있는 경우 하부 프레임을 분절하여 렌더링 */}
+            {/* 기둥이 있는 경우 걸래받이을 분절하여 렌더링 */}
             {(() => {
               const columns = spaceInfo.columns || [];
 
               // 슬롯 가이드와 동일한 범위 사용 - 모든 모드에서 calculateZoneSlotInfo 사용
               const zoneInfo = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
 
-              // 단내림이 활성화된 경우 두 영역 모두에 하부프레임 렌더링
+              // 단내림이 활성화된 경우 두 영역 모두에 걸래받이 렌더링
               const renderZones = [];
 
               if (spaceInfo.droppedCeiling?.enabled && zoneInfo.dropped) {
@@ -6807,7 +6807,7 @@ const Room: React.FC<RoomProps> = ({
                 });
               }
 
-              // 각 영역에 대해 하부프레임 렌더링
+              // 각 영역에 대해 걸래받이 렌더링
               return renderZones.map((renderZone, zoneIndex) => {
                 // 단내림 구간은 별도 material 인스턴스 사용 (R3F primitive attach 이슈 방지)
                 const rawZoneMaterial = renderZone.zone === 'dropped'
@@ -6846,14 +6846,14 @@ const Room: React.FC<RoomProps> = ({
                 // 기둥이 없거나 모든 기둥이 729mm 이하인 경우 분절하지 않음
                 const hasDeepColumns = columns.some(column => column.depth >= 730);
 
-                // console.log('🔧 [하부프레임 윗면] 기둥 분절 확인:', {
+                // console.log('🔧 [걸래받이 윗면] 기둥 분절 확인:', {
                 //   columnsCount: columns.length,
                 //   hasDeepColumns,
                 //   columnDepths: columns.map(c => c.depth)
                 // });
 
                 if (columns.length === 0 || !hasDeepColumns) {
-                  // 슬롯배치: 하부장/키큰장이 없으면 하부프레임 없음 (상부장만 있을 때 숨김)
+                  // 슬롯배치: 하부장/키큰장이 없으면 걸래받이 없음 (상부장만 있을 때 숨김)
                   const slotModsForBase = placedModulesFromStore.filter(m =>
                     !m.isSurroundPanel && !(m.moduleId || '').includes('upper-cabinet')
                   );
@@ -6872,7 +6872,7 @@ const Room: React.FC<RoomProps> = ({
                   slotModsForBase
                     .filter(mod => {
                       if (mod.hasBase === false) return false;
-                      // Insert 프레임: 자체적으로 바닥~천장 ㄷ자 구조이므로 공간 하부 프레임 불필요
+                      // Insert 프레임: 자체적으로 바닥~천장 ㄷ자 구조이므로 공간 걸래받이 불필요
                       if (mod.moduleId?.includes('insert-frame')) return false;
                       if (isSideViewBase && selectedSlotIndex !== null && mod.slotIndex !== undefined) {
                         const isDual = mod.isDualSlot || mod.moduleId?.includes('dual-');
@@ -6908,7 +6908,7 @@ const Room: React.FC<RoomProps> = ({
                       if (mod.hasLeftEndPanel) { modWidthMM -= epThk; modCenterXmm += epThk / 2; }
                       if (mod.hasRightEndPanel) { modWidthMM -= epThk; modCenterXmm -= epThk / 2; }
                       const rawBaseHeight = mod.baseFrameHeight ?? globalBaseHeightMm;
-                      // 하부프레임 갭: 바닥 쪽에서 gap만큼 비우고 프레임 높이 축소 (가구쪽 상단은 고정)
+                      // 걸래받이 갭: 바닥 쪽에서 gap만큼 비우고 프레임 높이 축소 (가구쪽 상단은 고정)
                       const baseFrameGapMm = Math.max(0, Math.min(rawBaseHeight - 1, mod.baseFrameGap ?? 0));
                       const modBaseHeight = Math.max(0, rawBaseHeight - baseFrameGapMm);
                       const modBaseH = mmToThreeUnits(modBaseHeight);
@@ -6917,14 +6917,14 @@ const Room: React.FC<RoomProps> = ({
                       const modCategory = getModuleCategory(mod);
                       const isLowerMod = modCategory === 'lower';
                       const modBaseZInset = mod.baseFrameOffset ? mmToThreeUnits(mod.baseFrameOffset) : (isLowerMod ? mmToThreeUnits(65) : 0);
-                      // 신발장 하부프레임 Z (앞면 기준)
+                      // 신발장 걸래받이 Z (앞면 기준)
                       const slotBaseShoeMid = mod.moduleId || '';
                       const isShoeSlotBase = slotBaseShoeMid.includes('-entryway-') || slotBaseShoeMid.includes('-shelf-') || slotBaseShoeMid.includes('-4drawer-shelf-') || slotBaseShoeMid.includes('-2drawer-shelf-');
                       // 모든 가구 공통: 하부 섹션 depth 변화를 가구 기본 깊이 기준으로 반영
                       const unifiedBaseZOffset = computeDepthZOffset(mod, 'lower');
                       const effectiveBaseZ = baseZPos + unifiedBaseZOffset;
 
-                      // 커스터마이즈 가구 좌우분할: 무조건 하부프레임도 영역별 분할
+                      // 커스터마이즈 가구 좌우분할: 무조건 걸래받이도 영역별 분할
                       const customSec0 = (mod as any).customConfig?.sections?.[0];
                       if (customSec0?.horizontalSplit && customSec0.areaFinish) {
                         const hs = customSec0.horizontalSplit;
@@ -6939,7 +6939,7 @@ const Room: React.FC<RoomProps> = ({
                         const rightRaise = customSec0.areaFinish['right']?.bottomPanelRaise ?? 0;
                         const centerRaise = is3split ? (customSec0.areaFinish['center']?.bottomPanelRaise ?? 0) : 0;
 
-                        // 상하분할 하부 비움 체크: 비움이면 해당 영역 하부프레임도 숨김
+                        // 상하분할 하부 비움 체크: 비움이면 해당 영역 걸래받이도 숨김
                         const subSplits = customSec0.areaSubSplits;
                         const isSubLowerDeleted = (side: string) => {
                           const sub = subSplits?.[side];
@@ -6950,9 +6950,9 @@ const Room: React.FC<RoomProps> = ({
                         const centerHidden = is3split ? (centerRaise > 0 || isSubLowerDeleted('center')) : false;
                         const allHidden = leftHidden && rightHidden && (!is3split || centerHidden);
 
-                        if (allHidden) return; // 전체 숨김 → 하부프레임 없음
+                        if (allHidden) return; // 전체 숨김 → 걸래받이 없음
 
-                        // 좌우분할 시 무조건 영역별로 하부프레임 분할
+                        // 좌우분할 시 무조건 영역별로 걸래받이 분할
                         // 칸막이 귀속: non-raised 영역이 칸막이를 흡수 (raised 영역 옆 갭 방지)
                         const modLeftMm = modCenterXmm - modWidthMM / 2;
 
@@ -7045,7 +7045,7 @@ const Room: React.FC<RoomProps> = ({
                         }
                         return;
                       }
-                      // 섹션 전체 bottomPanelRaise → 하부프레임 없음
+                      // 섹션 전체 bottomPanelRaise → 걸래받이 없음
                       if (customSec0?.bottomPanelRaise && customSec0.bottomPanelRaise > 0) return;
 
                       // baseFrameOffset: 양수 = 안쪽(뒤쪽)으로 들어감 (modBaseZInset으로 이미 계산됨)
@@ -7111,7 +7111,7 @@ const Room: React.FC<RoomProps> = ({
                 const adjustedFrameStartXCalc = frameStartX;
                 const adjustedFrameEndXCalc = frameEndX;
 
-// console.log('🔧 하부프레임 분절 엔드패널 조정:', {
+// console.log('🔧 걸래받이 분절 엔드패널 조정:', {
                   // 조정된시작: adjustedFrameStartXCalc,
                   // 조정된끝: adjustedFrameEndXCalc,
                   // 왼쪽엔드패널: endPanelPositions.left,
@@ -7375,7 +7375,7 @@ export default React.memo(Room, (prevProps, nextProps) => {
 
   // surroundOffsetBase 비교 (서라운드 옵셋 기준 변경)
   if (prevSpace.surroundOffsetBase !== nextSpace.surroundOffsetBase) return false;
-  // frameOffsetBase 비교 (상하부프레임 옵셋 기준 변경)
+  // frameOffsetBase 비교 (상걸래받이 옵셋 기준 변경)
   if (prevSpace.frameOffsetBase !== nextSpace.frameOffsetBase) return false;
 
   // 가구 배치 비교

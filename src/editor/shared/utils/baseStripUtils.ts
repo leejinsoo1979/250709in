@@ -1,7 +1,7 @@
 /**
  * 자유배치 모드 프레임 스트립 그룹핑 유틸리티
  * - 하부 걸래받이: 하부/키큰장이 있는 구간에만 생성
- * - 상부 프레임: 상부/키큰장이 있는 구간에만 생성
+ * - 상단 몰딩: 상부/키큰장이 있는 구간에만 생성
  * 인접한 가구들은 하나의 연속 스트립으로 병합한다.
  */
 
@@ -16,7 +16,7 @@ export interface BaseStripGroup {
   depthMM: number;   // 그룹 내 최대 깊이 (mm)
   depthZOffsetMM: number; // 깊이 방향 Z오프셋 (mm, 하부섹션 깊이 축소 시)
   thicknessMM: number; // 그룹 내 최대 프레임 두께 (mm, 0 = 공간 기본값 사용)
-  minFreeHeightMM: number; // 그룹 내 최소 freeHeight (mm, 상부프레임 확장 계산용)
+  minFreeHeightMM: number; // 그룹 내 최소 freeHeight (mm, 상단몰딩 확장 계산용)
   maxFreeHeightMM: number; // 그룹 내 최대 freeHeight (mm, 원래 배치 높이)
   modules: PlacedModule[];
 }
@@ -92,12 +92,12 @@ export function getBaseFrameBoundsX(module: PlacedModule): { left: number; right
 export function computeBaseStripGroups(
   placedModules: PlacedModule[],
 ): BaseStripGroup[] {
-  // 1. 걸래받이 대상 모듈 필터링 (바닥판 올림 활성 가구는 하부프레임 불필요)
+  // 1. 걸래받이 대상 모듈 필터링 (바닥판 올림 활성 가구는 걸래받이 불필요)
   const baseModules = placedModules.filter((m) => {
     if (!m.isFreePlacement) return false;
     const category = getModuleCategory(m);
     if (category === 'upper') return false;
-    // bottomPanelRaise 활성 시 조절발/하부프레임 없음
+    // bottomPanelRaise 활성 시 조절발/걸래받이 없음
     const sections = (m as any).customConfig?.sections;
     if (sections?.[0]?.bottomPanelRaise && sections[0].bottomPanelRaise > 0) return false;
     return true;
@@ -157,7 +157,7 @@ export function computeBaseStripGroups(
 }
 
 /**
- * 배치된 가구 목록에서 상부 프레임 스트립 그룹을 계산한다.
+ * 배치된 가구 목록에서 상단 몰딩 스트립 그룹을 계산한다.
  * - 자유배치 + category === 'upper' 또는 'full' 인 모듈만 대상
  * - X 범위 기준으로 인접/겹치는 모듈을 하나의 그룹으로 병합
  */

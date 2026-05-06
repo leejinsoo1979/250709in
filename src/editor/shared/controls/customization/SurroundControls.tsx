@@ -25,7 +25,7 @@ const SurroundControls: React.FC<SurroundControlsProps> = ({ spaceInfo, onUpdate
 
   // 사용자 저장 기본 이격값 (프레임 타입 전환 시 적용)
   const [userDefaultGaps, setUserDefaultGaps] = useState<{ left: number; right: number }>({ left: 1.5, right: 1.5 });
-  // 사용자 저장 기본 상부프레임 높이 (없으면 30)
+  // 사용자 저장 기본 상단몰딩 높이 (없으면 30)
   const [userDefaultFrameTop, setUserDefaultFrameTop] = useState<number>(30);
   useEffect(() => {
     getSpaceConfigDefaults().then(defaults => {
@@ -127,7 +127,7 @@ const SurroundControls: React.FC<SurroundControlsProps> = ({ spaceInfo, onUpdate
         middle: spaceInfo.gapConfig?.middle ?? 1.5,
       };
       updates.frameConfig = { left: true, right: true, top: true, bottom: true };
-      // 전체서라운드 시 도어 상단갭 = 상부프레임 두께 + 3mm
+      // 전체서라운드 시 도어 상단갭 = 상단몰딩 두께 + 3mm
       updates.doorTopGap = currentTop + 3;
 
       onUpdate(updates);
@@ -139,7 +139,7 @@ const SurroundControls: React.FC<SurroundControlsProps> = ({ spaceInfo, onUpdate
         const epUpdate: Record<string, number> = {};
         if (m.hasLeftEndPanel) epUpdate.leftEndPanelOffset = 23;
         if (m.hasRightEndPanel) epUpdate.rightEndPanelOffset = 23;
-        // 상부장(upper-*/upper-cabinet): 상부 프레임 옵셋 23mm 저장
+        // 상부장(upper-*/upper-cabinet): 상단 몰딩 옵셋 23mm 저장
         const isUpper = m.moduleId?.includes('upper-cabinet') || m.moduleId?.startsWith('upper-');
         if (isUpper) epUpdate.topFrameOffset = 23;
         if (Object.keys(epUpdate).length > 0) {

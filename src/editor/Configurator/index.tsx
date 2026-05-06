@@ -490,7 +490,7 @@ const Configurator: React.FC = () => {
     return panelClosed !== 'true';
   });
   const [isFrameSectionCollapsed, setIsFrameSectionCollapsed] = useState(false);
-  // 상부/하부 프레임 '전체' 통합 모드 (기본 true: 통합 행 표시)
+  // 상부/걸래받이 '전체' 통합 모드 (기본 true: 통합 행 표시)
   const [topFrameAllMode, setTopFrameAllMode] = useState<boolean>(true);
   const [baseFrameAllMode, setBaseFrameAllMode] = useState<boolean>(true);
 
@@ -674,7 +674,7 @@ const Configurator: React.FC = () => {
     }
   }, []);
 
-  // 하부프레임 OFF/ON + 띄움높이 동기화는 RightPanel에서 직접 처리
+  // 걸래받이 OFF/ON + 띄움높이 동기화는 RightPanel에서 직접 처리
   // (Configurator watcher 제거 — React 배치 업데이트로 인한 경쟁 조건 방지)
 
   // Configurator 진입 시 렌더모드 solid로 초기화 (CNC 옵티마이저 등 다른 페이지에서 돌아왔을 때 wireframe 잔상 방지)
@@ -3432,7 +3432,7 @@ const Configurator: React.FC = () => {
       // finalUpdates_baseConfig: finalUpdates.baseConfig,
       // depth: finalUpdates.baseConfig?.depth
     // });
-    // 도어 상하단갭은 상부프레임 높이 변경과 무관 — 우측바의 상하갭 컨트롤로만 조정
+    // 도어 상하단갭은 상단몰딩 높이 변경과 무관 — 우측바의 상하갭 컨트롤로만 조정
 
     setSpaceInfo(finalUpdates);
 
@@ -5243,9 +5243,9 @@ const Configurator: React.FC = () => {
                   );
                 })()}
 
-                {/* 단내림 상부프레임 - 항상 표시 */}
+                {/* 단내림 상단몰딩 - 항상 표시 */}
                 <div className={styles.frameItem}>
-                  <label className={styles.frameItemLabel}>상부프레임</label>
+                  <label className={styles.frameItemLabel}>상단몰딩</label>
                   <div className={styles.frameItemInput}>
                     <button
                       className={styles.frameButton}
@@ -5290,10 +5290,10 @@ const Configurator: React.FC = () => {
                   </div>
                 </div>
 
-                {/* 단내림 하부프레임 - 노서라운드일 때만 표시 */}
+                {/* 단내림 걸래받이 - 노서라운드일 때만 표시 */}
                 {(spaceInfo.surroundType || 'surround') === 'no-surround' && (
                 <div className={styles.frameItem}>
-                  <label className={styles.frameItemLabel}>하부프레임</label>
+                  <label className={styles.frameItemLabel}>걸래받이</label>
                   <div className={styles.frameItemInput}>
                     <button
                       className={styles.frameButton}
@@ -5503,7 +5503,7 @@ const Configurator: React.FC = () => {
           );
         })()}
 
-        {/* 상,하부프레임 섹션 — 가구별 좌→우 순서 (서라운드 무관하게 항상 표시) */}
+        {/* 상,걸래받이 섹션 — 가구별 좌→우 순서 (서라운드 무관하게 항상 표시) */}
         {isFreeMode && (() => {
           const freeMods = placedModules.filter(m => m.isFreePlacement);
           if (freeMods.length === 0) return null;
@@ -5517,21 +5517,21 @@ const Configurator: React.FC = () => {
             <div className={styles.configSection}>
               <div className={styles.sectionHeader} onClick={() => setIsFrameSectionCollapsed(prev => !prev)} style={{ cursor: 'pointer', userSelect: 'none' }}>
                 <span className={styles.sectionDot}></span>
-                <h3 className={styles.sectionTitle}>상,하부프레임</h3>
-                <HelpBtn title="상,하부프레임" text="상부프레임: 가구 위쪽과 천장 사이의 마감 패널 높이입니다. 하부프레임(베이스): 가구 아래쪽 받침대의 높이와 깊이를 설정합니다. 베이스 높이는 조절발이나 받침대의 높이, 깊이는 가구 본체 대비 베이스가 들어가는 정도를 결정합니다." />
+                <h3 className={styles.sectionTitle}>상,걸래받이</h3>
+                <HelpBtn title="상,걸래받이" text="상단몰딩: 가구 위쪽과 천장 사이의 마감 패널 높이입니다. 걸래받이(베이스): 가구 아래쪽 받침대의 높이와 깊이를 설정합니다. 베이스 높이는 조절발이나 받침대의 높이, 깊이는 가구 본체 대비 베이스가 들어가는 정도를 결정합니다." />
                 <IoIosArrowDropup style={{ marginLeft: 'auto', fontSize: '14px', color: 'var(--theme-text-secondary)', transition: 'transform 0.2s', transform: isFrameSectionCollapsed ? 'rotate(180deg)' : 'rotate(0deg)' }} />
               </div>
               {!isFrameSectionCollapsed && <>
               <div className={styles.subSetting}>
-                {/* 상부프레임 먼저 */}
+                {/* 상단몰딩 먼저 */}
                 {sorted.map((mod) => {
                   const cat = getModuleCategory(mod);
                   if (cat !== 'upper' && cat !== 'full') return null;
                   topNum++;
                   const tn = topNum;
                   const globalTop = spaceInfo.frameSize?.top ?? 30;
-                  // 상부장(upper)은 상부프레임 = topFrameThickness (캐비넷 위 작은 띠)
-                  // 키큰장(full)은 상부프레임 = 공간높이 - 받침대 - 가구높이
+                  // 상부장(upper)은 상단몰딩 = topFrameThickness (캐비넷 위 작은 띠)
+                  // 키큰장(full)은 상단몰딩 = 공간높이 - 받침대 - 가구높이
                   if (cat === 'upper') {
                     const upperTopFrame = mod.topFrameThickness ?? globalTop;
                     const upperOffsetDefault = spaceInfo.surroundType === 'surround' ? 23 : 0;
@@ -5581,7 +5581,7 @@ const Configurator: React.FC = () => {
                 {spaceInfo.baseConfig?.type !== 'stand' && sorted.length > 0 && (
                   <div style={{ borderTop: '1px solid var(--theme-border, #e0e0e0)', margin: '6px 0' }} />
                 )}
-                {/* 하부프레임 — 띄워서 배치(stand)면 받침대 없으므로 숨김 */}
+                {/* 걸래받이 — 띄워서 배치(stand)면 받침대 없으므로 숨김 */}
                 {spaceInfo.baseConfig?.type !== 'stand' && sorted.map((mod) => {
                   const cat = getModuleCategory(mod);
                   if (cat !== 'lower' && cat !== 'full') return null;
@@ -5673,11 +5673,11 @@ const Configurator: React.FC = () => {
           );
         })()}
 
-        {/* 슬롯배치 상,하부프레임 개별 설정은 우측바(RightPanel)에서 처리 */}
+        {/* 슬롯배치 상,걸래받이 개별 설정은 우측바(RightPanel)에서 처리 */}
 
-        {/* 하부프레임 높이/깊이 (글로벌) — 자유배치에서는 상하부프레임 섹션에서 개별 설정 가능하므로 숨김 */}
+        {/* 걸래받이 높이/깊이 (글로벌) — 자유배치에서는 상걸래받이 섹션에서 개별 설정 가능하므로 숨김 */}
 
-        {/* 슬롯배치: 모든 가구의 상,하부프레임 개별 설정 */}
+        {/* 슬롯배치: 모든 가구의 상,걸래받이 개별 설정 */}
         {!isFreeMode && (() => {
           const slotMods = placedModules.filter(m => !m.isSurroundPanel);
           if (slotMods.length === 0) return null;
@@ -5943,13 +5943,13 @@ const Configurator: React.FC = () => {
               <div className={styles.configSection}>
                 <div className={styles.sectionHeader} onClick={() => setIsFrameSectionCollapsed(prev => !prev)} style={{ cursor: 'pointer', userSelect: 'none' }}>
                   <span className={styles.sectionDot}></span>
-                  <h3 className={styles.sectionTitle}>상,하부프레임</h3>
-                  <HelpBtn title="상,하부프레임" text="프레임 병합 모드: 병합 그룹 단위로 프레임을 설정합니다. 너비는 병합된 총 너비(읽기전용), 높이와 옵셋은 그룹 내 모든 가구에 일괄 적용됩니다." />
+                  <h3 className={styles.sectionTitle}>상,걸래받이</h3>
+                  <HelpBtn title="상,걸래받이" text="프레임 병합 모드: 병합 그룹 단위로 프레임을 설정합니다. 너비는 병합된 총 너비(읽기전용), 높이와 옵셋은 그룹 내 모든 가구에 일괄 적용됩니다." />
                   <IoIosArrowDropup style={{ marginLeft: 'auto', fontSize: '14px', color: 'var(--theme-text-secondary)', transition: 'transform 0.2s', transform: isFrameSectionCollapsed ? 'rotate(180deg)' : 'rotate(0deg)' }} />
                 </div>
                 {!isFrameSectionCollapsed && (
                   <div className={styles.subSetting}>
-                    {/* 상부프레임 병합 그룹 */}
+                    {/* 상단몰딩 병합 그룹 */}
                     {topGroups.map((group, gIdx) => {
                       const groupMods = group.moduleIds.map(id => slotMods.find(m => m.id === id)!).filter(Boolean);
                       const firstMod = groupMods[0];
@@ -5972,7 +5972,7 @@ const Configurator: React.FC = () => {
                     {spaceInfo.baseConfig?.type !== 'stand' && topGroups.length > 0 && (
                       <div style={{ borderTop: '1px solid var(--theme-border, #e0e0e0)', margin: '6px 0' }} />
                     )}
-                    {/* 하부프레임 병합 그룹 — stand 타입이면 숨김 */}
+                    {/* 걸래받이 병합 그룹 — stand 타입이면 숨김 */}
                     {spaceInfo.baseConfig?.type !== 'stand' && baseGroups.map((group, gIdx) => {
                       const groupMods = group.moduleIds.map(id => slotMods.find(m => m.id === id)!).filter(Boolean);
                       const firstMod = groupMods[0];
@@ -6010,7 +6010,7 @@ const Configurator: React.FC = () => {
             );
           }
 
-          // 비병합 모드: 상부/하부 프레임 섹션 분리
+          // 비병합 모드: 상부/걸래받이 섹션 분리
           if (spaceInfo.isIsland) return null;
           let topNum = 0;
           let baseNum = 0;
@@ -6036,11 +6036,11 @@ const Configurator: React.FC = () => {
           };
           return (
             <>
-              {/* 상부프레임 섹션 */}
+              {/* 상단몰딩 섹션 */}
               <div className={styles.configSection}>
                 <div className={styles.sectionHeader} onClick={() => setIsFrameSectionCollapsed(prev => !prev)} style={{ cursor: 'pointer', userSelect: 'none' }}>
                   <span className={styles.sectionDot}></span>
-                  <h3 className={styles.sectionTitle}>상부프레임</h3>
+                  <h3 className={styles.sectionTitle}>상단몰딩</h3>
                   <label
                     onClick={(e) => e.stopPropagation()}
                     style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11px', color: 'var(--theme-text-secondary)', cursor: 'pointer', marginLeft: '8px' }}
@@ -6048,7 +6048,7 @@ const Configurator: React.FC = () => {
                     <input type="checkbox" checked={allTopOn} onChange={toggleAllTop} style={{ cursor: 'pointer', accentColor: 'var(--theme-primary, #4a90d9)' }} />
                     <span>전체</span>
                   </label>
-                  <HelpBtn title="상부프레임" text="각 가구별 상부 프레임을 개별 설정합니다. 토글로 표시/숨김, size로 높이, 옵셋으로 Z축 위치를 조정합니다." />
+                  <HelpBtn title="상단몰딩" text="각 가구별 상단 몰딩을 개별 설정합니다. 토글로 표시/숨김, size로 높이, 옵셋으로 Z축 위치를 조정합니다." />
                   <IoIosArrowDropup style={{ marginLeft: 'auto', fontSize: '14px', color: 'var(--theme-text-secondary)', transition: 'transform 0.2s', transform: isFrameSectionCollapsed ? 'rotate(180deg)' : 'rotate(0deg)' }} />
                 </div>
                 {!isFrameSectionCollapsed && (
@@ -6079,7 +6079,7 @@ const Configurator: React.FC = () => {
                           'top-all',
                         );
                         }
-                        // OFF 상태: 상단갭 = 공간높이 - 가구높이 - 하부프레임 - 바닥마감재 - 띄움 (실제 빈 공간)
+                        // OFF 상태: 상단갭 = 공간높이 - 가구높이 - 걸래받이 - 바닥마감재 - 띄움 (실제 빈 공간)
                         const floorFinishH = spaceInfo.hasFloorFinish && spaceInfo.floorFinish?.height ? spaceInfo.floorFinish.height : 0;
                         const bottomPortion = firstTop.hasBase === false
                           ? (firstTop.individualFloatHeight ?? 0)
@@ -6153,12 +6153,12 @@ const Configurator: React.FC = () => {
                   </div>
                 )}
               </div>
-              {/* 하부프레임 섹션 (stand 타입 제외) */}
+              {/* 걸래받이 섹션 (stand 타입 제외) */}
               {spaceInfo.baseConfig?.type !== 'stand' && (
                 <div className={styles.configSection}>
                   <div className={styles.sectionHeader} onClick={() => setIsFrameSectionCollapsed(prev => !prev)} style={{ cursor: 'pointer', userSelect: 'none' }}>
                     <span className={styles.sectionDot}></span>
-                    <h3 className={styles.sectionTitle}>하부프레임</h3>
+                    <h3 className={styles.sectionTitle}>걸래받이</h3>
                     <label
                       onClick={(e) => e.stopPropagation()}
                       style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11px', color: 'var(--theme-text-secondary)', cursor: 'pointer', marginLeft: '8px' }}
@@ -6166,7 +6166,7 @@ const Configurator: React.FC = () => {
                       <input type="checkbox" checked={allBaseOn} onChange={toggleAllBase} style={{ cursor: 'pointer', accentColor: 'var(--theme-primary, #4a90d9)' }} />
                       <span>전체</span>
                     </label>
-                    <HelpBtn title="하부프레임" text="각 가구별 하부 프레임(베이스)을 개별 설정합니다. 토글로 표시/숨김, size로 높이, 옵셋으로 Z축 위치를 조정합니다." />
+                    <HelpBtn title="걸래받이" text="각 가구별 걸래받이(베이스)을 개별 설정합니다. 토글로 표시/숨김, size로 높이, 옵셋으로 Z축 위치를 조정합니다." />
                     <IoIosArrowDropup style={{ marginLeft: 'auto', fontSize: '14px', color: 'var(--theme-text-secondary)', transition: 'transform 0.2s', transform: isFrameSectionCollapsed ? 'rotate(180deg)' : 'rotate(0deg)' }} />
                   </div>
                   {!isFrameSectionCollapsed && (
@@ -6184,7 +6184,7 @@ const Configurator: React.FC = () => {
                               first.baseFrameHeight ?? globalBase,
                               first.baseFrameOffset ?? firstOffsetDefault,
                               () => {
-                                // 하부 OFF (상부프레임 건드리지 않음)
+                                // 하부 OFF (상단몰딩 건드리지 않음)
                                 baseSortedMods.forEach(m => updatePlacedModule(m.id, {
                                   hasBase: false,
                                   individualFloatHeight: 0,
@@ -6206,7 +6206,7 @@ const Configurator: React.FC = () => {
                               <span className={styles.frameItemLabel} style={{ minWidth: '34px', textAlign: 'left', margin: 0 }}>전체</span>
                               <button
                                 onClick={() => {
-                                  // 하부 ON 복귀 (상부프레임 건드리지 않음)
+                                  // 하부 ON 복귀 (상단몰딩 건드리지 않음)
                                   baseSortedMods.forEach(m => updatePlacedModule(m.id, {
                                     hasBase: true,
                                     doorBottomGap: 25,
@@ -6271,7 +6271,7 @@ const Configurator: React.FC = () => {
             <div className={styles.sectionHeader}>
               <span className={styles.sectionDot}></span>
               <h3 className={styles.sectionTitle}>도어 셋팅</h3>
-              <HelpBtn title="도어 셋팅" text="상하부프레임 섹션에서 '상하프레임 가림' 또는 '상하프레임 노출'을 선택하면 도어 갭이 자동 계산됩니다." />
+              <HelpBtn title="도어 셋팅" text="상걸래받이 섹션에서 '상하프레임 가림' 또는 '상하프레임 노출'을 선택하면 도어 갭이 자동 계산됩니다." />
             </div>
 
             {/* Close/Open 토글 → ViewerControls 상단바로 이동됨 */}
@@ -6417,7 +6417,7 @@ const Configurator: React.FC = () => {
           </div>
         )}
 
-        {/* 받침대 — 숨김 처리 (상/하부프레임 섹션에서 설정 가능) */}
+        {/* 받침대 — 숨김 처리 (상/걸래받이 섹션에서 설정 가능) */}
         {/* <div className={styles.configSection}>
           <div className={styles.sectionHeader}>
             <span className={styles.sectionDot}></span>

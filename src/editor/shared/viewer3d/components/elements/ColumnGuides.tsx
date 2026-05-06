@@ -241,7 +241,7 @@ const ColumnGuides: React.FC<ColumnGuidesProps> = ({ viewMode: viewModeProp }) =
     ? spaceInfo.height - spaceInfo.droppedCeiling.dropHeight 
     : spaceInfo.height;
     
-  // 단내림 영역의 내부 높이 계산 (바닥마감, 받침대, 상부프레임 제외)
+  // 단내림 영역의 내부 높이 계산 (바닥마감, 받침대, 상단몰딩 제외)
   const calculateDroppedInternalHeight = () => {
     if (!hasDroppedCeiling) return internalSpace.height;
     
@@ -259,7 +259,7 @@ const ColumnGuides: React.FC<ColumnGuidesProps> = ({ viewMode: viewModeProp }) =
     // 하단 프레임 높이 (단내림 전용 bottomFrame)
     const bottomFrameHeight = spaceInfo.droppedCeiling?.bottomFrame ?? 0;
 
-    // 단내림 영역의 내부 높이 = 단내림 전체 높이 - 바닥마감 - 받침대 높이 - 상부프레임 높이 - 하부프레임 높이
+    // 단내림 영역의 내부 높이 = 단내림 전체 높이 - 바닥마감 - 받침대 높이 - 상단몰딩 높이 - 걸래받이 높이
     return droppedTotalHeight - floorFinishHeight - baseFrameHeight - topFrameHeight - bottomFrameHeight;
   };
   
@@ -269,7 +269,7 @@ const ColumnGuides: React.FC<ColumnGuidesProps> = ({ viewMode: viewModeProp }) =
     : 0;
   const isLeftDropped = spaceInfo.droppedCeiling?.position === 'left';
   
-  // 상부프레임 높이 (중복 선언 제거 - calculateDroppedInternalHeight에서 이미 계산됨)
+  // 상단몰딩 높이 (중복 선언 제거 - calculateDroppedInternalHeight에서 이미 계산됨)
   const topFrameHeight = spaceInfo.frameSize?.top || 0;
   
   // 디버깅 로그 추가
@@ -390,8 +390,8 @@ const ColumnGuides: React.FC<ColumnGuidesProps> = ({ viewMode: viewModeProp }) =
   const floorY = mmToThreeUnits(internalSpace.startY) + floatHeight;
   const ceilingY = mmToThreeUnits(internalSpace.startY) + mmToThreeUnits(internalSpace.height);
   
-  // 단내림 천장 높이: 바닥(0)에서 단내림 전체 높이 - 상부프레임 높이
-  // 이것이 상부프레임의 하단 위치입니다
+  // 단내림 천장 높이: 바닥(0)에서 단내림 전체 높이 - 상단몰딩 높이
+  // 이것이 상단몰딩의 하단 위치입니다
   const droppedCeilingY = hasDroppedCeiling 
     ? mmToThreeUnits(droppedTotalHeight - topFrameHeight) 
     : ceilingY;
@@ -401,7 +401,7 @@ const ColumnGuides: React.FC<ColumnGuidesProps> = ({ viewMode: viewModeProp }) =
     // '전체 높이 (mm)': spaceInfo.height,
     // '단차 (mm)': spaceInfo.droppedCeiling?.dropHeight,
     // '단내림 전체 높이 (mm)': droppedTotalHeight,
-    // '상부프레임 (mm)': topFrameHeight,
+    // '상단몰딩 (mm)': topFrameHeight,
     // '단내림 천장 위치 (mm)': droppedTotalHeight - topFrameHeight,
     // 'Three.js 단위': {
       // floorY,

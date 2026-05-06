@@ -20,9 +20,9 @@ function toMeshName(cncName: string): string {
   if (cncName === '바닥') return '바닥판';
   // 보강대: CNC "좌(상)후면 보강대 1" → 3D "좌(상)보강대" (후면+번호 제거)
   if (cncName.includes('후면 보강대')) return cncName.replace(/후면 보강대\s*\d*/, '보강대').trim();
-  // 프레임: CNC "상부프레임" / "하부프레임" → 3D "top-frame" / "base-frame"
-  if (cncName.includes('상부프레임') || cncName.includes('상부 프레임')) return 'top-frame';
-  if (cncName.includes('하부프레임') || cncName.includes('하부 프레임')) return 'base-frame';
+  // 프레임: CNC "상단몰딩" / "걸래받이" → 3D "top-frame" / "base-frame"
+  if (cncName.includes('상단몰딩') || cncName.includes('상단 몰딩')) return 'top-frame';
+  if (cncName.includes('걸래받이') || cncName.includes('걸래받이')) return 'base-frame';
   // 서라운드: CNC → 3D Room name
   // L자 측면판/전면판 (자유배치)
   if (cncName.includes('좌측 서라운드 측면판')) return 'left-surround-lshape-side';
@@ -85,7 +85,7 @@ export function useLivePanelData() {
       const allPanels: Panel[] = [];
       
       // Internal space calculation
-      // 가구 배치 높이 = 공간 높이 - 상부프레임 - 하부프레임(받침대)
+      // 가구 배치 높이 = 공간 높이 - 상단몰딩 - 걸래받이(받침대)
       const frameTop = spaceInfo.frameSize?.top || 0;
       const baseHeight = spaceInfo.baseConfig?.height || 0;
       const furnitureHeight = spaceInfo.height - frameTop - baseHeight;
@@ -95,7 +95,7 @@ export function useLivePanelData() {
         depth: spaceInfo.depth
       };
 
-      console.log('internalSpace:', internalSpace, `(공간 ${spaceInfo.height} - 상부프레임 ${frameTop} - 하부 ${baseHeight} = ${furnitureHeight})`);
+      console.log('internalSpace:', internalSpace, `(공간 ${spaceInfo.height} - 상단몰딩 ${frameTop} - 하부 ${baseHeight} = ${furnitureHeight})`);
 
       placedModules.forEach((placedModule, moduleIndex) => {
         // Get module ID
@@ -228,10 +228,10 @@ export function useLivePanelData() {
           placedModule.hasRightEndPanel,    // 우측 엔드패널 여부
           (placedModule as any).endPanelThickness, // 엔드패널 두께
           placedModule.freeHeight || placedModule.customHeight, // 자유배치/단내림 높이
-          topFrameH,                        // 상부프레임 높이
-          visualBaseFrameH,                 // 하부프레임 높이 (바닥마감재 차감)
-          (placedModule as any).hasTopFrame, // 상부프레임 표시 여부
-          (placedModule as any).hasBase,     // 하부프레임 표시 여부
+          topFrameH,                        // 상단몰딩 높이
+          visualBaseFrameH,                 // 걸래받이 높이 (바닥마감재 차감)
+          (placedModule as any).hasTopFrame, // 상단몰딩 표시 여부
+          (placedModule as any).hasBase,     // 걸래받이 표시 여부
           placedModule.isDualSlot,           // 듀얼 슬롯 가구 여부
           leftEpAdj,                         // leftEpAdjacentFurniture
           rightEpAdj,                        // rightEpAdjacentFurniture
@@ -716,7 +716,7 @@ export function useLivePanelData() {
       console.log('========================================');
       console.log('All panels:', allPanels);
 
-      // ★ 프레임 병합 처리: frameMergeEnabled=true일 때 개별 상부/하부 프레임을 병합
+      // ★ 프레임 병합 처리: frameMergeEnabled=true일 때 개별 상부/걸래받이을 병합
       // 병합 조건: 프레임 높이(Y축)·두께(Z축)가 동일하고 합산 너비(X축) ≤ 2420mm
       if (spaceInfo.frameMergeEnabled && placedModules.length > 1) {
         const frameTop = spaceInfo.frameSize?.top || 0;
@@ -728,10 +728,10 @@ export function useLivePanelData() {
         const topGroups = computeFrameMergeGroups(placedModules, 'top', 2420, frameTop);
         const baseGroups = computeFrameMergeGroups(placedModules, 'base', 2420, visualBaseH);
 
-        // 기존 개별 프레임 패널 제거 (상부 서라운드 프레임도 병합 상부프레임과 중복이므로 제거)
+        // 기존 개별 프레임 패널 제거 (상부 서라운드 프레임도 병합 상단몰딩과 중복이므로 제거)
         const framePanelIndices: number[] = [];
         allPanels.forEach((p, idx) => {
-          if (p.name.includes('상부프레임') || p.name.includes('하부프레임') || p.name === '상부 서라운드 프레임') {
+          if (p.name.includes('상단몰딩') || p.name.includes('걸래받이') || p.name === '상부 서라운드 프레임') {
             framePanelIndices.push(idx);
           }
         });
@@ -746,7 +746,7 @@ export function useLivePanelData() {
           if (group.frameHeight > 0) {
             allPanels.push({
               id: `merged_top_${gIdx}`,
-              name: `${group.label} 상부프레임`,
+              name: `${group.label} 상단몰딩`,
               width: Math.round(group.totalWidthMm * 10) / 10,
               height: group.frameHeight,
               thickness: (spaceInfo.panelThickness === 18.5 || spaceInfo.panelThickness === 15.5) ? 18.5 : 18, // 프레임: 사용자 설정 따름
@@ -764,7 +764,7 @@ export function useLivePanelData() {
           if (group.frameHeight > 0) {
             allPanels.push({
               id: `merged_base_${gIdx}`,
-              name: `${group.label} 하부프레임`,
+              name: `${group.label} 걸래받이`,
               width: Math.round(group.totalWidthMm * 10) / 10,
               height: group.frameHeight,
               thickness: (spaceInfo.panelThickness === 18.5 || spaceInfo.panelThickness === 15.5) ? 18.5 : 18, // 프레임: 사용자 설정 따름
@@ -782,7 +782,7 @@ export function useLivePanelData() {
 
         // =========================================================
         // ★ 인조대리석 상판 병합 처리
-        // 상하부 프레임과 마찬가지로 병합 후 내보내기 (stoneTopMergeGroups 활용)
+        // 상걸래받이과 마찬가지로 병합 후 내보내기 (stoneTopMergeGroups 활용)
         // =========================================================
         const stoneTopGroups = computeStoneTopMergeGroups(placedModules, 3680);
         
@@ -1026,7 +1026,7 @@ export function usePanelSubscription(callback: (panels: Panel[]) => void) {
     // Extract panels and call callback
     const allPanels: Panel[] = [];
     
-    // 가구 배치 높이 = 공간 높이 - 상부프레임 - 하부프레임(받침대)
+    // 가구 배치 높이 = 공간 높이 - 상단몰딩 - 걸래받이(받침대)
     const frameTop2 = spaceInfo.frameSize?.top || 0;
     const baseHeight2 = spaceInfo.baseConfig?.height || 0;
     const furnitureHeight2 = spaceInfo.height - frameTop2 - baseHeight2;

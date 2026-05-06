@@ -24,10 +24,10 @@ export const calculatePanelDetails = (
   hasRightEndPanel?: boolean, // 우측 엔드패널 여부
   endPanelThickness?: number, // 엔드패널 두께 (mm, 기본값: 18)
   freeHeight?: number, // 자유배치 모드 가구 높이 (mm) — 지정 시 섹션 비례 스케일링
-  topFrameHeightMm?: number, // 상부프레임 높이 (mm) — 0이면 프레임 없음
-  baseFrameHeightMm?: number, // 하부프레임(받침대) 높이 (mm) — 0이면 받침대 없음
-  hasTopFrame?: boolean, // 상부프레임 표시 여부 (기본: true)
-  hasBase?: boolean, // 하부프레임(받침대) 표시 여부 (기본: true)
+  topFrameHeightMm?: number, // 상단몰딩 높이 (mm) — 0이면 프레임 없음
+  baseFrameHeightMm?: number, // 걸래받이(받침대) 높이 (mm) — 0이면 받침대 없음
+  hasTopFrame?: boolean, // 상단몰딩 표시 여부 (기본: true)
+  hasBase?: boolean, // 걸래받이(받침대) 표시 여부 (기본: true)
   isDualSlot?: boolean, // 듀얼 슬롯 가구 여부 (커스텀 가구에서 moduleId에 'dual'이 없어도 듀얼 판단)
   leftEpAdjacentFurniture?: boolean, // 좌측 EP 방향에 인접 가구 있음 (ㄷ자 측판 생략)
   rightEpAdjacentFurniture?: boolean, // 우측 EP 방향에 인접 가구 있음 (ㄷ자 측판 생략)
@@ -1947,13 +1947,13 @@ export const calculatePanelDetails = (
     });
   }
 
-  // === 프레임 패널 (상부프레임 / 하부프레임) ===
+  // === 프레임 패널 (상단몰딩 / 걸래받이) ===
   const PET_THICKNESS = 18.5; // PET 재질 항상 18.5mm
 
-  // 상부프레임 — 하부장(lower-*)과 상부장(upper)에는 상부프레임 없음
+  // 상단몰딩 — 하부장(lower-*)과 상부장(upper)에는 상단몰딩 없음
   if (!isLowerCabinetModule && !isUpperCabinet && hasTopFrame !== false && topFrameHeightMm && topFrameHeightMm > 0) {
     panels.frame.push({
-      name: '상부프레임',
+      name: '상단몰딩',
       width: customWidth,
       height: topFrameHeightMm,
       thickness: PET_THICKNESS,
@@ -1961,10 +1961,10 @@ export const calculatePanelDetails = (
     });
   }
 
-  // 하부프레임 (받침대) — 상부장(upper)은 벽걸이라 하부프레임 없음
+  // 걸래받이 (받침대) — 상부장(upper)은 벽걸이라 걸래받이 없음
   if (!isUpperCabinet && hasBase !== false && baseFrameHeightMm && baseFrameHeightMm > 0) {
     panels.frame.push({
-      name: '하부프레임',
+      name: '걸래받이',
       width: customWidth,
       height: baseFrameHeightMm,
       thickness: PET_THICKNESS,

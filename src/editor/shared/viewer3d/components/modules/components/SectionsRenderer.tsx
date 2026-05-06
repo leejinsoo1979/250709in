@@ -551,7 +551,7 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
                   
                   // 하단 가이드선 위치 결정
                   if (index === 0) {
-                    // 첫 번째 섹션: 하부 프레임 상단
+                    // 첫 번째 섹션: 걸래받이 상단
                     bottomY = -height/2 + basicThickness;
                   } else if (isType4HangingSection) {
                     // Type4 상부 섹션: 상부섹션 바닥판 상단부터 (하부 1000mm + 바닥판 18mm)
@@ -671,7 +671,7 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
                         topY = bottomY + sectionHeight + floatingAdjustment;
 // console.log('🟡 싱글 가구 케이스 - topY:', topY, 'topY_mm:', topY * 100);
                       } else {
-                        // 일반 케이스: 상부 프레임 하단까지
+                        // 일반 케이스: 상단 몰딩 하단까지
                         topY = height/2 - basicThickness + floatingAdjustment;
 // console.log('🟡 일반 케이스 - topY:', topY, 'topY_mm:', topY * 100);
                       }
@@ -693,11 +693,11 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
                   // 실제 내경 계산 (가이드선 사이의 거리)
                   actualInternalHeight = (topY - bottomY) / 0.01;
                 } else if (section.type === 'drawer') {
-                  // drawer 섹션: 하부 프레임 윗면부터 상판 아랫면까지
+                  // drawer 섹션: 걸래받이 윗면부터 상판 아랫면까지
                   const sectionBottomY = sectionCenterY - sectionHeight/2;
                   const sectionTopY = sectionCenterY + sectionHeight/2;
 
-                  // 2drawer-hanging의 하부 섹션만 특별 처리 (하부 프레임 있음)
+                  // 2drawer-hanging의 하부 섹션만 특별 처리 (걸래받이 있음)
                   const is2DrawerHangingLowerSection = furnitureId?.includes('2drawer-hanging') && index === 0;
 
                   // 상부 섹션(index > 0)은 상부섹션 영역 시작점부터 시작
@@ -777,7 +777,7 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
                     const sectionBottomY = sectionCenterY - sectionHeight/2;
                     // 안전선반 윗면
                     topCompartmentBottomY = sectionBottomY + (safetyShelfPositionMm * 0.01) + basicThickness / 2;
-                    // 상부 프레임 하단 (띄움배치 시에도 상단갭 유지)
+                    // 상단 몰딩 하단 (띄움배치 시에도 상단갭 유지)
                     topCompartmentTopY = height/2 - basicThickness;
                     // 안전선반 위 칸의 내경
                     topCompartmentHeight = (topCompartmentTopY - topCompartmentBottomY) / 0.01;

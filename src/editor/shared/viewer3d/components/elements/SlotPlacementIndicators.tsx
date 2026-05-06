@@ -164,11 +164,11 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
             // ? spaceInfo.height - spaceInfo.droppedCeiling.dropHeight
             // : undefined,
           // 사용된천장높이: ceilingHeight,
-          // 상부프레임: topFrameHeightMm,
+          // 상단몰딩: topFrameHeightMm,
           // 상부장높이: furnitureHeightMm
         // });
 
-        // 상부장 상단 Y = 천장 높이 - 상부프레임 높이
+        // 상부장 상단 Y = 천장 높이 - 상단몰딩 높이
         const upperCabinetTopY = ceilingHeight - topFrameHeightMm;
         // 상부장 중심 Y = 상부장 상단 - 상부장 높이/2
         return (upperCabinetTopY - furnitureHeightMm / 2) * 0.01;

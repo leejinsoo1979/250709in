@@ -1821,9 +1821,9 @@ export const generateExternalDimensions = (
   const frameThickness = spaceInfo.frameThickness || 50;
   // 받침대 높이
   const baseHeight = spaceInfo.baseHeight || 65;
-  // 상부 프레임 높이
+  // 상단 몰딩 높이
   const topFrameHeight = spaceInfo.topFrameHeight || frameThickness;
-  // 가구 높이 (전체 높이 - 받침대 - 상부프레임)
+  // 가구 높이 (전체 높이 - 받침대 - 상단몰딩)
   const furnitureHeight = height - baseHeight - topFrameHeight;
 
   const halfWidth = width / 2;
@@ -2081,13 +2081,13 @@ export const generateExternalDimensions = (
       });
     }
 
-    // 우측 치수선: 상부프레임 | 가구영역 | 받침대
+    // 우측 치수선: 상단몰딩 | 가구영역 | 받침대
     const frameSize = spaceInfo.frameSize || { left: 18, right: 18, top: 30 };
     const topFrameThick = frameSize.top || 30;
     const rightDimX = halfWidth + dimensionOffset;
     const rightDimX2 = rightDimX + 40;
 
-    // 상부 프레임 높이 치수선
+    // 상단 몰딩 높이 치수선
     lines.push({
       x1: rightDimX, y1: height - topFrameThick, x2: rightDimX, y2: height,
       layer: 'DIMENSIONS', color: dimensionColor
@@ -2105,7 +2105,7 @@ export const generateExternalDimensions = (
       text: `${topFrameThick}`, height: 20, color: dimensionColor, layer: 'DIMENSIONS'
     });
 
-    // 가구 영역 높이 (전체 - 상부프레임 - 받침대)
+    // 가구 영역 높이 (전체 - 상단몰딩 - 받침대)
     const furnitureAreaHeight = height - topFrameThick - baseH;
     lines.push({
       x1: rightDimX2, y1: baseH, x2: rightDimX2, y2: height - topFrameThick,
@@ -2156,7 +2156,7 @@ export const generateExternalDimensions = (
     lines.push({ x1: rightFrameX2, y1: height, x2: rightFrameX1, y2: height, layer: 'SPACE_FRAME', color: frameColor });
     lines.push({ x1: rightFrameX1, y1: height, x2: rightFrameX1, y2: 0, layer: 'SPACE_FRAME', color: frameColor });
 
-    // 상부 프레임 박스 (좌우 프레임 사이, 상단)
+    // 상단 몰딩 박스 (좌우 프레임 사이, 상단)
     const topFrameY1 = height - topFrameThick;
     const topFrameY2 = height;
     lines.push({ x1: leftFrameX2, y1: topFrameY1, x2: rightFrameX1, y2: topFrameY1, layer: 'SPACE_FRAME', color: frameColor });
@@ -2642,7 +2642,7 @@ export const generateExternalDimensions = (
     // 받침대 깊이
     const baseDepthMm = spaceInfo.baseConfig?.depth || 0;
 
-    // 하부 프레임 높이 (받침대 또는 바닥레일)
+    // 걸래받이 높이 (받침대 또는 바닥레일)
     const baseFrameHeightMm = isFloating ? 0 : railOrBaseHeightMm;
 
     // 가구 시작 Y 위치
@@ -2693,8 +2693,8 @@ export const generateExternalDimensions = (
     console.log(`  - 전체 높이: ${height}mm`);
     console.log(`  - 가구 깊이: ${furnitureDepthMm}mm`);
     console.log(`  - 가구 높이: ${furnitureHeightMm}mm`);
-    console.log(`  - 상부 프레임 높이: ${topFrameHeightMm}mm`);
-    console.log(`  - 하부 프레임/받침대 높이: ${baseFrameHeightMm}mm`);
+    console.log(`  - 상단 몰딩 높이: ${topFrameHeightMm}mm`);
+    console.log(`  - 걸래받이/받침대 높이: ${baseFrameHeightMm}mm`);
     console.log(`  - 받침대 깊이: ${baseDepthMm}mm`);
     console.log(`  - 띄움 배치: ${isFloating}, 띄움 높이: ${floatHeightMm}mm`);
 
@@ -2735,13 +2735,13 @@ export const generateExternalDimensions = (
       lines.push({ x1: minX, y1: panelTop, x2: minX, y2: panelBottom, layer: 'FURNITURE_PANEL', color: lineColor });
 
       // ========================================
-      // 3. 상부 프레임 (있는 경우)
+      // 3. 상단 몰딩 (있는 경우)
       // ========================================
       if (topFrameHeightMm > 0) {
         const topFrameBottom = height - topFrameHeightMm;
         const topFrameTop = height;
 
-        // 상부 프레임 사각형
+        // 상단 몰딩 사각형
         lines.push({ x1: minX, y1: topFrameBottom, x2: maxX, y2: topFrameBottom, layer: 'SPACE_FRAME', color: lineColor });
         lines.push({ x1: maxX, y1: topFrameBottom, x2: maxX, y2: topFrameTop, layer: 'SPACE_FRAME', color: lineColor });
         lines.push({ x1: maxX, y1: topFrameTop, x2: minX, y2: topFrameTop, layer: 'SPACE_FRAME', color: lineColor });
@@ -2749,7 +2749,7 @@ export const generateExternalDimensions = (
       }
 
       // ========================================
-      // 4. 하부 프레임/받침대 (있는 경우)
+      // 4. 걸래받이/받침대 (있는 경우)
       // ========================================
       if (baseFrameHeightMm > 0) {
         const baseBottom = 0;
@@ -2761,7 +2761,7 @@ export const generateExternalDimensions = (
         const baseMinX = Math.min(baseLeft, baseRight);
         const baseMaxX = Math.max(baseLeft, baseRight);
 
-        // 하부 프레임/받침대 사각형
+        // 걸래받이/받침대 사각형
         lines.push({ x1: baseMinX, y1: baseBottom, x2: baseMaxX, y2: baseBottom, layer: 'SPACE_FRAME', color: lineColor });
         lines.push({ x1: baseMaxX, y1: baseBottom, x2: baseMaxX, y2: baseTop, layer: 'SPACE_FRAME', color: lineColor });
         lines.push({ x1: baseMaxX, y1: baseTop, x2: baseMinX, y2: baseTop, layer: 'SPACE_FRAME', color: lineColor });
@@ -2992,7 +2992,7 @@ export const generateExternalDimensions = (
 
     // CADDimensions2D와 동일한 Y 좌표 계산
     const cabinetBottomY = baseFrameHeightMmDim; // 가구 내부 시작점 (받침대 위)
-    const cabinetTopY = height - topFrameHeightMm; // 가구 내부 끝점 (상부프레임 아래)
+    const cabinetTopY = height - topFrameHeightMm; // 가구 내부 끝점 (상단몰딩 아래)
 
     // 실제 가구 형상 X 범위 (상/하단 깊이 치수선 위치에 사용)
     const furnitureXMin = actualFurnitureMinX !== undefined ? actualFurnitureMinX : 0;
@@ -3017,7 +3017,7 @@ export const generateExternalDimensions = (
       // ===== 오른쪽 (X=furnitureXMax 근처): 섹션별 치수 =====
       const rightX = furnitureXMax + dimOffset;
 
-      // 상부 프레임 치수 (있는 경우)
+      // 상단 몰딩 치수 (있는 경우)
       if (topFrameHeightMm > 0) {
         const topFrameBottomY = height - topFrameHeightMm;
         lines.push({ x1: rightX, y1: topFrameBottomY, x2: rightX, y2: height, layer: 'DIMENSIONS', color: dimColor });
@@ -3041,7 +3041,7 @@ export const generateExternalDimensions = (
       lines.push({ x1: furnitureXMax, y1: lowerSectionBottomY_L, x2: rightX + extLength, y2: lowerSectionBottomY_L, layer: 'DIMENSIONS', color: dimColor });
       texts.push({ x: rightX + 60, y: (lowerSectionTopY_L + lowerSectionBottomY_L) / 2, text: `${lowerSectionHeightMmVal}`, height: 25, color: dimColor, layer: 'DIMENSIONS' });
 
-      // 하부 프레임/받침대 치수 (있는 경우)
+      // 걸래받이/받침대 치수 (있는 경우)
       if (baseFrameHeightMmDim > 0) {
         lines.push({ x1: rightX, y1: 0, x2: rightX, y2: baseFrameHeightMmDim, layer: 'DIMENSIONS', color: dimColor });
         lines.push({ x1: furnitureXMax, y1: 0, x2: rightX + extLength, y2: 0, layer: 'DIMENSIONS', color: dimColor });
@@ -3078,7 +3078,7 @@ export const generateExternalDimensions = (
       // ===== 왼쪽 (furnitureXMin 근처): 섹션별 치수 =====
       const leftX = furnitureXMin - dimOffset;
 
-      // 상부 프레임 치수 (있는 경우)
+      // 상단 몰딩 치수 (있는 경우)
       if (topFrameHeightMm > 0) {
         const topFrameBottomY = height - topFrameHeightMm;
         lines.push({ x1: leftX, y1: topFrameBottomY, x2: leftX, y2: height, layer: 'DIMENSIONS', color: dimColor });
@@ -3102,7 +3102,7 @@ export const generateExternalDimensions = (
       lines.push({ x1: furnitureXMin, y1: lowerSectionBottomY_R, x2: leftX - extLength, y2: lowerSectionBottomY_R, layer: 'DIMENSIONS', color: dimColor });
       texts.push({ x: leftX - 60, y: (lowerSectionTopY_R + lowerSectionBottomY_R) / 2, text: `${lowerSectionHeightMmVal}`, height: 25, color: dimColor, layer: 'DIMENSIONS' });
 
-      // 하부 프레임/받침대 치수 (있는 경우)
+      // 걸래받이/받침대 치수 (있는 경우)
       if (baseFrameHeightMmDim > 0) {
         lines.push({ x1: leftX, y1: 0, x2: leftX, y2: baseFrameHeightMmDim, layer: 'DIMENSIONS', color: dimColor });
         lines.push({ x1: furnitureXMin, y1: 0, x2: leftX - extLength, y2: 0, layer: 'DIMENSIONS', color: dimColor });
@@ -3230,7 +3230,7 @@ export const generateDxfFromData = (
   // 측면뷰(left/right): 완전 데이터 기반
   // 씬에는 leftmost 가구 1개만 렌더링되어 있어 다른 슬롯 가구를 씬에서 추출 불가능.
   // generateExternalDimensions(dimensionsOnly=false)가 모든 것을 생성:
-  //   외곽 측판, 상/하부 프레임, 조절발, 내부 선반/칸막이 경계선, 하판/상판, 치수선
+  //   외곽 측판, 상/걸래받이, 조절발, 내부 선반/칸막이 경계선, 하판/상판, 치수선
   let lines: DxfLine[];
   let texts: DxfText[];
 

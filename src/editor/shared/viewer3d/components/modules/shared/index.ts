@@ -54,7 +54,7 @@ export interface FurnitureTypeProps {
   backPanelThickness?: number; // 백패널 두께 (mm, 기본값: 9)
   textureUrl?: string; // 텍스처 URL
   zone?: 'normal' | 'dropped'; // 단내림 영역 정보
-  hasBase?: boolean; // 하부프레임 존재 여부 (false면 받침대 없음 → baseHeight=0)
+  hasBase?: boolean; // 걸래받이 존재 여부 (false면 받침대 없음 → baseHeight=0)
   individualFloatHeight?: number; // 개별 띄움 높이 (mm) - hasBase=false일 때 도어 Y보정용
   parentGroupY?: number; // 부모 그룹(가구)의 Y 위치 (Three.js 단위) — 도어 Y 보정용
   topPanelNotchSize?: '680x140' | '340x140'; // 상판 따내기 크기

@@ -69,7 +69,7 @@ export const AdjustableFootsRenderer: React.FC<AdjustableFootsRendererProps> = (
     const mod = state.placedModules.find(m => m.id === placedFurnitureId);
     return mod?.hasBase !== false;
   });
-  // 개별 가구 하부프레임 높이 (설정되어 있으면 글로벌 baseConfig.height 대신 사용)
+  // 개별 가구 걸래받이 높이 (설정되어 있으면 글로벌 baseConfig.height 대신 사용)
   const individualBaseFrameHeight = useFurnitureStore(state => {
     if (!placedFurnitureId) return undefined;
     const mod = state.placedModules.find(m => m.id === placedFurnitureId);
@@ -113,7 +113,7 @@ export const AdjustableFootsRenderer: React.FC<AdjustableFootsRendererProps> = (
     return null;
   }
 
-  // 하부프레임 토글 꺼짐 → 조절발도 함께 숨김
+  // 걸래받이 토글 꺼짐 → 조절발도 함께 숨김
   if (!hasBase) {
     return null;
   }
@@ -137,7 +137,7 @@ export const AdjustableFootsRenderer: React.FC<AdjustableFootsRendererProps> = (
   const rightX = furnitureWidth / 2 - plateHalf;
 
   // Z축 위치
-  // 앞쪽: 하부프레임 뒷면과 맞닿도록 20mm 뒤로 + 받침대 깊이만큼 뒤로 + 하부프레임 옵셋
+  // 앞쪽: 걸래받이 뒷면과 맞닿도록 20mm 뒤로 + 받침대 깊이만큼 뒤로 + 걸래받이 옵셋
   // 뒤쪽: 뒷부분 꼭지점과 맞닿도록 plateHalf만큼 안쪽 (받침대 깊이 영향 없음)
   const baseDepthOffset = mmToThreeUnits(effectiveBaseDepth);
   // baseFrameOffset: 양수 = 안쪽(뒤쪽) 방향 (Room.tsx와 동일 컨벤션)

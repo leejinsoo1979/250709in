@@ -383,7 +383,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   // 자유배치: 실제 프레임 크기 = 공간높이 - 받침대 - 띄움높이 - freeHeight
   const effectiveTopFrame = (() => {
     // 상부장은 freeHeight 기반 계산 제외 — 상부장의 freeHeight는 캐비넷 높이이므로
-    // 공간높이 - 받침대 - freeHeight 하면 상부프레임이 아닌 하부장 영역 높이가 나옴
+    // 공간높이 - 받침대 - freeHeight 하면 상단몰딩이 아닌 하부장 영역 높이가 나옴
     const isUpperForFrame = placedModule.moduleId?.includes('upper-cabinet');
     if (placedModule.isFreePlacement && placedModule.freeHeight && !isUpperForFrame) {
       const baseH = spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height || 65) : 0;
@@ -403,7 +403,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     && spaceInfo.surroundType === 'surround'
     && spaceInfo.frameConfig?.top !== false;
   const hasTopFrameActive = isSlotSurround;
-  // 하부장은 상부프레임과 무관한 자체 doorTopGap을 사용하므로 서라운드 연동 제외
+  // 하부장은 상단몰딩과 무관한 자체 doorTopGap을 사용하므로 서라운드 연동 제외
   const isLowerModule = placedModule.moduleId?.includes('lower-');
   useEffect(() => {
     if (!hasTopFrameActive || !placedModule.hasDoor || isLowerModule) return;
@@ -435,7 +435,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   // 도어 셋업 모드 변경 핸들러
   const handleDoorSetupModeChange = useCallback((mode: 'furniture-fit' | 'space-fit') => {
     const { setSpaceInfo } = useSpaceConfigStore.getState();
-    // 도어 셋팅 변경 시 상하부프레임도 연동 변경
+    // 도어 셋팅 변경 시 상걸래받이도 연동 변경
     // 공간에 맞춤 → 프레임 가구에 맞춤, 가구에 맞춤 → 프레임 도어에 맞춤
     if (mode === 'space-fit') {
       const spaceInfo = useSpaceConfigStore.getState().spaceInfo;
@@ -1347,7 +1347,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         y: placedModule.position.y
       };
     } else {
-      // 상부장은 상부프레임 하단에 붙어야 함
+      // 상부장은 상단몰딩 하단에 붙어야 함
       // 자유배치 모드에서는 사용자 지정 높이를 우선 사용
       // 미드웨이 편집: customHeight가 있으면 상단 고정, 하단 확장
       const upperCabinetHeight = (placedModule.isFreePlacement && placedModule.freeHeight)
@@ -1356,8 +1356,8 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
           ? placedModule.customHeight
           : (actualModuleData?.dimensions.height || 0)); // 상부장 높이
 
-      // 띄워서 배치 모드와 관계없이 상부장은 항상 상부프레임 하단에 붙어야 함
-      // 상부프레임 높이: 개별 가구 설정(topFrameThickness) 우선, 없으면 전역 설정
+      // 띄워서 배치 모드와 관계없이 상부장은 항상 상단몰딩 하단에 붙어야 함
+      // 상단몰딩 높이: 개별 가구 설정(topFrameThickness) 우선, 없으면 전역 설정
       const topFrameHeightMm = placedModule.topFrameThickness ?? (spaceInfo.frameSize?.top || 30);
 
       // 단내림 구역에 배치된 경우 단내림 높이 사용, 아니면 전체 높이 사용
@@ -1373,7 +1373,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         }
       }
 
-      // 상부장 상단 Y = 천장 높이 - 상부프레임 높이 (상부프레임 하단)
+      // 상부장 상단 Y = 천장 높이 - 상단몰딩 높이 (상단몰딩 하단)
       const upperCabinetTopY = ceilingHeight - topFrameHeightMm;
       // 상부장 중심 Y = 상부장 상단 - 상부장 높이/2
       const upperCabinetCenterY = (upperCabinetTopY - upperCabinetHeight / 2) * 0.01;
@@ -1401,7 +1401,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     const baseFreeHeight = placedModule.freeHeight || internalSpace.height;
     const maxFreeHeight = internalSpace.height - floatHeightMm;
     furnitureHeightMm = Math.min(baseFreeHeight, maxFreeHeight);
-    // 개별 가구 상부프레임 두께 변경 시 추가 보정
+    // 개별 가구 상단몰딩 두께 변경 시 추가 보정
     if (placedModule.topFrameThickness !== undefined) {
       const globalTopFrame = spaceInfo.frameSize?.top || 30;
       const topFrameDelta = placedModule.topFrameThickness - globalTopFrame;
@@ -1422,7 +1422,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     // freeHeight가 없을 때만 topFrameThickness delta로 보정
     if (!placedModule.isFreePlacement && furnitureHeightMm > 0) {
       // freeHeight가 없을 때만 topFrameThickness delta 보정
-      // 단, 하부프레임이 OFF일 때는 그 공간을 가구가 차지하므로 차감하지 않는 delta 계산
+      // 단, 걸래받이이 OFF일 때는 그 공간을 가구가 차지하므로 차감하지 않는 delta 계산
       if (!placedModule.freeHeight && placedModule.topFrameThickness !== undefined) {
         const globalTop = spaceInfo.frameSize?.top ?? 30;
         const topDelta = placedModule.topFrameThickness - globalTop;
@@ -1436,7 +1436,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         const globalBase = spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height ?? 65) : 0;
         furnitureHeightMm -= (placedModule.baseFrameHeight - globalBase);
       }
-      // 하부프레임 OFF: 하부프레임 자리를 가구가 흡수 - 띄움만큼은 빈 공간으로 제외
+      // 걸래받이 OFF: 걸래받이 자리를 가구가 흡수 - 띄움만큼은 빈 공간으로 제외
       if (!placedModule.freeHeight && placedModule.hasBase === false && isTallCabinetForY) {
         const globalBaseMm = spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height ?? 60) : 0;
         const absorbedBase = placedModule.baseFrameHeight ?? globalBaseMm;
@@ -1457,7 +1457,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     }
   }
 
-  // 하부프레임 토글 꺼짐 → 가구 높이 유지, Y 위치만 바닥으로 내림 (baseHeightMm=0 처리)
+  // 걸래받이 토글 꺼짐 → 가구 높이 유지, Y 위치만 바닥으로 내림 (baseHeightMm=0 처리)
   // furnitureHeightMm는 변경하지 않음 (측판 높이 유지)
 
   // customSections는 placedModule에 직접 저장된 것만 사용
@@ -1511,7 +1511,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         const bottomRaiseActive = configSections?.[0]?.bottomPanelRaise && configSections[0].bottomPanelRaise > 0;
         const isLowerModBase = placedModule.moduleId?.startsWith('lower-') || placedModule.moduleId?.includes('-lower-');
         const baseHeightMm = bottomRaiseActive ? 0 : (spaceInfo.baseConfig?.type === 'stand' ? 0 : (placedModule.hasBase === false ? 0 : (placedModule.baseFrameHeight ?? spaceInfo.baseConfig?.height ?? (isLowerModBase ? 100 : 60))));
-        // 하부프레임 OFF + 개별 띄움 높이
+        // 걸래받이 OFF + 개별 띄움 높이
         const indivFloatMm = (placedModule.hasBase === false) ? (placedModule.individualFloatHeight ?? 0) : 0;
         const baseHeight = (baseHeightMm + indivFloatMm) * 0.01; // mm to Three.js units
 
@@ -2070,7 +2070,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   // 디버깅용 로그 추가 제거됨
 
   // 키큰장 높이는 항상 내경 높이와 동일 (띄워서 배치와 관계없이)
-  // 키큰장은 바닥(또는 띄움 위치)부터 시작해서 상부프레임 하단까지
+  // 키큰장은 바닥(또는 띄움 위치)부터 시작해서 상단몰딩 하단까지
 
   // 노서라운드 모드에서 엔드패널 위치 조정은 나중에 적용
 

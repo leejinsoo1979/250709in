@@ -294,7 +294,7 @@ const IPadRightPanel: React.FC<IPadRightPanelProps> = ({ spaceInfo }) => {
   const setLeftGap = (v: number) => handleSpaceInfoUpdate({ gapConfig: { ...(spaceInfo.gapConfig ?? {}), left: v } as any });
   const setRightGap = (v: number) => handleSpaceInfoUpdate({ gapConfig: { ...(spaceInfo.gapConfig ?? {}), right: v } as any });
 
-  // 상/하부 프레임
+  // 상/걸래받이
   const frameSize = spaceInfo.frameSize || { top: 30, bottom: 0, left: 50, right: 50 };
   const topEnabled = frameSize.top > 0;
   const bottomEnabled = (spaceInfo.baseConfig?.type === 'floor');
@@ -416,8 +416,8 @@ const IPadRightPanel: React.FC<IPadRightPanelProps> = ({ spaceInfo }) => {
         </>
       )}
 
-      {/* ─ 상,하부프레임 (시안: A/B/C 상 + A/B/C 하) ─ */}
-      <SectionHeader title="상,하부프레임" help="각 프레임의 size / 옵셋" />
+      {/* ─ 상,걸래받이 (시안: A/B/C 상 + A/B/C 하) ─ */}
+      <SectionHeader title="상,걸래받이" help="각 프레임의 size / 옵셋" />
       <FrameRow label="A(상)" enabled={topEnabled}    onToggle={setTopEnabled}    sizeValue={topSize}    onSizeChange={setTopSize}    optionValue={topOffset}    onOptionChange={setTopOffset} />
       <FrameRow label="B(상)" enabled={topEnabled}    onToggle={setTopEnabled}    sizeValue={topSize}    onSizeChange={setTopSize}    optionValue={topOffset}    onOptionChange={setTopOffset} />
       <FrameRow label="C(상)" enabled={topEnabled}    onToggle={setTopEnabled}    sizeValue={topSize}    onSizeChange={setTopSize}    optionValue={topOffset}    onOptionChange={setTopOffset} />

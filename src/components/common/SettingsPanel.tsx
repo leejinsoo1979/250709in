@@ -222,7 +222,7 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({ isOpen, onClose, onSpaceD
               <div className={styles.settingItem}>
                 <div className={styles.settingInfo}>
                   <span className={styles.settingLabel}>프레임</span>
-                  <span className={styles.settingDescription}>상부/하부 프레임 표시</span>
+                  <span className={styles.settingDescription}>상부/걸래받이 표시</span>
                 </div>
                 <label className={styles.switch}>
                   <input type="checkbox" checked={showFrame} onChange={() => setShowFrame(!showFrame)} />

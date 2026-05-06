@@ -96,8 +96,8 @@ interface BoxModuleProps {
   upperDoorBottomGap?: number; // 상부 도어 하단 이격거리 (mm)
   lowerDoorTopGap?: number; // 하부 도어 상단 이격거리 (mm)
   lowerDoorBottomGap?: number; // 하부 도어 하단 이격거리 (mm)
-  topFrameThickness?: number; // 개별 가구 상부프레임 두께 (mm)
-  hasBase?: boolean; // 하부프레임 존재 여부 (false면 받침대 없음 → baseHeight=0)
+  topFrameThickness?: number; // 개별 가구 상단몰딩 두께 (mm)
+  hasBase?: boolean; // 걸래받이 존재 여부 (false면 받침대 없음 → baseHeight=0)
   individualFloatHeight?: number; // 개별 띄움 높이 (mm) - hasBase=false일 때 도어 Y보정용
   isCustomizable?: boolean; // 커스터마이징 가구 여부
   customConfig?: CustomFurnitureConfig; // 커스터마이징 설정
@@ -184,8 +184,8 @@ const BoxModule: React.FC<BoxModuleProps> = ({
   upperDoorBottomGap, // 상부 도어 하단 이격거리
   lowerDoorTopGap, // 하부 도어 상단 이격거리
   lowerDoorBottomGap, // 하부 도어 하단 이격거리
-  topFrameThickness, // 개별 가구 상부프레임 두께
-  hasBase, // 하부프레임 존재 여부
+  topFrameThickness, // 개별 가구 상단몰딩 두께
+  hasBase, // 걸래받이 존재 여부
   individualFloatHeight, // 개별 띄움 높이
   isCustomizable: _isCustomizable = false, // 커스터마이징 가구 여부 (편집 패널 분기용, 렌더링에는 customConfig 사용)
   customConfig, // 커스터마이징 설정
@@ -1154,7 +1154,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
   }
 
   // === Insert 프레임 (ㄷ자 구조) 전용 렌더링 ===
-  // 본체/백패널/상하판/조절발/도어/공간상하부프레임 모두 없음
+  // 본체/백패널/상하판/조절발/도어/공간상걸래받이 모두 없음
   // 앞면 프레임 + 좌 EP(18×58) + 우 EP(18×58), 모두 PET 재질, 바닥~천장
   // 외경은 customWidth(빌트인 냉장고장 배치 시 자동 조정) 우선, 없으면 moduleData 기본값(136)
   const isInsertFrame = (moduleData?.modelConfig as any)?.isInsertFrame === true;
@@ -1374,7 +1374,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
               zone={zone} // 단내림 영역 정보 전달
               internalHeight={internalHeight} // 자유배치 시 실제 가구 높이 전달
               isFreePlacement={isFreePlacement} // 자유배치 모드 전달
-              topFrameThickness={topFrameThickness} // 개별 가구 상부프레임 두께
+              topFrameThickness={topFrameThickness} // 개별 가구 상단몰딩 두께
               hasBase={hasBase}
             individualFloatHeight={individualFloatHeight}
             parentGroupY={parentGroupY}

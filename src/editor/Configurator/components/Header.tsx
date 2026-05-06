@@ -1358,7 +1358,7 @@ const Header: React.FC<HeaderProps> = ({
               color: 'var(--theme-text-secondary, #6b7280)',
               lineHeight: 1.5,
             }}>
-              분절된 상하부 프레임을 병합하여 내보내시겠습니까?
+              분절된 상걸래받이을 병합하여 내보내시겠습니까?
             </p>
             <div style={{
               display: 'flex',

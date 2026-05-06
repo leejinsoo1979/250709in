@@ -516,7 +516,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
     const floorFinishHeightMm = spaceInfo.hasFloorFinish && spaceInfo.floorFinish ? spaceInfo.floorFinish.height : 0;
     const isFloating = spaceInfo.baseConfig?.type === 'stand' && spaceInfo.baseConfig?.placementType === 'float';
     const floatHeight = isFloating ? (spaceInfo.baseConfig?.floatHeight || 0) : 0;
-    // 하부 프레임 높이: floor 타입은 받침대, stand 타입(비띄움)은 바닥레일
+    // 걸래받이 높이: floor 타입은 받침대, stand 타입(비띄움)은 바닥레일
     const bottomFrameHeight = spaceInfo.baseConfig?.type === 'floor'
       ? (spaceInfo.baseConfig.height || 65)
       : (spaceInfo.baseConfig?.type === 'stand' && !isFloating)
@@ -3782,7 +3782,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             }
             return leftmostMod;
           })();
-          // 상부/하부 프레임 치수 = 토글 OFF면 0, ON이면 저장값
+          // 상부/걸래받이 치수 = 토글 OFF면 0, ON이면 저장값
           const actualBottomSize = leftmostMod?.hasBase === false ? 0 : (leftLowerMod?.baseFrameHeight !== undefined ? leftLowerMod.baseFrameHeight : globalBottomFrameH);
           const actualTopSize = leftmostMod?.hasTopFrame === false ? 0 : (leftmostMod?.topFrameThickness !== undefined ? leftmostMod.topFrameThickness : globalTopFrame);
 
@@ -3806,7 +3806,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               if (leftCategoryResolved === 'lower' || leftCategoryResolved === 'upper') {
                 furnitureH = leftModDataForCat?.dimensions.height ?? Math.max(0, effectiveH - actualBottomSize - actualTopSize);
               } else {
-                // 키큰장(full): 공간 - 하부프레임 - 상부프레임
+                // 키큰장(full): 공간 - 걸래받이 - 상단몰딩
                 furnitureH = Math.max(0, effectiveH - actualBottomSize - actualTopSize);
               }
             }
@@ -3879,7 +3879,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           const bottomFrameH = leftLowerMod?.hasBase === false
             ? (leftLowerMod.individualFloatHeight ?? 0)
             : actualBottomSize;
-          // 상부프레임 높이: 상부장/상하부장 동시배치는 고정값(actualTopSize), 하부장 단독은 남은 공간, 키큰장은 나머지에서 계산
+          // 상단몰딩 높이: 상부장/상하부장 동시배치는 고정값(actualTopSize), 하부장 단독은 남은 공간, 키큰장은 나머지에서 계산
           const topFrameH = (leftCategoryResolved === 'upper' || hasDualCabinet)
             ? actualTopSize
             : Math.max(0, effectiveH - floorFinishForHeight - bottomFrameH - furnitureH);
@@ -3897,13 +3897,13 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             );
             const sections = modData?.modelConfig?.sections;
             if (sections && sections.length >= 2) {
-              // 섹션 기준 furnitureH = 실제 가구 내경 (공간 - 실제 상부프레임 - 실제 하부프레임 - 띄움)
+              // 섹션 기준 furnitureH = 실제 가구 내경 (공간 - 실제 상단몰딩 - 실제 걸래받이 - 띄움)
               const realTopFrame = leftmostMod.hasTopFrame === false ? 0 : (leftmostMod.topFrameThickness ?? globalTopFrame);
-              // 띄움 배치: hasBase=false 이면 하부프레임 자리가 띄움 공간으로 대체됨
+              // 띄움 배치: hasBase=false 이면 걸래받이 자리가 띄움 공간으로 대체됨
               // → individualFloatHeight 가 없으면 baseFrameHeight (= 띄움 기본) 사용
-              // 하부프레임 OFF (hasBase=false) → 하부프레임 자리를 마지막 섹션이 흡수
+              // 걸래받이 OFF (hasBase=false) → 걸래받이 자리를 마지막 섹션이 흡수
               //   → realBottomFrame = individualFloatHeight (있으면) 또는 0
-              // 하부프레임 ON → baseFrameHeight (있으면) 또는 globalBottomFrameH
+              // 걸래받이 ON → baseFrameHeight (있으면) 또는 globalBottomFrameH
               const leftLowerHasBase = (leftLowerMod as any)?.hasBase;
               const realBottomFrame = leftLowerHasBase === false
                 ? ((leftLowerMod as any)?.individualFloatHeight ?? 0)
@@ -3930,18 +3930,18 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           // Y 좌표 (1단용)
           const floorFinishBaseY = mmToThreeUnits(floorFinishForHeight);
           const effectiveCeilingY = mmToThreeUnits(effectiveH);
-          // 상부장: 천장→상부프레임→가구→빈공간→바닥 순서
-          // 하부장/키큰장: 바닥→바닥마감재→받침대→가구→상부프레임→천장 순서
-          // 상하부장 동시배치: 바닥→받침대→하부장→빈공간→상부장→상부프레임→천장
+          // 상부장: 천장→상단몰딩→가구→빈공간→바닥 순서
+          // 하부장/키큰장: 바닥→바닥마감재→받침대→가구→상단몰딩→천장 순서
+          // 상하부장 동시배치: 바닥→받침대→하부장→빈공간→상부장→상단몰딩→천장
           let bottomFrameTopY: number, furnitureTopY: number;
           if (hasDualCabinet) {
             // 상하부장 동시 배치: 하부장 기준으로 좌표 설정
             bottomFrameTopY = mmToThreeUnits(floorFinishForHeight + bottomFrameH);
             furnitureTopY = mmToThreeUnits(floorFinishForHeight + bottomFrameH + lowerCabinetH);
           } else if (isUpperCategory) {
-            // 상부장: 가구는 천장 - 상부프레임 아래에 붙음
+            // 상부장: 가구는 천장 - 상단몰딩 아래에 붙음
             // 치수 표시는 하부마감판(18mm) 포함하여 상부장 body 하단보다 18mm 아래까지
-            furnitureTopY = mmToThreeUnits(effectiveH - actualTopSize); // 상부프레임 하단 = 가구 상단
+            furnitureTopY = mmToThreeUnits(effectiveH - actualTopSize); // 상단몰딩 하단 = 가구 상단
             bottomFrameTopY = furnitureTopY - mmToThreeUnits(furnitureH + UPPER_BOTTOM_FINISH_MM); // 가구 하단 + 하부마감판
           } else {
             bottomFrameTopY = mmToThreeUnits(floorFinishForHeight + bottomFrameH);
@@ -4069,7 +4069,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 </>);
               })()}
 
-              {/* ── 1단(안쪽): 받침대/가구높이/상부프레임 분해 (가구가 배치된 경우만 표시) ── */}
+              {/* ── 1단(안쪽): 받침대/가구높이/상단몰딩 분해 (가구가 배치된 경우만 표시) ── */}
               {leftmostMod && (<>
               {/* 세로 메인 라인: 바닥마감재 위 ~ effectiveCeiling */}
               <NativeLine name="dimension_line"
@@ -4261,7 +4261,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 </>
               )}
 
-              {/* 상부프레임 구분 틱 & 치수 */}
+              {/* 상단몰딩 구분 틱 & 치수 */}
               {topFrameH > 0 && (() => {
                 const topFrameBottomRef = hasDualCabinet ? upperCabinetTopY : furnitureTopY;
                 return (
@@ -4450,7 +4450,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             }
             return rightmostMod;
           })();
-          // 상부/하부 프레임 치수 = 토글 OFF면 0, ON이면 저장값
+          // 상부/걸래받이 치수 = 토글 OFF면 0, ON이면 저장값
           const rActualBottomSize = rightmostMod?.hasBase === false ? 0 : (rightLowerMod?.baseFrameHeight !== undefined ? rightLowerMod.baseFrameHeight : rGlobalBottomFrameH);
           const rActualTopSize = rightmostMod?.hasTopFrame === false ? 0 : (rightmostMod?.topFrameThickness !== undefined ? rightmostMod.topFrameThickness : rGlobalTopFrame);
 
@@ -4543,7 +4543,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           const rBottomFrameH = rightLowerMod?.hasBase === false
             ? (rightLowerMod.individualFloatHeight ?? 0)
             : rActualBottomSize;
-          // 상부프레임 높이: 상부장/상하부장 동시배치는 고정값, 하부장 단독은 남은 공간, 키큰장은 나머지에서 계산
+          // 상단몰딩 높이: 상부장/상하부장 동시배치는 고정값, 하부장 단독은 남은 공간, 키큰장은 나머지에서 계산
           const rTopFrameH = (rightCategoryResolved === 'upper' || rHasDualCabinet)
             ? rActualTopSize
             : Math.max(0, rEffectiveH - rFloorFinishForHeight - rBottomFrameH - rFurnitureH);
@@ -4558,7 +4558,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             );
             const rSections = rModData?.modelConfig?.sections;
             if (rSections && rSections.length >= 2) {
-              // 섹션 기준 furnitureH = 실제 가구 내경 (공간 - 실제 상부프레임 - 실제 하부프레임)
+              // 섹션 기준 furnitureH = 실제 가구 내경 (공간 - 실제 상단몰딩 - 실제 걸래받이)
               const rRealTopFrame = rightmostMod.hasTopFrame === false ? 0 : (rightmostMod.topFrameThickness ?? rGlobalTopFrame);
               const rRealBottomFrame = (rightLowerMod as any)?.hasBase === false
                 ? ((rightLowerMod as any)?.individualFloatHeight ?? 0)
@@ -4592,9 +4592,9 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             rBottomFrameTopY = mmToThreeUnits(rFloorFinishForHeight + rBottomFrameH);
             rFurnitureTopY = mmToThreeUnits(rFloorFinishForHeight + rBottomFrameH + rLowerCabinetH);
           } else if (rIsUpperCategory) {
-            // 상부장: 가구는 천장 - 상부프레임 아래에 붙음
+            // 상부장: 가구는 천장 - 상단몰딩 아래에 붙음
             // 치수 표시는 하부마감판(18mm) 포함하여 상부장 body 하단보다 18mm 아래까지
-            rFurnitureTopY = mmToThreeUnits(rEffectiveH - rActualTopSize); // 상부프레임 하단 = 가구 상단
+            rFurnitureTopY = mmToThreeUnits(rEffectiveH - rActualTopSize); // 상단몰딩 하단 = 가구 상단
             rBottomFrameTopY = rFurnitureTopY - mmToThreeUnits(rFurnitureH + R_UPPER_BOTTOM_FINISH_MM); // 가구 하단 + 하부마감판
           } else {
             rBottomFrameTopY = mmToThreeUnits(rFloorFinishForHeight + rBottomFrameH);
@@ -4721,7 +4721,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 </>);
               })()}
 
-              {/* ── 1단(안쪽): 받침대/가구높이/상부프레임 분해 (가구가 배치된 경우만 표시) ── */}
+              {/* ── 1단(안쪽): 받침대/가구높이/상단몰딩 분해 (가구가 배치된 경우만 표시) ── */}
               {rightmostMod && (<>
               {/* 세로 메인 라인: 바닥마감재 위 ~ effectiveCeiling */}
               <NativeLine name="dimension_line"
@@ -4912,7 +4912,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 </>
               )}
 
-              {/* 상부프레임 구분 틱 & 치수 */}
+              {/* 상단몰딩 구분 틱 & 치수 */}
               {rTopFrameH > 0 && (() => {
                 const rTopFrameBottomRef = rHasDualCabinet ? rUpperCabinetTopY : rFurnitureTopY;
                 return (
@@ -5139,7 +5139,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             }
           });
 
-          // 공통 데이터: 조절발/상부프레임
+          // 공통 데이터: 조절발/상단몰딩
           const footHeightMm = bottomRaiseActive ? 0 : (spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height || 65) : 0);
           const topFrameMm = spaceInfo.frameSize?.top ?? 30;
           const floorFinishMm = (spaceInfo.hasFloorFinish && spaceInfo.floorFinish) ? spaceInfo.floorFinish.height : 0;
@@ -5154,7 +5154,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             }
             // 2) 섹션 세그먼트
             baseSegments.forEach(seg => all.push(seg));
-            // 3) 상부프레임
+            // 3) 상단몰딩
             if (topFrameMm > 0) {
               const topStart = baseSegments.length > 0 ? baseSegments[baseSegments.length - 1].endY : furnitureBaseY;
               const topEnd = topStart + mmToThreeUnits(topFrameMm);
@@ -5227,7 +5227,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 </group>
               ))}
 
-              {/* 우측 섹션 높이 치수선 (가구 우측) — 조절발/상부프레임/서브분할/바닥판올림 반영 */}
+              {/* 우측 섹션 높이 치수선 (가구 우측) — 조절발/상단몰딩/서브분할/바닥판올림 반영 */}
               {(() => {
                 const dimLineRightX = furnitureRightX + mmToThreeUnits(120);
                 const extLineRightX = dimLineRightX + mmToThreeUnits(20);
@@ -5463,7 +5463,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           ?? (module.moduleId?.includes('upper') ? 'upper'
             : module.moduleId?.includes('lower') ? 'lower' : 'full');
         const isLowerDim = moduleCategoryForDim === 'lower';
-        // 하부장 상단 Y(mm) = 바닥마감재 + 하부프레임(받침대) + 개별 띄움 + 가구 높이
+        // 하부장 상단 Y(mm) = 바닥마감재 + 걸래받이(받침대) + 개별 띄움 + 가구 높이
         // 3D 배치 좌표계(바닥=0)에서 계산
         const floorFinishMmForDim = spaceInfo.hasFloorFinish && spaceInfo.floorFinish?.height
           ? (spaceInfo.floorFinish.height || 0) : 0;
@@ -5913,7 +5913,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         const cxX = module.position.x;
         const labelX = cxX;
         // 실제 렌더링 공식 동일 (SectionsRenderer)
-        // 가구 외경 H = 공간높이 - 상부프레임 - 받침대
+        // 가구 외경 H = 공간높이 - 상단몰딩 - 받침대
         // availableHeight = H - 2*t (가구 상하판)
         // 마지막 섹션 = availableHeight - 나머지섹션합
         const topFrameMm = spaceInfo.frameSize?.top ?? 30;
@@ -5941,7 +5941,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           if (n === 0) { sectionBottomMm += sectionHeight; return; }
           const halfT = basicThickness / 2;
           // 섹션 외경을 spaceInfo의 실시간 값으로 재계산
-          // 가구 외경 = 공간높이 - 상부프레임 - 받침대
+          // 가구 외경 = 공간높이 - 상단몰딩 - 받침대
           // 마지막(상부) 섹션 외경 = 가구 외경 - 고정섹션합
           // 첫(하부) 섹션 외경 = section.height 그대로 (고정 섹션)
           const topFrameRuntime = spaceInfo.frameSize?.top ?? 30;
@@ -6544,16 +6544,16 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
 
             // 개별 모듈의 baseFrameHeight 우선 사용 (선택된 슬롯 기준 가구)
             const viewMod = sideViewMod || leftmostModules[0];
-            // 가구별 상부프레임 우선 (하부 OFF 시 상부프레임이 확장된 값 반영)
+            // 가구별 상단몰딩 우선 (하부 OFF 시 상단몰딩이 확장된 값 반영)
             const rawTopFrame = viewMod?.topFrameThickness ?? globalTopFrame;
-            // 하부 OFF 시 상부프레임에 흡수된 하부프레임 크기 (FurnitureItem의 topDelta 계산과 동일)
+            // 하부 OFF 시 상단몰딩에 흡수된 걸래받이 크기 (FurnitureItem의 topDelta 계산과 동일)
             const globalBaseMm = spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height ?? 60) : 0;
             const baseFrameAbsorbed = viewMod?.hasBase === false
               ? (viewMod.baseFrameHeight ?? globalBaseMm)
               : 0;
             const topFrameHeight = Math.max(0, rawTopFrame - baseFrameAbsorbed);
             // console.log('🔍 [CleanCAD2D 좌측 치수]', { ... }); // 진단용 로그 제거 (성능)
-            // hasBase=false → 하부프레임 0 (individualFloatHeight만 반영)
+            // hasBase=false → 걸래받이 0 (individualFloatHeight만 반영)
             const bottomFrameHeight = viewMod?.hasBase === false
               ? (viewMod.individualFloatHeight ?? 0)
               : (viewMod?.baseFrameHeight !== undefined && spaceInfo.baseConfig?.type === 'floor')
@@ -6565,9 +6565,9 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             const bottomY = 0; // 바닥
             const floorFinishTopYLocal = mmToThreeUnits(floorFinishHeightMm); // 바닥마감재 상단
             const baseStartYLocal = floorFinishHeightMm > 0 ? floorFinishTopYLocal : bottomY; // 받침대 시작점
-            const bottomFrameTopY = mmToThreeUnits(bottomFrameHeight); // 하부 프레임 상단
+            const bottomFrameTopY = mmToThreeUnits(bottomFrameHeight); // 걸래받이 상단
             const cabinetAreaTopY = mmToThreeUnits(bottomFrameHeight + cabinetPlacementHeight); // 캐비넷 영역 상단
-            const topFrameTopY = cabinetAreaTopY + mmToThreeUnits(topFrameHeight); // 상부 프레임 상단
+            const topFrameTopY = cabinetAreaTopY + mmToThreeUnits(topFrameHeight); // 상단 몰딩 상단
 
             // 좌측뷰 대상 가구의 높이만 사용
             let maxFurnitureTop = topFrameTopY;
@@ -6586,7 +6586,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     ?? viewMod.customHeight
                     ?? moduleData?.dimensions.height
                     ?? (viewMod.customConfig?.totalHeight || 2000);
-                  // 하부프레임 OFF (hasBase=false): 가구가 하부프레임 자리를 흡수 — moduleHeight 보정
+                  // 걸래받이 OFF (hasBase=false): 가구가 걸래받이 자리를 흡수 — moduleHeight 보정
                   // (FurnitureItem.tsx의 furnitureHeightMm 보정과 동일)
                   if (!viewMod.freeHeight && (viewMod as any).hasBase === false && category === 'full') {
                     const globalBase = spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height ?? 60) : 0;
@@ -6618,7 +6618,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
 
             return (
               <>
-                {/* 1. 띄움 높이 또는 하부 프레임 높이 */}
+                {/* 1. 띄움 높이 또는 걸래받이 높이 */}
                 {/* 띄움 배치인 경우: 띄움 높이 표시 (실제 가구 위치에 맞춤) */}
                 {isFloating && floatHeight > 0 && (
                 <group>
@@ -6654,7 +6654,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 </group>
                 )}
 
-                {/* 띄움 배치가 아니고 받침대가 있는 경우: 하부 프레임 높이 표시 (바닥부터) */}
+                {/* 띄움 배치가 아니고 받침대가 있는 경우: 걸래받이 높이 표시 (바닥부터) */}
                 {!isFloating && bottomFrameHeight > 0 && (
                 <group>
                   <Line
@@ -6830,7 +6830,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 </group>
                 )}
 
-                {/* 4. 상부 프레임 높이 / 노서라운드일 때는 상부 이격거리 */}
+                {/* 4. 상단 몰딩 높이 / 노서라운드일 때는 상부 이격거리 */}
                 {(
                 <group>
                   <Line
@@ -6865,7 +6865,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 </group>
                 )}
 
-                {/* 5. 상부 프레임 이상 돌출 구간 */}
+                {/* 5. 상단 몰딩 이상 돌출 구간 */}
                 {hasExtraFurnitureHeight && (
                 <group>
                   <Line
@@ -7079,7 +7079,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   color={dimensionColor}
                   lineWidth={0.3}
                 />
-                {/* 하부 프레임 상단 연장선 - 받침대가 있는 경우에만 표시 */}
+                {/* 걸래받이 상단 연장선 - 받침대가 있는 경우에만 표시 */}
                 {bottomFrameHeight > 0 && (
                 <Line
                   points={[[0, bottomFrameTopY, spaceZOffset], [0, bottomFrameTopY, rightDimensionZ - mmToThreeUnits(20)]]}
@@ -7659,7 +7659,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
 
             // 개별 모듈의 baseFrameHeight 우선 사용 (선택된 슬롯 기준 가구)
             const viewMod = sideViewMod || rightmostModules[0];
-            // 가구별 상부프레임 우선 (하부 OFF 시 상부프레임에 흡수된 베이스 분 빼서 표시)
+            // 가구별 상단몰딩 우선 (하부 OFF 시 상단몰딩에 흡수된 베이스 분 빼서 표시)
             const rawTopFrame = viewMod?.topFrameThickness ?? globalTopFrame;
             const globalBaseMm = spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height ?? 60) : 0;
             const baseFrameAbsorbed = viewMod?.hasBase === false
@@ -7667,7 +7667,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               : 0;
             const topFrameHeight = Math.max(0, rawTopFrame - baseFrameAbsorbed);
             // console.log('🔍 [CleanCAD2D 우측 치수]', { viewModId: viewMod?.id, rawTopFrame, baseFrameAbsorbed, topFrameHeight, hasBase: viewMod?.hasBase });
-            // hasBase=false → 하부프레임 0 (individualFloatHeight만 반영)
+            // hasBase=false → 걸래받이 0 (individualFloatHeight만 반영)
             const bottomFrameHeight = viewMod?.hasBase === false
               ? (viewMod.individualFloatHeight ?? 0)
               : (viewMod?.baseFrameHeight !== undefined && spaceInfo.baseConfig?.type === 'floor')
@@ -7700,7 +7700,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     ?? viewMod.customHeight
                     ?? moduleData?.dimensions.height
                     ?? (viewMod.customConfig?.totalHeight || 2000);
-                  // 하부프레임 OFF (hasBase=false): 가구가 하부프레임 자리를 흡수 — moduleHeight 보정
+                  // 걸래받이 OFF (hasBase=false): 가구가 걸래받이 자리를 흡수 — moduleHeight 보정
                   // (FurnitureItem.tsx의 furnitureHeightMm 보정과 동일)
                   if (!viewMod.freeHeight && (viewMod as any).hasBase === false && category === 'full') {
                     const globalBase = spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height ?? 60) : 0;
@@ -7741,7 +7741,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
 
             return (
               <>
-                {/* 1. 띄움 높이 또는 하부 프레임 높이 */}
+                {/* 1. 띄움 높이 또는 걸래받이 높이 */}
                 {/* 띄움 배치인 경우: 띄움 높이 표시 (실제 가구 위치에 맞춤) */}
                 {isFloating && floatHeight > 0 && (
                 <group>
@@ -7777,7 +7777,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 </group>
                 )}
 
-                {/* 띄움 배치가 아니고 받침대가 있는 경우: 하부 프레임 높이 표시 (바닥부터) */}
+                {/* 띄움 배치가 아니고 받침대가 있는 경우: 걸래받이 높이 표시 (바닥부터) */}
                 {!isFloating && bottomFrameHeight > 0 && (
                 <group>
                   <Line
@@ -7953,7 +7953,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 </group>
                 )}
 
-                {/* 4. 상부 프레임 높이 / 노서라운드일 때는 상부 이격거리 */}
+                {/* 4. 상단 몰딩 높이 / 노서라운드일 때는 상부 이격거리 */}
                 {(
                 <group>
                   <Line
@@ -7988,7 +7988,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               </group>
                 )}
 
-                {/* 5. 상부 프레임 이상 돌출 구간 */}
+                {/* 5. 상단 몰딩 이상 돌출 구간 */}
                 {hasExtraFurnitureHeight && (
                 <group>
                   <Line
@@ -8029,7 +8029,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   color={dimensionColor}
                   lineWidth={0.3}
                 />
-                {/* 하부 프레임 상단 연장선 - 받침대가 있는 경우에만 표시 */}
+                {/* 걸래받이 상단 연장선 - 받침대가 있는 경우에만 표시 */}
                 {bottomFrameHeight > 0 && (
                 <Line
                   points={[[spaceWidth, bottomFrameTopY, spaceZOffset], [spaceWidth, bottomFrameTopY, leftDimensionZ + mmToThreeUnits(20)]]}
@@ -8207,7 +8207,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
     );
   };
 
-  // 상단뷰 치수선 - 객체 좌표계와 맞춤 (상부 프레임 가로길이, 좌우 프레임 폭, 캐비넷 폭만 표시)
+  // 상단뷰 치수선 - 객체 좌표계와 맞춤 (상단 몰딩 가로길이, 좌우 프레임 폭, 캐비넷 폭만 표시)
   const renderTopView = () => {
     const spaceWidth = mmToThreeUnits(spaceInfo.width);
     const spaceDepth = mmToThreeUnits(spaceInfo.depth);
@@ -8218,7 +8218,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
     const spaceXOffset = -spaceWidth / 2;
     const spaceZOffset = -spaceDepth / 2;
     const baseFrameHeight = spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig.height || 65) : 0;
-    const baseFrameThickness = mmToThreeUnits(18); // 하부 프레임 두께
+    const baseFrameThickness = mmToThreeUnits(18); // 걸래받이 두께
     const baseFrameY = 0; // 바닥 기준
     const baseFrameZ = spaceZOffset + spaceDepth/2 - mmToThreeUnits(20); // 3D와 동일하게 앞쪽에서 20mm 뒤로
     const baseFrameWidth = spaceWidth - (spaceInfo.surroundType === 'no-surround' ? 0 : (mmToThreeUnits(frameSize.left) + mmToThreeUnits(frameSize.right)));
@@ -8241,7 +8241,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         {/* 탑뷰 치수선들 - 좌측면도가 아닐 때만 표시 */}
         {showDimensions && currentViewDirection !== 'left' && (
           <>
-        {/* 상단 전체 폭 치수선 (상부 프레임의 가로 길이) - 외부로 이동 / 커튼박스 분리 표시 */}
+        {/* 상단 전체 폭 치수선 (상단 몰딩의 가로 길이) - 외부로 이동 / 커튼박스 분리 표시 */}
         <group>
           {(() => {
             const mainDimZ = topMainDimZ;

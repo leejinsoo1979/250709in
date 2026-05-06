@@ -73,7 +73,7 @@ export function updateSectionHeight(
         // 상판이 있는 경우 (타입2 하부 섹션)
         newSectionHeight = newInternalHeight + basicThickness * 2;
       } else {
-        // 상판이 없는 경우 (일반 hanging, 상부 프레임이 상판 역할)
+        // 상판이 없는 경우 (일반 hanging, 상단 몰딩이 상판 역할)
         newSectionHeight = newInternalHeight + basicThickness;
       }
     } else {

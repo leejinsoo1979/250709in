@@ -482,7 +482,7 @@ function extractFurnitureNum(name: string): number {
  *   3. body    — 상판/하판/선반/칸막이/바닥판/서랍 등 본체 패널
  *   4. door    — 도어 (듀얼 우선, 싱글 나중)
  *   5. surround — 서라운드 프레임 (도어 뒤, 상/하 프레임 앞)
- *   6. frame   — 상부프레임/하부프레임 (맨 마지막 재단)
+ *   6. frame   — 상단몰딩/걸래받이 (맨 마지막 재단)
  */
 function getPanelCategory(name: string): 'side' | 'back' | 'body' | 'door' | 'surround' | 'frame' {
   if (!name) return 'body';
@@ -514,7 +514,7 @@ function extractPanelTypeKey(name: string): string {
   if (!name) return '';
   // 가구번호와 모델명 제거 후 핵심 패널 종류만 추출
   const types = ['백패널', '좌측판', '우측판', '상판', '바닥', '선반', '칸막이',
-    '상부프레임', '하부프레임', '상부프래임', '하부프래임', '후면 보강대',
+    '상단몰딩', '걸래받이', '상부프래임', '하부프래임', '후면 보강대',
     '서랍앞판', '서랍뒷판', '서랍좌측', '서랍우측', '서랍바닥', '도어'];
   for (const t of types) {
     if (name.includes(t)) return t;

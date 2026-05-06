@@ -8,8 +8,8 @@ export const calculatePanelDetails = (
   customDepth: number,
   hasDoor: boolean = false,
   backPanelThicknessMm?: number, // 백패널 두께 (mm, 기본값: 9)
-  topFrameHeightMm?: number, // 상부프레임 높이 (mm)
-  baseFrameHeightMm?: number // 하부프레임(받침대) 높이 (mm)
+  topFrameHeightMm?: number, // 상단몰딩 높이 (mm)
+  baseFrameHeightMm?: number // 걸래받이(받침대) 높이 (mm)
 ): Panel[] => {
   const panels: Panel[] = [];
   let panelId = 1;
@@ -561,13 +561,13 @@ export const calculatePanelDetails = (
     }
   }
 
-  // === 프레임 패널 (상부프레임 / 하부프레임) ===
+  // === 프레임 패널 (상단몰딩 / 걸래받이) ===
   const FRAME_THICKNESS = 18.5; // 프레임(PET 재질) 항상 18.5mm
 
   if (topFrameHeightMm && topFrameHeightMm > 0) {
     panels.push({
       id: `panel-${panelId++}`,
-      name: `${moduleData.name} - 상부프레임`,
+      name: `${moduleData.name} - 상단몰딩`,
       width: customWidth,
       height: topFrameHeightMm,
       thickness: FRAME_THICKNESS,
@@ -581,7 +581,7 @@ export const calculatePanelDetails = (
   if (baseFrameHeightMm && baseFrameHeightMm > 0) {
     panels.push({
       id: `panel-${panelId++}`,
-      name: `${moduleData.name} - 하부프레임`,
+      name: `${moduleData.name} - 걸래받이`,
       width: customWidth,
       height: baseFrameHeightMm,
       thickness: FRAME_THICKNESS,

@@ -14,7 +14,7 @@ export interface FrameSize {
   left: number;
   right: number;
   top: number;
-  topOffset?: number; // 자유배치 상부프레임 옵셋 (mm, 천장에서 아래로)
+  topOffset?: number; // 자유배치 상단몰딩 옵셋 (mm, 천장에서 아래로)
 }
 
 // 자유배치 서라운드 개별 면 설정
@@ -156,7 +156,7 @@ export interface SpaceInfo {
   freeSurround?: FreeSurroundConfig;
   // 서라운드 옵셋 기준: 'furniture' = 가구 앞면 기준, 'door' = 도어 앞면 기준
   surroundOffsetBase?: 'furniture' | 'door';
-  // 상하부프레임 옵셋 기준 (서라운드와 독립)
+  // 상걸래받이 옵셋 기준 (서라운드와 독립)
   frameOffsetBase?: 'furniture' | 'door';
 
   // 자유배치 도어 셋업 방식 (글로벌)
@@ -180,7 +180,7 @@ export interface SpaceInfo {
   // 슬롯배치 커튼박스 설정 (단내림과 독립적으로 동작)
   curtainBox?: CurtainBoxConfig;
 
-  // 상하부 프레임 병합 활성화 (기본: false)
+  // 상걸래받이 병합 활성화 (기본: false)
   frameMergeEnabled?: boolean;
 
   // 가구재 두께 (15 / 15.5 / 18 / 18.5 mm, 기본: 18)
@@ -194,8 +194,8 @@ export interface DroppedCeilingConfig {
   width: number;                 // 단내림 영역 폭 (mm)
   dropHeight: number;            // 천장에서 내려오는 높이 (mm)
   depth?: number;                // 공간 깊이 (생략 시 spaceInfo.depth 사용)
-  topFrame?: number;             // 단내림 상부프레임 높이 (mm, 기본: frameSize.top과 동일)
-  bottomFrame?: number;          // 단내림 하부프레임 높이 (mm, 기본: 0)
+  topFrame?: number;             // 단내림 상단몰딩 높이 (mm, 기본: frameSize.top과 동일)
+  bottomFrame?: number;          // 단내림 걸래받이 높이 (mm, 기본: 0)
   sideFrame?: number;            // 단내림 벽쪽 프레임 폭 (mm, 서라운드 시 사용, 기본: frameSize.left/right와 동일)
 }
 

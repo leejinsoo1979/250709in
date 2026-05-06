@@ -401,7 +401,7 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
       // 상부장 상판 따내기 기본값: 없음 (필요시 수동 설정)
       // topPanelNotchSize, topPanelNotchSide는 undefined → 따내기 없음
 
-      // 하부프레임 기본값: 하부장 100mm, 키큰장은 사용자 받침대 높이(spaceInfo.baseConfig.height) 사용
+      // 걸래받이 기본값: 하부장 100mm, 키큰장은 사용자 받침대 높이(spaceInfo.baseConfig.height) 사용
       const isLowerById = module.moduleId?.startsWith('lower-') || module.moduleId?.includes('dual-lower-');
       if (module.baseFrameHeight === undefined) {
         if (newCategory === 'lower' || isLowerById) {
@@ -852,7 +852,7 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
     const floatHeight = spaceInfo.baseConfig?.floatHeight || 200;
     const defaultBottomGap = isFloatPlacement ? floatHeight : 25;
 
-    // 전체서라운드: 상부프레임 + 3mm, 그 외: 5mm
+    // 전체서라운드: 상단몰딩 + 3mm, 그 외: 5mm
     const isFullSurround = spaceInfo.surroundType === 'surround' && spaceInfo.frameConfig?.top !== false;
     const topFrameMm = spaceInfo.frameSize?.top || 30;
     const defaultTopGap = isFullSurround ? (topFrameMm + 3) : 5;

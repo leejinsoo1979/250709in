@@ -332,7 +332,7 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
                   </>
                 ) : null}
                 
-                {/* 첫 번째 섹션(서랍)의 하부 프레임 두께 표시 - 제거됨 (2D에서 18mm 두께 표시 불필요) */}
+                {/* 첫 번째 섹션(서랍)의 걸래받이 두께 표시 - 제거됨 (2D에서 18mm 두께 표시 불필요) */}
               </group>
             )}
           </group>
@@ -393,7 +393,7 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
               <group>
                 {index === 0 && (
                   <>
-                    {/* 하단 바지걸이 구역 - 하부 프레임부터 중단선반까지 */}
+                    {/* 하단 바지걸이 구역 - 걸래받이부터 중단선반까지 */}
                     <Text
                       position={[
                         getDimensionXPosition(rightWidth, true),

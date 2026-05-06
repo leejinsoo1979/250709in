@@ -2531,7 +2531,7 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
       })()}
       </group>
 
-      {/* 하부프레임은 Room.tsx에서 렌더링 (중복 방지) */}
+      {/* 걸래받이은 Room.tsx에서 렌더링 (중복 방지) */}
 
       {/* 엔드패널(EP) 렌더링 — 표준 모듈과 동일한 높이 로직 적용 */}
       {(() => {

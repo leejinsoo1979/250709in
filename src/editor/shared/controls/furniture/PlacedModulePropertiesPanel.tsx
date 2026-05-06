@@ -1406,7 +1406,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
   // 도어용 원래 너비 계산 (adjustedWidth가 없으면 slotCustomWidth → customWidth → 기본 너비)
   const doorOriginalWidth = currentPlacedModule?.slotCustomWidth ?? currentPlacedModule?.customWidth ?? moduleData?.dimensions.width;
 
-  // 프레임 높이 계산 (상부프레임, 하부프레임)
+  // 프레임 높이 계산 (상단몰딩, 걸래받이)
   const topFrameHeightMm = calculateTopBottomFrameHeight(spaceInfo);
   // 개별 가구 baseFrameHeight 우선 → 글로벌 spaceInfo 폴백 (FurnitureItem.tsx와 동일 우선순위)
   const globalBaseFrameHeightMm = calculateBaseFrameHeight(spaceInfo);
@@ -2961,7 +2961,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                         const val = parseInt(freeHeightInput, 10);
                         if (!isNaN(val) && val >= 100 && val <= 3000 && currentPlacedModule) {
                           const updates: any = { freeHeight: val };
-                          // 키큰장(full): 가구 높이 줄이면 상부프레임이 늘어나야 함
+                          // 키큰장(full): 가구 높이 줄이면 상단몰딩이 늘어나야 함
                           if (moduleData.category === 'full') {
                             const iSpace = calculateInternalSpace(spaceInfo);
                             const originalH = iSpace.height; // 원래 내경 높이
@@ -2970,7 +2970,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                             if (heightDiff > 0) {
                               updates.topFrameThickness = globalTopFrame + heightDiff;
                             } else {
-                              // 원래보다 크거나 같으면 상부프레임 기본값
+                              // 원래보다 크거나 같으면 상단몰딩 기본값
                               updates.topFrameThickness = Math.max(0, globalTopFrame + heightDiff);
                             }
                           }
@@ -3392,7 +3392,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                                 const newTotalH = prevFixed + inputVal;
                                 const clampedH = Math.max(300, Math.min(3000, newTotalH));
                                 const secUpdates: any = { freeHeight: clampedH };
-                                // 키큰장: 상부프레임도 연동
+                                // 키큰장: 상단몰딩도 연동
                                 if (moduleData.category === 'full') {
                                   const iSpace = calculateInternalSpace(spaceInfo);
                                   const globalTopFrame = spaceInfo.frameSize?.top || 30;
@@ -3682,7 +3682,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
             );
           })()}
 
-          {/* 상,하부 프레임 — 우측바와 동일 형태 (해당 가구 단일) */}
+          {/* 상,걸래받이 — 우측바와 동일 형태 (해당 가구 단일) */}
           {currentPlacedModule && !currentPlacedModule.isSurroundPanel && (() => {
             const mod = currentPlacedModule;
             const globalTop = spaceInfo.frameSize?.top ?? 30;
@@ -3729,9 +3729,9 @@ const PlacedModulePropertiesPanel: React.FC = () => {
 
             return (
               <div className={styles.propertySection}>
-                <h5 className={styles.sectionTitle}>상,하부프레임</h5>
+                <h5 className={styles.sectionTitle}>상,걸래받이</h5>
 
-                {/* 상부 프레임 */}
+                {/* 상단 몰딩 */}
                 <div style={rowStyle}>
                   <span style={labelStyle}>상부</span>
                   <button
@@ -3840,7 +3840,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                   <div style={{ borderTop: '1px solid var(--theme-border, #e0e0e0)', margin: '6px 0' }} />
                 )}
 
-                {/* 하부 프레임 — stand 타입이면 숨김 */}
+                {/* 걸래받이 — stand 타입이면 숨김 */}
                 {!isStandType && (
                   <div style={rowStyle}>
                     <span style={labelStyle}>하부</span>

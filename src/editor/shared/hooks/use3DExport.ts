@@ -178,7 +178,7 @@ export const use3DExport = () => {
         }
       }
 
-      // 상부/하부 프레임 포함 (Room이 그리는 BoxWithEdges 메시 트리)
+      // 상부/걸래받이 포함 (Room이 그리는 BoxWithEdges 메시 트리)
       // BoxWithEdges는 mesh 이름을 "furniture-mesh-{name}" 형태로 만들기 때문에
       // top-frame / base-frame / bottom-frame을 prefix까지 포함해서 매칭한다.
       const lowerName = (obj.name || '').toLowerCase();
