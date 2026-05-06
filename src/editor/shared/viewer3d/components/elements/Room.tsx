@@ -521,10 +521,9 @@ const Room: React.FC<RoomProps> = ({
       if (rightWallMaterialRef.current && rightWallMaterialRef.current.uniforms) {
         rightWallMaterialRef.current.uniforms.opacity.value = computeOpacity(rightDot);
       }
-      // 천장: vy(=topDot)가 큰 양수일 때만 페이드 (카메라가 거의 위에서 내려다보는 시점)
-      // 정면뷰(vy 작은 양수)는 불투명 유지
-      // computeOpacity와 부호 반대: dot이 작을수록 불투명, 클수록 투명
-      const computeTopOpacity = (dot: number, fadeStart = 0.6, fadeEnd = 0.9): number => {
+      // 천장: vy(=topDot)가 클수록(카메라가 위로 회전) 천장이 가구 윗면을 가림 → 페이드
+      // 정면뷰(vy ≈ 0.3 전후 추정)는 불투명 유지, 위로 더 회전하면 페이드 시작
+      const computeTopOpacity = (dot: number, fadeStart = 0.35, fadeEnd = 0.6): number => {
         if (dot <= fadeStart) return 1;
         if (dot >= fadeEnd) return 0;
         return (fadeEnd - dot) / (fadeEnd - fadeStart);
