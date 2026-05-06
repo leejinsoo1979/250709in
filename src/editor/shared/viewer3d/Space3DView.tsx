@@ -513,7 +513,13 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
       window.removeEventListener('duplicate-furniture', handleDuplicateFurniture);
       window.removeEventListener('duplicate-column', handleDuplicateColumn);
     };
-  }, [spaceInfo]);
+    // 핸들러 내부에서 useFurnitureStore.getState() / useSpaceConfigStore.getState()로
+    // 최신 상태를 직접 읽으므로 deps는 비워둠. (이전엔 [spaceInfo]였는데, spaceInfo가 자주
+    // 바뀌면 useEffect가 cleanup→재등록을 반복하다 strict mode/빠른 state 업데이트 시
+    // 한 시점에 핸들러가 중복 등록되어 복사·붙여넣기 1번 시 2개 가구가 생성되는 버그가
+    // 발생했음)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // 기둥 변경 감지하여 즉시 리렌더링 및 가구 업데이트
   useEffect(() => {
