@@ -101,6 +101,9 @@ export function useExplorerActions(
   const deleteItems = useCallback(async (items: { id: string; type: string; projectId?: string }[]) => {
     const isSharedMenu = nav.activeMenu === 'shared-with-me' || nav.activeMenu === 'shared-by-me';
 
+    // 새로고침이 필요한 projectId 수집 (다중 프로젝트 디자인 삭제 시)
+    const affectedProjectIds = new Set<string>();
+
     for (const item of items) {
       try {
         // 공유받은/공유한 파일 메뉴에서 삭제 → 공유 해제
@@ -123,10 +126,32 @@ export function useExplorerActions(
           if (error) {
             alert('프로젝트 삭제 실패: ' + error);
           }
-        } else if (item.type === 'design' && item.projectId) {
-          const { error } = await softDeleteDesignFile(item.id, item.projectId);
+        } else if (item.type === 'design') {
+          // projectId가 누락되었을 경우, 우선 currentProjectId로 보강하고
+          // 그래도 없으면 Firestore에서 디자인 문서를 직접 조회해 projectId를 가져옴
+          let resolvedProjectId = item.projectId || nav.currentProjectId || undefined;
+          if (!resolvedProjectId) {
+            try {
+              const { designFile } = await getDesignFileById(item.id);
+              if (designFile?.projectId) {
+                resolvedProjectId = designFile.projectId;
+              }
+            } catch (lookupErr) {
+              console.error('디자인 파일 projectId 조회 실패:', lookupErr);
+            }
+          }
+
+          if (!resolvedProjectId) {
+            console.error('🚫 디자인 삭제 실패 - projectId를 찾을 수 없음:', item);
+            alert('디자인파일 삭제 실패: 프로젝트 정보를 찾을 수 없습니다.');
+            continue;
+          }
+
+          const { error } = await softDeleteDesignFile(item.id, resolvedProjectId);
           if (error) {
             alert('디자인파일 삭제 실패: ' + error);
+          } else {
+            affectedProjectIds.add(resolvedProjectId);
           }
         } else if (item.type === 'folder' && item.projectId) {
           const projectFolders = data.folders[item.projectId] || [];
@@ -135,15 +160,20 @@ export function useExplorerActions(
         }
       } catch (err) {
         console.error('삭제 중 오류:', err);
+        alert('삭제 중 오류가 발생했습니다. 콘솔을 확인해주세요.');
       }
     }
 
     // 삭제 후 데이터 새로고침
     await data.refreshProjects();
     if (nav.currentProjectId) {
-      await data.refreshDesignFiles(nav.currentProjectId);
+      affectedProjectIds.add(nav.currentProjectId);
       await data.refreshFolders(nav.currentProjectId);
     }
+    // 영향받은 모든 프로젝트의 디자인 파일 목록 새로고침 (다중 프로젝트 검색 결과 등 대응)
+    await Promise.all(
+      Array.from(affectedProjectIds).map((pid) => data.refreshDesignFiles(pid))
+    );
     clearSelection();
   }, [data, nav.currentProjectId, nav.activeMenu, user, clearSelection]);
 
