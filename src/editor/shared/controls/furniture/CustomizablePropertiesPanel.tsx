@@ -4623,20 +4623,20 @@ const CustomizablePropertiesPanel: React.FC = () => {
                         <div>
                           <span style={{ fontSize: '11px', color: 'var(--theme-text-secondary)' }}>좌EP 앞</span>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginTop: '2px' }}>
-                            <input type="text" inputMode="numeric" value={placedModule.leftEndPanelOffset ?? 0}
-                              onChange={(e) => { const v = e.target.value; if (v === '' || v === '-' || /^-?\d+$/.test(v)) { const num = (v === '' || v === '-') ? 0 : Math.max(-200, Math.min(200, parseInt(v, 10))); updatePlacedModule(moduleId, { leftEndPanelOffset: num }); } }}
-                              onKeyDown={(e) => { if (e.key === 'ArrowUp' || e.key === 'ArrowDown') { e.preventDefault(); const cur = placedModule.leftEndPanelOffset ?? 0; const next = Math.max(-200, Math.min(200, cur + (e.key === 'ArrowUp' ? 1 : -1))); updatePlacedModule(moduleId, { leftEndPanelOffset: next }); } }}
-                              style={{ width: '45px', padding: '4px 6px', border: '1px solid var(--theme-border)', borderRadius: '4px', fontSize: '13px', textAlign: 'center', background: 'var(--theme-background)', color: 'var(--theme-text)' }} />
+                            <EpOffsetInput
+                              value={placedModule.leftEndPanelOffset ?? 0}
+                              onCommit={(num) => updatePlacedModule(moduleId, { leftEndPanelOffset: num })}
+                            />
                             <span style={{ fontSize: '11px', color: 'var(--theme-text-secondary)' }}>mm</span>
                           </div>
                         </div>
                         <div>
                           <span style={{ fontSize: '11px', color: 'var(--theme-text-secondary)' }}>좌EP 뒤</span>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginTop: '2px' }}>
-                            <input type="text" inputMode="numeric" value={placedModule.leftEndPanelBackOffset ?? 0}
-                              onChange={(e) => { const v = e.target.value; if (v === '' || v === '-' || /^-?\d+$/.test(v)) { const num = (v === '' || v === '-') ? 0 : Math.max(-200, Math.min(200, parseInt(v, 10))); updatePlacedModule(moduleId, { leftEndPanelBackOffset: num }); } }}
-                              onKeyDown={(e) => { if (e.key === 'ArrowUp' || e.key === 'ArrowDown') { e.preventDefault(); const cur = placedModule.leftEndPanelBackOffset ?? 0; const next = Math.max(-200, Math.min(200, cur + (e.key === 'ArrowUp' ? 1 : -1))); updatePlacedModule(moduleId, { leftEndPanelBackOffset: next }); } }}
-                              style={{ width: '45px', padding: '4px 6px', border: '1px solid var(--theme-border)', borderRadius: '4px', fontSize: '13px', textAlign: 'center', background: 'var(--theme-background)', color: 'var(--theme-text)' }} />
+                            <EpOffsetInput
+                              value={placedModule.leftEndPanelBackOffset ?? 0}
+                              onCommit={(num) => updatePlacedModule(moduleId, { leftEndPanelBackOffset: num })}
+                            />
                             <span style={{ fontSize: '11px', color: 'var(--theme-text-secondary)' }}>mm</span>
                           </div>
                         </div>
@@ -4648,20 +4648,20 @@ const CustomizablePropertiesPanel: React.FC = () => {
                         <div>
                           <span style={{ fontSize: '11px', color: 'var(--theme-text-secondary)' }}>우EP 앞</span>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginTop: '2px' }}>
-                            <input type="text" inputMode="numeric" value={placedModule.rightEndPanelOffset ?? 0}
-                              onChange={(e) => { const v = e.target.value; if (v === '' || v === '-' || /^-?\d+$/.test(v)) { const num = (v === '' || v === '-') ? 0 : Math.max(-200, Math.min(200, parseInt(v, 10))); updatePlacedModule(moduleId, { rightEndPanelOffset: num }); } }}
-                              onKeyDown={(e) => { if (e.key === 'ArrowUp' || e.key === 'ArrowDown') { e.preventDefault(); const cur = placedModule.rightEndPanelOffset ?? 0; const next = Math.max(-200, Math.min(200, cur + (e.key === 'ArrowUp' ? 1 : -1))); updatePlacedModule(moduleId, { rightEndPanelOffset: next }); } }}
-                              style={{ width: '45px', padding: '4px 6px', border: '1px solid var(--theme-border)', borderRadius: '4px', fontSize: '13px', textAlign: 'center', background: 'var(--theme-background)', color: 'var(--theme-text)' }} />
+                            <EpOffsetInput
+                              value={placedModule.rightEndPanelOffset ?? 0}
+                              onCommit={(num) => updatePlacedModule(moduleId, { rightEndPanelOffset: num })}
+                            />
                             <span style={{ fontSize: '11px', color: 'var(--theme-text-secondary)' }}>mm</span>
                           </div>
                         </div>
                         <div>
                           <span style={{ fontSize: '11px', color: 'var(--theme-text-secondary)' }}>우EP 뒤</span>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginTop: '2px' }}>
-                            <input type="text" inputMode="numeric" value={placedModule.rightEndPanelBackOffset ?? 0}
-                              onChange={(e) => { const v = e.target.value; if (v === '' || v === '-' || /^-?\d+$/.test(v)) { const num = (v === '' || v === '-') ? 0 : Math.max(-200, Math.min(200, parseInt(v, 10))); updatePlacedModule(moduleId, { rightEndPanelBackOffset: num }); } }}
-                              onKeyDown={(e) => { if (e.key === 'ArrowUp' || e.key === 'ArrowDown') { e.preventDefault(); const cur = placedModule.rightEndPanelBackOffset ?? 0; const next = Math.max(-200, Math.min(200, cur + (e.key === 'ArrowUp' ? 1 : -1))); updatePlacedModule(moduleId, { rightEndPanelBackOffset: next }); } }}
-                              style={{ width: '45px', padding: '4px 6px', border: '1px solid var(--theme-border)', borderRadius: '4px', fontSize: '13px', textAlign: 'center', background: 'var(--theme-background)', color: 'var(--theme-text)' }} />
+                            <EpOffsetInput
+                              value={placedModule.rightEndPanelBackOffset ?? 0}
+                              onCommit={(num) => updatePlacedModule(moduleId, { rightEndPanelBackOffset: num })}
+                            />
                             <span style={{ fontSize: '11px', color: 'var(--theme-text-secondary)' }}>mm</span>
                           </div>
                         </div>
@@ -4773,3 +4773,77 @@ const CustomizablePropertiesPanel: React.FC = () => {
 };
 
 export default CustomizablePropertiesPanel;
+
+/**
+ * EP 옵셋 전용 숫자 입력
+ * - 음수 입력 가능 (-200 ~ 200)
+ * - 입력 도중 '-'/'-숫자' 등 미완성 상태를 허용 (로컬 문자열 상태)
+ * - 유효한 정수일 때만 store 업데이트
+ * - blur 시 빈값/-만 있는 경우 0으로 정규화
+ */
+interface EpOffsetInputProps {
+  value: number;
+  onCommit: (next: number) => void;
+}
+const EpOffsetInput: React.FC<EpOffsetInputProps> = ({ value, onCommit }) => {
+  const [text, setText] = useState<string>(String(value ?? 0));
+  const isEditingRef = useRef(false);
+
+  // 외부 value 변경 시 (편집 중이 아닐 때만) 동기화
+  useEffect(() => {
+    if (!isEditingRef.current) {
+      setText(String(value ?? 0));
+    }
+  }, [value]);
+
+  const clamp = (n: number) => Math.max(-200, Math.min(200, n));
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const v = e.target.value;
+    // 허용 패턴: 빈문자, '-', '-?\d+'
+    if (v === '' || v === '-' || /^-?\d+$/.test(v)) {
+      setText(v);
+      // 유효한 숫자일 때만 store 업데이트 (빈문자/'-'는 화면 표시만)
+      if (v !== '' && v !== '-') {
+        const num = clamp(parseInt(v, 10));
+        onCommit(num);
+      }
+    }
+  };
+
+  const handleBlur = () => {
+    isEditingRef.current = false;
+    if (text === '' || text === '-') {
+      setText('0');
+      onCommit(0);
+    } else {
+      const num = clamp(parseInt(text, 10));
+      setText(String(num));
+      onCommit(num);
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+      e.preventDefault();
+      const cur = parseInt(text, 10);
+      const base = isNaN(cur) ? 0 : cur;
+      const next = clamp(base + (e.key === 'ArrowUp' ? 1 : -1));
+      setText(String(next));
+      onCommit(next);
+    }
+  };
+
+  return (
+    <input
+      type="text"
+      inputMode="numeric"
+      value={text}
+      onFocus={() => { isEditingRef.current = true; }}
+      onChange={handleChange}
+      onKeyDown={handleKeyDown}
+      onBlur={handleBlur}
+      style={{ width: '45px', padding: '4px 6px', border: '1px solid var(--theme-border)', borderRadius: '4px', fontSize: '13px', textAlign: 'center', background: 'var(--theme-background)', color: 'var(--theme-text)' }}
+    />
+  );
+};
