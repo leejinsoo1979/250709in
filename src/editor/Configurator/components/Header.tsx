@@ -14,7 +14,9 @@ import { useAuth } from '@/auth/AuthProvider';
 import ProfilePopup from './ProfilePopup';
 import { useTranslation } from '@/i18n/useTranslation';
 import { useProjectStore } from '@/store/core/projectStore';
-import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
+import { useSpaceConfigStore, DEFAULT_SPACE_CONFIG } from '@/store/core/spaceConfigStore';
+import { createDesignFile } from '@/firebase/projects';
+import { getSpaceConfigDefaults } from '@/firebase/userProfiles';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
 import { useUIStore } from '@/store/uiStore';
 import { useHistoryStore } from '@/store/historyStore';
@@ -220,6 +222,105 @@ const Header: React.FC<HeaderProps> = ({
   const fileMenuTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const convertMenuRef = useRef<HTMLDivElement>(null);
   const designNameInputRef = useRef<HTMLInputElement>(null);
+
+  // 공간설정 기본값 저장 후 → 동일 프로젝트에 "새 디자인" 자동 생성하고 이동
+  const handleAutoCreateDesignAfterDefaults = async () => {
+    if (!projectId) {
+      alert('프로젝트 정보가 없습니다.');
+      return;
+    }
+    try {
+      let spaceConfig: any = { ...DEFAULT_SPACE_CONFIG };
+      const defaults = await getSpaceConfigDefaults();
+      console.log('🆕 [Configurator 자동 새 디자인] defaults:', defaults);
+      if (defaults) {
+        spaceConfig = {
+          ...spaceConfig,
+          ...(defaults.width !== undefined && { width: defaults.width }),
+          ...(defaults.height !== undefined && { height: defaults.height }),
+          gapConfig: {
+            left: defaults.gapLeft ?? spaceConfig.gapConfig?.left ?? 1.5,
+            right: defaults.gapRight ?? spaceConfig.gapConfig?.right ?? 1.5,
+          },
+          frameSize: {
+            ...spaceConfig.frameSize!,
+            top: defaults.frameTop ?? spaceConfig.frameSize?.top ?? 30,
+            left: defaults.frameLeft ?? spaceConfig.frameSize?.left ?? 18,
+            right: defaults.frameRight ?? spaceConfig.frameSize?.right ?? 18,
+          },
+          baseConfig: {
+            ...spaceConfig.baseConfig!,
+            height: defaults.baseHeight ?? spaceConfig.baseConfig?.height ?? 65,
+          },
+          ...(defaults.furnitureSingleWidth !== undefined && { furnitureSingleWidth: defaults.furnitureSingleWidth }),
+          ...(defaults.furnitureDualWidth !== undefined && { furnitureDualWidth: defaults.furnitureDualWidth }),
+          ...(defaults.surroundMode ? {
+            surroundType: defaults.surroundMode === 'no-surround' ? 'no-surround' as const : 'surround' as const,
+            frameConfig: defaults.surroundMode === 'full-surround'
+              ? { left: true, right: true, top: true, bottom: true }
+              : defaults.surroundMode === 'sides-only'
+                ? { left: true, right: true, top: false, bottom: false }
+                : { left: false, right: false, top: true, bottom: false },
+          } : {}),
+          ...(defaults.installType ? (() => {
+            switch (defaults.installType) {
+              case 'builtin':
+                return { installType: 'builtin' as const, wallConfig: { left: true, right: true } };
+              case 'semistanding-left':
+                return { installType: 'semistanding' as const, wallConfig: { left: true, right: false } };
+              case 'semistanding-right':
+                return { installType: 'semistanding' as const, wallConfig: { left: false, right: true } };
+              case 'freestanding':
+                return { installType: 'freestanding' as const, wallConfig: { left: false, right: false } };
+              default:
+                return {};
+            }
+          })() : {}),
+          ...(defaults.droppedCeilingMode && defaults.droppedCeilingMode !== 'none' ? {
+            droppedCeiling: {
+              enabled: true,
+              position: defaults.droppedCeilingMode,
+              width: defaults.droppedCeilingWidth ?? 1300,
+              dropHeight: defaults.droppedCeilingDropHeight ?? 200,
+            },
+          } : {}),
+          ...(defaults.curtainBoxMode && defaults.curtainBoxMode !== 'none' ? {
+            curtainBox: {
+              enabled: true,
+              position: defaults.curtainBoxMode,
+              width: 100,
+              dropHeight: 200,
+            },
+          } : {}),
+        };
+      }
+      console.log('🆕 [Configurator 자동 새 디자인] 적용 spaceConfig:', {
+        baseConfigHeight: spaceConfig.baseConfig?.height,
+        frameSizeTop: spaceConfig.frameSize?.top,
+      });
+      const designName = '새 디자인';
+      const { id, error } = await createDesignFile({
+        name: designName,
+        projectId,
+        spaceConfig,
+        furniture: { placedModules: [] },
+      } as any);
+      if (error || !id) {
+        alert('디자인 생성에 실패했습니다: ' + (error ?? '알 수 없는 오류'));
+        return;
+      }
+      const params = new URLSearchParams();
+      params.set('projectId', projectId);
+      params.set('designFileId', id);
+      params.set('designFileName', encodeURIComponent(designName));
+      navigate(`/configurator?${params.toString()}`);
+      // URL 변경 후 Configurator가 새 디자인을 로드하도록 강제 새로고침
+      setTimeout(() => window.location.reload(), 50);
+    } catch (e) {
+      console.error('자동 새 디자인 생성 실패:', e);
+      alert('새 디자인 생성 중 오류가 발생했습니다.');
+    }
+  };
 
   // 대시보드 이동 (해당 프로젝트 위치)
   const navigateToDashboard = () => {
@@ -1105,6 +1206,7 @@ const Header: React.FC<HeaderProps> = ({
       <SettingsPanel
         isOpen={isSettingsPanelOpen}
         onClose={() => setIsSettingsPanelOpen(false)}
+        onSpaceDefaultsSaved={handleAutoCreateDesignAfterDefaults}
       />
 
       {/* 프로필 팝업 */}
