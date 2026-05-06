@@ -16,7 +16,6 @@ interface EnterpriseForm {
   password: string;
   passwordConfirm: string;
   contactName: string;
-  department: string;
   contactPhone: string;
   expectedUsers: string;
 }
@@ -31,7 +30,7 @@ export default function EnterpriseSignUpPage() {
   const [form, setForm] = useState<EnterpriseForm>({
     companyName: '', businessNumber: '', businessType: '', businessCategory: '',
     loginEmail: '', password: '', passwordConfirm: '',
-    contactName: '', department: '', contactPhone: '',
+    contactName: '', contactPhone: '',
     expectedUsers: '',
   });
   const [businessLicenseFile, setBusinessLicenseFile] = useState<File | null>(null);
@@ -131,7 +130,7 @@ export default function EnterpriseSignUpPage() {
       const chatId = import.meta.env.VITE_TELEGRAM_CHAT_ID;
       if (botToken && chatId) {
         const time = new Date().toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' });
-        const text = `🏢 기업계정 가입 신청\n\n👤 대표자: ${form.contactName}\n📧 이메일: ${form.loginEmail}\n🏢 회사명: ${form.companyName}\n📋 사업자번호: ${form.businessNumber}\n🏭 업종: ${form.businessType}\n📂 업태: ${form.businessCategory}\n👥 예상인원: ${form.expectedUsers || '미입력'}\n🏢 부서/직책: ${form.department || '미입력'}\n📱 연락처: ${form.contactPhone || '미입력'}\n📎 사업자등록증: ${businessLicenseUrl}\n🕐 신청시간: ${time}\n\n승인하시겠습니까?`;
+        const text = `🏢 기업계정 가입 신청\n\n👤 대표자: ${form.contactName}\n📧 이메일: ${form.loginEmail}\n🏢 회사명: ${form.companyName}\n📋 사업자번호: ${form.businessNumber}\n🏭 업종: ${form.businessType}\n📂 업태: ${form.businessCategory}\n👥 예상인원: ${form.expectedUsers || '미입력'}\n📱 연락처: ${form.contactPhone || '미입력'}\n📎 사업자등록증: ${businessLicenseUrl}\n🕐 신청시간: ${time}\n\n승인하시겠습니까?`;
         fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -332,21 +331,17 @@ export default function EnterpriseSignUpPage() {
               </div>
             </section>
 
-            {/* 담당자 정보 */}
+            {/* 대표자 정보 */}
             <section className="mb-10">
-              <h2 className="text-white text-sm font-semibold mb-6 pb-2 border-b border-white/30">담당자 정보</h2>
               <div className="space-y-5">
                 <div className="grid grid-cols-2 gap-6">
                   <Field label="대표자명" required>
                     <Input value={form.contactName} onChange={(v) => update('contactName', v)} placeholder="홍길동" required />
                   </Field>
-                  <Field label="부서/직책">
-                    <Input value={form.department} onChange={(v) => update('department', v)} placeholder="디자인팀 / 팀장" />
+                  <Field label="연락처">
+                    <Input type="tel" value={form.contactPhone} onChange={(v) => update('contactPhone', v)} placeholder="010-0000-0000 (선택)" />
                   </Field>
                 </div>
-                <Field label="연락처">
-                  <Input type="tel" value={form.contactPhone} onChange={(v) => update('contactPhone', v)} placeholder="010-0000-0000 (선택)" />
-                </Field>
               </div>
             </section>
 
