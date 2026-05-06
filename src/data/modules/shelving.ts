@@ -414,7 +414,7 @@ const createInsertFrame = (maxHeight: number, slotWidthForId: number = INSERT_FR
   const widthForId = Math.round(slotWidthForId * 100) / 100;
   const base = createFurnitureBase(
     `insert-frame-${widthForId}`,
-    `Insert 프레임 ${INSERT_FRAME_OUTER_WIDTH}mm`,
+    `키큰장찬넬 ${INSERT_FRAME_OUTER_WIDTH}mm`,
     INSERT_FRAME_OUTER_WIDTH,
     maxHeight,
     INSERT_FRAME_DEPTH,
