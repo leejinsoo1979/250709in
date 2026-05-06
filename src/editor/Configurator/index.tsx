@@ -1985,6 +1985,7 @@ const Configurator: React.FC = () => {
       // 유저 공간설정 기본값 로드 후 병합
       try {
         const defaults = await getSpaceConfigDefaults();
+        alert('[에디터 새디자인] firebase에서 받은 baseHeight: ' + (defaults?.baseHeight ?? '없음'));
         console.log('🟡 [에디터-새디자인] getSpaceConfigDefaults:', defaults);
         if (defaults) {
           defaultSpaceConfig = {
