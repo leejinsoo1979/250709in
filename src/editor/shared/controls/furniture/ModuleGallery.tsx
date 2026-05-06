@@ -1108,14 +1108,15 @@ const ModuleGallery: React.FC<ModuleGalleryProps> = ({ moduleCategory = 'tall', 
       // 상부장 = upper 전체
       categoryModules = getModulesByCategory('upper', adjustedInternalSpace, spaceInfoWithSlotWidths);
     } else if (kitchenSubCategory === 'tall') {
-      // 키큰장 = 주방 키큰장 전용 모듈 (인출장, 팬트리장, 냉장고장)
-      // 개발자 계정(sbbc212@gmail.com)에서는 빌트인 냉장고장 / Insert 프레임도 함께 노출
+      // 키큰장 = 주방 키큰장 전용 모듈 (인출장, 팬트리장, 냉장고장, 키큰장찬넬)
+      // 빌트인 냉장고장은 개발자 계정에서만 노출
       const allFullModules = getModulesByCategory('full', adjustedInternalSpace, spaceInfoWithSlotWidths);
       categoryModules = allFullModules.filter(m =>
         m.id.includes('pull-out-cabinet') ||
         m.id.includes('pantry-cabinet') ||
         m.id.includes('fridge-cabinet') ||
-        (isDevAccount && (m.id.includes('built-in-fridge') || m.id.includes('insert-frame')))
+        m.id.includes('insert-frame') ||
+        (isDevAccount && m.id.includes('built-in-fridge'))
       );
     } else {
       // 기본장/도어올림/상판내림 = lower 중 ID 패턴으로 분기
