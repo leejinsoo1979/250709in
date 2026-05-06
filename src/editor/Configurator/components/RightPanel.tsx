@@ -55,61 +55,59 @@ const FrameRow = React.memo(({ label, enabled, widthMM = 0, sizeMM, offset, onTo
           left: enabled ? '18px' : '2px',
         }} />
       </button>
-      {enabled && (
-        <div style={{ display: 'flex', flex: 1, gap: '4px' }}>
-          {/* 너비 - 읽기전용 */}
-          <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '2px', border: '1px solid var(--theme-border)', borderRadius: '4px', padding: '2px 4px' }}>
-            <span style={{ fontSize: '10px', color: 'var(--theme-text-secondary)', flexShrink: 0 }}>너비</span>
-            <input type="text" inputMode="numeric"
-              value={widthMM ? (Number.isInteger(widthMM) ? widthMM : Number(widthMM.toFixed(1))) : ''} readOnly
-              onFocus={() => setHighlightedFrame(hlKey)}
-              onBlur={() => setHighlightedFrame(null)}
-              style={{ width: '100%', border: 'none', outline: 'none', fontSize: '12px', textAlign: 'center', background: 'transparent', color: 'var(--theme-text-secondary)', cursor: 'default' }}
-            />
-          </div>
-          {/* 높이 */}
-          <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '2px', border: '1px solid var(--theme-border)', borderRadius: '4px', padding: '2px 4px' }}>
-            <span style={{ fontSize: '10px', color: 'var(--theme-text-secondary)', flexShrink: 0 }}>높이</span>
-            <input type="text" inputMode="numeric"
-              value={sizeText} placeholder="0"
-              onFocus={() => { sizeEditingRef.current = true; setHighlightedFrame(hlKey); }}
-              onKeyDown={(e) => {
-                if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
-                  e.preventDefault();
-                  const next = Math.max(0, Math.min(9999, (sizeMM || 0) + (e.key === 'ArrowUp' ? 1 : -1)));
-                  setSizeText(String(next));
-                  onSizeChange(next);
-                } else if (e.key === 'Enter') {
-                  (e.target as HTMLInputElement).blur();
-                }
-              }}
-              onChange={(e) => { const v = e.target.value; if (v === '' || /^\d+$/.test(v)) setSizeText(v); }}
-              onBlur={(e) => { sizeEditingRef.current = false; setHighlightedFrame(null); const clamped = Math.max(0, Math.min(9999, parseInt(e.target.value) || 0)); setSizeText(String(clamped)); onSizeChange(clamped); }}
-              style={{ width: '100%', border: 'none', outline: 'none', fontSize: '12px', textAlign: 'center', background: 'transparent', color: 'var(--theme-text-primary)' }}
-            />
-          </div>
-          <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '2px', border: '1px solid var(--theme-border)', borderRadius: '4px', padding: '2px 4px' }}>
-            <span style={{ fontSize: '10px', color: 'var(--theme-text-secondary)', flexShrink: 0 }}>옵셋</span>
-            <input type="text" inputMode="numeric"
-              value={offsetText} placeholder="0"
-              onFocus={() => { offsetEditingRef.current = true; setHighlightedFrame(hlKey); }}
-              onKeyDown={(e) => {
-                if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
-                  e.preventDefault();
-                  const next = Math.max(-200, Math.min(200, (offset || 0) + (e.key === 'ArrowUp' ? 1 : -1)));
-                  setOffsetText(String(next));
-                  onOffsetChange(next);
-                } else if (e.key === 'Enter') {
-                  (e.target as HTMLInputElement).blur();
-                }
-              }}
-              onChange={(e) => { const v = e.target.value; if (v === '' || v === '-' || /^-?\d+$/.test(v)) setOffsetText(v); }}
-              onBlur={(e) => { offsetEditingRef.current = false; setHighlightedFrame(null); const clamped = Math.max(-200, Math.min(200, parseInt(e.target.value) || 0)); setOffsetText(String(clamped)); onOffsetChange(clamped); }}
-              style={{ width: '100%', border: 'none', outline: 'none', fontSize: '12px', textAlign: 'center', background: 'transparent', color: 'var(--theme-text-primary)' }}
-            />
-          </div>
+      <div style={{ display: 'flex', flex: 1, gap: '4px', opacity: enabled ? 1 : 0.5 }}>
+        {/* 너비 - 읽기전용 */}
+        <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '2px', border: '1px solid var(--theme-border)', borderRadius: '4px', padding: '2px 4px' }}>
+          <span style={{ fontSize: '10px', color: 'var(--theme-text-secondary)', flexShrink: 0 }}>너비</span>
+          <input type="text" inputMode="numeric"
+            value={widthMM ? (Number.isInteger(widthMM) ? widthMM : Number(widthMM.toFixed(1))) : ''} readOnly
+            onFocus={() => setHighlightedFrame(hlKey)}
+            onBlur={() => setHighlightedFrame(null)}
+            style={{ width: '100%', border: 'none', outline: 'none', fontSize: '12px', textAlign: 'center', background: 'transparent', color: 'var(--theme-text-secondary)', cursor: 'default' }}
+          />
         </div>
-      )}
+        {/* 높이 */}
+        <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '2px', border: '1px solid var(--theme-border)', borderRadius: '4px', padding: '2px 4px' }}>
+          <span style={{ fontSize: '10px', color: 'var(--theme-text-secondary)', flexShrink: 0 }}>높이</span>
+          <input type="text" inputMode="numeric"
+            value={sizeText} placeholder="0"
+            onFocus={() => { sizeEditingRef.current = true; setHighlightedFrame(hlKey); }}
+            onKeyDown={(e) => {
+              if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                e.preventDefault();
+                const next = Math.max(0, Math.min(9999, (sizeMM || 0) + (e.key === 'ArrowUp' ? 1 : -1)));
+                setSizeText(String(next));
+                onSizeChange(next);
+              } else if (e.key === 'Enter') {
+                (e.target as HTMLInputElement).blur();
+              }
+            }}
+            onChange={(e) => { const v = e.target.value; if (v === '' || /^\d+$/.test(v)) setSizeText(v); }}
+            onBlur={(e) => { sizeEditingRef.current = false; setHighlightedFrame(null); const clamped = Math.max(0, Math.min(9999, parseInt(e.target.value) || 0)); setSizeText(String(clamped)); onSizeChange(clamped); }}
+            style={{ width: '100%', border: 'none', outline: 'none', fontSize: '12px', textAlign: 'center', background: 'transparent', color: 'var(--theme-text-primary)' }}
+          />
+        </div>
+        <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '2px', border: '1px solid var(--theme-border)', borderRadius: '4px', padding: '2px 4px' }}>
+          <span style={{ fontSize: '10px', color: 'var(--theme-text-secondary)', flexShrink: 0 }}>옵셋</span>
+          <input type="text" inputMode="numeric"
+            value={offsetText} placeholder="0"
+            onFocus={() => { offsetEditingRef.current = true; setHighlightedFrame(hlKey); }}
+            onKeyDown={(e) => {
+              if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                e.preventDefault();
+                const next = Math.max(-200, Math.min(200, (offset || 0) + (e.key === 'ArrowUp' ? 1 : -1)));
+                setOffsetText(String(next));
+                onOffsetChange(next);
+              } else if (e.key === 'Enter') {
+                (e.target as HTMLInputElement).blur();
+              }
+            }}
+            onChange={(e) => { const v = e.target.value; if (v === '' || v === '-' || /^-?\d+$/.test(v)) setOffsetText(v); }}
+            onBlur={(e) => { offsetEditingRef.current = false; setHighlightedFrame(null); const clamped = Math.max(-200, Math.min(200, parseInt(e.target.value) || 0)); setOffsetText(String(clamped)); onOffsetChange(clamped); }}
+            style={{ width: '100%', border: 'none', outline: 'none', fontSize: '12px', textAlign: 'center', background: 'transparent', color: 'var(--theme-text-primary)' }}
+          />
+        </div>
+      </div>
     </div>
   );
 });
@@ -152,62 +150,60 @@ const MergedFrameRow = React.memo(({ label, enabled, widthMM, heightMM, offset, 
           left: enabled ? '18px' : '2px',
         }} />
       </button>
-      {enabled ? (
-        <div style={{ display: 'flex', flex: 1, gap: '4px' }}>
-          {/* 너비 - 읽기전용 */}
-          <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '2px', border: '1px solid var(--theme-border)', borderRadius: '4px', padding: '2px 4px' }}>
-            <span style={{ fontSize: '10px', color: 'var(--theme-text-secondary)', flexShrink: 0 }}>너비</span>
-            <input type="text" inputMode="numeric"
-              value={widthMM ? (Number.isInteger(widthMM) ? widthMM : Number(widthMM.toFixed(1))) : ''} readOnly
-              onFocus={() => setHighlightedFrame(hlKey)}
-              onBlur={() => setHighlightedFrame(null)}
-              style={{ width: '100%', border: 'none', outline: 'none', fontSize: '12px', textAlign: 'center', background: 'transparent', color: 'var(--theme-text-secondary)', cursor: 'default' }}
-            />
-          </div>
-          {/* 높이 - 편집 가능 */}
-          <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '2px', border: '1px solid var(--theme-border)', borderRadius: '4px', padding: '2px 4px' }}>
-            <span style={{ fontSize: '10px', color: 'var(--theme-text-secondary)', flexShrink: 0 }}>높이</span>
-            <input type="text" inputMode="numeric"
-              value={heightText} placeholder="0"
-              onFocus={() => { heightEditingRef.current = true; setHighlightedFrame(hlKey); }}
-              onKeyDown={(e) => {
-                if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
-                  e.preventDefault();
-                  const next = Math.max(bfMin, Math.min(bfMax, (heightMM || bfDefault) + (e.key === 'ArrowUp' ? 1 : -1)));
-                  setHeightText(String(next));
-                  onHeightChange(next);
-                } else if (e.key === 'Enter') {
-                  (e.target as HTMLInputElement).blur();
-                }
-              }}
-              onChange={(e) => { const v = e.target.value; if (v === '' || /^\d+$/.test(v)) { if (v !== '' && parseInt(v) > bfMax) { setHeightText(String(bfMax)); } else { setHeightText(v); } } }}
-              onBlur={(e) => { heightEditingRef.current = false; setHighlightedFrame(null); const clamped = Math.max(bfMin, Math.min(bfMax, parseInt(e.target.value) || bfDefault)); setHeightText(String(clamped)); onHeightChange(clamped); }}
-              style={{ width: '100%', border: 'none', outline: 'none', fontSize: '12px', textAlign: 'center', background: 'transparent', color: 'var(--theme-text-primary)' }}
-            />
-          </div>
-          {/* 옵셋 - 편집 가능 */}
-          <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '2px', border: '1px solid var(--theme-border)', borderRadius: '4px', padding: '2px 4px' }}>
-            <span style={{ fontSize: '10px', color: 'var(--theme-text-secondary)', flexShrink: 0 }}>옵셋</span>
-            <input type="text" inputMode="numeric"
-              value={offsetText} placeholder="0"
-              onFocus={() => { offsetEditingRef.current = true; setHighlightedFrame(hlKey); }}
-              onKeyDown={(e) => {
-                if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
-                  e.preventDefault();
-                  const next = Math.max(-200, Math.min(200, (offset || 0) + (e.key === 'ArrowUp' ? 1 : -1)));
-                  setOffsetText(String(next));
-                  onOffsetChange(next);
-                } else if (e.key === 'Enter') {
-                  (e.target as HTMLInputElement).blur();
-                }
-              }}
-              onChange={(e) => { const v = e.target.value; if (v === '' || v === '-' || /^-?\d+$/.test(v)) setOffsetText(v); }}
-              onBlur={(e) => { offsetEditingRef.current = false; setHighlightedFrame(null); const clamped = Math.max(-200, Math.min(200, parseInt(e.target.value) || 0)); setOffsetText(String(clamped)); onOffsetChange(clamped); }}
-              style={{ width: '100%', border: 'none', outline: 'none', fontSize: '12px', textAlign: 'center', background: 'transparent', color: 'var(--theme-text-primary)' }}
-            />
-          </div>
+      <div style={{ display: 'flex', flex: 1, gap: '4px', opacity: enabled ? 1 : 0.5 }}>
+        {/* 너비 - 읽기전용 */}
+        <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '2px', border: '1px solid var(--theme-border)', borderRadius: '4px', padding: '2px 4px' }}>
+          <span style={{ fontSize: '10px', color: 'var(--theme-text-secondary)', flexShrink: 0 }}>너비</span>
+          <input type="text" inputMode="numeric"
+            value={widthMM ? (Number.isInteger(widthMM) ? widthMM : Number(widthMM.toFixed(1))) : ''} readOnly
+            onFocus={() => setHighlightedFrame(hlKey)}
+            onBlur={() => setHighlightedFrame(null)}
+            style={{ width: '100%', border: 'none', outline: 'none', fontSize: '12px', textAlign: 'center', background: 'transparent', color: 'var(--theme-text-secondary)', cursor: 'default' }}
+          />
         </div>
-      ) : null}
+        {/* 높이 - 편집 가능 */}
+        <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '2px', border: '1px solid var(--theme-border)', borderRadius: '4px', padding: '2px 4px' }}>
+          <span style={{ fontSize: '10px', color: 'var(--theme-text-secondary)', flexShrink: 0 }}>높이</span>
+          <input type="text" inputMode="numeric"
+            value={heightText} placeholder="0"
+            onFocus={() => { heightEditingRef.current = true; setHighlightedFrame(hlKey); }}
+            onKeyDown={(e) => {
+              if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                e.preventDefault();
+                const next = Math.max(bfMin, Math.min(bfMax, (heightMM || bfDefault) + (e.key === 'ArrowUp' ? 1 : -1)));
+                setHeightText(String(next));
+                onHeightChange(next);
+              } else if (e.key === 'Enter') {
+                (e.target as HTMLInputElement).blur();
+              }
+            }}
+            onChange={(e) => { const v = e.target.value; if (v === '' || /^\d+$/.test(v)) { if (v !== '' && parseInt(v) > bfMax) { setHeightText(String(bfMax)); } else { setHeightText(v); } } }}
+            onBlur={(e) => { heightEditingRef.current = false; setHighlightedFrame(null); const clamped = Math.max(bfMin, Math.min(bfMax, parseInt(e.target.value) || bfDefault)); setHeightText(String(clamped)); onHeightChange(clamped); }}
+            style={{ width: '100%', border: 'none', outline: 'none', fontSize: '12px', textAlign: 'center', background: 'transparent', color: 'var(--theme-text-primary)' }}
+          />
+        </div>
+        {/* 옵셋 - 편집 가능 */}
+        <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '2px', border: '1px solid var(--theme-border)', borderRadius: '4px', padding: '2px 4px' }}>
+          <span style={{ fontSize: '10px', color: 'var(--theme-text-secondary)', flexShrink: 0 }}>옵셋</span>
+          <input type="text" inputMode="numeric"
+            value={offsetText} placeholder="0"
+            onFocus={() => { offsetEditingRef.current = true; setHighlightedFrame(hlKey); }}
+            onKeyDown={(e) => {
+              if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                e.preventDefault();
+                const next = Math.max(-200, Math.min(200, (offset || 0) + (e.key === 'ArrowUp' ? 1 : -1)));
+                setOffsetText(String(next));
+                onOffsetChange(next);
+              } else if (e.key === 'Enter') {
+                (e.target as HTMLInputElement).blur();
+              }
+            }}
+            onChange={(e) => { const v = e.target.value; if (v === '' || v === '-' || /^-?\d+$/.test(v)) setOffsetText(v); }}
+            onBlur={(e) => { offsetEditingRef.current = false; setHighlightedFrame(null); const clamped = Math.max(-200, Math.min(200, parseInt(e.target.value) || 0)); setOffsetText(String(clamped)); onOffsetChange(clamped); }}
+            style={{ width: '100%', border: 'none', outline: 'none', fontSize: '12px', textAlign: 'center', background: 'transparent', color: 'var(--theme-text-primary)' }}
+          />
+        </div>
+      </div>
     </div>
   );
 });
