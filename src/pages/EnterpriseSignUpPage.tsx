@@ -2,9 +2,10 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
-import { db } from '@/firebase/config';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { db, storage } from '@/firebase/config';
 import { signUpWithEmail } from '@/firebase/auth';
-import { Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff, Upload, X, FileText } from 'lucide-react';
 
 interface EnterpriseForm {
   companyName: string;
@@ -15,11 +16,8 @@ interface EnterpriseForm {
   password: string;
   passwordConfirm: string;
   contactName: string;
-  contactEmail: string;
-  contactPhone: string;
   department: string;
   expectedUsers: string;
-  message: string;
 }
 
 const EXPECTED_USERS_OPTIONS = [
@@ -32,9 +30,10 @@ export default function EnterpriseSignUpPage() {
   const [form, setForm] = useState<EnterpriseForm>({
     companyName: '', businessNumber: '', businessType: '', businessCategory: '',
     loginEmail: '', password: '', passwordConfirm: '',
-    contactName: '', contactEmail: '', contactPhone: '', department: '',
-    expectedUsers: '', message: '',
+    contactName: '', department: '',
+    expectedUsers: '',
   });
+  const [businessLicenseFile, setBusinessLicenseFile] = useState<File | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -43,6 +42,24 @@ export default function EnterpriseSignUpPage() {
 
   const update = (field: keyof EnterpriseForm, value: string) =>
     setForm((prev) => ({ ...prev, [field]: value }));
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    // 10MB 제한
+    if (file.size > 10 * 1024 * 1024) {
+      setError('파일 크기는 10MB 이하여야 합니다.');
+      return;
+    }
+    // 허용 형식: 이미지, PDF
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg', 'application/pdf'];
+    if (!allowedTypes.includes(file.type)) {
+      setError('이미지(JPG, PNG) 또는 PDF 파일만 업로드 가능합니다.');
+      return;
+    }
+    setError(null);
+    setBusinessLicenseFile(file);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -57,6 +74,11 @@ export default function EnterpriseSignUpPage() {
     }
     if (form.password.length < 6) {
       setError('비밀번호는 6자 이상이어야 합니다.');
+      setSubmitting(false);
+      return;
+    }
+    if (!businessLicenseFile) {
+      setError('사업자등록증을 첨부해주세요.');
       setSubmitting(false);
       return;
     }
@@ -81,22 +103,34 @@ export default function EnterpriseSignUpPage() {
         return;
       }
 
-      // 2. Firestore에 기업 정보 저장 (승인 대기 상태)
+      // 2. 사업자등록증 파일을 Firebase Storage에 업로드
+      const ext = businessLicenseFile.name.split('.').pop() || 'pdf';
+      const timestamp = Date.now();
+      const storageRef = ref(
+        storage,
+        `business-licenses/${user.uid}/${timestamp}.${ext}`
+      );
+      await uploadBytes(storageRef, businessLicenseFile);
+      const businessLicenseUrl = await getDownloadURL(storageRef);
+
+      // 3. Firestore에 기업 정보 저장 (승인 대기 상태)
       const { password: _pw, passwordConfirm: _pwc, ...formData } = form;
       await addDoc(collection(db, 'enterprise_inquiries'), {
         ...formData,
+        businessLicenseUrl,
+        businessLicenseFileName: businessLicenseFile.name,
         uid: user.uid,
         status: 'pending',
         accountType: 'enterprise',
         createdAt: serverTimestamp(),
       });
 
-      // 3. 텔레그램으로 승인 요청 전송 (InlineKeyboard 버튼 포함)
+      // 4. 텔레그램으로 승인 요청 전송 (InlineKeyboard 버튼 포함)
       const botToken = import.meta.env.VITE_TELEGRAM_BOT_TOKEN;
       const chatId = import.meta.env.VITE_TELEGRAM_CHAT_ID;
       if (botToken && chatId) {
         const time = new Date().toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' });
-        const text = `🏢 기업계정 가입 신청\n\n👤 담당자: ${form.contactName}\n📧 이메일: ${form.loginEmail}\n🏢 회사명: ${form.companyName}\n📋 사업자번호: ${form.businessNumber}\n🏭 업종: ${form.businessType}\n📂 업태: ${form.businessCategory}\n👥 예상인원: ${form.expectedUsers || '미입력'}\n📱 연락처: ${form.contactPhone}\n🕐 신청시간: ${time}\n\n승인하시겠습니까?`;
+        const text = `🏢 기업계정 가입 신청\n\n👤 담당자: ${form.contactName}\n📧 이메일: ${form.loginEmail}\n🏢 회사명: ${form.companyName}\n📋 사업자번호: ${form.businessNumber}\n🏭 업종: ${form.businessType}\n📂 업태: ${form.businessCategory}\n👥 예상인원: ${form.expectedUsers || '미입력'}\n🏢 부서/직책: ${form.department || '미입력'}\n📎 사업자등록증: ${businessLicenseUrl}\n🕐 신청시간: ${time}\n\n승인하시겠습니까?`;
         fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -236,6 +270,38 @@ export default function EnterpriseSignUpPage() {
                 <Field label="사업자등록번호" required>
                   <Input value={form.businessNumber} onChange={(v) => update('businessNumber', v)} placeholder="000-00-00000" required />
                 </Field>
+                <Field label="사업자등록증 첨부" required>
+                  {businessLicenseFile ? (
+                    <div className="flex items-center justify-between bg-zinc-900 border border-white/30 rounded-xl px-4 py-3">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <FileText size={18} className="text-emerald-400 shrink-0" />
+                        <span className="text-white text-sm truncate">{businessLicenseFile.name}</span>
+                        <span className="text-zinc-500 text-xs shrink-0">
+                          {(businessLicenseFile.size / 1024 / 1024).toFixed(2)}MB
+                        </span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setBusinessLicenseFile(null)}
+                        className="text-zinc-500 hover:text-red-400 transition-colors shrink-0 ml-2"
+                      >
+                        <X size={16} />
+                      </button>
+                    </div>
+                  ) : (
+                    <label className="flex flex-col items-center justify-center gap-2 bg-zinc-900 border border-dashed border-white/30 rounded-xl px-4 py-6 cursor-pointer hover:border-zinc-500 transition-colors">
+                      <Upload size={20} className="text-zinc-400" />
+                      <span className="text-zinc-400 text-sm">파일 선택 (이미지 또는 PDF)</span>
+                      <span className="text-zinc-600 text-xs">최대 10MB</span>
+                      <input
+                        type="file"
+                        accept="image/jpeg,image/png,image/jpg,application/pdf"
+                        onChange={handleFileChange}
+                        className="hidden"
+                      />
+                    </label>
+                  )}
+                </Field>
                 <div className="grid grid-cols-2 gap-6">
                   <Field label="업종" required>
                     <Input value={form.businessType} onChange={(v) => update('businessType', v)} placeholder="예: 제조업, 건설업" required />
@@ -268,35 +334,14 @@ export default function EnterpriseSignUpPage() {
             {/* 담당자 정보 */}
             <section className="mb-10">
               <h2 className="text-white text-sm font-semibold mb-6 pb-2 border-b border-white/30">담당자 정보</h2>
-              <div className="space-y-5">
-                <div className="grid grid-cols-2 gap-6">
-                  <Field label="담당자명" required>
-                    <Input value={form.contactName} onChange={(v) => update('contactName', v)} placeholder="홍길동" required />
-                  </Field>
-                  <Field label="부서/직책">
-                    <Input value={form.department} onChange={(v) => update('department', v)} placeholder="디자인팀 / 팀장" />
-                  </Field>
-                </div>
-                <Field label="이메일">
-                  <Input type="email" value={form.contactEmail} onChange={(v) => update('contactEmail', v)} placeholder="담당자 이메일 (로그인 이메일과 다를 경우)" />
+              <div className="grid grid-cols-2 gap-6">
+                <Field label="담당자명" required>
+                  <Input value={form.contactName} onChange={(v) => update('contactName', v)} placeholder="홍길동" required />
                 </Field>
-                <Field label="연락처" required>
-                  <Input type="tel" value={form.contactPhone} onChange={(v) => update('contactPhone', v)} placeholder="010-0000-0000" required />
+                <Field label="부서/직책">
+                  <Input value={form.department} onChange={(v) => update('department', v)} placeholder="디자인팀 / 팀장" />
                 </Field>
               </div>
-            </section>
-
-            {/* 문의 내용 */}
-            <section className="mb-10">
-              <Field label="문의 내용">
-                <textarea
-                  value={form.message}
-                  onChange={(e) => update('message', e.target.value)}
-                  placeholder="추가 요청사항이나 문의사항을 입력해주세요"
-                  rows={4}
-                  className="w-full bg-zinc-900 border border-white/30 rounded-xl px-4 py-3 text-white text-sm placeholder:text-zinc-600 focus:outline-none focus:border-zinc-500 transition-colors resize-none"
-                />
-              </Field>
             </section>
 
             {error && (
