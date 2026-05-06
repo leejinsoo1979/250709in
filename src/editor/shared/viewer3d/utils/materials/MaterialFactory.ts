@@ -346,8 +346,8 @@ export class MaterialFactory {
           opacity: { value: 1.0 }
         },
         side: THREE.DoubleSide,
-        transparent: false,  // 3D 모드에서는 투명 효과 제거
-        depthWrite: true,
+        transparent: true,   // 카메라 각도 기반 페이드 지원
+        depthWrite: false,   // 투명 시 뒤쪽 가구가 가려지지 않도록
         depthTest: true
       });
     }
