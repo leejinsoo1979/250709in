@@ -3,6 +3,7 @@ import { SpaceInfo } from '@/store/core/spaceConfigStore';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
 import { calculateInternalSpace } from '@/editor/shared/viewer3d/utils/geometry';
 import { getModuleCategory } from '@/editor/shared/utils/freePlacementUtils';
+import { getSpaceConfigDefaults } from '@/firebase/userProfiles';
 import PlacementControls from './components/PlacementControls';
 import styles from '../styles/common.module.css';
 
@@ -34,28 +35,40 @@ const BaseControls: React.FC<BaseControlsProps> = ({ spaceInfo, onUpdate, disabl
     });
   };
 
+  // 사용자 디폴트 (없으면 시스템 폴백 60)
+  const [userBaseDefault, setUserBaseDefault] = useState<number>(60);
+  useEffect(() => {
+    let cancelled = false;
+    getSpaceConfigDefaults().then((d) => {
+      if (cancelled || !d || typeof d.baseHeight !== 'number') return;
+      setUserBaseDefault(d.baseHeight);
+    }).catch(() => {/* noop */});
+    return () => { cancelled = true; };
+  }, []);
+
   // 로컬 상태들 - 항상 string으로 관리
   // 받침대 높이는 바닥마감재와 무관하게 원래 값 그대로 표시
   const [baseHeight, setBaseHeight] = useState<string>(
-    String(spaceInfo.baseConfig?.height || 60)
+    String(spaceInfo.baseConfig?.height ?? userBaseDefault)
   );
   const [baseDepth, setBaseDepth] = useState<string>(
     String(spaceInfo.baseConfig?.depth ?? 0)
   );
 
   // baseConfig 변경 시 로컬 상태 동기화
-  // UI 표시값은 항상 60 이상으로 보정 (기본값 60)
+  // UI 표시값은 항상 사용자 디폴트(또는 60) 이상으로 보정
   useEffect(() => {
     const stored = spaceInfo.baseConfig?.height;
-    const displayH = (stored === undefined || stored < 60) ? 60 : stored;
+    const fallback = userBaseDefault;
+    const displayH = (stored === undefined || stored < 60) ? fallback : stored;
     setBaseHeight(String(displayH));
     setBaseDepth(String(spaceInfo.baseConfig?.depth ?? 0));
     // UI 표시값과 저장값이 다르면 store 동기화 (UI가 진실의 원천)
     if (stored !== displayH) {
-      const currentBaseConfig = spaceInfo.baseConfig || { type: 'floor' as const, height: 60 };
+      const currentBaseConfig = spaceInfo.baseConfig || { type: 'floor' as const, height: fallback };
       onUpdate({ baseConfig: { ...currentBaseConfig, height: displayH } });
     }
-  }, [spaceInfo.baseConfig]);
+  }, [spaceInfo.baseConfig, userBaseDefault]);
 
   // 높이 입력 처리 — 즉시 store 업데이트 (실시간 반영)
   const handleHeightChange = (value: string) => {

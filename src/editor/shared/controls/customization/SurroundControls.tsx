@@ -25,6 +25,8 @@ const SurroundControls: React.FC<SurroundControlsProps> = ({ spaceInfo, onUpdate
 
   // 사용자 저장 기본 이격값 (프레임 타입 전환 시 적용)
   const [userDefaultGaps, setUserDefaultGaps] = useState<{ left: number; right: number }>({ left: 1.5, right: 1.5 });
+  // 사용자 저장 기본 상부프레임 높이 (없으면 30)
+  const [userDefaultFrameTop, setUserDefaultFrameTop] = useState<number>(30);
   useEffect(() => {
     getSpaceConfigDefaults().then(defaults => {
       if (defaults) {
@@ -32,8 +34,11 @@ const SurroundControls: React.FC<SurroundControlsProps> = ({ spaceInfo, onUpdate
           left: defaults.gapLeft ?? 1.5,
           right: defaults.gapRight ?? 1.5,
         });
+        if (typeof defaults.frameTop === 'number') {
+          setUserDefaultFrameTop(defaults.frameTop);
+        }
       }
-    }).catch(() => { /* noop: 기본값 1.5 유지 */ });
+    }).catch(() => { /* noop: 기본값 유지 */ });
   }, []);
 
   // 기존 로컬 상태들
@@ -102,7 +107,7 @@ const SurroundControls: React.FC<SurroundControlsProps> = ({ spaceInfo, onUpdate
       // 전체서라운드: 기존 서라운드 + frameConfig top/bottom 활성
       const updates: Partial<SpaceInfo> = { surroundType: 'surround' };
       const installType = spaceInfo.installType;
-      const currentTop = spaceInfo.frameSize?.top || 30;
+      const currentTop = spaceInfo.frameSize?.top || userDefaultFrameTop;
 
       if (installType === 'builtin' || installType === 'built-in') {
         updates.frameSize = { left: 50, right: 50, top: currentTop };
@@ -170,7 +175,7 @@ const SurroundControls: React.FC<SurroundControlsProps> = ({ spaceInfo, onUpdate
       updates.frameSize = {
         left: 0,
         right: 0,
-        top: spaceInfo.frameSize?.top || 30
+        top: spaceInfo.frameSize?.top || userDefaultFrameTop
       };
 
       // 노서라운드 전환 시 이격을 사용자 저장 기본값으로 초기화 (벽이 없는 쪽은 0)

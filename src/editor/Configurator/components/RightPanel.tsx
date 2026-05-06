@@ -11,6 +11,7 @@ import { useTranslation } from '@/i18n/useTranslation';
 import PreviewViewer from './PreviewViewer';
 import { computeFrameMergeGroups } from '@/editor/shared/utils/frameMergeUtils';
 import { useAuth } from '@/auth/AuthProvider';
+import { getSpaceConfigDefaults } from '@/firebase/userProfiles';
 
 // Window 인터페이스 확장
 declare global {
@@ -113,14 +114,15 @@ const FrameRow = React.memo(({ label, enabled, widthMM = 0, sizeMM, offset, onTo
   );
 });
 
-const MergedFrameRow = React.memo(({ label, enabled, widthMM, heightMM, offset, onToggle, onHeightChange, onOffsetChange, hlKey, setHighlightedFrame, isLowerCategory = false }: {
+const MergedFrameRow = React.memo(({ label, enabled, widthMM, heightMM, offset, onToggle, onHeightChange, onOffsetChange, hlKey, setHighlightedFrame, isLowerCategory = false, userBaseHeightDefault }: {
   label: string; enabled: boolean; widthMM: number; heightMM: number; offset: number;
   onToggle: () => void; onHeightChange: (v: number) => void; onOffsetChange: (v: number) => void; hlKey: string;
-  setHighlightedFrame: (v: string | null) => void; isLowerCategory?: boolean;
+  setHighlightedFrame: (v: string | null) => void; isLowerCategory?: boolean; userBaseHeightDefault?: number;
 }) => {
   const bfMin = isLowerCategory ? 60 : 40;
   const bfMax = isLowerCategory ? 150 : 100;
-  const bfDefault = isLowerCategory ? 100 : 60;
+  // 일반 가구의 디폴트는 사용자 설정값(baseHeight) 우선, 없으면 60
+  const bfDefault = isLowerCategory ? 100 : (userBaseHeightDefault ?? 60);
   const [heightText, setHeightText] = React.useState(String(heightMM || ''));
   const [offsetText, setOffsetText] = React.useState(offset !== 0 ? String(offset) : '');
   const heightEditingRef = React.useRef(false);
@@ -854,6 +856,17 @@ const RightPanel: React.FC<RightPanelProps> = ({
   const [topFrameAllMode, setTopFrameAllMode] = useState<boolean>(true);
   const [baseFrameAllMode, setBaseFrameAllMode] = useState<boolean>(true);
 
+  // 사용자가 설정한 기본 프레임/받침대 디폴트 (없으면 시스템 폴백)
+  const [userDefaults, setUserDefaults] = useState<{ frameTop?: number; baseHeight?: number }>({});
+  useEffect(() => {
+    let cancelled = false;
+    getSpaceConfigDefaults().then((d) => {
+      if (cancelled || !d) return;
+      setUserDefaults({ frameTop: d.frameTop, baseHeight: d.baseHeight });
+    }).catch(() => { /* noop */ });
+    return () => { cancelled = true; };
+  }, []);
+
   // 초기 렌더링 시 UIStore 동기화
   useEffect(() => {
     if (spaceInfo.droppedCeiling?.enabled) {
@@ -1366,8 +1379,8 @@ const RightPanel: React.FC<RightPanelProps> = ({
               if (slotMods.length === 0) return null;
               const sorted = [...slotMods].sort((a, b) => a.position.x - b.position.x);
               const toAlpha = (n: number) => String.fromCharCode(64 + n);
-              const globalTop = spaceInfo.frameSize?.top ?? 30;
-              const globalBase = spaceInfo.baseConfig?.height ?? 65;
+              const globalTop = spaceInfo.frameSize?.top ?? userDefaults.frameTop ?? 30;
+              const globalBase = spaceInfo.baseConfig?.height ?? userDefaults.baseHeight ?? 65;
               const isMergeMode = spaceInfo.frameMergeEnabled ?? false;
               const indexing = calculateSpaceIndexing(spaceInfo);
               const slotColWidth = indexing.columnWidth || 0;
@@ -1419,6 +1432,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
                             widthMM={group.totalWidthMm}
                             heightMM={firstMod?.topFrameThickness ?? globalTop}
                             offset={getTopOffsetDisplay(firstMod)}
+                            userBaseHeightDefault={userDefaults.frameTop}
                             onToggle={() => {
                               const newVal = !allEnabled;
                               group.moduleIds.forEach(id => updatePlacedModule(id, { hasTopFrame: newVal }));
@@ -1462,6 +1476,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
                               widthMM={group.totalWidthMm}
                               heightMM={firstMod?.baseFrameHeight ?? globalBase}
                               offset={firstMod?.baseFrameOffset ?? 0}
+                              userBaseHeightDefault={userDefaults.baseHeight}
                               onToggle={() => {
                                 const newVal = !allEnabled;
                                 group.moduleIds.forEach(id => updatePlacedModule(id, {
@@ -1591,7 +1606,8 @@ const RightPanel: React.FC<RightPanelProps> = ({
                     const isLowerMod = mod.moduleId?.startsWith('lower-') || mod.moduleId?.includes('-lower-');
                     const bfMin = isLowerMod ? 60 : 40;
                     const bfMax = isLowerMod ? 150 : 100;
-                    const bfDefault = isLowerMod ? 100 : 60;
+                    // 일반 가구 디폴트는 사용자 설정값(baseHeight) 우선, 없으면 60
+                    const bfDefault = isLowerMod ? 100 : (userDefaults.baseHeight ?? 60);
                     return (
                       <div key={`base-${mod.id}`} style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '3px 0' }}>
                         <span style={{ minWidth: '50px', fontSize: '11px', color: 'var(--theme-text-secondary)', fontWeight: 500 }}>{`${toAlpha(baseNum)}(하)`}</span>
