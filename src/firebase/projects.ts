@@ -1061,17 +1061,40 @@ export const softDeleteDesignFile = async (designFileId: string, projectId: stri
 
     const docRef = doc(db, 'designFiles', designFileId);
     const snap = await getDocFromServer(docRef);
-    if (!snap.exists()) return { error: '디자인 파일을 찾을 수 없습니다.' };
+    if (!snap.exists()) {
+      // 이미 사라진 문서 → 성공 처리
+      console.log(`소프트 삭제: 이미 없는 디자인 파일 ${designFileId} → 성공 처리`);
+      return { error: null };
+    }
 
-    await updateDoc(docRef, {
-      isDeleted: true,
-      deletedAt: serverTimestamp(),
-    });
+    try {
+      await updateDoc(docRef, {
+        isDeleted: true,
+        deletedAt: serverTimestamp(),
+      });
+    } catch (updateErr: any) {
+      // updateDoc 실패 시 (보안 규칙 / 누락 필드 / userId 불일치 등)
+      // 권한이 있다면 deleteDoc로 폴백 (영구 삭제). 휴지통 기능은 못 쓰지만
+      // 사용자가 "안 지워진다"고 클레임하는 상황이므로 즉시 제거가 우선.
+      console.error('소프트 삭제 updateDoc 실패, deleteDoc 폴백 시도:', updateErr);
+      try {
+        await deleteDoc(docRef);
+        console.log(`✅ deleteDoc 폴백 성공: ${designFileId}`);
+      } catch (deleteErr: any) {
+        const code = deleteErr?.code || updateErr?.code || 'unknown';
+        const msg = deleteErr?.message || updateErr?.message || '알 수 없는 오류';
+        console.error('소프트 삭제 deleteDoc 폴백도 실패:', deleteErr);
+        return { error: `삭제 실패 [${code}]: ${msg}` };
+      }
+    }
+
     await updateProjectStats(projectId);
     return { error: null };
-  } catch (error) {
+  } catch (error: any) {
+    const code = error?.code || 'unknown';
+    const msg = error?.message || '알 수 없는 오류';
     console.error('소프트 삭제 에러:', error);
-    return { error: '삭제 중 오류가 발생했습니다.' };
+    return { error: `삭제 실패 [${code}]: ${msg}` };
   }
 };
 
