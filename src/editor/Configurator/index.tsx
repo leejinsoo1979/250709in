@@ -2084,8 +2084,9 @@ const Configurator: React.FC = () => {
           designFileName: newDesignName.trim(),
         });
 
-        // 새 디자인으로 이동
-        navigate(`/configurator?projectId=${newDesignProjectId}&designFileId=${result.id}`, { replace: true });
+        // 새 디자인으로 이동 — Configurator가 Firebase에서 새 spaceConfig를 로드하도록 강제 새로고침
+        const targetUrl = `/configurator?projectId=${newDesignProjectId}&designFileId=${result.id}`;
+        window.location.href = targetUrl;
       }
     } catch (error) {
       console.error('새 디자인 생성 중 오류:', error);
