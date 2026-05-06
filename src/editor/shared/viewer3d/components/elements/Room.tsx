@@ -511,9 +511,9 @@ const Room: React.FC<RoomProps> = ({
       // 우측벽: 방 오른쪽(+X)에 위치, 안쪽(-X) 향함. 카메라가 왼쪽(-X)에 있을수록 잘 보임
       // 카메라가 오른쪽(+X)으로 가면 우측벽 뒤로 → 투명화
       const rightDot = -vx;
-      // 천장: 위(+Y)에 위치, 안쪽(-Y) 향함. 카메라가 아래(-Y)에서 올려다보면 잘 보임
-      // 카메라가 위(+Y)로 가면 천장 위로 올라가서 천장이 가구를 가림 → 투명화
-      const topDot = -vy;
+      // 천장: 위(+Y)에 위치. 카메라가 위(+Y)에 있으면 천장을 위에서 내려다봄 → 정상 (불투명)
+      // 카메라가 아래(-Y)로 내려가면 천장 아래에서 올려다봄 → 천장이 가구 가림 → 투명화
+      const topDot = vy;
 
       if (leftWallMaterialRef.current && leftWallMaterialRef.current.uniforms) {
         leftWallMaterialRef.current.uniforms.opacity.value = computeOpacity(leftDot);
