@@ -1383,11 +1383,6 @@ const Configurator: React.FC = () => {
         delete spaceConfig.lockedWallGaps; // 세션 전용
 // console.log('🔄 Firebase 프로젝트 로드 시 컬럼 관련 값 초기화');
 
-        // 상부프레임 최소값 보정 (30mm 미만이면 30으로)
-        if (spaceConfig.frameSize && spaceConfig.frameSize.top < 30) {
-          spaceConfig.frameSize.top = 30;
-        }
-
         // 이격: 사용자가 설정에 저장한 기본값으로 맞추기 (노서라운드일 때만)
         // 양쪽 벽이 실제로 있는 쪽에만 적용
         if (spaceConfig.surroundType === 'no-surround') {
@@ -2753,10 +2748,6 @@ const Configurator: React.FC = () => {
                     ...designFile.spaceConfig.baseConfig
                   }
                 };
-                // 상부프레임 최소값 보정 (30mm 미만이면 30으로)
-                if (spaceConfig.frameSize && spaceConfig.frameSize.top < 30) {
-                  spaceConfig.frameSize.top = 30;
-                }
 
                 // 이전 디자인 파일 상태 완전 초기화 후 새 데이터 로드
                 // 로드 중 플래그 설정 — useEffect에서 가구 재배치 방지

@@ -436,11 +436,6 @@ export const useSpaceConfigStore = create<SpaceConfigState>()((set) => ({
         } : {})
       };
 
-      // 상부프레임 최소값 보정 (30mm 미만이면 30으로)
-      if (tempSpaceInfo.frameSize && tempSpaceInfo.frameSize.top < 30) {
-        tempSpaceInfo.frameSize = { ...tempSpaceInfo.frameSize, top: 30 };
-      }
-      
       // customSlotWidths 무효화: 컬럼 수/너비/배치/이격 등이 바뀌면 사용자 지정 슬롯 너비를 리셋
       // (단, 호출자가 명시적으로 customSlotWidths를 같이 보낸 경우는 보존)
       const customSlotInvalidatingChange =
