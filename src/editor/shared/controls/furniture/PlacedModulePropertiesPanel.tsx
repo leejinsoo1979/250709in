@@ -3111,6 +3111,51 @@ const PlacedModulePropertiesPanel: React.FC = () => {
             </div>
           )}
 
+          {/* 도어 치수 (읽기 전용) — 몸통치수 바로 아래 */}
+          {currentPlacedModule && currentPlacedModule.hasDoor && (() => {
+            const bodyWidth = (() => {
+              const v = parseInt(freeWidthInput, 10);
+              if (!isNaN(v) && v > 0) return v;
+              return currentPlacedModule.freeWidth || currentPlacedModule.customWidth || moduleData.dimensions.width;
+            })();
+            // 도어 너비: 슬롯/가구 너비 - 좌우 갭(보통 3mm씩) → 슬롯 너비 그대로 사용 (실제 도어는 자동 계산)
+            const doorW = bodyWidth;
+            // 도어 높이: 공간 높이 - 도어 상갭 - 도어 하갭
+            const spaceH = spaceInfo.height || 0;
+            const doorH = Math.max(0, spaceH - (doorTopGap || 0) - (doorBottomGap || 0));
+            const doorThickness = 20;
+            return (
+              <div className={styles.propertySection}>
+                <h5 className={styles.sectionTitle}>도어치수</h5>
+                <div style={{ display: 'flex', gap: '4px', alignItems: 'center', marginTop: '2px' }}>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <label style={{ fontSize: '10px', color: 'var(--theme-text-tertiary)', display: 'block', lineHeight: 1 }}>W</label>
+                    <div className={styles.inputWithUnit}>
+                      <input type="text" value={doorW} readOnly className={styles.depthInput} style={{ fontSize: '12px', cursor: 'default', color: 'var(--theme-text-secondary)' }} />
+                      <span className={styles.unit}>mm</span>
+                    </div>
+                  </div>
+                  <span style={{ color: 'var(--theme-text-tertiary)', fontSize: '11px', flexShrink: 0 }}>×</span>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <label style={{ fontSize: '10px', color: 'var(--theme-text-tertiary)', display: 'block', lineHeight: 1 }}>H</label>
+                    <div className={styles.inputWithUnit}>
+                      <input type="text" value={doorH} readOnly className={styles.depthInput} style={{ fontSize: '12px', cursor: 'default', color: 'var(--theme-text-secondary)' }} />
+                      <span className={styles.unit}>mm</span>
+                    </div>
+                  </div>
+                  <span style={{ color: 'var(--theme-text-tertiary)', fontSize: '11px', flexShrink: 0 }}>×</span>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <label style={{ fontSize: '10px', color: 'var(--theme-text-tertiary)', display: 'block', lineHeight: 1 }}>D</label>
+                    <div className={styles.inputWithUnit}>
+                      <input type="text" value={doorThickness} readOnly className={styles.depthInput} style={{ fontSize: '12px', cursor: 'default', color: 'var(--theme-text-secondary)' }} />
+                      <span className={styles.unit}>mm</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            );
+          })()}
+
           {/* 섹션별 치수 설정 (2섹션 이상 가구: customConfig 또는 modelConfig) */}
           {currentPlacedModule && (() => {
             const cc = currentPlacedModule.customConfig;
