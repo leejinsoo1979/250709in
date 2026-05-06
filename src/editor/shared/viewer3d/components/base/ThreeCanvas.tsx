@@ -560,9 +560,12 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
 
   // 스페이스바: 1번 누름 → 카메라 초기화, 연속 2번 누름 → perspective ↔ orthographic 토글
   // (2D 모드에서는 시점 순환: front → top → left → front)
-  const lastSpaceAtRef = useRef<number>(0);
+  // 패턴: 첫 누름 후 400ms 동안 다음 누름을 대기. 그 안에 안 들어오면 그제서야 카메라 초기화.
+  const spacePendingTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => {
     canvasLog('🎮 스페이스 키 리스너 등록됨 - viewMode:', viewMode, 'cameraMode:', cameraMode);
+
+    const SPACE_DOUBLE_TAP_MS = 400;
 
     const handleKeyDown = (e: KeyboardEvent) => {
       canvasLog('⌨️ 키 눌림:', e.code, e.keyCode);
@@ -577,16 +580,14 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
         e.preventDefault(); // 페이지 스크롤 방지
         e.stopPropagation(); // 이벤트 전파 방지
 
-        const now = Date.now();
-        const SPACE_DOUBLE_TAP_MS = 400;
-        const isDoubleTap = now - lastSpaceAtRef.current < SPACE_DOUBLE_TAP_MS;
-        lastSpaceAtRef.current = now;
+        if (spacePendingTimerRef.current !== null) {
+          // 두 번째 누름 (대기 중): 보류된 카메라 초기화를 취소하고 카메라 모드 전환만 실행
+          clearTimeout(spacePendingTimerRef.current);
+          spacePendingTimerRef.current = null;
 
-        if (isDoubleTap) {
-          // 두 번째 누름: 카메라 모드 전환
+          const ui = useUIStore.getState();
           if (viewMode === '2D') {
             // 2D 모드: 시점 순환 (front → top → left → front)
-            const ui = useUIStore.getState();
             const order: Array<'front' | 'top' | 'left'> = ['front', 'top', 'left'];
             const idx = order.indexOf(ui.view2DDirection as 'front' | 'top' | 'left');
             const next = order[(idx + 1) % order.length] || 'front';
@@ -594,17 +595,18 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
             canvasLog('🔁 2D 시점 순환 →', next);
           } else {
             // 3D 모드: perspective ↔ orthographic 토글
-            const ui = useUIStore.getState();
             const nextMode = ui.cameraMode === 'perspective' ? 'orthographic' : 'perspective';
             ui.setCameraMode(nextMode);
-            canvasLog('🔁 3D 카메라 모드 전환 →', nextMode);
+            canvasLog('🔁 3D 카메라 모드 전환:', ui.cameraMode, '→', nextMode);
           }
-          // 더블탭 후엔 다음 더블탭이 즉시 발동하지 않도록 타임스탬프 리셋
-          lastSpaceAtRef.current = 0;
         } else {
-          // 첫 번째 누름: 카메라 초기화
-          canvasLog('🚀 스페이스 키 눌림 (1st) - 카메라 초기화');
-          resetCamera();
+          // 첫 번째 누름: 일정 시간 대기 후 카메라 초기화
+          // 그 사이에 두 번째 누름이 들어오면 위 분기에서 취소됨
+          spacePendingTimerRef.current = setTimeout(() => {
+            canvasLog('🚀 스페이스 키 단독 누름 - 카메라 초기화');
+            resetCamera();
+            spacePendingTimerRef.current = null;
+          }, SPACE_DOUBLE_TAP_MS);
         }
         return;
       }
@@ -711,6 +713,10 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
 
     return () => {
       window.removeEventListener('keydown', handleKeyDown, { capture: true });
+      if (spacePendingTimerRef.current !== null) {
+        clearTimeout(spacePendingTimerRef.current);
+        spacePendingTimerRef.current = null;
+      }
     };
   }, [resetCamera, viewMode, cameraMode]);
 
