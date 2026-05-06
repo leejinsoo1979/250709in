@@ -1092,30 +1092,8 @@ const Configurator: React.FC = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // F5 단축키
-  // - 2D 모드: 시점 순환 (정면 → 탑 → 좌측 → 정면)
-  // - 3D 모드: 카메라 전환 (perspective ↔ orthographic)
-  useEffect(() => {
-    const handleF5 = (e: KeyboardEvent) => {
-      if (e.key !== 'F5') return;
-      const tag = (e.target as HTMLElement)?.tagName;
-      if (tag === 'INPUT' || tag === 'TEXTAREA' || (e.target as HTMLElement)?.isContentEditable) return;
-      e.preventDefault(); // 브라우저 새로고침 방지
-      if (viewMode === '2D') {
-        const order: View2DDirection[] = ['front', 'top', 'left'];
-        const cur = view2DDirection as View2DDirection;
-        const idx = order.indexOf(cur);
-        const next = order[(idx + 1) % order.length] || 'front';
-        setView2DDirection(next);
-      } else {
-        // 3D: perspective ↔ orthographic 토글
-        const ui = useUIStore.getState();
-        ui.setCameraMode(ui.cameraMode === 'perspective' ? 'orthographic' : 'perspective');
-      }
-    };
-    document.addEventListener('keydown', handleF5);
-    return () => document.removeEventListener('keydown', handleF5);
-  }, [viewMode, view2DDirection, setView2DDirection]);
+  // F5 단축키 제거 — F5는 브라우저 기본 새로고침으로 복귀
+  // (카메라 전환/시점 순환은 ThreeCanvas의 스페이스바 더블탭으로 이전됨)
 
   // 미리보기 창과 BroadcastChannel 동기화
   useEffect(() => {

@@ -558,7 +558,9 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
     });
   }, [camera, viewMode, cameraMode]);
 
-  // 스페이스바로 카메라 리셋
+  // 스페이스바: 1번 누름 → 카메라 초기화, 연속 2번 누름 → perspective ↔ orthographic 토글
+  // (2D 모드에서는 시점 순환: front → top → left → front)
+  const lastSpaceAtRef = useRef<number>(0);
   useEffect(() => {
     canvasLog('🎮 스페이스 키 리스너 등록됨 - viewMode:', viewMode, 'cameraMode:', cameraMode);
 
@@ -567,10 +569,43 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
 
       // 스페이스바 (32) 또는 Space 키
       if (e.code === 'Space' || e.keyCode === 32) {
+        // 입력 중이면 무시 (텍스트 입력 방해 방지)
+        const tag = (e.target as HTMLElement)?.tagName;
+        if (tag === 'INPUT' || tag === 'TEXTAREA' || (e.target as HTMLElement)?.isContentEditable) {
+          return;
+        }
         e.preventDefault(); // 페이지 스크롤 방지
         e.stopPropagation(); // 이벤트 전파 방지
-        canvasLog('🚀 스페이스 키 눌림 - viewMode:', viewMode, 'cameraMode:', cameraMode);
-        resetCamera();
+
+        const now = Date.now();
+        const SPACE_DOUBLE_TAP_MS = 400;
+        const isDoubleTap = now - lastSpaceAtRef.current < SPACE_DOUBLE_TAP_MS;
+        lastSpaceAtRef.current = now;
+
+        if (isDoubleTap) {
+          // 두 번째 누름: 카메라 모드 전환
+          if (viewMode === '2D') {
+            // 2D 모드: 시점 순환 (front → top → left → front)
+            const ui = useUIStore.getState();
+            const order: Array<'front' | 'top' | 'left'> = ['front', 'top', 'left'];
+            const idx = order.indexOf(ui.view2DDirection as 'front' | 'top' | 'left');
+            const next = order[(idx + 1) % order.length] || 'front';
+            ui.setView2DDirection(next);
+            canvasLog('🔁 2D 시점 순환 →', next);
+          } else {
+            // 3D 모드: perspective ↔ orthographic 토글
+            const ui = useUIStore.getState();
+            const nextMode = ui.cameraMode === 'perspective' ? 'orthographic' : 'perspective';
+            ui.setCameraMode(nextMode);
+            canvasLog('🔁 3D 카메라 모드 전환 →', nextMode);
+          }
+          // 더블탭 후엔 다음 더블탭이 즉시 발동하지 않도록 타임스탬프 리셋
+          lastSpaceAtRef.current = 0;
+        } else {
+          // 첫 번째 누름: 카메라 초기화
+          canvasLog('🚀 스페이스 키 눌림 (1st) - 카메라 초기화');
+          resetCamera();
+        }
         return;
       }
 
