@@ -481,6 +481,10 @@ const Room: React.FC<RoomProps> = ({
   const rightWallMaterialRef = useRef<THREE.ShaderMaterial>(null);
   const topWallMaterialRef = useRef<THREE.ShaderMaterial>(null);
   const droppedWallMaterialRef = useRef<THREE.ShaderMaterial>(null);
+  const floorWallMaterialRef = useRef<THREE.ShaderMaterial>(null);
+
+  // 바닥 그라데이션 머티리얼은 매 렌더마다 새로 생성되지 않도록 useMemo로 분리하여 ref 부착
+  const floorGradientMaterial = useMemo(() => MaterialFactory.createShaderGradientWallMaterial('vertical', viewMode), [viewMode]);
 
   // 카메라 각도에 따라 벽 투명도 업데이트
   useFrame(() => {
@@ -534,6 +538,11 @@ const Room: React.FC<RoomProps> = ({
       if (droppedWallMaterialRef.current && droppedWallMaterialRef.current.uniforms) {
         droppedWallMaterialRef.current.uniforms.opacity.value = computeTopOpacity(topDot);
       }
+      // 바닥: 카메라가 아래(vy 음수)로 회전해서 바닥이 가구 하단 가릴 때 페이드
+      // 정면뷰(vy ≈ 0.3)에서는 불투명. vy < -0.35부터 페이드, vy < -0.6에서 완전 투명
+      if (floorWallMaterialRef.current && floorWallMaterialRef.current.uniforms) {
+        floorWallMaterialRef.current.uniforms.opacity.value = computeTopOpacity(-vy);
+      }
     } else if (viewMode === '3D' && cameraMode === 'orthographic') {
       // orthographic 모드에서는 모든 그라데이션 메쉬 숨김
       if (leftWallMaterialRef.current && leftWallMaterialRef.current.uniforms) {
@@ -547,6 +556,9 @@ const Room: React.FC<RoomProps> = ({
       }
       if (droppedWallMaterialRef.current && droppedWallMaterialRef.current.uniforms) {
         droppedWallMaterialRef.current.uniforms.opacity.value = 0;
+      }
+      if (floorWallMaterialRef.current && floorWallMaterialRef.current.uniforms) {
+        floorWallMaterialRef.current.uniforms.opacity.value = 0;
       }
     }
   });
@@ -2688,7 +2700,7 @@ const Room: React.FC<RoomProps> = ({
                 rotation={[-Math.PI / 2, 0, 0]}
               >
                 <planeGeometry args={[width, extendedPanelDepth]} />
-                <primitive object={MaterialFactory.createShaderGradientWallMaterial('vertical', viewMode)} />
+                <primitive ref={floorWallMaterialRef} object={floorGradientMaterial} />
               </mesh>
           )}
 
