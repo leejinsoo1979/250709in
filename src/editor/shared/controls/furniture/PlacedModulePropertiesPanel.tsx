@@ -557,20 +557,40 @@ const calcBackLipFillHeight = (
   const stoneT = currentMod.stoneTopThickness || 0;
   const lowerTopMm = floorH + baseH + lowerBodyH + stoneT;
 
-  // 같은 슬롯 상부장 찾기
-  const upperInSlot = placedModules.find((m: any) => {
+  // 현재 하부장의 X 영역(좌→우 mm)
+  const selfWmm = (currentMod.isFreePlacement && currentMod.freeWidth)
+    ? currentMod.freeWidth
+    : (currentMod.customWidth || currentMod.adjustedWidth || currentMod.moduleWidth || moduleData?.dimensions?.width || 0);
+  const selfCxMm = Math.round((currentMod.position?.x ?? 0) * 100);
+  const selfL = selfCxMm - selfWmm / 2;
+  const selfR = selfCxMm + selfWmm / 2;
+
+  // X 영역이 겹치는 상부장 모두 찾기 (듀얼/싱글 혼용 대응)
+  const overlappingUppers = placedModules.filter((m: any) => {
     if (m.id === currentMod.id) return false;
-    if (m.slotIndex !== currentMod.slotIndex) return false;
     const md = getModuleById(m.moduleId, internalSpace, spaceInfo) || buildModuleDataFromPlacedModule(m);
-    return md?.category === 'upper';
+    if (md?.category !== 'upper') return false;
+    const wmm = (m.isFreePlacement && m.freeWidth)
+      ? m.freeWidth
+      : (m.customWidth || m.adjustedWidth || m.moduleWidth || md?.dimensions?.width || 0);
+    const cxMm = Math.round((m.position?.x ?? 0) * 100);
+    const l = cxMm - wmm / 2;
+    const r = cxMm + wmm / 2;
+    return l < selfR - 1 && r > selfL + 1; // 1mm 미만 접촉은 비겹침
   });
 
   let targetMm: number;
-  if (upperInSlot) {
-    const upperMd = getModuleById(upperInSlot.moduleId, internalSpace, spaceInfo) || buildModuleDataFromPlacedModule(upperInSlot);
-    const upperH = upperInSlot.cabinetBodyHeight ?? upperMd?.dimensions?.height ?? 785;
-    const topFrame = upperInSlot.topFrameThickness ?? (spaceInfo.frameSize?.top ?? 30);
-    targetMm = (spaceInfo.height || 2400) - topFrame - upperH;
+  if (overlappingUppers.length > 0) {
+    // 겹치는 상부장 중 가장 낮은(=가구 하단이 가장 아래) 천장 한계로 결정
+    let minTarget = Infinity;
+    for (const upper of overlappingUppers) {
+      const upperMd = getModuleById(upper.moduleId, internalSpace, spaceInfo) || buildModuleDataFromPlacedModule(upper);
+      const upperH = upper.cabinetBodyHeight ?? upperMd?.dimensions?.height ?? 785;
+      const topFrame = upper.topFrameThickness ?? (spaceInfo.frameSize?.top ?? 30);
+      const t = (spaceInfo.height || 2400) - topFrame - upperH;
+      if (t < minTarget) minTarget = t;
+    }
+    targetMm = minTarget;
   } else {
     targetMm = spaceInfo.height || 2400;
   }
