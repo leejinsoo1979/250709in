@@ -2753,6 +2753,12 @@ const Configurator: React.FC = () => {
 
               // 공간 설정
               if (designFile.spaceConfig) {
+                alert(
+                  '[디자인 로드] firebase에서 받은 값\n' +
+                  'width=' + designFile.spaceConfig.width + '\n' +
+                  'baseHeight=' + (designFile.spaceConfig.baseConfig?.height ?? '없음') + '\n' +
+                  'frameTop=' + (designFile.spaceConfig.frameSize?.top ?? '없음')
+                );
                 console.log('🟢 [Configurator 로드] firebase에서 받은 designFile.spaceConfig:', {
                   baseConfigHeight: designFile.spaceConfig.baseConfig?.height,
                   frameTop: designFile.spaceConfig.frameSize?.top,
