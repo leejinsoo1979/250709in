@@ -2256,12 +2256,31 @@ const Configurator: React.FC = () => {
             setCurrentProjectId(newProjectId);
           }
 
+          // 새 디자인이므로 사용자 공간설정 기본값 적용 (frameTop, baseHeight 등)
+          const userDefaults = await getSpaceConfigDefaults();
+          const baseSpaceInfo: any = stripSessionOnlyFields(spaceInfo);
+          if (userDefaults) {
+            if (typeof userDefaults.baseHeight === 'number') {
+              baseSpaceInfo.baseConfig = {
+                ...(baseSpaceInfo.baseConfig || { type: 'floor', placementType: 'ground' }),
+                height: userDefaults.baseHeight,
+              };
+            }
+            if (typeof userDefaults.frameTop === 'number') {
+              baseSpaceInfo.frameSize = {
+                ...(baseSpaceInfo.frameSize || { left: 50, right: 50, top: 30 }),
+                top: userDefaults.frameTop,
+              };
+            }
+          }
+          alert('[다른이름저장] 적용 baseHeight: ' + (baseSpaceInfo.baseConfig?.height ?? '없음') + ', frameTop: ' + (baseSpaceInfo.frameSize?.top ?? '없음'));
+
           // Firebase에 새 디자인 파일로 저장
           const { createDesignFile } = await import('@/firebase/projects');
           const { id: designFileId, error } = await createDesignFile({
             name: newTitle.trim(),
             projectId: projectIdToUse,
-            spaceConfig: removeUndefinedValues(stripSessionOnlyFields(spaceInfo)),
+            spaceConfig: removeUndefinedValues(baseSpaceInfo),
             furniture: {
               placedModules: removeUndefinedValues(placedModules)
             },
@@ -2284,8 +2303,9 @@ const Configurator: React.FC = () => {
             useSpaceConfigStore.getState().markAsSaved();
             useFurnitureStore.getState().markAsSaved();
 
-            // URL 업데이트 - 프로젝트ID와 디자인파일ID 모두 포함
-            navigate(`/configurator?projectId=${projectIdToUse}&designFileId=${designFileId}`, { replace: true });
+            // URL 업데이트 + 강제 새로고침 (새 spaceConfig 적용)
+            window.location.href = `/configurator?projectId=${projectIdToUse}&designFileId=${designFileId}`;
+            return;
 
 // console.log('✅ 디자인 파일 다른이름으로 저장 성공:', newTitle);
             // alert(`"${newTitle}" 디자인 파일로 저장되었습니다!`);
