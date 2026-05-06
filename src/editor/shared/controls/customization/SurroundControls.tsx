@@ -227,15 +227,15 @@ const SurroundControls: React.FC<SurroundControlsProps> = ({ spaceInfo, onUpdate
 
     // 유효하지 않은 숫자라면 기본값 사용
     if (isNaN(numValue)) {
-      numValue = dimension === 'top' ? 30 : 50;
+      numValue = dimension === 'top' ? 10 : 50;
     }
 
-    // 범위 검증
+    // 범위 검증 (상단 프레임은 10~200, 라벨과 일치)
     if (dimension === 'left' || dimension === 'right') {
       if (numValue < 40) numValue = 40;
       if (numValue > 100) numValue = 100;
     } else {
-      if (numValue < 30) numValue = 30;
+      if (numValue < 10) numValue = 10;
       if (numValue > 200) numValue = 200;
     }
 
@@ -262,14 +262,14 @@ const SurroundControls: React.FC<SurroundControlsProps> = ({ spaceInfo, onUpdate
       let value = parseInt(input.value, 10);
 
       if (isNaN(value)) {
-        value = dimension === 'top' ? 30 : 50;
+        value = dimension === 'top' ? 10 : 50;
       }
 
       if (dimension === 'left' || dimension === 'right') {
         if (value < 40) value = 40;
         if (value > 100) value = 100;
       } else {
-        if (value < 30) value = 30;
+        if (value < 10) value = 10;
         if (value > 200) value = 200;
       }
 
@@ -293,7 +293,7 @@ const SurroundControls: React.FC<SurroundControlsProps> = ({ spaceInfo, onUpdate
         minValue = 40;
         maxValue = 100;
       } else {
-        minValue = 30;
+        minValue = 10;
         maxValue = 200;
       }
 
