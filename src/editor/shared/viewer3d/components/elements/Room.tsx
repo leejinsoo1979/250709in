@@ -495,11 +495,11 @@ const Room: React.FC<RoomProps> = ({
       const vy = camPos.y / dist;
       // const vz = camPos.z / dist; // 정면벽은 그라데이션이 없으므로 사용 안 함
 
-      // dot값이 임계값(threshold) 이하면 투명, 그 이상이면 불투명, 사이는 보간
-      // threshold=0.1 (벽이 거의 옆에서 보일 때부터 페이드 시작)
+      // dot값이 음수(카메라가 벽 뒤로 회전)일 때만 페이드 시작
+      // 정면뷰(dot≈0)에서는 완전 불투명 유지
       const computeOpacity = (dot: number): number => {
-        const FADE_START = 0.3;  // 이 이상이면 완전 불투명
-        const FADE_END = -0.05;  // 이 이하면 완전 투명
+        const FADE_START = -0.05; // 이 이상이면 완전 불투명 (정면뷰 포함)
+        const FADE_END = -0.4;    // 이 이하면 완전 투명 (벽 뒤로 깊이 회전)
         if (dot >= FADE_START) return 1;
         if (dot <= FADE_END) return 0;
         return (dot - FADE_END) / (FADE_START - FADE_END);
