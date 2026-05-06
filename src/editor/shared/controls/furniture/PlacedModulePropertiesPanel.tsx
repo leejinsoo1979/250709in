@@ -712,6 +712,13 @@ const PlacedModulePropertiesPanel: React.FC = () => {
   const [upperWidthDirection, setUpperWidthDirection] = useState<'left' | 'right'>('left'); // 상부 너비 줄이는 방향
   const [lowerTopOffset, setLowerTopOffset] = useState<number>(0); // 하부 섹션 상판 옵셋 (mm)
   const [lowerTopOffsetInput, setLowerTopOffsetInput] = useState<string>('0'); // 하부 섹션 상판 옵셋 입력
+  // EP 옵셋 입력 임시 문자열 — '-' 단독 입력 허용용 (undefined면 store값 표시)
+  const [epInputs, setEpInputs] = useState<{
+    leftFront?: string;
+    leftBack?: string;
+    rightFront?: string;
+    rightBack?: string;
+  }>({});
   const [customWidth, setCustomWidth] = useState<number>(600); // 기본 컬럼 너비로 변경
   const [widthInputValue, setWidthInputValue] = useState<string>('600');
   const [widthError, setWidthError] = useState<string>('');
@@ -4262,13 +4269,23 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                           <input
                             type="text"
                             inputMode="numeric"
-                            value={currentPlacedModule.leftEndPanelOffset ?? 0}
+                            value={epInputs.leftFront ?? String(currentPlacedModule.leftEndPanelOffset ?? 0)}
                             onChange={(e) => {
                               const v = e.target.value;
                               if (v === '' || v === '-' || /^-?\d+$/.test(v)) {
-                                const num = (v === '' || v === '-') ? 0 : Math.max(-200, Math.min(200, parseInt(v, 10)));
-                                updatePlacedModule(currentPlacedModule.id, { leftEndPanelOffset: num });
+                                setEpInputs(s => ({ ...s, leftFront: v }));
+                                if (v !== '' && v !== '-') {
+                                  const num = Math.max(-200, Math.min(200, parseInt(v, 10)));
+                                  updatePlacedModule(currentPlacedModule.id, { leftEndPanelOffset: num });
+                                }
                               }
+                            }}
+                            onBlur={() => {
+                              const v = epInputs.leftFront;
+                              if (v === '' || v === '-' || v === undefined) {
+                                updatePlacedModule(currentPlacedModule.id, { leftEndPanelOffset: 0 });
+                              }
+                              setEpInputs(s => ({ ...s, leftFront: undefined }));
                             }}
                             onKeyDown={(e) => {
                               if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
@@ -4276,6 +4293,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                                 const cur = currentPlacedModule.leftEndPanelOffset ?? 0;
                                 const next = Math.max(-200, Math.min(200, cur + (e.key === 'ArrowUp' ? 1 : -1)));
                                 updatePlacedModule(currentPlacedModule.id, { leftEndPanelOffset: next });
+                                setEpInputs(s => ({ ...s, leftFront: undefined }));
                               }
                             }}
                             className={styles.epInput}
@@ -4289,13 +4307,23 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                           <input
                             type="text"
                             inputMode="numeric"
-                            value={currentPlacedModule.leftEndPanelBackOffset ?? 0}
+                            value={epInputs.leftBack ?? String(currentPlacedModule.leftEndPanelBackOffset ?? 0)}
                             onChange={(e) => {
                               const v = e.target.value;
                               if (v === '' || v === '-' || /^-?\d+$/.test(v)) {
-                                const num = (v === '' || v === '-') ? 0 : Math.max(-200, Math.min(200, parseInt(v, 10)));
-                                updatePlacedModule(currentPlacedModule.id, { leftEndPanelBackOffset: num });
+                                setEpInputs(s => ({ ...s, leftBack: v }));
+                                if (v !== '' && v !== '-') {
+                                  const num = Math.max(-200, Math.min(200, parseInt(v, 10)));
+                                  updatePlacedModule(currentPlacedModule.id, { leftEndPanelBackOffset: num });
+                                }
                               }
+                            }}
+                            onBlur={() => {
+                              const v = epInputs.leftBack;
+                              if (v === '' || v === '-' || v === undefined) {
+                                updatePlacedModule(currentPlacedModule.id, { leftEndPanelBackOffset: 0 });
+                              }
+                              setEpInputs(s => ({ ...s, leftBack: undefined }));
                             }}
                             onKeyDown={(e) => {
                               if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
@@ -4303,6 +4331,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                                 const cur = currentPlacedModule.leftEndPanelBackOffset ?? 0;
                                 const next = Math.max(-200, Math.min(200, cur + (e.key === 'ArrowUp' ? 1 : -1)));
                                 updatePlacedModule(currentPlacedModule.id, { leftEndPanelBackOffset: next });
+                                setEpInputs(s => ({ ...s, leftBack: undefined }));
                               }
                             }}
                             className={styles.epInput}
@@ -4321,13 +4350,23 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                           <input
                             type="text"
                             inputMode="numeric"
-                            value={currentPlacedModule.rightEndPanelOffset ?? 0}
+                            value={epInputs.rightFront ?? String(currentPlacedModule.rightEndPanelOffset ?? 0)}
                             onChange={(e) => {
                               const v = e.target.value;
                               if (v === '' || v === '-' || /^-?\d+$/.test(v)) {
-                                const num = (v === '' || v === '-') ? 0 : Math.max(-200, Math.min(200, parseInt(v, 10)));
-                                updatePlacedModule(currentPlacedModule.id, { rightEndPanelOffset: num });
+                                setEpInputs(s => ({ ...s, rightFront: v }));
+                                if (v !== '' && v !== '-') {
+                                  const num = Math.max(-200, Math.min(200, parseInt(v, 10)));
+                                  updatePlacedModule(currentPlacedModule.id, { rightEndPanelOffset: num });
+                                }
                               }
+                            }}
+                            onBlur={() => {
+                              const v = epInputs.rightFront;
+                              if (v === '' || v === '-' || v === undefined) {
+                                updatePlacedModule(currentPlacedModule.id, { rightEndPanelOffset: 0 });
+                              }
+                              setEpInputs(s => ({ ...s, rightFront: undefined }));
                             }}
                             onKeyDown={(e) => {
                               if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
@@ -4335,6 +4374,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                                 const cur = currentPlacedModule.rightEndPanelOffset ?? 0;
                                 const next = Math.max(-200, Math.min(200, cur + (e.key === 'ArrowUp' ? 1 : -1)));
                                 updatePlacedModule(currentPlacedModule.id, { rightEndPanelOffset: next });
+                                setEpInputs(s => ({ ...s, rightFront: undefined }));
                               }
                             }}
                             className={styles.epInput}
@@ -4348,13 +4388,23 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                           <input
                             type="text"
                             inputMode="numeric"
-                            value={currentPlacedModule.rightEndPanelBackOffset ?? 0}
+                            value={epInputs.rightBack ?? String(currentPlacedModule.rightEndPanelBackOffset ?? 0)}
                             onChange={(e) => {
                               const v = e.target.value;
                               if (v === '' || v === '-' || /^-?\d+$/.test(v)) {
-                                const num = (v === '' || v === '-') ? 0 : Math.max(-200, Math.min(200, parseInt(v, 10)));
-                                updatePlacedModule(currentPlacedModule.id, { rightEndPanelBackOffset: num });
+                                setEpInputs(s => ({ ...s, rightBack: v }));
+                                if (v !== '' && v !== '-') {
+                                  const num = Math.max(-200, Math.min(200, parseInt(v, 10)));
+                                  updatePlacedModule(currentPlacedModule.id, { rightEndPanelBackOffset: num });
+                                }
                               }
+                            }}
+                            onBlur={() => {
+                              const v = epInputs.rightBack;
+                              if (v === '' || v === '-' || v === undefined) {
+                                updatePlacedModule(currentPlacedModule.id, { rightEndPanelBackOffset: 0 });
+                              }
+                              setEpInputs(s => ({ ...s, rightBack: undefined }));
                             }}
                             onKeyDown={(e) => {
                               if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
@@ -4362,6 +4412,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                                 const cur = currentPlacedModule.rightEndPanelBackOffset ?? 0;
                                 const next = Math.max(-200, Math.min(200, cur + (e.key === 'ArrowUp' ? 1 : -1)));
                                 updatePlacedModule(currentPlacedModule.id, { rightEndPanelBackOffset: next });
+                                setEpInputs(s => ({ ...s, rightBack: undefined }));
                               }
                             }}
                             className={styles.epInput}
