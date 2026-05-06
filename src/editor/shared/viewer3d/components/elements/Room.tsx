@@ -538,10 +538,11 @@ const Room: React.FC<RoomProps> = ({
       if (droppedWallMaterialRef.current && droppedWallMaterialRef.current.uniforms) {
         droppedWallMaterialRef.current.uniforms.opacity.value = computeTopOpacity(topDot);
       }
-      // 바닥: 카메라가 아래(vy 음수)로 회전해서 바닥이 가구 하단 가릴 때 페이드
-      // 정면뷰(vy ≈ 0.3)에서는 불투명. vy < -0.35부터 페이드, vy < -0.6에서 완전 투명
+      // 바닥: 정면뷰에서는 가구 아래 거의 안 보이므로 항상 불투명 유지
+      // 카메라가 아래로 많이 내려가야(거의 정수직 아래에서 올려다봄) 가릴 수 있는데
+      // 그 경우는 매우 드물어 페이드 비활성화
       if (floorWallMaterialRef.current && floorWallMaterialRef.current.uniforms) {
-        floorWallMaterialRef.current.uniforms.opacity.value = computeTopOpacity(-vy);
+        floorWallMaterialRef.current.uniforms.opacity.value = 1;
       }
     } else if (viewMode === '3D' && cameraMode === 'orthographic') {
       // orthographic 모드에서는 모든 그라데이션 메쉬 숨김
