@@ -84,10 +84,12 @@ const Step1: React.FC<Step1Props> = ({ onClose, projectId, projectTitle, initial
             top: defaults.frameTop ?? current.frameSize?.top ?? 30,
             left: defaults.frameLeft ?? current.frameSize?.left ?? 18,
             right: defaults.frameRight ?? current.frameSize?.right ?? 18,
+            ...(defaults.frameTopOffset !== undefined && { topOffset: defaults.frameTopOffset }),
           },
           baseConfig: {
             ...current.baseConfig!,
             height: defaults.baseHeight ?? current.baseConfig?.height ?? 60,
+            ...(defaults.baseFrameOffset !== undefined && { offset: defaults.baseFrameOffset }),
           },
           furnitureSingleWidth: defaults.furnitureSingleWidth ?? current.furnitureSingleWidth,
           furnitureDualWidth: defaults.furnitureDualWidth ?? current.furnitureDualWidth,

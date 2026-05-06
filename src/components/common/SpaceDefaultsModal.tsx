@@ -14,9 +14,11 @@ const SYSTEM_DEFAULTS: Required<SpaceConfigDefaults> = {
   gapLeft: 1.5,
   gapRight: 1.5,
   frameTop: 30,
+  frameTopOffset: 0,
   frameLeft: 18,
   frameRight: 18,
   baseHeight: 60,
+  baseFrameOffset: 0,
   furnitureSingleWidth: 500,
   furnitureDualWidth: 1000,
   placementType: 'slot',
@@ -62,13 +64,19 @@ const NumberInput: React.FC<NumberInputProps> = ({ label, value, onChange, min, 
     setLocalValue(String(value));
   }, [value]);
 
+  const lo = min ?? -Infinity;
+  const hi = max ?? Infinity;
   const commit = (raw: string) => {
-    const v = Number(raw);
-    if (raw === '' || isNaN(v)) {
-      setLocalValue(String(value)); // 복원
+    if (raw === '' || raw === '-') {
+      setLocalValue(String(value));
       return;
     }
-    const clamped = Math.max(min ?? 0, Math.min(max ?? Infinity, v));
+    const v = Number(raw);
+    if (isNaN(v)) {
+      setLocalValue(String(value));
+      return;
+    }
+    const clamped = Math.max(lo, Math.min(hi, v));
     onChange(clamped);
     setLocalValue(String(clamped));
   };
@@ -77,19 +85,25 @@ const NumberInput: React.FC<NumberInputProps> = ({ label, value, onChange, min, 
     <div className={styles.numberInput}>
       <div className={styles.inputLabel}>{label}</div>
       <div className={styles.inputGroup}>
-        <button className={styles.inputButton} onClick={() => onChange(Math.max(min ?? 0, value - step))} disabled={value <= (min ?? 0)}>−</button>
+        <button className={styles.inputButton} onClick={() => onChange(Math.max(lo, value - step))} disabled={value <= lo}>−</button>
         <div className={styles.inputField}>
           <input
             type="text"
             inputMode="decimal"
             value={localValue}
-            onChange={(e) => setLocalValue(e.target.value)}
+            onChange={(e) => {
+              const v = e.target.value;
+              // 음수 입력 허용: 빈 문자열, '-' 단독, 숫자/소수점/마이너스 조합 허용
+              if (v === '' || v === '-' || /^-?\d*\.?\d*$/.test(v)) {
+                setLocalValue(v);
+              }
+            }}
             onBlur={(e) => commit(e.target.value)}
             onKeyDown={(e) => { if (e.key === 'Enter') commit((e.target as HTMLInputElement).value); }}
           />
           <span className={styles.inputUnit}>{unit}</span>
         </div>
-        <button className={styles.inputButton} onClick={() => onChange(Math.min(max ?? Infinity, value + step))} disabled={value >= (max ?? Infinity)}>+</button>
+        <button className={styles.inputButton} onClick={() => onChange(Math.min(hi, value + step))} disabled={value >= hi}>+</button>
       </div>
     </div>
   );
@@ -220,8 +234,12 @@ const SpaceDefaultsModal: React.FC<SpaceDefaultsModalProps> = ({ onClose, onSave
           <div className={styles.section}>
             <div className={styles.sectionLabel}>프레임 사이즈</div>
             <div className={styles.row}>
-              <NumberInput label="상부" value={values.frameTop} onChange={h('frameTop')} min={0} max={200} step={1} />
-              <NumberInput label="하부" value={values.baseHeight} onChange={h('baseHeight')} min={0} max={200} step={1} />
+              <NumberInput label="상부 size" value={values.frameTop} onChange={h('frameTop')} min={0} max={200} step={1} />
+              <NumberInput label="상부 옵셋" value={values.frameTopOffset} onChange={h('frameTopOffset')} min={-200} max={200} step={1} />
+            </div>
+            <div className={styles.row}>
+              <NumberInput label="하부 size" value={values.baseHeight} onChange={h('baseHeight')} min={0} max={200} step={1} />
+              <NumberInput label="하부 옵셋" value={values.baseFrameOffset} onChange={h('baseFrameOffset')} min={-200} max={200} step={1} />
             </div>
             {values.surroundMode !== 'no-surround' && (
               <div className={styles.row}>

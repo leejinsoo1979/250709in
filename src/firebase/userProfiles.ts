@@ -758,9 +758,11 @@ export type SpaceConfigDefaults = {
   gapLeft?: number;
   gapRight?: number;
   frameTop?: number;
+  frameTopOffset?: number;
   frameLeft?: number;
   frameRight?: number;
   baseHeight?: number;
+  baseFrameOffset?: number;
   furnitureSingleWidth?: number;
   furnitureDualWidth?: number;
   surroundMode?: 'full-surround' | 'sides-only' | 'no-surround';
