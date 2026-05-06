@@ -8,9 +8,10 @@ import styles from './SettingsPanel.module.css';
 interface SettingsPanelProps {
   isOpen: boolean;
   onClose: () => void;
+  onSpaceDefaultsSaved?: () => void;
 }
 
-const SettingsPanel: React.FC<SettingsPanelProps> = ({ isOpen, onClose }) => {
+const SettingsPanel: React.FC<SettingsPanelProps> = ({ isOpen, onClose, onSpaceDefaultsSaved }) => {
   const { t, currentLanguage, changeLanguage, availableLanguages } = useTranslation();
   const { viewMode, renderMode, setRenderMode, cameraMode, setCameraMode, shadowEnabled, setShadowEnabled, edgeOutlineEnabled, setEdgeOutlineEnabled, showDimensions, setShowDimensions, showDimensionsText, setShowDimensionsText, showAll, setShowAll, showFurniture, setShowFurniture, showGuides, setShowGuides, showAxis, setShowAxis, showFrame, setShowFrame, showFurnitureEditHandles, setShowFurnitureEditHandles } = useUIStore();
   const [showSpaceDefaults, setShowSpaceDefaults] = useState(false);
@@ -68,7 +69,15 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({ isOpen, onClose }) => {
               </div>
             </div>
           </div>
-          {showSpaceDefaults && <SpaceDefaultsModal onClose={() => setShowSpaceDefaults(false)} />}
+          {showSpaceDefaults && (
+            <SpaceDefaultsModal
+              onClose={() => setShowSpaceDefaults(false)}
+              onSaved={() => {
+                onClose();
+                onSpaceDefaultsSaved?.();
+              }}
+            />
+          )}
 
           <div className={styles.section}>
             <h3 className={styles.sectionTitle}>{t('settings.theme')}</h3>

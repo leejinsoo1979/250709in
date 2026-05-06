@@ -376,8 +376,9 @@ const SimpleDashboard: React.FC = () => {
     setNewDesignName('');
   }, [nav.currentProjectId]);
 
-  const handleSaasCreateDesignSubmit = useCallback(async () => {
-    if (!newDesignName.trim() || !nav.currentProjectId || isCreatingDesign) return;
+  const handleSaasCreateDesignSubmit = useCallback(async (overrideName?: string, options?: { navigateAfter?: boolean }) => {
+    const designName = (overrideName ?? newDesignName).trim();
+    if (!designName || !nav.currentProjectId || isCreatingDesign) return;
 
     setIsCreatingDesign(true);
     try {
@@ -391,6 +392,7 @@ const SimpleDashboard: React.FC = () => {
       let spaceConfig = { ...DEFAULT_SPACE_CONFIG };
       try {
         const defaults = await getSpaceConfigDefaults();
+        console.log('🆕 [새 디자인] getSpaceConfigDefaults 결과:', defaults);
         if (defaults) {
           spaceConfig = {
             ...spaceConfig,
@@ -456,8 +458,16 @@ const SimpleDashboard: React.FC = () => {
         console.error('유저 공간설정 기본값 로드 실패:', e);
       }
 
+      console.log('🆕 [새 디자인] 최종 적용 spaceConfig:', {
+        baseConfigHeight: spaceConfig.baseConfig?.height,
+        frameSizeTop: spaceConfig.frameSize?.top,
+        frameSizeLeft: spaceConfig.frameSize?.left,
+        frameSizeRight: spaceConfig.frameSize?.right,
+        surroundType: spaceConfig.surroundType,
+      });
+
       const createData: any = {
-        name: newDesignName.trim(),
+        name: designName,
         projectId: nav.currentProjectId,
         spaceConfig,
         furniture: { placedModules: [] },
@@ -478,6 +488,9 @@ const SimpleDashboard: React.FC = () => {
         setIsSaasDesignModalOpen(false);
         setNewDesignName('');
         await data.refreshDesignFiles(nav.currentProjectId);
+        if (options?.navigateAfter) {
+          handleDesignOpen(nav.currentProjectId, id, designName);
+        }
       }
     } catch (error) {
       console.error('디자인 생성 실패:', error);
@@ -485,7 +498,16 @@ const SimpleDashboard: React.FC = () => {
     } finally {
       setIsCreatingDesign(false);
     }
-  }, [newDesignName, nav.currentProjectId, nav.currentFolderId, isCreatingDesign, data]);
+  }, [newDesignName, nav.currentProjectId, nav.currentFolderId, isCreatingDesign, data, handleDesignOpen]);
+
+  // 공간설정 기본값 저장 후 자동으로 "새 디자인" 생성하고 에디터로 이동
+  const handleAutoCreateDesignAfterDefaults = useCallback(() => {
+    if (!nav.currentProjectId) {
+      alert('프로젝트를 먼저 선택해주세요. 프로젝트를 선택한 뒤 다시 시도해주세요.');
+      return;
+    }
+    handleSaasCreateDesignSubmit('새 디자인', { navigateAfter: true });
+  }, [nav.currentProjectId, handleSaasCreateDesignSubmit]);
 
   // Step1 모달 닫기
   const handleCloseStep1Modal = useCallback(async () => {
@@ -966,7 +988,7 @@ const SimpleDashboard: React.FC = () => {
                 취소
               </button>
               <button
-                onClick={handleSaasCreateDesignSubmit}
+                onClick={() => handleSaasCreateDesignSubmit()}
                 disabled={!newDesignName.trim() || isCreatingDesign}
                 className={styles.modalCreateBtn}
               >
@@ -1044,6 +1066,7 @@ const SimpleDashboard: React.FC = () => {
       <SettingsPanel
         isOpen={isSettingsPanelOpen}
         onClose={() => setIsSettingsPanelOpen(false)}
+        onSpaceDefaultsSaved={handleAutoCreateDesignAfterDefaults}
       />
 
       {/* 프로필 팝업 */}

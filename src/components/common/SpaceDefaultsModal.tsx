@@ -5,6 +5,7 @@ import styles from './SpaceDefaultsModal.module.css';
 
 interface SpaceDefaultsModalProps {
   onClose: () => void;
+  onSaved?: () => void;
 }
 
 const SYSTEM_DEFAULTS: Required<SpaceConfigDefaults> = {
@@ -106,7 +107,7 @@ const Toggle: React.FC<{ options: { id: string; label: string }[]; selected: str
 );
 
 /* ── Main Modal ── */
-const SpaceDefaultsModal: React.FC<SpaceDefaultsModalProps> = ({ onClose }) => {
+const SpaceDefaultsModal: React.FC<SpaceDefaultsModalProps> = ({ onClose, onSaved }) => {
   const [values, setValues] = useState<Required<SpaceConfigDefaults>>(SYSTEM_DEFAULTS);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -141,6 +142,7 @@ const SpaceDefaultsModal: React.FC<SpaceDefaultsModalProps> = ({ onClose }) => {
       setMessage({ text: error, type: 'error' });
     } else {
       onClose();
+      onSaved?.();
     }
   };
 
