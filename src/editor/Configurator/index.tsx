@@ -3991,7 +3991,7 @@ const Configurator: React.FC = () => {
               {(['width', 'depth', 'height'] as const).map((dim) => {
                 const label = dim === 'width' ? 'W' : dim === 'depth' ? 'D' : 'H';
                 const min = 300;
-                const max = dim === 'width' ? 6000 : dim === 'depth' ? 2000 : 2400;
+                const max = dim === 'width' ? 6000 : dim === 'depth' ? 2000 : 2750;
                 return (
                   <div key={dim} style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '6px' }}>
                     <span style={{ minWidth: '16px', color: 'var(--theme-primary)' }}>{label}</span>
