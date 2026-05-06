@@ -2835,7 +2835,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
           {/* 가구 치수 편집 — 한 줄 가로 배치 */}
           {currentPlacedModule && (
             <div className={styles.propertySection}>
-              <h5 className={styles.sectionTitle}>가구 치수</h5>
+              <h5 className={styles.sectionTitle}>몸통치수</h5>
               <div style={{ display: 'flex', gap: '4px', alignItems: 'center', marginTop: '2px' }}>
                 {/* 너비 — 슬롯배치/자유배치 모두 편집 가능 */}
                 <div style={{ flex: 1, minWidth: 0 }}>
