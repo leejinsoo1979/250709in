@@ -497,12 +497,10 @@ const Room: React.FC<RoomProps> = ({
 
       // dot값이 음수(카메라가 벽 뒤로 회전)일 때만 페이드 시작
       // 정면뷰(dot≈0)에서는 완전 불투명 유지
-      const computeOpacity = (dot: number): number => {
-        const FADE_START = -0.05; // 이 이상이면 완전 불투명 (정면뷰 포함)
-        const FADE_END = -0.4;    // 이 이하면 완전 투명 (벽 뒤로 깊이 회전)
-        if (dot >= FADE_START) return 1;
-        if (dot <= FADE_END) return 0;
-        return (dot - FADE_END) / (FADE_START - FADE_END);
+      const computeOpacity = (dot: number, fadeStart = -0.05, fadeEnd = -0.4): number => {
+        if (dot >= fadeStart) return 1;
+        if (dot <= fadeEnd) return 0;
+        return (dot - fadeEnd) / (fadeStart - fadeEnd);
       };
 
       // 좌측벽: 방 왼쪽(-X)에 위치, 안쪽(+X) 향함. 카메라가 오른쪽(+X)에 있을수록 좌측벽이 정면으로 보임 → 잘 보임
@@ -511,8 +509,10 @@ const Room: React.FC<RoomProps> = ({
       // 우측벽: 방 오른쪽(+X)에 위치, 안쪽(-X) 향함. 카메라가 왼쪽(-X)에 있을수록 잘 보임
       // 카메라가 오른쪽(+X)으로 가면 우측벽 뒤로 → 투명화
       const rightDot = -vx;
-      // 천장: 위(+Y)에 위치. 카메라가 위(+Y)에 있으면 천장을 위에서 내려다봄 → 정상 (불투명)
-      // 카메라가 아래(-Y)로 내려가면 천장 아래에서 올려다봄 → 천장이 가구 가림 → 투명화
+      // 천장: 카메라가 매우 위(vy 큰 양수)로 올라가야만 천장이 시야를 가림
+      // 정면뷰(vy 작은 양수)에서는 천장이 위쪽 배경으로 보여야 정상 → 불투명 유지
+      // vy 음수(아래에서 올려다봄)에서도 천장은 위쪽 너머 → 불투명
+      // 임계값: 페이드 시작 = vy 0.6, 완전 투명 = vy 0.9
       const topDot = vy;
 
       if (leftWallMaterialRef.current && leftWallMaterialRef.current.uniforms) {
@@ -521,11 +521,19 @@ const Room: React.FC<RoomProps> = ({
       if (rightWallMaterialRef.current && rightWallMaterialRef.current.uniforms) {
         rightWallMaterialRef.current.uniforms.opacity.value = computeOpacity(rightDot);
       }
+      // 천장: vy(=topDot)가 큰 양수일 때만 페이드 (카메라가 거의 위에서 내려다보는 시점)
+      // 정면뷰(vy 작은 양수)는 불투명 유지
+      // computeOpacity와 부호 반대: dot이 작을수록 불투명, 클수록 투명
+      const computeTopOpacity = (dot: number, fadeStart = 0.6, fadeEnd = 0.9): number => {
+        if (dot <= fadeStart) return 1;
+        if (dot >= fadeEnd) return 0;
+        return (fadeEnd - dot) / (fadeEnd - fadeStart);
+      };
       if (topWallMaterialRef.current && topWallMaterialRef.current.uniforms) {
-        topWallMaterialRef.current.uniforms.opacity.value = computeOpacity(topDot);
+        topWallMaterialRef.current.uniforms.opacity.value = computeTopOpacity(topDot);
       }
       if (droppedWallMaterialRef.current && droppedWallMaterialRef.current.uniforms) {
-        droppedWallMaterialRef.current.uniforms.opacity.value = computeOpacity(topDot);
+        droppedWallMaterialRef.current.uniforms.opacity.value = computeTopOpacity(topDot);
       }
     } else if (viewMode === '3D' && cameraMode === 'orthographic') {
       // orthographic 모드에서는 모든 그라데이션 메쉬 숨김
