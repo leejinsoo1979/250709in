@@ -1985,6 +1985,7 @@ const Configurator: React.FC = () => {
       // 유저 공간설정 기본값 로드 후 병합
       try {
         const defaults = await getSpaceConfigDefaults();
+        console.log('🟡 [에디터-새디자인] getSpaceConfigDefaults:', defaults);
         if (defaults) {
           defaultSpaceConfig = {
             ...defaultSpaceConfig,
@@ -2000,6 +2001,8 @@ const Configurator: React.FC = () => {
               right: defaults.frameRight ?? 18,
             },
             baseConfig: {
+              type: 'floor' as const,
+              placementType: 'ground' as const,
               ...defaultSpaceConfig.baseConfig,
               height: defaults.baseHeight ?? 60,
             },
@@ -2054,6 +2057,12 @@ const Configurator: React.FC = () => {
       } catch (e) {
         console.error('유저 공간설정 기본값 로드 실패:', e);
       }
+
+      console.log('🟡 [에디터-새디자인] firebase 저장 직전 spaceConfig:', {
+        baseConfigHeight: defaultSpaceConfig.baseConfig?.height,
+        frameTop: defaultSpaceConfig.frameSize?.top,
+        full: defaultSpaceConfig,
+      });
 
       const createData: any = {
         name: newDesignName.trim(),
@@ -2723,6 +2732,10 @@ const Configurator: React.FC = () => {
 
               // 공간 설정
               if (designFile.spaceConfig) {
+                console.log('🟢 [Configurator 로드] firebase에서 받은 designFile.spaceConfig:', {
+                  baseConfigHeight: designFile.spaceConfig.baseConfig?.height,
+                  frameTop: designFile.spaceConfig.frameSize?.top,
+                });
                 // 저장된 설정을 유지하되 baseConfig의 기본값만 보장
                 const spaceConfig = {
                   ...designFile.spaceConfig,
