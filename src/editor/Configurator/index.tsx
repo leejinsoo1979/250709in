@@ -2057,13 +2057,6 @@ const Configurator: React.FC = () => {
         console.error('유저 공간설정 기본값 로드 실패:', e);
       }
 
-      // 진단용: 어느 함수가 호출되는지 + 어떤 값이 firebase로 가는지
-      alert(
-        '[A. handleNewDesignSubmit]\n' +
-        'baseHeight=' + (defaultSpaceConfig.baseConfig?.height ?? '없음') + '\n' +
-        'frameTop=' + (defaultSpaceConfig.frameSize?.top ?? '없음')
-      );
-
       const createData: any = {
         name: newDesignName.trim(),
         projectId: newDesignProjectId,
@@ -2750,12 +2743,6 @@ const Configurator: React.FC = () => {
 
               // 공간 설정
               if (designFile.spaceConfig) {
-                alert(
-                  '[B. 디자인 로드]\n' +
-                  'width=' + designFile.spaceConfig.width + '\n' +
-                  'baseHeight=' + (designFile.spaceConfig.baseConfig?.height ?? '없음') + '\n' +
-                  'frameTop=' + (designFile.spaceConfig.frameSize?.top ?? '없음')
-                );
                 // 저장된 설정을 유지하되 baseConfig의 기본값만 보장
                 const spaceConfig = {
                   ...designFile.spaceConfig,
