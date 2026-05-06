@@ -1626,55 +1626,40 @@ const RightPanel: React.FC<RightPanelProps> = ({
                             left: baseEnabled ? '18px' : '2px',
                           }} />
                         </button>
-                        {baseEnabled ? (
-                          <div style={{ display: 'flex', flex: 1, gap: '4px' }}>
-                            {/* 너비 - 읽기전용 */}
-                            <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '2px', border: '1px solid var(--theme-border)', borderRadius: '4px', padding: '2px 4px' }}>
-                              <span style={{ fontSize: '10px', color: 'var(--theme-text-secondary)', flexShrink: 0 }}>너비</span>
-                              <input type="text" inputMode="numeric"
-                                value={baseModWidthMM ? (Number.isInteger(baseModWidthMM) ? baseModWidthMM : Number(baseModWidthMM.toFixed(1))) : ''} readOnly
-                                onFocus={() => setHighlightedFrame(`base-${mod.id}`)}
-                                onBlur={() => setHighlightedFrame(null)}
-                                style={{ width: '100%', border: 'none', outline: 'none', fontSize: '12px', textAlign: 'center', background: 'transparent', color: 'var(--theme-text-secondary)', cursor: 'default' }}
-                              />
-                            </div>
-                            <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '2px', border: '1px solid var(--theme-border)', borderRadius: '4px', padding: '2px 4px' }}>
-                              <span style={{ fontSize: '10px', color: 'var(--theme-text-secondary)', flexShrink: 0 }}>높이</span>
-                              <input type="text" inputMode="numeric"
-                                value={(mod.baseFrameHeight ?? bfDefault) || ''} placeholder="0"
-                                onFocus={() => setHighlightedFrame(`base-${mod.id}`)}
-                                onKeyDown={(e) => { if (e.key === 'ArrowUp' || e.key === 'ArrowDown') { e.preventDefault(); const cur = mod.baseFrameHeight ?? bfDefault; updatePlacedModule(mod.id, { baseFrameHeight: Math.max(bfMin, Math.min(bfMax, cur + (e.key === 'ArrowUp' ? 1 : -1))) }); } }}
-                                onChange={(e) => { const v = e.target.value; if (v === '' || /^\d+$/.test(v)) { const num = v === '' ? 0 : parseInt(v, 10); updatePlacedModule(mod.id, { baseFrameHeight: num > bfMax ? bfMax : num }); } }}
-                                onBlur={(e) => { setHighlightedFrame(null); updatePlacedModule(mod.id, { baseFrameHeight: Math.max(bfMin, Math.min(bfMax, parseInt(e.target.value) || bfDefault)) }); }}
-                                style={{ width: '100%', border: 'none', outline: 'none', fontSize: '12px', textAlign: 'center', background: 'transparent', color: 'var(--theme-text-primary)' }}
-                              />
-                            </div>
-                            <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '2px', border: '1px solid var(--theme-border)', borderRadius: '4px', padding: '2px 4px' }}>
-                              <span style={{ fontSize: '10px', color: 'var(--theme-text-secondary)', flexShrink: 0 }}>옵셋</span>
-                              <input type="text" inputMode="numeric"
-                                value={(mod.baseFrameOffset ?? 0) !== 0 ? (mod.baseFrameOffset ?? 0) : ''} placeholder="0"
-                                onFocus={() => setHighlightedFrame(`base-${mod.id}`)}
-                                onKeyDown={(e) => { if (e.key === 'ArrowUp' || e.key === 'ArrowDown') { e.preventDefault(); const cur = mod.baseFrameOffset ?? 0; updatePlacedModule(mod.id, { baseFrameOffset: Math.max(-200, Math.min(200, cur + (e.key === 'ArrowUp' ? 1 : -1))) }); } }}
-                                onChange={(e) => { const v = e.target.value; if (v === '' || v === '-' || /^-?\d+$/.test(v)) updatePlacedModule(mod.id, { baseFrameOffset: v === '' || v === '-' ? 0 : parseInt(v, 10) }); }}
-                                onBlur={(e) => { setHighlightedFrame(null); updatePlacedModule(mod.id, { baseFrameOffset: Math.max(-200, Math.min(200, parseInt(e.target.value) || 0)) }); }}
-                                style={{ width: '100%', border: 'none', outline: 'none', fontSize: '12px', textAlign: 'center', background: 'transparent', color: 'var(--theme-text-primary)' }}
-                              />
-                            </div>
+                        <div style={{ display: 'flex', flex: 1, gap: '4px', opacity: baseEnabled ? 1 : 0.5 }}>
+                          {/* 너비 - 읽기전용 */}
+                          <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '2px', border: '1px solid var(--theme-border)', borderRadius: '4px', padding: '2px 4px' }}>
+                            <span style={{ fontSize: '10px', color: 'var(--theme-text-secondary)', flexShrink: 0 }}>너비</span>
+                            <input type="text" inputMode="numeric"
+                              value={baseModWidthMM ? (Number.isInteger(baseModWidthMM) ? baseModWidthMM : Number(baseModWidthMM.toFixed(1))) : ''} readOnly
+                              onFocus={() => setHighlightedFrame(`base-${mod.id}`)}
+                              onBlur={() => setHighlightedFrame(null)}
+                              style={{ width: '100%', border: 'none', outline: 'none', fontSize: '12px', textAlign: 'center', background: 'transparent', color: 'var(--theme-text-secondary)', cursor: 'default' }}
+                            />
                           </div>
-                        ) : (
-                          <div style={{ display: 'flex', flex: 1, gap: '4px' }}>
-                            <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '2px', border: '1px solid var(--theme-border)', borderRadius: '4px', padding: '2px 4px' }}>
-                              <span style={{ fontSize: '10px', color: 'var(--theme-text-secondary)', flexShrink: 0 }}>띄움</span>
-                              <input type="text" inputMode="numeric"
-                                value={(mod.individualFloatHeight ?? 0) || ''} placeholder="0"
-                                onKeyDown={(e) => { if (e.key === 'ArrowUp' || e.key === 'ArrowDown') { e.preventDefault(); const cur = mod.individualFloatHeight ?? 0; const nv = Math.max(0, Math.min(500, cur + (e.key === 'ArrowUp' ? 1 : -1))); updatePlacedModule(mod.id, { individualFloatHeight: nv, doorBottomGap: nv }); } }}
-                                onChange={(e) => { const v = e.target.value; if (v === '' || /^\d+$/.test(v)) { const nv = v === '' ? 0 : parseInt(v, 10); updatePlacedModule(mod.id, { individualFloatHeight: nv, doorBottomGap: nv }); } }}
-                                onBlur={() => { /* 토글 전환 시 필드 제거로 blur 발생 — doorBottomGap 덮어쓰기 방지 */ }}
-                                style={{ width: '100%', border: 'none', outline: 'none', fontSize: '12px', textAlign: 'center', background: 'transparent', color: 'var(--theme-text-primary)' }}
-                              />
-                            </div>
+                          <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '2px', border: '1px solid var(--theme-border)', borderRadius: '4px', padding: '2px 4px' }}>
+                            <span style={{ fontSize: '10px', color: 'var(--theme-text-secondary)', flexShrink: 0 }}>높이</span>
+                            <input type="text" inputMode="numeric"
+                              value={(mod.baseFrameHeight ?? bfDefault) || ''} placeholder="0"
+                              onFocus={() => setHighlightedFrame(`base-${mod.id}`)}
+                              onKeyDown={(e) => { if (e.key === 'ArrowUp' || e.key === 'ArrowDown') { e.preventDefault(); const cur = mod.baseFrameHeight ?? bfDefault; updatePlacedModule(mod.id, { baseFrameHeight: Math.max(bfMin, Math.min(bfMax, cur + (e.key === 'ArrowUp' ? 1 : -1))) }); } }}
+                              onChange={(e) => { const v = e.target.value; if (v === '' || /^\d+$/.test(v)) { const num = v === '' ? 0 : parseInt(v, 10); updatePlacedModule(mod.id, { baseFrameHeight: num > bfMax ? bfMax : num }); } }}
+                              onBlur={(e) => { setHighlightedFrame(null); updatePlacedModule(mod.id, { baseFrameHeight: Math.max(bfMin, Math.min(bfMax, parseInt(e.target.value) || bfDefault)) }); }}
+                              style={{ width: '100%', border: 'none', outline: 'none', fontSize: '12px', textAlign: 'center', background: 'transparent', color: 'var(--theme-text-primary)' }}
+                            />
                           </div>
-                        )}
+                          <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '2px', border: '1px solid var(--theme-border)', borderRadius: '4px', padding: '2px 4px' }}>
+                            <span style={{ fontSize: '10px', color: 'var(--theme-text-secondary)', flexShrink: 0 }}>옵셋</span>
+                            <input type="text" inputMode="numeric"
+                              value={(mod.baseFrameOffset ?? 0) !== 0 ? (mod.baseFrameOffset ?? 0) : ''} placeholder="0"
+                              onFocus={() => setHighlightedFrame(`base-${mod.id}`)}
+                              onKeyDown={(e) => { if (e.key === 'ArrowUp' || e.key === 'ArrowDown') { e.preventDefault(); const cur = mod.baseFrameOffset ?? 0; updatePlacedModule(mod.id, { baseFrameOffset: Math.max(-200, Math.min(200, cur + (e.key === 'ArrowUp' ? 1 : -1))) }); } }}
+                              onChange={(e) => { const v = e.target.value; if (v === '' || v === '-' || /^-?\d+$/.test(v)) updatePlacedModule(mod.id, { baseFrameOffset: v === '' || v === '-' ? 0 : parseInt(v, 10) }); }}
+                              onBlur={(e) => { setHighlightedFrame(null); updatePlacedModule(mod.id, { baseFrameOffset: Math.max(-200, Math.min(200, parseInt(e.target.value) || 0)) }); }}
+                              style={{ width: '100%', border: 'none', outline: 'none', fontSize: '12px', textAlign: 'center', background: 'transparent', color: 'var(--theme-text-primary)' }}
+                            />
+                          </div>
+                        </div>
                       </div>
                     );
                   })}
