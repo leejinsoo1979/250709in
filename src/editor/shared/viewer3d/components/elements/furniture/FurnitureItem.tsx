@@ -3283,6 +3283,27 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
           setIsHovered(false);
         }}
       >
+        {/* 키큰장찬넬(insert-frame) 클릭 영역 확장: 폭이 좁아 다른 가구 사이에 끼면
+            마우스로 잡기 어려운 문제를 해결. 투명 박스 메시를 가구 폭의 좌우로
+            확장하여 클릭/호버 영역만 넓히고 시각 변화는 없음. (편집 모드에서만,
+            드래그 중이 아닐 때) */}
+        {placedModule.moduleId?.includes('insert-frame') && width > 0 && height > 0 && depth > 0 && !isDraggingThis && (
+          <mesh
+            position={[0, 0, 0]}
+            userData={{ decoration: 'pick-helper', furnitureId: placedModule.id }}
+            renderOrder={-1}
+          >
+            {/* 클릭 영역을 좌우 +60mm씩 확장 (총 +120mm) — 시각적 표시 없음 */}
+            <boxGeometry args={[width + mmToThreeUnits(120), height, depth]} />
+            <meshBasicMaterial
+              transparent
+              opacity={0}
+              depthWrite={false}
+              depthTest={false}
+              side={THREE.DoubleSide}
+            />
+          </mesh>
+        )}
         {isSelected && width > 0 && height > 0 && depth > 0 && (
           <>
             {/* 선택 하이라이트: 3D에서만 표시 (2D에서는 치수 확인을 위해 숨김) */}
