@@ -292,7 +292,7 @@ export class MaterialFactory {
   /**
    * ShaderMaterial 기반 그라데이션 벽면 재질 (확실한 그라데이션 효과)
    */
-  static createShaderGradientWallMaterial(direction: 'horizontal' | 'vertical' | 'horizontal-reverse' | 'vertical-reverse' = 'horizontal', viewMode: '2D' | '3D' = '3D', isDroppedWall: boolean = false): THREE.ShaderMaterial {
+  static createShaderGradientWallMaterial(direction: 'horizontal' | 'vertical' | 'horizontal-reverse' | 'vertical-reverse' = 'horizontal', viewMode: '2D' | '3D' = '3D', isDroppedWall: boolean = false, supportFade: boolean = true): THREE.ShaderMaterial {
     // 3D 모드에서는 간단한 그라데이션 셰이더
     if (viewMode === '3D' || viewMode === undefined) {
       const isReverse = direction === 'horizontal-reverse' || direction === 'vertical-reverse';
@@ -346,12 +346,14 @@ export class MaterialFactory {
           opacity: { value: 1.0 }
         },
         side: THREE.DoubleSide,
-        transparent: true,   // 카메라 각도 기반 페이드 지원
-        depthWrite: false,   // 투명 시 뒤쪽 가구가 가려지지 않도록
+        // 페이드 지원 시: transparent + depthWrite=false (블렌딩 가능, 뒷면 가구 비침)
+        // 페이드 미지원 시: 원래대로 불투명 (정상 z-buffer 동작)
+        transparent: supportFade,
+        depthWrite: !supportFade,
         depthTest: true
       });
     }
-    
+
     // 2D 모드일 때 투명 처리 로직
     const is2DMode = viewMode === '2D';
     const vertexShader = `

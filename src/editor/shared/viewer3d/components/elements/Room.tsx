@@ -483,8 +483,8 @@ const Room: React.FC<RoomProps> = ({
   const droppedWallMaterialRef = useRef<THREE.ShaderMaterial>(null);
   const floorWallMaterialRef = useRef<THREE.ShaderMaterial>(null);
 
-  // 바닥 그라데이션 머티리얼은 매 렌더마다 새로 생성되지 않도록 useMemo로 분리하여 ref 부착
-  const floorGradientMaterial = useMemo(() => MaterialFactory.createShaderGradientWallMaterial('vertical', viewMode), [viewMode]);
+  // 바닥 그라데이션 머티리얼: 페이드 비활성화(불투명+depthWrite) — 정상 렌더 유지
+  const floorGradientMaterial = useMemo(() => MaterialFactory.createShaderGradientWallMaterial('vertical', viewMode, false, false), [viewMode]);
 
   // 카메라 각도에 따라 벽 투명도 업데이트
   useFrame(() => {
