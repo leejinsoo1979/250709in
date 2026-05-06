@@ -783,11 +783,27 @@
   position: relative;
   display: flex;
   flex-direction: column;
+  cursor: default;
 }
 
 .designCard:hover {
   box-shadow: var(--theme-shadow, 0 4px 12px rgba(0, 0, 0, 0.1));
   border: 2px solid var(--theme-primary);
+  cursor: default;
+}
+
+/* 카드 내부 모든 요소 기본 cursor 강제 (썸네일/이미지 등) */
+.designCard *,
+.designCard .cardThumbnail,
+.designCard .cardThumbnail img,
+.designCard .thumbnailImage {
+  cursor: default;
+}
+
+/* 단, 카드 내부의 실제 버튼(더보기 등)은 pointer 유지 */
+.designCard button,
+.designCard .cardActionButton {
+  cursor: pointer;
 }
 
 /* 더보기 버튼 */
