@@ -1233,42 +1233,35 @@ const Header: React.FC<HeaderProps> = ({
               background: 'var(--theme-surface, #ffffff)',
               color: 'var(--theme-text, #1f2937)',
               borderRadius: 16,
-              padding: '32px 32px 24px',
+              padding: '36px 36px 28px',
               width: 'min(440px, 92vw)',
               boxShadow: '0 20px 60px rgba(0, 0, 0, 0.25)',
               border: '1px solid var(--theme-border, #e5e7eb)',
               textAlign: 'center',
             }}
           >
-            <div
+            <h3
               style={{
-                width: 64,
-                height: 64,
-                borderRadius: '50%',
-                background: 'rgba(99, 102, 241, 0.12)',
-                color: '#6366f1',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                margin: '0 auto 16px',
-                fontSize: 28,
+                margin: '0 0 12px',
+                fontSize: 20,
+                fontWeight: 700,
+                textAlign: 'center',
+                wordBreak: 'keep-all',
               }}
             >
-              🏢
-            </div>
-            <h3 style={{ margin: '0 0 8px', fontSize: 20, fontWeight: 700 }}>
               기업회원 전용 기능입니다
             </h3>
             <p
               style={{
-                margin: '0 0 24px',
+                margin: '0 0 28px',
                 fontSize: 14,
-                lineHeight: 1.6,
+                lineHeight: 1.7,
                 color: 'var(--theme-text-secondary, #6b7280)',
+                textAlign: 'center',
+                wordBreak: 'keep-all',
               }}
             >
               컨버팅(CNC 옵티마이저 · 내보내기) 기능은 기업회원에게만 제공됩니다.
-              <br />
               체험을 마치고 기업계정으로 가입하시면 모든 기능을 이용하실 수 있습니다.
             </p>
             <div style={{ display: 'flex', gap: 8, justifyContent: 'center' }}>
@@ -1296,7 +1289,7 @@ const Header: React.FC<HeaderProps> = ({
                   padding: '10px 20px',
                   borderRadius: 8,
                   border: 'none',
-                  background: '#6366f1',
+                  background: 'var(--theme-primary, #667eea)',
                   color: '#ffffff',
                   fontSize: 14,
                   fontWeight: 600,
