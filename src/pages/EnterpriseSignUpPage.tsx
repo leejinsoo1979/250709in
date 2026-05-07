@@ -580,28 +580,13 @@ export default function EnterpriseSignUpPage() {
             <p className="text-zinc-400 text-sm mb-8 leading-relaxed">
               관리자가 신청 내용을 검토하고 있습니다.<br />
               신청 후 약 10~20분 이내에 처리됩니다.<br />
-              처리 결과는 다음 로그인 시 안내됩니다.
+              처리 결과는 자동으로 안내됩니다.
             </p>
-            <div className="flex gap-3 justify-center">
+            <div className="flex justify-center">
               <button
                 onClick={() => navigate('/demo')}
                 style={{
-                  padding: '12px 24px',
-                  borderRadius: 999,
-                  border: '1px solid rgba(102, 126, 234, 0.5)',
-                  background: 'transparent',
-                  color: '#ffffff',
-                  fontSize: 14,
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                }}
-              >
-                데모 체험 계속하기
-              </button>
-              <button
-                onClick={() => navigate('/login')}
-                style={{
-                  padding: '12px 24px',
+                  padding: '12px 32px',
                   borderRadius: 999,
                   border: 'none',
                   background: '#ffffff',
@@ -611,7 +596,7 @@ export default function EnterpriseSignUpPage() {
                   cursor: 'pointer',
                 }}
               >
-                로그인 페이지로 이동
+                확인
               </button>
             </div>
           </motion.div>
