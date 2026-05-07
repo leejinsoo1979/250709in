@@ -210,8 +210,18 @@ const Header: React.FC<HeaderProps> = ({
   const [isConvertMenuOpen, setIsConvertMenuOpen] = useState(false);
   const [is3DExportSubmenuOpen, setIs3DExportSubmenuOpen] = useState(false);
   const [isDemoEnterpriseModalOpen, setIsDemoEnterpriseModalOpen] = useState(false);
-  // 데모 모드: /demo 경로에서는 컨버팅 기능을 막고 기업회원 전용 안내 표시
+  // 데모 모드: /demo 경로에서는 파일/저장/컨버팅 등 모든 기능을 막고 기업회원 전용 안내 표시
   const isDemoMode = typeof window !== 'undefined' && window.location.pathname.startsWith('/demo');
+  // 데모 모드에서 기업회원 전용 기능 호출 시 모달을 띄우고 true 반환 (호출자는 즉시 return)
+  const blockIfDemo = (): boolean => {
+    if (isDemoMode) {
+      setIsDemoEnterpriseModalOpen(true);
+      setIsFileMenuOpen(false);
+      setIsConvertMenuOpen(false);
+      return true;
+    }
+    return false;
+  };
   const submenuTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const [isEditingDesignName, setIsEditingDesignName] = useState(false);
   const [editingDesignName, setEditingDesignName] = useState('');
@@ -610,7 +620,10 @@ const Header: React.FC<HeaderProps> = ({
             >
               <button
                 className={styles.actionButton}
-                onClick={handleFileMenuToggle}
+                onClick={(e) => {
+                  if (blockIfDemo()) { e.preventDefault(); e.stopPropagation(); return; }
+                  handleFileMenuToggle();
+                }}
               >
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
                   <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" stroke="currentColor" strokeWidth="2" />
@@ -742,6 +755,7 @@ const Header: React.FC<HeaderProps> = ({
             <button
               className={styles.actionButton}
               onClick={() => {
+                if (blockIfDemo()) return;
                 console.log('💾💾💾 [Header] 저장 버튼 클릭됨!');
                 if (onSave) {
                   onSave();
@@ -761,7 +775,10 @@ const Header: React.FC<HeaderProps> = ({
             {!readOnly && (
               <button
                 className={styles.exitButton}
-                onClick={() => setIsExitModalOpen(true)}
+                onClick={() => {
+                  if (blockIfDemo()) return;
+                  setIsExitModalOpen(true);
+                }}
                 title="저장하고 나가기"
               >
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
@@ -914,7 +931,13 @@ const Header: React.FC<HeaderProps> = ({
             )}
 
             {onNext && (
-              <button className={styles.actionButton} onClick={onNext}>
+              <button
+                className={styles.actionButton}
+                onClick={() => {
+                  if (blockIfDemo()) return;
+                  onNext();
+                }}
+              >
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
                   <path d="M9 11l3 3L22 4" stroke="currentColor" strokeWidth="2" fill="none" />
                   <path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11" stroke="currentColor" strokeWidth="2" fill="none" />
@@ -932,6 +955,7 @@ const Header: React.FC<HeaderProps> = ({
             <button
               className={styles.actionButton}
               onClick={() => {
+                if (blockIfDemo()) return;
                 if (onSave) onSave();
               }}
               disabled={saving}
