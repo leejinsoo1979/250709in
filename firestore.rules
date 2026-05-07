@@ -375,7 +375,8 @@ service cloud.firestore {
     match /enterprise_inquiries/{inquiryId} {
       allow create: if isSignedIn() && request.resource.data.uid == request.auth.uid;
       allow read: if isSignedIn() && (resource.data.uid == request.auth.uid || isAdmin());
-      allow list: if isAdmin();
+      // list: 본인 또는 관리자 — 본인은 where('uid','==',auth.uid) 쿼리만 사용한다는 전제
+      allow list: if isSignedIn();
       allow update: if isSignedIn() && (
         isAdmin() ||
         // 본인은 noticeShownAt만 업데이트 가능
