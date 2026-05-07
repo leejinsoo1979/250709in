@@ -5946,11 +5946,17 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         const spaceHeightMm = spaceInfo.height || 0;
         const furnitureOuterH = spaceHeightMm - topFrameMm - baseFrameMm;
         const availableHeight = furnitureOuterH - 2 * basicThickness;
-        const fixedSections = effectiveSections.slice(0, -1);
-        const fixedSum = fixedSections.reduce((s: number, sec: any) => s + (sec.height || 0), 0);
-        const lastEffective = Math.max(0, availableHeight - fixedSum);
+        // 신발장은 첫(하부) 섹션이 흡수, 그 외는 마지막(상부) 섹션이 흡수
+        const isShoeEff = mid.includes('-entryway-') ||
+          mid.includes('-shelf-') ||
+          mid.includes('-4drawer-shelf-') ||
+          mid.includes('-2drawer-shelf-');
+        const absorbIdx = isShoeEff ? 0 : effectiveSections.length - 1;
+        const fixedSum = effectiveSections.reduce((s: number, sec: any, i: number) =>
+          i === absorbIdx ? s : s + (sec.height || 0), 0);
+        const absorbEffective = Math.max(0, availableHeight - fixedSum);
         const getEffectiveSectionHeight = (sec: any, idx: number) => {
-          return idx === effectiveSections.length - 1 ? lastEffective : (sec.height || 0);
+          return idx === absorbIdx ? absorbEffective : (sec.height || 0);
         };
 
         // 가구 내부 바닥(밑판 윗면)에서 섹션 시작
