@@ -31,7 +31,8 @@ const ProfilePopup: React.FC<ProfilePopupProps> = ({ isOpen, onClose, position }
   useEffect(() => {
     if (!isOpen || !user) return;
     const superAdminEmails = ['sbbc212@gmail.com'];
-    if (superAdminEmails.includes(user.email || '')) {
+    const isEmailSuper = superAdminEmails.includes(user.email || '');
+    if (isEmailSuper) {
       setIsSuperAdmin(true);
     }
     // getDocFromServer 사용해서 캐시 우회, 항상 서버 값 (관리자가 변경한 직후도 즉시 반영)
@@ -39,15 +40,15 @@ const ProfilePopup: React.FC<ProfilePopupProps> = ({ isOpen, onClose, position }
       getDocFromServer(doc(db, 'users', user.uid)).then((userDoc) => {
         if (userDoc.exists()) {
           const data = userDoc.data();
-          setIsSuperAdmin(data.role === 'superadmin');
+          // 이메일 기반 슈퍼관리자는 Firestore role 값과 무관하게 true 유지
+          setIsSuperAdmin(isEmailSuper || data.role === 'superadmin');
           setUserPlan(data.plan || 'free');
         }
       }).catch(() => {
-        // 서버 fetch 실패 시 캐시라도 시도
         getDoc(doc(db, 'users', user.uid)).then((d) => {
           if (d.exists()) {
             const data = d.data();
-            setIsSuperAdmin(data.role === 'superadmin');
+            setIsSuperAdmin(isEmailSuper || data.role === 'superadmin');
             setUserPlan(data.plan || 'free');
           }
         });
