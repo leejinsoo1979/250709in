@@ -1135,14 +1135,16 @@ const Header: React.FC<HeaderProps> = ({
             </div>
           )}
 
-          {/* 설정 버튼 */}
-          <button
-            className={styles.settingsButton}
-            onClick={() => window.dispatchEvent(new CustomEvent('openSettingsPanel'))}
-            title="설정"
-          >
-            <Settings size={18} strokeWidth={1.8} />
-          </button>
+          {/* 설정 버튼 (데모 모드에서는 숨김) */}
+          {!isDemoMode && (
+            <button
+              className={styles.settingsButton}
+              onClick={() => window.dispatchEvent(new CustomEvent('openSettingsPanel'))}
+              title="설정"
+            >
+              <Settings size={18} strokeWidth={1.8} />
+            </button>
+          )}
         </div>
       </div>
 
