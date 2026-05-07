@@ -448,8 +448,8 @@ export default function EnterpriseSignUpPage() {
             const body = isApproved
               ? `${existingInquiry.companyName ? existingInquiry.companyName + ' 님의 ' : ''}기업계정이 활성화되어 있습니다.\n로그인 후 모든 기능을 이용하실 수 있습니다.`
               : isPending
-              ? '관리자가 신청 내용을 검토 중입니다.\n빠르면 10분, 늦어도 20분 이내에 승인됩니다.\n처리 결과는 다음 로그인 시 자동으로 안내됩니다.'
-              : '관리자 메모를 확인하시고 보완 후 다시 신청해 주세요.';
+              ? '관리자가 신청 내용을 검토하고 있습니다.\n신청 후 약 10~20분 이내에 처리됩니다.\n처리 결과는 다음 로그인 시 안내됩니다.'
+              : '관리자 메모를 확인하신 후 보완하여 다시 신청해 주십시오.';
 
             return (
               <motion.div
