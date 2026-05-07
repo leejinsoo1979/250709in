@@ -62,6 +62,9 @@ const ProfileTab: React.FC<ProfileTabProps> = ({ initialSection = 'profile' }) =
   // 슈퍼 관리자 권한
   const [isSuperAdmin, setIsSuperAdmin] = useState(false);
 
+  // 사용자 plan (free / pro / enterprise / ...)
+  const [userPlan, setUserPlan] = useState<string>('free');
+
   // 비밀번호 변경
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [currentPassword, setCurrentPassword] = useState('');
@@ -80,11 +83,12 @@ const ProfileTab: React.FC<ProfileTabProps> = ({ initialSection = 'profile' }) =
     setError(null);
 
     try {
-      // 슈퍼 관리자 권한 체크
+      // 슈퍼 관리자 권한 + plan 체크
       const userDoc = await getDoc(doc(db, 'users', user.uid));
       if (userDoc.exists()) {
         const userData = userDoc.data();
         setIsSuperAdmin(userData.role === 'superadmin');
+        setUserPlan(userData.plan || 'free');
       }
 
       const { profile: fetchedProfile, error: fetchError } = await getUserProfile();
@@ -805,48 +809,61 @@ const ProfileTab: React.FC<ProfileTabProps> = ({ initialSection = 'profile' }) =
                 </p>
 
                 <div className={styles.currentPlan}>
-                  <div className={styles.planHeader}>
-                    <div>
-                      <h4>{isSuperAdmin ? '무제한 플랜' : '무료 플랜'}</h4>
-                      <p>{isSuperAdmin ? '모든 기능을 무제한으로 사용할 수 있습니다.' : '기본 기능을 사용할 수 있습니다.'}</p>
-                    </div>
-                    <span className={styles.planBadge}>{isSuperAdmin ? 'UNLIMITED' : 'FREE'}</span>
-                  </div>
+                  {(() => {
+                    const isEnterprise = userPlan === 'enterprise';
+                    const planName = isSuperAdmin ? '무제한 플랜' : isEnterprise ? '기업회원' : '체험판';
+                    const planDesc = isSuperAdmin
+                      ? '모든 기능을 무제한으로 사용할 수 있습니다.'
+                      : isEnterprise
+                      ? '기업회원으로 모든 핵심 기능을 사용하실 수 있습니다.'
+                      : '데모 체험만 가능합니다. 모든 기능을 사용하려면 기업회원 가입이 필요합니다.';
+                    const planBadge = isSuperAdmin ? 'UNLIMITED' : isEnterprise ? 'ENTERPRISE' : 'DEMO';
 
-                  <div className={styles.planFeatures}>
-                    {isSuperAdmin ? (
+                    return (
                       <>
-                        <div className={styles.featureItem}>
-                          <span>✓</span> 무제한 프로젝트
+                        <div className={styles.planHeader}>
+                          <div>
+                            <h4>{planName}</h4>
+                            <p>{planDesc}</p>
+                          </div>
+                          <span className={styles.planBadge}>{planBadge}</span>
                         </div>
-                        <div className={styles.featureItem}>
-                          <span>✓</span> 무제한 크레딧
-                        </div>
-                        <div className={styles.featureItem}>
-                          <span>✓</span> 모든 기능 사용 가능
-                        </div>
-                      </>
-                    ) : (
-                      <>
-                        <div className={styles.featureItem}>
-                          <span>✓</span> 프로젝트 5개까지
-                        </div>
-                        <div className={styles.featureItem}>
-                          <span>✓</span> 기본 3D 렌더링
-                        </div>
-                        <div className={styles.featureItem}>
-                          <span>✓</span> 커뮤니티 지원
-                        </div>
-                      </>
-                    )}
-                  </div>
 
-                  {!isSuperAdmin && (
-                    <button className={styles.upgradeButton}>
-                      <CreditCard size={16} />
-                      Pro로 업그레이드
-                    </button>
-                  )}
+                        <div className={styles.planFeatures}>
+                          {isSuperAdmin ? (
+                            <>
+                              <div className={styles.featureItem}><span>✓</span> 무제한 프로젝트</div>
+                              <div className={styles.featureItem}><span>✓</span> 무제한 크레딧</div>
+                              <div className={styles.featureItem}><span>✓</span> 모든 기능 사용 가능</div>
+                            </>
+                          ) : isEnterprise ? (
+                            <>
+                              <div className={styles.featureItem}><span>✓</span> 프로젝트 저장 / 불러오기</div>
+                              <div className={styles.featureItem}><span>✓</span> CNC 옵티마이저</div>
+                              <div className={styles.featureItem}><span>✓</span> 도면 내보내기 (PDF / DXF)</div>
+                              <div className={styles.featureItem}><span>✓</span> 팀 협업 기능</div>
+                            </>
+                          ) : (
+                            <>
+                              <div className={styles.featureItem}><span>✓</span> 데모 체험</div>
+                              <div className={styles.featureItem}><span>✗</span> 프로젝트 저장 (기업회원 전용)</div>
+                              <div className={styles.featureItem}><span>✗</span> CNC / 내보내기 (기업회원 전용)</div>
+                            </>
+                          )}
+                        </div>
+
+                        {!isSuperAdmin && !isEnterprise && (
+                          <button
+                            className={styles.upgradeButton}
+                            onClick={() => window.location.assign('/enterprise-signup')}
+                          >
+                            <CreditCard size={16} />
+                            기업회원 가입하기
+                          </button>
+                        )}
+                      </>
+                    );
+                  })()}
                 </div>
 
                 <div className={styles.usageStats}>
