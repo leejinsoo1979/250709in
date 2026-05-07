@@ -1278,13 +1278,13 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                                 />
                               );
                             })()}
-                            {/* 서랍 뒷판 */}
+                            {/* 서랍 뒷판 — 하단이 바닥판 윗면 위에 올라탐 */}
                             {(() => {
                               const pn = '서랍1 뒷판';
                               const mat = getPanelMaterial(pn);
-                              // 뒷판 하단 = 바닥판 윗면
+                              // 바닥판 윗면 Y = 측판하단 + 13mm + bottomT (바닥판 Y와 동일 공식)
                               const sidePanelBottom2 = drawerCenterY - drawerSideH / 2;
-                              const bottomTopY2 = sidePanelBottom2 + mmToThreeUnits(18) + bottomT;
+                              const bottomTopY2 = sidePanelBottom2 + mmToThreeUnits(13) + bottomT;
                               const origBackTop = drawerCenterY + drawerSideH / 2;
                               const backH = origBackTop - bottomTopY2;
                               const backCY = (origBackTop + bottomTopY2) / 2;
