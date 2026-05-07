@@ -1200,20 +1200,22 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                         const wingInnerWidth = innerWidth - sidePanelGap - (vertXOff + frameT) * 2;
                         const drawerAreaWidth = wingInnerWidth - mmToThreeUnits(5) * 2;
 
-                        // 의류장 서랍(DrawerRenderer)과 동일 공식:
-                        //   drawerDepth(섹션에서 받음) = depth - basicThickness
-                        //   actualDrawerDepth = drawerDepth - 60mm = depth - basicThickness - 60mm
-                        //   centerZ = basicThickness/2
-                        //   측판 중심 Z = centerZ - HANDLE_PLATE_THICKNESS/2 = basicThickness/2 - basicThickness/2 = 0
-                        //   측판 앞면 Z = 0 + 측판깊이/2
-                        //   마이다 앞면 = centerZ + actualDrawerDepth/2 = basicThickness/2 + (depth - basicThickness - 60)/2
-                        //                = (depth - 60)/2 = depth/2 - 30 → 가구 앞면에서 30mm 안쪽
-                        // 마이다 앞면 = 가구 앞면 - 30mm
-                        const wingFrontFaceZ = depth/2 - mmToThreeUnits(30);
-                        // 측판 깊이 = (depth - basicThickness - 60) - 마이다두께 (의류장 동일: actualDrawerDepth - HANDLE_PLATE_THICKNESS)
-                        // → 측판 앞면 = 마이다 뒷면 = wingFrontFaceZ - maidaT
-                        const drawerSideDepth = depth - basicThickness - mmToThreeUnits(60) - maidaT;
-                        const drawerSideFrontZ = wingFrontFaceZ - maidaT; // 측판 앞면 = 마이다 뒷면
+                        // 서랍은 하부 섹션 안에 있으므로 하부 섹션 깊이 기준으로 계산
+                        // (lowerSectionDepthMm 변경 시 서랍도 따라가도록)
+                        const drawerSectionDepth = lowerSectionDepthMm !== undefined
+                          ? mmToThreeUnits(lowerSectionDepthMm)
+                          : depth;
+                        // 하부 섹션 앞면 Z (앞고정/뒤고정 방향 반영)
+                        // front(앞고정): 섹션 앞면 = 가구 앞면 → 그대로 depth/2
+                        // back(뒤고정): 섹션 앞면 = 가구 뒷면 + 섹션깊이 = -depth/2 + drawerSectionDepth
+                        const drawerSectionFrontZ = lowerSectionDepthDirection === 'back'
+                          ? -depth/2 + drawerSectionDepth
+                          : depth/2;
+                        // 마이다 앞면 = 섹션 앞면 - 30mm
+                        const wingFrontFaceZ = drawerSectionFrontZ - mmToThreeUnits(30);
+                        // 측판 깊이 = (섹션깊이 - basicThickness - 60) - 마이다두께
+                        const drawerSideDepth = drawerSectionDepth - basicThickness - mmToThreeUnits(60) - maidaT;
+                        const drawerSideFrontZ = wingFrontFaceZ - maidaT;
                         const drawerBackZ = drawerSideFrontZ - drawerSideDepth;
                         const drawerSideCenterZ = (drawerSideFrontZ + drawerBackZ) / 2;
 
