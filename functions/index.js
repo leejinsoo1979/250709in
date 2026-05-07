@@ -180,6 +180,103 @@ exports.adminDeleteAuthUser = onCall(
 );
 
 /**
+ * [관리자 전용] 기업회원 신청 처리 — status + plan을 트랜잭션으로 동시 변경
+ *
+ * 입력: { inquiryId: string, action: 'approve'|'hold'|'reject'|'pending', reason?: string }
+ * 출력: { ok: boolean, status: string, plan: string }
+ *
+ * 매핑:
+ *   approve  → status='approved',  plan='enterprise'
+ *   hold     → status='on_hold',   plan='free'
+ *   reject   → status='rejected',  plan='free'
+ *   pending  → status='pending',   plan='free'  (승인대기로 되돌림)
+ *
+ * 트랜잭션이라 둘 중 하나만 성공하는 케이스 없음 — 데이터 불일치 원천 차단.
+ */
+exports.adminProcessEnterpriseInquiry = onCall(
+  { region: 'asia-northeast3' },
+  async (request) => {
+    const callerUid = request.auth?.uid;
+    const callerEmail = request.auth?.token?.email || '';
+    if (!callerUid) {
+      throw new HttpsError('unauthenticated', '로그인이 필요합니다.');
+    }
+    const isSuperAdmin = callerEmail.toLowerCase() === 'sbbc212@gmail.com';
+    if (!isSuperAdmin) {
+      const adminDoc = await admin.firestore().doc(`admins/${callerUid}`).get();
+      if (!adminDoc.exists) {
+        throw new HttpsError('permission-denied', '관리자 권한이 필요합니다.');
+      }
+    }
+
+    const inquiryId = String(request.data?.inquiryId || '').trim();
+    const action = String(request.data?.action || '').trim();
+    const reason = String(request.data?.reason || '').trim();
+    if (!inquiryId) throw new HttpsError('invalid-argument', 'inquiryId가 필요합니다.');
+
+    const ACTION_MAP = {
+      approve: { status: 'approved', plan: 'enterprise' },
+      hold: { status: 'on_hold', plan: 'free' },
+      reject: { status: 'rejected', plan: 'free' },
+      pending: { status: 'pending', plan: 'free' },
+    };
+    const mapped = ACTION_MAP[action];
+    if (!mapped) throw new HttpsError('invalid-argument', '알 수 없는 action');
+
+    const db = admin.firestore();
+    const inquiryRef = db.doc(`enterprise_inquiries/${inquiryId}`);
+
+    let resultPlan = 'free';
+    await db.runTransaction(async (tx) => {
+      const inquirySnap = await tx.get(inquiryRef);
+      if (!inquirySnap.exists) {
+        throw new HttpsError('not-found', '해당 신청을 찾을 수 없습니다.');
+      }
+      const inquiry = inquirySnap.data();
+      const targetUid = inquiry.uid;
+      if (!targetUid) {
+        throw new HttpsError('failed-precondition', '신청에 uid가 없어 plan 동기화 불가');
+      }
+
+      // 슈퍼관리자는 plan 변경 안 함 (보호)
+      const userRef = db.doc(`users/${targetUid}`);
+      const userSnap = await tx.get(userRef);
+      const userData = userSnap.exists ? userSnap.data() : {};
+      const isTargetSuperAdmin = userData.role === 'superadmin';
+
+      // 1) inquiry 업데이트
+      const inquiryUpdates = {
+        status: mapped.status,
+        processedAt: admin.firestore.FieldValue.serverTimestamp(),
+        processedBy: callerUid,
+        noticeShownAt: null,
+      };
+      if (action === 'hold' || action === 'reject') {
+        inquiryUpdates.reasonText = reason || (action === 'hold' ? '추가 확인 필요' : '거절');
+      } else {
+        inquiryUpdates.reasonText = null;
+        inquiryUpdates.reasonCode = null;
+      }
+      tx.update(inquiryRef, inquiryUpdates);
+
+      // 2) users.plan 동기화 (슈퍼관리자 제외)
+      if (!isTargetSuperAdmin) {
+        tx.set(
+          userRef,
+          { plan: mapped.plan, planUpdatedAt: admin.firestore.FieldValue.serverTimestamp() },
+          { merge: true }
+        );
+        resultPlan = mapped.plan;
+      } else {
+        resultPlan = userData.plan || 'free';
+      }
+    });
+
+    return { ok: true, status: mapped.status, plan: resultPlan };
+  }
+);
+
+/**
  * [관리자 전용] enterprise_inquiries.status 와 users.plan 동기화
  *
  * 동작:
@@ -419,6 +516,8 @@ exports.telegramWebhook = onRequest(
         uid = parts[3];
         reasonText = HOLD_REASONS[reasonCode] || '기타';
         nextStatus = 'on_hold';
+        // 보류 시 plan을 free로 환원 (이전에 approved였을 수 있음)
+        planUpdate = 'free';
         doneText = `⏸ 보류 처리됨 (사유: ${reasonText})\n${new Date().toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' })}`;
       } else if (action === 'reject') {
         reasonCode = parts[1];
@@ -426,6 +525,8 @@ exports.telegramWebhook = onRequest(
         uid = parts[3];
         reasonText = REJECT_REASONS[reasonCode] || '기타';
         nextStatus = 'rejected';
+        // 거절 시 plan을 free로 환원 (이전에 approved였을 수 있음)
+        planUpdate = 'free';
         doneText = `❌ 거절 처리됨 (사유: ${reasonText})\n${new Date().toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' })}`;
       } else {
         await tgApi(token, 'answerCallbackQuery', {

@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
-import { collection, query, orderBy, getDocs, doc, updateDoc, serverTimestamp, Timestamp } from 'firebase/firestore';
-import { db } from '@/firebase/config';
+import { collection, query, orderBy, getDocs, Timestamp } from 'firebase/firestore';
+import { httpsCallable } from 'firebase/functions';
+import { db, functions } from '@/firebase/config';
 import { useAuth } from '@/auth/AuthProvider';
-import { updateUserPlan } from '@/firebase/plans';
 
 type Status = 'pending' | 'approved' | 'on_hold' | 'rejected' | 'all';
 
@@ -94,22 +94,19 @@ export default function Enterprise() {
 
   useEffect(() => { load(); }, []);
 
+  // 모든 status 변경은 Cloud Function (트랜잭션)으로 처리 — status + plan 동시 변경 보장
+  const callProcessFn = httpsCallable<
+    { inquiryId: string; action: 'approve' | 'hold' | 'reject' | 'pending'; reason?: string },
+    { ok: boolean; status: string; plan: string }
+  >(functions, 'adminProcessEnterpriseInquiry');
+
   const handleApprove = async (row: InquiryRow) => {
     if (!confirm(`${row.companyName || row.loginEmail}을(를) 승인하시겠습니까?`)) return;
     setBusy(row.id);
     try {
-      await updateDoc(doc(db, 'enterprise_inquiries', row.id), {
-        status: 'approved',
-        processedAt: serverTimestamp(),
-        processedBy: user?.uid || 'admin',
-        // 사용자에게 새 알림 트리거 (이전 표시 기록 리셋)
-        noticeShownAt: null,
-        reasonText: null,
-        reasonCode: null,
-      });
-      if (row.uid) await updateUserPlan(row.uid, 'enterprise');
+      const r = await callProcessFn({ inquiryId: row.id, action: 'approve' });
       await load();
-      alert('✅ 승인 완료');
+      alert(`✅ 승인 완료 (plan: ${r.data.plan})`);
     } catch (e) {
       alert('승인 실패: ' + (e as Error).message);
     } finally {
@@ -123,16 +120,10 @@ export default function Enterprise() {
     if (reason === null) return;
     setBusy(row.id);
     try {
-      await updateDoc(doc(db, 'enterprise_inquiries', row.id), {
-        status,
-        reasonText: reason || (status === 'on_hold' ? '추가 확인 필요' : '거절'),
-        processedAt: serverTimestamp(),
-        processedBy: user?.uid || 'admin',
-        noticeShownAt: null,
-      });
-      // rejected는 plan 변경 없음, on_hold도 변경 없음
+      const action = status === 'on_hold' ? 'hold' : 'reject';
+      const r = await callProcessFn({ inquiryId: row.id, action, reason });
       await load();
-      alert(`✅ ${label} 처리 완료`);
+      alert(`✅ ${label} 처리 완료 (plan: ${r.data.plan})`);
     } catch (e) {
       alert(`${label} 실패: ` + (e as Error).message);
     } finally {
@@ -140,36 +131,18 @@ export default function Enterprise() {
     }
   };
 
-  // 처리 결과를 되돌려 '승인 대기'로 복구
-  // - approved 였다면 사용자 plan도 free 로 환원
-  // - on_hold/rejected 였다면 plan은 그대로 (이미 free 였을 것)
+  // 처리 결과를 '승인 대기'로 되돌림 (status + plan 동시)
   const handleRevertToPending = async (row: InquiryRow) => {
     const wasApproved = row.status === 'approved';
     const msg = wasApproved
-      ? `${row.companyName || row.loginEmail}의 승인을 취소하고 '승인 대기' 상태로 되돌립니다.\n사용자의 기업 권한(plan)도 free 로 환원됩니다.\n계속하시겠습니까?`
+      ? `${row.companyName || row.loginEmail}의 승인을 취소하고 '승인 대기' 상태로 되돌립니다.\n사용자 권한도 데모(free)로 환원됩니다.\n계속하시겠습니까?`
       : `${row.companyName || row.loginEmail}을(를) '승인 대기' 상태로 되돌리시겠습니까?`;
     if (!confirm(msg)) return;
     setBusy(row.id);
     try {
-      await updateDoc(doc(db, 'enterprise_inquiries', row.id), {
-        status: 'pending',
-        reasonText: null,
-        reasonCode: null,
-        processedAt: null,
-        processedBy: null,
-        noticeShownAt: null,
-      });
-      if (wasApproved && row.uid) {
-        try {
-          await updateUserPlan(row.uid, 'free');
-        } catch (e) {
-          alert('⚠️ enterprise_inquiries는 되돌렸으나 사용자 plan 환원 실패: ' + (e as Error).message + '\nFirebase Console에서 직접 users/{uid}.plan = "free" 로 수정해주세요.');
-          await load();
-          return;
-        }
-      }
+      const r = await callProcessFn({ inquiryId: row.id, action: 'pending' });
       await load();
-      alert('✅ 승인 대기로 되돌렸습니다.\n사용자가 다음 새로고침 시 권한 변경이 반영됩니다.');
+      alert(`✅ 승인 대기로 되돌렸습니다 (plan: ${r.data.plan})`);
     } catch (e) {
       alert('되돌리기 실패: ' + (e as Error).message);
     } finally {
