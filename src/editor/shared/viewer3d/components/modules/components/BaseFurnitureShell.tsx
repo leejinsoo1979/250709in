@@ -1301,18 +1301,18 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                                 />
                               );
                             })()}
-                            {/* 서랍 바닥판 */}
+                            {/* 서랍 바닥판 — 다른 서랍 모듈(DrawerRenderer)과 동일 위치 */}
                             {(() => {
                               const pn = '서랍1 바닥';
                               const mat = getPanelMaterial(pn);
-                              // 바닥판 깊이: 측판 깊이 - 앞쪽 10mm 홈 여유
+                              // 바닥판 깊이: 측판 깊이 - 앞쪽 10mm 홈 여유 (다른 서랍 동일)
                               const bottomDepth2 = drawerSideDepth - mmToThreeUnits(10);
                               const bottomZ2 = drawerSideCenterZ - mmToThreeUnits(5);
-                              // 바닥판 폭: 서랍 좌우측판 안쪽 간격
-                              const bottomWidth = drawerAreaWidth - drawerSideT * 2;
-                              // 바닥판 Y: 측판 하단에서 18mm 위
+                              // 바닥판 폭: 서랍 폭 - 96mm (다른 서랍 동일: 70+26)
+                              const bottomWidth = drawerAreaWidth - mmToThreeUnits(70) - mmToThreeUnits(26);
+                              // 바닥판 Y: 측판 하단 + basicThickness + 10mm + bottomT/2 (다른 서랍 동일)
                               const sidePanelBottom = drawerCenterY - drawerSideH / 2;
-                              const bottomY = sidePanelBottom + mmToThreeUnits(18) + bottomT / 2;
+                              const bottomY = sidePanelBottom + basicThickness + mmToThreeUnits(10) + bottomT / 2;
                               return (
                                 <BoxWithEdges
                                   key={`entryway-drawer-bottom-${mat.uuid}`}
