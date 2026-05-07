@@ -48,35 +48,37 @@ const Teams = () => {
         setLoading(true);
         console.log('🏢 팀 목록 조회 중...');
 
-        const teamsQuery = query(collection(db, 'teams'));
-        const teamsSnapshot = await getDocs(teamsQuery);
-
+        const teamsSnapshot = await getDocs(collection(db, 'teams'));
         console.log('🏢 팀 개수:', teamsSnapshot.size);
 
-        const teamsData: TeamData[] = [];
+        // ⚡ 각 팀의 members/projects 서브컬렉션을 모두 병렬로 조회 (이전엔 직렬 → 무한 로딩)
+        const subResults = await Promise.all(
+          teamsSnapshot.docs.map(async (teamDoc) => {
+            const [members, projects] = await Promise.all([
+              getDocs(collection(db, 'teams', teamDoc.id, 'members')).catch(() => ({ size: 0 })),
+              getDocs(collection(db, 'teams', teamDoc.id, 'projects')).catch(() => ({ size: 0 })),
+            ]);
+            return { id: teamDoc.id, memberCount: members.size, projectCount: projects.size };
+          })
+        );
+        const subMap = new Map(subResults.map((r) => [r.id, r]));
 
-        for (const teamDoc of teamsSnapshot.docs) {
+        const teamsData: TeamData[] = teamsSnapshot.docs.map((teamDoc) => {
           const data = teamDoc.data();
-
-          // 멤버 수 조회
-          const membersSnapshot = await getDocs(collection(db, 'teams', teamDoc.id, 'members')).catch(() => ({ size: 0 }));
-
-          // 프로젝트 수 조회
-          const projectsSnapshot = await getDocs(collection(db, 'teams', teamDoc.id, 'projects')).catch(() => ({ size: 0 }));
-
-          teamsData.push({
+          const sub = subMap.get(teamDoc.id);
+          return {
             id: teamDoc.id,
             name: data.name || '이름 없음',
             description: data.description || '',
             ownerId: data.ownerId || '',
             createdAt: data.createdAt?.toDate?.() || null,
             updatedAt: data.updatedAt?.toDate?.() || null,
-            memberCount: membersSnapshot.size,
-            projectCount: projectsSnapshot.size
-          });
-        }
+            memberCount: sub?.memberCount || 0,
+            projectCount: sub?.projectCount || 0,
+          };
+        });
 
-        console.log('🏢 팀 데이터:', teamsData);
+        console.log('🏢 팀 데이터:', teamsData.length, '건');
         setTeams(teamsData);
       } catch (error) {
         console.error('❌ 팀 목록 조회 실패:', error);
@@ -96,44 +98,36 @@ const Teams = () => {
 
       const membersSnapshot = await getDocs(collection(db, 'teams', teamId, 'members'));
 
-      const membersData: TeamMember[] = [];
+      // ⚡ users 정보를 병렬 조회 (이전엔 멤버 1명당 직렬 → 멤버 많으면 느림)
+      const membersData: TeamMember[] = await Promise.all(
+        membersSnapshot.docs.map(async (memberDoc) => {
+          const data = memberDoc.data();
+          const userId = memberDoc.id;
+          let photoURL = '';
+          let displayName = data.displayName || '이름 없음';
+          let email = data.email || '';
+          try {
+            const userDoc = await getDoc(doc(db, 'users', userId));
+            if (userDoc.exists()) {
+              const userData = userDoc.data();
+              photoURL = userData.photoURL || '';
+              displayName = userData.displayName || userData.name || displayName;
+              email = userData.email || email;
+            }
+          } catch { /* ignore */ }
+          return {
+            userId,
+            email,
+            displayName,
+            photoURL,
+            role: data.role || 'member',
+            joinedAt: data.joinedAt?.toDate?.() || null,
+            status: data.status || 'active',
+          };
+        })
+      );
 
-      // 각 멤버에 대해 users 컬렉션에서 추가 정보 조회
-      for (const memberDoc of membersSnapshot.docs) {
-        const data = memberDoc.data();
-        const userId = memberDoc.id;
-
-        // users 컬렉션에서 실제 사용자 정보 조회
-        let photoURL = '';
-        let displayName = data.displayName || '이름 없음';
-        let email = data.email || '';
-
-        try {
-          const userDocRef = doc(db, 'users', userId);
-          const userDoc = await getDoc(userDocRef);
-
-          if (userDoc.exists()) {
-            const userData = userDoc.data();
-            photoURL = userData.photoURL || '';
-            displayName = userData.displayName || userData.name || displayName;
-            email = userData.email || email;
-          }
-        } catch (error) {
-          console.warn('⚠️ 사용자 정보 조회 실패:', userId, error);
-        }
-
-        membersData.push({
-          userId,
-          email,
-          displayName,
-          photoURL,
-          role: data.role || 'member',
-          joinedAt: data.joinedAt?.toDate?.() || null,
-          status: data.status || 'active'
-        });
-      }
-
-      console.log('👥 멤버 데이터:', membersData);
+      console.log('👥 멤버 데이터:', membersData.length, '명');
       setTeamMembers(membersData);
     } catch (error) {
       console.error('❌ 팀 멤버 조회 실패:', error);
