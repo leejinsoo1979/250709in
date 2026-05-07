@@ -383,10 +383,15 @@ exports.telegramWebhook = onRequest(
           status: nextStatus,
           processedAt: admin.firestore.FieldValue.serverTimestamp(),
           processedBy: String(cb.from?.id || ''),
+          // 사용자에게 새 알림 트리거 (이전 표시 기록 리셋)
+          noticeShownAt: null,
         };
         if (reasonText) {
           updates.reasonCode = reasonCode;
           updates.reasonText = reasonText;
+        } else {
+          updates.reasonCode = null;
+          updates.reasonText = null;
         }
         await inquiryRef.update(updates);
 

@@ -102,6 +102,10 @@ export default function Enterprise() {
         status: 'approved',
         processedAt: serverTimestamp(),
         processedBy: user?.uid || 'admin',
+        // 사용자에게 새 알림 트리거 (이전 표시 기록 리셋)
+        noticeShownAt: null,
+        reasonText: null,
+        reasonCode: null,
       });
       if (row.uid) await updateUserPlan(row.uid, 'enterprise');
       await load();
@@ -124,6 +128,7 @@ export default function Enterprise() {
         reasonText: reason || (status === 'on_hold' ? '추가 확인 필요' : '거절'),
         processedAt: serverTimestamp(),
         processedBy: user?.uid || 'admin',
+        noticeShownAt: null,
       });
       // rejected는 plan 변경 없음, on_hold도 변경 없음
       await load();
