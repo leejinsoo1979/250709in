@@ -736,14 +736,17 @@ const createSingleEntrywayH = (columnWidth: number, maxHeight: number): ModuleDa
   const topHeight = maxHeight - bottomHeight;
   const _t = FURNITURE_SPECS.BASIC_THICKNESS;
 
+  // 신발선반 4개 균등분할 중 최상단(받침대 바로 아래) 선반은 제거 → 3개만 사용
+  const evenPositions4 = calculateEvenShelfPositions(bottomHeight - 2 * _t, 4);
+  const shelfPositionsLower = evenPositions4.slice(0, 3); // 하단 3개만
   const baseSections: SectionConfig[] = [
-    // 섹션0: 하부 — 신발선반 4개 (균등분할) + 속서랍 포함 (1200mm 통합)
+    // 섹션0: 하부 — 신발선반 3개 (받침대 아래) + 속서랍 포함 (1200mm 통합)
     {
       type: 'shelf',
       heightType: 'absolute',
       height: bottomHeight,
-      count: 4,
-      shelfPositions: calculateEvenShelfPositions(bottomHeight - 2 * _t, 4)
+      count: 3,
+      shelfPositions: shelfPositionsLower
     },
     // 섹션1: 상부 — 다보선반 4개 (균등분할)
     {
