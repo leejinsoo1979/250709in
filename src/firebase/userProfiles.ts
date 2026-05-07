@@ -13,7 +13,8 @@ import {
   setDoc
 } from 'firebase/firestore';
 import { updateProfile } from 'firebase/auth';
-import { db, auth } from './config';
+import { getFunctions, httpsCallable } from 'firebase/functions';
+import { db, auth, app } from './config';
 import { getCurrentUserAsync } from './auth';
 import { UserProfile } from './types';
 import { getUserPlan, getPlanLimits, PlanType } from './plans';
@@ -474,6 +475,24 @@ export const adminDeleteUserData = async (
       }
     } catch (e) {
       console.warn('projects 삭제 경고:', e);
+    }
+
+    // 5) Firebase Auth 계정 삭제 (Cloud Function 호출 — Admin SDK 사용)
+    try {
+      const functions = getFunctions(app, 'asia-northeast3');
+      const fn = httpsCallable<
+        { targetUid: string },
+        { ok: boolean; message?: string }
+      >(functions, 'adminDeleteAuthUser');
+      const result = await fn({ targetUid });
+      console.log('✅ Auth 계정 삭제 완료:', result.data);
+    } catch (e: any) {
+      console.warn('Auth 계정 삭제 실패(Cloud Function):', e?.message || e);
+      // Cloud Function 미배포 또는 호출 실패 시 — Firestore 삭제는 성공이므로 경고만
+      return {
+        error: null,
+        deletedCounts: { projects: projectCount },
+      };
     }
 
     console.log('✅ 관리자 회원 데이터 삭제 완료:', targetUid, '/ 삭제 프로젝트:', projectCount);

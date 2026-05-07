@@ -30,7 +30,7 @@ console.log('🔥 Firebase Config Status:', {
 });
 
 // Firebase 앱 초기화
-const app = initializeApp(firebaseConfig);
+export const app = initializeApp(firebaseConfig);
 
 // Firebase 서비스 초기화
 export const auth = getAuth(app);

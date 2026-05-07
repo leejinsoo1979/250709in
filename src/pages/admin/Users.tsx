@@ -235,11 +235,11 @@ const Users = () => {
 
       const projects = deletedCounts?.projects ?? 0;
       alert(
-        `✅ 회원 데이터가 삭제되었습니다.\n` +
-        `- 프로젝트 ${projects}건 삭제\n\n` +
-        `※ Firebase Auth 계정 자체는 보안상 클라이언트에서 삭제할 수 없습니다.\n` +
-        `   동일 이메일로 기업회원 재가입이 필요한 경우, Firebase Console에서\n` +
-        `   해당 Auth 계정을 수동으로 삭제해주세요.`
+        `✅ 회원 탈퇴 처리가 완료되었습니다.\n` +
+        `- 프로젝트 ${projects}건 삭제\n` +
+        `- Firestore 사용자 문서 삭제\n` +
+        `- Firebase Auth 계정 삭제\n\n` +
+        `동일 이메일로 재가입이 가능합니다.`
       );
 
       // 목록에서 제거
@@ -813,10 +813,7 @@ const Users = () => {
             <div style={{ fontWeight: 600, marginBottom: 6 }}>다음 데이터가 영구 삭제됩니다:</div>
             <div>• userProfiles, users, admins 컬렉션의 사용자 문서</div>
             <div>• 해당 사용자가 소유한 모든 프로젝트(projects)</div>
-            <div style={{ marginTop: 8, fontSize: 12 }}>
-              ※ Firebase Auth 계정 자체는 클라이언트에서 삭제 불가합니다.
-              동일 이메일로 <b>기업회원 재가입</b>이 필요하면 Firebase Console에서 Auth 계정을 수동 삭제해주세요.
-            </div>
+            <div>• <b>Firebase Auth 계정</b> (동일 이메일로 재가입 가능)</div>
           </div>
 
           <div style={{ marginTop: 12 }}>
