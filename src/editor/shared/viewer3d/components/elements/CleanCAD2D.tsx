@@ -5950,9 +5950,17 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             ? (module as any).baseFrameHeight
             : (spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height ?? 60) : 0);
           const furnitureOuterRuntime = (spaceInfo.height || 0) - topFrameRuntime - baseFrameRuntime;
-          const fixedSumRuntime = effectiveSections.slice(0, -1).reduce((s: number, sec: any) => s + (sec.height || 0), 0);
-          const isLastSectionRuntime = sectionIdx === effectiveSections.length - 1;
-          const sectionOuterH = isLastSectionRuntime
+          // 신발장(현관장 H/선반장)은 첫(하부) 섹션이 높이 변화 흡수 — 그 외는 마지막(상부) 섹션 흡수
+          const modIdForAbsorb = (module as any)?.moduleId || '';
+          const isShoeAbsorb = modIdForAbsorb.includes('-entryway-') ||
+            modIdForAbsorb.includes('-shelf-') ||
+            modIdForAbsorb.includes('-4drawer-shelf-') ||
+            modIdForAbsorb.includes('-2drawer-shelf-');
+          const absorbIdxRuntime = isShoeAbsorb ? 0 : effectiveSections.length - 1;
+          const fixedSumRuntime = effectiveSections.reduce((s: number, sec: any, i: number) =>
+            i === absorbIdxRuntime ? s : s + (sec.height || 0), 0);
+          const isAbsorbingSectionRuntime = sectionIdx === absorbIdxRuntime;
+          const sectionOuterH = isAbsorbingSectionRuntime
             ? Math.max(0, furnitureOuterRuntime - fixedSumRuntime)
             : ((section.height as number) || sectionHeight);
           const innerH = Math.max(0, sectionOuterH - 2 * basicThickness);
