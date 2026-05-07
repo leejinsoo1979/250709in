@@ -1257,15 +1257,17 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                                 />
                               );
                             })()}
-                            {/* 서랍 앞판 */}
+                            {/* 서랍 앞판 — 마이다 뒤로 마이다 두께만큼 들어감 */}
                             {(() => {
                               const pn = '서랍1 앞판';
                               const mat = getPanelMaterial(pn);
+                              // 앞판 앞면 = 마이다 뒷면 = wingFrontFaceZ - maidaT
+                              // 앞판 중심 = (wingFrontFaceZ - maidaT) - drawerSideT/2
                               return (
                                 <BoxWithEdges
                                   key={`entryway-drawer-front-${mat.uuid}`}
                                   args={[drawerAreaWidth - drawerSideT * 2, drawerSideH, drawerSideT]}
-                                  position={[0, drawerCenterY, wingFrontFaceZ - drawerSideT/2]}
+                                  position={[0, drawerCenterY, wingFrontFaceZ - maidaT - drawerSideT/2]}
                                   material={mat}
                                   renderMode={renderMode}
                                   isDragging={isDragging}
