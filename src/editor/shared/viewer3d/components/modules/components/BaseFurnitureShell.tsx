@@ -1314,9 +1314,9 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                               const bottomZ2 = drawerSideCenterZ - mmToThreeUnits(5);
                               // 바닥판 폭: 서랍 폭 - 96mm (다른 서랍 동일: 70+26)
                               const bottomWidth = drawerAreaWidth - mmToThreeUnits(70) - mmToThreeUnits(26);
-                              // 바닥판 Y: 측판 하단 + basicThickness + 10mm + bottomT/2 (다른 서랍 동일)
+                              // 바닥판 Y: 측판 하단에서 13mm 위 (바닥판 하단 = 측판 하단 + 13mm)
                               const sidePanelBottom = drawerCenterY - drawerSideH / 2;
-                              const bottomY = sidePanelBottom + basicThickness + mmToThreeUnits(10) + bottomT / 2;
+                              const bottomY = sidePanelBottom + mmToThreeUnits(13) + bottomT / 2;
                               return (
                                 <BoxWithEdges
                                   key={`entryway-drawer-bottom-${mat.uuid}`}
