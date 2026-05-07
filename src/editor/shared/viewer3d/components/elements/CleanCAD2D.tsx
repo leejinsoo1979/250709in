@@ -7128,7 +7128,10 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           
           // 실제 가구 Z 위치 계산 (FurnitureItem.tsx와 동일)
           const doorThickness = mmToThreeUnits(20);
-          const furnitureZ = furnitureZOffset + furnitureDepth/2 - doorThickness - moduleDepth/2;
+          // 가구별 뒷벽 이격(backWallGap) 반영 — 측면뷰 치수도 가구 본체 따라 이동
+          const moduleBackWallGapMm = (module as any).backWallGap ?? 0;
+          const moduleBackWallGapZ = moduleBackWallGapMm > 0 ? mmToThreeUnits(moduleBackWallGapMm) : 0;
+          const furnitureZ = furnitureZOffset + furnitureDepth/2 - doorThickness - moduleDepth/2 + moduleBackWallGapZ;
           const furnitureBackZ = furnitureZ - moduleDepth/2;
           const furnitureFrontZ = furnitureZ + moduleDepth/2;
           
@@ -7191,7 +7194,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               {/* 하부섹션 깊이 치수 (2섹션 가구인 경우) */}
               {hasMultiSection && (() => {
                 const lowerModuleDepth = mmToThreeUnits(lowerDepth);
-                const lowerFurnitureZ = furnitureZOffset + furnitureDepth/2 - doorThickness - lowerModuleDepth/2;
+                const lowerFurnitureZ = furnitureZOffset + furnitureDepth/2 - doorThickness - lowerModuleDepth/2 + moduleBackWallGapZ;
                 const lowerBackZ = lowerFurnitureZ - lowerModuleDepth/2;
                 const lowerFrontZ = lowerFurnitureZ + lowerModuleDepth/2;
                 const lowerDimY = mmToThreeUnits(-50); // 하단 치수선 위치
