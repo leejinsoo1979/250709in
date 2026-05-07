@@ -5998,15 +5998,9 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             ? Math.max(0, furnitureOuterRuntime - fixedSumRuntime)
             : ((section.height as number) || sectionHeight);
           const innerH = Math.max(0, sectionOuterH - 2 * basicThickness);
-          // 흡수 섹션의 shelfPositions는 useBaseFurniture가 균등 재계산하므로 핸들러도 동일하게 재계산
-          // (그 외 섹션은 원본 posArr 그대로 — 사용자가 스피너로 옮긴 위치 보존)
-          let posArrEffective: number[] = posArr;
-          if (isAbsorbingSectionRuntime && n > 0) {
-            const g = (innerH - n * basicThickness) / (n + 1);
-            posArrEffective = Array.from({ length: n }, (_, i) =>
-              Math.round((i + 1) * g + i * basicThickness + halfT)
-            );
-          }
+          // 모듈 원본 shelfPositions 그대로 사용 (신발장 하부는 받침대 기준 특수 위치)
+          // useBaseFurniture가 비례조정하더라도 핸들러는 원본 위치 표시
+          const posArrEffective: number[] = posArr;
           // gaps를 실제 저장된 shelfPositions에서 파생 (스피너로 선반 이동 시 즉시 반영되도록)
           // gaps[k] = posArr[k]가 있으면 (k==0 ? posArr[0]-halfT : posArr[k]-posArr[k-1]-basicThickness), 마지막은 innerH-posArr[n-1]-halfT
           const gaps: number[] = [];
