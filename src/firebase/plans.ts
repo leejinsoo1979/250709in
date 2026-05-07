@@ -2,7 +2,7 @@
  * 사용자 플랜 관리
  */
 
-import { doc, updateDoc, getDoc } from 'firebase/firestore';
+import { doc, setDoc, updateDoc, getDoc } from 'firebase/firestore';
 import { db } from './config';
 
 // 플랜 타입 정의
@@ -80,11 +80,11 @@ export async function updateUserPlan(userId: string, plan: PlanType): Promise<vo
     // 새 플랜의 크레딧
     const newPlanCredits = PLANS[plan].credits;
 
-    // users 컬렉션 업데이트
-    await updateDoc(userRef, {
+    // users 컬렉션 업데이트 (문서 없을 수도 있으므로 set merge로 안전하게 upsert)
+    await setDoc(userRef, {
       plan,
       planUpdatedAt: new Date()
-    });
+    }, { merge: true });
 
     // userProfiles 컬렉션의 크레딧도 업데이트
     const userProfileDoc = await getDoc(userProfileRef);
