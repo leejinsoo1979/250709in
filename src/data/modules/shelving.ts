@@ -122,7 +122,7 @@ const FURNITURE_SPECS = {
   },
 
   // 현관장 스펙
-  ENTRYWAY_DEPTH: 400,          // 현관장 기본 깊이
+  ENTRYWAY_DEPTH: 380,          // 현관장 기본 깊이 (다른 신발장 모듈과 통일)
   ENTRYWAY_BOTTOM_HEIGHT: 1200, // 현관장 H 하부섹션(선반+서랍) 고정 높이
   // ENTRYWAY_I_BOTTOM_HEIGHT: 1400, // 현관장 I 하부섹션 고정 높이
 
