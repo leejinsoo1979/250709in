@@ -156,39 +156,53 @@ const Logs = () => {
         );
         const shareLinkAccessLogSnapshot = await getDocs(shareLinkAccessLogQuery).catch(() => ({ docs: [] }));
 
-        const shareLinkData: ShareLinkAccess[] = [];
-        for (const logDoc of shareLinkAccessLogSnapshot.docs) {
-          const data = logDoc.data();
+        // ⚡ 옛 로그 보강용으로 shareLinks/projects를 1회씩만 가져와서 메모리 매핑
+        // (이전엔 로그 1건당 doc 조회 → 200건이면 400회 read, 무한 로딩)
+        const needsBackfill = shareLinkAccessLogSnapshot.docs.some((d) => {
+          const data = d.data();
+          return !data.projectId || !data.shareLinkToken;
+        });
 
-          // 로그에 이미 저장된 정보 사용 (새 로그)
+        const shareLinkMap = new Map<string, { token: string; projectId: string }>();
+        const projectNameMap = new Map<string, string>();
+        if (needsBackfill) {
+          try {
+            const [shareLinksSnap, projectsSnap] = await Promise.all([
+              getDocs(collection(db, 'shareLinks')),
+              getDocs(collection(db, 'projects')),
+            ]);
+            shareLinksSnap.docs.forEach((d) => {
+              const x = d.data();
+              shareLinkMap.set(d.id, { token: x.token || '', projectId: x.projectId || '' });
+            });
+            projectsSnap.docs.forEach((d) => {
+              const x = d.data();
+              projectNameMap.set(d.id, x.projectName || x.title || '');
+            });
+          } catch { /* ignore */ }
+        }
+
+        const shareLinkData: ShareLinkAccess[] = shareLinkAccessLogSnapshot.docs.map((logDoc) => {
+          const data = logDoc.data();
           let projectId = data.projectId || '';
           let projectName = data.projectName || '';
           let shareLinkToken = data.shareLinkToken || '';
 
-          // 정보가 없으면 (기존 로그) ShareLink 조회
           if (!projectId || !shareLinkToken) {
-            if (data.shareLinkId || data.linkId) {
-              const shareLinkDoc = await getDoc(doc(db, 'shareLinks', data.shareLinkId || data.linkId)).catch(() => null);
-              if (shareLinkDoc?.exists()) {
-                if (!shareLinkToken) {
-                  shareLinkToken = shareLinkDoc.data()?.token || '';
-                }
-                if (!projectId) {
-                  projectId = shareLinkDoc.data()?.projectId || '';
-
-                  // 프로젝트명 조회
-                  if (projectId) {
-                    const projectDoc = await getDoc(doc(db, 'projects', projectId)).catch(() => null);
-                    if (projectDoc?.exists()) {
-                      projectName = projectDoc.data()?.projectName || projectDoc.data()?.title || '';
-                    }
-                  }
-                }
+            const shareLinkId = data.shareLinkId || data.linkId;
+            if (shareLinkId) {
+              const sl = shareLinkMap.get(shareLinkId);
+              if (sl) {
+                if (!shareLinkToken) shareLinkToken = sl.token;
+                if (!projectId) projectId = sl.projectId;
               }
+            }
+            if (projectId && !projectName) {
+              projectName = projectNameMap.get(projectId) || '';
             }
           }
 
-          shareLinkData.push({
+          return {
             id: logDoc.id,
             shareLinkId: data.shareLinkId || data.linkId || '',
             shareLinkToken,
@@ -196,9 +210,9 @@ const Logs = () => {
             projectName,
             ipAddress: data.ipAddress || '',
             userAgent: data.userAgent || '',
-            accessedAt: data.accessedAt?.toDate?.() || null
-          });
-        }
+            accessedAt: data.accessedAt?.toDate?.() || null,
+          };
+        });
 
         console.log('📋 공유 링크 접근 로그:', shareLinkData.length);
         setShareLinkAccessLog(shareLinkData);

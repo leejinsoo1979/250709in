@@ -55,81 +55,80 @@ const Projects = () => {
         setLoading(true);
         console.log('📁 프로젝트 목록 조회 중...');
 
-        const projectsQuery = query(collection(db, 'projects'));
-        const projectsSnapshot = await getDocs(projectsQuery);
+        // ⚡ 모든 컬렉션을 1회씩만 병렬로 조회 (이전엔 프로젝트당 N회 반복 → 무한 로딩)
+        const [projectsSnap, designFilesSnap, shareLinksSnap, sharedAccessSnap] = await Promise.all([
+          getDocs(collection(db, 'projects')),
+          getDocs(collection(db, 'designFiles')).catch(() => ({ docs: [] as any[] })),
+          getDocs(collection(db, 'shareLinks')).catch(() => ({ docs: [] as any[] })),
+          getDocs(collection(db, 'sharedProjectAccess')).catch(() => ({ docs: [] as any[] })),
+        ]);
 
-        console.log('📁 프로젝트 개수:', projectsSnapshot.size);
+        console.log('📁 프로젝트 개수:', projectsSnap.size);
 
-        const projectsData: ProjectData[] = [];
+        // projectId별로 그룹핑 (메모리에서 1회)
+        const designFilesByProject = new Map<string, number>();
+        designFilesSnap.docs.forEach((d: any) => {
+          const pid = d.data().projectId;
+          if (pid) designFilesByProject.set(pid, (designFilesByProject.get(pid) || 0) + 1);
+        });
+        const shareLinksByProject = new Map<string, number>();
+        shareLinksSnap.docs.forEach((d: any) => {
+          const pid = d.data().projectId;
+          if (pid) shareLinksByProject.set(pid, (shareLinksByProject.get(pid) || 0) + 1);
+        });
+        const collaboratorsByProject = new Map<string, number>();
+        sharedAccessSnap.docs.forEach((d: any) => {
+          const pid = d.data().projectId;
+          if (pid) collaboratorsByProject.set(pid, (collaboratorsByProject.get(pid) || 0) + 1);
+        });
 
-        for (const projectDoc of projectsSnapshot.docs) {
+        // 소유자 정보를 위한 unique userId 추출
+        const userIds = new Set<string>();
+        projectsSnap.docs.forEach((p) => {
+          const data = p.data();
+          const uid = data.userId || data.user_id;
+          if (uid) userIds.add(uid);
+        });
+
+        // 소유자 정보 병렬 조회 (캐시 맵)
+        const ownerMap = new Map<string, { name: string; email: string; photoURL: string }>();
+        await Promise.all(
+          Array.from(userIds).map(async (uid) => {
+            try {
+              const userDoc = await getDoc(doc(db, 'users', uid));
+              if (userDoc.exists()) {
+                const u = userDoc.data();
+                ownerMap.set(uid, {
+                  name: u?.displayName || u?.name || '',
+                  email: u?.email || '',
+                  photoURL: u?.photoURL || '',
+                });
+              }
+            } catch { /* ignore */ }
+          })
+        );
+
+        const projectsData: ProjectData[] = projectsSnap.docs.map((projectDoc) => {
           const data = projectDoc.data();
-
-          // 프로젝트 이름 확인 - 실제 사용되는 필드명은 'title'
           const projectName = data.title || data.projectName || data.name || data.project_name || '이름 없음';
-
-          // 디자인 파일 수 조회
-          const designFilesSnapshot = await getDocs(
-            query(
-              collection(db, 'designFiles'),
-              // where('projectId', '==', projectDoc.id) // designFiles에 projectId가 있다면
-            )
-          ).catch(() => ({ size: 0, docs: [] }));
-
-          // 해당 프로젝트의 디자인 파일만 필터링
-          const projectDesignFiles = designFilesSnapshot.docs.filter(
-            doc => doc.data().projectId === projectDoc.id
-          );
-
-          // 공유 여부 확인 (shareLinks 컬렉션에서 확인)
-          const shareLinksSnapshot = await getDocs(
-            collection(db, 'shareLinks')
-          ).catch(() => ({ size: 0, docs: [] }));
-
-          const projectShareLinks = shareLinksSnapshot.docs.filter(
-            doc => doc.data().projectId === projectDoc.id
-          );
-
-          // 협업자 수 확인 (sharedProjectAccess 컬렉션에서 확인)
-          const sharedAccessSnapshot = await getDocs(
-            collection(db, 'sharedProjectAccess')
-          ).catch(() => ({ size: 0, docs: [] }));
-
-          const projectCollaborators = sharedAccessSnapshot.docs.filter(
-            doc => doc.data().projectId === projectDoc.id
-          );
-
-          // 프로젝트 소유자 정보 조회
-          let ownerName = '';
-          let ownerEmail = '';
-          let ownerPhotoURL = '';
           const userId = data.userId || data.user_id || '';
-          if (userId) {
-            const userDoc = await getDoc(doc(db, 'users', userId)).catch(() => null);
-            if (userDoc?.exists()) {
-              const userData = userDoc.data();
-              ownerName = userData?.displayName || userData?.name || '';
-              ownerEmail = userData?.email || '';
-              ownerPhotoURL = userData?.photoURL || '';
-            }
-          }
-
-          projectsData.push({
+          const owner = ownerMap.get(userId) || { name: '', email: '', photoURL: '' };
+          return {
             id: projectDoc.id,
-            projectName: projectName,
-            userId: userId,
-            ownerName: ownerName,
-            ownerEmail: ownerEmail,
-            ownerPhotoURL: ownerPhotoURL,
+            projectName,
+            userId,
+            ownerName: owner.name,
+            ownerEmail: owner.email,
+            ownerPhotoURL: owner.photoURL,
             createdAt: data.createdAt?.toDate?.() || null,
             updatedAt: data.updatedAt?.toDate?.() || null,
-            designFileCount: projectDesignFiles.length,
-            isShared: projectShareLinks.length > 0,
-            collaboratorCount: projectCollaborators.length
-          });
-        }
+            designFileCount: designFilesByProject.get(projectDoc.id) || 0,
+            isShared: (shareLinksByProject.get(projectDoc.id) || 0) > 0,
+            collaboratorCount: collaboratorsByProject.get(projectDoc.id) || 0,
+          };
+        });
 
-        console.log('📁 프로젝트 데이터:', projectsData);
+        console.log('📁 프로젝트 데이터:', projectsData.length, '건');
         setProjects(projectsData);
       } catch (error) {
         console.error('❌ 프로젝트 목록 조회 실패:', error);
