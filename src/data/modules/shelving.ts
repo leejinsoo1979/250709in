@@ -863,10 +863,10 @@ const createSingleShelf = (columnWidth: number, maxHeight: number): ModuleData =
     `선반장 ${widthForId}mm`,
     columnWidth,
     maxHeight,
-    FURNITURE_SPECS.DEFAULT_DEPTH,
+    FURNITURE_SPECS.SHELF_DRAWER_DEPTH,
     '#607D8B', // blue-grey
     `하단 선반 ${bottomShelfCount}개 + 상단 선반 ${topShelfCount}개`,
-    FURNITURE_SPECS.DEFAULT_DEPTH
+    FURNITURE_SPECS.SHELF_DRAWER_DEPTH
   );
 
   return {
@@ -1379,10 +1379,10 @@ const createDualShelf = (dualColumnWidth: number, maxHeight: number, slotWidths?
     `선반장 ${widthForId}mm`,
     dualColumnWidth,
     maxHeight,
-    FURNITURE_SPECS.DEFAULT_DEPTH,
+    FURNITURE_SPECS.SHELF_DRAWER_DEPTH,
     '#607D8B',
     `듀얼 하단 선반 ${bottomShelfCount}개 + 상단 선반 ${topShelfCount}개`,
-    FURNITURE_SPECS.DEFAULT_DEPTH
+    FURNITURE_SPECS.SHELF_DRAWER_DEPTH
   );
 
   return {
