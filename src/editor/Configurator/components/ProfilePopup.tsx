@@ -231,14 +231,42 @@ const ProfilePopup: React.FC<ProfilePopupProps> = ({ isOpen, onClose, position }
           <div className={styles.section}>
             <h4 className={styles.sectionTitle}>{t('profile.accountInfo')}</h4>
             <div className={styles.infoSection}>
+            {/* 회원 등급 — 최상단에 강조 표시 */}
+            {(() => {
+              const isEnt = userPlan === 'enterprise';
+              const label = isSuperAdmin ? '무제한 회원' : isEnt ? '기업회원' : '체험판';
+              const bg = isSuperAdmin ? '#7c3aed' : isEnt ? '#10b981' : '#6b7280';
+              return (
+                <div className={styles.infoRow}>
+                  <div className={styles.infoLabel}>
+                    <Shield size={18} />
+                    <span>회원 등급</span>
+                  </div>
+                  <span
+                    style={{
+                      display: 'inline-block',
+                      padding: '4px 12px',
+                      borderRadius: 999,
+                      background: bg,
+                      color: '#fff',
+                      fontSize: 12,
+                      fontWeight: 700,
+                      letterSpacing: 0.3,
+                    }}
+                  >
+                    {label}
+                  </span>
+                </div>
+              );
+            })()}
             <div className={styles.infoRow}>
               <div className={styles.infoLabel}>
                 <Shield size={18} />
                 <span>{t('profile.authMethod')}</span>
               </div>
               <span className={styles.infoValue}>
-                {user.providerData?.[0]?.providerId === 'google.com' ? t('profile.googleAccount') : 
-                 user.providerData?.[0]?.providerId === 'password' ? t('profile.emailAuth') : 
+                {user.providerData?.[0]?.providerId === 'google.com' ? t('profile.googleAccount') :
+                 user.providerData?.[0]?.providerId === 'password' ? t('profile.emailAuth') :
                  t('profile.other')}
               </span>
             </div>
