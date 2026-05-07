@@ -438,17 +438,18 @@ export default function EnterpriseSignUpPage() {
             const s = existingInquiry.status;
             const isPending = s === 'pending';
             const isApproved = s === 'approved';
-            const isHold = s === 'on_hold';
-            const isRejected = s === 'rejected';
+            // on_hold/rejected 둘 다 '추가 확인 필요'로 사용자에게 표시
 
-            const accent = isApproved ? '#10b981' : '#f59e0b';
-            // 사용자에겐 거절/대기/보류 모두 '승인 보류 중'으로 통일 — 강한 부정 표현 안 사용
             const title = isApproved
               ? '이미 기업회원으로 승인되었습니다'
-              : '승인 보류 중입니다';
+              : isPending
+              ? '승인 대기 중입니다'
+              : '보류 중입니다';
             const body = isApproved
               ? `${existingInquiry.companyName ? existingInquiry.companyName + ' 님의 ' : ''}기업계정이 활성화되어 있습니다.\n로그인 후 모든 기능을 이용하실 수 있습니다.`
-              : '관리자가 신청 내용을 확인하고 있습니다.\n처리 결과는 다음 로그인 시 자동으로 안내됩니다.';
+              : isPending
+              ? '관리자가 신청 내용을 검토 중입니다.\n빠르면 10분, 늦어도 20분 이내에 승인됩니다.\n처리 결과는 다음 로그인 시 자동으로 안내됩니다.'
+              : '관리자 메모를 확인하시고 보완 후 다시 신청해 주세요.';
 
             return (
               <motion.div
@@ -519,8 +520,8 @@ export default function EnterpriseSignUpPage() {
                       로그인하러 가기
                     </button>
                   )}
-                  {/* approved 외 모든 상태(pending/on_hold/rejected) 보완 후 재신청 가능 */}
-                  {!isApproved && (
+                  {/* on_hold / rejected 만 보완 후 재신청 가능 (pending은 검토 중이라 불필요) */}
+                  {!isApproved && !isPending && (
                     <button
                       onClick={() => setForceShowForm(true)}
                       style={{

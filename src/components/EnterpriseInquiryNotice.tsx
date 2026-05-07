@@ -101,19 +101,24 @@ export default function EnterpriseInquiryNotice() {
 
   if (!open || !inquiry) return null;
 
-  // 상태별 컨텐츠 — 사용자에겐 approved 외에는 모두 '승인 보류'로 통일
+  // 상태별 컨텐츠
   const isApproved = inquiry.status === 'approved';
+  const isPending = inquiry.status === 'pending';
+  // on_hold/rejected 둘 다 '보완 필요' 로 사용자에게 표시
 
   const accent = 'var(--theme-primary, #667eea)';
 
-  // 사용자에겐 거절/보류 모두 '승인 보류 중'으로 통일
   const title = isApproved
     ? '기업회원 가입이 승인되었습니다'
-    : '승인 보류 중입니다';
+    : isPending
+    ? '승인 대기 중입니다'
+    : '보류 중입니다';
 
   const body = isApproved
     ? `${inquiry.companyName ? `${inquiry.companyName} 님의 ` : ''}기업계정이 활성화되어 모든 기능을 이용하실 수 있습니다.`
-    : '관리자가 신청 내용을 확인하고 있습니다.\n아래 사유를 확인하시고 보완 후 다시 신청해 주세요.';
+    : isPending
+    ? '관리자가 신청 내용을 검토 중입니다.\n빠르면 10분, 늦어도 20분 이내에 승인됩니다.'
+    : '관리자 메모를 확인하시고 보완 후 다시 신청해 주세요.';
 
   const features = isApproved
     ? [
