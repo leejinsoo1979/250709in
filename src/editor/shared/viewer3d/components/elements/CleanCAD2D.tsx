@@ -3918,12 +3918,11 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 if (s.heightType === 'absolute') return s.height;
                 return Math.round(sectionBasisH * s.height / 100);
               });
-              // 신발장(현관장 H/선반장)은 첫(하부) 섹션이 흡수, 그 외는 마지막(상부) 섹션이 흡수
+              // 현관장 H/일반 선반장만 첫(하부) 섹션이 흡수 (4단/2단서랍선반장은 일반 가구처럼 마지막 흡수)
               const leftModId = leftViewMod?.moduleId || '';
               const leftIsShoe = leftModId.includes('-entryway-') ||
-                leftModId.includes('-shelf-') ||
-                leftModId.includes('-4drawer-shelf-') ||
-                leftModId.includes('-2drawer-shelf-');
+                leftModId.startsWith('single-shelf-') ||
+                leftModId.startsWith('dual-shelf-');
               if (leftIsShoe && rawHeights.length >= 2) {
                 const fixedSum = rawHeights.slice(1).reduce((a, b) => a + b, 0);
                 sectionHeights = [
@@ -4585,12 +4584,11 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 if (s.heightType === 'absolute') return s.height;
                 return Math.round(rSectionBasisH * s.height / 100);
               });
-              // 신발장은 첫(하부) 섹션이 흡수, 그 외는 마지막(상부) 섹션이 흡수
+              // 현관장 H/일반 선반장만 첫(하부) 섹션이 흡수 (4단/2단서랍선반장은 일반 가구)
               const rModId = rightmostMod?.moduleId || '';
               const rIsShoe = rModId.includes('-entryway-') ||
-                rModId.includes('-shelf-') ||
-                rModId.includes('-4drawer-shelf-') ||
-                rModId.includes('-2drawer-shelf-');
+                rModId.startsWith('single-shelf-') ||
+                rModId.startsWith('dual-shelf-');
               if (rIsShoe && rRawHeights.length >= 2) {
                 const rFixedSum = rRawHeights.slice(1).reduce((a, b) => a + b, 0);
                 rSectionHeights = [
@@ -5951,10 +5949,10 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         const availableHeight = furnitureOuterH - 2 * basicThickness;
         // 모듈 원본 sections.height 사용 (useBaseFurniture 비례조정 전 값)
         // useBaseFurniture와 동일 공식: renderHeight = 가구외경, absorb = 가구외경 - 다른섹션합
+        // 신발장 중 현관장 H/일반 선반장만 하부 흡수, 4단/2단서랍선반장은 일반 가구처럼 상부 흡수
         const isShoeEff = mid.includes('-entryway-') ||
-          mid.includes('-shelf-') ||
-          mid.includes('-4drawer-shelf-') ||
-          mid.includes('-2drawer-shelf-');
+          mid.startsWith('single-shelf-') ||
+          mid.startsWith('dual-shelf-');
         const originalSections = (moduleData.modelConfig?.sections || []) as any[];
         const absorbIdx = isShoeEff ? 0 : originalSections.length - 1;
         const fixedSumOuter = originalSections.reduce((s: number, sec: any, i: number) =>
@@ -5965,11 +5963,10 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         };
 
         // 가구 내부 바닥(밑판 윗면)에서 섹션 시작
-        // 신발장은 띄움이 하부 섹션 안에서 흡수 → 상부 섹션 라벨은 띄움만큼 내림 (Y 변화 없음)
+        // 현관장 H/일반 선반장만 하부 흡수 (4단/2단서랍선반장은 일반 가구)
         const isShoeLabel = mid.includes('-entryway-') ||
-          mid.includes('-shelf-') ||
-          mid.includes('-4drawer-shelf-') ||
-          mid.includes('-2drawer-shelf-');
+          mid.startsWith('single-shelf-') ||
+          mid.startsWith('dual-shelf-');
         let sectionBottomMm = furnitureBottomMm + basicThickness;
         const output: React.ReactNode[] = [];
         effectiveSections.forEach((section: any, sectionIdx: number) => {
@@ -6038,10 +6035,10 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             updatePlacedModule(module.id, { customSections: newSections });
           };
           // 신발장(현관장 H/선반장)의 하부 섹션 마지막 칸(받침대 아래)은 라벨 표시 안 함
+          // 현관장 H/일반 선반장만 받침대 아래 칸 라벨 숨김 (4단/2단서랍선반장은 표시)
           const isShoeGapHide = (mid.includes('-entryway-') ||
-            mid.includes('-shelf-') ||
-            mid.includes('-4drawer-shelf-') ||
-            mid.includes('-2drawer-shelf-')) && sectionIdx === 0;
+            mid.startsWith('single-shelf-') ||
+            mid.startsWith('dual-shelf-')) && sectionIdx === 0;
           if (showShelfEditUi)
           gaps.forEach((g, i) => {
             if (isShoeGapHide && i === gaps.length - 1) return; // 432 같은 잘못된 마지막 칸 라벨 숨김
