@@ -194,13 +194,30 @@ export const useBaseFurniture = (
           height: fixedHeight
         };
       }
-      // 흡수 섹션: height만 늘리고 shelfPositions는 모듈 원본 그대로 보존
-      // (선반 사이 간격을 모듈 정의값 그대로 유지)
+      // 흡수 섹션: height 늘리고
+      // 신발장 하부 흡수(현관장 H/일반 선반장)는 받침대 기준이라 shelfPositions 원본 유지
+      // 그 외 (일반 가구, 4drawer/2drawer 선반장)는 새 height에 맞춰 선반 균등 재분할
       const newSectionHeight = Math.round(absorbingNewHeight);
+      if (!isLowerAbsorbShoeCabinetHeight && section.shelfPositions && section.shelfPositions.length > 0 && section.count && section.count > 0) {
+        const realCount = section.count;
+        const sectionInner = newSectionHeight - 2 * basicThicknessMm;
+        if (sectionInner > 0 && realCount > 0) {
+          const halfT = basicThicknessMm / 2;
+          const g = (sectionInner - realCount * basicThicknessMm) / (realCount + 1);
+          const newPositions = Array.from({ length: realCount }, (_, i) =>
+            Math.round((i + 1) * g + i * basicThicknessMm + halfT)
+          );
+          const hasZeroSentinel = section.shelfPositions.includes(0);
+          return {
+            ...section,
+            height: newSectionHeight,
+            shelfPositions: hasZeroSentinel ? [0, ...newPositions] : newPositions,
+          };
+        }
+      }
       return {
         ...section,
         height: newSectionHeight,
-        // shelfPositions: 원본 그대로 (재계산 안 함)
       };
     });
 
