@@ -13,6 +13,14 @@ service cloud.firestore {
         exists(/databases/$(database)/documents/admins/$(request.auth.uid))
       );
     }
+    // 기업회원 또는 관리자만 통과 (체험판 사용자 차단)
+    function isEnterpriseOrAdmin() {
+      return isSignedIn() && (
+        isAdmin() ||
+        (exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.plan == 'enterprise')
+      );
+    }
     function isTeamMember(teamId) {
       return isSignedIn() &&
              exists(/databases/$(database)/documents/teams/$(teamId)/members/$(request.auth.uid));
@@ -166,17 +174,19 @@ service cloud.firestore {
       }
     }
 
-    // Legacy(dualWrite 중만 허용)
+    // Legacy(dualWrite 중만 허용) — 기업회원/관리자만 쓰기 가능
     match /projects/{id} {
-      // 읽기는 누구나 가능 (공유 링크 지원), 쓰기는 소유자 또는 편집 권한이 있는 사람만
+      // 읽기는 누구나 가능 (공유 링크 지원)
       allow read: if true;
       allow list: if isAdmin(); // 관리자는 전체 프로젝트 목록 조회 가능
-      allow write: if isSignedIn() && (
+      // 쓰기: 기업회원이거나 admin이면서 본인 소유 또는 editor 권한
+      allow write: if isEnterpriseOrAdmin() && (
         resource.data.userId == request.auth.uid ||
         (exists(/databases/$(database)/documents/sharedProjectAccess/$(id + '_' + request.auth.uid)) &&
          get(/databases/$(database)/documents/sharedProjectAccess/$(id + '_' + request.auth.uid)).data.permission == 'editor')
       );
-      allow create: if isSignedIn();
+      // create: 기업회원/관리자만
+      allow create: if isEnterpriseOrAdmin();
 
       // 관리자는 프로젝트 하위의 디자인 파일을 조회할 수 있음
       match /designs/{designId} {
@@ -190,8 +200,8 @@ service cloud.firestore {
       allow read: if true;
       allow list: if isAdmin(); // 관리자는 전체 디자인 파일 목록 조회 가능
 
-      // 생성: 본인이 소유자인 경우만
-      allow create: if isSignedIn() && request.auth.uid == request.resource.data.userId;
+      // 생성: 기업회원/관리자만, 본인이 소유자인 경우
+      allow create: if isEnterpriseOrAdmin() && request.auth.uid == request.resource.data.userId;
 
       // 수정 및 삭제: 소유자, 슈퍼관리자, 부모 프로젝트 소유자, 또는 편집 권한이 있는 경우
       allow update, delete: if isSignedIn() && (
