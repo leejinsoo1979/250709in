@@ -1199,13 +1199,14 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                         const wingInnerWidth = innerWidth - sidePanelGap - (vertXOff + frameT) * 2;
                         const drawerAreaWidth = wingInnerWidth - mmToThreeUnits(5) * 2;
 
-                        // 날개벽 수직패널 앞쪽 끝 = 전면 수평패널 안쪽면
-                        // 날개벽 전면 앞면 Z (마이다/앞판 기준)
-                        const wingFrontFaceZ = depth/2 - mmToThreeUnits(85);
-                        // 서랍 뒷판 뒷면 Z: 백패널 앞면 + 12mm
-                        const drawerBackZ = -depth/2 + backReductionForPanels + mmToThreeUnits(12);
-                        // 측판 깊이 = 앞판 앞면 ~ 뒷판 뒷면 (측판이 가장 길고 앞판/뒷판이 측판 안에 끼임)
-                        const drawerSideDepth = wingFrontFaceZ - drawerBackZ;
+                        // 다른 서랍 모듈(ExternalDrawerRenderer)과 동일 공식:
+                        //   측판 앞면 = 가구 앞면(depth/2), 깊이 = min(가구깊이 - 50, 453)
+                        //   ㄷ자 프레임은 슬라이드 가이드 역할로 그대로 유지
+                        const wingFrontFaceZ = depth/2;
+                        const moduleDepthMmForDrawer = depth / 0.01;
+                        const drawerSideDepthMm = Math.min(moduleDepthMmForDrawer - 50, 453);
+                        const drawerSideDepth = mmToThreeUnits(drawerSideDepthMm);
+                        const drawerBackZ = wingFrontFaceZ - drawerSideDepth;
                         const drawerSideCenterZ = (wingFrontFaceZ + drawerBackZ) / 2;
 
                         return (
