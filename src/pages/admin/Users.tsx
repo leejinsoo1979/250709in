@@ -588,7 +588,7 @@ const Users = () => {
               <tr>
                 <th>사용자</th>
                 <th>이메일</th>
-                <th>권한</th>
+                <th>레벨</th>
                 <th>플랜</th>
                 <th>프로젝트</th>
                 <th>디자인</th>
@@ -633,7 +633,10 @@ const Users = () => {
                       {targetUser.isAdmin && !targetUser.isSuperAdmin && (
                         <span className={styles.adminBadge}>관리자</span>
                       )}
-                      {!targetUser.isAdmin && !targetUser.isSuperAdmin && (
+                      {!targetUser.isAdmin && !targetUser.isSuperAdmin && targetUser.plan === 'enterprise' && (
+                        <span className={styles.enterpriseBadge}>기업회원</span>
+                      )}
+                      {!targetUser.isAdmin && !targetUser.isSuperAdmin && targetUser.plan !== 'enterprise' && (
                         <span className={styles.userBadge}>일반 사용자</span>
                       )}
                     </div>

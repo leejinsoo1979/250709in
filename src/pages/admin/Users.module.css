@@ -379,6 +379,7 @@
 
 .superAdminBadge,
 .adminBadge,
+.enterpriseBadge,
 .userBadge {
   display: inline-block;
   padding: 4px 12px;
@@ -431,6 +432,12 @@
   background: var(--theme-primary, #10b981);
   color: white;
   box-shadow: 0 2px 8px rgba(16, 185, 129, 0.2);
+}
+
+.enterpriseBadge {
+  background: #f59e0b;
+  color: white;
+  box-shadow: 0 2px 8px rgba(245, 158, 11, 0.25);
 }
 
 .userBadge {
