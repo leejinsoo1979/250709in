@@ -659,7 +659,9 @@ const BoxModule: React.FC<BoxModuleProps> = ({
     );
   }
 
-  if (moduleData.id.includes('dual-2hanging') || moduleData.id.includes('dual-entryway-h-') || moduleData.id.includes('dual-shelf-')) {
+  // 듀얼 현관장 H(dual-entryway-h-)는 BaseFurnitureShell 폴백 경로에서 처리
+  // (속서랍/서랍받침대/속장 ㄷ자 프레임 hardcoded 코드가 BaseFurnitureShell에 있음)
+  if (moduleData.id.includes('dual-2hanging') || moduleData.id.includes('dual-shelf-')) {
     return (
       <>
         {/* 모든 타입에서 간접조명 렌더링 */}
