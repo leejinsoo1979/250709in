@@ -2,6 +2,7 @@ import { initializeApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
+import { getFunctions } from 'firebase/functions';
 import { getAnalytics, Analytics } from 'firebase/analytics';
 
 // Firebase 설정 (환경변수에서 가져오기)
@@ -44,6 +45,9 @@ if (typeof window !== 'undefined') {
 }
 
 export const storage = getStorage(app);
+
+// Cloud Functions (region: asia-northeast3 - 서울)
+export const functions = getFunctions(app, 'asia-northeast3');
 
 // Firebase Analytics 초기화 (브라우저 환경에서만)
 let analytics: Analytics | null = null;

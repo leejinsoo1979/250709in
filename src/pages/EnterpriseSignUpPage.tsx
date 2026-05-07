@@ -4,10 +4,16 @@ import { motion } from 'motion/react';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { EmailAuthProvider, linkWithCredential } from 'firebase/auth';
-import { db, storage, auth } from '@/firebase/config';
+import { httpsCallable } from 'firebase/functions';
+import { db, storage, auth, functions } from '@/firebase/config';
 import { signUpWithEmail } from '@/firebase/auth';
 import { useAuth } from '@/auth/AuthProvider';
-import { Eye, EyeOff, Upload, X, FileText, Check, AlertCircle } from 'lucide-react';
+import { Eye, EyeOff, Upload, X, FileText, Check, AlertCircle, Loader2 } from 'lucide-react';
+import {
+  formatBusinessNumber,
+  getDigitsOnly,
+  isValidBusinessNumberFormat,
+} from '@/utils/businessNumber';
 
 interface EnterpriseForm {
   companyName: string;
@@ -53,6 +59,14 @@ export default function EnterpriseSignUpPage() {
   // 소셜 로그인 사용자가 비밀번호도 설정할지 선택 (기본: 미설정 = 구글 로그인만 사용)
   const [setExtraPassword, setSetExtraPassword] = useState(false);
 
+  // 사업자등록번호 검증 상태
+  type BizVerifyStatus = 'idle' | 'verifying' | 'active' | 'inactive' | 'closed' | 'not_found' | 'error';
+  const [bizVerify, setBizVerify] = useState<{
+    status: BizVerifyStatus;
+    message: string;
+    verifiedNumber: string; // 검증 완료된 사업자번호 (입력값과 비교용 - 변경되면 재검증 필요)
+  }>({ status: 'idle', message: '', verifiedNumber: '' });
+
   // 소셜 로그인 사용자: 이메일/대표자명 자동 입력
   useEffect(() => {
     if (!currentUser) return;
@@ -65,6 +79,61 @@ export default function EnterpriseSignUpPage() {
 
   const update = (field: keyof EnterpriseForm, value: string) =>
     setForm((prev) => ({ ...prev, [field]: value }));
+
+  // 사업자등록번호 입력 핸들러 (자동 포맷팅)
+  const handleBizNumberChange = (value: string) => {
+    const formatted = formatBusinessNumber(value);
+    update('businessNumber', formatted);
+    // 입력이 바뀌면 이전 검증 결과 초기화
+    if (bizVerify.status !== 'idle') {
+      setBizVerify({ status: 'idle', message: '', verifiedNumber: '' });
+    }
+  };
+
+  // 국세청 API 호출 - 사업자등록번호 진위/영업상태 검증
+  const handleVerifyBizNumber = async () => {
+    const digits = getDigitsOnly(form.businessNumber);
+    if (digits.length !== 10) {
+      setBizVerify({ status: 'error', message: '사업자등록번호 10자리를 입력해주세요.', verifiedNumber: '' });
+      return;
+    }
+    if (!isValidBusinessNumberFormat(digits)) {
+      setBizVerify({ status: 'error', message: '잘못된 사업자등록번호 형식입니다.', verifiedNumber: '' });
+      return;
+    }
+
+    setBizVerify({ status: 'verifying', message: '국세청에 조회 중...', verifiedNumber: '' });
+
+    try {
+      const verifyFn = httpsCallable<
+        { businessNumber: string },
+        { ok: boolean; status: string; statusText: string; taxType: string }
+      >(functions, 'verifyBusinessNumber');
+      const result = await verifyFn({ businessNumber: digits });
+      const data = result.data;
+
+      const messageMap: Record<string, string> = {
+        active: `유효한 사업자입니다 (${data.statusText || '계속사업자'}${data.taxType ? ` · ${data.taxType}` : ''})`,
+        inactive: `휴업 상태인 사업자입니다.`,
+        closed: `폐업한 사업자입니다.`,
+        not_found: '국세청에 등록되지 않은 사업자번호입니다.',
+      };
+
+      setBizVerify({
+        status: (data.status as BizVerifyStatus) || 'error',
+        message: messageMap[data.status] || data.statusText || '확인할 수 없는 상태입니다.',
+        verifiedNumber: data.ok ? digits : '',
+      });
+    } catch (err: unknown) {
+      const e = err as { code?: string; message?: string };
+      console.error('사업자번호 검증 실패:', e);
+      setBizVerify({
+        status: 'error',
+        message: e?.message || '국세청 조회 중 오류가 발생했습니다.',
+        verifiedNumber: '',
+      });
+    }
+  };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -105,6 +174,20 @@ export default function EnterpriseSignUpPage() {
     }
     if (!businessLicenseFile) {
       setError('사업자등록증을 첨부해주세요.');
+      setSubmitting(false);
+      return;
+    }
+
+    // 사업자등록번호 검증 가드
+    const bizDigits = getDigitsOnly(form.businessNumber);
+    if (!isValidBusinessNumberFormat(bizDigits)) {
+      setError('사업자등록번호가 올바르지 않습니다.');
+      setSubmitting(false);
+      return;
+    }
+    // 국세청 검증을 통과하지 않았거나, 통과 후 번호가 바뀐 경우
+    if (bizVerify.status !== 'active' || bizVerify.verifiedNumber !== bizDigits) {
+      setError('사업자등록번호 검증을 완료해주세요. (검증 버튼 클릭)');
       setSubmitting(false);
       return;
     }
@@ -190,6 +273,10 @@ export default function EnterpriseSignUpPage() {
         uid: user.uid,
         status: 'pending',
         accountType: 'enterprise',
+        // 국세청 검증 결과 함께 저장 (승인 검토용)
+        ntsVerified: bizVerify.status === 'active',
+        ntsStatus: bizVerify.status,
+        ntsMessage: bizVerify.message,
         createdAt: serverTimestamp(),
       });
 
@@ -436,7 +523,94 @@ export default function EnterpriseSignUpPage() {
                   <Input value={form.companyName} onChange={(v) => update('companyName', v)} placeholder="주식회사 예시" required />
                 </Field>
                 <Field label="사업자등록번호" required>
-                  <Input value={form.businessNumber} onChange={(v) => update('businessNumber', v)} placeholder="000-00-00000" required />
+                  {(() => {
+                    const digits = getDigitsOnly(form.businessNumber);
+                    const formatOk = digits.length === 10 && isValidBusinessNumberFormat(digits);
+                    const formatTouched = digits.length > 0;
+                    const verifying = bizVerify.status === 'verifying';
+                    const verifiedOk = bizVerify.status === 'active' && bizVerify.verifiedNumber === digits;
+
+                    return (
+                      <>
+                        <div className="flex gap-2">
+                          <input
+                            type="text"
+                            value={form.businessNumber}
+                            onChange={(e) => handleBizNumberChange(e.target.value)}
+                            placeholder="000-00-00000"
+                            required
+                            inputMode="numeric"
+                            maxLength={12}
+                            className={`flex-1 bg-zinc-900 border rounded-xl px-4 py-3 text-white text-sm placeholder:text-zinc-600 focus:outline-none transition-colors ${
+                              !formatTouched
+                                ? 'border-white/30 focus:border-zinc-500'
+                                : verifiedOk
+                                ? 'border-emerald-500/60 focus:border-emerald-500'
+                                : formatOk
+                                ? 'border-zinc-500 focus:border-zinc-400'
+                                : 'border-red-500/60 focus:border-red-500'
+                            }`}
+                          />
+                          <button
+                            type="button"
+                            onClick={handleVerifyBizNumber}
+                            disabled={!formatOk || verifying || verifiedOk}
+                            className={`px-4 py-3 rounded-xl text-sm font-semibold whitespace-nowrap transition-colors ${
+                              verifiedOk
+                                ? 'bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 cursor-default'
+                                : !formatOk || verifying
+                                ? 'bg-zinc-800 border border-white/10 text-zinc-600 cursor-not-allowed'
+                                : 'bg-white text-zinc-950 hover:bg-zinc-200'
+                            }`}
+                          >
+                            {verifying ? (
+                              <span className="flex items-center gap-1.5">
+                                <Loader2 size={14} className="animate-spin" />
+                                검증 중
+                              </span>
+                            ) : verifiedOk ? (
+                              <span className="flex items-center gap-1.5">
+                                <Check size={14} />
+                                검증완료
+                              </span>
+                            ) : (
+                              '검증'
+                            )}
+                          </button>
+                        </div>
+
+                        {/* 형식 검증 결과 */}
+                        {formatTouched && !formatOk && (
+                          <div className="mt-2 flex items-center gap-1.5 text-xs text-red-400">
+                            <AlertCircle size={14} />
+                            올바르지 않은 사업자등록번호입니다 ({digits.length}/10)
+                          </div>
+                        )}
+                        {formatTouched && formatOk && bizVerify.status === 'idle' && (
+                          <div className="mt-2 flex items-center gap-1.5 text-xs text-zinc-400">
+                            <AlertCircle size={14} />
+                            검증 버튼을 눌러 국세청 등록 여부를 확인해주세요
+                          </div>
+                        )}
+
+                        {/* 국세청 검증 결과 */}
+                        {bizVerify.status !== 'idle' && bizVerify.status !== 'verifying' && (
+                          <div
+                            className={`mt-2 flex items-start gap-1.5 text-xs ${
+                              bizVerify.status === 'active'
+                                ? 'text-emerald-400'
+                                : bizVerify.status === 'inactive'
+                                ? 'text-amber-400'
+                                : 'text-red-400'
+                            }`}
+                          >
+                            {bizVerify.status === 'active' ? <Check size={14} className="mt-0.5" /> : <AlertCircle size={14} className="mt-0.5" />}
+                            <span>{bizVerify.message}</span>
+                          </div>
+                        )}
+                      </>
+                    );
+                  })()}
                 </Field>
                 <Field label="사업자등록증 첨부" required>
                   {businessLicenseFile ? (
