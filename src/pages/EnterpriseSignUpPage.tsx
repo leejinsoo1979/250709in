@@ -87,16 +87,23 @@ export default function EnterpriseSignUpPage() {
         return;
       }
       try {
+        // ⚠️ orderBy + where는 복합 인덱스 필요 → 인덱스 없으면 쿼리 실패하여
+        //   사용자가 가입 폼을 또 보게 되는 버그가 있었음.
+        //   → where만 사용하고 클라이언트에서 정렬
         const q = query(
           collection(db, 'enterprise_inquiries'),
-          where('uid', '==', currentUser.uid),
-          orderBy('createdAt', 'desc'),
-          limit(1)
+          where('uid', '==', currentUser.uid)
         );
         const snap = await getDocs(q);
         if (cancelled) return;
         if (!snap.empty) {
-          const data = snap.docs[0].data() as {
+          // 가장 최근 createdAt 1건 선택
+          const docs = snap.docs.slice().sort((a, b) => {
+            const ta = (a.data().createdAt?.toMillis?.() ?? 0) as number;
+            const tb = (b.data().createdAt?.toMillis?.() ?? 0) as number;
+            return tb - ta;
+          });
+          const data = docs[0].data() as {
             status?: ExistingStatus;
             companyName?: string;
             reasonText?: string;
@@ -110,7 +117,7 @@ export default function EnterpriseSignUpPage() {
           });
         }
       } catch (err) {
-        console.warn('기존 신청 조회 실패:', err);
+        console.error('기존 신청 조회 실패:', err);
       } finally {
         if (!cancelled) setCheckingExisting(false);
       }
