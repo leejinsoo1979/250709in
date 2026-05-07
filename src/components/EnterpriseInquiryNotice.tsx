@@ -2,23 +2,22 @@
  * 기업회원 가입 신청 결과 안내 컴포넌트
  *
  * 동작:
- *  - 로그인 후 사용자의 enterprise_inquiries 컬렉션에서 가장 최근 신청 1건 조회
- *  - status에 따라 팝업 표시:
- *      approved → 승인 환영 팝업 (사용자가 한 번 본 후 자동 디스미스)
- *      on_hold  → 보류 안내 팝업
- *      rejected → 거절 안내 팝업
- *  - "확인" 누르면 해당 inquiry에 noticeShownAt을 기록하여 같은 알림 재표시 방지
- *  - 팝업 1회 표시 후 sessionStorage에도 마킹하여 같은 세션 내 재진입 시 즉시 표시 안 함
+ *  - 로그인 후 사용자의 enterprise_inquiries 컬렉션을 onSnapshot으로 실시간 구독
+ *  - status가 approved/on_hold/rejected 로 바뀌는 즉시 팝업 표시
+ *  - 사용자가 데모 페이지에 머물러 있어도 관리자 승인 시 바로 알림
+ *  - "확인" 누르면 해당 inquiry에 noticeShownAt을 기록하여 재표시 방지
+ *
+ * 비용 안전성: 본인 문서 1개만 구독하므로 read 비용 무시 가능
  */
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   collection,
   query,
   where,
   orderBy,
   limit,
-  getDocs,
+  onSnapshot,
   doc,
   updateDoc,
   serverTimestamp,
@@ -36,50 +35,53 @@ interface InquiryDoc {
   noticeShownAt?: unknown;
 }
 
-const SESSION_FLAG_PREFIX = 'enterprise_inquiry_seen_';
-
 export default function EnterpriseInquiryNotice() {
   const { user } = useAuth();
   const [inquiry, setInquiry] = useState<InquiryDoc | null>(null);
   const [open, setOpen] = useState(false);
+  // 같은 세션에서 동일 inquiry+status 조합은 한 번만 표시
+  const shownSetRef = useRef<Set<string>>(new Set());
 
   useEffect(() => {
     if (!user?.uid) return;
-    const sessionKey = `${SESSION_FLAG_PREFIX}${user.uid}`;
-    if (sessionStorage.getItem(sessionKey) === '1') return; // 같은 세션 내 한 번만
 
-    let cancelled = false;
-    (async () => {
-      try {
-        const q = query(
-          collection(db, 'enterprise_inquiries'),
-          where('uid', '==', user.uid),
-          orderBy('createdAt', 'desc'),
-          limit(1)
-        );
-        const snap = await getDocs(q);
-        if (cancelled || snap.empty) return;
+    const q = query(
+      collection(db, 'enterprise_inquiries'),
+      where('uid', '==', user.uid),
+      orderBy('createdAt', 'desc'),
+      limit(1)
+    );
 
+    const unsubscribe = onSnapshot(
+      q,
+      (snap) => {
+        if (snap.empty) return;
         const docSnap = snap.docs[0];
         const data = docSnap.data() as Omit<InquiryDoc, 'id'>;
         const status = data.status as InquiryStatus;
 
-        // approved/on_hold/rejected만 표시 (pending은 무시)
+        // pending은 알림 없음
         if (status !== 'approved' && status !== 'on_hold' && status !== 'rejected') return;
 
-        // 이미 noticeShownAt이 있으면 표시 안 함 (한 번만 보여주기)
-        if (data.noticeShownAt) {
-          sessionStorage.setItem(sessionKey, '1');
-          return;
-        }
+        // 이미 noticeShownAt 기록된 신청 = 사용자가 한 번 본 적 있음
+        if (data.noticeShownAt) return;
+
+        // 같은 inquiry+status 조합은 세션 내 한 번만
+        const sigKey = `${docSnap.id}:${status}`;
+        if (shownSetRef.current.has(sigKey)) return;
+        shownSetRef.current.add(sigKey);
 
         setInquiry({ id: docSnap.id, ...data });
         setOpen(true);
-      } catch (err) {
-        console.warn('enterprise_inquiry 조회 실패:', err);
+      },
+      (err) => {
+        console.warn('enterprise_inquiry 구독 실패:', err);
       }
-    })();
-    return () => { cancelled = true; };
+    );
+
+    return () => {
+      unsubscribe();
+    };
   }, [user?.uid]);
 
   const handleClose = async () => {
@@ -92,7 +94,6 @@ export default function EnterpriseInquiryNotice() {
       await updateDoc(doc(db, 'enterprise_inquiries', inquiry.id), {
         noticeShownAt: serverTimestamp(),
       });
-      sessionStorage.setItem(`${SESSION_FLAG_PREFIX}${user.uid}`, '1');
     } catch (err) {
       console.warn('noticeShownAt 업데이트 실패:', err);
     }
