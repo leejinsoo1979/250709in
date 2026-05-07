@@ -3905,8 +3905,13 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               //   → realBottomFrame = individualFloatHeight (있으면) 또는 0
               // 걸래받이 ON → baseFrameHeight (있으면) 또는 globalBottomFrameH
               const leftLowerHasBase = (leftLowerMod as any)?.hasBase;
+              // 신발장은 띄움이 하부 섹션 안에서 흡수 → realBottomFrame=0 (띄움 빼지 않음)
+              const leftIsShoeForBase = !!(leftmostMod?.moduleId?.includes('-entryway-') ||
+                leftmostMod?.moduleId?.includes('-shelf-') ||
+                leftmostMod?.moduleId?.includes('-4drawer-shelf-') ||
+                leftmostMod?.moduleId?.includes('-2drawer-shelf-'));
               const realBottomFrame = leftLowerHasBase === false
-                ? ((leftLowerMod as any)?.individualFloatHeight ?? 0)
+                ? (leftIsShoeForBase ? 0 : ((leftLowerMod as any)?.individualFloatHeight ?? 0))
                 : (leftLowerMod?.baseFrameHeight ?? globalBottomFrameH);
               // 인출장/팬트리장: 바닥마감재도 가구 외경에 포함 (마지막 섹션이 흡수)
               const isPullOutOrPantryHere = !!(leftmostMod?.moduleId?.includes('pull-out-cabinet') || leftmostMod?.moduleId?.includes('pantry-cabinet'));
@@ -4573,8 +4578,12 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             if (rSections && rSections.length >= 2) {
               // 섹션 기준 furnitureH = 실제 가구 내경 (공간 - 실제 상단몰딩 - 실제 걸래받이)
               const rRealTopFrame = rightmostMod.hasTopFrame === false ? 0 : (rightmostMod.topFrameThickness ?? rGlobalTopFrame);
+              const rIsShoeForBase = !!(rightmostMod?.moduleId?.includes('-entryway-') ||
+                rightmostMod?.moduleId?.includes('-shelf-') ||
+                rightmostMod?.moduleId?.includes('-4drawer-shelf-') ||
+                rightmostMod?.moduleId?.includes('-2drawer-shelf-'));
               const rRealBottomFrame = (rightLowerMod as any)?.hasBase === false
-                ? ((rightLowerMod as any)?.individualFloatHeight ?? 0)
+                ? (rIsShoeForBase ? 0 : ((rightLowerMod as any)?.individualFloatHeight ?? 0))
                 : (rightLowerMod?.baseFrameHeight ?? rGlobalBottomFrameH);
               const rIsPullOutOrPantryHere = !!(rightmostMod?.moduleId?.includes('pull-out-cabinet') || rightmostMod?.moduleId?.includes('pantry-cabinet'));
               const rRealFloorFinish = rIsPullOutOrPantryHere ? 0 : rFloorFinishForHeight;
