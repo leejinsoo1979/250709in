@@ -390,14 +390,14 @@
 }
 
 .superAdminBadge {
-  background: var(--theme-primary, #3b82f6);
+  background: #000000;
   color: white;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
 
 .crownIcon {
   font-size: 24px;
-  color: var(--theme-primary, #10b981);
+  color: #000000;
   filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.15));
   flex-shrink: 0;
   width: 24px;
