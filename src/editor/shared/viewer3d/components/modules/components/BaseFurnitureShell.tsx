@@ -1208,10 +1208,14 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                         //   측판 앞면 Z = 0 + 측판깊이/2
                         //   마이다 앞면 = centerZ + actualDrawerDepth/2 = basicThickness/2 + (depth - basicThickness - 60)/2
                         //                = (depth - 60)/2 = depth/2 - 30 → 가구 앞면에서 30mm 안쪽
-                        const drawerSideDepth = depth - basicThickness - mmToThreeUnits(60); // 의류장과 동일 (=depth-78mm)
-                        const wingFrontFaceZ = depth/2 - mmToThreeUnits(30); // 마이다 앞면이 가구 앞면 -30mm
-                        const drawerBackZ = wingFrontFaceZ - drawerSideDepth;
-                        const drawerSideCenterZ = (wingFrontFaceZ + drawerBackZ) / 2;
+                        // 마이다 앞면 = 가구 앞면 - 30mm
+                        const wingFrontFaceZ = depth/2 - mmToThreeUnits(30);
+                        // 측판 깊이 = (depth - basicThickness - 60) - 마이다두께 (의류장 동일: actualDrawerDepth - HANDLE_PLATE_THICKNESS)
+                        // → 측판 앞면 = 마이다 뒷면 = wingFrontFaceZ - maidaT
+                        const drawerSideDepth = depth - basicThickness - mmToThreeUnits(60) - maidaT;
+                        const drawerSideFrontZ = wingFrontFaceZ - maidaT; // 측판 앞면 = 마이다 뒷면
+                        const drawerBackZ = drawerSideFrontZ - drawerSideDepth;
+                        const drawerSideCenterZ = (drawerSideFrontZ + drawerBackZ) / 2;
 
                         return (
                           <>
@@ -1257,17 +1261,17 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                                 />
                               );
                             })()}
-                            {/* 서랍 앞판 — 마이다 뒤로 마이다 두께만큼 들어감 */}
+                            {/* 서랍 앞판 — 측판 앞면(드로워사이드프론트Z)에 부착 */}
                             {(() => {
                               const pn = '서랍1 앞판';
                               const mat = getPanelMaterial(pn);
-                              // 앞판 앞면 = 마이다 뒷면 = wingFrontFaceZ - maidaT
-                              // 앞판 중심 = (wingFrontFaceZ - maidaT) - drawerSideT/2
+                              // 앞판 앞면 = 측판 앞면 (= 마이다 뒷면)
+                              const drawerSideFrontZForFront = wingFrontFaceZ - maidaT;
                               return (
                                 <BoxWithEdges
                                   key={`entryway-drawer-front-${mat.uuid}`}
                                   args={[drawerAreaWidth - drawerSideT * 2, drawerSideH, drawerSideT]}
-                                  position={[0, drawerCenterY, wingFrontFaceZ - maidaT - drawerSideT/2]}
+                                  position={[0, drawerCenterY, drawerSideFrontZForFront - drawerSideT/2]}
                                   material={mat}
                                   renderMode={renderMode}
                                   isDragging={isDragging}
