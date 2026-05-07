@@ -5935,13 +5935,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         const baseFrameMm = (module as any).hasBase === false ? 0
           : ((module as any).baseFrameHeight ?? (spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height || 65) : 0));
         const floatMm = (module as any).hasBase === false ? ((module as any).individualFloatHeight ?? 0) : 0;
-        // 신발장(현관장 H/선반장)은 띄움 시 가구가 위로 뜨지 않고 하부 섹션 안에서 흡수
-        // → furnitureBottomMm에 floatMm 안 더함 (가구 Y 위치 유지, 상부 섹션 라벨 변화 없음)
-        const isShoeForBottom = mid.includes('-entryway-') ||
-          mid.includes('-shelf-') ||
-          mid.includes('-4drawer-shelf-') ||
-          mid.includes('-2drawer-shelf-');
-        const furnitureBottomMm = floorFinishMm + baseFrameMm + (isShoeForBottom ? 0 : floatMm);
+        const furnitureBottomMm = floorFinishMm + baseFrameMm + floatMm;
         const cxX = module.position.x;
         const labelX = cxX;
         // 실제 렌더링 공식 동일 (SectionsRenderer)
@@ -5968,6 +5962,11 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         };
 
         // 가구 내부 바닥(밑판 윗면)에서 섹션 시작
+        // 신발장은 띄움이 하부 섹션 안에서 흡수 → 상부 섹션 라벨은 띄움만큼 내림 (Y 변화 없음)
+        const isShoeLabel = mid.includes('-entryway-') ||
+          mid.includes('-shelf-') ||
+          mid.includes('-4drawer-shelf-') ||
+          mid.includes('-2drawer-shelf-');
         let sectionBottomMm = furnitureBottomMm + basicThickness;
         const output: React.ReactNode[] = [];
         effectiveSections.forEach((section: any, sectionIdx: number) => {
@@ -5976,6 +5975,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             sectionBottomMm += sectionHeight;
             return;
           }
+          // 신발장 상부 섹션 라벨은 띄움만큼 내려서 Y 변화 없게
+          const labelOffsetMm = (isShoeLabel && sectionIdx !== 0) ? -floatMm : 0;
           const posArr: number[] = [...((section.shelfPositions || []) as number[])].sort((a, b) => a - b);
           const n = posArr.length;
           if (n === 0) { sectionBottomMm += sectionHeight; return; }
@@ -5994,14 +5995,12 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               gaps.push(Math.max(0, Math.round(posArr[k] - posArr[k - 1] - basicThickness)));
             }
           }
-          // 각 칸 중심 Y
+          // 각 칸 중심 Y (신발장 상부 섹션은 labelOffsetMm으로 띄움 보정)
           const centerYs: number[] = [];
-          // 칸1 중심: 바닥에서 gaps[0]/2
-          centerYs.push(sectionBottomMm + gaps[0] / 2);
-          // 칸2..마지막: 아래 선반 윗면 + gap/2 = (sectionBottomMm + pos[i-1] + halfT) + gap[i]/2
+          centerYs.push(sectionBottomMm + gaps[0] / 2 + labelOffsetMm);
           for (let i = 1; i < gaps.length; i++) {
             const below = sectionBottomMm + posArr[i - 1] + halfT;
-            centerYs.push(below + gaps[i] / 2);
+            centerYs.push(below + gaps[i] / 2 + labelOffsetMm);
           }
           const applyGapEdit = (gapIdx: number, newGap: number) => {
             const safeGap = Math.max(0, Math.round(newGap));
@@ -6105,7 +6104,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           // 스피너: 각 선반(posArr[k]) 위에 배치 — 선반 위로/아래로 1mm 이동
           if (showShelfEditUi)
           posArr.forEach((pos, k) => {
-            const shelfYmm = sectionBottomMm + pos;
+            const shelfYmm = sectionBottomMm + pos + labelOffsetMm;
             const shelfYThree = mmToThreeUnits(shelfYmm);
             output.push(
               <Html
