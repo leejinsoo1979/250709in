@@ -2711,6 +2711,13 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   // 신발장 카테고리: 뒷벽에 뒷면 정렬 (의류장과 앞면 맞추는 로직 제거)
   const midForZ = placedModule.moduleId || '';
   const isShoeCabinet = midForZ.includes('-entryway-') || midForZ.includes('-shelf-') || midForZ.includes('-4drawer-shelf-') || midForZ.includes('-2drawer-shelf-');
+  const normalizeShoeSectionDepth = (sectionDepth?: number) => (
+    isShoeCabinet && sectionDepth !== undefined && sectionDepth > actualDepthMm
+      ? actualDepthMm
+      : sectionDepth
+  );
+  const effectiveLowerSectionDepth = normalizeShoeSectionDepth(placedModule.lowerSectionDepth);
+  const effectiveUpperSectionDepth = normalizeShoeSectionDepth(placedModule.upperSectionDepth);
   let furnitureZ: number;
   if (isFrontSpaceFurniture) {
     furnitureZ = placedModule.position.z;
@@ -3695,8 +3702,8 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                   visibleSectionIndex={visibleSectionIndex} // 듀얼 가구 섹션 필터링
                   doorTopGap={storeDoorTopGap ?? placedModule.doorTopGap ?? spaceInfo.doorTopGap} // store 우선 → prop → 글로벌 폴백
                   doorBottomGap={storeDoorBottomGap ?? placedModule.doorBottomGap ?? spaceInfo.doorBottomGap} // store 우선 → prop → 글로벌 폴백
-                  lowerSectionDepth={placedModule.lowerSectionDepth} // 하부 섹션 깊이 (mm)
-                  upperSectionDepth={placedModule.upperSectionDepth} // 상부 섹션 깊이 (mm)
+                  lowerSectionDepth={effectiveLowerSectionDepth} // 하부 섹션 깊이 (mm)
+                  upperSectionDepth={effectiveUpperSectionDepth} // 상부 섹션 깊이 (mm)
                   lowerSectionDepthDirection={placedModule.lowerSectionDepthDirection} // 하부 깊이 줄이는 방향
                   upperSectionDepthDirection={placedModule.upperSectionDepthDirection} // 상부 깊이 줄이는 방향
                   lowerSectionWidth={placedModule.lowerSectionWidth} // 하부 섹션 너비 (mm)
@@ -4010,8 +4017,8 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
               finalYPosition, // 상부장은 14, 나머지는 adjustedPosition.y
               (() => {
                 // 상/하부 섹션 depth가 있으면 도어 Z를 "덜 줄어든 쪽"(max) 기준 + direction 반영
-                const uS = (placedModule as any).upperSectionDepth;
-                const lS = (placedModule as any).lowerSectionDepth;
+                const uS = effectiveUpperSectionDepth;
+                const lS = effectiveLowerSectionDepth;
                 const maxSec = Math.max(uS || 0, lS || 0);
                 if (maxSec > 0 && maxSec < actualDepthMm) {
                   const isMaxUpper = (uS || 0) >= (lS || 0);
@@ -4030,8 +4037,8 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
             <DoorModule
               moduleWidth={doorWidth}
               moduleDepth={(() => {
-                const uS = (placedModule as any).upperSectionDepth;
-                const lS = (placedModule as any).lowerSectionDepth;
+                const uS = effectiveUpperSectionDepth;
+                const lS = effectiveLowerSectionDepth;
                 const maxSec = Math.max(uS || 0, lS || 0);
                 return maxSec > 0 ? maxSec : actualDepthMm;
               })()}

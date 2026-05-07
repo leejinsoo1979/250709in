@@ -493,6 +493,12 @@ const Configurator: React.FC = () => {
   // 상부/걸래받이 '전체' 통합 모드 (기본 true: 통합 행 표시)
   const [topFrameAllMode, setTopFrameAllMode] = useState<boolean>(true);
   const [baseFrameAllMode, setBaseFrameAllMode] = useState<boolean>(true);
+  const [shoeAlignmentPrompt, setShoeAlignmentPrompt] = useState<{
+    shoeIds: string[];
+    backWallGap: number;
+    clothingDepth: number;
+    shoeDepth: number;
+  } | null>(null);
 
   const [isFileTreeOpen, setIsFileTreeOpen] = useState(false);
   const [fileTreeProjects, setFileTreeProjects] = useState<ProjectSummary[]>([]);
@@ -609,6 +615,30 @@ const Configurator: React.FC = () => {
       }
     }
   };
+
+  useEffect(() => {
+    const handleShoeAlignmentPrompt = (event: Event) => {
+      const detail = (event as CustomEvent<{
+        shoeIds: string[];
+        backWallGap: number;
+        clothingDepth: number;
+        shoeDepth: number;
+      }>).detail;
+      if (!detail?.shoeIds?.length || detail.backWallGap <= 0) return;
+      setShoeAlignmentPrompt(detail);
+    };
+
+    window.addEventListener('shoe-clothing-depth-conflict', handleShoeAlignmentPrompt);
+    return () => window.removeEventListener('shoe-clothing-depth-conflict', handleShoeAlignmentPrompt);
+  }, []);
+
+  const applyShoeLineAlignment = useCallback(() => {
+    if (!shoeAlignmentPrompt) return;
+    shoeAlignmentPrompt.shoeIds.forEach(id => {
+      updatePlacedModule(id, { backWallGap: shoeAlignmentPrompt.backWallGap });
+    });
+    setShoeAlignmentPrompt(null);
+  }, [shoeAlignmentPrompt, updatePlacedModule]);
 
   // 도어 셋팅 최초 표시 시 undefined 값만 기본값으로 채움 (카테고리별 분기)
   React.useEffect(() => {
@@ -7627,6 +7657,67 @@ const Configurator: React.FC = () => {
                 }}
               >
                 {isCreatingNewDesign ? '생성 중...' : '생성'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {shoeAlignmentPrompt && (
+        <div style={{
+          position: 'fixed',
+          inset: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.45)',
+          zIndex: 10000,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '20px',
+        }}>
+          <div style={{
+            width: 'min(420px, 100%)',
+            background: 'var(--theme-surface)',
+            color: 'var(--theme-text)',
+            border: '1px solid var(--theme-border)',
+            borderRadius: '10px',
+            boxShadow: '0 18px 50px rgba(0, 0, 0, 0.28)',
+            padding: '22px',
+          }}>
+            <h3 style={{ margin: '0 0 10px', fontSize: '16px', fontWeight: 700 }}>
+              깊이 기준 선택
+            </h3>
+            <p style={{ margin: '0 0 18px', fontSize: '13px', lineHeight: 1.6, color: 'var(--theme-text-secondary)' }}>
+              의류장과 신발장의 깊이가 다릅니다. 신발장을 벽에서 {Math.round(shoeAlignmentPrompt.backWallGap)}mm 띄워 의류장과 앞라인을 맞추시겠습니까?
+            </p>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
+              <button
+                onClick={() => setShoeAlignmentPrompt(null)}
+                style={{
+                  padding: '9px 16px',
+                  border: '1px solid var(--theme-border)',
+                  borderRadius: '7px',
+                  background: 'var(--theme-surface)',
+                  color: 'var(--theme-text)',
+                  fontSize: '13px',
+                  cursor: 'pointer',
+                }}
+              >
+                뒷벽에 배치
+              </button>
+              <button
+                onClick={applyShoeLineAlignment}
+                style={{
+                  padding: '9px 16px',
+                  border: '1px solid var(--theme-primary)',
+                  borderRadius: '7px',
+                  background: 'var(--theme-primary)',
+                  color: '#fff',
+                  fontSize: '13px',
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                }}
+              >
+                라인맞춤
               </button>
             </div>
           </div>

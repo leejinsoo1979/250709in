@@ -672,6 +672,9 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   if (isFree) {
     // 자유배치: store에서 가져온 freeWidth 또는 props moduleWidth 사용
     actualDoorWidth = storeFreeWidth || moduleWidth;
+  } else if (storePlacedModule?.customWidth !== undefined) {
+    // 가구편집 팝업에서 몸통폭을 직접 조정한 경우 실제 렌더링 폭은 customWidth가 기준이다.
+    actualDoorWidth = storePlacedModule.customWidth;
   } else if (storePlacedModule?.slotCustomWidth !== undefined) {
     // slotCustomWidth가 있으면 최우선 사용 (사용자가 슬롯 너비를 조정한 경우)
     actualDoorWidth = storePlacedModule.slotCustomWidth;

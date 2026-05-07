@@ -974,13 +974,13 @@ const PlacedModulePropertiesPanel: React.FC = () => {
         ? currentPlacedModule.customDepth
         : getDefaultDepth(moduleData);
 
-      // 기둥에 의해 조정된 너비가 있으면 우선 사용, 없으면 slotCustomWidth, customWidth, 기본 너비 순
+      // 기둥에 의해 조정된 너비가 있으면 우선 사용, 없으면 customWidth, slotCustomWidth, 기본 너비 순
       const initialWidth = currentPlacedModule.adjustedWidth !== undefined && currentPlacedModule.adjustedWidth !== null
         ? currentPlacedModule.adjustedWidth
-        : (currentPlacedModule.slotCustomWidth !== undefined
-          ? currentPlacedModule.slotCustomWidth
-          : (currentPlacedModule.customWidth !== undefined && currentPlacedModule.customWidth !== null
-            ? currentPlacedModule.customWidth
+        : (currentPlacedModule.customWidth !== undefined && currentPlacedModule.customWidth !== null
+          ? currentPlacedModule.customWidth
+          : (currentPlacedModule.slotCustomWidth !== undefined
+            ? currentPlacedModule.slotCustomWidth
             : moduleData.dimensions.width));
       console.log('🔍 [팝업 치수 디버그]', {
         moduleId: currentPlacedModule.moduleId,
@@ -1403,8 +1403,8 @@ const PlacedModulePropertiesPanel: React.FC = () => {
   );
   const isTwoSectionFurniture = sections.length === 2 || (isPullOutOrPantry && sections.length >= 2);
 
-  // 도어용 원래 너비 계산 (adjustedWidth가 없으면 slotCustomWidth → customWidth → 기본 너비)
-  const doorOriginalWidth = currentPlacedModule?.slotCustomWidth ?? currentPlacedModule?.customWidth ?? moduleData?.dimensions.width;
+  // 도어용 너비 계산: 실제 렌더링 몸통폭(customWidth)을 우선 사용한다.
+  const doorOriginalWidth = currentPlacedModule?.customWidth ?? currentPlacedModule?.slotCustomWidth ?? moduleData?.dimensions.width;
 
   // 프레임 높이 계산 (상단몰딩, 걸래받이)
   const topFrameHeightMm = calculateTopBottomFrameHeight(spaceInfo);
@@ -1782,6 +1782,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
       // 기존 customDepth 유지
       const updateData: any = { 
         customWidth: newWidth,
+        slotCustomWidth: undefined,
         isSplit: true // 너비가 조정되면 분할 상태로 표시
       };
       
@@ -3130,8 +3131,21 @@ const PlacedModulePropertiesPanel: React.FC = () => {
               if (!isNaN(v) && v > 0) return v;
               return currentPlacedModule.freeWidth || currentPlacedModule.customWidth || moduleData.dimensions.width;
             })();
-            // 도어 너비: 슬롯/가구 너비 - 좌우 갭(보통 3mm씩) → 슬롯 너비 그대로 사용 (실제 도어는 자동 계산)
-            const doorW = bodyWidth;
+            const doorGap = 3;
+            const isDualDoor = currentPlacedModule.isDualSlot || moduleData.id.startsWith('dual-');
+            let doorW = isDualDoor
+              ? Math.floor(bodyWidth / 2 - doorGap)
+              : bodyWidth - doorGap;
+
+            // DoorModule 렌더링과 동일하게 EP가 앞으로 돌출된 쪽은 도어 폭에서 제외한다.
+            const epThickness = currentPlacedModule.endPanelThickness || 18;
+            if (currentPlacedModule.hasLeftEndPanel && (currentPlacedModule.leftEndPanelOffset ?? 0) > 0) {
+              doorW -= epThickness;
+            }
+            if (currentPlacedModule.hasRightEndPanel && (currentPlacedModule.rightEndPanelOffset ?? 0) > 0) {
+              doorW -= epThickness;
+            }
+            doorW = Math.max(0, Math.round(doorW));
             // 도어 높이: 공간 높이 - 도어 상갭 - 도어 하갭
             const spaceH = spaceInfo.height || 0;
             const doorH = Math.max(0, spaceH - (doorTopGap || 0) - (doorBottomGap || 0));
