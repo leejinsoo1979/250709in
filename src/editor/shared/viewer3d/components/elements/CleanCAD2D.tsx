@@ -3889,9 +3889,11 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
 
           // ── 섹션 분할 정보 (2섹션 가구일 때 하부/상부 높이 분리) ──
           let sectionHeights: number[] = []; // 각 섹션의 mm 높이
-          if (leftmostMod && !hasDualCabinet) {
+          // 측면뷰 기준 가구는 sideViewMod 우선 (사용자가 선택/표시 중인 모듈)
+          const leftViewMod = sideViewMod || leftmostMod;
+          if (leftViewMod && !hasDualCabinet) {
             const modData = getModuleById(
-              leftmostMod.moduleId,
+              leftViewMod.moduleId,
               calculateInternalSpace(spaceInfo),
               spaceInfo
             );
@@ -3917,7 +3919,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 return Math.round(sectionBasisH * s.height / 100);
               });
               // 신발장(현관장 H/선반장)은 첫(하부) 섹션이 흡수, 그 외는 마지막(상부) 섹션이 흡수
-              const leftModId = leftmostMod?.moduleId || '';
+              const leftModId = leftViewMod?.moduleId || '';
               const leftIsShoe = leftModId.includes('-entryway-') ||
                 leftModId.includes('-shelf-') ||
                 leftModId.includes('-4drawer-shelf-') ||
