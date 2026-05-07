@@ -172,31 +172,13 @@ export const useBaseFurniture = (
         }
         return section;
       }
-      // 흡수 섹션(신발장: 하부 / 그 외: 상부)만 조정
-      // fixedTopZoneMm이 있으면 상단 그 영역은 보존, 그 아래 공간을 선반 갯수 균등 재계산
+      // 흡수 섹션: height만 늘리고 shelfPositions는 모듈 원본 그대로 보존
+      // (선반 사이 간격을 모듈 정의값 그대로 유지)
       const newSectionHeight = Math.round(absorbingNewHeight);
-      if (section.fixedTopZoneMm && section.count && section.count > 0) {
-        const fixedTop = section.fixedTopZoneMm;
-        // 받침대 하단 아래 공간(내경) = 새 섹션 높이 - 상판두께 - fixedTop - 바닥판두께
-        const lowerInner = newSectionHeight - basicThicknessMm - fixedTop - basicThicknessMm;
-        if (lowerInner > 0) {
-          const realCount = section.count;
-          const halfT = basicThicknessMm / 2;
-          const g = (lowerInner - realCount * basicThicknessMm) / (realCount + 1);
-          const newPositions = Array.from({ length: realCount }, (_, i) =>
-            Math.round((i + 1) * g + i * basicThicknessMm + halfT)
-          );
-          return {
-            ...section,
-            height: newSectionHeight,
-            shelfPositions: newPositions,
-          };
-        }
-      }
       return {
         ...section,
         height: newSectionHeight,
-        shelfPositions: section.shelfPositions?.map((pos: number) => Math.round(pos * absorbingRatio))
+        // shelfPositions: 원본 그대로 (재계산 안 함)
       };
     });
 
