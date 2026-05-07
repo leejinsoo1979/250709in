@@ -6584,8 +6584,14 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             const topFrameHeight = Math.max(0, rawTopFrame - baseFrameAbsorbed);
             // console.log('🔍 [CleanCAD2D 좌측 치수]', { ... }); // 진단용 로그 제거 (성능)
             // hasBase=false → 걸래받이 0 (individualFloatHeight만 반영)
+            // 신발장(현관장 H/선반장)은 띄움이 하부 섹션 안에서 흡수 → bottomFrameHeight 0
+            const viewModId = viewMod?.moduleId || '';
+            const viewIsShoe = viewModId.includes('-entryway-') ||
+              viewModId.includes('-shelf-') ||
+              viewModId.includes('-4drawer-shelf-') ||
+              viewModId.includes('-2drawer-shelf-');
             const bottomFrameHeight = viewMod?.hasBase === false
-              ? (viewMod.individualFloatHeight ?? 0)
+              ? (viewIsShoe ? 0 : (viewMod.individualFloatHeight ?? 0))
               : (viewMod?.baseFrameHeight !== undefined && spaceInfo.baseConfig?.type === 'floor')
                 ? viewMod.baseFrameHeight : globalBottomFrame;
 
