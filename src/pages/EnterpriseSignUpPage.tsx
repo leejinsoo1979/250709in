@@ -441,21 +441,14 @@ export default function EnterpriseSignUpPage() {
             const isHold = s === 'on_hold';
             const isRejected = s === 'rejected';
 
-            const accent = isApproved ? '#10b981' : isPending ? '#3b82f6' : isHold ? '#f59e0b' : '#ef4444';
-            const title = isPending
-              ? '승인 대기 중입니다'
-              : isApproved
+            const accent = isApproved ? '#10b981' : '#f59e0b';
+            // 사용자에겐 거절/대기/보류 모두 '승인 보류 중'으로 통일 — 강한 부정 표현 안 사용
+            const title = isApproved
               ? '이미 기업회원으로 승인되었습니다'
-              : isHold
-              ? '가입 신청이 보류된 상태입니다'
-              : '가입 신청이 거절되었습니다';
-            const body = isPending
-              ? '관리자가 신청 내용을 검토 중입니다.\n빠르면 10분, 늦어도 20분 이내에 처리됩니다.\n검토 결과는 다음 로그인 시 자동으로 안내됩니다.'
-              : isApproved
+              : '승인 보류 중입니다';
+            const body = isApproved
               ? `${existingInquiry.companyName ? existingInquiry.companyName + ' 님의 ' : ''}기업계정이 활성화되어 있습니다.\n로그인 후 모든 기능을 이용하실 수 있습니다.`
-              : isHold
-              ? '관리자가 추가 확인 중입니다. 확인이 완료되면 다시 안내드리겠습니다.'
-              : '아쉽게도 이번 신청은 승인되지 않았습니다.\n사유를 확인하시고 필요 시 다시 신청해 주세요.';
+              : '관리자가 신청 내용을 확인하고 있습니다.\n처리 결과는 다음 로그인 시 자동으로 안내됩니다.';
 
             return (
               <motion.div
@@ -471,20 +464,10 @@ export default function EnterpriseSignUpPage() {
                   <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke={accent} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     {isApproved ? (
                       <polyline points="20 6 9 17 4 12" />
-                    ) : isPending ? (
+                    ) : (
                       <>
                         <circle cx="12" cy="12" r="10" />
                         <polyline points="12 6 12 12 16 14" />
-                      </>
-                    ) : isHold ? (
-                      <>
-                        <rect x="6" y="4" width="4" height="16" />
-                        <rect x="14" y="4" width="4" height="16" />
-                      </>
-                    ) : (
-                      <>
-                        <line x1="18" y1="6" x2="6" y2="18" />
-                        <line x1="6" y1="6" x2="18" y2="18" />
                       </>
                     )}
                   </svg>
@@ -503,19 +486,7 @@ export default function EnterpriseSignUpPage() {
                   </div>
                 )}
 
-                {(isHold || isRejected) && existingInquiry.reasonText && (
-                  <div
-                    className="mb-6 mx-auto max-w-md text-left rounded-xl px-4 py-3 text-sm leading-relaxed"
-                    style={{
-                      background: isHold ? 'rgba(245, 158, 11, 0.1)' : 'rgba(239, 68, 68, 0.1)',
-                      border: `1px solid ${isHold ? 'rgba(245, 158, 11, 0.3)' : 'rgba(239, 68, 68, 0.3)'}`,
-                      color: isHold ? '#fcd34d' : '#fca5a5',
-                    }}
-                  >
-                    <div className="font-semibold mb-1">사유</div>
-                    <div>{existingInquiry.reasonText}</div>
-                  </div>
-                )}
+                {/* 사유 박스 — 사용자에게 거절/보류 사유 노출 안 함 (관리자만 본다) */}
 
                 <div className="flex gap-3 justify-center flex-wrap">
                   <button
@@ -550,23 +521,7 @@ export default function EnterpriseSignUpPage() {
                       로그인하러 가기
                     </button>
                   )}
-                  {isRejected && (
-                    <button
-                      onClick={() => setForceShowForm(true)}
-                      style={{
-                        padding: '12px 24px',
-                        borderRadius: 999,
-                        border: 'none',
-                        background: '#ffffff',
-                        color: '#09090b',
-                        fontSize: 14,
-                        fontWeight: 600,
-                        cursor: 'pointer',
-                      }}
-                    >
-                      다시 신청하기
-                    </button>
-                  )}
+                  {/* 거절 사용자도 다시 신청 버튼 노출 안 함 (혼란 방지) */}
                 </div>
               </motion.div>
             );
