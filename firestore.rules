@@ -356,5 +356,23 @@ service cloud.firestore {
         resource.data.userId == request.auth.uid || isAdmin()
       );
     }
+
+    // 기업회원 가입 신청 (enterprise_inquiries)
+    // - 생성: 로그인 사용자 본인 (uid 일치)
+    // - 읽기/목록: 본인 또는 관리자
+    // - 수정: 본인은 noticeShownAt만, 관리자는 전체 (텔레그램 webhook은 admin SDK라 룰 우회)
+    // - 삭제: 관리자만
+    match /enterprise_inquiries/{inquiryId} {
+      allow create: if isSignedIn() && request.resource.data.uid == request.auth.uid;
+      allow read: if isSignedIn() && (resource.data.uid == request.auth.uid || isAdmin());
+      allow list: if isAdmin();
+      allow update: if isSignedIn() && (
+        isAdmin() ||
+        // 본인은 noticeShownAt만 업데이트 가능
+        (resource.data.uid == request.auth.uid &&
+         request.resource.data.diff(resource.data).affectedKeys().hasOnly(['noticeShownAt']))
+      );
+      allow delete: if isAdmin();
+    }
   }
 }

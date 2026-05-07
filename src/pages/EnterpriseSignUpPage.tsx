@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'motion/react';
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, addDoc, serverTimestamp, query, where, orderBy, limit, getDocs } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { EmailAuthProvider, linkWithCredential } from 'firebase/auth';
 import { httpsCallable } from 'firebase/functions';
@@ -66,6 +66,57 @@ export default function EnterpriseSignUpPage() {
     message: string;
     verifiedNumber: string; // 검증 완료된 사업자번호 (입력값과 비교용 - 변경되면 재검증 필요)
   }>({ status: 'idle', message: '', verifiedNumber: '' });
+
+  // 기존 가입 신청 조회 (이미 신청한 경우 폼 대신 상태 안내 화면 표시)
+  type ExistingStatus = 'pending' | 'approved' | 'on_hold' | 'rejected';
+  const [existingInquiry, setExistingInquiry] = useState<{
+    status: ExistingStatus;
+    companyName?: string;
+    reasonText?: string;
+    createdAt?: Date | null;
+  } | null>(null);
+  const [checkingExisting, setCheckingExisting] = useState(true);
+  // 거절/보류 사용자가 재신청 선택 시 폼 표시
+  const [forceShowForm, setForceShowForm] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      if (!currentUser?.uid) {
+        setCheckingExisting(false);
+        return;
+      }
+      try {
+        const q = query(
+          collection(db, 'enterprise_inquiries'),
+          where('uid', '==', currentUser.uid),
+          orderBy('createdAt', 'desc'),
+          limit(1)
+        );
+        const snap = await getDocs(q);
+        if (cancelled) return;
+        if (!snap.empty) {
+          const data = snap.docs[0].data() as {
+            status?: ExistingStatus;
+            companyName?: string;
+            reasonText?: string;
+            createdAt?: { toDate?: () => Date };
+          };
+          setExistingInquiry({
+            status: (data.status as ExistingStatus) || 'pending',
+            companyName: data.companyName,
+            reasonText: data.reasonText,
+            createdAt: data.createdAt?.toDate?.() || null,
+          });
+        }
+      } catch (err) {
+        console.warn('기존 신청 조회 실패:', err);
+      } finally {
+        if (!cancelled) setCheckingExisting(false);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [currentUser?.uid]);
 
   // 소셜 로그인 사용자: 이메일/대표자명 자동 입력
   useEffect(() => {
@@ -372,7 +423,121 @@ export default function EnterpriseSignUpPage() {
       </header>
 
       <div className="max-w-xl mx-auto px-6 py-12 sm:py-16">
-        {submitted ? (
+        {checkingExisting ? (
+          <div className="text-center py-32 text-zinc-500 text-sm">신청 정보 확인 중...</div>
+        ) : existingInquiry && !forceShowForm && !submitted ? (
+          // 이미 신청한 사용자: 상태별 안내 화면
+          (() => {
+            const s = existingInquiry.status;
+            const isPending = s === 'pending';
+            const isApproved = s === 'approved';
+            const isHold = s === 'on_hold';
+            const isRejected = s === 'rejected';
+
+            const accent = isApproved ? '#10b981' : isPending ? '#3b82f6' : isHold ? '#f59e0b' : '#ef4444';
+            const title = isPending
+              ? '승인 대기 중입니다'
+              : isApproved
+              ? '이미 기업회원으로 승인되었습니다'
+              : isHold
+              ? '가입 신청이 보류된 상태입니다'
+              : '가입 신청이 거절되었습니다';
+            const body = isPending
+              ? '관리자가 신청 내용을 검토 중입니다.\n빠르면 10분, 늦어도 20분 이내에 처리됩니다.\n검토 결과는 다음 로그인 시 자동으로 안내됩니다.'
+              : isApproved
+              ? `${existingInquiry.companyName ? existingInquiry.companyName + ' 님의 ' : ''}기업계정이 활성화되어 있습니다.\n로그인 후 모든 기능을 이용하실 수 있습니다.`
+              : isHold
+              ? '관리자가 추가 확인 중입니다. 확인이 완료되면 다시 안내드리겠습니다.'
+              : '아쉽게도 이번 신청은 승인되지 않았습니다.\n사유를 확인하시고 필요 시 다시 신청해 주세요.';
+
+            return (
+              <motion.div
+                className="text-center py-20"
+                initial={{ opacity: 0, y: 24 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4 }}
+              >
+                <div
+                  className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6"
+                  style={{ background: `${accent}1A`, border: `1px solid ${accent}55` }}
+                >
+                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke={accent} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    {isApproved ? (
+                      <polyline points="20 6 9 17 4 12" />
+                    ) : isPending ? (
+                      <>
+                        <circle cx="12" cy="12" r="10" />
+                        <polyline points="12 6 12 12 16 14" />
+                      </>
+                    ) : isHold ? (
+                      <>
+                        <rect x="6" y="4" width="4" height="16" />
+                        <rect x="14" y="4" width="4" height="16" />
+                      </>
+                    ) : (
+                      <>
+                        <line x1="18" y1="6" x2="6" y2="18" />
+                        <line x1="6" y1="6" x2="18" y2="18" />
+                      </>
+                    )}
+                  </svg>
+                </div>
+                <h2 className="text-2xl font-bold text-white mb-3">{title}</h2>
+                <p className="text-zinc-400 text-sm mb-6 leading-relaxed whitespace-pre-line">{body}</p>
+
+                {existingInquiry.companyName && (
+                  <div className="mb-4 text-zinc-500 text-xs">
+                    회사명: <span className="text-zinc-300">{existingInquiry.companyName}</span>
+                  </div>
+                )}
+                {existingInquiry.createdAt && (
+                  <div className="mb-6 text-zinc-500 text-xs">
+                    신청일: <span className="text-zinc-300">{existingInquiry.createdAt.toLocaleString('ko-KR')}</span>
+                  </div>
+                )}
+
+                {(isHold || isRejected) && existingInquiry.reasonText && (
+                  <div
+                    className="mb-6 mx-auto max-w-md text-left rounded-xl px-4 py-3 text-sm leading-relaxed"
+                    style={{
+                      background: isHold ? 'rgba(245, 158, 11, 0.1)' : 'rgba(239, 68, 68, 0.1)',
+                      border: `1px solid ${isHold ? 'rgba(245, 158, 11, 0.3)' : 'rgba(239, 68, 68, 0.3)'}`,
+                      color: isHold ? '#fcd34d' : '#fca5a5',
+                    }}
+                  >
+                    <div className="font-semibold mb-1">사유</div>
+                    <div>{existingInquiry.reasonText}</div>
+                  </div>
+                )}
+
+                <div className="flex gap-3 justify-center flex-wrap">
+                  <button
+                    onClick={() => navigate('/demo')}
+                    className="border border-white/30 text-white py-3 px-6 rounded-full font-semibold text-sm hover:bg-white/10 transition-colors"
+                  >
+                    데모로 돌아가기
+                  </button>
+                  {isApproved && (
+                    <button
+                      onClick={() => navigate('/login')}
+                      className="bg-white text-zinc-950 py-3 px-6 rounded-full font-semibold text-sm hover:bg-zinc-200 transition-colors"
+                    >
+                      로그인하러 가기
+                    </button>
+                  )}
+                  {isRejected && (
+                    <button
+                      onClick={() => setForceShowForm(true)}
+                      className="bg-white text-zinc-950 py-3 px-6 rounded-full font-semibold text-sm hover:bg-zinc-200 transition-colors"
+                    >
+                      다시 신청하기
+                    </button>
+                  )}
+                </div>
+              </motion.div>
+            );
+          })()
+        ) : submitted ? (
           <motion.div
             className="text-center py-20"
             initial={{ opacity: 0, y: 24 }}
