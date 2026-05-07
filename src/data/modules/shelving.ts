@@ -23,6 +23,11 @@ export interface SectionConfig {
   // 섹션별 백패널 유무 (기본값 true). false면 백패널 없음 + 측판 우측 홈파기 없음
   // 예: 빌트인 냉장고장 하부섹션 (냉장고 통풍/콘센트용 개방)
   hasBackPanel?: boolean;
+
+  // 흡수 섹션일 때 상단 고정 영역 높이 (mm)
+  // 예: 신발장 H 하부섹션은 상단 206mm(서랍 188mm + 받침대 18mm)가 고정 영역,
+  //     그 아래 공간만 흡수되어 신발선반 균등분할
+  fixedTopZoneMm?: number;
 }
 
 // 타입 가드 함수: Firebase에서 불러온 데이터 검증
@@ -124,6 +129,9 @@ const FURNITURE_SPECS = {
   // 현관장 스펙
   ENTRYWAY_DEPTH: 400,          // 현관장 기본 깊이
   ENTRYWAY_BOTTOM_HEIGHT: 1200, // 현관장 H 하부섹션(선반+서랍) 고정 높이
+  // 현관장 H 속서랍 영역 = 받침대 두께(_t=18) + 서랍 내경 188 = 206mm
+  // 이 값은 하부섹션 상단의 고정 영역 (흡수되지 않음, 받침대 위치 유지)
+  ENTRYWAY_DRAWER_ZONE_MM: 206,
   // ENTRYWAY_I_BOTTOM_HEIGHT: 1400, // 현관장 I 하부섹션 고정 높이
 
   // 선반장+서랍 스펙
@@ -736,22 +744,22 @@ const createSingleEntrywayH = (columnWidth: number, maxHeight: number): ModuleDa
   const topHeight = maxHeight - bottomHeight;
   const _t = FURNITURE_SPECS.BASIC_THICKNESS;
 
-  // 받침대 하단 위치(섹션 바닥에서) = 섹션 천장 - 상판두께 - 188mm - 받침대두께
-  //                                = bottomHeight - _t - 188 - _t = bottomHeight - 2*_t - 188
-  // 받침대 하단 아래 공간을 신발선반 3개 균등분할 (서랍 영역과 안 겹침)
-  const drawerSupportBottomFromSectionBottom = bottomHeight - 2 * _t - 188; // 섹션 바닥(_t 위) 기준
-  // calculateEvenShelfPositions은 sectionHeight(내경)만큼의 공간을 N+1 균등분할 → N개 선반 위치 반환
-  // 내경 공간 = 받침대 하단 아래 공간 - 섹션 바닥판 두께 = drawerSupportBottomFromSectionBottom - _t
-  const lowerShelfInnerHeight = drawerSupportBottomFromSectionBottom - _t;
+  // 하부섹션 상단의 서랍 영역(받침대+서랍)은 흡수되지 않는 고정 영역
+  // fixedTopZone = ENTRYWAY_DRAWER_ZONE_MM (206)
+  // 받침대 하단 아래 공간 = bottomHeight - _t - fixedTopZone (섹션 바닥판 두께 빼고)
+  const drawerZoneMm = FURNITURE_SPECS.ENTRYWAY_DRAWER_ZONE_MM;
+  const lowerShelfInnerHeight = bottomHeight - _t - drawerZoneMm - _t;
   const shelfPositionsLower = calculateEvenShelfPositions(lowerShelfInnerHeight, 3);
   const baseSections: SectionConfig[] = [
     // 섹션0: 하부 — 신발선반 3개 (받침대 하단 아래 공간 균등분할) + 속서랍 포함
+    // fixedTopZoneMm: 흡수 시 상단 고정 영역(받침대+서랍 = 206mm) 보존
     {
       type: 'shelf',
       heightType: 'absolute',
       height: bottomHeight,
       count: 3,
-      shelfPositions: shelfPositionsLower
+      shelfPositions: shelfPositionsLower,
+      fixedTopZoneMm: drawerZoneMm,
     },
     // 섹션1: 상부 — 다보선반 4개 (균등분할)
     {
