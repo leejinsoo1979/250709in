@@ -1069,9 +1069,10 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                         // backPanelThickness는 line 727에서 8mm로 shadowing됨 → backReductionForPanels(26mm) 사용
                         const bpFrontFace = -depth/2 + backReductionForPanels;
                         const backHorizZ = bpFrontFace + basicThickness/2;
-                        // 수직 패널 깊이: 전면~후면 수평 패널 사이
-                        const vertFrontEdge = frontHorizZ - basicThickness/2;
-                        const vertBackEdge = backHorizZ + basicThickness/2;
+                        // 수직 패널 깊이: 섹션 덥개(하부 상판)와 동일한 깊이 = lowerSectionDepth - 26 - 85
+                        // 수직 패널이 전면/후면 수평 패널의 바깥쪽 면까지 확장 (덥개와 끝선 일치)
+                        const vertFrontEdge = frontHorizZ + basicThickness/2;
+                        const vertBackEdge = backHorizZ - basicThickness/2;
                         const vertDepth = vertFrontEdge - vertBackEdge;
                         const vertZ = (vertFrontEdge + vertBackEdge) / 2;
                         // 수평 패널 폭: 27mm + basicThickness
