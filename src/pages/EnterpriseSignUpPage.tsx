@@ -471,17 +471,17 @@ export default function EnterpriseSignUpPage() {
                   </div>
                 )}
 
-                {/* 관리자 메모 — 회색 톤, 빨간색 사용 안 함 */}
+                {/* 관리자 메모 — 테마 primary 톤 */}
                 {!isApproved && existingInquiry.reasonText && (
                   <div
                     className="mb-6 mx-auto max-w-md text-left rounded-xl px-4 py-3 text-sm leading-relaxed"
                     style={{
-                      background: '#27272a',
-                      border: '1px solid #3f3f46',
-                      color: '#e4e4e7',
+                      background: 'rgba(102, 126, 234, 0.10)',
+                      border: '1px solid rgba(102, 126, 234, 0.30)',
+                      color: '#ffffff',
                     }}
                   >
-                    <div style={{ color: '#a1a1aa', fontWeight: 600, marginBottom: 4, fontSize: 12 }}>관리자 메모</div>
+                    <div style={{ color: 'var(--theme-primary, #667eea)', fontWeight: 600, marginBottom: 4, fontSize: 12 }}>관리자 메모</div>
                     <div>{existingInquiry.reasonText}</div>
                   </div>
                 )}
@@ -492,8 +492,8 @@ export default function EnterpriseSignUpPage() {
                     style={{
                       padding: '12px 24px',
                       borderRadius: 999,
-                      border: '1px solid #52525b',
-                      background: '#27272a',
+                      border: '1px solid rgba(102, 126, 234, 0.5)',
+                      background: 'transparent',
                       color: '#ffffff',
                       fontSize: 14,
                       fontWeight: 600,

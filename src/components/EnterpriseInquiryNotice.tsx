@@ -104,7 +104,7 @@ export default function EnterpriseInquiryNotice() {
   // 상태별 컨텐츠 — 사용자에겐 approved 외에는 모두 '승인 보류'로 통일
   const isApproved = inquiry.status === 'approved';
 
-  const accent = isApproved ? 'var(--theme-primary, #667eea)' : '#f59e0b';
+  const accent = 'var(--theme-primary, #667eea)';
 
   // 사용자에겐 거절/보류 모두 '승인 보류 중'으로 통일
   const title = isApproved
@@ -211,14 +211,14 @@ export default function EnterpriseInquiryNotice() {
           </div>
         )}
 
-        {/* 사유 박스 — 회색 톤 (빨간색 사용 안 함) */}
+        {/* 관리자 메모 — 테마 primary 톤 */}
         {!isApproved && inquiry.reasonText && (
           <div
             style={{
               textAlign: 'left',
-              background: 'var(--theme-surface-alt, #f4f4f5)',
-              border: '1px solid var(--theme-border, #e4e4e7)',
-              color: 'var(--theme-text, #18181b)',
+              background: 'var(--theme-primary-alpha, rgba(102, 126, 234, 0.08))',
+              border: '1px solid var(--theme-primary-alpha-strong, rgba(102, 126, 234, 0.25))',
+              color: 'var(--theme-text, #1f2937)',
               borderRadius: 10,
               padding: '12px 16px',
               marginBottom: 24,
@@ -226,7 +226,7 @@ export default function EnterpriseInquiryNotice() {
               lineHeight: 1.6,
             }}
           >
-            <div style={{ fontWeight: 600, marginBottom: 4, color: 'var(--theme-text-secondary, #6b7280)' }}>관리자 메모</div>
+            <div style={{ fontWeight: 600, marginBottom: 4, color: 'var(--theme-primary, #667eea)', fontSize: 12 }}>관리자 메모</div>
             <div>{inquiry.reasonText}</div>
           </div>
         )}
