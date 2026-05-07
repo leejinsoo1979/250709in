@@ -255,34 +255,38 @@ const computeSectionHeightsInfo = (
 
   // useBaseFurniture.ts(line 112-157)와 동일한 방식:
   // shelving.ts에서 sections 합 = dimensions.height (판재 두께 포함)
-  // 하부 섹션 고정, 마지막(상부) 섹션이 높이 차이를 흡수
+  // 일반 가구: 하부 섹션 고정, 마지막(상부) 섹션이 높이 차이를 흡수
+  // 신발장(현관장 H/선반장): 첫(하부) 섹션이 흡수, 상부 섹션 고정
+  const modIdForAbsorb = module.moduleId || '';
+  const isShoeAbsorb = modIdForAbsorb.includes('-entryway-') ||
+    modIdForAbsorb.includes('-shelf-') ||
+    modIdForAbsorb.includes('-4drawer-shelf-') ||
+    modIdForAbsorb.includes('-2drawer-shelf-');
+  const absorbIdx = isShoeAbsorb ? 0 : rawSections.length - 1;
+
   let heightsMm: number[];
 
   const hasCalculatedHeights = rawSections.every(section => typeof (section as SectionWithCalc & { calculatedHeight?: number }).calculatedHeight === 'number');
 
   if (hasCalculatedHeights && rawSections.length > 0) {
-    // calculatedHeight가 있는 경우: 합산 후 internalHeightMm과 비교하여 마지막 섹션 보정
     const calcHeights = rawSections.map(section => {
       const calc = (section as SectionWithCalc & { calculatedHeight?: number }).calculatedHeight;
       return Math.max(calc ?? 0, 0);
     });
     const calcTotal = calcHeights.reduce((sum, h) => sum + h, 0);
     if (Math.abs(calcTotal - internalHeightMm) > 1 && rawSections.length > 1) {
-      // 하부 고정, 마지막(상부) 섹션이 차이 흡수
-      const fixedSum = calcHeights.slice(0, -1).reduce((sum, h) => sum + h, 0);
-      calcHeights[calcHeights.length - 1] = Math.max(0, internalHeightMm - fixedSum);
+      const fixedSum = calcHeights.reduce((s, h, i) => i === absorbIdx ? s : s + h, 0);
+      calcHeights[absorbIdx] = Math.max(0, internalHeightMm - fixedSum);
     }
     heightsMm = calcHeights;
   } else {
-    // 하부 섹션 고정, 마지막(상부) 섹션이 높이 차이를 흡수 (useBaseFurniture 방식)
-    const fixedSum = rawSections.slice(0, -1).reduce((sum, section) => sum + (section.height ?? 0), 0);
-    const lastSectionNewHeight = Math.max(0, internalHeightMm - fixedSum);
+    const fixedSum = rawSections.reduce((s, section, i) =>
+      i === absorbIdx ? s : s + (section.height ?? 0), 0);
+    const absorbingNewHeight = Math.max(0, internalHeightMm - fixedSum);
 
     heightsMm = rawSections.map((section, idx) => {
-      if (idx < rawSections.length - 1) {
-        return section.height ?? 0; // 하부 섹션 고정
-      }
-      return lastSectionNewHeight; // 상부(마지막) 섹션이 나머지 흡수
+      if (idx === absorbIdx) return absorbingNewHeight;
+      return section.height ?? 0;
     });
   }
 
