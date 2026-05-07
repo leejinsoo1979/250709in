@@ -5999,16 +5999,21 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             : ((section.height as number) || sectionHeight);
           const innerH = Math.max(0, sectionOuterH - 2 * basicThickness);
           // 모듈 원본 shelfPositions 그대로 사용 (신발장 하부는 받침대 기준 특수 위치)
-          // useBaseFurniture가 비례조정하더라도 핸들러는 원본 위치 표시
           const posArrEffective: number[] = posArr;
+          // 흡수 섹션 + fixedTopZoneMm 있으면(신발장 하부) 마지막 칸은 마지막 선반~받침대 하단까지로 제한
+          // (fixedTopZone = 받침대+서랍 영역, 그 위는 별도 표시 안 함)
+          const fixedTopZone = (section as any).fixedTopZoneMm ? Number((section as any).fixedTopZoneMm) : 0;
+          const effectiveTopY = isAbsorbingSectionRuntime && fixedTopZone > 0
+            ? innerH - fixedTopZone
+            : innerH;
           // gaps를 실제 저장된 shelfPositions에서 파생 (스피너로 선반 이동 시 즉시 반영되도록)
-          // gaps[k] = posArr[k]가 있으면 (k==0 ? posArr[0]-halfT : posArr[k]-posArr[k-1]-basicThickness), 마지막은 innerH-posArr[n-1]-halfT
+          // gaps[k]: k==0 → posArr[0]-halfT, 중간 → posArr[k]-posArr[k-1]-basicThickness, 마지막 → effectiveTopY - posArr[n-1] - halfT
           const gaps: number[] = [];
           for (let k = 0; k <= n; k++) {
             if (k === 0) {
               gaps.push(Math.max(0, Math.round(posArrEffective[0] - halfT)));
             } else if (k === n) {
-              gaps.push(Math.max(0, Math.round(innerH - posArrEffective[n - 1] - halfT)));
+              gaps.push(Math.max(0, Math.round(effectiveTopY - posArrEffective[n - 1] - halfT)));
             } else {
               gaps.push(Math.max(0, Math.round(posArrEffective[k] - posArrEffective[k - 1] - basicThickness)));
             }
