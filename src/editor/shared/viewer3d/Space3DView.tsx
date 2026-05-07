@@ -17,7 +17,7 @@ import PanelBCreationMarkers from './components/elements/space/PanelBCreationMar
 
 import ColumnGuides from './components/elements/ColumnGuides';
 import CleanCAD2D from './components/elements/CleanCAD2D';
-import CADDimensions2D from './components/elements/CADDimensions2D';
+import SideViewDimensions2D from './components/elements/SideViewDimensions2D';
 import CADGrid from './components/elements/CADGrid';
 import DroppedCeilingSpace from './components/elements/DroppedCeilingSpace';
 import { MeasurementTool } from './components/elements/MeasurementTool';
@@ -2006,7 +2006,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
 
               {/* 측면뷰 전용 치수 표시 - 2D 측면뷰에서만 (Configurator 전용, 자유배치모드에서는 가구 배치 후 표시) */}
               {showDimensions && showDimensionsText && !isStep2 && viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right') && (spaceInfo?.layoutMode !== 'free-placement' || placedModules.length > 0) && (
-                <CADDimensions2D
+                <SideViewDimensions2D
                   viewDirection={view2DDirection}
                   showDimensions={dimensionDisplayEnabled}
                   isSplitView={true}
@@ -2435,7 +2435,7 @@ const QuadrantContent: React.FC<{
 
       {/* 측면뷰 전용 치수 표시 - 4분할 뷰에서도 표시 (자유배치모드에서는 가구 배치 후 표시) */}
       {showDimensions && showDimensionsText && (viewDirection === 'left' || viewDirection === 'right') && (spaceInfo?.layoutMode !== 'free-placement' || placedModules.length > 0) && (
-        <CADDimensions2D
+        <SideViewDimensions2D
           viewDirection={viewDirection}
           showDimensions={dimensionDisplayEnabled}
           isSplitView={true}
