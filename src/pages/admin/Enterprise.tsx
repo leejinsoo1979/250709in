@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { collection, query, orderBy, getDocs, Timestamp } from 'firebase/firestore';
+import { collection, query, orderBy, getDocs, doc, updateDoc, serverTimestamp, Timestamp } from 'firebase/firestore';
 import { httpsCallable } from 'firebase/functions';
 import { db, functions } from '@/firebase/config';
 import { useAuth } from '@/auth/AuthProvider';
@@ -150,7 +150,21 @@ export default function Enterprise() {
     }
   };
 
-  const filtered = rows
+  // 같은 uid의 신청 중 '가장 최근 1건만' 표시 (이전 건은 자동으로 보이지 않게)
+  const latestByUid = (() => {
+    const seen = new Set<string>();
+    const result: InquiryRow[] = [];
+    for (const r of rows) {
+      // rows는 createdAt desc로 이미 정렬됨
+      const key = r.uid || `__no_uid__${r.id}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      result.push(r);
+    }
+    return result;
+  })();
+
+  const filtered = latestByUid
     // superseded(보완 후 재신청으로 대체됨) 항목은 목록에서 자동 숨김
     .filter((r) => (r.status as string) !== 'superseded')
     .filter((r) => (filter === 'all' ? true : r.status === filter))
