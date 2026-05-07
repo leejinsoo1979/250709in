@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { doc, getDocFromServer, Timestamp } from 'firebase/firestore';
 import { db } from '@/firebase/config';
 import { ProjectSummary } from '@/firebase/types';
@@ -57,6 +57,9 @@ export function useExplorerData(
 
   // --- 데이터 로딩 함수들 ---
 
+  // owner 정보 세션 캐시 — 같은 ownerId는 다시 Firestore read 하지 않음
+  const ownerCacheRef = useRef<Map<string, { displayName: string; photoURL: string | null }>>(new Map());
+
   const loadDesignFilesForProject = useCallback(async (projectId: string) => {
     if (!user) return;
 
@@ -69,13 +72,16 @@ export function useExplorerData(
       } else {
         setProjectDesignFiles(prev => ({ ...prev, [projectId]: designFiles }));
 
-        // 소유자 프로필 정보 로드
+        // 소유자 프로필 정보 로드 — 캐시 미스인 ownerId만 조회
         const ownerIds = new Set(
           designFiles.map((df: any) => df.userId).filter(Boolean)
         );
-        if (ownerIds.size > 0) {
+        const cache = ownerCacheRef.current;
+        const missingIds = Array.from(ownerIds).filter(id => !cache.has(id));
+
+        if (missingIds.length > 0) {
           const fetchedOwners = await Promise.all(
-            Array.from(ownerIds).map(async (ownerId) => {
+            missingIds.map(async (ownerId) => {
               try {
                 const ownerDoc = await getDocFromServer(doc(db, 'users', ownerId));
                 let displayName = '';
@@ -101,6 +107,11 @@ export function useExplorerData(
               }
             })
           );
+          // 캐시 업데이트
+          fetchedOwners.forEach(o => {
+            cache.set(o.ownerId, { displayName: o.displayName, photoURL: o.photoURL });
+          });
+          // state 반영
           setProjectOwners(prev => {
             const next = { ...prev };
             fetchedOwners.forEach(o => {
@@ -171,7 +182,9 @@ export function useExplorerData(
   }, [user]);
 
   // --- 실시간 구독 ---
-
+  // ⚠️ 기존 코드 버그: setTimeout 안의 return은 useEffect cleanup에 등록 안 됨 →
+  //   리스너가 unmount 시 끊기지 않아 누적되고 Firestore read 폭증의 주범이 됨.
+  //   useRef로 unsubscribe를 외부에 노출시켜 cleanup에서 안전하게 정리.
   useEffect(() => {
     if (!user) {
       setProjectsLoading(false);
@@ -180,16 +193,22 @@ export function useExplorerData(
 
     setProjectsLoading(true);
 
+    let unsubscribe: (() => void) | null = null;
     const timeoutId = setTimeout(() => {
-      const unsubscribe = subscribeToUserProjects(user.uid, (loadedProjects) => {
+      unsubscribe = subscribeToUserProjects(user.uid, (loadedProjects) => {
         setProjects(loadedProjects);
         setProjectsLoading(false);
         setInitialLoadComplete(true);
       });
-      return () => unsubscribe();
     }, 500);
 
-    return () => clearTimeout(timeoutId);
+    return () => {
+      clearTimeout(timeoutId);
+      if (unsubscribe) {
+        unsubscribe();
+        unsubscribe = null;
+      }
+    };
   }, [user]);
 
   // 프로젝트 로드 시 디자인 파일 + 폴더 로드
@@ -206,32 +225,30 @@ export function useExplorerData(
     }
   }, [projects, user, loadDesignFilesForProject, loadFolderDataForProject]);
 
-  // 공유 프로젝트 로드
+  // 공유 프로젝트 로드 — 사용자 로그인 시점에 1회만 (Firestore read 폭증 방지)
+  // ⚠️ 기존 deps에 projects + projectCollaborators가 있어 setSharedByMeProjects ↔ 협업자 useEffect 간 순환 무한루프 발생.
+  //   sharedByMe 계산은 projects/collaborators가 바뀌어도 자동 갱신되지 않으므로
+  //   필요 시 refreshProjects 호출 시점에 같이 갱신.
   useEffect(() => {
     if (!user) return;
     const loadShared = async () => {
       try {
-        const shared = await getSharedProjectsForUser(user.uid);
+        const [shared, myLinks] = await Promise.all([
+          getSharedProjectsForUser(user.uid),
+          getMySharedLinks(user.uid),
+        ]);
         setSharedWithMeProjects(shared);
 
-        const myLinks = await getMySharedLinks(user.uid);
-        const sharedByMe = projects.filter(p => {
-          const collabs = projectCollaborators[p.id];
-          return collabs && collabs.length > 0;
-        });
-
+        // 내가 공유한 프로젝트는 myLinks 기준으로만 구성 (projectCollaborators 의존 제거)
         const sharedByMeMap = new Map<string, any>();
-        sharedByMe.forEach(p => sharedByMeMap.set(p.id, p));
         myLinks.forEach(link => {
-          if (!sharedByMeMap.has(link.projectId)) {
-            sharedByMeMap.set(link.projectId, {
-              id: link.projectId,
-              title: link.projectName,
-              userId: user.uid,
-              createdAt: link.createdAt,
-              updatedAt: link.createdAt,
-            });
-          }
+          sharedByMeMap.set(link.projectId, {
+            id: link.projectId,
+            title: link.projectName,
+            userId: user.uid,
+            createdAt: link.createdAt,
+            updatedAt: link.createdAt,
+          });
         });
 
         setSharedByMeProjects(Array.from(sharedByMeMap.values()));
@@ -240,24 +257,33 @@ export function useExplorerData(
       }
     };
     loadShared();
-  }, [user, projects, projectCollaborators]);
+  }, [user]);
 
-  // 협업자 정보 로드
+  // 협업자 정보 로드 — 한 번 조회한 프로젝트는 재조회 안 함 (Firestore read 폭증 방지)
+  const fetchedCollaboratorIdsRef = useRef<Set<string>>(new Set());
   useEffect(() => {
     const allProjects = [...projects, ...sharedByMeProjects, ...sharedWithMeProjects];
     if (allProjects.length === 0) return;
 
-    const fetchAll = async () => {
-      const map: { [id: string]: ProjectCollaborator[] } = {};
-      for (const p of allProjects) {
+    // 아직 조회 안 한 프로젝트만 추출
+    const fetched = fetchedCollaboratorIdsRef.current;
+    const toFetch = allProjects.filter(p => !fetched.has(p.id));
+    if (toFetch.length === 0) return;
+
+    const fetchPending = async () => {
+      const additions: { [id: string]: ProjectCollaborator[] } = {};
+      for (const p of toFetch) {
+        fetched.add(p.id); // 즉시 마킹하여 중복 호출 방지
         try {
           const collabs = await getProjectCollaborators(p.id);
-          if (collabs.length > 0) map[p.id] = collabs;
+          if (collabs.length > 0) additions[p.id] = collabs;
         } catch { /* ignore */ }
       }
-      setProjectCollaboratorsState(map);
+      if (Object.keys(additions).length > 0) {
+        setProjectCollaboratorsState(prev => ({ ...prev, ...additions }));
+      }
     };
-    fetchAll();
+    fetchPending();
   }, [projects, sharedByMeProjects, sharedWithMeProjects]);
 
   // 북마크 로드 (localStorage)
