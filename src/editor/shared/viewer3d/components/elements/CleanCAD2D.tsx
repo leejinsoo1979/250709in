@@ -5998,18 +5998,25 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             ? Math.max(0, furnitureOuterRuntime - fixedSumRuntime)
             : ((section.height as number) || sectionHeight);
           const innerH = Math.max(0, sectionOuterH - 2 * basicThickness);
-          // eslint-disable-next-line no-console
-          // console.log('[FINAL]', { sIdx: sectionIdx, outerH: sectionOuterH, innerH, pos: posArr, baseFrame: baseFrameRuntime, topFrame: topFrameRuntime, spaceH: spaceInfo.height });
+          // 흡수 섹션의 shelfPositions는 useBaseFurniture가 균등 재계산하므로 핸들러도 동일하게 재계산
+          // (그 외 섹션은 원본 posArr 그대로 — 사용자가 스피너로 옮긴 위치 보존)
+          let posArrEffective: number[] = posArr;
+          if (isAbsorbingSectionRuntime && n > 0) {
+            const g = (innerH - n * basicThickness) / (n + 1);
+            posArrEffective = Array.from({ length: n }, (_, i) =>
+              Math.round((i + 1) * g + i * basicThickness + halfT)
+            );
+          }
           // gaps를 실제 저장된 shelfPositions에서 파생 (스피너로 선반 이동 시 즉시 반영되도록)
           // gaps[k] = posArr[k]가 있으면 (k==0 ? posArr[0]-halfT : posArr[k]-posArr[k-1]-basicThickness), 마지막은 innerH-posArr[n-1]-halfT
           const gaps: number[] = [];
           for (let k = 0; k <= n; k++) {
             if (k === 0) {
-              gaps.push(Math.max(0, Math.round(posArr[0] - halfT)));
+              gaps.push(Math.max(0, Math.round(posArrEffective[0] - halfT)));
             } else if (k === n) {
-              gaps.push(Math.max(0, Math.round(innerH - posArr[n - 1] - halfT)));
+              gaps.push(Math.max(0, Math.round(innerH - posArrEffective[n - 1] - halfT)));
             } else {
-              gaps.push(Math.max(0, Math.round(posArr[k] - posArr[k - 1] - basicThickness)));
+              gaps.push(Math.max(0, Math.round(posArrEffective[k] - posArrEffective[k - 1] - basicThickness)));
             }
           }
           // 각 칸 중심 Y
@@ -6018,7 +6025,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           centerYs.push(sectionBottomMm + gaps[0] / 2);
           // 칸2..마지막: 아래 선반 윗면 + gap/2 = (sectionBottomMm + pos[i-1] + halfT) + gap[i]/2
           for (let i = 1; i < gaps.length; i++) {
-            const below = sectionBottomMm + posArr[i - 1] + halfT;
+            const below = sectionBottomMm + posArrEffective[i - 1] + halfT;
             centerYs.push(below + gaps[i] / 2);
           }
           const applyGapEdit = (gapIdx: number, newGap: number) => {
