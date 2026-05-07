@@ -27,20 +27,31 @@ const ProfilePopup: React.FC<ProfilePopupProps> = ({ isOpen, onClose, position }
   const [nameSaving, setNameSaving] = useState(false);
   const [displayNameLocal, setDisplayNameLocal] = useState<string | null>(null);
 
-  // 슈퍼 관리자 권한 체크
+  // 슈퍼 관리자 권한 + plan 체크 — popup 열릴 때마다 강제로 최신값 fetch (서버 우선)
   useEffect(() => {
     if (!isOpen || !user) return;
     const superAdminEmails = ['sbbc212@gmail.com'];
     if (superAdminEmails.includes(user.email || '')) {
       setIsSuperAdmin(true);
-      return;
     }
-    getDoc(doc(db, 'users', user.uid)).then((userDoc) => {
-      if (userDoc.exists()) {
-        const data = userDoc.data();
-        setIsSuperAdmin(data.role === 'superadmin');
-        setUserPlan(data.plan || 'free');
-      }
+    // getDocFromServer 사용해서 캐시 우회, 항상 서버 값 (관리자가 변경한 직후도 즉시 반영)
+    import('firebase/firestore').then(({ getDocFromServer }) => {
+      getDocFromServer(doc(db, 'users', user.uid)).then((userDoc) => {
+        if (userDoc.exists()) {
+          const data = userDoc.data();
+          setIsSuperAdmin(data.role === 'superadmin');
+          setUserPlan(data.plan || 'free');
+        }
+      }).catch(() => {
+        // 서버 fetch 실패 시 캐시라도 시도
+        getDoc(doc(db, 'users', user.uid)).then((d) => {
+          if (d.exists()) {
+            const data = d.data();
+            setIsSuperAdmin(data.role === 'superadmin');
+            setUserPlan(data.plan || 'free');
+          }
+        });
+      });
     });
   }, [isOpen, user]);
 

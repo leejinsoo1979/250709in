@@ -160,10 +160,16 @@ export default function Enterprise() {
         noticeShownAt: null,
       });
       if (wasApproved && row.uid) {
-        try { await updateUserPlan(row.uid, 'free'); } catch (e) { console.warn('plan free 환원 실패:', e); }
+        try {
+          await updateUserPlan(row.uid, 'free');
+        } catch (e) {
+          alert('⚠️ enterprise_inquiries는 되돌렸으나 사용자 plan 환원 실패: ' + (e as Error).message + '\nFirebase Console에서 직접 users/{uid}.plan = "free" 로 수정해주세요.');
+          await load();
+          return;
+        }
       }
       await load();
-      alert('✅ 승인 대기로 되돌렸습니다.');
+      alert('✅ 승인 대기로 되돌렸습니다.\n사용자가 다음 새로고침 시 권한 변경이 반영됩니다.');
     } catch (e) {
       alert('되돌리기 실패: ' + (e as Error).message);
     } finally {
