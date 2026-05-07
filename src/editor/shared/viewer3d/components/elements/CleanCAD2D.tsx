@@ -8968,6 +8968,9 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             //   하부장/의류장: backZ = furnitureZOffset + furnitureDepth/2 - doorThickness - depth + baseDepthOffset
             const isFloating = spaceInfo.baseConfig?.type === 'stand' && spaceInfo.baseConfig?.placementType === 'float';
             const baseDepthOffset = isFloating ? mmToThreeUnits(spaceInfo.baseConfig?.depth || 0) : 0;
+            // 가구별 뒷벽 이격(backWallGap) 반영 — 모든 z 위치에 더해줌
+            const moduleBackWallGapMm2 = (module as any).backWallGap ?? 0;
+            const moduleBackWallGapZ2 = moduleBackWallGapMm2 > 0 ? mmToThreeUnits(moduleBackWallGapMm2) : 0;
             const mid2 = module.moduleId || '';
             const isShoeCabinet2 = mid2.includes('-entryway-') || mid2.includes('-shelf-') ||
                                    mid2.includes('-4drawer-shelf-') || mid2.includes('-2drawer-shelf-');
@@ -8976,7 +8979,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               // 신발장(선반장): FurnitureItem.tsx처럼 customDepth를 최우선으로 사용 (단일 깊이)
               const depthMm = module.customDepth || module.upperSectionDepth || module.lowerSectionDepth || moduleData.dimensions.depth;
               const depth = mmToThreeUnits(depthMm);
-              const backZ = furnitureZOffset - furnitureDepth/2 - doorThickness + baseDepthOffset;
+              const backZ = furnitureZOffset - furnitureDepth/2 - doorThickness + baseDepthOffset + moduleBackWallGapZ2;
               const frontZ = backZ + depth;
               const key = Math.round(depthMm);
               const existing = depthGroups.get(key);
@@ -8991,7 +8994,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               // 의류장(2섹션): 하부=앞면정렬, 상부=뒷면정렬
               const lowerDepthMm = module.lowerSectionDepth || module.customDepth || moduleData.dimensions.depth;
               const lowerDepth = mmToThreeUnits(lowerDepthMm);
-              const lowerBackZ = furnitureZOffset + furnitureDepth/2 - doorThickness - lowerDepth + baseDepthOffset;
+              const lowerBackZ = furnitureZOffset + furnitureDepth/2 - doorThickness - lowerDepth + baseDepthOffset + moduleBackWallGapZ2;
               const lowerFrontZ = lowerBackZ + lowerDepth;
               const lowerKey = Math.round(lowerDepthMm);
               const existingLower = depthGroups.get(lowerKey);
@@ -9005,7 +9008,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
 
               const upperDepthMm = module.upperSectionDepth || module.customDepth || moduleData.dimensions.depth;
               const upperDepth = mmToThreeUnits(upperDepthMm);
-              const upperBackZ = furnitureZOffset - furnitureDepth/2 - doorThickness;
+              const upperBackZ = furnitureZOffset - furnitureDepth/2 - doorThickness + moduleBackWallGapZ2;
               const upperFrontZ = upperBackZ + upperDepth;
               const upperKey = Math.round(upperDepthMm);
               if (upperKey !== lowerKey) {
@@ -9033,20 +9036,23 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             const depth = mmToThreeUnits(actualDepthMm);
             const isFloating = spaceInfo.baseConfig?.type === 'stand' && spaceInfo.baseConfig?.placementType === 'float';
             const baseDepthOffset = isFloating ? mmToThreeUnits(spaceInfo.baseConfig?.depth || 0) : 0;
+            // 가구별 뒷벽 이격(backWallGap) 반영
+            const moduleBackWallGapMmX = (module as any).backWallGap ?? 0;
+            const moduleBackWallGapZX = moduleBackWallGapMmX > 0 ? mmToThreeUnits(moduleBackWallGapMmX) : 0;
             const isUpperCat = moduleData.category === 'upper' || module.moduleId?.includes('upper-cabinet');
             let furnitureBackZ: number;
             let furnitureFrontZ: number;
             if (isUpperCat) {
               // 상부장: 공간 뒷면 정렬
-              furnitureBackZ = furnitureZOffset - furnitureDepth/2 - doorThickness;
+              furnitureBackZ = furnitureZOffset - furnitureDepth/2 - doorThickness + moduleBackWallGapZX;
               furnitureFrontZ = furnitureBackZ + depth;
             } else if (isShoeCabinet) {
               // 신발장: 뒷면 정렬 + baseDepthOffset
-              furnitureBackZ = furnitureZOffset - furnitureDepth/2 - doorThickness + baseDepthOffset;
+              furnitureBackZ = furnitureZOffset - furnitureDepth/2 - doorThickness + baseDepthOffset + moduleBackWallGapZX;
               furnitureFrontZ = furnitureBackZ + depth;
             } else {
               // 하부장/키큰장/의류장: 앞면 정렬 + baseDepthOffset
-              furnitureBackZ = furnitureZOffset + furnitureDepth/2 - doorThickness - depth + baseDepthOffset;
+              furnitureBackZ = furnitureZOffset + furnitureDepth/2 - doorThickness - depth + baseDepthOffset + moduleBackWallGapZX;
               furnitureFrontZ = furnitureBackZ + depth;
             }
             const depthKey = Math.round(actualDepthMm);
@@ -9180,6 +9186,9 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               // FurnitureItem.tsx와 동일 공식 — 신발장은 customDepth 우선 단일 깊이
               const isFloating = spaceInfo.baseConfig?.type === 'stand' && spaceInfo.baseConfig?.placementType === 'float';
               const baseDepthOffset = isFloating ? mmToThreeUnits(spaceInfo.baseConfig?.depth || 0) : 0;
+              // 가구별 뒷벽 이격(backWallGap) 반영
+              const moduleBackWallGapMmR = (module as any).backWallGap ?? 0;
+              const moduleBackWallGapZR = moduleBackWallGapMmR > 0 ? mmToThreeUnits(moduleBackWallGapMmR) : 0;
               const mid2 = module.moduleId || '';
               const isShoeCabinet2 = mid2.includes('-entryway-') || mid2.includes('-shelf-') ||
                                      mid2.includes('-4drawer-shelf-') || mid2.includes('-2drawer-shelf-');
@@ -9188,7 +9197,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 // 신발장: customDepth 최우선(FurnitureItem.tsx와 동일)
                 const depthMm = module.customDepth || module.upperSectionDepth || module.lowerSectionDepth || moduleData.dimensions.depth;
                 const depth = mmToThreeUnits(depthMm);
-                const backZ = furnitureZOffset - furnitureDepth/2 - doorThickness + baseDepthOffset;
+                const backZ = furnitureZOffset - furnitureDepth/2 - doorThickness + baseDepthOffset + moduleBackWallGapZR;
                 const frontZ = backZ + depth;
                 const key = Math.round(depthMm);
                 const existing = depthGroups.get(key);
@@ -9203,7 +9212,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 // 의류장(2섹션): 하부=앞면정렬, 상부=뒷면정렬
                 const lowerDepthMm = module.lowerSectionDepth || module.customDepth || moduleData.dimensions.depth;
                 const lowerDepth = mmToThreeUnits(lowerDepthMm);
-                const lowerBackZ = furnitureZOffset + furnitureDepth/2 - doorThickness - lowerDepth + baseDepthOffset;
+                const lowerBackZ = furnitureZOffset + furnitureDepth/2 - doorThickness - lowerDepth + baseDepthOffset + moduleBackWallGapZR;
                 const lowerFrontZ = lowerBackZ + lowerDepth;
                 const lowerKey = Math.round(lowerDepthMm);
                 const existingLower = depthGroups.get(lowerKey);
@@ -9217,7 +9226,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
 
                 const upperDepthMm = module.upperSectionDepth || module.customDepth || moduleData.dimensions.depth;
                 const upperDepth = mmToThreeUnits(upperDepthMm);
-                const upperBackZ = furnitureZOffset - furnitureDepth/2 - doorThickness;
+                const upperBackZ = furnitureZOffset - furnitureDepth/2 - doorThickness + moduleBackWallGapZR;
                 const upperFrontZ = upperBackZ + upperDepth;
                 const upperKey = Math.round(upperDepthMm);
                 if (upperKey !== lowerKey) {
@@ -9239,6 +9248,9 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               const depth = mmToThreeUnits(actualDepthMm);
               const isFloating = spaceInfo.baseConfig?.type === 'stand' && spaceInfo.baseConfig?.placementType === 'float';
               const baseDepthOffset = isFloating ? mmToThreeUnits(spaceInfo.baseConfig?.depth || 0) : 0;
+              // 가구별 뒷벽 이격(backWallGap) 반영
+              const moduleBackWallGapMmRX = (module as any).backWallGap ?? 0;
+              const moduleBackWallGapZRX = moduleBackWallGapMmRX > 0 ? mmToThreeUnits(moduleBackWallGapMmRX) : 0;
               const isUpperCat = moduleData.category === 'upper' || module.moduleId?.includes('upper-cabinet');
               const mid = module.moduleId || '';
               const isShoeCabinet = mid.includes('-entryway-') || mid.includes('-shelf-') ||
@@ -9246,13 +9258,13 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               let furnitureBackZ: number;
               let furnitureFrontZ: number;
               if (isUpperCat) {
-                furnitureBackZ = furnitureZOffset - furnitureDepth/2 - doorThickness;
+                furnitureBackZ = furnitureZOffset - furnitureDepth/2 - doorThickness + moduleBackWallGapZRX;
                 furnitureFrontZ = furnitureBackZ + depth;
               } else if (isShoeCabinet) {
-                furnitureBackZ = furnitureZOffset - furnitureDepth/2 - doorThickness + baseDepthOffset;
+                furnitureBackZ = furnitureZOffset - furnitureDepth/2 - doorThickness + baseDepthOffset + moduleBackWallGapZRX;
                 furnitureFrontZ = furnitureBackZ + depth;
               } else {
-                furnitureBackZ = furnitureZOffset + furnitureDepth/2 - doorThickness - depth + baseDepthOffset;
+                furnitureBackZ = furnitureZOffset + furnitureDepth/2 - doorThickness - depth + baseDepthOffset + moduleBackWallGapZRX;
                 furnitureFrontZ = furnitureBackZ + depth;
               }
               const depthKey = Math.round(actualDepthMm);
