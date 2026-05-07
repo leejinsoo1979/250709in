@@ -3916,12 +3916,25 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 if (s.heightType === 'absolute') return s.height;
                 return Math.round(sectionBasisH * s.height / 100);
               });
-              // 하부 섹션 고정, 마지막(상부) 섹션은 항상 남은 공간 흡수
-              const fixedSum = rawHeights.slice(0, -1).reduce((a, b) => a + b, 0);
-              sectionHeights = [
-                ...rawHeights.slice(0, -1),
-                Math.max(0, sectionBasisH - fixedSum)
-              ];
+              // 신발장(현관장 H/선반장)은 첫(하부) 섹션이 흡수, 그 외는 마지막(상부) 섹션이 흡수
+              const leftModId = leftmostMod?.moduleId || '';
+              const leftIsShoe = leftModId.includes('-entryway-') ||
+                leftModId.includes('-shelf-') ||
+                leftModId.includes('-4drawer-shelf-') ||
+                leftModId.includes('-2drawer-shelf-');
+              if (leftIsShoe && rawHeights.length >= 2) {
+                const fixedSum = rawHeights.slice(1).reduce((a, b) => a + b, 0);
+                sectionHeights = [
+                  Math.max(0, sectionBasisH - fixedSum),
+                  ...rawHeights.slice(1),
+                ];
+              } else {
+                const fixedSum = rawHeights.slice(0, -1).reduce((a, b) => a + b, 0);
+                sectionHeights = [
+                  ...rawHeights.slice(0, -1),
+                  Math.max(0, sectionBasisH - fixedSum)
+                ];
+              }
             }
           }
           const hasSectionSplit = sectionHeights.length >= 2;
@@ -4570,12 +4583,25 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 if (s.heightType === 'absolute') return s.height;
                 return Math.round(rSectionBasisH * s.height / 100);
               });
-              // 하부 섹션 고정, 마지막(상부) 섹션은 항상 남은 공간 흡수
-              const rFixedSum = rRawHeights.slice(0, -1).reduce((a, b) => a + b, 0);
-              rSectionHeights = [
-                ...rRawHeights.slice(0, -1),
-                Math.max(0, rSectionBasisH - rFixedSum)
-              ];
+              // 신발장은 첫(하부) 섹션이 흡수, 그 외는 마지막(상부) 섹션이 흡수
+              const rModId = rightmostMod?.moduleId || '';
+              const rIsShoe = rModId.includes('-entryway-') ||
+                rModId.includes('-shelf-') ||
+                rModId.includes('-4drawer-shelf-') ||
+                rModId.includes('-2drawer-shelf-');
+              if (rIsShoe && rRawHeights.length >= 2) {
+                const rFixedSum = rRawHeights.slice(1).reduce((a, b) => a + b, 0);
+                rSectionHeights = [
+                  Math.max(0, rSectionBasisH - rFixedSum),
+                  ...rRawHeights.slice(1),
+                ];
+              } else {
+                const rFixedSum = rRawHeights.slice(0, -1).reduce((a, b) => a + b, 0);
+                rSectionHeights = [
+                  ...rRawHeights.slice(0, -1),
+                  Math.max(0, rSectionBasisH - rFixedSum)
+                ];
+              }
             }
           }
           const rHasSectionSplit = rSectionHeights.length >= 2;
