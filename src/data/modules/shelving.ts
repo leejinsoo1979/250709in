@@ -736,11 +736,16 @@ const createSingleEntrywayH = (columnWidth: number, maxHeight: number): ModuleDa
   const topHeight = maxHeight - bottomHeight;
   const _t = FURNITURE_SPECS.BASIC_THICKNESS;
 
-  // 신발선반 4개 균등분할 중 최상단(받침대 바로 아래) 선반은 제거 → 3개만 사용
-  const evenPositions4 = calculateEvenShelfPositions(bottomHeight - 2 * _t, 4);
-  const shelfPositionsLower = evenPositions4.slice(0, 3); // 하단 3개만
+  // 받침대 하단 위치(섹션 바닥에서) = 섹션 천장 - 상판두께 - 188mm - 받침대두께
+  //                                = bottomHeight - _t - 188 - _t = bottomHeight - 2*_t - 188
+  // 받침대 하단 아래 공간을 신발선반 3개 균등분할 (서랍 영역과 안 겹침)
+  const drawerSupportBottomFromSectionBottom = bottomHeight - 2 * _t - 188; // 섹션 바닥(_t 위) 기준
+  // calculateEvenShelfPositions은 sectionHeight(내경)만큼의 공간을 N+1 균등분할 → N개 선반 위치 반환
+  // 내경 공간 = 받침대 하단 아래 공간 - 섹션 바닥판 두께 = drawerSupportBottomFromSectionBottom - _t
+  const lowerShelfInnerHeight = drawerSupportBottomFromSectionBottom - _t;
+  const shelfPositionsLower = calculateEvenShelfPositions(lowerShelfInnerHeight, 3);
   const baseSections: SectionConfig[] = [
-    // 섹션0: 하부 — 신발선반 3개 (받침대 아래) + 속서랍 포함 (1200mm 통합)
+    // 섹션0: 하부 — 신발선반 3개 (받침대 하단 아래 공간 균등분할) + 속서랍 포함
     {
       type: 'shelf',
       heightType: 'absolute',
