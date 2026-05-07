@@ -645,7 +645,7 @@ const Users = () => {
                   <td>
                     <div className={styles.roleBadges}>
                       {targetUser.isSuperAdmin && (
-                        <span className={styles.superAdminBadge}>슈퍼 관리자</span>
+                        <span className={styles.superAdminBadge}>슈퍼관리자</span>
                       )}
                       {targetUser.isAdmin && !targetUser.isSuperAdmin && (
                         <span className={styles.adminBadge}>관리자</span>
@@ -654,7 +654,7 @@ const Users = () => {
                         <span className={styles.enterpriseBadge}>기업회원</span>
                       )}
                       {!targetUser.isAdmin && !targetUser.isSuperAdmin && targetUser.plan !== 'enterprise' && (
-                        <span className={styles.userBadge}>일반 사용자</span>
+                        <span className={styles.userBadge}>일반회원</span>
                       )}
                     </div>
                   </td>

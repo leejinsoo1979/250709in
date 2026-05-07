@@ -214,7 +214,7 @@ const ProfilePopup: React.FC<ProfilePopupProps> = ({ isOpen, onClose, position }
                 <p className={styles.headerEmail}>{user.email}</p>
                 {(() => {
                   const isEnt = userPlan === 'enterprise';
-                  const label = isSuperAdmin ? '마스터' : isAdmin ? '운영자' : isEnt ? '기업회원' : '체험판';
+                  const label = isSuperAdmin ? '슈퍼관리자' : isAdmin ? '관리자' : isEnt ? '기업회원' : '일반회원';
                   const bg = isSuperAdmin ? '#7c3aed' : isAdmin ? '#3b82f6' : isEnt ? '#10b981' : '#6b7280';
                   return (
                     <span
