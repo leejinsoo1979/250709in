@@ -180,6 +180,78 @@ exports.adminDeleteAuthUser = onCall(
 );
 
 /**
+ * [관리자 전용] enterprise_inquiries.status 와 users.plan 동기화
+ *
+ * 동작:
+ *  - status='approved' 인 사용자 → users.plan = 'enterprise' 강제 set
+ *  - status가 'approved'가 아닌 사용자 → users.plan = 'free' 강제 set
+ *  - 슈퍼관리자(role='superadmin')는 건드리지 않음
+ *
+ * 입력: {} (없음)
+ * 출력: { synced: number, details: Array<{uid, email, oldPlan, newPlan}> }
+ */
+exports.adminSyncEnterprisePlans = onCall(
+  { region: 'asia-northeast3' },
+  async (request) => {
+    const callerUid = request.auth?.uid;
+    if (!callerUid) {
+      throw new HttpsError('unauthenticated', '로그인이 필요합니다.');
+    }
+    // 호출자가 관리자인지 확인
+    const callerEmail = request.auth?.token?.email || '';
+    const isSuperAdmin = callerEmail.toLowerCase() === 'sbbc212@gmail.com';
+    if (!isSuperAdmin) {
+      const adminDoc = await admin.firestore().doc(`admins/${callerUid}`).get();
+      if (!adminDoc.exists) {
+        throw new HttpsError('permission-denied', '관리자 권한이 필요합니다.');
+      }
+    }
+
+    const db = admin.firestore();
+    const inquiriesSnap = await db.collection('enterprise_inquiries').get();
+
+    // uid -> 가장 최근 inquiry status
+    const latestStatus = new Map();
+    const latestCreatedAt = new Map();
+    inquiriesSnap.forEach((d) => {
+      const data = d.data();
+      const uid = data.uid;
+      if (!uid) return;
+      const created = data.createdAt?.toMillis?.() || 0;
+      if (!latestCreatedAt.has(uid) || created > latestCreatedAt.get(uid)) {
+        latestCreatedAt.set(uid, created);
+        latestStatus.set(uid, data.status || 'pending');
+      }
+    });
+
+    const details = [];
+    let synced = 0;
+    for (const [uid, status] of latestStatus.entries()) {
+      try {
+        const userRef = db.doc(`users/${uid}`);
+        const userSnap = await userRef.get();
+        const userData = userSnap.exists ? userSnap.data() : {};
+        // 슈퍼관리자는 건드리지 않음
+        if (userData.role === 'superadmin') continue;
+        const oldPlan = userData.plan || 'free';
+        const newPlan = status === 'approved' ? 'enterprise' : 'free';
+        if (oldPlan === newPlan) continue;
+        await userRef.set(
+          { plan: newPlan, planUpdatedAt: admin.firestore.FieldValue.serverTimestamp() },
+          { merge: true }
+        );
+        details.push({ uid, email: userData.email || '', oldPlan, newPlan, status });
+        synced += 1;
+      } catch (e) {
+        details.push({ uid, error: e?.message || String(e) });
+      }
+    }
+
+    return { synced, details };
+  }
+);
+
+/**
  * 텔레그램 봇 Webhook
  *
  * 기업회원 가입 신청 메시지의 [승인/보류/거절] 버튼 callback 처리.
