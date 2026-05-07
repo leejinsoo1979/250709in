@@ -37,7 +37,8 @@ const Users = () => {
   >('date-desc');
   const [usageStats, setUsageStats] = useState<Record<string, UserUsageStats>>({});
   const [usageLoading, setUsageLoading] = useState(false);
-  const [filterPlan, setFilterPlan] = useState<PlanType | 'all'>('all');
+  // 회원 유형 필터: all=전체, enterprise=기업회원, general=일반회원(free+pro)
+  const [filterPlan, setFilterPlan] = useState<'all' | 'enterprise' | 'general'>('all');
   const [sortDropdownOpen, setSortDropdownOpen] = useState(false);
   const [planFilterDropdownOpen, setPlanFilterDropdownOpen] = useState(false);
   const [planDialog, setPlanDialog] = useState<{
@@ -260,7 +261,12 @@ const Users = () => {
         user.displayName?.toLowerCase().includes(query) ||
         user.id.toLowerCase().includes(query);
 
-      const matchesPlan = filterPlan === 'all' || user.plan === filterPlan;
+      const matchesPlan =
+        filterPlan === 'all'
+          ? true
+          : filterPlan === 'enterprise'
+            ? user.plan === 'enterprise'
+            : user.plan !== 'enterprise'; // general = 일반회원 (free + pro)
 
       return matchesSearch && matchesPlan;
     })
@@ -488,9 +494,9 @@ const Users = () => {
             </div>
           </div>
 
-          {/* 플랜 필터 드롭다운 */}
+          {/* 회원유형 필터 드롭다운 */}
           <div className={styles.filterGroup}>
-            <label className={styles.filterLabel}>플랜</label>
+            <label className={styles.filterLabel}>회원유형</label>
             <div className={styles.customFilterDropdown}>
               <button
                 type="button"
@@ -499,9 +505,8 @@ const Users = () => {
               >
                 <span>
                   {filterPlan === 'all' && '전체'}
-                  {filterPlan === 'free' && '무료'}
-                  {filterPlan === 'pro' && '프로'}
-                  {filterPlan === 'enterprise' && '엔터프라이즈'}
+                  {filterPlan === 'general' && '일반회원'}
+                  {filterPlan === 'enterprise' && '기업회원'}
                 </span>
                 <svg
                   className={`${styles.dropdownIcon} ${planFilterDropdownOpen ? styles.dropdownIconOpen : ''}`}
@@ -530,28 +535,14 @@ const Users = () => {
                     )}
                   </button>
                   <button
-                    className={`${styles.filterDropdownItem} ${filterPlan === 'free' ? styles.filterDropdownItemActive : ''}`}
+                    className={`${styles.filterDropdownItem} ${filterPlan === 'general' ? styles.filterDropdownItemActive : ''}`}
                     onClick={() => {
-                      setFilterPlan('free');
+                      setFilterPlan('general');
                       setPlanFilterDropdownOpen(false);
                     }}
                   >
-                    무료
-                    {filterPlan === 'free' && (
-                      <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
-                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                      </svg>
-                    )}
-                  </button>
-                  <button
-                    className={`${styles.filterDropdownItem} ${filterPlan === 'pro' ? styles.filterDropdownItemActive : ''}`}
-                    onClick={() => {
-                      setFilterPlan('pro');
-                      setPlanFilterDropdownOpen(false);
-                    }}
-                  >
-                    프로
-                    {filterPlan === 'pro' && (
+                    일반회원
+                    {filterPlan === 'general' && (
                       <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
                         <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                       </svg>
@@ -564,7 +555,7 @@ const Users = () => {
                       setPlanFilterDropdownOpen(false);
                     }}
                   >
-                    엔터프라이즈
+                    기업회원
                     {filterPlan === 'enterprise' && (
                       <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
                         <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
