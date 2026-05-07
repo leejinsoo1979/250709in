@@ -1,10 +1,12 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { db, storage } from '@/firebase/config';
+import { EmailAuthProvider, linkWithCredential } from 'firebase/auth';
+import { db, storage, auth } from '@/firebase/config';
 import { signUpWithEmail } from '@/firebase/auth';
+import { useAuth } from '@/auth/AuthProvider';
 import { Eye, EyeOff, Upload, X, FileText } from 'lucide-react';
 
 interface EnterpriseForm {
@@ -27,6 +29,14 @@ const EXPECTED_USERS_OPTIONS = [
 
 export default function EnterpriseSignUpPage() {
   const navigate = useNavigate();
+  const { user: currentUser } = useAuth();
+
+  // 구글 등 소셜로 이미 로그인된 사용자 여부 (이메일/비밀번호 provider만 있는 경우는 제외)
+  const isSocialLoggedIn =
+    !!currentUser &&
+    currentUser.providerData.length > 0 &&
+    !currentUser.providerData.some((p) => p.providerId === 'password');
+
   const [form, setForm] = useState<EnterpriseForm>({
     companyName: '', businessNumber: '', businessType: '', businessCategory: '',
     loginEmail: '', password: '', passwordConfirm: '',
@@ -39,6 +49,19 @@ export default function EnterpriseSignUpPage() {
   const [error, setError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
   const [showPasswordConfirm, setShowPasswordConfirm] = useState(false);
+
+  // 소셜 로그인 사용자가 비밀번호도 설정할지 선택 (기본: 미설정 = 구글 로그인만 사용)
+  const [setExtraPassword, setSetExtraPassword] = useState(false);
+
+  // 소셜 로그인 사용자: 이메일/대표자명 자동 입력
+  useEffect(() => {
+    if (!currentUser) return;
+    setForm((prev) => ({
+      ...prev,
+      loginEmail: prev.loginEmail || currentUser.email || '',
+      contactName: prev.contactName || currentUser.displayName || '',
+    }));
+  }, [currentUser]);
 
   const update = (field: keyof EnterpriseForm, value: string) =>
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -66,16 +89,19 @@ export default function EnterpriseSignUpPage() {
     setSubmitting(true);
     setError(null);
 
-    // 비밀번호 확인
-    if (form.password !== form.passwordConfirm) {
-      setError('비밀번호가 일치하지 않습니다.');
-      setSubmitting(false);
-      return;
-    }
-    if (form.password.length < 6) {
-      setError('비밀번호는 6자 이상이어야 합니다.');
-      setSubmitting(false);
-      return;
+    // 비밀번호 검증: 소셜 로그인 사용자는 setExtraPassword=true일 때만, 신규 가입자는 항상
+    const passwordRequired = !isSocialLoggedIn || setExtraPassword;
+    if (passwordRequired) {
+      if (form.password !== form.passwordConfirm) {
+        setError('비밀번호가 일치하지 않습니다.');
+        setSubmitting(false);
+        return;
+      }
+      if (form.password.length < 6) {
+        setError('비밀번호는 6자 이상이어야 합니다.');
+        setSubmitting(false);
+        return;
+      }
     }
     if (!businessLicenseFile) {
       setError('사업자등록증을 첨부해주세요.');
@@ -84,21 +110,63 @@ export default function EnterpriseSignUpPage() {
     }
 
     try {
-      // 1. Firebase Auth 계정 생성
-      const { user, error: authError } = await signUpWithEmail(
-        form.loginEmail, form.password, form.contactName
-      );
-      if (authError || !user) {
-        // Firebase 에러 메시지 한글 변환
-        if (authError?.includes('email-already-in-use')) {
-          setError('이미 사용 중인 이메일입니다.');
-        } else if (authError?.includes('invalid-email')) {
-          setError('올바르지 않은 이메일 형식입니다.');
-        } else if (authError?.includes('weak-password')) {
-          setError('비밀번호가 너무 약합니다. 6자 이상 입력해주세요.');
-        } else {
-          setError(authError || '계정 생성 중 오류가 발생했습니다.');
+      // 1. Firebase Auth 계정 처리
+      // - 소셜 로그인 상태: 기존 계정 그대로 사용 (선택적으로 이메일/비밀번호 자격증명 link)
+      // - 비로그인 상태: 새 이메일/비밀번호 계정 생성
+      let user: { uid: string; email: string | null } | null = null;
+
+      if (isSocialLoggedIn && currentUser) {
+        user = { uid: currentUser.uid, email: currentUser.email };
+
+        // 사용자가 비밀번호 설정을 선택한 경우: 이메일/비밀번호 자격증명을 추가로 link
+        if (setExtraPassword && currentUser.email && auth.currentUser) {
+          try {
+            const credential = EmailAuthProvider.credential(
+              currentUser.email,
+              form.password
+            );
+            await linkWithCredential(auth.currentUser, credential);
+          } catch (linkErr: unknown) {
+            const code = (linkErr as { code?: string })?.code;
+            if (code === 'auth/provider-already-linked') {
+              // 이미 link된 상태 - 무시
+            } else if (code === 'auth/credential-already-in-use') {
+              setError('해당 이메일에 이미 다른 계정이 연결되어 있습니다.');
+              setSubmitting(false);
+              return;
+            } else if (code === 'auth/weak-password') {
+              setError('비밀번호가 너무 약합니다. 6자 이상 입력해주세요.');
+              setSubmitting(false);
+              return;
+            } else {
+              setError('비밀번호 설정 중 오류가 발생했습니다.');
+              setSubmitting(false);
+              return;
+            }
+          }
         }
+      } else {
+        const { user: createdUser, error: authError } = await signUpWithEmail(
+          form.loginEmail, form.password, form.contactName
+        );
+        if (authError || !createdUser) {
+          if (authError?.includes('email-already-in-use')) {
+            setError('이미 사용 중인 이메일입니다.');
+          } else if (authError?.includes('invalid-email')) {
+            setError('올바르지 않은 이메일 형식입니다.');
+          } else if (authError?.includes('weak-password')) {
+            setError('비밀번호가 너무 약합니다. 6자 이상 입력해주세요.');
+          } else {
+            setError(authError || '계정 생성 중 오류가 발생했습니다.');
+          }
+          setSubmitting(false);
+          return;
+        }
+        user = { uid: createdUser.uid, email: createdUser.email };
+      }
+
+      if (!user) {
+        setError('계정 정보를 확인할 수 없습니다.');
         setSubmitting(false);
         return;
       }
@@ -215,48 +283,90 @@ export default function EnterpriseSignUpPage() {
             {/* 로그인 계정 정보 */}
             <section className="mb-10">
               <h2 className="text-white text-sm font-semibold mb-6 pb-2 border-b border-white/30">로그인 계정 정보</h2>
+
+              {isSocialLoggedIn && (
+                <div className="mb-5 px-4 py-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 text-xs leading-relaxed">
+                  현재 <b>{currentUser?.email}</b> 구글 계정으로 로그인되어 있습니다.<br />
+                  이 계정으로 기업회원 신청이 진행되며, 이후에도 동일한 구글 로그인을 사용할 수 있습니다.
+                </div>
+              )}
+
               <div className="space-y-5">
                 <Field label="로그인 이메일" required>
-                  <Input type="email" value={form.loginEmail} onChange={(v) => update('loginEmail', v)} placeholder="login@company.com" required />
+                  <Input
+                    type="email"
+                    value={form.loginEmail}
+                    onChange={(v) => update('loginEmail', v)}
+                    placeholder="login@company.com"
+                    required
+                    readOnly={isSocialLoggedIn}
+                  />
                 </Field>
-                <Field label="비밀번호" required>
-                  <div className="relative">
-                    <input
-                      type={showPassword ? 'text' : 'password'}
-                      value={form.password}
-                      onChange={(e) => update('password', e.target.value)}
-                      placeholder="6자 이상 입력"
-                      required
-                      className="w-full bg-zinc-900 border border-white/30 rounded-xl px-4 py-3 text-white text-sm placeholder:text-zinc-600 focus:outline-none focus:border-zinc-500 transition-colors pr-11"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-300 transition-colors"
-                    >
-                      {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-                    </button>
+
+                {/* 소셜 로그인 사용자: 비밀번호 추가 설정 옵션 */}
+                {isSocialLoggedIn && (
+                  <div className="rounded-xl bg-zinc-900 border border-white/30 px-4 py-4">
+                    <label className="flex items-start gap-3 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={setExtraPassword}
+                        onChange={(e) => setSetExtraPassword(e.target.checked)}
+                        className="mt-0.5 w-4 h-4 accent-emerald-500"
+                      />
+                      <div>
+                        <div className="text-white text-sm font-medium">이메일/비밀번호 로그인도 추가로 사용</div>
+                        <div className="text-zinc-500 text-xs mt-1 leading-relaxed">
+                          체크 시 입력한 비밀번호로 이메일 로그인이 가능해집니다.
+                          미체크 시 구글 로그인만 사용합니다.
+                        </div>
+                      </div>
+                    </label>
                   </div>
-                </Field>
-                <Field label="비밀번호 확인" required>
-                  <div className="relative">
-                    <input
-                      type={showPasswordConfirm ? 'text' : 'password'}
-                      value={form.passwordConfirm}
-                      onChange={(e) => update('passwordConfirm', e.target.value)}
-                      placeholder="비밀번호 재입력"
-                      required
-                      className="w-full bg-zinc-900 border border-white/30 rounded-xl px-4 py-3 text-white text-sm placeholder:text-zinc-600 focus:outline-none focus:border-zinc-500 transition-colors pr-11"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPasswordConfirm(!showPasswordConfirm)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-300 transition-colors"
-                    >
-                      {showPasswordConfirm ? <EyeOff size={16} /> : <Eye size={16} />}
-                    </button>
-                  </div>
-                </Field>
+                )}
+
+                {/* 비밀번호 입력 필드: 비로그인 신규 가입자이거나, 소셜 로그인 사용자가 비밀번호 설정을 선택한 경우 */}
+                {(!isSocialLoggedIn || setExtraPassword) && (
+                  <>
+                    <Field label="비밀번호" required>
+                      <div className="relative">
+                        <input
+                          type={showPassword ? 'text' : 'password'}
+                          value={form.password}
+                          onChange={(e) => update('password', e.target.value)}
+                          placeholder="6자 이상 입력"
+                          required
+                          className="w-full bg-zinc-900 border border-white/30 rounded-xl px-4 py-3 text-white text-sm placeholder:text-zinc-600 focus:outline-none focus:border-zinc-500 transition-colors pr-11"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowPassword(!showPassword)}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-300 transition-colors"
+                        >
+                          {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                        </button>
+                      </div>
+                    </Field>
+                    <Field label="비밀번호 확인" required>
+                      <div className="relative">
+                        <input
+                          type={showPasswordConfirm ? 'text' : 'password'}
+                          value={form.passwordConfirm}
+                          onChange={(e) => update('passwordConfirm', e.target.value)}
+                          placeholder="비밀번호 재입력"
+                          required
+                          className="w-full bg-zinc-900 border border-white/30 rounded-xl px-4 py-3 text-white text-sm placeholder:text-zinc-600 focus:outline-none focus:border-zinc-500 transition-colors pr-11"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowPasswordConfirm(!showPasswordConfirm)}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-300 transition-colors"
+                        >
+                          {showPasswordConfirm ? <EyeOff size={16} /> : <Eye size={16} />}
+                        </button>
+                      </div>
+                    </Field>
+                  </>
+                )}
               </div>
             </section>
 
@@ -383,9 +493,9 @@ function Field({ label, required, children }: { label: string; required?: boolea
 }
 
 function Input({
-  value, onChange, placeholder, type = 'text', required,
+  value, onChange, placeholder, type = 'text', required, readOnly,
 }: {
-  value: string; onChange: (v: string) => void; placeholder: string; type?: string; required?: boolean;
+  value: string; onChange: (v: string) => void; placeholder: string; type?: string; required?: boolean; readOnly?: boolean;
 }) {
   return (
     <input
@@ -394,7 +504,8 @@ function Input({
       onChange={(e) => onChange(e.target.value)}
       placeholder={placeholder}
       required={required}
-      className="w-full bg-zinc-900 border border-white/30 rounded-xl px-4 py-3 text-white text-sm placeholder:text-zinc-600 focus:outline-none focus:border-zinc-500 transition-colors"
+      readOnly={readOnly}
+      className={`w-full bg-zinc-900 border border-white/30 rounded-xl px-4 py-3 text-white text-sm placeholder:text-zinc-600 focus:outline-none focus:border-zinc-500 transition-colors ${readOnly ? 'opacity-70 cursor-not-allowed' : ''}`}
     />
   );
 }
