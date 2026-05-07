@@ -8082,33 +8082,37 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           const actualDepth = upperDepth;
           const moduleDepth = mmToThreeUnits(actualDepth);
           const dimY = topDimensionY - mmToThreeUnits(120);
-          
+          // 가구별 뒷벽 이격(backWallGap) 반영 — 우측면 깊이 치수선도 가구 따라 이동
+          const moduleBackWallGapMmRD = (module as any).backWallGap ?? 0;
+          const moduleBackWallGapZRD = moduleBackWallGapMmRD > 0 ? mmToThreeUnits(moduleBackWallGapMmRD) : 0;
+          const dimZStart = spaceZOffset + moduleBackWallGapZRD;
+
           return (
             <group key={`right-module-dim-${index}`}>
               {/* 가구 깊이 치수선 */}
               <Line
-                points={[[spaceWidth, dimY, spaceZOffset], [spaceWidth, dimY, spaceZOffset + moduleDepth]]}
+                points={[[spaceWidth, dimY, dimZStart], [spaceWidth, dimY, dimZStart + moduleDepth]]}
                 color={dimensionColor}
                 lineWidth={0.3}
               />
               
               {/* 화살표들 */}
               <Line
-                points={createArrowHead([spaceWidth, dimY, spaceZOffset], [spaceWidth, dimY, spaceZOffset + 0.02], 0.01)}
+                points={createArrowHead([spaceWidth, dimY, dimZStart], [spaceWidth, dimY, dimZStart + 0.02], 0.01)}
                 color={dimensionColor}
                 lineWidth={0.3}
               />
               <Line
-                points={createArrowHead([spaceWidth, dimY, spaceZOffset + moduleDepth], [spaceWidth, dimY, spaceZOffset + moduleDepth - 0.02], 0.01)}
+                points={createArrowHead([spaceWidth, dimY, dimZStart + moduleDepth], [spaceWidth, dimY, dimZStart + moduleDepth - 0.02], 0.01)}
                 color={dimensionColor}
                 lineWidth={0.3}
               />
-              
+
               {/* 치수 텍스트 */}
               <Text
                   renderOrder={1000}
                   depthTest={false}
-                position={[spaceWidth, dimY - mmToThreeUnits(30), spaceZOffset + moduleDepth / 2]}
+                position={[spaceWidth, dimY - mmToThreeUnits(30), dimZStart + moduleDepth / 2]}
                 fontSize={baseFontSize}
                 color={dimensionColor}
                 anchorX="center"
@@ -8119,12 +8123,12 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
 
               {/* 연장선 (가구에서 치수선까지 긴 보조선) */}
               <Line
-                points={[[spaceWidth, spaceHeight, spaceZOffset], [spaceWidth, dimY + mmToThreeUnits(30), spaceZOffset]]}
+                points={[[spaceWidth, spaceHeight, dimZStart], [spaceWidth, dimY + mmToThreeUnits(30), dimZStart]]}
                 color={dimensionColor}
                 lineWidth={0.3}
               />
               <Line
-                points={[[spaceWidth, spaceHeight, spaceZOffset + moduleDepth], [spaceWidth, dimY + mmToThreeUnits(30), spaceZOffset + moduleDepth]]}
+                points={[[spaceWidth, spaceHeight, dimZStart + moduleDepth], [spaceWidth, dimY + mmToThreeUnits(30), dimZStart + moduleDepth]]}
                 color={dimensionColor}
                 lineWidth={0.3}
               />
@@ -8138,19 +8142,19 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   <group>
                     {/* 하부 깊이 치수선 */}
                     <Line
-                      points={[[spaceWidth, lowerDimY, spaceZOffset], [spaceWidth, lowerDimY, spaceZOffset + lowerModuleDepth]]}
+                      points={[[spaceWidth, lowerDimY, dimZStart], [spaceWidth, lowerDimY, dimZStart + lowerModuleDepth]]}
                       color={dimensionColor}
                       lineWidth={0.3}
                     />
 
                     {/* 화살표들 */}
                     <Line
-                      points={createArrowHead([spaceWidth, lowerDimY, spaceZOffset], [spaceWidth, lowerDimY, spaceZOffset + 0.02], 0.01)}
+                      points={createArrowHead([spaceWidth, lowerDimY, dimZStart], [spaceWidth, lowerDimY, dimZStart + 0.02], 0.01)}
                       color={dimensionColor}
                       lineWidth={0.3}
                     />
                     <Line
-                      points={createArrowHead([spaceWidth, lowerDimY, spaceZOffset + lowerModuleDepth], [spaceWidth, lowerDimY, spaceZOffset + lowerModuleDepth - 0.02], 0.01)}
+                      points={createArrowHead([spaceWidth, lowerDimY, dimZStart + lowerModuleDepth], [spaceWidth, lowerDimY, dimZStart + lowerModuleDepth - 0.02], 0.01)}
                       color={dimensionColor}
                       lineWidth={0.3}
                     />
@@ -8159,7 +8163,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     <Text
                       renderOrder={1000}
                       depthTest={false}
-                      position={[spaceWidth, lowerDimY + mmToThreeUnits(30), spaceZOffset + lowerModuleDepth / 2]}
+                      position={[spaceWidth, lowerDimY + mmToThreeUnits(30), dimZStart + lowerModuleDepth / 2]}
                       fontSize={baseFontSize}
                       color={dimensionColor}
                       anchorX="center"
@@ -8170,12 +8174,12 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
 
                     {/* 연장선 (가구에서 치수선까지) */}
                     <Line
-                      points={[[spaceWidth, 0, spaceZOffset], [spaceWidth, lowerDimY - mmToThreeUnits(30), spaceZOffset]]}
+                      points={[[spaceWidth, 0, dimZStart], [spaceWidth, lowerDimY - mmToThreeUnits(30), dimZStart]]}
                       color={dimensionColor}
                       lineWidth={0.3}
                     />
                     <Line
-                      points={[[spaceWidth, 0, spaceZOffset + lowerModuleDepth], [spaceWidth, lowerDimY - mmToThreeUnits(30), spaceZOffset + lowerModuleDepth]]}
+                      points={[[spaceWidth, 0, dimZStart + lowerModuleDepth], [spaceWidth, lowerDimY - mmToThreeUnits(30), dimZStart + lowerModuleDepth]]}
                       color={dimensionColor}
                       lineWidth={0.3}
                     />
