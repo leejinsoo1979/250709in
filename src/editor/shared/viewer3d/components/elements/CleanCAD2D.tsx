@@ -5935,7 +5935,13 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         const baseFrameMm = (module as any).hasBase === false ? 0
           : ((module as any).baseFrameHeight ?? (spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height || 65) : 0));
         const floatMm = (module as any).hasBase === false ? ((module as any).individualFloatHeight ?? 0) : 0;
-        const furnitureBottomMm = floorFinishMm + baseFrameMm + floatMm;
+        // 신발장(현관장 H/선반장)은 띄움 시 가구가 위로 뜨지 않고 하부 섹션 안에서 흡수
+        // → furnitureBottomMm에 floatMm 안 더함 (가구 Y 위치 유지, 상부 섹션 라벨 변화 없음)
+        const isShoeForBottom = mid.includes('-entryway-') ||
+          mid.includes('-shelf-') ||
+          mid.includes('-4drawer-shelf-') ||
+          mid.includes('-2drawer-shelf-');
+        const furnitureBottomMm = floorFinishMm + baseFrameMm + (isShoeForBottom ? 0 : floatMm);
         const cxX = module.position.x;
         const labelX = cxX;
         // 실제 렌더링 공식 동일 (SectionsRenderer)
