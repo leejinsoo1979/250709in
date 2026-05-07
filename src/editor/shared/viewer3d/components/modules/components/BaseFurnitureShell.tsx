@@ -1192,7 +1192,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                         const drawerPanelThicknessMm = (basicThicknessMm === 18.5 || basicThicknessMm === 15.5) ? 15.5 : 15;
                         const drawerSideT = mmToThreeUnits(drawerPanelThicknessMm);
                         const maidaT = mmToThreeUnits(drawerPanelThicknessMm);
-                        const bottomT = mmToThreeUnits(9); // 바닥판 두께 = 백패널 두께 (9mm 고정)
+                        const bottomT = backPanelThickness; // 바닥판 두께 = 백패널 두께 (다른 서랍과 동일하게 동적)
 
                         // 서랍 영역: 날개벽 수직패널 안쪽면 사이에서 좌우 5mm 갭
                         const vertXOff = mmToThreeUnits(27);
@@ -1374,15 +1374,17 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                               // 측판 좌/우 X (날개벽 안쪽 5mm 갭 안에서 측판 두께 절반)
                               const leftPanelX = -drawerAreaWidth / 2 + sideThicknessForBoring / 2;
                               const rightPanelX = drawerAreaWidth / 2 - sideThicknessForBoring / 2;
-                              // 측판 상/하 Y: 측판 끝에서 20mm
+                              // 보링 Y: 다른 서랍(DrawerRenderer)과 동일 — 측판 상단에서 20mm, 바닥판 윗면에서 20mm 위
                               const drawerTopY = drawerCenterY + drawerSideH / 2;
-                              const drawerBottomY = drawerCenterY - drawerSideH / 2;
+                              const sidePanelBottomForBoring = drawerCenterY - drawerSideH / 2;
+                              const bottomTopYForBoring = sidePanelBottomForBoring + mmToThreeUnits(13) + bottomT; // 바닥판 윗면
                               const edgeOffsetY = mmToThreeUnits(20);
                               const topBoringY = drawerTopY - edgeOffsetY;
-                              const bottomBoringY = drawerBottomY + edgeOffsetY;
+                              const bottomBoringY = bottomTopYForBoring + edgeOffsetY;
                               const middleBoringY = (topBoringY + bottomBoringY) / 2;
                               const boringYs = [topBoringY, middleBoringY, bottomBoringY];
-                              // 보링 Z: 측판 앞면(드로워 앞판 위치)/측판 뒷면(뒷판 위치) 기준 — 마이다 위가 아니라 측판 위에 표시
+                              // 보링 Z: 측판 앞쪽 끝에서 측판두께/2 안쪽, 측판 뒤쪽 끝에서 측판두께/2 안쪽
+                              // (다른 서랍 동일: 측판 안쪽 끝에서 sideT/2 위치 = 앞판/뒷판 안쪽면 중앙)
                               const drawerSideFrontZForBoring = wingFrontFaceZ - maidaT;
                               const frontBoringZ = drawerSideFrontZForBoring - sideThicknessForBoring / 2;
                               const backBoringZ = drawerBackZ + sideThicknessForBoring / 2;
