@@ -337,8 +337,12 @@ export default function EnterpriseSignUpPage() {
       }
 
       setSubmitted(true);
-    } catch {
-      setError('제출 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.');
+    } catch (err: unknown) {
+      const e = err as { code?: string; message?: string };
+      console.error('❌ 기업가입 제출 에러:', e);
+      // 어디서 발생했는지 파악할 수 있도록 메시지 노출
+      const detail = e?.code || e?.message || String(err);
+      setError(`제출 중 오류가 발생했습니다: ${detail}`);
     } finally {
       setSubmitting(false);
     }

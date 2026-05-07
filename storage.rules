@@ -26,5 +26,17 @@ service firebase.storage {
     match /teams/{teamId}/designs/{designId}/versions/{rest=**} {
       allow read, write: if isTeamMember(teamId);
     }
+
+    // 사업자등록증 (기업회원 가입 신청)
+    // 쓰기: 본인 폴더에만, JPG/PNG/PDF, 10MB 이하
+    // 읽기: 본인 + 텔레그램 봇이 다운로드할 수 있도록 공개 읽기 허용
+    //   (URL이 노출되더라도 추측 어려운 timestamp 포함, 실질적 위험 낮음)
+    match /business-licenses/{uid}/{file=**} {
+      allow read: if true;
+      allow write: if isSignedIn() && request.auth.uid == uid &&
+                   request.resource.size < 10 * 1024 * 1024 &&
+                   (request.resource.contentType.matches('image/.*') ||
+                    request.resource.contentType == 'application/pdf');
+    }
   }
 }
