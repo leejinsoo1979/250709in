@@ -5974,48 +5974,18 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           const n = posArr.length;
           if (n === 0) { sectionBottomMm += sectionHeight; return; }
           const halfT = basicThickness / 2;
-          // 섹션 외경을 spaceInfo의 실시간 값으로 재계산
-          // 가구 외경 = 공간높이 - 상단몰딩 - 받침대
-          // 마지막(상부) 섹션 외경 = 가구 외경 - 고정섹션합
-          // 첫(하부) 섹션 외경 = section.height 그대로 (고정 섹션)
-          const topFrameRuntime = spaceInfo.frameSize?.top ?? 30;
-          // 가구 개별 baseFrameHeight 우선, 없으면 글로벌 spaceInfo 사용
-          const baseFrameRuntime = (module as any).baseFrameHeight !== undefined
-            ? (module as any).baseFrameHeight
-            : (spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height ?? 60) : 0);
-          const furnitureOuterRuntime = (spaceInfo.height || 0) - topFrameRuntime - baseFrameRuntime;
-          // 신발장(현관장 H/선반장)은 첫(하부) 섹션이 높이 변화 흡수 — 그 외는 마지막(상부) 섹션 흡수
-          const modIdForAbsorb = (module as any)?.moduleId || '';
-          const isShoeAbsorb = modIdForAbsorb.includes('-entryway-') ||
-            modIdForAbsorb.includes('-shelf-') ||
-            modIdForAbsorb.includes('-4drawer-shelf-') ||
-            modIdForAbsorb.includes('-2drawer-shelf-');
-          const absorbIdxRuntime = isShoeAbsorb ? 0 : effectiveSections.length - 1;
-          const fixedSumRuntime = effectiveSections.reduce((s: number, sec: any, i: number) =>
-            i === absorbIdxRuntime ? s : s + (sec.height || 0), 0);
-          const isAbsorbingSectionRuntime = sectionIdx === absorbIdxRuntime;
-          const sectionOuterH = isAbsorbingSectionRuntime
-            ? Math.max(0, furnitureOuterRuntime - fixedSumRuntime)
-            : ((section.height as number) || sectionHeight);
+          // 계산 없음 — 렌더링된 section.height와 shelfPositions 그대로 사용
+          const sectionOuterH = (section.height as number) || sectionHeight;
           const innerH = Math.max(0, sectionOuterH - 2 * basicThickness);
-          // 모듈 원본 shelfPositions 그대로 사용 (신발장 하부는 받침대 기준 특수 위치)
-          const posArrEffective: number[] = posArr;
-          // 흡수 섹션 + fixedTopZoneMm 있으면(신발장 하부) 마지막 칸은 마지막 선반~받침대 하단까지로 제한
-          // (fixedTopZone = 받침대+서랍 영역, 그 위는 별도 표시 안 함)
-          const fixedTopZone = (section as any).fixedTopZoneMm ? Number((section as any).fixedTopZoneMm) : 0;
-          const effectiveTopY = isAbsorbingSectionRuntime && fixedTopZone > 0
-            ? innerH - fixedTopZone
-            : innerH;
-          // gaps를 실제 저장된 shelfPositions에서 파생 (스피너로 선반 이동 시 즉시 반영되도록)
-          // gaps[k]: k==0 → posArr[0]-halfT, 중간 → posArr[k]-posArr[k-1]-basicThickness, 마지막 → effectiveTopY - posArr[n-1] - halfT
+          // gaps: posArr 그대로 사용 (선반 사이 간격 = posArr 차이 그대로)
           const gaps: number[] = [];
           for (let k = 0; k <= n; k++) {
             if (k === 0) {
-              gaps.push(Math.max(0, Math.round(posArrEffective[0] - halfT)));
+              gaps.push(Math.max(0, Math.round(posArr[0] - halfT)));
             } else if (k === n) {
-              gaps.push(Math.max(0, Math.round(effectiveTopY - posArrEffective[n - 1] - halfT)));
+              gaps.push(Math.max(0, Math.round(innerH - posArr[n - 1] - halfT)));
             } else {
-              gaps.push(Math.max(0, Math.round(posArrEffective[k] - posArrEffective[k - 1] - basicThickness)));
+              gaps.push(Math.max(0, Math.round(posArr[k] - posArr[k - 1] - basicThickness)));
             }
           }
           // 각 칸 중심 Y
