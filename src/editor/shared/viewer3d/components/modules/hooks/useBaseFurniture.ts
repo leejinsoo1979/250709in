@@ -471,24 +471,11 @@ export const useBaseFurniture = (
     const remainingHeight = availableHeight - totalFixedHeight;
 
     // 모든 섹션의 높이 계산
-    const sectionHeights = sections.map((section: SectionConfig) =>
+    return sections.map((section: SectionConfig) =>
       (section.heightType === 'absolute')
         ? calculateSectionHeight(section, availableHeight)
         : calculateSectionHeight(section, remainingHeight)
     );
-
-    if (sectionHeights.length >= 2) {
-      const totalSectionHeight = sectionHeights.reduce((sum: number, sectionHeight: number) => sum + sectionHeight, 0);
-      if (Math.abs(totalSectionHeight - availableHeight) > 0.001) {
-        const lastIdx = sectionHeights.length - 1;
-        const lowerSectionsHeight = sectionHeights
-          .slice(0, lastIdx)
-          .reduce((sum: number, sectionHeight: number) => sum + sectionHeight, 0);
-        sectionHeights[lastIdx] = availableHeight - lowerSectionsHeight;
-      }
-    }
-
-    return sectionHeights;
   };
   
   return {
