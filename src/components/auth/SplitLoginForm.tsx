@@ -1,8 +1,9 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { signInWithCredential, GoogleAuthProvider } from 'firebase/auth';
 import { useAuth } from '@/auth/AuthProvider';
 import { auth, signInWithEmail, signUpWithEmail, signInWithGoogle, handleRedirectResult } from '@/firebase/auth';
+import { isSuperAdmin, isUserAdmin } from '@/firebase/admins';
 import { SignInFlo } from '@/components/ui/sign-in-flo';
 import {
   isSketchUpEnvironment,
@@ -22,23 +23,30 @@ export const SplitLoginForm: React.FC<SplitLoginFormProps> = ({ onSuccess, defau
   const [googleLoading, setGoogleLoading] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  // SketchUp HtmlDialog 환경이면 로그인 후 SketchUp 전용 대시보드로 이동
-  const postLoginPath = useMemo(
-    () => (isSketchUpEnvironment() ? '/sketchup' : '/dashboard'),
-    []
-  );
+  // 관리자(슈퍼/일반)는 대시보드, 그 외 일반 사용자는 데모 모드로 라우팅
+  // SketchUp HtmlDialog 환경은 기존 /sketchup 경로 유지
+  const resolvePostLoginPath = async (
+    user: { uid?: string | null; email?: string | null } | null | undefined
+  ): Promise<string> => {
+    if (isSketchUpEnvironment()) return '/sketchup';
+    if (!user) return '/demo';
+    if (isSuperAdmin(user.email)) return '/dashboard';
+    if (user.uid && (await isUserAdmin(user.uid))) return '/dashboard';
+    return '/demo';
+  };
 
   useEffect(() => {
     const checkRedirectResult = async () => {
       const result = await handleRedirectResult();
       if (result.user) {
-        navigate(postLoginPath);
+        const path = await resolvePostLoginPath(result.user);
+        navigate(path);
       } else if (result.error) {
         setError(result.error);
       }
     };
     checkRedirectResult();
-  }, [navigate, postLoginPath]);
+  }, [navigate]);
 
   // SketchUp 외부 OAuth 위임 흐름의 토큰 수신 콜백 등록
   useEffect(() => {
@@ -70,7 +78,8 @@ export const SplitLoginForm: React.FC<SplitLoginFormProps> = ({ onSuccess, defau
         const credential = GoogleAuthProvider.credential(idToken, accessToken);
         const userCred = await signInWithCredential(auth, credential);
         if (userCred.user) {
-          navigate(postLoginPath);
+          const path = await resolvePostLoginPath(userCred.user);
+          navigate(path);
         }
       } catch (err: any) {
         console.error('signInWithCredential 실패:', err);
@@ -90,7 +99,7 @@ export const SplitLoginForm: React.FC<SplitLoginFormProps> = ({ onSuccess, defau
       delete (window as any).__sketchupOAuthToken;
       delete (window as any).__sketchupOAuthError;
     };
-  }, [navigate, postLoginPath]);
+  }, [navigate]);
 
   const handleSubmit = async (data: {
     email: string;
@@ -110,7 +119,8 @@ export const SplitLoginForm: React.FC<SplitLoginFormProps> = ({ onSuccess, defau
         setError(result.error);
       } else if (result.user) {
         onSuccess?.();
-        navigate(postLoginPath);
+        const path = await resolvePostLoginPath(result.user);
+        navigate(path);
       }
     } catch {
       setError('예상치 못한 오류가 발생했습니다.');
@@ -142,7 +152,8 @@ export const SplitLoginForm: React.FC<SplitLoginFormProps> = ({ onSuccess, defau
       if (result.error) {
         setError(result.error);
       } else if (result.user) {
-        navigate(postLoginPath);
+        const path = await resolvePostLoginPath(result.user);
+        navigate(path);
       }
       // result.user가 null이면 redirect 진행 중 - 페이지가 곧 떠나므로 대기
     } catch {

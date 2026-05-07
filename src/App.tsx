@@ -1,6 +1,7 @@
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { useEffect, lazy, Suspense } from 'react';
 import { AuthProvider } from '@/auth/AuthProvider';
+import DashboardAdminGuard from '@/auth/DashboardAdminGuard';
 import { ThemeProvider } from '@/contexts/ThemeContext';
 import { AlertProvider } from '@/contexts/AlertContext';
 import { NavigationProvider } from '@/contexts/NavigationContext';
@@ -130,9 +131,9 @@ function AppContent() {
       <Routes>
         {/* 메인 페이지 - 랜딩 페이지 */}
         <Route path="/" element={<LandingPage />} />
-        {/* 대시보드 페이지 */}
-        <Route path="/dashboard" element={<SimpleDashboard />} />
-        <Route path="/dashboard/*" element={<SimpleDashboard />} />
+        {/* 대시보드 페이지 (관리자 전용 - 그 외 사용자는 /demo 로 강제) */}
+        <Route path="/dashboard" element={<DashboardAdminGuard><SimpleDashboard /></DashboardAdminGuard>} />
+        <Route path="/dashboard/*" element={<DashboardAdminGuard><SimpleDashboard /></DashboardAdminGuard>} />
         {/* 관리자 페이지 */}
         <Route path="/admin" element={<AdminLayout />}>
           <Route index element={<AdminDashboard />} />
