@@ -457,21 +457,6 @@ export default function EnterpriseSignUpPage() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.4 }}
               >
-                <div
-                  className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6"
-                  style={{ background: `${accent}1A`, border: `1px solid ${accent}55` }}
-                >
-                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke={accent} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    {isApproved ? (
-                      <polyline points="20 6 9 17 4 12" />
-                    ) : (
-                      <>
-                        <circle cx="12" cy="12" r="10" />
-                        <polyline points="12 6 12 12 16 14" />
-                      </>
-                    )}
-                  </svg>
-                </div>
                 <h2 className="text-2xl font-bold text-white mb-3">{title}</h2>
                 <p className="text-zinc-400 text-sm mb-6 leading-relaxed whitespace-pre-line">{body}</p>
 
@@ -486,7 +471,20 @@ export default function EnterpriseSignUpPage() {
                   </div>
                 )}
 
-                {/* 사유 박스 — 사용자에게 거절/보류 사유 노출 안 함 (관리자만 본다) */}
+                {/* 관리자 메모 — 회색 톤, 빨간색 사용 안 함 */}
+                {!isApproved && existingInquiry.reasonText && (
+                  <div
+                    className="mb-6 mx-auto max-w-md text-left rounded-xl px-4 py-3 text-sm leading-relaxed"
+                    style={{
+                      background: '#27272a',
+                      border: '1px solid #3f3f46',
+                      color: '#e4e4e7',
+                    }}
+                  >
+                    <div style={{ color: '#a1a1aa', fontWeight: 600, marginBottom: 4, fontSize: 12 }}>관리자 메모</div>
+                    <div>{existingInquiry.reasonText}</div>
+                  </div>
+                )}
 
                 <div className="flex gap-3 justify-center flex-wrap">
                   <button
@@ -521,7 +519,24 @@ export default function EnterpriseSignUpPage() {
                       로그인하러 가기
                     </button>
                   )}
-                  {/* 거절 사용자도 다시 신청 버튼 노출 안 함 (혼란 방지) */}
+                  {/* approved 외 모든 상태(pending/on_hold/rejected) 보완 후 재신청 가능 */}
+                  {!isApproved && (
+                    <button
+                      onClick={() => setForceShowForm(true)}
+                      style={{
+                        padding: '12px 24px',
+                        borderRadius: 999,
+                        border: 'none',
+                        background: '#ffffff',
+                        color: '#09090b',
+                        fontSize: 14,
+                        fontWeight: 600,
+                        cursor: 'pointer',
+                      }}
+                    >
+                      보완 후 재신청
+                    </button>
+                  )}
                 </div>
               </motion.div>
             );

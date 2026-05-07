@@ -101,10 +101,8 @@ export default function EnterpriseInquiryNotice() {
 
   if (!open || !inquiry) return null;
 
-  // 상태별 컨텐츠
+  // 상태별 컨텐츠 — 사용자에겐 approved 외에는 모두 '승인 보류'로 통일
   const isApproved = inquiry.status === 'approved';
-  const isHold = inquiry.status === 'on_hold';
-  const isRejected = inquiry.status === 'rejected';
 
   const accent = isApproved ? 'var(--theme-primary, #667eea)' : '#f59e0b';
 
@@ -115,7 +113,7 @@ export default function EnterpriseInquiryNotice() {
 
   const body = isApproved
     ? `${inquiry.companyName ? `${inquiry.companyName} 님의 ` : ''}기업계정이 활성화되어 모든 기능을 이용하실 수 있습니다.`
-    : '관리자가 신청 내용을 확인하고 있습니다.\n처리 결과는 다시 안내드리겠습니다.';
+    : '관리자가 신청 내용을 확인하고 있습니다.\n아래 사유를 확인하시고 보완 후 다시 신청해 주세요.';
 
   const features = isApproved
     ? [
@@ -213,7 +211,25 @@ export default function EnterpriseInquiryNotice() {
           </div>
         )}
 
-        {/* 사유 박스 — 사용자에게 거절/보류 사유 노출 안 함 */}
+        {/* 사유 박스 — 회색 톤 (빨간색 사용 안 함) */}
+        {!isApproved && inquiry.reasonText && (
+          <div
+            style={{
+              textAlign: 'left',
+              background: 'var(--theme-surface-alt, #f4f4f5)',
+              border: '1px solid var(--theme-border, #e4e4e7)',
+              color: 'var(--theme-text, #18181b)',
+              borderRadius: 10,
+              padding: '12px 16px',
+              marginBottom: 24,
+              fontSize: 14,
+              lineHeight: 1.6,
+            }}
+          >
+            <div style={{ fontWeight: 600, marginBottom: 4, color: 'var(--theme-text-secondary, #6b7280)' }}>관리자 메모</div>
+            <div>{inquiry.reasonText}</div>
+          </div>
+        )}
 
         <button
           onClick={handleClose}
