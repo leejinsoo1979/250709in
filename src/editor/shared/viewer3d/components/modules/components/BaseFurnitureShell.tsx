@@ -1382,8 +1382,9 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                               const bottomBoringY = drawerBottomY + edgeOffsetY;
                               const middleBoringY = (topBoringY + bottomBoringY) / 2;
                               const boringYs = [topBoringY, middleBoringY, bottomBoringY];
-                              // 보링 Z: 앞판 안쪽면, 뒷판 안쪽면 (측판 위에 표시)
-                              const frontBoringZ = wingFrontFaceZ - sideThicknessForBoring / 2;
+                              // 보링 Z: 측판 앞면(드로워 앞판 위치)/측판 뒷면(뒷판 위치) 기준 — 마이다 위가 아니라 측판 위에 표시
+                              const drawerSideFrontZForBoring = wingFrontFaceZ - maidaT;
+                              const frontBoringZ = drawerSideFrontZForBoring - sideThicknessForBoring / 2;
                               const backBoringZ = drawerBackZ + sideThicknessForBoring / 2;
                               const boringZs = [frontBoringZ, backBoringZ];
                               const boringColor = '#666666';
