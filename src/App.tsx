@@ -2,6 +2,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'r
 import { useEffect, lazy, Suspense } from 'react';
 import { AuthProvider } from '@/auth/AuthProvider';
 import DashboardAdminGuard from '@/auth/DashboardAdminGuard';
+import EnterpriseInquiryNotice from '@/components/EnterpriseInquiryNotice';
 import { ThemeProvider } from '@/contexts/ThemeContext';
 import { AlertProvider } from '@/contexts/AlertContext';
 import { NavigationProvider } from '@/contexts/NavigationContext';
@@ -128,6 +129,7 @@ function AppContent() {
   return (
     <>
       <RouteChangeHandler />
+      <EnterpriseInquiryNotice />
       <Routes>
         {/* 메인 페이지 - 랜딩 페이지 */}
         <Route path="/" element={<LandingPage />} />

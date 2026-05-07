@@ -266,7 +266,7 @@ export default function EnterpriseSignUpPage() {
 
       // 3. Firestore에 기업 정보 저장 (승인 대기 상태)
       const { password: _pw, passwordConfirm: _pwc, ...formData } = form;
-      await addDoc(collection(db, 'enterprise_inquiries'), {
+      const inquiryRef = await addDoc(collection(db, 'enterprise_inquiries'), {
         ...formData,
         businessLicenseUrl,
         businessLicenseFileName: businessLicenseFile.name,
@@ -280,26 +280,60 @@ export default function EnterpriseSignUpPage() {
         createdAt: serverTimestamp(),
       });
 
-      // 4. 텔레그램으로 승인 요청 전송 (InlineKeyboard 버튼 포함)
+      // 4. 텔레그램으로 승인 요청 전송 (사업자등록증 사진 + InlineKeyboard 3버튼)
       const botToken = import.meta.env.VITE_TELEGRAM_BOT_TOKEN;
       const chatId = import.meta.env.VITE_TELEGRAM_CHAT_ID;
       if (botToken && chatId) {
         const time = new Date().toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' });
-        const text = `🏢 기업계정 가입 신청\n\n👤 대표자: ${form.contactName}\n📧 이메일: ${form.loginEmail}\n🏢 회사명: ${form.companyName}\n📋 사업자번호: ${form.businessNumber}\n🏭 업종: ${form.businessType}\n📂 업태: ${form.businessCategory}\n👥 예상인원: ${form.expectedUsers || '미입력'}\n📱 연락처: ${form.contactPhone || '미입력'}\n📎 사업자등록증: ${businessLicenseUrl}\n🕐 신청시간: ${time}\n\n승인하시겠습니까?`;
-        fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+        const caption = [
+          '🏢 *기업계정 가입 신청*',
+          '',
+          `👤 대표자: ${form.contactName}`,
+          `📧 이메일: ${form.loginEmail}`,
+          `🏢 회사명: ${form.companyName}`,
+          `📋 사업자번호: ${form.businessNumber}`,
+          `🏭 업종: ${form.businessType}`,
+          `📂 업태: ${form.businessCategory}`,
+          `👥 예상인원: ${form.expectedUsers || '미입력'}`,
+          `📱 연락처: ${form.contactPhone || '미입력'}`,
+          `🔍 국세청 검증: ${bizVerify.status === 'active' ? '✅ 정상' : bizVerify.message}`,
+          `🕐 신청시간: ${time}`,
+        ].join('\n');
+
+        const inlineKeyboard = {
+          inline_keyboard: [[
+            { text: '✅ 승인', callback_data: `approve:${inquiryRef.id}:${user.uid}` },
+            { text: '⏸ 보류', callback_data: `hold_menu:${inquiryRef.id}:${user.uid}` },
+            { text: '❌ 거절', callback_data: `reject_menu:${inquiryRef.id}:${user.uid}` },
+          ]],
+        };
+
+        // 이미지면 sendPhoto, PDF면 sendDocument
+        const isImage = /^image\//i.test(businessLicenseFile.type);
+        const apiMethod = isImage ? 'sendPhoto' : 'sendDocument';
+        const photoBody: any = {
+          chat_id: chatId,
+          [isImage ? 'photo' : 'document']: businessLicenseUrl,
+          caption,
+          reply_markup: inlineKeyboard,
+        };
+
+        fetch(`https://api.telegram.org/bot${botToken}/${apiMethod}`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            chat_id: chatId,
-            text,
-            reply_markup: {
-              inline_keyboard: [[
-                { text: '✅ 승인', callback_data: `approve:${user.uid}` },
-                { text: '❌ 거절', callback_data: `reject:${user.uid}` },
-              ]],
-            },
-          }),
-        }).catch(() => {/* 알림 실패해도 무시 */});
+          body: JSON.stringify(photoBody),
+        }).catch(() => {
+          // sendPhoto 실패 시 일반 메시지로 fallback
+          fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              chat_id: chatId,
+              text: caption + `\n\n📎 사업자등록증: ${businessLicenseUrl}`,
+              reply_markup: inlineKeyboard,
+            }),
+          }).catch(() => {/* 무시 */});
+        });
       }
 
       setSubmitted(true);
