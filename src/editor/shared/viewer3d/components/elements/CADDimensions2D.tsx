@@ -459,7 +459,7 @@ const computeLowerCabinetMaidaHeights = (
   });
 };
 
-interface SideViewDimensions2DProps {
+interface CADDimensions2DProps {
   viewDirection?: '3D' | 'front' | 'left' | 'right' | 'top';
   showDimensions?: boolean;
   isSplitView?: boolean;
@@ -468,7 +468,7 @@ interface SideViewDimensions2DProps {
 /**
  * CAD 스타일 2D 치수 표기 컴포넌트 - 측면뷰 전용
  */
-const SideViewDimensions2D: React.FC<SideViewDimensions2DProps> = ({ viewDirection, showDimensions: showDimensionsProp }) => {
+const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDimensions: showDimensionsProp }) => {
   const { spaceInfo } = useSpaceConfigStore();
   // 상판 실효 두께 — PET이면 도어 두께(spaceInfo.panelThickness, 기본 18), stone이면 사용자 선택값
   const _stoneTopThk = (mod: any) => getStoneTopThicknessMm(mod, spaceInfo?.panelThickness || 18);
@@ -3163,4 +3163,4 @@ const SideViewDimensions2D: React.FC<SideViewDimensions2DProps> = ({ viewDirecti
   return null;
 };
 
-export default SideViewDimensions2D;
+export default CADDimensions2D;
