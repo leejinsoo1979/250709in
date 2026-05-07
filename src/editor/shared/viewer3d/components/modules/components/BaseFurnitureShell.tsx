@@ -1200,13 +1200,16 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                         const wingInnerWidth = innerWidth - sidePanelGap - (vertXOff + frameT) * 2;
                         const drawerAreaWidth = wingInnerWidth - mmToThreeUnits(5) * 2;
 
-                        // 다른 서랍 모듈(ExternalDrawerRenderer)과 동일 공식:
-                        //   측판 앞면 = 가구 앞면(depth/2), 깊이 = min(가구깊이 - 50, 453)
-                        //   ㄷ자 프레임은 슬라이드 가이드 역할로 그대로 유지
-                        const wingFrontFaceZ = depth/2;
-                        const moduleDepthMmForDrawer = depth / 0.01;
-                        const drawerSideDepthMm = Math.min(moduleDepthMmForDrawer - 50, 453);
-                        const drawerSideDepth = mmToThreeUnits(drawerSideDepthMm);
+                        // 의류장 서랍(DrawerRenderer)과 동일 공식:
+                        //   drawerDepth(섹션에서 받음) = depth - basicThickness
+                        //   actualDrawerDepth = drawerDepth - 60mm = depth - basicThickness - 60mm
+                        //   centerZ = basicThickness/2
+                        //   측판 중심 Z = centerZ - HANDLE_PLATE_THICKNESS/2 = basicThickness/2 - basicThickness/2 = 0
+                        //   측판 앞면 Z = 0 + 측판깊이/2
+                        //   마이다 앞면 = centerZ + actualDrawerDepth/2 = basicThickness/2 + (depth - basicThickness - 60)/2
+                        //                = (depth - 60)/2 = depth/2 - 30 → 가구 앞면에서 30mm 안쪽
+                        const drawerSideDepth = depth - basicThickness - mmToThreeUnits(60); // 의류장과 동일 (=depth-78mm)
+                        const wingFrontFaceZ = depth/2 - mmToThreeUnits(30); // 마이다 앞면이 가구 앞면 -30mm
                         const drawerBackZ = wingFrontFaceZ - drawerSideDepth;
                         const drawerSideCenterZ = (wingFrontFaceZ + drawerBackZ) / 2;
 
@@ -1342,7 +1345,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                                 <BoxWithEdges
                                   key={`entryway-drawer-maida-${mat.uuid}`}
                                   args={[innerWidth - sidePanelGap - mmToThreeUnits(12) * 2, maidaH, maidaT]}
-                                  position={[0, maidaCenterY, wingFrontFaceZ + maidaT/2]}
+                                  position={[0, maidaCenterY, wingFrontFaceZ - maidaT/2]}
                                   material={mat}
                                   renderMode={renderMode}
                                   isDragging={isDragging}
