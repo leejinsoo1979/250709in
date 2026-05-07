@@ -1352,6 +1352,52 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                                 />
                               );
                             })()}
+                            {/* 서랍 측판 보링 — DrawerRenderer와 동일 공식
+                                좌/우 측판 × 앞판Z/뒷판Z × 상/중/하 = 12개 점 */}
+                            {(() => {
+                              const holeDiameter = 3;
+                              const holeOuterRadius = mmToThreeUnits(holeDiameter / 2);
+                              const holeInnerRadius = holeOuterRadius * 0.6;
+                              const sideThicknessForBoring = drawerSideT;
+                              // 측판 좌/우 X (날개벽 안쪽 5mm 갭 안에서 측판 두께 절반)
+                              const leftPanelX = -drawerAreaWidth / 2 + sideThicknessForBoring / 2;
+                              const rightPanelX = drawerAreaWidth / 2 - sideThicknessForBoring / 2;
+                              // 측판 상/하 Y: 측판 끝에서 20mm
+                              const drawerTopY = drawerCenterY + drawerSideH / 2;
+                              const drawerBottomY = drawerCenterY - drawerSideH / 2;
+                              const edgeOffsetY = mmToThreeUnits(20);
+                              const topBoringY = drawerTopY - edgeOffsetY;
+                              const bottomBoringY = drawerBottomY + edgeOffsetY;
+                              const middleBoringY = (topBoringY + bottomBoringY) / 2;
+                              const boringYs = [topBoringY, middleBoringY, bottomBoringY];
+                              // 보링 Z: 앞판 안쪽면, 뒷판 안쪽면 (측판 위에 표시)
+                              const frontBoringZ = wingFrontFaceZ - sideThicknessForBoring / 2;
+                              const backBoringZ = drawerBackZ + sideThicknessForBoring / 2;
+                              const boringZs = [frontBoringZ, backBoringZ];
+                              const boringColor = '#666666';
+                              // 측판 측면(X 방향)에 보이도록 ringGeometry를 X축으로 회전
+                              return (
+                                <>
+                                  {[leftPanelX, rightPanelX].map((xPos, xIdx) => (
+                                    <group key={`entryway-boring-x${xIdx}`}>
+                                      {boringZs.map((zPos, zIdx) => (
+                                        boringYs.map((yPos, yIdx) => (
+                                          <mesh
+                                            key={`entryway-boring-${xIdx}-${zIdx}-${yIdx}`}
+                                            position={[xPos, yPos, zPos]}
+                                            rotation={[0, Math.PI / 2, 0]}
+                                            renderOrder={50}
+                                          >
+                                            <ringGeometry args={[holeInnerRadius, holeOuterRadius, 16]} />
+                                            <meshBasicMaterial color={boringColor} side={THREE.DoubleSide} depthTest={false} />
+                                          </mesh>
+                                        ))
+                                      ))}
+                                    </group>
+                                  ))}
+                                </>
+                              );
+                            })()}
                           </>
                         );
                       })()}
