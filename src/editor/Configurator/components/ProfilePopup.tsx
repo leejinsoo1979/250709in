@@ -20,6 +20,7 @@ const ProfilePopup: React.FC<ProfilePopupProps> = ({ isOpen, onClose, position }
   const navigate = useNavigate();
   const { t } = useTranslation();
   const [isSuperAdmin, setIsSuperAdmin] = useState<boolean>(false);
+  const [isAdmin, setIsAdmin] = useState<boolean>(false);
   const [userPlan, setUserPlan] = useState<string>('free');
   // 닉네임 편집 상태
   const [isEditingName, setIsEditingName] = useState(false);
@@ -40,7 +41,6 @@ const ProfilePopup: React.FC<ProfilePopupProps> = ({ isOpen, onClose, position }
       getDocFromServer(doc(db, 'users', user.uid)).then((userDoc) => {
         if (userDoc.exists()) {
           const data = userDoc.data();
-          // 이메일 기반 슈퍼관리자는 Firestore role 값과 무관하게 true 유지
           setIsSuperAdmin(isEmailSuper || data.role === 'superadmin');
           setUserPlan(data.plan || 'free');
         }
@@ -54,6 +54,11 @@ const ProfilePopup: React.FC<ProfilePopupProps> = ({ isOpen, onClose, position }
         });
       });
     });
+
+    // admins 컬렉션 등록 여부 확인 (일반 관리자)
+    getDoc(doc(db, 'admins', user.uid)).then((adminDoc) => {
+      if (adminDoc.exists()) setIsAdmin(true);
+    }).catch(() => {});
   }, [isOpen, user]);
 
   // 닉네임 저장
@@ -209,8 +214,8 @@ const ProfilePopup: React.FC<ProfilePopupProps> = ({ isOpen, onClose, position }
                 <p className={styles.headerEmail}>{user.email}</p>
                 {(() => {
                   const isEnt = userPlan === 'enterprise';
-                  const label = isSuperAdmin ? '무제한 회원' : isEnt ? '기업회원' : '체험판';
-                  const bg = isSuperAdmin ? '#7c3aed' : isEnt ? '#10b981' : '#6b7280';
+                  const label = isSuperAdmin ? '마스터' : isAdmin ? '운영자' : isEnt ? '기업회원' : '체험판';
+                  const bg = isSuperAdmin ? '#7c3aed' : isAdmin ? '#3b82f6' : isEnt ? '#10b981' : '#6b7280';
                   return (
                     <span
                       style={{
