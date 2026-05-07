@@ -3892,7 +3892,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           if (leftmostMod && !hasDualCabinet) {
             const modData = getModuleById(
               leftmostMod.moduleId,
-              { width: spaceInfo.width, height: spaceInfo.height, depth: spaceInfo.depth },
+              calculateInternalSpace(spaceInfo),
               spaceInfo
             );
             const sections = modData?.modelConfig?.sections;
@@ -4566,7 +4566,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           if (rightmostMod && !rHasDualCabinet) {
             const rModData = getModuleById(
               rightmostMod.moduleId,
-              { width: spaceInfo.width, height: spaceInfo.height, depth: spaceInfo.depth },
+              calculateInternalSpace(spaceInfo),
               spaceInfo
             );
             const rSections = rModData?.modelConfig?.sections;
