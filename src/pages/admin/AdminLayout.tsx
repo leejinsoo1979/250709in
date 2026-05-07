@@ -3,7 +3,7 @@ import { useNavigate, Outlet, NavLink } from 'react-router-dom';
 import { useAuth } from '@/auth/AuthProvider';
 import { useAdmin } from '@/hooks/useAdmin';
 import { UserIcon, UsersIcon, SettingsIcon, LogOutIcon } from '@/components/common/Icons';
-import { HiOutlineChartBar, HiOutlineCreditCard, HiOutlineLockClosed, HiOutlineFolder, HiOutlineShare, HiOutlineClipboardList, HiOutlineShieldCheck, HiOutlineMail, HiOutlineChatAlt2, HiOutlineKey } from 'react-icons/hi';
+import { HiOutlineChartBar, HiOutlineCreditCard, HiOutlineLockClosed, HiOutlineFolder, HiOutlineShare, HiOutlineClipboardList, HiOutlineShieldCheck, HiOutlineMail, HiOutlineChatAlt2, HiOutlineKey, HiOutlineOfficeBuilding } from 'react-icons/hi';
 import { VscServerProcess } from 'react-icons/vsc';
 import { GiImperialCrown } from 'react-icons/gi';
 import styles from './AdminLayout.module.css';
@@ -102,6 +102,14 @@ const AdminLayout = () => {
           >
             <UsersIcon size={20} />
             <span>사용자 관리</span>
+          </NavLink>
+
+          <NavLink
+            to="/admin/enterprise"
+            className={({ isActive }) => isActive ? `${styles.navItem} ${styles.navItemActive}` : styles.navItem}
+          >
+            <HiOutlineOfficeBuilding size={20} />
+            <span>기업회원 관리</span>
           </NavLink>
 
           {isSuperAdmin && (

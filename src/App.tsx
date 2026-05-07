@@ -32,6 +32,7 @@ import EnterpriseSignUpPage from '@/pages/EnterpriseSignUpPage';
 import AdminLayout from '@/pages/admin/AdminLayout';
 import AdminDashboard from '@/pages/admin/Dashboard';
 import AdminUsers from '@/pages/admin/Users';
+import AdminEnterprise from '@/pages/admin/Enterprise';
 import AdminUserDetail from '@/pages/admin/UserDetail';
 import AdminAdmins from '@/pages/admin/Admins';
 import AdminTeams from '@/pages/admin/Teams';
@@ -142,6 +143,7 @@ function AppContent() {
           <Route index element={<AdminDashboard />} />
           <Route path="users" element={<AdminUsers />} />
           <Route path="users/:userId" element={<AdminUserDetail />} />
+          <Route path="enterprise" element={<AdminEnterprise />} />
           <Route path="admins" element={<AdminAdmins />} />
           <Route path="teams" element={<AdminTeams />} />
           <Route path="projects" element={<AdminProjects />} />
