@@ -6030,7 +6030,13 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             updatePlacedModule(module.id, { customSections: newSections });
           };
           if (showShelfEditUi)
+          // 신발장(현관장 H/선반장)의 하부 섹션 마지막 칸(받침대 아래)은 라벨 표시 안 함
+          const isShoeGapHide = (mid.includes('-entryway-') ||
+            mid.includes('-shelf-') ||
+            mid.includes('-4drawer-shelf-') ||
+            mid.includes('-2drawer-shelf-')) && sectionIdx === 0;
           gaps.forEach((g, i) => {
+            if (isShoeGapHide && i === gaps.length - 1) return; // 432 같은 잘못된 마지막 칸 라벨 숨김
             const cyThree = mmToThreeUnits(centerYs[i]);
             output.push(
               <Html
