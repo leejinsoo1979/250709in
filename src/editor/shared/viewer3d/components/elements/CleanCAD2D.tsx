@@ -5994,7 +5994,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           centerYs.push(sectionBottomMm + gaps[0] / 2);
           // 칸2..마지막: 아래 선반 윗면 + gap/2 = (sectionBottomMm + pos[i-1] + halfT) + gap[i]/2
           for (let i = 1; i < gaps.length; i++) {
-            const below = sectionBottomMm + posArrEffective[i - 1] + halfT;
+            const below = sectionBottomMm + posArr[i - 1] + halfT;
             centerYs.push(below + gaps[i] / 2);
           }
           const applyGapEdit = (gapIdx: number, newGap: number) => {
