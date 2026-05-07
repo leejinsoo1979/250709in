@@ -7,6 +7,7 @@ import { SearchIcon } from '@/components/common/Icons';
 import { getAllAdmins, isSuperAdmin } from '@/firebase/admins';
 import { updateUserPlan, PLANS, PlanType } from '@/firebase/plans';
 import { adminDeleteUserData } from '@/firebase/userProfiles';
+import { getAllUserUsageStats, clearUserUsageStatsCache, UserUsageStats } from '@/firebase/userUsageStats';
 import { GiImperialCrown } from 'react-icons/gi';
 import { FiUser } from 'react-icons/fi';
 import { PiMedal } from 'react-icons/pi';
@@ -30,7 +31,12 @@ const Users = () => {
   const [users, setUsers] = useState<UserData[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
-  const [sortBy, setSortBy] = useState<'date-desc' | 'date-asc' | 'name-asc' | 'name-desc'>('date-desc');
+  const [sortBy, setSortBy] = useState<
+    'date-desc' | 'date-asc' | 'name-asc' | 'name-desc'
+    | 'projects-desc' | 'designs-desc' | 'last-login-desc' | 'last-activity-desc'
+  >('date-desc');
+  const [usageStats, setUsageStats] = useState<Record<string, UserUsageStats>>({});
+  const [usageLoading, setUsageLoading] = useState(false);
   const [filterPlan, setFilterPlan] = useState<PlanType | 'all'>('all');
   const [sortDropdownOpen, setSortDropdownOpen] = useState(false);
   const [planFilterDropdownOpen, setPlanFilterDropdownOpen] = useState(false);
@@ -109,6 +115,41 @@ const Users = () => {
 
     fetchUsers();
   }, []);
+
+  // 사용량 정렬 선택 시 통계 lazy 로드 (sessionStorage 캐시 적용)
+  useEffect(() => {
+    const usageRequired =
+      sortBy === 'projects-desc' ||
+      sortBy === 'designs-desc' ||
+      sortBy === 'last-activity-desc';
+    if (!usageRequired) return;
+    if (Object.keys(usageStats).length > 0) return; // 이미 로드됨
+
+    let cancelled = false;
+    (async () => {
+      setUsageLoading(true);
+      try {
+        const stats = await getAllUserUsageStats();
+        if (!cancelled) setUsageStats(stats);
+      } finally {
+        if (!cancelled) setUsageLoading(false);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [sortBy, usageStats]);
+
+  // 사용량 새로고침 (캐시 무효화 후 재로드)
+  const refreshUsageStats = async () => {
+    clearUserUsageStatsCache();
+    setUsageStats({});
+    setUsageLoading(true);
+    try {
+      const stats = await getAllUserUsageStats(true);
+      setUsageStats(stats);
+    } finally {
+      setUsageLoading(false);
+    }
+  };
 
   // Click outside 감지
   useEffect(() => {
@@ -233,14 +274,36 @@ const Users = () => {
           if (!a.createdAt) return 1;
           if (!b.createdAt) return -1;
           return a.createdAt.getTime() - b.createdAt.getTime();
-        case 'name-asc':
+        case 'name-asc': {
           const nameA = (a.displayName || a.email || '').toLowerCase();
           const nameB = (b.displayName || b.email || '').toLowerCase();
           return nameA.localeCompare(nameB);
-        case 'name-desc':
+        }
+        case 'name-desc': {
           const nameA2 = (a.displayName || a.email || '').toLowerCase();
           const nameB2 = (b.displayName || b.email || '').toLowerCase();
           return nameB2.localeCompare(nameA2);
+        }
+        case 'projects-desc': {
+          const pa = usageStats[a.id]?.projectCount ?? 0;
+          const pb = usageStats[b.id]?.projectCount ?? 0;
+          return pb - pa;
+        }
+        case 'designs-desc': {
+          const da = usageStats[a.id]?.designFileCount ?? 0;
+          const db_ = usageStats[b.id]?.designFileCount ?? 0;
+          return db_ - da;
+        }
+        case 'last-login-desc': {
+          const la = a.lastLoginAt?.getTime() ?? 0;
+          const lb = b.lastLoginAt?.getTime() ?? 0;
+          return lb - la;
+        }
+        case 'last-activity-desc': {
+          const la = usageStats[a.id]?.lastActivityAt ?? 0;
+          const lb = usageStats[b.id]?.lastActivityAt ?? 0;
+          return lb - la;
+        }
         default:
           return 0;
       }
@@ -290,6 +353,10 @@ const Users = () => {
                   {sortBy === 'date-asc' && '가입일 오래된순'}
                   {sortBy === 'name-asc' && '이름 가나다순'}
                   {sortBy === 'name-desc' && '이름 역순'}
+                  {sortBy === 'projects-desc' && `프로젝트 많은순${usageLoading ? ' (로딩...)' : ''}`}
+                  {sortBy === 'designs-desc' && `디자인파일 많은순${usageLoading ? ' (로딩...)' : ''}`}
+                  {sortBy === 'last-login-desc' && '최근 로그인순'}
+                  {sortBy === 'last-activity-desc' && `최근 활동순${usageLoading ? ' (로딩...)' : ''}`}
                 </span>
                 <svg
                   className={`${styles.dropdownIcon} ${sortDropdownOpen ? styles.dropdownIconOpen : ''}`}
@@ -358,6 +425,63 @@ const Users = () => {
                         <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                       </svg>
                     )}
+                  </button>
+
+                  {/* 사용량 기준 정렬 (구분선) */}
+                  <div style={{ borderTop: '1px solid var(--theme-border, #e5e7eb)', margin: '4px 0' }} />
+
+                  <button
+                    className={`${styles.filterDropdownItem} ${sortBy === 'projects-desc' ? styles.filterDropdownItemActive : ''}`}
+                    onClick={() => { setSortBy('projects-desc'); setSortDropdownOpen(false); }}
+                  >
+                    프로젝트 많은순
+                    {sortBy === 'projects-desc' && (
+                      <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                      </svg>
+                    )}
+                  </button>
+                  <button
+                    className={`${styles.filterDropdownItem} ${sortBy === 'designs-desc' ? styles.filterDropdownItemActive : ''}`}
+                    onClick={() => { setSortBy('designs-desc'); setSortDropdownOpen(false); }}
+                  >
+                    디자인파일 많은순
+                    {sortBy === 'designs-desc' && (
+                      <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                      </svg>
+                    )}
+                  </button>
+                  <button
+                    className={`${styles.filterDropdownItem} ${sortBy === 'last-login-desc' ? styles.filterDropdownItemActive : ''}`}
+                    onClick={() => { setSortBy('last-login-desc'); setSortDropdownOpen(false); }}
+                  >
+                    최근 로그인순
+                    {sortBy === 'last-login-desc' && (
+                      <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                      </svg>
+                    )}
+                  </button>
+                  <button
+                    className={`${styles.filterDropdownItem} ${sortBy === 'last-activity-desc' ? styles.filterDropdownItemActive : ''}`}
+                    onClick={() => { setSortBy('last-activity-desc'); setSortDropdownOpen(false); }}
+                  >
+                    최근 활동순
+                    {sortBy === 'last-activity-desc' && (
+                      <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                      </svg>
+                    )}
+                  </button>
+
+                  <div style={{ borderTop: '1px solid var(--theme-border, #e5e7eb)', margin: '4px 0' }} />
+                  <button
+                    className={styles.filterDropdownItem}
+                    onClick={() => { refreshUsageStats(); setSortDropdownOpen(false); }}
+                    style={{ color: 'var(--theme-primary, #667eea)', fontSize: '12px' }}
+                  >
+                    🔄 사용량 새로고침
                   </button>
                 </div>
               )}
@@ -475,6 +599,8 @@ const Users = () => {
                 <th>이메일</th>
                 <th>권한</th>
                 <th>플랜</th>
+                <th>프로젝트</th>
+                <th>디자인</th>
                 <th>UID</th>
                 <th>가입일</th>
                 <th>최근 로그인</th>
@@ -528,6 +654,12 @@ const Users = () => {
                     >
                       {PLANS[targetUser.plan || 'free'].name}
                     </span>
+                  </td>
+                  <td style={{ textAlign: 'center', fontFamily: 'monospace' }}>
+                    {usageStats[targetUser.id]?.projectCount ?? (Object.keys(usageStats).length === 0 ? '-' : 0)}
+                  </td>
+                  <td style={{ textAlign: 'center', fontFamily: 'monospace' }}>
+                    {usageStats[targetUser.id]?.designFileCount ?? (Object.keys(usageStats).length === 0 ? '-' : 0)}
                   </td>
                   <td>
                     <code className={styles.uid}>{targetUser.id.substring(0, 12)}...</code>
