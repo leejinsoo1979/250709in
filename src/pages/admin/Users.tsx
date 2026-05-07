@@ -6,6 +6,7 @@ import { useAuth } from '@/auth/AuthProvider';
 import { SearchIcon } from '@/components/common/Icons';
 import { getAllAdmins, isSuperAdmin } from '@/firebase/admins';
 import { updateUserPlan, PLANS, PlanType } from '@/firebase/plans';
+import { adminDeleteUserData } from '@/firebase/userProfiles';
 import { GiImperialCrown } from 'react-icons/gi';
 import { FiUser } from 'react-icons/fi';
 import { PiMedal } from 'react-icons/pi';
@@ -40,6 +41,16 @@ const Users = () => {
     currentPlan: PlanType;
     newPlan: PlanType;
   }>({ show: false, userId: '', userName: '', currentPlan: 'free', newPlan: 'free' });
+
+  // 회원 삭제 다이얼로그
+  const [deleteDialog, setDeleteDialog] = useState<{
+    show: boolean;
+    userId: string;
+    userEmail: string;
+    userName: string;
+    confirmInput: string;
+    submitting: boolean;
+  }>({ show: false, userId: '', userEmail: '', userName: '', confirmInput: '', submitting: false });
 
   const isAdminUser = user && (isSuperAdmin(user.email) || getAllAdmins().then(admins => admins.has(user.uid)));
 
@@ -149,6 +160,53 @@ const Users = () => {
       alert('❌ 플랜 변경 실패: ' + (error as Error).message);
     } finally {
       setPlanDialog({ show: false, userId: '', userName: '', currentPlan: 'free', newPlan: 'free' });
+    }
+  };
+
+  // 회원 삭제 다이얼로그 열기
+  const openDeleteDialog = (userId: string, userEmail: string, userName: string) => {
+    setDeleteDialog({
+      show: true,
+      userId,
+      userEmail,
+      userName,
+      confirmInput: '',
+      submitting: false,
+    });
+  };
+
+  // 회원 삭제 실행 (Firestore 데이터 일괄 삭제 → 동일 이메일 재가입 가능)
+  const handleDeleteUser = async () => {
+    const { userId, userEmail, confirmInput } = deleteDialog;
+    if (confirmInput.trim().toLowerCase() !== userEmail.trim().toLowerCase()) {
+      alert('확인을 위해 사용자의 이메일을 정확히 입력해주세요.');
+      return;
+    }
+
+    setDeleteDialog((prev) => ({ ...prev, submitting: true }));
+    try {
+      const { error, deletedCounts } = await adminDeleteUserData(userId);
+      if (error) {
+        alert('❌ 회원 삭제 실패: ' + error);
+        setDeleteDialog((prev) => ({ ...prev, submitting: false }));
+        return;
+      }
+
+      const projects = deletedCounts?.projects ?? 0;
+      alert(
+        `✅ 회원 데이터가 삭제되었습니다.\n` +
+        `- 프로젝트 ${projects}건 삭제\n\n` +
+        `※ Firebase Auth 계정 자체는 보안상 클라이언트에서 삭제할 수 없습니다.\n` +
+        `   동일 이메일로 기업회원 재가입이 필요한 경우, Firebase Console에서\n` +
+        `   해당 Auth 계정을 수동으로 삭제해주세요.`
+      );
+
+      // 목록에서 제거
+      setUsers((prev) => prev.filter((u) => u.id !== userId));
+      setDeleteDialog({ show: false, userId: '', userEmail: '', userName: '', confirmInput: '', submitting: false });
+    } catch (e) {
+      alert('❌ 회원 삭제 중 예외 발생: ' + (e as Error).message);
+      setDeleteDialog((prev) => ({ ...prev, submitting: false }));
     }
   };
 
@@ -488,19 +546,40 @@ const Users = () => {
                     {targetUser.isSuperAdmin ? (
                       <span className={styles.superAdminText}>절대 권한</span>
                     ) : (
-                      <button
-                        className={styles.changePlanButton}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          openPlanDialog(
-                            targetUser.id,
-                            targetUser.displayName || targetUser.email,
-                            targetUser.plan || 'free'
-                          );
-                        }}
-                      >
-                        플랜 변경
-                      </button>
+                      <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                        <button
+                          className={styles.changePlanButton}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            openPlanDialog(
+                              targetUser.id,
+                              targetUser.displayName || targetUser.email,
+                              targetUser.plan || 'free'
+                            );
+                          }}
+                        >
+                          플랜 변경
+                        </button>
+                        <button
+                          className={styles.changePlanButton}
+                          style={{
+                            background: '#ef4444',
+                            borderColor: '#ef4444',
+                            color: '#fff',
+                          }}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            openDeleteDialog(
+                              targetUser.id,
+                              targetUser.email,
+                              targetUser.displayName || targetUser.email
+                            );
+                          }}
+                          title="회원 데이터 삭제 (재가입 가능)"
+                        >
+                          탈퇴 처리
+                        </button>
+                      </div>
                     )}
                   </td>
                 </tr>
@@ -570,6 +649,107 @@ const Users = () => {
               disabled={planDialog.currentPlan === planDialog.newPlan}
             >
               변경
+            </button>
+          </div>
+        </div>
+      </div>
+    )}
+
+    {/* 회원 탈퇴(데이터 삭제) 다이얼로그 */}
+    {deleteDialog.show && (
+      <div className={styles.dialogOverlay}>
+        <div className={styles.dialog}>
+          <h3 className={styles.dialogTitle} style={{ color: '#ef4444' }}>
+            ⚠️ 회원 탈퇴 처리
+          </h3>
+          <p className={styles.dialogMessage}>
+            <strong>{deleteDialog.userName}</strong> ({deleteDialog.userEmail}) 회원을 탈퇴 처리합니다.
+          </p>
+
+          <div
+            style={{
+              background: '#fef2f2',
+              border: '1px solid #fecaca',
+              borderRadius: 8,
+              padding: '12px 14px',
+              margin: '12px 0',
+              fontSize: 13,
+              color: '#991b1b',
+              lineHeight: 1.6,
+            }}
+          >
+            <div style={{ fontWeight: 600, marginBottom: 6 }}>다음 데이터가 영구 삭제됩니다:</div>
+            <div>• userProfiles, users, admins 컬렉션의 사용자 문서</div>
+            <div>• 해당 사용자가 소유한 모든 프로젝트(projects)</div>
+            <div style={{ marginTop: 8, fontSize: 12 }}>
+              ※ Firebase Auth 계정 자체는 클라이언트에서 삭제 불가합니다.
+              동일 이메일로 <b>기업회원 재가입</b>이 필요하면 Firebase Console에서 Auth 계정을 수동 삭제해주세요.
+            </div>
+          </div>
+
+          <div style={{ marginTop: 12 }}>
+            <label style={{ display: 'block', fontSize: 13, color: '#374151', marginBottom: 6 }}>
+              확인을 위해 사용자의 이메일을 정확히 입력하세요:
+            </label>
+            <input
+              type="text"
+              value={deleteDialog.confirmInput}
+              onChange={(e) =>
+                setDeleteDialog((prev) => ({ ...prev, confirmInput: e.target.value }))
+              }
+              placeholder={deleteDialog.userEmail}
+              autoFocus
+              style={{
+                width: '100%',
+                padding: '10px 12px',
+                border: '1px solid #d1d5db',
+                borderRadius: 8,
+                fontSize: 14,
+                outline: 'none',
+                boxSizing: 'border-box',
+              }}
+            />
+          </div>
+
+          <div className={styles.dialogActions}>
+            <button
+              className={styles.cancelButton}
+              onClick={() =>
+                setDeleteDialog({
+                  show: false,
+                  userId: '',
+                  userEmail: '',
+                  userName: '',
+                  confirmInput: '',
+                  submitting: false,
+                })
+              }
+              disabled={deleteDialog.submitting}
+            >
+              취소
+            </button>
+            <button
+              className={styles.confirmButton}
+              onClick={handleDeleteUser}
+              disabled={
+                deleteDialog.submitting ||
+                deleteDialog.confirmInput.trim().toLowerCase() !==
+                  deleteDialog.userEmail.trim().toLowerCase()
+              }
+              style={{
+                background:
+                  deleteDialog.confirmInput.trim().toLowerCase() ===
+                  deleteDialog.userEmail.trim().toLowerCase()
+                    ? '#ef4444'
+                    : undefined,
+                borderColor:
+                  deleteDialog.confirmInput.trim().toLowerCase() ===
+                  deleteDialog.userEmail.trim().toLowerCase()
+                    ? '#ef4444'
+                    : undefined,
+              }}
+            >
+              {deleteDialog.submitting ? '삭제 중...' : '탈퇴 처리'}
             </button>
           </div>
         </div>

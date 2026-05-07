@@ -412,11 +412,75 @@ export const deleteUserProfile = async (): Promise<{ error: string | null }> => 
 
     const profileRef = doc(db, USER_PROFILES_COLLECTION, user.uid);
     await deleteDoc(profileRef);
-    
+
     return { error: null };
   } catch (error) {
     console.error('사용자 프로필 삭제 에러:', error);
     return { error: '사용자 프로필 삭제 중 오류가 발생했습니다.' };
+  }
+};
+
+/**
+ * [관리자 전용] 임의 사용자의 Firestore 데이터 일괄 삭제
+ *
+ * 클라이언트 SDK는 다른 사용자의 Firebase Auth 계정을 직접 삭제할 수 없습니다.
+ * 따라서 이 함수는 Firestore 데이터(users / userProfiles / admins / projects)만 삭제하고,
+ * 동일 이메일로 재가입(특히 기업회원 재가입) 가능하도록 처리합니다.
+ *
+ * Auth 계정 자체 삭제가 필요하면 Firebase Console에서 수동 삭제하거나
+ * Cloud Functions(Admin SDK)로 별도 처리해야 합니다.
+ */
+export const adminDeleteUserData = async (
+  targetUid: string
+): Promise<{ error: string | null; deletedCounts?: { projects: number } }> => {
+  try {
+    if (!targetUid) {
+      return { error: '대상 UID가 없습니다.' };
+    }
+
+    // 1) userProfiles/{uid}
+    try {
+      const profileRef = doc(db, USER_PROFILES_COLLECTION, targetUid);
+      await deleteDoc(profileRef);
+    } catch (e) {
+      console.warn('userProfiles 삭제 경고(없을 수 있음):', e);
+    }
+
+    // 2) users/{uid}
+    try {
+      const userRef = doc(db, 'users', targetUid);
+      await deleteDoc(userRef);
+    } catch (e) {
+      console.warn('users 삭제 경고(없을 수 있음):', e);
+    }
+
+    // 3) admins/{uid} (관리자였다면 권한 해제)
+    try {
+      const adminRef = doc(db, 'admins', targetUid);
+      await deleteDoc(adminRef);
+    } catch (e) {
+      console.warn('admins 삭제 경고(없을 수 있음):', e);
+    }
+
+    // 4) projects (userId == targetUid)
+    let projectCount = 0;
+    try {
+      const projectsRef = collection(db, 'projects');
+      const projectsQuery = query(projectsRef, where('userId', '==', targetUid));
+      const projectsSnap = await getDocs(projectsQuery);
+      for (const p of projectsSnap.docs) {
+        await deleteDoc(p.ref);
+        projectCount += 1;
+      }
+    } catch (e) {
+      console.warn('projects 삭제 경고:', e);
+    }
+
+    console.log('✅ 관리자 회원 데이터 삭제 완료:', targetUid, '/ 삭제 프로젝트:', projectCount);
+    return { error: null, deletedCounts: { projects: projectCount } };
+  } catch (error) {
+    console.error('❌ 관리자 회원 삭제 실패:', error);
+    return { error: '회원 삭제 중 오류가 발생했습니다.' };
   }
 };
 
