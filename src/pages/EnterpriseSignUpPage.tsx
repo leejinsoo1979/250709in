@@ -87,9 +87,7 @@ export default function EnterpriseSignUpPage() {
         return;
       }
       try {
-        // ⚠️ orderBy + where는 복합 인덱스 필요 → 인덱스 없으면 쿼리 실패하여
-        //   사용자가 가입 폼을 또 보게 되는 버그가 있었음.
-        //   → where만 사용하고 클라이언트에서 정렬
+        // where만 사용하고 클라이언트에서 정렬 (인덱스 없어도 동작)
         const q = query(
           collection(db, 'enterprise_inquiries'),
           where('uid', '==', currentUser.uid)
@@ -97,8 +95,10 @@ export default function EnterpriseSignUpPage() {
         const snap = await getDocs(q);
         if (cancelled) return;
         if (!snap.empty) {
-          // 가장 최근 createdAt 1건 선택
-          const docs = snap.docs.slice().sort((a, b) => {
+          // superseded(보완 후 재신청으로 대체된 옛 신청) 제외 + 가장 최근 createdAt 1건
+          const valid = snap.docs.filter((d) => (d.data().status as string) !== 'superseded');
+          if (valid.length === 0) return; // 모두 superseded면 신청 안 한 상태로 간주
+          const docs = valid.slice().sort((a, b) => {
             const ta = (a.data().createdAt?.toMillis?.() ?? 0) as number;
             const tb = (b.data().createdAt?.toMillis?.() ?? 0) as number;
             return tb - ta;
@@ -461,12 +461,12 @@ export default function EnterpriseSignUpPage() {
             // on_hold/rejected 둘 다 '추가 확인 필요'로 사용자에게 표시
 
             const title = isApproved
-              ? '이미 기업회원으로 승인되었습니다'
+              ? '기업회원입니다'
               : isPending
               ? '승인 대기 중입니다'
               : '보류 중입니다';
             const body = isApproved
-              ? `${existingInquiry.companyName ? existingInquiry.companyName + ' 님의 ' : ''}기업계정이 활성화되어 있습니다.\n로그인 후 모든 기능을 이용하실 수 있습니다.`
+              ? `${existingInquiry.companyName ? existingInquiry.companyName + ' 님의 ' : ''}기업계정이 활성화되어 있습니다.\n모든 기능을 이용하실 수 있습니다.`
               : isPending
               ? '관리자가 신청 내용을 검토하고 있습니다.\n신청 후 약 10~20분 이내에 처리됩니다.\n처리 결과는 다음 로그인 시 안내됩니다.'
               : '관리자 메모를 확인하신 후 보완하여 다시 신청해 주십시오.';
@@ -508,24 +508,10 @@ export default function EnterpriseSignUpPage() {
                 )}
 
                 <div className="flex gap-3 justify-center flex-wrap">
-                  <button
-                    onClick={() => navigate('/demo')}
-                    style={{
-                      padding: '12px 24px',
-                      borderRadius: 999,
-                      border: '1px solid rgba(102, 126, 234, 0.5)',
-                      background: 'transparent',
-                      color: '#ffffff',
-                      fontSize: 14,
-                      fontWeight: 600,
-                      cursor: 'pointer',
-                    }}
-                  >
-                    데모로 돌아가기
-                  </button>
-                  {isApproved && (
+                  {/* 승인된 사용자: 대시보드 직행. 그 외: 데모로 돌아가기 */}
+                  {isApproved ? (
                     <button
-                      onClick={() => navigate('/login')}
+                      onClick={() => navigate('/dashboard')}
                       style={{
                         padding: '12px 24px',
                         borderRadius: 999,
@@ -537,7 +523,23 @@ export default function EnterpriseSignUpPage() {
                         cursor: 'pointer',
                       }}
                     >
-                      로그인하러 가기
+                      대시보드로 이동
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => navigate('/demo')}
+                      style={{
+                        padding: '12px 24px',
+                        borderRadius: 999,
+                        border: '1px solid rgba(102, 126, 234, 0.5)',
+                        background: 'transparent',
+                        color: '#ffffff',
+                        fontSize: 14,
+                        fontWeight: 600,
+                        cursor: 'pointer',
+                      }}
+                    >
+                      데모로 돌아가기
                     </button>
                   )}
                   {/* on_hold / rejected 만 보완 후 재신청 가능 (pending은 검토 중이라 불필요) */}

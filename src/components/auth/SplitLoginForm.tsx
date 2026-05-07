@@ -43,17 +43,22 @@ export const SplitLoginForm: React.FC<SplitLoginFormProps> = ({ onSuccess, defau
       const currentPlan = userDoc.exists() ? (userDoc.data() as { plan?: string }).plan : undefined;
 
       // enterprise_inquiries 최신 신청 1건 조회 → 그 status가 진실
+      // superseded(대체된 옛 신청) 제외, 클라이언트 정렬 (인덱스 의존 X)
       let truePlan: 'enterprise' | 'free' = 'free';
       try {
         const q = query(
           collection(db, 'enterprise_inquiries'),
-          where('uid', '==', user.uid),
-          orderBy('createdAt', 'desc'),
-          limit(1)
+          where('uid', '==', user.uid)
         );
         const snap = await getDocs(q);
-        if (!snap.empty) {
-          const status = (snap.docs[0].data() as { status?: string }).status;
+        const valid = snap.docs.filter((d) => (d.data().status as string) !== 'superseded');
+        if (valid.length > 0) {
+          const sorted = valid.slice().sort((a, b) => {
+            const ta = (a.data().createdAt?.toMillis?.() ?? 0) as number;
+            const tb = (b.data().createdAt?.toMillis?.() ?? 0) as number;
+            return tb - ta;
+          });
+          const status = (sorted[0].data() as { status?: string }).status;
           if (status === 'approved') truePlan = 'enterprise';
         }
       } catch (e) {
