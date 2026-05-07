@@ -323,14 +323,13 @@ export default function Enterprise() {
                           <>
                             <button onClick={() => handleApprove(r)} disabled={busy === r.id} style={{ ...btn, background: '#10b981', color: '#fff' }}>승인</button>
                             <button onClick={() => handleReject(r, 'rejected')} disabled={busy === r.id} style={{ ...btn, background: '#ef4444', color: '#fff' }}>거절</button>
-                            <button onClick={() => handleRevertToPending(r)} disabled={busy === r.id} style={{ ...btn, background: '#6b7280', color: '#fff' }}>승인대기</button>
                           </>
                         )}
                         {r.status === 'approved' && (
-                          <button onClick={() => handleRevertToPending(r)} disabled={busy === r.id} style={{ ...btn, background: '#6b7280', color: '#fff' }}>승인대기</button>
+                          <button onClick={() => handleRevertToPending(r)} disabled={busy === r.id} style={{ ...btn, background: '#6b7280', color: '#fff' }}>승인 취소</button>
                         )}
                         {r.status === 'rejected' && (
-                          <button onClick={() => handleRevertToPending(r)} disabled={busy === r.id} style={{ ...btn, background: '#6b7280', color: '#fff' }}>승인대기</button>
+                          <button onClick={() => handleApprove(r)} disabled={busy === r.id} style={{ ...btn, background: '#10b981', color: '#fff' }}>다시 승인</button>
                         )}
                       </div>
                     </td>
