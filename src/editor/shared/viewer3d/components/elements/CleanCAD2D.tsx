@@ -5944,7 +5944,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         // 마지막 섹션 = availableHeight - 나머지섹션합
         const topFrameMm = spaceInfo.frameSize?.top ?? 30;
         const spaceHeightMm = spaceInfo.height || 0;
-        const furnitureOuterH = spaceHeightMm - topFrameMm - baseFrameMm;
+        // 띄움도 가구 외부 빈 공간으로 빼야 입면=측면 일치 (하부 섹션이 흡수하지 않음)
+        const furnitureOuterH = spaceHeightMm - topFrameMm - baseFrameMm - floatMm;
         const availableHeight = furnitureOuterH - 2 * basicThickness;
         // 모듈 원본 sections.height 사용 (useBaseFurniture 비례조정 전 값)
         // useBaseFurniture와 동일 공식: renderHeight = 가구외경, absorb = 가구외경 - 다른섹션합
