@@ -386,14 +386,24 @@ export default function EnterpriseSignUpPage() {
             </div>
             <h2 className="text-2xl font-bold text-white mb-3">가입 신청이 완료되었습니다</h2>
             <p className="text-zinc-400 text-sm mb-8 leading-relaxed">
-              관리자 승인 후 이용 가능합니다.<br />승인이 완료되면 등록하신 이메일로 로그인하세요.
+              관리자가 신청 내용을 검토 후 승인합니다.<br />
+              빠르면 10분, 늦어도 20분 이내에 처리됩니다.<br />
+              검토 결과(승인 / 보류 / 거절)는 다음 로그인 시 자동으로 안내됩니다.
             </p>
-            <button
-              onClick={() => navigate('/login')}
-              className="bg-white text-zinc-950 py-3 px-8 rounded-full font-semibold text-sm hover:bg-zinc-200 transition-colors"
-            >
-              로그인 페이지로 이동
-            </button>
+            <div className="flex gap-3 justify-center">
+              <button
+                onClick={() => navigate('/demo')}
+                className="border border-white/30 text-white py-3 px-6 rounded-full font-semibold text-sm hover:bg-white/10 transition-colors"
+              >
+                데모 체험 계속하기
+              </button>
+              <button
+                onClick={() => navigate('/login')}
+                className="bg-white text-zinc-950 py-3 px-6 rounded-full font-semibold text-sm hover:bg-zinc-200 transition-colors"
+              >
+                로그인 페이지로 이동
+              </button>
+            </div>
           </motion.div>
         ) : (
           <motion.form
