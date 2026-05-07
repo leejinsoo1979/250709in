@@ -1061,13 +1061,23 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                         const drawerFrameCenterY = lowerTopPanelY - basicThickness/2 - drawerFrameH/2;
                         const halfInnerW = (innerWidth - sidePanelGap) / 2;
 
+                        // 하부 섹션 깊이/방향 — ㄷ자 프레임도 섹션 따라감
+                        const lowerSecDepthForFrame = lowerSectionDepthMm !== undefined
+                          ? mmToThreeUnits(lowerSectionDepthMm)
+                          : depth;
+                        // 섹션 앞면 Z (앞고정 front: 가구 앞면 / 뒤고정 back: 가구 뒷면 + 섹션깊이)
+                        const lowerSecFrontZ = lowerSectionDepthDirection === 'back'
+                          ? -depth/2 + lowerSecDepthForFrame
+                          : depth/2;
+                        // 섹션 뒷면 Z
+                        const lowerSecBackZ = lowerSecFrontZ - lowerSecDepthForFrame;
+
                         // 수직 패널: 측판에서 27mm 안쪽, 레일 부착용
                         const vertXOffset = mmToThreeUnits(27);
-                        // 전면 수평 패널: 앞에서 85mm 위치
-                        const frontHorizZ = depth/2 - mmToThreeUnits(85) - basicThickness/2;
-                        // 후면 수평 패널: 백패널 앞면에 맞닿음
-                        // backPanelThickness는 line 727에서 8mm로 shadowing됨 → backReductionForPanels(26mm) 사용
-                        const bpFrontFace = -depth/2 + backReductionForPanels;
+                        // 전면 수평 패널: 섹션 앞면에서 85mm 안쪽
+                        const frontHorizZ = lowerSecFrontZ - mmToThreeUnits(85) - basicThickness/2;
+                        // 후면 수평 패널: 섹션 백패널 앞면에 맞닿음
+                        const bpFrontFace = lowerSecBackZ + backReductionForPanels;
                         const backHorizZ = bpFrontFace + basicThickness/2;
                         // 수직 패널 깊이: 섹션 덥개(하부 상판)와 동일한 깊이 = lowerSectionDepth - 26 - 85
                         // 수직 패널이 전면/후면 수평 패널의 바깥쪽 면까지 확장 (덥개와 끝선 일치)
