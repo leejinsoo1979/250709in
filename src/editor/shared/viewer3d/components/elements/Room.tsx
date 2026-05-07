@@ -4642,10 +4642,13 @@ const Room: React.FC<RoomProps> = ({
                       const nFrontZ = nBackZ + mmToThreeUnits(topSectionDepthMm);
                       nSectionFrameZ = nFrontZ - mmToThreeUnits(END_PANEL_THICKNESS) / 2;
                     }
+                    // 가구별 뒷벽 이격(backWallGap) 반영: 상단몰딩도 가구 본체와 동일하게 앞으로 이동
+                    const modTopBackWallGapMm = (mod as any).backWallGap ?? 0;
+                    const modTopBackWallGapZ = modTopBackWallGapMm > 0 ? mmToThreeUnits(modTopBackWallGapMm) : 0;
                     allTopSegments.push({
                       widthMm: modWidthMM,
                       centerXmm: modCenterXmm,
-                      zPosition: (modCategory === 'upper' ? upperFrameZ : (nSectionFrameZ !== null ? nSectionFrameZ : (shoeFrameZ !== null ? shoeFrameZ : topZPosition))) + modTopZOffset + topFrameZRetract,
+                      zPosition: (modCategory === 'upper' ? upperFrameZ : (nSectionFrameZ !== null ? nSectionFrameZ : (shoeFrameZ !== null ? shoeFrameZ : topZPosition))) + modTopZOffset + topFrameZRetract + modTopBackWallGapZ,
                       height: modFrameHeight,
                       yPosition: modFrameCenterY,
                       material: topSurrMat,
@@ -5539,10 +5542,13 @@ const Room: React.FC<RoomProps> = ({
                     // 신발장/의류장 공통: 상부 섹션 depth 변화를 가구 기본 깊이 기준으로 반영
                     slotFrameZ = topZPos + computeDepthZOffset(mod, 'upper');
                   }
+                  // 가구별 뒷벽 이격(backWallGap) 반영: 상단몰딩도 가구 본체와 동일하게 앞으로 이동
+                  const slotTopBackWallGapMm = (mod as any).backWallGap ?? 0;
+                  const slotTopBackWallGapZ = slotTopBackWallGapMm > 0 ? mmToThreeUnits(slotTopBackWallGapMm) : 0;
                   slotTopSegments.push({
                     widthMm: modWidthMM,
                     centerXmm: modCenterXmm,
-                    zPosition: slotFrameZ + modTopZOffset,
+                    zPosition: slotFrameZ + modTopZOffset + slotTopBackWallGapZ,
                     height: modTopHeight,
                     yPosition: modTopY,
                     material: topFrameMat,
@@ -6574,6 +6580,11 @@ const Room: React.FC<RoomProps> = ({
               } else {
                 baseZPosition = baseZBase - mmToThreeUnits(depthZOffsetMM) - modBaseZInset;
               }
+              // 가구별 뒷벽 이격(backWallGap) 반영: 가구 본체와 동일하게 앞으로 이동
+              const modBaseBackWallGapMm = mod.backWallGap ?? 0;
+              if (modBaseBackWallGapMm > 0) {
+                baseZPosition += mmToThreeUnits(modBaseBackWallGapMm);
+              }
               const rawBaseHeightMm = mod.baseFrameHeight ?? (spaceInfo.baseConfig?.height ?? (freeIsLower ? 100 : 60));
               // 걸래받이 갭: 바닥 쪽에서 gap만큼 비우고 프레임 높이 축소 (가구쪽 상단은 고정)
               const modBaseFrameGapMm = Math.max(0, Math.min(rawBaseHeightMm - 1, mod.baseFrameGap ?? 0));
@@ -6922,7 +6933,10 @@ const Room: React.FC<RoomProps> = ({
                       const isShoeSlotBase = slotBaseShoeMid.includes('-entryway-') || slotBaseShoeMid.includes('-shelf-') || slotBaseShoeMid.includes('-4drawer-shelf-') || slotBaseShoeMid.includes('-2drawer-shelf-');
                       // 모든 가구 공통: 하부 섹션 depth 변화를 가구 기본 깊이 기준으로 반영
                       const unifiedBaseZOffset = computeDepthZOffset(mod, 'lower');
-                      const effectiveBaseZ = baseZPos + unifiedBaseZOffset;
+                      // 가구별 뒷벽 이격(backWallGap) 반영: 가구 본체와 동일하게 앞으로 이동
+                      const slotBaseBackWallGapMm = mod.backWallGap ?? 0;
+                      const slotBaseBackWallGapZ = slotBaseBackWallGapMm > 0 ? mmToThreeUnits(slotBaseBackWallGapMm) : 0;
+                      const effectiveBaseZ = baseZPos + unifiedBaseZOffset + slotBaseBackWallGapZ;
 
                       // 커스터마이즈 가구 좌우분할: 무조건 걸래받이도 영역별 분할
                       const customSec0 = (mod as any).customConfig?.sections?.[0];
