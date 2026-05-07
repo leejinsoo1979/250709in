@@ -130,17 +130,26 @@ export const useBaseFurniture = (
       return originalModelConfig;
     }
 
-    // 하부 섹션(마지막 제외)은 고정, 마지막(상부) 섹션이 높이 변화를 흡수
-    // 물리적으로 하부 칸막이 위치는 고정이고 상부만 가변
+    // 신발장(현관장 H): 상부/하부 경계 Y 유지를 위해 첫(하부) 섹션이 높이 변화 흡수
+    // 그 외 가구: 하부 섹션은 고정, 마지막(상부) 섹션이 높이 변화 흡수
+    const isShoeCabinetHeight = !!moduleData?.id && (
+      moduleData.id.includes('-entryway-') ||
+      moduleData.id.includes('-shelf-') ||
+      moduleData.id.includes('-4drawer-shelf-') ||
+      moduleData.id.includes('-2drawer-shelf-')
+    );
     const sections = originalModelConfig.sections;
-    const fixedSum = sections.slice(0, -1).reduce((sum: number, s: SectionConfig) => sum + s.height, 0);
-    const lastSection = sections[sections.length - 1];
-    const lastSectionNewHeight = Math.max(0, renderHeightMm - fixedSum);
-    const lastSectionRatio = lastSection.height > 0 ? lastSectionNewHeight / lastSection.height : 1;
+    // 흡수 섹션 인덱스: 신발장이면 0(하부), 그 외엔 마지막(상부)
+    const absorbingIdx = isShoeCabinetHeight ? 0 : sections.length - 1;
+    const fixedSum = sections.reduce((sum: number, s: SectionConfig, i: number) =>
+      i === absorbingIdx ? sum : sum + s.height, 0);
+    const absorbingSection = sections[absorbingIdx];
+    const absorbingNewHeight = Math.max(0, renderHeightMm - fixedSum);
+    const absorbingRatio = absorbingSection.height > 0 ? absorbingNewHeight / absorbingSection.height : 1;
 
     const basicThicknessMm = originalModelConfig.basicThickness || 18;
     const scaledSections = sections.map((section: SectionConfig, idx: number) => {
-      if (idx < sections.length - 1) {
+      if (idx !== absorbingIdx) {
         // 하부 섹션: 높이는 고정이되, shelfPositions는 현재 섹션 내경 기준으로 균등 재분할
         // (띄움 배치 등 렌더 높이 변화 시 기존 절대 위치가 비균등으로 보이는 문제 방지)
         if (section.shelfPositions && section.shelfPositions.length > 0 && section.count && section.count > 0) {
@@ -163,11 +172,11 @@ export const useBaseFurniture = (
         }
         return section;
       }
-      // 마지막(상부) 섹션만 조정
+      // 흡수 섹션(신발장: 하부 / 그 외: 상부)만 조정
       return {
         ...section,
-        height: Math.round(lastSectionNewHeight),
-        shelfPositions: section.shelfPositions?.map((pos: number) => Math.round(pos * lastSectionRatio))
+        height: Math.round(absorbingNewHeight),
+        shelfPositions: section.shelfPositions?.map((pos: number) => Math.round(pos * absorbingRatio))
       };
     });
 
