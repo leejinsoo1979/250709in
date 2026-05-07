@@ -1,79 +1,29 @@
-// CRAFT PWA Service Worker
-// 전략: 문서(HTML)는 network-first, 정적 자산은 cache-first
-const CACHE = 'craft-pwa-v2';
-const PRECACHE_URLS = [
-  '/',
-  '/index.html',
-  '/mobile',
-  '/manifest.webmanifest',
-  '/pwa-icon-192.png',
-  '/pwa-icon-512.png',
-  '/apple-touch-icon.png',
-];
+// Service Worker DISABLED — Self-unregister
+// 이전 버전에서 fetch 가로채기 오류로 페이지 로딩 실패 사례 발생 → SW 자체 비활성화.
+// 기존 사용자가 이 파일을 받으면 즉시 자기 자신을 unregister 하고 모든 캐시를 비워서
+// 다음 새로고침부터 깨끗한 네트워크 요청만 사용하도록 한다.
 
-self.addEventListener('install', (event) => {
-  event.waitUntil(
-    caches.open(CACHE).then((cache) => cache.addAll(PRECACHE_URLS)).catch(() => {})
-  );
+self.addEventListener('install', () => {
   self.skipWaiting();
 });
 
 self.addEventListener('activate', (event) => {
-  event.waitUntil(
-    caches.keys().then((keys) =>
-      Promise.all(keys.filter((k) => k !== CACHE).map((k) => caches.delete(k)))
-    )
-  );
-  self.clients.claim();
+  event.waitUntil((async () => {
+    try {
+      const keys = await caches.keys();
+      await Promise.all(keys.map((k) => caches.delete(k)));
+    } catch (_) {}
+    try {
+      await self.registration.unregister();
+    } catch (_) {}
+    try {
+      const clientsList = await self.clients.matchAll({ type: 'window' });
+      clientsList.forEach((client) => {
+        // 새로고침 강제 — 다음 요청부터 SW 없이 동작
+        client.navigate(client.url).catch(() => {});
+      });
+    } catch (_) {}
+  })());
 });
 
-self.addEventListener('fetch', (event) => {
-  const req = event.request;
-  if (req.method !== 'GET') return;
-  const url = new URL(req.url);
-  if (url.origin !== self.location.origin) return;
-
-  // 문서(HTML) 탐색 요청: network-first, 실패 시 캐시, 최후에 /index.html, 그래도 없으면 네트워크 재시도
-  const isNav = req.mode === 'navigate' || (req.destination === 'document');
-  if (isNav) {
-    event.respondWith(
-      (async () => {
-        try {
-          const res = await fetch(req);
-          const copy = res.clone();
-          caches.open(CACHE).then((c) => c.put(req, copy)).catch(() => {});
-          return res;
-        } catch (_) {
-          const cached = await caches.match(req);
-          if (cached) return cached;
-          const fallback = await caches.match('/index.html');
-          if (fallback) return fallback;
-          const root = await caches.match('/');
-          if (root) return root;
-          // 마지막 수단: 빈 HTML 응답이라도 반환해 SW 에러 방지
-          return new Response(
-            '<!doctype html><meta charset="utf-8"><title>Offline</title><p>네트워크 연결을 확인해주세요.</p>',
-            { status: 503, headers: { 'Content-Type': 'text/html; charset=utf-8' } }
-          );
-        }
-      })()
-    );
-    return;
-  }
-
-  // 정적 자산: cache-first
-  event.respondWith(
-    caches.match(req).then((cached) => {
-      if (cached) return cached;
-      return fetch(req)
-        .then((res) => {
-          if (res && res.status === 200 && res.type === 'basic') {
-            const copy = res.clone();
-            caches.open(CACHE).then((c) => c.put(req, copy)).catch(() => {});
-          }
-          return res;
-        })
-        .catch(() => cached);
-    })
-  );
-});
+// fetch 이벤트는 절대 가로채지 않음 — 모든 요청을 네트워크가 직접 처리

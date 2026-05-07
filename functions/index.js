@@ -367,6 +367,18 @@ exports.telegramWebhook = onRequest(
       // Firestore 업데이트
       try {
         const inquiryRef = db.doc(`enterprise_inquiries/${inquiryId}`);
+        // 문서 존재 여부 먼저 확인 (샘플/삭제된 케이스 친절한 안내)
+        const inquirySnap = await inquiryRef.get();
+        if (!inquirySnap.exists) {
+          await tgApi(token, 'answerCallbackQuery', {
+            callback_query_id: cb.id,
+            text: '⚠️ 신청 정보를 찾을 수 없습니다 (샘플 메시지이거나 이미 삭제된 신청)',
+            show_alert: true,
+          });
+          res.status(200).send('not_found');
+          return;
+        }
+
         const updates = {
           status: nextStatus,
           processedAt: admin.firestore.FieldValue.serverTimestamp(),
