@@ -4,6 +4,8 @@ import { signInWithCredential, GoogleAuthProvider } from 'firebase/auth';
 import { useAuth } from '@/auth/AuthProvider';
 import { auth, signInWithEmail, signUpWithEmail, signInWithGoogle, handleRedirectResult } from '@/firebase/auth';
 import { isSuperAdmin, isUserAdmin } from '@/firebase/admins';
+import { doc, getDoc } from 'firebase/firestore';
+import { db } from '@/firebase/config';
 import { SignInFlo } from '@/components/ui/sign-in-flo';
 import {
   isSketchUpEnvironment,
@@ -23,7 +25,7 @@ export const SplitLoginForm: React.FC<SplitLoginFormProps> = ({ onSuccess, defau
   const [googleLoading, setGoogleLoading] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  // 관리자(슈퍼/일반)는 대시보드, 그 외 일반 사용자는 데모 모드로 라우팅
+  // 관리자(슈퍼/일반/기업회원)는 대시보드, 그 외 일반 사용자는 데모 모드로 라우팅
   // SketchUp HtmlDialog 환경은 기존 /sketchup 경로 유지
   const resolvePostLoginPath = async (
     user: { uid?: string | null; email?: string | null } | null | undefined
@@ -31,7 +33,16 @@ export const SplitLoginForm: React.FC<SplitLoginFormProps> = ({ onSuccess, defau
     if (isSketchUpEnvironment()) return '/sketchup';
     if (!user) return '/demo';
     if (isSuperAdmin(user.email)) return '/dashboard';
-    if (user.uid && (await isUserAdmin(user.uid))) return '/dashboard';
+    if (!user.uid) return '/demo';
+    if (await isUserAdmin(user.uid)) return '/dashboard';
+    // 기업회원(plan: 'enterprise') 도 대시보드 사용 가능
+    try {
+      const userDoc = await getDoc(doc(db, 'users', user.uid));
+      const plan = userDoc.exists() ? (userDoc.data() as { plan?: string }).plan : undefined;
+      if (plan === 'enterprise') return '/dashboard';
+    } catch {
+      /* read 실패 시 데모로 fallback */
+    }
     return '/demo';
   };
 
