@@ -2,6 +2,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'r
 import { useEffect, lazy, Suspense } from 'react';
 import { AuthProvider } from '@/auth/AuthProvider';
 import DashboardAdminGuard from '@/auth/DashboardAdminGuard';
+import EnterpriseOrAdminGuard from '@/auth/EnterpriseOrAdminGuard';
 import EnterpriseInquiryNotice from '@/components/EnterpriseInquiryNotice';
 import { ThemeProvider } from '@/contexts/ThemeContext';
 import { AlertProvider } from '@/contexts/AlertContext';
@@ -170,12 +171,12 @@ function AppContent() {
         {/* 2D Konva 뷰어 테스트 페이지 */}
         <Route path="/test-2d" element={<Test2DViewer />} />
         <Route path="/test-canvas" element={<CanvasDuplicateTest />} />
-        {/* 에디터 라우트 */}
-        <Route path="/step1" element={<Step1 />} />
-        <Route path="/configurator" element={<ConfiguratorWrapper />} />
+        {/* 에디터 라우트 (기업회원/관리자 전용 — 그 외 사용자는 /demo로 강제) */}
+        <Route path="/step1" element={<EnterpriseOrAdminGuard><Step1 /></EnterpriseOrAdminGuard>} />
+        <Route path="/configurator" element={<EnterpriseOrAdminGuard><ConfiguratorWrapper /></EnterpriseOrAdminGuard>} />
         {/* iPad 전용 에디터 (3컬럼 레이아웃, 태블릿 시안) */}
-        <Route path="/ipad" element={<IPadEditor />} />
-        <Route path="/ipad/configurator" element={<IPadEditor />} />
+        <Route path="/ipad" element={<EnterpriseOrAdminGuard><IPadEditor /></EnterpriseOrAdminGuard>} />
+        <Route path="/ipad/configurator" element={<EnterpriseOrAdminGuard><IPadEditor /></EnterpriseOrAdminGuard>} />
         {/* 모바일 전용: 로그인 → 대시보드 → 에디터 */}
         <Route path="/mobile/login" element={<MobileLogin />} />
         <Route path="/mobile" element={<MobileAuthGuard><MobileDashboard /></MobileAuthGuard>} />
@@ -187,8 +188,8 @@ function AppContent() {
         {/* 데모 라우트 (로그인/저장 없음, 새로고침 시 초기화) */}
         <Route path="/demo" element={<ConfiguratorWrapper />} />
         <Route path="/preview-popout" element={<PreviewPopout />} />
-        <Route path="/cnc-optimizer" element={<CNCOptimizerPro />} />
-        <Route path="/cnc-test" element={<CNCOptimizerTest />} />
+        <Route path="/cnc-optimizer" element={<EnterpriseOrAdminGuard><CNCOptimizerPro /></EnterpriseOrAdminGuard>} />
+        <Route path="/cnc-test" element={<EnterpriseOrAdminGuard><CNCOptimizerTest /></EnterpriseOrAdminGuard>} />
         <Route path="/step0" element={<Navigate to="/step1" replace />} />
         <Route path="/step2" element={<Navigate to="/configurator" replace />} />
         <Route path="/step3" element={<Navigate to="/configurator" replace />} />
