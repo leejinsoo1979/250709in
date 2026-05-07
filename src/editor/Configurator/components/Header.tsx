@@ -794,7 +794,38 @@ const Header: React.FC<HeaderProps> = ({
         {!isMobile && (
           <div className={styles.centerActions}>
             <div className={styles.designFileName}>
-              {projectName && designFileName ? (
+              {isDemoMode ? (
+                <span
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 8,
+                    padding: '6px 14px',
+                    borderRadius: 999,
+                    background: `${colors.primary}15`,
+                    border: `1px solid ${colors.primary}40`,
+                    color: colors.primary,
+                    fontWeight: 700,
+                    fontSize: 14,
+                    letterSpacing: 0.5,
+                  }}
+                >
+                  <span
+                    style={{
+                      fontSize: 11,
+                      fontWeight: 800,
+                      padding: '2px 6px',
+                      borderRadius: 4,
+                      background: colors.primary,
+                      color: '#ffffff',
+                      letterSpacing: 1,
+                    }}
+                  >
+                    DEMO
+                  </span>
+                  체험판
+                </span>
+              ) : projectName && designFileName ? (
                 <>
                   <RxDashboard size={14} style={{ opacity: 0.6, flexShrink: 0 }} />
                   <span
