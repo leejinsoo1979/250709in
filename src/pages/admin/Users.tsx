@@ -37,8 +37,8 @@ const Users = () => {
   >('date-desc');
   const [usageStats, setUsageStats] = useState<Record<string, UserUsageStats>>({});
   const [usageLoading, setUsageLoading] = useState(false);
-  // 회원 유형 필터: all=전체, enterprise=기업회원, general=일반회원(free+pro)
-  const [filterPlan, setFilterPlan] = useState<'all' | 'enterprise' | 'general'>('all');
+  // 회원 유형 필터: all=전체, enterprise=기업회원, admin=관리자(슈퍼관리자 포함), general=일반회원
+  const [filterPlan, setFilterPlan] = useState<'all' | 'enterprise' | 'admin' | 'general'>('all');
   const [sortDropdownOpen, setSortDropdownOpen] = useState(false);
   const [planFilterDropdownOpen, setPlanFilterDropdownOpen] = useState(false);
   const [planDialog, setPlanDialog] = useState<{
@@ -264,9 +264,11 @@ const Users = () => {
       const matchesPlan =
         filterPlan === 'all'
           ? true
-          : filterPlan === 'enterprise'
-            ? user.plan === 'enterprise'
-            : user.plan !== 'enterprise'; // general = 일반회원 (free + pro)
+          : filterPlan === 'admin'
+            ? !!(user.isAdmin || user.isSuperAdmin)
+            : filterPlan === 'enterprise'
+              ? !user.isAdmin && !user.isSuperAdmin && user.plan === 'enterprise'
+              : !user.isAdmin && !user.isSuperAdmin && user.plan !== 'enterprise'; // general = 일반회원
 
       return matchesSearch && matchesPlan;
     })
@@ -505,8 +507,9 @@ const Users = () => {
               >
                 <span>
                   {filterPlan === 'all' && '전체'}
-                  {filterPlan === 'general' && '일반회원'}
                   {filterPlan === 'enterprise' && '기업회원'}
+                  {filterPlan === 'admin' && '관리자'}
+                  {filterPlan === 'general' && '일반회원'}
                 </span>
                 <svg
                   className={`${styles.dropdownIcon} ${planFilterDropdownOpen ? styles.dropdownIconOpen : ''}`}
@@ -535,20 +538,6 @@ const Users = () => {
                     )}
                   </button>
                   <button
-                    className={`${styles.filterDropdownItem} ${filterPlan === 'general' ? styles.filterDropdownItemActive : ''}`}
-                    onClick={() => {
-                      setFilterPlan('general');
-                      setPlanFilterDropdownOpen(false);
-                    }}
-                  >
-                    일반회원
-                    {filterPlan === 'general' && (
-                      <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
-                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                      </svg>
-                    )}
-                  </button>
-                  <button
                     className={`${styles.filterDropdownItem} ${filterPlan === 'enterprise' ? styles.filterDropdownItemActive : ''}`}
                     onClick={() => {
                       setFilterPlan('enterprise');
@@ -557,6 +546,34 @@ const Users = () => {
                   >
                     기업회원
                     {filterPlan === 'enterprise' && (
+                      <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                      </svg>
+                    )}
+                  </button>
+                  <button
+                    className={`${styles.filterDropdownItem} ${filterPlan === 'admin' ? styles.filterDropdownItemActive : ''}`}
+                    onClick={() => {
+                      setFilterPlan('admin');
+                      setPlanFilterDropdownOpen(false);
+                    }}
+                  >
+                    관리자
+                    {filterPlan === 'admin' && (
+                      <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                      </svg>
+                    )}
+                  </button>
+                  <button
+                    className={`${styles.filterDropdownItem} ${filterPlan === 'general' ? styles.filterDropdownItemActive : ''}`}
+                    onClick={() => {
+                      setFilterPlan('general');
+                      setPlanFilterDropdownOpen(false);
+                    }}
+                  >
+                    일반회원
+                    {filterPlan === 'general' && (
                       <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
                         <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                       </svg>
