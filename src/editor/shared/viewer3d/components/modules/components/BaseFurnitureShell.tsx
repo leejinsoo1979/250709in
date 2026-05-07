@@ -1065,8 +1065,10 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                         const lowerSecDepthForFrame = lowerSectionDepthMm !== undefined
                           ? mmToThreeUnits(lowerSectionDepthMm)
                           : depth;
-                        // 섹션 앞면 Z (앞고정 front: 가구 앞면 / 뒤고정 back: 가구 뒷면 + 섹션깊이)
-                        const lowerSecFrontZ = lowerSectionDepthDirection === 'back'
+                        // 섹션 앞면 Z — 내부값/UI 매핑:
+                        //   internal 'front' = UI "뒤고정" (뒷면이 가구 뒷면 고정 → 앞면 = -depth/2 + sec)
+                        //   internal 'back'  = UI "앞고정" (앞면이 가구 앞면 고정 → 앞면 = depth/2)
+                        const lowerSecFrontZ = lowerSectionDepthDirection === 'front'
                           ? -depth/2 + lowerSecDepthForFrame
                           : depth/2;
                         // 섹션 뒷면 Z
@@ -1215,10 +1217,10 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                         const drawerSectionDepth = lowerSectionDepthMm !== undefined
                           ? mmToThreeUnits(lowerSectionDepthMm)
                           : depth;
-                        // 하부 섹션 앞면 Z (앞고정/뒤고정 방향 반영)
-                        // front(앞고정): 섹션 앞면 = 가구 앞면 → 그대로 depth/2
-                        // back(뒤고정): 섹션 앞면 = 가구 뒷면 + 섹션깊이 = -depth/2 + drawerSectionDepth
-                        const drawerSectionFrontZ = lowerSectionDepthDirection === 'back'
+                        // 하부 섹션 앞면 Z — 내부값/UI 매핑:
+                        //   internal 'front' = UI "뒤고정" (뒷면 고정) → 섹션 앞면 = -depth/2 + sec
+                        //   internal 'back'  = UI "앞고정" (앞면 고정) → 섹션 앞면 = depth/2
+                        const drawerSectionFrontZ = lowerSectionDepthDirection === 'front'
                           ? -depth/2 + drawerSectionDepth
                           : depth/2;
                         // 마이다 앞면 = 섹션 앞면 - 30mm
