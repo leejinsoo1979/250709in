@@ -4,7 +4,7 @@ import { signInWithCredential, GoogleAuthProvider } from 'firebase/auth';
 import { useAuth } from '@/auth/AuthProvider';
 import { auth, signInWithEmail, signUpWithEmail, signInWithGoogle, handleRedirectResult } from '@/firebase/auth';
 import { isSuperAdmin, isUserAdmin } from '@/firebase/admins';
-import { doc, getDoc } from 'firebase/firestore';
+import { collection, doc, getDoc, getDocs, limit, orderBy, query, setDoc, where } from 'firebase/firestore';
 import { db } from '@/firebase/config';
 import { SignInFlo } from '@/components/ui/sign-in-flo';
 import {
@@ -27,6 +27,7 @@ export const SplitLoginForm: React.FC<SplitLoginFormProps> = ({ onSuccess, defau
 
   // 관리자(슈퍼/일반/기업회원)는 대시보드, 그 외 일반 사용자는 데모 모드로 라우팅
   // SketchUp HtmlDialog 환경은 기존 /sketchup 경로 유지
+  // ⚠️ 보안: enterprise_inquiries 최신 status를 plan과 동기화해서 우회 방지
   const resolvePostLoginPath = async (
     user: { uid?: string | null; email?: string | null } | null | undefined
   ): Promise<string> => {
@@ -35,15 +36,43 @@ export const SplitLoginForm: React.FC<SplitLoginFormProps> = ({ onSuccess, defau
     if (isSuperAdmin(user.email)) return '/dashboard';
     if (!user.uid) return '/demo';
     if (await isUserAdmin(user.uid)) return '/dashboard';
-    // 기업회원(plan: 'enterprise') 도 대시보드 사용 가능
+
     try {
-      const userDoc = await getDoc(doc(db, 'users', user.uid));
-      const plan = userDoc.exists() ? (userDoc.data() as { plan?: string }).plan : undefined;
-      if (plan === 'enterprise') return '/dashboard';
+      const userRef = doc(db, 'users', user.uid);
+      const userDoc = await getDoc(userRef);
+      const currentPlan = userDoc.exists() ? (userDoc.data() as { plan?: string }).plan : undefined;
+
+      // enterprise_inquiries 최신 신청 1건 조회 → 그 status가 진실
+      let truePlan: 'enterprise' | 'free' = 'free';
+      try {
+        const q = query(
+          collection(db, 'enterprise_inquiries'),
+          where('uid', '==', user.uid),
+          orderBy('createdAt', 'desc'),
+          limit(1)
+        );
+        const snap = await getDocs(q);
+        if (!snap.empty) {
+          const status = (snap.docs[0].data() as { status?: string }).status;
+          if (status === 'approved') truePlan = 'enterprise';
+        }
+      } catch (e) {
+        console.warn('enterprise_inquiries 조회 실패:', e);
+      }
+
+      // plan과 truePlan이 다르면 강제 동기화 (관리자 변경 누락 케이스 자동 복구)
+      if (currentPlan !== truePlan) {
+        try {
+          await setDoc(userRef, { plan: truePlan, planUpdatedAt: new Date() }, { merge: true });
+        } catch (e) {
+          console.warn('plan 동기화 실패:', e);
+        }
+      }
+
+      return truePlan === 'enterprise' ? '/dashboard' : '/demo';
     } catch {
-      /* read 실패 시 데모로 fallback */
+      return '/demo';
     }
-    return '/demo';
   };
 
   useEffect(() => {

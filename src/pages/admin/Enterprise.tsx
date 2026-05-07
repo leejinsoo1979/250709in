@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { collection, query, orderBy, getDocs, doc, updateDoc, serverTimestamp, Timestamp } from 'firebase/firestore';
-import { httpsCallable } from 'firebase/functions';
-import { db, functions } from '@/firebase/config';
+import { db } from '@/firebase/config';
 import { useAuth } from '@/auth/AuthProvider';
 import { updateUserPlan } from '@/firebase/plans';
 
@@ -205,29 +204,9 @@ export default function Enterprise() {
             전체 {rows.length}건 · 대기 {counts.pending || 0} · 승인 {counts.approved || 0} · 보류 {counts.on_hold || 0} · 거절 {counts.rejected || 0}
           </p>
         </div>
-        <div style={{ display: 'flex', gap: 8 }}>
-          <button
-            onClick={async () => {
-              if (!confirm('모든 사용자의 plan을 enterprise_inquiries 상태와 동기화합니다.\n승인된 사용자 → enterprise, 그 외 → free\n계속하시겠습니까?')) return;
-              try {
-                const fn = httpsCallable<unknown, { synced: number; details: Array<{ uid: string; email: string; oldPlan: string; newPlan: string; status: string }> }>(functions, 'adminSyncEnterprisePlans');
-                const r = await fn({});
-                const data = r.data;
-                const lines = data.details.map((d) => `${d.email || d.uid}: ${d.oldPlan} → ${d.newPlan} (${d.status})`).join('\n');
-                alert(`✅ ${data.synced}건 동기화 완료\n\n${lines || '(변경된 사용자 없음)'}`);
-                await load();
-              } catch (e) {
-                alert('❌ 동기화 실패: ' + (e as Error).message);
-              }
-            }}
-            style={{ padding: '8px 16px', borderRadius: 8, border: 'none', background: '#ef4444', color: '#fff', cursor: 'pointer', fontSize: 13, fontWeight: 600 }}
-          >
-            Plan 강제 동기화
-          </button>
-          <button onClick={load} style={{ padding: '8px 16px', borderRadius: 8, border: '1px solid var(--theme-border, #e5e7eb)', background: 'var(--theme-surface, #fff)', cursor: 'pointer', fontSize: 13 }}>
-            새로고침
-          </button>
-        </div>
+        <button onClick={load} style={{ padding: '8px 16px', borderRadius: 8, border: '1px solid var(--theme-border, #e5e7eb)', background: 'var(--theme-surface, #fff)', cursor: 'pointer', fontSize: 13 }}>
+          새로고침
+        </button>
       </div>
 
       {/* 필터 */}
