@@ -20,6 +20,7 @@ const ProfilePopup: React.FC<ProfilePopupProps> = ({ isOpen, onClose, position }
   const navigate = useNavigate();
   const { t } = useTranslation();
   const [isSuperAdmin, setIsSuperAdmin] = useState<boolean>(false);
+  const [userPlan, setUserPlan] = useState<string>('free');
   // 닉네임 편집 상태
   const [isEditingName, setIsEditingName] = useState(false);
   const [nameInput, setNameInput] = useState('');
@@ -36,7 +37,9 @@ const ProfilePopup: React.FC<ProfilePopupProps> = ({ isOpen, onClose, position }
     }
     getDoc(doc(db, 'users', user.uid)).then((userDoc) => {
       if (userDoc.exists()) {
-        setIsSuperAdmin(userDoc.data().role === 'superadmin');
+        const data = userDoc.data();
+        setIsSuperAdmin(data.role === 'superadmin');
+        setUserPlan(data.plan || 'free');
       }
     });
   }, [isOpen, user]);
@@ -192,6 +195,28 @@ const ProfilePopup: React.FC<ProfilePopupProps> = ({ isOpen, onClose, position }
                   </div>
                 )}
                 <p className={styles.headerEmail}>{user.email}</p>
+                {(() => {
+                  const isEnt = userPlan === 'enterprise';
+                  const label = isSuperAdmin ? '무제한 회원' : isEnt ? '기업회원' : '체험판';
+                  const bg = isSuperAdmin ? '#7c3aed' : isEnt ? '#10b981' : '#6b7280';
+                  return (
+                    <span
+                      style={{
+                        display: 'inline-block',
+                        marginTop: 6,
+                        padding: '3px 10px',
+                        borderRadius: 999,
+                        background: bg,
+                        color: '#fff',
+                        fontSize: 11,
+                        fontWeight: 700,
+                        letterSpacing: 0.5,
+                      }}
+                    >
+                      {label}
+                    </span>
+                  );
+                })()}
               </div>
             </div>
             <button className={styles.closeButton} onClick={onClose}>
