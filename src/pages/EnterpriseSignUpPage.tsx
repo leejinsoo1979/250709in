@@ -520,14 +520,32 @@ export default function EnterpriseSignUpPage() {
                 <div className="flex gap-3 justify-center flex-wrap">
                   <button
                     onClick={() => navigate('/demo')}
-                    className="border border-white/30 text-white py-3 px-6 rounded-full font-semibold text-sm hover:bg-white/10 transition-colors"
+                    style={{
+                      padding: '12px 24px',
+                      borderRadius: 999,
+                      border: '1px solid rgba(255,255,255,0.3)',
+                      background: 'transparent',
+                      color: '#ffffff',
+                      fontSize: 14,
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                    }}
                   >
                     데모로 돌아가기
                   </button>
                   {isApproved && (
                     <button
                       onClick={() => navigate('/login')}
-                      className="bg-white text-zinc-950 py-3 px-6 rounded-full font-semibold text-sm hover:bg-zinc-200 transition-colors"
+                      style={{
+                        padding: '12px 24px',
+                        borderRadius: 999,
+                        border: 'none',
+                        background: '#ffffff',
+                        color: '#09090b',
+                        fontSize: 14,
+                        fontWeight: 600,
+                        cursor: 'pointer',
+                      }}
                     >
                       로그인하러 가기
                     </button>
@@ -535,7 +553,16 @@ export default function EnterpriseSignUpPage() {
                   {isRejected && (
                     <button
                       onClick={() => setForceShowForm(true)}
-                      className="bg-white text-zinc-950 py-3 px-6 rounded-full font-semibold text-sm hover:bg-zinc-200 transition-colors"
+                      style={{
+                        padding: '12px 24px',
+                        borderRadius: 999,
+                        border: 'none',
+                        background: '#ffffff',
+                        color: '#09090b',
+                        fontSize: 14,
+                        fontWeight: 600,
+                        cursor: 'pointer',
+                      }}
                     >
                       다시 신청하기
                     </button>
