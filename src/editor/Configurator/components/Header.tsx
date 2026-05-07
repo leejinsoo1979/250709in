@@ -209,6 +209,9 @@ const Header: React.FC<HeaderProps> = ({
   const [profilePopupPosition, setProfilePopupPosition] = useState({ top: 60, right: 20 });
   const [isConvertMenuOpen, setIsConvertMenuOpen] = useState(false);
   const [is3DExportSubmenuOpen, setIs3DExportSubmenuOpen] = useState(false);
+  const [isDemoEnterpriseModalOpen, setIsDemoEnterpriseModalOpen] = useState(false);
+  // 데모 모드: /demo 경로에서는 컨버팅 기능을 막고 기업회원 전용 안내 표시
+  const isDemoMode = typeof window !== 'undefined' && window.location.pathname.startsWith('/demo');
   const submenuTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const [isEditingDesignName, setIsEditingDesignName] = useState(false);
   const [editingDesignName, setEditingDesignName] = useState('');
@@ -967,6 +970,11 @@ const Header: React.FC<HeaderProps> = ({
               <button
                 className={styles.convertButton}
                 onClick={() => {
+                  if (isDemoMode) {
+                    setIsDemoEnterpriseModalOpen(true);
+                    setIsConvertMenuOpen(false);
+                    return;
+                  }
                   setIsConvertMenuOpen(!isConvertMenuOpen);
                 }}
               >
@@ -1201,6 +1209,106 @@ const Header: React.FC<HeaderProps> = ({
 
       {/* 조작법 모달 */}
       <HelpModal isOpen={isHelpModalOpen} onClose={handleHelpClose} />
+
+      {/* 데모 모드 - 컨버팅 기능: 기업회원 전용 안내 모달 */}
+      {isDemoEnterpriseModalOpen && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: 'rgba(0, 0, 0, 0.55)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 99999,
+          }}
+          onClick={() => setIsDemoEnterpriseModalOpen(false)}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              background: 'var(--theme-surface, #ffffff)',
+              color: 'var(--theme-text, #1f2937)',
+              borderRadius: 16,
+              padding: '32px 32px 24px',
+              width: 'min(440px, 92vw)',
+              boxShadow: '0 20px 60px rgba(0, 0, 0, 0.25)',
+              border: '1px solid var(--theme-border, #e5e7eb)',
+              textAlign: 'center',
+            }}
+          >
+            <div
+              style={{
+                width: 64,
+                height: 64,
+                borderRadius: '50%',
+                background: 'rgba(99, 102, 241, 0.12)',
+                color: '#6366f1',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                margin: '0 auto 16px',
+                fontSize: 28,
+              }}
+            >
+              🏢
+            </div>
+            <h3 style={{ margin: '0 0 8px', fontSize: 20, fontWeight: 700 }}>
+              기업회원 전용 기능입니다
+            </h3>
+            <p
+              style={{
+                margin: '0 0 24px',
+                fontSize: 14,
+                lineHeight: 1.6,
+                color: 'var(--theme-text-secondary, #6b7280)',
+              }}
+            >
+              컨버팅(CNC 옵티마이저 · 내보내기) 기능은 기업회원에게만 제공됩니다.
+              <br />
+              체험을 마치고 기업계정으로 가입하시면 모든 기능을 이용하실 수 있습니다.
+            </p>
+            <div style={{ display: 'flex', gap: 8, justifyContent: 'center' }}>
+              <button
+                onClick={() => setIsDemoEnterpriseModalOpen(false)}
+                style={{
+                  padding: '10px 20px',
+                  borderRadius: 8,
+                  border: '1px solid var(--theme-border, #e5e7eb)',
+                  background: 'transparent',
+                  color: 'var(--theme-text, #1f2937)',
+                  fontSize: 14,
+                  fontWeight: 500,
+                  cursor: 'pointer',
+                }}
+              >
+                닫기
+              </button>
+              <button
+                onClick={() => {
+                  setIsDemoEnterpriseModalOpen(false);
+                  navigate('/enterprise-signup');
+                }}
+                style={{
+                  padding: '10px 20px',
+                  borderRadius: 8,
+                  border: 'none',
+                  background: '#6366f1',
+                  color: '#ffffff',
+                  fontSize: 14,
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                }}
+              >
+                기업회원 가입하기
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* 설정 패널 */}
       <SettingsPanel
