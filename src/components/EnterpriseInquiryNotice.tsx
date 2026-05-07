@@ -106,23 +106,16 @@ export default function EnterpriseInquiryNotice() {
   const isHold = inquiry.status === 'on_hold';
   const isRejected = inquiry.status === 'rejected';
 
-  const accent = isApproved
-    ? 'var(--theme-primary, #667eea)'
-    : isHold
-    ? '#f59e0b'
-    : '#ef4444';
+  const accent = isApproved ? 'var(--theme-primary, #667eea)' : '#f59e0b';
 
+  // 사용자에겐 거절/보류 모두 '승인 보류 중'으로 통일
   const title = isApproved
     ? '기업회원 가입이 승인되었습니다'
-    : isHold
-    ? '가입 신청이 보류되었습니다'
-    : '가입 신청이 거절되었습니다';
+    : '승인 보류 중입니다';
 
   const body = isApproved
     ? `${inquiry.companyName ? `${inquiry.companyName} 님의 ` : ''}기업계정이 활성화되어 모든 기능을 이용하실 수 있습니다.`
-    : isHold
-    ? '관리자가 추가 확인 중입니다. 확인이 완료되면 다시 안내드리겠습니다.'
-    : '아쉽게도 가입이 어려운 것으로 확인되었습니다. 자세한 내용은 아래 사유를 참고해주세요.';
+    : '관리자가 신청 내용을 확인하고 있습니다.\n처리 결과는 다시 안내드리겠습니다.';
 
   const features = isApproved
     ? [
@@ -220,24 +213,7 @@ export default function EnterpriseInquiryNotice() {
           </div>
         )}
 
-        {(isHold || isRejected) && inquiry.reasonText && (
-          <div
-            style={{
-              textAlign: 'left',
-              background: isHold ? '#fef3c7' : '#fee2e2',
-              border: `1px solid ${isHold ? '#fde68a' : '#fecaca'}`,
-              color: isHold ? '#92400e' : '#991b1b',
-              borderRadius: 10,
-              padding: '12px 16px',
-              marginBottom: 24,
-              fontSize: 14,
-              lineHeight: 1.6,
-            }}
-          >
-            <div style={{ fontWeight: 600, marginBottom: 4 }}>사유</div>
-            <div>{inquiry.reasonText}</div>
-          </div>
-        )}
+        {/* 사유 박스 — 사용자에게 거절/보류 사유 노출 안 함 */}
 
         <button
           onClick={handleClose}
