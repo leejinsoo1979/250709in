@@ -50,7 +50,7 @@ export default function Enterprise() {
   const [filter, setFilter] = useState<Status>('all');
   const [search, setSearch] = useState('');
   const [busy, setBusy] = useState<string | null>(null);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [preview, setPreview] = useState<{ url: string; fileName?: string } | null>(null);
 
   const load = async () => {
     setLoading(true);
@@ -135,6 +135,37 @@ export default function Enterprise() {
       alert(`✅ ${label} 처리 완료`);
     } catch (e) {
       alert(`${label} 실패: ` + (e as Error).message);
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  // 처리 결과를 되돌려 '승인 대기'로 복구
+  // - approved 였다면 사용자 plan도 free 로 환원
+  // - on_hold/rejected 였다면 plan은 그대로 (이미 free 였을 것)
+  const handleRevertToPending = async (row: InquiryRow) => {
+    const wasApproved = row.status === 'approved';
+    const msg = wasApproved
+      ? `${row.companyName || row.loginEmail}의 승인을 취소하고 '승인 대기' 상태로 되돌립니다.\n사용자의 기업 권한(plan)도 free 로 환원됩니다.\n계속하시겠습니까?`
+      : `${row.companyName || row.loginEmail}을(를) '승인 대기' 상태로 되돌리시겠습니까?`;
+    if (!confirm(msg)) return;
+    setBusy(row.id);
+    try {
+      await updateDoc(doc(db, 'enterprise_inquiries', row.id), {
+        status: 'pending',
+        reasonText: null,
+        reasonCode: null,
+        processedAt: null,
+        processedBy: null,
+        noticeShownAt: null,
+      });
+      if (wasApproved && row.uid) {
+        try { await updateUserPlan(row.uid, 'free'); } catch (e) { console.warn('plan free 환원 실패:', e); }
+      }
+      await load();
+      alert('✅ 승인 대기로 되돌렸습니다.');
+    } catch (e) {
+      alert('되돌리기 실패: ' + (e as Error).message);
     } finally {
       setBusy(null);
     }
@@ -262,12 +293,22 @@ export default function Enterprise() {
                     </td>
                     <td style={td}>
                       {r.businessLicenseUrl ? (
-                        <button
-                          onClick={() => setPreviewUrl(r.businessLicenseUrl!)}
-                          style={{ padding: '4px 10px', borderRadius: 6, border: '1px solid var(--theme-border, #e5e7eb)', background: 'transparent', cursor: 'pointer', fontSize: 11 }}
-                        >
-                          보기
-                        </button>
+                        <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
+                          <button
+                            onClick={() => setPreview({ url: r.businessLicenseUrl!, fileName: r.businessLicenseFileName })}
+                            style={{ padding: '4px 10px', borderRadius: 6, border: '1px solid var(--theme-border, #e5e7eb)', background: 'transparent', cursor: 'pointer', fontSize: 11 }}
+                          >
+                            보기
+                          </button>
+                          <a
+                            href={r.businessLicenseUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            style={{ padding: '4px 10px', borderRadius: 6, border: '1px solid var(--theme-border, #e5e7eb)', background: 'transparent', cursor: 'pointer', fontSize: 11, color: 'var(--theme-text, #1f2937)', textDecoration: 'none' }}
+                          >
+                            새 탭
+                          </a>
+                        </div>
                       ) : (
                         '-'
                       )}
@@ -275,19 +316,28 @@ export default function Enterprise() {
                     <td style={td}>{r.createdAt ? r.createdAt.toLocaleString('ko-KR') : '-'}</td>
                     <td style={td}>{r.processedAt ? r.processedAt.toLocaleString('ko-KR') : '-'}</td>
                     <td style={td}>
-                      {r.status === 'pending' || r.status === 'on_hold' ? (
-                        <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
-                          <button onClick={() => handleApprove(r)} disabled={busy === r.id} style={{ ...btn, background: '#10b981', color: '#fff' }}>승인</button>
-                          {r.status !== 'on_hold' && (
+                      <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
+                        {r.status === 'pending' && (
+                          <>
+                            <button onClick={() => handleApprove(r)} disabled={busy === r.id} style={{ ...btn, background: '#10b981', color: '#fff' }}>승인</button>
                             <button onClick={() => handleReject(r, 'on_hold')} disabled={busy === r.id} style={{ ...btn, background: '#f59e0b', color: '#fff' }}>보류</button>
-                          )}
-                          <button onClick={() => handleReject(r, 'rejected')} disabled={busy === r.id} style={{ ...btn, background: '#ef4444', color: '#fff' }}>거절</button>
-                        </div>
-                      ) : r.status === 'approved' ? (
-                        <button onClick={() => handleReject(r, 'rejected')} disabled={busy === r.id} style={{ ...btn, background: '#ef4444', color: '#fff' }}>승인 취소</button>
-                      ) : (
-                        <button onClick={() => handleApprove(r)} disabled={busy === r.id} style={{ ...btn, background: '#10b981', color: '#fff' }}>다시 승인</button>
-                      )}
+                            <button onClick={() => handleReject(r, 'rejected')} disabled={busy === r.id} style={{ ...btn, background: '#ef4444', color: '#fff' }}>거절</button>
+                          </>
+                        )}
+                        {r.status === 'on_hold' && (
+                          <>
+                            <button onClick={() => handleApprove(r)} disabled={busy === r.id} style={{ ...btn, background: '#10b981', color: '#fff' }}>승인</button>
+                            <button onClick={() => handleReject(r, 'rejected')} disabled={busy === r.id} style={{ ...btn, background: '#ef4444', color: '#fff' }}>거절</button>
+                            <button onClick={() => handleRevertToPending(r)} disabled={busy === r.id} style={{ ...btn, background: '#6b7280', color: '#fff' }}>승인대기</button>
+                          </>
+                        )}
+                        {r.status === 'approved' && (
+                          <button onClick={() => handleRevertToPending(r)} disabled={busy === r.id} style={{ ...btn, background: '#6b7280', color: '#fff' }}>승인 취소(대기로)</button>
+                        )}
+                        {r.status === 'rejected' && (
+                          <button onClick={() => handleRevertToPending(r)} disabled={busy === r.id} style={{ ...btn, background: '#6b7280', color: '#fff' }}>승인대기 복구</button>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -297,27 +347,44 @@ export default function Enterprise() {
         </div>
       )}
 
-      {/* 미리보기 모달 */}
-      {previewUrl && (
-        <div
-          onClick={() => setPreviewUrl(null)}
-          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', zIndex: 99999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}
-        >
-          <div onClick={(e) => e.stopPropagation()} style={{ background: '#fff', borderRadius: 12, padding: 16, maxWidth: '90vw', maxHeight: '90vh', overflow: 'auto', position: 'relative' }}>
-            <button onClick={() => setPreviewUrl(null)} style={{ position: 'absolute', top: 8, right: 8, background: '#000', color: '#fff', border: 'none', borderRadius: 6, padding: '4px 10px', cursor: 'pointer' }}>닫기</button>
-            {/\.(pdf)$/i.test(previewUrl) ? (
-              <iframe src={previewUrl} style={{ width: '80vw', height: '80vh', border: 'none' }} title="사업자등록증" />
-            ) : (
-              <img src={previewUrl} alt="사업자등록증" style={{ maxWidth: '85vw', maxHeight: '85vh', display: 'block' }} />
-            )}
-            <div style={{ marginTop: 8, textAlign: 'center' }}>
-              <a href={previewUrl} target="_blank" rel="noopener noreferrer" style={{ fontSize: 12, color: '#3b82f6' }}>
-                새 탭에서 열기 / 다운로드
-              </a>
+      {/* 미리보기 모달 — 파일명으로 PDF/이미지 판단 (Storage URL은 .pdf로 끝나지 않음) */}
+      {preview && (() => {
+        const isPdf = /\.pdf$/i.test(preview.fileName || '');
+        return (
+          <div
+            onClick={() => setPreview(null)}
+            style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', zIndex: 99999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}
+          >
+            <div onClick={(e) => e.stopPropagation()} style={{ background: '#fff', borderRadius: 12, padding: 16, maxWidth: '90vw', maxHeight: '90vh', overflow: 'auto', position: 'relative' }}>
+              <button onClick={() => setPreview(null)} style={{ position: 'absolute', top: 8, right: 8, background: '#000', color: '#fff', border: 'none', borderRadius: 6, padding: '4px 10px', cursor: 'pointer', zIndex: 1 }}>닫기</button>
+              {isPdf ? (
+                <iframe src={preview.url} style={{ width: '80vw', height: '80vh', border: 'none' }} title="사업자등록증" />
+              ) : (
+                <img
+                  src={preview.url}
+                  alt="사업자등록증"
+                  style={{ maxWidth: '85vw', maxHeight: '85vh', display: 'block' }}
+                  onError={(e) => {
+                    // 이미지 로드 실패 시 PDF iframe으로 fallback
+                    const target = e.currentTarget;
+                    const fallback = document.createElement('iframe');
+                    fallback.src = preview.url;
+                    fallback.style.cssText = 'width: 80vw; height: 80vh; border: none;';
+                    fallback.title = '사업자등록증';
+                    target.parentElement?.replaceChild(fallback, target);
+                  }}
+                />
+              )}
+              <div style={{ marginTop: 8, textAlign: 'center', fontSize: 12 }}>
+                {preview.fileName && <span style={{ color: '#6b7280', marginRight: 12 }}>{preview.fileName}</span>}
+                <a href={preview.url} target="_blank" rel="noopener noreferrer" style={{ color: '#3b82f6' }}>
+                  새 탭에서 열기 / 다운로드
+                </a>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
     </div>
   );
 }
