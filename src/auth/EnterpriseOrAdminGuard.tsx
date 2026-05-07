@@ -21,26 +21,8 @@ import { doc, getDoc } from 'firebase/firestore';
 import { db } from '@/firebase/config';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 
-const CACHE_KEY_PREFIX = 'dashboard_access_check_v2_';
-
-function getCachedAccessFlag(uid: string): boolean | null {
-  try {
-    const v = sessionStorage.getItem(CACHE_KEY_PREFIX + uid);
-    if (v === '1') return true;
-    if (v === '0') return false;
-    return null;
-  } catch {
-    return null;
-  }
-}
-
-function setCachedAccessFlag(uid: string, allowed: boolean) {
-  try {
-    sessionStorage.setItem(CACHE_KEY_PREFIX + uid, allowed ? '1' : '0');
-  } catch {
-    /* ignore */
-  }
-}
+// 캐시 사용 안 함: 관리자가 plan 변경 즉시 반영되도록 매번 Firestore 1회 read
+// (본인 admin 문서 + users 문서 1개씩, 비용 미미)
 
 export default function EnterpriseOrAdminGuard({ children }: { children: React.ReactNode }) {
   const { user, loading: authLoading } = useAuth();
@@ -65,14 +47,6 @@ export default function EnterpriseOrAdminGuard({ children }: { children: React.R
         }
         return;
       }
-      const cached = getCachedAccessFlag(user.uid);
-      if (cached !== null) {
-        if (!cancelled) {
-          setAllowed(cached);
-          setChecking(false);
-        }
-        return;
-      }
       // 1) admins 체크
       let allowedFlag = await isUserAdmin(user.uid);
       // 2) 기업회원 체크
@@ -85,7 +59,6 @@ export default function EnterpriseOrAdminGuard({ children }: { children: React.R
           /* ignore */
         }
       }
-      setCachedAccessFlag(user.uid, allowedFlag);
       if (!cancelled) {
         setAllowed(allowedFlag);
         setChecking(false);

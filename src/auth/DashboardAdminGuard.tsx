@@ -15,26 +15,7 @@ import LoadingSpinner from '@/components/common/LoadingSpinner';
  * Firestore admins 문서 read 결과는 sessionStorage에 캐싱 (탭 닫기 전까지 유지)
  * → 같은 사용자가 /dashboard 여러 번 진입해도 read는 1회만 발생
  */
-const CACHE_KEY_PREFIX = 'dashboard_access_check_v2_';
-
-function getCachedAdminFlag(uid: string): boolean | null {
-  try {
-    const v = sessionStorage.getItem(CACHE_KEY_PREFIX + uid);
-    if (v === '1') return true;
-    if (v === '0') return false;
-    return null;
-  } catch {
-    return null;
-  }
-}
-
-function setCachedAdminFlag(uid: string, allowed: boolean) {
-  try {
-    sessionStorage.setItem(CACHE_KEY_PREFIX + uid, allowed ? '1' : '0');
-  } catch {
-    /* ignore */
-  }
-}
+// 캐시 사용 안 함: 관리자가 plan 변경 즉시 반영되도록 매번 Firestore 1회 read
 
 export default function DashboardAdminGuard({ children }: { children: React.ReactNode }) {
   const { user, loading: authLoading } = useAuth();
@@ -60,16 +41,6 @@ export default function DashboardAdminGuard({ children }: { children: React.Reac
         }
         return;
       }
-      // 캐시 확인 — 있으면 Firestore read 스킵
-      const cached = getCachedAdminFlag(user.uid);
-      if (cached !== null) {
-        if (!cancelled) {
-          setAllowed(cached);
-          setChecking(false);
-        }
-        return;
-      }
-      // 캐시 미스 시에만 Firestore read
       // 1) admins 컬렉션 체크
       let allowedFlag = await isUserAdmin(user.uid);
       // 2) 기업회원(plan: 'enterprise') 도 통과
@@ -82,7 +53,6 @@ export default function DashboardAdminGuard({ children }: { children: React.Reac
           /* ignore */
         }
       }
-      setCachedAdminFlag(user.uid, allowedFlag);
       if (!cancelled) {
         setAllowed(allowedFlag);
         setChecking(false);
