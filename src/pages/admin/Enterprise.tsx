@@ -151,6 +151,8 @@ export default function Enterprise() {
   };
 
   const filtered = rows
+    // superseded(보완 후 재신청으로 대체됨) 항목은 목록에서 자동 숨김
+    .filter((r) => (r.status as string) !== 'superseded')
     .filter((r) => (filter === 'all' ? true : r.status === filter))
     .filter((r) => {
       if (!search.trim()) return true;

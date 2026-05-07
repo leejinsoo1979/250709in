@@ -322,7 +322,27 @@ export default function EnterpriseSignUpPage() {
       await uploadBytes(storageRef, businessLicenseFile);
       const businessLicenseUrl = await getDownloadURL(storageRef);
 
-      // 3. Firestore에 기업 정보 저장 (승인 대기 상태)
+      // 3. 같은 uid의 기존 신청들을 superseded(대체됨)로 마킹 — 관리자 목록 중복 방지
+      try {
+        const prevSnap = await getDocs(query(
+          collection(db, 'enterprise_inquiries'),
+          where('uid', '==', user.uid)
+        ));
+        const { doc: docRef, updateDoc } = await import('firebase/firestore');
+        for (const d of prevSnap.docs) {
+          const data = d.data();
+          // approved는 이미 승인된 상태라 건드리지 않음
+          if (data.status === 'approved') continue;
+          await updateDoc(docRef(db, 'enterprise_inquiries', d.id), {
+            status: 'superseded',
+            supersededAt: serverTimestamp(),
+          }).catch(() => {});
+        }
+      } catch (e) {
+        console.warn('이전 신청 superseded 마킹 실패:', e);
+      }
+
+      // 4. Firestore에 기업 정보 저장 (승인 대기 상태)
       const { password: _pw, passwordConfirm: _pwc, ...formData } = form;
       const inquiryRef = await addDoc(collection(db, 'enterprise_inquiries'), {
         ...formData,
