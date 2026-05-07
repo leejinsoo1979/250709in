@@ -7,7 +7,7 @@ import { EmailAuthProvider, linkWithCredential } from 'firebase/auth';
 import { db, storage, auth } from '@/firebase/config';
 import { signUpWithEmail } from '@/firebase/auth';
 import { useAuth } from '@/auth/AuthProvider';
-import { Eye, EyeOff, Upload, X, FileText } from 'lucide-react';
+import { Eye, EyeOff, Upload, X, FileText, Check, AlertCircle } from 'lucide-react';
 
 interface EnterpriseForm {
   companyName: string;
@@ -325,48 +325,106 @@ export default function EnterpriseSignUpPage() {
                 )}
 
                 {/* 비밀번호 입력 필드: 비로그인 신규 가입자이거나, 소셜 로그인 사용자가 비밀번호 설정을 선택한 경우 */}
-                {(!isSocialLoggedIn || setExtraPassword) && (
-                  <>
-                    <Field label="비밀번호" required>
-                      <div className="relative">
-                        <input
-                          type={showPassword ? 'text' : 'password'}
-                          value={form.password}
-                          onChange={(e) => update('password', e.target.value)}
-                          placeholder="6자 이상 입력"
-                          required
-                          className="w-full bg-zinc-900 border border-white/30 rounded-xl px-4 py-3 text-white text-sm placeholder:text-zinc-600 focus:outline-none focus:border-zinc-500 transition-colors pr-11"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => setShowPassword(!showPassword)}
-                          className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-300 transition-colors"
-                        >
-                          {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-                        </button>
-                      </div>
-                    </Field>
-                    <Field label="비밀번호 확인" required>
-                      <div className="relative">
-                        <input
-                          type={showPasswordConfirm ? 'text' : 'password'}
-                          value={form.passwordConfirm}
-                          onChange={(e) => update('passwordConfirm', e.target.value)}
-                          placeholder="비밀번호 재입력"
-                          required
-                          className="w-full bg-zinc-900 border border-white/30 rounded-xl px-4 py-3 text-white text-sm placeholder:text-zinc-600 focus:outline-none focus:border-zinc-500 transition-colors pr-11"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => setShowPasswordConfirm(!showPasswordConfirm)}
-                          className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-300 transition-colors"
-                        >
-                          {showPasswordConfirm ? <EyeOff size={16} /> : <Eye size={16} />}
-                        </button>
-                      </div>
-                    </Field>
-                  </>
-                )}
+                {(!isSocialLoggedIn || setExtraPassword) && (() => {
+                  // 실시간 검증 상태
+                  const pwLength = form.password.length;
+                  const pwLengthOk = pwLength >= 6;
+                  const pwTouched = pwLength > 0;
+                  const confirmTouched = form.passwordConfirm.length > 0;
+                  const pwMatch = form.password === form.passwordConfirm;
+
+                  // 비밀번호 강도: 길이/문자 종류 기반
+                  const hasLetter = /[a-zA-Z]/.test(form.password);
+                  const hasNumber = /[0-9]/.test(form.password);
+                  const hasSymbol = /[^a-zA-Z0-9]/.test(form.password);
+                  const strengthScore = (pwLength >= 6 ? 1 : 0) + (pwLength >= 10 ? 1 : 0) + (hasLetter && hasNumber ? 1 : 0) + (hasSymbol ? 1 : 0);
+                  // 0~1: 약함, 2: 보통, 3~4: 강함
+                  const strengthLabel = !pwTouched ? '' : strengthScore <= 1 ? '약함' : strengthScore === 2 ? '보통' : '강함';
+                  const strengthColor = strengthScore <= 1 ? 'bg-red-500' : strengthScore === 2 ? 'bg-amber-500' : 'bg-emerald-500';
+                  const strengthTextColor = strengthScore <= 1 ? 'text-red-400' : strengthScore === 2 ? 'text-amber-400' : 'text-emerald-400';
+                  const strengthWidthPct = Math.min(100, strengthScore * 25);
+
+                  return (
+                    <>
+                      <Field label="비밀번호" required>
+                        <div className="relative">
+                          <input
+                            type={showPassword ? 'text' : 'password'}
+                            value={form.password}
+                            onChange={(e) => update('password', e.target.value)}
+                            placeholder="6자 이상 입력"
+                            required
+                            className={`w-full bg-zinc-900 border rounded-xl px-4 py-3 text-white text-sm placeholder:text-zinc-600 focus:outline-none transition-colors pr-11 ${
+                              !pwTouched
+                                ? 'border-white/30 focus:border-zinc-500'
+                                : pwLengthOk
+                                ? 'border-emerald-500/60 focus:border-emerald-500'
+                                : 'border-red-500/60 focus:border-red-500'
+                            }`}
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setShowPassword(!showPassword)}
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-300 transition-colors"
+                          >
+                            {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                          </button>
+                        </div>
+                        {/* 길이 검증 */}
+                        {pwTouched && (
+                          <div className={`mt-2 flex items-center gap-1.5 text-xs ${pwLengthOk ? 'text-emerald-400' : 'text-red-400'}`}>
+                            {pwLengthOk ? <Check size={14} /> : <AlertCircle size={14} />}
+                            {pwLengthOk ? '6자 이상 충족' : `6자 이상 입력해주세요 (${pwLength}/6)`}
+                          </div>
+                        )}
+                        {/* 강도 표시 */}
+                        {pwTouched && (
+                          <div className="mt-2">
+                            <div className="h-1 rounded-full bg-zinc-800 overflow-hidden">
+                              <div
+                                className={`h-full ${strengthColor} transition-all duration-200`}
+                                style={{ width: `${strengthWidthPct}%` }}
+                              />
+                            </div>
+                            <div className={`mt-1 text-xs ${strengthTextColor}`}>강도: {strengthLabel}</div>
+                          </div>
+                        )}
+                      </Field>
+                      <Field label="비밀번호 확인" required>
+                        <div className="relative">
+                          <input
+                            type={showPasswordConfirm ? 'text' : 'password'}
+                            value={form.passwordConfirm}
+                            onChange={(e) => update('passwordConfirm', e.target.value)}
+                            placeholder="비밀번호 재입력"
+                            required
+                            className={`w-full bg-zinc-900 border rounded-xl px-4 py-3 text-white text-sm placeholder:text-zinc-600 focus:outline-none transition-colors pr-11 ${
+                              !confirmTouched
+                                ? 'border-white/30 focus:border-zinc-500'
+                                : pwMatch
+                                ? 'border-emerald-500/60 focus:border-emerald-500'
+                                : 'border-red-500/60 focus:border-red-500'
+                            }`}
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setShowPasswordConfirm(!showPasswordConfirm)}
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-300 transition-colors"
+                          >
+                            {showPasswordConfirm ? <EyeOff size={16} /> : <Eye size={16} />}
+                          </button>
+                        </div>
+                        {/* 일치 여부 */}
+                        {confirmTouched && (
+                          <div className={`mt-2 flex items-center gap-1.5 text-xs ${pwMatch ? 'text-emerald-400' : 'text-red-400'}`}>
+                            {pwMatch ? <Check size={14} /> : <AlertCircle size={14} />}
+                            {pwMatch ? '비밀번호가 일치합니다' : '비밀번호가 일치하지 않습니다'}
+                          </div>
+                        )}
+                      </Field>
+                    </>
+                  );
+                })()}
               </div>
             </section>
 
