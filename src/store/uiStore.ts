@@ -414,13 +414,28 @@ const getAppTheme = (): 'dark' | 'light' => {
   return 'light';
 };
 
-// localStorage에서 shadowEnabled 캐시 강제 제거 (항상 기본값 false 사용)
+// localStorage 마이그레이션: shadowEnabled 캐시 + 과거 누적된 openTabs/activeTabId 제거
+// (탭은 더 이상 영속화하지 않음 — CAD처럼 사용자가 연 디자인만 표시)
 try {
   const raw = localStorage.getItem('ui-store');
   if (raw) {
     const parsed = JSON.parse(raw);
-    if (parsed?.state && 'shadowEnabled' in parsed.state) {
-      delete parsed.state.shadowEnabled;
+    let mutated = false;
+    if (parsed?.state) {
+      if ('shadowEnabled' in parsed.state) {
+        delete parsed.state.shadowEnabled;
+        mutated = true;
+      }
+      if ('openTabs' in parsed.state) {
+        delete parsed.state.openTabs;
+        mutated = true;
+      }
+      if ('activeTabId' in parsed.state) {
+        delete parsed.state.activeTabId;
+        mutated = true;
+      }
+    }
+    if (mutated) {
       localStorage.setItem('ui-store', JSON.stringify(parsed));
     }
   }
@@ -960,8 +975,7 @@ export const useUIStore = create<UIState>()(
         sunAngle: state.sunAngle,
         edgeOutlineEnabled: state.edgeOutlineEnabled,
         dashboardLayout: state.dashboardLayout,
-        openTabs: state.openTabs,
-        activeTabId: state.activeTabId,
+        // openTabs/activeTabId는 영속화하지 않음 (CAD처럼 사용자가 명시적으로 연 디자인만 탭으로 표시)
         // 뷰 토글 상태 유지
         showDimensions: state.showDimensions,
         showDimensionsText: state.showDimensionsText,
