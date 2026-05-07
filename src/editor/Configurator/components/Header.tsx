@@ -795,35 +795,56 @@ const Header: React.FC<HeaderProps> = ({
           <div className={styles.centerActions}>
             <div className={styles.designFileName}>
               {isDemoMode ? (
-                <span
-                  style={{
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: 8,
-                    padding: '6px 14px',
-                    borderRadius: 999,
-                    background: `${colors.primary}15`,
-                    border: `1px solid ${colors.primary}40`,
-                    color: colors.primary,
-                    fontWeight: 700,
-                    fontSize: 14,
-                    letterSpacing: 0.5,
-                  }}
-                >
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 10 }}>
                   <span
                     style={{
-                      fontSize: 11,
-                      fontWeight: 800,
-                      padding: '2px 6px',
-                      borderRadius: 4,
-                      background: colors.primary,
-                      color: '#ffffff',
-                      letterSpacing: 1,
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: 8,
+                      padding: '6px 14px',
+                      borderRadius: 999,
+                      background: `${colors.primary}15`,
+                      border: `1px solid ${colors.primary}40`,
+                      color: colors.primary,
+                      fontWeight: 700,
+                      fontSize: 14,
+                      letterSpacing: 0.5,
                     }}
                   >
-                    DEMO
+                    <span
+                      style={{
+                        fontSize: 11,
+                        fontWeight: 800,
+                        padding: '2px 6px',
+                        borderRadius: 4,
+                        background: colors.primary,
+                        color: '#ffffff',
+                        letterSpacing: 1,
+                      }}
+                    >
+                      DEMO
+                    </span>
+                    체험판
                   </span>
-                  체험판
+                  <button
+                    type="button"
+                    onClick={() => navigate('/enterprise-signup')}
+                    style={{
+                      padding: '6px 14px',
+                      borderRadius: 999,
+                      border: 'none',
+                      background: colors.primary,
+                      color: '#ffffff',
+                      fontSize: 13,
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                      whiteSpace: 'nowrap',
+                      lineHeight: 1.4,
+                    }}
+                    title="기업회원으로 등록하면 모든 기능을 사용할 수 있습니다"
+                  >
+                    기업회원 등록
+                  </button>
                 </span>
               ) : projectName && designFileName ? (
                 <>
