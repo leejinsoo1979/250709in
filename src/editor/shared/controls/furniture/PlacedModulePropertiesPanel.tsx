@@ -3051,7 +3051,14 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                         const isLowerDrawer = currentPlacedModule?.moduleId?.includes('lower-drawer-');
                         const minDepth = isLowerDrawer ? 400 : 100;
                         if (!isNaN(val) && val >= minDepth && val <= 800 && currentPlacedModule) {
-                          updatePlacedModule(currentPlacedModule.id, { freeDepth: val, customDepth: val });
+                          // 몸통 깊이 변경 시 섹션별 깊이도 함께 업데이트 (이미 사용자가 섹션별 깊이를
+                          // 별도로 설정한 경우는 보존하지 않고 일괄 따라감 → 섹션 치수가 몸통 치수 따라가도록)
+                          updatePlacedModule(currentPlacedModule.id, {
+                            freeDepth: val,
+                            customDepth: val,
+                            lowerSectionDepth: val,
+                            upperSectionDepth: val,
+                          });
                           setFreeDepthInput(val.toString());
                           const store = useFurnitureStore.getState();
                           const dims = {
@@ -3096,7 +3103,12 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                           const next = Math.max(minDepthArrow, Math.min(800, cur + (e.key === 'ArrowUp' ? 1 : -1)));
                           setFreeDepthInput(next.toString());
                           if (currentPlacedModule) {
-                            updatePlacedModule(currentPlacedModule.id, { freeDepth: next, customDepth: next });
+                            updatePlacedModule(currentPlacedModule.id, {
+                              freeDepth: next,
+                              customDepth: next,
+                              lowerSectionDepth: next,
+                              upperSectionDepth: next,
+                            });
                           }
                         }
                       }}
@@ -4042,7 +4054,12 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                       const isLowerDrawer = currentPlacedModule?.moduleId?.includes('lower-drawer-');
                       const minDepth = isLowerDrawer ? 400 : 100;
                       if (!isNaN(val) && val >= minDepth && val <= 800 && currentPlacedModule) {
-                        updatePlacedModule(currentPlacedModule.id, { freeDepth: val, customDepth: val });
+                        updatePlacedModule(currentPlacedModule.id, {
+                          freeDepth: val,
+                          customDepth: val,
+                          lowerSectionDepth: val,
+                          upperSectionDepth: val,
+                        });
                         setFreeDepthInput(val.toString());
                       }
                     }}
@@ -4056,7 +4073,12 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                         const next = Math.max(minDepthArrow, Math.min(800, cur + (e.key === 'ArrowUp' ? 1 : -1)));
                         setFreeDepthInput(next.toString());
                         if (currentPlacedModule) {
-                          updatePlacedModule(currentPlacedModule.id, { freeDepth: next, customDepth: next });
+                          updatePlacedModule(currentPlacedModule.id, {
+                            freeDepth: next,
+                            customDepth: next,
+                            lowerSectionDepth: next,
+                            upperSectionDepth: next,
+                          });
                         }
                       }
                     }}
