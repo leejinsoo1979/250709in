@@ -523,8 +523,8 @@ export default function EnterpriseSignUpPage() {
                     style={{
                       padding: '12px 24px',
                       borderRadius: 999,
-                      border: '1px solid rgba(255,255,255,0.3)',
-                      background: 'transparent',
+                      border: '1px solid #52525b',
+                      background: '#27272a',
                       color: '#ffffff',
                       fontSize: 14,
                       fontWeight: 600,
