@@ -5981,8 +5981,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           const n = posArr.length;
           if (n === 0) { sectionBottomMm += sectionHeight; return; }
           const halfT = basicThickness / 2;
-          // 계산 없음 — 렌더링된 section.height와 shelfPositions 그대로 사용
-          const sectionOuterH = (section.height as number) || sectionHeight;
+          // 흡수된 section height 사용 (getEffectiveSectionHeight 결과 우선)
+          const sectionOuterH = sectionHeight || (section.height as number);
           const innerH = Math.max(0, sectionOuterH - 2 * basicThickness);
           // gaps: posArr 그대로 사용 (선반 사이 간격 = posArr 차이 그대로)
           const gaps: number[] = [];
