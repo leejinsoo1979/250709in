@@ -681,6 +681,8 @@ exports.telegramWebhook = onRequest(
       const chatId = cb.message.chat.id;
 
       // 헬퍼: 버튼만 즉시 제거 (가장 안전 — 텍스트 변경 없음)
+      // 실패 시 (오래된 메시지/권한 등) → 새 메시지를 답글로 보내 처리 결과 알림
+      let removeFailed = false;
       const removeButtons = async () => {
         try {
           await tgApi(token, 'editMessageReplyMarkup', {
@@ -689,7 +691,9 @@ exports.telegramWebhook = onRequest(
             reply_markup: { inline_keyboard: [] },
           });
         } catch (e) {
-          console.error('editMessageReplyMarkup 실패:', e?.response?.data || e?.message || e);
+          removeFailed = true;
+          const detail = e?.response?.data ? JSON.stringify(e.response.data) : (e?.message || String(e));
+          console.error('[telegramWebhook] editMessageReplyMarkup 실패:', detail);
         }
       };
 
@@ -862,6 +866,22 @@ exports.telegramWebhook = onRequest(
 
       // 텔레그램 메시지 갱신 (최종 결과로 — '처리 중'을 덮어씀, 버튼 제거 유지)
       await editCaption(doneText, { inline_keyboard: [] });
+
+      // editMessageReplyMarkup 이 실패한 경우 — 답글 메시지로 결과 별도 전송
+      // (오래된 메시지/권한 문제로 원본 수정이 안 되어도 관리자가 즉시 결과 확인 가능)
+      if (removeFailed) {
+        try {
+          await tgApi(token, 'sendMessage', {
+            chat_id: chatId,
+            text: `${doneText}\n\n⚠️ 원본 메시지 버튼 제거가 실패하여 별도 메시지로 알립니다.`,
+            reply_to_message_id: messageId,
+            allow_sending_without_reply: true,
+          });
+        } catch (e) {
+          console.error('[telegramWebhook] sendMessage(fallback) 실패:', e?.response?.data || e?.message || e);
+        }
+      }
+
       // 화면 위에 알림 팝업 (show_alert: true)
       const alertText =
         action === 'approve' ? '✅ 승인 처리 완료'
