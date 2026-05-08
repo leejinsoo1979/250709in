@@ -368,6 +368,37 @@ service cloud.firestore {
       );
     }
 
+    // 발주(orders) — 기업회원이 공장(파트너)에게 발주
+    // - ordererId: 발주자 uid
+    // - factoryId: 공장 uid (users.isPartner === true)
+    // - status: 'pending' | 'accepted' | 'rejected' | 'in_progress' | 'completed'
+    // - read/list: 발주자, 공장, 관리자만
+    // - create: 본인이 ordererId, 기업회원/관리자
+    // - update: 공장(상태 변경), 발주자(취소), 관리자
+    function isOrderParticipant() {
+      return isSignedIn() && (
+        resource.data.ordererId == request.auth.uid ||
+        resource.data.factoryId == request.auth.uid ||
+        isAdmin()
+      );
+    }
+    match /orders/{orderId} {
+      allow create: if isEnterpriseOrAdmin() &&
+                    request.resource.data.ordererId == request.auth.uid;
+      allow read: if isOrderParticipant();
+      allow list: if isSignedIn(); // 클라이언트에서 where 필터로 본인 것만 조회
+      // 공장: 상태 변경 가능 (수락/거절/진행/완료)
+      // 발주자: 취소만 가능
+      // 관리자: 모두 가능
+      allow update: if isSignedIn() && (
+        isAdmin() ||
+        resource.data.factoryId == request.auth.uid ||
+        (resource.data.ordererId == request.auth.uid &&
+         request.resource.data.status == 'cancelled')
+      );
+      allow delete: if isAdmin();
+    }
+
     // 기업회원 가입 신청 (enterprise_inquiries)
     // - 생성: 로그인 사용자 본인 (uid 일치)
     // - 읽기/목록: 본인 또는 관리자

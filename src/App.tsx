@@ -33,6 +33,9 @@ import AdminLayout from '@/pages/admin/AdminLayout';
 import AdminDashboard from '@/pages/admin/Dashboard';
 import AdminUsers from '@/pages/admin/Users';
 import AdminEnterprise from '@/pages/admin/Enterprise';
+import AdminOrders from '@/pages/admin/Orders';
+import FactoryOrders from '@/pages/FactoryOrders';
+import MyOrders from '@/pages/MyOrders';
 import AdminUserDetail from '@/pages/admin/UserDetail';
 import AdminAdmins from '@/pages/admin/Admins';
 import AdminTeams from '@/pages/admin/Teams';
@@ -144,6 +147,7 @@ function AppContent() {
           <Route path="users" element={<AdminUsers />} />
           <Route path="users/:userId" element={<AdminUserDetail />} />
           <Route path="enterprise" element={<AdminEnterprise />} />
+          <Route path="orders" element={<AdminOrders />} />
           <Route path="admins" element={<AdminAdmins />} />
           <Route path="teams" element={<AdminTeams />} />
           <Route path="projects" element={<AdminProjects />} />
@@ -189,6 +193,10 @@ function AppContent() {
         <Route path="/sketchup-oauth" element={<SketchUpOAuth />} />
         {/* 데모 라우트 (로그인/저장 없음, 새로고침 시 초기화) */}
         <Route path="/demo" element={<ConfiguratorWrapper />} />
+        {/* 공장(파트너) 전용 — 받은 발주 목록 */}
+        <Route path="/factory/orders" element={<FactoryOrders />} />
+        {/* 발주자 — 본인 발주 현황 */}
+        <Route path="/dashboard/orders" element={<DashboardAdminGuard><MyOrders /></DashboardAdminGuard>} />
         <Route path="/preview-popout" element={<PreviewPopout />} />
         <Route path="/cnc-optimizer" element={<EnterpriseOrAdminGuard><CNCOptimizerPro /></EnterpriseOrAdminGuard>} />
         <Route path="/cnc-test" element={<EnterpriseOrAdminGuard><CNCOptimizerTest /></EnterpriseOrAdminGuard>} />

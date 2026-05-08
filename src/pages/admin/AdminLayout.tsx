@@ -112,6 +112,14 @@ const AdminLayout = () => {
             <span>기업회원 관리</span>
           </NavLink>
 
+          <NavLink
+            to="/admin/orders"
+            className={({ isActive }) => isActive ? `${styles.navItem} ${styles.navItemActive}` : styles.navItem}
+          >
+            <HiOutlineClipboardList size={20} />
+            <span>발주 현황</span>
+          </NavLink>
+
           {isSuperAdmin && (
             <NavLink
               to="/admin/admins"
