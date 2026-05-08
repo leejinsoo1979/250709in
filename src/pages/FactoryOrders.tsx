@@ -265,7 +265,7 @@ export default function FactoryOrders() {
                         {o.status === 'in_progress' && (
                           <button onClick={() => handleAction(o.id, 'complete')} disabled={busyId === o.id} style={btnSmPrimary}>완료</button>
                         )}
-                        <button onClick={() => handleSendMessage(o.ordererId)} style={btnSm}>💬</button>
+                        <button onClick={() => handleSendMessage(o.ordererId)} style={btnSm}>메시지</button>
                       </div>
                     </td>
                   </tr>

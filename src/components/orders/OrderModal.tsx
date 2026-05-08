@@ -75,7 +75,7 @@ export default function OrderModal({
         thumbnailUrl,
         formData: form,
       });
-      alert('✅ 발주 요청이 전송되었습니다.');
+      alert('발주 요청이 전송되었습니다.');
       onSuccess?.(r.orderId);
       onClose();
     } catch (e) {

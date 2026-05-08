@@ -143,7 +143,7 @@ export default function MyOrders() {
                         >
                           디자인
                         </button>
-                        <button onClick={() => handleSendMessageToFactory(o.factoryId)} style={btnSm}>💬</button>
+                        <button onClick={() => handleSendMessageToFactory(o.factoryId)} style={btnSm}>메시지</button>
                       </div>
                     </td>
                   </tr>

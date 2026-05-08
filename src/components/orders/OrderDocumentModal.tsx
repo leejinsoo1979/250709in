@@ -5,9 +5,34 @@
  * - 인쇄 시 모달 외 영역 숨김 처리 (전역 @media print 스타일)
  */
 import { useEffect, useRef, useState } from 'react';
-import { doc, getDoc } from 'firebase/firestore';
+import { doc, getDoc, collection, query, where, getDocs, limit } from 'firebase/firestore';
 import { db } from '@/firebase/config';
 import type { OrderRecord } from '@/firebase/orders';
+
+// enterprise_inquiries 의 가장 최근 approved 1건 조회 (없으면 superseded 제외 최근 1건)
+async function loadEnterpriseInquiry(uid: string): Promise<Record<string, any> | null> {
+  try {
+    const snap = await getDocs(query(
+      collection(db, 'enterprise_inquiries'),
+      where('uid', '==', uid),
+      limit(20)
+    ));
+    if (snap.empty) return null;
+    const docs = snap.docs.map(d => d.data() as Record<string, any>);
+    const approved = docs.find(d => d.status === 'approved');
+    if (approved) return approved;
+    const valid = docs.filter(d => d.status !== 'superseded');
+    if (valid.length === 0) return null;
+    valid.sort((a, b) => {
+      const ta = (a.createdAt?.toMillis?.() ?? 0) as number;
+      const tb = (b.createdAt?.toMillis?.() ?? 0) as number;
+      return tb - ta;
+    });
+    return valid[0];
+  } catch {
+    return null;
+  }
+}
 
 interface PartyInfo {
   name?: string;
@@ -40,34 +65,41 @@ export default function OrderDocumentModal({ order, onClose, onSendMessage }: Pr
     let cancelled = false;
     (async () => {
       try {
-        const [oUser, oProfile, fUser, fProfile] = await Promise.all([
+        const [oUser, oProfile, fUser, fProfile, oInq, fInq] = await Promise.all([
           getDoc(doc(db, 'users', order.ordererId)),
           getDoc(doc(db, 'userProfiles', order.ordererId)),
           getDoc(doc(db, 'users', order.factoryId)),
           getDoc(doc(db, 'userProfiles', order.factoryId)),
+          loadEnterpriseInquiry(order.ordererId),
+          loadEnterpriseInquiry(order.factoryId),
         ]);
         if (cancelled) return;
         const ou = oUser.exists() ? (oUser.data() as any) : {};
         const op = oProfile.exists() ? (oProfile.data() as any) : {};
         const fu = fUser.exists() ? (fUser.data() as any) : {};
         const fp = fProfile.exists() ? (fProfile.data() as any) : {};
+        const oi = oInq || {};
+        const fi = fInq || {};
+
+        // enterprise_inquiries 가 진실 — 사업자등록증 검증 시 입력한 정보
+        // 폴백 순서: enterprise_inquiries → users → userProfiles → order 메타
         setOrderer({
-          name: ou.displayName || ou.name || order.ordererName || '',
-          email: ou.email || order.ordererEmail || '',
-          phone: ou.phone || op.phone || '',
-          companyName: ou.companyName || op.companyName || '',
-          businessNumber: ou.businessNumber || op.businessNumber || '',
-          address: ou.address || op.address || '',
-          representativeName: ou.representativeName || op.representativeName || '',
+          name: oi.contactName || ou.displayName || ou.name || order.ordererName || '',
+          email: oi.loginEmail || ou.email || order.ordererEmail || '',
+          phone: oi.contactPhone || ou.phone || op.phone || '',
+          companyName: oi.companyName || ou.companyName || op.companyName || '',
+          businessNumber: oi.businessNumber || ou.businessNumber || op.businessNumber || '',
+          address: oi.companyAddress || oi.address || ou.address || op.address || '',
+          representativeName: oi.representativeName || oi.contactName || ou.representativeName || op.representativeName || '',
         });
         setFactory({
-          name: fu.displayName || fu.name || order.factoryName || '',
-          email: fu.email || '',
-          phone: fu.phone || fp.phone || '',
-          companyName: fu.companyName || fp.companyName || '',
-          businessNumber: fu.businessNumber || fp.businessNumber || '',
-          address: fu.address || fp.address || '',
-          representativeName: fu.representativeName || fp.representativeName || '',
+          name: fi.contactName || fu.displayName || fu.name || order.factoryName || '',
+          email: fi.loginEmail || fu.email || '',
+          phone: fi.contactPhone || fu.phone || fp.phone || '',
+          companyName: fi.companyName || fu.companyName || fp.companyName || '',
+          businessNumber: fi.businessNumber || fu.businessNumber || fp.businessNumber || '',
+          address: fi.companyAddress || fi.address || fu.address || fp.address || '',
+          representativeName: fi.representativeName || fi.contactName || fu.representativeName || fp.representativeName || '',
         });
       } catch (e) {
         console.error('[발주서 정보 조회 실패]', e);
@@ -119,9 +151,9 @@ export default function OrderDocumentModal({ order, onClose, onSendMessage }: Pr
             <div className="order-doc-toolbar" style={toolbar}>
               <div style={{ fontWeight: 600, fontSize: 14, color: 'var(--theme-text, #1f2937)' }}>발주서 No. {orderNo}</div>
               <div style={{ display: 'flex', gap: 8 }}>
-                <button onClick={handlePrint} style={btnPrimary}>🖨 인쇄 / PDF 저장</button>
+                <button onClick={handlePrint} style={btnPrimary}>인쇄 / PDF 저장</button>
                 {onSendMessage && (
-                  <button onClick={() => onSendMessage(order.ordererId)} style={btnSecondary}>💬 메시지</button>
+                  <button onClick={() => onSendMessage(order.ordererId)} style={btnSecondary}>메시지</button>
                 )}
                 <button onClick={onClose} style={btnSecondary}>닫기</button>
               </div>
@@ -157,9 +189,7 @@ export default function OrderDocumentModal({ order, onClose, onSendMessage }: Pr
                   <tr>
                     <th style={{ ...th, width: 40 }}>No.</th>
                     <th style={th}>품명</th>
-                    <th style={{ ...th, width: 90 }}>수량</th>
                     <th style={{ ...th, width: 140 }}>납기</th>
-                    <th style={{ ...th, width: 200 }}>비고</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -171,46 +201,40 @@ export default function OrderDocumentModal({ order, onClose, onSendMessage }: Pr
                         <div style={{ fontSize: 11, color: '#6b7280', marginTop: 2 }}>프로젝트: {order.projectName}</div>
                       )}
                     </td>
-                    <td style={tdCenter}>{order.formData.quantity || '1'}</td>
                     <td style={tdCenter}>{order.formData.dueDate || '-'}</td>
-                    <td style={td}>{order.formData.notes || '-'}</td>
                   </tr>
                 </tbody>
               </table>
 
-              {/* 추가 정보 */}
-              {(order.formData.deliveryAddress || order.formData.installSchedule) && (
-                <table style={{ ...table, marginTop: 12 }}>
-                  <tbody>
-                    {order.formData.deliveryAddress && (
-                      <tr>
-                        <td style={{ ...thLabel, width: 110 }}>배송지</td>
-                        <td style={td}>{order.formData.deliveryAddress}</td>
-                      </tr>
-                    )}
-                    {order.formData.installSchedule && (
-                      <tr>
-                        <td style={thLabel}>설치 일정</td>
-                        <td style={td}>{order.formData.installSchedule}</td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
-              )}
-
-              {/* 도면 이미지 */}
-              {order.thumbnailUrl && (
-                <>
-                  <h3 style={sectionTitle}>첨 부 도 면</h3>
-                  <div style={imageBox}>
-                    <img
-                      src={order.thumbnailUrl}
-                      alt={order.designName}
-                      style={{ maxWidth: '100%', maxHeight: 460, objectFit: 'contain' }}
-                    />
-                  </div>
-                </>
-              )}
+              {/* 자재 스펙 / 배송지 / 설치 일정 / 요청사항 */}
+              <table style={{ ...table, marginTop: 12 }}>
+                <tbody>
+                  {order.formData.materialSpec && (
+                    <tr>
+                      <td style={{ ...thLabel, width: 110 }}>자재 스펙</td>
+                      <td style={{ ...td, whiteSpace: 'pre-wrap' }}>{order.formData.materialSpec}</td>
+                    </tr>
+                  )}
+                  {order.formData.deliveryAddress && (
+                    <tr>
+                      <td style={{ ...thLabel, width: 110 }}>배송지</td>
+                      <td style={td}>{order.formData.deliveryAddress}</td>
+                    </tr>
+                  )}
+                  {order.formData.installSchedule && (
+                    <tr>
+                      <td style={thLabel}>설치 일정</td>
+                      <td style={td}>{order.formData.installSchedule}</td>
+                    </tr>
+                  )}
+                  {order.formData.notes && (
+                    <tr>
+                      <td style={thLabel}>요청사항</td>
+                      <td style={{ ...td, whiteSpace: 'pre-wrap' }}>{order.formData.notes}</td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
 
               {/* 푸터 */}
               <div style={footerArea}>
