@@ -12,6 +12,7 @@ import Step1 from '../editor/Step1';
 import ProjectViewerModal from '../components/common/ProjectViewerModal';
 import ProfilePopup from '../editor/Configurator/components/ProfilePopup';
 import { ShareLinkModal } from '@/components/ShareLinkModal';
+import OrderModal from '@/components/orders/OrderModal';
 import GalleryPublishModal from '@/components/gallery/GalleryPublishModal';
 import RenameModal from '../components/common/RenameModal';
 import CreditErrorModal from '@/components/common/CreditErrorModal';
@@ -135,6 +136,15 @@ const SimpleDashboard: React.FC = () => {
     id: string;
     name: string;
     type: 'folder' | 'design' | 'project';
+  } | null>(null);
+
+  // 발주 모달
+  const [orderModal, setOrderModal] = useState<{
+    designId: string;
+    designName: string;
+    projectId?: string;
+    projectName?: string;
+    thumbnailUrl?: string;
   } | null>(null);
 
   // 컨텍스트 메뉴 (아이템 우클릭)
@@ -1120,6 +1130,19 @@ const SimpleDashboard: React.FC = () => {
         title="이름 바꾸기"
       />
 
+      {/* 발주 모달 */}
+      {orderModal && (
+        <OrderModal
+          isOpen={!!orderModal}
+          onClose={() => setOrderModal(null)}
+          designId={orderModal.designId}
+          designName={orderModal.designName}
+          projectId={orderModal.projectId}
+          projectName={orderModal.projectName}
+          thumbnailUrl={orderModal.thumbnailUrl}
+        />
+      )}
+
       {/* 크레딧 부족 모달 */}
       <CreditErrorModal
         isOpen={creditError.isOpen}
@@ -1284,7 +1307,7 @@ const SimpleDashboard: React.FC = () => {
               <button
                 style={{
                   width: '100%', padding: '8px 16px', border: 'none', background: 'none',
-                  color: 'var(--theme-text, #fff)', textAlign: 'left', 
+                  color: 'var(--theme-text, #fff)', textAlign: 'left',
                   display: 'flex', alignItems: 'center', gap: 10, fontSize: 13,
                 }}
                 onMouseEnter={e => (e.currentTarget.style.background = 'var(--theme-primary, #3b82f6)')}
@@ -1300,6 +1323,37 @@ const SimpleDashboard: React.FC = () => {
               >
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                 에디터로 이동
+              </button>
+            )}
+
+            {/* 발주하기 (디자인만) */}
+            {contextMenu.item.type === 'design' && (
+              <button
+                style={{
+                  width: '100%', padding: '8px 16px', border: 'none', background: 'none',
+                  color: 'var(--theme-text, #fff)', textAlign: 'left',
+                  display: 'flex', alignItems: 'center', gap: 10, fontSize: 13,
+                }}
+                onMouseEnter={e => (e.currentTarget.style.background = 'var(--theme-primary, #3b82f6)')}
+                onMouseLeave={e => (e.currentTarget.style.background = 'none')}
+                onClick={() => {
+                  const item = contextMenu.item;
+                  const projectId = item.projectId || nav.currentProjectId || '';
+                  const project = data.projects.find((p) => p.id === projectId);
+                  setOrderModal({
+                    designId: item.id,
+                    designName: item.name,
+                    projectId: projectId || undefined,
+                    projectName: project?.title,
+                    thumbnailUrl: item.thumbnail || undefined,
+                  });
+                  setContextMenu(null);
+                }}
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                </svg>
+                발주하기
               </button>
             )}
 
