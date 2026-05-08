@@ -22,6 +22,36 @@ import { useFurnitureStore } from '@/store/core/furnitureStore';
 // 도면 타입 정의
 export type DrawingType = 'front' | 'plan' | 'side' | 'sideLeft' | 'door';
 
+const getSideSlotGroups = (placedModules: PlacedModule[]): Array<{
+  slotKey: number;
+  titleIndex: number;
+  selectedSlotIndex: number;
+  modules: PlacedModule[];
+}> => {
+  const visibleModules = placedModules.filter(module => !module.isSurroundPanel);
+  const grouped = new Map<number, PlacedModule[]>();
+
+  visibleModules.forEach(module => {
+    const slotKey = module.slotIndex ?? Math.round((module.position?.x ?? 0) * 1000);
+    const modules = grouped.get(slotKey) ?? [];
+    modules.push(module);
+    grouped.set(slotKey, modules);
+  });
+
+  return Array.from(grouped.entries())
+    .sort(([, aModules], [, bModules]) => {
+      const ax = Math.min(...aModules.map(module => module.position?.x ?? 0));
+      const bx = Math.min(...bModules.map(module => module.position?.x ?? 0));
+      return ax - bx;
+    })
+    .map(([, modules], index) => ({
+      slotKey: typeof modules[0]?.slotIndex === 'number' ? modules[0].slotIndex : index,
+      titleIndex: typeof modules[0]?.slotIndex === 'number' ? modules[0].slotIndex + 1 : index + 1,
+      selectedSlotIndex: typeof modules[0]?.slotIndex === 'number' ? modules[0].slotIndex : 0,
+      modules
+    }));
+};
+
 const waitForSceneUpdate = async (delayMs = 500): Promise<void> => {
   if (typeof requestAnimationFrame === 'function') {
     await new Promise<void>(resolve => {
@@ -206,7 +236,8 @@ export const useDXFExport = () => {
       renderMode: uiStore.renderMode,
       showDimensions: uiStore.showDimensions,
       showDimensionsText: uiStore.showDimensionsText,
-      showFurniture: uiStore.showFurniture
+      showFurniture: uiStore.showFurniture,
+      selectedSlotIndex: uiStore.selectedSlotIndex
     };
     const originalPlacedModules = furnitureStore.placedModules;
 
@@ -244,15 +275,6 @@ export const useDXFExport = () => {
         });
       }
 
-      if (drawingTypes.includes('door')) {
-        useFurnitureStore.setState({ placedModules: originalPlacedModules });
-        await switchSceneView('front');
-        drawingData.push({
-          title: '도어도면',
-          data: generateDxfDrawingData(spaceInfo, placedModules, 'front', 'all', false, undefined, ['DOOR', 'DOOR_DIMENSIONS'])
-        });
-      }
-
       if (drawingTypes.includes('plan')) {
         useFurnitureStore.setState({ placedModules: originalPlacedModules });
         await switchSceneView('top');
@@ -263,22 +285,28 @@ export const useDXFExport = () => {
       }
 
       if (drawingTypes.includes('side') || drawingTypes.includes('sideLeft')) {
-        const sideModules = [...placedModules].sort((a, b) => (a.position?.x ?? 0) - (b.position?.x ?? 0));
+        const sideSlotGroups = getSideSlotGroups(placedModules);
 
-        for (const [index, module] of sideModules.entries()) {
-          useFurnitureStore.setState({ placedModules: [module] });
+        for (const group of sideSlotGroups) {
+          useFurnitureStore.setState({ placedModules: group.modules });
+          useUIStore.setState({ selectedSlotIndex: group.selectedSlotIndex });
           await switchSceneView('left');
 
-          const sideData = generateDxfDrawingData(spaceInfo, [module], 'left');
+          const sideData = generateDxfDrawingData(spaceInfo, group.modules, 'left');
           drawingData.push({
-            title: `측면도 ${index + 1}`,
-            data: {
-              ...sideData,
-              lines: sideData.lines.filter(line => line.layer !== 'DOOR' && line.layer !== 'DOOR_DIMENSIONS'),
-              texts: sideData.texts.filter(text => text.layer !== 'DOOR' && text.layer !== 'DOOR_DIMENSIONS')
-            }
+            title: `측면도 ${group.titleIndex}`,
+            data: sideData
           });
         }
+      }
+
+      if (drawingTypes.includes('door')) {
+        useFurnitureStore.setState({ placedModules: originalPlacedModules });
+        await switchSceneView('front');
+        drawingData.push({
+          title: '도어도면',
+          data: generateDxfDrawingData(spaceInfo, placedModules, 'front', 'all', false, undefined, ['DOOR', 'DOOR_DIMENSIONS'])
+        });
       }
 
       const dxfContent = buildCombinedDxfFromDrawingData(spaceInfo, drawingData);

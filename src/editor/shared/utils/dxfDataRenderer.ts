@@ -1340,11 +1340,19 @@ export const extractFromScene = (
       // 특수 객체에 대한 색상 및 레이어 강제 할당
       const parentNames = getParentNamesForFilter(object);
       const combinedNames = lowerName + parentNames;
+      const isLine2DoorDimension = combinedNames.includes('door-dimension') ||
+                                   combinedNames.includes('door_dimension') ||
+                                   combinedNames.includes('door_height_dim') ||
+                                   combinedNames.includes('door_height_ext');
       const isLine2Drawer = combinedNames.includes('drawer') ||
                             combinedNames.includes('서랍') ||
                             combinedNames.includes('마이다');
 
-      if (isLine2Drawer) {
+      if (isLine2DoorDimension) {
+        line2Color = 7;
+        line2Layer = 'DOOR_DIMENSIONS';
+        console.log(`📐 도어 치수(Line2): ${name || '(이름없음)'}, 레이어=DOOR_DIMENSIONS`);
+      } else if (isLine2Drawer) {
         line2Color = 30;
         line2Layer = 'DRAWER';
         console.log(`📐 서랍(Line2): ${name || '(이름없음)'}, 레이어=DRAWER`);
@@ -1600,8 +1608,16 @@ export const extractFromScene = (
         const lineParentNames = getParentNamesForFilter(lineObj);
         const lineCombinedNames = lineLowerName + lineParentNames;
         let lineLayer = layer;
+        const isLineDoorDimension = lineCombinedNames.includes('door-dimension') ||
+                                    lineCombinedNames.includes('door_dimension') ||
+                                    lineCombinedNames.includes('door_height_dim') ||
+                                    lineCombinedNames.includes('door_height_ext');
 
-        if (lineCombinedNames.includes('drawer') ||
+        if (isLineDoorDimension) {
+          lineColor = 7;
+          lineLayer = 'DOOR_DIMENSIONS';
+          console.log(`📐 도어 치수(Line): ${name || '(이름없음)'}, 레이어=DOOR_DIMENSIONS`);
+        } else if (lineCombinedNames.includes('drawer') ||
             lineCombinedNames.includes('서랍') ||
             lineCombinedNames.includes('마이다')) {
           lineColor = 30;
@@ -3287,280 +3303,9 @@ export const generateExternalDimensions = (
   return { lines, texts };
 };
 
-const generateSideDrawerDetailsFromData = (
-  spaceInfo: SpaceInfo,
-  placedModules: PlacedModule[],
-  viewDirection: ViewDirection,
-  sideViewFilter: SideViewFilter
-): DxfLine[] => {
-  if (viewDirection !== 'left' && viewDirection !== 'right') return [];
-  const module = selectSideModule(placedModules, sideViewFilter);
-  if (!module) return [];
-
-  const moduleData = resolveModuleData(module, spaceInfo);
-  if (!moduleData) return [];
-
-  const moduleHeightMm = getModuleHeightMm(module, moduleData, spaceInfo);
-  const moduleDepthMm = getModuleDepthMm(module, moduleData);
-  const topFrameHeightMm = resolveTopFrameHeightMm(module, spaceInfo);
-  const baseHeightMm = module.baseFrameHeight ?? resolveBaseHeightMm(spaceInfo);
-  const category = getPlacedModuleCategory(module, moduleData);
-
-  const furnitureBaseY = category === 'upper'
-    ? Math.max(spaceInfo.height - topFrameHeightMm - moduleHeightMm, 0)
-    : baseHeightMm + (module.individualFloatHeight || 0);
-
-  const sectionInfo = computeSectionHeightsInfo(module, moduleData, moduleHeightMm, viewDirection);
-  const lines: DxfLine[] = [];
-  const color = 30;
-  const basicThickness = sectionInfo.basicThicknessMm || DEFAULT_BASIC_THICKNESS_MM;
-  const transformX = (x: number) => viewDirection === 'right' ? moduleDepthMm - x : x;
-  const drawDepthRect = (frontMm: number, backMm: number, bottomY: number, topY: number, layer = 'DRAWER') => {
-    addRectLines(lines, transformX(frontMm), bottomY, transformX(backMm), topY, layer, color);
-  };
-
-  let sectionBottomY = furnitureBaseY + basicThickness;
-  sectionInfo.sections.forEach((section, index) => {
-    const sectionHeight = sectionInfo.heightsMm[index] ?? 0;
-    if (sectionHeight <= 0) {
-      return;
-    }
-
-    if (section.type === 'drawer') {
-      const gapHeight = section.gapHeight ?? 24;
-      const drawerHeights = section.drawerHeights && section.drawerHeights.length > 0
-        ? section.drawerHeights
-        : Array.from({ length: Math.max(section.count || 1, 1) }, () => {
-            const count = Math.max(section.count || 1, 1);
-            return Math.max((sectionHeight - gapHeight * (count + 1)) / count, 0);
-          });
-
-      const drawerDepth = Math.max(moduleDepthMm - basicThickness - 60, 80);
-      const bodyFront = 30;
-      const bodyBack = Math.min(bodyFront + drawerDepth, moduleDepthMm - 15);
-      const maidaDepth = Math.max(basicThickness, 15);
-      const maidaFront = 0;
-      const maidaBack = maidaFront + maidaDepth;
-      let drawerCursorY = sectionBottomY + gapHeight;
-
-      // 서랍속장 좌우 프레임의 측면 투영: 2D 측면도에서 최소한 보이는 ㄷ자 구조
-      drawDepthRect(bodyFront, bodyBack, sectionBottomY, sectionBottomY + sectionHeight, 'DRAWER');
-
-      drawerHeights.forEach((drawerHeight) => {
-        const drawerBottom = drawerCursorY;
-        const drawerTop = drawerCursorY + drawerHeight;
-        if (drawerTop > drawerBottom) {
-          drawDepthRect(bodyFront, bodyBack, drawerBottom, drawerTop, 'DRAWER');
-          drawDepthRect(maidaFront, maidaBack, drawerBottom, drawerTop, 'DRAWER');
-        }
-        drawerCursorY = drawerTop + gapHeight;
-      });
-    }
-
-    sectionBottomY += sectionHeight + basicThickness;
-  });
-
-  if (lines.length > 0) {
-    console.log(`📐 측면도 데이터 보강: 서랍 형상 ${lines.length}개 라인 추가 (${module.moduleId})`);
-  }
-
-  return lines;
-};
-
-const ensureSideFrameDetails = (
-  spaceInfo: SpaceInfo,
-  placedModules: PlacedModule[],
-  viewDirection: ViewDirection,
-  sideViewFilter: SideViewFilter,
-  lines: DxfLine[]
-): void => {
-  if (viewDirection !== 'left' && viewDirection !== 'right') return;
-  const module = selectSideModule(placedModules, sideViewFilter);
-  const moduleData = module ? resolveModuleData(module, spaceInfo) : null;
-  const moduleDepthMm = module ? getModuleDepthMm(module, moduleData) : Math.min(spaceInfo.depth || 600, 600);
-  const topFrameHeightMm = resolveTopFrameHeightMm(module, spaceInfo);
-  if (topFrameHeightMm <= 0) return;
-
-  const hasTopFrame = lines.some(line =>
-    line.layer === 'SPACE_FRAME' &&
-    Math.max(line.y1, line.y2) >= spaceInfo.height - 1 &&
-    Math.min(line.y1, line.y2) >= spaceInfo.height - topFrameHeightMm - 1
-  );
-  if (hasTopFrame) return;
-
-  addRectLines(
-    lines,
-    0,
-    spaceInfo.height - topFrameHeightMm,
-    moduleDepthMm,
-    spaceInfo.height,
-    'SPACE_FRAME',
-    7
-  );
-  console.log(`📐 측면도 데이터 보강: 상부 프레임 ${topFrameHeightMm}mm 추가`);
-};
-
-const generateDoorDimensionFallback = (
-  spaceInfo: SpaceInfo,
-  placedModules: PlacedModule[]
-): { lines: DxfLine[]; texts: DxfText[] } => {
-  const lines: DxfLine[] = [];
-  const texts: DxfText[] = [];
-  const dimColor = 7;
-  const ext = 35;
-  const offset = 90;
-  const effectiveH = spaceInfo.height;
-  const isFloating = spaceInfo.baseConfig?.type === 'stand' && spaceInfo.baseConfig?.placementType === 'float';
-  const floatHeightMm = isFloating ? (spaceInfo.baseConfig?.floatHeight || 0) : 0;
-  const baseHeightMm = resolveBaseHeightMm(spaceInfo);
-  const floorFinishMm = spaceInfo.hasFloorFinish ? (spaceInfo.floorFinish?.height || 0) : 0;
-
-  const addCircleLines = (cx: number, cy: number, radius: number, layer: string, color: number, segments = 32) => {
-    for (let i = 0; i < segments; i++) {
-      const a1 = (i / segments) * Math.PI * 2;
-      const a2 = ((i + 1) / segments) * Math.PI * 2;
-      lines.push({
-        x1: cx + Math.cos(a1) * radius,
-        y1: cy + Math.sin(a1) * radius,
-        x2: cx + Math.cos(a2) * radius,
-        y2: cy + Math.sin(a2) * radius,
-        layer,
-        color
-      });
-    }
-  };
-
-  const addDoorHinge = (cx: number, cy: number, smallCircleOffsetX: number) => {
-    addCircleLines(cx, cy, 17.5, 'DOOR', 4);
-    addCircleLines(cx + smallCircleOffsetX, cy + 22.5, 4, 'DOOR', 4, 18);
-    addCircleLines(cx + smallCircleOffsetX, cy - 22.5, 4, 'DOOR', 4, 18);
-  };
-
-  const getDoorHingeOffsetsFromBottom = (
-    category: 'full' | 'upper' | 'lower',
-    doorHeight: number
-  ): number[] => {
-    const rawOffsets = category === 'upper'
-      ? [100, doorHeight - 100]
-      : category === 'lower'
-        ? [149, doorHeight - 100]
-        : [149, 749, doorHeight - 700, doorHeight - 100];
-
-    const offsets = rawOffsets
-      .filter(offsetValue => offsetValue > 30 && offsetValue < doorHeight - 30)
-      .map(offsetValue => Math.round(offsetValue));
-
-    return [...new Set(offsets)].sort((a, b) => a - b);
-  };
-
-  placedModules.forEach(module => {
-    if (!module.hasDoor) return;
-
-    const moduleData = resolveModuleData(module, spaceInfo);
-    if (!moduleData) return;
-
-    const category = getPlacedModuleCategory(module, moduleData);
-    const moduleWidth = getModuleWidthMm(module, moduleData);
-    const moduleHeight = getModuleHeightMm(module, moduleData, spaceInfo);
-    const moduleX = (module.position?.x || 0) * 100;
-    const doorTopGap = module.doorTopGap ?? spaceInfo.doorTopGap ?? 0;
-    const doorBottomGap = module.doorBottomGap ?? spaceInfo.doorBottomGap ?? 0;
-
-    let doorBottom = 0;
-    let doorTop = 0;
-
-    if (category === 'upper') {
-      const topFrame = resolveTopFrameHeightMm(module, spaceInfo);
-      doorTop = effectiveH - doorTopGap;
-      doorBottom = doorTop - (moduleHeight + topFrame - doorTopGap + doorBottomGap);
-    } else if (category === 'lower') {
-      const cabinetBottom = (isFloating ? floatHeightMm : baseHeightMm) + floorFinishMm;
-      const isDoorLift = module.moduleId.includes('lower-door-lift-');
-      const isTopDown = module.moduleId.includes('lower-top-down-');
-      if (isTopDown) {
-        doorBottom = cabinetBottom - 5;
-        doorTop = doorBottom + 710;
-      } else if (isDoorLift) {
-        doorTop = cabinetBottom + moduleHeight + 30;
-        doorBottom = doorTop - (moduleHeight + 5 + 30);
-      } else {
-        doorTop = cabinetBottom + moduleHeight + doorTopGap;
-        doorBottom = cabinetBottom - doorBottomGap;
-      }
-    } else {
-      const isFloorType = !spaceInfo.baseConfig || spaceInfo.baseConfig.type === 'floor';
-      const floorForDoor = isFloorType && spaceInfo.hasFloorFinish ? floorFinishMm : 0;
-      doorBottom = doorBottomGap + floorForDoor;
-      doorTop = effectiveH - doorTopGap;
-    }
-
-    const doorHeight = Math.round(doorTop - doorBottom);
-    if (doorHeight <= 0) return;
-
-    const leftEdge = moduleX - moduleWidth / 2;
-    const rightEdge = moduleX + moduleWidth / 2;
-    const leftDimX = leftEdge - offset;
-    const rightDimX = rightEdge + offset;
-    const widthDimY = doorBottom - offset;
-    const textY = (doorBottom + doorTop) / 2;
-
-    lines.push({ x1: leftDimX, y1: doorBottom, x2: leftDimX, y2: doorTop, layer: 'DOOR_DIMENSIONS', color: dimColor });
-    lines.push({ x1: leftDimX - 18, y1: doorBottom, x2: leftDimX + 18, y2: doorBottom, layer: 'DOOR_DIMENSIONS', color: dimColor });
-    lines.push({ x1: leftDimX - 18, y1: doorTop, x2: leftDimX + 18, y2: doorTop, layer: 'DOOR_DIMENSIONS', color: dimColor });
-    lines.push({ x1: leftEdge, y1: doorBottom, x2: leftDimX - ext, y2: doorBottom, layer: 'DOOR_DIMENSIONS', color: dimColor });
-    lines.push({ x1: leftEdge, y1: doorTop, x2: leftDimX - ext, y2: doorTop, layer: 'DOOR_DIMENSIONS', color: dimColor });
-    texts.push({ x: leftDimX - 45, y: textY, text: `${doorHeight}`, height: 25, color: dimColor, layer: 'DOOR_DIMENSIONS' });
-
-    lines.push({ x1: rightDimX, y1: doorBottom, x2: rightDimX, y2: doorTop, layer: 'DOOR_DIMENSIONS', color: dimColor });
-    lines.push({ x1: rightDimX - 18, y1: doorBottom, x2: rightDimX + 18, y2: doorBottom, layer: 'DOOR_DIMENSIONS', color: dimColor });
-    lines.push({ x1: rightDimX - 18, y1: doorTop, x2: rightDimX + 18, y2: doorTop, layer: 'DOOR_DIMENSIONS', color: dimColor });
-    lines.push({ x1: rightEdge, y1: doorBottom, x2: rightDimX + ext, y2: doorBottom, layer: 'DOOR_DIMENSIONS', color: dimColor });
-    lines.push({ x1: rightEdge, y1: doorTop, x2: rightDimX + ext, y2: doorTop, layer: 'DOOR_DIMENSIONS', color: dimColor });
-    texts.push({ x: rightDimX + 45, y: textY, text: `${doorHeight}`, height: 25, color: dimColor, layer: 'DOOR_DIMENSIONS' });
-
-    lines.push({ x1: leftEdge, y1: widthDimY, x2: rightEdge, y2: widthDimY, layer: 'DOOR_DIMENSIONS', color: dimColor });
-    lines.push({ x1: leftEdge, y1: doorBottom, x2: leftEdge, y2: widthDimY - ext, layer: 'DOOR_DIMENSIONS', color: dimColor });
-    lines.push({ x1: rightEdge, y1: doorBottom, x2: rightEdge, y2: widthDimY - ext, layer: 'DOOR_DIMENSIONS', color: dimColor });
-    lines.push({ x1: leftEdge - 18, y1: widthDimY, x2: leftEdge + 18, y2: widthDimY, layer: 'DOOR_DIMENSIONS', color: dimColor });
-    lines.push({ x1: rightEdge - 18, y1: widthDimY, x2: rightEdge + 18, y2: widthDimY, layer: 'DOOR_DIMENSIONS', color: dimColor });
-    texts.push({ x: (leftEdge + rightEdge) / 2, y: widthDimY - 45, text: `${Math.round(moduleWidth)}`, height: 25, color: dimColor, layer: 'DOOR_DIMENSIONS' });
-
-    const moduleDataId = moduleData.id || module.moduleId;
-    const isSingleDoorOnlyCabinet =
-      moduleDataId.includes('pantry-cabinet') ||
-      moduleDataId.includes('pull-out-cabinet') ||
-      moduleDataId.includes('fridge-cabinet') ||
-      moduleDataId.includes('built-in-fridge');
-    const isDualDoor = module.isDualSlot ||
-      module.moduleId.startsWith('dual-') ||
-      moduleDataId.startsWith('dual-') ||
-      (!isSingleDoorOnlyCabinet && Math.round(moduleWidth) >= 601);
-    const hingeYPositions = getDoorHingeOffsetsFromBottom(category, doorHeight)
-      .map(offsetValue => doorBottom + offsetValue);
-
-    if (isDualDoor) {
-      hingeYPositions.forEach(hingeY => {
-        addDoorHinge(leftEdge + 24, hingeY, 9.5);
-        addDoorHinge(rightEdge - 24, hingeY, -9.5);
-      });
-    } else {
-      const isLeftHinge = (module.hingePosition || 'right') === 'left';
-      const hingeX = isLeftHinge ? leftEdge + 24 : rightEdge - 24;
-      const smallCircleOffsetX = isLeftHinge ? 9.5 : -9.5;
-      hingeYPositions.forEach(hingeY => addDoorHinge(hingeX, hingeY, smallCircleOffsetX));
-    }
-  });
-
-  if (texts.length > 0) {
-    console.log(`📐 도어도면 데이터 보강: 도어 치수 ${texts.length}개 및 경첩 표시 추가`);
-  }
-
-  return { lines, texts };
-};
-
 /**
  * DXF 생성 - 색상과 텍스트 포함
- * @param sideViewFilter 측면뷰 필터링 타입 (leftmost: 좌측 가구만, rightmost: 우측 가구만, all: 모두)
+ * @param sideViewFilter 측면뷰 필터링 타입 (leftmost: 좌측 가구만, all: 모두)
  * @param excludeDoor 도어 관련 객체 제외 여부 (front-no-door용)
  */
 export const generateDxfFromData = (
@@ -3589,6 +3334,16 @@ export const generateDxfDrawingData = (
   if (!scene) {
     console.error('❌ 씬을 찾을 수 없습니다');
     throw new Error('씬을 찾을 수 없습니다');
+  }
+
+  if (viewDirection === 'right') {
+    console.warn('⚠️ DXF 우측뷰 요청은 지원하지 않습니다. 좌측뷰로 강제합니다.');
+    viewDirection = 'left';
+  }
+
+  if (sideViewFilter === 'rightmost') {
+    console.warn('⚠️ DXF 우측 측면 필터는 지원하지 않습니다. 좌측 필터로 강제합니다.');
+    sideViewFilter = 'leftmost';
   }
 
   console.log(`📐 DXF 생성 시작 (${viewDirection}, 필터: ${sideViewFilter})`);
@@ -3660,39 +3415,19 @@ export const generateDxfDrawingData = (
     ? placedModules.find(module => module.id === targetModuleId)
     : undefined;
   const sideDrawingModules = targetSideModule ? [targetSideModule] : placedModules;
-  const dataBasedSideDrawing = isSideView
-    ? generateExternalDimensions(
-        spaceInfo,
-        sideDrawingModules,
-        viewDirection,
-        targetSideModule ? 'all' : sideViewFilter
-      )
-    : null;
 
   // 씬에서 Line과 Text 객체 추출 (X 필터링 범위 전달, excludeDoor 옵션 전달)
-  const extracted = dataBasedSideDrawing
-    ? { lines: [], texts: [] }
-    : extractFromScene(scene, viewDirection, allowedXRange, excludeDoor);
+  const extracted = extractFromScene(scene, viewDirection, allowedXRange, excludeDoor);
 
-  // 측면뷰(left/right): 완전 데이터 기반
-  // 씬에는 leftmost 가구 1개만 렌더링되어 있어 다른 슬롯 가구를 씬에서 추출 불가능.
-  // generateExternalDimensions(dimensionsOnly=false)가 모든 것을 생성:
-  //   외곽 측판, 상/걸래받이, 조절발, 내부 선반/칸막이 경계선, 하판/상판, 치수선
+  // 측면뷰(left/right): 2D 씬에 실제 렌더된 라인/텍스트만 추출한다.
+  // DXF 생성 단계에서 형상을 새로 그려 보강하지 않는다.
   let lines: DxfLine[];
   let texts: DxfText[];
 
   if (isSideView) {
-    if (dataBasedSideDrawing) {
-      lines = [...dataBasedSideDrawing.lines];
-      texts = [...dataBasedSideDrawing.texts];
-      console.log(`📐 ${viewDirection}뷰: 데이터 기반 측면도 사용 (${targetModuleId || sideViewFilter}, 라인 ${lines.length}개, 텍스트 ${texts.length}개)`);
-    } else {
-      // 측면뷰: 2D 뷰어가 씬에 그린 가구 형상(서랍 박스, 옷봉, 선반 등) + CADDimensions2D의
-      // 치수를 그대로 추출. 씬에 이미 leftmost/rightmost 가구 + 모든 geometry가 렌더됨.
-      lines = [...extracted.lines];
-      texts = [...extracted.texts];
-      console.log(`📐 ${viewDirection}뷰: 씬 추출 그대로 사용 (라인 ${lines.length}개, 텍스트 ${texts.length}개)`);
-    }
+    lines = [...extracted.lines];
+    texts = [...extracted.texts];
+    console.log(`📐 ${viewDirection}뷰: 2D 씬 추출만 사용 (라인 ${lines.length}개, 텍스트 ${texts.length}개)`);
   } else if (viewDirection === 'front') {
     // 정면뷰: 2D 뷰어의 CleanCAD2D/CADDimensions2D가 씬에 그린 치수를 그대로 사용.
     // (좌/우 세로 치수 스택 30/1270/1000/60/2360, 내부 섹션 라벨 191/1025/964,
@@ -3720,25 +3455,10 @@ export const generateDxfDrawingData = (
     console.warn('⚠️ 추출된 라인이 없습니다.');
   }
 
-  if (isSideView) {
-    ensureSideFrameDetails(spaceInfo, sideDrawingModules, viewDirection, targetSideModule ? 'all' : sideViewFilter, lines);
-
-    const hasDrawerGeometry = lines.some(line => line.layer === 'DRAWER');
-    if (!hasDrawerGeometry) {
-      lines.push(...generateSideDrawerDetailsFromData(spaceInfo, sideDrawingModules, viewDirection, targetSideModule ? 'all' : sideViewFilter));
-    }
-  }
-
   const isDoorOnlyExport = viewDirection === 'front' &&
     includeLayers?.some(layer => layer === 'DOOR_DIMENSIONS');
   if (isDoorOnlyExport) {
-    const fallbackDoorDimensions = generateDoorDimensionFallback(spaceInfo, placedModules);
-    if (fallbackDoorDimensions.texts.length > 0) {
-      lines = lines.filter(line => line.layer !== 'DOOR_DIMENSIONS');
-      texts = [];
-      lines.push(...fallbackDoorDimensions.lines);
-      texts.push(...fallbackDoorDimensions.texts);
-    }
+    console.log('📐 도어도면: 2D 씬 추출 결과만 사용');
   }
 
   // DXF 원점 이동 (왼쪽 하단을 원점으로)

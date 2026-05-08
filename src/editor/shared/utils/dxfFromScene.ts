@@ -25,7 +25,7 @@ const drawingTypeToViewDirection = (drawingType: DrawingType): ViewDirection => 
       return 'top';
     case 'side':
     case 'sideLeft':
-      // 측면도: "측면에서 본 도면"
+      // 측면도 내보내기는 항상 좌측뷰만 사용
       return 'left';
     case 'door':
       // 도어도면: 정면에서 도어/서랍만 표시
@@ -88,7 +88,7 @@ export const generateDXFFromScene = (
   // 뷰 방향 결정
   const viewDirection = drawingTypeToViewDirection(drawingType);
 
-  // 측면뷰 필터 결정 (sideLeft: leftmost만, sideRight: rightmost만)
+  // 측면뷰 필터 결정 (sideLeft: leftmost만)
   const sideViewFilter = drawingTypeToSideViewFilter(drawingType);
 
   // placedModules가 없으면 빈 배열 사용
