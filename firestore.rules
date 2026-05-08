@@ -180,8 +180,11 @@ service cloud.firestore {
 
     // Legacy(dualWrite 중만 허용) — 기업회원/관리자만 쓰기 가능
     match /projects/{id} {
-      // 읽기는 누구나 가능 (공유 링크 지원)
-      allow read: if true;
+      // 읽기: 본인 소유 + 관리자 + 공유링크 권한자만 (외부 노출 차단)
+      allow read: if isAdmin() ||
+                     (isSignedIn() && resource.data.userId == request.auth.uid) ||
+                     (isSignedIn() &&
+                      exists(/databases/$(database)/documents/sharedProjectAccess/$(id + '_' + request.auth.uid)));
       // list/listen: 기업회원/관리자만 (일반회원은 대시보드 접근 불가 정책)
       // 클라이언트는 where('userId','==',uid) 필터를 통해 본인 것만 받아옴
       allow list: if isEnterpriseOrAdmin();

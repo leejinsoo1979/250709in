@@ -144,13 +144,16 @@ export async function listDesignFiles(
     }
     
     // Fallback 2: Legacy path (designFiles collection)
-    console.log('📂 Trying legacy path: designFiles collection');
+    // 본인 디자인만 조회: userId == 현재 사용자 + projectId 일치
+    // (예전 버그: userId 필터 없어서 다른 계정 디자인이 노출되는 경우 발생)
+    console.log('📂 Trying legacy path: designFiles collection (filter by userId+projectId)');
     const legacyQuery = query(
       collection(db, LEGACY_COLLECTIONS.designFiles),
+      where('userId', '==', userId),
       where('projectId', '==', projectId),
       orderBy('updatedAt', 'desc')
     );
-    
+
     const legacySnapshot = await getDocs(legacyQuery);
     console.log('📂 Legacy snapshot empty?', legacySnapshot.empty, 'size:', legacySnapshot.size);
     
