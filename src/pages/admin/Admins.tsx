@@ -46,7 +46,7 @@ const Admins = () => {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState<'role' | 'name-asc' | 'name-desc'>('role');
-  const [filterRole, setFilterRole] = useState<'all' | 'superadmin' | 'admin' | 'user'>('all');
+  const [filterRole, setFilterRole] = useState<'all' | 'superadmin' | 'admin'>('all');
   const [sortDropdownOpen, setSortDropdownOpen] = useState(false);
   const [roleFilterDropdownOpen, setRoleFilterDropdownOpen] = useState(false);
   const [confirmDialog, setConfirmDialog] = useState<{
@@ -94,6 +94,11 @@ const Admins = () => {
         usersSnapshot.docs.forEach((doc) => {
           const data = doc.data() as DocumentData;
           const userEmail = data.email || '';
+          const isAdminUser = adminsMap.has(doc.id);
+          const isSuperAdminUser = isSuperAdmin(userEmail);
+          // 관리자 권한 관리 페이지 — 관리자(isAdmin) 또는 슈퍼관리자만 노출
+          // 일반 사용자는 검색 UI 를 통해서만 추가 가능
+          if (!isAdminUser && !isSuperAdminUser) return;
 
           usersData.push({
             id: doc.id,
@@ -101,8 +106,8 @@ const Admins = () => {
             displayName: data.displayName || data.name || '',
             photoURL: data.photoURL || '',
             createdAt: data.createdAt?.toDate?.() || null,
-            isAdmin: adminsMap.has(doc.id),
-            isSuperAdmin: isSuperAdmin(userEmail)
+            isAdmin: isAdminUser,
+            isSuperAdmin: isSuperAdminUser,
           });
         });
 
@@ -225,8 +230,7 @@ const Admins = () => {
       const matchesRole =
         filterRole === 'all' ||
         (filterRole === 'superadmin' && user.isSuperAdmin) ||
-        (filterRole === 'admin' && user.isAdmin && !user.isSuperAdmin) ||
-        (filterRole === 'user' && !user.isAdmin && !user.isSuperAdmin);
+        (filterRole === 'admin' && user.isAdmin && !user.isSuperAdmin);
 
       return matchesSearch && matchesRole;
     })
@@ -249,12 +253,11 @@ const Admins = () => {
       }
     });
 
-  // 통계
+  // 통계 — 관리자 권한자만 표시되는 페이지이므로 슈퍼관리자/관리자만 카운트
   const stats = {
     total: users.length,
     superAdmins: users.filter(u => u.isSuperAdmin).length,
     admins: users.filter(u => u.isAdmin && !u.isSuperAdmin).length,
-    regularUsers: users.filter(u => !u.isAdmin && !u.isSuperAdmin).length
   };
 
   return (
@@ -263,7 +266,7 @@ const Admins = () => {
         <div>
           <h1 className={styles.title}>관리자 권한 관리</h1>
           <p className={styles.subtitle}>
-            슈퍼 관리자 {stats.superAdmins}명 · 관리자 {stats.admins}명 · 일반 사용자 {stats.regularUsers}명
+            슈퍼 관리자 {stats.superAdmins}명 · 관리자 {stats.admins}명
           </p>
         </div>
       </div>
@@ -371,7 +374,6 @@ const Admins = () => {
                   {filterRole === 'all' && '전체'}
                   {filterRole === 'superadmin' && '슈퍼 관리자'}
                   {filterRole === 'admin' && '관리자'}
-                  {filterRole === 'user' && '일반 사용자'}
                 </span>
                 <svg
                   className={`${styles.dropdownIcon} ${roleFilterDropdownOpen ? styles.dropdownIconOpen : ''}`}
@@ -422,20 +424,6 @@ const Admins = () => {
                   >
                     관리자
                     {filterRole === 'admin' && (
-                      <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
-                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                      </svg>
-                    )}
-                  </button>
-                  <button
-                    className={`${styles.filterDropdownItem} ${filterRole === 'user' ? styles.filterDropdownItemActive : ''}`}
-                    onClick={() => {
-                      setFilterRole('user');
-                      setRoleFilterDropdownOpen(false);
-                    }}
-                  >
-                    일반 사용자
-                    {filterRole === 'user' && (
                       <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
                         <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                       </svg>
