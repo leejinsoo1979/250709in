@@ -113,6 +113,14 @@ const AdminLayout = () => {
           </NavLink>
 
           <NavLink
+            to="/admin/partners"
+            className={({ isActive }) => isActive ? `${styles.navItem} ${styles.navItemActive}` : styles.navItem}
+          >
+            <HiOutlineOfficeBuilding size={20} />
+            <span>파트너사 관리</span>
+          </NavLink>
+
+          <NavLink
             to="/admin/orders"
             className={({ isActive }) => isActive ? `${styles.navItem} ${styles.navItemActive}` : styles.navItem}
           >

@@ -7,7 +7,6 @@ import { SearchIcon } from '@/components/common/Icons';
 import { getAllAdmins, isSuperAdmin } from '@/firebase/admins';
 import { updateUserPlan, PLANS, PlanType } from '@/firebase/plans';
 import { adminDeleteUserData } from '@/firebase/userProfiles';
-import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { getAllUserUsageStats, clearUserUsageStatsCache, UserUsageStats } from '@/firebase/userUsageStats';
 import { GiImperialCrown } from 'react-icons/gi';
 import { FiUser } from 'react-icons/fi';
@@ -221,27 +220,6 @@ const Users = () => {
   };
 
   // 회원 삭제 실행 (Firestore 데이터 일괄 삭제 → 동일 이메일 재가입 가능)
-  // 파트너(공장) 등록/해제 — 기업회원만 가능
-  const togglePartner = async (target: UserData) => {
-    if (target.plan !== 'enterprise') {
-      alert('기업회원만 공장(파트너)으로 등록할 수 있습니다.');
-      return;
-    }
-    const next = !target.isPartner;
-    if (!confirm(`${target.displayName || target.email} 을(를) ${next ? '공장(파트너)으로 등록' : '공장 등록 해제'} 하시겠습니까?`)) return;
-    try {
-      await setDoc(
-        doc(db, 'users', target.id),
-        { isPartner: next, partnerUpdatedAt: serverTimestamp() },
-        { merge: true }
-      );
-      setUsers((prev) => prev.map((u) => (u.id === target.id ? { ...u, isPartner: next } : u)));
-      alert(`✅ ${next ? '공장(파트너)으로 등록' : '공장 등록 해제'} 완료`);
-    } catch (e) {
-      alert('실패: ' + (e as Error).message);
-    }
-  };
-
   const handleDeleteUser = async () => {
     const { userId, userEmail, confirmInput } = deleteDialog;
     if (confirmInput.trim().toLowerCase() !== userEmail.trim().toLowerCase()) {
@@ -739,23 +717,6 @@ const Users = () => {
                         >
                           플랜 변경
                         </button>
-                        {targetUser.plan === 'enterprise' && (
-                          <button
-                            className={styles.changePlanButton}
-                            style={{
-                              background: targetUser.isPartner ? '#0ea5e9' : 'transparent',
-                              borderColor: '#0ea5e9',
-                              color: targetUser.isPartner ? '#fff' : '#0ea5e9',
-                            }}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              togglePartner(targetUser);
-                            }}
-                            title="기업회원을 공장(파트너)으로 등록/해제"
-                          >
-                            {targetUser.isPartner ? '공장 해제' : '공장 등록'}
-                          </button>
-                        )}
                         <button
                           className={styles.changePlanButton}
                           style={{

@@ -34,6 +34,7 @@ import AdminDashboard from '@/pages/admin/Dashboard';
 import AdminUsers from '@/pages/admin/Users';
 import AdminEnterprise from '@/pages/admin/Enterprise';
 import AdminOrders from '@/pages/admin/Orders';
+import AdminPartners from '@/pages/admin/Partners';
 import FactoryOrders from '@/pages/FactoryOrders';
 import MyOrders from '@/pages/MyOrders';
 import AdminUserDetail from '@/pages/admin/UserDetail';
@@ -148,6 +149,7 @@ function AppContent() {
           <Route path="users/:userId" element={<AdminUserDetail />} />
           <Route path="enterprise" element={<AdminEnterprise />} />
           <Route path="orders" element={<AdminOrders />} />
+          <Route path="partners" element={<AdminPartners />} />
           <Route path="admins" element={<AdminAdmins />} />
           <Route path="teams" element={<AdminTeams />} />
           <Route path="projects" element={<AdminProjects />} />
