@@ -1,10 +1,7 @@
 /**
  * 파트너사(공장) 관리 — /admin/partners
  *
- * 동작:
- *  - 이메일 또는 UID 입력 → 해당 사용자를 isPartner=true 로 등록
- *  - 등록된 파트너사 목록 표시 + 해제 버튼
- *  - 기업회원 아닌 사용자도 등록 가능 (제약 없음 — 마스터 책임)
+ * 흐름: 이메일/UID 입력 → [검색] → 회원 카드 표시 → [파트너로 등록] → 목록 추가
  */
 import { useEffect, useState } from 'react';
 import {
@@ -28,12 +25,26 @@ interface PartnerRow {
   partnerUpdatedAt?: Date | null;
 }
 
+interface SearchResult {
+  uid: string;
+  email: string;
+  displayName: string;
+  photoURL?: string;
+  plan?: string;
+  isPartner: boolean;
+}
+
 export default function Partners() {
   const [rows, setRows] = useState<PartnerRow[]>([]);
   const [loading, setLoading] = useState(true);
-  const [input, setInput] = useState('');
-  const [busy, setBusy] = useState(false);
   const [search, setSearch] = useState('');
+
+  // 검색 흐름
+  const [searchInput, setSearchInput] = useState('');
+  const [searching, setSearching] = useState(false);
+  const [searchResult, setSearchResult] = useState<SearchResult | null>(null);
+  const [searchError, setSearchError] = useState<string | null>(null);
+  const [registering, setRegistering] = useState(false);
 
   const load = async () => {
     setLoading(true);
@@ -63,60 +74,73 @@ export default function Partners() {
 
   useEffect(() => { load(); }, []);
 
-  // 이메일 또는 UID로 사용자 찾기
-  const findUserByEmailOrUid = async (text: string): Promise<{ uid: string; data: Record<string, unknown> } | null> => {
-    const trimmed = text.trim();
-    if (!trimmed) return null;
-
-    // 이메일 형식이면 email로 조회
-    if (trimmed.includes('@')) {
-      const q = query(collection(db, 'users'), where('email', '==', trimmed));
-      const snap = await getDocs(q);
-      if (snap.empty) return null;
-      return { uid: snap.docs[0].id, data: snap.docs[0].data() };
-    }
-    // 그 외는 UID로 직접 조회
-    const userSnap = await getDocs(query(collection(db, 'users'), where('__name__', '==', trimmed)));
-    if (userSnap.empty) return null;
-    return { uid: userSnap.docs[0].id, data: userSnap.docs[0].data() };
-  };
-
-  const handleAdd = async () => {
-    const trimmed = input.trim();
+  // 검색 — 이메일 또는 UID
+  const handleSearch = async () => {
+    const trimmed = searchInput.trim();
     if (!trimmed) {
-      alert('이메일 또는 UID를 입력해주세요.');
+      setSearchError('이메일 또는 UID를 입력해주세요.');
+      setSearchResult(null);
       return;
     }
-    setBusy(true);
+    setSearching(true);
+    setSearchError(null);
+    setSearchResult(null);
     try {
-      const found = await findUserByEmailOrUid(trimmed);
-      if (!found) {
-        alert(`해당 사용자를 찾을 수 없습니다.\n(이메일: ${trimmed})\n해당 회원이 사이트에 한 번이라도 로그인한 적이 있어야 등록 가능합니다.`);
-        setBusy(false);
+      let foundDoc: { id: string; data: Record<string, unknown> } | null = null;
+
+      if (trimmed.includes('@')) {
+        // 이메일로 조회
+        const snap = await getDocs(query(collection(db, 'users'), where('email', '==', trimmed)));
+        if (!snap.empty) foundDoc = { id: snap.docs[0].id, data: snap.docs[0].data() };
+      } else {
+        // UID로 직접 조회
+        const userSnap = await getDocs(query(collection(db, 'users'), where('__name__', '==', trimmed)));
+        if (!userSnap.empty) foundDoc = { id: userSnap.docs[0].id, data: userSnap.docs[0].data() };
+      }
+
+      if (!foundDoc) {
+        setSearchError('해당 사용자를 찾을 수 없습니다. 사이트에 한 번이라도 로그인한 적이 있어야 합니다.');
         return;
       }
-      if (found.data.isPartner) {
-        alert('이미 등록된 파트너사입니다.');
-        setBusy(false);
-        return;
-      }
-      const name = (found.data.displayName as string) || (found.data.email as string) || trimmed;
-      if (!confirm(`${name} 을(를) 파트너사(공장)로 등록하시겠습니까?`)) {
-        setBusy(false);
-        return;
-      }
+
+      const x = foundDoc.data;
+      setSearchResult({
+        uid: foundDoc.id,
+        email: (x.email as string) || '',
+        displayName: (x.displayName as string) || (x.name as string) || '',
+        photoURL: (x.photoURL as string) || undefined,
+        plan: x.plan as string | undefined,
+        isPartner: !!x.isPartner,
+      });
+    } catch (e) {
+      setSearchError('검색 실패: ' + (e as Error).message);
+    } finally {
+      setSearching(false);
+    }
+  };
+
+  const handleRegister = async () => {
+    if (!searchResult) return;
+    if (searchResult.isPartner) {
+      alert('이미 파트너사로 등록된 사용자입니다.');
+      return;
+    }
+    setRegistering(true);
+    try {
       await setDoc(
-        doc(db, 'users', found.uid),
+        doc(db, 'users', searchResult.uid),
         { isPartner: true, partnerUpdatedAt: serverTimestamp() },
         { merge: true }
       );
-      setInput('');
+      alert(`✅ ${searchResult.displayName || searchResult.email} 파트너사 등록 완료`);
+      setSearchInput('');
+      setSearchResult(null);
+      setSearchError(null);
       await load();
-      alert(`✅ ${name} 파트너사 등록 완료`);
     } catch (e) {
       alert('등록 실패: ' + (e as Error).message);
     } finally {
-      setBusy(false);
+      setRegistering(false);
     }
   };
 
@@ -157,7 +181,7 @@ export default function Partners() {
         <button onClick={load} style={btnSecondary}>새로고침</button>
       </div>
 
-      {/* 등록 입력 */}
+      {/* 새 파트너사 등록 — 검색 → 결과 → 등록 */}
       <div style={{
         background: 'var(--theme-surface, #fff)',
         border: '1px solid var(--theme-border, #e5e7eb)',
@@ -167,17 +191,16 @@ export default function Partners() {
       }}>
         <h3 style={{ margin: '0 0 12px', fontSize: 15, fontWeight: 600 }}>새 파트너사 등록</h3>
         <p style={{ margin: '0 0 14px', fontSize: 12, color: 'var(--theme-text-secondary, #6b7280)' }}>
-          파트너로 등록할 사용자의 <b>이메일</b> 또는 <b>UID</b>를 입력해주세요.<br />
-          해당 사용자가 사이트에 로그인한 적이 있어야 합니다.
+          파트너로 등록할 사용자의 <b>이메일</b> 또는 <b>UID</b>를 검색하세요.
         </p>
         <div style={{ display: 'flex', gap: 8 }}>
           <input
             type="text"
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={(e) => { if (e.key === 'Enter') handleAdd(); }}
-            placeholder="예: factory@example.com"
-            disabled={busy}
+            value={searchInput}
+            onChange={(e) => { setSearchInput(e.target.value); setSearchResult(null); setSearchError(null); }}
+            onKeyDown={(e) => { if (e.key === 'Enter') handleSearch(); }}
+            placeholder="예: factory@example.com 또는 UID"
+            disabled={searching}
             style={{
               flex: 1,
               padding: '10px 14px',
@@ -190,8 +213,8 @@ export default function Partners() {
             }}
           />
           <button
-            onClick={handleAdd}
-            disabled={busy || !input.trim()}
+            onClick={handleSearch}
+            disabled={searching || !searchInput.trim()}
             style={{
               padding: '10px 24px',
               borderRadius: 8,
@@ -200,16 +223,76 @@ export default function Partners() {
               color: '#fff',
               fontSize: 14,
               fontWeight: 600,
-              cursor: busy || !input.trim() ? 'not-allowed' : 'pointer',
-              opacity: busy || !input.trim() ? 0.6 : 1,
+              cursor: searching || !searchInput.trim() ? 'not-allowed' : 'pointer',
+              opacity: searching || !searchInput.trim() ? 0.6 : 1,
+              whiteSpace: 'nowrap',
             }}
           >
-            {busy ? '등록 중...' : '등록'}
+            {searching ? '검색 중...' : '검색'}
           </button>
         </div>
+
+        {/* 검색 에러 */}
+        {searchError && (
+          <div style={{ marginTop: 12, padding: '10px 14px', borderRadius: 8, background: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.3)', color: '#ef4444', fontSize: 13 }}>
+            {searchError}
+          </div>
+        )}
+
+        {/* 검색 결과 카드 */}
+        {searchResult && (
+          <div style={{
+            marginTop: 16,
+            padding: 16,
+            borderRadius: 10,
+            background: 'var(--theme-surface-alt, #f9fafb)',
+            border: '1px solid var(--theme-border, #e5e7eb)',
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+              {searchResult.photoURL ? (
+                <img src={searchResult.photoURL} alt={searchResult.displayName} style={{ width: 56, height: 56, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }} />
+              ) : (
+                <div style={{ width: 56, height: 56, borderRadius: '50%', background: '#0ea5e9', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, fontWeight: 600, flexShrink: 0 }}>
+                  {(searchResult.displayName || searchResult.email || '?').charAt(0).toUpperCase()}
+                </div>
+              )}
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                  <strong style={{ fontSize: 16 }}>{searchResult.displayName || '이름 없음'}</strong>
+                  {searchResult.plan === 'enterprise' && (
+                    <span style={{ padding: '2px 8px', borderRadius: 999, background: '#10b98122', color: '#10b981', fontSize: 11, fontWeight: 600 }}>기업회원</span>
+                  )}
+                  {searchResult.isPartner && (
+                    <span style={{ padding: '2px 8px', borderRadius: 999, background: '#0ea5e922', color: '#0ea5e9', fontSize: 11, fontWeight: 600 }}>이미 파트너</span>
+                  )}
+                </div>
+                <div style={{ fontSize: 13, color: 'var(--theme-text-secondary, #6b7280)', marginBottom: 2 }}>{searchResult.email || '-'}</div>
+                <div style={{ fontSize: 11, color: 'var(--theme-text-secondary, #9ca3af)', fontFamily: 'monospace' }}>UID: {searchResult.uid}</div>
+              </div>
+              <button
+                onClick={handleRegister}
+                disabled={registering || searchResult.isPartner}
+                style={{
+                  padding: '12px 24px',
+                  borderRadius: 8,
+                  border: 'none',
+                  background: searchResult.isPartner ? '#9ca3af' : '#10b981',
+                  color: '#fff',
+                  fontSize: 14,
+                  fontWeight: 600,
+                  cursor: registering || searchResult.isPartner ? 'not-allowed' : 'pointer',
+                  whiteSpace: 'nowrap',
+                  flexShrink: 0,
+                }}
+              >
+                {registering ? '등록 중...' : searchResult.isPartner ? '이미 등록됨' : '파트너로 등록'}
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
-      {/* 검색 */}
+      {/* 검색 (등록된 파트너 목록) */}
       <input
         type="text"
         placeholder="회사명/이메일/UID 검색"
