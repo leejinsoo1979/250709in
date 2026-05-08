@@ -77,6 +77,12 @@
   user-select: none;
 }
 
+.sectionDivider {
+  height: 1px;
+  background: var(--theme-border, #e5e7eb);
+  margin: 12px 16px 8px;
+}
+
 .menuItem {
   display: flex;
   align-items: center;
