@@ -1342,21 +1342,21 @@ const Room: React.FC<RoomProps> = ({
 
   // 공간 메쉬 확장 깊이 (300mm = 3 Three.js units)
   const extensionDepth = mmToThreeUnits(300);
-  // ── 그라데이션 메쉬를 가구 뒷면까지만 당기는 옵션 ──
-  // true: 공간 그라데이션(바닥/벽/천장) 뒷쪽 경계가 가구 뒷면에 맞춰 렌더링
-  //       (가구/프레임/치수 좌표는 영향 없음 — 순수 시각 효과)
-  // false: 기존 동작 (공간 전체 깊이 기준)
-  const SHRINK_MESH_TO_FURNITURE_BACK = true;
-  // 가구 뒷면과 공간 뒷벽 사이 여유 간격 (너무 딱 붙어 보이지 않게)
+  // ── 그라데이션 메쉬 깊이 ──
+  // false: 공간 전체 깊이(panelDepth)까지 메쉬 확장 (조절발/가구 뒷면 외곽이 메쉬 안에 완전히 들어감)
+  // true: 가구 뒷면 + GAP 까지만 (이전 동작)
+  const SHRINK_MESH_TO_FURNITURE_BACK = false;
   const BACK_MESH_GAP = mmToThreeUnits(10);
+  // 사용자 보고: 메쉬가 Z축 앞으로 30mm 정도 튀어나와 보임 → 30mm 뒤로 보정
+  const MESH_Z_BACK_SHIFT = mmToThreeUnits(30);
   const meshDepth = SHRINK_MESH_TO_FURNITURE_BACK
     ? (furnitureDepth + BACK_MESH_GAP)
     : panelDepth;
   const extendedPanelDepth = meshDepth + extensionDepth;
-  // 뒷쪽 경계: 축소 시 가구 뒷면에서 GAP만큼 더 뒤로, 아니면 기존 zOffset
-  const extendedZOffset = SHRINK_MESH_TO_FURNITURE_BACK
+  // 뒷쪽 경계: 축소 시 가구 뒷면 - GAP, 아니면 공간 뒷벽(zOffset). 추가로 30mm 뒤로 이동
+  const extendedZOffset = (SHRINK_MESH_TO_FURNITURE_BACK
     ? (furnitureZOffset - furnitureDepth / 2 - BACK_MESH_GAP)
-    : zOffset;
+    : zOffset) - MESH_Z_BACK_SHIFT;
 
   // 상단/하단 패널의 너비 (좌우 프레임 사이의 공간)
   const topBottomPanelWidth = baseFrame.width;
