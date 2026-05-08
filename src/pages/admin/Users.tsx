@@ -658,18 +658,6 @@ const Users = () => {
                       {!targetUser.isAdmin && !targetUser.isSuperAdmin && targetUser.plan !== 'enterprise' && (
                         <span className={styles.userBadge}>일반회원</span>
                       )}
-                      {targetUser.isPartner && (
-                        <span style={{
-                          display: 'inline-block',
-                          padding: '4px 12px',
-                          borderRadius: 12,
-                          background: '#0ea5e9',
-                          color: '#fff',
-                          fontSize: 12,
-                          fontWeight: 600,
-                          marginLeft: 6,
-                        }}>공장</span>
-                      )}
                     </div>
                   </td>
                   <td>
