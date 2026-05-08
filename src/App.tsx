@@ -4,6 +4,7 @@ import { AuthProvider } from '@/auth/AuthProvider';
 import DashboardAdminGuard from '@/auth/DashboardAdminGuard';
 import EnterpriseOrAdminGuard from '@/auth/EnterpriseOrAdminGuard';
 import EnterpriseInquiryNotice from '@/components/EnterpriseInquiryNotice';
+import FriendRequestToast from '@/components/friends/FriendRequestToast';
 import { ThemeProvider } from '@/contexts/ThemeContext';
 import { AlertProvider } from '@/contexts/AlertContext';
 import { NavigationProvider } from '@/contexts/NavigationContext';
@@ -138,6 +139,7 @@ function AppContent() {
     <>
       <RouteChangeHandler />
       <EnterpriseInquiryNotice />
+      <FriendRequestToast />
       <Routes>
         {/* 메인 페이지 - 랜딩 페이지 */}
         <Route path="/" element={<LandingPage />} />

@@ -61,7 +61,8 @@ export default function Messages() {
       await sendMessage(activeConvId, user.uid, text);
       setText('');
     } catch (err: any) {
-      alert(err?.message || '메시지 전송 실패');
+      console.error('[메시지 전송 실패]', err);
+      alert(`메시지 전송 실패: ${err?.code || ''} ${err?.message || ''}`);
     } finally {
       setSending(false);
     }

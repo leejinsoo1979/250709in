@@ -134,6 +134,24 @@ export async function sendFriendRequest(params: {
     status: 'pending',
     createdAt: serverTimestamp(),
   });
+  // 수신자에게 알림 생성 (종 아이콘에 표시)
+  try {
+    const notifId = doc(collection(db, 'notifications')).id;
+    await setDoc(doc(db, 'notifications', notifId), {
+      id: notifId,
+      userId: toUid,
+      type: 'system',
+      title: '친구 요청',
+      message: `${params.fromName || params.fromEmail || '누군가'}님이 친구 요청을 보냈습니다.`,
+      sharedBy: fromUid,
+      sharedByName: params.fromName || '',
+      actionUrl: '/dashboard/friends',
+      isRead: false,
+      createdAt: serverTimestamp(),
+    });
+  } catch (e) {
+    console.error('[친구요청 알림 생성 실패]', e);
+  }
   return reqId;
 }
 
@@ -267,6 +285,35 @@ export async function sendMessage(convId: string, senderId: string, text: string
     lastSenderId: senderId,
     unread,
   });
+  // 수신자에게 알림 생성 (종 아이콘에 표시)
+  if (peerUid) {
+    try {
+      // 발신자 이름 조회
+      let senderName = '';
+      try {
+        const u = await getDoc(doc(db, 'users', senderId));
+        if (u.exists()) {
+          const ud = u.data() as any;
+          senderName = ud.displayName || ud.name || '';
+        }
+      } catch {}
+      const notifId = doc(collection(db, 'notifications')).id;
+      await setDoc(doc(db, 'notifications', notifId), {
+        id: notifId,
+        userId: peerUid,
+        type: 'message',
+        title: senderName ? `${senderName}님의 메시지` : '새 메시지',
+        message: trimmed.length > 80 ? trimmed.slice(0, 80) + '…' : trimmed,
+        senderId,
+        senderName,
+        actionUrl: `/dashboard/messages/${convId}`,
+        isRead: false,
+        createdAt: serverTimestamp(),
+      });
+    } catch (e) {
+      console.error('[메시지 알림 생성 실패]', e);
+    }
+  }
 }
 
 /** 대화방 메시지 실시간 구독 */
