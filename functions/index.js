@@ -777,6 +777,11 @@ exports.telegramWebhook = onRequest(
         return;
       }
 
+      // 즉시 피드백: 버튼 제거 + '처리 중' 표시 (Firestore 호출 전에 먼저 화면 갱신)
+      const _userName = cb.from?.first_name || cb.from?.username || '관리자';
+      const _nowKr = new Date().toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' });
+      await editCaption(`⏳ 처리 중... (by ${_userName})\n${_nowKr}`, { inline_keyboard: [] }).catch(() => {});
+
       // Firestore 업데이트
       try {
         const inquiryRef = db.doc(`enterprise_inquiries/${inquiryId}`);
@@ -840,11 +845,18 @@ exports.telegramWebhook = onRequest(
         return;
       }
 
-      // 텔레그램 메시지 갱신
+      // 텔레그램 메시지 갱신 (최종 결과로 — '처리 중'을 덮어씀, 버튼 제거 유지)
       await editCaption(doneText, { inline_keyboard: [] });
+      // 화면 위에 알림 팝업 (show_alert: true)
+      const alertText =
+        action === 'approve' ? '✅ 승인 처리 완료'
+        : action === 'hold' ? '⏸ 보류 처리 완료'
+        : action === 'reject' ? '❌ 거절 처리 완료'
+        : '처리 완료';
       await tgApi(token, 'answerCallbackQuery', {
         callback_query_id: cb.id,
-        text: '처리 완료',
+        text: alertText,
+        show_alert: true,
       });
 
       res.status(200).send('ok');
