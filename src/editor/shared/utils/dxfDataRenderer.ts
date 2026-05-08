@@ -3459,14 +3459,25 @@ const generateDoorDimensionFallback = (
     const doorHeight = Math.round(doorTop - doorBottom);
     if (doorHeight <= 0) return;
 
-    const x = moduleX + moduleWidth / 2 + offset;
+    const leftEdge = moduleX - moduleWidth / 2;
     const rightEdge = moduleX + moduleWidth / 2;
-    lines.push({ x1: x, y1: doorBottom, x2: x, y2: doorTop, layer: 'DOOR_DIMENSIONS', color: dimColor });
-    lines.push({ x1: x - 18, y1: doorBottom, x2: x + 18, y2: doorBottom, layer: 'DOOR_DIMENSIONS', color: dimColor });
-    lines.push({ x1: x - 18, y1: doorTop, x2: x + 18, y2: doorTop, layer: 'DOOR_DIMENSIONS', color: dimColor });
-    lines.push({ x1: rightEdge, y1: doorBottom, x2: x + ext, y2: doorBottom, layer: 'DOOR_DIMENSIONS', color: dimColor });
-    lines.push({ x1: rightEdge, y1: doorTop, x2: x + ext, y2: doorTop, layer: 'DOOR_DIMENSIONS', color: dimColor });
-    texts.push({ x: x + 45, y: (doorBottom + doorTop) / 2, text: `${doorHeight}`, height: 25, color: dimColor, layer: 'DOOR_DIMENSIONS' });
+    const leftDimX = leftEdge - offset;
+    const rightDimX = rightEdge + offset;
+    const textY = (doorBottom + doorTop) / 2;
+
+    lines.push({ x1: leftDimX, y1: doorBottom, x2: leftDimX, y2: doorTop, layer: 'DOOR_DIMENSIONS', color: dimColor });
+    lines.push({ x1: leftDimX - 18, y1: doorBottom, x2: leftDimX + 18, y2: doorBottom, layer: 'DOOR_DIMENSIONS', color: dimColor });
+    lines.push({ x1: leftDimX - 18, y1: doorTop, x2: leftDimX + 18, y2: doorTop, layer: 'DOOR_DIMENSIONS', color: dimColor });
+    lines.push({ x1: leftEdge, y1: doorBottom, x2: leftDimX - ext, y2: doorBottom, layer: 'DOOR_DIMENSIONS', color: dimColor });
+    lines.push({ x1: leftEdge, y1: doorTop, x2: leftDimX - ext, y2: doorTop, layer: 'DOOR_DIMENSIONS', color: dimColor });
+    texts.push({ x: leftDimX - 45, y: textY, text: `${doorHeight}`, height: 25, color: dimColor, layer: 'DOOR_DIMENSIONS' });
+
+    lines.push({ x1: rightDimX, y1: doorBottom, x2: rightDimX, y2: doorTop, layer: 'DOOR_DIMENSIONS', color: dimColor });
+    lines.push({ x1: rightDimX - 18, y1: doorBottom, x2: rightDimX + 18, y2: doorBottom, layer: 'DOOR_DIMENSIONS', color: dimColor });
+    lines.push({ x1: rightDimX - 18, y1: doorTop, x2: rightDimX + 18, y2: doorTop, layer: 'DOOR_DIMENSIONS', color: dimColor });
+    lines.push({ x1: rightEdge, y1: doorBottom, x2: rightDimX + ext, y2: doorBottom, layer: 'DOOR_DIMENSIONS', color: dimColor });
+    lines.push({ x1: rightEdge, y1: doorTop, x2: rightDimX + ext, y2: doorTop, layer: 'DOOR_DIMENSIONS', color: dimColor });
+    texts.push({ x: rightDimX + 45, y: textY, text: `${doorHeight}`, height: 25, color: dimColor, layer: 'DOOR_DIMENSIONS' });
   });
 
   if (texts.length > 0) {
