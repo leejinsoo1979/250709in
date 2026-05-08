@@ -225,10 +225,7 @@ export default function FactoryOrders() {
                   <th style={th}>상태</th>
                   <th style={th}>발주일시</th>
                   <th style={th}>발주자</th>
-                  <th style={th}>디자인 / 프로젝트</th>
-                  <th style={th}>자재 스펙</th>
                   <th style={th}>납기</th>
-                  <th style={th}>배송지</th>
                   <th style={{ ...th, textAlign: 'right' }}>액션</th>
                 </tr>
               </thead>
@@ -252,15 +249,7 @@ export default function FactoryOrders() {
                         {o.ordererName || o.ordererEmail || '-'}
                       </button>
                     </td>
-                    <td style={td}>
-                      <div style={{ fontWeight: 600 }}>{o.designName}</div>
-                      {o.projectName && <div style={{ fontSize: 11, color: 'var(--theme-text-secondary, #6b7280)' }}>{o.projectName}</div>}
-                    </td>
-                    <td style={{ ...td, maxWidth: 220, whiteSpace: 'pre-wrap' }}>
-                      {o.formData.materialSpec || '-'}
-                    </td>
                     <td style={{ ...td, whiteSpace: 'nowrap' }}>{o.formData.dueDate || '-'}</td>
-                    <td style={{ ...td, maxWidth: 180 }}>{o.formData.deliveryAddress || '-'}</td>
                     <td style={{ ...td, textAlign: 'right', whiteSpace: 'nowrap' }}>
                       <div style={{ display: 'inline-flex', gap: 4, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
                         <button onClick={() => setDocOrder(o)} style={btnSm}>발주서</button>

@@ -120,8 +120,6 @@ export default function MyOrders() {
                   <th style={th}>상태</th>
                   <th style={th}>발주일시</th>
                   <th style={th}>공장</th>
-                  <th style={th}>디자인 / 프로젝트</th>
-                  <th style={th}>자재 스펙</th>
                   <th style={th}>납기</th>
                   <th style={th}>처리일</th>
                   <th style={{ ...th, textAlign: 'right' }}>액션</th>
@@ -139,11 +137,6 @@ export default function MyOrders() {
                       {o.createdAt?.toLocaleString('ko-KR') || '-'}
                     </td>
                     <td style={td}>{o.factoryName || '-'}</td>
-                    <td style={td}>
-                      <div style={{ fontWeight: 600 }}>{o.designName}</div>
-                      {o.projectName && <div style={{ fontSize: 11, color: 'var(--theme-text-secondary, #6b7280)' }}>{o.projectName}</div>}
-                    </td>
-                    <td style={{ ...td, maxWidth: 220, whiteSpace: 'pre-wrap' }}>{o.formData.materialSpec || '-'}</td>
                     <td style={{ ...td, whiteSpace: 'nowrap' }}>{o.formData.dueDate || '-'}</td>
                     <td style={{ ...td, whiteSpace: 'nowrap', color: 'var(--theme-text-secondary, #6b7280)' }}>
                       {o.processedAt?.toLocaleString('ko-KR') || '-'}

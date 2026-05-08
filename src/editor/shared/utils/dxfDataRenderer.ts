@@ -3415,6 +3415,44 @@ const generateDoorDimensionFallback = (
   const baseHeightMm = resolveBaseHeightMm(spaceInfo);
   const floorFinishMm = spaceInfo.hasFloorFinish ? (spaceInfo.floorFinish?.height || 0) : 0;
 
+  const addCircleLines = (cx: number, cy: number, radius: number, layer: string, color: number, segments = 32) => {
+    for (let i = 0; i < segments; i++) {
+      const a1 = (i / segments) * Math.PI * 2;
+      const a2 = ((i + 1) / segments) * Math.PI * 2;
+      lines.push({
+        x1: cx + Math.cos(a1) * radius,
+        y1: cy + Math.sin(a1) * radius,
+        x2: cx + Math.cos(a2) * radius,
+        y2: cy + Math.sin(a2) * radius,
+        layer,
+        color
+      });
+    }
+  };
+
+  const addDoorHinge = (cx: number, cy: number, smallCircleOffsetX: number) => {
+    addCircleLines(cx, cy, 17.5, 'DOOR', 4);
+    addCircleLines(cx + smallCircleOffsetX, cy + 22.5, 4, 'DOOR', 4, 18);
+    addCircleLines(cx + smallCircleOffsetX, cy - 22.5, 4, 'DOOR', 4, 18);
+  };
+
+  const getDoorHingeOffsetsFromBottom = (
+    category: 'full' | 'upper' | 'lower',
+    doorHeight: number
+  ): number[] => {
+    const rawOffsets = category === 'upper'
+      ? [100, doorHeight - 100]
+      : category === 'lower'
+        ? [149, doorHeight - 100]
+        : [149, 749, doorHeight - 700, doorHeight - 100];
+
+    const offsets = rawOffsets
+      .filter(offsetValue => offsetValue > 30 && offsetValue < doorHeight - 30)
+      .map(offsetValue => Math.round(offsetValue));
+
+    return [...new Set(offsets)].sort((a, b) => a - b);
+  };
+
   placedModules.forEach(module => {
     if (!module.hasDoor) return;
 
@@ -3463,6 +3501,7 @@ const generateDoorDimensionFallback = (
     const rightEdge = moduleX + moduleWidth / 2;
     const leftDimX = leftEdge - offset;
     const rightDimX = rightEdge + offset;
+    const widthDimY = doorBottom - offset;
     const textY = (doorBottom + doorTop) / 2;
 
     lines.push({ x1: leftDimX, y1: doorBottom, x2: leftDimX, y2: doorTop, layer: 'DOOR_DIMENSIONS', color: dimColor });
@@ -3478,10 +3517,42 @@ const generateDoorDimensionFallback = (
     lines.push({ x1: rightEdge, y1: doorBottom, x2: rightDimX + ext, y2: doorBottom, layer: 'DOOR_DIMENSIONS', color: dimColor });
     lines.push({ x1: rightEdge, y1: doorTop, x2: rightDimX + ext, y2: doorTop, layer: 'DOOR_DIMENSIONS', color: dimColor });
     texts.push({ x: rightDimX + 45, y: textY, text: `${doorHeight}`, height: 25, color: dimColor, layer: 'DOOR_DIMENSIONS' });
+
+    lines.push({ x1: leftEdge, y1: widthDimY, x2: rightEdge, y2: widthDimY, layer: 'DOOR_DIMENSIONS', color: dimColor });
+    lines.push({ x1: leftEdge, y1: doorBottom, x2: leftEdge, y2: widthDimY - ext, layer: 'DOOR_DIMENSIONS', color: dimColor });
+    lines.push({ x1: rightEdge, y1: doorBottom, x2: rightEdge, y2: widthDimY - ext, layer: 'DOOR_DIMENSIONS', color: dimColor });
+    lines.push({ x1: leftEdge - 18, y1: widthDimY, x2: leftEdge + 18, y2: widthDimY, layer: 'DOOR_DIMENSIONS', color: dimColor });
+    lines.push({ x1: rightEdge - 18, y1: widthDimY, x2: rightEdge + 18, y2: widthDimY, layer: 'DOOR_DIMENSIONS', color: dimColor });
+    texts.push({ x: (leftEdge + rightEdge) / 2, y: widthDimY - 45, text: `${Math.round(moduleWidth)}`, height: 25, color: dimColor, layer: 'DOOR_DIMENSIONS' });
+
+    const moduleDataId = moduleData.id || module.moduleId;
+    const isSingleDoorOnlyCabinet =
+      moduleDataId.includes('pantry-cabinet') ||
+      moduleDataId.includes('pull-out-cabinet') ||
+      moduleDataId.includes('fridge-cabinet') ||
+      moduleDataId.includes('built-in-fridge');
+    const isDualDoor = module.isDualSlot ||
+      module.moduleId.startsWith('dual-') ||
+      moduleDataId.startsWith('dual-') ||
+      (!isSingleDoorOnlyCabinet && Math.round(moduleWidth) >= 601);
+    const hingeYPositions = getDoorHingeOffsetsFromBottom(category, doorHeight)
+      .map(offsetValue => doorBottom + offsetValue);
+
+    if (isDualDoor) {
+      hingeYPositions.forEach(hingeY => {
+        addDoorHinge(leftEdge + 24, hingeY, 9.5);
+        addDoorHinge(rightEdge - 24, hingeY, -9.5);
+      });
+    } else {
+      const isLeftHinge = (module.hingePosition || 'right') === 'left';
+      const hingeX = isLeftHinge ? leftEdge + 24 : rightEdge - 24;
+      const smallCircleOffsetX = isLeftHinge ? 9.5 : -9.5;
+      hingeYPositions.forEach(hingeY => addDoorHinge(hingeX, hingeY, smallCircleOffsetX));
+    }
   });
 
   if (texts.length > 0) {
-    console.log(`📐 도어도면 데이터 보강: 높이 치수 ${texts.length}개 추가`);
+    console.log(`📐 도어도면 데이터 보강: 도어 치수 ${texts.length}개 및 경첩 표시 추가`);
   }
 
   return { lines, texts };
@@ -3664,7 +3735,7 @@ export const generateDxfDrawingData = (
     const fallbackDoorDimensions = generateDoorDimensionFallback(spaceInfo, placedModules);
     if (fallbackDoorDimensions.texts.length > 0) {
       lines = lines.filter(line => line.layer !== 'DOOR_DIMENSIONS');
-      texts = texts.filter(text => text.layer !== 'DOOR_DIMENSIONS');
+      texts = [];
       lines.push(...fallbackDoorDimensions.lines);
       texts.push(...fallbackDoorDimensions.texts);
     }
