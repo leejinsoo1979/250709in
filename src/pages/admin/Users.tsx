@@ -650,6 +650,7 @@ const Users = () => {
                           <img
                             src={targetUser.photoURL}
                             alt={targetUser.displayName || targetUser.email}
+                            referrerPolicy="no-referrer"
                             onError={(e) => {
                               const img = e.currentTarget;
                               img.style.display = 'none';

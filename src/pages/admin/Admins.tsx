@@ -488,6 +488,7 @@ const Admins = () => {
                           <img
                             src={targetUser.photoURL}
                             alt={targetUser.displayName || targetUser.email}
+                            referrerPolicy="no-referrer"
                             onError={(e) => {
                               // 이미지 로드 실패 시 placeholder 로 폴백
                               const img = e.currentTarget;
