@@ -210,11 +210,14 @@ const Header: React.FC<HeaderProps> = ({
   const [isConvertMenuOpen, setIsConvertMenuOpen] = useState(false);
   const [is3DExportSubmenuOpen, setIs3DExportSubmenuOpen] = useState(false);
   const [isDemoEnterpriseModalOpen, setIsDemoEnterpriseModalOpen] = useState(false);
+  // 권한 상태 (관리자/기업회원이면 데모 모드 차단 무시)
+  const [hasFullAccess, setHasFullAccess] = useState(false);
   // 데모 모드: /demo 경로에서는 파일/저장/컨버팅 등 모든 기능을 막고 기업회원 전용 안내 표시
   const isDemoMode = typeof window !== 'undefined' && window.location.pathname.startsWith('/demo');
   // 데모 모드에서 기업회원 전용 기능 호출 시 모달을 띄우고 true 반환 (호출자는 즉시 return)
+  // 단, 관리자(admins/{uid} or 슈퍼관리자) 또는 기업회원(plan=enterprise/role=superadmin)은 통과
   const blockIfDemo = (): boolean => {
-    if (isDemoMode) {
+    if (isDemoMode && !hasFullAccess) {
       setIsDemoEnterpriseModalOpen(true);
       setIsFileMenuOpen(false);
       setIsConvertMenuOpen(false);
@@ -222,6 +225,37 @@ const Header: React.FC<HeaderProps> = ({
     }
     return false;
   };
+  // 사용자 권한 조회 — 관리자/기업회원/슈퍼관리자면 hasFullAccess=true
+  useEffect(() => {
+    if (!user?.uid) { setHasFullAccess(false); return; }
+    let cancelled = false;
+    (async () => {
+      try {
+        // 1) 슈퍼관리자 이메일 즉시 통과
+        const { isSuperAdmin } = await import('@/firebase/admins');
+        if (isSuperAdmin(user.email || '')) {
+          if (!cancelled) setHasFullAccess(true);
+          return;
+        }
+        // 2) admins 컬렉션 + users.plan/role 동시 체크
+        const { doc, getDoc } = await import('firebase/firestore');
+        const { db } = await import('@/firebase/config');
+        const [adminSnap, userSnap] = await Promise.all([
+          getDoc(doc(db, 'admins', user.uid)),
+          getDoc(doc(db, 'users', user.uid)),
+        ]);
+        if (cancelled) return;
+        const isAdminUser = adminSnap.exists();
+        const u = userSnap.exists() ? (userSnap.data() as any) : {};
+        const isEnterprise = u.plan === 'enterprise' || u.role === 'superadmin';
+        setHasFullAccess(isAdminUser || isEnterprise);
+      } catch {
+        if (!cancelled) setHasFullAccess(false);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [user?.uid, user?.email]);
+
   const submenuTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const [isEditingDesignName, setIsEditingDesignName] = useState(false);
   const [editingDesignName, setEditingDesignName] = useState('');
