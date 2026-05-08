@@ -99,54 +99,57 @@ export default function MyOrders() {
         ) : filtered.length === 0 ? (
           <div style={{ padding: 60, textAlign: 'center', color: 'var(--theme-text-secondary, #6b7280)' }}>발주 내역이 없습니다.</div>
         ) : (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(360px, 1fr))', gap: 16 }}>
-            {filtered.map((o) => (
-              <div key={o.id} style={{
-                background: 'var(--theme-surface, #ffffff)',
-                border: '1px solid var(--theme-border, #e5e7eb)',
-                borderRadius: 12,
-                padding: 16,
-                boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
-              }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-                  <span style={{ display: 'inline-block', padding: '3px 10px', borderRadius: 999, fontSize: 11, fontWeight: 600, background: STATUS_COLOR[o.status] + '22', color: STATUS_COLOR[o.status] }}>
-                    {STATUS_LABEL[o.status]}
-                  </span>
-                  <span style={{ fontSize: 11, color: 'var(--theme-text-secondary, #6b7280)' }}>
-                    {o.createdAt?.toLocaleString('ko-KR') || '-'}
-                  </span>
-                </div>
-
-                <div style={{ marginBottom: 12 }}>
-                  <div style={{ fontSize: 16, fontWeight: 700, marginBottom: 4 }}>{o.designName}</div>
-                  {o.projectName && <div style={{ fontSize: 12, color: 'var(--theme-text-secondary, #6b7280)' }}>프로젝트: {o.projectName}</div>}
-                </div>
-
-                <div style={{ fontSize: 13, lineHeight: 1.7, marginBottom: 12 }}>
-                  <Row label="공장" value={o.factoryName || '-'} />
-                  {o.formData.materialSpec && <Row label="자재 스펙" value={o.formData.materialSpec} />}
-                  {o.formData.dueDate && <Row label="납기" value={o.formData.dueDate} />}
-                  {o.processedAt && <Row label="처리일" value={o.processedAt.toLocaleString('ko-KR')} />}
-                  {o.reason && <Row label="사유" value={o.reason} />}
-                </div>
-
-                <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 8 }}>
-                  <button onClick={() => setDocOrder(o)} style={btnPrimary}>📄 발주서 보기</button>
-                  <button
-                    onClick={() => navigate(`/configurator?designFileId=${o.designId}&projectId=${o.projectId || ''}&readonly=1`)}
-                    style={btnSecondary}
-                  >
-                    디자인 보기
-                  </button>
-                </div>
-                <button
-                  onClick={() => handleSendMessageToFactory(o.factoryId)}
-                  style={btnMessage}
-                >
-                  💬 공장에 메시지 보내기
-                </button>
-              </div>
-            ))}
+          <div style={{ background: 'var(--theme-surface, #fff)', border: '1px solid var(--theme-border, #e5e7eb)', borderRadius: 12, overflow: 'hidden' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+              <thead style={{ background: 'var(--theme-background, #f9fafb)' }}>
+                <tr>
+                  <th style={th}>상태</th>
+                  <th style={th}>발주일시</th>
+                  <th style={th}>공장</th>
+                  <th style={th}>디자인 / 프로젝트</th>
+                  <th style={th}>자재 스펙</th>
+                  <th style={th}>납기</th>
+                  <th style={th}>처리일</th>
+                  <th style={{ ...th, textAlign: 'right' }}>액션</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filtered.map((o) => (
+                  <tr key={o.id} style={{ borderTop: '1px solid var(--theme-border, #e5e7eb)' }}>
+                    <td style={td}>
+                      <span style={{ display: 'inline-block', padding: '3px 10px', borderRadius: 999, fontSize: 11, fontWeight: 600, background: STATUS_COLOR[o.status] + '22', color: STATUS_COLOR[o.status] }}>
+                        {STATUS_LABEL[o.status]}
+                      </span>
+                    </td>
+                    <td style={{ ...td, whiteSpace: 'nowrap', color: 'var(--theme-text-secondary, #6b7280)' }}>
+                      {o.createdAt?.toLocaleString('ko-KR') || '-'}
+                    </td>
+                    <td style={td}>{o.factoryName || '-'}</td>
+                    <td style={td}>
+                      <div style={{ fontWeight: 600 }}>{o.designName}</div>
+                      {o.projectName && <div style={{ fontSize: 11, color: 'var(--theme-text-secondary, #6b7280)' }}>{o.projectName}</div>}
+                    </td>
+                    <td style={{ ...td, maxWidth: 220, whiteSpace: 'pre-wrap' }}>{o.formData.materialSpec || '-'}</td>
+                    <td style={{ ...td, whiteSpace: 'nowrap' }}>{o.formData.dueDate || '-'}</td>
+                    <td style={{ ...td, whiteSpace: 'nowrap', color: 'var(--theme-text-secondary, #6b7280)' }}>
+                      {o.processedAt?.toLocaleString('ko-KR') || '-'}
+                    </td>
+                    <td style={{ ...td, textAlign: 'right', whiteSpace: 'nowrap' }}>
+                      <div style={{ display: 'inline-flex', gap: 4, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+                        <button onClick={() => setDocOrder(o)} style={btnSm}>발주서</button>
+                        <button
+                          onClick={() => navigate(`/configurator?designFileId=${o.designId}&projectId=${o.projectId || ''}&readonly=1`)}
+                          style={btnSm}
+                        >
+                          디자인
+                        </button>
+                        <button onClick={() => handleSendMessageToFactory(o.factoryId)} style={btnSm}>💬</button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         )}
       </div>
@@ -171,6 +174,35 @@ function Row({ label, value }: { label: string; value: string }) {
     </div>
   );
 }
+
+const th: React.CSSProperties = {
+  padding: '12px 14px',
+  textAlign: 'left',
+  fontSize: 12,
+  fontWeight: 600,
+  color: 'var(--theme-text-secondary, #6b7280)',
+  textTransform: 'uppercase',
+  letterSpacing: '0.5px',
+  whiteSpace: 'nowrap',
+};
+
+const td: React.CSSProperties = {
+  padding: '12px 14px',
+  fontSize: 13,
+  color: 'var(--theme-text, #1f2937)',
+  verticalAlign: 'middle',
+};
+
+const btnSm: React.CSSProperties = {
+  padding: '5px 10px',
+  borderRadius: 6,
+  border: '1px solid var(--theme-border, #e5e7eb)',
+  background: 'var(--theme-surface, #fff)',
+  color: 'var(--theme-text, #1f2937)',
+  fontSize: 12,
+  fontWeight: 500,
+  cursor: 'pointer',
+};
 
 const btnSecondary: React.CSSProperties = {
   padding: '8px 14px',

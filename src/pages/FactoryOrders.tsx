@@ -204,85 +204,74 @@ export default function FactoryOrders() {
             받은 발주가 없습니다.
           </div>
         ) : (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(360px, 1fr))', gap: 16 }}>
-            {filtered.map((o) => (
-              <div key={o.id} style={cardStyle}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-                  <span style={{ ...badgeStyle, background: STATUS_COLOR[o.status] + '22', color: STATUS_COLOR[o.status] }}>
-                    {STATUS_LABEL[o.status]}
-                  </span>
-                  <span style={{ fontSize: 11, color: 'var(--theme-text-secondary, #6b7280)' }}>
-                    {o.createdAt?.toLocaleString('ko-KR') || '-'}
-                  </span>
-                </div>
-
-                <div style={{ marginBottom: 12 }}>
-                  <div style={{ fontSize: 16, fontWeight: 700, marginBottom: 4 }}>{o.designName}</div>
-                  {o.projectName && <div style={{ fontSize: 12, color: 'var(--theme-text-secondary, #6b7280)' }}>프로젝트: {o.projectName}</div>}
-                </div>
-
-                <div style={{ fontSize: 13, lineHeight: 1.7, marginBottom: 12 }}>
-                  <Row label="발주자" value={o.ordererName || o.ordererEmail || '-'} />
-                  {o.formData.materialSpec && <Row label="자재 스펙" value={o.formData.materialSpec} />}
-                  {o.formData.dueDate && <Row label="납기" value={o.formData.dueDate} />}
-                  {o.formData.deliveryAddress && <Row label="배송지" value={o.formData.deliveryAddress} />}
-                  {o.formData.installSchedule && <Row label="설치" value={o.formData.installSchedule} />}
-                  {o.formData.notes && <Row label="요청사항" value={o.formData.notes} />}
-                  {o.reason && <Row label="사유" value={o.reason} />}
-                </div>
-
-                {/* 액션 버튼: 디자인보기 + (대기시 수락) + 발주자정보 */}
-                <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 8 }}>
-                  <button onClick={() => setDocOrder(o)} style={btnPrimary}>
-                    📄 발주서 보기
-                  </button>
-                  <button
-                    onClick={() => navigate(`/configurator?designFileId=${o.designId}&projectId=${o.projectId || ''}&readonly=1`)}
-                    style={btnSecondary}
-                  >
-                    디자인 보기
-                  </button>
-                  {o.status === 'pending' && (
-                    <button
-                      onClick={() => handleAction(o.id, 'accept')}
-                      disabled={busyId === o.id}
-                      style={btnPrimary}
-                    >
-                      수락
-                    </button>
-                  )}
-                  {o.status === 'accepted' && (
-                    <button
-                      onClick={() => handleAction(o.id, 'in_progress')}
-                      disabled={busyId === o.id}
-                      style={btnPrimary}
-                    >
-                      제작 시작
-                    </button>
-                  )}
-                  {o.status === 'in_progress' && (
-                    <button
-                      onClick={() => handleAction(o.id, 'complete')}
-                      disabled={busyId === o.id}
-                      style={btnPrimary}
-                    >
-                      완료 처리
-                    </button>
-                  )}
-                  <button onClick={() => handleShowOrderer(o)} style={btnSecondary}>
-                    발주자 정보
-                  </button>
-                </div>
-
-                {/* 하단 메시지 보내기 */}
-                <button
-                  onClick={() => handleSendMessage(o.ordererId)}
-                  style={btnMessage}
-                >
-                  💬 메시지 보내기
-                </button>
-              </div>
-            ))}
+          <div style={{ background: 'var(--theme-surface, #fff)', border: '1px solid var(--theme-border, #e5e7eb)', borderRadius: 12, overflow: 'hidden' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+              <thead style={{ background: 'var(--theme-background, #f9fafb)' }}>
+                <tr>
+                  <th style={th}>상태</th>
+                  <th style={th}>발주일시</th>
+                  <th style={th}>발주자</th>
+                  <th style={th}>디자인 / 프로젝트</th>
+                  <th style={th}>자재 스펙</th>
+                  <th style={th}>납기</th>
+                  <th style={th}>배송지</th>
+                  <th style={{ ...th, textAlign: 'right' }}>액션</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filtered.map((o) => (
+                  <tr key={o.id} style={{ borderTop: '1px solid var(--theme-border, #e5e7eb)' }}>
+                    <td style={td}>
+                      <span style={{ ...badgeStyle, background: STATUS_COLOR[o.status] + '22', color: STATUS_COLOR[o.status] }}>
+                        {STATUS_LABEL[o.status]}
+                      </span>
+                    </td>
+                    <td style={{ ...td, whiteSpace: 'nowrap', color: 'var(--theme-text-secondary, #6b7280)' }}>
+                      {o.createdAt?.toLocaleString('ko-KR') || '-'}
+                    </td>
+                    <td style={td}>
+                      <button
+                        onClick={() => handleShowOrderer(o)}
+                        style={{ background: 'transparent', border: 'none', padding: 0, color: 'var(--theme-primary, #667eea)', cursor: 'pointer', fontSize: 13, textDecoration: 'underline' }}
+                        title="발주자 상세 정보 보기"
+                      >
+                        {o.ordererName || o.ordererEmail || '-'}
+                      </button>
+                    </td>
+                    <td style={td}>
+                      <div style={{ fontWeight: 600 }}>{o.designName}</div>
+                      {o.projectName && <div style={{ fontSize: 11, color: 'var(--theme-text-secondary, #6b7280)' }}>{o.projectName}</div>}
+                    </td>
+                    <td style={{ ...td, maxWidth: 220, whiteSpace: 'pre-wrap' }}>
+                      {o.formData.materialSpec || '-'}
+                    </td>
+                    <td style={{ ...td, whiteSpace: 'nowrap' }}>{o.formData.dueDate || '-'}</td>
+                    <td style={{ ...td, maxWidth: 180 }}>{o.formData.deliveryAddress || '-'}</td>
+                    <td style={{ ...td, textAlign: 'right', whiteSpace: 'nowrap' }}>
+                      <div style={{ display: 'inline-flex', gap: 4, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+                        <button onClick={() => setDocOrder(o)} style={btnSm}>발주서</button>
+                        <button
+                          onClick={() => navigate(`/configurator?designFileId=${o.designId}&projectId=${o.projectId || ''}&readonly=1`)}
+                          style={btnSm}
+                        >
+                          디자인
+                        </button>
+                        {o.status === 'pending' && (
+                          <button onClick={() => handleAction(o.id, 'accept')} disabled={busyId === o.id} style={btnSmPrimary}>수락</button>
+                        )}
+                        {o.status === 'accepted' && (
+                          <button onClick={() => handleAction(o.id, 'in_progress')} disabled={busyId === o.id} style={btnSmPrimary}>제작 시작</button>
+                        )}
+                        {o.status === 'in_progress' && (
+                          <button onClick={() => handleAction(o.id, 'complete')} disabled={busyId === o.id} style={btnSmPrimary}>완료</button>
+                        )}
+                        <button onClick={() => handleSendMessage(o.ordererId)} style={btnSm}>💬</button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         )}
       </div>
@@ -366,6 +355,46 @@ const cardStyle: React.CSSProperties = {
   boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
   display: 'flex',
   flexDirection: 'column',
+};
+
+const th: React.CSSProperties = {
+  padding: '12px 14px',
+  textAlign: 'left',
+  fontSize: 12,
+  fontWeight: 600,
+  color: 'var(--theme-text-secondary, #6b7280)',
+  textTransform: 'uppercase',
+  letterSpacing: '0.5px',
+  whiteSpace: 'nowrap',
+};
+
+const td: React.CSSProperties = {
+  padding: '12px 14px',
+  fontSize: 13,
+  color: 'var(--theme-text, #1f2937)',
+  verticalAlign: 'middle',
+};
+
+const btnSm: React.CSSProperties = {
+  padding: '5px 10px',
+  borderRadius: 6,
+  border: '1px solid var(--theme-border, #e5e7eb)',
+  background: 'var(--theme-surface, #fff)',
+  color: 'var(--theme-text, #1f2937)',
+  fontSize: 12,
+  fontWeight: 500,
+  cursor: 'pointer',
+};
+
+const btnSmPrimary: React.CSSProperties = {
+  padding: '5px 10px',
+  borderRadius: 6,
+  border: 'none',
+  background: 'var(--theme-primary, #3b82f6)',
+  color: '#fff',
+  fontSize: 12,
+  fontWeight: 600,
+  cursor: 'pointer',
 };
 
 const badgeStyle: React.CSSProperties = {
