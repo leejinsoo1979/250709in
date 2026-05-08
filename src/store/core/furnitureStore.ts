@@ -103,69 +103,6 @@ const notifyR3F = (modules: PlacedModule[]) => {
   }, 0);
 };
 
-const isUpperCabinetModuleId = (moduleId?: string) => !!moduleId?.includes('upper-cabinet');
-
-const isShoeCabinetModuleId = (moduleId?: string) => {
-  const mid = moduleId || '';
-  if (isUpperCabinetModuleId(mid)) return false;
-  return mid.includes('-entryway-') ||
-    mid.includes('-shelf-') ||
-    mid.includes('-4drawer-shelf-') ||
-    mid.includes('-2drawer-shelf-');
-};
-
-const isClothingCabinetModuleId = (moduleId?: string) => {
-  const mid = moduleId || '';
-  if (!mid || isShoeCabinetModuleId(mid) || isUpperCabinetModuleId(mid)) return false;
-  return mid.includes('-hanging') ||
-    mid.includes('hanging-') ||
-    mid.includes('-2hanging-') ||
-    mid.includes('-4drawer-hanging-') ||
-    mid.includes('-2drawer-hanging-');
-};
-
-const getPlacedModuleDepthMm = (module: PlacedModule, internalSpace: any, spaceInfo: any) => {
-  const moduleData = getModuleById(module.moduleId, internalSpace, spaceInfo);
-  return module.customDepth ?? moduleData?.dimensions.depth ?? 600;
-};
-
-const queueShoeClothingDepthPrompt = (
-  newModule: PlacedModule,
-  modules: PlacedModule[],
-  internalSpace: any,
-  spaceInfo: any
-) => {
-  if (typeof window === 'undefined') return;
-
-  const newIsShoe = isShoeCabinetModuleId(newModule.moduleId);
-  const newIsClothing = isClothingCabinetModuleId(newModule.moduleId);
-  if (!newIsShoe && !newIsClothing) return;
-
-  const clothingModules = modules.filter(m => isClothingCabinetModuleId(m.moduleId));
-  const shoeModules = modules.filter(m => isShoeCabinetModuleId(m.moduleId));
-  if (clothingModules.length === 0 || shoeModules.length === 0) return;
-
-  const clothingDepth = Math.max(...clothingModules.map(m => getPlacedModuleDepthMm(m, internalSpace, spaceInfo)));
-  const targetShoes = (newIsShoe ? [newModule] : shoeModules).filter(m => {
-    const shoeDepth = getPlacedModuleDepthMm(m, internalSpace, spaceInfo);
-    const requiredGap = Math.max(0, clothingDepth - shoeDepth);
-    return requiredGap > 0 && Math.round((m as any).backWallGap ?? 0) !== Math.round(requiredGap);
-  });
-  if (targetShoes.length === 0) return;
-
-  const shoeDepth = getPlacedModuleDepthMm(targetShoes[0], internalSpace, spaceInfo);
-  const requiredGap = Math.max(0, clothingDepth - shoeDepth);
-
-  window.dispatchEvent(new CustomEvent('shoe-clothing-depth-conflict', {
-    detail: {
-      shoeIds: targetShoes.map(m => m.id),
-      backWallGap: requiredGap,
-      clothingDepth,
-      shoeDepth
-    }
-  }));
-};
-
 /**
  * 가구 배치 후 인접 키큰장(full)의 EP를 자동 체크하는 헬퍼.
  * - 새 가구가 upper/lower면 → 인접 full의 해당 방향 EP 체크
@@ -478,7 +415,7 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
       // 2단 가구인 경우 섹션 깊이 초기화
       const sections = newModuleData?.modelConfig?.sections;
       if (sections && sections.length === 2) {
-        const defaultDepth = module.customDepth ?? newModuleData.dimensions.depth;
+        const defaultDepth = newModuleData.dimensions.depth;
 
         // 섹션 깊이가 설정되지 않은 경우 기본값으로 초기화
         if (module.lowerSectionDepth === undefined) {
@@ -493,7 +430,6 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
       if (module.isFreePlacement) {
         const newModules = [...state.placedModules, module];
         notifyR3F(newModules);
-        queueShoeClothingDepthPrompt(module, newModules, internalSpace, spaceInfo);
         return {
           placedModules: newModules
         };
@@ -555,7 +491,6 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
             module
           ];
           notifyR3F(newModules);
-          queueShoeClothingDepthPrompt(module, newModules, internalSpace, spaceInfo);
           return {
             placedModules: newModules
           };
@@ -564,7 +499,6 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
         // 모든 기존 가구와 공존 가능하면 추가
         const newModules2 = [...state.placedModules, module];
         notifyR3F(newModules2);
-        queueShoeClothingDepthPrompt(module, newModules2, internalSpace, spaceInfo);
         return {
           placedModules: newModules2
         };
@@ -572,7 +506,6 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
 
       const newModules3 = [...state.placedModules, module];
       notifyR3F(newModules3);
-      queueShoeClothingDepthPrompt(module, newModules3, internalSpace, spaceInfo);
       return {
         placedModules: newModules3
       };

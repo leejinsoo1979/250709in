@@ -216,27 +216,6 @@ const computeFurnitureHeightMm = (
   return heightMm;
 };
 
-const isShoeCabinetModule = (moduleId?: string): boolean => {
-  const mid = moduleId || '';
-  return mid.includes('-entryway-') ||
-    mid.includes('-shelf-') ||
-    mid.includes('-4drawer-shelf-') ||
-    mid.includes('-2drawer-shelf-');
-};
-
-const computeFrontViewShoeOuterHeightMm = (
-  mod: PlacedModule,
-  spaceInfo: SpaceInfo
-): number => {
-  const topFrameMm = spaceInfo.frameSize?.top ?? 30;
-  const baseFrameMm = (mod as any).hasBase === false
-    ? 0
-    : ((mod as any).baseFrameHeight ?? (spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height || 65) : 0));
-  const floatMm = (mod as any).hasBase === false ? ((mod as any).individualFloatHeight ?? 0) : 0;
-
-  return Math.max(0, (spaceInfo.height || 0) - topFrameMm - baseFrameMm - floatMm);
-};
-
 interface SectionHeightsInfo {
   sections: SectionWithCalc[];
   heightsMm: number[];
@@ -279,17 +258,17 @@ const computeSectionHeightsInfo = (
   // 일반 가구: 하부 섹션 고정, 마지막(상부) 섹션이 높이 차이를 흡수
   // 신발장(현관장 H/선반장): 첫(하부) 섹션이 흡수, 상부 섹션 고정
   const modIdForAbsorb = module.moduleId || '';
-  const isShoeAbsorb = isShoeCabinetModule(modIdForAbsorb);
+  const isShoeAbsorb = modIdForAbsorb.includes('-entryway-') ||
+    modIdForAbsorb.includes('-shelf-') ||
+    modIdForAbsorb.includes('-4drawer-shelf-') ||
+    modIdForAbsorb.includes('-2drawer-shelf-');
   const absorbIdx = isShoeAbsorb ? 0 : rawSections.length - 1;
-  const referenceSections = isShoeAbsorb
-    ? ((moduleData?.modelConfig?.sections as SectionWithCalc[] | undefined) || rawSections)
-    : rawSections;
 
   let heightsMm: number[];
 
   const hasCalculatedHeights = rawSections.every(section => typeof (section as SectionWithCalc & { calculatedHeight?: number }).calculatedHeight === 'number');
 
-  if (hasCalculatedHeights && rawSections.length > 0 && !isShoeAbsorb) {
+  if (hasCalculatedHeights && rawSections.length > 0) {
     const calcHeights = rawSections.map(section => {
       const calc = (section as SectionWithCalc & { calculatedHeight?: number }).calculatedHeight;
       return Math.max(calc ?? 0, 0);
@@ -301,13 +280,13 @@ const computeSectionHeightsInfo = (
     }
     heightsMm = calcHeights;
   } else {
-    const fixedSum = referenceSections.reduce((s, section, i) =>
+    const fixedSum = rawSections.reduce((s, section, i) =>
       i === absorbIdx ? s : s + (section.height ?? 0), 0);
     const absorbingNewHeight = Math.max(0, internalHeightMm - fixedSum);
 
     heightsMm = rawSections.map((section, idx) => {
       if (idx === absorbIdx) return absorbingNewHeight;
-      return referenceSections[idx]?.height ?? section.height ?? 0;
+      return section.height ?? 0;
     });
   }
 
@@ -834,10 +813,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
             // 하부장/상부장은 단일 표시, full 카테고리만 섹션 분할 적용
             let didSplitSections = false;
             if (modCat_l2 === 'full') {
-              const sectionHeightBaseMm = isShoeCabinetModule(mod.moduleId)
-                ? computeFrontViewShoeOuterHeightMm(mod, spaceInfo)
-                : moduleHeightMm;
-              const sectionInfo = computeSectionHeightsInfo(mod, moduleData, sectionHeightBaseMm, 'left');
+              const sectionInfo = computeSectionHeightsInfo(mod, moduleData, moduleHeightMm, 'left');
               if (sectionInfo.heightsMm.length >= 2) {
                 // 하부 → 상부 순서로 누적 쌓기
                 let cursorMm = cabinetBottomMm;
@@ -1573,10 +1549,9 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
             furnitureTopEdge = furnitureBaseY + modHeight;
           }
 
-          const stableTopDepthDimY = displaySpaceHeight + mmToThreeUnits(200);
           const depthDimY = isLowerMod
             ? furnitureBottomEdge - mmToThreeUnits(200)    // 하부장: 가구 바닥 아래
-            : stableTopDepthDimY; // 키큰장/상부장: 공간 상단 기준 고정
+            : furnitureTopEdge + mmToThreeUnits(200); // 키큰장/상부장: 가구 상단 위
           const depthDimEdge = isLowerMod ? furnitureBottomEdge : furnitureTopEdge;
 
           // 신발장 하부섹션 치수 위치 (가구 바닥 아래)
@@ -1602,9 +1577,8 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
             ? (module.customDepth || 380)
             : depthModuleData.dimensions.depth;
           const baseModuleDepth = mmToThreeUnits(baseModuleDepthMm);
-          const moduleBackWallGapZ = mmToThreeUnits((module as any).backWallGap ?? 0);
-          const baseFrontZ = furnitureZOffset + furnitureDepth / 2 - doorThickness - baseModuleDepth / 2 + moduleBackWallGapZ;
-          const baseBackZ = furnitureZOffset - furnitureDepth / 2 - doorThickness + baseModuleDepth / 2 + moduleBackWallGapZ;
+          const baseFrontZ = furnitureZOffset + furnitureDepth / 2 - doorThickness - baseModuleDepth / 2;
+          const baseBackZ = furnitureZOffset - furnitureDepth / 2 - doorThickness + baseModuleDepth / 2;
 
           // 상부섹션/단일 섹션 Z
           const upperDir = (mod.upperSectionDepthDirection as 'front' | 'back' | undefined) || 'front';
@@ -2218,10 +2192,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
             // 2섹션 가구(의류장: 코트장/붙박이장B/D)는 섹션별로 분할하여 표시
             let didSplitSectionsRL2 = false;
             if (modCat_rl2 === 'full') {
-              const sectionHeightBaseMm = isShoeCabinetModule(mod.moduleId)
-                ? computeFrontViewShoeOuterHeightMm(mod, spaceInfo)
-                : moduleHeightMm;
-              const sectionInfo = computeSectionHeightsInfo(mod, moduleData, sectionHeightBaseMm, 'right');
+              const sectionInfo = computeSectionHeightsInfo(mod, moduleData, moduleHeightMm, 'right');
               if (sectionInfo.heightsMm.length >= 2) {
                 let cursorMm = cabinetBottomMm;
                 sectionInfo.heightsMm.forEach((hMm, sIdx) => {
@@ -2681,8 +2652,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
 
           const indexing = calculateSpaceIndexing(spaceInfo);
           const slotX = -spaceWidth / 2 + indexing.columnWidth * module.slotIndex + indexing.columnWidth / 2;
-          const furnitureTopEdgeY_d2 = furnitureBaseY + internalHeight;
-          const furnitureTopY = displaySpaceHeight + mmToThreeUnits(200);
+          const furnitureTopY = furnitureBaseY + internalHeight + mmToThreeUnits(200);
           const furnitureBottomDimY_d2 = furnitureBaseY - mmToThreeUnits(200);
 
           const panelDepthMm = spaceInfo.depth || 1500;
@@ -2699,9 +2669,8 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
             ? (module.customDepth || 380)
             : moduleData.dimensions.depth;
           const baseModuleDepth_d2 = mmToThreeUnits(baseModuleDepthMm_d2);
-          const moduleBackWallGapZ_d2 = mmToThreeUnits((module as any).backWallGap ?? 0);
-          const baseFrontZ_d2 = furnitureZOffset + furnitureDepth/2 - doorThickness - baseModuleDepth_d2/2 + moduleBackWallGapZ_d2;
-          const baseBackZ_d2 = furnitureZOffset - furnitureDepth/2 - doorThickness + baseModuleDepth_d2/2 + moduleBackWallGapZ_d2;
+          const baseFrontZ_d2 = furnitureZOffset + furnitureDepth/2 - doorThickness - baseModuleDepth_d2/2;
+          const baseBackZ_d2 = furnitureZOffset - furnitureDepth/2 - doorThickness + baseModuleDepth_d2/2;
           // 상부 방향 오프셋
           const upperDir_d2 = (module.upperSectionDepthDirection as 'front' | 'back' | undefined) || 'front';
           const upperDiff_d2 = baseModuleDepth_d2 - moduleDepth;
@@ -2719,8 +2688,8 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
 
           return (
             <group key={`furniture-depth-${index}`}>
-              <ExtLine points={[[0, furnitureTopEdgeY_d2, furnitureZ + moduleDepth/2], [0, furnitureTopY, furnitureZ + moduleDepth/2]]} color={dimensionColor} />
-              <ExtLine points={[[0, furnitureTopEdgeY_d2, furnitureZ - moduleDepth/2], [0, furnitureTopY, furnitureZ - moduleDepth/2]]} color={dimensionColor} />
+              <ExtLine points={[[0, furnitureBaseY + internalHeight, furnitureZ + moduleDepth/2], [0, furnitureTopY, furnitureZ + moduleDepth/2]]} color={dimensionColor} />
+              <ExtLine points={[[0, furnitureBaseY + internalHeight, furnitureZ - moduleDepth/2], [0, furnitureTopY, furnitureZ - moduleDepth/2]]} color={dimensionColor} />
 
               <NativeLine name="dimension_line"
                 points={[
