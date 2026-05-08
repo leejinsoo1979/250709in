@@ -40,11 +40,13 @@ export const SplitLoginForm: React.FC<SplitLoginFormProps> = ({ onSuccess, defau
     try {
       const userRef = doc(db, 'users', user.uid);
       const userDoc = await getDoc(userRef);
-      const currentPlan = userDoc.exists() ? (userDoc.data() as { plan?: string }).plan : undefined;
+      const userData = userDoc.exists() ? userDoc.data() as { plan?: string; displayName?: string } : {};
+      const currentPlan = userData.plan;
+      const currentDisplayName = userData.displayName;
 
       // enterprise_inquiries 최신 신청 1건 조회 → 그 status가 진실
-      // superseded(대체된 옛 신청) 제외, 클라이언트 정렬 (인덱스 의존 X)
       let truePlan: 'enterprise' | 'free' = 'free';
+      let companyName: string | undefined;
       try {
         const q = query(
           collection(db, 'enterprise_inquiries'),
@@ -58,19 +60,35 @@ export const SplitLoginForm: React.FC<SplitLoginFormProps> = ({ onSuccess, defau
             const tb = (b.data().createdAt?.toMillis?.() ?? 0) as number;
             return tb - ta;
           });
-          const status = (sorted[0].data() as { status?: string }).status;
-          if (status === 'approved') truePlan = 'enterprise';
+          const latest = sorted[0].data() as { status?: string; companyName?: string };
+          if (latest.status === 'approved') truePlan = 'enterprise';
+          companyName = latest.companyName;
         }
       } catch (e) {
         console.warn('enterprise_inquiries 조회 실패:', e);
       }
 
-      // plan과 truePlan이 다르면 강제 동기화 (관리자 변경 누락 케이스 자동 복구)
+      // plan + displayName 자동 동기화
+      // - plan: 승인 상태 진실 기준
+      // - displayName: 기업회원이면 항상 회사명으로 (이미 가입된 회원도 자동 보정)
+      const updates: Record<string, unknown> = {};
       if (currentPlan !== truePlan) {
+        updates.plan = truePlan;
+        updates.planUpdatedAt = new Date();
+      }
+      if (truePlan === 'enterprise' && companyName && currentDisplayName !== companyName) {
+        updates.displayName = companyName;
+      }
+      if (Object.keys(updates).length > 0) {
         try {
-          await setDoc(userRef, { plan: truePlan, planUpdatedAt: new Date() }, { merge: true });
+          await setDoc(userRef, updates, { merge: true });
+          // Firebase Auth user 객체 displayName도 동기화
+          if (updates.displayName && auth.currentUser) {
+            const { updateProfile } = await import('firebase/auth');
+            await updateProfile(auth.currentUser, { displayName: updates.displayName as string }).catch(() => {});
+          }
         } catch (e) {
-          console.warn('plan 동기화 실패:', e);
+          console.warn('plan/displayName 동기화 실패:', e);
         }
       }
 

@@ -259,18 +259,36 @@ exports.adminProcessEnterpriseInquiry = onCall(
       }
       tx.update(inquiryRef, inquiryUpdates);
 
-      // 2) users.plan 동기화 (슈퍼관리자 제외)
+      // 2) users.plan + displayName 동기화 (슈퍼관리자 제외)
       if (!isTargetSuperAdmin) {
-        tx.set(
-          userRef,
-          { plan: mapped.plan, planUpdatedAt: admin.firestore.FieldValue.serverTimestamp() },
-          { merge: true }
-        );
+        const userPatch = {
+          plan: mapped.plan,
+          planUpdatedAt: admin.firestore.FieldValue.serverTimestamp(),
+        };
+        // 기업회원 승인 시 닉네임을 회사명으로 자동 설정
+        if (mapped.plan === 'enterprise' && inquiry.companyName) {
+          userPatch.displayName = inquiry.companyName;
+        }
+        tx.set(userRef, userPatch, { merge: true });
         resultPlan = mapped.plan;
       } else {
         resultPlan = userData.plan || 'free';
       }
     });
+
+    // 트랜잭션 외부: Firebase Auth displayName도 갱신 (Auth는 트랜잭션 안 됨)
+    if (mapped.plan === 'enterprise') {
+      try {
+        const inquirySnap2 = await inquiryRef.get();
+        const companyName = inquirySnap2.data()?.companyName;
+        const targetUidFinal = inquirySnap2.data()?.uid;
+        if (companyName && targetUidFinal) {
+          await admin.auth().updateUser(targetUidFinal, { displayName: companyName });
+        }
+      } catch (e) {
+        console.warn('Auth displayName 업데이트 실패:', e?.message);
+      }
+    }
 
     return { ok: true, status: mapped.status, plan: resultPlan };
   }
@@ -568,12 +586,25 @@ exports.telegramWebhook = onRequest(
         }
         await inquiryRef.update(updates);
 
-        // 승인 시 user plan 업데이트
+        // 승인 시 user plan + displayName 업데이트 (기업회원 닉네임=회사명)
         if (planUpdate && uid) {
           try {
-            await db.doc(`users/${uid}`).set({ plan: planUpdate }, { merge: true });
+            const inquiryData = inquirySnap.data() || {};
+            const userUpdates = { plan: planUpdate };
+            if (planUpdate === 'enterprise' && inquiryData.companyName) {
+              userUpdates.displayName = inquiryData.companyName;
+            }
+            await db.doc(`users/${uid}`).set(userUpdates, { merge: true });
+            // Firebase Auth displayName도 같이 갱신 (기업회원 승인 시)
+            if (planUpdate === 'enterprise' && inquiryData.companyName) {
+              try {
+                await admin.auth().updateUser(uid, { displayName: inquiryData.companyName });
+              } catch (authErr) {
+                console.warn('Auth displayName 업데이트 실패:', authErr?.message);
+              }
+            }
           } catch (e) {
-            console.warn('users plan 업데이트 실패:', e);
+            console.warn('users plan/displayName 업데이트 실패:', e);
           }
         }
       } catch (e) {
