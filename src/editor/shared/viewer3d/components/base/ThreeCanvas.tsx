@@ -580,27 +580,23 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
         e.preventDefault(); // 페이지 스크롤 방지
         e.stopPropagation(); // 이벤트 전파 방지
 
+        // 2D 모드: 항상 카메라 초기화만 (시점 순환 비활성화)
+        if (viewMode === '2D') {
+          canvasLog('🚀 스페이스 (2D) - resetCamera');
+          resetCamera();
+          return;
+        }
+
+        // 3D 모드: 1번 → 카메라 초기화 / 2번 → perspective ↔ orthographic 토글
         if (spaceToggleStepRef.current === 0) {
-          // 1번째 / 3번째 / 5번째 ... → 카메라 초기화
           canvasLog('🚀 스페이스 (초기화 단계) - resetCamera');
           resetCamera();
           spaceToggleStepRef.current = 1;
         } else {
-          // 2번째 / 4번째 / 6번째 ... → 카메라 모드 전환
           const ui = useUIStore.getState();
-          if (viewMode === '2D') {
-            // 2D 모드: 시점 순환 (front → top → left → front)
-            const order: Array<'front' | 'top' | 'left'> = ['front', 'top', 'left'];
-            const idx = order.indexOf(ui.view2DDirection as 'front' | 'top' | 'left');
-            const next = order[(idx + 1) % order.length] || 'front';
-            ui.setView2DDirection(next);
-            canvasLog('🔁 2D 시점 순환 →', next);
-          } else {
-            // 3D 모드: perspective ↔ orthographic 토글
-            const nextMode = ui.cameraMode === 'perspective' ? 'orthographic' : 'perspective';
-            ui.setCameraMode(nextMode);
-            canvasLog('🔁 3D 카메라 모드 전환:', ui.cameraMode, '→', nextMode);
-          }
+          const nextMode = ui.cameraMode === 'perspective' ? 'orthographic' : 'perspective';
+          ui.setCameraMode(nextMode);
+          canvasLog('🔁 3D 카메라 모드 전환:', ui.cameraMode, '→', nextMode);
           spaceToggleStepRef.current = 0;
         }
         return;
@@ -1044,7 +1040,7 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
             touchAction: 'none'
           }}
           dpr={[1, 2]}
-          frameloop={viewMode === '2D' ? 'demand' : 'always'}
+          frameloop="always"
           gl={{
             powerPreference: 'high-performance',
             antialias: true,
