@@ -110,70 +110,52 @@ export const useBaseFurniture = (
   // FurnitureItem에서: dimensions.height = freeHeight로 오버라이드
   // drawer 섹션은 고정(하드웨어 제약), 나머지 섹션만 높이 변화를 흡수
   const modelConfig = useMemo(() => {
-    // 신발장 중 현관장 H/일반 선반장만 상부/하부 경계 Y 유지를 위해 첫(하부) 섹션이 높이 변화 흡수
-    // 2단/4단 서랍 선반장은 하부 서랍 섹션 고정이므로 일반 가구처럼 마지막(상부) 섹션이 흡수
-    const moduleId = moduleData?.id || '';
-    const isLowerAbsorbShoeCabinetHeight = (
-      moduleId.includes('-entryway-') ||
-      moduleId.startsWith('single-shelf-') ||
-      moduleId.startsWith('dual-shelf-')
-    );
-    const isDrawerShelfCabinetHeight = (
-      moduleId.includes('-4drawer-shelf-') ||
-      moduleId.includes('-2drawer-shelf-')
-    );
-    const sourceSections = customSections && customSections.length > 0
-      ? customSections
-      : originalModelConfig.sections;
-    const referenceSections = isDrawerShelfCabinetHeight
-      ? (originalModelConfig.sections || sourceSections)
-      : sourceSections;
-
-    if (!sourceSections || sourceSections.length === 0 || !referenceSections || referenceSections.length === 0) {
+    if (!originalModelConfig.sections || originalModelConfig.sections.length === 0) {
       return originalModelConfig;
     }
 
     // absolute 섹션들의 합 = 원래 dimensions.height (FurnitureItem 변경 전)
-    const originalSectionsTotal = referenceSections.reduce((sum: number, s: SectionConfig) => {
+    const originalSectionsTotal = originalModelConfig.sections.reduce((sum: number, s: SectionConfig) => {
       return sum + (s.heightType === 'absolute' ? s.height : 0);
     }, 0);
     if (originalSectionsTotal <= 0) {
-      return customSections && customSections.length > 0
-        ? { ...originalModelConfig, sections: customSections }
-        : originalModelConfig;
+      return originalModelConfig;
     }
 
     // 현재 렌더링 높이 (freeHeight가 적용된 dimensions.height)
     const renderHeightMm = internalHeight || moduleData.dimensions.height;
 
     // 렌더링 높이와 원래 섹션 합의 차이가 1mm 이하면 조정 불필요
-    if (Math.abs(renderHeightMm - originalSectionsTotal) <= 1 && !isDrawerShelfCabinetHeight) {
-      return customSections && customSections.length > 0
-        ? { ...originalModelConfig, sections: customSections }
-        : originalModelConfig;
+    if (Math.abs(renderHeightMm - originalSectionsTotal) <= 1) {
+      return originalModelConfig;
     }
 
-    const sections = sourceSections;
-    // 흡수 섹션 인덱스: 현관장 H/일반 선반장이면 0(하부), 그 외엔 마지막(상부)
-    const absorbingIdx = isLowerAbsorbShoeCabinetHeight ? 0 : sections.length - 1;
-    const fixedSum = referenceSections.reduce((sum: number, s: SectionConfig, i: number) =>
+    // 신발장(현관장 H): 상부/하부 경계 Y 유지를 위해 첫(하부) 섹션이 높이 변화 흡수
+    // 그 외 가구: 하부 섹션은 고정, 마지막(상부) 섹션이 높이 변화 흡수
+    const isShoeCabinetHeight = !!moduleData?.id && (
+      moduleData.id.includes('-entryway-') ||
+      moduleData.id.includes('-shelf-') ||
+      moduleData.id.includes('-4drawer-shelf-') ||
+      moduleData.id.includes('-2drawer-shelf-')
+    );
+    const sections = originalModelConfig.sections;
+    // 흡수 섹션 인덱스: 신발장이면 0(하부), 그 외엔 마지막(상부)
+    const absorbingIdx = isShoeCabinetHeight ? 0 : sections.length - 1;
+    const fixedSum = sections.reduce((sum: number, s: SectionConfig, i: number) =>
       i === absorbingIdx ? sum : sum + s.height, 0);
     const absorbingSection = sections[absorbingIdx];
-    const absorbingReferenceSection = referenceSections[absorbingIdx] || absorbingSection;
     const absorbingNewHeight = Math.max(0, renderHeightMm - fixedSum);
-    const absorbingRatio = absorbingReferenceSection.height > 0 ? absorbingNewHeight / absorbingReferenceSection.height : 1;
+    const absorbingRatio = absorbingSection.height > 0 ? absorbingNewHeight / absorbingSection.height : 1;
 
     const basicThicknessMm = originalModelConfig.basicThickness || 18;
     const scaledSections = sections.map((section: SectionConfig, idx: number) => {
-      const referenceSection = referenceSections[idx] || section;
       if (idx !== absorbingIdx) {
-        const fixedHeight = Math.round(referenceSection.height);
         // 하부 섹션: 높이는 고정이되, shelfPositions는 현재 섹션 내경 기준으로 균등 재분할
         // (띄움 배치 등 렌더 높이 변화 시 기존 절대 위치가 비균등으로 보이는 문제 방지)
         if (section.shelfPositions && section.shelfPositions.length > 0 && section.count && section.count > 0) {
           // [0]은 치수 표시용 sentinel 이므로 유지, 실제 선반 갯수 = count 로 균등 재계산
           const realCount = section.count;
-          const sectionInner = fixedHeight - 2 * basicThicknessMm;
+          const sectionInner = section.height - 2 * basicThicknessMm;
           if (sectionInner > 0 && realCount > 0) {
             const halfT = basicThicknessMm / 2;
             const g = (sectionInner - realCount * basicThicknessMm) / (realCount + 1);
@@ -184,15 +166,11 @@ export const useBaseFurniture = (
             const hasZeroSentinel = section.shelfPositions.includes(0);
             return {
               ...section,
-              height: fixedHeight,
               shelfPositions: hasZeroSentinel ? [0, ...newPositions] : newPositions,
             };
           }
         }
-        return {
-          ...section,
-          height: fixedHeight
-        };
+        return section;
       }
       // 흡수 섹션: height 늘리고
       // 신발장 하부 흡수(현관장 H/일반 선반장)는 받침대 기준이라 shelfPositions 원본 유지
@@ -225,7 +203,7 @@ export const useBaseFurniture = (
       ...originalModelConfig,
       sections: scaledSections
     };
-  }, [internalHeight, moduleData.dimensions.height, originalModelConfig, customSections]);
+  }, [internalHeight, moduleData.dimensions.height, originalModelConfig]);
   
   // 기본 판재 두께 변환 (mm -> Three.js 단위)
   const basicThickness = mmToThreeUnits(modelConfig.basicThickness || 18);
@@ -468,10 +446,16 @@ export const useBaseFurniture = (
   
   // 섹션별 높이 계산 (modelConfig.sections는 이미 비례 조정됨)
   const getSectionHeights = () => {
-    const sections = modelConfig.sections || customSections;
+    // customSections가 있으면 그것을 우선 사용
+    const sections = customSections || modelConfig.sections;
 
     if (!sections || sections.length === 0) {
       return [];
+    }
+
+    // customSections가 있고 calculatedHeight가 있으면 그대로 사용
+    if (customSections && customSections.every(s => s.calculatedHeight)) {
+      return customSections.map(s => mmToThreeUnits(s.calculatedHeight!));
     }
 
     const availableHeight = height - basicThickness * 2;
@@ -488,24 +472,11 @@ export const useBaseFurniture = (
     const remainingHeight = availableHeight - totalFixedHeight;
 
     // 모든 섹션의 높이 계산
-    const sectionHeights = sections.map((section: SectionConfig) =>
+    return sections.map((section: SectionConfig) =>
       (section.heightType === 'absolute')
         ? calculateSectionHeight(section, availableHeight)
         : calculateSectionHeight(section, remainingHeight)
     );
-
-    if (sectionHeights.length >= 2) {
-      const totalSectionHeight = sectionHeights.reduce((sum: number, sectionHeight: number) => sum + sectionHeight, 0);
-      if (Math.abs(totalSectionHeight - availableHeight) > 0.001) {
-        const lastIdx = sectionHeights.length - 1;
-        const lowerSectionsHeight = sectionHeights
-          .slice(0, lastIdx)
-          .reduce((sum: number, sectionHeight: number) => sum + sectionHeight, 0);
-        sectionHeights[lastIdx] = availableHeight - lowerSectionsHeight;
-      }
-    }
-
-    return sectionHeights;
   };
   
   return {
@@ -540,7 +511,9 @@ export const useBaseFurniture = (
     // 유틸리티
     mmToThreeUnits,
 
-    // 설정 데이터
-    modelConfig
+    // 설정 데이터 (customSections가 있으면 modelConfig.sections를 오버라이드)
+    modelConfig: customSections
+      ? { ...modelConfig, sections: customSections }
+      : modelConfig
   };
 };

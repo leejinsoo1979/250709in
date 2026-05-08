@@ -292,17 +292,12 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
     });
 
     // 마지막 섹션은 나머지 공간을 채우도록 조정 (오차 보정)
-    // 현관장 H/일반 선반장처럼 useBaseFurniture에서 하부 섹션을 흡수하도록 이미 재계산한 경우에는
-    // 여기서 다시 마지막 섹션을 늘려버리면 분기 의도가 깨진다.
     if (allSections.length >= 2) {
       const lastIdx = allSections.length - 1;
-      const absoluteSectionsTotal = allSections.reduce((sum, s) => sum + s.calculatedHeight, 0);
-      if (Math.abs(absoluteSectionsTotal - availableHeight) > 0.001) {
-        const lowerSectionsHeight = allSections
-          .slice(0, lastIdx)
-          .reduce((sum, s) => sum + s.calculatedHeight, 0);
-        allSections[lastIdx].calculatedHeight = availableHeight - lowerSectionsHeight;
-      }
+      const lowerSectionsHeight = allSections
+        .slice(0, lastIdx)
+        .reduce((sum, s) => sum + s.calculatedHeight, 0);
+      allSections[lastIdx].calculatedHeight = availableHeight - lowerSectionsHeight;
     }
 
     // 렌더링

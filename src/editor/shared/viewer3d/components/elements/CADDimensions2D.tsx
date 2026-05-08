@@ -216,17 +216,12 @@ const computeFurnitureHeightMm = (
   return heightMm;
 };
 
-const isLowerAbsorbShoeCabinetModule = (moduleId?: string): boolean => {
+const isShoeCabinetModule = (moduleId?: string): boolean => {
   const mid = moduleId || '';
-  if (mid.includes('upper-cabinet')) return false;
   return mid.includes('-entryway-') ||
-    mid.startsWith('single-shelf-') ||
-    mid.startsWith('dual-shelf-');
-};
-
-const isDrawerShelfCabinetModule = (moduleId?: string): boolean => {
-  const mid = moduleId || '';
-  return mid.includes('-4drawer-shelf-') || mid.includes('-2drawer-shelf-');
+    mid.includes('-shelf-') ||
+    mid.includes('-4drawer-shelf-') ||
+    mid.includes('-2drawer-shelf-');
 };
 
 const computeFrontViewShoeOuterHeightMm = (
@@ -282,13 +277,11 @@ const computeSectionHeightsInfo = (
   // useBaseFurniture.ts(line 112-157)와 동일한 방식:
   // shelving.ts에서 sections 합 = dimensions.height (판재 두께 포함)
   // 일반 가구: 하부 섹션 고정, 마지막(상부) 섹션이 높이 차이를 흡수
-  // 신발장 중 현관장 H/일반 선반장만 첫(하부) 섹션이 흡수, 상부 섹션 고정
-  // 2단/4단 서랍 선반장은 하부 서랍 섹션 고정이므로 일반 가구처럼 상부 섹션이 흡수
+  // 신발장(현관장 H/선반장): 첫(하부) 섹션이 흡수, 상부 섹션 고정
   const modIdForAbsorb = module.moduleId || '';
-  const isShoeAbsorb = isLowerAbsorbShoeCabinetModule(modIdForAbsorb);
-  const isDrawerShelf = isDrawerShelfCabinetModule(modIdForAbsorb);
+  const isShoeAbsorb = isShoeCabinetModule(modIdForAbsorb);
   const absorbIdx = isShoeAbsorb ? 0 : rawSections.length - 1;
-  const referenceSections = (isShoeAbsorb || isDrawerShelf)
+  const referenceSections = isShoeAbsorb
     ? ((moduleData?.modelConfig?.sections as SectionWithCalc[] | undefined) || rawSections)
     : rawSections;
 
@@ -296,7 +289,7 @@ const computeSectionHeightsInfo = (
 
   const hasCalculatedHeights = rawSections.every(section => typeof (section as SectionWithCalc & { calculatedHeight?: number }).calculatedHeight === 'number');
 
-  if (hasCalculatedHeights && rawSections.length > 0 && !isShoeAbsorb && !isDrawerShelf) {
+  if (hasCalculatedHeights && rawSections.length > 0 && !isShoeAbsorb) {
     const calcHeights = rawSections.map(section => {
       const calc = (section as SectionWithCalc & { calculatedHeight?: number }).calculatedHeight;
       return Math.max(calc ?? 0, 0);
@@ -841,7 +834,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
             // 하부장/상부장은 단일 표시, full 카테고리만 섹션 분할 적용
             let didSplitSections = false;
             if (modCat_l2 === 'full') {
-              const sectionHeightBaseMm = isLowerAbsorbShoeCabinetModule(mod.moduleId)
+              const sectionHeightBaseMm = isShoeCabinetModule(mod.moduleId)
                 ? computeFrontViewShoeOuterHeightMm(mod, spaceInfo)
                 : moduleHeightMm;
               const sectionInfo = computeSectionHeightsInfo(mod, moduleData, sectionHeightBaseMm, 'left');
@@ -2225,7 +2218,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
             // 2섹션 가구(의류장: 코트장/붙박이장B/D)는 섹션별로 분할하여 표시
             let didSplitSectionsRL2 = false;
             if (modCat_rl2 === 'full') {
-              const sectionHeightBaseMm = isLowerAbsorbShoeCabinetModule(mod.moduleId)
+              const sectionHeightBaseMm = isShoeCabinetModule(mod.moduleId)
                 ? computeFrontViewShoeOuterHeightMm(mod, spaceInfo)
                 : moduleHeightMm;
               const sectionInfo = computeSectionHeightsInfo(mod, moduleData, sectionHeightBaseMm, 'right');
