@@ -104,7 +104,9 @@ export const createOrUpdateUserProfile = async (
     return { error: null };
   } catch (error) {
     console.error('사용자 프로필 생성/업데이트 에러:', error);
-    return { error: '사용자 프로필 처리 중 오류가 발생했습니다.' };
+    const e = error as { code?: string; message?: string };
+    const detail = e?.code || e?.message || String(error);
+    return { error: `사용자 프로필 처리 실패: ${detail}` };
   }
 };
 
@@ -790,21 +792,26 @@ export const updateSpaceConfigDefaults = async (
 
     const profileRef = doc(db, USER_PROFILES_COLLECTION, user.uid);
 
-    const profileSnap = await getDoc(profileRef);
-    if (!profileSnap.exists()) {
-      return await createOrUpdateUserProfile({ spaceConfigDefaults: defaults } as any);
-    }
+    // Firestore가 undefined 값 거부 → JSON round-trip 으로 undefined 제거
+    const cleanDefaults = JSON.parse(JSON.stringify(defaults));
 
-    await updateDoc(profileRef, {
-      spaceConfigDefaults: defaults,
-      updatedAt: serverTimestamp()
-    });
+    // setDoc(merge: true)로 통일 — 문서 없으면 생성, 있으면 병합 (룰 단순화 + 권한 일관성)
+    await setDoc(
+      profileRef,
+      {
+        spaceConfigDefaults: cleanDefaults,
+        updatedAt: serverTimestamp(),
+      },
+      { merge: true }
+    );
 
-    console.log('✅ [Firebase] 공간설정 기본값 저장 완료:', defaults);
+    console.log('✅ [Firebase] 공간설정 기본값 저장 완료:', cleanDefaults);
     return { error: null };
   } catch (error) {
     console.error('공간설정 기본값 저장 에러:', error);
-    return { error: '공간설정 기본값 저장 중 오류가 발생했습니다.' };
+    const e = error as { code?: string; message?: string };
+    const detail = e?.code || e?.message || String(error);
+    return { error: `공간설정 기본값 저장 실패: ${detail}` };
   }
 };
 
