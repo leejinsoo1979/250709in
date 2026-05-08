@@ -2832,8 +2832,8 @@ const PlacedModulePropertiesPanel: React.FC = () => {
             </div>
           )}
 
-          {/* 가구 치수 편집 — 한 줄 가로 배치 */}
-          {currentPlacedModule && (
+          {/* 가구 치수 편집 — 한 줄 가로 배치 (편집 탭 전용) */}
+          {!showDetails && currentPlacedModule && (
             <div className={styles.propertySection}>
               <h5 className={styles.sectionTitle}>몸통치수</h5>
               <div style={{ display: 'flex', gap: '4px', alignItems: 'center', marginTop: '2px' }}>
@@ -3123,8 +3123,8 @@ const PlacedModulePropertiesPanel: React.FC = () => {
             </div>
           )}
 
-          {/* 도어 치수 (읽기 전용) — 몸통치수 바로 아래 */}
-          {currentPlacedModule && currentPlacedModule.hasDoor && (() => {
+          {/* 도어 치수 (읽기 전용) — 몸통치수 바로 아래, 편집 탭 전용 */}
+          {!showDetails && currentPlacedModule && currentPlacedModule.hasDoor && (() => {
             const bodyWidth = (() => {
               const v = parseInt(freeWidthInput, 10);
               if (!isNaN(v) && v > 0) return v;
