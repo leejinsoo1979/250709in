@@ -1306,48 +1306,53 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           );
         })()}
 
-        {/* 바닥마감재 치수 (별도 위치, 좌측뷰) — 하부장은 왼쪽 2단에서 표시, 상부장은 받침대 없으므로 제외 */}
-        {floorFinishHeightMm > 0 && !isFloating && selectedModCategory !== 'lower' && selectedModCategory !== 'upper' && (
-        <group>
-            {/* 보조 가이드 연장선 - 바닥 */}
-            <ExtLine points={[[0, 0, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750) - mmToThreeUnits(720)], [0, 0, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750) - mmToThreeUnits(360)]]} color={dimensionColor} />
-            {/* 보조 가이드 연장선 - 마감재 상단 */}
-            <ExtLine points={[[0, floorFinishY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750) - mmToThreeUnits(720)], [0, floorFinishY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750) - mmToThreeUnits(360)]]} color={dimensionColor} />
-            {/* 메인 치수선 (바닥 ~ 마감재 상단) */}
-            <NativeLine name="dimension_line"
-              points={[
-                [0, 0, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750) - mmToThreeUnits(360)],
-                [0, floorFinishY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750) - mmToThreeUnits(360)]
-              ]}
-              color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
-            />
-            {/* 티크 마크 - 바닥 */}
-            <NativeLine name="dimension_line"
-              points={[
-                [-0.008, 0, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750) - mmToThreeUnits(360)],
-                [0.008, 0, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750) - mmToThreeUnits(360)]
-              ]}
-              color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
-            />
-            {/* 티크 마크 - 마감재 상단 */}
-            <NativeLine name="dimension_line"
-              points={[
-                [-0.008, floorFinishY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750) - mmToThreeUnits(360)],
-                [0.008, floorFinishY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750) - mmToThreeUnits(360)]
-              ]}
-              color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
-            />
-            <Text
-              position={[0, floorFinishY / 2, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750) - mmToThreeUnits(360) + mmToThreeUnits(60)]}
-              fontSize={largeFontSize} color={textColor}
-              anchorX="center" anchorY="middle"
-              renderOrder={100001} depthTest={false}
-              rotation={[0, -Math.PI / 2, Math.PI / 2]}
-            >
-              {floorFinishHeightMm}
-            </Text>
-        </group>
-        )}
+        {/* 바닥마감재 치수 — 받침대(걸래받이) 치수와 동일 Z 라인 + 동일 연장선 길이 */}
+        {floorFinishHeightMm > 0 && !isFloating && selectedModCategory !== 'lower' && selectedModCategory !== 'upper' && (() => {
+          // 받침대 치수와 동일한 Z 라인 (메인 치수선 위치)
+          const dimZ = spaceDepth/2 + rightDimOffset - mmToThreeUnits(750);
+          // 받침대 치수와 동일한 연장선 시작 Z (360mm 길이)
+          const extStartZ = spaceDepth/2 + rightDimOffset - mmToThreeUnits(750) - mmToThreeUnits(360);
+          return (
+            <group>
+              {/* 보조 가이드 연장선 - 바닥 (받침대 시작 ExtLine과 길이 동일 360mm) */}
+              <ExtLine points={[[0, 0, extStartZ], [0, 0, dimZ]]} color={dimensionColor} />
+              {/* 마감재 상단의 ExtLine은 받침대 치수의 시작 ExtLine과 중복되므로 생략 */}
+              {/* 메인 치수선 (바닥 ~ 마감재 상단) */}
+              <NativeLine name="dimension_line"
+                points={[
+                  [0, 0, dimZ],
+                  [0, floorFinishY, dimZ]
+                ]}
+                color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
+              />
+              {/* 티크 마크 - 바닥 */}
+              <NativeLine name="dimension_line"
+                points={[
+                  [-0.008, 0, dimZ],
+                  [0.008, 0, dimZ]
+                ]}
+                color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
+              />
+              {/* 티크 마크 - 마감재 상단 */}
+              <NativeLine name="dimension_line"
+                points={[
+                  [-0.008, floorFinishY, dimZ],
+                  [0.008, floorFinishY, dimZ]
+                ]}
+                color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
+              />
+              <Text
+                position={[0, floorFinishY / 2, dimZ + mmToThreeUnits(60)]}
+                fontSize={largeFontSize} color={textColor}
+                anchorX="center" anchorY="middle"
+                renderOrder={100001} depthTest={false}
+                rotation={[0, -Math.PI / 2, Math.PI / 2]}
+              >
+                {floorFinishHeightMm}
+              </Text>
+            </group>
+          );
+        })()}
 
         {/* 받침대 높이 (마감재 상단 ~ 받침대 상단, 좌측뷰) — 하부장은 왼쪽 2단에서 표시, 상부장은 받침대 없으므로 제외 */}
         {baseFrameHeightMm > 0 && selectedModCategory !== 'lower' && selectedModCategory !== 'upper' && (
