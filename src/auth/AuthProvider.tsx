@@ -56,6 +56,20 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       // Firebase 인증 상태 변화 감지
       const unsubscribe = onAuthStateChange(async (user) => {
+        // 사용자 변경 감지 — 다른 계정으로 전환되면 메모리에 남은 탭/뷰 상태 정리
+        // (탭바에 이전 사용자가 열었던 디자인이 그대로 남는 문제 차단)
+        const previousUid = localStorage.getItem('userId');
+        const newUid = user?.uid || null;
+        if (previousUid && previousUid !== newUid) {
+          try {
+            const { useUIStore } = await import('@/store/uiStore');
+            useUIStore.setState({ openTabs: [], activeTabId: null } as any);
+            console.log('🧹 사용자 변경 감지 — openTabs 초기화:', previousUid, '→', newUid);
+          } catch (e) {
+            console.warn('탭 초기화 실패:', e);
+          }
+        }
+
         setUser(user);
         setLoading(false);
 
