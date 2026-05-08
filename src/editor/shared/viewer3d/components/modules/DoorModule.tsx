@@ -1380,9 +1380,9 @@ const DoorModule: React.FC<DoorModuleProps> = ({
       <group position={[doorGroupX, 0, 0]}> {/* 듀얼 캐비넷도 원래 슬롯 중심에 배치 */}
         {/* 왼쪽 도어 - 왼쪽 힌지 (왼쪽 가장자리에서 회전) */}
         {showLeftDoor && (
-        <group position={[leftHingeX + leftEpTrimShift + leftInsertExtendShift + hingeOffsetUnits, doorYPosition, doorDepth / 2]}>
+        <group position={[leftHingeX + leftEpTrimShift + leftInsertExtendShift + hingeOffsetUnits, doorYPosition, doorDepth / 2 + hingeOffsetUnits]}>
           <animated.group rotation-y={leftDoorLocked ? 0 : dualLeftDoorSpring.rotation}>
-            <group position={[leftDoorWidthUnits / 2 - hingeOffsetUnits - hingeOffsetUnits, 0, 0]}>
+            <group position={[leftDoorWidthUnits / 2 - hingeOffsetUnits - hingeOffsetUnits, 0, -hingeOffsetUnits]}>
               {/* 2D 정면뷰: 좌측 도어 반투명 overlay (잠금 시 붉은색) */}
               {showDoorOverlay && (
                 <mesh position={[0, 0, doorThicknessUnits / 2 + 0.001]} renderOrder={9999}>
@@ -1753,9 +1753,9 @@ const DoorModule: React.FC<DoorModuleProps> = ({
 
         {/* 오른쪽 도어 - 오른쪽 힌지 (오른쪽 가장자리에서 회전) */}
         {showRightDoor && (
-        <group position={[rightHingeX + rightEpTrimShift + rightInsertExtendShift - hingeOffsetUnits, doorYPosition, doorDepth / 2]}>
+        <group position={[rightHingeX + rightEpTrimShift + rightInsertExtendShift - hingeOffsetUnits, doorYPosition, doorDepth / 2 + hingeOffsetUnits]}>
           <animated.group rotation-y={rightDoorLocked ? 0 : dualRightDoorSpring.rotation}>
-            <group position={[-rightDoorWidthUnits / 2 + hingeOffsetUnits + hingeOffsetUnits, 0, 0]}>
+            <group position={[-rightDoorWidthUnits / 2 + hingeOffsetUnits + hingeOffsetUnits, 0, -hingeOffsetUnits]}>
               {/* 2D 정면뷰: 우측 도어 반투명 overlay (잠금 시 붉은색) */}
               {showDoorOverlay && (
                 <mesh position={[0, 0, doorThicknessUnits / 2 + 0.001]} renderOrder={9999}>
@@ -2240,11 +2240,15 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     //   왼쪽 힌지: 슬롯 안쪽 = +X 방향, 오른쪽 힌지: 슬롯 안쪽 = -X 방향
     //   닫힘 외관은 자식 group의 반대 보정으로 유지
     const innerXShift = adjustedHingePosition === 'left' ? hingeOffsetUnits : -hingeOffsetUnits;
+    // Z축: 90도 회전 시 자식 group의 X 보정값이 Z방향으로 회전돼 도어가 가구 안쪽으로 9mm 들어가는 현상 보정
+    //   (왼쪽 힌지: 자식 X = -9mm → 90도 회전 시 Z = -9mm 가구 안쪽 / 오른쪽 힌지도 동일)
+    //   회전축 Z를 +9mm 앞으로 이동, 자식 group Z를 -9mm 보정 → 닫힘 외관 유지 + 90도 시 도어 앞면이 측판 앞면 라인과 일치
+    const zCompensation = hingeOffsetUnits;
 
     return (
-      <group position={[doorGroupX + hingeAxisOffset + epTrimShiftX + insertExtendShiftX + innerXShift, doorYPosition, doorDepth / 2]}>
+      <group position={[doorGroupX + hingeAxisOffset + epTrimShiftX + insertExtendShiftX + innerXShift, doorYPosition, doorDepth / 2 + zCompensation]}>
         <animated.group rotation-y={singleDoorLocked ? 0 : (adjustedHingePosition === 'left' ? leftHingeDoorSpring.rotation : rightHingeDoorSpring.rotation)}>
-          <group position={[doorPositionX - innerXShift, 0, 0]}>
+          <group position={[doorPositionX - innerXShift, 0, -zCompensation]}>
             {/* 2D 정면뷰: 싱글 도어 반투명 overlay (잠금 시 붉은색) */}
             {showDoorOverlay && (
               <mesh position={[0, 0, doorThicknessUnits / 2 + 0.001]} renderOrder={9999}>
