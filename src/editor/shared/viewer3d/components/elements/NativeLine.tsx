@@ -49,6 +49,8 @@ export const NativeLine: React.FC<NativeLineProps> = ({
   const effectiveDepthTest = isDimensionOverlay ? false : depthTest;
   const effectiveDepthWrite = isDimensionOverlay ? false : depthWrite;
   const effectiveRenderOrder = isDimensionOverlay ? Math.max(renderOrder, 100000) : renderOrder;
+  // 치수 오버레이는 항상 마지막에 그려지도록 transparent 강제 (Three.js는 transparent=true를 마지막에 렌더)
+  const effectiveTransparent = isDimensionOverlay ? true : (transparent || opacity < 1);
 
   // points를 flat array로 변환
   const flatPositions = useMemo(() => {
@@ -79,7 +81,7 @@ export const NativeLine: React.FC<NativeLineProps> = ({
       dashSize: dashSize,
       gapSize: gapSize,
       opacity: opacity,
-      transparent: transparent || opacity < 1,
+      transparent: effectiveTransparent,
       depthTest: effectiveDepthTest,
       depthWrite: effectiveDepthWrite,
       resolution: new THREE.Vector2(size.width, size.height),
@@ -107,11 +109,11 @@ export const NativeLine: React.FC<NativeLineProps> = ({
     material.dashSize = dashSize;
     material.gapSize = gapSize;
     material.opacity = opacity;
-    material.transparent = transparent || opacity < 1;
+    material.transparent = effectiveTransparent;
     material.depthTest = effectiveDepthTest;
     material.depthWrite = effectiveDepthWrite;
     material.needsUpdate = true;
-  }, [material, color, lineWidth, dashed, dashSize, gapSize, opacity, transparent, effectiveDepthTest, effectiveDepthWrite]);
+  }, [material, color, lineWidth, dashed, dashSize, gapSize, opacity, effectiveTransparent, effectiveDepthTest, effectiveDepthWrite]);
 
   // resolution 업데이트 (캔버스 리사이즈 대응)
   useEffect(() => {

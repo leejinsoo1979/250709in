@@ -219,7 +219,9 @@ const EditableDimensionText: React.FC<EditableDimensionTextProps> = ({
             anchorY="middle"
             rotation={rotation}
             renderOrder={renderOrder}
-            depthTest={depthTest}
+            material-depthTest={depthTest}
+            material-depthWrite={false}
+            material-transparent={true}
           >
             {formatDim(value)}
           </Text>

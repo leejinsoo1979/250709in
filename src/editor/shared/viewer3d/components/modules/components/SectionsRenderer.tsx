@@ -848,13 +848,19 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
                       {/* 섹션 내경 가이드선 양끝 엔드포인트 - 측면뷰/탑뷰와 드래그 중에는 숨김 */}
                       {!isDragging && !(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right' || view2DDirection === 'top')) && (
                         <>
-                          <mesh position={[-innerWidth/2 * 0.3, topY + dimensionYOffset, viewMode === '3D' ? depth/2 + 0.1 : depth/2 + 1.0]}>
+                          <mesh
+                            position={[-innerWidth/2 * 0.3, topY + dimensionYOffset, viewMode === '3D' ? depth/2 + 0.1 : depth/2 + 1.0]}
+                            renderOrder={100000}
+                          >
                             <sphereGeometry args={[0.05, 8, 8]} />
-                            <meshBasicMaterial color={currentColor} />
+                            <meshBasicMaterial color={currentColor} depthTest={false} depthWrite={false} />
                           </mesh>
-                          <mesh position={[-innerWidth/2 * 0.3, bottomY + dimensionYOffset, viewMode === '3D' ? depth/2 + 0.1 : depth/2 + 1.0]}>
+                          <mesh
+                            position={[-innerWidth/2 * 0.3, bottomY + dimensionYOffset, viewMode === '3D' ? depth/2 + 0.1 : depth/2 + 1.0]}
+                            renderOrder={100000}
+                          >
                             <sphereGeometry args={[0.05, 8, 8]} />
-                            <meshBasicMaterial color={currentColor} />
+                            <meshBasicMaterial color={currentColor} depthTest={false} depthWrite={false} />
                           </mesh>
                         </>
                       )}
@@ -922,13 +928,19 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
                               {/* 안전선반 위 칸 수직선 양끝 엔드포인트 */}
                               {!isDragging && !(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right' || view2DDirection === 'top')) && (
                                 <>
-                                  <mesh position={[-innerWidth/2 * 0.3, topCompartmentTopY + dimensionYOffset, viewMode === '3D' ? depth/2 + 0.1 : depth/2 + 1.0]}>
+                                  <mesh
+                                    position={[-innerWidth/2 * 0.3, topCompartmentTopY + dimensionYOffset, viewMode === '3D' ? depth/2 + 0.1 : depth/2 + 1.0]}
+                                    renderOrder={100000}
+                                  >
                                     <sphereGeometry args={[0.05, 8, 8]} />
-                                    <meshBasicMaterial color={topCurrentColor} />
+                                    <meshBasicMaterial color={topCurrentColor} depthTest={false} depthWrite={false} />
                                   </mesh>
-                                  <mesh position={[-innerWidth/2 * 0.3, topCompartmentBottomY + dimensionYOffset, viewMode === '3D' ? depth/2 + 0.1 : depth/2 + 1.0]}>
+                                  <mesh
+                                    position={[-innerWidth/2 * 0.3, topCompartmentBottomY + dimensionYOffset, viewMode === '3D' ? depth/2 + 0.1 : depth/2 + 1.0]}
+                                    renderOrder={100000}
+                                  >
                                     <sphereGeometry args={[0.05, 8, 8]} />
-                                    <meshBasicMaterial color={topCurrentColor} />
+                                    <meshBasicMaterial color={topCurrentColor} depthTest={false} depthWrite={false} />
                                   </mesh>
                                 </>
                               )}
