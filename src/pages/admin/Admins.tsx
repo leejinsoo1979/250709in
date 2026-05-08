@@ -485,12 +485,24 @@ const Admins = () => {
                       )}
                       <div className={styles.avatar}>
                         {targetUser.photoURL ? (
-                          <img src={targetUser.photoURL} alt={targetUser.displayName || targetUser.email} />
-                        ) : (
-                          <div className={styles.avatarPlaceholder}>
-                            {(targetUser.displayName || targetUser.email || '?').charAt(0).toUpperCase()}
-                          </div>
-                        )}
+                          <img
+                            src={targetUser.photoURL}
+                            alt={targetUser.displayName || targetUser.email}
+                            onError={(e) => {
+                              // 이미지 로드 실패 시 placeholder 로 폴백
+                              const img = e.currentTarget;
+                              img.style.display = 'none';
+                              const fb = img.nextElementSibling as HTMLElement | null;
+                              if (fb) fb.style.display = 'flex';
+                            }}
+                          />
+                        ) : null}
+                        <div
+                          className={styles.avatarPlaceholder}
+                          style={{ display: targetUser.photoURL ? 'none' : 'flex' }}
+                        >
+                          {(targetUser.displayName || targetUser.email || '?').charAt(0).toUpperCase()}
+                        </div>
                       </div>
                       <span className={styles.displayName}>
                         {targetUser.displayName || '이름 없음'}
