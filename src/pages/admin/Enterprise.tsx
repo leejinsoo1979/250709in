@@ -202,7 +202,7 @@ export default function Enterprise() {
                 const result = await fn({});
                 const { synced, details } = result.data;
                 const detailLines = details.slice(0, 20).map(d => `  ${d.email || d.uid}: ${d.oldPlan || '(없음)'} → ${d.newPlan}`).join('\n');
-                alert(`✅ 동기화 완료\n변경된 사용자: ${synced}명\n\n${detailLines}${details.length > 20 ? `\n... 외 ${details.length - 20}명` : ''}`);
+                alert(`동기화 완료\n변경된 사용자: ${synced}명\n\n${detailLines}${details.length > 20 ? `\n... 외 ${details.length - 20}명` : ''}`);
                 await load();
               } catch (e) {
                 alert('동기화 실패: ' + (e as Error).message);
@@ -211,6 +211,42 @@ export default function Enterprise() {
             style={{ padding: '8px 16px', borderRadius: 8, border: '1px solid #10b981', background: '#10b981', color: '#fff', cursor: 'pointer', fontSize: 13, fontWeight: 600 }}
           >
             Plan 일괄 동기화
+          </button>
+          <button
+            onClick={async () => {
+              try {
+                const fn = httpsCallable<{ mode: 'diagnose' | 'fix' }, {
+                  total: number;
+                  mismatched: Array<{ designId: string; designName: string; projectId: string; projectName?: string; designUserId: string; projectUserId: string | null; action: string }>;
+                  fixed: number;
+                  mode: string;
+                }>(functions, 'adminAuditDesignFiles');
+
+                const diag = await fn({ mode: 'diagnose' });
+                const { total, mismatched } = diag.data;
+                if (mismatched.length === 0) {
+                  alert(`디자인 소유자 검사 결과: 이상 없음\n전체 디자인: ${total}건\n불일치: 0건`);
+                  return;
+                }
+                const lines = mismatched.slice(0, 15).map(m =>
+                  `  · ${m.designName || m.designId} (project: ${m.projectName || m.projectId})\n    designUserId=${m.designUserId} → projectUserId=${m.projectUserId || '(고아)'}`
+                ).join('\n');
+                const ok = confirm(
+                  `디자인 소유자 불일치 발견: ${mismatched.length}건 / 전체 ${total}건\n\n` +
+                  `${lines}${mismatched.length > 15 ? `\n... 외 ${mismatched.length - 15}건` : ''}\n\n` +
+                  `[확인] 누르면 designFile.userId 를 부모 project.userId 로 강제 정정합니다.\n` +
+                  `(고아 디자인 — 부모 project 없는 건 — 은 변경되지 않음)`
+                );
+                if (!ok) return;
+                const fix = await fn({ mode: 'fix' });
+                alert(`정정 완료: ${fix.data.fixed}건 수정\n전체 디자인: ${fix.data.total}건\n불일치: ${fix.data.mismatched.length}건`);
+              } catch (e) {
+                alert('실패: ' + (e as Error).message);
+              }
+            }}
+            style={{ padding: '8px 16px', borderRadius: 8, border: '1px solid #ef4444', background: '#ef4444', color: '#fff', cursor: 'pointer', fontSize: 13, fontWeight: 600 }}
+          >
+            디자인 소유자 검사/정정
           </button>
           <button onClick={load} style={{ padding: '8px 16px', borderRadius: 8, border: '1px solid var(--theme-border, #e5e7eb)', background: 'var(--theme-surface, #fff)', cursor: 'pointer', fontSize: 13 }}>
             새로고침

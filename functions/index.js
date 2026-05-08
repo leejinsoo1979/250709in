@@ -393,6 +393,126 @@ exports.adminSyncEnterprisePlans = onCall(
   }
 );
 
+/**
+ * [관리자 전용] designFile.userId 와 projects.{projectId}.userId 불일치 진단 + 정정
+ *
+ * 입력: { mode: 'diagnose' | 'fix' }
+ *   - diagnose: 불일치 목록만 반환 (기본)
+ *   - fix: 불일치 designFile 의 userId 를 부모 project 의 userId 로 강제 set
+ *
+ * 출력: {
+ *   total: number,
+ *   mismatched: Array<{
+ *     designId, designName, projectId, projectName?,
+ *     designUserId, projectUserId, action: 'kept'|'fixed'|'orphan'
+ *   }>,
+ *   fixed: number,
+ * }
+ *
+ * 권한: 슈퍼관리자(이메일) 또는 admins/{uid}
+ */
+exports.adminAuditDesignFiles = onCall(
+  { region: 'asia-northeast3' },
+  async (request) => {
+    const callerUid = request.auth?.uid;
+    if (!callerUid) {
+      throw new HttpsError('unauthenticated', '로그인이 필요합니다.');
+    }
+    const callerEmail = String(request.auth?.token?.email || '').toLowerCase();
+    const isSuper = callerEmail === 'sbbc212@gmail.com';
+    if (!isSuper) {
+      const adminDoc = await admin.firestore().doc(`admins/${callerUid}`).get();
+      if (!adminDoc.exists) {
+        throw new HttpsError('permission-denied', '관리자 권한이 필요합니다.');
+      }
+    }
+
+    const mode = String(request.data?.mode || 'diagnose');
+    const db = admin.firestore();
+
+    // 모든 디자인 파일 조회
+    const designsSnap = await db.collection('designFiles').get();
+    // 부모 projects 사전 조회 (id 단위 캐시)
+    const projectIds = Array.from(new Set(
+      designsSnap.docs.map(d => d.data().projectId).filter(Boolean)
+    ));
+    const projectMap = new Map();
+    // Firestore in 쿼리 한계(10) 회피 — 개별 get
+    await Promise.all(projectIds.map(async (pid) => {
+      try {
+        const psnap = await db.doc(`projects/${pid}`).get();
+        if (psnap.exists) projectMap.set(pid, psnap.data());
+      } catch { /* ignore */ }
+    }));
+
+    const mismatched = [];
+    let fixedCount = 0;
+    const batch = db.batch();
+    let batchSize = 0;
+
+    for (const ds of designsSnap.docs) {
+      const data = ds.data();
+      if (data.isDeleted) continue;
+      const designUserId = data.userId || '';
+      const projectId = data.projectId || '';
+      const project = projectMap.get(projectId);
+
+      if (!project) {
+        // 부모 프로젝트가 없는 고아 디자인
+        mismatched.push({
+          designId: ds.id,
+          designName: data.name || '',
+          projectId,
+          projectName: undefined,
+          designUserId,
+          projectUserId: null,
+          action: 'orphan',
+        });
+        continue;
+      }
+
+      const projectUserId = project.userId || '';
+      if (designUserId === projectUserId) continue; // 정상
+
+      const action = mode === 'fix' ? 'fixed' : 'kept';
+      mismatched.push({
+        designId: ds.id,
+        designName: data.name || '',
+        projectId,
+        projectName: project.title || '',
+        designUserId,
+        projectUserId,
+        action,
+      });
+
+      if (mode === 'fix' && projectUserId) {
+        batch.update(ds.ref, {
+          userId: projectUserId,
+          userIdAuditedAt: admin.firestore.FieldValue.serverTimestamp(),
+          userIdPrevious: designUserId,
+        });
+        batchSize++;
+        fixedCount++;
+        // Firestore batch 한계 500
+        if (batchSize >= 400) {
+          await batch.commit();
+          batchSize = 0;
+        }
+      }
+    }
+    if (mode === 'fix' && batchSize > 0) {
+      await batch.commit();
+    }
+
+    return {
+      total: designsSnap.size,
+      mismatched,
+      fixed: fixedCount,
+      mode,
+    };
+  }
+);
+
 // ─────────────────────────────────────────────
 // 발주(orders) Cloud Functions
 // ─────────────────────────────────────────────
