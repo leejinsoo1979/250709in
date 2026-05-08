@@ -193,9 +193,29 @@ export default function Enterprise() {
             전체 {rows.length}건 · 대기 {counts.pending || 0} · 승인 {counts.approved || 0} · 보류 {counts.on_hold || 0} · 거절 {counts.rejected || 0}
           </p>
         </div>
-        <button onClick={load} style={{ padding: '8px 16px', borderRadius: 8, border: '1px solid var(--theme-border, #e5e7eb)', background: 'var(--theme-surface, #fff)', cursor: 'pointer', fontSize: 13 }}>
-          새로고침
-        </button>
+        <div style={{ display: 'flex', gap: 8 }}>
+          <button
+            onClick={async () => {
+              if (!confirm('승인된 모든 기업회원의 plan을 강제 동기화합니다.\n(누락된 기존 사용자도 모두 enterprise로 복구됨)\n계속하시겠습니까?')) return;
+              try {
+                const fn = httpsCallable<Record<string, never>, { synced: number; details: Array<{ uid: string; email?: string; oldPlan?: string; newPlan: string }> }>(functions, 'adminSyncEnterprisePlans');
+                const result = await fn({});
+                const { synced, details } = result.data;
+                const detailLines = details.slice(0, 20).map(d => `  ${d.email || d.uid}: ${d.oldPlan || '(없음)'} → ${d.newPlan}`).join('\n');
+                alert(`✅ 동기화 완료\n변경된 사용자: ${synced}명\n\n${detailLines}${details.length > 20 ? `\n... 외 ${details.length - 20}명` : ''}`);
+                await load();
+              } catch (e) {
+                alert('동기화 실패: ' + (e as Error).message);
+              }
+            }}
+            style={{ padding: '8px 16px', borderRadius: 8, border: '1px solid #10b981', background: '#10b981', color: '#fff', cursor: 'pointer', fontSize: 13, fontWeight: 600 }}
+          >
+            Plan 일괄 동기화
+          </button>
+          <button onClick={load} style={{ padding: '8px 16px', borderRadius: 8, border: '1px solid var(--theme-border, #e5e7eb)', background: 'var(--theme-surface, #fff)', cursor: 'pointer', fontSize: 13 }}>
+            새로고침
+          </button>
+        </div>
       </div>
 
       {/* 필터 */}
