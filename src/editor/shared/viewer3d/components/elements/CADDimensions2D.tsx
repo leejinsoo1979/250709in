@@ -237,6 +237,51 @@ const computeFrontViewShoeOuterHeightMm = (
   return Math.max(0, (spaceInfo.height || 0) - topFrameMm - baseFrameMm - floatMm);
 };
 
+const computePlacedModuleFrontZ = (
+  module: PlacedModule,
+  moduleData: any,
+  spaceInfo: SpaceInfo
+): number => {
+  const panelDepthMm = spaceInfo.depth || 1500;
+  const furnitureDepthMm = Math.min(panelDepthMm, 600);
+  const panelDepth = mmToThreeUnits(panelDepthMm);
+  const furnitureDepth = mmToThreeUnits(furnitureDepthMm);
+  const doorThickness = mmToThreeUnits(20);
+  const zOffset = -panelDepth / 2;
+  const furnitureZOffset = zOffset + (panelDepth - furnitureDepth) / 2;
+
+  const moduleId = module.moduleId || '';
+  const isUpperMod = getModuleCategory(module) === 'upper';
+  const isShoeMod = (
+    moduleId.includes('-entryway-') ||
+    moduleId.includes('-shelf-') ||
+    moduleId.includes('-4drawer-shelf-') ||
+    moduleId.includes('-2drawer-shelf-')
+  ) && !moduleId.includes('upper-cabinet-');
+  const baseModuleDepthMm = isShoeMod
+    ? (module.customDepth || 380)
+    : (moduleData?.dimensions?.depth || module.customDepth || 600);
+  const baseModuleDepth = mmToThreeUnits(baseModuleDepthMm);
+  const moduleBackWallGapZ = mmToThreeUnits((module as any).backWallGap ?? 0);
+  const baseFrontZ = furnitureZOffset + furnitureDepth / 2 - doorThickness - baseModuleDepth / 2 + moduleBackWallGapZ;
+  const baseBackZ = furnitureZOffset - furnitureDepth / 2 - doorThickness + baseModuleDepth / 2 + moduleBackWallGapZ;
+
+  const resolveFrontZ = (depthMm: number, direction: 'front' | 'back' | undefined, backAligned: boolean): number => {
+    const depth = mmToThreeUnits(depthMm);
+    const diff = baseModuleDepth - depth;
+    const offset = diff === 0 ? 0 : direction === 'back' ? diff / 2 : -diff / 2;
+    const centerZ = backAligned ? baseBackZ + offset : baseFrontZ + offset;
+    return centerZ + depth / 2;
+  };
+
+  const upperDepthMm = module.upperSectionDepth || module.customDepth || moduleData?.dimensions?.depth || baseModuleDepthMm;
+  const lowerDepthMm = module.lowerSectionDepth || module.customDepth || (isShoeMod ? 380 : moduleData?.dimensions?.depth) || baseModuleDepthMm;
+  const upperFrontZ = resolveFrontZ(upperDepthMm, module.upperSectionDepthDirection as 'front' | 'back' | undefined, isUpperMod || isShoeMod);
+  const lowerFrontZ = resolveFrontZ(lowerDepthMm, module.lowerSectionDepthDirection as 'front' | 'back' | undefined, isShoeMod);
+
+  return Math.max(upperFrontZ, lowerFrontZ);
+};
+
 interface SectionHeightsInfo {
   sections: SectionWithCalc[];
   heightsMm: number[];
@@ -797,7 +842,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           const leftInnerExtStartZ = leftExtStartZ;
           const effectiveH_l2 = isSelectedSlotInDroppedZone ? (spaceInfo.height - dropHeightMm) : spaceInfo.height;
 
-          const segments_l2: { bottomY: number; topY: number; heightMm: number; key: string; extStartZ?: number; upperModuleId?: string; currentHeightMm?: number }[] = [];
+          const segments_l2: { bottomY: number; topY: number; heightMm: number; key: string; dimZ?: number; extStartZ?: number; upperModuleId?: string; currentHeightMm?: number }[] = [];
           // 도어 안쪽에 표시할 갭 치수 (상판 윗면~도어 상단)
           const innerGapSegments_l2: { bottomY: number; topY: number; heightMm: number; key: string }[] = [];
 
@@ -815,6 +860,9 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
             const mod = module as PlacedModule;
             const modCat_l2 = getModuleCategory(mod);
             const moduleHeightMm = computeFurnitureHeightMm(mod, moduleData, spaceInfo, internalSpace);
+            const moduleFrontZ = computePlacedModuleFrontZ(mod, moduleData, spaceInfo);
+            const moduleDimZ = moduleFrontZ + mmToThreeUnits(150);
+            const moduleExtStartZ = moduleFrontZ + mmToThreeUnits(30);
 
             let cabinetBottomMm: number;
             let cabinetTopMm: number;
@@ -851,6 +899,8 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                     topY: mmToThreeUnits(sTop),
                     heightMm: Math.round(hMm),
                     key: `furniture-${moduleIndex}-sec${sIdx}`,
+                    dimZ: moduleDimZ,
+                    extStartZ: moduleExtStartZ,
                   });
                   cursorMm = sTop;
                 });
@@ -865,6 +915,8 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                 topY: mmToThreeUnits(cabinetTopMm),
                 heightMm: Math.round(moduleHeightMm),
                 key: `furniture-${moduleIndex}`,
+                dimZ: moduleDimZ,
+                extStartZ: moduleExtStartZ,
                 // 상부장이면 미드웨이 편집 시 참조할 id/현재높이 기록
                 upperModuleId: modCat_l2 === 'upper' ? mod.id : undefined,
                 currentHeightMm: modCat_l2 === 'upper' ? moduleHeightMm : undefined,
@@ -877,7 +929,9 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                 bottomY: mmToThreeUnits(cabinetTopMm),
                 topY: mmToThreeUnits(cabinetTopMm + stoneThicknessL2),
                 heightMm: stoneThicknessL2,
-                key: `stone-top-${moduleIndex}`
+                key: `stone-top-${moduleIndex}`,
+                dimZ: moduleDimZ,
+                extStartZ: moduleExtStartZ
               });
             }
 
@@ -905,7 +959,8 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                   topY: mmToThreeUnits(effectiveH_l2),
                   heightMm: Math.round(topFrameVal),
                   key: `upper-topframe-${moduleIndex}`,
-                  extStartZ: upperFrontZ
+                  dimZ: upperFrontZ + mmToThreeUnits(150),
+                  extStartZ: upperFrontZ + mmToThreeUnits(30)
                 });
               }
             }
@@ -922,7 +977,9 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                     bottomY: mmToThreeUnits(cabinetTopMm + stoneThickness),
                     topY: mmToThreeUnits(cabinetTopMm + stoneThickness + backLipH),
                     heightMm: backLipH,
-                    key: `stone-backlip-${moduleIndex}`
+                    key: `stone-backlip-${moduleIndex}`,
+                    dimZ: moduleDimZ,
+                    extStartZ: moduleExtStartZ
                   });
                 }
               }
@@ -949,6 +1006,8 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                   topY: gapTopY,
                   heightMm: gapMm,
                   key: `gap-${i}`,
+                  dimZ: segments_l2[i + 1].dimZ ?? segments_l2[i].dimZ,
+                  extStartZ: segments_l2[i + 1].extStartZ ?? segments_l2[i].extStartZ,
                   upperModuleId: upperAbove,
                   currentHeightMm: upperCurH,
                 });
@@ -962,26 +1021,27 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           return (
             <group>
               {allSegments_l2.map((seg) => {
+                const segDimZ = seg.dimZ !== undefined ? seg.dimZ : leftInnerZ;
                 const segExtStartZ = seg.extStartZ !== undefined ? seg.extStartZ : leftInnerExtStartZ;
                 return (
                 <group key={`l2-sec-${seg.key}`}>
-                  <ExtLine points={[[0, seg.bottomY, segExtStartZ], [0, seg.bottomY, leftInnerZ]]} color={dimensionColor} />
-                  <ExtLine points={[[0, seg.topY, segExtStartZ], [0, seg.topY, leftInnerZ]]} color={dimensionColor} />
+                  <ExtLine points={[[0, seg.bottomY, segExtStartZ], [0, seg.bottomY, segDimZ]]} color={dimensionColor} />
+                  <ExtLine points={[[0, seg.topY, segExtStartZ], [0, seg.topY, segDimZ]]} color={dimensionColor} />
                   <NativeLine name="dimension_line"
-                    points={[[0, seg.bottomY, leftInnerZ], [0, seg.topY, leftInnerZ]]}
+                    points={[[0, seg.bottomY, segDimZ], [0, seg.topY, segDimZ]]}
                     color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
                   />
                   <NativeLine name="dimension_line"
-                    points={[[-0.008, seg.bottomY, leftInnerZ], [0.008, seg.bottomY, leftInnerZ]]}
+                    points={[[-0.008, seg.bottomY, segDimZ], [0.008, seg.bottomY, segDimZ]]}
                     color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
                   />
                   <NativeLine name="dimension_line"
-                    points={[[-0.008, seg.topY, leftInnerZ], [0.008, seg.topY, leftInnerZ]]}
+                    points={[[-0.008, seg.topY, segDimZ], [0.008, seg.topY, segDimZ]]}
                     color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
                   />
                   {seg.upperModuleId && seg.currentHeightMm ? (
                     <MidwayEditableNumber
-                      position={[0, (seg.bottomY + seg.topY) / 2, leftInnerZ - mmToThreeUnits(60)]}
+                      position={[0, (seg.bottomY + seg.topY) / 2, segDimZ + mmToThreeUnits(60)]}
                       value={seg.heightMm}
                       color={textColor}
                       fontSize={largeFontSize}
@@ -999,7 +1059,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                     />
                   ) : (
                     <Text
-                      position={[0, (seg.bottomY + seg.topY) / 2, leftInnerZ - mmToThreeUnits(60)]}
+                      position={[0, (seg.bottomY + seg.topY) / 2, segDimZ + mmToThreeUnits(60)]}
                       fontSize={largeFontSize} color={textColor}
                       anchorX="center" anchorY="middle"
                       renderOrder={1000} depthTest={false}
@@ -2183,7 +2243,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           const leftInnerExtStartZ = leftExtStartZ;
           const effectiveH_rl2 = isSelectedSlotInDroppedZone ? (spaceInfo.height - dropHeightMm) : spaceInfo.height;
 
-          const segments_rl2: { bottomY: number; topY: number; heightMm: number; key: string }[] = [];
+          const segments_rl2: { bottomY: number; topY: number; heightMm: number; key: string; dimZ?: number; extStartZ?: number }[] = [];
           const innerGapSegments_rl2: { bottomY: number; topY: number; heightMm: number; key: string }[] = [];
 
           visibleFurniture.forEach((module, moduleIndex) => {
@@ -2198,6 +2258,9 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
             const mod = module as PlacedModule;
             const modCat_rl2 = getModuleCategory(mod);
             const moduleHeightMm = computeFurnitureHeightMm(mod, moduleData, spaceInfo, internalSpace);
+            const moduleFrontZ = computePlacedModuleFrontZ(mod, moduleData, spaceInfo);
+            const moduleDimZ = moduleFrontZ + mmToThreeUnits(150);
+            const moduleExtStartZ = moduleFrontZ + mmToThreeUnits(30);
 
             let cabinetBottomMm: number;
             let cabinetTopMm: number;
@@ -2233,7 +2296,9 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                     bottomY: mmToThreeUnits(sBottom),
                     topY: mmToThreeUnits(sTop),
                     heightMm: Math.round(hMm),
-                    key: `furniture-${moduleIndex}-sec${sIdx}`
+                    key: `furniture-${moduleIndex}-sec${sIdx}`,
+                    dimZ: moduleDimZ,
+                    extStartZ: moduleExtStartZ
                   });
                   cursorMm = sTop;
                 });
@@ -2246,7 +2311,9 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                 bottomY: mmToThreeUnits(cabinetBottomMm),
                 topY: mmToThreeUnits(displayTopMmRL2),
                 heightMm: Math.round(displayHeightMmRL2),
-                key: `furniture-${moduleIndex}`
+                key: `furniture-${moduleIndex}`,
+                dimZ: moduleDimZ,
+                extStartZ: moduleExtStartZ
               });
             }
 
@@ -2262,7 +2329,9 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                     bottomY: mmToThreeUnits(cabinetTopMm + stoneThickness),
                     topY: mmToThreeUnits(cabinetTopMm + stoneThickness + backLipH),
                     heightMm: backLipH,
-                    key: `stone-backlip-${moduleIndex}`
+                    key: `stone-backlip-${moduleIndex}`,
+                    dimZ: moduleDimZ,
+                    extStartZ: moduleExtStartZ
                   });
                 }
               }
@@ -2280,7 +2349,14 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
               const gapTopY = segments_rl2[i + 1].bottomY;
               const gapMm = Math.round((gapTopY - gapBottomY) / 0.01);
               if (gapMm > 0) {
-                allSegments_rl2.push({ bottomY: gapBottomY, topY: gapTopY, heightMm: gapMm, key: `gap-${i}` });
+                allSegments_rl2.push({
+                  bottomY: gapBottomY,
+                  topY: gapTopY,
+                  heightMm: gapMm,
+                  key: `gap-${i}`,
+                  dimZ: segments_rl2[i + 1].dimZ ?? segments_rl2[i].dimZ,
+                  extStartZ: segments_rl2[i + 1].extStartZ ?? segments_rl2[i].extStartZ
+                });
               }
             }
           }
@@ -2289,18 +2365,22 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
 
           return (
             <group>
-              {allSegments_rl2.map((seg) => (
+              {allSegments_rl2.map((seg) => {
+                const segDimZ = seg.dimZ !== undefined ? seg.dimZ : leftInnerZ;
+                const segExtStartZ = seg.extStartZ !== undefined ? seg.extStartZ : leftInnerExtStartZ;
+                return (
                 <group key={`rl2-sec-${seg.key}`}>
-                  <ExtLine points={[[0, seg.bottomY, leftInnerExtStartZ], [0, seg.bottomY, leftInnerZ]]} color={dimensionColor} />
-                  <ExtLine points={[[0, seg.topY, leftInnerExtStartZ], [0, seg.topY, leftInnerZ]]} color={dimensionColor} />
-                  <NativeLine name="dimension_line" points={[[0, seg.bottomY, leftInnerZ], [0, seg.topY, leftInnerZ]]} color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false} />
-                  <NativeLine name="dimension_line" points={[[-0.008, seg.bottomY, leftInnerZ], [0.008, seg.bottomY, leftInnerZ]]} color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false} />
-                  <NativeLine name="dimension_line" points={[[-0.008, seg.topY, leftInnerZ], [0.008, seg.topY, leftInnerZ]]} color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false} />
-                  <Text position={[0, (seg.bottomY + seg.topY) / 2, leftInnerZ - mmToThreeUnits(60)]} fontSize={largeFontSize} color={textColor} anchorX="center" anchorY="middle" renderOrder={1000} depthTest={false} rotation={[0, Math.PI / 2, Math.PI / 2]}>
+                  <ExtLine points={[[0, seg.bottomY, segExtStartZ], [0, seg.bottomY, segDimZ]]} color={dimensionColor} />
+                  <ExtLine points={[[0, seg.topY, segExtStartZ], [0, seg.topY, segDimZ]]} color={dimensionColor} />
+                  <NativeLine name="dimension_line" points={[[0, seg.bottomY, segDimZ], [0, seg.topY, segDimZ]]} color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false} />
+                  <NativeLine name="dimension_line" points={[[-0.008, seg.bottomY, segDimZ], [0.008, seg.bottomY, segDimZ]]} color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false} />
+                  <NativeLine name="dimension_line" points={[[-0.008, seg.topY, segDimZ], [0.008, seg.topY, segDimZ]]} color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false} />
+                  <Text position={[0, (seg.bottomY + seg.topY) / 2, segDimZ + mmToThreeUnits(60)]} fontSize={largeFontSize} color={textColor} anchorX="center" anchorY="middle" renderOrder={1000} depthTest={false} rotation={[0, Math.PI / 2, Math.PI / 2]}>
                     {seg.heightMm}
                   </Text>
                 </group>
-              ))}
+                );
+              })}
 
               {/* 도어 안쪽 갭 치수 (상판 윗면~도어 상단) — 우측뷰: 도어 치수선 바깥 */}
               {innerGapSegments_rl2.length > 0 && (() => {
