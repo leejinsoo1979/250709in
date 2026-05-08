@@ -55,10 +55,39 @@ function moduleIdToKoreanName(moduleId: string, p: PlacedModule): string {
   return slotLabel ? `${label} (${slotLabel})` : label;
 }
 
-function formatDimensions(p: PlacedModule): string {
-  const w = p.adjustedWidth ?? p.customWidth ?? p.freeWidth ?? p.moduleWidth;
-  const h = p.customHeight ?? p.freeHeight;
-  const d = p.customDepth ?? p.freeDepth;
+function formatDimensions(p: PlacedModule, space?: any): string {
+  // 너비: 가구 자체 우선 → moduleId 끝의 숫자 폴백
+  let w = p.adjustedWidth ?? p.customWidth ?? p.freeWidth ?? p.moduleWidth;
+  if (!w && p.moduleId) {
+    const m = p.moduleId.match(/-([\d.]+)$/);
+    if (m) w = parseFloat(m[1]);
+  }
+
+  // 높이: 가구 자체 → spaceInfo (커스텀이면 customHeight, 아니면 spaceInfo.height - 받침대 - 상단프레임)
+  let h = p.customHeight ?? p.freeHeight;
+  if (!h && space) {
+    const isUpper = p.moduleId?.includes('upper');
+    const isLower = p.moduleId?.includes('lower');
+    const spaceH = space.height || 0;
+    if (isUpper) {
+      // 상부장 — 임의값 없이 customHeight 우선이지만 없으면 표시 생략
+      h = undefined;
+    } else if (isLower) {
+      h = undefined;
+    } else {
+      // 키큰장: 공간 높이 - 상단프레임 - 받침대
+      const top = space.frameSize?.top ?? 30;
+      const base = (space.baseConfig?.type === 'floor' ? (space.baseConfig?.height ?? 65) : 0);
+      h = Math.max(0, spaceH - top - base);
+    }
+  }
+
+  // 깊이: 가구 자체 → spaceInfo.depth (보통 600 한계)
+  let d = p.customDepth ?? p.freeDepth;
+  if (!d && space) {
+    d = Math.min(space.depth || 600, 600);
+  }
+
   const parts: string[] = [];
   if (w) parts.push(`W${Math.round(w)}`);
   if (h) parts.push(`H${Math.round(h)}`);
@@ -118,6 +147,7 @@ export default function OrderDocumentModal({ order, onClose, onSendMessage }: Pr
   });
   const [loading, setLoading] = useState(true);
   const [placedModules, setPlacedModules] = useState<PlacedModule[]>([]);
+  const [spaceConfig, setSpaceConfig] = useState<any>(null);
   const [loadingModules, setLoadingModules] = useState(true);
   const printRootRef = useRef<HTMLDivElement>(null);
 
@@ -131,6 +161,7 @@ export default function OrderDocumentModal({ order, onClose, onSendMessage }: Pr
         if (cancelled) return;
         const list = (designFile?.furniture?.placedModules as PlacedModule[]) || [];
         setPlacedModules(list);
+        setSpaceConfig(designFile?.spaceConfig || null);
       } catch (e) {
         console.error('[발주서 가구 로드 실패]', e);
       } finally {
@@ -321,7 +352,7 @@ export default function OrderDocumentModal({ order, onClose, onSendMessage }: Pr
                           </div>
                         </td>
                         <td style={{ ...tdCenter, fontFamily: 'ui-monospace, monospace', fontSize: 11 }}>
-                          {formatDimensions(p) || '-'}
+                          {formatDimensions(p, spaceConfig) || '-'}
                         </td>
                         <td style={tdCenter}>{p.hasDoor ? '있음' : '없음'}</td>
                         <td className="order-doc-no-print" style={tdCenter}>

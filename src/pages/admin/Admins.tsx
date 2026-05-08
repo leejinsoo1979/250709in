@@ -58,6 +58,9 @@ const Admins = () => {
   const [selectedPermissions, setSelectedPermissions] = useState<string[]>(
     PERMISSIONS.map(p => p.id)
   );
+  // 관리자 추가 모달
+  const [addAdminModal, setAddAdminModal] = useState(false);
+  const [addAdminSearch, setAddAdminSearch] = useState('');
 
   const currentUserIsSuperAdmin = isSuperAdmin(user?.email);
 
@@ -272,6 +275,21 @@ const Admins = () => {
             슈퍼 관리자 {stats.superAdmins}명 · 관리자 {stats.admins}명
           </p>
         </div>
+        <button
+          onClick={() => { setAddAdminSearch(''); setAddAdminModal(true); }}
+          style={{
+            padding: '10px 18px',
+            borderRadius: 8,
+            border: 'none',
+            background: 'var(--theme-primary, #3b82f6)',
+            color: '#fff',
+            fontSize: 14,
+            fontWeight: 600,
+            cursor: 'pointer',
+          }}
+        >
+          + 관리자 추가
+        </button>
       </div>
 
       {/* 검색 및 필터 */}

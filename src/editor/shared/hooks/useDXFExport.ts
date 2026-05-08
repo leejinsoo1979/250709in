@@ -1,20 +1,40 @@
 import { useCallback, useState } from 'react';
 import {
   generateDXFFromScene,
-  generateCombinedDXFFromScene,
   downloadDXFFromScene,
   generateDXFFilenameFromScene,
   generateCombinedDXFFilenameFromScene
 } from '../utils/dxfFromScene';
+import {
+  buildCombinedDxfFromDrawingData,
+  generateDxfDrawingData,
+  type CombinedDxfDrawingData
+} from '../utils/dxfDataRenderer';
 import type { SpaceInfo } from '@/store/core/spaceConfigStore';
 import type { PlacedModule } from '../furniture/types';
 import { exportWithPersistence } from '@/services/exportService';
 import { getCurrentVersionId } from '@/services/designs.repo';
 import { auth } from '@/firebase/config';
 import { sceneHolder } from '../viewer3d/sceneHolder';
+import { useUIStore } from '@/store/uiStore';
+import { useFurnitureStore } from '@/store/core/furnitureStore';
 
 // 도면 타입 정의
 export type DrawingType = 'front' | 'plan' | 'side' | 'sideLeft' | 'door';
+
+const waitForSceneUpdate = async (delayMs = 500): Promise<void> => {
+  if (typeof requestAnimationFrame === 'function') {
+    await new Promise<void>(resolve => {
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => resolve());
+      });
+    });
+  }
+
+  if (delayMs > 0) {
+    await new Promise<void>(resolve => window.setTimeout(resolve, delayMs));
+  }
+};
 
 /**
  * DXF 내보내기 기능을 제공하는 커스텀 훅
@@ -178,6 +198,18 @@ export const useDXFExport = () => {
     placedModules: PlacedModule[],
     drawingTypes: DrawingType[]
   ) => {
+    const uiStore = useUIStore.getState();
+    const furnitureStore = useFurnitureStore.getState();
+    const originalUI = {
+      viewMode: uiStore.viewMode,
+      view2DDirection: uiStore.view2DDirection,
+      renderMode: uiStore.renderMode,
+      showDimensions: uiStore.showDimensions,
+      showDimensionsText: uiStore.showDimensionsText,
+      showFurniture: uiStore.showFurniture
+    };
+    const originalPlacedModules = furnitureStore.placedModules;
+
     try {
       setIsExporting(true);
       console.log(`🔧 통합 DXF 내보내기 시작 (씬 기반)...`);
@@ -189,7 +221,67 @@ export const useDXFExport = () => {
         throw new Error('Three.js 씬을 찾을 수 없습니다. 에디터가 로드될 때까지 기다려주세요.');
       }
 
-      const dxfContent = generateCombinedDXFFromScene(spaceInfo, drawingTypes, placedModules);
+      const drawingData: CombinedDxfDrawingData[] = [];
+
+      const switchSceneView = async (direction: 'front' | 'left' | 'top') => {
+        useUIStore.setState({
+          viewMode: '2D',
+          view2DDirection: direction,
+          renderMode: 'wireframe',
+          showDimensions: true,
+          showDimensionsText: true,
+          showFurniture: true
+        });
+        await waitForSceneUpdate(700);
+      };
+
+      if (drawingTypes.includes('front')) {
+        useFurnitureStore.setState({ placedModules: originalPlacedModules });
+        await switchSceneView('front');
+        drawingData.push({
+          title: '입면도',
+          data: generateDxfDrawingData(spaceInfo, placedModules, 'front')
+        });
+      }
+
+      if (drawingTypes.includes('door')) {
+        useFurnitureStore.setState({ placedModules: originalPlacedModules });
+        await switchSceneView('front');
+        drawingData.push({
+          title: '도어도면',
+          data: generateDxfDrawingData(spaceInfo, placedModules, 'front', 'all', false, undefined, ['DOOR', 'DOOR_DIMENSIONS'])
+        });
+      }
+
+      if (drawingTypes.includes('plan')) {
+        useFurnitureStore.setState({ placedModules: originalPlacedModules });
+        await switchSceneView('top');
+        drawingData.push({
+          title: '평면도',
+          data: generateDxfDrawingData(spaceInfo, placedModules, 'top')
+        });
+      }
+
+      if (drawingTypes.includes('side') || drawingTypes.includes('sideLeft')) {
+        const sideModules = [...placedModules].sort((a, b) => (a.position?.x ?? 0) - (b.position?.x ?? 0));
+
+        for (const [index, module] of sideModules.entries()) {
+          useFurnitureStore.setState({ placedModules: [module] });
+          await switchSceneView('left');
+
+          const sideData = generateDxfDrawingData(spaceInfo, [module], 'left');
+          drawingData.push({
+            title: `측면도 ${index + 1}`,
+            data: {
+              ...sideData,
+              lines: sideData.lines.filter(line => line.layer !== 'DOOR' && line.layer !== 'DOOR_DIMENSIONS'),
+              texts: sideData.texts.filter(text => text.layer !== 'DOOR' && text.layer !== 'DOOR_DIMENSIONS')
+            }
+          });
+        }
+      }
+
+      const dxfContent = buildCombinedDxfFromDrawingData(spaceInfo, drawingData);
       if (!dxfContent) {
         throw new Error('통합 DXF 생성에 실패했습니다.');
       }
@@ -224,6 +316,8 @@ export const useDXFExport = () => {
         message: `통합 DXF 파일 생성에 실패했습니다.`
       };
     } finally {
+      useFurnitureStore.setState({ placedModules: originalPlacedModules });
+      useUIStore.setState(originalUI);
       setIsExporting(false);
     }
   }, []);
