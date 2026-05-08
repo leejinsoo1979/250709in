@@ -144,17 +144,26 @@ export async function listDesignFiles(
     }
     
     // Fallback 2: Legacy path (designFiles collection)
-    // 본인 디자인만 조회: userId == 현재 사용자 + projectId 일치
-    // (예전 버그: userId 필터 없어서 다른 계정 디자인이 노출되는 경우 발생)
-    console.log('📂 Trying legacy path: designFiles collection (filter by userId+projectId)');
+    // projectId 로 조회 후 클라이언트에서 userId 필터링 (복합 인덱스 불필요)
+    console.log('📂 Trying legacy path: designFiles collection');
     const legacyQuery = query(
       collection(db, LEGACY_COLLECTIONS.designFiles),
-      where('userId', '==', userId),
       where('projectId', '==', projectId),
       orderBy('updatedAt', 'desc')
     );
 
-    const legacySnapshot = await getDocs(legacyQuery);
+    const legacySnapshotRaw = await getDocs(legacyQuery);
+    // 클라이언트 측 userId 필터 (다른 사용자 디자인 노출 차단)
+    const legacySnapshot = {
+      empty: legacySnapshotRaw.empty,
+      size: legacySnapshotRaw.size,
+      docs: legacySnapshotRaw.docs.filter(d => {
+        const u = (d.data() as any).userId;
+        // userId 필드가 없는 레거시 문서는 통과 (기존 데이터 호환), 있으면 본인 것만
+        return !u || u === userId;
+      }),
+      forEach(cb: (doc: any) => void) { this.docs.forEach(cb); },
+    };
     console.log('📂 Legacy snapshot empty?', legacySnapshot.empty, 'size:', legacySnapshot.size);
     
     legacySnapshot.forEach((doc) => {
