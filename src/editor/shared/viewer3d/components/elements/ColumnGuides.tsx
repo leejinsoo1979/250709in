@@ -434,9 +434,12 @@ const ColumnGuides: React.FC<ColumnGuidesProps> = ({ viewMode: viewModeProp }) =
   // false: 기존 동작 (공간 내경 뒷쪽)
   const SHRINK_GUIDES_TO_FURNITURE_BACK = true;
   const BACK_GUIDE_GAP_MM = 10; // 가구 뒷면과 가이드 뒷쪽 경계 사이 여유
-  const backZ = SHRINK_GUIDES_TO_FURNITURE_BACK
+  // 공간 그라데이션 메쉬 30mm 뒤로 이동에 맞춰 슬롯 가이드/치수도 동일하게 보정
+  const GUIDE_Z_BACK_SHIFT_MM = 30;
+  const backZ = (SHRINK_GUIDES_TO_FURNITURE_BACK
     ? (furnitureZOffset - mmToThreeUnits(furnitureDepthMm) / 2 - mmToThreeUnits(BACK_GUIDE_GAP_MM)) // 가구 뒷면 - 10mm
-    : -mmToThreeUnits(internalSpace.depth / 2); // 내경의 뒤쪽 좌표
+    : -mmToThreeUnits(internalSpace.depth / 2)) // 내경의 뒤쪽 좌표
+    - mmToThreeUnits(GUIDE_Z_BACK_SHIFT_MM);
 
   // 바닥 슬롯 메쉬와 동일한 앞쪽 좌표
   const frontZ = frameEndZ;

@@ -1347,13 +1347,13 @@ const Room: React.FC<RoomProps> = ({
   // false: 공간 전체 깊이 기준
   const SHRINK_MESH_TO_FURNITURE_BACK = true;
   const BACK_MESH_GAP = mmToThreeUnits(10);
-  // 사용자 보고: 메쉬가 Z축 앞으로 30mm 정도 튀어나와 보임 → 30mm 뒤로 보정
+  // 메쉬 전체를 Z축 30mm 뒤로 이동 (깊이는 그대로 유지)
   const MESH_Z_BACK_SHIFT = mmToThreeUnits(30);
   const meshDepth = SHRINK_MESH_TO_FURNITURE_BACK
     ? (furnitureDepth + BACK_MESH_GAP)
     : panelDepth;
   const extendedPanelDepth = meshDepth + extensionDepth;
-  // 뒷쪽 경계: 기존 위치에서 추가로 30mm 뒤로만 이동
+  // 뒷쪽 경계: 기존 위치에서 30mm 뒤로 이동 (메쉬 통째로 30mm 뒤로)
   const extendedZOffset = (SHRINK_MESH_TO_FURNITURE_BACK
     ? (furnitureZOffset - furnitureDepth / 2 - BACK_MESH_GAP)
     : zOffset) - MESH_Z_BACK_SHIFT;
