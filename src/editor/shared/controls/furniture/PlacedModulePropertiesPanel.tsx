@@ -3130,14 +3130,14 @@ const PlacedModulePropertiesPanel: React.FC = () => {
               if (!isNaN(v) && v > 0) return v;
               return currentPlacedModule.freeWidth || currentPlacedModule.customWidth || moduleData.dimensions.width;
             })();
-            // 도어 갭: 패널 추출 로직(panelExtractor)과 일치 — 측면/상하 모두 2mm
-            const DOOR_GAP = 2;
-            // 듀얼 가구는 도어 2장 + 가운데 갭 → 실제 도어 한 장 너비 = (몸통 - 갭*3) / 2
-            // 싱글 가구는 도어 1장 → 너비 = 몸통 - 갭*2
+            // 실제 3D 렌더링과 동일한 공식 (DoorModule.tsx 의 doorGap=3)
+            // 슬롯(도어 1장이 차지하는 너비) - 3mm = 좌우 1.5mm씩 안쪽 갭
             const isDualSlot = currentPlacedModule.isDualSlot || currentPlacedModule.moduleId?.startsWith('dual-');
+            // 듀얼: 도어 2장 → 슬롯 1개 너비 = 몸통/2 → 도어 1장 너비 = (몸통/2) - 3
+            // 싱글: 도어 1장 → 도어 너비 = 몸통 - 3
             const doorW = isDualSlot
-              ? Math.max(0, Math.floor((bodyWidth - DOOR_GAP * 3) / 2))
-              : Math.max(0, bodyWidth - DOOR_GAP * 2);
+              ? Math.max(0, Math.round(bodyWidth / 2) - 3)
+              : Math.max(0, bodyWidth - 3);
             // 도어 높이: 공간 높이 - 도어 상갭 - 도어 하갭 (전체 가구 높이 기준)
             const spaceH = spaceInfo.height || 0;
             const doorH = Math.max(0, spaceH - (doorTopGap || 0) - (doorBottomGap || 0));
