@@ -49,7 +49,8 @@ const FurniturePlacementPlane: React.FC<FurniturePlacementPlaneProps> = ({ space
   
   // 기준면을 내경 공간 중앙에 정확히 배치 (Z=0이 공간 앞면, -depth가 뒷면)
   // 앞쪽에서 20mm 줄였으므로 중심을 10mm 뒤로 이동
-  const planeZ = mmToThreeUnits(-10);
+  // + 공간 그라데이션 메쉬와 동일하게 30mm 추가 뒤로 이동 (총 -40mm)
+  const planeZ = mmToThreeUnits(-40);
   
   // placedModules 중 도어가 장착된 모듈이 하나라도 있으면 바닥 슬롯 매쉬를 숨김
   const hasAnyDoor = placedModules.some(module => module.hasDoor);
