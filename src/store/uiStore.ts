@@ -414,8 +414,8 @@ const getAppTheme = (): 'dark' | 'light' => {
   return 'light';
 };
 
-// localStorage 마이그레이션: shadowEnabled 캐시 + 과거 누적된 openTabs/activeTabId 제거
-// (탭은 더 이상 영속화하지 않음 — CAD처럼 사용자가 연 디자인만 표시)
+// localStorage 마이그레이션: shadowEnabled 캐시 제거
+// (탭은 다시 영속화 — 새로고침해도 열어둔 탭 유지, 다른 계정 전환 시는 AuthProvider 가 초기화)
 try {
   const raw = localStorage.getItem('ui-store');
   if (raw) {
@@ -424,14 +424,6 @@ try {
     if (parsed?.state) {
       if ('shadowEnabled' in parsed.state) {
         delete parsed.state.shadowEnabled;
-        mutated = true;
-      }
-      if ('openTabs' in parsed.state) {
-        delete parsed.state.openTabs;
-        mutated = true;
-      }
-      if ('activeTabId' in parsed.state) {
-        delete parsed.state.activeTabId;
         mutated = true;
       }
     }
@@ -975,7 +967,9 @@ export const useUIStore = create<UIState>()(
         sunAngle: state.sunAngle,
         edgeOutlineEnabled: state.edgeOutlineEnabled,
         dashboardLayout: state.dashboardLayout,
-        // openTabs/activeTabId는 영속화하지 않음 (CAD처럼 사용자가 명시적으로 연 디자인만 탭으로 표시)
+        // openTabs/activeTabId 영속화 (사용자별 격리는 AuthProvider 의 사용자 변경 감지에서 초기화)
+        openTabs: state.openTabs,
+        activeTabId: state.activeTabId,
         // 뷰 토글 상태 유지
         showDimensions: state.showDimensions,
         showDimensionsText: state.showDimensionsText,
