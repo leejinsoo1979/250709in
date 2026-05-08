@@ -148,7 +148,18 @@ export const createProject = async (projectData: CreateProjectData): Promise<{ i
     return { id: docRef.id, error: null };
   } catch (error) {
     console.error('프로젝트 생성 에러:', error);
-    return { id: null, error: '프로젝트 생성 중 오류가 발생했습니다.' };
+    const e = error as { code?: string; message?: string };
+    const code = e?.code || '';
+    const msg = e?.message || String(error);
+    let userMessage = `프로젝트 생성 중 오류가 발생했습니다. (${msg})`;
+    if (code === 'permission-denied' || /permission|insufficient/i.test(msg)) {
+      userMessage =
+        '프로젝트 생성 권한이 없습니다. 기업회원 승인 상태를 확인 후 다시 로그인해주세요. ' +
+        `(${code || 'permission-denied'})`;
+    } else if (code === 'unauthenticated' || /unauthenticated/i.test(msg)) {
+      userMessage = '로그인이 만료되었습니다. 다시 로그인해주세요.';
+    }
+    return { id: null, error: userMessage };
   }
 };
 
