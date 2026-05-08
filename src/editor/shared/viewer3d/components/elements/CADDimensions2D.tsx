@@ -1354,13 +1354,14 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           );
         })()}
 
-        {/* 우측 영역 받침대 치수 — 좌측에 이미 65 표시되므로 제거.
-            대신 사용자가 걸래받이 갭(baseFrameGap)에 값을 입력하면 그 갭을 우측에 표시 */}
+        {/* 우측 영역 — 걸레받이 높이 표시
+            좌측 65 = 조절발(받침대 본체) 높이 / 우측 = 걸레받이 = baseFrameGap 사용자 입력값
+            사용자가 baseFrameGap 입력 안 하면 표시 안함 */}
         {(() => {
           const baseGapMm = (selectedMod?.baseFrameGap ?? 0);
           if (!baseGapMm || baseGapMm <= 0) return null;
           if (selectedModCategory === 'lower' || selectedModCategory === 'upper') return null;
-          // 갭은 받침대 하단 라인(바닥에서 시작) ~ 받침대 시작 사이
+          // 걸레받이 = 바닥마감재 상단 ~ baseGapMm 만큼 위
           const gapStartY = floorFinishY;
           const gapEndY = floorFinishY + mmToThreeUnits(baseGapMm);
           return (
@@ -2477,10 +2478,10 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
         {/* 바닥마감재 치수 (별도 위치, 우측뷰) — 하부장은 왼쪽 2단에서 표시, 상부장은 받침대 없으므로 제외 */}
         {floorFinishHeightMm > 0 && !isFloating && selectedModCategory !== 'lower' && selectedModCategory !== 'upper' && (
         <group>
-            {/* 보조 가이드 연장선 - 바닥 */}
-            <ExtLine points={[[0, 0, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750) - mmToThreeUnits(720)], [0, 0, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750) - mmToThreeUnits(360)]]} color={dimensionColor} />
-            {/* 보조 가이드 연장선 - 마감재 상단 */}
-            <ExtLine points={[[0, floorFinishY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750) - mmToThreeUnits(720)], [0, floorFinishY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750) - mmToThreeUnits(360)]]} color={dimensionColor} />
+            {/* 보조 가이드 연장선 - 바닥: 마감재 끝(spaceDepth/2) 부터 치수선까지 */}
+            <ExtLine points={[[0, 0, spaceDepth/2], [0, 0, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750) - mmToThreeUnits(360)]]} color={dimensionColor} />
+            {/* 보조 가이드 연장선 - 마감재 상단: 마감재 끝(spaceDepth/2) 부터 치수선까지 */}
+            <ExtLine points={[[0, floorFinishY, spaceDepth/2], [0, floorFinishY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750) - mmToThreeUnits(360)]]} color={dimensionColor} />
             {/* 메인 치수선 (바닥 ~ 마감재 상단) */}
             <NativeLine name="dimension_line"
               points={[
