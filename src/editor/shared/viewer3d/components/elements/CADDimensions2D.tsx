@@ -1354,48 +1354,52 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           );
         })()}
 
-        {/* 받침대 높이 (마감재 상단 ~ 받침대 상단, 좌측뷰) — 하부장은 왼쪽 2단에서 표시, 상부장은 받침대 없으므로 제외 */}
-        {baseFrameHeightMm > 0 && selectedModCategory !== 'lower' && selectedModCategory !== 'upper' && (
-        <group>
-            {/* 보조 가이드 연장선 - 시작 (마감재 상단 or 바닥) — 240mm */}
-            <ExtLine points={[[0, floorFinishY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750) - mmToThreeUnits(240)], [0, floorFinishY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750)]]} color={dimensionColor} />
-            {/* 보조 가이드 연장선 - 받침대 상단 — 240mm */}
-            <ExtLine points={[[0, furnitureBaseY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750) - mmToThreeUnits(240)], [0, furnitureBaseY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750)]]} color={dimensionColor} />
-            {/* 메인 치수선 (마감재 상단 ~ 받침대 상단) */}
-            <NativeLine name="dimension_line"
-              points={[
-                [0, floorFinishY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750)],
-                [0, furnitureBaseY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750)]
-              ]}
-              color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
-            />
-            {/* 티크 마크 - 시작 */}
-            <NativeLine name="dimension_line"
-              points={[
-                [-0.008, floorFinishY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750)],
-                [0.008, floorFinishY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750)]
-              ]}
-              color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
-            />
-            {/* 티크 마크 - 받침대 상단 */}
-            <NativeLine name="dimension_line"
-              points={[
-                [-0.008, furnitureBaseY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750)],
-                [0.008, furnitureBaseY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750)]
-              ]}
-              color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
-            />
-            <Text
-              position={[0, floorFinishY + (furnitureBaseY - floorFinishY) / 2, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750) + mmToThreeUnits(60)]}
-              fontSize={largeFontSize} color={textColor}
-              anchorX="center" anchorY="middle"
-              renderOrder={100001} depthTest={false}
-              rotation={[0, -Math.PI / 2, Math.PI / 2]}
-            >
-              {baseFrameDisplayMm}
-            </Text>
-        </group>
-        )}
+        {/* 우측 영역 받침대 치수 — 좌측에 이미 65 표시되므로 제거.
+            대신 사용자가 걸래받이 갭(baseFrameGap)에 값을 입력하면 그 갭을 우측에 표시 */}
+        {(() => {
+          const baseGapMm = (selectedMod?.baseFrameGap ?? 0);
+          if (!baseGapMm || baseGapMm <= 0) return null;
+          if (selectedModCategory === 'lower' || selectedModCategory === 'upper') return null;
+          // 갭은 받침대 하단 라인(바닥에서 시작) ~ 받침대 시작 사이
+          const gapStartY = floorFinishY;
+          const gapEndY = floorFinishY + mmToThreeUnits(baseGapMm);
+          return (
+            <group>
+              <ExtLine points={[[0, gapStartY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750) - mmToThreeUnits(240)], [0, gapStartY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750)]]} color={dimensionColor} />
+              <ExtLine points={[[0, gapEndY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750) - mmToThreeUnits(240)], [0, gapEndY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750)]]} color={dimensionColor} />
+              <NativeLine name="dimension_line"
+                points={[
+                  [0, gapStartY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750)],
+                  [0, gapEndY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750)]
+                ]}
+                color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
+              />
+              <NativeLine name="dimension_line"
+                points={[
+                  [-0.008, gapStartY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750)],
+                  [0.008, gapStartY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750)]
+                ]}
+                color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
+              />
+              <NativeLine name="dimension_line"
+                points={[
+                  [-0.008, gapEndY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750)],
+                  [0.008, gapEndY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750)]
+                ]}
+                color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
+              />
+              <Text
+                position={[0, gapStartY + (gapEndY - gapStartY) / 2, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750) + mmToThreeUnits(60)]}
+                fontSize={largeFontSize} color={textColor}
+                anchorX="center" anchorY="middle"
+                renderOrder={100001} depthTest={false}
+                rotation={[0, -Math.PI / 2, Math.PI / 2]}
+              >
+                {baseGapMm}
+              </Text>
+            </group>
+          );
+        })()}
 
 
         {/* 하부장/상부장: 바닥 ~ 가구 상단 합산 치수 (바닥마감재 + 걸래받이 + 가구높이) */}
