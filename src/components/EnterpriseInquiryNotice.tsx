@@ -11,6 +11,7 @@
  */
 
 import { useEffect, useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   collection,
   query,
@@ -37,6 +38,7 @@ interface InquiryDoc {
 
 export default function EnterpriseInquiryNotice() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [inquiry, setInquiry] = useState<InquiryDoc | null>(null);
   const [open, setOpen] = useState(false);
   // 같은 세션에서 동일 inquiry+status 조합은 한 번만 표시
@@ -89,6 +91,7 @@ export default function EnterpriseInquiryNotice() {
       setOpen(false);
       return;
     }
+    const wasApproved = inquiry.status === 'approved';
     setOpen(false);
     try {
       await updateDoc(doc(db, 'enterprise_inquiries', inquiry.id), {
@@ -96,6 +99,10 @@ export default function EnterpriseInquiryNotice() {
       });
     } catch (err) {
       console.warn('noticeShownAt 업데이트 실패:', err);
+    }
+    // 승인 팝업 확인 시 대시보드로 이동
+    if (wasApproved) {
+      navigate('/dashboard');
     }
   };
 
