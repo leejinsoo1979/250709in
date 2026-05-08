@@ -90,17 +90,64 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
               });
               console.log('✅ users 컬렉션에 사용자 정보 동기화 (실제 가입일 사용)');
             } else {
-              // 기존 사용자 - lastLoginAt만 업데이트
+              // 기존 사용자 - lastLoginAt만 업데이트 (displayName/photoURL은 빈 값으로 덮어쓰지 않음)
               const { updateDoc } = await import('firebase/firestore');
-              await updateDoc(userRef, {
-                lastLoginAt: serverTimestamp(),
-                displayName: user.displayName || '',
-                photoURL: user.photoURL || ''
-              });
+              const lastLoginPatch: Record<string, unknown> = { lastLoginAt: serverTimestamp() };
+              if (user.displayName) lastLoginPatch.displayName = user.displayName;
+              if (user.photoURL) lastLoginPatch.photoURL = user.photoURL;
+              await updateDoc(userRef, lastLoginPatch);
               console.log('✅ users 컬렉션 lastLoginAt 업데이트');
             }
           } catch (err) {
             console.error('❌ users 컬렉션 저장 실패:', err);
+          }
+
+          // 🔐 기업회원 plan 자동 동기화 (모든 로그인 경로 공통)
+          // enterprise_inquiries 의 최신 status='approved' 인 경우 → users.plan='enterprise' 강제 set
+          // 어떤 이유로 승인 시 users 문서 업데이트가 누락됐을 때도 다음 로그인 시점에 자동 복구됨
+          try {
+            const {
+              doc: docRef,
+              getDoc: getDocFn,
+              setDoc: setDocFn,
+              collection: collFn,
+              query: qFn,
+              where: whFn,
+              getDocs: getDocsFn
+            } = await import('firebase/firestore');
+            const { db } = await import('@/firebase/config');
+
+            const inqQ = qFn(
+              collFn(db, 'enterprise_inquiries'),
+              whFn('uid', '==', user.uid)
+            );
+            const inqSnap = await getDocsFn(inqQ);
+            const valid = inqSnap.docs.filter(d => (d.data().status as string) !== 'superseded');
+            if (valid.length > 0) {
+              const sorted = valid.slice().sort((a, b) => {
+                const ta = (a.data().createdAt?.toMillis?.() ?? 0) as number;
+                const tb = (b.data().createdAt?.toMillis?.() ?? 0) as number;
+                return tb - ta;
+              });
+              const latest = sorted[0].data() as { status?: string; companyName?: string };
+              const truePlan: 'enterprise' | 'free' = latest.status === 'approved' ? 'enterprise' : 'free';
+
+              // users 문서 현재 plan 확인 후 다르면 동기화
+              const userRef2 = docRef(db, 'users', user.uid);
+              const userDoc2 = await getDocFn(userRef2);
+              const data = userDoc2.exists() ? (userDoc2.data() as { plan?: string; displayName?: string; role?: string }) : {};
+              if (data.role !== 'superadmin' && data.plan !== truePlan) {
+                const planPatch: Record<string, unknown> = { plan: truePlan };
+                // 기업회원 승격 시 회사명을 displayName에도 동기화
+                if (truePlan === 'enterprise' && latest.companyName && data.displayName !== latest.companyName) {
+                  planPatch.displayName = latest.companyName;
+                }
+                await setDocFn(userRef2, planPatch, { merge: true });
+                console.log('✅ users.plan 자동 동기화:', data.plan, '→', truePlan);
+              }
+            }
+          } catch (err) {
+            console.warn('⚠️ enterprise plan 자동 동기화 실패(무시):', err);
           }
 
           // 로그인 기록 저장

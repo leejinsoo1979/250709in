@@ -276,6 +276,33 @@ exports.adminProcessEnterpriseInquiry = onCall(
       }
     });
 
+    // 트랜잭션 외부: 안전망 — users.plan 재확인 후 누락 시 강제 set
+    // (트랜잭션 충돌/재시도 등 어떤 이유로 plan 동기화가 안 됐을 때 복구)
+    try {
+      const inquirySnap2 = await inquiryRef.get();
+      const targetUidFinal = inquirySnap2.data()?.uid;
+      if (targetUidFinal) {
+        const userRefFinal = db.doc(`users/${targetUidFinal}`);
+        const userSnapFinal = await userRefFinal.get();
+        const isTargetSuperFinal = userSnapFinal.exists && userSnapFinal.data()?.role === 'superadmin';
+        if (!isTargetSuperFinal) {
+          const currentPlan = userSnapFinal.exists ? userSnapFinal.data()?.plan : undefined;
+          if (currentPlan !== mapped.plan) {
+            await userRefFinal.set(
+              {
+                plan: mapped.plan,
+                planUpdatedAt: admin.firestore.FieldValue.serverTimestamp(),
+              },
+              { merge: true }
+            );
+            console.log(`🛡️ users.plan 안전망 적용: ${currentPlan} → ${mapped.plan} (uid=${targetUidFinal})`);
+          }
+        }
+      }
+    } catch (e) {
+      console.warn('users.plan 안전망 동기화 실패:', e?.message);
+    }
+
     // 트랜잭션 외부: Firebase Auth displayName도 갱신 (Auth는 트랜잭션 안 됨)
     if (mapped.plan === 'enterprise') {
       try {
@@ -363,6 +390,201 @@ exports.adminSyncEnterprisePlans = onCall(
     }
 
     return { synced, details };
+  }
+);
+
+// ─────────────────────────────────────────────
+// 발주(orders) Cloud Functions
+// ─────────────────────────────────────────────
+
+/**
+ * 발주 생성 — 기업회원이 공장(파트너)에게 발주
+ *
+ * 입력: {
+ *   factoryId: string,         // 공장 uid
+ *   designId: string,
+ *   designName: string,
+ *   projectId: string,
+ *   projectName?: string,
+ *   formData: { quantity, dueDate, deliveryAddress, installSchedule, notes }
+ *   thumbnailUrl?: string,
+ * }
+ * 출력: { ok: boolean, orderId: string }
+ *
+ * 동작:
+ *  - 발주자 plan === 'enterprise' 검증
+ *  - 공장(factoryId) users.isPartner === true 검증
+ *  - orders/{id} 문서 생성 (status: 'pending')
+ *  - 공장에게 알림 (notifications)
+ *  - 마스터 텔레그램 알림
+ */
+exports.createOrder = onCall(
+  { secrets: [TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID], region: 'asia-northeast3' },
+  async (request) => {
+    const callerUid = request.auth?.uid;
+    if (!callerUid) throw new HttpsError('unauthenticated', '로그인이 필요합니다.');
+
+    const data = request.data || {};
+    const factoryId = String(data.factoryId || '').trim();
+    const designId = String(data.designId || '').trim();
+    const designName = String(data.designName || '').trim();
+    if (!factoryId || !designId) {
+      throw new HttpsError('invalid-argument', '공장 또는 디자인 정보가 없습니다.');
+    }
+
+    const db = admin.firestore();
+
+    // 발주자 권한 검증 (기업회원만)
+    const ordererSnap = await db.doc(`users/${callerUid}`).get();
+    const ordererData = ordererSnap.exists ? ordererSnap.data() : {};
+    const isOrdererAllowed = ordererData.plan === 'enterprise' || ordererData.role === 'superadmin' ||
+      (await db.doc(`admins/${callerUid}`).get()).exists;
+    if (!isOrdererAllowed) {
+      throw new HttpsError('permission-denied', '기업회원만 발주할 수 있습니다.');
+    }
+
+    // 공장 검증
+    const factorySnap = await db.doc(`users/${factoryId}`).get();
+    const factoryData = factorySnap.exists ? factorySnap.data() : {};
+    if (!factoryData.isPartner) {
+      throw new HttpsError('failed-precondition', '선택한 회사는 등록된 공장이 아닙니다.');
+    }
+
+    // orders 문서 생성
+    const orderRef = await db.collection('orders').add({
+      ordererId: callerUid,
+      ordererName: ordererData.displayName || '',
+      ordererEmail: ordererData.email || '',
+      factoryId,
+      factoryName: factoryData.displayName || '',
+      designId,
+      designName,
+      projectId: data.projectId || '',
+      projectName: data.projectName || '',
+      thumbnailUrl: data.thumbnailUrl || '',
+      formData: data.formData || {},
+      status: 'pending',
+      createdAt: admin.firestore.FieldValue.serverTimestamp(),
+      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+    });
+
+    // 공장에게 알림
+    try {
+      await db.collection('notifications').add({
+        userId: factoryId,
+        type: 'order',
+        title: '새 발주 요청',
+        message: `${ordererData.displayName || '발주자'} 님으로부터 ${designName} 발주 요청이 접수되었습니다.`,
+        link: `/factory/orders/${orderRef.id}`,
+        relatedId: orderRef.id,
+        isRead: false,
+        createdAt: admin.firestore.FieldValue.serverTimestamp(),
+      });
+    } catch (e) {
+      console.warn('공장 알림 생성 실패:', e?.message);
+    }
+
+    // 마스터 텔레그램 알림
+    try {
+      const token = TELEGRAM_BOT_TOKEN.value();
+      const chatId = String(TELEGRAM_CHAT_ID.value() || '');
+      if (token && chatId) {
+        const time = new Date().toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' });
+        const fd = data.formData || {};
+        const text = [
+          '📦 새 발주 요청',
+          '',
+          `📌 발주자: ${ordererData.displayName || ordererData.email || ''}`,
+          `🏭 공장: ${factoryData.displayName || factoryData.email || ''}`,
+          `🎨 디자인: ${designName}`,
+          fd.quantity ? `📦 수량: ${fd.quantity}` : '',
+          fd.dueDate ? `📅 납기: ${fd.dueDate}` : '',
+          fd.deliveryAddress ? `📍 배송지: ${fd.deliveryAddress}` : '',
+          `🕐 ${time}`,
+        ].filter(Boolean).join('\n');
+        await tgApi(token, 'sendMessage', { chat_id: chatId, text }).catch(() => {});
+      }
+    } catch (e) {
+      console.warn('텔레그램 알림 실패:', e?.message);
+    }
+
+    return { ok: true, orderId: orderRef.id };
+  }
+);
+
+/**
+ * 발주 처리 — 공장이 수락/거절/진행/완료
+ *
+ * 입력: { orderId, action: 'accept' | 'reject' | 'in_progress' | 'complete', reason?: string }
+ * 출력: { ok: boolean, status: string }
+ */
+exports.processOrder = onCall(
+  { region: 'asia-northeast3' },
+  async (request) => {
+    const callerUid = request.auth?.uid;
+    if (!callerUid) throw new HttpsError('unauthenticated', '로그인이 필요합니다.');
+
+    const orderId = String(request.data?.orderId || '').trim();
+    const action = String(request.data?.action || '').trim();
+    const reason = String(request.data?.reason || '').trim();
+    if (!orderId || !action) {
+      throw new HttpsError('invalid-argument', 'orderId/action 필요');
+    }
+
+    const ACTION_MAP = {
+      accept: 'accepted',
+      reject: 'rejected',
+      in_progress: 'in_progress',
+      complete: 'completed',
+    };
+    const newStatus = ACTION_MAP[action];
+    if (!newStatus) throw new HttpsError('invalid-argument', '알 수 없는 action');
+
+    const db = admin.firestore();
+    const orderRef = db.doc(`orders/${orderId}`);
+    const orderSnap = await orderRef.get();
+    if (!orderSnap.exists) throw new HttpsError('not-found', '발주를 찾을 수 없습니다.');
+    const order = orderSnap.data();
+
+    // 권한: 공장 본인 또는 관리자
+    const callerEmail = request.auth?.token?.email || '';
+    const isCallerSuperAdmin = callerEmail.toLowerCase() === 'sbbc212@gmail.com';
+    const callerAdminDoc = await db.doc(`admins/${callerUid}`).get();
+    const isCallerAdmin = isCallerSuperAdmin || callerAdminDoc.exists;
+    if (order.factoryId !== callerUid && !isCallerAdmin) {
+      throw new HttpsError('permission-denied', '권한이 없습니다.');
+    }
+
+    await orderRef.update({
+      status: newStatus,
+      reason: reason || null,
+      processedAt: admin.firestore.FieldValue.serverTimestamp(),
+      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+    });
+
+    // 발주자에게 알림
+    try {
+      const statusLabel = {
+        accepted: '수락',
+        rejected: '거절',
+        in_progress: '제작 진행',
+        completed: '완료',
+      }[newStatus];
+      await db.collection('notifications').add({
+        userId: order.ordererId,
+        type: 'order',
+        title: `발주 ${statusLabel}`,
+        message: `${order.factoryName || '공장'} 에서 ${order.designName || '발주'} 를 ${statusLabel} 처리했습니다.${reason ? `\n사유: ${reason}` : ''}`,
+        link: `/dashboard/orders/${orderId}`,
+        relatedId: orderId,
+        isRead: false,
+        createdAt: admin.firestore.FieldValue.serverTimestamp(),
+      });
+    } catch (e) {
+      console.warn('발주자 알림 생성 실패:', e?.message);
+    }
+
+    return { ok: true, status: newStatus };
   }
 );
 
