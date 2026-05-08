@@ -634,6 +634,36 @@ const DoorModule: React.FC<DoorModuleProps> = ({
 
   // 인덱싱 정보 계산 - 원본 spaceInfo 사용 + slotCustomWidth 재분할 반영
   const allPlacedModules = useFurnitureStore(state => state.placedModules);
+  const doorHeightDimensionSides = useMemo(() => {
+    if (!furnitureId) {
+      return { left: true, right: true };
+    }
+
+    const visibleModules = allPlacedModules
+      .filter(module => !module.isSurroundPanel)
+      .map((module, index) => ({
+        id: module.id,
+        x: module.position?.x ?? 0,
+        index
+      }))
+      .sort((a, b) => {
+        if (Math.abs(a.x - b.x) > 0.001) return a.x - b.x;
+        return a.index - b.index;
+      });
+
+    if (visibleModules.length === 0) {
+      return { left: true, right: true };
+    }
+
+    const leftModule = visibleModules[0];
+    const rightModule = visibleModules[visibleModules.length - 1];
+
+    return {
+      left: leftModule.id === furnitureId,
+      right: rightModule.id === furnitureId
+    };
+  }, [allPlacedModules, furnitureId]);
+
   const indexing = useMemo(() => {
     const base = calculateSpaceIndexing(originalSpaceInfo);
     const hasCustomWidths = allPlacedModules.some(m => m.slotCustomWidth !== undefined);
@@ -1639,7 +1669,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
 
                 return (
                   <>
-                    {!is3D && (
+                    {!is3D && doorHeightDimensionSides.left && (
                     <>
                     <NativeLine name="door-dimension-height" points={[
                       [-leftDoorWidthUnits / 2 - mmToThreeUnits(90), -doorHeight / 2, zPos],
@@ -2011,7 +2041,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
 
                 return (
                   <>
-                    {!is3D && (
+                    {!is3D && doorHeightDimensionSides.right && (
                     <>
                     <NativeLine name="door-dimension-height" points={[
                       [rightDoorWidthUnits / 2 + mmToThreeUnits(90), -doorHeight / 2, zPos],
@@ -2618,41 +2648,49 @@ const DoorModule: React.FC<DoorModuleProps> = ({
 
               return (
                 <>
-                  {!is3D && (
+                  {!is3D && (doorHeightDimensionSides.left || doorHeightDimensionSides.right) && (
                   <>
-                  <NativeLine
-                    name="door-dimension-height"
-                    points={[
-                      [-doorWidthUnits / 2 - mmToThreeUnits(90), -doorHeight / 2, zPos],
-                      [-doorWidthUnits / 2 - mmToThreeUnits(90), doorHeight / 2, zPos]
-                    ]}
-                    color={dimColor}
-                    lineWidth={1}
-                    renderOrder={100001}
-                    depthTest={false}
-                    depthWrite={false}
-                    transparent={true}
-                  />
+                  {doorHeightDimensionSides.left && (
+                    <NativeLine
+                      name="door-dimension-height"
+                      points={[
+                        [-doorWidthUnits / 2 - mmToThreeUnits(90), -doorHeight / 2, zPos],
+                        [-doorWidthUnits / 2 - mmToThreeUnits(90), doorHeight / 2, zPos]
+                      ]}
+                      color={dimColor}
+                      lineWidth={1}
+                      renderOrder={100001}
+                      depthTest={false}
+                      depthWrite={false}
+                      transparent={true}
+                    />
+                  )}
 
-                  <NativeLine
-                    name="door-dimension-height"
-                    points={[
-                      [doorWidthUnits / 2 + mmToThreeUnits(90), -doorHeight / 2, zPos],
-                      [doorWidthUnits / 2 + mmToThreeUnits(90), doorHeight / 2, zPos]
-                    ]}
-                    color={dimColor}
-                    lineWidth={1}
-                    renderOrder={100001}
-                    depthTest={false}
-                    depthWrite={false}
-                    transparent={true}
-                  />
+                  {doorHeightDimensionSides.right && (
+                    <NativeLine
+                      name="door-dimension-height"
+                      points={[
+                        [doorWidthUnits / 2 + mmToThreeUnits(90), -doorHeight / 2, zPos],
+                        [doorWidthUnits / 2 + mmToThreeUnits(90), doorHeight / 2, zPos]
+                      ]}
+                      color={dimColor}
+                      lineWidth={1}
+                      renderOrder={100001}
+                      depthTest={false}
+                      depthWrite={false}
+                      transparent={true}
+                    />
+                  )}
 
                   {[
-                    [-doorWidthUnits / 2 - mmToThreeUnits(90), -doorHeight / 2],
-                    [-doorWidthUnits / 2 - mmToThreeUnits(90), doorHeight / 2],
-                    [doorWidthUnits / 2 + mmToThreeUnits(90), -doorHeight / 2],
-                    [doorWidthUnits / 2 + mmToThreeUnits(90), doorHeight / 2]
+                    ...(doorHeightDimensionSides.left ? [
+                      [-doorWidthUnits / 2 - mmToThreeUnits(90), -doorHeight / 2],
+                      [-doorWidthUnits / 2 - mmToThreeUnits(90), doorHeight / 2]
+                    ] : []),
+                    ...(doorHeightDimensionSides.right ? [
+                      [doorWidthUnits / 2 + mmToThreeUnits(90), -doorHeight / 2],
+                      [doorWidthUnits / 2 + mmToThreeUnits(90), doorHeight / 2]
+                    ] : [])
                   ].map(([x, y], index) => (
                     <NativeLine
                       key={`single-door-height-tick-${index}`}
@@ -2667,71 +2705,79 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                     />
                   ))}
 
-                  <NativeLine
-                    name="door-dimension-height"
-                    points={[[-doorWidthUnits / 2, -doorHeight / 2, zPos], [-doorWidthUnits / 2 - mmToThreeUnits(70), -doorHeight / 2, zPos]]}
-                    color={dimColor}
-                    lineWidth={1}
-                    renderOrder={100001}
-                    depthTest={false}
-                    depthWrite={false}
-                    transparent={true}
-                  />
+                  {doorHeightDimensionSides.left && (
+                    <>
+                      <NativeLine
+                        name="door-dimension-height"
+                        points={[[-doorWidthUnits / 2, -doorHeight / 2, zPos], [-doorWidthUnits / 2 - mmToThreeUnits(70), -doorHeight / 2, zPos]]}
+                        color={dimColor}
+                        lineWidth={1}
+                        renderOrder={100001}
+                        depthTest={false}
+                        depthWrite={false}
+                        transparent={true}
+                      />
 
-                  <NativeLine
-                    name="door-dimension-height"
-                    points={[[-doorWidthUnits / 2, doorHeight / 2, zPos], [-doorWidthUnits / 2 - mmToThreeUnits(70), doorHeight / 2, zPos]]}
-                    color={dimColor}
-                    lineWidth={1}
-                    renderOrder={100001}
-                    depthTest={false}
-                    depthWrite={false}
-                    transparent={true}
-                  />
+                      <NativeLine
+                        name="door-dimension-height"
+                        points={[[-doorWidthUnits / 2, doorHeight / 2, zPos], [-doorWidthUnits / 2 - mmToThreeUnits(70), doorHeight / 2, zPos]]}
+                        color={dimColor}
+                        lineWidth={1}
+                        renderOrder={100001}
+                        depthTest={false}
+                        depthWrite={false}
+                        transparent={true}
+                      />
 
-                  <NativeLine
-                    name="door-dimension-height"
-                    points={[[doorWidthUnits / 2, -doorHeight / 2, zPos], [doorWidthUnits / 2 + mmToThreeUnits(70), -doorHeight / 2, zPos]]}
-                    color={dimColor}
-                    lineWidth={1}
-                    renderOrder={100001}
-                    depthTest={false}
-                    depthWrite={false}
-                    transparent={true}
-                  />
+                      <DimensionText
+                        name="door-dimension-height-text"
+                        value={actualDoorHeight}
+                        position={[-doorWidthUnits / 2 - mmToThreeUnits(125), 0, zPos]}
+                        color={dimColor}
+                        anchorX="center"
+                        anchorY="middle"
+                        rotation={[0, 0, Math.PI / 2]}
+                        forceShow={true}
+                      />
+                    </>
+                  )}
 
-                  <NativeLine
-                    name="door-dimension-height"
-                    points={[[doorWidthUnits / 2, doorHeight / 2, zPos], [doorWidthUnits / 2 + mmToThreeUnits(70), doorHeight / 2, zPos]]}
-                    color={dimColor}
-                    lineWidth={1}
-                    renderOrder={100001}
-                    depthTest={false}
-                    depthWrite={false}
-                    transparent={true}
-                  />
+                  {doorHeightDimensionSides.right && (
+                    <>
+                      <NativeLine
+                        name="door-dimension-height"
+                        points={[[doorWidthUnits / 2, -doorHeight / 2, zPos], [doorWidthUnits / 2 + mmToThreeUnits(70), -doorHeight / 2, zPos]]}
+                        color={dimColor}
+                        lineWidth={1}
+                        renderOrder={100001}
+                        depthTest={false}
+                        depthWrite={false}
+                        transparent={true}
+                      />
 
-                  <DimensionText
-                    name="door-dimension-height-text"
-                    value={actualDoorHeight}
-                    position={[-doorWidthUnits / 2 - mmToThreeUnits(125), 0, zPos]}
-                    color={dimColor}
-                    anchorX="center"
-                    anchorY="middle"
-                    rotation={[0, 0, Math.PI / 2]}
-                    forceShow={true}
-                  />
+                      <NativeLine
+                        name="door-dimension-height"
+                        points={[[doorWidthUnits / 2, doorHeight / 2, zPos], [doorWidthUnits / 2 + mmToThreeUnits(70), doorHeight / 2, zPos]]}
+                        color={dimColor}
+                        lineWidth={1}
+                        renderOrder={100001}
+                        depthTest={false}
+                        depthWrite={false}
+                        transparent={true}
+                      />
 
-                  <DimensionText
-                    name="door-dimension-height-text"
-                    value={actualDoorHeight}
-                    position={[doorWidthUnits / 2 + mmToThreeUnits(125), 0, zPos]}
-                    color={dimColor}
-                    anchorX="center"
-                    anchorY="middle"
-                    rotation={[0, 0, Math.PI / 2]}
-                    forceShow={true}
-                  />
+                      <DimensionText
+                        name="door-dimension-height-text"
+                        value={actualDoorHeight}
+                        position={[doorWidthUnits / 2 + mmToThreeUnits(125), 0, zPos]}
+                        color={dimColor}
+                        anchorX="center"
+                        anchorY="middle"
+                        rotation={[0, 0, Math.PI / 2]}
+                        forceShow={true}
+                      />
+                    </>
+                  )}
                   </>
                   )}
 
