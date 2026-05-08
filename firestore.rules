@@ -36,8 +36,9 @@ service cloud.firestore {
     }
 
     // admins - 관리자 권한 정보 (슈퍼 관리자만 관리)
+    // read: 본인 문서는 누구나(자기 권한 확인용), 다른 사람 문서는 관리자만
     match /admins/{adminId} {
-      allow read: if isAdmin();
+      allow read: if isSignedIn() && (request.auth.uid == adminId || isAdmin());
       allow write: if isSuperAdmin();
     }
 
@@ -293,11 +294,26 @@ service cloud.firestore {
     }
 
     // 폴더 데이터 (projectFolders 컬렉션 - 실제 코드에서 사용)
+    // docId 패턴: {uid}_{projectId} — 본인 docId 면 통과
     match /projectFolders/{docId} {
-      allow read: if isSignedIn() && resource.data.userId == request.auth.uid;
-      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
-      allow update: if isSignedIn() && resource.data.userId == request.auth.uid;
-      allow delete: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow read: if isSignedIn() && (
+        docId.matches('^' + request.auth.uid + '_.*') ||
+        (resource != null && resource.data.userId == request.auth.uid) ||
+        isAdmin()
+      );
+      allow create: if isSignedIn() && (
+        docId.matches('^' + request.auth.uid + '_.*') ||
+        request.resource.data.userId == request.auth.uid
+      );
+      allow update: if isSignedIn() && (
+        docId.matches('^' + request.auth.uid + '_.*') ||
+        resource.data.userId == request.auth.uid
+      );
+      allow delete: if isSignedIn() && (
+        docId.matches('^' + request.auth.uid + '_.*') ||
+        resource.data.userId == request.auth.uid ||
+        isAdmin()
+      );
     }
 
     // 메시지 - 관리자만 접근 가능
