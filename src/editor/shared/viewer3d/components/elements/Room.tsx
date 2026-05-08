@@ -3518,17 +3518,81 @@ const Room: React.FC<RoomProps> = ({
 
       {/* 바닥 마감재가 있는 경우 - 전체 가구 폭으로 설치 */}
       {spaceInfo.hasFloorFinish && floorFinishHeight > 0 && (
-        <BoxWithEdges
-          hideEdges={hideEdges}
-          isOuterFrame
-          args={[width, floorFinishHeight, extendedPanelDepth]}
-          position={[xOffset + width / 2, yOffset + floorFinishHeight / 2, extendedZOffset + extendedPanelDepth / 2]}
-          material={new THREE.MeshLambertMaterial({ color: floorColor })}
-          renderMode={renderMode}
-          viewMode={viewMode}
-          shadowEnabled={shadowEnabled}
-          view2DTheme={view2DTheme}
-        />
+        <>
+          <BoxWithEdges
+            hideEdges={hideEdges}
+            isOuterFrame
+            args={[width, floorFinishHeight, extendedPanelDepth]}
+            position={[xOffset + width / 2, yOffset + floorFinishHeight / 2, extendedZOffset + extendedPanelDepth / 2]}
+            material={new THREE.MeshLambertMaterial({ color: floorColor })}
+            renderMode={renderMode}
+            viewMode={viewMode}
+            shadowEnabled={shadowEnabled}
+            view2DTheme={view2DTheme}
+          />
+          {/* 2D 측면뷰: 바닥마감재 측면 단면에 빗금 패턴 표시 */}
+          {viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right') && (() => {
+            // 빗금 패턴 캔버스 텍스처 생성 (45도 사선)
+            const canvas = document.createElement('canvas');
+            canvas.width = 32;
+            canvas.height = 32;
+            const ctx = canvas.getContext('2d');
+            if (ctx) {
+              // 배경색 (마감재 색상)
+              ctx.fillStyle = view2DTheme === 'dark' ? '#2a2a2a' : '#f5f5f5';
+              ctx.fillRect(0, 0, 32, 32);
+              // 빗금 (45도 사선)
+              ctx.strokeStyle = view2DTheme === 'dark' ? '#888' : '#555';
+              ctx.lineWidth = 1.2;
+              for (let i = -32; i <= 64; i += 6) {
+                ctx.beginPath();
+                ctx.moveTo(i, 0);
+                ctx.lineTo(i + 32, 32);
+                ctx.stroke();
+              }
+            }
+            const tex = new THREE.CanvasTexture(canvas);
+            tex.wrapS = THREE.RepeatWrapping;
+            tex.wrapT = THREE.RepeatWrapping;
+            // 마감재 두께(보통 9mm) 한 칸당 적당히 보이도록 반복
+            const repeatX = Math.max(1, Math.round(extendedPanelDepth * 100 / 60));
+            const repeatY = Math.max(1, Math.round(floorFinishHeight * 100 / 60));
+            tex.repeat.set(repeatX, repeatY);
+            const hatchMaterial = new THREE.MeshBasicMaterial({
+              map: tex,
+              transparent: true,
+              depthTest: false,
+              depthWrite: false,
+              side: THREE.DoubleSide,
+            });
+
+            // 좌/우 측면에 빗금 plane 두 개 (X축 양 끝)
+            const leftX = xOffset + 0.001;
+            const rightX = xOffset + width - 0.001;
+            const planeY = yOffset + floorFinishHeight / 2;
+            const planeZ = extendedZOffset + extendedPanelDepth / 2;
+            return (
+              <>
+                <mesh
+                  position={[leftX, planeY, planeZ]}
+                  rotation={[0, -Math.PI / 2, 0]}
+                  renderOrder={50}
+                >
+                  <planeGeometry args={[extendedPanelDepth, floorFinishHeight]} />
+                  <primitive object={hatchMaterial} attach="material" />
+                </mesh>
+                <mesh
+                  position={[rightX, planeY, planeZ]}
+                  rotation={[0, Math.PI / 2, 0]}
+                  renderOrder={50}
+                >
+                  <planeGeometry args={[extendedPanelDepth, floorFinishHeight]} />
+                  <primitive object={hatchMaterial} attach="material" />
+                </mesh>
+              </>
+            );
+          })()}
+        </>
       )}
 
       {/* 슬롯 바닥면 - 그린색으로 표시 - showAll이 true일 때만 */}
