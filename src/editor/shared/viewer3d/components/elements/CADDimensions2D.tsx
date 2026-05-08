@@ -1310,8 +1310,8 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
         {floorFinishHeightMm > 0 && !isFloating && selectedModCategory !== 'lower' && selectedModCategory !== 'upper' && (() => {
           // 받침대 치수와 동일한 Z 라인 (메인 치수선 위치)
           const dimZ = spaceDepth/2 + rightDimOffset - mmToThreeUnits(750);
-          // 받침대 치수와 동일한 연장선 시작 Z (360mm 길이)
-          const extStartZ = spaceDepth/2 + rightDimOffset - mmToThreeUnits(750) - mmToThreeUnits(360);
+          // 연장선 길이 240mm (기존 360mm에서 1/3 단축)
+          const extStartZ = spaceDepth/2 + rightDimOffset - mmToThreeUnits(750) - mmToThreeUnits(240);
           return (
             <group>
               {/* 보조 가이드 연장선 - 바닥 (받침대 시작 ExtLine과 길이 동일 360mm) */}
@@ -1357,10 +1357,10 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
         {/* 받침대 높이 (마감재 상단 ~ 받침대 상단, 좌측뷰) — 하부장은 왼쪽 2단에서 표시, 상부장은 받침대 없으므로 제외 */}
         {baseFrameHeightMm > 0 && selectedModCategory !== 'lower' && selectedModCategory !== 'upper' && (
         <group>
-            {/* 보조 가이드 연장선 - 시작 (마감재 상단 or 바닥) */}
-            <ExtLine points={[[0, floorFinishY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750) - mmToThreeUnits(360)], [0, floorFinishY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750)]]} color={dimensionColor} />
-            {/* 보조 가이드 연장선 - 받침대 상단 */}
-            <ExtLine points={[[0, furnitureBaseY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750) - mmToThreeUnits(360)], [0, furnitureBaseY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750)]]} color={dimensionColor} />
+            {/* 보조 가이드 연장선 - 시작 (마감재 상단 or 바닥) — 240mm */}
+            <ExtLine points={[[0, floorFinishY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750) - mmToThreeUnits(240)], [0, floorFinishY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750)]]} color={dimensionColor} />
+            {/* 보조 가이드 연장선 - 받침대 상단 — 240mm */}
+            <ExtLine points={[[0, furnitureBaseY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750) - mmToThreeUnits(240)], [0, furnitureBaseY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750)]]} color={dimensionColor} />
             {/* 메인 치수선 (마감재 상단 ~ 받침대 상단) */}
             <NativeLine name="dimension_line"
               points={[
