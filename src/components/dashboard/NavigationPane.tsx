@@ -58,6 +58,8 @@ const NavigationPane: React.FC<NavigationPaneProps> = ({
   const location = useLocation();
   const [pendingRequestCount, setPendingRequestCount] = useState(0);
   const [unreadMessageCount, setUnreadMessageCount] = useState(0);
+  // 공장(파트너) 계정 여부 — true면 발주 메뉴 라벨을 '수주 현황' 으로 표시
+  const [isPartner, setIsPartner] = useState(false);
   useEffect(() => {
     if (!user?.uid) return;
     const unsub1 = subscribeReceivedRequests(user.uid, (list) => setPendingRequestCount(list.length));
@@ -65,6 +67,17 @@ const NavigationPane: React.FC<NavigationPaneProps> = ({
       const total = convs.reduce((sum, c) => sum + ((c.unread || {})[user.uid] || 0), 0);
       setUnreadMessageCount(total);
     });
+    // 본인 isPartner 조회 (1회)
+    (async () => {
+      try {
+        const { doc: docRef, getDoc: getDocFn } = await import('firebase/firestore');
+        const { db } = await import('@/firebase/config');
+        const snap = await getDocFn(docRef(db, 'users', user.uid));
+        setIsPartner(snap.exists() && !!(snap.data() as { isPartner?: boolean }).isPartner);
+      } catch {
+        /* ignore */
+      }
+    })();
     return () => { unsub1(); unsub2(); };
   }, [user?.uid]);
 
@@ -241,11 +254,11 @@ const NavigationPane: React.FC<NavigationPaneProps> = ({
               {unreadMessageCount > 0 && <span className={styles.menuBadge}>{unreadMessageCount}</span>}
             </button>
             <button
-              className={`${styles.menuItem} ${location.pathname.startsWith('/dashboard/orders') ? styles.menuItemActive : ''}`}
-              onClick={() => navigate('/dashboard/orders')}
+              className={`${styles.menuItem} ${(location.pathname.startsWith('/dashboard/orders') || location.pathname.startsWith('/factory/orders')) ? styles.menuItemActive : ''}`}
+              onClick={() => navigate(isPartner ? '/factory/orders' : '/dashboard/orders')}
             >
               <span className={styles.menuIcon}><Package size={16} /></span>
-              <span className={styles.menuLabel}>발주 현황</span>
+              <span className={styles.menuLabel}>{isPartner ? '수주 현황' : '발주 현황'}</span>
             </button>
           </div>
         )}
