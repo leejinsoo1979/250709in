@@ -3130,15 +3130,24 @@ const PlacedModulePropertiesPanel: React.FC = () => {
               if (!isNaN(v) && v > 0) return v;
               return currentPlacedModule.freeWidth || currentPlacedModule.customWidth || moduleData.dimensions.width;
             })();
-            // 도어 너비: 슬롯/가구 너비 - 좌우 갭(보통 3mm씩) → 슬롯 너비 그대로 사용 (실제 도어는 자동 계산)
-            const doorW = bodyWidth;
-            // 도어 높이: 공간 높이 - 도어 상갭 - 도어 하갭
+            // 도어 갭: 패널 추출 로직(panelExtractor)과 일치 — 측면/상하 모두 2mm
+            const DOOR_GAP = 2;
+            // 듀얼 가구는 도어 2장 + 가운데 갭 → 실제 도어 한 장 너비 = (몸통 - 갭*3) / 2
+            // 싱글 가구는 도어 1장 → 너비 = 몸통 - 갭*2
+            const isDualSlot = currentPlacedModule.isDualSlot || currentPlacedModule.moduleId?.startsWith('dual-');
+            const doorW = isDualSlot
+              ? Math.max(0, Math.floor((bodyWidth - DOOR_GAP * 3) / 2))
+              : Math.max(0, bodyWidth - DOOR_GAP * 2);
+            // 도어 높이: 공간 높이 - 도어 상갭 - 도어 하갭 (전체 가구 높이 기준)
             const spaceH = spaceInfo.height || 0;
             const doorH = Math.max(0, spaceH - (doorTopGap || 0) - (doorBottomGap || 0));
             const doorThickness = 20;
             return (
               <div className={styles.propertySection}>
-                <h5 className={styles.sectionTitle}>도어치수</h5>
+                <h5 className={styles.sectionTitle}>
+                  도어치수
+                  {isDualSlot && <span style={{ fontSize: '10px', color: 'var(--theme-text-tertiary)', fontWeight: 'normal', marginLeft: '6px' }}>(도어 1장 / 총 2장)</span>}
+                </h5>
                 <div style={{ display: 'flex', gap: '4px', alignItems: 'center', marginTop: '2px' }}>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <label style={{ fontSize: '10px', color: 'var(--theme-text-tertiary)', display: 'block', lineHeight: 1 }}>W</label>
