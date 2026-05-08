@@ -179,14 +179,15 @@ service cloud.firestore {
       // 읽기는 누구나 가능 (공유 링크 지원)
       allow read: if true;
       allow list: if isAdmin(); // 관리자는 전체 프로젝트 목록 조회 가능
-      // 쓰기: 기업회원이거나 admin이면서 본인 소유 또는 editor 권한
-      allow write: if isEnterpriseOrAdmin() && (
+      // 생성: 기업회원/관리자, 본인을 userId로 (resource 없으니 request.resource 사용)
+      allow create: if isEnterpriseOrAdmin() &&
+                    request.resource.data.userId == request.auth.uid;
+      // 수정/삭제: 기업회원/관리자이면서 본인 소유 또는 editor 권한
+      allow update, delete: if isEnterpriseOrAdmin() && (
         resource.data.userId == request.auth.uid ||
         (exists(/databases/$(database)/documents/sharedProjectAccess/$(id + '_' + request.auth.uid)) &&
          get(/databases/$(database)/documents/sharedProjectAccess/$(id + '_' + request.auth.uid)).data.permission == 'editor')
       );
-      // create: 기업회원/관리자만
-      allow create: if isEnterpriseOrAdmin();
 
       // 관리자는 프로젝트 하위의 디자인 파일을 조회할 수 있음
       match /designs/{designId} {
