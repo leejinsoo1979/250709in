@@ -680,25 +680,42 @@ exports.telegramWebhook = onRequest(
       const messageId = cb.message.message_id;
       const chatId = cb.message.chat.id;
 
-      // 헬퍼: 메시지 캡션/텍스트 갱신
+      // 헬퍼: 버튼만 즉시 제거 (가장 안전 — 텍스트 변경 없음)
+      const removeButtons = async () => {
+        try {
+          await tgApi(token, 'editMessageReplyMarkup', {
+            chat_id: chatId,
+            message_id: messageId,
+            reply_markup: { inline_keyboard: [] },
+          });
+        } catch (e) {
+          console.error('editMessageReplyMarkup 실패:', e?.response?.data || e?.message || e);
+        }
+      };
+
+      // 헬퍼: 메시지 캡션/텍스트 갱신 (실패해도 버튼은 이미 제거된 상태로 유지)
       const editCaption = async (extraText, replyMarkup) => {
         const original = cb.message.caption || cb.message.text || '';
         const isPhoto = !!cb.message.photo;
         const newText = `${original}\n\n${extraText}`;
-        if (isPhoto) {
-          await tgApi(token, 'editMessageCaption', {
-            chat_id: chatId,
-            message_id: messageId,
-            caption: newText,
-            reply_markup: replyMarkup || { inline_keyboard: [] },
-          }).catch(() => {});
-        } else {
-          await tgApi(token, 'editMessageText', {
-            chat_id: chatId,
-            message_id: messageId,
-            text: newText,
-            reply_markup: replyMarkup || { inline_keyboard: [] },
-          }).catch(() => {});
+        try {
+          if (isPhoto) {
+            await tgApi(token, 'editMessageCaption', {
+              chat_id: chatId,
+              message_id: messageId,
+              caption: newText,
+              reply_markup: replyMarkup || { inline_keyboard: [] },
+            });
+          } else {
+            await tgApi(token, 'editMessageText', {
+              chat_id: chatId,
+              message_id: messageId,
+              text: newText,
+              reply_markup: replyMarkup || { inline_keyboard: [] },
+            });
+          }
+        } catch (e) {
+          console.error('editMessage 실패:', e?.response?.data || e?.message || e);
         }
       };
 
@@ -777,10 +794,8 @@ exports.telegramWebhook = onRequest(
         return;
       }
 
-      // 즉시 피드백: 버튼 제거 + '처리 중' 표시 (Firestore 호출 전에 먼저 화면 갱신)
-      const _userName = cb.from?.first_name || cb.from?.username || '관리자';
-      const _nowKr = new Date().toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' });
-      await editCaption(`⏳ 처리 중... (by ${_userName})\n${_nowKr}`, { inline_keyboard: [] }).catch(() => {});
+      // 즉시 피드백 1단계: 버튼만 제거 (가장 안전 — 어떤 경우에도 버튼은 사라짐)
+      await removeButtons();
 
       // Firestore 업데이트
       try {
