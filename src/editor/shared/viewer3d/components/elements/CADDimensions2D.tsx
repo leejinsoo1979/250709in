@@ -705,9 +705,73 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
   // 좌측뷰 연장선 시작점
   const leftExtStartZ = -spaceDepth/2 + mmToThreeUnits(70);
 
+  // 측면뷰 공통: 바닥마감재 해치 표시 (정면뷰와 동일한 패턴)
+  const renderFloorFinishHatch = () => {
+    if (floorFinishHeightMm <= 0) return null;
+    const floorH = mmToThreeUnits(floorFinishHeightMm);
+    const floorStartZ = -spaceDepth / 2;
+    const floorEndZ = spaceDepth / 2;
+    const floorWidth = spaceDepth;
+
+    const hatchLines: JSX.Element[] = [];
+    const hatchSpacing = mmToThreeUnits(40);
+    const startOff = -floorH;
+    const endOff = floorWidth;
+    const count = Math.ceil((endOff - startOff) / hatchSpacing) + 1;
+    const hatchColor = view2DTheme === 'dark' ? '#FFCC99' : '#CC8844';
+
+    for (let i = 0; i <= count; i++) {
+      const off = startOff + i * hatchSpacing;
+      const sz = floorStartZ + off;
+      const sy = 0;
+      const ez = sz + floorH;
+      const ey = floorH;
+
+      let cz0 = sz, cy0 = sy, cz1 = ez, cy1 = ey;
+      if (sz < floorStartZ) { const d = floorStartZ - sz; cz0 = floorStartZ; cy0 = sy + d; }
+      if (ez > floorEndZ) { const d = ez - floorEndZ; cz1 = floorEndZ; cy1 = ey - d; }
+
+      if (cz0 < floorEndZ && cz1 > floorStartZ && cy0 < floorH && cy1 > 0) {
+        hatchLines.push(
+          <NativeLine
+            key={`floor-hatch-side-${i}`}
+            name="floor_finish_hatch"
+            points={[[0, cy0, cz0], [0, cy1, cz1]]}
+            color={hatchColor}
+            lineWidth={0.3}
+            renderOrder={99997}
+            depthTest={false}
+          />
+        );
+      }
+    }
+    return (
+      <group>
+        <mesh
+          position={[0, floorH / 2, 0]}
+          rotation={[0, -Math.PI / 2, 0]}
+          renderOrder={99996}
+        >
+          <planeGeometry args={[floorWidth, floorH]} />
+          <meshBasicMaterial color="#FFCC99" transparent opacity={0.2} depthTest={false} />
+        </mesh>
+        <NativeLine
+          name="floor_finish_top"
+          points={[[0, floorH, floorStartZ], [0, floorH, floorEndZ]]}
+          color={hatchColor}
+          lineWidth={0.6}
+          renderOrder={99998}
+          depthTest={false}
+        />
+        {hatchLines}
+      </group>
+    );
+  };
+
   if (currentViewDirection === 'left') {
     return (
       <group>
+        {renderFloorFinishHatch()}
         {/* ===== 왼쪽: 전체 높이 치수 (공간 높이 - 바닥부터 시작) ===== */}
         {/* 단내림 구간이 선택된 경우 단내림 높이를 표시 */}
         {<group>
@@ -2094,6 +2158,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
   if (currentViewDirection === 'right') {
     return (
       <group>
+        {renderFloorFinishHatch()}
         {/* ===== 왼쪽: 전체 높이 치수 (공간 높이 - 바닥부터 시작) ===== */}
         {/* 단내림 구간이 선택된 경우 단내림 높이를 표시 */}
         {<group>
