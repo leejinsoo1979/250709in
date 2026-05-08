@@ -41,6 +41,14 @@ export const NativeLine: React.FC<NativeLineProps> = ({
 }) => {
   const lineRef = useRef<Line2>(null!);
   const { size } = useThree();
+  const isDimensionOverlay = typeof name === 'string' && (
+    name.includes('dimension') ||
+    name.includes('guide') ||
+    name.includes('dim')
+  );
+  const effectiveDepthTest = isDimensionOverlay ? false : depthTest;
+  const effectiveDepthWrite = isDimensionOverlay ? false : depthWrite;
+  const effectiveRenderOrder = isDimensionOverlay ? Math.max(renderOrder, 100000) : renderOrder;
 
   // points를 flat array로 변환
   const flatPositions = useMemo(() => {
@@ -72,8 +80,8 @@ export const NativeLine: React.FC<NativeLineProps> = ({
       gapSize: gapSize,
       opacity: opacity,
       transparent: transparent || opacity < 1,
-      depthTest: depthTest,
-      depthWrite: depthWrite,
+      depthTest: effectiveDepthTest,
+      depthWrite: effectiveDepthWrite,
       resolution: new THREE.Vector2(size.width, size.height),
     });
 
@@ -100,10 +108,10 @@ export const NativeLine: React.FC<NativeLineProps> = ({
     material.gapSize = gapSize;
     material.opacity = opacity;
     material.transparent = transparent || opacity < 1;
-    material.depthTest = depthTest;
-    material.depthWrite = depthWrite;
+    material.depthTest = effectiveDepthTest;
+    material.depthWrite = effectiveDepthWrite;
     material.needsUpdate = true;
-  }, [material, color, lineWidth, dashed, dashSize, gapSize, opacity, transparent, depthTest, depthWrite]);
+  }, [material, color, lineWidth, dashed, dashSize, gapSize, opacity, transparent, effectiveDepthTest, effectiveDepthWrite]);
 
   // resolution 업데이트 (캔버스 리사이즈 대응)
   useEffect(() => {
@@ -122,16 +130,19 @@ export const NativeLine: React.FC<NativeLineProps> = ({
 
   // Line2 인스턴스 (한 번만 생성)
   const line2 = useMemo(() => {
-    return new Line2(geometry, material);
-  }, [geometry, material]);
+    const line = new Line2(geometry, material);
+    line.renderOrder = effectiveRenderOrder;
+    if (name !== undefined) line.name = name || '';
+    return line;
+  }, [geometry, material, effectiveRenderOrder, name]);
 
   // renderOrder, name 업데이트
   useEffect(() => {
     if (line2) {
-      line2.renderOrder = renderOrder;
+      line2.renderOrder = effectiveRenderOrder;
       if (name !== undefined) line2.name = name || '';
     }
-  }, [line2, renderOrder, name]);
+  }, [line2, effectiveRenderOrder, name]);
 
   // cleanup
   useEffect(() => {

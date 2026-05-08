@@ -44,13 +44,14 @@ const DynamicLine: React.FC<{ points: number[]; color: string }> = ({ points, co
       ref.current.needsUpdate = true;
     }
   }, [arr]);
+  const Line: any = 'line';
   return (
-    <line>
+    <Line renderOrder={100000}>
       <bufferGeometry>
         <bufferAttribute ref={ref} attach="attributes-position" array={arr} count={arr.length / 3} itemSize={3} />
       </bufferGeometry>
-      <lineBasicMaterial color={color} linewidth={1} />
-    </line>
+      <lineBasicMaterial color={color} linewidth={1} depthTest={false} depthWrite={false} transparent />
+    </Line>
   );
 };
 
