@@ -658,16 +658,33 @@ exports.telegramWebhook = onRequest(
       const update = req.body;
       const cb = update?.callback_query;
       if (!cb) {
+        console.log('[telegramWebhook] non-callback update:', JSON.stringify(update).slice(0, 200));
         res.status(200).send('ok');
         return;
       }
+      console.log('[telegramWebhook] callback received:', {
+        data: cb.data,
+        chatId: cb.message?.chat?.id,
+        fromId: cb.from?.id,
+        fromName: cb.from?.first_name || cb.from?.username,
+        messageId: cb.message?.message_id,
+      });
 
-      // 보안: 등록된 관리자 chat에서 온 callback만 허용
-      const fromChatId = String(cb.message?.chat?.id || cb.from?.id || '');
-      if (adminChatId && fromChatId !== adminChatId) {
+      // 보안: 등록된 관리자 chat 또는 user 본인에서 온 callback만 허용
+      // 그룹/채널: cb.message.chat.id == adminChatId
+      // 1:1 채팅: cb.from.id == adminChatId (사용자 본인 ID)
+      const messageChatId = String(cb.message?.chat?.id || '');
+      const fromUserId = String(cb.from?.id || '');
+      const isAuthorized = !adminChatId ||
+        messageChatId === adminChatId ||
+        fromUserId === adminChatId;
+      if (!isAuthorized) {
+        console.error('[telegramWebhook] 권한 거부:', {
+          adminChatId, messageChatId, fromUserId, action: String(cb.data || '').split(':')[0],
+        });
         await tgApi(token, 'answerCallbackQuery', {
           callback_query_id: cb.id,
-          text: '권한 없음',
+          text: `권한 없음 (chat: ${messageChatId}, user: ${fromUserId})`,
           show_alert: true,
         });
         res.status(200).send('forbidden');
