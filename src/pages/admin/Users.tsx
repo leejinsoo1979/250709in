@@ -38,8 +38,8 @@ const Users = () => {
   >('date-desc');
   const [usageStats, setUsageStats] = useState<Record<string, UserUsageStats>>({});
   const [usageLoading, setUsageLoading] = useState(false);
-  // 회원 유형 필터: all=전체, enterprise=기업회원, admin=관리자(슈퍼관리자 포함), general=일반회원
-  const [filterPlan, setFilterPlan] = useState<'all' | 'enterprise' | 'admin' | 'general'>('all');
+  // 회원 유형 필터: all=전체, enterprise=기업회원, partner=파트너사, admin=관리자(슈퍼관리자 포함), general=일반회원
+  const [filterPlan, setFilterPlan] = useState<'all' | 'enterprise' | 'partner' | 'admin' | 'general'>('all');
   const [sortDropdownOpen, setSortDropdownOpen] = useState(false);
   const [planFilterDropdownOpen, setPlanFilterDropdownOpen] = useState(false);
   const [planDialog, setPlanDialog] = useState<{
@@ -263,14 +263,15 @@ const Users = () => {
         user.displayName?.toLowerCase().includes(query) ||
         user.id.toLowerCase().includes(query);
 
-      const matchesPlan =
-        filterPlan === 'all'
-          ? true
-          : filterPlan === 'admin'
-            ? !!(user.isAdmin || user.isSuperAdmin)
-            : filterPlan === 'enterprise'
-              ? !user.isAdmin && !user.isSuperAdmin && user.plan === 'enterprise'
-              : !user.isAdmin && !user.isSuperAdmin && user.plan !== 'enterprise'; // general = 일반회원
+      const matchesPlan = (() => {
+        if (filterPlan === 'all') return true;
+        if (filterPlan === 'admin') return !!(user.isAdmin || user.isSuperAdmin);
+        if (user.isAdmin || user.isSuperAdmin) return false; // 관리자는 다른 카테고리에서 제외
+        if (filterPlan === 'partner') return !!user.isPartner;
+        if (filterPlan === 'enterprise') return !user.isPartner && user.plan === 'enterprise';
+        // general = 일반회원
+        return !user.isPartner && user.plan !== 'enterprise';
+      })();
 
       return matchesSearch && matchesPlan;
     })
@@ -510,6 +511,7 @@ const Users = () => {
                 <span>
                   {filterPlan === 'all' && '전체'}
                   {filterPlan === 'enterprise' && '기업회원'}
+                  {filterPlan === 'partner' && '파트너사'}
                   {filterPlan === 'admin' && '관리자'}
                   {filterPlan === 'general' && '일반회원'}
                 </span>
@@ -548,6 +550,20 @@ const Users = () => {
                   >
                     기업회원
                     {filterPlan === 'enterprise' && (
+                      <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                      </svg>
+                    )}
+                  </button>
+                  <button
+                    className={`${styles.filterDropdownItem} ${filterPlan === 'partner' ? styles.filterDropdownItemActive : ''}`}
+                    onClick={() => {
+                      setFilterPlan('partner');
+                      setPlanFilterDropdownOpen(false);
+                    }}
+                  >
+                    파트너사
+                    {filterPlan === 'partner' && (
                       <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
                         <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                       </svg>
@@ -652,10 +668,21 @@ const Users = () => {
                       {targetUser.isAdmin && !targetUser.isSuperAdmin && (
                         <span className={styles.adminBadge}>관리자</span>
                       )}
-                      {!targetUser.isAdmin && !targetUser.isSuperAdmin && targetUser.plan === 'enterprise' && (
+                      {!targetUser.isAdmin && !targetUser.isSuperAdmin && targetUser.isPartner && (
+                        <span style={{
+                          display: 'inline-block',
+                          padding: '4px 12px',
+                          borderRadius: 12,
+                          background: '#0ea5e9',
+                          color: '#fff',
+                          fontSize: 12,
+                          fontWeight: 600,
+                        }}>파트너사</span>
+                      )}
+                      {!targetUser.isAdmin && !targetUser.isSuperAdmin && !targetUser.isPartner && targetUser.plan === 'enterprise' && (
                         <span className={styles.enterpriseBadge}>기업회원</span>
                       )}
-                      {!targetUser.isAdmin && !targetUser.isSuperAdmin && targetUser.plan !== 'enterprise' && (
+                      {!targetUser.isAdmin && !targetUser.isSuperAdmin && !targetUser.isPartner && targetUser.plan !== 'enterprise' && (
                         <span className={styles.userBadge}>일반회원</span>
                       )}
                     </div>
