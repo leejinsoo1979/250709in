@@ -697,21 +697,45 @@ exports.telegramWebhook = onRequest(
       const messageId = cb.message.message_id;
       const chatId = cb.message.chat.id;
 
-      // 헬퍼: 버튼만 즉시 제거 (가장 안전 — 텍스트 변경 없음)
-      // 실패 시 (오래된 메시지/권한 등) → 새 메시지를 답글로 보내 처리 결과 알림
+      // 헬퍼: 버튼 제거 (여러 방법으로 시도 — 어느 하나라도 성공하면 OK)
       let removeFailed = false;
       const removeButtons = async () => {
+        // 방법 1: reply_markup 미지정 (텔레그램 표준 — 키보드 자동 제거)
+        try {
+          await tgApi(token, 'editMessageReplyMarkup', {
+            chat_id: chatId,
+            message_id: messageId,
+          });
+          console.log('[telegramWebhook] removeButtons: 방법1 성공');
+          return;
+        } catch (e1) {
+          console.error('[telegramWebhook] 방법1 실패:', e1?.response?.data ? JSON.stringify(e1.response.data) : e1?.message);
+        }
+        // 방법 2: 빈 inline_keyboard 배열
         try {
           await tgApi(token, 'editMessageReplyMarkup', {
             chat_id: chatId,
             message_id: messageId,
             reply_markup: { inline_keyboard: [] },
           });
-        } catch (e) {
-          removeFailed = true;
-          const detail = e?.response?.data ? JSON.stringify(e.response.data) : (e?.message || String(e));
-          console.error('[telegramWebhook] editMessageReplyMarkup 실패:', detail);
+          console.log('[telegramWebhook] removeButtons: 방법2 성공');
+          return;
+        } catch (e2) {
+          console.error('[telegramWebhook] 방법2 실패:', e2?.response?.data ? JSON.stringify(e2.response.data) : e2?.message);
         }
+        // 방법 3: JSON 문자열로 reply_markup
+        try {
+          await tgApi(token, 'editMessageReplyMarkup', {
+            chat_id: chatId,
+            message_id: messageId,
+            reply_markup: JSON.stringify({ inline_keyboard: [] }),
+          });
+          console.log('[telegramWebhook] removeButtons: 방법3 성공');
+          return;
+        } catch (e3) {
+          console.error('[telegramWebhook] 방법3 실패:', e3?.response?.data ? JSON.stringify(e3.response.data) : e3?.message);
+        }
+        removeFailed = true;
       };
 
       // 헬퍼: 메시지 캡션/텍스트 갱신 (실패해도 버튼은 이미 제거된 상태로 유지)
