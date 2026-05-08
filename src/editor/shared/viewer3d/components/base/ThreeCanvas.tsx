@@ -811,51 +811,6 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
     };
   }, [viewMode]);
 
-  // 2D 모드에서 트랙패드 줌 속도 조절
-  useEffect(() => {
-    if (!containerRef.current || viewMode !== '2D') return;
-
-    const handleWheel = (e: WheelEvent) => {
-      // 줌 이벤트인 경우 (Ctrl 키 또는 핀치 제스처)
-      if (e.ctrlKey || e.metaKey) {
-        e.preventDefault();
-
-        // 줌 속도를 더 많이 줄임 (0.1로 변경 - 트랙패드에서 더 부드럽게)
-        const scaledDeltaY = e.deltaY * 0.1;
-
-        // 새로운 휠 이벤트 생성
-        const newEvent = new WheelEvent('wheel', {
-          deltaY: scaledDeltaY,
-          deltaX: e.deltaX,
-          deltaMode: e.deltaMode,
-          ctrlKey: e.ctrlKey,
-          shiftKey: e.shiftKey,
-          altKey: e.altKey,
-          metaKey: e.metaKey,
-          bubbles: true,
-          cancelable: true
-        });
-
-        // OrbitControls가 받을 수 있도록 이벤트 재발송
-        if (canvasRef.current) {
-          const canvas = canvasRef.current.querySelector('canvas');
-          if (canvas) {
-            canvas.dispatchEvent(newEvent);
-          }
-        }
-
-        return false;
-      }
-    };
-
-    const container = containerRef.current;
-    container.addEventListener('wheel', handleWheel, { passive: false, capture: true });
-
-    return () => {
-      container.removeEventListener('wheel', handleWheel, { capture: true });
-    };
-  }, [viewMode]);
-
   // viewMode 또는 view2DDirection 변경 시 OrbitControls 리셋
   useEffect(() => {
     if (!controlsRef.current) return;
@@ -1089,7 +1044,7 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
             touchAction: 'none'
           }}
           dpr={[1, 2]}
-          frameloop="always"
+          frameloop={viewMode === '2D' ? 'demand' : 'always'}
           gl={{
             powerPreference: 'high-performance',
             antialias: true,
@@ -1337,7 +1292,7 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
             minAzimuthAngle={controlsConfig.minAzimuthAngle}
             maxAzimuthAngle={controlsConfig.maxAzimuthAngle}
             enablePan={controlsConfig.enablePan && !isFurnitureDragging && !isDraggingColumn && !isSlotDragging}
-            enableZoom={controlsConfig.enableZoom && !isFurnitureDragging && !isDraggingColumn && !isSlotDragging}
+            enableZoom={viewMode !== '2D' && controlsConfig.enableZoom && !isFurnitureDragging && !isDraggingColumn && !isSlotDragging}
             enableRotate={controlsConfig.enableRotate && !isFurnitureDragging && !isDraggingColumn && !isSlotDragging}
             minDistance={controlsConfig.minDistance}
             maxDistance={controlsConfig.maxDistance}
@@ -1346,8 +1301,8 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
             panSpeed={0.8}
             rotateSpeed={0.6}
             zoomSpeed={controlsConfig.zoomSpeed ?? (viewMode === '2D' ? 0.02 : 1.2)}
-            enableDamping={true}
-            dampingFactor={viewMode === '2D' ? 0.2 : 0.1}
+            enableDamping={viewMode !== '2D'}
+            dampingFactor={0.1}
             screenSpacePanning={true}
             zoomToCursor={true}
             makeDefault

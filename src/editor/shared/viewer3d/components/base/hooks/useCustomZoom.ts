@@ -21,7 +21,7 @@ export const CustomZoomController: React.FC<CustomZoomControllerProps> = ({
   zoomSpeed = 1.0,
   controlsRef
 }) => {
-  const { camera, gl, scene, invalidate } = useThree();
+  const { camera, gl, invalidate } = useThree();
   const currentCameraRef = useRef(camera);
   
   useEffect(() => {
@@ -111,23 +111,9 @@ export const CustomZoomController: React.FC<CustomZoomControllerProps> = ({
         camera.zoom = newZoom;
       }
       
-      if (import.meta.env.DEV) {
-        console.log('🔍 2D 마우스 포인터 줌:', {
-          device: isTrackpad ? 'Trackpad' : 'Mouse',
-          mouseX: mouseX.toFixed(0),
-          mouseY: mouseY.toFixed(0),
-          oldZoom: currentZoom.toFixed(2),
-          newZoom: newZoom.toFixed(2),
-          deltaY: delta,
-          direction: delta < 0 ? 'UP(확대)' : 'DOWN(축소)'
-        });
-      }
-
       // 카메라 매트릭스 업데이트
       camera.updateProjectionMatrix();
-      
-      // 사용자 드래그의 즉각적인 반영을 위해 동기식 강제 업데이트 (버벅거림 해소)
-      gl.render(scene, camera);
+      invalidate();
     };
 
     // 휠 이벤트 등록 (passive: false로 preventDefault 허용)
@@ -136,7 +122,7 @@ export const CustomZoomController: React.FC<CustomZoomControllerProps> = ({
     return () => {
       canvas.removeEventListener('wheel', handleWheel);
     };
-  }, [gl, scene, minDistance, maxDistance, viewMode, zoomSpeed, camera]);
+  }, [gl, invalidate, minDistance, maxDistance, viewMode, zoomSpeed, camera]);
 
   // 이 컴포넌트는 렌더링하지 않음 (기능만 제공)
   return null;
