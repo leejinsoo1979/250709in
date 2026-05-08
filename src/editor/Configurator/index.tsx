@@ -470,7 +470,7 @@ const Configurator: React.FC = () => {
   const { setPlacedModules, placedModules, setAllDoors, clearAllModules, updatePlacedModule } = useFurnitureStore();
   const derivedSpaceStore = useDerivedSpaceStore();
   const { updateFurnitureForNewSpace } = useFurnitureSpaceAdapter({ setPlacedModules });
-  const { viewMode, setViewMode, doorsOpen, toggleDoors, setDoorsOpen, view2DDirection, setView2DDirection, showDimensions, toggleDimensions, showDimensionsText, toggleDimensionsText, highlightedFrame, setHighlightedFrame, selectedColumnId, setSelectedColumnId, activePopup, openColumnEditModal, closeAllPopups, showGuides, toggleGuides, showAxis, toggleAxis, activeDroppedCeilingTab, setActiveDroppedCeilingTab, showFurniture, setShowFurniture, setShadowEnabled, toggleIndividualDoor, showBorings, toggleBorings, renderMode, setRenderMode, setLayoutBuilderOpen, selectedFurnitureId, showFrame } = useUIStore();
+  const { viewMode, setViewMode, doorsOpen, toggleDoors, setDoorsOpen, view2DDirection, setView2DDirection, showDimensions, toggleDimensions, showDimensionsText, toggleDimensionsText, highlightedFrame, setHighlightedFrame, selectedColumnId, setSelectedColumnId, activePopup, openColumnEditModal, closeAllPopups, showGuides, toggleGuides, showAxis, toggleAxis, activeDroppedCeilingTab, setActiveDroppedCeilingTab, showFurniture, setShowFurniture, setShadowEnabled, toggleIndividualDoor, showBorings, toggleBorings, renderMode, setRenderMode, setLayoutBuilderOpen, selectedFurnitureId, setSelectedFurnitureId, showFrame } = useUIStore();
   const view2DTheme = useUIStore(s => s.view2DTheme);
   const equalDistributionUpper = useUIStore(s => s.equalDistributionUpper);
   const equalDistributionLower = useUIStore(s => s.equalDistributionLower);
@@ -2495,6 +2495,20 @@ const Configurator: React.FC = () => {
   // projectIdParam은 이미 위에서 선언됨
   const designFileIdParam = searchParams.get('designFileId');
   const urlDesignFileNameParam = searchParams.get('designFileName') || searchParams.get('fileName');
+
+  // 발주서 '보기' 버튼에서 넘어온 가구 포커스 — placedModules가 로드된 뒤 한 번만 실행
+  const focusModuleIdParam = searchParams.get('focusModuleId');
+  const focusAppliedRef = useRef(false);
+  useEffect(() => {
+    if (!focusModuleIdParam) return;
+    if (focusAppliedRef.current) return;
+    if (placedModules.length === 0) return;
+    const target = placedModules.find(m => m.id === focusModuleIdParam);
+    if (target) {
+      setSelectedFurnitureId(target.id);
+      focusAppliedRef.current = true;
+    }
+  }, [focusModuleIdParam, placedModules, setSelectedFurnitureId]);
   // modeParam은 이미 위에서 선언됨
   const skipLoadParam = searchParams.get('skipLoad') === 'true';
   const isNewDesignParam = searchParams.get('design') === 'new';

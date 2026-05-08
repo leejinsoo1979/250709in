@@ -5,9 +5,66 @@
  * - 인쇄 시 모달 외 영역 숨김 처리 (전역 @media print 스타일)
  */
 import { useEffect, useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { doc, getDoc, collection, query, where, getDocs, limit } from 'firebase/firestore';
 import { db } from '@/firebase/config';
 import type { OrderRecord } from '@/firebase/orders';
+import { getDesignFileById } from '@/firebase/projects';
+import type { PlacedModule } from '@/editor/shared/furniture/types';
+
+/**
+ * moduleId → 한국어 품명 매핑
+ * 예: 'single-2drawer-hanging-600' → '서랍2단+옷장 (싱글, 600)'
+ *     'dual-4drawer-hanging-1200' → '서랍4단+옷장 (듀얼, 1200)'
+ */
+function moduleIdToKoreanName(moduleId: string, p: PlacedModule): string {
+  const id = moduleId || '';
+  const isDual = id.startsWith('dual-') || p.isDualSlot === true;
+  const isSingle = id.startsWith('single-') && !isDual;
+  const slotLabel = isDual ? '듀얼' : isSingle ? '싱글' : '';
+
+  // 베이스 타입 (너비 제거)
+  const base = id.replace(/-[\d.]+$/, '').replace(/^(single-|dual-)/, '');
+
+  let label = '';
+  if (id.startsWith('customizable-')) {
+    if (id.includes('-full-')) label = '커스텀 키큰장';
+    else if (id.includes('-upper-')) label = '커스텀 상부장';
+    else if (id.includes('-lower-')) label = '커스텀 하부장';
+    else label = '커스텀 가구';
+  } else if (base.includes('upper-cabinet-shelf')) label = '상부 선반장';
+  else if (base.includes('upper-cabinet')) label = '상부 도어장';
+  else if (base.includes('lower-drawer-2tier')) label = '하부 서랍2단';
+  else if (base.includes('lower-drawer-3tier')) label = '하부 서랍3단';
+  else if (base.includes('lower-drawer-4tier')) label = '하부 서랍4단';
+  else if (base.includes('lower-drawer')) label = '하부 서랍';
+  else if (base.includes('lower-door-lift')) label = '리프트 도어';
+  else if (base.includes('lower-top-down')) label = '탑다운 도어';
+  else if (base.includes('lower-cabinet')) label = '하부 도어장';
+  else if (base.includes('induction')) label = '인덕션장';
+  else if (base.includes('shoe-cabinet')) label = '신발장';
+  else if (base.includes('coat-cabinet')) label = '코트장';
+  else if (base.includes('drawer-hanging')) {
+    const m = base.match(/(\d)drawer/);
+    label = `서랍${m?.[1] || ''}단 + 옷장`;
+  } else if (base.includes('hanging')) label = '옷장';
+  else if (base.includes('open')) label = '오픈장';
+  else if (base.includes('shelf')) label = '선반장';
+  else label = base.replace(/-/g, ' ');
+
+  return slotLabel ? `${label} (${slotLabel})` : label;
+}
+
+function formatDimensions(p: PlacedModule): string {
+  const w = p.adjustedWidth ?? p.customWidth ?? p.freeWidth ?? p.moduleWidth;
+  const h = p.customHeight ?? p.freeHeight;
+  const d = p.customDepth ?? p.freeDepth;
+  const parts: string[] = [];
+  if (w) parts.push(`W${Math.round(w)}`);
+  if (h) parts.push(`H${Math.round(h)}`);
+  if (d) parts.push(`D${Math.round(d)}`);
+  return parts.join(' × ');
+}
 
 // enterprise_inquiries 의 가장 최근 approved 1건 조회 (없으면 superseded 제외 최근 1건)
 async function loadEnterpriseInquiry(uid: string): Promise<Record<string, any> | null> {
@@ -51,6 +108,7 @@ interface Props {
 }
 
 export default function OrderDocumentModal({ order, onClose, onSendMessage }: Props) {
+  const navigate = useNavigate();
   const [orderer, setOrderer] = useState<PartyInfo>({
     name: order.ordererName,
     email: order.ordererEmail,
@@ -59,7 +117,33 @@ export default function OrderDocumentModal({ order, onClose, onSendMessage }: Pr
     name: order.factoryName,
   });
   const [loading, setLoading] = useState(true);
+  const [placedModules, setPlacedModules] = useState<PlacedModule[]>([]);
+  const [loadingModules, setLoadingModules] = useState(true);
   const printRootRef = useRef<HTMLDivElement>(null);
+
+  // 디자인 파일에서 placedModules 로드
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      setLoadingModules(true);
+      try {
+        const { designFile } = await getDesignFileById(order.designId);
+        if (cancelled) return;
+        const list = (designFile?.furniture?.placedModules as PlacedModule[]) || [];
+        setPlacedModules(list);
+      } catch (e) {
+        console.error('[발주서 가구 로드 실패]', e);
+      } finally {
+        if (!cancelled) setLoadingModules(false);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [order.designId]);
+
+  const handleViewItem = (placedId: string) => {
+    const projectId = order.projectId || '';
+    navigate(`/configurator?designFileId=${order.designId}&projectId=${projectId}&readonly=1&focusModuleId=${encodeURIComponent(placedId)}`);
+  };
 
   useEffect(() => {
     let cancelled = false;
@@ -140,6 +224,7 @@ export default function OrderDocumentModal({ order, onClose, onSendMessage }: Pr
           .order-doc-print-portal .order-doc-modal { box-shadow: none !important; max-height: none !important; height: auto !important; width: 100% !important; max-width: 100% !important; border-radius: 0 !important; }
           .order-doc-print-portal .order-doc-toolbar { display: none !important; }
           .order-doc-print-portal .order-doc-paper { padding: 24mm 18mm !important; }
+          .order-doc-print-portal .order-doc-no-print { display: none !important; }
           @page { size: A4; margin: 0; }
         }
       `}</style>
@@ -182,27 +267,71 @@ export default function OrderDocumentModal({ order, onClose, onSendMessage }: Pr
                 <PartyBox title="발 주 자 (발신)" info={orderer} />
               </div>
 
-              {/* 품목 표 */}
-              <h3 style={sectionTitle}>품 목 내 역</h3>
+              {/* 품목 표 — 디자인 명 / 프로젝트 / 납기 (요약) */}
+              <h3 style={sectionTitle}>발 주 요 약</h3>
               <table style={table}>
-                <thead>
-                  <tr>
-                    <th style={{ ...th, width: 40 }}>No.</th>
-                    <th style={th}>품명</th>
-                    <th style={{ ...th, width: 140 }}>납기</th>
-                  </tr>
-                </thead>
                 <tbody>
                   <tr>
-                    <td style={tdCenter}>1</td>
+                    <td style={{ ...thLabel, width: 110 }}>디자인</td>
                     <td style={td}>
                       <div style={{ fontWeight: 600 }}>{order.designName}</div>
                       {order.projectName && (
                         <div style={{ fontSize: 11, color: '#6b7280', marginTop: 2 }}>프로젝트: {order.projectName}</div>
                       )}
                     </td>
-                    <td style={tdCenter}>{order.formData.dueDate || '-'}</td>
+                    <td style={{ ...thLabel, width: 80 }}>납기</td>
+                    <td style={{ ...td, width: 140, textAlign: 'center' }}>{order.formData.dueDate || '-'}</td>
                   </tr>
+                </tbody>
+              </table>
+
+              {/* 가구 모듈 목록 — 가구별로 한 행, 우측 보기 버튼 */}
+              <h3 style={{ ...sectionTitle, marginTop: 24 }}>품 목 내 역 ({placedModules.length}점)</h3>
+              <table style={table}>
+                <thead>
+                  <tr>
+                    <th style={{ ...th, width: 40 }}>No.</th>
+                    <th style={th}>품명</th>
+                    <th style={{ ...th, width: 220 }}>치수 (W × H × D, mm)</th>
+                    <th style={{ ...th, width: 90 }}>도어</th>
+                    <th className="order-doc-no-print" style={{ ...th, width: 80 }}>보기</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {loadingModules ? (
+                    <tr>
+                      <td colSpan={5} style={{ ...td, textAlign: 'center', color: '#9ca3af', padding: 20 }}>
+                        가구 목록 불러오는 중…
+                      </td>
+                    </tr>
+                  ) : placedModules.length === 0 ? (
+                    <tr>
+                      <td colSpan={5} style={{ ...td, textAlign: 'center', color: '#9ca3af', padding: 20 }}>
+                        등록된 가구가 없습니다.
+                      </td>
+                    </tr>
+                  ) : (
+                    placedModules.map((p, idx) => (
+                      <tr key={p.id || idx}>
+                        <td style={tdCenter}>{idx + 1}</td>
+                        <td style={td}>
+                          <div style={{ fontWeight: 600 }}>{moduleIdToKoreanName(p.moduleId, p)}</div>
+                          <div style={{ fontSize: 10, color: '#9ca3af', marginTop: 2, fontFamily: 'ui-monospace, monospace' }}>
+                            {p.moduleId}
+                          </div>
+                        </td>
+                        <td style={{ ...tdCenter, fontFamily: 'ui-monospace, monospace', fontSize: 11 }}>
+                          {formatDimensions(p) || '-'}
+                        </td>
+                        <td style={tdCenter}>{p.hasDoor ? '있음' : '없음'}</td>
+                        <td className="order-doc-no-print" style={tdCenter}>
+                          <button onClick={() => handleViewItem(p.id)} style={btnViewItem}>
+                            보기
+                          </button>
+                        </td>
+                      </tr>
+                    ))
+                  )}
                 </tbody>
               </table>
 
@@ -367,4 +496,8 @@ const btnPrimary: React.CSSProperties = {
 const btnSecondary: React.CSSProperties = {
   padding: '8px 16px', background: '#fff', color: '#1f2937',
   border: '1px solid #d1d5db', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer',
+};
+const btnViewItem: React.CSSProperties = {
+  padding: '5px 12px', background: 'var(--theme-primary, #3b82f6)', color: '#fff',
+  border: 'none', borderRadius: 5, fontSize: 11, fontWeight: 600, cursor: 'pointer',
 };

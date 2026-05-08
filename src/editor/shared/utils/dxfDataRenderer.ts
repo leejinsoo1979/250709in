@@ -148,6 +148,11 @@ export interface CombinedDxfDrawingInput {
   includeLayers?: string[];
 }
 
+export interface CombinedDxfDrawingData {
+  title: string;
+  data: DxfDrawingData;
+}
+
 /**
  * RGB 색상을 DXF ACI 색상 코드로 변환
  * DXF ACI: 1=빨강, 2=노랑, 3=초록, 4=시안, 5=파랑, 6=마젠타, 7=흰색/검정, 8=회색 등
@@ -753,7 +758,10 @@ const determineLayerWithParent = (obj: THREE.Object3D): string => {
   const combinedNames = lowerName + parentNames;
 
   // 도어 치수선 (일반 치수선보다 먼저 체크)
-  if (combinedNames.includes('door-dimension') || combinedNames.includes('door_dimension')) {
+  if (combinedNames.includes('door-dimension') ||
+      combinedNames.includes('door_dimension') ||
+      combinedNames.includes('door_height_dim') ||
+      combinedNames.includes('door_height_ext')) {
     return 'DOOR_DIMENSIONS';
   }
 
@@ -830,7 +838,10 @@ const determineLayer = (name: string): string => {
   const lowerName = name.toLowerCase();
 
   // 도어 치수선 (일반 치수선보다 먼저 체크)
-  if (lowerName.includes('door-dimension') || lowerName.includes('door_dimension')) {
+  if (lowerName.includes('door-dimension') ||
+      lowerName.includes('door_dimension') ||
+      lowerName.includes('door_height_dim') ||
+      lowerName.includes('door_height_ext')) {
     return 'DOOR_DIMENSIONS';
   }
 
@@ -1328,6 +1339,9 @@ export const extractFromScene = (
 
         const isBackPanelEdge = combinedNames.includes('back-panel') || combinedNames.includes('백패널');
         const isReinforcementEdge = combinedNames.includes('보강대') || combinedNames.includes('reinforcement');
+        const isDrawerEdge = combinedNames.includes('drawer') ||
+                             combinedNames.includes('서랍') ||
+                             combinedNames.includes('마이다');
         const isClothingRodEdge = combinedNames.includes('clothing-rod') || combinedNames.includes('옷봉');
         const isAdjustableFootEdge = combinedNames.includes('adjustable-foot') || combinedNames.includes('조절발');
         const isVentilationEdge = combinedNames.includes('ventilation') || combinedNames.includes('환기');
@@ -1336,7 +1350,9 @@ export const extractFromScene = (
         const isFurniturePanelEdge = lowerName.includes('furniture-edge');
 
         // 도어 엣지 감지: DoorModule.tsx에서 name="door-edge"로 설정됨
-        const isDoorEdge = lowerName.includes('door-edge') || lowerName.includes('door');
+        const isDoorEdge = combinedNames.includes('door-edge') ||
+                           combinedNames.includes('door') ||
+                           combinedNames.includes('도어');
 
         // 공간 프레임 감지: Room.tsx에서 name="space-frame"으로 설정됨
         const isSpaceFrame = lowerName.includes('space-frame');
@@ -1380,13 +1396,16 @@ export const extractFromScene = (
 
         // 가구 패널/공간 프레임/도어 엣지는 뒤쪽 필터링 건너뜀 (좌측판, 우측판, 상판, 하판, 좌우상하 프레임 등 모두 보임)
         // 보강대(reinforcement)도 탑뷰에서 보여야 하므로 필터링 제외
-        const skipBackFilter = isFurniturePanelEdge || isBackPanelEdge || isReinforcementEdge || isClothingRodEdge || isAdjustableFootEdge || isSpaceFrame || isDoorEdge;
+        const skipBackFilter = isFurniturePanelEdge || isDrawerEdge || isBackPanelEdge || isReinforcementEdge || isClothingRodEdge || isAdjustableFootEdge || isSpaceFrame || isDoorEdge;
 
         // 레이어 및 색상 결정 이유 로깅
         let lsLayer = layer; // 기본값은 determineLayer에서 결정된 값
         let colorReason = '기본';
 
-        if (isBackPanelEdge) {
+        if (isDrawerEdge) {
+          lsLayer = 'DRAWER';
+          colorReason = '서랍';
+        } else if (isBackPanelEdge) {
           lsLayer = 'BACK_PANEL';
           lsColor = 30; // ACI 30 = 오렌지 (2D에서 가구패널과 동일한 색상, 투명도 10%는 CAD에서 별도 설정)
           colorReason = '백패널';
@@ -1519,25 +1538,24 @@ export const extractFromScene = (
 
         const projPos = projectTo2D(worldPos, scale);
 
-        // 자신 또는 부모 계층에서 door-dimension / door-maida / maida 확인
-        // 하부장 서랍 마이다(앞판) 치수는 CADDimensions2D가 door-maida-group-* 로
-        // 감싸서 렌더하므로, 이것도 도어도면에 포함되도록 DOOR 레이어로 분류.
-        const isDoorRelatedName = (n: string): boolean => {
+        // 자신 또는 부모 계층에서 실제 도어 치수만 확인.
+        // 마이다/서랍 치수는 도어도면에 섞이면 안 되므로 DOOR 레이어로 올리지 않는다.
+        const isDoorDimensionName = (n: string): boolean => {
           const ln = n.toLowerCase();
           return ln.includes('door-dimension') ||
                  ln.includes('door_dimension') ||
-                 ln.includes('door-maida') ||
-                 ln.includes('door_maida') ||
-                 ln.includes('마이다');
+                 ln.includes('door_height_dim') ||
+                 ln.includes('door_height_ext') ||
+                 ln.includes('door-dimension-height');
         };
         let textLayer = 'DIMENSIONS';
-        if (isDoorRelatedName(name)) {
-          textLayer = 'DOOR';
+        if (isDoorDimensionName(name)) {
+          textLayer = 'DOOR_DIMENSIONS';
         } else {
           let current: THREE.Object3D | null = mesh.parent;
           while (current) {
-            if (current.name && isDoorRelatedName(current.name)) {
-              textLayer = 'DOOR';
+            if (current.name && isDoorDimensionName(current.name)) {
+              textLayer = 'DOOR_DIMENSIONS';
               break;
             }
             current = current.parent;
@@ -3493,6 +3511,13 @@ export const generateCombinedDxfFromData = (
     }
   });
 
+  return buildCombinedDxfFromDrawingData(spaceInfo, drawingData);
+};
+
+export const buildCombinedDxfFromDrawingData = (
+  spaceInfo: SpaceInfo,
+  drawingData: CombinedDxfDrawingData[]
+): string => {
   const visibleDrawings = drawingData.filter(({ data }) => data.lines.length > 0 || data.texts.length > 0);
   if (visibleDrawings.length === 0) {
     const fallbackText: DxfText = {

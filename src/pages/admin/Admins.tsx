@@ -90,24 +90,20 @@ const Admins = () => {
         const adminsMap = await getAllAdmins();
         console.log('👑 관리자 수:', adminsMap.size);
 
+        // 모든 사용자를 메모리에 보관 (검색 시 일반 사용자도 찾을 수 있도록)
+        // 단, 검색어가 비어있으면 화면에는 관리자/슈퍼관리자만 노출 (filteredUsers 에서 처리)
         const usersData: UserData[] = [];
         usersSnapshot.docs.forEach((doc) => {
           const data = doc.data() as DocumentData;
           const userEmail = data.email || '';
-          const isAdminUser = adminsMap.has(doc.id);
-          const isSuperAdminUser = isSuperAdmin(userEmail);
-          // 관리자 권한 관리 페이지 — 관리자(isAdmin) 또는 슈퍼관리자만 노출
-          // 일반 사용자는 검색 UI 를 통해서만 추가 가능
-          if (!isAdminUser && !isSuperAdminUser) return;
-
           usersData.push({
             id: doc.id,
             email: userEmail,
             displayName: data.displayName || data.name || '',
             photoURL: data.photoURL || '',
             createdAt: data.createdAt?.toDate?.() || null,
-            isAdmin: isAdminUser,
-            isSuperAdmin: isSuperAdminUser,
+            isAdmin: adminsMap.has(doc.id),
+            isSuperAdmin: isSuperAdmin(userEmail),
           });
         });
 
@@ -221,18 +217,25 @@ const Admins = () => {
 
   const filteredUsers = users
     .filter(user => {
-      const query = searchQuery.toLowerCase();
-      const matchesSearch =
-        user.email?.toLowerCase().includes(query) ||
-        user.displayName?.toLowerCase().includes(query) ||
-        user.id.toLowerCase().includes(query);
+      const query = searchQuery.toLowerCase().trim();
+      // 검색어가 없으면: 관리자/슈퍼관리자만 노출 (일반 사용자 숨김)
+      // 검색어가 있으면: 일반 사용자도 매칭하여 노출 (관리자 권한 부여를 위해)
+      if (!query) {
+        if (!user.isAdmin && !user.isSuperAdmin) return false;
+      } else {
+        const matchesSearch =
+          user.email?.toLowerCase().includes(query) ||
+          user.displayName?.toLowerCase().includes(query) ||
+          user.id.toLowerCase().includes(query);
+        if (!matchesSearch) return false;
+      }
 
       const matchesRole =
         filterRole === 'all' ||
         (filterRole === 'superadmin' && user.isSuperAdmin) ||
         (filterRole === 'admin' && user.isAdmin && !user.isSuperAdmin);
 
-      return matchesSearch && matchesRole;
+      return matchesRole;
     })
     .sort((a, b) => {
       switch (sortBy) {
