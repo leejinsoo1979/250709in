@@ -214,8 +214,8 @@ const ProfilePopup: React.FC<ProfilePopupProps> = ({ isOpen, onClose, position }
                 <p className={styles.headerEmail}>{user.email}</p>
                 {(() => {
                   const isEnt = userPlan === 'enterprise';
-                  const label = isSuperAdmin ? '슈퍼관리자' : isAdmin ? '관리자' : isEnt ? '기업회원' : '일반회원';
-                  const bg = isSuperAdmin ? '#7c3aed' : isAdmin ? '#3b82f6' : isEnt ? '#10b981' : '#6b7280';
+                  const label = isSuperAdmin ? '👑 슈퍼관리자' : isAdmin ? '관리자' : isEnt ? '기업회원' : '일반회원';
+                  const bg = isSuperAdmin ? '#000000' : isAdmin ? '#3b82f6' : isEnt ? '#10b981' : '#6b7280';
                   return (
                     <span
                       style={{
@@ -251,8 +251,8 @@ const ProfilePopup: React.FC<ProfilePopupProps> = ({ isOpen, onClose, position }
             {/* 회원 등급 — 최상단에 강조 표시 */}
             {(() => {
               const isEnt = userPlan === 'enterprise';
-              const label = isSuperAdmin ? '무제한 회원' : isEnt ? '기업회원' : '체험판';
-              const bg = isSuperAdmin ? '#7c3aed' : isEnt ? '#10b981' : '#6b7280';
+              const label = isSuperAdmin ? '👑 슈퍼관리자' : isAdmin ? '관리자' : isEnt ? '기업회원' : '일반회원';
+              const bg = isSuperAdmin ? '#000000' : isAdmin ? '#3b82f6' : isEnt ? '#10b981' : '#6b7280';
               return (
                 <div className={styles.infoRow}>
                   <div className={styles.infoLabel}>
