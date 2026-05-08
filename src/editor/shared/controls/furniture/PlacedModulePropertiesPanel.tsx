@@ -3207,8 +3207,8 @@ const PlacedModulePropertiesPanel: React.FC = () => {
             </div>
           )}
 
-          {/* 섹션별 치수 설정 (2섹션 이상 가구: customConfig 또는 modelConfig) */}
-          {currentPlacedModule && (() => {
+          {/* 섹션별 치수 설정 (2섹션 이상 가구: customConfig 또는 modelConfig) — 편집 탭 전용 */}
+          {!showDetails && currentPlacedModule && (() => {
             const cc = currentPlacedModule.customConfig;
             const ccSections = cc?.sections;
             const mcSections = moduleData?.modelConfig?.sections;
@@ -3778,8 +3778,8 @@ const PlacedModulePropertiesPanel: React.FC = () => {
             );
           })()}
 
-          {/* 상,걸래받이 — 우측바와 동일 형태 (해당 가구 단일) */}
-          {currentPlacedModule && !currentPlacedModule.isSurroundPanel && (() => {
+          {/* 상,걸래받이 — 우측바와 동일 형태 (해당 가구 단일) — 편집 탭 전용 */}
+          {!showDetails && currentPlacedModule && !currentPlacedModule.isSurroundPanel && (() => {
             const mod = currentPlacedModule;
             const globalTop = spaceInfo.frameSize?.top ?? 30;
             const globalBase = spaceInfo.baseConfig?.height ?? 65;
@@ -4163,8 +4163,8 @@ const PlacedModulePropertiesPanel: React.FC = () => {
           })()}
 
 
-          {/* 엔드패널(EP) 설정 */}
-          {currentPlacedModule && moduleData && (
+          {/* 엔드패널(EP) 설정 — 편집 탭 전용 */}
+          {!showDetails && currentPlacedModule && moduleData && (
             <div className={styles.propertySection}>
               <h5 className={styles.sectionTitle}>엔드패널</h5>
               {/* 좌/우 EP 체크박스 */}
