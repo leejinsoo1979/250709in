@@ -414,18 +414,21 @@ const getAppTheme = (): 'dark' | 'light' => {
   return 'light';
 };
 
-// localStorage 마이그레이션: shadowEnabled 캐시 제거
-// (탭은 다시 영속화 — 새로고침해도 열어둔 탭 유지, 다른 계정 전환 시는 AuthProvider 가 초기화)
+// localStorage 마이그레이션
+// 1) shadowEnabled 캐시 제거 (구버전 잔재)
+// 2) showDimensions/showDimensionsText 도 제거 — 이제 영속화 안 함, 디자인 열 때마다 ON
 try {
   const raw = localStorage.getItem('ui-store');
   if (raw) {
     const parsed = JSON.parse(raw);
     let mutated = false;
     if (parsed?.state) {
-      if ('shadowEnabled' in parsed.state) {
-        delete parsed.state.shadowEnabled;
-        mutated = true;
-      }
+      ['shadowEnabled', 'showDimensions', 'showDimensionsText'].forEach((k) => {
+        if (k in parsed.state) {
+          delete parsed.state[k];
+          mutated = true;
+        }
+      });
     }
     if (mutated) {
       localStorage.setItem('ui-store', JSON.stringify(parsed));
@@ -970,9 +973,7 @@ export const useUIStore = create<UIState>()(
         // openTabs/activeTabId 영속화 (사용자별 격리는 AuthProvider 의 사용자 변경 감지에서 초기화)
         openTabs: state.openTabs,
         activeTabId: state.activeTabId,
-        // 뷰 토글 상태 유지
-        showDimensions: state.showDimensions,
-        showDimensionsText: state.showDimensionsText,
+        // 뷰 토글: showDimensions/showDimensionsText 는 영속화 안 함 — 디자인 새로 열 때마다 ON
         showAll: state.showAll,
         // showGuides는 기본값(false) 유지를 위해 영속화하지 않음
         showAxis: state.showAxis,
