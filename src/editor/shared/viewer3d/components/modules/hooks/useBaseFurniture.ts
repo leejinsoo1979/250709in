@@ -130,17 +130,18 @@ export const useBaseFurniture = (
       return originalModelConfig;
     }
 
-    // 신발장(현관장 H): 상부/하부 경계 Y 유지를 위해 첫(하부) 섹션이 높이 변화 흡수
-    // 그 외 가구: 하부 섹션은 고정, 마지막(상부) 섹션이 높이 변화 흡수
-    const isShoeCabinetHeight = !!moduleData?.id && (
-      moduleData.id.includes('-entryway-') ||
-      moduleData.id.includes('-shelf-') ||
-      moduleData.id.includes('-4drawer-shelf-') ||
-      moduleData.id.includes('-2drawer-shelf-')
+    // 흡수 섹션 결정:
+    // - 하부 흡수(현관장 H/일반 선반장): 첫 섹션(하부)이 높이 변화 흡수, 받침대 기준 유지
+    // - 그 외(일반 가구, 4drawer/2drawer 선반장): 마지막 섹션(상부)이 흡수
+    const mid = moduleData?.id || '';
+    const isLowerAbsorbShoeCabinetHeight = !!mid && (
+      mid.includes('-entryway-') ||
+      // -shelf- 인데 4drawer/2drawer 가 아닌 일반 선반장만 하부 흡수
+      (mid.includes('-shelf-') && !mid.includes('-4drawer-shelf-') && !mid.includes('-2drawer-shelf-'))
     );
     const sections = originalModelConfig.sections;
-    // 흡수 섹션 인덱스: 신발장이면 0(하부), 그 외엔 마지막(상부)
-    const absorbingIdx = isShoeCabinetHeight ? 0 : sections.length - 1;
+    // 흡수 섹션 인덱스: 하부 흡수 신발장이면 0(하부), 그 외엔 마지막(상부)
+    const absorbingIdx = isLowerAbsorbShoeCabinetHeight ? 0 : sections.length - 1;
     const fixedSum = sections.reduce((sum: number, s: SectionConfig, i: number) =>
       i === absorbingIdx ? sum : sum + s.height, 0);
     const absorbingSection = sections[absorbingIdx];
