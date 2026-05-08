@@ -739,6 +739,7 @@ exports.telegramWebhook = onRequest(
       };
 
       // 헬퍼: 메시지 캡션/텍스트 갱신 (실패해도 버튼은 이미 제거된 상태로 유지)
+      let editFailed = false;
       const editCaption = async (extraText, replyMarkup) => {
         const original = cb.message.caption || cb.message.text || '';
         const isPhoto = !!cb.message.photo;
@@ -759,8 +760,10 @@ exports.telegramWebhook = onRequest(
               reply_markup: replyMarkup || { inline_keyboard: [] },
             });
           }
+          console.log('[telegramWebhook] editCaption 성공');
         } catch (e) {
-          console.error('editMessage 실패:', e?.response?.data || e?.message || e);
+          editFailed = true;
+          console.error('[telegramWebhook] editMessage 실패:', e?.response?.data ? JSON.stringify(e.response.data) : e?.message || String(e));
         }
       };
 
@@ -908,18 +911,19 @@ exports.telegramWebhook = onRequest(
       // 텔레그램 메시지 갱신 (최종 결과로 — '처리 중'을 덮어씀, 버튼 제거 유지)
       await editCaption(doneText, { inline_keyboard: [] });
 
-      // editMessageReplyMarkup 이 실패한 경우 — 답글 메시지로 결과 별도 전송
-      // (오래된 메시지/권한 문제로 원본 수정이 안 되어도 관리자가 즉시 결과 확인 가능)
-      if (removeFailed) {
+      // 원본 메시지 수정이 실패한 경우 — 답글 메시지로 결과 별도 전송
+      // (버튼 제거 또는 caption 갱신 어느 쪽이라도 실패하면 발동)
+      if (removeFailed || editFailed) {
         try {
           await tgApi(token, 'sendMessage', {
             chat_id: chatId,
-            text: `${doneText}\n\n⚠️ 원본 메시지 버튼 제거가 실패하여 별도 메시지로 알립니다.`,
+            text: doneText,
             reply_to_message_id: messageId,
             allow_sending_without_reply: true,
           });
+          console.log('[telegramWebhook] sendMessage(fallback) 성공');
         } catch (e) {
-          console.error('[telegramWebhook] sendMessage(fallback) 실패:', e?.response?.data || e?.message || e);
+          console.error('[telegramWebhook] sendMessage(fallback) 실패:', e?.response?.data ? JSON.stringify(e.response.data) : e?.message || String(e));
         }
       }
 
