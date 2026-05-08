@@ -641,13 +641,6 @@ const SimpleDashboard: React.FC = () => {
         return;
       }
 
-      // Ctrl+X: 잘라내기
-      if (isMod && e.key === 'x' && actions.selectedItems.size > 0) {
-        e.preventDefault();
-        actions.cutItems(getSelectedExplorerItems());
-        return;
-      }
-
       // Ctrl+V: 붙여넣기
       if (isMod && e.key === 'v' && actions.clipboard) {
         e.preventDefault();
@@ -1299,30 +1292,6 @@ const SimpleDashboard: React.FC = () => {
               열기
             </button>
 
-            {/* 에디터로 이동 (디자인만) */}
-            {contextMenu.item.type === 'design' && (
-              <button
-                style={{
-                  width: '100%', padding: '8px 16px', border: 'none', background: 'none',
-                  color: 'var(--theme-text, #fff)', textAlign: 'left',
-                  display: 'flex', alignItems: 'center', gap: 10, fontSize: 13,
-                }}
-                onMouseEnter={e => (e.currentTarget.style.background = 'var(--theme-primary, #3b82f6)')}
-                onMouseLeave={e => (e.currentTarget.style.background = 'none')}
-                onClick={() => {
-                  const item = contextMenu.item;
-                  const projectId = item.projectId || nav.currentProjectId;
-                  if (projectId) {
-                    handleDesignOpen(projectId, item.id, item.name);
-                  }
-                  setContextMenu(null);
-                }}
-              >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                에디터로 이동
-              </button>
-            )}
-
             {/* 발주하기 (디자인만) */}
             {contextMenu.item.type === 'design' && (
               <button
@@ -1513,27 +1482,6 @@ const SimpleDashboard: React.FC = () => {
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
               복사
               <span style={{ marginLeft: 'auto', opacity: 0.5, fontSize: 11 }}>Ctrl+C</span>
-            </button>
-
-            {/* 잘라내기 */}
-            <button
-              style={{
-                width: '100%', padding: '8px 16px', border: 'none', background: 'none',
-                color: 'var(--theme-text, #fff)', textAlign: 'left', 
-                display: 'flex', alignItems: 'center', gap: 10, fontSize: 13,
-              }}
-              onMouseEnter={e => (e.currentTarget.style.background = 'var(--theme-primary, #3b82f6)')}
-              onMouseLeave={e => (e.currentTarget.style.background = 'none')}
-              onClick={() => {
-                const selected = getSelectedExplorerItems();
-                const items = selected.length > 0 ? selected : [contextMenu.item];
-                actions.cutItems(items);
-                setContextMenu(null);
-              }}
-            >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><line x1="20" y1="4" x2="8.12" y2="15.88"/><line x1="14.47" y1="14.48" x2="20" y2="20"/><line x1="8.12" y1="8.12" x2="12" y2="12"/></svg>
-              잘라내기
-              <span style={{ marginLeft: 'auto', opacity: 0.5, fontSize: 11 }}>Ctrl+X</span>
             </button>
 
             {/* 붙여넣기 (클립보드에 항목이 있을 때) */}

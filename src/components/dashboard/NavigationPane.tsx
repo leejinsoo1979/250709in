@@ -220,10 +220,10 @@ const NavigationPane: React.FC<NavigationPaneProps> = ({
           </div>
         )}
 
-        {/* 협업 메뉴 */}
+        {/* 협업 메뉴 — 구분선으로 빠른 액세스와 분리 */}
         {!showProjectTree && (
           <div className={styles.section}>
-            <div className={styles.sectionTitle}>협업</div>
+            <div className={styles.sectionDivider} />
             <button
               className={`${styles.menuItem} ${location.pathname.startsWith('/dashboard/friends') ? styles.menuItemActive : ''}`}
               onClick={() => navigate('/dashboard/friends')}
