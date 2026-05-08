@@ -178,9 +178,9 @@ service cloud.firestore {
     match /projects/{id} {
       // 읽기는 누구나 가능 (공유 링크 지원)
       allow read: if true;
-      // list/listen: 관리자는 전체, 일반 로그인 사용자는 본인 소유 프로젝트만
-      // (대시보드의 본인 프로젝트 listen 쿼리가 400 Bad Request 받지 않도록 허용)
-      allow list: if isAdmin() || isSignedIn();
+      // list/listen: 기업회원/관리자만 (일반회원은 대시보드 접근 불가 정책)
+      // 클라이언트는 where('userId','==',uid) 필터를 통해 본인 것만 받아옴
+      allow list: if isEnterpriseOrAdmin();
       // 생성: 기업회원/관리자, 본인을 userId로 (resource 없으니 request.resource 사용)
       allow create: if isEnterpriseOrAdmin() &&
                     request.resource.data.userId == request.auth.uid;
@@ -201,8 +201,8 @@ service cloud.firestore {
     match /designFiles/{id} {
       // 공유 링크를 위해 읽기는 모두 허용
       allow read: if true;
-      // list/listen: 관리자는 전체, 일반 로그인 사용자는 본인 디자인 파일만 (where 필터 필수)
-      allow list: if isAdmin() || isSignedIn();
+      // list/listen: 기업회원/관리자만 (일반회원은 대시보드 접근 불가 정책)
+      allow list: if isEnterpriseOrAdmin();
 
       // 생성: 기업회원/관리자만, 본인이 소유자인 경우
       allow create: if isEnterpriseOrAdmin() && request.auth.uid == request.resource.data.userId;
