@@ -1,8 +1,13 @@
 import { useCallback, useState } from 'react';
-import { generateDXFFromScene, downloadDXFFromScene, generateDXFFilenameFromScene } from '../utils/dxfFromScene';
+import {
+  generateDXFFromScene,
+  generateCombinedDXFFromScene,
+  downloadDXFFromScene,
+  generateDXFFilenameFromScene,
+  generateCombinedDXFFilenameFromScene
+} from '../utils/dxfFromScene';
 import type { SpaceInfo } from '@/store/core/spaceConfigStore';
 import type { PlacedModule } from '../furniture/types';
-import JSZip from 'jszip';
 import { exportWithPersistence } from '@/services/exportService';
 import { getCurrentVersionId } from '@/services/designs.repo';
 import { auth } from '@/firebase/config';
@@ -163,7 +168,7 @@ export const useDXFExport = () => {
   }, []);
 
   /**
-   * 여러 DXF 파일을 ZIP으로 묶어서 다운로드
+   * 선택한 도면들을 하나의 DXF 레이아웃으로 묶어서 다운로드
    * @param spaceInfo 공간 정보
    * @param placedModules 배치된 가구 모듈들
    * @param drawingTypes 도면 타입들
@@ -175,7 +180,7 @@ export const useDXFExport = () => {
   ) => {
     try {
       setIsExporting(true);
-      console.log(`🔧 DXF ZIP 내보내기 시작 (씬 기반)...`);
+      console.log(`🔧 통합 DXF 내보내기 시작 (씬 기반)...`);
       console.log('📊 선택된 도면:', drawingTypes);
 
       // 씬 확인
@@ -184,49 +189,15 @@ export const useDXFExport = () => {
         throw new Error('Three.js 씬을 찾을 수 없습니다. 에디터가 로드될 때까지 기다려주세요.');
       }
 
-      // ZIP 파일 생성
-      const zip = new JSZip();
-
-      // 각 도면 타입별로 DXF 생성
-      for (const drawingType of drawingTypes) {
-        console.log(`📄 ${drawingType} 도면 생성 중...`);
-
-        const dxfContent = generateDXFFromScene(spaceInfo, drawingType, placedModules);
-
-        if (!dxfContent) {
-          console.warn(`⚠️ ${drawingType} 도면 생성 실패, 건너뜀`);
-          continue;
-        }
-
-        const filename = generateDXFFilenameFromScene(spaceInfo, drawingType);
-        zip.file(filename, dxfContent);
-
-        console.log(`✅ ${drawingType} 도면 추가 완료: ${filename}`);
+      const dxfContent = generateCombinedDXFFromScene(spaceInfo, drawingTypes, placedModules);
+      if (!dxfContent) {
+        throw new Error('통합 DXF 생성에 실패했습니다.');
       }
 
-      // ZIP 파일 내 파일 수 확인
-      const filesInZip = Object.keys(zip.files);
-      console.log(`📦 ZIP 내 파일 수: ${filesInZip.length}개`, filesInZip);
+      const filename = generateCombinedDXFFilenameFromScene(spaceInfo);
+      downloadDXFFromScene(dxfContent, filename);
 
-      // ZIP 파일 생성 및 다운로드 (DXF 파일만 포함, README 제외)
-      const zipBlob = await zip.generateAsync({ type: 'blob' });
-
-      const timestamp = new Date().toISOString().slice(0, 19).replace(/[:-]/g, '');
-      const dimensions = `${spaceInfo.width}W-${spaceInfo.height}H-${spaceInfo.depth}D`;
-      const zipFilename = `furniture-drawings-${dimensions}-${timestamp}.zip`;
-
-      const url = URL.createObjectURL(zipBlob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = zipFilename;
-
-      document.body.appendChild(link);
-      link.click();
-
-      document.body.removeChild(link);
-      URL.revokeObjectURL(url);
-
-      console.log(`✅ DXF ZIP 파일 다운로드 완료: ${zipFilename}`);
+      console.log(`✅ 통합 DXF 파일 다운로드 완료: ${filename}`);
 
       const drawingTypeNames: Record<DrawingType, string> = {
         front: '입면도',
@@ -240,17 +211,17 @@ export const useDXFExport = () => {
 
       return {
         success: true,
-        filename: zipFilename,
-        message: `DXF 도면 ${drawingTypes.length}개 (${selectedDrawingNames})가 ZIP 파일로 생성되었습니다.`
+        filename,
+        message: `DXF 도면 ${drawingTypes.length}개 (${selectedDrawingNames})가 통합 DXF 파일로 생성되었습니다.`
       };
 
     } catch (error) {
-      console.error(`❌ DXF ZIP 내보내기 실패:`, error);
+      console.error(`❌ 통합 DXF 내보내기 실패:`, error);
 
       return {
         success: false,
         error: error instanceof Error ? error.message : '알 수 없는 오류가 발생했습니다.',
-        message: `DXF ZIP 파일 생성에 실패했습니다.`
+        message: `통합 DXF 파일 생성에 실패했습니다.`
       };
     } finally {
       setIsExporting(false);

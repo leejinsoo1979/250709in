@@ -1,7 +1,14 @@
 import { SpaceInfo } from '@/store/core/spaceConfigStore';
 import { PlacedModule } from '@/editor/shared/furniture/types';
 import { formatDxfDate } from './dxfKoreanText';
-import { generateDxfFromData, downloadDxf, type ViewDirection, type SideViewFilter } from './dxfDataRenderer';
+import {
+  generateDxfFromData,
+  generateCombinedDxfFromData,
+  downloadDxf,
+  type ViewDirection,
+  type SideViewFilter,
+  type CombinedDxfDrawingInput
+} from './dxfDataRenderer';
 
 // 도면 타입 정의
 export type DrawingType = 'front' | 'plan' | 'side' | 'sideLeft' | 'door';
@@ -45,6 +52,22 @@ const drawingTypeToSideViewFilter = (drawingType: DrawingType): SideViewFilter =
   }
 };
 
+const drawingTypeToTitle = (drawingType: DrawingType): string => {
+  switch (drawingType) {
+    case 'front':
+      return '입면도';
+    case 'plan':
+      return '평면도';
+    case 'side':
+    case 'sideLeft':
+      return '측면도';
+    case 'door':
+      return '도어도면';
+    default:
+      return '도면';
+  }
+};
+
 /**
  * 데이터 기반 DXF 생성
  *
@@ -80,6 +103,30 @@ export const generateDXFFromScene = (
     return dxfString;
   } catch (error) {
     console.error('❌ DXF 생성 실패:', error);
+    return null;
+  }
+};
+
+export const generateCombinedDXFFromScene = (
+  spaceInfo: SpaceInfo,
+  drawingTypes: DrawingType[],
+  placedModules?: PlacedModule[]
+): string | null => {
+  console.log(`📐 통합 DXF 생성 시작 (${drawingTypes.join(', ')})...`);
+
+  const modules = placedModules || [];
+  const drawings: CombinedDxfDrawingInput[] = drawingTypes.map(drawingType => ({
+    title: drawingTypeToTitle(drawingType),
+    viewDirection: drawingTypeToViewDirection(drawingType),
+    sideViewFilter: drawingTypeToSideViewFilter(drawingType)
+  }));
+
+  try {
+    const dxfString = generateCombinedDxfFromData(spaceInfo, modules, drawings);
+    console.log(`✅ 통합 DXF 생성 완료 (${drawingTypes.length}개 도면)`);
+    return dxfString;
+  } catch (error) {
+    console.error('❌ 통합 DXF 생성 실패:', error);
     return null;
   }
 };
@@ -124,4 +171,13 @@ export const generateDXFFilenameFromScene = (
   };
 
   return `furniture-${typeNames[drawingType]}-${dimensions}-${timestamp}.dxf`;
+};
+
+export const generateCombinedDXFFilenameFromScene = (
+  spaceInfo: SpaceInfo
+): string => {
+  const timestamp = formatDxfDate();
+  const dimensions = `${spaceInfo.width}W-${spaceInfo.height}H-${spaceInfo.depth}D`;
+
+  return `furniture-all-in-one-${dimensions}-${timestamp}.dxf`;
 };

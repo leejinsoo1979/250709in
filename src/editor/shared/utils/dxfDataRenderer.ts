@@ -128,6 +128,24 @@ export interface DxfText {
   layer: string;
 }
 
+export interface DxfDrawingData {
+  lines: DxfLine[];
+  texts: DxfText[];
+  minX: number;
+  maxX: number;
+  minY: number;
+  maxY: number;
+  width: number;
+  height: number;
+}
+
+export interface CombinedDxfDrawingInput {
+  title: string;
+  viewDirection: ViewDirection;
+  sideViewFilter?: SideViewFilter;
+  excludeDoor?: boolean;
+}
+
 /**
  * RGB 색상을 DXF ACI 색상 코드로 변환
  * DXF ACI: 1=빨강, 2=노랑, 3=초록, 4=시안, 5=파랑, 6=마젠타, 7=흰색/검정, 8=회색 등
@@ -3160,6 +3178,17 @@ export const generateDxfFromData = (
   sideViewFilter: SideViewFilter = 'all',
   excludeDoor: boolean = false
 ): string => {
+  const drawingData = generateDxfDrawingData(spaceInfo, placedModules, viewDirection, sideViewFilter, excludeDoor);
+  return buildDxfString(drawingData.lines, drawingData.texts);
+};
+
+export const generateDxfDrawingData = (
+  spaceInfo: SpaceInfo,
+  placedModules: PlacedModule[],
+  viewDirection: ViewDirection,
+  sideViewFilter: SideViewFilter = 'all',
+  excludeDoor: boolean = false
+): DxfDrawingData => {
   const scene = sceneHolder.getScene();
 
   if (!scene) {
@@ -3274,6 +3303,60 @@ export const generateDxfFromData = (
   const offsetX = (viewDirection === 'left' || viewDirection === 'right') ? 0 : spaceInfo.width / 2;
   const offsetY = 0;
 
+  const normalizedLines = lines.map(line => ({
+    ...line,
+    x1: line.x1 + offsetX,
+    y1: line.y1 + offsetY,
+    x2: line.x2 + offsetX,
+    y2: line.y2 + offsetY
+  }));
+  const normalizedTexts = texts.map(text => ({
+    ...text,
+    x: text.x + offsetX,
+    y: text.y + offsetY
+  }));
+  const bounds = getDxfBounds(normalizedLines, normalizedTexts);
+
+  return {
+    lines: normalizedLines,
+    texts: normalizedTexts,
+    ...bounds,
+    width: bounds.maxX - bounds.minX,
+    height: bounds.maxY - bounds.minY
+  };
+};
+
+const getDxfBounds = (
+  lines: DxfLine[],
+  texts: DxfText[]
+): { minX: number; maxX: number; minY: number; maxY: number } => {
+  let minX = Number.POSITIVE_INFINITY;
+  let maxX = Number.NEGATIVE_INFINITY;
+  let minY = Number.POSITIVE_INFINITY;
+  let maxY = Number.NEGATIVE_INFINITY;
+
+  lines.forEach(line => {
+    minX = Math.min(minX, line.x1, line.x2);
+    maxX = Math.max(maxX, line.x1, line.x2);
+    minY = Math.min(minY, line.y1, line.y2);
+    maxY = Math.max(maxY, line.y1, line.y2);
+  });
+
+  texts.forEach(text => {
+    minX = Math.min(minX, text.x);
+    maxX = Math.max(maxX, text.x);
+    minY = Math.min(minY, text.y - text.height);
+    maxY = Math.max(maxY, text.y + text.height);
+  });
+
+  if (!Number.isFinite(minX) || !Number.isFinite(maxX) || !Number.isFinite(minY) || !Number.isFinite(maxY)) {
+    return { minX: 0, maxX: 0, minY: 0, maxY: 0 };
+  }
+
+  return { minX, maxX, minY, maxY };
+};
+
+const buildDxfString = (lines: DxfLine[], texts: DxfText[]): string => {
   // DXF 생성
   const dxf = new DxfWriter();
 
@@ -3320,9 +3403,9 @@ export const generateDxfFromData = (
     const finalColor = line.color;
 
     // colorNumber 옵션으로 개별 라인에 색상 적용
-    dxf.addLine(
-      point3d(line.x1 + offsetX, line.y1 + offsetY),
-      point3d(line.x2 + offsetX, line.y2 + offsetY),
+      dxf.addLine(
+      point3d(line.x1, line.y1),
+      point3d(line.x2, line.y2),
       { colorNumber: finalColor }
     );
   });
@@ -3338,7 +3421,7 @@ export const generateDxfFromData = (
 
     // DXF TEXT 엔티티 추가 - colorNumber 옵션으로 개별 텍스트에 색상 적용
     dxf.addText(
-      point3d(text.x + offsetX, text.y + offsetY),
+      point3d(text.x, text.y),
       text.height,
       text.text,
       { colorNumber: text.color }
@@ -3347,6 +3430,89 @@ export const generateDxfFromData = (
 
   console.log(`✅ DXF 생성 완료 - 라인 ${lines.length}개, 텍스트 ${texts.length}개`);
   return dxf.stringify();
+};
+
+export const generateCombinedDxfFromData = (
+  spaceInfo: SpaceInfo,
+  placedModules: PlacedModule[],
+  drawings: CombinedDxfDrawingInput[]
+): string => {
+  const drawingData = drawings.map(drawing => ({
+    title: drawing.title,
+    data: generateDxfDrawingData(
+      spaceInfo,
+      placedModules,
+      drawing.viewDirection,
+      drawing.sideViewFilter ?? 'all',
+      drawing.excludeDoor ?? false
+    )
+  }));
+
+  const visibleDrawings = drawingData.filter(({ data }) => data.lines.length > 0 || data.texts.length > 0);
+  if (visibleDrawings.length === 0) {
+    throw new Error('통합 DXF에 포함할 도면 데이터가 없습니다.');
+  }
+
+  const maxDrawingWidth = Math.max(...visibleDrawings.map(({ data }) => data.width));
+  const maxDrawingHeight = Math.max(...visibleDrawings.map(({ data }) => data.height));
+  const gapX = Math.max(300, spaceInfo.width * 0.12);
+  const gapY = Math.max(300, spaceInfo.height * 0.12);
+  const titleHeight = 45;
+  const cellWidth = maxDrawingWidth + gapX;
+  const cellHeight = maxDrawingHeight + gapY + titleHeight;
+  const layoutSlots = [
+    { key: '입면도', col: 0, row: 0 },
+    { key: '도어도면', col: 1, row: 0 },
+    { key: '평면도', col: 0, row: 1 },
+    { key: '측면도', col: 1, row: 1 }
+  ];
+
+  const combinedLines: DxfLine[] = [];
+  const combinedTexts: DxfText[] = [];
+
+  visibleDrawings.forEach((drawing, index) => {
+    const slot = layoutSlots.find(item => item.key === drawing.title) ?? {
+      key: drawing.title,
+      col: index % 2,
+      row: Math.floor(index / 2)
+    };
+    const originX = slot.col * cellWidth;
+    const originY = -slot.row * cellHeight;
+    const offsetX = originX - drawing.data.minX + (cellWidth - drawing.data.width) / 2;
+    const offsetY = originY - drawing.data.minY + (cellHeight - titleHeight - drawing.data.height) / 2;
+    const titleX = originX + cellWidth / 2;
+    const titleY = originY + cellHeight - titleHeight;
+
+    combinedTexts.push({
+      x: titleX,
+      y: titleY,
+      text: drawing.title,
+      height: 40,
+      color: 7,
+      layer: 'DIMENSIONS'
+    });
+
+    drawing.data.lines.forEach(line => {
+      combinedLines.push({
+        ...line,
+        x1: line.x1 + offsetX,
+        y1: line.y1 + offsetY,
+        x2: line.x2 + offsetX,
+        y2: line.y2 + offsetY
+      });
+    });
+
+    drawing.data.texts.forEach(text => {
+      combinedTexts.push({
+        ...text,
+        x: text.x + offsetX,
+        y: text.y + offsetY
+      });
+    });
+  });
+
+  console.log(`✅ 통합 DXF 레이아웃 생성 완료 - 도면 ${visibleDrawings.length}개, 라인 ${combinedLines.length}개, 텍스트 ${combinedTexts.length}개`);
+  return buildDxfString(combinedLines, combinedTexts);
 };
 
 export const downloadDxf = (dxfContent: string, filename: string): void => {

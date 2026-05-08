@@ -1,5 +1,7 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import { Folder, Clock, Share2, Trash2, ChevronRight, ChevronDown, Users, Plus, Home } from 'lucide-react';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { Folder, Clock, Share2, Trash2, ChevronRight, ChevronDown, Users, Plus, Home, MessageCircle, UserPlus, Package } from 'lucide-react';
+import { subscribeReceivedRequests, subscribeMyConversations } from '@/firebase/friends';
 import { FcFolder } from 'react-icons/fc';
 import { RxDashboard } from 'react-icons/rx';
 import { useAuth } from '@/auth/AuthProvider';
@@ -50,6 +52,21 @@ const NavigationPane: React.FC<NavigationPaneProps> = ({
   });
   const [paneWidth, setPaneWidth] = useState(240);
   const [isResizing, setIsResizing] = useState(false);
+
+  // 협업 메뉴 (친구 요청/메시지/발주)
+  const navigate = useNavigate();
+  const location = useLocation();
+  const [pendingRequestCount, setPendingRequestCount] = useState(0);
+  const [unreadMessageCount, setUnreadMessageCount] = useState(0);
+  useEffect(() => {
+    if (!user?.uid) return;
+    const unsub1 = subscribeReceivedRequests(user.uid, (list) => setPendingRequestCount(list.length));
+    const unsub2 = subscribeMyConversations(user.uid, (convs) => {
+      const total = convs.reduce((sum, c) => sum + ((c.unread || {})[user.uid] || 0), 0);
+      setUnreadMessageCount(total);
+    });
+    return () => { unsub1(); unsub2(); };
+  }, [user?.uid]);
 
   // 폴더 데이터 (Firebase에서 직접 로드)
   const [localFolders, setLocalFolders] = useState<{ [projectId: string]: FolderData[] }>({});
@@ -200,6 +217,36 @@ const NavigationPane: React.FC<NavigationPaneProps> = ({
                 )}
               </button>
             ))}
+          </div>
+        )}
+
+        {/* 협업 메뉴 */}
+        {!showProjectTree && (
+          <div className={styles.section}>
+            <div className={styles.sectionTitle}>협업</div>
+            <button
+              className={`${styles.menuItem} ${location.pathname.startsWith('/dashboard/friends') ? styles.menuItemActive : ''}`}
+              onClick={() => navigate('/dashboard/friends')}
+            >
+              <span className={styles.menuIcon}><UserPlus size={16} /></span>
+              <span className={styles.menuLabel}>친구</span>
+              {pendingRequestCount > 0 && <span className={styles.menuBadge}>{pendingRequestCount}</span>}
+            </button>
+            <button
+              className={`${styles.menuItem} ${location.pathname.startsWith('/dashboard/messages') ? styles.menuItemActive : ''}`}
+              onClick={() => navigate('/dashboard/messages')}
+            >
+              <span className={styles.menuIcon}><MessageCircle size={16} /></span>
+              <span className={styles.menuLabel}>메시지</span>
+              {unreadMessageCount > 0 && <span className={styles.menuBadge}>{unreadMessageCount}</span>}
+            </button>
+            <button
+              className={`${styles.menuItem} ${location.pathname.startsWith('/dashboard/orders') ? styles.menuItemActive : ''}`}
+              onClick={() => navigate('/dashboard/orders')}
+            >
+              <span className={styles.menuIcon}><Package size={16} /></span>
+              <span className={styles.menuLabel}>발주 현황</span>
+            </button>
           </div>
         )}
 

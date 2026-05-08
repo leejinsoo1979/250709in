@@ -406,6 +406,74 @@ service cloud.firestore {
       allow delete: if isAdmin();
     }
 
+    // 친구 요청 (friendRequests)
+    // - id: {fromUid}_{toUid}
+    // - fromUid, toUid, status: 'pending'|'accepted'|'rejected', createdAt, fromName, fromEmail
+    match /friendRequests/{reqId} {
+      allow create: if isSignedIn() &&
+                    request.resource.data.fromUid == request.auth.uid &&
+                    request.resource.data.fromUid != request.resource.data.toUid;
+      allow read: if isSignedIn() && (
+        resource.data.fromUid == request.auth.uid ||
+        resource.data.toUid == request.auth.uid ||
+        isAdmin()
+      );
+      allow list: if isSignedIn();
+      // 수신자만 수락/거절, 송신자는 취소
+      allow update: if isSignedIn() && (
+        isAdmin() ||
+        (resource.data.toUid == request.auth.uid &&
+         request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'respondedAt'])) ||
+        (resource.data.fromUid == request.auth.uid &&
+         request.resource.data.status == 'cancelled')
+      );
+      allow delete: if isSignedIn() && (
+        isAdmin() ||
+        resource.data.fromUid == request.auth.uid ||
+        resource.data.toUid == request.auth.uid
+      );
+    }
+
+    // 친구 관계 (friends/{uid}/list/{friendUid}) — 양방향 미러링
+    match /friends/{uid}/list/{friendUid} {
+      allow read, list: if isSignedIn() && (uid == request.auth.uid || isAdmin());
+      // 본인 또는 친구가 친구관계 생성 가능 (수락 시 양쪽 미러링)
+      allow create: if isSignedIn() && (
+        uid == request.auth.uid ||
+        friendUid == request.auth.uid
+      );
+      allow update: if isSignedIn() && uid == request.auth.uid;
+      allow delete: if isSignedIn() && (uid == request.auth.uid || friendUid == request.auth.uid);
+    }
+
+    // 1:1 대화방 (conversations) — id: 정렬된 두 uid를 _로 결합 (예: uidA_uidB)
+    function isConversationMember(convId) {
+      return isSignedIn() && (
+        exists(/databases/$(database)/documents/conversations/$(convId)) &&
+        request.auth.uid in get(/databases/$(database)/documents/conversations/$(convId)).data.members
+      );
+    }
+    match /conversations/{convId} {
+      // members: [uidA, uidB], lastMessage, lastMessageAt, lastSenderId, unread:{uidA:0,uidB:0}
+      allow create: if isSignedIn() &&
+                    request.auth.uid in request.resource.data.members &&
+                    request.resource.data.members.size() == 2;
+      allow read: if isSignedIn() && (request.auth.uid in resource.data.members || isAdmin());
+      allow list: if isSignedIn();
+      allow update: if isSignedIn() && request.auth.uid in resource.data.members;
+      allow delete: if isAdmin();
+
+      // 메시지: senderId, text, createdAt, readBy:[uid]
+      match /messages/{msgId} {
+        allow read, list: if isConversationMember(convId);
+        allow create: if isConversationMember(convId) &&
+                      request.resource.data.senderId == request.auth.uid;
+        // readBy 업데이트만 허용
+        allow update: if isConversationMember(convId);
+        allow delete: if isAdmin();
+      }
+    }
+
     // 기업회원 가입 신청 (enterprise_inquiries)
     // - 생성: 로그인 사용자 본인 (uid 일치)
     // - 읽기/목록: 본인 또는 관리자

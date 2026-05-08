@@ -37,6 +37,8 @@ import AdminOrders from '@/pages/admin/Orders';
 import AdminPartners from '@/pages/admin/Partners';
 import FactoryOrders from '@/pages/FactoryOrders';
 import MyOrders from '@/pages/MyOrders';
+import Friends from '@/pages/Friends';
+import Messages from '@/pages/Messages';
 import AdminUserDetail from '@/pages/admin/UserDetail';
 import AdminAdmins from '@/pages/admin/Admins';
 import AdminTeams from '@/pages/admin/Teams';
@@ -141,6 +143,10 @@ function AppContent() {
         <Route path="/" element={<LandingPage />} />
         {/* 대시보드 페이지 (관리자 전용 - 그 외 사용자는 /demo 로 강제) */}
         <Route path="/dashboard" element={<DashboardAdminGuard><SimpleDashboard /></DashboardAdminGuard>} />
+        <Route path="/dashboard/friends" element={<DashboardAdminGuard><Friends /></DashboardAdminGuard>} />
+        <Route path="/dashboard/messages" element={<DashboardAdminGuard><Messages /></DashboardAdminGuard>} />
+        <Route path="/dashboard/messages/:convId" element={<DashboardAdminGuard><Messages /></DashboardAdminGuard>} />
+        <Route path="/dashboard/orders" element={<DashboardAdminGuard><MyOrders /></DashboardAdminGuard>} />
         <Route path="/dashboard/*" element={<DashboardAdminGuard><SimpleDashboard /></DashboardAdminGuard>} />
         {/* 관리자 페이지 */}
         <Route path="/admin" element={<AdminLayout />}>
