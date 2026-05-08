@@ -2235,14 +2235,10 @@ const DoorModule: React.FC<DoorModuleProps> = ({
 
     // 도어 위치: 회전축이 힌지 위치에 맞게 조정
     const doorPositionX = -hingeAxisOffset; // 회전축 보정을 위한 도어 위치 조정
-    // X축 회전축을 슬롯 안쪽(중심 방향)으로 9mm 추가 이동
-    //   90도 열림 시 인접 슬롯의 도어와 18mm 간격 확보 (도어 두께만큼)
-    //   왼쪽 힌지: 슬롯 안쪽 = +X 방향, 오른쪽 힌지: 슬롯 안쪽 = -X 방향
-    //   닫힘 외관은 자식 group의 반대 보정으로 유지
+    // X축 회전축을 슬롯 안쪽으로 프레임(측판) 두께의 절반(9mm) 만큼 이동
+    //   왼쪽 힌지: 슬롯 안쪽 = +X, 오른쪽 힌지: 슬롯 안쪽 = -X
     const innerXShift = adjustedHingePosition === 'left' ? hingeOffsetUnits : -hingeOffsetUnits;
-    // Z축: 90도 회전 시 자식 group의 X 보정값이 Z방향으로 회전돼 도어가 가구 안쪽으로 9mm 들어가는 현상 보정
-    //   (왼쪽 힌지: 자식 X = -9mm → 90도 회전 시 Z = -9mm 가구 안쪽 / 오른쪽 힌지도 동일)
-    //   회전축 Z를 +9mm 앞으로 이동, 자식 group Z를 -9mm 보정 → 닫힘 외관 유지 + 90도 시 도어 앞면이 측판 앞면 라인과 일치
+    // Z축: X 보정값이 90도 회전 시 -Z로 변환되는 것을 상쇄
     const zCompensation = hingeOffsetUnits;
 
     return (
