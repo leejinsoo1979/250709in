@@ -29,7 +29,7 @@ export default function OrderModal({
   const [factoriesLoading, setFactoriesLoading] = useState(false);
   const [selectedFactoryId, setSelectedFactoryId] = useState<string>('');
   const [form, setForm] = useState<OrderFormData>({
-    quantity: '',
+    materialSpec: '',
     dueDate: '',
     deliveryAddress: '',
     installSchedule: '',
@@ -55,8 +55,8 @@ export default function OrderModal({
       setError('공장을 선택해주세요.');
       return;
     }
-    if (!form.quantity?.trim()) {
-      setError('수량을 입력해주세요.');
+    if (!form.materialSpec?.trim()) {
+      setError('자재 스펙을 입력해주세요.');
       return;
     }
     if (!form.dueDate?.trim()) {
@@ -148,10 +148,16 @@ export default function OrderModal({
             )}
           </div>
 
-          {/* 수량 */}
+          {/* 자재 스펙 */}
           <div>
-            <label style={labelStyle}>수량 <span style={{ color: '#ef4444' }}>*</span></label>
-            <input type="text" value={form.quantity} onChange={(e) => update('quantity', e.target.value)} placeholder="예: 10세트" style={inputStyle} />
+            <label style={labelStyle}>자재 스펙 <span style={{ color: '#ef4444' }}>*</span></label>
+            <textarea
+              value={form.materialSpec}
+              onChange={(e) => update('materialSpec', e.target.value)}
+              placeholder={'예) 몸통: PB 18T 화이트, 백패널: MDF 9T, 도어: PET 무광 그레이, 손잡이: 브러시드 알루미늄'}
+              rows={3}
+              style={{ ...inputStyle, resize: 'vertical', fontFamily: 'inherit' }}
+            />
           </div>
 
           {/* 납기 */}

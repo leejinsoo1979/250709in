@@ -15,7 +15,7 @@ import { db, functions } from './config';
 export type OrderStatus = 'pending' | 'accepted' | 'rejected' | 'in_progress' | 'completed' | 'cancelled';
 
 export interface OrderFormData {
-  quantity?: string;
+  materialSpec?: string;  // 자재 스펙 (예: PB 18T, MDF 9T 등)
   dueDate?: string;
   deliveryAddress?: string;
   installSchedule?: string;

@@ -434,13 +434,49 @@ exports.createOrder = onCall(
 
     const db = admin.firestore();
 
-    // 발주자 권한 검증 (기업회원만)
+    // 발주자 권한 검증 (기업회원/관리자/슈퍼관리자)
     const ordererSnap = await db.doc(`users/${callerUid}`).get();
     const ordererData = ordererSnap.exists ? ordererSnap.data() : {};
-    const isOrdererAllowed = ordererData.plan === 'enterprise' || ordererData.role === 'superadmin' ||
-      (await db.doc(`admins/${callerUid}`).get()).exists;
+    const callerEmail = String(request.auth?.token?.email || '').toLowerCase();
+    const isSuperAdminEmail = callerEmail === 'sbbc212@gmail.com';
+    const adminDoc = await db.doc(`admins/${callerUid}`).get();
+    // enterprise_inquiries 진실 기준 — 승인된 신청이 있으면 기업회원으로 인정
+    let hasApprovedEnterpriseInquiry = false;
+    try {
+      const inqSnap = await db.collection('enterprise_inquiries')
+        .where('uid', '==', callerUid)
+        .where('status', '==', 'approved')
+        .limit(1)
+        .get();
+      hasApprovedEnterpriseInquiry = !inqSnap.empty;
+    } catch (e) {
+      console.warn('enterprise_inquiries 조회 실패:', e?.message);
+    }
+    const isOrdererAllowed =
+      ordererData.plan === 'enterprise' ||
+      ordererData.role === 'superadmin' ||
+      isSuperAdminEmail ||
+      adminDoc.exists ||
+      hasApprovedEnterpriseInquiry;
     if (!isOrdererAllowed) {
+      console.error('[createOrder] 권한 거부:', {
+        callerUid, callerEmail,
+        plan: ordererData.plan, role: ordererData.role,
+        adminExists: adminDoc.exists,
+      });
       throw new HttpsError('permission-denied', '기업회원만 발주할 수 있습니다.');
+    }
+    // 기업회원 승인됐는데 plan 누락된 경우 — 자동 복구
+    if (hasApprovedEnterpriseInquiry && ordererData.plan !== 'enterprise' && ordererData.role !== 'superadmin') {
+      try {
+        await db.doc(`users/${callerUid}`).set({
+          plan: 'enterprise',
+          planUpdatedAt: admin.firestore.FieldValue.serverTimestamp(),
+        }, { merge: true });
+        console.log('[createOrder] users.plan 자동 복구: enterprise');
+      } catch (e) {
+        console.warn('plan 자동 복구 실패:', e?.message);
+      }
     }
 
     // 공장 검증
