@@ -177,30 +177,48 @@ export default function EnterpriseSignUpPage() {
         not_found: '국세청에 등록되지 않은 사업자번호입니다.',
       };
 
-      // 국세청 검증 통과 시 — 같은 사업자번호로 이미 다른 계정이 신청/승인됐는지 추가 체크
+      // 국세청 검증 통과 시 — 같은 사업자번호 가입 계정 수 체크 (최대 3개)
       if (data.ok) {
         try {
           const dupSnap = await getDocs(query(
             collection(db, 'enterprise_inquiries'),
             where('businessNumber', '==', form.businessNumber)
           ));
-          const conflicting = dupSnap.docs.filter(d => {
+          const existing = dupSnap.docs.filter(d => {
             const dd = d.data();
             if (dd.status === 'superseded') return false;
             if (isSocialLoggedIn && currentUser && dd.uid === currentUser.uid) return false;
             return true;
           });
-          if (conflicting.length > 0) {
-            const c = conflicting[0].data();
-            const statusLabel: Record<string, string> = {
-              pending: '승인 대기', approved: '승인됨', on_hold: '보류', rejected: '거절됨',
-            };
+          const MAX_ACCOUNTS = 3;
+          if (existing.length >= MAX_ACCOUNTS) {
             setBizVerify({
               status: 'error',
-              message: `이미 다른 계정으로 신청된 사업자번호입니다. (상태: ${statusLabel[c.status as string] || c.status})`,
+              message: `해당 사업자등록번호로 이미 ${existing.length}개 계정이 등록되어 있습니다. (최대 ${MAX_ACCOUNTS}개까지 가입 가능)`,
               verifiedNumber: '',
             });
             return;
+          }
+          if (existing.length > 0) {
+            const statusLabel: Record<string, string> = {
+              pending: '승인 대기', approved: '승인됨', on_hold: '보류', rejected: '거절됨',
+            };
+            const lines = existing.slice(0, 5).map(d => {
+              const dd = d.data();
+              return `  · ${dd.companyName || dd.loginEmail || dd.contactName || '(이름없음)'} - ${statusLabel[dd.status as string] || dd.status}`;
+            }).join('\n');
+            const proceed = confirm(
+              `해당 사업자등록번호로 이미 가입된 계정이 ${existing.length}개 있습니다. ` +
+              `(최대 ${MAX_ACCOUNTS}개까지 가입 가능)\n\n${lines}\n\n계정을 추가로 등록하시겠습니까?`
+            );
+            if (!proceed) {
+              setBizVerify({
+                status: 'idle',
+                message: '',
+                verifiedNumber: '',
+              });
+              return;
+            }
           }
         } catch (e) {
           console.warn('사업자번호 중복 체크 실패(무시):', e);
@@ -280,35 +298,43 @@ export default function EnterpriseSignUpPage() {
       return;
     }
 
-    // 같은 사업자번호로 이미 다른 계정이 신청/승인된 경우 차단
-    // (본인이 다시 신청하는 경우는 superseded 처리로 통과 — uid 비교)
+    // 같은 사업자번호 가입 계정 수 체크 (최대 3개) — 동시 신청/우회 방지를 위해 제출 직전에도 한 번 더
     try {
       const dupSnap = await getDocs(query(
         collection(db, 'enterprise_inquiries'),
         where('businessNumber', '==', form.businessNumber)
       ));
-      const conflicting = dupSnap.docs.filter(d => {
+      const existing = dupSnap.docs.filter(d => {
         const data = d.data();
-        // superseded(대체된 신청)와 본인 신청은 제외
         if (data.status === 'superseded') return false;
         if (isSocialLoggedIn && currentUser && data.uid === currentUser.uid) return false;
         return true;
       });
-      if (conflicting.length > 0) {
-        const c = conflicting[0].data();
-        const statusLabel: Record<string, string> = {
-          pending: '승인 대기',
-          approved: '승인됨',
-          on_hold: '보류',
-          rejected: '거절됨',
-        };
+      const MAX_ACCOUNTS = 3;
+      if (existing.length >= MAX_ACCOUNTS) {
         setError(
-          `해당 사업자등록번호는 이미 다른 계정으로 신청되어 있습니다. ` +
-          `(상태: ${statusLabel[c.status as string] || c.status})\n` +
-          `같은 사업자번호로는 한 계정만 가입 가능합니다.`
+          `해당 사업자등록번호로 이미 ${existing.length}개 계정이 등록되어 있습니다.\n` +
+          `같은 사업자번호로는 최대 ${MAX_ACCOUNTS}개까지만 가입 가능합니다.`
         );
         setSubmitting(false);
         return;
+      }
+      if (existing.length > 0) {
+        const statusLabel: Record<string, string> = {
+          pending: '승인 대기', approved: '승인됨', on_hold: '보류', rejected: '거절됨',
+        };
+        const lines = existing.slice(0, 5).map(d => {
+          const dd = d.data();
+          return `  · ${dd.companyName || dd.loginEmail || dd.contactName || '(이름없음)'} - ${statusLabel[dd.status as string] || dd.status}`;
+        }).join('\n');
+        const proceed = confirm(
+          `해당 사업자등록번호로 이미 가입된 계정이 ${existing.length}개 있습니다. ` +
+          `(최대 ${MAX_ACCOUNTS}개까지 가입 가능)\n\n${lines}\n\n계정을 추가로 등록하시겠습니까?`
+        );
+        if (!proceed) {
+          setSubmitting(false);
+          return;
+        }
       }
     } catch (e) {
       console.warn('사업자번호 중복 체크 실패(무시):', e);
