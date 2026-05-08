@@ -62,9 +62,14 @@ export const useFurnitureSpaceAdapter = ({ setPlacedModules }: UseFurnitureSpace
           // 공간 폭이 변경된 경우: 비례 리사이징 + 재배치
           // ⚠️ surroundType 변경(서라운드 ↔ 노서라운드)처럼 작은 폭 변화는 비례 리사이징하지 않음
           //    리사이징 시 moduleId 너비 변경 → 모듈 데이터 깨짐 → 본체 사라짐
+          // ⚠️ 사용자가 freeWidth를 직접 수정한 가구(customWidth/freeWidth가 명시 설정된 경우)는
+          //    공간이 약간 변해도 비례 리사이즈하지 않음 — 사용자 의도 보존
           const ratio = oldSpaceWidth > 0 ? newSpaceWidth / oldSpaceWidth : 1;
-          // 5% 이상 변경 시에만 리사이징 (surroundType 변경은 보통 100mm 이내 = 5% 미만)
-          const needsResize = Math.abs(ratio - 1) > 0.05;
+          // 사용자가 직접 너비를 변경한 가구는 절대 자동 리사이즈하지 않음
+          const userSetWidth = !!(module.customWidth || module.freeWidth);
+          // 30% 이상 변경 시에만 리사이징 (그 외에는 사용자 너비 보존)
+          // 자유배치는 슬롯 종속이 아니라 사용자가 직접 폭을 결정하므로 자동 리사이즈를 보수적으로 적용
+          const needsResize = !userSetWidth && Math.abs(ratio - 1) > 0.05;
 
           let newWidth = moduleWidth;
           let newCenterX = centerXmm;

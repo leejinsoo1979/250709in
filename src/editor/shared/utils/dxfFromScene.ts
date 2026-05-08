@@ -122,7 +122,7 @@ export const generateCombinedDXFFromScene = (
   console.log(`📐 통합 DXF 생성 시작 (${drawingTypes.join(', ')})...`);
 
   const modules = placedModules || [];
-  const drawings: CombinedDxfDrawingInput[] = drawingTypes.flatMap(drawingType => {
+  const drawings = drawingTypes.flatMap<CombinedDxfDrawingInput>(drawingType => {
     if (drawingType === 'side' || drawingType === 'sideLeft') {
       return modules.map((module, index) => ({
         title: `측면도 ${index + 1}`,

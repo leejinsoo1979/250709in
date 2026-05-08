@@ -10,7 +10,7 @@ import { SpaceInfo } from '@/store/core/spaceConfigStore';
 import { PlacedModule } from '@/editor/shared/furniture/types';
 import { sceneHolder } from '../viewer3d/sceneHolder';
 import { calculateFrameThickness, calculateInternalSpace, calculateBaseFrameHeight } from '../viewer3d/utils/geometry';
-import { getModuleById } from '@/data/modules';
+import { buildModuleDataFromPlacedModule, getModuleById } from '@/data/modules';
 import type { SectionConfig } from '@/data/modules/shelving';
 // calculateFrameThickness 제거됨 - 탑뷰 프레임은 씬에서 직접 추출
 
@@ -23,6 +23,107 @@ interface SectionHeightsInfo {
   heightsMm: number[];
   basicThicknessMm: number;
 }
+
+const resolveModuleData = (
+  module: PlacedModule,
+  spaceInfo: SpaceInfo
+): ReturnType<typeof getModuleById> | null => {
+  if (module.moduleId.startsWith('customizable-')) {
+    return buildModuleDataFromPlacedModule(module, spaceInfo.panelThickness);
+  }
+
+  const internalSpace = calculateInternalSpace(spaceInfo);
+  return getModuleById(
+    module.moduleId,
+    { width: internalSpace.width, height: internalSpace.height, depth: internalSpace.depth },
+    spaceInfo
+  ) || buildModuleDataFromPlacedModule(module, spaceInfo.panelThickness);
+};
+
+const getPlacedModuleCategory = (
+  module: PlacedModule,
+  moduleData: ReturnType<typeof getModuleById> | null
+): 'full' | 'upper' | 'lower' => {
+  if (moduleData?.category) return moduleData.category;
+  if (module.moduleId.includes('upper')) return 'upper';
+  if (module.moduleId.includes('lower')) return 'lower';
+  return 'full';
+};
+
+const getModuleHeightMm = (
+  module: PlacedModule,
+  moduleData: ReturnType<typeof getModuleById> | null,
+  spaceInfo: SpaceInfo
+): number => {
+  if (module.freeHeight) return module.freeHeight;
+  if (module.customHeight) return module.customHeight;
+  if (moduleData?.dimensions.height) return moduleData.dimensions.height;
+
+  const internalSpace = calculateInternalSpace(spaceInfo);
+  return internalSpace.height || Math.max(spaceInfo.height - (spaceInfo.frameSize?.top ?? 30) - calculateBaseFrameHeight(spaceInfo), 0);
+};
+
+const getModuleDepthMm = (
+  module: PlacedModule,
+  moduleData: ReturnType<typeof getModuleById> | null
+): number => module.upperSectionDepth || module.lowerSectionDepth || module.customDepth || module.freeDepth || moduleData?.dimensions.depth || 600;
+
+const getModuleWidthMm = (
+  module: PlacedModule,
+  moduleData: ReturnType<typeof getModuleById> | null
+): number => module.customWidth || module.adjustedWidth || module.freeWidth || module.moduleWidth || moduleData?.dimensions.width || 600;
+
+const resolveTopFrameHeightMm = (
+  module: PlacedModule | undefined,
+  spaceInfo: SpaceInfo
+): number => module?.topFrameThickness ?? (spaceInfo.frameSize?.top ?? 30);
+
+const resolveBaseHeightMm = (spaceInfo: SpaceInfo): number => {
+  const isFloating = spaceInfo.baseConfig?.type === 'stand' && spaceInfo.baseConfig?.placementType === 'float';
+  if (isFloating) return 0;
+  if (spaceInfo.baseConfig?.type === 'stand') return spaceInfo.baseConfig.height || 0;
+  return calculateBaseFrameHeight(spaceInfo);
+};
+
+const addRectLines = (
+  lines: DxfLine[],
+  x1: number,
+  y1: number,
+  x2: number,
+  y2: number,
+  layer: string,
+  color: number
+): void => {
+  const minX = Math.min(x1, x2);
+  const maxX = Math.max(x1, x2);
+  const minY = Math.min(y1, y2);
+  const maxY = Math.max(y1, y2);
+  lines.push({ x1: minX, y1: minY, x2: maxX, y2: minY, layer, color });
+  lines.push({ x1: maxX, y1: minY, x2: maxX, y2: maxY, layer, color });
+  lines.push({ x1: maxX, y1: maxY, x2: minX, y2: maxY, layer, color });
+  lines.push({ x1: minX, y1: maxY, x2: minX, y2: minY, layer, color });
+};
+
+const selectSideModule = (
+  placedModules: PlacedModule[],
+  sideViewFilter: SideViewFilter
+): PlacedModule | undefined => {
+  if (placedModules.length === 0) return undefined;
+
+  if (sideViewFilter === 'leftmost') {
+    return placedModules.reduce((prev, curr) =>
+      ((curr.position?.x || 0) < (prev.position?.x || 0)) ? curr : prev
+    );
+  }
+
+  if (sideViewFilter === 'rightmost') {
+    return placedModules.reduce((prev, curr) =>
+      ((curr.position?.x || 0) > (prev.position?.x || 0)) ? curr : prev
+    );
+  }
+
+  return placedModules[0];
+};
 
 /**
  * 가구 섹션 높이 계산 - CADDimensions2D의 computeSectionHeightsInfo와 동일 로직
@@ -105,7 +206,7 @@ const computeSectionHeightsInfo = (
   };
 };
 
-export type ViewDirection = 'front' | 'left' | 'top' | 'door';
+export type ViewDirection = 'front' | 'left' | 'right' | 'top' | 'door';
 
 // 측면뷰 필터링 타입: 좌측뷰는 leftmost 가구만, 우측뷰는 rightmost 가구만
 export type SideViewFilter = 'all' | 'leftmost' | 'rightmost';
@@ -1157,7 +1258,8 @@ export const extractFromScene = (
     if (allowedXRange &&
         (viewDirection === 'left' || viewDirection === 'right') &&
         layer !== 'SPACE_FRAME' &&
-        (targetModuleId || (!isAdjustableFoot && !isFurnitureInternal))) {
+        !isAdjustableFoot &&
+        !isFurnitureInternal) {
 
       // 가구 관련 객체인 경우 X 위치 필터링 적용
       const isFurnitureObject = lowerNameForFilter.includes('furniture') ||
@@ -1236,7 +1338,17 @@ export const extractFromScene = (
       }
 
       // 특수 객체에 대한 색상 및 레이어 강제 할당
-      if (lowerName.includes('clothing-rod') || lowerName.includes('옷봉')) {
+      const parentNames = getParentNamesForFilter(object);
+      const combinedNames = lowerName + parentNames;
+      const isLine2Drawer = combinedNames.includes('drawer') ||
+                            combinedNames.includes('서랍') ||
+                            combinedNames.includes('마이다');
+
+      if (isLine2Drawer) {
+        line2Color = 30;
+        line2Layer = 'DRAWER';
+        console.log(`📐 서랍(Line2): ${name || '(이름없음)'}, 레이어=DRAWER`);
+      } else if (lowerName.includes('clothing-rod') || lowerName.includes('옷봉')) {
         line2Color = 7; // ACI 7 = 흰색/검정
         line2Layer = 'CLOTHING_ROD';
         console.log(`📐 옷봉(Line2): ${name}, 색상 ACI=7로 강제 설정`);
@@ -1485,9 +1597,17 @@ export const extractFromScene = (
         // 엣지 타입 감지 (개별 Line 요소용)
         // 특수 객체에 대한 색상 및 레이어 강제 할당
         const lineLowerName = name.toLowerCase();
+        const lineParentNames = getParentNamesForFilter(lineObj);
+        const lineCombinedNames = lineLowerName + lineParentNames;
         let lineLayer = layer;
 
-        if (lineLowerName.includes('clothing-rod') || lineLowerName.includes('옷봉')) {
+        if (lineCombinedNames.includes('drawer') ||
+            lineCombinedNames.includes('서랍') ||
+            lineCombinedNames.includes('마이다')) {
+          lineColor = 30;
+          lineLayer = 'DRAWER';
+          console.log(`📐 서랍(Line): ${name || '(이름없음)'}, 레이어=DRAWER`);
+        } else if (lineLowerName.includes('clothing-rod') || lineLowerName.includes('옷봉')) {
           lineColor = 7; // ACI 7 = 흰색/검정
           lineLayer = 'CLOTHING_ROD';
           console.log(`📐 옷봉(Line): ${name}, 색상 ACI=7로 강제 설정`);
@@ -1855,15 +1975,6 @@ export const generateExternalDimensions = (
   const dimensionColor = 7; // 흰색/검정 (치수선)
   const extensionLength = 50; // 연장선 길이 (mm)
   const dimensionOffset = 400; // 치수선 오프셋 (mm) - 가구와 충분히 떨어지게 (2D 뷰와 동일)
-
-  // 프레임 두께
-  const frameThickness = spaceInfo.frameThickness || 50;
-  // 받침대 높이
-  const baseHeight = spaceInfo.baseHeight || 65;
-  // 상단 몰딩 높이
-  const topFrameHeight = spaceInfo.topFrameHeight || frameThickness;
-  // 가구 높이 (전체 높이 - 받침대 - 상단몰딩)
-  const furnitureHeight = height - baseHeight - topFrameHeight;
 
   const halfWidth = width / 2;
 
@@ -2556,12 +2667,13 @@ export const generateExternalDimensions = (
     // 좌측 서브프레임 (가구 측면에 겹쳐서 위치, 메인 프레임과는 떨어져 있음)
     // Room.tsx 조건과 동일: surroundType !== 'no-surround' && (builtin || (semistanding && wallConfig.left))
     // wallConfig는 이미 위에서 선언됨
+    const installType = spaceInfo.installType as string;
     const showLeftSubFrame = spaceInfo.surroundType !== 'no-surround' && leftFrameWidth > 0 &&
-      (spaceInfo.installType === 'builtin' || spaceInfo.installType === 'built-in' ||
-        (spaceInfo.installType === 'semistanding' && wallConfig?.left));
+      (installType === 'builtin' || installType === 'built-in' ||
+        (installType === 'semistanding' && wallConfig?.left));
     const showRightSubFrame = spaceInfo.surroundType !== 'no-surround' && rightFrameWidth > 0 &&
-      (spaceInfo.installType === 'builtin' || spaceInfo.installType === 'built-in' ||
-        (spaceInfo.installType === 'semistanding' && wallConfig?.right));
+      (installType === 'builtin' || installType === 'built-in' ||
+        (installType === 'semistanding' && wallConfig?.right));
 
     if (showLeftSubFrame) {
       // Room.tsx 기준:
@@ -2716,13 +2828,9 @@ export const generateExternalDimensions = (
         targetModule = placedModules[0];
       }
 
-      const moduleDepth = targetModule.upperSectionDepth || targetModule.customDepth;
-      if (moduleDepth) {
-        furnitureDepthMm = moduleDepth;
-      }
-      if (targetModule.customHeight) {
-        furnitureHeightMm = targetModule.customHeight;
-      }
+      const targetModuleData = resolveModuleData(targetModule, spaceInfo);
+      furnitureDepthMm = getModuleDepthMm(targetModule, targetModuleData);
+      furnitureHeightMm = getModuleHeightMm(targetModule, targetModuleData, spaceInfo);
     }
 
     // 색상 정의 (흰색으로 통일 - 2D 뷰어처럼 깔끔하게)
@@ -2892,11 +3000,7 @@ export const generateExternalDimensions = (
           targetMod = placedModules[0];
         }
 
-        const modData = getModuleById(
-          targetMod.moduleId,
-          { width: spaceInfo.width, height: spaceInfo.height, depth: spaceInfo.depth },
-          spaceInfo
-        );
+        const modData = resolveModuleData(targetMod, spaceInfo);
 
         const moduleHeightForSections = targetMod.customHeight ?? furnitureHeightMm;
         const sectionInfo = computeSectionHeightsInfo(targetMod, modData, moduleHeightForSections, viewDirection);
@@ -2990,11 +3094,7 @@ export const generateExternalDimensions = (
 
       const module = targetModuleForSection;
       // CADDimensions2D와 동일하게 moduleId 사용하여 모듈 데이터 가져오기
-      const moduleData = getModuleById(
-        module.moduleId,
-        { width: spaceInfo.width, height: spaceInfo.height, depth: spaceInfo.depth },
-        spaceInfo
-      );
+      const moduleData = resolveModuleData(module, spaceInfo);
 
       // CADDimensions2D와 동일하게 internalSpace.height 사용
       const sectionInfo = computeSectionHeightsInfo(module, moduleData, internalSpace.height, viewDirection);
@@ -3187,6 +3287,195 @@ export const generateExternalDimensions = (
   return { lines, texts };
 };
 
+const generateSideDrawerDetailsFromData = (
+  spaceInfo: SpaceInfo,
+  placedModules: PlacedModule[],
+  viewDirection: ViewDirection,
+  sideViewFilter: SideViewFilter
+): DxfLine[] => {
+  if (viewDirection !== 'left' && viewDirection !== 'right') return [];
+  const module = selectSideModule(placedModules, sideViewFilter);
+  if (!module) return [];
+
+  const moduleData = resolveModuleData(module, spaceInfo);
+  if (!moduleData) return [];
+
+  const moduleHeightMm = getModuleHeightMm(module, moduleData, spaceInfo);
+  const moduleDepthMm = getModuleDepthMm(module, moduleData);
+  const topFrameHeightMm = resolveTopFrameHeightMm(module, spaceInfo);
+  const baseHeightMm = module.baseFrameHeight ?? resolveBaseHeightMm(spaceInfo);
+  const category = getPlacedModuleCategory(module, moduleData);
+
+  const furnitureBaseY = category === 'upper'
+    ? Math.max(spaceInfo.height - topFrameHeightMm - moduleHeightMm, 0)
+    : baseHeightMm + (module.individualFloatHeight || 0);
+
+  const sectionInfo = computeSectionHeightsInfo(module, moduleData, moduleHeightMm, viewDirection);
+  const lines: DxfLine[] = [];
+  const color = 30;
+  const basicThickness = sectionInfo.basicThicknessMm || DEFAULT_BASIC_THICKNESS_MM;
+  const transformX = (x: number) => viewDirection === 'right' ? moduleDepthMm - x : x;
+  const drawDepthRect = (frontMm: number, backMm: number, bottomY: number, topY: number, layer = 'DRAWER') => {
+    addRectLines(lines, transformX(frontMm), bottomY, transformX(backMm), topY, layer, color);
+  };
+
+  let sectionBottomY = furnitureBaseY + basicThickness;
+  sectionInfo.sections.forEach((section, index) => {
+    const sectionHeight = sectionInfo.heightsMm[index] ?? 0;
+    if (sectionHeight <= 0) {
+      return;
+    }
+
+    if (section.type === 'drawer') {
+      const gapHeight = section.gapHeight ?? 24;
+      const drawerHeights = section.drawerHeights && section.drawerHeights.length > 0
+        ? section.drawerHeights
+        : Array.from({ length: Math.max(section.count || 1, 1) }, () => {
+            const count = Math.max(section.count || 1, 1);
+            return Math.max((sectionHeight - gapHeight * (count + 1)) / count, 0);
+          });
+
+      const drawerDepth = Math.max(moduleDepthMm - basicThickness - 60, 80);
+      const bodyFront = 30;
+      const bodyBack = Math.min(bodyFront + drawerDepth, moduleDepthMm - 15);
+      const maidaDepth = Math.max(basicThickness, 15);
+      const maidaFront = 0;
+      const maidaBack = maidaFront + maidaDepth;
+      let drawerCursorY = sectionBottomY + gapHeight;
+
+      // 서랍속장 좌우 프레임의 측면 투영: 2D 측면도에서 최소한 보이는 ㄷ자 구조
+      drawDepthRect(bodyFront, bodyBack, sectionBottomY, sectionBottomY + sectionHeight, 'DRAWER');
+
+      drawerHeights.forEach((drawerHeight) => {
+        const drawerBottom = drawerCursorY;
+        const drawerTop = drawerCursorY + drawerHeight;
+        if (drawerTop > drawerBottom) {
+          drawDepthRect(bodyFront, bodyBack, drawerBottom, drawerTop, 'DRAWER');
+          drawDepthRect(maidaFront, maidaBack, drawerBottom, drawerTop, 'DRAWER');
+        }
+        drawerCursorY = drawerTop + gapHeight;
+      });
+    }
+
+    sectionBottomY += sectionHeight + basicThickness;
+  });
+
+  if (lines.length > 0) {
+    console.log(`📐 측면도 데이터 보강: 서랍 형상 ${lines.length}개 라인 추가 (${module.moduleId})`);
+  }
+
+  return lines;
+};
+
+const ensureSideFrameDetails = (
+  spaceInfo: SpaceInfo,
+  placedModules: PlacedModule[],
+  viewDirection: ViewDirection,
+  sideViewFilter: SideViewFilter,
+  lines: DxfLine[]
+): void => {
+  if (viewDirection !== 'left' && viewDirection !== 'right') return;
+  const module = selectSideModule(placedModules, sideViewFilter);
+  const moduleData = module ? resolveModuleData(module, spaceInfo) : null;
+  const moduleDepthMm = module ? getModuleDepthMm(module, moduleData) : Math.min(spaceInfo.depth || 600, 600);
+  const topFrameHeightMm = resolveTopFrameHeightMm(module, spaceInfo);
+  if (topFrameHeightMm <= 0) return;
+
+  const hasTopFrame = lines.some(line =>
+    line.layer === 'SPACE_FRAME' &&
+    Math.max(line.y1, line.y2) >= spaceInfo.height - 1 &&
+    Math.min(line.y1, line.y2) >= spaceInfo.height - topFrameHeightMm - 1
+  );
+  if (hasTopFrame) return;
+
+  addRectLines(
+    lines,
+    0,
+    spaceInfo.height - topFrameHeightMm,
+    moduleDepthMm,
+    spaceInfo.height,
+    'SPACE_FRAME',
+    7
+  );
+  console.log(`📐 측면도 데이터 보강: 상부 프레임 ${topFrameHeightMm}mm 추가`);
+};
+
+const generateDoorDimensionFallback = (
+  spaceInfo: SpaceInfo,
+  placedModules: PlacedModule[]
+): { lines: DxfLine[]; texts: DxfText[] } => {
+  const lines: DxfLine[] = [];
+  const texts: DxfText[] = [];
+  const dimColor = 7;
+  const ext = 35;
+  const offset = 90;
+  const effectiveH = spaceInfo.height;
+  const isFloating = spaceInfo.baseConfig?.type === 'stand' && spaceInfo.baseConfig?.placementType === 'float';
+  const floatHeightMm = isFloating ? (spaceInfo.baseConfig?.floatHeight || 0) : 0;
+  const baseHeightMm = resolveBaseHeightMm(spaceInfo);
+  const floorFinishMm = spaceInfo.hasFloorFinish ? (spaceInfo.floorFinish?.height || 0) : 0;
+
+  placedModules.forEach(module => {
+    if (!module.hasDoor) return;
+
+    const moduleData = resolveModuleData(module, spaceInfo);
+    if (!moduleData) return;
+
+    const category = getPlacedModuleCategory(module, moduleData);
+    const moduleWidth = getModuleWidthMm(module, moduleData);
+    const moduleHeight = getModuleHeightMm(module, moduleData, spaceInfo);
+    const moduleX = (module.position?.x || 0) * 100;
+    const doorTopGap = module.doorTopGap ?? spaceInfo.doorTopGap ?? 0;
+    const doorBottomGap = module.doorBottomGap ?? spaceInfo.doorBottomGap ?? 0;
+
+    let doorBottom = 0;
+    let doorTop = 0;
+
+    if (category === 'upper') {
+      const topFrame = resolveTopFrameHeightMm(module, spaceInfo);
+      doorTop = effectiveH - doorTopGap;
+      doorBottom = doorTop - (moduleHeight + topFrame - doorTopGap + doorBottomGap);
+    } else if (category === 'lower') {
+      const cabinetBottom = (isFloating ? floatHeightMm : baseHeightMm) + floorFinishMm;
+      const isDoorLift = module.moduleId.includes('lower-door-lift-');
+      const isTopDown = module.moduleId.includes('lower-top-down-');
+      if (isTopDown) {
+        doorBottom = cabinetBottom - 5;
+        doorTop = doorBottom + 710;
+      } else if (isDoorLift) {
+        doorTop = cabinetBottom + moduleHeight + 30;
+        doorBottom = doorTop - (moduleHeight + 5 + 30);
+      } else {
+        doorTop = cabinetBottom + moduleHeight + doorTopGap;
+        doorBottom = cabinetBottom - doorBottomGap;
+      }
+    } else {
+      const isFloorType = !spaceInfo.baseConfig || spaceInfo.baseConfig.type === 'floor';
+      const floorForDoor = isFloorType && spaceInfo.hasFloorFinish ? floorFinishMm : 0;
+      doorBottom = doorBottomGap + floorForDoor;
+      doorTop = effectiveH - doorTopGap;
+    }
+
+    const doorHeight = Math.round(doorTop - doorBottom);
+    if (doorHeight <= 0) return;
+
+    const x = moduleX + moduleWidth / 2 + offset;
+    const rightEdge = moduleX + moduleWidth / 2;
+    lines.push({ x1: x, y1: doorBottom, x2: x, y2: doorTop, layer: 'DOOR_DIMENSIONS', color: dimColor });
+    lines.push({ x1: x - 18, y1: doorBottom, x2: x + 18, y2: doorBottom, layer: 'DOOR_DIMENSIONS', color: dimColor });
+    lines.push({ x1: x - 18, y1: doorTop, x2: x + 18, y2: doorTop, layer: 'DOOR_DIMENSIONS', color: dimColor });
+    lines.push({ x1: rightEdge, y1: doorBottom, x2: x + ext, y2: doorBottom, layer: 'DOOR_DIMENSIONS', color: dimColor });
+    lines.push({ x1: rightEdge, y1: doorTop, x2: x + ext, y2: doorTop, layer: 'DOOR_DIMENSIONS', color: dimColor });
+    texts.push({ x: x + 45, y: (doorBottom + doorTop) / 2, text: `${doorHeight}`, height: 25, color: dimColor, layer: 'DOOR_DIMENSIONS' });
+  });
+
+  if (texts.length > 0) {
+    console.log(`📐 도어도면 데이터 보강: 높이 치수 ${texts.length}개 추가`);
+  }
+
+  return { lines, texts };
+};
+
 /**
  * DXF 생성 - 색상과 텍스트 포함
  * @param sideViewFilter 측면뷰 필터링 타입 (leftmost: 좌측 가구만, rightmost: 우측 가구만, all: 모두)
@@ -3223,9 +3512,6 @@ export const generateDxfDrawingData = (
   console.log(`📐 DXF 생성 시작 (${viewDirection}, 필터: ${sideViewFilter})`);
   console.log(`📊 공간 정보: ${spaceInfo.width}mm x ${spaceInfo.height}mm x ${spaceInfo.depth}mm`);
   console.log(`📊 배치된 가구 수: ${placedModules.length}`);
-
-  // spaceInfo에서 width, height, depth 추출 (프레임 생성에 필요)
-  const { width, height, depth } = spaceInfo;
 
   // 측면뷰용 공간 깊이 설정 (projectTo2D에서 사용)
   currentSpaceDepthMm = spaceInfo.depth || 600;
@@ -3287,11 +3573,18 @@ export const generateDxfDrawingData = (
     }
   }
 
-  const targetSideModule = targetModuleId && (viewDirection === 'left' || viewDirection === 'right')
+  const isSideView = viewDirection === 'left' || viewDirection === 'right';
+  const targetSideModule = targetModuleId && isSideView
     ? placedModules.find(module => module.id === targetModuleId)
     : undefined;
-  const dataBasedSideDrawing = targetSideModule
-    ? generateExternalDimensions(spaceInfo, [targetSideModule], viewDirection, 'all')
+  const sideDrawingModules = targetSideModule ? [targetSideModule] : placedModules;
+  const dataBasedSideDrawing = isSideView
+    ? generateExternalDimensions(
+        spaceInfo,
+        sideDrawingModules,
+        viewDirection,
+        targetSideModule ? 'all' : sideViewFilter
+      )
     : null;
 
   // 씬에서 Line과 Text 객체 추출 (X 필터링 범위 전달, excludeDoor 옵션 전달)
@@ -3306,11 +3599,11 @@ export const generateDxfDrawingData = (
   let lines: DxfLine[];
   let texts: DxfText[];
 
-  if (viewDirection === 'left' || viewDirection === 'right') {
+  if (isSideView) {
     if (dataBasedSideDrawing) {
       lines = [...dataBasedSideDrawing.lines];
       texts = [...dataBasedSideDrawing.texts];
-      console.log(`📐 ${viewDirection}뷰: 모듈별 데이터 기반 측면도 사용 (${targetModuleId}, 라인 ${lines.length}개, 텍스트 ${texts.length}개)`);
+      console.log(`📐 ${viewDirection}뷰: 데이터 기반 측면도 사용 (${targetModuleId || sideViewFilter}, 라인 ${lines.length}개, 텍스트 ${texts.length}개)`);
     } else {
       // 측면뷰: 2D 뷰어가 씬에 그린 가구 형상(서랍 박스, 옷봉, 선반 등) + CADDimensions2D의
       // 치수를 그대로 추출. 씬에 이미 leftmost/rightmost 가구 + 모든 geometry가 렌더됨.
@@ -3343,6 +3636,27 @@ export const generateDxfDrawingData = (
 
   if (lines.length === 0) {
     console.warn('⚠️ 추출된 라인이 없습니다.');
+  }
+
+  if (isSideView) {
+    ensureSideFrameDetails(spaceInfo, sideDrawingModules, viewDirection, targetSideModule ? 'all' : sideViewFilter, lines);
+
+    const hasDrawerGeometry = lines.some(line => line.layer === 'DRAWER');
+    if (!hasDrawerGeometry) {
+      lines.push(...generateSideDrawerDetailsFromData(spaceInfo, sideDrawingModules, viewDirection, targetSideModule ? 'all' : sideViewFilter));
+    }
+  }
+
+  const isDoorOnlyExport = viewDirection === 'front' &&
+    includeLayers?.some(layer => layer === 'DOOR_DIMENSIONS');
+  if (isDoorOnlyExport) {
+    const fallbackDoorDimensions = generateDoorDimensionFallback(spaceInfo, placedModules);
+    if (fallbackDoorDimensions.texts.length > 0) {
+      lines = lines.filter(line => line.layer !== 'DOOR_DIMENSIONS');
+      texts = texts.filter(text => text.layer !== 'DOOR_DIMENSIONS');
+      lines.push(...fallbackDoorDimensions.lines);
+      texts.push(...fallbackDoorDimensions.texts);
+    }
   }
 
   // DXF 원점 이동 (왼쪽 하단을 원점으로)

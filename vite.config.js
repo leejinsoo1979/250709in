@@ -44,7 +44,10 @@ export default defineConfig({
         chunkSizeWarningLimit: 1500
     },
     esbuild: {
-        drop: ['console', 'debugger'],
+        // console.error / console.warn 은 남겨서 운영 중 디버깅 가능하게 유지
+        // console.log / console.info / console.debug 만 제거
+        pure: ['console.log', 'console.info', 'console.debug'],
+        drop: ['debugger'],
     },
     test: {
         globals: true,
