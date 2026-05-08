@@ -177,6 +177,36 @@ export default function EnterpriseSignUpPage() {
         not_found: '국세청에 등록되지 않은 사업자번호입니다.',
       };
 
+      // 국세청 검증 통과 시 — 같은 사업자번호로 이미 다른 계정이 신청/승인됐는지 추가 체크
+      if (data.ok) {
+        try {
+          const dupSnap = await getDocs(query(
+            collection(db, 'enterprise_inquiries'),
+            where('businessNumber', '==', form.businessNumber)
+          ));
+          const conflicting = dupSnap.docs.filter(d => {
+            const dd = d.data();
+            if (dd.status === 'superseded') return false;
+            if (isSocialLoggedIn && currentUser && dd.uid === currentUser.uid) return false;
+            return true;
+          });
+          if (conflicting.length > 0) {
+            const c = conflicting[0].data();
+            const statusLabel: Record<string, string> = {
+              pending: '승인 대기', approved: '승인됨', on_hold: '보류', rejected: '거절됨',
+            };
+            setBizVerify({
+              status: 'error',
+              message: `이미 다른 계정으로 신청된 사업자번호입니다. (상태: ${statusLabel[c.status as string] || c.status})`,
+              verifiedNumber: '',
+            });
+            return;
+          }
+        } catch (e) {
+          console.warn('사업자번호 중복 체크 실패(무시):', e);
+        }
+      }
+
       setBizVerify({
         status: (data.status as BizVerifyStatus) || 'error',
         message: messageMap[data.status] || data.statusText || '확인할 수 없는 상태입니다.',
@@ -248,6 +278,40 @@ export default function EnterpriseSignUpPage() {
       setError('사업자등록번호 검증을 완료해주세요. (검증 버튼 클릭)');
       setSubmitting(false);
       return;
+    }
+
+    // 같은 사업자번호로 이미 다른 계정이 신청/승인된 경우 차단
+    // (본인이 다시 신청하는 경우는 superseded 처리로 통과 — uid 비교)
+    try {
+      const dupSnap = await getDocs(query(
+        collection(db, 'enterprise_inquiries'),
+        where('businessNumber', '==', form.businessNumber)
+      ));
+      const conflicting = dupSnap.docs.filter(d => {
+        const data = d.data();
+        // superseded(대체된 신청)와 본인 신청은 제외
+        if (data.status === 'superseded') return false;
+        if (isSocialLoggedIn && currentUser && data.uid === currentUser.uid) return false;
+        return true;
+      });
+      if (conflicting.length > 0) {
+        const c = conflicting[0].data();
+        const statusLabel: Record<string, string> = {
+          pending: '승인 대기',
+          approved: '승인됨',
+          on_hold: '보류',
+          rejected: '거절됨',
+        };
+        setError(
+          `해당 사업자등록번호는 이미 다른 계정으로 신청되어 있습니다. ` +
+          `(상태: ${statusLabel[c.status as string] || c.status})\n` +
+          `같은 사업자번호로는 한 계정만 가입 가능합니다.`
+        );
+        setSubmitting(false);
+        return;
+      }
+    } catch (e) {
+      console.warn('사업자번호 중복 체크 실패(무시):', e);
     }
 
     try {
