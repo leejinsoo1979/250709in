@@ -760,7 +760,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
             color={textColor}
             anchorX="center"
             anchorY="middle"
-            renderOrder={1000}
+            renderOrder={100001}
             depthTest={false}
             rotation={[0, -Math.PI / 2, Math.PI / 2]}
           >
@@ -976,7 +976,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                       position={[0, (seg.bottomY + seg.topY) / 2, leftInnerZ - mmToThreeUnits(60)]}
                       fontSize={largeFontSize} color={textColor}
                       anchorX="center" anchorY="middle"
-                      renderOrder={1000} depthTest={false}
+                      renderOrder={100001} depthTest={false}
                       rotation={[0, -Math.PI / 2, Math.PI / 2]}
                     >
                       {seg.heightMm}
@@ -1017,7 +1017,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                       position={[0, (seg.bottomY + seg.topY) / 2, innerDimZ + mmToThreeUnits(60)]}
                       fontSize={largeFontSize} color={textColor}
                       anchorX="center" anchorY="middle"
-                      renderOrder={1000} depthTest={false}
+                      renderOrder={100001} depthTest={false}
                       rotation={[0, -Math.PI / 2, Math.PI / 2]}
                     >
                       {seg.heightMm}
@@ -1047,7 +1047,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                     position={[0, floorFinishY + (furnitureBaseY - floorFinishY) / 2, leftInnerZ - mmToThreeUnits(60)]}
                     fontSize={largeFontSize} color={textColor}
                     anchorX="center" anchorY="middle"
-                    renderOrder={1000} depthTest={false}
+                    renderOrder={100001} depthTest={false}
                     rotation={[0, -Math.PI / 2, Math.PI / 2]}
                   >
                     {baseFrameDisplayMm}
@@ -1265,7 +1265,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                   <NativeLine name="dimension_line" points={[[0, seg.bottomY, dimZ], [0, seg.topY, dimZ]]} color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false} />
                   <NativeLine name="dimension_line" points={[[-0.008, seg.bottomY, dimZ], [0.008, seg.bottomY, dimZ]]} color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false} />
                   <NativeLine name="dimension_line" points={[[-0.008, seg.topY, dimZ], [0.008, seg.topY, dimZ]]} color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false} />
-                  <Text position={[0, (seg.bottomY + seg.topY) / 2, dimZ + mmToThreeUnits(60)]} fontSize={largeFontSize} color={textColor} anchorX="center" anchorY="middle" renderOrder={1000} depthTest={false} rotation={[0, -Math.PI / 2, Math.PI / 2]}>
+                  <Text position={[0, (seg.bottomY + seg.topY) / 2, dimZ + mmToThreeUnits(60)]} fontSize={largeFontSize} color={textColor} anchorX="center" anchorY="middle" renderOrder={100001} depthTest={false} rotation={[0, -Math.PI / 2, Math.PI / 2]}>
                     {seg.heightMm}
                   </Text>
                 </group>
@@ -1278,7 +1278,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                   <NativeLine name="dimension_line" points={[[0, seg.bottomY, upperDimZ], [0, seg.topY, upperDimZ]]} color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false} />
                   <NativeLine name="dimension_line" points={[[-0.008, seg.bottomY, upperDimZ], [0.008, seg.bottomY, upperDimZ]]} color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false} />
                   <NativeLine name="dimension_line" points={[[-0.008, seg.topY, upperDimZ], [0.008, seg.topY, upperDimZ]]} color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false} />
-                  <Text position={[0, (seg.bottomY + seg.topY) / 2, upperDimZ + mmToThreeUnits(60)]} fontSize={largeFontSize} color={textColor} anchorX="center" anchorY="middle" renderOrder={1000} depthTest={false} rotation={[0, -Math.PI / 2, Math.PI / 2]}>
+                  <Text position={[0, (seg.bottomY + seg.topY) / 2, upperDimZ + mmToThreeUnits(60)]} fontSize={largeFontSize} color={textColor} anchorX="center" anchorY="middle" renderOrder={100001} depthTest={false} rotation={[0, -Math.PI / 2, Math.PI / 2]}>
                     {seg.heightMm}
                   </Text>
                 </group>
@@ -1296,7 +1296,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                     <ExtLine points={[[0, bottomStartY, dimExtZ], [0, bottomStartY, dimZ]]} color={dimensionColor} />
                     <NativeLine name="dimension_line" points={[[0, bottomStartY, dimZ], [0, lowestBottomY, dimZ]]} color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false} />
                     <NativeLine name="dimension_line" points={[[-0.008, bottomStartY, dimZ], [0.008, bottomStartY, dimZ]]} color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false} />
-                    <Text position={[0, (bottomStartY + lowestBottomY) / 2, dimZ + mmToThreeUnits(60)]} fontSize={largeFontSize} color={textColor} anchorX="center" anchorY="middle" renderOrder={1000} depthTest={false} rotation={[0, -Math.PI / 2, Math.PI / 2]}>
+                    <Text position={[0, (bottomStartY + lowestBottomY) / 2, dimZ + mmToThreeUnits(60)]} fontSize={largeFontSize} color={textColor} anchorX="center" anchorY="middle" renderOrder={100001} depthTest={false} rotation={[0, -Math.PI / 2, Math.PI / 2]}>
                       {bottomGapMm}
                     </Text>
                   </group>
@@ -1341,7 +1341,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
               position={[0, floorFinishY / 2, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750) - mmToThreeUnits(360) + mmToThreeUnits(60)]}
               fontSize={largeFontSize} color={textColor}
               anchorX="center" anchorY="middle"
-              renderOrder={1000} depthTest={false}
+              renderOrder={100001} depthTest={false}
               rotation={[0, -Math.PI / 2, Math.PI / 2]}
             >
               {floorFinishHeightMm}
@@ -1384,7 +1384,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
               position={[0, floorFinishY + (furnitureBaseY - floorFinishY) / 2, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750) + mmToThreeUnits(60)]}
               fontSize={largeFontSize} color={textColor}
               anchorX="center" anchorY="middle"
-              renderOrder={1000} depthTest={false}
+              renderOrder={100001} depthTest={false}
               rotation={[0, -Math.PI / 2, Math.PI / 2]}
             >
               {baseFrameDisplayMm}
@@ -1445,7 +1445,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                 position={[0, totalFromFloorY / 2, dimZ_combined + mmToThreeUnits(60)]}
                 fontSize={largeFontSize} color={textColor}
                 anchorX="center" anchorY="middle"
-                renderOrder={1000} depthTest={false}
+                renderOrder={100001} depthTest={false}
                 rotation={[0, -Math.PI / 2, Math.PI / 2]}
               >
                 {totalFromFloorMm}
@@ -1636,7 +1636,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                 position={[0, depthDimY + mmToThreeUnits(isLowerMod ? -40 : 40), furnitureZ]}
                 fontSize={largeFontSize} color={textColor}
                 anchorX="center" anchorY="middle"
-                renderOrder={1000} depthTest={false}
+                renderOrder={100001} depthTest={false}
                 rotation={[0, -Math.PI / 2, 0]}
               >
                 {customDepth}
@@ -1669,7 +1669,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                     position={[0, depthDimYLower - mmToThreeUnits(40), furnitureZLower]}
                     fontSize={largeFontSize} color={textColor}
                     anchorX="center" anchorY="middle"
-                    renderOrder={1000} depthTest={false}
+                    renderOrder={100001} depthTest={false}
                     rotation={[0, -Math.PI / 2, 0]}
                   >
                     {lowerDepth}
@@ -1718,7 +1718,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                       position={[0, finishDimY - mmToThreeUnits(40), finishZ]}
                       fontSize={largeFontSize} color={textColor}
                       anchorX="center" anchorY="middle"
-                      renderOrder={1000} depthTest={false}
+                      renderOrder={100001} depthTest={false}
                       rotation={[0, -Math.PI / 2, 0]}
                     >
                       {finishDepthMm}
@@ -1739,7 +1739,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                       position={[0, finishDimY - mmToThreeUnits(40), (cabinetBackZ + finishBackZ) / 2]}
                       fontSize={largeFontSize} color={textColor}
                       anchorX="center" anchorY="middle"
-                      renderOrder={1000} depthTest={false}
+                      renderOrder={100001} depthTest={false}
                       rotation={[0, -Math.PI / 2, 0]}
                     >
                       {offsetMm}
@@ -1792,7 +1792,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                       color={textColor}
                       anchorX="center"
                       anchorY="middle"
-                      renderOrder={1000}
+                      renderOrder={100001}
                       depthTest={false}
                       rotation={[0, -Math.PI / 2, 0]}
                     >
@@ -2028,7 +2028,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                           <NativeLine name="door_height_dim" points={[[0, dBotY, doorDimZ], [0, dTopY, doorDimZ]]} color={doorColor} lineWidth={1} renderOrder={100000} depthTest={false} />
                           <NativeLine name="door_height_dim" points={[[-0.008, dBotY, doorDimZ], [0.008, dBotY, doorDimZ]]} color={doorColor} lineWidth={1} renderOrder={100000} depthTest={false} />
                           <NativeLine name="door_height_dim" points={[[-0.008, dTopY, doorDimZ], [0.008, dTopY, doorDimZ]]} color={doorColor} lineWidth={1} renderOrder={100000} depthTest={false} />
-                          <Text position={[0, (dBotY + dTopY) / 2, doorDimZ + doorTextOffsetZ]} fontSize={largeFontSize} color={doorColor} anchorX="center" anchorY="middle" renderOrder={1000} depthTest={false} rotation={[0, -Math.PI / 2, Math.PI / 2]}>
+                          <Text position={[0, (dBotY + dTopY) / 2, doorDimZ + doorTextOffsetZ]} fontSize={largeFontSize} color={doorColor} anchorX="center" anchorY="middle" renderOrder={100001} depthTest={false} rotation={[0, -Math.PI / 2, Math.PI / 2]}>
                             {Number.isInteger(m.maidaHeightMm) ? m.maidaHeightMm.toString() : (Math.round(m.maidaHeightMm * 10) / 10).toString()}
                           </Text>
                           <ExtLine points={[[0, dTopY, doorExtStartZ], [0, dTopY, doorDimZ]]} color={doorColor} lineWidth={0.3} name="door_height_ext" />
@@ -2044,7 +2044,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                           <NativeLine name="door_height_dim" points={[[0, gBotY, doorDimZ], [0, gTopY, doorDimZ]]} color={doorColor} lineWidth={1} renderOrder={100000} depthTest={false} />
                           <NativeLine name="door_height_dim" points={[[-0.008, gBotY, doorDimZ], [0.008, gBotY, doorDimZ]]} color={doorColor} lineWidth={1} renderOrder={100000} depthTest={false} />
                           <NativeLine name="door_height_dim" points={[[-0.008, gTopY, doorDimZ], [0.008, gTopY, doorDimZ]]} color={doorColor} lineWidth={1} renderOrder={100000} depthTest={false} />
-                          <Text position={[0, (gBotY + gTopY) / 2, doorDimZ + doorTextOffsetZ]} fontSize={largeFontSize} color={doorColor} anchorX="center" anchorY="middle" renderOrder={1000} depthTest={false} rotation={[0, -Math.PI / 2, Math.PI / 2]}>
+                          <Text position={[0, (gBotY + gTopY) / 2, doorDimZ + doorTextOffsetZ]} fontSize={largeFontSize} color={doorColor} anchorX="center" anchorY="middle" renderOrder={100001} depthTest={false} rotation={[0, -Math.PI / 2, Math.PI / 2]}>
                             {gap.heightMm}
                           </Text>
                           <ExtLine points={[[0, gTopY, doorExtStartZ], [0, gTopY, doorDimZ]]} color={doorColor} lineWidth={0.3} name="door_height_ext" />
@@ -2066,7 +2066,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                       <NativeLine name="door_height_dim" points={[[0, bottomStartY, doorDimZ], [0, maidaBottomAbsY, doorDimZ]]} color={doorColor} lineWidth={1} renderOrder={100000} depthTest={false} />
                       <NativeLine name="door_height_dim" points={[[-0.008, bottomStartY, doorDimZ], [0.008, bottomStartY, doorDimZ]]} color={doorColor} lineWidth={1} renderOrder={100000} depthTest={false} />
                       <NativeLine name="door_height_dim" points={[[-0.008, maidaBottomAbsY, doorDimZ], [0.008, maidaBottomAbsY, doorDimZ]]} color={doorColor} lineWidth={1} renderOrder={100000} depthTest={false} />
-                      <Text position={[0, (bottomStartY + maidaBottomAbsY) / 2, doorDimZ + doorTextOffsetZ]} fontSize={largeFontSize} color={doorColor} anchorX="center" anchorY="middle" renderOrder={1000} depthTest={false} rotation={[0, -Math.PI / 2, Math.PI / 2]}>
+                      <Text position={[0, (bottomStartY + maidaBottomAbsY) / 2, doorDimZ + doorTextOffsetZ]} fontSize={largeFontSize} color={doorColor} anchorX="center" anchorY="middle" renderOrder={100001} depthTest={false} rotation={[0, -Math.PI / 2, Math.PI / 2]}>
                         {floorToMaidaDispMm}
                       </Text>
                     </group>
@@ -2141,7 +2141,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
             color={textColor}
             anchorX="center"
             anchorY="middle"
-            renderOrder={1000}
+            renderOrder={100001}
             depthTest={false}
             rotation={[0, Math.PI / 2, Math.PI / 2]}
           >
@@ -2265,7 +2265,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                   <NativeLine name="dimension_line" points={[[0, seg.bottomY, leftInnerZ], [0, seg.topY, leftInnerZ]]} color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false} />
                   <NativeLine name="dimension_line" points={[[-0.008, seg.bottomY, leftInnerZ], [0.008, seg.bottomY, leftInnerZ]]} color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false} />
                   <NativeLine name="dimension_line" points={[[-0.008, seg.topY, leftInnerZ], [0.008, seg.topY, leftInnerZ]]} color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false} />
-                  <Text position={[0, (seg.bottomY + seg.topY) / 2, leftInnerZ - mmToThreeUnits(60)]} fontSize={largeFontSize} color={textColor} anchorX="center" anchorY="middle" renderOrder={1000} depthTest={false} rotation={[0, Math.PI / 2, Math.PI / 2]}>
+                  <Text position={[0, (seg.bottomY + seg.topY) / 2, leftInnerZ - mmToThreeUnits(60)]} fontSize={largeFontSize} color={textColor} anchorX="center" anchorY="middle" renderOrder={100001} depthTest={false} rotation={[0, Math.PI / 2, Math.PI / 2]}>
                     {seg.heightMm}
                   </Text>
                 </group>
@@ -2287,7 +2287,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                     <NativeLine name="dimension_line" points={[[0, seg.bottomY, innerDimZ], [0, seg.topY, innerDimZ]]} color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false} />
                     <NativeLine name="dimension_line" points={[[-0.008, seg.bottomY, innerDimZ], [0.008, seg.bottomY, innerDimZ]]} color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false} />
                     <NativeLine name="dimension_line" points={[[-0.008, seg.topY, innerDimZ], [0.008, seg.topY, innerDimZ]]} color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false} />
-                    <Text position={[0, (seg.bottomY + seg.topY) / 2, innerDimZ + mmToThreeUnits(60)]} fontSize={largeFontSize} color={textColor} anchorX="center" anchorY="middle" renderOrder={1000} depthTest={false} rotation={[0, Math.PI / 2, Math.PI / 2]}>
+                    <Text position={[0, (seg.bottomY + seg.topY) / 2, innerDimZ + mmToThreeUnits(60)]} fontSize={largeFontSize} color={textColor} anchorX="center" anchorY="middle" renderOrder={100001} depthTest={false} rotation={[0, Math.PI / 2, Math.PI / 2]}>
                       {seg.heightMm}
                     </Text>
                   </group>
@@ -2301,7 +2301,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                   <NativeLine name="dimension_line" points={[[0, floorFinishY, leftInnerZ], [0, furnitureBaseY, leftInnerZ]]} color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false} />
                   <NativeLine name="dimension_line" points={[[-0.008, floorFinishY, leftInnerZ], [0.008, floorFinishY, leftInnerZ]]} color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false} />
                   <NativeLine name="dimension_line" points={[[-0.008, furnitureBaseY, leftInnerZ], [0.008, furnitureBaseY, leftInnerZ]]} color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false} />
-                  <Text position={[0, floorFinishY + (furnitureBaseY - floorFinishY) / 2, leftInnerZ - mmToThreeUnits(60)]} fontSize={largeFontSize} color={textColor} anchorX="center" anchorY="middle" renderOrder={1000} depthTest={false} rotation={[0, Math.PI / 2, Math.PI / 2]}>
+                  <Text position={[0, floorFinishY + (furnitureBaseY - floorFinishY) / 2, leftInnerZ - mmToThreeUnits(60)]} fontSize={largeFontSize} color={textColor} anchorX="center" anchorY="middle" renderOrder={100001} depthTest={false} rotation={[0, Math.PI / 2, Math.PI / 2]}>
                     {baseFrameDisplayMm}
                   </Text>
                 </>
@@ -2458,7 +2458,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
               <NativeLine name="dimension_line" points={[[0, seg.bottomY, dimZ_r], [0, seg.topY, dimZ_r]]} color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false} />
               <NativeLine name="dimension_line" points={[[-0.008, seg.bottomY, dimZ_r], [0.008, seg.bottomY, dimZ_r]]} color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false} />
               <NativeLine name="dimension_line" points={[[-0.008, seg.topY, dimZ_r], [0.008, seg.topY, dimZ_r]]} color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false} />
-              <Text position={[0, (seg.bottomY + seg.topY) / 2, dimZ_r + mmToThreeUnits(60)]} fontSize={largeFontSize} color={textColor} anchorX="center" anchorY="middle" renderOrder={1000} depthTest={false} rotation={[0, Math.PI / 2, Math.PI / 2]}>
+              <Text position={[0, (seg.bottomY + seg.topY) / 2, dimZ_r + mmToThreeUnits(60)]} fontSize={largeFontSize} color={textColor} anchorX="center" anchorY="middle" renderOrder={100001} depthTest={false} rotation={[0, Math.PI / 2, Math.PI / 2]}>
                 {seg.heightMm}
               </Text>
             </group>
@@ -2500,7 +2500,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
               position={[0, floorFinishY / 2, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750) - mmToThreeUnits(360) + mmToThreeUnits(60)]}
               fontSize={largeFontSize} color={textColor}
               anchorX="center" anchorY="middle"
-              renderOrder={1000} depthTest={false}
+              renderOrder={100001} depthTest={false}
               rotation={[0, Math.PI / 2, Math.PI / 2]}
             >
               {floorFinishHeightMm}
@@ -2543,7 +2543,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
               position={[0, floorFinishY + (furnitureBaseY - floorFinishY) / 2, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750) + mmToThreeUnits(60)]}
               fontSize={largeFontSize} color={textColor}
               anchorX="center" anchorY="middle"
-              renderOrder={1000} depthTest={false}
+              renderOrder={100001} depthTest={false}
               rotation={[0, Math.PI / 2, Math.PI / 2]}
             >
               {baseFrameDisplayMm}
@@ -2603,7 +2603,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                 position={[0, totalFromFloorY_r / 2, dimZ_combined_r + mmToThreeUnits(60)]}
                 fontSize={largeFontSize} color={textColor}
                 anchorX="center" anchorY="middle"
-                renderOrder={1000} depthTest={false}
+                renderOrder={100001} depthTest={false}
                 rotation={[0, Math.PI / 2, Math.PI / 2]}
               >
                 {totalFromFloorMm_r}
@@ -2730,7 +2730,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                 color={textColor}
                 anchorX="center"
                 anchorY="middle"
-                renderOrder={1000}
+                renderOrder={100001}
                 depthTest={false}
                 rotation={[0, Math.PI / 2, 0]}
               >
@@ -2758,7 +2758,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                     position={[0, furnitureBottomDimY_d2 - mmToThreeUnits(40), furnitureZLower_d2]}
                     fontSize={largeFontSize} color={textColor}
                     anchorX="center" anchorY="middle"
-                    renderOrder={1000} depthTest={false}
+                    renderOrder={100001} depthTest={false}
                     rotation={[0, Math.PI / 2, 0]}
                   >
                     {lowerDepth_d2}
@@ -2816,7 +2816,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                       position={[0, finishDimY_r - mmToThreeUnits(40), finishZ_r]}
                       fontSize={largeFontSize} color={textColor}
                       anchorX="center" anchorY="middle"
-                      renderOrder={1000} depthTest={false}
+                      renderOrder={100001} depthTest={false}
                       rotation={[0, Math.PI / 2, 0]}
                     >
                       {finishDepthMm_r}
@@ -2835,7 +2835,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                       position={[0, finishDimY_r - mmToThreeUnits(40), (cabinetBackZ_r + finishBackZ_r) / 2]}
                       fontSize={largeFontSize} color={textColor}
                       anchorX="center" anchorY="middle"
-                      renderOrder={1000} depthTest={false}
+                      renderOrder={100001} depthTest={false}
                       rotation={[0, Math.PI / 2, 0]}
                     >
                       {offsetMm_r}
@@ -2895,7 +2895,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                       color={textColor}
                       anchorX="center"
                       anchorY="middle"
-                      renderOrder={1000}
+                      renderOrder={100001}
                       depthTest={false}
                       rotation={[0, Math.PI / 2, 0]}
                     >
@@ -3004,7 +3004,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                           <NativeLine name="door_height_dim" points={[[0, dBotY, doorDimZ_r], [0, dTopY, doorDimZ_r]]} color={doorColor_r} lineWidth={1} renderOrder={100000} depthTest={false} />
                           <NativeLine name="door_height_dim" points={[[-0.008, dBotY, doorDimZ_r], [0.008, dBotY, doorDimZ_r]]} color={doorColor_r} lineWidth={1} renderOrder={100000} depthTest={false} />
                           <NativeLine name="door_height_dim" points={[[-0.008, dTopY, doorDimZ_r], [0.008, dTopY, doorDimZ_r]]} color={doorColor_r} lineWidth={1} renderOrder={100000} depthTest={false} />
-                          <Text position={[0, (dBotY + dTopY) / 2, doorDimZ_r + mmToThreeUnits(60)]} fontSize={largeFontSize} color={doorColor_r} anchorX="center" anchorY="middle" renderOrder={1000} depthTest={false} rotation={[0, Math.PI / 2, Math.PI / 2]}>
+                          <Text position={[0, (dBotY + dTopY) / 2, doorDimZ_r + mmToThreeUnits(60)]} fontSize={largeFontSize} color={doorColor_r} anchorX="center" anchorY="middle" renderOrder={100001} depthTest={false} rotation={[0, Math.PI / 2, Math.PI / 2]}>
                             {Number.isInteger(m.maidaHeightMm) ? m.maidaHeightMm.toString() : (Math.round(m.maidaHeightMm * 10) / 10).toString()}
                           </Text>
                           <ExtLine points={[[0, dTopY, furnitureFrontZ_door + mmToThreeUnits(20)], [0, dTopY, doorDimZ_r]]} color={doorColor_r} lineWidth={0.3} name="door_height_ext" />
@@ -3020,7 +3020,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                           <NativeLine name="door_height_dim" points={[[0, gBotY, doorDimZ_r], [0, gTopY, doorDimZ_r]]} color={doorColor_r} lineWidth={1} renderOrder={100000} depthTest={false} />
                           <NativeLine name="door_height_dim" points={[[-0.008, gBotY, doorDimZ_r], [0.008, gBotY, doorDimZ_r]]} color={doorColor_r} lineWidth={1} renderOrder={100000} depthTest={false} />
                           <NativeLine name="door_height_dim" points={[[-0.008, gTopY, doorDimZ_r], [0.008, gTopY, doorDimZ_r]]} color={doorColor_r} lineWidth={1} renderOrder={100000} depthTest={false} />
-                          <Text position={[0, (gBotY + gTopY) / 2, doorDimZ_r + mmToThreeUnits(60)]} fontSize={largeFontSize} color={doorColor_r} anchorX="center" anchorY="middle" renderOrder={1000} depthTest={false} rotation={[0, Math.PI / 2, Math.PI / 2]}>
+                          <Text position={[0, (gBotY + gTopY) / 2, doorDimZ_r + mmToThreeUnits(60)]} fontSize={largeFontSize} color={doorColor_r} anchorX="center" anchorY="middle" renderOrder={100001} depthTest={false} rotation={[0, Math.PI / 2, Math.PI / 2]}>
                             {gap.heightMm}
                           </Text>
                           <ExtLine points={[[0, gTopY, furnitureFrontZ_door + mmToThreeUnits(20)], [0, gTopY, doorDimZ_r]]} color={doorColor_r} lineWidth={0.3} name="door_height_ext" />
