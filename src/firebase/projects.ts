@@ -76,11 +76,9 @@ export const createProject = async (projectData: CreateProjectData): Promise<{ i
       photoURL: user.photoURL
     });
 
-    const newProject: Omit<FirebaseProject, 'id'> = {
+    // Firestore는 undefined 필드를 거부하므로, 값 있을 때만 포함
+    const newProject: any = {
       userId: user.uid,
-      userName: user.displayName || undefined,
-      userEmail: user.email || undefined,
-      userPhotoURL: user.photoURL || undefined,
       teamId: teamId || `personal_${user.uid}`, // 팀 ID 추가
       title: projectData.title,
       createdAt: serverTimestamp() as Timestamp,
@@ -123,6 +121,10 @@ export const createProject = async (projectData: CreateProjectData): Promise<{ i
         placedModules: [],
       },
     };
+    // user 정보는 값 있을 때만 포함 (undefined 필드 차단 — Firestore 거부)
+    if (user.displayName) newProject.userName = user.displayName;
+    if (user.email) newProject.userEmail = user.email;
+    if (user.photoURL) newProject.userPhotoURL = user.photoURL;
 
     // 1. Legacy 경로에 먼저 저장 (기본)
     const docRef = await addDoc(collection(db, PROJECTS_COLLECTION), newProject);
