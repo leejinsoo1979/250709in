@@ -200,12 +200,17 @@ const computeFurnitureHeightMm = (
     heightMm -= floorFinishH;
   }
 
-  // 걸래받이 OFF: 키큰장(full)은 렌더와 동일하게 걸래받이 자리를 가구 높이가 흡수
-  if (!mod.isFreePlacement && (mod as any).hasBase === false && isTall) {
+  // 인출장/팬트리장: hasBase=false → 가구가 걸래받이 자리 흡수 (FurnitureItem.tsx와 동일)
+  const isPullOutOrPantry = !!(mod.moduleId?.includes('pull-out-cabinet') || mod.moduleId?.includes('pantry-cabinet'));
+  if (!mod.isFreePlacement && (mod as any).hasBase === false && isTall && isPullOutOrPantry) {
     const globalBaseMm = spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height ?? 60) : 0;
     const absorbedBase = mod.baseFrameHeight ?? globalBaseMm;
     const floatH = (mod as any).individualFloatHeight ?? 0;
     heightMm += (absorbedBase - floatH);
+    // 인출장/팬트리장은 바닥마감재도 흡수
+    if (floorFinishH > 0) {
+      heightMm += floorFinishH;
+    }
   }
 
   return heightMm;
