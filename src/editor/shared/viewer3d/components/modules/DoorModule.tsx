@@ -1055,6 +1055,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   // 힌지 위치 오프셋(9mm) 상수 정의
   const hingeOffset = panelThickness / 2; // 9mm
   const hingeOffsetUnits = mmToThreeUnits(hingeOffset);
+  const doorOpenInsetAdjustUnits = hingeOffsetUnits / 2;
   
   // 편집 모드 체크 로그
   useEffect(() => {
@@ -1380,9 +1381,9 @@ const DoorModule: React.FC<DoorModuleProps> = ({
       <group position={[doorGroupX, 0, 0]}> {/* 듀얼 캐비넷도 원래 슬롯 중심에 배치 */}
         {/* 왼쪽 도어 - 왼쪽 힌지 (왼쪽 가장자리에서 회전) */}
         {showLeftDoor && (
-        <group position={[leftHingeX + leftEpTrimShift + leftInsertExtendShift, doorYPosition, doorDepth / 2]}>
+        <group position={[leftHingeX + leftEpTrimShift + leftInsertExtendShift + doorOpenInsetAdjustUnits, doorYPosition, doorDepth / 2 + doorOpenInsetAdjustUnits]}>
           <animated.group rotation-y={leftDoorLocked ? 0 : dualLeftDoorSpring.rotation}>
-            <group position={[leftDoorWidthUnits / 2 - hingeOffsetUnits, 0, 0]}>
+            <group position={[leftDoorWidthUnits / 2 - hingeOffsetUnits - doorOpenInsetAdjustUnits, 0, -doorOpenInsetAdjustUnits]}>
               {/* 2D 정면뷰: 좌측 도어 반투명 overlay (잠금 시 붉은색) */}
               {showDoorOverlay && (
                 <mesh position={[0, 0, doorThicknessUnits / 2 + 0.001]} renderOrder={9999}>
@@ -1753,9 +1754,9 @@ const DoorModule: React.FC<DoorModuleProps> = ({
 
         {/* 오른쪽 도어 - 오른쪽 힌지 (오른쪽 가장자리에서 회전) */}
         {showRightDoor && (
-        <group position={[rightHingeX + rightEpTrimShift + rightInsertExtendShift, doorYPosition, doorDepth / 2]}>
+        <group position={[rightHingeX + rightEpTrimShift + rightInsertExtendShift - doorOpenInsetAdjustUnits, doorYPosition, doorDepth / 2 + doorOpenInsetAdjustUnits]}>
           <animated.group rotation-y={rightDoorLocked ? 0 : dualRightDoorSpring.rotation}>
-            <group position={[-rightDoorWidthUnits / 2 + hingeOffsetUnits, 0, 0]}>
+            <group position={[-rightDoorWidthUnits / 2 + hingeOffsetUnits + doorOpenInsetAdjustUnits, 0, -doorOpenInsetAdjustUnits]}>
               {/* 2D 정면뷰: 우측 도어 반투명 overlay (잠금 시 붉은색) */}
               {showDoorOverlay && (
                 <mesh position={[0, 0, doorThicknessUnits / 2 + 0.001]} renderOrder={9999}>
@@ -2235,10 +2236,11 @@ const DoorModule: React.FC<DoorModuleProps> = ({
 
     // 도어 위치: 회전축이 힌지 위치에 맞게 조정
     const doorPositionX = -hingeAxisOffset; // 회전축 보정을 위한 도어 위치 조정
+    const innerXShift = adjustedHingePosition === 'left' ? doorOpenInsetAdjustUnits : -doorOpenInsetAdjustUnits;
     return (
-      <group position={[doorGroupX + hingeAxisOffset + epTrimShiftX + insertExtendShiftX, doorYPosition, doorDepth / 2]}>
+      <group position={[doorGroupX + hingeAxisOffset + epTrimShiftX + insertExtendShiftX + innerXShift, doorYPosition, doorDepth / 2 + doorOpenInsetAdjustUnits]}>
         <animated.group rotation-y={singleDoorLocked ? 0 : (adjustedHingePosition === 'left' ? leftHingeDoorSpring.rotation : rightHingeDoorSpring.rotation)}>
-          <group position={[doorPositionX, 0, 0]}>
+          <group position={[doorPositionX - innerXShift, 0, -doorOpenInsetAdjustUnits]}>
             {/* 2D 정면뷰: 싱글 도어 반투명 overlay (잠금 시 붉은색) */}
             {showDoorOverlay && (
               <mesh position={[0, 0, doorThicknessUnits / 2 + 0.001]} renderOrder={9999}>
