@@ -328,7 +328,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
   const uiScale = Math.min(1, Math.max(0.25, camZoom / 50));
   const uiScaleStyle: React.CSSProperties = { transform: `scale(${uiScale})`, transformOrigin: 'center', display: 'inline-block' };
   // 줌아웃이 과도하면 편집 UI 숨김 (너무 작아져서 시인성/조작성 나빠짐)
-  const showShelfEditUi = camZoom >= 20;
+  // 임계값 5: 어느 정도 확대 상태에서는 거의 항상 보이도록 완화 (이전 20은 너무 보수적)
+  const showShelfEditUi = camZoom >= 5;
 
   const { spaceInfo } = useSpaceConfigStore();
   const placedModulesStore = useFurnitureStore(state => state.placedModules);
