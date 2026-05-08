@@ -1279,11 +1279,13 @@ export const getDesignFileById = async (designFileId: string): Promise<{ designF
       return { designFile: null, error: '로그인이 필요합니다.' };
     }
 
-    // 관리자 권한 확인
-    const { isSuperAdmin } = await import('./admins');
-    const isAdmin = isSuperAdmin(user.email || '');
+    // 관리자 권한 확인 — 슈퍼관리자(이메일) + 일반 관리자(admins 컬렉션) 모두 포함
+    const { isSuperAdmin, isUserAdmin } = await import('./admins');
+    const isSuper = isSuperAdmin(user.email || '');
+    const isGeneralAdmin = !isSuper ? await isUserAdmin(user.uid).catch(() => false) : false;
+    const isAdmin = isSuper || isGeneralAdmin;
     if (isAdmin) {
-      console.log('👑 [Firebase] 관리자 권한으로 디자인 파일 접근:', designFileId);
+      console.log('👑 [Firebase] 관리자 권한으로 디자인 파일 접근:', designFileId, isSuper ? '(슈퍼관리자)' : '(관리자)');
     }
 
     const docRef = doc(db, 'designFiles', designFileId);
