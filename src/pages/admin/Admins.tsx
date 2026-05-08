@@ -282,7 +282,7 @@ const Admins = () => {
             <SearchIcon size={20} />
             <input
               type="text"
-              placeholder="이메일, 이름, UID로 검색..."
+              placeholder="권한 부여할 일반 사용자도 검색 가능 (이메일, 이름, UID)..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className={styles.searchInput}
