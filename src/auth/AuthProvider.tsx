@@ -92,7 +92,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             } else {
               // 기존 사용자 - lastLoginAt만 업데이트 (displayName/photoURL은 빈 값으로 덮어쓰지 않음)
               const { updateDoc } = await import('firebase/firestore');
-              const lastLoginPatch: Record<string, unknown> = { lastLoginAt: serverTimestamp() };
+              const lastLoginPatch: any = { lastLoginAt: serverTimestamp() };
               if (user.displayName) lastLoginPatch.displayName = user.displayName;
               if (user.photoURL) lastLoginPatch.photoURL = user.photoURL;
               await updateDoc(userRef, lastLoginPatch);
