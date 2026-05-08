@@ -238,8 +238,9 @@ const Header: React.FC<HeaderProps> = ({
 
   // 공간설정 기본값 저장 후 → 동일 프로젝트에 "새 디자인" 자동 생성하고 이동
   const handleAutoCreateDesignAfterDefaults = async () => {
+    // 프로젝트 정보가 없으면 자동 생성 안 함 (사용자가 에디터에서 설정만 저장한 케이스)
     if (!projectId) {
-      alert('프로젝트 정보가 없습니다.');
+      console.log('공간설정 기본값 저장 완료 (자동 디자인 생성 스킵 — projectId 없음)');
       return;
     }
     try {

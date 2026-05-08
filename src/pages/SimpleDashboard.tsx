@@ -512,14 +512,11 @@ const SimpleDashboard: React.FC = () => {
     }
   }, [newDesignName, nav.currentProjectId, nav.currentFolderId, isCreatingDesign, data, handleDesignOpen]);
 
-  // 공간설정 기본값 저장 후 자동으로 "새 디자인" 생성하고 에디터로 이동
+  // 공간설정 기본값 저장 후 콜백 — 사용자 단위 디폴트값이라 자동 디자인 생성하지 않음
+  // (프로젝트 선택 여부와 무관하게 그냥 저장만 됨)
   const handleAutoCreateDesignAfterDefaults = useCallback(() => {
-    if (!nav.currentProjectId) {
-      alert('프로젝트를 먼저 선택해주세요. 프로젝트를 선택한 뒤 다시 시도해주세요.');
-      return;
-    }
-    handleSaasCreateDesignSubmit('새 디자인', { navigateAfter: true });
-  }, [nav.currentProjectId, handleSaasCreateDesignSubmit]);
+    // no-op: 공간설정 기본값은 사용자 디폴트라 추가 동작 없음
+  }, []);
 
   // Step1 모달 닫기
   const handleCloseStep1Modal = useCallback(async () => {
