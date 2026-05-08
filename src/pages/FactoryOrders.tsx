@@ -15,6 +15,7 @@ import {
 } from '@/firebase/orders';
 import { ensureConversation } from '@/firebase/friends';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
+import OrderDocumentModal from '@/components/orders/OrderDocumentModal';
 
 const STATUS_LABEL: Record<OrderStatus, string> = {
   pending: '대기',
@@ -55,6 +56,7 @@ export default function FactoryOrders() {
   const [busyId, setBusyId] = useState<string | null>(null);
   const [ordererInfo, setOrdererInfo] = useState<OrdererInfo | null>(null);
   const [loadingInfo, setLoadingInfo] = useState(false);
+  const [docOrder, setDocOrder] = useState<OrderRecord | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -214,12 +216,6 @@ export default function FactoryOrders() {
                   </span>
                 </div>
 
-                {o.thumbnailUrl && (
-                  <div style={{ width: '100%', aspectRatio: '16/10', overflow: 'hidden', borderRadius: 8, marginBottom: 12, background: '#f3f4f6' }}>
-                    <img src={o.thumbnailUrl} alt={o.designName} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                  </div>
-                )}
-
                 <div style={{ marginBottom: 12 }}>
                   <div style={{ fontSize: 16, fontWeight: 700, marginBottom: 4 }}>{o.designName}</div>
                   {o.projectName && <div style={{ fontSize: 12, color: 'var(--theme-text-secondary, #6b7280)' }}>프로젝트: {o.projectName}</div>}
@@ -227,7 +223,7 @@ export default function FactoryOrders() {
 
                 <div style={{ fontSize: 13, lineHeight: 1.7, marginBottom: 12 }}>
                   <Row label="발주자" value={o.ordererName || o.ordererEmail || '-'} />
-                  {o.formData.quantity && <Row label="수량" value={o.formData.quantity} />}
+                  {o.formData.materialSpec && <Row label="자재 스펙" value={o.formData.materialSpec} />}
                   {o.formData.dueDate && <Row label="납기" value={o.formData.dueDate} />}
                   {o.formData.deliveryAddress && <Row label="배송지" value={o.formData.deliveryAddress} />}
                   {o.formData.installSchedule && <Row label="설치" value={o.formData.installSchedule} />}
@@ -237,6 +233,9 @@ export default function FactoryOrders() {
 
                 {/* 액션 버튼: 디자인보기 + (대기시 수락) + 발주자정보 */}
                 <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 8 }}>
+                  <button onClick={() => setDocOrder(o)} style={btnPrimary}>
+                    📄 발주서 보기
+                  </button>
                   <button
                     onClick={() => navigate(`/configurator?designFileId=${o.designId}&projectId=${o.projectId || ''}&readonly=1`)}
                     style={btnSecondary}
@@ -287,6 +286,15 @@ export default function FactoryOrders() {
           </div>
         )}
       </div>
+
+      {/* 발주서 모달 */}
+      {docOrder && (
+        <OrderDocumentModal
+          order={docOrder}
+          onClose={() => setDocOrder(null)}
+          onSendMessage={(uid) => { setDocOrder(null); handleSendMessage(uid); }}
+        />
+      )}
 
       {/* 발주자 정보 모달 */}
       {ordererInfo && (

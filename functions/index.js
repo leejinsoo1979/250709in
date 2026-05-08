@@ -515,7 +515,7 @@ exports.createOrder = onCall(
           `📌 발주자: ${ordererData.displayName || ordererData.email || ''}`,
           `🏭 공장: ${factoryData.displayName || factoryData.email || ''}`,
           `🎨 디자인: ${designName}`,
-          fd.quantity ? `📦 수량: ${fd.quantity}` : '',
+          fd.materialSpec ? `🧱 자재 스펙: ${fd.materialSpec}` : '',
           fd.dueDate ? `📅 납기: ${fd.dueDate}` : '',
           fd.deliveryAddress ? `📍 배송지: ${fd.deliveryAddress}` : '',
           `🕐 ${time}`,

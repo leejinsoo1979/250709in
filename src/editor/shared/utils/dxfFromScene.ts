@@ -102,7 +102,7 @@ export const generateDXFFromScene = (
       viewDirection,
       sideViewFilter,
       false,
-      drawingType === 'door' ? ['DOOR', 'DOOR_DIMENSIONS'] : undefined
+      drawingType === 'door' ? ['DOOR', 'DOOR_DIMENSIONS', 'DRAWER'] : undefined
     );
 
     console.log(`✅ DXF 생성 완료 (${drawingType}, 필터: ${sideViewFilter})`);
@@ -136,7 +136,7 @@ export const generateCombinedDXFFromScene = (
       title: drawingTypeToTitle(drawingType),
       viewDirection: drawingTypeToViewDirection(drawingType),
       sideViewFilter: drawingTypeToSideViewFilter(drawingType),
-      includeLayers: drawingType === 'door' ? ['DOOR', 'DOOR_DIMENSIONS'] : undefined
+      includeLayers: drawingType === 'door' ? ['DOOR', 'DOOR_DIMENSIONS', 'DRAWER'] : undefined
     }];
   });
 

@@ -5,7 +5,9 @@ import { useEffect, useState } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/auth/AuthProvider';
 import { listMyOrders, type OrderRecord, type OrderStatus } from '@/firebase/orders';
+import { ensureConversation } from '@/firebase/friends';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
+import OrderDocumentModal from '@/components/orders/OrderDocumentModal';
 
 const STATUS_LABEL: Record<OrderStatus, string> = {
   pending: '대기',
@@ -30,6 +32,17 @@ export default function MyOrders() {
   const [orders, setOrders] = useState<OrderRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<OrderStatus | 'all'>('all');
+  const [docOrder, setDocOrder] = useState<OrderRecord | null>(null);
+
+  const handleSendMessageToFactory = async (factoryUid: string) => {
+    if (!user?.uid) return;
+    try {
+      const convId = await ensureConversation(user.uid, factoryUid);
+      navigate(`/dashboard/messages/${convId}`);
+    } catch (e: any) {
+      alert('메시지 시작 실패: ' + (e?.message || ''));
+    }
+  };
 
   useEffect(() => {
     if (!user?.uid) return;
@@ -104,29 +117,48 @@ export default function MyOrders() {
                   </span>
                 </div>
 
-                {o.thumbnailUrl && (
-                  <div style={{ width: '100%', aspectRatio: '16/10', overflow: 'hidden', borderRadius: 8, marginBottom: 12, background: '#f3f4f6' }}>
-                    <img src={o.thumbnailUrl} alt={o.designName} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                  </div>
-                )}
-
                 <div style={{ marginBottom: 12 }}>
                   <div style={{ fontSize: 16, fontWeight: 700, marginBottom: 4 }}>{o.designName}</div>
                   {o.projectName && <div style={{ fontSize: 12, color: 'var(--theme-text-secondary, #6b7280)' }}>프로젝트: {o.projectName}</div>}
                 </div>
 
-                <div style={{ fontSize: 13, lineHeight: 1.7 }}>
+                <div style={{ fontSize: 13, lineHeight: 1.7, marginBottom: 12 }}>
                   <Row label="공장" value={o.factoryName || '-'} />
-                  {o.formData.quantity && <Row label="수량" value={o.formData.quantity} />}
+                  {o.formData.materialSpec && <Row label="자재 스펙" value={o.formData.materialSpec} />}
                   {o.formData.dueDate && <Row label="납기" value={o.formData.dueDate} />}
                   {o.processedAt && <Row label="처리일" value={o.processedAt.toLocaleString('ko-KR')} />}
                   {o.reason && <Row label="사유" value={o.reason} />}
                 </div>
+
+                <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 8 }}>
+                  <button onClick={() => setDocOrder(o)} style={btnPrimary}>📄 발주서 보기</button>
+                  <button
+                    onClick={() => navigate(`/configurator?designFileId=${o.designId}&projectId=${o.projectId || ''}&readonly=1`)}
+                    style={btnSecondary}
+                  >
+                    디자인 보기
+                  </button>
+                </div>
+                <button
+                  onClick={() => handleSendMessageToFactory(o.factoryId)}
+                  style={btnMessage}
+                >
+                  💬 공장에 메시지 보내기
+                </button>
               </div>
             ))}
           </div>
         )}
       </div>
+
+      {/* 발주서 모달 */}
+      {docOrder && (
+        <OrderDocumentModal
+          order={docOrder}
+          onClose={() => setDocOrder(null)}
+          onSendMessage={(_uid) => { const fid = docOrder.factoryId; setDocOrder(null); handleSendMessageToFactory(fid); }}
+        />
+      )}
     </div>
   );
 }
@@ -148,5 +180,29 @@ const btnSecondary: React.CSSProperties = {
   color: 'var(--theme-text, #1f2937)',
   fontSize: 13,
   fontWeight: 500,
+  cursor: 'pointer',
+};
+
+const btnPrimary: React.CSSProperties = {
+  padding: '8px 14px',
+  borderRadius: 8,
+  border: 'none',
+  background: 'var(--theme-primary, #3b82f6)',
+  color: '#fff',
+  fontSize: 13,
+  fontWeight: 600,
+  cursor: 'pointer',
+};
+
+const btnMessage: React.CSSProperties = {
+  width: '100%',
+  marginTop: 4,
+  padding: '10px 14px',
+  borderRadius: 8,
+  border: '1px solid var(--theme-primary, #3b82f6)',
+  background: 'transparent',
+  color: 'var(--theme-primary, #3b82f6)',
+  fontSize: 13,
+  fontWeight: 600,
   cursor: 'pointer',
 };

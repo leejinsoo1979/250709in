@@ -771,6 +771,7 @@ const determineLayerWithParent = (obj: THREE.Object3D): string => {
   // 도어 (대각선, 엣지 등) - 서랍 제외
   if (combinedNames.includes('door-diagonal') || combinedNames.includes('door-edge') ||
       combinedNames.includes('door_diagonal') || combinedNames.includes('door_edge') ||
+      combinedNames.includes('도어') ||
       (lowerName.includes('door') && !combinedNames.includes('dimension'))) {
     return 'DOOR';
   }
@@ -847,6 +848,7 @@ const determineLayer = (name: string): string => {
   // 도어 (대각선, 엣지 등) - 서랍 제외
   if (lowerName.includes('door-diagonal') || lowerName.includes('door-edge') ||
       lowerName.includes('door_diagonal') || lowerName.includes('door_edge') ||
+      lowerName.includes('도어') ||
       (lowerName.includes('door') && !lowerName.includes('dimension'))) {
     return 'DOOR';
   }
@@ -3267,8 +3269,17 @@ export const generateDxfDrawingData = (
     }
   }
 
+  const targetSideModule = targetModuleId && (viewDirection === 'left' || viewDirection === 'right')
+    ? placedModules.find(module => module.id === targetModuleId)
+    : undefined;
+  const dataBasedSideDrawing = targetSideModule
+    ? generateExternalDimensions(spaceInfo, [targetSideModule], viewDirection, 'all')
+    : null;
+
   // 씬에서 Line과 Text 객체 추출 (X 필터링 범위 전달, excludeDoor 옵션 전달)
-  const extracted = extractFromScene(scene, viewDirection, allowedXRange, excludeDoor);
+  const extracted = dataBasedSideDrawing
+    ? { lines: [], texts: [] }
+    : extractFromScene(scene, viewDirection, allowedXRange, excludeDoor);
 
   // 측면뷰(left/right): 완전 데이터 기반
   // 씬에는 leftmost 가구 1개만 렌더링되어 있어 다른 슬롯 가구를 씬에서 추출 불가능.
@@ -3278,12 +3289,17 @@ export const generateDxfDrawingData = (
   let texts: DxfText[];
 
   if (viewDirection === 'left' || viewDirection === 'right') {
-    // 측면뷰: 2D 뷰어가 씬에 그린 가구 형상(서랍 박스, 옷봉, 선반 등) + CADDimensions2D의
-    // 치수를 그대로 추출. 씬에 이미 leftmost/rightmost 가구 + 모든 geometry가 렌더됨.
-    // generateExternalDimensions 호출 제거 (씬과 중복).
-    lines = [...extracted.lines];
-    texts = [...extracted.texts];
-    console.log(`📐 ${viewDirection}뷰: 씬 추출 그대로 사용 (라인 ${lines.length}개, 텍스트 ${texts.length}개)`);
+    if (dataBasedSideDrawing) {
+      lines = [...dataBasedSideDrawing.lines];
+      texts = [...dataBasedSideDrawing.texts];
+      console.log(`📐 ${viewDirection}뷰: 모듈별 데이터 기반 측면도 사용 (${targetModuleId}, 라인 ${lines.length}개, 텍스트 ${texts.length}개)`);
+    } else {
+      // 측면뷰: 2D 뷰어가 씬에 그린 가구 형상(서랍 박스, 옷봉, 선반 등) + CADDimensions2D의
+      // 치수를 그대로 추출. 씬에 이미 leftmost/rightmost 가구 + 모든 geometry가 렌더됨.
+      lines = [...extracted.lines];
+      texts = [...extracted.texts];
+      console.log(`📐 ${viewDirection}뷰: 씬 추출 그대로 사용 (라인 ${lines.length}개, 텍스트 ${texts.length}개)`);
+    }
   } else if (viewDirection === 'front') {
     // 정면뷰: 2D 뷰어의 CleanCAD2D/CADDimensions2D가 씬에 그린 치수를 그대로 사용.
     // (좌/우 세로 치수 스택 30/1270/1000/60/2360, 내부 섹션 라벨 191/1025/964,
