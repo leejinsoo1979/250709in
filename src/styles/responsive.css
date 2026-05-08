@@ -363,10 +363,8 @@
     background-size: contain;
   }
   
-  /* Use higher resolution images */
-  .logo {
-    background-image: url('/images/logo@2x.png');
-  }
+  /* Use higher resolution images — 파일이 존재할 때만 활성화 */
+  /* .logo { background-image: url('/images/logo@2x.png'); } */
 }
 
 /* ================================
