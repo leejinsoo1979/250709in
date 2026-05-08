@@ -22,8 +22,12 @@ service cloud.firestore {
       );
     }
     function isTeamMember(teamId) {
-      return isSignedIn() &&
-             exists(/databases/$(database)/documents/teams/$(teamId)/members/$(request.auth.uid));
+      return isSignedIn() && (
+        // 개인 팀(personal_{uid})은 본인이 항상 멤버로 인정
+        teamId == ('personal_' + request.auth.uid) ||
+        // 일반 팀은 members 문서로 확인
+        exists(/databases/$(database)/documents/teams/$(teamId)/members/$(request.auth.uid))
+      );
     }
 
     // admins - 관리자 권한 정보 (슈퍼 관리자만 관리)
