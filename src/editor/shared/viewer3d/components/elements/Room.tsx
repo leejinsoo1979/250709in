@@ -23,6 +23,7 @@ import { computeBaseStripGroups, computeTopStripGroups, getBaseFrameBoundsX, get
 import { getModuleBoundsX, getModuleCategory } from '@/editor/shared/utils/freePlacementUtils';
 import { getModuleById } from '@/data/modules';
 import { MaterialFactory } from '../../utils/materials/MaterialFactory';
+import NativeLine from './NativeLine';
 import { useSpace3DView } from '../../context/useSpace3DView';
 import PlacedFurnitureContainer from './furniture/PlacedFurnitureContainer';
 import { FurnitureBoringOverlay } from './boring';
@@ -3530,65 +3531,107 @@ const Room: React.FC<RoomProps> = ({
             shadowEnabled={shadowEnabled}
             view2DTheme={view2DTheme}
           />
-          {/* 2D 측면뷰: 바닥마감재 측면 단면에 빗금 패턴 표시 */}
+          {/* 2D 측면뷰: 바닥마감재 측면 단면에 빗금 패턴 표시
+              CleanCAD2D 정면뷰 바닥마감재 해치와 동일한 패턴 (40mm 간격, 45도, #FFCC99/#CC8844) */}
           {viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right') && (() => {
-            // 빗금 패턴 캔버스 텍스처 생성 (45도 사선)
-            const canvas = document.createElement('canvas');
-            canvas.width = 32;
-            canvas.height = 32;
-            const ctx = canvas.getContext('2d');
-            if (ctx) {
-              // 배경색 (마감재 색상)
-              ctx.fillStyle = view2DTheme === 'dark' ? '#2a2a2a' : '#f5f5f5';
-              ctx.fillRect(0, 0, 32, 32);
-              // 빗금 (45도 사선)
-              ctx.strokeStyle = view2DTheme === 'dark' ? '#888' : '#555';
-              ctx.lineWidth = 1.2;
-              for (let i = -32; i <= 64; i += 6) {
-                ctx.beginPath();
-                ctx.moveTo(i, 0);
-                ctx.lineTo(i + 32, 32);
-                ctx.stroke();
-              }
-            }
-            const tex = new THREE.CanvasTexture(canvas);
-            tex.wrapS = THREE.RepeatWrapping;
-            tex.wrapT = THREE.RepeatWrapping;
-            // 마감재 두께(보통 9mm) 한 칸당 적당히 보이도록 반복
-            const repeatX = Math.max(1, Math.round(extendedPanelDepth * 100 / 60));
-            const repeatY = Math.max(1, Math.round(floorFinishHeight * 100 / 60));
-            tex.repeat.set(repeatX, repeatY);
-            const hatchMaterial = new THREE.MeshBasicMaterial({
-              map: tex,
-              transparent: true,
-              depthTest: false,
-              depthWrite: false,
-              side: THREE.DoubleSide,
-            });
+            const hatchColor = view2DTheme === 'dark' ? '#FFCC99' : '#CC8844';
+            const bgColor = '#FFCC99';
+            // 측면뷰 평면: Z(앞뒤) × Y(높이). Y는 0~floorFinishHeight, Z는 extendedZOffset~extendedZOffset+extendedPanelDepth
+            const z0 = extendedZOffset;
+            const z1 = extendedZOffset + extendedPanelDepth;
+            const planeDepth = extendedPanelDepth;
+            const planeHeight = floorFinishHeight;
+            const hatchSpacing = mmToThreeUnits(40);
+            const startOff = -planeHeight;
+            const endOff = planeDepth;
+            const hatchCount = Math.ceil((endOff - startOff) / hatchSpacing) + 1;
 
-            // 좌/우 측면에 빗금 plane 두 개 (X축 양 끝)
+            // 좌측 측면 (view2DDirection === 'left'): X = xOffset, 반대편이 보임
+            // 우측 측면 (view2DDirection === 'right'): X = xOffset + width
+            const showLeft = view2DDirection === 'left';
+            const showRight = view2DDirection === 'right';
+
+            const buildHatch = (planeX: number, key: string) => {
+              const lines: JSX.Element[] = [];
+              for (let i = 0; i <= hatchCount; i++) {
+                const off = startOff + i * hatchSpacing;
+                // 시작점: (z = z0 + off, y = 0), 끝점: (z = z0 + off + planeHeight, y = planeHeight)
+                let sz = z0 + off;
+                let sy = 0;
+                let ez = sz + planeHeight;
+                let ey = planeHeight;
+                // 클리핑
+                if (sz < z0) { const d = z0 - sz; sz = z0; sy = sy + d; }
+                if (ez > z1) { const d = ez - z1; ez = z1; ey = ey - d; }
+                if (sz < z1 && ez > z0 && sy < planeHeight && ey > 0) {
+                  lines.push(
+                    <NativeLine
+                      key={`${key}-hatch-${i}`}
+                      name="floor-finish-hatch"
+                      points={[
+                        [planeX, yOffset + sy, sz],
+                        [planeX, yOffset + ey, ez],
+                      ]}
+                      color={hatchColor}
+                      lineWidth={0.6}
+                      opacity={0.6}
+                      transparent
+                      renderOrder={100001}
+                      depthTest={false}
+                    />
+                  );
+                }
+              }
+              return lines;
+            };
+
             const leftX = xOffset + 0.001;
             const rightX = xOffset + width - 0.001;
-            const planeY = yOffset + floorFinishHeight / 2;
-            const planeZ = extendedZOffset + extendedPanelDepth / 2;
             return (
               <>
-                <mesh
-                  position={[leftX, planeY, planeZ]}
-                  rotation={[0, -Math.PI / 2, 0]}
-                  renderOrder={50}
-                >
-                  <planeGeometry args={[extendedPanelDepth, floorFinishHeight]} />
-                  <primitive object={hatchMaterial} attach="material" />
-                </mesh>
-                <mesh
-                  position={[rightX, planeY, planeZ]}
-                  rotation={[0, Math.PI / 2, 0]}
-                  renderOrder={50}
-                >
-                  <planeGeometry args={[extendedPanelDepth, floorFinishHeight]} />
-                  <primitive object={hatchMaterial} attach="material" />
-                </mesh>
+                {showLeft && (
+                  <>
+                    {/* 좌측 단면: 배경 + 상단 경계선 + 해치 라인 */}
+                    <mesh
+                      position={[leftX, yOffset + planeHeight / 2, z0 + planeDepth / 2]}
+                      rotation={[0, -Math.PI / 2, 0]}
+                      renderOrder={50}
+                    >
+                      <planeGeometry args={[planeDepth, planeHeight]} />
+                      <meshBasicMaterial color={bgColor} transparent opacity={0.2} depthTest={false} depthWrite={false} side={THREE.DoubleSide} />
+                    </mesh>
+                    <NativeLine
+                      name="floor-finish-top"
+                      points={[[leftX, yOffset + planeHeight, z0], [leftX, yOffset + planeHeight, z1]]}
+                      color={hatchColor}
+                      lineWidth={1}
+                      renderOrder={100001}
+                      depthTest={false}
+                    />
+                    {buildHatch(leftX, 'left')}
+                  </>
+                )}
+                {showRight && (
+                  <>
+                    <mesh
+                      position={[rightX, yOffset + planeHeight / 2, z0 + planeDepth / 2]}
+                      rotation={[0, Math.PI / 2, 0]}
+                      renderOrder={50}
+                    >
+                      <planeGeometry args={[planeDepth, planeHeight]} />
+                      <meshBasicMaterial color={bgColor} transparent opacity={0.2} depthTest={false} depthWrite={false} side={THREE.DoubleSide} />
+                    </mesh>
+                    <NativeLine
+                      name="floor-finish-top"
+                      points={[[rightX, yOffset + planeHeight, z0], [rightX, yOffset + planeHeight, z1]]}
+                      color={hatchColor}
+                      lineWidth={1}
+                      renderOrder={100001}
+                      depthTest={false}
+                    />
+                    {buildHatch(rightX, 'right')}
+                  </>
+                )}
               </>
             );
           })()}
