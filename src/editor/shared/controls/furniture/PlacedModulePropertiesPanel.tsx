@@ -3168,6 +3168,36 @@ const PlacedModulePropertiesPanel: React.FC = () => {
             );
           })()}
 
+          {/* 경첩 방향 선택 (도어치수 바로 아래로 이동) — 도어 + 싱글 가구 + 상세보기 아닐 때 */}
+          {!showDetails && hasDoor && isSingleFurniture && (
+            <div className={styles.propertySection}>
+              <div className={styles.hingeSubSection}>
+                <h6 className={styles.subSectionTitle}>{t('furniture.hingeDirection')}</h6>
+                <div className={styles.hingeTabSelector}>
+                  <button
+                    className={`${styles.hingeTab} ${hingePosition === 'left' ? styles.activeHingeTab : ''}`}
+                    onClick={() => handleHingePositionChange('left')}
+                  >
+                    {t('furniture.left')}
+                    <span className={styles.hingeTabSubtitle}>{t('furniture.openToRight')}</span>
+                  </button>
+                  <button
+                    className={`${styles.hingeTab} ${hingePosition === 'right' ? styles.activeHingeTab : ''}`}
+                    onClick={() => handleHingePositionChange('right')}
+                  >
+                    {t('furniture.right')}
+                    <span className={styles.hingeTabSubtitle}>{t('furniture.openToLeft')}</span>
+                  </button>
+                </div>
+                {isCoverDoor && (
+                  <div className={styles.coverDoorNote}>
+                    {t('furniture.coverDoorNote')}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
           {/* 섹션별 치수 설정 (2섹션 이상 가구: customConfig 또는 modelConfig) */}
           {currentPlacedModule && (() => {
             const cc = currentPlacedModule.customConfig;
@@ -5432,60 +5462,6 @@ const PlacedModulePropertiesPanel: React.FC = () => {
             </div>
           )}
           */}
-
-          {/* 경첩 방향 선택 (도어가 있고 싱글 가구인 경우만, 상세보기 아닐 때만) */}
-          {!showDetails && hasDoor && (
-            <div className={styles.propertySection}>
-              {/* 경첩 방향 선택 (도어가 있고 싱글 가구인 경우만) */}
-              {hasDoor && isSingleFurniture && (
-                <div className={styles.hingeSubSection}>
-                  <h6 className={styles.subSectionTitle}>{t('furniture.hingeDirection')}</h6>
-                  <div className={styles.hingeTabSelector}>
-                    <button
-                      className={`${styles.hingeTab} ${hingePosition === 'left' ? styles.activeHingeTab : ''}`}
-                      onClick={() => handleHingePositionChange('left')}
-                    >
-                      {t('furniture.left')}
-                      <span className={styles.hingeTabSubtitle}>{t('furniture.openToRight')}</span>
-                    </button>
-                    <button
-                      className={`${styles.hingeTab} ${hingePosition === 'right' ? styles.activeHingeTab : ''}`}
-                      onClick={() => handleHingePositionChange('right')}
-                    >
-                      {t('furniture.right')}
-                      <span className={styles.hingeTabSubtitle}>{t('furniture.openToLeft')}</span>
-                    </button>
-                  </div>
-                  {isCoverDoor && (
-                    <div className={styles.coverDoorNote}>
-                      {t('furniture.coverDoorNote')}
-                    </div>
-                  )}
-                </div>
-              )}
-              {/* 경첩 타입 선택 — 숨김 처리
-              <div className={styles.hingeSubSection}>
-                <h6 className={styles.subSectionTitle}>경첩 타입</h6>
-                <div className={styles.hingeTabSelector}>
-                  <button
-                    className={`${styles.hingeTab} ${hingeType === 'A' ? styles.activeHingeTab : ''}`}
-                    onClick={() => handleHingeTypeChange('A')}
-                  >
-                    A-type
-                    <span className={styles.hingeTabSubtitle}>45mm</span>
-                  </button>
-                  <button
-                    className={`${styles.hingeTab} ${hingeType === 'B' ? styles.activeHingeTab : ''}`}
-                    onClick={() => handleHingeTypeChange('B')}
-                  >
-                    B-type
-                    <span className={styles.hingeTabSubtitle}>48mm</span>
-                  </button>
-                </div>
-              </div>
-              */}
-            </div>
-          )}
 
           {/* 도어 상하 이격거리 — 도어 셋팅 섹션으로 통합됨 */}
 
