@@ -66,7 +66,13 @@ const getModuleHeightMm = (
 const getModuleDepthMm = (
   module: PlacedModule,
   moduleData: ReturnType<typeof getModuleById> | null
-): number => module.upperSectionDepth || module.lowerSectionDepth || module.customDepth || module.freeDepth || moduleData?.dimensions.depth || 600;
+): number => {
+  if (isShoeCabinetModule(module)) {
+    return resolveShoeBodyDepthMm(module, moduleData);
+  }
+
+  return module.upperSectionDepth || module.lowerSectionDepth || module.customDepth || module.freeDepth || moduleData?.dimensions.depth || 600;
+};
 
 const getModuleWidthMm = (
   module: PlacedModule,
@@ -123,6 +129,37 @@ const selectSideModule = (
   }
 
   return placedModules[0];
+};
+
+const isShoeCabinetModule = (module?: PlacedModule): boolean => {
+  const moduleId = module?.moduleId || '';
+  const key = moduleId.replace(/-[\d.]+$/, '');
+  return !moduleId.includes('upper-cabinet-') && (
+    moduleId.includes('-entryway-') ||
+    moduleId.includes('-4drawer-shelf-') ||
+    moduleId.includes('-2drawer-shelf-') ||
+    /(^|-)shelf$/.test(key)
+  );
+};
+
+const resolveShoeBodyDepthMm = (
+  module: PlacedModule,
+  moduleData: ReturnType<typeof getModuleById> | null
+): number => {
+  const rawDepth = module.customDepth ||
+    module.upperSectionDepth ||
+    module.lowerSectionDepth ||
+    module.freeDepth ||
+    moduleData?.defaultDepth ||
+    moduleData?.dimensions.depth ||
+    380;
+
+  // 현관장 H 템플릿은 400mm가 도어 포함값이다. 몸통/측면도 기준은 380mm.
+  if ((module.moduleId || '').includes('-entryway-') && Math.abs(rawDepth - 400) < 0.5) {
+    return 380;
+  }
+
+  return rawDepth;
 };
 
 /**
@@ -195,7 +232,8 @@ const computeSectionHeightsInfo = (
     const assignedMm = heightsMm.reduce((sum, value) => sum + value, 0);
     const diffMm = availableHeightMm - assignedMm;
     if (Math.abs(diffMm) > 0.01 && heightsMm.length > 0) {
-      heightsMm[heightsMm.length - 1] = Math.max(heightsMm[heightsMm.length - 1] + diffMm, 0);
+      const absorbIndex = isShoeCabinetModule(module) && heightsMm.length >= 2 ? 0 : heightsMm.length - 1;
+      heightsMm[absorbIndex] = Math.max(heightsMm[absorbIndex] + diffMm, 0);
     }
   }
 
@@ -3109,6 +3147,7 @@ export const generateExternalDimensions = (
       }
 
       const module = targetModuleForSection;
+      const isShoeCabinetForSection = isShoeCabinetModule(module);
       // CADDimensions2D와 동일하게 moduleId 사용하여 모듈 데이터 가져오기
       const moduleData = resolveModuleData(module, spaceInfo);
 
@@ -3125,13 +3164,17 @@ export const generateExternalDimensions = (
       }
 
       // 하부섹션 깊이 가져오기 (CADDimensions2D.tsx와 동일)
-      if (module.lowerSectionDepth !== undefined) {
+      // 신발장/선반장은 2D 화면에서 뒤쪽 기준 단일 깊이 치수로 표시하므로
+      // 아래쪽 하부 깊이 치수를 별도로 만들지 않는다.
+      if (isShoeCabinetForSection) {
+        lowerSectionDepthMm = undefined;
+        console.log(`📐 ${viewDirection}뷰 신발장: 하단 하부 깊이 치수 생략`);
+      } else if (module.lowerSectionDepth !== undefined) {
         lowerSectionDepthMm = module.lowerSectionDepth;
         console.log(`📐 ${viewDirection}뷰 하부섹션 깊이: ${lowerSectionDepthMm}mm`);
       } else {
-        // 1섹션 가구인 경우에도 하부에 깊이 표시 (상부 깊이와 동일)
-        lowerSectionDepthMm = module.upperSectionDepth || module.customDepth || furnitureDepthMm;
-        console.log(`📐 ${viewDirection}뷰 하부섹션 깊이 (1섹션 가구): ${lowerSectionDepthMm}mm`);
+        lowerSectionDepthMm = undefined;
+        console.log(`📐 ${viewDirection}뷰 단일 깊이 가구: 하단 하부 깊이 치수 생략`);
       }
     }
 
@@ -3213,7 +3256,7 @@ export const generateExternalDimensions = (
       texts.push({ x: (furnitureXMin + furnitureXMax) / 2, y: topDimY + 15, text: `${Math.round(furnitureDepthMm)}`, height: 25, color: dimColor, layer: 'DIMENSIONS' });
 
       // ===== 하단: 하부섹션 깊이 치수 (2섹션 가구인 경우) =====
-      if (lowerSectionDepthMm !== undefined && lowerSectionDepthMm > 0) {
+      if (lowerSectionDepthMm !== undefined && lowerSectionDepthMm > 0 && Math.abs(lowerSectionDepthMm - furnitureDepthMm) > 0.5) {
         const bottomDimY = -dimOffset;
         // 하부섹션은 같은 시작점에서 lowerSectionDepthMm 비율만큼
         const lowerRatio = lowerSectionDepthMm / furnitureDepthMm;
@@ -3282,7 +3325,7 @@ export const generateExternalDimensions = (
       texts.push({ x: (furnitureXMin + furnitureXMax) / 2, y: topDimY + 15, text: `${Math.round(furnitureDepthMm)}`, height: 25, color: dimColor, layer: 'DIMENSIONS' });
 
       // ===== 하단: 하부섹션 깊이 치수 (2섹션 가구인 경우) =====
-      if (lowerSectionDepthMm !== undefined && lowerSectionDepthMm > 0) {
+      if (lowerSectionDepthMm !== undefined && lowerSectionDepthMm > 0 && Math.abs(lowerSectionDepthMm - furnitureDepthMm) > 0.5) {
         const bottomDimY = -dimOffset;
         // 하부섹션은 같은 끝점에서 lowerSectionDepthMm 비율만큼
         const lowerRatio = lowerSectionDepthMm / furnitureDepthMm;

@@ -41,6 +41,7 @@ const drawingTypeToViewDirection = (drawingType: DrawingType): ViewDirection => 
  */
 const drawingTypeToSideViewFilter = (drawingType: DrawingType): SideViewFilter => {
   switch (drawingType) {
+    case 'side':
     case 'sideLeft':
       // 측면도: 가장 왼쪽에 있는 가구의 측면을 봄
       return 'leftmost';
@@ -127,7 +128,7 @@ export const generateCombinedDXFFromScene = (
       return modules.map((module, index) => ({
         title: `측면도 ${index + 1}`,
         viewDirection: drawingTypeToViewDirection(drawingType),
-        sideViewFilter: 'all' as const,
+        sideViewFilter: 'leftmost' as const,
         targetModuleId: module.id
       }));
     }

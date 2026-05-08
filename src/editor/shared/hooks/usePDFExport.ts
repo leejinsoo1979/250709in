@@ -10,6 +10,7 @@ import { addKoreanText, addMixedText } from '@/editor/shared/utils/pdfKoreanFont
 import { exportWithPersistence } from '@/services/exportService';
 import { getCurrentVersionId } from '@/services/designs.repo';
 import { auth } from '@/firebase/config';
+import { downloadDxfAsPdf, type PdfViewDirection } from '@/editor/shared/utils/dxfToPdf';
 
 // 도어/서랍 정보 인터페이스
 interface DoorDrawingItem {
@@ -543,6 +544,22 @@ export function usePDFExport() {
     setIsExporting(true);
     
     try {
+      const pdfViews: PdfViewDirection[] = [];
+      if (selectedViews.includes('2d-front')) pdfViews.push('front');
+      if (selectedViews.includes('2d-top')) pdfViews.push('top');
+      if (selectedViews.includes('2d-left')) pdfViews.push('left');
+      if (selectedViews.includes('2d-door')) pdfViews.push('door-only');
+
+      if (pdfViews.length > 0) {
+        await downloadDxfAsPdf(spaceInfo, placedModules, pdfViews);
+
+        return {
+          success: true,
+          message: 'PDF가 성공적으로 생성되었습니다.',
+          filename: `drawing_${new Date().toISOString().slice(0, 10)}.pdf`
+        };
+      }
+
       // PDF 문서 생성 (A3 가로 방향 - 건축 도면 표준)
       const pdf = new jsPDF({
         orientation: 'landscape',

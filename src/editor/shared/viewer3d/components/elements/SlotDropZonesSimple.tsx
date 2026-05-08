@@ -27,6 +27,30 @@ import { PlacedModule } from '@/editor/shared/furniture/types';
 const BUILT_IN_FRIDGE_FIXED_WIDTH = 582;
 const isBuiltInFridgeModule = (moduleId: string): boolean => moduleId.includes('built-in-fridge');
 
+const isShoeCabinetModule = (moduleId: string): boolean => {
+  const key = moduleId.replace(/-[\d.]+$/, '');
+  return !moduleId.includes('upper-cabinet-') && (
+    moduleId.includes('-entryway-') ||
+    moduleId.includes('-4drawer-shelf-') ||
+    moduleId.includes('-2drawer-shelf-') ||
+    /(^|-)shelf$/.test(key)
+  );
+};
+
+const getPlacementDefaultDepth = (moduleData: ModuleData | undefined, spaceDepth: number): number => {
+  const moduleId = moduleData?.id || '';
+  if (moduleId.includes('upper-cabinet')) {
+    return Math.min(300, spaceDepth);
+  }
+  if (isShoeCabinetModule(moduleId)) {
+    return Math.min(380, spaceDepth);
+  }
+  if (moduleData?.defaultDepth) {
+    return Math.min(moduleData.defaultDepth, spaceDepth);
+  }
+  return Math.min(Math.floor(spaceDepth * 0.9), 580);
+};
+
 interface SlotDropZonesSimpleProps {
   spaceInfo: SpaceInfo;
   showAll?: boolean;
@@ -1062,7 +1086,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         : `placed-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 
       // 기본 깊이 설정
-      const defaultDepth = moduleData?.defaultDepth || Math.min(Math.floor(spaceInfo.depth * 0.9), 580);
+      const defaultDepth = getPlacementDefaultDepth(moduleData, spaceInfo.depth);
 
       // 실제 슬롯 너비 가져오기 (slotWidths 사용) - targetZoneInfo는 이미 위에서 선언됨
       const targetZoneWidths = zoneToUse === 'dropped'
@@ -1658,7 +1682,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         const isDual = moduleData.id.includes('dual')
           || dragData.isDualSlot === true
           || (moduleData.dimensions.width > indexing.columnWidth * 1.5);
-        const defaultDepth = moduleData.defaultDepth || 600;
+        const defaultDepth = getPlacementDefaultDepth(moduleData, spaceInfo.depth);
         const slotIndex = colliderUserData?.slotIndex;
         const customWidth = moduleData.customWidth || moduleData.dimensions.width;
 
@@ -1855,7 +1879,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
     const placedId = `placed-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 
     // 기본 깊이 설정
-    const defaultDepth = moduleData?.defaultDepth || Math.min(Math.floor(spaceInfo.depth * 0.9), 580);
+    const defaultDepth = getPlacementDefaultDepth(moduleData, spaceInfo.depth);
 
     // 사용할 인덱싱 정보 결정
     let zoneTargetIndexing = indexing;
@@ -3365,7 +3389,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
           });
         }
 
-        let customDepth = moduleData?.defaultDepth || Math.min(Math.floor(spaceInfo.depth * 0.9), 580);
+        let customDepth = getPlacementDefaultDepth(moduleData, spaceInfo.depth);
 
         // 카테고리 체크
         const isUpperCabinet = moduleData?.category === 'upper';

@@ -2673,11 +2673,14 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   // 깊이 계산: customDepth(사용자 지정) > adjustedDepthMm(슬롯-기둥 남는 공간) > moduleDepth
   // 기둥 앞 배치 front 모드도 customDepth를 존중 (사용자가 기둥과 같은 깊이로 줄인 경우 등)
   const moduleDepth = actualModuleData?.dimensions?.depth || 0;
-  const actualDepthMm = placedModule.customDepth ||
+  const rawActualDepthMm = placedModule.customDepth ||
     (placedModule.columnPlacementMode === 'front' && adjustedDepthMm !== moduleDepth
       ? adjustedDepthMm
       : (autoAdjustedDepthMm !== null ? autoAdjustedDepthMm :
           (adjustedDepthMm !== moduleDepth ? adjustedDepthMm : moduleDepth)));
+  const actualDepthMm = placedModule.moduleId?.includes('-entryway-') && Math.abs(rawActualDepthMm - 400) < 0.5
+    ? 380
+    : rawActualDepthMm;
   const depth = mmToThreeUnits(actualDepthMm);
 
 

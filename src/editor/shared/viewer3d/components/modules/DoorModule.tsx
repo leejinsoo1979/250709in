@@ -1639,6 +1639,8 @@ const DoorModule: React.FC<DoorModuleProps> = ({
 
                 return (
                   <>
+                    {!is3D && (
+                    <>
                     <NativeLine name="door-dimension-height" points={[
                       [-leftDoorWidthUnits / 2 - mmToThreeUnits(90), -doorHeight / 2, zPos],
                       [-leftDoorWidthUnits / 2 - mmToThreeUnits(90), doorHeight / 2, zPos]
@@ -1674,6 +1676,8 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                       rotation={[0, 0, Math.PI / 2]}
                       forceShow={true}
                     />
+                    </>
+                    )}
 
                     <NativeLine name="door-dimension" points={[
                       [-leftDoorWidthUnits / 2, extensionStart, zPos],
@@ -2007,6 +2011,8 @@ const DoorModule: React.FC<DoorModuleProps> = ({
 
                 return (
                   <>
+                    {!is3D && (
+                    <>
                     <NativeLine name="door-dimension-height" points={[
                       [rightDoorWidthUnits / 2 + mmToThreeUnits(90), -doorHeight / 2, zPos],
                       [rightDoorWidthUnits / 2 + mmToThreeUnits(90), doorHeight / 2, zPos]
@@ -2042,6 +2048,8 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                       rotation={[0, 0, Math.PI / 2]}
                       forceShow={true}
                     />
+                    </>
+                    )}
 
                     <NativeLine
                       name="door-dimension"
@@ -2610,6 +2618,8 @@ const DoorModule: React.FC<DoorModuleProps> = ({
 
               return (
                 <>
+                  {!is3D && (
+                  <>
                   <NativeLine
                     name="door-dimension-height"
                     points={[
@@ -2722,6 +2732,8 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                     rotation={[0, 0, Math.PI / 2]}
                     forceShow={true}
                   />
+                  </>
+                  )}
 
                   <NativeLine
                     name="door-dimension"

@@ -21,6 +21,34 @@ import { ColumnIndexer } from './indexing/ColumnIndexer';
 import { useUIStore } from '@/store/uiStore';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
 
+const getSideSlotGroups = (placedModules: PlacedModule[]): Array<{
+  titleIndex: number;
+  selectedSlotIndex: number;
+  modules: PlacedModule[];
+}> => {
+  const visibleModules = placedModules.filter(module => !module.isSurroundPanel);
+  const grouped = new Map<number, PlacedModule[]>();
+
+  visibleModules.forEach(module => {
+    const slotKey = module.slotIndex ?? Math.round((module.position?.x ?? 0) * 1000);
+    const modules = grouped.get(slotKey) ?? [];
+    modules.push(module);
+    grouped.set(slotKey, modules);
+  });
+
+  return Array.from(grouped.entries())
+    .sort(([, aModules], [, bModules]) => {
+      const ax = Math.min(...aModules.map(module => module.position?.x ?? 0));
+      const bx = Math.min(...bModules.map(module => module.position?.x ?? 0));
+      return ax - bx;
+    })
+    .map(([, modules], index) => ({
+      titleIndex: typeof modules[0]?.slotIndex === 'number' ? modules[0].slotIndex + 1 : index + 1,
+      selectedSlotIndex: typeof modules[0]?.slotIndex === 'number' ? modules[0].slotIndex : 0,
+      modules
+    }));
+};
+
 /**
  * PDF 생성 전 씬을 올바른 뷰 모드로 전환하는 헬퍼
  * DXF 추출은 현재 씬 상태에서 Line/Text 객체를 가져오므로,
@@ -352,6 +380,7 @@ export const downloadDxfAsPdf = async (
   const originalViewMode = uiState.viewMode;
   const originalView2DDirection = uiState.view2DDirection;
   const originalRenderMode = uiState.renderMode;
+  const originalSelectedSlotIndex = uiState.selectedSlotIndex;
   console.log(`[PDF] 원래 뷰 모드: ${originalViewMode}/${originalView2DDirection}/${originalRenderMode}`);
 
   // PDF 생성을 위해 2D wireframe 모드로 전환 (도어 대각선 등 조건부 렌더링 포함)
@@ -432,44 +461,34 @@ export const downloadDxfAsPdf = async (
       await switchSceneViewMode('2D', 'front', 'wireframe');
     }
 
-    // 측면도(left)는 배치된 가구 각각에 대해 페이지 생성
-    // 씬에는 leftmost 가구 1개만 렌더링되므로, 완전 데이터 기반으로 각 가구별 측면뷰 생성
+    // 측면도(left)는 슬롯별 그룹 기준으로 페이지 생성
     if (viewDirection === 'left' && placedModules.length > 0) {
-      // X 위치 기준 정렬 (왼쪽부터)
-      const sortedModules = [...placedModules].sort((a, b) =>
-        (a.position?.x ?? 0) - (b.position?.x ?? 0)
-      );
-
-      // 각 가구별 측면뷰를 생성하려면 씬에 그 가구만 렌더돼야 함.
-      // PlacedFurnitureContainer는 view2DDirection='left'일 때 "leftmost X 가구"만 렌더 →
-      // furnitureStore의 placedModules를 해당 가구 하나로 교체하면 씬에 그 가구만 나타남.
+      const sideSlotGroups = getSideSlotGroups(placedModules);
       const furnitureStore = useFurnitureStore.getState();
       const originalPlacedModules = furnitureStore.placedModules;
 
       try {
-        for (let moduleIdx = 0; moduleIdx < sortedModules.length; moduleIdx++) {
-          const singleModule = sortedModules[moduleIdx];
-
+        for (const group of sideSlotGroups) {
           if (!isFirstPage) pdf.addPage();
           isFirstPage = false;
 
-          console.log(`[DXF] left (가구 ${moduleIdx + 1}/${sortedModules.length}): moduleId=${singleModule.moduleId}`);
+          console.log(`[DXF] left (슬롯 ${group.titleIndex}): modules=${group.modules.length}`);
 
-          // store에 해당 가구 하나만 남겨 씬 재렌더
-          useFurnitureStore.setState({ placedModules: [singleModule] });
+          useFurnitureStore.setState({ placedModules: group.modules });
+          useUIStore.setState({ selectedSlotIndex: group.selectedSlotIndex });
           // 씬 갱신 대기 (React 렌더 + R3F 반영)
           await new Promise(resolve => setTimeout(resolve, 600));
 
-          // 씬 추출 - 씬에는 현재 singleModule만 있음
           const dxfViewDirection = pdfViewToViewDirection(viewDirection);
-          const { lines, texts } = generateViewDataFromDxf(spaceInfo, [singleModule], dxfViewDirection);
-          console.log(`[DXF] left (가구 ${moduleIdx + 1}): ${lines.length} lines, ${texts.length} texts`);
+          const { lines, texts } = generateViewDataFromDxf(spaceInfo, group.modules, dxfViewDirection);
+          console.log(`[DXF] left (슬롯 ${group.titleIndex}): ${lines.length} lines, ${texts.length} texts`);
 
-          renderToPdfWithSlotInfo(pdf, lines, texts, spaceInfo, viewDirection, pageWidth, pageHeight, moduleIdx + 1, [singleModule]);
+          renderToPdfWithSlotInfo(pdf, lines, texts, spaceInfo, viewDirection, pageWidth, pageHeight, group.titleIndex, group.modules);
         }
       } finally {
         // 원본 placedModules 복원
         useFurnitureStore.setState({ placedModules: originalPlacedModules });
+        useUIStore.setState({ selectedSlotIndex: originalSelectedSlotIndex });
         await new Promise(resolve => setTimeout(resolve, 300));
       }
     }
@@ -550,6 +569,7 @@ export const downloadDxfAsPdf = async (
     restoreStore.setViewMode(originalViewMode);
     restoreStore.setView2DDirection(originalView2DDirection);
     restoreStore.setRenderMode(originalRenderMode);
+    restoreStore.setSelectedSlotIndex(originalSelectedSlotIndex);
   }
 };
 
@@ -574,13 +594,8 @@ const renderToPdfWithSlotInfo = (
   const centerX = margin + drawableWidth / 2;
   const centerY = margin + titleHeight + drawableHeight / 2;
 
-  // 측면뷰에서는 DOOR 레이어 및 DOOR_DIMENSIONS 필터링 (도어 치수는 정면뷰에서만 의미가 있음)
-  const filteredLines = viewDirection === 'left'
-    ? lines.filter(l => l.layer !== 'DOOR' && l.layer !== 'DOOR_DIMENSIONS')
-    : lines;
-  const filteredTexts = viewDirection === 'left'
-    ? texts.filter(t => t.layer !== 'DOOR' && t.layer !== 'DOOR_DIMENSIONS')
-    : texts;
+  const filteredLines = lines;
+  const filteredTexts = texts;
 
   // 바운딩 박스 계산
   let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
@@ -937,25 +952,25 @@ const renderSheetContent = async (
   await switchSceneViewMode('2D', 'top', 'wireframe');
   const topView = generateViewDataFromDxf(spaceInfo, placedModules, 'top');
 
-  // ─ 3) Side views (가구별) — 각 가구마다 씬에 그 가구만 렌더되도록 store 교체 + 대기
+  // ─ 3) Side views (슬롯별) — 각 슬롯 그룹마다 씬에 그 슬롯 가구만 렌더
   await switchSceneViewMode('2D', 'left', 'wireframe');
-  const sortedModules = [...placedModules].sort((a, b) =>
-    (a.position?.x ?? 0) - (b.position?.x ?? 0)
-  );
-  const sideDataList: Array<{ module: PlacedModule; lines: ParsedLine[]; texts: ParsedText[] }> = [];
+  const sideSlotGroups = getSideSlotGroups(placedModules);
+  const sideDataList: Array<{ slotTitle: number; modules: PlacedModule[]; lines: ParsedLine[]; texts: ParsedText[] }> = [];
   const furnitureStoreForSheet = useFurnitureStore.getState();
+  const uiStoreForSheet = useUIStore.getState();
   const originalModulesForSheet = furnitureStoreForSheet.placedModules;
+  const originalSelectedSlotForSheet = uiStoreForSheet.selectedSlotIndex;
   try {
-    for (const m of sortedModules) {
-      useFurnitureStore.setState({ placedModules: [m] });
+    for (const group of sideSlotGroups) {
+      useFurnitureStore.setState({ placedModules: group.modules });
+      useUIStore.setState({ selectedSlotIndex: group.selectedSlotIndex });
       await new Promise(resolve => setTimeout(resolve, 600));
-      const data = generateViewDataFromDxf(spaceInfo, [m], 'left');
-      const fLines = data.lines.filter(l => l.layer !== 'DOOR' && l.layer !== 'DOOR_DIMENSIONS');
-      const fTexts = data.texts.filter(t => t.layer !== 'DOOR' && t.layer !== 'DOOR_DIMENSIONS');
-      sideDataList.push({ module: m, lines: fLines, texts: fTexts });
+      const data = generateViewDataFromDxf(spaceInfo, group.modules, 'left');
+      sideDataList.push({ slotTitle: group.titleIndex, modules: group.modules, lines: data.lines, texts: data.texts });
     }
   } finally {
     useFurnitureStore.setState({ placedModules: originalModulesForSheet });
+    useUIStore.setState({ selectedSlotIndex: originalSelectedSlotForSheet });
     await new Promise(resolve => setTimeout(resolve, 300));
   }
 
@@ -988,7 +1003,7 @@ const renderSheetContent = async (
   for (let idx = 0; idx < sidesInFirstPage; idx++) {
     const sd = sideDataList[idx];
     const rect: SheetRect = { x: areaX + sideColW * idx, y: botY, w: sideColW, h: botH };
-    renderViewToRect(pdf, rect, `Side View (Slot ${idx + 1})`, sd.lines, sd.texts);
+    renderViewToRect(pdf, rect, `Side View (Slot ${sd.slotTitle})`, sd.lines, sd.texts);
     if (idx > 0) {
       pdf.setLineWidth(0.15);
       pdf.setDrawColor(200, 200, 200);
@@ -1020,7 +1035,7 @@ const renderSheetContent = async (
         const idx = start + k;
         const sd = sideDataList[idx];
         const rect: SheetRect = { x: areaX + pageColW * k, y: areaY, w: pageColW, h: areaH };
-        renderViewToRect(pdf, rect, `Side View (Slot ${idx + 1})`, sd.lines, sd.texts);
+        renderViewToRect(pdf, rect, `Side View (Slot ${sd.slotTitle})`, sd.lines, sd.texts);
         if (k > 0) {
           pdf.setLineWidth(0.15);
           pdf.setDrawColor(200, 200, 200);

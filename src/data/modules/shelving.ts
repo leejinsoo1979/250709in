@@ -127,7 +127,7 @@ const FURNITURE_SPECS = {
   },
 
   // 현관장 스펙
-  ENTRYWAY_DEPTH: 400,          // 현관장 기본 깊이
+  ENTRYWAY_DEPTH: 380,          // 현관장 몸통 기본 깊이
   ENTRYWAY_BOTTOM_HEIGHT: 1200, // 현관장 H 하부섹션(선반+서랍) 고정 높이
   // 현관장 H 속서랍 영역 = 받침대 두께(_t=18) + 서랍 내경 188 = 206mm
   // 이 값은 하부섹션 상단의 고정 영역 (흡수되지 않음, 받침대 위치 유지)

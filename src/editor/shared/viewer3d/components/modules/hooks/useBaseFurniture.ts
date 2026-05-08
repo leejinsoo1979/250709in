@@ -241,7 +241,10 @@ export const useBaseFurniture = (
   
   const width = mmToThreeUnits(actualWidthMm);
   const height = mmToThreeUnits(internalHeight || moduleData.dimensions.height);
-  const actualDepthMm = customDepth || moduleData.dimensions.depth;
+  const rawActualDepthMm = customDepth || moduleData.dimensions.depth;
+  const actualDepthMm = moduleData.id?.includes('-entryway-') && Math.abs(rawActualDepthMm - 400) < 0.5
+    ? 380
+    : rawActualDepthMm;
   const depth = mmToThreeUnits(actualDepthMm);
 
 
