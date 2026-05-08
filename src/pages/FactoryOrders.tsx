@@ -13,6 +13,7 @@ import {
   type OrderRecord,
   type OrderStatus,
 } from '@/firebase/orders';
+import { ensureConversation } from '@/firebase/friends';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 
 const STATUS_LABEL: Record<OrderStatus, string> = {
@@ -24,13 +25,24 @@ const STATUS_LABEL: Record<OrderStatus, string> = {
   cancelled: '취소',
 };
 const STATUS_COLOR: Record<OrderStatus, string> = {
-  pending: '#3b82f6',
+  pending: 'var(--theme-primary, #3b82f6)',
   accepted: '#10b981',
   rejected: '#ef4444',
   in_progress: '#f59e0b',
   completed: '#7c3aed',
   cancelled: '#6b7280',
 };
+
+interface OrdererInfo {
+  uid: string;
+  name?: string;
+  email?: string;
+  phone?: string;
+  companyName?: string;
+  businessNumber?: string;
+  address?: string;
+  photoURL?: string;
+}
 
 export default function FactoryOrders() {
   const { user, loading: authLoading } = useAuth();
@@ -41,6 +53,8 @@ export default function FactoryOrders() {
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<OrderStatus | 'all'>('all');
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [ordererInfo, setOrdererInfo] = useState<OrdererInfo | null>(null);
+  const [loadingInfo, setLoadingInfo] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -97,8 +111,48 @@ export default function FactoryOrders() {
     }
   };
 
+  const handleShowOrderer = async (o: OrderRecord) => {
+    setLoadingInfo(true);
+    setOrdererInfo({ uid: o.ordererId, name: o.ordererName, email: o.ordererEmail });
+    try {
+      const [userSnap, profileSnap] = await Promise.all([
+        getDoc(doc(db, 'users', o.ordererId)),
+        getDoc(doc(db, 'userProfiles', o.ordererId)),
+      ]);
+      const u = userSnap.exists() ? (userSnap.data() as any) : {};
+      const p = profileSnap.exists() ? (profileSnap.data() as any) : {};
+      setOrdererInfo({
+        uid: o.ordererId,
+        name: u.displayName || u.name || o.ordererName || '',
+        email: u.email || o.ordererEmail || '',
+        phone: u.phone || p.phone || '',
+        companyName: u.companyName || p.companyName || '',
+        businessNumber: u.businessNumber || p.businessNumber || '',
+        address: u.address || p.address || '',
+        photoURL: u.photoURL || p.photoURL || '',
+      });
+    } catch (e) {
+      console.error('[발주자 정보 조회 실패]', e);
+    } finally {
+      setLoadingInfo(false);
+    }
+  };
+
+  const handleSendMessage = async (ordererUid: string) => {
+    if (!user?.uid) return;
+    try {
+      const convId = await ensureConversation(user.uid, ordererUid);
+      navigate(`/dashboard/messages/${convId}`);
+    } catch (e: any) {
+      alert('메시지 시작 실패: ' + (e?.message || ''));
+    }
+  };
+
   const filtered = orders.filter((o) => filter === 'all' ? true : o.status === filter);
   const counts = orders.reduce<Record<string, number>>((a, o) => { a[o.status] = (a[o.status] || 0) + 1; return a; }, {});
+
+  // 표시할 필터 (거절 제외)
+  const visibleFilters: (OrderStatus | 'all')[] = ['all', 'pending', 'accepted', 'in_progress', 'completed'];
 
   return (
     <div style={{ minHeight: '100vh', background: 'var(--theme-background, #f9fafb)', padding: '32px 24px' }}>
@@ -116,12 +170,12 @@ export default function FactoryOrders() {
           </div>
         </div>
 
-        {/* 필터 */}
+        {/* 필터 (거절 제외) */}
         <div style={{ display: 'flex', gap: 8, marginBottom: 16, flexWrap: 'wrap' }}>
-          {(['all', 'pending', 'accepted', 'in_progress', 'completed', 'rejected'] as const).map((s) => (
+          {visibleFilters.map((s) => (
             <button
               key={s}
-              onClick={() => setFilter(s as OrderStatus | 'all')}
+              onClick={() => setFilter(s)}
               style={{
                 padding: '8px 16px',
                 borderRadius: 999,
@@ -181,7 +235,8 @@ export default function FactoryOrders() {
                   {o.reason && <Row label="사유" value={o.reason} />}
                 </div>
 
-                <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                {/* 액션 버튼: 디자인보기 + (대기시 수락) + 발주자정보 */}
+                <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 8 }}>
                   <button
                     onClick={() => navigate(`/configurator?designFileId=${o.designId}&projectId=${o.projectId || ''}&readonly=1`)}
                     style={btnSecondary}
@@ -189,23 +244,99 @@ export default function FactoryOrders() {
                     디자인 보기
                   </button>
                   {o.status === 'pending' && (
-                    <>
-                      <button onClick={() => handleAction(o.id, 'accept')} disabled={busyId === o.id} style={{ ...actionBtn, background: '#10b981' }}>수락</button>
-                      <button onClick={() => handleAction(o.id, 'reject')} disabled={busyId === o.id} style={{ ...actionBtn, background: '#ef4444' }}>거절</button>
-                    </>
+                    <button
+                      onClick={() => handleAction(o.id, 'accept')}
+                      disabled={busyId === o.id}
+                      style={btnPrimary}
+                    >
+                      수락
+                    </button>
                   )}
                   {o.status === 'accepted' && (
-                    <button onClick={() => handleAction(o.id, 'in_progress')} disabled={busyId === o.id} style={{ ...actionBtn, background: '#f59e0b' }}>제작 시작</button>
+                    <button
+                      onClick={() => handleAction(o.id, 'in_progress')}
+                      disabled={busyId === o.id}
+                      style={btnPrimary}
+                    >
+                      제작 시작
+                    </button>
                   )}
                   {o.status === 'in_progress' && (
-                    <button onClick={() => handleAction(o.id, 'complete')} disabled={busyId === o.id} style={{ ...actionBtn, background: '#7c3aed' }}>완료 처리</button>
+                    <button
+                      onClick={() => handleAction(o.id, 'complete')}
+                      disabled={busyId === o.id}
+                      style={btnPrimary}
+                    >
+                      완료 처리
+                    </button>
                   )}
+                  <button onClick={() => handleShowOrderer(o)} style={btnSecondary}>
+                    발주자 정보
+                  </button>
                 </div>
+
+                {/* 하단 메시지 보내기 */}
+                <button
+                  onClick={() => handleSendMessage(o.ordererId)}
+                  style={btnMessage}
+                >
+                  💬 메시지 보내기
+                </button>
               </div>
             ))}
           </div>
         )}
       </div>
+
+      {/* 발주자 정보 모달 */}
+      {ordererInfo && (
+        <div style={modalOverlay} onClick={() => setOrdererInfo(null)}>
+          <div style={modalBox} onClick={(e) => e.stopPropagation()}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+              <h2 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: 'var(--theme-text, #1f2937)' }}>발주자 정보</h2>
+              <button onClick={() => setOrdererInfo(null)} style={closeBtn}>×</button>
+            </div>
+            {loadingInfo ? (
+              <div style={{ textAlign: 'center', padding: 32, color: 'var(--theme-text-secondary, #6b7280)' }}>로딩 중...</div>
+            ) : (
+              <>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 16 }}>
+                  <div style={avatar}>
+                    {ordererInfo.photoURL
+                      ? <img src={ordererInfo.photoURL} alt="" style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} />
+                      : (ordererInfo.name?.[0] || ordererInfo.email?.[0] || '?').toUpperCase()
+                    }
+                  </div>
+                  <div>
+                    <div style={{ fontWeight: 700, fontSize: 16, color: 'var(--theme-text, #1f2937)' }}>{ordererInfo.name || '(이름 없음)'}</div>
+                    <div style={{ fontSize: 12, color: 'var(--theme-text-secondary, #6b7280)' }}>{ordererInfo.email}</div>
+                  </div>
+                </div>
+                <div style={{ fontSize: 14, lineHeight: 1.9 }}>
+                  {ordererInfo.companyName && <Row label="회사" value={ordererInfo.companyName} />}
+                  {ordererInfo.businessNumber && <Row label="사업자번호" value={ordererInfo.businessNumber} />}
+                  {ordererInfo.phone && <Row label="연락처" value={ordererInfo.phone} />}
+                  {ordererInfo.address && <Row label="주소" value={ordererInfo.address} />}
+                  {!ordererInfo.companyName && !ordererInfo.phone && !ordererInfo.address && (
+                    <div style={{ color: 'var(--theme-text-secondary, #6b7280)', fontSize: 13, padding: '12px 0' }}>
+                      추가 정보가 등록되어 있지 않습니다.
+                    </div>
+                  )}
+                </div>
+                <div style={{ display: 'flex', gap: 8, marginTop: 20 }}>
+                  <button onClick={() => setOrdererInfo(null)} style={{ ...btnSecondary, flex: 1 }}>닫기</button>
+                  <button
+                    onClick={() => { const uid = ordererInfo.uid; setOrdererInfo(null); handleSendMessage(uid); }}
+                    style={{ ...btnPrimary, flex: 1 }}
+                  >
+                    메시지 보내기
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -213,7 +344,7 @@ export default function FactoryOrders() {
 function Row({ label, value }: { label: string; value: string }) {
   return (
     <div style={{ display: 'flex', gap: 8 }}>
-      <span style={{ minWidth: 60, color: 'var(--theme-text-secondary, #6b7280)' }}>{label}</span>
+      <span style={{ minWidth: 80, color: 'var(--theme-text-secondary, #6b7280)' }}>{label}</span>
       <span style={{ flex: 1, color: 'var(--theme-text, #1f2937)' }}>{value}</span>
     </div>
   );
@@ -225,6 +356,8 @@ const cardStyle: React.CSSProperties = {
   borderRadius: 12,
   padding: 16,
   boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
+  display: 'flex',
+  flexDirection: 'column',
 };
 
 const badgeStyle: React.CSSProperties = {
@@ -233,6 +366,17 @@ const badgeStyle: React.CSSProperties = {
   borderRadius: 999,
   fontSize: 11,
   fontWeight: 600,
+};
+
+const btnPrimary: React.CSSProperties = {
+  padding: '8px 14px',
+  borderRadius: 8,
+  border: 'none',
+  background: 'var(--theme-primary, #3b82f6)',
+  color: '#ffffff',
+  fontSize: 13,
+  fontWeight: 600,
+  cursor: 'pointer',
 };
 
 const btnSecondary: React.CSSProperties = {
@@ -246,12 +390,36 @@ const btnSecondary: React.CSSProperties = {
   cursor: 'pointer',
 };
 
-const actionBtn: React.CSSProperties = {
-  padding: '6px 12px',
-  borderRadius: 6,
-  border: 'none',
-  color: '#ffffff',
-  fontSize: 12,
+const btnMessage: React.CSSProperties = {
+  width: '100%',
+  marginTop: 'auto',
+  padding: '10px 14px',
+  borderRadius: 8,
+  border: '1px solid var(--theme-primary, #3b82f6)',
+  background: 'transparent',
+  color: 'var(--theme-primary, #3b82f6)',
+  fontSize: 13,
   fontWeight: 600,
   cursor: 'pointer',
+};
+
+const modalOverlay: React.CSSProperties = {
+  position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)',
+  display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000,
+};
+
+const modalBox: React.CSSProperties = {
+  background: 'var(--theme-surface, #fff)', borderRadius: 12, padding: 24,
+  width: 'min(90vw, 460px)', boxShadow: '0 20px 50px rgba(0,0,0,0.2)',
+};
+
+const closeBtn: React.CSSProperties = {
+  background: 'none', border: 'none', fontSize: 28, cursor: 'pointer',
+  color: 'var(--theme-text-secondary, #6b7280)', lineHeight: 1, padding: 0,
+};
+
+const avatar: React.CSSProperties = {
+  width: 48, height: 48, borderRadius: '50%', background: 'var(--theme-primary, #3b82f6)',
+  color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center',
+  fontWeight: 700, fontSize: 20, overflow: 'hidden', flexShrink: 0,
 };

@@ -144,6 +144,8 @@ export interface CombinedDxfDrawingInput {
   viewDirection: ViewDirection;
   sideViewFilter?: SideViewFilter;
   excludeDoor?: boolean;
+  targetModuleId?: string;
+  includeLayers?: string[];
 }
 
 /**
@@ -1142,8 +1144,7 @@ export const extractFromScene = (
     if (allowedXRange &&
         (viewDirection === 'left' || viewDirection === 'right') &&
         layer !== 'SPACE_FRAME' &&
-        !isAdjustableFoot &&
-        !isFurnitureInternal) {
+        (targetModuleId || (!isAdjustableFoot && !isFurnitureInternal))) {
 
       // 가구 관련 객체인 경우 X 위치 필터링 적용
       const isFurnitureObject = lowerNameForFilter.includes('furniture') ||
@@ -3176,9 +3177,10 @@ export const generateDxfFromData = (
   placedModules: PlacedModule[],
   viewDirection: ViewDirection,
   sideViewFilter: SideViewFilter = 'all',
-  excludeDoor: boolean = false
+  excludeDoor: boolean = false,
+  includeLayers?: string[]
 ): string => {
-  const drawingData = generateDxfDrawingData(spaceInfo, placedModules, viewDirection, sideViewFilter, excludeDoor);
+  const drawingData = generateDxfDrawingData(spaceInfo, placedModules, viewDirection, sideViewFilter, excludeDoor, undefined, includeLayers);
   return buildDxfString(drawingData.lines, drawingData.texts);
 };
 
@@ -3187,7 +3189,9 @@ export const generateDxfDrawingData = (
   placedModules: PlacedModule[],
   viewDirection: ViewDirection,
   sideViewFilter: SideViewFilter = 'all',
-  excludeDoor: boolean = false
+  excludeDoor: boolean = false,
+  targetModuleId?: string,
+  includeLayers?: string[]
 ): DxfDrawingData => {
   const scene = sceneHolder.getScene();
 
@@ -3212,7 +3216,7 @@ export const generateDxfDrawingData = (
   let allowedXRange: { min: number; max: number } | null = null;
 
   if ((viewDirection === 'left' || viewDirection === 'right') &&
-      sideViewFilter !== 'all' &&
+      (sideViewFilter !== 'all' || targetModuleId) &&
       placedModules.length > 0) {
 
     // placedModules에서 X 위치와 너비 추출 (Three.js 단위: meter)
@@ -3222,13 +3226,23 @@ export const generateDxfDrawingData = (
       // 기본값 600mm (일반적인 가구 너비)
       const widthInUnits = ((m.moduleWidth || m.customWidth || 600) / 100) / 2;
       return {
+        id: m.id,
         x,
         minX: x - widthInUnits,
         maxX: x + widthInUnits
       };
     });
 
-    if (sideViewFilter === 'leftmost') {
+    if (targetModuleId) {
+      const targetModule = modulesWithBounds.find(module => module.id === targetModuleId);
+      if (targetModule) {
+        allowedXRange = {
+          min: targetModule.minX - 0.01,
+          max: targetModule.maxX + 0.01
+        };
+        console.log(`📐 측면뷰 모듈별 필터: ${targetModuleId} X=${targetModule.x.toFixed(3)} (범위: ${allowedXRange.min.toFixed(3)}~${allowedXRange.max.toFixed(3)})`);
+      }
+    } else if (sideViewFilter === 'leftmost') {
       // 좌측뷰: leftmost X 위치의 가구만
       const leftmostModule = modulesWithBounds.reduce((prev, curr) =>
         curr.x < prev.x ? curr : prev
@@ -3303,15 +3317,21 @@ export const generateDxfDrawingData = (
   const offsetX = (viewDirection === 'left' || viewDirection === 'right') ? 0 : spaceInfo.width / 2;
   const offsetY = 0;
 
-  const normalizedLines = lines.map(line => ({
+  const includedLayerSet = includeLayers?.length ? new Set(includeLayers) : null;
+  const layerFilteredLines = includedLayerSet ? lines.filter(line => includedLayerSet.has(line.layer)) : lines;
+  const layerFilteredTexts = includedLayerSet ? texts.filter(text => includedLayerSet.has(text.layer)) : texts;
+
+  const normalizedLines = layerFilteredLines.map(line => ({
     ...line,
+    color: line.layer === 'DOOR' ? 3 : line.color,
     x1: line.x1 + offsetX,
     y1: line.y1 + offsetY,
     x2: line.x2 + offsetX,
     y2: line.y2 + offsetY
   }));
-  const normalizedTexts = texts.map(text => ({
+  const normalizedTexts = layerFilteredTexts.map(text => ({
     ...text,
+    color: text.layer === 'DOOR' ? 3 : text.color,
     x: text.x + offsetX,
     y: text.y + offsetY
   }));
@@ -3437,20 +3457,37 @@ export const generateCombinedDxfFromData = (
   placedModules: PlacedModule[],
   drawings: CombinedDxfDrawingInput[]
 ): string => {
-  const drawingData = drawings.map(drawing => ({
-    title: drawing.title,
-    data: generateDxfDrawingData(
-      spaceInfo,
-      placedModules,
-      drawing.viewDirection,
-      drawing.sideViewFilter ?? 'all',
-      drawing.excludeDoor ?? false
-    )
-  }));
+  const drawingData = drawings.flatMap(drawing => {
+    try {
+      return [{
+        title: drawing.title,
+        data: generateDxfDrawingData(
+          spaceInfo,
+          placedModules,
+          drawing.viewDirection,
+          drawing.sideViewFilter ?? 'all',
+          drawing.excludeDoor ?? false,
+          drawing.targetModuleId,
+          drawing.includeLayers
+        )
+      }];
+    } catch (error) {
+      console.warn(`⚠️ 통합 DXF 도면 생성 실패, 건너뜀: ${drawing.title}`, error);
+      return [];
+    }
+  });
 
   const visibleDrawings = drawingData.filter(({ data }) => data.lines.length > 0 || data.texts.length > 0);
   if (visibleDrawings.length === 0) {
-    throw new Error('통합 DXF에 포함할 도면 데이터가 없습니다.');
+    const fallbackText: DxfText = {
+      x: 0,
+      y: 0,
+      text: 'NO DRAWING DATA',
+      height: 40,
+      color: 7,
+      layer: 'DIMENSIONS'
+    };
+    return buildDxfString([], [fallbackText]);
   }
 
   const maxDrawingWidth = Math.max(...visibleDrawings.map(({ data }) => data.width));
@@ -3469,13 +3506,23 @@ export const generateCombinedDxfFromData = (
 
   const combinedLines: DxfLine[] = [];
   const combinedTexts: DxfText[] = [];
+  let sideSlotIndex = 0;
 
   visibleDrawings.forEach((drawing, index) => {
-    const slot = layoutSlots.find(item => item.key === drawing.title) ?? {
-      key: drawing.title,
-      col: index % 2,
-      row: Math.floor(index / 2)
-    };
+    const slot = drawing.title.startsWith('측면도')
+      ? {
+          key: drawing.title,
+          col: sideSlotIndex % 2 === 0 ? 1 : 0,
+          row: 1 + Math.floor((sideSlotIndex + 1) / 2)
+        }
+      : layoutSlots.find(item => item.key === drawing.title) ?? {
+          key: drawing.title,
+          col: index % 2,
+          row: Math.floor(index / 2)
+        };
+    if (drawing.title.startsWith('측면도')) {
+      sideSlotIndex += 1;
+    }
     const originX = slot.col * cellWidth;
     const originY = -slot.row * cellHeight;
     const offsetX = originX - drawing.data.minX + (cellWidth - drawing.data.width) / 2;

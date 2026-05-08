@@ -96,7 +96,14 @@ export const generateDXFFromScene = (
 
   try {
     // 데이터 기반 DXF 생성 (측면뷰 필터 전달)
-    const dxfString = generateDxfFromData(spaceInfo, modules, viewDirection, sideViewFilter);
+    const dxfString = generateDxfFromData(
+      spaceInfo,
+      modules,
+      viewDirection,
+      sideViewFilter,
+      false,
+      drawingType === 'door' ? ['DOOR', 'DOOR_DIMENSIONS'] : undefined
+    );
 
     console.log(`✅ DXF 생성 완료 (${drawingType}, 필터: ${sideViewFilter})`);
 
@@ -115,11 +122,23 @@ export const generateCombinedDXFFromScene = (
   console.log(`📐 통합 DXF 생성 시작 (${drawingTypes.join(', ')})...`);
 
   const modules = placedModules || [];
-  const drawings: CombinedDxfDrawingInput[] = drawingTypes.map(drawingType => ({
-    title: drawingTypeToTitle(drawingType),
-    viewDirection: drawingTypeToViewDirection(drawingType),
-    sideViewFilter: drawingTypeToSideViewFilter(drawingType)
-  }));
+  const drawings: CombinedDxfDrawingInput[] = drawingTypes.flatMap(drawingType => {
+    if (drawingType === 'side' || drawingType === 'sideLeft') {
+      return modules.map((module, index) => ({
+        title: `측면도 ${index + 1}`,
+        viewDirection: drawingTypeToViewDirection(drawingType),
+        sideViewFilter: 'all' as const,
+        targetModuleId: module.id
+      }));
+    }
+
+    return [{
+      title: drawingTypeToTitle(drawingType),
+      viewDirection: drawingTypeToViewDirection(drawingType),
+      sideViewFilter: drawingTypeToSideViewFilter(drawingType),
+      includeLayers: drawingType === 'door' ? ['DOOR', 'DOOR_DIMENSIONS'] : undefined
+    }];
+  });
 
   try {
     const dxfString = generateCombinedDxfFromData(spaceInfo, modules, drawings);
