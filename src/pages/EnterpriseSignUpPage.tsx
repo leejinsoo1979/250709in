@@ -287,8 +287,9 @@ export default function EnterpriseSignUpPage() {
           }
         }
       } else {
+        // 이메일 가입 시 displayName은 회사명으로 (대표자명 X)
         const { user: createdUser, error: authError } = await signUpWithEmail(
-          form.loginEmail, form.password, form.contactName
+          form.loginEmail, form.password, form.companyName || form.contactName
         );
         if (authError || !createdUser) {
           if (authError?.includes('email-already-in-use')) {
