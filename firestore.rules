@@ -14,11 +14,16 @@ service cloud.firestore {
       );
     }
     // 기업회원 또는 관리자만 통과 (체험판 사용자 차단)
+    // - users.plan == 'enterprise' (정상 동기화된 경우)
+    // - users.role == 'superadmin' (슈퍼관리자)
+    // - admins/{uid} 문서 존재 (관리자)
+    // - 슈퍼관리자 이메일
     function isEnterpriseOrAdmin() {
       return isSignedIn() && (
         isAdmin() ||
         (exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
-         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.plan == 'enterprise')
+         (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.plan == 'enterprise' ||
+          get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'superadmin'))
       );
     }
     function isTeamMember(teamId) {
