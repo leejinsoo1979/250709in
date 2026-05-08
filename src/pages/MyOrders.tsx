@@ -35,12 +35,26 @@ export default function MyOrders() {
   const [docOrder, setDocOrder] = useState<OrderRecord | null>(null);
 
   const handleSendMessageToFactory = async (factoryUid: string) => {
-    if (!user?.uid) return;
+    if (!user?.uid) {
+      alert('로그인이 필요합니다.');
+      return;
+    }
+    if (!factoryUid) {
+      alert('공장 정보가 없어 메시지를 보낼 수 없습니다.');
+      return;
+    }
+    if (factoryUid === user.uid) {
+      alert('본인에게는 메시지를 보낼 수 없습니다.');
+      return;
+    }
     try {
       const convId = await ensureConversation(user.uid, factoryUid);
       navigate(`/dashboard/messages/${convId}`);
     } catch (e: any) {
-      alert('메시지 시작 실패: ' + (e?.message || ''));
+      console.error('[MyOrders] handleSendMessageToFactory 실패:', e);
+      const code = e?.code || '';
+      const msg = e?.message || String(e);
+      alert(`메시지 시작 실패\n코드: ${code}\n사유: ${msg}`);
     }
   };
 
