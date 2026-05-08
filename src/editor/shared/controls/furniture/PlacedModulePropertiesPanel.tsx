@@ -3166,7 +3166,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                   </div>
                   <span style={{ color: 'var(--theme-text-tertiary)', fontSize: '11px', flexShrink: 0 }}>×</span>
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <label style={{ fontSize: '10px', color: 'var(--theme-text-tertiary)', display: 'block', lineHeight: 1 }}>D</label>
+                    <label style={{ fontSize: '10px', color: 'var(--theme-text-tertiary)', display: 'block', lineHeight: 1 }}>t</label>
                     <div className={styles.inputWithUnit}>
                       <input type="text" value={doorThickness} readOnly className={styles.depthInput} style={{ fontSize: '12px', cursor: 'default', color: 'var(--theme-text-secondary)' }} />
                       <span className={styles.unit}>mm</span>
