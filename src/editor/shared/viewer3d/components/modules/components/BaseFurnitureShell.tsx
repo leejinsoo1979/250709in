@@ -2167,6 +2167,66 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
           );
         })()}
 
+        {/* 유리장 전용: 서랍 영역 좌우 단일 측판 (D277 × H500 × t18) */}
+        {moduleData?.id?.includes('glass-cabinet') && (() => {
+          // 측판 사이즈 (mm): D 277, H 500, T = basicThickness(18mm)
+          const sidePanelW_mm = 18; // 패널 두께
+          const sidePanelH_mm = 500;
+          const sidePanelD_mm = 277;
+          const sideW = mmToThreeUnits(sidePanelW_mm);
+          const sideH = mmToThreeUnits(sidePanelH_mm);
+          const sideD = mmToThreeUnits(sidePanelD_mm);
+
+          // 서랍 영역의 Y 중심 — sections 배열 [open(하부), drawer/open(서랍), shelf(상부)]
+          // 가구 좌표: 바닥 = -height/2, 천장 = +height/2
+          // 하부 오픈 + 서랍 영역의 절반이 서랍 중심
+          const sectionsArr = ((moduleData as any)?.modelConfig?.sections) || [];
+          const bottomOpenH_mm = sectionsArr[0]?.height ?? 0;
+          const drawerAreaH_mm = sectionsArr[1]?.height ?? 0;
+          const cabinetH_mm = height / 0.01;
+          const drawerCenterFromBottom_mm = bottomOpenH_mm + drawerAreaH_mm / 2;
+          const drawerCenterY = -height / 2 + mmToThreeUnits(drawerCenterFromBottom_mm);
+
+          // X 위치 — 가구 측판 안쪽에 바로 붙임
+          const leftX = -innerWidth / 2 + sideW / 2;
+          const rightX = innerWidth / 2 - sideW / 2;
+
+          // Z — 가구 앞면에서 살짝 안쪽 (도어 두께 영역 제외)
+          // 측판 깊이 277, 가구 깊이 365 → 앞면 - (가구깊이 - 277)/2 정도 뒤
+          const sidePanelZ = depth / 2 - sideD / 2 - mmToThreeUnits(20); // 앞면 20mm 안쪽
+
+          return (
+            <>
+              <BoxWithEdges
+                key={`glass-drawer-side-left-${getPanelMaterial('서랍 좌측판').uuid}`}
+                args={[sideW, sideH, sideD]}
+                position={[leftX, drawerCenterY, sidePanelZ]}
+                material={getPanelMaterial('서랍 좌측판')}
+                renderMode={renderMode}
+                isDragging={isDragging}
+                isEditMode={isEditMode}
+                panelName="서랍 좌측판"
+                panelGrainDirections={panelGrainDirections}
+                furnitureId={placedFurnitureId}
+                textureUrl={textureUrl}
+              />
+              <BoxWithEdges
+                key={`glass-drawer-side-right-${getPanelMaterial('서랍 우측판').uuid}`}
+                args={[sideW, sideH, sideD]}
+                position={[rightX, drawerCenterY, sidePanelZ]}
+                material={getPanelMaterial('서랍 우측판')}
+                renderMode={renderMode}
+                isDragging={isDragging}
+                isEditMode={isEditMode}
+                panelName="서랍 우측판"
+                panelGrainDirections={panelGrainDirections}
+                furnitureId={placedFurnitureId}
+                textureUrl={textureUrl}
+              />
+            </>
+          );
+        })()}
+
         {/* 내부 구조 (타입별로 다른 내용) */}
         {showFurniture ? children : null}
       </>

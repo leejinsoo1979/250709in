@@ -1054,13 +1054,11 @@ const buildGlassCabinetSections = (): SectionConfig[] => {
       height: bottomOpen
     },
     {
-      // 중간 — 서랍 2단
-      type: 'drawer',
+      // 중간 — 서랍 영역 (유리장 전용: 일반 ㄷ자 서랍 대신 양쪽에 단일 측판만 생성)
+      // 실제 서랍 박스/마이다는 BaseFurnitureShell의 유리장 분기에서 별도 렌더링
+      type: 'open',
       heightType: 'absolute',
-      height: drawerArea,
-      count: 2,
-      drawerHeights: [GLASS_CABINET_DRAWER_SIDE_H, GLASS_CABINET_DRAWER_SIDE_H],
-      gapHeight: gap
+      height: drawerArea
     },
     {
       // 가구 천장 — 상부 오픈선반 (다보선반 2개로 칸 3개) 도면 비율 3:3:5
