@@ -2394,27 +2394,35 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                               backPanelBottomY={bottomTopYInner}
                             />
                           )}
-                          {/* 마이다 — 날개벽(서랍 측판) 안쪽에 끼움
+                          {/* 마이다 — 날개벽(서랍 측판) 안쪽에 체결
                               폭: 좌·우 측판 안쪽 간격 - 좌우 2mm 이격
-                              높이: 240mm
+                              높이: 240mm (측판 H보다 큼 → 단별로 정렬 기준 다름)
+                                · 아래 서랍(idx=0): 마이다 하단 = 측판 하단
+                                · 위 서랍(idx=1): 마이다 상단 = 측판 상단
                               두께: 가구재 두께
-                              Z: 측판 앞면 (= drawerFrontZ) 안쪽 (마이다 앞면 = 측판 앞면) */}
+                              Z: 마이다 앞면 = 측판 앞면(drawerFrontZ) */}
                           {(() => {
                             const MAIDA_H_MM = 240;
                             const MAIDA_GAP_MM = 2;
-                            // 좌·우 측판 안쪽 X 라인
                             const leftSideInnerX = leftSideX + DRAWER_SIDE_T / 2;
                             const rightSideInnerX = rightSideX - DRAWER_SIDE_T / 2;
                             const maidaW = (rightSideInnerX - leftSideInnerX) - mmToThreeUnits(MAIDA_GAP_MM * 2);
                             const maidaH = mmToThreeUnits(MAIDA_H_MM);
                             const maidaT = basicThickness;
-                            // 마이다 앞면 = 측판 앞면(drawerFrontZ) → 마이다 중심 Z
                             const maidaZ = drawerFrontZ - maidaT / 2;
+                            // 측판 상·하단
+                            const sideBottomY_d = sideCenterY - drawerSideH / 2;
+                            const sideTopY_d = sideCenterY + drawerSideH / 2;
+                            // idx=0(아래): 마이다 하단 = 측판 하단 → 중심 = sideBottom + maidaH/2
+                            // idx=1(위): 마이다 상단 = 측판 상단 → 중심 = sideTop - maidaH/2
+                            const maidaY = idx === 0
+                              ? sideBottomY_d + maidaH / 2
+                              : sideTopY_d - maidaH / 2;
                             return (
                               <BoxWithEdges
                                 key={`glass-d${idx}-maida`}
                                 args={[maidaW, maidaH, maidaT]}
-                                position={[0, sideCenterY, maidaZ]}
+                                position={[0, maidaY, maidaZ]}
                                 material={getPanelMaterial(`${sectionPrefix} 마이다`)}
                                 renderMode={renderMode}
                                 isDragging={isDragging}
