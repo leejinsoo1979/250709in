@@ -2269,12 +2269,13 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                 const vertY = refY + basicThickness + vertHm / 2;
                 const vertZ = depth / 2 - mmToThreeUnits(NOTCH_FRAME_DEPTH_MM) + basicThickness / 2;
 
-                // 전대: 측판 사이 가로판 (apronW = 측판 사이 폭, 높이 150mm)
-                //   앞면이 가구 앞면(depth/2)에 위치, 두께 = basicThickness
-                //   refY 기준으로 위쪽에 배치 (refY ~ refY+150 사이)
+                // 전대: 목찬넬 뒤에 위치 (목찬넬 수직판 뒷면에 붙음)
+                //   apronW = 측판 사이 폭, 높이 150mm, 두께 basicThickness
+                //   목찬넬 수직판 뒷면 Z = vertZ - basicThickness/2
+                //   전대 앞면이 그 위치에 닿도록 → 전대 중심 Z = (vertZ - basicThk/2) - basicThk/2
                 const apronW = innerWidth - sideW * 2;
                 const apronH = mmToThreeUnits(APRON_HEIGHT_MM);
-                const apronZ = depth / 2 - basicThickness / 2;
+                const apronZ = vertZ - basicThickness;
                 const apronY = refY + apronH / 2;
 
                 return (
