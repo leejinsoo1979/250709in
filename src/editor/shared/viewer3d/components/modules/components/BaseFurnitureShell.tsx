@@ -2394,14 +2394,22 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                               backPanelBottomY={bottomTopYInner}
                             />
                           )}
-                          {/* 마이다 — H240, 가구 내경 - 좌우 2mm 이격, 두께 가구재두께, 가구 앞면 */}
+                          {/* 마이다 — 날개벽(서랍 측판) 안쪽에 끼움
+                              폭: 좌·우 측판 안쪽 간격 - 좌우 2mm 이격
+                              높이: 240mm
+                              두께: 가구재 두께
+                              Z: 측판 앞면 (= drawerFrontZ) 안쪽 (마이다 앞면 = 측판 앞면) */}
                           {(() => {
                             const MAIDA_H_MM = 240;
-                            const MAIDA_GAP_MM = 2; // 좌우 날개벽 이격
-                            const maidaW = innerWidth - mmToThreeUnits(MAIDA_GAP_MM * 2);
+                            const MAIDA_GAP_MM = 2;
+                            // 좌·우 측판 안쪽 X 라인
+                            const leftSideInnerX = leftSideX + DRAWER_SIDE_T / 2;
+                            const rightSideInnerX = rightSideX - DRAWER_SIDE_T / 2;
+                            const maidaW = (rightSideInnerX - leftSideInnerX) - mmToThreeUnits(MAIDA_GAP_MM * 2);
                             const maidaH = mmToThreeUnits(MAIDA_H_MM);
                             const maidaT = basicThickness;
-                            const maidaZ = depth / 2 - maidaT / 2;
+                            // 마이다 앞면 = 측판 앞면(drawerFrontZ) → 마이다 중심 Z
+                            const maidaZ = drawerFrontZ - maidaT / 2;
                             return (
                               <BoxWithEdges
                                 key={`glass-d${idx}-maida`}
