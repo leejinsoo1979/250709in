@@ -1045,17 +1045,16 @@ const buildGlassCabinetSections = (): SectionConfig[] => {
   const shelfPos1 = innerH * ratioBigBottom;
   const shelfPos2 = innerH * ratioBigBottom + t + innerH * ratioMid;
 
+  // sections 배열 순서 = 아래에서 위로 (기존 가구 컨벤션 동일)
   return [
     {
-      // 상부 오픈선반 (다보선반 2개로 칸 3개) — 도면 비율 3:3:5
-      type: 'shelf',
+      // 가구 바닥 — 하부 오픈 (242, 서랍 아래)
+      type: 'open',
       heightType: 'absolute',
-      height: shelfH,
-      count: 2,
-      shelfPositions: [shelfPos1, shelfPos2]
+      height: bottomOpen
     },
     {
-      // 서랍 2단
+      // 중간 — 서랍 2단
       type: 'drawer',
       heightType: 'absolute',
       height: drawerArea,
@@ -1064,10 +1063,13 @@ const buildGlassCabinetSections = (): SectionConfig[] => {
       gapHeight: gap
     },
     {
-      // 하부 오픈
-      type: 'open',
+      // 가구 천장 — 상부 오픈선반 (다보선반 2개로 칸 3개) 도면 비율 3:3:5
+      // shelfPositions는 섹션 바닥 기준이므로 아래에서 위로 누적
+      type: 'shelf',
       heightType: 'absolute',
-      height: bottomOpen
+      height: shelfH,
+      count: 2,
+      shelfPositions: [shelfPos1, shelfPos2]
     }
   ];
 };
