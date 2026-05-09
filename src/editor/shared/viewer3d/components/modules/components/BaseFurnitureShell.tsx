@@ -2341,9 +2341,9 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                 // 프레임 윗면 = 측판 윗면 (코너에 끼움) → 프레임 중심 = 측판 상단 - frameH/2
                 const sideTopY = drawerCenterY + sideH / 2;
                 const frameY = sideTopY - frameH / 2;
-                // Z: 백패널 앞면에 뒷면 맞춤
-                const backPanelInnerZ = -depth / 2 + backPanelThickness + mmToThreeUnits(backPanelConfig.depthOffset);
-                const frameZ = backPanelInnerZ + frameThk / 2;
+                // Z: 측판 뒷면에 프레임 뒷면 맞춤
+                const sideBackZ = (depth / 2 - mmToThreeUnits(40)) - mmToThreeUnits(277);
+                const frameZ = sideBackZ + frameThk / 2;
                 return (
                   <BoxWithEdges
                     key={`glass-top-rear-frame-${getPanelMaterial('상단뒤프레임').uuid}`}
