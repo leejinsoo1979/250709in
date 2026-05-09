@@ -2191,6 +2191,22 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
           // 서랍측판 중심 Z = 앞면 - sideD/2
           const sidePanelZ = depth / 2 - mmToThreeUnits(40) - sideD / 2;
 
+          // 바닥판 — 측판 사이에 끼워짐, 두께 18mm, 앞면이 측판 앞면에서 18mm 안쪽 옵셋
+          //   바닥판 W = innerWidth - sideW × 2 (측판 안쪽 사이 폭)
+          //   바닥판 H(두께) = 18mm
+          //   바닥판 D = 측판 D - 18mm 옵셋 (앞쪽 18mm 짧음, 뒷면은 측판 뒷면과 일치)
+          const bottomThk_mm = 18;
+          const bottomFrontOffset_mm = 18;
+          const bottomD_mm = 277 - bottomFrontOffset_mm; // 277 - 18 = 259
+          const bottomW = innerWidth - sideW * 2;
+          const bottomTh = mmToThreeUnits(bottomThk_mm);
+          const bottomD = mmToThreeUnits(bottomD_mm);
+          // 바닥판 Y(중심) = 측판 하단(가구바닥 + 242mm) + 바닥판 두께/2
+          const bottomY = -height / 2 + mmToThreeUnits(SIDE_BOTTOM_FROM_FLOOR_MM) + bottomTh / 2;
+          // 바닥판 Z(중심) = 측판 앞면(= depth/2 - 40) - 18(옵셋) - bottomD/2
+          const sidePanelFrontZ = depth / 2 - mmToThreeUnits(40);
+          const bottomZ = sidePanelFrontZ - mmToThreeUnits(bottomFrontOffset_mm) - bottomD / 2;
+
           return (
             <>
               <BoxWithEdges
@@ -2215,6 +2231,20 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                 isDragging={isDragging}
                 isEditMode={isEditMode}
                 panelName="서랍 우측판"
+                panelGrainDirections={panelGrainDirections}
+                furnitureId={placedFurnitureId}
+                textureUrl={textureUrl}
+              />
+              {/* 서랍 바닥판 — 측판 하단 사이, 앞면이 측판 앞에서 18mm 안쪽 */}
+              <BoxWithEdges
+                key={`glass-drawer-bottom-${getPanelMaterial('서랍 바닥판').uuid}`}
+                args={[bottomW, bottomTh, bottomD]}
+                position={[0, bottomY, bottomZ]}
+                material={getPanelMaterial('서랍 바닥판')}
+                renderMode={renderMode}
+                isDragging={isDragging}
+                isEditMode={isEditMode}
+                panelName="서랍 바닥판"
                 panelGrainDirections={panelGrainDirections}
                 furnitureId={placedFurnitureId}
                 textureUrl={textureUrl}
