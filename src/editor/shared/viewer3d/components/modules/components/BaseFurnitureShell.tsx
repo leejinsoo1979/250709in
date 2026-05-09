@@ -2263,7 +2263,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                 const DRAWER_SIDE_T = mmToThreeUnits(drawerPanelTmm);
                 const DRAWER_BOTTOM_T = mmToThreeUnits(9);
                 const DRAWER_SIDE_H_PER_TIER_MM = [126, 146]; // [아래, 위]
-                const SIDE_PANEL_OFFSET_MM = 38; // 가장자리에서 측판까지 오프셋 (기존 패턴)
+                const SIDE_PANEL_OFFSET_MM = 10; // 가구 측판에서 서랍 측판까지 오프셋 (레일 장착 공간)
 
                 // 서랍 외경 폭 (가구 내경 폭과 동일 — 기존 패턴은 drawerWidth = innerWidth)
                 const drawerOuterW = innerWidth;
