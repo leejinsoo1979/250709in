@@ -2255,8 +2255,8 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                 const NOTCH_FRAME_DEPTH_MM = 40; // 목찬넬 수평 프레임 깊이
                 const NOTCH_FRAME_VERT_H_MM = 60; // 수직 프레임 높이
 
-                // 측판 앞면 Z (가구 앞면 - 40mm)
-                const sideFrontZ = depth / 2 - mmToThreeUnits(40);
+                // 목찬넬·전대 앞면은 측판 앞면에서 추가로 18mm 안쪽
+                const sideFrontZ = depth / 2 - mmToThreeUnits(40) - mmToThreeUnits(18);
 
                 // 측판 하단 Y = -height/2 + 242mm
                 const sideBottomY = -height / 2 + mmToThreeUnits(SIDE_BOTTOM_FROM_FLOOR_MM);
