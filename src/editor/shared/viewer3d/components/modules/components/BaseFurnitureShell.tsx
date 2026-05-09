@@ -2250,10 +2250,11 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                 textureUrl={textureUrl}
               />
               {/* 서랍 바닥판 위에 한 장 더 — 앞면은 측판 앞에서 18mm 옵셋,
-                  뒷면은 백패널 안쪽(앞면)에 맞닿음 (백패널 두께 9mm만큼 가구 뒷벽보다 앞) */}
+                  뒷면은 백패널 앞면(안쪽)에 맞닿음. 백패널 두께는 props 값 그대로 사용 */}
               {(() => {
-                const backPanelThicknessMm = 9; // 표준 백패널 두께
-                const backPanelInnerZ = -depth / 2 + mmToThreeUnits(backPanelThicknessMm);
+                // 가구 내부 상/하판이 뒤에서 줄어드는 방식과 동일하게:
+                //   가구 뒷벽 = -depth/2, 백패널 앞면 = -depth/2 + backPanelThickness
+                const backPanelInnerZ = -depth / 2 + backPanelThickness;
                 const upperBottomFrontZ = sidePanelFrontZ - mmToThreeUnits(bottomFrontOffset_mm);
                 const upperBottomD = upperBottomFrontZ - backPanelInnerZ;
                 const upperBottomZ = (upperBottomFrontZ + backPanelInnerZ) / 2;
