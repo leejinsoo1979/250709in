@@ -2413,11 +2413,11 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                             // 측판 상·하단
                             const sideBottomY_d = sideCenterY - drawerSideH / 2;
                             const sideTopY_d = sideCenterY + drawerSideH / 2;
-                            // idx=0(아래): 마이다 하단 = 측판 하단 → 중심 = sideBottom + maidaH/2
-                            // idx=1(위): 마이다 상단 = 측판 상단 → 중심 = sideTop - maidaH/2
+                            // idx=0(아래): 마이다 상단 = 측판 상단 → 중심 = sideTop - maidaH/2 (아래로 튀어나옴)
+                            // idx=1(위): 마이다 하단 = 측판 하단 → 중심 = sideBottom + maidaH/2 (위로 튀어나옴)
                             const maidaY = idx === 0
-                              ? sideBottomY_d + maidaH / 2
-                              : sideTopY_d - maidaH / 2;
+                              ? sideTopY_d - maidaH / 2
+                              : sideBottomY_d + maidaH / 2;
                             return (
                               <BoxWithEdges
                                 key={`glass-d${idx}-maida`}
