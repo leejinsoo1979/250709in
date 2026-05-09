@@ -2394,6 +2394,30 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                               backPanelBottomY={bottomTopYInner}
                             />
                           )}
+                          {/* 마이다 — H240, 가구 내경 - 좌우 2mm 이격, 두께 가구재두께, 가구 앞면 */}
+                          {(() => {
+                            const MAIDA_H_MM = 240;
+                            const MAIDA_GAP_MM = 2; // 좌우 날개벽 이격
+                            const maidaW = innerWidth - mmToThreeUnits(MAIDA_GAP_MM * 2);
+                            const maidaH = mmToThreeUnits(MAIDA_H_MM);
+                            const maidaT = basicThickness;
+                            const maidaZ = depth / 2 - maidaT / 2;
+                            return (
+                              <BoxWithEdges
+                                key={`glass-d${idx}-maida`}
+                                args={[maidaW, maidaH, maidaT]}
+                                position={[0, sideCenterY, maidaZ]}
+                                material={getPanelMaterial(`${sectionPrefix} 마이다`)}
+                                renderMode={renderMode}
+                                isDragging={isDragging}
+                                isEditMode={isEditMode}
+                                panelName={`${sectionPrefix} 마이다`}
+                                panelGrainDirections={panelGrainDirections}
+                                furnitureId={placedFurnitureId}
+                                textureUrl={textureUrl}
+                              />
+                            );
+                          })()}
                         </group>
                       );
                     })}
