@@ -7,6 +7,7 @@ import { useUIStore } from '@/store/uiStore';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
 import { SpaceInfo } from '@/store/core/spaceConfigStore';
 import BoxWithEdges from './BoxWithEdges';
+import { DrawerSidePanelBoring } from '../DrawerRenderer';
 import { Text, Line } from '@react-three/drei';
 import DimensionText from './DimensionText';
 import { useDimensionColor } from '../hooks/useDimensionColor';
@@ -2377,6 +2378,22 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                             furnitureId={placedFurnitureId}
                             textureUrl={textureUrl}
                           />
+                          {/* 유도보링 (좌·우 측판 외면, 직경 3mm × 끝20/중간/끝20 × 앞·뒤 = 6개씩) */}
+                          {(viewMode === '2D') && (
+                            <DrawerSidePanelBoring
+                              drawerWidth={drawerOuterW}
+                              drawerHeight={drawerSideH}
+                              drawerDepth={drawerBodyD}
+                              centerPosition={[0, sideCenterY, drawerBodyCenterZ]}
+                              sideThickness={DRAWER_SIDE_T}
+                              sidePanelOffset={mmToThreeUnits(SIDE_PANEL_OFFSET_MM)}
+                              drawerIndex={idx}
+                              mmToThreeUnits={mmToThreeUnits}
+                              viewMode="2D"
+                              view2DDirection={(view2DDirection === 'all' ? 'front' : view2DDirection) as 'front' | 'top' | 'left' | 'right'}
+                              backPanelBottomY={bottomTopYInner}
+                            />
+                          )}
                         </group>
                       );
                     })}

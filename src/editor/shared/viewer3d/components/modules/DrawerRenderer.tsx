@@ -30,7 +30,7 @@ interface DrawerSidePanelBoringProps {
   backPanelBottomY?: number; // 뒷판 하단 Y 좌표 (바닥판 윗면)
 }
 
-const DrawerSidePanelBoring: React.FC<DrawerSidePanelBoringProps> = ({
+export const DrawerSidePanelBoring: React.FC<DrawerSidePanelBoringProps> = ({
   drawerWidth,
   drawerHeight,
   drawerDepth,
