@@ -2327,6 +2327,39 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                 );
               })()}
 
+              {/* 측판 상단 뒷부분 안쪽 — 높이 36.5mm 프레임 1장
+                  - 폭: 측판 사이 (innerWidth - 측판 두께 × 2)
+                  - 높이: 36.5mm
+                  - 두께(깊이): basicThickness (가구재 두께)
+                  - 위치: 측판 상단에 상단 맞춤, 뒷면이 백패널 앞면에 맞닿음 */}
+              {(() => {
+                const TOP_REAR_FRAME_H_MM = 36.5;
+                const frameW = innerWidth - sideW * 2;          // 측판 사이 폭
+                const frameH = mmToThreeUnits(TOP_REAR_FRAME_H_MM);
+                const frameThk = basicThickness;                 // 깊이 = 가구재 두께
+                // 측판 상단 Y = drawerCenterY + sideH/2 (= 측판 중심 + 측판 절반)
+                const sideTopY = drawerCenterY + sideH / 2;
+                const frameY = sideTopY - frameH / 2; // 상단 맞춤 (프레임 윗면 = 측판 윗면)
+                // Z: 백패널 앞면에 뒷면 맞춤
+                const backPanelInnerZ = -depth / 2 + backPanelThickness + mmToThreeUnits(backPanelConfig.depthOffset);
+                const frameZ = backPanelInnerZ + frameThk / 2;
+                return (
+                  <BoxWithEdges
+                    key={`glass-top-rear-frame-${getPanelMaterial('상단뒤프레임').uuid}`}
+                    args={[frameW, frameH, frameThk]}
+                    position={[0, frameY, frameZ]}
+                    material={getPanelMaterial('상단뒤프레임')}
+                    renderMode={renderMode}
+                    isDragging={isDragging}
+                    isEditMode={isEditMode}
+                    panelName="상단뒤프레임"
+                    panelGrainDirections={panelGrainDirections}
+                    furnitureId={placedFurnitureId}
+                    textureUrl={textureUrl}
+                  />
+                );
+              })()}
+
               {/* 서랍 바닥판 위에 한 장 더 — 앞면은 측판 앞에서 18mm 옵셋,
                   뒷면은 실제 백패널 앞면에 맞닿음.
                   백패널 앞면 Z = -depth/2 + backPanelThickness + depthOffset(=basicThicknessMm-1mm) */}
