@@ -2344,20 +2344,37 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                 // Z: 측판 뒷면에 프레임 뒷면 맞춤
                 const sideBackZ = (depth / 2 - mmToThreeUnits(40)) - mmToThreeUnits(277);
                 const frameZ = sideBackZ + frameThk / 2;
+                // 프레임 안쪽(앞쪽)에 같은 사양 판재 1장 — 프레임 앞면에 뒷면 맞닿음
+                const innerPanelZ = frameZ + frameThk;
                 return (
-                  <BoxWithEdges
-                    key={`glass-top-rear-frame-${getPanelMaterial('상단뒤프레임').uuid}`}
-                    args={[frameW, frameH, frameThk]}
-                    position={[0, frameY, frameZ]}
-                    material={getPanelMaterial('상단뒤프레임')}
-                    renderMode={renderMode}
-                    isDragging={isDragging}
-                    isEditMode={isEditMode}
-                    panelName="상단뒤프레임"
-                    panelGrainDirections={panelGrainDirections}
-                    furnitureId={placedFurnitureId}
-                    textureUrl={textureUrl}
-                  />
+                  <>
+                    <BoxWithEdges
+                      key={`glass-top-rear-frame-${getPanelMaterial('상단뒤프레임').uuid}`}
+                      args={[frameW, frameH, frameThk]}
+                      position={[0, frameY, frameZ]}
+                      material={getPanelMaterial('상단뒤프레임')}
+                      renderMode={renderMode}
+                      isDragging={isDragging}
+                      isEditMode={isEditMode}
+                      panelName="상단뒤프레임"
+                      panelGrainDirections={panelGrainDirections}
+                      furnitureId={placedFurnitureId}
+                      textureUrl={textureUrl}
+                    />
+                    <BoxWithEdges
+                      key={`glass-top-rear-inner-${getPanelMaterial('상단뒤프레임 안쪽판').uuid}`}
+                      args={[frameW, frameH, frameThk]}
+                      position={[0, frameY, innerPanelZ]}
+                      material={getPanelMaterial('상단뒤프레임 안쪽판')}
+                      renderMode={renderMode}
+                      isDragging={isDragging}
+                      isEditMode={isEditMode}
+                      panelName="상단뒤프레임 안쪽판"
+                      panelGrainDirections={panelGrainDirections}
+                      furnitureId={placedFurnitureId}
+                      textureUrl={textureUrl}
+                    />
+                  </>
                 );
               })()}
 
