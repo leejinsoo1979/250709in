@@ -2249,6 +2249,79 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                 furnitureId={placedFurnitureId}
                 textureUrl={textureUrl}
               />
+              {/* 목찬넬(L자: 수평+수직) + 전대 — 측판 하단에서 위로 200mm 지점 */}
+              {(() => {
+                const FROM_SIDE_BOTTOM_MM = 200; // 측판 하단에서 200mm 위
+                const SIDE_FRONT_OFFSET_MM = 40; // 측판이 가구 앞면에서 40mm 안쪽
+                const NOTCH_FRAME_DEPTH_MM = 40; // 목찬넬 프레임 영역 깊이 (주방 하부장과 동일)
+                const NOTCH_FRAME_VERT_H_MM = 60; // 수직 프레임 높이 (주방 하부장 notchHeight 60 - basicThk 일부 - 단순화)
+                const APRON_HEIGHT_MM = 150;     // 전대 높이 (주방 싱크/인덕션과 동일)
+
+                // 측판 하단 Y = -height/2 + 242mm
+                const sideBottomY = -height / 2 + mmToThreeUnits(SIDE_BOTTOM_FROM_FLOOR_MM);
+                // 기준점 Y = 측판 하단 + 200mm (이 지점에 목찬넬·전대 하단)
+                const refY = sideBottomY + mmToThreeUnits(FROM_SIDE_BOTTOM_MM);
+                // 목찬넬 수평: 위 가로판 (basicThk 두께 × 40mm 깊이)
+                const horzY = refY + basicThickness / 2;
+                const horzZ = depth / 2 - mmToThreeUnits(NOTCH_FRAME_DEPTH_MM) / 2;
+                // 목찬넬 수직: 가로판 위에 붙어 위로 60mm 올라가는 세로판 (basicThk 두께 × 60 높이)
+                const vertHm = mmToThreeUnits(NOTCH_FRAME_VERT_H_MM);
+                const vertY = refY + basicThickness + vertHm / 2;
+                const vertZ = depth / 2 - mmToThreeUnits(NOTCH_FRAME_DEPTH_MM) + basicThickness / 2;
+
+                // 전대: 측판 사이 가로판 (apronW = 측판 사이 폭, 높이 150mm)
+                //   앞면이 가구 앞면(depth/2)에 위치, 두께 = basicThickness
+                //   refY 기준으로 위쪽에 배치 (refY ~ refY+150 사이)
+                const apronW = innerWidth - sideW * 2;
+                const apronH = mmToThreeUnits(APRON_HEIGHT_MM);
+                const apronZ = depth / 2 - basicThickness / 2;
+                const apronY = refY + apronH / 2;
+
+                return (
+                  <>
+                    <BoxWithEdges
+                      key={`glass-woodch-horz-${getPanelMaterial('목찬넬프레임수평(1)').uuid}`}
+                      args={[apronW, basicThickness, mmToThreeUnits(NOTCH_FRAME_DEPTH_MM)]}
+                      position={[0, horzY, horzZ]}
+                      material={getPanelMaterial('목찬넬프레임수평(1)')}
+                      renderMode={renderMode}
+                      isDragging={isDragging}
+                      isEditMode={isEditMode}
+                      panelName="목찬넬프레임수평(1)"
+                      panelGrainDirections={panelGrainDirections}
+                      furnitureId={placedFurnitureId}
+                      textureUrl={textureUrl}
+                    />
+                    <BoxWithEdges
+                      key={`glass-woodch-vert-${getPanelMaterial('목찬넬프레임수직(1)').uuid}`}
+                      args={[apronW, vertHm, basicThickness]}
+                      position={[0, vertY, vertZ]}
+                      material={getPanelMaterial('목찬넬프레임수직(1)')}
+                      renderMode={renderMode}
+                      isDragging={isDragging}
+                      isEditMode={isEditMode}
+                      panelName="목찬넬프레임수직(1)"
+                      panelGrainDirections={panelGrainDirections}
+                      furnitureId={placedFurnitureId}
+                      textureUrl={textureUrl}
+                    />
+                    <BoxWithEdges
+                      key={`glass-apron-${getPanelMaterial('전대').uuid}`}
+                      args={[apronW, apronH, basicThickness]}
+                      position={[0, apronY, apronZ]}
+                      material={getPanelMaterial('전대')}
+                      renderMode={renderMode}
+                      isDragging={isDragging}
+                      isEditMode={isEditMode}
+                      panelName="전대"
+                      panelGrainDirections={panelGrainDirections}
+                      furnitureId={placedFurnitureId}
+                      textureUrl={textureUrl}
+                    />
+                  </>
+                );
+              })()}
+
               {/* 서랍 바닥판 위에 한 장 더 — 앞면은 측판 앞에서 18mm 옵셋,
                   뒷면은 실제 백패널 앞면에 맞닿음.
                   백패널 앞면 Z = -depth/2 + backPanelThickness + depthOffset(=basicThicknessMm-1mm) */}
