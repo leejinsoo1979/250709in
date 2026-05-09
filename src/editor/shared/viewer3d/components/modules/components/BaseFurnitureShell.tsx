@@ -2249,41 +2249,41 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                 furnitureId={placedFurnitureId}
                 textureUrl={textureUrl}
               />
-              {/* 서랍 2개 — 양 측판 사이, 바닥판2 위에 안착, 위로 2단 적층 */}
+              {/* 유리장 서랍 2개 — DrawerRenderer.renderDrawer 패턴 그대로
+                  - 측판: T=15, H=126/146 (단별), D=drawerBodyDepth, X=가장자리에서 38mm 안쪽
+                  - 앞판: T=15, W=drawerOuterW-107, H=측판H, Z=본체 앞쪽
+                  - 뒷판: T=15, W=drawerOuterW-107, H=측판H-9-10, Y=바닥판 윗면~상단
+                  - 바닥판: T=9, W=drawerOuterW-70-26, D=drawerBodyDepth-10, Y=측판 하단+10+T/2
+                  - 유도보링: 좌·우 측판 외면, 직경 3mm, 끝20mm/중간/끝20mm × 앞·뒤 = 6개씩
+                  - 마이다는 추가 안 함
+              */}
               {(() => {
-                const DRAWER_SIDE_T_MM = 15;       // 서랍 박스 측판 두께
-                const DRAWER_BOTTOM_T_MM = 9;      // 서랍 바닥판 두께
-                // 단별 측판 높이 (아래 126, 위 146)
-                const DRAWER_SIDE_H_PER_TIER_MM = [126, 146];
-                const MAIDA_T_MM = 18;             // 마이다(앞판) 두께
-                const DRAWER_GAP_MM = 24;          // 서랍 간 갭
-                const DRAWER_SIDE_GAP_MM = 6;      // 가구 측판 ↔ 서랍 사이 간격
+                const drawerPanelTmm = (basicThickness / 0.01 === 18.5 || basicThickness / 0.01 === 15.5) ? 15.5 : 15;
+                const DRAWER_SIDE_T = mmToThreeUnits(drawerPanelTmm);
+                const DRAWER_BOTTOM_T = mmToThreeUnits(9);
+                const DRAWER_SIDE_H_PER_TIER_MM = [126, 146]; // [아래, 위]
+                const SIDE_PANEL_OFFSET_MM = 38; // 가장자리에서 측판까지 오프셋 (기존 패턴)
 
-                // 서랍 영역 내경 폭 (가구 측판 → 서랍 측판 사이 갭 양쪽 6mm)
-                const drawerOuterW = innerWidth - mmToThreeUnits(DRAWER_SIDE_GAP_MM * 2);
-                const drawerInnerW = drawerOuterW - mmToThreeUnits(DRAWER_SIDE_T_MM * 2);
-                // 서랍 측판 깊이 250mm (사용자 지정), 앞면은 가구 측판 앞면 -18mm (다른 안쪽 패널과 동일)
-                const drawerD = mmToThreeUnits(250);
-                const drawerSideT = mmToThreeUnits(DRAWER_SIDE_T_MM);
-                const drawerBottomT = mmToThreeUnits(DRAWER_BOTTOM_T_MM);
-                const drawerGap = mmToThreeUnits(DRAWER_GAP_MM);
-                const maidaT = mmToThreeUnits(MAIDA_T_MM);
+                // 서랍 외경 폭 (가구 내경 폭과 동일 — 기존 패턴은 drawerWidth = innerWidth)
+                const drawerOuterW = innerWidth;
+                // 측판 X 위치: 가장자리에서 38mm + 측판두께/2
+                const leftSideX = -drawerOuterW / 2 + DRAWER_SIDE_T / 2 + mmToThreeUnits(SIDE_PANEL_OFFSET_MM);
+                const rightSideX = drawerOuterW / 2 - DRAWER_SIDE_T / 2 - mmToThreeUnits(SIDE_PANEL_OFFSET_MM);
 
-                // 서랍 측판 앞면 = 가구 측판 앞면 - 18mm (= 바닥판2 등 안쪽 판재와 동일 라인)
+                // 서랍 본체 깊이/Z — 측판 깊이 250 (사용자 지정), 앞면 = 가구 측판 앞면 - 18 (안쪽 라인)
+                const drawerBodyD = mmToThreeUnits(250);
                 const drawerFrontZ = sidePanelFrontZ - mmToThreeUnits(18);
-                const drawerCenterZ = drawerFrontZ - drawerD / 2;
-                // 마이다 Z: 서랍 측판 앞면 바로 앞에 부착 (마이다 뒷면 = 서랍 측판 앞면)
-                const maidaZ = drawerFrontZ + maidaT / 2;
-                const maidaWidth = drawerOuterW + mmToThreeUnits(DRAWER_SIDE_GAP_MM * 2 - 3);
+                const drawerBodyCenterZ = drawerFrontZ - drawerBodyD / 2;
 
-                // 아래 서랍(1단) 하단 Y = 바닥판2 윗면 + 16mm
-                //   바닥판2 윗면 Y = bottomY + bottomTh + bottomTh (첫 바닥판 + 바닥판2)
-                const bottomSlab2TopY = bottomY + bottomTh + bottomTh;
-                const drawer1StartY = bottomSlab2TopY + mmToThreeUnits(16);
-                // 위 서랍(2단) 하단 Y = 목찬넬 수직판 윗면(=L자 전체 상단) + 37.8mm
-                //   목찬넬 영역 시작 = 측판하단 + 200, L자 전체 높이 60mm
+                // 폭 계산 (기존 패턴 그대로)
+                const frontBackPanelW = drawerOuterW - mmToThreeUnits(107);
+                const bottomPanelW = drawerOuterW - mmToThreeUnits(70 + 26);
+
+                // 1단 시작 Y = 바닥판2 윗면 + 16mm
+                const drawer1StartY = (bottomY + bottomTh + bottomTh) + mmToThreeUnits(16);
+                // 2단 시작 Y = 목찬넬 L자 윗면 + 37.8mm
                 const sideBottomYUp = -height / 2 + mmToThreeUnits(SIDE_BOTTOM_FROM_FLOOR_MM);
-                const woodChannelTopY = sideBottomYUp + mmToThreeUnits(200) + mmToThreeUnits(60);
+                const woodChannelTopY = sideBottomYUp + mmToThreeUnits(200 + 60);
                 const drawer2StartY = woodChannelTopY + mmToThreeUnits(37.8);
                 const drawerStartYs = [drawer1StartY, drawer2StartY];
 
@@ -2293,67 +2293,89 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                       const drawerSideHmm = DRAWER_SIDE_H_PER_TIER_MM[idx];
                       const drawerSideH = mmToThreeUnits(drawerSideHmm);
                       const sideCenterY = startY + drawerSideH / 2;
-                      const drawerLeftX = -drawerOuterW / 2 + drawerSideT / 2;
-                      const drawerRightX = drawerOuterW / 2 - drawerSideT / 2;
-                      const drawerBottomY = startY + drawerBottomT / 2;
-                      const backY = sideCenterY;
-                      const backZ = drawerCenterZ - drawerD / 2 + drawerSideT / 2;
-                      const maidaH = drawerSideH + drawerGap;
-                      const maidaY = sideCenterY;
-                      const keyP = (n: string) => `glass-drawer${idx + 1}-${n}`;
+                      // 바닥판 Y = 측판 하단 + 10mm + bottomT/2 (기존: centerY - drawerH/2 + basicThk + 10 + bottomT/2)
+                      //   여기서는 측판 H 기준이므로 측판 하단(startY) + 10 + bottomT/2
+                      const bottomCY = startY + mmToThreeUnits(10) + DRAWER_BOTTOM_T / 2;
+                      const bottomTopYInner = bottomCY + DRAWER_BOTTOM_T / 2;
+                      // 뒷판: 바닥판 윗면 ~ 측판 윗면 (기존: 상단~bottomTopY 의 중간)
+                      const sideTopY = sideCenterY + drawerSideH / 2;
+                      const backH = sideTopY - bottomTopYInner;
+                      const backCY = (sideTopY + bottomTopYInner) / 2;
+                      // 앞판: 측판 H, Z=본체 앞쪽
+                      const frontZ = drawerBodyCenterZ + drawerBodyD / 2 - DRAWER_SIDE_T / 2;
+                      const backZ = drawerBodyCenterZ - drawerBodyD / 2 + DRAWER_SIDE_T / 2;
+                      const sectionPrefix = `유리장 서랍${idx + 1}`;
                       return (
                         <group key={`glass-drawer-${idx}`}>
+                          {/* 좌측판 */}
                           <BoxWithEdges
-                            args={[drawerSideT, drawerSideH, drawerD]}
-                            position={[drawerLeftX, sideCenterY, drawerCenterZ]}
-                            material={getPanelMaterial(`서랍${idx + 1} 좌측판`)}
+                            key={`glass-d${idx}-left`}
+                            args={[DRAWER_SIDE_T, drawerSideH, drawerBodyD]}
+                            position={[leftSideX, sideCenterY, drawerBodyCenterZ]}
+                            material={getPanelMaterial(`${sectionPrefix} 좌측판`)}
                             renderMode={renderMode}
                             isDragging={isDragging}
                             isEditMode={isEditMode}
-                            panelName={`서랍${idx + 1} 좌측판`}
+                            panelName={`${sectionPrefix} 좌측판`}
                             panelGrainDirections={panelGrainDirections}
                             furnitureId={placedFurnitureId}
                             textureUrl={textureUrl}
-                            key={keyP('left')}
                           />
+                          {/* 우측판 */}
                           <BoxWithEdges
-                            args={[drawerSideT, drawerSideH, drawerD]}
-                            position={[drawerRightX, sideCenterY, drawerCenterZ]}
-                            material={getPanelMaterial(`서랍${idx + 1} 우측판`)}
+                            key={`glass-d${idx}-right`}
+                            args={[DRAWER_SIDE_T, drawerSideH, drawerBodyD]}
+                            position={[rightSideX, sideCenterY, drawerBodyCenterZ]}
+                            material={getPanelMaterial(`${sectionPrefix} 우측판`)}
                             renderMode={renderMode}
                             isDragging={isDragging}
                             isEditMode={isEditMode}
-                            panelName={`서랍${idx + 1} 우측판`}
+                            panelName={`${sectionPrefix} 우측판`}
                             panelGrainDirections={panelGrainDirections}
                             furnitureId={placedFurnitureId}
                             textureUrl={textureUrl}
-                            key={keyP('right')}
                           />
+                          {/* 앞판 (측판 안쪽 끼움) */}
                           <BoxWithEdges
-                            args={[drawerInnerW, drawerBottomT, drawerD]}
-                            position={[0, drawerBottomY, drawerCenterZ]}
-                            material={getPanelMaterial(`서랍${idx + 1} 바닥`)}
+                            key={`glass-d${idx}-front`}
+                            args={[frontBackPanelW, drawerSideH, DRAWER_SIDE_T]}
+                            position={[0, sideCenterY, frontZ]}
+                            material={getPanelMaterial(`${sectionPrefix} 앞판`)}
                             renderMode={renderMode}
                             isDragging={isDragging}
                             isEditMode={isEditMode}
-                            panelName={`서랍${idx + 1} 바닥`}
+                            panelName={`${sectionPrefix} 앞판`}
                             panelGrainDirections={panelGrainDirections}
                             furnitureId={placedFurnitureId}
                             textureUrl={textureUrl}
-                            key={keyP('bottom')}
                           />
+                          {/* 뒷판 (바닥판 윗면 ~ 측판 윗면) */}
                           <BoxWithEdges
-                            args={[drawerInnerW, drawerSideH, drawerSideT]}
-                            position={[0, backY, backZ]}
-                            material={getPanelMaterial(`서랍${idx + 1} 뒷판`)}
+                            key={`glass-d${idx}-back`}
+                            args={[frontBackPanelW, backH, DRAWER_SIDE_T]}
+                            position={[0, backCY, backZ]}
+                            material={getPanelMaterial(`${sectionPrefix} 뒷판`)}
                             renderMode={renderMode}
                             isDragging={isDragging}
                             isEditMode={isEditMode}
-                            panelName={`서랍${idx + 1} 뒷판`}
+                            panelName={`${sectionPrefix} 뒷판`}
                             panelGrainDirections={panelGrainDirections}
                             furnitureId={placedFurnitureId}
                             textureUrl={textureUrl}
-                            key={keyP('back')}
+                          />
+                          {/* 바닥판 */}
+                          <BoxWithEdges
+                            key={`glass-d${idx}-bottom`}
+                            args={[bottomPanelW, DRAWER_BOTTOM_T, drawerBodyD - mmToThreeUnits(10)]}
+                            position={[0, bottomCY, drawerBodyCenterZ - mmToThreeUnits(5)]}
+                            material={getPanelMaterial(`${sectionPrefix} 바닥`)}
+                            renderMode={renderMode}
+                            isDragging={isDragging}
+                            isEditMode={isEditMode}
+                            panelName={`${sectionPrefix} 바닥`}
+                            panelGrainDirections={panelGrainDirections}
+                            furnitureId={placedFurnitureId}
+                            textureUrl={textureUrl}
                           />
                         </group>
                       );
