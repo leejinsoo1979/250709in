@@ -8,6 +8,7 @@ import { useFurnitureStore } from '@/store/core/furnitureStore';
 import { SpaceInfo } from '@/store/core/spaceConfigStore';
 import BoxWithEdges from './BoxWithEdges';
 import { DrawerSidePanelBoring } from '../DrawerRenderer';
+import { useSpring, animated } from '@react-spring/three';
 import { Text, Line } from '@react-three/drei';
 import DimensionText from './DimensionText';
 import { useDimensionColor } from '../hooks/useDimensionColor';
@@ -257,6 +258,16 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
   const { view2DDirection, showDimensions, showDimensionsText } = useUIStore(); // UI 스토어에서 view2DDirection 가져오기
   const highlightedSection = useUIStore(state => state.highlightedSection);
   const highlightedPanel = useUIStore(state => state.highlightedPanel);
+  const doorsOpen = useUIStore(state => state.doorsOpen);
+
+  // 유리장 서랍 인출 애니메이션 — 도어가 90도 회전한 후 서랍 인출 (200mm)
+  // 열기: doorsOpen=true → 500ms 지연 후 200mm 인출 (도어 회전이 먼저)
+  // 닫기: doorsOpen=false → 즉시 0으로 복귀 (서랍이 먼저 들어간 뒤 도어 회전)
+  const glassDrawerSpring = useSpring({
+    z: doorsOpen === true ? mmToThreeUnits(200) : 0,
+    config: { tension: 90, friction: 16, clamp: true },
+    delay: doorsOpen === true ? 500 : 0,
+  });
   const { dimensionColor, baseFontSize } = useDimensionColor();
 
   // 18.5/15.5mm는 양면 접합 두께이므로 좌우 이격 불필요 (0mm)
@@ -2269,23 +2280,31 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                 //   기존 패턴: -drawerOuterW/2 + DRAWER_SIDE_T/2 + offset → offset 5.5
                 const SIDE_PANEL_OFFSET_MM = 5.5;
 
-                // 서랍 외경 폭 (가구 내경 폭과 동일 — 기존 패턴은 drawerWidth = innerWidth)
-                const drawerOuterW = innerWidth;
-                // 측판 X 위치: 가장자리에서 38mm + 측판두께/2
-                const leftSideX = -drawerOuterW / 2 + DRAWER_SIDE_T / 2 + mmToThreeUnits(SIDE_PANEL_OFFSET_MM);
-                const rightSideX = drawerOuterW / 2 - DRAWER_SIDE_T / 2 - mmToThreeUnits(SIDE_PANEL_OFFSET_MM);
+                // 날개벽 내경 = 가구 내경(innerWidth) - 날개벽 두께 18 × 2
+                const sangePanelTmm = 18; // 날개벽 패널 두께
+                const sangeInnerW = innerWidth - mmToThreeUnits(sangePanelTmm * 2);
+                // 서랍 외경 폭 = 날개벽 내경 - 좌우 이격 5.5 × 2
+                const drawerOuterW = sangeInnerW - mmToThreeUnits(SIDE_PANEL_OFFSET_MM * 2);
+                // 측판 X 위치: 서랍 외경 폭 기준으로 좌·우 끝
+                const leftSideX = -drawerOuterW / 2 + DRAWER_SIDE_T / 2;
+                const rightSideX = drawerOuterW / 2 - DRAWER_SIDE_T / 2;
 
                 // 서랍 본체 깊이/Z — 측판 깊이 250 (사용자 지정), 앞면 = 가구 측판 앞면 - 18 (안쪽 라인)
                 const drawerBodyD = mmToThreeUnits(250);
                 const drawerFrontZ = sidePanelFrontZ - mmToThreeUnits(18);
                 const drawerBodyCenterZ = drawerFrontZ - drawerBodyD / 2;
 
-                // 폭 계산 (기존 패턴 그대로)
-                const frontBackPanelW = drawerOuterW - mmToThreeUnits(107);
-                const bottomPanelW = drawerOuterW - mmToThreeUnits(70 + 26);
+                // 측판 사이 안쪽 폭 (좌·우 측판 안쪽 면 사이 거리)
+                const innerBetweenSidesW = (rightSideX - DRAWER_SIDE_T / 2) - (leftSideX + DRAWER_SIDE_T / 2);
+                // 앞·뒷판: 측판 사이 폭 그대로 (측판 안쪽에 끼움)
+                const frontBackPanelW = innerBetweenSidesW;
+                // 바닥판: 측판 사이 + 약간 여유 (좌우 5mm씩 측판 안쪽으로 끼워들어감)
+                const bottomPanelW = innerBetweenSidesW + mmToThreeUnits(10);
 
                 // 1단 시작 Y = 바닥판2 윗면 + 16mm
-                const drawer1StartY = (bottomY + bottomTh + bottomTh) + mmToThreeUnits(16);
+                //   bottomY = 첫 바닥판 중심 / 바닥판2 중심 = bottomY + bottomTh
+                //   바닥판2 윗면 = bottomY + bottomTh + bottomTh/2
+                const drawer1StartY = (bottomY + bottomTh + bottomTh / 2) + mmToThreeUnits(16);
                 // 2단 시작 Y = 목찬넬 L자 윗면 + 37.8mm
                 const sideBottomYUp = -height / 2 + mmToThreeUnits(SIDE_BOTTOM_FROM_FLOOR_MM);
                 const woodChannelTopY = sideBottomYUp + mmToThreeUnits(200 + 60);
@@ -2311,7 +2330,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                       const backZ = drawerBodyCenterZ - drawerBodyD / 2 + DRAWER_SIDE_T / 2;
                       const sectionPrefix = `유리장 서랍${idx + 1}`;
                       return (
-                        <group key={`glass-drawer-${idx}`}>
+                        <animated.group key={`glass-drawer-${idx}`} position-z={glassDrawerSpring.z}>
                           {/* 좌측판 */}
                           <BoxWithEdges
                             key={`glass-d${idx}-left`}
@@ -2408,10 +2427,11 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                           {(() => {
                             const MAIDA_H_MM = 240;
                             const MAIDA_GAP_MM = 2;
-                            // 마이다 폭 = 좌·우 서랍 날개판 외면 사이 거리 - 좌우 각 2mm 이격
-                            const leftSideOuterX = leftSideX - DRAWER_SIDE_T / 2;
-                            const rightSideOuterX = rightSideX + DRAWER_SIDE_T / 2;
-                            const maidaW = (rightSideOuterX - leftSideOuterX) - mmToThreeUnits(MAIDA_GAP_MM * 2);
+                            // 마이다 폭 = 날개벽(서랍 영역 좌·우 단일 측판) 내경 - 좌우 각 2mm 이격
+                            //   날개벽 내경 = innerWidth - 날개벽 두께 18×2
+                            const sangePanelTmm2 = 18;
+                            const sangeInnerW2 = innerWidth - mmToThreeUnits(sangePanelTmm2 * 2);
+                            const maidaW = sangeInnerW2 - mmToThreeUnits(MAIDA_GAP_MM * 2);
                             const maidaH = mmToThreeUnits(MAIDA_H_MM);
                             const maidaT = basicThickness;
                             // 마이다 뒷면 = 서랍 날개판(측판) 앞면(= drawerFrontZ)
@@ -2421,9 +2441,14 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                             const sideTopY_d = sideCenterY + drawerSideH / 2;
                             // idx=0(아래): 마이다 하단 = 측판 하단 → 중심 = sideBottom + maidaH/2 (위로 튀어나옴)
                             // idx=1(위): 마이다 상단 = 측판 상단 → 중심 = sideTop - maidaH/2 (아래로 튀어나옴)
+                            // 아래 마이다 하단 = 날개벽 하단 (서랍 측판이 아닌 날개벽 패널 하단)
+                            //   날개벽 하단 Y = drawerCenterY - sideH/2 (= -height/2 + 242mm)
+                            // 위 마이다 상단 = 날개벽 상단 = 날개벽 하단 + sideH(500)
+                            //   두 마이다 합 480 + 갭 20 = 500 ✓
+                            const sangeBottomY = drawerCenterY - sideH / 2;
                             const maidaY = idx === 0
-                              ? (sideBottomY_d + maidaH / 2) - mmToThreeUnits(61)
-                              : (sideTopY_d - maidaH / 2) + mmToThreeUnits(56.2);
+                              ? sangeBottomY + maidaH / 2
+                              : sangeBottomY + sideH - maidaH / 2;
                             return (
                               <BoxWithEdges
                                 key={`glass-d${idx}-maida`}
@@ -2440,7 +2465,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                               />
                             );
                           })()}
-                        </group>
+                        </animated.group>
                       );
                     })}
                   </>
