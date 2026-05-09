@@ -2409,9 +2409,8 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                             const maidaW = (rightSideInnerX - leftSideInnerX) - mmToThreeUnits(MAIDA_GAP_MM * 2);
                             const maidaH = mmToThreeUnits(MAIDA_H_MM);
                             const maidaT = basicThickness;
-                            // 마이다 뒷면 = 서랍 앞판 앞면(= drawerBodyCenterZ + drawerBodyD/2)
-                            const drawerFrontPanelFrontZ = drawerBodyCenterZ + drawerBodyD / 2;
-                            const maidaZ = drawerFrontPanelFrontZ + maidaT / 2;
+                            // 마이다 뒷면 = 서랍 날개판(측판) 앞면(= drawerFrontZ)
+                            const maidaZ = drawerFrontZ + maidaT / 2;
                             // 측판 상·하단
                             const sideBottomY_d = sideCenterY - drawerSideH / 2;
                             const sideTopY_d = sideCenterY + drawerSideH / 2;
