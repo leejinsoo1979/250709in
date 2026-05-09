@@ -2249,20 +2249,29 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                 furnitureId={placedFurnitureId}
                 textureUrl={textureUrl}
               />
-              {/* 서랍 바닥판 위에 한 장 더 (동일 사양: 폭/두께/깊이 동일, Y만 두께만큼 위로) */}
-              <BoxWithEdges
-                key={`glass-drawer-bottom2-${getPanelMaterial('서랍 바닥판2').uuid}`}
-                args={[bottomW, bottomTh, bottomD]}
-                position={[0, bottomY + bottomTh, bottomZ]}
-                material={getPanelMaterial('서랍 바닥판2')}
-                renderMode={renderMode}
-                isDragging={isDragging}
-                isEditMode={isEditMode}
-                panelName="서랍 바닥판2"
-                panelGrainDirections={panelGrainDirections}
-                furnitureId={placedFurnitureId}
-                textureUrl={textureUrl}
-              />
+              {/* 서랍 바닥판 위에 한 장 더 — 앞면은 첫 바닥판과 동일(측판 앞에서 18mm 옵셋),
+                  뒷면은 가구 뒷면(백패널 위치)까지 연장 → 깊이가 백패널과 맞닿음 */}
+              {(() => {
+                const cabinetBackZ = -depth / 2;
+                const upperBottomFrontZ = sidePanelFrontZ - mmToThreeUnits(bottomFrontOffset_mm);
+                const upperBottomD = upperBottomFrontZ - cabinetBackZ;
+                const upperBottomZ = (upperBottomFrontZ + cabinetBackZ) / 2;
+                return (
+                  <BoxWithEdges
+                    key={`glass-drawer-bottom2-${getPanelMaterial('서랍 바닥판2').uuid}`}
+                    args={[bottomW, bottomTh, upperBottomD]}
+                    position={[0, bottomY + bottomTh, upperBottomZ]}
+                    material={getPanelMaterial('서랍 바닥판2')}
+                    renderMode={renderMode}
+                    isDragging={isDragging}
+                    isEditMode={isEditMode}
+                    panelName="서랍 바닥판2"
+                    panelGrainDirections={panelGrainDirections}
+                    furnitureId={placedFurnitureId}
+                    textureUrl={textureUrl}
+                  />
+                );
+              })()}
             </>
           );
         })()}
