@@ -2186,9 +2186,10 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
           const leftX = -innerWidth / 2 + sideW / 2;
           const rightX = innerWidth / 2 - sideW / 2;
 
-          // Z — 가구 앞면에서 살짝 안쪽 (도어 두께 영역 제외)
-          // 측판 깊이 277, 가구 깊이 365 → 앞면 - (가구깊이 - 277)/2 정도 뒤
-          const sidePanelZ = depth / 2 - sideD / 2 - mmToThreeUnits(20); // 앞면 20mm 안쪽
+          // Z — 측판 앞면이 가구 측판 앞면에서 40mm 안쪽
+          // 가구 앞면 = depth/2, 서랍측판 앞면 = depth/2 - 40mm
+          // 서랍측판 중심 Z = 앞면 - sideD/2
+          const sidePanelZ = depth / 2 - mmToThreeUnits(40) - sideD / 2;
 
           return (
             <>
