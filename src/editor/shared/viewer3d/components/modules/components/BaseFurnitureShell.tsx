@@ -2355,19 +2355,6 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                             textureUrl={textureUrl}
                             key={keyP('back')}
                           />
-                          <BoxWithEdges
-                            args={[maidaWidth, maidaH, maidaT]}
-                            position={[0, maidaY, maidaZ]}
-                            material={getPanelMaterial(`서랍${idx + 1} 마이다`)}
-                            renderMode={renderMode}
-                            isDragging={isDragging}
-                            isEditMode={isEditMode}
-                            panelName={`서랍${idx + 1} 마이다`}
-                            panelGrainDirections={panelGrainDirections}
-                            furnitureId={placedFurnitureId}
-                            textureUrl={textureUrl}
-                            key={keyP('maida')}
-                          />
                         </group>
                       );
                     })}
