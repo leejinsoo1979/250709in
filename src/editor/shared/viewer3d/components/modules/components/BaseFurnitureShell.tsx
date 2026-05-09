@@ -2261,20 +2261,20 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                 // 서랍 영역 내경 폭 (가구 측판 → 서랍 측판 사이 갭 양쪽 6mm)
                 const drawerOuterW = innerWidth - mmToThreeUnits(DRAWER_SIDE_GAP_MM * 2);
                 const drawerInnerW = drawerOuterW - mmToThreeUnits(DRAWER_SIDE_T_MM * 2);
-                // 서랍 깊이: 측판 깊이(277)와 동일하게 사용
-                const drawerD = mmToThreeUnits(277 - 18); // 측판 앞면 -18 옵셋부터 뒷면까지
+                // 서랍 측판 깊이 250mm (사용자 지정), 앞면은 가구 측판 앞면 -18mm (다른 안쪽 패널과 동일)
+                const drawerD = mmToThreeUnits(250);
                 const drawerSideH = mmToThreeUnits(DRAWER_SIDE_H_MM);
                 const drawerSideT = mmToThreeUnits(DRAWER_SIDE_T_MM);
                 const drawerBottomT = mmToThreeUnits(DRAWER_BOTTOM_T_MM);
                 const drawerGap = mmToThreeUnits(DRAWER_GAP_MM);
                 const maidaT = mmToThreeUnits(MAIDA_T_MM);
 
-                // 서랍 박스 Z 중심: 측판 앞면에서 18mm 옵셋 ~ 뒷쪽
+                // 서랍 측판 앞면 = 가구 측판 앞면 - 18mm (= 바닥판2 등 안쪽 판재와 동일 라인)
                 const drawerFrontZ = sidePanelFrontZ - mmToThreeUnits(18);
                 const drawerCenterZ = drawerFrontZ - drawerD / 2;
-                // 마이다 Z (가구 앞면에 가깝게, 측판 앞에 위치 — 도어와 동일선)
-                const maidaZ = depth / 2 - maidaT / 2;
-                const maidaWidth = drawerOuterW + mmToThreeUnits(DRAWER_SIDE_GAP_MM * 2 - 3); // 마이다는 외경 거의 가구 폭에 가깝게
+                // 마이다 Z: 서랍 측판 앞면 바로 앞에 부착 (마이다 뒷면 = 서랍 측판 앞면)
+                const maidaZ = drawerFrontZ + maidaT / 2;
+                const maidaWidth = drawerOuterW + mmToThreeUnits(DRAWER_SIDE_GAP_MM * 2 - 3);
 
                 // 목찬넬 시작 Y = 측판 하단 + 200mm (목찬넬·전대 영역 하단)
                 const sideBottomYForDr = -height / 2 + mmToThreeUnits(SIDE_BOTTOM_FROM_FLOOR_MM);
