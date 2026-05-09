@@ -2253,7 +2253,8 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
               {(() => {
                 const DRAWER_SIDE_T_MM = 15;       // 서랍 박스 측판 두께
                 const DRAWER_BOTTOM_T_MM = 9;      // 서랍 바닥판 두께
-                const DRAWER_SIDE_H_MM = 146;      // 서랍 측판 높이 (사용자 지정)
+                // 단별 측판 높이 (아래 126, 위 146)
+                const DRAWER_SIDE_H_PER_TIER_MM = [126, 146];
                 const MAIDA_T_MM = 18;             // 마이다(앞판) 두께
                 const DRAWER_GAP_MM = 24;          // 서랍 간 갭
                 const DRAWER_SIDE_GAP_MM = 6;      // 가구 측판 ↔ 서랍 사이 간격
@@ -2263,7 +2264,6 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                 const drawerInnerW = drawerOuterW - mmToThreeUnits(DRAWER_SIDE_T_MM * 2);
                 // 서랍 측판 깊이 250mm (사용자 지정), 앞면은 가구 측판 앞면 -18mm (다른 안쪽 패널과 동일)
                 const drawerD = mmToThreeUnits(250);
-                const drawerSideH = mmToThreeUnits(DRAWER_SIDE_H_MM);
                 const drawerSideT = mmToThreeUnits(DRAWER_SIDE_T_MM);
                 const drawerBottomT = mmToThreeUnits(DRAWER_BOTTOM_T_MM);
                 const drawerGap = mmToThreeUnits(DRAWER_GAP_MM);
@@ -2290,21 +2290,19 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                 return (
                   <>
                     {drawerStartYs.map((startY, idx) => {
+                      const drawerSideHmm = DRAWER_SIDE_H_PER_TIER_MM[idx];
+                      const drawerSideH = mmToThreeUnits(drawerSideHmm);
                       const sideCenterY = startY + drawerSideH / 2;
                       const drawerLeftX = -drawerOuterW / 2 + drawerSideT / 2;
                       const drawerRightX = drawerOuterW / 2 - drawerSideT / 2;
-                      // 바닥판: 서랍 측판 안쪽 폭, 두께 9mm, 측판 중심에서 약간 아래(=측판 바닥에 닿음)
                       const drawerBottomY = startY + drawerBottomT / 2;
-                      // 뒷판: 폭 = 측판 안쪽 폭, 위치 Z = 박스 뒷면 + drawerSideT/2
                       const backY = sideCenterY;
                       const backZ = drawerCenterZ - drawerD / 2 + drawerSideT / 2;
-                      // 마이다: H = 서랍 외부 영역 (측판 + 갭 일부)
-                      const maidaH = drawerSideH + drawerGap; // 한 칸 외부 높이 (대략)
+                      const maidaH = drawerSideH + drawerGap;
                       const maidaY = sideCenterY;
                       const keyP = (n: string) => `glass-drawer${idx + 1}-${n}`;
                       return (
                         <group key={`glass-drawer-${idx}`}>
-                          {/* 좌측판 */}
                           <BoxWithEdges
                             args={[drawerSideT, drawerSideH, drawerD]}
                             position={[drawerLeftX, sideCenterY, drawerCenterZ]}
@@ -2318,7 +2316,6 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                             textureUrl={textureUrl}
                             key={keyP('left')}
                           />
-                          {/* 우측판 */}
                           <BoxWithEdges
                             args={[drawerSideT, drawerSideH, drawerD]}
                             position={[drawerRightX, sideCenterY, drawerCenterZ]}
@@ -2332,7 +2329,6 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                             textureUrl={textureUrl}
                             key={keyP('right')}
                           />
-                          {/* 바닥판 */}
                           <BoxWithEdges
                             args={[drawerInnerW, drawerBottomT, drawerD]}
                             position={[0, drawerBottomY, drawerCenterZ]}
@@ -2346,7 +2342,6 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                             textureUrl={textureUrl}
                             key={keyP('bottom')}
                           />
-                          {/* 뒷판 */}
                           <BoxWithEdges
                             args={[drawerInnerW, drawerSideH, drawerSideT]}
                             position={[0, backY, backZ]}
@@ -2360,7 +2355,6 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                             textureUrl={textureUrl}
                             key={keyP('back')}
                           />
-                          {/* 마이다 (앞판) */}
                           <BoxWithEdges
                             args={[maidaWidth, maidaH, maidaT]}
                             position={[0, maidaY, maidaZ]}
