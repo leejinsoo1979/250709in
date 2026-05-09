@@ -2252,7 +2252,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
               {/* 목찬넬(L자: 수평+수직) + 전대 — 측판 안쪽, 측판 하단 +200mm 지점 */}
               {(() => {
                 const FROM_SIDE_BOTTOM_MM = 200; // 측판 하단에서 200mm 위
-                const NOTCH_FRAME_DEPTH_MM = 40; // 목찬넬 수평 프레임 깊이
+                const NOTCH_FRAME_DEPTH_MM = 60; // 목찬넬 수평 프레임 깊이 (40 → 60)
                 const NOTCH_FRAME_VERT_H_MM = 60; // 수직 프레임 높이
 
                 // 목찬넬·전대 앞면은 측판 앞면에서 추가로 18mm 안쪽
