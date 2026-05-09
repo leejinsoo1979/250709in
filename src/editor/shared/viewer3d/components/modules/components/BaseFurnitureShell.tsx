@@ -2354,8 +2354,9 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                 const innerSlabBackZ = frameZ + frameThk / 2; // 프레임 앞면
                 const innerSlabD = innerSlabFrontZ - innerSlabBackZ;
                 const innerSlabZ = (innerSlabFrontZ + innerSlabBackZ) / 2;
+                // 가로판 하단 = 프레임 하단 (= frameBottomY) → 가로판 중심 = frameBottomY + 두께/2
                 const frameBottomY = frameY - frameH / 2;
-                const innerSlabY = frameBottomY - innerSlabThk / 2;
+                const innerSlabY = frameBottomY + innerSlabThk / 2;
                 return (
                   <>
                     <BoxWithEdges
