@@ -2249,6 +2249,20 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                 furnitureId={placedFurnitureId}
                 textureUrl={textureUrl}
               />
+              {/* 서랍 바닥판 위에 한 장 더 (동일 사양: 폭/두께/깊이 동일, Y만 두께만큼 위로) */}
+              <BoxWithEdges
+                key={`glass-drawer-bottom2-${getPanelMaterial('서랍 바닥판2').uuid}`}
+                args={[bottomW, bottomTh, bottomD]}
+                position={[0, bottomY + bottomTh, bottomZ]}
+                material={getPanelMaterial('서랍 바닥판2')}
+                renderMode={renderMode}
+                isDragging={isDragging}
+                isEditMode={isEditMode}
+                panelName="서랍 바닥판2"
+                panelGrainDirections={panelGrainDirections}
+                furnitureId={placedFurnitureId}
+                textureUrl={textureUrl}
+              />
             </>
           );
         })()}
