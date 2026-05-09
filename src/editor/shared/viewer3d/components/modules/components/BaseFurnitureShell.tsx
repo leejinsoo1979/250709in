@@ -2418,7 +2418,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                             // idx=1(위): 마이다 상단 = 측판 상단 → 중심 = sideTop - maidaH/2 (아래로 튀어나옴)
                             const maidaY = idx === 0
                               ? (sideBottomY_d + maidaH / 2) - mmToThreeUnits(61)
-                              : (sideTopY_d - maidaH / 2) + mmToThreeUnits(117.2);
+                              : (sideTopY_d - maidaH / 2);
                             return (
                               <BoxWithEdges
                                 key={`glass-d${idx}-maida`}
