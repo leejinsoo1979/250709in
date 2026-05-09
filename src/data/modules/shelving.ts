@@ -1000,52 +1000,74 @@ const createSingle2DrawerShelf = (columnWidth: number, maxHeight: number): Modul
 // - 하단 서랍 2단(서랍 측판 146mm 기준) + 상단 다보선반 2개(칸 3개)
 // ============================================================================
 
-// 유리장 사양 (이미지 도면 기준)
-//   총높이 1920 = 상판18.5 + 상부오픈(다보선반2 + 칸3) 1105 + 서랍영역 410 + 하부오픈 242 + 하판18.5
-//   - 상부 오픈: 다보선반 2개로 칸 3개 (위 301 / 중 302.5 / 아래 501.5 — 균등 아닌 도면 비율 반영)
-//   - 서랍영역: 서랍 측판 146mm × 2단 + 마이다/패널/갭 합산 약 410
-//   - 하부 오픈: 빈 공간 242mm
+// 유리장 사양
+// - 외형: H 1920 / D 365 (외형치수만 고정)
+// - 띄움: 200mm
+// - 내부 구조는 패널 두께(BASIC_THICKNESS = 18mm 기준)에 종속해 동적 계산
+//   상부오픈(다보선반 2 — 칸 3) : 서랍영역 : 하부오픈 = 약 6.1 : 2.7 : 1.3 (도면 비율)
+//   서랍 1단 외부높이 = 서랍측판 + 마이다(패널두께) + 갭
+//   상부 오픈 칸 비율: 위 약 3 : 중 약 3 : 아래 약 5 (도면 301/302.5/501.5)
 const GLASS_CABINET_HEIGHT = 1920;
 const GLASS_CABINET_DEPTH = 365;
 const GLASS_CABINET_FLOAT = 200;
-const GLASS_CABINET_DRAWER_SIDE_H = 146; // 서랍 측판 높이 (사용자 지정)
-// 서랍영역 = 마이다(서랍 위 패널) + 갭 + 서랍1 + 칸막이 + 서랍2 + 갭
-// 도면값: 18.5 + 18.5 + 약240 + 18.5 + 약240 + 18.5+18.5 ≈ 약 410
-const GLASS_CABINET_DRAWER_AREA_H = 410;
-const GLASS_CABINET_BOTTOM_OPEN_H = 242; // 서랍 아래 빈 오픈 영역
+const GLASS_CABINET_DRAWER_SIDE_H = 146; // 서랍 측판 높이 (가구재 종속 아님)
 
 const buildGlassCabinetSections = (): SectionConfig[] => {
-  // 섹션 합계 = totalHeight (= 1920) — 상하 패널은 sections 외부에서 처리됨
-  // 위에서부터: 상부 오픈선반 / 서랍 / 하부 오픈
-  const drawerH = GLASS_CABINET_DRAWER_AREA_H; // 410
-  const bottomOpenH = GLASS_CABINET_BOTTOM_OPEN_H; // 242
-  const shelfH = GLASS_CABINET_HEIGHT - drawerH - bottomOpenH; // = 1268
+  // 섹션 합계 = 외형 H 1920 (sections 합 = 외형 — 상하 패널은 sections 외부에서 처리됨)
+  // 모든 치수는 가구재 패널 두께(t)에 종속되도록 동적 계산.
+  const t = FURNITURE_SPECS.BASIC_THICKNESS; // 18 (또는 사용자 가구재 두께)
+  const gap = FURNITURE_SPECS.DRAWER_GAP;     // 24
+
+  // 1) 서랍 영역: 서랍 2단 외부 높이 + 마이다 + 칸막이 + 갭
+  //    1단 외부 = 측판H + 패널두께(상부 마이다)
+  //    2단 = 1단×2 + 중간 칸막이(패널두께) + 상하 갭
+  const drawerExternal = GLASS_CABINET_DRAWER_SIDE_H + t;       // 146 + 18 = 164
+  const drawerArea = drawerExternal * 2 + t + gap * 2;          // 164*2 + 18 + 48 = 394
+  // 도면 표기 약 500은 18.5 패널 + 큰 갭 가정. 실제 패널두께(t)에 따라 자동 변동.
+
+  // 2) 하부 오픈: 도면 비율 약 13% (242/1883) — 외형 합산에서 비율 차지
+  //    sections 합계 = HEIGHT (1920). 정확히 차지하는 비율로 재계산하기보다는
+  //    하부오픈을 서랍영역의 약 0.6배 정도로 두고 나머지를 상부 shelf에 할당
+  //    (사용자가 도면에 명시한 비율 = 상부 1141 : 서랍 500 : 하부 242 ≈ 6.1 : 2.7 : 1.3)
+  //    여기서는 서랍영역(drawerArea, 패널두께 종속) + 하부오픈 = 도면비율 유지하도록
+  //    bottomOpen = drawerArea * (242/500) ≈ drawerArea * 0.484
+  const bottomOpen = Math.round(drawerArea * 0.484);
+  // 3) 상부 shelf: 나머지 전체
+  const shelfH = GLASS_CABINET_HEIGHT - drawerArea - bottomOpen;
+
+  // 다보선반 2개 위치 (섹션 바닥 기준 mm)
+  //   도면 칸 비율 위:중:큰 = 3:3:5
+  //   섹션 내부 가용 높이 = shelfH - 2t (상하 패널 빼야 selfPositions 기준 높이)
+  const innerH = shelfH - 2 * t;
+  const ratioBigBottom = 5 / 11;           // 큰 칸(아래) 비율
+  const ratioMid = 3 / 11;                  // 중 칸 비율
+  // 섹션 좌표(바닥 0): 첫 선반 = 큰 칸 높이, 두번째 선반 = 큰 칸 + 패널 + 중 칸
+  const shelfPos1 = innerH * ratioBigBottom;
+  const shelfPos2 = innerH * ratioBigBottom + t + innerH * ratioMid;
+
   return [
     {
-      // 상부 오픈선반 (다보선반 2개로 칸 3개)
+      // 상부 오픈선반 (다보선반 2개로 칸 3개) — 도면 비율 3:3:5
       type: 'shelf',
       heightType: 'absolute',
       height: shelfH,
       count: 2,
-      shelfPositions: calculateEvenShelfPositions(
-        shelfH - 2 * FURNITURE_SPECS.BASIC_THICKNESS,
-        2
-      )
+      shelfPositions: [shelfPos1, shelfPos2]
     },
     {
-      // 서랍 2단 (각 측판 146mm)
+      // 서랍 2단
       type: 'drawer',
       heightType: 'absolute',
-      height: drawerH,
+      height: drawerArea,
       count: 2,
       drawerHeights: [GLASS_CABINET_DRAWER_SIDE_H, GLASS_CABINET_DRAWER_SIDE_H],
-      gapHeight: FURNITURE_SPECS.DRAWER_GAP
+      gapHeight: gap
     },
     {
-      // 하부 오픈 빈 공간
+      // 하부 오픈
       type: 'open',
       heightType: 'absolute',
-      height: bottomOpenH
+      height: bottomOpen
     }
   ];
 };
