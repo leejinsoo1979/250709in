@@ -2177,15 +2177,10 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
           const sideH = mmToThreeUnits(sidePanelH_mm);
           const sideD = mmToThreeUnits(sidePanelD_mm);
 
-          // 서랍 영역의 Y 중심 — sections 배열 [open(하부), drawer/open(서랍), shelf(상부)]
-          // 가구 좌표: 바닥 = -height/2, 천장 = +height/2
-          // 하부 오픈 + 서랍 영역의 절반이 서랍 중심
-          const sectionsArr = ((moduleData as any)?.modelConfig?.sections) || [];
-          const bottomOpenH_mm = sectionsArr[0]?.height ?? 0;
-          const drawerAreaH_mm = sectionsArr[1]?.height ?? 0;
-          const cabinetH_mm = height / 0.01;
-          const drawerCenterFromBottom_mm = bottomOpenH_mm + drawerAreaH_mm / 2;
-          const drawerCenterY = -height / 2 + mmToThreeUnits(drawerCenterFromBottom_mm);
+          // 측판 하단 = 가구 바닥판 위에서 242mm 떨어진 지점
+          // 측판 중심 Y = -height/2 + 242 + sideH/2
+          const SIDE_BOTTOM_FROM_FLOOR_MM = 242;
+          const drawerCenterY = -height / 2 + mmToThreeUnits(SIDE_BOTTOM_FROM_FLOOR_MM) + sideH / 2;
 
           // X 위치 — 가구 측판 안쪽에 바로 붙임
           const leftX = -innerWidth / 2 + sideW / 2;
