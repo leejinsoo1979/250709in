@@ -150,10 +150,15 @@ export function placeFurnitureFree(params: PlaceFurnitureFreeParams): PlaceFurni
     freeHeight: effectiveHeight,
     freeDepth: dimensions.depth,
     zone: effectiveZone,
-    hasBase: moduleData.category !== 'upper',
+    // ModuleData가 명시적으로 hasBase=false 라면 우선 (유리장 등 띄움 전용 가구)
+    hasBase: (moduleData as any).hasBase === false ? false : (moduleData.category !== 'upper'),
     hasTopFrame: moduleData.category !== 'lower',
-    hasBottomFrame: moduleData.category !== 'upper',
+    hasBottomFrame: (moduleData as any).hasBase === false ? false : (moduleData.category !== 'upper'),
     topFrameThickness: spaceInfo.frameSize?.top || 30,
+    // ModuleData에 individualFloatHeight 가 정의된 가구(예: 유리장 200mm)
+    ...(((moduleData as any).individualFloatHeight ?? 0) > 0
+      ? { individualFloatHeight: (moduleData as any).individualFloatHeight }
+      : {}),
     hasDoor: false, // 자유배치 시 도어 없이 배치 (사용자가 수동 설정)
     lowerSectionTopOffset: defaultLowerTopOffset,
     ...(isCustomizable && {

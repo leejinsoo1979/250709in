@@ -636,6 +636,12 @@ export function placeFurnitureAtSlot(params: PlaceFurnitureParams): PlaceFurnitu
     ...(customConfig !== undefined && { customConfig }),
     ...(isCustomizable !== undefined && { isCustomizable }),
     ...(moduleWidth !== undefined && { moduleWidth }),
+    // ModuleData 정의에서 hasBase: false / individualFloatHeight 가 명시된 가구(예: 유리장)
+    // 의 띄움 속성을 PlacedModule로 전파
+    ...((moduleData as any).hasBase === false ? { hasBase: false } : {}),
+    ...(((moduleData as any).individualFloatHeight ?? 0) > 0
+      ? { individualFloatHeight: (moduleData as any).individualFloatHeight }
+      : {}),
   };
 
   // My캐비넷 배치 데이터 초기화
