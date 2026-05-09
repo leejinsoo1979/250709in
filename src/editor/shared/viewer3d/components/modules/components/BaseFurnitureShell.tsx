@@ -2357,6 +2357,14 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                 // 가로판 하단 = 프레임 하단 (= frameBottomY) → 가로판 중심 = frameBottomY + 두께/2
                 const frameBottomY = frameY - frameH / 2;
                 const innerSlabY = frameBottomY + innerSlabThk / 2;
+                // 상단뒤프레임 하단에 — 바닥판2와 동일 사이즈 가로 판재
+                //   바닥판2: W = 측판 사이, 두께 = 18, 깊이 = 측판앞-18 ~ 백패널 앞면
+                //   Y: 상단뒤프레임 하단(frameBottomY)에 윗면 맞춤 → 중심 = frameBottomY - 두께/2
+                const backPanelInnerZForTop = -depth / 2 + backPanelThickness + mmToThreeUnits(backPanelConfig.depthOffset);
+                const topUnderSlabFrontZ = sidePanelFrontZ - mmToThreeUnits(bottomFrontOffset_mm);
+                const topUnderSlabD = topUnderSlabFrontZ - backPanelInnerZForTop;
+                const topUnderSlabZ = (topUnderSlabFrontZ + backPanelInnerZForTop) / 2;
+                const topUnderSlabY = frameBottomY - innerSlabThk / 2;
                 return (
                   <>
                     <BoxWithEdges
@@ -2381,6 +2389,20 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                       isDragging={isDragging}
                       isEditMode={isEditMode}
                       panelName="상단뒤프레임 안쪽판재"
+                      panelGrainDirections={panelGrainDirections}
+                      furnitureId={placedFurnitureId}
+                      textureUrl={textureUrl}
+                    />
+                    {/* 상단뒤프레임 하단에 바닥판2와 동일 사이즈의 가로 판재 */}
+                    <BoxWithEdges
+                      key={`glass-top-under-slab-${getPanelMaterial('상단뒤프레임 하단판재').uuid}`}
+                      args={[frameW, innerSlabThk, topUnderSlabD]}
+                      position={[0, topUnderSlabY, topUnderSlabZ]}
+                      material={getPanelMaterial('상단뒤프레임 하단판재')}
+                      renderMode={renderMode}
+                      isDragging={isDragging}
+                      isEditMode={isEditMode}
+                      panelName="상단뒤프레임 하단판재"
                       panelGrainDirections={panelGrainDirections}
                       furnitureId={placedFurnitureId}
                       textureUrl={textureUrl}
