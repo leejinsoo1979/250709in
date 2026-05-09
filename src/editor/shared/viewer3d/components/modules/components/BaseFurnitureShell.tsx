@@ -2404,9 +2404,10 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                           {(() => {
                             const MAIDA_H_MM = 240;
                             const MAIDA_GAP_MM = 2;
-                            const leftSideInnerX = leftSideX + DRAWER_SIDE_T / 2;
-                            const rightSideInnerX = rightSideX - DRAWER_SIDE_T / 2;
-                            const maidaW = (rightSideInnerX - leftSideInnerX) - mmToThreeUnits(MAIDA_GAP_MM * 2);
+                            // 마이다 폭 = 좌·우 날개벽 외면 사이 거리 - 좌우 2mm 이격
+                            const leftSideOuterX = leftSideX - DRAWER_SIDE_T / 2;
+                            const rightSideOuterX = rightSideX + DRAWER_SIDE_T / 2;
+                            const maidaW = (rightSideOuterX - leftSideOuterX) - mmToThreeUnits(MAIDA_GAP_MM * 2);
                             const maidaH = mmToThreeUnits(MAIDA_H_MM);
                             const maidaT = basicThickness;
                             // 마이다 뒷면 = 서랍 날개판(측판) 앞면(= drawerFrontZ)
