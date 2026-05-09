@@ -2344,8 +2344,18 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                 // Z: 측판 뒷면에 프레임 뒷면 맞춤
                 const sideBackZ = (depth / 2 - mmToThreeUnits(40)) - mmToThreeUnits(277);
                 const frameZ = sideBackZ + frameThk / 2;
-                // 프레임 안쪽(앞쪽)에 같은 사양 판재 1장 — 프레임 앞면에 뒷면 맞닿음
-                const innerPanelZ = frameZ + frameThk;
+                // 프레임 안쪽(앞쪽)에 가로 판재 1장 — 바닥판 형태(가로로 누움)
+                //   폭 = 측판 사이 (frameW)
+                //   두께 = 18 (가로판 두께)
+                //   깊이 = 측판 앞면 - 18 옵셋(앞면) ~ 프레임 앞면(뒷면) 사이
+                //   Y(중심): 프레임 하단(frameY - frameH/2) - 두께/2
+                const innerSlabThk = basicThickness; // 18mm 가로판
+                const innerSlabFrontZ = sidePanelFrontZ - mmToThreeUnits(bottomFrontOffset_mm);
+                const innerSlabBackZ = frameZ + frameThk / 2; // 프레임 앞면
+                const innerSlabD = innerSlabFrontZ - innerSlabBackZ;
+                const innerSlabZ = (innerSlabFrontZ + innerSlabBackZ) / 2;
+                const frameBottomY = frameY - frameH / 2;
+                const innerSlabY = frameBottomY - innerSlabThk / 2;
                 return (
                   <>
                     <BoxWithEdges
@@ -2362,14 +2372,14 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                       textureUrl={textureUrl}
                     />
                     <BoxWithEdges
-                      key={`glass-top-rear-inner-${getPanelMaterial('상단뒤프레임 안쪽판').uuid}`}
-                      args={[frameW, frameH, frameThk]}
-                      position={[0, frameY, innerPanelZ]}
-                      material={getPanelMaterial('상단뒤프레임 안쪽판')}
+                      key={`glass-top-inner-slab-${getPanelMaterial('상단뒤프레임 안쪽판재').uuid}`}
+                      args={[frameW, innerSlabThk, innerSlabD]}
+                      position={[0, innerSlabY, innerSlabZ]}
+                      material={getPanelMaterial('상단뒤프레임 안쪽판재')}
                       renderMode={renderMode}
                       isDragging={isDragging}
                       isEditMode={isEditMode}
-                      panelName="상단뒤프레임 안쪽판"
+                      panelName="상단뒤프레임 안쪽판재"
                       panelGrainDirections={panelGrainDirections}
                       furnitureId={placedFurnitureId}
                       textureUrl={textureUrl}
