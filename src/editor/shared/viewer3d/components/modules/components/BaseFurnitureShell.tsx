@@ -2249,13 +2249,14 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                 furnitureId={placedFurnitureId}
                 textureUrl={textureUrl}
               />
-              {/* 서랍 바닥판 위에 한 장 더 — 앞면은 첫 바닥판과 동일(측판 앞에서 18mm 옵셋),
-                  뒷면은 가구 뒷면(백패널 위치)까지 연장 → 깊이가 백패널과 맞닿음 */}
+              {/* 서랍 바닥판 위에 한 장 더 — 앞면은 측판 앞에서 18mm 옵셋,
+                  뒷면은 백패널 안쪽(앞면)에 맞닿음 (백패널 두께 9mm만큼 가구 뒷벽보다 앞) */}
               {(() => {
-                const cabinetBackZ = -depth / 2;
+                const backPanelThicknessMm = 9; // 표준 백패널 두께
+                const backPanelInnerZ = -depth / 2 + mmToThreeUnits(backPanelThicknessMm);
                 const upperBottomFrontZ = sidePanelFrontZ - mmToThreeUnits(bottomFrontOffset_mm);
-                const upperBottomD = upperBottomFrontZ - cabinetBackZ;
-                const upperBottomZ = (upperBottomFrontZ + cabinetBackZ) / 2;
+                const upperBottomD = upperBottomFrontZ - backPanelInnerZ;
+                const upperBottomZ = (upperBottomFrontZ + backPanelInnerZ) / 2;
                 return (
                   <BoxWithEdges
                     key={`glass-drawer-bottom2-${getPanelMaterial('서랍 바닥판2').uuid}`}
