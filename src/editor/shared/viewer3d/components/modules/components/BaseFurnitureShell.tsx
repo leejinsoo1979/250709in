@@ -2276,10 +2276,15 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                 const maidaZ = drawerFrontZ + maidaT / 2;
                 const maidaWidth = drawerOuterW + mmToThreeUnits(DRAWER_SIDE_GAP_MM * 2 - 3);
 
-                // 1단 서랍 하단 Y = 바닥판2 위
-                const drawer1StartY = bottomY + bottomTh + bottomTh;
-                // 2단 서랍 하단 Y = 1단 시작 + 측판H + 갭 (1단 위로 한 단)
-                const drawer2StartY = drawer1StartY + drawerSideH + drawerGap;
+                // 아래 서랍(1단) 하단 Y = 바닥판2 윗면 + 16mm
+                //   바닥판2 윗면 Y = bottomY + bottomTh + bottomTh (첫 바닥판 + 바닥판2)
+                const bottomSlab2TopY = bottomY + bottomTh + bottomTh;
+                const drawer1StartY = bottomSlab2TopY + mmToThreeUnits(16);
+                // 위 서랍(2단) 하단 Y = 목찬넬 수직판 윗면(=L자 전체 상단) + 37.8mm
+                //   목찬넬 영역 시작 = 측판하단 + 200, L자 전체 높이 60mm
+                const sideBottomYUp = -height / 2 + mmToThreeUnits(SIDE_BOTTOM_FROM_FLOOR_MM);
+                const woodChannelTopY = sideBottomYUp + mmToThreeUnits(200) + mmToThreeUnits(60);
+                const drawer2StartY = woodChannelTopY + mmToThreeUnits(37.8);
                 const drawerStartYs = [drawer1StartY, drawer2StartY];
 
                 return (
