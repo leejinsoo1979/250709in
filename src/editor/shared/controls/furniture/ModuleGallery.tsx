@@ -1088,7 +1088,7 @@ const ModuleGallery: React.FC<ModuleGalleryProps> = ({ moduleCategory = 'tall', 
     // 하부장 카테고리 선택시
     categoryModules = getModulesByCategory('lower', adjustedInternalSpace, spaceInfoWithSlotWidths);
   } else if (moduleCategory === 'clothing') {
-    // 의류장 = 키큰장(full) 중 신발장/주방 키큰장 제외
+    // 의류장 = 키큰장(full) 중 신발장/주방 키큰장 제외 (유리장 포함)
     categoryModules = getModulesByCategory('full', adjustedInternalSpace, spaceInfoWithSlotWidths)
       .filter(m =>
         !isShoeModuleId(m.id) &&
@@ -1096,7 +1096,8 @@ const ModuleGallery: React.FC<ModuleGalleryProps> = ({ moduleCategory = 'tall', 
         !m.id.includes('insert-frame') &&
         !m.id.includes('pull-out-cabinet') &&
         !m.id.includes('pantry-cabinet') &&
-        !m.id.includes('fridge-cabinet')
+        !m.id.includes('fridge-cabinet') &&
+        !m.id.includes('glass-cabinet')
       );
   } else if (moduleCategory === 'shoes') {
     // 신발장 = full 카테고리 내 선반장 계열 + 현관장
@@ -1108,7 +1109,7 @@ const ModuleGallery: React.FC<ModuleGalleryProps> = ({ moduleCategory = 'tall', 
       // 상부장 = upper 전체
       categoryModules = getModulesByCategory('upper', adjustedInternalSpace, spaceInfoWithSlotWidths);
     } else if (kitchenSubCategory === 'tall') {
-      // 키큰장 = 주방 키큰장 전용 모듈 (인출장, 팬트리장, 냉장고장, 키큰장찬넬)
+      // 키큰장 = 주방 키큰장 전용 모듈 (인출장, 팬트리장, 냉장고장, 키큰장찬넬, 유리장)
       // 빌트인 냉장고장은 개발자 계정에서만 노출
       const allFullModules = getModulesByCategory('full', adjustedInternalSpace, spaceInfoWithSlotWidths);
       categoryModules = allFullModules.filter(m =>
@@ -1116,6 +1117,7 @@ const ModuleGallery: React.FC<ModuleGalleryProps> = ({ moduleCategory = 'tall', 
         m.id.includes('pantry-cabinet') ||
         m.id.includes('fridge-cabinet') ||
         m.id.includes('insert-frame') ||
+        m.id.includes('glass-cabinet') ||
         (isDevAccount && m.id.includes('built-in-fridge'))
       );
     } else {
@@ -1143,14 +1145,15 @@ const ModuleGallery: React.FC<ModuleGalleryProps> = ({ moduleCategory = 'tall', 
       return !isDoorRaise && !isTopDown;
     });
   } else {
-    // 키큰장(전체형) 모듈 (기존 'tall' 호환) — 주방 전용 모듈 제외
+    // 키큰장(전체형) 모듈 (기존 'tall' 호환) — 주방 전용 모듈 제외 (유리장 포함)
     categoryModules = getModulesByCategory('full', adjustedInternalSpace, spaceInfoWithSlotWidths)
       .filter(m =>
         !m.id.includes('built-in-fridge') &&
         !m.id.includes('insert-frame') &&
         !m.id.includes('pull-out-cabinet') &&
         !m.id.includes('pantry-cabinet') &&
-        !m.id.includes('fridge-cabinet')
+        !m.id.includes('fridge-cabinet') &&
+        !m.id.includes('glass-cabinet')
       );
   }
 

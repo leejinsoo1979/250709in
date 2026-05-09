@@ -991,6 +991,122 @@ const createSingle2DrawerShelf = (columnWidth: number, maxHeight: number): Modul
 };
 
 // ============================================================================
+// 유리장 (싱글) — 띄움배치 가구
+// - H 1920mm 고정, D 365mm 고정
+// - 조절발 없음 (hasBase: false)
+// - 띄움 200mm (개별 individualFloatHeight=200, 측판은 띄움 위에서 1920까지 하나로)
+// - 도어 없음
+// - 측판 하나(상하 분리 없음) → 단일 sections 처리
+// - 하단 서랍 2단(서랍 측판 146mm 기준) + 상단 다보선반 2개(칸 3개)
+// ============================================================================
+
+// 유리장 사양 (이미지 도면 기준)
+//   총높이 1920 = 상판18.5 + 상부오픈(다보선반2 + 칸3) 1105 + 서랍영역 410 + 하부오픈 242 + 하판18.5
+//   - 상부 오픈: 다보선반 2개로 칸 3개 (위 301 / 중 302.5 / 아래 501.5 — 균등 아닌 도면 비율 반영)
+//   - 서랍영역: 서랍 측판 146mm × 2단 + 마이다/패널/갭 합산 약 410
+//   - 하부 오픈: 빈 공간 242mm
+const GLASS_CABINET_HEIGHT = 1920;
+const GLASS_CABINET_DEPTH = 365;
+const GLASS_CABINET_FLOAT = 200;
+const GLASS_CABINET_DRAWER_SIDE_H = 146; // 서랍 측판 높이 (사용자 지정)
+// 서랍영역 = 마이다(서랍 위 패널) + 갭 + 서랍1 + 칸막이 + 서랍2 + 갭
+// 도면값: 18.5 + 18.5 + 약240 + 18.5 + 약240 + 18.5+18.5 ≈ 약 410
+const GLASS_CABINET_DRAWER_AREA_H = 410;
+const GLASS_CABINET_BOTTOM_OPEN_H = 242; // 서랍 아래 빈 오픈 영역
+
+const buildGlassCabinetSections = (): SectionConfig[] => {
+  // 섹션 합계 = totalHeight (= 1920) — 상하 패널은 sections 외부에서 처리됨
+  // 위에서부터: 상부 오픈선반 / 서랍 / 하부 오픈
+  const drawerH = GLASS_CABINET_DRAWER_AREA_H; // 410
+  const bottomOpenH = GLASS_CABINET_BOTTOM_OPEN_H; // 242
+  const shelfH = GLASS_CABINET_HEIGHT - drawerH - bottomOpenH; // = 1268
+  return [
+    {
+      // 상부 오픈선반 (다보선반 2개로 칸 3개)
+      type: 'shelf',
+      heightType: 'absolute',
+      height: shelfH,
+      count: 2,
+      shelfPositions: calculateEvenShelfPositions(
+        shelfH - 2 * FURNITURE_SPECS.BASIC_THICKNESS,
+        2
+      )
+    },
+    {
+      // 서랍 2단 (각 측판 146mm)
+      type: 'drawer',
+      heightType: 'absolute',
+      height: drawerH,
+      count: 2,
+      drawerHeights: [GLASS_CABINET_DRAWER_SIDE_H, GLASS_CABINET_DRAWER_SIDE_H],
+      gapHeight: FURNITURE_SPECS.DRAWER_GAP
+    },
+    {
+      // 하부 오픈 빈 공간
+      type: 'open',
+      heightType: 'absolute',
+      height: bottomOpenH
+    }
+  ];
+};
+
+const createSingleGlassCabinet = (columnWidth: number): ModuleData => {
+  const widthForId = Math.round(columnWidth * 100) / 100;
+  const base = createFurnitureBase(
+    `single-glass-cabinet-${widthForId}`,
+    `유리장 ${widthForId}mm`,
+    columnWidth,
+    GLASS_CABINET_HEIGHT,
+    GLASS_CABINET_DEPTH,
+    '#90A4AE',
+    `유리장 (띄움 ${GLASS_CABINET_FLOAT}mm · 다보선반 2 + 서랍 2단 + 하부오픈)`,
+    GLASS_CABINET_DEPTH,
+    'full'
+  );
+
+  return {
+    ...base,
+    hasDoor: false,
+    hasBase: false,
+    individualFloatHeight: GLASS_CABINET_FLOAT,
+    modelConfig: {
+      ...base.modelConfig,
+      sections: buildGlassCabinetSections()
+    }
+  } as ModuleData;
+};
+
+const createDualGlassCabinet = (
+  dualColumnWidth: number,
+  slotWidths?: number[]
+): ModuleData => {
+  const widthForId = Math.round(dualColumnWidth * 100) / 100;
+  const base = createFurnitureBase(
+    `dual-glass-cabinet-${widthForId}`,
+    `유리장 ${widthForId}mm`,
+    dualColumnWidth,
+    GLASS_CABINET_HEIGHT,
+    GLASS_CABINET_DEPTH,
+    '#90A4AE',
+    `듀얼 유리장 (띄움 ${GLASS_CABINET_FLOAT}mm · 다보선반 2 + 서랍 2단 + 하부오픈)`,
+    GLASS_CABINET_DEPTH,
+    'full'
+  );
+
+  return {
+    ...base,
+    slotWidths,
+    hasDoor: false,
+    hasBase: false,
+    individualFloatHeight: GLASS_CABINET_FLOAT,
+    modelConfig: {
+      ...base.modelConfig,
+      sections: buildGlassCabinetSections()
+    }
+  } as ModuleData;
+};
+
+// ============================================================================
 // 듀얼 가구 생성 함수들
 // ============================================================================
 
@@ -3322,6 +3438,8 @@ export const generateShelvingModules = (
   modules.push(createSingleShelf(columnWidth, maxHeight));
   modules.push(createSingle4DrawerShelf(columnWidth, maxHeight));
   modules.push(createSingle2DrawerShelf(columnWidth, maxHeight));
+  // 유리장 (싱글) — H/D 고정, 띄움 200mm
+  modules.push(createSingleGlassCabinet(columnWidth));
 
   // === 듀얼 가구 생성 ===
   // _tempSlotWidths가 있고 듀얼 가구를 위한 2개의 슬롯 너비가 있으면 합계 사용
@@ -3383,6 +3501,8 @@ export const generateShelvingModules = (
     modules.push(createDualShelf(dualWidth, maxHeight, dualSlotWidths));
     modules.push(createDual4DrawerShelf(dualWidth, maxHeight, dualSlotWidths));
     modules.push(createDual2DrawerShelf(dualWidth, maxHeight, dualSlotWidths));
+    // 유리장 (듀얼)
+    modules.push(createDualGlassCabinet(dualWidth, dualSlotWidths));
 
     // === 상부장 가구 생성 ===
     modules.push(createDualUpperCabinet1(dualWidth));
