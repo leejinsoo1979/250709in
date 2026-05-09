@@ -1013,61 +1013,13 @@ const GLASS_CABINET_FLOAT = 200;
 const GLASS_CABINET_DRAWER_SIDE_H = 146; // 서랍 측판 높이 (가구재 종속 아님)
 
 const buildGlassCabinetSections = (): SectionConfig[] => {
-  // 섹션 합계 = 외형 H 1920 (sections 합 = 외형 — 상하 패널은 sections 외부에서 처리됨)
-  // 모든 치수는 가구재 패널 두께(t)에 종속되도록 동적 계산.
-  const t = FURNITURE_SPECS.BASIC_THICKNESS; // 18 (또는 사용자 가구재 두께)
-  const gap = FURNITURE_SPECS.DRAWER_GAP;     // 24
-
-  // 1) 서랍 영역: 서랍 2단 외부 높이 + 마이다 + 칸막이 + 갭
-  //    1단 외부 = 측판H + 패널두께(상부 마이다)
-  //    2단 = 1단×2 + 중간 칸막이(패널두께) + 상하 갭
-  const drawerExternal = GLASS_CABINET_DRAWER_SIDE_H + t;       // 146 + 18 = 164
-  const drawerArea = drawerExternal * 2 + t + gap * 2;          // 164*2 + 18 + 48 = 394
-  // 도면 표기 약 500은 18.5 패널 + 큰 갭 가정. 실제 패널두께(t)에 따라 자동 변동.
-
-  // 2) 하부 오픈: 도면 비율 약 13% (242/1883) — 외형 합산에서 비율 차지
-  //    sections 합계 = HEIGHT (1920). 정확히 차지하는 비율로 재계산하기보다는
-  //    하부오픈을 서랍영역의 약 0.6배 정도로 두고 나머지를 상부 shelf에 할당
-  //    (사용자가 도면에 명시한 비율 = 상부 1141 : 서랍 500 : 하부 242 ≈ 6.1 : 2.7 : 1.3)
-  //    여기서는 서랍영역(drawerArea, 패널두께 종속) + 하부오픈 = 도면비율 유지하도록
-  //    bottomOpen = drawerArea * (242/500) ≈ drawerArea * 0.484
-  const bottomOpen = Math.round(drawerArea * 0.484);
-  // 3) 상부 shelf: 나머지 전체
-  const shelfH = GLASS_CABINET_HEIGHT - drawerArea - bottomOpen;
-
-  // 다보선반 2개 위치 (섹션 바닥 기준 mm)
-  //   도면 칸 비율 위:중:큰 = 3:3:5
-  //   섹션 내부 가용 높이 = shelfH - 2t (상하 패널 빼야 selfPositions 기준 높이)
-  const innerH = shelfH - 2 * t;
-  const ratioBigBottom = 5 / 11;           // 큰 칸(아래) 비율
-  const ratioMid = 3 / 11;                  // 중 칸 비율
-  // 섹션 좌표(바닥 0): 첫 선반 = 큰 칸 높이, 두번째 선반 = 큰 칸 + 패널 + 중 칸
-  const shelfPos1 = innerH * ratioBigBottom;
-  const shelfPos2 = innerH * ratioBigBottom + t + innerH * ratioMid;
-
-  // sections 배열 순서 = 아래에서 위로 (기존 가구 컨벤션 동일)
+  // 유리장은 sections 분할 없이 가구 전체를 단일 open 섹션으로 처리.
+  // 내부 측판/선반/서랍은 BaseFurnitureShell의 glass-cabinet 분기에서 별도 렌더링.
   return [
     {
-      // 가구 바닥 — 하부 오픈 (242, 서랍 아래)
       type: 'open',
-      heightType: 'absolute',
-      height: bottomOpen
-    },
-    {
-      // 중간 — 서랍 영역 (유리장 전용: 일반 ㄷ자 서랍 대신 양쪽에 단일 측판만 생성)
-      // 실제 서랍 박스/마이다는 BaseFurnitureShell의 유리장 분기에서 별도 렌더링
-      type: 'open',
-      heightType: 'absolute',
-      height: drawerArea
-    },
-    {
-      // 가구 천장 — 상부 오픈선반 (다보선반 2개로 칸 3개) 도면 비율 3:3:5
-      // shelfPositions는 섹션 바닥 기준이므로 아래에서 위로 누적
-      type: 'shelf',
-      heightType: 'absolute',
-      height: shelfH,
-      count: 2,
-      shelfPositions: [shelfPos1, shelfPos2]
+      heightType: 'percentage',
+      height: 100
     }
   ];
 };
