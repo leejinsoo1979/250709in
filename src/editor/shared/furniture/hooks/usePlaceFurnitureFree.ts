@@ -159,6 +159,8 @@ export function placeFurnitureFree(params: PlaceFurnitureFreeParams): PlaceFurni
     ...(((moduleData as any).individualFloatHeight ?? 0) > 0
       ? { individualFloatHeight: (moduleData as any).individualFloatHeight }
       : {}),
+    // ModuleData.hasBackPanel === false (예: 유리장 — 사용자 별도 백패널 처리)
+    ...((moduleData as any).hasBackPanel === false ? { hasBackPanel: false } : {}),
     hasDoor: false, // 자유배치 시 도어 없이 배치 (사용자가 수동 설정)
     lowerSectionTopOffset: defaultLowerTopOffset,
     ...(isCustomizable && {

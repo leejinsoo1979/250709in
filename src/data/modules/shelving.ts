@@ -1042,6 +1042,7 @@ const createSingleGlassCabinet = (columnWidth: number): ModuleData => {
     ...base,
     hasDoor: false,
     hasBase: false,
+    hasBackPanel: false,
     individualFloatHeight: GLASS_CABINET_FLOAT,
     modelConfig: {
       ...base.modelConfig,
@@ -1072,6 +1073,7 @@ const createDualGlassCabinet = (
     slotWidths,
     hasDoor: false,
     hasBase: false,
+    hasBackPanel: false,
     individualFloatHeight: GLASS_CABINET_FLOAT,
     modelConfig: {
       ...base.modelConfig,
