@@ -2337,10 +2337,10 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                 const frameW = innerWidth - sideW * 2;          // 측판 사이 폭
                 const frameH = mmToThreeUnits(TOP_REAR_FRAME_H_MM);
                 const frameThk = basicThickness;                 // 깊이 = 가구재 두께
-                // 측판 상단 Y = drawerCenterY + sideH/2
+                // 측판 상단(코너) Y = drawerCenterY + sideH/2
+                // 프레임 윗면 = 측판 윗면 (코너에 끼움) → 프레임 중심 = 측판 상단 - frameH/2
                 const sideTopY = drawerCenterY + sideH / 2;
-                // 프레임은 측판 위에 올라감 → 프레임 하단 = 측판 상단
-                const frameY = sideTopY + frameH / 2;
+                const frameY = sideTopY - frameH / 2;
                 // Z: 백패널 앞면에 뒷면 맞춤
                 const backPanelInnerZ = -depth / 2 + backPanelThickness + mmToThreeUnits(backPanelConfig.depthOffset);
                 const frameZ = backPanelInnerZ + frameThk / 2;
