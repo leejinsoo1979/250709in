@@ -3219,7 +3219,11 @@ const PlacedModulePropertiesPanel: React.FC = () => {
           {!showDetails && currentPlacedModule && (() => {
             const cc = currentPlacedModule.customConfig;
             const ccSections = cc?.sections;
-            const mcSections = moduleData?.modelConfig?.sections;
+            // 사용자가 customSections로 직접 갱신한 경우 우선 (팬트리장 하부 섹션 변경 등)
+            const userCustomSections = (currentPlacedModule as any).customSections;
+            const mcSections = (Array.isArray(userCustomSections) && userCustomSections.length >= 2)
+              ? userCustomSections
+              : moduleData?.modelConfig?.sections;
             const hasSections = (ccSections && ccSections.length >= 2) || (mcSections && mcSections.length >= 2);
             if (!hasSections) return null;
 
@@ -3462,12 +3466,14 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                       </div>
                         );
                       })()}
-                      {/* 섹션 높이 — 표준 가구: 마지막(상부) 섹션만 편집 가능 (전체 높이 역계산), 커스텀: 모두 편집 가능 */}
+                      {/* 섹션 높이 — 표준 가구: 마지막(상부) 섹션만 편집 가능 (전체 높이 역계산), 커스텀: 모두 편집 가능
+                          단, 팬트리장/인출장은 모든 섹션 편집 가능 (하부 변경 시 상부 자동 동기화) */}
                       {(() => {
                         // 표준 가구에서 마지막 섹션(상부=가변)만 편집 가능
                         const isLastSection = sIdx === sectionCount - 1;
                         const isStdEditable = !isCustom && isLastSection && sectionCount >= 2;
-                        const canEdit = isCustom || isStdEditable;
+                        const isPantryOrPullOut = isPullOutOrPantry;
+                        const canEdit = isCustom || isStdEditable || (isPantryOrPullOut && sectionCount >= 2);
                         return (
                       <div style={{ flex: 1, minWidth: '70px' }}>
                         <label style={{ fontSize: '10px', color: 'var(--theme-text-secondary)', display: 'block', lineHeight: 1 }}>높이</label>
@@ -3504,6 +3510,43 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                                 }
                                 updatePlacedModule(currentPlacedModule.id, secUpdates);
                                 setFreeHeightInput(clampedH.toString());
+                                setSectionHeightInputs({});
+                              } else if (isPantryOrPullOut && mcSections) {
+                                // 팬트리장/인출장: 하부(또는 중간) 섹션 변경
+                                // 1) 변경된 섹션의 height 갱신
+                                // 2) 상부(마지막) 섹션 height = freeHeight - (다른 섹션 합) 으로 재계산
+                                // 3) 상부 섹션의 shelfPositions 균등 재배치
+                                const inputVal = parseInt(sectionHeightInputs[sIdx] || '0', 10);
+                                if (isNaN(inputVal) || inputVal < 100) {
+                                  setSectionHeightInputs({});
+                                  return;
+                                }
+                                const totalH = currentPlacedModule.freeHeight ?? currentPlacedModule.customHeight ?? moduleData.dimensions.height;
+                                const lastIdx = mcSections.length - 1;
+                                // 변경된 섹션 height 적용한 임시 배열
+                                const tentative = mcSections.map((s: any, idx: number) => {
+                                  if (idx === sIdx) return { ...s, height: inputVal };
+                                  return s;
+                                });
+                                // 마지막 섹션을 제외한 합
+                                const otherSum = tentative
+                                  .filter((_: any, idx: number) => idx !== lastIdx)
+                                  .reduce((sum: number, s: any) => sum + (s.height || 0), 0);
+                                const newLastH = Math.max(100, totalH - otherSum);
+                                const basicThickness = (spaceInfo as any).panelThickness || 18;
+                                const newSections = tentative.map((s: any, idx: number) => {
+                                  if (idx !== lastIdx) return s;
+                                  // 마지막(상부) 섹션 갱신
+                                  const updated: any = { ...s, height: newLastH };
+                                  // shelf 타입이고 count가 있으면 선반 균등 재배치
+                                  if ((s.type === 'shelf' || s.type === 'open') && (s.count > 0 || (Array.isArray(s.shelfPositions) && s.shelfPositions.length > 0))) {
+                                    const shelfCount = s.count || (s.shelfPositions?.length ?? 0);
+                                    const innerH = Math.max(0, newLastH - 2 * basicThickness);
+                                    updated.shelfPositions = calculateEvenShelfPositions(innerH, shelfCount, basicThickness);
+                                  }
+                                  return updated;
+                                });
+                                updatePlacedModule(currentPlacedModule.id, { customSections: newSections } as any);
                                 setSectionHeightInputs({});
                               } else {
                                 setSectionHeightInputs(prev => ({ ...prev, [sIdx]: displayH }));
