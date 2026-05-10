@@ -1497,7 +1497,10 @@ const FreePlacementDropZone: React.FC = () => {
         const targetZone = (leftZone === rightZone && rightZone === centerZone && centerZone !== 'main')
           ? centerZone : null;
 
-        if (targetZone) {
+        // 사용자가 직접 폭을 변경한 가구는 자동 리사이즈 건너뜀
+        // (폭 입력 후 이동 시 너비가 원래로 돌아오는 문제 방지)
+        const userResized = !!(mod as any).userResizedWidth;
+        if (targetZone && !userResized) {
           const zoneInfo = zonePlacementBounds.find(z => z.zone === targetZone);
           if (zoneInfo) {
             const remaining = getZoneRemainingWidth(zoneInfo, freeModules, mod.id);

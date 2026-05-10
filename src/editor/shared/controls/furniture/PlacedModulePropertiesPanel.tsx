@@ -2870,7 +2870,8 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                             freeWidth: val,
                             moduleWidth: val,
                             position: { ...freshModule.position, x: newX },
-                          });
+                            userResizedWidth: true, // 사용자가 직접 폭 변경 → 이동 시 자동 리사이즈 차단
+                          } as any);
                           setFreeWidthInput(val.toString());
                           const store = useFurnitureStore.getState();
                           const dims = {
