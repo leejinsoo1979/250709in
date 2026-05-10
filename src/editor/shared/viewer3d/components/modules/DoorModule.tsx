@@ -1334,16 +1334,38 @@ const DoorModule: React.FC<DoorModuleProps> = ({
       }
     }
 
-    // Insert 프레임 인접 시 도어 24.5mm 확장 (해당 쪽으로)
+    // Insert 프레임 인접 시 도어 확장 (해당 쪽으로)
+    // 도어 확장/축소 토글: ON 시 사용자 입력값으로 양쪽 합산 균등 분배, OFF 시 자동 확장도 무효화 (몸통-3mm)
+    const doorAdjEnabledDual = !!(storePlacedModule as any)?.doorWidthAdjustEnabled;
+    const userDoorExtendMmDual = (storePlacedModule as any)?.doorWidthAdjustMm;
+    const autoExtendLeftMm = insertFrameAdjacency.left ? INSERT_FRAME_DOOR_EXTENSION_MM : 0;
+    const autoExtendRightMm = insertFrameAdjacency.right ? INSERT_FRAME_DOOR_EXTENSION_MM : 0;
+    let leftExtendMm = 0;
+    let rightExtendMm = 0;
+    if (doorAdjEnabledDual) {
+      const total = (userDoorExtendMmDual ?? (autoExtendLeftMm + autoExtendRightMm));
+      // 자동 인접 방향이 있으면 그쪽으로 우선 배분, 양쪽 모두면 균등
+      if (autoExtendLeftMm > 0 && autoExtendRightMm > 0) {
+        leftExtendMm = total / 2;
+        rightExtendMm = total / 2;
+      } else if (autoExtendLeftMm > 0) {
+        leftExtendMm = total;
+      } else if (autoExtendRightMm > 0) {
+        rightExtendMm = total;
+      } else {
+        // 인접 없음: 우측에 적용 (관례)
+        rightExtendMm = total;
+      }
+    }
     let leftInsertExtendShift = 0;
     let rightInsertExtendShift = 0;
-    if (insertFrameAdjacency.left) {
-      leftDoorWidth += INSERT_FRAME_DOOR_EXTENSION_MM;
-      leftInsertExtendShift = -mmToThreeUnits(INSERT_FRAME_DOOR_EXTENSION_MM) / 2;
+    if (leftExtendMm !== 0) {
+      leftDoorWidth += leftExtendMm;
+      leftInsertExtendShift = -mmToThreeUnits(leftExtendMm) / 2;
     }
-    if (insertFrameAdjacency.right) {
-      rightDoorWidth += INSERT_FRAME_DOOR_EXTENSION_MM;
-      rightInsertExtendShift = mmToThreeUnits(INSERT_FRAME_DOOR_EXTENSION_MM) / 2;
+    if (rightExtendMm !== 0) {
+      rightDoorWidth += rightExtendMm;
+      rightInsertExtendShift = mmToThreeUnits(rightExtendMm) / 2;
     }
 
     const leftDoorWidthUnits = mmToThreeUnits(leftDoorWidth);
@@ -2233,16 +2255,27 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     // X 위치 보정: 좌측 trim은 오른쪽으로, 우측 trim은 왼쪽으로 밀기
     const epTrimShiftX = mmToThreeUnits(epTrimLeft - epTrimRight) / 2;
 
-    // Insert 프레임 인접 시 도어 24.5mm 확장 (해당 쪽으로)
+    // Insert 프레임 인접 시 도어 확장 (해당 쪽으로)
+    // 도어 확장/축소 토글: ON 시 사용자 입력값 적용, OFF 시 자동 확장도 무효화 (몸통-3mm)
+    const doorAdjEnabled = !!(storePlacedModule as any)?.doorWidthAdjustEnabled;
+    const userDoorExtendMm = (storePlacedModule as any)?.doorWidthAdjustMm;
+    const autoLeftMm = insertFrameAdjacency.left ? INSERT_FRAME_DOOR_EXTENSION_MM : 0;
+    const autoRightMm = insertFrameAdjacency.right ? INSERT_FRAME_DOOR_EXTENSION_MM : 0;
     let insertExtendLeft = 0;
     let insertExtendRight = 0;
-    if (insertFrameAdjacency.left) {
-      doorWidth += INSERT_FRAME_DOOR_EXTENSION_MM;
-      insertExtendLeft = INSERT_FRAME_DOOR_EXTENSION_MM;
-    }
-    if (insertFrameAdjacency.right) {
-      doorWidth += INSERT_FRAME_DOOR_EXTENSION_MM;
-      insertExtendRight = INSERT_FRAME_DOOR_EXTENSION_MM;
+    if (doorAdjEnabled) {
+      const total = (userDoorExtendMm ?? (autoLeftMm + autoRightMm));
+      if (autoLeftMm > 0 && autoRightMm > 0) {
+        insertExtendLeft = total / 2;
+        insertExtendRight = total / 2;
+      } else if (autoLeftMm > 0) {
+        insertExtendLeft = total;
+      } else if (autoRightMm > 0) {
+        insertExtendRight = total;
+      } else {
+        insertExtendRight = total;
+      }
+      doorWidth += insertExtendLeft + insertExtendRight;
     }
     // 좌측 확장은 도어를 좌측으로(-X), 우측 확장은 우측으로(+X) 시프트
     const insertExtendShiftX = mmToThreeUnits(insertExtendRight - insertExtendLeft) / 2;

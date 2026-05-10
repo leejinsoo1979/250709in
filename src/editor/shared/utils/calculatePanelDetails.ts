@@ -57,6 +57,50 @@ export const calculatePanelDetails = (
     frame: []      // 프레임 패널 (상부/하부)
   };
 
+  // === 키큰장찬넬(insert-frame) 전용 패널 처리 ===
+  // 3D BoxModule.tsx Insert 분기와 동일: 전면 프레임(136×H×18) + 좌EP(18×H×40) + 우EP(18×H×40)
+  // 재질: 상단몰딩/걸레받이와 동일 카테고리(frame). 사이즈는 공간 전체 높이 기준.
+  // 함수 최종 반환은 배열이므로 동일 형식의 배열로 반환.
+  if (moduleData.id.includes('insert-frame') || (moduleData?.modelConfig as any)?.isInsertFrame === true) {
+    // 사용자 입력값(customWidth) 우선, 없으면 기본 136
+    const insertOuterWidthMm = (typeof customWidth === 'number' && customWidth > 0)
+      ? customWidth
+      : (moduleData.dimensions.width || 136);
+    const insertEpThicknessMm = 18;
+    const insertEpDepthMm = 40; // 58 - 18
+    const insertFrontFrameThicknessMm = 18;
+    const insertHeightMm = (typeof spaceHeight === 'number' && spaceHeight > 0)
+      ? spaceHeight
+      : (moduleData.dimensions.height || 2400);
+    const insertResult: any[] = [];
+    insertResult.push({ name: '=== 키큰장찬넬 ===' });
+    insertResult.push({
+      name: '키큰장찬넬 전면프레임',
+      width: insertOuterWidthMm,
+      height: insertHeightMm,
+      thickness: insertFrontFrameThicknessMm,
+      material: 'PET',
+      quantity: 1,
+    });
+    insertResult.push({
+      name: '키큰장찬넬 좌EP',
+      width: insertEpThicknessMm,
+      height: insertHeightMm,
+      thickness: insertEpDepthMm,
+      material: 'PET',
+      quantity: 1,
+    });
+    insertResult.push({
+      name: '키큰장찬넬 우EP',
+      width: insertEpThicknessMm,
+      height: insertHeightMm,
+      thickness: insertEpDepthMm,
+      material: 'PET',
+      quantity: 1,
+    });
+    return insertResult;
+  }
+
   // 도어 없는 모듈 — 마이다(서랍 앞판)만 사용하는 모듈은 도어 강제 차단
   // 3D LowerCabinet.tsx L922의 도어 차단 목록과 동일
   const moduleId = moduleData.id;

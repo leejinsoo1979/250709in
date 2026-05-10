@@ -255,12 +255,11 @@ const BoxModule: React.FC<BoxModuleProps> = ({
 
   // debug useEffects removed for perf
 
-  // 인서트 프레임 머티리얼 (도어와 동일: 색상 + 텍스처)
-  // DoorModule.applyTextureToMaterial과 동일한 순서/속성으로 처리하여 색감 일치
-  const insertDoorColorRaw = (spaceInfo?.materialConfig as any)?.doorColor as string | undefined;
-  const insertDoorTextureRaw = (spaceInfo?.materialConfig as any)?.doorTexture as string | undefined;
+  // 인서트 프레임 머티리얼 (상단몰딩/걸레받이와 동일: frameColor / frameTexture 사용)
+  // 키큰장찬넬은 채움재(프레임)이므로 도어 재질이 아닌 프레임 재질을 따름
+  const insertFrameColorRaw = (spaceInfo?.materialConfig as any)?.frameColor as string | undefined;
+  const insertFrameTextureRaw = (spaceInfo?.materialConfig as any)?.frameTexture as string | undefined;
   const insertFrameMaterial = useMemo(() => {
-    // 도어 createDoorMaterial과 동일한 초기 속성
     const mat = new THREE.MeshStandardMaterial({
       color: new THREE.Color('#E0E0E0'),
       metalness: 0.0,
@@ -269,27 +268,25 @@ const BoxModule: React.FC<BoxModuleProps> = ({
       emissive: new THREE.Color(0x000000),
     });
 
-    if (insertDoorTextureRaw) {
-      // 텍스처 로드 전에 도어와 동일하게 즉시 텍스처별 사전 설정
-      if (isOakTexture(insertDoorTextureRaw)) {
+    if (insertFrameTextureRaw) {
+      if (isOakTexture(insertFrameTextureRaw)) {
         applyOakTextureSettings(mat);
-      } else if (isCabinetTexture1(insertDoorTextureRaw)) {
+      } else if (isCabinetTexture1(insertFrameTextureRaw)) {
         applyCabinetTexture1Settings(mat);
       }
 
       const loader = new THREE.TextureLoader();
-      loader.load(insertDoorTextureRaw, (texture) => {
+      loader.load(insertFrameTextureRaw, (texture) => {
         texture.wrapS = THREE.RepeatWrapping;
         texture.wrapT = THREE.RepeatWrapping;
         texture.repeat.set(1, 1);
-        // 결 방향: vertical = PI/2, horizontal = 0 (도어 패널은 vertical 기본)
         texture.rotation = Math.PI / 2;
         texture.center.set(0.5, 0.5);
         mat.map = texture;
 
-        if (isOakTexture(insertDoorTextureRaw)) {
+        if (isOakTexture(insertFrameTextureRaw)) {
           applyOakTextureSettings(mat);
-        } else if (isCabinetTexture1(insertDoorTextureRaw)) {
+        } else if (isCabinetTexture1(insertFrameTextureRaw)) {
           applyCabinetTexture1Settings(mat);
         } else {
           applyDefaultImageTextureSettings(mat);
@@ -298,11 +295,11 @@ const BoxModule: React.FC<BoxModuleProps> = ({
         mat.needsUpdate = true;
       });
     } else {
-      // 텍스처 없을 때만 doorColor 적용
-      mat.color.set(insertDoorColorRaw || '#E0E0E0');
+      // 텍스처 없을 때만 frameColor 적용
+      mat.color.set(insertFrameColorRaw || '#D4C5A9');
     }
     return mat;
-  }, [insertDoorColorRaw, insertDoorTextureRaw]);
+  }, [insertFrameColorRaw, insertFrameTextureRaw]);
 
   // 머티리얼 dispose (언마운트/재생성 시 메모리 정리)
   useEffect(() => {
@@ -1183,8 +1180,8 @@ const BoxModule: React.FC<BoxModuleProps> = ({
     const fullYOffset = mmTo(spaceCenterYmm - furnitureCenterYmm);
     const fullHeight = mmTo(spaceTotalHeightMm);
 
-    // 외경 폭: 인서트 프레임은 항상 136 고정 (자유 모드/슬롯배치 무관)
-    const insertOuterWidthMm = 136;
+    // 외경 폭: 사용자 입력값(adjustedWidth) 우선, 없으면 기본 136
+    const insertOuterWidthMm = adjustedWidth || moduleData.dimensions.width || 136;
     const moduleW = mmTo(insertOuterWidthMm);
     const moduleD = baseFurniture.depth; // 58mm
 
@@ -1193,15 +1190,17 @@ const BoxModule: React.FC<BoxModuleProps> = ({
     //   프레임 두께 중심 = 프레임 앞면 - 두께/2 = depth/2 - 40 - 18/2
     const FRONT_FRAME_INSET = mmTo(40);
     const frontFrameZ = moduleD / 2 - FRONT_FRAME_INSET - PT_THREE / 2;
-    // 좌 EP: 두께 18, 깊이 58, 위치 좌측 끝
+    // 좌/우 EP: 두께 18, 깊이 = 기본 - 18mm (Z축으로 18mm 줄임). 위치 X는 좌/우 끝 그대로
     const leftEpX = -moduleW / 2 + PT_THREE / 2;
-    // 우 EP: 두께 18, 깊이 58, 위치 우측 끝
     const rightEpX = moduleW / 2 - PT_THREE / 2;
-    // EP Z 중심: EP 앞면이 가구 앞면(z=+depth/2)과 일치, EP 깊이 58 → 중심 = depth/2 - 58/2
-    const epZ = moduleD / 2 - FRAME_DEPTH / 2;
+    // EP 깊이를 기본 FRAME_DEPTH(58)에서 18mm 줄임 → 40
+    const EP_DEPTH_REDUCTION = mmTo(18);
+    const epDepth = FRAME_DEPTH - EP_DEPTH_REDUCTION;
+    // EP 앞면이 가구 앞면(z=+depth/2)과 일치 → 중심 = depth/2 - epDepth/2
+    const epZ = moduleD / 2 - epDepth / 2;
 
-    // 전면 프레임 폭: 좌우 EP 사이에 끼이는 폭 = 외경 - 좌EP 두께 - 우EP 두께
-    const frontFrameWidth = moduleW - PT_THREE * 2;
+    // 전면 프레임 폭: 외경 폭 그대로 (좌우로 EP 두께만큼 더 늘려서 가구 양 끝까지)
+    const frontFrameWidth = moduleW;
     return (
       <>
         {/* 앞면 프레임 (PET) - 좌우 EP 사이, 가구 중앙에 위치, 윤곽선 포함 */}
@@ -1214,9 +1213,9 @@ const BoxModule: React.FC<BoxModuleProps> = ({
           panelName="Insert전면프레임"
           furnitureId={placedFurnitureId}
         />
-        {/* 좌측 EP (PET) - 윤곽선 포함 */}
+        {/* 좌측 EP (PET) - 윤곽선 포함 (깊이 18mm 줄임) */}
         <BoxWithEdges
-          args={[PT_THREE, fullHeight, FRAME_DEPTH]}
+          args={[PT_THREE, fullHeight, epDepth]}
           position={[leftEpX, fullYOffset, epZ]}
           material={insertFrameMaterial}
           isDragging={isDragging}
@@ -1225,9 +1224,9 @@ const BoxModule: React.FC<BoxModuleProps> = ({
           panelName="Insert좌EP"
           furnitureId={placedFurnitureId}
         />
-        {/* 우측 EP (PET) - 윤곽선 포함 */}
+        {/* 우측 EP (PET) - 윤곽선 포함 (깊이 18mm 줄임) */}
         <BoxWithEdges
-          args={[PT_THREE, fullHeight, FRAME_DEPTH]}
+          args={[PT_THREE, fullHeight, epDepth]}
           position={[rightEpX, fullYOffset, epZ]}
           material={insertFrameMaterial}
           isDragging={isDragging}

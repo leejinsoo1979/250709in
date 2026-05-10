@@ -2756,9 +2756,16 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   }
 
   // 뒷벽과 이격: 기본 위치 유지(0=앞면정렬). 양수면 앞으로 이동.
+  // 키큰장찬넬(insert-frame): 전면 옵셋 — 입력값(+) → backWallGap 음수 저장 → 가구 뒤로 이동(furnitureZ -=)
   const backWallGapMm = placedModule.backWallGap ?? 0;
-  if (backWallGapMm > 0 && !isFrontSpaceFurniture) {
-    furnitureZ += mmToThreeUnits(backWallGapMm);
+  const isInsertFrameMod = typeof placedModule.moduleId === 'string' && placedModule.moduleId.includes('insert-frame');
+  if (!isFrontSpaceFurniture) {
+    if (isInsertFrameMod) {
+      // 음수/양수 모두 적용 (음수=뒤로, 양수=앞으로)
+      furnitureZ += mmToThreeUnits(backWallGapMm);
+    } else if (backWallGapMm > 0) {
+      furnitureZ += mmToThreeUnits(backWallGapMm);
+    }
   }
 
 

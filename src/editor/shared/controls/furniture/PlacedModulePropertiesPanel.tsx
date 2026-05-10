@@ -2577,31 +2577,46 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                   })()}
                 </span>
               </div>
-              {/* 뒷벽과 이격 */}
-              {currentPlacedModule && (
+              {/* 뒷벽과 이격 / 키큰장찬넬은 전면 옵셋 (입력값만큼 앞면에서 뒤로 들어감) */}
+              {currentPlacedModule && (() => {
+                const isInsertFrameRow = typeof currentPlacedModule.moduleId === 'string' && currentPlacedModule.moduleId.includes('insert-frame');
+                // 키큰장찬넬: 표시값 = -backWallGap (입력 양수 → 뒤로 들어감 → backWallGap 음수 저장)
+                const displayValue = isInsertFrameRow
+                  ? String(-(currentPlacedModule.backWallGap ?? 0))
+                  : String(currentPlacedModule.backWallGap ?? 0);
+                return (
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '6px' }}>
-                  <span style={{ fontSize: '11px', color: 'var(--theme-text-secondary)', flexShrink: 0 }}>뒷벽 이격</span>
+                  <span style={{ fontSize: '11px', color: 'var(--theme-text-secondary)', flexShrink: 0 }}>{isInsertFrameRow ? '전면 옵셋' : '뒷벽 이격'}</span>
                   <div className={styles.inputWithUnit} style={{ flex: 1 }}>
                     <input
                       type="text"
                       inputMode="numeric"
-                      value={String(currentPlacedModule.backWallGap ?? 0)}
+                      value={displayValue}
                       onChange={(e) => {
                         const raw = e.target.value;
                         const parsed = parseBackWallGapInput(raw);
                         if (parsed !== null) {
-                          updatePlacedModule(currentPlacedModule.id, { backWallGap: parsed });
+                          // 키큰장찬넬: 입력값이 +면 가구를 뒤로 이동 → backWallGap에 음수로 저장
+                          const stored = isInsertFrameRow ? -parsed : parsed;
+                          updatePlacedModule(currentPlacedModule.id, { backWallGap: stored });
                         }
                       }}
                       onKeyDown={(e) => {
                         if (e.key === 'Enter') (e.target as HTMLInputElement).blur();
                         else if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
                           e.preventDefault();
-                          const next = stepBackWallGapMm(
-                            currentPlacedModule.backWallGap,
-                            e.key === 'ArrowUp' ? 1 : -1
-                          );
-                          updatePlacedModule(currentPlacedModule.id, { backWallGap: next });
+                          if (isInsertFrameRow) {
+                            // 표시값 기준 ↑↓: 표시값 +1/-1 → 저장값 부호 반대
+                            const curDisp = -(currentPlacedModule.backWallGap ?? 0);
+                            const nextDisp = curDisp + (e.key === 'ArrowUp' ? 1 : -1);
+                            updatePlacedModule(currentPlacedModule.id, { backWallGap: -nextDisp });
+                          } else {
+                            const next = stepBackWallGapMm(
+                              currentPlacedModule.backWallGap,
+                              e.key === 'ArrowUp' ? 1 : -1
+                            );
+                            updatePlacedModule(currentPlacedModule.id, { backWallGap: next });
+                          }
                         }
                       }}
                       className={styles.depthInput}
@@ -2610,7 +2625,8 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                     <span className={styles.unit}>mm</span>
                   </div>
                 </div>
-              )}
+                );
+              })()}
             </div>
           </div>
           
@@ -2859,8 +2875,10 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                       onBlur={() => {
                         const val = parseInt(freeWidthInput, 10);
                         const isSlotMode = spaceInfo.layoutMode !== 'free-placement';
+                        // 키큰장찬넬: 슬롯 배치여도 자유배치처럼 좌측 고정 / 우측으로만 확장
+                        const isInsertFrameWidth = typeof currentPlacedModule?.moduleId === 'string' && currentPlacedModule.moduleId.includes('insert-frame');
 
-                        if (isSlotMode && currentPlacedModule) {
+                        if (isSlotMode && !isInsertFrameWidth && currentPlacedModule) {
                           // 슬롯 모드: adjustSlotWidth 사용
                           if (!isNaN(val) && val >= 200 && currentPlacedModule.slotIndex !== undefined) {
                             // max 검증: internalWidth - 다른 고정합 - 남은슬롯×200
@@ -2870,15 +2888,17 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                           }
                         } else if (!isNaN(val) && val >= 100 && val <= 2400 && currentPlacedModule) {
                           // 자유배치 모드: 기존 로직
+                          // 키큰장찬넬은 슬롯배치여도 좌측 고정 적용
                           const freshModule = useFurnitureStore.getState().placedModules.find(m => m.id === currentPlacedModule.id) || currentPlacedModule;
                           const freshAll = useFurnitureStore.getState().placedModules;
                           const freshSI = useSpaceConfigStore.getState().spaceInfo;
-                          const newX = freshModule.isFreePlacement
+                          const newX = (freshModule.isFreePlacement || isInsertFrameWidth)
                             ? calcResizedPositionX(freshModule, val, freshAll, freshSI)
                             : freshModule.position.x;
                           updatePlacedModule(currentPlacedModule.id, {
                             freeWidth: val,
                             moduleWidth: val,
+                            customWidth: val,
                             position: { ...freshModule.position, x: newX },
                             userResizedWidth: true, // 사용자가 직접 폭 변경 → 이동 시 자동 리사이즈 차단
                           } as any);
@@ -2921,9 +2941,10 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                         else if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
                           e.preventDefault();
                           const isSlotMode = spaceInfo.layoutMode !== 'free-placement';
+                          const isInsertFrameKey = typeof currentPlacedModule?.moduleId === 'string' && currentPlacedModule.moduleId.includes('insert-frame');
                           const freshMod = useFurnitureStore.getState().placedModules.find(m => m.id === currentPlacedModule?.id);
 
-                          if (isSlotMode && currentPlacedModule && freshMod) {
+                          if (isSlotMode && !isInsertFrameKey && currentPlacedModule && freshMod) {
                             // 슬롯 모드: adjustSlotWidth 사용
                             const curW = freshMod.slotCustomWidth ?? freshMod.customWidth ?? moduleData.dimensions.width;
                             const next = Math.max(200, curW + (e.key === 'ArrowUp' ? 1 : -1));
@@ -2931,19 +2952,20 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                             const { adjustSlotWidth } = useFurnitureStore.getState();
                             adjustSlotWidth(currentPlacedModule.id, next);
                           } else {
-                            // 자유배치 모드: 기존 로직
-                            const curW = freshMod?.freeWidth || parseInt(freeWidthInput, 10) || (currentPlacedModule?.freeWidth || moduleData.dimensions.width);
+                            // 자유배치 모드 (또는 키큰장찬넬): 좌측 고정 / 우측으로만 확장
+                            const curW = freshMod?.freeWidth || freshMod?.customWidth || parseInt(freeWidthInput, 10) || (currentPlacedModule?.freeWidth || moduleData.dimensions.width);
                             const next = Math.max(100, Math.min(2400, curW + (e.key === 'ArrowUp' ? 1 : -1)));
                             setFreeWidthInput(next.toString());
                             if (currentPlacedModule && freshMod) {
                               const freshAll = useFurnitureStore.getState().placedModules;
                               const freshSI = useSpaceConfigStore.getState().spaceInfo;
-                              const newX = freshMod.isFreePlacement
+                              const newX = (freshMod.isFreePlacement || isInsertFrameKey)
                                 ? calcResizedPositionX(freshMod, next, freshAll, freshSI)
                                 : freshMod.position.x;
                               updatePlacedModule(currentPlacedModule.id, {
                                 freeWidth: next,
                                 moduleWidth: next,
+                                customWidth: next,
                                 position: { ...freshMod.position, x: newX },
                               });
                             }
@@ -3135,7 +3157,8 @@ const PlacedModulePropertiesPanel: React.FC = () => {
           )}
 
           {/* 도어 치수 (읽기 전용) — 몸통치수 바로 아래, 편집 탭 전용 */}
-          {!showDetails && currentPlacedModule && currentPlacedModule.hasDoor && (() => {
+          {/* 키큰장 찬넬(insert-frame)은 도어 없는 채움재 → 도어 옵션 전체 숨김 */}
+          {!showDetails && currentPlacedModule && currentPlacedModule.hasDoor && !(typeof currentPlacedModule.moduleId === 'string' && currentPlacedModule.moduleId.includes('insert-frame')) && (() => {
             const bodyWidth = (() => {
               const v = parseInt(freeWidthInput, 10);
               if (!isNaN(v) && v > 0) return v;
@@ -3144,11 +3167,63 @@ const PlacedModulePropertiesPanel: React.FC = () => {
             // 실제 3D 렌더링과 동일한 공식 (DoorModule.tsx 의 doorGap=3)
             // 슬롯(도어 1장이 차지하는 너비) - 3mm = 좌우 1.5mm씩 안쪽 갭
             const isDualSlot = currentPlacedModule.isDualSlot || currentPlacedModule.moduleId?.startsWith('dual-');
+            // 키큰장 찬넬(insert-frame) 인접 시 도어 47mm 확장 (DoorModule.tsx INSERT_FRAME_DOOR_EXTENSION_MM)
+            const INSERT_FRAME_DOOR_EXTENSION_MM = 47;
+            const isInsertMod = (m: any) => typeof m?.moduleId === 'string' && m.moduleId.includes('insert-frame');
+            const isCurrentInsert = isInsertMod(currentPlacedModule);
+            let insertExtensionMm = 0;
+            if (!isCurrentInsert) {
+              if (currentPlacedModule.isFreePlacement) {
+                // 자유배치: 위치 기반 인접성 (DoorModule.tsx insertFrameAdjacency 동일 식)
+                const myX = currentPlacedModule.position?.x ?? 0;
+                const myWidthThree = (currentPlacedModule.freeWidth ?? currentPlacedModule.customWidth ?? currentPlacedModule.moduleWidth ?? 0) * 0.01;
+                const myLeft = myX - myWidthThree / 2;
+                const myRight = myX + myWidthThree / 2;
+                const TOL = 0.5;
+                placedModules.forEach((m: any) => {
+                  if (!m.isFreePlacement || !isInsertMod(m) || m.id === currentPlacedModule.id) return;
+                  const mx = m.position?.x ?? 0;
+                  const mw = (m.freeWidth ?? m.customWidth ?? m.moduleWidth ?? 0) * 0.01;
+                  // 좌측 인접
+                  if (mx < myX && Math.abs((mx + mw / 2) - myLeft) <= TOL) {
+                    insertExtensionMm += INSERT_FRAME_DOOR_EXTENSION_MM;
+                  }
+                  // 우측 인접
+                  if (mx > myX && Math.abs((mx - mw / 2) - myRight) <= TOL) {
+                    insertExtensionMm += INSERT_FRAME_DOOR_EXTENSION_MM;
+                  }
+                });
+              } else {
+                // 슬롯배치: slotIndex 기반 인접성
+                const myZone = currentPlacedModule.zone || 'normal';
+                const mySlot = currentPlacedModule.slotIndex;
+                if (mySlot !== undefined) {
+                  const isDualSelf = !!currentPlacedModule.isDualSlot;
+                  const rightEdge = isDualSelf ? mySlot + 1 : mySlot;
+                  placedModules.forEach((m: any) => {
+                    if (m.id === currentPlacedModule.id) return;
+                    if ((m.zone || 'normal') !== myZone || m.isFreePlacement) return;
+                    if (!isInsertMod(m)) return;
+                    if (m.slotIndex === mySlot - 1 || (m.isDualSlot && m.slotIndex === mySlot - 2)) {
+                      insertExtensionMm += INSERT_FRAME_DOOR_EXTENSION_MM;
+                    }
+                    if (m.slotIndex === rightEdge + 1) {
+                      insertExtensionMm += INSERT_FRAME_DOOR_EXTENSION_MM;
+                    }
+                  });
+                }
+              }
+            }
+            // 도어 확장/축소 토글: ON 시 사용자 입력값(절대 확장량) 적용, OFF 시 확장 없음(몸통-3mm)
+            const doorWidthAdjustEnabled = !!(currentPlacedModule as any).doorWidthAdjustEnabled;
+            const totalExtensionMm = doorWidthAdjustEnabled
+              ? ((currentPlacedModule as any).doorWidthAdjustMm ?? insertExtensionMm)
+              : 0;
             // 듀얼: 도어 2장 → 슬롯 1개 너비 = 몸통/2 → 도어 1장 너비 = (몸통/2) - 3
-            // 싱글: 도어 1장 → 도어 너비 = 몸통 - 3
+            // 싱글: 도어 1장 → 도어 너비 = 몸통 - 3 + 확장량
             const doorW = isDualSlot
               ? Math.max(0, Math.round(bodyWidth / 2) - 3)
-              : Math.max(0, bodyWidth - 3);
+              : Math.max(0, bodyWidth - 3 + totalExtensionMm);
             // 도어 높이: 공간 높이 - 도어 상갭 - 도어 하갭 (전체 가구 높이 기준)
             const spaceH = spaceInfo.height || 0;
             const doorH = Math.max(0, spaceH - (doorTopGap || 0) - (doorBottomGap || 0));
@@ -3184,12 +3259,70 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                     </div>
                   </div>
                 </div>
+                {/* 도어 확장/축소 토글: 사용자가 도어 폭을 좌/우 방향으로 +/- 조정 */}
+                <div style={{ marginTop: '8px', display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', color: 'var(--theme-text-primary)', cursor: 'pointer' }}>
+                    <input
+                      type="checkbox"
+                      checked={!!(currentPlacedModule as any).doorWidthAdjustEnabled}
+                      onChange={(e) => {
+                        const enabled = e.target.checked;
+                        // 토글 ON 시 현재 자동 확장값(insertExtensionMm)을 초기값으로 박음
+                        // 토글 OFF 시 사용자 입력값 제거(자동값 복귀)
+                        if (enabled) {
+                          const initial = (currentPlacedModule as any).doorWidthAdjustMm ?? insertExtensionMm;
+                          updatePlacedModule(currentPlacedModule.id, {
+                            doorWidthAdjustEnabled: true,
+                            doorWidthAdjustMm: initial,
+                          } as any);
+                        } else {
+                          updatePlacedModule(currentPlacedModule.id, {
+                            doorWidthAdjustEnabled: false,
+                          } as any);
+                        }
+                      }}
+                      style={{ cursor: 'pointer', accentColor: 'var(--theme-primary, #4a90d9)' }}
+                    />
+                    <span>도어 확장/축소</span>
+                  </label>
+                  {!!(currentPlacedModule as any).doorWidthAdjustEnabled && (
+                    <>
+                      {/* 도어 확장량 mm 입력 (현재 적용 절대값, +확장 / -축소). 경첩 반대 방향으로 적용 */}
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                        <input
+                          type="text"
+                          inputMode="numeric"
+                          value={(currentPlacedModule as any).doorWidthAdjustMm ?? insertExtensionMm}
+                          onChange={(e) => {
+                            const v = e.target.value;
+                            if (v === '' || v === '-' || /^-?\d+$/.test(v)) {
+                              const num = v === '' || v === '-' ? 0 : parseInt(v, 10);
+                              updatePlacedModule(currentPlacedModule.id, { doorWidthAdjustMm: Math.max(-500, Math.min(500, num)) } as any);
+                            }
+                          }}
+                          onKeyDown={(e) => {
+                            if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                              e.preventDefault();
+                              const cur = (currentPlacedModule as any).doorWidthAdjustMm ?? insertExtensionMm;
+                              const next = Math.max(-500, Math.min(500, cur + (e.key === 'ArrowUp' ? 1 : -1)));
+                              updatePlacedModule(currentPlacedModule.id, { doorWidthAdjustMm: next } as any);
+                            }
+                          }}
+                          style={{ width: '60px', padding: '2px 4px', border: '1px solid var(--theme-border)', borderRadius: '4px', fontSize: '12px', textAlign: 'right' }}
+                        />
+                        <span style={{ fontSize: '11px', color: 'var(--theme-text-secondary)' }}>mm</span>
+                      </div>
+                      <span style={{ fontSize: '10px', color: 'var(--theme-text-tertiary)' }}>(+ 확장 / − 축소, 경첩 반대 방향)</span>
+                    </>
+                  )}
+                </div>
               </div>
             );
           })()}
 
           {/* 경첩 방향 선택 (도어치수 바로 아래로 이동) — 도어 + 싱글 가구 + 상세보기 아닐 때 */}
-          {!showDetails && hasDoor && isSingleFurniture && (
+          {/* 키큰장 찬넬(insert-frame)은 도어 없는 채움재 → 경첩 방향도 숨김 */}
+          {!showDetails && hasDoor && isSingleFurniture && !(typeof currentPlacedModule?.moduleId === 'string' && currentPlacedModule.moduleId.includes('insert-frame')) && (
             <div className={styles.propertySection}>
               <div className={styles.hingeSubSection}>
                 <h6 className={styles.subSectionTitle}>{t('furniture.hingeDirection')}</h6>
@@ -3833,7 +3966,8 @@ const PlacedModulePropertiesPanel: React.FC = () => {
           })()}
 
           {/* 상,걸래받이 — 우측바와 동일 형태 (해당 가구 단일) — 편집 탭 전용 */}
-          {!showDetails && currentPlacedModule && !currentPlacedModule.isSurroundPanel && (() => {
+          {/* 키큰장 찬넬(insert-frame)은 도어 없는 채움재 → 상단몰딩/걸레받이 옵션 숨김 */}
+          {!showDetails && currentPlacedModule && !currentPlacedModule.isSurroundPanel && !(typeof currentPlacedModule.moduleId === 'string' && currentPlacedModule.moduleId.includes('insert-frame')) && (() => {
             const mod = currentPlacedModule;
             const globalTop = spaceInfo.frameSize?.top ?? 30;
             const globalBase = spaceInfo.baseConfig?.height ?? 65;
@@ -4373,7 +4507,8 @@ const PlacedModulePropertiesPanel: React.FC = () => {
 
 
           {/* 엔드패널(EP) 설정 — 편집 탭 전용 */}
-          {!showDetails && currentPlacedModule && moduleData && (
+          {/* 키큰장 찬넬(insert-frame)은 자체가 채움재 → 엔드패널 부착 의미 없음 */}
+          {!showDetails && currentPlacedModule && moduleData && !(typeof currentPlacedModule.moduleId === 'string' && currentPlacedModule.moduleId.includes('insert-frame')) && (
             <div className={styles.propertySection}>
               <h5 className={styles.sectionTitle}>엔드패널</h5>
               {/* 좌/우 EP 체크박스 */}
