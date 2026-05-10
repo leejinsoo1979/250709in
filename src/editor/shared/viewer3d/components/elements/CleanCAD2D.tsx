@@ -3846,6 +3846,11 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           const leftTopGapForDim = leftmostMod?.hasTopFrame === false
             ? Math.max(0, Math.round(leftmostMod?.topFrameGap ?? 0))
             : 0;
+          if (isFreePlacement && leftmostMod?.hasBase === false && leftmostMod?.hasTopFrame !== false && leftCategoryResolved === 'full') {
+            const absorbedBase = leftmostMod.baseFrameHeight ?? globalBottomFrameH;
+            const floatH = leftmostMod.individualFloatHeight ?? 0;
+            furnitureH += (absorbedBase - floatH);
+          }
           if (isFreePlacement && leftmostMod?.hasTopFrame === false && leftCategoryResolved === 'full') {
             furnitureH = Math.max(0, effectiveH - floorFinishForHeight - bottomFrameH - leftTopGapForDim);
           }
@@ -4600,6 +4605,11 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           const rTopGapForDim = rightmostMod?.hasTopFrame === false
             ? Math.max(0, Math.round(rightmostMod?.topFrameGap ?? 0))
             : 0;
+          if (isFreePlacement && rightmostMod?.hasBase === false && rightmostMod?.hasTopFrame !== false && rightCategoryResolved === 'full') {
+            const rAbsorbedBase = rightmostMod.baseFrameHeight ?? rGlobalBottomFrameH;
+            const rFloatH = rightmostMod.individualFloatHeight ?? 0;
+            rFurnitureH += (rAbsorbedBase - rFloatH);
+          }
           if (isFreePlacement && rightmostMod?.hasTopFrame === false && rightCategoryResolved === 'full') {
             rFurnitureH = Math.max(0, rEffectiveH - rFloorFinishForHeight - rBottomFrameH - rTopGapForDim);
           }
