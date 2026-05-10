@@ -4740,14 +4740,18 @@ const Room: React.FC<RoomProps> = ({
                       (modMidShoe.includes('fridge-cabinet') && !modMidShoe.includes('built-in-fridge'));
                     let nSectionFrameZ: number | null = null;
                     if (isNSectionMod) {
-                      const sectionDepthsArr = (mod as any).sectionDepths as number[] | undefined;
-                      const lastIdx = sectionDepthsArr ? sectionDepthsArr.length - 1 : -1;
-                      const topSectionDepthMm = (sectionDepthsArr && lastIdx >= 0 && sectionDepthsArr[lastIdx])
-                        ? sectionDepthsArr[lastIdx]
-                        : (mod.customDepth || mod.freeDepth || 600);
-                      const nBackZ = fiZOffset - fiFurnitureDepth / 2 - mmToThreeUnits(20);
-                      const nFrontZ = nBackZ + mmToThreeUnits(topSectionDepthMm);
-                      nSectionFrameZ = nFrontZ - mmToThreeUnits(END_PANEL_THICKNESS) / 2;
+                      if (modMidShoe.includes('pull-out-cabinet')) {
+                        nSectionFrameZ = topZPosition + computeDepthZOffset(mod, 'upper');
+                      } else {
+                        const sectionDepthsArr = (mod as any).sectionDepths as number[] | undefined;
+                        const lastIdx = sectionDepthsArr ? sectionDepthsArr.length - 1 : -1;
+                        const topSectionDepthMm = (sectionDepthsArr && lastIdx >= 0 && sectionDepthsArr[lastIdx])
+                          ? sectionDepthsArr[lastIdx]
+                          : (mod.customDepth || mod.freeDepth || 600);
+                        const nBackZ = fiZOffset - fiFurnitureDepth / 2 - mmToThreeUnits(20);
+                        const nFrontZ = nBackZ + mmToThreeUnits(topSectionDepthMm);
+                        nSectionFrameZ = nFrontZ - mmToThreeUnits(END_PANEL_THICKNESS) / 2;
+                      }
                     }
                     // 가구별 뒷벽 이격(backWallGap) 반영: 상단몰딩도 가구 본체와 동일하게 앞으로 이동
                     const modTopBackWallGapMm = (mod as any).backWallGap ?? 0;
