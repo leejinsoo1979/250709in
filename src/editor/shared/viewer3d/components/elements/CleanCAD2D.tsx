@@ -4281,21 +4281,45 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 </>
               )}
 
-              {/* 상단몰딩 구분 틱 & 치수 */}
-              {topFrameH > 0 && (() => {
+              {/* 상단몰딩/상단갭 구분 틱 & 치수 — 토글 OFF여도 사용자 입력 상단갭 표시 */}
+              {(() => {
+                // 토글 OFF + 사용자 입력 상단갭이 있으면 그 값을 표시 (몰딩 자리가 빈 공간)
+                const userTopGap = leftmostMod?.hasTopFrame === false
+                  ? Math.max(0, Math.round(leftmostMod?.topFrameGap ?? 0))
+                  : 0;
+                const displayTopFrame = leftmostMod?.hasTopFrame === false
+                  ? userTopGap
+                  : topFrameH;
+                if (displayTopFrame <= 0) return null;
                 const topFrameBottomRef = hasDualCabinet ? upperCabinetTopY : furnitureTopY;
                 return (
                   <>
                     <NativeLine name="dimension_line"
+                      points={[[innerX, topFrameBottomRef, 0.003], [innerX, effectiveCeilingY, 0.003]]}
+                      color={frameDimensionColor} lineWidth={0.8} renderOrder={100002} depthTest={false}
+                    />
+                    <NativeLine name="dimension_line"
                       points={[[innerX - mmToThreeUnits(15), effectiveCeilingY, 0.002], [innerX + mmToThreeUnits(15), effectiveCeilingY, 0.002]]}
                       color={frameDimensionColor} lineWidth={0.6} renderOrder={100000} depthTest={false}
+                    />
+                    <NativeLine name="dimension_line"
+                      points={[[innerX - mmToThreeUnits(15), topFrameBottomRef, 0.002], [innerX + mmToThreeUnits(15), topFrameBottomRef, 0.002]]}
+                      color={frameDimensionColor} lineWidth={0.6} renderOrder={100000} depthTest={false}
+                    />
+                    <NativeLine name="dimension_line"
+                      points={[[leftOffset, effectiveCeilingY, 0.003], [innerX - mmToThreeUnits(20), effectiveCeilingY, 0.003]]}
+                      color={frameDimensionColor} lineWidth={0.6} renderOrder={100002} depthTest={false}
+                    />
+                    <NativeLine name="dimension_line"
+                      points={[[leftOffset, topFrameBottomRef, 0.003], [innerX - mmToThreeUnits(20), topFrameBottomRef, 0.003]]}
+                      color={frameDimensionColor} lineWidth={0.6} renderOrder={100002} depthTest={false}
                     />
                     <Text renderOrder={100001} depthTest={false}
                       position={[innerX - mmToThreeUnits(25), (topFrameBottomRef + effectiveCeilingY) / 2, 0.01]}
                       fontSize={baseFontSize} color={frameDimensionColor} anchorX="right" anchorY="middle"
                       outlineWidth={textOutlineWidth} outlineColor={textOutlineColor}
                     >
-                      {topFrameH}
+                      {displayTopFrame}
                     </Text>
                   </>
                 );
@@ -4944,21 +4968,44 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 </>
               )}
 
-              {/* 상단몰딩 구분 틱 & 치수 */}
-              {rTopFrameH > 0 && (() => {
+              {/* 상단몰딩/상단갭 구분 틱 & 치수 — 토글 OFF여도 사용자 입력 상단갭 표시 */}
+              {(() => {
+                const rUserTopGap = rightmostMod?.hasTopFrame === false
+                  ? Math.max(0, Math.round(rightmostMod?.topFrameGap ?? 0))
+                  : 0;
+                const rDisplayTopFrame = rightmostMod?.hasTopFrame === false
+                  ? rUserTopGap
+                  : rTopFrameH;
+                if (rDisplayTopFrame <= 0) return null;
                 const rTopFrameBottomRef = rHasDualCabinet ? rUpperCabinetTopY : rFurnitureTopY;
                 return (
                   <>
                     <NativeLine name="dimension_line"
+                      points={[[rightInnerX, rTopFrameBottomRef, 0.003], [rightInnerX, rEffectiveCeilingY, 0.003]]}
+                      color={frameDimensionColor} lineWidth={0.8} renderOrder={100002} depthTest={false}
+                    />
+                    <NativeLine name="dimension_line"
                       points={[[rightInnerX - mmToThreeUnits(15), rEffectiveCeilingY, 0.002], [rightInnerX + mmToThreeUnits(15), rEffectiveCeilingY, 0.002]]}
                       color={frameDimensionColor} lineWidth={0.6} renderOrder={100000} depthTest={false}
+                    />
+                    <NativeLine name="dimension_line"
+                      points={[[rightInnerX - mmToThreeUnits(15), rTopFrameBottomRef, 0.002], [rightInnerX + mmToThreeUnits(15), rTopFrameBottomRef, 0.002]]}
+                      color={frameDimensionColor} lineWidth={0.6} renderOrder={100000} depthTest={false}
+                    />
+                    <NativeLine name="dimension_line"
+                      points={[[rightInnerX + mmToThreeUnits(20), rEffectiveCeilingY, 0.003], [rightWallX, rEffectiveCeilingY, 0.003]]}
+                      color={frameDimensionColor} lineWidth={0.6} renderOrder={100002} depthTest={false}
+                    />
+                    <NativeLine name="dimension_line"
+                      points={[[rightInnerX + mmToThreeUnits(20), rTopFrameBottomRef, 0.003], [rightWallX, rTopFrameBottomRef, 0.003]]}
+                      color={frameDimensionColor} lineWidth={0.6} renderOrder={100002} depthTest={false}
                     />
                     <Text renderOrder={100001} depthTest={false}
                       position={[rightInnerX + mmToThreeUnits(10), (rTopFrameBottomRef + rEffectiveCeilingY) / 2, 0.01]}
                       fontSize={baseFontSize} color={frameDimensionColor} anchorX="left" anchorY="middle"
                       outlineWidth={textOutlineWidth} outlineColor={textOutlineColor}
                     >
-                      {rTopFrameH}
+                      {rDisplayTopFrame}
                     </Text>
                   </>
                 );
@@ -5490,11 +5537,17 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         const moduleWidth = mmToThreeUnits(actualWidth);
         const leftX = actualPositionX - moduleWidth / 2;
         const rightX = actualPositionX + moduleWidth / 2;
-        // 가구 카테고리: 하부장은 하부장 바로 위에, 상부장/키큰장은 공간 상단에 너비 치수 표시
-        const moduleCategoryForDim = moduleData.category
-          ?? (module.moduleId?.includes('upper') ? 'upper'
-            : module.moduleId?.includes('lower') ? 'lower' : 'full');
-        const isLowerDim = moduleCategoryForDim === 'lower';
+	        // 가구 카테고리: 하부장은 하부장 바로 위에, 상부장/키큰장은 공간 상단에 너비 치수 표시
+	        const moduleCategoryForDim = moduleData.category
+	          ?? (module.moduleId?.includes('upper') ? 'upper'
+	            : module.moduleId?.includes('lower') ? 'lower' : 'full');
+	        const isLowerDim = moduleCategoryForDim === 'lower';
+	        const topGapMmForDim = module.hasTopFrame === false
+	          ? Math.max(0, Math.round(module.topFrameGap ?? 0))
+	          : 0;
+	        const showTopGapHeightGuide = currentViewDirection === 'front'
+	          && topGapMmForDim > 0
+	          && (moduleCategoryForDim === 'full' || moduleCategoryForDim === 'upper');
         // 하부장 상단 Y(mm) = 바닥마감재 + 걸래받이(받침대) + 개별 띄움 + 가구 높이
         // 3D 배치 좌표계(바닥=0)에서 계산
         const floorFinishMmForDim = spaceInfo.hasFloorFinish && spaceInfo.floorFinish?.height
@@ -5717,7 +5770,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             )}
 
             {/* 자유배치: 구간 내 좌/우 이격 치수선 (가구~구간경계 거리) */}
-            {isFreePlacement && (() => {
+	            {isFreePlacement && (() => {
               // 이격 치수선 Y: 가구 수직 중앙 (공간 안에 표시)
               const modHeightMm = module.freeHeight ?? module.customHeight ?? moduleData.dimensions.height;
               const modCat = moduleData.category
@@ -5925,11 +5978,74 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   </Text>
                 </>)}
               </>);
-            })()}
+	            })()}
 
-          </group>
-        );
-      })}
+	            {/* 정면뷰 상단갭 세로 치수가이드 */}
+	            {showTopGapHeightGuide && (() => {
+	              const topGapTopY = spaceHeight;
+	              const topGapBottomY = spaceHeight - mmToThreeUnits(topGapMmForDim);
+	              const topGapDimX = rightX + mmToThreeUnits(120);
+	              const topGapExtX = topGapDimX + mmToThreeUnits(20);
+	              const topGapTextX = topGapDimX + mmToThreeUnits(60);
+
+	              return (
+	                <group key={`front-top-gap-guide-${module.id}`}>
+	                  <NativeLine name="dimension_line"
+	                    points={[[topGapDimX, topGapBottomY, 0.002], [topGapDimX, topGapTopY, 0.002]]}
+	                    color={dimensionColor}
+	                    lineWidth={0.6}
+	                    renderOrder={1000000}
+	                    depthTest={false}
+	                  />
+	                  <NativeLine name="dimension_line"
+	                    points={createArrowHead([topGapDimX, topGapBottomY, 0.002], [topGapDimX, topGapBottomY - 0.015, 0.002])}
+	                    color={dimensionColor}
+	                    lineWidth={0.6}
+	                    renderOrder={1000000}
+	                    depthTest={false}
+	                  />
+	                  <NativeLine name="dimension_line"
+	                    points={createArrowHead([topGapDimX, topGapTopY, 0.002], [topGapDimX, topGapTopY + 0.015, 0.002])}
+	                    color={dimensionColor}
+	                    lineWidth={0.6}
+	                    renderOrder={1000000}
+	                    depthTest={false}
+	                  />
+	                  <NativeLine name="dimension_line"
+	                    points={[[rightX, topGapBottomY, 0.001], [topGapExtX, topGapBottomY, 0.001]]}
+	                    color={dimensionColor}
+	                    lineWidth={0.3}
+	                    renderOrder={1000000}
+	                    depthTest={false}
+	                  />
+	                  <NativeLine name="dimension_line"
+	                    points={[[rightX, topGapTopY, 0.001], [topGapExtX, topGapTopY, 0.001]]}
+	                    color={dimensionColor}
+	                    lineWidth={0.3}
+	                    renderOrder={1000000}
+	                    depthTest={false}
+	                  />
+	                  <Text
+	                    renderOrder={1000001}
+	                    depthTest={false}
+	                    position={[topGapTextX, (topGapBottomY + topGapTopY) / 2, 0.01]}
+	                    fontSize={baseFontSize}
+	                    color={textColor}
+	                    anchorX="center"
+	                    anchorY="middle"
+	                    outlineWidth={textOutlineWidth}
+	                    outlineColor={textOutlineColor}
+	                    rotation={[0, 0, Math.PI / 2]}
+	                  >
+	                    {topGapMmForDim}
+	                  </Text>
+	                </group>
+	              );
+	            })()}
+
+	          </group>
+	        );
+	      })}
 
       {/* 선반장(-shelf-) 모듈 입면뷰 각 칸 내경 편집 라벨
           공식: 첫칸=pos[0]-t/2, 중간=pos[i+1]-pos[i]-t, 마지막=sectionH-pos[N-1]-t/2 */}
@@ -6585,14 +6701,18 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
 
             // 개별 모듈의 baseFrameHeight 우선 사용 (선택된 슬롯 기준 가구)
             const viewMod = sideViewMod || leftmostModules[0];
-            // 가구별 상단몰딩 우선 (하부 OFF 시 상단몰딩이 확장된 값 반영)
+            // 가구별 상단몰딩/상단갭 우선 (하부 OFF 시 상단몰딩이 확장된 값 반영)
+            const isTopFrameOff = viewMod?.hasTopFrame === false;
             const rawTopFrame = viewMod?.topFrameThickness ?? globalTopFrame;
             // 하부 OFF 시 상단몰딩에 흡수된 걸래받이 크기 (FurnitureItem의 topDelta 계산과 동일)
             const globalBaseMm = spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height ?? 60) : 0;
             const baseFrameAbsorbed = viewMod?.hasBase === false
               ? (viewMod.baseFrameHeight ?? globalBaseMm)
               : 0;
-            const topFrameHeight = Math.max(0, rawTopFrame - baseFrameAbsorbed);
+            const topFrameHeight = isTopFrameOff
+              ? Math.max(0, Math.round(viewMod.topFrameGap ?? 0))
+              : Math.max(0, rawTopFrame - baseFrameAbsorbed);
+            const topSegmentColor = frameDimensionColor;
             // console.log('🔍 [CleanCAD2D 좌측 치수]', { ... }); // 진단용 로그 제거 (성능)
             // hasBase=false → 걸래받이 0 (individualFloatHeight만 반영)
             const bottomFrameHeight = viewMod?.hasBase === false
@@ -6623,13 +6743,15 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   ?? (viewMod.moduleId.includes('upper') ? 'upper'
                     : viewMod.moduleId.includes('lower') ? 'lower' : 'full');
                 if (category !== 'upper') {
-                  let moduleHeight = viewMod.freeHeight
-                    ?? viewMod.customHeight
-                    ?? moduleData?.dimensions.height
-                    ?? (viewMod.customConfig?.totalHeight || 2000);
+                  let moduleHeight = isTopFrameOff && category === 'full' && !viewMod.freeHeight
+                    ? cabinetPlacementHeight
+                    : (viewMod.freeHeight
+                      ?? viewMod.customHeight
+                      ?? moduleData?.dimensions.height
+                      ?? (viewMod.customConfig?.totalHeight || 2000));
                   // 걸래받이 OFF (hasBase=false): 가구가 걸래받이 자리를 흡수 — moduleHeight 보정
                   // (FurnitureItem.tsx의 furnitureHeightMm 보정과 동일)
-                  if (!viewMod.freeHeight && (viewMod as any).hasBase === false && category === 'full') {
+                  if (!isTopFrameOff && !viewMod.freeHeight && (viewMod as any).hasBase === false && category === 'full') {
                     const globalBase = spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height ?? 60) : 0;
                     const absorbedBase = (viewMod as any).baseFrameHeight ?? globalBase;
                     const floatH = (viewMod as any).individualFloatHeight ?? 0;
@@ -6871,28 +6993,28 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 </group>
                 )}
 
-                {/* 4. 상단 몰딩 높이 / 노서라운드일 때는 상부 이격거리 */}
-                {(
+                {/* 4. 상단 몰딩 높이 / 토글 OFF일 때는 상단갭 */}
+                {topFrameHeight > 0 && (
                 <group>
                   <Line
                     points={[[0, cabinetAreaTopY, rightDimensionZ], [0, topFrameTopY, rightDimensionZ]]}
-                    color={spaceInfo.surroundType === 'no-surround' ? textColor : frameDimensionColor}
+                    color={topSegmentColor}
                     lineWidth={0.6}
                   />
                   <Line
                     points={createArrowHead([0, cabinetAreaTopY, rightDimensionZ], [0, cabinetAreaTopY + 0.015, rightDimensionZ])}
-                    color={spaceInfo.surroundType === 'no-surround' ? textColor : frameDimensionColor}
+                    color={topSegmentColor}
                     lineWidth={0.6}
                   />
                   <Line
                     points={createArrowHead([0, topFrameTopY, rightDimensionZ], [0, topFrameTopY - 0.015, rightDimensionZ])}
-                    color={spaceInfo.surroundType === 'no-surround' ? textColor : frameDimensionColor}
+                    color={topSegmentColor}
                     lineWidth={0.6}
                   />
                   <Text
                   renderOrder={100001}
                   depthTest={false}
-                    position={[0, cabinetAreaTopY + mmToThreeUnits(topFrameHeight / 2), rightDimensionZ + mmToThreeUnits(60)]}
+                    position={[0, (cabinetAreaTopY + topFrameTopY) / 2, rightDimensionZ + mmToThreeUnits(60)]}
                     fontSize={baseFontSize}
                     color={textColor}
                     anchorX="center"
@@ -7128,16 +7250,20 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   lineWidth={0.3}
                 />
                 )}
-                <Line
-                  points={[[0, cabinetAreaTopY, spaceZOffset], [0, cabinetAreaTopY, rightDimensionZ - mmToThreeUnits(20)]]}
-                  color={dimensionColor}
-                  lineWidth={0.3}
-                />
-                <Line
-                  points={[[0, topY, spaceZOffset], [0, topY, rightDimensionZ - mmToThreeUnits(20)]]}
-                  color={dimensionColor}
-                  lineWidth={0.3}
-                />
+                {topFrameHeight > 0 && (
+                  <>
+                    <Line
+                      points={[[0, cabinetAreaTopY, spaceZOffset], [0, cabinetAreaTopY, rightDimensionZ - mmToThreeUnits(20)]]}
+                      color={topSegmentColor}
+                      lineWidth={0.3}
+                    />
+                    <Line
+                      points={[[0, topFrameTopY, spaceZOffset], [0, topFrameTopY, rightDimensionZ - mmToThreeUnits(20)]]}
+                      color={topSegmentColor}
+                      lineWidth={0.3}
+                    />
+                  </>
+                )}
               </>
             );
           })()}
@@ -7703,13 +7829,17 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
 
             // 개별 모듈의 baseFrameHeight 우선 사용 (선택된 슬롯 기준 가구)
             const viewMod = sideViewMod || rightmostModules[0];
-            // 가구별 상단몰딩 우선 (하부 OFF 시 상단몰딩에 흡수된 베이스 분 빼서 표시)
+            // 가구별 상단몰딩/상단갭 우선 (하부 OFF 시 상단몰딩에 흡수된 베이스 분 빼서 표시)
+            const isTopFrameOff = viewMod?.hasTopFrame === false;
             const rawTopFrame = viewMod?.topFrameThickness ?? globalTopFrame;
             const globalBaseMm = spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height ?? 60) : 0;
             const baseFrameAbsorbed = viewMod?.hasBase === false
               ? (viewMod.baseFrameHeight ?? globalBaseMm)
               : 0;
-            const topFrameHeight = Math.max(0, rawTopFrame - baseFrameAbsorbed);
+            const topFrameHeight = isTopFrameOff
+              ? Math.max(0, Math.round(viewMod.topFrameGap ?? 0))
+              : Math.max(0, rawTopFrame - baseFrameAbsorbed);
+            const topSegmentColor = frameDimensionColor;
             // console.log('🔍 [CleanCAD2D 우측 치수]', { viewModId: viewMod?.id, rawTopFrame, baseFrameAbsorbed, topFrameHeight, hasBase: viewMod?.hasBase });
             // hasBase=false → 걸래받이 0 (individualFloatHeight만 반영)
             const bottomFrameHeight = viewMod?.hasBase === false
@@ -7740,13 +7870,15 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   ?? (viewMod.moduleId.includes('upper') ? 'upper'
                     : viewMod.moduleId.includes('lower') ? 'lower' : 'full');
                 if (category !== 'upper') {
-                  let moduleHeight = viewMod.freeHeight
-                    ?? viewMod.customHeight
-                    ?? moduleData?.dimensions.height
-                    ?? (viewMod.customConfig?.totalHeight || 2000);
+                  let moduleHeight = isTopFrameOff && category === 'full' && !viewMod.freeHeight
+                    ? cabinetPlacementHeight
+                    : (viewMod.freeHeight
+                      ?? viewMod.customHeight
+                      ?? moduleData?.dimensions.height
+                      ?? (viewMod.customConfig?.totalHeight || 2000));
                   // 걸래받이 OFF (hasBase=false): 가구가 걸래받이 자리를 흡수 — moduleHeight 보정
                   // (FurnitureItem.tsx의 furnitureHeightMm 보정과 동일)
-                  if (!viewMod.freeHeight && (viewMod as any).hasBase === false && category === 'full') {
+                  if (!isTopFrameOff && !viewMod.freeHeight && (viewMod as any).hasBase === false && category === 'full') {
                     const globalBase = spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height ?? 60) : 0;
                     const absorbedBase = (viewMod as any).baseFrameHeight ?? globalBase;
                     const floatH = (viewMod as any).individualFloatHeight ?? 0;
@@ -7997,28 +8129,28 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 </group>
                 )}
 
-                {/* 4. 상단 몰딩 높이 / 노서라운드일 때는 상부 이격거리 */}
-                {(
+                {/* 4. 상단 몰딩 높이 / 토글 OFF일 때는 상단갭 */}
+                {topFrameHeight > 0 && (
                 <group>
                   <Line
                     points={[[spaceWidth, cabinetAreaTopY, leftDimensionZ], [spaceWidth, topFrameLineTopY, leftDimensionZ]]}
-                    color={spaceInfo.surroundType === 'no-surround' ? textColor : frameDimensionColor}
+                    color={topSegmentColor}
                     lineWidth={0.6}
                   />
                   <Line
                     points={createArrowHead([spaceWidth, cabinetAreaTopY, leftDimensionZ], [spaceWidth, cabinetAreaTopY + 0.015, leftDimensionZ])}
-                    color={spaceInfo.surroundType === 'no-surround' ? textColor : frameDimensionColor}
+                    color={topSegmentColor}
                     lineWidth={0.6}
                   />
                   <Line
                     points={createArrowHead([spaceWidth, topFrameLineTopY, leftDimensionZ], [spaceWidth, topFrameLineTopY - 0.015, leftDimensionZ])}
-                    color={spaceInfo.surroundType === 'no-surround' ? textColor : frameDimensionColor}
+                    color={topSegmentColor}
                     lineWidth={0.6}
                   />
                   <Text
                   renderOrder={100001}
                   depthTest={false}
-                    position={[spaceWidth, mmToThreeUnits(spaceInfo.height - topFrameHeight / 2), leftDimensionZ + mmToThreeUnits(60)]}
+                    position={[spaceWidth, (cabinetAreaTopY + topFrameLineTopY) / 2, leftDimensionZ + mmToThreeUnits(60)]}
                     fontSize={baseFontSize}
                     color={textColor}
                     anchorX="center"
@@ -8081,16 +8213,20 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   lineWidth={0.3}
                 />
                 )}
-                <Line
-                  points={[[spaceWidth, furnitureTopY, spaceZOffset], [spaceWidth, furnitureTopY, leftDimensionZ + mmToThreeUnits(20)]]}
-                  color={dimensionColor}
-                  lineWidth={0.3}
-                />
-                <Line
-                  points={[[spaceWidth, topFrameTopY, spaceZOffset + spaceDepth], [spaceWidth, topFrameTopY, leftDimensionZ + mmToThreeUnits(20)]]}
-                  color={dimensionColor}
-                  lineWidth={0.3}
-                />
+                {topFrameHeight > 0 && (
+                  <>
+                    <Line
+                      points={[[spaceWidth, cabinetAreaTopY, spaceZOffset], [spaceWidth, cabinetAreaTopY, leftDimensionZ + mmToThreeUnits(20)]]}
+                      color={topSegmentColor}
+                      lineWidth={0.3}
+                    />
+                    <Line
+                      points={[[spaceWidth, topFrameTopY, spaceZOffset], [spaceWidth, topFrameTopY, leftDimensionZ + mmToThreeUnits(20)]]}
+                      color={topSegmentColor}
+                      lineWidth={0.3}
+                    />
+                  </>
+                )}
                 {hasExtraFurnitureHeight && (
                 <Line
                   points={[[spaceWidth, maxFurnitureTop, spaceZOffset + spaceDepth], [spaceWidth, maxFurnitureTop, extraFurnitureZ + mmToThreeUnits(10)]]}
