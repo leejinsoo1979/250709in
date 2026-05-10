@@ -1126,8 +1126,11 @@ const PlacedModulePropertiesPanel: React.FC = () => {
           setHsCenterWidthInput(hsCW);
           setHsCenterDepthInput(hsCD);
         } else {
-          // 표준 가구: modelConfig.sections 기반 초기화
-          const mcSections = moduleData.modelConfig?.sections || [];
+          // 표준 가구: 사용자가 섹션 높이를 바꾼 경우 customSections를 우선 사용
+          const userCustomSections = (currentPlacedModule as any).customSections;
+          const mcSections = (Array.isArray(userCustomSections) && userCustomSections.length >= 2)
+            ? userCustomSections
+            : (moduleData.modelConfig?.sections || []);
           if (mcSections.length >= 2) {
             const pt = moduleData.modelConfig?.basicThickness || 18;
             // moduleData는 zone 반영된 getModuleById로 조회되므로 dimensions.height에 단내림이 반영됨

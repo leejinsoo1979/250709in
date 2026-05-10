@@ -3872,7 +3872,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               calculateInternalSpace(spaceInfo),
               spaceInfo
             );
-            const sections = modData?.modelConfig?.sections;
+            const sections = ((leftViewMod as any)?.customSections || modData?.modelConfig?.sections) as any[] | undefined;
             if (sections && sections.length >= 2) {
               // 섹션 기준 furnitureH = 실제 가구 내경 (공간 - 실제 상단몰딩 - 실제 걸래받이 - 띄움)
               const realTopFrame = leftmostMod.hasTopFrame === false
@@ -3888,7 +3888,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 ? ((leftLowerMod as any)?.individualFloatHeight ?? 0)
                 : (leftLowerMod?.baseFrameHeight ?? globalBottomFrameH);
               // 인출장/팬트리장: 바닥마감재도 가구 외경에 포함 (마지막 섹션이 흡수)
-              const isPullOutOrPantryHere = !!(leftmostMod?.moduleId?.includes('pull-out-cabinet') || leftmostMod?.moduleId?.includes('pantry-cabinet'));
+              const isPullOutOrPantryHere = !!(leftViewMod?.moduleId?.includes('pull-out-cabinet') || leftViewMod?.moduleId?.includes('pantry-cabinet'));
               const realFloorFinish = isPullOutOrPantryHere ? 0 : floorFinishForHeight;
               const sectionBasisH = Math.max(0, effectiveH - realTopFrame - realBottomFrame - realFloorFinish);
               const rawHeights = sections.map(s => {
@@ -4626,7 +4626,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               calculateInternalSpace(spaceInfo),
               spaceInfo
             );
-            const rSections = rModData?.modelConfig?.sections;
+            const rSections = ((rightmostMod as any)?.customSections || rModData?.modelConfig?.sections) as any[] | undefined;
             if (rSections && rSections.length >= 2) {
               // 섹션 기준 furnitureH = 실제 가구 내경 (공간 - 실제 상단몰딩 - 실제 걸래받이)
               const rRealTopFrame = rightmostMod.hasTopFrame === false
