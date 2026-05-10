@@ -588,7 +588,8 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
 
   // 다중 노치 여부 판별 (notches가 있으면 우선 사용)
   const hasCircleHoles = !!(circleHoles && circleHoles.length > 0);
-  const hasAnyNotch = !!(notch || (notches && notches.length > 0) || bottomRebate || cornerNotch || backCenterNotch || hasCircleHoles);
+  const hasAnyNotch = !!(notch || (notches && notches.length > 0) || bottomRebate || cornerNotch || backCenterNotch);
+  const hasCustomGeometry = hasAnyNotch || hasCircleHoles;
 
   // L자형 노치 엣지 라인 생성 (2D/3D 공용) — 단일 및 다중 노치 지원
   const getNotchEdgeLines = React.useCallback((): [number, number, number][][] => {
@@ -900,7 +901,7 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
 
   // 노치 지오메트리 (단일 notch 또는 다중 notches 지원)
   const notchGeometry = React.useMemo(() => {
-    if (!hasAnyNotch) return null;
+    if (!hasCustomGeometry) return null;
     const [w, h, d] = safeArgs;
     const halfW = w / 2, halfH = h / 2, halfD = d / 2;
 
@@ -1150,7 +1151,7 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
     geom.computeVertexNormals();
 
     return geom;
-  }, [notch, notches, bottomRebate, cornerNotch, backCenterNotch, hasCircleHoles, circleHoles, hasAnyNotch, safeArgs]);
+  }, [notch, notches, bottomRebate, cornerNotch, backCenterNotch, hasCircleHoles, circleHoles, hasAnyNotch, hasCustomGeometry, safeArgs]);
 
   // 옵티마이저에서 제외된 패널이면 렌더링하지 않음
   // useFrame 폴링으로 visible 제어 — R3F reconciler/DOM reconciler 간 Zustand 구독 호환 문제 회피
