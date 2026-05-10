@@ -833,7 +833,12 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     moduleData?.id?.includes('fridge-cabinet') ||
     moduleData?.id?.includes('built-in-fridge')
   );
-  const isDualFurniture = isDualByModuleId || (!isSingleDoorOnlyCabinet && Math.round(effectiveFurnitureWidth) >= 601);
+  // 상부장: 모듈 ID로 단일/듀얼 확정 (싱글 상부장은 너비가 600 넘어도 도어 1짝 유지)
+  const isSingleUpperCabinet = !!(
+    moduleData?.id?.includes('upper-cabinet') &&
+    !moduleData?.id?.startsWith('dual-')
+  );
+  const isDualFurniture = isDualByModuleId || (!isSingleDoorOnlyCabinet && !isSingleUpperCabinet && Math.round(effectiveFurnitureWidth) >= 601);
   
   // mm를 Three.js 단위로 변환
   const mmToThreeUnits = (mm: number) => mm * 0.01;
