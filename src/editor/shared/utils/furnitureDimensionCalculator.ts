@@ -8,6 +8,10 @@
 import { getModuleById } from '@/data/modules';
 import type { PlacedModule } from '@/store/core/furnitureStore';
 import type { SpaceInfo } from '@/store/core/spaceConfigStore';
+import {
+  resolveDoorVerticalGeometry,
+  type DoorCabinetCategory
+} from './doorGeometryCalculator';
 
 /**
  * 가구 섹션 정보
@@ -30,13 +34,29 @@ export interface FurnitureSection {
 }
 
 /**
+ * 계산에 필요한 모듈 데이터 최소 형태
+ */
+export interface FurnitureDimensionModuleData {
+  id: string;
+  category?: string;
+  dimensions: {
+    width: number;
+    height: number;
+    depth: number;
+  };
+  modelConfig?: {
+    basicThickness?: number;
+  };
+}
+
+/**
  * 가구 치수 데이터
  */
 export interface FurnitureDimension {
   /** 가구 모듈 */
   module: PlacedModule;
   /** 모듈 데이터 */
-  moduleData: any;
+  moduleData: FurnitureDimensionModuleData;
   /** 실제 너비 (mm) */
   actualWidth: number;
   /** 실제 높이 (mm) */
@@ -131,9 +151,9 @@ export const calculateFurnitureDimensions = (
     const backPanelThickness = module.backPanelThickness ?? 9; // mm
 
     // 실제 치수
-    const actualWidth = module.customWidth || module.adjustedWidth || moduleData.dimensions.width;
-    const actualHeight = moduleData.dimensions.height;
-    const actualDepth = module.customDepth || moduleData.dimensions.depth;
+    const actualWidth = module.freeWidth || module.customWidth || module.adjustedWidth || module.moduleWidth || moduleData.dimensions.width;
+    const actualHeight = module.freeHeight || module.customHeight || moduleData.dimensions.height;
+    const actualDepth = module.freeDepth || module.customDepth || moduleData.dimensions.depth;
 
     // 내경 치수 계산
     const innerWidth = actualWidth - basicThickness * 2; // 좌우 측판 제외
@@ -150,7 +170,7 @@ export const calculateFurnitureDimensions = (
 
     // 섹션 정보 계산
     let sections: FurnitureSection[] | undefined;
-    let totalInnerHeight = actualHeight - basicThickness * 2; // 상하판 제외
+    const totalInnerHeight = actualHeight - basicThickness * 2; // 상하판 제외
 
     if (isMultiSection) {
       const sectionHeights = calculateSectionHeights(moduleData.id, actualHeight);
@@ -247,4 +267,219 @@ export const convertToThreeUnits = (dimension: FurnitureDimension): FurnitureDim
       innerDepth: mmToThreeUnits(section.innerDepth)
     }))
   };
+};
+
+export type DrawingDimensionView = 'front' | 'top' | 'left' | 'door';
+export type DrawingDimensionRequestView = DrawingDimensionView | 'right';
+
+export interface DrawingDimensionSegment {
+  id: string;
+  view: DrawingDimensionView;
+  axis: 'width' | 'height' | 'depth' | 'door-width' | 'door-height';
+  orientation: 'horizontal' | 'vertical';
+  valueMm: number;
+  rawValueMm: number;
+  moduleInstanceId: string;
+  moduleId: string;
+  label: string;
+  includes: string[];
+}
+
+export interface ResolveDrawingDimensionsInput {
+  dimensions: FurnitureDimension[];
+  views?: DrawingDimensionRequestView[];
+  includeDoor?: boolean;
+  doorGapMm?: number;
+}
+
+export interface ResolvedDrawingDimensions {
+  front: DrawingDimensionSegment[];
+  top: DrawingDimensionSegment[];
+  left: DrawingDimensionSegment[];
+  door: DrawingDimensionSegment[];
+  warnings: string[];
+}
+
+export const roundDrawingDimensionMm = (valueMm: number): number => {
+  if (!Number.isFinite(valueMm)) return 0;
+
+  return Math.round(valueMm + Number.EPSILON);
+};
+
+export const normalizeDrawingDimensionView = (
+  view: DrawingDimensionRequestView
+): DrawingDimensionView => view === 'right' ? 'left' : view;
+
+const createDrawingSegment = (
+  dimension: FurnitureDimension,
+  view: DrawingDimensionView,
+  axis: DrawingDimensionSegment['axis'],
+  orientation: DrawingDimensionSegment['orientation'],
+  rawValueMm: number,
+  includes: string[],
+  labelSuffix = axis
+): DrawingDimensionSegment => ({
+  id: `${dimension.module.id}:${view}:${labelSuffix}`,
+  view,
+  axis,
+  orientation,
+  valueMm: roundDrawingDimensionMm(rawValueMm),
+  rawValueMm,
+  moduleInstanceId: dimension.module.id,
+  moduleId: dimension.module.moduleId,
+  label: String(roundDrawingDimensionMm(rawValueMm)),
+  includes
+});
+
+const resolveDoorCabinetCategory = (
+  category: unknown
+): DoorCabinetCategory => {
+  if (category === 'upper' || category === 'lower' || category === 'full') {
+    return category;
+  }
+
+  return 'generic';
+};
+
+const pushDoorSegments = (
+  output: DrawingDimensionSegment[],
+  dimension: FurnitureDimension,
+  doorGapMm: number
+) => {
+  if (!dimension.module.hasDoor) return;
+
+  const doorDimensions = resolveDoorVerticalGeometry({
+    moduleId: dimension.moduleData?.id ?? dimension.module.moduleId,
+    cabinetCategory: resolveDoorCabinetCategory(dimension.moduleData?.category),
+    doorWidthMm: dimension.actualWidth,
+    cabinetHeightMm: dimension.actualHeight,
+    doorTopGapMm: dimension.module.doorTopGap,
+    doorBottomGapMm: dimension.module.doorBottomGap,
+    doorGapMm,
+    isDualSlot: dimension.module.isDualSlot,
+    hingeSide: dimension.module.hingePosition
+  });
+
+  doorDimensions.leaves.forEach(leaf => {
+    output.push({
+      ...createDrawingSegment(
+        dimension,
+        'door',
+        'door-width',
+        'horizontal',
+        leaf.widthMm,
+        ['door-leaf-width'],
+        `${leaf.name}:width`
+      ),
+      id: `${dimension.module.id}:door:${leaf.name}:width`,
+      label: String(roundDrawingDimensionMm(leaf.widthMm))
+    });
+    output.push({
+      ...createDrawingSegment(
+        dimension,
+        'door',
+        'door-height',
+        'vertical',
+        leaf.heightMm,
+        ['door-leaf-height'],
+        `${leaf.name}:height`
+      ),
+      id: `${dimension.module.id}:door:${leaf.name}:height`,
+      label: String(roundDrawingDimensionMm(leaf.heightMm))
+    });
+  });
+};
+
+export const resolveDrawingDimensions = (
+  input: ResolveDrawingDimensionsInput
+): ResolvedDrawingDimensions => {
+  const warnings: string[] = [];
+  const output: ResolvedDrawingDimensions = {
+    front: [],
+    top: [],
+    left: [],
+    door: [],
+    warnings
+  };
+  const requestedViews = input.views ?? ['front', 'top', 'left', 'door'];
+  const normalizedViews = new Set<DrawingDimensionView>();
+
+  requestedViews.forEach(view => {
+    const normalized = normalizeDrawingDimensionView(view);
+    normalizedViews.add(normalized);
+    if (view === 'right') {
+      warnings.push('right-side drawing request normalized to left-side export policy');
+    }
+  });
+
+  input.dimensions.forEach(dimension => {
+    if (normalizedViews.has('front')) {
+      output.front.push(
+        createDrawingSegment(
+          dimension,
+          'front',
+          'width',
+          'horizontal',
+          dimension.actualWidth,
+          ['body-width']
+        ),
+        createDrawingSegment(
+          dimension,
+          'front',
+          'height',
+          'vertical',
+          dimension.actualHeight,
+          ['body-height']
+        )
+      );
+    }
+
+    if (normalizedViews.has('top')) {
+      output.top.push(
+        createDrawingSegment(
+          dimension,
+          'top',
+          'width',
+          'horizontal',
+          dimension.actualWidth,
+          ['body-width']
+        ),
+        createDrawingSegment(
+          dimension,
+          'top',
+          'depth',
+          'vertical',
+          dimension.actualDepth,
+          ['body-depth']
+        )
+      );
+    }
+
+    if (normalizedViews.has('left')) {
+      output.left.push(
+        createDrawingSegment(
+          dimension,
+          'left',
+          'depth',
+          'horizontal',
+          dimension.actualDepth,
+          ['body-depth']
+        ),
+        createDrawingSegment(
+          dimension,
+          'left',
+          'height',
+          'vertical',
+          dimension.actualHeight,
+          ['body-height']
+        )
+      );
+    }
+
+    if (normalizedViews.has('door') && input.includeDoor !== false) {
+      pushDoorSegments(output.door, dimension, input.doorGapMm ?? 3);
+    }
+  });
+
+  return output;
 };

@@ -11,6 +11,7 @@ import { Text, Line } from '@react-three/drei';
 import { useDimensionColor } from '../hooks/useDimensionColor';
 import { ClothingRod } from '../components/ClothingRod';
 import { VentilationCap } from '../components/VentilationCap';
+import { resolveShelfFrontInsetMm } from '@/editor/shared/utils/shelfInsetCalculator';
 
 /**
  * DualType2 컴포넌트
@@ -552,31 +553,32 @@ const DualType2: React.FC<FurnitureTypeProps> = ({
               textureUrl={spaceInfo.materialConfig?.doorTexture}
               panelGrainDirections={panelGrainDirections}
               lowerSectionTopOffsetMm={(moduleData?.id?.includes('entryway-h')) ? 85 : lowerSectionTopOffset}
-              shelfFrontInsetMm={(moduleData?.id?.includes('entryway-h') || moduleData?.id?.includes('-shelf-') || moduleData?.id?.includes('-4drawer-shelf-') || moduleData?.id?.includes('-2drawer-shelf-')) ? 30 : 0}
+              shelfFrontInsetMm={resolveShelfFrontInsetMm({
+                moduleId: moduleData?.id,
+                cabinetCategory: moduleData?.category
+              })}
               isFloatingPlacement={spaceInfo?.baseConfig?.placementType === 'float'}
             />
 
             {/* 옷걸이 봉 렌더링 - hanging 섹션만 */}
             {(() => {
               const sections = baseFurniture.modelConfig.sections || [];
-              let accumulatedY = -height/2 + basicThickness;
               const availableHeight = height - basicThickness * 2;
+              let accumulatedY = -height/2 + basicThickness;
 
               return sections.map((section: any, sectionIndex: number) => {
-                // hanging 타입이 아니면 렌더링 안함
+                const sectionBottomY = accumulatedY;
+                const originalSectionHeight = mmToThreeUnits(section.height);
+
+                // Type1/Type4와 동일하게 하부 섹션은 고정, 상부 섹션은 현재 가구 높이의 나머지를 사용한다.
+                const sectionHeight = sectionIndex === 0
+                  ? originalSectionHeight
+                  : Math.max(0, availableHeight - mmToThreeUnits(sections[0]?.height || 0));
+                accumulatedY += originalSectionHeight;
+
                 if (section.type !== 'hanging') {
-                  // accumulatedY는 업데이트해야 다음 섹션 위치가 맞음
-                  const sectionHeight = baseFurniture.calculateSectionHeight(section, availableHeight);
-                  accumulatedY += sectionHeight;
                   return null;
                 }
-
-                const sectionHeight = baseFurniture.calculateSectionHeight(section, availableHeight);
-                const sectionBottomY = accumulatedY;
-                const sectionCenterY = accumulatedY + sectionHeight / 2 - basicThickness;
-
-                // 누적 Y 위치 업데이트
-                accumulatedY += sectionHeight;
 
                 // 안전선반 또는 마감 패널 위치 찾기
                 const safetyShelfPositionMm = section.shelfPositions?.find((pos: number) => pos > 0);
@@ -593,8 +595,7 @@ const DualType2: React.FC<FurnitureTypeProps> = ({
                   rodYPosition = safetyShelfY - basicThickness / 2 - mmToThreeUnits(75 / 2);
                 } else if (sectionIndex === 0) {
                   // 하부 섹션: 브라켓 상단이 하부 섹션 상판 밑면에 닿음
-                  // 측면판 렌더링과 동일한 계산 사용
-                  const lowerTopPanelY = sectionCenterY + sectionHeight/2 - basicThickness/2;
+                  const lowerTopPanelY = sectionBottomY + sectionHeight - basicThickness / 2;
                   const lowerTopPanelBottom = lowerTopPanelY - basicThickness / 2;
                   rodYPosition = lowerTopPanelBottom - mmToThreeUnits(75 / 2);
                 } else if (hasFinishPanel) {

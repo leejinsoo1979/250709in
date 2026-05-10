@@ -270,6 +270,13 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
   });
   const { dimensionColor, baseFontSize } = useDimensionColor();
 
+  // 상부장 하부 EP 토글 reactive 구독 (체크박스 변경 시 즉시 재렌더)
+  const currentPlacedModuleForBottomEP = useFurnitureStore(state =>
+    placedFurnitureId
+      ? state.placedModules.find(m => m.id === placedFurnitureId)
+      : null
+  );
+
   // 18.5/15.5mm는 양면 접합 두께이므로 좌우 이격 불필요 (0mm)
   // 18/15mm는 기존대로 좌우 0.5mm씩 총 1mm 이격
   const sidePanelGapMm = (basicThicknessMm === 18.5 || basicThicknessMm === 15.5) ? 0 : 1;
@@ -1623,6 +1630,14 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
             return backReduction / 2;
           })();
           const isHighlightedBottom = isMultiSectionFurniture() ? highlightedSection === `${placedFurnitureId}-0` : false;
+
+          // 상부장 하부 EP 체크 해제 시 바닥판 렌더 안함
+          const isUpperCabinet =
+            moduleData?.category === 'upper' ||
+            !!moduleData?.id?.includes('upper-cabinet') ||
+            !!moduleData?.id?.startsWith('upper-');
+          const hasBottomEP = (currentPlacedModuleForBottomEP as any)?.hasBottomEndPanel !== false;
+          if (isUpperCabinet && !hasBottomEP) return null;
 
           return (
             <BoxWithEdges

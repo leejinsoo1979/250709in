@@ -3,6 +3,7 @@ import { Text, Html } from '@react-three/drei';
 import * as THREE from 'three';
 import { getThemeHex } from '@/theme';
 import { useUIStore } from '@/store/uiStore';
+import { useSpace3DView } from '../../../context/useSpace3DView';
 
 // 소수점 1자리 포맷 (.0이면 정수)
 const formatDim = (v: number) => { const r = Math.round(v * 10) / 10; return r % 1 === 0 ? String(r) : r.toFixed(1); };
@@ -59,7 +60,7 @@ const EditableDimensionText: React.FC<EditableDimensionTextProps> = ({
   onHoverChange
 }) => {
   const view2DTheme = useUIStore(state => state.view2DTheme);
-  const viewMode = useUIStore(state => state.viewMode);
+  const { viewMode } = useSpace3DView();
   const isDark = viewMode !== '3D' && view2DTheme === 'dark';
   const [isEditing, setIsEditing] = useState(false);
   const [editValue, setEditValue] = useState(formatDim(value));
@@ -162,6 +163,21 @@ const EditableDimensionText: React.FC<EditableDimensionTextProps> = ({
             userSelect: 'none'
           }}
         >
+          {isDark && (
+            <style>
+              {`
+                html body input.editable-dimension-input-dark,
+                [data-theme="light"] input.editable-dimension-input-dark {
+                  background-color: #1f2937 !important;
+                  color: #ffffff !important;
+                  -webkit-text-fill-color: #ffffff !important;
+                  border-color: #6b7280 !important;
+                  caret-color: #ffffff !important;
+                  color-scheme: dark !important;
+                }
+              `}
+            </style>
+          )}
           <div
             style={{
               display: 'flex',
@@ -177,6 +193,7 @@ const EditableDimensionText: React.FC<EditableDimensionTextProps> = ({
             <input
               ref={inputRef}
               type="number"
+              className={isDark ? 'editable-dimension-input-dark' : undefined}
               value={editValue}
               onChange={(e) => setEditValue(e.target.value)}
               onKeyDown={handleKeyDown}
@@ -190,6 +207,8 @@ const EditableDimensionText: React.FC<EditableDimensionTextProps> = ({
                 textAlign: 'center',
                 backgroundColor: isDark ? '#1f2937' : '#ffffff',
                 color: isDark ? '#ffffff' : '#000000',
+                WebkitTextFillColor: isDark ? '#ffffff' : '#000000',
+                caretColor: isDark ? '#ffffff' : '#000000',
                 // 브라우저 기본 스타일 억제
                 colorScheme: isDark ? 'dark' : 'light',
                 outline: 'none',

@@ -51,7 +51,6 @@ interface PDFTemplatePreviewProps {
     front?: string;
     side?: string;
     door?: string;
-    right?: string;
     base?: string;
     iso?: string;
     detail1?: string;
@@ -83,7 +82,6 @@ const AVAILABLE_VIEWS: ViewMenuItem[] = [
   { id: 'front', label: 'Front VIEW' },
   { id: 'side', label: 'Left VIEW' },
   { id: 'door', label: 'Door Front' },
-  { id: 'right', label: 'Right VIEW' },
   { id: 'base', label: 'Base Frame' },
   { id: 'iso', label: 'ISO VIEW' },
   { id: 'detail1', label: 'Detail 1' },
@@ -1356,12 +1354,6 @@ const PDFTemplatePreview: React.FC<PDFTemplatePreviewProps> = ({ isOpen, onClose
 
                   {/* 뷰 모드 */}
                   <div className={styles.viewModeGroup}>
-                    <button
-                      className={`${styles.viewModeButton} ${viewMode === '3D' ? styles.active : ''}`}
-                      onClick={() => setViewMode('3D')}
-                    >
-                      3D
-                    </button>
                     <button
                       className={`${styles.viewModeButton} ${viewMode === '2D' ? styles.active : ''}`}
                       onClick={() => setViewMode('2D')}

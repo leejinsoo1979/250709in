@@ -5,146 +5,25 @@ import { useProjectStore } from '@/store/core/projectStore';
 import { useUIStore } from '@/store/uiStore';
 import { jsPDF } from 'jspdf';
 import html2canvas from 'html2canvas';
-import { getModuleById, buildModuleDataFromPlacedModule, ModuleData } from '@/data/modules';
-import { addKoreanText, addMixedText } from '@/editor/shared/utils/pdfKoreanFont';
-import { exportWithPersistence } from '@/services/exportService';
-import { getCurrentVersionId } from '@/services/designs.repo';
-import { auth } from '@/firebase/config';
+import { getModuleById, buildModuleDataFromPlacedModule } from '@/data/modules';
+import { addMixedText } from '@/editor/shared/utils/pdfKoreanFont';
 import { downloadDxfAsPdf, type PdfViewDirection } from '@/editor/shared/utils/dxfToPdf';
+import {
+  PDF_VIEW_TYPES,
+  normalizePdfSelectedViews,
+  type PdfExportViewInfo,
+  type PdfExportViewType
+} from '@/editor/shared/utils/pdfViewSelection';
+import {
+  resolveDoorDrawingOuterBounds,
+  resolvePdfDoorDrawingItem,
+  type PdfDoorDrawingItem
+} from '@/editor/shared/utils/pdfDoorDrawingGeometry';
+import { getSideViewSlotGroups, type SideViewSlotGroup } from '@/editor/shared/utils/sideViewModuleFilter';
 
-// 도어/서랍 정보 인터페이스
-interface DoorDrawingItem {
-  moduleId: string;
-  moduleName: string;
-  furnitureX: number; // 가구 X 위치 (mm)
-  furnitureWidth: number; // 가구 전체 너비 (mm)
-  furnitureHeight: number; // 가구 전체 높이 (mm)
-  items: {
-    type: 'door' | 'drawer';
-    x: number; // 도어/서랍 X 위치 (가구 기준, mm)
-    y: number; // 도어/서랍 Y 위치 (가구 바닥 기준, mm)
-    width: number; // 도어/서랍 너비 (mm)
-    height: number; // 도어/서랍 높이 (mm)
-    label?: string; // 라벨 (서랍1, 서랍2 등)
-  }[];
-}
-
-/**
- * 가구에서 도어/서랍 정보 추출
- */
-const extractDoorInfo = (
-  placedModule: PlacedModule,
-  moduleData: ModuleData | undefined,
-  spaceInfo: SpaceInfo
-): DoorDrawingItem | null => {
-  if (!moduleData) return null;
-
-  const hasDoor = placedModule.hasDoor ?? moduleData.hasDoor ?? false;
-  const sections = moduleData.modelConfig?.sections || [];
-
-  // 도어나 서랍이 있는 섹션이 있는지 확인
-  const hasDrawer = sections.some(s => s.type === 'drawer');
-
-  if (!hasDoor && !hasDrawer) return null;
-
-  const furnitureWidth = placedModule.customWidth || moduleData.dimensions.width;
-  const furnitureHeight = placedModule.customHeight || moduleData.dimensions.height;
-  const furnitureX = placedModule.position.x * 100; // Three.js 좌표를 mm로 변환
-
-  const items: DoorDrawingItem['items'] = [];
-
-  // 기본 두께 (측판, 하판 등)
-  const basicThickness = moduleData.modelConfig?.basicThickness || 18;
-
-  // 도어 갭 설정
-  const doorTopGap = placedModule.doorTopGap ?? 10;
-  const doorBottomGap = placedModule.doorBottomGap ?? 65;
-
-  // 서랍 처리
-  let currentY = basicThickness; // 하판 위부터 시작
-
-  for (const section of sections) {
-    if (section.type === 'drawer') {
-      const drawerHeights = section.drawerHeights || [];
-      const gapHeight = section.gapHeight || 24;
-
-      for (let i = 0; i < drawerHeights.length; i++) {
-        const drawerHeight = drawerHeights[i];
-
-        items.push({
-          type: 'drawer',
-          x: basicThickness, // 좌측판 두께
-          y: currentY,
-          width: furnitureWidth - basicThickness * 2, // 양쪽 측판 두께 제외
-          height: drawerHeight,
-          label: `Drawer ${i + 1}`
-        });
-
-        currentY += drawerHeight + gapHeight;
-      }
-    } else if (section.type === 'hanging' || section.type === 'shelf' || section.type === 'open') {
-      // 서랍이 아닌 섹션의 높이를 계산
-      if (section.heightType === 'absolute') {
-        currentY += section.height;
-      } else {
-        // 퍼센트 기반 높이 계산
-        currentY += (section.height / 100) * furnitureHeight;
-      }
-    }
-  }
-
-  // 도어 처리 (hasDoor가 true인 경우)
-  if (hasDoor) {
-    const doorX = basicThickness;
-    const doorY = doorBottomGap;
-    const doorWidth = furnitureWidth - basicThickness * 2;
-    const doorHeight = furnitureHeight - doorTopGap - doorBottomGap;
-
-    // 도어가 서랍과 겹치지 않도록 서랍 영역 위에 도어 배치
-    // 서랍이 있는 경우 도어 영역 조정
-    const hasDrawerSections = sections.some(s => s.type === 'drawer');
-
-    if (!hasDrawerSections && doorHeight > 0) {
-      items.push({
-        type: 'door',
-        x: doorX,
-        y: doorY,
-        width: doorWidth,
-        height: doorHeight,
-        label: 'Door'
-      });
-    }
-  }
-
-  if (items.length === 0) return null;
-
-  return {
-    moduleId: placedModule.moduleId,
-    moduleName: moduleData.name,
-    furnitureX,
-    furnitureWidth,
-    furnitureHeight,
-    items
-  };
-};
-
-export type ViewType = '3d-front' | '2d-front' | '2d-top' | '2d-left' | '2d-door';
-
-interface ViewInfo {
-  id: ViewType;
-  name: string;
-  viewMode: '2D' | '3D';
-  viewDirection?: 'front' | 'top' | 'left';
-  isDoorDrawing?: boolean; // 도어도면 여부
-}
-
-const VIEW_TYPES: ViewInfo[] = [
-  { id: '3d-front', name: '3D 투시도 (Perspective)', viewMode: '3D' },
-  { id: '2d-front', name: '입면도 (Front View)', viewMode: '2D', viewDirection: 'front' },
-  { id: '2d-top', name: '평면도 (Top View)', viewMode: '2D', viewDirection: 'top' },
-  { id: '2d-left', name: '측면도 (Side View)', viewMode: '2D', viewDirection: 'left' },
-  { id: '2d-door', name: '도어도면 (Door Drawing)', viewMode: '2D', viewDirection: 'front', isDoorDrawing: true },
-];
+export type ViewType = PdfExportViewType;
+type ViewInfo = PdfExportViewInfo;
+const VIEW_TYPES: ViewInfo[] = PDF_VIEW_TYPES;
 
 /**
  * 도어도면 페이지 렌더링 함수
@@ -152,18 +31,13 @@ const VIEW_TYPES: ViewInfo[] = [
  */
 const renderDoorDrawingPage = async (
   pdf: jsPDF,
-  doorItems: DoorDrawingItem[],
+  doorItems: PdfDoorDrawingItem[],
   pageWidth: number,
   pageHeight: number,
   borderMargin: number,
   innerMargin: number,
   titleBlockHeight: number,
-  titleBlockWidth: number,
-  projectTitle: string,
-  currentDate: string,
-  pageIndex: number,
-  totalPages: number,
-  colors: { black: string; gray: string; lightGray: string; text: string; white: string }
+  titleBlockWidth: number
 ): Promise<void> => {
   // 도면 영역 정의
   const drawingAreaX = borderMargin + innerMargin + 10;
@@ -171,26 +45,15 @@ const renderDoorDrawingPage = async (
   const drawingAreaWidth = pageWidth - 2 * (borderMargin + innerMargin) - titleBlockWidth - 30;
   const drawingAreaHeight = pageHeight - 2 * (borderMargin + innerMargin) - 60;
 
-  // 전체 도어/서랍의 범위 계산 (스케일 결정용)
-  let minX = Infinity, maxX = -Infinity;
-  let minY = Infinity, maxY = -Infinity;
-
-  for (const doorItem of doorItems) {
-    for (const item of doorItem.items) {
-      const absX = doorItem.furnitureX + item.x;
-      minX = Math.min(minX, absX);
-      maxX = Math.max(maxX, absX + item.width);
-      minY = Math.min(minY, item.y);
-      maxY = Math.max(maxY, item.y + item.height);
-    }
-  }
+  const contentBounds = resolveDoorDrawingOuterBounds(doorItems);
+  if (!contentBounds) return;
 
   // 여유 마진 추가
   const marginMm = 100; // 100mm 여유
-  minX -= marginMm;
-  maxX += marginMm;
-  minY -= marginMm;
-  maxY += marginMm;
+  const minX = contentBounds.minX - marginMm;
+  const maxX = contentBounds.maxX + marginMm;
+  const minY = contentBounds.minY - marginMm;
+  const maxY = contentBounds.maxY + marginMm;
 
   const totalWidthMm = maxX - minX;
   const totalHeightMm = maxY - minY;
@@ -231,10 +94,11 @@ const renderDoorDrawingPage = async (
         pdf.setFillColor(245, 245, 245); // 연한 회색 배경
         pdf.rect(pdfX, pdfY, pdfWidth, pdfHeight, 'FD');
 
-        // 도어 힌지 표시 (왼쪽에 작은 원)
+        // 도어 힌지 표시
+        const hingeX = item.hingeSide === 'right' ? pdfX + pdfWidth - 3 : pdfX + 3;
         pdf.setFillColor(0, 0, 0);
-        pdf.circle(pdfX + 3, pdfY + 10, 2, 'F');
-        pdf.circle(pdfX + 3, pdfY + pdfHeight - 10, 2, 'F');
+        pdf.circle(hingeX, pdfY + 10, 2, 'F');
+        pdf.circle(hingeX, pdfY + pdfHeight - 10, 2, 'F');
       } else {
         // 서랍
         pdf.setDrawColor(0, 0, 0);
@@ -273,24 +137,6 @@ const renderDoorDrawingPage = async (
       pdf.setFontSize(7);
       pdf.text(`${Math.round(item.width)}`, pdfX + pdfWidth / 2, dimY - 2, { align: 'center' });
 
-      // 높이 치수선 (우측)
-      const dimX = pdfX + pdfWidth + dimLineOffset;
-
-      pdf.setDrawColor(100, 100, 100);
-      pdf.line(dimX, pdfY, dimX, pdfY + pdfHeight);
-      // 끝단 표시
-      pdf.line(dimX - 2, pdfY, dimX + 2, pdfY);
-      pdf.line(dimX - 2, pdfY + pdfHeight, dimX + 2, pdfY + pdfHeight);
-      // 연장선
-      pdf.setDrawColor(200, 200, 200);
-      pdf.line(pdfX + pdfWidth, pdfY, dimX - 2, pdfY);
-      pdf.line(pdfX + pdfWidth, pdfY + pdfHeight, dimX - 2, pdfY + pdfHeight);
-
-      // 높이 텍스트 (세로로 회전)
-      pdf.setDrawColor(0, 0, 0);
-      pdf.setTextColor(0, 0, 0);
-      pdf.text(`${Math.round(item.height)}`, dimX + 3, pdfY + pdfHeight / 2, { angle: 90 });
-
       // 라벨 표시 (도어/서랍 내부)
       if (item.label) {
         pdf.setFontSize(6);
@@ -308,6 +154,40 @@ const renderDoorDrawingPage = async (
     const simpleName = doorItem.moduleId.substring(0, 20);
     pdf.text(simpleName, furnitureCenterX, furnitureBottomY, { align: 'center' });
   }
+
+  // 높이 치수는 도어별 반복 표시하지 않고 전체 도어도면 외곽 좌/우에만 표시한다.
+  const outerTopY = toPageY(contentBounds.maxY);
+  const outerBottomY = toPageY(contentBounds.minY);
+  const outerLeftX = toPageX(contentBounds.minX);
+  const outerRightX = toPageX(contentBounds.maxX);
+  const outerHeightText = `${Math.round(contentBounds.height)}`;
+  const heightDimOffset = 12;
+  const drawOuterHeightDimension = (dimX: number, side: 'left' | 'right') => {
+    pdf.setLineWidth(0.2);
+    pdf.setDrawColor(100, 100, 100);
+    pdf.line(dimX, outerTopY, dimX, outerBottomY);
+    pdf.line(dimX - 2, outerTopY, dimX + 2, outerTopY);
+    pdf.line(dimX - 2, outerBottomY, dimX + 2, outerBottomY);
+
+    pdf.setDrawColor(200, 200, 200);
+    if (side === 'left') {
+      pdf.line(dimX + 2, outerTopY, outerLeftX, outerTopY);
+      pdf.line(dimX + 2, outerBottomY, outerLeftX, outerBottomY);
+    } else {
+      pdf.line(outerRightX, outerTopY, dimX - 2, outerTopY);
+      pdf.line(outerRightX, outerBottomY, dimX - 2, outerBottomY);
+    }
+
+    pdf.setTextColor(0, 0, 0);
+    pdf.setFontSize(7);
+    pdf.text(outerHeightText, dimX + (side === 'left' ? -3 : 3), (outerTopY + outerBottomY) / 2, {
+      angle: 90,
+      align: 'center'
+    });
+  };
+
+  drawOuterHeightDimension(outerLeftX - heightDimOffset, 'left');
+  drawOuterHeightDimension(outerRightX + heightDimOffset, 'right');
 
   // 범례 추가 (좌측 하단)
   const legendX = drawingAreaX;
@@ -378,32 +258,28 @@ export function usePDFExport() {
       }
     });
 
-    // 요청된 뷰로 변경
-    if (viewInfo.viewMode === '3D') {
-      setViewMode('3D');
-      // 3D 모드에서는 사용자가 선택한 렌더 모드 적용
-      setRenderMode(targetRenderMode);
-    } else {
-      // 2D 모드로 전환하면서 그리드/축만 비활성화, 치수는 유지
-      setViewMode('2D');
-      setShowGuides(false); // 그리드 끄기
-      setShowAxis(false); // 축 끄기
-      setShowDimensions(true); // 치수는 표시해야 함!
-      setShowDimensionsText(true); // 치수 텍스트도 표시해야 함!
-      setShowFurniture(true); // 가구도 표시해야 함!
-      setRenderMode('wireframe'); // 2D는 반드시 와이어프레임 (검정색 선)
-      if (viewInfo.viewDirection) {
-        setView2DDirection(viewInfo.viewDirection);
-      }
+    let imageData = '';
 
-      // 측면뷰에서 특정 슬롯을 지정한 경우, selectedSlotIndex 설정
-      if (viewInfo.viewDirection === 'left' && slotIndex !== undefined) {
-        setSelectedSlotIndex(slotIndex);
-        console.log(`📸 측면뷰 슬롯 ${slotIndex} 선택`);
-      } else if (viewInfo.viewDirection === 'left') {
-        // 측면뷰인데 슬롯 지정이 없으면 null로 리셋
-        setSelectedSlotIndex(null);
-      }
+    try {
+    // PDF export 캡처는 2D 도면 기준만 사용한다.
+    setViewMode('2D');
+    setShowGuides(false); // 그리드 끄기
+    setShowAxis(false); // 축 끄기
+    setShowDimensions(true); // 치수는 표시해야 함!
+    setShowDimensionsText(true); // 치수 텍스트도 표시해야 함!
+    setShowFurniture(true); // 가구도 표시해야 함!
+    setRenderMode('wireframe'); // 2D는 반드시 와이어프레임 (검정색 선)
+    if (viewInfo.viewDirection) {
+      setView2DDirection(viewInfo.viewDirection);
+    }
+
+    // 측면뷰에서 특정 슬롯을 지정한 경우, selectedSlotIndex 설정
+    if (viewInfo.viewDirection === 'left' && slotIndex !== undefined) {
+      setSelectedSlotIndex(slotIndex);
+      console.log(`📸 측면뷰 슬롯 ${slotIndex} 선택`);
+    } else if (viewInfo.viewDirection === 'left') {
+      // 측면뷰인데 슬롯 지정이 없으면 null로 리셋
+      setSelectedSlotIndex(null);
     }
 
     // 뷰 변경이 적용되길 기다림 (3초로 증가 - 카메라 및 씬 업데이트 완료 대기)
@@ -443,7 +319,6 @@ export function usePDFExport() {
     }
     
     viewerContainer = viewerContainer || canvas.parentElement;
-    let imageData: string;
     
     console.log('Canvas 캡처 시도:', {
       viewerContainer: !!viewerContainer,
@@ -503,47 +378,49 @@ export function usePDFExport() {
       
       imageData = capturedCanvas.toDataURL('image/png');
     }
-    
-    // 원래 뷰로 복원
-    setViewMode(originalViewMode);
-    if (originalViewMode === '2D') {
-      setView2DDirection(originalView2DDirection);
-    }
-    // 모든 설정 복원
-    setShowGuides(originalShowGuides);
-    setShowAxis(originalShowAxis);
-    setShowDimensions(originalShowDimensions);
-    setShowDimensionsText(originalShowDimensionsText);
-    setShowFurniture(originalShowFurniture);
-    setRenderMode(originalRenderMode);
-    setSelectedSlotIndex(originalSelectedSlotIndex);
-
-    console.log('📸 PDF 캡처 완료 - 설정 복원:', {
-      viewMode: originalViewMode,
-      view2DDirection: originalView2DDirection,
-      showGuides: originalShowGuides,
-      showAxis: originalShowAxis,
-      showDimensions: originalShowDimensions,
-      showDimensionsText: originalShowDimensionsText,
-      renderMode: originalRenderMode,
-      selectedSlotIndex: originalSelectedSlotIndex
-    });
-
-    // 복원 대기
-    await new Promise(resolve => setTimeout(resolve, 500));
 
     return imageData;
+    } finally {
+      // 원래 뷰로 복원
+      setViewMode(originalViewMode);
+      if (originalViewMode === '2D') {
+        setView2DDirection(originalView2DDirection);
+      }
+      // 모든 설정 복원
+      setShowGuides(originalShowGuides);
+      setShowAxis(originalShowAxis);
+      setShowDimensions(originalShowDimensions);
+      setShowDimensionsText(originalShowDimensionsText);
+      setShowFurniture(originalShowFurniture);
+      setRenderMode(originalRenderMode);
+      setSelectedSlotIndex(originalSelectedSlotIndex);
+
+      console.log('📸 PDF 캡처 완료 - 설정 복원:', {
+        viewMode: originalViewMode,
+        view2DDirection: originalView2DDirection,
+        showGuides: originalShowGuides,
+        showAxis: originalShowAxis,
+        showDimensions: originalShowDimensions,
+        showDimensionsText: originalShowDimensionsText,
+        renderMode: originalRenderMode,
+        selectedSlotIndex: originalSelectedSlotIndex
+      });
+
+      // 복원 대기
+      await new Promise(resolve => setTimeout(resolve, 500));
+    }
   }, [viewMode, view2DDirection, showGuides, showAxis, showDimensions, showDimensionsText, showFurniture, renderMode, selectedSlotIndex, setViewMode, setView2DDirection, setShowGuides, setShowAxis, setShowDimensions, setShowDimensionsText, setShowFurniture, setRenderMode, setSelectedSlotIndex]);
   
   const exportToPDF = useCallback(async (
     spaceInfo: SpaceInfo,
     placedModules: PlacedModule[],
-    selectedViews: ViewType[],
+    rawSelectedViews: ViewType[],
     targetRenderMode: 'solid' | 'wireframe' = 'solid'
   ) => {
     setIsExporting(true);
     
     try {
+      const selectedViews = normalizePdfSelectedViews(rawSelectedViews);
       const pdfViews: PdfViewDirection[] = [];
       if (selectedViews.includes('2d-front')) pdfViews.push('front');
       if (selectedViews.includes('2d-top')) pdfViews.push('top');
@@ -634,21 +511,17 @@ export function usePDFExport() {
       const totalSlotCount = normalSlotCount + (hasDroppedCeiling ? droppedSlotCount : 0);
       const allSlotIndices = Array.from({ length: totalSlotCount }, (_, i) => i);
 
-      // 가구가 있는 슬롯만 필터링 (측면도에서 가구가 있는 슬롯만 페이지 생성)
-      const slotsWithFurniture = [...new Set(placedModules.map(m => {
-        if (m.slotIndex === undefined) return undefined;
-
-        // 단내림 구간 가구면 글로벌 인덱스로 변환
-        if (hasDroppedCeiling && isModuleInDroppedZone(m)) {
-          return normalSlotCount + m.slotIndex;
-        }
-        return m.slotIndex;
-      }))]
-        .filter((idx): idx is number => idx !== undefined)
-        .sort((a, b) => a - b);
-
-      // 측면도 페이지용 슬롯 인덱스: 가구가 있는 슬롯만 (없으면 전체 슬롯 사용)
-      const uniqueSlotIndices = slotsWithFurniture.length > 0 ? slotsWithFurniture : allSlotIndices;
+      const sideSlotGroups = getSideViewSlotGroups(placedModules);
+      const fallbackSideSlotGroups: SideViewSlotGroup[] = allSlotIndices.map(slotIndex => ({
+        slotKey: slotIndex,
+        titleIndex: slotIndex + 1,
+        selectedSlotIndex: slotIndex,
+        modules: []
+      }));
+      const sideSlotGroupsToRender = sideSlotGroups.length > 0
+        ? sideSlotGroups
+        : fallbackSideSlotGroups;
+      const uniqueSlotIndices = sideSlotGroupsToRender.map(group => group.selectedSlotIndex);
 
       console.log('📋 PDF 내보내기 - 슬롯 정보:', {
         totalModules: placedModules.length,
@@ -657,8 +530,12 @@ export function usePDFExport() {
         droppedSlotCount,
         totalSlotCount,
         allSlotIndices,
-        slotsWithFurniture,
-        uniqueSlotIndices,
+        sideSlotGroups: sideSlotGroupsToRender.map(group => ({
+          slotKey: group.slotKey,
+          titleIndex: group.titleIndex,
+          selectedSlotIndex: group.selectedSlotIndex,
+          moduleCount: group.modules.length
+        })),
         modules: placedModules.map(m => ({
           id: m.id.slice(-8),
           slotIndex: m.slotIndex,
@@ -678,13 +555,16 @@ export function usePDFExport() {
 
         // 측면뷰(left)의 경우 각 슬롯별로 페이지 생성
         const isSideView = viewInfo.viewDirection === 'left';
-        const slotIndicesToRender = isSideView ? uniqueSlotIndices : [undefined as number | undefined];
+        const slotGroupsToRender = isSideView
+          ? sideSlotGroupsToRender
+          : [undefined as SideViewSlotGroup | undefined];
 
-        console.log(`📄 PDF 페이지 생성 시작: viewType=${viewType}, isSideView=${isSideView}, slotIndicesToRender=`, slotIndicesToRender);
+        console.log(`📄 PDF 페이지 생성 시작: viewType=${viewType}, isSideView=${isSideView}, slotGroupsToRender=`, slotGroupsToRender);
 
-        for (let slotIdx = 0; slotIdx < slotIndicesToRender.length; slotIdx++) {
-          const currentSlotIndex = slotIndicesToRender[slotIdx];
-          console.log(`  📄 슬롯 ${slotIdx}/${slotIndicesToRender.length}: currentSlotIndex=${currentSlotIndex}`);
+        for (let slotIdx = 0; slotIdx < slotGroupsToRender.length; slotIdx++) {
+          const currentSlotGroup = slotGroupsToRender[slotIdx];
+          const currentSlotIndex = currentSlotGroup?.selectedSlotIndex;
+          console.log(`  📄 슬롯 ${slotIdx}/${slotGroupsToRender.length}: currentSlotIndex=${currentSlotIndex}`);
 
           // 새 페이지 추가 (첫 페이지 제외)
           if (pageIndex > 0) {
@@ -745,15 +625,15 @@ export function usePDFExport() {
         });
         
         // 측면뷰에서 슬롯 정보가 있으면 뷰 이름에 추가
-          const displayViewName = isSideView && currentSlotIndex !== undefined
-            ? `${viewInfo.name} - Slot ${currentSlotIndex + 1}`
+          const displayViewName = isSideView && currentSlotGroup
+            ? `${viewInfo.name} - Slot ${currentSlotGroup.titleIndex}`
             : viewInfo.name;
 
           // 총 페이지 수 계산
           const totalSideViewPages = selectedViews.filter(v => {
             const info = VIEW_TYPES.find(vi => vi.id === v);
             return info?.viewDirection === 'left';
-          }).length * uniqueSlotIndices.length;
+          }).length * sideSlotGroupsToRender.length;
           const totalNonSideViewPages = selectedViews.filter(v => {
             const info = VIEW_TYPES.find(vi => vi.id === v);
             return info?.viewDirection !== 'left';
@@ -799,11 +679,11 @@ export function usePDFExport() {
           // 도어도면인 경우 별도 렌더링
           if (viewInfo.isDoorDrawing) {
             // 도어/서랍 정보 추출
-            const doorItems: DoorDrawingItem[] = [];
+            const doorItems: PdfDoorDrawingItem[] = [];
             for (const placedModule of placedModules) {
               const moduleData = getModuleById(placedModule.moduleId, undefined, spaceInfo)
                 || buildModuleDataFromPlacedModule(placedModule);
-              const doorInfo = extractDoorInfo(placedModule, moduleData, spaceInfo);
+              const doorInfo = resolvePdfDoorDrawingItem(placedModule, moduleData);
               if (doorInfo) {
                 doorItems.push(doorInfo);
               }
@@ -819,12 +699,7 @@ export function usePDFExport() {
                 borderMargin,
                 innerMargin,
                 titleBlockHeight,
-                titleBlockWidth,
-                projectTitle,
-                currentDate,
-                pageIndex,
-                totalPages,
-                colors
+                titleBlockWidth
               );
 
               // 뷰 타이틀 (좌측 하단)

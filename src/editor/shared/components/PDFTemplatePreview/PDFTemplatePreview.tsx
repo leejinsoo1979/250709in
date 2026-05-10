@@ -64,7 +64,6 @@ interface PDFTemplatePreviewProps {
     front?: string;
     side?: string;
     door?: string;
-    right?: string;
     base?: string;
     iso?: string;
     detail1?: string;
@@ -120,7 +119,6 @@ const AVAILABLE_VIEWS: ViewMenuItem[] = [
   { id: 'front', label: 'Front VIEW' },
   { id: 'side', label: 'Left VIEW' },
   { id: 'door', label: 'Door Front' },
-  { id: 'right', label: 'Right VIEW' },
   { id: 'base', label: 'Base Frame' },
   { id: 'iso', label: 'ISO VIEW' },
   { id: 'detail1', label: 'Detail 1' },
@@ -186,11 +184,16 @@ const LAYOUT_TEMPLATES: LayoutTemplate[] = [
       { id: 'top', type: 'view', target: 'top', x: 280, y: 28, width: 300, height: 140, maintainScale: true },
       { id: 'front', type: 'view', target: 'front', x: 212, y: 188, width: 360, height: 360, maintainScale: true },
       { id: 'side', type: 'view', target: 'side', x: 28, y: 328, width: 180, height: 320, maintainScale: true },
-      { id: 'right', type: 'view', target: 'right', x: 28, y: 520, width: 180, height: 240, maintainScale: true },
       { id: 'door', type: 'view', target: 'door', x: 212, y: 560, width: 360, height: 240, maintainScale: true }
     ]
   }
 ];
+
+const normalizeTemplateViewTarget = (target: string): string => (
+  target === 'right' ? 'side' : target
+);
+
+const PDF_TEMPLATE_VIEW_DIRECTIONS = ['all', 'front', 'top', 'left'] as const;
 
 const DEFAULT_CAPTURE_REGION: CaptureRegion = {
   x: 0,
@@ -562,7 +565,7 @@ const PDFTemplatePreview: React.FC<PDFTemplatePreviewProps> = ({ isOpen, onClose
     setViewerOverlay({
       isOpen: true,
       viewId: viewId,
-      viewType: viewType
+      viewType: normalizeTemplateViewTarget(viewType)
     });
   };
 
@@ -592,17 +595,17 @@ const PDFTemplatePreview: React.FC<PDFTemplatePreviewProps> = ({ isOpen, onClose
   }, []);
 
   const getViewDimensionsMm = useCallback((viewType: string) => {
+    const normalizedViewType = normalizeTemplateViewTarget(viewType);
     const fallbackWidth = spaceInfo?.width ?? 3000;
     const fallbackDepth = spaceInfo?.depth ?? 600;
     const fallbackHeight = spaceInfo?.height ?? 2400;
 
-    switch (viewType) {
+    switch (normalizedViewType) {
       case 'top':
         return { width: fallbackWidth, height: fallbackDepth };
       case 'front':
         return { width: fallbackWidth, height: fallbackHeight };
       case 'side':
-      case 'right':
         return { width: fallbackDepth, height: fallbackHeight };
       case 'door':
         return { width: fallbackWidth, height: fallbackHeight };
@@ -927,7 +930,9 @@ const PDFTemplatePreview: React.FC<PDFTemplatePreviewProps> = ({ isOpen, onClose
       }
 
       const viewId = viewerOverlay.viewId;
-      const viewType = viewerOverlay.viewType;
+      const viewType = viewerOverlay.viewType
+        ? normalizeTemplateViewTarget(viewerOverlay.viewType)
+        : null;
 
       setLocalCapturedViews(prev => ({
         ...prev,
@@ -2848,7 +2853,7 @@ const PDFTemplatePreview: React.FC<PDFTemplatePreviewProps> = ({ isOpen, onClose
       // 각 뷰 위치에 대해 이미지 렌더링
       for (const view of viewPositions) {
         // 뷰 ID에서 원본 타입 추출 (timestamp 제거)
-        const viewType = view.id.split('_')[0];
+        const viewType = normalizeTemplateViewTarget(view.id.split('_')[0]);
         const isTextItem = AVAILABLE_TEXT_ITEMS.some(item => item.id === viewType);
 
         // 텍스트 아이템은 나중에 처리
@@ -2946,7 +2951,7 @@ const PDFTemplatePreview: React.FC<PDFTemplatePreviewProps> = ({ isOpen, onClose
       await new Promise(resolve => setTimeout(resolve, 100));
 
       for (const view of viewPositions) {
-        const viewType = view.id.split('_')[0];
+        const viewType = normalizeTemplateViewTarget(view.id.split('_')[0]);
         const isTextItem = AVAILABLE_TEXT_ITEMS.some(item => item.id === viewType);
 
         console.log(`뷰 확인: ${view.id}, 타입: ${viewType}, isTextItem: ${isTextItem}`);
@@ -4606,7 +4611,7 @@ const PDFTemplatePreview: React.FC<PDFTemplatePreviewProps> = ({ isOpen, onClose
 
                   {/* 뷰카드 렌더링 - 페이퍼 내부에 */}
                   {viewPositions.length > 0 && viewPositions.map(view => {
-                    const viewType = view.id.split('_')[0];
+                    const viewType = normalizeTemplateViewTarget(view.id.split('_')[0]);
                     const viewInfo = AVAILABLE_VIEWS.find(v => v.id === viewType);
                     const capturedImage = localCapturedViews[view.id] 
                       ?? (viewType ? localCapturedViews[viewType] : undefined)
@@ -5437,17 +5442,16 @@ const PDFTemplatePreview: React.FC<PDFTemplatePreviewProps> = ({ isOpen, onClose
                   {viewMode === '2D' && (
                     <>
                       <div className={styles.viewDirectionGroup}>
-                        {['all', 'front', 'top', 'left', 'right'].map((direction) => (
+                        {PDF_TEMPLATE_VIEW_DIRECTIONS.map((direction) => (
                           <button
                             key={direction}
                             className={`${styles.viewDirectionButton} ${view2DDirection === direction ? styles.active : ''}`}
-                            onClick={() => setView2DDirection(direction as any)}
+                            onClick={() => setView2DDirection(direction)}
                           >
                             {direction === 'all' ? t('viewer.all') :
                              direction === 'front' ? t('viewer.front') :
                              direction === 'top' ? t('viewer.top') :
-                             direction === 'left' ? t('viewer.left') :
-                             t('viewer.right')}
+                             t('viewer.left')}
                           </button>
                         ))}
                       </div>

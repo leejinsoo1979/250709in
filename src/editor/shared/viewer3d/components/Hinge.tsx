@@ -17,7 +17,6 @@ export const Hinge: React.FC<HingeProps> = ({
   position,
   mainDiameter = 17.5, // 메인 경첩 반지름 17.5mm
   smallCircleDiameter = 4, // 작은 원 반지름 4mm
-  verticalSpacing = 20, // 작은 원들 사이 간격 (사용 안 함)
   smallCircleXOffset = 9.5, // 작은 원이 메인 원보다 안쪽으로 9.5mm (33.5 - 24)
   viewDirection = 'front', // 기본값은 정면뷰
   view2DDirection: propsView2DDirection // props로 전달받은 view2DDirection
@@ -52,6 +51,13 @@ export const Hinge: React.FC<HingeProps> = ({
 
   const mainCirclePoints = generateCirclePoints(mainRadius);
   const smallCirclePoints = generateCirclePoints(smallRadius);
+  const sideLineSegments = useMemo(() => {
+    return hingeSidePaths.map(pathData => {
+      const points = parseSVGPath(pathData.d, pathData.matrix);
+      console.log('Parsed path:', { d: pathData.d.substring(0, 20), pointCount: points.length, firstPoint: points[0] });
+      return points;
+    });
+  }, []);
 
   // Only render in 2D view
   if (viewMode !== '2D') {
@@ -60,7 +66,7 @@ export const Hinge: React.FC<HingeProps> = ({
 
   // 측면뷰 렌더링 - 직접 SVG 경로 파싱
   if ((view2DDirection === 'left' || view2DDirection === 'right') && viewDirection === 'side') {
-    const [x, y, z] = position;
+    const [, y, z] = position;
     const sidePosition: [number, number, number] = [z, y, 0];
 
     console.log('Hinge side view rendering:', {
@@ -71,17 +77,7 @@ export const Hinge: React.FC<HingeProps> = ({
       pathCount: hingeSidePaths.length
     });
 
-    // 모든 SVG 경로를 파싱
-    const lineSegments = useMemo(() => {
-      const segments = hingeSidePaths.map(pathData => {
-        const points = parseSVGPath(pathData.d, pathData.matrix);
-        console.log('Parsed path:', { d: pathData.d.substring(0, 20), pointCount: points.length, firstPoint: points[0] });
-        return points;
-      });
-      return segments;
-    }, []);
-
-    console.log('Total line segments:', lineSegments.length, 'First segment points:', lineSegments[0]?.length);
+    console.log('Total line segments:', sideLineSegments.length, 'First segment points:', sideLineSegments[0]?.length);
 
     // SVG viewBox: 0 0 491 348
     // 목표 크기: 35mm 높이
@@ -98,13 +94,14 @@ export const Hinge: React.FC<HingeProps> = ({
     const offsetY = -svgViewBoxHeight / 2;
 
     return (
-      <group position={sidePosition}>
-        <group position={[offsetX * scale, -offsetY * scale, 0]} scale={[scale, -scale, scale]}>
-          {lineSegments.map((points, index) => {
+      <group name="door-hinge" position={sidePosition}>
+        <group name="door-hinge-side" position={[offsetX * scale, -offsetY * scale, 0]} scale={[scale, -scale, scale]}>
+          {sideLineSegments.map((points, index) => {
             if (points.length < 2) return null;
             return (
               <Line
                 key={index}
+                name="door-hinge"
                 points={points}
                 color={lineColor}
                 lineWidth={1}
@@ -119,18 +116,18 @@ export const Hinge: React.FC<HingeProps> = ({
   // 정면뷰 렌더링 (기본값)
   if (viewDirection === 'front') {
     return (
-      <group position={position}>
+      <group name="door-hinge" position={position}>
         {/* 메인 경첩 원 (17.5mm 반지름) - 측판에서 24mm 안쪽 */}
-        <Line points={mainCirclePoints} color={lineColor} lineWidth={1} />
+        <Line name="door-hinge" points={mainCirclePoints} color={lineColor} lineWidth={1} />
 
         {/* 위쪽 작은 원 (4mm 반지름) - 측판에서 33.5mm 안쪽, 메인 원 중심에서 위로 22.5mm */}
-        <group position={[smallCircleX, smallCircleSpacing, 0]}>
-          <Line points={smallCirclePoints} color={lineColor} lineWidth={1} />
+        <group name="door-hinge-screw" position={[smallCircleX, smallCircleSpacing, 0]}>
+          <Line name="door-hinge" points={smallCirclePoints} color={lineColor} lineWidth={1} />
         </group>
 
         {/* 아래쪽 작은 원 (4mm 반지름) - 측판에서 33.5mm 안쪽, 메인 원 중심에서 아래로 22.5mm */}
-        <group position={[smallCircleX, -smallCircleSpacing, 0]}>
-          <Line points={smallCirclePoints} color={lineColor} lineWidth={1} />
+        <group name="door-hinge-screw" position={[smallCircleX, -smallCircleSpacing, 0]}>
+          <Line name="door-hinge" points={smallCirclePoints} color={lineColor} lineWidth={1} />
         </group>
       </group>
     );

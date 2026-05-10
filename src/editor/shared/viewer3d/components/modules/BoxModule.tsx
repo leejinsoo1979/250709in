@@ -32,6 +32,7 @@ import {
   applyCabinetTexture1Settings,
   applyDefaultImageTextureSettings,
 } from '@/editor/shared/utils/materialConstants';
+import { resolveShelfFrontInsetMm } from '@/editor/shared/utils/shelfInsetCalculator';
 
 interface BoxModuleProps {
   moduleData: ModuleData;
@@ -1275,7 +1276,10 @@ const BoxModule: React.FC<BoxModuleProps> = ({
               textureUrl={baseFurniture.textureUrl}
               panelGrainDirections={panelGrainDirections}
               isFloatingPlacement={spaceInfo?.baseConfig?.placementType === 'float'}
-              shelfFrontInsetMm={(moduleData?.id?.includes('entryway-h') || moduleData?.id?.includes('-shelf-') || moduleData?.id?.includes('-4drawer-shelf-') || moduleData?.id?.includes('-2drawer-shelf-') || moduleData?.id?.includes('pull-out-cabinet') || moduleData?.id?.includes('pantry-cabinet') || (moduleData?.id?.includes('fridge-cabinet') && !moduleData?.id?.includes('built-in-fridge'))) ? 30 : 0}
+              shelfFrontInsetMm={resolveShelfFrontInsetMm({
+                moduleId: moduleData?.id,
+                cabinetCategory: moduleData?.category
+              })}
               doorTopGap={doorTopGap}
               doorBottomGap={doorBottomGap}
               sectionDepths={placedModuleForReactive?.sectionDepths}

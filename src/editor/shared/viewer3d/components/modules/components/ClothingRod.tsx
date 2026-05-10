@@ -4,6 +4,11 @@ import BoxWithEdges from './BoxWithEdges';
 import { Line } from '@react-three/drei';
 import { useUIStore } from '@/store/uiStore';
 import { useSpace3DView } from '../../../context/useSpace3DView';
+import {
+  calculateClothingRodGeometry,
+  mmToClothingRodUnits,
+  shouldHideClothingRodInView
+} from '@/editor/shared/utils/clothingRodGeometry';
 
 interface ClothingRodProps {
   innerWidth: number;
@@ -33,8 +38,6 @@ export const ClothingRod: React.FC<ClothingRodProps> = ({
   renderMode,
   isDragging = false,
   isEditMode = false,
-  adjustedDepthForShelves,
-  depth,
   addFrontFillLight,
   furnitureId,
 }) => {
@@ -55,36 +58,26 @@ export const ClothingRod: React.FC<ClothingRodProps> = ({
       if (furnitureId && !highlightedPanel.startsWith(`${furnitureId}-`)) return true;
     }
     // 탑뷰에서는 렌더링하지 않음
-    if (viewMode === '2D' && view2DDirection === 'top') return true;
+    if (shouldHideClothingRodInView(viewMode, view2DDirection)) return true;
     return false;
   }, [ctx.hideAccessories, highlightedPanel, furnitureId, viewMode, view2DDirection]);
 
-  // 단위 변환 함수
-  const mmToThreeUnits = (mm: number): number => mm * 0.01;
-
-  // 브라켓 크기 (고정)
-  const bracketWidth = mmToThreeUnits(12);
-  const bracketDepth = mmToThreeUnits(12);
-  const bracketHeight = mmToThreeUnits(75);
-
-  // 브라켓 X 위치 (가구 내부 양 끝에서 각각 0.5mm씩 안쪽으로)
-  const widthReduction = mmToThreeUnits(0.5); // 좌우 각 0.5mm씩 줄임
-  const leftBracketX = -innerWidth / 2 + bracketWidth / 2 + widthReduction;
-  const rightBracketX = innerWidth / 2 - bracketWidth / 2 - widthReduction;
-
-  // 옷봉 크기 및 위치: 브라켓 안쪽에서 안쪽까지
-  const rodStartX = leftBracketX + bracketWidth / 2;
-  const rodEndX = rightBracketX - bracketWidth / 2;
-  const rodWidth = rodEndX - rodStartX;
-  const rodCenterX = (rodStartX + rodEndX) / 2;
-  const rodDepth = mmToThreeUnits(10);
-  const rodHeight = mmToThreeUnits(30);
-
-  // 옷봉 Y 위치
-  const rodYOffset = -bracketHeight / 2 + mmToThreeUnits(5) + rodHeight / 2;
-
-  // 옷봉 Z 위치
-  const rodZOffset = -mmToThreeUnits(1);
+  const {
+    bracketWidth,
+    bracketDepth,
+    bracketHeight,
+    leftBracketX,
+    rightBracketX,
+    rodStartX,
+    rodEndX,
+    rodWidth,
+    rodCenterX,
+    rodDepth,
+    rodHeight,
+    rodYOffset,
+    rodZOffset,
+    midLineOffset
+  } = React.useMemo(() => calculateClothingRodGeometry(innerWidth), [innerWidth]);
 
   // 옷봉 재질
   const rodMaterial = React.useMemo(() => {
@@ -144,11 +137,11 @@ export const ClothingRod: React.FC<ClothingRodProps> = ({
         <>
           <spotLight
             ref={fillLightRef}
-            position={[0, rodYOffset + mmToThreeUnits(80), rodZOffset + mmToThreeUnits(220)]}
+            position={[0, rodYOffset + mmToClothingRodUnits(80), rodZOffset + mmToClothingRodUnits(220)]}
             angle={Math.PI / 5.5}
             penumbra={0.55}
             intensity={0.6}
-            distance={mmToThreeUnits(900)}
+            distance={mmToClothingRodUnits(900)}
             decay={2}
             color="#f7f8ff"
             castShadow={false}
@@ -216,8 +209,8 @@ export const ClothingRod: React.FC<ClothingRodProps> = ({
           <Line
             name="clothing-rod-line-mid-upper"
             points={[
-              [rodStartX, rodYOffset + mmToThreeUnits(5), rodZOffset],
-              [rodEndX, rodYOffset + mmToThreeUnits(5), rodZOffset]
+              [rodStartX, rodYOffset + midLineOffset, rodZOffset],
+              [rodEndX, rodYOffset + midLineOffset, rodZOffset]
             ]}
             color={lineColor}
             lineWidth={0.5}
@@ -226,8 +219,8 @@ export const ClothingRod: React.FC<ClothingRodProps> = ({
           <Line
             name="clothing-rod-line-mid-lower"
             points={[
-              [rodStartX, rodYOffset - mmToThreeUnits(5), rodZOffset],
-              [rodEndX, rodYOffset - mmToThreeUnits(5), rodZOffset]
+              [rodStartX, rodYOffset - midLineOffset, rodZOffset],
+              [rodEndX, rodYOffset - midLineOffset, rodZOffset]
             ]}
             color={lineColor}
             lineWidth={0.5}

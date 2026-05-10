@@ -15,6 +15,7 @@ import { useUIStore } from '@/store/uiStore';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
 import { SettingsIcon, EditIcon } from '@/components/common/Icons';
 import { isCabinetTexture1, applyCabinetTexture1Settings, isOakTexture, applyOakTextureSettings } from '@/editor/shared/utils/materialConstants';
+import { resolveCustomShelfFrontInsetMm } from '@/editor/shared/utils/shelfInsetCalculator';
 import DimensionText from '../components/DimensionText';
 import EndPanelWithTexture from '../components/EndPanelWithTexture';
 import { Line } from '@react-three/drei';
@@ -1276,7 +1277,10 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
       } else if (el.type === 'shelf') {
         // ═══ ShelfRenderer 사용 ═══
         // el.heights는 섹션 하단에서 각 선반 위치 (mm)
-        const insetMm = el.shelfMethod === 'fixed' ? 0 : (el.shelfFrontInset ?? 30);
+        const insetMm = resolveCustomShelfFrontInsetMm({
+          shelfMethod: el.shelfMethod,
+          explicitInsetMm: el.shelfFrontInset
+        });
         nodes.push(
           <group key={key} position={[offsetX, 0, 0]}>
             <ShelfRenderer

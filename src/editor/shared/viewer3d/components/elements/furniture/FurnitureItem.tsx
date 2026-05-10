@@ -1407,6 +1407,17 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       const topFrameDelta = placedModule.topFrameThickness - globalTopFrame;
       furnitureHeightMm -= topFrameDelta;
     }
+    if (placedModule.hasTopFrame === false) {
+      const topFrameMm = placedModule.topFrameThickness ?? (spaceInfo.frameSize?.top ?? 30);
+      const topGapMm = placedModule.topFrameGap ?? 0;
+      furnitureHeightMm += (topFrameMm - topGapMm);
+    }
+    if (placedModule.hasBase === false) {
+      const globalBaseMm = spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height ?? 60) : 0;
+      const absorbedBase = placedModule.baseFrameHeight ?? globalBaseMm;
+      const floatH = placedModule.individualFloatHeight ?? 0;
+      furnitureHeightMm += (absorbedBase - floatH);
+    }
   } else if (placedModule.isFreePlacement && placedModule.freeHeight) {
     furnitureHeightMm = placedModule.freeHeight;
   } else {
@@ -1428,6 +1439,11 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         const topDelta = placedModule.topFrameThickness - globalTop;
         furnitureHeightMm -= topDelta;
       }
+      if (placedModule.hasTopFrame === false && isTallCabinetForY) {
+        const topFrameMm = placedModule.topFrameThickness ?? (spaceInfo.frameSize?.top ?? 30);
+        const topGapMm = placedModule.topFrameGap ?? 0;
+        furnitureHeightMm += (topFrameMm - topGapMm);
+      }
       // 개별 baseFrameHeight 보정: 키큰장(full)만 적용
       // moduleData.dimensions.height는 글로벌 baseFrame 기준이므로 개별 차이를 반영
       // (CADDimensions2D.tsx computeFurnitureHeightMm과 동일 로직)
@@ -1437,7 +1453,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         furnitureHeightMm -= (placedModule.baseFrameHeight - globalBase);
       }
       // 걸래받이 OFF: 걸래받이 자리를 가구가 흡수 - 띄움만큼은 빈 공간으로 제외
-      if (!placedModule.freeHeight && placedModule.hasBase === false && isTallCabinetForY) {
+      if (placedModule.hasBase === false && isTallCabinetForY) {
         const globalBaseMm = spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height ?? 60) : 0;
         const absorbedBase = placedModule.baseFrameHeight ?? globalBaseMm;
         const floatH = placedModule.individualFloatHeight ?? 0;

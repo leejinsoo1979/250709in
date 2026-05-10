@@ -1,12 +1,12 @@
 import { useCallback, useState } from 'react';
 import {
-  generateDXFFromScene,
   downloadDXFFromScene,
   generateDXFFilenameFromScene,
   generateCombinedDXFFilenameFromScene
 } from '../utils/dxfFromScene';
 import {
   buildCombinedDxfFromDrawingData,
+  generateDxfFromData,
   generateDxfDrawingData,
   type CombinedDxfDrawingData
 } from '../utils/dxfDataRenderer';
@@ -18,39 +18,11 @@ import { auth } from '@/firebase/config';
 import { sceneHolder } from '../viewer3d/sceneHolder';
 import { useUIStore } from '@/store/uiStore';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
+import { captureExportUiState, createExportViewUiPatch, shouldApplyExportUiPatch } from '../utils/exportStateSnapshot';
+import { getSideViewSlotGroups } from '../utils/sideViewModuleFilter';
 
 // 도면 타입 정의
 export type DrawingType = 'front' | 'plan' | 'side' | 'sideLeft' | 'door';
-
-const getSideSlotGroups = (placedModules: PlacedModule[]): Array<{
-  slotKey: number;
-  titleIndex: number;
-  selectedSlotIndex: number;
-  modules: PlacedModule[];
-}> => {
-  const visibleModules = placedModules.filter(module => !module.isSurroundPanel);
-  const grouped = new Map<number, PlacedModule[]>();
-
-  visibleModules.forEach(module => {
-    const slotKey = module.slotIndex ?? Math.round((module.position?.x ?? 0) * 1000);
-    const modules = grouped.get(slotKey) ?? [];
-    modules.push(module);
-    grouped.set(slotKey, modules);
-  });
-
-  return Array.from(grouped.entries())
-    .sort(([, aModules], [, bModules]) => {
-      const ax = Math.min(...aModules.map(module => module.position?.x ?? 0));
-      const bx = Math.min(...bModules.map(module => module.position?.x ?? 0));
-      return ax - bx;
-    })
-    .map(([, modules], index) => ({
-      slotKey: typeof modules[0]?.slotIndex === 'number' ? modules[0].slotIndex : index,
-      titleIndex: typeof modules[0]?.slotIndex === 'number' ? modules[0].slotIndex + 1 : index + 1,
-      selectedSlotIndex: typeof modules[0]?.slotIndex === 'number' ? modules[0].slotIndex : 0,
-      modules
-    }));
-};
 
 const waitForSceneUpdate = async (delayMs = 500): Promise<void> => {
   if (typeof requestAnimationFrame === 'function') {
@@ -66,6 +38,12 @@ const waitForSceneUpdate = async (delayMs = 500): Promise<void> => {
   }
 };
 
+const createSideSlotFilename = (
+  spaceInfo: SpaceInfo,
+  slotNumber: number
+): string => generateDXFFilenameFromScene(spaceInfo, 'sideLeft')
+  .replace('furniture-side-', `furniture-side-slot-${slotNumber}-`);
+
 /**
  * DXF 내보내기 기능을 제공하는 커스텀 훅
  * Three.js 씬에서 실제 렌더링된 geometry를 추출하여 DXF로 내보냄
@@ -73,6 +51,30 @@ const waitForSceneUpdate = async (delayMs = 500): Promise<void> => {
  */
 export const useDXFExport = () => {
   const [isExporting, setIsExporting] = useState(false);
+
+  const persistOrDownloadDxf = useCallback(async (
+    dxfContent: string,
+    filename: string
+  ): Promise<void> => {
+    try {
+      const user = auth.currentUser;
+      if (user) {
+        const teamId = `personal_${user.uid}`;
+        const designId = 'current_design';
+        const versionId = await getCurrentVersionId(teamId, designId) || 'v_' + Date.now();
+
+        const blob = new Blob([dxfContent], { type: 'application/dxf' });
+        await exportWithPersistence(blob, filename, 'dxf', teamId, designId, versionId);
+        console.log(`✅ DXF Storage 업로드 성공: ${filename}`);
+        return;
+      }
+
+      downloadDXFFromScene(dxfContent, filename);
+    } catch (error) {
+      console.error('Storage 업로드 실패, 로컬 다운로드로 폴백:', error);
+      downloadDXFFromScene(dxfContent, filename);
+    }
+  }, []);
 
   /**
    * 현재 가구 배치를 DXF 파일로 내보내기
@@ -86,6 +88,16 @@ export const useDXFExport = () => {
     placedModules: PlacedModule[],
     drawingType: DrawingType = 'front'
   ) => {
+    const originalUI = captureExportUiState(useUIStore.getState());
+
+    const switchSceneView = async (direction: 'front' | 'left' | 'top', selectedSlotIndex?: number | null) => {
+      const patch = createExportViewUiPatch(direction, selectedSlotIndex);
+      if (shouldApplyExportUiPatch(useUIStore.getState(), patch)) {
+        useUIStore.setState(patch);
+      }
+      await waitForSceneUpdate(700);
+    };
+
     try {
       setIsExporting(true);
       console.log(`🔧 DXF ${drawingType} 도면 내보내기 시작 (씬 기반)...`);
@@ -106,33 +118,35 @@ export const useDXFExport = () => {
         throw new Error('Three.js 씬을 찾을 수 없습니다. 에디터가 로드될 때까지 기다려주세요.');
       }
 
-      // 데이터 기반 DXF 생성 (placedModules 전달)
-      const dxfContent = generateDXFFromScene(spaceInfo, drawingType, placedModules);
+      const downloadedFilenames: string[] = [];
 
-      if (!dxfContent) {
-        throw new Error('DXF 생성에 실패했습니다.');
-      }
-
-      // 파일명 생성
-      const filename = generateDXFFilenameFromScene(spaceInfo, drawingType);
-
-      // Storage 업로드 시도
-      try {
-        const user = auth.currentUser;
-        if (user) {
-          const teamId = `personal_${user.uid}`;
-          const designId = 'current_design';
-          const versionId = await getCurrentVersionId(teamId, designId) || 'v_' + Date.now();
-
-          const blob = new Blob([dxfContent], { type: 'application/dxf' });
-          await exportWithPersistence(blob, filename, 'dxf', teamId, designId, versionId);
-          console.log(`✅ DXF ${drawingType} Storage 업로드 성공!`);
-        } else {
-          downloadDXFFromScene(dxfContent, filename);
+      if (drawingType === 'side' || drawingType === 'sideLeft') {
+        const sideSlotGroups = getSideViewSlotGroups(placedModules);
+        if (sideSlotGroups.length === 0) {
+          throw new Error('측면도에 포함할 가구가 없습니다.');
         }
-      } catch (error) {
-        console.error('Storage 업로드 실패, 로컬 다운로드로 폴백:', error);
-        downloadDXFFromScene(dxfContent, filename);
+
+        for (const group of sideSlotGroups) {
+          await switchSceneView('left', group.selectedSlotIndex);
+          const dxfContent = generateDxfFromData(spaceInfo, group.modules, 'left');
+          const filename = createSideSlotFilename(spaceInfo, group.titleIndex);
+          await persistOrDownloadDxf(dxfContent, filename);
+          downloadedFilenames.push(filename);
+        }
+      } else {
+        const viewDirection = drawingType === 'plan' ? 'top' : 'front';
+        await switchSceneView(viewDirection);
+        const dxfContent = generateDxfFromData(
+          spaceInfo,
+          placedModules,
+          viewDirection,
+          'all',
+          false,
+          drawingType === 'door' ? ['DOOR', 'DOOR_DIMENSIONS'] : undefined
+        );
+        const filename = generateDXFFilenameFromScene(spaceInfo, drawingType);
+        await persistOrDownloadDxf(dxfContent, filename);
+        downloadedFilenames.push(filename);
       }
 
       console.log(`✅ DXF ${drawingType} 도면 내보내기 완료!`);
@@ -147,8 +161,8 @@ export const useDXFExport = () => {
 
       return {
         success: true,
-        filename,
-        message: `DXF ${drawingTypeNames[drawingType]} 파일이 성공적으로 생성되었습니다.`
+        filename: downloadedFilenames.join(', '),
+        message: `DXF ${drawingTypeNames[drawingType]} 파일 ${downloadedFilenames.length}개가 성공적으로 생성되었습니다.`
       };
 
     } catch (error) {
@@ -160,9 +174,10 @@ export const useDXFExport = () => {
         message: `DXF ${drawingType} 도면 파일 생성에 실패했습니다.`
       };
     } finally {
+      useUIStore.setState(originalUI);
       setIsExporting(false);
     }
-  }, []);
+  }, [persistOrDownloadDxf]);
 
   /**
    * DXF 내보내기 가능 여부 확인
@@ -173,6 +188,8 @@ export const useDXFExport = () => {
     spaceInfo: SpaceInfo | null,
     _placedModules: PlacedModule[]
   ): boolean => {
+    void _placedModules;
+
     // 공간 정보가 있고, 최소한의 치수가 설정되어 있어야 함
     if (!spaceInfo || spaceInfo.width <= 0 || spaceInfo.depth <= 0) {
       return false;
@@ -230,15 +247,7 @@ export const useDXFExport = () => {
   ) => {
     const uiStore = useUIStore.getState();
     const furnitureStore = useFurnitureStore.getState();
-    const originalUI = {
-      viewMode: uiStore.viewMode,
-      view2DDirection: uiStore.view2DDirection,
-      renderMode: uiStore.renderMode,
-      showDimensions: uiStore.showDimensions,
-      showDimensionsText: uiStore.showDimensionsText,
-      showFurniture: uiStore.showFurniture,
-      selectedSlotIndex: uiStore.selectedSlotIndex
-    };
+    const originalUI = captureExportUiState(uiStore);
     const originalPlacedModules = furnitureStore.placedModules;
 
     try {
@@ -255,19 +264,14 @@ export const useDXFExport = () => {
       const drawingData: CombinedDxfDrawingData[] = [];
 
       const switchSceneView = async (direction: 'front' | 'left' | 'top') => {
-        useUIStore.setState({
-          viewMode: '2D',
-          view2DDirection: direction,
-          renderMode: 'wireframe',
-          showDimensions: true,
-          showDimensionsText: true,
-          showFurniture: true
-        });
+        const patch = createExportViewUiPatch(direction);
+        if (shouldApplyExportUiPatch(useUIStore.getState(), patch)) {
+          useUIStore.setState(patch);
+        }
         await waitForSceneUpdate(700);
       };
 
       if (drawingTypes.includes('front')) {
-        useFurnitureStore.setState({ placedModules: originalPlacedModules });
         await switchSceneView('front');
         drawingData.push({
           title: '입면도',
@@ -276,7 +280,6 @@ export const useDXFExport = () => {
       }
 
       if (drawingTypes.includes('plan')) {
-        useFurnitureStore.setState({ placedModules: originalPlacedModules });
         await switchSceneView('top');
         drawingData.push({
           title: '평면도',
@@ -285,11 +288,13 @@ export const useDXFExport = () => {
       }
 
       if (drawingTypes.includes('side') || drawingTypes.includes('sideLeft')) {
-        const sideSlotGroups = getSideSlotGroups(placedModules);
+        const sideSlotGroups = getSideViewSlotGroups(placedModules);
 
         for (const group of sideSlotGroups) {
-          useFurnitureStore.setState({ placedModules: group.modules });
-          useUIStore.setState({ selectedSlotIndex: group.selectedSlotIndex });
+          const slotPatch = { selectedSlotIndex: group.selectedSlotIndex };
+          if (shouldApplyExportUiPatch(useUIStore.getState(), slotPatch)) {
+            useUIStore.setState(slotPatch);
+          }
           await switchSceneView('left');
 
           const sideData = generateDxfDrawingData(spaceInfo, group.modules, 'left');
@@ -301,7 +306,6 @@ export const useDXFExport = () => {
       }
 
       if (drawingTypes.includes('door')) {
-        useFurnitureStore.setState({ placedModules: originalPlacedModules });
         await switchSceneView('front');
         drawingData.push({
           title: '도어도면',
@@ -344,7 +348,9 @@ export const useDXFExport = () => {
         message: `통합 DXF 파일 생성에 실패했습니다.`
       };
     } finally {
-      useFurnitureStore.setState({ placedModules: originalPlacedModules });
+      if (useFurnitureStore.getState().placedModules !== originalPlacedModules) {
+        useFurnitureStore.setState({ placedModules: originalPlacedModules });
+      }
       useUIStore.setState(originalUI);
       setIsExporting(false);
     }

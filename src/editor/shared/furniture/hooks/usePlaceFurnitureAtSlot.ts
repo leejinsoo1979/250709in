@@ -13,6 +13,44 @@ import { analyzeColumnSlots, calculateFurnitureBounds } from '@/editor/shared/ut
 import { isCustomizableModuleId, createDefaultCustomConfig } from '@/editor/shared/controls/furniture/CustomizableFurnitureLibrary';
 import { useMyCabinetStore, PendingPlacement } from '@/store/core/myCabinetStore';
 import { v4 as uuidv4 } from 'uuid';
+import {
+  getCategoryDefaultFurnitureDepth,
+  getDefaultFurnitureDepth as resolveDefaultFurnitureDepth
+} from '@/editor/shared/utils/furnitureDepthDefaults';
+
+const isTopFrameCapablePlacedModule = (module: PlacedModule): boolean => {
+  if (module.isSurroundPanel) return false;
+  const moduleId = module.moduleId || '';
+  if (moduleId.includes('insert-frame')) return false;
+  return !(moduleId.startsWith('lower-') || moduleId.includes('-lower-'));
+};
+
+const isBaseFrameCapablePlacedModule = (module: PlacedModule): boolean => {
+  if (module.isSurroundPanel) return false;
+  const moduleId = module.moduleId || '';
+  if (moduleId.includes('insert-frame')) return false;
+  return !(moduleId.includes('upper-cabinet') || moduleId.startsWith('upper-') || moduleId.includes('-upper-'));
+};
+
+const clampTopFrameGapForModule = (
+  moduleData: ModuleData,
+  topFrameMm: number,
+  topGapMm: number,
+  absorbedBaseMm: number
+): number => {
+  const sections = moduleData.modelConfig?.sections;
+  if (!sections || sections.length < 2) {
+    return Math.max(0, topGapMm);
+  }
+
+  const upperAbsorbingIndex = sections.length - 1;
+  const fixedSectionHeight = sections.reduce((sum, section, index) => (
+    index === upperAbsorbingIndex ? sum : sum + (section.height || 0)
+  ), 0);
+  const minimumUpperHeight = moduleData.modelConfig?.basicThickness || 18;
+  const maxGap = Math.max(0, moduleData.dimensions.height + topFrameMm + absorbedBaseMm - fixedSectionHeight - minimumUpperHeight);
+  return Math.max(0, Math.min(topGapMm, maxGap));
+};
 
 export interface PlaceFurnitureParams {
   moduleId: string;           // 배치할 가구 ID (예: 'single-2drawer-hanging-450')
@@ -581,20 +619,8 @@ export function placeFurnitureAtSlot(params: PlaceFurnitureParams): PlaceFurnitu
     });
   }
 
-  // 카테고리별 기본 깊이 (상부장 300 먼저, 신발장 380)
   if (customDepth === undefined) {
-    const isUpperCabinet = furnitureId.includes('upper-cabinet');
-    const isShoeCabinet = !isUpperCabinet && (
-      furnitureId.includes('-entryway-') ||
-      furnitureId.includes('-shelf-') ||
-      furnitureId.includes('-4drawer-shelf-') ||
-      furnitureId.includes('-2drawer-shelf-')
-    );
-    if (isUpperCabinet) {
-      customDepth = Math.min(300, spaceInfo.depth);
-    } else if (isShoeCabinet) {
-      customDepth = Math.min(380, spaceInfo.depth);
-    }
+    customDepth = getCategoryDefaultFurnitureDepth(spaceInfo.depth, furnitureId);
   }
 
   // 고정폭 모듈 (빌트인 냉장고장 582 / Insert 프레임 136): 항상 고정폭 유지 (자유 모드 포함)
@@ -607,6 +633,35 @@ export function placeFurnitureAtSlot(params: PlaceFurnitureParams): PlaceFurnitu
   const isFixedWidthModule = fixedWidthForFinal > 0;
   const finalCustomWidth = isFixedWidthModule ? fixedWidthForFinal : customWidth;
   const finalAdjustedWidth = isFixedWidthModule ? undefined : adjustedWidth;
+  const topFrameCapableExistingModules = existingModules
+    .filter(module => !module.isFreePlacement && (module.zone || 'normal') === targetSlot.zone)
+    .filter(isTopFrameCapablePlacedModule);
+  const inheritTopFrameOff = topFrameCapableExistingModules.length > 0
+    && topFrameCapableExistingModules.every(module => module.hasTopFrame === false);
+  const inheritedTopFrameGap = topFrameCapableExistingModules.find(module => module.topFrameGap !== undefined)?.topFrameGap ?? 0;
+  const shouldHaveTopFrame = moduleData.category !== 'lower' && spaceInfo.frameConfig?.top !== false && !inheritTopFrameOff;
+  const moduleFlags = moduleData as ModuleData & {
+    hasBase?: boolean;
+    individualFloatHeight?: number;
+  };
+  const baseFrameCapableExistingModules = existingModules
+    .filter(module => !module.isFreePlacement && (module.zone || 'normal') === targetSlot.zone)
+    .filter(isBaseFrameCapablePlacedModule);
+  const inheritBaseFrameOff = baseFrameCapableExistingModules.length > 0
+    && baseFrameCapableExistingModules.every(module => module.hasBase === false);
+  const inheritedFloatHeight = baseFrameCapableExistingModules.find(module => module.individualFloatHeight !== undefined)?.individualFloatHeight ?? 0;
+  const inheritedDoorBottomGap = baseFrameCapableExistingModules.find(module => module.doorBottomGap !== undefined)?.doorBottomGap;
+  const shouldHaveBaseFrame = moduleFlags.hasBase === false
+    ? false
+    : moduleData.category !== 'upper' && !inheritBaseFrameOff;
+  const initialFloatHeight = moduleFlags.individualFloatHeight ?? (shouldHaveBaseFrame ? 0 : inheritedFloatHeight);
+  const inheritedAbsorbedBase = shouldHaveBaseFrame
+    ? 0
+    : ((spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height ?? 60) : 0) - initialFloatHeight);
+  const topFrameThickness = spaceInfo.frameSize?.top || 30;
+  const initialTopFrameGap = shouldHaveTopFrame
+    ? 0
+    : clampTopFrameGapForModule(moduleData, topFrameThickness, inheritedTopFrameGap, inheritedAbsorbedBase);
 
   const newModule: PlacedModule = {
     id: uuidv4(),
@@ -629,6 +684,11 @@ export function placeFurnitureAtSlot(params: PlaceFurnitureParams): PlaceFurnitu
     lowerSectionDepth: undefined,
     upperSectionDepth: undefined,
     lowerSectionTopOffset: defaultLowerTopOffset,
+    hasBase: shouldHaveBaseFrame,
+    hasBottomFrame: shouldHaveBaseFrame,
+    hasTopFrame: shouldHaveTopFrame,
+    topFrameThickness,
+    ...(shouldHaveTopFrame ? {} : { topFrameGap: initialTopFrameGap }),
     // 서라운드 + 상부장은 상단 몰딩 옵셋 기본 23mm
     ...((moduleData.category === 'upper' && spaceInfo.surroundType === 'surround')
          ? { topFrameOffset: 23 } : {}),
@@ -638,10 +698,12 @@ export function placeFurnitureAtSlot(params: PlaceFurnitureParams): PlaceFurnitu
     ...(moduleWidth !== undefined && { moduleWidth }),
     // ModuleData 정의에서 hasBase: false / individualFloatHeight / hasBackPanel: false 가
     // 명시된 가구(예: 유리장)의 띄움/백패널 속성을 PlacedModule로 전파
-    ...((moduleData as any).hasBase === false ? { hasBase: false } : {}),
     ...((moduleData as any).hasBackPanel === false ? { hasBackPanel: false } : {}),
-    ...(((moduleData as any).individualFloatHeight ?? 0) > 0
-      ? { individualFloatHeight: (moduleData as any).individualFloatHeight }
+    ...(initialFloatHeight > 0 || !shouldHaveBaseFrame
+      ? { individualFloatHeight: initialFloatHeight }
+      : {}),
+    ...(!shouldHaveBaseFrame && inheritedDoorBottomGap !== undefined
+      ? { doorBottomGap: inheritedDoorBottomGap }
       : {}),
   };
 
@@ -824,20 +886,5 @@ function placeDualBuiltInFridgeSet(params: PlaceFurnitureParams): PlaceFurniture
  * 기본 가구 깊이 계산
  */
 export function getDefaultFurnitureDepth(spaceInfo: SpaceInfo, moduleData?: ModuleData): number {
-  const mid = moduleData?.id || '';
-  // 상부장: 300mm (먼저 검사)
-  const isUpperCabinet = mid.includes('upper-cabinet');
-  if (isUpperCabinet) {
-    return Math.min(300, spaceInfo.depth);
-  }
-  // 신발장: 380mm
-  const isShoeCabinet = mid.includes('-entryway-') || mid.includes('-shelf-') || mid.includes('-4drawer-shelf-') || mid.includes('-2drawer-shelf-');
-  if (isShoeCabinet) {
-    return Math.min(380, spaceInfo.depth);
-  }
-  if (moduleData?.defaultDepth) {
-    return Math.min(moduleData.defaultDepth, spaceInfo.depth);
-  }
-  const spaceBasedDepth = Math.floor(spaceInfo.depth * 0.9);
-  return Math.min(spaceBasedDepth, 580);
+  return resolveDefaultFurnitureDepth(spaceInfo, moduleData);
 }

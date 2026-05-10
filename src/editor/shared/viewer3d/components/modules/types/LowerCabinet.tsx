@@ -20,6 +20,7 @@ import { isCabinetTexture1, applyCabinetTexture1Settings, isOakTexture, applyOak
 import LegraSideRail from '../components/LegraSideRail';
 import { Line } from '@react-three/drei';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
+import { resolveShelfFrontInsetMm } from '@/editor/shared/utils/shelfInsetCalculator';
 
 /**
  * 졸리컷 수평 상판 — 앞면 하단 모서리가 45도로 가공된 판
@@ -1267,7 +1268,10 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
             const shelfPositions = [shelfInterval, shelfInterval * 2];
 
             const shelfThicknessMm = 18;
-            const shelfFrontInsetMm = 30; // 앞에서 30mm 들여보냄
+            const shelfFrontInsetMm = resolveShelfFrontInsetMm({
+              moduleId: moduleData.id,
+              cabinetCategory: 'lower'
+            }); // 앞에서 30mm 들여보냄
             const backReductionMm = backPanelMm + basicThicknessMm - 1; // 26mm (바닥판과 동일)
             const shelfDepthMm = depthMm - backReductionMm - shelfFrontInsetMm;
             const shelfWidth = baseFurniture.innerWidth;

@@ -19,35 +19,9 @@ import {
 } from './dxfDataRenderer';
 import { ColumnIndexer } from './indexing/ColumnIndexer';
 import { useUIStore } from '@/store/uiStore';
-import { useFurnitureStore } from '@/store/core/furnitureStore';
-
-const getSideSlotGroups = (placedModules: PlacedModule[]): Array<{
-  titleIndex: number;
-  selectedSlotIndex: number;
-  modules: PlacedModule[];
-}> => {
-  const visibleModules = placedModules.filter(module => !module.isSurroundPanel);
-  const grouped = new Map<number, PlacedModule[]>();
-
-  visibleModules.forEach(module => {
-    const slotKey = module.slotIndex ?? Math.round((module.position?.x ?? 0) * 1000);
-    const modules = grouped.get(slotKey) ?? [];
-    modules.push(module);
-    grouped.set(slotKey, modules);
-  });
-
-  return Array.from(grouped.entries())
-    .sort(([, aModules], [, bModules]) => {
-      const ax = Math.min(...aModules.map(module => module.position?.x ?? 0));
-      const bx = Math.min(...bModules.map(module => module.position?.x ?? 0));
-      return ax - bx;
-    })
-    .map(([, modules], index) => ({
-      titleIndex: typeof modules[0]?.slotIndex === 'number' ? modules[0].slotIndex + 1 : index + 1,
-      selectedSlotIndex: typeof modules[0]?.slotIndex === 'number' ? modules[0].slotIndex : 0,
-      modules
-    }));
-};
+import { captureExportUiState, createExportViewUiPatch, shouldApplyExportUiPatch } from './exportStateSnapshot';
+import { getSideViewSlotGroups } from './sideViewModuleFilter';
+import { getCategoryDefaultFurnitureDepth } from './furnitureDepthDefaults';
 
 /**
  * PDF 생성 전 씬을 올바른 뷰 모드로 전환하는 헬퍼
@@ -62,7 +36,12 @@ const switchSceneViewMode = async (
   const store = useUIStore.getState();
   const needsChange = store.viewMode !== viewMode ||
     store.view2DDirection !== view2DDirection ||
-    store.renderMode !== renderMode;
+    store.renderMode !== renderMode ||
+    !store.showDimensions ||
+    !store.showDimensionsText ||
+    !store.showFurniture ||
+    store.showGuides ||
+    store.showAxis;
 
   if (!needsChange) {
     console.log(`[PDF] 씬 뷰 모드 변경 불필요: ${viewMode}/${view2DDirection}/${renderMode}`);
@@ -70,13 +49,21 @@ const switchSceneViewMode = async (
   }
 
   console.log(`[PDF] 씬 뷰 모드 전환: ${store.viewMode}/${store.view2DDirection} → ${viewMode}/${view2DDirection}/${renderMode}`);
-  store.setViewMode(viewMode);
-  store.setView2DDirection(view2DDirection);
-  store.setRenderMode(renderMode);
+  useUIStore.setState({
+    ...createExportViewUiPatch(view2DDirection === 'right' ? 'left' : view2DDirection),
+    viewMode,
+    renderMode
+  });
 
   // React 렌더링 사이클 대기 (씬 갱신 필요 - 도어 대각선 등 조건부 렌더링 요소 포함)
   // ConvertModal의 캡처 코드에서 1500ms 대기하므로 동일한 시간 사용
   await new Promise(resolve => setTimeout(resolve, 1000));
+};
+
+const applyExportUiPatchIfChanged = (patch: ReturnType<typeof createExportViewUiPatch>): void => {
+  if (shouldApplyExportUiPatch(useUIStore.getState(), patch)) {
+    useUIStore.setState(patch);
+  }
 };
 
 // PDF 뷰 타입
@@ -104,6 +91,66 @@ interface ParsedText {
   height: number;
   layer: string;
 }
+
+export const isDoorDrawingLayer = (layer: string): boolean =>
+  layer === 'DOOR' || layer === 'DOOR_DIMENSIONS';
+
+export const filterDoorOnlyDrawingData = <
+  TLine extends { layer: string },
+  TText extends { layer: string }
+>(lines: TLine[], texts: TText[]): { lines: TLine[]; texts: TText[] } => ({
+  lines: lines.filter(line => isDoorDrawingLayer(line.layer)),
+  texts: texts.filter(text => isDoorDrawingLayer(text.layer))
+});
+
+export const hasPdfDrawingData = (
+  lines: readonly unknown[],
+  texts: readonly unknown[]
+): boolean => lines.length > 0 || texts.length > 0;
+
+export const filterVisiblePdfDrawingItems = <
+  TItem extends { lines: readonly unknown[]; texts: readonly unknown[] }
+>(items: readonly TItem[]): TItem[] => items.filter(item => hasPdfDrawingData(item.lines, item.texts));
+
+export const resolvePlacedModuleExportDepth = (
+  spaceInfo: SpaceInfo,
+  module: PlacedModule
+): number => {
+  const explicitDepths = [
+    module.upperSectionDepth,
+    module.lowerSectionDepth,
+    module.customDepth,
+    module.freeDepth,
+    module.lowerLeftSectionDepth,
+    module.lowerRightSectionDepth,
+    ...(module.sectionDepths ?? [])
+  ].filter((depth): depth is number => typeof depth === 'number' && Number.isFinite(depth) && depth > 0);
+
+  const categoryDefaultDepth = getCategoryDefaultFurnitureDepth(spaceInfo.depth, module.moduleId);
+
+  if (explicitDepths.length === 0) {
+    return categoryDefaultDepth ?? Math.min(spaceInfo.depth || 600, 600);
+  }
+
+  const explicitDepth = Math.max(...explicitDepths);
+
+  if ((module.moduleId || '').includes('-entryway-') && Math.abs(explicitDepth - 400) < 0.5) {
+    return categoryDefaultDepth ?? 380;
+  }
+
+  return explicitDepth;
+};
+
+export const resolveMaxPlacedModuleExportDepth = (
+  spaceInfo: SpaceInfo,
+  placedModules: PlacedModule[]
+): number => {
+  if (placedModules.length === 0) {
+    return Math.min(spaceInfo.depth || 600, 600);
+  }
+
+  return Math.max(...placedModules.map(module => resolvePlacedModuleExportDepth(spaceInfo, module)));
+};
 
 /**
  * DXF 문자열에서 LINE 엔티티 파싱
@@ -305,12 +352,7 @@ const renderToPdf = (
     pdf.text(text.text, toX(text.x), toY(text.y), { align: 'center' });
   });
 
-  // 하단 정보 - 가구 깊이 계산 (placedModules에서 최대 깊이 추출)
-  let furnitureDepth = 600; // 기본값
-  if (placedModules && placedModules.length > 0) {
-    const depths = placedModules.map(m => m.upperSectionDepth || m.customDepth || 600);
-    furnitureDepth = Math.max(...depths);
-  }
+  const furnitureDepth = resolveMaxPlacedModuleExportDepth(spaceInfo, placedModules ?? []);
 
   pdf.setFontSize(8);
   pdf.setTextColor(128, 128, 128);
@@ -376,15 +418,8 @@ export const downloadDxfAsPdf = async (
   console.log('[PDF] Views to convert: ' + views.join(', '));
 
   // 현재 뷰 상태 저장 (나중에 복원)
-  const uiState = useUIStore.getState();
-  const originalViewMode = uiState.viewMode;
-  const originalView2DDirection = uiState.view2DDirection;
-  const originalRenderMode = uiState.renderMode;
-  const originalSelectedSlotIndex = uiState.selectedSlotIndex;
-  console.log(`[PDF] 원래 뷰 모드: ${originalViewMode}/${originalView2DDirection}/${originalRenderMode}`);
-
-  // PDF 생성을 위해 2D wireframe 모드로 전환 (도어 대각선 등 조건부 렌더링 포함)
-  await switchSceneViewMode('2D', 'front', 'wireframe');
+  const originalUI = captureExportUiState(useUIStore.getState());
+  console.log(`[PDF] 원래 뷰 모드: ${originalUI.viewMode}/${originalUI.view2DDirection}/${originalUI.renderMode}`);
 
   const pdf = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
   const pageWidth = pdf.internal.pageSize.getWidth();
@@ -463,19 +498,13 @@ export const downloadDxfAsPdf = async (
 
     // 측면도(left)는 슬롯별 그룹 기준으로 페이지 생성
     if (viewDirection === 'left' && placedModules.length > 0) {
-      const sideSlotGroups = getSideSlotGroups(placedModules);
-      const furnitureStore = useFurnitureStore.getState();
-      const originalPlacedModules = furnitureStore.placedModules;
+      const sideSlotGroups = getSideViewSlotGroups(placedModules);
 
       try {
         for (const group of sideSlotGroups) {
-          if (!isFirstPage) pdf.addPage();
-          isFirstPage = false;
-
           console.log(`[DXF] left (슬롯 ${group.titleIndex}): modules=${group.modules.length}`);
 
-          useFurnitureStore.setState({ placedModules: group.modules });
-          useUIStore.setState({ selectedSlotIndex: group.selectedSlotIndex });
+          applyExportUiPatchIfChanged(createExportViewUiPatch('left', group.selectedSlotIndex));
           // 씬 갱신 대기 (React 렌더 + R3F 반영)
           await new Promise(resolve => setTimeout(resolve, 600));
 
@@ -483,20 +512,23 @@ export const downloadDxfAsPdf = async (
           const { lines, texts } = generateViewDataFromDxf(spaceInfo, group.modules, dxfViewDirection);
           console.log(`[DXF] left (슬롯 ${group.titleIndex}): ${lines.length} lines, ${texts.length} texts`);
 
+          if (!hasPdfDrawingData(lines, texts)) {
+            console.warn(`[DXF] left (슬롯 ${group.titleIndex}): 빈 측면도 페이지를 건너뜁니다.`);
+            continue;
+          }
+
+          if (!isFirstPage) pdf.addPage();
+          isFirstPage = false;
+
           renderToPdfWithSlotInfo(pdf, lines, texts, spaceInfo, viewDirection, pageWidth, pageHeight, group.titleIndex, group.modules);
         }
       } finally {
-        // 원본 placedModules 복원
-        useFurnitureStore.setState({ placedModules: originalPlacedModules });
-        useUIStore.setState({ selectedSlotIndex: originalSelectedSlotIndex });
+        useUIStore.setState(originalUI);
         await new Promise(resolve => setTimeout(resolve, 300));
       }
     }
     // 도어 입면도 (DOOR 레이어만 표시 - 2D 뷰어에서 가구 필터 끈 것과 동일)
     else if (viewDirection === 'door-only') {
-      if (!isFirstPage) pdf.addPage();
-      isFirstPage = false;
-
       console.log('[DXF] door-only: rendering door elevation...');
 
       // front 뷰 DXF 데이터 생성 후 DOOR 레이어만 필터링
@@ -508,19 +540,22 @@ export const downloadDxfAsPdf = async (
       console.log('[DXF] door-only: line layers:', [...new Set(lines.map(l => l.layer))]);
 
       // DOOR + DOOR_DIMENSIONS 레이어 필터링 (도어 형상 + 도어 높이/너비 치수선)
-      const doorOnlyLines = lines.filter(line => line.layer === 'DOOR' || line.layer === 'DOOR_DIMENSIONS');
-
-      // 도어 치수 텍스트도 포함
-      const doorTexts = texts.filter(text => text.layer === 'DOOR' || text.layer === 'DOOR_DIMENSIONS');
+      const { lines: doorOnlyLines, texts: doorTexts } = filterDoorOnlyDrawingData(lines, texts);
 
       console.log('[DXF] door-only: original ' + lines.length + ' lines -> DOOR layer ' + doorOnlyLines.length + ' lines, ' + doorTexts.length + ' texts');
+
+      if (!hasPdfDrawingData(doorOnlyLines, doorTexts)) {
+        console.warn('[DXF] door-only: 빈 도어도면 페이지를 건너뜁니다.');
+        continue;
+      }
+
+      if (!isFirstPage) pdf.addPage();
+      isFirstPage = false;
+
       renderToPdf(pdf, doorOnlyLines, doorTexts, spaceInfo, viewDirection, pageWidth, pageHeight, placedModules);
     }
     // 입면도 (도어 없음) - DXF 생성 시 도어 제외
     else if (viewDirection === 'front-no-door') {
-      if (!isFirstPage) pdf.addPage();
-      isFirstPage = false;
-
       console.log('[DXF] front-no-door: rendering elevation without doors (excludeDoor=true)...');
 
       // excludeDoor=true로 DXF 생성 시 도어 관련 객체 모두 제외
@@ -532,16 +567,31 @@ export const downloadDxfAsPdf = async (
       const doorTexts = texts.filter(t => t.layer === 'DOOR');
       console.log('[DXF] front-no-door: DOOR layer lines ' + doorLines.length + ', texts ' + doorTexts.length + ' (should all be 0)');
       console.log('[DXF] front-no-door: ' + lines.length + ' lines, ' + texts.length + ' texts (doors excluded)');
+
+      if (!hasPdfDrawingData(lines, texts)) {
+        console.warn('[DXF] front-no-door: 빈 입면도 페이지를 건너뜁니다.');
+        continue;
+      }
+
+      if (!isFirstPage) pdf.addPage();
+      isFirstPage = false;
+
       renderToPdf(pdf, lines, texts, spaceInfo, viewDirection, pageWidth, pageHeight, placedModules);
     }
     else {
       // 일반 뷰 (front, top)
-      if (!isFirstPage) pdf.addPage();
-      isFirstPage = false;
-
       const dxfViewDirection = pdfViewToViewDirection(viewDirection);
       const { lines, texts } = generateViewDataFromDxf(spaceInfo, placedModules, dxfViewDirection);
       console.log('[DXF] ' + viewDirection + ': final ' + lines.length + ' lines, ' + texts.length + ' texts');
+
+      if (!hasPdfDrawingData(lines, texts)) {
+        console.warn(`[DXF] ${viewDirection}: 빈 PDF 페이지를 건너뜁니다.`);
+        continue;
+      }
+
+      if (!isFirstPage) pdf.addPage();
+      isFirstPage = false;
+
       renderToPdf(pdf, lines, texts, spaceInfo, viewDirection, pageWidth, pageHeight, placedModules);
     }
   }
@@ -559,17 +609,19 @@ export const downloadDxfAsPdf = async (
     }
   }
 
+  if (isFirstPage) {
+    pdf.setFontSize(14);
+    pdf.setTextColor(150, 150, 150);
+    pdf.text('No drawing data', pageWidth / 2, pageHeight / 2, { align: 'center' });
+  }
+
   pdf.save(`drawing_${new Date().toISOString().slice(0, 10)}.pdf`);
   console.log('✅ PDF 다운로드 완료');
 
   } finally {
     // 원래 뷰 상태로 복원
-    console.log(`[PDF] 뷰 모드 복원: ${originalViewMode}/${originalView2DDirection}/${originalRenderMode}`);
-    const restoreStore = useUIStore.getState();
-    restoreStore.setViewMode(originalViewMode);
-    restoreStore.setView2DDirection(originalView2DDirection);
-    restoreStore.setRenderMode(originalRenderMode);
-    restoreStore.setSelectedSlotIndex(originalSelectedSlotIndex);
+    console.log(`[PDF] 뷰 모드 복원: ${originalUI.viewMode}/${originalUI.view2DDirection}/${originalUI.renderMode}`);
+    useUIStore.setState(originalUI);
   }
 };
 
@@ -652,12 +704,7 @@ const renderToPdfWithSlotInfo = (
     pdf.text(text.text, toX(text.x), toY(text.y), { align: 'center' });
   });
 
-  // 하단 정보 - 가구 깊이 계산 (slotModules에서 최대 깊이 추출)
-  let furnitureDepth = 600; // 기본값
-  if (slotModules && slotModules.length > 0) {
-    const depths = slotModules.map(m => m.upperSectionDepth || m.customDepth || 600);
-    furnitureDepth = Math.max(...depths);
-  }
+  const furnitureDepth = resolveMaxPlacedModuleExportDepth(spaceInfo, slotModules ?? []);
 
   pdf.setFontSize(8);
   pdf.setTextColor(128, 128, 128);
@@ -945,34 +992,30 @@ const renderSheetContent = async (
   const frontWith = generateViewDataFromDxf(spaceInfo, placedModules, 'front', false);
   const frontNo   = generateViewDataFromDxf(spaceInfo, placedModules, 'front', true);
   const doorAll   = generateViewDataFromDxf(spaceInfo, placedModules, 'front');
-  const doorOnlyLines = doorAll.lines.filter(l => l.layer === 'DOOR' || l.layer === 'DOOR_DIMENSIONS');
-  const doorOnlyTexts = doorAll.texts.filter(t => t.layer === 'DOOR' || t.layer === 'DOOR_DIMENSIONS');
+  const { lines: doorOnlyLines, texts: doorOnlyTexts } = filterDoorOnlyDrawingData(doorAll.lines, doorAll.texts);
 
   // ─ 2) Top view
   await switchSceneViewMode('2D', 'top', 'wireframe');
   const topView = generateViewDataFromDxf(spaceInfo, placedModules, 'top');
 
-  // ─ 3) Side views (슬롯별) — 각 슬롯 그룹마다 씬에 그 슬롯 가구만 렌더
+  // ─ 3) Side views (슬롯별) — selectedSlotIndex 필터로 슬롯별 측면 렌더
   await switchSceneViewMode('2D', 'left', 'wireframe');
-  const sideSlotGroups = getSideSlotGroups(placedModules);
-  const sideDataList: Array<{ slotTitle: number; modules: PlacedModule[]; lines: ParsedLine[]; texts: ParsedText[] }> = [];
-  const furnitureStoreForSheet = useFurnitureStore.getState();
+  const sideSlotGroups = getSideViewSlotGroups(placedModules);
+  const sideDataListRaw: Array<{ slotTitle: number; modules: PlacedModule[]; lines: ParsedLine[]; texts: ParsedText[] }> = [];
   const uiStoreForSheet = useUIStore.getState();
-  const originalModulesForSheet = furnitureStoreForSheet.placedModules;
   const originalSelectedSlotForSheet = uiStoreForSheet.selectedSlotIndex;
   try {
     for (const group of sideSlotGroups) {
-      useFurnitureStore.setState({ placedModules: group.modules });
-      useUIStore.setState({ selectedSlotIndex: group.selectedSlotIndex });
+      applyExportUiPatchIfChanged(createExportViewUiPatch('left', group.selectedSlotIndex));
       await new Promise(resolve => setTimeout(resolve, 600));
       const data = generateViewDataFromDxf(spaceInfo, group.modules, 'left');
-      sideDataList.push({ slotTitle: group.titleIndex, modules: group.modules, lines: data.lines, texts: data.texts });
+      sideDataListRaw.push({ slotTitle: group.titleIndex, modules: group.modules, lines: data.lines, texts: data.texts });
     }
   } finally {
-    useFurnitureStore.setState({ placedModules: originalModulesForSheet });
-    useUIStore.setState({ selectedSlotIndex: originalSelectedSlotForSheet });
+    applyExportUiPatchIfChanged({ selectedSlotIndex: originalSelectedSlotForSheet });
     await new Promise(resolve => setTimeout(resolve, 300));
   }
+  const sideDataList = filterVisiblePdfDrawingItems(sideDataListRaw);
 
   const topColW = areaW / 3;
   const frontWithRect: SheetRect = { x: areaX, y: areaY, w: topColW, h: topH };
@@ -989,7 +1032,7 @@ const renderSheetContent = async (
   pdf.line(topViewRect.x, areaY, topViewRect.x, areaY + topH);
   pdf.setDrawColor(0, 0, 0);
 
-  const sideN = Math.max(1, sideDataList.length);
+  const sideN = sideDataList.length;
   const botY = areaY + topH;
 
   // 최대 5개 가구까지 한 페이지, 초과 시 첫 페이지는 5개 + Door, 나머지는 다음 페이지로
@@ -998,18 +1041,22 @@ const renderSheetContent = async (
 
   const sideAreaW = areaW * 0.65;
   const doorAreaW = areaW - sideAreaW;
-  const sideColW = sideAreaW / sidesInFirstPage;
+  const sideColW = sideN > 0 ? sideAreaW / sidesInFirstPage : sideAreaW;
 
-  for (let idx = 0; idx < sidesInFirstPage; idx++) {
-    const sd = sideDataList[idx];
-    const rect: SheetRect = { x: areaX + sideColW * idx, y: botY, w: sideColW, h: botH };
-    renderViewToRect(pdf, rect, `Side View (Slot ${sd.slotTitle})`, sd.lines, sd.texts);
-    if (idx > 0) {
-      pdf.setLineWidth(0.15);
-      pdf.setDrawColor(200, 200, 200);
-      pdf.line(rect.x, botY, rect.x, botY + botH);
-      pdf.setDrawColor(0, 0, 0);
+  if (sideN > 0) {
+    for (let idx = 0; idx < sidesInFirstPage; idx++) {
+      const sd = sideDataList[idx];
+      const rect: SheetRect = { x: areaX + sideColW * idx, y: botY, w: sideColW, h: botH };
+      renderViewToRect(pdf, rect, `Side View (Slot ${sd.slotTitle})`, sd.lines, sd.texts);
+      if (idx > 0) {
+        pdf.setLineWidth(0.15);
+        pdf.setDrawColor(200, 200, 200);
+        pdf.line(rect.x, botY, rect.x, botY + botH);
+        pdf.setDrawColor(0, 0, 0);
+      }
     }
+  } else {
+    renderViewToRect(pdf, { x: areaX, y: botY, w: sideAreaW, h: botH }, 'Side View (Left)', [], []);
   }
   const doorRect: SheetRect = { x: areaX + sideAreaW, y: botY, w: doorAreaW, h: botH };
   pdf.setLineWidth(0.15);
@@ -1049,26 +1096,13 @@ const renderSheetContent = async (
   const tbX = pageW - margin - titleBlockW;
   const tbY = margin;
   const tbHeight = pageH - margin * 2;
-  // 가구 깊이 계산: upperSectionDepth / lowerSectionDepth / customDepth 중 최댓값
-  // (공간 깊이가 아니라 실제 가구 깊이를 표기)
-  let maxDepth = 600;
-  if (placedModules.length > 0) {
-    const depths: number[] = [];
-    placedModules.forEach((m: any) => {
-      if (typeof m.upperSectionDepth === 'number') depths.push(m.upperSectionDepth);
-      if (typeof m.lowerSectionDepth === 'number') depths.push(m.lowerSectionDepth);
-      if (typeof m.customDepth === 'number') depths.push(m.customDepth);
-    });
-    if (depths.length > 0) {
-      maxDepth = Math.max(...depths);
-    }
-  }
+  const maxDepth = resolveMaxPlacedModuleExportDepth(spaceInfo, placedModules);
   const today = new Date().toISOString().slice(0, 10);
 
   // 도어 짝 수 계산: 듀얼 가구(isDualSlot 또는 moduleId에 'dual-' 포함)는 2짝, 싱글은 1짝
   const doorCount = placedModules.reduce((sum, m) => {
     if (!m.hasDoor) return sum;
-    const isDual = (m as any).isDualSlot === true ||
+    const isDual = m.isDualSlot === true ||
                    (typeof m.moduleId === 'string' && m.moduleId.includes('dual-'));
     return sum + (isDual ? 2 : 1);
   }, 0);

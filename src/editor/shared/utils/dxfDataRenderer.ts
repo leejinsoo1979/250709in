@@ -50,17 +50,48 @@ const getPlacedModuleCategory = (
   return 'full';
 };
 
+const getEffectiveTopFrameHeightMm = (
+  module: PlacedModule,
+  spaceInfo: SpaceInfo
+): number => {
+  if ((module as any).hasTopFrame === false) return 0;
+  return module.topFrameThickness ?? (spaceInfo.frameSize?.top ?? 30);
+};
+
+const getAbsorbedTopFrameHeightMm = (
+  module: PlacedModule,
+  spaceInfo: SpaceInfo
+): number => {
+  if ((module as any).hasTopFrame !== false) return 0;
+  const topFrameMm = module.topFrameThickness ?? (spaceInfo.frameSize?.top ?? 30);
+  const topGapMm = (module as any).topFrameGap ?? 0;
+  return topFrameMm - topGapMm;
+};
+
 const getModuleHeightMm = (
   module: PlacedModule,
   moduleData: ReturnType<typeof getModuleById> | null,
   spaceInfo: SpaceInfo
 ): number => {
-  if (module.freeHeight) return module.freeHeight;
-  if (module.customHeight) return module.customHeight;
-  if (moduleData?.dimensions.height) return moduleData.dimensions.height;
-
   const internalSpace = calculateInternalSpace(spaceInfo);
-  return internalSpace.height || Math.max(spaceInfo.height - (spaceInfo.frameSize?.top ?? 30) - calculateBaseFrameHeight(spaceInfo), 0);
+  let heightMm = module.freeHeight
+    || module.customHeight
+    || moduleData?.dimensions.height
+    || internalSpace.height
+    || Math.max(spaceInfo.height - (spaceInfo.frameSize?.top ?? 30) - calculateBaseFrameHeight(spaceInfo), 0);
+
+  if (resolveModuleCategory(module, moduleData) === 'full') {
+    heightMm += getAbsorbedTopFrameHeightMm(module, spaceInfo);
+  }
+
+  if (resolveModuleCategory(module, moduleData) === 'full' && (module as any).hasBase === false) {
+    const globalBaseMm = spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height ?? 60) : 0;
+    const absorbedBase = module.baseFrameHeight ?? globalBaseMm;
+    const floatH = (module as any).individualFloatHeight ?? 0;
+    heightMm += (absorbedBase - floatH);
+  }
+
+  return heightMm;
 };
 
 const getModuleDepthMm = (
@@ -82,7 +113,7 @@ const getModuleWidthMm = (
 const resolveTopFrameHeightMm = (
   module: PlacedModule | undefined,
   spaceInfo: SpaceInfo
-): number => module?.topFrameThickness ?? (spaceInfo.frameSize?.top ?? 30);
+): number => module ? getEffectiveTopFrameHeightMm(module, spaceInfo) : (spaceInfo.frameSize?.top ?? 30);
 
 const resolveBaseHeightMm = (spaceInfo: SpaceInfo): number => {
   const isFloating = spaceInfo.baseConfig?.type === 'stand' && spaceInfo.baseConfig?.placementType === 'float';
@@ -195,7 +226,9 @@ const computeSectionHeightsInfo = (
     };
   }
 
-  const availableHeightMm = Math.max(internalHeightMm - basicThicknessMm * 2, 0);
+  // sections.height는 외곽 높이 기준이다. 여기서 상/하판 두께를 빼면
+  // 2D/DXF 섹션 높이도 정확히 2T(36mm) 짧아진다.
+  const availableHeightMm = Math.max(internalHeightMm, 0);
   const hasCalculatedHeights = rawSections.every(section => typeof (section as SectionWithCalc & { calculatedHeight?: number }).calculatedHeight === 'number');
 
   let heightsMm: number[];
@@ -248,6 +281,28 @@ export type ViewDirection = 'front' | 'left' | 'right' | 'top' | 'door';
 
 // 측면뷰 필터링 타입: 좌측뷰는 leftmost 가구만, 우측뷰는 rightmost 가구만
 export type SideViewFilter = 'all' | 'leftmost' | 'rightmost';
+
+export interface NormalizedDxfSideViewRequest {
+  viewDirection: ViewDirection;
+  sideViewFilter: SideViewFilter;
+  forcedLeftView: boolean;
+  forcedLeftFilter: boolean;
+}
+
+export const normalizeDxfSideViewRequest = (
+  viewDirection: ViewDirection,
+  sideViewFilter: SideViewFilter
+): NormalizedDxfSideViewRequest => {
+  const forcedLeftView = viewDirection === 'right';
+  const forcedLeftFilter = sideViewFilter === 'rightmost';
+
+  return {
+    viewDirection: forcedLeftView ? 'left' : viewDirection,
+    sideViewFilter: forcedLeftFilter ? 'leftmost' : sideViewFilter,
+    forcedLeftView,
+    forcedLeftFilter
+  };
+};
 
 export interface DxfLine {
   x1: number;
@@ -1410,14 +1465,17 @@ export const extractFromScene = (
         line2Color = 30; // ACI 30 = 오렌지 (가구패널과 동일, 투명도 10%는 CAD에서 별도 설정)
         line2Layer = 'BACK_PANEL';
         console.log(`📐 백패널(Line2): ${name}, 색상 ACI=30으로 강제 설정`);
-      } else if (lowerName.includes('door-diagonal') || lowerName.includes('door-edge') || lowerName.includes('door')) {
+      } else if (combinedNames.includes('door-diagonal') ||
+                 combinedNames.includes('door-edge') ||
+                 combinedNames.includes('door-hinge') ||
+                 combinedNames.includes('door')) {
         // 도어 관련 Line2 (대각선 열림방향 표시 포함)
         line2Color = 3; // ACI 3 = 연두색
         line2Layer = 'DOOR';
         if (lowerName.includes('door-diagonal')) {
           console.log(`📐 도어 대각선(Line2): ${name}, 색상 ACI=3, 레이어=DOOR`);
         } else {
-          console.log(`📐 도어(Line2): ${name}, 색상 ACI=3으로 강제 설정`);
+          console.log(`📐 도어(Line2): ${name || '(이름없음)'}, 색상 ACI=3으로 강제 설정`);
         }
       } else if (lowerName.includes('dimension')) {
         console.log(`📏 치수선(Line2): ${name}, 추출된 색상 ACI=${line2Color}`);
@@ -1677,11 +1735,14 @@ export const extractFromScene = (
           lineColor = 30; // ACI 30 = 오렌지 (가구패널과 동일, 투명도 10%는 CAD에서 별도 설정)
           lineLayer = 'BACK_PANEL';
           console.log(`📐 백패널(Line): ${name}, 색상 ACI=30으로 강제 설정`);
-        } else if (lineLowerName.includes('door-diagonal') || lineLowerName.includes('door-edge') || lineLowerName.includes('door')) {
+        } else if (lineCombinedNames.includes('door-diagonal') ||
+                   lineCombinedNames.includes('door-edge') ||
+                   lineCombinedNames.includes('door-hinge') ||
+                   lineCombinedNames.includes('door')) {
           // 도어 관련 Line (대각선 열림방향 표시 포함)
           lineColor = 3; // ACI 3 = 연두색
           lineLayer = 'DOOR';
-          console.log(`📐 도어(Line): ${name}, 색상 ACI=3으로 강제 설정`);
+          console.log(`📐 도어(Line): ${name || '(이름없음)'}, 색상 ACI=3으로 강제 설정`);
         } else if (lineLowerName.includes('dimension')) {
           console.log(`📏 치수선(Line): ${name}, 추출된 색상 ACI=${lineColor}`);
         }
@@ -3379,15 +3440,18 @@ export const generateDxfDrawingData = (
     throw new Error('씬을 찾을 수 없습니다');
   }
 
-  if (viewDirection === 'right') {
+  const normalizedSideView = normalizeDxfSideViewRequest(viewDirection, sideViewFilter);
+
+  if (normalizedSideView.forcedLeftView) {
     console.warn('⚠️ DXF 우측뷰 요청은 지원하지 않습니다. 좌측뷰로 강제합니다.');
-    viewDirection = 'left';
   }
 
-  if (sideViewFilter === 'rightmost') {
+  if (normalizedSideView.forcedLeftFilter) {
     console.warn('⚠️ DXF 우측 측면 필터는 지원하지 않습니다. 좌측 필터로 강제합니다.');
-    sideViewFilter = 'leftmost';
   }
+
+  viewDirection = normalizedSideView.viewDirection;
+  sideViewFilter = normalizedSideView.sideViewFilter;
 
   console.log(`📐 DXF 생성 시작 (${viewDirection}, 필터: ${sideViewFilter})`);
   console.log(`📊 공간 정보: ${spaceInfo.width}mm x ${spaceInfo.height}mm x ${spaceInfo.depth}mm`);

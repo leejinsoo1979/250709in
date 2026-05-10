@@ -5527,18 +5527,119 @@ const Configurator: React.FC = () => {
 
           let topNum = 0;
           let baseNum = 0;
+          // 자유배치 전체 토글 — 슬롯배치와 동일 동작
+          // 통합 모드(allOn): 통합 행 1개. 해제 모드(allOff): 가구별 개별 행 (각자 토글/입력 가능)
+          // 토글 시 모든 가구를 ON 상태로 복구하여 개별 토글 자유 유지
+          const topFreeMods = sorted.filter(m => {
+            const cat = getModuleCategory(m);
+            return cat === 'upper' || cat === 'full';
+          });
+          const baseFreeMods = sorted.filter(m => {
+            const cat = getModuleCategory(m);
+            return cat === 'lower' || cat === 'full';
+          });
+          const allTopOnFree = topFrameAllMode;
+          const allBaseOnFree = baseFrameAllMode;
+          const toggleAllTopFree = () => {
+            const next = !topFrameAllMode;
+            setTopFrameAllMode(next);
+            // 통합/해제 모두 개별행 ON 상태로 복구
+            topFreeMods.forEach(m => updatePlacedModule(m.id, { hasTopFrame: true }));
+          };
+          const toggleAllBaseFree = () => {
+            const next = !baseFrameAllMode;
+            setBaseFrameAllMode(next);
+            // 통합/해제 모두 개별행 ON 상태로 복구
+            baseFreeMods.forEach(m => updatePlacedModule(m.id, {
+              hasBase: true,
+              doorBottomGap: 25,
+            }));
+          };
           return (
+            <>
+            {/* 상단몰딩 섹션 */}
             <div className={styles.configSection}>
               <div className={styles.sectionHeader} onClick={() => setIsFrameSectionCollapsed(prev => !prev)} style={{ cursor: 'pointer', userSelect: 'none' }}>
                 <span className={styles.sectionDot}></span>
-                <h3 className={styles.sectionTitle}>상,걸래받이</h3>
-                <HelpBtn title="상,걸래받이" text="상단몰딩: 가구 위쪽과 천장 사이의 마감 패널 높이입니다. 걸래받이(베이스): 가구 아래쪽 받침대의 높이와 깊이를 설정합니다. 베이스 높이는 조절발이나 받침대의 높이, 깊이는 가구 본체 대비 베이스가 들어가는 정도를 결정합니다." />
+                <h3 className={styles.sectionTitle}>상단몰딩</h3>
+                <label
+                  onClick={(e) => e.stopPropagation()}
+                  style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11px', color: 'var(--theme-text-secondary)', cursor: 'pointer', marginLeft: '8px' }}
+                >
+                  <input type="checkbox" checked={allTopOnFree} onChange={toggleAllTopFree} style={{ cursor: 'pointer', accentColor: 'var(--theme-primary, #4a90d9)' }} />
+                  <span>전체</span>
+                </label>
+                <HelpBtn title="상단몰딩" text="가구 위쪽과 천장 사이의 마감 패널 높이입니다." />
                 <IoIosArrowDropup style={{ marginLeft: 'auto', fontSize: '14px', color: 'var(--theme-text-secondary)', transition: 'transform 0.2s', transform: isFrameSectionCollapsed ? 'rotate(180deg)' : 'rotate(0deg)' }} />
               </div>
-              {!isFrameSectionCollapsed && <>
+              {!isFrameSectionCollapsed && (
               <div className={styles.subSetting}>
-                {/* 상단몰딩 먼저 */}
-                {sorted.map((mod) => {
+                {/* 상단몰딩 항목들 — 전체 모드 ON: 통합 행 1개 (토글 ON=size+옵셋, OFF=상단갭). 해제: 가구별 개별 행 */}
+                {allTopOnFree && topFreeMods.length > 0 ? (
+                  (() => {
+                    const firstTop = topFreeMods[0];
+                    const catFirst = getModuleCategory(firstTop);
+                    const globalTop = spaceInfo.frameSize?.top ?? 30;
+                    const globalBaseLocal = spaceInfo.baseConfig?.height ?? 65;
+                    const topOffsetDefaultU = (catFirst === 'upper' && spaceInfo.surroundType === 'surround') ? 23 : 0;
+                    const unifiedEnabled = topFreeMods.every(m => m.hasTopFrame !== false);
+                    if (unifiedEnabled) {
+                      return <FrameOffsetRow key="top-all-free"
+                        num={1} label="전체"
+                        enabled={true}
+                        sizeMM={firstTop.topFrameThickness ?? globalTop}
+                        offset={firstTop.topFrameOffset ?? topOffsetDefaultU}
+                        onToggle={() => topFreeMods.forEach(m => updatePlacedModule(m.id, { hasTopFrame: false, topFrameGap: m.topFrameGap ?? 0 }))}
+                        onSizeChange={(v) => topFreeMods.forEach(m => updatePlacedModule(m.id, { topFrameThickness: Math.max(0, v) }))}
+                        onOffsetChange={(v) => topFreeMods.forEach(m => updatePlacedModule(m.id, { topFrameOffset: v }))}
+                        highlightKey="top-all-free"
+                        toAlpha={toAlpha} styles={styles} setHighlightedFrame={setHighlightedFrame}
+                      />;
+                    }
+                    // OFF 상태: 상단갭 = 공간높이 - 가구높이 - 걸레받이 - 바닥마감재 - 띄움
+                    const floorFinishH = spaceInfo.hasFloorFinish && spaceInfo.floorFinish?.height ? spaceInfo.floorFinish.height : 0;
+                    const bottomPortion = firstTop.hasBase === false
+                      ? (firstTop.individualFloatHeight ?? 0)
+                      : (firstTop.baseFrameHeight ?? globalBaseLocal);
+                    const furnitureActualH = firstTop.freeHeight
+                      ?? firstTop.customHeight
+                      ?? (() => {
+                        const md = getModuleById(firstTop.moduleId, { width: spaceInfo.width, height: spaceInfo.height, depth: spaceInfo.depth }, spaceInfo);
+                        return md?.dimensions.height ?? 0;
+                      })();
+                    const computedGap = Math.max(0, spaceInfo.height - furnitureActualH - bottomPortion - floorFinishH);
+                    const currentGap = firstTop.topFrameGap ?? (firstTop.hasTopFrame === false ? 0 : computedGap);
+                    return (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '3px 0' }}>
+                        <span className={styles.frameItemLabel} style={{ minWidth: '34px', textAlign: 'left', margin: 0 }}>전체</span>
+                        <button
+                          onClick={() => topFreeMods.forEach(m => updatePlacedModule(m.id, { hasTopFrame: true }))}
+                          className={styles.miniToggle}
+                        />
+                        <div style={{ display: 'flex', flex: 1, gap: '4px' }}>
+                          <div className={styles.frameItemInput} style={{ flex: 1 }}>
+                            <span style={{ fontSize: '10px', color: 'var(--theme-text-secondary)', padding: '0 2px', flexShrink: 0 }}>상단갭</span>
+                            <input
+                              type="text" inputMode="numeric"
+                              value={currentGap || ''} placeholder="0"
+                              onKeyDown={(e) => {
+                                if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                                  e.preventDefault();
+                                  const nextGap = Math.max(0, Math.min(2000, currentGap + (e.key === 'ArrowUp' ? 1 : -1)));
+                                  topFreeMods.forEach(m => updatePlacedModule(m.id, { topFrameGap: nextGap }));
+                                }
+                              }}
+                              onChange={(e) => { const v = e.target.value; if (v === '' || /^\d+$/.test(v)) { const nextGap = v === '' ? 0 : parseInt(v, 10); topFreeMods.forEach(m => updatePlacedModule(m.id, { topFrameGap: nextGap })); } }}
+                              onBlur={(e) => { const nextGap = Math.max(0, Math.min(2000, parseInt(e.target.value) || 0)); topFreeMods.forEach(m => updatePlacedModule(m.id, { topFrameGap: nextGap })); }}
+                              className={styles.frameNumberInput}
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })()
+                ) : (
+                sorted.map((mod) => {
                   const cat = getModuleCategory(mod);
                   if (cat !== 'upper' && cat !== 'full') return null;
                   topNum++;
@@ -5590,13 +5691,82 @@ const Configurator: React.FC = () => {
                     highlightKey={`top-${mod.id}`}
                     toAlpha={toAlpha} styles={styles} setHighlightedFrame={setHighlightedFrame}
                   />;
-                })}
-                {/* 상하부 구분선 */}
-                {spaceInfo.baseConfig?.type !== 'stand' && sorted.length > 0 && (
-                  <div style={{ borderTop: '1px solid var(--theme-border, #e0e0e0)', margin: '6px 0' }} />
+                })
                 )}
-                {/* 걸래받이 — 띄워서 배치(stand)면 받침대 없으므로 숨김 */}
-                {spaceInfo.baseConfig?.type !== 'stand' && sorted.map((mod) => {
+              </div>
+              )}
+            </div>
+            {/* 걸레받이 섹션 — 별도 configSection */}
+            {spaceInfo.baseConfig?.type !== 'stand' && (
+            <div className={styles.configSection}>
+              <div className={styles.sectionHeader} onClick={() => setIsFrameSectionCollapsed(prev => !prev)} style={{ cursor: 'pointer', userSelect: 'none' }}>
+                <span className={styles.sectionDot}></span>
+                <h3 className={styles.sectionTitle}>걸레받이</h3>
+                <label
+                  onClick={(e) => e.stopPropagation()}
+                  style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11px', color: 'var(--theme-text-secondary)', cursor: 'pointer', marginLeft: '8px' }}
+                >
+                  <input type="checkbox" checked={allBaseOnFree} onChange={toggleAllBaseFree} style={{ cursor: 'pointer', accentColor: 'var(--theme-primary, #4a90d9)' }} />
+                  <span>전체</span>
+                </label>
+                <HelpBtn title="걸레받이" text="가구 아래쪽 받침대의 높이와 옵셋을 설정합니다." />
+                <IoIosArrowDropup style={{ marginLeft: 'auto', fontSize: '14px', color: 'var(--theme-text-secondary)', transition: 'transform 0.2s', transform: isFrameSectionCollapsed ? 'rotate(180deg)' : 'rotate(0deg)' }} />
+              </div>
+              {!isFrameSectionCollapsed && (
+              <div className={styles.subSetting}>
+                {/* 걸레받이 항목들 — 전체 모드 ON: 통합 행 1개 (토글 ON=size+옵셋, OFF=띄움). 해제: 가구별 개별 행 */}
+                {allBaseOnFree && baseFreeMods.length > 0 ? (
+                  (() => {
+                    const firstBase = baseFreeMods[0];
+                    const isLowerFirst = firstBase.moduleId?.startsWith('lower-') || firstBase.moduleId?.includes('-lower-');
+                    const globalBaseLocal = spaceInfo.baseConfig?.height ?? 65;
+                    const unifiedEnabled = baseFreeMods.every(m => m.hasBase !== false);
+                    if (unifiedEnabled) {
+                      return <FrameOffsetRow key="base-all-free"
+                        num={1} label="전체"
+                        enabled={true}
+                        sizeMM={firstBase.baseFrameHeight ?? globalBaseLocal}
+                        offset={firstBase.baseFrameOffset ?? (isLowerFirst ? 65 : 0)}
+                        onToggle={() => baseFreeMods.forEach(m => updatePlacedModule(m.id, { hasBase: false, individualFloatHeight: 0, doorBottomGap: -5 }))}
+                        onSizeChange={(v) => baseFreeMods.forEach(m => updatePlacedModule(m.id, { baseFrameHeight: Math.max(0, v) }))}
+                        onOffsetChange={(v) => baseFreeMods.forEach(m => updatePlacedModule(m.id, { baseFrameOffset: v }))}
+                        highlightKey="base-all-free"
+                        toAlpha={toAlpha} styles={styles} setHighlightedFrame={setHighlightedFrame}
+                      />;
+                    }
+                    // OFF 상태: 띄움 입력
+                    const currentFloat = firstBase.individualFloatHeight ?? 0;
+                    return (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '3px 0' }}>
+                        <span className={styles.frameItemLabel} style={{ minWidth: '34px', textAlign: 'left', margin: 0 }}>전체</span>
+                        <button
+                          onClick={() => baseFreeMods.forEach(m => updatePlacedModule(m.id, { hasBase: true, doorBottomGap: 25 }))}
+                          className={styles.miniToggle}
+                        />
+                        <div style={{ display: 'flex', flex: 1, gap: '4px' }}>
+                          <div className={styles.frameItemInput} style={{ flex: 1 }}>
+                            <span style={{ fontSize: '10px', color: 'var(--theme-text-secondary)', padding: '0 2px', flexShrink: 0 }}>띄움</span>
+                            <input
+                              type="text" inputMode="numeric"
+                              value={currentFloat || ''} placeholder="0"
+                              onKeyDown={(e) => {
+                                if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                                  e.preventDefault();
+                                  const nv = Math.max(0, Math.min(500, currentFloat + (e.key === 'ArrowUp' ? 1 : -1)));
+                                  baseFreeMods.forEach(m => updatePlacedModule(m.id, { individualFloatHeight: nv, doorBottomGap: nv }));
+                                }
+                              }}
+                              onChange={(e) => { const v = e.target.value; if (v === '' || /^\d+$/.test(v)) { const nv = v === '' ? 0 : parseInt(v, 10); baseFreeMods.forEach(m => updatePlacedModule(m.id, { individualFloatHeight: nv, doorBottomGap: nv })); } }}
+                              onBlur={(e) => { const nv = Math.max(0, Math.min(500, parseInt(e.target.value) || 0)); baseFreeMods.forEach(m => updatePlacedModule(m.id, { individualFloatHeight: nv, doorBottomGap: nv })); }}
+                              className={styles.frameNumberInput}
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })()
+                ) : (
+                sorted.map((mod) => {
                   const cat = getModuleCategory(mod);
                   if (cat !== 'lower' && cat !== 'full') return null;
                   baseNum++;
@@ -5680,10 +5850,13 @@ const Configurator: React.FC = () => {
                       )}
                     </div>
                   );
-                })}
+                })
+                )}
               </div>
-              </>}
+              )}
             </div>
+            )}
+            </>
           );
         })()}
 
@@ -6082,7 +6255,10 @@ const Configurator: React.FC = () => {
                           firstTop.topFrameOffset ?? topOffsetDefaultU,
                           () => {
                             const newVal = !unifiedEnabled;
-                            topSortedMods.forEach(m => updatePlacedModule(m.id, { hasTopFrame: newVal }));
+                            topSortedMods.forEach(m => updatePlacedModule(m.id, {
+                              hasTopFrame: newVal,
+                              ...(newVal ? {} : { topFrameGap: m.topFrameGap ?? 0 }),
+                            }));
                           },
                           (v) => {
                             topSortedMods.forEach(m => updatePlacedModule(m.id, { topFrameThickness: v }));
@@ -6105,7 +6281,7 @@ const Configurator: React.FC = () => {
                             return md?.dimensions.height ?? 0;
                           })();
                         const computedGap = Math.max(0, spaceInfo.height - furnitureActualH - bottomPortion - floorFinishH);
-                        const currentGap = firstTop.topFrameThickness !== undefined ? firstTop.topFrameThickness : computedGap;
+                        const currentGap = firstTop.topFrameGap ?? (firstTop.hasTopFrame === false ? 0 : computedGap);
                         return (
                           <div style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '3px 0' }}>
                             <span className={styles.frameItemLabel} style={{ minWidth: '34px', textAlign: 'left', margin: 0 }}>전체</span>
@@ -6125,19 +6301,19 @@ const Configurator: React.FC = () => {
                                     if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
                                       e.preventDefault();
                                       const nextGap = Math.max(0, Math.min(2000, currentGap + (e.key === 'ArrowUp' ? 1 : -1)));
-                                      topSortedMods.forEach(m => updatePlacedModule(m.id, { topFrameThickness: nextGap }));
+                                      topSortedMods.forEach(m => updatePlacedModule(m.id, { topFrameGap: nextGap }));
                                     }
                                   }}
                                   onChange={(e) => {
                                     const v = e.target.value;
                                     if (v === '' || /^\d+$/.test(v)) {
                                       const nextGap = v === '' ? 0 : parseInt(v, 10);
-                                      topSortedMods.forEach(m => updatePlacedModule(m.id, { topFrameThickness: nextGap }));
+                                      topSortedMods.forEach(m => updatePlacedModule(m.id, { topFrameGap: nextGap }));
                                     }
                                   }}
                                   onBlur={(e) => {
                                     const nextGap = Math.max(0, Math.min(2000, parseInt(e.target.value) || 0));
-                                    topSortedMods.forEach(m => updatePlacedModule(m.id, { topFrameThickness: nextGap }));
+                                    topSortedMods.forEach(m => updatePlacedModule(m.id, { topFrameGap: nextGap }));
                                   }}
                                   className={styles.frameNumberInput}
                                 />

@@ -18,6 +18,7 @@ import { calculateFrameThickness, calculateInternalSpace, END_PANEL_THICKNESS } 
 import { analyzeColumnSlots, calculateFurnitureBounds } from '@/editor/shared/utils/columnSlotProcessor';
 import { isCustomizableModuleId, getCustomDimensionKey, getStandardDimensionKey } from '@/editor/shared/controls/furniture/CustomizableFurnitureLibrary';
 import { calcResizedPositionX } from '@/editor/shared/utils/freePlacementUtils';
+import { filterSideViewModules } from '@/editor/shared/utils/sideViewModuleFilter';
 
 interface CleanCAD2DProps {
   viewDirection?: '3D' | 'front' | 'left' | 'right' | 'top';
@@ -361,87 +362,48 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
 
   const leftmostModules = useMemo(() => {
     if (!showDimensions || placedModules.length === 0) return [];
-    const [firstModule] = placedModules;
-    if (!firstModule) return [];
 
-    const leftmostModule = placedModules.reduce((min, module) =>
-      module.position.x < min.position.x ? module : min,
-      firstModule
-    );
-
-    return [leftmostModule];
-  }, [showDimensions, placedModules]);
+    return filterSideViewModules({
+      placedModules,
+      viewDirection: 'left',
+      selectedSlotIndex,
+      isFreePlacement: spaceInfo.layoutMode === 'free-placement',
+      spaceInfo,
+      zones,
+      excludeSurroundPanels: true
+    });
+  }, [showDimensions, placedModules, selectedSlotIndex, spaceInfo, zones]);
 
   const rightmostModules = useMemo(() => {
     if (!showDimensions || placedModules.length === 0) return [];
-    const [firstModule] = placedModules;
-    if (!firstModule) return [];
 
-    const rightmostModule = placedModules.reduce((max, module) =>
-      module.position.x > max.position.x ? module : max,
-      firstModule
-    );
-
-    return [rightmostModule];
-  }, [showDimensions, placedModules]);
+    return filterSideViewModules({
+      placedModules,
+      viewDirection: 'right',
+      selectedSlotIndex,
+      isFreePlacement: spaceInfo.layoutMode === 'free-placement',
+      spaceInfo,
+      zones,
+      excludeSurroundPanels: true
+    });
+  }, [showDimensions, placedModules, selectedSlotIndex, spaceInfo, zones]);
 
   const isFreePlacement = spaceInfo.layoutMode === 'free-placement';
 
   // 측면뷰 3구간 치수 기준 가구: CADDimensions2D.getVisibleFurnitureForSideView()와 완전 동기화
   const sideViewMod = useMemo(() => {
     if (placedModules.length === 0) return null;
-    const nonSurround = placedModules.filter(m => !m.isSurroundPanel);
-    if (nonSurround.length === 0) return null;
+    const filtered = filterSideViewModules({
+      placedModules,
+      viewDirection: viewDirection || view2DDirection,
+      selectedSlotIndex,
+      isFreePlacement,
+      spaceInfo,
+      zones,
+      excludeSurroundPanels: true
+    });
 
-    let filtered = nonSurround;
-    if (selectedSlotIndex !== null) {
-      if (isFreePlacement) {
-        const sortedByX = [...nonSurround].sort((a, b) => (a.position?.x ?? 0) - (b.position?.x ?? 0));
-        const xGroups: number[][] = [];
-        let lastX: number | null = null;
-        sortedByX.forEach((m, idx) => {
-          const mx = m.position?.x ?? 0;
-          if (lastX === null || Math.abs(mx - lastX) > 0.01) {
-            xGroups.push([idx]);
-            lastX = mx;
-          } else {
-            xGroups[xGroups.length - 1].push(idx);
-          }
-        });
-        if (selectedSlotIndex < xGroups.length) {
-          const ids = new Set(xGroups[selectedSlotIndex].map(idx => sortedByX[idx].id));
-          filtered = nonSurround.filter(m => ids.has(m.id));
-        }
-      } else {
-        const hasDropCeiling = spaceInfo.droppedCeiling?.enabled || false;
-        const nSlotCount = zones?.normal?.columnCount || (spaceInfo.customColumnCount || 4);
-        filtered = nonSurround.filter(module => {
-          if (module.slotIndex === undefined) return false;
-          let gIdx = module.slotIndex;
-          let inDrop = module.zone === 'dropped';
-          if (hasDropCeiling && !inDrop && zones?.dropped && zones?.normal) {
-            const dPos = spaceInfo.droppedCeiling?.position || 'right';
-            const mXMm = module.position.x * 100;
-            inDrop = dPos === 'left' ? mXMm < zones.dropped.width : mXMm >= zones.normal.width;
-          }
-          if (hasDropCeiling && inDrop) gIdx = nSlotCount + module.slotIndex;
-          return module.isDualSlot
-            ? (gIdx === selectedSlotIndex || gIdx + 1 === selectedSlotIndex)
-            : (gIdx === selectedSlotIndex);
-        });
-      }
-    }
     if (filtered.length === 0) return null;
-
-    // CADDimensions2D와 동일: view direction에 따라 가장 왼쪽/오른쪽 X 위치 가구 필터
-    const viewDir = viewDirection || view2DDirection;
-    if (viewDir === 'left') {
-      const target = filtered.reduce((a, b) => (a.position?.x ?? 0) < (b.position?.x ?? 0) ? a : b);
-      filtered = filtered.filter(m => Math.abs((m.position?.x ?? 0) - (target.position?.x ?? 0)) < 0.01);
-    } else if (viewDir === 'right') {
-      const target = filtered.reduce((a, b) => (a.position?.x ?? 0) > (b.position?.x ?? 0) ? a : b);
-      filtered = filtered.filter(m => Math.abs((m.position?.x ?? 0) - (target.position?.x ?? 0)) < 0.01);
-    }
 
     // 하부장/키큰장 우선 (받침대 기준이 되어야 함)
     const lowerOrFull = filtered.find(m => {
@@ -804,7 +766,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         freeWidth: clamped,
         moduleWidth: clamped,
         position: { ...module.position, x: newX },
-      });
+        userResizedWidth: true, // 사용자 직접 폭 변경 → 화살표 이동 시 자동 리사이즈 차단
+      } as any);
       // 마지막 치수 기억 → 다음 추가 배치 시 이 너비로 배치
       const height = module.freeHeight ?? module.customConfig?.totalHeight ?? 2400;
       const depth = module.freeDepth ?? 600;
@@ -4261,18 +4224,60 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 </>
               ) : (
                 <>
-                  {/* 단일 내경 높이 표시 — 상부장 단독이면 하부마감판(18mm) 포함하여 표시 */}
+                  {/* 단일 내경 높이 표시
+                      - 상부장: 본체 H(furnitureH)와 하부 EP(18mm)를 별도 치수로 분리 표시
+                      - 그 외: 단일 치수 */}
                   <NativeLine name="dimension_line"
                     points={[[innerX - mmToThreeUnits(15), furnitureTopY, 0.002], [innerX + mmToThreeUnits(15), furnitureTopY, 0.002]]}
                     color={dimensionColor} lineWidth={0.6} renderOrder={100000} depthTest={false}
                   />
-                  <Text renderOrder={100001} depthTest={false}
-                    position={[innerX - mmToThreeUnits(25), (bottomFrameTopY + furnitureTopY) / 2, 0.01]}
-                    fontSize={baseFontSize} color={textColor} anchorX="right" anchorY="middle"
-                    outlineWidth={textOutlineWidth} outlineColor={textOutlineColor}
-                  >
-                    {leftCategoryResolved === 'upper' ? (furnitureH + UPPER_BOTTOM_FINISH_MM) : furnitureH}
-                  </Text>
+                  {leftCategoryResolved === 'upper' ? (() => {
+                    // 상부장 본체 하단 = bottomFrameTopY + 하부 EP 두께(있을 때만)
+                    const hasBottomEPLeft = (() => {
+                      const lm = leftmostMod as any;
+                      return lm?.hasBottomEndPanel !== false;
+                    })();
+                    const bodyBottomY = hasBottomEPLeft
+                      ? bottomFrameTopY + mmToThreeUnits(UPPER_BOTTOM_FINISH_MM)
+                      : bottomFrameTopY;
+                    return (
+                      <>
+                        {/* 본체 H 치수 텍스트 */}
+                        <Text renderOrder={100001} depthTest={false}
+                          position={[innerX - mmToThreeUnits(25), (bodyBottomY + furnitureTopY) / 2, 0.01]}
+                          fontSize={baseFontSize} color={textColor} anchorX="right" anchorY="middle"
+                          outlineWidth={textOutlineWidth} outlineColor={textOutlineColor}
+                        >
+                          {furnitureH}
+                        </Text>
+                        {hasBottomEPLeft && (
+                          <>
+                            {/* 본체 하단 ~ 하부 EP 하단 구분 가이드 — 좌측으로만 짧게 (외곽선과 무관) */}
+                            <NativeLine name="dimension_line"
+                              points={[[innerX - mmToThreeUnits(20), bodyBottomY, 0.002], [innerX, bodyBottomY, 0.002]]}
+                              color={dimensionColor} lineWidth={0.6} renderOrder={100000} depthTest={false}
+                            />
+                            {/* 하부 EP 18 치수 텍스트 */}
+                            <Text renderOrder={100001} depthTest={false}
+                              position={[innerX - mmToThreeUnits(25), (bottomFrameTopY + bodyBottomY) / 2, 0.01]}
+                              fontSize={baseFontSize} color={textColor} anchorX="right" anchorY="middle"
+                              outlineWidth={textOutlineWidth} outlineColor={textOutlineColor}
+                            >
+                              {UPPER_BOTTOM_FINISH_MM}
+                            </Text>
+                          </>
+                        )}
+                      </>
+                    );
+                  })() : (
+                    <Text renderOrder={100001} depthTest={false}
+                      position={[innerX - mmToThreeUnits(25), (bottomFrameTopY + furnitureTopY) / 2, 0.01]}
+                      fontSize={baseFontSize} color={textColor} anchorX="right" anchorY="middle"
+                      outlineWidth={textOutlineWidth} outlineColor={textOutlineColor}
+                    >
+                      {furnitureH}
+                    </Text>
+                  )}
                 </>
               )}
 
@@ -5787,30 +5792,36 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               const snap = (v: number) => Math.round(v * 100) / 100;
               // 좌/우 한계(벽 또는 인접 가구)까지 한번에 붙이기 + 가구 너비 자동 확장
               // (기본값: 싱글 600, 듀얼 1200 상한까지 빈 공간만큼 확장)
+              // 단, 사용자가 직접 폭을 변경한 경우(userResizedWidth)는 현재 폭 유지
               const isModDual = module.moduleId?.includes('dual-');
               const maxModWidth = isModDual ? 1200 : 600;
               const currentWidthMm = (module.freeWidth || module.customWidth || module.moduleWidth || 0);
+              const userResized = !!(module as any).userResizedWidth;
               const totalAvailableMm = realLeftGapMm + currentWidthMm + realRightGapMm;
-              const newWidthMm = Math.min(maxModWidth, Math.floor(totalAvailableMm));
+              const newWidthMm = userResized
+                ? currentWidthMm
+                : Math.min(maxModWidth, Math.floor(totalAvailableMm));
               const newHalfWThree = mmToThreeUnits(newWidthMm) / 2;
 
               const moveLeft = (e: any) => {
                 stopAll(e);
                 const newX = snap(leftLimit + newHalfWThree);
-                updatePlacedModule(module.id, {
-                  position: { ...module.position, x: newX },
-                  freeWidth: newWidthMm,
-                  moduleWidth: newWidthMm,
-                });
+                const updates: any = { position: { ...module.position, x: newX } };
+                if (!userResized) {
+                  updates.freeWidth = newWidthMm;
+                  updates.moduleWidth = newWidthMm;
+                }
+                updatePlacedModule(module.id, updates);
               };
               const moveRight = (e: any) => {
                 stopAll(e);
                 const newX = snap(rightLimit - newHalfWThree);
-                updatePlacedModule(module.id, {
-                  position: { ...module.position, x: newX },
-                  freeWidth: newWidthMm,
-                  moduleWidth: newWidthMm,
-                });
+                const updates: any = { position: { ...module.position, x: newX } };
+                if (!userResized) {
+                  updates.freeWidth = newWidthMm;
+                  updates.moduleWidth = newWidthMm;
+                }
+                updatePlacedModule(module.id, updates);
               };
               return (<>
                 {/* 좌측 이동 화살표 — 가구 선택 + 이격 여유 있을 때만 */}

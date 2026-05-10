@@ -168,6 +168,17 @@ const computeFurnitureHeightMm = (
       const globalTopFrame = spaceInfo.frameSize?.top || 30;
       heightMm -= (mod.topFrameThickness - globalTopFrame);
     }
+    if ((mod as any).hasTopFrame === false) {
+      const topFrameMm = mod.topFrameThickness ?? (spaceInfo.frameSize?.top ?? 30);
+      const topGapMm = (mod as any).topFrameGap ?? 0;
+      heightMm += (topFrameMm - topGapMm);
+    }
+    if ((mod as any).hasBase === false) {
+      const globalBaseMm = spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height ?? 60) : 0;
+      const absorbedBase = mod.baseFrameHeight ?? globalBaseMm;
+      const floatH = (mod as any).individualFloatHeight ?? 0;
+      heightMm += (absorbedBase - floatH);
+    }
   } else if (mod.isFreePlacement && mod.freeHeight) {
     // 자유배치 상/하부장: freeHeight 고정
     heightMm = mod.freeHeight;
@@ -187,6 +198,11 @@ const computeFurnitureHeightMm = (
         const globalTop = spaceInfo.frameSize?.top ?? 30;
         heightMm -= (mod.topFrameThickness - globalTop);
       }
+      if ((mod as any).hasTopFrame === false && isTall) {
+        const topFrameMm = mod.topFrameThickness ?? (spaceInfo.frameSize?.top ?? 30);
+        const topGapMm = (mod as any).topFrameGap ?? 0;
+        heightMm += (topFrameMm - topGapMm);
+      }
       if (mod.baseFrameHeight !== undefined && !isStandType && isTall) {
         const globalBase = spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height ?? 65) : 0;
         heightMm -= (mod.baseFrameHeight - globalBase);
@@ -200,9 +216,14 @@ const computeFurnitureHeightMm = (
     heightMm -= floorFinishH;
   }
 
-  // 인출장/팬트리장: hasBase=false → 가구가 걸래받이 자리 흡수 (FurnitureItem.tsx와 동일)
+  // 인출장/팬트리장/의류장: hasBase=false → 가구가 걸래받이 자리 흡수 (FurnitureItem.tsx와 동일)
   const isPullOutOrPantry = !!(mod.moduleId?.includes('pull-out-cabinet') || mod.moduleId?.includes('pantry-cabinet'));
-  if (!mod.isFreePlacement && (mod as any).hasBase === false && isTall && isPullOutOrPantry) {
+  const isClothingCabinet = !!(
+    mod.moduleId?.includes('2drawer-hanging') ||
+    mod.moduleId?.includes('2hanging') ||
+    mod.moduleId?.includes('4drawer-hanging')
+  );
+  if (!mod.isFreePlacement && (mod as any).hasBase === false && isTall && (isPullOutOrPantry || isClothingCabinet)) {
     const globalBaseMm = spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height ?? 60) : 0;
     const absorbedBase = mod.baseFrameHeight ?? globalBaseMm;
     const floatH = (mod as any).individualFloatHeight ?? 0;
@@ -704,6 +725,16 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
   // 좌측뷰인 경우
   // 좌측뷰 연장선 시작점
   const leftExtStartZ = -spaceDepth/2 + mmToThreeUnits(70);
+  const getVisibleTopGapMm = () => {
+    const target = visibleFurniture.find(module => {
+      const mod = module as PlacedModule;
+      const cat = getModuleCategory(mod);
+      return (cat === 'full' || cat === 'upper') && Number((mod as any).topFrameGap ?? 0) > 0;
+    }) as PlacedModule | undefined;
+
+    if (!target) return 0;
+    return Math.min(displaySpaceHeightMm, Math.max(0, Math.round(Number((target as any).topFrameGap ?? 0))));
+  };
 
   if (currentViewDirection === 'left') {
     return (
@@ -767,6 +798,43 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
             {displaySpaceHeightMm}
           </Text>
         </group>}
+
+        {/* 상단갭: 상단몰딩 OFF + 상단갭 입력 시 좌우 치수 가이드에 독립 표시 */}
+        {(() => {
+          const topGapMm = getVisibleTopGapMm();
+          if (topGapMm <= 0) return null;
+
+          const gapTopY = displaySpaceHeight;
+          const gapBottomY = mmToThreeUnits(displaySpaceHeightMm - topGapMm);
+          const leftGapZ = -spaceDepth/2 - leftDimOffset + mmToThreeUnits(350);
+          const rightGapZ = spaceDepth/2 + rightDimOffset - mmToThreeUnits(750);
+          const rightExtStartZ = rightGapZ - mmToThreeUnits(240);
+
+          return (
+            <group>
+              <group>
+                <ExtLine points={[[0, gapBottomY, leftExtStartZ], [0, gapBottomY, leftGapZ]]} color={dimensionColor} />
+                <ExtLine points={[[0, gapTopY, leftExtStartZ], [0, gapTopY, leftGapZ]]} color={dimensionColor} />
+                <NativeLine name="dimension_line" points={[[0, gapBottomY, leftGapZ], [0, gapTopY, leftGapZ]]} color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false} />
+                <NativeLine name="dimension_line" points={[[-0.008, gapBottomY, leftGapZ], [0.008, gapBottomY, leftGapZ]]} color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false} />
+                <NativeLine name="dimension_line" points={[[-0.008, gapTopY, leftGapZ], [0.008, gapTopY, leftGapZ]]} color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false} />
+                <Text position={[0, (gapBottomY + gapTopY) / 2, leftGapZ - mmToThreeUnits(60)]} fontSize={largeFontSize} color={textColor} anchorX="center" anchorY="middle" renderOrder={100001} depthTest={false} rotation={[0, -Math.PI / 2, Math.PI / 2]}>
+                  {topGapMm}
+                </Text>
+              </group>
+              <group>
+                <ExtLine points={[[0, gapBottomY, rightExtStartZ], [0, gapBottomY, rightGapZ]]} color={dimensionColor} />
+                <ExtLine points={[[0, gapTopY, rightExtStartZ], [0, gapTopY, rightGapZ]]} color={dimensionColor} />
+                <NativeLine name="dimension_line" points={[[0, gapBottomY, rightGapZ], [0, gapTopY, rightGapZ]]} color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false} />
+                <NativeLine name="dimension_line" points={[[-0.008, gapBottomY, rightGapZ], [0.008, gapBottomY, rightGapZ]]} color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false} />
+                <NativeLine name="dimension_line" points={[[-0.008, gapTopY, rightGapZ], [0.008, gapTopY, rightGapZ]]} color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false} />
+                <Text position={[0, (gapBottomY + gapTopY) / 2, rightGapZ + mmToThreeUnits(60)]} fontSize={largeFontSize} color={textColor} anchorX="center" anchorY="middle" renderOrder={100001} depthTest={false} rotation={[0, -Math.PI / 2, Math.PI / 2]}>
+                  {topGapMm}
+                </Text>
+              </group>
+            </group>
+          );
+        })()}
 
         {/* ===== 왼쪽 2단: 몸통 사이즈 (segment-based, 모든 카테고리) ===== */}
         {visibleFurniture.length > 0 && (() => {
@@ -855,10 +923,12 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
               });
             }
 
-            // 상부장: 상단몰딩 치수 세그먼트 추가 (캐비넷 상단 ~ 천장)
+            // 상부장: 상단몰딩 치수 세그먼트 추가 (캐비넷 상단 ~ 몰딩 상단)
             if (modCat_l2 === 'upper') {
               const topFrameVal = mod.topFrameThickness ?? (spaceInfo.frameSize?.top ?? 30);
-              if (topFrameVal > 0) {
+              const topGapVal = Math.min(topFrameVal, Math.max(0, Math.round((mod as any).topFrameGap ?? 0)));
+              const visibleTopFrameVal = mod.hasTopFrame === false ? 0 : Math.max(0, topFrameVal - topGapVal);
+              if (visibleTopFrameVal > 0) {
                 // 상단몰딩 연장선은 가구 뒷면까지 연장
                 // 상부장 뒷면을 하부장 뒷면에 정렬
                 // 하부장 뒷면 Z = fzOff - furnitureDepth/2 - doorThickness(20mm)
@@ -876,8 +946,8 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
 
                 segments_l2.push({
                   bottomY: mmToThreeUnits(cabinetTopMm),
-                  topY: mmToThreeUnits(effectiveH_l2),
-                  heightMm: Math.round(topFrameVal),
+                  topY: mmToThreeUnits(effectiveH_l2 - topGapVal),
+                  heightMm: Math.round(visibleTopFrameVal),
                   key: `upper-topframe-${moduleIndex}`,
                   extStartZ: upperFrontZ
                 });
@@ -938,51 +1008,53 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
               {allSegments_l2.map((seg) => {
                 const segExtStartZ = seg.extStartZ !== undefined ? seg.extStartZ : leftInnerExtStartZ;
                 return (
-                <group key={`l2-sec-${seg.key}`}>
-                  <ExtLine points={[[0, seg.bottomY, segExtStartZ], [0, seg.bottomY, leftInnerZ]]} color={dimensionColor} />
-                  <ExtLine points={[[0, seg.topY, segExtStartZ], [0, seg.topY, leftInnerZ]]} color={dimensionColor} />
-                  <NativeLine name="dimension_line"
-                    points={[[0, seg.bottomY, leftInnerZ], [0, seg.topY, leftInnerZ]]}
-                    color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
-                  />
-                  <NativeLine name="dimension_line"
-                    points={[[-0.008, seg.bottomY, leftInnerZ], [0.008, seg.bottomY, leftInnerZ]]}
-                    color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
-                  />
-                  <NativeLine name="dimension_line"
-                    points={[[-0.008, seg.topY, leftInnerZ], [0.008, seg.topY, leftInnerZ]]}
-                    color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
-                  />
-                  {seg.upperModuleId && seg.currentHeightMm ? (
-                    <MidwayEditableNumber
-                      position={[0, (seg.bottomY + seg.topY) / 2, leftInnerZ - mmToThreeUnits(60)]}
-                      value={seg.heightMm}
-                      color={textColor}
-                      fontSize={largeFontSize}
-                      rotated90
-                      isDark={view2DTheme === 'dark'}
-                      onChange={(newGap) => {
-                        const delta = seg.heightMm - newGap; // 양수: 갭 줄임 → 상부장 확장
-                        const newHeight = Math.round((seg.currentHeightMm || 0) + delta);
-                        if (newHeight > 0 && seg.upperModuleId) {
-                          useFurnitureStore.getState().updatePlacedModule(seg.upperModuleId, {
-                            customHeight: newHeight,
-                          });
-                        }
-                      }}
+                <React.Fragment key={`l2-sec-${seg.key}`}>
+                  <group>
+                    <ExtLine points={[[0, seg.bottomY, segExtStartZ], [0, seg.bottomY, leftInnerZ]]} color={dimensionColor} />
+                    <ExtLine points={[[0, seg.topY, segExtStartZ], [0, seg.topY, leftInnerZ]]} color={dimensionColor} />
+                    <NativeLine name="dimension_line"
+                      points={[[0, seg.bottomY, leftInnerZ], [0, seg.topY, leftInnerZ]]}
+                      color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
                     />
-                  ) : (
-                    <Text
-                      position={[0, (seg.bottomY + seg.topY) / 2, leftInnerZ - mmToThreeUnits(60)]}
-                      fontSize={largeFontSize} color={textColor}
-                      anchorX="center" anchorY="middle"
-                      renderOrder={100001} depthTest={false}
-                      rotation={[0, -Math.PI / 2, Math.PI / 2]}
-                    >
-                      {seg.heightMm}
-                    </Text>
-                  )}
-                </group>
+                    <NativeLine name="dimension_line"
+                      points={[[-0.008, seg.bottomY, leftInnerZ], [0.008, seg.bottomY, leftInnerZ]]}
+                      color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
+                    />
+                    <NativeLine name="dimension_line"
+                      points={[[-0.008, seg.topY, leftInnerZ], [0.008, seg.topY, leftInnerZ]]}
+                      color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false}
+                    />
+                    {seg.upperModuleId && seg.currentHeightMm ? (
+                      <MidwayEditableNumber
+                        position={[0, (seg.bottomY + seg.topY) / 2, leftInnerZ - mmToThreeUnits(60)]}
+                        value={seg.heightMm}
+                        color={textColor}
+                        fontSize={largeFontSize}
+                        rotated90
+                        isDark={view2DTheme === 'dark'}
+                        onChange={(newGap) => {
+                          const delta = seg.heightMm - newGap; // 양수: 갭 줄임 → 상부장 확장
+                          const newHeight = Math.round((seg.currentHeightMm || 0) + delta);
+                          if (newHeight > 0 && seg.upperModuleId) {
+                            useFurnitureStore.getState().updatePlacedModule(seg.upperModuleId, {
+                              customHeight: newHeight,
+                            });
+                          }
+                        }}
+                      />
+                    ) : (
+                      <Text
+                        position={[0, (seg.bottomY + seg.topY) / 2, leftInnerZ - mmToThreeUnits(60)]}
+                        fontSize={largeFontSize} color={textColor}
+                        anchorX="center" anchorY="middle"
+                        renderOrder={100001} depthTest={false}
+                        rotation={[0, -Math.PI / 2, Math.PI / 2]}
+                      >
+                        {seg.heightMm}
+                      </Text>
+                    )}
+                  </group>
+                </React.Fragment>
                 );
               })}
 
@@ -1687,15 +1759,19 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                 </>
               )}
 
-              {/* 상부장 하부마감판 깊이 치수 + 뒤쪽 갭 치수 */}
-              {isUpperMod && (() => {
-                const finishDepthMm = customDepth - 35;
+              {/* 상부장 하부마감판 깊이 치수 + 뒤쪽 갭 치수 — 하부 EP 체크 해제 시 미표시 */}
+              {isUpperMod && (module as any).hasBottomEndPanel !== false && (() => {
+                // 사용자 입력 갭 (기본: 전면 0, 후면 35mm)
+                const frontGapMm = (module as any).bottomEndPanelOffset ?? 0;
+                const backGapMm = (module as any).bottomEndPanelBackOffset ?? 35;
+                const finishDepthMm = customDepth - frontGapMm - backGapMm;
                 const finishDepth = mmToThreeUnits(finishDepthMm);
-                const finishZ = furnitureZ + mmToThreeUnits(17.5);
+                // 마감판 중심 Z = 가구 중심 Z + (frontGap - backGap)/2 (앞쪽으로 frontGap, 뒤쪽으로 backGap 들어감)
+                const finishZ = furnitureZ + mmToThreeUnits((backGapMm - frontGapMm) / 2);
                 const finishDimY = furnitureBottomEdge - mmToThreeUnits(80);
                 const cabinetBackZ = furnitureZ - moduleDepth / 2;
                 const finishBackZ = finishZ - finishDepth / 2;
-                const offsetMm = 35;
+                const offsetMm = backGapMm;
 
                 return (
                   <group>
@@ -1734,26 +1810,60 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                       {finishDepthMm}
                     </Text>
 
-                    {/* 갭 치수선 (가구 뒷면 ~ 마감판 뒷면 = 35mm) — 같은 높이 */}
-                    <NativeLine name="dimension_line"
-                      points={[[0, finishDimY, cabinetBackZ], [0, finishDimY, finishBackZ]]}
-                      color={dimensionColor} lineWidth={0.5} renderOrder={100000} depthTest={false}
-                    />
-                    {/* 갭 뒤쪽 티크 */}
-                    <NativeLine name="dimension_line"
-                      points={[[0 - 0.02, finishDimY, cabinetBackZ], [0 + 0.02, finishDimY, cabinetBackZ]]}
-                      color={dimensionColor} lineWidth={0.5} renderOrder={100000} depthTest={false}
-                    />
-                    {/* 갭 텍스트 */}
-                    <Text
-                      position={[0, finishDimY - mmToThreeUnits(40), (cabinetBackZ + finishBackZ) / 2]}
-                      fontSize={largeFontSize} color={textColor}
-                      anchorX="center" anchorY="middle"
-                      renderOrder={100001} depthTest={false}
-                      rotation={[0, -Math.PI / 2, 0]}
-                    >
-                      {offsetMm}
-                    </Text>
+                    {/* 후면갭 치수선 (가구 뒷면 ~ 마감판 뒷면) — 후면갭 > 0 일 때만 표시 */}
+                    {backGapMm > 0 && (
+                      <>
+                        <NativeLine name="dimension_line"
+                          points={[[0, finishDimY, cabinetBackZ], [0, finishDimY, finishBackZ]]}
+                          color={dimensionColor} lineWidth={0.5} renderOrder={100000} depthTest={false}
+                        />
+                        <NativeLine name="dimension_line"
+                          points={[[0 - 0.02, finishDimY, cabinetBackZ], [0 + 0.02, finishDimY, cabinetBackZ]]}
+                          color={dimensionColor} lineWidth={0.5} renderOrder={100000} depthTest={false}
+                        />
+                        <Text
+                          position={[0, finishDimY - mmToThreeUnits(40), (cabinetBackZ + finishBackZ) / 2]}
+                          fontSize={largeFontSize} color={textColor}
+                          anchorX="center" anchorY="middle"
+                          renderOrder={100001} depthTest={false}
+                          rotation={[0, -Math.PI / 2, 0]}
+                        >
+                          {backGapMm}
+                        </Text>
+                      </>
+                    )}
+
+                    {/* 전면갭 치수선 (마감판 앞면 ~ 가구 앞면) — 전면갭 > 0 일 때만 표시 */}
+                    {frontGapMm > 0 && (() => {
+                      const cabinetFrontZ = furnitureZ + moduleDepth / 2;
+                      const finishFrontZ = finishZ + finishDepth / 2;
+                      return (
+                        <>
+                          {/* 가구 앞쪽 가이드 연장선 */}
+                          <ExtLine points={[[0, furnitureBottomEdge, cabinetFrontZ], [0, finishDimY, cabinetFrontZ]]} color={dimensionColor} />
+                          {/* 전면갭 치수선 */}
+                          <NativeLine name="dimension_line"
+                            points={[[0, finishDimY, finishFrontZ], [0, finishDimY, cabinetFrontZ]]}
+                            color={dimensionColor} lineWidth={0.5} renderOrder={100000} depthTest={false}
+                          />
+                          {/* 가구 앞쪽 티크 */}
+                          <NativeLine name="dimension_line"
+                            points={[[0 - 0.02, finishDimY, cabinetFrontZ], [0 + 0.02, finishDimY, cabinetFrontZ]]}
+                            color={dimensionColor} lineWidth={0.5} renderOrder={100000} depthTest={false}
+                          />
+                          {/* 전면갭 텍스트 */}
+                          <Text
+                            position={[0, finishDimY - mmToThreeUnits(40), (finishFrontZ + cabinetFrontZ) / 2]}
+                            fontSize={largeFontSize} color={textColor}
+                            anchorX="center" anchorY="middle"
+                            renderOrder={100001} depthTest={false}
+                            rotation={[0, -Math.PI / 2, 0]}
+                          >
+                            {frontGapMm}
+                          </Text>
+                        </>
+                      );
+                    })()}
                   </group>
                 );
               })()}
@@ -2159,6 +2269,43 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           </Text>
         </group>}
 
+        {/* 상단갭: 상단몰딩 OFF + 상단갭 입력 시 좌우 치수 가이드에 독립 표시 */}
+        {(() => {
+          const topGapMm = getVisibleTopGapMm();
+          if (topGapMm <= 0) return null;
+
+          const gapTopY = displaySpaceHeight;
+          const gapBottomY = mmToThreeUnits(displaySpaceHeightMm - topGapMm);
+          const leftGapZ = -spaceDepth/2 - leftDimOffset + mmToThreeUnits(350);
+          const rightGapZ = spaceDepth/2 + rightDimOffset - mmToThreeUnits(750);
+          const rightExtStartZ = rightGapZ - mmToThreeUnits(240);
+
+          return (
+            <group>
+              <group>
+                <ExtLine points={[[0, gapBottomY, leftExtStartZ], [0, gapBottomY, leftGapZ]]} color={dimensionColor} />
+                <ExtLine points={[[0, gapTopY, leftExtStartZ], [0, gapTopY, leftGapZ]]} color={dimensionColor} />
+                <NativeLine name="dimension_line" points={[[0, gapBottomY, leftGapZ], [0, gapTopY, leftGapZ]]} color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false} />
+                <NativeLine name="dimension_line" points={[[-0.008, gapBottomY, leftGapZ], [0.008, gapBottomY, leftGapZ]]} color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false} />
+                <NativeLine name="dimension_line" points={[[-0.008, gapTopY, leftGapZ], [0.008, gapTopY, leftGapZ]]} color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false} />
+                <Text position={[0, (gapBottomY + gapTopY) / 2, leftGapZ - mmToThreeUnits(60)]} fontSize={largeFontSize} color={textColor} anchorX="center" anchorY="middle" renderOrder={100001} depthTest={false} rotation={[0, Math.PI / 2, Math.PI / 2]}>
+                  {topGapMm}
+                </Text>
+              </group>
+              <group>
+                <ExtLine points={[[0, gapBottomY, rightExtStartZ], [0, gapBottomY, rightGapZ]]} color={dimensionColor} />
+                <ExtLine points={[[0, gapTopY, rightExtStartZ], [0, gapTopY, rightGapZ]]} color={dimensionColor} />
+                <NativeLine name="dimension_line" points={[[0, gapBottomY, rightGapZ], [0, gapTopY, rightGapZ]]} color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false} />
+                <NativeLine name="dimension_line" points={[[-0.008, gapBottomY, rightGapZ], [0.008, gapBottomY, rightGapZ]]} color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false} />
+                <NativeLine name="dimension_line" points={[[-0.008, gapTopY, rightGapZ], [0.008, gapTopY, rightGapZ]]} color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false} />
+                <Text position={[0, (gapBottomY + gapTopY) / 2, rightGapZ + mmToThreeUnits(60)]} fontSize={largeFontSize} color={textColor} anchorX="center" anchorY="middle" renderOrder={100001} depthTest={false} rotation={[0, Math.PI / 2, Math.PI / 2]}>
+                  {topGapMm}
+                </Text>
+              </group>
+            </group>
+          );
+        })()}
+
         {/* ===== 왼쪽 2단: 몸통 사이즈 (segment-based, 모든 카테고리) — 우측뷰 ===== */}
         {visibleFurniture.length > 0 && (() => {
           const leftInnerZ = -spaceDepth/2 - leftDimOffset + mmToThreeUnits(150) + mmToThreeUnits(200);
@@ -2229,6 +2376,21 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
               });
             }
 
+            // 상부장 상단몰딩: 갭이 있으면 실제 몰딩 높이만 분리 표시
+            if (modCat_rl2 === 'upper') {
+              const topFrameVal = mod.topFrameThickness ?? (spaceInfo.frameSize?.top ?? 30);
+              const topGapVal = Math.min(topFrameVal, Math.max(0, Math.round((mod as any).topFrameGap ?? 0)));
+              const visibleTopFrameVal = mod.hasTopFrame === false ? 0 : Math.max(0, topFrameVal - topGapVal);
+              if (visibleTopFrameVal > 0) {
+                segments_rl2.push({
+                  bottomY: mmToThreeUnits(cabinetTopMm),
+                  topY: mmToThreeUnits(effectiveH_rl2 - topGapVal),
+                  heightMm: Math.round(visibleTopFrameVal),
+                  key: `upper-topframe-${moduleIndex}`
+                });
+              }
+            }
+
             // 하부장: 뒷턱 치수만 (상판 두께는 몸통에 합산됨)
             if (modCat_rl2 === 'lower') {
               const stoneThickness = _stoneTopThk(mod);
@@ -2268,18 +2430,22 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
 
           return (
             <group>
-              {allSegments_rl2.map((seg) => (
-                <group key={`rl2-sec-${seg.key}`}>
-                  <ExtLine points={[[0, seg.bottomY, leftInnerExtStartZ], [0, seg.bottomY, leftInnerZ]]} color={dimensionColor} />
-                  <ExtLine points={[[0, seg.topY, leftInnerExtStartZ], [0, seg.topY, leftInnerZ]]} color={dimensionColor} />
-                  <NativeLine name="dimension_line" points={[[0, seg.bottomY, leftInnerZ], [0, seg.topY, leftInnerZ]]} color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false} />
-                  <NativeLine name="dimension_line" points={[[-0.008, seg.bottomY, leftInnerZ], [0.008, seg.bottomY, leftInnerZ]]} color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false} />
-                  <NativeLine name="dimension_line" points={[[-0.008, seg.topY, leftInnerZ], [0.008, seg.topY, leftInnerZ]]} color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false} />
-                  <Text position={[0, (seg.bottomY + seg.topY) / 2, leftInnerZ - mmToThreeUnits(60)]} fontSize={largeFontSize} color={textColor} anchorX="center" anchorY="middle" renderOrder={100001} depthTest={false} rotation={[0, Math.PI / 2, Math.PI / 2]}>
-                    {seg.heightMm}
-                  </Text>
-                </group>
-              ))}
+              {allSegments_rl2.map((seg) => {
+                return (
+                  <React.Fragment key={`rl2-sec-${seg.key}`}>
+                    <group>
+                      <ExtLine points={[[0, seg.bottomY, leftInnerExtStartZ], [0, seg.bottomY, leftInnerZ]]} color={dimensionColor} />
+                      <ExtLine points={[[0, seg.topY, leftInnerExtStartZ], [0, seg.topY, leftInnerZ]]} color={dimensionColor} />
+                      <NativeLine name="dimension_line" points={[[0, seg.bottomY, leftInnerZ], [0, seg.topY, leftInnerZ]]} color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false} />
+                      <NativeLine name="dimension_line" points={[[-0.008, seg.bottomY, leftInnerZ], [0.008, seg.bottomY, leftInnerZ]]} color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false} />
+                      <NativeLine name="dimension_line" points={[[-0.008, seg.topY, leftInnerZ], [0.008, seg.topY, leftInnerZ]]} color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false} />
+                      <Text position={[0, (seg.bottomY + seg.topY) / 2, leftInnerZ - mmToThreeUnits(60)]} fontSize={largeFontSize} color={textColor} anchorX="center" anchorY="middle" renderOrder={100001} depthTest={false} rotation={[0, Math.PI / 2, Math.PI / 2]}>
+                        {seg.heightMm}
+                      </Text>
+                    </group>
+                  </React.Fragment>
+                );
+              })}
 
               {/* 도어 안쪽 갭 치수 (상판 윗면~도어 상단) — 우측뷰: 도어 치수선 바깥 */}
               {innerGapSegments_rl2.length > 0 && (() => {
@@ -2776,11 +2942,12 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                 </>
               )}
 
-              {/* 상부장 하부마감판 깊이 치수 (우측뷰) */}
+              {/* 상부장 하부마감판 깊이 치수 (우측뷰) — 하부 EP 체크 해제 시 미표시 */}
               {(() => {
                 const mod = module as PlacedModule;
                 const modCat = getModuleCategory(mod);
                 if (modCat !== 'upper') return null;
+                if ((mod as any).hasBottomEndPanel === false) return null;
 
                 const modHeightMm_r = computeFurnitureHeightMm(mod, moduleData!, spaceInfo, internalSpace);
                 const depthEffH_r = isSelectedSlotInDroppedZone ? (spaceInfo.height - dropHeightMm) : spaceInfo.height;

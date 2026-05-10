@@ -12,6 +12,15 @@ import { useExcludedPanelsStore } from '../../../context/ExcludedPanelsContext';
 import { useFurnitureGhostContext } from '../../../context/FurnitureGhostContext';
 import { NativeLine } from '../../elements/NativeLine';
 
+const MIN_BOX_GEOMETRY_SIZE = 0.001;
+
+const sanitizeBoxGeometrySize = (value: number): number => {
+  if (!Number.isFinite(value) || value <= 0) {
+    return MIN_BOX_GEOMETRY_SIZE;
+  }
+  return value;
+};
+
 interface BoxWithEdgesProps {
   args: [number, number, number];
   position: [number, number, number];
@@ -77,6 +86,11 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
   backCenterNotch,
   circleHoles
 }) => {
+  const safeArgs = React.useMemo<[number, number, number]>(() => [
+    sanitizeBoxGeometrySize(args[0]),
+    sanitizeBoxGeometrySize(args[1]),
+    sanitizeBoxGeometrySize(args[2]),
+  ], [args[0], args[1], args[2]]);
 
   // CNC 옵티마이저에서 체크 해제된 패널이면 렌더링 생략 (furnitureId::panelName 복합키)
   // NOTE: React hook (useExcludedPanelsStore) 대신 useFrame으로 폴링 — R3F Canvas는 별도 React reconciler를 사용하므로
@@ -579,7 +593,7 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
   // L자형 노치 엣지 라인 생성 (2D/3D 공용) — 단일 및 다중 노치 지원
   const getNotchEdgeLines = React.useCallback((): [number, number, number][][] => {
     if (!hasAnyNotch) return [];
-    const [width, height, depth] = args;
+    const [width, height, depth] = safeArgs;
     const halfW = width / 2, halfH = height / 2, halfD = depth / 2;
     const lines: [number, number, number][][] = [];
 
@@ -785,11 +799,11 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
     }
 
     return lines;
-  }, [notch, notches, bottomRebate, cornerNotch, backCenterNotch, hasAnyNotch, args]);
+  }, [notch, notches, bottomRebate, cornerNotch, backCenterNotch, hasAnyNotch, safeArgs]);
 
   // 2D 모드에서 엣지 렌더링 (panelName 기반 opacity 적용)
   const render2DEdgesWithDepth = React.useCallback(() => {
-    const [width, height, depth] = args;
+    const [width, height, depth] = safeArgs;
     const halfW = width / 2;
     const halfH = height / 2;
     const halfD = depth / 2;
@@ -882,12 +896,12 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
         ))}
       </>
     );
-  }, [args, edgeColor, hideTopEdge, hideBottomEdge, isHighlighted, isBackPanel, isClothingRod, panelName, panelDepthOpacity, view2DTheme, view2DDirection, hasAnyNotch, getNotchEdgeLines]);
+  }, [args, safeArgs, edgeColor, hideTopEdge, hideBottomEdge, isHighlighted, isBackPanel, isClothingRod, panelName, panelDepthOpacity, view2DTheme, view2DDirection, hasAnyNotch, getNotchEdgeLines]);
 
   // 노치 지오메트리 (단일 notch 또는 다중 notches 지원)
   const notchGeometry = React.useMemo(() => {
     if (!hasAnyNotch) return null;
-    const [w, h, d] = args;
+    const [w, h, d] = safeArgs;
     const halfW = w / 2, halfH = h / 2, halfD = d / 2;
 
     // YZ 평면 Shape 생성 (shapeX=Y축, shapeY=Z축)
@@ -1136,7 +1150,7 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
     geom.computeVertexNormals();
 
     return geom;
-  }, [notch, notches, bottomRebate, cornerNotch, backCenterNotch, hasCircleHoles, circleHoles, hasAnyNotch, args]);
+  }, [notch, notches, bottomRebate, cornerNotch, backCenterNotch, hasCircleHoles, circleHoles, hasAnyNotch, safeArgs]);
 
   // 옵티마이저에서 제외된 패널이면 렌더링하지 않음
   // useFrame 폴링으로 visible 제어 — R3F reconciler/DOM reconciler 간 Zustand 구독 호환 문제 회피
@@ -1158,9 +1172,9 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
         material={finalMaterial}
       >
         {notchGeometry ? (
-          <primitive key={`notch-${args[0]}-${args[1]}-${args[2]}-${JSON.stringify(notch || notches || cornerNotch || backCenterNotch || circleHoles)}`} object={notchGeometry} attach="geometry" />
+          <primitive key={`notch-${safeArgs[0]}-${safeArgs[1]}-${safeArgs[2]}-${JSON.stringify(notch || notches || cornerNotch || backCenterNotch || circleHoles)}`} object={notchGeometry} attach="geometry" />
         ) : (
-          <boxGeometry key={`${args[0]}-${args[1]}-${args[2]}`} args={args} />
+          <boxGeometry key={`${safeArgs[0]}-${safeArgs[1]}-${safeArgs[2]}`} args={safeArgs} />
         )}
       </mesh>
       {/* 윤곽선 렌더링 - hideEdges prop 또는 edgeOutlineEnabled 스토어 설정으로 제어 */}
@@ -1205,7 +1219,7 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
         }
 
         if (hideTopEdge || hideBottomEdge) {
-          const [width, height, depth] = args;
+          const [width, height, depth] = safeArgs;
           const halfW = width / 2;
           const halfH = height / 2;
           const halfD = depth / 2;
@@ -1273,7 +1287,7 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
           return (
             <>
               <lineSegments name={edgeName}>
-                <edgesGeometry key={`${args[0]}-${args[1]}-${args[2]}`} args={[new THREE.BoxGeometry(...args)]} />
+                <edgesGeometry key={`${safeArgs[0]}-${safeArgs[1]}-${safeArgs[2]}`} args={[new THREE.BoxGeometry(...safeArgs)]} />
                 <lineBasicMaterial
                   color={edgeColor}
                   transparent={effectiveRenderMode !== 'wireframe'}

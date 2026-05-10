@@ -18,6 +18,17 @@ import { Hinge } from '../Hinge';
 import DimensionText from './components/DimensionText';
 import { useDimensionColor } from './hooks/useDimensionColor';
 import { useExcludedPanelsStore } from '../../context/ExcludedPanelsContext';
+import { calculateDualDoorOpenGeometry, calculateSingleDoorOpenGeometry } from '@/editor/shared/utils/doorGeometryCalculator';
+import { resolveDoorHeightDimensionSides, shouldRenderDoorDimensionGuides } from '@/editor/shared/utils/doorDimensionGuides';
+
+const MIN_DOOR_BOX_GEOMETRY_SIZE = 0.001;
+
+const sanitizeDoorBoxGeometrySize = (value: number): number => {
+  if (!Number.isFinite(value) || value <= 0) {
+    return MIN_DOOR_BOX_GEOMETRY_SIZE;
+  }
+  return value;
+};
 
 // BoxWithEdges 컴포넌트 정의 (독립적인 그림자 업데이트 포함)
 const BoxWithEdges: React.FC<{
@@ -43,7 +54,12 @@ const BoxWithEdges: React.FC<{
 
   const { theme } = useViewerTheme();
   const { view2DTheme, shadowEnabled } = useUIStore();
-  const geometry = useMemo(() => new THREE.BoxGeometry(...args), [args]);
+  const safeArgs = useMemo<[number, number, number]>(() => [
+    sanitizeDoorBoxGeometrySize(args[0]),
+    sanitizeDoorBoxGeometrySize(args[1]),
+    sanitizeDoorBoxGeometrySize(args[2]),
+  ], [args[0], args[1], args[2]]);
+  const geometry = useMemo(() => new THREE.BoxGeometry(...safeArgs), [safeArgs]);
   const edgesGeometry = useMemo(() => new THREE.EdgesGeometry(geometry), [geometry]);
 
   const { viewMode } = useSpace3DView();
@@ -635,34 +651,22 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   // 인덱싱 정보 계산 - 원본 spaceInfo 사용 + slotCustomWidth 재분할 반영
   const allPlacedModules = useFurnitureStore(state => state.placedModules);
   const doorHeightDimensionSides = useMemo(() => {
-    if (!furnitureId) {
-      return { left: true, right: true };
-    }
-
     const visibleModules = allPlacedModules
       .filter(module => !module.isSurroundPanel)
       .map((module, index) => ({
         id: module.id,
         x: module.position?.x ?? 0,
         index
-      }))
-      .sort((a, b) => {
-        if (Math.abs(a.x - b.x) > 0.001) return a.x - b.x;
-        return a.index - b.index;
-      });
+      }));
 
-    if (visibleModules.length === 0) {
-      return { left: true, right: true };
-    }
-
-    const leftModule = visibleModules[0];
-    const rightModule = visibleModules[visibleModules.length - 1];
-
-    return {
-      left: leftModule.id === furnitureId,
-      right: rightModule.id === furnitureId
-    };
+    return resolveDoorHeightDimensionSides(visibleModules, furnitureId);
   }, [allPlacedModules, furnitureId]);
+  const showDoorDimensionGuides = shouldRenderDoorDimensionGuides(
+    showDimensions,
+    isPlainMaterial,
+    viewMode,
+    view2DDirection
+  );
 
   const indexing = useMemo(() => {
     const base = calculateSpaceIndexing(originalSpaceInfo);
@@ -1060,7 +1064,6 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   // 힌지 위치 오프셋(9mm) 상수 정의
   const hingeOffset = panelThickness / 2; // 9mm
   const hingeOffsetUnits = mmToThreeUnits(hingeOffset);
-  const doorOpenInsetAdjustUnits = hingeOffsetUnits / 2;
   
   // 편집 모드 체크 로그
   useEffect(() => {
@@ -1360,6 +1363,26 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     // 힌지 축 위치 (각 도어의 바깥쪽 가장자리에서 9mm 안쪽)
     const leftHingeX = leftXOffset + (-leftDoorWidthUnits / 2 + hingeOffsetUnits);  // 왼쪽 도어: 왼쪽 가장자리 + 9mm
     const rightHingeX = rightXOffset + (rightDoorWidthUnits / 2 - hingeOffsetUnits); // 오른쪽 도어: 오른쪽 가장자리 - 9mm
+    const leftDoorOpenGeometry = calculateDualDoorOpenGeometry({
+      doorSide: 'left',
+      doorYPosition,
+      doorDepth,
+      hingeX: leftHingeX,
+      doorWidthUnits: leftDoorWidthUnits,
+      epTrimShift: leftEpTrimShift,
+      insertExtendShift: leftInsertExtendShift,
+      panelThicknessMm: panelThickness
+    });
+    const rightDoorOpenGeometry = calculateDualDoorOpenGeometry({
+      doorSide: 'right',
+      doorYPosition,
+      doorDepth,
+      hingeX: rightHingeX,
+      doorWidthUnits: rightDoorWidthUnits,
+      epTrimShift: rightEpTrimShift,
+      insertExtendShift: rightInsertExtendShift,
+      panelThicknessMm: panelThickness
+    });
 
 // console.log('🚪 듀얼 도어 위치:', {
       // totalWidth,
@@ -1386,9 +1409,9 @@ const DoorModule: React.FC<DoorModuleProps> = ({
       <group position={[doorGroupX, 0, 0]}> {/* 듀얼 캐비넷도 원래 슬롯 중심에 배치 */}
         {/* 왼쪽 도어 - 왼쪽 힌지 (왼쪽 가장자리에서 회전) */}
         {showLeftDoor && (
-        <group position={[leftHingeX + leftEpTrimShift + leftInsertExtendShift + doorOpenInsetAdjustUnits, doorYPosition, doorDepth / 2 + doorOpenInsetAdjustUnits]}>
+        <group position={leftDoorOpenGeometry.parentPosition}>
           <animated.group rotation-y={leftDoorLocked ? 0 : dualLeftDoorSpring.rotation}>
-            <group position={[leftDoorWidthUnits / 2 - hingeOffsetUnits - doorOpenInsetAdjustUnits, 0, -doorOpenInsetAdjustUnits]}>
+            <group position={leftDoorOpenGeometry.childPosition}>
               {/* 2D 정면뷰: 좌측 도어 반투명 overlay (잠금 시 붉은색) */}
               {showDoorOverlay && (
                 <mesh position={[0, 0, doorThicknessUnits / 2 + 0.001]} renderOrder={9999}>
@@ -1662,7 +1685,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
               })()}
 
               {/* 왼쪽 도어 가로 폭 치수 (2D 정면뷰 + 3D) */}
-              {showDimensions && !isPlainMaterial && (viewMode === '3D' || (viewMode === '2D' && view2DDirection === 'front')) && (() => {
+              {showDoorDimensionGuides && (() => {
                 const is3D = viewMode === '3D';
                 const extensionLineStart = mmToThreeUnits(70);
                 const extensionLineLength = mmToThreeUnits(110);
@@ -1759,9 +1782,9 @@ const DoorModule: React.FC<DoorModuleProps> = ({
 
         {/* 오른쪽 도어 - 오른쪽 힌지 (오른쪽 가장자리에서 회전) */}
         {showRightDoor && (
-        <group position={[rightHingeX + rightEpTrimShift + rightInsertExtendShift - doorOpenInsetAdjustUnits, doorYPosition, doorDepth / 2 + doorOpenInsetAdjustUnits]}>
+        <group position={rightDoorOpenGeometry.parentPosition}>
           <animated.group rotation-y={rightDoorLocked ? 0 : dualRightDoorSpring.rotation}>
-            <group position={[-rightDoorWidthUnits / 2 + hingeOffsetUnits + doorOpenInsetAdjustUnits, 0, -doorOpenInsetAdjustUnits]}>
+            <group position={rightDoorOpenGeometry.childPosition}>
               {/* 2D 정면뷰: 우측 도어 반투명 overlay (잠금 시 붉은색) */}
               {showDoorOverlay && (
                 <mesh position={[0, 0, doorThicknessUnits / 2 + 0.001]} renderOrder={9999}>
@@ -2034,7 +2057,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
               })()}
 
               {/* 오른쪽 도어 가로 폭 치수 (2D 정면뷰 + 3D) */}
-              {showDimensions && !isPlainMaterial && (viewMode === '3D' || (viewMode === '2D' && view2DDirection === 'front')) && (() => {
+              {showDoorDimensionGuides && (() => {
                 const is3D = viewMode === '3D';
                 const extensionLineStart = mmToThreeUnits(70);
                 const extensionLineLength = mmToThreeUnits(110);
@@ -2234,18 +2257,21 @@ const DoorModule: React.FC<DoorModuleProps> = ({
       // moduleDataId: moduleData?.id
     // });
 
-    // 조정된 힌지 위치 사용
-    const hingeAxisOffset = adjustedHingePosition === 'left'
-      ? -doorWidthUnits / 2 + hingeOffsetUnits  // 왼쪽 힌지: 왼쪽 가장자리에서 9mm 안쪽
-      : doorWidthUnits / 2 - hingeOffsetUnits;  // 오른쪽 힌지: 오른쪽 가장자리에서 9mm 안쪽
+    const singleDoorOpenGeometry = calculateSingleDoorOpenGeometry({
+      hingeSide: adjustedHingePosition,
+      doorGroupX,
+      doorYPosition,
+      doorDepth,
+      doorWidthUnits,
+      epTrimShiftX,
+      insertExtendShiftX,
+      panelThicknessMm: panelThickness
+    });
 
-    // 도어 위치: 회전축이 힌지 위치에 맞게 조정
-    const doorPositionX = -hingeAxisOffset; // 회전축 보정을 위한 도어 위치 조정
-    const innerXShift = adjustedHingePosition === 'left' ? doorOpenInsetAdjustUnits : -doorOpenInsetAdjustUnits;
     return (
-      <group position={[doorGroupX + hingeAxisOffset + epTrimShiftX + insertExtendShiftX + innerXShift, doorYPosition, doorDepth / 2 + doorOpenInsetAdjustUnits]}>
+      <group position={singleDoorOpenGeometry.parentPosition}>
         <animated.group rotation-y={singleDoorLocked ? 0 : (adjustedHingePosition === 'left' ? leftHingeDoorSpring.rotation : rightHingeDoorSpring.rotation)}>
-          <group position={[doorPositionX - innerXShift, 0, -doorOpenInsetAdjustUnits]}>
+          <group position={singleDoorOpenGeometry.childPosition}>
             {/* 2D 정면뷰: 싱글 도어 반투명 overlay (잠금 시 붉은색) */}
             {showDoorOverlay && (
               <mesh position={[0, 0, doorThicknessUnits / 2 + 0.001]} renderOrder={9999}>
@@ -2641,7 +2667,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
             })()}
 
             {/* 도어 가로 폭 치수 (2D 정면뷰 + 3D) */}
-            {showDimensions && !isPlainMaterial && (viewMode === '3D' || (viewMode === '2D' && view2DDirection === 'front')) && (() => {
+            {showDoorDimensionGuides && (() => {
               const is3D = viewMode === '3D';
               const extensionLineStart = mmToThreeUnits(70);
               const extensionLineLength = mmToThreeUnits(110);

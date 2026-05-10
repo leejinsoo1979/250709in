@@ -7519,8 +7519,15 @@ export default React.memo(Room, (prevProps, nextProps) => {
     if (prev.customWidth !== next.customWidth) return false;
     if (prev.adjustedWidth !== next.adjustedWidth) return false;
     if (prev.hasTopFrame !== next.hasTopFrame) return false;
+    if (prev.topFrameThickness !== next.topFrameThickness) return false;
+    if (prev.topFrameGap !== next.topFrameGap) return false;
+    if (prev.topFrameOffset !== next.topFrameOffset) return false;
     if (prev.hasBase !== next.hasBase) return false;
+    if (prev.baseFrameHeight !== next.baseFrameHeight) return false;
+    if (prev.baseFrameGap !== next.baseFrameGap) return false;
+    if (prev.baseFrameOffset !== next.baseFrameOffset) return false;
     if (prev.individualFloatHeight !== next.individualFloatHeight) return false;
+    if (prev.customSections !== next.customSections) return false;
     if (prev.customConfig !== next.customConfig) return false;
     if (prev.hasLeftEndPanel !== next.hasLeftEndPanel) return false;
     if (prev.hasRightEndPanel !== next.hasRightEndPanel) return false;

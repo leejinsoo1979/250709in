@@ -3,6 +3,8 @@ import { calculateHingePositions, calculateHingeCount } from '@/domain/boring/ca
 import { DEFAULT_HINGE_SETTINGS } from '@/domain/boring/constants';
 import type { CustomFurnitureConfig } from '@/editor/shared/furniture/types';
 import type { FreeSurroundConfig } from '@/store/core/spaceConfigStore';
+import { resolveDoorLeafDimensions } from './doorGeometryCalculator';
+import { resolveShelfFrontInsetMm } from './shelfInsetCalculator';
 
 // 패널 정보 계산 함수 - 상부장/하부장 구분하여 표시
 export const calculatePanelDetails = (
@@ -87,12 +89,10 @@ export const calculatePanelDetails = (
   
   // 선반 앞면 30mm 옵셋 (다보선반: 상부장·하부장 공통)
   const isUpperCabinet = moduleData.category === 'upper';
-  const isLowerHalfCabinet = moduleData.id.includes('lower-half-cabinet') || moduleData.id.includes('dual-lower-half-cabinet')
-    || moduleData.id.includes('lower-sink-cabinet') || moduleData.id.includes('dual-lower-sink-cabinet')
-    || moduleData.id.includes('lower-induction-cabinet') || moduleData.id.includes('dual-lower-induction-cabinet')
-    || moduleData.id.includes('lower-door-lift-half') || moduleData.id.includes('dual-lower-door-lift-half')
-    || moduleData.id.includes('lower-top-down-half') || moduleData.id.includes('dual-lower-top-down-half');
-  const shelfFrontInsetMm = (isUpperCabinet || isLowerHalfCabinet) ? 30 : 0;
+  const shelfFrontInsetMm = resolveShelfFrontInsetMm({
+    moduleId: moduleData.id,
+    cabinetCategory: moduleData.category
+  });
 
   const originalHeight = moduleData.dimensions.height;
   const height = freeHeight || originalHeight;
@@ -937,7 +937,11 @@ export const calculatePanelDetails = (
   // === 바지걸이장 안전선반 (전체 너비, 상부 섹션) ===
   if (isPantsHanger && moduleData.modelConfig?.hasSharedSafetyShelf) {
     const sidePanelGap = (basicThickness === 15.5 || basicThickness === 18.5) ? 0 : 1;
-    const shelfFrontInsetMm = moduleData.modelConfig?.shelfFrontInsetMm || 0;
+    const shelfFrontInsetMm = resolveShelfFrontInsetMm({
+      moduleId: moduleData.id,
+      cabinetCategory: moduleData.category,
+      explicitInsetMm: moduleData.modelConfig?.shelfFrontInsetMm
+    });
     panels.upper.push({
       name: '(상)선반 1',
       width: innerWidth - sidePanelGap,
@@ -1013,33 +1017,19 @@ export const calculatePanelDetails = (
   // lower-induction-cabinet 은 마이다(서랍 앞판) 전용 — 도어 아닌 마이다로 별도 생성
   if (effectiveHasDoor) {
     const doorGap = 3; // DoorModule.tsx 3D 렌더링과 동일 (doorGap = 3)
-    // 도어 높이 = 공간높이 - 천장이격 - 바닥이격 (가구편집창 입력값)
-    // spaceHeight가 제공되면 실제 도어 높이 공식 사용, 아니면 기존 방식 fallback
-    const isUpperCab = moduleData.id.includes('upper-cabinet') || moduleData.id.includes('dual-upper-cabinet');
-    const isLowerCab = moduleData.id.includes('lower-') && moduleData.category === 'lower';
-    const isTallCab = !isUpperCab && !isLowerCab; // 키큰장 (category === 'full')
-    let actualDoorH: number;
-    if (spaceHeight && isTallCab) {
-      // 키큰장만 공간높이 기준 도어 (DoorModule.tsx L786-831과 동일)
-      actualDoorH = spaceHeight - (doorTopGap ?? 5) - (doorBottomGap ?? 25);
-    } else if (isUpperCab) {
-      // 상부장: 캐비넷높이 - 상단5mm + 하단확장28mm (DoorModule.tsx L756-766)
-      actualDoorH = height - 5 + 28;
-    } else if (isLowerCab) {
-      // 하부장 도어 높이: DoorModule.tsx L767-785와 동일
-      const isDoorLift = moduleData.id.includes('lower-door-lift-');
-      const isTopDown = moduleData.id.includes('lower-top-down-');
-      if (isTopDown) {
-        actualDoorH = 710; // 상판내림: 고정 710mm (DoorModule.tsx L774)
-      } else if (isDoorLift) {
-        actualDoorH = height + 5 + 30; // 도어올림: 캐비넷높이 + 5 + 30 (DoorModule.tsx L779)
-      } else {
-        // 기본 하부장: 상단갭 + 하단갭 확장 (DoorModule.tsx L784)
-        actualDoorH = height + (doorTopGap ?? 0) + (doorBottomGap ?? 0);
-      }
-    } else {
-      actualDoorH = height - doorGap * 2;
-    }
+    const doorLeafDimensions = resolveDoorLeafDimensions({
+      moduleId: moduleData.id,
+      cabinetCategory: moduleData.category,
+      doorWidthMm: doorWidth,
+      cabinetHeightMm: height,
+      spaceHeightMm: spaceHeight,
+      doorTopGapMm: doorTopGap,
+      doorBottomGapMm: doorBottomGap,
+      doorGapMm: doorGap,
+      isDualSlot: isDualSlot || moduleData.id.includes('dual'),
+      hingeSide: hingePosition ?? 'left'
+    });
+    const actualDoorH = doorLeafDimensions.leafHeightMm;
 
     // 도어 보링 데이터 생성 헬퍼
     const createDoorBoringData = (doorW: number, doorH: number, isLeftHinge: boolean) => {
@@ -1070,54 +1060,18 @@ export const calculatePanelDetails = (
       };
     };
 
-    if (isDualSlot || moduleData.id.includes('dual')) {
-      // 3D 렌더링과 동일: 각 도어 = 전체폭/2 - doorGap (DoorModule.tsx: actualDoorWidth/2 - doorGap)
-      const singleDoorWidth = Math.floor(doorWidth / 2 - doorGap);
-      const doorH = actualDoorH;
-      // 좌측 도어: 가구 좌측에 달림 → 경첩은 좌측판(=도어 우측 가장자리)에 체결
-      // 우측 도어: 가구 우측에 달림 → 경첩은 우측판(=도어 좌측 가장자리)에 체결
-      const leftDoorBoring = createDoorBoringData(singleDoorWidth, doorH, false);
-      const rightDoorBoring = createDoorBoringData(singleDoorWidth, doorH, true);
-
+    doorLeafDimensions.leaves.forEach((leaf) => {
+      const isLeftHinge = leaf.hingeSide === 'left';
+      const doorBoring = createDoorBoringData(leaf.widthMm, leaf.heightMm, isLeftHinge);
+      const doorName = leaf.name === 'left'
+        ? '좌측 도어'
+        : leaf.name === 'right'
+          ? '우측 도어'
+          : '도어';
       panels.door.push({
-        name: '좌측 도어',
-        width: singleDoorWidth,
-        height: doorH,
-        thickness: 18.5,  // PET 재질 항상 18.5mm
-        material: 'PET',
-        boringPositions: leftDoorBoring.boringPositions,
-        boringDepthPositions: leftDoorBoring.boringDepthPositions,
-        screwPositions: leftDoorBoring.screwPositions,
-        screwDepthPositions: leftDoorBoring.screwDepthPositions,
-        screwHoleSpacing: leftDoorBoring.screwHoleSpacing,
-        isDoor: true,
-        isLeftHinge: false,
-      });
-      panels.door.push({
-        name: '우측 도어',
-        width: singleDoorWidth,
-        height: doorH,
-        thickness: 18.5,  // PET 재질 항상 18.5mm
-        material: 'PET',
-        boringPositions: rightDoorBoring.boringPositions,
-        boringDepthPositions: rightDoorBoring.boringDepthPositions,
-        screwPositions: rightDoorBoring.screwPositions,
-        screwDepthPositions: rightDoorBoring.screwDepthPositions,
-        screwHoleSpacing: rightDoorBoring.screwHoleSpacing,
-        isDoor: true,
-        isLeftHinge: true,
-      });
-    } else {
-      // 3D 렌더링과 동일: doorWidth = actualDoorWidth - doorGap (DoorModule.tsx)
-      const doorW = doorWidth - doorGap;
-      const doorH = actualDoorH;
-      const isLeftHinge = (hingePosition ?? 'left') === 'left';
-      const doorBoring = createDoorBoringData(doorW, doorH, isLeftHinge);
-
-      panels.door.push({
-        name: '도어',
-        width: doorW,
-        height: doorH,
+        name: doorName,
+        width: leaf.widthMm,
+        height: leaf.heightMm,
         thickness: 18.5,  // PET 재질 항상 18.5mm
         material: 'PET',
         boringPositions: doorBoring.boringPositions,
@@ -1128,7 +1082,7 @@ export const calculatePanelDetails = (
         isDoor: true,
         isLeftHinge,
       });
-    }
+    });
 
     // === 측판에 힌지 브라켓 타공 데이터 주입 ===
     // 도어가 없는 모듈(서랍전용, 인덕션장 등)은 브라켓 보링 불필요

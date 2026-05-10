@@ -1,8 +1,6 @@
 import React, { useState } from 'react';
 import styles from './ConvertModal.module.css';
-import { PDFTemplatePreview } from '@/editor/shared/components/PDFTemplatePreview';
 import { useUIStore } from '@/store/uiStore';
-import { useTranslation } from '@/i18n/useTranslation';
 import { useDXFExport, type DrawingType } from '@/editor/shared/hooks/useDXFExport';
 import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
@@ -17,24 +15,15 @@ interface ConvertModalProps {
 }
 
 const ConvertModal: React.FC<ConvertModalProps> = ({ isOpen, onClose, showAll, setShowAll }) => {
-  const { t } = useTranslation();
-  const [showPDFPreview, setShowPDFPreview] = useState(false);
-  const [capturedViews, setCapturedViews] = useState<{
-    top?: string;
-    front?: string;
-    side?: string;
-    door?: string;
-  }>({});
+  void showAll;
+  void setShowAll;
   const [isCapturing, setIsCapturing] = useState(false);
-  const [loadingStep, setLoadingStep] = useState(0);
-  const [loadingStatus, setLoadingStatus] = useState('');
   const [loadingProgress, setLoadingProgress] = useState(0);
   
   // 내보내기 옵션 상태
   const [exportType, setExportType] = useState<'pdf' | 'dxf'>('pdf');
   // PDF는 무조건 와이어프레임(벡터 도면)으로 내보내기
   const [selectedViews, setSelectedViews] = useState({
-    '3d': true,
     '2d-front': true,           // 입면도 (도어 있음)
     '2d-front-no-door': true,   // 입면도 (도어 없음)
     '2d-top': true,             // 평면도
@@ -54,7 +43,6 @@ const ConvertModal: React.FC<ConvertModalProps> = ({ isOpen, onClose, showAll, s
   // 로딩 화면 컴포넌트 - DXF/PDF에 따라 다른 메시지 표시
   const LoadingScreen = () => {
     const isDXF = isDXFExporting;
-    console.log('🔍 LoadingScreen 렌더링:', { isDXF, isDXFExporting, isCapturing });
     return (
     <div className={styles.loadingOverlay}>
       <div className={styles.loadingContent}>
@@ -77,161 +65,6 @@ const ConvertModal: React.FC<ConvertModalProps> = ({ isOpen, onClose, showAll, s
       </div>
     </div>
   );
-  };
-
-  // 뷰 캡처 함수
-  const captureViews = async () => {
-    console.log('captureViews 시작');
-    setIsCapturing(true);
-    setLoadingStep(0);
-    setLoadingProgress(10);
-    setLoadingStatus('캡처 준비 중...');
-    const { 
-      viewMode, 
-      view2DDirection,
-      renderMode, 
-      setViewMode, 
-      setView2DDirection, 
-      setRenderMode,
-      showGuides,
-      showAxis,
-      showDimensions,
-      setShowGuides,
-      setShowAxis,
-      setShowDimensions
-    } = useUIStore.getState();
-    
-    console.log('현재 상태:', { viewMode, view2DDirection, renderMode });
-    
-    // 현재 상태 저장
-    const originalViewMode = viewMode;
-    const originalView2DDirection = view2DDirection;
-    const originalRenderMode = renderMode;
-    const originalShowGuides = showGuides;
-    const originalShowAxis = showAxis;
-    const originalShowDimensions = showDimensions;
-    const originalShowAll = showAll;
-    
-    // 캡처를 위해 그리드, 축 끄기 (치수선은 유지)
-    console.log('캡처 전 상태:', { showGuides, showAxis, showDimensions, showAll });
-
-    if (showGuides) setShowGuides(false);
-    if (showAxis) setShowAxis(false);
-    // 치수선은 PDF에 포함되어야 하므로 켠 상태 유지
-    if (!showDimensions) setShowDimensions(true);
-    
-    // showAll 확인 및 설정
-    if (setShowAll) {
-      console.log('컬럼 끄기: showAll을 false로 설정 (현재값:', showAll, ')');
-      setShowAll(false);
-    } else {
-      console.error('setShowAll 함수가 전달되지 않았습니다!');
-    }
-    
-    // 상태 변경이 렌더링에 반영되도록 충분히 대기
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    
-    const captures: typeof capturedViews = {};
-    
-    try {
-      // 모든 캔버스 찾기
-      const canvases = document.querySelectorAll('canvas');
-      console.log('찾은 캔버스 개수:', canvases.length);
-      
-      // Three.js 캔버스 찾기 (일반적으로 가장 큰 캔버스)
-      let threeCanvas: HTMLCanvasElement | null = null;
-      canvases.forEach(canvas => {
-        console.log('캔버스 크기:', canvas.width, 'x', canvas.height);
-        if (canvas.width > 100 && canvas.height > 100) {
-          threeCanvas = canvas;
-        }
-      });
-      
-      if (!threeCanvas) {
-        console.error('Three.js 캔버스를 찾을 수 없습니다');
-        setIsCapturing(false);
-        return;
-      }
-      
-      // 상부뷰 캡처
-      console.log('상부뷰 캡처 시작');
-      setLoadingStep(1);
-      setLoadingProgress(25);
-      setLoadingStatus('상부 뷰 캡처 중...');
-      setViewMode('2D');
-      setView2DDirection('top');
-      setRenderMode('wireframe');
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      captures.top = threeCanvas.toDataURL();
-      console.log('상부뷰 캡처 완료');
-      
-      // 정면뷰 캡처 - wireframe 유지
-      console.log('정면뷰 캡처 시작');
-      setLoadingProgress(40);
-      setLoadingStatus('정면 뷰 캡처 중...');
-      setView2DDirection('front');
-      setRenderMode('wireframe');  // 2D는 wireframe으로!
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      captures.front = threeCanvas.toDataURL();
-      console.log('정면뷰 캡처 완료');
-      
-      // 측면뷰 캡처 - wireframe 유지
-      console.log('측면뷰 캡처 시작');
-      setLoadingProgress(55);
-      setLoadingStatus('측면 뷰 캡처 중...');
-      setView2DDirection('left');
-      setRenderMode('wireframe');  // 2D는 wireframe으로!
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      captures.side = threeCanvas.toDataURL();
-      console.log('측면뷰 캡처 완료');
-      
-      // 도어뷰 캡처 (3D 정면)
-      console.log('도어뷰 캡처 시작');
-      setLoadingProgress(70);
-      setLoadingStatus('3D 뷰 캡처 중...');
-      setViewMode('3D');
-      setRenderMode('solid');
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      captures.door = threeCanvas.toDataURL();
-      console.log('도어뷰 캡처 완료');
-      
-      setLoadingStep(2);
-      setLoadingProgress(85);
-      setLoadingStatus('도면 변환 중...');
-      
-      setCapturedViews(captures);
-      console.log('모든 캡처 완료:', captures);
-      
-      // 변환 완료
-      await new Promise(resolve => setTimeout(resolve, 500));
-      setLoadingStep(3);
-      setLoadingProgress(100);
-      setLoadingStatus('PDF 생성 완료!');
-      
-      // 원래 상태로 복원
-      setViewMode(originalViewMode);
-      setView2DDirection(originalView2DDirection);
-      setRenderMode(originalRenderMode);
-      setShowGuides(originalShowGuides);
-      setShowAxis(originalShowAxis);
-      setShowDimensions(originalShowDimensions);
-      if (setShowAll) setShowAll(originalShowAll);
-
-      setIsCapturing(false);
-      setShowPDFPreview(true);
-    } catch (error) {
-      console.error('뷰 캡처 실패:', error);
-      // 원래 상태로 복원
-      setViewMode(originalViewMode);
-      setView2DDirection(originalView2DDirection);
-      setRenderMode(originalRenderMode);
-      setShowGuides(originalShowGuides);
-      setShowAxis(originalShowAxis);
-      setShowDimensions(originalShowDimensions);
-      if (setShowAll) setShowAll(originalShowAll);
-      setIsCapturing(false);
-      alert(t('messages.captureFailure'));
-    }
   };
 
   const handleViewToggle = (view: string) => {
@@ -322,16 +155,9 @@ const ConvertModal: React.FC<ConvertModalProps> = ({ isOpen, onClose, showAll, s
       return;
     }
 
-    // 선택된 뷰만 필터링 및 올바른 ID로 매핑
-    const viewsToExport = Object.entries(selectedViews)
-      .filter(([_, selected]) => selected)
-      .map(([view, _]) => {
-        // '3d'를 '3d-front'로 매핑
-        if (view === '3d') return '3d-front';
-        return view;
-      });
+    const selectedViewCount = Object.values(selectedViews).filter(Boolean).length;
 
-    if (viewsToExport.length === 0) {
+    if (selectedViewCount === 0) {
       alert('최소 하나 이상의 뷰를 선택해주세요.');
       return;
     }
@@ -342,7 +168,6 @@ const ConvertModal: React.FC<ConvertModalProps> = ({ isOpen, onClose, showAll, s
       console.log('🔧 DXF→PDF 변환 시작...');
       setIsCapturing(true);
       setLoadingProgress(30);
-      setLoadingStatus('도면 생성 중...');
 
       // 선택된 뷰를 PdfViewDirection으로 변환
       const pdfViews: PdfViewDirection[] = [];
@@ -366,7 +191,7 @@ const ConvertModal: React.FC<ConvertModalProps> = ({ isOpen, onClose, showAll, s
 
         // 디자인명: 먼저 uiStore의 활성 탭에서 찾기 (가장 정확), 없으면 URL 쿼리에서 안전하게 디코딩
         const uiState = useUIStore.getState();
-        const activeTab = uiState.openTabs?.find((t: any) => t.id === uiState.activeTabId);
+        const activeTab = uiState.openTabs?.find(tab => tab.id === uiState.activeTabId);
         let designName = activeTab?.designFileName || '';
 
         if (!designName) {
@@ -530,14 +355,6 @@ const ConvertModal: React.FC<ConvertModalProps> = ({ isOpen, onClose, showAll, s
                     </label>
                   </div>
                   <div className={styles.viewList}>
-                    <label className={`${styles.viewOption} ${selectedViews['3d'] ? styles.selected : ''}`}>
-                      <input
-                        type="checkbox"
-                        checked={selectedViews['3d']}
-                        onChange={() => handleViewToggle('3d')}
-                      />
-                      <span>3D 투시도 (Perspective)</span>
-                    </label>
                     <label className={`${styles.viewOption} ${selectedViews['2d-front'] ? styles.selected : ''}`}>
                       <input
                         type="checkbox"
@@ -608,16 +425,6 @@ const ConvertModal: React.FC<ConvertModalProps> = ({ isOpen, onClose, showAll, s
           </div>
         </div>
       </div>
-
-      {/* PDF 미리보기 */}
-      <PDFTemplatePreview 
-        isOpen={showPDFPreview}
-        onClose={() => {
-          setShowPDFPreview(false);
-          onClose();
-        }}
-        capturedViews={capturedViews}
-      />
     </>
   );
 };

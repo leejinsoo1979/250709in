@@ -221,9 +221,10 @@ const ExportPanel: React.FC = () => {
       const sideCanvas = document.querySelector('[data-viewer-container="true"] canvas') as HTMLCanvasElement;
       if (sideCanvas) captures.side = sideCanvas.toDataURL();
 
-      // 도어뷰 캡처 (3D 정면)
-      setViewMode('3D');
-      setRenderMode('solid');
+      // 도어뷰 캡처도 2D 정면 와이어프레임 기준으로 유지
+      setViewMode('2D');
+      setView2DDirection('front');
+      setRenderMode('wireframe');
       await new Promise(resolve => setTimeout(resolve, 1000));
       const doorCanvas = document.querySelector('[data-viewer-container="true"] canvas') as HTMLCanvasElement;
       if (doorCanvas) captures.door = doorCanvas.toDataURL();
@@ -259,21 +260,7 @@ const ExportPanel: React.FC = () => {
 
   // PDF 내보내기 실행
   const handleExportPDF = async () => {
-    alert(`PDF Export 시작!\n선택된 뷰: ${selectedPDFViews.join(', ')}\n가구 수: ${placedModules.length}`);
-
-    console.log('PDF Export clicked', {
-      spaceInfo: !!spaceInfo,
-      canExport: spaceInfo ? canExportPDF(spaceInfo, placedModules) : false,
-      selectedViews: selectedPDFViews.length,
-      placedModules: placedModules.length
-    });
-    
     if (!spaceInfo || !canExportPDF(spaceInfo, placedModules) || selectedPDFViews.length === 0) {
-      console.log('Export blocked:', {
-        hasSpaceInfo: !!spaceInfo,
-        canExport: spaceInfo ? canExportPDF(spaceInfo, placedModules) : false,
-        hasSelectedViews: selectedPDFViews.length > 0
-      });
       return;
     }
 
@@ -313,17 +300,6 @@ const ExportPanel: React.FC = () => {
     
   const isPDFExportEnabled = spaceInfo && canExportPDF(spaceInfo, placedModules) && selectedPDFViews.length > 0;
   const statusMessage = spaceInfo ? getExportStatusMessage(spaceInfo, placedModules) : '공간 정보가 없습니다.';
-  
-  // PDF 버튼 상태 디버깅
-  console.log('PDF Button State:', {
-    isPDFExportEnabled,
-    isPDFExporting,
-    disabled: !isPDFExportEnabled || isPDFExporting,
-    spaceInfo: !!spaceInfo,
-    canExportPDF: spaceInfo ? canExportPDF(spaceInfo, placedModules) : false,
-    selectedPDFViews: selectedPDFViews.length,
-    placedModules: placedModules.length
-  });
 
   return (
     <div className={styles.exportPanel}>
@@ -519,7 +495,7 @@ const ExportPanel: React.FC = () => {
             </div>
             <div className={styles.infoItem}>
               <span className={styles.infoLabel}>포함 내용:</span>
-              <span className={styles.infoValue}>3D/2D 뷰, 치수, 가구 정보</span>
+              <span className={styles.infoValue}>2D 도면, 치수, 가구 정보</span>
             </div>
           </div>
         </>

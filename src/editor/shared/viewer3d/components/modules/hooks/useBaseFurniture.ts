@@ -149,6 +149,33 @@ export const useBaseFurniture = (
     const absorbingRatio = absorbingSection.height > 0 ? absorbingNewHeight / absorbingSection.height : 1;
 
     const basicThicknessMm = originalModelConfig.basicThickness || 18;
+    const preserveUpperSafetyShelfGap = (section: SectionConfig, nextHeight: number): SectionConfig | null => {
+      const safetyIndex = section.shelfPositions?.findIndex(pos => pos > 0) ?? -1;
+      if (section.type !== 'hanging' || safetyIndex < 0) {
+        return null;
+      }
+
+      const currentInnerHeight = Math.max(0, section.height - 2 * basicThicknessMm);
+      const nextInnerHeight = Math.max(0, nextHeight - 2 * basicThicknessMm);
+      const currentGap = Math.max(0, Math.round(
+        currentInnerHeight -
+        (section.shelfPositions?.[safetyIndex] ?? 0) -
+        basicThicknessMm / 2
+      ));
+      const nextShelfPositions = [...(section.shelfPositions || [])];
+      nextShelfPositions[safetyIndex] = Math.max(0, Math.round(
+        nextInnerHeight -
+        currentGap -
+        basicThicknessMm / 2
+      ));
+
+      return {
+        ...section,
+        height: Math.round(nextHeight),
+        shelfPositions: nextShelfPositions,
+      };
+    };
+
     const scaledSections = sections.map((section: SectionConfig, idx: number) => {
       if (idx !== absorbingIdx) {
         // 하부 섹션: 높이는 고정이되, shelfPositions는 현재 섹션 내경 기준으로 균등 재분할
@@ -177,6 +204,10 @@ export const useBaseFurniture = (
       // 신발장 하부 흡수(현관장 H/일반 선반장)는 받침대 기준이라 shelfPositions 원본 유지
       // 그 외 (일반 가구, 4drawer/2drawer 선반장)는 새 height에 맞춰 선반 균등 재분할
       const newSectionHeight = Math.round(absorbingNewHeight);
+      const upperSafetyShelfSection = preserveUpperSafetyShelfGap(section, newSectionHeight);
+      if (upperSafetyShelfSection) {
+        return upperSafetyShelfSection;
+      }
       if (!isLowerAbsorbShoeCabinetHeight && section.shelfPositions && section.shelfPositions.length > 0 && section.count && section.count > 0) {
         const realCount = section.count;
         const sectionInner = newSectionHeight - 2 * basicThicknessMm;
@@ -462,7 +493,10 @@ export const useBaseFurniture = (
       return customSections.map(s => mmToThreeUnits(s.calculatedHeight!));
     }
 
-    const availableHeight = height - basicThickness * 2;
+    // sections.height는 shelving.ts에서 가구 외곽 높이 기준으로 생성된다.
+    // 이 값은 BaseFurnitureShell의 좌우측판/백패널 분할에도 쓰이므로
+    // 상판/하판 두께를 빼면 판재가 정확히 2T(36mm) 짧아진다.
+    const availableHeight = height;
 
     // 고정 높이 섹션들 분리
     const fixedSections = sections.filter((s: SectionConfig) => s.heightType === 'absolute');
@@ -476,11 +510,23 @@ export const useBaseFurniture = (
     const remainingHeight = availableHeight - totalFixedHeight;
 
     // 모든 섹션의 높이 계산
-    return sections.map((section: SectionConfig) =>
+    const sectionHeights = sections.map((section: SectionConfig) =>
       (section.heightType === 'absolute')
         ? calculateSectionHeight(section, availableHeight)
         : calculateSectionHeight(section, remainingHeight)
     );
+
+    // 2섹션 의류장/수납장은 전체 높이 변화분을 마지막(상부) 섹션이 흡수한다.
+    // 걸레받이 OFF, 바닥마감재, 프레임 개별 조정 시 상부 측판이 천장 쪽 기준을 유지해야 한다.
+    if (sectionHeights.length >= 2) {
+      const lastIndex = sectionHeights.length - 1;
+      const previousSectionsHeight = sectionHeights
+        .slice(0, lastIndex)
+        .reduce((sum, sectionHeight) => sum + sectionHeight, 0);
+      sectionHeights[lastIndex] = Math.max(0, availableHeight - previousSectionsHeight);
+    }
+
+    return sectionHeights;
   };
   
   return {

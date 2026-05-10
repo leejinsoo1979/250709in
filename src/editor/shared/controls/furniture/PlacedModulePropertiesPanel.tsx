@@ -14,6 +14,7 @@ import { withUpperSafetyShelfRemoved, isUpperSafetyShelfModule } from '@/editor/
 import { getDefaultGrainDirection } from '@/editor/shared/utils/materialConstants';
 import { isCustomizableModuleId, getCustomDimensionKey, getStandardDimensionKey } from './CustomizableFurnitureLibrary';
 import { calcResizedPositionX } from '@/editor/shared/utils/freePlacementUtils';
+import { parseBackWallGapInput, stepBackWallGapMm } from '@/editor/shared/utils/backWallGapValidation';
 import { SURROUND_PANEL_THICKNESS } from '@/data/modules/surroundPanels';
 import styles from './PlacedModulePropertiesPanel.module.css';
 
@@ -1780,16 +1781,24 @@ const PlacedModulePropertiesPanel: React.FC = () => {
     setCustomWidth(newWidth);
     if (activePopup.id) {
       // 기존 customDepth 유지
-      const updateData: any = { 
+      const updateData: any = {
         customWidth: newWidth,
         isSplit: true // 너비가 조정되면 분할 상태로 표시
       };
-      
+
       // 기존 customDepth가 있으면 유지
       if (currentPlacedModule.customDepth !== undefined) {
         updateData.customDepth = currentPlacedModule.customDepth;
       }
-      
+
+      // 자유배치 가구는 freeWidth/moduleWidth도 함께 갱신하고 userResizedWidth 표시
+      // (화살표 이동 시 원래 폭으로 되돌아가는 문제 방지)
+      if (currentPlacedModule.isFreePlacement) {
+        updateData.freeWidth = newWidth;
+        updateData.moduleWidth = newWidth;
+        updateData.userResizedWidth = true;
+      }
+
       updatePlacedModule(activePopup.id, updateData);
       
 // console.log('📏 가구 너비 조정:', {
@@ -2576,21 +2585,19 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                       value={String(currentPlacedModule.backWallGap ?? 0)}
                       onChange={(e) => {
                         const raw = e.target.value;
-                        if (raw === '' || /^-?\d+$/.test(raw)) {
-                          const v = parseInt(raw, 10);
-                          if (!isNaN(v) && v >= 0 && v <= 500) {
-                            updatePlacedModule(currentPlacedModule.id, { backWallGap: v });
-                          } else if (raw === '') {
-                            updatePlacedModule(currentPlacedModule.id, { backWallGap: 0 });
-                          }
+                        const parsed = parseBackWallGapInput(raw);
+                        if (parsed !== null) {
+                          updatePlacedModule(currentPlacedModule.id, { backWallGap: parsed });
                         }
                       }}
                       onKeyDown={(e) => {
                         if (e.key === 'Enter') (e.target as HTMLInputElement).blur();
                         else if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
                           e.preventDefault();
-                          const cur = currentPlacedModule.backWallGap ?? 0;
-                          const next = Math.max(0, Math.min(500, cur + (e.key === 'ArrowUp' ? 1 : -1)));
+                          const next = stepBackWallGapMm(
+                            currentPlacedModule.backWallGap,
+                            e.key === 'ArrowUp' ? 1 : -1
+                          );
                           updatePlacedModule(currentPlacedModule.id, { backWallGap: next });
                         }
                       }}
@@ -3823,21 +3830,131 @@ const PlacedModulePropertiesPanel: React.FC = () => {
             };
             const rowStyle: React.CSSProperties = { display: 'flex', alignItems: 'center', gap: '6px', padding: '3px 0' };
             const labelStyle: React.CSSProperties = { minWidth: '50px', fontSize: '11px', color: 'var(--theme-text-secondary)', fontWeight: 500 };
+            const getUpperShelfGapSyncUpdates = (nextFrameState: Partial<typeof mod>) => {
+              const nextMod = { ...mod, ...nextFrameState } as typeof mod;
+              const basicThicknessMm = (spaceInfo as any).panelThickness || 18;
+              const sections = (mod as any).customSections
+                ?? (mod as any).customConfig?.sections
+                ?? moduleData?.modelConfig?.sections;
+              const hasExplicitCustomSections = Array.isArray((mod as any).customSections);
+              const sectionList = Array.isArray(sections) ? sections : [];
+              const upperHangingIndex = (() => {
+                for (let i = sectionList.length - 1; i >= 0; i--) {
+                  const section = sectionList[i] as any;
+                  if (
+                    section.type === 'hanging' &&
+                    Array.isArray(section.shelfPositions) &&
+                    section.shelfPositions.some((pos: number) => pos > 0)
+                  ) {
+                    return i;
+                  }
+                }
+                for (let i = sectionList.length - 1; i >= 0; i--) {
+                  if ((sectionList[i] as any).type === 'hanging') return i;
+                }
+                return -1;
+              })();
+              if (upperHangingIndex < 0) return {};
+
+              const getEffectiveTotalHeight = (targetMod: typeof mod) => {
+                const baseTotalHeight = targetMod.freeHeight
+                  || targetMod.customHeight
+                  || moduleData?.dimensions?.height
+                  || 0;
+                const globalTopFrame = spaceInfo.frameSize?.top ?? 30;
+                const topFrameMm = targetMod.topFrameThickness ?? globalTopFrame;
+                const topFrameDelta = targetMod.topFrameThickness !== undefined
+                  ? topFrameMm - globalTopFrame
+                  : 0;
+                const absorbedTopHeight = targetMod.hasTopFrame === false
+                  ? topFrameMm - (targetMod.topFrameGap ?? 0)
+                  : 0;
+                const absorbedBaseHeight = targetMod.hasBase === false
+                  ? ((targetMod.baseFrameHeight ?? (spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height ?? 60) : 0))
+                    - (targetMod.individualFloatHeight ?? 0))
+                  : 0;
+                const isStandTypeForHeight = spaceInfo.baseConfig?.type === 'stand';
+                const baseFrameDelta = targetMod.baseFrameHeight !== undefined && !isStandTypeForHeight
+                  ? targetMod.baseFrameHeight - (spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height ?? 65) : 0)
+                  : 0;
+                return Math.max(0, baseTotalHeight - topFrameDelta - baseFrameDelta + absorbedTopHeight + absorbedBaseHeight);
+              };
+              const getSectionHeight = (sectionIndex: number, targetMod: typeof mod) => {
+                const section = sectionList[sectionIndex] as any;
+                if (!section) return 0;
+                if (sectionList.length >= 2 && sectionIndex === sectionList.length - 1) {
+                  const previousSectionsHeight = sectionList
+                    .slice(0, sectionIndex)
+                    .reduce((sum: number, prevSection: any) => sum + (prevSection.height || 0), 0);
+                  return Math.max(0, getEffectiveTotalHeight(targetMod) - previousSectionsHeight);
+                }
+                return section.height || 0;
+              };
+
+              const upperSection = sectionList[upperHangingIndex] as any;
+              const shelfPositions = Array.isArray(upperSection.shelfPositions)
+                ? upperSection.shelfPositions
+                : [];
+              const safetyIndex = shelfPositions.findIndex((pos: number) => pos > 0);
+              if (safetyIndex < 0) return {};
+              const getRenderedShelfPosition = (section: any, sectionHeight: number) => {
+                const rawPos = shelfPositions[safetyIndex];
+                if (hasExplicitCustomSections || upperHangingIndex !== sectionList.length - 1) {
+                  return rawPos;
+                }
+                const originalInnerH = Math.max(0, (section.height || 0) - 2 * basicThicknessMm);
+                const renderedInnerH = Math.max(0, sectionHeight - 2 * basicThicknessMm);
+                const originalGap = Math.max(0, Math.round(
+                  originalInnerH -
+                  rawPos -
+                  basicThicknessMm / 2
+                ));
+                return Math.max(0, Math.round(renderedInnerH - originalGap - basicThicknessMm / 2));
+              };
+              const currentSectionHeight = getSectionHeight(upperHangingIndex, mod);
+              const currentShelfPos = getRenderedShelfPosition(upperSection, currentSectionHeight);
+              const currentGap = Math.max(0, Math.round(
+                Math.max(0, currentSectionHeight - 2 * basicThicknessMm) -
+                currentShelfPos -
+                basicThicknessMm / 2
+              ));
+              const nextInnerH = Math.max(0, getSectionHeight(upperHangingIndex, nextMod) - 2 * basicThicknessMm);
+              const nextShelfPos = Math.max(0, Math.round(nextInnerH - currentGap - basicThicknessMm / 2));
+              const nextSections = sectionList.map((section: any, index: number) => {
+                if (index !== upperHangingIndex) return section;
+                const nextShelfPositions = Array.isArray(section.shelfPositions)
+                  ? [...section.shelfPositions]
+                  : [];
+                nextShelfPositions[safetyIndex] = nextShelfPos;
+                return { ...section, shelfPositions: nextShelfPositions };
+              });
+              return {
+                upperShelfTopGap: currentGap,
+                customSections: nextSections,
+              };
+            };
 
             return (
+              <>
               <div className={styles.propertySection}>
-                <h5 className={styles.sectionTitle}>상,걸래받이</h5>
+                <h5 className={styles.sectionTitle}>상단몰딩</h5>
 
                 {/* 상단 몰딩 */}
                 <div style={rowStyle}>
-                  <span style={labelStyle}>상부</span>
+                  <span style={labelStyle}>전체</span>
                   <button
-                    onClick={() => updatePlacedModule(mod.id, { hasTopFrame: !topEnabled })}
+                    onClick={() => {
+                      const nextHasTopFrame = !topEnabled;
+                      updatePlacedModule(mod.id, {
+                        hasTopFrame: nextHasTopFrame,
+                        ...getUpperShelfGapSyncUpdates({ hasTopFrame: nextHasTopFrame }),
+                      });
+                    }}
                     style={toggleStyle(topEnabled)}
                   >
                     <span style={knobStyle(topEnabled)} />
                   </button>
-                  {topEnabled && (
+                  {(
                     <div style={{ display: 'flex', flex: 1, gap: '4px' }}>
                       <div style={cellStyle}>
                         <span style={cellLabelStyle}>높이</span>
@@ -3848,7 +3965,10 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                             if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
                               e.preventDefault();
                               const next = Math.max(0, Math.min(9999, (topSize || 0) + (e.key === 'ArrowUp' ? 1 : -1)));
-                              updatePlacedModule(mod.id, { topFrameThickness: next });
+                              updatePlacedModule(mod.id, {
+                                topFrameThickness: next,
+                                ...getUpperShelfGapSyncUpdates({ topFrameThickness: next }),
+                              });
                             } else if (e.key === 'Enter') {
                               (e.target as HTMLInputElement).blur();
                             }
@@ -3857,13 +3977,20 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                             const v = e.target.value;
                             if (v === '' || /^\d+$/.test(v)) {
                               const num = v === '' ? 0 : parseInt(v, 10);
-                              updatePlacedModule(mod.id, { topFrameThickness: Math.max(0, Math.min(9999, num)) });
+                              const next = Math.max(0, Math.min(9999, num));
+                              updatePlacedModule(mod.id, {
+                                topFrameThickness: next,
+                                ...getUpperShelfGapSyncUpdates({ topFrameThickness: next }),
+                              });
                             }
                           }}
                           onBlur={(e) => {
                             setHighlightedFrame(null);
                             const clamped = Math.max(0, Math.min(9999, parseInt(e.target.value) || 0));
-                            updatePlacedModule(mod.id, { topFrameThickness: clamped });
+                            updatePlacedModule(mod.id, {
+                              topFrameThickness: clamped,
+                              ...getUpperShelfGapSyncUpdates({ topFrameThickness: clamped }),
+                            });
                           }}
                           style={inputStyle}
                         />
@@ -3904,9 +4031,11 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                           onKeyDown={(e) => {
                             if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
                               e.preventDefault();
-                              const maxGap = Math.max(0, topSize - 1);
-                              const next = Math.max(0, Math.min(maxGap, (topGap || 0) + (e.key === 'ArrowUp' ? 1 : -1)));
-                              updatePlacedModule(mod.id, { topFrameGap: next });
+                              const next = Math.max(0, Math.min(2000, (topGap || 0) + (e.key === 'ArrowUp' ? 1 : -1)));
+                              updatePlacedModule(mod.id, {
+                                topFrameGap: next,
+                                ...getUpperShelfGapSyncUpdates({ topFrameGap: next }),
+                              });
                             } else if (e.key === 'Enter') {
                               (e.target as HTMLInputElement).blur();
                             }
@@ -3915,15 +4044,20 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                             const v = e.target.value;
                             if (v === '' || /^\d+$/.test(v)) {
                               const num = v === '' ? 0 : parseInt(v, 10);
-                              const maxGap = Math.max(0, topSize - 1);
-                              updatePlacedModule(mod.id, { topFrameGap: Math.max(0, Math.min(maxGap, num)) });
+                              const next = Math.max(0, Math.min(2000, num));
+                              updatePlacedModule(mod.id, {
+                                topFrameGap: next,
+                                ...getUpperShelfGapSyncUpdates({ topFrameGap: next }),
+                              });
                             }
                           }}
                           onBlur={(e) => {
                             setHighlightedFrame(null);
-                            const maxGap = Math.max(0, topSize - 1);
-                            const clamped = Math.max(0, Math.min(maxGap, parseInt(e.target.value) || 0));
-                            updatePlacedModule(mod.id, { topFrameGap: clamped });
+                            const clamped = Math.max(0, Math.min(2000, parseInt(e.target.value) || 0));
+                            updatePlacedModule(mod.id, {
+                              topFrameGap: clamped,
+                              ...getUpperShelfGapSyncUpdates({ topFrameGap: clamped }),
+                            });
                           }}
                           style={inputStyle}
                         />
@@ -3932,22 +4066,29 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                   )}
                 </div>
 
-                {/* 상하부 구분선 — stand 타입이 아닐 때만 */}
-                {!isStandType && (
-                  <div style={{ borderTop: '1px solid var(--theme-border, #e0e0e0)', margin: '6px 0' }} />
-                )}
+              </div>
 
-                {/* 걸래받이 — stand 타입이면 숨김 */}
-                {!isStandType && (
+              {/* 걸레받이 — stand 타입/상부장이면 숨김. 별도 섹션으로 분리 */}
+              {!isStandType && !isUpperCat && (
+                <div className={styles.propertySection}>
+                  <h5 className={styles.sectionTitle}>걸레받이</h5>
                   <div style={rowStyle}>
-                    <span style={labelStyle}>하부</span>
+                    <span style={labelStyle}>전체</span>
                     <button
-                      onClick={() => updatePlacedModule(mod.id, {
-                        hasBase: !baseEnabled,
-                        ...(baseEnabled
-                          ? { individualFloatHeight: 0 }
-                          : { doorBottomGap: 25 }),
-                      })}
+                      onClick={() => {
+                        const nextHasBase = !baseEnabled;
+                        const nextFrameState = {
+                          hasBase: nextHasBase,
+                          ...(baseEnabled ? { individualFloatHeight: 0 } : {}),
+                        };
+                        updatePlacedModule(mod.id, {
+                          ...nextFrameState,
+                          ...(baseEnabled
+                            ? {}
+                            : { doorBottomGap: 25 }),
+                          ...getUpperShelfGapSyncUpdates(nextFrameState),
+                        });
+                      }}
                       style={toggleStyle(baseEnabled)}
                     >
                       <span style={knobStyle(baseEnabled)} />
@@ -3960,10 +4101,14 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                             value={baseSize || ''} placeholder="0"
                             onFocus={() => setHighlightedFrame(`base-${mod.id}` as any)}
                             onKeyDown={(e) => {
-                              if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
-                                e.preventDefault();
-                                const cur = mod.baseFrameHeight ?? bfDefault;
-                                updatePlacedModule(mod.id, { baseFrameHeight: Math.max(bfMin, Math.min(bfMax, cur + (e.key === 'ArrowUp' ? 1 : -1))) });
+                            if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                              e.preventDefault();
+                              const cur = mod.baseFrameHeight ?? bfDefault;
+                                const next = Math.max(bfMin, Math.min(bfMax, cur + (e.key === 'ArrowUp' ? 1 : -1)));
+                                updatePlacedModule(mod.id, {
+                                  baseFrameHeight: next,
+                                  ...getUpperShelfGapSyncUpdates({ baseFrameHeight: next }),
+                                });
                               } else if (e.key === 'Enter') {
                                 (e.target as HTMLInputElement).blur();
                               }
@@ -3972,12 +4117,20 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                               const v = e.target.value;
                               if (v === '' || /^\d+$/.test(v)) {
                                 const num = v === '' ? 0 : parseInt(v, 10);
-                                updatePlacedModule(mod.id, { baseFrameHeight: num > bfMax ? bfMax : num });
+                                const next = num > bfMax ? bfMax : num;
+                                updatePlacedModule(mod.id, {
+                                  baseFrameHeight: next,
+                                  ...getUpperShelfGapSyncUpdates({ baseFrameHeight: next }),
+                                });
                               }
                             }}
                             onBlur={(e) => {
                               setHighlightedFrame(null);
-                              updatePlacedModule(mod.id, { baseFrameHeight: Math.max(bfMin, Math.min(bfMax, parseInt(e.target.value) || bfDefault)) });
+                              const next = Math.max(bfMin, Math.min(bfMax, parseInt(e.target.value) || bfDefault));
+                              updatePlacedModule(mod.id, {
+                                baseFrameHeight: next,
+                                ...getUpperShelfGapSyncUpdates({ baseFrameHeight: next }),
+                              });
                             }}
                             style={inputStyle}
                           />
@@ -4053,7 +4206,11 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                                 e.preventDefault();
                                 const cur = mod.individualFloatHeight ?? 0;
                                 const nv = Math.max(0, Math.min(500, cur + (e.key === 'ArrowUp' ? 1 : -1)));
-                                updatePlacedModule(mod.id, { individualFloatHeight: nv, doorBottomGap: nv });
+                                updatePlacedModule(mod.id, {
+                                  individualFloatHeight: nv,
+                                  doorBottomGap: nv,
+                                  ...getUpperShelfGapSyncUpdates({ individualFloatHeight: nv }),
+                                });
                               } else if (e.key === 'Enter') {
                                 (e.target as HTMLInputElement).blur();
                               }
@@ -4062,7 +4219,11 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                               const v = e.target.value;
                               if (v === '' || /^\d+$/.test(v)) {
                                 const nv = v === '' ? 0 : parseInt(v, 10);
-                                updatePlacedModule(mod.id, { individualFloatHeight: nv, doorBottomGap: nv });
+                                updatePlacedModule(mod.id, {
+                                  individualFloatHeight: nv,
+                                  doorBottomGap: nv,
+                                  ...getUpperShelfGapSyncUpdates({ individualFloatHeight: nv }),
+                                });
                               }
                             }}
                             onBlur={() => { /* blur 시 doorBottomGap 덮어쓰기 방지 */ }}
@@ -4072,8 +4233,9 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                       </div>
                     )}
                   </div>
+                </div>
                 )}
-              </div>
+              </>
             );
           })()}
 
@@ -4212,12 +4374,26 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                   />
                   우측 EP
                 </label>
+                {/* 하부 EP — 상부장 전용 (가구 아래쪽 마감판) */}
+                {moduleData.category === 'upper' && (
+                  <label className={styles.epCheckboxLabel}>
+                    <input
+                      type="checkbox"
+                      checked={currentPlacedModule.hasBottomEndPanel !== false}
+                      onChange={() => {
+                        const turning = !(currentPlacedModule.hasBottomEndPanel !== false);
+                        updatePlacedModule(currentPlacedModule.id, { hasBottomEndPanel: turning } as any);
+                      }}
+                    />
+                    하부 EP
+                  </label>
+                )}
               </div>
-              {(currentPlacedModule.hasLeftEndPanel || currentPlacedModule.hasRightEndPanel) && (
+              {(currentPlacedModule.hasLeftEndPanel || currentPlacedModule.hasRightEndPanel || (moduleData.category === 'upper' && currentPlacedModule.hasBottomEndPanel !== false)) && (
                 <>
                   {/* EP 높이 모드 — 키큰장(full)만 표시 (하부장/상부장은 카테고리별 자동 결정) */}
-                  {/* 상단/하단 갭 — 카테고리별 기준 다름 */}
-                  {(
+                  {/* 상단/하단 갭 — 좌/우 EP 전용 (하부 EP는 전면갭/후면갭 사용) */}
+                  {(currentPlacedModule.hasLeftEndPanel || currentPlacedModule.hasRightEndPanel) && (
                     <div className={styles.epRow}>
                       <div className={styles.epField}>
                         <label className={styles.epFieldLabel}>
@@ -4520,6 +4696,87 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                                 const next = Math.max(-200, Math.min(200, cur + (e.key === 'ArrowUp' ? 1 : -1)));
                                 updatePlacedModule(currentPlacedModule.id, { rightEndPanelBackOffset: next });
                                 setEpInputs(s => ({ ...s, rightBack: undefined }));
+                              }
+                            }}
+                            className={styles.epInput}
+                          />
+                          <span className={styles.unit}>mm</span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                  {/* 하부 EP(상부장 하부 마감판) 전면갭/후면갭 — 상부장 전용. 기본 전면 0 / 후면 35mm */}
+                  {moduleData.category === 'upper' && currentPlacedModule.hasBottomEndPanel !== false && (
+                    <div className={styles.epRow}>
+                      <div className={styles.epField}>
+                        <label className={styles.epFieldLabel}>전면갭</label>
+                        <div className={styles.inputWithUnit}>
+                          <input
+                            type="text"
+                            inputMode="numeric"
+                            value={(epInputs as any).bottomFront ?? String((currentPlacedModule as any).bottomEndPanelOffset ?? 0)}
+                            onChange={(e) => {
+                              const v = e.target.value;
+                              if (v === '' || v === '-' || /^-?\d+$/.test(v)) {
+                                setEpInputs(s => ({ ...s, bottomFront: v } as any));
+                                if (v !== '' && v !== '-') {
+                                  const num = Math.max(-200, Math.min(200, parseInt(v, 10)));
+                                  updatePlacedModule(currentPlacedModule.id, { bottomEndPanelOffset: num } as any);
+                                }
+                              }
+                            }}
+                            onBlur={() => {
+                              const v = (epInputs as any).bottomFront;
+                              if (v === '' || v === '-' || v === undefined) {
+                                updatePlacedModule(currentPlacedModule.id, { bottomEndPanelOffset: 0 } as any);
+                              }
+                              setEpInputs(s => ({ ...s, bottomFront: undefined } as any));
+                            }}
+                            onKeyDown={(e) => {
+                              if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                                e.preventDefault();
+                                const cur = (currentPlacedModule as any).bottomEndPanelOffset ?? 0;
+                                const next = Math.max(-200, Math.min(200, cur + (e.key === 'ArrowUp' ? 1 : -1)));
+                                updatePlacedModule(currentPlacedModule.id, { bottomEndPanelOffset: next } as any);
+                                setEpInputs(s => ({ ...s, bottomFront: undefined } as any));
+                              }
+                            }}
+                            className={styles.epInput}
+                          />
+                          <span className={styles.unit}>mm</span>
+                        </div>
+                      </div>
+                      <div className={styles.epField}>
+                        <label className={styles.epFieldLabel}>후면갭</label>
+                        <div className={styles.inputWithUnit}>
+                          <input
+                            type="text"
+                            inputMode="numeric"
+                            value={(epInputs as any).bottomBack ?? String((currentPlacedModule as any).bottomEndPanelBackOffset ?? 35)}
+                            onChange={(e) => {
+                              const v = e.target.value;
+                              if (v === '' || v === '-' || /^-?\d+$/.test(v)) {
+                                setEpInputs(s => ({ ...s, bottomBack: v } as any));
+                                if (v !== '' && v !== '-') {
+                                  const num = Math.max(-200, Math.min(200, parseInt(v, 10)));
+                                  updatePlacedModule(currentPlacedModule.id, { bottomEndPanelBackOffset: num } as any);
+                                }
+                              }
+                            }}
+                            onBlur={() => {
+                              const v = (epInputs as any).bottomBack;
+                              if (v === '' || v === '-' || v === undefined) {
+                                updatePlacedModule(currentPlacedModule.id, { bottomEndPanelBackOffset: 35 } as any);
+                              }
+                              setEpInputs(s => ({ ...s, bottomBack: undefined } as any));
+                            }}
+                            onKeyDown={(e) => {
+                              if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                                e.preventDefault();
+                                const cur = (currentPlacedModule as any).bottomEndPanelBackOffset ?? 35;
+                                const next = Math.max(-200, Math.min(200, cur + (e.key === 'ArrowUp' ? 1 : -1)));
+                                updatePlacedModule(currentPlacedModule.id, { bottomEndPanelBackOffset: next } as any);
+                                setEpInputs(s => ({ ...s, bottomBack: undefined } as any));
                               }
                             }}
                             className={styles.epInput}
@@ -5381,6 +5638,84 @@ const PlacedModulePropertiesPanel: React.FC = () => {
               position: 'absolute', top: '2px', width: '16px', height: '16px', borderRadius: '50%',
               backgroundColor: '#fff', transition: 'left 0.2s', left: removed ? '18px' : '2px',
             };
+            // 상부섹션 안전선반 윗면 ~ 천판 바닥 사이 간격 계산
+            // 2D 표시 공식과 동일: innerH - shelfPos - halfT
+            // = (sectionOuterH - 2*basicThickness) - shelfPos - (basicThickness / 2)
+            const basicThicknessMm = (spaceInfo as any).panelThickness || 18;
+            const sections = (currentPlacedModule as any).customSections
+              ?? (currentPlacedModule.customConfig as any)?.sections
+              ?? moduleData?.modelConfig?.sections;
+            const hasExplicitCustomSections = Array.isArray((currentPlacedModule as any).customSections);
+            const sectionList = Array.isArray(sections) ? sections : [];
+            const upperHangingIndex = (() => {
+              for (let i = sectionList.length - 1; i >= 0; i--) {
+                const section = sectionList[i] as any;
+                if (
+                  section.type === 'hanging' &&
+                  Array.isArray(section.shelfPositions) &&
+                  section.shelfPositions.some((pos: number) => pos > 0)
+                ) {
+                  return i;
+                }
+              }
+              for (let i = sectionList.length - 1; i >= 0; i--) {
+                if ((sectionList[i] as any).type === 'hanging') return i;
+              }
+              return -1;
+            })();
+            const hangingSection = upperHangingIndex >= 0 ? sectionList[upperHangingIndex] : null;
+            const baseTotalHeight = currentPlacedModule.freeHeight
+              || currentPlacedModule.customHeight
+              || moduleData?.dimensions?.height
+              || 0;
+            const globalTopFrame = spaceInfo.frameSize?.top ?? 30;
+            const topFrameMm = currentPlacedModule.topFrameThickness ?? globalTopFrame;
+            const topFrameDelta = currentPlacedModule.topFrameThickness !== undefined
+              ? topFrameMm - globalTopFrame
+              : 0;
+            const absorbedTopHeight = currentPlacedModule.hasTopFrame === false
+              ? topFrameMm - (currentPlacedModule.topFrameGap ?? 0)
+              : 0;
+            const absorbedBaseHeight = currentPlacedModule.hasBase === false
+              ? ((currentPlacedModule.baseFrameHeight ?? (spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height ?? 60) : 0))
+                - (currentPlacedModule.individualFloatHeight ?? 0))
+              : 0;
+            const isStandTypeForHeight = spaceInfo.baseConfig?.type === 'stand';
+            const baseFrameDelta = currentPlacedModule.baseFrameHeight !== undefined && !isStandTypeForHeight
+              ? currentPlacedModule.baseFrameHeight - (spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height ?? 65) : 0)
+              : 0;
+            const effectiveTotalHeight = Math.max(0, baseTotalHeight - topFrameDelta - baseFrameDelta + absorbedTopHeight + absorbedBaseHeight);
+            const getEffectiveSectionHeight = (sectionIndex: number) => {
+              const section = sectionList[sectionIndex] as any;
+              if (!section) return 0;
+              if (sectionList.length >= 2 && sectionIndex === sectionList.length - 1) {
+                const previousSectionsHeight = sectionList
+                  .slice(0, sectionIndex)
+                  .reduce((sum: number, prevSection: any) => sum + (prevSection.height || 0), 0);
+                return Math.max(0, effectiveTotalHeight - previousSectionsHeight);
+              }
+              return section.height || 0;
+            };
+            let topGap: number | null = null;
+            if (hangingSection && !removed) {
+              const hangingH = getEffectiveSectionHeight(upperHangingIndex);
+              const posArr = (hangingSection.shelfPositions || []) as number[];
+              const shelfPos = posArr.length > 0 ? posArr[posArr.length - 1] : null;
+              if (shelfPos !== null) {
+                const innerH = Math.max(0, hangingH - 2 * basicThicknessMm);
+                let renderedShelfPos = shelfPos;
+                if (!hasExplicitCustomSections && upperHangingIndex === sectionList.length - 1) {
+                  const originalInnerH = Math.max(0, ((hangingSection as any).height || 0) - 2 * basicThicknessMm);
+                  const originalGap = Math.max(0, Math.round(
+                    originalInnerH -
+                    shelfPos -
+                    basicThicknessMm / 2
+                  ));
+                  renderedShelfPos = Math.max(0, Math.round(innerH - originalGap - basicThicknessMm / 2));
+                }
+                topGap = Math.max(0, Math.round(innerH - renderedShelfPos - basicThicknessMm / 2));
+              }
+            }
             return (
               <div className={styles.propertySection}>
                 <h5 className={styles.sectionTitle}>상부 선반</h5>
@@ -5396,6 +5731,60 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                     선반 제거 (옷봉을 상판에 부착)
                   </span>
                 </div>
+                {topGap !== null && (() => {
+                  // 저장값이 아니라 현재 섹션 높이와 선반 위치에서 항상 재계산한다.
+                  const currentGap = topGap;
+                  const updateGap = (v: number) => {
+                    const clamped = Math.max(0, Math.min(2000, v));
+                    const updates: any = { upperShelfTopGap: clamped };
+                    if (upperHangingIndex >= 0) {
+                      const nextSections = sectionList.map((section: any, index: number) => {
+                        if (index !== upperHangingIndex) return section;
+                        const innerH = Math.max(0, getEffectiveSectionHeight(index) - 2 * basicThicknessMm);
+                        const nextShelfPos = Math.max(0, Math.round(innerH - clamped - basicThicknessMm / 2));
+                        const shelfPositions = Array.isArray(section.shelfPositions)
+                          ? [...section.shelfPositions]
+                          : [];
+                        const safetyIndex = shelfPositions.findIndex((pos: number) => pos > 0);
+                        if (safetyIndex >= 0) {
+                          shelfPositions[safetyIndex] = nextShelfPos;
+                        } else {
+                          shelfPositions.push(nextShelfPos);
+                        }
+                        return { ...section, shelfPositions };
+                      });
+                      updates.customSections = nextSections;
+                    }
+                    updatePlacedModule(currentPlacedModule.id, updates);
+                  };
+                  return (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '4px 0', fontSize: '12px' }}>
+                      <span style={{ color: 'var(--theme-text-secondary)' }}>옷봉선반 간격</span>
+                      <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                        <input
+                          type="text"
+                          inputMode="numeric"
+                          value={currentGap}
+                          onChange={(e) => {
+                            const v = e.target.value;
+                            if (v === '' || /^\d+$/.test(v)) {
+                              updateGap(v === '' ? 0 : parseInt(v, 10));
+                            }
+                          }}
+                          onKeyDown={(e) => {
+                            if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                              e.preventDefault();
+                              updateGap(currentGap + (e.key === 'ArrowUp' ? 1 : -1));
+                            }
+                          }}
+                          onBlur={(e) => updateGap(parseInt(e.target.value) || 0)}
+                          style={{ width: '60px', padding: '2px 4px', border: '1px solid var(--theme-border)', borderRadius: '4px', fontSize: '12px', textAlign: 'right' }}
+                        />
+                        <span style={{ color: 'var(--theme-text-secondary)' }}>mm</span>
+                      </div>
+                    </div>
+                  );
+                })()}
               </div>
             );
           })()}

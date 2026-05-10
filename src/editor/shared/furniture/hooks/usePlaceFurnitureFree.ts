@@ -18,8 +18,49 @@ import { isCustomizableModuleId, createDefaultCustomConfig } from '@/editor/shar
 import { useMyCabinetStore, PendingPlacement } from '@/store/core/myCabinetStore';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
 import { CustomFurnitureConfig } from '@/editor/shared/furniture/types';
-import { isSurroundPanelId, getSurroundPanelType, SURROUND_PANEL_THICKNESS } from '@/data/modules/surroundPanels';
+import { isSurroundPanelId, getSurroundPanelType } from '@/data/modules/surroundPanels';
 import { getInternalSpaceBoundsX } from '@/editor/shared/utils/freePlacementUtils';
+import { resolveInitialFurnitureDepth } from '@/editor/shared/utils/furnitureDepthDefaults';
+
+type FreePlacementModuleFlags = ModuleData & {
+  hasBase?: boolean;
+  individualFloatHeight?: number;
+  hasBackPanel?: boolean;
+};
+
+const isTopFrameCapablePlacedModule = (module: PlacedModule): boolean => {
+  if (module.isSurroundPanel) return false;
+  const moduleId = module.moduleId || '';
+  if (moduleId.includes('insert-frame')) return false;
+  return !(moduleId.startsWith('lower-') || moduleId.includes('-lower-'));
+};
+
+const isBaseFrameCapablePlacedModule = (module: PlacedModule): boolean => {
+  if (module.isSurroundPanel) return false;
+  const moduleId = module.moduleId || '';
+  if (moduleId.includes('insert-frame')) return false;
+  return !(moduleId.includes('upper-cabinet') || moduleId.startsWith('upper-') || moduleId.includes('-upper-'));
+};
+
+const clampTopFrameGapForModule = (
+  moduleData: ModuleData,
+  topFrameMm: number,
+  topGapMm: number,
+  absorbedBaseMm: number
+): number => {
+  const sections = moduleData.modelConfig?.sections;
+  if (!sections || sections.length < 2) {
+    return Math.max(0, topGapMm);
+  }
+
+  const upperAbsorbingIndex = sections.length - 1;
+  const fixedSectionHeight = sections.reduce((sum, section, index) => (
+    index === upperAbsorbingIndex ? sum : sum + (section.height || 0)
+  ), 0);
+  const minimumUpperHeight = moduleData.modelConfig?.basicThickness || 18;
+  const maxGap = Math.max(0, moduleData.dimensions.height + topFrameMm + absorbedBaseMm - fixedSectionHeight - minimumUpperHeight);
+  return Math.max(0, Math.min(topGapMm, maxGap));
+};
 
 export interface PlaceFurnitureFreeParams {
   moduleId: string;
@@ -89,6 +130,12 @@ export function placeFurnitureFree(params: PlaceFurnitureFreeParams): PlaceFurni
     category: moduleData.category,
   });
 
+  const effectiveDepth = resolveInitialFurnitureDepth(
+    spaceInfo,
+    moduleData.id || moduleId,
+    dimensions.depth
+  );
+
   // Y좌표 계산 (카테고리별)
   // 상부장이 단내림 구간에 배치될 때: 천장 기준이 stepCeiling.height여야 함
   const yPositionThree = calculateYPosition(
@@ -137,6 +184,32 @@ export function placeFurnitureFree(params: PlaceFurnitureFreeParams): PlaceFurni
 
   // 서랍장(2단/4단)/인출장 하부섹션 상판 85mm 들여쓰기 기본값
   const defaultLowerTopOffset = (moduleId.includes('2drawer') || moduleId.includes('4drawer') || moduleId.includes('pull-out-cabinet')) ? 85 : undefined;
+  const moduleFlags = moduleData as FreePlacementModuleFlags;
+  const topFrameCapableExistingModules = existingModules
+    .filter(module => module.isFreePlacement)
+    .filter(isTopFrameCapablePlacedModule);
+  const inheritTopFrameOff = topFrameCapableExistingModules.length > 0
+    && topFrameCapableExistingModules.every(module => module.hasTopFrame === false);
+  const inheritedTopFrameGap = topFrameCapableExistingModules.find(module => module.topFrameGap !== undefined)?.topFrameGap ?? 0;
+  const shouldHaveTopFrame = moduleData.category !== 'lower' && spaceInfo.frameConfig?.top !== false && !inheritTopFrameOff;
+  const baseFrameCapableExistingModules = existingModules
+    .filter(module => module.isFreePlacement)
+    .filter(isBaseFrameCapablePlacedModule);
+  const inheritBaseFrameOff = baseFrameCapableExistingModules.length > 0
+    && baseFrameCapableExistingModules.every(module => module.hasBase === false);
+  const inheritedFloatHeight = baseFrameCapableExistingModules.find(module => module.individualFloatHeight !== undefined)?.individualFloatHeight ?? 0;
+  const inheritedDoorBottomGap = baseFrameCapableExistingModules.find(module => module.doorBottomGap !== undefined)?.doorBottomGap;
+  const shouldHaveBaseFrame = moduleFlags.hasBase === false
+    ? false
+    : moduleData.category !== 'upper' && !inheritBaseFrameOff;
+  const initialFloatHeight = moduleFlags.individualFloatHeight ?? (shouldHaveBaseFrame ? 0 : inheritedFloatHeight);
+  const inheritedAbsorbedBase = shouldHaveBaseFrame
+    ? 0
+    : ((spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height ?? 60) : 0) - initialFloatHeight);
+  const topFrameThickness = spaceInfo.frameSize?.top || 30;
+  const initialTopFrameGap = shouldHaveTopFrame
+    ? 0
+    : clampTopFrameGapForModule(moduleData, topFrameThickness, inheritedTopFrameGap, inheritedAbsorbedBase);
 
   const newModule: PlacedModule = {
     id: uuidv4(),
@@ -148,19 +221,23 @@ export function placeFurnitureFree(params: PlaceFurnitureFreeParams): PlaceFurni
     isFreePlacement: true,
     freeWidth: dimensions.width,
     freeHeight: effectiveHeight,
-    freeDepth: dimensions.depth,
+    freeDepth: effectiveDepth,
     zone: effectiveZone,
     // ModuleData가 명시적으로 hasBase=false 라면 우선 (유리장 등 띄움 전용 가구)
-    hasBase: (moduleData as any).hasBase === false ? false : (moduleData.category !== 'upper'),
-    hasTopFrame: moduleData.category !== 'lower',
-    hasBottomFrame: (moduleData as any).hasBase === false ? false : (moduleData.category !== 'upper'),
-    topFrameThickness: spaceInfo.frameSize?.top || 30,
+    hasBase: shouldHaveBaseFrame,
+    hasTopFrame: shouldHaveTopFrame,
+    hasBottomFrame: shouldHaveBaseFrame,
+    topFrameThickness,
+    ...(shouldHaveTopFrame ? {} : { topFrameGap: initialTopFrameGap }),
     // ModuleData에 individualFloatHeight 가 정의된 가구(예: 유리장 200mm)
-    ...(((moduleData as any).individualFloatHeight ?? 0) > 0
-      ? { individualFloatHeight: (moduleData as any).individualFloatHeight }
+    ...(initialFloatHeight > 0 || !shouldHaveBaseFrame
+      ? { individualFloatHeight: initialFloatHeight }
+      : {}),
+    ...(!shouldHaveBaseFrame && inheritedDoorBottomGap !== undefined
+      ? { doorBottomGap: inheritedDoorBottomGap }
       : {}),
     // ModuleData.hasBackPanel === false (예: 유리장 — 사용자 별도 백패널 처리)
-    ...((moduleData as any).hasBackPanel === false ? { hasBackPanel: false } : {}),
+    ...(moduleFlags.hasBackPanel === false ? { hasBackPanel: false } : {}),
     hasDoor: false, // 자유배치 시 도어 없이 배치 (사용자가 수동 설정)
     lowerSectionTopOffset: defaultLowerTopOffset,
     ...(isCustomizable && {

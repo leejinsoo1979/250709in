@@ -8,6 +8,7 @@ import DoorModule from '../DoorModule';
 import FinishingPanelWithTexture from '../components/FinishingPanelWithTexture';
 import BoxWithEdges from '../components/BoxWithEdges';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
+import { resolveShelfFrontInsetMm } from '@/editor/shared/utils/shelfInsetCalculator';
 
 /**
  * 상부장 컴포넌트
@@ -139,7 +140,10 @@ const UpperCabinet: React.FC<FurnitureTypeProps> = ({
                     furnitureId={moduleData.id}
                     lowerSectionTopOffsetMm={lowerSectionTopOffset}
                     isFloatingPlacement={spaceInfo?.baseConfig?.placementType === 'float'}
-                    shelfFrontInsetMm={30}
+                    shelfFrontInsetMm={resolveShelfFrontInsetMm({
+                      moduleId: moduleData.id,
+                      cabinetCategory: moduleData.category
+                    })}
                   />
                 ) : (
                   /* 싱글 가구인 경우 기존 방식 */
@@ -158,29 +162,49 @@ const UpperCabinet: React.FC<FurnitureTypeProps> = ({
                     furnitureId={moduleData.id}
                     lowerSectionTopOffsetMm={lowerSectionTopOffset}
                     isFloatingPlacement={spaceInfo?.baseConfig?.placementType === 'float'}
-                    shelfFrontInsetMm={30}
+                    shelfFrontInsetMm={resolveShelfFrontInsetMm({
+                      moduleId: moduleData.id,
+                      cabinetCategory: moduleData.category
+                    })}
                   />
                 )}
               </>
           </BaseFurnitureShell>
 
-          {/* 상부장 하단 마감재 (18mm) - 도어 색상과 동일 */}
+          {/* 상부장 하단 마감재 (18mm) - 도어 색상과 동일 — 하부 EP 체크 해제 시 미렌더 */}
             {(() => {
+              const selfMod = placedFurnitureId
+                ? placedModulesForOuter.find(mm => mm.id === placedFurnitureId)
+                : null;
+              const hasBottomEP = (selfMod as any)?.hasBottomEndPanel !== false;
+              if (!hasBottomEP) return null;
+              // 사용자 입력 갭 (전면갭=앞에서 들이기, 후면갭=뒤에서 들이기, mm)
+              // 기본값: 전면 0mm, 후면 35mm (사용자가 입력 안 하면 후면 35mm 적용)
+              const FRONT_GAP_DEFAULT_MM = 0;
+              const BACK_GAP_DEFAULT_MM = 35;
+              const frontGapMm = (selfMod as any)?.bottomEndPanelOffset ?? FRONT_GAP_DEFAULT_MM;
+              const backGapMm = (selfMod as any)?.bottomEndPanelBackOffset ?? BACK_GAP_DEFAULT_MM;
               const leftExtMm = outerExtendLeftUpper;
               const rightExtMm = outerExtendRightUpper;
               const leftExt = leftExtMm * 0.01;
               const rightExt = rightExtMm * 0.01;
               const extendedWidth = baseFurniture.width + leftExt + rightExt;
               const xOffset = (rightExt - leftExt) / 2;
+              const frontGap = frontGapMm * 0.01;
+              const backGap = backGapMm * 0.01;
+              const panelFrontZ = baseFurniture.depth / 2 - frontGap;
+              const panelBackZ = -baseFurniture.depth / 2 + backGap;
+              const panelDepth = panelFrontZ - panelBackZ;
+              const panelCenterZ = (panelFrontZ + panelBackZ) / 2;
               return (
             <FinishingPanelWithTexture
               width={extendedWidth}
               height={0.18}
-              depth={baseFurniture.depth - 0.35} // 깊이 35mm 줄임
+              depth={panelDepth}
               position={[
                 xOffset,
-                -(baseFurniture.height / 2) - 0.09, // 하단에 위치 (18mm의 절반만큼 아래로)
-                0.175 // z축 앞으로 17.5mm 이동
+                -(baseFurniture.height / 2) - 0.09,
+                panelCenterZ
               ]}
               spaceInfo={spaceInfo}
               doorColor={baseFurniture.doorColor}

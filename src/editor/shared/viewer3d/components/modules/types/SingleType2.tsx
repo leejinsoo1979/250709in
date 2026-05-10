@@ -11,6 +11,7 @@ import DoorModule from '../DoorModule';
 import { AdjustableFootsRenderer } from '../components/AdjustableFootsRenderer';
 import { ClothingRod } from '../components/ClothingRod';
 import { VentilationCap } from '../components/VentilationCap';
+import { resolveShelfFrontInsetMm } from '@/editor/shared/utils/shelfInsetCalculator';
 
 /**
  * SingleType2 컴포넌트
@@ -330,7 +331,10 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
             ]}
             sectionWidthDirections={[lowerSectionWidthDirection, upperSectionWidthDirection]}
             lowerSectionTopOffsetMm={(moduleData?.id?.includes('entryway-h')) ? 85 : lowerSectionTopOffset}
-            shelfFrontInsetMm={(moduleData?.id?.includes('entryway-h') || moduleData?.id?.includes('-shelf-') || moduleData?.id?.includes('-4drawer-shelf-') || moduleData?.id?.includes('-2drawer-shelf-')) ? 30 : 0}
+            shelfFrontInsetMm={resolveShelfFrontInsetMm({
+              moduleId: moduleData?.id,
+              cabinetCategory: moduleData?.category
+            })}
             isFloatingPlacement={spaceInfo?.baseConfig?.placementType === 'float'}
           />
 
