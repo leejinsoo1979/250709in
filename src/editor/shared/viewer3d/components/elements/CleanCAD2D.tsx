@@ -3843,6 +3843,12 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           const bottomFrameH = leftLowerMod?.hasBase === false
             ? (leftLowerMod.individualFloatHeight ?? 0)
             : actualBottomSize;
+          const leftTopGapForDim = leftmostMod?.hasTopFrame === false
+            ? Math.max(0, Math.round(leftmostMod?.topFrameGap ?? 0))
+            : 0;
+          if (isFreePlacement && leftmostMod?.hasTopFrame === false && leftCategoryResolved === 'full') {
+            furnitureH = Math.max(0, effectiveH - floorFinishForHeight - bottomFrameH - leftTopGapForDim);
+          }
           // 상단몰딩 높이: 상부장/상하부장 동시배치는 고정값(actualTopSize), 하부장 단독은 남은 공간, 키큰장은 나머지에서 계산
           const topFrameH = (leftCategoryResolved === 'upper' || hasDualCabinet)
             ? actualTopSize
@@ -3864,7 +3870,9 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             const sections = modData?.modelConfig?.sections;
             if (sections && sections.length >= 2) {
               // 섹션 기준 furnitureH = 실제 가구 내경 (공간 - 실제 상단몰딩 - 실제 걸래받이 - 띄움)
-              const realTopFrame = leftmostMod.hasTopFrame === false ? 0 : (leftmostMod.topFrameThickness ?? globalTopFrame);
+              const realTopFrame = leftmostMod.hasTopFrame === false
+                ? (isFreePlacement ? leftTopGapForDim : 0)
+                : (leftmostMod.topFrameThickness ?? globalTopFrame);
               // 띄움 배치: hasBase=false 이면 걸래받이 자리가 띄움 공간으로 대체됨
               // → individualFloatHeight 가 없으면 baseFrameHeight (= 띄움 기본) 사용
               // 걸래받이 OFF (hasBase=false) → 걸래받이 자리를 마지막 섹션이 흡수
@@ -4589,6 +4597,12 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           const rBottomFrameH = rightLowerMod?.hasBase === false
             ? (rightLowerMod.individualFloatHeight ?? 0)
             : rActualBottomSize;
+          const rTopGapForDim = rightmostMod?.hasTopFrame === false
+            ? Math.max(0, Math.round(rightmostMod?.topFrameGap ?? 0))
+            : 0;
+          if (isFreePlacement && rightmostMod?.hasTopFrame === false && rightCategoryResolved === 'full') {
+            rFurnitureH = Math.max(0, rEffectiveH - rFloorFinishForHeight - rBottomFrameH - rTopGapForDim);
+          }
           // 상단몰딩 높이: 상부장/상하부장 동시배치는 고정값, 하부장 단독은 남은 공간, 키큰장은 나머지에서 계산
           const rTopFrameH = (rightCategoryResolved === 'upper' || rHasDualCabinet)
             ? rActualTopSize
@@ -4605,7 +4619,9 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             const rSections = rModData?.modelConfig?.sections;
             if (rSections && rSections.length >= 2) {
               // 섹션 기준 furnitureH = 실제 가구 내경 (공간 - 실제 상단몰딩 - 실제 걸래받이)
-              const rRealTopFrame = rightmostMod.hasTopFrame === false ? 0 : (rightmostMod.topFrameThickness ?? rGlobalTopFrame);
+              const rRealTopFrame = rightmostMod.hasTopFrame === false
+                ? (isFreePlacement ? rTopGapForDim : 0)
+                : (rightmostMod.topFrameThickness ?? rGlobalTopFrame);
               const rRealBottomFrame = (rightLowerMod as any)?.hasBase === false
                 ? ((rightLowerMod as any)?.individualFloatHeight ?? 0)
                 : (rightLowerMod?.baseFrameHeight ?? rGlobalBottomFrameH);
@@ -5552,6 +5568,18 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
 	        const showTopGapHeightGuide = currentViewDirection === 'front'
 	          && topGapMmForDim > 0
 	          && (moduleCategoryForDim === 'full' || moduleCategoryForDim === 'upper');
+        const moduleCeilingMmForDim = (() => {
+          if (module.zone === 'dropped') {
+            if (isFreePlacement && spaceInfo.stepCeiling?.enabled) {
+              return spaceInfo.height - (spaceInfo.stepCeiling.dropHeight || 0);
+            }
+            if (spaceInfo.droppedCeiling?.enabled) {
+              return spaceInfo.height - (spaceInfo.droppedCeiling.dropHeight || 0);
+            }
+          }
+          return spaceInfo.height;
+        })();
+        const moduleCeilingYForDim = mmToThreeUnits(moduleCeilingMmForDim);
         // 하부장 상단 Y(mm) = 바닥마감재 + 걸래받이(받침대) + 개별 띄움 + 가구 높이
         // 3D 배치 좌표계(바닥=0)에서 계산
         const floorFinishMmForDim = spaceInfo.hasFloorFinish && spaceInfo.floorFinish?.height
@@ -5753,7 +5781,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             ) : (
               <>
                 <NativeLine name="dimension_line"
-                  points={[[leftX, spaceHeight, 0.001], [leftX, (hasDroppedCeiling || hasStepDown) ? slotTotalDimensionY : columnDimensionY, 0.001]]}
+                  points={[[leftX, moduleCeilingYForDim, 0.001], [leftX, (hasDroppedCeiling || hasStepDown) ? slotTotalDimensionY : columnDimensionY, 0.001]]}
                   color={dimensionColor}
                   lineWidth={0.6}
                   renderOrder={1000000}
@@ -5762,7 +5790,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   transparent={true}
                 />
                 <NativeLine name="dimension_line"
-                  points={[[rightX, spaceHeight, 0.001], [rightX, (hasDroppedCeiling || hasStepDown) ? slotTotalDimensionY : columnDimensionY, 0.001]]}
+                  points={[[rightX, moduleCeilingYForDim, 0.001], [rightX, (hasDroppedCeiling || hasStepDown) ? slotTotalDimensionY : columnDimensionY, 0.001]]}
                   color={dimensionColor}
                   lineWidth={0.6}
                   renderOrder={1000000}
@@ -5986,8 +6014,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
 
 	            {/* 정면뷰 상단갭 세로 치수가이드 */}
 	            {showTopGapHeightGuide && (() => {
-	              const topGapTopY = spaceHeight;
-	              const topGapBottomY = spaceHeight - mmToThreeUnits(topGapMmForDim);
+	              const topGapTopY = moduleCeilingYForDim;
+	              const topGapBottomY = moduleCeilingYForDim - mmToThreeUnits(topGapMmForDim);
 	              const topGapDimX = rightX + mmToThreeUnits(120);
 	              const topGapExtX = topGapDimX + mmToThreeUnits(20);
 	              const topGapTextX = topGapDimX + mmToThreeUnits(60);
