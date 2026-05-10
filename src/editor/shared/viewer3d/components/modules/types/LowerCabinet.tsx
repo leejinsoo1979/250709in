@@ -1270,8 +1270,9 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
             const shelfThicknessMm = 18;
             const shelfFrontInsetMm = resolveShelfFrontInsetMm({
               moduleId: moduleData.id,
-              cabinetCategory: 'lower'
-            }); // 앞에서 30mm 들여보냄
+              cabinetCategory: 'lower',
+              depthMm: depthMm
+            }); // 깊이 < 400 → 20mm, 깊이 ≥ 400 → 72mm
             const backReductionMm = backPanelMm + basicThicknessMm - 1; // 26mm (바닥판과 동일)
             const shelfDepthMm = depthMm - backReductionMm - shelfFrontInsetMm;
             const shelfWidth = baseFurniture.innerWidth;

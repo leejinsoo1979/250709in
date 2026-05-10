@@ -555,7 +555,8 @@ const DualType2: React.FC<FurnitureTypeProps> = ({
               lowerSectionTopOffsetMm={(moduleData?.id?.includes('entryway-h')) ? 85 : lowerSectionTopOffset}
               shelfFrontInsetMm={resolveShelfFrontInsetMm({
                 moduleId: moduleData?.id,
-                cabinetCategory: moduleData?.category
+                cabinetCategory: moduleData?.category,
+                depthMm: baseFurniture?.actualDepthMm
               })}
               isFloatingPlacement={spaceInfo?.baseConfig?.placementType === 'float'}
             />

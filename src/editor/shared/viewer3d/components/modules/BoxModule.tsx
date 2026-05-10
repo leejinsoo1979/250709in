@@ -1278,7 +1278,8 @@ const BoxModule: React.FC<BoxModuleProps> = ({
               isFloatingPlacement={spaceInfo?.baseConfig?.placementType === 'float'}
               shelfFrontInsetMm={resolveShelfFrontInsetMm({
                 moduleId: moduleData?.id,
-                cabinetCategory: moduleData?.category
+                cabinetCategory: moduleData?.category,
+                depthMm: baseFurniture?.actualDepthMm
               })}
               doorTopGap={doorTopGap}
               doorBottomGap={doorBottomGap}

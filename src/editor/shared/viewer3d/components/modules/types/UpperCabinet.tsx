@@ -142,7 +142,8 @@ const UpperCabinet: React.FC<FurnitureTypeProps> = ({
                     isFloatingPlacement={spaceInfo?.baseConfig?.placementType === 'float'}
                     shelfFrontInsetMm={resolveShelfFrontInsetMm({
                       moduleId: moduleData.id,
-                      cabinetCategory: moduleData.category
+                      cabinetCategory: moduleData.category,
+                      depthMm: baseFurniture?.actualDepthMm
                     })}
                   />
                 ) : (
@@ -164,7 +165,8 @@ const UpperCabinet: React.FC<FurnitureTypeProps> = ({
                     isFloatingPlacement={spaceInfo?.baseConfig?.placementType === 'float'}
                     shelfFrontInsetMm={resolveShelfFrontInsetMm({
                       moduleId: moduleData.id,
-                      cabinetCategory: moduleData.category
+                      cabinetCategory: moduleData.category,
+                      depthMm: baseFurniture?.actualDepthMm
                     })}
                   />
                 )}
