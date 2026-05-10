@@ -92,26 +92,34 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
     sanitizeBoxGeometrySize(args[2]),
   ], [args[0], args[1], args[2]]);
 
+  const { viewMode, plainMaterial: isPlainMaterial } = useSpace3DView();
+  const { view2DDirection, shadowEnabled, edgeOutlineEnabled } = useUIStore(); // view2DDirection, shadowEnabled, edgeOutlineEnabled 추가
+  const { theme } = useViewerTheme();
+  const { view2DTheme } = useUIStore();
+  const { theme: appTheme } = useTheme();
+
+  const hideInTop2D = viewMode === '2D' && view2DDirection === 'top' && panelName && (panelName.includes('(하)상판') || panelName.includes('(상)바닥'));
+  const hideRearReinforcementInFront2D = viewMode === '2D' && view2DDirection === 'front' && panelName?.includes('보강대');
+  const hiddenByViewMode = !!(hideInTop2D || hideRearReinforcementInFront2D);
+
   // CNC 옵티마이저에서 체크 해제된 패널이면 렌더링 생략 (furnitureId::panelName 복합키)
   // NOTE: React hook (useExcludedPanelsStore) 대신 useFrame으로 폴링 — R3F Canvas는 별도 React reconciler를 사용하므로
   // DOM 쪽 Zustand 구독이 R3F 내부 컴포넌트 리렌더를 트리거하지 못함
   const groupRef = useRef<THREE.Group>(null);
   const compositeKey = furnitureId && panelName ? `${furnitureId}::${panelName}` : null;
   useFrame(() => {
-    if (!groupRef.current || !compositeKey) return;
+    if (!groupRef.current) return;
+    if (hiddenByViewMode) {
+      groupRef.current.visible = false;
+      return;
+    }
+    if (!compositeKey) return;
     const { excludedKeys } = useExcludedPanelsStore.getState();
     const shouldHide = excludedKeys.size > 0 && excludedKeys.has(compositeKey);
     if (groupRef.current.visible === shouldHide) {
       groupRef.current.visible = !shouldHide;
     }
   });
-
-
-  const { viewMode, plainMaterial: isPlainMaterial } = useSpace3DView();
-  const { view2DDirection, shadowEnabled, edgeOutlineEnabled } = useUIStore(); // view2DDirection, shadowEnabled, edgeOutlineEnabled 추가
-  const { theme } = useViewerTheme();
-  const { view2DTheme } = useUIStore();
-  const { theme: appTheme } = useTheme();
 
   // 전역 스토어에서 직접 편집 상태 감지 (Context bridge 문제 회피)
   const activePopup = useUIStore(state => state.activePopup);
@@ -1153,11 +1161,9 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
     return geom;
   }, [notch, notches, bottomRebate, cornerNotch, backCenterNotch, hasCircleHoles, circleHoles, hasAnyNotch, hasCustomGeometry, safeArgs]);
 
-  // 옵티마이저에서 제외된 패널이면 렌더링하지 않음
-  // useFrame 폴링으로 visible 제어 — R3F reconciler/DOM reconciler 간 Zustand 구독 호환 문제 회피
   return (
     <group ref={groupRef} position={position} userData={furnitureId ? { furnitureId } : undefined}
-      visible={!(viewMode === '2D' && view2DDirection === 'top' && panelName && (panelName.includes('(하)상판') || panelName.includes('(상)바닥')))}
+      visible={!hiddenByViewMode}
     >
       {/* 면 렌더링 - 와이어프레임에서는 투명하게 */}
       {/* DXF 내보내기를 위해 mesh에도 이름 추가 */}
