@@ -4291,7 +4291,9 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   ? userTopGap
                   : topFrameH;
                 if (displayTopFrame <= 0) return null;
-                const topFrameBottomRef = hasDualCabinet ? upperCabinetTopY : furnitureTopY;
+                const topFrameBottomRef = leftmostMod?.hasTopFrame === false
+                  ? effectiveCeilingY - mmToThreeUnits(userTopGap)
+                  : (hasDualCabinet ? upperCabinetTopY : furnitureTopY);
                 return (
                   <>
                     <NativeLine name="dimension_line"
@@ -4977,7 +4979,9 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   ? rUserTopGap
                   : rTopFrameH;
                 if (rDisplayTopFrame <= 0) return null;
-                const rTopFrameBottomRef = rHasDualCabinet ? rUpperCabinetTopY : rFurnitureTopY;
+                const rTopFrameBottomRef = rightmostMod?.hasTopFrame === false
+                  ? rEffectiveCeilingY - mmToThreeUnits(rUserTopGap)
+                  : (rHasDualCabinet ? rUpperCabinetTopY : rFurnitureTopY);
                 return (
                   <>
                     <NativeLine name="dimension_line"
