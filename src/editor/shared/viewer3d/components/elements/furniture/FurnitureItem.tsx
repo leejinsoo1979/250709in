@@ -2997,6 +2997,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
           (window as any).__r3fClickHandled = true;
           useUIStore.getState().setSelectedColumnId(null);
           useFurnitureStore.getState().setSelectedFurnitureId(placedModule.id);
+          useFurnitureStore.getState().setSelectedPlacedModuleId(placedModule.id);
           useUIStore.getState().setSelectedFurnitureId(placedModule.id);
           useUIStore.getState().openFurnitureEditPopup(placedModule.id);
         }}

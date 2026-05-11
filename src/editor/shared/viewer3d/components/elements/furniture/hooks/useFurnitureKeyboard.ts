@@ -439,6 +439,12 @@ export const useFurnitureKeyboard = ({
         if (selectedPlacedModuleId) {
           const selectedModule = placedModules.find(m => m.id === selectedPlacedModuleId);
           if (!selectedModule) return;
+
+          // 자유배치 가구는 FreePlacementDropZone에서 실제 좌표 기준으로 이동 처리한다.
+          // 슬롯 이동 훅이 이전 selectedPlacedModuleId를 잡고 있으면 엉뚱한 가구가 움직일 수 있다.
+          if (selectedModule.isFreePlacement) {
+            return;
+          }
           
           // 선택된 가구의 데이터 가져오기 (커스텀 가구는 PlacedModule에서 빌드)
           const moduleData = getModuleById(selectedModule.moduleId, internalSpace, spaceInfo)

@@ -45,6 +45,8 @@ export const useFurnitureSelection = (options?: UseFurnitureSelectionOptions) =>
     e.stopPropagation();
 
     setSelectedFurnitureId(placedModuleId);
+    useFurnitureStore.getState().setSelectedFurnitureId(placedModuleId);
+    useFurnitureStore.getState().setSelectedPlacedModuleId(placedModuleId);
 
     if (dragMode) {
       // 드래그 모드에서는 삭제

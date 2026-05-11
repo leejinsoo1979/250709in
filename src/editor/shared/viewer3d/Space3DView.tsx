@@ -89,6 +89,9 @@ const SunLight: React.FC<{ sunAngle: number; castShadow: boolean }> = ({ sunAngl
   );
 };
 
+const DUPLICATE_FURNITURE_EVENT_HANDLED_FLAG = '__configuratorDuplicateFurnitureHandled';
+let lastDuplicateFurnitureRequest: { furnitureId: string; at: number } | null = null;
+
 /**
  * Space3DView 컴포넌트
  * 공간 정보를 3D로 표시하는 Three.js 뷰어
@@ -173,9 +176,22 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
   useEffect(() => {
     console.log('복제 이벤트 리스너 등록됨');
     const handleDuplicateFurniture = (e: Event) => {
+      if ((e as any)[DUPLICATE_FURNITURE_EVENT_HANDLED_FLAG]) return;
+      (e as any)[DUPLICATE_FURNITURE_EVENT_HANDLED_FLAG] = true;
+
       console.log('복제 이벤트 수신됨');
       const customEvent = e as CustomEvent<{ furnitureId: string }>;
       const { furnitureId } = customEvent.detail;
+      if (!furnitureId) return;
+
+      const now = Date.now();
+      if (
+        lastDuplicateFurnitureRequest?.furnitureId === furnitureId &&
+        now - lastDuplicateFurnitureRequest.at < 250
+      ) {
+        return;
+      }
+      lastDuplicateFurnitureRequest = { furnitureId, at: now };
 
       const { placedModules: latestPlacedModules, addModule: addModuleFn, setSelectedPlacedModuleId } = useFurnitureStore.getState();
       const { spaceInfo: latestSpaceInfo } = useSpaceConfigStore.getState();

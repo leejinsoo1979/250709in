@@ -1227,13 +1227,10 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         hasAdjacentLeft = Math.abs(leftEdge - zoneLimitLeft) > 0.001;
         hasAdjacentRight = Math.abs(rightEdge - zoneLimitRight) > 0.001;
 
-        // 정수mm로 계산 (Three.js 부동소수점 → mm 변환 시 0.5mm 오차 방지)
-        const moduleLeftMm = Math.round(moduleLeft * 100);
-        const moduleRightMm = Math.round(moduleRight * 100);
-        const leftEdgeMm = Math.round(leftEdge * 100);
-        const rightEdgeMm = Math.round(rightEdge * 100);
-        nearestLeftDistance = Math.abs(moduleLeftMm - leftEdgeMm);
-        nearestRightDistance = Math.abs(rightEdgeMm - moduleRightMm);
+        // 좌표를 각각 반올림한 뒤 빼면 0.5mm 경계에서 표시 치수가 1mm 흔들릴 수 있다.
+        // 다른 치수선처럼 실제 거리 차이를 먼저 구한 뒤 정수 mm로 반올림한다.
+        nearestLeftDistance = Math.round(Math.abs((moduleLeft - leftEdge) * 100));
+        nearestRightDistance = Math.round(Math.abs((rightEdge - moduleRight) * 100));
       }
 
       // ────────────────────────────────────────────────
@@ -3784,7 +3781,9 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             return leftmostMod;
           })();
           // 상부/걸래받이 치수 = 토글 OFF면 0, ON이면 저장값
-          const actualBottomSize = leftmostMod?.hasBase === false ? 0 : (leftLowerMod?.baseFrameHeight !== undefined ? leftLowerMod.baseFrameHeight : globalBottomFrameH);
+          // 상하부장 동시배치 시 leftmostMod가 상부장이면 leftLowerMod(하부장)의 hasBase 참조
+          const baseRefMod = leftLowerMod ?? leftmostMod;
+          const actualBottomSize = baseRefMod?.hasBase === false ? 0 : (leftLowerMod?.baseFrameHeight !== undefined ? leftLowerMod.baseFrameHeight : globalBottomFrameH);
           const actualTopSize = leftmostMod?.hasTopFrame === false ? 0 : (leftmostMod?.topFrameThickness !== undefined ? leftmostMod.topFrameThickness : globalTopFrame);
 
           // 가구 내경 높이 — FurnitureItem.tsx와 동일한 로직 적용
@@ -5868,12 +5867,13 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 gapDimY = mmToThreeUnits(baseFrameHGap + modHeightMm / 2);
               }
 
-              // 벽 인접(hasAdjacentLeft=false): freeLeftGap → gapConfig → 1.5 순 폴백
-              // 가구 간(hasAdjacentLeft=true): 좌표 차이(nearestDistance) 그대로 사용
-              const rawLeftGap = hasAdjacentLeft
+              // 자유배치는 벽/가구 모두 실제 좌표 거리 기준으로 표시한다.
+              // freeLeftGap/gapConfig는 기본 배치값이라 이동 후 실제 이격과 달라질 수 있다.
+              const useActualGapDistance = module.isFreePlacement || spaceInfo.layoutMode === 'free-placement';
+              const rawLeftGap = hasAdjacentLeft || useActualGapDistance
                 ? nearestLeftDistance
                 : (module.freeLeftGap ?? spaceInfo.gapConfig?.left ?? 1.5);
-              const rawRightGap = hasAdjacentRight
+              const rawRightGap = hasAdjacentRight || useActualGapDistance
                 ? nearestRightDistance
                 : (module.freeRightGap ?? spaceInfo.gapConfig?.right ?? 1.5);
               // 이격거리는 정수 mm로 반올림 (소수점 불필요)
@@ -5885,8 +5885,9 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               // 1) 서라운드 모드에서 벽 인접 가구의 이격은 프레임 두께와 겹침 → 숨김
               // 2) 이격거리 ≤ 2mm 는 기본 최소간격이므로 숨김 (노서라운드 포함)
               const isSurround = spaceInfo.surroundType !== 'no-surround';
-              const suppressLeftGap = leftGapMm <= 2 || (isSurround && !hasAdjacentLeft && leftGapMm > 0 && leftGapMm <= (frameSize?.left ?? 0) + 2);
-              const suppressRightGap = rightGapMm <= 2 || (isSurround && !hasAdjacentRight && rightGapMm > 0 && rightGapMm <= (frameSize?.right ?? 0) + 2);
+              const hideFreePlacementInlineGap = useActualGapDistance;
+              const suppressLeftGap = hideFreePlacementInlineGap || leftGapMm <= 2 || (isSurround && !hasAdjacentLeft && leftGapMm > 0 && leftGapMm <= (frameSize?.left ?? 0) + 2);
+              const suppressRightGap = hideFreePlacementInlineGap || rightGapMm <= 2 || (isSurround && !hasAdjacentRight && rightGapMm > 0 && rightGapMm <= (frameSize?.right ?? 0) + 2);
               // 좌측 갭: 가구 왼쪽 ~ (왼쪽 인접 가구 또는 구간 경계)
               const gapLeftX = leftX - mmToThreeUnits(leftGapMm);
               // 우측 갭: (오른쪽 인접 가구 또는 구간 경계) ~ 가구 오른쪽

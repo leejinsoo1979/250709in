@@ -33,6 +33,7 @@ import { isSurroundPanelId } from '@/data/modules/surroundPanels';
 // 키보드 이동 단위 (mm)
 const KEYBOARD_STEP_MM = 1;
 const KEYBOARD_SHIFT_STEP_MM = 10;
+const TINY_FURNITURE_GAP_MM = 2;
 
 /** bufferAttribute가 변해도 실시간 갱신되는 라인 컴포넌트 */
 const DynamicLine: React.FC<{ points: number[]; color: string }> = ({ points, color }) => {
@@ -184,7 +185,17 @@ const FreePlacementDropZone: React.FC = () => {
     const totalAvailable = endX - startX;
     if (freeModules.length === 0) return totalAvailable;
 
-    const bounds = sortedBoundsCache;
+    const collapsedBounds = sortedBoundsCache.reduce<Array<{ left: number; right: number }>>((acc, b) => {
+      const width = Math.round(b.right - b.left);
+      const last = acc[acc.length - 1];
+      if (last && b.left - last.right <= TINY_FURNITURE_GAP_MM) {
+        last.right += width;
+      } else {
+        acc.push({ left: b.left, right: b.left + width });
+      }
+      return acc;
+    }, []);
+    const bounds = collapsedBounds;
     let maxGap = 0;
     // 왼쪽 벽 ~ 첫 가구
     if (bounds[0].left > startX) maxGap = Math.max(maxGap, bounds[0].left - startX);
@@ -552,6 +563,30 @@ const FreePlacementDropZone: React.FC = () => {
 
     clampedX = clampToSpaceBoundsX(clampedX, widthMm, spaceInfo);
 
+    // 구간 경계 스냅/마우스 좌표로 1~2mm가 남으면 가구끼리 완전히 맞닿게 보정
+    const sealTinyFurnitureGap = (centerX: number) => {
+      const left = centerX - halfWidth;
+      const right = centerX + halfWidth;
+      for (const b of bounds) {
+        const canCoexist =
+          (category === 'upper' && b.category === 'lower') ||
+          (category === 'lower' && b.category === 'upper');
+        if (canCoexist) continue;
+
+        const leftGap = left - b.right;
+        if (leftGap > 0 && leftGap <= TINY_FURNITURE_GAP_MM) {
+          return b.right + halfWidth;
+        }
+
+        const rightGap = b.left - right;
+        if (rightGap > 0 && rightGap <= TINY_FURNITURE_GAP_MM) {
+          return b.left - halfWidth;
+        }
+      }
+      return centerX;
+    };
+    clampedX = clampToSpaceBoundsX(sealTinyFurnitureGap(clampedX), widthMm, spaceInfo);
+
     // 충돌 시 가장 가까운 빈 공간으로 밀어내기
     const newBounds: FurnitureBoundsX = {
       left: clampedX - halfWidth,
@@ -918,7 +953,7 @@ const FreePlacementDropZone: React.FC = () => {
         g.push({
           startX,
           endX: localBounds[0].left,
-          width: Math.floor(localBounds[0].left - startX),
+          width: Math.round(localBounds[0].left - startX),
           centerX: ((startX + localBounds[0].left) / 2) * 0.01,
           centerY: gapLabelY,
           adjacentModuleId: localBounds[0].id,
@@ -943,7 +978,7 @@ const FreePlacementDropZone: React.FC = () => {
           g.push({
             startX: gapStart,
             endX: gapEnd,
-            width: Math.floor(exactGap),
+            width: Math.round(exactGap),
             centerX: ((gapStart + gapEnd) / 2) * 0.01,
             centerY: gapLabelY,
             adjacentModuleId: localBounds[i + 1].id,
@@ -961,7 +996,7 @@ const FreePlacementDropZone: React.FC = () => {
         const totalInner = endX - startX;
         const moduleSum = localBounds.reduce((s, b) => s + (b.right - b.left), 0);
         const gapSum = g.reduce((s, gi) => s + (gi.endX - gi.startX), 0);
-        const exactRightGap = Math.max(0, Math.floor(totalInner - moduleSum - gapSum));
+        const exactRightGap = Math.max(0, Math.round(totalInner - moduleSum - gapSum));
         g.push({
           startX: lastBound.right,
           endX,
@@ -1070,7 +1105,7 @@ const FreePlacementDropZone: React.FC = () => {
         gaps.push({
           startX,
           endX: bounds[0].left,
-          width: Math.floor(bounds[0].left - startX),
+          width: Math.round(bounds[0].left - startX),
           centerX: ((startX + bounds[0].left) / 2) * 0.01,
           centerY: gapLabelY,
           adjacentModuleId: bounds[0].id,
@@ -1098,7 +1133,7 @@ const FreePlacementDropZone: React.FC = () => {
         gaps.push({
           startX: gapStart,
           endX: gapEnd,
-          width: Math.floor(exactGap),
+          width: Math.round(exactGap),
           centerX: ((gapStart + gapEnd) / 2) * 0.01,
           centerY: gapLabelY,
           adjacentModuleId: bounds[i + 1].id,
@@ -1122,7 +1157,7 @@ const FreePlacementDropZone: React.FC = () => {
           gaps.push({
             startX: lastBound.right,
             endX: lockStartX,
-            width: Math.floor(extraGap),
+            width: Math.round(extraGap),
             centerX: ((lastBound.right + lockStartX) / 2) * 0.01,
             centerY: gapLabelY,
             adjacentModuleId: lastBound.id,
@@ -1150,7 +1185,7 @@ const FreePlacementDropZone: React.FC = () => {
         const totalInner = endX - startX;
         const moduleSum = bounds.reduce((s, b) => s + (b.right - b.left), 0);
         const gapSum = gaps.reduce((s, g) => s + (g.endX - g.startX), 0);
-        const exactRightGap = Math.max(0, Math.floor(totalInner - moduleSum - gapSum));
+        const exactRightGap = Math.max(0, Math.round(totalInner - moduleSum - gapSum));
         gaps.push({
           startX: lastBound.right,
           endX,
@@ -1346,6 +1381,30 @@ const FreePlacementDropZone: React.FC = () => {
     }
 
     clampedX = clampToSpaceBoundsX(clampedX, widthMm, spaceInfo);
+
+    const movingCategory = getModuleCategory(movingModule);
+    const sealTinyFurnitureGap = (centerX: number) => {
+      const left = centerX - halfWidth;
+      const right = centerX + halfWidth;
+      for (const b of bounds) {
+        const canCoexist =
+          (movingCategory === 'upper' && b.category === 'lower') ||
+          (movingCategory === 'lower' && b.category === 'upper');
+        if (canCoexist) continue;
+
+        const leftGap = left - b.right;
+        if (leftGap > 0 && leftGap <= TINY_FURNITURE_GAP_MM) {
+          return b.right + halfWidth;
+        }
+
+        const rightGap = b.left - right;
+        if (rightGap > 0 && rightGap <= TINY_FURNITURE_GAP_MM) {
+          return b.left - halfWidth;
+        }
+      }
+      return centerX;
+    };
+    clampedX = clampToSpaceBoundsX(sealTinyFurnitureGap(clampedX), widthMm, spaceInfo);
 
     // 충돌 체크 (자기 자신 제외) — 스냅 여부와 관계없이 항상 수행
     const newBounds: FurnitureBoundsX = {
@@ -1585,7 +1644,9 @@ const FreePlacementDropZone: React.FC = () => {
       }
 
       // 이동할 가구: movingModuleId > 편집 중인 자유배치 가구 > 단순 선택된 자유배치 가구
-      const selectedId = useFurnitureStore.getState().selectedFurnitureId;
+      const uiSelectedId = useUIStore.getState().selectedFurnitureId;
+      const storeSelectedId = useFurnitureStore.getState().selectedFurnitureId;
+      const selectedId = uiSelectedId || storeSelectedId;
       const selectedMod = selectedId ? placedModules.find(m => m.id === selectedId && m.isFreePlacement) : null;
       const targetId = movingModuleId || editingFreeModuleId || (selectedMod ? selectedId : null);
       if (!targetId) return;
