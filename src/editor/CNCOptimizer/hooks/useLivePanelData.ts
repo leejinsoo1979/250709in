@@ -844,12 +844,15 @@ export function useLivePanelData() {
 
             // 2. 앞판 (상판내림 전용)
             // 상판내림 모듈인 경우 앞판 추가 (이 구분을 위해 refMod.id 패턴 확인)
-            const isTopDownForStone = refMod.id.includes('lower-top-down-') || refMod.id.includes('dual-lower-top-down-');
+            const refModuleId = refMod.moduleId || refMod.id;
+            const isTopDownForStone = refModuleId.includes('lower-top-down-') || refModuleId.includes('dual-lower-top-down-');
             if (isTopDownForStone) {
-              const effectiveDoorTopGap = (spaceInfo.doorTopGap === undefined || spaceInfo.doorTopGap === 0) ? -80 : spaceInfo.doorTopGap;
-              const absDoorTopGapForStone = Math.abs(effectiveDoorTopGap);
-              const doorGapForStone = 20; 
-              const frontPlateHeight = (absDoorTopGapForStone - doorGapForStone) + (refMod.stoneTopThickness || 12);
+              const refModuleData = getModuleById(refModuleId);
+              const refHeight = refMod.freeHeight || refMod.customHeight || refModuleData?.dimensions.height || 785;
+              const rawTopGap = (refMod as any).doorTopGap ?? spaceInfo.doorTopGap;
+              const effectiveDoorTopGap = (rawTopGap === undefined || rawTopGap === 0) ? -80 : rawTopGap;
+              const topFrontMm = 705 + (effectiveDoorTopGap - (-80));
+              const frontPlateHeight = Math.max(0, refHeight - topFrontMm - 20) + (refMod.stoneTopThickness || 12);
               allPanels.push({
                 id: `merged_stone_front_${gIdx}`,
                 name: `${group.label} 인조대리석 앞판`,

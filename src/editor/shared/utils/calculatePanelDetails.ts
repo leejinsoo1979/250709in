@@ -142,6 +142,12 @@ export const calculatePanelDetails = (
 
   const originalHeight = moduleData.dimensions.height;
   const height = freeHeight || originalHeight;
+  const topDownStretcherHeightMm = Math.max(0, 55 + (height - 785));
+  const getTopDownStoneFrontHeightMm = (stoneThicknessMm: number) => {
+    const effectiveDoorTopGap = (doorTopGap === undefined || doorTopGap === 0) ? -80 : doorTopGap;
+    const topFrontMm = 705 + (effectiveDoorTopGap - (-80));
+    return Math.max(0, height - topFrontMm - 20) + stoneThicknessMm;
+  };
   const heightRatio = freeHeight && originalHeight > 0 ? freeHeight / originalHeight : 1;
   // 내경 = 전체폭 - 실제 측판두께×2 (18.5mm면 18.5×2, 18mm면 18×2)
   const innerWidth = customWidth - (basicThickness * 2);
@@ -1929,7 +1935,7 @@ export const calculatePanelDetails = (
     });
   }
 
-  // === 상판내림 전대 (topStretcher: 높이 55mm, 깊이 40mm) — 3D BaseFurnitureShell L530 ===
+  // === 상판내림 전대 (topStretcher: 기본 55mm, 가구 높이 증감분 연동) — 3D BaseFurnitureShell ===
   if (moduleId.includes('lower-top-down-')) {
     // 10mm 상판: 외경 전대 (가구 전체 폭, 측판 앞면에 부착)
     // 20/30mm: 내경 전대 (측판 사이 끼움)
@@ -1937,7 +1943,7 @@ export const calculatePanelDetails = (
     panels.frame.push({
       name: '전대',
       width: isOuterStretcher ? customWidth : (innerWidth - apronGap),
-      height: 55,        // topStretcher.heightMm
+      height: topDownStretcherHeightMm,
       thickness: basicThickness,
       material: 'PB',
     });
@@ -2001,14 +2007,9 @@ export const calculatePanelDetails = (
       material: '인조대리석',
     });
     // 상판내림 전용: 수직 앞판 (45도 연귀 접합)
-    // 높이: 가시 영역(|doorTopGap| - 20mm) + 45도 연귀 겹침(stoneTopThickness)
-    // 10mm→70, 20mm→80, 30mm→90
+    // 높이: 상단 마이다 상단과 앞판 하단 사이 20mm 유지 + 45도 연귀 겹침
     if (isTopDownForStone) {
-      // doorTopGap: 0이면 이전 버그값 → 상판내림 기본값 -80 사용
-      const effectiveDoorTopGap = (doorTopGap === undefined || doorTopGap === 0) ? -80 : doorTopGap;
-      const absDoorTopGapForStone = Math.abs(effectiveDoorTopGap);
-      const doorGapForStone = 20; // 도어 상단과 앞판 하단 사이 갭
-      const frontPlateHeight = (absDoorTopGapForStone - doorGapForStone) + stoneTopThickness;
+      const frontPlateHeight = getTopDownStoneFrontHeightMm(stoneTopThickness);
       result.push({
         name: '인조대리석 앞판',
         width: customWidth + (stoneTopLeftOffset || 0) + (stoneTopRightOffset || 0),

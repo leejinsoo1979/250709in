@@ -197,6 +197,15 @@ const JollyCutVerticalPlate: React.FC<{
   );
 });
 
+const getTopDownStoneFrontVisibleHeightMm = (
+  moduleHeightMm: number,
+  doorTopGap?: number
+) => {
+  const effectiveDoorTopGap = (doorTopGap === undefined || doorTopGap === 0) ? -80 : doorTopGap;
+  const topFrontMm = 705 + (effectiveDoorTopGap - (-80));
+  return Math.max(0, moduleHeightMm - topFrontMm - 20);
+};
+
 /**
  * 인덕션장 레그라박스 서랍 + 마이다 (인출 애니메이션 포함)
  * - 바닥판 + 뒷판 + 레그라 측판(GLB) + 마이다 2장
@@ -823,6 +832,10 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
     adjustedWidth,
     backPanelThicknessMm: backPanelThickness
   });
+  const isTopDownModule = moduleData.id.includes('lower-top-down-') || moduleData.id.includes('dual-lower-top-down-');
+  const topDownStretcherHeightMm = isTopDownModule
+    ? Math.max(0, 55 + ((moduleData.dimensions.height || 785) - 785))
+    : 55;
 
   // 띄워서 배치 여부 확인 (간접조명용)
   const placementType = spaceInfo?.baseConfig?.placementType;
@@ -1141,7 +1154,7 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
                 if (stoneThickness === 10) return baseReduction - 10.5; // 10mm: 10.5mm 앞으로 확장 (기존 18mm 확장에서 7.5mm 축소)
                 return baseReduction;
               })()}
-              topStretcher={moduleData.id.includes('lower-top-down-') ? { heightMm: 55, depthMm: 40 } : undefined}
+              topStretcher={isTopDownModule ? { heightMm: topDownStretcherHeightMm, depthMm: 40 } : undefined}
               stoneTopThickness={stoneThickness}
               {...(moduleData.id.includes('lower-door-lift-touch-') ? {
                 // 도어올림 터치: 따내기 없음
@@ -1312,6 +1325,9 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
         const isDoorLift2Tier = moduleData.id.includes('lower-door-lift-2tier');
         const isTopDown3Tier = moduleData.id.includes('lower-top-down-3tier');
         const isTopDown2Tier = moduleData.id.includes('lower-top-down-2tier');
+        const effectiveDrawerTopGap = (isTopDown2Tier || isTopDown3Tier) && (doorTopGap === undefined || doorTopGap === 0)
+          ? -80
+          : doorTopGap;
         // 기존 서랍장: 상단 따내기 60mm 있음. 2단 fromBottom=330(균등), 3단 fromBottom=295+510
         // 도어올림 3단: fromBottom=315, 545 (1단=315, 따내기65, 2단=165, 따내기65, 3단=175)
         // 도어올림 2단: fromBottom=355
@@ -1347,7 +1363,7 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
               hideTopNotch={isDoorLift2Tier || isDoorLift3Tier || isTopDown2Tier || isTopDown3Tier}
               maidaHeightsMm={isDoorLift2Tier ? [400, 400] : isDoorLift3Tier ? [360, 210, 210] : undefined}
               sideHeightOverrides={isTopDown2Tier ? { all: 240 } : isTopDown3Tier ? { first: 180, rest: 130 } : undefined}
-              doorTopGap={doorTopGap}
+              doorTopGap={effectiveDrawerTopGap}
               doorBottomGap={doorBottomGap}
               defaultDoorTopGap={isTopDown2Tier || isTopDown3Tier ? -80 : isDoorLift2Tier || isDoorLift3Tier ? 30 : -20}
               defaultDoorBottomGap={5}
@@ -1630,9 +1646,7 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
       {/* 상판내림: 졸리컷 L자 (수평판 + 수직 앞판) — 탑뷰에서는 숨김 */}
       {showFurniture && stoneTopData && stoneTopMaterial && isTopDown && !(viewMode === '2D' && view2DDirection === 'top') && (() => {
         const t = stoneTopData.thickness;
-        const absDoorTopGap = Math.abs(doorTopGap ?? -80);
-        const doorGapMm = 20;
-        const frontPlateH = (absDoorTopGap - doorGapMm) * 0.01;
+        const frontPlateH = getTopDownStoneFrontVisibleHeightMm(adjustedHeight / 0.01, doorTopGap) * 0.01;
         const cabinetTopY = cabinetYPosition + adjustedHeight / 2;
         // 수평판: 중심Y = 캐비넷 상단 + 두께/2
         const hPosY = cabinetTopY + t / 2;

@@ -119,6 +119,20 @@ describe('panelDetails regression baselines', () => {
     expect(findPanel(panels, '인조대리석 앞판').height).toBe(90)
   })
 
+  it('상판내림 높이 변경 시 마이다 상단과 인조대리석 앞판 하단 갭 20mm를 유지한다', () => {
+    const panels = calculatePanels('lower-top-down-2tier-500', 500, 650, {
+      hasDoor: true,
+      doorTopGap: -80,
+      doorBottomGap: 25,
+      backPanelThicknessMm: 9,
+      freeHeight: 815,
+      stoneTopThickness: 30
+    })
+
+    expect(findPanel(panels, '전대').height).toBe(85)
+    expect(findPanel(panels, '인조대리석 앞판').height).toBe(120)
+  })
+
   it('하부 3단 서랍장 높이 축소 시 서랍 패널 높이는 가구 높이 안에서 재계산된다', () => {
     const panels = calculatePanels('lower-drawer-3tier-500', 500, 650, {
       backPanelThicknessMm: 9,

@@ -1058,7 +1058,8 @@ const PlacedModulePropertiesPanel: React.FC = () => {
           ? currentPlacedModule.cabinetBodyHeight
           : (currentPlacedModule.freeHeight || moduleData.dimensions.height);
         // 상부몰딩/걸레받이 OFF로 흡수된 높이 더해서 표시 (실제 가구 높이)
-        const absorbedTopForH = currentPlacedModule.hasTopFrame === false
+        const shouldAbsorbTopForBodyH = moduleData.category === 'full';
+        const absorbedTopForH = shouldAbsorbTopForBodyH && currentPlacedModule.hasTopFrame === false
           ? ((currentPlacedModule.topFrameThickness ?? spaceInfo.frameSize?.top ?? 30) - (currentPlacedModule.topFrameGap ?? 0))
           : 0;
         const absorbedBaseForH = currentPlacedModule.hasBase === false
@@ -1145,7 +1146,8 @@ const PlacedModulePropertiesPanel: React.FC = () => {
             // moduleData는 zone 반영된 getModuleById로 조회되므로 dimensions.height에 단내림이 반영됨.
             // 섹션별 높이 합은 팝업의 몸통치수 H와 같아야 한다.
             const baseBodyHeightForSections = currentPlacedModule.freeHeight || moduleData.dimensions.height;
-            const absorbedTopForSections = currentPlacedModule.hasTopFrame === false
+            const shouldAbsorbTopForSections = moduleData.category === 'full';
+            const absorbedTopForSections = shouldAbsorbTopForSections && currentPlacedModule.hasTopFrame === false
               ? ((currentPlacedModule.topFrameThickness ?? spaceInfo.frameSize?.top ?? 30) - (currentPlacedModule.topFrameGap ?? 0))
               : 0;
             const absorbedBaseForSections = currentPlacedModule.hasBase === false
@@ -3040,7 +3042,8 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                         const displayVal = parseInt(freeHeightInput, 10);
                         if (!isNaN(displayVal) && displayVal >= 100 && displayVal <= 3000 && currentPlacedModule) {
                           // 표시값(늘어난 값) → freeHeight(원본값): 흡수분 차감
-                          const absT = currentPlacedModule.hasTopFrame === false
+                          const shouldAbsorbTopForBodyH = moduleData.category === 'full';
+                          const absT = shouldAbsorbTopForBodyH && currentPlacedModule.hasTopFrame === false
                             ? ((currentPlacedModule.topFrameThickness ?? spaceInfo.frameSize?.top ?? 30) - (currentPlacedModule.topFrameGap ?? 0))
                             : 0;
                           const absB = currentPlacedModule.hasBase === false
@@ -3107,7 +3110,8 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                           setFreeHeightInput(nextDisplay.toString());
                           if (currentPlacedModule) {
                             // 표시값 → freeHeight 변환 (흡수분 차감)
-                            const absT = currentPlacedModule.hasTopFrame === false
+                            const shouldAbsorbTopForBodyH = moduleData.category === 'full';
+                            const absT = shouldAbsorbTopForBodyH && currentPlacedModule.hasTopFrame === false
                               ? ((currentPlacedModule.topFrameThickness ?? spaceInfo.frameSize?.top ?? 30) - (currentPlacedModule.topFrameGap ?? 0))
                               : 0;
                             const absB = currentPlacedModule.hasBase === false
@@ -3291,7 +3295,8 @@ const PlacedModulePropertiesPanel: React.FC = () => {
             // 도어 높이: 실제 적용된 몸통 높이 기준 (EP와 동일)
             // 상부몰딩/걸레받이 토글 OFF 시 가구가 흡수해서 몸통이 늘어남 → 도어 H도 늘어난 몸통 + 갭
             const baseBodyH = adjustedFreeHeight || currentPlacedModule.freeHeight || currentPlacedModule.customHeight || moduleData.dimensions.height || 0;
-            const absorbedTopH = currentPlacedModule.hasTopFrame === false
+            const shouldAbsorbTopForDoorH = moduleData.category === 'full';
+            const absorbedTopH = shouldAbsorbTopForDoorH && currentPlacedModule.hasTopFrame === false
               ? ((currentPlacedModule.topFrameThickness ?? spaceInfo.frameSize?.top ?? 30) - (currentPlacedModule.topFrameGap ?? 0))
               : 0;
             const absorbedBaseH = currentPlacedModule.hasBase === false
@@ -3448,7 +3453,15 @@ const PlacedModulePropertiesPanel: React.FC = () => {
 
           {/* 경첩 방향 선택 (도어치수 바로 아래로 이동) — 도어 + 싱글 가구 + 상세보기 아닐 때 */}
           {/* 키큰장 찬넬(insert-frame)은 도어 없는 채움재 → 경첩 방향도 숨김 */}
-          {!showDetails && hasDoor && isSingleFurniture && !(typeof currentPlacedModule?.moduleId === 'string' && currentPlacedModule.moduleId.includes('insert-frame')) && (
+          {/* 서랍 모듈(drawer, top-down, door-lift-touch)은 앞판이 서랍 슬라이드라 경첩 없음 */}
+          {!showDetails && hasDoor && isSingleFurniture
+            && !(typeof currentPlacedModule?.moduleId === 'string' && currentPlacedModule.moduleId.includes('insert-frame'))
+            && !(typeof currentPlacedModule?.moduleId === 'string' && (
+              currentPlacedModule.moduleId.includes('drawer')
+              || currentPlacedModule.moduleId.includes('top-down')
+              || currentPlacedModule.moduleId.includes('door-lift-touch')
+            ))
+            && (
             <div className={styles.propertySection}>
               <div className={styles.hingeSubSection}>
                 <h6 className={styles.subSectionTitle}>{t('furniture.hingeDirection')}</h6>
@@ -3503,7 +3516,8 @@ const PlacedModulePropertiesPanel: React.FC = () => {
 
             // 표준 가구의 섹션 높이: 마지막(상부) 섹션이 프레임 토글 흡수분을 먹되,
             // 상/하부 섹션 합은 팝업의 몸통치수 H와 같아야 한다.
-            const absorbedTopForSections = currentPlacedModule.hasTopFrame === false
+            const shouldAbsorbTopForSections = moduleData?.category === 'full';
+            const absorbedTopForSections = shouldAbsorbTopForSections && currentPlacedModule.hasTopFrame === false
               ? ((currentPlacedModule.topFrameThickness ?? spaceInfo.frameSize?.top ?? 30) - (currentPlacedModule.topFrameGap ?? 0))
               : 0;
             const absorbedBaseForSections = currentPlacedModule.hasBase === false
@@ -4205,7 +4219,8 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                 const topFrameDelta = targetMod.topFrameThickness !== undefined
                   ? topFrameMm - globalTopFrame
                   : 0;
-                const absorbedTopHeight = targetMod.hasTopFrame === false
+                const shouldAbsorbTopForHeight = moduleData?.category === 'full';
+                const absorbedTopHeight = shouldAbsorbTopForHeight && targetMod.hasTopFrame === false
                   ? topFrameMm - (targetMod.topFrameGap ?? 0)
                   : 0;
                 const absorbedBaseHeight = targetMod.hasBase === false
@@ -6037,7 +6052,8 @@ const PlacedModulePropertiesPanel: React.FC = () => {
             const topFrameDelta = currentPlacedModule.topFrameThickness !== undefined
               ? topFrameMm - globalTopFrame
               : 0;
-            const absorbedTopHeight = currentPlacedModule.hasTopFrame === false
+            const shouldAbsorbTopForHeight = moduleData?.category === 'full';
+            const absorbedTopHeight = shouldAbsorbTopForHeight && currentPlacedModule.hasTopFrame === false
               ? topFrameMm - (currentPlacedModule.topFrameGap ?? 0)
               : 0;
             const absorbedBaseHeight = currentPlacedModule.hasBase === false

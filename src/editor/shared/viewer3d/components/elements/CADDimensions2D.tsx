@@ -184,12 +184,13 @@ const computeFurnitureHeightMm = (
     heightMm = mod.freeHeight;
   } else {
     // 슬롯 기반
+    const manualHeightMm = mod.freeHeight || mod.customHeight;
     // cabinetBodyHeight가 있으면 2단서랍장 몸통 높이 오버라이드 (FurnitureItem.tsx와 동기화)
     if (mod.cabinetBodyHeight && (mod.moduleId.includes('lower-drawer-2tier') || mod.moduleId.includes('dual-lower-drawer-2tier'))) {
       heightMm = mod.cabinetBodyHeight;
-    } else if (category === 'upper' && mod.customHeight) {
-      // 상부장 미드웨이 편집: customHeight 우선 (상단 고정, 하단만 확장)
-      heightMm = mod.customHeight;
+    } else if (manualHeightMm) {
+      // 표준 모듈 수동 높이 변경: FurnitureItem에서 freeHeight로 moduleData.height를 오버라이드하는 것과 동일 기준
+      heightMm = manualHeightMm;
     } else {
       heightMm = moduleData?.dimensions.height || 0;
     }
