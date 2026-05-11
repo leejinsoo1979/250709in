@@ -152,6 +152,7 @@ const computeFurnitureHeightMm = (
 ): number => {
   const category = getModuleCategory(mod);
   const isTall = category === 'full';
+  const isGlassCabinet = mod.moduleId?.includes('glass-cabinet');
   const isStandFloat = spaceInfo.baseConfig?.type === 'stand' && spaceInfo.baseConfig?.placementType === 'float';
   const floatHeightMm = isStandFloat ? (spaceInfo.baseConfig?.floatHeight || 0) : 0;
   const isStandType = spaceInfo.baseConfig?.type === 'stand';
@@ -161,7 +162,7 @@ const computeFurnitureHeightMm = (
   if (mod.isFreePlacement && isTall) {
     // 자유배치 키큰장: freeHeight 우선, 없으면 internalSpace.height
     const baseFreeHeight = mod.freeHeight || internalSpace.height;
-    const maxFreeHeight = internalSpace.height - floatHeightMm;
+    const maxFreeHeight = isGlassCabinet ? baseFreeHeight : internalSpace.height - floatHeightMm;
     heightMm = Math.min(baseFreeHeight, maxFreeHeight);
     // 개별 상단몰딩 두께 변경 시 보정
     if (mod.topFrameThickness !== undefined) {
@@ -173,7 +174,14 @@ const computeFurnitureHeightMm = (
       const topGapMm = (mod as any).topFrameGap ?? 0;
       heightMm += (topFrameMm - topGapMm);
     }
-    if ((mod as any).hasBase === false) {
+    if (isGlassCabinet) {
+      const defaultGlassFloatMm = (moduleData as any)?.individualFloatHeight ?? 200;
+      const glassBottomSupportMm = (mod as any).hasBase === false
+        ? ((mod as any).individualFloatHeight ?? defaultGlassFloatMm)
+        : (mod.baseFrameHeight ?? (spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height ?? 60) : 0));
+      heightMm += defaultGlassFloatMm - glassBottomSupportMm;
+    }
+    if ((mod as any).hasBase === false && !isGlassCabinet) {
       const globalBaseMm = spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height ?? 60) : 0;
       const absorbedBase = mod.baseFrameHeight ?? globalBaseMm;
       const floatH = (mod as any).individualFloatHeight ?? 0;
@@ -209,6 +217,13 @@ const computeFurnitureHeightMm = (
         const topGapMm = (mod as any).topFrameGap ?? 0;
         heightMm += (topFrameMm - topGapMm);
       }
+      if (isGlassCabinet) {
+        const defaultGlassFloatMm = (moduleData as any)?.individualFloatHeight ?? 200;
+        const glassBottomSupportMm = (mod as any).hasBase === false
+          ? ((mod as any).individualFloatHeight ?? defaultGlassFloatMm)
+          : (mod.baseFrameHeight ?? (spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height ?? 60) : 0));
+        heightMm += defaultGlassFloatMm - glassBottomSupportMm;
+      }
       if (mod.baseFrameHeight !== undefined && !isStandType && isTall) {
         const globalBase = spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height ?? 65) : 0;
         heightMm -= (mod.baseFrameHeight - globalBase);
@@ -218,7 +233,7 @@ const computeFurnitureHeightMm = (
 
   // 바닥마감재 차감: 키큰장(full)만 (하부장/상부장은 고정 높이이므로 차감 불필요)
   const floorFinishH = (spaceInfo.hasFloorFinish && spaceInfo.floorFinish) ? spaceInfo.floorFinish.height : 0;
-  if (floorFinishH > 0 && isTall) {
+  if (floorFinishH > 0 && isTall && !isGlassCabinet) {
     heightMm -= floorFinishH;
   }
 

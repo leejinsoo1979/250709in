@@ -2575,8 +2575,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                 const frameW = innerWidth - sideW * 2;          // 측판 사이 폭
                 const frameH = mmToThreeUnits(TOP_REAR_FRAME_H_MM);
                 const frameThk = basicThickness;                 // 깊이 = 가구재 두께
-                // 측판 상단(코너) Y = drawerCenterY + sideH/2
-                // 프레임 윗면 = 측판 윗면 (코너에 끼움) → 프레임 중심 = 측판 상단 - frameH/2
+                // 서랍 모듈 상판은 서랍 영역 상단 기준으로 유지한다.
                 const sideTopY = drawerCenterY + sideH / 2;
                 const frameY = sideTopY - frameH / 2;
                 // Z: 측판 뒷면에 프레임 뒷면 맞춤

@@ -3893,7 +3893,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           // 바닥마감재 차감: 키큰장(full)만 (하부장/상부장은 고정 높이이므로 차감 불필요)
           const floorFinishForHeight = (spaceInfo.hasFloorFinish && spaceInfo.floorFinish)
             ? spaceInfo.floorFinish.height : 0;
-          if (floorFinishForHeight > 0 && leftCategoryResolved === 'full') {
+          const isLeftGlassCabinet = !!leftmostMod?.moduleId?.includes('glass-cabinet');
+          if (floorFinishForHeight > 0 && leftCategoryResolved === 'full' && !isLeftGlassCabinet) {
             furnitureH -= floorFinishForHeight;
           }
 
@@ -3906,7 +3907,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           const leftTopGapForDim = leftmostMod?.hasTopFrame === false
             ? Math.max(0, Math.round(leftmostMod?.topFrameGap ?? 0))
             : 0;
-          if (isFreePlacement && leftmostMod?.hasBase === false && leftmostMod?.hasTopFrame !== false && leftCategoryResolved === 'full') {
+          if (isFreePlacement && leftmostMod?.hasBase === false && leftmostMod?.hasTopFrame !== false && leftCategoryResolved === 'full' && !isLeftGlassCabinet) {
             const absorbedBase = leftmostMod.baseFrameHeight ?? globalBottomFrameH;
             const floatH = leftmostMod.individualFloatHeight ?? 0;
             furnitureH += (absorbedBase - floatH);
@@ -4697,7 +4698,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           // 바닥마감재 차감: 키큰장(full)만 (하부장/상부장은 고정 높이이므로 차감 불필요)
           const rFloorFinishForHeight = (spaceInfo.hasFloorFinish && spaceInfo.floorFinish)
             ? spaceInfo.floorFinish.height : 0;
-          if (rFloorFinishForHeight > 0 && rightCategoryResolved === 'full') {
+          const isRightGlassCabinet = !!rightmostMod?.moduleId?.includes('glass-cabinet');
+          if (rFloorFinishForHeight > 0 && rightCategoryResolved === 'full' && !isRightGlassCabinet) {
             rFurnitureH -= rFloorFinishForHeight;
           }
 
@@ -4709,7 +4711,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           const rTopGapForDim = rightmostMod?.hasTopFrame === false
             ? Math.max(0, Math.round(rightmostMod?.topFrameGap ?? 0))
             : 0;
-          if (isFreePlacement && rightmostMod?.hasBase === false && rightmostMod?.hasTopFrame !== false && rightCategoryResolved === 'full') {
+          if (isFreePlacement && rightmostMod?.hasBase === false && rightmostMod?.hasTopFrame !== false && rightCategoryResolved === 'full' && !isRightGlassCabinet) {
             const rAbsorbedBase = rightmostMod.baseFrameHeight ?? rGlobalBottomFrameH;
             const rFloatH = rightmostMod.individualFloatHeight ?? 0;
             rFurnitureH += (rAbsorbedBase - rFloatH);
@@ -6973,11 +6975,18 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                       ?? (viewMod.customConfig?.totalHeight || 2000)));
                 // 걸래받이 OFF (hasBase=false): 가구가 걸래받이 자리를 흡수 — moduleHeight 보정
                 // (FurnitureItem.tsx의 furnitureHeightMm 보정과 동일)
-                if (!isTopFrameOff && !viewMod.freeHeight && (viewMod as any).hasBase === false && category === 'full') {
+                if (!isTopFrameOff && !viewMod.freeHeight && (viewMod as any).hasBase === false && category === 'full' && !viewMod.moduleId?.includes('glass-cabinet')) {
                   const globalBase = spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height ?? 60) : 0;
                   const absorbedBase = (viewMod as any).baseFrameHeight ?? globalBase;
                   const floatH = (viewMod as any).individualFloatHeight ?? 0;
                   moduleHeight += (absorbedBase - floatH);
+                }
+                if (viewMod.moduleId?.includes('glass-cabinet') && category === 'full') {
+                  const defaultGlassFloat = (moduleData as any)?.individualFloatHeight ?? 200;
+                  const glassBottomSupport = (viewMod as any).hasBase === false
+                    ? ((viewMod as any).individualFloatHeight ?? defaultGlassFloat)
+                    : ((viewMod as any).baseFrameHeight ?? (spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height ?? 60) : 0));
+                  moduleHeight += defaultGlassFloat - glassBottomSupport;
                 }
                 const moduleTopY = category === 'upper'
                   ? cabinetAreaTopY
@@ -8163,11 +8172,18 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                       ?? (viewMod.customConfig?.totalHeight || 2000)));
                 // 걸래받이 OFF (hasBase=false): 가구가 걸래받이 자리를 흡수 — moduleHeight 보정
                 // (FurnitureItem.tsx의 furnitureHeightMm 보정과 동일)
-                if (!isTopFrameOff && !viewMod.freeHeight && (viewMod as any).hasBase === false && category === 'full') {
+                if (!isTopFrameOff && !viewMod.freeHeight && (viewMod as any).hasBase === false && category === 'full' && !viewMod.moduleId?.includes('glass-cabinet')) {
                   const globalBase = spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height ?? 60) : 0;
                   const absorbedBase = (viewMod as any).baseFrameHeight ?? globalBase;
                   const floatH = (viewMod as any).individualFloatHeight ?? 0;
                   moduleHeight += (absorbedBase - floatH);
+                }
+                if (viewMod.moduleId?.includes('glass-cabinet') && category === 'full') {
+                  const defaultGlassFloat = (moduleData as any)?.individualFloatHeight ?? 200;
+                  const glassBottomSupport = (viewMod as any).hasBase === false
+                    ? ((viewMod as any).individualFloatHeight ?? defaultGlassFloat)
+                    : ((viewMod as any).baseFrameHeight ?? (spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height ?? 60) : 0));
+                  moduleHeight += defaultGlassFloat - glassBottomSupport;
                 }
                 const moduleTopY = category === 'upper'
                   ? cabinetAreaTopY

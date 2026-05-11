@@ -1294,11 +1294,15 @@ const PlacedModulePropertiesPanel: React.FC = () => {
         const absorbedTopForH = shouldAbsorbTopForBodyH && currentPlacedModule.hasTopFrame === false
           ? ((currentPlacedModule.topFrameThickness ?? spaceInfo.frameSize?.top ?? 30) - (currentPlacedModule.topFrameGap ?? 0))
           : 0;
-        const absorbedBaseForH = shouldAbsorbBaseForBodyH && currentPlacedModule.hasBase === false
+        const absorbedBaseForH = shouldAbsorbBaseForBodyH && currentPlacedModule.hasBase === false && !currentPlacedModule.moduleId?.includes('glass-cabinet')
           ? (((currentPlacedModule.baseFrameHeight ?? (spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height ?? 60) : 0)))
             - (currentPlacedModule.individualFloatHeight ?? 0))
           : 0;
-        const effectiveHeight = baseHeight + absorbedTopForH + absorbedBaseForH;
+        const defaultGlassFloatForH = (moduleData as any)?.individualFloatHeight ?? 200;
+        const absorbedGlassFloatForH = currentPlacedModule.moduleId?.includes('glass-cabinet')
+          ? Math.max(0, defaultGlassFloatForH - (currentPlacedModule.individualFloatHeight ?? defaultGlassFloatForH))
+          : 0;
+        const effectiveHeight = baseHeight + absorbedTopForH + absorbedBaseForH + absorbedGlassFloatForH;
         setFreeHeightInput(Math.round(effectiveHeight).toString());
         setFreeDepthInput(Math.round(currentPlacedModule.freeDepth || initialDepth).toString());
 
@@ -1384,7 +1388,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
             const absorbedTopForSections = shouldAbsorbTopForSections && currentPlacedModule.hasTopFrame === false
               ? ((currentPlacedModule.topFrameThickness ?? spaceInfo.frameSize?.top ?? 30) - (currentPlacedModule.topFrameGap ?? 0))
               : 0;
-            const absorbedBaseForSections = shouldAbsorbBaseForSections && currentPlacedModule.hasBase === false
+            const absorbedBaseForSections = shouldAbsorbBaseForSections && currentPlacedModule.hasBase === false && !currentPlacedModule.moduleId?.includes('glass-cabinet')
               ? (((currentPlacedModule.baseFrameHeight ?? (spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height ?? 60) : 0)))
                 - (currentPlacedModule.individualFloatHeight ?? 0))
               : 0;
@@ -3287,8 +3291,10 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                           // 유리장: 띄움배치 (천장 - 상부몰딩 - 띄움높이)
                           if (currentPlacedModule?.moduleId?.includes('glass-cabinet')) {
                             const topFrame = currentPlacedModule.topFrameThickness ?? spaceInfo.frameSize?.top ?? 30;
+                            const topGap = currentPlacedModule.topFrameGap ?? 0;
+                            const topOffset = currentPlacedModule.hasTopFrame === false ? topGap : topFrame;
                             const floatH = currentPlacedModule.individualFloatHeight ?? 200;
-                            return Math.round(spaceInfo.height - topFrame - floatH);
+                            return Math.round(spaceInfo.height - topOffset - floatH);
                           }
                           return 3000;
                         })();
@@ -3299,11 +3305,15 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                             ? ((currentPlacedModule.topFrameThickness ?? spaceInfo.frameSize?.top ?? 30) - (currentPlacedModule.topFrameGap ?? 0))
                             : 0;
                           const shouldAbsorbBaseForBodyH = moduleData.category === 'full' || moduleData.category === 'lower';
-                          const absB = shouldAbsorbBaseForBodyH && currentPlacedModule.hasBase === false
+                          const absB = shouldAbsorbBaseForBodyH && currentPlacedModule.hasBase === false && !currentPlacedModule.moduleId?.includes('glass-cabinet')
                             ? (((currentPlacedModule.baseFrameHeight ?? (spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height ?? 60) : 0)))
                               - (currentPlacedModule.individualFloatHeight ?? 0))
                             : 0;
-                          const val = displayVal - absT - absB;
+                          const defaultGlassFloatForInput = (moduleData as any)?.individualFloatHeight ?? 200;
+                          const absGlassFloat = currentPlacedModule.moduleId?.includes('glass-cabinet')
+                            ? Math.max(0, defaultGlassFloatForInput - (currentPlacedModule.individualFloatHeight ?? defaultGlassFloatForInput))
+                            : 0;
+                          const val = displayVal - absT - absB - absGlassFloat;
                           const updates: any = moduleData.category === 'upper'
                             ? { customHeight: val, freeHeight: undefined }
                             : { freeHeight: val };
@@ -3366,8 +3376,10 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                           // 유리장: 띄움배치 (천장 - 상부몰딩 - 띄움높이)
                           if (currentPlacedModule?.moduleId?.includes('glass-cabinet')) {
                             const topFrame = currentPlacedModule.topFrameThickness ?? spaceInfo.frameSize?.top ?? 30;
+                            const topGap = currentPlacedModule.topFrameGap ?? 0;
+                            const topOffset = currentPlacedModule.hasTopFrame === false ? topGap : topFrame;
                             const floatH = currentPlacedModule.individualFloatHeight ?? 200;
-                            return Math.round(spaceInfo.height - topFrame - floatH);
+                            return Math.round(spaceInfo.height - topOffset - floatH);
                           }
                           return 3000;
                         })();
@@ -3377,11 +3389,15 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                               ? ((currentPlacedModule.topFrameThickness ?? spaceInfo.frameSize?.top ?? 30) - (currentPlacedModule.topFrameGap ?? 0))
                               : 0;
                             const shouldAbsorbBaseForBodyH = moduleData.category === 'full' || moduleData.category === 'lower';
-                            const absB = shouldAbsorbBaseForBodyH && currentPlacedModule.hasBase === false
+                            const absB = shouldAbsorbBaseForBodyH && currentPlacedModule.hasBase === false && !currentPlacedModule.moduleId?.includes('glass-cabinet')
                               ? (((currentPlacedModule.baseFrameHeight ?? (spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height ?? 60) : 0)))
                                 - (currentPlacedModule.individualFloatHeight ?? 0))
                               : 0;
-                            const val = displayVal - absT - absB;
+                            const defaultGlassFloatForEnter = (moduleData as any)?.individualFloatHeight ?? 200;
+                            const absGlassFloat = currentPlacedModule.moduleId?.includes('glass-cabinet')
+                              ? Math.max(0, defaultGlassFloatForEnter - (currentPlacedModule.individualFloatHeight ?? defaultGlassFloatForEnter))
+                              : 0;
+                            const val = displayVal - absT - absB - absGlassFloat;
                             const updates: any = moduleData.category === 'upper'
                               ? { customHeight: val, freeHeight: undefined }
                               : { freeHeight: val };
@@ -3405,8 +3421,10 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                           // 유리장: 띄움배치 (천장 - 상부몰딩 - 띄움높이)
                           if (currentPlacedModule?.moduleId?.includes('glass-cabinet')) {
                             const topFrame = currentPlacedModule.topFrameThickness ?? spaceInfo.frameSize?.top ?? 30;
+                            const topGap = currentPlacedModule.topFrameGap ?? 0;
+                            const topOffset = currentPlacedModule.hasTopFrame === false ? topGap : topFrame;
                             const floatH = currentPlacedModule.individualFloatHeight ?? 200;
-                            return Math.round(spaceInfo.height - topFrame - floatH);
+                            return Math.round(spaceInfo.height - topOffset - floatH);
                           }
                           return 3000;
                         })();
@@ -3419,11 +3437,15 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                               ? ((currentPlacedModule.topFrameThickness ?? spaceInfo.frameSize?.top ?? 30) - (currentPlacedModule.topFrameGap ?? 0))
                               : 0;
                             const shouldAbsorbBaseForBodyH = moduleData.category === 'full' || moduleData.category === 'lower';
-                            const absB = shouldAbsorbBaseForBodyH && currentPlacedModule.hasBase === false
+                            const absB = shouldAbsorbBaseForBodyH && currentPlacedModule.hasBase === false && !currentPlacedModule.moduleId?.includes('glass-cabinet')
                               ? (((currentPlacedModule.baseFrameHeight ?? (spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height ?? 60) : 0)))
                                 - (currentPlacedModule.individualFloatHeight ?? 0))
                               : 0;
-                            const next = nextDisplay - absT - absB;
+                            const defaultGlassFloatForArrow = (moduleData as any)?.individualFloatHeight ?? 200;
+                            const absGlassFloat = currentPlacedModule.moduleId?.includes('glass-cabinet')
+                              ? Math.max(0, defaultGlassFloatForArrow - (currentPlacedModule.individualFloatHeight ?? defaultGlassFloatForArrow))
+                              : 0;
+                            const next = nextDisplay - absT - absB - absGlassFloat;
                             const arrowUpdates: any = moduleData.category === 'upper'
                               ? { customHeight: next, freeHeight: undefined }
                               : { freeHeight: next };
@@ -3617,7 +3639,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
             const absorbedTopH = shouldAbsorbTopForDoorH && currentPlacedModule.hasTopFrame === false
               ? ((currentPlacedModule.topFrameThickness ?? spaceInfo.frameSize?.top ?? 30) - (currentPlacedModule.topFrameGap ?? 0))
               : 0;
-            const absorbedBaseH = shouldAbsorbBaseForDoorH && currentPlacedModule.hasBase === false
+            const absorbedBaseH = shouldAbsorbBaseForDoorH && currentPlacedModule.hasBase === false && !currentPlacedModule.moduleId?.includes('glass-cabinet')
               ? (((currentPlacedModule.baseFrameHeight ?? (spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height ?? 60) : 0)))
                 - (currentPlacedModule.individualFloatHeight ?? 0))
               : 0;
@@ -3856,7 +3878,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
             const absorbedTopForSections = shouldAbsorbTopForSections && currentPlacedModule.hasTopFrame === false
               ? ((currentPlacedModule.topFrameThickness ?? spaceInfo.frameSize?.top ?? 30) - (currentPlacedModule.topFrameGap ?? 0))
               : 0;
-            const absorbedBaseForSections = shouldAbsorbBaseForSections && currentPlacedModule.hasBase === false
+            const absorbedBaseForSections = shouldAbsorbBaseForSections && currentPlacedModule.hasBase === false && !currentPlacedModule.moduleId?.includes('glass-cabinet')
               ? (((currentPlacedModule.baseFrameHeight ?? (spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height ?? 60) : 0)))
                 - (currentPlacedModule.individualFloatHeight ?? 0))
               : 0;
@@ -4559,7 +4581,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                 const absorbedTopHeight = shouldAbsorbTopForHeight && targetMod.hasTopFrame === false
                   ? topFrameMm - (targetMod.topFrameGap ?? 0)
                   : 0;
-                const absorbedBaseHeight = targetMod.hasBase === false
+                const absorbedBaseHeight = targetMod.hasBase === false && !targetMod.moduleId?.includes('glass-cabinet')
                   ? ((targetMod.baseFrameHeight ?? (spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height ?? 60) : 0))
                     - (targetMod.individualFloatHeight ?? 0))
                   : 0;
@@ -6401,7 +6423,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
             const absorbedTopHeight = shouldAbsorbTopForHeight && currentPlacedModule.hasTopFrame === false
               ? topFrameMm - (currentPlacedModule.topFrameGap ?? 0)
               : 0;
-            const absorbedBaseHeight = currentPlacedModule.hasBase === false
+            const absorbedBaseHeight = currentPlacedModule.hasBase === false && !currentPlacedModule.moduleId?.includes('glass-cabinet')
               ? ((currentPlacedModule.baseFrameHeight ?? (spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height ?? 60) : 0))
                 - (currentPlacedModule.individualFloatHeight ?? 0))
               : 0;

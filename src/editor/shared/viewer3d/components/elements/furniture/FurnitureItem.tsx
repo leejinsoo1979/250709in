@@ -1327,6 +1327,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
 
   // 키큰장 체크
   const isTallCabinetForY = actualModuleData?.category === 'full';
+  const isGlassCabinetForY = placedModule.moduleId?.includes('glass-cabinet');
 
   const autoDroppedUpperHeight = React.useMemo(() => {
     const matchesAutoHeight = (value?: number) => {
@@ -1422,7 +1423,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   if (placedModule.isFreePlacement && isTallCabinetForY) {
     // freeHeight가 stale(이전 배치모드 값)일 수 있으므로 최대값 제한
     const baseFreeHeight = placedModule.freeHeight || internalSpace.height;
-    const maxFreeHeight = internalSpace.height - floatHeightMm;
+    const maxFreeHeight = isGlassCabinetForY ? baseFreeHeight : internalSpace.height - floatHeightMm;
     furnitureHeightMm = Math.min(baseFreeHeight, maxFreeHeight);
     // 개별 가구 상단몰딩 두께 변경 시 추가 보정
     if (placedModule.topFrameThickness !== undefined) {
@@ -1435,7 +1436,14 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       const topGapMm = placedModule.topFrameGap ?? 0;
       furnitureHeightMm += (topFrameMm - topGapMm);
     }
-    if (placedModule.hasBase === false) {
+    if (isGlassCabinetForY) {
+      const defaultGlassFloatMm = (actualModuleData as any)?.individualFloatHeight ?? 200;
+      const glassBottomSupportMm = placedModule.hasBase === false
+        ? (placedModule.individualFloatHeight ?? defaultGlassFloatMm)
+        : (placedModule.baseFrameHeight ?? (spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height ?? 60) : 0));
+      furnitureHeightMm += defaultGlassFloatMm - glassBottomSupportMm;
+    }
+    if (placedModule.hasBase === false && !isGlassCabinetForY) {
       const globalBaseMm = spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height ?? 60) : 0;
       const absorbedBase = placedModule.baseFrameHeight ?? globalBaseMm;
       const floatH = placedModule.individualFloatHeight ?? 0;
@@ -1469,6 +1477,13 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         const topGapMm = placedModule.topFrameGap ?? 0;
         furnitureHeightMm += (topFrameMm - topGapMm);
       }
+      if (isGlassCabinetForY) {
+        const defaultGlassFloatMm = (actualModuleData as any)?.individualFloatHeight ?? 200;
+        const glassBottomSupportMm = placedModule.hasBase === false
+          ? (placedModule.individualFloatHeight ?? defaultGlassFloatMm)
+          : (placedModule.baseFrameHeight ?? (spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height ?? 60) : 0));
+        furnitureHeightMm += defaultGlassFloatMm - glassBottomSupportMm;
+      }
       // 개별 baseFrameHeight 보정: 키큰장(full)만 적용
       // moduleData.dimensions.height는 글로벌 baseFrame 기준이므로 개별 차이를 반영
       // (CADDimensions2D.tsx computeFurnitureHeightMm과 동일 로직)
@@ -1478,7 +1493,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         furnitureHeightMm -= (placedModule.baseFrameHeight - globalBase);
       }
       // 걸래받이 OFF: 걸래받이 자리를 가구가 흡수 - 띄움만큼은 빈 공간으로 제외
-      if (placedModule.hasBase === false && isTallCabinetForY) {
+      if (placedModule.hasBase === false && isTallCabinetForY && !isGlassCabinetForY) {
         const globalBaseMm = spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height ?? 60) : 0;
         const absorbedBase = placedModule.baseFrameHeight ?? globalBaseMm;
         const floatH = placedModule.individualFloatHeight ?? 0;
@@ -1493,7 +1508,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   {
     const floorFinishForHeight = (spaceInfo.hasFloorFinish && spaceInfo.floorFinish)
       ? spaceInfo.floorFinish.height : 0;
-    if (floorFinishForHeight > 0 && isTallCabinetForY) {
+    if (floorFinishForHeight > 0 && isTallCabinetForY && !isGlassCabinetForY) {
       furnitureHeightMm -= floorFinishForHeight;
     }
   }
