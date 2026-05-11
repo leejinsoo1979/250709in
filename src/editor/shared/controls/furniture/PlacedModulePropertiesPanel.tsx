@@ -3104,7 +3104,8 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                           const absT = shouldAbsorbTopForBodyH && currentPlacedModule.hasTopFrame === false
                             ? ((currentPlacedModule.topFrameThickness ?? spaceInfo.frameSize?.top ?? 30) - (currentPlacedModule.topFrameGap ?? 0))
                             : 0;
-                          const absB = currentPlacedModule.hasBase === false
+                          const shouldAbsorbBaseForBodyH = moduleData.category === 'full' || moduleData.category === 'lower';
+                          const absB = shouldAbsorbBaseForBodyH && currentPlacedModule.hasBase === false
                             ? (((currentPlacedModule.baseFrameHeight ?? (spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height ?? 60) : 0)))
                               - (currentPlacedModule.individualFloatHeight ?? 0))
                             : 0;
@@ -3174,7 +3175,8 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                             const absT = shouldAbsorbTopForBodyH && currentPlacedModule.hasTopFrame === false
                               ? ((currentPlacedModule.topFrameThickness ?? spaceInfo.frameSize?.top ?? 30) - (currentPlacedModule.topFrameGap ?? 0))
                               : 0;
-                            const absB = currentPlacedModule.hasBase === false
+                            const shouldAbsorbBaseForBodyH = moduleData.category === 'full' || moduleData.category === 'lower';
+                            const absB = shouldAbsorbBaseForBodyH && currentPlacedModule.hasBase === false
                               ? (((currentPlacedModule.baseFrameHeight ?? (spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height ?? 60) : 0)))
                                 - (currentPlacedModule.individualFloatHeight ?? 0))
                               : 0;

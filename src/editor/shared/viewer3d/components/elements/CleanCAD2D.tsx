@@ -7362,6 +7362,19 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     doorTopAbsMm = cabinetTopAbs + doorTopGapVal;
                     doorBottomAbsMm = cabinetBottomAbs - doorBottomGapVal;
                     doorHeightMm = cabinetH + doorTopGapVal + doorBottomGapVal;
+                    console.log('🚪 [측면뷰 상부장 도어 H 디버그]', {
+                      moduleId: doorModule.moduleId,
+                      cabinetH,
+                      freeHeight: doorModule.freeHeight,
+                      customHeight: doorModule.customHeight,
+                      doorModData_height: doorModData?.dimensions.height,
+                      doorTopGapVal,
+                      doorBottomGapVal,
+                      topFrameVal,
+                      doorHeightMm,
+                      doorTopAbsMm,
+                      doorBottomAbsMm,
+                    });
                   } else if (doorCategory === 'lower') {
                     const cabinetH = doorModData?.dimensions.height ?? 1000;
                     const isDoorLift = doorModData?.id?.includes('lower-door-lift-');
