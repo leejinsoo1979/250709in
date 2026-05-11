@@ -4176,36 +4176,41 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                                 setFreeHeightInput(clampedH.toString());
                                 setSectionHeightInputs({});
                               } else if (isPantryOrPullOut && mcSections) {
-                                // 팬트리장/인출장: 하부(또는 중간) 섹션 변경
+                                // 팬트리장/인출장: 사용자가 변경한 섹션 유지 + 하부(첫 섹션 = 0)가 흡수
                                 // 1) 변경된 섹션의 height 갱신
-                                // 2) 상부(마지막) 섹션 height = freeHeight - (다른 섹션 합) 으로 재계산
-                                // 3) 상부 섹션의 shelfPositions 균등 재배치
+                                // 2) 하부(첫 섹션) height = freeHeight - (다른 섹션 합) 으로 재계산
+                                // 3) 변경된 섹션이 shelf면 shelfPositions 균등 재배치
                                 const inputVal = parseInt(sectionHeightInputs[sIdx] || '0', 10);
                                 if (isNaN(inputVal) || inputVal < 100) {
                                   setSectionHeightInputs({});
                                   return;
                                 }
                                 const totalH = placedBodyHeight || moduleData.dimensions.height;
-                                const lastIdx = mcSections.length - 1;
-                                // 변경된 섹션 height 적용한 임시 배열
-                                const tentative = mcSections.map((s: any, idx: number) => {
-                                  if (idx === sIdx) return { ...s, height: inputVal };
-                                  return s;
-                                });
-                                // 마지막 섹션을 제외한 합
-                                const otherSum = tentative
-                                  .filter((_: any, idx: number) => idx !== lastIdx)
-                                  .reduce((sum: number, s: any) => sum + (s.height || 0), 0);
-                                const newLastH = Math.max(100, totalH - otherSum);
+                                const absorbIdx = 0; // 하부(첫 섹션)가 흡수
                                 const basicThickness = (spaceInfo as any).panelThickness || 18;
-                                const newSections = tentative.map((s: any, idx: number) => {
-                                  if (idx !== lastIdx) return s;
-                                  // 마지막(상부) 섹션 갱신
-                                  const updated: any = { ...s, height: newLastH };
-                                  // shelf 타입이고 count가 있으면 선반 균등 재배치
+                                // 변경된 섹션 height 적용 + 변경된 섹션이 shelf면 shelfPositions 재배치
+                                const tentative = mcSections.map((s: any, idx: number) => {
+                                  if (idx !== sIdx) return s;
+                                  const updated: any = { ...s, height: inputVal };
                                   if ((s.type === 'shelf' || s.type === 'open') && (s.count > 0 || (Array.isArray(s.shelfPositions) && s.shelfPositions.length > 0))) {
                                     const shelfCount = s.count || (s.shelfPositions?.length ?? 0);
-                                    const innerH = Math.max(0, newLastH - 2 * basicThickness);
+                                    const innerH = Math.max(0, inputVal - 2 * basicThickness);
+                                    updated.shelfPositions = calculateEvenShelfPositions(innerH, shelfCount, basicThickness);
+                                  }
+                                  return updated;
+                                });
+                                // 사용자가 하부(첫) 섹션 변경한 경우 → 마지막 섹션이 흡수 (역순)
+                                const absorbTarget = sIdx === absorbIdx ? mcSections.length - 1 : absorbIdx;
+                                const otherSum = tentative
+                                  .filter((_: any, idx: number) => idx !== absorbTarget)
+                                  .reduce((sum: number, s: any) => sum + (s.height || 0), 0);
+                                const newAbsorbH = Math.max(100, totalH - otherSum);
+                                const newSections = tentative.map((s: any, idx: number) => {
+                                  if (idx !== absorbTarget) return s;
+                                  const updated: any = { ...s, height: newAbsorbH };
+                                  if ((s.type === 'shelf' || s.type === 'open') && (s.count > 0 || (Array.isArray(s.shelfPositions) && s.shelfPositions.length > 0))) {
+                                    const shelfCount = s.count || (s.shelfPositions?.length ?? 0);
+                                    const innerH = Math.max(0, newAbsorbH - 2 * basicThickness);
                                     updated.shelfPositions = calculateEvenShelfPositions(innerH, shelfCount, basicThickness);
                                   }
                                   return updated;
