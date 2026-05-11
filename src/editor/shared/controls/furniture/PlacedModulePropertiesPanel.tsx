@@ -3320,6 +3320,70 @@ const PlacedModulePropertiesPanel: React.FC = () => {
             );
           })()}
 
+          {/* 도어 셋팅 (상단갭/하단갭) — 도어 장착 시 표시, insert-frame 제외 */}
+          {!showDetails && currentPlacedModule && currentPlacedModule.hasDoor && !(typeof currentPlacedModule.moduleId === 'string' && currentPlacedModule.moduleId.includes('insert-frame')) && (() => {
+            const isDualSlot = currentPlacedModule.isDualSlot || currentPlacedModule.moduleId?.startsWith('dual-');
+            const doorCount = isDualSlot ? 2 : 1;
+            return (
+              <div className={styles.propertySection}>
+                <h5 className={styles.sectionTitle}>
+                  <span style={{ color: 'var(--theme-primary, #10b981)', marginRight: '4px' }}>●</span>
+                  도어 셋팅
+                  <span style={{ marginLeft: '4px', color: 'var(--theme-text-tertiary)', fontSize: '11px', cursor: 'help' }} title="도어와 가구 상단/하단 사이의 간격 (mm). 0이면 공간 천장/바닥 기준.">ⓘ</span>
+                </h5>
+                {/* 도어 헤더 행: 전체 체크박스 + 도어 N */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px', color: 'var(--theme-text-secondary)', cursor: 'pointer' }}>
+                    <input
+                      type="checkbox"
+                      style={{ cursor: 'pointer', accentColor: 'var(--theme-primary, #10b981)' }}
+                      readOnly
+                      checked={false}
+                    />
+                    <span>전체</span>
+                  </label>
+                  <div style={{ flex: 1, textAlign: 'center', fontSize: '12px', color: 'var(--theme-text-secondary)' }}>
+                    {Array.from({ length: doorCount }, (_, i) => `도어 ${i + 1}`).join(' / ')}
+                  </div>
+                </div>
+                {/* 상단갭 */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
+                  <label style={{ width: '52px', fontSize: '12px', color: 'var(--theme-text-secondary)', flexShrink: 0 }}>상단갭</label>
+                  <div className={styles.inputWithUnit} style={{ flex: 1 }}>
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      value={doorTopGapInput}
+                      onChange={(e) => handleDoorTopGapChange(e.target.value)}
+                      onBlur={handleDoorTopGapBlur}
+                      onKeyDown={handleDoorTopGapKeyDown}
+                      className={styles.depthInput}
+                      style={{ textAlign: 'center', fontSize: '13px' }}
+                    />
+                    <span className={styles.unit}>mm</span>
+                  </div>
+                </div>
+                {/* 하단갭 */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <label style={{ width: '52px', fontSize: '12px', color: 'var(--theme-text-secondary)', flexShrink: 0 }}>하단갭</label>
+                  <div className={styles.inputWithUnit} style={{ flex: 1 }}>
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      value={doorBottomGapInput}
+                      onChange={(e) => handleDoorBottomGapChange(e.target.value)}
+                      onBlur={handleDoorBottomGapBlur}
+                      onKeyDown={handleDoorBottomGapKeyDown}
+                      className={styles.depthInput}
+                      style={{ textAlign: 'center', fontSize: '13px' }}
+                    />
+                    <span className={styles.unit}>mm</span>
+                  </div>
+                </div>
+              </div>
+            );
+          })()}
+
           {/* 경첩 방향 선택 (도어치수 바로 아래로 이동) — 도어 + 싱글 가구 + 상세보기 아닐 때 */}
           {/* 키큰장 찬넬(insert-frame)은 도어 없는 채움재 → 경첩 방향도 숨김 */}
           {!showDetails && hasDoor && isSingleFurniture && !(typeof currentPlacedModule?.moduleId === 'string' && currentPlacedModule.moduleId.includes('insert-frame')) && (
@@ -4578,7 +4642,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                     <div className={styles.epRow}>
                       <div className={styles.epField}>
                         <label className={styles.epFieldLabel}>
-                          {moduleData.category === 'lower' ? '상단 갭 (가구↓)' : '상단 갭 (천장↓)'}
+                          상단 갭 (몸통↑)
                         </label>
                         <div className={styles.inputWithUnit}>
                           <input
@@ -4607,7 +4671,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                       </div>
                       <div className={styles.epField}>
                         <label className={styles.epFieldLabel}>
-                          {moduleData.category === 'upper' ? '하단 갭 (가구↑)' : '하단 갭 (바닥↑)'}
+                          하단 갭 (몸통↓)
                         </label>
                         <div className={styles.inputWithUnit}>
                           <input
