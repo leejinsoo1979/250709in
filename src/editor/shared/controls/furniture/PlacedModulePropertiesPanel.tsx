@@ -1183,20 +1183,18 @@ const PlacedModulePropertiesPanel: React.FC = () => {
         }
       }
 
-      // 도어 상하 갭 초기값 설정 (천장/바닥 기준, 입력 중 방해 방지)
-      // 띄움배치일 때는 띄움 높이를 바닥 이격거리로 자동 설정
-      // 모듈별 기본 doorTopGap: 도어올림=30, 상판내림=-80, 일반하부장=-20, 그 외=0
+      // 도어 상하 갭 초기값 (몸통 기준, EP와 동일)
+      // 상단갭 = 몸통 상단에서 위로, 하단갭 = 몸통 하단에서 아래로
+      // 기본값 0 = 도어 == 몸통. 도어올림/상판내림은 모듈별 기본값 사용
       const modId = currentPlacedModule.moduleId || '';
-      const isLowerMod = modId.startsWith('lower-') || modId.includes('dual-lower-');
       const isDoorLift = modId.includes('lower-door-lift-') && !modId.includes('-half-');
       const isTopDown = modId.includes('lower-top-down-') && !modId.includes('-half-');
-      const defaultTopGap = isDoorLift ? 30 : isTopDown ? -80 : isLowerMod ? -20 : 0;
-      // 하부장에서 doorTopGap=0은 이전 버그값 → 모듈별 기본값으로 보정
+      const defaultTopGap = isDoorLift ? 30 : isTopDown ? -80 : 0;
+      const defaultBottomGap = isTopDown ? 5 : 0;
       const rawTopGap = currentPlacedModule.doorTopGap;
-      const initialTopGap = (rawTopGap === undefined || (isLowerMod && rawTopGap === 0)) ? defaultTopGap : rawTopGap;
-      // 도어 상하갭은 항상 바닥/천장 기준 (받침대/띄움 무관, 0이면 공간 높이)
+      const initialTopGap = rawTopGap ?? defaultTopGap;
       const rawBotGap = currentPlacedModule.doorBottomGap;
-      const initialBottomGap = (rawBotGap === undefined || (isLowerMod && rawBotGap === 0)) ? (isLowerMod ? 5 : 0) : rawBotGap;
+      const initialBottomGap = rawBotGap ?? defaultBottomGap;
       // State 업데이트
       const needsUpdate = doorTopGap !== initialTopGap || doorBottomGap !== initialBottomGap;
 
@@ -2364,19 +2362,20 @@ const PlacedModulePropertiesPanel: React.FC = () => {
       // 현재 showDimensions 상태 저장
       const currentShowDimensions = useUIStore.getState().showDimensions;
       
-      // hasDoor 켤 때 doorTopGap/doorBottomGap 기본값도 함께 설정
+      // hasDoor 켤 때 doorTopGap/doorBottomGap 기본값 (몸통 기준, EP와 동일)
+      // 기본값 0 = 도어와 몸통이 동일한 위치
+      // 도어올림(상단 +30) / 상판내림(하단 +5) 같은 특수 모듈만 기본값 보존
       const mod = useFurnitureStore.getState().placedModules.find(m => m.id === activePopup.id);
       const updates: Record<string, unknown> = { hasDoor: doorEnabled };
       if (doorEnabled && mod) {
         const mId = mod.moduleId || '';
-        const cat = mId.includes('upper-') ? 'upper' : mId.startsWith('lower-') ? 'lower' : 'full';
         const isDL = mId.includes('lower-door-lift-') && !mId.includes('-half-');
         const isTD = mId.includes('lower-top-down-') && !mId.includes('-half-');
         if (mod.doorTopGap === undefined) {
-          updates.doorTopGap = isDL ? 30 : isTD ? -80 : cat === 'lower' ? -20 : cat === 'upper' ? -20 : 5;
+          updates.doorTopGap = isDL ? 30 : isTD ? -80 : 0;
         }
         if (mod.doorBottomGap === undefined) {
-          updates.doorBottomGap = cat === 'lower' ? 5 : cat === 'upper' ? 5 : 25;
+          updates.doorBottomGap = isTD ? 5 : 0;
         }
       }
       updatePlacedModule(activePopup.id, updates);

@@ -3857,35 +3857,17 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
               const rightEpD = Math.max(0, epD + rightFront + rightBack);
               const rightEpZShift = (rightFront - rightBack) / 2;
 
-              // EP 높이 계산: 카테고리별 상단/하단 기준이 다름
-              // 상부장: 상단=천장, 하단=가구 하단
-              // 하부장: 상단=가구 상단, 하단=바닥
-              // 키큰장: 상단=천장, 하단=바닥
+              // EP 높이 계산: 상단/하단 갭은 모두 가구 몸통 기준 바깥 방향
               const groupY = adjustedPosition.y; // Three.js 단위 (가구 중심 Y)
-              const spaceH = mmToThreeUnits(spaceInfo.height);
               const epTopOffsetMm = placedModule.endPanelTopOffset ?? 0;
               const epBottomOffsetMm = placedModule.endPanelBottomOffset ?? 0;
               const topOff = mmToThreeUnits(epTopOffsetMm);
               const bottomOff = mmToThreeUnits(epBottomOffsetMm);
 
-              let epTopWorld: number; // EP 상단의 월드 Y
-              let epBottomWorld: number; // EP 하단의 월드 Y
               const furnitureTop = groupY + height / 2;
               const furnitureBottom = groupY - height / 2;
-
-              if (furnitureCategory === 'upper') {
-                // 상부장: 상단=천장 기준, 하단=가구 하단 기준
-                epTopWorld = spaceH - topOff;
-                epBottomWorld = furnitureBottom + bottomOff;
-              } else if (furnitureCategory === 'lower') {
-                // 하부장: 상단=가구 상단 기준, 하단=바닥 기준
-                epTopWorld = furnitureTop - topOff;
-                epBottomWorld = bottomOff;
-              } else {
-                // 키큰장(full): 상단=천장 기준, 하단=바닥 기준
-                epTopWorld = spaceH - topOff;
-                epBottomWorld = bottomOff;
-              }
+              const epTopWorld = furnitureTop + topOff;
+              const epBottomWorld = furnitureBottom - bottomOff;
 
               let epH: number;
               let epYRelative: number;
