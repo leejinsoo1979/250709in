@@ -967,19 +967,28 @@ const PlacedModulePropertiesPanel: React.FC = () => {
       if (isFormElement) {
         if (e.key === 'Escape') {
           e.preventDefault();
-          closeAllPopups();
+          // 취소: 원래값 복원 후 팝업 닫기
+          activeElement.blur();
+          handleCancel();
+        } else if (e.key === 'Enter') {
+          // Enter: input의 onKeyDown이 먼저 저장 처리 → blur 후 팝업 닫기
+          // (input onKeyDown에서 preventDefault 안 했으면 여기 도달)
+          e.preventDefault();
+          activeElement.blur();
+          // 다음 tick에 닫기 (blur로 인한 onBlur 저장 완료 후)
+          setTimeout(() => closeAllPopups(), 0);
         }
         return;
       }
 
-      // 메인 팝업이 열려있을 때 (furnitureEdit 타입 체크)
+      // 메인 팝업이 열려있을 때 (input 밖)
       if (activePopup.type === 'furnitureEdit') {
         if (e.key === 'Enter') {
           e.preventDefault();
-          closeAllPopups();
+          closeAllPopups(); // 확인
         } else if (e.key === 'Escape') {
           e.preventDefault();
-          closeAllPopups();
+          handleCancel(); // 취소: 원래값 복원
         }
       }
     };
