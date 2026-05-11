@@ -7350,15 +7350,18 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
 
                   if (doorCategory === 'upper') {
                     // 상부장 도어 (몸통 기준, EP와 동일)
-                    // 상단갭 = 몸통 상단에서 위로, 하단갭 = 몸통 하단에서 아래로
-                    const cabinetH = doorModData?.dimensions.height ?? 600;
+                    // doorHeight = 몸통H + 상단갭 + 하단갭
+                    // 몸통 위치: 천장 - 상부몰딩 (또는 freeHeight 사용)
+                    const cabinetH = doorModule.freeHeight
+                      ?? doorModule.customHeight
+                      ?? doorModData?.dimensions.height
+                      ?? 600;
                     const topFrameVal = doorModule.topFrameThickness ?? (spaceInfo.frameSize?.top ?? 30);
-                    // 상부장 위치: 천장 - 상부몰딩 = 상부장 상단
                     const cabinetTopAbs = effectiveH - topFrameVal;
                     const cabinetBottomAbs = cabinetTopAbs - cabinetH;
                     doorTopAbsMm = cabinetTopAbs + doorTopGapVal;
                     doorBottomAbsMm = cabinetBottomAbs - doorBottomGapVal;
-                    doorHeightMm = doorTopAbsMm - doorBottomAbsMm;
+                    doorHeightMm = cabinetH + doorTopGapVal + doorBottomGapVal;
                   } else if (doorCategory === 'lower') {
                     const cabinetH = doorModData?.dimensions.height ?? 1000;
                     const isDoorLift = doorModData?.id?.includes('lower-door-lift-');

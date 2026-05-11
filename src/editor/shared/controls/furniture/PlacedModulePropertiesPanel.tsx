@@ -971,9 +971,18 @@ const PlacedModulePropertiesPanel: React.FC = () => {
       || rounded === Math.round(moduleData.dimensions.height + 65);
   };
   const placedBodyHeight = currentPlacedModule && moduleData
-    ? ((autoDroppedUpperHeight && !autoDroppedUpperHeight.freeHeight && !isStaleUpperTotalHeight(currentPlacedModule.freeHeight) ? currentPlacedModule.freeHeight : undefined)
-      ?? (autoDroppedUpperHeight && !autoDroppedUpperHeight.customHeight && !isStaleUpperTotalHeight(currentPlacedModule.customHeight) ? currentPlacedModule.customHeight : undefined)
-      ?? moduleData.dimensions.height)
+    ? (() => {
+      const validFreeHeight = autoDroppedUpperHeight && !autoDroppedUpperHeight.freeHeight && !isStaleUpperTotalHeight(currentPlacedModule.freeHeight)
+        ? currentPlacedModule.freeHeight
+        : undefined;
+      const validCustomHeight = autoDroppedUpperHeight && !autoDroppedUpperHeight.customHeight && !isStaleUpperTotalHeight(currentPlacedModule.customHeight)
+        ? currentPlacedModule.customHeight
+        : undefined;
+
+      return moduleData.category === 'upper'
+        ? (validCustomHeight ?? validFreeHeight ?? moduleData.dimensions.height)
+        : (validFreeHeight ?? validCustomHeight ?? moduleData.dimensions.height);
+    })()
     : 0;
   // 기둥 슬롯 정보 및 기둥 C 여부 확인 (조건부 렌더링 전에 미리 계산)
   const { slotInfo, isCoverDoor, isColumnC } = React.useMemo(() => {
@@ -3100,7 +3109,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                               - (currentPlacedModule.individualFloatHeight ?? 0))
                             : 0;
                           const val = displayVal - absT - absB;
-                          const updates: any = moduleData.category === 'upper' && !currentPlacedModule.isFreePlacement
+                          const updates: any = moduleData.category === 'upper'
                             ? { customHeight: val, freeHeight: undefined }
                             : { freeHeight: val };
                           // 키큰장(full): 가구 높이 줄이면 상단몰딩이 늘어나야 함
@@ -3170,7 +3179,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                                 - (currentPlacedModule.individualFloatHeight ?? 0))
                               : 0;
                             const next = nextDisplay - absT - absB;
-                            const arrowUpdates: any = moduleData.category === 'upper' && !currentPlacedModule.isFreePlacement
+                            const arrowUpdates: any = moduleData.category === 'upper'
                               ? { customHeight: next, freeHeight: undefined }
                               : { freeHeight: next };
                             if (moduleData.category === 'full') {
