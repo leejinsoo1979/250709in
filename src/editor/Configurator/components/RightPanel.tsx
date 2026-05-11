@@ -1391,12 +1391,13 @@ const RightPanel: React.FC<RightPanelProps> = ({
                 const allBaseOnMerge = slotMods.length > 0 && slotMods.every(m => m.hasBase !== false);
                 const toggleAllTopMerge = () => {
                   const newVal = !allTopOnMerge;
-                  slotMods.forEach(m => updatePlacedModule(m.id, { hasTopFrame: newVal }));
+                  slotMods.forEach(m => updatePlacedModule(m.id, { hasTopFrame: newVal, doorTopGap: newVal ? 5 : -5 }));
                 };
                 const toggleAllBaseMerge = () => {
                   const newVal = !allBaseOnMerge;
                   slotMods.forEach(m => updatePlacedModule(m.id, {
                     hasBase: newVal,
+                    doorBottomGap: newVal ? 25 : -5,
                     ...(newVal ? {} : { individualFloatHeight: 0 }),
                   }));
                 };
@@ -1431,7 +1432,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
                             userBaseHeightDefault={userDefaults.frameTop}
                             onToggle={() => {
                               const newVal = !allEnabled;
-                              group.moduleIds.forEach(id => updatePlacedModule(id, { hasTopFrame: newVal }));
+                              group.moduleIds.forEach(id => updatePlacedModule(id, { hasTopFrame: newVal, doorTopGap: newVal ? 5 : -5 }));
                             }}
                             onHeightChange={(v) => {
                               group.moduleIds.forEach(id => updatePlacedModule(id, { topFrameThickness: v }));
@@ -1477,6 +1478,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
                                 const newVal = !allEnabled;
                                 group.moduleIds.forEach(id => updatePlacedModule(id, {
                                   hasBase: newVal,
+                                  doorBottomGap: newVal ? 25 : -5,
                                   ...(newVal ? {} : { individualFloatHeight: 0 }),
                                 }));
                               }}
@@ -1508,7 +1510,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
                 const next = !topFrameAllMode;
                 setTopFrameAllMode(next);
                 // 통합모드 진입/해제 모두 개별행 ON 상태로 복구
-                sorted.forEach(m => updatePlacedModule(m.id, { hasTopFrame: true }));
+                sorted.forEach(m => updatePlacedModule(m.id, { hasTopFrame: true, doorTopGap: 5 }));
               };
               const toggleAllBase = () => {
                 const next = !baseFrameAllMode;
@@ -1516,6 +1518,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
                 // 통합모드 진입/해제 모두 개별행 ON 상태로 복구
               sorted.forEach(m => updatePlacedModule(m.id, {
                 hasBase: true,
+                doorBottomGap: 25,
               }));
               };
               return (
@@ -1548,7 +1551,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
                           offset={getTopOffsetDisplay(first)}
                           onToggle={() => {
                             const newVal = !unifiedEnabled;
-                            sorted.forEach(m => updatePlacedModule(m.id, { hasTopFrame: newVal }));
+                            sorted.forEach(m => updatePlacedModule(m.id, { hasTopFrame: newVal, doorTopGap: newVal ? 5 : -5 }));
                           }}
                           onSizeChange={(v) => sorted.forEach(m => updatePlacedModule(m.id, { topFrameThickness: v }))}
                           onOffsetChange={(v) => sorted.forEach(m => updatePlacedModule(m.id, { topFrameOffset: v }))}
@@ -1568,7 +1571,10 @@ const RightPanel: React.FC<RightPanelProps> = ({
                           widthMM={modWidthMM}
                           sizeMM={mod.topFrameThickness ?? globalTop}
                           offset={getTopOffsetDisplay(mod)}
-                          onToggle={() => updatePlacedModule(mod.id, { hasTopFrame: !(mod.hasTopFrame !== false) })}
+                          onToggle={() => {
+                            const newVal = !(mod.hasTopFrame !== false);
+                            updatePlacedModule(mod.id, { hasTopFrame: newVal, doorTopGap: newVal ? 5 : -5 });
+                          }}
                           onSizeChange={(v) => {
                             updatePlacedModule(mod.id, { topFrameThickness: v });
                           }}
@@ -1609,6 +1615,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
                         <button
                           onClick={() => updatePlacedModule(mod.id, {
                             hasBase: !baseEnabled,
+                            doorBottomGap: !baseEnabled ? 25 : -5,
                             ...( baseEnabled
                               ? { individualFloatHeight: 0 }  // OFF: 띄움높이 초기화
                               : {}),

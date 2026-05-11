@@ -737,12 +737,12 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
   setPlacedModules: (modules: PlacedModule[] | ((prev: PlacedModule[]) => PlacedModule[])) => {
     const state = get();
     const resolved = typeof modules === 'function' ? modules(state.placedModules) : modules;
-    // 마이그레이션: 기본하부장/서랍장 도어갭 기본값 업데이트 (옛 기본값 20/2 → 새 기본값 -20/5)
+    // 도어갭 기본값은 undefined일 때만 채운다. 0/양수/음수는 사용자 입력값이다.
     const newModules = resolved.map(m => {
       const isBasic = m.moduleId?.includes('lower-half-cabinet') || m.moduleId?.includes('dual-lower-half-cabinet') || m.moduleId?.includes('lower-drawer-') || m.moduleId?.includes('dual-lower-drawer-') || m.moduleId?.includes('lower-sink-cabinet') || m.moduleId?.includes('dual-lower-sink-cabinet') || m.moduleId?.includes('lower-induction-cabinet') || m.moduleId?.includes('dual-lower-induction-cabinet');
       if (isBasic) {
-        const needsTopFix = m.doorTopGap === 20 || m.doorTopGap === 0;
-        const needsBottomFix = m.doorBottomGap === 2 || m.doorBottomGap === 0;
+        const needsTopFix = m.doorTopGap === undefined;
+        const needsBottomFix = m.doorBottomGap === undefined;
         if (needsTopFix || needsBottomFix) {
           return {
             ...m,
@@ -751,11 +751,11 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
           };
         }
       }
-      // 도어올림: 옛 기본값(20/2) → 새 기본값(30/5)
+      // 도어올림 기본값
       const isDoorLift = m.moduleId?.includes('lower-door-lift-');
       if (isDoorLift) {
-        const needsTopFix = m.doorTopGap === 20;
-        const needsBottomFix = m.doorBottomGap === 2;
+        const needsTopFix = m.doorTopGap === undefined;
+        const needsBottomFix = m.doorBottomGap === undefined;
         if (needsTopFix || needsBottomFix) {
           return {
             ...m,
@@ -764,11 +764,11 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
           };
         }
       }
-      // 상판내림: 옛 기본값(20/2) → 새 기본값(-80/5)
+      // 상판내림 기본값
       const isTopDown = m.moduleId?.includes('lower-top-down-');
       if (isTopDown) {
-        const needsTopFix = m.doorTopGap === 20;
-        const needsBottomFix = m.doorBottomGap === 2;
+        const needsTopFix = m.doorTopGap === undefined;
+        const needsBottomFix = m.doorBottomGap === undefined;
         if (needsTopFix || needsBottomFix) {
           return {
             ...m,

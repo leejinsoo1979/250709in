@@ -4239,6 +4239,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                       const nextHasTopFrame = !topEnabled;
                       updatePlacedModule(mod.id, {
                         hasTopFrame: nextHasTopFrame,
+                        doorTopGap: nextHasTopFrame ? 5 : -5,
                         ...getUpperShelfGapSyncUpdates({ hasTopFrame: nextHasTopFrame }),
                       });
                       setSectionHeightInputs({}); // 흡수된 높이 재계산 위해 섹션 캐시 초기화
@@ -4376,6 +4377,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                         };
                         updatePlacedModule(mod.id, {
                           ...nextFrameState,
+                          doorBottomGap: nextHasBase ? 25 : -5,
                           ...getUpperShelfGapSyncUpdates(nextFrameState),
                         });
                         setSectionHeightInputs({}); // 흡수된 높이 재계산 위해 섹션 캐시 초기화
