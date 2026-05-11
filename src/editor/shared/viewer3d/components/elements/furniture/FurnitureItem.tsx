@@ -1305,6 +1305,28 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   // 키큰장 체크
   const isTallCabinetForY = actualModuleData?.category === 'full';
 
+  const isAutoDroppedUpperCustomHeight = React.useMemo(() => {
+    if (!isUpperCabinetForY || placedModule.zone !== 'dropped' || typeof placedModule.customHeight !== 'number') {
+      return false;
+    }
+
+    const expectedHeights: number[] = [];
+    if (spaceInfo.droppedCeiling?.enabled && typeof spaceInfo.droppedCeiling.dropHeight === 'number') {
+      const topFrameMm = spaceInfo.frameSize?.top || 0;
+      const baseFrameMm = spaceInfo.baseConfig?.height || 0;
+      expectedHeights.push(spaceInfo.height - spaceInfo.droppedCeiling.dropHeight - topFrameMm - baseFrameMm);
+      expectedHeights.push(calculateInternalSpace({ ...spaceInfo, zone: 'dropped' as const }).height);
+    }
+    if (spaceInfo.layoutMode === 'free-placement' && spaceInfo.stepCeiling?.enabled) {
+      expectedHeights.push(calculateInternalSpace({
+        ...spaceInfo,
+        height: spaceInfo.height - (spaceInfo.stepCeiling.dropHeight || 0)
+      }).height);
+    }
+
+    return expectedHeights.some(height => Math.round(height) === Math.round(placedModule.customHeight!));
+  }, [isUpperCabinetForY, placedModule.zone, placedModule.customHeight, spaceInfo]);
+
   // adjustedPosition 계산 (Y축 위치 포함)
   let adjustedPosition = initialAdjustedPosition;
 
@@ -1321,7 +1343,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       // 미드웨이 편집: customHeight가 있으면 상단 고정, 하단 확장
       const upperCabinetHeight = (placedModule.isFreePlacement && placedModule.freeHeight)
         ? placedModule.freeHeight
-        : (placedModule.customHeight
+        : (placedModule.customHeight && !isAutoDroppedUpperCustomHeight
           ? placedModule.customHeight
           : (actualModuleData?.dimensions.height || 0)); // 상부장 높이
 
@@ -1391,7 +1413,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     furnitureHeightMm = placedModule.freeHeight;
   } else {
     // 상부장 미드웨이 편집: customHeight 우선 (상단 고정, 하단만 확장)
-    if (isUpperCabinetForY && placedModule.customHeight) {
+    if (isUpperCabinetForY && placedModule.customHeight && !isAutoDroppedUpperCustomHeight) {
       furnitureHeightMm = placedModule.customHeight;
     } else {
       furnitureHeightMm = actualModuleData?.dimensions.height || 0;

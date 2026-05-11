@@ -1587,7 +1587,9 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         zone: zoneToUse, // 영역 정보 저장
         customWidth: _isBuiltInFridge1 ? BUILT_IN_FRIDGE_FIXED_WIDTH : customWidth, // 실제 슬롯 너비 사용 (소수점 2자리)
         ...(_isBuiltInFridge1 ? { slotCustomWidth: BUILT_IN_FRIDGE_FIXED_WIDTH } : {}),
-        customHeight: zoneToUse === 'dropped' && zoneInternalSpace ? zoneInternalSpace.height : undefined, // 단내림 구간의 줄어든 높이 저장
+        customHeight: zoneToUse === 'dropped' && zoneInternalSpace && moduleData.category === 'full'
+          ? zoneInternalSpace.height
+          : undefined, // 단내림 구간 키큰장만 줄어든 높이 저장
         lowerSectionTopOffset: moduleData.id.includes('2drawer') || moduleData.id.includes('4drawer') || moduleData.id.includes('pull-out-cabinet') ? 85 : 0 // 2단/4단 서랍장/인출장 85mm, 나머지 0mm
       };
 

@@ -580,7 +580,7 @@ export function placeFurnitureAtSlot(params: PlaceFurnitureParams): PlaceFurnitu
   const defaultLowerTopOffset = (furnitureId.includes('2drawer') || furnitureId.includes('4drawer') || furnitureId.includes('pull-out-cabinet')) ? 85 : undefined;
   // 단내림 구간 가구 높이 계산: 공간높이 - 단내림높이 - 프레임 - 받침대
   let droppedCustomHeight: number | undefined;
-  if (hasDroppedCeiling && zone === 'dropped' && spaceInfo.droppedCeiling?.dropHeight) {
+  if (hasDroppedCeiling && zone === 'dropped' && spaceInfo.droppedCeiling?.dropHeight && moduleData.category === 'full') {
     const dropH = spaceInfo.droppedCeiling.dropHeight;
     const frameTop = spaceInfo.frameSize?.top || 0;
     const baseH = spaceInfo.baseConfig?.height || 0;

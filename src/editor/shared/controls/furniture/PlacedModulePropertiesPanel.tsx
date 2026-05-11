@@ -930,6 +930,35 @@ const PlacedModulePropertiesPanel: React.FC = () => {
       })()
     : null;
 
+  const isAutoDroppedUpperCustomHeight = (() => {
+    if (!currentPlacedModule || !moduleData) return false;
+    if (moduleData.category !== 'upper' || currentPlacedModule.zone !== 'dropped' || typeof currentPlacedModule.customHeight !== 'number') {
+      return false;
+    }
+
+    const expectedHeights: number[] = [];
+    if (spaceInfo.droppedCeiling?.enabled && typeof spaceInfo.droppedCeiling.dropHeight === 'number') {
+      const topFrameMm = spaceInfo.frameSize?.top || 0;
+      const baseFrameMm = spaceInfo.baseConfig?.height || 0;
+      expectedHeights.push(spaceInfo.height - spaceInfo.droppedCeiling.dropHeight - topFrameMm - baseFrameMm);
+      expectedHeights.push(calculateInternalSpace({ ...spaceInfo, zone: 'dropped' as const }).height);
+    }
+    if (spaceInfo.layoutMode === 'free-placement' && spaceInfo.stepCeiling?.enabled) {
+      expectedHeights.push(calculateInternalSpace({
+        ...spaceInfo,
+        height: spaceInfo.height - (spaceInfo.stepCeiling.dropHeight || 0)
+      }).height);
+    }
+
+    return expectedHeights.some(height => Math.round(height) === Math.round(currentPlacedModule.customHeight!));
+  })();
+
+  const placedBodyHeight = currentPlacedModule && moduleData
+    ? (currentPlacedModule.freeHeight
+      ?? (isAutoDroppedUpperCustomHeight ? undefined : currentPlacedModule.customHeight)
+      ?? moduleData.dimensions.height)
+    : 0;
+
   // 기둥 슬롯 정보 및 기둥 C 여부 확인 (조건부 렌더링 전에 미리 계산)
   const { slotInfo, isCoverDoor, isColumnC } = React.useMemo(() => {
     if (!currentPlacedModule || !moduleData) return { slotInfo: null, isCoverDoor: false, isColumnC: false };
@@ -1056,7 +1085,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
         const is2TierDrawer = currentPlacedModule.moduleId.includes('lower-drawer-2tier') || currentPlacedModule.moduleId.includes('dual-lower-drawer-2tier');
         const baseHeight = is2TierDrawer && currentPlacedModule.cabinetBodyHeight
           ? currentPlacedModule.cabinetBodyHeight
-          : (currentPlacedModule.freeHeight ?? currentPlacedModule.customHeight ?? moduleData.dimensions.height);
+          : placedBodyHeight;
         // 상부몰딩/걸레받이 OFF로 흡수된 높이 더해서 표시 (실제 가구 높이)
         const shouldAbsorbTopForBodyH = moduleData.category === 'full';
         const absorbedTopForH = shouldAbsorbTopForBodyH && currentPlacedModule.hasTopFrame === false
@@ -1145,7 +1174,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
             const pt = moduleData.modelConfig?.basicThickness || 18;
             // moduleData는 zone 반영된 getModuleById로 조회되므로 dimensions.height에 단내림이 반영됨.
             // 섹션별 높이 합은 팝업의 몸통치수 H와 같아야 한다.
-            const baseBodyHeightForSections = currentPlacedModule.freeHeight ?? currentPlacedModule.customHeight ?? moduleData.dimensions.height;
+            const baseBodyHeightForSections = placedBodyHeight;
             const shouldAbsorbTopForSections = moduleData.category === 'full';
             const absorbedTopForSections = shouldAbsorbTopForSections && currentPlacedModule.hasTopFrame === false
               ? ((currentPlacedModule.topFrameThickness ?? spaceInfo.frameSize?.top ?? 30) - (currentPlacedModule.topFrameGap ?? 0))
@@ -1407,7 +1436,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
         }
       }
     }
-  }, [currentPlacedModule?.id, moduleData?.id, currentPlacedModule?.freeHeight, currentPlacedModule?.customHeight, currentPlacedModule?.customDepth, currentPlacedModule?.customWidth, currentPlacedModule?.adjustedWidth, currentPlacedModule?.hasDoor, currentPlacedModule?.doorTopGap, currentPlacedModule?.doorBottomGap, moduleDefaultLowerTopOffset, currentPlacedModule?.customSections, currentPlacedModule?.hasTopFrame, currentPlacedModule?.hasBase, currentPlacedModule?.topFrameThickness, currentPlacedModule?.topFrameGap, currentPlacedModule?.baseFrameHeight, currentPlacedModule?.individualFloatHeight]); // 토글 변경 시 흡수된 높이 재계산
+  }, [currentPlacedModule?.id, moduleData?.id, placedBodyHeight, currentPlacedModule?.customDepth, currentPlacedModule?.customWidth, currentPlacedModule?.adjustedWidth, currentPlacedModule?.hasDoor, currentPlacedModule?.doorTopGap, currentPlacedModule?.doorBottomGap, moduleDefaultLowerTopOffset, currentPlacedModule?.customSections, currentPlacedModule?.hasTopFrame, currentPlacedModule?.hasBase, currentPlacedModule?.topFrameThickness, currentPlacedModule?.topFrameGap, currentPlacedModule?.baseFrameHeight, currentPlacedModule?.individualFloatHeight]); // 토글 변경 시 흡수된 높이 재계산
 
   // 도어 상하갭은 바닥/천장 기준 (받침대/띄움 무관)
   // 배치 타입 변경 시 갭값을 자동으로 바꾸지 않음 — 사용자가 도어갭에서 직접 조정
@@ -1478,7 +1507,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
   // moduleData.dimensions.height는 글로벌 baseFrame 기준이므로, 차이만큼 가구 높이에 반영
   const baseFrameDelta = globalBaseFrameHeightMm - baseFrameHeightMm; // 글로벌65 - 개별60 = +5mm
   const adjustedFreeHeight = (() => {
-    const base = currentPlacedModule?.freeHeight || currentPlacedModule?.customHeight;
+    const base = currentPlacedModule ? placedBodyHeight : undefined;
     if (baseFrameDelta !== 0) {
       // freeHeight가 있으면 delta 보정, 없으면 moduleData 높이 + delta
       return (base || moduleData?.dimensions.height || 0) + baseFrameDelta;
@@ -2122,7 +2151,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
     const newInnerH = inputVal - 2 * pt;
     if (newInnerH < 50) return;
 
-    const totalH = currentPlacedModule.freeHeight ?? currentPlacedModule.customHeight ?? 2000;
+    const totalH = placedBodyHeight || 2000;
     const sectionCount = sections.length;
     const oldInnerH = sections[sIdx].height;
     const diff = newInnerH - oldInnerH;
@@ -2954,7 +2983,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                           const store = useFurnitureStore.getState();
                           const dims = {
                             width: val,
-                            height: currentPlacedModule.freeHeight ?? currentPlacedModule.customHeight ?? moduleData.dimensions.height,
+                            height: placedBodyHeight,
                             depth: currentPlacedModule.freeDepth || moduleData.dimensions.depth,
                           };
                           if (isCustomizableModuleId(currentPlacedModule.moduleId)) {
@@ -3105,7 +3134,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                         if (e.key === 'Enter') { (e.target as HTMLInputElement).blur(); }
                         else if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
                           e.preventDefault();
-                          const cur = parseInt(freeHeightInput, 10) || (currentPlacedModule?.freeHeight ?? currentPlacedModule?.customHeight ?? moduleData.dimensions.height);
+                          const cur = parseInt(freeHeightInput, 10) || placedBodyHeight || moduleData.dimensions.height;
                           const nextDisplay = Math.max(100, Math.min(3000, cur + (e.key === 'ArrowUp' ? 1 : -1)));
                           setFreeHeightInput(nextDisplay.toString());
                           if (currentPlacedModule) {
@@ -3164,7 +3193,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                           const store = useFurnitureStore.getState();
                           const dims = {
                             width: currentPlacedModule.freeWidth || moduleData.dimensions.width,
-                            height: currentPlacedModule.freeHeight ?? currentPlacedModule.customHeight ?? moduleData.dimensions.height,
+                            height: placedBodyHeight,
                             depth: val,
                           };
                           if (isCustomizableModuleId(currentPlacedModule.moduleId)) {
@@ -3294,7 +3323,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
               : Math.max(0, bodyWidth - 3 + totalExtensionMm);
             // 도어 높이: 실제 적용된 몸통 높이 기준 (EP와 동일)
             // 상부몰딩/걸레받이 토글 OFF 시 가구가 흡수해서 몸통이 늘어남 → 도어 H도 늘어난 몸통 + 갭
-            const baseBodyH = adjustedFreeHeight || currentPlacedModule.freeHeight || currentPlacedModule.customHeight || moduleData.dimensions.height || 0;
+            const baseBodyH = adjustedFreeHeight || placedBodyHeight || moduleData.dimensions.height || 0;
             const shouldAbsorbTopForDoorH = moduleData.category === 'full';
             const absorbedTopH = shouldAbsorbTopForDoorH && currentPlacedModule.hasTopFrame === false
               ? ((currentPlacedModule.topFrameThickness ?? spaceInfo.frameSize?.top ?? 30) - (currentPlacedModule.topFrameGap ?? 0))
@@ -3511,7 +3540,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
             const isCustom = !!(ccSections && ccSections.length >= 2);
             const sectionCount = isCustom ? ccSections!.length : mcSections!.length;
             const pt = isCustom ? (cc!.panelThickness || 18) : (moduleData?.modelConfig?.basicThickness || 18);
-            const totalH = currentPlacedModule.freeHeight ?? currentPlacedModule.customHeight ?? moduleData?.dimensions?.height ?? 2200;
+            const totalH = placedBodyHeight || moduleData?.dimensions?.height || 2200;
             const totalW = currentPlacedModule.freeWidth
               ?? currentPlacedModule.adjustedWidth
               ?? currentPlacedModule.customWidth
@@ -3817,7 +3846,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                                   setSectionHeightInputs({});
                                   return;
                                 }
-                                const totalH = currentPlacedModule.freeHeight ?? currentPlacedModule.customHeight ?? moduleData.dimensions.height;
+                                const totalH = placedBodyHeight || moduleData.dimensions.height;
                                 const lastIdx = mcSections.length - 1;
                                 // 변경된 섹션 height 적용한 임시 배열
                                 const tentative = mcSections.map((s: any, idx: number) => {
