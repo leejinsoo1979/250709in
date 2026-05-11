@@ -19,7 +19,7 @@ import { analyzeColumnSlots, calculateFurnitureBounds } from '@/editor/shared/ut
 import { isCustomizableModuleId, getCustomDimensionKey, getStandardDimensionKey } from '@/editor/shared/controls/furniture/CustomizableFurnitureLibrary';
 import { calcResizedPositionX } from '@/editor/shared/utils/freePlacementUtils';
 import { filterSideViewModules } from '@/editor/shared/utils/sideViewModuleFilter';
-import { applyCountertopBodyHeightCompensation, resolveCountertopThicknessMm } from '@/editor/shared/utils/countertopHeightCompensation';
+import { resolveCountertopThicknessMm } from '@/editor/shared/utils/countertopHeightCompensation';
 
 interface CleanCAD2DProps {
   viewDirection?: '3D' | 'front' | 'left' | 'right' | 'top';
@@ -3829,9 +3829,6 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           } else {
             furnitureH = _internalHeight;
           }
-          if (leftCategoryResolved === 'lower' && leftmostMod) {
-            furnitureH = applyCountertopBodyHeightCompensation(furnitureH, leftmostMod, spaceInfo);
-          }
           // console.log('🔍 [상부섹션 furnitureH 좌]', { ... }); // 진단용 로그 제거 (성능)
 
           // companion 모듈(상부장+하부장 동시 배치) 높이 계산
@@ -3864,9 +3861,6 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 ?? leftCompanionMod.customHeight
               ?? compModData?.dimensions.height
               ?? 0);
-            if (companionCategory === 'lower') {
-              companionH = applyCountertopBodyHeightCompensation(companionH, leftCompanionMod, spaceInfo);
-            }
           }
           // hasDualCabinet: 상부장+하부장 동시 배치
           const hasDualCabinet = leftCompanionMod !== null && companionH > 0;
@@ -4641,9 +4635,6 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           } else {
             rFurnitureH = rInternalHeight;
           }
-          if (rightCategoryResolved === 'lower' && rightmostMod) {
-            rFurnitureH = applyCountertopBodyHeightCompensation(rFurnitureH, rightmostMod, spaceInfo);
-          }
           // console.log('🔍 [상부섹션 furnitureH 우]', { ... }); // 진단용 로그 제거 (성능)
 
           // companion 모듈(상부장+하부장 동시 배치) 높이 계산
@@ -4676,9 +4667,6 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 ?? rightCompanionMod.customHeight
               ?? compModData?.dimensions.height
               ?? 0);
-            if (rCompanionCategory === 'lower') {
-              rCompanionH = applyCountertopBodyHeightCompensation(rCompanionH, rightCompanionMod, spaceInfo);
-            }
           }
           const rHasDualCabinet = rightCompanionMod !== null && rCompanionH > 0;
           // 상부장 하부마감판 두께 (UpperCabinet.tsx FinishingPanelWithTexture 18mm)
@@ -6983,9 +6971,6 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                       ?? viewMod.customHeight
                       ?? moduleData?.dimensions.height
                       ?? (viewMod.customConfig?.totalHeight || 2000)));
-                if (category === 'lower') {
-                  moduleHeight = applyCountertopBodyHeightCompensation(moduleHeight, viewMod, spaceInfo);
-                }
                 // 걸래받이 OFF (hasBase=false): 가구가 걸래받이 자리를 흡수 — moduleHeight 보정
                 // (FurnitureItem.tsx의 furnitureHeightMm 보정과 동일)
                 if (!isTopFrameOff && !viewMod.freeHeight && (viewMod as any).hasBase === false && category === 'full') {
@@ -8173,9 +8158,6 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                       ?? viewMod.customHeight
                       ?? moduleData?.dimensions.height
                       ?? (viewMod.customConfig?.totalHeight || 2000)));
-                if (category === 'lower') {
-                  moduleHeight = applyCountertopBodyHeightCompensation(moduleHeight, viewMod, spaceInfo);
-                }
                 // 걸래받이 OFF (hasBase=false): 가구가 걸래받이 자리를 흡수 — moduleHeight 보정
                 // (FurnitureItem.tsx의 furnitureHeightMm 보정과 동일)
                 if (!isTopFrameOff && !viewMod.freeHeight && (viewMod as any).hasBase === false && category === 'full') {
