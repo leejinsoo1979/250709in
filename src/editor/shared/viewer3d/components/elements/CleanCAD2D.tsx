@@ -1213,12 +1213,13 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           const otherRight = otherModule.position.x + otherWThree / 2;
 
           // 왼쪽에 있는 가구 중 가장 가까운 것
-          if (otherRight <= moduleLeft + 0.001 && otherRight > leftEdge) {
-            leftEdge = otherRight;
+          // tolerance 0.05 unit (5mm) — 부동소수점 오차/미세 겹침도 인접으로 인정
+          if (otherRight <= moduleLeft + 0.05 && otherRight > leftEdge) {
+            leftEdge = Math.min(otherRight, moduleLeft); // 살짝 겹치면 moduleLeft로 클램프 (음수 갭 방지)
           }
           // 오른쪽에 있는 가구 중 가장 가까운 것
-          if (otherLeft >= moduleRight - 0.001 && otherLeft < rightEdge) {
-            rightEdge = otherLeft;
+          if (otherLeft >= moduleRight - 0.05 && otherLeft < rightEdge) {
+            rightEdge = Math.max(otherLeft, moduleRight);
           }
         }
 
