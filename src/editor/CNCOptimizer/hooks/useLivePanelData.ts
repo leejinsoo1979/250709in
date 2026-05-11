@@ -10,6 +10,7 @@ import { calculateShelfBoringPositions } from '@/domain/boring/utils/calculateSh
 import { computeFrameMergeGroups, computeStoneTopMergeGroups } from '@/editor/shared/utils/frameMergeUtils';
 import { getDefaultGrainDirection } from '@/editor/shared/utils/materialConstants';
 import { withUpperSafetyShelfRemoved } from '@/editor/shared/utils/upperSafetyShelf';
+import { applyCountertopBodyHeightCompensation } from '@/editor/shared/utils/countertopHeightCompensation';
 
 /**
  * CNC 패널 이름 → 3D panelName 변환
@@ -116,7 +117,10 @@ function computeOuterSurroundMods(placedModules: any[], spaceInfo: any, side: 'l
       : category === 'upper'
         ? 785
         : spaceInfo.height;
-    const cabHeight = explicitHeightMm ?? (moduleDataH > 0 ? moduleDataH : defaultCabH);
+    const rawCabHeight = explicitHeightMm ?? (moduleDataH > 0 ? moduleDataH : defaultCabH);
+    const cabHeight = category === 'lower'
+      ? applyCountertopBodyHeightCompensation(rawCabHeight, m, spaceInfo)
+      : rawCabHeight;
 
     if (category === 'upper') {
       let ceilingHeightMm = spaceInfo.height;
@@ -369,9 +373,15 @@ export function useLivePanelData() {
           placedModule.hasLeftEndPanel,     // 좌측 엔드패널 여부
           placedModule.hasRightEndPanel,    // 우측 엔드패널 여부
           (placedModule as any).endPanelThickness, // 엔드패널 두께
-          getPlacedModuleCategory(placedModule) === 'upper'
-            ? (placedModule.customHeight ?? placedModule.freeHeight)
-            : (placedModule.freeHeight ?? placedModule.customHeight), // 렌더링과 동일한 높이 우선순위
+          (() => {
+            const preferredHeight = getPlacedModuleCategory(placedModule) === 'upper'
+              ? (placedModule.customHeight ?? placedModule.freeHeight)
+              : (placedModule.freeHeight ?? placedModule.customHeight);
+            const baseHeightForPanels = preferredHeight ?? moduleData.dimensions.height;
+            return getPlacedModuleCategory(placedModule) === 'lower'
+              ? applyCountertopBodyHeightCompensation(baseHeightForPanels, placedModule, spaceInfo)
+              : preferredHeight;
+          })(), // 렌더링과 동일한 높이 우선순위
           topFrameH,                        // 상단몰딩 높이
           visualBaseFrameH,                 // 걸래받이 높이 (바닥마감재 차감)
           (placedModule as any).hasTopFrame, // 상단몰딩 표시 여부
@@ -882,7 +892,11 @@ export function useLivePanelData() {
             const isTopDownForStone = refModuleId.includes('lower-top-down-') || refModuleId.includes('dual-lower-top-down-');
             if (isTopDownForStone) {
               const refModuleData = getModuleById(refModuleId);
-              const refHeight = refMod.freeHeight || refMod.customHeight || refModuleData?.dimensions.height || 785;
+              const refHeight = applyCountertopBodyHeightCompensation(
+                refMod.freeHeight || refMod.customHeight || refModuleData?.dimensions.height || 785,
+                refMod,
+                spaceInfo
+              );
               const rawTopGap = (refMod as any).doorTopGap ?? spaceInfo.doorTopGap;
               const effectiveDoorTopGap = (rawTopGap === undefined || rawTopGap === 0) ? -80 : rawTopGap;
               const topFrontMm = 705 + (effectiveDoorTopGap - (-80));
@@ -1179,9 +1193,15 @@ export function usePanelSubscription(callback: (panels: Panel[]) => void) {
         placedModule.hasLeftEndPanel,
         placedModule.hasRightEndPanel,
         (placedModule as any).endPanelThickness,
-        getPlacedModuleCategory(placedModule) === 'upper'
-          ? (placedModule.customHeight ?? placedModule.freeHeight)
-          : (placedModule.freeHeight ?? placedModule.customHeight),
+        (() => {
+          const preferredHeight = getPlacedModuleCategory(placedModule) === 'upper'
+            ? (placedModule.customHeight ?? placedModule.freeHeight)
+            : (placedModule.freeHeight ?? placedModule.customHeight);
+          const baseHeightForPanels = preferredHeight ?? moduleData.dimensions.height;
+          return getPlacedModuleCategory(placedModule) === 'lower'
+            ? applyCountertopBodyHeightCompensation(baseHeightForPanels, placedModule, spaceInfo)
+            : preferredHeight;
+        })(),
         topFrameH2,
         visualBaseFrameH2,
         (placedModule as any).hasTopFrame,

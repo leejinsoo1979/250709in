@@ -20,6 +20,7 @@ import EndPanelWithTexture from '../../modules/components/EndPanelWithTexture';
 import { useTheme } from '@/contexts/ThemeContext';
 import { isCustomizableModuleId, getCustomizableCategory, CUSTOMIZABLE_DEFAULTS } from '@/editor/shared/controls/furniture/CustomizableFurnitureLibrary';
 import SurroundPanelMesh from '../../modules/SurroundPanelMesh';
+import { applyCountertopBodyHeightCompensation } from '@/editor/shared/utils/countertopHeightCompensation';
 
 // 엔드패널 슬롯 계산 기준 두께
 const END_PANEL_THICKNESS = 18; // mm
@@ -1059,6 +1060,16 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       dimensions: {
         ...moduleData.dimensions,
         height: placedModule.cabinetBodyHeight,
+      },
+    };
+  }
+
+  if (moduleData?.category === 'lower' && !isCustomFurniture && !isCustomizableModuleId(placedModule.moduleId)) {
+    moduleData = {
+      ...moduleData,
+      dimensions: {
+        ...moduleData.dimensions,
+        height: applyCountertopBodyHeightCompensation(moduleData.dimensions.height, placedModule, spaceInfo),
       },
     };
   }

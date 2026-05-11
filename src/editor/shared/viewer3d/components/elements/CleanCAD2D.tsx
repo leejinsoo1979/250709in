@@ -19,6 +19,7 @@ import { analyzeColumnSlots, calculateFurnitureBounds } from '@/editor/shared/ut
 import { isCustomizableModuleId, getCustomDimensionKey, getStandardDimensionKey } from '@/editor/shared/controls/furniture/CustomizableFurnitureLibrary';
 import { calcResizedPositionX } from '@/editor/shared/utils/freePlacementUtils';
 import { filterSideViewModules } from '@/editor/shared/utils/sideViewModuleFilter';
+import { applyCountertopBodyHeightCompensation, resolveCountertopThicknessMm } from '@/editor/shared/utils/countertopHeightCompensation';
 
 interface CleanCAD2DProps {
   viewDirection?: '3D' | 'front' | 'left' | 'right' | 'top';
@@ -3828,6 +3829,9 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           } else {
             furnitureH = _internalHeight;
           }
+          if (leftCategoryResolved === 'lower' && leftmostMod) {
+            furnitureH = applyCountertopBodyHeightCompensation(furnitureH, leftmostMod, spaceInfo);
+          }
           // console.log('🔍 [상부섹션 furnitureH 좌]', { ... }); // 진단용 로그 제거 (성능)
 
           // companion 모듈(상부장+하부장 동시 배치) 높이 계산
@@ -3860,6 +3864,9 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 ?? leftCompanionMod.customHeight
               ?? compModData?.dimensions.height
               ?? 0);
+            if (companionCategory === 'lower') {
+              companionH = applyCountertopBodyHeightCompensation(companionH, leftCompanionMod, spaceInfo);
+            }
           }
           // hasDualCabinet: 상부장+하부장 동시 배치
           const hasDualCabinet = leftCompanionMod !== null && companionH > 0;
@@ -3878,14 +3885,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             }
           }
 
-          // 하부장 상판 두께 포함 (PET 재질이면 가구재 기반 PET 매핑, 인조대리석이면 사용자 선택값)
-          // PET 매핑: 15→18, 15.5→18.5, 18→18, 18.5→18.5
-          const _basicThk_l = spaceInfo?.panelThickness || 18;
-          const _petMapped_l = _basicThk_l === 15 ? 18 : _basicThk_l === 15.5 ? 18.5 : _basicThk_l;
           const getStoneH = (m: any): number => {
-            const t = m?.stoneTopThickness || 0;
-            if (t <= 0) return 0;
-            return (m?.stoneTopMaterial === 'pet') ? _petMapped_l : t;
+            return resolveCountertopThicknessMm(m, spaceInfo);
           };
           if (hasDualCabinet) {
             const lowerMod = leftCategoryResolved === 'lower' ? leftmostMod : leftCompanionMod;
@@ -4640,6 +4641,9 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           } else {
             rFurnitureH = rInternalHeight;
           }
+          if (rightCategoryResolved === 'lower' && rightmostMod) {
+            rFurnitureH = applyCountertopBodyHeightCompensation(rFurnitureH, rightmostMod, spaceInfo);
+          }
           // console.log('🔍 [상부섹션 furnitureH 우]', { ... }); // 진단용 로그 제거 (성능)
 
           // companion 모듈(상부장+하부장 동시 배치) 높이 계산
@@ -4672,6 +4676,9 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 ?? rightCompanionMod.customHeight
               ?? compModData?.dimensions.height
               ?? 0);
+            if (rCompanionCategory === 'lower') {
+              rCompanionH = applyCountertopBodyHeightCompensation(rCompanionH, rightCompanionMod, spaceInfo);
+            }
           }
           const rHasDualCabinet = rightCompanionMod !== null && rCompanionH > 0;
           // 상부장 하부마감판 두께 (UpperCabinet.tsx FinishingPanelWithTexture 18mm)
@@ -4688,14 +4695,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             }
           }
 
-          // 하부장 상판 두께 포함 (PET 재질이면 가구재 기반 PET 매핑, 인조대리석이면 사용자 선택값)
-          // PET 매핑: 15→18, 15.5→18.5, 18→18, 18.5→18.5
-          const _basicThk_r = spaceInfo?.panelThickness || 18;
-          const _petMapped_r = _basicThk_r === 15 ? 18 : _basicThk_r === 15.5 ? 18.5 : _basicThk_r;
           const getStoneH_r = (m: any): number => {
-            const t = m?.stoneTopThickness || 0;
-            if (t <= 0) return 0;
-            return (m?.stoneTopMaterial === 'pet') ? _petMapped_r : t;
+            return resolveCountertopThicknessMm(m, spaceInfo);
           };
           if (rHasDualCabinet) {
             const rLowerMod = rightCategoryResolved === 'lower' ? rightmostMod : rightCompanionMod;
@@ -6982,6 +6983,9 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                       ?? viewMod.customHeight
                       ?? moduleData?.dimensions.height
                       ?? (viewMod.customConfig?.totalHeight || 2000)));
+                if (category === 'lower') {
+                  moduleHeight = applyCountertopBodyHeightCompensation(moduleHeight, viewMod, spaceInfo);
+                }
                 // 걸래받이 OFF (hasBase=false): 가구가 걸래받이 자리를 흡수 — moduleHeight 보정
                 // (FurnitureItem.tsx의 furnitureHeightMm 보정과 동일)
                 if (!isTopFrameOff && !viewMod.freeHeight && (viewMod as any).hasBase === false && category === 'full') {
@@ -8169,6 +8173,9 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                       ?? viewMod.customHeight
                       ?? moduleData?.dimensions.height
                       ?? (viewMod.customConfig?.totalHeight || 2000)));
+                if (category === 'lower') {
+                  moduleHeight = applyCountertopBodyHeightCompensation(moduleHeight, viewMod, spaceInfo);
+                }
                 // 걸래받이 OFF (hasBase=false): 가구가 걸래받이 자리를 흡수 — moduleHeight 보정
                 // (FurnitureItem.tsx의 furnitureHeightMm 보정과 동일)
                 if (!isTopFrameOff && !viewMod.freeHeight && (viewMod as any).hasBase === false && category === 'full') {

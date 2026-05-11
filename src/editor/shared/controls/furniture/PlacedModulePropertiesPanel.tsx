@@ -15,6 +15,7 @@ import { getDefaultGrainDirection } from '@/editor/shared/utils/materialConstant
 import { isCustomizableModuleId, getCustomDimensionKey, getStandardDimensionKey } from './CustomizableFurnitureLibrary';
 import { calcResizedPositionX } from '@/editor/shared/utils/freePlacementUtils';
 import { parseBackWallGapInput, stepBackWallGapMm } from '@/editor/shared/utils/backWallGapValidation';
+import { applyCountertopBodyHeightCompensation, getCountertopBodyHeightDeltaMm, resolveCountertopThicknessMm } from '@/editor/shared/utils/countertopHeightCompensation';
 import styles from './PlacedModulePropertiesPanel.module.css';
 
 // 가구 썸네일 이미지 경로 — ModuleGallery와 동일한 규칙
@@ -700,8 +701,12 @@ const calcBackLipFillHeight = (
   const indivFloat = modHasBaseOff ? (currentMod.individualFloatHeight ?? 0) : 0;
   const baseH = isFloating ? floatH : (railOrBaseH + indivFloat);
   const floorH = spaceInfo.hasFloorFinish && spaceInfo.floorFinish ? spaceInfo.floorFinish.height : 0;
-  const lowerBodyH = currentMod.cabinetBodyHeight ?? moduleData?.dimensions?.height ?? 785;
-  const stoneT = currentMod.stoneTopThickness || 0;
+  const lowerBodyH = applyCountertopBodyHeightCompensation(
+    currentMod.cabinetBodyHeight ?? currentMod.freeHeight ?? currentMod.customHeight ?? moduleData?.dimensions?.height ?? 785,
+    currentMod,
+    spaceInfo
+  );
+  const stoneT = resolveCountertopThicknessMm(currentMod, spaceInfo);
   const lowerTopMm = floorH + baseH + lowerBodyH + stoneT;
 
   // 현재 하부장의 X 영역(좌→우 mm)
@@ -1125,9 +1130,12 @@ const PlacedModulePropertiesPanel: React.FC = () => {
         ? currentPlacedModule.customHeight
         : undefined;
 
-      return moduleData.category === 'upper'
+      const baseHeight = moduleData.category === 'upper'
         ? (validCustomHeight ?? validFreeHeight ?? moduleData.dimensions.height)
         : (validFreeHeight ?? validCustomHeight ?? moduleData.dimensions.height);
+      return moduleData.category === 'lower'
+        ? applyCountertopBodyHeightCompensation(baseHeight, currentPlacedModule, spaceInfo)
+        : baseHeight;
     })()
     : 0;
   // 기둥 슬롯 정보 및 기둥 C 여부 확인 (조건부 렌더링 전에 미리 계산)
@@ -1254,9 +1262,12 @@ const PlacedModulePropertiesPanel: React.FC = () => {
         setFreeWidthInput((() => { const v = Math.round(slotModeWidth * 10) / 10; return v % 1 === 0 ? v.toString() : v.toFixed(1); })());
         // 2단서랍장: cabinetBodyHeight 우선, 그 외: 렌더링과 동일하게 freeHeight → customHeight → 기본 높이
         const is2TierDrawer = currentPlacedModule.moduleId.includes('lower-drawer-2tier') || currentPlacedModule.moduleId.includes('dual-lower-drawer-2tier');
-        const baseHeight = is2TierDrawer && currentPlacedModule.cabinetBodyHeight
+        const rawBaseHeight = is2TierDrawer && currentPlacedModule.cabinetBodyHeight
           ? currentPlacedModule.cabinetBodyHeight
           : placedBodyHeight;
+        const baseHeight = moduleData.category === 'lower' && is2TierDrawer && currentPlacedModule.cabinetBodyHeight
+          ? applyCountertopBodyHeightCompensation(rawBaseHeight, currentPlacedModule, spaceInfo)
+          : rawBaseHeight;
         // 상부몰딩/걸레받이 OFF로 흡수된 높이 더해서 표시 (실제 가구 높이)
         // 상부장은 천장/바닥과 무관한 독립 가구이므로 흡수 적용 안 함 (full/lower만)
         const shouldAbsorbTopForBodyH = moduleData.category === 'full';
@@ -3264,7 +3275,10 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                             ? (((currentPlacedModule.baseFrameHeight ?? (spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height ?? 60) : 0)))
                               - (currentPlacedModule.individualFloatHeight ?? 0))
                             : 0;
-                          const val = displayVal - absT - absB;
+                          const countertopDelta = moduleData.category === 'lower'
+                            ? getCountertopBodyHeightDeltaMm(currentPlacedModule, spaceInfo)
+                            : 0;
+                          const val = displayVal - absT - absB - countertopDelta;
                           const updates: any = moduleData.category === 'upper'
                             ? { customHeight: val, freeHeight: undefined }
                             : { freeHeight: val };
@@ -3336,7 +3350,10 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                               ? (((currentPlacedModule.baseFrameHeight ?? (spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height ?? 60) : 0)))
                                 - (currentPlacedModule.individualFloatHeight ?? 0))
                               : 0;
-                            const next = nextDisplay - absT - absB;
+                            const countertopDelta = moduleData.category === 'lower'
+                              ? getCountertopBodyHeightDeltaMm(currentPlacedModule, spaceInfo)
+                              : 0;
+                            const next = nextDisplay - absT - absB - countertopDelta;
                             const arrowUpdates: any = moduleData.category === 'upper'
                               ? { customHeight: next, freeHeight: undefined }
                               : { freeHeight: next };
@@ -3449,9 +3466,9 @@ const PlacedModulePropertiesPanel: React.FC = () => {
           {!showDetails && currentPlacedModule && currentPlacedModule.hasDoor
             && !(typeof currentPlacedModule.moduleId === 'string' && currentPlacedModule.moduleId.includes('insert-frame'))
             && !(typeof currentPlacedModule.moduleId === 'string' && (
-              /^lower-drawer-/.test(currentPlacedModule.moduleId)
-              || currentPlacedModule.moduleId.includes('lower-door-lift-touch-')
-              || currentPlacedModule.moduleId.includes('lower-top-down-touch-')
+              /^(dual-)?lower-drawer-/.test(currentPlacedModule.moduleId)
+              || /(^|-)lower-door-lift-/.test(currentPlacedModule.moduleId)
+              || /(^|-)lower-top-down-/.test(currentPlacedModule.moduleId)
             ))
             && (() => {
             const bodyWidth = (() => {
@@ -3631,9 +3648,9 @@ const PlacedModulePropertiesPanel: React.FC = () => {
           {!showDetails && currentPlacedModule && currentPlacedModule.hasDoor
             && !(typeof currentPlacedModule.moduleId === 'string' && currentPlacedModule.moduleId.includes('insert-frame'))
             && !(typeof currentPlacedModule.moduleId === 'string' && (
-              /^lower-drawer-/.test(currentPlacedModule.moduleId)
-              || currentPlacedModule.moduleId.includes('lower-door-lift-touch-')
-              || currentPlacedModule.moduleId.includes('lower-top-down-touch-')
+              /^(dual-)?lower-drawer-/.test(currentPlacedModule.moduleId)
+              || /(^|-)lower-door-lift-/.test(currentPlacedModule.moduleId)
+              || /(^|-)lower-top-down-/.test(currentPlacedModule.moduleId)
             ))
             && (() => {
             const isDualSlot = currentPlacedModule.isDualSlot || currentPlacedModule.moduleId?.startsWith('dual-');
@@ -3698,9 +3715,9 @@ const PlacedModulePropertiesPanel: React.FC = () => {
             && !(typeof currentPlacedModule?.moduleId === 'string' && currentPlacedModule.moduleId.startsWith('dual-'))
             && !(typeof currentPlacedModule?.moduleId === 'string' && currentPlacedModule.moduleId.includes('insert-frame'))
             && !(typeof currentPlacedModule?.moduleId === 'string' && (
-              /^lower-drawer-/.test(currentPlacedModule.moduleId)
-              || currentPlacedModule.moduleId.includes('lower-door-lift-touch-')
-              || currentPlacedModule.moduleId.includes('lower-top-down-touch-')
+              /^(dual-)?lower-drawer-/.test(currentPlacedModule.moduleId)
+              || /(^|-)lower-door-lift-/.test(currentPlacedModule.moduleId)
+              || /(^|-)lower-top-down-/.test(currentPlacedModule.moduleId)
             ))
             && (
             <div className={styles.propertySection}>
@@ -5670,7 +5687,9 @@ const PlacedModulePropertiesPanel: React.FC = () => {
               )}
               {/* 높이 제한 경고 — 800mm 초과 시에만 표시 */}
               {(currentPlacedModule.stoneTopThickness || 0) > 0 && (() => {
-                const bodyH = currentPlacedModule.cabinetBodyHeight ?? moduleData.dimensions.height ?? 785;
+                const bodyH = currentPlacedModule.cabinetBodyHeight
+                  ? applyCountertopBodyHeightCompensation(currentPlacedModule.cabinetBodyHeight, currentPlacedModule, spaceInfo)
+                  : placedBodyHeight;
                 const totalH = bodyH + (currentPlacedModule.stoneTopThickness || 0);
                 return totalH > 800 ? (
                   <div style={{ color: '#e53e3e', fontSize: '11px', marginTop: '4px' }}>

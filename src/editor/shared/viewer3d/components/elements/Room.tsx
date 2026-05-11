@@ -22,6 +22,7 @@ import { calculateSpaceIndexing, ColumnIndexer } from '@/editor/shared/utils/ind
 import { computeBaseStripGroups, computeTopStripGroups, getBaseFrameBoundsX, getLowerDepthZOffsetMM } from '@/editor/shared/utils/baseStripUtils';
 import { getModuleBoundsX, getModuleCategory } from '@/editor/shared/utils/freePlacementUtils';
 import { getModuleById } from '@/data/modules';
+import { applyCountertopBodyHeightCompensation } from '@/editor/shared/utils/countertopHeightCompensation';
 import { MaterialFactory } from '../../utils/materials/MaterialFactory';
 import NativeLine from './NativeLine';
 import { useSpace3DView } from '../../context/useSpace3DView';
@@ -1452,7 +1453,10 @@ const Room: React.FC<RoomProps> = ({
         if (md?.dimensions?.height) moduleDataH = md.dimensions.height;
       } catch { /* noop */ }
       const defaultCabH = cat === 'lower' ? 785 : cat === 'upper' ? 785 : (spaceInfo.height - topFrameMM - floorFinishMM - baseH);
-      const cabHeight = hMm > 0 ? hMm : (moduleDataH > 0 ? moduleDataH : defaultCabH);
+      const rawCabHeight = hMm > 0 ? hMm : (moduleDataH > 0 ? moduleDataH : defaultCabH);
+      const cabHeight = cat === 'lower'
+        ? applyCountertopBodyHeightCompensation(rawCabHeight, m, spaceInfo)
+        : rawCabHeight;
       // 좌/우 서라운드 프레임 Y 범위
       //  - upper: 렌더링 기준 상부장 몸통 하단 ~ 몸통 상단
       //  - lower: 공간 바닥(0) ~ 가구 상단 (floorFinish + base + cabHeight)
