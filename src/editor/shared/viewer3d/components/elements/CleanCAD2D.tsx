@@ -4545,9 +4545,34 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             }
             return rightmostMod;
           })();
+          // 상부장 참조: rightmostMod가 하부장이면 같은 위치의 상부장(companion)을 상단몰딩 참조로 사용
+          const rightUpperMod = (() => {
+            if (!rightmostMod) return rightmostMod;
+            const cat = getModuleById(rightmostMod.moduleId)?.category
+              ?? (rightmostMod.moduleId.includes('upper') ? 'upper'
+                : rightmostMod.moduleId.includes('lower') ? 'lower' : 'full');
+            if (cat === 'lower') {
+              const upperMod = allMods_R.find(m => {
+                if (m === rightmostMod) return false;
+                const bothHaveSlot = m.slotIndex !== undefined && rightmostMod.slotIndex !== undefined;
+                const samePos = bothHaveSlot
+                  ? m.slotIndex === rightmostMod.slotIndex
+                  : Math.abs((m.position?.x ?? 0) - (rightmostMod.position?.x ?? 0)) < 300;
+                if (!samePos) return false;
+                const mCat = getModuleById(m.moduleId)?.category
+                  ?? (m.moduleId.includes('upper') ? 'upper'
+                    : m.moduleId.includes('lower') ? 'lower' : 'full');
+                return mCat === 'upper';
+              });
+              return upperMod ?? rightmostMod;
+            }
+            return rightmostMod;
+          })();
           // 상부/걸래받이 치수 = 토글 OFF면 0, ON이면 저장값
+          // 상하부장 동시배치 시 rightmostMod가 하부장이면 rightUpperMod(상부장)의 hasTopFrame 참조
+          const topRefMod_R = rightUpperMod ?? rightmostMod;
           const rActualBottomSize = rightmostMod?.hasBase === false ? 0 : (rightLowerMod?.baseFrameHeight !== undefined ? rightLowerMod.baseFrameHeight : rGlobalBottomFrameH);
-          const rActualTopSize = rightmostMod?.hasTopFrame === false ? 0 : (rightmostMod?.topFrameThickness !== undefined ? rightmostMod.topFrameThickness : rGlobalTopFrame);
+          const rActualTopSize = topRefMod_R?.hasTopFrame === false ? 0 : (topRefMod_R?.topFrameThickness !== undefined ? topRefMod_R.topFrameThickness : rGlobalTopFrame);
 
           // 가구 내경 높이 — FurnitureItem.tsx와 동일한 로직 적용
           let rFurnitureH: number;
