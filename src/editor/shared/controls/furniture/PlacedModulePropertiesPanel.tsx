@@ -3331,20 +3331,9 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                   도어 셋팅
                   <span style={{ marginLeft: '4px', color: 'var(--theme-text-tertiary)', fontSize: '11px', cursor: 'help' }} title="도어와 가구 상단/하단 사이의 간격 (mm). 0이면 공간 천장/바닥 기준.">ⓘ</span>
                 </h5>
-                {/* 도어 헤더 행: 전체 체크박스 + 도어 N */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
-                  <label style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px', color: 'var(--theme-text-secondary)', cursor: 'pointer' }}>
-                    <input
-                      type="checkbox"
-                      style={{ cursor: 'pointer', accentColor: 'var(--theme-primary, #10b981)' }}
-                      readOnly
-                      checked={false}
-                    />
-                    <span>전체</span>
-                  </label>
-                  <div style={{ flex: 1, textAlign: 'center', fontSize: '12px', color: 'var(--theme-text-secondary)' }}>
-                    {Array.from({ length: doorCount }, (_, i) => `도어 ${i + 1}`).join(' / ')}
-                  </div>
+                {/* 도어 헤더 행: 도어 N */}
+                <div style={{ textAlign: 'center', fontSize: '12px', color: 'var(--theme-text-secondary)', marginBottom: '6px' }}>
+                  {Array.from({ length: doorCount }, (_, i) => `도어 ${i + 1}`).join(' / ')}
                 </div>
                 {/* 상단갭 */}
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
