@@ -93,7 +93,10 @@ const getRenderedSurroundPanelMod = (module: any, spaceInfo: any): RenderedSurro
   }
 
   const defaultCabH = category === 'lower' ? 785 : category === 'upper' ? 785 : spaceInfo.height;
-  const cabHeight = explicitHeightMm ?? (moduleDataH > 0 ? moduleDataH : defaultCabH);
+  const rawCabHeight = explicitHeightMm ?? (moduleDataH > 0 ? moduleDataH : defaultCabH);
+  const cabHeight = category === 'lower'
+    ? applyCountertopBodyHeightCompensation(rawCabHeight, module, spaceInfo)
+    : rawCabHeight;
 
   if (category === 'upper') {
     let ceilingHeightMm = spaceInfo.height;
@@ -3466,9 +3469,10 @@ const PlacedModulePropertiesPanel: React.FC = () => {
           {!showDetails && currentPlacedModule && currentPlacedModule.hasDoor
             && !(typeof currentPlacedModule.moduleId === 'string' && currentPlacedModule.moduleId.includes('insert-frame'))
             && !(typeof currentPlacedModule.moduleId === 'string' && (
+              // 서랍 모듈만 매칭 (반통 half는 도어 모듈 → 제외)
               /^(dual-)?lower-drawer-/.test(currentPlacedModule.moduleId)
-              || /(^|-)lower-door-lift-/.test(currentPlacedModule.moduleId)
-              || /(^|-)lower-top-down-/.test(currentPlacedModule.moduleId)
+              || (/(^|-)lower-door-lift-/.test(currentPlacedModule.moduleId) && !currentPlacedModule.moduleId.includes('-half-'))
+              || (/(^|-)lower-top-down-/.test(currentPlacedModule.moduleId) && !currentPlacedModule.moduleId.includes('-half-'))
             ))
             && (() => {
             const bodyWidth = (() => {
@@ -3648,9 +3652,10 @@ const PlacedModulePropertiesPanel: React.FC = () => {
           {!showDetails && currentPlacedModule && currentPlacedModule.hasDoor
             && !(typeof currentPlacedModule.moduleId === 'string' && currentPlacedModule.moduleId.includes('insert-frame'))
             && !(typeof currentPlacedModule.moduleId === 'string' && (
+              // 서랍 모듈만 매칭 (반통 half는 도어 모듈 → 제외)
               /^(dual-)?lower-drawer-/.test(currentPlacedModule.moduleId)
-              || /(^|-)lower-door-lift-/.test(currentPlacedModule.moduleId)
-              || /(^|-)lower-top-down-/.test(currentPlacedModule.moduleId)
+              || (/(^|-)lower-door-lift-/.test(currentPlacedModule.moduleId) && !currentPlacedModule.moduleId.includes('-half-'))
+              || (/(^|-)lower-top-down-/.test(currentPlacedModule.moduleId) && !currentPlacedModule.moduleId.includes('-half-'))
             ))
             && (() => {
             const isDualSlot = currentPlacedModule.isDualSlot || currentPlacedModule.moduleId?.startsWith('dual-');
@@ -3715,9 +3720,10 @@ const PlacedModulePropertiesPanel: React.FC = () => {
             && !(typeof currentPlacedModule?.moduleId === 'string' && currentPlacedModule.moduleId.startsWith('dual-'))
             && !(typeof currentPlacedModule?.moduleId === 'string' && currentPlacedModule.moduleId.includes('insert-frame'))
             && !(typeof currentPlacedModule?.moduleId === 'string' && (
+              // 서랍 모듈만 매칭 (반통 half는 도어 모듈 → 제외)
               /^(dual-)?lower-drawer-/.test(currentPlacedModule.moduleId)
-              || /(^|-)lower-door-lift-/.test(currentPlacedModule.moduleId)
-              || /(^|-)lower-top-down-/.test(currentPlacedModule.moduleId)
+              || (/(^|-)lower-door-lift-/.test(currentPlacedModule.moduleId) && !currentPlacedModule.moduleId.includes('-half-'))
+              || (/(^|-)lower-top-down-/.test(currentPlacedModule.moduleId) && !currentPlacedModule.moduleId.includes('-half-'))
             ))
             && (
             <div className={styles.propertySection}>
