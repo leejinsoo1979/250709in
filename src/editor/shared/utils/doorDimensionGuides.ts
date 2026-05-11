@@ -35,5 +35,6 @@ export const shouldRenderDoorDimensionGuides = (
   isPlainMaterial: boolean,
   viewMode: '2D' | '3D',
   view2DDirection?: string
-): boolean => showDimensions && !isPlainMaterial && viewMode === '2D' && view2DDirection === 'front'
-
+): boolean => showDimensions
+  && !isPlainMaterial
+  && (viewMode === '3D' || (viewMode === '2D' && view2DDirection === 'front'))

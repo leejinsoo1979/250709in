@@ -41,12 +41,11 @@ describe('doorDimensionGuides', () => {
     expect(resolveDoorHeightDimensionSides(modules, 'middle')).toEqual({ left: false, right: false })
   })
 
-  it('도어 치수 가이드는 2D 정면뷰에서만 렌더링한다', () => {
+  it('도어 치수 가이드는 3D와 2D 정면뷰에서 렌더링한다', () => {
     expect(shouldRenderDoorDimensionGuides(true, false, '2D', 'front')).toBe(true)
-    expect(shouldRenderDoorDimensionGuides(true, false, '3D', 'front')).toBe(false)
+    expect(shouldRenderDoorDimensionGuides(true, false, '3D', 'front')).toBe(true)
     expect(shouldRenderDoorDimensionGuides(true, false, '2D', 'left')).toBe(false)
     expect(shouldRenderDoorDimensionGuides(false, false, '2D', 'front')).toBe(false)
     expect(shouldRenderDoorDimensionGuides(true, true, '2D', 'front')).toBe(false)
   })
 })
-
