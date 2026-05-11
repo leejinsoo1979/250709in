@@ -259,12 +259,12 @@ const FreePlacementDropZone: React.FC = () => {
       const exactUnitWidth = availableWidth / totalUnits;
       const cappedUnitWidth = Math.min(MAX_SINGLE, exactUnitWidth);
 
-      // 0.5mm 단위로 균등 분할 (제조 편의)
-      // 가구 합이 배치공간을 초과하면 안 되므로 floor (내림) 적용
-      // 싱글 너비 결정 후 듀얼은 정확히 싱글 × 2 (진정한 균등분할)
-      const floor05 = (v: number) => Math.floor(v * 2) / 2;
-      const singleW = floor05(cappedUnitWidth);
-      const dualW = Math.min(singleW * 2, MAX_DUAL);
+      // 균등 분할 (제조 편의)
+      // - 싱글(반통): 정수 mm 내림
+      // - 듀얼(한통): 0.5mm 단위 내림 (싱글 × 2 → 자동으로 정수 또는 .0/.5)
+      // 가구 합이 배치공간을 초과하면 안 되므로 floor 적용
+      const singleW = Math.floor(cappedUnitWidth); // 정수 mm
+      const dualW = Math.min(singleW * 2, MAX_DUAL); // 싱글 × 2 = 정수
 
       let currentX = zoneStartMm;
       sorted.forEach((mod, i) => {
