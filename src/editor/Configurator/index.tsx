@@ -146,6 +146,15 @@ const DoorGapInput: React.FC<{
   );
 };
 
+const getTopDoorGapForFrameState = (spaceInfo: any, hasTopFrame: boolean): number => {
+  if (!hasTopFrame) return -5;
+  const frameConfig = spaceInfo?.frameConfig;
+  const isFullSurround = spaceInfo?.surroundType === 'surround'
+    && frameConfig?.top !== false
+    && frameConfig?.bottom !== false;
+  return isFullSurround ? -3 : 5;
+};
+
 /** 프레임 size/옵셋 입력 행 — 로컬 상태 기반 (편집 중 store 업데이트로 인한 덮어쓰기 방지) */
 const FrameOffsetRow: React.FC<{
   num: number; label: string; enabled: boolean; sizeMM: number; offset: number;
@@ -4517,14 +4526,13 @@ const Configurator: React.FC = () => {
               // 서라운드 타입별 업데이트 데이터 구성
               let updates: Record<string, unknown>;
               if (newMode === 'full-surround') {
-                const topFrame = spaceInfo.frameSize?.top || 30;
                 updates = {
                   surroundType: 'surround',
                   frameConfig: { ...currentFrameConfig, top: true, bottom: true },
                   frameSize: {
                     ...(spaceInfo.frameSize || { left: 50, right: 50, top: 30 }),
                   },
-                  doorTopGap: topFrame + 3,
+                  doorTopGap: -3,
                 };
               } else if (newMode === 'sides-only') {
                 updates = {
@@ -5543,7 +5551,7 @@ const Configurator: React.FC = () => {
             const next = !topFrameAllMode;
             setTopFrameAllMode(next);
             // 통합/해제 모두 개별행 ON 상태로 복구
-            topFreeMods.forEach(m => updatePlacedModule(m.id, { hasTopFrame: true, doorTopGap: 5 }));
+            topFreeMods.forEach(m => updatePlacedModule(m.id, { hasTopFrame: true, doorTopGap: getTopDoorGapForFrameState(spaceInfo, true) }));
           };
           const toggleAllBaseFree = () => {
             const next = !baseFrameAllMode;
@@ -5612,7 +5620,7 @@ const Configurator: React.FC = () => {
                       <div style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '3px 0' }}>
                         <span className={styles.frameItemLabel} style={{ minWidth: '34px', textAlign: 'left', margin: 0 }}>전체</span>
                         <button
-                          onClick={() => topFreeMods.forEach(m => updatePlacedModule(m.id, { hasTopFrame: true, doorTopGap: 5 }))}
+                          onClick={() => topFreeMods.forEach(m => updatePlacedModule(m.id, { hasTopFrame: true, doorTopGap: getTopDoorGapForFrameState(spaceInfo, true) }))}
                           className={styles.miniToggle}
                         />
                         <div style={{ display: 'flex', flex: 1, gap: '4px' }}>
@@ -5654,7 +5662,7 @@ const Configurator: React.FC = () => {
                       enabled={mod.hasTopFrame !== false} sizeMM={upperTopFrame} offset={mod.topFrameOffset ?? upperOffsetDefault}
                       onToggle={() => {
                         const newVal = !(mod.hasTopFrame !== false);
-                        updatePlacedModule(mod.id, { hasTopFrame: newVal, doorTopGap: newVal ? 5 : -5 });
+                        updatePlacedModule(mod.id, { hasTopFrame: newVal, doorTopGap: getTopDoorGapForFrameState(spaceInfo, newVal) });
                       }}
                       onSizeChange={(v) => updatePlacedModule(mod.id, { topFrameThickness: Math.max(0, v) })}
                       onOffsetChange={(v) => updatePlacedModule(mod.id, { topFrameOffset: v })}
@@ -5684,7 +5692,7 @@ const Configurator: React.FC = () => {
                     enabled={mod.hasTopFrame !== false} sizeMM={actualTopFrameSize} offset={mod.topFrameOffset ?? 0}
                     onToggle={() => {
                       const newVal = !(mod.hasTopFrame !== false);
-                      updatePlacedModule(mod.id, { hasTopFrame: newVal, doorTopGap: newVal ? 5 : -5 });
+                      updatePlacedModule(mod.id, { hasTopFrame: newVal, doorTopGap: getTopDoorGapForFrameState(spaceInfo, newVal) });
                     }}
                     onSizeChange={(v) => {
                       const revFloatH = (spaceInfo.baseConfig?.type === 'stand' && spaceInfo.baseConfig?.placementType === 'float')
@@ -6148,7 +6156,7 @@ const Configurator: React.FC = () => {
                         group.totalWidthMm,
                         firstMod?.topFrameThickness ?? globalTop,
                         firstMod?.topFrameOffset ?? topOffsetDefault,
-                        () => { const newVal = !allEnabled; group.moduleIds.forEach(id => updatePlacedModule(id, { hasTopFrame: newVal, doorTopGap: newVal ? 5 : -5 })); },
+                        () => { const newVal = !allEnabled; group.moduleIds.forEach(id => updatePlacedModule(id, { hasTopFrame: newVal, doorTopGap: getTopDoorGapForFrameState(spaceInfo, newVal) })); },
                         (v) => { group.moduleIds.forEach(id => updatePlacedModule(id, { topFrameThickness: v })); },
                         (v) => { group.moduleIds.forEach(id => updatePlacedModule(id, { topFrameOffset: v })); },
                         `merged-top-${gIdx}`,
@@ -6205,7 +6213,7 @@ const Configurator: React.FC = () => {
             const next = !topFrameAllMode;
             setTopFrameAllMode(next);
             // 통합모드 진입/해제 모두 개별행 ON 상태로 복구
-            topSortedMods.forEach(m => updatePlacedModule(m.id, { hasTopFrame: true, doorTopGap: 5 }));
+            topSortedMods.forEach(m => updatePlacedModule(m.id, { hasTopFrame: true, doorTopGap: getTopDoorGapForFrameState(spaceInfo, true) }));
           };
           const toggleAllBase = () => {
             const next = !baseFrameAllMode;
@@ -6252,7 +6260,7 @@ const Configurator: React.FC = () => {
                             const newVal = !unifiedEnabled;
                             topSortedMods.forEach(m => updatePlacedModule(m.id, {
                               hasTopFrame: newVal,
-                              doorTopGap: newVal ? 5 : -5,
+                              doorTopGap: getTopDoorGapForFrameState(spaceInfo, newVal),
                               ...(newVal ? {} : { topFrameGap: m.topFrameGap ?? 0 }),
                             }));
                           },
@@ -6283,7 +6291,7 @@ const Configurator: React.FC = () => {
                             <span className={styles.frameItemLabel} style={{ minWidth: '34px', textAlign: 'left', margin: 0 }}>전체</span>
                             <button
                               onClick={() => {
-                                topSortedMods.forEach(m => updatePlacedModule(m.id, { hasTopFrame: true, doorTopGap: 5 }));
+                                topSortedMods.forEach(m => updatePlacedModule(m.id, { hasTopFrame: true, doorTopGap: getTopDoorGapForFrameState(spaceInfo, true) }));
                               }}
                               className={styles.miniToggle}
                             />
@@ -6331,7 +6339,7 @@ const Configurator: React.FC = () => {
                           mod.topFrameOffset ?? topOffsetDefault,
                           () => {
                             const newVal = !(mod.hasTopFrame !== false);
-                            updatePlacedModule(mod.id, { hasTopFrame: newVal, doorTopGap: newVal ? 5 : -5 });
+                            updatePlacedModule(mod.id, { hasTopFrame: newVal, doorTopGap: getTopDoorGapForFrameState(spaceInfo, newVal) });
                           },
                           (v) => updatePlacedModule(mod.id, { topFrameThickness: v }),
                           (v) => updatePlacedModule(mod.id, { topFrameOffset: v }),

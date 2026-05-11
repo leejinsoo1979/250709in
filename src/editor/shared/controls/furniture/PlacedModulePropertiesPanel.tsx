@@ -1207,8 +1207,12 @@ const PlacedModulePropertiesPanel: React.FC = () => {
       const modId = currentPlacedModule.moduleId || '';
       const isDoorLift = modId.includes('lower-door-lift-') && !modId.includes('-half-');
       const isTopDown = modId.includes('lower-top-down-') && !modId.includes('-half-');
-      const defaultTopGap = isDoorLift ? 30 : isTopDown ? -80 : 0;
-      const defaultBottomGap = isTopDown ? 5 : 0;
+      const isLowerCategory = moduleData?.category === 'lower';
+      const isFullSurroundForDoorDefaults = spaceInfo.surroundType === 'surround'
+        && spaceInfo.frameConfig?.top !== false
+        && spaceInfo.frameConfig?.bottom !== false;
+      const defaultTopGap = isDoorLift ? 30 : isTopDown ? -80 : isLowerCategory ? 0 : (isFullSurroundForDoorDefaults ? -3 : 5);
+      const defaultBottomGap = isTopDown ? 5 : isLowerCategory ? 0 : 25;
       const rawTopGap = currentPlacedModule.doorTopGap;
       const initialTopGap = rawTopGap ?? defaultTopGap;
       const rawBotGap = currentPlacedModule.doorBottomGap;
@@ -2389,11 +2393,15 @@ const PlacedModulePropertiesPanel: React.FC = () => {
         const mId = mod.moduleId || '';
         const isDL = mId.includes('lower-door-lift-') && !mId.includes('-half-');
         const isTD = mId.includes('lower-top-down-') && !mId.includes('-half-');
+        const isLowerModule = mId.startsWith('lower-') || mId.includes('dual-lower-');
+        const isFullSurroundForDoorDefaults = spaceInfo.surroundType === 'surround'
+          && spaceInfo.frameConfig?.top !== false
+          && spaceInfo.frameConfig?.bottom !== false;
         if (mod.doorTopGap === undefined) {
-          updates.doorTopGap = isDL ? 30 : isTD ? -80 : 0;
+          updates.doorTopGap = isDL ? 30 : isTD ? -80 : isLowerModule ? 0 : (isFullSurroundForDoorDefaults ? -3 : 5);
         }
         if (mod.doorBottomGap === undefined) {
-          updates.doorBottomGap = isTD ? 5 : 0;
+          updates.doorBottomGap = isTD ? 5 : isLowerModule ? 0 : 25;
         }
       }
       updatePlacedModule(activePopup.id, updates);
@@ -4095,6 +4103,10 @@ const PlacedModulePropertiesPanel: React.FC = () => {
             // 서라운드(전체/양쪽 포함) + 상부장일 때 기본 옵셋 23mm
             const isUpperCat = mod.moduleId?.includes('upper-cabinet') || mod.moduleId?.startsWith('upper-');
             const isSurroundForOffset = spaceInfo.surroundType === 'surround';
+            const isFullSurroundForDoorGap = spaceInfo.surroundType === 'surround'
+              && spaceInfo.frameConfig?.top !== false
+              && spaceInfo.frameConfig?.bottom !== false;
+            const topDoorGapOn = isFullSurroundForDoorGap ? -3 : 5;
             const topOffsetDefault = (isUpperCat && isSurroundForOffset) ? 23 : 0;
             const topOffset = mod.topFrameOffset ?? topOffsetDefault;
             const topGap = mod.topFrameGap ?? 0;
@@ -4239,7 +4251,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                       const nextHasTopFrame = !topEnabled;
                       updatePlacedModule(mod.id, {
                         hasTopFrame: nextHasTopFrame,
-                        doorTopGap: nextHasTopFrame ? 5 : -5,
+                        doorTopGap: nextHasTopFrame ? topDoorGapOn : -5,
                         ...getUpperShelfGapSyncUpdates({ hasTopFrame: nextHasTopFrame }),
                       });
                       setSectionHeightInputs({}); // 흡수된 높이 재계산 위해 섹션 캐시 초기화

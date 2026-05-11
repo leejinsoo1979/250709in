@@ -127,8 +127,7 @@ const SurroundControls: React.FC<SurroundControlsProps> = ({ spaceInfo, onUpdate
         middle: spaceInfo.gapConfig?.middle ?? 1.5,
       };
       updates.frameConfig = { left: true, right: true, top: true, bottom: true };
-      // 전체서라운드 시 도어 상단갭 = 상단몰딩 두께 + 3mm
-      updates.doorTopGap = currentTop + 3;
+      updates.doorTopGap = -3;
 
       onUpdate(updates);
 

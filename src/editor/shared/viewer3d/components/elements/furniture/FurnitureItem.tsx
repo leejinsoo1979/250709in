@@ -379,7 +379,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   }, [storeDoorTopGap, storeDoorBottomGap]);
 
   // 도어갭 자동 동기화 비활성화 (몸통 기준 시스템에서는 사용자 입력 + 토글 핸들러로 제어)
-  // 기존: 슬롯배치 전체서라운드에서 doorTopGap = topFrame + 3 강제 → 상부몰딩/걸레받이 토글 결과를 덮어씀
+  // 기존: 슬롯배치 전체서라운드에서 doorTopGap을 자동 강제 → 상부몰딩/걸레받이 토글 결과를 덮어씀
   const isLowerModule = placedModule.moduleId?.includes('lower-');
 
   // 도어 갭 변경 핸들러

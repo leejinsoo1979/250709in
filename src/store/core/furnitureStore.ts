@@ -381,9 +381,10 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
           // 기타 하부장: 캐비넷 상단에서 20mm 내려옴
           module.doorTopGap = 20;
         } else {
-          const isFullSurround = spaceInfo.surroundType === 'surround' && spaceInfo.frameConfig?.top !== false;
-          const topFrameMm = spaceInfo.frameSize?.top || 30;
-          module.doorTopGap = isFullSurround ? (topFrameMm + 3) : 5;
+          const isFullSurround = spaceInfo.surroundType === 'surround'
+            && spaceInfo.frameConfig?.top !== false
+            && spaceInfo.frameConfig?.bottom !== false;
+          module.doorTopGap = isFullSurround ? -3 : 5;
         }
       }
 
@@ -841,10 +842,10 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
     const floatHeight = spaceInfo.baseConfig?.floatHeight || 200;
     const defaultBottomGap = isFloatPlacement ? floatHeight : 25;
 
-    // 전체서라운드: 상단몰딩 + 3mm, 그 외: 5mm
-    const isFullSurround = spaceInfo.surroundType === 'surround' && spaceInfo.frameConfig?.top !== false;
-    const topFrameMm = spaceInfo.frameSize?.top || 30;
-    const defaultTopGap = isFullSurround ? (topFrameMm + 3) : 5;
+    const isFullSurround = spaceInfo.surroundType === 'surround'
+      && spaceInfo.frameConfig?.top !== false
+      && spaceInfo.frameConfig?.bottom !== false;
+    const defaultTopGap = isFullSurround ? -3 : 5;
 
     const currentModules = get().placedModules;
     const updatedModules = currentModules.map(module => {
@@ -1160,9 +1161,10 @@ useFurnitureStore.subscribe((state) => {
     // 상부장 doorTopGap 이상치 수정
     const isUpper = m.moduleId?.includes('upper-cabinet');
     if (isUpper && m.doorTopGap !== undefined && m.doorTopGap > 100) {
-      const isFullSurround = spInfo.surroundType === 'surround' && spInfo.frameConfig?.top !== false;
-      const topFrameMm = m.topFrameThickness ?? spInfo.frameSize?.top ?? 30;
-      const correctGap = isFullSurround ? (topFrameMm + 3) : 5;
+      const isFullSurround = spInfo.surroundType === 'surround'
+        && spInfo.frameConfig?.top !== false
+        && spInfo.frameConfig?.bottom !== false;
+      const correctGap = isFullSurround ? -3 : 5;
       return { ...m, doorTopGap: correctGap };
     }
     const isBasic = m.moduleId?.includes('lower-half-cabinet') || m.moduleId?.includes('dual-lower-half-cabinet') || m.moduleId?.includes('lower-drawer-') || m.moduleId?.includes('dual-lower-drawer-') || m.moduleId?.includes('lower-sink-cabinet') || m.moduleId?.includes('dual-lower-sink-cabinet') || m.moduleId?.includes('lower-induction-cabinet') || m.moduleId?.includes('dual-lower-induction-cabinet');
