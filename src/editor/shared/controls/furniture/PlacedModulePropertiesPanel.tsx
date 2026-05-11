@@ -3291,8 +3291,15 @@ const PlacedModulePropertiesPanel: React.FC = () => {
           )}
 
           {/* 도어 치수 (읽기 전용) — 몸통치수 바로 아래, 편집 탭 전용 */}
-          {/* 키큰장 찬넬(insert-frame)은 도어 없는 채움재 → 도어 옵션 전체 숨김 */}
-          {!showDetails && currentPlacedModule && currentPlacedModule.hasDoor && !(typeof currentPlacedModule.moduleId === 'string' && currentPlacedModule.moduleId.includes('insert-frame')) && (() => {
+          {/* 키큰장 찬넬(insert-frame) 및 서랍 전용 모듈 제외 */}
+          {!showDetails && currentPlacedModule && currentPlacedModule.hasDoor
+            && !(typeof currentPlacedModule.moduleId === 'string' && currentPlacedModule.moduleId.includes('insert-frame'))
+            && !(typeof currentPlacedModule.moduleId === 'string' && (
+              /^lower-drawer-/.test(currentPlacedModule.moduleId)
+              || currentPlacedModule.moduleId.includes('lower-door-lift-touch-')
+              || currentPlacedModule.moduleId.includes('lower-top-down-touch-')
+            ))
+            && (() => {
             const bodyWidth = (() => {
               const v = parseInt(freeWidthInput, 10);
               if (!isNaN(v) && v > 0) return v;
