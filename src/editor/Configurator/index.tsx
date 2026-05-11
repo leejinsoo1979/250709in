@@ -689,9 +689,8 @@ const Configurator: React.FC = () => {
     setRenderMode('solid');
   }, []);
 
-  // 상부장 topFrameOffset 자동 동기화:
-  // - 서라운드: 상부장 옵셋 미설정/0 → 23 저장
-  // - 노서라운드: 상부장에 0이 아닌 잔재값 남아있으면 → 0 저장
+  // 상부장 topFrameOffset 자동 동기화: surroundType 변경 시에만 1회 동기화
+  // (placedModules deps 제거 — 사용자가 옵셋 0 등으로 변경 시 자동 23으로 되돌리는 문제 방지)
   useEffect(() => {
     if (isLoadingProjectRef.current) return;
     const isSurround = spaceInfo.surroundType === 'surround';
@@ -703,17 +702,21 @@ const Configurator: React.FC = () => {
         updatePlacedModule(m.id, { doorTopGap: -3 });
       }
       if (!isUpper) return;
+      // 옵셋이 명시적으로 설정 안 된 경우(undefined)에만 기본값 적용
       if (isSurround) {
-        if (m.topFrameOffset === undefined || m.topFrameOffset === 0) {
+        if (m.topFrameOffset === undefined) {
           updatePlacedModule(m.id, { topFrameOffset: 23 });
         }
       } else {
+        // 노서라운드 전환 시에만 잔재값 0으로 리셋 (이후 사용자 입력은 보존)
         if (m.topFrameOffset !== undefined && m.topFrameOffset !== 0) {
           updatePlacedModule(m.id, { topFrameOffset: 0 });
         }
       }
     });
-  }, [spaceInfo.surroundType, spaceInfo.frameConfig?.top, placedModules, updatePlacedModule]);
+    // surroundType / frameConfig.top 변경 시에만 실행 (placedModules 제외)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [spaceInfo.surroundType, spaceInfo.frameConfig?.top]);
 
   // 보링 데이터 생성 훅
   const { panels: boringPanels, totalBorings, furnitureCount: boringFurnitureCount } = useFurnitureBoring();
