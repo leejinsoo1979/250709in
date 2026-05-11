@@ -1187,7 +1187,8 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
               } : moduleData.id.includes('lower-door-lift-3tier') ? {
                 sideNotches: [{ y: 65, z: 40, fromBottom: 315 }, { y: 65, z: 40, fromBottom: 545 }]
               } : moduleData.id.includes('lower-door-lift-2tier') ? {
-                sideNotches: [{ y: 65, z: 40, fromBottom: 355 }]
+                // 도어올림 2단 반통: 몸통 H 변경 시 노치 위치 동적 계산 (LowerCabinet.tsx 1362 doorLift2TierNotch와 동일 공식)
+                sideNotches: [{ y: 65, z: 40, fromBottom: Math.max(0, Math.round((Math.round(adjustedHeight / 0.01) - 75) / 2)) }]
               } : moduleData.id.includes('lower-top-down-3tier') ? {
                 sideNotches: [{ y: 65, z: 40, fromBottom: 225 }, { y: 65, z: 40, fromBottom: 445 }, { y: 65, z: 40, fromBottom: 665 }]
               } : moduleData.id.includes('lower-top-down-2tier') ? {
@@ -1356,7 +1357,14 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
         // 상판내림 3단: fromBottom=225, 445, 665 (1단=225, 따내기65, 2단=155, 따내기65, 3단=155, 따내기65, 상단55)
         // 상판내림 2단: fromBottom=300, 665 (1단=300, 따내기65, 2단=300, 따내기65, 상단55)
         const drawer2TierFromBottom = (moduleData.dimensions.height - 125) / 2;
-        const notchFromBottoms = is3Tier ? [295, 510] : isDoorLift3Tier ? [315, 545] : isDoorLift2Tier ? [355] : isTopDown3Tier ? [225, 445, 665] : isTopDown2Tier ? [300, 665] : [drawer2TierFromBottom];
+        // 도어올림 2단: 사용자 몸통 H 변경 시 도어와 몸통이 균형있게 같이 변하도록 동적 계산
+        // 노치높이 65, 도어갭 20 고정. notch=(H-75)/2, maida=notch+45 (도어갭 20mm 보존)
+        // (H=785 기준: notch=355, 도어=400 — 기존 값과 동일)
+        // 정수 반올림으로 0.5 단위 방지. maida를 notch에서 파생시켜 도어갭 일관성 보장
+        const currentCabinetHmm = Math.round(adjustedHeight / 0.01);
+        const doorLift2TierNotch = Math.max(0, Math.round((currentCabinetHmm - 75) / 2));
+        const doorLift2TierMaidaH = Math.max(0, doorLift2TierNotch + 45);
+        const notchFromBottoms = is3Tier ? [295, 510] : isDoorLift3Tier ? [315, 545] : isDoorLift2Tier ? [doorLift2TierNotch] : isTopDown3Tier ? [225, 445, 665] : isTopDown2Tier ? [300, 665] : [drawer2TierFromBottom];
         const notchHeights = is3Tier ? [65, 65] : isDoorLift3Tier ? [65, 65] : isDoorLift2Tier ? [65] : isTopDown3Tier ? [65, 65, 65] : isTopDown2Tier ? [65, 65] : [65];
         const drawerCount = (is3Tier || isDoorLift3Tier || isTopDown3Tier) ? 3 : 2;
 
@@ -1383,7 +1391,7 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
               notchHeights={notchHeights}
               isEditMode={isEditMode}
               hideTopNotch={isDoorLift2Tier || isDoorLift3Tier || isTopDown2Tier || isTopDown3Tier}
-              maidaHeightsMm={isDoorLift2Tier ? [400, 400] : isDoorLift3Tier ? [360, 210, 210] : undefined}
+              maidaHeightsMm={isDoorLift2Tier ? [doorLift2TierMaidaH, doorLift2TierMaidaH] : isDoorLift3Tier ? [360, 210, 210] : undefined}
               sideHeightOverrides={isTopDown2Tier ? { all: 240 } : isTopDown3Tier ? { first: 180, rest: 130 } : undefined}
               doorTopGap={effectiveDrawerTopGap}
               doorBottomGap={effectiveDrawerBottomGap}

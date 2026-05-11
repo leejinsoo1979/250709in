@@ -1374,6 +1374,11 @@ const PlacedModulePropertiesPanel: React.FC = () => {
           setHsCenterWidthInput(hsCW);
           setHsCenterDepthInput(hsCD);
         } else {
+          const isPullOutOrPantryInit = !!(
+            currentPlacedModule.moduleId?.includes('pull-out-cabinet') ||
+            currentPlacedModule.moduleId?.includes('pantry-cabinet') ||
+            (currentPlacedModule.moduleId?.includes('fridge-cabinet') && !currentPlacedModule.moduleId?.includes('built-in-fridge'))
+          );
           // 표준 가구: 사용자가 섹션 높이를 바꾼 경우 customSections를 우선 사용
           const userCustomSections = (currentPlacedModule as any).customSections;
           const mcSections = (Array.isArray(userCustomSections) && userCustomSections.length >= 2)
@@ -1418,7 +1423,9 @@ const PlacedModulePropertiesPanel: React.FC = () => {
               const ht = sec.heightType || 'percentage';
               const isLast = i === mcSections.length - 1;
               let sH: number;
-              if (isLast) {
+              if (isPullOutOrPantryInit && (Array.isArray(userCustomSections) || sec.heightType === 'absolute')) {
+                sH = sec.height || 0;
+              } else if (isLast) {
                 const fixedSum = mcSections.slice(0, -1).reduce((acc: number, s: any) => {
                   if ((s.heightType || 'percentage') === 'absolute') return acc + (s.height || 0);
                   const r = (s.height || s.heightRatio || 50) / 100;
@@ -3754,13 +3761,14 @@ const PlacedModulePropertiesPanel: React.FC = () => {
           })()}
 
           {/* 도어 셋팅 (상단갭/하단갭) — 도어 장착 시 표시, insert-frame 및 서랍 전용 모듈 제외 */}
+          {/* 단, 도어올림장(lower-door-lift-*)은 서랍이어도 도어 갭 설정 표시 (사용자 예외 요청) */}
           {!showDetails && currentPlacedModule && currentPlacedModule.hasDoor
             && !(typeof currentPlacedModule.moduleId === 'string' && currentPlacedModule.moduleId.includes('insert-frame'))
             && !(typeof currentPlacedModule.moduleId === 'string' && (
               // 서랍 모듈만 매칭 (반통 half는 도어 모듈 → 제외)
+              // 도어올림장(lower-door-lift-*)은 서랍이어도 도어 갭 설정 노출 → 여기서 제외하지 않음
               /^(dual-)?lower-drawer-/.test(currentPlacedModule.moduleId)
               || /(^|-)lower-induction-cabinet-/.test(currentPlacedModule.moduleId)
-              || (/(^|-)lower-door-lift-/.test(currentPlacedModule.moduleId) && !currentPlacedModule.moduleId.includes('-half-'))
               || (/(^|-)lower-top-down-/.test(currentPlacedModule.moduleId) && !currentPlacedModule.moduleId.includes('-half-'))
             ))
             && (() => {
@@ -3932,7 +3940,10 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                 // isCustom이어도 마지막 섹션은 sectionBasisH - 이전합으로 계산해야
                 // 상부몰딩/걸레받이 토글 변경 시 흡수된 높이가 즉시 반영됨
                 const isLastSection = sIdx === sectionCount - 1;
-                const dynamicH = isLastSection
+                const isPantryOrPullOutSection = isPullOutOrPantry && !isCustom;
+                const dynamicH = isPantryOrPullOutSection
+                  ? ((sec as any).height || getStdSectionHeightMM(sIdx))
+                  : isLastSection
                   ? (() => {
                       const fixedSum = (isCustom ? ccSections! : mcSections!)
                         .slice(0, -1)
@@ -4149,6 +4160,47 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                             onBlur={() => {
                               if (isCustom) {
                                 handleSectionHeightBlur(sIdx);
+                              } else if (isPantryOrPullOut && mcSections) {
+                                // 팬트리장/인출장: 전체 몸통 H 고정, 변경한 섹션의 반대쪽 섹션이 흡수한다.
+                                const inputVal = parseInt(sectionHeightInputs[sIdx] || '0', 10);
+                                if (isNaN(inputVal) || inputVal < 100) {
+                                  setSectionHeightInputs({});
+                                  return;
+                                }
+                                const totalH = placedBodyHeight || moduleData.dimensions.height;
+                                const basicThickness = (spaceInfo as any).panelThickness || 18;
+                                // 변경된 섹션 height 적용 + 변경된 섹션이 shelf면 shelfPositions 재배치
+                                const tentative = mcSections.map((s: any, idx: number) => {
+                                  if (idx !== sIdx) return s;
+                                  const updated: any = { ...s, height: inputVal };
+                                  if ((s.type === 'shelf' || s.type === 'open') && (s.count > 0 || (Array.isArray(s.shelfPositions) && s.shelfPositions.length > 0))) {
+                                    const shelfCount = s.count || (s.shelfPositions?.length ?? 0);
+                                    const innerH = Math.max(0, inputVal - 2 * basicThickness);
+                                    updated.shelfPositions = calculateEvenShelfPositions(innerH, shelfCount, basicThickness);
+                                  }
+                                  return updated;
+                                });
+                                const absorbTarget = sIdx === 0 ? mcSections.length - 1 : 0;
+                                const otherSum = tentative
+                                  .filter((_: any, idx: number) => idx !== absorbTarget)
+                                  .reduce((sum: number, s: any) => sum + (s.height || 0), 0);
+                                const newAbsorbH = totalH - otherSum;
+                                if (newAbsorbH < 100) {
+                                  setSectionHeightInputs({});
+                                  return;
+                                }
+                                const newSections = tentative.map((s: any, idx: number) => {
+                                  if (idx !== absorbTarget) return s;
+                                  const updated: any = { ...s, height: newAbsorbH };
+                                  if ((s.type === 'shelf' || s.type === 'open') && (s.count > 0 || (Array.isArray(s.shelfPositions) && s.shelfPositions.length > 0))) {
+                                    const shelfCount = s.count || (s.shelfPositions?.length ?? 0);
+                                    const innerH = Math.max(0, newAbsorbH - 2 * basicThickness);
+                                    updated.shelfPositions = calculateEvenShelfPositions(innerH, shelfCount, basicThickness);
+                                  }
+                                  return updated;
+                                });
+                                updatePlacedModule(currentPlacedModule.id, { customSections: newSections } as any);
+                                setSectionHeightInputs({});
                               } else if (isStdEditable && mcSections) {
                                 // 표준 가구 마지막(상부) 섹션 높이 변경 → 전체 높이 역계산
                                 const inputVal = parseInt(sectionHeightInputs[sIdx] || '0', 10);
@@ -4174,48 +4226,6 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                                 }
                                 updatePlacedModule(currentPlacedModule.id, secUpdates);
                                 setFreeHeightInput(clampedH.toString());
-                                setSectionHeightInputs({});
-                              } else if (isPantryOrPullOut && mcSections) {
-                                // 팬트리장/인출장: 사용자가 변경한 섹션 유지 + 하부(첫 섹션 = 0)가 흡수
-                                // 1) 변경된 섹션의 height 갱신
-                                // 2) 하부(첫 섹션) height = freeHeight - (다른 섹션 합) 으로 재계산
-                                // 3) 변경된 섹션이 shelf면 shelfPositions 균등 재배치
-                                const inputVal = parseInt(sectionHeightInputs[sIdx] || '0', 10);
-                                if (isNaN(inputVal) || inputVal < 100) {
-                                  setSectionHeightInputs({});
-                                  return;
-                                }
-                                const totalH = placedBodyHeight || moduleData.dimensions.height;
-                                const absorbIdx = 0; // 하부(첫 섹션)가 흡수
-                                const basicThickness = (spaceInfo as any).panelThickness || 18;
-                                // 변경된 섹션 height 적용 + 변경된 섹션이 shelf면 shelfPositions 재배치
-                                const tentative = mcSections.map((s: any, idx: number) => {
-                                  if (idx !== sIdx) return s;
-                                  const updated: any = { ...s, height: inputVal };
-                                  if ((s.type === 'shelf' || s.type === 'open') && (s.count > 0 || (Array.isArray(s.shelfPositions) && s.shelfPositions.length > 0))) {
-                                    const shelfCount = s.count || (s.shelfPositions?.length ?? 0);
-                                    const innerH = Math.max(0, inputVal - 2 * basicThickness);
-                                    updated.shelfPositions = calculateEvenShelfPositions(innerH, shelfCount, basicThickness);
-                                  }
-                                  return updated;
-                                });
-                                // 사용자가 하부(첫) 섹션 변경한 경우 → 마지막 섹션이 흡수 (역순)
-                                const absorbTarget = sIdx === absorbIdx ? mcSections.length - 1 : absorbIdx;
-                                const otherSum = tentative
-                                  .filter((_: any, idx: number) => idx !== absorbTarget)
-                                  .reduce((sum: number, s: any) => sum + (s.height || 0), 0);
-                                const newAbsorbH = Math.max(100, totalH - otherSum);
-                                const newSections = tentative.map((s: any, idx: number) => {
-                                  if (idx !== absorbTarget) return s;
-                                  const updated: any = { ...s, height: newAbsorbH };
-                                  if ((s.type === 'shelf' || s.type === 'open') && (s.count > 0 || (Array.isArray(s.shelfPositions) && s.shelfPositions.length > 0))) {
-                                    const shelfCount = s.count || (s.shelfPositions?.length ?? 0);
-                                    const innerH = Math.max(0, newAbsorbH - 2 * basicThickness);
-                                    updated.shelfPositions = calculateEvenShelfPositions(innerH, shelfCount, basicThickness);
-                                  }
-                                  return updated;
-                                });
-                                updatePlacedModule(currentPlacedModule.id, { customSections: newSections } as any);
                                 setSectionHeightInputs({});
                               } else {
                                 setSectionHeightInputs(prev => ({ ...prev, [sIdx]: displayH }));
