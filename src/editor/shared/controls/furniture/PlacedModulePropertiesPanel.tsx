@@ -975,7 +975,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
       const validFreeHeight = autoDroppedUpperHeight && !autoDroppedUpperHeight.freeHeight && !isStaleUpperTotalHeight(currentPlacedModule.freeHeight)
         ? currentPlacedModule.freeHeight
         : undefined;
-      const validCustomHeight = autoDroppedUpperHeight && !autoDroppedUpperHeight.customHeight && !isStaleUpperTotalHeight(currentPlacedModule.customHeight)
+      const validCustomHeight = autoDroppedUpperHeight && !autoDroppedUpperHeight.customHeight
         ? currentPlacedModule.customHeight
         : undefined;
 
@@ -3098,7 +3098,8 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                       onChange={(e) => setFreeHeightInput(e.target.value)}
                       onBlur={() => {
                         const displayVal = parseInt(freeHeightInput, 10);
-                        if (!isNaN(displayVal) && displayVal >= 100 && displayVal <= 3000 && currentPlacedModule) {
+                        const maxHeightInput = moduleData.category === 'upper' ? Math.round(spaceInfo.height) : 3000;
+                        if (!isNaN(displayVal) && displayVal >= 100 && displayVal <= maxHeightInput && currentPlacedModule) {
                           // 표시값(늘어난 값) → freeHeight(원본값): 흡수분 차감
                           const shouldAbsorbTopForBodyH = moduleData.category === 'full';
                           const absT = shouldAbsorbTopForBodyH && currentPlacedModule.hasTopFrame === false
@@ -3167,7 +3168,8 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                         else if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
                           e.preventDefault();
                           const cur = parseInt(freeHeightInput, 10) || placedBodyHeight || moduleData.dimensions.height;
-                          const nextDisplay = Math.max(100, Math.min(3000, cur + (e.key === 'ArrowUp' ? 1 : -1)));
+                          const maxHeightInput = moduleData.category === 'upper' ? Math.round(spaceInfo.height) : 3000;
+                          const nextDisplay = Math.max(100, Math.min(maxHeightInput, cur + (e.key === 'ArrowUp' ? 1 : -1)));
                           setFreeHeightInput(nextDisplay.toString());
                           if (currentPlacedModule) {
                             // 표시값 → freeHeight 변환 (흡수분 차감)

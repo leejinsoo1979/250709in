@@ -1431,8 +1431,12 @@ const Room: React.FC<RoomProps> = ({
         (id.startsWith('upper-') || id.includes('-upper-')) ? 'upper'
         : (id.startsWith('lower-') || id.includes('-lower-')) ? 'lower'
         : 'full';
-      const hMm = (m.freeHeight || m.customHeight || 0);
-      // 모듈 데이터에서 실제 높이 가져오기 (freeHeight/customHeight > 모듈 정의 height > 기본)
+      const freeHeightMm = typeof m.freeHeight === 'number' && m.freeHeight > 0 ? m.freeHeight : undefined;
+      const customHeightMm = typeof m.customHeight === 'number' && m.customHeight > 0 ? m.customHeight : undefined;
+      const hMm = cat === 'upper'
+        ? (customHeightMm ?? freeHeightMm ?? 0)
+        : (freeHeightMm ?? customHeightMm ?? 0);
+      // 모듈 데이터에서 실제 높이 가져오기 (상부장: customHeight 우선, 그 외: freeHeight 우선)
       let moduleDataH = 0;
       try {
         const internalSp = { width: spaceInfo.width, height: spaceInfo.height, depth: spaceInfo.depth || 1500 };
@@ -1441,18 +1445,23 @@ const Room: React.FC<RoomProps> = ({
       } catch { /* noop */ }
       const defaultCabH = cat === 'lower' ? 785 : cat === 'upper' ? 785 : (spaceInfo.height - topFrameMM - floorFinishMM - baseH);
       const cabHeight = hMm > 0 ? hMm : (moduleDataH > 0 ? moduleDataH : defaultCabH);
-      // position.y (three.js, floorFinish 기준 mm): 가구 중심 Y
-      const posYmm = Math.round((m.position?.y ?? 0) * 100);
-      // 상부장 도어 하단 확장 갭 (가구 바닥보다 아래로 확장)
-      const doorBotGap = (m as any).doorBottomGap ?? (spaceInfo as any).doorBottomGap ?? 0;
       // 좌/우 서라운드 프레임 Y 범위
-      //  - upper: (상부장 하단 - doorBottomGap) ~ 공간 천장
+      //  - upper: 렌더링 기준 상부장 몸통 하단 ~ 몸통 상단
       //  - lower: 공간 바닥(0) ~ 가구 상단 (floorFinish + base + cabHeight)
       let bottomMm: number;
       let topMm: number;
       if (cat === 'upper') {
-        bottomMm = posYmm - cabHeight / 2 - doorBotGap;
-        topMm = spaceInfo.height;
+        let ceilingHeightMm = spaceInfo.height;
+        if ((m as any).zone === 'dropped') {
+          if (spaceInfo.layoutMode === 'free-placement' && spaceInfo.stepCeiling?.enabled) {
+            ceilingHeightMm = spaceInfo.height - (spaceInfo.stepCeiling.dropHeight || 0);
+          } else if (spaceInfo.droppedCeiling?.enabled && spaceInfo.droppedCeiling?.dropHeight !== undefined) {
+            ceilingHeightMm = spaceInfo.height - spaceInfo.droppedCeiling.dropHeight;
+          }
+        }
+        const upperTopFrameMm = (m as any).topFrameThickness ?? topFrameMM;
+        topMm = ceilingHeightMm - upperTopFrameMm;
+        bottomMm = topMm - cabHeight;
       } else if (cat === 'lower') {
         bottomMm = 0;
         // 하부장 프레임 상단 = floorFinish + 받침대(가구별) + 실제 하부장 높이
@@ -4115,15 +4124,19 @@ const Room: React.FC<RoomProps> = ({
           return (
             <>
               {leftOuterMods.map((om, idx) => {
-                const segH = mmToThreeUnits(om.heightMm);
-                const segCY = panelStartY + mmToThreeUnits(om.bottomMm) + segH / 2;
+                const LOWER_EP_MM = 27.5;
+                const isUpperFront = om.category === 'upper';
+                const frontHeightMm = isUpperFront ? om.heightMm + LOWER_EP_MM : om.heightMm;
+                const frontBottomMm = isUpperFront ? om.bottomMm - LOWER_EP_MM : om.bottomMm;
+                const segH = mmToThreeUnits(frontHeightMm);
+                const segCY = panelStartY + mmToThreeUnits(frontBottomMm) + segH / 2;
                 // 기본 Z(표준 600mm 깊이 가구 도어 앞면 기준)에서, 가구 깊이 차이만큼 뒤로 이동
                 const refDepthMm = 600;
                 const depthDiff = mmToThreeUnits(refDepthMm - om.depthMm);
                 const segCZ = leftPosition[2] - depthDiff;
                 return (
                   <BoxWithEdges
-                    key={`left-frame-split-${idx}-${om.category}-${materialConfig?.doorColor}-${materialConfig?.doorTexture}`}
+                    key={`left-frame-split-${idx}-${om.category}-${Math.round(frontHeightMm)}-${Math.round(frontBottomMm)}-${Math.round(om.depthMm)}-${materialConfig?.doorColor}-${materialConfig?.doorTexture}`}
                     hideEdges={hideEdges}
                     isOuterFrame
                     name="left-surround-ep"
@@ -4519,14 +4532,18 @@ const Room: React.FC<RoomProps> = ({
           return (
             <>
               {rightOuterMods.map((om, idx) => {
-                const segH = mmToThreeUnits(om.heightMm);
-                const segCY = panelStartY + mmToThreeUnits(om.bottomMm) + segH / 2;
+                const LOWER_EP_MM = 27.5;
+                const isUpperFront = om.category === 'upper';
+                const frontHeightMm = isUpperFront ? om.heightMm + LOWER_EP_MM : om.heightMm;
+                const frontBottomMm = isUpperFront ? om.bottomMm - LOWER_EP_MM : om.bottomMm;
+                const segH = mmToThreeUnits(frontHeightMm);
+                const segCY = panelStartY + mmToThreeUnits(frontBottomMm) + segH / 2;
                 const refDepthMm = 600;
                 const depthDiff = mmToThreeUnits(refDepthMm - om.depthMm);
                 const segCZ = rightFrameZ - depthDiff;
                 return (
                   <BoxWithEdges
-                    key={`right-frame-split-${idx}-${om.category}-${materialConfig?.doorColor}-${materialConfig?.doorTexture}`}
+                    key={`right-frame-split-${idx}-${om.category}-${Math.round(frontHeightMm)}-${Math.round(frontBottomMm)}-${Math.round(om.depthMm)}-${materialConfig?.doorColor}-${materialConfig?.doorTexture}`}
                     hideEdges={hideEdges}
                     isOuterFrame
                     name="right-surround-ep"
@@ -6320,30 +6337,25 @@ const Room: React.FC<RoomProps> = ({
               const subFrameZ = furnitureZOffset + furnitureDepth / 2 - mmToThreeUnits(END_PANEL_THICKNESS) / 2 - mmToThreeUnits(28) + leftSubEdgeZOffset;
               const subFrameMat = leftSubFrameMaterial ?? createFrameMaterial('left');
 
-              // 분절 모드: 좌측 최외곽이 상/하부만 → 각 가구 높이/Z/깊이에 맞춰 세로 서브프레임 조각들
-              //  - 상부장 옆 내측 서브프레임은 하단 18mm(하부마감판 두께)만큼 위로 올려 마감판 위에 얹음
+              // 분절 모드: 좌측 최외곽이 상/하부만 → 각 가구 몸통 높이/Z/깊이에 맞춰 세로 서브프레임 조각들
               if (isLeftFrameSplit && spaceInfo.surroundType !== 'no-surround') {
                 return (
                   <>
                     {leftOuterMods.map((om, idx) => {
-                      const BOTTOM_PANEL_MM = 27.5;
-                      const isUpperSub = om.category === 'upper';
-                      const adjustedHeightMm = isUpperSub ? Math.max(0, om.heightMm - BOTTOM_PANEL_MM) : om.heightMm;
-                      const adjustedBottomMm = isUpperSub ? om.bottomMm + BOTTOM_PANEL_MM : om.bottomMm;
-                      const segH = mmToThreeUnits(adjustedHeightMm);
-                      const segCY = panelStartY + mmToThreeUnits(adjustedBottomMm) + segH / 2;
+                      const segH = mmToThreeUnits(om.heightMm);
+                      const segCY = panelStartY + mmToThreeUnits(om.bottomMm) + segH / 2;
                       const refDepthMm = 600;
                       const depthDiff = mmToThreeUnits(refDepthMm - om.depthMm);
                       const segSubZ = subFrameZ - depthDiff;
                       return (
                         <group
-                          key={`left-normal-vertical-split-${idx}-${om.category}`}
+                          key={`left-normal-vertical-split-${idx}-${om.category}-${Math.round(om.heightMm)}-${Math.round(om.bottomMm)}-${Math.round(om.depthMm)}`}
                           position={[subFrameX, segCY, segSubZ]}
                           rotation={[0, Math.PI / 2, 0]}
                         >
                           <BoxWithEdges
                             hideEdges={hideEdges}
-                            key={`left-normal-vertical-split-inner-${idx}-${om.category}-${materialConfig?.doorColor}-${materialConfig?.doorTexture}`}
+                            key={`left-normal-vertical-split-inner-${idx}-${om.category}-${Math.round(om.heightMm)}-${Math.round(om.bottomMm)}-${Math.round(om.depthMm)}-${materialConfig?.doorColor}-${materialConfig?.doorTexture}`}
                             args={[mmToThreeUnits(44), segH, mmToThreeUnits(END_PANEL_THICKNESS)]}
                             position={[0, 0, 0]}
                             material={subFrameMat}
@@ -6545,24 +6557,20 @@ const Room: React.FC<RoomProps> = ({
                 return (
                   <>
                     {rightOuterMods.map((om, idx) => {
-                      const BOTTOM_PANEL_MM = 27.5;
-                      const isUpperSub = om.category === 'upper';
-                      const adjustedHeightMm = isUpperSub ? Math.max(0, om.heightMm - BOTTOM_PANEL_MM) : om.heightMm;
-                      const adjustedBottomMm = isUpperSub ? om.bottomMm + BOTTOM_PANEL_MM : om.bottomMm;
-                      const segH = mmToThreeUnits(adjustedHeightMm);
-                      const segCY = panelStartY + mmToThreeUnits(adjustedBottomMm) + segH / 2;
+                      const segH = mmToThreeUnits(om.heightMm);
+                      const segCY = panelStartY + mmToThreeUnits(om.bottomMm) + segH / 2;
                       const refDepthMm = 600;
                       const depthDiff = mmToThreeUnits(refDepthMm - om.depthMm);
                       const segSubZ = subFrameZ - depthDiff;
                       return (
                         <group
-                          key={`right-normal-vertical-split-${idx}-${om.category}`}
+                          key={`right-normal-vertical-split-${idx}-${om.category}-${Math.round(om.heightMm)}-${Math.round(om.bottomMm)}-${Math.round(om.depthMm)}`}
                           position={[subFrameX, segCY, segSubZ]}
                           rotation={[0, Math.PI / 2, 0]}
                         >
                           <BoxWithEdges
                             hideEdges={hideEdges}
-                            key={`right-normal-vertical-split-inner-${idx}-${om.category}-${materialConfig?.doorColor}-${materialConfig?.doorTexture}`}
+                            key={`right-normal-vertical-split-inner-${idx}-${om.category}-${Math.round(om.heightMm)}-${Math.round(om.bottomMm)}-${Math.round(om.depthMm)}-${materialConfig?.doorColor}-${materialConfig?.doorTexture}`}
                             args={[mmToThreeUnits(44), segH, mmToThreeUnits(END_PANEL_THICKNESS)]}
                             position={[0, 0, 0]}
                             material={subFrameMat}

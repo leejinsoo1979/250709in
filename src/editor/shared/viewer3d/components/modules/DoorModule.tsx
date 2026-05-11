@@ -416,8 +416,12 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   const isFree = isLayoutModeFree || isFreePlacement || (storePlacedModule?.isFreePlacement ?? false);
   const storeFreeWidth = storePlacedModule?.freeWidth;
   const storeFreeHeight = storePlacedModule?.freeHeight;
-  // 자유배치에서 실제 사용할 높이: props internalHeight > store freeHeight > 기본값
-  const effectiveInternalHeight = internalHeight || storeFreeHeight;
+  const storeCustomHeight = storePlacedModule?.customHeight;
+  const storeHeightFallback = moduleData?.category === 'upper'
+    ? (storeCustomHeight ?? storeFreeHeight)
+    : (storeFreeHeight ?? storeCustomHeight);
+  // 실제 사용할 높이: 부모 렌더 높이 > 스토어 수동 높이 > 모듈 기본값
+  const effectiveInternalHeight = internalHeight ?? storeHeightFallback;
 
   // 자유배치 EP 역보정: 부모 group이 freeEpOffsetX만큼 밀렸으므로 도어는 반대로 되돌림
   // (도어는 원래 freeWidth 크기 그대로, 가구 중심에 위치해야 함)

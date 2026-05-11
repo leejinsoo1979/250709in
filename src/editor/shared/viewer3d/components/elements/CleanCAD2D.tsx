@@ -3811,11 +3811,11 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               || rounded === Math.round(leftModDataForCat.dimensions.height + 65);
           };
           if (leftmostMod) {
-            if (leftCategoryResolved === 'upper' && leftmostMod.customHeight && !isStaleUpperTotalHeightLeft(leftmostMod.customHeight)) {
+            if (leftCategoryResolved === 'upper' && leftmostMod.customHeight) {
               furnitureH = leftmostMod.customHeight;
             } else if (leftmostMod.freeHeight && !isStaleUpperTotalHeightLeft(leftmostMod.freeHeight)) {
               furnitureH = leftmostMod.freeHeight;
-            } else if (leftmostMod.customHeight && !isStaleUpperTotalHeightLeft(leftmostMod.customHeight)) {
+            } else if (leftmostMod.customHeight) {
               furnitureH = leftmostMod.customHeight;
             } else {
               if (leftCategoryResolved === 'lower' || leftCategoryResolved === 'upper') {
@@ -3852,12 +3852,12 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 || rounded === Math.round(compModData.dimensions.height + 65);
             };
             companionH = companionCategory === 'upper'
-              ? ((!isStaleCompanionUpperTotalHeight(leftCompanionMod.customHeight) ? leftCompanionMod.customHeight : undefined)
+              ? (leftCompanionMod.customHeight
                 ?? (!isStaleCompanionUpperTotalHeight(leftCompanionMod.freeHeight) ? leftCompanionMod.freeHeight : undefined)
                 ?? compModData?.dimensions.height
                 ?? 0)
               : ((!isStaleCompanionUpperTotalHeight(leftCompanionMod.freeHeight) ? leftCompanionMod.freeHeight : undefined)
-                ?? (!isStaleCompanionUpperTotalHeight(leftCompanionMod.customHeight) ? leftCompanionMod.customHeight : undefined)
+                ?? leftCompanionMod.customHeight
               ?? compModData?.dimensions.height
               ?? 0);
           }
@@ -4624,11 +4624,11 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               || rounded === Math.round(rightModDataForCat.dimensions.height + 65);
           };
           if (rightmostMod) {
-            if (rightCategoryResolved === 'upper' && rightmostMod.customHeight && !isStaleUpperTotalHeightRight(rightmostMod.customHeight)) {
+            if (rightCategoryResolved === 'upper' && rightmostMod.customHeight) {
               rFurnitureH = rightmostMod.customHeight;
             } else if (rightmostMod.freeHeight && !isStaleUpperTotalHeightRight(rightmostMod.freeHeight)) {
               rFurnitureH = rightmostMod.freeHeight;
-            } else if (rightmostMod.customHeight && !isStaleUpperTotalHeightRight(rightmostMod.customHeight)) {
+            } else if (rightmostMod.customHeight) {
               rFurnitureH = rightmostMod.customHeight;
             } else {
               if (rightCategoryResolved === 'lower' || rightCategoryResolved === 'upper') {
@@ -4664,12 +4664,12 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 || rounded === Math.round(compModData.dimensions.height + 65);
             };
             rCompanionH = rCompanionCategory === 'upper'
-              ? ((!isStaleRightCompanionUpperTotalHeight(rightCompanionMod.customHeight) ? rightCompanionMod.customHeight : undefined)
+              ? (rightCompanionMod.customHeight
                 ?? (!isStaleRightCompanionUpperTotalHeight(rightCompanionMod.freeHeight) ? rightCompanionMod.freeHeight : undefined)
                 ?? compModData?.dimensions.height
                 ?? 0)
               : ((!isStaleRightCompanionUpperTotalHeight(rightCompanionMod.freeHeight) ? rightCompanionMod.freeHeight : undefined)
-                ?? (!isStaleRightCompanionUpperTotalHeight(rightCompanionMod.customHeight) ? rightCompanionMod.customHeight : undefined)
+                ?? rightCompanionMod.customHeight
               ?? compModData?.dimensions.height
               ?? 0);
           }
@@ -7398,10 +7398,10 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   if (doorCategory === 'upper') {
                     // 상부장 도어 (몸통 기준, EP와 동일)
                     // doorHeight = 몸통H + 상단갭 + 하단갭
-                    // 몸통 H는 팝업 H와 동일해야 함: freeHeight > customHeight > 모듈 정의의 base 높이 (785 등)
+                    // 몸통 H는 팝업 H와 동일해야 함: 상부장은 customHeight 우선
                     // doorModData.dimensions.height는 zone/maxHeight 영향으로 바뀔 수 있어 사용 안 함
-                    const cabinetH = doorModule.freeHeight
-                      ?? doorModule.customHeight
+                    const cabinetH = doorModule.customHeight
+                      ?? doorModule.freeHeight
                       ?? 785; // 상부장 표준 높이
                     const topFrameVal = doorModule.topFrameThickness ?? (spaceInfo.frameSize?.top ?? 30);
                     const cabinetTopAbs = effectiveH - topFrameVal;

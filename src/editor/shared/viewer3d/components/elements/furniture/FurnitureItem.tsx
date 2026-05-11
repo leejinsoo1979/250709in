@@ -1029,7 +1029,6 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
 
   const validUpperCustomHeight = moduleData?.category === 'upper'
     && placedModule.customHeight
-    && !isStaleUpperTotalHeight(placedModule.customHeight)
     ? placedModule.customHeight
     : undefined;
   const validFreeHeight = placedModule.freeHeight
@@ -1372,7 +1371,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       // 상부장은 상단몰딩 하단에 붙어야 함
       // 자유배치 모드에서는 사용자 지정 높이를 우선 사용
       // 미드웨이 편집: customHeight가 있으면 상단 고정, 하단 확장
-      const upperCabinetHeight = (placedModule.customHeight && !autoDroppedUpperHeight.customHeight && !isStaleUpperTotalHeight(placedModule.customHeight))
+      const upperCabinetHeight = (placedModule.customHeight && !autoDroppedUpperHeight.customHeight)
         ? placedModule.customHeight
         : (placedModule.isFreePlacement && placedModule.freeHeight && !autoDroppedUpperHeight.freeHeight && !isStaleUpperTotalHeight(placedModule.freeHeight)
           ? placedModule.freeHeight
@@ -1440,13 +1439,13 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       const floatH = placedModule.individualFloatHeight ?? 0;
       furnitureHeightMm += (absorbedBase - floatH);
     }
-  } else if (isUpperCabinetForY && placedModule.customHeight && !autoDroppedUpperHeight.customHeight && !isStaleUpperTotalHeight(placedModule.customHeight)) {
+  } else if (isUpperCabinetForY && placedModule.customHeight && !autoDroppedUpperHeight.customHeight) {
     furnitureHeightMm = placedModule.customHeight;
   } else if (placedModule.isFreePlacement && placedModule.freeHeight && !(isUpperCabinetForY && (autoDroppedUpperHeight.freeHeight || isStaleUpperTotalHeight(placedModule.freeHeight)))) {
     furnitureHeightMm = placedModule.freeHeight;
   } else {
     // 상부장 미드웨이 편집: customHeight 우선 (상단 고정, 하단만 확장)
-    if (isUpperCabinetForY && placedModule.customHeight && !autoDroppedUpperHeight.customHeight && !isStaleUpperTotalHeight(placedModule.customHeight)) {
+    if (isUpperCabinetForY && placedModule.customHeight && !autoDroppedUpperHeight.customHeight) {
       furnitureHeightMm = placedModule.customHeight;
     } else {
       furnitureHeightMm = actualModuleData?.dimensions.height || 0;
