@@ -1198,14 +1198,14 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
 
             if (modCat === 'upper') {
               // 상부장 도어 (몸통 기준, EP와 동일)
-              // doorH = 몸통H + 상단갭 + 하단갭 (785 + 5 + 28 = 818)
-              const cabinetH = mod.freeHeight || mod.customHeight || modData.dimensions.height || 600;
+              // 가구 본체 위치 계산과 동일한 moduleHeightMm 사용 (토글 흡수분 포함)
+              // doorH = 몸통H + 상단갭 + 하단갭
               const topFrameVal = mod.topFrameThickness ?? (spaceInfo.frameSize?.top ?? 30);
               const cabinetTopAbs = effectiveH_door - topFrameVal;
-              const cabinetBottomAbs = cabinetTopAbs - cabinetH;
+              const cabinetBottomAbs = cabinetTopAbs - moduleHeightMm;
               doorTopAbsMm = cabinetTopAbs + doorTopGapVal;
               doorBottomAbsMm = cabinetBottomAbs - doorBottomGapVal;
-              doorHeightMm = cabinetH + doorTopGapVal + doorBottomGapVal;
+              doorHeightMm = moduleHeightMm + doorTopGapVal + doorBottomGapVal;
             } else if (modCat === 'lower') {
               const cabinetH = modData.dimensions.height ?? 1000;
               const cabinetBottomAbs = (isFloating ? floatHeightMm : (railOrBaseHeightMm + indivFloatMm)) + floorFinishHeightMm;
@@ -2543,14 +2543,13 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
 
             if (modCat === 'upper') {
               // 상부장 도어 (몸통 기준, EP와 동일)
-              // doorH = 몸통H + 상단갭 + 하단갭
-              const cabinetH = mod.freeHeight || mod.customHeight || modData.dimensions.height || 600;
+              // 가구 본체 위치 계산과 동일한 moduleHeightMm 사용 (토글 흡수분 포함)
               const topFrameVal = mod.topFrameThickness ?? (spaceInfo.frameSize?.top ?? 30);
               const cabinetTopAbs = effectiveH_rd - topFrameVal;
-              const cabinetBottomAbs = cabinetTopAbs - cabinetH;
+              const cabinetBottomAbs = cabinetTopAbs - moduleHeightMm;
               doorTopAbsMm = cabinetTopAbs + doorTopGapVal;
               doorBottomAbsMm = cabinetBottomAbs - doorBottomGapVal;
-              doorHeightMm = cabinetH + doorTopGapVal + doorBottomGapVal;
+              doorHeightMm = moduleHeightMm + doorTopGapVal + doorBottomGapVal;
             } else if (modCat === 'lower') {
               const cabinetH = modData.dimensions.height ?? 1000;
               const cabinetBottomAbs = (isFloating ? floatHeightMm : (railOrBaseHeightMm + indivFloatMm)) + floorFinishHeightMm;

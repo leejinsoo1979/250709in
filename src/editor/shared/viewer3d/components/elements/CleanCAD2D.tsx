@@ -6901,12 +6901,17 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
 
             // 개별 모듈의 baseFrameHeight 우선 사용 (선택된 슬롯 기준 가구)
             const viewMod = sideViewMod || leftmostModules[0];
+            const viewModDataForFrame = viewMod ? getModuleById(viewMod.moduleId) : null;
+            const viewModCategoryForFrame = viewModDataForFrame?.category
+              ?? (viewMod?.moduleId.includes('upper') ? 'upper'
+                : viewMod?.moduleId.includes('lower') ? 'lower' : 'full');
             // 가구별 상단몰딩/상단갭 우선 (하부 OFF 시 상단몰딩이 확장된 값 반영)
             const isTopFrameOff = viewMod?.hasTopFrame === false;
             const rawTopFrame = viewMod?.topFrameThickness ?? globalTopFrame;
             // 하부 OFF 시 상단몰딩에 흡수된 걸래받이 크기 (FurnitureItem의 topDelta 계산과 동일)
             const globalBaseMm = spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height ?? 60) : 0;
-            const baseFrameAbsorbed = viewMod?.hasBase === false
+            const canAbsorbBaseInSideView = viewModCategoryForFrame === 'full' || viewModCategoryForFrame === 'lower';
+            const baseFrameAbsorbed = canAbsorbBaseInSideView && viewMod?.hasBase === false
               ? (viewMod.baseFrameHeight ?? globalBaseMm)
               : 0;
             const topFrameHeight = isTopFrameOff
@@ -6915,7 +6920,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             const topSegmentColor = frameDimensionColor;
             // console.log('🔍 [CleanCAD2D 좌측 치수]', { ... }); // 진단용 로그 제거 (성능)
             // hasBase=false → 걸래받이 0 (individualFloatHeight만 반영)
-            const bottomFrameHeight = viewMod?.hasBase === false
+            const bottomFrameHeight = canAbsorbBaseInSideView && viewMod?.hasBase === false
               ? (viewMod.individualFloatHeight ?? 0)
               : (viewMod?.baseFrameHeight !== undefined && spaceInfo.baseConfig?.type === 'floor')
                 ? viewMod.baseFrameHeight : globalBottomFrame;
@@ -8061,11 +8066,16 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
 
             // 개별 모듈의 baseFrameHeight 우선 사용 (선택된 슬롯 기준 가구)
             const viewMod = sideViewMod || rightmostModules[0];
+            const viewModDataForFrame = viewMod ? getModuleById(viewMod.moduleId) : null;
+            const viewModCategoryForFrame = viewModDataForFrame?.category
+              ?? (viewMod?.moduleId.includes('upper') ? 'upper'
+                : viewMod?.moduleId.includes('lower') ? 'lower' : 'full');
             // 가구별 상단몰딩/상단갭 우선 (하부 OFF 시 상단몰딩에 흡수된 베이스 분 빼서 표시)
             const isTopFrameOff = viewMod?.hasTopFrame === false;
             const rawTopFrame = viewMod?.topFrameThickness ?? globalTopFrame;
             const globalBaseMm = spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height ?? 60) : 0;
-            const baseFrameAbsorbed = viewMod?.hasBase === false
+            const canAbsorbBaseInSideView = viewModCategoryForFrame === 'full' || viewModCategoryForFrame === 'lower';
+            const baseFrameAbsorbed = canAbsorbBaseInSideView && viewMod?.hasBase === false
               ? (viewMod.baseFrameHeight ?? globalBaseMm)
               : 0;
             const topFrameHeight = isTopFrameOff
@@ -8074,7 +8084,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             const topSegmentColor = frameDimensionColor;
             // console.log('🔍 [CleanCAD2D 우측 치수]', { viewModId: viewMod?.id, rawTopFrame, baseFrameAbsorbed, topFrameHeight, hasBase: viewMod?.hasBase });
             // hasBase=false → 걸래받이 0 (individualFloatHeight만 반영)
-            const bottomFrameHeight = viewMod?.hasBase === false
+            const bottomFrameHeight = canAbsorbBaseInSideView && viewMod?.hasBase === false
               ? (viewMod.individualFloatHeight ?? 0)
               : (viewMod?.baseFrameHeight !== undefined && spaceInfo.baseConfig?.type === 'floor')
                 ? viewMod.baseFrameHeight : globalBottomFrame;
