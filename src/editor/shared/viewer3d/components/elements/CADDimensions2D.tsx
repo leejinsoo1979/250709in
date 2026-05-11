@@ -179,6 +179,9 @@ const computeFurnitureHeightMm = (
       const floatH = (mod as any).individualFloatHeight ?? 0;
       heightMm += (absorbedBase - floatH);
     }
+  } else if (category === 'upper' && mod.customHeight) {
+    // 상부장 몸통 H 직접 입력: 자유배치여도 customHeight를 최우선 적용
+    heightMm = mod.customHeight;
   } else if (mod.isFreePlacement && mod.freeHeight) {
     // 자유배치 상/하부장: freeHeight 고정
     heightMm = mod.freeHeight;
@@ -1194,13 +1197,15 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
             let doorHeightMm = 0;
 
             if (modCat === 'upper') {
-              // DoorModule과 동일: freeHeight || dimensions.height (delta 보정 없는 원본값)
-              const cabinetH = mod.freeHeight || modData.dimensions.height || 600;
+              // 상부장 도어 (몸통 기준, EP와 동일)
+              // doorH = 몸통H + 상단갭 + 하단갭 (785 + 5 + 28 = 818)
+              const cabinetH = mod.freeHeight || mod.customHeight || modData.dimensions.height || 600;
               const topFrameVal = mod.topFrameThickness ?? (spaceInfo.frameSize?.top ?? 30);
-              const topExtension = topFrameVal - doorTopGapVal;
-              doorHeightMm = cabinetH + topExtension + doorBottomGapVal;
-              doorTopAbsMm = effectiveH_door - doorTopGapVal;
-              doorBottomAbsMm = doorTopAbsMm - doorHeightMm;
+              const cabinetTopAbs = effectiveH_door - topFrameVal;
+              const cabinetBottomAbs = cabinetTopAbs - cabinetH;
+              doorTopAbsMm = cabinetTopAbs + doorTopGapVal;
+              doorBottomAbsMm = cabinetBottomAbs - doorBottomGapVal;
+              doorHeightMm = cabinetH + doorTopGapVal + doorBottomGapVal;
             } else if (modCat === 'lower') {
               const cabinetH = modData.dimensions.height ?? 1000;
               const cabinetBottomAbs = (isFloating ? floatHeightMm : (railOrBaseHeightMm + indivFloatMm)) + floorFinishHeightMm;
@@ -2537,12 +2542,15 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
             let doorHeightMm = 0;
 
             if (modCat === 'upper') {
-              // 천장에서 상부장 바닥(마감판 하단)까지의 전체 높이
+              // 상부장 도어 (몸통 기준, EP와 동일)
+              // doorH = 몸통H + 상단갭 + 하단갭
+              const cabinetH = mod.freeHeight || mod.customHeight || modData.dimensions.height || 600;
               const topFrameVal = mod.topFrameThickness ?? (spaceInfo.frameSize?.top ?? 30);
-              const finishPanelThickness = 18; // 하부마감판 18mm
-              doorHeightMm = topFrameVal + moduleHeightMm + finishPanelThickness;
-              doorTopAbsMm = effectiveH_rd;
-              doorBottomAbsMm = doorTopAbsMm - doorHeightMm;
+              const cabinetTopAbs = effectiveH_rd - topFrameVal;
+              const cabinetBottomAbs = cabinetTopAbs - cabinetH;
+              doorTopAbsMm = cabinetTopAbs + doorTopGapVal;
+              doorBottomAbsMm = cabinetBottomAbs - doorBottomGapVal;
+              doorHeightMm = cabinetH + doorTopGapVal + doorBottomGapVal;
             } else if (modCat === 'lower') {
               const cabinetH = modData.dimensions.height ?? 1000;
               const cabinetBottomAbs = (isFloating ? floatHeightMm : (railOrBaseHeightMm + indivFloatMm)) + floorFinishHeightMm;

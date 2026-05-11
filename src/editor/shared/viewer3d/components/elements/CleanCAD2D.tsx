@@ -495,15 +495,19 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         const isCustomizable = module.moduleId.startsWith('customizable-');
         if (!moduleData && !isCustomizable && !module.isFreePlacement) return;
 
-        const moduleHeight = module.freeHeight
-          ?? module.customHeight
-          ?? moduleData?.dimensions.height
-          ?? (module.customConfig?.totalHeight || 2000);
-
         // 상하부장 분류
         const category = moduleData?.category
           ?? (module.moduleId.includes('upper') ? 'upper'
             : module.moduleId.includes('lower') ? 'lower' : 'full');
+        const moduleHeight = category === 'upper'
+          ? (module.customHeight
+            ?? module.freeHeight
+            ?? moduleData?.dimensions.height
+            ?? (module.customConfig?.totalHeight || 2000))
+          : (module.freeHeight
+            ?? module.customHeight
+            ?? moduleData?.dimensions.height
+            ?? (module.customConfig?.totalHeight || 2000));
         if (category === 'lower' && moduleHeight > maxLowerCabinetHeightMm) {
           maxLowerCabinetHeightMm = moduleHeight;
         }
@@ -5747,7 +5751,9 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           ? 0
           : (module.baseFrameHeight ?? (spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height || 65) : 0));
         const floatMmForDim = module.hasBase === false ? (module.individualFloatHeight ?? 0) : 0;
-        const moduleHeightMm = (module.freeHeight ?? module.customHeight ?? moduleData.dimensions.height) || 0;
+        const moduleHeightMm = (moduleData.category === 'upper'
+          ? (module.customHeight ?? module.freeHeight ?? moduleData.dimensions.height)
+          : (module.freeHeight ?? module.customHeight ?? moduleData.dimensions.height)) || 0;
         const lowerTopYMm = floorFinishMmForDim + baseFrameMmForDim + floatMmForDim + moduleHeightMm;
         const LOWER_DIM_OFFSET_MM = 150; // 하부장 상단에서 치수선까지 거리 (연장선 길이)
         const lowerDimY = mmToThreeUnits(lowerTopYMm + LOWER_DIM_OFFSET_MM);
@@ -5800,7 +5806,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         const isInStepDownArea = hasStepDown && !isInMainArea;
         
         // 가이드라인 높이 계산 - 가구 상단까지만
-        const furnitureHeight = mmToThreeUnits(moduleData.dimensions.height);
+        const furnitureHeight = mmToThreeUnits(moduleHeightMm);
         const guideTopY = furnitureHeight; // 가구 상단까지만 표시
         const guideBottomY = 0;
         
@@ -5963,10 +5969,12 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             {/* 자유배치: 구간 내 좌/우 이격 치수선 (가구~구간경계 거리) */}
 	            {isFreePlacement && (() => {
               // 이격 치수선 Y: 가구 수직 중앙 (공간 안에 표시)
-              const modHeightMm = module.freeHeight ?? module.customHeight ?? moduleData.dimensions.height;
               const modCat = moduleData.category
                 ?? (module.moduleId.includes('upper') ? 'upper'
                   : module.moduleId.includes('lower') ? 'lower' : 'full');
+              const modHeightMm = modCat === 'upper'
+                ? (module.customHeight ?? module.freeHeight ?? moduleData.dimensions.height)
+                : (module.freeHeight ?? module.customHeight ?? moduleData.dimensions.height);
               const baseFrameHGap = module.baseFrameHeight ?? (spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig.height || 65) : 0);
               const topFrameForGap = module.topFrameThickness ?? (spaceInfo.frameSize?.top ?? 30);
               let gapDimY: number;
@@ -6926,6 +6934,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             let maxFurnitureTop = topFrameTopY;
             let maxModuleHeightMm = 0;
             let tallestModuleTopY = cabinetAreaTopY;
+            let tallestModuleBottomY = bottomFrameTopY;
 
             if (viewMod) {
               const moduleData = getModuleById(viewMod.moduleId);
@@ -6934,34 +6943,44 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 const category = moduleData?.category
                   ?? (viewMod.moduleId.includes('upper') ? 'upper'
                     : viewMod.moduleId.includes('lower') ? 'lower' : 'full');
-                if (category !== 'upper') {
-                  let moduleHeight = isTopFrameOff && category === 'full' && !viewMod.freeHeight
-                    ? cabinetPlacementHeight
+                let moduleHeight = isTopFrameOff && category === 'full' && !viewMod.freeHeight
+                  ? cabinetPlacementHeight
+                  : (category === 'upper'
+                    ? (viewMod.customHeight
+                      ?? viewMod.freeHeight
+                      ?? moduleData?.dimensions.height
+                      ?? (viewMod.customConfig?.totalHeight || 2000))
                     : (viewMod.freeHeight
                       ?? viewMod.customHeight
                       ?? moduleData?.dimensions.height
-                      ?? (viewMod.customConfig?.totalHeight || 2000));
-                  // 걸래받이 OFF (hasBase=false): 가구가 걸래받이 자리를 흡수 — moduleHeight 보정
-                  // (FurnitureItem.tsx의 furnitureHeightMm 보정과 동일)
-                  if (!isTopFrameOff && !viewMod.freeHeight && (viewMod as any).hasBase === false && category === 'full') {
-                    const globalBase = spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height ?? 60) : 0;
-                    const absorbedBase = (viewMod as any).baseFrameHeight ?? globalBase;
-                    const floatH = (viewMod as any).individualFloatHeight ?? 0;
-                    moduleHeight += (absorbedBase - floatH);
-                  }
-                  const furnitureStartY = isFloating ? mmToThreeUnits(floorFinishHeightMm + floatHeight) : bottomFrameTopY;
-                  const moduleTopY = furnitureStartY + mmToThreeUnits(moduleHeight);
-                  maxFurnitureTop = moduleTopY;
-                  maxModuleHeightMm = moduleHeight;
-                  tallestModuleTopY = moduleTopY;
+                      ?? (viewMod.customConfig?.totalHeight || 2000)));
+                // 걸래받이 OFF (hasBase=false): 가구가 걸래받이 자리를 흡수 — moduleHeight 보정
+                // (FurnitureItem.tsx의 furnitureHeightMm 보정과 동일)
+                if (!isTopFrameOff && !viewMod.freeHeight && (viewMod as any).hasBase === false && category === 'full') {
+                  const globalBase = spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height ?? 60) : 0;
+                  const absorbedBase = (viewMod as any).baseFrameHeight ?? globalBase;
+                  const floatH = (viewMod as any).individualFloatHeight ?? 0;
+                  moduleHeight += (absorbedBase - floatH);
                 }
+                const moduleTopY = category === 'upper'
+                  ? cabinetAreaTopY
+                  : ((isFloating ? mmToThreeUnits(floorFinishHeightMm + floatHeight) : bottomFrameTopY) + mmToThreeUnits(moduleHeight));
+                const moduleBottomY = category === 'upper'
+                  ? moduleTopY - mmToThreeUnits(moduleHeight)
+                  : (isFloating ? mmToThreeUnits(floorFinishHeightMm + floatHeight) : bottomFrameTopY);
+                maxFurnitureTop = moduleTopY;
+                maxModuleHeightMm = moduleHeight;
+                tallestModuleTopY = moduleTopY;
+                tallestModuleBottomY = moduleBottomY;
               }
             }
             const hasFurnitureHeight = maxModuleHeightMm > 0;
             const furnitureHeightValue = hasFurnitureHeight ? maxModuleHeightMm : cabinetPlacementHeight;
             const furnitureTopY = hasFurnitureHeight ? tallestModuleTopY : cabinetAreaTopY;
             // 띄움배치 시에는 바닥재 + floatHeight를 기준으로 텍스트 위치 계산
-            const furnitureStartY = isFloating ? mmToThreeUnits(floorFinishHeightMm + floatHeight) : bottomFrameTopY;
+            const furnitureStartY = hasFurnitureHeight
+              ? tallestModuleBottomY
+              : (isFloating ? mmToThreeUnits(floorFinishHeightMm + floatHeight) : bottomFrameTopY);
             const furnitureTextY = furnitureStartY + (furnitureTopY - furnitureStartY) / 2;
             const topFrameLineTopY = topFrameTopY;
             const extraFurnitureHeightUnits = maxFurnitureTop - topFrameLineTopY;
@@ -7084,12 +7103,12 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 {!isFloating && (
                 <group>
                   <Line
-                    points={[[0, bottomFrameTopY, rightDimensionZ], [0, furnitureTopY, rightDimensionZ]]}
+                    points={[[0, furnitureStartY, rightDimensionZ], [0, furnitureTopY, rightDimensionZ]]}
                     color={dimensionColor}
                     lineWidth={0.6}
                   />
                   <Line
-                    points={createArrowHead([0, bottomFrameTopY, rightDimensionZ], [0, bottomFrameTopY + 0.015, rightDimensionZ])}
+                    points={createArrowHead([0, furnitureStartY, rightDimensionZ], [0, furnitureStartY + 0.015, rightDimensionZ])}
                     color={dimensionColor}
                     lineWidth={0.6}
                   />
@@ -8074,6 +8093,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             let maxFurnitureTop = topFrameTopY;
             let maxModuleHeightMm = 0;
             let tallestModuleTopY = cabinetAreaTopY;
+            let tallestModuleBottomY = bottomFrameTopY;
 
             if (viewMod) {
               const moduleData = getModuleById(viewMod.moduleId);
@@ -8082,27 +8102,35 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 const category = moduleData?.category
                   ?? (viewMod.moduleId.includes('upper') ? 'upper'
                     : viewMod.moduleId.includes('lower') ? 'lower' : 'full');
-                if (category !== 'upper') {
-                  let moduleHeight = isTopFrameOff && category === 'full' && !viewMod.freeHeight
-                    ? cabinetPlacementHeight
+                let moduleHeight = isTopFrameOff && category === 'full' && !viewMod.freeHeight
+                  ? cabinetPlacementHeight
+                  : (category === 'upper'
+                    ? (viewMod.customHeight
+                      ?? viewMod.freeHeight
+                      ?? moduleData?.dimensions.height
+                      ?? (viewMod.customConfig?.totalHeight || 2000))
                     : (viewMod.freeHeight
                       ?? viewMod.customHeight
                       ?? moduleData?.dimensions.height
-                      ?? (viewMod.customConfig?.totalHeight || 2000));
-                  // 걸래받이 OFF (hasBase=false): 가구가 걸래받이 자리를 흡수 — moduleHeight 보정
-                  // (FurnitureItem.tsx의 furnitureHeightMm 보정과 동일)
-                  if (!isTopFrameOff && !viewMod.freeHeight && (viewMod as any).hasBase === false && category === 'full') {
-                    const globalBase = spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height ?? 60) : 0;
-                    const absorbedBase = (viewMod as any).baseFrameHeight ?? globalBase;
-                    const floatH = (viewMod as any).individualFloatHeight ?? 0;
-                    moduleHeight += (absorbedBase - floatH);
-                  }
-                  const furnitureStartY = isFloating ? mmToThreeUnits(floorFinishHeightMm + floatHeight) : bottomFrameTopY;
-                  const moduleTopY = furnitureStartY + mmToThreeUnits(moduleHeight);
-                  maxFurnitureTop = moduleTopY;
-                  maxModuleHeightMm = moduleHeight;
-                  tallestModuleTopY = moduleTopY;
+                      ?? (viewMod.customConfig?.totalHeight || 2000)));
+                // 걸래받이 OFF (hasBase=false): 가구가 걸래받이 자리를 흡수 — moduleHeight 보정
+                // (FurnitureItem.tsx의 furnitureHeightMm 보정과 동일)
+                if (!isTopFrameOff && !viewMod.freeHeight && (viewMod as any).hasBase === false && category === 'full') {
+                  const globalBase = spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height ?? 60) : 0;
+                  const absorbedBase = (viewMod as any).baseFrameHeight ?? globalBase;
+                  const floatH = (viewMod as any).individualFloatHeight ?? 0;
+                  moduleHeight += (absorbedBase - floatH);
                 }
+                const moduleTopY = category === 'upper'
+                  ? cabinetAreaTopY
+                  : ((isFloating ? mmToThreeUnits(floorFinishHeightMm + floatHeight) : bottomFrameTopY) + mmToThreeUnits(moduleHeight));
+                const moduleBottomY = category === 'upper'
+                  ? moduleTopY - mmToThreeUnits(moduleHeight)
+                  : (isFloating ? mmToThreeUnits(floorFinishHeightMm + floatHeight) : bottomFrameTopY);
+                maxFurnitureTop = moduleTopY;
+                maxModuleHeightMm = moduleHeight;
+                tallestModuleTopY = moduleTopY;
+                tallestModuleBottomY = moduleBottomY;
               }
             }
 
@@ -8110,7 +8138,9 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             const furnitureHeightValue = hasFurnitureHeight ? maxModuleHeightMm : cabinetPlacementHeight;
             const furnitureTopY = hasFurnitureHeight ? tallestModuleTopY : cabinetAreaTopY;
             // 띄움배치 시에는 바닥재 + floatHeight를 기준으로 텍스트 위치 계산
-            const furnitureStartY = isFloating ? mmToThreeUnits(floorFinishHeightMm + floatHeight) : bottomFrameTopY;
+            const furnitureStartY = hasFurnitureHeight
+              ? tallestModuleBottomY
+              : (isFloating ? mmToThreeUnits(floorFinishHeightMm + floatHeight) : bottomFrameTopY);
             const furnitureTextY = furnitureStartY + (furnitureTopY - furnitureStartY) / 2;
             const topFrameLineTopY = topFrameTopY;
             const extraFurnitureHeightUnits = maxFurnitureTop - topFrameLineTopY;
@@ -8241,12 +8271,12 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 {!isFloating && (
                 <group>
                   <Line
-                    points={[[spaceWidth, bottomFrameTopY, leftDimensionZ], [spaceWidth, furnitureTopY, leftDimensionZ]]}
+                    points={[[spaceWidth, furnitureStartY, leftDimensionZ], [spaceWidth, furnitureTopY, leftDimensionZ]]}
                     color={dimensionColor}
                     lineWidth={0.6}
                   />
                   <Line
-                    points={createArrowHead([spaceWidth, bottomFrameTopY, leftDimensionZ], [spaceWidth, bottomFrameTopY + 0.015, leftDimensionZ])}
+                    points={createArrowHead([spaceWidth, furnitureStartY, leftDimensionZ], [spaceWidth, furnitureStartY + 0.015, leftDimensionZ])}
                     color={dimensionColor}
                     lineWidth={0.6}
                   />
