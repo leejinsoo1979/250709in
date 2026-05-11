@@ -970,14 +970,9 @@ const PlacedModulePropertiesPanel: React.FC = () => {
           // 취소: 원래값 복원 후 팝업 닫기
           activeElement.blur();
           handleCancel();
-        } else if (e.key === 'Enter') {
-          // Enter: input의 onKeyDown이 먼저 저장 처리 → blur 후 팝업 닫기
-          // (input onKeyDown에서 preventDefault 안 했으면 여기 도달)
-          e.preventDefault();
-          activeElement.blur();
-          // 다음 tick에 닫기 (blur로 인한 onBlur 저장 완료 후)
-          setTimeout(() => closeAllPopups(), 0);
         }
+        // Enter는 input의 onKeyDown 핸들러가 처리하도록 글로벌 핸들러는 건드리지 않음
+        // (글로벌이 먼저 closeAllPopups 호출하면 React input onKeyDown이 실행 안 됨)
         return;
       }
 
@@ -3381,6 +3376,8 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                             setSectionHeightInputs({});
                           }
                           (e.target as HTMLInputElement).blur();
+                          // 저장 완료 후 팝업 닫기 (확인)
+                          setTimeout(() => closeAllPopups(), 0);
                         }
                         else if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
                           e.preventDefault();
