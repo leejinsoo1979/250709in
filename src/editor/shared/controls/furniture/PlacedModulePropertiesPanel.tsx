@@ -3223,9 +3223,17 @@ const PlacedModulePropertiesPanel: React.FC = () => {
             const doorW = isDualSlot
               ? Math.max(0, Math.round(bodyWidth / 2) - 3)
               : Math.max(0, bodyWidth - 3 + totalExtensionMm);
-            // 도어 높이: 몸통(cabinet) 기준 — 몸통 높이 + 상단갭 + 하단갭 (EP와 동일)
-            // 갭이 양수면 몸통 밖으로 확장, 음수면 몸통보다 작음
-            const bodyH = adjustedFreeHeight || currentPlacedModule.freeHeight || currentPlacedModule.customHeight || moduleData.dimensions.height || 0;
+            // 도어 높이: 실제 적용된 몸통 높이 기준 (EP와 동일)
+            // 상부몰딩/걸레받이 토글 OFF 시 가구가 흡수해서 몸통이 늘어남 → 도어 H도 늘어난 몸통 + 갭
+            const baseBodyH = adjustedFreeHeight || currentPlacedModule.freeHeight || currentPlacedModule.customHeight || moduleData.dimensions.height || 0;
+            const absorbedTopH = currentPlacedModule.hasTopFrame === false
+              ? ((currentPlacedModule.topFrameThickness ?? spaceInfo.frameSize?.top ?? 30) - (currentPlacedModule.topFrameGap ?? 0))
+              : 0;
+            const absorbedBaseH = currentPlacedModule.hasBase === false
+              ? (((currentPlacedModule.baseFrameHeight ?? (spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height ?? 60) : 0)))
+                - (currentPlacedModule.individualFloatHeight ?? 0))
+              : 0;
+            const bodyH = baseBodyH + absorbedTopH + absorbedBaseH;
             const doorH = Math.max(0, bodyH + (doorTopGap || 0) + (doorBottomGap || 0));
             const doorThickness = 20;
             return (

@@ -372,46 +372,15 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     };
   }, [showSurroundOptions]);
 
-  // store 갭 값 변경 시 입력 동기화
+  // store 갭 값 변경 시 입력 동기화 (몸통 기준, 기본값 0)
   useEffect(() => {
-    setDoorTopGapInput((storeDoorTopGap ?? 5).toString());
-    setDoorBottomGapInput((storeDoorBottomGap ?? 25).toString());
+    setDoorTopGapInput((storeDoorTopGap ?? 0).toString());
+    setDoorBottomGapInput((storeDoorBottomGap ?? 0).toString());
   }, [storeDoorTopGap, storeDoorBottomGap]);
 
-  // 전체서라운드/자유배치: 프레임 두께 변경 시 doorTopGap = frameTop + 3 자동 동기화
-  // 슬롯배치: topFrameThickness 또는 글로벌 frameSize.top 사용
-  // 자유배치: 실제 프레임 크기 = 공간높이 - 받침대 - 띄움높이 - freeHeight
-  const effectiveTopFrame = (() => {
-    // 상부장은 freeHeight 기반 계산 제외 — 상부장의 freeHeight는 캐비넷 높이이므로
-    // 공간높이 - 받침대 - freeHeight 하면 상단몰딩이 아닌 하부장 영역 높이가 나옴
-    const isUpperForFrame = placedModule.moduleId?.includes('upper-cabinet');
-    if (placedModule.isFreePlacement && placedModule.freeHeight && !isUpperForFrame) {
-      const baseH = spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height || 65) : 0;
-      const standFloat = spaceInfo.baseConfig?.type === 'stand' && spaceInfo.baseConfig?.placementType === 'float';
-      const floatH = standFloat ? (spaceInfo.baseConfig?.floatHeight || 0) : 0;
-      const isDroppedZone = placedModule.zone === 'dropped';
-      const stepDrop = (isDroppedZone && spaceInfo.stepCeiling?.enabled) ? (spaceInfo.stepCeiling?.dropHeight || 0) : 0;
-      const dcDrop = (isDroppedZone && spaceInfo.droppedCeiling?.enabled && !spaceInfo.stepCeiling?.enabled) ? (spaceInfo.droppedCeiling?.dropHeight || 0) : 0;
-      const effSpaceH = spaceInfo.height - stepDrop - dcDrop;
-      return Math.max(0, effSpaceH - baseH - floatH - placedModule.freeHeight);
-    }
-    return placedModule.topFrameThickness ?? spaceInfo.frameSize?.top ?? 30;
-  })();
-  // 슬롯배치: 전체서라운드(surround)일 때만 doorTopGap 연동 (양쪽서라운드/노서라운드는 연동 안 함)
-  // 자유배치는 슬롯배치와 동일한 기본값(5)을 유지 — 자동 동기화 안 함
-  const isSlotSurround = !placedModule.isFreePlacement
-    && spaceInfo.surroundType === 'surround'
-    && spaceInfo.frameConfig?.top !== false;
-  const hasTopFrameActive = isSlotSurround;
-  // 하부장은 상단몰딩과 무관한 자체 doorTopGap을 사용하므로 서라운드 연동 제외
+  // 도어갭 자동 동기화 비활성화 (몸통 기준 시스템에서는 사용자 입력 + 토글 핸들러로 제어)
+  // 기존: 슬롯배치 전체서라운드에서 doorTopGap = topFrame + 3 강제 → 상부몰딩/걸레받이 토글 결과를 덮어씀
   const isLowerModule = placedModule.moduleId?.includes('lower-');
-  useEffect(() => {
-    if (!hasTopFrameActive || !placedModule.hasDoor || isLowerModule) return;
-    const expectedGap = effectiveTopFrame + 3;
-    if (storeDoorTopGap !== expectedGap) {
-      updatePlacedModule(placedModule.id, { doorTopGap: expectedGap });
-    }
-  }, [hasTopFrameActive, effectiveTopFrame, placedModule.hasDoor, placedModule.id, storeDoorTopGap, updatePlacedModule, isLowerModule]);
 
   // 도어 갭 변경 핸들러
   const handleDoorTopGapCommit = useCallback((value: string) => {

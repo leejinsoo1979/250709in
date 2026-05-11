@@ -6461,6 +6461,17 @@ const Configurator: React.FC = () => {
             <div className={styles.sectionHeader}>
               <span className={styles.sectionDot}></span>
               <h3 className={styles.sectionTitle}>도어 셋팅</h3>
+              <label
+                style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11px', color: 'var(--theme-text-secondary)', cursor: 'pointer', marginLeft: '8px' }}
+              >
+                <input
+                  type="checkbox"
+                  checked={doorGapAllSync}
+                  onChange={(e) => setDoorGapAllSync(e.target.checked)}
+                  style={{ cursor: 'pointer', accentColor: 'var(--theme-primary, #4a90d9)' }}
+                />
+                <span>전체</span>
+              </label>
               <HelpBtn title="도어 셋팅" text="상걸래받이 섹션에서 '상하프레임 가림' 또는 '상하프레임 노출'을 선택하면 도어 갭이 자동 계산됩니다." />
             </div>
 
@@ -6472,17 +6483,7 @@ const Configurator: React.FC = () => {
                 <table style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed' }}>
                   <thead>
                     <tr>
-                      <th style={{ width: '52px', padding: '2px 4px', fontSize: '10px', fontWeight: 500, color: 'var(--theme-text-secondary, #999)', textAlign: 'center', whiteSpace: 'nowrap' }}>
-                        <label style={{ display: 'flex', alignItems: 'center', gap: '2px', cursor: 'pointer', justifyContent: 'center' }}>
-                          <input
-                            type="checkbox"
-                            checked={doorGapAllSync}
-                            onChange={(e) => setDoorGapAllSync(e.target.checked)}
-                            style={{ width: '13px', height: '13px', cursor: 'pointer', accentColor: 'var(--theme-primary, #4a90d9)' }}
-                          />
-                          <span style={{ fontSize: '9px', color: 'var(--theme-text-secondary, #999)' }}>전체</span>
-                        </label>
-                      </th>
+                      <th style={{ width: '52px', padding: '2px 4px', fontSize: '10px', fontWeight: 500, color: 'var(--theme-text-secondary, #999)', textAlign: 'center', whiteSpace: 'nowrap' }}></th>
                       <th style={{ padding: '2px 2px', fontSize: '10px', fontWeight: 600, color: 'var(--theme-text-secondary, #666)', textAlign: 'center' }}>
                         통합
                       </th>
@@ -6523,17 +6524,7 @@ const Configurator: React.FC = () => {
                 <table style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed' }}>
                   <thead>
                     <tr>
-                      <th style={{ width: '52px', padding: '2px 4px', fontSize: '10px', fontWeight: 500, color: 'var(--theme-text-secondary, #999)', textAlign: 'center', whiteSpace: 'nowrap' }}>
-                        <label style={{ display: 'flex', alignItems: 'center', gap: '2px', cursor: 'pointer', justifyContent: 'center' }}>
-                          <input
-                            type="checkbox"
-                            checked={doorGapAllSync}
-                            onChange={(e) => setDoorGapAllSync(e.target.checked)}
-                            style={{ width: '13px', height: '13px', cursor: 'pointer', accentColor: 'var(--theme-primary, #4a90d9)' }}
-                          />
-                          <span style={{ fontSize: '9px', color: 'var(--theme-text-secondary, #999)' }}>전체</span>
-                        </label>
-                      </th>
+                      <th style={{ width: '52px', padding: '2px 4px', fontSize: '10px', fontWeight: 500, color: 'var(--theme-text-secondary, #999)', textAlign: 'center', whiteSpace: 'nowrap' }}></th>
                       {fullDoorIndices.map(({ info, i }) => (
                         <th key={i} style={{ padding: '2px 2px', fontSize: '10px', fontWeight: 600, color: 'var(--theme-text-secondary, #666)', textAlign: 'center' }}>
                           도어 {info.label}

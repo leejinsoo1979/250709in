@@ -932,13 +932,11 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     const isFloorType = !originalSpaceInfo.baseConfig || originalSpaceInfo.baseConfig.type === 'floor';
     const floorHeightForCalc = isFloorType ? 0 : floorHeightValue;
 
-    // 가구 높이 계산 — 프레임 커버는 천장/바닥 기준, 자유배치 기본은 몸통 기준
+    // 몸통(cabinet) 실측 높이 우선 사용 — 상부몰딩/걸레받이 토글 OFF 시 가구가 흡수해서 늘어난 높이 반영
+    // effectiveInternalHeight는 FurnitureItem.furnitureHeightMm (토글 흡수분 포함)
     const spaceBasedHeight = fullSpaceHeight - topFrameHeightValue - floorHeightForCalc - baseHeightValue;
-
     useFurnitureFitDoorHeight = isFree && (originalSpaceInfo.doorSetupMode || 'default') !== 'frame-cover' && !!effectiveInternalHeight;
-    tallCabinetFurnitureHeight = useFurnitureFitDoorHeight
-      ? (effectiveInternalHeight ?? spaceBasedHeight)
-      : spaceBasedHeight;
+    tallCabinetFurnitureHeight = effectiveInternalHeight ?? spaceBasedHeight;
 
     // 로컬 좌표계에서 도어 기준 위치 계산
     const cabinetBottomLocal = -tallCabinetFurnitureHeight / 2;
