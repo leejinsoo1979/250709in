@@ -3502,11 +3502,25 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                   : `섹션 ${sIdx + 1}`;
                 const hasHS = isCustom && !!(sec as any).horizontalSplit;
 
-                // 높이 표시값
-                const displayH = sectionHeightInputs[sIdx]
-                  || (isCustom
-                    ? Math.round((sec as any).height + 2 * pt).toString()
-                    : Math.round(getStdSectionHeightMM(sIdx)).toString());
+                // 높이 표시값 — 마지막(상부) 섹션은 항상 동적 재계산 (토글 흡수분 반영)
+                // isCustom이어도 마지막 섹션은 sectionBasisH - 이전합으로 계산해야
+                // 상부몰딩/걸레받이 토글 변경 시 흡수된 높이가 즉시 반영됨
+                const isLastSection = sIdx === sectionCount - 1;
+                const dynamicH = isLastSection
+                  ? (() => {
+                      const fixedSum = (isCustom ? ccSections! : mcSections!)
+                        .slice(0, -1)
+                        .reduce((acc: number, s: any) => {
+                          if (s.heightType === 'absolute') return acc + (s.height || 0);
+                          const r = (s.height || s.heightRatio || 50) / 100;
+                          return acc + Math.round(sectionBasisH * r);
+                        }, 0);
+                      return Math.max(0, sectionBasisH - fixedSum);
+                    })()
+                  : (isCustom
+                      ? ((sec as any).height + 2 * pt)
+                      : getStdSectionHeightMM(sIdx));
+                const displayH = sectionHeightInputs[sIdx] || Math.round(dynamicH).toString();
                 // 깊이 표시값: 섹션별 저장값 우선, 없으면 customDepth(신발장 380 등), 최후 totalD
                 // 옛 데이터의 stale 값(moduleDim과 일치) 무시
                 const cDepth = currentPlacedModule.customDepth;
