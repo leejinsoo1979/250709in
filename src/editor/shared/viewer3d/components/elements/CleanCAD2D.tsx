@@ -3807,7 +3807,9 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               || rounded === Math.round(leftModDataForCat.dimensions.height + 65);
           };
           if (leftmostMod) {
-            if (leftmostMod.freeHeight && !isStaleUpperTotalHeightLeft(leftmostMod.freeHeight)) {
+            if (leftCategoryResolved === 'upper' && leftmostMod.customHeight && !isStaleUpperTotalHeightLeft(leftmostMod.customHeight)) {
+              furnitureH = leftmostMod.customHeight;
+            } else if (leftmostMod.freeHeight && !isStaleUpperTotalHeightLeft(leftmostMod.freeHeight)) {
               furnitureH = leftmostMod.freeHeight;
             } else if (leftmostMod.customHeight && !isStaleUpperTotalHeightLeft(leftmostMod.customHeight)) {
               furnitureH = leftmostMod.customHeight;
@@ -3845,10 +3847,15 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 || rounded === Math.round(compModData.dimensions.height + 60)
                 || rounded === Math.round(compModData.dimensions.height + 65);
             };
-            companionH = (!isStaleCompanionUpperTotalHeight(leftCompanionMod.freeHeight) ? leftCompanionMod.freeHeight : undefined)
-              ?? (!isStaleCompanionUpperTotalHeight(leftCompanionMod.customHeight) ? leftCompanionMod.customHeight : undefined)
+            companionH = companionCategory === 'upper'
+              ? ((!isStaleCompanionUpperTotalHeight(leftCompanionMod.customHeight) ? leftCompanionMod.customHeight : undefined)
+                ?? (!isStaleCompanionUpperTotalHeight(leftCompanionMod.freeHeight) ? leftCompanionMod.freeHeight : undefined)
+                ?? compModData?.dimensions.height
+                ?? 0)
+              : ((!isStaleCompanionUpperTotalHeight(leftCompanionMod.freeHeight) ? leftCompanionMod.freeHeight : undefined)
+                ?? (!isStaleCompanionUpperTotalHeight(leftCompanionMod.customHeight) ? leftCompanionMod.customHeight : undefined)
               ?? compModData?.dimensions.height
-              ?? 0;
+              ?? 0);
           }
           // hasDualCabinet: 상부장+하부장 동시 배치
           const hasDualCabinet = leftCompanionMod !== null && companionH > 0;
@@ -4613,7 +4620,9 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               || rounded === Math.round(rightModDataForCat.dimensions.height + 65);
           };
           if (rightmostMod) {
-            if (rightmostMod.freeHeight && !isStaleUpperTotalHeightRight(rightmostMod.freeHeight)) {
+            if (rightCategoryResolved === 'upper' && rightmostMod.customHeight && !isStaleUpperTotalHeightRight(rightmostMod.customHeight)) {
+              rFurnitureH = rightmostMod.customHeight;
+            } else if (rightmostMod.freeHeight && !isStaleUpperTotalHeightRight(rightmostMod.freeHeight)) {
               rFurnitureH = rightmostMod.freeHeight;
             } else if (rightmostMod.customHeight && !isStaleUpperTotalHeightRight(rightmostMod.customHeight)) {
               rFurnitureH = rightmostMod.customHeight;
@@ -4650,10 +4659,15 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 || rounded === Math.round(compModData.dimensions.height + 60)
                 || rounded === Math.round(compModData.dimensions.height + 65);
             };
-            rCompanionH = (!isStaleRightCompanionUpperTotalHeight(rightCompanionMod.freeHeight) ? rightCompanionMod.freeHeight : undefined)
-              ?? (!isStaleRightCompanionUpperTotalHeight(rightCompanionMod.customHeight) ? rightCompanionMod.customHeight : undefined)
+            rCompanionH = rCompanionCategory === 'upper'
+              ? ((!isStaleRightCompanionUpperTotalHeight(rightCompanionMod.customHeight) ? rightCompanionMod.customHeight : undefined)
+                ?? (!isStaleRightCompanionUpperTotalHeight(rightCompanionMod.freeHeight) ? rightCompanionMod.freeHeight : undefined)
+                ?? compModData?.dimensions.height
+                ?? 0)
+              : ((!isStaleRightCompanionUpperTotalHeight(rightCompanionMod.freeHeight) ? rightCompanionMod.freeHeight : undefined)
+                ?? (!isStaleRightCompanionUpperTotalHeight(rightCompanionMod.customHeight) ? rightCompanionMod.customHeight : undefined)
               ?? compModData?.dimensions.height
-              ?? 0;
+              ?? 0);
           }
           const rHasDualCabinet = rightCompanionMod !== null && rCompanionH > 0;
           // 상부장 하부마감판 두께 (UpperCabinet.tsx FinishingPanelWithTexture 18mm)
@@ -7323,8 +7337,9 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   // 도어가 없는 가구 (인덕션 이외)는 치수선 생략
                   if (!doorModule.hasDoor) return null;
 
-                  const doorTopGapVal = doorModule.doorTopGap ?? 5;
-                  const doorBottomGapVal = doorModule.doorBottomGap ?? 25;
+                  // 도어갭 기본값 0 (몸통 기준, EP와 동일)
+                  const doorTopGapVal = doorModule.doorTopGap ?? 0;
+                  const doorBottomGapVal = doorModule.doorBottomGap ?? 0;
 
                   let doorHeightMm = 0;
                   let doorBottomAbsMm = 0;
@@ -7334,12 +7349,16 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   const effectiveH = spaceInfo.height;
 
                   if (doorCategory === 'upper') {
+                    // 상부장 도어 (몸통 기준, EP와 동일)
+                    // 상단갭 = 몸통 상단에서 위로, 하단갭 = 몸통 하단에서 아래로
                     const cabinetH = doorModData?.dimensions.height ?? 600;
                     const topFrameVal = doorModule.topFrameThickness ?? (spaceInfo.frameSize?.top ?? 30);
-                    const topExtension = topFrameVal - doorTopGapVal;
-                    doorHeightMm = cabinetH + topExtension + doorBottomGapVal;
-                    doorTopAbsMm = effectiveH - doorTopGapVal;
-                    doorBottomAbsMm = doorTopAbsMm - doorHeightMm;
+                    // 상부장 위치: 천장 - 상부몰딩 = 상부장 상단
+                    const cabinetTopAbs = effectiveH - topFrameVal;
+                    const cabinetBottomAbs = cabinetTopAbs - cabinetH;
+                    doorTopAbsMm = cabinetTopAbs + doorTopGapVal;
+                    doorBottomAbsMm = cabinetBottomAbs - doorBottomGapVal;
+                    doorHeightMm = doorTopAbsMm - doorBottomAbsMm;
                   } else if (doorCategory === 'lower') {
                     const cabinetH = doorModData?.dimensions.height ?? 1000;
                     const isDoorLift = doorModData?.id?.includes('lower-door-lift-');

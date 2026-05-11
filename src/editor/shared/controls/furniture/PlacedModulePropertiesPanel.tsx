@@ -3100,7 +3100,9 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                               - (currentPlacedModule.individualFloatHeight ?? 0))
                             : 0;
                           const val = displayVal - absT - absB;
-                          const updates: any = { freeHeight: val };
+                          const updates: any = moduleData.category === 'upper' && !currentPlacedModule.isFreePlacement
+                            ? { customHeight: val, freeHeight: undefined }
+                            : { freeHeight: val };
                           // 키큰장(full): 가구 높이 줄이면 상단몰딩이 늘어나야 함
                           if (moduleData.category === 'full') {
                             const iSpace = calculateInternalSpace(spaceInfo);
@@ -3168,7 +3170,9 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                                 - (currentPlacedModule.individualFloatHeight ?? 0))
                               : 0;
                             const next = nextDisplay - absT - absB;
-                            const arrowUpdates: any = { freeHeight: next };
+                            const arrowUpdates: any = moduleData.category === 'upper' && !currentPlacedModule.isFreePlacement
+                              ? { customHeight: next, freeHeight: undefined }
+                              : { freeHeight: next };
                             if (moduleData.category === 'full') {
                               const iSpace = calculateInternalSpace(spaceInfo);
                               const globalTopFrame = spaceInfo.frameSize?.top || 30;

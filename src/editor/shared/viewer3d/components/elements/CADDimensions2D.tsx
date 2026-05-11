@@ -184,7 +184,9 @@ const computeFurnitureHeightMm = (
     heightMm = mod.freeHeight;
   } else {
     // 슬롯 기반
-    const manualHeightMm = mod.freeHeight || mod.customHeight;
+    const manualHeightMm = category === 'upper'
+      ? (mod.customHeight || mod.freeHeight)
+      : (mod.freeHeight || mod.customHeight);
     // cabinetBodyHeight가 있으면 2단서랍장 몸통 높이 오버라이드 (FurnitureItem.tsx와 동기화)
     if (mod.cabinetBodyHeight && (mod.moduleId.includes('lower-drawer-2tier') || mod.moduleId.includes('dual-lower-drawer-2tier'))) {
       heightMm = mod.cabinetBodyHeight;
