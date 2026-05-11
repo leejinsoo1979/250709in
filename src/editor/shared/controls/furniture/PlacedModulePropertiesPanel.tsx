@@ -3458,10 +3458,11 @@ const PlacedModulePropertiesPanel: React.FC = () => {
              - lower-door-lift-touch-* (터치 서랍)
              - lower-top-down-touch-* (터치 상판내림 서랍)
              상판내림(top-down-half/2tier/3tier)·도어올림(door-lift-half/2tier/3tier)·기본장은 도어이므로 경첩 표시 */}
-          {!showDetails && currentPlacedModule?.hasDoor && isSingleFurniture
+          {!showDetails && currentPlacedModule?.hasDoor
+            && !(typeof currentPlacedModule?.moduleId === 'string' && currentPlacedModule.moduleId.startsWith('dual-'))
             && !(typeof currentPlacedModule?.moduleId === 'string' && currentPlacedModule.moduleId.includes('insert-frame'))
             && !(typeof currentPlacedModule?.moduleId === 'string' && (
-              /^(dual-)?lower-drawer-/.test(currentPlacedModule.moduleId)
+              /^lower-drawer-/.test(currentPlacedModule.moduleId)
               || currentPlacedModule.moduleId.includes('lower-door-lift-touch-')
               || currentPlacedModule.moduleId.includes('lower-top-down-touch-')
             ))
