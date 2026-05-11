@@ -3344,7 +3344,35 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                         }
                       }}
                       onKeyDown={(e) => {
-                        if (e.key === 'Enter') { (e.target as HTMLInputElement).blur(); }
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          // Enter 시 직접 저장 처리 (blur 시점에 팝업이 닫히면 onBlur가 실행 안 될 수 있음)
+                          const displayVal = parseInt(freeHeightInput, 10);
+                          const maxHeightInput = moduleData.category === 'upper' ? Math.round(spaceInfo.height) : 3000;
+                          if (!isNaN(displayVal) && displayVal >= 100 && displayVal <= maxHeightInput && currentPlacedModule) {
+                            const shouldAbsorbTopForBodyH = moduleData.category === 'full';
+                            const absT = shouldAbsorbTopForBodyH && currentPlacedModule.hasTopFrame === false
+                              ? ((currentPlacedModule.topFrameThickness ?? spaceInfo.frameSize?.top ?? 30) - (currentPlacedModule.topFrameGap ?? 0))
+                              : 0;
+                            const shouldAbsorbBaseForBodyH = moduleData.category === 'full' || moduleData.category === 'lower';
+                            const absB = shouldAbsorbBaseForBodyH && currentPlacedModule.hasBase === false
+                              ? (((currentPlacedModule.baseFrameHeight ?? (spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height ?? 60) : 0)))
+                                - (currentPlacedModule.individualFloatHeight ?? 0))
+                              : 0;
+                            const val = displayVal - absT - absB;
+                            const updates: any = moduleData.category === 'upper'
+                              ? { customHeight: val, freeHeight: undefined }
+                              : { freeHeight: val };
+                            if (moduleData.category === 'full') {
+                              const iSpace = calculateInternalSpace(spaceInfo);
+                              const globalTopFrame = spaceInfo.frameSize?.top || 30;
+                              updates.topFrameThickness = Math.max(0, globalTopFrame + (iSpace.height - val));
+                            }
+                            updatePlacedModule(currentPlacedModule.id, updates);
+                            setSectionHeightInputs({});
+                          }
+                          (e.target as HTMLInputElement).blur();
+                        }
                         else if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
                           e.preventDefault();
                           const cur = parseInt(freeHeightInput, 10) || placedBodyHeight || moduleData.dimensions.height;
