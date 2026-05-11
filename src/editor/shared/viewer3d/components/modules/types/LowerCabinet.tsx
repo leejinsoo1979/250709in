@@ -324,14 +324,16 @@ const InductionDrawerAnimated: React.FC<InductionDrawerAnimatedProps> = ({
   const defaultDBG = 5;
   const gapTopExt = (doorTopGap ?? defaultDTG) - defaultDTG;
   const gapBottomExt = (doorBottomGap ?? defaultDBG) - defaultDBG;
+  const cabinetHeightMm = adjustedHeight / 0.01;
 
   const maida1HeightMm = 340 + gapBottomExt;
   const maida1BottomMm = -5 - gapBottomExt;
   const maida1CenterY = cabinetBottomY + mmToThreeUnits(maida1BottomMm) + mmToThreeUnits(maida1HeightMm) / 2;
 
-  const maida2HeightMm = 427 + gapTopExt;
   const gapMm = 3;
   const maida2BottomMm = -5 + 340 + gapMm;
+  const maida2TopMm = cabinetHeightMm - 20 + gapTopExt;
+  const maida2HeightMm = Math.max(0, maida2TopMm - maida2BottomMm);
   const maida2CenterY = cabinetBottomY + mmToThreeUnits(maida2BottomMm) + mmToThreeUnits(maida2HeightMm) / 2;
 
   // 2D 오버레이 표시 조건
@@ -1456,10 +1458,14 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
       {showFurniture && hasBase !== false && (moduleData.id.includes('lower-sink-cabinet') || moduleData.id.includes('dual-lower-sink-cabinet') || moduleData.id.includes('lower-induction-cabinet') || moduleData.id.includes('dual-lower-induction-cabinet')) && (() => {
         const mmToThreeUnits = (mm: number) => mm * 0.01;
         const cabinetHeight = adjustedHeight;
+        const cabinetHeightMm = cabinetHeight / 0.01;
+        const isInductionCabinet = moduleData.id.includes('lower-induction-cabinet') || moduleData.id.includes('dual-lower-induction-cabinet');
         const cabinetBottomY = -cabinetHeight / 2;
-        const apronHeightMm = 150;
         const notchHeightMm = 60;
         const notchFromBottomMm = (moduleData.dimensions.height || 785) - notchHeightMm;
+        const apronHeightMm = isInductionCabinet
+          ? Math.max(0, cabinetHeightMm - 635)
+          : 150;
         // 전대 상단 = 따내기 시작점(notchFromBottomMm), 전대 하단 = notchFromBottomMm - apronHeightMm
         const apronCenterY = cabinetBottomY + mmToThreeUnits(notchFromBottomMm - apronHeightMm / 2);
         const apronWidth = baseFurniture.innerWidth; // 내경 (전체폭 - 측판두께×2)

@@ -3477,6 +3477,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
             && !(typeof currentPlacedModule.moduleId === 'string' && (
               // 서랍 모듈만 매칭 (반통 half는 도어 모듈 → 제외)
               /^(dual-)?lower-drawer-/.test(currentPlacedModule.moduleId)
+              || /(^|-)lower-induction-cabinet-/.test(currentPlacedModule.moduleId)
               || (/(^|-)lower-door-lift-/.test(currentPlacedModule.moduleId) && !currentPlacedModule.moduleId.includes('-half-'))
               || (/(^|-)lower-top-down-/.test(currentPlacedModule.moduleId) && !currentPlacedModule.moduleId.includes('-half-'))
             ))
@@ -3660,6 +3661,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
             && !(typeof currentPlacedModule.moduleId === 'string' && (
               // 서랍 모듈만 매칭 (반통 half는 도어 모듈 → 제외)
               /^(dual-)?lower-drawer-/.test(currentPlacedModule.moduleId)
+              || /(^|-)lower-induction-cabinet-/.test(currentPlacedModule.moduleId)
               || (/(^|-)lower-door-lift-/.test(currentPlacedModule.moduleId) && !currentPlacedModule.moduleId.includes('-half-'))
               || (/(^|-)lower-top-down-/.test(currentPlacedModule.moduleId) && !currentPlacedModule.moduleId.includes('-half-'))
             ))
@@ -3728,6 +3730,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
             && !(typeof currentPlacedModule?.moduleId === 'string' && (
               // 서랍 모듈만 매칭 (반통 half는 도어 모듈 → 제외)
               /^(dual-)?lower-drawer-/.test(currentPlacedModule.moduleId)
+              || /(^|-)lower-induction-cabinet-/.test(currentPlacedModule.moduleId)
               || (/(^|-)lower-door-lift-/.test(currentPlacedModule.moduleId) && !currentPlacedModule.moduleId.includes('-half-'))
               || (/(^|-)lower-top-down-/.test(currentPlacedModule.moduleId) && !currentPlacedModule.moduleId.includes('-half-'))
             ))

@@ -7320,15 +7320,18 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     const gapBottomExt = dbg - defaultDBG;
                     const gapMm = 3;
                     const maida1H = 340 + gapBottomExt;
-                    const maida2H = 427 + gapTopExt;
                     const maida1BottomAbs = cabinetBottomAbs - 5 - gapBottomExt;
                     const maida1TopAbs = maida1BottomAbs + maida1H;
                     const maida2BottomAbs = cabinetBottomAbs - 5 + 340 + gapMm;
-                    const maida2TopAbs = maida2BottomAbs + maida2H;
-                    // 상단 갭: 2단 마이다 상단 ~ 캐비넷 상단
                     const inductionModData = getModuleById(doorModule.moduleId, { width: spaceInfo.width, height: spaceInfo.height, depth: spaceInfo.depth }, spaceInfo);
-                    const cabinetH = inductionModData?.dimensions.height ?? 785;
+                    const cabinetH = doorModule.freeHeight
+                      ?? doorModule.customHeight
+                      ?? inductionModData?.dimensions.height
+                      ?? 785;
                     const cabinetTopAbs = cabinetBottomAbs + cabinetH;
+                    const maida2TopAbs = cabinetTopAbs - 20 + gapTopExt;
+                    const maida2H = Math.max(0, maida2TopAbs - maida2BottomAbs);
+                    // 상단 갭: 2단 마이다 상단 ~ 캐비넷 상단
                     const topGapMm = Math.round(cabinetTopAbs - maida2TopAbs);
 
                     const renderMaidaDim = (bottomAbs: number, topAbs: number, heightMm: number) => {

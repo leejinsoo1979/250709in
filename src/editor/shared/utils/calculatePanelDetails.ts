@@ -1830,6 +1830,9 @@ export const calculatePanelDetails = (
     const inductionDefaultDBG = 5;
     const inductionGapTopExt = (doorTopGap ?? inductionDefaultDTG) - inductionDefaultDTG;
     const inductionGapBottomExt = (doorBottomGap ?? inductionDefaultDBG) - inductionDefaultDBG;
+    const inductionMaida2BottomMm = -5 + 340 + 3;
+    const inductionMaida2TopMm = height - 20 + inductionGapTopExt;
+    const inductionMaida2HeightMm = Math.max(0, inductionMaida2TopMm - inductionMaida2BottomMm);
     extDrawerPanels.push({
       name: '인덕션 1단서랍(마이다)',
       width: maidaWidthMm,
@@ -1840,7 +1843,7 @@ export const calculatePanelDetails = (
     extDrawerPanels.push({
       name: '인덕션 2단서랍(마이다)',
       width: maidaWidthMm,
-      height: 427 + inductionGapTopExt,
+      height: inductionMaida2HeightMm,
       thickness: 18.5,
       material: 'PET',
     });
@@ -1926,10 +1929,11 @@ export const calculatePanelDetails = (
   // === 싱크장/인덕션장 전대 (상단 따내기 아래 150mm) ===
   const apronGap = (basicThickness === 15.5 || basicThickness === 18.5) ? 0 : 1;
   if (moduleId.includes('lower-sink-cabinet') || moduleId.includes('dual-lower-sink-cabinet') || moduleId.includes('lower-induction-cabinet') || moduleId.includes('dual-lower-induction-cabinet')) {
+    const isInductionCabinet = moduleId.includes('lower-induction-cabinet') || moduleId.includes('dual-lower-induction-cabinet');
     panels.frame.push({
       name: '전대',
       width: innerWidth - apronGap, // 상판/바닥판과 동일 너비
-      height: 150,
+      height: isInductionCabinet ? Math.max(0, height - 635) : 150,
       thickness: basicThickness,
       material: 'PB',
     });
