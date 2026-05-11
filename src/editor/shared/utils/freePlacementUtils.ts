@@ -361,32 +361,46 @@ export function calcResizedPositionX(
   // ── 붙어있는 쪽 고정 ──
   const SNAP_THRESHOLD = 3;
 
-  let leftAttached = Math.abs(oldBounds.left - startX) <= SNAP_THRESHOLD
-    || (lockedGaps?.left != null && Math.abs(oldBounds.left - effStart) <= SNAP_THRESHOLD);
-  let rightAttached = Math.abs(oldBounds.right - endX) <= SNAP_THRESHOLD
-    || (lockedGaps?.right != null && Math.abs(oldBounds.right - effEnd) <= SNAP_THRESHOLD);
+  // 좌측 정렬 기준점 결정: 인접 가구 우측 끝 우선, 없으면 oldBounds.left, 벽 이격 경계
+  let leftAnchor: number | null = null;
+  let rightAnchor: number | null = null;
 
+  // 벽/이격 경계 체크
+  if (Math.abs(oldBounds.left - startX) <= SNAP_THRESHOLD) leftAnchor = startX;
+  else if (lockedGaps?.left != null && Math.abs(oldBounds.left - effStart) <= SNAP_THRESHOLD) leftAnchor = effStart;
+
+  if (Math.abs(oldBounds.right - endX) <= SNAP_THRESHOLD) rightAnchor = endX;
+  else if (lockedGaps?.right != null && Math.abs(oldBounds.right - effEnd) <= SNAP_THRESHOLD) rightAnchor = effEnd;
+
+  // 인접 가구 체크 — 가구 끝점을 정확한 anchor로 사용 (부동소수점 오차 제거)
   for (const other of allModules) {
     if (other.id === module.id || !other.isFreePlacement) continue;
     const otherBounds = getModuleBoundsX(other);
-    if (Math.abs(oldBounds.left - otherBounds.right) <= SNAP_THRESHOLD) leftAttached = true;
-    if (Math.abs(oldBounds.right - otherBounds.left) <= SNAP_THRESHOLD) rightAttached = true;
+    if (Math.abs(oldBounds.left - otherBounds.right) <= SNAP_THRESHOLD) {
+      leftAnchor = otherBounds.right; // 인접 가구의 우측 끝에 정확히 붙임
+    }
+    if (Math.abs(oldBounds.right - otherBounds.left) <= SNAP_THRESHOLD) {
+      rightAnchor = otherBounds.left; // 인접 가구의 좌측 끝에 정확히 붙임
+    }
   }
+
+  const leftAttached = leftAnchor !== null;
+  const rightAttached = rightAnchor !== null;
 
   const currentCenterMm = module.position.x * 100;
   let newCenterMm: number;
 
   if (leftAttached && rightAttached) {
-    // 양쪽 다 붙어있으면 좌측 고정
-    newCenterMm = oldBounds.left + halfNew;
+    // 양쪽 다 붙어있으면 좌측 anchor 기준
+    newCenterMm = leftAnchor! + halfNew;
   } else if (leftAttached) {
-    // 좌측에 붙어있으면 좌측 고정
-    newCenterMm = oldBounds.left + halfNew;
+    // 좌측에 붙어있으면 좌측 anchor 기준
+    newCenterMm = leftAnchor! + halfNew;
   } else if (rightAttached) {
-    // 우측에 붙어있으면 우측 고정
-    newCenterMm = oldBounds.right - halfNew;
+    // 우측에 붙어있으면 우측 anchor 기준
+    newCenterMm = rightAnchor! - halfNew;
   } else {
-    // 어디에도 안 붙어있어도 좌측 고정 (왼쪽이 제자리, 오른쪽으로만 확장/축소)
+    // 어디에도 안 붙어있으면 기존 좌측 위치 유지
     newCenterMm = oldBounds.left + halfNew;
   }
 
