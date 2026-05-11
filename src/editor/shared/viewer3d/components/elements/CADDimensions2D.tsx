@@ -449,15 +449,20 @@ const computeLowerCabinetMaidaHeights = (
 
   // LowerCabinet.tsx line 349-350과 동일 (2단서랍장은 동적 계산)
   const drawer2TierFromBottom = (moduleHeightMm - 125) / 2;
-  // 도어올림 2단 반통: 몸통 H 변경 시 도어/노치 동적 스케일링 (LowerCabinet.tsx 1358-1364와 동기화)
+  // 도어올림 2단 반통: 몸통 H 변경 시 도어/노치 동적 스케일링 (LowerCabinet.tsx와 동기화)
   // 노치 65, 도어갭 20 고정. notch=(H-75)/2, maida=notch+45 (도어갭 20mm 보존)
   // 정수 반올림으로 0.5 단위 방지. maida를 notch에서 파생시켜 도어갭 일관성 보장
   const doorLift2TierNotch = Math.max(0, Math.round((moduleHeightMm - 75) / 2));
   const doorLift2TierMaidaH = Math.max(0, doorLift2TierNotch + 45);
-  const notchFromBottoms = is3Tier ? [295, 510] : isDoorLift3Tier ? [315, 545] : isDoorLift2Tier ? [doorLift2TierNotch] : isTopDown3Tier ? [225, 445, 665] : isTopDown2Tier ? [300, 665] : [drawer2TierFromBottom];
+  // 도어올림 3단: 아래 도어(360) 고정, 위 2개 도어만 균등하게 H 변경 흡수
+  // notch1=315(고정), notch2=(H+305)/2, 도어=[360, (H-365)/2, (H-365)/2]
+  // (H=785 기준: notch=[315,545], 도어=[360,210,210])
+  const doorLift3TierUpperMaidaH = Math.max(0, Math.round((moduleHeightMm - 365) / 2));
+  const doorLift3TierNotch2 = Math.max(380, doorLift3TierUpperMaidaH + 335);
+  const notchFromBottoms = is3Tier ? [295, 510] : isDoorLift3Tier ? [315, doorLift3TierNotch2] : isDoorLift2Tier ? [doorLift2TierNotch] : isTopDown3Tier ? [225, 445, 665] : isTopDown2Tier ? [300, 665] : [drawer2TierFromBottom];
   const notchHeights = is3Tier ? [65, 65] : isDoorLift3Tier ? [65, 65] : isDoorLift2Tier ? [65] : isTopDown3Tier ? [65, 65, 65] : isTopDown2Tier ? [65, 65] : [65];
   const hideTopNotch = isDoorLift2Tier || isDoorLift3Tier || isTopDown2Tier || isTopDown3Tier;
-  const fixedMaidaHeights = isDoorLift2Tier ? [doorLift2TierMaidaH, doorLift2TierMaidaH] : isDoorLift3Tier ? [360, 210, 210] : undefined;
+  const fixedMaidaHeights = isDoorLift2Tier ? [doorLift2TierMaidaH, doorLift2TierMaidaH] : isDoorLift3Tier ? [360, doorLift3TierUpperMaidaH, doorLift3TierUpperMaidaH] : undefined;
   // 실제 서랍 개수 (ExternalDrawerRenderer drawerCount와 동일)
   const drawerCount = (is3Tier || isDoorLift3Tier || isTopDown3Tier) ? 3 : 2;
 

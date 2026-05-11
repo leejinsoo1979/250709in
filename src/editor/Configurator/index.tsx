@@ -5935,11 +5935,8 @@ const Configurator: React.FC = () => {
                     <input
                       type="text" inputMode="numeric"
                       value={offset} placeholder="0"
-                      disabled={hlKey.startsWith('top')}
-                      readOnly={hlKey.startsWith('top')}
                       onFocus={() => setHighlightedFrame(hlKey)}
                       onKeyDown={(e) => {
-                        if (hlKey.startsWith('top')) return;
                         if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
                           e.preventDefault();
                           const delta = e.key === 'ArrowUp' ? 1 : -1;
@@ -5947,12 +5944,10 @@ const Configurator: React.FC = () => {
                         }
                       }}
                       onChange={(e) => {
-                        if (hlKey.startsWith('top')) return;
                         const v = e.target.value;
                         if (v === '' || v === '-' || /^-?\d+$/.test(v)) onOffsetChange(v === '' || v === '-' ? 0 : parseInt(v, 10));
                       }}
                       onBlur={(e) => {
-                        if (hlKey.startsWith('top')) return;
                         setHighlightedFrame(null);
                         onOffsetChange(Math.max(-200, Math.min(200, parseInt(e.target.value) || 0)));
                       }}
