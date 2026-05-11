@@ -1018,8 +1018,13 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   // 슬롯 배치/자유배치 모두 적용 — 사용자가 높이를 수동 변경한 경우
   const isStaleUpperTotalHeight = (value?: number) => {
     if (!moduleData || moduleData.category !== 'upper' || typeof value !== 'number') return false;
+    const rounded = Math.round(value);
     const baseFrameHeight = spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height ?? 65) : 65;
-    return Math.round(value) === Math.round(moduleData.dimensions.height + baseFrameHeight);
+    return rounded === 850
+      || rounded === 868
+      || rounded === Math.round(moduleData.dimensions.height + baseFrameHeight)
+      || rounded === Math.round(moduleData.dimensions.height + 60)
+      || rounded === Math.round(moduleData.dimensions.height + 65);
   };
 
   if (moduleData && placedModule.freeHeight

@@ -960,21 +960,21 @@ const PlacedModulePropertiesPanel: React.FC = () => {
     };
   })();
 
-  const upperBottomEndPanelHeight = currentPlacedModule && moduleData?.category === 'upper' && currentPlacedModule.hasBottomEndPanel !== false ? 18 : 0;
   const isStaleUpperTotalHeight = (value?: number) => {
     if (!moduleData || moduleData.category !== 'upper' || typeof value !== 'number') return false;
+    const rounded = Math.round(value);
     const baseFrameHeight = spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height ?? 65) : 65;
-    return Math.round(value) === Math.round(moduleData.dimensions.height + baseFrameHeight);
+    return rounded === 850
+      || rounded === 868
+      || rounded === Math.round(moduleData.dimensions.height + baseFrameHeight)
+      || rounded === Math.round(moduleData.dimensions.height + 60)
+      || rounded === Math.round(moduleData.dimensions.height + 65);
   };
   const placedBodyHeight = currentPlacedModule && moduleData
     ? ((autoDroppedUpperHeight && !autoDroppedUpperHeight.freeHeight && !isStaleUpperTotalHeight(currentPlacedModule.freeHeight) ? currentPlacedModule.freeHeight : undefined)
       ?? (autoDroppedUpperHeight && !autoDroppedUpperHeight.customHeight && !isStaleUpperTotalHeight(currentPlacedModule.customHeight) ? currentPlacedModule.customHeight : undefined)
       ?? moduleData.dimensions.height)
     : 0;
-  const placedDisplayHeight = moduleData?.category === 'upper'
-    ? placedBodyHeight + upperBottomEndPanelHeight
-    : placedBodyHeight;
-
   // 기둥 슬롯 정보 및 기둥 C 여부 확인 (조건부 렌더링 전에 미리 계산)
   const { slotInfo, isCoverDoor, isColumnC } = React.useMemo(() => {
     if (!currentPlacedModule || !moduleData) return { slotInfo: null, isCoverDoor: false, isColumnC: false };
@@ -1101,13 +1101,15 @@ const PlacedModulePropertiesPanel: React.FC = () => {
         const is2TierDrawer = currentPlacedModule.moduleId.includes('lower-drawer-2tier') || currentPlacedModule.moduleId.includes('dual-lower-drawer-2tier');
         const baseHeight = is2TierDrawer && currentPlacedModule.cabinetBodyHeight
           ? currentPlacedModule.cabinetBodyHeight
-          : placedDisplayHeight;
+          : placedBodyHeight;
         // 상부몰딩/걸레받이 OFF로 흡수된 높이 더해서 표시 (실제 가구 높이)
+        // 상부장은 천장/바닥과 무관한 독립 가구이므로 흡수 적용 안 함 (full/lower만)
         const shouldAbsorbTopForBodyH = moduleData.category === 'full';
+        const shouldAbsorbBaseForBodyH = moduleData.category === 'full' || moduleData.category === 'lower';
         const absorbedTopForH = shouldAbsorbTopForBodyH && currentPlacedModule.hasTopFrame === false
           ? ((currentPlacedModule.topFrameThickness ?? spaceInfo.frameSize?.top ?? 30) - (currentPlacedModule.topFrameGap ?? 0))
           : 0;
-        const absorbedBaseForH = currentPlacedModule.hasBase === false
+        const absorbedBaseForH = shouldAbsorbBaseForBodyH && currentPlacedModule.hasBase === false
           ? (((currentPlacedModule.baseFrameHeight ?? (spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height ?? 60) : 0)))
             - (currentPlacedModule.individualFloatHeight ?? 0))
           : 0;
@@ -1191,11 +1193,13 @@ const PlacedModulePropertiesPanel: React.FC = () => {
             // moduleData는 zone 반영된 getModuleById로 조회되므로 dimensions.height에 단내림이 반영됨.
             // 섹션별 높이 합은 팝업의 몸통치수 H와 같아야 한다.
             const baseBodyHeightForSections = placedBodyHeight;
+            // 상부장은 천장/바닥과 무관 → 흡수 적용 안 함 (full/lower만)
             const shouldAbsorbTopForSections = moduleData.category === 'full';
+            const shouldAbsorbBaseForSections = moduleData.category === 'full' || moduleData.category === 'lower';
             const absorbedTopForSections = shouldAbsorbTopForSections && currentPlacedModule.hasTopFrame === false
               ? ((currentPlacedModule.topFrameThickness ?? spaceInfo.frameSize?.top ?? 30) - (currentPlacedModule.topFrameGap ?? 0))
               : 0;
-            const absorbedBaseForSections = currentPlacedModule.hasBase === false
+            const absorbedBaseForSections = shouldAbsorbBaseForSections && currentPlacedModule.hasBase === false
               ? (((currentPlacedModule.baseFrameHeight ?? (spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height ?? 60) : 0)))
                 - (currentPlacedModule.individualFloatHeight ?? 0))
               : 0;
@@ -3095,8 +3099,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                             ? (((currentPlacedModule.baseFrameHeight ?? (spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height ?? 60) : 0)))
                               - (currentPlacedModule.individualFloatHeight ?? 0))
                             : 0;
-                          const absUpperBottomEp = moduleData.category === 'upper' && currentPlacedModule.hasBottomEndPanel !== false ? 18 : 0;
-                          const val = displayVal - absT - absB - absUpperBottomEp;
+                          const val = displayVal - absT - absB;
                           const updates: any = { freeHeight: val };
                           // 키큰장(full): 가구 높이 줄이면 상단몰딩이 늘어나야 함
                           if (moduleData.category === 'full') {
@@ -3164,8 +3167,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                               ? (((currentPlacedModule.baseFrameHeight ?? (spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height ?? 60) : 0)))
                                 - (currentPlacedModule.individualFloatHeight ?? 0))
                               : 0;
-                            const absUpperBottomEp = moduleData.category === 'upper' && currentPlacedModule.hasBottomEndPanel !== false ? 18 : 0;
-                            const next = nextDisplay - absT - absB - absUpperBottomEp;
+                            const next = nextDisplay - absT - absB;
                             const arrowUpdates: any = { freeHeight: next };
                             if (moduleData.category === 'full') {
                               const iSpace = calculateInternalSpace(spaceInfo);
@@ -3341,12 +3343,14 @@ const PlacedModulePropertiesPanel: React.FC = () => {
               : Math.max(0, bodyWidth - 3 + totalExtensionMm);
             // 도어 높이: 실제 적용된 몸통 높이 기준 (EP와 동일)
             // 상부몰딩/걸레받이 토글 OFF 시 가구가 흡수해서 몸통이 늘어남 → 도어 H도 늘어난 몸통 + 갭
+            // 상부장은 천장/바닥과 무관 → 흡수 적용 안 함 (full/lower만)
             const baseBodyH = adjustedFreeHeight || placedBodyHeight || moduleData.dimensions.height || 0;
             const shouldAbsorbTopForDoorH = moduleData.category === 'full';
+            const shouldAbsorbBaseForDoorH = moduleData.category === 'full' || moduleData.category === 'lower';
             const absorbedTopH = shouldAbsorbTopForDoorH && currentPlacedModule.hasTopFrame === false
               ? ((currentPlacedModule.topFrameThickness ?? spaceInfo.frameSize?.top ?? 30) - (currentPlacedModule.topFrameGap ?? 0))
               : 0;
-            const absorbedBaseH = currentPlacedModule.hasBase === false
+            const absorbedBaseH = shouldAbsorbBaseForDoorH && currentPlacedModule.hasBase === false
               ? (((currentPlacedModule.baseFrameHeight ?? (spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height ?? 60) : 0)))
                 - (currentPlacedModule.individualFloatHeight ?? 0))
               : 0;
@@ -3568,11 +3572,13 @@ const PlacedModulePropertiesPanel: React.FC = () => {
 
             // 표준 가구의 섹션 높이: 마지막(상부) 섹션이 프레임 토글 흡수분을 먹되,
             // 상/하부 섹션 합은 팝업의 몸통치수 H와 같아야 한다.
+            // 상부장은 천장/바닥과 무관 → 흡수 적용 안 함 (full/lower만)
             const shouldAbsorbTopForSections = moduleData?.category === 'full';
+            const shouldAbsorbBaseForSections = moduleData?.category === 'full' || moduleData?.category === 'lower';
             const absorbedTopForSections = shouldAbsorbTopForSections && currentPlacedModule.hasTopFrame === false
               ? ((currentPlacedModule.topFrameThickness ?? spaceInfo.frameSize?.top ?? 30) - (currentPlacedModule.topFrameGap ?? 0))
               : 0;
-            const absorbedBaseForSections = currentPlacedModule.hasBase === false
+            const absorbedBaseForSections = shouldAbsorbBaseForSections && currentPlacedModule.hasBase === false
               ? (((currentPlacedModule.baseFrameHeight ?? (spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height ?? 60) : 0)))
                 - (currentPlacedModule.individualFloatHeight ?? 0))
               : 0;

@@ -3799,7 +3799,12 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               : leftmostMod?.moduleId.includes('lower') ? 'lower' : 'full');
           const isStaleUpperTotalHeightLeft = (value?: number) => {
             if (leftCategoryResolved !== 'upper' || !leftModDataForCat || typeof value !== 'number') return false;
-            return Math.round(value) === Math.round(leftModDataForCat.dimensions.height + (spaceInfo.baseConfig?.height ?? 65));
+            const rounded = Math.round(value);
+            return rounded === 850
+              || rounded === 868
+              || rounded === Math.round(leftModDataForCat.dimensions.height + (spaceInfo.baseConfig?.height ?? 65))
+              || rounded === Math.round(leftModDataForCat.dimensions.height + 60)
+              || rounded === Math.round(leftModDataForCat.dimensions.height + 65);
           };
           if (leftmostMod) {
             if (leftmostMod.freeHeight && !isStaleUpperTotalHeightLeft(leftmostMod.freeHeight)) {
@@ -3833,7 +3838,12 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 : leftCompanionMod.moduleId.includes('lower') ? 'lower' : 'full');
             const isStaleCompanionUpperTotalHeight = (value?: number) => {
               if (companionCategory !== 'upper' || !compModData || typeof value !== 'number') return false;
-              return Math.round(value) === Math.round(compModData.dimensions.height + (spaceInfo.baseConfig?.height ?? 65));
+              const rounded = Math.round(value);
+              return rounded === 850
+                || rounded === 868
+                || rounded === Math.round(compModData.dimensions.height + (spaceInfo.baseConfig?.height ?? 65))
+                || rounded === Math.round(compModData.dimensions.height + 60)
+                || rounded === Math.round(compModData.dimensions.height + 65);
             };
             companionH = (!isStaleCompanionUpperTotalHeight(leftCompanionMod.freeHeight) ? leftCompanionMod.freeHeight : undefined)
               ?? (!isStaleCompanionUpperTotalHeight(leftCompanionMod.customHeight) ? leftCompanionMod.customHeight : undefined)
@@ -4242,7 +4252,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     fontSize={baseFontSize} color={textColor} anchorX="right" anchorY="middle"
                     outlineWidth={textOutlineWidth} outlineColor={textOutlineColor}
                   >
-                    {upperCabinetH}
+                    {Math.max(0, upperCabinetH - ((((leftCategoryResolved === 'upper' ? leftmostMod : leftCompanionMod) as any)?.hasBottomEndPanel !== false) ? UPPER_BOTTOM_FINISH_MM : 0))}
                   </Text>
                 </>
               ) : hasSectionSplit ? (
@@ -4595,7 +4605,12 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               : rightmostMod?.moduleId.includes('lower') ? 'lower' : 'full');
           const isStaleUpperTotalHeightRight = (value?: number) => {
             if (rightCategoryResolved !== 'upper' || !rightModDataForCat || typeof value !== 'number') return false;
-            return Math.round(value) === Math.round(rightModDataForCat.dimensions.height + (spaceInfo.baseConfig?.height ?? 65));
+            const rounded = Math.round(value);
+            return rounded === 850
+              || rounded === 868
+              || rounded === Math.round(rightModDataForCat.dimensions.height + (spaceInfo.baseConfig?.height ?? 65))
+              || rounded === Math.round(rightModDataForCat.dimensions.height + 60)
+              || rounded === Math.round(rightModDataForCat.dimensions.height + 65);
           };
           if (rightmostMod) {
             if (rightmostMod.freeHeight && !isStaleUpperTotalHeightRight(rightmostMod.freeHeight)) {
@@ -4628,7 +4643,12 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 : rightCompanionMod.moduleId.includes('lower') ? 'lower' : 'full');
             const isStaleRightCompanionUpperTotalHeight = (value?: number) => {
               if (rCompanionCategory !== 'upper' || !compModData || typeof value !== 'number') return false;
-              return Math.round(value) === Math.round(compModData.dimensions.height + (spaceInfo.baseConfig?.height ?? 65));
+              const rounded = Math.round(value);
+              return rounded === 850
+                || rounded === 868
+                || rounded === Math.round(compModData.dimensions.height + (spaceInfo.baseConfig?.height ?? 65))
+                || rounded === Math.round(compModData.dimensions.height + 60)
+                || rounded === Math.round(compModData.dimensions.height + 65);
             };
             rCompanionH = (!isStaleRightCompanionUpperTotalHeight(rightCompanionMod.freeHeight) ? rightCompanionMod.freeHeight : undefined)
               ?? (!isStaleRightCompanionUpperTotalHeight(rightCompanionMod.customHeight) ? rightCompanionMod.customHeight : undefined)
@@ -5019,7 +5039,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     fontSize={baseFontSize} color={textColor} anchorX="left" anchorY="middle"
                     outlineWidth={textOutlineWidth} outlineColor={textOutlineColor}
                   >
-                    {rUpperCabinetH}
+                    {Math.max(0, rUpperCabinetH - ((((rightCategoryResolved === 'upper' ? rightmostMod : rightCompanionMod) as any)?.hasBottomEndPanel !== false) ? R_UPPER_BOTTOM_FINISH_MM : 0))}
                   </Text>
                 </>
               ) : rHasSectionSplit ? (
@@ -5058,18 +5078,56 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 </>
               ) : (
                 <>
-                  {/* 단일 내경 높이 표시 */}
+                  {/* 단일 내경 높이 표시
+                      - 상부장: 본체 H(rFurnitureH)와 하부 EP(18mm)를 별도 치수로 분리 표시
+                      - 그 외: 단일 치수 */}
                   <NativeLine name="dimension_line"
                     points={[[rightInnerX - mmToThreeUnits(15), rFurnitureTopY, 0.002], [rightInnerX + mmToThreeUnits(15), rFurnitureTopY, 0.002]]}
                     color={dimensionColor} lineWidth={0.6} renderOrder={100000} depthTest={false}
                   />
-                  <Text renderOrder={100001} depthTest={false}
-                    position={[rightInnerX + mmToThreeUnits(10), (rBottomFrameTopY + rFurnitureTopY) / 2, 0.01]}
-                    fontSize={baseFontSize} color={textColor} anchorX="left" anchorY="middle"
-                    outlineWidth={textOutlineWidth} outlineColor={textOutlineColor}
-                  >
-                    {rightCategoryResolved === 'upper' ? (rFurnitureH + R_UPPER_BOTTOM_FINISH_MM) : rFurnitureH}
-                  </Text>
+                  {rightCategoryResolved === 'upper' ? (() => {
+                    const hasBottomEPRight = (() => {
+                      const rm = rightmostMod as any;
+                      return rm?.hasBottomEndPanel !== false;
+                    })();
+                    const rBodyBottomY = hasBottomEPRight
+                      ? rBottomFrameTopY + mmToThreeUnits(R_UPPER_BOTTOM_FINISH_MM)
+                      : rBottomFrameTopY;
+                    return (
+                      <>
+                        <Text renderOrder={100001} depthTest={false}
+                          position={[rightInnerX + mmToThreeUnits(10), (rBodyBottomY + rFurnitureTopY) / 2, 0.01]}
+                          fontSize={baseFontSize} color={textColor} anchorX="left" anchorY="middle"
+                          outlineWidth={textOutlineWidth} outlineColor={textOutlineColor}
+                        >
+                          {rFurnitureH}
+                        </Text>
+                        {hasBottomEPRight && (
+                          <>
+                            <NativeLine name="dimension_line"
+                              points={[[rightInnerX, rBodyBottomY, 0.002], [rightInnerX + mmToThreeUnits(20), rBodyBottomY, 0.002]]}
+                              color={dimensionColor} lineWidth={0.6} renderOrder={100000} depthTest={false}
+                            />
+                            <Text renderOrder={100001} depthTest={false}
+                              position={[rightInnerX + mmToThreeUnits(10), (rBottomFrameTopY + rBodyBottomY) / 2, 0.01]}
+                              fontSize={baseFontSize} color={textColor} anchorX="left" anchorY="middle"
+                              outlineWidth={textOutlineWidth} outlineColor={textOutlineColor}
+                            >
+                              {R_UPPER_BOTTOM_FINISH_MM}
+                            </Text>
+                          </>
+                        )}
+                      </>
+                    );
+                  })() : (
+                    <Text renderOrder={100001} depthTest={false}
+                      position={[rightInnerX + mmToThreeUnits(10), (rBottomFrameTopY + rFurnitureTopY) / 2, 0.01]}
+                      fontSize={baseFontSize} color={textColor} anchorX="left" anchorY="middle"
+                      outlineWidth={textOutlineWidth} outlineColor={textOutlineColor}
+                    >
+                      {rFurnitureH}
+                    </Text>
+                  )}
                 </>
               )}
 
