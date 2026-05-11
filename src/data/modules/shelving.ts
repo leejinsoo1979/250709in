@@ -1047,6 +1047,7 @@ const createSingleGlassCabinet = (columnWidth: number, maxHeight?: number): Modu
     hasBase: false,
     hasBackPanel: false,
     individualFloatHeight: GLASS_CABINET_FLOAT,
+    thumbnail: '/images/furniture-thumbnails/glass_single.png',
     modelConfig: {
       ...base.modelConfig,
       sections: buildGlassCabinetSections()
@@ -1080,6 +1081,7 @@ const createDualGlassCabinet = (
     hasBase: false,
     hasBackPanel: false,
     individualFloatHeight: GLASS_CABINET_FLOAT,
+    thumbnail: '/images/furniture-thumbnails/glass_dual.png',
     modelConfig: {
       ...base.modelConfig,
       sections: buildGlassCabinetSections()
