@@ -1290,7 +1290,9 @@ const PlacedModulePropertiesPanel: React.FC = () => {
         // 상부몰딩/걸레받이 OFF로 흡수된 높이 더해서 표시 (실제 가구 높이)
         // 상부장은 천장/바닥과 무관한 독립 가구이므로 흡수 적용 안 함 (full/lower만)
         const shouldAbsorbTopForBodyH = moduleData.category === 'full';
-        const shouldAbsorbBaseForBodyH = moduleData.category === 'full' || moduleData.category === 'lower';
+        // 하부장은 가구 자체 H가 받침대와 무관 (받침대는 별도) → 흡수 적용 안 함
+        // 키큰장(full)만 hasBase=false 시 받침대 자리 흡수
+        const shouldAbsorbBaseForBodyH = moduleData.category === 'full';
         const absorbedTopForH = shouldAbsorbTopForBodyH && currentPlacedModule.hasTopFrame === false
           ? ((currentPlacedModule.topFrameThickness ?? spaceInfo.frameSize?.top ?? 30) - (currentPlacedModule.topFrameGap ?? 0))
           : 0;
@@ -3304,7 +3306,9 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                           const absT = shouldAbsorbTopForBodyH && currentPlacedModule.hasTopFrame === false
                             ? ((currentPlacedModule.topFrameThickness ?? spaceInfo.frameSize?.top ?? 30) - (currentPlacedModule.topFrameGap ?? 0))
                             : 0;
-                          const shouldAbsorbBaseForBodyH = moduleData.category === 'full' || moduleData.category === 'lower';
+                          // 하부장은 가구 자체 H가 받침대와 무관 (받침대는 별도) → 흡수 적용 안 함
+        // 키큰장(full)만 hasBase=false 시 받침대 자리 흡수
+        const shouldAbsorbBaseForBodyH = moduleData.category === 'full';
                           const absB = shouldAbsorbBaseForBodyH && currentPlacedModule.hasBase === false && !currentPlacedModule.moduleId?.includes('glass-cabinet')
                             ? (((currentPlacedModule.baseFrameHeight ?? (spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height ?? 60) : 0)))
                               - (currentPlacedModule.individualFloatHeight ?? 0))
@@ -3388,7 +3392,9 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                             const absT = shouldAbsorbTopForBodyH && currentPlacedModule.hasTopFrame === false
                               ? ((currentPlacedModule.topFrameThickness ?? spaceInfo.frameSize?.top ?? 30) - (currentPlacedModule.topFrameGap ?? 0))
                               : 0;
-                            const shouldAbsorbBaseForBodyH = moduleData.category === 'full' || moduleData.category === 'lower';
+                            // 하부장은 가구 자체 H가 받침대와 무관 (받침대는 별도) → 흡수 적용 안 함
+        // 키큰장(full)만 hasBase=false 시 받침대 자리 흡수
+        const shouldAbsorbBaseForBodyH = moduleData.category === 'full';
                             const absB = shouldAbsorbBaseForBodyH && currentPlacedModule.hasBase === false && !currentPlacedModule.moduleId?.includes('glass-cabinet')
                               ? (((currentPlacedModule.baseFrameHeight ?? (spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height ?? 60) : 0)))
                                 - (currentPlacedModule.individualFloatHeight ?? 0))
@@ -3436,7 +3442,9 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                             const absT = shouldAbsorbTopForBodyH && currentPlacedModule.hasTopFrame === false
                               ? ((currentPlacedModule.topFrameThickness ?? spaceInfo.frameSize?.top ?? 30) - (currentPlacedModule.topFrameGap ?? 0))
                               : 0;
-                            const shouldAbsorbBaseForBodyH = moduleData.category === 'full' || moduleData.category === 'lower';
+                            // 하부장은 가구 자체 H가 받침대와 무관 (받침대는 별도) → 흡수 적용 안 함
+        // 키큰장(full)만 hasBase=false 시 받침대 자리 흡수
+        const shouldAbsorbBaseForBodyH = moduleData.category === 'full';
                             const absB = shouldAbsorbBaseForBodyH && currentPlacedModule.hasBase === false && !currentPlacedModule.moduleId?.includes('glass-cabinet')
                               ? (((currentPlacedModule.baseFrameHeight ?? (spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height ?? 60) : 0)))
                                 - (currentPlacedModule.individualFloatHeight ?? 0))
