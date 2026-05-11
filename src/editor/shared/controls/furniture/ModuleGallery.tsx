@@ -30,6 +30,9 @@ const FURNITURE_ICONS: Record<string, string> = {
   'built-in-fridge': getImagePath('single_builtin.png'),
   'insert-frame': getImagePath('insert_frame.png'),
   'dual-built-in-fridge': getImagePath('dual_builtin.png'),
+  // 유리장
+  'single-glass-cabinet': getImagePath('glass_single.png'),
+  'dual-glass-cabinet': getImagePath('glass_dual.png'),
   'single-pull-out-cabinet': getImagePath('microwave.png'),
   'single-pantry-cabinet': getImagePath('pantry.png'),
   'single-fridge-cabinet': getImagePath('single_builtin.png'),
