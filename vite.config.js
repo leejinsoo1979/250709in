@@ -1,15 +1,37 @@
 /// <reference types="vitest" />
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
+import { transformSync } from 'esbuild';
 import { fileURLToPath } from 'node:url';
 import { dirname } from 'node:path';
 import path from 'node:path';
 var __filename = fileURLToPath(import.meta.url);
 var __dirname = dirname(__filename);
+var compatibleOutputPlugin = function () { return ({
+    name: 'compatible-output-transform',
+    apply: 'build',
+    enforce: 'post',
+    generateBundle: function (_, bundle) {
+        for (var _i = 0, _a = Object.values(bundle); _i < _a.length; _i++) {
+            var asset = _a[_i];
+            if (asset.type !== 'chunk') {
+                continue;
+            }
+            var result = transformSync(asset.code, {
+                target: ['chrome79', 'edge79', 'safari13', 'firefox73'],
+                format: 'esm',
+                minify: true,
+            });
+            asset.code = result.code;
+            asset.map = null;
+        }
+    },
+}); };
 // https://vitejs.dev/config/
 export default defineConfig({
     plugins: [
         react(),
+        compatibleOutputPlugin(),
     ],
     base: process.env.GH_PAGES ? '/250709in/' : '/',
     resolve: {
@@ -19,7 +41,7 @@ export default defineConfig({
     },
     build: {
         minify: 'esbuild',
-        target: 'esnext',
+        target: ['chrome79', 'edge79', 'safari13', 'firefox73'],
         rollupOptions: {
             external: [
                 // AR 관련 파일들을 빌드에서 제외

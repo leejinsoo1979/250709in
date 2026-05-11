@@ -1,6 +1,7 @@
 /// <reference types="vitest" />
-import { defineConfig } from 'vite'
+import { defineConfig, type Plugin } from 'vite'
 import react from '@vitejs/plugin-react'
+import { transformSync } from 'esbuild'
 import { fileURLToPath } from 'node:url'
 import { dirname } from 'node:path'
 import path from 'node:path'
@@ -8,10 +9,33 @@ import path from 'node:path'
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
 
+const compatibleOutputPlugin = (): Plugin => ({
+  name: 'compatible-output-transform',
+  apply: 'build',
+  enforce: 'post',
+  generateBundle(_, bundle) {
+    for (const asset of Object.values(bundle)) {
+      if (asset.type !== 'chunk') {
+        continue
+      }
+
+      const result = transformSync(asset.code, {
+        target: ['chrome79', 'edge79', 'safari13', 'firefox73'],
+        format: 'esm',
+        minify: true,
+      })
+
+      asset.code = result.code
+      asset.map = null
+    }
+  },
+})
+
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [
     react(),
+    compatibleOutputPlugin(),
   ],
   base: process.env.GH_PAGES ? '/250709in/' : '/',
   resolve: {
@@ -21,8 +45,7 @@ export default defineConfig({
   },
   build: {
     minify: 'esbuild',
-    // es2020 이상: `??`, `?.` 등 네이티브 지원 (Chrome 80+, Edge 80+, Safari 13.1+, Firefox 74+)
-    target: 'es2020',
+    target: ['chrome79', 'edge79', 'safari13', 'firefox73'],
     rollupOptions: {
       external: [
         // AR 관련 파일들을 빌드에서 제외
