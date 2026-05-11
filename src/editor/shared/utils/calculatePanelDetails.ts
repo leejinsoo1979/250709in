@@ -48,7 +48,9 @@ export const calculatePanelDetails = (
   stoneTopBackLipTopOffset?: number,
   stoneTopBackLipTopBackOffset?: number,
   stoneTopBackLipFullFill?: boolean,
-  stoneTopBackLipFillHeight?: number
+  stoneTopBackLipFillHeight?: number,
+  endPanelTopOffsetMm?: number,
+  endPanelBottomOffsetMm?: number
 ) => {
   const panels: { upper: any[]; lower: any[]; door: any[]; frame: any[] } = {
     upper: [],     // 상부장 패널
@@ -1480,6 +1482,13 @@ export const calculatePanelDetails = (
   const epThicknessMm = endPanelThickness || 18; // 사용자 설정 EP 두께
   const isEpCFrame = epThicknessMm > 18; // >18mm이면 ㄷ자 프레임
   const epConnectorWidth = epThicknessMm - 18.5; // 전면/후면 연결판 폭 = EP두께 - 외판두께
+  const effectiveEndPanelTopOffsetMm = hasTopFrame === false
+    ? 0
+    : ((endPanelTopOffsetMm ?? 0) > 0 ? (endPanelTopOffsetMm as number) : (topFrameHeightMm ?? 0));
+  const effectiveEndPanelBottomOffsetMm = hasBase === false
+    ? 0
+    : ((endPanelBottomOffsetMm ?? 0) > 0 ? (endPanelBottomOffsetMm as number) : (baseFrameHeightMm ?? 0));
+  const endPanelHeight = height + effectiveEndPanelTopOffsetMm + effectiveEndPanelBottomOffsetMm;
 
   if (hasLeftEndPanel) {
     if (isEpCFrame) {
@@ -1487,7 +1496,7 @@ export const calculatePanelDetails = (
       if (!leftEpAdjacentFurniture) {
         result.push({
           name: 'EP(좌)측판',
-          width: height,
+          width: endPanelHeight,
           height: customDepth,
           thickness: epT,
           material: 'PET',
@@ -1496,7 +1505,7 @@ export const calculatePanelDetails = (
       }
       result.push({
         name: 'EP(좌)전면연결판',
-        width: height,
+        width: endPanelHeight,
         height: leftEpAdjacentFurniture ? epThicknessMm : epConnectorWidth,
         thickness: epT,
         material: 'PET',
@@ -1504,7 +1513,7 @@ export const calculatePanelDetails = (
       });
       result.push({
         name: 'EP(좌)후면연결판',
-        width: height,
+        width: endPanelHeight,
         height: leftEpAdjacentFurniture ? epThicknessMm : epConnectorWidth,
         thickness: epT,
         material: 'PET',
@@ -1513,7 +1522,7 @@ export const calculatePanelDetails = (
     } else {
       result.push({
         name: '엔드패널(좌)',
-        width: height,
+        width: endPanelHeight,
         height: customDepth,
         thickness: epT,
         material: 'PET',
@@ -1526,7 +1535,7 @@ export const calculatePanelDetails = (
       if (!rightEpAdjacentFurniture) {
         result.push({
           name: 'EP(우)측판',
-          width: height,
+          width: endPanelHeight,
           height: customDepth,
           thickness: epT,
           material: 'PET',
@@ -1535,7 +1544,7 @@ export const calculatePanelDetails = (
       }
       result.push({
         name: 'EP(우)전면연결판',
-        width: height,
+        width: endPanelHeight,
         height: rightEpAdjacentFurniture ? epThicknessMm : epConnectorWidth,
         thickness: epT,
         material: 'PET',
@@ -1543,7 +1552,7 @@ export const calculatePanelDetails = (
       });
       result.push({
         name: 'EP(우)후면연결판',
-        width: height,
+        width: endPanelHeight,
         height: rightEpAdjacentFurniture ? epThicknessMm : epConnectorWidth,
         thickness: epT,
         material: 'PET',
@@ -1552,7 +1561,7 @@ export const calculatePanelDetails = (
     } else {
       result.push({
         name: '엔드패널(우)',
-        width: height,
+        width: endPanelHeight,
         height: customDepth,
         thickness: epT,
         material: 'PET',

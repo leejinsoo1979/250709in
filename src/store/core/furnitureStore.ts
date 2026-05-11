@@ -382,8 +382,7 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
           module.doorTopGap = 20;
         } else {
           const isFullSurround = spaceInfo.surroundType === 'surround'
-            && spaceInfo.frameConfig?.top !== false
-            && spaceInfo.frameConfig?.bottom !== false;
+            && spaceInfo.frameConfig?.top !== false;
           module.doorTopGap = isFullSurround ? -3 : 5;
         }
       }
@@ -843,8 +842,7 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
     const defaultBottomGap = isFloatPlacement ? floatHeight : 25;
 
     const isFullSurround = spaceInfo.surroundType === 'surround'
-      && spaceInfo.frameConfig?.top !== false
-      && spaceInfo.frameConfig?.bottom !== false;
+      && spaceInfo.frameConfig?.top !== false;
     const defaultTopGap = isFullSurround ? -3 : 5;
 
     const currentModules = get().placedModules;
@@ -877,7 +875,9 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
         ...module,
         hasDoor,
         ...(hasDoor && {
-          doorTopGap: module.doorTopGap ?? topGap,
+          doorTopGap: isFullSurround && module.hasTopFrame !== false && category !== 'lower' && module.doorTopGap === 5
+            ? -3
+            : (module.doorTopGap ?? topGap),
           doorBottomGap: module.doorBottomGap ?? bottomGap
         })
       };
@@ -1162,10 +1162,12 @@ useFurnitureStore.subscribe((state) => {
     const isUpper = m.moduleId?.includes('upper-cabinet');
     if (isUpper && m.doorTopGap !== undefined && m.doorTopGap > 100) {
       const isFullSurround = spInfo.surroundType === 'surround'
-        && spInfo.frameConfig?.top !== false
-        && spInfo.frameConfig?.bottom !== false;
+        && spInfo.frameConfig?.top !== false;
       const correctGap = isFullSurround ? -3 : 5;
       return { ...m, doorTopGap: correctGap };
+    }
+    if (spInfo.surroundType === 'surround' && spInfo.frameConfig?.top !== false && !m.moduleId?.includes('lower-') && m.hasTopFrame !== false && m.doorTopGap === 5) {
+      return { ...m, doorTopGap: -3 };
     }
     const isBasic = m.moduleId?.includes('lower-half-cabinet') || m.moduleId?.includes('dual-lower-half-cabinet') || m.moduleId?.includes('lower-drawer-') || m.moduleId?.includes('dual-lower-drawer-') || m.moduleId?.includes('lower-sink-cabinet') || m.moduleId?.includes('dual-lower-sink-cabinet') || m.moduleId?.includes('lower-induction-cabinet') || m.moduleId?.includes('dual-lower-induction-cabinet');
     const isDoorLift = m.moduleId?.includes('lower-door-lift-');

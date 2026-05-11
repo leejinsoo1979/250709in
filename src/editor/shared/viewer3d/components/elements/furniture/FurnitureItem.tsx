@@ -3828,8 +3828,20 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
 
               // EP 높이 계산: 상단/하단 갭은 모두 가구 몸통 기준 바깥 방향
               const groupY = adjustedPosition.y; // Three.js 단위 (가구 중심 Y)
-              const epTopOffsetMm = placedModule.endPanelTopOffset ?? 0;
-              const epBottomOffsetMm = placedModule.endPanelBottomOffset ?? 0;
+              const defaultEpTopOffsetMm = placedModule.hasTopFrame === false
+                ? 0
+                : (placedModule.topFrameThickness ?? (spaceInfo.frameSize?.top ?? 30));
+              const defaultEpBottomOffsetMm = placedModule.hasBase === false
+                ? 0
+                : (spaceInfo.baseConfig?.type === 'stand'
+                  ? 0
+                  : (placedModule.baseFrameHeight ?? (spaceInfo.baseConfig?.height ?? 65)));
+              const epTopOffsetMm = placedModule.hasTopFrame === false
+                ? 0
+                : ((placedModule.endPanelTopOffset ?? 0) > 0 ? (placedModule.endPanelTopOffset as number) : defaultEpTopOffsetMm);
+              const epBottomOffsetMm = placedModule.hasBase === false
+                ? 0
+                : ((placedModule.endPanelBottomOffset ?? 0) > 0 ? (placedModule.endPanelBottomOffset as number) : defaultEpBottomOffsetMm);
               const topOff = mmToThreeUnits(epTopOffsetMm);
               const bottomOff = mmToThreeUnits(epBottomOffsetMm);
 

@@ -369,8 +369,8 @@ const FurnitureInfoModal: React.FC<FurnitureInfoModalProps> = ({
   const hasDoor = placedModule.doorConfig?.enabled || false;
   
   // 프레임 높이 계산
-  const topFrameHeightMm = calculateTopBottomFrameHeight(spaceInfo);
-  const baseFrameHeightMm = calculateBaseFrameHeight(spaceInfo);
+  const topFrameHeightMm = placedModule?.topFrameThickness ?? calculateTopBottomFrameHeight(spaceInfo);
+  const baseFrameHeightMm = placedModule?.baseFrameHeight ?? calculateBaseFrameHeight(spaceInfo);
   const floorFinishH = spaceInfo.hasFloorFinish ? (spaceInfo.floorFinishHeight || 15) : 0;
   const visualBaseFrameHeightMm = spaceInfo.baseConfig?.type === 'floor' && floorFinishH > 0
     ? Math.max(0, baseFrameHeightMm - floorFinishH)
@@ -399,7 +399,27 @@ const FurnitureInfoModal: React.FC<FurnitureInfoModalProps> = ({
     topFrameHeightMm, visualBaseFrameHeightMm,
     placedModule?.hasTopFrame, placedModule?.hasBase,
     placedModule?.isDualSlot,
-    leftEpAdj, rightEpAdj
+    leftEpAdj, rightEpAdj,
+    undefined,
+    undefined,
+    undefined,
+    undefined,
+    undefined,
+    undefined,
+    undefined,
+    undefined,
+    undefined,
+    undefined,
+    undefined,
+    undefined,
+    undefined,
+    undefined,
+    placedModule?.hasTopFrame === false
+      ? 0
+      : ((placedModule?.endPanelTopOffset ?? 0) > 0 ? placedModule?.endPanelTopOffset : topFrameHeightMm),
+    placedModule?.hasBase === false
+      ? 0
+      : ((placedModule?.endPanelBottomOffset ?? 0) > 0 ? placedModule?.endPanelBottomOffset : baseFrameHeightMm)
   );
 
   // 서라운드 패널 (공간 전체 단위)

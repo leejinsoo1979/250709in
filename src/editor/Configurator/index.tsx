@@ -150,8 +150,7 @@ const getTopDoorGapForFrameState = (spaceInfo: any, hasTopFrame: boolean): numbe
   if (!hasTopFrame) return -5;
   const frameConfig = spaceInfo?.frameConfig;
   const isFullSurround = spaceInfo?.surroundType === 'surround'
-    && frameConfig?.top !== false
-    && frameConfig?.bottom !== false;
+    && frameConfig?.top !== false;
   return isFullSurround ? -3 : 5;
 };
 
@@ -696,8 +695,13 @@ const Configurator: React.FC = () => {
   useEffect(() => {
     if (isLoadingProjectRef.current) return;
     const isSurround = spaceInfo.surroundType === 'surround';
+    const isFullSurroundDoorDefault = isSurround && spaceInfo.frameConfig?.top !== false;
     placedModules.forEach(m => {
       const isUpper = m.moduleId?.includes('upper-cabinet') || m.moduleId?.startsWith('upper-');
+      const isLower = m.moduleId?.startsWith('lower-') || m.moduleId?.includes('dual-lower-');
+      if (isFullSurroundDoorDefault && m.hasDoor && !isLower && m.hasTopFrame !== false && (m.doorTopGap === undefined || m.doorTopGap === 5)) {
+        updatePlacedModule(m.id, { doorTopGap: -3 });
+      }
       if (!isUpper) return;
       if (isSurround) {
         if (m.topFrameOffset === undefined || m.topFrameOffset === 0) {
@@ -709,7 +713,7 @@ const Configurator: React.FC = () => {
         }
       }
     });
-  }, [spaceInfo.surroundType, placedModules, updatePlacedModule]);
+  }, [spaceInfo.surroundType, spaceInfo.frameConfig?.top, placedModules, updatePlacedModule]);
 
   // 보링 데이터 생성 훅
   const { panels: boringPanels, totalBorings, furnitureCount: boringFurnitureCount } = useFurnitureBoring();
@@ -4601,12 +4605,12 @@ const Configurator: React.FC = () => {
 
               handleSpaceInfoUpdate(updates);
 
-              // EP 옵셋 설정
+              // EP 앞 옵셋 기본값은 서라운드 모드에서도 0으로 유지
               if (newMode === 'full-surround') {
                 placedModules.forEach(m => {
                   const epUpdate: Partial<typeof m> = {};
-                  if (m.hasLeftEndPanel) epUpdate.leftEndPanelOffset = 23;
-                  if (m.hasRightEndPanel) epUpdate.rightEndPanelOffset = 23;
+                  if (m.hasLeftEndPanel) epUpdate.leftEndPanelOffset = 0;
+                  if (m.hasRightEndPanel) epUpdate.rightEndPanelOffset = 0;
                   if (Object.keys(epUpdate).length > 0) updatePlacedModule(m.id, epUpdate);
                 });
               } else {

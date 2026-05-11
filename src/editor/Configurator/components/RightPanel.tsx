@@ -816,8 +816,7 @@ const getTopDoorGapForFrameState = (spaceInfo: any, hasTopFrame: boolean): numbe
   if (!hasTopFrame) return -5;
   const frameConfig = spaceInfo?.frameConfig;
   const isFullSurround = spaceInfo?.surroundType === 'surround'
-    && frameConfig?.top !== false
-    && frameConfig?.bottom !== false;
+    && frameConfig?.top !== false;
   return isFullSurround ? -3 : 5;
 };
 

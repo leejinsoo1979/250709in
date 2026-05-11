@@ -185,8 +185,8 @@ export function useLivePanelData() {
         const moduleBackPanelThickness = (placedModule as any).backPanelThickness ?? 9;
 
         // 프레임 높이 계산
-        const topFrameH = calculateTopBottomFrameHeight(spaceInfo);
-        const baseFrameH = calculateBaseFrameHeight(spaceInfo);
+        const topFrameH = (placedModule as any).topFrameThickness ?? calculateTopBottomFrameHeight(spaceInfo);
+        const baseFrameH = (placedModule as any).baseFrameHeight ?? calculateBaseFrameHeight(spaceInfo);
         const floorFinishH = spaceInfo.hasFloorFinish ? (spaceInfo.floorFinishHeight || 15) : 0;
         const visualBaseFrameH = spaceInfo.baseConfig?.type === 'floor' && floorFinishH > 0
           ? Math.max(0, baseFrameH - floorFinishH) : baseFrameH;
@@ -256,7 +256,13 @@ export function useLivePanelData() {
           placedModule.stoneTopBackLipTopOffset,
           placedModule.stoneTopBackLipTopBackOffset,
           placedModule.stoneTopBackLipFullFill,
-          placedModule.stoneTopBackLipFillHeight
+          placedModule.stoneTopBackLipFillHeight,
+          (placedModule as any).hasTopFrame === false
+            ? 0
+            : (((placedModule as any).endPanelTopOffset ?? 0) > 0 ? (placedModule as any).endPanelTopOffset : topFrameH),
+          (placedModule as any).hasBase === false
+            ? 0
+            : (((placedModule as any).endPanelBottomOffset ?? 0) > 0 ? (placedModule as any).endPanelBottomOffset : baseFrameH)
         );
 
         console.log(`Module ${moduleIndex}: All panels list received:`, allPanelsList);
@@ -1094,8 +1100,8 @@ export function usePanelSubscription(callback: (panels: Panel[]) => void) {
       const moduleBackPanelThickness2 = (placedModule as any).backPanelThickness ?? 9;
 
       // 프레임 높이 계산
-      const topFrameH2 = calculateTopBottomFrameHeight(spaceInfo);
-      const baseFrameH2 = calculateBaseFrameHeight(spaceInfo);
+      const topFrameH2 = (placedModule as any).topFrameThickness ?? calculateTopBottomFrameHeight(spaceInfo);
+      const baseFrameH2 = (placedModule as any).baseFrameHeight ?? calculateBaseFrameHeight(spaceInfo);
       const floorFinishH2 = spaceInfo.hasFloorFinish ? (spaceInfo.floorFinishHeight || 15) : 0;
       const visualBaseFrameH2 = spaceInfo.baseConfig?.type === 'floor' && floorFinishH2 > 0
         ? Math.max(0, baseFrameH2 - floorFinishH2) : baseFrameH2;
@@ -1145,7 +1151,25 @@ export function usePanelSubscription(callback: (panels: Panel[]) => void) {
         leftEpAdj2,                         // leftEpAdjacentFurniture
         rightEpAdj2,                        // rightEpAdjacentFurniture
         (placedModule as any).topPanelNotchSize,  // 상판 따내기 크기
-        (placedModule as any).topPanelNotchSide   // 따내기 위치
+        (placedModule as any).topPanelNotchSide,  // 따내기 위치
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        (placedModule as any).hasTopFrame === false
+          ? 0
+          : (((placedModule as any).endPanelTopOffset ?? 0) > 0 ? (placedModule as any).endPanelTopOffset : topFrameH2),
+        (placedModule as any).hasBase === false
+          ? 0
+          : (((placedModule as any).endPanelBottomOffset ?? 0) > 0 ? (placedModule as any).endPanelBottomOffset : baseFrameH2)
       );
 
       // calculatePanelDetailsShared는 평면 배열을 반환함 (섹션 헤더 포함)

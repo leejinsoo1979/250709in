@@ -4532,11 +4532,8 @@ const CustomizablePropertiesPanel: React.FC = () => {
                       checked={placedModule.hasLeftEndPanel === true}
                       onChange={() => {
                         const turning = !placedModule.hasLeftEndPanel;
-                        const isFullSurround = spaceInfo.surroundType === 'surround' && spaceInfo.frameConfig?.top !== false;
                         const update: Record<string, unknown> = { hasLeftEndPanel: turning };
-                        if (turning && isFullSurround) {
-                          update.leftEndPanelOffset = 23;
-                        }
+                        if (turning) update.leftEndPanelOffset = 0;
                         updatePlacedModule(moduleId, update);
                       }}
                       style={{ width: '16px', height: '16px', cursor: 'pointer', accentColor: 'var(--theme-primary)' }}
@@ -4549,11 +4546,8 @@ const CustomizablePropertiesPanel: React.FC = () => {
                       checked={placedModule.hasRightEndPanel === true}
                       onChange={() => {
                         const turning = !placedModule.hasRightEndPanel;
-                        const isFullSurround = spaceInfo.surroundType === 'surround' && spaceInfo.frameConfig?.top !== false;
                         const update: Record<string, unknown> = { hasRightEndPanel: turning };
-                        if (turning && isFullSurround) {
-                          update.rightEndPanelOffset = 23;
-                        }
+                        if (turning) update.rightEndPanelOffset = 0;
                         updatePlacedModule(moduleId, update);
                       }}
                       style={{ width: '16px', height: '16px', cursor: 'pointer', accentColor: 'var(--theme-primary)' }}

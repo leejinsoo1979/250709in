@@ -131,13 +131,13 @@ const SurroundControls: React.FC<SurroundControlsProps> = ({ spaceInfo, onUpdate
 
       onUpdate(updates);
 
-      // 전체서라운드: EP 있는 가구의 옵셋을 23으로 설정 + 상부장 topFrameOffset=23
+      // 전체서라운드: EP 앞 옵셋은 0 기본값 유지 + 상부장 topFrameOffset=23
       const { placedModules, updatePlacedModule } = useFurnitureStore.getState();
       console.log('🔧 전체서라운드 옵셋 업데이트:', placedModules.length, '개 가구');
       placedModules.forEach(m => {
         const epUpdate: Record<string, number> = {};
-        if (m.hasLeftEndPanel) epUpdate.leftEndPanelOffset = 23;
-        if (m.hasRightEndPanel) epUpdate.rightEndPanelOffset = 23;
+        if (m.hasLeftEndPanel) epUpdate.leftEndPanelOffset = 0;
+        if (m.hasRightEndPanel) epUpdate.rightEndPanelOffset = 0;
         // 상부장(upper-*/upper-cabinet): 상단 몰딩 옵셋 23mm 저장
         const isUpper = m.moduleId?.includes('upper-cabinet') || m.moduleId?.startsWith('upper-');
         if (isUpper) epUpdate.topFrameOffset = 23;

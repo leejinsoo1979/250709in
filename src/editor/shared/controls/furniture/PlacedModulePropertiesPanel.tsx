@@ -1209,12 +1209,13 @@ const PlacedModulePropertiesPanel: React.FC = () => {
       const isTopDown = modId.includes('lower-top-down-') && !modId.includes('-half-');
       const isLowerCategory = moduleData?.category === 'lower';
       const isFullSurroundForDoorDefaults = spaceInfo.surroundType === 'surround'
-        && spaceInfo.frameConfig?.top !== false
-        && spaceInfo.frameConfig?.bottom !== false;
+        && spaceInfo.frameConfig?.top !== false;
       const defaultTopGap = isDoorLift ? 30 : isTopDown ? -80 : isLowerCategory ? 0 : (isFullSurroundForDoorDefaults ? -3 : 5);
       const defaultBottomGap = isTopDown ? 5 : isLowerCategory ? 0 : 25;
       const rawTopGap = currentPlacedModule.doorTopGap;
-      const initialTopGap = rawTopGap ?? defaultTopGap;
+      const initialTopGap = isFullSurroundForDoorDefaults && currentPlacedModule.hasTopFrame !== false && rawTopGap === 5
+        ? -3
+        : (rawTopGap ?? defaultTopGap);
       const rawBotGap = currentPlacedModule.doorBottomGap;
       const initialBottomGap = rawBotGap ?? defaultBottomGap;
       // State 업데이트
@@ -1438,6 +1439,16 @@ const PlacedModulePropertiesPanel: React.FC = () => {
   // 받침대 높이는 바닥마감재와 무관하게 원래 값 사용
   const floorFinishH = spaceInfo.hasFloorFinish ? (spaceInfo.floorFinish?.height || 15) : 0;
   const visualBaseFrameHeightMm = baseFrameHeightMm;
+  const endPanelTopOffsetForPanels = currentPlacedModule?.hasTopFrame === false
+    ? 0
+    : ((currentPlacedModule?.endPanelTopOffset ?? 0) > 0
+      ? (currentPlacedModule?.endPanelTopOffset as number)
+      : (currentPlacedModule?.topFrameThickness ?? topFrameHeightMm));
+  const endPanelBottomOffsetForPanels = currentPlacedModule?.hasBase === false
+    ? 0
+    : ((currentPlacedModule?.endPanelBottomOffset ?? 0) > 0
+      ? (currentPlacedModule?.endPanelBottomOffset as number)
+      : visualBaseFrameHeightMm);
 
   // 패널 상세정보 계산 (hasDoor 변경 시 자동 재계산)
   // moduleData는 zone 반영된 effectiveSpaceInfo로 getModuleById 조회되므로
@@ -1491,9 +1502,18 @@ const PlacedModulePropertiesPanel: React.FC = () => {
       currentPlacedModule?.stoneTopFrontOffset,
       currentPlacedModule?.stoneTopBackOffset,
       currentPlacedModule?.stoneTopLeftOffset,
-      currentPlacedModule?.stoneTopRightOffset
+      currentPlacedModule?.stoneTopRightOffset,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      endPanelTopOffsetForPanels,
+      endPanelBottomOffsetForPanels
     );
-  }, [moduleData, customWidth, customDepth, hasDoor, t, doorOriginalWidth, backPanelThicknessValue, currentPlacedModule?.customConfig, currentPlacedModule?.hasLeftEndPanel, currentPlacedModule?.hasRightEndPanel, currentPlacedModule?.endPanelThickness, adjustedFreeHeight, topFrameHeightMm, visualBaseFrameHeightMm, currentPlacedModule?.hasTopFrame, currentPlacedModule?.hasBase, currentPlacedModule?.isDualSlot, leftEpAdjacent, rightEpAdjacent, currentPlacedModule?.topPanelNotchSize, currentPlacedModule?.topPanelNotchSide, currentPlacedModule?.stoneTopThickness, currentPlacedModule?.stoneTopFrontOffset, currentPlacedModule?.stoneTopBackOffset, currentPlacedModule?.stoneTopLeftOffset, currentPlacedModule?.stoneTopRightOffset, currentPlacedModule?.doorTopGap, currentPlacedModule?.doorBottomGap]);
+  }, [moduleData, customWidth, customDepth, hasDoor, t, doorOriginalWidth, backPanelThicknessValue, currentPlacedModule?.customConfig, currentPlacedModule?.hasLeftEndPanel, currentPlacedModule?.hasRightEndPanel, currentPlacedModule?.endPanelThickness, adjustedFreeHeight, topFrameHeightMm, visualBaseFrameHeightMm, currentPlacedModule?.hasTopFrame, currentPlacedModule?.hasBase, currentPlacedModule?.topFrameThickness, currentPlacedModule?.endPanelTopOffset, currentPlacedModule?.endPanelBottomOffset, currentPlacedModule?.isDualSlot, leftEpAdjacent, rightEpAdjacent, currentPlacedModule?.topPanelNotchSize, currentPlacedModule?.topPanelNotchSide, currentPlacedModule?.stoneTopThickness, currentPlacedModule?.stoneTopFrontOffset, currentPlacedModule?.stoneTopBackOffset, currentPlacedModule?.stoneTopLeftOffset, currentPlacedModule?.stoneTopRightOffset, currentPlacedModule?.doorTopGap, currentPlacedModule?.doorBottomGap, endPanelTopOffsetForPanels, endPanelBottomOffsetForPanels]);
 
   // 서라운드 패널 계산 — 맨 좌측 가구에 좌측 서라운드, 맨 우측 가구에 우측 서라운드 귀속
   const surroundPanels = React.useMemo(() => {
@@ -2395,10 +2415,11 @@ const PlacedModulePropertiesPanel: React.FC = () => {
         const isTD = mId.includes('lower-top-down-') && !mId.includes('-half-');
         const isLowerModule = mId.startsWith('lower-') || mId.includes('dual-lower-');
         const isFullSurroundForDoorDefaults = spaceInfo.surroundType === 'surround'
-          && spaceInfo.frameConfig?.top !== false
-          && spaceInfo.frameConfig?.bottom !== false;
+          && spaceInfo.frameConfig?.top !== false;
         if (mod.doorTopGap === undefined) {
           updates.doorTopGap = isDL ? 30 : isTD ? -80 : isLowerModule ? 0 : (isFullSurroundForDoorDefaults ? -3 : 5);
+        } else if (isFullSurroundForDoorDefaults && mod.hasTopFrame !== false && mod.doorTopGap === 5 && !isDL && !isTD && !isLowerModule) {
+          updates.doorTopGap = -3;
         }
         if (mod.doorBottomGap === undefined) {
           updates.doorBottomGap = isTD ? 5 : isLowerModule ? 0 : 25;
@@ -4104,8 +4125,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
             const isUpperCat = mod.moduleId?.includes('upper-cabinet') || mod.moduleId?.startsWith('upper-');
             const isSurroundForOffset = spaceInfo.surroundType === 'surround';
             const isFullSurroundForDoorGap = spaceInfo.surroundType === 'surround'
-              && spaceInfo.frameConfig?.top !== false
-              && spaceInfo.frameConfig?.bottom !== false;
+              && spaceInfo.frameConfig?.top !== false;
             const topDoorGapOn = isFullSurroundForDoorGap ? -3 : 5;
             const topOffsetDefault = (isUpperCat && isSurroundForOffset) ? 23 : 0;
             const topOffset = mod.topFrameOffset ?? topOffsetDefault;
@@ -4113,6 +4133,21 @@ const PlacedModulePropertiesPanel: React.FC = () => {
             const baseSize = mod.baseFrameHeight ?? bfDefault;
             const baseOffset = mod.baseFrameOffset ?? 0;
             const baseGap = mod.baseFrameGap ?? 0;
+            const getEndPanelGapSyncUpdates = (nextFrameState: Partial<typeof mod>) => {
+              if (!mod.hasLeftEndPanel && !mod.hasRightEndPanel) return {};
+              const updates: Record<string, number> = {};
+              if ('hasTopFrame' in nextFrameState || 'topFrameThickness' in nextFrameState) {
+                const nextTopEnabled = nextFrameState.hasTopFrame ?? topEnabled;
+                const nextTopSize = nextFrameState.topFrameThickness ?? topSize;
+                updates.endPanelTopOffset = nextTopEnabled === false ? 0 : nextTopSize;
+              }
+              if ('hasBase' in nextFrameState || 'baseFrameHeight' in nextFrameState) {
+                const nextBaseEnabled = nextFrameState.hasBase ?? baseEnabled;
+                const nextBaseSize = nextFrameState.baseFrameHeight ?? baseSize;
+                updates.endPanelBottomOffset = nextBaseEnabled === false ? 0 : nextBaseSize;
+              }
+              return updates;
+            };
 
             const toggleStyle = (on: boolean): React.CSSProperties => ({
               width: '36px', height: '20px', borderRadius: '10px', border: 'none', cursor: 'pointer',
@@ -4252,6 +4287,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                       updatePlacedModule(mod.id, {
                         hasTopFrame: nextHasTopFrame,
                         doorTopGap: nextHasTopFrame ? topDoorGapOn : -5,
+                        ...getEndPanelGapSyncUpdates({ hasTopFrame: nextHasTopFrame }),
                         ...getUpperShelfGapSyncUpdates({ hasTopFrame: nextHasTopFrame }),
                       });
                       setSectionHeightInputs({}); // 흡수된 높이 재계산 위해 섹션 캐시 초기화
@@ -4273,6 +4309,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                               const next = Math.max(0, Math.min(9999, (topSize || 0) + (e.key === 'ArrowUp' ? 1 : -1)));
                               updatePlacedModule(mod.id, {
                                 topFrameThickness: next,
+                                ...getEndPanelGapSyncUpdates({ topFrameThickness: next }),
                                 ...getUpperShelfGapSyncUpdates({ topFrameThickness: next }),
                               });
                             } else if (e.key === 'Enter') {
@@ -4286,6 +4323,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                               const next = Math.max(0, Math.min(9999, num));
                               updatePlacedModule(mod.id, {
                                 topFrameThickness: next,
+                                ...getEndPanelGapSyncUpdates({ topFrameThickness: next }),
                                 ...getUpperShelfGapSyncUpdates({ topFrameThickness: next }),
                               });
                             }
@@ -4295,6 +4333,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                             const clamped = Math.max(0, Math.min(9999, parseInt(e.target.value) || 0));
                             updatePlacedModule(mod.id, {
                               topFrameThickness: clamped,
+                              ...getEndPanelGapSyncUpdates({ topFrameThickness: clamped }),
                               ...getUpperShelfGapSyncUpdates({ topFrameThickness: clamped }),
                             });
                           }}
@@ -4390,6 +4429,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                         updatePlacedModule(mod.id, {
                           ...nextFrameState,
                           doorBottomGap: nextHasBase ? 25 : -5,
+                          ...getEndPanelGapSyncUpdates(nextFrameState),
                           ...getUpperShelfGapSyncUpdates(nextFrameState),
                         });
                         setSectionHeightInputs({}); // 흡수된 높이 재계산 위해 섹션 캐시 초기화
@@ -4412,6 +4452,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                                 const next = Math.max(bfMin, Math.min(bfMax, cur + (e.key === 'ArrowUp' ? 1 : -1)));
                                 updatePlacedModule(mod.id, {
                                   baseFrameHeight: next,
+                                  ...getEndPanelGapSyncUpdates({ baseFrameHeight: next }),
                                   ...getUpperShelfGapSyncUpdates({ baseFrameHeight: next }),
                                 });
                               } else if (e.key === 'Enter') {
@@ -4425,6 +4466,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                                 const next = num > bfMax ? bfMax : num;
                                 updatePlacedModule(mod.id, {
                                   baseFrameHeight: next,
+                                  ...getEndPanelGapSyncUpdates({ baseFrameHeight: next }),
                                   ...getUpperShelfGapSyncUpdates({ baseFrameHeight: next }),
                                 });
                               }
@@ -4434,6 +4476,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                               const next = Math.max(bfMin, Math.min(bfMax, parseInt(e.target.value) || bfDefault));
                               updatePlacedModule(mod.id, {
                                 baseFrameHeight: next,
+                                ...getEndPanelGapSyncUpdates({ baseFrameHeight: next }),
                                 ...getUpperShelfGapSyncUpdates({ baseFrameHeight: next }),
                               });
                             }}
@@ -4631,7 +4674,20 @@ const PlacedModulePropertiesPanel: React.FC = () => {
 
           {/* 엔드패널(EP) 설정 — 편집 탭 전용 */}
           {/* 키큰장 찬넬(insert-frame)은 자체가 채움재 → 엔드패널 부착 의미 없음 */}
-          {!showDetails && currentPlacedModule && moduleData && !(typeof currentPlacedModule.moduleId === 'string' && currentPlacedModule.moduleId.includes('insert-frame')) && (
+          {!showDetails && currentPlacedModule && moduleData && !(typeof currentPlacedModule.moduleId === 'string' && currentPlacedModule.moduleId.includes('insert-frame')) && (() => {
+            const epTopEnabled = currentPlacedModule.hasTopFrame !== false;
+            const epBaseEnabled = currentPlacedModule.hasBase !== false;
+            const epTopDefault = epTopEnabled ? (currentPlacedModule.topFrameThickness ?? (spaceInfo.frameSize?.top ?? 30)) : 0;
+            const epBaseDefault = epBaseEnabled
+              ? (spaceInfo.baseConfig?.type === 'stand' ? 0 : (currentPlacedModule.baseFrameHeight ?? (spaceInfo.baseConfig?.height ?? 65)))
+              : 0;
+            const epTopOffsetValue = epTopEnabled
+              ? ((currentPlacedModule.endPanelTopOffset ?? 0) > 0 ? (currentPlacedModule.endPanelTopOffset as number) : epTopDefault)
+              : 0;
+            const epBottomOffsetValue = epBaseEnabled
+              ? ((currentPlacedModule.endPanelBottomOffset ?? 0) > 0 ? (currentPlacedModule.endPanelBottomOffset as number) : epBaseDefault)
+              : 0;
+            return (
             <div className={styles.propertySection}>
               <h5 className={styles.sectionTitle}>엔드패널</h5>
               {/* 좌/우 EP 체크박스 */}
@@ -4642,11 +4698,12 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                     checked={currentPlacedModule.hasLeftEndPanel === true}
                     onChange={() => {
                       const turning = !currentPlacedModule.hasLeftEndPanel;
-                      const isFullSurround = spaceInfo.surroundType === 'surround' && spaceInfo.frameConfig?.top !== false;
                       const isNotFull = moduleData.category === 'upper' || moduleData.category === 'lower';
                       const update: Record<string, unknown> = { hasLeftEndPanel: turning };
-                      if (turning && isFullSurround) {
-                        update.leftEndPanelOffset = 23;
+                      if (turning) update.leftEndPanelOffset = 0;
+                      if (turning) {
+                        update.endPanelTopOffset = epTopDefault;
+                        update.endPanelBottomOffset = epBaseDefault;
                       }
                       // 하부장/상부장은 EP 높이를 가구에 맞춤으로 자동 설정
                       if (turning && isNotFull && !currentPlacedModule.endPanelHeightMode) {
@@ -4663,11 +4720,12 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                     checked={currentPlacedModule.hasRightEndPanel === true}
                     onChange={() => {
                       const turning = !currentPlacedModule.hasRightEndPanel;
-                      const isFullSurround = spaceInfo.surroundType === 'surround' && spaceInfo.frameConfig?.top !== false;
                       const isNotFull = moduleData.category === 'upper' || moduleData.category === 'lower';
                       const update: Record<string, unknown> = { hasRightEndPanel: turning };
-                      if (turning && isFullSurround) {
-                        update.rightEndPanelOffset = 23;
+                      if (turning) update.rightEndPanelOffset = 0;
+                      if (turning) {
+                        update.endPanelTopOffset = epTopDefault;
+                        update.endPanelBottomOffset = epBaseDefault;
                       }
                       // 하부장/상부장은 EP 높이를 가구에 맞춤으로 자동 설정
                       if (turning && isNotFull && !currentPlacedModule.endPanelHeightMode) {
@@ -4707,7 +4765,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                           <input
                             type="text"
                             inputMode="numeric"
-                            value={currentPlacedModule.endPanelTopOffset ?? 0}
+                            value={epTopOffsetValue}
                             onChange={(e) => {
                               const v = e.target.value;
                               if (v === '' || /^\d+$/.test(v)) {
@@ -4718,7 +4776,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                             onKeyDown={(e) => {
                               if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
                                 e.preventDefault();
-                                const cur = currentPlacedModule.endPanelTopOffset ?? 0;
+                                const cur = epTopOffsetValue;
                                 const next = Math.max(0, Math.min(500, cur + (e.key === 'ArrowUp' ? 1 : -1)));
                                 updatePlacedModule(currentPlacedModule.id, { endPanelTopOffset: next });
                               }
@@ -4736,7 +4794,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                           <input
                             type="text"
                             inputMode="numeric"
-                            value={currentPlacedModule.endPanelBottomOffset ?? 0}
+                            value={epBottomOffsetValue}
                             onChange={(e) => {
                               const v = e.target.value;
                               if (v === '' || /^\d+$/.test(v)) {
@@ -4747,7 +4805,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                             onKeyDown={(e) => {
                               if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
                                 e.preventDefault();
-                                const cur = currentPlacedModule.endPanelBottomOffset ?? 0;
+                                const cur = epBottomOffsetValue;
                                 const next = Math.max(0, Math.min(500, cur + (e.key === 'ArrowUp' ? 1 : -1)));
                                 updatePlacedModule(currentPlacedModule.id, { endPanelBottomOffset: next });
                               }
@@ -5093,7 +5151,8 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                 </>
               )}
             </div>
-          )}
+            );
+          })()}
 
           {/* 좌우 이격거리 섹션 제거됨 */}
 
