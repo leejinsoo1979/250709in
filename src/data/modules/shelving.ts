@@ -3419,8 +3419,12 @@ export const generateShelvingModules = (
   modules.push(createSingleShelf(columnWidth, maxHeight));
   modules.push(createSingle4DrawerShelf(columnWidth, maxHeight));
   modules.push(createSingle2DrawerShelf(columnWidth, maxHeight));
-  // 유리장 (싱글) — H/D 고정, 띄움 200mm
-  modules.push(createSingleGlassCabinet(columnWidth, maxHeight));
+  // 유리장 (싱글) — 띄움 200mm, H는 공간 높이 - 상부몰딩 - 띄움200 (걸레받이 자리는 띄움이 흡수)
+  // maxHeight는 받침대(걸레받이) 차감 후이므로 받침대 다시 더해서 사용 (유리장은 띄움이라 받침대 자리 없음)
+  const _topFrame = indexingSpaceInfo.frameSize?.top ?? 30;
+  const _floorFinish = indexingSpaceInfo.hasFloorFinish ? (indexingSpaceInfo.floorFinish?.height ?? 0) : 0;
+  const glassMaxHeight = indexingSpaceInfo.height - _topFrame - _floorFinish;
+  modules.push(createSingleGlassCabinet(columnWidth, glassMaxHeight));
 
   // === 듀얼 가구 생성 ===
   // _tempSlotWidths가 있고 듀얼 가구를 위한 2개의 슬롯 너비가 있으면 합계 사용
@@ -3483,7 +3487,8 @@ export const generateShelvingModules = (
     modules.push(createDual4DrawerShelf(dualWidth, maxHeight, dualSlotWidths));
     modules.push(createDual2DrawerShelf(dualWidth, maxHeight, dualSlotWidths));
     // 유리장 (듀얼)
-    modules.push(createDualGlassCabinet(dualWidth, dualSlotWidths, maxHeight));
+    // 유리장 듀얼도 동일하게 받침대 무시 (위에서 계산한 glassMaxHeight 재사용)
+    modules.push(createDualGlassCabinet(dualWidth, dualSlotWidths, glassMaxHeight));
 
     // === 상부장 가구 생성 ===
     modules.push(createDualUpperCabinet1(dualWidth));
