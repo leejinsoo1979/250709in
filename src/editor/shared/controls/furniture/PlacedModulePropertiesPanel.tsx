@@ -3239,7 +3239,10 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                 <span style={{ color: 'var(--theme-text-tertiary)', fontSize: '11px', flexShrink: 0 }}>×</span>
                 {/* 높이 — 2단서랍장은 '몸통 높이'로만 조절, H는 읽기전용 */}
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <label style={{ fontSize: '10px', color: 'var(--theme-text-tertiary)', display: 'block', lineHeight: 1 }}>H <span style={{ fontSize: '9px' }}>(발통제외)</span></label>
+                  <label style={{ fontSize: '10px', color: 'var(--theme-text-tertiary)', display: 'block', lineHeight: 1 }}>
+                    H
+                    {moduleData.category !== 'upper' && <span style={{ fontSize: '9px' }}> (발통제외)</span>}
+                  </label>
                   <div className={styles.inputWithUnit}>
                     <input
                       type="text"
