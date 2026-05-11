@@ -1963,8 +1963,8 @@ export const calculatePanelDetails = (
   // === 프레임 패널 (상단몰딩 / 걸래받이) ===
   const PET_THICKNESS = 18.5; // PET 재질 항상 18.5mm
 
-  // 상단몰딩 — 하부장(lower-*)과 상부장(upper)에는 상단몰딩 없음
-  if (!isLowerCabinetModule && !isUpperCabinet && hasTopFrame !== false && topFrameHeightMm && topFrameHeightMm > 0) {
+  // 상단몰딩 — 하부장(lower-*)에는 없음. 상부장/키큰장은 실제 렌더링과 동일하게 포함
+  if (!isLowerCabinetModule && hasTopFrame !== false && topFrameHeightMm && topFrameHeightMm > 0) {
     panels.frame.push({
       name: '상단몰딩',
       width: customWidth,
@@ -2092,20 +2092,21 @@ export const calculateSurroundPanels = (
   if (freeSurround.left?.enabled && freeSurround.left.method !== 'none') {
     const method = freeSurround.left.method || 'lshape';
     const gapMm = freeSurround.left.gap || 0;
+    const panelHeightMm = Math.max(0, surroundHeightMm - (freeSurround.left.topGap || 0) - (freeSurround.left.bottomGap || 0));
 
     if (method === 'lshape' && gapMm > 0) {
       // L자형: 측면판 + 전면판
       result.push({
         name: '좌측 서라운드 측면판',
         width: SURROUND_SIDE_DEPTH,
-        height: surroundHeightMm,
+        height: panelHeightMm,
         thickness: SURROUND_PANEL_THICKNESS,
         material: 'PET',
       });
       result.push({
         name: '좌측 서라운드 전면판',
         width: Math.max(0, gapMm - 3), // 양쪽 1.5mm씩 이격
-        height: surroundHeightMm,
+        height: panelHeightMm,
         thickness: SURROUND_PANEL_THICKNESS,
         material: 'PET',
       });
@@ -2114,7 +2115,7 @@ export const calculateSurroundPanels = (
       result.push({
         name: '좌측 서라운드',
         width: SURROUND_PANEL_THICKNESS,
-        height: surroundHeightMm,
+        height: panelHeightMm,
         thickness: SURROUND_PANEL_THICKNESS,
         material: 'PET',
       });
@@ -2125,19 +2126,20 @@ export const calculateSurroundPanels = (
   if (freeSurround.right?.enabled && freeSurround.right.method !== 'none') {
     const method = freeSurround.right.method || 'lshape';
     const gapMm = freeSurround.right.gap || 0;
+    const panelHeightMm = Math.max(0, surroundHeightMm - (freeSurround.right.topGap || 0) - (freeSurround.right.bottomGap || 0));
 
     if (method === 'lshape' && gapMm > 0) {
       result.push({
         name: '우측 서라운드 측면판',
         width: SURROUND_SIDE_DEPTH,
-        height: surroundHeightMm,
+        height: panelHeightMm,
         thickness: SURROUND_PANEL_THICKNESS,
         material: 'PET',
       });
       result.push({
         name: '우측 서라운드 전면판',
         width: Math.max(0, gapMm - 3), // 양쪽 1.5mm씩 이격
-        height: surroundHeightMm,
+        height: panelHeightMm,
         thickness: SURROUND_PANEL_THICKNESS,
         material: 'PET',
       });
@@ -2145,7 +2147,7 @@ export const calculateSurroundPanels = (
       result.push({
         name: '우측 서라운드',
         width: SURROUND_PANEL_THICKNESS,
-        height: surroundHeightMm,
+        height: panelHeightMm,
         thickness: SURROUND_PANEL_THICKNESS,
         material: 'PET',
       });
@@ -2160,12 +2162,13 @@ export const calculateSurroundPanels = (
       if (gapMm <= 0) return;
 
       const label = freeSurround.middle!.length > 1 ? `중간${idx + 1}` : '중간';
+      const panelHeightMm = Math.max(0, surroundHeightMm - (midCfg.topGap || 0) - (midCfg.bottomGap || 0));
 
       // 좌측 측면판
       result.push({
         name: `${label} 서라운드 좌측면판`,
         width: SURROUND_SIDE_DEPTH,
-        height: surroundHeightMm,
+        height: panelHeightMm,
         thickness: SURROUND_PANEL_THICKNESS,
         material: 'PET',
       });
@@ -2173,7 +2176,7 @@ export const calculateSurroundPanels = (
       result.push({
         name: `${label} 서라운드 우측면판`,
         width: SURROUND_SIDE_DEPTH,
-        height: surroundHeightMm,
+        height: panelHeightMm,
         thickness: SURROUND_PANEL_THICKNESS,
         material: 'PET',
       });
@@ -2181,7 +2184,7 @@ export const calculateSurroundPanels = (
       result.push({
         name: `${label} 서라운드 전면판`,
         width: Math.max(0, gapMm - 3), // 양쪽 1.5mm씩 이격
-        height: surroundHeightMm,
+        height: panelHeightMm,
         thickness: SURROUND_PANEL_THICKNESS,
         material: 'PET',
       });

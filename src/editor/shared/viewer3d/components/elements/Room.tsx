@@ -1391,7 +1391,15 @@ const Room: React.FC<RoomProps> = ({
 
   // 좌/우 서라운드 프레임 분절용 — 최외곽 가구들의 카테고리/높이/Y 추출
   // 같은 X극단 위치에 상부장+하부장 공존 가능하므로 여러 개 반환
-  type OuterMod = { category: 'full' | 'upper' | 'lower'; heightMm: number; bottomMm: number; topMm: number; depthMm: number };
+  type OuterMod = {
+    category: 'full' | 'upper' | 'lower';
+    heightMm: number;
+    bottomMm: number;
+    topMm: number;
+    depthMm: number;
+    frontHeightMm?: number;
+    frontBottomMm?: number;
+  };
   const computeOuterMods = (side: 'left' | 'right'): OuterMod[] => {
     const mods = placedModulesFromStore.filter(m => !m.isSurroundPanel);
     if (mods.length === 0) return [];
@@ -1450,6 +1458,8 @@ const Room: React.FC<RoomProps> = ({
       //  - lower: 공간 바닥(0) ~ 가구 상단 (floorFinish + base + cabHeight)
       let bottomMm: number;
       let topMm: number;
+      let frontBottomMm: number | undefined;
+      let frontHeightMm: number | undefined;
       if (cat === 'upper') {
         let ceilingHeightMm = spaceInfo.height;
         if ((m as any).zone === 'dropped') {
@@ -1459,9 +1469,19 @@ const Room: React.FC<RoomProps> = ({
             ceilingHeightMm = spaceInfo.height - spaceInfo.droppedCeiling.dropHeight;
           }
         }
-        const upperTopFrameMm = (m as any).topFrameThickness ?? topFrameMM;
-        topMm = ceilingHeightMm - upperTopFrameMm;
+        const upperTopGapMm = (m as any).hasTopFrame === false
+          ? ((m as any).topFrameGap ?? 0)
+          : 0;
+        const upperTopFrameMm = (m as any).hasTopFrame === false
+          ? 0
+          : ((m as any).topFrameThickness ?? topFrameMM);
+        topMm = ceilingHeightMm - upperTopGapMm;
         bottomMm = topMm - cabHeight;
+        const bodyTopMm = topMm - upperTopFrameMm;
+        const bodyBottomMm = bodyTopMm - cabHeight;
+        const doorBottomGapMm = (m as any).doorBottomGap ?? (spaceInfo as any).doorBottomGap ?? 0;
+        frontBottomMm = bodyBottomMm - doorBottomGapMm;
+        frontHeightMm = Math.max(0, topMm - frontBottomMm);
       } else if (cat === 'lower') {
         bottomMm = 0;
         // 하부장 프레임 상단 = floorFinish + 받침대(가구별) + 실제 하부장 높이
@@ -1475,7 +1495,7 @@ const Room: React.FC<RoomProps> = ({
       }
       const heightMm = topMm - bottomMm;
       const depthMm = m.freeDepth || m.customDepth || (cat === 'upper' ? 300 : 600);
-      return { category: cat, heightMm, bottomMm, topMm, depthMm };
+      return { category: cat, heightMm, bottomMm, topMm, depthMm, frontHeightMm, frontBottomMm };
     });
   };
   const leftOuterMods = useMemo(() => computeOuterMods('left'), [placedModulesFromStore, spaceInfo]);
@@ -4124,10 +4144,8 @@ const Room: React.FC<RoomProps> = ({
           return (
             <>
               {leftOuterMods.map((om, idx) => {
-                const LOWER_EP_MM = 27.5;
-                const isUpperFront = om.category === 'upper';
-                const frontHeightMm = isUpperFront ? om.heightMm + LOWER_EP_MM : om.heightMm;
-                const frontBottomMm = isUpperFront ? om.bottomMm - LOWER_EP_MM : om.bottomMm;
+                const frontHeightMm = om.frontHeightMm ?? om.heightMm;
+                const frontBottomMm = om.frontBottomMm ?? om.bottomMm;
                 const segH = mmToThreeUnits(frontHeightMm);
                 const segCY = panelStartY + mmToThreeUnits(frontBottomMm) + segH / 2;
                 // 기본 Z(표준 600mm 깊이 가구 도어 앞면 기준)에서, 가구 깊이 차이만큼 뒤로 이동
@@ -4532,10 +4550,8 @@ const Room: React.FC<RoomProps> = ({
           return (
             <>
               {rightOuterMods.map((om, idx) => {
-                const LOWER_EP_MM = 27.5;
-                const isUpperFront = om.category === 'upper';
-                const frontHeightMm = isUpperFront ? om.heightMm + LOWER_EP_MM : om.heightMm;
-                const frontBottomMm = isUpperFront ? om.bottomMm - LOWER_EP_MM : om.bottomMm;
+                const frontHeightMm = om.frontHeightMm ?? om.heightMm;
+                const frontBottomMm = om.frontBottomMm ?? om.bottomMm;
                 const segH = mmToThreeUnits(frontHeightMm);
                 const segCY = panelStartY + mmToThreeUnits(frontBottomMm) + segH / 2;
                 const refDepthMm = 600;

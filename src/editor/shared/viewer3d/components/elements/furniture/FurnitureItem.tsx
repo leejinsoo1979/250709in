@@ -1378,8 +1378,10 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
           : (actualModuleData?.dimensions.height || 0)); // 상부장 높이
 
       // 띄워서 배치 모드와 관계없이 상부장은 항상 상단몰딩 하단에 붙어야 함
-      // 상단몰딩 높이: 개별 가구 설정(topFrameThickness) 우선, 없으면 전역 설정
-      const topFrameHeightMm = placedModule.topFrameThickness ?? (spaceInfo.frameSize?.top || 30);
+      // 상단몰딩 OFF: 몰딩 두께가 아니라 사용자가 지정한 상단갭만 천장에서 띄움
+      const topFrameHeightMm = placedModule.hasTopFrame === false
+        ? (placedModule.topFrameGap ?? 0)
+        : (placedModule.topFrameThickness ?? (spaceInfo.frameSize?.top || 30));
 
       // 단내림 구역에 배치된 경우 단내림 높이 사용, 아니면 전체 높이 사용
       const isInDroppedZone = placedModule.zone === 'dropped';

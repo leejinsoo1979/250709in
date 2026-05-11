@@ -3466,8 +3466,15 @@ const PlacedModulePropertiesPanel: React.FC = () => {
             );
           })()}
 
-          {/* 도어 셋팅 (상단갭/하단갭) — 도어 장착 시 표시, insert-frame 제외 */}
-          {!showDetails && currentPlacedModule && currentPlacedModule.hasDoor && !(typeof currentPlacedModule.moduleId === 'string' && currentPlacedModule.moduleId.includes('insert-frame')) && (() => {
+          {/* 도어 셋팅 (상단갭/하단갭) — 도어 장착 시 표시, insert-frame 및 서랍 전용 모듈 제외 */}
+          {!showDetails && currentPlacedModule && currentPlacedModule.hasDoor
+            && !(typeof currentPlacedModule.moduleId === 'string' && currentPlacedModule.moduleId.includes('insert-frame'))
+            && !(typeof currentPlacedModule.moduleId === 'string' && (
+              /^lower-drawer-/.test(currentPlacedModule.moduleId)
+              || currentPlacedModule.moduleId.includes('lower-door-lift-touch-')
+              || currentPlacedModule.moduleId.includes('lower-top-down-touch-')
+            ))
+            && (() => {
             const isDualSlot = currentPlacedModule.isDualSlot || currentPlacedModule.moduleId?.startsWith('dual-');
             const doorCount = isDualSlot ? 2 : 1;
             return (

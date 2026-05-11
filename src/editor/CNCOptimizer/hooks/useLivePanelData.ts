@@ -48,6 +48,148 @@ function getDefaultGrain(panelName: string): 'HORIZONTAL' | 'VERTICAL' {
   return getDefaultGrainDirection(panelName) === 'vertical' ? 'VERTICAL' : 'HORIZONTAL';
 }
 
+type OuterSurroundMod = {
+  category: 'full' | 'upper' | 'lower';
+  heightMm: number;
+  frontHeightMm?: number;
+};
+
+function getPlacedModuleCategory(module: any): 'full' | 'upper' | 'lower' {
+  const id = module?.moduleId || '';
+  if (id.startsWith('upper-') || id.includes('-upper-')) return 'upper';
+  if (id.startsWith('lower-') || id.includes('-lower-')) return 'lower';
+  return 'full';
+}
+
+function getPlacedModuleWidthMm(module: any): number {
+  return module?.isFreePlacement && module?.freeWidth
+    ? module.freeWidth
+    : (module?.customWidth || module?.adjustedWidth || module?.moduleWidth || 0);
+}
+
+function computeOuterSurroundMods(placedModules: any[], spaceInfo: any, side: 'left' | 'right'): OuterSurroundMod[] {
+  const mods = placedModules.filter(m => !m.isSurroundPanel);
+  if (mods.length === 0) return [];
+
+  const halfSpaceMm = (spaceInfo.width || 0) / 2;
+  const frameLeftMm = spaceInfo.frameSize?.left || 0;
+  const frameRightMm = spaceInfo.frameSize?.right || 0;
+  const boundaryMm = side === 'left' ? -halfSpaceMm + frameLeftMm : halfSpaceMm - frameRightMm;
+
+  let extremeX: number | null = null;
+  mods.forEach((m) => {
+    const w = getPlacedModuleWidthMm(m);
+    const centerXmm = Math.round((m.position?.x ?? 0) * 100);
+    const edgeMm = side === 'left' ? centerXmm - w / 2 : centerXmm + w / 2;
+    if (extremeX === null) extremeX = edgeMm;
+    else if (side === 'left' && edgeMm < extremeX) extremeX = edgeMm;
+    else if (side === 'right' && edgeMm > extremeX) extremeX = edgeMm;
+  });
+  if (extremeX === null || Math.abs(extremeX - boundaryMm) > 50) return [];
+
+  const outermost = mods.filter((m) => {
+    const w = getPlacedModuleWidthMm(m);
+    const centerXmm = Math.round((m.position?.x ?? 0) * 100);
+    const edgeMm = side === 'left' ? centerXmm - w / 2 : centerXmm + w / 2;
+    return Math.abs(edgeMm - (extremeX as number)) <= 1;
+  });
+
+  const floorFinishMM = spaceInfo.hasFloorFinish && spaceInfo.floorFinish ? spaceInfo.floorFinish.height : 0;
+  const topFrameMM = spaceInfo.frameSize?.top || 30;
+  return outermost.map((m): OuterSurroundMod => {
+    const category = getPlacedModuleCategory(m);
+    const freeHeightMm = typeof m.freeHeight === 'number' && m.freeHeight > 0 ? m.freeHeight : undefined;
+    const customHeightMm = typeof m.customHeight === 'number' && m.customHeight > 0 ? m.customHeight : undefined;
+    const explicitHeightMm = category === 'upper'
+      ? (customHeightMm ?? freeHeightMm)
+      : (freeHeightMm ?? customHeightMm);
+
+    let moduleDataH = 0;
+    try {
+      const internalSp = { width: spaceInfo.width, height: spaceInfo.height, depth: spaceInfo.depth || 1500 };
+      const md = getModuleById(m.moduleId, internalSp, spaceInfo);
+      if (md?.dimensions?.height) moduleDataH = md.dimensions.height;
+    } catch { /* noop */ }
+
+    const defaultCabH = category === 'lower'
+      ? 785
+      : category === 'upper'
+        ? 785
+        : spaceInfo.height;
+    const cabHeight = explicitHeightMm ?? (moduleDataH > 0 ? moduleDataH : defaultCabH);
+
+    if (category === 'upper') {
+      let ceilingHeightMm = spaceInfo.height;
+      if (m.zone === 'dropped') {
+        if (spaceInfo.layoutMode === 'free-placement' && spaceInfo.stepCeiling?.enabled) {
+          ceilingHeightMm = spaceInfo.height - (spaceInfo.stepCeiling.dropHeight || 0);
+        } else if (spaceInfo.droppedCeiling?.enabled && spaceInfo.droppedCeiling?.dropHeight !== undefined) {
+          ceilingHeightMm = spaceInfo.height - spaceInfo.droppedCeiling.dropHeight;
+        }
+      }
+      const topGapMm = m.hasTopFrame === false ? (m.topFrameGap ?? 0) : 0;
+      const topMm = ceilingHeightMm - topGapMm;
+      const topFrameMm = m.hasTopFrame === false ? 0 : (m.topFrameThickness ?? topFrameMM);
+      const bodyTopMm = topMm - topFrameMm;
+      const bodyBottomMm = bodyTopMm - cabHeight;
+      const doorBottomGapMm = m.doorBottomGap ?? spaceInfo.doorBottomGap ?? 0;
+      return {
+        category,
+        heightMm: cabHeight,
+        frontHeightMm: Math.max(0, topMm - (bodyBottomMm - doorBottomGapMm)),
+      };
+    }
+
+    if (category === 'lower') {
+      const modBaseH = spaceInfo.baseConfig?.type === 'stand' ? 0 : (m.baseFrameHeight ?? spaceInfo.baseConfig?.height ?? 100);
+      return {
+        category,
+        heightMm: floorFinishMM + modBaseH + cabHeight,
+      };
+    }
+
+    return { category, heightMm: spaceInfo.height };
+  });
+}
+
+function buildSurroundPanelsFromRenderedFrames(placedModules: any[], spaceInfo: any, surroundThickness: number, surroundMaterial: string): any[] {
+  if (spaceInfo.surroundType !== 'surround' || !spaceInfo.frameSize) return [];
+  const fs = spaceInfo.frameSize;
+  const SIDE_DEPTH = 40;
+  const panels: any[] = [];
+  const leftMods = computeOuterSurroundMods(placedModules, spaceInfo, 'left');
+  const rightMods = computeOuterSurroundMods(placedModules, spaceInfo, 'right');
+
+  if (fs.left > 0) {
+    const mods = leftMods.length > 0 ? leftMods : [{ category: 'full' as const, heightMm: spaceInfo.height }];
+    mods.forEach((om, idx) => {
+      const suffix = mods.length > 1 ? ` ${idx + 1}` : '';
+      panels.push({ name: `좌측 서라운드 측면판${suffix}`, width: SIDE_DEPTH, height: om.heightMm, thickness: surroundThickness, material: surroundMaterial });
+      panels.push({ name: `좌측 서라운드 전면판${suffix}`, width: Math.max(0, fs.left - 3), height: om.frontHeightMm ?? om.heightMm, thickness: surroundThickness, material: surroundMaterial });
+    });
+  }
+
+  if (fs.right > 0) {
+    const mods = rightMods.length > 0 ? rightMods : [{ category: 'full' as const, heightMm: spaceInfo.height }];
+    mods.forEach((om, idx) => {
+      const suffix = mods.length > 1 ? ` ${idx + 1}` : '';
+      panels.push({ name: `우측 서라운드 측면판${suffix}`, width: SIDE_DEPTH, height: om.heightMm, thickness: surroundThickness, material: surroundMaterial });
+      panels.push({ name: `우측 서라운드 전면판${suffix}`, width: Math.max(0, fs.right - 3), height: om.frontHeightMm ?? om.heightMm, thickness: surroundThickness, material: surroundMaterial });
+    });
+  }
+
+  if (fs.top > 0) {
+    panels.push({
+      name: '상부 서라운드 프레임',
+      width: spaceInfo.width - (fs.left || 0) - (fs.right || 0),
+      height: fs.top,
+      thickness: surroundThickness,
+      material: surroundMaterial,
+    });
+  }
+  return panels;
+}
+
 /**
  * Hook for live panel data binding from Configurator
  * Subscribes to furniture store changes and provides normalized panels
@@ -227,7 +369,9 @@ export function useLivePanelData() {
           placedModule.hasLeftEndPanel,     // 좌측 엔드패널 여부
           placedModule.hasRightEndPanel,    // 우측 엔드패널 여부
           (placedModule as any).endPanelThickness, // 엔드패널 두께
-          placedModule.freeHeight || placedModule.customHeight, // 자유배치/단내림 높이
+          getPlacedModuleCategory(placedModule) === 'upper'
+            ? (placedModule.customHeight ?? placedModule.freeHeight)
+            : (placedModule.freeHeight ?? placedModule.customHeight), // 렌더링과 동일한 높이 우선순위
           topFrameH,                        // 상단몰딩 높이
           visualBaseFrameH,                 // 걸래받이 높이 (바닥마감재 차감)
           (placedModule as any).hasTopFrame, // 상단몰딩 표시 여부
@@ -491,127 +635,17 @@ export function useLivePanelData() {
         ? (spaceInfo.baseConfig.floatHeight || 0) : 0;
       const surroundH = spaceH - floorFinishForSurround - floatH;
 
-      // 단내림 구간 서라운드 높이: 단내림 높이만큼 차감
-      const dropH = spaceInfo.droppedCeiling?.enabled ? (spaceInfo.droppedCeiling.dropHeight || 0) : 0;
-      const surroundHDropped = surroundH - dropH;
+      const userPT = spaceInfo.panelThickness ?? 18;
+      const surroundThickness = (userPT === 18.5 || userPT === 15.5) ? 18.5 : 18;
+      const surroundMaterial = surroundThickness === 18.5 ? 'PET' : 'PB';
 
       if (spaceInfo.freeSurround) {
         // 자유배치 서라운드
         surroundPanelList = calculateSurroundPanels(spaceInfo.freeSurround, surroundH, spaceInfo.panelThickness ?? 18);
       } else if (spaceInfo.surroundType === 'surround' && spaceInfo.frameSize) {
         // 균등배치 서라운드 — frameSize에서 직접 패널 생성
-        const fs = spaceInfo.frameSize;
         // 서라운드 두께/재질: 사용자 설정값 따름 (18→PB, 18.5→PET). 15/15.5는 서라운드에 없으므로 18/18.5로 변환
-        const userPT = spaceInfo.panelThickness ?? 18;
-        const surroundThickness = (userPT === 18.5 || userPT === 15.5) ? 18.5 : 18;
-        const surroundMaterial = surroundThickness === 18.5 ? 'PET' : 'PB';
-        const SIDE_DEPTH = 40; // L자 측면판 깊이 (mm)
-        // 서라운드 프레임은 항상 L자 구조 (전면판 + 측면판으로 재단)
-        const isLeftLShape = true;
-        const isRightLShape = true;
-
-        if (dropH > 0) {
-          // 단내림 활성: position에 따라 해당 쪽만 단내림 높이 적용
-          const dropPosition = spaceInfo.droppedCeiling?.position || 'left';
-          const mainPanelH = surroundH - (fs.top || 0);
-          const droppedPanelH = surroundHDropped - (fs.top || 0);
-
-          // 좌측 서라운드: 단내림이 좌측이면 단내림 높이, 아니면 메인 높이
-          if (fs.left > 0) {
-            const leftH = dropPosition === 'left' ? droppedPanelH : mainPanelH;
-            if (isLeftLShape) {
-              surroundPanelList.push({
-                name: '좌측 서라운드 측면판',
-                width: SIDE_DEPTH, height: leftH,
-                thickness: surroundThickness, material: surroundMaterial,
-              });
-              surroundPanelList.push({
-                name: '좌측 서라운드 전면판',
-                width: Math.max(0, fs.left - 3), height: leftH,
-                thickness: surroundThickness, material: surroundMaterial,
-              });
-            } else {
-              surroundPanelList.push({
-                name: '좌측 서라운드 프레임',
-                width: fs.left, height: leftH,
-                thickness: surroundThickness, material: surroundMaterial,
-              });
-            }
-          }
-          // 우측 서라운드: 단내림이 우측이면 단내림 높이, 아니면 메인 높이
-          if (fs.right > 0) {
-            const rightH = dropPosition === 'right' ? droppedPanelH : mainPanelH;
-            if (isRightLShape) {
-              surroundPanelList.push({
-                name: '우측 서라운드 측면판',
-                width: SIDE_DEPTH, height: rightH,
-                thickness: surroundThickness, material: surroundMaterial,
-              });
-              surroundPanelList.push({
-                name: '우측 서라운드 전면판',
-                width: Math.max(0, fs.right - 3), height: rightH,
-                thickness: surroundThickness, material: surroundMaterial,
-              });
-            } else {
-              surroundPanelList.push({
-                name: '우측 서라운드 프레임',
-                width: fs.right, height: rightH,
-                thickness: surroundThickness, material: surroundMaterial,
-              });
-            }
-          }
-        } else {
-          // 단내림 없음: 기존 로직
-          const panelH = surroundH - (fs.top || 0);
-          if (fs.left > 0) {
-            if (isLeftLShape) {
-              surroundPanelList.push({
-                name: '좌측 서라운드 측면판',
-                width: SIDE_DEPTH, height: panelH,
-                thickness: surroundThickness, material: surroundMaterial,
-              });
-              surroundPanelList.push({
-                name: '좌측 서라운드 전면판',
-                width: Math.max(0, fs.left - 3), height: panelH,
-                thickness: surroundThickness, material: surroundMaterial,
-              });
-            } else {
-              surroundPanelList.push({
-                name: '좌측 서라운드 프레임',
-                width: fs.left, height: panelH,
-                thickness: surroundThickness, material: surroundMaterial,
-              });
-            }
-          }
-          if (fs.right > 0) {
-            if (isRightLShape) {
-              surroundPanelList.push({
-                name: '우측 서라운드 측면판',
-                width: SIDE_DEPTH, height: panelH,
-                thickness: surroundThickness, material: surroundMaterial,
-              });
-              surroundPanelList.push({
-                name: '우측 서라운드 전면판',
-                width: Math.max(0, fs.right - 3), height: panelH,
-                thickness: surroundThickness, material: surroundMaterial,
-              });
-            } else {
-              surroundPanelList.push({
-                name: '우측 서라운드 프레임',
-                width: fs.right, height: panelH,
-                thickness: surroundThickness, material: surroundMaterial,
-              });
-            }
-          }
-        }
-        if (fs.top > 0) {
-          surroundPanelList.push({
-            name: '상부 서라운드 프레임',
-            width: spaceInfo.width - (fs.left || 0) - (fs.right || 0),
-            height: fs.top,
-            thickness: surroundThickness, material: surroundMaterial,
-          });
-        }
+        surroundPanelList = buildSurroundPanelsFromRenderedFrames(placedModules, spaceInfo, surroundThickness, surroundMaterial);
       }
 
       // 슬롯배치 커튼박스 L자 프레임 패널 추가
@@ -1145,7 +1179,9 @@ export function usePanelSubscription(callback: (panels: Panel[]) => void) {
         placedModule.hasLeftEndPanel,
         placedModule.hasRightEndPanel,
         (placedModule as any).endPanelThickness,
-        placedModule.freeHeight || placedModule.customHeight,
+        getPlacedModuleCategory(placedModule) === 'upper'
+          ? (placedModule.customHeight ?? placedModule.freeHeight)
+          : (placedModule.freeHeight ?? placedModule.customHeight),
         topFrameH2,
         visualBaseFrameH2,
         (placedModule as any).hasTopFrame,
@@ -1388,66 +1424,15 @@ export function usePanelSubscription(callback: (panels: Panel[]) => void) {
     const floatH2 = spaceInfo.baseConfig?.type === 'stand' && spaceInfo.baseConfig?.placementType === 'float'
       ? (spaceInfo.baseConfig.floatHeight || 0) : 0;
     const surroundH2 = spaceH2 - floorFinishForSurround2 - floatH2;
-
-    const dropH2 = spaceInfo.droppedCeiling?.enabled ? (spaceInfo.droppedCeiling.dropHeight || 0) : 0;
-    const surroundHDropped2 = surroundH2 - dropH2;
+    const userPT2 = spaceInfo.panelThickness ?? 18;
+    const surroundThickness2 = (userPT2 === 18.5 || userPT2 === 15.5) ? 18.5 : 18;
+    const surroundMaterial2 = surroundThickness2 === 18.5 ? 'PET' : 'PB';
 
     if (spaceInfo.freeSurround) {
       surroundPanelList2 = calculateSurroundPanels(spaceInfo.freeSurround, surroundH2, spaceInfo.panelThickness ?? 18);
     } else if (spaceInfo.surroundType === 'surround' && spaceInfo.frameSize) {
-      const fs2 = spaceInfo.frameSize;
       // 서라운드 두께/재질: 사용자 설정값 따름 (18→PB, 18.5→PET). 15/15.5는 서라운드에 없으므로 18/18.5로 변환
-      const userPT2 = spaceInfo.panelThickness ?? 18;
-      const surroundThickness2 = (userPT2 === 18.5 || userPT2 === 15.5) ? 18.5 : 18;
-      const surroundMaterial2 = surroundThickness2 === 18.5 ? 'PET' : 'PB';
-
-      if (dropH2 > 0) {
-        const dropPosition2 = spaceInfo.droppedCeiling?.position || 'left';
-        const mainPanelH2 = surroundH2 - (fs2.top || 0);
-        const droppedPanelH2 = surroundHDropped2 - (fs2.top || 0);
-
-        if (fs2.left > 0) {
-          const leftH2 = dropPosition2 === 'left' ? droppedPanelH2 : mainPanelH2;
-          surroundPanelList2.push({
-            name: '좌측 서라운드 프레임',
-            width: fs2.left, height: leftH2,
-            thickness: surroundThickness2, material: surroundMaterial2,
-          });
-        }
-        if (fs2.right > 0) {
-          const rightH2 = dropPosition2 === 'right' ? droppedPanelH2 : mainPanelH2;
-          surroundPanelList2.push({
-            name: '우측 서라운드 프레임',
-            width: fs2.right, height: rightH2,
-            thickness: surroundThickness2, material: surroundMaterial2,
-          });
-        }
-      } else {
-        const panelH2 = surroundH2 - (fs2.top || 0);
-        if (fs2.left > 0) {
-          surroundPanelList2.push({
-            name: '좌측 서라운드 프레임',
-            width: fs2.left, height: panelH2,
-            thickness: surroundThickness2, material: surroundMaterial2,
-          });
-        }
-        if (fs2.right > 0) {
-          surroundPanelList2.push({
-            name: '우측 서라운드 프레임',
-            width: fs2.right, height: panelH2,
-            thickness: surroundThickness2, material: surroundMaterial2,
-          });
-        }
-      }
-      if (fs2.top > 0) {
-        surroundPanelList2.push({
-          name: '상부 서라운드 프레임',
-          width: spaceInfo.width - (fs2.left || 0) - (fs2.right || 0),
-          height: fs2.top,
-          thickness: surroundThickness2,
-          material: surroundMaterial2,
-        });
-      }
+      surroundPanelList2 = buildSurroundPanelsFromRenderedFrames(placedModules, spaceInfo, surroundThickness2, surroundMaterial2);
     }
 
     // 슬롯배치 커튼박스 L자 프레임 패널 추가
