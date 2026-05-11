@@ -119,7 +119,13 @@ const MobileLayoutToggle: React.FC = () => {
     const updates: Record<string, unknown> = { layoutMode: mode };
     if (spaceInfo.surroundType === 'no-surround') {
       const wc = spaceInfo.wallConfig || { left: true, right: true };
-      updates.gapConfig = { left: wc.left ? 1.5 : 0, right: wc.right ? 1.5 : 0, middle: 1.5 };
+      // 사용자가 설정한 이격값 보존, 없을 때만 기본값 사용
+      const existingGap = spaceInfo.gapConfig || {};
+      updates.gapConfig = {
+        left: wc.left ? (existingGap.left ?? 1.5) : 0,
+        right: wc.right ? (existingGap.right ?? 1.5) : 0,
+        middle: existingGap.middle ?? 1.5,
+      };
     }
     if (mode === 'equal-division') {
       if (spaceInfo.droppedCeiling?.enabled) {
