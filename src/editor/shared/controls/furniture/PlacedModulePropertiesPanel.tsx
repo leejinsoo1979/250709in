@@ -15,12 +15,158 @@ import { getDefaultGrainDirection } from '@/editor/shared/utils/materialConstant
 import { isCustomizableModuleId, getCustomDimensionKey, getStandardDimensionKey } from './CustomizableFurnitureLibrary';
 import { calcResizedPositionX } from '@/editor/shared/utils/freePlacementUtils';
 import { parseBackWallGapInput, stepBackWallGapMm } from '@/editor/shared/utils/backWallGapValidation';
-import { SURROUND_PANEL_THICKNESS } from '@/data/modules/surroundPanels';
 import styles from './PlacedModulePropertiesPanel.module.css';
 
 // 가구 썸네일 이미지 경로 — ModuleGallery와 동일한 규칙
 const getImagePath = (filename: string) => {
   return `/images/furniture-thumbnails/${filename}`;
+};
+
+type RenderedSurroundPanelMod = {
+  sideHeightMm: number;
+  frontHeightMm: number;
+};
+
+const getPlacedModuleCategoryForPanels = (module: any): 'full' | 'upper' | 'lower' => {
+  const id = module?.moduleId || '';
+  if (id.startsWith('upper-') || id.includes('-upper-')) return 'upper';
+  if (id.startsWith('lower-') || id.includes('-lower-')) return 'lower';
+  return 'full';
+};
+
+const getPlacedModuleWidthForPanels = (module: any): number => {
+  return module?.isFreePlacement && module?.freeWidth
+    ? module.freeWidth
+    : (module?.customWidth || module?.adjustedWidth || module?.moduleWidth || 0);
+};
+
+const isOuterRenderedSurroundModule = (
+  module: any,
+  placedModules: any[],
+  spaceInfo: any,
+  side: 'left' | 'right'
+): boolean => {
+  const mods = placedModules.filter(m => !m.isSurroundPanel);
+  if (!module || mods.length === 0) return false;
+
+  const halfSpaceMm = (spaceInfo.width || 0) / 2;
+  const frameLeftMm = spaceInfo.frameSize?.left || 0;
+  const frameRightMm = spaceInfo.frameSize?.right || 0;
+  const boundaryMm = side === 'left' ? -halfSpaceMm + frameLeftMm : halfSpaceMm - frameRightMm;
+
+  let extremeEdgeMm: number | null = null;
+  mods.forEach((m) => {
+    const w = getPlacedModuleWidthForPanels(m);
+    const centerXmm = Math.round((m.position?.x ?? 0) * 100);
+    const edgeMm = side === 'left' ? centerXmm - w / 2 : centerXmm + w / 2;
+    if (extremeEdgeMm === null) extremeEdgeMm = edgeMm;
+    else if (side === 'left' && edgeMm < extremeEdgeMm) extremeEdgeMm = edgeMm;
+    else if (side === 'right' && edgeMm > extremeEdgeMm) extremeEdgeMm = edgeMm;
+  });
+
+  if (extremeEdgeMm === null || Math.abs(extremeEdgeMm - boundaryMm) > 50) return false;
+
+  const moduleWidthMm = getPlacedModuleWidthForPanels(module);
+  const moduleCenterXmm = Math.round((module.position?.x ?? 0) * 100);
+  const moduleEdgeMm = side === 'left'
+    ? moduleCenterXmm - moduleWidthMm / 2
+    : moduleCenterXmm + moduleWidthMm / 2;
+  return Math.abs(moduleEdgeMm - extremeEdgeMm) <= 1;
+};
+
+const getRenderedSurroundPanelMod = (module: any, spaceInfo: any): RenderedSurroundPanelMod => {
+  const category = getPlacedModuleCategoryForPanels(module);
+  const freeHeightMm = typeof module?.freeHeight === 'number' && module.freeHeight > 0 ? module.freeHeight : undefined;
+  const customHeightMm = typeof module?.customHeight === 'number' && module.customHeight > 0 ? module.customHeight : undefined;
+  const explicitHeightMm = category === 'upper'
+    ? (customHeightMm ?? freeHeightMm)
+    : (freeHeightMm ?? customHeightMm);
+
+  let moduleDataH = 0;
+  try {
+    const internalSp = { width: spaceInfo.width, height: spaceInfo.height, depth: spaceInfo.depth || 1500 };
+    const md = getModuleById(module.moduleId, internalSp, spaceInfo);
+    if (md?.dimensions?.height) moduleDataH = md.dimensions.height;
+  } catch {
+    // Use the fallback below when module lookup is unavailable.
+  }
+
+  const defaultCabH = category === 'lower' ? 785 : category === 'upper' ? 785 : spaceInfo.height;
+  const cabHeight = explicitHeightMm ?? (moduleDataH > 0 ? moduleDataH : defaultCabH);
+
+  if (category === 'upper') {
+    let ceilingHeightMm = spaceInfo.height;
+    if (module.zone === 'dropped') {
+      if (spaceInfo.layoutMode === 'free-placement' && spaceInfo.stepCeiling?.enabled) {
+        ceilingHeightMm = spaceInfo.height - (spaceInfo.stepCeiling.dropHeight || 0);
+      } else if (spaceInfo.droppedCeiling?.enabled && spaceInfo.droppedCeiling?.dropHeight !== undefined) {
+        ceilingHeightMm = spaceInfo.height - spaceInfo.droppedCeiling.dropHeight;
+      }
+    }
+
+    const topGapMm = module.hasTopFrame === false ? (module.topFrameGap ?? 0) : 0;
+    const topMm = ceilingHeightMm - topGapMm;
+    const topFrameMm = module.hasTopFrame === false ? 0 : (module.topFrameThickness ?? (spaceInfo.frameSize?.top || 30));
+    const bodyTopMm = topMm - topFrameMm;
+    const bodyBottomMm = bodyTopMm - cabHeight;
+    const doorBottomGapMm = module.doorBottomGap ?? spaceInfo.doorBottomGap ?? 0;
+
+    return {
+      sideHeightMm: cabHeight,
+      frontHeightMm: Math.max(0, topMm - (bodyBottomMm - doorBottomGapMm)),
+    };
+  }
+
+  if (category === 'lower') {
+    const floorFinishMm = spaceInfo.hasFloorFinish && spaceInfo.floorFinish ? spaceInfo.floorFinish.height : 0;
+    const baseFrameMm = spaceInfo.baseConfig?.type === 'stand'
+      ? 0
+      : (module.baseFrameHeight ?? spaceInfo.baseConfig?.height ?? 100);
+    const heightMm = floorFinishMm + baseFrameMm + cabHeight;
+    return { sideHeightMm: heightMm, frontHeightMm: heightMm };
+  }
+
+  return { sideHeightMm: spaceInfo.height, frontHeightMm: spaceInfo.height };
+};
+
+const calculateRenderedSurroundPanelsForModule = (
+  currentPlacedModule: any,
+  placedModules: any[],
+  spaceInfo: any
+): any[] => {
+  if (spaceInfo.surroundType !== 'surround' || !spaceInfo.frameSize || !currentPlacedModule) return [];
+
+  const frameSize = spaceInfo.frameSize;
+  const userPanelThickness = spaceInfo.panelThickness ?? 18;
+  const surroundThickness = (userPanelThickness === 18.5 || userPanelThickness === 15.5) ? 18.5 : 18;
+  const surroundMaterial = surroundThickness === 18.5 ? 'PET' : 'PB';
+  const sideDepthMm = 40;
+  const panels: any[] = [];
+
+  ([
+    { side: 'left' as const, label: '좌측', frameWidth: frameSize.left || 0 },
+    { side: 'right' as const, label: '우측', frameWidth: frameSize.right || 0 },
+  ]).forEach(({ side, label, frameWidth }) => {
+    if (frameWidth <= 0 || !isOuterRenderedSurroundModule(currentPlacedModule, placedModules, spaceInfo, side)) return;
+
+    const rendered = getRenderedSurroundPanelMod(currentPlacedModule, spaceInfo);
+    panels.push({
+      name: `${label} 서라운드 측면판`,
+      width: sideDepthMm,
+      height: rendered.sideHeightMm,
+      thickness: surroundThickness,
+      material: surroundMaterial,
+    });
+    panels.push({
+      name: `${label} 서라운드 전면판`,
+      width: Math.max(0, frameWidth - 3),
+      height: rendered.frontHeightMm,
+      thickness: surroundThickness,
+      material: surroundMaterial,
+    });
+  });
+
+  return panels;
 };
 
 // ModuleGallery의 FURNITURE_ICONS와 동일하게 동기화 유지 (수정 시 양쪽 함께 변경)
@@ -1577,6 +1723,11 @@ const PlacedModulePropertiesPanel: React.FC = () => {
 
   // 서라운드 패널 계산 — 맨 좌측 가구에 좌측 서라운드, 맨 우측 가구에 우측 서라운드 귀속
   const surroundPanels = React.useMemo(() => {
+    if (currentPlacedModule && spaceInfo.surroundType === 'surround') {
+      const renderedPanels = calculateRenderedSurroundPanelsForModule(currentPlacedModule, placedModules, spaceInfo);
+      return renderedPanels.length > 0 ? [{ name: '=== 서라운드 ===' }, ...renderedPanels] : [];
+    }
+
     if (!spaceInfo.freeSurround || !currentPlacedModule) return [];
     // 서라운드 높이 = 공간높이 - 바닥마감재 - 띄움높이
     const spaceH = spaceInfo.height || 2400;
@@ -1611,7 +1762,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
 
     if (finalFiltered.length === 0) return [];
     return [{ name: '=== 서라운드 ===' }, ...finalFiltered];
-  }, [spaceInfo.freeSurround, spaceInfo.height, spaceInfo.baseConfig, floorFinishH, currentPlacedModule, placedModules]);
+  }, [spaceInfo, floorFinishH, currentPlacedModule, placedModules]);
 
   // panelDetails + surroundPanels 합산
   const allPanelDetails = React.useMemo(() => {
@@ -3202,6 +3353,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                     />
                     <span className={styles.unit}>mm</span>
                   </div>
+                  <div style={{ fontSize: '10px', color: 'var(--theme-text-tertiary)', textAlign: 'center', marginTop: '2px' }}>발통제외</div>
                 </div>
                 <span style={{ color: 'var(--theme-text-tertiary)', fontSize: '11px', flexShrink: 0 }}>×</span>
                 {/* 깊이 */}
