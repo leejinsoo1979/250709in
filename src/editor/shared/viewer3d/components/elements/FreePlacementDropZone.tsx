@@ -259,21 +259,35 @@ const FreePlacementDropZone: React.FC = () => {
       const exactUnitWidth = availableWidth / totalUnits;
       const cappedUnitWidth = Math.min(MAX_SINGLE, exactUnitWidth);
 
+      // 1mm 정수 단위로 너비 계산 (소수점 누적 오차 제거)
+      // 마지막 가구가 zone 끝까지 정확히 채우도록 잔여분 흡수
+      const widths: number[] = sorted.map((_, i) => {
+        const exactW = isDualArr[i] ? Math.min(cappedUnitWidth * 2, MAX_DUAL) : cappedUnitWidth;
+        return Math.floor(exactW); // 정수 mm로 절사
+      });
+      const sumW = widths.reduce((a, b) => a + b, 0);
+      const remainder = Math.floor(availableWidth) - sumW;
+      // 남은 1mm씩 마지막 가구부터 역순으로 분배
+      if (remainder > 0) {
+        for (let k = 0; k < remainder; k++) {
+          const idx = widths.length - 1 - (k % widths.length);
+          // 듀얼 상한(1200) / 싱글 상한(600) 초과 안 하도록 체크
+          const maxW = isDualArr[idx] ? MAX_DUAL : MAX_SINGLE;
+          if (widths[idx] < maxW) widths[idx]++;
+        }
+      }
+
       let currentX = zoneStartMm;
       sorted.forEach((mod, i) => {
-        const exactW = isDualArr[i] ? Math.min(cappedUnitWidth * 2, MAX_DUAL) : cappedUnitWidth;
-        const nextX = currentX + exactW;
-        const roundedCurrentX = Math.round(currentX * 10) / 10;
-        const roundedNextX = Math.round(nextX * 10) / 10;
-        const w = Math.round((roundedNextX - roundedCurrentX) * 10) / 10;
-        const centerXmm = roundedCurrentX + (w / 2);
+        const w = widths[i];
+        const centerXmm = currentX + (w / 2);
 
         updatePlacedModule(mod.id, {
           freeWidth: w,
           moduleWidth: w,
           position: { ...mod.position, x: centerXmm * 0.01 },
         });
-        currentX = nextX;
+        currentX += w;
       });
     };
 
