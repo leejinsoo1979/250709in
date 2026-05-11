@@ -95,8 +95,8 @@ const SingleDrawer: React.FC<SingleDrawerProps> = ({
   uniformDrawerHeight = false,
   fixedMaidaHeightMm,
   sideHeightOverrides,
-  doorTopGap = 0,
-  doorBottomGap = 0,
+  doorTopGap,
+  doorBottomGap,
   defaultDoorTopGap = -20,
   defaultDoorBottomGap = 5,
   isTopDrawer = false,
@@ -147,13 +147,15 @@ const SingleDrawer: React.FC<SingleDrawerProps> = ({
   // 마이다 높이·Y — 상단갭/하단갭 확장 포함
   // 기본 마이다: 노치 위 +40mm, 하단 -5mm (기본하부장 doorTopGap=-20, doorBottomGap=5에 해당)
   // doorTopGap/doorBottomGap 변경분만 적용 (모듈별 기본값 대비 델타)
+  const effectiveDoorTopGap = doorTopGap ?? defaultDoorTopGap;
+  const effectiveDoorBottomGap = doorBottomGap ?? defaultDoorBottomGap;
   const maidaTopMm = zone.notchAboveBottom + 40;
   const maidaBottomMm = zone.notchBelowTop != null ? (zone.notchBelowTop - 5) : -5;
-  const gapTopExt = isTopDrawer ? (doorTopGap - defaultDoorTopGap) : 0;
-  const gapBottomExt = isBottomDrawer ? (doorBottomGap - defaultDoorBottomGap) : 0;
+  const gapTopExt = isTopDrawer ? (effectiveDoorTopGap - defaultDoorTopGap) : 0;
+  const gapBottomExt = isBottomDrawer ? (effectiveDoorBottomGap - defaultDoorBottomGap) : 0;
   const defaultMaidaHeightMm = maidaTopMm - maidaBottomMm + gapTopExt + gapBottomExt;
   // fixedMaidaHeightMm이 있어도 상단/하단 갭 delta를 추가 적용
-  const maidaHeightMm = fixedMaidaHeightMm ? (fixedMaidaHeightMm + gapTopExt + gapBottomExt) : defaultMaidaHeightMm;
+  const maidaHeightMm = fixedMaidaHeightMm != null ? (fixedMaidaHeightMm + gapTopExt + gapBottomExt) : defaultMaidaHeightMm;
   const maidaHeight = mmToThreeUnits(maidaHeightMm);
   const maidaCenterY = cabinetBottomY + mmToThreeUnits(maidaBottomMm - gapBottomExt) + maidaHeight / 2;
 
@@ -376,8 +378,8 @@ export const ExternalDrawerRenderer: React.FC<ExternalDrawerRendererProps> = ({
   hideTopNotch = false,
   maidaHeightsMm,
   sideHeightOverrides,
-  doorTopGap = 0,
-  doorBottomGap = 0,
+  doorTopGap,
+  doorBottomGap,
   defaultDoorTopGap = -20,
   defaultDoorBottomGap = 5,
 }) => {

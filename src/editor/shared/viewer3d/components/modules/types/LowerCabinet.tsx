@@ -546,6 +546,8 @@ interface TouchDrawerAnimatedProps {
   showFurniture: boolean;
   hasDoor: boolean;
   panelGrainDirections?: { [panelName: string]: 'horizontal' | 'vertical' };
+  doorTopGap?: number;
+  doorBottomGap?: number;
 }
 
 const TouchDrawerAnimated: React.FC<TouchDrawerAnimatedProps> = ({
@@ -563,6 +565,8 @@ const TouchDrawerAnimated: React.FC<TouchDrawerAnimatedProps> = ({
   showFurniture,
   hasDoor,
   panelGrainDirections,
+  doorTopGap,
+  doorBottomGap,
 }) => {
   const { doorsOpen, isIndividualDoorOpen, isInteriorMaterialMode } = useUIStore();
   const { gl } = useThree();
@@ -628,6 +632,7 @@ const TouchDrawerAnimated: React.FC<TouchDrawerAnimatedProps> = ({
   const isTouch3 = moduleId.includes('lower-door-lift-touch-3tier');
   const isTDTouch2 = moduleId.includes('lower-top-down-touch-2tier');
   const isTDTouch3 = moduleId.includes('lower-top-down-touch-3tier');
+  const isTopDownTouch = isTDTouch2 || isTDTouch3;
 
   // 서랍 스펙
   const drawerSpecs: [number, number][] = isTouch2A ? [[228, 28], [228, 406]]
@@ -661,8 +666,14 @@ const TouchDrawerAnimated: React.FC<TouchDrawerAnimatedProps> = ({
     : isTDTouch3 ? [164, 117, 117]
     : [228, 228];
 
-  const topExtMm = 30;
-  const bottomExtMm = 5;
+  const defaultTopExtMm = isTopDownTouch ? -80 : 30;
+  const defaultBottomExtMm = 5;
+  const topExtMm = isTopDownTouch && (doorTopGap === undefined || doorTopGap === 0)
+    ? defaultTopExtMm
+    : (doorTopGap ?? defaultTopExtMm);
+  const bottomExtMm = doorBottomGap ?? defaultBottomExtMm;
+  const gapTopExt = topExtMm - defaultTopExtMm;
+  const gapBottomExt = bottomExtMm - defaultBottomExtMm;
   const totalFrontMm = moduleHeightMm + topExtMm + bottomExtMm;
   const gapMm = 3;
   const drawerCount = drawerHeights.length;
@@ -677,7 +688,7 @@ const TouchDrawerAnimated: React.FC<TouchDrawerAnimatedProps> = ({
   const isDoorLift3Fixed = drawerCount === 3 && isTouch3;
   const isTopDown2Fixed = drawerCount === 2 && isTDTouch2;
   const isTopDown3Fixed = drawerCount === 3 && isTDTouch3;
-  const maidaHeightsMm = isDoorLift2Fixed
+  const baseMaidaHeightsMm = isDoorLift2Fixed
     ? [408, 409]
     : isDoorLift3Fixed
       ? [360, 227, 227]
@@ -686,6 +697,12 @@ const TouchDrawerAnimated: React.FC<TouchDrawerAnimatedProps> = ({
         : isTopDown3Fixed
           ? [284, 210, 210]
           : drawerHeights.map(h => (h / totalDrawerH) * totalMaidaMm);
+  const maidaHeightsMm = [...baseMaidaHeightsMm];
+  if (maidaHeightsMm.length > 0) {
+    maidaHeightsMm[0] = Math.max(0, maidaHeightsMm[0] + gapBottomExt);
+    const topIndex = maidaHeightsMm.length - 1;
+    maidaHeightsMm[topIndex] = Math.max(0, maidaHeightsMm[topIndex] + gapTopExt);
+  }
 
   let currentBottomMm = -bottomExtMm;
   const maidas = maidaHeightsMm.map((h, idx) => {
@@ -1327,9 +1344,12 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
         const isDoorLift2Tier = moduleData.id.includes('lower-door-lift-2tier');
         const isTopDown3Tier = moduleData.id.includes('lower-top-down-3tier');
         const isTopDown2Tier = moduleData.id.includes('lower-top-down-2tier');
+        const defaultDrawerTopGap = (isTopDown2Tier || isTopDown3Tier) ? -80 : (isDoorLift2Tier || isDoorLift3Tier) ? 30 : -20;
+        const defaultDrawerBottomGap = 5;
         const effectiveDrawerTopGap = (isTopDown2Tier || isTopDown3Tier) && (doorTopGap === undefined || doorTopGap === 0)
-          ? -80
-          : doorTopGap;
+          ? defaultDrawerTopGap
+          : (doorTopGap ?? defaultDrawerTopGap);
+        const effectiveDrawerBottomGap = doorBottomGap ?? defaultDrawerBottomGap;
         // 기존 서랍장: 상단 따내기 60mm 있음. 2단 fromBottom=330(균등), 3단 fromBottom=295+510
         // 도어올림 3단: fromBottom=315, 545 (1단=315, 따내기65, 2단=165, 따내기65, 3단=175)
         // 도어올림 2단: fromBottom=355
@@ -1366,9 +1386,9 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
               maidaHeightsMm={isDoorLift2Tier ? [400, 400] : isDoorLift3Tier ? [360, 210, 210] : undefined}
               sideHeightOverrides={isTopDown2Tier ? { all: 240 } : isTopDown3Tier ? { first: 180, rest: 130 } : undefined}
               doorTopGap={effectiveDrawerTopGap}
-              doorBottomGap={doorBottomGap}
-              defaultDoorTopGap={isTopDown2Tier || isTopDown3Tier ? -80 : isDoorLift2Tier || isDoorLift3Tier ? 30 : -20}
-              defaultDoorBottomGap={5}
+              doorBottomGap={effectiveDrawerBottomGap}
+              defaultDoorTopGap={defaultDrawerTopGap}
+              defaultDoorBottomGap={defaultDrawerBottomGap}
             />
           </group>
         );
@@ -1530,6 +1550,8 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
           showFurniture={showFurniture}
           hasDoor={hasDoor}
           panelGrainDirections={panelGrainDirections}
+          doorTopGap={doorTopGap}
+          doorBottomGap={doorBottomGap}
         />
       )}
 

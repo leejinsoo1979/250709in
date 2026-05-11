@@ -235,6 +235,19 @@ describe('doorGeometryCalculator', () => {
     expect(result.leafHeightMm).toBe(755)
   })
 
+  it('하부 도어올림 도어 높이는 입력된 상하 갭 변경을 반영한다', () => {
+    const result = resolveDoorLeafDimensions({
+      moduleId: 'lower-door-lift-2tier',
+      cabinetCategory: 'lower',
+      doorWidthMm: 600,
+      cabinetHeightMm: 720,
+      doorTopGapMm: 40,
+      doorBottomGapMm: 10
+    })
+
+    expect(result.leafHeightMm).toBe(770)
+  })
+
   it('일반 하부장 도어 높이는 입력된 상하 갭만큼 확장한다', () => {
     const result = resolveDoorLeafDimensions({
       moduleId: 'lower-cabinet-basic',
@@ -305,6 +318,23 @@ describe('doorGeometryCalculator', () => {
     expect(result.bottomMm).toBe(57)
     expect(result.topMm).toBe(797)
     expect(result.centerYMm).toBe(427)
+  })
+
+  it('하부 도어올림 도어 세로 위치는 입력된 상하 갭을 몸통 기준으로 적용한다', () => {
+    const result = resolveDoorVerticalGeometry({
+      moduleId: 'lower-door-lift-2tier',
+      cabinetCategory: 'lower',
+      doorWidthMm: 500,
+      cabinetHeightMm: 720,
+      cabinetBottomMm: 65,
+      doorTopGapMm: 40,
+      doorBottomGapMm: 10
+    })
+
+    expect(result.leafHeightMm).toBe(770)
+    expect(result.bottomMm).toBe(55)
+    expect(result.topMm).toBe(825)
+    expect(result.centerYMm).toBe(440)
   })
 
   it('상부장 도어 세로 위치는 공간 상단 기준 top gap을 유지한다', () => {

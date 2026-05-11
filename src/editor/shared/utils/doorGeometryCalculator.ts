@@ -109,7 +109,7 @@ export const resolveDoorLeafDimensions = (
     if (classification.isTopDown) {
       leafHeightMm = 710
     } else if (classification.isDoorLift) {
-      leafHeightMm = cabinetHeightMm + 5 + 30
+      leafHeightMm = cabinetHeightMm + (doorTopGapMm ?? 30) + (doorBottomGapMm ?? 5)
     } else {
       leafHeightMm = cabinetHeightMm + (doorTopGapMm ?? 0) + (doorBottomGapMm ?? 0)
     }
@@ -191,8 +191,10 @@ export const resolveDoorVerticalGeometry = (
       bottomMm = cabinetBottomMm - 5
       topMm = bottomMm + leafDimensions.leafHeightMm
     } else if (classification.isDoorLift) {
-      topMm = cabinetBottomMm + cabinetHeightMm + 30
-      bottomMm = topMm - leafDimensions.leafHeightMm
+      const doorLiftTopGap = doorTopGapMm ?? 30
+      const doorLiftBottomGap = doorBottomGapMm ?? 5
+      bottomMm = cabinetBottomMm - doorLiftBottomGap
+      topMm = cabinetBottomMm + cabinetHeightMm + doorLiftTopGap
     } else {
       bottomMm = cabinetBottomMm - (doorBottomGapMm ?? 0)
       topMm = bottomMm + leafDimensions.leafHeightMm

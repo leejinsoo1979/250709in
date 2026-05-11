@@ -3284,7 +3284,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                       type="text"
                       inputMode="numeric"
                       value={freeHeightInput}
-                      readOnly={!!(currentPlacedModule && (currentPlacedModule.moduleId.includes('lower-drawer-2tier') || currentPlacedModule.moduleId.includes('dual-lower-drawer-2tier')))}
+                      readOnly={false}
                       onChange={(e) => setFreeHeightInput(e.target.value)}
                       onBlur={() => {
                         const displayVal = parseInt(freeHeightInput, 10);
@@ -3321,6 +3321,10 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                           const updates: any = moduleData.category === 'upper'
                             ? { customHeight: val, freeHeight: undefined }
                             : { freeHeight: val };
+                          // 2단서랍장: cabinetBodyHeight도 함께 저장 (렌더링이 우선 사용)
+                          if (currentPlacedModule.moduleId?.includes('lower-drawer-2tier') || currentPlacedModule.moduleId?.includes('dual-lower-drawer-2tier')) {
+                            updates.cabinetBodyHeight = val;
+                          }
                           // 키큰장(full): 가구 높이 줄이면 상단몰딩이 늘어나야 함
                           if (moduleData.category === 'full') {
                             const iSpace = calculateInternalSpace(spaceInfo);
