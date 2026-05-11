@@ -21,7 +21,8 @@ export default defineConfig({
   },
   build: {
     minify: 'esbuild',
-    target: 'esnext',
+    // es2020 이상: `??`, `?.` 등 네이티브 지원 (Chrome 80+, Edge 80+, Safari 13.1+, Firefox 74+)
+    target: 'es2020',
     rollupOptions: {
       external: [
         // AR 관련 파일들을 빌드에서 제외
