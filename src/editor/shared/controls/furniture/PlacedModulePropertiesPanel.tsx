@@ -4291,6 +4291,8 @@ const PlacedModulePropertiesPanel: React.FC = () => {
 
             return (
               <>
+              {/* 상단몰딩 — 하부장은 천장과 무관하므로 숨김 */}
+              {!isLowerMod && (
               <div className={styles.propertySection}>
                 <h5 className={styles.sectionTitle}>상단몰딩</h5>
 
@@ -4428,6 +4430,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                 </div>
 
               </div>
+              )}
 
               {/* 걸레받이 — stand 타입/상부장이면 숨김. 별도 섹션으로 분리 */}
               {!isStandType && !isUpperCat && (
