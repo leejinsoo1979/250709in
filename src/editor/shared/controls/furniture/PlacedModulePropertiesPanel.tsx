@@ -3223,9 +3223,10 @@ const PlacedModulePropertiesPanel: React.FC = () => {
             const doorW = isDualSlot
               ? Math.max(0, Math.round(bodyWidth / 2) - 3)
               : Math.max(0, bodyWidth - 3 + totalExtensionMm);
-            // 도어 높이: 공간 높이 - 도어 상갭 - 도어 하갭 (전체 가구 높이 기준)
-            const spaceH = spaceInfo.height || 0;
-            const doorH = Math.max(0, spaceH - (doorTopGap || 0) - (doorBottomGap || 0));
+            // 도어 높이: 몸통(cabinet) 기준 — 몸통 높이 + 상단갭 + 하단갭 (EP와 동일)
+            // 갭이 양수면 몸통 밖으로 확장, 음수면 몸통보다 작음
+            const bodyH = adjustedFreeHeight || currentPlacedModule.freeHeight || currentPlacedModule.customHeight || moduleData.dimensions.height || 0;
+            const doorH = Math.max(0, bodyH + (doorTopGap || 0) + (doorBottomGap || 0));
             const doorThickness = 20;
             return (
               <div className={styles.propertySection}>
@@ -4177,8 +4178,11 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                   <button
                     onClick={() => {
                       const nextHasTopFrame = !topEnabled;
+                      // 상부몰딩 OFF → 가구가 천장에 붙음. 도어가 천장에 충돌 안 하도록 상단갭 -5
+                      // 상부몰딩 ON → 몰딩 아래 위치이므로 상단갭 0 (몸통 = 도어)
                       updatePlacedModule(mod.id, {
                         hasTopFrame: nextHasTopFrame,
+                        doorTopGap: nextHasTopFrame ? 0 : -5,
                         ...getUpperShelfGapSyncUpdates({ hasTopFrame: nextHasTopFrame }),
                       });
                     }}
@@ -4313,11 +4317,11 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                           hasBase: nextHasBase,
                           ...(baseEnabled ? { individualFloatHeight: 0 } : {}),
                         };
+                        // 걸레받이 OFF → 가구가 바닥에 내려옴. 도어가 바닥에 충돌 안 하도록 하단갭 -5
+                        // 걸레받이 ON → 받침대 위에 위치이므로 하단갭 0 (몸통 = 도어)
                         updatePlacedModule(mod.id, {
                           ...nextFrameState,
-                          ...(baseEnabled
-                            ? {}
-                            : { doorBottomGap: 25 }),
+                          doorBottomGap: nextHasBase ? 0 : -5,
                           ...getUpperShelfGapSyncUpdates(nextFrameState),
                         });
                       }}

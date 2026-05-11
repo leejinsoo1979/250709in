@@ -891,16 +891,10 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   let doorTopLocal = 0; // 키큰장 기준 로컬 좌표에서의 도어 상단 (mm)
 
   if (isUpperCabinet) {
-    // 상부장 도어
+    // 상부장 도어 (몸통 기준, EP와 동일)
+    // 상단갭/하단갭 양수 = 몸통 밖으로 확장. 0이면 도어 == 몸통
     const upperCabinetHeight = effectiveInternalHeight || moduleData?.dimensions?.height || 600;
-    const topFrameHeightMm = perFurnitureTopFrame ?? (originalSpaceInfo.frameSize?.top || 30);
-
-    // 도어 상단: 천장에서 doorTopGap만큼 내려온 위치 (키큰장과 동일)
-    // 캐비넷 상단 기준 로컬 오프셋 = topFrame - doorTopGap
-    const topExtension = topFrameHeightMm - doorTopGap;
-    // 도어 하단: 캐비넷 하단에서 doorBottomGap만큼 아래로 확장
-    const bottomExtension = doorBottomGap;
-    actualDoorHeight = upperCabinetHeight + topExtension + bottomExtension;
+    actualDoorHeight = upperCabinetHeight + doorTopGap + doorBottomGap;
   } else if (isLowerCabinet) {
     const lowerCabinetHeight = effectiveInternalHeight || moduleData?.dimensions?.height || 1000;
     const isDoorLift = moduleData?.id?.includes('lower-door-lift-');
@@ -983,17 +977,9 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   let doorYPosition: number;
   
   if (isUpperCabinet) {
-    // 상부장 도어 Y 위치 — 높이 계산과 동일 로직
-    const upperCabinetHeight = effectiveInternalHeight || moduleData?.dimensions?.height || 600;
-    const cabinetBottom = -upperCabinetHeight / 2;
-    const cabinetTop = upperCabinetHeight / 2;
-    const topFrameForY = perFurnitureTopFrame ?? (originalSpaceInfo.frameSize?.top || 30);
-    const topExtension = topFrameForY - doorTopGap;
-    const bottomExtension = doorBottomGap;
-
-    const doorTop = cabinetTop + topExtension;
-    const doorBottom = cabinetBottom - bottomExtension;
-    const doorCenter = (doorTop + doorBottom) / 2;
+    // 상부장 도어 Y 위치 (몸통 기준, EP와 동일)
+    // 도어 중심 = (몸통 상단 + 상단갭 + 몸통 하단 - 하단갭) / 2 = (상단갭 - 하단갭) / 2
+    const doorCenter = (doorTopGap - doorBottomGap) / 2;
     doorYPosition = mmToThreeUnits(doorCenter);
   } else if (isLowerCabinet) {
     const lowerCabinetHeight = effectiveInternalHeight || moduleData?.dimensions?.height || 1000;
