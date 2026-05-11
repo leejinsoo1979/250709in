@@ -1237,7 +1237,8 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
               doorBottomAbsMm = cabinetBottomAbs - doorBottomGapVal;
               doorHeightMm = popupH + doorTopGapVal + doorBottomGapVal;
             } else if (modCat === 'lower') {
-              const cabinetH = modData.dimensions.height ?? 1000;
+              // 하부장 몸통 H: 사용자 수정값(customHeight/freeHeight) 우선 적용 (싱크장 반통 등 높이 변경 반영)
+              const cabinetH = mod.customHeight ?? mod.freeHeight ?? modData.dimensions.height ?? 1000;
               const cabinetBottomAbs = (isFloating ? floatHeightMm : (railOrBaseHeightMm + indivFloatMm)) + floorFinishHeightMm;
               const isDoorLift = modData.id?.includes('lower-door-lift-');
               const isTopDown = modData.id?.includes('lower-top-down-');
@@ -1279,7 +1280,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
             // lower-door-lift는 도어가 가구 위로 올라가므로 좌측 2단에서 표시 (여기서 제외)
             const _effStoneThk_l = _stoneTopThk(mod);
             if (modCat === 'lower' && modData.id?.includes('lower-top-down-') && _effStoneThk_l > 0) {
-              const cabinetH = modData.dimensions.height ?? 785;
+              const cabinetH = mod.customHeight ?? mod.freeHeight ?? modData.dimensions.height ?? 785;
               const cabinetBottomAbs = (isFloating ? floatHeightMm : (railOrBaseHeightMm + indivFloatMm)) + floorFinishHeightMm;
               const cabinetTopAbs = cabinetBottomAbs + cabinetH;
               // 도어 상단 ~ 인조대리석 앞판 하단 = 20mm 갭
@@ -1305,7 +1306,8 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                 });
               }
             } else if (modCat === 'lower' && !modData.id?.includes('lower-top-down-') && !modData.id?.includes('lower-door-lift-')) {
-              const cabinetH = modData.dimensions.height ?? 1000;
+              // 하부장 몸통 H: 사용자 수정값(customHeight/freeHeight) 우선 적용 (싱크장 반통 등 높이 변경 반영)
+              const cabinetH = mod.customHeight ?? mod.freeHeight ?? modData.dimensions.height ?? 1000;
               const cabinetBottomAbs = (isFloating ? floatHeightMm : (railOrBaseHeightMm + indivFloatMm)) + floorFinishHeightMm;
               const cabinetTopAbsMm = cabinetBottomAbs + cabinetH;
               // 상단갭: 도어 상단 ~ 가구 상단
@@ -2582,7 +2584,8 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
               doorBottomAbsMm = cabinetBottomAbs - doorBottomGapVal;
               doorHeightMm = moduleHeightMm + doorTopGapVal + doorBottomGapVal;
             } else if (modCat === 'lower') {
-              const cabinetH = modData.dimensions.height ?? 1000;
+              // 하부장 몸통 H: 사용자 수정값(customHeight/freeHeight) 우선 적용 (싱크장 반통 등 높이 변경 반영)
+              const cabinetH = mod.customHeight ?? mod.freeHeight ?? modData.dimensions.height ?? 1000;
               const cabinetBottomAbs = (isFloating ? floatHeightMm : (railOrBaseHeightMm + indivFloatMm)) + floorFinishHeightMm;
               const isDoorLift = modData.id?.includes('lower-door-lift-');
               const isTopDown = modData.id?.includes('lower-top-down-');
@@ -2629,7 +2632,8 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                 key: `door-topgap-${moduleIndex}`
               });
               // 앞판 높이 = (캐비넷상단 - 앞판하단) + 상판 실효 두께
-              const cabinetH_r = modData.dimensions.height ?? 785;
+              // 하부장 몸통 H: 사용자 수정값(customHeight/freeHeight) 우선 적용
+              const cabinetH_r = mod.customHeight ?? mod.freeHeight ?? modData.dimensions.height ?? 785;
               const cabinetBottomAbs_r = (isFloating ? floatHeightMm : (railOrBaseHeightMm + indivFloatMm)) + floorFinishHeightMm;
               const cabinetTopAbs_r = cabinetBottomAbs_r + cabinetH_r;
               const frontPlateAreaMm_r = Math.round(cabinetTopAbs_r - gapTopAbs_r) + _effStT_r;
