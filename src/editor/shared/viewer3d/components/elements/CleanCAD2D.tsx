@@ -1143,6 +1143,42 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
       if (slotInfo && slotInfo.wallPositions) {
         nearestLeftDistance = Math.abs(moduleLeft * 100 - slotInfo.wallPositions.left);
         nearestRightDistance = Math.abs(slotInfo.wallPositions.right - moduleRight * 100);
+        // 슬롯 가구도 인접 가구 체크 (wallPositions은 벽까지만 → 인접 가구가 사이에 있으면 거리 단축)
+        const currentCat = module.isSurroundPanel ? 'full'
+          : (module.moduleId?.startsWith('upper-') || module.moduleId?.includes('-upper-')) ? 'upper'
+          : (module.moduleId?.startsWith('lower-') || module.moduleId?.includes('-lower-')) ? 'lower'
+          : 'full';
+        for (const otherModule of placedModules) {
+          if (otherModule.id === module.id) continue;
+          if (otherModule.isSurroundPanel) continue;
+          const otherCat = (otherModule.moduleId?.startsWith('upper-') || otherModule.moduleId?.includes('-upper-')) ? 'upper'
+            : (otherModule.moduleId?.startsWith('lower-') || otherModule.moduleId?.includes('-lower-')) ? 'lower'
+            : 'full';
+          const canCoexist = (currentCat === 'upper' && otherCat === 'lower') || (currentCat === 'lower' && otherCat === 'upper');
+          if (canCoexist) continue;
+          const otherWmm = (otherModule.isFreePlacement && otherModule.freeWidth)
+            ? otherModule.freeWidth
+            : (otherModule.customWidth || otherModule.adjustedWidth || otherModule.moduleWidth || 0);
+          const otherWThree = otherWmm * 0.01;
+          const otherLeft = otherModule.position.x - otherWThree / 2;
+          const otherRight = otherModule.position.x + otherWThree / 2;
+          // 좌측 인접 가구 — moduleLeft까지 거리가 wallPositions 기반보다 짧으면 갱신
+          if (otherRight <= moduleLeft + 0.001) {
+            const distMm = Math.round((moduleLeft - otherRight) * 100);
+            if (distMm < nearestLeftDistance) {
+              nearestLeftDistance = distMm;
+              hasAdjacentLeft = true;
+            }
+          }
+          // 우측 인접 가구
+          if (otherLeft >= moduleRight - 0.001) {
+            const distMm = Math.round((otherLeft - moduleRight) * 100);
+            if (distMm < nearestRightDistance) {
+              nearestRightDistance = distMm;
+              hasAdjacentRight = true;
+            }
+          }
+        }
       } else {
         // 같은 구간 내 다른 가구들의 위치를 고려
         // 왼쪽: 현재 가구 좌측 ~ (왼쪽에 인접한 가구의 우측 또는 구간 왼쪽 경계)
