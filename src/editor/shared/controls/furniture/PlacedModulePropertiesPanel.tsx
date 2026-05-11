@@ -930,34 +930,50 @@ const PlacedModulePropertiesPanel: React.FC = () => {
       })()
     : null;
 
-  const isAutoDroppedUpperCustomHeight = (() => {
+  const autoDroppedUpperHeight = (() => {
     if (!currentPlacedModule || !moduleData) return false;
-    if (moduleData.category !== 'upper' || currentPlacedModule.zone !== 'dropped' || typeof currentPlacedModule.customHeight !== 'number') {
-      return false;
-    }
+    const matchesAutoHeight = (value?: number) => {
+      if (moduleData.category !== 'upper' || currentPlacedModule.zone !== 'dropped' || typeof value !== 'number') {
+        return false;
+      }
 
-    const expectedHeights: number[] = [];
-    if (spaceInfo.droppedCeiling?.enabled && typeof spaceInfo.droppedCeiling.dropHeight === 'number') {
-      const topFrameMm = spaceInfo.frameSize?.top || 0;
-      const baseFrameMm = spaceInfo.baseConfig?.height || 0;
-      expectedHeights.push(spaceInfo.height - spaceInfo.droppedCeiling.dropHeight - topFrameMm - baseFrameMm);
-      expectedHeights.push(calculateInternalSpace({ ...spaceInfo, zone: 'dropped' as const }).height);
-    }
-    if (spaceInfo.layoutMode === 'free-placement' && spaceInfo.stepCeiling?.enabled) {
-      expectedHeights.push(calculateInternalSpace({
-        ...spaceInfo,
-        height: spaceInfo.height - (spaceInfo.stepCeiling.dropHeight || 0)
-      }).height);
-    }
+      const expectedHeights: number[] = [];
+      if (spaceInfo.droppedCeiling?.enabled && typeof spaceInfo.droppedCeiling.dropHeight === 'number') {
+        const topFrameMm = spaceInfo.frameSize?.top || 0;
+        const baseFrameMm = spaceInfo.baseConfig?.height || 0;
+        expectedHeights.push(spaceInfo.height - spaceInfo.droppedCeiling.dropHeight - topFrameMm - baseFrameMm);
+        expectedHeights.push(calculateInternalSpace({ ...spaceInfo, zone: 'dropped' as const }).height);
+      }
+      if (spaceInfo.layoutMode === 'free-placement' && spaceInfo.stepCeiling?.enabled) {
+        expectedHeights.push(calculateInternalSpace({
+          ...spaceInfo,
+          height: spaceInfo.height - (spaceInfo.stepCeiling.dropHeight || 0)
+        }).height);
+      }
 
-    return expectedHeights.some(height => Math.round(height) === Math.round(currentPlacedModule.customHeight!));
+      return expectedHeights.some(height => Math.round(height) === Math.round(value));
+    };
+
+    return {
+      freeHeight: matchesAutoHeight(currentPlacedModule.freeHeight),
+      customHeight: matchesAutoHeight(currentPlacedModule.customHeight),
+    };
   })();
 
+  const upperBottomEndPanelHeight = currentPlacedModule && moduleData?.category === 'upper' && currentPlacedModule.hasBottomEndPanel !== false ? 18 : 0;
+  const isStaleUpperTotalHeight = (value?: number) => {
+    if (!moduleData || moduleData.category !== 'upper' || typeof value !== 'number') return false;
+    const baseFrameHeight = spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height ?? 65) : 65;
+    return Math.round(value) === Math.round(moduleData.dimensions.height + baseFrameHeight);
+  };
   const placedBodyHeight = currentPlacedModule && moduleData
-    ? (currentPlacedModule.freeHeight
-      ?? (isAutoDroppedUpperCustomHeight ? undefined : currentPlacedModule.customHeight)
+    ? ((autoDroppedUpperHeight && !autoDroppedUpperHeight.freeHeight && !isStaleUpperTotalHeight(currentPlacedModule.freeHeight) ? currentPlacedModule.freeHeight : undefined)
+      ?? (autoDroppedUpperHeight && !autoDroppedUpperHeight.customHeight && !isStaleUpperTotalHeight(currentPlacedModule.customHeight) ? currentPlacedModule.customHeight : undefined)
       ?? moduleData.dimensions.height)
     : 0;
+  const placedDisplayHeight = moduleData?.category === 'upper'
+    ? placedBodyHeight + upperBottomEndPanelHeight
+    : placedBodyHeight;
 
   // 기둥 슬롯 정보 및 기둥 C 여부 확인 (조건부 렌더링 전에 미리 계산)
   const { slotInfo, isCoverDoor, isColumnC } = React.useMemo(() => {
@@ -1085,7 +1101,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
         const is2TierDrawer = currentPlacedModule.moduleId.includes('lower-drawer-2tier') || currentPlacedModule.moduleId.includes('dual-lower-drawer-2tier');
         const baseHeight = is2TierDrawer && currentPlacedModule.cabinetBodyHeight
           ? currentPlacedModule.cabinetBodyHeight
-          : placedBodyHeight;
+          : placedDisplayHeight;
         // 상부몰딩/걸레받이 OFF로 흡수된 높이 더해서 표시 (실제 가구 높이)
         const shouldAbsorbTopForBodyH = moduleData.category === 'full';
         const absorbedTopForH = shouldAbsorbTopForBodyH && currentPlacedModule.hasTopFrame === false
@@ -3079,7 +3095,8 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                             ? (((currentPlacedModule.baseFrameHeight ?? (spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height ?? 60) : 0)))
                               - (currentPlacedModule.individualFloatHeight ?? 0))
                             : 0;
-                          const val = displayVal - absT - absB;
+                          const absUpperBottomEp = moduleData.category === 'upper' && currentPlacedModule.hasBottomEndPanel !== false ? 18 : 0;
+                          const val = displayVal - absT - absB - absUpperBottomEp;
                           const updates: any = { freeHeight: val };
                           // 키큰장(full): 가구 높이 줄이면 상단몰딩이 늘어나야 함
                           if (moduleData.category === 'full') {
@@ -3147,7 +3164,8 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                               ? (((currentPlacedModule.baseFrameHeight ?? (spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height ?? 60) : 0)))
                                 - (currentPlacedModule.individualFloatHeight ?? 0))
                               : 0;
-                            const next = nextDisplay - absT - absB;
+                            const absUpperBottomEp = moduleData.category === 'upper' && currentPlacedModule.hasBottomEndPanel !== false ? 18 : 0;
+                            const next = nextDisplay - absT - absB - absUpperBottomEp;
                             const arrowUpdates: any = { freeHeight: next };
                             if (moduleData.category === 'full') {
                               const iSpace = calculateInternalSpace(spaceInfo);

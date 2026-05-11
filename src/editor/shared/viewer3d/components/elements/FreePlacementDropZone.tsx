@@ -261,14 +261,29 @@ const FreePlacementDropZone: React.FC = () => {
 
       // 균등 분할 (제조 편의)
       // - 싱글(반통): 정수 mm 내림
-      // - 듀얼(한통): 0.5mm 단위 내림 (싱글 × 2 → 자동으로 정수 또는 .0/.5)
+      // - 듀얼(한통): 싱글 × 2
       // 가구 합이 배치공간을 초과하면 안 되므로 floor 적용
+      // 잔여 mm는 마지막 가구가 흡수하여 우측 이격 0 (이격은 좌우만 사용자 설정값 그대로)
       const singleW = Math.floor(cappedUnitWidth); // 정수 mm
-      const dualW = Math.min(singleW * 2, MAX_DUAL); // 싱글 × 2 = 정수
+      const dualW = Math.min(singleW * 2, MAX_DUAL); // 싱글 × 2
+
+      // 모든 가구의 합 계산
+      const widths = sorted.map((_, i) => isDualArr[i] ? dualW : singleW);
+      const sumW = widths.reduce((a, b) => a + b, 0);
+      const remainder = availableWidth - sumW;
+      // 잔여를 마지막 가구가 흡수 (싱글이면 정수 유지, 듀얼이면 0.5 단위 가능)
+      if (remainder > 0 && widths.length > 0) {
+        const lastIdx = widths.length - 1;
+        const isDualLast = isDualArr[lastIdx];
+        const maxW = isDualLast ? MAX_DUAL : MAX_SINGLE;
+        // 싱글: 정수 단위, 듀얼: 0.5 단위
+        const addable = isDualLast ? Math.floor(remainder * 2) / 2 : Math.floor(remainder);
+        widths[lastIdx] = Math.min(widths[lastIdx] + addable, maxW);
+      }
 
       let currentX = zoneStartMm;
       sorted.forEach((mod, i) => {
-        const w = isDualArr[i] ? dualW : singleW;
+        const w = widths[i];
         const centerXmm = currentX + (w / 2);
 
         updatePlacedModule(mod.id, {
@@ -413,7 +428,7 @@ const FreePlacementDropZone: React.FC = () => {
         ...baseModule,
         dimensions: {
           width: effectiveWidth,
-          height: lastDims.height,
+          height: baseModule.category === 'upper' ? baseModule.dimensions.height : lastDims.height,
           depth: lastDims.depth,
         },
       };

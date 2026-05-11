@@ -118,7 +118,7 @@ export function placeFurnitureFree(params: PlaceFurnitureFreeParams): PlaceFurni
 
   // 단내림 구간에 배치되면 높이를 줄임 (full/upper 모두)
   if (effectiveZone === 'dropped' && droppedZone.droppedInternalHeight !== undefined) {
-    if (moduleData.category === 'full' || moduleData.category === 'upper') {
+    if (moduleData.category === 'full') {
       effectiveHeight = droppedZone.droppedInternalHeight;
     }
   }

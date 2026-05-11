@@ -1016,7 +1016,14 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   // freeHeight가 있으면 moduleData.dimensions.height 오버라이드
   // (커스텀/커스터마이징 가구는 이미 위에서 처리됨, 여기는 표준 모듈용)
   // 슬롯 배치/자유배치 모두 적용 — 사용자가 높이를 수동 변경한 경우
+  const isStaleUpperTotalHeight = (value?: number) => {
+    if (!moduleData || moduleData.category !== 'upper' || typeof value !== 'number') return false;
+    const baseFrameHeight = spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height ?? 65) : 65;
+    return Math.round(value) === Math.round(moduleData.dimensions.height + baseFrameHeight);
+  };
+
   if (moduleData && placedModule.freeHeight
+      && !isStaleUpperTotalHeight(placedModule.freeHeight)
       && !isCustomFurniture && !isCustomizableModuleId(placedModule.moduleId)) {
     moduleData = {
       ...moduleData,
@@ -1305,27 +1312,34 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   // 키큰장 체크
   const isTallCabinetForY = actualModuleData?.category === 'full';
 
-  const isAutoDroppedUpperCustomHeight = React.useMemo(() => {
-    if (!isUpperCabinetForY || placedModule.zone !== 'dropped' || typeof placedModule.customHeight !== 'number') {
-      return false;
-    }
+  const autoDroppedUpperHeight = React.useMemo(() => {
+    const matchesAutoHeight = (value?: number) => {
+      if (!isUpperCabinetForY || placedModule.zone !== 'dropped' || typeof value !== 'number') {
+        return false;
+      }
 
-    const expectedHeights: number[] = [];
-    if (spaceInfo.droppedCeiling?.enabled && typeof spaceInfo.droppedCeiling.dropHeight === 'number') {
-      const topFrameMm = spaceInfo.frameSize?.top || 0;
-      const baseFrameMm = spaceInfo.baseConfig?.height || 0;
-      expectedHeights.push(spaceInfo.height - spaceInfo.droppedCeiling.dropHeight - topFrameMm - baseFrameMm);
-      expectedHeights.push(calculateInternalSpace({ ...spaceInfo, zone: 'dropped' as const }).height);
-    }
-    if (spaceInfo.layoutMode === 'free-placement' && spaceInfo.stepCeiling?.enabled) {
-      expectedHeights.push(calculateInternalSpace({
-        ...spaceInfo,
-        height: spaceInfo.height - (spaceInfo.stepCeiling.dropHeight || 0)
-      }).height);
-    }
+      const expectedHeights: number[] = [];
+      if (spaceInfo.droppedCeiling?.enabled && typeof spaceInfo.droppedCeiling.dropHeight === 'number') {
+        const topFrameMm = spaceInfo.frameSize?.top || 0;
+        const baseFrameMm = spaceInfo.baseConfig?.height || 0;
+        expectedHeights.push(spaceInfo.height - spaceInfo.droppedCeiling.dropHeight - topFrameMm - baseFrameMm);
+        expectedHeights.push(calculateInternalSpace({ ...spaceInfo, zone: 'dropped' as const }).height);
+      }
+      if (spaceInfo.layoutMode === 'free-placement' && spaceInfo.stepCeiling?.enabled) {
+        expectedHeights.push(calculateInternalSpace({
+          ...spaceInfo,
+          height: spaceInfo.height - (spaceInfo.stepCeiling.dropHeight || 0)
+        }).height);
+      }
 
-    return expectedHeights.some(height => Math.round(height) === Math.round(placedModule.customHeight!));
-  }, [isUpperCabinetForY, placedModule.zone, placedModule.customHeight, spaceInfo]);
+      return expectedHeights.some(height => Math.round(height) === Math.round(value));
+    };
+
+    return {
+      freeHeight: matchesAutoHeight(placedModule.freeHeight),
+      customHeight: matchesAutoHeight(placedModule.customHeight),
+    };
+  }, [isUpperCabinetForY, placedModule.zone, placedModule.freeHeight, placedModule.customHeight, spaceInfo]);
 
   // adjustedPosition 계산 (Y축 위치 포함)
   let adjustedPosition = initialAdjustedPosition;
@@ -1341,9 +1355,9 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       // 상부장은 상단몰딩 하단에 붙어야 함
       // 자유배치 모드에서는 사용자 지정 높이를 우선 사용
       // 미드웨이 편집: customHeight가 있으면 상단 고정, 하단 확장
-      const upperCabinetHeight = (placedModule.isFreePlacement && placedModule.freeHeight)
+      const upperCabinetHeight = (placedModule.isFreePlacement && placedModule.freeHeight && !autoDroppedUpperHeight.freeHeight && !isStaleUpperTotalHeight(placedModule.freeHeight))
         ? placedModule.freeHeight
-        : (placedModule.customHeight && !isAutoDroppedUpperCustomHeight
+        : (placedModule.customHeight && !autoDroppedUpperHeight.customHeight && !isStaleUpperTotalHeight(placedModule.customHeight)
           ? placedModule.customHeight
           : (actualModuleData?.dimensions.height || 0)); // 상부장 높이
 
@@ -1409,11 +1423,11 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       const floatH = placedModule.individualFloatHeight ?? 0;
       furnitureHeightMm += (absorbedBase - floatH);
     }
-  } else if (placedModule.isFreePlacement && placedModule.freeHeight) {
+  } else if (placedModule.isFreePlacement && placedModule.freeHeight && !(isUpperCabinetForY && (autoDroppedUpperHeight.freeHeight || isStaleUpperTotalHeight(placedModule.freeHeight)))) {
     furnitureHeightMm = placedModule.freeHeight;
   } else {
     // 상부장 미드웨이 편집: customHeight 우선 (상단 고정, 하단만 확장)
-    if (isUpperCabinetForY && placedModule.customHeight && !isAutoDroppedUpperCustomHeight) {
+    if (isUpperCabinetForY && placedModule.customHeight && !autoDroppedUpperHeight.customHeight && !isStaleUpperTotalHeight(placedModule.customHeight)) {
       furnitureHeightMm = placedModule.customHeight;
     } else {
       furnitureHeightMm = actualModuleData?.dimensions.height || 0;

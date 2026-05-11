@@ -3797,10 +3797,14 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           let leftCategoryResolved: string = leftModDataForCat?.category
             ?? (leftmostMod?.moduleId.includes('upper') ? 'upper'
               : leftmostMod?.moduleId.includes('lower') ? 'lower' : 'full');
+          const isStaleUpperTotalHeightLeft = (value?: number) => {
+            if (leftCategoryResolved !== 'upper' || !leftModDataForCat || typeof value !== 'number') return false;
+            return Math.round(value) === Math.round(leftModDataForCat.dimensions.height + (spaceInfo.baseConfig?.height ?? 65));
+          };
           if (leftmostMod) {
-            if (leftmostMod.freeHeight) {
+            if (leftmostMod.freeHeight && !isStaleUpperTotalHeightLeft(leftmostMod.freeHeight)) {
               furnitureH = leftmostMod.freeHeight;
-            } else if (leftmostMod.customHeight) {
+            } else if (leftmostMod.customHeight && !isStaleUpperTotalHeightLeft(leftmostMod.customHeight)) {
               furnitureH = leftmostMod.customHeight;
             } else {
               if (leftCategoryResolved === 'lower' || leftCategoryResolved === 'upper') {
@@ -3827,8 +3831,12 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             companionCategory = compModData?.category
               ?? (leftCompanionMod.moduleId.includes('upper') ? 'upper'
                 : leftCompanionMod.moduleId.includes('lower') ? 'lower' : 'full');
-            companionH = leftCompanionMod.freeHeight
-              ?? leftCompanionMod.customHeight
+            const isStaleCompanionUpperTotalHeight = (value?: number) => {
+              if (companionCategory !== 'upper' || !compModData || typeof value !== 'number') return false;
+              return Math.round(value) === Math.round(compModData.dimensions.height + (spaceInfo.baseConfig?.height ?? 65));
+            };
+            companionH = (!isStaleCompanionUpperTotalHeight(leftCompanionMod.freeHeight) ? leftCompanionMod.freeHeight : undefined)
+              ?? (!isStaleCompanionUpperTotalHeight(leftCompanionMod.customHeight) ? leftCompanionMod.customHeight : undefined)
               ?? compModData?.dimensions.height
               ?? 0;
           }
@@ -4585,10 +4593,14 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           let rightCategoryResolved: string = rightModDataForCat?.category
             ?? (rightmostMod?.moduleId.includes('upper') ? 'upper'
               : rightmostMod?.moduleId.includes('lower') ? 'lower' : 'full');
+          const isStaleUpperTotalHeightRight = (value?: number) => {
+            if (rightCategoryResolved !== 'upper' || !rightModDataForCat || typeof value !== 'number') return false;
+            return Math.round(value) === Math.round(rightModDataForCat.dimensions.height + (spaceInfo.baseConfig?.height ?? 65));
+          };
           if (rightmostMod) {
-            if (rightmostMod.freeHeight) {
+            if (rightmostMod.freeHeight && !isStaleUpperTotalHeightRight(rightmostMod.freeHeight)) {
               rFurnitureH = rightmostMod.freeHeight;
-            } else if (rightmostMod.customHeight) {
+            } else if (rightmostMod.customHeight && !isStaleUpperTotalHeightRight(rightmostMod.customHeight)) {
               rFurnitureH = rightmostMod.customHeight;
             } else {
               if (rightCategoryResolved === 'lower' || rightCategoryResolved === 'upper') {
@@ -4614,8 +4626,12 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             rCompanionCategory = compModData?.category
               ?? (rightCompanionMod.moduleId.includes('upper') ? 'upper'
                 : rightCompanionMod.moduleId.includes('lower') ? 'lower' : 'full');
-            rCompanionH = rightCompanionMod.freeHeight
-              ?? rightCompanionMod.customHeight
+            const isStaleRightCompanionUpperTotalHeight = (value?: number) => {
+              if (rCompanionCategory !== 'upper' || !compModData || typeof value !== 'number') return false;
+              return Math.round(value) === Math.round(compModData.dimensions.height + (spaceInfo.baseConfig?.height ?? 65));
+            };
+            rCompanionH = (!isStaleRightCompanionUpperTotalHeight(rightCompanionMod.freeHeight) ? rightCompanionMod.freeHeight : undefined)
+              ?? (!isStaleRightCompanionUpperTotalHeight(rightCompanionMod.customHeight) ? rightCompanionMod.customHeight : undefined)
               ?? compModData?.dimensions.height
               ?? 0;
           }

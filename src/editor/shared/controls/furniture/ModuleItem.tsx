@@ -113,7 +113,13 @@ const ModuleItem: React.FC<ModuleItemProps> = ({ module, internalSpace }) => {
       moduleData = getModuleById(module.id, internalSpace, spaceInfo);
       if (!moduleData) return;
       const lastDims = furnitureStore.lastCustomDimensions[module.id.replace(/-[\d.]+$/, '')];
-      dims = lastDims ? { width: lastDims.width, height: lastDims.height, depth: lastDims.depth } : moduleData.dimensions;
+      dims = lastDims
+        ? {
+            width: lastDims.width,
+            height: moduleData.category === 'upper' ? moduleData.dimensions.height : lastDims.height,
+            depth: lastDims.depth
+          }
+        : moduleData.dimensions;
       moduleData = { ...moduleData, dimensions: dims };
     }
 

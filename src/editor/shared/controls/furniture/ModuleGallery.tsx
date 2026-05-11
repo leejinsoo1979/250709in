@@ -617,7 +617,11 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
         const stdKey = getStandardDimensionKey(module.id);
         const lastDims = useFurnitureStore.getState().lastCustomDimensions[stdKey];
         let dims = lastDims
-          ? { width: module.dimensions.width, height: lastDims.height, depth: lastDims.depth }
+          ? {
+              width: module.dimensions.width,
+              height: moduleData.category === 'upper' ? module.dimensions.height : lastDims.height,
+              depth: lastDims.depth
+            }
           : { ...module.dimensions };
         const fullBounds = getInternalSpaceBoundsX(spaceInfo);
 
