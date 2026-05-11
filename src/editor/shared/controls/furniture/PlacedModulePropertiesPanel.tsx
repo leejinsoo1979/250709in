@@ -3453,14 +3453,17 @@ const PlacedModulePropertiesPanel: React.FC = () => {
 
           {/* 경첩 방향 선택 (도어치수 바로 아래로 이동) — 도어 + 싱글 가구 + 상세보기 아닐 때 */}
           {/* 키큰장 찬넬(insert-frame)은 도어 없는 채움재 → 경첩 방향도 숨김 */}
-          {/* 순수 서랍 모듈(lower-drawer-, lower-top-down-, lower-door-lift-touch-)은 서랍 슬라이드라 경첩 없음 */}
-          {/* 단, 서랍+옷장 복합형(2drawer-hanging, 4drawer-shelf 등)은 옷장 도어에 경첩 필요 */}
+          {/* 서랍 전용 모듈만 경첩 숨김:
+             - lower-drawer-* (순수 서랍 2tier/3tier)
+             - lower-door-lift-touch-* (터치 서랍)
+             - lower-top-down-touch-* (터치 상판내림 서랍)
+             상판내림(top-down-half/2tier/3tier)·도어올림(door-lift-half/2tier/3tier)·기본장은 도어이므로 경첩 표시 */}
           {!showDetails && hasDoor && isSingleFurniture
             && !(typeof currentPlacedModule?.moduleId === 'string' && currentPlacedModule.moduleId.includes('insert-frame'))
             && !(typeof currentPlacedModule?.moduleId === 'string' && (
               /^(dual-)?lower-drawer-/.test(currentPlacedModule.moduleId)
-              || currentPlacedModule.moduleId.includes('lower-top-down-')
               || currentPlacedModule.moduleId.includes('lower-door-lift-touch-')
+              || currentPlacedModule.moduleId.includes('lower-top-down-touch-')
             ))
             && (
             <div className={styles.propertySection}>
