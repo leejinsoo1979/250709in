@@ -3416,12 +3416,15 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                               const globalTopFrame = spaceInfo.frameSize?.top || 30;
                               updates.topFrameThickness = Math.max(0, globalTopFrame + (iSpace.height - val));
                             }
+                            // 2단서랍장: cabinetBodyHeight도 함께 저장
+                            if (currentPlacedModule.moduleId?.includes('lower-drawer-2tier') || currentPlacedModule.moduleId?.includes('dual-lower-drawer-2tier')) {
+                              updates.cabinetBodyHeight = val;
+                            }
                             updatePlacedModule(currentPlacedModule.id, updates);
+                            setFreeHeightInput(displayVal.toString());
                             setSectionHeightInputs({});
                           }
                           (e.target as HTMLInputElement).blur();
-                          // 저장 완료 후 팝업 닫기 (확인)
-                          setTimeout(() => closeAllPopups(), 0);
                         }
                         else if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
                           e.preventDefault();

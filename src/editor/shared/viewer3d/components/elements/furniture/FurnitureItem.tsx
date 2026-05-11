@@ -1443,7 +1443,9 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         : (placedModule.baseFrameHeight ?? (spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height ?? 60) : 0));
       furnitureHeightMm += defaultGlassFloatMm - glassBottomSupportMm;
     }
-    if (placedModule.hasBase === false && !isGlassCabinetForY) {
+    // 키큰장찬넬(insert-frame)은 채움재이므로 걸레받이 흡수 처리 제외 (바닥 아래로 내려가는 문제 방지)
+    const isInsertFrameForFreeHeight = typeof placedModule.moduleId === 'string' && placedModule.moduleId.includes('insert-frame');
+    if (placedModule.hasBase === false && !isGlassCabinetForY && !isInsertFrameForFreeHeight) {
       const globalBaseMm = spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height ?? 60) : 0;
       const absorbedBase = placedModule.baseFrameHeight ?? globalBaseMm;
       const floatH = placedModule.individualFloatHeight ?? 0;
@@ -1493,7 +1495,9 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         furnitureHeightMm -= (placedModule.baseFrameHeight - globalBase);
       }
       // 걸래받이 OFF: 걸래받이 자리를 가구가 흡수 - 띄움만큼은 빈 공간으로 제외
-      if (placedModule.hasBase === false && isTallCabinetForY && !isGlassCabinetForY) {
+      // 단, 키큰장찬넬(insert-frame)은 채움재이므로 흡수하지 않음 (바닥 아래로 내려가는 문제 방지)
+      const isInsertFrameForHeight = typeof placedModule.moduleId === 'string' && placedModule.moduleId.includes('insert-frame');
+      if (placedModule.hasBase === false && isTallCabinetForY && !isGlassCabinetForY && !isInsertFrameForHeight) {
         const globalBaseMm = spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height ?? 60) : 0;
         const absorbedBase = placedModule.baseFrameHeight ?? globalBaseMm;
         const floatH = placedModule.individualFloatHeight ?? 0;
@@ -1566,9 +1570,12 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         const configSections = placedModule.customConfig?.sections;
         const bottomRaiseActive = configSections?.[0]?.bottomPanelRaise && configSections[0].bottomPanelRaise > 0;
         const isLowerModBase = placedModule.moduleId?.startsWith('lower-') || placedModule.moduleId?.includes('-lower-');
-        const baseHeightMm = bottomRaiseActive ? 0 : (spaceInfo.baseConfig?.type === 'stand' ? 0 : (placedModule.hasBase === false ? 0 : (placedModule.baseFrameHeight ?? spaceInfo.baseConfig?.height ?? (isLowerModBase ? 100 : 60))));
+        // 키큰장찬넬(insert-frame)은 채움재이므로 걸레받이 OFF 영향을 받지 않음 (바닥 아래로 내려가는 문제 방지)
+        const isInsertFrameForBase = typeof placedModule.moduleId === 'string' && placedModule.moduleId.includes('insert-frame');
+        const effectiveHasBaseFalse = !isInsertFrameForBase && placedModule.hasBase === false;
+        const baseHeightMm = bottomRaiseActive ? 0 : (spaceInfo.baseConfig?.type === 'stand' ? 0 : (effectiveHasBaseFalse ? 0 : (placedModule.baseFrameHeight ?? spaceInfo.baseConfig?.height ?? (isLowerModBase ? 100 : 60))));
         // 걸래받이 OFF + 개별 띄움 높이
-        const indivFloatMm = (placedModule.hasBase === false) ? (placedModule.individualFloatHeight ?? 0) : 0;
+        const indivFloatMm = effectiveHasBaseFalse ? (placedModule.individualFloatHeight ?? 0) : 0;
         const baseHeight = (baseHeightMm + indivFloatMm) * 0.01; // mm to Three.js units
 
         // 바닥 마감재 높이

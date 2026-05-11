@@ -5544,11 +5544,15 @@ const Configurator: React.FC = () => {
           // 자유배치 전체 토글 — 슬롯배치와 동일 동작
           // 통합 모드(allOn): 통합 행 1개. 해제 모드(allOff): 가구별 개별 행 (각자 토글/입력 가능)
           // 토글 시 모든 가구를 ON 상태로 복구하여 개별 토글 자유 유지
+          // 키큰장찬넬(insert-frame)은 채움재이므로 상단몰딩/걸레받이 전체 토글에서 제외 (전체 OFF 시 바닥 아래로 내려가는 문제 방지)
+          const isInsertFrame = (m: any) => typeof m.moduleId === 'string' && m.moduleId.includes('insert-frame');
           const topFreeMods = sorted.filter(m => {
+            if (isInsertFrame(m)) return false;
             const cat = getModuleCategory(m);
             return cat === 'upper' || cat === 'full';
           });
           const baseFreeMods = sorted.filter(m => {
+            if (isInsertFrame(m)) return false;
             const cat = getModuleCategory(m);
             return cat === 'lower' || cat === 'full';
           });
@@ -6211,8 +6215,10 @@ const Configurator: React.FC = () => {
           if (spaceInfo.isIsland) return null;
           let topNum = 0;
           let baseNum = 0;
-          const topSortedMods = sorted.filter(m => getModuleCategory(m) !== 'lower');
-          const baseSortedMods = sorted.filter(m => getModuleCategory(m) !== 'upper');
+          // 키큰장찬넬(insert-frame)은 채움재이므로 상단몰딩/걸레받이 전체 토글에서 제외 (전체 OFF 시 바닥 아래로 내려가는 문제 방지)
+          const isInsertFrameSlot = (m: any) => typeof m.moduleId === 'string' && m.moduleId.includes('insert-frame');
+          const topSortedMods = sorted.filter(m => !isInsertFrameSlot(m) && getModuleCategory(m) !== 'lower');
+          const baseSortedMods = sorted.filter(m => !isInsertFrameSlot(m) && getModuleCategory(m) !== 'upper');
           // 통합 모드: '전체' 체크박스로 제어
           const allTopOn = topFrameAllMode;
           const allBaseOn = baseFrameAllMode;

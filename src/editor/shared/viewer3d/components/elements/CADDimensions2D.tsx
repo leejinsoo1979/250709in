@@ -393,8 +393,14 @@ const computeLowerCabinetMaidaHeights = (
       : isTDTouch3 ? [164, 117, 117]
       : [228, 228];
 
-    const topExtMm = 30;
-    const bottomExtMm = 5;
+    const defaultTopExtMm = isTopDownTouch ? -80 : 30;
+    const defaultBottomExtMm = 5;
+    const topExtMm = isTopDownTouch && doorTopGap === 0
+      ? defaultTopExtMm
+      : doorTopGap;
+    const bottomExtMm = doorBottomGap;
+    const gapTopExt = topExtMm - defaultTopExtMm;
+    const gapBottomExt = bottomExtMm - defaultBottomExtMm;
     const totalFrontMm = moduleHeightMm + topExtMm + bottomExtMm;
     const gapMm = 3;
     const drawerCount = drawerHeights.length;
@@ -409,7 +415,7 @@ const computeLowerCabinetMaidaHeights = (
     const isDoorLift3Fixed = drawerCount === 3 && isTouch3;
     const isTopDown2Fixed = drawerCount === 2 && isTDTouch2;
     const isTopDown3Fixed = drawerCount === 3 && isTDTouch3;
-    const maidaHeightsMm = isDoorLift2Fixed
+    const baseMaidaHeightsMm = isDoorLift2Fixed
       ? [408, 409]
       : isDoorLift3Fixed
         ? [360, 227, 227]
@@ -418,6 +424,12 @@ const computeLowerCabinetMaidaHeights = (
           : isTopDown3Fixed
             ? [284, 210, 210]
             : drawerHeights.map(h => (h / totalDrawerH) * totalMaidaMm);
+    const maidaHeightsMm = [...baseMaidaHeightsMm];
+    if (maidaHeightsMm.length > 0) {
+      maidaHeightsMm[0] = Math.max(0, maidaHeightsMm[0] + gapBottomExt);
+      const topIndex = maidaHeightsMm.length - 1;
+      maidaHeightsMm[topIndex] = Math.max(0, maidaHeightsMm[topIndex] + gapTopExt);
+    }
 
     // 마이다 위치 (캐비넷 하단 -5mm 부터 시작)
     let currentBottomMm = -bottomExtMm;
@@ -494,7 +506,9 @@ const computeLowerCabinetMaidaHeights = (
     const gapTopExt = isTopDrawer ? (doorTopGap - defaultDoorTopGap) : 0;
     const gapBottomExt = isBottomDrawer ? (doorBottomGap - defaultDoorBottomGap) : 0;
     const defaultMaidaH = maidaTopBase - maidaBottomBase + gapTopExt + gapBottomExt;
-    const maidaH = (fixedMaidaHeights && fixedMaidaHeights[i]) ? fixedMaidaHeights[i] : defaultMaidaH;
+    const maidaH = fixedMaidaHeights?.[i] != null
+      ? fixedMaidaHeights[i] + gapTopExt + gapBottomExt
+      : defaultMaidaH;
     const maidaBottom = maidaBottomBase - gapBottomExt;
     const maidaTop = maidaBottom + maidaH;
     return { maidaHeightMm: maidaH, maidaBottomMm: maidaBottom, maidaTopMm: maidaTop };
@@ -1232,9 +1246,9 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                 doorBottomAbsMm = cabinetBottomAbs - 5;
                 doorTopAbsMm = doorBottomAbsMm + doorHeightMm;
               } else if (isDoorLift) {
-                doorHeightMm = cabinetH + 5 + 30;
-                doorTopAbsMm = cabinetBottomAbs + cabinetH + 30;
-                doorBottomAbsMm = doorTopAbsMm - doorHeightMm;
+                doorHeightMm = cabinetH + doorTopGapVal + doorBottomGapVal;
+                doorTopAbsMm = cabinetBottomAbs + cabinetH + doorTopGapVal;
+                doorBottomAbsMm = cabinetBottomAbs - doorBottomGapVal;
               } else {
                 doorHeightMm = cabinetH + doorTopGapVal + doorBottomGapVal;
                 doorTopAbsMm = cabinetBottomAbs + cabinetH + doorTopGapVal;
@@ -2119,9 +2133,10 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
               const isDL = mod.moduleId.includes('lower-door-lift-') && !mod.moduleId.includes('-half-');
               const isTD = mod.moduleId.includes('lower-top-down-') && !mod.moduleId.includes('-half-');
               const modDefaultTopGap = isDL ? 30 : isTD ? -80 : -20;
-              // doorTopGap이 undefined/0(이전 버그)이면 모듈별 기본값 사용
-              const effectiveTopGap = (mod.doorTopGap === undefined || mod.doorTopGap === 0) ? modDefaultTopGap : mod.doorTopGap;
-              const effectiveBotGap = (mod.doorBottomGap === undefined || mod.doorBottomGap === 0) ? 5 : mod.doorBottomGap;
+              const effectiveTopGap = isTD && (mod.doorTopGap === undefined || mod.doorTopGap === 0)
+                ? modDefaultTopGap
+                : (mod.doorTopGap ?? modDefaultTopGap);
+              const effectiveBotGap = mod.doorBottomGap ?? 5;
               const lowerMaidas = computeLowerCabinetMaidaHeights(mod.moduleId, modHeightMm, effectiveTopGap, effectiveBotGap);
               if (lowerMaidas && lowerMaidas.length > 0) {
                 const cabinetBottomY = furnitureBaseY;
@@ -2576,9 +2591,9 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                 doorBottomAbsMm = cabinetBottomAbs - 5;
                 doorTopAbsMm = doorBottomAbsMm + doorHeightMm;
               } else if (isDoorLift) {
-                doorHeightMm = cabinetH + 5 + 30;
-                doorTopAbsMm = cabinetBottomAbs + cabinetH + 30;
-                doorBottomAbsMm = doorTopAbsMm - doorHeightMm;
+                doorHeightMm = cabinetH + doorTopGapVal + doorBottomGapVal;
+                doorTopAbsMm = cabinetBottomAbs + cabinetH + doorTopGapVal;
+                doorBottomAbsMm = cabinetBottomAbs - doorBottomGapVal;
               } else {
                 doorHeightMm = cabinetH + doorTopGapVal + doorBottomGapVal;
                 doorTopAbsMm = cabinetBottomAbs + cabinetH + doorTopGapVal;
@@ -3154,8 +3169,10 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
               const isDL_r = mod.moduleId.includes('lower-door-lift-') && !mod.moduleId.includes('-half-');
               const isTD_r = mod.moduleId.includes('lower-top-down-') && !mod.moduleId.includes('-half-');
               const modDefaultTopGap_r = isDL_r ? 30 : isTD_r ? -80 : -20;
-              const effectiveTopGap_r = (mod.doorTopGap === undefined || mod.doorTopGap === 0) ? modDefaultTopGap_r : mod.doorTopGap;
-              const effectiveBotGap_r = (mod.doorBottomGap === undefined || mod.doorBottomGap === 0) ? 5 : mod.doorBottomGap;
+              const effectiveTopGap_r = isTD_r && (mod.doorTopGap === undefined || mod.doorTopGap === 0)
+                ? modDefaultTopGap_r
+                : (mod.doorTopGap ?? modDefaultTopGap_r);
+              const effectiveBotGap_r = mod.doorBottomGap ?? 5;
               const lowerMaidas = computeLowerCabinetMaidaHeights(mod.moduleId, modHeightMm, effectiveTopGap_r, effectiveBotGap_r);
               if (lowerMaidas && lowerMaidas.length > 0) {
                 const cabinetBottomY_r = furnitureBaseY;
