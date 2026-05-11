@@ -727,6 +727,7 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
               isDragging={isDragging}
               isEditMode={isEditMode}
               moduleData={moduleData}
+              internalHeight={internalHeight}
               originalSlotWidth={originalSlotWidth}
               slotCenterX={slotCenterX || 0}
               slotIndex={slotIndex}

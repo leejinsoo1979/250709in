@@ -385,19 +385,19 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   // 도어 갭 변경 핸들러
   const handleDoorTopGapCommit = useCallback((value: string) => {
     const num = parseInt(value);
-    if (!isNaN(num) && num >= 0) {
+    if (!isNaN(num)) {
       updatePlacedModule(placedModule.id, { doorTopGap: num });
     } else {
-      setDoorTopGapInput((storeDoorTopGap ?? 5).toString());
+      setDoorTopGapInput((storeDoorTopGap ?? 0).toString());
     }
   }, [placedModule.id, storeDoorTopGap, updatePlacedModule]);
 
   const handleDoorBottomGapCommit = useCallback((value: string) => {
     const num = parseInt(value);
-    if (!isNaN(num) && num >= 0) {
+    if (!isNaN(num)) {
       updatePlacedModule(placedModule.id, { doorBottomGap: num });
     } else {
-      setDoorBottomGapInput((storeDoorBottomGap ?? 1.5).toString());
+      setDoorBottomGapInput((storeDoorBottomGap ?? 0).toString());
     }
   }, [placedModule.id, storeDoorBottomGap, updatePlacedModule]);
 
@@ -4288,12 +4288,12 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                     onKeyDown={(e) => {
                       if (e.key === 'Enter') handleDoorTopGapCommit(doorTopGapInput);
                       if (e.key === 'ArrowUp') {
-                        const v = Math.max(0, (parseInt(doorTopGapInput) || 0) + 1);
+                        const v = (parseInt(doorTopGapInput) || 0) + 1;
                         setDoorTopGapInput(v.toString());
                         updatePlacedModule(placedModule.id, { doorTopGap: v });
                       }
                       if (e.key === 'ArrowDown') {
-                        const v = Math.max(0, (parseInt(doorTopGapInput) || 0) - 1);
+                        const v = (parseInt(doorTopGapInput) || 0) - 1;
                         setDoorTopGapInput(v.toString());
                         updatePlacedModule(placedModule.id, { doorTopGap: v });
                       }
@@ -4319,12 +4319,12 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                     onKeyDown={(e) => {
                       if (e.key === 'Enter') handleDoorBottomGapCommit(doorBottomGapInput);
                       if (e.key === 'ArrowUp') {
-                        const v = Math.max(0, (parseInt(doorBottomGapInput) || 0) + 1);
+                        const v = (parseInt(doorBottomGapInput) || 0) + 1;
                         setDoorBottomGapInput(v.toString());
                         updatePlacedModule(placedModule.id, { doorBottomGap: v });
                       }
                       if (e.key === 'ArrowDown') {
-                        const v = Math.max(0, (parseInt(doorBottomGapInput) || 0) - 1);
+                        const v = (parseInt(doorBottomGapInput) || 0) - 1;
                         setDoorBottomGapInput(v.toString());
                         updatePlacedModule(placedModule.id, { doorBottomGap: v });
                       }

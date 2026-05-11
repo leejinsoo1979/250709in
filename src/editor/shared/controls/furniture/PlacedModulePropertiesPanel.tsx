@@ -1142,14 +1142,22 @@ const PlacedModulePropertiesPanel: React.FC = () => {
             : (moduleData.modelConfig?.sections || []);
           if (mcSections.length >= 2) {
             const pt = moduleData.modelConfig?.basicThickness || 18;
-            // moduleData는 zone 반영된 getModuleById로 조회되므로 dimensions.height에 단내림이 반영됨
-            const totalH = currentPlacedModule.freeHeight || moduleData.dimensions.height;
+            // moduleData는 zone 반영된 getModuleById로 조회되므로 dimensions.height에 단내림이 반영됨.
+            // 섹션별 높이 합은 팝업의 몸통치수 H와 같아야 한다.
+            const baseBodyHeightForSections = currentPlacedModule.freeHeight || moduleData.dimensions.height;
+            const absorbedTopForSections = currentPlacedModule.hasTopFrame === false
+              ? ((currentPlacedModule.topFrameThickness ?? spaceInfo.frameSize?.top ?? 30) - (currentPlacedModule.topFrameGap ?? 0))
+              : 0;
+            const absorbedBaseForSections = currentPlacedModule.hasBase === false
+              ? (((currentPlacedModule.baseFrameHeight ?? (spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height ?? 60) : 0)))
+                - (currentPlacedModule.individualFloatHeight ?? 0))
+              : 0;
+            const sectionBasisH = Math.max(0, baseBodyHeightForSections + absorbedTopForSections + absorbedBaseForSections);
             const totalD = currentPlacedModule.customDepth || currentPlacedModule.freeDepth || moduleData.dimensions.depth;
             const totalW = currentPlacedModule.freeWidth
               ?? currentPlacedModule.adjustedWidth
               ?? currentPlacedModule.customWidth
               ?? moduleData.dimensions.width;
-            const dimH = moduleData.dimensions.height; // 원래 모듈 높이
             // 신발장: 옛 데이터의 섹션 깊이가 moduleData.dimensions.depth(600)로 stale 저장된 경우 무시
             const _isShoeCat2 =
               currentPlacedModule.moduleId.includes('-entryway-') ||
@@ -1168,16 +1176,17 @@ const PlacedModulePropertiesPanel: React.FC = () => {
               const ht = sec.heightType || 'percentage';
               const isLast = i === mcSections.length - 1;
               let sH: number;
-              if (ht === 'absolute') {
-                if (isLast) {
-                  // 마지막 섹션: sec.height + freeHeight 차이 흡수
-                  const diff = totalH - dimH;
-                  sH = (sec.height || 0) + diff;
-                } else {
-                  sH = sec.height || 0;
-                }
+              if (isLast) {
+                const fixedSum = mcSections.slice(0, -1).reduce((acc: number, s: any) => {
+                  if ((s.heightType || 'percentage') === 'absolute') return acc + (s.height || 0);
+                  const r = (s.height || s.heightRatio || 50) / 100;
+                  return acc + Math.round(sectionBasisH * r);
+                }, 0);
+                sH = Math.max(0, sectionBasisH - fixedSum);
+              } else if (ht === 'absolute') {
+                sH = sec.height || 0;
               } else {
-                sH = Math.round(totalH * ((sec.height || sec.heightRatio || 50) / 100));
+                sH = Math.round(sectionBasisH * ((sec.height || sec.heightRatio || 50) / 100));
               }
               hInputs[i] = Math.round(sH).toString();
               if (i === 0) dInputs[i] = Math.round(_lowerSec2 ?? totalD).toString();
@@ -1874,7 +1883,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
 
     // 유효한 숫자면 즉시 반영
     const numValue = parseInt(value);
-    if (!isNaN(numValue) && numValue >= 0 && currentPlacedModule) {
+    if (!isNaN(numValue) && currentPlacedModule) {
       setDoorTopGap(numValue);
       updatePlacedModule(currentPlacedModule.id, { doorTopGap: numValue });
     }
@@ -1886,7 +1895,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
 
     // 유효한 숫자면 즉시 반영
     const numValue = parseInt(value);
-    if (!isNaN(numValue) && numValue >= 0 && currentPlacedModule) {
+    if (!isNaN(numValue) && currentPlacedModule) {
       setDoorBottomGap(numValue);
       updatePlacedModule(currentPlacedModule.id, { doorBottomGap: numValue });
     }
@@ -1894,7 +1903,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
 
   const handleDoorTopGapBlur = () => {
     const value = parseInt(doorTopGapInput);
-    if (!isNaN(value) && value >= 0 && currentPlacedModule) {
+    if (!isNaN(value) && currentPlacedModule) {
       setDoorTopGap(value);
       updatePlacedModule(currentPlacedModule.id, { doorTopGap: value });
     } else {
@@ -1905,7 +1914,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
 
   const handleDoorBottomGapBlur = () => {
     const value = parseInt(doorBottomGapInput);
-    if (!isNaN(value) && value >= 0 && currentPlacedModule) {
+    if (!isNaN(value) && currentPlacedModule) {
       setDoorBottomGap(value);
       updatePlacedModule(currentPlacedModule.id, { doorBottomGap: value });
     } else {
@@ -1917,7 +1926,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
   const handleDoorTopGapKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
       const value = parseInt(doorTopGapInput);
-      if (!isNaN(value) && value >= 0 && currentPlacedModule) {
+      if (!isNaN(value) && currentPlacedModule) {
         setDoorTopGap(value);
         updatePlacedModule(currentPlacedModule.id, { doorTopGap: value });
       }
@@ -1934,7 +1943,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
     } else if (e.key === 'ArrowDown') {
       e.preventDefault();
       const currentValue = parseInt(doorTopGapInput) || 0;
-      const newValue = Math.max(0, currentValue - 1);
+      const newValue = currentValue - 1;
       setDoorTopGapInput(newValue.toString());
       setDoorTopGap(newValue);
       if (currentPlacedModule) {
@@ -1946,7 +1955,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
   const handleDoorBottomGapKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
       const value = parseInt(doorBottomGapInput);
-      if (!isNaN(value) && value >= 0 && currentPlacedModule) {
+      if (!isNaN(value) && currentPlacedModule) {
         setDoorBottomGap(value);
         updatePlacedModule(currentPlacedModule.id, { doorBottomGap: value });
       }
@@ -1963,7 +1972,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
     } else if (e.key === 'ArrowDown') {
       e.preventDefault();
       const currentValue = parseInt(doorBottomGapInput) || 0;
-      const newValue = Math.max(0, currentValue - 1);
+      const newValue = currentValue - 1;
       setDoorBottomGapInput(newValue.toString());
       setDoorBottomGap(newValue);
       if (currentPlacedModule) {
@@ -3463,15 +3472,16 @@ const PlacedModulePropertiesPanel: React.FC = () => {
               ?? 600;
             const totalD = currentPlacedModule.customDepth || currentPlacedModule.freeDepth || moduleData?.dimensions?.depth || 580;
 
-            // 표준 가구의 섹션 높이: 마지막(상부) 섹션은 실제 공간에서 하부섹션/프레임 빼서 계산
-            const realTopFrame = currentPlacedModule.hasTopFrame === false
-              ? 0
-              : (currentPlacedModule.topFrameThickness ?? spaceInfo.frameSize?.top ?? 30);
-            const realBottomFrame = currentPlacedModule.hasBase === false
-              ? 0
-              : (currentPlacedModule.baseFrameHeight ?? (spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height ?? 60) : 0));
-            const realFloorFinish = spaceInfo.hasFloorFinish && spaceInfo.floorFinish?.height ? spaceInfo.floorFinish.height : 0;
-            const sectionBasisH = Math.max(0, spaceInfo.height - realTopFrame - realBottomFrame - realFloorFinish);
+            // 표준 가구의 섹션 높이: 마지막(상부) 섹션이 프레임 토글 흡수분을 먹되,
+            // 상/하부 섹션 합은 팝업의 몸통치수 H와 같아야 한다.
+            const absorbedTopForSections = currentPlacedModule.hasTopFrame === false
+              ? ((currentPlacedModule.topFrameThickness ?? spaceInfo.frameSize?.top ?? 30) - (currentPlacedModule.topFrameGap ?? 0))
+              : 0;
+            const absorbedBaseForSections = currentPlacedModule.hasBase === false
+              ? (((currentPlacedModule.baseFrameHeight ?? (spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height ?? 60) : 0)))
+                - (currentPlacedModule.individualFloatHeight ?? 0))
+              : 0;
+            const sectionBasisH = Math.max(0, totalH + absorbedTopForSections + absorbedBaseForSections);
 
             const getStdSectionHeightMM = (sIdx: number): number => {
               if (!mcSections || mcSections.length < 2) return totalH;
@@ -4227,11 +4237,8 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                   <button
                     onClick={() => {
                       const nextHasTopFrame = !topEnabled;
-                      // 상부몰딩 OFF → 가구가 천장에 붙음. 도어가 천장에 충돌 안 하도록 상단갭 -5
-                      // 상부몰딩 ON → 몰딩 아래 위치이므로 상단갭 0 (몸통 = 도어)
                       updatePlacedModule(mod.id, {
                         hasTopFrame: nextHasTopFrame,
-                        doorTopGap: nextHasTopFrame ? 0 : -5,
                         ...getUpperShelfGapSyncUpdates({ hasTopFrame: nextHasTopFrame }),
                       });
                       setSectionHeightInputs({}); // 흡수된 높이 재계산 위해 섹션 캐시 초기화
@@ -4367,11 +4374,8 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                           hasBase: nextHasBase,
                           ...(baseEnabled ? { individualFloatHeight: 0 } : {}),
                         };
-                        // 걸레받이 OFF → 가구가 바닥에 내려옴. 도어가 바닥에 충돌 안 하도록 하단갭 -5
-                        // 걸레받이 ON → 받침대 위에 위치이므로 하단갭 0 (몸통 = 도어)
                         updatePlacedModule(mod.id, {
                           ...nextFrameState,
-                          doorBottomGap: nextHasBase ? 0 : -5,
                           ...getUpperShelfGapSyncUpdates(nextFrameState),
                         });
                         setSectionHeightInputs({}); // 흡수된 높이 재계산 위해 섹션 캐시 초기화
@@ -4495,7 +4499,6 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                                 const nv = Math.max(0, Math.min(500, cur + (e.key === 'ArrowUp' ? 1 : -1)));
                                 updatePlacedModule(mod.id, {
                                   individualFloatHeight: nv,
-                                  doorBottomGap: nv,
                                   ...getUpperShelfGapSyncUpdates({ individualFloatHeight: nv }),
                                 });
                               } else if (e.key === 'Enter') {
@@ -4508,7 +4511,6 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                                 const nv = v === '' ? 0 : parseInt(v, 10);
                                 updatePlacedModule(mod.id, {
                                   individualFloatHeight: nv,
-                                  doorBottomGap: nv,
                                   ...getUpperShelfGapSyncUpdates({ individualFloatHeight: nv }),
                                 });
                               }
@@ -5647,7 +5649,8 @@ const PlacedModulePropertiesPanel: React.FC = () => {
           {!showDetails && currentPlacedModule && (
             currentPlacedModule.moduleId.includes('-shelf-') ||
             currentPlacedModule.moduleId.includes('-4drawer-shelf-') ||
-            currentPlacedModule.moduleId.includes('-2drawer-shelf-')
+            currentPlacedModule.moduleId.includes('-2drawer-shelf-') ||
+            currentPlacedModule.moduleId.includes('-entryway-')
           ) && (() => {
             const effectiveSections: SectionConfig[] = currentPlacedModule.customSections || moduleData.modelConfig?.sections || [];
             const basicThickness = moduleData.modelConfig?.basicThickness || 18;

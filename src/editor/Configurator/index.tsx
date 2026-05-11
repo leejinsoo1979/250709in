@@ -653,10 +653,9 @@ const Configurator: React.FC = () => {
       const isDL = mid.includes('lower-door-lift-') && !mid.includes('-half-');
       const isTD = mid.includes('lower-top-down-') && !mid.includes('-half-');
       const correctTopGap = isDL ? 30 : isTD ? -80 : -20;
-      // 잘못된 값 목록: undefined, 이전 버그로 저장된 0, 20, 1.5, 5, 33 등 (전체서라운드 전파 버그 포함)
-      // 하부장 올바른 값: 도어올림=30, 상판내림=-80, 나머지=-20 — 이 외의 양수값은 모두 잘못된 것
-      const badTopValues = [undefined, 0, 1.5, 5, 20, 33];
-      const badBotValues = [undefined, 0, 2, 25];
+      // undefined만 기본값으로 보정한다. 0/양수/음수는 사용자가 직접 입력한 유효한 도어 갭이다.
+      const badTopValues = [undefined];
+      const badBotValues = [undefined];
       const needsTopFix = badTopValues.includes(m.doorTopGap as undefined | number);
       const needsBotFix = badBotValues.includes(m.doorBottomGap as undefined | number);
       if (needsTopFix || needsBotFix) {
@@ -5552,7 +5551,6 @@ const Configurator: React.FC = () => {
             // 통합/해제 모두 개별행 ON 상태로 복구
             baseFreeMods.forEach(m => updatePlacedModule(m.id, {
               hasBase: true,
-              doorBottomGap: 25,
             }));
           };
           return (
@@ -5727,7 +5725,7 @@ const Configurator: React.FC = () => {
                         enabled={true}
                         sizeMM={firstBase.baseFrameHeight ?? globalBaseLocal}
                         offset={firstBase.baseFrameOffset ?? (isLowerFirst ? 65 : 0)}
-                        onToggle={() => baseFreeMods.forEach(m => updatePlacedModule(m.id, { hasBase: false, individualFloatHeight: 0, doorBottomGap: -5 }))}
+                        onToggle={() => baseFreeMods.forEach(m => updatePlacedModule(m.id, { hasBase: false, individualFloatHeight: 0 }))}
                         onSizeChange={(v) => baseFreeMods.forEach(m => updatePlacedModule(m.id, { baseFrameHeight: Math.max(0, v) }))}
                         onOffsetChange={(v) => baseFreeMods.forEach(m => updatePlacedModule(m.id, { baseFrameOffset: v }))}
                         highlightKey="base-all-free"
@@ -5740,7 +5738,7 @@ const Configurator: React.FC = () => {
                       <div style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '3px 0' }}>
                         <span className={styles.frameItemLabel} style={{ minWidth: '34px', textAlign: 'left', margin: 0 }}>전체</span>
                         <button
-                          onClick={() => baseFreeMods.forEach(m => updatePlacedModule(m.id, { hasBase: true, doorBottomGap: 25 }))}
+                          onClick={() => baseFreeMods.forEach(m => updatePlacedModule(m.id, { hasBase: true }))}
                           className={styles.miniToggle}
                         />
                         <div style={{ display: 'flex', flex: 1, gap: '4px' }}>
@@ -5753,11 +5751,11 @@ const Configurator: React.FC = () => {
                                 if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
                                   e.preventDefault();
                                   const nv = Math.max(0, Math.min(500, currentFloat + (e.key === 'ArrowUp' ? 1 : -1)));
-                                  baseFreeMods.forEach(m => updatePlacedModule(m.id, { individualFloatHeight: nv, doorBottomGap: nv }));
+                                  baseFreeMods.forEach(m => updatePlacedModule(m.id, { individualFloatHeight: nv }));
                                 }
                               }}
-                              onChange={(e) => { const v = e.target.value; if (v === '' || /^\d+$/.test(v)) { const nv = v === '' ? 0 : parseInt(v, 10); baseFreeMods.forEach(m => updatePlacedModule(m.id, { individualFloatHeight: nv, doorBottomGap: nv })); } }}
-                              onBlur={(e) => { const nv = Math.max(0, Math.min(500, parseInt(e.target.value) || 0)); baseFreeMods.forEach(m => updatePlacedModule(m.id, { individualFloatHeight: nv, doorBottomGap: nv })); }}
+                              onChange={(e) => { const v = e.target.value; if (v === '' || /^\d+$/.test(v)) { const nv = v === '' ? 0 : parseInt(v, 10); baseFreeMods.forEach(m => updatePlacedModule(m.id, { individualFloatHeight: nv })); } }}
+                              onBlur={(e) => { const nv = Math.max(0, Math.min(500, parseInt(e.target.value) || 0)); baseFreeMods.forEach(m => updatePlacedModule(m.id, { individualFloatHeight: nv })); }}
                               className={styles.frameNumberInput}
                             />
                           </div>
@@ -5777,13 +5775,9 @@ const Configurator: React.FC = () => {
                       <span className={styles.frameItemLabel} style={{ minWidth: '34px', textAlign: 'left', margin: 0 }}>{toAlpha(bn)}(하)</span>
                       <button
                         onClick={() => {
-                          const isBasicLower = mod.moduleId?.includes('lower-half-cabinet') || mod.moduleId?.includes('dual-lower-half-cabinet') || mod.moduleId?.includes('lower-drawer-') || mod.moduleId?.includes('dual-lower-drawer-') || mod.moduleId?.includes('lower-sink-cabinet') || mod.moduleId?.includes('dual-lower-sink-cabinet');
-                          const isDoorLift = mod.moduleId?.includes('lower-door-lift-');
-                          const isTopDown = mod.moduleId?.includes('lower-top-down-');
-                          const defaultBottomGap = (isBasicLower || isDoorLift || isTopDown) ? 5 : 2;
                           updatePlacedModule(mod.id, {
                             hasBase: !freeBaseEnabled,
-                            ...(freeBaseEnabled ? { individualFloatHeight: 0, doorBottomGap: -5 } : { doorBottomGap: defaultBottomGap }),
+                            ...(freeBaseEnabled ? { individualFloatHeight: 0 } : {}),
                           });
                         }}
                         className={`${styles.miniToggle} ${freeBaseEnabled ? styles.miniToggleActive : ''}`}
@@ -5957,13 +5951,9 @@ const Configurator: React.FC = () => {
                 <span className={styles.frameItemLabel} style={{ minWidth: '34px', textAlign: 'left', margin: 0 }}>{label}</span>
                 <button
                   onClick={() => {
-                    const isBasicLower = mod.moduleId?.includes('lower-half-cabinet') || mod.moduleId?.includes('dual-lower-half-cabinet') || mod.moduleId?.includes('lower-drawer-') || mod.moduleId?.includes('dual-lower-drawer-') || mod.moduleId?.includes('lower-sink-cabinet') || mod.moduleId?.includes('dual-lower-sink-cabinet');
-                    const isDoorLift = mod.moduleId?.includes('lower-door-lift-');
-                    const isTopDown = mod.moduleId?.includes('lower-top-down-');
-                    const defaultBottomGap = (isBasicLower || isDoorLift || isTopDown) ? 5 : 2;
                     updatePlacedModule(mod.id, {
                       hasBase: !enabled,
-                      ...(enabled ? { individualFloatHeight: 0, doorBottomGap: -5 } : { doorBottomGap: defaultBottomGap }),
+                      ...(enabled ? { individualFloatHeight: 0 } : {}),
                     });
                   }}
                   className={`${styles.miniToggle} ${enabled ? styles.miniToggleActive : ''}`}
@@ -6174,14 +6164,9 @@ const Configurator: React.FC = () => {
                         () => {
                           const newVal = !allEnabled;
                           group.moduleIds.forEach(id => {
-                            const targetMod = groupMods.find(m => m.id === id);
-                            const isBasicLower = targetMod?.moduleId?.includes('lower-half-cabinet') || targetMod?.moduleId?.includes('dual-lower-half-cabinet') || targetMod?.moduleId?.includes('lower-drawer-') || targetMod?.moduleId?.includes('dual-lower-drawer-') || targetMod?.moduleId?.includes('lower-sink-cabinet') || targetMod?.moduleId?.includes('dual-lower-sink-cabinet');
-                            const isDoorLift = targetMod?.moduleId?.includes('lower-door-lift-');
-                            const isTopDown = targetMod?.moduleId?.includes('lower-top-down-');
-                            const defaultBottomGap = (isBasicLower || isDoorLift || isTopDown) ? 5 : 2;
                             updatePlacedModule(id, {
                               hasBase: newVal,
-                              ...(newVal ? { doorBottomGap: defaultBottomGap } : { individualFloatHeight: 0, doorBottomGap: -5 }),
+                              ...(newVal ? {} : { individualFloatHeight: 0 }),
                             });
                           });
                         },
@@ -6218,7 +6203,6 @@ const Configurator: React.FC = () => {
             // 통합모드 진입/해제 모두 개별행 ON 상태로 복구
             baseSortedMods.forEach(m => updatePlacedModule(m.id, {
               hasBase: true,
-              doorBottomGap: 25,
             }));
           };
           return (
@@ -6399,7 +6383,6 @@ const Configurator: React.FC = () => {
                                   // 하부 ON 복귀 (상단몰딩 건드리지 않음)
                                   baseSortedMods.forEach(m => updatePlacedModule(m.id, {
                                     hasBase: true,
-                                    doorBottomGap: 25,
                                   }));
                                 }}
                                 className={styles.miniToggle}
@@ -6415,19 +6398,19 @@ const Configurator: React.FC = () => {
                                         e.preventDefault();
                                         const cur = first.individualFloatHeight ?? 0;
                                         const next = Math.max(0, Math.min(500, cur + (e.key === 'ArrowUp' ? 1 : -1)));
-                                        baseSortedMods.forEach(m => updatePlacedModule(m.id, { individualFloatHeight: next, doorBottomGap: next }));
+                                        baseSortedMods.forEach(m => updatePlacedModule(m.id, { individualFloatHeight: next }));
                                       }
                                     }}
                                     onChange={(e) => {
                                       const v = e.target.value;
                                       if (v === '' || /^\d+$/.test(v)) {
                                         const num = v === '' ? 0 : parseInt(v, 10);
-                                        baseSortedMods.forEach(m => updatePlacedModule(m.id, { individualFloatHeight: num, doorBottomGap: num }));
+                                        baseSortedMods.forEach(m => updatePlacedModule(m.id, { individualFloatHeight: num }));
                                       }
                                     }}
                                     onBlur={(e) => {
                                       const num = Math.max(0, Math.min(500, parseInt(e.target.value) || 0));
-                                      baseSortedMods.forEach(m => updatePlacedModule(m.id, { individualFloatHeight: num, doorBottomGap: num }));
+                                      baseSortedMods.forEach(m => updatePlacedModule(m.id, { individualFloatHeight: num }));
                                     }}
                                     className={styles.frameNumberInput}
                                   />

@@ -101,8 +101,8 @@ export const resolveDoorLeafDimensions = (
 
   let leafHeightMm: number
 
-  if (spaceHeightMm && isTallCabinet) {
-    leafHeightMm = spaceHeightMm - (doorTopGapMm ?? 5) - (doorBottomGapMm ?? 25)
+  if (isTallCabinet) {
+    leafHeightMm = cabinetHeightMm + (doorTopGapMm ?? 0) + (doorBottomGapMm ?? 0)
   } else if (isUpperCabinet) {
     leafHeightMm = cabinetHeightMm - 5 + 28
   } else if (isLowerCabinet) {
@@ -198,8 +198,8 @@ export const resolveDoorVerticalGeometry = (
       topMm = bottomMm + leafDimensions.leafHeightMm
     }
   } else {
-    topMm = (spaceHeightMm ?? cabinetBottomMm + leafDimensions.leafHeightMm + doorTopGap) - doorTopGap
-    bottomMm = topMm - leafDimensions.leafHeightMm
+    bottomMm = cabinetBottomMm - (doorBottomGapMm ?? 0)
+    topMm = cabinetBottomMm + cabinetHeightMm + (doorTopGapMm ?? 0)
   }
 
   return {

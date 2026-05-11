@@ -131,6 +131,7 @@ const DualType1: React.FC<FurnitureTypeProps> = ({
         color={baseFurniture.doorColor}
         doorXOffset={0}
         moduleData={moduleData}
+        internalHeight={internalHeight}
         originalSlotWidth={originalSlotWidth}
         slotCenterX={slotCenterX}
         slotWidths={slotWidths}

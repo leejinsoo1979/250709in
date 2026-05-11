@@ -1313,6 +1313,7 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
           spaceInfo={spaceInfo}
           color={baseFurniture.doorColor}
           moduleData={moduleData} // 실제 듀얼캐비넷 분할 정보
+          internalHeight={internalHeight}
           originalSlotWidth={originalSlotWidth}
           slotCenterX={slotCenterX} // FurnitureItem에서 전달받은 보정값 사용
           slotWidths={slotWidths} // 듀얼 가구의 개별 슬롯 너비들

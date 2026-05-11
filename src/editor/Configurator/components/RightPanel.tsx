@@ -1397,7 +1397,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
                   const newVal = !allBaseOnMerge;
                   slotMods.forEach(m => updatePlacedModule(m.id, {
                     hasBase: newVal,
-                    ...(newVal ? { doorBottomGap: 25 } : { individualFloatHeight: 0 }),
+                    ...(newVal ? {} : { individualFloatHeight: 0 }),
                   }));
                 };
 
@@ -1477,7 +1477,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
                                 const newVal = !allEnabled;
                                 group.moduleIds.forEach(id => updatePlacedModule(id, {
                                   hasBase: newVal,
-                                  ...(newVal ? { doorBottomGap: 25 } : { individualFloatHeight: 0 }),
+                                  ...(newVal ? {} : { individualFloatHeight: 0 }),
                                 }));
                               }}
                               onHeightChange={(v) => {
@@ -1514,10 +1514,9 @@ const RightPanel: React.FC<RightPanelProps> = ({
                 const next = !baseFrameAllMode;
                 setBaseFrameAllMode(next);
                 // 통합모드 진입/해제 모두 개별행 ON 상태로 복구
-                sorted.forEach(m => updatePlacedModule(m.id, {
-                  hasBase: true,
-                  doorBottomGap: 25,
-                }));
+              sorted.forEach(m => updatePlacedModule(m.id, {
+                hasBase: true,
+              }));
               };
               return (
                 <>
@@ -1612,7 +1611,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
                             hasBase: !baseEnabled,
                             ...( baseEnabled
                               ? { individualFloatHeight: 0 }  // OFF: 띄움높이 초기화
-                              : { doorBottomGap: 25 }),  // ON: 하단갭 25mm로 복원
+                              : {}),
                           })}
                           style={{
                             width: '36px', height: '20px', borderRadius: '10px', border: 'none', cursor: 'pointer',

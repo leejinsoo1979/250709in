@@ -248,7 +248,7 @@ describe('doorGeometryCalculator', () => {
     expect(result.leafHeightMm).toBe(740)
   })
 
-  it('키큰장 도어 높이는 공간 높이에서 상하 갭을 뺀다', () => {
+  it('키큰장 도어 높이는 몸통 높이에 상하 갭을 더한다', () => {
     const result = resolveDoorLeafDimensions({
       moduleId: 'single-shelf-cabinet',
       cabinetCategory: 'full',
@@ -259,7 +259,7 @@ describe('doorGeometryCalculator', () => {
       doorBottomGapMm: 25
     })
 
-    expect(result.leafHeightMm).toBe(2370)
+    expect(result.leafHeightMm).toBe(2130)
   })
 
   it('듀얼 도어는 전체 폭을 합산하지 않고 좌우 leaf 폭을 따로 계산한다', () => {
@@ -323,7 +323,7 @@ describe('doorGeometryCalculator', () => {
     expect(result.centerYMm).toBe(1991)
   })
 
-  it('키큰장 도어 세로 위치는 공간 상단 기준 top gap과 leaf 높이를 유지한다', () => {
+  it('키큰장 도어 세로 위치는 몸통 기준 상하 갭을 유지한다', () => {
     const result = resolveDoorVerticalGeometry({
       moduleId: 'single-shelf-cabinet',
       cabinetCategory: 'full',
@@ -334,9 +334,9 @@ describe('doorGeometryCalculator', () => {
       doorBottomGapMm: 25
     })
 
-    expect(result.leafHeightMm).toBe(2370)
-    expect(result.bottomMm).toBe(25)
-    expect(result.topMm).toBe(2395)
-    expect(result.centerYMm).toBe(1210)
+    expect(result.leafHeightMm).toBe(2130)
+    expect(result.bottomMm).toBe(-25)
+    expect(result.topMm).toBe(2105)
+    expect(result.centerYMm).toBe(1040)
   })
 })
