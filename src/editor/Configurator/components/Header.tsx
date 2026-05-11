@@ -120,7 +120,7 @@ const MobileLayoutToggle: React.FC = () => {
     if (spaceInfo.surroundType === 'no-surround') {
       const wc = spaceInfo.wallConfig || { left: true, right: true };
       // 사용자가 설정한 이격값 보존, 없을 때만 기본값 사용
-      const existingGap = spaceInfo.gapConfig || {};
+      const existingGap: any = spaceInfo.gapConfig || {};
       updates.gapConfig = {
         left: wc.left ? (existingGap.left ?? 1.5) : 0,
         right: wc.right ? (existingGap.right ?? 1.5) : 0,
