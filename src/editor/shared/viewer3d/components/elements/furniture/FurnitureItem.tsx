@@ -1013,7 +1013,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     }
   }
 
-  // freeHeight가 있으면 moduleData.dimensions.height 오버라이드
+  // 높이 직접 입력이 있으면 moduleData.dimensions.height 오버라이드
   // (커스텀/커스터마이징 가구는 이미 위에서 처리됨, 여기는 표준 모듈용)
   // 슬롯 배치/자유배치 모두 적용 — 사용자가 높이를 수동 변경한 경우
   const isStaleUpperTotalHeight = (value?: number) => {
@@ -1027,14 +1027,26 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       || rounded === Math.round(moduleData.dimensions.height + 65);
   };
 
-  if (moduleData && placedModule.freeHeight
-      && !isStaleUpperTotalHeight(placedModule.freeHeight)
+  const validUpperCustomHeight = moduleData?.category === 'upper'
+    && placedModule.customHeight
+    && !isStaleUpperTotalHeight(placedModule.customHeight)
+    ? placedModule.customHeight
+    : undefined;
+  const validFreeHeight = placedModule.freeHeight
+    && !isStaleUpperTotalHeight(placedModule.freeHeight)
+    ? placedModule.freeHeight
+    : undefined;
+  const directModuleHeight = moduleData?.category === 'upper'
+    ? (validUpperCustomHeight ?? validFreeHeight)
+    : validFreeHeight;
+
+  if (moduleData && directModuleHeight
       && !isCustomFurniture && !isCustomizableModuleId(placedModule.moduleId)) {
     moduleData = {
       ...moduleData,
       dimensions: {
         ...moduleData.dimensions,
-        height: placedModule.freeHeight,
+        height: directModuleHeight,
       },
     };
   }
@@ -1360,10 +1372,10 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       // 상부장은 상단몰딩 하단에 붙어야 함
       // 자유배치 모드에서는 사용자 지정 높이를 우선 사용
       // 미드웨이 편집: customHeight가 있으면 상단 고정, 하단 확장
-      const upperCabinetHeight = (placedModule.isFreePlacement && placedModule.freeHeight && !autoDroppedUpperHeight.freeHeight && !isStaleUpperTotalHeight(placedModule.freeHeight))
-        ? placedModule.freeHeight
-        : (placedModule.customHeight && !autoDroppedUpperHeight.customHeight && !isStaleUpperTotalHeight(placedModule.customHeight)
-          ? placedModule.customHeight
+      const upperCabinetHeight = (placedModule.customHeight && !autoDroppedUpperHeight.customHeight && !isStaleUpperTotalHeight(placedModule.customHeight))
+        ? placedModule.customHeight
+        : (placedModule.isFreePlacement && placedModule.freeHeight && !autoDroppedUpperHeight.freeHeight && !isStaleUpperTotalHeight(placedModule.freeHeight)
+          ? placedModule.freeHeight
           : (actualModuleData?.dimensions.height || 0)); // 상부장 높이
 
       // 띄워서 배치 모드와 관계없이 상부장은 항상 상단몰딩 하단에 붙어야 함
@@ -1428,6 +1440,8 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       const floatH = placedModule.individualFloatHeight ?? 0;
       furnitureHeightMm += (absorbedBase - floatH);
     }
+  } else if (isUpperCabinetForY && placedModule.customHeight && !autoDroppedUpperHeight.customHeight && !isStaleUpperTotalHeight(placedModule.customHeight)) {
+    furnitureHeightMm = placedModule.customHeight;
   } else if (placedModule.isFreePlacement && placedModule.freeHeight && !(isUpperCabinetForY && (autoDroppedUpperHeight.freeHeight || isStaleUpperTotalHeight(placedModule.freeHeight)))) {
     furnitureHeightMm = placedModule.freeHeight;
   } else {
@@ -3695,9 +3709,10 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                 : '';
               // removeUpperSafetyShelf 토글 변경 시에도 BoxModule 리마운트 (편집 중 고스트 실시간 반영)
               const removeUpperSafetyShelfKey = placedModule.removeUpperSafetyShelf ? '1' : '0';
+              const furnitureHeightKey = Math.round(furnitureHeightMm || 0);
               return (
                 <BoxModule
-                  key={`boxmodule-${placedModule.id}-${customSectionsKey}-rus${removeUpperSafetyShelfKey}`}
+                  key={`boxmodule-${placedModule.id}-h${furnitureHeightKey}-${customSectionsKey}-rus${removeUpperSafetyShelfKey}`}
                   moduleData={actualModuleData}
                   isDragging={isDraggingThis} // 드래그 중에만 고스트 투명 표시 (내부 선반/서랍 숨김)
                   isEditMode={isEditModeForView} // 편집 모드 고스트: 측면/상면뷰에서는 숨김

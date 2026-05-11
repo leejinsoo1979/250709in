@@ -7351,11 +7351,11 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   if (doorCategory === 'upper') {
                     // 상부장 도어 (몸통 기준, EP와 동일)
                     // doorHeight = 몸통H + 상단갭 + 하단갭
-                    // 몸통 위치: 천장 - 상부몰딩 (또는 freeHeight 사용)
+                    // 몸통 H는 팝업 H와 동일해야 함: freeHeight > customHeight > 모듈 정의의 base 높이 (785 등)
+                    // doorModData.dimensions.height는 zone/maxHeight 영향으로 바뀔 수 있어 사용 안 함
                     const cabinetH = doorModule.freeHeight
                       ?? doorModule.customHeight
-                      ?? doorModData?.dimensions.height
-                      ?? 600;
+                      ?? 785; // 상부장 표준 높이
                     const topFrameVal = doorModule.topFrameThickness ?? (spaceInfo.frameSize?.top ?? 30);
                     const cabinetTopAbs = effectiveH - topFrameVal;
                     const cabinetBottomAbs = cabinetTopAbs - cabinetH;
