@@ -1054,9 +1054,18 @@ const PlacedModulePropertiesPanel: React.FC = () => {
         setFreeWidthInput((() => { const v = Math.round(slotModeWidth * 10) / 10; return v % 1 === 0 ? v.toString() : v.toFixed(1); })());
         // 2단서랍장: cabinetBodyHeight 우선, 그 외: freeHeight → moduleData.dimensions.height
         const is2TierDrawer = currentPlacedModule.moduleId.includes('lower-drawer-2tier') || currentPlacedModule.moduleId.includes('dual-lower-drawer-2tier');
-        const effectiveHeight = is2TierDrawer && currentPlacedModule.cabinetBodyHeight
+        const baseHeight = is2TierDrawer && currentPlacedModule.cabinetBodyHeight
           ? currentPlacedModule.cabinetBodyHeight
           : (currentPlacedModule.freeHeight || moduleData.dimensions.height);
+        // 상부몰딩/걸레받이 OFF로 흡수된 높이 더해서 표시 (실제 가구 높이)
+        const absorbedTopForH = currentPlacedModule.hasTopFrame === false
+          ? ((currentPlacedModule.topFrameThickness ?? spaceInfo.frameSize?.top ?? 30) - (currentPlacedModule.topFrameGap ?? 0))
+          : 0;
+        const absorbedBaseForH = currentPlacedModule.hasBase === false
+          ? (((currentPlacedModule.baseFrameHeight ?? (spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height ?? 60) : 0)))
+            - (currentPlacedModule.individualFloatHeight ?? 0))
+          : 0;
+        const effectiveHeight = baseHeight + absorbedTopForH + absorbedBaseForH;
         setFreeHeightInput(Math.round(effectiveHeight).toString());
         setFreeDepthInput(Math.round(currentPlacedModule.freeDepth || initialDepth).toString());
 
@@ -1382,7 +1391,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
         }
       }
     }
-  }, [currentPlacedModule?.id, moduleData?.id, currentPlacedModule?.customDepth, currentPlacedModule?.customWidth, currentPlacedModule?.adjustedWidth, currentPlacedModule?.hasDoor, currentPlacedModule?.doorTopGap, currentPlacedModule?.doorBottomGap, moduleDefaultLowerTopOffset, currentPlacedModule?.customSections]); // customSections 변경 시 즉시 반영
+  }, [currentPlacedModule?.id, moduleData?.id, currentPlacedModule?.customDepth, currentPlacedModule?.customWidth, currentPlacedModule?.adjustedWidth, currentPlacedModule?.hasDoor, currentPlacedModule?.doorTopGap, currentPlacedModule?.doorBottomGap, moduleDefaultLowerTopOffset, currentPlacedModule?.customSections, currentPlacedModule?.hasTopFrame, currentPlacedModule?.hasBase, currentPlacedModule?.topFrameThickness, currentPlacedModule?.topFrameGap, currentPlacedModule?.baseFrameHeight, currentPlacedModule?.individualFloatHeight]); // 토글 변경 시 흡수된 높이 재계산
 
   // 도어 상하갭은 바닥/천장 기준 (받침대/띄움 무관)
   // 배치 타입 변경 시 갭값을 자동으로 바꾸지 않음 — 사용자가 도어갭에서 직접 조정
@@ -2990,8 +2999,17 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                       readOnly={!!(currentPlacedModule && (currentPlacedModule.moduleId.includes('lower-drawer-2tier') || currentPlacedModule.moduleId.includes('dual-lower-drawer-2tier')))}
                       onChange={(e) => setFreeHeightInput(e.target.value)}
                       onBlur={() => {
-                        const val = parseInt(freeHeightInput, 10);
-                        if (!isNaN(val) && val >= 100 && val <= 3000 && currentPlacedModule) {
+                        const displayVal = parseInt(freeHeightInput, 10);
+                        if (!isNaN(displayVal) && displayVal >= 100 && displayVal <= 3000 && currentPlacedModule) {
+                          // 표시값(늘어난 값) → freeHeight(원본값): 흡수분 차감
+                          const absT = currentPlacedModule.hasTopFrame === false
+                            ? ((currentPlacedModule.topFrameThickness ?? spaceInfo.frameSize?.top ?? 30) - (currentPlacedModule.topFrameGap ?? 0))
+                            : 0;
+                          const absB = currentPlacedModule.hasBase === false
+                            ? (((currentPlacedModule.baseFrameHeight ?? (spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height ?? 60) : 0)))
+                              - (currentPlacedModule.individualFloatHeight ?? 0))
+                            : 0;
+                          const val = displayVal - absT - absB;
                           const updates: any = { freeHeight: val };
                           // 키큰장(full): 가구 높이 줄이면 상단몰딩이 늘어나야 함
                           if (moduleData.category === 'full') {
@@ -3007,7 +3025,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                             }
                           }
                           updatePlacedModule(currentPlacedModule.id, updates);
-                          setFreeHeightInput(val.toString());
+                          setFreeHeightInput(displayVal.toString()); // 표시는 사용자 입력값(흡수분 포함) 그대로 유지
                           setSectionHeightInputs({}); // 섹션 높이 캐시 초기화 → 재계산
                           const store = useFurnitureStore.getState();
                           const dims = {
@@ -3047,9 +3065,18 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                         else if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
                           e.preventDefault();
                           const cur = parseInt(freeHeightInput, 10) || (currentPlacedModule?.freeHeight || moduleData.dimensions.height);
-                          const next = Math.max(100, Math.min(3000, cur + (e.key === 'ArrowUp' ? 1 : -1)));
-                          setFreeHeightInput(next.toString());
+                          const nextDisplay = Math.max(100, Math.min(3000, cur + (e.key === 'ArrowUp' ? 1 : -1)));
+                          setFreeHeightInput(nextDisplay.toString());
                           if (currentPlacedModule) {
+                            // 표시값 → freeHeight 변환 (흡수분 차감)
+                            const absT = currentPlacedModule.hasTopFrame === false
+                              ? ((currentPlacedModule.topFrameThickness ?? spaceInfo.frameSize?.top ?? 30) - (currentPlacedModule.topFrameGap ?? 0))
+                              : 0;
+                            const absB = currentPlacedModule.hasBase === false
+                              ? (((currentPlacedModule.baseFrameHeight ?? (spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height ?? 60) : 0)))
+                                - (currentPlacedModule.individualFloatHeight ?? 0))
+                              : 0;
+                            const next = nextDisplay - absT - absB;
                             const arrowUpdates: any = { freeHeight: next };
                             if (moduleData.category === 'full') {
                               const iSpace = calculateInternalSpace(spaceInfo);
@@ -4193,6 +4220,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                         doorTopGap: nextHasTopFrame ? 0 : -5,
                         ...getUpperShelfGapSyncUpdates({ hasTopFrame: nextHasTopFrame }),
                       });
+                      setSectionHeightInputs({}); // 흡수된 높이 재계산 위해 섹션 캐시 초기화
                     }}
                     style={toggleStyle(topEnabled)}
                   >
@@ -4332,6 +4360,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                           doorBottomGap: nextHasBase ? 0 : -5,
                           ...getUpperShelfGapSyncUpdates(nextFrameState),
                         });
+                        setSectionHeightInputs({}); // 흡수된 높이 재계산 위해 섹션 캐시 초기화
                       }}
                       style={toggleStyle(baseEnabled)}
                     >
