@@ -3282,7 +3282,16 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                       onChange={(e) => setFreeHeightInput(e.target.value)}
                       onBlur={() => {
                         const displayVal = parseInt(freeHeightInput, 10);
-                        const maxHeightInput = moduleData.category === 'upper' ? Math.round(spaceInfo.height) : 3000;
+                        const maxHeightInput = (() => {
+                          if (moduleData.category === 'upper') return Math.round(spaceInfo.height);
+                          // 유리장: 띄움배치 (천장 - 상부몰딩 - 띄움높이)
+                          if (currentPlacedModule?.moduleId?.includes('glass-cabinet')) {
+                            const topFrame = currentPlacedModule.topFrameThickness ?? spaceInfo.frameSize?.top ?? 30;
+                            const floatH = currentPlacedModule.individualFloatHeight ?? 200;
+                            return Math.round(spaceInfo.height - topFrame - floatH);
+                          }
+                          return 3000;
+                        })();
                         if (!isNaN(displayVal) && displayVal >= 100 && displayVal <= maxHeightInput && currentPlacedModule) {
                           // 표시값(늘어난 값) → freeHeight(원본값): 흡수분 차감
                           const shouldAbsorbTopForBodyH = moduleData.category === 'full';
@@ -3352,7 +3361,16 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                           e.preventDefault();
                           // Enter 시 직접 저장 처리 (blur 시점에 팝업이 닫히면 onBlur가 실행 안 될 수 있음)
                           const displayVal = parseInt(freeHeightInput, 10);
-                          const maxHeightInput = moduleData.category === 'upper' ? Math.round(spaceInfo.height) : 3000;
+                          const maxHeightInput = (() => {
+                          if (moduleData.category === 'upper') return Math.round(spaceInfo.height);
+                          // 유리장: 띄움배치 (천장 - 상부몰딩 - 띄움높이)
+                          if (currentPlacedModule?.moduleId?.includes('glass-cabinet')) {
+                            const topFrame = currentPlacedModule.topFrameThickness ?? spaceInfo.frameSize?.top ?? 30;
+                            const floatH = currentPlacedModule.individualFloatHeight ?? 200;
+                            return Math.round(spaceInfo.height - topFrame - floatH);
+                          }
+                          return 3000;
+                        })();
                           if (!isNaN(displayVal) && displayVal >= 100 && displayVal <= maxHeightInput && currentPlacedModule) {
                             const shouldAbsorbTopForBodyH = moduleData.category === 'full';
                             const absT = shouldAbsorbTopForBodyH && currentPlacedModule.hasTopFrame === false
@@ -3382,7 +3400,16 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                         else if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
                           e.preventDefault();
                           const cur = parseInt(freeHeightInput, 10) || placedBodyHeight || moduleData.dimensions.height;
-                          const maxHeightInput = moduleData.category === 'upper' ? Math.round(spaceInfo.height) : 3000;
+                          const maxHeightInput = (() => {
+                          if (moduleData.category === 'upper') return Math.round(spaceInfo.height);
+                          // 유리장: 띄움배치 (천장 - 상부몰딩 - 띄움높이)
+                          if (currentPlacedModule?.moduleId?.includes('glass-cabinet')) {
+                            const topFrame = currentPlacedModule.topFrameThickness ?? spaceInfo.frameSize?.top ?? 30;
+                            const floatH = currentPlacedModule.individualFloatHeight ?? 200;
+                            return Math.round(spaceInfo.height - topFrame - floatH);
+                          }
+                          return 3000;
+                        })();
                           const nextDisplay = Math.max(100, Math.min(maxHeightInput, cur + (e.key === 'ArrowUp' ? 1 : -1)));
                           setFreeHeightInput(nextDisplay.toString());
                           if (currentPlacedModule) {

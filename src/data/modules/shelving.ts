@@ -1024,13 +1024,16 @@ const buildGlassCabinetSections = (): SectionConfig[] => {
   ];
 };
 
-const createSingleGlassCabinet = (columnWidth: number): ModuleData => {
+const createSingleGlassCabinet = (columnWidth: number, maxHeight?: number): ModuleData => {
   const widthForId = Math.round(columnWidth * 100) / 100;
+  // 공간 높이에 맞춰 유리장 H 동적 계산 (maxHeight = 내경 높이 = 천장 - 상부몰딩 - 바닥마감)
+  // 띄움 200mm 위에서 천장-상부몰딩까지: H = maxHeight - 띄움200
+  const glassHeight = maxHeight ? Math.max(0, maxHeight - GLASS_CABINET_FLOAT) : GLASS_CABINET_HEIGHT;
   const base = createFurnitureBase(
     `single-glass-cabinet-${widthForId}`,
     `유리장 ${widthForId}mm`,
     columnWidth,
-    GLASS_CABINET_HEIGHT,
+    glassHeight,
     GLASS_CABINET_DEPTH,
     '#90A4AE',
     `유리장 (띄움 ${GLASS_CABINET_FLOAT}mm · 다보선반 2 + 서랍 2단 + 하부오픈)`,
@@ -1053,14 +1056,16 @@ const createSingleGlassCabinet = (columnWidth: number): ModuleData => {
 
 const createDualGlassCabinet = (
   dualColumnWidth: number,
-  slotWidths?: number[]
+  slotWidths?: number[],
+  maxHeight?: number
 ): ModuleData => {
   const widthForId = Math.round(dualColumnWidth * 100) / 100;
+  const glassHeight = maxHeight ? Math.max(0, maxHeight - GLASS_CABINET_FLOAT) : GLASS_CABINET_HEIGHT;
   const base = createFurnitureBase(
     `dual-glass-cabinet-${widthForId}`,
     `유리장 ${widthForId}mm`,
     dualColumnWidth,
-    GLASS_CABINET_HEIGHT,
+    glassHeight,
     GLASS_CABINET_DEPTH,
     '#90A4AE',
     `듀얼 유리장 (띄움 ${GLASS_CABINET_FLOAT}mm · 다보선반 2 + 서랍 2단 + 하부오픈)`,
@@ -3415,7 +3420,7 @@ export const generateShelvingModules = (
   modules.push(createSingle4DrawerShelf(columnWidth, maxHeight));
   modules.push(createSingle2DrawerShelf(columnWidth, maxHeight));
   // 유리장 (싱글) — H/D 고정, 띄움 200mm
-  modules.push(createSingleGlassCabinet(columnWidth));
+  modules.push(createSingleGlassCabinet(columnWidth, maxHeight));
 
   // === 듀얼 가구 생성 ===
   // _tempSlotWidths가 있고 듀얼 가구를 위한 2개의 슬롯 너비가 있으면 합계 사용
@@ -3478,7 +3483,7 @@ export const generateShelvingModules = (
     modules.push(createDual4DrawerShelf(dualWidth, maxHeight, dualSlotWidths));
     modules.push(createDual2DrawerShelf(dualWidth, maxHeight, dualSlotWidths));
     // 유리장 (듀얼)
-    modules.push(createDualGlassCabinet(dualWidth, dualSlotWidths));
+    modules.push(createDualGlassCabinet(dualWidth, dualSlotWidths, maxHeight));
 
     // === 상부장 가구 생성 ===
     modules.push(createDualUpperCabinet1(dualWidth));
