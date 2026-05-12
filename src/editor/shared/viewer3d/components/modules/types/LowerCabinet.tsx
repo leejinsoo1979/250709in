@@ -549,6 +549,7 @@ interface TouchDrawerAnimatedProps {
   panelGrainDirections?: { [panelName: string]: 'horizontal' | 'vertical' };
   doorTopGap?: number;
   doorBottomGap?: number;
+  stoneThickness?: number;
 }
 
 const TouchDrawerAnimated: React.FC<TouchDrawerAnimatedProps> = ({
@@ -568,6 +569,7 @@ const TouchDrawerAnimated: React.FC<TouchDrawerAnimatedProps> = ({
   panelGrainDirections,
   doorTopGap,
   doorBottomGap,
+  stoneThickness = 20,
 }) => {
   const { doorsOpen, isIndividualDoorOpen, isInteriorMaterialMode } = useUIStore();
   const { gl } = useThree();
@@ -667,7 +669,11 @@ const TouchDrawerAnimated: React.FC<TouchDrawerAnimatedProps> = ({
     : isTDTouch3 ? [164, 117, 117]
     : [228, 228];
 
-  const defaultTopExtMm = isTopDownTouch ? -80 : 30;
+  // 상판내림 터치: ㄱ자 상판 하단(=가로전대 하단)과 마이다 최상단 사이 갭을 항상 20mm 유지
+  // 가로전대 높이는 stoneThickness별로 다름 (10mm→45, 20mm→55, 30mm→65)
+  // 마이다 최상단 = 캐비넷상단 - (stretcher + 20) = 캐비넷상단 + defaultTopExtMm
+  const tdTouchStretcherH = stoneThickness === 10 ? 45 : stoneThickness === 30 ? 65 : 55;
+  const defaultTopExtMm = isTopDownTouch ? -(tdTouchStretcherH + 20) : 30;
   const defaultBottomExtMm = 5;
   const topExtMm = isTopDownTouch && (doorTopGap === undefined || doorTopGap === 0)
     ? defaultTopExtMm
@@ -874,14 +880,8 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
     backPanelThicknessMm: backPanelThickness
   });
   const isTopDownModule = moduleData.id.includes('lower-top-down-') || moduleData.id.includes('dual-lower-top-down-');
-  // 상판내림 터치는 ㄱ자 꺾인 상판 안쪽 전대가 늘어나면 안 됨 → 항상 55mm 고정
-  // 그 외 상판내림(반통/2단/3단)은 어제 저녁(e98ecfb44) 공식 유지 (H 변화량 반영)
   const isTopDownTouchForStretcher = moduleData.id.includes('lower-top-down-touch-') || moduleData.id.includes('dual-lower-top-down-touch-');
-  const topDownStretcherHeightMm = isTopDownModule
-    ? (isTopDownTouchForStretcher
-        ? 55
-        : Math.max(0, 55 + ((moduleData.dimensions.height || 785) - 785)))
-    : 55;
+  // 실제 stretcher 높이 계산은 stoneThickness 정의 이후로 미룸 (아래 topDownStretcherHeightMm 참조)
 
   // 띄워서 배치 여부 확인 (간접조명용)
   const placementType = spaceInfo?.baseConfig?.placementType;
@@ -920,6 +920,18 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
     if (mat === 'pet') return userThk > 0 ? petMappedThk : 0;
     return userThk;
   });
+
+  // ㄱ자 꺾인 안쪽 전대(가로전대) 높이 결정
+  // - 상판내림 터치: 항상 H에 영향 X (사이즈 고정)
+  //   · 대리석 20mm 기본 = 55mm
+  //   · 대리석 10mm = 45mm (10mm 줄임)
+  //   · 대리석 30mm = 65mm (10mm 늘림)
+  // - 그 외 상판내림(반통/2단/3단): 어제 공식 유지 (H 변화량 반영)
+  const topDownStretcherHeightMm = isTopDownModule
+    ? (isTopDownTouchForStretcher
+        ? (stoneThickness === 10 ? 45 : stoneThickness === 30 ? 65 : 55)
+        : Math.max(0, 55 + ((moduleData.dimensions.height || 785) - 785)))
+    : 55;
   const stoneFrontOff = useFurnitureStore(state => {
     if (!placedFurnitureId) return 0;
     const pm = state.placedModules.find(m => m.id === placedFurnitureId);
@@ -1641,6 +1653,7 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
           panelGrainDirections={panelGrainDirections}
           doorTopGap={doorTopGap}
           doorBottomGap={doorBottomGap}
+          stoneThickness={stoneThickness}
         />
       )}
 
