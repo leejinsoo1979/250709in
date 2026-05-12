@@ -527,19 +527,7 @@ const computeLowerCabinetMaidaHeights = (
   const doorLift3TierUpperMaidaH = Math.max(0, Math.round((moduleHeightMm - 365) / 2));
   const doorLift3TierNotch2 = Math.max(380, doorLift3TierUpperMaidaH + 335);
   // 어제 저녁(e98ecfb44) 복원: 상판내림 2단 측판 노치는 [300, 665] 하드코딩 (대리석 두께 영향 X)
-  // 상판내림 3단: stretcher(가로전대) stoneThickness별 (10→65, 20→55, 30→45)
-  //   상단부 묶음(전대+목찬넬+마이다)이 stretcherDelta 만큼 평행이동
-  //   stretcherDelta > 0 (10mm 상판) → 묶음 아래로 → fromBottom 작아짐
-  //   stretcherDelta < 0 (30mm 상판) → 묶음 위로   → fromBottom 커짐
-  const td3TierStretcherH = stoneTopThicknessMm === 10 ? 65 : stoneTopThicknessMm === 30 ? 45 : 55;
-  const td3TierStretcherDelta = td3TierStretcherH - 55;
-  const notchFromBottoms = is3Tier
-    ? [295, 510]
-    : isDoorLift3Tier ? [315, doorLift3TierNotch2]
-    : isDoorLift2Tier ? [doorLift2TierNotch]
-    : isTopDown3Tier ? [225 - td3TierStretcherDelta, 445 - td3TierStretcherDelta, 665 - td3TierStretcherDelta]
-    : isTopDown2Tier ? [300, 665]
-    : [drawer2TierFromBottom];
+  const notchFromBottoms = is3Tier ? [295, 510] : isDoorLift3Tier ? [315, doorLift3TierNotch2] : isDoorLift2Tier ? [doorLift2TierNotch] : isTopDown3Tier ? [225, 445, 665] : isTopDown2Tier ? [300, 665] : [drawer2TierFromBottom];
   const notchHeights = is3Tier ? [65, 65] : isDoorLift3Tier ? [65, 65] : isDoorLift2Tier ? [65] : isTopDown3Tier ? [65, 65, 65] : isTopDown2Tier ? [65, 65] : [65];
   const hideTopNotch = isDoorLift2Tier || isDoorLift3Tier || isTopDown2Tier || isTopDown3Tier;
   const fixedMaidaHeights = isDoorLift2Tier ? [doorLift2TierMaidaH, doorLift2TierMaidaH] : isDoorLift3Tier ? [360, doorLift3TierUpperMaidaH, doorLift3TierUpperMaidaH] : undefined;
