@@ -1136,6 +1136,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
         topPanelNotchSide={topPanelNotchSide}
         doorTopGap={doorTopGap}
         doorBottomGap={doorBottomGap}
+        customSections={customSections} // 선반 갯수/위치 편집 반영 (상부장 3단형 등)
       />
       </>
     );
