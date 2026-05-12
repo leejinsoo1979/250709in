@@ -1627,30 +1627,45 @@ const PlacedModulePropertiesPanel: React.FC = () => {
         // finalWidth: initialWidth
       // });
 
-      // 선반장 모듈 초기화 (2섹션: 하단/상단 각각)
+      // 선반장 모듈 초기화 (2섹션: 하단/상단 각각, 1섹션: upperShelf만 사용)
       const isShelfModule = currentPlacedModule.moduleId.includes('-shelf-') ||
         currentPlacedModule.moduleId.includes('-4drawer-shelf-') ||
         currentPlacedModule.moduleId.includes('-2drawer-shelf-') ||
         currentPlacedModule.moduleId.includes('-entryway-');
       if (isShelfModule) {
         const effectiveSections = currentPlacedModule.customSections || moduleData.modelConfig?.sections || [];
-        // 하단(섹션0) shelf
-        const sec0 = effectiveSections[0];
-        if (sec0 && sec0.type === 'shelf') {
-          setLowerShelfCount(sec0.count || 0);
-          setLowerShelfPositionInputs((sec0.shelfPositions || []).map((p: number) => Math.round(p).toString()));
-        } else {
+        const isSingleSec = effectiveSections.length < 2;
+        if (isSingleSec) {
+          // 1섹션 가구(상부장 3단형 등): 섹션0을 upperShelf 상태에 매핑 (편집 UI에서 단일 에디터로 표시)
+          const sec0 = effectiveSections[0];
+          if (sec0 && sec0.type === 'shelf') {
+            setUpperShelfCount(sec0.count || 0);
+            setUpperShelfPositionInputs((sec0.shelfPositions || []).map((p: number) => Math.round(p).toString()));
+          } else {
+            setUpperShelfCount(0);
+            setUpperShelfPositionInputs([]);
+          }
           setLowerShelfCount(0);
           setLowerShelfPositionInputs([]);
-        }
-        // 상단(섹션1) shelf
-        const sec1 = effectiveSections[1];
-        if (sec1 && sec1.type === 'shelf') {
-          setUpperShelfCount(sec1.count || 0);
-          setUpperShelfPositionInputs((sec1.shelfPositions || []).map((p: number) => Math.round(p).toString()));
         } else {
-          setUpperShelfCount(0);
-          setUpperShelfPositionInputs([]);
+          // 하단(섹션0) shelf
+          const sec0 = effectiveSections[0];
+          if (sec0 && sec0.type === 'shelf') {
+            setLowerShelfCount(sec0.count || 0);
+            setLowerShelfPositionInputs((sec0.shelfPositions || []).map((p: number) => Math.round(p).toString()));
+          } else {
+            setLowerShelfCount(0);
+            setLowerShelfPositionInputs([]);
+          }
+          // 상단(섹션1) shelf
+          const sec1 = effectiveSections[1];
+          if (sec1 && sec1.type === 'shelf') {
+            setUpperShelfCount(sec1.count || 0);
+            setUpperShelfPositionInputs((sec1.shelfPositions || []).map((p: number) => Math.round(p).toString()));
+          } else {
+            setUpperShelfCount(0);
+            setUpperShelfPositionInputs([]);
+          }
         }
       }
     }
