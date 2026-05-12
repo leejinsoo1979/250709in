@@ -119,8 +119,51 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 32px;
+  gap: 24px;
   animation: brandFadeIn 0.6s ease-out both;
+}
+
+/* 진행 게이지 트랙 */
+.progressTrack {
+  position: relative;
+  width: 220px;
+  height: 4px;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+  margin-top: 4px;
+}
+
+/* 진행 게이지 채움 (가변 폭 시뮬레이션) */
+.progressFill {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    var(--theme-primary, #10b981) 0%,
+    color-mix(in srgb, var(--theme-primary, #10b981) 80%, white) 100%
+  );
+  border-radius: 2px;
+  transform-origin: left center;
+  animation: progressGrow 2.4s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  box-shadow:
+    0 0 8px color-mix(in srgb, var(--theme-primary, #10b981) 50%, transparent),
+    0 0 16px color-mix(in srgb, var(--theme-primary, #10b981) 30%, transparent);
+}
+
+/* 진행 게이지 위 스쳐가는 하이라이트 */
+.progressShimmer {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 60px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.32) 50%,
+    transparent 100%
+  );
+  animation: progressShimmer 1.6s ease-in-out infinite;
 }
 
 /* 브랜드 메시지 */
@@ -128,9 +171,35 @@
   margin: 0;
   font-size: 13px;
   font-weight: 400;
-  color: var(--theme-text-secondary, rgba(255, 255, 255, 0.4));
+  color: var(--theme-text-secondary, rgba(255, 255, 255, 0.55));
   text-align: center;
-  letter-spacing: 0.02em;
+  letter-spacing: 0.04em;
+  animation: messagePulse 1.8s ease-in-out infinite;
+}
+
+@keyframes progressGrow {
+  0% {
+    transform: scaleX(0.05);
+    opacity: 0.7;
+  }
+  50% {
+    transform: scaleX(0.7);
+    opacity: 1;
+  }
+  100% {
+    transform: scaleX(1);
+    opacity: 0.9;
+  }
+}
+
+@keyframes progressShimmer {
+  0% { left: -60px; }
+  100% { left: 220px; }
+}
+
+@keyframes messagePulse {
+  0%, 100% { opacity: 0.55; }
+  50% { opacity: 1; }
 }
 
 @keyframes brandFadeIn {

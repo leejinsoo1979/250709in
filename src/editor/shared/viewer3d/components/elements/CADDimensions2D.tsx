@@ -349,6 +349,7 @@ const computeLowerCabinetMaidaHeights = (
   moduleHeightMm: number,
   doorTopGap: number,
   doorBottomGap: number,
+  stoneTopThicknessMm: number = 20,
 ): { maidaHeightMm: number; maidaBottomMm: number; maidaTopMm: number }[] | null => {
   // 하부장 서랍/마이다 모듈만 처리
   const isLowerDrawer = moduleId.includes('lower-drawer-');
@@ -505,7 +506,7 @@ const computeLowerCabinetMaidaHeights = (
   // (H=785 기준: notch=[315,545], 도어=[360,210,210])
   const doorLift3TierUpperMaidaH = Math.max(0, Math.round((moduleHeightMm - 365) / 2));
   const doorLift3TierNotch2 = Math.max(380, doorLift3TierUpperMaidaH + 335);
-  const topDown2TierGeometry = resolveTopDown2TierGeometry(moduleHeightMm);
+  const topDown2TierGeometry = resolveTopDown2TierGeometry(moduleHeightMm, stoneTopThicknessMm);
   const notchFromBottoms = is3Tier ? [295, 510] : isDoorLift3Tier ? [315, doorLift3TierNotch2] : isDoorLift2Tier ? [doorLift2TierNotch] : isTopDown3Tier ? [225, 445, 665] : isTopDown2Tier ? topDown2TierGeometry.notches.map(notch => notch.fromBottom) : [drawer2TierFromBottom];
   const notchHeights = is3Tier ? [65, 65] : isDoorLift3Tier ? [65, 65] : isDoorLift2Tier ? [65] : isTopDown3Tier ? [65, 65, 65] : isTopDown2Tier ? [65, 65] : [65];
   const hideTopNotch = isDoorLift2Tier || isDoorLift3Tier || isTopDown2Tier || isTopDown3Tier;
@@ -1306,7 +1307,8 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                   modData.id,
                   cabinetH,
                   effectiveTopDownTopGap,
-                  effectiveTopDownBottomGap
+                  effectiveTopDownBottomGap,
+                  getStoneTopThicknessMm(mod)
                 );
                 const topMaida = maidaSegments?.[maidaSegments.length - 1];
                 const topDownReferenceH = modData.dimensions.height ?? 785;
@@ -2208,7 +2210,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                 ? modDefaultTopGap
                 : (mod.doorTopGap ?? modDefaultTopGap);
               const effectiveBotGap = mod.doorBottomGap ?? 5;
-              const lowerMaidas = computeLowerCabinetMaidaHeights(mod.moduleId, modHeightMm, effectiveTopGap, effectiveBotGap);
+              const lowerMaidas = computeLowerCabinetMaidaHeights(mod.moduleId, modHeightMm, effectiveTopGap, effectiveBotGap, getStoneTopThicknessMm(mod));
               if (lowerMaidas && lowerMaidas.length > 0) {
                 const cabinetBottomY = furnitureBaseY;
 
@@ -2665,7 +2667,8 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                   modData.id,
                   cabinetH,
                   effectiveTopDownTopGap,
-                  effectiveTopDownBottomGap
+                  effectiveTopDownBottomGap,
+                  getStoneTopThicknessMm(mod)
                 );
                 const topMaida = maidaSegments?.[maidaSegments.length - 1];
                 const topDownReferenceH = modData.dimensions.height ?? 785;
@@ -3258,7 +3261,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                 ? modDefaultTopGap_r
                 : (mod.doorTopGap ?? modDefaultTopGap_r);
               const effectiveBotGap_r = mod.doorBottomGap ?? 5;
-              const lowerMaidas = computeLowerCabinetMaidaHeights(mod.moduleId, modHeightMm, effectiveTopGap_r, effectiveBotGap_r);
+              const lowerMaidas = computeLowerCabinetMaidaHeights(mod.moduleId, modHeightMm, effectiveTopGap_r, effectiveBotGap_r, getStoneTopThicknessMm(mod));
               if (lowerMaidas && lowerMaidas.length > 0) {
                 const cabinetBottomY_r = furnitureBaseY;
 

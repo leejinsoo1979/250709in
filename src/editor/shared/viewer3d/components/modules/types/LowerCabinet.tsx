@@ -1206,7 +1206,7 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
               } : moduleData.id.includes('lower-top-down-3tier') ? {
                 sideNotches: [{ y: 65, z: 40, fromBottom: 225 }, { y: 65, z: 40, fromBottom: 445 }, { y: 65, z: 40, fromBottom: 665 }]
               } : moduleData.id.includes('lower-top-down-2tier') ? {
-                sideNotches: resolveTopDown2TierGeometry(Math.round(adjustedHeight / 0.01)).notches.map(notch => ({
+                sideNotches: resolveTopDown2TierGeometry(Math.round(adjustedHeight / 0.01), stoneThickness).notches.map(notch => ({
                   y: notch.height,
                   z: 40,
                   fromBottom: notch.fromBottom
@@ -1388,7 +1388,7 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
         // (H=785 기준: notch=[315,545], 도어=[360,210,210] — 기존 값과 동일)
         const doorLift3TierUpperMaidaH = Math.max(0, Math.round((currentCabinetHmm - 365) / 2));
         const doorLift3TierNotch2 = Math.max(380, doorLift3TierUpperMaidaH + 335);
-        const topDown2TierGeometry = resolveTopDown2TierGeometry(currentCabinetHmm);
+        const topDown2TierGeometry = resolveTopDown2TierGeometry(currentCabinetHmm, stoneThickness);
         // 3단서랍장 H 변경: 상단 묶음(노치2/마이다2/노치1상단/마이다3)은 캐비넷 상단에 붙어 평행이동
         //   → 노치 위치를 H 변화량(delta)만큼 위로 이동, 마이다1만 흡수
         const drawer3TierDelta = currentCabinetHmm - 785;
@@ -1726,9 +1726,9 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
         const cabinetTopY = cabinetYPosition + adjustedHeight / 2;
         // 수평판: 중심Y = 캐비넷 상단 + 두께/2
         const hPosY = cabinetTopY + t / 2;
-        // 수직 앞판: 높이 = frontPlateH + t (45도면 겹침 포함)
+        // 수직 앞판: 상판 두께와 무관하게 전면 노출 높이 80mm 고정
         // 상단 = cabinetTopY + t (수평판 상면과 동일)
-        const vTotalH = frontPlateH + t;
+        const vTotalH = frontPlateH;
         const vPosY = cabinetTopY + t - vTotalH / 2;
         // 수직 앞판 Z: 앞면 = 수평판 앞면
         const frontZ = stoneTopData.zOffset + stoneTopData.depth / 2;
