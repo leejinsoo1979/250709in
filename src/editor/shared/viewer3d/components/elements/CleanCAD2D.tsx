@@ -6299,13 +6299,15 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         // 마지막 섹션 = availableHeight - 나머지섹션합
         const topFrameMm = spaceInfo.frameSize?.top ?? 30;
         const spaceHeightMm = spaceInfo.height || 0;
-        // 상부장은 가구 자체 H와 실제 배치 위치(module.position.y) 사용
-        // (전체 공간 H 사용 시 빈 공간에 라벨이 표시되는 문제 발생)
+        // 상부장은 3D 렌더와 동일 공식으로 위치 계산 (천장에서 아래로 붙어 있음)
+        // furnitureBottomMm = ceilingH - topFrame - H
+        // module.position.y는 배치 시점 값이라 H 변경 시 갱신 안 됨 → 사용 X
         const isUpperCabinet = moduleData.category === 'upper' || mid.includes('upper-cabinet');
         const ownHeightMm = (module as any).customHeight ?? (module as any).freeHeight ?? moduleData.dimensions?.height ?? 0;
-        const moduleCenterYmm = (module.position.y || 0) / 0.01;
+        const ceilingHeightForUpper = spaceHeightMm;
+        const upperTopFrameMm = (module as any).topFrameThickness ?? topFrameMm;
         const furnitureBottomMm = isUpperCabinet
-          ? Math.max(0, Math.round(moduleCenterYmm - ownHeightMm / 2))
+          ? Math.max(0, Math.round(ceilingHeightForUpper - upperTopFrameMm - ownHeightMm))
           : (floorFinishMm + baseFrameMm + floatMm);
         // 띄움도 가구 외부 빈 공간으로 빼야 입면=측면 일치 (하부 섹션이 흡수하지 않음)
         const furnitureOuterH = isUpperCabinet
@@ -9524,8 +9526,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             const moduleBackWallGapMm2 = (module as any).backWallGap ?? 0;
             const moduleBackWallGapZ2 = moduleBackWallGapMm2 > 0 ? mmToThreeUnits(moduleBackWallGapMm2) : 0;
             const mid2 = module.moduleId || '';
-            const isShoeCabinet2 = mid2.includes('-entryway-') || mid2.includes('-shelf-') ||
-                                   mid2.includes('-4drawer-shelf-') || mid2.includes('-2drawer-shelf-');
+            const isShoeCabinet2 = !mid2.includes('entryway-split') && (mid2.includes('-entryway-') || mid2.includes('-shelf-') ||
+                                   mid2.includes('-4drawer-shelf-') || mid2.includes('-2drawer-shelf-'));
 
             if (isShoeCabinet2) {
               // 신발장(선반장): FurnitureItem.tsx처럼 customDepth를 최우선으로 사용 (단일 깊이)
@@ -9576,8 +9578,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             }
           } else {
             const mid = module.moduleId || '';
-            const isShoeCabinet = mid.includes('-entryway-') || mid.includes('-shelf-') ||
-                                  mid.includes('-4drawer-shelf-') || mid.includes('-2drawer-shelf-');
+            const isShoeCabinet = !mid.includes('entryway-split') && (mid.includes('-entryway-') || mid.includes('-shelf-') ||
+                                  mid.includes('-4drawer-shelf-') || mid.includes('-2drawer-shelf-'));
             // 모든 가구 공통: 사용자가 편집 팝업에서 설정한 실제 깊이 우선
             // 우선순위: customDepth > upperSectionDepth || lowerSectionDepth > dimensions.depth
             // (의류장/신발장 모두 섹션 깊이가 저장될 수 있음)
@@ -9805,8 +9807,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               const moduleBackWallGapZRX = moduleBackWallGapMmRX > 0 ? mmToThreeUnits(moduleBackWallGapMmRX) : 0;
               const isUpperCat = moduleData.category === 'upper' || module.moduleId?.includes('upper-cabinet');
               const mid = module.moduleId || '';
-              const isShoeCabinet = mid.includes('-entryway-') || mid.includes('-shelf-') ||
-                                    mid.includes('-4drawer-shelf-') || mid.includes('-2drawer-shelf-');
+              const isShoeCabinet = !mid.includes('entryway-split') && (mid.includes('-entryway-') || mid.includes('-shelf-') ||
+                                    mid.includes('-4drawer-shelf-') || mid.includes('-2drawer-shelf-'));
               let furnitureBackZ: number;
               let furnitureFrontZ: number;
               if (isUpperCat) {
