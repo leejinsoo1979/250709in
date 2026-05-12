@@ -1291,9 +1291,19 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
               } : moduleData.id.includes('lower-door-lift-2tier') ? {
                 // 도어올림 2단 반통: 몸통 H 변경 시 노치 위치 동적 계산 (LowerCabinet.tsx 1362 doorLift2TierNotch와 동일 공식)
                 sideNotches: [{ y: 65, z: 40, fromBottom: Math.max(0, Math.round((Math.round(adjustedHeight / 0.01) - 75) / 2)) }]
-              } : moduleData.id.includes('lower-top-down-3tier') ? {
-                sideNotches: [{ y: 65, z: 40, fromBottom: 225 }, { y: 65, z: 40, fromBottom: 445 }, { y: 65, z: 40, fromBottom: 665 }]
-              } : moduleData.id.includes('lower-top-down-2tier') ? {
+              } : moduleData.id.includes('lower-top-down-3tier') ? (() => {
+                // 상판내림 3단: H 변경 시 측판 노치도 캐비넷 상단에 붙어 평행이동
+                // H=785 기준 [225, 445, 665] → delta = H - 785
+                const cabinetHmmTd3 = Math.round(adjustedHeight / 0.01);
+                const deltaTd3 = cabinetHmmTd3 - 785;
+                return {
+                  sideNotches: [
+                    { y: 65, z: 40, fromBottom: 225 + deltaTd3 },
+                    { y: 65, z: 40, fromBottom: 445 + deltaTd3 },
+                    { y: 65, z: 40, fromBottom: 665 + deltaTd3 },
+                  ]
+                };
+              })() : moduleData.id.includes('lower-top-down-2tier') ? {
                 // 어제 저녁(e98ecfb44) 시점 복원: 측판 노치 [300, 665] 하드코딩
                 sideNotches: [{ y: 65, z: 40, fromBottom: 300 }, { y: 65, z: 40, fromBottom: 665 }]
               } : (moduleData.id.includes('lower-top-down-half') || moduleData.id.includes('dual-lower-top-down-half')) ? {
@@ -1482,14 +1492,14 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
         const doorLift3TierUpperMaidaH = Math.max(0, Math.round((currentCabinetHmm - 365) / 2));
         const doorLift3TierNotch2 = Math.max(380, doorLift3TierUpperMaidaH + 335);
         // 어제 저녁(e98ecfb44) 복원: 상판내림 2단 측판 노치는 [300, 665] 하드코딩 (대리석 두께 영향 X)
-        // 3단서랍장 H 변경: 상단 묶음(노치2/마이다2/노치1상단/마이다3)은 캐비넷 상단에 붙어 평행이동
-        //   → 노치 위치를 H 변화량(delta)만큼 위로 이동, 마이다1만 흡수
+        // 3단서랍장/상판내림3단 H 변경: 상단 묶음(노치/마이다)은 캐비넷 상단에 붙어 평행이동
+        //   → 노치 위치를 H 변화량(delta)만큼 위로 이동, 마이다1(맨아래)만 흡수
         const drawer3TierDelta = currentCabinetHmm - 785;
         const notchFromBottoms = is3Tier
           ? [295 + drawer3TierDelta, 510 + drawer3TierDelta]
           : isDoorLift3Tier ? [315, doorLift3TierNotch2]
           : isDoorLift2Tier ? [doorLift2TierNotch]
-          : isTopDown3Tier ? [225, 445, 665]
+          : isTopDown3Tier ? [225 + drawer3TierDelta, 445 + drawer3TierDelta, 665 + drawer3TierDelta]
           : isTopDown2Tier ? [300, 665]
           : [drawer2TierFromBottom];
         const notchHeights = is3Tier ? [65, 65] : isDoorLift3Tier ? [65, 65] : isDoorLift2Tier ? [65] : isTopDown3Tier ? [65, 65, 65] : isTopDown2Tier ? [65, 65] : [65];

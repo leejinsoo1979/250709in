@@ -527,7 +527,15 @@ const computeLowerCabinetMaidaHeights = (
   const doorLift3TierUpperMaidaH = Math.max(0, Math.round((moduleHeightMm - 365) / 2));
   const doorLift3TierNotch2 = Math.max(380, doorLift3TierUpperMaidaH + 335);
   // 어제 저녁(e98ecfb44) 복원: 상판내림 2단 측판 노치는 [300, 665] 하드코딩 (대리석 두께 영향 X)
-  const notchFromBottoms = is3Tier ? [295, 510] : isDoorLift3Tier ? [315, doorLift3TierNotch2] : isDoorLift2Tier ? [doorLift2TierNotch] : isTopDown3Tier ? [225, 445, 665] : isTopDown2Tier ? [300, 665] : [drawer2TierFromBottom];
+  // 상판내림 3단: H 변경 시 노치도 캐비넷 상단에 붙어 평행이동 (마이다1이 H 변화 흡수)
+  const td3TierDeltaDim = moduleHeightMm - 785;
+  const notchFromBottoms = is3Tier
+    ? [295, 510]
+    : isDoorLift3Tier ? [315, doorLift3TierNotch2]
+    : isDoorLift2Tier ? [doorLift2TierNotch]
+    : isTopDown3Tier ? [225 + td3TierDeltaDim, 445 + td3TierDeltaDim, 665 + td3TierDeltaDim]
+    : isTopDown2Tier ? [300, 665]
+    : [drawer2TierFromBottom];
   const notchHeights = is3Tier ? [65, 65] : isDoorLift3Tier ? [65, 65] : isDoorLift2Tier ? [65] : isTopDown3Tier ? [65, 65, 65] : isTopDown2Tier ? [65, 65] : [65];
   const hideTopNotch = isDoorLift2Tier || isDoorLift3Tier || isTopDown2Tier || isTopDown3Tier;
   const fixedMaidaHeights = isDoorLift2Tier ? [doorLift2TierMaidaH, doorLift2TierMaidaH] : isDoorLift3Tier ? [360, doorLift3TierUpperMaidaH, doorLift3TierUpperMaidaH] : undefined;
