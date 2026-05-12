@@ -145,7 +145,7 @@ export const calculatePanelDetails = (
   const height = freeHeight || originalHeight;
   const topDownStretcherHeightMm = 55;
   const getTopDownStoneFrontHeightMm = (stoneThicknessMm: number) => {
-    return getTopDownStoneFrontVisibleHeightMm(height, doorTopGap);
+    return getTopDownStoneFrontVisibleHeightMm(height, doorTopGap) + stoneThicknessMm;
   };
   const heightRatio = freeHeight && originalHeight > 0 ? freeHeight / originalHeight : 1;
   // 내경 = 전체폭 - 실제 측판두께×2 (18.5mm면 18.5×2, 18mm면 18×2)
@@ -417,7 +417,7 @@ export const calculatePanelDetails = (
           } else if (id.includes('lower-top-down-3tier')) {
             notches.push({ y: 65, z: 40, fromBottom: 225 }, { y: 65, z: 40, fromBottom: 445 }, { y: 65, z: 40, fromBottom: 665 });
           } else if (id.includes('lower-top-down-2tier')) {
-            resolveTopDown2TierGeometry(height, stoneTopThickness).notches.forEach(notch => {
+            resolveTopDown2TierGeometry(height).notches.forEach(notch => {
               notches.push({ y: notch.height, z: 40, fromBottom: notch.fromBottom });
             });
           } else if (id.includes('lower-top-down-half') || id.includes('dual-lower-top-down-half')) {
@@ -1614,7 +1614,7 @@ export const calculatePanelDetails = (
         notchFromBottoms = [355]; notchHeightsArr = [65];
         hideTopNotch = true; fixedMaidaHeights = [400, 400];
       } else if (isTopDown2Tier) {
-        const topDown2TierGeometry = resolveTopDown2TierGeometry(height, stoneTopThickness);
+        const topDown2TierGeometry = resolveTopDown2TierGeometry(height);
         notchFromBottoms = topDown2TierGeometry.notches.map(notch => notch.fromBottom);
         notchHeightsArr = topDown2TierGeometry.notches.map(notch => notch.height);
         hideTopNotch = true;
@@ -1888,7 +1888,7 @@ export const calculatePanelDetails = (
       : isTopDown3Tier
       ? [{ fromBottom: 225, height: 65 }, { fromBottom: 445, height: 65 }, { fromBottom: 665, height: 65 }]
       : isTopDown2Tier
-      ? resolveTopDown2TierGeometry(height, stoneTopThickness).notches
+      ? resolveTopDown2TierGeometry(height).notches
       : isTopDownHalf || isTopDownTouch
       ? [{ fromBottom: 665, height: 65 }]
       : [{ fromBottom: ((moduleData.dimensions.height || 785) - 125) / 2, height: 65 }];

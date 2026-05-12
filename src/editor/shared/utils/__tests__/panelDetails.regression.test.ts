@@ -2,7 +2,6 @@ import { describe, expect, it } from 'vitest'
 import { getModuleById } from '@/data/modules'
 import type { SpaceInfo } from '@/store/core/spaceConfigStore'
 import { calculatePanelDetails } from '../calculatePanelDetails'
-import { resolveTopDown2TierGeometry } from '../topDownCabinetGeometry'
 
 const translate = (key: string) => key
 
@@ -117,7 +116,7 @@ describe('panelDetails regression baselines', () => {
 
     expect(findPanel(panels, '상판').depth).toBe(614)
     expect(findPanel(panels, '인조대리석 상판').depth).toBe(673)
-    expect(findPanel(panels, '인조대리석 앞판').height).toBe(80)
+    expect(findPanel(panels, '인조대리석 앞판').height).toBe(90)
   })
 
   it('상판내림 높이 변경 시 마이다 상단과 인조대리석 앞판 하단 갭 20mm를 유지한다', () => {
@@ -130,26 +129,10 @@ describe('panelDetails regression baselines', () => {
       stoneTopThickness: 30
     })
 
-    expect(findPanel(panels, '서랍1(마이다)').height).toBe(365)
-    expect(findPanel(panels, '서랍2(마이다)').height).toBe(365)
+    expect(findPanel(panels, '서랍1(마이다)').height).toBe(360)
+    expect(findPanel(panels, '서랍2(마이다)').height).toBe(360)
     expect(findPanel(panels, '전대').height).toBe(55)
-    expect(findPanel(panels, '인조대리석 앞판').height).toBe(80)
-  })
-
-  it('상판내림 전면 상판은 상판 두께와 무관하게 80mm다', () => {
-    for (const thickness of [10, 20, 30]) {
-      const panels = calculatePanels('lower-top-down-2tier-500', 500, 650, {
-        hasDoor: true,
-        doorTopGap: -80,
-        doorBottomGap: 5,
-        backPanelThicknessMm: 9,
-        stoneTopThickness: thickness
-      })
-
-      expect(findPanel(panels, '인조대리석 앞판').height).toBe(80)
-      const geometry = resolveTopDown2TierGeometry(785, thickness)
-      expect(geometry.upperMaidaBottomMm - geometry.lowerMaidaTopMm).toBe(20)
-    }
+    expect(findPanel(panels, '인조대리석 앞판').height).toBe(90)
   })
 
   it('하부 3단 서랍장 높이 축소 시 서랍 패널 높이는 가구 높이 안에서 재계산된다', () => {
