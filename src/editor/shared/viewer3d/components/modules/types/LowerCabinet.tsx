@@ -922,14 +922,14 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
   });
 
   // ㄱ자 꺾인 안쪽 전대(가로전대) 높이 결정
-  // - 상판내림 터치: 항상 H에 영향 X (사이즈 고정)
-  //   · 대리석 20mm 기본 = 55mm
-  //   · 대리석 10mm = 45mm (10mm 줄임)
-  //   · 대리석 30mm = 65mm (10mm 늘림)
+  // - 상판내림 터치: 항상 H에 영향 X (사이즈는 대리석 두께에 의해 결정)
+  //   · 대리석 10mm = 65mm (아래로 10mm 확장)
+  //   · 대리석 20mm = 55mm (기본)
+  //   · 대리석 30mm = 45mm (위로 10mm 축소)
   // - 그 외 상판내림(반통/2단/3단): 어제 공식 유지 (H 변화량 반영)
   const topDownStretcherHeightMm = isTopDownModule
     ? (isTopDownTouchForStretcher
-        ? (stoneThickness === 10 ? 45 : stoneThickness === 30 ? 65 : 55)
+        ? (stoneThickness === 10 ? 65 : stoneThickness === 30 ? 45 : 55)
         : Math.max(0, 55 + ((moduleData.dimensions.height || 785) - 785)))
     : 55;
   const stoneFrontOff = useFurnitureStore(state => {
