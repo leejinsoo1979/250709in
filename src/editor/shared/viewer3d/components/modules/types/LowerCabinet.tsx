@@ -671,9 +671,10 @@ const TouchDrawerAnimated: React.FC<TouchDrawerAnimatedProps> = ({
 
   // 상판내림 터치: ㄱ자 상판 하단(=가로전대 하단)과 마이다 최상단 사이 갭을 항상 20mm 유지
   // 가로전대 높이는 stoneThickness별로 다름 (10mm→65, 20mm→55, 30mm→45)
-  // 마이다 최상단 = 캐비넷상단 - (stretcher + 20) = 캐비넷상단 + defaultTopExtMm
+  // 실측 결과 마이다 위치에 5mm 보정이 필요 (이전 공식은 15mm 갭)
+  // → defaultTopExt = -(stretcher + 20 + 5) = -(stretcher + 25)
   const tdTouchStretcherH = stoneThickness === 10 ? 65 : stoneThickness === 30 ? 45 : 55;
-  const defaultTopExtMm = isTopDownTouch ? -(tdTouchStretcherH + 20) : 30;
+  const defaultTopExtMm = isTopDownTouch ? -(tdTouchStretcherH + 25) : 30;
   const defaultBottomExtMm = 5;
   // 상판내림 터치는 doorTopGap/doorBottomGap에 관계없이 항상 기본값 강제
   // (마이다-상판 갭 20mm, 하단 5mm 보장)
