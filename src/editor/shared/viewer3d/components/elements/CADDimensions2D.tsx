@@ -449,6 +449,45 @@ const computeLowerCabinetMaidaHeights = (
   }
 
   const is3Tier = moduleId.includes('lower-drawer-3tier');
+  // 3단 서랍장 H 변경 동작: 상단 묶음(마이다3 + 노치2갭 + 마이다2 + 노치1갭 + 상단갭) 크기 고정,
+  //   캐비넷 상단에 붙어 평행 이동. H 변화는 하단 마이다1이 흡수.
+  //   H=785 기준 상수: 마이다1 외경 H=340 → 마이다1Top(335) → 노치1 295~360, 노치2 510~575
+  //   상단 묶음 총 외경 = 430 (마이다3 195 + 마이다2 195 + 2*갭18 + 4(반올림) → 측면상 평행이동 유지)
+  if (is3Tier && !moduleId.includes('-touch-')) {
+    const defaultDTG_3t = -20;
+    const defaultDBG_3t = 5;
+    const gapTopExt_3t = doorTopGap - defaultDTG_3t;
+    const gapBottomExt_3t = doorBottomGap - defaultDBG_3t;
+    const MAIDA_TOP_H = 195;       // 마이다3 외경
+    const MAIDA_MID_H = 195;       // 마이다2 외경
+    const NOTCH_H = 65;
+    const TOP_NOTCH_H = 60;
+    // H=785 기준: 노치2 510~575, 노치1 295~360
+    // 상단 묶음 = 노치1 하단(295) ~ 캐비넷 상단(785) = 490
+    // 마이다1 외경 = 340 (고정), 마이다1 끝(335) 위로 노치1 갭, 그 다음 마이다2 시작
+    // H가 늘면 노치1·노치2·상단노치 모두 위로 같은 양 평행 이동
+    const delta = moduleHeightMm - 785;
+    const notch1FromBottom_3t = 295 + delta;
+    const notch2FromBottom_3t = 510 + delta;
+    const topNotchFromBottom_3t = moduleHeightMm - TOP_NOTCH_H;
+    // 마이다1 (하단): -5 ~ (notch1 + 40), H 변화 흡수
+    const maida1Bottom_3t = -5 - gapBottomExt_3t;
+    const maida1Top_3t = notch1FromBottom_3t + 40;
+    const maida1H_3t = Math.max(0, maida1Top_3t - maida1Bottom_3t);
+    // 마이다2 (중간): (notch1.top - 5) ~ (notch2 + 40), 외경 195 유지
+    const maida2Bottom_3t = (notch1FromBottom_3t + NOTCH_H) - 5;
+    const maida2Top_3t = notch2FromBottom_3t + 40;
+    const maida2H_3t = Math.max(0, maida2Top_3t - maida2Bottom_3t);
+    // 마이다3 (상단): (notch2.top - 5) ~ (topNotch + 40), 외경 195 유지 + 상단갭 확장
+    const maida3Bottom_3t = (notch2FromBottom_3t + NOTCH_H) - 5;
+    const maida3Top_3t = topNotchFromBottom_3t + 40 + gapTopExt_3t;
+    const maida3H_3t = Math.max(0, maida3Top_3t - maida3Bottom_3t);
+    return [
+      { maidaHeightMm: maida1H_3t, maidaBottomMm: maida1Bottom_3t, maidaTopMm: maida1Top_3t },
+      { maidaHeightMm: maida2H_3t, maidaBottomMm: maida2Bottom_3t, maidaTopMm: maida2Top_3t },
+      { maidaHeightMm: maida3H_3t, maidaBottomMm: maida3Bottom_3t, maidaTopMm: maida3Top_3t },
+    ];
+  }
   const isDoorLift3Tier = moduleId.includes('lower-door-lift-3tier');
   const isDoorLift2Tier = moduleId.includes('lower-door-lift-2tier');
   const isTopDown3Tier = moduleId.includes('lower-top-down-3tier');

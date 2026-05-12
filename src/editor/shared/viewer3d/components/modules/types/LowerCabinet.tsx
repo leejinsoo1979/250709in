@@ -1380,7 +1380,16 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
         const doorLift3TierUpperMaidaH = Math.max(0, Math.round((currentCabinetHmm - 365) / 2));
         const doorLift3TierNotch2 = Math.max(380, doorLift3TierUpperMaidaH + 335);
         const topDown2TierGeometry = resolveTopDown2TierGeometry(currentCabinetHmm);
-        const notchFromBottoms = is3Tier ? [295, 510] : isDoorLift3Tier ? [315, doorLift3TierNotch2] : isDoorLift2Tier ? [doorLift2TierNotch] : isTopDown3Tier ? [225, 445, 665] : isTopDown2Tier ? topDown2TierGeometry.notches.map(notch => notch.fromBottom) : [drawer2TierFromBottom];
+        // 3단서랍장 H 변경: 상단 묶음(노치2/마이다2/노치1상단/마이다3)은 캐비넷 상단에 붙어 평행이동
+        //   → 노치 위치를 H 변화량(delta)만큼 위로 이동, 마이다1만 흡수
+        const drawer3TierDelta = currentCabinetHmm - 785;
+        const notchFromBottoms = is3Tier
+          ? [295 + drawer3TierDelta, 510 + drawer3TierDelta]
+          : isDoorLift3Tier ? [315, doorLift3TierNotch2]
+          : isDoorLift2Tier ? [doorLift2TierNotch]
+          : isTopDown3Tier ? [225, 445, 665]
+          : isTopDown2Tier ? topDown2TierGeometry.notches.map(notch => notch.fromBottom)
+          : [drawer2TierFromBottom];
         const notchHeights = is3Tier ? [65, 65] : isDoorLift3Tier ? [65, 65] : isDoorLift2Tier ? [65] : isTopDown3Tier ? [65, 65, 65] : isTopDown2Tier ? [65, 65] : [65];
         const drawerCount = (is3Tier || isDoorLift3Tier || isTopDown3Tier) ? 3 : 2;
 
