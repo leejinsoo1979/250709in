@@ -1294,15 +1294,20 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
                 // 도어올림 2단 반통: 몸통 H 변경 시 노치 위치 동적 계산 (LowerCabinet.tsx 1362 doorLift2TierNotch와 동일 공식)
                 sideNotches: [{ y: 65, z: 40, fromBottom: Math.max(0, Math.round((Math.round(adjustedHeight / 0.01) - 75) / 2)) }]
               } : moduleData.id.includes('lower-top-down-3tier') ? (() => {
-                // 상판내림 3단: H 변경 시 측판 노치도 캐비넷 상단에 붙어 평행이동
-                // H=785 기준 [225, 445, 665] → delta = H - 785
+                // 상판내림 3단: H 변경 + stoneThickness별 stretcher 변화로 측판 노치 위치 동적 계산
+                // - H 변화 (delta): 노치 전체 평행이동 (마이다1만 흡수)
+                // - stretcher 변화 (stoneThickness): 10mm→65, 20mm→55, 30mm→45
+                //   stretcherDelta>0 (10mm) → 묶음 아래로 → fromBottom -= delta
+                //   stretcherDelta<0 (30mm) → 묶음 위로   → fromBottom += |delta|
                 const cabinetHmmTd3 = Math.round(adjustedHeight / 0.01);
                 const deltaTd3 = cabinetHmmTd3 - 785;
+                const td3StretcherH = stoneThickness === 10 ? 65 : stoneThickness === 30 ? 45 : 55;
+                const td3StretcherDelta = td3StretcherH - 55;
                 return {
                   sideNotches: [
-                    { y: 65, z: 40, fromBottom: 225 + deltaTd3 },
-                    { y: 65, z: 40, fromBottom: 445 + deltaTd3 },
-                    { y: 65, z: 40, fromBottom: 665 + deltaTd3 },
+                    { y: 65, z: 40, fromBottom: 225 + deltaTd3 - td3StretcherDelta },
+                    { y: 65, z: 40, fromBottom: 445 + deltaTd3 - td3StretcherDelta },
+                    { y: 65, z: 40, fromBottom: 665 + deltaTd3 - td3StretcherDelta },
                   ]
                 };
               })() : moduleData.id.includes('lower-top-down-2tier') ? {
@@ -1496,12 +1501,15 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
         // 어제 저녁(e98ecfb44) 복원: 상판내림 2단 측판 노치는 [300, 665] 하드코딩 (대리석 두께 영향 X)
         // 3단서랍장/상판내림3단 H 변경: 상단 묶음(노치/마이다)은 캐비넷 상단에 붙어 평행이동
         //   → 노치 위치를 H 변화량(delta)만큼 위로 이동, 마이다1(맨아래)만 흡수
+        // 상판내림 3단: stretcher 변화(stoneThickness별 65/55/45)도 노치 위치에 반영
         const drawer3TierDelta = currentCabinetHmm - 785;
+        const td3StretcherForNotch = stoneThickness === 10 ? 65 : stoneThickness === 30 ? 45 : 55;
+        const td3StretcherDeltaForNotch = td3StretcherForNotch - 55;
         const notchFromBottoms = is3Tier
           ? [295 + drawer3TierDelta, 510 + drawer3TierDelta]
           : isDoorLift3Tier ? [315, doorLift3TierNotch2]
           : isDoorLift2Tier ? [doorLift2TierNotch]
-          : isTopDown3Tier ? [225 + drawer3TierDelta, 445 + drawer3TierDelta, 665 + drawer3TierDelta]
+          : isTopDown3Tier ? [225 + drawer3TierDelta - td3StretcherDeltaForNotch, 445 + drawer3TierDelta - td3StretcherDeltaForNotch, 665 + drawer3TierDelta - td3StretcherDeltaForNotch]
           : isTopDown2Tier ? [300, 665]
           : [drawer2TierFromBottom];
         const notchHeights = is3Tier ? [65, 65] : isDoorLift3Tier ? [65, 65] : isDoorLift2Tier ? [65] : isTopDown3Tier ? [65, 65, 65] : isTopDown2Tier ? [65, 65] : [65];

@@ -527,13 +527,19 @@ const computeLowerCabinetMaidaHeights = (
   const doorLift3TierUpperMaidaH = Math.max(0, Math.round((moduleHeightMm - 365) / 2));
   const doorLift3TierNotch2 = Math.max(380, doorLift3TierUpperMaidaH + 335);
   // 어제 저녁(e98ecfb44) 복원: 상판내림 2단 측판 노치는 [300, 665] 하드코딩 (대리석 두께 영향 X)
-  // 상판내림 3단: H 변경 시 노치도 캐비넷 상단에 붙어 평행이동 (마이다1이 H 변화 흡수)
+  // 상판내림 3단: H 변경 + stoneThickness별 stretcher 변화 노치 위치 동적 계산
+  //   - H 변화 (delta): 마이다1만 흡수, 노치 전체 평행이동
+  //   - stretcher (10→65/20→55/30→45) 변화량 stretcherDelta:
+  //     stretcherDelta>0 (10mm) → 노치 아래로 (fromBottom 감소)
+  //     stretcherDelta<0 (30mm) → 노치 위로 (fromBottom 증가)
   const td3TierDeltaDim = moduleHeightMm - 785;
+  const td3StretcherForDim = stoneTopThicknessMm === 10 ? 65 : stoneTopThicknessMm === 30 ? 45 : 55;
+  const td3StretcherDeltaForDim = td3StretcherForDim - 55;
   const notchFromBottoms = is3Tier
     ? [295, 510]
     : isDoorLift3Tier ? [315, doorLift3TierNotch2]
     : isDoorLift2Tier ? [doorLift2TierNotch]
-    : isTopDown3Tier ? [225 + td3TierDeltaDim, 445 + td3TierDeltaDim, 665 + td3TierDeltaDim]
+    : isTopDown3Tier ? [225 + td3TierDeltaDim - td3StretcherDeltaForDim, 445 + td3TierDeltaDim - td3StretcherDeltaForDim, 665 + td3TierDeltaDim - td3StretcherDeltaForDim]
     : isTopDown2Tier ? [300, 665]
     : [drawer2TierFromBottom];
   const notchHeights = is3Tier ? [65, 65] : isDoorLift3Tier ? [65, 65] : isDoorLift2Tier ? [65] : isTopDown3Tier ? [65, 65, 65] : isTopDown2Tier ? [65, 65] : [65];
