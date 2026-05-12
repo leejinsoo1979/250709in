@@ -157,15 +157,15 @@ export const useBaseFurniture = (
     // 선반장(single-shelf/dual-shelf) + 2섹션: 띄움은 하부에서 차감, 걸레받이 흡수는 상부로
     // FurnitureItem이 renderHeightMm = original - float + base 로 합쳐서 전달하므로,
     // 두 섹션을 명시적으로 새 높이로 계산하여 분배한다.
-    if (typeof window !== 'undefined' && (window as any).__SHELF_ABSORB_DEBUG__) {
-      console.log('🟧 useBaseFurniture 분배 점검:', {
+    if (isPlainShelf) {
+      console.log('🟧 useBaseFurniture 선반장:', {
         id: mid,
-        isPlainShelf,
         sectionsLen: sections.length,
         shelfFloatAbsorbedMm,
         shelfBaseAbsorbedMm,
         renderHeightMm,
         originalSectionsTotal,
+        분배진입: sections.length === 2 && (shelfFloatAbsorbedMm > 0 || shelfBaseAbsorbedMm > 0),
       });
     }
     if (isPlainShelf && sections.length === 2 && (shelfFloatAbsorbedMm > 0 || shelfBaseAbsorbedMm > 0)) {
