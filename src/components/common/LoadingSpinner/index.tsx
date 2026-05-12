@@ -29,7 +29,6 @@ const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
           <Logo size="large" loading />
           <div className={styles.progressTrack} aria-label="loading">
             <div className={styles.progressFill} />
-            <div className={styles.progressShimmer} />
           </div>
           {displayMessage && (
             <p className={styles.brandMessage}>{displayMessage}</p>

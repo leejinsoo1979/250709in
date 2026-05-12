@@ -1092,8 +1092,9 @@ const ModuleGallery: React.FC<ModuleGalleryProps> = ({ moduleCategory = 'tall', 
     // 상부장 카테고리 선택시
     categoryModules = getModulesByCategory('upper', adjustedInternalSpace, spaceInfoWithSlotWidths);
   } else if (moduleCategory === 'lower') {
-    // 하부장 카테고리 선택시
-    categoryModules = getModulesByCategory('lower', adjustedInternalSpace, spaceInfoWithSlotWidths);
+    // 하부장 카테고리 선택시 (도어분절 현관장은 신발장 전용 → 제외)
+    categoryModules = getModulesByCategory('lower', adjustedInternalSpace, spaceInfoWithSlotWidths)
+      .filter(m => !m.id.includes('entryway-split'));
   } else if (moduleCategory === 'clothing') {
     // 의류장 = 키큰장(full) 중 신발장/주방 키큰장 제외 (유리장 포함)
     categoryModules = getModulesByCategory('full', adjustedInternalSpace, spaceInfoWithSlotWidths)
@@ -1108,8 +1109,12 @@ const ModuleGallery: React.FC<ModuleGalleryProps> = ({ moduleCategory = 'tall', 
       );
   } else if (moduleCategory === 'shoes') {
     // 신발장 = full 카테고리 내 선반장 계열 + 현관장
-    categoryModules = getModulesByCategory('full', adjustedInternalSpace, spaceInfoWithSlotWidths)
+    // + lower 카테고리 중 도어분절 현관장(entryway-split) 포함
+    const fullShoeMods = getModulesByCategory('full', adjustedInternalSpace, spaceInfoWithSlotWidths)
       .filter(m => isShoeModuleId(m.id));
+    const lowerShoeMods = getModulesByCategory('lower', adjustedInternalSpace, spaceInfoWithSlotWidths)
+      .filter(m => m.id.includes('entryway-split'));
+    categoryModules = [...fullShoeMods, ...lowerShoeMods];
   } else if (moduleCategory === 'kitchen') {
     // 주방 = 서브카테고리별 필터링
     if (kitchenSubCategory === 'upper') {
@@ -1129,7 +1134,9 @@ const ModuleGallery: React.FC<ModuleGalleryProps> = ({ moduleCategory = 'tall', 
       );
     } else {
       // 기본장/도어올림/상판내림 = lower 중 ID 패턴으로 분기
-      const lowerMods = getModulesByCategory('lower', adjustedInternalSpace, spaceInfoWithSlotWidths);
+      // 도어분절 현관장(entryway-split)은 신발장 전용이므로 주방에서 제외
+      const lowerMods = getModulesByCategory('lower', adjustedInternalSpace, spaceInfoWithSlotWidths)
+        .filter(m => !m.id.includes('entryway-split'));
       categoryModules = lowerMods.filter(m => {
         const id = m.id;
         const isDoorRaise = id.includes('door-lift') || id.includes('door-raise');
@@ -1142,7 +1149,9 @@ const ModuleGallery: React.FC<ModuleGalleryProps> = ({ moduleCategory = 'tall', 
     }
   } else if (moduleCategory === 'island') {
     // 아일랜드 = 주방 하부장 모듈 재사용 (기본장/도어올림/상판내림만, 상부장 제외)
-    const lowerMods = getModulesByCategory('lower', adjustedInternalSpace, spaceInfoWithSlotWidths);
+    // 도어분절 현관장(entryway-split)은 신발장 전용이므로 아일랜드에서 제외
+    const lowerMods = getModulesByCategory('lower', adjustedInternalSpace, spaceInfoWithSlotWidths)
+      .filter(m => !m.id.includes('entryway-split'));
     categoryModules = lowerMods.filter(m => {
       const id = m.id;
       const isDoorRaise = id.includes('door-lift') || id.includes('door-raise');
