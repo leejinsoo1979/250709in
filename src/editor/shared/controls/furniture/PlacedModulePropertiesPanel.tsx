@@ -883,6 +883,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
   const [freeWidthInput, setFreeWidthInput] = useState<string>('');
   const [freeHeightInput, setFreeHeightInput] = useState<string>('');
   const [freeDepthInput, setFreeDepthInput] = useState<string>('');
+  const freeHeightFocusedRef = React.useRef(false); // H 입력 포커스 추적
   const epDepthFocusedRef = React.useRef(false); // EP 깊이 (unused, kept for compat)
   const [epThicknessInput, setEpThicknessInput] = useState<string>(''); // EP 두께 로컬 버퍼
   const epThicknessFocusedRef = React.useRef(false); // EP 두께 입력 포커스 추적
@@ -1305,7 +1306,10 @@ const PlacedModulePropertiesPanel: React.FC = () => {
           ? Math.max(0, defaultGlassFloatForH - (currentPlacedModule.individualFloatHeight ?? defaultGlassFloatForH))
           : 0;
         const effectiveHeight = baseHeight + absorbedTopForH + absorbedBaseForH + absorbedGlassFloatForH;
-        setFreeHeightInput(Math.round(effectiveHeight).toString());
+        // 사용자가 H input을 편집 중이면 동기화 skip (입력값 덮어쓰기 방지)
+        if (!freeHeightFocusedRef.current) {
+          setFreeHeightInput(Math.round(effectiveHeight).toString());
+        }
         setFreeDepthInput(Math.round(currentPlacedModule.freeDepth || initialDepth).toString());
 
         // EP 두께 초기화
@@ -3362,8 +3366,10 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                       inputMode="numeric"
                       value={freeHeightInput}
                       readOnly={false}
+                      onFocus={() => { freeHeightFocusedRef.current = true; }}
                       onChange={(e) => setFreeHeightInput(e.target.value)}
                       onBlur={() => {
+                        freeHeightFocusedRef.current = false;
                         const displayVal = parseInt(freeHeightInput, 10);
                         const maxHeightInput = (() => {
                           if (moduleData.category === 'upper') return Math.round(spaceInfo.height);
