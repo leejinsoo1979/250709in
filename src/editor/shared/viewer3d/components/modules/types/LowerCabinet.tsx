@@ -1539,7 +1539,12 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
               isEditMode={isEditMode}
               hideTopNotch={isDoorLift2Tier || isDoorLift3Tier || isTopDown2Tier || isTopDown3Tier}
               maidaHeightsMm={isDoorLift2Tier ? [doorLift2TierMaidaH, doorLift2TierMaidaH] : isDoorLift3Tier ? [360, doorLift3TierUpperMaidaH, doorLift3TierUpperMaidaH] : undefined}
-              sideHeightOverrides={isTopDown2Tier ? { all: 240 } : isTopDown3Tier ? { first: 180, rest: 130 } : undefined}
+              sideHeightOverrides={
+                isTopDown2Tier ? { all: 240 }
+                : isTopDown3Tier ? { first: 180, rest: 130 }
+                : isDoorLift3Tier ? { first: 240, rest: 130 } // 특대서랍 측판 높이 240
+                : undefined
+              }
               doorTopGap={effectiveDrawerTopGap}
               doorBottomGap={effectiveDrawerBottomGap}
               defaultDoorTopGap={defaultDrawerTopGap}
