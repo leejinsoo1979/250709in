@@ -614,9 +614,23 @@ export const useBaseFurniture = (
     // 유틸리티
     mmToThreeUnits,
 
-    // 설정 데이터 (customSections가 있으면 modelConfig.sections를 오버라이드)
-    modelConfig: customSections
-      ? { ...modelConfig, sections: customSections }
-      : modelConfig
+    // 설정 데이터
+    // - 선반장(single-shelf/dual-shelf) 흡수 분배가 활성: useMemo에서 이미 분배된 modelConfig 사용
+    //   (customSections이 덮어쓰지 않도록 우회)
+    // - 그 외: 기존대로 customSections이 있으면 오버라이드
+    modelConfig: (() => {
+      const mid = moduleData?.id || '';
+      const isPlainShelf = /(^|-)(?:single|dual)-shelf-/.test(mid)
+        && !mid.includes('-4drawer-shelf-')
+        && !mid.includes('-2drawer-shelf-');
+      const useShelfAbsorbDistribution = isPlainShelf
+        && (shelfFloatAbsorbedMm > 0 || shelfBaseAbsorbedMm > 0);
+      if (useShelfAbsorbDistribution) {
+        return modelConfig;
+      }
+      return customSections
+        ? { ...modelConfig, sections: customSections }
+        : modelConfig;
+    })()
   };
 };
