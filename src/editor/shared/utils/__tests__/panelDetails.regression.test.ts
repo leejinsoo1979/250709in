@@ -129,8 +129,10 @@ describe('panelDetails regression baselines', () => {
       stoneTopThickness: 30
     })
 
-    expect(findPanel(panels, '전대').height).toBe(85)
-    expect(findPanel(panels, '인조대리석 앞판').height).toBe(120)
+    expect(findPanel(panels, '서랍1(마이다)').height).toBe(360)
+    expect(findPanel(panels, '서랍2(마이다)').height).toBe(360)
+    expect(findPanel(panels, '전대').height).toBe(55)
+    expect(findPanel(panels, '인조대리석 앞판').height).toBe(90)
   })
 
   it('하부 3단 서랍장 높이 축소 시 서랍 패널 높이는 가구 높이 안에서 재계산된다', () => {

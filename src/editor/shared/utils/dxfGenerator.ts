@@ -9,6 +9,7 @@ import {
   getSafeDrawingTypeName,
   formatDxfDate 
 } from './dxfKoreanText';
+import { resolveTopDown2TierGeometry } from './topDownCabinetGeometry';
 
 // 섹션 설정 타입 (실제 가구 구조 정의)
 interface DXFSectionConfig {
@@ -775,7 +776,7 @@ const drawFrontFurnitureModules = (dxf: DxfWriter, placedModules: DXFPlacedModul
         : isTopDown3Tier
         ? [{ fromBottom: 225, height: 65 }, { fromBottom: 445, height: 65 }, { fromBottom: 665, height: 65 }]
         : isTopDown2Tier
-        ? [{ fromBottom: 300, height: 65 }, { fromBottom: 665, height: 65 }]
+        ? resolveTopDown2TierGeometry(furnitureHeight).notches
         : isTopDownHalf
         ? [{ fromBottom: 665, height: 65 }]
         : [{ fromBottom: 330, height: 65 }];

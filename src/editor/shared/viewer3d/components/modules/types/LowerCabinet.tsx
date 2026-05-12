@@ -21,6 +21,7 @@ import LegraSideRail from '../components/LegraSideRail';
 import { Line } from '@react-three/drei';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
 import { resolveShelfFrontInsetMm } from '@/editor/shared/utils/shelfInsetCalculator';
+import { getTopDownStoneFrontVisibleHeightMm, resolveTopDown2TierGeometry } from '@/editor/shared/utils/topDownCabinetGeometry';
 
 /**
  * 졸리컷 수평 상판 — 앞면 하단 모서리가 45도로 가공된 판
@@ -197,15 +198,6 @@ const JollyCutVerticalPlate: React.FC<{
   );
 });
 
-const getTopDownStoneFrontVisibleHeightMm = (
-  moduleHeightMm: number,
-  doorTopGap?: number
-) => {
-  const effectiveDoorTopGap = (doorTopGap === undefined || doorTopGap === 0) ? -80 : doorTopGap;
-  const topFrontMm = 705 + (effectiveDoorTopGap - (-80));
-  return Math.max(0, moduleHeightMm - topFrontMm - 20);
-};
-
 /**
  * 인덕션장 레그라박스 서랍 + 마이다 (인출 애니메이션 포함)
  * - 바닥판 + 뒷판 + 레그라 측판(GLB) + 마이다 2장
@@ -298,10 +290,9 @@ const InductionDrawerAnimated: React.FC<InductionDrawerAnimatedProps> = ({
   const drawer1BottomY = cabinetBottomY + mmToThreeUnits(basicThicknessMm + bottomGapMm);
   const drawer1TotalH = 228;
   const drawer1BackH = drawer1TotalH - drawerThicknessMm;
-  const drawer2FromBottomPanelTopMm = 338;
-  const drawer2BottomY = cabinetBottomY + mmToThreeUnits(drawer2FromBottomPanelTopMm + basicThicknessMm);
   const drawer2TotalH = 164;
   const drawer2BackH = drawer2TotalH - drawerThicknessMm;
+  // drawer2는 상단 마이다(maida2)와 연동되어야 하므로 maida2 계산 이후에 위치 결정 (아래 참조)
 
   const drawerBottomWidth = mmToThreeUnits(drawerBottomWidthMm);
   const drawerBackWidth = mmToThreeUnits(drawerBackWidthMm);
@@ -326,15 +317,25 @@ const InductionDrawerAnimated: React.FC<InductionDrawerAnimatedProps> = ({
   const gapBottomExt = (doorBottomGap ?? defaultDBG) - defaultDBG;
   const cabinetHeightMm = adjustedHeight / 0.01;
 
-  const maida1HeightMm = 340 + gapBottomExt;
+  // 인덕션장 마이다: H 변경 시 '상단 마이다(maida2)'는 크기 고정, 위치만 평행 이동
+  //   - 상단갭 20mm, 마이다 사이 갭 3mm 고정
+  //   - maida2 외경 높이 = 427 (H=785 기준 상수)
+  //   - maida1 높이 = (maida2 하단 - 3) - (-5 - bottomExt) → H 변화는 maida1이 흡수
+  const gapMm = 3;
+  const FIXED_MAIDA2_H = 427;
+  const maida2HeightMm = Math.max(0, FIXED_MAIDA2_H + gapTopExt);
+  const maida2TopMm = cabinetHeightMm - 20 + gapTopExt;
+  const maida2BottomMm = maida2TopMm - maida2HeightMm;
+  const maida2CenterY = cabinetBottomY + mmToThreeUnits(maida2BottomMm) + mmToThreeUnits(maida2HeightMm) / 2;
+
+  const maida1TopMm = maida2BottomMm - gapMm;
   const maida1BottomMm = -5 - gapBottomExt;
+  const maida1HeightMm = Math.max(0, maida1TopMm - maida1BottomMm);
   const maida1CenterY = cabinetBottomY + mmToThreeUnits(maida1BottomMm) + mmToThreeUnits(maida1HeightMm) / 2;
 
-  const gapMm = 3;
-  const maida2BottomMm = -5 + 340 + gapMm;
-  const maida2TopMm = cabinetHeightMm - 20 + gapTopExt;
-  const maida2HeightMm = Math.max(0, maida2TopMm - maida2BottomMm);
-  const maida2CenterY = cabinetBottomY + mmToThreeUnits(maida2BottomMm) + mmToThreeUnits(maida2HeightMm) / 2;
+  // drawer2 위치: 상단 마이다(maida2)와 함께 평행 이동
+  // 원래 H=785 기준: maida2 바닥(338) + 18 = drawer2 바닥(356)
+  const drawer2BottomY = cabinetBottomY + mmToThreeUnits(maida2BottomMm + 18);
 
   // 2D 오버레이 표시 조건
   const showMaidaOverlay = viewMode === '2D' && view2DDirection === 'front';
@@ -853,7 +854,7 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
   });
   const isTopDownModule = moduleData.id.includes('lower-top-down-') || moduleData.id.includes('dual-lower-top-down-');
   const topDownStretcherHeightMm = isTopDownModule
-    ? Math.max(0, 55 + ((moduleData.dimensions.height || 785) - 785))
+    ? 55
     : 55;
 
   // 띄워서 배치 여부 확인 (간접조명용)
@@ -1196,7 +1197,11 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
               } : moduleData.id.includes('lower-top-down-3tier') ? {
                 sideNotches: [{ y: 65, z: 40, fromBottom: 225 }, { y: 65, z: 40, fromBottom: 445 }, { y: 65, z: 40, fromBottom: 665 }]
               } : moduleData.id.includes('lower-top-down-2tier') ? {
-                sideNotches: [{ y: 65, z: 40, fromBottom: 300 }, { y: 65, z: 40, fromBottom: 665 }]
+                sideNotches: resolveTopDown2TierGeometry(Math.round(adjustedHeight / 0.01)).notches.map(notch => ({
+                  y: notch.height,
+                  z: 40,
+                  fromBottom: notch.fromBottom
+                }))
               } : (moduleData.id.includes('lower-top-down-half') || moduleData.id.includes('dual-lower-top-down-half')) ? {
                 sideNotches: [{ y: 65, z: 40, fromBottom: 665 }]
               } : {})}>
@@ -1359,7 +1364,7 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
         // 도어올림 3단: fromBottom=315, 545 (1단=315, 따내기65, 2단=165, 따내기65, 3단=175)
         // 도어올림 2단: fromBottom=355
         // 상판내림 3단: fromBottom=225, 445, 665 (1단=225, 따내기65, 2단=155, 따내기65, 3단=155, 따내기65, 상단55)
-        // 상판내림 2단: fromBottom=300, 665 (1단=300, 따내기65, 2단=300, 따내기65, 상단55)
+        // 상판내림 2단: 1/2단 마이다 높이를 동일하게 유지하고, 사이 간격 20mm를 보존
         const drawer2TierFromBottom = (moduleData.dimensions.height - 125) / 2;
         // 도어올림 2단: 사용자 몸통 H 변경 시 도어와 몸통이 균형있게 같이 변하도록 동적 계산
         // 노치높이 65, 도어갭 20 고정. notch=(H-75)/2, maida=notch+45 (도어갭 20mm 보존)
@@ -1374,7 +1379,8 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
         // (H=785 기준: notch=[315,545], 도어=[360,210,210] — 기존 값과 동일)
         const doorLift3TierUpperMaidaH = Math.max(0, Math.round((currentCabinetHmm - 365) / 2));
         const doorLift3TierNotch2 = Math.max(380, doorLift3TierUpperMaidaH + 335);
-        const notchFromBottoms = is3Tier ? [295, 510] : isDoorLift3Tier ? [315, doorLift3TierNotch2] : isDoorLift2Tier ? [doorLift2TierNotch] : isTopDown3Tier ? [225, 445, 665] : isTopDown2Tier ? [300, 665] : [drawer2TierFromBottom];
+        const topDown2TierGeometry = resolveTopDown2TierGeometry(currentCabinetHmm);
+        const notchFromBottoms = is3Tier ? [295, 510] : isDoorLift3Tier ? [315, doorLift3TierNotch2] : isDoorLift2Tier ? [doorLift2TierNotch] : isTopDown3Tier ? [225, 445, 665] : isTopDown2Tier ? topDown2TierGeometry.notches.map(notch => notch.fromBottom) : [drawer2TierFromBottom];
         const notchHeights = is3Tier ? [65, 65] : isDoorLift3Tier ? [65, 65] : isDoorLift2Tier ? [65] : isTopDown3Tier ? [65, 65, 65] : isTopDown2Tier ? [65, 65] : [65];
         const drawerCount = (is3Tier || isDoorLift3Tier || isTopDown3Tier) ? 3 : 2;
 
@@ -1455,8 +1461,13 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
       {showFurniture && hasBase !== false && (moduleData.id.includes('lower-half-cabinet') || moduleData.id.includes('dual-lower-half-cabinet') || moduleData.id.includes('lower-sink-cabinet') || moduleData.id.includes('dual-lower-sink-cabinet') || moduleData.id.includes('lower-induction-cabinet') || moduleData.id.includes('dual-lower-induction-cabinet')) && (() => {
         const mmToThreeUnits = (mm: number) => mm * 0.01;
         const cabinetHeight = adjustedHeight;
+        const cabinetHeightMmLocal = cabinetHeight / 0.01;
         const notchHeightMm = 60;
-        const notchFromBottomMm = (moduleData.dimensions.height || 785) - notchHeightMm;
+        // 인덕션장은 H 변경 시 따내기도 캐비넷 상단 기준 60mm 아래로 함께 이동
+        const isInductionForNotch = moduleData.id.includes('lower-induction-cabinet') || moduleData.id.includes('dual-lower-induction-cabinet');
+        const notchFromBottomMm = isInductionForNotch
+          ? (cabinetHeightMmLocal - notchHeightMm)
+          : ((moduleData.dimensions.height || 785) - notchHeightMm);
         const basicThicknessMm = baseFurniture.basicThickness / 0.01;
         const frameWidth = mmToThreeUnits(adjustedWidth || moduleData.dimensions.width);
         const verticalHMm = notchHeightMm - basicThicknessMm;
@@ -1500,10 +1511,11 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
         const isInductionCabinet = moduleData.id.includes('lower-induction-cabinet') || moduleData.id.includes('dual-lower-induction-cabinet');
         const cabinetBottomY = -cabinetHeight / 2;
         const notchHeightMm = 60;
-        const notchFromBottomMm = (moduleData.dimensions.height || 785) - notchHeightMm;
-        const apronHeightMm = isInductionCabinet
-          ? Math.max(0, cabinetHeightMm - 635)
-          : 150;
+        // 따내기 위치: 캐비넷 상단 기준 60mm 아래 (H 변경 시 함께 위로 이동)
+        const notchFromBottomMm = cabinetHeightMm - notchHeightMm;
+        // 전대 높이는 고정 150mm (인덕션장/싱크장 동일)
+        // H 변경 시 전대 크기는 그대로, 위치만 따내기 하단에 맞춰 이동
+        const apronHeightMm = 150;
         // 전대 상단 = 따내기 시작점(notchFromBottomMm), 전대 하단 = notchFromBottomMm - apronHeightMm
         const apronCenterY = cabinetBottomY + mmToThreeUnits(notchFromBottomMm - apronHeightMm / 2);
         const apronWidth = baseFurniture.innerWidth; // 내경 (전체폭 - 측판두께×2)

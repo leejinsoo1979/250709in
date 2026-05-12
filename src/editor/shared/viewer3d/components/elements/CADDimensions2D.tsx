@@ -12,6 +12,7 @@ import { getModuleCategory } from '@/editor/shared/utils/freePlacementUtils';
 import type { PlacedModule } from '@/editor/shared/furniture/types';
 import type { SectionConfig } from '@/data/modules/shelving';
 import type { SpaceInfo } from '@/store/core/spaceConfigStore';
+import { resolveTopDown2TierGeometry } from '@/editor/shared/utils/topDownCabinetGeometry';
 
 const DEFAULT_BASIC_THICKNESS_MM = 18;
 
@@ -355,19 +356,25 @@ const computeLowerCabinetMaidaHeights = (
   const isLowerTopDown = moduleId.includes('lower-top-down-');
   const isInduction = moduleId.includes('lower-induction-cabinet') || moduleId.includes('dual-lower-induction-cabinet');
 
-  // 인덕션장: 2단 마이다 상단은 몸통 상단 - 20mm 기준으로 몸통 높이 변경에 연동
+  // 인덕션장: H 변경 시 '상단 마이다(빨간 박스 영역)'는 크기 고정으로 위/아래 평행이동
+  //  - 상단갭 20mm, 마이다 사이 갭 3mm 고정
+  //  - 마이다2 외경 높이 = 427 (H=785 기준 상수: 785 - 20[상단갭] - 338[하단 묶음])
+  //  - 마이다1 높이 = 총 외경 - 마이다2 - 3(갭) → H 변화는 마이다1이 흡수
   if (isInduction) {
     const defaultDTG = -20;
     const defaultDBG = 5;
     const gapTopExt = doorTopGap - defaultDTG;
     const gapBottomExt = doorBottomGap - defaultDBG;
     const gapMm = 3;
-    const maida1H = 340 + gapBottomExt;
-    const maida1Bottom = -5 - gapBottomExt;
-    const maida1Top = maida1Bottom + maida1H;
-    const maida2Bottom = -5 + 340 + gapMm;
+    const FIXED_MAIDA2_H = 427; // 상단 마이다 높이 고정 (H=785 기준 상수)
+    // 마이다2 (상단): 위치만 H에 연동, 크기는 FIXED_MAIDA2_H + 상단/하단 갭 확장 반영
+    const maida2H = Math.max(0, FIXED_MAIDA2_H + gapTopExt);
     const maida2Top = moduleHeightMm - 20 + gapTopExt;
-    const maida2H = Math.max(0, maida2Top - maida2Bottom);
+    const maida2Bottom = maida2Top - maida2H;
+    // 마이다1 (하단): 마이다2 아래 3mm 갭 이후부터 캐비넷 하단(-5 - bottomExt)까지 (= H 변화 흡수)
+    const maida1Top = maida2Bottom - gapMm;
+    const maida1Bottom = -5 - gapBottomExt;
+    const maida1H = Math.max(0, maida1Top - maida1Bottom);
     return [
       { maidaHeightMm: maida1H, maidaBottomMm: maida1Bottom, maidaTopMm: maida1Top },
       { maidaHeightMm: maida2H, maidaBottomMm: maida2Bottom, maidaTopMm: maida2Top },
@@ -459,7 +466,8 @@ const computeLowerCabinetMaidaHeights = (
   // (H=785 기준: notch=[315,545], 도어=[360,210,210])
   const doorLift3TierUpperMaidaH = Math.max(0, Math.round((moduleHeightMm - 365) / 2));
   const doorLift3TierNotch2 = Math.max(380, doorLift3TierUpperMaidaH + 335);
-  const notchFromBottoms = is3Tier ? [295, 510] : isDoorLift3Tier ? [315, doorLift3TierNotch2] : isDoorLift2Tier ? [doorLift2TierNotch] : isTopDown3Tier ? [225, 445, 665] : isTopDown2Tier ? [300, 665] : [drawer2TierFromBottom];
+  const topDown2TierGeometry = resolveTopDown2TierGeometry(moduleHeightMm);
+  const notchFromBottoms = is3Tier ? [295, 510] : isDoorLift3Tier ? [315, doorLift3TierNotch2] : isDoorLift2Tier ? [doorLift2TierNotch] : isTopDown3Tier ? [225, 445, 665] : isTopDown2Tier ? topDown2TierGeometry.notches.map(notch => notch.fromBottom) : [drawer2TierFromBottom];
   const notchHeights = is3Tier ? [65, 65] : isDoorLift3Tier ? [65, 65] : isDoorLift2Tier ? [65] : isTopDown3Tier ? [65, 65, 65] : isTopDown2Tier ? [65, 65] : [65];
   const hideTopNotch = isDoorLift2Tier || isDoorLift3Tier || isTopDown2Tier || isTopDown3Tier;
   const fixedMaidaHeights = isDoorLift2Tier ? [doorLift2TierMaidaH, doorLift2TierMaidaH] : isDoorLift3Tier ? [360, doorLift3TierUpperMaidaH, doorLift3TierUpperMaidaH] : undefined;

@@ -5,6 +5,7 @@ import type { CustomFurnitureConfig } from '@/editor/shared/furniture/types';
 import type { FreeSurroundConfig } from '@/store/core/spaceConfigStore';
 import { resolveDoorLeafDimensions } from './doorGeometryCalculator';
 import { resolveShelfFrontInsetMm } from './shelfInsetCalculator';
+import { getTopDownStoneFrontVisibleHeightMm, resolveTopDown2TierGeometry } from './topDownCabinetGeometry';
 
 // 패널 정보 계산 함수 - 상부장/하부장 구분하여 표시
 export const calculatePanelDetails = (
@@ -142,11 +143,9 @@ export const calculatePanelDetails = (
 
   const originalHeight = moduleData.dimensions.height;
   const height = freeHeight || originalHeight;
-  const topDownStretcherHeightMm = Math.max(0, 55 + (height - 785));
+  const topDownStretcherHeightMm = 55;
   const getTopDownStoneFrontHeightMm = (stoneThicknessMm: number) => {
-    const effectiveDoorTopGap = (doorTopGap === undefined || doorTopGap === 0) ? -80 : doorTopGap;
-    const topFrontMm = 705 + (effectiveDoorTopGap - (-80));
-    return Math.max(0, height - topFrontMm - 20) + stoneThicknessMm;
+    return getTopDownStoneFrontVisibleHeightMm(height, doorTopGap) + stoneThicknessMm;
   };
   const heightRatio = freeHeight && originalHeight > 0 ? freeHeight / originalHeight : 1;
   // 내경 = 전체폭 - 실제 측판두께×2 (18.5mm면 18.5×2, 18mm면 18×2)
@@ -418,7 +417,9 @@ export const calculatePanelDetails = (
           } else if (id.includes('lower-top-down-3tier')) {
             notches.push({ y: 65, z: 40, fromBottom: 225 }, { y: 65, z: 40, fromBottom: 445 }, { y: 65, z: 40, fromBottom: 665 });
           } else if (id.includes('lower-top-down-2tier')) {
-            notches.push({ y: 65, z: 40, fromBottom: 300 }, { y: 65, z: 40, fromBottom: 665 });
+            resolveTopDown2TierGeometry(height).notches.forEach(notch => {
+              notches.push({ y: notch.height, z: 40, fromBottom: notch.fromBottom });
+            });
           } else if (id.includes('lower-top-down-half') || id.includes('dual-lower-top-down-half')) {
             notches.push({ y: 65, z: 40, fromBottom: 665 });
           }
@@ -1613,7 +1614,9 @@ export const calculatePanelDetails = (
         notchFromBottoms = [355]; notchHeightsArr = [65];
         hideTopNotch = true; fixedMaidaHeights = [400, 400];
       } else if (isTopDown2Tier) {
-        notchFromBottoms = [300, 665]; notchHeightsArr = [65, 65];
+        const topDown2TierGeometry = resolveTopDown2TierGeometry(height);
+        notchFromBottoms = topDown2TierGeometry.notches.map(notch => notch.fromBottom);
+        notchHeightsArr = topDown2TierGeometry.notches.map(notch => notch.height);
         hideTopNotch = true;
       } else { // standard lower-drawer-2tier
         const bodyH = moduleData.dimensions.height || 785;
@@ -1885,7 +1888,7 @@ export const calculatePanelDetails = (
       : isTopDown3Tier
       ? [{ fromBottom: 225, height: 65 }, { fromBottom: 445, height: 65 }, { fromBottom: 665, height: 65 }]
       : isTopDown2Tier
-      ? [{ fromBottom: 300, height: 65 }, { fromBottom: 665, height: 65 }]
+      ? resolveTopDown2TierGeometry(height).notches
       : isTopDownHalf || isTopDownTouch
       ? [{ fromBottom: 665, height: 65 }]
       : [{ fromBottom: ((moduleData.dimensions.height || 785) - 125) / 2, height: 65 }];
