@@ -1200,10 +1200,15 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
               stoneTopThickness={stoneThickness}
               {...(moduleData.id.includes('lower-door-lift-touch-') ? {
                 // 도어올림 터치: 따내기 없음
-              } : moduleData.id.includes('lower-top-down-touch-') ? {
-                // 상판내림 터치: 상판내림 반통과 동일한 상단 따내기
-                sideNotches: [{ y: 65, z: 40, fromBottom: 665 }]
-              } : moduleData.id.includes('lower-drawer-3tier') ? (() => {
+              } : moduleData.id.includes('lower-top-down-touch-') ? (() => {
+                // 상판내림 터치: H 변경 시 측판 따내기도 캐비넷 상단에 붙어 평행이동
+                // H=785 기준 fromBottom=665 → delta = H - 785
+                const cabinetHmm_tdt = Math.round(adjustedHeight / 0.01);
+                const deltaTDT = cabinetHmm_tdt - 785;
+                return {
+                  sideNotches: [{ y: 65, z: 40, fromBottom: 665 + deltaTDT }]
+                };
+              })() : moduleData.id.includes('lower-drawer-3tier') ? (() => {
                 // 3단서랍장 H 변경 시 측판 노치도 캐비넷 상단에 붙어 평행이동
                 // H=785 기준 [295, 510] → delta = H - 785
                 const cabinetHmm = Math.round(adjustedHeight / 0.01);
@@ -1466,7 +1471,12 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
       {/* 상판내림 반통/한통: L자 프레임만 렌더링 (서랍 없음, 도어는 별도) — 걸래받이 OFF 시 숨김 */}
       {showFurniture && hasBase !== false && (moduleData.id.includes('lower-top-down-half') || moduleData.id.includes('dual-lower-top-down-half') || moduleData.id.includes('lower-top-down-touch-') || moduleData.id.includes('dual-lower-top-down-touch-')) && (() => {
         const mmToThreeUnits = (mm: number) => mm * 0.01;
-        const notch = { fromBottom: 665, height: 65 };
+        // 상판내림 터치: H 변경 시 따내기/목찬넬/전대 위치도 캐비넷 상단에 붙어 평행이동
+        // H=785 기준 fromBottom=665 → delta = H - 785
+        const isTopDownTouchHere = moduleData.id.includes('lower-top-down-touch-') || moduleData.id.includes('dual-lower-top-down-touch-');
+        const cabinetHmmHere = Math.round(adjustedHeight / 0.01);
+        const deltaHere = isTopDownTouchHere ? (cabinetHmmHere - 785) : 0;
+        const notch = { fromBottom: 665 + deltaHere, height: 65 };
         const basicThicknessMm = baseFurniture.basicThickness / 0.01;
         const frameWidth = mmToThreeUnits(adjustedWidth || moduleData.dimensions.width);
         const verticalHMm = notch.height - basicThicknessMm;
