@@ -727,16 +727,14 @@ const TouchDrawerAnimated: React.FC<TouchDrawerAnimatedProps> = ({
     return { height: h, centerY, tier: idx + 1, bottomMm };
   });
 
-  // 상판내림 터치: stretcher(가로전대) 두께 변화량만큼 마이다2~/서랍2~ 평행 이동
-  // - stretcher가 길어지면(10mm 상판 65) 묶음 아래로, 짧아지면(30mm 상판 45) 묶음 위로
-  // - 20mm 상판 기준 stretcher=55가 기본
-  if (isTopDownTouch && drawers.length >= 2) {
-    const localStretcherH = stoneThickness === 10 ? 65 : stoneThickness === 30 ? 45 : 55;
-    const stretcherDeltaMm = localStretcherH - 55; // 10mm→+10, 30mm→-10
-    if (Math.abs(stretcherDeltaMm) > 0.01) {
-      for (let i = 1; i < drawers.length; i++) {
-        drawers[i] = { ...drawers[i], bottomY: drawers[i].bottomY - mmToThreeUnits(stretcherDeltaMm) };
-      }
+  // 상판내림 터치: 서랍2~ 위치를 마이다2~ 시작점에 묶음 (자동 동기화)
+  // - 마이다는 H/stretcher 변화에 따라 위치가 결정되고, 서랍은 마이다 i 안에서 21mm 위에 위치
+  // - 21mm = H=785 / stretcher=55 기준 서랍 bottomY와 마이다 시작 차이
+  if (isTopDownTouch && drawers.length >= 2 && maidas.length >= drawers.length) {
+    const drawerOffsetInsideMaida = 21;
+    for (let i = 1; i < drawers.length; i++) {
+      const newBottomY = cabinetBottomY + mmToThreeUnits(maidas[i].bottomMm + drawerOffsetInsideMaida);
+      drawers[i] = { ...drawers[i], bottomY: newBottomY };
     }
   }
 
