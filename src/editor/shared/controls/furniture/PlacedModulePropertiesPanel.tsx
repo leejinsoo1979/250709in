@@ -1633,7 +1633,11 @@ const PlacedModulePropertiesPanel: React.FC = () => {
         currentPlacedModule.moduleId.includes('-2drawer-shelf-') ||
         currentPlacedModule.moduleId.includes('-entryway-');
       if (isShelfModule) {
-        const effectiveSections = currentPlacedModule.customSections || moduleData.modelConfig?.sections || [];
+        // dual-upper-cabinet-shelf 등은 modelConfig.sections가 없고 leftSections만 있음 → fallback
+        const effectiveSections = currentPlacedModule.customSections
+          || moduleData.modelConfig?.sections
+          || moduleData.modelConfig?.leftSections
+          || [];
         const isSingleSec = effectiveSections.length < 2;
         if (isSingleSec) {
           // 1섹션 가구(상부장 3단형 등): 섹션0을 upperShelf 상태에 매핑 (편집 UI에서 단일 에디터로 표시)
@@ -6206,8 +6210,19 @@ const PlacedModulePropertiesPanel: React.FC = () => {
             currentPlacedModule.moduleId.includes('-2drawer-shelf-') ||
             currentPlacedModule.moduleId.includes('-entryway-')
           ) && (() => {
-            const effectiveSections: SectionConfig[] = currentPlacedModule.customSections || moduleData.modelConfig?.sections || [];
+            // dual-upper-cabinet-shelf 등은 modelConfig.sections가 없고 leftSections만 있음 → fallback
+            const effectiveSections: SectionConfig[] = currentPlacedModule.customSections
+              || moduleData.modelConfig?.sections
+              || moduleData.modelConfig?.leftSections
+              || [];
             const basicThickness = moduleData.modelConfig?.basicThickness || 18;
+
+            // 1섹션 가구(상부장 3단형 등): 가구 자체 높이 사용 (전체 공간 높이 X)
+            const isSingleSecForHeight = effectiveSections.length < 2;
+            const moduleOwnHeight = currentPlacedModule?.customHeight
+              ?? currentPlacedModule?.freeHeight
+              ?? moduleData?.dimensions?.height
+              ?? 0;
 
             // 각 섹션별 shelf 편집 블록 렌더링 헬퍼
             const renderShelfEditor = (
@@ -6220,19 +6235,21 @@ const PlacedModulePropertiesPanel: React.FC = () => {
             ) => {
               const section = effectiveSections[sectionIdx];
               if (!section || section.type !== 'shelf') return null;
-              // 섹션 외경을 spaceInfo 실시간 값으로 재계산
-              // 마지막 섹션: 가구외경 - 고정섹션합, 첫 섹션: section.height 그대로
+              // 섹션 외경 계산
+              // 1섹션 가구(상부장 3단형 등): 가구 자체 높이를 그대로 섹션 외경으로 사용
+              // 2섹션 가구(옷장 등): 마지막 섹션은 가구외경 - 고정섹션합, 첫 섹션은 section.height 그대로
               const topFrameR = spaceInfo.frameSize?.top ?? 30;
-              // 가구 개별 baseFrameHeight 우선, 없으면 글로벌 spaceInfo 사용
               const baseFrameR = currentPlacedModule?.baseFrameHeight !== undefined
                 ? currentPlacedModule.baseFrameHeight
                 : (spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height ?? 60) : 0);
               const furnitureOuterR = (spaceInfo.height || 0) - topFrameR - baseFrameR;
               const fixedSumR = effectiveSections.slice(0, -1).reduce((s: number, sec: any) => s + (sec.height || 0), 0);
               const isLastR = sectionIdx === effectiveSections.length - 1;
-              const sectionHeight = isLastR
-                ? Math.max(0, furnitureOuterR - fixedSumR)
-                : ((section.height as number) || 0);
+              const sectionHeight = isSingleSecForHeight
+                ? Math.max(0, moduleOwnHeight)
+                : (isLastR
+                  ? Math.max(0, furnitureOuterR - fixedSumR)
+                  : ((section.height as number) || 0));
 
               const handleCountChange = (delta: number) => {
                 const newCount = Math.max(0, Math.min(10, count + delta));

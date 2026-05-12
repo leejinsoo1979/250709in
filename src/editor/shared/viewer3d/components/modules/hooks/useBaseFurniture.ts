@@ -618,6 +618,8 @@ export const useBaseFurniture = (
     // - 선반장(single-shelf/dual-shelf) 흡수 분배가 활성: useMemo에서 이미 분배된 modelConfig 사용
     //   (customSections이 덮어쓰지 않도록 우회)
     // - 그 외: 기존대로 customSections이 있으면 오버라이드
+    // - 듀얼 상부장(dual-upper-cabinet-*): leftSections/rightSections도 customSections로 오버라이드
+    //   (UpperCabinet.tsx가 leftSections를 직접 참조하므로)
     modelConfig: (() => {
       const mid = moduleData?.id || '';
       const isPlainShelf = /(^|-)(?:single|dual)-shelf-/.test(mid)
@@ -628,9 +630,18 @@ export const useBaseFurniture = (
       if (useShelfAbsorbDistribution) {
         return modelConfig;
       }
-      return customSections
-        ? { ...modelConfig, sections: customSections }
-        : modelConfig;
+      if (!customSections) return modelConfig;
+      const isDualUpper = mid.startsWith('dual-upper-cabinet-');
+      if (isDualUpper && modelConfig.leftSections) {
+        // 듀얼 상부장: leftSections/rightSections도 customSections로 동기화
+        return {
+          ...modelConfig,
+          sections: customSections,
+          leftSections: customSections,
+          rightSections: customSections,
+        };
+      }
+      return { ...modelConfig, sections: customSections };
     })()
   };
 };
