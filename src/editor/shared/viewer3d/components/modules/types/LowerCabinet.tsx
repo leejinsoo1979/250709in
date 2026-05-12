@@ -874,9 +874,13 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
     backPanelThicknessMm: backPanelThickness
   });
   const isTopDownModule = moduleData.id.includes('lower-top-down-') || moduleData.id.includes('dual-lower-top-down-');
-  // 어제 저녁(e98ecfb44) 시점 공식 복원: H 변화량만큼 stretcher 높이도 같이 늘어남 (기본 55mm)
+  // 상판내림 터치는 ㄱ자 꺾인 상판 안쪽 전대가 늘어나면 안 됨 → 항상 55mm 고정
+  // 그 외 상판내림(반통/2단/3단)은 어제 저녁(e98ecfb44) 공식 유지 (H 변화량 반영)
+  const isTopDownTouchForStretcher = moduleData.id.includes('lower-top-down-touch-') || moduleData.id.includes('dual-lower-top-down-touch-');
   const topDownStretcherHeightMm = isTopDownModule
-    ? Math.max(0, 55 + ((moduleData.dimensions.height || 785) - 785))
+    ? (isTopDownTouchForStretcher
+        ? 55
+        : Math.max(0, 55 + ((moduleData.dimensions.height || 785) - 785)))
     : 55;
 
   // 띄워서 배치 여부 확인 (간접조명용)
