@@ -438,6 +438,18 @@ const computeLowerCabinetMaidaHeights = (
       const topIndex = maidaHeightsMm.length - 1;
       maidaHeightsMm[topIndex] = Math.max(0, maidaHeightsMm[topIndex] + gapTopExt);
     }
+    // 상판내림 터치(2단/3단): 상단 마이다 묶음(맨 위 마이다들 + 사이 갭 3mm)은 크기 고정,
+    // H 변화는 '하단(마이다1)'이 흡수. 즉 마이다1 = 총 외경 - 상단 묶음 - 갭들
+    if ((isTopDown2Fixed || isTopDown3Fixed) && maidaHeightsMm.length >= 2) {
+      // 상단 묶음 = 마이다1을 제외한 나머지 마이다 합 + 마이다 사이 갭 (n-1 개)
+      const upperMaidasSum = maidaHeightsMm
+        .slice(1)
+        .reduce((a, b) => a + b, 0);
+      const upperGapsCount = maidaHeightsMm.length - 1; // 마이다1과 마이다2 사이 갭 1개 + 그 위 갭들
+      const upperBundle = upperMaidasSum + upperGapsCount * gapMm;
+      // 하단 마이다1 = 총 외경(totalFrontMm) - 상단 묶음
+      maidaHeightsMm[0] = Math.max(0, totalFrontMm - upperBundle);
+    }
 
     // 마이다 위치 (캐비넷 하단 -5mm 부터 시작)
     let currentBottomMm = -bottomExtMm;
@@ -506,8 +518,8 @@ const computeLowerCabinetMaidaHeights = (
   // (H=785 기준: notch=[315,545], 도어=[360,210,210])
   const doorLift3TierUpperMaidaH = Math.max(0, Math.round((moduleHeightMm - 365) / 2));
   const doorLift3TierNotch2 = Math.max(380, doorLift3TierUpperMaidaH + 335);
-  const topDown2TierGeometry = resolveTopDown2TierGeometry(moduleHeightMm, stoneTopThicknessMm);
-  const notchFromBottoms = is3Tier ? [295, 510] : isDoorLift3Tier ? [315, doorLift3TierNotch2] : isDoorLift2Tier ? [doorLift2TierNotch] : isTopDown3Tier ? [225, 445, 665] : isTopDown2Tier ? topDown2TierGeometry.notches.map(notch => notch.fromBottom) : [drawer2TierFromBottom];
+  // 어제 저녁(e98ecfb44) 복원: 상판내림 2단 측판 노치는 [300, 665] 하드코딩 (대리석 두께 영향 X)
+  const notchFromBottoms = is3Tier ? [295, 510] : isDoorLift3Tier ? [315, doorLift3TierNotch2] : isDoorLift2Tier ? [doorLift2TierNotch] : isTopDown3Tier ? [225, 445, 665] : isTopDown2Tier ? [300, 665] : [drawer2TierFromBottom];
   const notchHeights = is3Tier ? [65, 65] : isDoorLift3Tier ? [65, 65] : isDoorLift2Tier ? [65] : isTopDown3Tier ? [65, 65, 65] : isTopDown2Tier ? [65, 65] : [65];
   const hideTopNotch = isDoorLift2Tier || isDoorLift3Tier || isTopDown2Tier || isTopDown3Tier;
   const fixedMaidaHeights = isDoorLift2Tier ? [doorLift2TierMaidaH, doorLift2TierMaidaH] : isDoorLift3Tier ? [360, doorLift3TierUpperMaidaH, doorLift3TierUpperMaidaH] : undefined;

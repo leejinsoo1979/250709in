@@ -704,13 +704,34 @@ const TouchDrawerAnimated: React.FC<TouchDrawerAnimatedProps> = ({
     const topIndex = maidaHeightsMm.length - 1;
     maidaHeightsMm[topIndex] = Math.max(0, maidaHeightsMm[topIndex] + gapTopExt);
   }
+  // 상판내림 터치(2단/3단): H 변경 시 상단 묶음(맨 위 마이다들 + 사이 갭) 크기 고정,
+  // 마이다1(맨 아래)이 H 변화 흡수
+  if ((isTopDown2Fixed || isTopDown3Fixed) && maidaHeightsMm.length >= 2) {
+    const upperMaidasSum = maidaHeightsMm.slice(1).reduce((a, b) => a + b, 0);
+    const upperGapsCount = maidaHeightsMm.length - 1;
+    const upperBundle = upperMaidasSum + upperGapsCount * gapMm;
+    maidaHeightsMm[0] = Math.max(0, totalFrontMm - upperBundle);
+  }
 
   let currentBottomMm = -bottomExtMm;
   const maidas = maidaHeightsMm.map((h, idx) => {
+    const bottomMm = currentBottomMm; // 캐비넷 바닥 기준 마이다 시작 mm
     const centerY = cabinetBottomY + mmToThreeUnits(currentBottomMm + h / 2);
     currentBottomMm += h + gapMm;
-    return { height: h, centerY, tier: idx + 1 };
+    return { height: h, centerY, tier: idx + 1, bottomMm };
   });
+
+  // 상판내림 터치: 마이다1 흡수에 따라 서랍 위치도 위로 평행이동
+  // 원래 H=785 기준 마이다1 외경: 2단=353, 3단=284. 그 변화량만큼 마이다2~ / 서랍2~를 위로
+  if (isTopDownTouch && drawers.length >= 2 && maidaHeightsMm.length >= 2) {
+    const origMaida1H = isTDTouch2 ? 353 : 284; // [353,354] 또는 [284,210,210]
+    const delta = maidaHeightsMm[0] - origMaida1H; // 양수면 마이다1 더 큼
+    if (Math.abs(delta) > 0.01) {
+      for (let i = 1; i < drawers.length; i++) {
+        drawers[i] = { ...drawers[i], bottomY: drawers[i].bottomY + mmToThreeUnits(delta) };
+      }
+    }
+  }
 
   return (
     <group position={[0, cabinetYPosition, 0]}>
