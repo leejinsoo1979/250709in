@@ -670,9 +670,9 @@ const TouchDrawerAnimated: React.FC<TouchDrawerAnimatedProps> = ({
     : [228, 228];
 
   // 상판내림 터치: ㄱ자 상판 하단(=가로전대 하단)과 마이다 최상단 사이 갭을 항상 20mm 유지
-  // 가로전대 높이는 stoneThickness별로 다름 (10mm→45, 20mm→55, 30mm→65)
+  // 가로전대 높이는 stoneThickness별로 다름 (10mm→65, 20mm→55, 30mm→45)
   // 마이다 최상단 = 캐비넷상단 - (stretcher + 20) = 캐비넷상단 + defaultTopExtMm
-  const tdTouchStretcherH = stoneThickness === 10 ? 45 : stoneThickness === 30 ? 65 : 55;
+  const tdTouchStretcherH = stoneThickness === 10 ? 65 : stoneThickness === 30 ? 45 : 55;
   const defaultTopExtMm = isTopDownTouch ? -(tdTouchStretcherH + 20) : 30;
   const defaultBottomExtMm = 5;
   const topExtMm = isTopDownTouch && (doorTopGap === undefined || doorTopGap === 0)
@@ -719,13 +719,50 @@ const TouchDrawerAnimated: React.FC<TouchDrawerAnimatedProps> = ({
     maidaHeightsMm[0] = Math.max(0, totalFrontMm - upperBundle);
   }
 
-  let currentBottomMm = -bottomExtMm;
-  const maidas = maidaHeightsMm.map((h, idx) => {
-    const bottomMm = currentBottomMm; // 캐비넷 바닥 기준 마이다 시작 mm
-    const centerY = cabinetBottomY + mmToThreeUnits(currentBottomMm + h / 2);
-    currentBottomMm += h + gapMm;
-    return { height: h, centerY, tier: idx + 1, bottomMm };
-  });
+  // 상판내림 터치: 마이다 묶음을 캐비넷 '상단'에서 채워 내려옴
+  //   → 맨 위 마이다는 항상 stretcher 하단 - 20mm 위치 (1단)
+  //   → 그 아래 마이다(2단)도 고정 위치
+  //   → 맨 아래 마이다(3단/maidas[0])가 남은 공간 흡수
+  // 그 외(터치 아닌 경우)는 기존대로 바닥에서 위로 누적
+  let maidas: { height: number; centerY: number; tier: number; bottomMm: number }[];
+  if (isTopDownTouch && maidaHeightsMm.length >= 2) {
+    // 마이다 최상단(맨 위 마이다 끝점) = totalFrontMm - bottomExtMm 위치 (= H + topExt)
+    // 위에서 아래로 채우기
+    const lastIdx = maidaHeightsMm.length - 1;
+    const topPositionMm = -bottomExtMm + totalFrontMm; // 캐비넷 바닥 기준 마이다 묶음 끝
+    let cursorTop = topPositionMm;
+    const result: { height: number; centerY: number; tier: number; bottomMm: number }[] = new Array(maidaHeightsMm.length);
+    // 맨 위(lastIdx)부터 아래(1)까지 위치 고정
+    for (let i = lastIdx; i >= 1; i--) {
+      const h = maidaHeightsMm[i];
+      const bottomMm = cursorTop - h;
+      result[i] = {
+        height: h,
+        centerY: cabinetBottomY + mmToThreeUnits(bottomMm + h / 2),
+        tier: i + 1,
+        bottomMm
+      };
+      cursorTop = bottomMm - gapMm; // 아래 마이다 위쪽 = 이 마이다 하단 - 갭
+    }
+    // 맨 아래(0)는 -bottomExt부터 시작 ~ cursorTop까지
+    const bottomStart = -bottomExtMm;
+    result[0] = {
+      height: Math.max(0, cursorTop - bottomStart),
+      centerY: cabinetBottomY + mmToThreeUnits((bottomStart + cursorTop) / 2),
+      tier: 1,
+      bottomMm: bottomStart
+    };
+    maidaHeightsMm[0] = result[0].height; // 흡수된 새 높이 동기화
+    maidas = result;
+  } else {
+    let currentBottomMm = -bottomExtMm;
+    maidas = maidaHeightsMm.map((h, idx) => {
+      const bottomMm = currentBottomMm;
+      const centerY = cabinetBottomY + mmToThreeUnits(currentBottomMm + h / 2);
+      currentBottomMm += h + gapMm;
+      return { height: h, centerY, tier: idx + 1, bottomMm };
+    });
+  }
 
   // 상판내림 터치: 서랍2~ 위치를 마이다2~ 시작점에 묶음 (자동 동기화)
   // - 마이다는 H/stretcher 변화에 따라 위치가 결정되고, 서랍은 마이다 i 안에서 21mm 위에 위치
