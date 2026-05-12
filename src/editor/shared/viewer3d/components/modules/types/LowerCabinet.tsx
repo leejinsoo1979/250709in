@@ -853,8 +853,9 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
     backPanelThicknessMm: backPanelThickness
   });
   const isTopDownModule = moduleData.id.includes('lower-top-down-') || moduleData.id.includes('dual-lower-top-down-');
+  // 어제 저녁(e98ecfb44) 시점 공식 복원: H 변화량만큼 stretcher 높이도 같이 늘어남 (기본 55mm)
   const topDownStretcherHeightMm = isTopDownModule
-    ? 55
+    ? Math.max(0, 55 + ((moduleData.dimensions.height || 785) - 785))
     : 55;
 
   // 띄워서 배치 여부 확인 (간접조명용)
@@ -1206,11 +1207,8 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
               } : moduleData.id.includes('lower-top-down-3tier') ? {
                 sideNotches: [{ y: 65, z: 40, fromBottom: 225 }, { y: 65, z: 40, fromBottom: 445 }, { y: 65, z: 40, fromBottom: 665 }]
               } : moduleData.id.includes('lower-top-down-2tier') ? {
-                sideNotches: resolveTopDown2TierGeometry(Math.round(adjustedHeight / 0.01), stoneThickness).notches.map(notch => ({
-                  y: notch.height,
-                  z: 40,
-                  fromBottom: notch.fromBottom
-                }))
+                // 어제 저녁(e98ecfb44) 시점 복원: 측판 노치 [300, 665] 하드코딩
+                sideNotches: [{ y: 65, z: 40, fromBottom: 300 }, { y: 65, z: 40, fromBottom: 665 }]
               } : (moduleData.id.includes('lower-top-down-half') || moduleData.id.includes('dual-lower-top-down-half')) ? {
                 sideNotches: [{ y: 65, z: 40, fromBottom: 665 }]
               } : {})}>
@@ -1285,6 +1283,11 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
                     renderMode={renderMode}
                     lowerSectionTopOffsetMm={lowerSectionTopOffset}
                     isFloatingPlacement={isFloating}
+                    shelfFrontInsetMm={resolveShelfFrontInsetMm({
+                      moduleId: moduleData.id,
+                      cabinetCategory: moduleData.category,
+                      depthMm: baseFurniture?.actualDepthMm
+                    })}
                   />
                 )}
               </>
@@ -1296,7 +1299,10 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
             const isLowerHalf = moduleId.includes('lower-half-cabinet') || moduleId.includes('dual-lower-half-cabinet');
             const isDoorLiftHalf = moduleId.includes('lower-door-lift-half') || moduleId.includes('dual-lower-door-lift-half');
             const isTopDownHalf = moduleId.includes('lower-top-down-half') || moduleId.includes('dual-lower-top-down-half');
+            // 도어분절 현관장(entryway-split)은 modelConfig.sections로 선반 관리 → 다보선반 강제 처리 제외
+            const isEntrywaySplit = moduleId.includes('entryway-split');
             if (!isLowerHalf && !isDoorLiftHalf && !isTopDownHalf) return null;
+            if (isEntrywaySplit) return null;
 
             const mmToUnits = (mm: number) => mm * 0.01;
             const basicThicknessMm = baseFurniture.basicThickness / 0.01;
@@ -1388,7 +1394,7 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
         // (H=785 기준: notch=[315,545], 도어=[360,210,210] — 기존 값과 동일)
         const doorLift3TierUpperMaidaH = Math.max(0, Math.round((currentCabinetHmm - 365) / 2));
         const doorLift3TierNotch2 = Math.max(380, doorLift3TierUpperMaidaH + 335);
-        const topDown2TierGeometry = resolveTopDown2TierGeometry(currentCabinetHmm, stoneThickness);
+        // 어제 저녁(e98ecfb44) 복원: 상판내림 2단 측판 노치는 [300, 665] 하드코딩 (대리석 두께 영향 X)
         // 3단서랍장 H 변경: 상단 묶음(노치2/마이다2/노치1상단/마이다3)은 캐비넷 상단에 붙어 평행이동
         //   → 노치 위치를 H 변화량(delta)만큼 위로 이동, 마이다1만 흡수
         const drawer3TierDelta = currentCabinetHmm - 785;
@@ -1397,7 +1403,7 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
           : isDoorLift3Tier ? [315, doorLift3TierNotch2]
           : isDoorLift2Tier ? [doorLift2TierNotch]
           : isTopDown3Tier ? [225, 445, 665]
-          : isTopDown2Tier ? topDown2TierGeometry.notches.map(notch => notch.fromBottom)
+          : isTopDown2Tier ? [300, 665]
           : [drawer2TierFromBottom];
         const notchHeights = is3Tier ? [65, 65] : isDoorLift3Tier ? [65, 65] : isDoorLift2Tier ? [65] : isTopDown3Tier ? [65, 65, 65] : isTopDown2Tier ? [65, 65] : [65];
         const drawerCount = (is3Tier || isDoorLift3Tier || isTopDown3Tier) ? 3 : 2;
