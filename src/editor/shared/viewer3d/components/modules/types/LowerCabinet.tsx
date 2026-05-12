@@ -731,7 +731,8 @@ const TouchDrawerAnimated: React.FC<TouchDrawerAnimatedProps> = ({
   // - stretcher가 길어지면(10mm 상판 65) 묶음 아래로, 짧아지면(30mm 상판 45) 묶음 위로
   // - 20mm 상판 기준 stretcher=55가 기본
   if (isTopDownTouch && drawers.length >= 2) {
-    const stretcherDeltaMm = topDownStretcherHeightMm - 55; // 10mm→+10, 30mm→-10
+    const localStretcherH = stoneThickness === 10 ? 65 : stoneThickness === 30 ? 45 : 55;
+    const stretcherDeltaMm = localStretcherH - 55; // 10mm→+10, 30mm→-10
     if (Math.abs(stretcherDeltaMm) > 0.01) {
       for (let i = 1; i < drawers.length; i++) {
         drawers[i] = { ...drawers[i], bottomY: drawers[i].bottomY - mmToThreeUnits(stretcherDeltaMm) };
