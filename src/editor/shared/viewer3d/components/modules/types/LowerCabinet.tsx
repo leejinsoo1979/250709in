@@ -727,14 +727,14 @@ const TouchDrawerAnimated: React.FC<TouchDrawerAnimatedProps> = ({
     return { height: h, centerY, tier: idx + 1, bottomMm };
   });
 
-  // 상판내림 터치: 마이다1 흡수에 따라 서랍 위치도 위로 평행이동
-  // 원래 H=785 기준 마이다1 외경: 2단=353, 3단=284. 그 변화량만큼 마이다2~ / 서랍2~를 위로
-  if (isTopDownTouch && drawers.length >= 2 && maidaHeightsMm.length >= 2) {
-    const origMaida1H = isTDTouch2 ? 353 : 284; // [353,354] 또는 [284,210,210]
-    const delta = maidaHeightsMm[0] - origMaida1H; // 양수면 마이다1 더 큼
-    if (Math.abs(delta) > 0.01) {
+  // 상판내림 터치: stretcher(가로전대) 두께 변화량만큼 마이다2~/서랍2~ 평행 이동
+  // - stretcher가 길어지면(10mm 상판 65) 묶음 아래로, 짧아지면(30mm 상판 45) 묶음 위로
+  // - 20mm 상판 기준 stretcher=55가 기본
+  if (isTopDownTouch && drawers.length >= 2) {
+    const stretcherDeltaMm = topDownStretcherHeightMm - 55; // 10mm→+10, 30mm→-10
+    if (Math.abs(stretcherDeltaMm) > 0.01) {
       for (let i = 1; i < drawers.length; i++) {
-        drawers[i] = { ...drawers[i], bottomY: drawers[i].bottomY + mmToThreeUnits(delta) };
+        drawers[i] = { ...drawers[i], bottomY: drawers[i].bottomY - mmToThreeUnits(stretcherDeltaMm) };
       }
     }
   }
