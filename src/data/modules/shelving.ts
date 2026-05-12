@@ -790,26 +790,41 @@ const createSingleEntrywayH = (columnWidth: number, maxHeight: number): ModuleDa
 };
 
 /**
- * 싱글 도어분절 현관장: 하부섹션(H860, D600, 선반3) — 상부섹션 추후 추가 예정
- * 기본하부장 반통과 동일 구조 (상단 따내기 60mm + 목찬넬 L자 프레임 자동 포함)
+ * 싱글 도어분절 현관장: 하부섹션(H860, 선반3) + 상부섹션(나머지 H, 선반6 기본)
+ * D=600
  * ID에 'lower-half-cabinet' 포함 → LowerCabinet 라우팅 + 따내기/목찬넬 자동 적용
  */
-const createSingleEntrywaySplit = (columnWidth: number, _maxHeight: number): ModuleData => {
-  const bottomHeight = 860;       // 캐비넷 본체 높이 (조절발 제외)
-  const bottomDepth = 600;        // 깊이 600
+const createSingleEntrywaySplit = (columnWidth: number, maxHeight: number): ModuleData => {
+  const bottomHeight = 860;
+  const bottomDepth = 600;
   const _t = FURNITURE_SPECS.BASIC_THICKNESS;
 
-  // 선반 3개 균등 분할 (섹션 내경 = bottomHeight - 2*_t)
-  const innerH = bottomHeight - 2 * _t;
-  const shelfPositions = calculateEvenShelfPositions(innerH, 3, _t);
+  // 상부섹션 H = 전체 - 하부섹션
+  const totalHeight = maxHeight;
+  const topHeight = Math.max(0, totalHeight - bottomHeight);
+
+  const lowerInnerH = bottomHeight - 2 * _t;
+  const lowerShelfPositions = calculateEvenShelfPositions(lowerInnerH, 3, _t);
+
+  const upperInnerH = Math.max(0, topHeight - 2 * _t);
+  const upperShelfPositions = calculateEvenShelfPositions(upperInnerH, 6, _t);
 
   const baseSections: SectionConfig[] = [
+    // 섹션0: 하부 (H860, 선반3)
     {
       type: 'shelf',
-      heightType: 'percentage',
-      height: 100,
+      heightType: 'absolute',
+      height: bottomHeight,
       count: 3,
-      shelfPositions,
+      shelfPositions: lowerShelfPositions,
+    },
+    // 섹션1: 상부 (나머지 H, 선반6)
+    {
+      type: 'shelf',
+      heightType: 'absolute',
+      height: topHeight,
+      count: 6,
+      shelfPositions: upperShelfPositions,
     },
   ];
 
@@ -818,10 +833,10 @@ const createSingleEntrywaySplit = (columnWidth: number, _maxHeight: number): Mod
     `lower-half-cabinet-entryway-split-${widthForId}`,
     `도어분절 현관장 ${widthForId}mm`,
     columnWidth,
-    bottomHeight, // 현재 단계: 하부섹션만 → 가구 높이 = 하부 H
+    totalHeight,
     bottomDepth,
     FURNITURE_SPECS.COLORS.ENTRYWAY,
-    `도어분절 현관장 (하부섹션: 선반3) — 상부섹션 추후 추가`,
+    `도어분절 현관장 (하부 선반3 + 상부 선반6) D600`,
     bottomDepth,
     'lower'
   );
@@ -841,26 +856,38 @@ const createSingleEntrywaySplit = (columnWidth: number, _maxHeight: number): Mod
 };
 
 /**
- * 듀얼 도어분절 현관장: 하부섹션(H860, D600, 선반3) — 상부섹션 추후 추가 예정
- * 기본하부장 한통과 동일 구조 (상단 따내기 60mm + 목찬넬 L자 프레임 자동 포함, 좌우 도어 2개)
+ * 듀얼 도어분절 현관장: 하부섹션(H860, 선반3) + 상부섹션(나머지 H, 선반6 기본)
+ * D=600
  * ID에 'dual-lower-half-cabinet' 포함 → LowerCabinet 라우팅 + 따내기/목찬넬 자동 적용
  */
-const createDualEntrywaySplit = (dualWidth: number, slotWidths?: number[]): ModuleData => {
-  const bottomHeight = 860;       // 캐비넷 본체 높이 (조절발 제외)
-  const bottomDepth = 600;        // 깊이 600
+const createDualEntrywaySplit = (dualWidth: number, maxHeight: number, slotWidths?: number[]): ModuleData => {
+  const bottomHeight = 860;
+  const bottomDepth = 600;
   const _t = FURNITURE_SPECS.BASIC_THICKNESS;
 
-  // 선반 3개 균등 분할 (섹션 내경 = bottomHeight - 2*_t)
-  const innerH = bottomHeight - 2 * _t;
-  const shelfPositions = calculateEvenShelfPositions(innerH, 3, _t);
+  const totalHeight = maxHeight;
+  const topHeight = Math.max(0, totalHeight - bottomHeight);
+
+  const lowerInnerH = bottomHeight - 2 * _t;
+  const lowerShelfPositions = calculateEvenShelfPositions(lowerInnerH, 3, _t);
+
+  const upperInnerH = Math.max(0, topHeight - 2 * _t);
+  const upperShelfPositions = calculateEvenShelfPositions(upperInnerH, 6, _t);
 
   const baseSections: SectionConfig[] = [
     {
       type: 'shelf',
-      heightType: 'percentage',
-      height: 100,
+      heightType: 'absolute',
+      height: bottomHeight,
       count: 3,
-      shelfPositions,
+      shelfPositions: lowerShelfPositions,
+    },
+    {
+      type: 'shelf',
+      heightType: 'absolute',
+      height: topHeight,
+      count: 6,
+      shelfPositions: upperShelfPositions,
     },
   ];
 
@@ -869,10 +896,10 @@ const createDualEntrywaySplit = (dualWidth: number, slotWidths?: number[]): Modu
     `dual-lower-half-cabinet-entryway-split-${widthForId}`,
     `도어분절 현관장 한통 ${widthForId}mm`,
     dualWidth,
-    bottomHeight,
+    totalHeight,
     bottomDepth,
     FURNITURE_SPECS.COLORS.ENTRYWAY,
-    `도어분절 현관장 한통 (하부섹션: 선반3) — 상부섹션 추후 추가`,
+    `도어분절 현관장 한통 (하부 선반3 + 상부 선반6) D600`,
     bottomDepth,
     'lower'
   );
@@ -3586,7 +3613,7 @@ export const generateShelvingModules = (
     modules.push(createDualType5(dualWidth, maxHeight, dualSlotWidths));
     modules.push(createDualType6(dualWidth, maxHeight, dualSlotWidths));
     modules.push(createDualEntrywayH(dualWidth, maxHeight, dualSlotWidths));
-    modules.push(createDualEntrywaySplit(dualWidth, dualSlotWidths));
+    modules.push(createDualEntrywaySplit(dualWidth, maxHeight, dualSlotWidths));
     // modules.push(createDualEntrywayI(dualWidth, maxHeight, dualSlotWidths));
 
     // === 듀얼 선반장 가구 생성 ===

@@ -903,7 +903,7 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
     lowerSectionTopOffset,
     placementType: spaceInfo?.baseConfig?.placementType,
     floatHeight: spaceInfo?.baseConfig?.floatHeight,
-    hideTopPanel: !moduleData.id.includes('lower-door-lift-') && !moduleData.id.includes('lower-top-down-'),
+    hideTopPanel: !moduleData.id.includes('lower-door-lift-') && !moduleData.id.includes('lower-top-down-') && !moduleData.id.includes('entryway-split'),
     hasSideNotches: (moduleData.id.includes('lower-door-lift-2tier') || moduleData.id.includes('lower-door-lift-3tier') || moduleData.id.includes('lower-drawer-') || moduleData.id.includes('lower-top-down-')) && !moduleData.id.includes('lower-door-lift-touch-'),
   });
   const { renderMode: contextRenderMode, viewMode } = useSpace3DView();
@@ -1246,7 +1246,7 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
               renderMode={renderMode}
               isFloating={isFloating}
               hideVentilationCap={true}
-              hideTopPanel={!moduleData.id.includes('lower-door-lift-') && !moduleData.id.includes('lower-top-down-')}
+              hideTopPanel={!moduleData.id.includes('lower-door-lift-') && !moduleData.id.includes('lower-top-down-') && !moduleData.id.includes('entryway-split')}
               topPanelFrontReduction={(() => {
                 if (!moduleData.id.includes('lower-top-down-')) return 0;
                 const btMm = baseFurniture.basicThickness / 0.01; // 가구재 두께 mm
@@ -1315,6 +1315,9 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
                 sideNotches: [{ y: 65, z: 40, fromBottom: 300 }, { y: 65, z: 40, fromBottom: 665 }]
               } : (moduleData.id.includes('lower-top-down-half') || moduleData.id.includes('dual-lower-top-down-half')) ? {
                 sideNotches: [{ y: 65, z: 40, fromBottom: 665 }]
+              } : moduleData.id.includes('entryway-split') ? {
+                // 도어분절 현관장: 하부섹션 상단(860 - 60 = 800)에 측판 따내기
+                sideNotches: [{ y: 60, z: 40, fromBottom: 800 }]
               } : {})}>
             {/* 내부 구조는 항상 렌더링 (서랍/선반) */}
             <>
@@ -1403,7 +1406,7 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
             const isLowerHalf = moduleId.includes('lower-half-cabinet') || moduleId.includes('dual-lower-half-cabinet');
             const isDoorLiftHalf = moduleId.includes('lower-door-lift-half') || moduleId.includes('dual-lower-door-lift-half');
             const isTopDownHalf = moduleId.includes('lower-top-down-half') || moduleId.includes('dual-lower-top-down-half');
-            // 도어분절 현관장(entryway-split)은 modelConfig.sections로 선반 관리 → 다보선반 강제 처리 제외
+            // 도어분절 현관장(entryway-split)은 modelConfig.sections.count(3)로 선반 관리 → SectionsRenderer가 그림
             const isEntrywaySplit = moduleId.includes('entryway-split');
             if (!isLowerHalf && !isDoorLiftHalf && !isTopDownHalf) return null;
             if (isEntrywaySplit) return null;
@@ -1614,9 +1617,13 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
         const notchHeightMm = 60;
         // 인덕션장은 H 변경 시 따내기도 캐비넷 상단 기준 60mm 아래로 함께 이동
         const isInductionForNotch = moduleData.id.includes('lower-induction-cabinet') || moduleData.id.includes('dual-lower-induction-cabinet');
-        const notchFromBottomMm = isInductionForNotch
-          ? (cabinetHeightMmLocal - notchHeightMm)
-          : ((moduleData.dimensions.height || 785) - notchHeightMm);
+        // 도어분절 현관장(entryway-split): 따내기는 하부섹션 상단(860 - 60 = 800)에 고정 → 가구 최상단이 아님
+        const isEntrywaySplitNotch = moduleData.id.includes('entryway-split');
+        const notchFromBottomMm = isEntrywaySplitNotch
+          ? (860 - notchHeightMm)
+          : (isInductionForNotch
+            ? (cabinetHeightMmLocal - notchHeightMm)
+            : ((moduleData.dimensions.height || 785) - notchHeightMm));
         const basicThicknessMm = baseFurniture.basicThickness / 0.01;
         const frameWidth = mmToThreeUnits(adjustedWidth || moduleData.dimensions.width);
         const verticalHMm = notchHeightMm - basicThicknessMm;

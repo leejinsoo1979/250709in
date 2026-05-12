@@ -6579,28 +6579,28 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         return <React.Fragment key={`shelf-gaps-${module.id}`}>{output}</React.Fragment>;
       })}
 
-      {/* 유리장(glass-cabinet) 정면뷰: 서랍 영역 위치 조절 스피너 (▲▼) */}
+      {/* 유리장(glass-cabinet) 정면뷰: 서랍 영역 위치 조절 스피너(▲▼) + 좌측 분할 치수 가이드 */}
       {showDimensions && currentViewDirection === 'front' && placedModules.map((module) => {
         const mid = module.moduleId || '';
         if (!mid.includes('glass-cabinet')) return null;
         const moduleData = getModuleById(mid, calculateInternalSpace(spaceInfo), spaceInfo);
         if (!moduleData) return null;
 
-        // 유리장 H (가구 본체 외경)
+        // 유리장 외경 H
         const glassH = (module as any).customHeight ?? (module as any).freeHeight ?? moduleData.dimensions?.height ?? 1920;
-        // 유리장 바닥 절대 Y (mm): 띄움(200) + 바닥마감재 위
+        // 유리장 바닥 절대 Y(mm) = 바닥마감재 + 띄움
         const floorFinishMm = spaceInfo.hasFloorFinish && spaceInfo.floorFinish?.height ? spaceInfo.floorFinish.height : 0;
         const floatMm = (module as any).individualFloatHeight ?? 200;
         const glassBottomAbsMm = floorFinishMm + floatMm;
-        // 서랍 영역 측판 사양: 가구 바닥 + offset(기본 242)부터 sideH=500mm 위
+        const glassTopAbsMm = glassBottomAbsMm + glassH;
+
+        // 서랍 영역(측판+바닥판+2단서랍) 측판 사양
         const SIDE_H = 500;
         const DEFAULT_OFFSET = 242;
         const currentOffset = (module as any).glassDrawerOffsetMm ?? DEFAULT_OFFSET;
-        // 서랍 영역 중심 절대 Y (mm)
-        const drawerCenterAbsMm = glassBottomAbsMm + currentOffset + SIDE_H / 2;
-        // X 위치: 가구 중심 좌측 라벨
-        const cxX = module.position.x;
-        const labelX = cxX;
+        const drawerBottomAbsMm = glassBottomAbsMm + currentOffset;
+        const drawerTopAbsMm = drawerBottomAbsMm + SIDE_H;
+        const drawerCenterAbsMm = (drawerBottomAbsMm + drawerTopAbsMm) / 2;
 
         const moveOffset = (delta: number) => {
           const next = Math.max(0, Math.min(glassH - SIDE_H, currentOffset + delta));
@@ -6608,73 +6608,151 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           updatePlacedModule(module.id, { glassDrawerOffsetMm: next });
         };
 
-        const cyThree = mmToThreeUnits(drawerCenterAbsMm);
+        // 3개 분할 영역 mm: 상부오픈 / 서랍 / 하부오픈
+        const upperH = Math.max(0, Math.round(glassTopAbsMm - drawerTopAbsMm));
+        const drawerH = Math.max(0, Math.round(drawerTopAbsMm - drawerBottomAbsMm));
+        const lowerH = Math.max(0, Math.round(drawerBottomAbsMm - glassBottomAbsMm));
+
+        // 좌측 가이드 X (모듈 좌측 외부, 가구 좌측에서 약 60mm 떨어진 위치)
+        const moduleWidthMm = (module.moduleWidth || (module as any).slotCustomWidth || moduleData.dimensions?.width || 600);
+        const cxX = module.position.x;
+        const leftGuideX = cxX - mmToThreeUnits(moduleWidthMm / 2 + 30);
+        const leftTextX = leftGuideX - mmToThreeUnits(20);
+
+        const yGlassBottom = mmToThreeUnits(glassBottomAbsMm);
+        const yGlassTop = mmToThreeUnits(glassTopAbsMm);
+        const yDrawerBottom = mmToThreeUnits(drawerBottomAbsMm);
+        const yDrawerTop = mmToThreeUnits(drawerTopAbsMm);
+
+        const tickW = mmToThreeUnits(15);
+        const drawCenterYThree = mmToThreeUnits(drawerCenterAbsMm);
+
         return (
-          <Html
-            key={`glass-drawer-spinner-${module.id}`}
-            position={[labelX, cyThree, 0.02]}
-            center
-            style={{ pointerEvents: 'auto', background: 'transparent' }}
-            zIndexRange={[5000, 0]}
-            transform={false}
-          >
-            <div style={{ ...uiScaleStyle, background: 'transparent' }}>
-              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '40px', lineHeight: 0, background: 'transparent' }}>
-                <button
-                  type="button"
-                  onMouseDown={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    moveOffset(1);
-                    const startHold = setTimeout(() => {
-                      (e.currentTarget as any)._repeat = setInterval(() => moveOffset(1), 80);
-                    }, 400);
-                    (e.currentTarget as any)._startHold = startHold;
-                  }}
-                  onMouseUp={(e) => {
-                    clearTimeout((e.currentTarget as any)?._startHold);
-                    clearInterval((e.currentTarget as any)?._repeat);
-                  }}
-                  onMouseLeave={(e) => {
-                    clearTimeout((e.currentTarget as any)?._startHold);
-                    clearInterval((e.currentTarget as any)?._repeat);
-                  }}
-                  style={{
-                    width: '20px', height: '14px', padding: 0, lineHeight: '14px',
-                    background: dimensionColor === '#FFFFFF' ? 'rgba(255,255,255,0.95)' : 'rgba(255,255,255,0.95)',
-                    color: '#000', border: '1px solid rgba(0,0,0,0.4)', borderRadius: '2px',
-                    cursor: 'pointer', fontSize: '10px', fontWeight: 'bold',
-                  }}
-                >▲</button>
-                <button
-                  type="button"
-                  onMouseDown={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    moveOffset(-1);
-                    const startHold = setTimeout(() => {
-                      (e.currentTarget as any)._repeat = setInterval(() => moveOffset(-1), 80);
-                    }, 400);
-                    (e.currentTarget as any)._startHold = startHold;
-                  }}
-                  onMouseUp={(e) => {
-                    clearTimeout((e.currentTarget as any)?._startHold);
-                    clearInterval((e.currentTarget as any)?._repeat);
-                  }}
-                  onMouseLeave={(e) => {
-                    clearTimeout((e.currentTarget as any)?._startHold);
-                    clearInterval((e.currentTarget as any)?._repeat);
-                  }}
-                  style={{
-                    width: '20px', height: '14px', padding: 0, lineHeight: '14px', marginTop: '1px',
-                    background: 'rgba(255,255,255,0.95)',
-                    color: '#000', border: '1px solid rgba(0,0,0,0.4)', borderRadius: '2px',
-                    cursor: 'pointer', fontSize: '10px', fontWeight: 'bold',
-                  }}
-                >▼</button>
+          <React.Fragment key={`glass-drawer-controls-${module.id}`}>
+            {/* 좌측 분할 가이드선 (수직 메인선 + 4개 가로 틱) */}
+            <NativeLine name="dimension_line"
+              points={[[leftGuideX, yGlassBottom, 0.002], [leftGuideX, yGlassTop, 0.002]]}
+              color={dimensionColor} lineWidth={0.6}
+            />
+            <NativeLine name="dimension_line"
+              points={[[leftGuideX - tickW/2, yGlassBottom, 0.002], [leftGuideX + tickW/2, yGlassBottom, 0.002]]}
+              color={dimensionColor} lineWidth={0.6}
+            />
+            <NativeLine name="dimension_line"
+              points={[[leftGuideX - tickW/2, yDrawerBottom, 0.002], [leftGuideX + tickW/2, yDrawerBottom, 0.002]]}
+              color={dimensionColor} lineWidth={0.6}
+            />
+            <NativeLine name="dimension_line"
+              points={[[leftGuideX - tickW/2, yDrawerTop, 0.002], [leftGuideX + tickW/2, yDrawerTop, 0.002]]}
+              color={dimensionColor} lineWidth={0.6}
+            />
+            <NativeLine name="dimension_line"
+              points={[[leftGuideX - tickW/2, yGlassTop, 0.002], [leftGuideX + tickW/2, yGlassTop, 0.002]]}
+              color={dimensionColor} lineWidth={0.6}
+            />
+            {/* 3개 치수 텍스트 */}
+            <Text
+              position={[leftTextX, (yGlassBottom + yDrawerBottom) / 2, 0.01]}
+              fontSize={baseFontSize}
+              color={textColor}
+              anchorX="right"
+              anchorY="middle"
+              outlineWidth={textOutlineWidth}
+              outlineColor={textOutlineColor}
+            >
+              {lowerH}
+            </Text>
+            <Text
+              position={[leftTextX, (yDrawerBottom + yDrawerTop) / 2, 0.01]}
+              fontSize={baseFontSize}
+              color={textColor}
+              anchorX="right"
+              anchorY="middle"
+              outlineWidth={textOutlineWidth}
+              outlineColor={textOutlineColor}
+            >
+              {drawerH}
+            </Text>
+            <Text
+              position={[leftTextX, (yDrawerTop + yGlassTop) / 2, 0.01]}
+              fontSize={baseFontSize}
+              color={textColor}
+              anchorX="right"
+              anchorY="middle"
+              outlineWidth={textOutlineWidth}
+              outlineColor={textOutlineColor}
+            >
+              {upperH}
+            </Text>
+
+            {/* 서랍 영역 위치 조절 스피너 (▲▼) — 더 크게 */}
+            <Html
+              position={[cxX, drawCenterYThree, 0.02]}
+              center
+              style={{ pointerEvents: 'auto', background: 'transparent' }}
+              zIndexRange={[5000, 0]}
+              transform={false}
+            >
+              <div style={{ ...uiScaleStyle, background: 'transparent' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '60px', lineHeight: 0, background: 'transparent', gap: '3px' }}>
+                  <button
+                    type="button"
+                    onMouseDown={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      moveOffset(1);
+                      const startHold = setTimeout(() => {
+                        (e.currentTarget as any)._repeat = setInterval(() => moveOffset(1), 80);
+                      }, 400);
+                      (e.currentTarget as any)._startHold = startHold;
+                    }}
+                    onMouseUp={(e) => {
+                      clearTimeout((e.currentTarget as any)?._startHold);
+                      clearInterval((e.currentTarget as any)?._repeat);
+                    }}
+                    onMouseLeave={(e) => {
+                      clearTimeout((e.currentTarget as any)?._startHold);
+                      clearInterval((e.currentTarget as any)?._repeat);
+                    }}
+                    style={{
+                      width: '36px', height: '26px', padding: 0, lineHeight: '26px',
+                      background: 'rgba(255,255,255,0.95)',
+                      color: '#000', border: '1px solid rgba(0,0,0,0.5)', borderRadius: '4px',
+                      cursor: 'pointer', fontSize: '16px', fontWeight: 'bold',
+                      boxShadow: '0 1px 2px rgba(0,0,0,0.15)',
+                    }}
+                  >▲</button>
+                  <button
+                    type="button"
+                    onMouseDown={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      moveOffset(-1);
+                      const startHold = setTimeout(() => {
+                        (e.currentTarget as any)._repeat = setInterval(() => moveOffset(-1), 80);
+                      }, 400);
+                      (e.currentTarget as any)._startHold = startHold;
+                    }}
+                    onMouseUp={(e) => {
+                      clearTimeout((e.currentTarget as any)?._startHold);
+                      clearInterval((e.currentTarget as any)?._repeat);
+                    }}
+                    onMouseLeave={(e) => {
+                      clearTimeout((e.currentTarget as any)?._startHold);
+                      clearInterval((e.currentTarget as any)?._repeat);
+                    }}
+                    style={{
+                      width: '36px', height: '26px', padding: 0, lineHeight: '26px',
+                      background: 'rgba(255,255,255,0.95)',
+                      color: '#000', border: '1px solid rgba(0,0,0,0.5)', borderRadius: '4px',
+                      cursor: 'pointer', fontSize: '16px', fontWeight: 'bold',
+                      boxShadow: '0 1px 2px rgba(0,0,0,0.15)',
+                    }}
+                  >▼</button>
+                </div>
               </div>
-            </div>
-          </Html>
+            </Html>
+          </React.Fragment>
         );
       })}
 
