@@ -401,12 +401,14 @@ const computeLowerCabinetMaidaHeights = (
       : isTDTouch3 ? [164, 117, 117]
       : [228, 228];
 
-    const defaultTopExtMm = isTopDownTouch ? -80 : 30;
+    // 상판내림 터치: 가로전대 높이 stoneThickness별로 다름 (10→65, 20→55, 30→45)
+    // 마이다 최상단 = 캐비넷상단 - (stretcher + 25)  ← 실측 보정 +5
+    // doorTopGap/doorBottomGap 무시하고 항상 기본값 강제 (마이다-상판 갭 20mm 보장)
+    const tdTouchStretcherH = stoneTopThicknessMm === 10 ? 65 : stoneTopThicknessMm === 30 ? 45 : 55;
+    const defaultTopExtMm = isTopDownTouch ? -(tdTouchStretcherH + 25) : 30;
     const defaultBottomExtMm = 5;
-    const topExtMm = isTopDownTouch && doorTopGap === 0
-      ? defaultTopExtMm
-      : doorTopGap;
-    const bottomExtMm = doorBottomGap;
+    const topExtMm = isTopDownTouch ? defaultTopExtMm : doorTopGap;
+    const bottomExtMm = isTopDownTouch ? defaultBottomExtMm : doorBottomGap;
     const gapTopExt = topExtMm - defaultTopExtMm;
     const gapBottomExt = bottomExtMm - defaultBottomExtMm;
     const totalFrontMm = moduleHeightMm + topExtMm + bottomExtMm;
@@ -439,19 +441,25 @@ const computeLowerCabinetMaidaHeights = (
       maidaHeightsMm[topIndex] = Math.max(0, maidaHeightsMm[topIndex] + gapTopExt);
     }
     // 상판내림 터치(2단/3단): 상단 마이다 묶음(맨 위 마이다들 + 사이 갭 3mm)은 크기 고정,
-    // H 변화는 '하단(마이다1)'이 흡수. 즉 마이다1 = 총 외경 - 상단 묶음 - 갭들
+    // 마이다 묶음을 캐비넷 상단에서 아래로 채워 내림. 맨 아래(maida0)가 남은 공간 흡수.
     if ((isTopDown2Fixed || isTopDown3Fixed) && maidaHeightsMm.length >= 2) {
-      // 상단 묶음 = 마이다1을 제외한 나머지 마이다 합 + 마이다 사이 갭 (n-1 개)
-      const upperMaidasSum = maidaHeightsMm
-        .slice(1)
-        .reduce((a, b) => a + b, 0);
-      const upperGapsCount = maidaHeightsMm.length - 1; // 마이다1과 마이다2 사이 갭 1개 + 그 위 갭들
-      const upperBundle = upperMaidasSum + upperGapsCount * gapMm;
-      // 하단 마이다1 = 총 외경(totalFrontMm) - 상단 묶음
-      maidaHeightsMm[0] = Math.max(0, totalFrontMm - upperBundle);
+      const lastIdx = maidaHeightsMm.length - 1;
+      const topPositionMm = -bottomExtMm + totalFrontMm; // 마이다 묶음 끝 (캐비넷 바닥 기준)
+      const result: { maidaHeightMm: number; maidaBottomMm: number; maidaTopMm: number }[] = new Array(maidaHeightsMm.length);
+      let cursorTop = topPositionMm;
+      for (let i = lastIdx; i >= 1; i--) {
+        const h = maidaHeightsMm[i];
+        const bottomMm = cursorTop - h;
+        result[i] = { maidaHeightMm: h, maidaBottomMm: bottomMm, maidaTopMm: cursorTop };
+        cursorTop = bottomMm - gapMm;
+      }
+      const bottomStart = -bottomExtMm;
+      const newMaida0H = Math.max(0, cursorTop - bottomStart);
+      result[0] = { maidaHeightMm: newMaida0H, maidaBottomMm: bottomStart, maidaTopMm: bottomStart + newMaida0H };
+      return result;
     }
 
-    // 마이다 위치 (캐비넷 하단 -5mm 부터 시작)
+    // 그 외(도어올림 터치 등) - 기존 방식: 캐비넷 하단부터 위로 누적
     let currentBottomMm = -bottomExtMm;
     return maidaHeightsMm.map(h => {
       const maidaBottom = currentBottomMm;
