@@ -1467,20 +1467,12 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
         const isDoorLift2Tier = moduleData.id.includes('lower-door-lift-2tier');
         const isTopDown3Tier = moduleData.id.includes('lower-top-down-3tier');
         const isTopDown2Tier = moduleData.id.includes('lower-top-down-2tier');
-        // 상판내림 2단/3단: 가로전대 stoneThickness별 (10→65, 20→55, 30→45)
-        // 마이다 묶음 최상단 = 캐비넷상단 - (stretcher + 25) [실측 +5 보정 포함]
-        // → defaultDrawerTopGap = -(stretcher + 25)
-        const tdStretcherForDrawer = stoneThickness === 10 ? 65 : stoneThickness === 30 ? 45 : 55;
-        const tdDefaultTopGap = -(tdStretcherForDrawer + 25); // 20mm→-80, 30mm→-70, 10mm→-90
-        const defaultDrawerTopGap = (isTopDown2Tier || isTopDown3Tier) ? tdDefaultTopGap : (isDoorLift2Tier || isDoorLift3Tier) ? 30 : -20;
+        const defaultDrawerTopGap = (isTopDown2Tier || isTopDown3Tier) ? -80 : (isDoorLift2Tier || isDoorLift3Tier) ? 30 : -20;
         const defaultDrawerBottomGap = 5;
-        // 상판내림 2단/3단은 doorTopGap 무시하고 항상 기본값 강제 (마이다-상판 갭 20mm 보장)
-        const effectiveDrawerTopGap = (isTopDown2Tier || isTopDown3Tier)
+        const effectiveDrawerTopGap = (isTopDown2Tier || isTopDown3Tier) && (doorTopGap === undefined || doorTopGap === 0)
           ? defaultDrawerTopGap
           : (doorTopGap ?? defaultDrawerTopGap);
-        const effectiveDrawerBottomGap = (isTopDown2Tier || isTopDown3Tier)
-          ? defaultDrawerBottomGap
-          : (doorBottomGap ?? defaultDrawerBottomGap);
+        const effectiveDrawerBottomGap = doorBottomGap ?? defaultDrawerBottomGap;
         // 기존 서랍장: 상단 따내기 60mm 있음. 2단 fromBottom=330(균등), 3단 fromBottom=295+510
         // 도어올림 3단: fromBottom=315, 545 (1단=315, 따내기65, 2단=165, 따내기65, 3단=175)
         // 도어올림 2단: fromBottom=355
