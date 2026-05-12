@@ -546,8 +546,12 @@ const computeLowerCabinetMaidaHeights = (
   // 실제 서랍 개수 (ExternalDrawerRenderer drawerCount와 동일)
   const drawerCount = (is3Tier || isDoorLift3Tier || isTopDown3Tier) ? 3 : 2;
 
-  // 모듈별 기본 doorTopGap/doorBottomGap (LowerCabinet.tsx line 379-381)
-  const defaultDoorTopGap = isTopDown2Tier || isTopDown3Tier ? -80 : isDoorLift2Tier || isDoorLift3Tier ? 30 : -20;
+  // 모듈별 기본 doorTopGap/doorBottomGap (LowerCabinet.tsx와 동기화)
+  // 상판내림 2단/3단: stoneThickness별 -(stretcher+25)
+  //   - 20mm 상판: -80, 10mm: -90, 30mm: -70
+  const tdStretcherForDimDefault = stoneTopThicknessMm === 10 ? 65 : stoneTopThicknessMm === 30 ? 45 : 55;
+  const tdDefaultTopGapForDim = -(tdStretcherForDimDefault + 25);
+  const defaultDoorTopGap = isTopDown2Tier || isTopDown3Tier ? tdDefaultTopGapForDim : isDoorLift2Tier || isDoorLift3Tier ? 30 : -20;
   const defaultDoorBottomGap = 5;
 
   // ExternalDrawerRenderer line 517-555: zone 계산
@@ -1333,7 +1337,12 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
               const isDoorLift = modData.id?.includes('lower-door-lift-');
               const isTopDown = modData.id?.includes('lower-top-down-');
               if (isTopDown) {
-                const effectiveTopDownTopGap = mod.doorTopGap ?? -80;
+                // 상판내림은 stoneThickness별 기본 topGap: -(stretcher+25)
+                // 20mm→-80, 30mm→-70, 10mm→-90
+                const _stoneThkForTopGap = getStoneTopThicknessMm(mod);
+                const _stretcherForTopGap = _stoneThkForTopGap === 10 ? 65 : _stoneThkForTopGap === 30 ? 45 : 55;
+                const _defaultTdTopGap = -(_stretcherForTopGap + 25);
+                const effectiveTopDownTopGap = mod.doorTopGap ?? _defaultTdTopGap;
                 const effectiveTopDownBottomGap = mod.doorBottomGap ?? 5;
                 const maidaSegments = computeLowerCabinetMaidaHeights(
                   modData.id,
@@ -2693,7 +2702,12 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
               const isDoorLift = modData.id?.includes('lower-door-lift-');
               const isTopDown = modData.id?.includes('lower-top-down-');
               if (isTopDown) {
-                const effectiveTopDownTopGap = mod.doorTopGap ?? -80;
+                // 상판내림은 stoneThickness별 기본 topGap: -(stretcher+25)
+                // 20mm→-80, 30mm→-70, 10mm→-90
+                const _stoneThkForTopGap = getStoneTopThicknessMm(mod);
+                const _stretcherForTopGap = _stoneThkForTopGap === 10 ? 65 : _stoneThkForTopGap === 30 ? 45 : 55;
+                const _defaultTdTopGap = -(_stretcherForTopGap + 25);
+                const effectiveTopDownTopGap = mod.doorTopGap ?? _defaultTdTopGap;
                 const effectiveTopDownBottomGap = mod.doorBottomGap ?? 5;
                 const maidaSegments = computeLowerCabinetMaidaHeights(
                   modData.id,
