@@ -1654,10 +1654,14 @@ const FreePlacementDropZone: React.FC = () => {
       const uiSelectedId = useUIStore.getState().selectedFurnitureId;
       const storeSelectedId = useFurnitureStore.getState().selectedFurnitureId;
       const selectedId = uiSelectedId || storeSelectedId;
-      const selectedMod = selectedId ? placedModules.find(m => m.id === selectedId && m.isFreePlacement) : null;
+      // isFreePlacement 필터 제거: 자유배치 모드에서는 가구 자체가 모두 자유배치이므로 plain selectedId도 허용
+      const selectedMod = selectedId ? placedModules.find(m => m.id === selectedId) : null;
       const targetId = movingModuleId || editingFreeModuleId || (selectedMod ? selectedId : null);
-      if (!targetId) return;
-      const mod = placedModules.find(m => m.id === targetId && m.isFreePlacement);
+      if (!targetId) {
+        console.log('🎯 [화살표 이동 무시] 선택된 가구 없음', { movingModuleId, editingFreeModuleId, uiSelectedId, storeSelectedId });
+        return;
+      }
+      const mod = placedModules.find(m => m.id === targetId);
       if (!mod) return;
 
       // input/textarea 포커스 중에는 방향키 무시 (숫자 입력 등 방해 방지)
