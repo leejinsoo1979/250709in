@@ -78,6 +78,19 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
       _shelfFloatAbsorbedMm = _globalFloatMm;
     }
   }
+  if (typeof window !== 'undefined' && (window as any).__SHELF_ABSORB_DEBUG__) {
+    console.log('🟦 SingleType2 분배 옵션 계산:', {
+      id: _midForAbsorb,
+      isPlainShelf: _isPlainShelf,
+      hasBase,
+      individualFloatHeight,
+      baseHeight: spaceInfo?.baseConfig?.height,
+      floatPlacement: spaceInfo?.baseConfig?.placementType,
+      floatHeight: spaceInfo?.baseConfig?.floatHeight,
+      _shelfBaseAbsorbedMm,
+      _shelfFloatAbsorbedMm,
+    });
+  }
 
   // 공통 로직 사용
   const baseFurniture = useBaseFurniture(moduleData, {
