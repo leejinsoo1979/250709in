@@ -3956,16 +3956,33 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 if (s.heightType === 'absolute') return s.height;
                 return Math.round(sectionBasisH * s.height / 100);
               });
-              // 현관장 H/일반 선반장만 첫(하부) 섹션이 흡수 (4단/2단서랍선반장은 일반 가구처럼 마지막 흡수)
+              // 현관장 H는 첫(하부) 섹션이 흡수
+              // 선반장(single-shelf/dual-shelf): 걸레받이 OFF→상부 흡수, 띄움→하부 차감으로 분배
+              // 그 외(일반 가구, 4drawer/2drawer-shelf 등): 마지막(상부) 섹션이 흡수
               const leftModId = leftViewMod?.moduleId || '';
-              const leftIsShoe = leftModId.includes('-entryway-') ||
-                leftModId.startsWith('single-shelf-') ||
-                leftModId.startsWith('dual-shelf-');
-              if (leftIsShoe && rawHeights.length >= 2) {
+              const leftIsEntryway = leftModId.includes('-entryway-');
+              const leftIsPlainShelf = (leftModId.startsWith('single-shelf-') || leftModId.startsWith('dual-shelf-'))
+                && !leftModId.includes('-4drawer-shelf-')
+                && !leftModId.includes('-2drawer-shelf-');
+              if (leftIsEntryway && rawHeights.length >= 2) {
                 const fixedSum = rawHeights.slice(1).reduce((a, b) => a + b, 0);
                 sectionHeights = [
                   Math.max(0, sectionBasisH - fixedSum),
                   ...rawHeights.slice(1),
+                ];
+              } else if (leftIsPlainShelf && rawHeights.length >= 2) {
+                // 띄움 차감 amount: 걸레받이 ON+전역 띄움 또는 걸레받이 OFF+개별 띄움
+                const isFloatPlacement = spaceInfo?.baseConfig?.type === 'stand'
+                  && spaceInfo?.baseConfig?.placementType === 'float';
+                const globalFloatMm = isFloatPlacement ? (spaceInfo?.baseConfig?.floatHeight || 0) : 0;
+                const shelfFloatAbsorbedMm = (leftLowerHasBase === false)
+                  ? Math.max(0, (leftLowerMod as any)?.individualFloatHeight ?? 0)
+                  : globalFloatMm;
+                const lowerOrig = rawHeights[0];
+                const newLowerH = Math.max(0, Math.round(lowerOrig - shelfFloatAbsorbedMm));
+                sectionHeights = [
+                  newLowerH,
+                  Math.max(0, sectionBasisH - newLowerH),
                 ];
               } else {
                 const fixedSum = rawHeights.slice(0, -1).reduce((a, b) => a + b, 0);
@@ -4748,16 +4765,32 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 if (s.heightType === 'absolute') return s.height;
                 return Math.round(rSectionBasisH * s.height / 100);
               });
-              // 현관장 H/일반 선반장만 첫(하부) 섹션이 흡수 (4단/2단서랍선반장은 일반 가구)
+              // 현관장 H는 첫(하부) 섹션이 흡수
+              // 선반장(single-shelf/dual-shelf): 걸레받이 OFF→상부 흡수, 띄움→하부 차감
+              // 그 외(일반 가구, 4drawer/2drawer-shelf 등): 마지막(상부) 섹션이 흡수
               const rModId = rightmostMod?.moduleId || '';
-              const rIsShoe = rModId.includes('-entryway-') ||
-                rModId.startsWith('single-shelf-') ||
-                rModId.startsWith('dual-shelf-');
-              if (rIsShoe && rRawHeights.length >= 2) {
+              const rIsEntryway = rModId.includes('-entryway-');
+              const rIsPlainShelf = (rModId.startsWith('single-shelf-') || rModId.startsWith('dual-shelf-'))
+                && !rModId.includes('-4drawer-shelf-')
+                && !rModId.includes('-2drawer-shelf-');
+              if (rIsEntryway && rRawHeights.length >= 2) {
                 const rFixedSum = rRawHeights.slice(1).reduce((a, b) => a + b, 0);
                 rSectionHeights = [
                   Math.max(0, rSectionBasisH - rFixedSum),
                   ...rRawHeights.slice(1),
+                ];
+              } else if (rIsPlainShelf && rRawHeights.length >= 2) {
+                const isFloatPlacement = spaceInfo?.baseConfig?.type === 'stand'
+                  && spaceInfo?.baseConfig?.placementType === 'float';
+                const globalFloatMm = isFloatPlacement ? (spaceInfo?.baseConfig?.floatHeight || 0) : 0;
+                const rShelfFloatAbsorbedMm = ((rightLowerMod as any)?.hasBase === false)
+                  ? Math.max(0, (rightLowerMod as any)?.individualFloatHeight ?? 0)
+                  : globalFloatMm;
+                const rLowerOrig = rRawHeights[0];
+                const rNewLowerH = Math.max(0, Math.round(rLowerOrig - rShelfFloatAbsorbedMm));
+                rSectionHeights = [
+                  rNewLowerH,
+                  Math.max(0, rSectionBasisH - rNewLowerH),
                 ];
               } else {
                 const rFixedSum = rRawHeights.slice(0, -1).reduce((a, b) => a + b, 0);
@@ -6247,14 +6280,17 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         if (!isShelf) return null;
         const moduleData = getModuleById(mid, calculateInternalSpace(spaceInfo), spaceInfo);
         if (!moduleData) return null;
-        const effectiveSections = ((module as any).customSections || moduleData.modelConfig?.sections || []) as any[];
+        // 상부장은 sections가 없고 leftSections만 있을 수 있음 (dual-upper-cabinet-shelf-*) → fallback
+        const effectiveSections = ((module as any).customSections
+          || moduleData.modelConfig?.sections
+          || moduleData.modelConfig?.leftSections
+          || []) as any[];
         if (!effectiveSections || effectiveSections.length === 0) return null;
         const basicThickness = (moduleData.modelConfig as any)?.basicThickness || 18;
         const floorFinishMm = spaceInfo.hasFloorFinish && spaceInfo.floorFinish?.height ? spaceInfo.floorFinish.height : 0;
         const baseFrameMm = (module as any).hasBase === false ? 0
           : ((module as any).baseFrameHeight ?? (spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height || 65) : 0));
         const floatMm = (module as any).hasBase === false ? ((module as any).individualFloatHeight ?? 0) : 0;
-        const furnitureBottomMm = floorFinishMm + baseFrameMm + floatMm;
         const cxX = module.position.x;
         const labelX = cxX;
         // 실제 렌더링 공식 동일 (SectionsRenderer)
@@ -6263,23 +6299,51 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         // 마지막 섹션 = availableHeight - 나머지섹션합
         const topFrameMm = spaceInfo.frameSize?.top ?? 30;
         const spaceHeightMm = spaceInfo.height || 0;
+        // 상부장은 가구 자체 H와 실제 배치 위치(module.position.y) 사용
+        // (전체 공간 H 사용 시 빈 공간에 라벨이 표시되는 문제 발생)
+        const isUpperCabinet = moduleData.category === 'upper' || mid.includes('upper-cabinet');
+        const ownHeightMm = (module as any).customHeight ?? (module as any).freeHeight ?? moduleData.dimensions?.height ?? 0;
+        const moduleCenterYmm = (module.position.y || 0) / 0.01;
+        const furnitureBottomMm = isUpperCabinet
+          ? Math.max(0, Math.round(moduleCenterYmm - ownHeightMm / 2))
+          : (floorFinishMm + baseFrameMm + floatMm);
         // 띄움도 가구 외부 빈 공간으로 빼야 입면=측면 일치 (하부 섹션이 흡수하지 않음)
-        const furnitureOuterH = spaceHeightMm - topFrameMm - baseFrameMm - floatMm;
+        const furnitureOuterH = isUpperCabinet
+          ? ownHeightMm
+          : (spaceHeightMm - topFrameMm - baseFrameMm - floatMm);
         const availableHeight = furnitureOuterH - 2 * basicThickness;
         // 모듈 원본 sections.height 사용 (useBaseFurniture 비례조정 전 값)
         // useBaseFurniture와 동일 공식: renderHeight = 가구외경, absorb = 가구외경 - 다른섹션합
-        // 신발장 중 현관장 H/일반 선반장만 하부 흡수, 4단/2단서랍선반장은 일반 가구처럼 상부 흡수
-        const isShoeEff = mid.includes('-entryway-') ||
-          mid.startsWith('single-shelf-') ||
-          mid.startsWith('dual-shelf-');
-        const originalSections = (moduleData.modelConfig?.sections || []) as any[];
-        const absorbIdx = isShoeEff ? 0 : originalSections.length - 1;
-        const fixedSumOuter = originalSections.reduce((s: number, sec: any, i: number) =>
-          i === absorbIdx ? s : s + (sec.height || 0), 0);
-        const absorbEffectiveOuter = Math.max(0, furnitureOuterH - fixedSumOuter);
-        const getEffectiveSectionHeight = (_sec: any, idx: number) => {
-          return idx === absorbIdx ? absorbEffectiveOuter : (originalSections[idx]?.height || 0);
-        };
+        // - 현관장 H: 하부 섹션이 흡수
+        // - 선반장(single-shelf/dual-shelf): 걸레받이 OFF→상부 흡수, 띄움→하부 차감
+        // - 그 외: 마지막 섹션이 흡수
+        const isEntrywayEff = mid.includes('-entryway-');
+        const isPlainShelfEff = (mid.startsWith('single-shelf-') || mid.startsWith('dual-shelf-'))
+          && !mid.includes('-4drawer-shelf-')
+          && !mid.includes('-2drawer-shelf-');
+        const originalSections = (moduleData.modelConfig?.sections
+          || moduleData.modelConfig?.leftSections
+          || []) as any[];
+        let getEffectiveSectionHeight: (_sec: any, idx: number) => number;
+        if (isPlainShelfEff && originalSections.length >= 2) {
+          // 선반장 분배: lowerNew = lowerOrig - floatAbsorbed, upperNew = furnitureOuterH - lowerNew
+          const lowerOrig = originalSections[0].height || 0;
+          const newLowerH = Math.max(0, Math.round(lowerOrig - floatMm));
+          const newUpperH = Math.max(0, Math.round(furnitureOuterH - newLowerH));
+          getEffectiveSectionHeight = (_sec: any, idx: number) => {
+            if (idx === 0) return newLowerH;
+            if (idx === 1) return newUpperH;
+            return originalSections[idx]?.height || 0;
+          };
+        } else {
+          const absorbIdx = isEntrywayEff ? 0 : originalSections.length - 1;
+          const fixedSumOuter = originalSections.reduce((s: number, sec: any, i: number) =>
+            i === absorbIdx ? s : s + (sec.height || 0), 0);
+          const absorbEffectiveOuter = Math.max(0, furnitureOuterH - fixedSumOuter);
+          getEffectiveSectionHeight = (_sec: any, idx: number) => {
+            return idx === absorbIdx ? absorbEffectiveOuter : (originalSections[idx]?.height || 0);
+          };
+        }
 
         // 가구 내부 바닥(밑판 윗면)에서 섹션 시작
         // 현관장 H/일반 선반장만 하부 흡수 (4단/2단서랍선반장은 일반 가구)
