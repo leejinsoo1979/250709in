@@ -1181,9 +1181,18 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
               } : moduleData.id.includes('lower-top-down-touch-') ? {
                 // 상판내림 터치: 상판내림 반통과 동일한 상단 따내기
                 sideNotches: [{ y: 65, z: 40, fromBottom: 665 }]
-              } : moduleData.id.includes('lower-drawer-3tier') ? {
-                sideNotches: [{ y: 65, z: 40, fromBottom: 295 }, { y: 65, z: 40, fromBottom: 510 }]
-              } : moduleData.id.includes('lower-drawer-2tier') ? {
+              } : moduleData.id.includes('lower-drawer-3tier') ? (() => {
+                // 3단서랍장 H 변경 시 측판 노치도 캐비넷 상단에 붙어 평행이동
+                // H=785 기준 [295, 510] → delta = H - 785
+                const cabinetHmm = Math.round(adjustedHeight / 0.01);
+                const delta3 = cabinetHmm - 785;
+                return {
+                  sideNotches: [
+                    { y: 65, z: 40, fromBottom: 295 + delta3 },
+                    { y: 65, z: 40, fromBottom: 510 + delta3 },
+                  ]
+                };
+              })() : moduleData.id.includes('lower-drawer-2tier') ? {
                 sideNotches: [{ y: 65, z: 40, fromBottom: (moduleData.dimensions.height - 125) / 2 }]
               } : moduleData.id.includes('lower-door-lift-3tier') ? {
                 // 도어올림 3단: notch1=315(고정), notch2는 위 2개 도어 균등 분할 (LowerCabinet.tsx doorLift3TierNotch2와 동일 공식)
