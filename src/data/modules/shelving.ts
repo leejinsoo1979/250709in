@@ -840,6 +840,58 @@ const createSingleEntrywaySplit = (columnWidth: number, _maxHeight: number): Mod
   } as ModuleData;
 };
 
+/**
+ * 듀얼 도어분절 현관장: 하부섹션(H860, D600, 선반3) — 상부섹션 추후 추가 예정
+ * 기본하부장 한통과 동일 구조 (상단 따내기 60mm + 목찬넬 L자 프레임 자동 포함, 좌우 도어 2개)
+ * ID에 'dual-lower-half-cabinet' 포함 → LowerCabinet 라우팅 + 따내기/목찬넬 자동 적용
+ */
+const createDualEntrywaySplit = (dualWidth: number, slotWidths?: number[]): ModuleData => {
+  const bottomHeight = 860;       // 캐비넷 본체 높이 (조절발 제외)
+  const bottomDepth = 600;        // 깊이 600
+  const _t = FURNITURE_SPECS.BASIC_THICKNESS;
+
+  // 선반 3개 균등 분할 (섹션 내경 = bottomHeight - 2*_t)
+  const innerH = bottomHeight - 2 * _t;
+  const shelfPositions = calculateEvenShelfPositions(innerH, 3, _t);
+
+  const baseSections: SectionConfig[] = [
+    {
+      type: 'shelf',
+      heightType: 'percentage',
+      height: 100,
+      count: 3,
+      shelfPositions,
+    },
+  ];
+
+  const widthForId = Math.round(dualWidth * 100) / 100;
+  const base = createFurnitureBase(
+    `dual-lower-half-cabinet-entryway-split-${widthForId}`,
+    `도어분절 현관장 한통 ${widthForId}mm`,
+    dualWidth,
+    bottomHeight,
+    bottomDepth,
+    FURNITURE_SPECS.COLORS.ENTRYWAY,
+    `도어분절 현관장 한통 (하부섹션: 선반3) — 상부섹션 추후 추가`,
+    bottomDepth,
+    'lower'
+  );
+
+  return {
+    ...base,
+    isDynamic: true,
+    defaultDepth: bottomDepth,
+    hasDoor: false,
+    slotWidths,
+    modelConfig: {
+      ...base.modelConfig,
+      basicThickness: _t,
+      hasOpenFront: false,
+      sections: baseSections,
+    },
+  } as ModuleData;
+};
+
 // /**
 //  * 싱글 현관장 I: 하부 선반 4개 + 상부 선반 2개 (속서랍 없음)
 //  */
@@ -3534,6 +3586,7 @@ export const generateShelvingModules = (
     modules.push(createDualType5(dualWidth, maxHeight, dualSlotWidths));
     modules.push(createDualType6(dualWidth, maxHeight, dualSlotWidths));
     modules.push(createDualEntrywayH(dualWidth, maxHeight, dualSlotWidths));
+    modules.push(createDualEntrywaySplit(dualWidth, dualSlotWidths));
     // modules.push(createDualEntrywayI(dualWidth, maxHeight, dualSlotWidths));
 
     // === 듀얼 선반장 가구 생성 ===
