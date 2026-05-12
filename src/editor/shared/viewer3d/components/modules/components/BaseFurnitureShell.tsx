@@ -2204,9 +2204,10 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
           const sideH = mmToThreeUnits(sidePanelH_mm);
           const sideD = mmToThreeUnits(sidePanelD_mm);
 
-          // 측판 하단 = 가구 바닥판 위에서 242mm 떨어진 지점
-          // 측판 중심 Y = -height/2 + 242 + sideH/2
-          const SIDE_BOTTOM_FROM_FLOOR_MM = 242;
+          // 측판 하단 = 가구 바닥판 위에서 기본 242mm (사용자 스피너로 조정 가능)
+          // 측판 중심 Y = -height/2 + offset + sideH/2
+          const userGlassDrawerOffset = (currentPlacedModuleForBottomEP as any)?.glassDrawerOffsetMm;
+          const SIDE_BOTTOM_FROM_FLOOR_MM = typeof userGlassDrawerOffset === 'number' ? userGlassDrawerOffset : 242;
           const drawerCenterY = -height / 2 + mmToThreeUnits(SIDE_BOTTOM_FROM_FLOOR_MM) + sideH / 2;
 
           // X 위치 — 가구 측판 안쪽에 바로 붙임
