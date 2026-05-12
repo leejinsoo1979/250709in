@@ -59,6 +59,26 @@ const DualType1: React.FC<FurnitureTypeProps> = ({
   console.log('  hasLowerSectionTopOffset:', lowerSectionTopOffset !== undefined);
   console.log('  🔴 zone:', zone, '(단내림:', zone === 'dropped' ? '✅' : '❌', ')');
 
+  // 선반장 흡수 분배: 띄움→하부에서 차감, 걸레받이 OFF→상부에 추가
+  const _midForAbsorb = moduleData?.id || '';
+  const _isPlainShelf = /(^|-)(?:single|dual)-shelf-/.test(_midForAbsorb)
+    && !_midForAbsorb.includes('-4drawer-shelf-')
+    && !_midForAbsorb.includes('-2drawer-shelf-');
+  let _shelfFloatAbsorbedMm = 0;
+  let _shelfBaseAbsorbedMm = 0;
+  if (_isPlainShelf) {
+    const _globalBaseMm = spaceInfo?.baseConfig?.height ?? 100;
+    const _isFloat = spaceInfo?.baseConfig?.type === 'stand'
+      && spaceInfo?.baseConfig?.placementType === 'float';
+    const _globalFloatMm = _isFloat ? (spaceInfo?.baseConfig?.floatHeight || 0) : 0;
+    if (hasBase === false) {
+      _shelfBaseAbsorbedMm = _globalBaseMm;
+      _shelfFloatAbsorbedMm = Math.max(0, individualFloatHeight ?? 0);
+    } else if (_globalFloatMm > 0) {
+      _shelfFloatAbsorbedMm = _globalFloatMm;
+    }
+  }
+
   // 공통 로직 사용
   const baseFurniture = useBaseFurniture(moduleData, {
     color,
@@ -70,8 +90,10 @@ const DualType1: React.FC<FurnitureTypeProps> = ({
     adjustedWidth, // adjustedWidth 전달
     customSections, // 사용자 정의 섹션 설정
     panelGrainDirections: propsPanelGrainDirections,
-    backPanelThicknessMm: backPanelThickness
-  });
+    backPanelThicknessMm: backPanelThickness,
+    shelfFloatAbsorbedMm: _shelfFloatAbsorbedMm,
+    shelfBaseAbsorbedMm: _shelfBaseAbsorbedMm,
+  } as any);
 
   const {
     textureUrl,

@@ -908,7 +908,9 @@ const DoorModule: React.FC<DoorModuleProps> = ({
       // 상판내림: 몸통 H 증감분은 상단 전대/대리석 앞판이 흡수한다.
       // 도어 상단 기준은 기본 몸통(785)에서 유지되어야 대리석 앞판 하단과 20mm 갭을 유지한다.
       const topDownReferenceHeight = moduleData?.dimensions?.height || 785;
-      actualDoorHeight = topDownReferenceHeight + doorTopGap + doorBottomGap;
+      const effectiveTopDownTopGap = doorTopGapProp ?? storePlacedModule?.doorTopGap ?? -80;
+      const effectiveTopDownBottomGap = doorBottomGapProp ?? storePlacedModule?.doorBottomGap ?? 5;
+      actualDoorHeight = topDownReferenceHeight + effectiveTopDownTopGap + effectiveTopDownBottomGap;
     } else if (isDoorLift) {
       // 도어올림: 몸통 기준 상단/하단 갭을 그대로 반영
       actualDoorHeight = lowerCabinetHeight + doorTopGap + doorBottomGap;
@@ -993,7 +995,8 @@ const DoorModule: React.FC<DoorModuleProps> = ({
       // 상판내림: 도어 상단은 바닥 기준 기본 위치(785 + gap)에 고정하고,
       // 늘어난 몸통 H는 상단 전대/대리석 앞판으로 흡수한다.
       const topDownReferenceHeight = moduleData?.dimensions?.height || 785;
-      const doorTopY = -mmToThreeUnits(lowerCabinetHeight) / 2 + mmToThreeUnits(topDownReferenceHeight + doorTopGap);
+      const effectiveTopDownTopGap = doorTopGapProp ?? storePlacedModule?.doorTopGap ?? -80;
+      const doorTopY = -mmToThreeUnits(lowerCabinetHeight) / 2 + mmToThreeUnits(topDownReferenceHeight + effectiveTopDownTopGap);
       doorYPosition = doorTopY - mmToThreeUnits(actualDoorHeight) / 2;
     } else if (isDoorLiftForY) {
       // 도어올림: 도어 상단 = 캐비넷 상단 + doorTopGap
