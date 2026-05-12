@@ -905,8 +905,10 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     const isTopDown = moduleData?.id?.includes('lower-top-down-');
 
     if (isTopDown) {
-      // 상판내림: 캐비넷 아래 5mm ~ 따내기하단(665)+40mm = 710mm
-      actualDoorHeight = 710;
+      // 상판내림: 몸통 기준 상단/하단 갭을 그대로 반영 (기본 -80 / 5)
+      // 도어 상단 = 몸통 상단 + doorTopGap (음수 = 안쪽으로 들어감 → 따내기 표현)
+      // 도어 하단 = 몸통 하단 - doorBottomGap (양수 = 아래로 확장)
+      actualDoorHeight = lowerCabinetHeight + doorTopGap + doorBottomGap;
     } else if (isDoorLift) {
       // 도어올림: 몸통 기준 상단/하단 갭을 그대로 반영
       actualDoorHeight = lowerCabinetHeight + doorTopGap + doorBottomGap;
@@ -988,9 +990,9 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     const isTopDownForY = moduleData?.id?.includes('lower-top-down-');
 
     if (isTopDownForY) {
-      // 상판내림: 도어 하단 = 캐비넷 하단 - 5mm, 도어 상단 = 따내기하단(665)+40mm = 705mm from bottom
-      const doorBottomY = -mmToThreeUnits(lowerCabinetHeight) / 2 - mmToThreeUnits(5);
-      doorYPosition = doorBottomY + mmToThreeUnits(actualDoorHeight) / 2;
+      // 상판내림: 도어 상단 = 캐비넷 상단 + doorTopGap (음수면 안쪽으로 내려감)
+      const doorTopY = mmToThreeUnits(lowerCabinetHeight) / 2 + mmToThreeUnits(doorTopGap);
+      doorYPosition = doorTopY - mmToThreeUnits(actualDoorHeight) / 2;
     } else if (isDoorLiftForY) {
       // 도어올림: 도어 상단 = 캐비넷 상단 + doorTopGap
       const doorTopY = mmToThreeUnits(lowerCabinetHeight) / 2 + mmToThreeUnits(doorTopGap);

@@ -3631,11 +3631,12 @@ const PlacedModulePropertiesPanel: React.FC = () => {
           {!showDetails && currentPlacedModule && currentPlacedModule.hasDoor
             && !(typeof currentPlacedModule.moduleId === 'string' && currentPlacedModule.moduleId.includes('insert-frame'))
             && !(typeof currentPlacedModule.moduleId === 'string' && (
-              // 서랍 모듈만 매칭 (반통 half는 도어 모듈 → 제외)
+              // 서랍 모듈만 매칭 (반통 half / 2tier / 3tier 는 도어 모듈 → 제외)
+              // 상판내림은 터치형(touch)만 서랍 → 그 외(half/2tier/3tier)는 도어 모듈
               /^(dual-)?lower-drawer-/.test(currentPlacedModule.moduleId)
               || /(^|-)lower-induction-cabinet-/.test(currentPlacedModule.moduleId)
               || (/(^|-)lower-door-lift-/.test(currentPlacedModule.moduleId) && !currentPlacedModule.moduleId.includes('-half-'))
-              || (/(^|-)lower-top-down-/.test(currentPlacedModule.moduleId) && !currentPlacedModule.moduleId.includes('-half-'))
+              || /(^|-)lower-top-down-touch-/.test(currentPlacedModule.moduleId)
             ))
             && (() => {
             const bodyWidth = (() => {
@@ -3816,11 +3817,12 @@ const PlacedModulePropertiesPanel: React.FC = () => {
           {!showDetails && currentPlacedModule && currentPlacedModule.hasDoor
             && !(typeof currentPlacedModule.moduleId === 'string' && currentPlacedModule.moduleId.includes('insert-frame'))
             && !(typeof currentPlacedModule.moduleId === 'string' && (
-              // 서랍 모듈만 매칭 (반통 half는 도어 모듈 → 제외)
+              // 서랍 모듈만 매칭 (반통 half / 2tier / 3tier 는 도어 모듈 → 제외)
               // 도어올림장(lower-door-lift-*)은 서랍이어도 도어 갭 설정 노출 → 여기서 제외하지 않음
+              // 상판내림은 터치형(touch)만 서랍 → 그 외(half/2tier/3tier)는 도어 모듈
               /^(dual-)?lower-drawer-/.test(currentPlacedModule.moduleId)
               || /(^|-)lower-induction-cabinet-/.test(currentPlacedModule.moduleId)
-              || (/(^|-)lower-top-down-/.test(currentPlacedModule.moduleId) && !currentPlacedModule.moduleId.includes('-half-'))
+              || /(^|-)lower-top-down-touch-/.test(currentPlacedModule.moduleId)
             ))
             && (() => {
             const isDualSlot = currentPlacedModule.isDualSlot || currentPlacedModule.moduleId?.startsWith('dual-');
@@ -3885,11 +3887,12 @@ const PlacedModulePropertiesPanel: React.FC = () => {
             && !(typeof currentPlacedModule?.moduleId === 'string' && currentPlacedModule.moduleId.startsWith('dual-'))
             && !(typeof currentPlacedModule?.moduleId === 'string' && currentPlacedModule.moduleId.includes('insert-frame'))
             && !(typeof currentPlacedModule?.moduleId === 'string' && (
-              // 서랍 모듈만 매칭 (반통 half는 도어 모듈 → 제외)
+              // 서랍 모듈만 매칭 (반통 half / 2tier / 3tier 는 도어 모듈 → 제외)
+              // 상판내림은 터치형(touch)만 서랍 → 그 외(half/2tier/3tier)는 도어 모듈
               /^(dual-)?lower-drawer-/.test(currentPlacedModule.moduleId)
               || /(^|-)lower-induction-cabinet-/.test(currentPlacedModule.moduleId)
               || (/(^|-)lower-door-lift-/.test(currentPlacedModule.moduleId) && !currentPlacedModule.moduleId.includes('-half-'))
-              || (/(^|-)lower-top-down-/.test(currentPlacedModule.moduleId) && !currentPlacedModule.moduleId.includes('-half-'))
+              || /(^|-)lower-top-down-touch-/.test(currentPlacedModule.moduleId)
             ))
             && (
             <div className={styles.propertySection}>
