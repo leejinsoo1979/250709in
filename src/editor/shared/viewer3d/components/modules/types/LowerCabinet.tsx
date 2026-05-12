@@ -853,9 +853,8 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
     backPanelThicknessMm: backPanelThickness
   });
   const isTopDownModule = moduleData.id.includes('lower-top-down-') || moduleData.id.includes('dual-lower-top-down-');
-  const topDownStretcherHeightMm = isTopDownModule
-    ? 55
-    : 55;
+  // 상판내림 전면 꺾임부 외경 높이: 상판 두께(10/20/30)와 무관하게 항상 80mm
+  const topDownStretcherHeightMm = 80;
 
   // 띄워서 배치 여부 확인 (간접조명용)
   const placementType = spaceInfo?.baseConfig?.placementType;
