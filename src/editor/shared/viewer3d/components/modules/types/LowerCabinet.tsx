@@ -675,11 +675,14 @@ const TouchDrawerAnimated: React.FC<TouchDrawerAnimatedProps> = ({
   const tdTouchStretcherH = stoneThickness === 10 ? 65 : stoneThickness === 30 ? 45 : 55;
   const defaultTopExtMm = isTopDownTouch ? -(tdTouchStretcherH + 20) : 30;
   const defaultBottomExtMm = 5;
-  // 상판내림 터치는 doorTopGap에 관계없이 항상 defaultTopExtMm 강제 (마이다-상판 갭 20mm 보장)
+  // 상판내림 터치는 doorTopGap/doorBottomGap에 관계없이 항상 기본값 강제
+  // (마이다-상판 갭 20mm, 하단 5mm 보장)
   const topExtMm = isTopDownTouch
     ? defaultTopExtMm
     : (doorTopGap ?? defaultTopExtMm);
-  const bottomExtMm = doorBottomGap ?? defaultBottomExtMm;
+  const bottomExtMm = isTopDownTouch
+    ? defaultBottomExtMm
+    : (doorBottomGap ?? defaultBottomExtMm);
   const gapTopExt = topExtMm - defaultTopExtMm;
   const gapBottomExt = bottomExtMm - defaultBottomExtMm;
   const totalFrontMm = moduleHeightMm + topExtMm + bottomExtMm;
