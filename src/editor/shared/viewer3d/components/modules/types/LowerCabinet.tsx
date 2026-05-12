@@ -1469,6 +1469,7 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
       {/* 외부서랍 렌더링 (하부 서랍장 전용) */}
       {showFurniture && !moduleData.id.includes('lower-door-lift-touch-') && !moduleData.id.includes('lower-top-down-touch-') && (moduleData.id.includes('lower-drawer-') || moduleData.id.includes('lower-door-lift-2tier') || moduleData.id.includes('lower-door-lift-3tier') || moduleData.id.includes('lower-top-down-2tier') || moduleData.id.includes('lower-top-down-3tier')) && (() => {
         const is3Tier = moduleData.id.includes('lower-drawer-3tier');
+        const is2Tier = moduleData.id.includes('lower-drawer-2tier');
         const isDoorLift3Tier = moduleData.id.includes('lower-door-lift-3tier');
         const isDoorLift2Tier = moduleData.id.includes('lower-door-lift-2tier');
         const isTopDown3Tier = moduleData.id.includes('lower-top-down-3tier');
@@ -1543,6 +1544,7 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
                 isTopDown2Tier ? { all: 240 }
                 : isTopDown3Tier ? { first: 180, rest: 130 }
                 : isDoorLift3Tier ? { first: 240, rest: 130 } // 특대서랍 측판 높이 240
+                : is2Tier ? { all: 240 } // 기본장 2단서랍장: 1·2단 모두 특대 240
                 : undefined
               }
               doorTopGap={effectiveDrawerTopGap}
