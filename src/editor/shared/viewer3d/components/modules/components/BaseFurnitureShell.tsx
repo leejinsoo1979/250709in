@@ -501,11 +501,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                 const sideDepth = depth;
                 const sideZOffset = 0;
                 // topStretcher Z 위치: 10mm→13 앞, 30mm→10 뒤
-                // 3단(-3tier-)은 측판 따내기 구조가 달라 stretcher 이동을 0으로 (어긋남 방지)
-                const isTopDown3TierForStretcher = !!moduleData?.id?.includes('-top-down-3tier');
-                const topStretcherZRecess = isTopDown3TierForStretcher
-                  ? 0
-                  : (mmToThreeUnits(topDownTopRecessMm) - mmToThreeUnits(topDownTopExtensionMm));
+                const topStretcherZRecess = mmToThreeUnits(topDownTopRecessMm) - mmToThreeUnits(topDownTopExtensionMm);
                 if (isTopDownShell) {
                   console.log('🔧 상판내림 측판 원장 깊이 계산:', {
                     moduleId: moduleData?.id,
@@ -519,11 +515,8 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                 }
 
                 // 상판내림: 상단 전대 영역에 앞쪽 따내기 (10mm→8, 30mm→10)
-                // 3단(-3tier-)은 측판 sideNotches가 이미 3개 있어 추가 따내기 시 측판이 어긋나는 문제 →
-                // 상단 추가 따내기는 2단/반통(half/touch)에만 적용
                 const topDownNotches: Array<{ y: number; z: number; fromBottom: number }> = [];
-                const isTopDown3TierShell = !!moduleData?.id?.includes('-top-down-3tier');
-                if (isTopDownShell && !isTopDown3TierShell) {
+                if (isTopDownShell) {
                   const stretcherH = mmToThreeUnits(topStretcher!.heightMm); // 55mm
                   if (stoneTopThickness === 10) {
                     topDownNotches.push({ y: stretcherH, z: mmToThreeUnits(8), fromBottom: height - stretcherH });
@@ -617,8 +610,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                     )}
 
                     {/* 상판내림 10mm 전용: 외경 전대 (가구 전체 폭, 기존 전대 바로 앞면에 부착) */}
-                    {/* 3단(-3tier-)은 측판 따내기 구조가 달라 외경 전대 제외 */}
-                    {isTopDownShell && stoneTopThickness === 10 && topStretcher && !moduleData?.id?.includes('-top-down-3tier') && (
+                    {isTopDownShell && stoneTopThickness === 10 && topStretcher && (
                       <BoxWithEdges
                         key={`front-stretcher-outer-${material instanceof THREE.Material ? material.uuid : 'mat'}`}
                         args={[innerWidth + basicThickness * 2, mmToThreeUnits(topStretcher.heightMm), basicThickness]}

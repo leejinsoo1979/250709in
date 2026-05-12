@@ -4,6 +4,7 @@ export const TOP_DOWN_DEFAULT_DOOR_BOTTOM_GAP_MM = 5;
 export const TOP_DOWN_MAIDA_GAP_MM = 20;
 export const TOP_DOWN_NOTCH_HEIGHT_MM = 65;
 export const TOP_DOWN_NOTCH_TO_MAIDA_TOP_MM = 40;
+export const TOP_DOWN_STONE_FRONT_HEIGHT_MM = 80;
 
 export interface TopDown2TierGeometry {
   maidaHeightMm: number;
@@ -16,12 +17,18 @@ export interface TopDown2TierGeometry {
   notches: Array<{ fromBottom: number; height: number }>;
 }
 
-export const resolveTopDown2TierGeometry = (heightMm: number): TopDown2TierGeometry => {
+export const resolveTopDown2TierGeometry = (
+  heightMm: number,
+  stoneTopThicknessMm: number = 20
+): TopDown2TierGeometry => {
   const safeHeight = Number.isFinite(heightMm) && heightMm > 0
     ? heightMm
     : TOP_DOWN_DEFAULT_HEIGHT_MM;
+  const safeStoneThickness = Number.isFinite(stoneTopThicknessMm) && stoneTopThicknessMm > 0
+    ? stoneTopThicknessMm
+    : 20;
   const lowerMaidaBottomMm = -TOP_DOWN_DEFAULT_DOOR_BOTTOM_GAP_MM;
-  const upperMaidaTopMm = safeHeight + TOP_DOWN_DEFAULT_DOOR_TOP_GAP_MM;
+  const upperMaidaTopMm = safeHeight + safeStoneThickness - TOP_DOWN_STONE_FRONT_HEIGHT_MM - TOP_DOWN_MAIDA_GAP_MM;
   const maidaHeightMm = Math.max(
     0,
     (upperMaidaTopMm - lowerMaidaBottomMm - TOP_DOWN_MAIDA_GAP_MM) / 2
@@ -53,13 +60,8 @@ export const resolveTopDown2TierGeometry = (heightMm: number): TopDown2TierGeome
 };
 
 export const getTopDownStoneFrontVisibleHeightMm = (
-  moduleHeightMm: number,
-  doorTopGap?: number
+  _moduleHeightMm?: number,
+  _doorTopGap?: number
 ) => {
-  const safeHeight = Number.isFinite(moduleHeightMm) && moduleHeightMm > 0
-    ? moduleHeightMm
-    : TOP_DOWN_DEFAULT_HEIGHT_MM;
-  const effectiveDoorTopGap = doorTopGap ?? TOP_DOWN_DEFAULT_DOOR_TOP_GAP_MM;
-  const upperMaidaTopMm = safeHeight + effectiveDoorTopGap;
-  return Math.max(0, safeHeight - upperMaidaTopMm - TOP_DOWN_MAIDA_GAP_MM);
+  return TOP_DOWN_STONE_FRONT_HEIGHT_MM;
 };

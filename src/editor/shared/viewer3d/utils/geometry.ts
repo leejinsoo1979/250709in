@@ -240,12 +240,8 @@ export const calculateFurnitureDepth = (placedModules?: any[], spaceInfo?: any) 
   // 상부장: 300
   const resolveDepthMm = (m: any): number => {
     const mid = m.moduleId || '';
-    // 도어분절 현관장(entryway-split)은 신발장이지만 깊이 600 기본 → 일반 가구 처리
-    const isEntrywaySplit = mid.includes('entryway-split');
-    const isShoe = !isEntrywaySplit && (
-      mid.includes('-entryway-') || mid.includes('-shelf-') ||
-      mid.includes('-4drawer-shelf-') || mid.includes('-2drawer-shelf-')
-    );
+    const isShoe = mid.includes('-entryway-') || mid.includes('-shelf-') ||
+                   mid.includes('-4drawer-shelf-') || mid.includes('-2drawer-shelf-');
     const isUpper = mid.includes('upper-cabinet');
     if (isShoe) return m.customDepth || m.upperSectionDepth || m.lowerSectionDepth || 380;
     if (isUpper) return m.customDepth || 300;

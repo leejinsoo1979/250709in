@@ -403,9 +403,7 @@ const Room: React.FC<RoomProps> = ({
     spaceInfo.frameConfig?.top === true && spaceInfo.frameConfig?.bottom === true;
 
   // 가구별 기본 깊이 (신발장 380, 상부장 300, 기타 600)
-  // 도어분절 현관장(entryway-split)은 신발장이지만 600 기본
   const getModBaseDepthMm = (moduleId: string): number => {
-    if (moduleId.includes('entryway-split')) return 600;
     if (moduleId.includes('-entryway-') || moduleId.includes('-shelf-') ||
         moduleId.includes('-4drawer-shelf-') || moduleId.includes('-2drawer-shelf-')) return 380;
     if (moduleId.includes('upper-cabinet')) return 300;
@@ -423,12 +421,8 @@ const Room: React.FC<RoomProps> = ({
   const computeDepthZOffset = (mod: any, useSection: 'upper' | 'lower' | 'any' = 'any'): number => {
     if (!mod) return 0;
     const mid = mod.moduleId || '';
-    // 도어분절 현관장(entryway-split)은 신발장이지만 깊이 600 기본 → 신발장 자동 처리에서 제외
-    const isEntrywaySplit = mid.includes('entryway-split');
-    const isShoe = !isEntrywaySplit && (
-      mid.includes('-entryway-') || mid.includes('-shelf-') ||
-      mid.includes('-4drawer-shelf-') || mid.includes('-2drawer-shelf-')
-    );
+    const isShoe = mid.includes('-entryway-') || mid.includes('-shelf-') ||
+                   mid.includes('-4drawer-shelf-') || mid.includes('-2drawer-shelf-');
     if (isShoe) {
       // 신발장: 공간 기본 600 기준. 섹션별 깊이 우선, 없으면 customDepth, 최후 380
       // 상/하 섹션별로 프레임이 따라가도록 useSection에 따라 섹션 값 선택
@@ -4765,8 +4759,7 @@ const Room: React.FC<RoomProps> = ({
                     const upperFrameZ = upperFrontZ - mmToThreeUnits(END_PANEL_THICKNESS) / 2;
                     // 신발장: 뒷면이 뒷벽+0, 앞면 = 뒷벽 + customDepth. 상단몰딩은 앞면 기준
                     const modMidShoe = mod.moduleId || '';
-                    // 도어분절 현관장(entryway-split)은 신발장 자동 처리에서 제외 (깊이 600 기본)
-                    const isShoeMod = !modMidShoe.includes('entryway-split') && (modMidShoe.includes('-entryway-') || modMidShoe.includes('-shelf-') || modMidShoe.includes('-4drawer-shelf-') || modMidShoe.includes('-2drawer-shelf-'));
+                    const isShoeMod = modMidShoe.includes('-entryway-') || modMidShoe.includes('-shelf-') || modMidShoe.includes('-4drawer-shelf-') || modMidShoe.includes('-2drawer-shelf-');
                     let shoeFrameZ: number | null = null;
                     if (isShoeMod) {
                       const shoeDepthMm = mod.upperSectionDepth || mod.customDepth || mod.freeDepth || 380;
@@ -5681,7 +5674,7 @@ const Room: React.FC<RoomProps> = ({
                   // 상부장은 프레임이 상부장 앞면에 맞춰 붙어야 함 (프레임 앞면 = 상부장 앞면)
                   let slotFrameZ = topZPos;
                   const slotModMid = mod.moduleId || '';
-                  const isShoeSlot = !slotModMid.includes('entryway-split') && (slotModMid.includes('-entryway-') || slotModMid.includes('-shelf-') || slotModMid.includes('-4drawer-shelf-') || slotModMid.includes('-2drawer-shelf-'));
+                  const isShoeSlot = slotModMid.includes('-entryway-') || slotModMid.includes('-shelf-') || slotModMid.includes('-4drawer-shelf-') || slotModMid.includes('-2drawer-shelf-');
                   if (slotModCategory === 'upper') {
                     const slotUpperDepthMm = mod.freeDepth || mod.customDepth || 300;
                     const fiFurnitureDepthMm = Math.min(spaceInfo.depth || 1500, 600);
@@ -6708,7 +6701,7 @@ const Room: React.FC<RoomProps> = ({
               const modBaseZInset = mod.baseFrameOffset ? mmToThreeUnits(mod.baseFrameOffset) : (freeIsLower ? mmToThreeUnits(65) : 0);
               // 신발장: 걸래받이 Z를 신발장 앞면에 맞춤 (inset 무시)
               const baseShoeMid = mod.moduleId || '';
-              const isShoeBase = !baseShoeMid.includes('entryway-split') && (baseShoeMid.includes('-entryway-') || baseShoeMid.includes('-shelf-') || baseShoeMid.includes('-4drawer-shelf-') || baseShoeMid.includes('-2drawer-shelf-'));
+              const isShoeBase = baseShoeMid.includes('-entryway-') || baseShoeMid.includes('-shelf-') || baseShoeMid.includes('-4drawer-shelf-') || baseShoeMid.includes('-2drawer-shelf-');
               let baseZPosition: number;
               if (isShoeBase) {
                 // 걸래받이: 하부 섹션 깊이 우선, 없으면 customDepth, 최후 380
@@ -7073,7 +7066,7 @@ const Room: React.FC<RoomProps> = ({
                       const modBaseZInset = mod.baseFrameOffset ? mmToThreeUnits(mod.baseFrameOffset) : (isLowerMod ? mmToThreeUnits(65) : 0);
                       // 신발장 걸래받이 Z (앞면 기준)
                       const slotBaseShoeMid = mod.moduleId || '';
-                      const isShoeSlotBase = !slotBaseShoeMid.includes('entryway-split') && (slotBaseShoeMid.includes('-entryway-') || slotBaseShoeMid.includes('-shelf-') || slotBaseShoeMid.includes('-4drawer-shelf-') || slotBaseShoeMid.includes('-2drawer-shelf-'));
+                      const isShoeSlotBase = slotBaseShoeMid.includes('-entryway-') || slotBaseShoeMid.includes('-shelf-') || slotBaseShoeMid.includes('-4drawer-shelf-') || slotBaseShoeMid.includes('-2drawer-shelf-');
                       // 모든 가구 공통: 하부 섹션 depth 변화를 가구 기본 깊이 기준으로 반영
                       const unifiedBaseZOffset = computeDepthZOffset(mod, 'lower');
                       // 가구별 뒷벽 이격(backWallGap) 반영: 가구 본체와 동일하게 앞으로 이동
