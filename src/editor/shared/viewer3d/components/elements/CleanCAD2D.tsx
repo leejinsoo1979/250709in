@@ -3866,15 +3866,18 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           const hasDualCabinet = leftCompanionMod !== null && companionH > 0;
           // 상부장 하부마감판 두께 (UpperCabinet.tsx FinishingPanelWithTexture 18mm)
           const UPPER_BOTTOM_FINISH_MM = 18;
-          // 하부장/상부장 높이 분리 (상부장은 하부마감판 포함)
+          // 하부장/상부장 높이 분리 (상부장은 하부마감판 포함, EP 끄면 미포함)
           let lowerCabinetH = 0;
           let upperCabinetH = 0;
           if (hasDualCabinet) {
+            const upperModForEP = leftCategoryResolved === 'upper' ? leftmostMod : leftCompanionMod;
+            const upperHasBottomEP = (upperModForEP as any)?.hasBottomEndPanel !== false;
+            const upperFinishMm = upperHasBottomEP ? UPPER_BOTTOM_FINISH_MM : 0;
             if (leftCategoryResolved === 'lower') {
               lowerCabinetH = furnitureH;
-              upperCabinetH = companionH + UPPER_BOTTOM_FINISH_MM;
+              upperCabinetH = companionH + upperFinishMm;
             } else if (leftCategoryResolved === 'upper') {
-              upperCabinetH = furnitureH + UPPER_BOTTOM_FINISH_MM;
+              upperCabinetH = furnitureH + upperFinishMm;
               lowerCabinetH = companionH;
             }
           }
@@ -4276,7 +4279,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     fontSize={baseFontSize} color={textColor} anchorX="right" anchorY="middle"
                     outlineWidth={textOutlineWidth} outlineColor={textOutlineColor}
                   >
-                    {Math.max(0, upperCabinetH - ((((leftCategoryResolved === 'upper' ? leftmostMod : leftCompanionMod) as any)?.hasBottomEndPanel !== false) ? UPPER_BOTTOM_FINISH_MM : 0))}
+                    {upperCabinetH}
                   </Text>
                 </>
               ) : hasSectionSplit ? (
@@ -4692,11 +4695,14 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           let rLowerCabinetH = 0;
           let rUpperCabinetH = 0;
           if (rHasDualCabinet) {
+            const rUpperModForEP = rightCategoryResolved === 'upper' ? rightmostMod : rightCompanionMod;
+            const rUpperHasBottomEP = (rUpperModForEP as any)?.hasBottomEndPanel !== false;
+            const rUpperFinishMm = rUpperHasBottomEP ? R_UPPER_BOTTOM_FINISH_MM : 0;
             if (rightCategoryResolved === 'lower') {
               rLowerCabinetH = rFurnitureH;
-              rUpperCabinetH = rCompanionH + R_UPPER_BOTTOM_FINISH_MM;
+              rUpperCabinetH = rCompanionH + rUpperFinishMm;
             } else if (rightCategoryResolved === 'upper') {
-              rUpperCabinetH = rFurnitureH + R_UPPER_BOTTOM_FINISH_MM;
+              rUpperCabinetH = rFurnitureH + rUpperFinishMm;
               rLowerCabinetH = rCompanionH;
             }
           }
@@ -5081,7 +5087,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     fontSize={baseFontSize} color={textColor} anchorX="left" anchorY="middle"
                     outlineWidth={textOutlineWidth} outlineColor={textOutlineColor}
                   >
-                    {Math.max(0, rUpperCabinetH - ((((rightCategoryResolved === 'upper' ? rightmostMod : rightCompanionMod) as any)?.hasBottomEndPanel !== false) ? R_UPPER_BOTTOM_FINISH_MM : 0))}
+                    {rUpperCabinetH}
                   </Text>
                 </>
               ) : rHasSectionSplit ? (
