@@ -554,6 +554,18 @@
   color: var(--theme-primary);
 }
 
+.countertopThicknessTabs {
+  gap: 6px;
+}
+
+.countertopThicknessTabs .doorTab {
+  min-width: 0;
+  padding: 8px 6px;
+  white-space: nowrap;
+  word-break: keep-all;
+  line-height: 1.2;
+}
+
 .doorTabSubtitle {
   display: block;
   font-size: 11px;

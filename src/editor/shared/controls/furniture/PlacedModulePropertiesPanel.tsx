@@ -3192,9 +3192,60 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                           const freshModule = useFurnitureStore.getState().placedModules.find(m => m.id === currentPlacedModule.id) || currentPlacedModule;
                           const freshAll = useFurnitureStore.getState().placedModules;
                           const freshSI = useSpaceConfigStore.getState().spaceInfo;
-                          const newX = (freshModule.isFreePlacement || isInsertFrameWidth)
-                            ? calcResizedPositionX(freshModule, val, freshAll, freshSI)
-                            : freshModule.position.x;
+                          // 키큰장찬넬(insert-frame): 인접가구 반대로 확장 + 양쪽 인접 시 우측 가구 이동
+                          let newX: number;
+                          if (isInsertFrameWidth) {
+                            const oldW = (freshModule.freeWidth ?? freshModule.customWidth ?? freshModule.moduleWidth ?? moduleData.dimensions.width);
+                            const oldCenter = freshModule.position.x;
+                            const oldLeftMm = oldCenter * 100 - oldW / 2;
+                            const oldRightMm = oldCenter * 100 + oldW / 2;
+                            const SNAP = 3;
+                            // 좌/우 인접 가구 탐색
+                            const leftAdj = freshAll.find((m: any) => {
+                              if (m.id === freshModule.id || m.isSurroundPanel) return false;
+                              const mW = m.freeWidth ?? m.customWidth ?? m.moduleWidth ?? 0;
+                              const mRight = (m.position?.x ?? 0) * 100 + mW / 2;
+                              return Math.abs(mRight - oldLeftMm) <= SNAP;
+                            });
+                            const rightAdj = freshAll.find((m: any) => {
+                              if (m.id === freshModule.id || m.isSurroundPanel) return false;
+                              const mW = m.freeWidth ?? m.customWidth ?? m.moduleWidth ?? 0;
+                              const mLeft = (m.position?.x ?? 0) * 100 - mW / 2;
+                              return Math.abs(mLeft - oldRightMm) <= SNAP;
+                            });
+                            const delta = val - oldW; // 확장량 (음수면 축소)
+                            if (leftAdj && rightAdj) {
+                              // 양쪽 인접: 좌측 anchor 유지, 우측 인접 가구 이동
+                              const newCenterMm = oldLeftMm + val / 2;
+                              newX = newCenterMm / 100;
+                              // 우측 가구 및 그 이후 가구들 이동
+                              const moveTargets = freshAll.filter((m: any) => {
+                                if (m.id === freshModule.id || m.isSurroundPanel) return false;
+                                const mLeft = (m.position?.x ?? 0) * 100 - (m.freeWidth ?? m.customWidth ?? m.moduleWidth ?? 0) / 2;
+                                return mLeft >= oldRightMm - SNAP;
+                              });
+                              moveTargets.forEach((m: any) => {
+                                updatePlacedModule(m.id, {
+                                  position: { ...m.position, x: m.position.x + delta / 100 },
+                                } as any);
+                              });
+                            } else if (leftAdj && !rightAdj) {
+                              // 좌측만 인접: 좌측 anchor 유지, 우측으로 확장
+                              const newCenterMm = oldLeftMm + val / 2;
+                              newX = newCenterMm / 100;
+                            } else if (!leftAdj && rightAdj) {
+                              // 우측만 인접: 우측 anchor 유지, 좌측으로 확장
+                              const newCenterMm = oldRightMm - val / 2;
+                              newX = newCenterMm / 100;
+                            } else {
+                              // 양쪽 비어있음: 기존 calcResizedPositionX 로직 (좌측 anchor 우선)
+                              newX = calcResizedPositionX(freshModule, val, freshAll, freshSI);
+                            }
+                          } else {
+                            newX = freshModule.isFreePlacement
+                              ? calcResizedPositionX(freshModule, val, freshAll, freshSI)
+                              : freshModule.position.x;
+                          }
                           updatePlacedModule(currentPlacedModule.id, {
                             freeWidth: val,
                             moduleWidth: val,
@@ -5710,7 +5761,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
               </div>
               {/* 두께 선택 — 인조대리석(stone)일 때만 표시, PET은 가구재 기반 자동 매핑 */}
               {(currentPlacedModule.stoneTopMaterial || 'stone') !== 'pet' && (
-              <div className={styles.doorTabSelector}>
+              <div className={`${styles.doorTabSelector} ${styles.countertopThicknessTabs}`}>
                 {([0, 10, 20, 30] as const).map(thickness => (
                   <button
                     key={thickness}
