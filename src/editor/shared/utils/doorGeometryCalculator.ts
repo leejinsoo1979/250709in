@@ -107,7 +107,9 @@ export const resolveDoorLeafDimensions = (
     leafHeightMm = cabinetHeightMm - 5 + 28
   } else if (isLowerCabinet) {
     if (classification.isTopDown) {
-      leafHeightMm = 710
+      // 상판내림은 몸통 높이 증감분을 상단 전대/대리석 앞판이 흡수한다.
+      // 도어 기준은 기본 몸통 785mm에 상하 갭만 반영한다. 기본 -80/+5 = 710mm.
+      leafHeightMm = 785 + (doorTopGapMm ?? -80) + (doorBottomGapMm ?? 5)
     } else if (classification.isDoorLift) {
       leafHeightMm = cabinetHeightMm + (doorTopGapMm ?? 30) + (doorBottomGapMm ?? 5)
     } else {

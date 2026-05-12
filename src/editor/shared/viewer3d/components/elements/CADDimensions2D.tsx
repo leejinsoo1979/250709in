@@ -1253,9 +1253,19 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
               const isDoorLift = modData.id?.includes('lower-door-lift-');
               const isTopDown = modData.id?.includes('lower-top-down-');
               if (isTopDown) {
-                doorHeightMm = 710;
-                doorBottomAbsMm = cabinetBottomAbs - 5;
-                doorTopAbsMm = doorBottomAbsMm + doorHeightMm;
+                const maidaSegments = computeLowerCabinetMaidaHeights(
+                  modData.id,
+                  cabinetH,
+                  doorTopGapVal,
+                  doorBottomGapVal
+                );
+                const topMaida = maidaSegments?.[maidaSegments.length - 1];
+                const topDownReferenceH = modData.dimensions.height ?? 785;
+                doorBottomAbsMm = cabinetBottomAbs - doorBottomGapVal;
+                doorTopAbsMm = cabinetBottomAbs + (
+                  topMaida?.maidaTopMm ?? (topDownReferenceH + doorTopGapVal)
+                );
+                doorHeightMm = Math.max(0, doorTopAbsMm - doorBottomAbsMm);
               } else if (isDoorLift) {
                 doorHeightMm = cabinetH + doorTopGapVal + doorBottomGapVal;
                 doorTopAbsMm = cabinetBottomAbs + cabinetH + doorTopGapVal;
@@ -2600,9 +2610,19 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
               const isDoorLift = modData.id?.includes('lower-door-lift-');
               const isTopDown = modData.id?.includes('lower-top-down-');
               if (isTopDown) {
-                doorHeightMm = 710;
-                doorBottomAbsMm = cabinetBottomAbs - 5;
-                doorTopAbsMm = doorBottomAbsMm + doorHeightMm;
+                const maidaSegments = computeLowerCabinetMaidaHeights(
+                  modData.id,
+                  cabinetH,
+                  doorTopGapVal,
+                  doorBottomGapVal
+                );
+                const topMaida = maidaSegments?.[maidaSegments.length - 1];
+                const topDownReferenceH = modData.dimensions.height ?? 785;
+                doorBottomAbsMm = cabinetBottomAbs - doorBottomGapVal;
+                doorTopAbsMm = cabinetBottomAbs + (
+                  topMaida?.maidaTopMm ?? (topDownReferenceH + doorTopGapVal)
+                );
+                doorHeightMm = Math.max(0, doorTopAbsMm - doorBottomAbsMm);
               } else if (isDoorLift) {
                 doorHeightMm = cabinetH + doorTopGapVal + doorBottomGapVal;
                 doorTopAbsMm = cabinetBottomAbs + cabinetH + doorTopGapVal;

@@ -27,6 +27,11 @@ interface BaseFurnitureOptions {
   grainDirection?: 'horizontal' | 'vertical'; // 텍스처 결 방향 (기본값: horizontal) - 하위 호환성
   panelGrainDirections?: { [panelName: string]: 'horizontal' | 'vertical' }; // 패널별 개별 결 방향
   backPanelThicknessMm?: number; // 백패널 두께 (mm, 기본값: 9)
+  // 선반장 전용: 띄움/걸레받이 흡수를 섹션별로 분배할 때 사용
+  // - shelfFloatAbsorbedMm: 띄움으로 가구가 줄어든 양 (mm). 하부 섹션에서 차감.
+  // - shelfBaseAbsorbedMm: 걸레받이 토글 OFF로 가구가 늘어난 양 (mm). 상부 섹션에 추가.
+  shelfFloatAbsorbedMm?: number;
+  shelfBaseAbsorbedMm?: number;
 }
 
 // 가구 기본 설정 반환 타입
@@ -87,7 +92,9 @@ export const useBaseFurniture = (
     upperSectionDepth,
     grainDirection = 'vertical', // 기본값: 세로 결 (하위 호환성)
     panelGrainDirections, // 패널별 개별 결 방향
-    backPanelThicknessMm = DEFAULT_BACK_PANEL_THICKNESS // 백패널 두께 (기본값: 9mm)
+    backPanelThicknessMm = DEFAULT_BACK_PANEL_THICKNESS, // 백패널 두께 (기본값: 9mm)
+    shelfFloatAbsorbedMm = 0,
+    shelfBaseAbsorbedMm = 0,
   } = options;
   
   // Store에서 재질 설정 가져오기
@@ -134,12 +141,58 @@ export const useBaseFurniture = (
     // - 하부 흡수(현관장 H/일반 선반장): 첫 섹션(하부)이 높이 변화 흡수, 받침대 기준 유지
     // - 그 외(일반 가구, 4drawer/2drawer 선반장): 마지막 섹션(상부)이 흡수
     const mid = moduleData?.id || '';
+    const isPlainShelf = !!mid && (
+      // single-shelf-* 또는 dual-shelf-* (4drawer/2drawer 조합 제외)
+      /(^|-)(?:single|dual)-shelf-/.test(mid) &&
+      !mid.includes('-4drawer-shelf-') &&
+      !mid.includes('-2drawer-shelf-')
+    );
     const isLowerAbsorbShoeCabinetHeight = !!mid && (
       mid.includes('-entryway-') ||
       // -shelf- 인데 4drawer/2drawer 가 아닌 일반 선반장만 하부 흡수
       (mid.includes('-shelf-') && !mid.includes('-4drawer-shelf-') && !mid.includes('-2drawer-shelf-'))
     );
     const sections = originalModelConfig.sections;
+
+    // 선반장(single-shelf/dual-shelf) + 2섹션: 띄움은 하부에서 차감, 걸레받이 흡수는 상부로
+    // FurnitureItem이 renderHeightMm = original - float + base 로 합쳐서 전달하므로,
+    // 두 섹션을 명시적으로 새 높이로 계산하여 분배한다.
+    if (isPlainShelf && sections.length === 2 && (shelfFloatAbsorbedMm > 0 || shelfBaseAbsorbedMm > 0)) {
+      const basicThicknessMm = originalModelConfig.basicThickness || 18;
+      const lowerOrig = sections[0].height;
+      const newLowerH = Math.max(0, Math.round(lowerOrig - shelfFloatAbsorbedMm));
+      const newUpperH = Math.max(0, Math.round(renderHeightMm - newLowerH));
+
+      const rescaleShelfPositions = (section: SectionConfig, newHeight: number): SectionConfig => {
+        if (section.shelfPositions && section.shelfPositions.length > 0 && section.count && section.count > 0) {
+          const realCount = section.count;
+          const sectionInner = newHeight - 2 * basicThicknessMm;
+          if (sectionInner > 0 && realCount > 0) {
+            const halfT = basicThicknessMm / 2;
+            const g = (sectionInner - realCount * basicThicknessMm) / (realCount + 1);
+            const newPositions = Array.from({ length: realCount }, (_, i) =>
+              Math.round((i + 1) * g + i * basicThicknessMm + halfT)
+            );
+            const hasZeroSentinel = section.shelfPositions.includes(0);
+            return {
+              ...section,
+              height: newHeight,
+              shelfPositions: hasZeroSentinel ? [0, ...newPositions] : newPositions,
+            };
+          }
+        }
+        return { ...section, height: newHeight };
+      };
+
+      return {
+        ...originalModelConfig,
+        sections: [
+          rescaleShelfPositions(sections[0], newLowerH),
+          rescaleShelfPositions(sections[1], newUpperH),
+        ],
+      };
+    }
+
     // 흡수 섹션 인덱스: 하부 흡수 신발장이면 0(하부), 그 외엔 마지막(상부)
     const absorbingIdx = isLowerAbsorbShoeCabinetHeight ? 0 : sections.length - 1;
     const fixedSum = sections.reduce((sum: number, s: SectionConfig, i: number) =>
@@ -235,7 +288,7 @@ export const useBaseFurniture = (
       ...originalModelConfig,
       sections: scaledSections
     };
-  }, [internalHeight, moduleData.dimensions.height, originalModelConfig]);
+  }, [internalHeight, moduleData.dimensions.height, originalModelConfig, shelfFloatAbsorbedMm, shelfBaseAbsorbedMm]);
   
   // 기본 판재 두께 변환 (mm -> Three.js 단위)
   const basicThickness = mmToThreeUnits(modelConfig.basicThickness || 18);

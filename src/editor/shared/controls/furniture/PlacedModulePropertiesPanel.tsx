@@ -6447,11 +6447,20 @@ const PlacedModulePropertiesPanel: React.FC = () => {
               );
             };
 
+            // 1섹션 가구(상부장 3단형 등): 상단 섹션 에디터만 노출, 라벨은 "선반"으로 단순화
+            const isSingleSection = effectiveSections.length < 2;
             return (
               <div className={styles.propertySection}>
                 <h5 className={styles.sectionTitle}>선반 설정</h5>
-                {renderShelfEditor(1, '상단 섹션', upperShelfCount, setUpperShelfCount, upperShelfPositionInputs, setUpperShelfPositionInputs)}
-                {renderShelfEditor(0, '하단 섹션', lowerShelfCount, setLowerShelfCount, lowerShelfPositionInputs, setLowerShelfPositionInputs)}
+                {isSingleSection
+                  ? renderShelfEditor(0, '선반', upperShelfCount, setUpperShelfCount, upperShelfPositionInputs, setUpperShelfPositionInputs)
+                  : (
+                    <>
+                      {renderShelfEditor(1, '상단 섹션', upperShelfCount, setUpperShelfCount, upperShelfPositionInputs, setUpperShelfPositionInputs)}
+                      {renderShelfEditor(0, '하단 섹션', lowerShelfCount, setLowerShelfCount, lowerShelfPositionInputs, setLowerShelfPositionInputs)}
+                    </>
+                  )
+                }
               </div>
             );
           })()}

@@ -233,6 +233,31 @@ const BoxModule: React.FC<BoxModuleProps> = ({
     ? { sectionDepths: placedSectionDepths, sectionDepthDirections: placedSectionDepthDirections }
     : null;
 
+  // 선반장(single-shelf/dual-shelf) 전용 흡수 분배:
+  // - 띄움 차감(floatAbsorbed): 하부 섹션에서 빼고
+  // - 걸레받이 흡수(baseAbsorbed): 상부 섹션에 더함
+  const moduleIdForAbsorb = moduleData?.id || '';
+  const isPlainShelfModule = /(^|-)(?:single|dual)-shelf-/.test(moduleIdForAbsorb)
+    && !moduleIdForAbsorb.includes('-4drawer-shelf-')
+    && !moduleIdForAbsorb.includes('-2drawer-shelf-');
+  let shelfFloatAbsorbedMm = 0;
+  let shelfBaseAbsorbedMm = 0;
+  if (isPlainShelfModule) {
+    const globalBaseMm = spaceInfo?.baseConfig?.height ?? 100;
+    const isFloatPlacement = spaceInfo?.baseConfig?.type === 'stand'
+      && spaceInfo?.baseConfig?.placementType === 'float';
+    const globalFloatMm = isFloatPlacement ? (spaceInfo?.baseConfig?.floatHeight || 0) : 0;
+    if (hasBase === false) {
+      // 걸레받이 OFF: 받침대 전체가 가구 본체에 흡수
+      shelfBaseAbsorbedMm = globalBaseMm;
+      // 개별 띄움(individualFloatHeight)만큼 가구가 줄어듦 → 하부에서 차감
+      shelfFloatAbsorbedMm = Math.max(0, individualFloatHeight ?? 0);
+    } else if (globalFloatMm > 0) {
+      // 걸레받이 ON + 전역 띄움: 띄움 높이만큼 가구가 줄어듦 → 하부에서 차감
+      shelfFloatAbsorbedMm = globalFloatMm;
+    }
+  }
+
   // 공통 로직도 항상 호출 (조건부 사용)
   const baseFurniture = useBaseFurniture(moduleData, {
     color,
@@ -250,6 +275,8 @@ const BoxModule: React.FC<BoxModuleProps> = ({
     upperSectionDepth,
     lowerSectionDepthDirection,
     upperSectionDepthDirection,
+    shelfFloatAbsorbedMm,
+    shelfBaseAbsorbedMm,
   } as any);
 
 
