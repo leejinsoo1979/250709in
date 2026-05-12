@@ -209,7 +209,7 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
       });
       correctedSpaceInfo = {
         ...spaceInfo,
-        frameSize: { left: 0, right: 0, top: 0 }
+        frameSize: { ...spaceInfo.frameSize, left: 0, right: 0 }
       };
     }
 
@@ -786,7 +786,7 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
         });
         correctedSpaceInfo = {
           ...spaceInfo,
-          frameSize: { left: 0, right: 0, top: 0 }
+          frameSize: { ...spaceInfo.frameSize, left: 0, right: 0 }
         };
       }
 

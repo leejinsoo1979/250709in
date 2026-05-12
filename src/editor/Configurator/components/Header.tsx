@@ -14,7 +14,7 @@ import { useAuth } from '@/auth/AuthProvider';
 import ProfilePopup from './ProfilePopup';
 import { useTranslation } from '@/i18n/useTranslation';
 import { useProjectStore } from '@/store/core/projectStore';
-import { useSpaceConfigStore, DEFAULT_SPACE_CONFIG } from '@/store/core/spaceConfigStore';
+import { useSpaceConfigStore, DEFAULT_SPACE_CONFIG, normalizeSpaceInfoFrameSize } from '@/store/core/spaceConfigStore';
 import { createDesignFile } from '@/firebase/projects';
 import { getSpaceConfigDefaults } from '@/firebase/userProfiles';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
@@ -352,6 +352,7 @@ const Header: React.FC<HeaderProps> = ({
         baseConfigHeight: spaceConfig.baseConfig?.height,
         frameSizeTop: spaceConfig.frameSize?.top,
       });
+      spaceConfig = normalizeSpaceInfoFrameSize(spaceConfig);
       const designName = '새 디자인';
       const { id, error } = await createDesignFile({
         name: designName,

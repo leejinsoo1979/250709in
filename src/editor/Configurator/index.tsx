@@ -3,7 +3,7 @@ import { TbRulerMeasure } from 'react-icons/tb';
 import { GoQuestion } from 'react-icons/go';
 import { IoIosArrowDropup } from 'react-icons/io';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { useSpaceConfigStore, SPACE_LIMITS, DEFAULT_SPACE_VALUES, DEFAULT_DROPPED_CEILING_VALUES } from '@/store/core/spaceConfigStore';
+import { useSpaceConfigStore, SPACE_LIMITS, DEFAULT_SPACE_VALUES, DEFAULT_DROPPED_CEILING_VALUES, normalizeSpaceInfoFrameSize } from '@/store/core/spaceConfigStore';
 import { inferFrameConfig } from '@/editor/shared/utils/frameConfigBridge';
 import { generateSurround } from '@/editor/shared/utils/surroundGenerator';
 import { useProjectStore } from '@/store/core/projectStore';
@@ -1396,13 +1396,14 @@ const Configurator: React.FC = () => {
         // 이전 프로젝트 상태 완전 초기화 후 새 데이터 로드
         // 로드 중 플래그 설정 — useEffect에서 가구 재배치 방지
         isLoadingProjectRef.current = true;
+        const normalizedSpaceConfig = normalizeSpaceInfoFrameSize(spaceConfig);
         resetSpaceInfo();
-        setSpaceInfo(spaceConfig);
-        setPreviousSpaceInfo(spaceConfig);
+        setSpaceInfo(normalizedSpaceConfig);
+        setPreviousSpaceInfo(normalizedSpaceConfig);
         // 상부장 topFrameOffset 마이그레이션:
         // - 서라운드: 미설정/0 → 23
         // - 노서라운드: 23 등 잔재값이 남아있으면 → 0 (UI/렌더와 데이터 일치)
-        const isSurroundLoaded = spaceConfig.surroundType === 'surround';
+        const isSurroundLoaded = normalizedSpaceConfig.surroundType === 'surround';
         const migratedModules = (project.furniture?.placedModules || []).map((m: any) => {
           const isUpper = m.moduleId?.includes('upper-cabinet') || m.moduleId?.startsWith('upper-');
           if (!isUpper) return m;
@@ -2044,6 +2045,7 @@ const Configurator: React.FC = () => {
       } catch (e) {
         console.error('유저 공간설정 기본값 로드 실패:', e);
       }
+      defaultSpaceConfig = normalizeSpaceInfoFrameSize(defaultSpaceConfig);
 
       const createData: any = {
         name: newDesignName.trim(),
@@ -2759,9 +2761,10 @@ const Configurator: React.FC = () => {
                 // 이전 디자인 파일 상태 완전 초기화 후 새 데이터 로드
                 // 로드 중 플래그 설정 — useEffect에서 가구 재배치 방지
                 isLoadingProjectRef.current = true;
+                const normalizedSpaceConfig = normalizeSpaceInfoFrameSize(spaceConfig);
                 resetSpaceInfo();
-                setSpaceInfo(spaceConfig);
-                setPreviousSpaceInfo(spaceConfig);
+                setSpaceInfo(normalizedSpaceConfig);
+                setPreviousSpaceInfo(normalizedSpaceConfig);
                 // 다음 렌더 사이클 이후 플래그 해제
                 requestAnimationFrame(() => {
                   setPreviousSpaceInfo(useSpaceConfigStore.getState().spaceInfo);

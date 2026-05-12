@@ -17,6 +17,37 @@ export interface FrameSize {
   topOffset?: number; // 자유배치 상단몰딩 옵셋 (mm, 천장에서 아래로)
 }
 
+type LegacyFrameSize = Partial<FrameSize> & {
+  upper?: number;
+  base?: number;
+  bottom?: number;
+};
+
+export const normalizeSpaceInfoFrameSize = <T extends Partial<SpaceInfo>>(spaceInfo: T): T => {
+  const rawFrame = spaceInfo.frameSize as LegacyFrameSize | undefined;
+
+  if (!rawFrame && spaceInfo.surroundType !== 'no-surround') {
+    return spaceInfo;
+  }
+
+  const nextFrame: FrameSize = {
+    left: rawFrame?.left ?? 0,
+    right: rawFrame?.right ?? 0,
+    top: rawFrame?.top ?? rawFrame?.upper ?? 0,
+    ...(rawFrame?.topOffset !== undefined ? { topOffset: rawFrame.topOffset } : {})
+  };
+
+  if (spaceInfo.surroundType === 'no-surround') {
+    nextFrame.left = 0;
+    nextFrame.right = 0;
+  }
+
+  return {
+    ...spaceInfo,
+    frameSize: nextFrame
+  };
+};
+
 // 자유배치 서라운드 개별 면 설정
 export interface FreeSurroundSide {
   enabled: boolean;
@@ -574,7 +605,7 @@ export const useSpaceConfigStore = create<SpaceConfigState>()((set) => ({
       }
 
       const newState = {
-        spaceInfo: tempSpaceInfo,
+        spaceInfo: normalizeSpaceInfoFrameSize(tempSpaceInfo),
         isDirty: true,
       };
       
