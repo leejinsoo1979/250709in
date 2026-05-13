@@ -5993,9 +5993,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
 	        const topGapMmForDim = module.hasTopFrame === false
 	          ? Math.max(0, Math.round(module.topFrameGap ?? 0))
 	          : 0;
-	        const showTopGapHeightGuide = currentViewDirection === 'front'
-	          && topGapMmForDim > 0
-	          && (moduleCategoryForDim === 'full' || moduleCategoryForDim === 'upper');
+	        // 우측 작은 상단갭 박스(가구 우측에 100 표시) — 좌측에 이미 표시되므로 중복 제거
+	        const showTopGapHeightGuide = false;
         const moduleCeilingMmForDim = (() => {
           if (module.zone === 'dropped') {
             if (isFreePlacement && spaceInfo.stepCeiling?.enabled) {
