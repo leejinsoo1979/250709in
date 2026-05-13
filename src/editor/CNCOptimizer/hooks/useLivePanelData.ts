@@ -18,8 +18,11 @@ import { withUpperSafetyShelfRemoved } from '@/editor/shared/utils/upperSafetySh
 function toMeshName(cncName: string): string {
   // 단일 섹션 가구: "바닥" → "바닥판" (3D BaseFurnitureShell에서 단일 섹션이면 '바닥판' 사용)
   if (cncName === '바닥') return '바닥판';
-  // 보강대: CNC "좌(상)후면 보강대 1" → 3D "좌(상)보강대" (후면+번호 제거)
-  if (cncName.includes('후면 보강대')) return cncName.replace(/후면 보강대\s*\d*/, '보강대').trim();
+  // 보강대: CNC "좌(상)후면 보강대 1" → 3D "좌(상)보강대 1"
+  if (cncName.includes('후면 보강대')) return cncName.replace('후면 보강대', '보강대').trim();
+  // 하부장 노치 보강 가로전대: CNC "가로전대(1)" → 3D "가로전대(하1)"
+  const lowerStretcherMatch = cncName.match(/^가로전대\((\d+)\)$/);
+  if (lowerStretcherMatch) return `가로전대(하${lowerStretcherMatch[1]})`;
   // 프레임: CNC "상단몰딩" / "걸래받이" → 3D "top-frame" / "base-frame"
   if (cncName.includes('상단몰딩') || cncName.includes('상단 몰딩')) return 'top-frame';
   if (cncName.includes('걸래받이') || cncName.includes('걸래받이')) return 'base-frame';

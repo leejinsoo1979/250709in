@@ -1496,7 +1496,7 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
                 material={baseFurniture.material}
                 renderMode={renderMode}
                 isHighlighted={false}
-                panelName={`다보선반(${idx + 1})`}
+                panelName={`선반 ${idx + 1}`}
                 furnitureId={placedFurnitureId}
               />
             ));
