@@ -2905,12 +2905,12 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                   })()}
                 </span>
               </div>
-              {/* 뒷벽과 이격 / 키큰장찬넬은 전면 옵셋 (입력값만큼 앞면에서 뒤로 들어감) */}
+              {/* 뒷벽과 이격 / 키큰장찬넬은 전면 옵셋 (전면 프레임이 EP 라인에서 뒤로 들어가는 mm) */}
               {currentPlacedModule && (() => {
                 const isInsertFrameRow = typeof currentPlacedModule.moduleId === 'string' && currentPlacedModule.moduleId.includes('insert-frame');
-                // 키큰장찬넬: 표시값 = -backWallGap (입력 양수 → 뒤로 들어감 → backWallGap 음수 저장)
+                // 키큰장찬넬: 표시값 = insertFrontInsetMm (기본 40)
                 const displayValue = isInsertFrameRow
-                  ? String(-(currentPlacedModule.backWallGap ?? 0))
+                  ? String(currentPlacedModule.insertFrontInsetMm ?? 40)
                   : String(currentPlacedModule.backWallGap ?? 0);
                 return (
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '6px' }}>
@@ -2924,9 +2924,13 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                         const raw = e.target.value;
                         const parsed = parseBackWallGapInput(raw);
                         if (parsed !== null) {
-                          // 키큰장찬넬: 입력값이 +면 가구를 뒤로 이동 → backWallGap에 음수로 저장
-                          const stored = isInsertFrameRow ? -parsed : parsed;
-                          updatePlacedModule(currentPlacedModule.id, { backWallGap: stored });
+                          if (isInsertFrameRow) {
+                            // 키큰장찬넬: insertFrontInsetMm로 저장 (0 이상)
+                            const next = Math.max(0, parsed);
+                            updatePlacedModule(currentPlacedModule.id, { insertFrontInsetMm: next });
+                          } else {
+                            updatePlacedModule(currentPlacedModule.id, { backWallGap: parsed });
+                          }
                         }
                       }}
                       onKeyDown={(e) => {
@@ -2934,10 +2938,9 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                         else if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
                           e.preventDefault();
                           if (isInsertFrameRow) {
-                            // 표시값 기준 ↑↓: 표시값 +1/-1 → 저장값 부호 반대
-                            const curDisp = -(currentPlacedModule.backWallGap ?? 0);
-                            const nextDisp = curDisp + (e.key === 'ArrowUp' ? 1 : -1);
-                            updatePlacedModule(currentPlacedModule.id, { backWallGap: -nextDisp });
+                            const cur = currentPlacedModule.insertFrontInsetMm ?? 40;
+                            const next = Math.max(0, cur + (e.key === 'ArrowUp' ? 1 : -1));
+                            updatePlacedModule(currentPlacedModule.id, { insertFrontInsetMm: next });
                           } else {
                             const next = stepBackWallGapMm(
                               currentPlacedModule.backWallGap,
