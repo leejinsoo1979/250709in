@@ -14,55 +14,65 @@ import DimensionText from './DimensionText';
 import { useDimensionColor } from '../hooks/useDimensionColor';
 import { VentilationCap } from './VentilationCap';
 
-// 유리장 타일 텍스처 (모듈 레벨 캐싱)
-let GLASS_TILE_TEXTURE: THREE.Texture | null = null;
-const getGlassTileTexture = (onLoad?: () => void): THREE.Texture => {
-  if (GLASS_TILE_TEXTURE) {
-    if (GLASS_TILE_TEXTURE.image && onLoad) onLoad();
-    return GLASS_TILE_TEXTURE;
-  }
-  const loader = new THREE.TextureLoader();
-  const tex = loader.load('/materials/tyle2.png', (loaded) => {
-    loaded.needsUpdate = true;
-    if (onLoad) onLoad();
+// 유리장 타일 텍스처 (이미지 로드 캐싱 — Image 객체로 직접 관리)
+let GLASS_TILE_IMAGE: HTMLImageElement | null = null;
+let GLASS_TILE_LOAD_PROMISE: Promise<HTMLImageElement> | null = null;
+const loadGlassTileImage = (): Promise<HTMLImageElement> => {
+  if (GLASS_TILE_IMAGE) return Promise.resolve(GLASS_TILE_IMAGE);
+  if (GLASS_TILE_LOAD_PROMISE) return GLASS_TILE_LOAD_PROMISE;
+  GLASS_TILE_LOAD_PROMISE = new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => {
+      GLASS_TILE_IMAGE = img;
+      resolve(img);
+    };
+    img.onerror = (e) => reject(e);
+    img.src = '/materials/tyle2.png';
   });
-  tex.wrapS = THREE.RepeatWrapping;
-  tex.wrapT = THREE.RepeatWrapping;
-  GLASS_TILE_TEXTURE = tex;
-  return tex;
+  return GLASS_TILE_LOAD_PROMISE;
 };
 
-// 타일 백패널 mesh 컴포넌트 — 텍스처 로드 후 강제 리렌더
+// 타일 백패널 mesh 컴포넌트 — 텍스처를 useEffect에서 로드 후 적용
 const TileBackPanelMesh: React.FC<{
   position: [number, number, number];
   args: [number, number, number];
   widthMm: number;
   heightMm: number;
 }> = ({ position, args, widthMm, heightMm }) => {
-  const [, force] = React.useState(0);
-  const matRef = React.useRef<THREE.MeshStandardMaterial | null>(null);
+  const [texture, setTexture] = React.useState<THREE.Texture | null>(null);
 
-  if (!matRef.current) {
-    const tex = getGlassTileTexture(() => force(n => n + 1));
-    const cloned = tex.clone();
-    cloned.wrapS = THREE.RepeatWrapping;
-    cloned.wrapT = THREE.RepeatWrapping;
-    cloned.repeat.set(Math.max(1, widthMm / 200), Math.max(1, heightMm / 200));
-    cloned.needsUpdate = true;
-    matRef.current = new THREE.MeshStandardMaterial({
-      map: cloned,
-      roughness: 0.6,
-      metalness: 0.05,
+  React.useEffect(() => {
+    let cancelled = false;
+    loadGlassTileImage().then((img) => {
+      if (cancelled) return;
+      const tex = new THREE.Texture(img);
+      tex.wrapS = THREE.RepeatWrapping;
+      tex.wrapT = THREE.RepeatWrapping;
+      tex.repeat.set(Math.max(1, widthMm / 200), Math.max(1, heightMm / 200));
+      tex.colorSpace = (THREE as any).SRGBColorSpace || THREE.LinearSRGBColorSpace;
+      tex.needsUpdate = true;
+      setTexture(tex);
+    }).catch(() => {
+      // 로드 실패 시 무시
     });
-  } else if (matRef.current.map) {
-    matRef.current.map.repeat.set(Math.max(1, widthMm / 200), Math.max(1, heightMm / 200));
-    matRef.current.map.needsUpdate = true;
-  }
+    return () => { cancelled = true; };
+  }, [widthMm, heightMm]);
 
   return (
-    <mesh position={position} userData={{ skipCNC: true }}>
+    <mesh position={position} userData={{ skipCNC: true }} renderOrder={1}>
       <boxGeometry args={args} />
-      <primitive object={matRef.current} attach="material" />
+      {texture ? (
+        <meshStandardMaterial
+          map={texture}
+          roughness={0.6}
+          metalness={0.05}
+          polygonOffset
+          polygonOffsetFactor={-1}
+          polygonOffsetUnits={-1}
+        />
+      ) : (
+        <meshStandardMaterial color={0xcccccc} />
+      )}
     </mesh>
   );
 };
@@ -2865,8 +2875,8 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                 const tileBackThk = backPanelThickness;
                 // 백패널 폭 (가구 내경)
                 const tileBackW = innerWidth + mmToThreeUnits(10);
-                // 백패널 Z(중심): 가구 뒤쪽 안쪽 면 (가구 뒷면 + 두께/2 + depthOffset)
-                const tileBackZ = -depth / 2 + tileBackThk / 2 + mmToThreeUnits(backPanelConfig.depthOffset);
+                // 백패널 Z(중심): 가구 뒤쪽 안쪽 면에서 살짝 앞으로 (z-fighting 방지 2mm 옵셋)
+                const tileBackZ = -depth / 2 + tileBackThk / 2 + mmToThreeUnits(backPanelConfig.depthOffset) + mmToThreeUnits(2);
 
                 // 영역 Y 좌표 (가구 중심 기준)
                 const sideBottomY = -height / 2 + mmToThreeUnits(SIDE_BOTTOM_FROM_FLOOR_MM); // 서랍 측판 하단
