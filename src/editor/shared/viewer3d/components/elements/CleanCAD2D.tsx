@@ -1593,6 +1593,12 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
       updatePlacedModule(module.id, { glassDrawerOffsetMm: next });
     };
 
+    // 측면뷰(좌/우)는 카메라가 X축 방향에서 보므로 Html이 안정적으로 표시되지 않을 수 있음
+    // → 측면뷰에서는 Text로 출력 (회전 보정)
+    const isSideView = keyPrefix === 'left' || keyPrefix === 'right';
+    const sideTextRotation: [number, number, number] = keyPrefix === 'left'
+      ? [0, -Math.PI / 2, -Math.PI / 2]
+      : [0, Math.PI / 2, Math.PI / 2];
     return (
       <React.Fragment key={`glass-side-split-${keyPrefix}-${module.id}`}>
         <NativeLine name="dimension_line"
@@ -1605,16 +1611,33 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             color={dimensionColor} lineWidth={0.6}
           />
         ))}
-        <Html
-          position={[x, (yGlassBottom + yDrawerBottom) / 2, textZ]}
-          center
-          style={{ pointerEvents: 'auto', background: 'transparent' }}
-          occlude={false}
-          zIndexRange={[10000, 10]}
-          transform={false}
-        >
-          <GlassDrawerGapEditor value={lowerH} color={dimensionColor} onChange={setLowerGap} />
-        </Html>
+        {isSideView ? (
+          <Text
+            renderOrder={100001}
+            depthTest={false}
+            position={[x, (yGlassBottom + yDrawerBottom) / 2, textZ]}
+            fontSize={baseFontSize}
+            color={textColor}
+            anchorX="center"
+            anchorY="middle"
+            outlineWidth={textOutlineWidth}
+            outlineColor={textOutlineColor}
+            rotation={sideTextRotation}
+          >
+            {lowerH}
+          </Text>
+        ) : (
+          <Html
+            position={[x, (yGlassBottom + yDrawerBottom) / 2, textZ]}
+            center
+            style={{ pointerEvents: 'auto', background: 'transparent' }}
+            occlude={false}
+            zIndexRange={[10000, 10]}
+            transform={false}
+          >
+            <GlassDrawerGapEditor value={lowerH} color={dimensionColor} onChange={setLowerGap} />
+          </Html>
+        )}
         <Text
           renderOrder={100001}
           depthTest={false}
@@ -1625,20 +1648,37 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           anchorY="middle"
           outlineWidth={textOutlineWidth}
           outlineColor={textOutlineColor}
-          rotation={[0, -Math.PI / 2, -Math.PI / 2]}
+          rotation={isSideView ? sideTextRotation : [0, -Math.PI / 2, -Math.PI / 2]}
         >
           {drawerH}
         </Text>
-        <Html
-          position={[x, (yDrawerTop + yGlassTop) / 2, textZ]}
-          center
-          style={{ pointerEvents: 'auto', background: 'transparent' }}
-          occlude={false}
-          zIndexRange={[10000, 10]}
-          transform={false}
-        >
-          <GlassDrawerGapEditor value={upperH} color={dimensionColor} onChange={setUpperGap} />
-        </Html>
+        {isSideView ? (
+          <Text
+            renderOrder={100001}
+            depthTest={false}
+            position={[x, (yDrawerTop + yGlassTop) / 2, textZ]}
+            fontSize={baseFontSize}
+            color={textColor}
+            anchorX="center"
+            anchorY="middle"
+            outlineWidth={textOutlineWidth}
+            outlineColor={textOutlineColor}
+            rotation={sideTextRotation}
+          >
+            {upperH}
+          </Text>
+        ) : (
+          <Html
+            position={[x, (yDrawerTop + yGlassTop) / 2, textZ]}
+            center
+            style={{ pointerEvents: 'auto', background: 'transparent' }}
+            occlude={false}
+            zIndexRange={[10000, 10]}
+            transform={false}
+          >
+            <GlassDrawerGapEditor value={upperH} color={dimensionColor} onChange={setUpperGap} />
+          </Html>
+        )}
       </React.Fragment>
     );
   };
