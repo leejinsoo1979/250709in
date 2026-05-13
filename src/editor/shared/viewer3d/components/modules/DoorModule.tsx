@@ -1424,21 +1424,57 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                   <meshBasicMaterial color={leftDoorLocked ? '#FF0000' : doorOverlayColor} transparent opacity={leftDoorLocked ? 0.12 : 0.2} side={THREE.DoubleSide} depthTest={false} depthWrite={false} />
                 </mesh>
               )}
-              {/* BoxWithEdges 사용하여 도어 렌더링 */}
-              <BoxWithEdges
-                key={`left-door-${leftDoorMaterial.uuid}`}
-                args={[leftDoorWidthUnits, doorHeight, doorThicknessUnits]}
-                position={[0, 0, 0]}
-                material={leftDoorMaterial}
-                renderMode={renderMode}
-                isDragging={isDragging}
-                isEditMode={isEditMode}
-                furnitureId={furnitureId}
-                panelName="좌측 도어"
-                textureUrl={textureUrl}
-                panelGrainDirections={panelGrainDirections}
-                isLocked={leftDoorLocked}
-              />
+              {/* BoxWithEdges 사용하여 도어 렌더링 (유리장은 금속프레임+유리) */}
+              {moduleData?.id?.includes('glass-cabinet') ? (() => {
+                const fW = mmToThreeUnits(25);
+                const gT = mmToThreeUnits(5);
+                const innerWL = leftDoorWidthUnits - 2 * fW;
+                const innerHL = doorHeight - 2 * fW;
+                const frameMat = new THREE.MeshStandardMaterial({ color: 0x918878, metalness: 0.85, roughness: 0.4 });
+                const glassMat = new THREE.MeshPhysicalMaterial({
+                  color: 0x4a2e1c, transparent: true, opacity: 0.38, roughness: 0.08, metalness: 0.0,
+                  transmission: 0.4, thickness: 0.5, ior: 1.45, side: THREE.DoubleSide,
+                });
+                return (
+                  <group key={`glass-left-door-${leftDoorMaterial.uuid}`}>
+                    <mesh position={[0, doorHeight / 2 - fW / 2, 0]} userData={{ skipCNC: true }}>
+                      <boxGeometry args={[leftDoorWidthUnits, fW, doorThicknessUnits]} />
+                      <primitive object={frameMat} attach="material" />
+                    </mesh>
+                    <mesh position={[0, -doorHeight / 2 + fW / 2, 0]} userData={{ skipCNC: true }}>
+                      <boxGeometry args={[leftDoorWidthUnits, fW, doorThicknessUnits]} />
+                      <primitive object={frameMat} attach="material" />
+                    </mesh>
+                    <mesh position={[-leftDoorWidthUnits / 2 + fW / 2, 0, 0]} userData={{ skipCNC: true }}>
+                      <boxGeometry args={[fW, doorHeight - 2 * fW, doorThicknessUnits]} />
+                      <primitive object={frameMat} attach="material" />
+                    </mesh>
+                    <mesh position={[leftDoorWidthUnits / 2 - fW / 2, 0, 0]} userData={{ skipCNC: true }}>
+                      <boxGeometry args={[fW, doorHeight - 2 * fW, doorThicknessUnits]} />
+                      <primitive object={frameMat} attach="material" />
+                    </mesh>
+                    <mesh position={[0, 0, 0]} userData={{ skipCNC: true }}>
+                      <boxGeometry args={[innerWL, innerHL, gT]} />
+                      <primitive object={glassMat} attach="material" />
+                    </mesh>
+                  </group>
+                );
+              })() : (
+                <BoxWithEdges
+                  key={`left-door-${leftDoorMaterial.uuid}`}
+                  args={[leftDoorWidthUnits, doorHeight, doorThicknessUnits]}
+                  position={[0, 0, 0]}
+                  material={leftDoorMaterial}
+                  renderMode={renderMode}
+                  isDragging={isDragging}
+                  isEditMode={isEditMode}
+                  furnitureId={furnitureId}
+                  panelName="좌측 도어"
+                  textureUrl={textureUrl}
+                  panelGrainDirections={panelGrainDirections}
+                  isLocked={leftDoorLocked}
+                />
+              )}
               
 
               {/* Hinges for left door - 상부장, 하부장, 키큰장 (잠금 시 숨김, 유리장 제외) */}
@@ -1797,21 +1833,57 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                   <meshBasicMaterial color={rightDoorLocked ? '#FF0000' : doorOverlayColor} transparent opacity={rightDoorLocked ? 0.12 : 0.2} side={THREE.DoubleSide} depthTest={false} depthWrite={false} />
                 </mesh>
               )}
-              {/* BoxWithEdges 사용하여 도어 렌더링 */}
-              <BoxWithEdges
-                key={`right-door-${rightDoorMaterial.uuid}`}
-                args={[rightDoorWidthUnits, doorHeight, doorThicknessUnits]}
-                position={[0, 0, 0]}
-                material={rightDoorMaterial}
-                renderMode={renderMode}
-                isDragging={isDragging}
-                isEditMode={isEditMode}
-                furnitureId={furnitureId}
-                panelName="우측 도어"
-                textureUrl={textureUrl}
-                panelGrainDirections={panelGrainDirections}
-                isLocked={rightDoorLocked}
-              />
+              {/* BoxWithEdges 사용하여 도어 렌더링 (유리장은 금속프레임+유리) */}
+              {moduleData?.id?.includes('glass-cabinet') ? (() => {
+                const fW = mmToThreeUnits(25);
+                const gT = mmToThreeUnits(5);
+                const innerWR = rightDoorWidthUnits - 2 * fW;
+                const innerHR = doorHeight - 2 * fW;
+                const frameMat = new THREE.MeshStandardMaterial({ color: 0x918878, metalness: 0.85, roughness: 0.4 });
+                const glassMat = new THREE.MeshPhysicalMaterial({
+                  color: 0x4a2e1c, transparent: true, opacity: 0.38, roughness: 0.08, metalness: 0.0,
+                  transmission: 0.4, thickness: 0.5, ior: 1.45, side: THREE.DoubleSide,
+                });
+                return (
+                  <group key={`glass-right-door-${rightDoorMaterial.uuid}`}>
+                    <mesh position={[0, doorHeight / 2 - fW / 2, 0]} userData={{ skipCNC: true }}>
+                      <boxGeometry args={[rightDoorWidthUnits, fW, doorThicknessUnits]} />
+                      <primitive object={frameMat} attach="material" />
+                    </mesh>
+                    <mesh position={[0, -doorHeight / 2 + fW / 2, 0]} userData={{ skipCNC: true }}>
+                      <boxGeometry args={[rightDoorWidthUnits, fW, doorThicknessUnits]} />
+                      <primitive object={frameMat} attach="material" />
+                    </mesh>
+                    <mesh position={[-rightDoorWidthUnits / 2 + fW / 2, 0, 0]} userData={{ skipCNC: true }}>
+                      <boxGeometry args={[fW, doorHeight - 2 * fW, doorThicknessUnits]} />
+                      <primitive object={frameMat} attach="material" />
+                    </mesh>
+                    <mesh position={[rightDoorWidthUnits / 2 - fW / 2, 0, 0]} userData={{ skipCNC: true }}>
+                      <boxGeometry args={[fW, doorHeight - 2 * fW, doorThicknessUnits]} />
+                      <primitive object={frameMat} attach="material" />
+                    </mesh>
+                    <mesh position={[0, 0, 0]} userData={{ skipCNC: true }}>
+                      <boxGeometry args={[innerWR, innerHR, gT]} />
+                      <primitive object={glassMat} attach="material" />
+                    </mesh>
+                  </group>
+                );
+              })() : (
+                <BoxWithEdges
+                  key={`right-door-${rightDoorMaterial.uuid}`}
+                  args={[rightDoorWidthUnits, doorHeight, doorThicknessUnits]}
+                  position={[0, 0, 0]}
+                  material={rightDoorMaterial}
+                  renderMode={renderMode}
+                  isDragging={isDragging}
+                  isEditMode={isEditMode}
+                  furnitureId={furnitureId}
+                  panelName="우측 도어"
+                  textureUrl={textureUrl}
+                  panelGrainDirections={panelGrainDirections}
+                  isLocked={rightDoorLocked}
+                />
+              )}
               
               {/* Hinges for right door - 상부장, 하부장, 키큰장 (잠금 시 숨김, 유리장 제외) */}
               {viewMode === '2D' && !rightDoorLocked && !moduleData?.id?.includes('glass-cabinet') && (view2DDirection === 'front' || view2DDirection === 'left' || view2DDirection === 'right') && (
