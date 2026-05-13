@@ -1533,9 +1533,10 @@ const BoxModule: React.FC<BoxModuleProps> = ({
                   forcedDoorHeightMm={lowerDoorH}
                   forcedDoorYMm={lowerDoorY}
                 />
-                {/* 상부 도어 — 너비 치수 숨김 (하부 도어가 이미 표시) */}
+                {/* 상부 도어 — 너비 치수 숨김 (하부 도어가 이미 표시) + 경첩 2개 (도어분절 팬트리장 사양) */}
                 <DoorModule
                   key="shelf-split-upper-door"
+                  hingeMode={isPantrySplit ? 'upper2' : 'auto'}
                   moduleWidth={doorWidth || moduleData.dimensions.width}
                   moduleDepth={baseFurniture.actualDepthMm}
                   hingePosition={hingePosition}

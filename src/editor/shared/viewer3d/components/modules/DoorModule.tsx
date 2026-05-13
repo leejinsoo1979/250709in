@@ -156,6 +156,7 @@ interface DoorModuleProps {
   forcedDoorHeightMm?: number; // 도어 높이 강제 지정 (mm) — 도어 분절용
   forcedDoorYMm?: number; // 도어 중심 Y 위치 강제 지정 (mm, 가구 중심 기준) — 도어 분절용
   hideWidthDimension?: boolean; // 도어 가로 폭 치수 숨김 (분절 상부 도어용)
+  hingeMode?: 'auto' | 'upper2' | 'lower4'; // 경첩 개수 강제 — 도어분절 가구용 (auto = 기본 카테고리 기반)
 }
 
 const DoorModule: React.FC<DoorModuleProps> = ({
@@ -189,6 +190,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   forcedDoorHeightMm, // 도어 높이 강제 (도어 분절)
   forcedDoorYMm, // 도어 Y 강제 (도어 분절)
   hideWidthDimension = false, // 도어 가로 폭 치수 숨김
+  hingeMode = 'auto', // 경첩 개수 모드
 }) => {
   const storeSpaceInfo = useSpaceConfigStore(state => state.spaceInfo);
   const placementType = (storeSpaceInfo?.baseConfig?.placementType) ?? (spaceInfo?.baseConfig?.placementType);
@@ -1440,8 +1442,8 @@ const DoorModule: React.FC<DoorModuleProps> = ({
               {/* Hinges for left door - 상부장, 하부장, 키큰장 (잠금 시 숨김) */}
               {viewMode === '2D' && !leftDoorLocked && (view2DDirection === 'front' || view2DDirection === 'left' || view2DDirection === 'right') && (
                 <>
-                  {isUpperCabinet ? (
-                    // 상부장: 위에서 100mm, 아래에서 100mm
+                  {(isUpperCabinet || hingeMode === 'upper2') ? (
+                    // 상부장 또는 도어분절 상부도어: 위에서 100mm, 아래에서 100mm
                     <>
                       <Hinge
                         position={[-leftDoorWidthUnits / 2 + mmToThreeUnits(24), doorHeight / 2 - mmToThreeUnits(100), doorThicknessUnits / 2 + 0.001]}
@@ -1812,8 +1814,8 @@ const DoorModule: React.FC<DoorModuleProps> = ({
               {/* Hinges for right door - 상부장, 하부장, 키큰장 (잠금 시 숨김) */}
               {viewMode === '2D' && !rightDoorLocked && (view2DDirection === 'front' || view2DDirection === 'left' || view2DDirection === 'right') && (
                 <>
-                  {isUpperCabinet ? (
-                    // 상부장: 위에서 100mm, 아래에서 100mm
+                  {(isUpperCabinet || hingeMode === 'upper2') ? (
+                    // 상부장 또는 도어분절 상부도어: 위에서 100mm, 아래에서 100mm
                     <>
                       <Hinge
                         position={[rightDoorWidthUnits / 2 - mmToThreeUnits(24), doorHeight / 2 - mmToThreeUnits(100), doorThicknessUnits / 2 + 0.001]}
