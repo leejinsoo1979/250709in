@@ -1110,42 +1110,58 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
     : (spaceInfo?.materialConfig?.countertopColor || '#FFFFFF');
   const stoneTopMatRef = useRef<THREE.MeshStandardMaterial | null>(null);
 
-  const stoneTopMaterial = useMemo(() => {
-    if (!stoneTopData) return null;
+  // 텍스처 로드 완료 후 material을 새 인스턴스로 교체하여 BoxWithEdges 캐시 무효화
+  // useState는 setter가 호출돼도 동일한 값이면 React가 재렌더하지 않음 → 안전
+  const [stoneTopMaterial, setStoneTopMaterial] = useState<THREE.MeshStandardMaterial | null>(null);
+
+  // 1) stoneTopData / isPetTop 변경 시 새 material 생성
+  useEffect(() => {
+    if (!stoneTopData) {
+      setStoneTopMaterial(null);
+      stoneTopMatRef.current = null;
+      return;
+    }
     const mat = new THREE.MeshStandardMaterial({
       color: new THREE.Color(countertopColorVal),
       metalness: 0.0, roughness: 0.6, envMapIntensity: 0.0,
     });
     stoneTopMatRef.current = mat;
-    return mat;
+    setStoneTopMaterial(mat);
+    // countertopColorVal는 별도 effect에서 업데이트
   }, [!!stoneTopData, isPetTop]);
 
-  // countertop 색상 변경 반영
+  // 2) countertop 색상 변경 (텍스처 없는 경우만)
   useEffect(() => {
     if (stoneTopMatRef.current && !stoneTopMatRef.current.map) {
       stoneTopMatRef.current.color.set(countertopColorVal);
       stoneTopMatRef.current.needsUpdate = true;
     }
-  }, [countertopColorVal, stoneTopMaterial]);
+  }, [countertopColorVal]);
 
-  // countertop 텍스처 로딩
+  // 3) countertop 텍스처 로딩 — 로드 완료 후 material을 새 인스턴스로 교체
   useEffect(() => {
     const mat = stoneTopMatRef.current;
     if (!mat) return;
+    let cancelled = false;
     if (countertopTextureUrl) {
       const loader = new THREE.TextureLoader();
       loader.load(countertopTextureUrl, (texture) => {
+        if (cancelled) return;
         texture.wrapS = THREE.RepeatWrapping;
         texture.wrapT = THREE.RepeatWrapping;
         texture.repeat.set(1, 1);
         texture.colorSpace = THREE.SRGBColorSpace;
-        mat.map = texture;
-        mat.color.set('#ffffff');
-        mat.toneMapped = false;
-        mat.envMapIntensity = 0.0;
-        mat.roughness = 0.8;
-        mat.metalness = 0.0;
-        mat.needsUpdate = true;
+        // 새 material 인스턴스 생성 → BoxWithEdges 캐시 무효화
+        const newMat = new THREE.MeshStandardMaterial({
+          color: new THREE.Color('#ffffff'),
+          map: texture,
+          metalness: 0.0,
+          roughness: 0.8,
+          envMapIntensity: 0.0,
+          toneMapped: false,
+        });
+        stoneTopMatRef.current = newMat;
+        setStoneTopMaterial(newMat);
       });
     } else {
       if (mat.map) {
@@ -1155,7 +1171,8 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
       mat.color.set(countertopColorVal);
       mat.needsUpdate = true;
     }
-  }, [countertopTextureUrl, countertopColorVal, stoneTopMaterial]);
+    return () => { cancelled = true; };
+  }, [countertopTextureUrl]);
 
   // 상판내림 반통/한통 L프레임용 도어 재질 (텍스처 로드 포함)
   const doorTextureUrl = spaceInfo?.materialConfig?.doorTexture;
