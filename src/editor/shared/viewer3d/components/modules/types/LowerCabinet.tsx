@@ -22,6 +22,7 @@ import { Line } from '@react-three/drei';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
 import { resolveShelfFrontInsetMm } from '@/editor/shared/utils/shelfInsetCalculator';
 import { getTopDownStoneFrontVisibleHeightMm, resolveTopDown2TierGeometry } from '@/editor/shared/utils/topDownCabinetGeometry';
+import { useExcludedPanelsStore } from '../../../context/ExcludedPanelsContext';
 
 /**
  * 졸리컷 수평 상판 — 앞면 하단 모서리가 45도로 가공된 판
@@ -38,7 +39,9 @@ const JollyCutHorizontalPlate: React.FC<{
   position: [number, number, number];
   material: THREE.Material;
   renderMode: 'solid' | 'wireframe';
-}> = React.memo(({ width, thickness: t, depth: d, position, material, renderMode }) => {
+  panelName?: string;
+  furnitureId?: string;
+}> = React.memo(({ width, thickness: t, depth: d, position, material, renderMode, panelName, furnitureId }) => {
   const geom = useMemo(() => {
     const hw = width / 2, ht = t / 2, hd = d / 2;
     // 0=좌상앞, 1=좌상뒤, 2=좌하뒤, 3=좌하앞(후퇴t)
@@ -93,9 +96,20 @@ const JollyCutHorizontalPlate: React.FC<{
   }, [width, t, d]);
 
   const lineColor = renderMode === 'wireframe' ? '#ffffff' : '#555555';
+  const groupRef = useRef<THREE.Group>(null);
+  const compositeKey = furnitureId && panelName ? `${furnitureId}::${panelName}` : null;
+
+  useFrame(() => {
+    if (!groupRef.current || !compositeKey) return;
+    const { excludedKeys } = useExcludedPanelsStore.getState();
+    const shouldHide = excludedKeys.size > 0 && excludedKeys.has(compositeKey);
+    if (groupRef.current.visible === shouldHide) {
+      groupRef.current.visible = !shouldHide;
+    }
+  });
 
   return (
-    <group position={position}>
+    <group ref={groupRef} position={position}>
       <mesh material={material}>
         <primitive key={`hplate-${width}-${t}-${d}`} object={geom} attach="geometry" />
       </mesh>
@@ -128,7 +142,9 @@ const JollyCutVerticalPlate: React.FC<{
   position: [number, number, number];
   material: THREE.Material;
   renderMode: 'solid' | 'wireframe';
-}> = React.memo(({ width, height: h, thickness: t, position, material, renderMode }) => {
+  panelName?: string;
+  furnitureId?: string;
+}> = React.memo(({ width, height: h, thickness: t, position, material, renderMode, panelName, furnitureId }) => {
   const geom = useMemo(() => {
     const hw = width / 2, hh = h / 2, ht = t / 2;
     // 0=좌상앞, 1=좌하앞, 2=좌하뒤, 3=좌상후퇴뒤
@@ -180,9 +196,20 @@ const JollyCutVerticalPlate: React.FC<{
   }, [width, h, t]);
 
   const lineColor = renderMode === 'wireframe' ? '#ffffff' : '#555555';
+  const groupRef = useRef<THREE.Group>(null);
+  const compositeKey = furnitureId && panelName ? `${furnitureId}::${panelName}` : null;
+
+  useFrame(() => {
+    if (!groupRef.current || !compositeKey) return;
+    const { excludedKeys } = useExcludedPanelsStore.getState();
+    const shouldHide = excludedKeys.size > 0 && excludedKeys.has(compositeKey);
+    if (groupRef.current.visible === shouldHide) {
+      groupRef.current.visible = !shouldHide;
+    }
+  });
 
   return (
-    <group position={position}>
+    <group ref={groupRef} position={position}>
       <mesh material={material}>
         <primitive key={`vplate-${width}-${h}-${t}`} object={geom} attach="geometry" />
       </mesh>
@@ -906,7 +933,7 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
     hideTopPanel: !moduleData.id.includes('lower-door-lift-') && !moduleData.id.includes('lower-top-down-'),
     hasSideNotches: (moduleData.id.includes('lower-door-lift-2tier') || moduleData.id.includes('lower-door-lift-3tier') || moduleData.id.includes('lower-drawer-') || moduleData.id.includes('lower-top-down-')) && !moduleData.id.includes('lower-door-lift-touch-'),
   });
-  const { renderMode: contextRenderMode, viewMode } = useSpace3DView();
+  const { renderMode: contextRenderMode, viewMode, hideAccessories } = useSpace3DView();
   const renderMode = renderModeProp || contextRenderMode;
   
   // 공통 가구 로직 사용
@@ -1242,6 +1269,7 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
               hasBackPanel={hasBackPanel}
               spaceInfo={spaceInfo}
               moduleData={moduleData}
+              placedFurnitureId={placedFurnitureId}
               lowerSectionTopOffsetMm={lowerSectionTopOffset}
               renderMode={renderMode}
               isFloating={isFloating}
@@ -1347,7 +1375,8 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
                         calculateSectionHeight={baseFurniture.calculateSectionHeight}
                         mmToThreeUnits={baseFurniture.mmToThreeUnits}
                         renderMode={renderMode}
-                        furnitureId={moduleData.id}
+                        furnitureId={placedFurnitureId || moduleData.id}
+                        placedFurnitureId={placedFurnitureId}
                         lowerSectionTopOffsetMm={lowerSectionTopOffset}
                         isFloatingPlacement={isFloating}
                       />
@@ -1359,6 +1388,7 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
                       position={[0, 0, baseFurniture.shelfZOffset]}
                       material={baseFurniture.material}
                       renderMode={renderMode}
+                      panelName="칸막이"
                       furnitureId={placedFurnitureId}
                     />
                     
@@ -1376,7 +1406,8 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
                         calculateSectionHeight={baseFurniture.calculateSectionHeight}
                         mmToThreeUnits={baseFurniture.mmToThreeUnits}
                         renderMode={renderMode}
-                        furnitureId={moduleData.id}
+                        furnitureId={placedFurnitureId || moduleData.id}
+                        placedFurnitureId={placedFurnitureId}
                         lowerSectionTopOffsetMm={lowerSectionTopOffset}
                         isFloatingPlacement={isFloating}
                       />
@@ -1393,10 +1424,11 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
                     basicThickness={baseFurniture.basicThickness}
                     shelfZOffset={baseFurniture.shelfZOffset}
                     material={baseFurniture.material}
-                    furnitureId={moduleData.id}
+                    furnitureId={placedFurnitureId || moduleData.id}
                     calculateSectionHeight={baseFurniture.calculateSectionHeight}
                     mmToThreeUnits={baseFurniture.mmToThreeUnits}
                     renderMode={renderMode}
+                    placedFurnitureId={placedFurnitureId}
                     lowerSectionTopOffsetMm={lowerSectionTopOffset}
                     isFloatingPlacement={isFloating}
                     shelfFrontInsetMm={resolveShelfFrontInsetMm({
@@ -1777,7 +1809,7 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
       )}
 
       {/* 인조대리석 상판 — 상판내림은 졸리컷 L자, 그 외는 단순 박스 (탑뷰에서는 숨김) */}
-      {showFurniture && stoneTopData && stoneTopMaterial && !isTopDown && !(viewMode === '2D' && view2DDirection === 'top') && (
+      {!hideAccessories && showFurniture && stoneTopData && stoneTopMaterial && !isTopDown && !(viewMode === '2D' && view2DDirection === 'top') && (
         <BoxWithEdges
           args={[stoneTopData.width, stoneTopData.thickness, stoneTopData.depth]}
           position={[
@@ -1788,12 +1820,13 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
           material={stoneTopMaterial}
           renderMode={renderMode}
           panelName="인조대리석 상판"
+          furnitureId={placedFurnitureId}
         />
       )}
 
       {/* 인조대리석 뒷턱 (back lip) — 상판 뒤쪽 수직판 */}
       {/* 2D 정면뷰에서는 상판과 같은 Z(중심)에 배치하여 정면에서 보이게 함 */}
-      {showFurniture && stoneTopData && stoneTopData.backLipHeight > 0 && stoneTopMaterial && !(viewMode === '2D' && view2DDirection === 'top') && (
+      {!hideAccessories && showFurniture && stoneTopData && stoneTopData.backLipHeight > 0 && stoneTopMaterial && !(viewMode === '2D' && view2DDirection === 'top') && (
         stoneTopData.backLipDepthOffset > 0 ? (
           <>
             {/* 수직 측판 (현재 사용자가 설정한 뒷턱 높이 적용) */}
@@ -1809,6 +1842,7 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
               material={stoneTopMaterial}
               renderMode={renderMode}
               panelName="인조대리석 뒷턱 전면부"
+              furnitureId={placedFurnitureId}
             />
             {/* 수평 덮개판 (뒷벽까지 채움 + 상판 앞뒤 돌출 반영, 높이는 젠다이 상단 기준) */}
             <BoxWithEdges
@@ -1823,6 +1857,7 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
               material={stoneTopMaterial}
               renderMode={renderMode}
               panelName="인조대리석 뒷턱 상단부"
+              furnitureId={placedFurnitureId}
             />
             {/* 다채움인 경우, Main Stone Top에서부터 올라가는 뒷벽 추가 대리석 패널 (후면 미드웨이 전체) */}
             {stoneTopData.backLipFullFill && stoneTopData.backLipFillHeight > 0 && (
@@ -1838,6 +1873,7 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
                 material={stoneTopMaterial}
                 renderMode={renderMode}
                 panelName="인조대리석 벽체 미드웨이"
+                furnitureId={placedFurnitureId}
               />
             )}
           </>
@@ -1859,12 +1895,13 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
             material={stoneTopMaterial}
             renderMode={renderMode}
             panelName="인조대리석 뒷턱"
+            furnitureId={placedFurnitureId}
           />
         )
       )}
 
       {/* 상판내림: 졸리컷 L자 (수평판 + 수직 앞판) — 탑뷰에서는 숨김 */}
-      {showFurniture && stoneTopData && stoneTopMaterial && isTopDown && !(viewMode === '2D' && view2DDirection === 'top') && (() => {
+      {!hideAccessories && showFurniture && stoneTopData && stoneTopMaterial && isTopDown && !(viewMode === '2D' && view2DDirection === 'top') && (() => {
         const t = stoneTopData.thickness;
         const frontPlateH = getTopDownStoneFrontVisibleHeightMm(adjustedHeight / 0.01, doorTopGap) * 0.01;
         const cabinetTopY = cabinetYPosition + adjustedHeight / 2;
@@ -1886,6 +1923,8 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
               position={[stoneTopData.xOffset, hPosY, stoneTopData.zOffset]}
               material={stoneTopMaterial}
               renderMode={renderMode}
+              panelName="인조대리석 상판"
+              furnitureId={placedFurnitureId}
             />
             <JollyCutVerticalPlate
               width={stoneTopData.width}
@@ -1894,6 +1933,8 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
               position={[stoneTopData.xOffset, vPosY, vPosZ]}
               material={stoneTopMaterial}
               renderMode={renderMode}
+              panelName="인조대리석 앞판"
+              furnitureId={placedFurnitureId}
             />
           </>
         );
