@@ -1128,9 +1128,6 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
     }
   }, [countertopColorVal, stoneTopMaterial]);
 
-  // 뒷턱 mesh 강제 remount 트리거 — 텍스처 로드 시점에 +1
-  const [stoneTopTextureKey, setStoneTopTextureKey] = useState(0);
-
   // countertop 텍스처 로딩
   useEffect(() => {
     const mat = stoneTopMatRef.current;
@@ -1149,8 +1146,6 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
         mat.roughness = 0.8;
         mat.metalness = 0.0;
         mat.needsUpdate = true;
-        // 텍스처 로드된 후 뒷턱 mesh를 remount → BoxWithEdges 캐시 새로 생성
-        setStoneTopTextureKey(k => k + 1);
       });
     } else {
       if (mat.map) {
@@ -1160,8 +1155,7 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
       mat.color.set(countertopColorVal);
       mat.needsUpdate = true;
     }
-    // 의존성: countertopTextureUrl 만 — stoneTopMaterial 제거하여 무한루프 방지
-  }, [countertopTextureUrl]);
+  }, [countertopTextureUrl, countertopColorVal, stoneTopMaterial]);
 
   // 상판내림 반통/한통 L프레임용 도어 재질 (텍스처 로드 포함)
   const doorTextureUrl = spaceInfo?.materialConfig?.doorTexture;
@@ -1804,7 +1798,6 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
           <>
             {/* 수직 측판 (현재 사용자가 설정한 뒷턱 높이 적용) */}
             <BoxWithEdges
-              key={`back-lip-front-${stoneTopTextureKey}`}
               args={[stoneTopData.width, stoneTopData.backLipHeight - stoneTopData.backLipThickness, stoneTopData.backLipThickness]}
               position={[
                 stoneTopData.xOffset,
@@ -1819,7 +1812,6 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
             />
             {/* 수평 덮개판 (뒷벽까지 채움 + 상판 앞뒤 돌출 반영, 높이는 젠다이 상단 기준) */}
             <BoxWithEdges
-              key={`back-lip-top-${stoneTopTextureKey}`}
               args={[stoneTopData.width, stoneTopData.backLipThickness, stoneTopData.backLipDepthOffset + stoneTopData.backLipThickness + stoneTopData.backLipTopOffset + stoneTopData.backLipTopBackOffset]}
               position={[
                 stoneTopData.xOffset,
@@ -1835,7 +1827,6 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
             {/* 다채움인 경우, Main Stone Top에서부터 올라가는 뒷벽 추가 대리석 패널 (후면 미드웨이 전체) */}
             {stoneTopData.backLipFullFill && stoneTopData.backLipFillHeight > 0 && (
               <BoxWithEdges
-                key={`back-lip-midway-${stoneTopTextureKey}`}
                 args={[stoneTopData.width, stoneTopData.backLipFillHeight, stoneTopData.backLipThickness]}
                 position={[
                   stoneTopData.xOffset,
@@ -1853,10 +1844,9 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
         ) : (
           /* 기존 (단일 뒷턱) - 다채움인 경우 전체 높이(backLipFillHeight)로 렌더링 */
           <BoxWithEdges
-            key={`back-lip-single-${stoneTopTextureKey}`}
             args={[
-              stoneTopData.width,
-              (stoneTopData.backLipFullFill && stoneTopData.backLipFillHeight > 0) ? stoneTopData.backLipFillHeight : stoneTopData.backLipHeight,
+              stoneTopData.width, 
+              (stoneTopData.backLipFullFill && stoneTopData.backLipFillHeight > 0) ? stoneTopData.backLipFillHeight : stoneTopData.backLipHeight, 
               stoneTopData.backLipThickness
             ]}
             position={[
