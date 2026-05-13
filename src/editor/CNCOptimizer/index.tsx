@@ -101,14 +101,16 @@ const CNCOptimizer: React.FC = () => {
   };
   const excludedMeshNames = useMemo(() => {
     const names = new Set<string>();
-    hiddenPanelIds.forEach(id => {
-      const panel = panelsList.find(p => p.id === id);
-      if (panel?.meshName) {
+    // 체크박스 OFF + 눈 아이콘 OFF 둘 다 3D 뷰어에서 숨김
+    panelsList.forEach(panel => {
+      const isHiddenByVisibility = hiddenPanelIds.has(panel.id);
+      const isUnchecked = !selectedPanels.has(panel.id);
+      if ((isHiddenByVisibility || isUnchecked) && panel.meshName) {
         names.add(panel.meshName);
       }
     });
     return names;
-  }, [hiddenPanelIds, panelsList]);
+  }, [hiddenPanelIds, selectedPanels, panelsList]);
 
   // 프로젝트 정보 가져오기
   const projectInfo = useMemo(() => {
