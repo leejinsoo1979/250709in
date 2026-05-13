@@ -4655,8 +4655,9 @@ const Room: React.FC<RoomProps> = ({
 
                   group.modules.filter((mod) => {
                     if (mod.hasTopFrame === false) return false;
-                    // 하부장 모듈은 상단몰딩 불필요
-                    if (getModuleCategory(mod) === 'lower') return false;
+                    // 하부장 모듈은 상단몰딩 불필요 (도어분절 현관장은 키큰장 성격이므로 예외)
+                    const isEntrywaySplitForTopFrameGroup = typeof mod.moduleId === 'string' && mod.moduleId.includes('entryway-split');
+                    if (getModuleCategory(mod) === 'lower' && !isEntrywaySplitForTopFrameGroup) return false;
                     // Insert 프레임은 상걸래받이 불필요 (자유배치/단내림 자유배치 포함)
                     if (mod.moduleId?.includes('insert-frame')) return false;
                     const isSideViewLocal = viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right');
@@ -5605,8 +5606,9 @@ const Room: React.FC<RoomProps> = ({
               slotModsForFrame
                 .filter(mod => {
                   if (mod.hasTopFrame === false) return false;
-                  // 하부장 모듈은 상단몰딩 불필요
-                  if (getModuleCategory(mod) === 'lower') return false;
+                  // 하부장 모듈은 상단몰딩 불필요 (도어분절 현관장은 키큰장 성격이므로 예외)
+                  const isEntrywaySplitForTopFrame = typeof mod.moduleId === 'string' && mod.moduleId.includes('entryway-split');
+                  if (getModuleCategory(mod) === 'lower' && !isEntrywaySplitForTopFrame) return false;
                   // Insert 프레임: 자체적으로 바닥~천장 ㄷ자 구조이므로 공간 상단 몰딩 불필요
                   if (mod.moduleId?.includes('insert-frame')) return false;
                   const isSideViewLocal = viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right');
