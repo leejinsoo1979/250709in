@@ -1501,9 +1501,10 @@ const BoxModule: React.FC<BoxModuleProps> = ({
             const upperDoorY = upperDoorCenterFromBottom - cabinetH / 2;
             return (
               <>
-                {/* 하부 도어 */}
+                {/* 하부 도어 — 너비 치수 숨김 (분절 가구는 단일 너비 치수만 표시) */}
                 <DoorModule
                   key="shelf-split-lower-door"
+                  hideWidthDimension={true}
                   moduleWidth={doorWidth || moduleData.dimensions.width}
                   moduleDepth={baseFurniture.actualDepthMm}
                   hingePosition={hingePosition}
