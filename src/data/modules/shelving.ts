@@ -933,10 +933,10 @@ const createSingleShelfSplit = (columnWidth: number, maxHeight: number): ModuleD
     `도어분절 현관장 ${widthForId}mm`,
     columnWidth,
     maxHeight,
-    FURNITURE_SPECS.SHELF_DRAWER_DEPTH,
+    600,
     FURNITURE_SPECS.COLORS.ENTRYWAY,
     `도어분절 현관장: 하단 선반 ${bottomShelfCount}개 + 상단 선반 ${topShelfCount}개`,
-    FURNITURE_SPECS.SHELF_DRAWER_DEPTH
+    600
   );
 
   return {
@@ -1602,10 +1602,10 @@ const createDualShelfSplit = (dualColumnWidth: number, maxHeight: number, slotWi
     `도어분절 현관장 ${widthForId}mm`,
     dualColumnWidth,
     maxHeight,
-    FURNITURE_SPECS.SHELF_DRAWER_DEPTH,
+    600,
     FURNITURE_SPECS.COLORS.ENTRYWAY,
     `듀얼 도어분절 현관장: 하단 선반 ${bottomShelfCount}개 + 상단 선반 ${topShelfCount}개`,
-    FURNITURE_SPECS.SHELF_DRAWER_DEPTH
+    600
   );
 
   return {
