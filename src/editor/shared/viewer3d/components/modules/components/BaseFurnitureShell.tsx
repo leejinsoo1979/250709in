@@ -174,6 +174,9 @@ interface BaseFurnitureShellProps {
   // 상판 앞쪽 깊이 감소 (상판내림: 전대 뒤에 맞닿도록 40mm 줄임)
   topPanelFrontReduction?: number;
 
+  // 바닥판 앞쪽 깊이 감소 (유리장: 앞 50mm 옵셋)
+  bottomPanelFrontReduction?: number;
+
   // 상단 가로전대 (상판내림: 상판이 있으면서도 상단에 가로전대 필요, 측판 따내기 없음)
   topStretcher?: { heightMm: number; depthMm: number };
 
@@ -233,6 +236,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
   hideVentilationCap = true,
   hideTopPanel = false,
   topPanelFrontReduction = 0,
+  bottomPanelFrontReduction = 0,
   topStretcher,
   sideNotches,
   disableAutoSideNotchStretcher = false,
@@ -1607,6 +1611,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
           const widthReduction = sidePanelGap;
           const panelW = innerWidth - widthReduction;
           const panelH = basicThickness;
+          const frontReductionBottom = bottomPanelFrontReduction ? mmToThreeUnits(bottomPanelFrontReduction) : 0;
           // 인출장/팬트리장/냉장고장(N섹션): sectionDepths[0] 우선 사용 (lowerSectionDepthMm prop 미전달)
           const isNSecBottom = !!(moduleData?.id?.includes('pull-out-cabinet') ||
             moduleData?.id?.includes('pantry-cabinet') ||
@@ -1623,16 +1628,16 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
             : (lowerSectionDepthMm !== undefined ? mmToThreeUnits(lowerSectionDepthMm) : undefined);
           const effectiveLowerDir = isNSecBottom ? nSecLowerDir : lowerSectionDepthDirection;
           const panelD = (isMultiSectionFurniture() && effectiveLowerDepth !== undefined)
-            ? effectiveLowerDepth - backReduction
-            : depth - backReduction;
+            ? effectiveLowerDepth - backReduction - frontReductionBottom
+            : depth - backReduction - frontReductionBottom;
           const panelY = -height/2 + basicThickness/2;
           const panelZ = (() => {
             if (isMultiSectionFurniture() && effectiveLowerDepth !== undefined) {
               const depthDiff = depth - effectiveLowerDepth;
               const dirOffset = effectiveLowerDir === 'back' ? depthDiff / 2 : -depthDiff / 2;
-              return dirOffset + backReduction / 2;
+              return dirOffset + (backReduction - frontReductionBottom) / 2;
             }
-            return backReduction / 2;
+            return (backReduction - frontReductionBottom) / 2;
           })();
           const isHighlightedBottom = isMultiSectionFurniture() ? highlightedSection === `${placedFurnitureId}-0` : false;
 
@@ -2802,6 +2807,7 @@ export default React.memo(BaseFurnitureShell, (prevProps, nextProps) => {
     prevProps.topPanelNotchSide === nextProps.topPanelNotchSide &&
     prevProps.stoneTopThickness === nextProps.stoneTopThickness &&
     prevProps.topPanelFrontReduction === nextProps.topPanelFrontReduction &&
+    prevProps.bottomPanelFrontReduction === nextProps.bottomPanelFrontReduction &&
     prevProps.hideTopPanel === nextProps.hideTopPanel &&
     JSON.stringify(prevProps.topStretcher) === JSON.stringify(nextProps.topStretcher) &&
     JSON.stringify(prevProps.sideNotches) === JSON.stringify(nextProps.sideNotches) &&
