@@ -6961,95 +6961,6 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         );
       })}
 
-      {/* 유리장(glass-cabinet) 측면뷰: 서랍 아래/위 치수를 직접 입력해 서랍 영역 위치 조절 */}
-      {showDimensions && (currentViewDirection === 'left' || currentViewDirection === 'right') && (() => {
-        const module = sideViewMod || (currentViewDirection === 'left' ? leftmostModules[0] : rightmostModules[0]);
-        const mid = module?.moduleId || '';
-        if (!module || !mid.includes('glass-cabinet')) return null;
-
-        const moduleData = getModuleById(mid, calculateInternalSpace(spaceInfo), spaceInfo);
-        if (!moduleData) return null;
-
-        const glassH = (module as any).customHeight ?? (module as any).freeHeight ?? moduleData.dimensions?.height ?? 1920;
-        const sideH = 500;
-        const maxOffset = Math.max(0, glassH - sideH);
-        const currentOffset = Math.max(0, Math.min(maxOffset, (module as any).glassDrawerOffsetMm ?? 242));
-        const lowerH = Math.round(currentOffset);
-        const upperH = Math.round(Math.max(0, glassH - sideH - currentOffset));
-
-        const floorFinishMm = spaceInfo.hasFloorFinish && spaceInfo.floorFinish?.height ? spaceInfo.floorFinish.height : 0;
-        const floatMm = (module as any).individualFloatHeight ?? (moduleData as any).individualFloatHeight ?? 200;
-        const glassBottomAbsMm = floorFinishMm + floatMm;
-        const drawerBottomAbsMm = glassBottomAbsMm + currentOffset;
-        const drawerTopAbsMm = drawerBottomAbsMm + sideH;
-        const glassTopAbsMm = glassBottomAbsMm + glassH;
-
-        const panelDepthMm = spaceInfo.depth || 600;
-        const panelDepth = mmToThreeUnits(panelDepthMm);
-        const spaceZOffset = -panelDepth / 2;
-        const guideZ = spaceZOffset + panelDepth + mmToThreeUnits(205);
-        const lineZ = spaceZOffset + panelDepth + mmToThreeUnits(160);
-        const x = currentViewDirection === 'right' ? mmToThreeUnits(spaceInfo.width) : 0;
-        const tickW = mmToThreeUnits(15);
-        const yGlassBottom = mmToThreeUnits(glassBottomAbsMm);
-        const yDrawerBottom = mmToThreeUnits(drawerBottomAbsMm);
-        const yDrawerTop = mmToThreeUnits(drawerTopAbsMm);
-        const yGlassTop = mmToThreeUnits(glassTopAbsMm);
-
-        const setLowerGap = (value: number) => {
-          const next = Math.max(0, Math.min(maxOffset, value));
-          updatePlacedModule(module.id, { glassDrawerOffsetMm: next });
-        };
-
-        const setUpperGap = (value: number) => {
-          const next = Math.max(0, Math.min(maxOffset, glassH - sideH - value));
-          updatePlacedModule(module.id, { glassDrawerOffsetMm: next });
-        };
-
-        return (
-          <React.Fragment key={`glass-side-drawer-gap-editor-${module.id}`}>
-            <NativeLine name="dimension_line"
-              points={[[x, yGlassBottom, lineZ], [x, yGlassTop, lineZ]]}
-              color={dimensionColor} lineWidth={0.6}
-            />
-            {[yGlassBottom, yDrawerBottom, yDrawerTop, yGlassTop].map((y, index) => (
-              <NativeLine key={`glass-side-drawer-gap-tick-${index}`} name="dimension_line"
-                points={[[x, y, lineZ - tickW / 2], [x, y, lineZ + tickW / 2]]}
-                color={dimensionColor} lineWidth={0.6}
-              />
-            ))}
-            <Html
-              position={[x, (yGlassBottom + yDrawerBottom) / 2, guideZ]}
-              center
-              style={{ pointerEvents: 'auto', background: 'transparent' }}
-              occlude={false}
-              zIndexRange={[10000, 10]}
-              transform={false}
-            >
-              <GlassDrawerGapEditor
-                value={lowerH}
-                color={dimensionColor}
-                onChange={setLowerGap}
-              />
-            </Html>
-            <Html
-              position={[x, (yDrawerTop + yGlassTop) / 2, guideZ]}
-              center
-              style={{ pointerEvents: 'auto', background: 'transparent' }}
-              occlude={false}
-              zIndexRange={[10000, 10]}
-              transform={false}
-            >
-              <GlassDrawerGapEditor
-                value={upperH}
-                color={dimensionColor}
-                onChange={setUpperGap}
-              />
-            </Html>
-          </React.Fragment>
-        );
-      })()}
-
       {/* 자유배치: 가구 없는 구간의 전체 폭 치수 (slotDimensionY 레벨) — 가구 있을 때만 */}
       {isFreePlacement && showDimensions && hasPlacedModules && (spaceInfo.stepCeiling?.enabled) && (() => {
         // 각 구간(메인/단내림)에 가구가 있는지 확인
@@ -7499,7 +7410,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             let tallestModuleBottomY = bottomFrameTopY;
 
             if (viewMod) {
-              const moduleData = getModuleById(viewMod.moduleId);
+              const moduleData = getModuleById(viewMod.moduleId, calculateInternalSpace(spaceInfo), spaceInfo);
               const isCustomizable = viewMod.moduleId.startsWith('customizable-');
               if (moduleData || isCustomizable || viewMod.isFreePlacement) {
                 const category = moduleData?.category
@@ -7561,6 +7472,13 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
 
             return (
               <>
+                {renderGlassDrawerSideSplitDimensions(
+                  viewMod,
+                  0,
+                  rightDimensionZ + mmToThreeUnits(95),
+                  rightDimensionZ + mmToThreeUnits(155),
+                  'left'
+                )}
                 {/* 1. 띄움 높이 또는 걸래받이 높이 */}
                 {/* 띄움 배치인 경우: 띄움 높이 표시 (실제 가구 위치에 맞춤) */}
                 {isFloating && floatHeight > 0 && (
