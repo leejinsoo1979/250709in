@@ -4029,12 +4029,18 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               || rounded === Math.round(leftModDataForCat.dimensions.height + 65);
           };
           if (leftmostMod) {
+            const isLeftGlassForH = !!leftmostMod.moduleId?.includes('glass-cabinet');
             if (leftCategoryResolved === 'upper' && leftmostMod.customHeight) {
               furnitureH = leftmostMod.customHeight;
             } else if (leftmostMod.freeHeight && !isStaleUpperTotalHeightLeft(leftmostMod.freeHeight)) {
               furnitureH = leftmostMod.freeHeight;
             } else if (leftmostMod.customHeight) {
               furnitureH = leftmostMod.customHeight;
+            } else if (isLeftGlassForH) {
+              // 유리장: 공간 - 상단몰딩 - 띄움 (걸래받이 자리는 띄움이 흡수)
+              const floatMm = (leftmostMod as any).individualFloatHeight
+                ?? (leftModDataForCat as any)?.individualFloatHeight ?? 200;
+              furnitureH = Math.max(0, effectiveH - actualTopSize - floatMm);
             } else {
               if (leftCategoryResolved === 'lower' || leftCategoryResolved === 'upper') {
                 furnitureH = leftModDataForCat?.dimensions.height ?? Math.max(0, effectiveH - actualBottomSize - actualTopSize);
@@ -4857,12 +4863,18 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               || rounded === Math.round(rightModDataForCat.dimensions.height + 65);
           };
           if (rightmostMod) {
+            const isRightGlassForH = !!rightmostMod.moduleId?.includes('glass-cabinet');
             if (rightCategoryResolved === 'upper' && rightmostMod.customHeight) {
               rFurnitureH = rightmostMod.customHeight;
             } else if (rightmostMod.freeHeight && !isStaleUpperTotalHeightRight(rightmostMod.freeHeight)) {
               rFurnitureH = rightmostMod.freeHeight;
             } else if (rightmostMod.customHeight) {
               rFurnitureH = rightmostMod.customHeight;
+            } else if (isRightGlassForH) {
+              // 유리장: 공간 - 상단몰딩 - 띄움 (걸래받이 자리는 띄움이 흡수)
+              const floatMm = (rightmostMod as any).individualFloatHeight
+                ?? (rightModDataForCat as any)?.individualFloatHeight ?? 200;
+              rFurnitureH = Math.max(0, rEffectiveH - rActualTopSize - floatMm);
             } else {
               if (rightCategoryResolved === 'lower' || rightCategoryResolved === 'upper') {
                 rFurnitureH = rightModDataForCat?.dimensions.height ?? Math.max(0, rEffectiveH - rActualBottomSize - rActualTopSize);
