@@ -1537,6 +1537,98 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
     ] as [number, number, number][];
   };
 
+  const renderGlassDrawerSideSplitDimensions = (
+    module: any,
+    x: number,
+    lineZ: number,
+    textZ: number,
+    keyPrefix: string
+  ) => {
+    const mid = module?.moduleId || '';
+    if (!module || !mid.includes('glass-cabinet')) return null;
+
+    const moduleData = getModuleById(mid, calculateInternalSpace(spaceInfo), spaceInfo);
+    if (!moduleData) return null;
+
+    const glassH = module.customHeight ?? module.freeHeight ?? moduleData.dimensions?.height ?? 1920;
+    const sideH = 500;
+    const maxOffset = Math.max(0, glassH - sideH);
+    const currentOffset = Math.max(0, Math.min(maxOffset, module.glassDrawerOffsetMm ?? 242));
+    const lowerH = Math.round(currentOffset);
+    const drawerH = sideH;
+    const upperH = Math.round(Math.max(0, glassH - sideH - currentOffset));
+    const floorFinishMm = spaceInfo.hasFloorFinish && spaceInfo.floorFinish?.height ? spaceInfo.floorFinish.height : 0;
+    const floatMm = module.individualFloatHeight ?? (moduleData as any).individualFloatHeight ?? 200;
+    const glassBottomAbsMm = floorFinishMm + floatMm;
+    const drawerBottomAbsMm = glassBottomAbsMm + currentOffset;
+    const drawerTopAbsMm = drawerBottomAbsMm + sideH;
+    const glassTopAbsMm = glassBottomAbsMm + glassH;
+    const yGlassBottom = mmToThreeUnits(glassBottomAbsMm);
+    const yDrawerBottom = mmToThreeUnits(drawerBottomAbsMm);
+    const yDrawerTop = mmToThreeUnits(drawerTopAbsMm);
+    const yGlassTop = mmToThreeUnits(glassTopAbsMm);
+    const tickW = mmToThreeUnits(15);
+
+    const setLowerGap = (value: number) => {
+      const next = Math.max(0, Math.min(maxOffset, value));
+      updatePlacedModule(module.id, { glassDrawerOffsetMm: next });
+    };
+
+    const setUpperGap = (value: number) => {
+      const next = Math.max(0, Math.min(maxOffset, glassH - sideH - value));
+      updatePlacedModule(module.id, { glassDrawerOffsetMm: next });
+    };
+
+    return (
+      <React.Fragment key={`glass-side-split-${keyPrefix}-${module.id}`}>
+        <NativeLine name="dimension_line"
+          points={[[x, yGlassBottom, lineZ], [x, yGlassTop, lineZ]]}
+          color={dimensionColor} lineWidth={0.6}
+        />
+        {[yGlassBottom, yDrawerBottom, yDrawerTop, yGlassTop].map((y, index) => (
+          <NativeLine key={`glass-side-split-tick-${keyPrefix}-${index}`} name="dimension_line"
+            points={[[x, y, lineZ - tickW / 2], [x, y, lineZ + tickW / 2]]}
+            color={dimensionColor} lineWidth={0.6}
+          />
+        ))}
+        <Html
+          position={[x, (yGlassBottom + yDrawerBottom) / 2, textZ]}
+          center
+          style={{ pointerEvents: 'auto', background: 'transparent' }}
+          occlude={false}
+          zIndexRange={[10000, 10]}
+          transform={false}
+        >
+          <GlassDrawerGapEditor value={lowerH} color={dimensionColor} onChange={setLowerGap} />
+        </Html>
+        <Text
+          renderOrder={100001}
+          depthTest={false}
+          position={[x, (yDrawerBottom + yDrawerTop) / 2, textZ]}
+          fontSize={baseFontSize}
+          color={textColor}
+          anchorX="center"
+          anchorY="middle"
+          outlineWidth={textOutlineWidth}
+          outlineColor={textOutlineColor}
+          rotation={[0, -Math.PI / 2, -Math.PI / 2]}
+        >
+          {drawerH}
+        </Text>
+        <Html
+          position={[x, (yDrawerTop + yGlassTop) / 2, textZ]}
+          center
+          style={{ pointerEvents: 'auto', background: 'transparent' }}
+          occlude={false}
+          zIndexRange={[10000, 10]}
+          transform={false}
+        >
+          <GlassDrawerGapEditor value={upperH} color={dimensionColor} onChange={setUpperGap} />
+        </Html>
+      </React.Fragment>
+    );
+  };
+
   // 뷰 방향별 치수선 렌더링
   const renderDimensions = () => {
     // showDimensions가 false이면 렌더링 안 함

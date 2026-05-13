@@ -2322,21 +2322,22 @@ const DoorModule: React.FC<DoorModuleProps> = ({
               // 유리: 프레임 안쪽 영역 (사방 25mm 안쪽)
               const innerW = doorWidthUnits - 2 * fW;
               const innerH = doorHeight - 2 * fW;
-              // 금속 프레임 재질 (실버/알루미늄)
+              // 금속 프레임 재질 (다크 그레이)
               const frameMaterial = new THREE.MeshStandardMaterial({
-                color: 0xB8B8B8,
-                metalness: 0.85,
-                roughness: 0.3,
+                color: 0x3a3a3a,
+                metalness: 0.8,
+                roughness: 0.35,
               });
-              // 브라운경(브라운 반투명 유리) 재질
+              // 브라운경(짙은 갈색 반투명 유리) 재질 — 촌스러운 주황 톤 제거
               const glassMaterial = new THREE.MeshPhysicalMaterial({
-                color: 0x6b4423,
+                color: 0x2a1f17,
                 transparent: true,
-                opacity: 0.55,
-                roughness: 0.05,
+                opacity: 0.45,
+                roughness: 0.1,
                 metalness: 0.0,
-                transmission: 0.4,
+                transmission: 0.25,
                 thickness: 0.5,
+                ior: 1.45,
                 side: THREE.DoubleSide,
               });
               return (
