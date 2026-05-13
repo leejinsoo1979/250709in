@@ -62,6 +62,10 @@ function getDefaultGrain(panelName: string): 'HORIZONTAL' | 'VERTICAL' {
   return getDefaultGrainDirection(panelName) === 'vertical' ? 'VERTICAL' : 'HORIZONTAL';
 }
 
+function isStonePanel(panel: { name?: string; material?: string }): boolean {
+  return panel.material === '인조대리석' || !!panel.name?.includes('인조대리석');
+}
+
 type OuterSurroundMod = {
   category: 'full' | 'upper' | 'lower';
   heightMm: number;
@@ -434,7 +438,7 @@ export function useLivePanelData() {
         const modulePanels = allPanelsList.filter((item: any) => {
           const isNotHeader = item.name && !item.name.includes('===');
           const hasValidDimensions = item.width !== undefined || item.depth !== undefined;
-          return isNotHeader && hasValidDimensions;
+          return isNotHeader && hasValidDimensions && !isStonePanel(item);
         });
 
         console.log(`Module ${moduleIndex}: Filtered ${modulePanels.length} actual panels (excluding ${allPanelsList.length - modulePanels.length} section headers)`);
@@ -998,7 +1002,7 @@ export function useLivePanelData() {
         }
       }
 
-      setPanels(allPanels);
+      setPanels(allPanels.filter(panel => !isStonePanel(panel)));
       } catch (error) {
         console.error('❌ extractPanels error:', error);
         console.error('❌ Stack:', error instanceof Error ? error.stack : '');
@@ -1235,7 +1239,7 @@ export function usePanelSubscription(callback: (panels: Panel[]) => void) {
       const modulePanels = allPanelsList.filter((item: any) => {
         const isNotHeader = item.name && !item.name.includes('===');
         const hasValidDimensions = item.width !== undefined || item.depth !== undefined;
-        return isNotHeader && hasValidDimensions;
+        return isNotHeader && hasValidDimensions && !isStonePanel(item);
       });
 
       // 패널 결방향 정보 가져오기
@@ -1523,6 +1527,6 @@ export function usePanelSubscription(callback: (panels: Panel[]) => void) {
       });
     }
 
-    callback(allPanels);
+    callback(allPanels.filter(panel => !isStonePanel(panel)));
   }, [placedModules, spaceInfo, callback]);
 }
