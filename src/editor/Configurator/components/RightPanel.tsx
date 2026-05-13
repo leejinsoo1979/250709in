@@ -853,7 +853,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
   const { t, currentLanguage } = useTranslation();
 
   const [expandedSections, setExpandedSections] = useState<Set<string>>(
-    new Set(['space', 'layoutMode', 'layout'])
+    new Set(['space', 'layoutMode', 'layout', 'slotFrame'])
   );
 
   // 상부/걸래받이 '전체' 통합 모드 (기본 true: 통합 행 표시)

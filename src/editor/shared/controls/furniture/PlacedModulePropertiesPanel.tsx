@@ -4594,7 +4594,9 @@ const PlacedModulePropertiesPanel: React.FC = () => {
             const globalTop = spaceInfo.frameSize?.top ?? 30;
             const globalBase = spaceInfo.baseConfig?.height ?? 65;
             const isStandType = spaceInfo.baseConfig?.type === 'stand';
-            const isLowerMod = mod.moduleId?.startsWith('lower-') || mod.moduleId?.includes('-lower-');
+            // 도어분절 현관장(entryway-split)은 lower- 접두사지만 천장까지 닿는 키큰장 성격 → 상단몰딩/걸레받이 모두 표시
+            const isEntrywaySplitMod = typeof mod.moduleId === 'string' && mod.moduleId.includes('entryway-split');
+            const isLowerMod = !isEntrywaySplitMod && (mod.moduleId?.startsWith('lower-') || mod.moduleId?.includes('-lower-'));
             const bfMin = isLowerMod ? 60 : 40;
             const bfMax = isLowerMod ? 150 : 100;
             const bfDefault = isLowerMod ? 100 : 60;
