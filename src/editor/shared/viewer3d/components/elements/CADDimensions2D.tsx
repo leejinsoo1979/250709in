@@ -238,6 +238,18 @@ const computeFurnitureHeightMm = (
     heightMm -= floorFinishH;
   }
 
+  // 유리장: 띄움 높이만큼 가구 외경에서 차감 (측면뷰 치수 정합성 보장)
+  // moduleData.dimensions.height는 이미 띄움 차감된 값이지만, 위 분기에서 보정 식으로 다시 200이 더해진 경우가 있어 명시적으로 보정
+  if (isGlassCabinet) {
+    const glassFloatMm = (mod as any).individualFloatHeight ?? (moduleData as any)?.individualFloatHeight ?? 200;
+    const topFrameMm = mod.topFrameThickness ?? (spaceInfo.frameSize?.top ?? 30);
+    // 유리장 가구 외경 = 공간높이 - 상부몰딩 - 띄움
+    const expectedGlassHeight = Math.max(0, spaceInfo.height - topFrameMm - glassFloatMm);
+    // customHeight/freeHeight가 명시되면 그것을 우선
+    const manualH = mod.customHeight || mod.freeHeight;
+    heightMm = manualH || expectedGlassHeight;
+  }
+
   // 인출장/팬트리장/의류장: hasBase=false → 가구가 걸래받이 자리 흡수 (FurnitureItem.tsx와 동일)
   const isPullOutOrPantry = !!(mod.moduleId?.includes('pull-out-cabinet') || mod.moduleId?.includes('pantry-cabinet'));
   const isClothingCabinet = !!(
