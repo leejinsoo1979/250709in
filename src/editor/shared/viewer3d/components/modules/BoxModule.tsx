@@ -1474,7 +1474,14 @@ const BoxModule: React.FC<BoxModuleProps> = ({
             //  - 도어분절 현관장(shelf-split): 하부섹션 860, 도어 분절 갭 20mm
             //  - 도어분절 팬트리장(pantry-cabinet-split): 하부섹션 1825, 도어 분절 갭 3mm
             const isPantrySplit = moduleData?.id?.includes('pantry-cabinet-split');
-            const lowerSectionTopMm = isPantrySplit ? 1825 : 860;
+            const defaultLowerSectionTopMm = isPantrySplit ? 1825 : 860;
+            // customSections가 있으면 첫 섹션의 height를 동적으로 사용 (사용자 섹션 H 변경 반영)
+            const customLowerSecH = (customSections && customSections.length > 0)
+              ? customSections[0].height
+              : undefined;
+            const lowerSectionTopMm = (typeof customLowerSecH === 'number' && customLowerSecH > 0)
+              ? customLowerSecH
+              : defaultLowerSectionTopMm;
             const doorSplitGapMm = isPantrySplit ? 3 : 20;
             // 도어 사이 갭이 하부섹션 외곽 상단을 중심으로 균등 배치
             // 현관장(갭20): 하부도어 상단 = 860-10 = 850? 아닌데 기존 사양 보존 → 갭의 ?

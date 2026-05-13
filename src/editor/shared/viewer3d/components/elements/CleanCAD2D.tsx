@@ -7655,10 +7655,16 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     const cabinetBottomAbsS = bottomFrameHeight + floorFinishForDoorS;
                     const cabinetTopAbsS = effectiveH - (doorModule.topFrameThickness ?? (spaceInfo.frameSize?.top ?? 30));
                     // 모듈별 사양:
-                    //  - 도어분절 현관장(shelf-split): 하부섹션 860, 분절 갭 20mm (하부 상단 = 820, 상부 하단 = 840)
-                    //  - 도어분절 팬트리장(pantry-cabinet-split): 하부섹션 1825, 분절 갭 3mm (1823.5 / 1826.5)
+                    //  - 도어분절 현관장(shelf-split): 하부섹션 860, 분절 갭 20mm
+                    //  - 도어분절 팬트리장(pantry-cabinet-split): 하부섹션 1825, 분절 갭 3mm
                     const isPantrySplitDim = doorModule.moduleId.includes('pantry-cabinet-split');
-                    const lowerSecTopMm = isPantrySplitDim ? 1825 : 860;
+                    const defaultLowerSecTopMm = isPantrySplitDim ? 1825 : 860;
+                    // customSections[0].height가 있으면 동적 적용 (섹션 H 변경 시 도어도 따라감)
+                    const customSecsForDim = (doorModule as any).customSections;
+                    const customLowerH = (customSecsForDim && customSecsForDim.length > 0)
+                      ? customSecsForDim[0].height : undefined;
+                    const lowerSecTopMm = (typeof customLowerH === 'number' && customLowerH > 0)
+                      ? customLowerH : defaultLowerSecTopMm;
                     const lowerDoorTopFromBottom = isPantrySplitDim ? (lowerSecTopMm - 1.5) : (lowerSecTopMm - 40);
                     const upperDoorBottomFromBottom = isPantrySplitDim ? (lowerSecTopMm + 1.5) : (lowerSecTopMm - 20);
                     // 하부도어: 상단 = lowerSecTop - (현관장 40 / 팬트리 1.5)
