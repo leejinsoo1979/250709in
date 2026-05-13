@@ -48,7 +48,7 @@ const TileBackPanelMesh: React.FC<{
       const tex = new THREE.Texture(img);
       tex.wrapS = THREE.RepeatWrapping;
       tex.wrapT = THREE.RepeatWrapping;
-      tex.repeat.set(Math.max(1, widthMm / 200), Math.max(1, heightMm / 200));
+      tex.repeat.set(Math.max(1, widthMm / 260), Math.max(1, heightMm / 260));
       tex.colorSpace = (THREE as any).SRGBColorSpace || THREE.LinearSRGBColorSpace;
       tex.needsUpdate = true;
       setTexture(tex);
