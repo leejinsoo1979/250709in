@@ -1446,10 +1446,13 @@ const BoxModule: React.FC<BoxModuleProps> = ({
             // 실제 가구 H 사용 (internalHeight = 토글 흡수 포함 실측 H)
             const cabinetH = internalHeight ?? moduleData.dimensions.height;
             const lowerSectionTopMm = 800; // 하부섹션 몸통 상단
-            const lowerDoorTopMm = lowerSectionTopMm - 40; // 760mm
-            const upperDoorBottomMm = lowerSectionTopMm - 20; // 780mm
-            const lowerGapBottom = doorBottomGap ?? 0;
-            const upperGapTop = doorTopGap ?? 0;
+            const lowerDoorTopMm = lowerSectionTopMm - 40; // 760mm (하부도어 상단)
+            const upperDoorBottomMm = lowerSectionTopMm - 20; // 780mm (상부도어 하단)
+            // 하단갭 = 하부도어 하단이 가구 바닥에서 위로 올라간 거리
+            // 상단갭 = 상부도어 상단이 가구 천판에서 아래로 내려간 거리
+            // 기본 0 (도어가 가구 외곽에 맞춤). 키큰장 디폴트(5/25) 무시.
+            const lowerGapBottom = 0;
+            const upperGapTop = 0;
             // 하부도어: doorBottomGap ~ 760mm
             const lowerDoorH = lowerDoorTopMm - lowerGapBottom;
             const lowerDoorCenterFromBottom = lowerGapBottom + lowerDoorH / 2;
