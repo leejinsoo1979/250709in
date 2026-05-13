@@ -963,13 +963,18 @@ const PlacedModulePropertiesPanel: React.FC = () => {
   // 전체 팝업에서 엔터키 처리 - 조건문 위로 이동
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      // e.target과 activeElement 둘 다 체크 — input의 onKeyDown(blur())이 먼저 실행돼
+      // activeElement는 body로 바뀌어도 e.target은 여전히 원래 input
+      const target = e.target as HTMLElement | null;
       const activeElement = document.activeElement as HTMLElement | null;
-      const isFormElement = activeElement && (activeElement.tagName === 'INPUT' || activeElement.tagName === 'TEXTAREA' || activeElement.isContentEditable);
+      const isTargetForm = target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable);
+      const isActiveForm = activeElement && (activeElement.tagName === 'INPUT' || activeElement.tagName === 'TEXTAREA' || activeElement.isContentEditable);
+      const isFormElement = isTargetForm || isActiveForm;
       if (isFormElement) {
         if (e.key === 'Escape') {
           e.preventDefault();
           // 취소: 원래값 복원 후 팝업 닫기
-          activeElement.blur();
+          activeElement?.blur();
           handleCancel();
         }
         // Enter는 input의 onKeyDown 핸들러가 처리하도록 글로벌 핸들러는 건드리지 않음
