@@ -148,6 +148,7 @@ export interface PlacedModule {
   baseFrameHeight?: number;  // 가구별 걸래받이(받침대) 높이 (mm, undefined = 공간 설정값 사용)
   removeUpperSafetyShelf?: boolean; // 상부 섹션 안전선반 제거 (코트장/붙박이장B/D) — 옷봉이 상판 하단에 직접 부착
   glassDrawerOffsetMm?: number; // 유리장 서랍 영역(측판+바닥판+서랍2단)의 가구 바닥 기준 위치 (mm, 기본 242)
+  insertFrontInsetMm?: number; // 키큰장찬넬 전면 프레임 안쪽 들임 (mm, 0=가구 측면과 라인 일치, 기본 40)
   upperShelfTopGap?: number; // 상부 안전선반 윗면 ~ 상부 섹션 상판 아랫면 간격 (mm)
   cabinetBodyHeight?: number; // 하부장 몸통 높이 (mm, undefined = 기본값 785, 범위 760~800)
   freeLeftGap?: number;      // 자유배치 노서라운드 좌측 이격거리 (mm)

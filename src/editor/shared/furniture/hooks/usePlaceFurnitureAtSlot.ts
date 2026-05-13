@@ -705,6 +705,8 @@ export function placeFurnitureAtSlot(params: PlaceFurnitureParams): PlaceFurnitu
     ...(!shouldHaveBaseFrame && inheritedDoorBottomGap !== undefined
       ? { doorBottomGap: inheritedDoorBottomGap }
       : {}),
+    // 키큰장찬넬(insert-frame): 전면 프레임 안쪽 들임 기본 40mm
+    ...(furnitureId.includes('insert-frame') ? { insertFrontInsetMm: 40 } : {}),
   };
 
   // My캐비넷 배치 데이터 초기화
