@@ -1826,6 +1826,7 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
               material={stoneTopMaterial}
               renderMode={renderMode}
               panelName="인조대리석 뒷턱 전면부"
+              key={`back-lip-front-${stoneTopMaterial?.uuid}`}
             />
             {/* 수평 덮개판 (뒷벽까지 채움 + 상판 앞뒤 돌출 반영, 높이는 젠다이 상단 기준) */}
             <BoxWithEdges
@@ -1840,6 +1841,7 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
               material={stoneTopMaterial}
               renderMode={renderMode}
               panelName="인조대리석 뒷턱 상단부"
+              key={`back-lip-top-${stoneTopMaterial?.uuid}`}
             />
             {/* 다채움인 경우, Main Stone Top에서부터 올라가는 뒷벽 추가 대리석 패널 (후면 미드웨이 전체) */}
             {stoneTopData.backLipFullFill && stoneTopData.backLipFillHeight > 0 && (
@@ -1855,6 +1857,7 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
                 material={stoneTopMaterial}
                 renderMode={renderMode}
                 panelName="인조대리석 벽체 미드웨이"
+                key={`back-lip-midway-${stoneTopMaterial?.uuid}`}
               />
             )}
           </>
