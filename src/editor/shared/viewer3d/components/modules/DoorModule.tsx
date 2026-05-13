@@ -156,7 +156,7 @@ interface DoorModuleProps {
   forcedDoorHeightMm?: number; // 도어 높이 강제 지정 (mm) — 도어 분절용
   forcedDoorYMm?: number; // 도어 중심 Y 위치 강제 지정 (mm, 가구 중심 기준) — 도어 분절용
   hideWidthDimension?: boolean; // 도어 가로 폭 치수 숨김 (분절 상부 도어용)
-  hingeMode?: 'auto' | 'upper2' | 'lower4'; // 경첩 개수 강제 — 도어분절 가구용 (auto = 기본 카테고리 기반)
+  hingeMode?: 'auto' | 'upper2' | 'lower4' | 'lower5'; // 경첩 개수 강제 — 도어분절 가구용
 }
 
 const DoorModule: React.FC<DoorModuleProps> = ({
