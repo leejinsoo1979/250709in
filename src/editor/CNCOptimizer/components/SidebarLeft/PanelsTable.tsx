@@ -100,6 +100,8 @@ export default function PanelsTable(){
   // 조립 애니메이션 refs
   const assemblyTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const assemblyStepRef = useRef<number>(0);
+  // 조립 애니메이션 속도 (1x = 200ms / 2x = 100ms / 4x = 50ms)
+  const [assemblySpeed, setAssemblySpeed] = useState<1 | 2 | 4>(1);
 
   // 가구 ID → slotIndex 매핑 (왼쪽부터 배치 순서)
   const furnitureSlotMap = useMemo(() => {
@@ -185,6 +187,7 @@ export default function PanelsTable(){
   useEffect(() => {
     if (!assemblyPlaying) return;
 
+    const intervalMs = Math.max(10, Math.round(200 / assemblySpeed));
     assemblyTimerRef.current = setInterval(() => {
       const step = assemblyStepRef.current;
       if (step >= sortedPanelIndices.length) {
@@ -199,14 +202,14 @@ export default function PanelsTable(){
         return next;
       });
       assemblyStepRef.current = step + 1;
-    }, 200);
+    }, intervalMs);
 
     return () => {
       if (assemblyTimerRef.current) {
         clearInterval(assemblyTimerRef.current);
       }
     };
-  }, [assemblyPlaying, sortedPanelIndices, panels, stopAssembly, setExcludedPanelIds]);
+  }, [assemblyPlaying, sortedPanelIndices, panels, stopAssembly, setExcludedPanelIds, assemblySpeed]);
 
   // 패널 ID → meshName/furnitureId 매핑 (3D 하이라이트용)
   const panelHighlightMap = useMemo(() => {
@@ -526,24 +529,37 @@ export default function PanelsTable(){
         <h3>{t('cnc.panelList')} ({panels.length})</h3>
         <div style={{ display: 'flex', gap: '4px' }}>
           {panels.length > 0 && (
-            <button
-              className={styles.addButton}
-              onClick={() => {
-                if (assemblyPlaying) {
-                  stopAssembly();
-                  return;
-                }
-                // 체크 해제가 안 되어 있으면 자동으로 전체 해제 후 조립 시작
-                if (excludedPanelIds.size !== panels.length) {
-                  setExcludedPanelIds(new Set(panels.map(p => p.id)));
-                }
-                startAssembly();
-              }}
-              title={assemblyPlaying ? '조립 중지' : '조립 애니메이션 (자동 전체 제외)'}
-              style={{ color: assemblyPlaying ? '#ef4444' : '#22c55e', minWidth: '28px' }}
-            >
-              {assemblyPlaying ? '■' : '▶'}
-            </button>
+            <>
+              <button
+                className={styles.addButton}
+                onClick={() => {
+                  if (assemblyPlaying) {
+                    stopAssembly();
+                    return;
+                  }
+                  // 체크 해제가 안 되어 있으면 자동으로 전체 해제 후 조립 시작
+                  if (excludedPanelIds.size !== panels.length) {
+                    setExcludedPanelIds(new Set(panels.map(p => p.id)));
+                  }
+                  startAssembly();
+                }}
+                title={assemblyPlaying ? '조립 중지' : '조립 애니메이션 (자동 전체 제외)'}
+                style={{ color: assemblyPlaying ? '#ef4444' : '#22c55e', minWidth: '28px' }}
+              >
+                {assemblyPlaying ? '■' : '▶'}
+              </button>
+              <select
+                value={assemblySpeed}
+                onChange={(e) => setAssemblySpeed(Number(e.target.value) as 1 | 2 | 4)}
+                title="조립 애니메이션 속도"
+                className={styles.addButton}
+                style={{ padding: '2px 6px', fontSize: '12px', cursor: 'pointer' }}
+              >
+                <option value={1}>1배속</option>
+                <option value={2}>2배속</option>
+                <option value={4}>4배속</option>
+              </select>
+            </>
           )}
           <button
             className={styles.addButton}
