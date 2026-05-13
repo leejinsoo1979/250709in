@@ -2775,9 +2775,8 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   // 하부장/키큰장: 앞면(도어 뒷면) 정렬
   const isUpperForZ = actualModuleData?.category === 'upper' || placedModule.moduleId?.includes('upper-cabinet');
   // 신발장 카테고리: 뒷벽에 뒷면 정렬 (의류장과 앞면 맞추는 로직 제거)
-  // 도어분절 현관장(entryway-split)은 깊이 600 일반 가구 처리 (신발장 뒷면정렬 제외)
   const midForZ = placedModule.moduleId || '';
-  const isShoeCabinet = !midForZ.includes('entryway-split') && (midForZ.includes('-entryway-') || midForZ.includes('-shelf-') || midForZ.includes('-4drawer-shelf-') || midForZ.includes('-2drawer-shelf-'));
+  const isShoeCabinet = (midForZ.includes('-entryway-') || midForZ.includes('-shelf-') || midForZ.includes('-4drawer-shelf-') || midForZ.includes('-2drawer-shelf-'));
   let furnitureZ: number;
   if (isFrontSpaceFurniture) {
     furnitureZ = placedModule.position.z;

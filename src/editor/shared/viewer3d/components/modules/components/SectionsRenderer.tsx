@@ -349,9 +349,7 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
         case 'shelf':
           // 하부장 반통/한통, 도어올림/상판내림 반통·한통은 다보선반을 LowerCabinet.tsx에서 직접 렌더링
           // SectionsRenderer에서는 건너뜀 (중복 방지)
-          // 단, 도어분절 현관장(entryway-split)은 modelConfig.sections.count로 선반 관리 → SectionsRenderer가 그림
-          const isEntrywaySplitForShelf = furnitureId && furnitureId.includes('entryway-split');
-          const isDowelShelfModule = furnitureId && !isEntrywaySplitForShelf && (
+          const isDowelShelfModule = furnitureId && (
             furnitureId.includes('lower-half-cabinet') || furnitureId.includes('dual-lower-half-cabinet') ||
             furnitureId.includes('lower-door-lift-half') || furnitureId.includes('dual-lower-door-lift-half') ||
             furnitureId.includes('lower-top-down-half') || furnitureId.includes('dual-lower-top-down-half')

@@ -9709,7 +9709,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             const moduleBackWallGapMm2 = (module as any).backWallGap ?? 0;
             const moduleBackWallGapZ2 = moduleBackWallGapMm2 > 0 ? mmToThreeUnits(moduleBackWallGapMm2) : 0;
             const mid2 = module.moduleId || '';
-            const isShoeCabinet2 = !mid2.includes('entryway-split') && (mid2.includes('-entryway-') || mid2.includes('-shelf-') ||
+            const isShoeCabinet2 = (mid2.includes('-entryway-') || mid2.includes('-shelf-') ||
                                    mid2.includes('-4drawer-shelf-') || mid2.includes('-2drawer-shelf-'));
 
             if (isShoeCabinet2) {
@@ -9761,7 +9761,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             }
           } else {
             const mid = module.moduleId || '';
-            const isShoeCabinet = !mid.includes('entryway-split') && (mid.includes('-entryway-') || mid.includes('-shelf-') ||
+            const isShoeCabinet = (mid.includes('-entryway-') || mid.includes('-shelf-') ||
                                   mid.includes('-4drawer-shelf-') || mid.includes('-2drawer-shelf-'));
             // 모든 가구 공통: 사용자가 편집 팝업에서 설정한 실제 깊이 우선
             // 우선순위: customDepth > upperSectionDepth || lowerSectionDepth > dimensions.depth
@@ -9990,7 +9990,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               const moduleBackWallGapZRX = moduleBackWallGapMmRX > 0 ? mmToThreeUnits(moduleBackWallGapMmRX) : 0;
               const isUpperCat = moduleData.category === 'upper' || module.moduleId?.includes('upper-cabinet');
               const mid = module.moduleId || '';
-              const isShoeCabinet = !mid.includes('entryway-split') && (mid.includes('-entryway-') || mid.includes('-shelf-') ||
+              const isShoeCabinet = (mid.includes('-entryway-') || mid.includes('-shelf-') ||
                                     mid.includes('-4drawer-shelf-') || mid.includes('-2drawer-shelf-'));
               let furnitureBackZ: number;
               let furnitureFrontZ: number;

@@ -1698,10 +1698,9 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           const isLowerMod = modCategory === 'lower';
 
           // 신발장 계열 판별 (entryway / shelf / Ndrawer-shelf — upper-cabinet-shelf 제외)
-          // 도어분절 현관장(entryway-split) 제외 (깊이 600 일반 가구 처리)
           const midSideCheck = mod.moduleId || '';
           const keyForShoe = midSideCheck.replace(/-[\d.]+$/, '');
-          const isEntrywayH = midSideCheck.includes('-entryway-') && !midSideCheck.includes('entryway-split');
+          const isEntrywayH = midSideCheck.includes('-entryway-');
           const isShelfDrawer = midSideCheck.includes('-4drawer-shelf-') || midSideCheck.includes('-2drawer-shelf-');
           const isPlainShelf = /(^|-)shelf$/.test(keyForShoe) && !midSideCheck.includes('upper-cabinet-');
           const isShoeCategory = (isEntrywayH || isShelfDrawer || isPlainShelf) && !midSideCheck.includes('upper-cabinet-');
@@ -2965,8 +2964,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           // 신발장 계열 판별 + 현관장만 도어 차감
           const midSide_d2 = module.moduleId || '';
           const keyForShoe_d2 = midSide_d2.replace(/-[\d.]+$/, '');
-          // 도어분절 현관장(entryway-split) 제외
-          const isEntrywayH_d2 = midSide_d2.includes('-entryway-') && !midSide_d2.includes('entryway-split');
+          const isEntrywayH_d2 = midSide_d2.includes('-entryway-');
           const isShelfDrawer_d2 = midSide_d2.includes('-4drawer-shelf-') || midSide_d2.includes('-2drawer-shelf-');
           const isPlainShelf_d2 = /(^|-)shelf$/.test(keyForShoe_d2) && !midSide_d2.includes('upper-cabinet-');
           const isShoeCategory_d2 = (isEntrywayH_d2 || isShelfDrawer_d2 || isPlainShelf_d2) && !midSide_d2.includes('upper-cabinet-');

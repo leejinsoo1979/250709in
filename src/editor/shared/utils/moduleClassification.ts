@@ -40,9 +40,7 @@ export const classifyModule = (moduleId = ''): ModuleClassification => {
   const isInduction = moduleId.includes('induction')
   const isPantry = moduleId.includes('pantry-cabinet')
   const isFridge = moduleId.includes('fridge-cabinet')
-  // 도어분절 현관장(entryway-split)은 신발장 카테고리에 표시되지만 깊이 600 기본 → 신발장 자동 처리 제외
-  const isEntrywaySplit = moduleId.includes('entryway-split')
-  const isShoeCabinet = !isUpperCabinet && !isEntrywaySplit && (
+  const isShoeCabinet = !isUpperCabinet && (
     isEntryway ||
     moduleId.includes('-shelf-') ||
     moduleId.includes('-4drawer-shelf-') ||

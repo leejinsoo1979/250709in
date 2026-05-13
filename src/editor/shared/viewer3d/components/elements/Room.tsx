@@ -403,9 +403,7 @@ const Room: React.FC<RoomProps> = ({
     spaceInfo.frameConfig?.top === true && spaceInfo.frameConfig?.bottom === true;
 
   // 가구별 기본 깊이 (신발장 380, 상부장 300, 기타 600)
-  // 도어분절 현관장(entryway-split)은 신발장 카테고리이지만 깊이 600
   const getModBaseDepthMm = (moduleId: string): number => {
-    if (moduleId.includes('entryway-split')) return 600;
     if (moduleId.includes('-entryway-') || moduleId.includes('-shelf-') ||
         moduleId.includes('-4drawer-shelf-') || moduleId.includes('-2drawer-shelf-')) return 380;
     if (moduleId.includes('upper-cabinet')) return 300;
@@ -423,9 +421,7 @@ const Room: React.FC<RoomProps> = ({
   const computeDepthZOffset = (mod: any, useSection: 'upper' | 'lower' | 'any' = 'any'): number => {
     if (!mod) return 0;
     const mid = mod.moduleId || '';
-    // 도어분절 현관장(entryway-split): 신발장 자동 처리 제외 (깊이 600 일반 가구)
-    const isEntrywaySplit = mid.includes('entryway-split');
-    const isShoe = !isEntrywaySplit && (
+    const isShoe = (
       mid.includes('-entryway-') || mid.includes('-shelf-') ||
       mid.includes('-4drawer-shelf-') || mid.includes('-2drawer-shelf-')
     );
@@ -4655,9 +4651,8 @@ const Room: React.FC<RoomProps> = ({
 
                   group.modules.filter((mod) => {
                     if (mod.hasTopFrame === false) return false;
-                    // 하부장 모듈은 상단몰딩 불필요 (도어분절 현관장은 키큰장 성격이므로 예외)
-                    const isEntrywaySplitForTopFrameGroup = typeof mod.moduleId === 'string' && mod.moduleId.includes('entryway-split');
-                    if (getModuleCategory(mod) === 'lower' && !isEntrywaySplitForTopFrameGroup) return false;
+                    // 하부장 모듈은 상단몰딩 불필요
+                    if (getModuleCategory(mod) === 'lower') return false;
                     // Insert 프레임은 상걸래받이 불필요 (자유배치/단내림 자유배치 포함)
                     if (mod.moduleId?.includes('insert-frame')) return false;
                     const isSideViewLocal = viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right');
@@ -4766,8 +4761,7 @@ const Room: React.FC<RoomProps> = ({
                     const upperFrameZ = upperFrontZ - mmToThreeUnits(END_PANEL_THICKNESS) / 2;
                     // 신발장: 뒷면이 뒷벽+0, 앞면 = 뒷벽 + customDepth. 상단몰딩은 앞면 기준
                     const modMidShoe = mod.moduleId || '';
-                    // 도어분절 현관장(entryway-split): 신발장 자동 처리 제외
-                    const isShoeMod = !modMidShoe.includes('entryway-split') && (modMidShoe.includes('-entryway-') || modMidShoe.includes('-shelf-') || modMidShoe.includes('-4drawer-shelf-') || modMidShoe.includes('-2drawer-shelf-'));
+                    const isShoeMod = (modMidShoe.includes('-entryway-') || modMidShoe.includes('-shelf-') || modMidShoe.includes('-4drawer-shelf-') || modMidShoe.includes('-2drawer-shelf-'));
                     let shoeFrameZ: number | null = null;
                     if (isShoeMod) {
                       const shoeDepthMm = mod.upperSectionDepth || mod.customDepth || mod.freeDepth || 380;
@@ -5606,9 +5600,8 @@ const Room: React.FC<RoomProps> = ({
               slotModsForFrame
                 .filter(mod => {
                   if (mod.hasTopFrame === false) return false;
-                  // 하부장 모듈은 상단몰딩 불필요 (도어분절 현관장은 키큰장 성격이므로 예외)
-                  const isEntrywaySplitForTopFrame = typeof mod.moduleId === 'string' && mod.moduleId.includes('entryway-split');
-                  if (getModuleCategory(mod) === 'lower' && !isEntrywaySplitForTopFrame) return false;
+                  // 하부장 모듈은 상단몰딩 불필요
+                  if (getModuleCategory(mod) === 'lower') return false;
                   // Insert 프레임: 자체적으로 바닥~천장 ㄷ자 구조이므로 공간 상단 몰딩 불필요
                   if (mod.moduleId?.includes('insert-frame')) return false;
                   const isSideViewLocal = viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right');
@@ -5683,8 +5676,7 @@ const Room: React.FC<RoomProps> = ({
                   // 상부장은 프레임이 상부장 앞면에 맞춰 붙어야 함 (프레임 앞면 = 상부장 앞면)
                   let slotFrameZ = topZPos;
                   const slotModMid = mod.moduleId || '';
-                  // 도어분절 현관장(entryway-split): 신발장 자동 처리 제외
-                  const isShoeSlot = !slotModMid.includes('entryway-split') && (slotModMid.includes('-entryway-') || slotModMid.includes('-shelf-') || slotModMid.includes('-4drawer-shelf-') || slotModMid.includes('-2drawer-shelf-'));
+                  const isShoeSlot = (slotModMid.includes('-entryway-') || slotModMid.includes('-shelf-') || slotModMid.includes('-4drawer-shelf-') || slotModMid.includes('-2drawer-shelf-'));
                   if (slotModCategory === 'upper') {
                     const slotUpperDepthMm = mod.freeDepth || mod.customDepth || 300;
                     const fiFurnitureDepthMm = Math.min(spaceInfo.depth || 1500, 600);
@@ -6710,9 +6702,8 @@ const Room: React.FC<RoomProps> = ({
               const freeIsLower = getModuleCategory(mod) === 'lower';
               const modBaseZInset = mod.baseFrameOffset ? mmToThreeUnits(mod.baseFrameOffset) : (freeIsLower ? mmToThreeUnits(65) : 0);
               // 신발장: 걸래받이 Z를 신발장 앞면에 맞춤 (inset 무시)
-              // 도어분절 현관장(entryway-split)은 일반 하부장 처리 → 조절발 앞쪽에 맞춤 (65mm 들이기 유지)
               const baseShoeMid = mod.moduleId || '';
-              const isShoeBase = !baseShoeMid.includes('entryway-split') && (baseShoeMid.includes('-entryway-') || baseShoeMid.includes('-shelf-') || baseShoeMid.includes('-4drawer-shelf-') || baseShoeMid.includes('-2drawer-shelf-'));
+              const isShoeBase = (baseShoeMid.includes('-entryway-') || baseShoeMid.includes('-shelf-') || baseShoeMid.includes('-4drawer-shelf-') || baseShoeMid.includes('-2drawer-shelf-'));
               let baseZPosition: number;
               if (isShoeBase) {
                 // 걸래받이: 하부 섹션 깊이 우선, 없으면 customDepth, 최후 380
@@ -7076,9 +7067,8 @@ const Room: React.FC<RoomProps> = ({
                       const isLowerMod = modCategory === 'lower';
                       const modBaseZInset = mod.baseFrameOffset ? mmToThreeUnits(mod.baseFrameOffset) : (isLowerMod ? mmToThreeUnits(65) : 0);
                       // 신발장 걸래받이 Z (앞면 기준)
-                      // 도어분절 현관장(entryway-split)은 일반 하부장 처리 → 조절발 앞쪽에 맞춤 (65mm 들이기 유지)
                       const slotBaseShoeMid = mod.moduleId || '';
-                      const isShoeSlotBase = !slotBaseShoeMid.includes('entryway-split') && (slotBaseShoeMid.includes('-entryway-') || slotBaseShoeMid.includes('-shelf-') || slotBaseShoeMid.includes('-4drawer-shelf-') || slotBaseShoeMid.includes('-2drawer-shelf-'));
+                      const isShoeSlotBase = (slotBaseShoeMid.includes('-entryway-') || slotBaseShoeMid.includes('-shelf-') || slotBaseShoeMid.includes('-4drawer-shelf-') || slotBaseShoeMid.includes('-2drawer-shelf-'));
                       // 모든 가구 공통: 하부 섹션 depth 변화를 가구 기본 깊이 기준으로 반영
                       const unifiedBaseZOffset = computeDepthZOffset(mod, 'lower');
                       // 가구별 뒷벽 이격(backWallGap) 반영: 가구 본체와 동일하게 앞으로 이동
