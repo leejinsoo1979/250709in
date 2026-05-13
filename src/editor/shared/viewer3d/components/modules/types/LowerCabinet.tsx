@@ -1311,9 +1311,10 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
                   ]
                 };
               })() : moduleData.id.includes('lower-top-down-2tier') ? {
-                // 어제 저녁(e98ecfb44) 시점 복원: 측판 노치 [300, 665] 하드코딩
+                // 상판내림 2단: 노치 [300, 665] 하드코딩 (H 변경과 무관)
                 sideNotches: [{ y: 65, z: 40, fromBottom: 300 }, { y: 65, z: 40, fromBottom: 665 }]
               } : (moduleData.id.includes('lower-top-down-half') || moduleData.id.includes('dual-lower-top-down-half')) ? {
+                // 상판내림 반통/한통: 노치 665 고정 (H 변경과 무관)
                 sideNotches: [{ y: 65, z: 40, fromBottom: 665 }]
               } : {})}>
             {/* 내부 구조는 항상 렌더링 (서랍/선반) */}
@@ -1415,6 +1416,7 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
             const hasTopPanel = isDoorLiftHalf || isTopDownHalf;
 
             if (isTopDownHalf) {
+              // 상판내림 반통/한통: 노치 665 고정 → 선반은 0~665 내경에서 균등 분할
               referenceHeightMm = 665;
             } else if (hasTopPanel) {
               referenceHeightMm = cabinetHeightMm - basicThicknessMm * 2;
@@ -1564,6 +1566,7 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
         const isTopDownTouchHere = moduleData.id.includes('lower-top-down-touch-') || moduleData.id.includes('dual-lower-top-down-touch-');
         const cabinetHmmHere = Math.round(adjustedHeight / 0.01);
         const notchHeightLocal = 65;
+        // 상판내림 반통/한통: 665 고정 (H 변경과 무관)
         const notchFromBottomLocal = isTopDownTouchHere
           ? (cabinetHmmHere - (topDownStretcherHeightMm + notchHeightLocal))
           : 665;
