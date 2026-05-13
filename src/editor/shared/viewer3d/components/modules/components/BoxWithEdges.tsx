@@ -115,7 +115,24 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
     }
     if (!compositeKey) return;
     const { excludedKeys } = useExcludedPanelsStore.getState();
-    const shouldHide = excludedKeys.size > 0 && excludedKeys.has(compositeKey);
+    // 정확 매칭 + 부분 매칭(furnitureId만 일치 + panelName 포함) 모두 시도
+    let shouldHide = false;
+    if (excludedKeys.size > 0) {
+      if (excludedKeys.has(compositeKey)) {
+        shouldHide = true;
+      } else if (furnitureId && panelName) {
+        // 패널명이 약간 다를 수 있으므로 furnitureId 동일 + panelName 포함/포함되는 키 찾기
+        for (const k of excludedKeys) {
+          if (!k.startsWith(`${furnitureId}::`)) continue;
+          const excludedPanelName = k.slice(furnitureId.length + 2);
+          if (excludedPanelName === panelName) { shouldHide = true; break; }
+          if (panelName.includes(excludedPanelName) || excludedPanelName.includes(panelName)) {
+            shouldHide = true;
+            break;
+          }
+        }
+      }
+    }
     if (groupRef.current.visible === shouldHide) {
       groupRef.current.visible = !shouldHide;
     }
