@@ -1465,6 +1465,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
               <>
                 {/* 하부 도어 */}
                 <DoorModule
+                  key="shelf-split-lower-door"
                   moduleWidth={doorWidth || moduleData.dimensions.width}
                   moduleDepth={baseFurniture.actualDepthMm}
                   hingePosition={hingePosition}
@@ -1496,6 +1497,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
                 />
                 {/* 상부 도어 — 너비 치수 숨김 (하부 도어가 이미 표시) */}
                 <DoorModule
+                  key="shelf-split-upper-door"
                   moduleWidth={doorWidth || moduleData.dimensions.width}
                   moduleDepth={baseFurniture.actualDepthMm}
                   hingePosition={hingePosition}
