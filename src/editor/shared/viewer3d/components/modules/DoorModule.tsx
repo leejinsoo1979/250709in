@@ -153,6 +153,8 @@ interface DoorModuleProps {
   individualFloatHeight?: number; // 개별 띄움 높이 (mm) - hasBase=false일 때 가구 Y오프셋 보정용
   individualBaseFrameHeight?: number; // 개별 받침대 높이 (mm) - 슬롯별 걸래받이 높이 조정용
   parentGroupY?: number; // 부모 그룹(가구)의 Y 위치 (Three.js 단위) — 도어 Y 보정용
+  forcedDoorHeightMm?: number; // 도어 높이 강제 지정 (mm) — 도어 분절용
+  forcedDoorYMm?: number; // 도어 중심 Y 위치 강제 지정 (mm, 가구 중심 기준) — 도어 분절용
 }
 
 const DoorModule: React.FC<DoorModuleProps> = ({
@@ -183,6 +185,8 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   individualFloatHeight: individualFloatHeightProp, // 개별 띄움 높이
   individualBaseFrameHeight: individualBaseFrameHeightProp, // 개별 받침대 높이
   parentGroupY: parentGroupYProp, // 부모 그룹 Y 위치
+  forcedDoorHeightMm, // 도어 높이 강제 (도어 분절)
+  forcedDoorYMm, // 도어 Y 강제 (도어 분절)
 }) => {
   const storeSpaceInfo = useSpaceConfigStore(state => state.spaceInfo);
   const placementType = (storeSpaceInfo?.baseConfig?.placementType) ?? (spaceInfo?.baseConfig?.placementType);
@@ -975,6 +979,10 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   const floorFinishForDoorY = (isFloorTypeForDoor && originalSpaceInfo.hasFloorFinish)
     ? (originalSpaceInfo.floorFinish?.height || 0) : 0;
 
+  // 도어 분절: 외부에서 forcedDoorHeightMm가 들어오면 강제 적용
+  if (forcedDoorHeightMm !== undefined && forcedDoorHeightMm > 0) {
+    actualDoorHeight = forcedDoorHeightMm;
+  }
   // 도어 높이에 추가 조정 없음 (사용자 입력 갭이 완전히 제어)
   const doorHeight = mmToThreeUnits(actualDoorHeight);
   
@@ -1014,6 +1022,10 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     doorYPosition = mmToThreeUnits(doorCenterLocal);
   }
 
+  // 도어 분절: 외부에서 forcedDoorYMm가 들어오면 강제 적용
+  if (forcedDoorYMm !== undefined) {
+    doorYPosition = mmToThreeUnits(forcedDoorYMm);
+  }
 
   // 노서라운드 + 벽없음 상태 체크
   const isNoSurroundNoWallLeft = originalSpaceInfo.surroundType === 'no-surround' && !originalSpaceInfo.wallConfig?.left;
