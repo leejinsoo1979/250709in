@@ -6881,18 +6881,25 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               points={[[leftGuideX - tickW/2, yGlassTop, 0.002], [leftGuideX + tickW/2, yGlassTop, 0.002]]}
               color={dimensionColor} lineWidth={0.6}
             />
-            {/* 3개 치수 텍스트 */}
-            <Text
+            {/* 3개 치수 텍스트 (하/상은 클릭하여 직접 입력 가능, 중간 서랍 H는 고정 500) */}
+            <Html
               position={[leftTextX, (yGlassBottom + yDrawerBottom) / 2, 0.01]}
-              fontSize={baseFontSize}
-              color={textColor}
-              anchorX="right"
-              anchorY="middle"
-              outlineWidth={textOutlineWidth}
-              outlineColor={textOutlineColor}
+              center
+              style={{ pointerEvents: 'auto', background: 'transparent' }}
+              occlude={false}
+              zIndexRange={[10000, 10]}
+              transform={false}
             >
-              {lowerH}
-            </Text>
+              <GlassDrawerGapEditor
+                value={lowerH}
+                color={dimensionColor}
+                onChange={(v) => {
+                  const maxOffset = Math.max(0, glassH - SIDE_H);
+                  const next = Math.max(0, Math.min(maxOffset, v));
+                  updatePlacedModule(module.id, { glassDrawerOffsetMm: next });
+                }}
+              />
+            </Html>
             <Text
               position={[leftTextX, (yDrawerBottom + yDrawerTop) / 2, 0.01]}
               fontSize={baseFontSize}
@@ -6904,17 +6911,24 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             >
               {drawerH}
             </Text>
-            <Text
+            <Html
               position={[leftTextX, (yDrawerTop + yGlassTop) / 2, 0.01]}
-              fontSize={baseFontSize}
-              color={textColor}
-              anchorX="right"
-              anchorY="middle"
-              outlineWidth={textOutlineWidth}
-              outlineColor={textOutlineColor}
+              center
+              style={{ pointerEvents: 'auto', background: 'transparent' }}
+              occlude={false}
+              zIndexRange={[10000, 10]}
+              transform={false}
             >
-              {upperH}
-            </Text>
+              <GlassDrawerGapEditor
+                value={upperH}
+                color={dimensionColor}
+                onChange={(v) => {
+                  const maxOffset = Math.max(0, glassH - SIDE_H);
+                  const next = Math.max(0, Math.min(maxOffset, glassH - SIDE_H - v));
+                  updatePlacedModule(module.id, { glassDrawerOffsetMm: next });
+                }}
+              />
+            </Html>
 
             {/* 서랍 영역 위치 조절 스피너 (▲▼) — 더 크게 */}
             <Html
