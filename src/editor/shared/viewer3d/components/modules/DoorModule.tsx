@@ -155,6 +155,7 @@ interface DoorModuleProps {
   parentGroupY?: number; // 부모 그룹(가구)의 Y 위치 (Three.js 단위) — 도어 Y 보정용
   forcedDoorHeightMm?: number; // 도어 높이 강제 지정 (mm) — 도어 분절용
   forcedDoorYMm?: number; // 도어 중심 Y 위치 강제 지정 (mm, 가구 중심 기준) — 도어 분절용
+  hideWidthDimension?: boolean; // 도어 가로 폭 치수 숨김 (분절 상부 도어용)
 }
 
 const DoorModule: React.FC<DoorModuleProps> = ({
@@ -187,6 +188,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   parentGroupY: parentGroupYProp, // 부모 그룹 Y 위치
   forcedDoorHeightMm, // 도어 높이 강제 (도어 분절)
   forcedDoorYMm, // 도어 Y 강제 (도어 분절)
+  hideWidthDimension = false, // 도어 가로 폭 치수 숨김
 }) => {
   const storeSpaceInfo = useSpaceConfigStore(state => state.spaceInfo);
   const placementType = (storeSpaceInfo?.baseConfig?.placementType) ?? (spaceInfo?.baseConfig?.placementType);
@@ -1684,7 +1686,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
               })()}
 
               {/* 왼쪽 도어 가로 폭 치수 (2D 정면뷰 + 3D) */}
-              {showDoorDimensionGuides && (() => {
+              {showDoorDimensionGuides && !hideWidthDimension && (() => {
                 const is3D = viewMode === '3D';
                 const extensionLineStart = mmToThreeUnits(70);
                 const extensionLineLength = mmToThreeUnits(110);
@@ -2056,7 +2058,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
               })()}
 
               {/* 오른쪽 도어 가로 폭 치수 (2D 정면뷰 + 3D) */}
-              {showDoorDimensionGuides && (() => {
+              {showDoorDimensionGuides && !hideWidthDimension && (() => {
                 const is3D = viewMode === '3D';
                 const extensionLineStart = mmToThreeUnits(70);
                 const extensionLineLength = mmToThreeUnits(110);
@@ -2677,7 +2679,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
             })()}
 
             {/* 도어 가로 폭 치수 (2D 정면뷰 + 3D) */}
-            {showDoorDimensionGuides && (() => {
+            {showDoorDimensionGuides && !hideWidthDimension && (() => {
               const is3D = viewMode === '3D';
               const extensionLineStart = mmToThreeUnits(70);
               const extensionLineLength = mmToThreeUnits(110);

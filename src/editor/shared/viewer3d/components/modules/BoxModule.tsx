@@ -1488,7 +1488,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
                   forcedDoorHeightMm={lowerDoorH}
                   forcedDoorYMm={lowerDoorY}
                 />
-                {/* 상부 도어 */}
+                {/* 상부 도어 — 너비 치수 숨김 (하부 도어가 이미 표시) */}
                 <DoorModule
                   moduleWidth={doorWidth || moduleData.dimensions.width}
                   moduleDepth={baseFurniture.actualDepthMm}
@@ -1518,6 +1518,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
                   parentGroupY={parentGroupY}
                   forcedDoorHeightMm={upperDoorH}
                   forcedDoorYMm={upperDoorY}
+                  hideWidthDimension={true}
                 />
               </>
             );
