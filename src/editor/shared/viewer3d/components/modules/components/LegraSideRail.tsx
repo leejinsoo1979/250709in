@@ -143,7 +143,7 @@ const LegraSideRail: React.FC<LegraSideRailProps> = ({
   drawerHeightMm,
   renderMode,
 }) => {
-  const { viewMode } = useSpace3DView();
+  const { viewMode, hideAccessories } = useSpace3DView();
   const view2DDirection = useUIStore(state => state.view2DDirection);
   const view2DTheme = useUIStore(state => state.view2DTheme);
   const { theme } = useTheme();
@@ -195,6 +195,7 @@ const LegraSideRail: React.FC<LegraSideRailProps> = ({
     return { leftPos: lPos, rightPos: rPos };
   }, [prepared, drawerBottomY, drawerFrontZ, sidePanelInnerX, modelPath]);
 
+  if (hideAccessories) return null;
   if (viewMode === '2D' && view2DDirection === 'top') return null;
 
   // 좌우 미러링은 group scale로 처리. scene은 인스턴스별 경량 clone (엣지/스냅박스는 템플릿에서 이미 생성됨).

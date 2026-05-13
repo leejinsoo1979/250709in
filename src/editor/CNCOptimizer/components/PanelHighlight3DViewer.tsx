@@ -72,6 +72,78 @@ function extractPanelName(objName: string): string | null {
  */
 const PanelHider: React.FC = () => null;
 
+function getExcludedPanelAliases(panelName: string): string[] {
+  const aliases = new Set<string>();
+
+  const lowerStretcherMatch = panelName.match(/^가로전대\(하(\d+)\)$/);
+  if (lowerStretcherMatch) {
+    aliases.add(`가로전대(${lowerStretcherMatch[1]})`);
+    aliases.add('전대');
+  }
+
+  const rawStretcherMatch = panelName.match(/^가로전대\((\d+)\)$/);
+  if (rawStretcherMatch) {
+    aliases.add(`가로전대(하${rawStretcherMatch[1]})`);
+    aliases.add('전대');
+  }
+
+  if (panelName === '전대') {
+    aliases.add('가로전대');
+    aliases.add('가로전대(하1)');
+    aliases.add('가로전대(1)');
+  }
+
+  const shelfMatch = panelName.match(/^(\([^)]+\))?선반\s*(\d+)$/);
+  if (shelfMatch) {
+    const prefix = shelfMatch[1] ?? '';
+    const shelfIndex = shelfMatch[2];
+    aliases.add(`${prefix}선반 ${shelfIndex}`);
+    aliases.add(`${prefix}선반${shelfIndex}`);
+    aliases.add(`선반 ${shelfIndex}`);
+    aliases.add(`선반${shelfIndex}`);
+    aliases.add(`(하)선반 ${shelfIndex}`);
+    aliases.add(`(상)선반 ${shelfIndex}`);
+  }
+
+  const dowelShelfMatch = panelName.match(/^다보선반(?:\s*|\()(\d+)\)?$/);
+  if (dowelShelfMatch) {
+    aliases.add(`선반 ${dowelShelfMatch[1]}`);
+  }
+
+  const touchLegraCncMatch = panelName.match(/^터치서랍(\d+)(?:\((마이다)\)|\s+(바닥판|뒷판))$/);
+  if (touchLegraCncMatch) {
+    const index = touchLegraCncMatch[1];
+    const part = touchLegraCncMatch[2] ? '(마이다)' : ` ${touchLegraCncMatch[3]}`;
+    aliases.add(`터치${index}단서랍${part}`);
+  }
+
+  const touchLegraMeshMatch = panelName.match(/^터치(\d+)단서랍(?:\((마이다)\)|\s+(바닥판|뒷판))$/);
+  if (touchLegraMeshMatch) {
+    const index = touchLegraMeshMatch[1];
+    const part = touchLegraMeshMatch[2] ? '(마이다)' : ` ${touchLegraMeshMatch[3]}`;
+    aliases.add(`터치서랍${index}${part}`);
+  }
+
+  aliases.delete(panelName);
+  return Array.from(aliases);
+}
+
+function expandExcludedPanelKeys(keys: Set<string>): Set<string> {
+  const expanded = new Set(keys);
+  keys.forEach((key) => {
+    const separatorIndex = key.indexOf('::');
+    if (separatorIndex < 0) {
+      getExcludedPanelAliases(key).forEach(alias => expanded.add(alias));
+      return;
+    }
+
+    const furnitureId = key.slice(0, separatorIndex);
+    const panelName = key.slice(separatorIndex + 2);
+    getExcludedPanelAliases(panelName).forEach(alias => expanded.add(`${furnitureId}::${alias}`));
+  });
+  return expanded;
+}
+
 /** 비하이라이트 패널 반투명 처리 (scene traverse) — wireframe + solid 모드 모두 지원 */
 const PanelDimmer: React.FC<{
   highlightedFurnitureId: string | null;
@@ -391,7 +463,7 @@ const PanelHighlight3DViewer: React.FC<PanelHighlight3DViewerProps> = ({
 
   // excludedMeshNames → Zustand store 동기화 (R3F Canvas 안에서 BoxWithEdges가 getState()로 접근)
   useEffect(() => {
-    const keys = excludedMeshNames ?? new Set();
+    const keys = expandExcludedPanelKeys(excludedMeshNames ?? new Set());
     console.log('🟧 [CNC] excludedKeys 동기화:', Array.from(keys).slice(0, 20));
     setExcludedKeys(keys);
     return () => setExcludedKeys(new Set());

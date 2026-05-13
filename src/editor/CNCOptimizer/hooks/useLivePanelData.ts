@@ -23,6 +23,17 @@ function toMeshName(cncName: string): string {
   // 하부장 노치 보강 가로전대: CNC "가로전대(1)" → 3D "가로전대(하1)"
   const lowerStretcherMatch = cncName.match(/^가로전대\((\d+)\)$/);
   if (lowerStretcherMatch) return `가로전대(하${lowerStretcherMatch[1]})`;
+  // 하부장 직접 다보선반: CNC/기존 저장값 "다보선반(1)" → 3D "선반 1"
+  const dowelShelfMatch = cncName.match(/^다보선반(?:\s*|\()(\d+)\)?$/);
+  if (dowelShelfMatch) return `선반 ${dowelShelfMatch[1]}`;
+  const compactShelfMatch = cncName.match(/^(\([^)]+\))?선반(\d+)$/);
+  if (compactShelfMatch) return `${compactShelfMatch[1] ?? ''}선반 ${compactShelfMatch[2]}`;
+  // 터치 레그라 마이다: CNC "터치서랍1(마이다)" → 3D "터치1단서랍(마이다)"
+  const touchLegraMaidaMatch = cncName.match(/^터치서랍(\d+)\(마이다\)$/);
+  if (touchLegraMaidaMatch) return `터치${touchLegraMaidaMatch[1]}단서랍(마이다)`;
+  // 터치 레그라 바닥판/뒷판: CNC "터치서랍1 바닥판" → 3D "터치1단서랍 바닥판"
+  const touchLegraPanelMatch = cncName.match(/^터치서랍(\d+)\s+(바닥판|뒷판)$/);
+  if (touchLegraPanelMatch) return `터치${touchLegraPanelMatch[1]}단서랍 ${touchLegraPanelMatch[2]}`;
   // 프레임: CNC "상단몰딩" / "걸래받이" → 3D "top-frame" / "base-frame"
   if (cncName.includes('상단몰딩') || cncName.includes('상단 몰딩')) return 'top-frame';
   if (cncName.includes('걸래받이') || cncName.includes('걸래받이')) return 'base-frame';
