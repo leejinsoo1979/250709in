@@ -122,7 +122,7 @@ const UpperCabinet: React.FC<FurnitureTypeProps> = ({
       {/* 가구 본체는 showFurniture가 true일 때만 렌더링 */}
       {showFurniture && (
         <>
-          <BaseFurnitureShell {...baseFurniture} isDragging={isDragging} isEditMode={isEditMode} hasBackPanel={hasBackPanel} isFloating={true} spaceInfo={spaceInfo} moduleData={moduleData} lowerSectionTopOffsetMm={lowerSectionTopOffset} renderMode={renderMode} topPanelNotchSize={topPanelNotchSize} topPanelNotchSide={topPanelNotchSide}>
+          <BaseFurnitureShell {...baseFurniture} isDragging={isDragging} isEditMode={isEditMode} hasBackPanel={hasBackPanel} isFloating={true} spaceInfo={spaceInfo} moduleData={moduleData} placedFurnitureId={placedFurnitureId} lowerSectionTopOffsetMm={lowerSectionTopOffset} renderMode={renderMode} topPanelNotchSize={topPanelNotchSize} topPanelNotchSide={topPanelNotchSide}>
             {/* 내부 구조는 항상 렌더링 (서랍/선반) */}
             <>
                 {/* 듀얼 가구도 칸막이 없이 전체 너비로 선반 렌더링 */}
@@ -139,7 +139,8 @@ const UpperCabinet: React.FC<FurnitureTypeProps> = ({
                     calculateSectionHeight={baseFurniture.calculateSectionHeight}
                     mmToThreeUnits={baseFurniture.mmToThreeUnits}
                     renderMode={renderMode}
-                    furnitureId={moduleData.id}
+                    furnitureId={placedFurnitureId || moduleData.id}
+                    placedFurnitureId={placedFurnitureId}
                     lowerSectionTopOffsetMm={lowerSectionTopOffset}
                     isFloatingPlacement={spaceInfo?.baseConfig?.placementType === 'float'}
                     shelfFrontInsetMm={resolveShelfFrontInsetMm({
@@ -162,7 +163,8 @@ const UpperCabinet: React.FC<FurnitureTypeProps> = ({
                     calculateSectionHeight={baseFurniture.calculateSectionHeight}
                     mmToThreeUnits={baseFurniture.mmToThreeUnits}
                     renderMode={renderMode}
-                    furnitureId={moduleData.id}
+                    furnitureId={placedFurnitureId || moduleData.id}
+                    placedFurnitureId={placedFurnitureId}
                     lowerSectionTopOffsetMm={lowerSectionTopOffset}
                     isFloatingPlacement={spaceInfo?.baseConfig?.placementType === 'float'}
                     shelfFrontInsetMm={resolveShelfFrontInsetMm({
@@ -213,7 +215,7 @@ const UpperCabinet: React.FC<FurnitureTypeProps> = ({
               spaceInfo={spaceInfo}
               doorColor={baseFurniture.doorColor}
               renderMode={renderMode}
-              furnitureId={moduleData.id}
+              furnitureId={placedFurnitureId}
               isDragging={isDragging}
               isEditMode={isEditMode}
               panelName="하부마감판"
