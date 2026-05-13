@@ -2312,21 +2312,78 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                 </mesh>
               );
             })()}
-            {/* BoxWithEdges 사용하여 도어 렌더링 */}
-            <BoxWithEdges
-              key={`single-door-${doorMaterial.uuid}`}
-              args={[doorWidthUnits, doorHeight, doorThicknessUnits]}
-              position={[0, 0, 0]}
-              material={doorMaterial}
-              renderMode={renderMode}
-              isDragging={isDragging}
-              isEditMode={isEditMode}
-              furnitureId={furnitureId}
-              panelName="도어"
-              textureUrl={textureUrl}
-              panelGrainDirections={panelGrainDirections}
-              isLocked={singleDoorLocked}
-            />
+            {/* BoxWithEdges 사용하여 도어 렌더링 — 유리장은 금속 프레임 + 브라운 유리 */}
+            {moduleData?.id?.includes('glass-cabinet') ? (() => {
+              // 금속 프레임 폭 25mm (정면 기준), 두께 18mm (도어 두께)
+              const frameWidthMm = 25;
+              const glassThicknessMm = 5;
+              const fW = mmToThreeUnits(frameWidthMm);
+              const gT = mmToThreeUnits(glassThicknessMm);
+              // 유리: 프레임 안쪽 영역 (사방 25mm 안쪽)
+              const innerW = doorWidthUnits - 2 * fW;
+              const innerH = doorHeight - 2 * fW;
+              // 금속 프레임 재질 (실버/알루미늄)
+              const frameMaterial = new THREE.MeshStandardMaterial({
+                color: 0xB8B8B8,
+                metalness: 0.85,
+                roughness: 0.3,
+              });
+              // 브라운경(브라운 반투명 유리) 재질
+              const glassMaterial = new THREE.MeshPhysicalMaterial({
+                color: 0x6b4423,
+                transparent: true,
+                opacity: 0.55,
+                roughness: 0.05,
+                metalness: 0.0,
+                transmission: 0.4,
+                thickness: 0.5,
+                side: THREE.DoubleSide,
+              });
+              return (
+                <group key={`glass-door-${doorMaterial.uuid}`}>
+                  {/* 상단 프레임 */}
+                  <mesh position={[0, doorHeight / 2 - fW / 2, 0]} userData={{ skipCNC: true }}>
+                    <boxGeometry args={[doorWidthUnits, fW, doorThicknessUnits]} />
+                    <primitive object={frameMaterial} attach="material" />
+                  </mesh>
+                  {/* 하단 프레임 */}
+                  <mesh position={[0, -doorHeight / 2 + fW / 2, 0]} userData={{ skipCNC: true }}>
+                    <boxGeometry args={[doorWidthUnits, fW, doorThicknessUnits]} />
+                    <primitive object={frameMaterial} attach="material" />
+                  </mesh>
+                  {/* 좌측 프레임 */}
+                  <mesh position={[-doorWidthUnits / 2 + fW / 2, 0, 0]} userData={{ skipCNC: true }}>
+                    <boxGeometry args={[fW, doorHeight - 2 * fW, doorThicknessUnits]} />
+                    <primitive object={frameMaterial} attach="material" />
+                  </mesh>
+                  {/* 우측 프레임 */}
+                  <mesh position={[doorWidthUnits / 2 - fW / 2, 0, 0]} userData={{ skipCNC: true }}>
+                    <boxGeometry args={[fW, doorHeight - 2 * fW, doorThicknessUnits]} />
+                    <primitive object={frameMaterial} attach="material" />
+                  </mesh>
+                  {/* 브라운 유리 (도어 두께 가운데, 5mm) */}
+                  <mesh position={[0, 0, 0]} userData={{ skipCNC: true }}>
+                    <boxGeometry args={[innerW, innerH, gT]} />
+                    <primitive object={glassMaterial} attach="material" />
+                  </mesh>
+                </group>
+              );
+            })() : (
+              <BoxWithEdges
+                key={`single-door-${doorMaterial.uuid}`}
+                args={[doorWidthUnits, doorHeight, doorThicknessUnits]}
+                position={[0, 0, 0]}
+                material={doorMaterial}
+                renderMode={renderMode}
+                isDragging={isDragging}
+                isEditMode={isEditMode}
+                furnitureId={furnitureId}
+                panelName="도어"
+                textureUrl={textureUrl}
+                panelGrainDirections={panelGrainDirections}
+                isLocked={singleDoorLocked}
+              />
+            )}
 
             {/* Hinges for single door - 상부장 2개, 하부장 2개, 키큰장 4개 (잠금 시 숨김) */}
             {viewMode === '2D' && !singleDoorLocked && (view2DDirection === 'front' || view2DDirection === 'left' || view2DDirection === 'right') && (

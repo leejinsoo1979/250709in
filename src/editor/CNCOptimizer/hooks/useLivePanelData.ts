@@ -435,10 +435,13 @@ export function useLivePanelData() {
         // calculatePanelDetailsShared는 평면 배열을 반환함 (섹션 헤더 포함)
         // 섹션 헤더("=== xxx ===")를 제외하고 실제 패널만 필터링
         // 또한 width나 depth 속성이 있어야 실제 패널로 간주
+        // 유리장: 도어(금속 프레임+브라운 유리)는 별도 제작이므로 CNC 패널 추출 제외
+        const isGlassCabinet = moduleData?.id?.includes('glass-cabinet');
         const modulePanels = allPanelsList.filter((item: any) => {
           const isNotHeader = item.name && !item.name.includes('===');
           const hasValidDimensions = item.width !== undefined || item.depth !== undefined;
-          return isNotHeader && hasValidDimensions && !isStonePanel(item);
+          const isGlassDoor = isGlassCabinet && item.name && (item.name.includes('도어') || item.name.includes('Door'));
+          return isNotHeader && hasValidDimensions && !isStonePanel(item) && !isGlassDoor;
         });
 
         console.log(`Module ${moduleIndex}: Filtered ${modulePanels.length} actual panels (excluding ${allPanelsList.length - modulePanels.length} section headers)`);
@@ -1236,10 +1239,13 @@ export function usePanelSubscription(callback: (panels: Panel[]) => void) {
       // calculatePanelDetailsShared는 평면 배열을 반환함 (섹션 헤더 포함)
       // 섹션 헤더("=== xxx ===")를 제외하고 실제 패널만 필터링
       // 또한 width나 depth 속성이 있어야 실제 패널로 간주
+      // 유리장: 도어(금속 프레임+브라운 유리) 별도 제작 → CNC 추출 제외
+      const isGlassCabinetForFilter = moduleData?.id?.includes('glass-cabinet');
       const modulePanels = allPanelsList.filter((item: any) => {
         const isNotHeader = item.name && !item.name.includes('===');
         const hasValidDimensions = item.width !== undefined || item.depth !== undefined;
-        return isNotHeader && hasValidDimensions && !isStonePanel(item);
+        const isGlassDoor = isGlassCabinetForFilter && item.name && (item.name.includes('도어') || item.name.includes('Door'));
+        return isNotHeader && hasValidDimensions && !isStonePanel(item) && !isGlassDoor;
       });
 
       // 패널 결방향 정보 가져오기

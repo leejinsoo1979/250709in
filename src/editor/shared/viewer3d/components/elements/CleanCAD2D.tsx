@@ -310,6 +310,117 @@ const MidwayGapEditor: React.FC<{
   );
 };
 
+const GlassDrawerGapEditor: React.FC<{
+  value: number;
+  color: string;
+  onChange: (value: number) => void;
+}> = ({ value, color, onChange }) => {
+  const [editing, setEditing] = useState(false);
+  const [text, setText] = useState(String(value));
+  const inputRef = useRef<HTMLInputElement>(null);
+  const view2DTheme = useUIStore(state => state.view2DTheme);
+  const viewMode = useUIStore(state => state.viewMode);
+  const isDark = viewMode === '2D' && view2DTheme === 'dark';
+
+  useEffect(() => {
+    setText(String(value));
+  }, [value]);
+
+  useEffect(() => {
+    if (editing && inputRef.current) {
+      inputRef.current.focus();
+      inputRef.current.select();
+    }
+  }, [editing]);
+
+  const commit = () => {
+    const next = parseFloat(text);
+    if (!Number.isNaN(next) && next >= 0) {
+      onChange(Math.round(next));
+    } else {
+      setText(String(value));
+    }
+    setEditing(false);
+  };
+
+  if (editing) {
+    return (
+      <div
+        style={{
+          background: isDark ? 'rgba(31,41,55,0.98)' : 'rgba(255,255,255,0.98)',
+          border: `2px solid ${color}`,
+          borderRadius: 4,
+          padding: 4,
+          boxShadow: '0 2px 10px rgba(0,0,0,0.3)',
+          pointerEvents: 'auto',
+        }}
+        onMouseDown={(event) => event.stopPropagation()}
+        onPointerDown={(event) => event.stopPropagation()}
+        onClick={(event) => event.stopPropagation()}
+      >
+        <input
+          ref={inputRef}
+          type="number"
+          value={text}
+          onChange={(event) => setText(event.target.value)}
+          onKeyDown={(event) => {
+            if (event.key === 'Enter') commit();
+            if (event.key === 'Escape') {
+              setText(String(value));
+              setEditing(false);
+            }
+          }}
+          onBlur={commit}
+          onMouseDown={(event) => event.stopPropagation()}
+          onPointerDown={(event) => event.stopPropagation()}
+          onClick={(event) => event.stopPropagation()}
+          style={{
+            width: 64,
+            padding: '2px 4px',
+            border: `1px solid ${isDark ? '#4b5563' : '#ccc'}`,
+            borderRadius: 2,
+            fontSize: 13,
+            fontWeight: 'bold',
+            textAlign: 'center',
+            outline: 'none',
+            background: isDark ? '#1f2937' : '#ffffff',
+            color: isDark ? '#ffffff' : '#000000',
+          }}
+        />
+      </div>
+    );
+  }
+
+  const effectiveColor = isDark && (color === '#000000' || color === 'black' || color === '#000') ? '#ffffff' : color;
+
+  return (
+    <div
+      onClick={(event) => {
+        event.stopPropagation();
+        setEditing(true);
+      }}
+      onMouseDown={(event) => event.stopPropagation()}
+      onPointerDown={(event) => event.stopPropagation()}
+      style={{
+        cursor: 'pointer',
+        padding: '3px 8px',
+        minWidth: 36,
+        textAlign: 'center',
+        color: effectiveColor,
+        fontSize: 13,
+        fontWeight: 'bold',
+        background: isDark ? 'rgba(31,41,55,0.85)' : 'rgba(255,255,255,0.92)',
+        border: `1px dashed ${effectiveColor}`,
+        borderRadius: 3,
+        userSelect: 'none',
+        pointerEvents: 'auto',
+      }}
+    >
+      {value}
+    </div>
+  );
+};
+
 /**
  * 깔끔한 CAD 스타일 2D 뷰어 (그리드 없음)
  * 이미지와 동일한 스타일의 치수선과 가이드라인만 표시
@@ -6757,6 +6868,95 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           </React.Fragment>
         );
       })}
+
+      {/* 유리장(glass-cabinet) 측면뷰: 서랍 아래/위 치수를 직접 입력해 서랍 영역 위치 조절 */}
+      {showDimensions && (currentViewDirection === 'left' || currentViewDirection === 'right') && (() => {
+        const module = sideViewMod || (currentViewDirection === 'left' ? leftmostModules[0] : rightmostModules[0]);
+        const mid = module?.moduleId || '';
+        if (!module || !mid.includes('glass-cabinet')) return null;
+
+        const moduleData = getModuleById(mid, calculateInternalSpace(spaceInfo), spaceInfo);
+        if (!moduleData) return null;
+
+        const glassH = (module as any).customHeight ?? (module as any).freeHeight ?? moduleData.dimensions?.height ?? 1920;
+        const sideH = 500;
+        const maxOffset = Math.max(0, glassH - sideH);
+        const currentOffset = Math.max(0, Math.min(maxOffset, (module as any).glassDrawerOffsetMm ?? 242));
+        const lowerH = Math.round(currentOffset);
+        const upperH = Math.round(Math.max(0, glassH - sideH - currentOffset));
+
+        const floorFinishMm = spaceInfo.hasFloorFinish && spaceInfo.floorFinish?.height ? spaceInfo.floorFinish.height : 0;
+        const floatMm = (module as any).individualFloatHeight ?? (moduleData as any).individualFloatHeight ?? 200;
+        const glassBottomAbsMm = floorFinishMm + floatMm;
+        const drawerBottomAbsMm = glassBottomAbsMm + currentOffset;
+        const drawerTopAbsMm = drawerBottomAbsMm + sideH;
+        const glassTopAbsMm = glassBottomAbsMm + glassH;
+
+        const panelDepthMm = spaceInfo.depth || 600;
+        const panelDepth = mmToThreeUnits(panelDepthMm);
+        const spaceZOffset = -panelDepth / 2;
+        const guideZ = spaceZOffset + panelDepth + mmToThreeUnits(205);
+        const lineZ = spaceZOffset + panelDepth + mmToThreeUnits(160);
+        const x = currentViewDirection === 'right' ? mmToThreeUnits(spaceInfo.width) : 0;
+        const tickW = mmToThreeUnits(15);
+        const yGlassBottom = mmToThreeUnits(glassBottomAbsMm);
+        const yDrawerBottom = mmToThreeUnits(drawerBottomAbsMm);
+        const yDrawerTop = mmToThreeUnits(drawerTopAbsMm);
+        const yGlassTop = mmToThreeUnits(glassTopAbsMm);
+
+        const setLowerGap = (value: number) => {
+          const next = Math.max(0, Math.min(maxOffset, value));
+          updatePlacedModule(module.id, { glassDrawerOffsetMm: next });
+        };
+
+        const setUpperGap = (value: number) => {
+          const next = Math.max(0, Math.min(maxOffset, glassH - sideH - value));
+          updatePlacedModule(module.id, { glassDrawerOffsetMm: next });
+        };
+
+        return (
+          <React.Fragment key={`glass-side-drawer-gap-editor-${module.id}`}>
+            <NativeLine name="dimension_line"
+              points={[[x, yGlassBottom, lineZ], [x, yGlassTop, lineZ]]}
+              color={dimensionColor} lineWidth={0.6}
+            />
+            {[yGlassBottom, yDrawerBottom, yDrawerTop, yGlassTop].map((y, index) => (
+              <NativeLine key={`glass-side-drawer-gap-tick-${index}`} name="dimension_line"
+                points={[[x, y, lineZ - tickW / 2], [x, y, lineZ + tickW / 2]]}
+                color={dimensionColor} lineWidth={0.6}
+              />
+            ))}
+            <Html
+              position={[x, (yGlassBottom + yDrawerBottom) / 2, guideZ]}
+              center
+              style={{ pointerEvents: 'auto', background: 'transparent' }}
+              occlude={false}
+              zIndexRange={[10000, 10]}
+              transform={false}
+            >
+              <GlassDrawerGapEditor
+                value={lowerH}
+                color={dimensionColor}
+                onChange={setLowerGap}
+              />
+            </Html>
+            <Html
+              position={[x, (yDrawerTop + yGlassTop) / 2, guideZ]}
+              center
+              style={{ pointerEvents: 'auto', background: 'transparent' }}
+              occlude={false}
+              zIndexRange={[10000, 10]}
+              transform={false}
+            >
+              <GlassDrawerGapEditor
+                value={upperH}
+                color={dimensionColor}
+                onChange={setUpperGap}
+              />
+            </Html>
+          </React.Fragment>
+        );
+      })()}
 
       {/* 자유배치: 가구 없는 구간의 전체 폭 치수 (slotDimensionY 레벨) — 가구 있을 때만 */}
       {isFreePlacement && showDimensions && hasPlacedModules && (spaceInfo.stepCeiling?.enabled) && (() => {
