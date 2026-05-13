@@ -79,18 +79,28 @@ function getExcludedPanelAliases(panelName: string): string[] {
   if (lowerStretcherMatch) {
     aliases.add(`가로전대(${lowerStretcherMatch[1]})`);
     aliases.add('전대');
+    aliases.add('가로전대(상)');
+    aliases.add('가로전대(외경)');
   }
 
   const rawStretcherMatch = panelName.match(/^가로전대\((\d+)\)$/);
   if (rawStretcherMatch) {
     aliases.add(`가로전대(하${rawStretcherMatch[1]})`);
     aliases.add('전대');
+    aliases.add('가로전대(상)');
+    aliases.add('가로전대(외경)');
   }
 
   if (panelName === '전대') {
     aliases.add('가로전대');
     aliases.add('가로전대(하1)');
     aliases.add('가로전대(1)');
+    aliases.add('가로전대(상)');
+    aliases.add('가로전대(외경)');
+  }
+
+  if (panelName === '가로전대(상)' || panelName === '가로전대(외경)') {
+    aliases.add('전대');
   }
 
   const shelfMatch = panelName.match(/^(\([^)]+\))?선반\s*(\d+)$/);

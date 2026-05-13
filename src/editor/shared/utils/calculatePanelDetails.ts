@@ -883,6 +883,33 @@ export const calculatePanelDetails = (
       }
     });
 
+    // LowerCabinet.tsx에서 직접 렌더링하는 하부장 다보선반.
+    // 해당 모듈들은 modelConfig section count가 0이라 기존 섹션 루프에서는 패널목록에 누락된다.
+    const hasDirectLowerDowelShelves =
+      moduleData.id.includes('lower-half-cabinet') || moduleData.id.includes('dual-lower-half-cabinet') ||
+      moduleData.id.includes('lower-door-lift-half') || moduleData.id.includes('dual-lower-door-lift-half') ||
+      moduleData.id.includes('lower-top-down-half') || moduleData.id.includes('dual-lower-top-down-half');
+    if (hasDirectLowerDowelShelves) {
+      const directShelfFrontInsetMm = resolveShelfFrontInsetMm({
+        moduleId: moduleData.id,
+        cabinetCategory: 'lower',
+        depthMm: customDepth,
+      });
+      const backReductionMm = backPanelThickness + basicThickness - 1;
+      const shelfDepthMm = customDepth - backReductionMm - directShelfFrontInsetMm;
+      for (let i = 1; i <= 2; i++) {
+        const shelfName = `선반 ${i}`;
+        if (panels.lower.some(panel => panel.name === shelfName)) continue;
+        panels.lower.push({
+          name: shelfName,
+          width: innerWidth,
+          depth: shelfDepthMm,
+          thickness: 18,
+          material: 'PB',
+        });
+      }
+    }
+
     // === 현관장 H 전용: 서랍받침대 + 서랍속장(날개벽) + 속서랍 ===
     if (moduleData.id.includes('entryway-h')) {
       const backReduction = backPanelThickness + 17; // 26mm
