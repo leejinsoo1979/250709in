@@ -1224,8 +1224,10 @@ const BoxModule: React.FC<BoxModuleProps> = ({
     // EP 깊이를 기본 FRAME_DEPTH(58)에서 18mm 줄임 → 40
     const EP_DEPTH_REDUCTION = mmTo(18);
     const epDepth = FRAME_DEPTH - EP_DEPTH_REDUCTION;
-    // EP 앞면이 가구 앞면(z=+depth/2)과 일치 → 중심 = depth/2 - epDepth/2
-    const epZ = moduleD / 2 - epDepth / 2;
+    // EP 앞면이 전면 프레임의 뒷면에 닿도록 → EP가 전면 프레임 뒤에 위치
+    // 전면 프레임 뒷면 Z = frontFrameZ - PT_THREE/2
+    // EP 중심 = (전면 프레임 뒷면) - epDepth/2
+    const epZ = frontFrameZ - PT_THREE / 2 - epDepth / 2;
 
     // 전면 프레임 폭: 외경 폭 그대로 (좌우로 EP 두께만큼 더 늘려서 가구 양 끝까지)
     const frontFrameWidth = moduleW;
