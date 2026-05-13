@@ -8680,7 +8680,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             let tallestModuleBottomY = bottomFrameTopY;
 
             if (viewMod) {
-              const moduleData = getModuleById(viewMod.moduleId);
+              const moduleData = getModuleById(viewMod.moduleId, calculateInternalSpace(spaceInfo), spaceInfo);
               const isCustomizable = viewMod.moduleId.startsWith('customizable-');
               if (moduleData || isCustomizable || viewMod.isFreePlacement) {
                 const category = moduleData?.category
@@ -8751,6 +8751,13 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
 
             return (
               <>
+                {renderGlassDrawerSideSplitDimensions(
+                  viewMod,
+                  spaceWidth,
+                  leftDimensionZ + mmToThreeUnits(95),
+                  leftDimensionZ + mmToThreeUnits(155),
+                  'right'
+                )}
                 {/* 1. 띄움 높이 또는 걸래받이 높이 */}
                 {/* 띄움 배치인 경우: 띄움 높이 표시 (실제 가구 위치에 맞춤) */}
                 {isFloating && floatHeight > 0 && (
