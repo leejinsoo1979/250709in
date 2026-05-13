@@ -6502,12 +6502,12 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 key={`shelf-spinner-${module.id}-${sectionIdx}-${k}`}
                 position={[labelX, shelfYThree, 0.02]}
                 center
-                style={{ pointerEvents: 'auto', background: 'transparent' }}
+                style={{ pointerEvents: 'none', background: 'transparent' }}
                 zIndexRange={[5000, 0]}
                 transform={false}
               >
-                <div style={{ ...uiScaleStyle, background: 'transparent' }}>
-                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '40px', lineHeight: 0, background: 'transparent' }}>
+                <div style={{ ...uiScaleStyle, background: 'transparent', pointerEvents: 'none' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '40px', lineHeight: 0, background: 'transparent', pointerEvents: 'none' }}>
                   <button
                     type="button"
                     onMouseDown={(e) => {
@@ -6537,6 +6537,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                       border: `1px solid ${dimensionColor}`, borderRadius: '3px 3px 0 0',
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
                       fontWeight: 'bold',
+                      pointerEvents: 'auto',
                     }}
                   >▲</button>
                   <button
@@ -6567,6 +6568,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                       borderRadius: '0 0 3px 3px',
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
                       fontWeight: 'bold',
+                      pointerEvents: 'auto',
                     }}
                   >▼</button>
                 </div>
