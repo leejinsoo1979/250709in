@@ -1648,7 +1648,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           anchorY="middle"
           outlineWidth={textOutlineWidth}
           outlineColor={textOutlineColor}
-          rotation={isSideView ? sideTextRotation : [0, -Math.PI / 2, -Math.PI / 2]}
+          rotation={isSideView ? sideTextRotation : [0, 0, 0]}
         >
           {drawerH}
         </Text>
