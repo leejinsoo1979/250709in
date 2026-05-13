@@ -1311,12 +1311,13 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
                   ]
                 };
               })() : moduleData.id.includes('lower-top-down-2tier') ? (() => {
-                // 상판내림 2단: 상단 노치는 캐비넷 상단 기준 120mm 아래 (H=785 기준 665, H 변경 시 함께 위로)
-                //                중간 노치(300)는 고정
+                // 상판내림 2단: 두 서랍 균등 + 상단 묶음 위로 평행이동
+                // 중간 노치 = (H - 185) / 2 (외부서랍 노치와 동기화)
+                // 상단 노치 = H - 120
                 const cabHmm2 = Math.round(adjustedHeight / 0.01);
                 return {
                   sideNotches: [
-                    { y: 65, z: 40, fromBottom: 300 },
+                    { y: 65, z: 40, fromBottom: Math.round((cabHmm2 - 185) / 2) },
                     { y: 65, z: 40, fromBottom: cabHmm2 - 120 },
                   ]
                 };
