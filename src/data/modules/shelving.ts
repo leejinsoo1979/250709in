@@ -597,6 +597,87 @@ const createPantryCabinet = (maxHeight: number, slotWidthForId: number = PANTRY_
   } as ModuleData;
 };
 
+// 도어분절 팬트리장 (싱글): 기존 팬트리장과 내부 동일, 도어만 상/하 분절
+//   - 분절 경계: 바닥에서 800mm (도어분절 현관장과 동일 패턴)
+//   - 외경: W600 × D600 (가변)
+//   - 1단(H1825): 오픈, 2단(가변): 가운데 다보선반 1개
+const createPantryCabinetSplit = (maxHeight: number, slotWidthForId: number = PANTRY_CABINET_WIDTH): ModuleData => {
+  const section1Height = PANTRY_SECTION1_HEIGHT;
+  const section2Height = Math.max(maxHeight - section1Height, 0);
+
+  const basicThickness = FURNITURE_SPECS.BASIC_THICKNESS;
+  const section2InnerHeight = Math.max(section2Height - basicThickness * 2, 0);
+  const shelfY = section2InnerHeight / 2;
+
+  const sections: SectionConfig[] = [
+    { type: 'open', heightType: 'absolute', height: section1Height },
+    { type: 'shelf', heightType: 'absolute', height: section2Height, count: 1, shelfPositions: [shelfY] },
+  ];
+
+  const widthForId = Math.round(slotWidthForId * 100) / 100;
+  const base = createFurnitureBase(
+    `single-pantry-cabinet-split-${widthForId}`,
+    `도어분절 팬트리장 ${PANTRY_CABINET_WIDTH}mm`,
+    PANTRY_CABINET_WIDTH,
+    maxHeight,
+    PANTRY_CABINET_DEPTH,
+    FURNITURE_SPECS.COLORS.TYPE2,
+    `도어분절 팬트리장 (도어 상/하 분절). 폭 ${PANTRY_CABINET_WIDTH} × 깊이 ${PANTRY_CABINET_DEPTH}.`,
+    PANTRY_CABINET_DEPTH,
+    'full'
+  );
+
+  return {
+    ...base,
+    widthOptions: [PANTRY_CABINET_WIDTH],
+    dimensions: { width: PANTRY_CABINET_WIDTH, height: maxHeight, depth: PANTRY_CABINET_DEPTH },
+    modelConfig: {
+      ...base.modelConfig,
+      sections,
+      isPantryCabinet: true,
+    } as any,
+  } as ModuleData;
+};
+
+// 도어분절 팬트리장 (듀얼): 두 통 합쳐진 팬트리장, 도어 상/하 분절
+const createDualPantryCabinetSplit = (dualWidth: number, maxHeight: number, slotWidths?: number[]): ModuleData => {
+  const section1Height = PANTRY_SECTION1_HEIGHT;
+  const section2Height = Math.max(maxHeight - section1Height, 0);
+
+  const basicThickness = FURNITURE_SPECS.BASIC_THICKNESS;
+  const section2InnerHeight = Math.max(section2Height - basicThickness * 2, 0);
+  const shelfY = section2InnerHeight / 2;
+
+  const sections: SectionConfig[] = [
+    { type: 'open', heightType: 'absolute', height: section1Height },
+    { type: 'shelf', heightType: 'absolute', height: section2Height, count: 1, shelfPositions: [shelfY] },
+  ];
+
+  const widthForId = Math.round(dualWidth * 100) / 100;
+  const base = createFurnitureBase(
+    `dual-pantry-cabinet-split-${widthForId}`,
+    `도어분절 팬트리장 한통 ${widthForId}mm`,
+    dualWidth,
+    maxHeight,
+    PANTRY_CABINET_DEPTH,
+    FURNITURE_SPECS.COLORS.TYPE2,
+    `듀얼 도어분절 팬트리장 (도어 상/하 분절). 폭 ${widthForId} × 깊이 ${PANTRY_CABINET_DEPTH}.`,
+    PANTRY_CABINET_DEPTH,
+    'full'
+  );
+
+  return {
+    ...base,
+    dimensions: { width: dualWidth, height: maxHeight, depth: PANTRY_CABINET_DEPTH },
+    slotWidths,
+    modelConfig: {
+      ...base.modelConfig,
+      sections,
+      isPantryCabinet: true,
+    } as any,
+  } as ModuleData;
+};
+
 // 일반 냉장고장: 2섹션 (팬트리장과 외형 동일하지만 측판 15mm + 하부 백패널 없음)
 //   - 외경: W600 × H가변 × D600
 //   - 좌/우 측판: 15mm (basic 18.5 → 15.5mm) — BaseFurnitureShell에서 모듈 ID 기반 분기
@@ -3518,6 +3599,7 @@ export const generateShelvingModules = (
 
   // === 키큰장: 팬트리장 (1단 오픈 + 2단 다보선반 가운데) ===
   modules.push(createPantryCabinet(maxHeight, columnWidth));
+  modules.push(createPantryCabinetSplit(maxHeight, columnWidth));
 
   // === 키큰장: 냉장고장 (1단 오픈+백패널X + 2단 다보선반, 측판 15mm) ===
   modules.push(createFridgeCabinet(maxHeight, columnWidth));
@@ -3596,6 +3678,7 @@ export const generateShelvingModules = (
     // === 듀얼 선반장 가구 생성 ===
     modules.push(createDualShelf(dualWidth, maxHeight, dualSlotWidths));
     modules.push(createDualShelfSplit(dualWidth, maxHeight, dualSlotWidths));
+    modules.push(createDualPantryCabinetSplit(dualWidth, maxHeight, dualSlotWidths));
     modules.push(createDual4DrawerShelf(dualWidth, maxHeight, dualSlotWidths));
     modules.push(createDual2DrawerShelf(dualWidth, maxHeight, dualSlotWidths));
     // 유리장 (듀얼)

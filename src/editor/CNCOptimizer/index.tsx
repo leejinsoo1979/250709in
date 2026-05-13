@@ -421,11 +421,48 @@ const CNCOptimizer: React.FC = () => {
                     <div className={styles.panelListTitle}>
                       <Package size={20} />
                       <span>패널 목록</span>
-                      <button 
+                      <button
                         className={styles.filterButton}
                         onClick={handleSelectAll}
                       >
                         {selectedPanels.size === filteredPanels.length ? '전체 해제' : '전체 선택'}
+                      </button>
+                      <button
+                        className={styles.filterButton}
+                        onClick={() => {
+                          // 전체 체크 해제 + 자동 옵티마이즈 (모든 패널 대상)
+                          setSelectedPanels(new Set());
+                          // setSelectedPanels는 비동기 → 옵티마이즈는 panelsList 전체를 직접 사용
+                          (async () => {
+                            setIsOptimizing(true);
+                            setActiveTab('optimization');
+                            const allResults: OptimizedResult[] = [];
+                            // panelsList 전체를 재질/색상별로 그룹화
+                            const groupsMap: { [key: string]: Panel[] } = {};
+                            panelsList.forEach(p => {
+                              const key = `${p.material}-${p.color}`;
+                              if (!groupsMap[key]) groupsMap[key] = [];
+                              groupsMap[key].push(p);
+                            });
+                            for (const key in groupsMap) {
+                              const group = groupsMap[key];
+                              const first = group[0];
+                              const matchingStock = stockPanels.find(
+                                s => s.material === first.material && s.color === first.color
+                              );
+                              if (matchingStock) {
+                                const results = await optimizePanelsMultiple(group, matchingStock);
+                                allResults.push(...results);
+                              }
+                            }
+                            setOptimizationResult(allResults);
+                            setIsOptimizing(false);
+                          })();
+                        }}
+                        title="모든 체크 해제 + 자동 옵티마이즈 실행"
+                        style={{ fontWeight: 'bold', fontSize: '14px', padding: '4px 10px' }}
+                      >
+                        ▶
                       </button>
                     </div>
                     <div className={styles.filterButtons}>

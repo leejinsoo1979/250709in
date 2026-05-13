@@ -886,7 +886,6 @@ export const calculatePanelDetails = (
     // LowerCabinet.tsx에서 직접 렌더링하는 하부장 다보선반.
     // 해당 모듈들은 modelConfig section count가 0이라 기존 섹션 루프에서는 패널목록에 누락된다.
     const hasDirectLowerDowelShelves =
-      moduleData.id.includes('lower-half-cabinet') || moduleData.id.includes('dual-lower-half-cabinet') ||
       moduleData.id.includes('lower-door-lift-half') || moduleData.id.includes('dual-lower-door-lift-half') ||
       moduleData.id.includes('lower-top-down-half') || moduleData.id.includes('dual-lower-top-down-half');
     if (hasDirectLowerDowelShelves) {
