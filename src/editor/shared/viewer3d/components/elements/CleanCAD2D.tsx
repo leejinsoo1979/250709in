@@ -10018,6 +10018,9 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           );
           if (!moduleData || !moduleData.dimensions) return;
 
+          // 키큰장찬넬(insert-frame): 깊이 치수 가이드 숨김
+          if (module.moduleId?.includes('insert-frame')) return;
+
           // 기둥 앞 배치(front) 모드는 슬롯 전체 너비 사용
           const isColFront = (module as any).columnPlacementMode === 'front';
           const slotFullW = module.slotIndex !== undefined ? (indexing.slotWidths?.[module.slotIndex] ?? indexing.columnWidth) : undefined;
@@ -10244,6 +10247,9 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               spaceInfo
             );
             if (!moduleData || !moduleData.dimensions) return;
+
+            // 키큰장찬넬(insert-frame): 깊이 치수 가이드 숨김
+            if (module.moduleId?.includes('insert-frame')) return;
 
             const isColFront = (module as any).columnPlacementMode === 'front';
             const slotFullW = module.slotIndex !== undefined ? (indexing.slotWidths?.[module.slotIndex] ?? indexing.columnWidth) : undefined;
