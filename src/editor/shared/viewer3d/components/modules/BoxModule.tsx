@@ -1213,9 +1213,10 @@ const BoxModule: React.FC<BoxModuleProps> = ({
     const moduleW = mmTo(insertOuterWidthMm);
     const moduleD = baseFurniture.depth; // 58mm
 
-    // 앞면 프레임: 가구 앞면(EP 앞면 라인)과 정렬
-    //   프레임 앞면 = z = +moduleD/2 → 프레임 중심 = moduleD/2 - PT/2
-    const frontFrameZ = moduleD / 2 - PT_THREE / 2;
+    // 앞면 프레임: 가구 앞면에서 40mm 안쪽으로 들임
+    //   프레임 앞면 = moduleD/2 - 40 → 프레임 중심 = moduleD/2 - 40 - PT/2
+    const FRONT_FRAME_INSET = mmTo(40);
+    const frontFrameZ = moduleD / 2 - FRONT_FRAME_INSET - PT_THREE / 2;
     // 좌/우 EP: 두께 18, 깊이 = 기본 - 18mm (Z축으로 18mm 줄임). 위치 X는 좌/우 끝 그대로
     const leftEpX = -moduleW / 2 + PT_THREE / 2;
     const rightEpX = moduleW / 2 - PT_THREE / 2;
