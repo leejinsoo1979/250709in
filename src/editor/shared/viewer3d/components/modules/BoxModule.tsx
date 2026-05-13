@@ -686,7 +686,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
 
   // 듀얼 현관장 H(dual-entryway-h-)는 BaseFurnitureShell 폴백 경로에서 처리
   // (속서랍/서랍받침대/속장 ㄷ자 프레임 hardcoded 코드가 BaseFurnitureShell에 있음)
-  if (moduleData.id.includes('dual-2hanging') || moduleData.id.includes('dual-shelf-')) {
+  if ((moduleData.id.includes('dual-2hanging') || moduleData.id.includes('dual-shelf-')) && !moduleData.id.includes('shelf-split')) {
     return (
       <>
         {/* 모든 타입에서 간접조명 렌더링 */}
@@ -948,7 +948,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
   if (moduleData.id.includes('-shelf-') && !moduleData.id.includes('-4drawer-shelf-') && !moduleData.id.includes('-2drawer-shelf-')) {
     console.log('🟪 BoxModule 선반장 진입:', { id: moduleData.id, hasBase, individualFloatHeight });
   }
-  if (moduleData.id.includes('single-2hanging') || moduleData.id.includes('single-shelf-')) {
+  if ((moduleData.id.includes('single-2hanging') || moduleData.id.includes('single-shelf-')) && !moduleData.id.includes('shelf-split')) {
     return (
       <>
         {/* 모든 타입에서 간접조명 렌더링 */}
