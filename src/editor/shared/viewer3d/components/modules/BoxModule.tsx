@@ -1391,20 +1391,21 @@ const BoxModule: React.FC<BoxModuleProps> = ({
                   furnitureId={placedFurnitureId}
                   textureUrl={baseFurniture.textureUrl}
                 />
-                {/* 가로부재 뒤쪽 수평 보강대 (전대) — 폭 innerWidth × 두께 18 × 깊이 80 */}
+                {/* 목찬넬 수직부재 뒤쪽 세로 보강대 (전대) — 폭 innerWidth × 높이 80 × 두께 18 */}
                 {(() => {
-                  const stretcherDepthMm = 80;
+                  const stretcherHeightMm = 80;
                   const stretcherWidth = baseFurniture.innerWidth;
-                  const stretcherHeight = baseFurniture.basicThickness;
-                  const stretcherDepth = mmToUnits(stretcherDepthMm);
-                  // Y: 목찬넬 가로부재와 동일
-                  const stretcherY = horzY;
-                  // Z: 가로부재(z=40) 바로 뒤 → 가로부재 뒷면 z = depth/2 - 40,
-                  //    보강대 중심 z = (depth/2 - 40) - stretcherDepth/2
-                  const stretcherZ = baseFurniture.depth / 2 - mmToUnits(40) - stretcherDepth / 2;
+                  const stretcherHeight = mmToUnits(stretcherHeightMm);
+                  const stretcherThickness = baseFurniture.basicThickness;
+                  // Y: 따내기 영역(780~860) 중앙 = 820 → 가구 중심 기준 = -H/2 + 820
+                  const stretcherY = cabinetBottomY + mmToUnits(notchFromBottomMm + notchHeightMm / 2);
+                  // Z: 수직부재(z 두께 18) 바로 뒤
+                  //    수직부재 뒷면 z = vertZ - basicThickness/2
+                  //    보강대 중심 z = (수직부재 뒷면) - stretcherThickness/2
+                  const stretcherZ = vertZ - baseFurniture.basicThickness / 2 - stretcherThickness / 2;
                   return (
                     <BoxWithEdges
-                      args={[stretcherWidth, stretcherHeight, stretcherDepth]}
+                      args={[stretcherWidth, stretcherHeight, stretcherThickness]}
                       position={[0, stretcherY, stretcherZ]}
                       material={baseFurniture.material}
                       renderMode={renderMode || useSpace3DView().renderMode}
