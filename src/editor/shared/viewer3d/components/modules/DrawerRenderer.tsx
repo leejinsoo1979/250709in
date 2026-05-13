@@ -233,6 +233,7 @@ interface DrawerRendererProps {
   topPanelFrontInset?: number; // (하)상판 앞쪽 옵셋 (mm) — 타공 간격 연동용
   doorTopGap?: number; // 상단갭 (mm) — 맨위 서랍 마이다 상단 확장
   doorBottomGap?: number; // 하단갭 (mm) — 맨아래 서랍 마이다 하단 확장
+  disableGapMaidaExtension?: boolean; // true면 도어 갭에 의한 마이다 확장 무효화 (인출장 1단 등 내부 속서랍)
 }
 
 /**
@@ -272,6 +273,7 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
   topPanelFrontInset = 0,
   doorTopGap = 0,
   doorBottomGap = 0,
+  disableGapMaidaExtension = false,
 }) => {
   const showDimensions = useUIStore(state => state.showDimensions);
   const showDimensionsText = useUIStore(state => state.showDimensionsText);
@@ -416,6 +418,13 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
       m.moduleId.includes('4drawer-hanging')
     );
   });
+  const isPullOutInnerDrawerModule = useFurnitureStore(state => {
+    if (furnitureId?.includes('pull-out-cabinet')) return true;
+    if (!furnitureId) return false;
+    const m = state.placedModules.find(p => p.id === furnitureId);
+    return !!m?.moduleId?.includes('pull-out-cabinet');
+  });
+  const disableAllMaidaExtension = disableGapMaidaExtension || isPullOutInnerDrawerModule;
   const drawerSlideSpring = useSpring({
     // 인출장만 인출, 다른 서랍은 0
     offset: (isInnerDrawerModule && shouldOpenDrawers) ? mmToThreeUnits(200) : 0,
@@ -623,11 +632,11 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
           const mat = getPanelMaterial(panelName);
           // 위배치 맨 아래 서랍: 마이다 하단 24mm + 상단 18mm 확장 (하부덮개 가림)
           const isBottomDrawerForAlign = drawerIndex === 0;
-          const maidaBottomExt = (drawerAlign === 'top' && isBottomDrawerForAlign) ? mmToThreeUnits(24) : 0;
-          const maidaTopExt = (drawerAlign === 'top' && isBottomDrawerForAlign) ? basicThickness : 0;
+          const maidaBottomExt = (!disableAllMaidaExtension && drawerAlign === 'top' && isBottomDrawerForAlign) ? mmToThreeUnits(24) : 0;
+          const maidaTopExt = (!disableAllMaidaExtension && drawerAlign === 'top' && isBottomDrawerForAlign) ? basicThickness : 0;
           // 상단갭/하단갭 확장: 맨위 서랍은 상단 확장, 맨아래 서랍은 하단 확장
-          const gapTopExt = isTopDrawer ? mmToThreeUnits(doorTopGap) : 0;
-          const gapBottomExt = isBottomDrawer ? mmToThreeUnits(doorBottomGap) : 0;
+          const gapTopExt = (!disableAllMaidaExtension && isTopDrawer) ? mmToThreeUnits(doorTopGap) : 0;
+          const gapBottomExt = (!disableAllMaidaExtension && isBottomDrawer) ? mmToThreeUnits(doorBottomGap) : 0;
           // 마이다 인셋 적용: 상하좌우 축소
           const maidaHeight = drawerHeight + maidaBottomExt + maidaTopExt + gapTopExt + gapBottomExt - mmToThreeUnits(maidaInsetTop + maidaInsetBottom);
           const maidaWidth = drawerWidth - mmToThreeUnits(maidaInsetLeft + maidaInsetRight);
