@@ -848,7 +848,8 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
 
                       {/* 하부 섹션 상판 - 뒤에서 26mm 줄여서 백패널과 맞닿게 + 사용자 오프셋 적용 (앞에서 줄어듦), 좌우 각 0.5mm씩 줄임 */}
                       {/* 빌트인 냉장고장: 하부섹션 백패널 없음 → 상판은 측판과 동일한 풀 깊이 + 뒷면 가운데 따내기(31.5mm 띠, 40mm 깊이) */}
-                      {(() => {
+                      {/* 도어분절 현관장(shelf-split): (하)상판 제거 — ㄱ자 목찬넬이 그 자리를 차지 */}
+                      {!moduleData?.id?.includes('shelf-split') && (() => {
                         const isBuiltInFridge = !!moduleData?.id?.includes('built-in-fridge');
                         // 냉장고장: 1단 백패널 없음 → 보강대 앞면까지 확장 (depthOffset 17mm만 줄임)
                         const isFridgeNoBack = !!moduleData?.id?.includes('fridge-cabinet') && !isBuiltInFridge;
