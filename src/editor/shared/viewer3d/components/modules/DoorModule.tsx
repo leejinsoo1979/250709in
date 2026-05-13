@@ -1441,8 +1441,8 @@ const DoorModule: React.FC<DoorModuleProps> = ({
               />
               
 
-              {/* Hinges for left door - 상부장, 하부장, 키큰장 (잠금 시 숨김) */}
-              {viewMode === '2D' && !leftDoorLocked && (view2DDirection === 'front' || view2DDirection === 'left' || view2DDirection === 'right') && (
+              {/* Hinges for left door - 상부장, 하부장, 키큰장 (잠금 시 숨김, 유리장 제외) */}
+              {viewMode === '2D' && !leftDoorLocked && !moduleData?.id?.includes('glass-cabinet') && (view2DDirection === 'front' || view2DDirection === 'left' || view2DDirection === 'right') && (
                 <>
                   {(isUpperCabinet || hingeMode === 'upper2') ? (
                     // 상부장 또는 도어분절 상부도어: 위에서 100mm, 아래에서 100mm
@@ -1813,8 +1813,8 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                 isLocked={rightDoorLocked}
               />
               
-              {/* Hinges for right door - 상부장, 하부장, 키큰장 (잠금 시 숨김) */}
-              {viewMode === '2D' && !rightDoorLocked && (view2DDirection === 'front' || view2DDirection === 'left' || view2DDirection === 'right') && (
+              {/* Hinges for right door - 상부장, 하부장, 키큰장 (잠금 시 숨김, 유리장 제외) */}
+              {viewMode === '2D' && !rightDoorLocked && !moduleData?.id?.includes('glass-cabinet') && (view2DDirection === 'front' || view2DDirection === 'left' || view2DDirection === 'right') && (
                 <>
                   {(isUpperCabinet || hingeMode === 'upper2') ? (
                     // 상부장 또는 도어분절 상부도어: 위에서 100mm, 아래에서 100mm
@@ -2386,8 +2386,8 @@ const DoorModule: React.FC<DoorModuleProps> = ({
               />
             )}
 
-            {/* Hinges for single door - 상부장 2개, 하부장 2개, 키큰장 4개 (잠금 시 숨김) */}
-            {viewMode === '2D' && !singleDoorLocked && (view2DDirection === 'front' || view2DDirection === 'left' || view2DDirection === 'right') && (
+            {/* Hinges for single door - 상부장 2개, 하부장 2개, 키큰장 4개 (잠금 시 숨김, 유리장 제외) */}
+            {viewMode === '2D' && !singleDoorLocked && !moduleData?.id?.includes('glass-cabinet') && (view2DDirection === 'front' || view2DDirection === 'left' || view2DDirection === 'right') && (
               <>
                 {(isUpperCabinet || hingeMode === 'upper2') ? (
                   // 상부장 또는 도어분절 상부도어: 위에서 100mm, 아래에서 100mm
