@@ -1285,28 +1285,38 @@ const BoxModule: React.FC<BoxModuleProps> = ({
             furnitureId={placedFurnitureId}
           />
         )}
-        {/* 좌측 EP (PET) - 윤곽선 포함 (깊이 18mm 줄임) */}
-        <BoxWithEdges
-          args={[PT_THREE, fullHeight, epDepth]}
-          position={[leftEpX, fullYOffset, epZ]}
-          material={insertFrameMaterial}
-          isDragging={isDragging}
-          isEditMode={isEditMode}
-          isEndPanel={true}
-          panelName="Insert좌EP"
-          furnitureId={placedFurnitureId}
-        />
-        {/* 우측 EP (PET) - 윤곽선 포함 (깊이 18mm 줄임) */}
-        <BoxWithEdges
-          args={[PT_THREE, fullHeight, epDepth]}
-          position={[rightEpX, fullYOffset, epZ]}
-          material={insertFrameMaterial}
-          isDragging={isDragging}
-          isEditMode={isEditMode}
-          isEndPanel={true}
-          panelName="Insert우EP"
-          furnitureId={placedFurnitureId}
-        />
+        {/* 좌/우 EP (PET) — 상단 프레임/걸레받이 사이 영역만 (전면 프레임과 동일한 본체 높이) */}
+        {(() => {
+          const epTopY = spaceTopY - topFrameH;       // 상단 프레임 하단
+          const epBottomY = spaceBottomY + baseFrameH; // 걸레받이 상단
+          const epH = Math.max(0, epTopY - epBottomY);
+          const epCenterY = (epTopY + epBottomY) / 2;
+          if (epH <= 0) return null;
+          return (
+            <>
+              <BoxWithEdges
+                args={[PT_THREE, epH, epDepth]}
+                position={[leftEpX, epCenterY, epZ]}
+                material={insertFrameMaterial}
+                isDragging={isDragging}
+                isEditMode={isEditMode}
+                isEndPanel={true}
+                panelName="Insert좌EP"
+                furnitureId={placedFurnitureId}
+              />
+              <BoxWithEdges
+                args={[PT_THREE, epH, epDepth]}
+                position={[rightEpX, epCenterY, epZ]}
+                material={insertFrameMaterial}
+                isDragging={isDragging}
+                isEditMode={isEditMode}
+                isEndPanel={true}
+                panelName="Insert우EP"
+                furnitureId={placedFurnitureId}
+              />
+            </>
+          );
+        })()}
       </>
     );
   }
