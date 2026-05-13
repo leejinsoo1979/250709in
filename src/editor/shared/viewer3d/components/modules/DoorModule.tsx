@@ -848,7 +848,9 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     moduleData?.id?.includes('pantry-cabinet') ||
     moduleData?.id?.includes('pull-out-cabinet') ||
     moduleData?.id?.includes('fridge-cabinet') ||
-    moduleData?.id?.includes('built-in-fridge')
+    moduleData?.id?.includes('built-in-fridge') ||
+    // 도어분절 가구도 단일 도어로 처리 (분절은 상/하만, 좌/우는 1장)
+    moduleData?.id?.includes('shelf-split')
   );
   // 상부장: 모듈 ID로 단일/듀얼 확정 (싱글 상부장은 너비가 600 넘어도 도어 1짝 유지)
   const isSingleUpperCabinet = !!(
