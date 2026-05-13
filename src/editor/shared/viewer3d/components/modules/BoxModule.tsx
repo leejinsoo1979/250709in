@@ -1438,22 +1438,24 @@ const BoxModule: React.FC<BoxModuleProps> = ({
         // 2D 모드에서 showFurniture가 false여도 도어는 렌더링
         if (hasDoor && spaceInfo) {
           // 도어분절 현관장(shelf-split): 도어를 상/하 두 장으로 분할
-          // - 분절 경계: 바닥에서 800mm (목찬넬 위치)
-          // - 도어 사이 갭: 20mm (경계에서 위·아래 각 10mm 빈공간)
+          // - 하부섹션 몸통 상단 = 800mm
+          // - 하부도어 상단 = 800 - 40 = 760mm (하부섹션 상단에서 40mm 아래)
+          // - 상부도어 하단 = 800 - 20 = 780mm (하부섹션 상단에서 20mm 아래)
+          // - 도어 사이 갭 = 780 - 760 = 20mm
           if (moduleData?.id?.includes('shelf-split')) {
             const cabinetH = moduleData.dimensions.height;
-            const splitBoundaryMm = 800; // 바닥에서 분절 경계까지
-            const interDoorGapHalf = 10; // 도어 사이 갭의 절반 (위/아래 각 10mm)
+            const lowerSectionTopMm = 800; // 하부섹션 몸통 상단
+            const lowerDoorTopMm = lowerSectionTopMm - 40; // 760mm
+            const upperDoorBottomMm = lowerSectionTopMm - 20; // 780mm
             const lowerGapBottom = doorBottomGap ?? 0;
             const upperGapTop = doorTopGap ?? 0;
-            // 하부도어: 바닥에서 doorBottomGap ~ 800-10mm
-            const lowerDoorH = (splitBoundaryMm - interDoorGapHalf) - lowerGapBottom;
+            // 하부도어: doorBottomGap ~ 760mm
+            const lowerDoorH = lowerDoorTopMm - lowerGapBottom;
             const lowerDoorCenterFromBottom = lowerGapBottom + lowerDoorH / 2;
-            // 가구 중심(=H/2) 기준 Y = lowerDoorCenterFromBottom - H/2
             const lowerDoorY = lowerDoorCenterFromBottom - cabinetH / 2;
-            // 상부도어: 810 ~ H - doorTopGap
-            const upperDoorH = (cabinetH - upperGapTop) - (splitBoundaryMm + interDoorGapHalf);
-            const upperDoorCenterFromBottom = (splitBoundaryMm + interDoorGapHalf) + upperDoorH / 2;
+            // 상부도어: 780mm ~ H - doorTopGap
+            const upperDoorH = (cabinetH - upperGapTop) - upperDoorBottomMm;
+            const upperDoorCenterFromBottom = upperDoorBottomMm + upperDoorH / 2;
             const upperDoorY = upperDoorCenterFromBottom - cabinetH / 2;
             return (
               <>
