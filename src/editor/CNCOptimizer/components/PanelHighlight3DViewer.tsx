@@ -392,6 +392,7 @@ const PanelHighlight3DViewer: React.FC<PanelHighlight3DViewerProps> = ({
   // excludedMeshNames → Zustand store 동기화 (R3F Canvas 안에서 BoxWithEdges가 getState()로 접근)
   useEffect(() => {
     const keys = excludedMeshNames ?? new Set();
+    console.log('🟧 [CNC] excludedKeys 동기화:', Array.from(keys).slice(0, 20));
     setExcludedKeys(keys);
     return () => setExcludedKeys(new Set());
   }, [excludedMeshNames, setExcludedKeys]);

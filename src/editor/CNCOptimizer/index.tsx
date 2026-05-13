@@ -102,13 +102,21 @@ const CNCOptimizer: React.FC = () => {
   const excludedMeshNames = useMemo(() => {
     const names = new Set<string>();
     // 체크박스 OFF + 눈 아이콘 OFF 둘 다 3D 뷰어에서 숨김
+    // key 형식: `${furnitureId}::${meshName}` (BoxWithEdges 매칭)
     panelsList.forEach(panel => {
       const isHiddenByVisibility = hiddenPanelIds.has(panel.id);
       const isUnchecked = !selectedPanels.has(panel.id);
-      if ((isHiddenByVisibility || isUnchecked) && panel.meshName) {
-        names.add(panel.meshName);
+      const shouldExclude = isHiddenByVisibility || isUnchecked;
+      if (!shouldExclude) return;
+      const fid = (panel as any).furnitureId;
+      const mn = panel.meshName;
+      if (fid && mn) {
+        names.add(`${fid}::${mn}`);
+      } else if (mn) {
+        names.add(mn);
       }
     });
+    console.log('🟪 [CNC index] excluded keys 생성:', Array.from(names).slice(0, 10), 'panels=', panelsList.slice(0, 3).map(p => ({ id: p.id, name: p.name, meshName: p.meshName, fid: (p as any).furnitureId })));
     return names;
   }, [hiddenPanelIds, selectedPanels, panelsList]);
 
