@@ -2764,6 +2764,43 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                   </>
                 );
               })()}
+
+              {/* 천판/바닥판 앞 50mm 금속 프레임 — 도어와 동일 브론즈, CNC 제외 */}
+              {(() => {
+                const GAP_DEPTH_MM = 50;
+                const PANEL_THK_MM = basicThickness / 0.01; // 가구재 두께(mm)
+                const gapD = mmToThreeUnits(GAP_DEPTH_MM);
+                const panelH = basicThickness;
+                // 프레임 폭 = 가구 외경 폭 (천판/바닥판 윗·아랫면을 덮음)
+                const frameW = innerWidth; // 측판 사이 = 천판/바닥판과 동일한 폭 기준
+                // 프레임 Z(중심) = 가구 앞면(depth/2) - GAP/2
+                const frameZ = depth / 2 - gapD / 2;
+                // 천판 Y(중심) = height/2 - basicThickness/2 → 동일 Y로 채움
+                const topFrameY = height / 2 - panelH / 2;
+                // 바닥판 Y(중심) = -height/2 + basicThickness/2
+                const bottomFrameY = -height / 2 + panelH / 2;
+
+                const gapFrameMaterial = new THREE.MeshStandardMaterial({
+                  color: 0x918878,
+                  metalness: 0.85,
+                  roughness: 0.4,
+                });
+
+                return (
+                  <>
+                    {/* 천판 앞 갭 채움 */}
+                    <mesh position={[0, topFrameY, frameZ]} userData={{ skipCNC: true }}>
+                      <boxGeometry args={[frameW, panelH, gapD]} />
+                      <primitive object={gapFrameMaterial} attach="material" />
+                    </mesh>
+                    {/* 바닥판 앞 갭 채움 */}
+                    <mesh position={[0, bottomFrameY, frameZ]} userData={{ skipCNC: true }}>
+                      <boxGeometry args={[frameW, panelH, gapD]} />
+                      <primitive object={gapFrameMaterial} attach="material" />
+                    </mesh>
+                  </>
+                );
+              })()}
             </>
           );
         })()}
