@@ -444,6 +444,10 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
             // 섹션 박스 이동(directionOffset)과 동일한 값 사용 → 서랍이 섹션과 함께 이동
             const drawerZOffset = directionOffset;
 
+            // 인출장 1단(내부 속서랍)은 외부 도어 갭과 무관 → 마이다 상/하 동일 높이 유지
+            const isPullOutInnerDrawer = !!furnitureId?.includes('pull-out-cabinet');
+            const sectionDoorTopGap = isPullOutInnerDrawer ? 0 : doorTopGap;
+            const sectionDoorBottomGap = isPullOutInnerDrawer ? 0 : doorBottomGap;
             sectionContent = (
               <DrawerRenderer
                 drawerCount={section.count}
@@ -464,8 +468,8 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
                 sectionName={sectionName}
                 backPanelThicknessOverride={currentPlacedModule?.backPanelThickness}
                 topPanelFrontInset={index === 0 && category === 'lower' ? lowerSectionTopOffsetMm : 0}
-                doorTopGap={doorTopGap}
-                doorBottomGap={doorBottomGap}
+                doorTopGap={sectionDoorTopGap}
+                doorBottomGap={sectionDoorBottomGap}
               />
             );
           }
