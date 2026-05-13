@@ -7001,6 +7001,54 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         );
       })}
 
+      {/* 3D: 좌·우 끝에 배치된 유리장은 측면(가구 좌·우 옆) 분할 치수 추가 표시 */}
+      {showDimensions && currentViewDirection === '3D' && placedModules.map((module) => {
+        const mid = module.moduleId || '';
+        if (!mid.includes('glass-cabinet')) return null;
+        const moduleData = getModuleById(mid, calculateInternalSpace(spaceInfo), spaceInfo);
+        if (!moduleData) return null;
+
+        const moduleWidthMm = (module.moduleWidth || (module as any).slotCustomWidth || moduleData.dimensions?.width || 600);
+        const moduleHalfW = mmToThreeUnits(moduleWidthMm / 2);
+        const moduleLeftX = module.position.x - moduleHalfW;
+        const moduleRightX = module.position.x + moduleHalfW;
+
+        // 공간 좌·우 경계 (벽 안쪽)
+        const spaceLeftX = leftOffset;
+        const spaceRightX = leftOffset + mmToThreeUnits(spaceInfo.width);
+        const EDGE_TOLERANCE = mmToThreeUnits(50); // 끝 판정 허용 오차
+
+        const isLeftEnd = Math.abs(moduleLeftX - spaceLeftX) < EDGE_TOLERANCE;
+        const isRightEnd = Math.abs(moduleRightX - spaceRightX) < EDGE_TOLERANCE;
+        if (!isLeftEnd && !isRightEnd) return null;
+
+        // 측면 가이드 X — 가구 외측에 가이드 표시
+        const guideOffset = mmToThreeUnits(80);
+        const textOffset = mmToThreeUnits(140);
+        const sideX = isLeftEnd
+          ? moduleLeftX - guideOffset
+          : moduleRightX + guideOffset;
+        const textX = isLeftEnd
+          ? moduleLeftX - textOffset
+          : moduleRightX + textOffset;
+        // lineZ/textZ는 가구 앞쪽으로 약간 띄움 (가구 깊이의 절반 + 여유)
+        const depthMm = moduleData.dimensions?.depth || 365;
+        const lineZ = mmToThreeUnits(depthMm / 2 + 40);
+        const textZ = mmToThreeUnits(depthMm / 2 + 80);
+
+        return (
+          <React.Fragment key={`glass-3d-side-split-${module.id}`}>
+            {renderGlassDrawerSideSplitDimensions(
+              module,
+              sideX,
+              lineZ,
+              textZ,
+              isLeftEnd ? `3d-left-${module.id}` : `3d-right-${module.id}`
+            )}
+          </React.Fragment>
+        );
+      })}
+
       {/* 자유배치: 가구 없는 구간의 전체 폭 치수 (slotDimensionY 레벨) — 가구 있을 때만 */}
       {isFreePlacement && showDimensions && hasPlacedModules && (spaceInfo.stepCeiling?.enabled) && (() => {
         // 각 구간(메인/단내림)에 가구가 있는지 확인
