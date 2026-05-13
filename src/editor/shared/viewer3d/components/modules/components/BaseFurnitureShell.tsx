@@ -14,6 +14,18 @@ import DimensionText from './DimensionText';
 import { useDimensionColor } from '../hooks/useDimensionColor';
 import { VentilationCap } from './VentilationCap';
 
+// 유리장 타일 텍스처 (모듈 레벨 캐싱)
+let GLASS_TILE_TEXTURE: THREE.Texture | null = null;
+const getGlassTileTexture = (): THREE.Texture => {
+  if (GLASS_TILE_TEXTURE) return GLASS_TILE_TEXTURE;
+  const loader = new THREE.TextureLoader();
+  const tex = loader.load('/materials/tyle2.png');
+  tex.wrapS = THREE.RepeatWrapping;
+  tex.wrapT = THREE.RepeatWrapping;
+  GLASS_TILE_TEXTURE = tex;
+  return tex;
+};
+
 // 점선을 수동으로 그리는 컴포넌트
 const ManualDashedBox: React.FC<{
   width: number;
@@ -2798,6 +2810,70 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                       <boxGeometry args={[frameW, panelH, gapD]} />
                       <primitive object={gapFrameMaterial} attach="material" />
                     </mesh>
+                  </>
+                );
+              })()}
+
+              {/* 유리장 서랍 모듈 위/아래 영역 백패널 — 타일 텍스처 (CNC 제외) */}
+              {(() => {
+                const userGlassDrawerOffset = (currentPlacedModuleForBottomEP as any)?.glassDrawerOffsetMm;
+                const SIDE_BOTTOM_FROM_FLOOR_MM = typeof userGlassDrawerOffset === 'number' ? userGlassDrawerOffset : 242;
+                const SIDE_H_MM = 500;
+
+                // 백패널 두께
+                const tileBackThk = backPanelThickness;
+                // 백패널 폭 (가구 내경)
+                const tileBackW = innerWidth + mmToThreeUnits(10);
+                // 백패널 Z(중심): 가구 뒤쪽 안쪽 면 (가구 뒷면 + 두께/2 + depthOffset)
+                const tileBackZ = -depth / 2 + tileBackThk / 2 + mmToThreeUnits(backPanelConfig.depthOffset);
+
+                // 영역 Y 좌표 (가구 중심 기준)
+                const sideBottomY = -height / 2 + mmToThreeUnits(SIDE_BOTTOM_FROM_FLOOR_MM); // 서랍 측판 하단
+                const sideTopY = sideBottomY + mmToThreeUnits(SIDE_H_MM); // 서랍 측판 상단
+                const cabinetBottomTopY = -height / 2 + basicThickness; // 바닥판 윗면
+                const cabinetTopBottomY = height / 2 - basicThickness; // 천판 하단
+
+                // 하부 영역 (바닥판 윗면 ~ 서랍 측판 하단)
+                const lowerH = sideBottomY - cabinetBottomTopY;
+                const lowerCY = (cabinetBottomTopY + sideBottomY) / 2;
+
+                // 상부 영역 (서랍 측판 상단 ~ 천판 하단)
+                const upperH = cabinetTopBottomY - sideTopY;
+                const upperCY = (sideTopY + cabinetTopBottomY) / 2;
+
+                // 재질 (각 영역별로 repeat 다름)
+                const makeTileMat = (widthMm: number, heightMm: number) => {
+                  const t = getGlassTileTexture().clone();
+                  t.wrapS = THREE.RepeatWrapping;
+                  t.wrapT = THREE.RepeatWrapping;
+                  // 타일 1장 = 약 200mm × 200mm 가정
+                  t.repeat.set(Math.max(1, widthMm / 200), Math.max(1, heightMm / 200));
+                  t.needsUpdate = true;
+                  return new THREE.MeshStandardMaterial({
+                    map: t,
+                    roughness: 0.6,
+                    metalness: 0.05,
+                  });
+                };
+
+                const widthMm = (innerWidth + mmToThreeUnits(10)) / 0.01;
+                const lowerMat = lowerH > 0 ? makeTileMat(widthMm, lowerH / 0.01) : null;
+                const upperMat = upperH > 0 ? makeTileMat(widthMm, upperH / 0.01) : null;
+
+                return (
+                  <>
+                    {lowerH > 0 && lowerMat && (
+                      <mesh position={[0, lowerCY, tileBackZ]} userData={{ skipCNC: true }}>
+                        <boxGeometry args={[tileBackW, lowerH, tileBackThk]} />
+                        <primitive object={lowerMat} attach="material" />
+                      </mesh>
+                    )}
+                    {upperH > 0 && upperMat && (
+                      <mesh position={[0, upperCY, tileBackZ]} userData={{ skipCNC: true }}>
+                        <boxGeometry args={[tileBackW, upperH, tileBackThk]} />
+                        <primitive object={upperMat} attach="material" />
+                      </mesh>
+                    )}
                   </>
                 );
               })()}
