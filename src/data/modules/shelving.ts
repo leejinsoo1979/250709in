@@ -895,6 +895,60 @@ const createSingleShelf = (columnWidth: number, maxHeight: number): ModuleData =
 };
 
 /**
+ * 싱글 도어분절 현관장: 선반장 베이스 + 하부/상부 도어 분절
+ * - 하부섹션 H=860, 선반 3개
+ * - 상부섹션 H=나머지, 선반 6개 (사용자 조절 가능)
+ * - D=선반장 동일
+ * - 카테고리: 'full' (신발장 카테고리에 표시)
+ */
+const createSingleShelfSplit = (columnWidth: number, maxHeight: number): ModuleData => {
+  const widthForId = Math.round(columnWidth * 100) / 100;
+  const bottomHeight = 860;
+  const topHeight = Math.max(0, maxHeight - bottomHeight);
+  const bottomShelfCount = 3;
+  const topShelfCount = 6;
+  const _t = FURNITURE_SPECS.BASIC_THICKNESS;
+  const bottomPositions = calculateEvenShelfPositions(bottomHeight - 2 * _t, bottomShelfCount);
+  const topPositions = calculateEvenShelfPositions(Math.max(0, topHeight - 2 * _t), topShelfCount);
+
+  const baseSections: SectionConfig[] = [
+    {
+      type: 'shelf',
+      heightType: 'absolute',
+      height: bottomHeight,
+      count: bottomShelfCount,
+      shelfPositions: bottomPositions
+    },
+    {
+      type: 'shelf',
+      heightType: 'absolute',
+      height: topHeight,
+      count: topShelfCount,
+      shelfPositions: topPositions
+    }
+  ];
+
+  const base = createFurnitureBase(
+    `single-shelf-split-${widthForId}`,
+    `도어분절 현관장 ${widthForId}mm`,
+    columnWidth,
+    maxHeight,
+    FURNITURE_SPECS.SHELF_DRAWER_DEPTH,
+    FURNITURE_SPECS.COLORS.ENTRYWAY,
+    `도어분절 현관장: 하단 선반 ${bottomShelfCount}개 + 상단 선반 ${topShelfCount}개`,
+    FURNITURE_SPECS.SHELF_DRAWER_DEPTH
+  );
+
+  return {
+    ...base,
+    modelConfig: {
+      ...base.modelConfig,
+      sections: baseSections
+    }
+  } as ModuleData;
+};
+
+/**
  * 싱글 선반장+4단서랍: 하단 4단서랍(1000mm) + 상단 선반
  */
 const createSingle4DrawerShelf = (columnWidth: number, maxHeight: number): ModuleData => {
@@ -1497,6 +1551,60 @@ const createDualShelf = (dualColumnWidth: number, maxHeight: number, slotWidths?
     FURNITURE_SPECS.SHELF_DRAWER_DEPTH,
     '#607D8B',
     `듀얼 하단 선반 ${bottomShelfCount}개 + 상단 선반 ${topShelfCount}개`,
+    FURNITURE_SPECS.SHELF_DRAWER_DEPTH
+  );
+
+  return {
+    ...base,
+    slotWidths,
+    modelConfig: {
+      ...base.modelConfig,
+      sections: baseSections
+    }
+  } as ModuleData;
+};
+
+/**
+ * 듀얼 도어분절 현관장: 선반장 베이스 + 하부/상부 도어 분절
+ * - 하부섹션 H=860, 선반 3개
+ * - 상부섹션 H=나머지, 선반 6개 (사용자 조절 가능)
+ * - D=선반장 동일
+ */
+const createDualShelfSplit = (dualColumnWidth: number, maxHeight: number, slotWidths?: number[]): ModuleData => {
+  const widthForId = Math.round(dualColumnWidth * 100) / 100;
+  const bottomHeight = 860;
+  const topHeight = Math.max(0, maxHeight - bottomHeight);
+  const bottomShelfCount = 3;
+  const topShelfCount = 6;
+  const _t = FURNITURE_SPECS.BASIC_THICKNESS;
+  const bottomPositions = calculateEvenShelfPositions(bottomHeight - 2 * _t, bottomShelfCount);
+  const topPositions = calculateEvenShelfPositions(Math.max(0, topHeight - 2 * _t), topShelfCount);
+
+  const baseSections: SectionConfig[] = [
+    {
+      type: 'shelf',
+      heightType: 'absolute',
+      height: bottomHeight,
+      count: bottomShelfCount,
+      shelfPositions: bottomPositions
+    },
+    {
+      type: 'shelf',
+      heightType: 'absolute',
+      height: topHeight,
+      count: topShelfCount,
+      shelfPositions: topPositions
+    }
+  ];
+
+  const base = createFurnitureBase(
+    `dual-shelf-split-${widthForId}`,
+    `도어분절 현관장 ${widthForId}mm`,
+    dualColumnWidth,
+    maxHeight,
+    FURNITURE_SPECS.SHELF_DRAWER_DEPTH,
+    FURNITURE_SPECS.COLORS.ENTRYWAY,
+    `듀얼 도어분절 현관장: 하단 선반 ${bottomShelfCount}개 + 상단 선반 ${topShelfCount}개`,
     FURNITURE_SPECS.SHELF_DRAWER_DEPTH
   );
 
@@ -3419,6 +3527,7 @@ export const generateShelvingModules = (
 
   // === 싱글 선반장 가구 생성 ===
   modules.push(createSingleShelf(columnWidth, maxHeight));
+  modules.push(createSingleShelfSplit(columnWidth, maxHeight));
   modules.push(createSingle4DrawerShelf(columnWidth, maxHeight));
   modules.push(createSingle2DrawerShelf(columnWidth, maxHeight));
   // 유리장 (싱글) — 띄움 200mm, H는 공간 높이 - 상부몰딩 - 띄움200 (걸레받이 자리는 띄움이 흡수)
@@ -3486,6 +3595,7 @@ export const generateShelvingModules = (
 
     // === 듀얼 선반장 가구 생성 ===
     modules.push(createDualShelf(dualWidth, maxHeight, dualSlotWidths));
+    modules.push(createDualShelfSplit(dualWidth, maxHeight, dualSlotWidths));
     modules.push(createDual4DrawerShelf(dualWidth, maxHeight, dualSlotWidths));
     modules.push(createDual2DrawerShelf(dualWidth, maxHeight, dualSlotWidths));
     // 유리장 (듀얼)

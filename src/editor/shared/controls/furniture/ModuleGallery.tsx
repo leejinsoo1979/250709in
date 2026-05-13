@@ -123,6 +123,8 @@ export type ModuleType = 'all' | 'single' | 'dual';
 // 주의: upper-cabinet-shelf-*, dual-upper-cabinet-shelf-* 는 upper 카테고리이므로 여기 해당 없음
 const isShoeModuleId = (id: string): boolean => {
   if (id.includes('entryway')) return true;
+  // 도어분절 현관장: single-shelf-split / dual-shelf-split
+  if (id.includes('shelf-split')) return true;
   // -shelf로 끝나는 ID 키 (폭 제거 후) 또는 중간에 -shelf-가 포함된 full 모듈
   // full 카테고리 기준이므로 upper/lower 접두어가 없음
   // 예: single-shelf-600, single-4drawer-shelf-600
