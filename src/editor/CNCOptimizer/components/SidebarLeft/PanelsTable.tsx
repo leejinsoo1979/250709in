@@ -525,11 +525,21 @@ export default function PanelsTable(){
         <Package size={16} />
         <h3>{t('cnc.panelList')} ({panels.length})</h3>
         <div style={{ display: 'flex', gap: '4px' }}>
-          {panels.length > 0 && (assemblyPlaying || excludedPanelIds.size === panels.length) && (
+          {panels.length > 0 && (
             <button
               className={styles.addButton}
-              onClick={assemblyPlaying ? stopAssembly : startAssembly}
-              title={assemblyPlaying ? '조립 중지' : '조립 애니메이션'}
+              onClick={() => {
+                if (assemblyPlaying) {
+                  stopAssembly();
+                  return;
+                }
+                // 체크 해제가 안 되어 있으면 자동으로 전체 해제 후 조립 시작
+                if (excludedPanelIds.size !== panels.length) {
+                  setExcludedPanelIds(new Set(panels.map(p => p.id)));
+                }
+                startAssembly();
+              }}
+              title={assemblyPlaying ? '조립 중지' : '조립 애니메이션 (자동 전체 제외)'}
               style={{ color: assemblyPlaying ? '#ef4444' : '#22c55e', minWidth: '28px' }}
             >
               {assemblyPlaying ? '■' : '▶'}
