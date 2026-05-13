@@ -967,13 +967,13 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
   //   · 대리석 10mm = 65mm (아래로 10mm 확장)
   //   · 대리석 20mm = 55mm (기본)
   //   · 대리석 30mm = 45mm (위로 10mm 축소)
-  // - 그 외 상판내림(반통 2단/half): 어제 공식 유지 (H 변화량 반영)
+  // - 그 외 상판내림(반통 2단/half): 55mm 고정 (H 변경과 무관)
   const isTopDown3TierForStretcher = moduleData.id.includes('lower-top-down-3tier') || moduleData.id.includes('dual-lower-top-down-3tier');
   const useStoneThicknessStretcher = isTopDownTouchForStretcher || isTopDown3TierForStretcher;
   const topDownStretcherHeightMm = isTopDownModule
     ? (useStoneThicknessStretcher
         ? (stoneThickness === 10 ? 65 : stoneThickness === 30 ? 45 : 55)
-        : Math.max(0, 55 + ((moduleData.dimensions.height || 785) - 785)))
+        : 55)
     : 55;
   const stoneFrontOff = useFurnitureStore(state => {
     if (!placedFurnitureId) return 0;
