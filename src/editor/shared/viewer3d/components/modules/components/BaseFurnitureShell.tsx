@@ -179,6 +179,8 @@ interface BaseFurnitureShellProps {
 
   // 측판 추가 노치 (하부장 2단용 — fromBottom: mm, y: mm, z: mm)
   sideNotches?: Array<{ y: number; z: number; fromBottom: number }>;
+  // sideNotches 자동 하단 가로전대 렌더링 끄기 (호출자가 ㄱ자 목찬넬 등을 직접 그리는 경우)
+  disableAutoSideNotchStretcher?: boolean;
 
   // 상판 코너 따내기 (상부장용)
   topPanelNotchSize?: '680x140' | '340x140';
@@ -233,6 +235,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
   topPanelFrontReduction = 0,
   topStretcher,
   sideNotches,
+  disableAutoSideNotchStretcher = false,
   topPanelNotchSize,
   topPanelNotchSide = 'right',
   renderMode: renderModeProp,
@@ -627,7 +630,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                     )}
 
                     {/* 하단 가로전대 (sideNotches가 있을 때) - 하단 노치 위치에 가로 부재 */}
-                    {sideNotches && sideNotches.map((n, idx) => {
+                    {sideNotches && !disableAutoSideNotchStretcher && sideNotches.map((n, idx) => {
                       const lowerNotchY = mmToThreeUnits(n.y);
                       const lowerNotchZ = mmToThreeUnits(n.z);
                       const lowerFromBottom = mmToThreeUnits(n.fromBottom);

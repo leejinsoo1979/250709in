@@ -1285,6 +1285,11 @@ const BoxModule: React.FC<BoxModuleProps> = ({
           panelGrainDirections={panelGrainDirections}
           moduleData={moduleData}
           lowerSectionTopOffsetMm={(moduleData?.id?.includes('entryway-h')) ? 85 : (lowerSectionTopOffset || 0)}
+          {...(moduleData?.id?.includes('shelf-split') ? {
+            // 도어분절 현관장: 하부섹션 상단(860 - 60 = 800) 측판 따내기 60mm
+            sideNotches: [{ y: 60, z: 40, fromBottom: 800 }],
+            disableAutoSideNotchStretcher: true,
+          } : {})}
         >
           {/* 내부 구조 렌더링 (드래그/고스트 중에도 표시) */}
           {(
@@ -1344,6 +1349,48 @@ const BoxModule: React.FC<BoxModuleProps> = ({
                 material={baseFurniture.material}
                 mmToThreeUnits={baseFurniture.mmToThreeUnits}
               />
+            );
+          })()}
+          {/* 도어분절 현관장: 하부섹션 상단(800mm)에 ㄱ자 목찬넬 (가로 + 수직) */}
+          {moduleData?.id?.includes('shelf-split') && (() => {
+            const mmToUnits = (mm: number) => mm * 0.01;
+            const notchHeightMm = 60;
+            const notchFromBottomMm = 800;
+            const basicThicknessMm = baseFurniture.basicThickness / 0.01;
+            const frameWidth = baseFurniture.innerWidth; // 측판 사이 폭
+            const verticalHMm = notchHeightMm - basicThicknessMm;
+            const cabinetBottomY = -baseFurniture.height / 2;
+            const horzY = cabinetBottomY + mmToUnits(notchFromBottomMm) + baseFurniture.basicThickness / 2;
+            const horzZ = baseFurniture.depth / 2 - mmToUnits(40) / 2;
+            const vertY = cabinetBottomY + mmToUnits(notchFromBottomMm) + baseFurniture.basicThickness + mmToUnits(verticalHMm) / 2;
+            const vertZ = baseFurniture.depth / 2 - mmToUnits(40) + baseFurniture.basicThickness / 2;
+            return (
+              <>
+                <BoxWithEdges
+                  args={[frameWidth, baseFurniture.basicThickness, mmToUnits(40)]}
+                  position={[0, horzY, horzZ]}
+                  material={baseFurniture.material}
+                  renderMode={renderMode || useSpace3DView().renderMode}
+                  isDragging={isDragging}
+                  isEditMode={isEditMode}
+                  panelName="목찬넬프레임수평"
+                  panelGrainDirections={panelGrainDirections}
+                  furnitureId={placedFurnitureId}
+                  textureUrl={baseFurniture.textureUrl}
+                />
+                <BoxWithEdges
+                  args={[frameWidth, mmToUnits(verticalHMm), baseFurniture.basicThickness]}
+                  position={[0, vertY, vertZ]}
+                  material={baseFurniture.material}
+                  renderMode={renderMode || useSpace3DView().renderMode}
+                  isDragging={isDragging}
+                  isEditMode={isEditMode}
+                  panelName="목찬넬프레임수직"
+                  panelGrainDirections={panelGrainDirections}
+                  furnitureId={placedFurnitureId}
+                  textureUrl={baseFurniture.textureUrl}
+                />
+              </>
             );
           })()}
         </BaseFurnitureShell>
