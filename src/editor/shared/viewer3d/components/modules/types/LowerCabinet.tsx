@@ -1110,6 +1110,8 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
     : (spaceInfo?.materialConfig?.countertopColor || '#FFFFFF');
   const stoneTopMatRef = useRef<THREE.MeshStandardMaterial | null>(null);
 
+  // 텍스처 로드 상태 — 로드 완료 시 setStoneTopMatVersion으로 stoneTopMaterial 재생성 트리거
+  const [stoneTopMatVersion, setStoneTopMatVersion] = useState(0);
   const stoneTopMaterial = useMemo(() => {
     if (!stoneTopData) return null;
     const mat = new THREE.MeshStandardMaterial({
@@ -1118,7 +1120,7 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
     });
     stoneTopMatRef.current = mat;
     return mat;
-  }, [!!stoneTopData, isPetTop]);
+  }, [!!stoneTopData, isPetTop, stoneTopMatVersion]);
 
   // countertop 색상 변경 반영
   useEffect(() => {
@@ -1133,12 +1135,15 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
     const mat = stoneTopMatRef.current;
     if (!mat) return;
     if (countertopTextureUrl) {
+      // 이미 같은 URL의 텍스처가 로드된 상태면 재로드 안 함 (무한 루프 방지)
+      if (mat.map && (mat.map as any).__sourceUrl === countertopTextureUrl) return;
       const loader = new THREE.TextureLoader();
       loader.load(countertopTextureUrl, (texture) => {
         texture.wrapS = THREE.RepeatWrapping;
         texture.wrapT = THREE.RepeatWrapping;
         texture.repeat.set(1, 1);
         texture.colorSpace = THREE.SRGBColorSpace;
+        (texture as any).__sourceUrl = countertopTextureUrl;
         mat.map = texture;
         mat.color.set('#ffffff');
         mat.toneMapped = false;
@@ -1146,6 +1151,9 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
         mat.roughness = 0.8;
         mat.metalness = 0.0;
         mat.needsUpdate = true;
+        // 텍스처 로드 후 stoneTopMaterial 재생성 → 모든 뒷턱/상판 mesh가 새 material 받음
+        // 단, 이미 텍스처가 있던 경우는 재로드 안 하므로 한 번만 실행됨
+        setStoneTopMatVersion(v => v + 1);
       });
     } else {
       if (mat.map) {
