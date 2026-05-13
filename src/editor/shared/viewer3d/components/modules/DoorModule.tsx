@@ -2328,14 +2328,14 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                 metalness: 0.85,
                 roughness: 0.4,
               });
-              // 브라운경(짙은 갈색 반투명 유리) 재질 — 살짝 더 투명하게
+              // 브라운경(짙은 갈색 반투명 유리) 재질 — 브라운 톤 강화
               const glassMaterial = new THREE.MeshPhysicalMaterial({
-                color: 0x2a1f17,
+                color: 0x4a2e1c,
                 transparent: true,
-                opacity: 0.32,
+                opacity: 0.38,
                 roughness: 0.08,
                 metalness: 0.0,
-                transmission: 0.45,
+                transmission: 0.4,
                 thickness: 0.5,
                 ior: 1.45,
                 side: THREE.DoubleSide,
