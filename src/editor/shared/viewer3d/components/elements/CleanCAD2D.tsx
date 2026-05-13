@@ -7653,13 +7653,14 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                       ? (spaceInfo.floorFinish?.height || 0) : 0;
                     const cabinetBottomAbsS = bottomFrameHeight + floorFinishForDoorS;
                     const cabinetTopAbsS = effectiveH - (doorModule.topFrameThickness ?? (spaceInfo.frameSize?.top ?? 30));
-                    // 하부도어 절대좌표: 가구 바닥 ~ 가구 바닥+760
-                    const lowerDoorBottomAbs = cabinetBottomAbsS + (doorBottomGapVal || 0);
-                    const lowerDoorTopAbs = cabinetBottomAbsS + 760;
+                    // 하부섹션 H=860 → 하부섹션 몸통 상단 = 바닥+860
+                    // 하부도어: 상단 = 860 - 40 = 820, 하단 = -하단갭 (가구 바닥에서 아래로)
+                    const lowerDoorBottomAbs = cabinetBottomAbsS - (doorBottomGapVal || 0);
+                    const lowerDoorTopAbs = cabinetBottomAbsS + 820;
                     const lowerDoorH = lowerDoorTopAbs - lowerDoorBottomAbs;
-                    // 상부도어 절대좌표: 가구 바닥+780 ~ 가구 천판
-                    const upperDoorBottomAbs = cabinetBottomAbsS + 780;
-                    const upperDoorTopAbs = cabinetTopAbsS - (doorTopGapVal || 0);
+                    // 상부도어: 하단 = 860 - 20 = 840, 상단 = 가구 천판 + 상단갭
+                    const upperDoorBottomAbs = cabinetBottomAbsS + 840;
+                    const upperDoorTopAbs = cabinetTopAbsS + (doorTopGapVal || 0);
                     const upperDoorH = upperDoorTopAbs - upperDoorBottomAbs;
 
                     const lowerBY = mmToThreeUnits(lowerDoorBottomAbs);
