@@ -1109,10 +1109,24 @@ export const calculatePanelDetails = (
       hingeSide: hingePosition ?? 'left'
     });
     const actualDoorH = doorLeafDimensions.leafHeightMm;
+    const isPantryDoorSplitModule = moduleData.id.includes('pantry-cabinet-split');
+    let bracketHingeYPositions: number[] | null = null;
+
+    const calculateFixedHingePositions = (doorH: number, hingeCount: number) => {
+      const margin = DEFAULT_HINGE_SETTINGS.topBottomMargin;
+      if (hingeCount <= 2) {
+        return [margin, doorH - margin];
+      }
+
+      const spacing = (doorH - 2 * margin) / (hingeCount - 1);
+      return Array.from({ length: hingeCount }, (_, index) => margin + spacing * index);
+    };
 
     // 도어 보링 데이터 생성 헬퍼
-    const createDoorBoringData = (doorW: number, doorH: number, isLeftHinge: boolean) => {
-      const hingePositions = calculateHingePositions(doorH);
+    const createDoorBoringData = (doorW: number, doorH: number, isLeftHinge: boolean, fixedHingeCount?: number) => {
+      const hingePositions = fixedHingeCount
+        ? calculateFixedHingePositions(doorH, fixedHingeCount)
+        : calculateHingePositions(doorH);
       // 힌지컵 X 위치 (도어 가장자리에서 cupEdgeDistance)
       const cupX = isLeftHinge
         ? DEFAULT_HINGE_SETTINGS.cupEdgeDistance
@@ -1134,23 +1148,23 @@ export const calculatePanelDetails = (
         screwPositions: hingePositions.flatMap(y => [y - screwYOffset, y + screwYOffset]),
         screwDepthPositions: [screwX],
         screwHoleSpacing,
-        hingeCount: calculateHingeCount(doorH),
+        hingeCount: fixedHingeCount ?? calculateHingeCount(doorH),
         isLeftHinge,
       };
     };
 
-    doorLeafDimensions.leaves.forEach((leaf) => {
-      const isLeftHinge = leaf.hingeSide === 'left';
-      const doorBoring = createDoorBoringData(leaf.widthMm, leaf.heightMm, isLeftHinge);
-      const doorName = leaf.name === 'left'
-        ? '좌측 도어'
-        : leaf.name === 'right'
-          ? '우측 도어'
-          : '도어';
+    const pushDoorPanel = (
+      name: string,
+      widthMm: number,
+      heightMm: number,
+      isLeftHinge: boolean,
+      fixedHingeCount?: number
+    ) => {
+      const doorBoring = createDoorBoringData(widthMm, heightMm, isLeftHinge, fixedHingeCount);
       panels.door.push({
-        name: doorName,
-        width: leaf.widthMm,
-        height: leaf.heightMm,
+        name,
+        width: widthMm,
+        height: heightMm,
         thickness: 18.5,  // PET 재질 항상 18.5mm
         material: 'PET',
         boringPositions: doorBoring.boringPositions,
@@ -1158,10 +1172,54 @@ export const calculatePanelDetails = (
         screwPositions: doorBoring.screwPositions,
         screwDepthPositions: doorBoring.screwDepthPositions,
         screwHoleSpacing: doorBoring.screwHoleSpacing,
+        hingeCount: doorBoring.hingeCount,
         isDoor: true,
         isLeftHinge,
       });
-    });
+    };
+
+    if (isPantryDoorSplitModule) {
+      const lowerSectionTopMm = 1825;
+      const doorSplitGapMm = 3;
+      const lowerDoorTopMm = lowerSectionTopMm - doorSplitGapMm / 2;
+      const upperDoorBottomMm = lowerSectionTopMm + doorSplitGapMm / 2;
+      const lowerDoorH = lowerDoorTopMm + (doorBottomGap ?? 0);
+      const upperDoorH = height + (doorTopGap ?? 0) - upperDoorBottomMm;
+      const lowerDoorBottomMm = -(doorBottomGap ?? 0);
+
+      bracketHingeYPositions = [];
+
+      doorLeafDimensions.leaves.forEach((leaf) => {
+        const isLeftHinge = leaf.hingeSide === 'left';
+        const prefix = leaf.name === 'left'
+          ? '좌측 '
+          : leaf.name === 'right'
+            ? '우측 '
+            : '';
+
+        const lowerHinges = calculateFixedHingePositions(lowerDoorH, 4);
+        const upperHinges = calculateFixedHingePositions(upperDoorH, 2);
+        bracketHingeYPositions?.push(
+          ...lowerHinges.map(y => lowerDoorBottomMm + y),
+          ...upperHinges.map(y => upperDoorBottomMm + y)
+        );
+
+        pushDoorPanel(`${prefix}하부 도어`, leaf.widthMm, lowerDoorH, isLeftHinge, 4);
+        pushDoorPanel(`${prefix}상부 도어`, leaf.widthMm, upperDoorH, isLeftHinge, 2);
+      });
+
+      bracketHingeYPositions = Array.from(new Set(bracketHingeYPositions)).sort((a, b) => a - b);
+    } else {
+      doorLeafDimensions.leaves.forEach((leaf) => {
+        const isLeftHinge = leaf.hingeSide === 'left';
+        const doorName = leaf.name === 'left'
+          ? '좌측 도어'
+          : leaf.name === 'right'
+            ? '우측 도어'
+            : '도어';
+        pushDoorPanel(doorName, leaf.widthMm, leaf.heightMm, isLeftHinge);
+      });
+    }
 
     // === 측판에 힌지 브라켓 타공 데이터 주입 ===
     // 도어가 없는 모듈(서랍전용, 인덕션장 등)은 브라켓 보링 불필요
@@ -1171,13 +1229,15 @@ export const calculatePanelDetails = (
     // → 분리 측판이면 각 측판의 Y범위에 해당하는 타공점을 상대좌표로 변환
     // 브라켓 보링: 도어 힌지 Y위치를 측판 기준으로 변환
     // 도어 높이 = actualDoorH (위에서 이미 계산됨)
-    const hingeYPositions = calculateHingePositions(actualDoorH);
+    const hingeYPositions = bracketHingeYPositions ?? calculateHingePositions(actualDoorH);
     // 도어 하단(바닥에서 doorBottomGap) → 측판 하단(바닥에서 baseHeight)
     // 측판 기준 Y = 힌지Y + (doorBottomGap - baseHeight)
     const bracketYOffset = spaceHeight
       ? (doorBottomGap ?? 25) - (baseHeight ?? 65)
       : 2; // fallback: 기존 doorGap
-    const bracketYPositions = hingeYPositions.map(y => y + bracketYOffset);
+    const bracketYPositions = bracketHingeYPositions
+      ? hingeYPositions.map(y => y - (baseHeight ?? 65))
+      : hingeYPositions.map(y => y + bracketYOffset);
 
     const allSidePanels = [...panels.upper, ...panels.lower];
     const isLeftSidePanel = (name: string) =>
@@ -1194,7 +1254,8 @@ export const calculatePanelDetails = (
       moduleData.id.includes('2drawer-shelf') ||
       moduleData.id.includes('2shelf') ||
       moduleData.id.includes('single-shelf-') ||
-      moduleData.id.includes('dual-shelf-');
+      moduleData.id.includes('dual-shelf-') ||
+      moduleData.id.includes('pantry-cabinet-split');
 
     // 하부 섹션 높이 계산 (분리 측판에서 Y좌표 변환용)
     let lowerSectionHeight = 0;

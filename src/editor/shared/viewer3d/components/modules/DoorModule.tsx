@@ -1464,7 +1464,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                         view2DDirection={view2DDirection}
                       />
                     </>
-                  ) : isLowerCabinet ? (
+                  ) : isLowerCabinet && hingeMode !== 'lower4' ? (
                     // 하부장: 위에서 100mm, 아래에서 149mm
                     <>
                       <Hinge
@@ -1836,7 +1836,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                         view2DDirection={view2DDirection}
                       />
                     </>
-                  ) : isLowerCabinet ? (
+                  ) : isLowerCabinet && hingeMode !== 'lower4' ? (
                     // 하부장: 위에서 100mm, 아래에서 149mm
                     <>
                       <Hinge
@@ -2331,8 +2331,8 @@ const DoorModule: React.FC<DoorModuleProps> = ({
             {/* Hinges for single door - 상부장 2개, 하부장 2개, 키큰장 4개 (잠금 시 숨김) */}
             {viewMode === '2D' && !singleDoorLocked && (view2DDirection === 'front' || view2DDirection === 'left' || view2DDirection === 'right') && (
               <>
-                {isUpperCabinet ? (
-                  // 상부장: 위에서 100mm, 아래에서 100mm
+                {(isUpperCabinet || hingeMode === 'upper2') ? (
+                  // 상부장 또는 도어분절 상부도어: 위에서 100mm, 아래에서 100mm
                   <>
                     <Hinge
                       position={[
@@ -2359,7 +2359,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                       view2DDirection={view2DDirection}
                     />
                   </>
-                ) : isLowerCabinet ? (
+                ) : isLowerCabinet && hingeMode !== 'lower4' ? (
                   // 하부장: 위에서 100mm, 아래에서 149mm
                   <>
                     <Hinge
