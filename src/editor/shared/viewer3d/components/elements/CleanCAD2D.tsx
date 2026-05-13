@@ -7645,6 +7645,58 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   // 단내림 구간 높이 계산
                   const effectiveH = spaceInfo.height;
 
+                  // 도어분절 현관장(shelf-split): 도어 2장 치수 표시 (상부도어 + 하부도어)
+                  const isShelfSplitDoor = typeof doorModule.moduleId === 'string' && doorModule.moduleId.includes('shelf-split');
+                  if (isShelfSplitDoor) {
+                    const isFloorTypeS = !spaceInfo.baseConfig || spaceInfo.baseConfig.type === 'floor';
+                    const floorFinishForDoorS = (isFloorTypeS && spaceInfo.hasFloorFinish)
+                      ? (spaceInfo.floorFinish?.height || 0) : 0;
+                    const cabinetBottomAbsS = bottomFrameHeight + floorFinishForDoorS;
+                    const cabinetTopAbsS = effectiveH - (doorModule.topFrameThickness ?? (spaceInfo.frameSize?.top ?? 30));
+                    // 하부도어 절대좌표: 가구 바닥 ~ 가구 바닥+760
+                    const lowerDoorBottomAbs = cabinetBottomAbsS + (doorBottomGapVal || 0);
+                    const lowerDoorTopAbs = cabinetBottomAbsS + 760;
+                    const lowerDoorH = lowerDoorTopAbs - lowerDoorBottomAbs;
+                    // 상부도어 절대좌표: 가구 바닥+780 ~ 가구 천판
+                    const upperDoorBottomAbs = cabinetBottomAbsS + 780;
+                    const upperDoorTopAbs = cabinetTopAbsS - (doorTopGapVal || 0);
+                    const upperDoorH = upperDoorTopAbs - upperDoorBottomAbs;
+
+                    const lowerBY = mmToThreeUnits(lowerDoorBottomAbs);
+                    const lowerTY = mmToThreeUnits(lowerDoorTopAbs);
+                    const lowerMidY = (lowerBY + lowerTY) / 2;
+                    const upperBY = mmToThreeUnits(upperDoorBottomAbs);
+                    const upperTY = mmToThreeUnits(upperDoorTopAbs);
+                    const upperMidY = (upperBY + upperTY) / 2;
+
+                    const renderSplitDim = (bY: number, tY: number, midY: number, heightMm: number, key: string) => (
+                      <group key={key} name={`door-dimension-height-${key}`}>
+                        <Line points={[[0, bY, doorDimZ], [0, tY, doorDimZ]]} color={doorColor} lineWidth={0.6} />
+                        <Line points={createArrowHead([0, bY, doorDimZ], [0, bY + 0.015, doorDimZ])} color={doorColor} lineWidth={0.6} />
+                        <Line points={createArrowHead([0, tY, doorDimZ], [0, tY - 0.015, doorDimZ])} color={doorColor} lineWidth={0.6} />
+                        <Text
+                          renderOrder={100001} depthTest={false}
+                          position={[0, midY, doorDimZ + mmToThreeUnits(60)]}
+                          fontSize={baseFontSize} color={doorColor}
+                          anchorX="center" anchorY="middle"
+                          outlineWidth={textOutlineWidth} outlineColor={textOutlineColor}
+                          rotation={[0, -Math.PI / 2, -Math.PI / 2]}
+                        >
+                          {Math.round(heightMm)}
+                        </Text>
+                        <Line points={[[0, tY, spaceZOffset], [0, tY, doorDimZ - mmToThreeUnits(20)]]} color={doorColor} lineWidth={0.3} />
+                        <Line points={[[0, bY, spaceZOffset], [0, bY, doorDimZ - mmToThreeUnits(20)]]} color={doorColor} lineWidth={0.3} />
+                      </group>
+                    );
+
+                    return (
+                      <group name="door-dimension-height-split">
+                        {lowerDoorH > 0 && renderSplitDim(lowerBY, lowerTY, lowerMidY, lowerDoorH, 'lower')}
+                        {upperDoorH > 0 && renderSplitDim(upperBY, upperTY, upperMidY, upperDoorH, 'upper')}
+                      </group>
+                    );
+                  }
+
                   if (doorCategory === 'upper') {
                     // 상부장 도어 (몸통 기준, EP와 동일)
                     // doorHeight = 몸통H + 상단갭 + 하단갭
