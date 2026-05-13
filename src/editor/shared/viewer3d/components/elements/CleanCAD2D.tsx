@@ -7037,10 +7037,9 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         const textX = isLeftEnd
           ? moduleLeftX - textOffset
           : moduleRightX + textOffset;
-        // lineZ/textZ는 가구 앞쪽으로 약간 띄움 (가구 깊이의 절반 + 여유)
-        const depthMm = moduleData.dimensions?.depth || 365;
-        const lineZ = mmToThreeUnits(depthMm / 2 + 40);
-        const textZ = mmToThreeUnits(depthMm / 2 + 80);
+        // lineZ/textZ는 가구 측면(YZ 평면) 위에 평면적으로 — 가구 깊이 중앙(0)
+        const lineZ = 0;
+        const textZ = 0;
 
         return (
           <React.Fragment key={`glass-3d-side-split-${module.id}`}>
