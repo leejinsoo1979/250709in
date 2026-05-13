@@ -1636,13 +1636,8 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
           })();
           const isHighlightedBottom = isMultiSectionFurniture() ? highlightedSection === `${placedFurnitureId}-0` : false;
 
-          // 상부장 하부 EP 체크 해제 시 바닥판 렌더 안함
-          const isUpperCabinet =
-            moduleData?.category === 'upper' ||
-            !!moduleData?.id?.includes('upper-cabinet') ||
-            !!moduleData?.id?.startsWith('upper-');
-          const hasBottomEP = (currentPlacedModuleForBottomEP as any)?.hasBottomEndPanel !== false;
-          if (isUpperCabinet && !hasBottomEP) return null;
+          // 상부장 본체 바닥판(지판)은 항상 렌더링
+          // 하부 EP(별도 18mm 마감재)는 UpperCabinet 컴포넌트에서 hasBottomEndPanel로 별도 처리
 
           return (
             <BoxWithEdges
