@@ -1521,7 +1521,7 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
           : isDoorLift3Tier ? [315, doorLift3TierNotch2]
           : isDoorLift2Tier ? [doorLift2TierNotch]
           : isTopDown3Tier ? [225 + drawer3TierDelta - td3StretcherDeltaForNotch, 445 + drawer3TierDelta - td3StretcherDeltaForNotch, 665 + drawer3TierDelta - td3StretcherDeltaForNotch]
-          : isTopDown2Tier ? [300, 665]
+          : isTopDown2Tier ? [300, currentCabinetHmm - 120]
           : [drawer2TierFromBottom];
         const notchHeights = is3Tier ? [65, 65] : isDoorLift3Tier ? [65, 65] : isDoorLift2Tier ? [65] : isTopDown3Tier ? [65, 65, 65] : isTopDown2Tier ? [65, 65] : [65];
         const drawerCount = (is3Tier || isDoorLift3Tier || isTopDown3Tier) ? 3 : 2;
