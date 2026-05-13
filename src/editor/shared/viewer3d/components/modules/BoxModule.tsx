@@ -1391,6 +1391,32 @@ const BoxModule: React.FC<BoxModuleProps> = ({
                   furnitureId={placedFurnitureId}
                   textureUrl={baseFurniture.textureUrl}
                 />
+                {/* 가로부재 뒤쪽 수평 보강대 (전대) — 폭 innerWidth × 두께 18 × 깊이 80 */}
+                {(() => {
+                  const stretcherDepthMm = 80;
+                  const stretcherWidth = baseFurniture.innerWidth;
+                  const stretcherHeight = baseFurniture.basicThickness;
+                  const stretcherDepth = mmToUnits(stretcherDepthMm);
+                  // Y: 목찬넬 가로부재와 동일
+                  const stretcherY = horzY;
+                  // Z: 가로부재(z=40) 바로 뒤 → 가로부재 뒷면 z = depth/2 - 40,
+                  //    보강대 중심 z = (depth/2 - 40) - stretcherDepth/2
+                  const stretcherZ = baseFurniture.depth / 2 - mmToUnits(40) - stretcherDepth / 2;
+                  return (
+                    <BoxWithEdges
+                      args={[stretcherWidth, stretcherHeight, stretcherDepth]}
+                      position={[0, stretcherY, stretcherZ]}
+                      material={baseFurniture.material}
+                      renderMode={renderMode || useSpace3DView().renderMode}
+                      isDragging={isDragging}
+                      isEditMode={isEditMode}
+                      panelName="전대(분절후방)"
+                      panelGrainDirections={panelGrainDirections}
+                      furnitureId={placedFurnitureId}
+                      textureUrl={baseFurniture.textureUrl}
+                    />
+                  );
+                })()}
               </>
             );
           })()}
