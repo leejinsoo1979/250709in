@@ -5416,50 +5416,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 </>
               )}
 
-              {/* 상단몰딩/상단갭 구분 틱 & 치수 — 토글 OFF여도 사용자 입력 상단갭 표시 */}
-              {(() => {
-                const rUserTopGap = rightmostMod?.hasTopFrame === false
-                  ? Math.max(0, Math.round(rightmostMod?.topFrameGap ?? 0))
-                  : 0;
-                const rDisplayTopFrame = rightmostMod?.hasTopFrame === false
-                  ? rUserTopGap
-                  : rTopFrameH;
-                if (rDisplayTopFrame <= 0) return null;
-                const rTopFrameBottomRef = rightmostMod?.hasTopFrame === false
-                  ? rEffectiveCeilingY - mmToThreeUnits(rUserTopGap)
-                  : (rHasDualCabinet ? rUpperCabinetTopY : rFurnitureTopY);
-                return (
-                  <>
-                    <NativeLine name="dimension_line"
-                      points={[[rightInnerX, rTopFrameBottomRef, 0.003], [rightInnerX, rEffectiveCeilingY, 0.003]]}
-                      color={frameDimensionColor} lineWidth={0.8} renderOrder={100002} depthTest={false}
-                    />
-                    <NativeLine name="dimension_line"
-                      points={[[rightInnerX - mmToThreeUnits(15), rEffectiveCeilingY, 0.002], [rightInnerX + mmToThreeUnits(15), rEffectiveCeilingY, 0.002]]}
-                      color={frameDimensionColor} lineWidth={0.6} renderOrder={100000} depthTest={false}
-                    />
-                    <NativeLine name="dimension_line"
-                      points={[[rightInnerX - mmToThreeUnits(15), rTopFrameBottomRef, 0.002], [rightInnerX + mmToThreeUnits(15), rTopFrameBottomRef, 0.002]]}
-                      color={frameDimensionColor} lineWidth={0.6} renderOrder={100000} depthTest={false}
-                    />
-                    <NativeLine name="dimension_line"
-                      points={[[rightInnerX + mmToThreeUnits(20), rEffectiveCeilingY, 0.003], [rightWallX, rEffectiveCeilingY, 0.003]]}
-                      color={frameDimensionColor} lineWidth={0.6} renderOrder={100002} depthTest={false}
-                    />
-                    <NativeLine name="dimension_line"
-                      points={[[rightInnerX + mmToThreeUnits(20), rTopFrameBottomRef, 0.003], [rightWallX, rTopFrameBottomRef, 0.003]]}
-                      color={frameDimensionColor} lineWidth={0.6} renderOrder={100002} depthTest={false}
-                    />
-                    <Text renderOrder={100001} depthTest={false}
-                      position={[rightInnerX + mmToThreeUnits(10), (rTopFrameBottomRef + rEffectiveCeilingY) / 2, 0.01]}
-                      fontSize={baseFontSize} color={frameDimensionColor} anchorX="left" anchorY="middle"
-                      outlineWidth={textOutlineWidth} outlineColor={textOutlineColor}
-                    >
-                      {rDisplayTopFrame}
-                    </Text>
-                  </>
-                );
-              })()}
+              {/* 우측 상단몰딩/상단갭 표시 — 좌측에 이미 표시되어 중복이므로 숨김 */}
+              {/* (좌·우 가구가 다른 갭을 가질 가능성은 낮고, 사용자 요청으로 우측 표시 제거) */}
               </>)}
 
               {/* 커튼박스(droppedCeiling) 구간 치수는 표시하지 않음 */}
