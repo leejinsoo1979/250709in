@@ -1443,7 +1443,8 @@ const BoxModule: React.FC<BoxModuleProps> = ({
           // - 상부도어 하단 = 800 - 20 = 780mm (하부섹션 상단에서 20mm 아래)
           // - 도어 사이 갭 = 780 - 760 = 20mm
           if (moduleData?.id?.includes('shelf-split')) {
-            const cabinetH = moduleData.dimensions.height;
+            // 실제 가구 H 사용 (internalHeight = 토글 흡수 포함 실측 H)
+            const cabinetH = internalHeight ?? moduleData.dimensions.height;
             const lowerSectionTopMm = 800; // 하부섹션 몸통 상단
             const lowerDoorTopMm = lowerSectionTopMm - 40; // 760mm
             const upperDoorBottomMm = lowerSectionTopMm - 20; // 780mm
