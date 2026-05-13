@@ -1232,6 +1232,23 @@ const BoxModule: React.FC<BoxModuleProps> = ({
 
     // 전면 프레임 폭: 외경 폭 그대로 (좌우로 EP 두께만큼 더 늘려서 가구 양 끝까지)
     const frontFrameWidth = moduleW;
+
+    // 상단 프레임 / 걸레받이: 전면 프레임과 동일한 Z 위치, 폭=가구 외경, 두께=18mm, 깊이=18mm
+    //   상단 프레임 size = spaceInfo.frameSize.top (기본 30)
+    //   걸레받이 size = spaceInfo.baseConfig.height (floor 타입일 때만, 기본 65)
+    const topFrameMmIF = spaceInfo.frameSize?.top ?? 30;
+    const baseFrameMmIF = spaceInfo.baseConfig?.type === 'floor'
+      ? (spaceInfo.baseConfig?.height ?? 65)
+      : 0;
+    const topFrameH = mmTo(topFrameMmIF);
+    const baseFrameH = mmTo(baseFrameMmIF);
+    // 공간 좌표계: 공간 상단 Y = fullYOffset + fullHeight/2
+    //              공간 바닥(floor finish 위) Y = fullYOffset - fullHeight/2 + mmTo(floorFinishMm)
+    const spaceTopY = fullYOffset + fullHeight / 2;
+    const spaceBottomY = fullYOffset - fullHeight / 2 + mmTo(floorFinishMm);
+    const topFrameCenterY = spaceTopY - topFrameH / 2;
+    const baseFrameCenterY = spaceBottomY + baseFrameH / 2;
+
     return (
       <>
         {/* 앞면 프레임 (PET) - 좌우 EP 사이, 가구 중앙에 위치, 윤곽선 포함 */}
@@ -1244,6 +1261,30 @@ const BoxModule: React.FC<BoxModuleProps> = ({
           panelName="Insert전면프레임"
           furnitureId={placedFurnitureId}
         />
+        {/* 상단 프레임 (PET) - 전면 프레임과 동일한 Z 위치 */}
+        {topFrameMmIF > 0 && (
+          <BoxWithEdges
+            args={[frontFrameWidth, topFrameH, PT_THREE]}
+            position={[0, topFrameCenterY, frontFrameZ]}
+            material={insertFrameMaterial}
+            isDragging={isDragging}
+            isEditMode={isEditMode}
+            panelName="Insert상단프레임"
+            furnitureId={placedFurnitureId}
+          />
+        )}
+        {/* 걸레받이 (PET) - 전면 프레임과 동일한 Z 위치 */}
+        {baseFrameMmIF > 0 && (
+          <BoxWithEdges
+            args={[frontFrameWidth, baseFrameH, PT_THREE]}
+            position={[0, baseFrameCenterY, frontFrameZ]}
+            material={insertFrameMaterial}
+            isDragging={isDragging}
+            isEditMode={isEditMode}
+            panelName="Insert걸레받이"
+            furnitureId={placedFurnitureId}
+          />
+        )}
         {/* 좌측 EP (PET) - 윤곽선 포함 (깊이 18mm 줄임) */}
         <BoxWithEdges
           args={[PT_THREE, fullHeight, epDepth]}
