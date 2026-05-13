@@ -1282,6 +1282,8 @@ const BoxModule: React.FC<BoxModuleProps> = ({
           panelGrainDirections={panelGrainDirections}
           moduleData={moduleData}
           lowerSectionTopOffsetMm={(moduleData?.id?.includes('entryway-h')) ? 85 : (lowerSectionTopOffset || 0)}
+          // 유리장 천판은 앞쪽 50mm 들이기 (브론즈 도어 위쪽 공간 확보)
+          topPanelFrontReduction={moduleData?.id?.includes('glass-cabinet') ? 50 : 0}
           {...(moduleData?.id?.includes('shelf-split') ? {
             // 도어분절 현관장: 하부섹션 상단(860 - 80 = 780) 측판 따내기 80mm
             sideNotches: [{ y: 80, z: 40, fromBottom: 780 }],
