@@ -242,9 +242,12 @@ const computeFurnitureHeightMm = (
   // moduleData.dimensions.height는 이미 띄움 차감된 값이지만, 위 분기에서 보정 식으로 다시 200이 더해진 경우가 있어 명시적으로 보정
   if (isGlassCabinet) {
     const glassFloatMm = (mod as any).individualFloatHeight ?? (moduleData as any)?.individualFloatHeight ?? 200;
-    const topFrameMm = mod.topFrameThickness ?? (spaceInfo.frameSize?.top ?? 30);
-    // 유리장 가구 외경 = 공간높이 - 상부몰딩 - 띄움
-    const expectedGlassHeight = Math.max(0, spaceInfo.height - topFrameMm - glassFloatMm);
+    const topFrameMm = (mod as any).hasTopFrame === false
+      ? 0
+      : (mod.topFrameThickness ?? (spaceInfo.frameSize?.top ?? 30));
+    const topGapMm = Math.max(0, Math.round((mod as any).topFrameGap ?? 0));
+    // 유리장 가구 외경 = 공간높이 - 상부몰딩 - 상단갭 - 띄움
+    const expectedGlassHeight = Math.max(0, spaceInfo.height - topFrameMm - topGapMm - glassFloatMm);
     // customHeight/freeHeight가 명시되면 그것을 우선
     const manualH = mod.customHeight || mod.freeHeight;
     heightMm = manualH || expectedGlassHeight;

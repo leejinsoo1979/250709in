@@ -4037,10 +4037,14 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             } else if (leftmostMod.customHeight) {
               furnitureH = leftmostMod.customHeight;
             } else if (isLeftGlassForH) {
-              // 유리장: 공간 - 상단몰딩 - 띄움 (걸래받이 자리는 띄움이 흡수)
+              // 유리장: 공간 - 상단몰딩(전역 우선) - 상단갭 - 띄움 (걸래받이 자리는 띄움이 흡수)
               const floatMm = (leftmostMod as any).individualFloatHeight
                 ?? (leftModDataForCat as any)?.individualFloatHeight ?? 200;
-              furnitureH = Math.max(0, effectiveH - actualTopSize - floatMm);
+              const topFrameMm = leftmostMod?.hasTopFrame === false
+                ? 0
+                : (leftmostMod?.topFrameThickness ?? globalTopFrame ?? 0);
+              const topGapMm = Math.max(0, Math.round(leftmostMod?.topFrameGap ?? 0));
+              furnitureH = Math.max(0, effectiveH - topFrameMm - topGapMm - floatMm);
             } else {
               if (leftCategoryResolved === 'lower' || leftCategoryResolved === 'upper') {
                 furnitureH = leftModDataForCat?.dimensions.height ?? Math.max(0, effectiveH - actualBottomSize - actualTopSize);
@@ -4871,10 +4875,14 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             } else if (rightmostMod.customHeight) {
               rFurnitureH = rightmostMod.customHeight;
             } else if (isRightGlassForH) {
-              // 유리장: 공간 - 상단몰딩 - 띄움 (걸래받이 자리는 띄움이 흡수)
+              // 유리장: 공간 - 상단몰딩(전역 우선) - 상단갭 - 띄움 (걸래받이 자리는 띄움이 흡수)
               const floatMm = (rightmostMod as any).individualFloatHeight
                 ?? (rightModDataForCat as any)?.individualFloatHeight ?? 200;
-              rFurnitureH = Math.max(0, rEffectiveH - rActualTopSize - floatMm);
+              const topFrameMm = topRefMod_R?.hasTopFrame === false
+                ? 0
+                : (topRefMod_R?.topFrameThickness ?? rGlobalTopFrame ?? 0);
+              const topGapMm = Math.max(0, Math.round(rightmostMod?.topFrameGap ?? 0));
+              rFurnitureH = Math.max(0, rEffectiveH - topFrameMm - topGapMm - floatMm);
             } else {
               if (rightCategoryResolved === 'lower' || rightCategoryResolved === 'upper') {
                 rFurnitureH = rightModDataForCat?.dimensions.height ?? Math.max(0, rEffectiveH - rActualBottomSize - rActualTopSize);
@@ -6817,8 +6825,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         const moduleData = getModuleById(mid, calculateInternalSpace(spaceInfo), spaceInfo);
         if (!moduleData) return null;
 
-        // 유리장 외경 H
-        const glassH = (module as any).customHeight ?? (module as any).freeHeight ?? moduleData.dimensions?.height ?? 1920;
+        // 유리장 외경 H — 상부몰딩 ON/OFF 즉시 반영 (spaceInfo 기반 동적 계산)
+        const glassH = resolveGlassCabinetBodyHeightMm(module, moduleData);
         // 유리장 바닥 절대 Y(mm) = 바닥마감재 + 띄움
         const floorFinishMm = spaceInfo.hasFloorFinish && spaceInfo.floorFinish?.height ? spaceInfo.floorFinish.height : 0;
         const floatMm = (module as any).individualFloatHeight ?? 200;
