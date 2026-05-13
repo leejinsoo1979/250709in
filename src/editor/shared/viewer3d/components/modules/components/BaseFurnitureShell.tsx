@@ -2673,6 +2673,92 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                   />
                 );
               })()}
+
+              {/* 유리 선반 2개 — 천판 하단으로부터 300mm 간격, 도어와 동일한 금속프레임+유리 (CNC 제외) */}
+              {(() => {
+                const SHELF_SPACING_MM = 300;
+                const SHELF_FRAME_WIDTH_MM = 25;
+                const SHELF_FRAME_THICK_MM = 18;
+                const GLASS_THICKNESS_MM = 5;
+                const FRONT_OFFSET_MM = 50; // 천판과 동일한 앞 옵셋
+                const BACK_REDUCTION_MM = (basicThickness / 0.01) - 1; // 천판 backReduction과 동일 (백패널 옵셋)
+
+                const fW = mmToThreeUnits(SHELF_FRAME_WIDTH_MM);
+                const fT = mmToThreeUnits(SHELF_FRAME_THICK_MM);
+                const gT = mmToThreeUnits(GLASS_THICKNESS_MM);
+
+                // 선반 폭 = 측판 사이 (innerWidth - 측판두께 ×2가 아니라, 유리장은 가구 측판이 곧 외측이므로 innerWidth)
+                const shelfW = innerWidth;
+                // 선반 깊이 = 천판과 동일 (depth - backReduction - frontReduction)
+                const shelfD = depth - mmToThreeUnits(BACK_REDUCTION_MM) - mmToThreeUnits(FRONT_OFFSET_MM);
+                // 선반 중심 Z = 천판과 동일
+                const shelfCenterZ = (mmToThreeUnits(BACK_REDUCTION_MM) - mmToThreeUnits(FRONT_OFFSET_MM)) / 2;
+
+                // 천판 하단 Y
+                const topPanelBottomY = height / 2 - basicThickness;
+
+                // 선반 프레임 재질 (도어와 동일 브론즈)
+                const shelfFrameMaterial = new THREE.MeshStandardMaterial({
+                  color: 0x918878,
+                  metalness: 0.85,
+                  roughness: 0.4,
+                });
+                // 선반 유리 재질 (도어와 동일)
+                const shelfGlassMaterial = new THREE.MeshPhysicalMaterial({
+                  color: 0x4a2e1c,
+                  transparent: true,
+                  opacity: 0.38,
+                  roughness: 0.08,
+                  metalness: 0.0,
+                  transmission: 0.4,
+                  thickness: 0.5,
+                  ior: 1.45,
+                  side: THREE.DoubleSide,
+                });
+
+                // 내부 유리 크기 (프레임 25mm씩 안쪽)
+                const innerW = shelfW - 2 * fW;
+                const innerD = shelfD - 2 * fW;
+
+                return (
+                  <>
+                    {[1, 2].map((n) => {
+                      // 선반 윗면 = 천판 하단 - n × 300mm → 중심 Y = 윗면 - 두께/2
+                      const shelfTopY = topPanelBottomY - mmToThreeUnits(SHELF_SPACING_MM * n);
+                      const shelfCenterY = shelfTopY - fT / 2;
+                      return (
+                        <group key={`glass-shelf-${n}`}>
+                          {/* 앞 프레임 (가로 막대) */}
+                          <mesh position={[0, shelfCenterY, shelfCenterZ + shelfD / 2 - fW / 2]} userData={{ skipCNC: true }}>
+                            <boxGeometry args={[shelfW, fT, fW]} />
+                            <primitive object={shelfFrameMaterial} attach="material" />
+                          </mesh>
+                          {/* 뒤 프레임 */}
+                          <mesh position={[0, shelfCenterY, shelfCenterZ - shelfD / 2 + fW / 2]} userData={{ skipCNC: true }}>
+                            <boxGeometry args={[shelfW, fT, fW]} />
+                            <primitive object={shelfFrameMaterial} attach="material" />
+                          </mesh>
+                          {/* 좌 프레임 */}
+                          <mesh position={[-shelfW / 2 + fW / 2, shelfCenterY, shelfCenterZ]} userData={{ skipCNC: true }}>
+                            <boxGeometry args={[fW, fT, shelfD - 2 * fW]} />
+                            <primitive object={shelfFrameMaterial} attach="material" />
+                          </mesh>
+                          {/* 우 프레임 */}
+                          <mesh position={[shelfW / 2 - fW / 2, shelfCenterY, shelfCenterZ]} userData={{ skipCNC: true }}>
+                            <boxGeometry args={[fW, fT, shelfD - 2 * fW]} />
+                            <primitive object={shelfFrameMaterial} attach="material" />
+                          </mesh>
+                          {/* 유리판 (중앙) */}
+                          <mesh position={[0, shelfCenterY, shelfCenterZ]} userData={{ skipCNC: true }}>
+                            <boxGeometry args={[innerW, gT, innerD]} />
+                            <primitive object={shelfGlassMaterial} attach="material" />
+                          </mesh>
+                        </group>
+                      );
+                    })}
+                  </>
+                );
+              })()}
             </>
           );
         })()}
