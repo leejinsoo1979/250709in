@@ -437,12 +437,28 @@ export function useLivePanelData() {
         // 또한 width나 depth 속성이 있어야 실제 패널로 간주
         // 유리장: 도어(금속 프레임+브라운 유리)는 별도 제작이므로 CNC 패널 추출 제외
         const isGlassCabinet = moduleData?.id?.includes('glass-cabinet');
-        const modulePanels = allPanelsList.filter((item: any) => {
+        let modulePanels = allPanelsList.filter((item: any) => {
           const isNotHeader = item.name && !item.name.includes('===');
           const hasValidDimensions = item.width !== undefined || item.depth !== undefined;
           const isGlassDoor = isGlassCabinet && item.name && (item.name.includes('도어') || item.name.includes('Door'));
           return isNotHeader && hasValidDimensions && !isStonePanel(item) && !isGlassDoor;
         });
+
+        // 유리장: 백패널은 서랍모듈 뒤(서랍 측판 H=500) 영역만 포함, 후면 보강대는 제외
+        if (isGlassCabinet) {
+          const GLASS_DRAWER_SIDE_H = 500;
+          modulePanels = modulePanels.filter((item: any) => {
+            // 후면 보강대 제거 (서랍 위/아래 영역에 위치)
+            if (item.name && item.name.includes('후면 보강대')) return false;
+            return true;
+          }).map((item: any) => {
+            // 백패널 높이를 서랍 영역 크기로 축소 (+10mm extension 유지)
+            if (item.name && item.name.includes('백패널')) {
+              return { ...item, height: GLASS_DRAWER_SIDE_H + 10 };
+            }
+            return item;
+          });
+        }
 
         console.log(`Module ${moduleIndex}: Filtered ${modulePanels.length} actual panels (excluding ${allPanelsList.length - modulePanels.length} section headers)`);
 
@@ -1241,12 +1257,26 @@ export function usePanelSubscription(callback: (panels: Panel[]) => void) {
       // 또한 width나 depth 속성이 있어야 실제 패널로 간주
       // 유리장: 도어(금속 프레임+브라운 유리) 별도 제작 → CNC 추출 제외
       const isGlassCabinetForFilter = moduleData?.id?.includes('glass-cabinet');
-      const modulePanels = allPanelsList.filter((item: any) => {
+      let modulePanels = allPanelsList.filter((item: any) => {
         const isNotHeader = item.name && !item.name.includes('===');
         const hasValidDimensions = item.width !== undefined || item.depth !== undefined;
         const isGlassDoor = isGlassCabinetForFilter && item.name && (item.name.includes('도어') || item.name.includes('Door'));
         return isNotHeader && hasValidDimensions && !isStonePanel(item) && !isGlassDoor;
       });
+
+      // 유리장: 백패널은 서랍모듈 뒤(서랍 측판 H=500) 영역만 포함, 후면 보강대는 제외
+      if (isGlassCabinetForFilter) {
+        const GLASS_DRAWER_SIDE_H = 500;
+        modulePanels = modulePanels.filter((item: any) => {
+          if (item.name && item.name.includes('후면 보강대')) return false;
+          return true;
+        }).map((item: any) => {
+          if (item.name && item.name.includes('백패널')) {
+            return { ...item, height: GLASS_DRAWER_SIDE_H + 10 };
+          }
+          return item;
+        });
+      }
 
       // 패널 결방향 정보 가져오기
       const panelGrainDirections = placedModule.panelGrainDirections || {};
