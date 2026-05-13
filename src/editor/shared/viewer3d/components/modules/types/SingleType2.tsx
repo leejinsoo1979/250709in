@@ -78,17 +78,6 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
       _shelfFloatAbsorbedMm = _globalFloatMm;
     }
   }
-  if (_isPlainShelf) {
-    console.log('🟦 SingleType2 분배:', {
-      id: _midForAbsorb,
-      hasBase,
-      individualFloatHeight,
-      baseHeight: spaceInfo?.baseConfig?.height,
-      _shelfBaseAbsorbedMm,
-      _shelfFloatAbsorbedMm,
-    });
-  }
-
   // 공통 로직 사용
   const baseFurniture = useBaseFurniture(moduleData, {
     color,

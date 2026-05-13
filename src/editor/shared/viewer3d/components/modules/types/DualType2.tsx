@@ -77,14 +77,6 @@ const DualType2: React.FC<FurnitureTypeProps> = ({
       _shelfFloatAbsorbedMm = _globalFloatMm;
     }
   }
-  if (_isPlainShelf) {
-    console.log('🟫 DualType2 분배:', {
-      id: _midForAbsorb,
-      hasBase,
-      _shelfBaseAbsorbedMm,
-      _shelfFloatAbsorbedMm,
-    });
-  }
 
   // 공통 로직 사용
   const baseFurniture = useBaseFurniture(moduleData, {

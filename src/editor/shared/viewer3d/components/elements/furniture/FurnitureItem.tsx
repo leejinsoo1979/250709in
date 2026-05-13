@@ -3733,14 +3733,6 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
               // removeUpperSafetyShelf 토글 변경 시에도 BoxModule 리마운트 (편집 중 고스트 실시간 반영)
               const removeUpperSafetyShelfKey = placedModule.removeUpperSafetyShelf ? '1' : '0';
               const furnitureHeightKey = Math.round(furnitureHeightMm || 0);
-              if (typeof placedModule.moduleId === 'string' && placedModule.moduleId.includes('-shelf-')) {
-                console.log('🟥 FurnitureItem→BoxModule:', {
-                  id: placedModule.moduleId,
-                  hasBase: placedModule.hasBase,
-                  individualFloatHeight: placedModule.individualFloatHeight,
-                  furnitureHeightMm,
-                });
-              }
               return (
                 <BoxModule
                   key={`boxmodule-${placedModule.id}-h${furnitureHeightKey}-${customSectionsKey}-rus${removeUpperSafetyShelfKey}`}
