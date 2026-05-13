@@ -64,14 +64,15 @@ const TileBackPanelMesh: React.FC<{
       {texture ? (
         <meshStandardMaterial
           map={texture}
-          roughness={0.6}
+          color={0x666666}
+          roughness={0.75}
           metalness={0.05}
           polygonOffset
           polygonOffsetFactor={-1}
           polygonOffsetUnits={-1}
         />
       ) : (
-        <meshStandardMaterial color={0xcccccc} />
+        <meshStandardMaterial color={0x666666} />
       )}
     </mesh>
   );
