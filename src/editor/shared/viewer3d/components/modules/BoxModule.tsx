@@ -1286,8 +1286,8 @@ const BoxModule: React.FC<BoxModuleProps> = ({
           moduleData={moduleData}
           lowerSectionTopOffsetMm={(moduleData?.id?.includes('entryway-h')) ? 85 : (lowerSectionTopOffset || 0)}
           {...(moduleData?.id?.includes('shelf-split') ? {
-            // 도어분절 현관장: 하부섹션 상단(860 - 60 = 800) 측판 따내기 60mm
-            sideNotches: [{ y: 60, z: 40, fromBottom: 800 }],
+            // 도어분절 현관장: 하부섹션 상단(860 - 80 = 780) 측판 따내기 80mm
+            sideNotches: [{ y: 80, z: 40, fromBottom: 780 }],
             disableAutoSideNotchStretcher: true,
           } : {})}
         >
@@ -1354,8 +1354,8 @@ const BoxModule: React.FC<BoxModuleProps> = ({
           {/* 도어분절 현관장: 하부섹션 상단(800mm)에 ㄱ자 목찬넬 (가로 + 수직) */}
           {moduleData?.id?.includes('shelf-split') && (() => {
             const mmToUnits = (mm: number) => mm * 0.01;
-            const notchHeightMm = 60;
-            const notchFromBottomMm = 800;
+            const notchHeightMm = 80;
+            const notchFromBottomMm = 780;
             const basicThicknessMm = baseFurniture.basicThickness / 0.01;
             // 목찬넬 폭: 측판 따내기(z=40mm, 깊이방향) 안쪽으로 측판 두께만큼 좌·우 양옆 확장 → 끼워짐
             const frameWidth = baseFurniture.innerWidth + 2 * baseFurniture.basicThickness;
