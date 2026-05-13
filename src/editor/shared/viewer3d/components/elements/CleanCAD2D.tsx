@@ -7645,8 +7645,9 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   // 단내림 구간 높이 계산
                   const effectiveH = spaceInfo.height;
 
-                  // 도어분절 현관장(shelf-split): 도어 2장 치수 표시 (상부도어 + 하부도어)
-                  const isShelfSplitDoor = typeof doorModule.moduleId === 'string' && doorModule.moduleId.includes('shelf-split');
+                  // 도어분절 가구(shelf-split / pantry-cabinet-split): 도어 2장 치수 표시
+                  const isShelfSplitDoor = typeof doorModule.moduleId === 'string' &&
+                    (doorModule.moduleId.includes('shelf-split') || doorModule.moduleId.includes('pantry-cabinet-split'));
                   if (isShelfSplitDoor) {
                     const isFloorTypeS = !spaceInfo.baseConfig || spaceInfo.baseConfig.type === 'floor';
                     const floorFinishForDoorS = (isFloorTypeS && spaceInfo.hasFloorFinish)

@@ -1461,12 +1461,13 @@ const BoxModule: React.FC<BoxModuleProps> = ({
 
         // 2D 모드에서 showFurniture가 false여도 도어는 렌더링
         if (hasDoor && spaceInfo) {
-          // 도어분절 현관장(shelf-split): 도어를 상/하 두 장으로 분할
+          // 도어분절 가구(shelf-split / pantry-cabinet-split): 도어를 상/하 두 장으로 분할
           // - 하부섹션 몸통 상단 = 800mm
           // - 하부도어 상단 = 800 - 40 = 760mm (하부섹션 상단에서 40mm 아래)
           // - 상부도어 하단 = 800 - 20 = 780mm (하부섹션 상단에서 20mm 아래)
           // - 도어 사이 갭 = 780 - 760 = 20mm
-          if (moduleData?.id?.includes('shelf-split')) {
+          const isDoorSplitModule = moduleData?.id?.includes('shelf-split') || moduleData?.id?.includes('pantry-cabinet-split');
+          if (isDoorSplitModule) {
             // 실제 가구 H 사용 (internalHeight = 토글 흡수 포함 실측 H)
             const cabinetH = internalHeight ?? moduleData.dimensions.height;
             const lowerSectionTopMm = 860; // 하부섹션 몸통 상단 (= 하부섹션 H)

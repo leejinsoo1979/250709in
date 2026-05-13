@@ -35,6 +35,8 @@ const FURNITURE_ICONS: Record<string, string> = {
   'dual-glass-cabinet': getImagePath('glass_dual.png'),
   'single-pull-out-cabinet': getImagePath('microwave.png'),
   'single-pantry-cabinet': getImagePath('pantry.png'),
+  'single-pantry-cabinet-split': getImagePath('pantry.png'),
+  'dual-pantry-cabinet-split': getImagePath('pantry.png'),
   'single-fridge-cabinet': getImagePath('single_builtin.png'),
   'single-2drawer-hanging': getImagePath('single-2drawer-hanging.png'),
   'single-2hanging': getImagePath('single-2hanging.png'),
