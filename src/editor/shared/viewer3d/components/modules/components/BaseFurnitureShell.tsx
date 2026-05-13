@@ -16,14 +16,55 @@ import { VentilationCap } from './VentilationCap';
 
 // 유리장 타일 텍스처 (모듈 레벨 캐싱)
 let GLASS_TILE_TEXTURE: THREE.Texture | null = null;
-const getGlassTileTexture = (): THREE.Texture => {
-  if (GLASS_TILE_TEXTURE) return GLASS_TILE_TEXTURE;
+const getGlassTileTexture = (onLoad?: () => void): THREE.Texture => {
+  if (GLASS_TILE_TEXTURE) {
+    if (GLASS_TILE_TEXTURE.image && onLoad) onLoad();
+    return GLASS_TILE_TEXTURE;
+  }
   const loader = new THREE.TextureLoader();
-  const tex = loader.load('/materials/tyle2.png');
+  const tex = loader.load('/materials/tyle2.png', (loaded) => {
+    loaded.needsUpdate = true;
+    if (onLoad) onLoad();
+  });
   tex.wrapS = THREE.RepeatWrapping;
   tex.wrapT = THREE.RepeatWrapping;
   GLASS_TILE_TEXTURE = tex;
   return tex;
+};
+
+// 타일 백패널 mesh 컴포넌트 — 텍스처 로드 후 강제 리렌더
+const TileBackPanelMesh: React.FC<{
+  position: [number, number, number];
+  args: [number, number, number];
+  widthMm: number;
+  heightMm: number;
+}> = ({ position, args, widthMm, heightMm }) => {
+  const [, force] = React.useState(0);
+  const matRef = React.useRef<THREE.MeshStandardMaterial | null>(null);
+
+  if (!matRef.current) {
+    const tex = getGlassTileTexture(() => force(n => n + 1));
+    const cloned = tex.clone();
+    cloned.wrapS = THREE.RepeatWrapping;
+    cloned.wrapT = THREE.RepeatWrapping;
+    cloned.repeat.set(Math.max(1, widthMm / 200), Math.max(1, heightMm / 200));
+    cloned.needsUpdate = true;
+    matRef.current = new THREE.MeshStandardMaterial({
+      map: cloned,
+      roughness: 0.6,
+      metalness: 0.05,
+    });
+  } else if (matRef.current.map) {
+    matRef.current.map.repeat.set(Math.max(1, widthMm / 200), Math.max(1, heightMm / 200));
+    matRef.current.map.needsUpdate = true;
+  }
+
+  return (
+    <mesh position={position} userData={{ skipCNC: true }}>
+      <boxGeometry args={args} />
+      <primitive object={matRef.current} attach="material" />
+    </mesh>
+  );
 };
 
 // 점선을 수동으로 그리는 컴포넌트
@@ -2841,38 +2882,25 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                 const upperH = cabinetTopBottomY - sideTopY;
                 const upperCY = (sideTopY + cabinetTopBottomY) / 2;
 
-                // 재질 (각 영역별로 repeat 다름)
-                const makeTileMat = (widthMm: number, heightMm: number) => {
-                  const t = getGlassTileTexture().clone();
-                  t.wrapS = THREE.RepeatWrapping;
-                  t.wrapT = THREE.RepeatWrapping;
-                  // 타일 1장 = 약 200mm × 200mm 가정
-                  t.repeat.set(Math.max(1, widthMm / 200), Math.max(1, heightMm / 200));
-                  t.needsUpdate = true;
-                  return new THREE.MeshStandardMaterial({
-                    map: t,
-                    roughness: 0.6,
-                    metalness: 0.05,
-                  });
-                };
-
-                const widthMm = (innerWidth + mmToThreeUnits(10)) / 0.01;
-                const lowerMat = lowerH > 0 ? makeTileMat(widthMm, lowerH / 0.01) : null;
-                const upperMat = upperH > 0 ? makeTileMat(widthMm, upperH / 0.01) : null;
+                const widthMm = (tileBackW) / 0.01;
 
                 return (
                   <>
-                    {lowerH > 0 && lowerMat && (
-                      <mesh position={[0, lowerCY, tileBackZ]} userData={{ skipCNC: true }}>
-                        <boxGeometry args={[tileBackW, lowerH, tileBackThk]} />
-                        <primitive object={lowerMat} attach="material" />
-                      </mesh>
+                    {lowerH > 0 && (
+                      <TileBackPanelMesh
+                        position={[0, lowerCY, tileBackZ]}
+                        args={[tileBackW, lowerH, tileBackThk]}
+                        widthMm={widthMm}
+                        heightMm={lowerH / 0.01}
+                      />
                     )}
-                    {upperH > 0 && upperMat && (
-                      <mesh position={[0, upperCY, tileBackZ]} userData={{ skipCNC: true }}>
-                        <boxGeometry args={[tileBackW, upperH, tileBackThk]} />
-                        <primitive object={upperMat} attach="material" />
-                      </mesh>
+                    {upperH > 0 && (
+                      <TileBackPanelMesh
+                        position={[0, upperCY, tileBackZ]}
+                        args={[tileBackW, upperH, tileBackThk]}
+                        widthMm={widthMm}
+                        heightMm={upperH / 0.01}
+                      />
                     )}
                   </>
                 );
