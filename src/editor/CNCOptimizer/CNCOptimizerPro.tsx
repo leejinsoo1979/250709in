@@ -953,83 +953,84 @@ function PageInner(){
       }
 
       // ★ 확장 패널 그룹 옵티마이즈 (1220×2750 / 1220×3050 두 단계)
-      const optimizeExtGroup = async (extGroups: Map<string, Panel[]>, extLen: number) => {
-       for (const [key, groupPanels] of extGroups) {
-        let material: string | undefined;
-        let thickness: number;
-        if (key.startsWith('THICKNESS_')) {
-          thickness = parseFloat(key.split('_')[1]) || 18;
-        } else {
-          const parts = key.split('_');
-          material = parts[0];
-          thickness = parseFloat(parts[1]) || 18;
-        }
-        // 확장 자재 stockPanel (1220×extLen, 라벨에 '비규격' 표시)
-        const extStockPanel = {
-          id: `ext-${material || 'PB'}-${thickness}-${extLen}`,
-          width: defaultStockW,
-          height: extLen,
-          material: material || 'PB',
-          color: 'MW',
-          price: 0,
-          stock: 999,
-          thickness,
-          label: `비규격 ${defaultStockW}×${extLen}`,
-        } as any;
-        const extOptimizerPanels = groupPanels.map(p => ({
-          id: p.id,
-          name: p.label,
-          width: p.width,
-          height: p.length,
-          thickness: p.thickness,
-          quantity: p.quantity,
-          material: p.material || 'PB',
-          color: 'MW',
-          grain: p.grain === 'H' ? 'HORIZONTAL' : p.grain === 'V' ? 'VERTICAL' : 'VERTICAL',
-          canRotate: p.canRotate,
-          boringPositions: p.boringPositions,
-          boringDepthPositions: p.boringDepthPositions,
-          groovePositions: p.groovePositions,
-          screwPositions: p.screwPositions,
-          screwDepthPositions: p.screwDepthPositions,
-          isDoor: p.isDoor,
-          isLeftHinge: p.isLeftHinge,
-          screwHoleSpacing: p.screwHoleSpacing,
-          bracketBoringPositions: p.bracketBoringPositions,
-          bracketBoringDepthPositions: p.bracketBoringDepthPositions,
-          isBracketSide: p.isBracketSide,
-          cornerNotch: p.cornerNotch,
-          sideNotches: p.sideNotches,
-          rebate: p.rebate,
-          meshName: p.meshName,
-          furnitureId: p.furnitureId,
-        }));
-        const adjustedExtStock = {
-          ...extStockPanel,
-          width: extStockPanel.width - (settings.trimLeft || 10) - (settings.trimRight || 10),
-          height: extStockPanel.height - (settings.trimTop || 10) - (settings.trimBottom || 10),
-        };
-        const extResults = await optimizePanelsMultiple(
-          extOptimizerPanels as any,
-          adjustedExtStock,
-          settings.singleSheetOnly ? 1 : 999,
-          settings.alignVerticalCuts !== false,
-          settings.kerf || 5,
-          effectiveOptimizationType
-        );
-        extResults.forEach(result => {
-          result.panels.forEach(panel => {
-            panel.x += (settings.trimLeft || 10);
-            panel.y += (settings.trimBottom || 10);
+      const extGroupsList: Array<[Map<string, Panel[]>, number]> = [
+        [extPanelGroups2750, extendedStockL_2750],
+        [extPanelGroups3050, extendedStockL_3050],
+      ];
+      for (const [extGroups, extLen] of extGroupsList) {
+        for (const [key, groupPanels] of extGroups) {
+          let material: string | undefined;
+          let thickness: number;
+          if (key.startsWith('THICKNESS_')) {
+            thickness = parseFloat(key.split('_')[1]) || 18;
+          } else {
+            const parts = key.split('_');
+            material = parts[0];
+            thickness = parseFloat(parts[1]) || 18;
+          }
+          const extStockPanel: any = {
+            id: `ext-${material || 'PB'}-${thickness}-${extLen}`,
+            width: defaultStockW,
+            height: extLen,
+            material: material || 'PB',
+            color: 'MW',
+            price: 0,
+            stock: 999,
+            thickness,
+            label: `비규격 ${defaultStockW}×${extLen}`,
+          };
+          const extOptimizerPanels: any[] = groupPanels.map(p => ({
+            id: p.id,
+            name: p.label,
+            width: p.width,
+            height: p.length,
+            thickness: p.thickness,
+            quantity: p.quantity,
+            material: p.material || 'PB',
+            color: 'MW',
+            grain: p.grain === 'H' ? 'HORIZONTAL' : p.grain === 'V' ? 'VERTICAL' : 'VERTICAL',
+            canRotate: p.canRotate,
+            boringPositions: p.boringPositions,
+            boringDepthPositions: p.boringDepthPositions,
+            groovePositions: p.groovePositions,
+            screwPositions: p.screwPositions,
+            screwDepthPositions: p.screwDepthPositions,
+            isDoor: p.isDoor,
+            isLeftHinge: p.isLeftHinge,
+            screwHoleSpacing: p.screwHoleSpacing,
+            bracketBoringPositions: p.bracketBoringPositions,
+            bracketBoringDepthPositions: p.bracketBoringDepthPositions,
+            isBracketSide: p.isBracketSide,
+            cornerNotch: p.cornerNotch,
+            sideNotches: p.sideNotches,
+            rebate: p.rebate,
+            meshName: p.meshName,
+            furnitureId: p.furnitureId,
+          }));
+          const adjustedExtStock = {
+            ...extStockPanel,
+            width: extStockPanel.width - (settings.trimLeft || 10) - (settings.trimRight || 10),
+            height: extStockPanel.height - (settings.trimTop || 10) - (settings.trimBottom || 10),
+          };
+          const extResults = await optimizePanelsMultiple(
+            extOptimizerPanels,
+            adjustedExtStock,
+            settings.singleSheetOnly ? 1 : 999,
+            settings.alignVerticalCuts !== false,
+            settings.kerf || 5,
+            effectiveOptimizationType
+          );
+          extResults.forEach((result: any) => {
+            result.panels.forEach((panel: any) => {
+              panel.x += (settings.trimLeft || 10);
+              panel.y += (settings.trimBottom || 10);
+            });
+            result.stockPanel = extStockPanel;
+            result.isOversized = true;
           });
-          result.stockPanel = extStockPanel;
-          (result as any).isOversized = true; // 비규격 시트로 표시
-        });
-        allResults.push(...extResults);
-       }
-      };
-      await optimizeExtGroup(extPanelGroups2750, extendedStockL_2750);
-      await optimizeExtGroup(extPanelGroups3050, extendedStockL_3050);
+          allResults.push(...extResults);
+        }
+      }
 
       console.log('=== Initial Optimization Complete ===');
       console.log('Total sheets generated:', allResults.length);
