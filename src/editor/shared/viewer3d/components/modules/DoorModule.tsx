@@ -915,11 +915,8 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     const isTopDown = moduleData?.id?.includes('lower-top-down-');
 
     if (isTopDown) {
-      // 상판내림: 도어 H/위치는 stoneThk와 완전 무관 → store/prop 값 무시하고 강제 -80, +5 고정
-      const topDownReferenceHeight = moduleData?.dimensions?.height || 785;
-      const effectiveTopDownTopGap = -80;
-      const effectiveTopDownBottomGap = 5;
-      actualDoorHeight = topDownReferenceHeight + effectiveTopDownTopGap + effectiveTopDownBottomGap;
+      // 상판내림: 도어 H 무조건 710 고정 (stoneThk, cabH 등 모든 변수 무시)
+      actualDoorHeight = 710;
     } else if (isDoorLift) {
       // 도어올림: 몸통 기준 상단/하단 갭을 그대로 반영
       actualDoorHeight = lowerCabinetHeight + doorTopGap + doorBottomGap;
