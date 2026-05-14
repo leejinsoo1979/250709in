@@ -2746,7 +2746,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
               {/* 유리 선반 2개 — 천판 하단으로부터 300mm 간격, 도어와 동일한 금속프레임+유리 (CNC 제외) */}
               {(() => {
                 const SHELF_SPACING_MM = 300;
-                const SHELF_FRAME_WIDTH_MM = 25;
+                const SHELF_FRAME_WIDTH_MM = 22;
                 const SHELF_FRAME_THICK_MM = 18;
                 const GLASS_THICKNESS_MM = 5;
                 const FRONT_OFFSET_MM = 50; // 천판과 동일한 앞 옵셋
