@@ -390,25 +390,26 @@ export function calcResizedPositionX(
   const currentCenterMm = module.position.x * 100;
   let newCenterMm: number;
 
+  // 공간 중앙 기준으로 가구가 좌/우 어느 쪽에 있는지 판단
+  //  - 좌측 영역 가구: 좌측면(oldLeft) 고정 → 우측으로 확장/축소
+  //  - 우측 영역 가구: 우측면(oldRight) 고정 → 좌측으로 확장/축소
+  const spaceMidMm = (startX + endX) / 2;
+  const isOnLeftSide = currentCenterMm < spaceMidMm;
+
   if (leftAttached && rightAttached) {
-    // 양쪽 다 붙어있으면 좌측 anchor 기준
-    newCenterMm = leftAnchor! + halfNew;
+    // 양쪽 다 붙어있으면 공간 위치에 따라 anchor 선택
+    newCenterMm = isOnLeftSide ? (leftAnchor! + halfNew) : (rightAnchor! - halfNew);
   } else if (leftAttached) {
-    // 좌측에 붙어있으면 좌측 anchor 기준
+    // 좌측에만 붙어있으면 좌측 anchor 기준
     newCenterMm = leftAnchor! + halfNew;
   } else if (rightAttached) {
-    // 우측에 붙어있으면 우측 anchor 기준
+    // 우측에만 붙어있으면 우측 anchor 기준
     newCenterMm = rightAnchor! - halfNew;
   } else {
     // 어디에도 안 붙어있으면 공간 중앙 기준으로 좌/우 판단
-    //  - 가구 중심이 공간 중앙보다 왼쪽이면 좌측면(oldLeft) 고정 → 우측으로 확장/축소
-    //  - 가구 중심이 공간 중앙보다 오른쪽이면 우측면(oldRight) 고정 → 좌측으로 확장/축소
-    const spaceMidMm = (startX + endX) / 2;
-    if (currentCenterMm < spaceMidMm) {
-      newCenterMm = oldBounds.left + halfNew;
-    } else {
-      newCenterMm = oldBounds.right - halfNew;
-    }
+    newCenterMm = isOnLeftSide
+      ? oldBounds.left + halfNew
+      : oldBounds.right - halfNew;
   }
 
   let clampedMm = clampToSpaceBoundsX(newCenterMm, newWidthMm, spaceInfo);
