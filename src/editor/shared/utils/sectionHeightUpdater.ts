@@ -76,9 +76,6 @@ export function updateSectionHeight(
         // 상판이 없는 경우 (일반 hanging, 상단 몰딩이 상판 역할)
         newSectionHeight = newInternalHeight + basicThickness;
       }
-    } else if (section.type === 'shelf') {
-      // 선반 섹션: 내경 + 상하 패널
-      newSectionHeight = newInternalHeight + basicThickness * 2;
     } else {
       // 다른 타입은 기본값
       newSectionHeight = newInternalHeight;
@@ -100,22 +97,11 @@ export function updateSectionHeight(
     // 새로운 섹션 배열 생성
     const updatedSections = currentSections.map((s, idx) => {
       if (idx === sectionIndex) {
-        let nextShelfPositions = (s as any).shelfPositions;
-        // 선반(shelf) 섹션 H 변경 시 선반 위치 균등 재계산
-        if (s.type === 'shelf' && typeof (s as any).count === 'number' && (s as any).count > 0) {
-          const count = (s as any).count;
-          const innerH = Math.max(0, newSectionHeight - basicThickness * 2);
-          const gap = (innerH - count * basicThickness) / (count + 1);
-          nextShelfPositions = Array.from({ length: count }, (_, i) =>
-            (i + 1) * gap + i * basicThickness + basicThickness / 2
-          );
-        }
         return {
           ...s,
           height: newSectionHeight,
           // 내경 높이도 저장 (선택사항)
-          internalHeight: newInternalHeight,
-          ...(nextShelfPositions ? { shelfPositions: nextShelfPositions } : {})
+          internalHeight: newInternalHeight
         };
       }
       return s;
