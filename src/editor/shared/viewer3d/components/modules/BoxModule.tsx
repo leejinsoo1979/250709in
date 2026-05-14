@@ -1467,6 +1467,34 @@ const BoxModule: React.FC<BoxModuleProps> = ({
                     />
                   );
                 })()}
+                {/* (하)상판 — 목찬넬 수직부재 뒷면 ~ 백패널 앞면 까지 */}
+                {(() => {
+                  const stretcherThickness = baseFurniture.basicThickness;
+                  const stretcherZ = vertZ - baseFurniture.basicThickness / 2 - stretcherThickness / 2;
+                  const stretcherBackZ = stretcherZ - stretcherThickness / 2; // 전대 뒷면
+                  // 백패널 앞면 Z (대략): -depth/2 + 백패널두께 + depthOffset(가구재두께-1mm) → 보수적으로 -depth/2 + basicThickness
+                  const backPanelFrontZ = -baseFurniture.depth / 2 + baseFurniture.basicThickness;
+                  const topPanelDepth = stretcherBackZ - backPanelFrontZ;
+                  const topPanelCenterZ = (stretcherBackZ + backPanelFrontZ) / 2;
+                  if (topPanelDepth <= 0) return null;
+                  // Y: 측판 (하)상단과 윗면 정렬 — 측판 (하)상단 = -H/2 + 860, 상판 중심 = 그-basicThickness/2
+                  const lowerSectionTopY = cabinetBottomY + mmToUnits(notchFromBottomMm + notchHeightMm);
+                  const topPanelY = lowerSectionTopY - baseFurniture.basicThickness / 2;
+                  return (
+                    <BoxWithEdges
+                      args={[baseFurniture.innerWidth, baseFurniture.basicThickness, topPanelDepth]}
+                      position={[0, topPanelY, topPanelCenterZ]}
+                      material={baseFurniture.material}
+                      renderMode={renderMode || useSpace3DView().renderMode}
+                      isDragging={isDragging}
+                      isEditMode={isEditMode}
+                      panelName="(하)상판"
+                      panelGrainDirections={panelGrainDirections}
+                      furnitureId={placedFurnitureId}
+                      textureUrl={baseFurniture.textureUrl}
+                    />
+                  );
+                })()}
               </>
             );
           })()}
