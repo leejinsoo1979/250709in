@@ -4279,9 +4279,11 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             furnitureTopY = mmToThreeUnits(floorFinishForHeight + bottomFrameH + lowerCabinetH);
           } else if (isUpperCategory) {
             // 상부장: 가구는 천장 - 상단몰딩 아래에 붙음
-            // 치수 표시는 하부마감판(18mm) 포함하여 상부장 body 하단보다 18mm 아래까지
+            // 본체 가이드는 EP 켜진 경우에만 하부마감판(18mm) 포함, 끄면 본체만
+            const singleUpperHasBottomEP = (leftmostMod as any)?.hasBottomEndPanel !== false;
+            const singleUpperFinishMm = singleUpperHasBottomEP ? UPPER_BOTTOM_FINISH_MM : 0;
             furnitureTopY = mmToThreeUnits(effectiveH - actualTopSize); // 상단몰딩 하단 = 가구 상단
-            bottomFrameTopY = furnitureTopY - mmToThreeUnits(furnitureH + UPPER_BOTTOM_FINISH_MM); // 가구 하단 + 하부마감판
+            bottomFrameTopY = furnitureTopY - mmToThreeUnits(furnitureH + singleUpperFinishMm); // 가구 하단 + (EP 시 하부마감판)
           } else {
             bottomFrameTopY = mmToThreeUnits(floorFinishForHeight + bottomFrameH);
             furnitureTopY = mmToThreeUnits(floorFinishForHeight + bottomFrameH + furnitureH);
@@ -5099,9 +5101,11 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             rFurnitureTopY = mmToThreeUnits(rFloorFinishForHeight + rBottomFrameH + rLowerCabinetH);
           } else if (rIsUpperCategory) {
             // 상부장: 가구는 천장 - 상단몰딩 아래에 붙음
-            // 치수 표시는 하부마감판(18mm) 포함하여 상부장 body 하단보다 18mm 아래까지
+            // 본체 가이드는 EP 켜진 경우에만 하부마감판(18mm) 포함, 끄면 본체만
+            const rSingleUpperHasBottomEP = (rightmostMod as any)?.hasBottomEndPanel !== false;
+            const rSingleUpperFinishMm = rSingleUpperHasBottomEP ? R_UPPER_BOTTOM_FINISH_MM : 0;
             rFurnitureTopY = mmToThreeUnits(rEffectiveH - rActualTopSize); // 상단몰딩 하단 = 가구 상단
-            rBottomFrameTopY = rFurnitureTopY - mmToThreeUnits(rFurnitureH + R_UPPER_BOTTOM_FINISH_MM); // 가구 하단 + 하부마감판
+            rBottomFrameTopY = rFurnitureTopY - mmToThreeUnits(rFurnitureH + rSingleUpperFinishMm); // 가구 하단 + (EP 시 하부마감판)
           } else {
             rBottomFrameTopY = mmToThreeUnits(rFloorFinishForHeight + rBottomFrameH);
             rFurnitureTopY = mmToThreeUnits(rFloorFinishForHeight + rBottomFrameH + rFurnitureH);
