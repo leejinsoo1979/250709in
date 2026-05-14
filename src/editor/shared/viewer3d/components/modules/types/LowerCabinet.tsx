@@ -665,7 +665,11 @@ const TouchDrawerAnimated: React.FC<TouchDrawerAnimatedProps> = ({
   const isTopDownTouch = isTDTouch2 || isTDTouch3;
 
   // 서랍 스펙
-  const drawerSpecs: [number, number][] = isTouch2A ? [[228, 28], [228, 406]]
+  // 도어올림 터치 2A: H ≤ 590이면 레그라 측판 228 → 164 (작은 사이즈)로 자동 전환
+  const cabHmmForLegra = Math.round(adjustedHeight / 0.01);
+  const touch2ASmall = isTouch2A && cabHmmForLegra <= 590;
+  const drawerSpecs: [number, number][] = isTouch2A
+    ? (touch2ASmall ? [[164, 28], [164, 406]] : [[228, 28], [228, 406]])
     : isTouch2B ? [[228, 28], [164, 406]]
     : isTouch3 ? [[228, 28], [117, 357], [117, 587]]
     : isTDTouch2 ? [[228, 28], [228, 356]]
