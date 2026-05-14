@@ -400,8 +400,15 @@ export function calcResizedPositionX(
     // 우측에 붙어있으면 우측 anchor 기준
     newCenterMm = rightAnchor! - halfNew;
   } else {
-    // 어디에도 안 붙어있으면 기존 좌측 위치 유지
-    newCenterMm = oldBounds.left + halfNew;
+    // 어디에도 안 붙어있으면 공간 중앙 기준으로 좌/우 판단
+    //  - 가구 중심이 공간 중앙보다 왼쪽이면 좌측면(oldLeft) 고정 → 우측으로 확장/축소
+    //  - 가구 중심이 공간 중앙보다 오른쪽이면 우측면(oldRight) 고정 → 좌측으로 확장/축소
+    const spaceMidMm = (startX + endX) / 2;
+    if (currentCenterMm < spaceMidMm) {
+      newCenterMm = oldBounds.left + halfNew;
+    } else {
+      newCenterMm = oldBounds.right - halfNew;
+    }
   }
 
   let clampedMm = clampToSpaceBoundsX(newCenterMm, newWidthMm, spaceInfo);
