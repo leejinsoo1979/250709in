@@ -2447,7 +2447,7 @@ const createLowerDoorLiftHalf = (columnWidth: number): ModuleData => {
           type: 'shelf',
           heightType: 'percentage',
           height: 100,
-          count: 0
+          count: 2
         }
       ]
     }
@@ -2489,7 +2489,7 @@ const createDualLowerDoorLiftHalf = (dualWidth: number, slotWidths?: number[]): 
           type: 'shelf',
           heightType: 'percentage',
           height: 100,
-          count: 0
+          count: 2
         }
       ]
     }
@@ -2944,7 +2944,7 @@ const createLowerTopDownHalf = (columnWidth: number): ModuleData => {
           type: 'shelf',
           heightType: 'percentage',
           height: 100,
-          count: 0
+          count: 2
         }
       ]
     }
@@ -2986,7 +2986,7 @@ const createDualLowerTopDownHalf = (dualWidth: number, slotWidths?: number[]): M
           type: 'shelf',
           heightType: 'percentage',
           height: 100,
-          count: 0
+          count: 2
         }
       ]
     }
