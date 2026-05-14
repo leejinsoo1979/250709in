@@ -142,7 +142,9 @@ export function placeFurnitureFree(params: PlaceFurnitureFreeParams): PlaceFurni
     moduleData.category,
     effectiveHeight,
     spaceInfo,
-    effectiveZone === 'dropped' ? droppedZone.droppedInternalHeight : undefined
+    effectiveZone === 'dropped' ? droppedZone.droppedInternalHeight : undefined,
+    (moduleData as any).individualFloatHeight,
+    (moduleData as any).hasBase,
   );
 
   // 충돌 체크
@@ -276,7 +278,9 @@ export function calculateYPosition(
   category: string,
   heightMM: number,
   spaceInfo: SpaceInfo,
-  droppedInternalHeight?: number
+  droppedInternalHeight?: number,
+  moduleIndividualFloatHeight?: number, // 가구 개별 띄움(예: 유리장 200)
+  hasBaseOverride?: boolean,            // hasBase=false면 걸레받이 자리 무시
 ): number {
   const floorFinishMM =
     spaceInfo.hasFloorFinish && spaceInfo.floorFinish ? spaceInfo.floorFinish.height : 0;
@@ -303,6 +307,11 @@ export function calculateYPosition(
   const isFloat =
     spaceInfo.baseConfig?.placementType === 'float' &&
     (spaceInfo.baseConfig?.floatHeight || 0) > 0;
+
+  // 가구 개별 띄움(예: 유리장 200mm) 우선 — hasBase=false 가구
+  if ((moduleIndividualFloatHeight ?? 0) > 0 && hasBaseOverride === false) {
+    return floorFinish + (moduleIndividualFloatHeight as number) * 0.01 + (heightMM * 0.01) / 2;
+  }
 
   if (isFloat) {
     const floatH = (spaceInfo.baseConfig?.floatHeight || 0) * 0.01;
