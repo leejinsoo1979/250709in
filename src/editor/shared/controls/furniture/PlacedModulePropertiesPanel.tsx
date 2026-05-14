@@ -1150,6 +1150,10 @@ const PlacedModulePropertiesPanel: React.FC = () => {
       targetId.includes('lower-induction');
     if (!isLower) return {};
 
+    // 상판내림: stoneThk 변경 시 본체 H 자동 변경 안 함 (도어 H 영향 방지)
+    const isTopDown = targetId.includes('lower-top-down-');
+    if (isTopDown) return {};
+
     const internalSpace = calculateInternalSpace(spaceInfo);
     const targetModuleData = getModuleById(targetId, internalSpace, spaceInfo) || buildModuleDataFromPlacedModule(targetModule);
     const currentBodyHeight = targetModule.cabinetBodyHeight
@@ -3755,10 +3759,10 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                 - (currentPlacedModule.individualFloatHeight ?? 0))
               : 0;
             const bodyH = baseBodyH + absorbedTopH + absorbedBaseH;
-            // 상판내림: 도어 H 항상 710 강제 (stoneThk/cabH 변경 영향 없음)
+            // 상판내림: 도어 H = referenceH(785) + topGap + bottomGap (stoneThk 변경 무관, 사용자 갭 변경은 반영)
             const isTopDownForDoorHForce = currentPlacedModule.moduleId?.includes('lower-top-down-');
             const doorH = isTopDownForDoorHForce
-              ? 710
+              ? Math.max(0, (moduleData.dimensions.height || 785) + (doorTopGap ?? -80) + (doorBottomGap ?? 5))
               : Math.max(0, bodyH + (doorTopGap || 0) + (doorBottomGap || 0));
             const doorThickness = 20;
             return (

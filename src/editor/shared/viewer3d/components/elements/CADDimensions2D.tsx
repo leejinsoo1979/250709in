@@ -1366,9 +1366,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                 doorTopAbsMm = cabinetBottomAbs + (
                   topMaida?.maidaTopMm ?? (topDownReferenceH + effectiveTopDownTopGap)
                 );
-                // 상판내림: 도어 H 항상 710 고정
-                doorHeightMm = 710;
-                doorTopAbsMm = doorBottomAbsMm + 710;
+                doorHeightMm = Math.max(0, doorTopAbsMm - doorBottomAbsMm);
               } else if (isDoorLift) {
                 doorHeightMm = cabinetH + doorTopGapVal + doorBottomGapVal;
                 doorTopAbsMm = cabinetBottomAbs + cabinetH + doorTopGapVal;
@@ -2729,9 +2727,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                 doorTopAbsMm = cabinetBottomAbs + (
                   topMaida?.maidaTopMm ?? (topDownReferenceH + effectiveTopDownTopGap)
                 );
-                // 상판내림: 도어 H 항상 710 고정
-                doorHeightMm = 710;
-                doorTopAbsMm = doorBottomAbsMm + 710;
+                doorHeightMm = Math.max(0, doorTopAbsMm - doorBottomAbsMm);
               } else if (isDoorLift) {
                 doorHeightMm = cabinetH + doorTopGapVal + doorBottomGapVal;
                 doorTopAbsMm = cabinetBottomAbs + cabinetH + doorTopGapVal;
