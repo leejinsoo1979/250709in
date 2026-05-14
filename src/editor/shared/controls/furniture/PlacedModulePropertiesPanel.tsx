@@ -3494,7 +3494,10 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                           }
                           return 3000;
                         })();
-                        if (!isNaN(displayVal) && displayVal >= 100 && displayVal <= maxHeightInput && currentPlacedModule) {
+                        // 멍장(dummy)은 최소 300mm까지만 축소 가능
+                        const isDummyForMin = currentPlacedModule?.moduleId?.includes('dummy');
+                        const minHeightInput = isDummyForMin ? 300 : 100;
+                        if (!isNaN(displayVal) && displayVal >= minHeightInput && displayVal <= maxHeightInput && currentPlacedModule) {
                           // 표시값(늘어난 값) → freeHeight(원본값): 흡수분 차감
                           const shouldAbsorbTopForBodyH = moduleData.category === 'full';
                           const absT = shouldAbsorbTopForBodyH && currentPlacedModule.hasTopFrame === false
@@ -3585,7 +3588,9 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                           }
                           return 3000;
                         })();
-                          if (!isNaN(displayVal) && displayVal >= 100 && displayVal <= maxHeightInput && currentPlacedModule) {
+                          const isDummyForMinEnter = currentPlacedModule?.moduleId?.includes('dummy');
+                          const minHeightInputEnter = isDummyForMinEnter ? 300 : 100;
+                          if (!isNaN(displayVal) && displayVal >= minHeightInputEnter && displayVal <= maxHeightInput && currentPlacedModule) {
                             const shouldAbsorbTopForBodyH = moduleData.category === 'full';
                             const absT = shouldAbsorbTopForBodyH && currentPlacedModule.hasTopFrame === false
                               ? ((currentPlacedModule.topFrameThickness ?? spaceInfo.frameSize?.top ?? 30) - (currentPlacedModule.topFrameGap ?? 0))
@@ -3639,7 +3644,9 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                           }
                           return 3000;
                         })();
-                          const nextDisplay = Math.max(100, Math.min(maxHeightInput, cur + (e.key === 'ArrowUp' ? 1 : -1)));
+                          const isDummyForMinArrow = currentPlacedModule?.moduleId?.includes('dummy');
+                          const minHeightInputArrow = isDummyForMinArrow ? 300 : 100;
+                          const nextDisplay = Math.max(minHeightInputArrow, Math.min(maxHeightInput, cur + (e.key === 'ArrowUp' ? 1 : -1)));
                           setFreeHeightInput(nextDisplay.toString());
                           if (currentPlacedModule) {
                             // 표시값 → freeHeight 변환 (흡수분 차감)
