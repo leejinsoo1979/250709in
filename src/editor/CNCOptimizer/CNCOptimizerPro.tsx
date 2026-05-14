@@ -710,43 +710,46 @@ function PageInner(){
         }
       });
 
-      // ★ 패널 크기별 보드 분류
-      // 1) 일반(≤1220×2440): 기존 원장 사용
-      // 2) 비규격 확장(1220×2440 초과 ~ 1220×2750 이내): 확장 보드(1220×2750)에 옵티마이즈
-      // 3) 완전 초과(1220×2750 초과): 단일 패널 시트(isOversized)
+      // ★ 패널 크기별 보드 분류 (3단계 규격 + 초과)
+      // 1) 일반(≤1220×2440): 기본 원장
+      // 2) 확장1(1220×2440 초과 ~ ≤1220×2750): 1220×2750 비규격 자재
+      // 3) 확장2(1220×2750 초과 ~ ≤1220×3050): 1220×3050 비규격 자재
+      // 4) 완전 초과(1220×3050도 못 들어감): 단일 패널 시트(isOversized)
       const defaultStockW = stock[0]?.width ?? 1220;
       const defaultStockL = stock[0]?.length ?? 2440;
-      const extendedStockL = 2750; // 비규격 확장 자재 길이
+      const extendedStockL_2750 = 2750;
+      const extendedStockL_3050 = 3050;
       const fits = (w: number, l: number, canRotate: boolean, sw: number, sl: number) => {
-        // 짧은 쪽 = sw(1220), 긴 쪽 = sl(2440) 매칭 자동 검사
-        // (Panel width/length 명명 불일치 방지 — 두 방향 모두 시도)
+        // 짧은 쪽 = sw, 긴 쪽 = sl 매칭 자동 검사 (width/length 명명 불일치 방지)
         const shortSide = Math.min(w, l);
         const longSide = Math.max(w, l);
         const fitsAuto = shortSide <= sw && longSide <= sl;
         if (fitsAuto) return true;
-        if (canRotate) {
-          // 회전 가능: 더 엄격하게 양방향 검사 (실제로는 fitsAuto가 충분)
-          return false;
-        }
-        // 회전 불가: 원래 방향(w,l 그대로) 검사
+        if (canRotate) return false;
         return w <= sw && l <= sl;
       };
-      const oversizedPanels: Panel[] = [];      // 완전 초과 (1220×2750도 못 들어감)
-      const extendedPanels: Panel[] = [];        // 확장 보드(1220×2750)에 들어감
-      const regularPanels: Panel[] = [];         // 일반 보드(1220×2440)에 들어감
+      const oversizedPanels: Panel[] = [];        // 완전 초과 (1220×3050도 못 들어감)
+      const extended3050Panels: Panel[] = [];     // 1220×3050 비규격
+      const extended2750Panels: Panel[] = [];     // 1220×2750 비규격
+      const regularPanels: Panel[] = [];          // 일반 보드(1220×2440)
       panels.forEach(p => {
         const hasGrain = p.grain && p.grain !== 'NONE';
         const canRotate = !hasGrain;
         if (fits(p.width, p.length, canRotate, defaultStockW, defaultStockL)) {
           regularPanels.push(p);
-        } else if (fits(p.width, p.length, canRotate, defaultStockW, extendedStockL)) {
-          extendedPanels.push(p);
+        } else if (fits(p.width, p.length, canRotate, defaultStockW, extendedStockL_2750)) {
+          extended2750Panels.push(p);
+        } else if (fits(p.width, p.length, canRotate, defaultStockW, extendedStockL_3050)) {
+          extended3050Panels.push(p);
         } else {
           oversizedPanels.push(p);
         }
       });
-      if (extendedPanels.length > 0) {
-        console.warn(`[CNCOptimizer] 확장 자재 패널 ${extendedPanels.length}개 → ${defaultStockW}×${extendedStockL}에 배치`);
+      if (extended2750Panels.length > 0) {
+        console.warn(`[CNCOptimizer] 비규격 자재(${defaultStockW}×${extendedStockL_2750}) 패널 ${extended2750Panels.length}개`);
+      }
+      if (extended3050Panels.length > 0) {
+        console.warn(`[CNCOptimizer] 비규격 자재(${defaultStockW}×${extendedStockL_3050}) 패널 ${extended3050Panels.length}개`);
       }
       if (oversizedPanels.length > 0) {
         console.warn(`[CNCOptimizer] 완전 비규격 패널 ${oversizedPanels.length}개 → 단일 시트`);
@@ -785,20 +788,23 @@ function PageInner(){
         panelGroups.get(key)!.push(processedPanel);
       });
 
-      // 확장 패널은 별도 그룹(prefix EXT_)으로 분리 → 1220×2750 보드로 옵티마이즈
-      const extPanelGroups = new Map<string, Panel[]>();
-      extendedPanels.forEach(panel => {
-        const processedPanel = { ...panel };
-        const hasGrain = panel.grain && panel.grain !== 'NONE';
-        processedPanel.canRotate = !hasGrain;
-        const key = settings.considerMaterial
-          ? `${processedPanel.material || 'PB'}_${processedPanel.thickness || 18}`
-          : `THICKNESS_${processedPanel.thickness || 18}`;
-        if (!extPanelGroups.has(key)) {
-          extPanelGroups.set(key, []);
-        }
-        extPanelGroups.get(key)!.push(processedPanel);
-      });
+      // 확장 패널: 1220×2750 / 1220×3050 두 그룹으로 분리
+      const extPanelGroups2750 = new Map<string, Panel[]>();
+      const extPanelGroups3050 = new Map<string, Panel[]>();
+      const buildExtGroup = (src: Panel[], target: Map<string, Panel[]>) => {
+        src.forEach(panel => {
+          const processedPanel = { ...panel };
+          const hasGrain = panel.grain && panel.grain !== 'NONE';
+          processedPanel.canRotate = !hasGrain;
+          const key = settings.considerMaterial
+            ? `${processedPanel.material || 'PB'}_${processedPanel.thickness || 18}`
+            : `THICKNESS_${processedPanel.thickness || 18}`;
+          if (!target.has(key)) target.set(key, []);
+          target.get(key)!.push(processedPanel);
+        });
+      };
+      buildExtGroup(extended2750Panels, extPanelGroups2750);
+      buildExtGroup(extended3050Panels, extPanelGroups3050);
 
       const allResults: OptimizedResult[] = [];
 
@@ -946,8 +952,9 @@ function PageInner(){
         }
       }
 
-      // ★ 확장 패널 그룹(1220×2750 보드) 옵티마이즈
-      for (const [key, groupPanels] of extPanelGroups) {
+      // ★ 확장 패널 그룹 옵티마이즈 (1220×2750 / 1220×3050 두 단계)
+      const optimizeExtGroup = async (extGroups: Map<string, Panel[]>, extLen: number) => {
+       for (const [key, groupPanels] of extGroups) {
         let material: string | undefined;
         let thickness: number;
         if (key.startsWith('THICKNESS_')) {
@@ -957,17 +964,17 @@ function PageInner(){
           material = parts[0];
           thickness = parseFloat(parts[1]) || 18;
         }
-        // 확장 자재 stockPanel (1220×2750, 라벨에 '비규격' 표시)
+        // 확장 자재 stockPanel (1220×extLen, 라벨에 '비규격' 표시)
         const extStockPanel = {
-          id: `ext-${material || 'PB'}-${thickness}`,
+          id: `ext-${material || 'PB'}-${thickness}-${extLen}`,
           width: defaultStockW,
-          height: extendedStockL,
+          height: extLen,
           material: material || 'PB',
           color: 'MW',
           price: 0,
           stock: 999,
           thickness,
-          label: `비규격 ${defaultStockW}×${extendedStockL}`,
+          label: `비규격 ${defaultStockW}×${extLen}`,
         } as any;
         const extOptimizerPanels = groupPanels.map(p => ({
           id: p.id,
@@ -1019,7 +1026,10 @@ function PageInner(){
           (result as any).isOversized = true; // 비규격 시트로 표시
         });
         allResults.push(...extResults);
-      }
+       }
+      };
+      await optimizeExtGroup(extPanelGroups2750, extendedStockL_2750);
+      await optimizeExtGroup(extPanelGroups3050, extendedStockL_3050);
 
       console.log('=== Initial Optimization Complete ===');
       console.log('Total sheets generated:', allResults.length);
