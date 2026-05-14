@@ -433,8 +433,8 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
       {showFurniture && (
         <>
           {/* 좌우 측면 판재 - 다중 섹션은 상하 분할, 나머지는 통짜 */}
-          {/* 도어분절 현관장(shelf-split): 통짜 측판 + 따내기로 처리하기 위해 다중 섹션 분할에서 제외 */}
-          {(moduleData?.id?.includes('4drawer-hanging') || moduleData?.id?.includes('2drawer-hanging') || moduleData?.id?.includes('2hanging') || moduleData?.id?.includes('entryway-h') || moduleData?.id?.includes('-shelf-') || moduleData?.id?.includes('-4drawer-shelf-') || moduleData?.id?.includes('-2drawer-shelf-') || moduleData?.id?.includes('built-in-fridge')) && !moduleData?.id?.includes('shelf-split') && isMultiSectionFurniture() && getSectionHeights().length === 2 ? (
+          {/* 도어분절 현관장(shelf-split)도 분할 측판 사용 */}
+          {(moduleData?.id?.includes('4drawer-hanging') || moduleData?.id?.includes('2drawer-hanging') || moduleData?.id?.includes('2hanging') || moduleData?.id?.includes('entryway-h') || moduleData?.id?.includes('-shelf-') || moduleData?.id?.includes('-4drawer-shelf-') || moduleData?.id?.includes('-2drawer-shelf-') || moduleData?.id?.includes('built-in-fridge') || moduleData?.id?.includes('shelf-split')) && isMultiSectionFurniture() && getSectionHeights().length === 2 ? (
           // 다중 섹션: 좌우 측판을 상부/하부로 분할
           <>
             {(() => {
