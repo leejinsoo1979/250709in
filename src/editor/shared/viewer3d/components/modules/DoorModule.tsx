@@ -922,7 +922,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
       if (isTopDownHalfDoor) {
         const stoneThkForDoor = storePlacedModule?.stoneTopThickness ?? 0;
         const stretcherHForDoor = stoneThkForDoor === 10 ? 65 : stoneThkForDoor === 30 ? 45 : 55;
-        defaultTopDownTopGap = -(stretcherHForDoor + 20);
+        defaultTopDownTopGap = -(stretcherHForDoor + 25);
       }
       const effectiveTopDownTopGap = doorTopGapProp ?? storePlacedModule?.doorTopGap ?? defaultTopDownTopGap;
       const effectiveTopDownBottomGap = doorBottomGapProp ?? storePlacedModule?.doorBottomGap ?? 5;
@@ -1019,7 +1019,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
       if (isTopDownHalfDoorY) {
         const stoneThkForDoorY = storePlacedModule?.stoneTopThickness ?? 0;
         const stretcherHForDoorY = stoneThkForDoorY === 10 ? 65 : stoneThkForDoorY === 30 ? 45 : 55;
-        defaultTopDownTopGapY = -(stretcherHForDoorY + 20);
+        defaultTopDownTopGapY = -(stretcherHForDoorY + 25);
       }
       const effectiveTopDownTopGap = doorTopGapProp ?? storePlacedModule?.doorTopGap ?? defaultTopDownTopGapY;
       const doorTopY = -mmToThreeUnits(lowerCabinetHeight) / 2 + mmToThreeUnits(topDownReferenceHeight + effectiveTopDownTopGap);
