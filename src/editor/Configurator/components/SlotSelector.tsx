@@ -241,12 +241,35 @@ const SlotSelector: React.FC<SlotSelectorProps> = ({
                 e.stopPropagation(); // 4분할 뷰에서 클릭 이벤트 버블링 방지
                 e.preventDefault();
                 setSelectedSlotIndex(slot.actualIndex);
-                // 해당 슬롯에 배치된 가구로 팝업 전환 (듀얼은 본인 또는 본인-1 슬롯 매칭)
-                const matched = placedModules.find(m => {
-                  if (m.slotIndex === slot.actualIndex) return true;
-                  if (m.isDualSlot && m.slotIndex !== undefined && m.slotIndex + 1 === slot.actualIndex) return true;
-                  return false;
-                });
+                // 해당 슬롯에 배치된 가구로 팝업 전환
+                let matched: typeof placedModules[number] | undefined;
+                if (isFreePlacementMode) {
+                  // 자유배치: 가상 슬롯 = X좌표 순서로 그룹화된 X 좌표. actualIndex번째 X그룹의 가구
+                  const nonSurround = placedModules.filter(m => !m.isSurroundPanel);
+                  const sortedByX = [...nonSurround].sort((a, b) => (a.position?.x ?? 0) - (b.position?.x ?? 0));
+                  const xGroups: number[] = [];
+                  let lastX: number | null = null;
+                  sortedByX.forEach(m => {
+                    const mx = m.position?.x ?? 0;
+                    if (lastX === null || Math.abs(mx - lastX) > 0.01) {
+                      xGroups.push(mx);
+                      lastX = mx;
+                    }
+                  });
+                  const targetX = xGroups[slot.actualIndex];
+                  if (targetX !== undefined) {
+                    // 해당 X 그룹의 가구 중 첫 번째 (상부/하부 혼재 시 하부 우선)
+                    const inGroup = sortedByX.filter(m => Math.abs((m.position?.x ?? 0) - targetX) < 0.01);
+                    matched = inGroup.find(m => m.moduleId?.includes('lower-')) || inGroup[0];
+                  }
+                } else {
+                  // 슬롯 배치: slotIndex 매칭 (듀얼은 본인 또는 본인-1)
+                  matched = placedModules.find(m => {
+                    if (m.slotIndex === slot.actualIndex) return true;
+                    if (m.isDualSlot && m.slotIndex !== undefined && m.slotIndex + 1 === slot.actualIndex) return true;
+                    return false;
+                  });
+                }
                 const fStore = useFurnitureStore.getState();
                 const uStore = useUIStore.getState();
                 if (matched) {
