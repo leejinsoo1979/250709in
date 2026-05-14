@@ -474,6 +474,15 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
               const lowerZOffset = lowerDepthDiff === 0 ? 0 : lowerSectionDepthDirection === 'back' ? lowerDepthDiff / 2 : -lowerDepthDiff / 2;
               const upperZOffset = upperDepthDiff === 0 ? 0 : upperSectionDepthDirection === 'back' ? upperDepthDiff / 2 : -upperDepthDiff / 2;
 
+              // 도어분절 현관장(shelf-split): (하) 측판 앞 상단 모서리에 목찬넬용 노치 따내기
+              const isShelfSplit = !!moduleData?.id?.includes('shelf-split');
+              const lowerNotches = isShelfSplit
+                ? [{
+                    y: mmToThreeUnits(80),
+                    z: mmToThreeUnits(40),
+                    fromBottom: adjustedLowerHeight - mmToThreeUnits(80),
+                  }]
+                : undefined;
               return (
                 <>
                   {/* 왼쪽 하부 측판 */}
@@ -491,6 +500,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                     panelGrainDirections={panelGrainDirections}
                     furnitureId={placedFurnitureId}
                     textureUrl={textureUrl}
+                    notches={lowerNotches}
                   />
 
                   {/* 왼쪽 상부 측판 */}
@@ -525,6 +535,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                     panelGrainDirections={panelGrainDirections}
                     furnitureId={placedFurnitureId}
                     textureUrl={textureUrl}
+                    notches={lowerNotches}
                   />
 
                   {/* 오른쪽 상부 측판 */}
