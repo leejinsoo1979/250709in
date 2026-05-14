@@ -730,11 +730,21 @@ const FreePlacementDropZone: React.FC = () => {
       }
       if (!activeModuleId || !activeModuleData || !effectiveDimensions || hoverXmm === null || isColliding) {
         // 배치 모드가 아닌 경우: 허공 클릭 시 선택 해제 및 팝업 닫기
+        // 단, 가구 사이즈 변경 직후 BoxModule이 remount되는 1~2프레임 사이의 raycaster miss를
+        // "허공 클릭"으로 오인하지 않도록 다음 프레임에서 다시 확인 후 닫기
         e.stopPropagation();
         (window as any).__r3fClickHandled = true; // HTML레벨 deselect 중복 방지
-        useFurnitureStore.getState().setSelectedFurnitureId(null);
-        useUIStore.getState().setSelectedFurnitureId(null);
-        useUIStore.getState().closeAllPopups();
+        requestAnimationFrame(() => {
+          // 같은 click 시퀀스 안에서 다른 핸들러가 __r3fClickHandled를 다시 set 했거나
+          // 가구 onClick이 발화되어 선택을 했다면 닫기 건너뛰기
+          if ((window as any).__r3fFurnitureClicked) {
+            (window as any).__r3fFurnitureClicked = false;
+            return;
+          }
+          useFurnitureStore.getState().setSelectedFurnitureId(null);
+          useUIStore.getState().setSelectedFurnitureId(null);
+          useUIStore.getState().closeAllPopups();
+        });
         return;
       }
       e.stopPropagation();

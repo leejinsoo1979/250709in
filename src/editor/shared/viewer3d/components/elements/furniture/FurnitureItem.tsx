@@ -3310,6 +3310,8 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
           }
           // 가구 클릭 → 허공 클릭 deselect 방지 플래그 설정
           (window as any).__r3fClickHandled = true;
+          // FreePlacementDropZone의 1프레임 지연 닫기 로직에서 가구 클릭임을 확인하기 위한 플래그
+          (window as any).__r3fFurnitureClicked = true;
           // 가구 클릭 시 해당 슬롯 선택 (4분할 뷰 또는 미리보기에서 사용)
           if (onFurnitureClick && placedModule.slotIndex !== undefined) {
             e.stopPropagation();
@@ -3726,10 +3728,12 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                 : '';
               // removeUpperSafetyShelf 토글 변경 시에도 BoxModule 리마운트 (편집 중 고스트 실시간 반영)
               const removeUpperSafetyShelfKey = placedModule.removeUpperSafetyShelf ? '1' : '0';
-              const furnitureHeightKey = Math.round(furnitureHeightMm || 0);
+              // key에서 height를 제거 — H 변경마다 BoxModule이 unmount/remount 되면서
+              // 그 1~2 프레임 사이 클릭이 raycaster에 안 잡혀 "허공 클릭"으로 처리되어
+              // closeAllPopups()가 호출되는 race를 막음. H는 internalHeight prop으로 반영.
               return (
                 <BoxModule
-                  key={`boxmodule-${placedModule.id}-h${furnitureHeightKey}-${customSectionsKey}-rus${removeUpperSafetyShelfKey}`}
+                  key={`boxmodule-${placedModule.id}-${customSectionsKey}-rus${removeUpperSafetyShelfKey}`}
                   moduleData={actualModuleData}
                   isDragging={isDraggingThis} // 드래그 중에만 고스트 투명 표시 (내부 선반/서랍 숨김)
                   isEditMode={isEditModeForView} // 편집 모드 고스트: 측면/상면뷰에서는 숨김
