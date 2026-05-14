@@ -4145,7 +4145,12 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         // 엔드패널 위치 계산 (물리적 렌더링은 18.5mm)
         const endPanelWidth = mmToThreeUnits(END_PANEL_RENDER_THICKNESS);
         const endPanelHeight = height; // 가구와 동일한 높이
-        const epDepthMmSlot = Math.max(placedModule.customDepth || 0, actualDepthMm || 0, actualModuleData?.dimensions?.depth || 600);
+        // EP 길이: endPanelDepth(사용자 명시) 우선, 없으면 customDepth/actualDepthMm 사용
+        const epDepthMmSlot = placedModule.endPanelDepth
+          ?? placedModule.customDepth
+          ?? actualDepthMm
+          ?? actualModuleData?.dimensions?.depth
+          ?? 600;
         const endPanelDepth = mmToThreeUnits(epDepthMmSlot);
 
         // 엔드패널 X 위치 계산
