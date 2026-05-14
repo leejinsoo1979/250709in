@@ -7,9 +7,13 @@ import { calculateInternalSpace } from '@/editor/shared/viewer3d/utils/geometry'
 import { useSpaceConfigStore } from './spaceConfigStore';
 import { getCategoryDefaultFurnitureDepth } from '@/editor/shared/utils/furnitureDepthDefaults';
 
-// 상판내림 도어 상단갭: stoneThk별 stretcher H + 85 (ㄱ자 하단 - 20mm 갭 보장)
-// 모든 상판내림 모듈 통일: 10→-150, 20→-140, 30→-130
-const calcTopDownDoorTopGap = (_moduleId: string | undefined, stoneThk: number = 0): number => {
+// 상판내림 도어 상단갭
+// - 반통/한통: stoneThk별 stretcher H + 85 (10→-150, 20→-140, 30→-130)
+// - 그 외(2단/3단/터치): -80 고정 (원래 동작 유지)
+const calcTopDownDoorTopGap = (moduleId: string | undefined, stoneThk: number = 0): number => {
+  if (!moduleId) return -80;
+  const isHalf = moduleId.includes('lower-top-down-half') || moduleId.includes('dual-lower-top-down-half');
+  if (!isHalf) return -80;
   const stretcherH = stoneThk === 10 ? 65 : stoneThk === 30 ? 45 : 55;
   return -(stretcherH + 85);
 };
