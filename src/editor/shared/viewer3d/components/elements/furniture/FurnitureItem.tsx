@@ -2783,10 +2783,9 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     // 상부장: 뒷면을 하부장 뒷면에 정렬
     furnitureZ = furnitureZOffset - furnitureDepth / 2 - doorThickness + depth / 2;
   } else if (isShoeCabinet) {
-    // 신발장: 뒷면을 의류장/키큰장의 뒷면과 동일하게 정렬
-    // 600 기준 뒷면 Z = furnitureZOffset - furnitureDepth/2
-    // 신발장 중심 Z = 뒷면 + depth/2 (doorThickness 보정 X — 깊이 줄여도 도어가 안으로 들어가지 않도록)
-    furnitureZ = furnitureZOffset - furnitureDepth / 2 + depth / 2 + baseDepthOffset;
+    // 신발장: backWallGap=0이면 뒷벽 기준에 붙인다.
+    // 도어 안쪽 밀림은 각 도어 렌더러의 로컬 Z에서 처리하고, 본체 기준은 임의로 띄우지 않는다.
+    furnitureZ = furnitureZOffset - furnitureDepth / 2 - doorThickness + depth / 2 + baseDepthOffset;
   } else {
     // 기본은 앞면 정렬 (앞고정: 앞면 고정, 깊이 감소 시 뒷면이 앞으로)
     furnitureZ = furnitureZOffset + furnitureDepth / 2 - doorThickness - depth / 2 + baseDepthOffset;

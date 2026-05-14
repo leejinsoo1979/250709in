@@ -282,6 +282,30 @@ const BoxModule: React.FC<BoxModuleProps> = ({
     shelfBaseAbsorbedMm,
   } as any);
 
+  const resolveSplitDoorDepthPlacement = (sectionIndex: number) => {
+    const baseDepthMm = baseFurniture.actualDepthMm || moduleData.dimensions.depth || 600;
+    const fallbackDepthMm = sectionIndex === 0 ? lowerSectionDepth : upperSectionDepth;
+    const sectionDepthMm = placedSectionDepths?.[sectionIndex] ?? fallbackDepthMm;
+    const fallbackDirection = sectionIndex === 0 ? lowerSectionDepthDirection : upperSectionDepthDirection;
+    const sectionDirection = placedSectionDepthDirections?.[sectionIndex] ?? fallbackDirection ?? 'front';
+
+    if (!sectionDepthMm || sectionDepthMm <= 0 || sectionDepthMm >= baseDepthMm) {
+      return { moduleDepthMm: baseDepthMm, zOffset: 0 };
+    }
+
+    // UI의 '뒤고정'은 front 값이다. 뒷면을 고정하고 깊이를 줄이면 도어도 새 앞선으로 들어가야 한다.
+    if (sectionDirection === 'front') {
+      const diffMm = baseDepthMm - sectionDepthMm;
+      return {
+        moduleDepthMm: sectionDepthMm,
+        zOffset: -baseFurniture.mmToThreeUnits(diffMm),
+      };
+    }
+
+    // '앞고정'은 기존 앞선을 유지하므로 도어도 기존 앞선에 둔다.
+    return { moduleDepthMm: baseDepthMm, zOffset: 0 };
+  };
+
 
   // debug useEffects removed for perf
 
@@ -1644,76 +1668,82 @@ const BoxModule: React.FC<BoxModuleProps> = ({
             // 상부도어 중심(바닥기준) = (840 + 가구H + 상단갭) / 2
             const upperDoorCenterFromBottom = (upperDoorBottomMm + cabinetH + upperGapTop) / 2;
             const upperDoorY = upperDoorCenterFromBottom - cabinetH / 2;
+            const lowerDoorDepthPlacement = resolveSplitDoorDepthPlacement(0);
+            const upperDoorDepthPlacement = resolveSplitDoorDepthPlacement(1);
             return (
               <>
                 {/* 하부 도어 — 너비 치수 숨김 (분절 가구는 단일 너비 치수만 표시) */}
-                <DoorModule
-                  key="shelf-split-lower-door"
-                  hingeMode={isPantrySplit ? 'lower4' : 'auto'}
-                  hideWidthDimension={true}
-                  moduleWidth={doorWidth || moduleData.dimensions.width}
-                  moduleDepth={baseFurniture.actualDepthMm}
-                  hingePosition={hingePosition}
-                  spaceInfo={spaceInfo}
-                  color={baseFurniture.doorColor}
-                  doorXOffset={doorXOffset}
-                  originalSlotWidth={originalSlotWidth}
-                  slotCenterX={slotCenterX}
-                  slotWidths={slotWidths}
-                  slotIndex={slotIndex}
-                  moduleData={moduleData}
-                  isDragging={isDragging}
-                  isEditMode={isEditMode}
-                  textureUrl={baseFurniture.textureUrl}
-                  panelGrainDirections={baseFurniture.panelGrainDirections}
-                  furnitureId={placedFurnitureId}
-                  floatHeight={spaceInfo?.baseConfig?.floatHeight}
-                  doorTopGap={doorTopGap}
-                  doorBottomGap={doorBottomGap}
-                  zone={zone}
-                  internalHeight={internalHeight}
-                  isFreePlacement={isFreePlacement}
-                  topFrameThickness={topFrameThickness}
-                  hasBase={hasBase}
-                  individualFloatHeight={individualFloatHeight}
-                  parentGroupY={parentGroupY}
-                  forcedDoorHeightMm={lowerDoorH}
-                  forcedDoorYMm={lowerDoorY}
-                />
+                <group position={[0, 0, lowerDoorDepthPlacement.zOffset]}>
+                  <DoorModule
+                    key="shelf-split-lower-door"
+                    hingeMode={isPantrySplit ? 'lower4' : 'auto'}
+                    hideWidthDimension={true}
+                    moduleWidth={doorWidth || moduleData.dimensions.width}
+                    moduleDepth={lowerDoorDepthPlacement.moduleDepthMm}
+                    hingePosition={hingePosition}
+                    spaceInfo={spaceInfo}
+                    color={baseFurniture.doorColor}
+                    doorXOffset={doorXOffset}
+                    originalSlotWidth={originalSlotWidth}
+                    slotCenterX={slotCenterX}
+                    slotWidths={slotWidths}
+                    slotIndex={slotIndex}
+                    moduleData={moduleData}
+                    isDragging={isDragging}
+                    isEditMode={isEditMode}
+                    textureUrl={baseFurniture.textureUrl}
+                    panelGrainDirections={baseFurniture.panelGrainDirections}
+                    furnitureId={placedFurnitureId}
+                    floatHeight={spaceInfo?.baseConfig?.floatHeight}
+                    doorTopGap={doorTopGap}
+                    doorBottomGap={doorBottomGap}
+                    zone={zone}
+                    internalHeight={internalHeight}
+                    isFreePlacement={isFreePlacement}
+                    topFrameThickness={topFrameThickness}
+                    hasBase={hasBase}
+                    individualFloatHeight={individualFloatHeight}
+                    parentGroupY={parentGroupY}
+                    forcedDoorHeightMm={lowerDoorH}
+                    forcedDoorYMm={lowerDoorY}
+                  />
+                </group>
                 {/* 상부 도어 — 너비 치수 숨김 (하부 도어가 이미 표시) + 경첩 2개 (도어분절 팬트리장 사양) */}
-                <DoorModule
-                  key="shelf-split-upper-door"
-                  hingeMode={isPantrySplit ? 'upper2' : 'auto'}
-                  moduleWidth={doorWidth || moduleData.dimensions.width}
-                  moduleDepth={baseFurniture.actualDepthMm}
-                  hingePosition={hingePosition}
-                  spaceInfo={spaceInfo}
-                  color={baseFurniture.doorColor}
-                  doorXOffset={doorXOffset}
-                  originalSlotWidth={originalSlotWidth}
-                  slotCenterX={slotCenterX}
-                  slotWidths={slotWidths}
-                  slotIndex={slotIndex}
-                  moduleData={moduleData}
-                  isDragging={isDragging}
-                  isEditMode={isEditMode}
-                  textureUrl={baseFurniture.textureUrl}
-                  panelGrainDirections={baseFurniture.panelGrainDirections}
-                  furnitureId={placedFurnitureId}
-                  floatHeight={spaceInfo?.baseConfig?.floatHeight}
-                  doorTopGap={doorTopGap}
-                  doorBottomGap={doorBottomGap}
-                  zone={zone}
-                  internalHeight={internalHeight}
-                  isFreePlacement={isFreePlacement}
-                  topFrameThickness={topFrameThickness}
-                  hasBase={hasBase}
-                  individualFloatHeight={individualFloatHeight}
-                  parentGroupY={parentGroupY}
-                  forcedDoorHeightMm={upperDoorH}
-                  forcedDoorYMm={upperDoorY}
-                  hideWidthDimension={true}
-                />
+                <group position={[0, 0, upperDoorDepthPlacement.zOffset]}>
+                  <DoorModule
+                    key="shelf-split-upper-door"
+                    hingeMode={isPantrySplit ? 'upper2' : 'auto'}
+                    moduleWidth={doorWidth || moduleData.dimensions.width}
+                    moduleDepth={upperDoorDepthPlacement.moduleDepthMm}
+                    hingePosition={hingePosition}
+                    spaceInfo={spaceInfo}
+                    color={baseFurniture.doorColor}
+                    doorXOffset={doorXOffset}
+                    originalSlotWidth={originalSlotWidth}
+                    slotCenterX={slotCenterX}
+                    slotWidths={slotWidths}
+                    slotIndex={slotIndex}
+                    moduleData={moduleData}
+                    isDragging={isDragging}
+                    isEditMode={isEditMode}
+                    textureUrl={baseFurniture.textureUrl}
+                    panelGrainDirections={baseFurniture.panelGrainDirections}
+                    furnitureId={placedFurnitureId}
+                    floatHeight={spaceInfo?.baseConfig?.floatHeight}
+                    doorTopGap={doorTopGap}
+                    doorBottomGap={doorBottomGap}
+                    zone={zone}
+                    internalHeight={internalHeight}
+                    isFreePlacement={isFreePlacement}
+                    topFrameThickness={topFrameThickness}
+                    hasBase={hasBase}
+                    individualFloatHeight={individualFloatHeight}
+                    parentGroupY={parentGroupY}
+                    forcedDoorHeightMm={upperDoorH}
+                    forcedDoorYMm={upperDoorY}
+                    hideWidthDimension={true}
+                  />
+                </group>
               </>
             );
           }

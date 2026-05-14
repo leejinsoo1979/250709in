@@ -10059,6 +10059,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
 
           // 키큰장찬넬(insert-frame): 깊이 치수 가이드 숨김
           if (module.moduleId?.includes('insert-frame')) return;
+          // 유리장은 정면/측면 전용 치수로 처리하고, 탑뷰 외부 깊이 그룹에는 넣지 않는다.
+          if (module.moduleId?.includes('glass-cabinet')) return;
 
           // 기둥 앞 배치(front) 모드는 슬롯 전체 너비 사용
           const isColFront = (module as any).columnPlacementMode === 'front';
@@ -10195,10 +10197,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               furnitureBackZ = furnitureZOffset - furnitureDepth/2 - doorThickness + moduleBackWallGapZX;
               furnitureFrontZ = furnitureBackZ + depth;
             } else if (isShoeCabinet) {
-              // 신발장: 뒷면 정렬 — FurnitureItem.tsx와 동일하게 doorThickness 보정 제거
-              //   (FurnitureItem: furnitureZ = furnitureZOffset - furnitureDepth/2 + depth/2 + baseDepthOffset)
-              //   → backZ = furnitureZOffset - furnitureDepth/2 + baseDepthOffset
-              furnitureBackZ = furnitureZOffset - furnitureDepth/2 + baseDepthOffset + moduleBackWallGapZX;
+              // 신발장: FurnitureItem.tsx와 동일하게 뒷벽 기준에 붙인다.
+              furnitureBackZ = furnitureZOffset - furnitureDepth/2 - doorThickness + baseDepthOffset + moduleBackWallGapZX;
               furnitureFrontZ = furnitureBackZ + depth;
             } else {
               // 하부장/키큰장/의류장: 앞면 정렬 + baseDepthOffset
@@ -10291,6 +10291,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
 
             // 키큰장찬넬(insert-frame): 깊이 치수 가이드 숨김
             if (module.moduleId?.includes('insert-frame')) return;
+            // 유리장은 정면/측면 전용 치수로 처리하고, 탑뷰 외부 깊이 그룹에는 넣지 않는다.
+            if (module.moduleId?.includes('glass-cabinet')) return;
 
             const isColFront = (module as any).columnPlacementMode === 'front';
             const slotFullW = module.slotIndex !== undefined ? (indexing.slotWidths?.[module.slotIndex] ?? indexing.columnWidth) : undefined;
@@ -10414,8 +10416,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 furnitureBackZ = furnitureZOffset - furnitureDepth/2 - doorThickness + moduleBackWallGapZRX;
                 furnitureFrontZ = furnitureBackZ + depth;
               } else if (isShoeCabinet) {
-                // FurnitureItem.tsx와 동일하게 doorThickness 보정 제거
-                furnitureBackZ = furnitureZOffset - furnitureDepth/2 + baseDepthOffset + moduleBackWallGapZRX;
+                // 신발장: FurnitureItem.tsx와 동일하게 뒷벽 기준에 붙인다.
+                furnitureBackZ = furnitureZOffset - furnitureDepth/2 - doorThickness + baseDepthOffset + moduleBackWallGapZRX;
                 furnitureFrontZ = furnitureBackZ + depth;
               } else {
                 furnitureBackZ = furnitureZOffset + furnitureDepth/2 - doorThickness - depth + baseDepthOffset + moduleBackWallGapZRX;
