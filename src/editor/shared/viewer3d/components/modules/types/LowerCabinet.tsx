@@ -1340,20 +1340,19 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
               })() : moduleData.id.includes('lower-top-down-2tier') ? (() => {
                 // 상판내림 2단: 두 서랍 균등 + 상단 묶음 위로 평행이동
                 // 중간 노치 = (H - 185) / 2 (외부서랍 노치와 동기화)
-                // 상단 노치: y = stretcher(65/55/45), fromBottom = cabH - stretcher (가구 상단에서 stretcher만큼 아래)
-                //   → 측판의 상단 stretcher 영역을 stoneThk별 stretcher 두께만큼 깎음 (노치 ≡ stretcher)
+                // 상단 노치 = H - (stretcher + 65) — stoneThk별로 stretcher 가변
                 const cabHmm2 = Math.round(adjustedHeight / 0.01);
                 return {
                   sideNotches: [
                     { y: 65, z: 40, fromBottom: Math.round((cabHmm2 - 185) / 2) },
-                    { y: topDownStretcherHeightMm, z: 40, fromBottom: cabHmm2 - topDownStretcherHeightMm },
+                    { y: 65, z: 40, fromBottom: cabHmm2 - (topDownStretcherHeightMm + 65) },
                   ]
                 };
               })() : (moduleData.id.includes('lower-top-down-half') || moduleData.id.includes('dual-lower-top-down-half')) ? (() => {
-                // 상판내림 반통/한통: 측판 상단 stretcher 영역만 깎음 (노치 ≡ stretcher, stoneThk별 가변)
+                // 상판내림 반통/한통: 노치 = 가로전대 바로 아래 (stoneThk별 stretcher 반영)
                 const cabHmmH = Math.round(adjustedHeight / 0.01);
                 return {
-                  sideNotches: [{ y: topDownStretcherHeightMm, z: 40, fromBottom: cabHmmH - topDownStretcherHeightMm }]
+                  sideNotches: [{ y: 65, z: 40, fromBottom: cabHmmH - (topDownStretcherHeightMm + 65) }]
                 };
               })() : {})}>
             {/* 내부 구조는 항상 렌더링 (서랍/선반) */}
