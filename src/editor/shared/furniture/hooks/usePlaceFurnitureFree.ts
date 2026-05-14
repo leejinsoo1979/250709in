@@ -191,7 +191,12 @@ export function placeFurnitureFree(params: PlaceFurnitureFreeParams): PlaceFurni
   const inheritTopFrameOff = topFrameCapableExistingModules.length > 0
     && topFrameCapableExistingModules.every(module => module.hasTopFrame === false);
   const inheritedTopFrameGap = topFrameCapableExistingModules.find(module => module.topFrameGap !== undefined)?.topFrameGap ?? 0;
-  const shouldHaveTopFrame = moduleData.category !== 'lower' && spaceInfo.frameConfig?.top !== false && !inheritTopFrameOff;
+  // 유리장(glass-cabinet): 카테고리 'full'이지만 띄움 전용이라 상단몰딩 없음
+  const isGlassCabinetModule = moduleId.includes('glass-cabinet');
+  const shouldHaveTopFrame = !isGlassCabinetModule
+    && moduleData.category !== 'lower'
+    && spaceInfo.frameConfig?.top !== false
+    && !inheritTopFrameOff;
   const baseFrameCapableExistingModules = existingModules
     .filter(module => module.isFreePlacement)
     .filter(isBaseFrameCapablePlacedModule);
