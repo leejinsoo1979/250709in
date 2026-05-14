@@ -3888,10 +3888,12 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
 
               const epThicknessMm = placedModule.endPanelThickness || 18.5; // 물리적 렌더링 두께 (PET)
               const epW = mmToThreeUnits(epThicknessMm);
-              // EP 깊이: 모듈 템플릿 깊이(의류장 600) 기준. 본인이 신발장류면 모듈 원본 depth 그대로 사용
-              // 측면이 뒤쪽까지 노출되므로 EP는 본인 가구 전체 깊이를 덮어야 함
+              // EP 깊이: endPanelDepth(사용자 명시) 우선, 없으면 customDepth/actualDepthMm/dimensions.depth 순
               const epTemplateDepth = actualModuleData?.dimensions?.depth || 600;
-              const epOwnDepth = Math.max(placedModule.customDepth || 0, actualDepthMm || 0, epTemplateDepth);
+              const epOwnDepth = placedModule.endPanelDepth
+                ?? placedModule.customDepth
+                ?? actualDepthMm
+                ?? epTemplateDepth;
               const epDepthMm = epOwnDepth;
               const epD = mmToThreeUnits(epDepthMm);
               // 앞/뒤 옵셋: + 늘림, - 줄임. 깊이 = base + front + back, Z = (front - back) / 2
