@@ -1638,12 +1638,14 @@ const PlacedModulePropertiesPanel: React.FC = () => {
       // });
 
       // 선반장 모듈 초기화 (2섹션: 하단/상단 각각, 1섹션: upperShelf만 사용)
-      // 기본하부장(lower-half-cabinet)도 동일하게 처리
+      // 기본하부장(lower-half-cabinet) + 도어올림/상판내림 반통/한통도 동일하게 처리
       const isShelfModule = currentPlacedModule.moduleId.includes('-shelf-') ||
         currentPlacedModule.moduleId.includes('-4drawer-shelf-') ||
         currentPlacedModule.moduleId.includes('-2drawer-shelf-') ||
         currentPlacedModule.moduleId.includes('-entryway-') ||
-        currentPlacedModule.moduleId.includes('lower-half-cabinet');
+        currentPlacedModule.moduleId.includes('lower-half-cabinet') ||
+        currentPlacedModule.moduleId.includes('lower-door-lift-half') ||
+        currentPlacedModule.moduleId.includes('lower-top-down-half');
       if (isShelfModule) {
         // dual-upper-cabinet-shelf 등은 modelConfig.sections가 없고 leftSections만 있음 → fallback
         const effectiveSections = currentPlacedModule.customSections
@@ -6350,13 +6352,17 @@ const PlacedModulePropertiesPanel: React.FC = () => {
           )}
 
           {/* 선반장 선반 설정 (2섹션: 하단/상단 각각 편집) */}
-          {/* 기본하부장(lower-half-cabinet, dual-lower-half-cabinet)도 선반 갯수 편집 가능 */}
+          {/* 기본하부장(lower-half-cabinet, dual-lower-half-cabinet)도 선반 갯수 편집 가능
+              + 도어올림 반통/한통(lower-door-lift-half)
+              + 상판내림 반통/한통(lower-top-down-half) */}
           {!showDetails && currentPlacedModule && (
             currentPlacedModule.moduleId.includes('-shelf-') ||
             currentPlacedModule.moduleId.includes('-4drawer-shelf-') ||
             currentPlacedModule.moduleId.includes('-2drawer-shelf-') ||
             currentPlacedModule.moduleId.includes('-entryway-') ||
-            currentPlacedModule.moduleId.includes('lower-half-cabinet')
+            currentPlacedModule.moduleId.includes('lower-half-cabinet') ||
+            currentPlacedModule.moduleId.includes('lower-door-lift-half') ||
+            currentPlacedModule.moduleId.includes('lower-top-down-half')
           ) && (() => {
             // dual-upper-cabinet-shelf 등은 modelConfig.sections가 없고 leftSections만 있음 → fallback
             const effectiveSections: SectionConfig[] = currentPlacedModule.customSections
@@ -6636,8 +6642,12 @@ const PlacedModulePropertiesPanel: React.FC = () => {
 
             // 1섹션 가구(상부장 3단형 등): 상단 섹션 에디터만 노출, 라벨은 "선반"으로 단순화
             const isSingleSection = effectiveSections.length < 2;
-            // 기본하부장(lower-half-cabinet): 선반 있음/없음 토글 추가
-            const isLowerHalfCabinet = !!currentPlacedModule?.moduleId?.includes('lower-half-cabinet');
+            // 기본하부장(lower-half-cabinet) + 도어올림/상판내림 반통/한통: 선반 있음/없음 토글 추가
+            const isLowerHalfCabinet = !!(
+              currentPlacedModule?.moduleId?.includes('lower-half-cabinet')
+              || currentPlacedModule?.moduleId?.includes('lower-door-lift-half')
+              || currentPlacedModule?.moduleId?.includes('lower-top-down-half')
+            );
             const shelfPresent = isSingleSection
               ? upperShelfCount > 0
               : (upperShelfCount > 0 || lowerShelfCount > 0);
