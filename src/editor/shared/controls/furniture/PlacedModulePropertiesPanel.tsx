@@ -3308,8 +3308,16 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                                 newX = newCenterMm / 100;
                               }
                             } else {
-                              // 좌우 어디에도 가구 없음: 기존 calcResizedPositionX 로직 (공간 중앙 기준)
-                              newX = calcResizedPositionX(freshModule, val, freshAll, freshSI);
+                              // 좌우 어디에도 가구 없음: 공간 중앙 기준으로 가구 위치에 따라 한쪽 벽 고정
+                              //  - 가구가 공간 좌측이면 좌측 벽 anchor (우측으로만 확장)
+                              //  - 가구가 공간 우측이면 우측 벽 anchor (좌측으로만 확장)
+                              if (isOnLeftSide) {
+                                const newCenterMm = oldLeftMm + val / 2;
+                                newX = newCenterMm / 100;
+                              } else {
+                                const newCenterMm = oldRightMm - val / 2;
+                                newX = newCenterMm / 100;
+                              }
                             }
                           } else {
                             newX = freshModule.isFreePlacement
@@ -3420,7 +3428,10 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                                     ? (oldLeftMm + next / 2) / 100
                                     : (oldRightMm - next / 2) / 100;
                                 } else {
-                                  newX = calcResizedPositionX(freshMod, next, freshAll, freshSI);
+                                  // 양쪽 모두 가구 없음: 공간 좌/우 위치에 따라 한쪽 면 고정 (양쪽 확장 방지)
+                                  newX = isOnLeftSide
+                                    ? (oldLeftMm + next / 2) / 100
+                                    : (oldRightMm - next / 2) / 100;
                                 }
                               } else {
                                 newX = freshMod.isFreePlacement
@@ -3432,6 +3443,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                                 moduleWidth: next,
                                 customWidth: next,
                                 position: { ...freshMod.position, x: newX },
+                                userResizedWidth: true,
                               });
                             }
                           }
