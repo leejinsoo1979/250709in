@@ -390,6 +390,50 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
       // 상부장 상판 따내기 기본값: 없음 (필요시 수동 설정)
       // topPanelNotchSize, topPanelNotchSide는 undefined → 따내기 없음
 
+      // 하부장 신규 배치 시: 기존 배치된 하부장에 stoneTop이 설치되어 있으면 같은 두께/오프셋 자동 적용
+      const isNewLowerById = module.moduleId?.startsWith('lower-') || module.moduleId?.includes('dual-lower-');
+      const isNewLower = newCategory === 'lower' || isNewLowerById;
+      if (isNewLower && (module.stoneTopThickness === undefined || module.stoneTopThickness === 0)) {
+        const existingWithStone = state.placedModules.find(m => {
+          const mid = m.moduleId || '';
+          const isLower = m.moduleId?.startsWith('lower-') || mid.includes('dual-lower-') ||
+            mid.includes('lower-door-lift') || mid.includes('lower-top-down') ||
+            mid.includes('lower-drawer') || mid.includes('lower-sink') ||
+            mid.includes('lower-induction');
+          return isLower && (m.stoneTopThickness || 0) > 0;
+        });
+        if (existingWithStone) {
+          module.stoneTopThickness = existingWithStone.stoneTopThickness;
+          // 상판 오프셋도 같은 값으로 (앞 23 기본, 그 외는 0)
+          if (module.stoneTopFrontOffset === undefined) {
+            module.stoneTopFrontOffset = existingWithStone.stoneTopFrontOffset ?? 23;
+          }
+          if (module.stoneTopBackOffset === undefined) {
+            module.stoneTopBackOffset = existingWithStone.stoneTopBackOffset ?? 0;
+          }
+          if (module.stoneTopLeftOffset === undefined) {
+            module.stoneTopLeftOffset = existingWithStone.stoneTopLeftOffset ?? 0;
+          }
+          if (module.stoneTopRightOffset === undefined) {
+            module.stoneTopRightOffset = existingWithStone.stoneTopRightOffset ?? 0;
+          }
+          // 상판내림: stoneThk에 맞춰 cabH(freeHeight) + doorTopGap 자동 보정
+          const isTopDownNew = module.moduleId?.includes('lower-top-down-');
+          const sThk = module.stoneTopThickness || 0;
+          if (isTopDownNew && sThk > 0) {
+            const expectedGap = sThk === 10 ? -90 : sThk === 30 ? -70 : -80;
+            module.doorTopGap = expectedGap;
+            // cabH: 805 - sThk 기준 (반통/한통/2단/3단 공통)
+            const expectedCabH = 805 - sThk;
+            if (module.freeHeight === undefined) module.freeHeight = expectedCabH;
+            if (module.moduleId?.includes('lower-drawer-2tier') || module.moduleId?.includes('dual-lower-drawer-2tier')) {
+              if (module.cabinetBodyHeight === undefined) module.cabinetBodyHeight = expectedCabH;
+            }
+          }
+          // 일반 하부장은 stoneThk만 자동 적용 (freeHeight는 기본값 유지 — 사용자가 직접 조정)
+        }
+      }
+
       // 걸래받이 기본값: 하부장 100mm, 키큰장은 사용자 받침대 높이(spaceInfo.baseConfig.height) 사용
       const isLowerById = module.moduleId?.startsWith('lower-') || module.moduleId?.includes('dual-lower-');
       if (module.baseFrameHeight === undefined) {
