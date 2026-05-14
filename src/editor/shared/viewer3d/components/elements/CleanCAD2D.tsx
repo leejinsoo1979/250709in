@@ -10195,8 +10195,10 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               furnitureBackZ = furnitureZOffset - furnitureDepth/2 - doorThickness + moduleBackWallGapZX;
               furnitureFrontZ = furnitureBackZ + depth;
             } else if (isShoeCabinet) {
-              // 신발장: 뒷면 정렬 + baseDepthOffset
-              furnitureBackZ = furnitureZOffset - furnitureDepth/2 - doorThickness + baseDepthOffset + moduleBackWallGapZX;
+              // 신발장: 뒷면 정렬 — FurnitureItem.tsx와 동일하게 doorThickness 보정 제거
+              //   (FurnitureItem: furnitureZ = furnitureZOffset - furnitureDepth/2 + depth/2 + baseDepthOffset)
+              //   → backZ = furnitureZOffset - furnitureDepth/2 + baseDepthOffset
+              furnitureBackZ = furnitureZOffset - furnitureDepth/2 + baseDepthOffset + moduleBackWallGapZX;
               furnitureFrontZ = furnitureBackZ + depth;
             } else {
               // 하부장/키큰장/의류장: 앞면 정렬 + baseDepthOffset
@@ -10412,7 +10414,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 furnitureBackZ = furnitureZOffset - furnitureDepth/2 - doorThickness + moduleBackWallGapZRX;
                 furnitureFrontZ = furnitureBackZ + depth;
               } else if (isShoeCabinet) {
-                furnitureBackZ = furnitureZOffset - furnitureDepth/2 - doorThickness + baseDepthOffset + moduleBackWallGapZRX;
+                // FurnitureItem.tsx와 동일하게 doorThickness 보정 제거
+                furnitureBackZ = furnitureZOffset - furnitureDepth/2 + baseDepthOffset + moduleBackWallGapZRX;
                 furnitureFrontZ = furnitureBackZ + depth;
               } else {
                 furnitureBackZ = furnitureZOffset + furnitureDepth/2 - doorThickness - depth + baseDepthOffset + moduleBackWallGapZRX;
