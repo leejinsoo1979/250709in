@@ -241,6 +241,18 @@ const SlotSelector: React.FC<SlotSelectorProps> = ({
                 e.stopPropagation(); // 4분할 뷰에서 클릭 이벤트 버블링 방지
                 e.preventDefault();
                 setSelectedSlotIndex(slot.actualIndex);
+                // 해당 슬롯에 배치된 가구로 팝업 전환 (듀얼은 본인 또는 본인-1 슬롯 매칭)
+                const matched = placedModules.find(m => {
+                  if (m.slotIndex === slot.actualIndex) return true;
+                  if (m.isDualSlot && m.slotIndex !== undefined && m.slotIndex + 1 === slot.actualIndex) return true;
+                  return false;
+                });
+                const fStore = useFurnitureStore.getState();
+                if (matched) {
+                  fStore.setSelectedPlacedModuleId(matched.id);
+                } else {
+                  fStore.setSelectedPlacedModuleId(null);
+                }
               }}
               onPointerDown={(e) => e.stopPropagation()}
               onMouseDown={(e) => e.stopPropagation()}

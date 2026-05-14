@@ -1172,11 +1172,11 @@ const PlacedModulePropertiesPanel: React.FC = () => {
     // 슬롯 인덱스가 있으면 기둥 슬롯 분석
     let slotInfo = null;
     if (currentPlacedModule.slotIndex !== undefined) {
-      const columnSlots = analyzeColumnSlots(spaceInfo, placedModules);
+      const columnSlots = analyzeColumnSlots(spaceInfo);
       slotInfo = columnSlots[currentPlacedModule.slotIndex];
     } else {
       // 슬롯 인덱스가 없으면 위치 기반으로 판단
-      const columnSlots = analyzeColumnSlots(spaceInfo, placedModules);
+      const columnSlots = analyzeColumnSlots(spaceInfo);
       const indexing = calculateSpaceIndexing(spaceInfo);
       
       // 가구 위치에서 가장 가까운 슬롯 찾기
@@ -2335,19 +2335,6 @@ const PlacedModulePropertiesPanel: React.FC = () => {
     const numValue = parseFloat(inputMap[direction]);
     if (isNaN(numValue)) {
       setInputMap[direction](valueMap[direction].toString());
-    }
-  };
-
-  // 섹션 높이 입력 핸들러
-  const handleLowerHeightChange = (value: string) => {
-    if (value === '' || /^\d+$/.test(value)) {
-      setLowerHeightInput(value);
-    }
-  };
-
-  const handleUpperHeightChange = (value: string) => {
-    if (value === '' || /^\d+$/.test(value)) {
-      setUpperHeightInput(value);
     }
   };
 
@@ -5858,11 +5845,13 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                             setDoorTopGap(newGap);
                             setDoorTopGapInput(String(newGap));
                           }
-                          // 상판내림: 도어 상단갭은 stoneThk 무관 -80 고정 (cabH 기반 계산)
-                          if (isTopDown && currentPlacedModule.doorTopGap !== -80) {
-                            updates.doorTopGap = -80;
-                            setDoorTopGap(-80);
-                            setDoorTopGapInput('-80');
+                          // 상판내림: stoneThk별 도어 상단갭 (10→-90, 20→-80, 30→-70)
+                          // cabH 변화량(±10) + 도어 상단갭 변화량(±10)으로 도어 H/위치 일정 유지
+                          if (isTopDown) {
+                            const newGap = thickness === 10 ? -90 : thickness === 30 ? -70 : -80;
+                            updates.doorTopGap = newGap;
+                            setDoorTopGap(newGap);
+                            setDoorTopGapInput(String(newGap));
                           }
                           // 뒷턱 다채움 상태이면 새 두께 기준으로 재계산
                           const prevThickness = currentPlacedModule.stoneTopThickness || 0;
