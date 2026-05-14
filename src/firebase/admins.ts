@@ -48,9 +48,28 @@ export async function revokeAdminRole(userId: string): Promise<void> {
 }
 
 /**
- * 사용자가 관리자인지 확인
+ * 일반 사용자 모드로 강제할 이메일 목록
+ *  - admin 권한이 부여되어 있어도 이 이메일이면 일반 사용자 코드 경로 사용
+ *  - 발주자 계정 등 admin 권한 때문에 무거워지는 이슈 회피
  */
-export async function isUserAdmin(userId: string): Promise<boolean> {
+const FORCE_NORMAL_USER_EMAILS = new Set<string>([
+  'contact@interiorshow.kr',
+]);
+
+/**
+ * 이메일이 일반 사용자 모드 강제 대상인지
+ */
+export function isForceNormalUser(email: string | null | undefined): boolean {
+  if (!email) return false;
+  return FORCE_NORMAL_USER_EMAILS.has(email.toLowerCase());
+}
+
+/**
+ * 사용자가 관리자인지 확인
+ *  - FORCE_NORMAL_USER_EMAILS에 포함된 경우 admin 컬렉션 read 자체를 스킵하고 false 반환
+ */
+export async function isUserAdmin(userId: string, email?: string | null): Promise<boolean> {
+  if (isForceNormalUser(email)) return false;
   try {
     const adminRef = doc(db, 'admins', userId);
     const adminDoc = await getDoc(adminRef);

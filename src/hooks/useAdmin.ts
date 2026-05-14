@@ -67,6 +67,17 @@ export const useAdmin = (user: User | null, authLoading?: boolean) => {
 
         console.log('🔐 useAdmin: 슈퍼 관리자 아님 - Firestore admins 컬렉션 체크 중...');
 
+        // 강제 일반사용자 모드 이메일이면 admin read 자체를 스킵
+        const { isForceNormalUser } = await import('@/firebase/admins');
+        if (isForceNormalUser(user.email)) {
+          console.log('🔐 useAdmin: 강제 일반사용자 모드 — admin 분기 우회');
+          setIsAdmin(false);
+          setIsSuperAdmin(false);
+          setAdminRole(null);
+          setLoading(false);
+          return;
+        }
+
         // Firestore admins 컬렉션 체크
         const adminDoc = await getDoc(doc(db, 'admins', user.uid));
 

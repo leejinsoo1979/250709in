@@ -41,8 +41,8 @@ export default function DashboardAdminGuard({ children }: { children: React.Reac
         }
         return;
       }
-      // 1) admins 컬렉션 체크
-      let allowedFlag = await isUserAdmin(user.uid);
+      // 1) admins 컬렉션 체크 (이메일이 강제 일반사용자 목록이면 자동 false)
+      let allowedFlag = await isUserAdmin(user.uid, user.email);
       // 2) 기업회원(plan: 'enterprise') 도 통과
       if (!allowedFlag) {
         try {

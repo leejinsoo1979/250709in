@@ -47,8 +47,8 @@ export default function EnterpriseOrAdminGuard({ children }: { children: React.R
         }
         return;
       }
-      // 1) admins 체크
-      let allowedFlag = await isUserAdmin(user.uid);
+      // 1) admins 체크 (이메일이 강제 일반사용자 목록이면 자동 false)
+      let allowedFlag = await isUserAdmin(user.uid, user.email);
       // 2) 기업회원 체크
       if (!allowedFlag) {
         try {

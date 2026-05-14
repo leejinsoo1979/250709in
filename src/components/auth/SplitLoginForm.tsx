@@ -35,7 +35,7 @@ export const SplitLoginForm: React.FC<SplitLoginFormProps> = ({ onSuccess, defau
     if (!user) return '/demo';
     if (isSuperAdmin(user.email)) return '/dashboard';
     if (!user.uid) return '/demo';
-    if (await isUserAdmin(user.uid)) return '/dashboard';
+    if (await isUserAdmin(user.uid, user.email)) return '/dashboard';
 
     try {
       const userRef = doc(db, 'users', user.uid);
