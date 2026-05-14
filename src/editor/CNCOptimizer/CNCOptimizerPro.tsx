@@ -732,19 +732,10 @@ function PageInner(){
       const extended3050Panels: Panel[] = [];     // 1220×3050 비규격
       const extended2750Panels: Panel[] = [];     // 1220×2750 비규격
       const regularPanels: Panel[] = [];          // 일반 보드(1220×2440)
-      panels.forEach(p => {
-        const hasGrain = p.grain && p.grain !== 'NONE';
-        const canRotate = !hasGrain;
-        if (fits(p.width, p.length, canRotate, defaultStockW, defaultStockL)) {
-          regularPanels.push(p);
-        } else if (fits(p.width, p.length, canRotate, defaultStockW, extendedStockL_2750)) {
-          extended2750Panels.push(p);
-        } else if (fits(p.width, p.length, canRotate, defaultStockW, extendedStockL_3050)) {
-          extended3050Panels.push(p);
-        } else {
-          oversizedPanels.push(p);
-        }
-      });
+      // 비규격 자재 기능 임시 비활성화 — 모두 일반 옵티마이저로 처리
+      panels.forEach(p => regularPanels.push(p));
+      void fits; void extendedStockL_2750; void extendedStockL_3050;
+      void extended2750Panels; void extended3050Panels; void oversizedPanels;
       if (extended2750Panels.length > 0) {
         console.warn(`[CNCOptimizer] 비규격 자재(${defaultStockW}×${extendedStockL_2750}) 패널 ${extended2750Panels.length}개`);
       }
@@ -958,8 +949,8 @@ function PageInner(){
         [extPanelGroups3050, extendedStockL_3050],
       ];
       for (const item of extGroupsList) {
-        const extGroups: Map<string, Panel[]> = item[0];
-        const extLen: number = item[1];
+        const extGroups = item[0];
+        const extLen = item[1];
         for (const [key, groupPanels] of extGroups) {
           let material: string | undefined;
           let thickness: number;
