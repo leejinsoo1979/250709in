@@ -54,6 +54,8 @@ export interface OptimizedResult {
   efficiency: number;
   wasteArea: number;
   usedArea: number;
+  // 비규격: 1220×2440 원장 초과 패널들을 모은 시트 (별도 표시용)
+  isOversized?: boolean;
 }
 
 export interface PlacedPanel extends Panel {

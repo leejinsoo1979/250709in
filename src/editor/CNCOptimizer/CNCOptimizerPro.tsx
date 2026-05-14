@@ -710,10 +710,43 @@ function PageInner(){
         }
       });
 
-      // Group panels by material AND thickness
+      // ★ 패널 크기별 보드 분류
+      // 1) 일반(≤1220×2440): 기존 원장 사용
+      // 2) 비규격 확장(1220×2440 초과 ~ 1220×2750 이내): 확장 보드(1220×2750)에 옵티마이즈
+      // 3) 완전 초과(1220×2750 초과): 단일 패널 시트(isOversized)
+      const defaultStockW = stock[0]?.width ?? 1220;
+      const defaultStockL = stock[0]?.length ?? 2440;
+      const extendedStockL = 2750; // 비규격 확장 자재 길이
+      const fits = (w: number, l: number, canRotate: boolean, sw: number, sl: number) => {
+        const fitsNormal = w <= sw && l <= sl;
+        const fitsRotated = canRotate && (l <= sw && w <= sl);
+        return fitsNormal || fitsRotated;
+      };
+      const oversizedPanels: Panel[] = [];      // 완전 초과 (1220×2750도 못 들어감)
+      const extendedPanels: Panel[] = [];        // 확장 보드(1220×2750)에 들어감
+      const regularPanels: Panel[] = [];         // 일반 보드(1220×2440)에 들어감
+      panels.forEach(p => {
+        const hasGrain = p.grain && p.grain !== 'NONE';
+        const canRotate = !hasGrain;
+        if (fits(p.width, p.length, canRotate, defaultStockW, defaultStockL)) {
+          regularPanels.push(p);
+        } else if (fits(p.width, p.length, canRotate, defaultStockW, extendedStockL)) {
+          extendedPanels.push(p);
+        } else {
+          oversizedPanels.push(p);
+        }
+      });
+      if (extendedPanels.length > 0) {
+        console.warn(`[CNCOptimizer] 확장 자재 패널 ${extendedPanels.length}개 → ${defaultStockW}×${extendedStockL}에 배치`);
+      }
+      if (oversizedPanels.length > 0) {
+        console.warn(`[CNCOptimizer] 완전 비규격 패널 ${oversizedPanels.length}개 → 단일 시트`);
+      }
+
+      // Group panels by material AND thickness (확장 패널은 별도 그룹 키 prefix 'EXT_')
       const panelGroups = new Map<string, Panel[]>();
 
-      panels.forEach(panel => {
+      regularPanels.forEach(panel => {
         // Apply grain and rotation settings
         const processedPanel = { ...panel };
         
@@ -741,6 +774,21 @@ function PageInner(){
           panelGroups.set(key, []);
         }
         panelGroups.get(key)!.push(processedPanel);
+      });
+
+      // 확장 패널은 별도 그룹(prefix EXT_)으로 분리 → 1220×2750 보드로 옵티마이즈
+      const extPanelGroups = new Map<string, Panel[]>();
+      extendedPanels.forEach(panel => {
+        const processedPanel = { ...panel };
+        const hasGrain = panel.grain && panel.grain !== 'NONE';
+        processedPanel.canRotate = !hasGrain;
+        const key = settings.considerMaterial
+          ? `${processedPanel.material || 'PB'}_${processedPanel.thickness || 18}`
+          : `THICKNESS_${processedPanel.thickness || 18}`;
+        if (!extPanelGroups.has(key)) {
+          extPanelGroups.set(key, []);
+        }
+        extPanelGroups.get(key)!.push(processedPanel);
       });
 
       const allResults: OptimizedResult[] = [];
@@ -889,11 +937,142 @@ function PageInner(){
         }
       }
 
+      // ★ 확장 패널 그룹(1220×2750 보드) 옵티마이즈
+      for (const [key, groupPanels] of extPanelGroups) {
+        let material: string | undefined;
+        let thickness: number;
+        if (key.startsWith('THICKNESS_')) {
+          thickness = parseFloat(key.split('_')[1]) || 18;
+        } else {
+          const parts = key.split('_');
+          material = parts[0];
+          thickness = parseFloat(parts[1]) || 18;
+        }
+        // 확장 자재 stockPanel (1220×2750, 라벨에 '비규격' 표시)
+        const extStockPanel = {
+          id: `ext-${material || 'PB'}-${thickness}`,
+          width: defaultStockW,
+          height: extendedStockL,
+          material: material || 'PB',
+          color: 'MW',
+          price: 0,
+          stock: 999,
+          thickness,
+          label: `비규격 ${defaultStockW}×${extendedStockL}`,
+        } as any;
+        const extOptimizerPanels = groupPanels.map(p => ({
+          id: p.id,
+          name: p.label,
+          width: p.width,
+          height: p.length,
+          thickness: p.thickness,
+          quantity: p.quantity,
+          material: p.material || 'PB',
+          color: 'MW',
+          grain: p.grain === 'H' ? 'HORIZONTAL' : p.grain === 'V' ? 'VERTICAL' : 'VERTICAL',
+          canRotate: p.canRotate,
+          boringPositions: p.boringPositions,
+          boringDepthPositions: p.boringDepthPositions,
+          groovePositions: p.groovePositions,
+          screwPositions: p.screwPositions,
+          screwDepthPositions: p.screwDepthPositions,
+          isDoor: p.isDoor,
+          isLeftHinge: p.isLeftHinge,
+          screwHoleSpacing: p.screwHoleSpacing,
+          bracketBoringPositions: p.bracketBoringPositions,
+          bracketBoringDepthPositions: p.bracketBoringDepthPositions,
+          isBracketSide: p.isBracketSide,
+          cornerNotch: p.cornerNotch,
+          sideNotches: p.sideNotches,
+          rebate: p.rebate,
+          meshName: p.meshName,
+          furnitureId: p.furnitureId,
+        }));
+        const adjustedExtStock = {
+          ...extStockPanel,
+          width: extStockPanel.width - (settings.trimLeft || 10) - (settings.trimRight || 10),
+          height: extStockPanel.height - (settings.trimTop || 10) - (settings.trimBottom || 10),
+        };
+        const extResults = await optimizePanelsMultiple(
+          extOptimizerPanels as any,
+          adjustedExtStock,
+          settings.singleSheetOnly ? 1 : 999,
+          settings.alignVerticalCuts !== false,
+          settings.kerf || 5,
+          effectiveOptimizationType
+        );
+        extResults.forEach(result => {
+          result.panels.forEach(panel => {
+            panel.x += (settings.trimLeft || 10);
+            panel.y += (settings.trimBottom || 10);
+          });
+          result.stockPanel = extStockPanel;
+          (result as any).isOversized = true; // 비규격 시트로 표시
+        });
+        allResults.push(...extResults);
+      }
+
       console.log('=== Initial Optimization Complete ===');
       console.log('Total sheets generated:', allResults.length);
       console.log('panelGroups count:', panelGroups.size);
       if (allResults.length === 0) {
         console.error('❌ allResults is empty! panelGroups:', [...panelGroups.entries()].map(([k, v]) => `${k}: ${v.length} panels`));
+      }
+
+      // 비규격 패널을 별도 시트로 추가 (각 패널을 자체 크기 시트로, 배치 좌표 0,0)
+      if (oversizedPanels.length > 0) {
+        oversizedPanels.forEach((p, idx) => {
+          const oversizedStock = {
+            id: `oversized-${idx}`,
+            width: p.width,
+            height: p.length,
+            material: p.material || 'PB',
+            color: 'MW',
+            price: 0,
+            stock: 1,
+            thickness: p.thickness,
+          } as any;
+          const placed = [{
+            id: p.id,
+            name: p.label,
+            width: p.width,
+            height: p.length,
+            x: 0,
+            y: 0,
+            rotated: false,
+            thickness: p.thickness,
+            material: p.material || 'PB',
+            color: 'MW',
+            grain: p.grain === 'H' ? 'HORIZONTAL' : p.grain === 'V' ? 'VERTICAL' : 'NONE',
+            quantity: p.quantity,
+            canRotate: false,
+            label: p.label,
+            boringPositions: p.boringPositions,
+            boringDepthPositions: p.boringDepthPositions,
+            groovePositions: p.groovePositions,
+            screwPositions: p.screwPositions,
+            screwDepthPositions: p.screwDepthPositions,
+            isDoor: p.isDoor,
+            isLeftHinge: p.isLeftHinge,
+            screwHoleSpacing: p.screwHoleSpacing,
+            bracketBoringPositions: p.bracketBoringPositions,
+            bracketBoringDepthPositions: p.bracketBoringDepthPositions,
+            isBracketSide: p.isBracketSide,
+            cornerNotch: p.cornerNotch,
+            sideNotches: p.sideNotches,
+            rebate: p.rebate,
+            meshName: p.meshName,
+            furnitureId: p.furnitureId,
+          } as any];
+          allResults.push({
+            stockPanel: oversizedStock,
+            panels: placed,
+            efficiency: 100,
+            wasteArea: 0,
+            usedArea: p.width * p.length,
+            isOversized: true,
+          } as any);
+        });
       }
 
       // 재최적화 비활성화 - 시트 낭비 방지
@@ -1821,6 +2000,9 @@ function PageInner(){
                             </span>
                             <span className={styles.sheetInfo}>
                               {stockLabel}
+                              {(result as any).isOversized && (
+                                <span style={{ marginLeft: 6, padding: '1px 6px', background: '#ff9800', color: '#fff', borderRadius: 4, fontSize: 10, fontWeight: 600 }}>비규격</span>
+                              )}
                             </span>
                             <span className={styles.sheetPanels}>
                               {result.panels.length}개
