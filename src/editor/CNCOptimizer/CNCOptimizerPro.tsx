@@ -719,7 +719,7 @@ function PageInner(){
       const stdL = 2440;
       const ext2750 = 2750;
       const ext3050 = 3050;
-      const fitInBoard = (w, l, canRot, sw, sl) => {
+      const fitInBoard = (w: number, l: number, canRot: boolean, sw: number, sl: number) => {
         const sh = Math.min(w, l);
         const lg = Math.max(w, l);
         if (sh <= sw && lg <= sl) return true;
