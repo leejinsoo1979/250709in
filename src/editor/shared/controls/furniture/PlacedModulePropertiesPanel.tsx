@@ -6252,11 +6252,13 @@ const PlacedModulePropertiesPanel: React.FC = () => {
           )}
 
           {/* 선반장 선반 설정 (2섹션: 하단/상단 각각 편집) */}
+          {/* 기본하부장(lower-half-cabinet, dual-lower-half-cabinet)도 선반 갯수 편집 가능 */}
           {!showDetails && currentPlacedModule && (
             currentPlacedModule.moduleId.includes('-shelf-') ||
             currentPlacedModule.moduleId.includes('-4drawer-shelf-') ||
             currentPlacedModule.moduleId.includes('-2drawer-shelf-') ||
-            currentPlacedModule.moduleId.includes('-entryway-')
+            currentPlacedModule.moduleId.includes('-entryway-') ||
+            currentPlacedModule.moduleId.includes('lower-half-cabinet')
           ) && (() => {
             // dual-upper-cabinet-shelf 등은 modelConfig.sections가 없고 leftSections만 있음 → fallback
             const effectiveSections: SectionConfig[] = currentPlacedModule.customSections
