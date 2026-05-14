@@ -1006,9 +1006,9 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     const isTopDownForY = moduleData?.id?.includes('lower-top-down-');
 
     if (isTopDownForY) {
-      // 상판내림: 도어 위치는 stoneThk 무관 강제 -80 고정 (store 값 무시)
-      const topDownReferenceHeight = moduleData?.dimensions?.height || 785;
-      const effectiveTopDownTopGap = -80;
+      // 상판내림: referenceH 785 고정, 사용자 갭 변경은 store에서 반영
+      const topDownReferenceHeight = 785;
+      const effectiveTopDownTopGap = doorTopGapProp ?? storePlacedModule?.doorTopGap ?? -80;
       const doorTopY = -mmToThreeUnits(lowerCabinetHeight) / 2 + mmToThreeUnits(topDownReferenceHeight + effectiveTopDownTopGap);
       doorYPosition = doorTopY - mmToThreeUnits(actualDoorHeight) / 2;
     } else if (isDoorLiftForY) {
