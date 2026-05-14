@@ -718,9 +718,18 @@ function PageInner(){
       const defaultStockL = stock[0]?.length ?? 2440;
       const extendedStockL = 2750; // 비규격 확장 자재 길이
       const fits = (w: number, l: number, canRotate: boolean, sw: number, sl: number) => {
-        const fitsNormal = w <= sw && l <= sl;
-        const fitsRotated = canRotate && (l <= sw && w <= sl);
-        return fitsNormal || fitsRotated;
+        // 짧은 쪽 = sw(1220), 긴 쪽 = sl(2440) 매칭 자동 검사
+        // (Panel width/length 명명 불일치 방지 — 두 방향 모두 시도)
+        const shortSide = Math.min(w, l);
+        const longSide = Math.max(w, l);
+        const fitsAuto = shortSide <= sw && longSide <= sl;
+        if (fitsAuto) return true;
+        if (canRotate) {
+          // 회전 가능: 더 엄격하게 양방향 검사 (실제로는 fitsAuto가 충분)
+          return false;
+        }
+        // 회전 불가: 원래 방향(w,l 그대로) 검사
+        return w <= sw && l <= sl;
       };
       const oversizedPanels: Panel[] = [];      // 완전 초과 (1220×2750도 못 들어감)
       const extendedPanels: Panel[] = [];        // 확장 보드(1220×2750)에 들어감
