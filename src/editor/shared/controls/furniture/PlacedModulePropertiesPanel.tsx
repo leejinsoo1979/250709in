@@ -3239,16 +3239,37 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                             });
                             const delta = val - oldW; // 확장량 (음수면 축소)
                             insertDelta = delta;
+                            // 공간 중앙 기준으로 가구 위치 판단
+                            const spaceWidthMm = freshSI.width || 3000;
+                            const spaceMidMm = spaceWidthMm / 2 - spaceWidthMm / 2 + spaceWidthMm / 2; // 0 기준 가정 시 단순화 — 실제 X는 음수~양수 범위일 수 있음
+                            // currentCenterMm가 음수면 좌측, 양수면 우측 (Three.js 좌표는 공간 중앙이 0)
+                            const isOnLeftSide = oldCenter < 0;
                             if (leftAdj && rightAdj) {
-                              // 양쪽 인접: 좌측 anchor 유지, 우측 인접 가구 이동
-                              const newCenterMm = oldLeftMm + val / 2;
-                              newX = newCenterMm / 100;
-                              // 우측 가구 및 그 이후 가구들 이동은 본인 업데이트 후 일괄 처리
-                              insertMoveTargets = freshAll.filter((m: any) => {
-                                if (m.id === freshModule.id || m.isSurroundPanel) return false;
-                                const mLeft = (m.position?.x ?? 0) * 100 - (m.freeWidth ?? m.customWidth ?? m.moduleWidth ?? 0) / 2;
-                                return mLeft >= oldRightMm - SNAP;
-                              });
+                              // 양쪽 인접: 가구 위치에 따라 anchor 선택
+                              if (isOnLeftSide) {
+                                // 좌측 영역: 좌측 anchor 유지, 우측 인접 가구 이동
+                                const newCenterMm = oldLeftMm + val / 2;
+                                newX = newCenterMm / 100;
+                                insertMoveTargets = freshAll.filter((m: any) => {
+                                  if (m.id === freshModule.id || m.isSurroundPanel) return false;
+                                  const mLeft = (m.position?.x ?? 0) * 100 - (m.freeWidth ?? m.customWidth ?? m.moduleWidth ?? 0) / 2;
+                                  return mLeft >= oldRightMm - SNAP;
+                                });
+                              } else {
+                                // 우측 영역: 우측 anchor 유지, 좌측 인접 가구 이동
+                                const newCenterMm = oldRightMm - val / 2;
+                                newX = newCenterMm / 100;
+                                insertMoveTargets = freshAll.filter((m: any) => {
+                                  if (m.id === freshModule.id || m.isSurroundPanel) return false;
+                                  const mRight = (m.position?.x ?? 0) * 100 + (m.freeWidth ?? m.customWidth ?? m.moduleWidth ?? 0) / 2;
+                                  return mRight <= oldLeftMm + SNAP;
+                                });
+                                // 좌측 가구들은 delta만큼 *왼쪽으로* 이동 (delta가 음수=축소면 오른쪽으로)
+                                insertMoveTargets = insertMoveTargets.map((m: any) => ({
+                                  ...m,
+                                  __moveDirection: -1, // 마커: 좌측 가구는 반대 방향
+                                }));
+                              }
                             } else if (leftAdj && !rightAdj) {
                               // 좌측만 인접: 좌측 anchor 유지, 우측으로 확장
                               const newCenterMm = oldLeftMm + val / 2;
@@ -3277,8 +3298,10 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                           //  (본인 update와 같은 micro-task 안에서 처리되어 다음 onBlur에서 정상적인 freshModule을 받을 수 있도록 함)
                           if (isInsertFrameWidth && insertMoveTargets.length > 0) {
                             insertMoveTargets.forEach((m: any) => {
+                              // 좌측 가구는 반대 방향(__moveDirection=-1), 우측 가구는 정방향(default +1)
+                              const dir = m.__moveDirection === -1 ? -1 : 1;
                               updatePlacedModule(m.id, {
-                                position: { ...m.position, x: m.position.x + insertDelta / 100 },
+                                position: { ...m.position, x: m.position.x + (insertDelta * dir) / 100 },
                               } as any);
                             });
                           }
