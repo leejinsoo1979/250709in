@@ -3391,9 +3391,42 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                             if (currentPlacedModule && freshMod) {
                               const freshAll = useFurnitureStore.getState().placedModules;
                               const freshSI = useSpaceConfigStore.getState().spaceInfo;
-                              const newX = (freshMod.isFreePlacement || isInsertFrameKey)
-                                ? calcResizedPositionX(freshMod, next, freshAll, freshSI)
-                                : freshMod.position.x;
+                              let newX: number;
+                              if (isInsertFrameKey) {
+                                // 키큰장찬넬: 옆 가구 위치에 따라 반대쪽으로만 확장
+                                const oldCenter = freshMod.position.x;
+                                const oldLeftMm = oldCenter * 100 - curW / 2;
+                                const oldRightMm = oldCenter * 100 + curW / 2;
+                                const SNAP = 10;
+                                const hasLeftNeighbor = freshAll.some((m: any) => {
+                                  if (m.id === freshMod.id || m.isSurroundPanel) return false;
+                                  const mW = m.freeWidth ?? m.customWidth ?? m.moduleWidth ?? 0;
+                                  const mRight = (m.position?.x ?? 0) * 100 + mW / 2;
+                                  return mRight <= oldLeftMm + SNAP;
+                                });
+                                const hasRightNeighbor = freshAll.some((m: any) => {
+                                  if (m.id === freshMod.id || m.isSurroundPanel) return false;
+                                  const mW = m.freeWidth ?? m.customWidth ?? m.moduleWidth ?? 0;
+                                  const mLeft = (m.position?.x ?? 0) * 100 - mW / 2;
+                                  return mLeft >= oldRightMm - SNAP;
+                                });
+                                const isOnLeftSide = oldCenter < 0;
+                                if (hasLeftNeighbor && !hasRightNeighbor) {
+                                  newX = (oldLeftMm + next / 2) / 100;
+                                } else if (!hasLeftNeighbor && hasRightNeighbor) {
+                                  newX = (oldRightMm - next / 2) / 100;
+                                } else if (hasLeftNeighbor && hasRightNeighbor) {
+                                  newX = isOnLeftSide
+                                    ? (oldLeftMm + next / 2) / 100
+                                    : (oldRightMm - next / 2) / 100;
+                                } else {
+                                  newX = calcResizedPositionX(freshMod, next, freshAll, freshSI);
+                                }
+                              } else {
+                                newX = freshMod.isFreePlacement
+                                  ? calcResizedPositionX(freshMod, next, freshAll, freshSI)
+                                  : freshMod.position.x;
+                              }
                               updatePlacedModule(currentPlacedModule.id, {
                                 freeWidth: next,
                                 moduleWidth: next,
