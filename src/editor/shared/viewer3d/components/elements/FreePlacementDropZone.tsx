@@ -450,12 +450,20 @@ const FreePlacementDropZone: React.FC = () => {
       const floatMm = (activeModuleData as any).individualFloatHeight ?? 200;
       h = Math.max(0, (spaceInfo.height || 0) - topFrameMm - floorFinishMm - floatMm);
     }
+    // 멍장 키큰장(single-dummy-full / dual-dummy-full): 다른 키큰장과 동일하게 공간 H 맞춤
+    //   본체 H = 공간 H - 상단몰딩 - 걸레받이 - 바닥마감
+    if (activeModuleData.id?.includes('dummy-full')) {
+      const topFrameMm = spaceInfo.frameSize?.top ?? 30;
+      const floorFinishMm = (spaceInfo.hasFloorFinish && spaceInfo.floorFinish?.height) || 0;
+      const baseMm = spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height ?? 65) : 0;
+      h = Math.max(0, (spaceInfo.height || 0) - topFrameMm - floorFinishMm - baseMm);
+    }
     return {
       width: activeModuleData.dimensions.width,
       height: h,
       depth: activeModuleData.dimensions.depth,
     };
-  }, [activeModuleData, spaceInfo.height, spaceInfo.frameSize?.top, spaceInfo.hasFloorFinish, spaceInfo.floorFinish?.height]);
+  }, [activeModuleData, spaceInfo.height, spaceInfo.frameSize?.top, spaceInfo.hasFloorFinish, spaceInfo.floorFinish?.height, spaceInfo.baseConfig?.type, spaceInfo.baseConfig?.height]);
 
   // 구간 최적화 적용된 치수 (고스트/배치/충돌에 사용)
   const effectiveDimensions = useMemo(() => {

@@ -134,6 +134,16 @@ export function placeFurnitureFree(params: PlaceFurnitureFreeParams): PlaceFurni
       : spaceInfo.height;
     effectiveHeight = Math.max(0, zoneH - topFrameMm - floorFinishMm - floatMm);
   }
+  // 멍장 키큰장(single-dummy-full / dual-dummy-full): 다른 키큰장과 동일하게 공간 H 맞춤
+  if (moduleId.includes('dummy-full')) {
+    const topFrameMm = spaceInfo.frameSize?.top ?? 30;
+    const floorFinishMm = (spaceInfo.hasFloorFinish && spaceInfo.floorFinish?.height) || 0;
+    const baseMm = spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height ?? 65) : 0;
+    const zoneH = effectiveZone === 'dropped' && droppedZone.droppedInternalHeight !== undefined
+      ? droppedZone.droppedInternalHeight + (spaceInfo.baseConfig?.height ?? 65)
+      : spaceInfo.height;
+    effectiveHeight = Math.max(0, zoneH - topFrameMm - floorFinishMm - baseMm);
+  }
 
   console.log('🏗️ [placeFurnitureFree] zone detection', {
     xPositionMM, clampedX, zone: effectiveZone,
