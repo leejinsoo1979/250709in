@@ -3701,6 +3701,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                             customDepth: val,
                             lowerSectionDepth: val,
                             upperSectionDepth: val,
+                            endPanelDepth: val, // EP 길이도 가구 깊이에 맞춰 동기화
                           });
                           setFreeDepthInput(val.toString());
                           const store = useFurnitureStore.getState();
@@ -3751,6 +3752,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                               customDepth: next,
                               lowerSectionDepth: next,
                               upperSectionDepth: next,
+                              endPanelDepth: next, // EP 길이도 가구 깊이에 맞춰 동기화
                             });
                           }
                         }
