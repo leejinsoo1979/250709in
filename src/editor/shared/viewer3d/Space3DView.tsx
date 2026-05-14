@@ -150,32 +150,17 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
   const showDimensions = showDimensionsProp !== undefined ? showDimensionsProp : storeShowDimensions;
   const dimensionDisplayEnabled = showDimensions && showDimensionsText;
 
-  // ESC/E 키 이벤트 리스너
-  //  - ESC: selectedFurnitureId 해제
-  //  - E (2D 모드): 지우개 모드 토글
+  // ESC 키 이벤트 리스너 - selectedFurnitureId 해제
+  // (E 키 지우개 토글은 Configurator의 단축키 핸들러에서 처리)
   useEffect(() => {
-    const isEditableTarget = (target: EventTarget | null) => {
-      if (!(target instanceof HTMLElement)) return false;
-      const tag = target.tagName;
-      return tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || target.isContentEditable;
-    };
     const handleEscKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         const { selectedFurnitureId, setSelectedFurnitureId } = useUIStore.getState();
         if (selectedFurnitureId) {
           setSelectedFurnitureId(null);
         }
-        return;
-      }
-      // E 키: 2D 모드에서만 지우개 토글
-      if ((e.key === 'e' || e.key === 'E') && !e.metaKey && !e.ctrlKey && !e.altKey) {
-        if (isEditableTarget(e.target)) return;
-        const ui = useUIStore.getState();
-        if (ui.viewMode !== '2D') return;
-        ui.toggleEraserMode();
       }
     };
-
     document.addEventListener('keydown', handleEscKey);
     return () => {
       document.removeEventListener('keydown', handleEscKey);

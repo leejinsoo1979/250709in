@@ -1058,6 +1058,17 @@ const Configurator: React.FC = () => {
         return;
       }
 
+      // E (모디파이어 없음): 2D 모드일 때 지우개 모드 토글
+      if ((event.key === 'e' || event.key === 'E') && !event.ctrlKey && !event.metaKey && !event.altKey && !event.shiftKey) {
+        const { viewMode, setMeasureMode, toggleEraserMode } = useUIStore.getState();
+        if (viewMode === '2D') {
+          event.preventDefault();
+          setMeasureMode(false);
+          toggleEraserMode();
+          return;
+        }
+      }
+
       // 컬럼 편집 팝업이 열린 상태에서 좌우 화살표로 컬럼 이동
       if (activePopup.type === 'columnEdit' && activePopup.id) {
         const targetColumn = spaceInfo.columns?.find(col => col.id === activePopup.id);
