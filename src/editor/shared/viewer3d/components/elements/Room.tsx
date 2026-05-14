@@ -4727,10 +4727,11 @@ const Room: React.FC<RoomProps> = ({
                       effectiveCeilingToBase = ceilingToBaseTopMM - dropH;
                       effectiveTopY = panelStartY + height - mmToThreeUnits(dropH);
                     }
-                    // 상부장(upper): 상단몰딩 = topFrameThickness (캐비넷 위 작은 띠)
-                    // 키큰장(full)/기타: 공간 기반 계산 (공간높이 - 가구높이)
+                    const isGlassCabinetTopFrame = mod.moduleId?.includes('glass-cabinet') ?? false;
+                    // 상부장/유리장: 상단몰딩 = topFrameThickness.
+                    // 일반 키큰장(full)은 본체 높이 변경분을 상단몰딩이 흡수하므로 공간 기반으로 계산한다.
                     let totalFrameHeightMM: number;
-                    if (modCategory === 'upper') {
+                    if (modCategory === 'upper' || isGlassCabinetTopFrame) {
                       totalFrameHeightMM = mod.topFrameThickness ?? (spaceInfo.frameSize?.top || 30);
                     } else {
                       totalFrameHeightMM = Math.max(0, effectiveCeilingToBase - modFreeHeight);
