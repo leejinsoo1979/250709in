@@ -1638,10 +1638,12 @@ const PlacedModulePropertiesPanel: React.FC = () => {
       // });
 
       // 선반장 모듈 초기화 (2섹션: 하단/상단 각각, 1섹션: upperShelf만 사용)
+      // 기본하부장(lower-half-cabinet)도 동일하게 처리
       const isShelfModule = currentPlacedModule.moduleId.includes('-shelf-') ||
         currentPlacedModule.moduleId.includes('-4drawer-shelf-') ||
         currentPlacedModule.moduleId.includes('-2drawer-shelf-') ||
-        currentPlacedModule.moduleId.includes('-entryway-');
+        currentPlacedModule.moduleId.includes('-entryway-') ||
+        currentPlacedModule.moduleId.includes('lower-half-cabinet');
       if (isShelfModule) {
         // dual-upper-cabinet-shelf 등은 modelConfig.sections가 없고 leftSections만 있음 → fallback
         const effectiveSections = currentPlacedModule.customSections
