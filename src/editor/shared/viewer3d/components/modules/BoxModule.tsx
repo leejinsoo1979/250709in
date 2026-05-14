@@ -1312,7 +1312,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
             material={insertSurroundMaterial}
             isDragging={isDragging}
             isEditMode={isEditMode}
-            panelName="Insert상단프레임-마감판"
+            panelName="Insert상단프레임"
             furnitureId={placedFurnitureId}
           />
         )}
@@ -1324,7 +1324,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
             material={insertSurroundMaterial}
             isDragging={isDragging}
             isEditMode={isEditMode}
-            panelName="Insert걸레받이-마감판"
+            panelName="Insert걸레받이"
             furnitureId={placedFurnitureId}
           />
         )}
