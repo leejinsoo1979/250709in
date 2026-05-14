@@ -23,6 +23,42 @@ const getImagePath = (filename: string) => {
   return `/images/furniture-thumbnails/${filename}`;
 };
 
+const isPlainShoeShelfModuleId = (moduleId?: string): boolean => {
+  if (!moduleId) return false;
+  return /(^|-)(?:single|dual)-shelf-/.test(moduleId)
+    && !moduleId.includes('-4drawer-shelf-')
+    && !moduleId.includes('-2drawer-shelf-')
+    && !moduleId.includes('shelf-split');
+};
+
+const getPlainShoeShelfOffsets = (module: any, spaceInfo: any) => {
+  const floorBaseMm = spaceInfo?.baseConfig?.type === 'floor'
+    ? (spaceInfo?.baseConfig?.height ?? 60)
+    : 0;
+  const baseAbsorbedMm = module?.hasBase === false
+    ? (module?.baseFrameHeight ?? floorBaseMm)
+    : 0;
+  const isGlobalFloat = spaceInfo?.baseConfig?.type === 'stand'
+    && spaceInfo?.baseConfig?.placementType === 'float';
+  const floatAbsorbedMm = module?.hasBase === false
+    ? Math.max(0, module?.individualFloatHeight ?? 0)
+    : (isGlobalFloat ? Math.max(0, spaceInfo?.baseConfig?.floatHeight ?? 0) : 0);
+  return { baseAbsorbedMm, floatAbsorbedMm };
+};
+
+const getPlainShoeShelfSectionHeights = (
+  module: any,
+  spaceInfo: any,
+  sections: SectionConfig[],
+  sectionBasisH: number
+): number[] | null => {
+  if (!isPlainShoeShelfModuleId(module?.moduleId) || sections.length !== 2) return null;
+  const { baseAbsorbedMm, floatAbsorbedMm } = getPlainShoeShelfOffsets(module, spaceInfo);
+  const lowerH = Math.max(0, Math.round((sections[0]?.height || 0) + baseAbsorbedMm - floatAbsorbedMm));
+  const upperH = Math.max(0, Math.round(sectionBasisH - lowerH));
+  return [lowerH, upperH];
+};
+
 type RenderedSurroundPanelMod = {
   sideHeightMm: number;
   frontHeightMm: number;
@@ -4119,6 +4155,12 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                 - (currentPlacedModule.individualFloatHeight ?? 0))
               : 0;
             const sectionBasisH = Math.max(0, totalH + absorbedTopForSections + absorbedBaseForSections);
+            const isPlainShoeShelfForSections = !isCustom
+              && !!mcSections
+              && isPlainShoeShelfModuleId(currentPlacedModule.moduleId);
+            const plainShoeShelfSectionHeights = isPlainShoeShelfForSections && mcSections
+              ? getPlainShoeShelfSectionHeights(currentPlacedModule, spaceInfo, mcSections, sectionBasisH)
+              : null;
 
             const getStdSectionHeightMM = (sIdx: number): number => {
               if (!mcSections || mcSections.length < 2) return totalH;
@@ -4154,7 +4196,9 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                 // 상부몰딩/걸레받이 토글 변경 시 흡수된 높이가 즉시 반영됨
                 const isLastSection = sIdx === sectionCount - 1;
                 const isPantryOrPullOutSection = isPullOutOrPantry && !isCustom;
-                const dynamicH = isPantryOrPullOutSection
+                const dynamicH = plainShoeShelfSectionHeights
+                  ? (plainShoeShelfSectionHeights[sIdx] ?? 0)
+                  : isPantryOrPullOutSection
                   ? ((sec as any).height || getStdSectionHeightMM(sIdx))
                   : isLastSection
                   ? (() => {
@@ -4361,7 +4405,9 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                         const isLastSection = sIdx === sectionCount - 1;
                         const isStdEditable = !isCustom && isLastSection && sectionCount >= 2;
                         const isPantryOrPullOut = isPullOutOrPantry;
-                        const canEdit = isCustom || isStdEditable || (isPantryOrPullOut && sectionCount >= 2);
+                        const canEdit = isPlainShoeShelfForSections
+                          ? sectionCount === 2
+                          : (isCustom || isStdEditable || (isPantryOrPullOut && sectionCount >= 2));
                         return (
                       <div style={{ flex: 1, minWidth: '70px' }}>
                         <label style={{ fontSize: '10px', color: 'var(--theme-text-secondary)', display: 'block', lineHeight: 1 }}>높이</label>
@@ -4371,7 +4417,40 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                             value={displayH}
                             onChange={(e) => setSectionHeightInputs(prev => ({ ...prev, [sIdx]: e.target.value }))}
                             onBlur={() => {
-                              if (isCustom) {
+                              if (isPlainShoeShelfForSections && mcSections && plainShoeShelfSectionHeights) {
+                                const inputVal = parseInt(sectionHeightInputs[sIdx] || '0', 10);
+                                if (isNaN(inputVal) || inputVal < 100) {
+                                  setSectionHeightInputs({});
+                                  return;
+                                }
+                                const nextEffectiveHeights = [...plainShoeShelfSectionHeights];
+                                nextEffectiveHeights[sIdx] = inputVal;
+                                const nextSectionBasisH = nextEffectiveHeights.reduce((sum, h) => sum + h, 0);
+                                const nextBodyH = Math.max(300, Math.min(3000, nextSectionBasisH - absorbedTopForSections - absorbedBaseForSections));
+                                const { baseAbsorbedMm, floatAbsorbedMm } = getPlainShoeShelfOffsets(currentPlacedModule, spaceInfo);
+                                const canonicalLowerH = Math.max(0, Math.round(nextEffectiveHeights[0] - baseAbsorbedMm + floatAbsorbedMm));
+                                const canonicalUpperH = Math.max(0, Math.round(nextEffectiveHeights[1]));
+                                const effectiveHeightsForShelves = [nextEffectiveHeights[0], nextEffectiveHeights[1]];
+                                const newSections = mcSections.map((s: any, idx: number) => {
+                                  const nextH = idx === 0 ? canonicalLowerH : canonicalUpperH;
+                                  const updated: any = { ...s, height: nextH };
+                                  if ((s.type === 'shelf' || s.type === 'open') && (s.count > 0 || (Array.isArray(s.shelfPositions) && s.shelfPositions.length > 0))) {
+                                    const shelfCount = s.count || (s.shelfPositions?.length ?? 0);
+                                    const innerH = Math.max(0, effectiveHeightsForShelves[idx] - 2 * pt);
+                                    updated.shelfPositions = calculateEvenShelfPositions(innerH, shelfCount, pt);
+                                  }
+                                  return updated;
+                                });
+                                const updates: any = { customSections: newSections, freeHeight: nextBodyH };
+                                if (moduleData.category === 'full') {
+                                  const iSpace = calculateInternalSpace(spaceInfo);
+                                  const globalTopFrame = spaceInfo.frameSize?.top || 30;
+                                  updates.topFrameThickness = Math.max(0, globalTopFrame + (iSpace.height - nextBodyH));
+                                }
+                                updatePlacedModule(currentPlacedModule.id, updates);
+                                setFreeHeightInput(nextBodyH.toString());
+                                setSectionHeightInputs({});
+                              } else if (isCustom) {
                                 handleSectionHeightBlur(sIdx);
                               } else if (isPantryOrPullOut && mcSections) {
                                 // 팬트리장/인출장: 전체 몸통 H 고정, 변경한 섹션의 반대쪽 섹션이 흡수한다.
@@ -6377,6 +6456,22 @@ const PlacedModulePropertiesPanel: React.FC = () => {
               ?? currentPlacedModule?.freeHeight
               ?? moduleData?.dimensions?.height
               ?? 0;
+            const shouldAbsorbTopForShelfSections = moduleData?.category === 'full';
+            const shouldAbsorbBaseForShelfSections = moduleData?.category === 'full' || moduleData?.category === 'lower';
+            const absorbedTopForShelfSections = shouldAbsorbTopForShelfSections && currentPlacedModule.hasTopFrame === false
+              ? ((currentPlacedModule.topFrameThickness ?? spaceInfo.frameSize?.top ?? 30) - (currentPlacedModule.topFrameGap ?? 0))
+              : 0;
+            const absorbedBaseForShelfSections = shouldAbsorbBaseForShelfSections && currentPlacedModule.hasBase === false && !currentPlacedModule.moduleId?.includes('glass-cabinet')
+              ? (((currentPlacedModule.baseFrameHeight ?? (spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height ?? 60) : 0)))
+                - (currentPlacedModule.individualFloatHeight ?? 0))
+              : 0;
+            const shelfSectionBasisH = Math.max(0, moduleOwnHeight + absorbedTopForShelfSections + absorbedBaseForShelfSections);
+            const plainShoeShelfHeightsForShelfEditor = getPlainShoeShelfSectionHeights(
+              currentPlacedModule,
+              spaceInfo,
+              effectiveSections,
+              shelfSectionBasisH
+            );
 
             // 각 섹션별 shelf 편집 블록 렌더링 헬퍼
             const renderShelfEditor = (
@@ -6408,7 +6503,9 @@ const PlacedModulePropertiesPanel: React.FC = () => {
               const isLastR = sectionIdx === effectiveSections.length - 1;
               const sectionHeight = isSingleSecForHeight
                 ? Math.max(0, moduleOwnHeight)
-                : (isLastR
+                : (plainShoeShelfHeightsForShelfEditor
+                  ? (plainShoeShelfHeightsForShelfEditor[sectionIdx] ?? 0)
+                  : isLastR
                   ? Math.max(0, furnitureOuterR - fixedSumR)
                   : ((section.height as number) || 0));
 
@@ -6691,7 +6788,9 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                   const isLast = idx === effectiveSections.length - 1;
                   const sectionH = isSingleSection
                     ? Math.max(0, currentPlacedModule.customHeight ?? currentPlacedModule.freeHeight ?? moduleData?.dimensions?.height ?? 0)
-                    : (isLast ? Math.max(0, furnitureOuterR - fixedSumR) : (sec.height || 0));
+                    : (plainShoeShelfHeightsForShelfEditor
+                      ? (plainShoeShelfHeightsForShelfEditor[idx] ?? 0)
+                      : (isLast ? Math.max(0, furnitureOuterR - fixedSumR) : (sec.height || 0)));
                   const innerH = sectionH - 2 * basicThickness;
                   return {
                     ...sec,

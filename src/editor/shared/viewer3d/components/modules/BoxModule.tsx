@@ -235,15 +235,18 @@ const BoxModule: React.FC<BoxModuleProps> = ({
 
   // 선반장(single-shelf/dual-shelf) 전용 흡수 분배:
   // - 띄움 차감(floatAbsorbed): 하부 섹션에서 빼고
-  // - 걸레받이 흡수(baseAbsorbed): 상부 섹션에 더함
+  // - 걸레받이 흡수(baseAbsorbed): 하부 섹션에 더해 바닥 기준 1060 경계 유지
   const moduleIdForAbsorb = moduleData?.id || '';
   const isPlainShelfModule = /(^|-)(?:single|dual)-shelf-/.test(moduleIdForAbsorb)
     && !moduleIdForAbsorb.includes('-4drawer-shelf-')
-    && !moduleIdForAbsorb.includes('-2drawer-shelf-');
+    && !moduleIdForAbsorb.includes('-2drawer-shelf-')
+    && !moduleIdForAbsorb.includes('shelf-split');
   let shelfFloatAbsorbedMm = 0;
   let shelfBaseAbsorbedMm = 0;
   if (isPlainShelfModule) {
-    const globalBaseMm = spaceInfo?.baseConfig?.height ?? 100;
+    const globalBaseMm = spaceInfo?.baseConfig?.type === 'floor'
+      ? (spaceInfo?.baseConfig?.height ?? 60)
+      : 0;
     const isFloatPlacement = spaceInfo?.baseConfig?.type === 'stand'
       && spaceInfo?.baseConfig?.placementType === 'float';
     const globalFloatMm = isFloatPlacement ? (spaceInfo?.baseConfig?.floatHeight || 0) : 0;

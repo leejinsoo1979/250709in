@@ -4233,13 +4233,14 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 return Math.round(sectionBasisH * s.height / 100);
               });
               // 현관장 H는 첫(하부) 섹션이 흡수
-              // 선반장(single-shelf/dual-shelf): 걸레받이 OFF→상부 흡수, 띄움→하부 차감으로 분배
+              // 선반장(single-shelf/dual-shelf): 걸레받이 OFF→하부 흡수, 띄움→하부 차감으로 분배
               // 그 외(일반 가구, 4drawer/2drawer-shelf 등): 마지막(상부) 섹션이 흡수
               const leftModId = leftViewMod?.moduleId || '';
               const leftIsEntryway = leftModId.includes('-entryway-');
               const leftIsPlainShelf = (leftModId.startsWith('single-shelf-') || leftModId.startsWith('dual-shelf-'))
                 && !leftModId.includes('-4drawer-shelf-')
-                && !leftModId.includes('-2drawer-shelf-');
+                && !leftModId.includes('-2drawer-shelf-')
+                && !leftModId.includes('shelf-split');
               if (leftIsEntryway && rawHeights.length >= 2) {
                 const fixedSum = rawHeights.slice(1).reduce((a, b) => a + b, 0);
                 sectionHeights = [
@@ -4247,15 +4248,22 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   ...rawHeights.slice(1),
                 ];
               } else if (leftIsPlainShelf && rawHeights.length >= 2) {
-                // 띄움 차감 amount: 걸레받이 ON+전역 띄움 또는 걸레받이 OFF+개별 띄움
+                // 하부 경계는 바닥 기준 1060mm 유지:
+                // 걸레받이 OFF면 하부에 base를 더하고, 띄움은 하부에서 뺀다.
                 const isFloatPlacement = spaceInfo?.baseConfig?.type === 'stand'
                   && spaceInfo?.baseConfig?.placementType === 'float';
                 const globalFloatMm = isFloatPlacement ? (spaceInfo?.baseConfig?.floatHeight || 0) : 0;
+                const globalBaseMm = spaceInfo?.baseConfig?.type === 'floor'
+                  ? (spaceInfo?.baseConfig?.height ?? 60)
+                  : 0;
+                const shelfBaseAbsorbedMm = (leftLowerHasBase === false)
+                  ? ((leftLowerMod as any)?.baseFrameHeight ?? globalBaseMm)
+                  : 0;
                 const shelfFloatAbsorbedMm = (leftLowerHasBase === false)
                   ? Math.max(0, (leftLowerMod as any)?.individualFloatHeight ?? 0)
                   : globalFloatMm;
                 const lowerOrig = rawHeights[0];
-                const newLowerH = Math.max(0, Math.round(lowerOrig - shelfFloatAbsorbedMm));
+                const newLowerH = Math.max(0, Math.round(lowerOrig + shelfBaseAbsorbedMm - shelfFloatAbsorbedMm));
                 sectionHeights = [
                   newLowerH,
                   Math.max(0, sectionBasisH - newLowerH),
@@ -5057,13 +5065,14 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 return Math.round(rSectionBasisH * s.height / 100);
               });
               // 현관장 H는 첫(하부) 섹션이 흡수
-              // 선반장(single-shelf/dual-shelf): 걸레받이 OFF→상부 흡수, 띄움→하부 차감
+              // 선반장(single-shelf/dual-shelf): 걸레받이 OFF→하부 흡수, 띄움→하부 차감
               // 그 외(일반 가구, 4drawer/2drawer-shelf 등): 마지막(상부) 섹션이 흡수
               const rModId = rightmostMod?.moduleId || '';
               const rIsEntryway = rModId.includes('-entryway-');
               const rIsPlainShelf = (rModId.startsWith('single-shelf-') || rModId.startsWith('dual-shelf-'))
                 && !rModId.includes('-4drawer-shelf-')
-                && !rModId.includes('-2drawer-shelf-');
+                && !rModId.includes('-2drawer-shelf-')
+                && !rModId.includes('shelf-split');
               if (rIsEntryway && rRawHeights.length >= 2) {
                 const rFixedSum = rRawHeights.slice(1).reduce((a, b) => a + b, 0);
                 rSectionHeights = [
@@ -5074,11 +5083,17 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 const isFloatPlacement = spaceInfo?.baseConfig?.type === 'stand'
                   && spaceInfo?.baseConfig?.placementType === 'float';
                 const globalFloatMm = isFloatPlacement ? (spaceInfo?.baseConfig?.floatHeight || 0) : 0;
+                const globalBaseMm = spaceInfo?.baseConfig?.type === 'floor'
+                  ? (spaceInfo?.baseConfig?.height ?? 60)
+                  : 0;
+                const rShelfBaseAbsorbedMm = ((rightLowerMod as any)?.hasBase === false)
+                  ? ((rightLowerMod as any)?.baseFrameHeight ?? globalBaseMm)
+                  : 0;
                 const rShelfFloatAbsorbedMm = ((rightLowerMod as any)?.hasBase === false)
                   ? Math.max(0, (rightLowerMod as any)?.individualFloatHeight ?? 0)
                   : globalFloatMm;
                 const rLowerOrig = rRawHeights[0];
-                const rNewLowerH = Math.max(0, Math.round(rLowerOrig - rShelfFloatAbsorbedMm));
+                const rNewLowerH = Math.max(0, Math.round(rLowerOrig + rShelfBaseAbsorbedMm - rShelfFloatAbsorbedMm));
                 rSectionHeights = [
                   rNewLowerH,
                   Math.max(0, rSectionBasisH - rNewLowerH),
@@ -6567,20 +6582,33 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         // 모듈 원본 sections.height 사용 (useBaseFurniture 비례조정 전 값)
         // useBaseFurniture와 동일 공식: renderHeight = 가구외경, absorb = 가구외경 - 다른섹션합
         // - 현관장 H: 하부 섹션이 흡수
-        // - 선반장(single-shelf/dual-shelf): 걸레받이 OFF→상부 흡수, 띄움→하부 차감
+        // - 선반장(single-shelf/dual-shelf): 걸레받이 OFF→하부 흡수, 띄움→하부 차감
         // - 그 외: 마지막 섹션이 흡수
         const isEntrywayEff = mid.includes('-entryway-');
         const isPlainShelfEff = (mid.startsWith('single-shelf-') || mid.startsWith('dual-shelf-'))
           && !mid.includes('-4drawer-shelf-')
-          && !mid.includes('-2drawer-shelf-');
+          && !mid.includes('-2drawer-shelf-')
+          && !mid.includes('shelf-split');
         const originalSections = (moduleData.modelConfig?.sections
           || moduleData.modelConfig?.leftSections
           || []) as any[];
         let getEffectiveSectionHeight: (_sec: any, idx: number) => number;
         if (isPlainShelfEff && originalSections.length >= 2) {
-          // 선반장 분배: lowerNew = lowerOrig - floatAbsorbed, upperNew = furnitureOuterH - lowerNew
+          // 선반장 분배: lowerNew = lowerOrig + baseAbsorbed - floatAbsorbed
           const lowerOrig = originalSections[0].height || 0;
-          const newLowerH = Math.max(0, Math.round(lowerOrig - floatMm));
+          const globalBaseMm = spaceInfo?.baseConfig?.type === 'floor'
+            ? (spaceInfo?.baseConfig?.height ?? 60)
+            : 0;
+          const baseAbsorbedMm = (module as any).hasBase === false
+            ? ((module as any).baseFrameHeight ?? globalBaseMm)
+            : 0;
+          const isFloatPlacement = spaceInfo?.baseConfig?.type === 'stand'
+            && spaceInfo?.baseConfig?.placementType === 'float';
+          const globalFloatMm = isFloatPlacement ? (spaceInfo?.baseConfig?.floatHeight || 0) : 0;
+          const floatAbsorbedMm = (module as any).hasBase === false
+            ? Math.max(0, (module as any).individualFloatHeight ?? 0)
+            : globalFloatMm;
+          const newLowerH = Math.max(0, Math.round(lowerOrig + baseAbsorbedMm - floatAbsorbedMm));
           const newUpperH = Math.max(0, Math.round(furnitureOuterH - newLowerH));
           getEffectiveSectionHeight = (_sec: any, idx: number) => {
             if (idx === 0) return newLowerH;
@@ -6610,8 +6638,9 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             sectionBottomMm += sectionHeight;
             return;
           }
-          // 신발장 상부 섹션 라벨은 띄움만큼 내려서 Y 변화 없게
-          const labelOffsetMm = (isShoeLabel && sectionIdx !== 0) ? -floatMm : 0;
+          // 일반 선반장(single-shelf/dual-shelf)은 하부 섹션에서 띄움/걸레받이를 이미 흡수하므로
+          // 상부 스피너에 추가 띄움 보정을 넣으면 실제 선반 위치와 어긋난다.
+          const labelOffsetMm = (isShoeLabel && !isPlainShelfEff && sectionIdx !== 0) ? -floatMm : 0;
           const posArr: number[] = [...((section.shelfPositions || []) as number[])].sort((a, b) => a - b);
           const n = posArr.length;
           if (n === 0) { sectionBottomMm += sectionHeight; return; }

@@ -58,15 +58,18 @@ const DualType2: React.FC<FurnitureTypeProps> = ({
   individualFloatHeight,
   parentGroupY
 }) => {
-  // 선반장 흡수 분배: 띄움→하부에서 차감, 걸레받이 OFF→상부에 추가
+  // 선반장 흡수 분배: 띄움→하부에서 차감, 걸레받이 OFF→하부에 추가
   const _midForAbsorb = moduleData?.id || '';
   const _isPlainShelf = /(^|-)(?:single|dual)-shelf-/.test(_midForAbsorb)
     && !_midForAbsorb.includes('-4drawer-shelf-')
-    && !_midForAbsorb.includes('-2drawer-shelf-');
+    && !_midForAbsorb.includes('-2drawer-shelf-')
+    && !_midForAbsorb.includes('shelf-split');
   let _shelfFloatAbsorbedMm = 0;
   let _shelfBaseAbsorbedMm = 0;
   if (_isPlainShelf) {
-    const _globalBaseMm = spaceInfo?.baseConfig?.height ?? 100;
+    const _globalBaseMm = spaceInfo?.baseConfig?.type === 'floor'
+      ? (spaceInfo?.baseConfig?.height ?? 60)
+      : 0;
     const _isFloat = spaceInfo?.baseConfig?.type === 'stand'
       && spaceInfo?.baseConfig?.placementType === 'float';
     const _globalFloatMm = _isFloat ? (spaceInfo?.baseConfig?.floatHeight || 0) : 0;

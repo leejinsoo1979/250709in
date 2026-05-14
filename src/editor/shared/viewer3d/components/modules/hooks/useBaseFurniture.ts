@@ -29,7 +29,7 @@ interface BaseFurnitureOptions {
   backPanelThicknessMm?: number; // 백패널 두께 (mm, 기본값: 9)
   // 선반장 전용: 띄움/걸레받이 흡수를 섹션별로 분배할 때 사용
   // - shelfFloatAbsorbedMm: 띄움으로 가구가 줄어든 양 (mm). 하부 섹션에서 차감.
-  // - shelfBaseAbsorbedMm: 걸레받이 토글 OFF로 가구가 늘어난 양 (mm). 상부 섹션에 추가.
+  // - shelfBaseAbsorbedMm: 걸레받이 토글 OFF로 가구가 늘어난 양 (mm). 하부 섹션에 추가.
   shelfFloatAbsorbedMm?: number;
   shelfBaseAbsorbedMm?: number;
 }
@@ -117,53 +117,60 @@ export const useBaseFurniture = (
   // FurnitureItem에서: dimensions.height = freeHeight로 오버라이드
   // drawer 섹션은 고정(하드웨어 제약), 나머지 섹션만 높이 변화를 흡수
   const modelConfig = useMemo(() => {
-    if (!originalModelConfig.sections || originalModelConfig.sections.length === 0) {
-      return originalModelConfig;
+    const sourceModelConfig = customSections
+      ? { ...originalModelConfig, sections: customSections }
+      : originalModelConfig;
+    if (!sourceModelConfig.sections || sourceModelConfig.sections.length === 0) {
+      return sourceModelConfig;
     }
 
+    const sections = sourceModelConfig.sections;
+    const mid = moduleData?.id || '';
+    const isPlainShelf = !!mid && (
+      // single-shelf-* 또는 dual-shelf-* (split/4drawer/2drawer 조합 제외)
+      /(^|-)(?:single|dual)-shelf-/.test(mid) &&
+      !mid.includes('-4drawer-shelf-') &&
+      !mid.includes('-2drawer-shelf-') &&
+      !mid.includes('shelf-split')
+    );
+
     // absolute 섹션들의 합 = 원래 dimensions.height (FurnitureItem 변경 전)
-    const originalSectionsTotal = originalModelConfig.sections.reduce((sum: number, s: SectionConfig) => {
+    const originalSectionsTotal = sections.reduce((sum: number, s: SectionConfig) => {
       return sum + (s.heightType === 'absolute' ? s.height : 0);
     }, 0);
     if (originalSectionsTotal <= 0) {
-      return originalModelConfig;
+      return sourceModelConfig;
     }
 
     // 현재 렌더링 높이 (freeHeight가 적용된 dimensions.height)
     const renderHeightMm = internalHeight || moduleData.dimensions.height;
 
-    // 렌더링 높이와 원래 섹션 합의 차이가 1mm 이하면 조정 불필요
-    if (Math.abs(renderHeightMm - originalSectionsTotal) <= 1) {
-      return originalModelConfig;
-    }
-
     // 흡수 섹션 결정:
     // - 하부 흡수(현관장 H/일반 선반장): 첫 섹션(하부)이 높이 변화 흡수, 받침대 기준 유지
     // - 그 외(일반 가구, 4drawer/2drawer 선반장): 마지막 섹션(상부)이 흡수
-    const mid = moduleData?.id || '';
-    const isPlainShelf = !!mid && (
-      // single-shelf-* 또는 dual-shelf-* (4drawer/2drawer 조합 제외)
-      /(^|-)(?:single|dual)-shelf-/.test(mid) &&
-      !mid.includes('-4drawer-shelf-') &&
-      !mid.includes('-2drawer-shelf-')
-    );
     const isLowerAbsorbShoeCabinetHeight = !!mid && (
       mid.includes('-entryway-') ||
       // -shelf- 인데 4drawer/2drawer 가 아닌 일반 선반장만 하부 흡수
       (mid.includes('-shelf-') && !mid.includes('-4drawer-shelf-') && !mid.includes('-2drawer-shelf-'))
     );
-    const sections = originalModelConfig.sections;
 
-    // 선반장(single-shelf/dual-shelf) + 2섹션: 띄움은 하부에서 차감, 걸레받이 흡수는 상부로
+    // 선반장(single-shelf/dual-shelf) + 2섹션: 경계는 바닥 기준 1060mm로 고정된다.
     // FurnitureItem이 renderHeightMm = original - float + base 로 합쳐서 전달하므로,
-    // 두 섹션을 명시적으로 새 높이로 계산하여 분배한다.
-    if (isPlainShelf && sections.length === 2 && (shelfFloatAbsorbedMm > 0 || shelfBaseAbsorbedMm > 0)) {
-      const basicThicknessMm = originalModelConfig.basicThickness || 18;
+    // 하부는 원본 하부 + 걸레받이 흡수 - 띄움, 상부는 남은 높이를 흡수한다.
+    if (isPlainShelf && sections.length === 2) {
+      const basicThicknessMm = sourceModelConfig.basicThickness || 18;
       const lowerOrig = sections[0].height;
-      const newLowerH = Math.max(0, Math.round(lowerOrig - shelfFloatAbsorbedMm));
+      const newLowerH = Math.max(0, Math.round(lowerOrig + shelfBaseAbsorbedMm - shelfFloatAbsorbedMm));
       const newUpperH = Math.max(0, Math.round(renderHeightMm - newLowerH));
 
       const rescaleShelfPositions = (section: SectionConfig, newHeight: number): SectionConfig => {
+        const hasCustomShelfPositions = !!customSections
+          && Array.isArray(section.shelfPositions)
+          && (section.count ?? 0) > 0
+          && section.shelfPositions.length >= (section.count ?? 0);
+        if (hasCustomShelfPositions) {
+          return { ...section, height: newHeight };
+        }
         if (section.shelfPositions && section.shelfPositions.length > 0 && section.count && section.count > 0) {
           const realCount = section.count;
           const sectionInner = newHeight - 2 * basicThicknessMm;
@@ -185,12 +192,17 @@ export const useBaseFurniture = (
       };
 
       return {
-        ...originalModelConfig,
+        ...sourceModelConfig,
         sections: [
           rescaleShelfPositions(sections[0], newLowerH),
           rescaleShelfPositions(sections[1], newUpperH),
         ],
       };
+    }
+
+    // 렌더링 높이와 원래 섹션 합의 차이가 1mm 이하면 조정 불필요
+    if (Math.abs(renderHeightMm - originalSectionsTotal) <= 1) {
+      return sourceModelConfig;
     }
 
     // 흡수 섹션 인덱스: 하부 흡수 신발장이면 0(하부), 그 외엔 마지막(상부)
@@ -201,7 +213,7 @@ export const useBaseFurniture = (
     const absorbingNewHeight = Math.max(0, renderHeightMm - fixedSum);
     const absorbingRatio = absorbingSection.height > 0 ? absorbingNewHeight / absorbingSection.height : 1;
 
-    const basicThicknessMm = originalModelConfig.basicThickness || 18;
+    const basicThicknessMm = sourceModelConfig.basicThickness || 18;
     const preserveUpperSafetyShelfGap = (section: SectionConfig, nextHeight: number): SectionConfig | null => {
       const safetyIndex = section.shelfPositions?.findIndex(pos => pos > 0) ?? -1;
       if (section.type !== 'hanging' || safetyIndex < 0) {
@@ -285,10 +297,10 @@ export const useBaseFurniture = (
     });
 
     return {
-      ...originalModelConfig,
+      ...sourceModelConfig,
       sections: scaledSections
     };
-  }, [internalHeight, moduleData.dimensions.height, originalModelConfig, shelfFloatAbsorbedMm, shelfBaseAbsorbedMm]);
+  }, [internalHeight, moduleData.dimensions.height, originalModelConfig, customSections, shelfFloatAbsorbedMm, shelfBaseAbsorbedMm]);
   
   // 기본 판재 두께 변환 (mm -> Three.js 단위)
   const basicThickness = mmToThreeUnits(modelConfig.basicThickness || 18);
@@ -534,16 +546,15 @@ export const useBaseFurniture = (
   
   // 섹션별 높이 계산 (modelConfig.sections는 이미 비례 조정됨)
   const getSectionHeights = () => {
-    // customSections가 있으면 그것을 우선 사용
-    const sections = customSections || modelConfig.sections;
+    const sections = modelConfig.sections;
 
     if (!sections || sections.length === 0) {
       return [];
     }
 
-    // customSections가 있고 calculatedHeight가 있으면 그대로 사용
-    if (customSections && customSections.every(s => s.calculatedHeight)) {
-      return customSections.map(s => mmToThreeUnits(s.calculatedHeight!));
+    // calculatedHeight가 있으면 그대로 사용
+    if (sections.every(s => s.calculatedHeight)) {
+      return sections.map(s => mmToThreeUnits(s.calculatedHeight!));
     }
 
     // sections.height는 shelving.ts에서 가구 외곽 높이 기준으로 생성된다.
@@ -615,21 +626,11 @@ export const useBaseFurniture = (
     mmToThreeUnits,
 
     // 설정 데이터
-    // - 선반장(single-shelf/dual-shelf) 흡수 분배가 활성: useMemo에서 이미 분배된 modelConfig 사용
-    //   (customSections이 덮어쓰지 않도록 우회)
-    // - 그 외: 기존대로 customSections이 있으면 오버라이드
+    // - customSections는 useMemo 안에서 이미 원본 섹션으로 병합되어 높이/선반 위치 보정까지 끝난 상태
     // - 듀얼 상부장(dual-upper-cabinet-*): leftSections/rightSections도 customSections로 오버라이드
     //   (UpperCabinet.tsx가 leftSections를 직접 참조하므로)
     modelConfig: (() => {
       const mid = moduleData?.id || '';
-      const isPlainShelf = /(^|-)(?:single|dual)-shelf-/.test(mid)
-        && !mid.includes('-4drawer-shelf-')
-        && !mid.includes('-2drawer-shelf-');
-      const useShelfAbsorbDistribution = isPlainShelf
-        && (shelfFloatAbsorbedMm > 0 || shelfBaseAbsorbedMm > 0);
-      if (useShelfAbsorbDistribution) {
-        return modelConfig;
-      }
       if (!customSections) return modelConfig;
       const isDualUpper = mid.startsWith('dual-upper-cabinet-');
       if (isDualUpper && modelConfig.leftSections) {
@@ -641,7 +642,7 @@ export const useBaseFurniture = (
           rightSections: customSections,
         };
       }
-      return { ...modelConfig, sections: customSections };
+      return modelConfig;
     })()
   };
 };
