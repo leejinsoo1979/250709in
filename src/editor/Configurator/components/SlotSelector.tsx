@@ -274,6 +274,16 @@ const SlotSelector: React.FC<SlotSelectorProps> = ({
                 const uStore = useUIStore.getState();
                 if (matched) {
                   fStore.setSelectedPlacedModuleId(matched.id);
+                  // 상판내림: stoneThk에 맞춰 doorTopGap 자동 보정 (slot 이동으로 stale 값 방지)
+                  const mid = matched.moduleId || '';
+                  const isTopDown = mid.includes('lower-top-down');
+                  if (isTopDown) {
+                    const sThk = matched.stoneTopThickness || 0;
+                    const expectedGap = sThk === 10 ? -90 : sThk === 30 ? -70 : -80;
+                    if (matched.doorTopGap !== expectedGap && sThk > 0) {
+                      fStore.updatePlacedModule(matched.id, { doorTopGap: expectedGap });
+                    }
+                  }
                   // 가구 편집 팝업(우측 패널)을 해당 가구로 전환
                   uStore.openFurnitureEditPopup(matched.id);
                 } else {
