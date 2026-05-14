@@ -6387,10 +6387,17 @@ const PlacedModulePropertiesPanel: React.FC = () => {
               // 1섹션 가구(상부장 3단형 등): 가구 자체 높이를 그대로 섹션 외경으로 사용
               // 2섹션 가구(옷장 등): 마지막 섹션은 가구외경 - 고정섹션합, 첫 섹션은 section.height 그대로
               const topFrameR = spaceInfo.frameSize?.top ?? 30;
-              const baseFrameR = currentPlacedModule?.baseFrameHeight !== undefined
-                ? currentPlacedModule.baseFrameHeight
-                : (spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height ?? 60) : 0);
-              const furnitureOuterR = (spaceInfo.height || 0) - topFrameR - baseFrameR;
+              // 띄움 모드: 받침대 대신 띄움 높이를 차감
+              const isFloatModeR = spaceInfo.baseConfig?.placementType === 'float';
+              const baseFrameR = isFloatModeR
+                ? (currentPlacedModule?.individualFloatHeight ?? spaceInfo.baseConfig?.floatHeight ?? 0)
+                : (currentPlacedModule?.baseFrameHeight !== undefined
+                  ? currentPlacedModule.baseFrameHeight
+                  : (spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height ?? 60) : 0));
+              // freeHeight/customHeight가 있으면 그것을 외경으로 사용 (공중배치 등 사용자가 직접 H 변경한 경우)
+              const userHeightR = currentPlacedModule?.freeHeight ?? currentPlacedModule?.customHeight;
+              const furnitureOuterR = userHeightR
+                ?? ((spaceInfo.height || 0) - topFrameR - baseFrameR);
               const fixedSumR = effectiveSections.slice(0, -1).reduce((s: number, sec: any) => s + (sec.height || 0), 0);
               const isLastR = sectionIdx === effectiveSections.length - 1;
               const sectionHeight = isSingleSecForHeight
