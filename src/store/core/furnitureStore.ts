@@ -7,6 +7,23 @@ import { calculateInternalSpace } from '@/editor/shared/viewer3d/utils/geometry'
 import { useSpaceConfigStore } from './spaceConfigStore';
 import { getCategoryDefaultFurnitureDepth } from '@/editor/shared/utils/furnitureDepthDefaults';
 
+// 상판내림 도어 상단 갭 계산 — ㄱ자 수평 하단과 도어 상단 사이 20mm 갭
+// 반통/한통/2단(별도 ㄱ자 부재): stoneThk별 stretcher(10→65, 20→55, 30→45) + 65(노치) + 20(갭) = stretcherH + 85
+// 3단/터치: 마이다/노치 자체가 ㄱ자 자리 차지 → -80 고정
+const calcTopDownDoorTopGap = (moduleId: string | undefined, stoneThk: number = 0): number => {
+  if (!moduleId) return -80;
+  const isExternalDrawerType = moduleId.includes('lower-top-down-3tier')
+    || moduleId.includes('lower-top-down-2tier')
+    || moduleId.includes('lower-top-down-touch-')
+    || moduleId.includes('dual-lower-top-down-3tier')
+    || moduleId.includes('dual-lower-top-down-2tier')
+    || moduleId.includes('dual-lower-top-down-touch-');
+  if (isExternalDrawerType) return -80;
+  // 반통/한통(별도 ㄱ자 부재): stoneThk별 동적 계산
+  const stretcherH = stoneThk === 10 ? 65 : stoneThk === 30 ? 45 : 55;
+  return -(stretcherH + 85);
+};
+
 // 가구 데이터 Store 상태 타입 정의
 interface FurnitureDataState {
   // 가구 데이터 상태
@@ -369,8 +386,8 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
       // 도어 상단 이격거리 초기화 (카테고리별 기본값)
       if (module.doorTopGap === undefined) {
         if (isTopDown) {
-          // 상판내림: 상단 -80mm
-          module.doorTopGap = -80;
+          // 상판내림: 반통/한통은 stoneThk별 동적, 3단/터치는 -80
+          module.doorTopGap = calcTopDownDoorTopGap(module.moduleId, module.stoneTopThickness || 0);
         } else if (isDoorLift) {
           // 도어올림: 상단 30mm (마이다가 위로 올라감)
           module.doorTopGap = 30;
@@ -772,7 +789,7 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
         if (needsTopFix || needsBottomFix) {
           return {
             ...m,
-            ...(needsTopFix ? { doorTopGap: -80 } : {}),
+            ...(needsTopFix ? { doorTopGap: calcTopDownDoorTopGap(m.moduleId, m.stoneTopThickness || 0) } : {}),
             ...(needsBottomFix ? { doorBottomGap: 5 } : {})
           };
         }
@@ -857,8 +874,8 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
       const isDoorLift = module.moduleId?.includes('lower-door-lift-');
       const isTopDown = module.moduleId?.includes('lower-top-down-');
       if (isTopDown) {
-        topGap = -80;   // 상판내림: 상단 -80mm
-        bottomGap = 5;  // 상판내림: 하단 5mm
+        topGap = calcTopDownDoorTopGap(module.moduleId, module.stoneTopThickness || 0);
+        bottomGap = 5;
       } else if (isDoorLift) {
         topGap = 30;    // 도어올림: 상단 30mm
         bottomGap = 5;  // 도어올림: 하단 5mm
@@ -1188,7 +1205,7 @@ useFurnitureStore.subscribe((state) => {
       const fixTop = m.doorTopGap === undefined;
       const fixBot = m.doorBottomGap === undefined;
       if (!fixTop && !fixBot) return m;
-      return { ...m, ...(fixTop ? { doorTopGap: -80 } : {}), ...(fixBot ? { doorBottomGap: 5 } : {}) };
+      return { ...m, ...(fixTop ? { doorTopGap: calcTopDownDoorTopGap(m.moduleId, m.stoneTopThickness || 0) } : {}), ...(fixBot ? { doorBottomGap: 5 } : {}) };
     }
     return m;
   });
@@ -1226,7 +1243,7 @@ useFurnitureStore.subscribe((state) => {
         const fixBot = m.doorBottomGap === undefined;
         if (!fixTop && !fixBot) return m;
         changed = true;
-        return { ...m, ...(fixTop ? { doorTopGap: -80 } : {}), ...(fixBot ? { doorBottomGap: 5 } : {}) };
+        return { ...m, ...(fixTop ? { doorTopGap: calcTopDownDoorTopGap(m.moduleId, m.stoneTopThickness || 0) } : {}), ...(fixBot ? { doorBottomGap: 5 } : {}) };
       }
       return m;
     });
