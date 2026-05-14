@@ -248,10 +248,15 @@ const SlotSelector: React.FC<SlotSelectorProps> = ({
                   return false;
                 });
                 const fStore = useFurnitureStore.getState();
+                const uStore = useUIStore.getState();
                 if (matched) {
                   fStore.setSelectedPlacedModuleId(matched.id);
+                  // 가구 편집 팝업(우측 패널)을 해당 가구로 전환
+                  uStore.openFurnitureEditPopup(matched.id);
                 } else {
                   fStore.setSelectedPlacedModuleId(null);
+                  // 빈 슬롯이면 팝업 닫기
+                  uStore.closeAllPopups();
                 }
               }}
               onPointerDown={(e) => e.stopPropagation()}
