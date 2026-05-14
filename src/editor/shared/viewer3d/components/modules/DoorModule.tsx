@@ -915,11 +915,15 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     const isTopDown = moduleData?.id?.includes('lower-top-down-');
 
     if (isTopDown) {
-      // 상판내림: 터치 패턴과 동일 -(stretcherH + 25) (LowerCabinet.tsx 699 line)
+      // 상판내림: 도어 상단이 ㄱ자 수평 하단(가구 바닥 기준 785 - (stretcherH + 65))과 20mm 갭 유지
+      //   stretcherH: stoneThk 10→65, 20→55, 30→45 (반통/한통/2단/3단/터치 통일)
+      //   ㄱ자 하단(가구 바닥 기준) = 785 - stretcherH - 65
+      //   도어 상단 = ㄱ자 하단 - 20 = 785 - stretcherH - 85
+      //   actualDoorHeight = referenceHeight + topGap → topGap = -(stretcherH + 85)
       const topDownReferenceHeight = moduleData?.dimensions?.height || 785;
       const stoneThk = storePlacedModule?.stoneTopThickness ?? 0;
       const stretcherHForDoor = stoneThk === 10 ? 65 : stoneThk === 30 ? 45 : 55;
-      const defaultTopDownTopGap = -(stretcherHForDoor + 25);
+      const defaultTopDownTopGap = -(stretcherHForDoor + 85);
       const effectiveTopDownTopGap = doorTopGapProp ?? storePlacedModule?.doorTopGap ?? defaultTopDownTopGap;
       const effectiveTopDownBottomGap = doorBottomGapProp ?? storePlacedModule?.doorBottomGap ?? 5;
       actualDoorHeight = topDownReferenceHeight + effectiveTopDownTopGap + effectiveTopDownBottomGap;
