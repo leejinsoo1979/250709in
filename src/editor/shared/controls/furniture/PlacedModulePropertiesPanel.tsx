@@ -3224,9 +3224,8 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                             const oldCenter = freshModule.position.x;
                             const oldLeftMm = oldCenter * 100 - oldW / 2;
                             const oldRightMm = oldCenter * 100 + oldW / 2;
-                            // SNAP을 더 관대하게 (2회 이상 변경 시 누적 부동소수점 오차 흡수)
                             const SNAP = 10;
-                            // 좌/우 인접 가구 탐색
+                            // SNAP 인접 (붙어있는) 좌/우 가구 탐색
                             const leftAdj = freshAll.find((m: any) => {
                               if (m.id === freshModule.id || m.isSurroundPanel) return false;
                               const mW = m.freeWidth ?? m.customWidth ?? m.moduleWidth ?? 0;
@@ -3239,12 +3238,23 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                               const mLeft = (m.position?.x ?? 0) * 100 - mW / 2;
                               return Math.abs(mLeft - oldRightMm) <= SNAP;
                             });
+                            // 인접하지 않아도 좌/우에 가구가 있는지 광범위 탐색 (양쪽 확장 방지)
+                            //  - 키큰장찬넬은 채움재라 옆에 가구가 있으면 그 반대로만 확장되어야 함
+                            const hasLeftNeighbor = freshAll.some((m: any) => {
+                              if (m.id === freshModule.id || m.isSurroundPanel) return false;
+                              const mW = m.freeWidth ?? m.customWidth ?? m.moduleWidth ?? 0;
+                              const mRight = (m.position?.x ?? 0) * 100 + mW / 2;
+                              return mRight <= oldLeftMm + SNAP;
+                            });
+                            const hasRightNeighbor = freshAll.some((m: any) => {
+                              if (m.id === freshModule.id || m.isSurroundPanel) return false;
+                              const mW = m.freeWidth ?? m.customWidth ?? m.moduleWidth ?? 0;
+                              const mLeft = (m.position?.x ?? 0) * 100 - mW / 2;
+                              return mLeft >= oldRightMm - SNAP;
+                            });
                             const delta = val - oldW; // 확장량 (음수면 축소)
                             insertDelta = delta;
                             // 공간 중앙 기준으로 가구 위치 판단
-                            const spaceWidthMm = freshSI.width || 3000;
-                            const spaceMidMm = spaceWidthMm / 2 - spaceWidthMm / 2 + spaceWidthMm / 2; // 0 기준 가정 시 단순화 — 실제 X는 음수~양수 범위일 수 있음
-                            // currentCenterMm가 음수면 좌측, 양수면 우측 (Three.js 좌표는 공간 중앙이 0)
                             const isOnLeftSide = oldCenter < 0;
                             if (leftAdj && rightAdj) {
                               // 양쪽 인접: 가구 위치에 따라 anchor 선택
@@ -3280,8 +3290,25 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                               // 우측만 인접: 우측 anchor 유지, 좌측으로 확장
                               const newCenterMm = oldRightMm - val / 2;
                               newX = newCenterMm / 100;
+                            } else if (hasLeftNeighbor && !hasRightNeighbor) {
+                              // SNAP 안 됐지만 좌측에 가구 있음 → 좌측면 고정, 우측으로 확장
+                              const newCenterMm = oldLeftMm + val / 2;
+                              newX = newCenterMm / 100;
+                            } else if (!hasLeftNeighbor && hasRightNeighbor) {
+                              // 우측에 가구 있음 → 우측면 고정, 좌측으로 확장
+                              const newCenterMm = oldRightMm - val / 2;
+                              newX = newCenterMm / 100;
+                            } else if (hasLeftNeighbor && hasRightNeighbor) {
+                              // 양쪽에 가구 있음: 가구 위치에 따라 한쪽 면 고정 (양쪽 확장 방지)
+                              if (isOnLeftSide) {
+                                const newCenterMm = oldLeftMm + val / 2;
+                                newX = newCenterMm / 100;
+                              } else {
+                                const newCenterMm = oldRightMm - val / 2;
+                                newX = newCenterMm / 100;
+                              }
                             } else {
-                              // 양쪽 비어있음: 기존 calcResizedPositionX 로직
+                              // 좌우 어디에도 가구 없음: 기존 calcResizedPositionX 로직 (공간 중앙 기준)
                               newX = calcResizedPositionX(freshModule, val, freshAll, freshSI);
                             }
                           } else {
