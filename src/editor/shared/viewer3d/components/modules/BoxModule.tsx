@@ -282,10 +282,12 @@ const BoxModule: React.FC<BoxModuleProps> = ({
 
   // debug useEffects removed for perf
 
-  // 인서트 프레임 머티리얼 (상단몰딩/걸레받이와 동일: frameColor / frameTexture 사용)
-  // 키큰장찬넬은 채움재(프레임)이므로 도어 재질이 아닌 프레임 재질을 따름
-  const insertFrameColorRaw = (spaceInfo?.materialConfig as any)?.frameColor as string | undefined;
-  const insertFrameTextureRaw = (spaceInfo?.materialConfig as any)?.frameTexture as string | undefined;
+  // 인서트 프레임 머티리얼 (전면 프레임/EP) — 도어 재질 사용
+  // 도어색 우선 → 없으면 frameColor 폴백
+  const insertFrameColorRaw = ((spaceInfo?.materialConfig as any)?.doorColor as string | undefined)
+    ?? ((spaceInfo?.materialConfig as any)?.frameColor as string | undefined);
+  const insertFrameTextureRaw = ((spaceInfo?.materialConfig as any)?.doorTexture as string | undefined)
+    ?? ((spaceInfo?.materialConfig as any)?.frameTexture as string | undefined);
   const insertFrameMaterial = useMemo(() => {
     const mat = new THREE.MeshStandardMaterial({
       color: new THREE.Color('#E0E0E0'),
@@ -336,11 +338,9 @@ const BoxModule: React.FC<BoxModuleProps> = ({
     };
   }, [insertFrameMaterial]);
 
-  // 키큰장찬넬 상부몰딩/걸레받이 머티리얼 — 옆 가구와 동일 (도어색 우선 → 없으면 프레임색)
-  const insertSurroundColorRaw = ((spaceInfo?.materialConfig as any)?.doorColor as string | undefined)
-    ?? ((spaceInfo?.materialConfig as any)?.frameColor as string | undefined);
-  const insertSurroundTextureRaw = ((spaceInfo?.materialConfig as any)?.doorTexture as string | undefined)
-    ?? ((spaceInfo?.materialConfig as any)?.frameTexture as string | undefined);
+  // 키큰장찬넬 상부몰딩/걸레받이 머티리얼 — 옆 가구 상부몰딩/걸레받이와 동일 (frameColor/frameTexture 사용)
+  const insertSurroundColorRaw = (spaceInfo?.materialConfig as any)?.frameColor as string | undefined;
+  const insertSurroundTextureRaw = (spaceInfo?.materialConfig as any)?.frameTexture as string | undefined;
   const insertSurroundMaterial = useMemo(() => {
     const mat = new THREE.MeshStandardMaterial({
       color: new THREE.Color(insertSurroundColorRaw || '#D4C5A9'),
@@ -1301,7 +1301,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
           material={insertFrameMaterial}
           isDragging={isDragging}
           isEditMode={isEditMode}
-          panelName="Insert전면프레임"
+          panelName="Insert전면프레임-마감판"
           furnitureId={placedFurnitureId}
         />
         {/* 상단 프레임 (PET) - 옆 가구 상단몰딩과 같은 Z + 같은 색상/윤곽선 (panelName에 '마감판' 포함 → 도어 색 외곽선) */}
@@ -1344,7 +1344,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
                 isDragging={isDragging}
                 isEditMode={isEditMode}
                 isEndPanel={true}
-                panelName="Insert좌EP"
+                panelName="Insert좌EP-마감판"
                 furnitureId={placedFurnitureId}
               />
               <BoxWithEdges
@@ -1354,7 +1354,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
                 isDragging={isDragging}
                 isEditMode={isEditMode}
                 isEndPanel={true}
-                panelName="Insert우EP"
+                panelName="Insert우EP-마감판"
                 furnitureId={placedFurnitureId}
               />
             </>
