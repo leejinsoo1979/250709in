@@ -915,10 +915,9 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     const isTopDown = moduleData?.id?.includes('lower-top-down-');
 
     if (isTopDown) {
-      // 상판내림: 도어 H = referenceH(785) + topGap + bottomGap
-      // stoneThk 변경으로 freeHeight 변해도 도어는 영향 안 받음 (referenceH 고정)
-      // 단 사용자가 상단갭/하단갭을 명시적으로 변경하면 반영
-      const topDownReferenceHeight = moduleData?.dimensions?.height || 785;
+      // 상판내림: 도어 H = 785(원본 H 고정) + topGap + bottomGap
+      // stoneThk 변경에도 도어 H 변동 없음. 사용자 갭 변경은 반영.
+      const topDownReferenceHeight = 785;
       const effectiveTopDownTopGap = doorTopGapProp ?? storePlacedModule?.doorTopGap ?? -80;
       const effectiveTopDownBottomGap = doorBottomGapProp ?? storePlacedModule?.doorBottomGap ?? 5;
       actualDoorHeight = topDownReferenceHeight + effectiveTopDownTopGap + effectiveTopDownBottomGap;

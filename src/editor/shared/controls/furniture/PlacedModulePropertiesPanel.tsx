@@ -3755,10 +3755,10 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                 - (currentPlacedModule.individualFloatHeight ?? 0))
               : 0;
             const bodyH = baseBodyH + absorbedTopH + absorbedBaseH;
-            // 상판내림: 도어 H = referenceH(785) + topGap + bottomGap (stoneThk 변경 무관, 사용자 갭 변경은 반영)
+            // 상판내림: 도어 H = 785(원본 H 고정) + topGap + bottomGap (stoneThk/cabH 변경 무관)
             const isTopDownForDoorHForce = currentPlacedModule.moduleId?.includes('lower-top-down-');
             const doorH = isTopDownForDoorHForce
-              ? Math.max(0, (moduleData.dimensions.height || 785) + (doorTopGap ?? -80) + (doorBottomGap ?? 5))
+              ? Math.max(0, 785 + (doorTopGap ?? -80) + (doorBottomGap ?? 5))
               : Math.max(0, bodyH + (doorTopGap || 0) + (doorBottomGap || 0));
             const doorThickness = 20;
             return (
