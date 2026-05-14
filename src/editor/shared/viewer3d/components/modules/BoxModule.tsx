@@ -1248,6 +1248,9 @@ const BoxModule: React.FC<BoxModuleProps> = ({
     const spaceBottomY = fullYOffset - fullHeight / 2 + mmTo(floorFinishMm);
     const topFrameCenterY = spaceTopY - topFrameH / 2;
     const baseFrameCenterY = spaceBottomY + baseFrameH / 2;
+    // 상단몰딩/걸레받이 Z: 옆 가구와 동일한 라인 = 가구 앞면(moduleD/2)에서 두께/2 안쪽
+    //   (전면 프레임의 inset과 무관)
+    const topBaseFrameZ = moduleD / 2 - PT_THREE / 2;
 
     return (
       <>
@@ -1261,11 +1264,11 @@ const BoxModule: React.FC<BoxModuleProps> = ({
           panelName="Insert전면프레임"
           furnitureId={placedFurnitureId}
         />
-        {/* 상단 프레임 (PET) - 전면 프레임과 동일한 Z 위치 */}
+        {/* 상단 프레임 (PET) - 옆 가구 상단몰딩과 같은 Z (가구 앞면 정렬) */}
         {topFrameMmIF > 0 && (
           <BoxWithEdges
             args={[frontFrameWidth, topFrameH, PT_THREE]}
-            position={[0, topFrameCenterY, frontFrameZ]}
+            position={[0, topFrameCenterY, topBaseFrameZ]}
             material={insertFrameMaterial}
             isDragging={isDragging}
             isEditMode={isEditMode}
@@ -1273,11 +1276,11 @@ const BoxModule: React.FC<BoxModuleProps> = ({
             furnitureId={placedFurnitureId}
           />
         )}
-        {/* 걸레받이 (PET) - 전면 프레임과 동일한 Z 위치 */}
+        {/* 걸레받이 (PET) - 옆 가구 걸레받이와 같은 Z (가구 앞면 정렬) */}
         {baseFrameMmIF > 0 && (
           <BoxWithEdges
             args={[frontFrameWidth, baseFrameH, PT_THREE]}
-            position={[0, baseFrameCenterY, frontFrameZ]}
+            position={[0, baseFrameCenterY, topBaseFrameZ]}
             material={insertFrameMaterial}
             isDragging={isDragging}
             isEditMode={isEditMode}
