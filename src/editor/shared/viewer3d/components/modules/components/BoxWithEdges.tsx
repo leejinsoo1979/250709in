@@ -241,10 +241,12 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
         });
       }
 
+      // 키큰장찬넬 상단프레임/걸레받이: 옆 가구처럼 면은 완전 투명 (외곽선만)
+      const isInsertSurround = panelName && (panelName.includes('Insert상단프레임') || panelName.includes('Insert걸레받이'));
       const transparentMaterial = baseMaterial.clone();
       transparentMaterial.transparent = true;
       transparentMaterial.depthWrite = false;
-      transparentMaterial.opacity = 0.1;
+      transparentMaterial.opacity = isInsertSurround ? 0 : 0.1;
       transparentMaterial.needsUpdate = true;
       return transparentMaterial;
     }
