@@ -3755,7 +3755,11 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                 - (currentPlacedModule.individualFloatHeight ?? 0))
               : 0;
             const bodyH = baseBodyH + absorbedTopH + absorbedBaseH;
-            const doorH = Math.max(0, bodyH + (doorTopGap || 0) + (doorBottomGap || 0));
+            // 상판내림: 도어 H는 stoneThk/store 무관 강제 -80, +5 (710 고정)
+            const isTopDownForDoorHForce = currentPlacedModule.moduleId?.includes('lower-top-down-');
+            const doorH = isTopDownForDoorHForce
+              ? Math.max(0, bodyH + (-80) + 5)
+              : Math.max(0, bodyH + (doorTopGap || 0) + (doorBottomGap || 0));
             const doorThickness = 20;
             return (
               <div className={styles.propertySection}>

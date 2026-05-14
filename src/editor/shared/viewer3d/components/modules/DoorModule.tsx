@@ -915,10 +915,10 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     const isTopDown = moduleData?.id?.includes('lower-top-down-');
 
     if (isTopDown) {
-      // 상판내림: 도어 H/위치는 stoneThk와 완전 무관 (항상 -80, H 710 고정)
+      // 상판내림: 도어 H/위치는 stoneThk와 완전 무관 → store/prop 값 무시하고 강제 -80, +5 고정
       const topDownReferenceHeight = moduleData?.dimensions?.height || 785;
-      const effectiveTopDownTopGap = doorTopGapProp ?? storePlacedModule?.doorTopGap ?? -80;
-      const effectiveTopDownBottomGap = doorBottomGapProp ?? storePlacedModule?.doorBottomGap ?? 5;
+      const effectiveTopDownTopGap = -80;
+      const effectiveTopDownBottomGap = 5;
       actualDoorHeight = topDownReferenceHeight + effectiveTopDownTopGap + effectiveTopDownBottomGap;
     } else if (isDoorLift) {
       // 도어올림: 몸통 기준 상단/하단 갭을 그대로 반영
@@ -1005,9 +1005,9 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     const isTopDownForY = moduleData?.id?.includes('lower-top-down-');
 
     if (isTopDownForY) {
-      // 상판내림: 도어 위치는 stoneThk 무관 고정 (-80)
+      // 상판내림: 도어 위치는 stoneThk 무관 강제 -80 고정 (store 값 무시)
       const topDownReferenceHeight = moduleData?.dimensions?.height || 785;
-      const effectiveTopDownTopGap = doorTopGapProp ?? storePlacedModule?.doorTopGap ?? -80;
+      const effectiveTopDownTopGap = -80;
       const doorTopY = -mmToThreeUnits(lowerCabinetHeight) / 2 + mmToThreeUnits(topDownReferenceHeight + effectiveTopDownTopGap);
       doorYPosition = doorTopY - mmToThreeUnits(actualDoorHeight) / 2;
     } else if (isDoorLiftForY) {
