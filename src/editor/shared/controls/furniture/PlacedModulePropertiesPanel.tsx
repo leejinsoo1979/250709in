@@ -1150,10 +1150,6 @@ const PlacedModulePropertiesPanel: React.FC = () => {
       targetId.includes('lower-induction');
     if (!isLower) return {};
 
-    // 상판내림: stoneThk 변경 시 본체 H 자동 변경 안 함 (도어 H 영향 방지)
-    const isTopDown = targetId.includes('lower-top-down-');
-    if (isTopDown) return {};
-
     const internalSpace = calculateInternalSpace(spaceInfo);
     const targetModuleData = getModuleById(targetId, internalSpace, spaceInfo) || buildModuleDataFromPlacedModule(targetModule);
     const currentBodyHeight = targetModule.cabinetBodyHeight
