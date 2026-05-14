@@ -1350,13 +1350,8 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
               const isDoorLift = modData.id?.includes('lower-door-lift-');
               const isTopDown = modData.id?.includes('lower-top-down-');
               if (isTopDown) {
-                // 상판내림 반통/한통: 도어 하단 고정, 상단만 stoneThk별 ±10mm
-                const isTopDownHalfHere = modData.id?.includes('lower-top-down-half') || modData.id?.includes('dual-lower-top-down-half');
-                const stThk = getStoneTopThicknessMm(mod);
-                const halfTopGapDelta = isTopDownHalfHere
-                  ? (stThk === 10 ? -10 : stThk === 30 ? 10 : 0)
-                  : 0;
-                const effectiveTopDownTopGap = mod.doorTopGap ?? (-80 + halfTopGapDelta);
+                // 상판내림: 도어 위치/크기는 stoneThk와 무관하게 고정 (-80, H 710)
+                const effectiveTopDownTopGap = mod.doorTopGap ?? -80;
                 const effectiveTopDownBottomGap = mod.doorBottomGap ?? 5;
                 const maidaSegments = computeLowerCabinetMaidaHeights(
                   modData.id,
@@ -2716,13 +2711,8 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
               const isDoorLift = modData.id?.includes('lower-door-lift-');
               const isTopDown = modData.id?.includes('lower-top-down-');
               if (isTopDown) {
-                // 상판내림 반통/한통: 도어 하단 고정, 상단만 stoneThk별 ±10mm
-                const isTopDownHalfHere = modData.id?.includes('lower-top-down-half') || modData.id?.includes('dual-lower-top-down-half');
-                const stThk = getStoneTopThicknessMm(mod);
-                const halfTopGapDelta = isTopDownHalfHere
-                  ? (stThk === 10 ? -10 : stThk === 30 ? 10 : 0)
-                  : 0;
-                const effectiveTopDownTopGap = mod.doorTopGap ?? (-80 + halfTopGapDelta);
+                // 상판내림: 도어 위치/크기는 stoneThk와 무관하게 고정 (-80, H 710)
+                const effectiveTopDownTopGap = mod.doorTopGap ?? -80;
                 const effectiveTopDownBottomGap = mod.doorBottomGap ?? 5;
                 const maidaSegments = computeLowerCabinetMaidaHeights(
                   modData.id,
