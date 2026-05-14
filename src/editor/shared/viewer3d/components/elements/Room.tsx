@@ -402,8 +402,9 @@ const Room: React.FC<RoomProps> = ({
   const isFullSurround = spaceInfo.surroundType === 'surround' &&
     spaceInfo.frameConfig?.top === true && spaceInfo.frameConfig?.bottom === true;
 
-  // 가구별 기본 깊이 (신발장 380, 상부장 300, 기타 600)
+  // 가구별 기본 깊이 (유리장 365, 신발장 380, 상부장 300, 기타 600)
   const getModBaseDepthMm = (moduleId: string): number => {
+    if (moduleId.includes('glass-cabinet')) return 365;
     if (moduleId.includes('-entryway-') || moduleId.includes('-shelf-') ||
         moduleId.includes('-4drawer-shelf-') || moduleId.includes('-2drawer-shelf-')) return 380;
     if (moduleId.includes('upper-cabinet')) return 300;
@@ -423,21 +424,23 @@ const Room: React.FC<RoomProps> = ({
     const mid = mod.moduleId || '';
     const isShoe = (
       mid.includes('-entryway-') || mid.includes('-shelf-') ||
-      mid.includes('-4drawer-shelf-') || mid.includes('-2drawer-shelf-')
+      mid.includes('-4drawer-shelf-') || mid.includes('-2drawer-shelf-') ||
+      mid.includes('glass-cabinet')
     );
     if (isShoe) {
-      // 신발장: 공간 기본 600 기준. 섹션별 깊이 우선, 없으면 customDepth, 최후 380
+      // 신발장/유리장: 공간 기본 600 기준. 섹션별 깊이 우선, 없으면 customDepth, 최후 기본 깊이
       // 상/하 섹션별로 프레임이 따라가도록 useSection에 따라 섹션 값 선택
+      const defaultShoeDepth = mid.includes('glass-cabinet') ? 365 : 380;
       let shoeDepth: number;
       if (useSection === 'upper') {
-        shoeDepth = mod.upperSectionDepth || mod.customDepth || mod.freeDepth || 380;
+        shoeDepth = mod.upperSectionDepth || mod.customDepth || mod.freeDepth || defaultShoeDepth;
       } else if (useSection === 'lower') {
-        shoeDepth = mod.lowerSectionDepth || mod.customDepth || mod.freeDepth || 380;
+        shoeDepth = mod.lowerSectionDepth || mod.customDepth || mod.freeDepth || defaultShoeDepth;
       } else {
         // any: 두 섹션 중 더 작게 줄어든(=프레임이 더 뒤로 가야 하는) 쪽 기준
         // 단, 더 큰 쪽이 공간 600보다 작으면 그 만큼만 이동
-        const u = mod.upperSectionDepth || mod.customDepth || mod.freeDepth || 380;
-        const l = mod.lowerSectionDepth || mod.customDepth || mod.freeDepth || 380;
+        const u = mod.upperSectionDepth || mod.customDepth || mod.freeDepth || defaultShoeDepth;
+        const l = mod.lowerSectionDepth || mod.customDepth || mod.freeDepth || defaultShoeDepth;
         shoeDepth = Math.max(u, l); // 더 덜 줄어든 쪽 (프레임은 덜 줄인 쪽에 맞춤)
       }
       if (shoeDepth >= SPACE_BASE_DEPTH_MM) return 0;
@@ -4772,7 +4775,8 @@ const Room: React.FC<RoomProps> = ({
                     const isShoeMod = (modMidShoe.includes('-entryway-') || modMidShoe.includes('-shelf-') || modMidShoe.includes('-4drawer-shelf-') || modMidShoe.includes('-2drawer-shelf-') || modMidShoe.includes('glass-cabinet'));
                     let shoeFrameZ: number | null = null;
                     if (isShoeMod) {
-                      const shoeDepthMm = mod.upperSectionDepth || mod.customDepth || mod.freeDepth || 380;
+                      const defaultShoeDepthMm = modMidShoe.includes('glass-cabinet') ? 365 : 380;
+                      const shoeDepthMm = mod.upperSectionDepth || mod.customDepth || mod.freeDepth || defaultShoeDepthMm;
                       const shoeBackZ = fiZOffset - fiFurnitureDepth / 2 - mmToThreeUnits(20);
                       const shoeFrontZ = shoeBackZ + mmToThreeUnits(shoeDepthMm);
                       shoeFrameZ = shoeFrontZ - mmToThreeUnits(END_PANEL_THICKNESS) / 2;
@@ -6711,11 +6715,12 @@ const Room: React.FC<RoomProps> = ({
               const modBaseZInset = mod.baseFrameOffset ? mmToThreeUnits(mod.baseFrameOffset) : (freeIsLower ? mmToThreeUnits(65) : 0);
               // 신발장: 걸래받이 Z를 신발장 앞면에 맞춤 (inset 무시)
               const baseShoeMid = mod.moduleId || '';
-              const isShoeBase = (baseShoeMid.includes('-entryway-') || baseShoeMid.includes('-shelf-') || baseShoeMid.includes('-4drawer-shelf-') || baseShoeMid.includes('-2drawer-shelf-'));
+              const isShoeBase = (baseShoeMid.includes('-entryway-') || baseShoeMid.includes('-shelf-') || baseShoeMid.includes('-4drawer-shelf-') || baseShoeMid.includes('-2drawer-shelf-') || baseShoeMid.includes('glass-cabinet'));
               let baseZPosition: number;
               if (isShoeBase) {
-                // 걸래받이: 하부 섹션 깊이 우선, 없으면 customDepth, 최후 380
-                const shoeDepthMm = mod.lowerSectionDepth || mod.customDepth || mod.freeDepth || 380;
+                // 걸래받이: 하부 섹션 깊이 우선, 없으면 customDepth, 최후 기본 깊이
+                const defaultShoeDepthMm = baseShoeMid.includes('glass-cabinet') ? 365 : 380;
+                const shoeDepthMm = mod.lowerSectionDepth || mod.customDepth || mod.freeDepth || defaultShoeDepthMm;
                 const fiFurnitureDepthMm = Math.min(spaceInfo.depth || 1500, 600);
                 const fiFurnitureDepth = mmToThreeUnits(fiFurnitureDepthMm);
                 const fiZOffset = -mmToThreeUnits(spaceInfo.depth || 1500) / 2 + (mmToThreeUnits(spaceInfo.depth || 1500) - fiFurnitureDepth) / 2;

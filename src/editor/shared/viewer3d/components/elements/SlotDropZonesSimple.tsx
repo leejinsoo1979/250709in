@@ -27,6 +27,22 @@ import { PlacedModule } from '@/editor/shared/furniture/types';
 const BUILT_IN_FRIDGE_FIXED_WIDTH = 582;
 const isBuiltInFridgeModule = (moduleId: string): boolean => moduleId.includes('built-in-fridge');
 
+const getModulePlacementFlags = (moduleData: ModuleData | undefined) => {
+  const data = moduleData as (ModuleData & {
+    hasBase?: boolean;
+    individualFloatHeight?: number;
+    hasBackPanel?: boolean;
+  }) | undefined;
+
+  if (!data) return {};
+
+  return {
+    ...(data.hasBase === false ? { hasBase: false, hasBottomFrame: false } : {}),
+    ...(typeof data.individualFloatHeight === 'number' ? { individualFloatHeight: data.individualFloatHeight } : {}),
+    ...(data.hasBackPanel === false ? { hasBackPanel: false } : {}),
+  };
+};
+
 const isShoeCabinetModule = (moduleId: string): boolean => {
   const key = moduleId.replace(/-[\d.]+$/, '');
   return !moduleId.includes('upper-cabinet-') && (
@@ -1590,7 +1606,8 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         customHeight: zoneToUse === 'dropped' && zoneInternalSpace && moduleData.category === 'full'
           ? zoneInternalSpace.height
           : undefined, // 단내림 구간 키큰장만 줄어든 높이 저장
-        lowerSectionTopOffset: moduleData.id.includes('2drawer') || moduleData.id.includes('4drawer') || moduleData.id.includes('pull-out-cabinet') ? 85 : 0 // 2단/4단 서랍장/인출장 85mm, 나머지 0mm
+        lowerSectionTopOffset: moduleData.id.includes('2drawer') || moduleData.id.includes('4drawer') || moduleData.id.includes('pull-out-cabinet') ? 85 : 0, // 2단/4단 서랍장/인출장 85mm, 나머지 0mm
+        ...getModulePlacementFlags(moduleData)
       };
 
       // 기둥 정보가 있으면 추가
@@ -1729,6 +1746,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
           rotation: 0,
           slotIndex: slotIndex!,
           depth: defaultDepth,
+          customDepth: defaultDepth,
           isDualSlot: isDual,
           isValidInCurrentSpace: true,
           adjustedWidth: _isBuiltInFridge2 ? undefined : moduleData.dimensions.width,
@@ -1736,7 +1754,8 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
           customWidth: _isBuiltInFridge2 ? BUILT_IN_FRIDGE_FIXED_WIDTH : customWidth,
           ...(_isBuiltInFridge2 ? { slotCustomWidth: BUILT_IN_FRIDGE_FIXED_WIDTH } : {}),
           zone: targetZone, // 클릭한 슬롯의 영역 사용
-          lowerSectionTopOffset: moduleData.id.includes('2drawer') || moduleData.id.includes('4drawer') || moduleData.id.includes('pull-out-cabinet') ? 85 : 0 // 2단/4단 서랍장/인출장 85mm, 나머지 0mm
+          lowerSectionTopOffset: moduleData.id.includes('2drawer') || moduleData.id.includes('4drawer') || moduleData.id.includes('pull-out-cabinet') ? 85 : 0, // 2단/4단 서랍장/인출장 85mm, 나머지 0mm
+          ...getModulePlacementFlags(moduleData)
         };
 
         addModule(newModule);
@@ -2155,7 +2174,8 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
       // 빌트인 냉장고장: slotCustomWidth로 슬롯 재분배 트리거
       ...(isBuiltInFridge ? { slotCustomWidth: BUILT_IN_FRIDGE_FIXED_WIDTH } : {}),
       zone: zoneToUse, // 단내림 영역 정보 저장
-      lowerSectionTopOffset: moduleData.id.includes('2drawer') || moduleData.id.includes('4drawer') || moduleData.id.includes('pull-out-cabinet') ? 85 : 0 // 2단/4단 서랍장/인출장 85mm, 나머지 0mm
+      lowerSectionTopOffset: moduleData.id.includes('2drawer') || moduleData.id.includes('4drawer') || moduleData.id.includes('pull-out-cabinet') ? 85 : 0, // 2단/4단 서랍장/인출장 85mm, 나머지 0mm
+      ...getModulePlacementFlags(moduleData)
     };
 
     // 기둥 정보가 있으면 추가

@@ -30,6 +30,22 @@ import { useAlert } from '@/contexts/AlertContext';
 const BUILT_IN_FRIDGE_FIXED_WIDTH = 582;
 const isBuiltInFridgeModule = (moduleId: string): boolean => moduleId.includes('built-in-fridge');
 
+const getModulePlacementFlags = (moduleData: ModuleData | undefined) => {
+  const data = moduleData as (ModuleData & {
+    hasBase?: boolean;
+    individualFloatHeight?: number;
+    hasBackPanel?: boolean;
+  }) | undefined;
+
+  if (!data) return {};
+
+  return {
+    ...(data.hasBase === false ? { hasBase: false, hasBottomFrame: false } : {}),
+    ...(typeof data.individualFloatHeight === 'number' ? { individualFloatHeight: data.individualFloatHeight } : {}),
+    ...(data.hasBackPanel === false ? { hasBackPanel: false } : {}),
+  };
+};
+
 const isShoeCabinetModule = (moduleId: string): boolean => {
   const key = moduleId.replace(/-[\d.]+$/, '');
   return !moduleId.includes('upper-cabinet-') && (
@@ -838,7 +854,8 @@ const SlotDropZones: React.FC<SlotDropZonesProps> = ({ spaceInfo, showAll = true
             doorWidth: actualModuleData.dimensions.width - 3, // 기본값: 가구 너비 - 3mm
             spaceType: bestSpace.type, // 'left', 'right', 'front'
             moduleOrder: existingModulesInSlot.length // 이 슬롯에서 몇 번째 모듈인지
-          }
+          },
+          ...getModulePlacementFlags(actualModuleData)
         };
         
         // 모듈 추가
@@ -899,7 +916,8 @@ const SlotDropZones: React.FC<SlotDropZonesProps> = ({ spaceInfo, showAll = true
         isValidInCurrentSpace: true,
         adjustedWidth: finalAdjustedWidth,
         hingePosition: 'right',
-        columnSlotInfo: { hasColumn: false }
+        columnSlotInfo: { hasColumn: false },
+        ...getModulePlacementFlags(actualModuleData)
       };
       
       // 충돌 감지 및 충돌한 가구 제거
@@ -1080,7 +1098,8 @@ const SlotDropZones: React.FC<SlotDropZonesProps> = ({ spaceInfo, showAll = true
         originalDualSlots: isDual ? [slotIndex, slotIndex + 1] : [slotIndex], // 원래 점유 슬롯
         actualSlots: actualIsDual ? [slotIndex, slotIndex + 1] : [slotIndex], // 실제 점유 슬롯
         doorWidth: doorWidthForColumn // 기둥 커버용 도어 너비
-      } : { hasColumn: false }
+      } : { hasColumn: false },
+      ...getModulePlacementFlags(actualModuleData)
     };
     
     // 충돌 감지 및 충돌한 가구 제거
