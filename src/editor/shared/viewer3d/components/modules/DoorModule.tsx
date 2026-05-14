@@ -915,14 +915,12 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     const isTopDown = moduleData?.id?.includes('lower-top-down-');
 
     if (isTopDown) {
-      // 상판내림 반통/한통: ㄱ자 앞면 외경 80mm 고정 → 도어 상단 = ㄱ자 하단 - 20 → topGap = -100 고정
-      // 3단/터치 등 그 외 상판내림: 기존 -80
+      // 상판내림: 터치 패턴과 동일 -(stretcherH + 25) (LowerCabinet.tsx 699 line)
       const topDownReferenceHeight = moduleData?.dimensions?.height || 785;
-      const isTopDownHalf = moduleData?.id?.includes('lower-top-down-half') || moduleData?.id?.includes('dual-lower-top-down-half');
-      const defaultTopDownTopGap = isTopDownHalf ? -100 : -80;
-      const effectiveTopDownTopGap = isTopDownHalf
-        ? defaultTopDownTopGap
-        : (doorTopGapProp ?? storePlacedModule?.doorTopGap ?? defaultTopDownTopGap);
+      const stoneThk = storePlacedModule?.stoneTopThickness ?? 0;
+      const stretcherHForDoor = stoneThk === 10 ? 65 : stoneThk === 30 ? 45 : 55;
+      const defaultTopDownTopGap = -(stretcherHForDoor + 25);
+      const effectiveTopDownTopGap = doorTopGapProp ?? storePlacedModule?.doorTopGap ?? defaultTopDownTopGap;
       const effectiveTopDownBottomGap = doorBottomGapProp ?? storePlacedModule?.doorBottomGap ?? 5;
       actualDoorHeight = topDownReferenceHeight + effectiveTopDownTopGap + effectiveTopDownBottomGap;
     } else if (isDoorLift) {

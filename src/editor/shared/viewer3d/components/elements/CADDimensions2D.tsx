@@ -17,13 +17,18 @@ import { resolveTopDown2TierGeometry } from '@/editor/shared/utils/topDownCabine
 const DEFAULT_BASIC_THICKNESS_MM = 18;
 
 // 상판내림 도어 상단갭 기본값 — store/DoorModule과 동일 패턴
-// 반통/한통: -100 (ㄱ자 앞면 외경 80 + 도어갭 20)
-// 3단/2단/터치: -80
-const calcTopDownDefaultTopGap = (moduleId: string | undefined, _stoneThk: number = 0): number => {
+// 반통/한통: -(stretcherH + 25), 3단/2단/터치: -80 (ExternalDrawerRenderer 자체 처리)
+const calcTopDownDefaultTopGap = (moduleId: string | undefined, stoneThk: number = 0): number => {
   if (!moduleId) return -80;
-  const isHalf = moduleId.includes('lower-top-down-half') || moduleId.includes('dual-lower-top-down-half');
-  if (isHalf) return -100;
-  return -80;
+  const isExternalDrawerType = moduleId.includes('lower-top-down-3tier')
+    || moduleId.includes('lower-top-down-2tier')
+    || moduleId.includes('lower-top-down-touch-')
+    || moduleId.includes('dual-lower-top-down-3tier')
+    || moduleId.includes('dual-lower-top-down-2tier')
+    || moduleId.includes('dual-lower-top-down-touch-');
+  if (isExternalDrawerType) return -80;
+  const stretcherH = stoneThk === 10 ? 65 : stoneThk === 30 ? 45 : 55;
+  return -(stretcherH + 25);
 };
 
 // PET 실효 두께 매핑: 가구재 15→18, 15.5→18.5, 18→18, 18.5→18.5
@@ -1360,11 +1365,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
               const isDoorLift = modData.id?.includes('lower-door-lift-');
               const isTopDown = modData.id?.includes('lower-top-down-');
               if (isTopDown) {
-                // 반통/한통은 stoneThk 변경 시 즉시 반영되도록 store 값 무시하고 helper 강제 사용
-                const isTopDownHalf = modData.id?.includes('lower-top-down-half') || modData.id?.includes('dual-lower-top-down-half');
-                const effectiveTopDownTopGap = isTopDownHalf
-                  ? calcTopDownDefaultTopGap(modData.id, getStoneTopThicknessMm(mod))
-                  : (mod.doorTopGap ?? calcTopDownDefaultTopGap(modData.id, getStoneTopThicknessMm(mod)));
+                const effectiveTopDownTopGap = mod.doorTopGap ?? calcTopDownDefaultTopGap(modData.id, getStoneTopThicknessMm(mod));
                 const effectiveTopDownBottomGap = mod.doorBottomGap ?? 5;
                 const maidaSegments = computeLowerCabinetMaidaHeights(
                   modData.id,
@@ -2724,11 +2725,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
               const isDoorLift = modData.id?.includes('lower-door-lift-');
               const isTopDown = modData.id?.includes('lower-top-down-');
               if (isTopDown) {
-                // 반통/한통은 stoneThk 변경 시 즉시 반영되도록 store 값 무시하고 helper 강제 사용
-                const isTopDownHalf = modData.id?.includes('lower-top-down-half') || modData.id?.includes('dual-lower-top-down-half');
-                const effectiveTopDownTopGap = isTopDownHalf
-                  ? calcTopDownDefaultTopGap(modData.id, getStoneTopThicknessMm(mod))
-                  : (mod.doorTopGap ?? calcTopDownDefaultTopGap(modData.id, getStoneTopThicknessMm(mod)));
+                const effectiveTopDownTopGap = mod.doorTopGap ?? calcTopDownDefaultTopGap(modData.id, getStoneTopThicknessMm(mod));
                 const effectiveTopDownBottomGap = mod.doorBottomGap ?? 5;
                 const maidaSegments = computeLowerCabinetMaidaHeights(
                   modData.id,

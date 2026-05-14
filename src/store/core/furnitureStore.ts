@@ -19,10 +19,9 @@ const calcTopDownDoorTopGap = (moduleId: string | undefined, stoneThk: number = 
     || moduleId.includes('dual-lower-top-down-2tier')
     || moduleId.includes('dual-lower-top-down-touch-');
   if (isExternalDrawerType) return -80;
-  // 반통/한통(별도 ㄱ자 부재): ㄱ자 앞면 외경 80mm 고정
-  // ㄱ자 하단(가구 바닥 기준) = 785 - 80 = 705, 도어 상단 = 705 - 20 = 685
-  // → topGap = 685 - 785 = -100 (stoneThk 무관 고정)
-  return -100;
+  // 반통/한통(별도 ㄱ자 부재): 터치 패턴과 동일 -(stretcherH + 25)
+  const stretcherH = stoneThk === 10 ? 65 : stoneThk === 30 ? 45 : 55;
+  return -(stretcherH + 25);
 };
 
 // 가구 데이터 Store 상태 타입 정의
