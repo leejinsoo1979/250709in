@@ -1386,7 +1386,8 @@ const PlacedModulePropertiesPanel: React.FC = () => {
           const isPullOutOrPantryInit = !!(
             currentPlacedModule.moduleId?.includes('pull-out-cabinet') ||
             currentPlacedModule.moduleId?.includes('pantry-cabinet') ||
-            (currentPlacedModule.moduleId?.includes('fridge-cabinet') && !currentPlacedModule.moduleId?.includes('built-in-fridge'))
+            (currentPlacedModule.moduleId?.includes('fridge-cabinet') && !currentPlacedModule.moduleId?.includes('built-in-fridge')) ||
+            currentPlacedModule.moduleId?.includes('shelf-split')
           );
           // 표준 가구: 사용자가 섹션 높이를 바꾼 경우 customSections를 우선 사용
           const userCustomSections = (currentPlacedModule as any).customSections;
@@ -1701,7 +1702,9 @@ const PlacedModulePropertiesPanel: React.FC = () => {
   const isPullOutOrPantry = !!(
     moduleData?.id?.includes('pull-out-cabinet') ||
     moduleData?.id?.includes('pantry-cabinet') ||
-    (moduleData?.id?.includes('fridge-cabinet') && !moduleData?.id?.includes('built-in-fridge'))
+    (moduleData?.id?.includes('fridge-cabinet') && !moduleData?.id?.includes('built-in-fridge')) ||
+    // 도어분절 현관장(싱글/듀얼): 하부/상부 섹션 양쪽 편집 가능, 반대 섹션 자동 흡수
+    moduleData?.id?.includes('shelf-split')
   );
   const isTwoSectionFurniture = sections.length === 2 || (isPullOutOrPantry && sections.length >= 2);
 
