@@ -1615,7 +1615,9 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
                 isTopDown2Tier ? { all: 240 }
                 : isTopDown3Tier ? { first: 180, rest: 130 }
                 : isDoorLift3Tier ? { first: 240, rest: 130 } // 특대서랍 측판 높이 240
-                : isDoorLift2Tier ? { all: 240 } // 도어올림 2단: 대자라 240
+                : isDoorLift2Tier
+                  // 도어올림 2단: H ≤ 640이면 대(180), 초과면 특대(240)
+                  ? { all: currentCabinetHmm <= 640 ? 180 : 240 }
                 : is2Tier
                   // 기본장 2단서랍장: H(발통제외) ≤ 673이면 대(180), 초과면 특대(240)
                   ? { all: currentCabinetHmm <= 673 ? 180 : 240 }
