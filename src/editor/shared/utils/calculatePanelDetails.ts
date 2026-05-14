@@ -1544,6 +1544,162 @@ export const calculatePanelDetails = (
     });
   }
 
+  // === 유리장 전용 서랍 모듈 목재 패널 ===
+  // BaseFurnitureShell의 glass-cabinet 전용 렌더 분기와 panelName을 맞춘다.
+  // 금속/유리 선반, 브론즈 프레임은 CNC 제외 대상이라 여기에는 넣지 않는다.
+  if (moduleData.id.includes('glass-cabinet')) {
+    const glassPanelsTarget = panels.upper.length > 0 ? panels.upper : panels.lower;
+    const glassSidePanelThickness = 18;
+    const glassDrawerModuleHeight = 500;
+    const glassDrawerModuleDepth = 277;
+    const glassDrawerModuleInnerWidth = innerWidth - glassSidePanelThickness * 2;
+    const drawerModuleBottomDepth = glassDrawerModuleDepth - 18;
+
+    glassPanelsTarget.push(
+      {
+        name: '서랍 좌측판',
+        width: glassDrawerModuleDepth,
+        height: glassDrawerModuleHeight,
+        thickness: glassSidePanelThickness,
+        material: 'PB'
+      },
+      {
+        name: '서랍 우측판',
+        width: glassDrawerModuleDepth,
+        height: glassDrawerModuleHeight,
+        thickness: glassSidePanelThickness,
+        material: 'PB'
+      },
+      {
+        name: '서랍 바닥판',
+        width: glassDrawerModuleInnerWidth,
+        depth: drawerModuleBottomDepth,
+        thickness: glassSidePanelThickness,
+        material: 'PB'
+      }
+    );
+
+    const glassDrawerPanelThickness = drawerSideThickness;
+    const glassDrawerBottomThickness = backPanelThickness;
+    const glassDrawerOuterWidth = glassDrawerModuleInnerWidth - 11;
+    const glassDrawerFrontBackWidth = glassDrawerOuterWidth - glassDrawerPanelThickness * 2;
+    const glassDrawerBottomWidth = glassDrawerFrontBackWidth + 10;
+    const glassDrawerBodyDepth = 250;
+    const glassDrawerBottomDepth = glassDrawerBodyDepth - 10;
+    const glassDrawerSideHeights = [126, 146];
+    const glassMaidaWidth = glassDrawerModuleInnerWidth - 4;
+
+    glassDrawerSideHeights.forEach((drawerSideHeight, index) => {
+      const drawerNo = index + 1;
+      const prefix = `유리장 서랍${drawerNo}`;
+      const drawerBackHeight = drawerSideHeight - 10 - glassDrawerBottomThickness;
+
+      glassPanelsTarget.push(
+        {
+          name: `${prefix} 좌측판`,
+          width: glassDrawerBodyDepth,
+          height: drawerSideHeight,
+          thickness: glassDrawerPanelThickness,
+          material: 'PB'
+        },
+        {
+          name: `${prefix} 우측판`,
+          width: glassDrawerBodyDepth,
+          height: drawerSideHeight,
+          thickness: glassDrawerPanelThickness,
+          material: 'PB'
+        },
+        {
+          name: `${prefix} 앞판`,
+          width: glassDrawerFrontBackWidth,
+          height: drawerSideHeight,
+          thickness: glassDrawerPanelThickness,
+          material: 'PB'
+        },
+        {
+          name: `${prefix} 뒷판`,
+          width: glassDrawerFrontBackWidth,
+          height: drawerBackHeight,
+          thickness: glassDrawerPanelThickness,
+          material: 'PB'
+        },
+        {
+          name: `${prefix} 바닥`,
+          width: glassDrawerBottomWidth,
+          depth: glassDrawerBottomDepth,
+          thickness: glassDrawerBottomThickness,
+          material: 'MDF'
+        },
+        {
+          name: `${prefix} 마이다`,
+          width: glassMaidaWidth,
+          height: 240,
+          thickness: basicThickness,
+          material: 'PB'
+        }
+      );
+    });
+
+    const glassFrameWidth = glassDrawerModuleInnerWidth;
+    const glassWoodChannelHeight = 60;
+    const glassWoodChannelVerticalHeight = glassWoodChannelHeight - basicThickness;
+    const backPanelDepthOffset = basicThickness - 1;
+    const rearAlignedPanelDepth = customDepth - 57 - backPanelThickness - basicThickness;
+    const topRearInnerPanelDepth = drawerModuleBottomDepth - basicThickness;
+
+    glassPanelsTarget.push(
+      {
+        name: '목찬넬프레임수평(1)',
+        width: glassFrameWidth,
+        depth: 40,
+        thickness: basicThickness,
+        material: 'PB'
+      },
+      {
+        name: '목찬넬프레임수직(1)',
+        width: glassFrameWidth,
+        height: glassWoodChannelVerticalHeight,
+        thickness: basicThickness,
+        material: 'PB'
+      },
+      {
+        name: '전대',
+        width: glassFrameWidth,
+        height: glassWoodChannelHeight,
+        thickness: basicThickness,
+        material: 'PB'
+      },
+      {
+        name: '상단뒤프레임',
+        width: glassFrameWidth,
+        height: 36.5,
+        thickness: basicThickness,
+        material: 'PB'
+      },
+      {
+        name: '상단뒤프레임 안쪽판재',
+        width: glassFrameWidth,
+        depth: Math.max(0, topRearInnerPanelDepth),
+        thickness: basicThickness,
+        material: 'PB'
+      },
+      {
+        name: '상단뒤프레임 하단판재',
+        width: glassFrameWidth,
+        depth: Math.max(0, rearAlignedPanelDepth),
+        thickness: basicThickness,
+        material: 'PB'
+      },
+      {
+        name: '서랍 바닥판2',
+        width: glassDrawerModuleInnerWidth,
+        depth: Math.max(0, customDepth - 58 - backPanelThickness - backPanelDepthOffset),
+        thickness: glassSidePanelThickness,
+        material: 'PB'
+      }
+    );
+  }
+
   // 플랫 배열로 변환하여 반환
   const result: any[] = [];
   const isLowerCabinetModule = moduleData.id.includes('lower-');

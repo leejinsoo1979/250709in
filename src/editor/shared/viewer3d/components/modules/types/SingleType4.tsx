@@ -264,26 +264,9 @@ const SingleType4: React.FC<FurnitureTypeProps> = ({
       {/* 도어는 showFurniture와 관계없이 hasDoor가 true이면 항상 렌더링 (도어만 보기 위해) - 단, 기둥 A(deep) 침범 시에는 FurnitureItem에서 별도 렌더링 */}
       {hasDoor && spaceInfo &&
        !(slotInfo && slotInfo.hasColumn && (slotInfo.columnType === 'deep' || adjustedWidth !== undefined)) && (() => {
-        // 도어 Z 이동: 가구 "기본 깊이" 기준으로 "덜 줄어든 쪽"(max) 만큼 뒤로
-        const midD = moduleData.id || '';
-        const isShoeMod = midD.includes('-entryway-') || midD.includes('-shelf-') ||
-                          midD.includes('-4drawer-shelf-') || midD.includes('-2drawer-shelf-');
-        const isUpperMod = midD.includes('upper-cabinet');
-        const baseDepthMm = isShoeMod ? 380 : isUpperMod ? 300 : 600;
-        const maxSec = Math.max(upperSectionDepth || 0, lowerSectionDepth || 0);
-        let doorLocalZ = 0;
         let effectiveDoorDepth = baseFurniture.actualDepthMm;
-        if (maxSec > 0 && maxSec < baseDepthMm) {
-          const isMaxUpper = (upperSectionDepth || 0) >= (lowerSectionDepth || 0);
-          const dir = isMaxUpper
-            ? (upperSectionDepthDirection || 'front')
-            : (lowerSectionDepthDirection || 'front');
-          if (dir === 'front') {
-            doorLocalZ = -(baseDepthMm - maxSec) * 0.01;
-          }
-        }
         return (
-          <group position={[0, 0, doorLocalZ]}>
+          <group>
             <DoorModule
               moduleWidth={doorWidth || moduleData.dimensions.width}
               moduleDepth={effectiveDoorDepth}
