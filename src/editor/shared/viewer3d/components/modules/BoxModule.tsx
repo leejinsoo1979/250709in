@@ -338,9 +338,12 @@ const BoxModule: React.FC<BoxModuleProps> = ({
     };
   }, [insertFrameMaterial]);
 
-  // 키큰장찬넬 상부몰딩/걸레받이 머티리얼 — 옆 가구 상부몰딩/걸레받이와 동일 (frameColor/frameTexture 사용)
-  const insertSurroundColorRaw = (spaceInfo?.materialConfig as any)?.frameColor as string | undefined;
-  const insertSurroundTextureRaw = (spaceInfo?.materialConfig as any)?.frameTexture as string | undefined;
+  // 키큰장찬넬 상부몰딩/걸레받이 머티리얼 — 옆 가구 상부몰딩/걸레받이와 동일
+  //   Room.tsx createFrameMaterial 정책: doorColor 우선 → frameColor 폴백
+  const insertSurroundColorRaw = ((spaceInfo?.materialConfig as any)?.doorColor as string | undefined)
+    ?? ((spaceInfo?.materialConfig as any)?.frameColor as string | undefined);
+  const insertSurroundTextureRaw = ((spaceInfo?.materialConfig as any)?.doorTexture as string | undefined)
+    ?? ((spaceInfo?.materialConfig as any)?.frameTexture as string | undefined);
   const insertSurroundMaterial = useMemo(() => {
     const mat = new THREE.MeshStandardMaterial({
       color: new THREE.Color(insertSurroundColorRaw || '#D4C5A9'),
