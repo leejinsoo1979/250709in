@@ -5861,6 +5861,14 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                             setDoorTopGap(newGap);
                             setDoorTopGapInput(String(newGap));
                           }
+                          // 상판내림: 상판 두께별 도어 상단갭 (10mm→-90, 20mm→-80, 30mm→-70)
+                          if (isTopDown) {
+                            const stretcherH = thickness === 10 ? 65 : thickness === 30 ? 45 : 55;
+                            const newGap = -(stretcherH + 25);
+                            updates.doorTopGap = newGap;
+                            setDoorTopGap(newGap);
+                            setDoorTopGapInput(String(newGap));
+                          }
                           // 뒷턱 다채움 상태이면 새 두께 기준으로 재계산
                           const prevThickness = currentPlacedModule.stoneTopThickness || 0;
                           const curBackLip = currentPlacedModule.stoneTopBackLip || 0;
