@@ -801,11 +801,12 @@ const TouchDrawerAnimated: React.FC<TouchDrawerAnimatedProps> = ({
     });
   }
 
-  // 상판내림 터치 + 도어올림 터치 2A/2B: 모든 서랍 위치를 마이다 시작점에 묶음 (레그라 포함)
-  // - 마이다 위치 변화에 서랍 본체(+레그라 레일)가 같이 움직임 → 마이다-서랍 간격 일정 유지
-  if ((isTopDownTouch || isDoorLift2Fixed) && drawers.length >= 1 && maidas.length >= drawers.length) {
+  // 상판내림 터치 + 도어올림 터치 2A/2B: 서랍 2단~ 위치를 마이다 시작점에 묶음
+  // - 1단 서랍은 원본 위치 유지 (캐비넷 바닥 기준)
+  // - 2단~ 서랍은 마이다 위치 변화에 따라 이동
+  if ((isTopDownTouch || isDoorLift2Fixed) && drawers.length >= 2 && maidas.length >= drawers.length) {
     const drawerOffsetInsideMaida = 21;
-    for (let i = 0; i < drawers.length; i++) {
+    for (let i = 1; i < drawers.length; i++) {
       const newBottomY = cabinetBottomY + mmToThreeUnits(maidas[i].bottomMm + drawerOffsetInsideMaida);
       drawers[i] = { ...drawers[i], bottomY: newBottomY };
     }
