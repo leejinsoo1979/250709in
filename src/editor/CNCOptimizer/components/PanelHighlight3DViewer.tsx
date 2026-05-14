@@ -134,6 +134,18 @@ function getExcludedPanelAliases(panelName: string): string[] {
     aliases.add(`터치서랍${index}${part}`);
   }
 
+  // 유리장 서랍 패널: CNC ↔ 3D 동일 이름이지만 호환을 위한 명시적 alias
+  const glassDrawerMatch = panelName.match(/^유리장 서랍(\d+)\s+(좌측판|우측판|앞판|뒷판|바닥판|마이다)$/);
+  if (glassDrawerMatch) {
+    const index = glassDrawerMatch[1];
+    const part = glassDrawerMatch[2];
+    aliases.add(`유리장 서랍${index} ${part}`);
+    aliases.add(`유리장 서랍${index}(${part})`);
+  }
+  if (panelName === '서랍 좌측판' || panelName === '서랍 우측판' || panelName === '서랍 바닥판') {
+    aliases.add(panelName.replace('서랍 ', '유리장 서랍 '));
+  }
+
   aliases.delete(panelName);
   return Array.from(aliases);
 }
