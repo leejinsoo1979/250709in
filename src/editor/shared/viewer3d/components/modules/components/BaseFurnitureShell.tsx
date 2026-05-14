@@ -709,8 +709,17 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                       />
                     )}
 
-                    {/* 하단 가로전대 (sideNotches가 있을 때) - 하단 노치 위치에 가로 부재 */}
+                    {/* 하단 가로전대 (sideNotches가 있을 때) - 하단 노치 위치에 가로 부재
+                        단, topStretcher 영역(가구 상단 ~ stretcherH)과 겹치는 노치는 스킵 (중복 방지) */}
                     {sideNotches && !disableAutoSideNotchStretcher && sideNotches.map((n, idx) => {
+                      // topStretcher 영역과 겹치는지 검사 (mm 단위로 비교)
+                      if (topStretcher) {
+                        const heightMmTotal = Math.round(height / mmToThreeUnits(1));
+                        const notchTopMm = n.fromBottom + n.y;
+                        const stretcherBottomMm = heightMmTotal - topStretcher.heightMm;
+                        // 노치 상단이 stretcher 하단 이상이면 stretcher 영역과 겹침 → 자동 stretcher 스킵
+                        if (notchTopMm >= stretcherBottomMm - 1) return null;
+                      }
                       const lowerNotchY = mmToThreeUnits(n.y);
                       const lowerNotchZ = mmToThreeUnits(n.z);
                       const lowerFromBottom = mmToThreeUnits(n.fromBottom);
