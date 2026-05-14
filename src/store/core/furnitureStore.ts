@@ -393,6 +393,13 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
       // 하부장 신규 배치 시: 기존 배치된 하부장에 stoneTop이 설치되어 있으면 같은 두께/오프셋 자동 적용
       const isNewLowerById = module.moduleId?.startsWith('lower-') || module.moduleId?.includes('dual-lower-');
       const isNewLower = newCategory === 'lower' || isNewLowerById;
+      console.log('[addModule stoneTop auto]', {
+        moduleId: module.moduleId,
+        newCategory,
+        isNewLower,
+        incomingStoneThk: module.stoneTopThickness,
+        existingModules: state.placedModules.map(m => ({ id: m.id, moduleId: m.moduleId, stoneTopThickness: m.stoneTopThickness }))
+      });
       if (isNewLower && (module.stoneTopThickness === undefined || module.stoneTopThickness === 0)) {
         const existingWithStone = state.placedModules.find(m => {
           const mid = m.moduleId || '';
@@ -402,6 +409,7 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
             mid.includes('lower-induction');
           return isLower && (m.stoneTopThickness || 0) > 0;
         });
+        console.log('[addModule stoneTop auto] matched existing:', existingWithStone?.moduleId, 'stoneThk:', existingWithStone?.stoneTopThickness);
         if (existingWithStone) {
           module.stoneTopThickness = existingWithStone.stoneTopThickness;
           // 상판 오프셋도 같은 값으로 (앞 23 기본, 그 외는 0)
