@@ -915,10 +915,19 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     const isTopDown = moduleData?.id?.includes('lower-top-down-');
 
     if (isTopDown) {
-      // 상판내림: 도어 H는 stoneThk와 무관하게 고정 (-80 + 5)
-      // 도어 위치만 stoneThk별로 이동 (Y 위치 분기에서 처리)
+      // 상판내림 반통/한통: 도어 하단 고정, 상단만 stoneThk별 ±10mm 이동 → 도어 H 변동
+      //   20mm 기준: H = 785 - 80 + 5 = 710
+      //   30mm: H +10 (상단 위로) → topGap -70
+      //   10mm: H -10 (상단 아래로) → topGap -90
       const topDownReferenceHeight = moduleData?.dimensions?.height || 785;
-      const effectiveTopDownTopGap = doorTopGapProp ?? storePlacedModule?.doorTopGap ?? -80;
+      const isTopDownHalf = moduleData?.id?.includes('lower-top-down-half') || moduleData?.id?.includes('dual-lower-top-down-half');
+      let defaultTopDownTopGap = -80;
+      if (isTopDownHalf) {
+        const stoneThkForDoor = storePlacedModule?.stoneTopThickness ?? 0;
+        const halfDelta = stoneThkForDoor === 10 ? -10 : stoneThkForDoor === 30 ? 10 : 0;
+        defaultTopDownTopGap = -80 + halfDelta;
+      }
+      const effectiveTopDownTopGap = doorTopGapProp ?? storePlacedModule?.doorTopGap ?? defaultTopDownTopGap;
       const effectiveTopDownBottomGap = doorBottomGapProp ?? storePlacedModule?.doorBottomGap ?? 5;
       actualDoorHeight = topDownReferenceHeight + effectiveTopDownTopGap + effectiveTopDownBottomGap;
     } else if (isDoorLift) {
@@ -1006,19 +1015,18 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     const isTopDownForY = moduleData?.id?.includes('lower-top-down-');
 
     if (isTopDownForY) {
-      // 상판내림: 도어 H는 고정, 위치만 stoneThk별로 이동
-      // 반통/한통: 20mm 기준 -80 위치. 30mm는 도어 +10mm 위, 10mm는 -10mm 아래
+      // 상판내림 반통/한통: 도어 하단 고정, 상단만 stoneThk별 ±10mm 이동
+      //   20mm 기준 -80, 30mm는 -70 (상단 +10), 10mm는 -90 (상단 -10)
       const topDownReferenceHeight = moduleData?.dimensions?.height || 785;
-      const baseTopGap = -80;
       const isTopDownHalfDoorY = moduleData?.id?.includes('lower-top-down-half') || moduleData?.id?.includes('dual-lower-top-down-half');
-      let positionAdjust = 0;
+      let defaultTopDownTopGapY = -80;
       if (isTopDownHalfDoorY) {
         const stoneThkForDoorY = storePlacedModule?.stoneTopThickness ?? 0;
-        // stretcherH 변화량(20mm기준 55, 10mm는 +10=65, 30mm는 -10=45) 반대 부호로 도어 이동
-        positionAdjust = stoneThkForDoorY === 10 ? -10 : stoneThkForDoorY === 30 ? 10 : 0;
+        const halfDeltaY = stoneThkForDoorY === 10 ? -10 : stoneThkForDoorY === 30 ? 10 : 0;
+        defaultTopDownTopGapY = -80 + halfDeltaY;
       }
-      const effectiveTopDownTopGap = doorTopGapProp ?? storePlacedModule?.doorTopGap ?? baseTopGap;
-      const doorTopY = -mmToThreeUnits(lowerCabinetHeight) / 2 + mmToThreeUnits(topDownReferenceHeight + effectiveTopDownTopGap + positionAdjust);
+      const effectiveTopDownTopGap = doorTopGapProp ?? storePlacedModule?.doorTopGap ?? defaultTopDownTopGapY;
+      const doorTopY = -mmToThreeUnits(lowerCabinetHeight) / 2 + mmToThreeUnits(topDownReferenceHeight + effectiveTopDownTopGap);
       doorYPosition = doorTopY - mmToThreeUnits(actualDoorHeight) / 2;
     } else if (isDoorLiftForY) {
       // 도어올림: 도어 상단 = 캐비넷 상단 + doorTopGap

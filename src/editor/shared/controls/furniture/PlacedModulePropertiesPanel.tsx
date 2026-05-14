@@ -3741,9 +3741,14 @@ const PlacedModulePropertiesPanel: React.FC = () => {
             // 상부몰딩/걸레받이 토글 OFF 시 가구가 흡수해서 몸통이 늘어남 → 도어 H도 늘어난 몸통 + 갭
             // 상부장은 천장/바닥과 무관 → 흡수 적용 안 함 (full/lower만)
             // 상판내림: 도어 H는 모듈 기본 H(785) 고정 사용 (걸레받이/H 변경에 영향 안 받음)
+            // 반통/한통: stoneThk별 ±10mm 보정 (30mm→+10, 10mm→-10)
             const isTopDownForDoorH = currentPlacedModule.moduleId?.includes('lower-top-down-');
+            const isTopDownHalfForDoorH = currentPlacedModule.moduleId?.includes('lower-top-down-half') || currentPlacedModule.moduleId?.includes('dual-lower-top-down-half');
+            const topDownHalfDelta = isTopDownHalfForDoorH
+              ? ((currentPlacedModule.stoneTopThickness === 10 ? -10 : currentPlacedModule.stoneTopThickness === 30 ? 10 : 0))
+              : 0;
             const baseBodyH = isTopDownForDoorH
-              ? (moduleData.dimensions.height || 0)
+              ? ((moduleData.dimensions.height || 0) + topDownHalfDelta)
               : (adjustedFreeHeight || placedBodyHeight || moduleData.dimensions.height || 0);
             const shouldAbsorbTopForDoorH = moduleData.category === 'full';
             const shouldAbsorbBaseForDoorH = moduleData.category === 'full' || moduleData.category === 'lower';
