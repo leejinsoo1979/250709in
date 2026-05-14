@@ -3755,11 +3755,8 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                 - (currentPlacedModule.individualFloatHeight ?? 0))
               : 0;
             const bodyH = baseBodyH + absorbedTopH + absorbedBaseH;
-            // 상판내림: 도어 H = 785(원본 H 고정) + topGap + bottomGap (stoneThk/cabH 변경 무관)
-            const isTopDownForDoorHForce = currentPlacedModule.moduleId?.includes('lower-top-down-');
-            const doorH = isTopDownForDoorHForce
-              ? Math.max(0, 785 + (doorTopGap ?? -80) + (doorBottomGap ?? 5))
-              : Math.max(0, bodyH + (doorTopGap || 0) + (doorBottomGap || 0));
+            // 상판내림: 도어 H = cabH + topGap + bottomGap (가구 상단~도어 상단 갭 일정)
+            const doorH = Math.max(0, bodyH + (doorTopGap || 0) + (doorBottomGap || 0));
             const doorThickness = 20;
             return (
               <div className={styles.propertySection}>
@@ -5861,13 +5858,11 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                             setDoorTopGap(newGap);
                             setDoorTopGapInput(String(newGap));
                           }
-                          // 상판내림: 상판 두께별 도어 상단갭 (10mm→-90, 20mm→-80, 30mm→-70)
-                          if (isTopDown) {
-                            const stretcherH = thickness === 10 ? 65 : thickness === 30 ? 45 : 55;
-                            const newGap = -(stretcherH + 25);
-                            updates.doorTopGap = newGap;
-                            setDoorTopGap(newGap);
-                            setDoorTopGapInput(String(newGap));
+                          // 상판내림: 도어 상단갭은 stoneThk 무관 -80 고정 (cabH 기반 계산)
+                          if (isTopDown && currentPlacedModule.doorTopGap !== -80) {
+                            updates.doorTopGap = -80;
+                            setDoorTopGap(-80);
+                            setDoorTopGapInput('-80');
                           }
                           // 뒷턱 다채움 상태이면 새 두께 기준으로 재계산
                           const prevThickness = currentPlacedModule.stoneTopThickness || 0;

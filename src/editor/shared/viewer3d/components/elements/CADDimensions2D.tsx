@@ -1361,7 +1361,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                   getStoneTopThicknessMm(mod)
                 );
                 const topMaida = maidaSegments?.[maidaSegments.length - 1];
-                const topDownReferenceH = 785; // 상판내림 도어 H는 원본 785 고정 (stoneThk/cabH 무관)
+                const topDownReferenceH = cabinetH; // 상판내림: cabH 기반 (가구 상단~도어 상단 갭 일정)
                 doorBottomAbsMm = cabinetBottomAbs - effectiveTopDownBottomGap;
                 doorTopAbsMm = cabinetBottomAbs + (
                   topMaida?.maidaTopMm ?? (topDownReferenceH + effectiveTopDownTopGap)
@@ -2722,7 +2722,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                   getStoneTopThicknessMm(mod)
                 );
                 const topMaida = maidaSegments?.[maidaSegments.length - 1];
-                const topDownReferenceH = 785; // 상판내림 도어 H는 원본 785 고정 (stoneThk/cabH 무관)
+                const topDownReferenceH = cabinetH; // 상판내림: cabH 기반 (가구 상단~도어 상단 갭 일정)
                 doorBottomAbsMm = cabinetBottomAbs - effectiveTopDownBottomGap;
                 doorTopAbsMm = cabinetBottomAbs + (
                   topMaida?.maidaTopMm ?? (topDownReferenceH + effectiveTopDownTopGap)

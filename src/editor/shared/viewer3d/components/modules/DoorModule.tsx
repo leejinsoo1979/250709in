@@ -915,12 +915,11 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     const isTopDown = moduleData?.id?.includes('lower-top-down-');
 
     if (isTopDown) {
-      // 상판내림: 도어 H = 785(원본 H 고정) + topGap + bottomGap
-      // stoneThk 변경에도 도어 H 변동 없음. 사용자 갭 변경은 반영.
-      const topDownReferenceHeight = 785;
+      // 상판내림: 도어 상단 = cabH + topGap(-80 기본), 도어 하단 = -bottomGap(5)
+      // cabH가 stoneThk별로 변해도 도어 상단~가구 상단 갭은 항상 80mm 일정
       const effectiveTopDownTopGap = doorTopGapProp ?? storePlacedModule?.doorTopGap ?? -80;
       const effectiveTopDownBottomGap = doorBottomGapProp ?? storePlacedModule?.doorBottomGap ?? 5;
-      actualDoorHeight = topDownReferenceHeight + effectiveTopDownTopGap + effectiveTopDownBottomGap;
+      actualDoorHeight = lowerCabinetHeight + effectiveTopDownTopGap + effectiveTopDownBottomGap;
     } else if (isDoorLift) {
       // 도어올림: 몸통 기준 상단/하단 갭을 그대로 반영
       actualDoorHeight = lowerCabinetHeight + doorTopGap + doorBottomGap;
@@ -1006,10 +1005,9 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     const isTopDownForY = moduleData?.id?.includes('lower-top-down-');
 
     if (isTopDownForY) {
-      // 상판내림: referenceH 785 고정, 사용자 갭 변경은 store에서 반영
-      const topDownReferenceHeight = 785;
+      // 상판내림: 도어 상단 = cabH + topGap(-80) → 가구 상단보다 80mm 아래로 고정
       const effectiveTopDownTopGap = doorTopGapProp ?? storePlacedModule?.doorTopGap ?? -80;
-      const doorTopY = -mmToThreeUnits(lowerCabinetHeight) / 2 + mmToThreeUnits(topDownReferenceHeight + effectiveTopDownTopGap);
+      const doorTopY = mmToThreeUnits(lowerCabinetHeight) / 2 + mmToThreeUnits(effectiveTopDownTopGap);
       doorYPosition = doorTopY - mmToThreeUnits(actualDoorHeight) / 2;
     } else if (isDoorLiftForY) {
       // 도어올림: 도어 상단 = 캐비넷 상단 + doorTopGap
