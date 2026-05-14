@@ -3721,10 +3721,11 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                 furnitureId: placedModule.id
               });
 
-              // customSections의 선반 갯수/위치 변경 시 BoxModule 리마운트 (고스트 포함 즉시 반영)
-              // shelfPositions까지 포함해 ▲▼ 스피너로 선반 1mm 이동 시에도 즉시 3D에 반영
+              // customSections의 선반 갯수 변경 시에만 BoxModule 리마운트
+              // shelfPositions는 prop으로 갱신만 → 듀얼 W 변경 시 width에 비례해 재계산되어도
+              // BoxModule이 remount되지 않아 클릭 race(팝업 안 뜨는 현상) 방지
               const customSectionsKey = adjustedCustomSections
-                ? adjustedCustomSections.map((s: any) => `${s.count || 0}:${(s.shelfPositions || []).join(',')}`).join('|')
+                ? adjustedCustomSections.map((s: any) => `${s.count || 0}`).join('|')
                 : '';
               // removeUpperSafetyShelf 토글 변경 시에도 BoxModule 리마운트 (편집 중 고스트 실시간 반영)
               const removeUpperSafetyShelfKey = placedModule.removeUpperSafetyShelf ? '1' : '0';
