@@ -555,7 +555,7 @@ const computeLowerCabinetMaidaHeights = (
     : isDoorLift3Tier ? [315, doorLift3TierNotch2]
     : isDoorLift2Tier ? [doorLift2TierNotch]
     : isTopDown3Tier ? [225 + td3TierDeltaDim - td3StretcherDeltaForDim, 445 + td3TierDeltaDim - td3StretcherDeltaForDim, 665 + td3TierDeltaDim - td3StretcherDeltaForDim]
-    : isTopDown2Tier ? [Math.round((moduleHeightMm - 185) / 2), moduleHeightMm - 120]
+    : isTopDown2Tier ? [Math.round((moduleHeightMm - 185) / 2), moduleHeightMm - (td3StretcherForDim + 65)]
     : [drawer2TierFromBottom];
   const notchHeights = is3Tier ? [65, 65] : isDoorLift3Tier ? [65, 65] : isDoorLift2Tier ? [65] : isTopDown3Tier ? [65, 65, 65] : isTopDown2Tier ? [65, 65] : [65];
   const hideTopNotch = isDoorLift2Tier || isDoorLift3Tier || isTopDown2Tier || isTopDown3Tier;

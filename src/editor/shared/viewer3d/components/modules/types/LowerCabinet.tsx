@@ -990,12 +990,12 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
   });
 
   // ㄱ자 꺾인 안쪽 전대(가로전대) 높이 결정
-  // - 상판내림 터치/3단/반통/한통: stoneThickness별로 결정
+  // - 상판내림 터치/2단/3단/반통/한통: stoneThickness별로 결정
   //   · 대리석 10mm = 65mm, 20mm = 55mm (기본), 30mm = 45mm
-  // - 그 외(상판내림 2단): 55mm 고정
   const isTopDown3TierForStretcher = moduleData.id.includes('lower-top-down-3tier') || moduleData.id.includes('dual-lower-top-down-3tier');
+  const isTopDown2TierForStretcher = moduleData.id.includes('lower-top-down-2tier') || moduleData.id.includes('dual-lower-top-down-2tier');
   const isTopDownHalfForStretcher = moduleData.id.includes('lower-top-down-half') || moduleData.id.includes('dual-lower-top-down-half');
-  const useStoneThicknessStretcher = isTopDownTouchForStretcher || isTopDown3TierForStretcher || isTopDownHalfForStretcher;
+  const useStoneThicknessStretcher = isTopDownTouchForStretcher || isTopDown3TierForStretcher || isTopDown2TierForStretcher || isTopDownHalfForStretcher;
   const topDownStretcherHeightMm = isTopDownModule
     ? (useStoneThicknessStretcher
         ? (stoneThickness === 10 ? 65 : stoneThickness === 30 ? 45 : 55)
@@ -1340,12 +1340,12 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
               })() : moduleData.id.includes('lower-top-down-2tier') ? (() => {
                 // 상판내림 2단: 두 서랍 균등 + 상단 묶음 위로 평행이동
                 // 중간 노치 = (H - 185) / 2 (외부서랍 노치와 동기화)
-                // 상단 노치 = H - 120
+                // 상단 노치 = H - (stretcher + 65) — stoneThk별로 stretcher 가변
                 const cabHmm2 = Math.round(adjustedHeight / 0.01);
                 return {
                   sideNotches: [
                     { y: 65, z: 40, fromBottom: Math.round((cabHmm2 - 185) / 2) },
-                    { y: 65, z: 40, fromBottom: cabHmm2 - 120 },
+                    { y: 65, z: 40, fromBottom: cabHmm2 - (topDownStretcherHeightMm + 65) },
                   ]
                 };
               })() : (moduleData.id.includes('lower-top-down-half') || moduleData.id.includes('dual-lower-top-down-half')) ? (() => {
