@@ -439,12 +439,21 @@ const FreePlacementDropZone: React.FC = () => {
   // 활성 가구 치수 (기본값 — zone 최적화 전)
   const activeDimensions = useMemo(() => {
     if (!activeModuleData) return null;
+    let h = activeModuleData.dimensions.height;
+    // 유리장(glass-cabinet): 공간 높이에 맞춰 본체 H 동적 계산 (슬롯배치와 동일)
+    //   본체 H = 공간 H - 상단몰딩 - 바닥마감 - 띄움(200)
+    if (activeModuleData.id?.includes('glass-cabinet')) {
+      const topFrameMm = spaceInfo.frameSize?.top ?? 30;
+      const floorFinishMm = (spaceInfo.hasFloorFinish && spaceInfo.floorFinish?.height) || 0;
+      const floatMm = (activeModuleData as any).individualFloatHeight ?? 200;
+      h = Math.max(0, (spaceInfo.height || 0) - topFrameMm - floorFinishMm - floatMm);
+    }
     return {
       width: activeModuleData.dimensions.width,
-      height: activeModuleData.dimensions.height,
+      height: h,
       depth: activeModuleData.dimensions.depth,
     };
-  }, [activeModuleData]);
+  }, [activeModuleData, spaceInfo.height, spaceInfo.frameSize?.top, spaceInfo.hasFloorFinish, spaceInfo.floorFinish?.height]);
 
   // 구간 최적화 적용된 치수 (고스트/배치/충돌에 사용)
   const effectiveDimensions = useMemo(() => {
