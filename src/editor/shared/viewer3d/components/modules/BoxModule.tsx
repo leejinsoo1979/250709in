@@ -1304,7 +1304,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
           panelName="Insert전면프레임"
           furnitureId={placedFurnitureId}
         />
-        {/* 상단 프레임 (PET) - 옆 가구 상단몰딩과 같은 Z + 같은 색상(도어색 우선) */}
+        {/* 상단 프레임 (PET) - 옆 가구 상단몰딩과 같은 Z + 같은 색상/윤곽선 (panelName에 '마감판' 포함 → 도어 색 외곽선) */}
         {topFrameMmIF > 0 && (
           <BoxWithEdges
             args={[frontFrameWidth, topFrameH, PT_THREE]}
@@ -1316,7 +1316,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
             furnitureId={placedFurnitureId}
           />
         )}
-        {/* 걸레받이 (PET) - 옆 가구 걸레받이와 같은 Z + 같은 색상(도어색 우선) */}
+        {/* 걸레받이 (PET) - 옆 가구 걸레받이와 같은 Z + 같은 색상/윤곽선 */}
         {baseFrameMmIF > 0 && (
           <BoxWithEdges
             args={[frontFrameWidth, baseFrameH, PT_THREE]}
