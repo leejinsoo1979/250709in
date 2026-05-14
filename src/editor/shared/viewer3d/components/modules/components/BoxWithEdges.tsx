@@ -458,6 +458,10 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
     if (viewMode === '2D' && panelName && (panelName.includes('도어') || panelName.includes('마이다') || panelName.includes('마감판'))) {
       return view2DTheme === 'dark' ? '#00ff00' : '#228B22'; // 다크→초록, 라이트→진한 녹색
     }
+    // 2D 모드에서 키큰장찬넬 상단프레임/걸레받이: 옆 가구 프레임(상단몰딩/걸레받이)과 동일 (흰색/검정)
+    if (viewMode === '2D' && panelName && (panelName.includes('Insert상단프레임') || panelName.includes('Insert걸레받이'))) {
+      return view2DTheme === 'dark' ? '#ffffff' : '#000000';
+    }
 
     // 옷걸이 봉인 경우: 2D 모드에서 view2DTheme에 따라 색상 변경
     if (isClothingRod && viewMode === '2D') {
