@@ -953,11 +953,13 @@ function PageInner(){
       }
 
       // ★ 확장 패널 그룹 옵티마이즈 (1220×2750 / 1220×3050 두 단계)
-      const extGroupsList: Array<[Map<string, Panel[]>, number]> = [
+      const extGroupsList: any[] = [
         [extPanelGroups2750, extendedStockL_2750],
         [extPanelGroups3050, extendedStockL_3050],
       ];
-      for (const [extGroups, extLen] of extGroupsList) {
+      for (const item of extGroupsList) {
+        const extGroups: Map<string, Panel[]> = item[0];
+        const extLen: number = item[1];
         for (const [key, groupPanels] of extGroups) {
           let material: string | undefined;
           let thickness: number;
