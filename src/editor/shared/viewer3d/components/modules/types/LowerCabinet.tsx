@@ -1516,7 +1516,9 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
         const isDoorLift2Tier = moduleData.id.includes('lower-door-lift-2tier');
         const isTopDown3Tier = moduleData.id.includes('lower-top-down-3tier');
         const isTopDown2Tier = moduleData.id.includes('lower-top-down-2tier');
-        const defaultDrawerTopGap = (isTopDown2Tier || isTopDown3Tier) ? -80 : (isDoorLift2Tier || isDoorLift3Tier) ? 30 : -20;
+        // 상판내림 2/3단: stoneThk별 기본 갭(10→-90, 20→-80, 30→-70) — 마이다 사이즈 stoneThk 무관 유지
+        const topDownDefaultTopGapLR = stoneThickness === 10 ? -90 : stoneThickness === 30 ? -70 : -80;
+        const defaultDrawerTopGap = (isTopDown2Tier || isTopDown3Tier) ? topDownDefaultTopGapLR : (isDoorLift2Tier || isDoorLift3Tier) ? 30 : -20;
         const defaultDrawerBottomGap = 5;
         const effectiveDrawerTopGap = (isTopDown2Tier || isTopDown3Tier) && (doorTopGap === undefined || doorTopGap === 0)
           ? defaultDrawerTopGap
