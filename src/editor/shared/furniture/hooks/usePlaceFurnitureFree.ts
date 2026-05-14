@@ -123,6 +123,18 @@ export function placeFurnitureFree(params: PlaceFurnitureFreeParams): PlaceFurni
     }
   }
 
+  // 유리장(glass-cabinet): 슬롯배치와 동일하게 공간 높이에 맞춰 본체 H 동적 계산
+  //   본체 H = 공간 H - 바닥마감 - 상단몰딩 - 띄움(200) (슬롯배치 createSingleGlassCabinet 로직과 일치)
+  if (moduleId.includes('glass-cabinet')) {
+    const topFrameMm = spaceInfo.frameSize?.top ?? 30;
+    const floorFinishMm = (spaceInfo.hasFloorFinish && spaceInfo.floorFinish?.height) || 0;
+    const floatMm = (moduleData as any).individualFloatHeight ?? 200;
+    const zoneH = effectiveZone === 'dropped' && droppedZone.droppedInternalHeight !== undefined
+      ? droppedZone.droppedInternalHeight + (spaceInfo.baseConfig?.height ?? 65)
+      : spaceInfo.height;
+    effectiveHeight = Math.max(0, zoneH - topFrameMm - floorFinishMm - floatMm);
+  }
+
   console.log('🏗️ [placeFurnitureFree] zone detection', {
     xPositionMM, clampedX, zone: effectiveZone,
     originalHeight: dimensions.height, effectiveHeight,
@@ -193,12 +205,7 @@ export function placeFurnitureFree(params: PlaceFurnitureFreeParams): PlaceFurni
   const inheritTopFrameOff = topFrameCapableExistingModules.length > 0
     && topFrameCapableExistingModules.every(module => module.hasTopFrame === false);
   const inheritedTopFrameGap = topFrameCapableExistingModules.find(module => module.topFrameGap !== undefined)?.topFrameGap ?? 0;
-  // 유리장(glass-cabinet): 카테고리 'full'이지만 띄움 전용이라 상단몰딩 없음
-  const isGlassCabinetModule = moduleId.includes('glass-cabinet');
-  const shouldHaveTopFrame = !isGlassCabinetModule
-    && moduleData.category !== 'lower'
-    && spaceInfo.frameConfig?.top !== false
-    && !inheritTopFrameOff;
+  const shouldHaveTopFrame = moduleData.category !== 'lower' && spaceInfo.frameConfig?.top !== false && !inheritTopFrameOff;
   const baseFrameCapableExistingModules = existingModules
     .filter(module => module.isFreePlacement)
     .filter(isBaseFrameCapablePlacedModule);
