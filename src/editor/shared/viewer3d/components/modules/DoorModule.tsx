@@ -915,10 +915,16 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     const isTopDown = moduleData?.id?.includes('lower-top-down-');
 
     if (isTopDown) {
-      // 상판내림: 몸통 H 증감분은 상단 전대/대리석 앞판이 흡수한다.
-      // 도어 상단 기준은 기본 몸통(785)에서 유지되어야 대리석 앞판 하단과 20mm 갭을 유지한다.
+      // 상판내림 반통/한통만 stretcher 기반 동적, 나머지는 기존 -80 유지
       const topDownReferenceHeight = moduleData?.dimensions?.height || 785;
-      const effectiveTopDownTopGap = doorTopGapProp ?? storePlacedModule?.doorTopGap ?? -80;
+      const isTopDownHalfDoor = moduleData?.id?.includes('lower-top-down-half') || moduleData?.id?.includes('dual-lower-top-down-half');
+      let defaultTopDownTopGap = -80;
+      if (isTopDownHalfDoor) {
+        const stoneThkForDoor = storePlacedModule?.stoneTopThickness ?? 0;
+        const stretcherHForDoor = stoneThkForDoor === 10 ? 65 : stoneThkForDoor === 30 ? 45 : 55;
+        defaultTopDownTopGap = -(stretcherHForDoor + 85);
+      }
+      const effectiveTopDownTopGap = doorTopGapProp ?? storePlacedModule?.doorTopGap ?? defaultTopDownTopGap;
       const effectiveTopDownBottomGap = doorBottomGapProp ?? storePlacedModule?.doorBottomGap ?? 5;
       actualDoorHeight = topDownReferenceHeight + effectiveTopDownTopGap + effectiveTopDownBottomGap;
     } else if (isDoorLift) {
@@ -1006,10 +1012,16 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     const isTopDownForY = moduleData?.id?.includes('lower-top-down-');
 
     if (isTopDownForY) {
-      // 상판내림: 도어 상단은 바닥 기준 기본 위치(785 + gap)에 고정하고,
-      // 늘어난 몸통 H는 상단 전대/대리석 앞판으로 흡수한다.
+      // 상판내림 반통/한통만 stretcher 기반, 나머지 -80 유지
       const topDownReferenceHeight = moduleData?.dimensions?.height || 785;
-      const effectiveTopDownTopGap = doorTopGapProp ?? storePlacedModule?.doorTopGap ?? -80;
+      const isTopDownHalfDoorY = moduleData?.id?.includes('lower-top-down-half') || moduleData?.id?.includes('dual-lower-top-down-half');
+      let defaultTopDownTopGapY = -80;
+      if (isTopDownHalfDoorY) {
+        const stoneThkForDoorY = storePlacedModule?.stoneTopThickness ?? 0;
+        const stretcherHForDoorY = stoneThkForDoorY === 10 ? 65 : stoneThkForDoorY === 30 ? 45 : 55;
+        defaultTopDownTopGapY = -(stretcherHForDoorY + 85);
+      }
+      const effectiveTopDownTopGap = doorTopGapProp ?? storePlacedModule?.doorTopGap ?? defaultTopDownTopGapY;
       const doorTopY = -mmToThreeUnits(lowerCabinetHeight) / 2 + mmToThreeUnits(topDownReferenceHeight + effectiveTopDownTopGap);
       doorYPosition = doorTopY - mmToThreeUnits(actualDoorHeight) / 2;
     } else if (isDoorLiftForY) {
