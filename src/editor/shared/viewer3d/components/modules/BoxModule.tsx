@@ -1339,7 +1339,6 @@ const BoxModule: React.FC<BoxModuleProps> = ({
           // 유리장 천판/바닥판은 앞쪽 50mm 들이기 (브론즈 도어 위/아래 공간 확보)
           topPanelFrontReduction={moduleData?.id?.includes('glass-cabinet') ? 50 : 0}
           bottomPanelFrontReduction={moduleData?.id?.includes('glass-cabinet') ? 50 : 0}
-          {/* 도어분절 현관장(shelf-split): 측판이 상부/하부로 분할되므로 sideNotches 불필요 */}
         >
           {/* 내부 구조 렌더링 (드래그/고스트 중에도 표시) */}
           {(
