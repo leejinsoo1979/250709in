@@ -990,16 +990,12 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
   });
 
   // ㄱ자 꺾인 안쪽 전대(가로전대) 높이 결정
-  // - 상판내림 터치 + 상판내림 3단 + 반통/한통: stoneThickness별
-  //   · 대리석 10mm = 65mm, 20mm = 55mm, 30mm = 45mm
-  // - 그 외(상판내림 2단 등): 55mm 고정 (원래대로)
-  const isTopDown3TierForStretcher = moduleData.id.includes('lower-top-down-3tier') || moduleData.id.includes('dual-lower-top-down-3tier');
-  const isTopDownHalfForStretcher = moduleData.id.includes('lower-top-down-half') || moduleData.id.includes('dual-lower-top-down-half');
-  const useStoneThicknessStretcher = isTopDownTouchForStretcher || isTopDown3TierForStretcher || isTopDownHalfForStretcher;
+  // - 모든 상판내림 모듈(반통/한통/2단/3단/터치): stoneThickness별로 결정 (통일된 룰)
+  //   · 대리석 10mm = 65mm
+  //   · 대리석 20mm = 55mm (기본)
+  //   · 대리석 30mm = 45mm
   const topDownStretcherHeightMm = isTopDownModule
-    ? (useStoneThicknessStretcher
-        ? (stoneThickness === 10 ? 65 : stoneThickness === 30 ? 45 : 55)
-        : 55)
+    ? (stoneThickness === 10 ? 65 : stoneThickness === 30 ? 45 : 55)
     : 55;
   const stoneFrontOff = useFurnitureStore(state => {
     if (!placedFurnitureId) return 0;
