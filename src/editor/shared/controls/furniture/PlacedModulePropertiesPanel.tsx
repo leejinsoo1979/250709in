@@ -3614,11 +3614,15 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                             if (currentPlacedModule.moduleId?.includes('lower-drawer-2tier') || currentPlacedModule.moduleId?.includes('dual-lower-drawer-2tier')) {
                               updates.cabinetBodyHeight = val;
                             }
+                            // 동기화 useEffect가 store stale 값으로 덮어쓰지 않도록 focused 유지 후 store 업데이트
+                            freeHeightFocusedRef.current = true;
                             updatePlacedModule(currentPlacedModule.id, updates);
                             setFreeHeightInput(displayVal.toString());
                             setSectionHeightInputs({});
+                            // 다음 tick에 focused 해제 (store 업데이트 반영 후)
+                            setTimeout(() => { freeHeightFocusedRef.current = false; }, 50);
                           }
-                          (e.target as HTMLInputElement).blur();
+                          // blur() 호출 제거: input focus 유지 → useEffect 동기화 skip
                         }
                         else if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
                           e.preventDefault();
