@@ -147,11 +147,13 @@ const isShoeModuleId = (id: string): boolean => {
 const formatThumbnailName = (module: ModuleData): string => {
   let name = module.name.replace(/\s*[\d.]+mm$/, '');
   const isDual = module.id.includes('dual-');
+  // 키큰장찬넬(insert-frame)은 듀얼 개념 없는 단일 채움재 → "(반통)" 접미어 제외
+  const isInsertFrame = module.id.includes('insert-frame');
 
   // "한통" 제거, "듀얼 " 접두어 제거
   name = name.replace(/\s*한통/, '').replace(/^듀얼\s*/, '');
 
-  if (isDual) return name.trim();
+  if (isDual || isInsertFrame) return name.trim();
 
   // 싱글: 이름 안의 "반통" 또는 "(반통)"을 모두 제거한 뒤, 끝에 "(반통)" 하나만 붙임
   name = name
