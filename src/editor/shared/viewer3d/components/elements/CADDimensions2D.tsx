@@ -16,6 +16,21 @@ import { resolveTopDown2TierGeometry } from '@/editor/shared/utils/topDownCabine
 
 const DEFAULT_BASIC_THICKNESS_MM = 18;
 
+// 상판내림 도어 상단갭 기본값 — store/DoorModule과 동일 패턴
+// 반통/한통: -(stretcherH + 25), 3단/2단/터치: -80 (ExternalDrawerRenderer 자체 처리)
+const calcTopDownDefaultTopGap = (moduleId: string | undefined, stoneThk: number = 0): number => {
+  if (!moduleId) return -80;
+  const isExternalDrawerType = moduleId.includes('lower-top-down-3tier')
+    || moduleId.includes('lower-top-down-2tier')
+    || moduleId.includes('lower-top-down-touch-')
+    || moduleId.includes('dual-lower-top-down-3tier')
+    || moduleId.includes('dual-lower-top-down-2tier')
+    || moduleId.includes('dual-lower-top-down-touch-');
+  if (isExternalDrawerType) return -80;
+  const stretcherH = stoneThk === 10 ? 65 : stoneThk === 30 ? 45 : 55;
+  return -(stretcherH + 25);
+};
+
 // PET 실효 두께 매핑: 가구재 15→18, 15.5→18.5, 18→18, 18.5→18.5
 // (15mm 계열은 PB+PET 코팅 시 PET 도어/상판이 18mm 규격 적용)
 const getPetThicknessMm = (basicThicknessMm: number): number => {
@@ -564,7 +579,7 @@ const computeLowerCabinetMaidaHeights = (
   const drawerCount = (is3Tier || isDoorLift3Tier || isTopDown3Tier) ? 3 : 2;
 
   // 모듈별 기본 doorTopGap/doorBottomGap (LowerCabinet.tsx line 379-381)
-  const defaultDoorTopGap = isTopDown2Tier || isTopDown3Tier ? -80 : isDoorLift2Tier || isDoorLift3Tier ? 30 : -20;
+  const defaultDoorTopGap = isTopDown2Tier || isTopDown3Tier ? -80 : isDoorLift2Tier || isDoorLift3Tier ? 30 : (moduleId.includes('lower-top-down-half') || moduleId.includes('dual-lower-top-down-half')) ? calcTopDownDefaultTopGap(moduleId, stoneTopThicknessMm ?? 0) : -20;
   const defaultDoorBottomGap = 5;
 
   // ExternalDrawerRenderer line 517-555: zone 계산
@@ -1350,7 +1365,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
               const isDoorLift = modData.id?.includes('lower-door-lift-');
               const isTopDown = modData.id?.includes('lower-top-down-');
               if (isTopDown) {
-                const effectiveTopDownTopGap = mod.doorTopGap ?? -80;
+                const effectiveTopDownTopGap = mod.doorTopGap ?? calcTopDownDefaultTopGap(modData.id, getStoneTopThicknessMm(mod));
                 const effectiveTopDownBottomGap = mod.doorBottomGap ?? 5;
                 const maidaSegments = computeLowerCabinetMaidaHeights(
                   modData.id,
@@ -2254,7 +2269,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
               // 모듈별 기본 doorTopGap (computeLowerCabinetMaidaHeights 내부 defaultDTG와 일치해야 함)
               const isDL = mod.moduleId.includes('lower-door-lift-') && !mod.moduleId.includes('-half-');
               const isTD = mod.moduleId.includes('lower-top-down-') && !mod.moduleId.includes('-half-');
-              const modDefaultTopGap = isDL ? 30 : isTD ? -80 : -20;
+              const modDefaultTopGap = isDL ? 30 : isTD ? calcTopDownDefaultTopGap(mod.moduleId, getStoneTopThicknessMm(mod)) : -20;
               const effectiveTopGap = isTD && (mod.doorTopGap === undefined || mod.doorTopGap === 0)
                 ? modDefaultTopGap
                 : (mod.doorTopGap ?? modDefaultTopGap);
@@ -2710,7 +2725,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
               const isDoorLift = modData.id?.includes('lower-door-lift-');
               const isTopDown = modData.id?.includes('lower-top-down-');
               if (isTopDown) {
-                const effectiveTopDownTopGap = mod.doorTopGap ?? -80;
+                const effectiveTopDownTopGap = mod.doorTopGap ?? calcTopDownDefaultTopGap(modData.id, getStoneTopThicknessMm(mod));
                 const effectiveTopDownBottomGap = mod.doorBottomGap ?? 5;
                 const maidaSegments = computeLowerCabinetMaidaHeights(
                   modData.id,
@@ -3305,7 +3320,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
               const modHeightMm = modData ? computeFurnitureHeightMm(mod as PlacedModule, modData, spaceInfo, internalSpace) : 0;
               const isDL_r = mod.moduleId.includes('lower-door-lift-') && !mod.moduleId.includes('-half-');
               const isTD_r = mod.moduleId.includes('lower-top-down-') && !mod.moduleId.includes('-half-');
-              const modDefaultTopGap_r = isDL_r ? 30 : isTD_r ? -80 : -20;
+              const modDefaultTopGap_r = isDL_r ? 30 : isTD_r ? calcTopDownDefaultTopGap(mod.moduleId, getStoneTopThicknessMm(mod)) : -20;
               const effectiveTopGap_r = isTD_r && (mod.doorTopGap === undefined || mod.doorTopGap === 0)
                 ? modDefaultTopGap_r
                 : (mod.doorTopGap ?? modDefaultTopGap_r);
