@@ -3618,7 +3618,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                             setFreeHeightInput(displayVal.toString());
                             setSectionHeightInputs({});
                           }
-                          // blur() 호출하지 않음: focused 유지 → useEffect 동기화 skip → 사용자 입력값 보존
+                          (e.target as HTMLInputElement).blur();
                         }
                         else if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
                           e.preventDefault();
