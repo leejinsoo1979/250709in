@@ -1361,10 +1361,16 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                 );
                 const topMaida = maidaSegments?.[maidaSegments.length - 1];
                 const topDownReferenceH = modData.dimensions.height ?? 785;
-                doorBottomAbsMm = cabinetBottomAbs - effectiveTopDownBottomGap;
+                // 상판내림 반통/한통: 도어 H 고정, 위치만 stoneThk별 ±10mm (10→아래, 30→위)
+                const isTopDownHalfHere = modData.id?.includes('lower-top-down-half') || modData.id?.includes('dual-lower-top-down-half');
+                const stThk = getStoneTopThicknessMm(mod);
+                const positionAdjustHalf = isTopDownHalfHere
+                  ? (stThk === 10 ? -10 : stThk === 30 ? 10 : 0)
+                  : 0;
+                doorBottomAbsMm = cabinetBottomAbs - effectiveTopDownBottomGap + positionAdjustHalf;
                 doorTopAbsMm = cabinetBottomAbs + (
                   topMaida?.maidaTopMm ?? (topDownReferenceH + effectiveTopDownTopGap)
-                );
+                ) + positionAdjustHalf;
                 doorHeightMm = Math.max(0, doorTopAbsMm - doorBottomAbsMm);
               } else if (isDoorLift) {
                 doorHeightMm = cabinetH + doorTopGapVal + doorBottomGapVal;
@@ -2721,10 +2727,16 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                 );
                 const topMaida = maidaSegments?.[maidaSegments.length - 1];
                 const topDownReferenceH = modData.dimensions.height ?? 785;
-                doorBottomAbsMm = cabinetBottomAbs - effectiveTopDownBottomGap;
+                // 상판내림 반통/한통: 도어 H 고정, 위치만 stoneThk별 ±10mm (10→아래, 30→위)
+                const isTopDownHalfHere = modData.id?.includes('lower-top-down-half') || modData.id?.includes('dual-lower-top-down-half');
+                const stThk = getStoneTopThicknessMm(mod);
+                const positionAdjustHalf = isTopDownHalfHere
+                  ? (stThk === 10 ? -10 : stThk === 30 ? 10 : 0)
+                  : 0;
+                doorBottomAbsMm = cabinetBottomAbs - effectiveTopDownBottomGap + positionAdjustHalf;
                 doorTopAbsMm = cabinetBottomAbs + (
                   topMaida?.maidaTopMm ?? (topDownReferenceH + effectiveTopDownTopGap)
-                );
+                ) + positionAdjustHalf;
                 doorHeightMm = Math.max(0, doorTopAbsMm - doorBottomAbsMm);
               } else if (isDoorLift) {
                 doorHeightMm = cabinetH + doorTopGapVal + doorBottomGapVal;
