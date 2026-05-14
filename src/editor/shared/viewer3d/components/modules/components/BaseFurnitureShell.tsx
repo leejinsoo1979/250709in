@@ -2831,7 +2831,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                       // 선반 윗면 = 천판 하단 - n × 300mm → 중심 Y = 윗면 - 두께/2
                       const shelfTopY = topPanelBottomY - mmToThreeUnits(SHELF_SPACING_MM * n);
                       const shelfCenterY = shelfTopY - fT / 2;
-                      const edgeColor = '#3a3024'; // 브론즈보다 어두운 윤곽선
+                      const edgeColor = '#1a1410'; // 브론즈보다 훨씬 어두운 윤곽선 (선명하게 보이도록)
                       return (
                         <group key={`glass-shelf-${n}`}>
                           {/* 앞 프레임 (가로 막대) + 윤곽선 */}
@@ -2841,7 +2841,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                           </mesh>
                           <lineSegments position={[0, shelfCenterY, shelfCenterZ + shelfD / 2 - fW / 2]} userData={{ skipCNC: true }}>
                             <edgesGeometry args={[new THREE.BoxGeometry(shelfW, fT, fW)]} />
-                            <lineBasicMaterial color={edgeColor} linewidth={0.5} />
+                            <lineBasicMaterial color={edgeColor} linewidth={2} />
                           </lineSegments>
                           {/* 뒤 프레임 */}
                           <mesh position={[0, shelfCenterY, shelfCenterZ - shelfD / 2 + fW / 2]} userData={{ skipCNC: true }}>
@@ -2850,7 +2850,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                           </mesh>
                           <lineSegments position={[0, shelfCenterY, shelfCenterZ - shelfD / 2 + fW / 2]} userData={{ skipCNC: true }}>
                             <edgesGeometry args={[new THREE.BoxGeometry(shelfW, fT, fW)]} />
-                            <lineBasicMaterial color={edgeColor} linewidth={0.5} />
+                            <lineBasicMaterial color={edgeColor} linewidth={2} />
                           </lineSegments>
                           {/* 좌 프레임 */}
                           <mesh position={[-shelfW / 2 + fW / 2, shelfCenterY, shelfCenterZ]} userData={{ skipCNC: true }}>
@@ -2859,7 +2859,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                           </mesh>
                           <lineSegments position={[-shelfW / 2 + fW / 2, shelfCenterY, shelfCenterZ]} userData={{ skipCNC: true }}>
                             <edgesGeometry args={[new THREE.BoxGeometry(fW, fT, shelfD - 2 * fW)]} />
-                            <lineBasicMaterial color={edgeColor} linewidth={0.5} />
+                            <lineBasicMaterial color={edgeColor} linewidth={2} />
                           </lineSegments>
                           {/* 우 프레임 */}
                           <mesh position={[shelfW / 2 - fW / 2, shelfCenterY, shelfCenterZ]} userData={{ skipCNC: true }}>
@@ -2868,7 +2868,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                           </mesh>
                           <lineSegments position={[shelfW / 2 - fW / 2, shelfCenterY, shelfCenterZ]} userData={{ skipCNC: true }}>
                             <edgesGeometry args={[new THREE.BoxGeometry(fW, fT, shelfD - 2 * fW)]} />
-                            <lineBasicMaterial color={edgeColor} linewidth={0.5} />
+                            <lineBasicMaterial color={edgeColor} linewidth={2} />
                           </lineSegments>
                           {/* 유리판 (중앙) */}
                           <mesh position={[0, shelfCenterY, shelfCenterZ]} userData={{ skipCNC: true }}>
