@@ -742,9 +742,14 @@ const TouchDrawerAnimated: React.FC<TouchDrawerAnimatedProps> = ({
     const topIndex = maidaHeightsMm.length - 1;
     maidaHeightsMm[topIndex] = Math.max(0, maidaHeightsMm[topIndex] + gapTopExt);
   }
-  // 상판내림 터치(2단/3단) + 도어올림 터치 2A/2B: H 변경 시 상단 묶음(맨 위 마이다들 + 사이 갭) 크기 고정,
-  // 마이다0(맨 아래)이 H 변화 흡수 → 사이 갭 3mm 유지
-  if ((isTopDown2Fixed || isTopDown3Fixed || isDoorLift2Fixed) && maidaHeightsMm.length >= 2) {
+  // 도어올림 터치 2A/2B: 1단·2단 마이다 높이 동일하게 균등 분배
+  if (isDoorLift2Fixed && maidaHeightsMm.length === 2) {
+    const evenH = Math.max(0, (totalFrontMm - gapMm) / 2);
+    maidaHeightsMm[0] = evenH;
+    maidaHeightsMm[1] = evenH;
+  }
+  // 상판내림 터치(2단/3단): H 변경 시 상단 묶음(맨 위 마이다들 + 사이 갭) 크기 고정, maida0이 흡수
+  if ((isTopDown2Fixed || isTopDown3Fixed) && maidaHeightsMm.length >= 2) {
     const upperMaidasSum = maidaHeightsMm.slice(1).reduce((a, b) => a + b, 0);
     const upperGapsCount = maidaHeightsMm.length - 1;
     const upperBundle = upperMaidasSum + upperGapsCount * gapMm;
@@ -796,10 +801,9 @@ const TouchDrawerAnimated: React.FC<TouchDrawerAnimatedProps> = ({
     });
   }
 
-  // 상판내림 터치: 서랍2~ 위치를 마이다2~ 시작점에 묶음 (자동 동기화)
-  // - 마이다는 H/stretcher 변화에 따라 위치가 결정되고, 서랍은 마이다 i 안에서 21mm 위에 위치
-  // - 21mm = H=785 / stretcher=55 기준 서랍 bottomY와 마이다 시작 차이
-  if (isTopDownTouch && drawers.length >= 2 && maidas.length >= drawers.length) {
+  // 상판내림 터치 + 도어올림 터치 2A/2B: 서랍2~ 위치를 마이다2~ 시작점에 묶음
+  // - 마이다 위치 변화에 서랍 본체도 따라 내려옴 → 마이다-서랍 간격 일정 유지
+  if ((isTopDownTouch || isDoorLift2Fixed) && drawers.length >= 2 && maidas.length >= drawers.length) {
     const drawerOffsetInsideMaida = 21;
     for (let i = 1; i < drawers.length; i++) {
       const newBottomY = cabinetBottomY + mmToThreeUnits(maidas[i].bottomMm + drawerOffsetInsideMaida);
