@@ -3561,7 +3561,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                             updates.cabinetBodyHeight = val;
                           }
                           // 키큰장(full): 가구 높이 줄이면 상단몰딩이 늘어나야 함
-                          if (moduleData.category === 'full') {
+                          if (moduleData.category === 'full' && !isPlainShoeShelfModuleId(currentPlacedModule.moduleId)) {
                             const iSpace = calculateInternalSpace(spaceInfo);
                             const originalH = iSpace.height; // 원래 내경 높이
                             const globalTopFrame = spaceInfo.frameSize?.top || 30;
@@ -3648,7 +3648,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                             const updates: any = moduleData.category === 'upper'
                               ? { customHeight: val, freeHeight: undefined }
                               : { freeHeight: val };
-                            if (moduleData.category === 'full') {
+                            if (moduleData.category === 'full' && !isPlainShoeShelfModuleId(currentPlacedModule.moduleId)) {
                               const iSpace = calculateInternalSpace(spaceInfo);
                               const globalTopFrame = spaceInfo.frameSize?.top || 30;
                               updates.topFrameThickness = Math.max(0, globalTopFrame + (iSpace.height - val));
@@ -3707,7 +3707,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                             const arrowUpdates: any = moduleData.category === 'upper'
                               ? { customHeight: next, freeHeight: undefined }
                               : { freeHeight: next };
-                            if (moduleData.category === 'full') {
+                            if (moduleData.category === 'full' && !isPlainShoeShelfModuleId(currentPlacedModule.moduleId)) {
                               const iSpace = calculateInternalSpace(spaceInfo);
                               const globalTopFrame = spaceInfo.frameSize?.top || 30;
                               arrowUpdates.topFrameThickness = Math.max(0, globalTopFrame + (iSpace.height - next));
@@ -4442,7 +4442,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                                   return updated;
                                 });
                                 const updates: any = { customSections: newSections, freeHeight: nextBodyH };
-                                if (moduleData.category === 'full') {
+                                if (moduleData.category === 'full' && !isPlainShoeShelfModuleId(currentPlacedModule.moduleId)) {
                                   const iSpace = calculateInternalSpace(spaceInfo);
                                   const globalTopFrame = spaceInfo.frameSize?.top || 30;
                                   updates.topFrameThickness = Math.max(0, globalTopFrame + (iSpace.height - nextBodyH));
@@ -4511,7 +4511,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                                 const clampedH = Math.max(300, Math.min(3000, newTotalH));
                                 const secUpdates: any = { freeHeight: clampedH };
                                 // 키큰장: 상단몰딩도 연동
-                                if (moduleData.category === 'full') {
+                                if (moduleData.category === 'full' && !isPlainShoeShelfModuleId(currentPlacedModule.moduleId)) {
                                   const iSpace = calculateInternalSpace(spaceInfo);
                                   const globalTopFrame = spaceInfo.frameSize?.top || 30;
                                   secUpdates.topFrameThickness = Math.max(0, globalTopFrame + (iSpace.height - clampedH));

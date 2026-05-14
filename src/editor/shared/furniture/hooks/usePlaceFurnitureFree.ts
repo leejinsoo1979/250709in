@@ -42,6 +42,14 @@ const isBaseFrameCapablePlacedModule = (module: PlacedModule): boolean => {
   return !(moduleId.includes('upper-cabinet') || moduleId.startsWith('upper-') || moduleId.includes('-upper-'));
 };
 
+const isPlainShoeShelfModuleId = (moduleId?: string): boolean => {
+  if (!moduleId) return false;
+  return (moduleId.startsWith('single-shelf-') || moduleId.startsWith('dual-shelf-'))
+    && !moduleId.includes('-4drawer-shelf-')
+    && !moduleId.includes('-2drawer-shelf-')
+    && !moduleId.includes('shelf-split');
+};
+
 const clampTopFrameGapForModule = (
   moduleData: ModuleData,
   topFrameMm: number,
@@ -115,6 +123,9 @@ export function placeFurnitureFree(params: PlaceFurnitureFreeParams): PlaceFurni
   const droppedZone = detectDroppedZone(clampedX, spaceInfo, dimensions.width);
   const effectiveZone = droppedZone.zone;
   let effectiveHeight = dimensions.height;
+  if (isPlainShoeShelfModuleId(moduleId)) {
+    effectiveHeight = moduleData.dimensions.height;
+  }
 
   // 단내림 구간에 배치되면 높이를 줄임 (full/upper 모두)
   if (effectiveZone === 'dropped' && droppedZone.droppedInternalHeight !== undefined) {
