@@ -112,7 +112,10 @@ const ModuleItem: React.FC<ModuleItemProps> = ({ module, internalSpace }) => {
     } else {
       moduleData = getModuleById(module.id, internalSpace, spaceInfo);
       if (!moduleData) return;
-      const lastDims = furnitureStore.lastCustomDimensions[module.id.replace(/-[\d.]+$/, '')];
+      // 모듈ID별 키 우선, 없으면 기본 dimensions 사용 (카테고리 stdKey는 너비 공유용이므로 깊이 fallback X)
+      // → 도어분절 팬트리장 같은 깊이 고정 가구가 다른 키큰장의 D 변경 영향 받지 않음
+      const moduleSpecificKey = module.id.replace(/-[\d.]+$/, '');
+      const lastDims = furnitureStore.lastCustomDimensions[moduleSpecificKey];
       dims = lastDims
         ? {
             width: lastDims.width,

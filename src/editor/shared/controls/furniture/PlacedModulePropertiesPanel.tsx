@@ -3721,6 +3721,9 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                           } else {
                             const stdKey = getStandardDimensionKey(currentPlacedModule.moduleId);
                             store.setLastCustomDimensions(stdKey, dims);
+                            // 모듈ID별 키도 함께 저장 (도어분절 팬트리장 등 카테고리 공유 가구 분리)
+                            const moduleSpecificKey = currentPlacedModule.moduleId.replace(/-[\d.]+$/, '');
+                            store.setLastCustomDimensions(moduleSpecificKey, dims);
                             if (stdKey === 'std-dual-full') {
                               store.setLastCustomDimensions('std-single-full', { ...dims, width: Math.round(dims.width / 2) });
                             } else if (stdKey === 'std-single-full') {

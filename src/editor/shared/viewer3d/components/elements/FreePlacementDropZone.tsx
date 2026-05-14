@@ -406,8 +406,10 @@ const FreePlacementDropZone: React.FC = () => {
     const baseModule = getModuleById(selectedFurnitureId, internalSpace, spaceInfo);
     if (!baseModule) return null;
 
+    // 모듈ID별 키 우선 (카테고리 stdKey는 너비 공유용이라 깊이 fallback 시 다른 가구의 D가 끼어들 수 있음)
+    const moduleSpecificKey = selectedFurnitureId.replace(/-[\d.]+$/, '');
     const groupKey = getStandardDimensionKey(selectedFurnitureId);
-    const lastDims = lastCustomDimensions[groupKey];
+    const lastDims = lastCustomDimensions[moduleSpecificKey] || lastCustomDimensions[groupKey];
     if (lastDims) {
       // 이전 치수가 남은 공간보다 크면 남은 공간 기준으로 축소 (배치 불가 방지)
       const effectiveWidth = lastDims.width > maxRemainingWidth
