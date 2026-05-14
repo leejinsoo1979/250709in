@@ -150,24 +150,34 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
   const showDimensions = showDimensionsProp !== undefined ? showDimensionsProp : storeShowDimensions;
   const dimensionDisplayEnabled = showDimensions && showDimensionsText;
 
-  // ESC 키 이벤트 리스너 - selectedFurnitureId 해제
+  // ESC/E 키 이벤트 리스너
+  //  - ESC: selectedFurnitureId 해제
+  //  - E (2D 모드): 지우개 모드 토글
   useEffect(() => {
+    const isEditableTarget = (target: EventTarget | null) => {
+      if (!(target instanceof HTMLElement)) return false;
+      const tag = target.tagName;
+      return tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || target.isContentEditable;
+    };
     const handleEscKey = (e: KeyboardEvent) => {
-      console.log('🔵 [Space3DView] 키 눌림:', e.key);
       if (e.key === 'Escape') {
         const { selectedFurnitureId, setSelectedFurnitureId } = useUIStore.getState();
-        console.log('🔵 [Space3DView] ESC 키 감지 - selectedFurnitureId:', selectedFurnitureId);
         if (selectedFurnitureId) {
-          console.log('🔵 [Space3DView] selectedFurnitureId 해제 실행');
           setSelectedFurnitureId(null);
         }
+        return;
+      }
+      // E 키: 2D 모드에서만 지우개 토글
+      if ((e.key === 'e' || e.key === 'E') && !e.metaKey && !e.ctrlKey && !e.altKey) {
+        if (isEditableTarget(e.target)) return;
+        const ui = useUIStore.getState();
+        if (ui.viewMode !== '2D') return;
+        ui.toggleEraserMode();
       }
     };
 
-    console.log('🔵 [Space3DView] ESC 키 이벤트 리스너 등록');
     document.addEventListener('keydown', handleEscKey);
     return () => {
-      console.log('🔵 [Space3DView] ESC 키 이벤트 리스너 해제');
       document.removeEventListener('keydown', handleEscKey);
     };
   }, []);
