@@ -742,9 +742,9 @@ const TouchDrawerAnimated: React.FC<TouchDrawerAnimatedProps> = ({
     const topIndex = maidaHeightsMm.length - 1;
     maidaHeightsMm[topIndex] = Math.max(0, maidaHeightsMm[topIndex] + gapTopExt);
   }
-  // 상판내림 터치(2단/3단): H 변경 시 상단 묶음(맨 위 마이다들 + 사이 갭) 크기 고정,
-  // 마이다1(맨 아래)이 H 변화 흡수
-  if ((isTopDown2Fixed || isTopDown3Fixed) && maidaHeightsMm.length >= 2) {
+  // 상판내림 터치(2단/3단) + 도어올림 터치 2A/2B: H 변경 시 상단 묶음(맨 위 마이다들 + 사이 갭) 크기 고정,
+  // 마이다0(맨 아래)이 H 변화 흡수 → 사이 갭 3mm 유지
+  if ((isTopDown2Fixed || isTopDown3Fixed || isDoorLift2Fixed) && maidaHeightsMm.length >= 2) {
     const upperMaidasSum = maidaHeightsMm.slice(1).reduce((a, b) => a + b, 0);
     const upperGapsCount = maidaHeightsMm.length - 1;
     const upperBundle = upperMaidasSum + upperGapsCount * gapMm;
@@ -757,7 +757,7 @@ const TouchDrawerAnimated: React.FC<TouchDrawerAnimatedProps> = ({
   //   → 맨 아래 마이다(3단/maidas[0])가 남은 공간 흡수
   // 그 외(터치 아닌 경우)는 기존대로 바닥에서 위로 누적
   let maidas: { height: number; centerY: number; tier: number; bottomMm: number }[];
-  if (isTopDownTouch && maidaHeightsMm.length >= 2) {
+  if ((isTopDownTouch || isDoorLift2Fixed) && maidaHeightsMm.length >= 2) {
     // 마이다 최상단(맨 위 마이다 끝점) = totalFrontMm - bottomExtMm 위치 (= H + topExt)
     // 위에서 아래로 채우기
     const lastIdx = maidaHeightsMm.length - 1;

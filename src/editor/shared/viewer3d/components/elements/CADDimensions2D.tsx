@@ -455,9 +455,9 @@ const computeLowerCabinetMaidaHeights = (
       const topIndex = maidaHeightsMm.length - 1;
       maidaHeightsMm[topIndex] = Math.max(0, maidaHeightsMm[topIndex] + gapTopExt);
     }
-    // 상판내림 터치(2단/3단): 상단 마이다 묶음(맨 위 마이다들 + 사이 갭 3mm)은 크기 고정,
+    // 상판내림 터치(2단/3단) + 도어올림 터치 2A/2B: 상단 마이다 묶음(맨 위 마이다들 + 사이 갭 3mm)은 크기 고정,
     // 마이다 묶음을 캐비넷 상단에서 아래로 채워 내림. 맨 아래(maida0)가 남은 공간 흡수.
-    if ((isTopDown2Fixed || isTopDown3Fixed) && maidaHeightsMm.length >= 2) {
+    if ((isTopDown2Fixed || isTopDown3Fixed || isDoorLift2Fixed) && maidaHeightsMm.length >= 2) {
       const lastIdx = maidaHeightsMm.length - 1;
       const topPositionMm = -bottomExtMm + totalFrontMm; // 마이다 묶음 끝 (캐비넷 바닥 기준)
       const result: { maidaHeightMm: number; maidaBottomMm: number; maidaTopMm: number }[] = new Array(maidaHeightsMm.length);
