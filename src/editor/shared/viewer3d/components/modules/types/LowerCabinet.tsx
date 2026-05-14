@@ -1339,12 +1339,14 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
                 };
               })() : moduleData.id.includes('lower-top-down-2tier') ? (() => {
                 // 상판내림 2단: 두 서랍 균등 + 상단 묶음 위로 평행이동
-                // 중간 노치 = (H - 185) / 2 (외부서랍 노치와 동기화)
+                // 중간 노치 = (cabH_normalized - 185) / 2 — stoneThk 변경에 따른 cabH 변동 흡수
+                //   (cabH_normalized = cabH + stoneThk - 20 → 사용자 H 변경 없으면 항상 785)
                 // 상단 노치 = H - (stretcher + 65) — stoneThk별로 stretcher 가변
                 const cabHmm2 = Math.round(adjustedHeight / 0.01);
+                const cabHNorm2 = cabHmm2 + stoneThickness - 20;
                 return {
                   sideNotches: [
-                    { y: 65, z: 40, fromBottom: Math.round((cabHmm2 - 185) / 2) },
+                    { y: 65, z: 40, fromBottom: Math.round((cabHNorm2 - 185) / 2) },
                     { y: 65, z: 40, fromBottom: cabHmm2 - (topDownStretcherHeightMm + 65) },
                   ]
                 };
@@ -1555,7 +1557,7 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
           : isDoorLift3Tier ? [315, doorLift3TierNotch2]
           : isDoorLift2Tier ? [doorLift2TierNotch]
           : isTopDown3Tier ? [225 + drawer3TierDelta - td3StretcherDeltaForNotch, 445 + drawer3TierDelta - td3StretcherDeltaForNotch, 665 + drawer3TierDelta - td3StretcherDeltaForNotch]
-          : isTopDown2Tier ? [Math.round((currentCabinetHmm - 185) / 2), currentCabinetHmm - (td3StretcherForNotch + 65)]
+          : isTopDown2Tier ? [Math.round((currentCabinetHmm + stoneThickness - 20 - 185) / 2), currentCabinetHmm - (td3StretcherForNotch + 65)]
           : [drawer2TierFromBottom];
         const notchHeights = is3Tier ? [65, 65] : isDoorLift3Tier ? [65, 65] : isDoorLift2Tier ? [65] : isTopDown3Tier ? [65, 65, 65] : isTopDown2Tier ? [65, 65] : [65];
         const drawerCount = (is3Tier || isDoorLift3Tier || isTopDown3Tier) ? 3 : 2;
