@@ -1351,7 +1351,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
               const isTopDown = modData.id?.includes('lower-top-down-');
               if (isTopDown) {
                 // 상판내림: 도어 위치/크기는 stoneThk와 무관하게 고정 (-80, H 710)
-                const effectiveTopDownTopGap = -80; // 상판내림 도어는 stoneThk 무관 강제 -80
+                const effectiveTopDownTopGap = mod.doorTopGap ?? -80;
                 const effectiveTopDownBottomGap = mod.doorBottomGap ?? 5;
                 const maidaSegments = computeLowerCabinetMaidaHeights(
                   modData.id,
@@ -2712,7 +2712,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
               const isTopDown = modData.id?.includes('lower-top-down-');
               if (isTopDown) {
                 // 상판내림: 도어 위치/크기는 stoneThk와 무관하게 고정 (-80, H 710)
-                const effectiveTopDownTopGap = -80; // 상판내림 도어는 stoneThk 무관 강제 -80
+                const effectiveTopDownTopGap = mod.doorTopGap ?? -80;
                 const effectiveTopDownBottomGap = mod.doorBottomGap ?? 5;
                 const maidaSegments = computeLowerCabinetMaidaHeights(
                   modData.id,
