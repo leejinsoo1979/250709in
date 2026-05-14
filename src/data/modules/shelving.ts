@@ -3622,7 +3622,11 @@ export const generateShelvingModules = (
   // === 듀얼 가구 생성 ===
   // _tempSlotWidths가 있고 듀얼 가구를 위한 2개의 슬롯 너비가 있으면 합계 사용
   let dualWidth: number;
-  if (indexingSpaceInfo.layoutMode === 'free-placement' && indexingSpaceInfo.furnitureDualWidth) {
+  const hasTempSlotWidthsForDual = slotWidths && slotWidths.length >= 2;
+  if (hasTempSlotWidthsForDual) {
+    // getModuleById에서 특정 너비로 검색하는 경우(_tempSlotWidths 경유): 자유배치라도 그 값 우선
+    dualWidth = Math.round((slotWidths![0] + slotWidths![1]) * 100) / 100;
+  } else if (indexingSpaceInfo.layoutMode === 'free-placement' && indexingSpaceInfo.furnitureDualWidth) {
     // 자유배치 모드: 사용자 설정 듀얼 너비 사용
     dualWidth = indexingSpaceInfo.furnitureDualWidth;
   } else if (slotWidths && slotWidths.length >= 2) {
