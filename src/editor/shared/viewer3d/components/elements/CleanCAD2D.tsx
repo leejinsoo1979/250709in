@@ -17,7 +17,7 @@ import { ColumnIndexer } from '@/editor/shared/utils/indexing/ColumnIndexer';
 import { calculateFrameThickness, calculateInternalSpace, END_PANEL_THICKNESS } from '@/editor/shared/viewer3d/utils/geometry';
 import { analyzeColumnSlots, calculateFurnitureBounds } from '@/editor/shared/utils/columnSlotProcessor';
 import { isCustomizableModuleId, getCustomDimensionKey, getStandardDimensionKey } from '@/editor/shared/controls/furniture/CustomizableFurnitureLibrary';
-import { calcResizedPositionX } from '@/editor/shared/utils/freePlacementUtils';
+import { calcInsertFrameResizedPositionX, calcResizedPositionX } from '@/editor/shared/utils/freePlacementUtils';
 import { filterSideViewModules } from '@/editor/shared/utils/sideViewModuleFilter';
 import { resolveCountertopThicknessMm } from '@/editor/shared/utils/countertopHeightCompensation';
 
@@ -875,12 +875,18 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
     const module = placedModules.find(m => m.id === editingFurnitureWidthId);
     if (module) {
       const freshSI = useSpaceConfigStore.getState().spaceInfo;
+      const isInsertFrame = typeof module.moduleId === 'string' && module.moduleId.includes('insert-frame');
       const newX = module.isFreePlacement
-        ? calcResizedPositionX(module, clamped, placedModules, freshSI)
+        ? (
+          isInsertFrame
+            ? calcInsertFrameResizedPositionX(module, clamped, placedModules, freshSI)
+            : calcResizedPositionX(module, clamped, placedModules, freshSI)
+        )
         : module.position.x;
       updatePlacedModule(editingFurnitureWidthId, {
         freeWidth: clamped,
         moduleWidth: clamped,
+        customWidth: clamped,
         position: { ...module.position, x: newX },
         userResizedWidth: true, // 사용자 직접 폭 변경 → 화살표 이동 시 자동 리사이즈 차단
       } as any);

@@ -439,6 +439,84 @@ export function calcResizedPositionX(
   return clampedMm * 0.01;
 }
 
+/**
+ * 키큰장찬넬 전용 너비 변경 위치 보정.
+ *
+ * 찬넬은 채움재이므로 가장 가까운 가구 쪽 면을 고정하고 반대쪽으로만 확장/축소한다.
+ * 일반 자유배치 리사이즈처럼 중심 기준으로 양쪽을 동시에 움직이면 옆 가구와 겹치기 쉽다.
+ */
+export function calcInsertFrameResizedPositionX(
+  module: PlacedModule,
+  newWidthMm: number,
+  allModules: PlacedModule[],
+  spaceInfo: SpaceInfo
+): number {
+  const oldBounds = getModuleBoundsX(module);
+  const { startX, endX } = getInternalSpaceBoundsX(spaceInfo);
+  const halfNew = newWidthMm / 2;
+  const currentCenterMm = module.position.x * 100;
+  const spaceMidMm = (startX + endX) / 2;
+
+  const lockedGaps = spaceInfo.lockedWallGaps;
+  const effStart = lockedGaps?.left != null ? startX + lockedGaps.left : startX;
+  const effEnd = lockedGaps?.right != null ? endX - lockedGaps.right : endX;
+
+  const SNAP_MM = 10;
+  const NEAR_MM = 80;
+  let leftAnchor: { x: number; gap: number } | null = null;
+  let rightAnchor: { x: number; gap: number } | null = null;
+
+  for (const other of allModules) {
+    if (other.id === module.id || other.isSurroundPanel || !other.isFreePlacement) continue;
+    const otherBounds = getModuleBoundsX(other);
+
+    const leftGap = oldBounds.left - otherBounds.right;
+    if (leftGap >= -SNAP_MM && leftGap <= NEAR_MM) {
+      if (!leftAnchor || leftGap < leftAnchor.gap) {
+        leftAnchor = { x: otherBounds.right, gap: Math.max(0, leftGap) };
+      }
+    }
+
+    const rightGap = otherBounds.left - oldBounds.right;
+    if (rightGap >= -SNAP_MM && rightGap <= NEAR_MM) {
+      if (!rightAnchor || rightGap < rightAnchor.gap) {
+        rightAnchor = { x: otherBounds.left, gap: Math.max(0, rightGap) };
+      }
+    }
+  }
+
+  const leftWallGap = oldBounds.left - effStart;
+  if (!leftAnchor && leftWallGap >= -SNAP_MM && leftWallGap <= NEAR_MM) {
+    leftAnchor = { x: effStart, gap: Math.max(0, leftWallGap) };
+  }
+
+  const rightWallGap = effEnd - oldBounds.right;
+  if (!rightAnchor && rightWallGap >= -SNAP_MM && rightWallGap <= NEAR_MM) {
+    rightAnchor = { x: effEnd, gap: Math.max(0, rightWallGap) };
+  }
+
+  let newCenterMm: number;
+  if (leftAnchor && rightAnchor) {
+    const useLeftAnchor = leftAnchor.gap < rightAnchor.gap
+      || (leftAnchor.gap === rightAnchor.gap && currentCenterMm < spaceMidMm);
+    newCenterMm = useLeftAnchor
+      ? leftAnchor.x + halfNew
+      : rightAnchor.x - halfNew;
+  } else if (leftAnchor) {
+    newCenterMm = leftAnchor.x + halfNew;
+  } else if (rightAnchor) {
+    newCenterMm = rightAnchor.x - halfNew;
+  } else {
+    newCenterMm = currentCenterMm < spaceMidMm
+      ? oldBounds.left + halfNew
+      : oldBounds.right - halfNew;
+  }
+
+  let clampedMm = clampToSpaceBoundsX(newCenterMm, newWidthMm, spaceInfo);
+  clampedMm = Math.max(effStart + halfNew, Math.min(effEnd - halfNew, clampedMm));
+  return clampedMm * 0.01;
+}
+
 // ─── 구간별 최적 가구 너비 자동 계산 유틸 ───
 
 export type ZoneType = 'main' | 'stepCeiling' | 'curtainBox';

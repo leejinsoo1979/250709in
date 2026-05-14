@@ -1601,13 +1601,12 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   // 듀얼 가구는 customWidth가 올바른지 확인 필요
   let furnitureWidthMm = actualModuleData?.dimensions.width || 0; // 기본값
 
-  // 자유배치 모드에서는 사용자 지정 너비를 우선 사용 (슬롯/기둥 관련 조정 건너뜀)
+  // 자유배치 모드에서는 freeWidth를 최우선 사용한다.
+  // customWidth가 이전 편집값으로 남아 있어도 2D 치수 입력으로 줄인 폭을 덮어쓰면 안 된다.
   if (placedModule.isFreePlacement && placedModule.freeWidth) {
     furnitureWidthMm = placedModule.freeWidth;
-  }
-
-  // adjustedWidth가 있으면 최우선 사용 (기둥 침범 케이스) - 자유배치는 제외
-  if (!placedModule.isFreePlacement && placedModule.adjustedWidth !== undefined && placedModule.adjustedWidth !== null) {
+  } else if (!placedModule.isFreePlacement && placedModule.adjustedWidth !== undefined && placedModule.adjustedWidth !== null) {
+    // adjustedWidth가 있으면 최우선 사용 (기둥 침범 케이스) - 자유배치는 제외
     furnitureWidthMm = placedModule.adjustedWidth;
   } else if (!placedModule.isFreePlacement && placedModule.slotCustomWidth !== undefined) {
     // slotCustomWidth: 슬롯 모드 사용자 지정 너비 (adjustedWidth 다음 우선순위)

@@ -13,7 +13,7 @@ import { calculatePanelDetails, calculateSurroundPanels } from '@/editor/shared/
 import { withUpperSafetyShelfRemoved, isUpperSafetyShelfModule } from '@/editor/shared/utils/upperSafetyShelf';
 import { getDefaultGrainDirection } from '@/editor/shared/utils/materialConstants';
 import { isCustomizableModuleId, getCustomDimensionKey, getStandardDimensionKey } from './CustomizableFurnitureLibrary';
-import { calcResizedPositionX } from '@/editor/shared/utils/freePlacementUtils';
+import { calcInsertFrameResizedPositionX, calcResizedPositionX } from '@/editor/shared/utils/freePlacementUtils';
 import { parseBackWallGapInput, stepBackWallGapMm } from '@/editor/shared/utils/backWallGapValidation';
 import { resolveCountertopThicknessMm } from '@/editor/shared/utils/countertopHeightCompensation';
 import styles from './PlacedModulePropertiesPanel.module.css';
@@ -3324,6 +3324,11 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                               ? calcResizedPositionX(freshModule, val, freshAll, freshSI)
                               : freshModule.position.x;
                           }
+                          if (isInsertFrameWidth) {
+                            newX = calcInsertFrameResizedPositionX(freshModule, val, freshAll, freshSI);
+                            insertMoveTargets = [];
+                            insertDelta = 0;
+                          }
                           updatePlacedModule(currentPlacedModule.id, {
                             freeWidth: val,
                             moduleWidth: val,
@@ -3437,6 +3442,9 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                                 newX = freshMod.isFreePlacement
                                   ? calcResizedPositionX(freshMod, next, freshAll, freshSI)
                                   : freshMod.position.x;
+                              }
+                              if (isInsertFrameKey) {
+                                newX = calcInsertFrameResizedPositionX(freshMod, next, freshAll, freshSI);
                               }
                               updatePlacedModule(currentPlacedModule.id, {
                                 freeWidth: next,
