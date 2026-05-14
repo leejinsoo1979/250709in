@@ -455,9 +455,10 @@ const computeLowerCabinetMaidaHeights = (
       const topIndex = maidaHeightsMm.length - 1;
       maidaHeightsMm[topIndex] = Math.max(0, maidaHeightsMm[topIndex] + gapTopExt);
     }
-    // 도어올림 터치 2A/2B + 상판내림 터치 2단: 1단·2단 마이다 균등 분배 (도어 갭 3 + 상단 20 + 하단 5 유지)
+    // 도어올림 터치 2A/2B + 상판내림 터치 2단: 1단·2단 마이다 균등 분배 (정수, 도어 갭 3 + 상단 20 + 하단 5 유지)
     if ((isDoorLift2Fixed || isTopDown2Fixed) && maidaHeightsMm.length === 2) {
-      const evenH = Math.max(0, (totalFrontMm - gapMm) / 2);
+      const total = Math.max(0, totalFrontMm - gapMm);
+      const evenH = Math.floor(total / 2);
       maidaHeightsMm[0] = evenH;
       maidaHeightsMm[1] = evenH;
     }
