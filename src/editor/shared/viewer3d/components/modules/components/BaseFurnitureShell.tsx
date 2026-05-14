@@ -1,7 +1,7 @@
 import React, { useMemo, useEffect, useRef, useCallback } from 'react';
 import * as THREE from 'three';
 import { useSpace3DView } from '../../../context/useSpace3DView';
-import { useThree } from '@react-three/fiber';
+import { useFrame, useThree } from '@react-three/fiber';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useUIStore } from '@/store/uiStore';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
@@ -13,6 +13,7 @@ import { Text, Line } from '@react-three/drei';
 import DimensionText from './DimensionText';
 import { useDimensionColor } from '../hooks/useDimensionColor';
 import { VentilationCap } from './VentilationCap';
+import { useExcludedPanelsStore } from '../../../context/ExcludedPanelsContext';
 
 // 유리장 타일 텍스처 (이미지 로드 캐싱 — Image 객체로 직접 관리)
 let GLASS_TILE_IMAGE: HTMLImageElement | null = null;
@@ -38,8 +39,21 @@ const TileBackPanelMesh: React.FC<{
   args: [number, number, number];
   widthMm: number;
   heightMm: number;
-}> = ({ position, args, widthMm, heightMm }) => {
+  panelName?: string;
+  furnitureId?: string;
+}> = ({ position, args, widthMm, heightMm, panelName, furnitureId }) => {
   const [texture, setTexture] = React.useState<THREE.Texture | null>(null);
+  const groupRef = useRef<THREE.Group>(null);
+  const compositeKey = furnitureId && panelName ? `${furnitureId}::${panelName}` : null;
+
+  useFrame(() => {
+    if (!groupRef.current || !compositeKey) return;
+    const { excludedKeys } = useExcludedPanelsStore.getState();
+    const shouldHide = excludedKeys.size > 0 && excludedKeys.has(compositeKey);
+    if (groupRef.current.visible === shouldHide) {
+      groupRef.current.visible = !shouldHide;
+    }
+  });
 
   React.useEffect(() => {
     let cancelled = false;
@@ -59,22 +73,24 @@ const TileBackPanelMesh: React.FC<{
   }, [widthMm, heightMm]);
 
   return (
-    <mesh position={position} userData={{ skipCNC: true }} renderOrder={1}>
-      <boxGeometry args={args} />
-      {texture ? (
-        <meshStandardMaterial
-          map={texture}
-          color={0x999999}
-          roughness={0.7}
-          metalness={0.05}
-          polygonOffset
-          polygonOffsetFactor={-1}
-          polygonOffsetUnits={-1}
-        />
-      ) : (
-        <meshStandardMaterial color={0x999999} />
-      )}
-    </mesh>
+    <group ref={groupRef}>
+      <mesh position={position} userData={{ skipCNC: true }} renderOrder={1}>
+        <boxGeometry args={args} />
+        {texture ? (
+          <meshStandardMaterial
+            map={texture}
+            color={0x999999}
+            roughness={0.7}
+            metalness={0.05}
+            polygonOffset
+            polygonOffsetFactor={-1}
+            polygonOffsetUnits={-1}
+          />
+        ) : (
+          <meshStandardMaterial color={0x999999} />
+        )}
+      </mesh>
+    </group>
   );
 };
 
@@ -2815,28 +2831,45 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                       // 선반 윗면 = 천판 하단 - n × 300mm → 중심 Y = 윗면 - 두께/2
                       const shelfTopY = topPanelBottomY - mmToThreeUnits(SHELF_SPACING_MM * n);
                       const shelfCenterY = shelfTopY - fT / 2;
+                      const edgeColor = '#3a3024'; // 브론즈보다 어두운 윤곽선
                       return (
                         <group key={`glass-shelf-${n}`}>
-                          {/* 앞 프레임 (가로 막대) */}
+                          {/* 앞 프레임 (가로 막대) + 윤곽선 */}
                           <mesh position={[0, shelfCenterY, shelfCenterZ + shelfD / 2 - fW / 2]} userData={{ skipCNC: true }}>
                             <boxGeometry args={[shelfW, fT, fW]} />
                             <primitive object={shelfFrameMaterial} attach="material" />
                           </mesh>
+                          <lineSegments position={[0, shelfCenterY, shelfCenterZ + shelfD / 2 - fW / 2]} userData={{ skipCNC: true }}>
+                            <edgesGeometry args={[new THREE.BoxGeometry(shelfW, fT, fW)]} />
+                            <lineBasicMaterial color={edgeColor} linewidth={0.5} />
+                          </lineSegments>
                           {/* 뒤 프레임 */}
                           <mesh position={[0, shelfCenterY, shelfCenterZ - shelfD / 2 + fW / 2]} userData={{ skipCNC: true }}>
                             <boxGeometry args={[shelfW, fT, fW]} />
                             <primitive object={shelfFrameMaterial} attach="material" />
                           </mesh>
+                          <lineSegments position={[0, shelfCenterY, shelfCenterZ - shelfD / 2 + fW / 2]} userData={{ skipCNC: true }}>
+                            <edgesGeometry args={[new THREE.BoxGeometry(shelfW, fT, fW)]} />
+                            <lineBasicMaterial color={edgeColor} linewidth={0.5} />
+                          </lineSegments>
                           {/* 좌 프레임 */}
                           <mesh position={[-shelfW / 2 + fW / 2, shelfCenterY, shelfCenterZ]} userData={{ skipCNC: true }}>
                             <boxGeometry args={[fW, fT, shelfD - 2 * fW]} />
                             <primitive object={shelfFrameMaterial} attach="material" />
                           </mesh>
+                          <lineSegments position={[-shelfW / 2 + fW / 2, shelfCenterY, shelfCenterZ]} userData={{ skipCNC: true }}>
+                            <edgesGeometry args={[new THREE.BoxGeometry(fW, fT, shelfD - 2 * fW)]} />
+                            <lineBasicMaterial color={edgeColor} linewidth={0.5} />
+                          </lineSegments>
                           {/* 우 프레임 */}
                           <mesh position={[shelfW / 2 - fW / 2, shelfCenterY, shelfCenterZ]} userData={{ skipCNC: true }}>
                             <boxGeometry args={[fW, fT, shelfD - 2 * fW]} />
                             <primitive object={shelfFrameMaterial} attach="material" />
                           </mesh>
+                          <lineSegments position={[shelfW / 2 - fW / 2, shelfCenterY, shelfCenterZ]} userData={{ skipCNC: true }}>
+                            <edgesGeometry args={[new THREE.BoxGeometry(fW, fT, shelfD - 2 * fW)]} />
+                            <lineBasicMaterial color={edgeColor} linewidth={0.5} />
+                          </lineSegments>
                           {/* 유리판 (중앙) */}
                           <mesh position={[0, shelfCenterY, shelfCenterZ]} userData={{ skipCNC: true }}>
                             <boxGeometry args={[innerW, gT, innerD]} />
@@ -2923,6 +2956,8 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                         args={[tileBackW, lowerH, tileBackThk]}
                         widthMm={widthMm}
                         heightMm={lowerH / 0.01}
+                        panelName="백패널"
+                        furnitureId={placedFurnitureId}
                       />
                     )}
                     {upperH > 0 && (
@@ -2931,6 +2966,8 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                         args={[tileBackW, upperH, tileBackThk]}
                         widthMm={widthMm}
                         heightMm={upperH / 0.01}
+                        panelName="백패널"
+                        furnitureId={placedFurnitureId}
                       />
                     )}
                   </>
