@@ -1338,22 +1338,18 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
                   ]
                 };
               })() : moduleData.id.includes('lower-top-down-2tier') ? (() => {
-                // 상판내림 2단: 두 서랍 균등 + 상단 묶음 위로 평행이동
+                // 상판내림 2단: 두 서랍 균등
                 // 중간 노치 = (H - 185) / 2 (외부서랍 노치와 동기화)
-                // 상단 노치 = H - (stretcher + 65) — stoneThk별로 stretcher 가변
+                // 상단 가로전대는 topStretcher로 그려지므로 sideNotches에서는 제외 (위치 중복 방지)
                 const cabHmm2 = Math.round(adjustedHeight / 0.01);
                 return {
                   sideNotches: [
                     { y: 65, z: 40, fromBottom: Math.round((cabHmm2 - 185) / 2) },
-                    { y: 65, z: 40, fromBottom: cabHmm2 - (topDownStretcherHeightMm + 65) },
                   ]
                 };
               })() : (moduleData.id.includes('lower-top-down-half') || moduleData.id.includes('dual-lower-top-down-half')) ? (() => {
-                // 상판내림 반통/한통: 노치 = 가로전대 바로 아래 (stoneThk별 stretcher 반영)
-                const cabHmmH = Math.round(adjustedHeight / 0.01);
-                return {
-                  sideNotches: [{ y: 65, z: 40, fromBottom: cabHmmH - (topDownStretcherHeightMm + 65) }]
-                };
+                // 상판내림 반통/한통: 상단 가로전대는 topStretcher로 그려지므로 sideNotches에서 제외 (위치 중복 방지)
+                return {};
               })() : {})}>
             {/* 내부 구조는 항상 렌더링 (서랍/선반) */}
             <>
