@@ -1617,16 +1617,17 @@ const BoxModule: React.FC<BoxModuleProps> = ({
               ? customLowerSecH
               : defaultLowerSectionTopMm;
             const doorSplitGapMm = isPantrySplit ? 3 : 20;
-            // 도어 사이 갭이 하부섹션 외곽 상단을 중심으로 균등 배치
-            // 현관장(갭20): 하부도어 상단 = 860-10 = 850? 아닌데 기존 사양 보존 → 갭의 ?
             // 명시 사양 (사용자):
             //   - shelf-split: 하부도어 상단 = 860-40, 상부도어 하단 = 860-20
-            //   - pantry-cabinet-split: 갭 3mm → 분절 경계(1825) 중심으로 갭 균등
+            //   - pantry-cabinet-split: 갭 3mm 비대칭 분할
+            //       · 하부도어 상단 = 하부섹션 상단 - 2mm (아래로 2)
+            //       · 상부도어 하단 = 하부섹션 상단(=상부섹션 하단) + 1mm (위로 1)
+            //       · 총 갭 = 1 + 2 = 3mm
             const lowerDoorTopMm = isPantrySplit
-              ? lowerSectionTopMm - doorSplitGapMm / 2 // 1823.5
+              ? lowerSectionTopMm - 2 // 하부 도어 상단: 하부섹션 상단에서 2mm 아래
               : lowerSectionTopMm - 40; // 820 (현관장 기존 사양 유지)
             const upperDoorBottomMm = isPantrySplit
-              ? lowerSectionTopMm + doorSplitGapMm / 2 // 1826.5
+              ? lowerSectionTopMm + 1 // 상부 도어 하단: 상부섹션 하단에서 1mm 위
               : lowerSectionTopMm - 20; // 840 (현관장 기존 사양 유지)
             const lowerGapBottom = doorBottomGap ?? 0; // 가구 바닥에서 아래로 확장
             const upperGapTop = doorTopGap ?? 0; // 가구 천판에서 위로 확장
