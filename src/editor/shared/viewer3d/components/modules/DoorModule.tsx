@@ -915,18 +915,9 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     const isTopDown = moduleData?.id?.includes('lower-top-down-');
 
     if (isTopDown) {
-      // 상판내림 반통/한통: 도어 하단 고정, 상단만 stoneThk별 ±10mm
-      //   20mm 기준 -80, 10mm → -70 (도어 +10mm 위), 30mm → -90 (도어 -10mm 아래)
+      // 상판내림: 도어 H/위치는 stoneThk와 완전 무관 (항상 -80, H 710 고정)
       const topDownReferenceHeight = moduleData?.dimensions?.height || 785;
-      const isTopDownHalf = moduleData?.id?.includes('lower-top-down-half') || moduleData?.id?.includes('dual-lower-top-down-half');
-      let defaultTopDownTopGap = -80;
-      if (isTopDownHalf) {
-        const stoneThkForDoor = storePlacedModule?.stoneTopThickness ?? 0;
-        // 10mm → +10 (도어 H 늘어남), 30mm → -10 (도어 H 줄어듦)
-        const halfDelta = stoneThkForDoor === 10 ? 10 : stoneThkForDoor === 30 ? -10 : 0;
-        defaultTopDownTopGap = -80 + halfDelta;
-      }
-      const effectiveTopDownTopGap = doorTopGapProp ?? storePlacedModule?.doorTopGap ?? defaultTopDownTopGap;
+      const effectiveTopDownTopGap = doorTopGapProp ?? storePlacedModule?.doorTopGap ?? -80;
       const effectiveTopDownBottomGap = doorBottomGapProp ?? storePlacedModule?.doorBottomGap ?? 5;
       actualDoorHeight = topDownReferenceHeight + effectiveTopDownTopGap + effectiveTopDownBottomGap;
     } else if (isDoorLift) {
