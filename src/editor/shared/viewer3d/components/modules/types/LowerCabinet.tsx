@@ -1345,10 +1345,10 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
                   ]
                 };
               })() : (moduleData.id.includes('lower-top-down-half') || moduleData.id.includes('dual-lower-top-down-half')) ? (() => {
-                // 상판내림 반통/한통: 노치 = 가로전대 바로 아래 (stoneThk별 stretcher 반영, 터치와 동일)
+                // 상판내림 반통/한통: ㄱ자 외경 80mm 고정 → 노치 위 80mm
                 const cabHmmH = Math.round(adjustedHeight / 0.01);
                 return {
-                  sideNotches: [{ y: 65, z: 40, fromBottom: cabHmmH - (topDownStretcherHeightMm + 65) }]
+                  sideNotches: [{ y: 65, z: 40, fromBottom: cabHmmH - 80 }]
                 };
               })() : {})}>
             {/* 내부 구조는 항상 렌더링 (서랍/선반) */}
@@ -1600,11 +1600,14 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
       {/* 상판내림 반통/한통: L자 프레임만 렌더링 (서랍 없음, 도어는 별도) — 걸래받이 OFF 시 숨김 */}
       {showFurniture && hasBase !== false && (moduleData.id.includes('lower-top-down-half') || moduleData.id.includes('dual-lower-top-down-half') || moduleData.id.includes('lower-top-down-touch-') || moduleData.id.includes('dual-lower-top-down-touch-')) && (() => {
         const mmToThreeUnits = (mm: number) => mm * 0.01;
-        // 상판내림 반통/한통/터치: 측판 따내기 = 가로전대 바로 아래
-        // fromBottom = 캐비넷H - (stretcherH + notchHeight 65) — 터치와 동일 패턴으로 통일
+        // 상판내림 반통/한통: ㄱ자 외경 80mm 고정 → 노치 fromBottom = 캐비넷H - 80
+        // 상판내림 터치: stretcherH별 동적 (캐비넷H - stretcherH - 65)
+        const isTopDownHalfHere = moduleData.id.includes('lower-top-down-half') || moduleData.id.includes('dual-lower-top-down-half');
         const cabinetHmmHere = Math.round(adjustedHeight / 0.01);
         const notchHeightLocal = 65;
-        const notchFromBottomLocal = cabinetHmmHere - (topDownStretcherHeightMm + notchHeightLocal);
+        const notchFromBottomLocal = isTopDownHalfHere
+          ? (cabinetHmmHere - 80)
+          : (cabinetHmmHere - (topDownStretcherHeightMm + notchHeightLocal));
         const notch = { fromBottom: notchFromBottomLocal, height: notchHeightLocal };
         const basicThicknessMm = baseFurniture.basicThickness / 0.01;
         const frameWidth = mmToThreeUnits(adjustedWidth || moduleData.dimensions.width);
