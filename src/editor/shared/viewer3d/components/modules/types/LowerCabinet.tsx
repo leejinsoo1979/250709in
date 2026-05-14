@@ -1450,6 +1450,15 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
             const isTopDownHalf = moduleId.includes('lower-top-down-half') || moduleId.includes('dual-lower-top-down-half');
             if (!isLowerHalf && !isDoorLiftHalf && !isTopDownHalf) return null;
 
+            // placedModule.customSections 우선 사용 (팝업 선반 갯수 토글/스피너 반영)
+            const placedModuleForShelves = placedFurnitureId
+              ? useFurnitureStore.getState().placedModules.find(p => p.id === placedFurnitureId)
+              : undefined;
+            const customSecForShelves = (placedModuleForShelves as any)?.customSections;
+            const customShelfSec = Array.isArray(customSecForShelves)
+              ? customSecForShelves.find((s: any) => s?.type === 'shelf')
+              : undefined;
+
             const mmToUnits = (mm: number) => mm * 0.01;
             const basicThicknessMm = baseFurniture.basicThickness / 0.01;
             const cabinetHeightMm = adjustedHeight / 0.01;
@@ -1469,8 +1478,24 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
               referenceHeightMm = cabinetHeightMm - basicThicknessMm;
             }
 
-            const shelfInterval = referenceHeightMm / 3;
-            const shelfPositions = [shelfInterval, shelfInterval * 2];
+            // 팝업에서 사용자 정의한 선반 갯수/위치 우선
+            //  - customShelfSec.count === 0이면 렌더링 안 함 (선반 없음)
+            //  - shelfPositions가 있으면 그대로 사용
+            //  - 없으면 기본 균등 분할 (기존 동작)
+            let shelfPositions: number[];
+            if (customShelfSec) {
+              const cnt = typeof customShelfSec.count === 'number' ? customShelfSec.count : 2;
+              if (cnt <= 0) return null;
+              if (Array.isArray(customShelfSec.shelfPositions) && customShelfSec.shelfPositions.length === cnt) {
+                shelfPositions = customShelfSec.shelfPositions as number[];
+              } else {
+                const gap = referenceHeightMm / (cnt + 1);
+                shelfPositions = Array.from({ length: cnt }, (_, k) => gap * (k + 1));
+              }
+            } else {
+              const shelfInterval = referenceHeightMm / 3;
+              shelfPositions = [shelfInterval, shelfInterval * 2];
+            }
 
             const shelfThicknessMm = 18;
             const shelfFrontInsetMm = resolveShelfFrontInsetMm({
