@@ -564,7 +564,9 @@ const computeLowerCabinetMaidaHeights = (
   const drawerCount = (is3Tier || isDoorLift3Tier || isTopDown3Tier) ? 3 : 2;
 
   // 모듈별 기본 doorTopGap/doorBottomGap (LowerCabinet.tsx line 379-381)
-  const defaultDoorTopGap = isTopDown2Tier || isTopDown3Tier ? -80 : isDoorLift2Tier || isDoorLift3Tier ? 30 : -20;
+  // 상판내림 2/3단: stoneThk별 기본 갭(10→-90, 20→-80, 30→-70)로 마이다 사이즈 stoneThk 무관 유지
+  const topDownDefaultTopGap = stoneTopThicknessMm === 10 ? -90 : stoneTopThicknessMm === 30 ? -70 : -80;
+  const defaultDoorTopGap = isTopDown2Tier || isTopDown3Tier ? topDownDefaultTopGap : isDoorLift2Tier || isDoorLift3Tier ? 30 : -20;
   const defaultDoorBottomGap = 5;
 
   // ExternalDrawerRenderer line 517-555: zone 계산
