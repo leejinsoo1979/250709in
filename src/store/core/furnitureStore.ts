@@ -7,9 +7,9 @@ import { calculateInternalSpace } from '@/editor/shared/viewer3d/utils/geometry'
 import { useSpaceConfigStore } from './spaceConfigStore';
 import { getCategoryDefaultFurnitureDepth } from '@/editor/shared/utils/furnitureDepthDefaults';
 
-// 상판내림 도어 상단 갭 계산 — ㄱ자 수평 하단과 도어 상단 사이 20mm 갭
-// 반통/한통/2단(별도 ㄱ자 부재): stoneThk별 stretcher(10→65, 20→55, 30→45) + 65(노치) + 20(갭) = stretcherH + 85
-// 3단/터치: 마이다/노치 자체가 ㄱ자 자리 차지 → -80 고정
+// 상판내림 도어 상단 갭 계산 — 상판내림 터치 패턴 (LowerCabinet.tsx 699 line 동일)
+// ㄱ자 상판 하단과 도어/마이다 최상단 사이 20mm 갭 + 5mm 보정 = stretcherH + 25
+// 3단/터치(ExternalDrawerRenderer 자체 처리): -80 고정
 const calcTopDownDoorTopGap = (moduleId: string | undefined, stoneThk: number = 0): number => {
   if (!moduleId) return -80;
   const isExternalDrawerType = moduleId.includes('lower-top-down-3tier')
@@ -19,9 +19,9 @@ const calcTopDownDoorTopGap = (moduleId: string | undefined, stoneThk: number = 
     || moduleId.includes('dual-lower-top-down-2tier')
     || moduleId.includes('dual-lower-top-down-touch-');
   if (isExternalDrawerType) return -80;
-  // 반통/한통(별도 ㄱ자 부재): stoneThk별 동적 계산
+  // 반통/한통(별도 ㄱ자 부재): 터치 패턴과 동일 -(stretcherH + 25)
   const stretcherH = stoneThk === 10 ? 65 : stoneThk === 30 ? 45 : 55;
-  return -(stretcherH + 85);
+  return -(stretcherH + 25);
 };
 
 // 가구 데이터 Store 상태 타입 정의
