@@ -1400,11 +1400,17 @@ const BoxModule: React.FC<BoxModuleProps> = ({
               />
             );
           })()}
-          {/* 도어분절 현관장: 하부섹션 상단(800mm)에 ㄱ자 목찬넬 (가로 + 수직) */}
+          {/* 도어분절 현관장: 하부섹션 상단에 ㄱ자 목찬넬 (가로 + 수직) — 하부섹션 H 변경 추종 */}
           {moduleData?.id?.includes('shelf-split') && (() => {
             const mmToUnits = (mm: number) => mm * 0.01;
             const notchHeightMm = 80;
-            const notchFromBottomMm = 780;
+            // 하부섹션 실제 height (customSections 우선, 없으면 modelConfig.sections[0].height)
+            const lowerSectionHmm =
+              (customSections?.[0]?.height as number | undefined) ??
+              (baseFurniture.modelConfig?.sections?.[0]?.height as number | undefined) ??
+              860;
+            // 노치 상단 = 하부섹션 상단(=측판 (하) 상단), 노치 하단 = 그 - 80mm
+            const notchFromBottomMm = lowerSectionHmm - notchHeightMm;
             const basicThicknessMm = baseFurniture.basicThickness / 0.01;
             // 목찬넬 폭: 측판 따내기(z=40mm, 깊이방향) 안쪽으로 측판 두께만큼 좌·우 양옆 확장 → 끼워짐
             const frameWidth = baseFurniture.innerWidth + 2 * baseFurniture.basicThickness;
