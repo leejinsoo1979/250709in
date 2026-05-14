@@ -130,6 +130,171 @@ const isCoreSidePanelName = (panelName: string, coreKeyword: string): boolean =>
   return true;
 };
 
+// === 카테고리별 패널 분류 함수 ===
+// 출력되어야 하는 5가지 카테고리: 패널/프레임/마이다/도어/서랍모듈
+type PanelCategory = 'panel' | 'frame' | 'maida' | 'door' | 'drawer';
+
+const classifyPanel = (p: PanelDetail): PanelCategory | 'other' => {
+  const n = p.name ?? '';
+  // 1) 도어
+  if (p.isDoor) return 'door';
+  if (n.includes('도어')) return 'door';
+  // 2) 마이다 (서랍 앞판)
+  if (n.includes('마이다')) return 'maida';
+  // 3) 프레임 류 (몰딩/걸레받이/받침대/보강대/서라운드/엔드/EP/전대/찬넬/프레임)
+  if (
+    n.includes('몰딩') ||
+    n.includes('걸레받이') ||
+    n.includes('받침대') ||
+    n.includes('보강대') ||
+    n.includes('서라운드') ||
+    n.includes('엔드') ||
+    n.includes('EP') ||
+    n.includes('전대') ||
+    n.includes('찬넬') ||
+    n.includes('프레임') ||
+    n.includes('인조대리석') ||
+    n.includes('하부마감')
+  ) {
+    return 'frame';
+  }
+  // 4) 서랍 모듈 (서랍 측판/뒷판/바닥판/속장)
+  if (n.includes('서랍')) return 'drawer';
+  // 5) 일반 패널 (좌측/우측/상판/바닥/백패널/선반/칸막이)
+  if (
+    n.includes('좌측') ||
+    n.includes('우측') ||
+    n.includes('상판') ||
+    n.includes('바닥') ||
+    n.includes('지판') ||
+    n.includes('백패널') ||
+    n.includes('선반') ||
+    n.includes('칸막이') ||
+    n.includes('중간판') ||
+    n.includes('날개')
+  ) {
+    return 'panel';
+  }
+  return 'other';
+};
+
+// === 모듈별 기대 카테고리 추론 ===
+// 모듈ID 패턴으로 출력 카테고리 중 어느 것이 의무인지 결정
+interface ExpectedCategories {
+  panel: boolean;
+  frame: boolean;
+  maida: boolean;
+  door: boolean;
+  drawer: boolean;
+}
+
+const inferExpectedCategories = (
+  moduleId: string,
+  hasDoor: boolean,
+): ExpectedCategories => {
+  // 기본: 패널은 모든 가구가 가져야 함
+  const exp: ExpectedCategories = {
+    panel: true,
+    frame: false,
+    maida: false,
+    door: false,
+    drawer: false,
+  };
+
+  // insert-frame: 프레임만, 다른 건 없음
+  if (moduleId.includes('insert-frame')) {
+    return { panel: false, frame: true, maida: false, door: false, drawer: false };
+  }
+  // dummy: 모두 옵션 (placeholder)
+  if (moduleId.includes('dummy')) {
+    return { panel: true, frame: false, maida: false, door: false, drawer: false };
+  }
+
+  // 도어 옵션 ON인 경우
+  if (hasDoor) {
+    // 유리장 도어는 가구 패널리스트에서 제외 (별도 처리)
+    const isGlass = moduleId.includes('glass-cabinet');
+    // 인덕션장은 도어 차단 (마이다가 역할)
+    const isInduction = moduleId.includes('induction');
+    // door-lift-half / top-down-half는 선반장 구조 (마이다 없음, 일반 도어)
+    const isHalfShelfDoorOnly =
+      moduleId.includes('door-lift-half') || moduleId.includes('top-down-half');
+    // 서랍/도어올림/상판내림 가구는 마이다 + 도어 혼합 (단, half 변형 제외)
+    const isMaidaDriven =
+      !isHalfShelfDoorOnly &&
+      (
+        moduleId.includes('drawer-2tier') ||
+        moduleId.includes('drawer-3tier') ||
+        moduleId.includes('door-lift') ||
+        moduleId.includes('top-down')
+      );
+
+    if (!isGlass && !isInduction) {
+      // 마이다가 있는 가구는 마이다 또는 도어 중 하나만 있어도 OK
+      if (isMaidaDriven) {
+        exp.maida = true; // 마이다는 반드시
+        // 도어는 케이스별로 다름 (door-lift는 도어 있음, drawer-only는 없음)
+      } else {
+        exp.door = true;
+      }
+    }
+  }
+
+  // 서랍 모듈이 있는 가구
+  if (
+    moduleId.includes('drawer-hanging') ||
+    moduleId.includes('drawer-shelf') ||
+    moduleId.includes('drawer-2tier') ||
+    moduleId.includes('drawer-3tier') ||
+    moduleId.includes('door-lift-touch') ||
+    moduleId.includes('top-down-touch') ||
+    moduleId.includes('entryway') ||
+    moduleId.includes('induction') ||
+    moduleId.includes('styler') ||
+    moduleId.includes('pantshanger')
+  ) {
+    exp.drawer = true;
+  }
+
+  // 마이다 가구
+  // ※ 'door-lift-half', 'top-down-half'는 선반장 구조라 마이다 없음 (정상)
+  const isHalfShelfVariant =
+    moduleId.includes('door-lift-half') || moduleId.includes('top-down-half');
+  if (
+    !isHalfShelfVariant &&
+    (
+      moduleId.includes('induction') ||
+      moduleId.includes('door-lift-touch') ||
+      moduleId.includes('top-down') ||
+      moduleId.includes('drawer-2tier') ||
+      moduleId.includes('drawer-3tier') ||
+      moduleId.includes('drawer-hanging') ||
+      moduleId.includes('drawer-shelf') ||
+      moduleId.includes('entryway')
+    )
+  ) {
+    exp.maida = true;
+  }
+
+  // 프레임 (몰딩/받침대 등) — 거의 모든 가구에 받침대나 보강대가 있음
+  // 다만 상부장은 받침대 없을 수 있으므로 옵션
+  if (moduleId.includes('upper-cabinet') || moduleId.includes('upper')) {
+    exp.frame = false; // 상부장은 옵션
+  } else {
+    exp.frame = true; // 키큰장/하부장은 프레임 필수 (보강대/받침대)
+  }
+
+  return exp;
+};
+
+// 유리장은 도어/선반을 가구 패널리스트에 포함하지 않음 (의도된 제외)
+const shouldSkipDoorCheck = (moduleId: string): boolean => {
+  return moduleId.includes('glass-cabinet');
+};
+const shouldSkipShelfCheck = (moduleId: string): boolean => {
+  return moduleId.includes('glass-cabinet');
+};
+
 const hasPanelLike = (panels: PanelDetail[], coreNames: string[]): boolean => {
   return panels.some((p) => {
     if (!p.name) return false;
@@ -440,6 +605,69 @@ describe('Panel List Audit — 전체 모듈 패널 누락/사이즈 검증', ()
             });
             stats.modulesWithIssues.add(moduleId);
           }
+        }
+
+        // 8. 카테고리별 출력 검증
+        //    사용자 요구사항: 패널/프레임/마이다/도어/서랍모듈 전부 나와야 함
+        //    예외: 유리장 도어·선반, 레그라박스 서랍 좌/우측판
+        const counts: Record<PanelCategory | 'other', number> = {
+          panel: 0, frame: 0, maida: 0, door: 0, drawer: 0, other: 0,
+        };
+        for (const p of realPanels) {
+          counts[classifyPanel(p)] += 1;
+        }
+        const expectedCats = inferExpectedCategories(moduleId, hasDoor);
+
+        // 유리장은 도어 체크 스킵
+        if (expectedCats.door && !shouldSkipDoorCheck(moduleId) && counts.door === 0) {
+          issues.push({
+            moduleId,
+            category,
+            severity: 'HIGH',
+            type: 'MISSING_CATEGORY',
+            detail: `hasDoor=${hasDoor} 도어 카테고리 누락 (도어 패널 0개)`,
+          });
+          stats.modulesWithIssues.add(moduleId);
+        }
+        if (expectedCats.maida && counts.maida === 0) {
+          issues.push({
+            moduleId,
+            category,
+            severity: 'HIGH',
+            type: 'MISSING_CATEGORY',
+            detail: `hasDoor=${hasDoor} 마이다 카테고리 누락 (마이다 패널 0개)`,
+          });
+          stats.modulesWithIssues.add(moduleId);
+        }
+        if (expectedCats.drawer && counts.drawer === 0) {
+          issues.push({
+            moduleId,
+            category,
+            severity: 'HIGH',
+            type: 'MISSING_CATEGORY',
+            detail: `hasDoor=${hasDoor} 서랍모듈 카테고리 누락 (서랍 패널 0개)`,
+          });
+          stats.modulesWithIssues.add(moduleId);
+        }
+        if (expectedCats.frame && counts.frame === 0) {
+          issues.push({
+            moduleId,
+            category,
+            severity: 'MEDIUM',
+            type: 'MISSING_CATEGORY',
+            detail: `hasDoor=${hasDoor} 프레임 카테고리 누락 (프레임/보강대/받침대 0개)`,
+          });
+          stats.modulesWithIssues.add(moduleId);
+        }
+        if (expectedCats.panel && counts.panel === 0) {
+          issues.push({
+            moduleId,
+            category,
+            severity: 'HIGH',
+            type: 'MISSING_CATEGORY',
+            detail: `hasDoor=${hasDoor} 일반 패널 카테고리 누락 (좌/우/상/바닥/백 0개)`,
+          });
+          stats.modulesWithIssues.add(moduleId);
         }
       }
     }
