@@ -710,46 +710,10 @@ function PageInner(){
         }
       });
 
-      // ★ 패널 크기별 보드 분류 (3단계 규격 + 초과)
-      // 1) 일반(≤1220×2440): 기본 원장
-      // 2) 확장1(1220×2440 초과 ~ ≤1220×2750): 1220×2750 비규격 자재
-      // 3) 확장2(1220×2750 초과 ~ ≤1220×3050): 1220×3050 비규격 자재
-      // 4) 완전 초과(1220×3050도 못 들어감): 단일 패널 시트(isOversized)
-      const defaultStockW = stock[0]?.width ?? 1220;
-      const defaultStockL = stock[0]?.length ?? 2440;
-      const extendedStockL_2750 = 2750;
-      const extendedStockL_3050 = 3050;
-      const fits = (w: number, l: number, canRotate: boolean, sw: number, sl: number) => {
-        // 짧은 쪽 = sw, 긴 쪽 = sl 매칭 자동 검사 (width/length 명명 불일치 방지)
-        const shortSide = Math.min(w, l);
-        const longSide = Math.max(w, l);
-        const fitsAuto = shortSide <= sw && longSide <= sl;
-        if (fitsAuto) return true;
-        if (canRotate) return false;
-        return w <= sw && l <= sl;
-      };
-      const oversizedPanels: Panel[] = [];        // 완전 초과 (1220×3050도 못 들어감)
-      const extended3050Panels: Panel[] = [];     // 1220×3050 비규격
-      const extended2750Panels: Panel[] = [];     // 1220×2750 비규격
-      const regularPanels: Panel[] = [];          // 일반 보드(1220×2440)
-      // 비규격 자재 기능 임시 비활성화 — 모두 일반 옵티마이저로 처리
-      panels.forEach(p => regularPanels.push(p));
-      void fits; void extendedStockL_2750; void extendedStockL_3050;
-      void extended2750Panels; void extended3050Panels; void oversizedPanels;
-      if (extended2750Panels.length > 0) {
-        console.warn(`[CNCOptimizer] 비규격 자재(${defaultStockW}×${extendedStockL_2750}) 패널 ${extended2750Panels.length}개`);
-      }
-      if (extended3050Panels.length > 0) {
-        console.warn(`[CNCOptimizer] 비규격 자재(${defaultStockW}×${extendedStockL_3050}) 패널 ${extended3050Panels.length}개`);
-      }
-      if (oversizedPanels.length > 0) {
-        console.warn(`[CNCOptimizer] 완전 비규격 패널 ${oversizedPanels.length}개 → 단일 시트`);
-      }
-
-      // Group panels by material AND thickness (확장 패널은 별도 그룹 키 prefix 'EXT_')
+      // Group panels by material AND thickness
       const panelGroups = new Map<string, Panel[]>();
 
-      regularPanels.forEach(panel => {
+      panels.forEach(panel => {
         // Apply grain and rotation settings
         const processedPanel = { ...panel };
         
@@ -778,24 +742,6 @@ function PageInner(){
         }
         panelGroups.get(key)!.push(processedPanel);
       });
-
-      // 확장 패널: 1220×2750 / 1220×3050 두 그룹으로 분리
-      const extPanelGroups2750 = new Map<string, Panel[]>();
-      const extPanelGroups3050 = new Map<string, Panel[]>();
-      const buildExtGroup = (src: Panel[], target: Map<string, Panel[]>) => {
-        src.forEach(panel => {
-          const processedPanel = { ...panel };
-          const hasGrain = panel.grain && panel.grain !== 'NONE';
-          processedPanel.canRotate = !hasGrain;
-          const key = settings.considerMaterial
-            ? `${processedPanel.material || 'PB'}_${processedPanel.thickness || 18}`
-            : `THICKNESS_${processedPanel.thickness || 18}`;
-          if (!target.has(key)) target.set(key, []);
-          target.get(key)!.push(processedPanel);
-        });
-      };
-      buildExtGroup(extended2750Panels, extPanelGroups2750);
-      buildExtGroup(extended3050Panels, extPanelGroups3050);
 
       const allResults: OptimizedResult[] = [];
 
@@ -943,149 +889,12 @@ function PageInner(){
         }
       }
 
-      // ★ 확장 패널 그룹 옵티마이즈 (1220×2750 / 1220×3050 두 단계)
-      const extGroupsList: any[] = [
-        [extPanelGroups2750, extendedStockL_2750],
-        [extPanelGroups3050, extendedStockL_3050],
-      ];
-      for (const item of extGroupsList) {
-        const extGroups = item[0];
-        const extLen = item[1];
-        for (const [key, groupPanels] of extGroups) {
-          let material: string | undefined;
-          let thickness: number;
-          if (key.startsWith('THICKNESS_')) {
-            thickness = parseFloat(key.split('_')[1]) || 18;
-          } else {
-            const parts = key.split('_');
-            material = parts[0];
-            thickness = parseFloat(parts[1]) || 18;
-          }
-          const extStockPanel: any = {
-            id: `ext-${material || 'PB'}-${thickness}-${extLen}`,
-            width: defaultStockW,
-            height: extLen,
-            material: material || 'PB',
-            color: 'MW',
-            price: 0,
-            stock: 999,
-            thickness,
-            label: `비규격 ${defaultStockW}×${extLen}`,
-          };
-          const extOptimizerPanels: any[] = groupPanels.map(p => ({
-            id: p.id,
-            name: p.label,
-            width: p.width,
-            height: p.length,
-            thickness: p.thickness,
-            quantity: p.quantity,
-            material: p.material || 'PB',
-            color: 'MW',
-            grain: p.grain === 'H' ? 'HORIZONTAL' : p.grain === 'V' ? 'VERTICAL' : 'VERTICAL',
-            canRotate: p.canRotate,
-            boringPositions: p.boringPositions,
-            boringDepthPositions: p.boringDepthPositions,
-            groovePositions: p.groovePositions,
-            screwPositions: p.screwPositions,
-            screwDepthPositions: p.screwDepthPositions,
-            isDoor: p.isDoor,
-            isLeftHinge: p.isLeftHinge,
-            screwHoleSpacing: p.screwHoleSpacing,
-            bracketBoringPositions: p.bracketBoringPositions,
-            bracketBoringDepthPositions: p.bracketBoringDepthPositions,
-            isBracketSide: p.isBracketSide,
-            cornerNotch: p.cornerNotch,
-            sideNotches: p.sideNotches,
-            rebate: p.rebate,
-            meshName: p.meshName,
-            furnitureId: p.furnitureId,
-          }));
-          const adjustedExtStock = {
-            ...extStockPanel,
-            width: extStockPanel.width - (settings.trimLeft || 10) - (settings.trimRight || 10),
-            height: extStockPanel.height - (settings.trimTop || 10) - (settings.trimBottom || 10),
-          };
-          const extResults = await optimizePanelsMultiple(
-            extOptimizerPanels,
-            adjustedExtStock,
-            settings.singleSheetOnly ? 1 : 999,
-            settings.alignVerticalCuts !== false,
-            settings.kerf || 5,
-            effectiveOptimizationType
-          );
-          extResults.forEach((result: any) => {
-            result.panels.forEach((panel: any) => {
-              panel.x += (settings.trimLeft || 10);
-              panel.y += (settings.trimBottom || 10);
-            });
-            result.stockPanel = extStockPanel;
-            result.isOversized = true;
-          });
-          allResults.push(...extResults);
-        }
-      }
 
       console.log('=== Initial Optimization Complete ===');
       console.log('Total sheets generated:', allResults.length);
       console.log('panelGroups count:', panelGroups.size);
       if (allResults.length === 0) {
         console.error('❌ allResults is empty! panelGroups:', [...panelGroups.entries()].map(([k, v]) => `${k}: ${v.length} panels`));
-      }
-
-      // 비규격 패널을 별도 시트로 추가 (각 패널을 자체 크기 시트로, 배치 좌표 0,0)
-      if (oversizedPanels.length > 0) {
-        oversizedPanels.forEach((p, idx) => {
-          const oversizedStock = {
-            id: `oversized-${idx}`,
-            width: p.width,
-            height: p.length,
-            material: p.material || 'PB',
-            color: 'MW',
-            price: 0,
-            stock: 1,
-            thickness: p.thickness,
-          } as any;
-          const placed = [{
-            id: p.id,
-            name: p.label,
-            width: p.width,
-            height: p.length,
-            x: 0,
-            y: 0,
-            rotated: false,
-            thickness: p.thickness,
-            material: p.material || 'PB',
-            color: 'MW',
-            grain: p.grain === 'H' ? 'HORIZONTAL' : p.grain === 'V' ? 'VERTICAL' : 'NONE',
-            quantity: p.quantity,
-            canRotate: false,
-            label: p.label,
-            boringPositions: p.boringPositions,
-            boringDepthPositions: p.boringDepthPositions,
-            groovePositions: p.groovePositions,
-            screwPositions: p.screwPositions,
-            screwDepthPositions: p.screwDepthPositions,
-            isDoor: p.isDoor,
-            isLeftHinge: p.isLeftHinge,
-            screwHoleSpacing: p.screwHoleSpacing,
-            bracketBoringPositions: p.bracketBoringPositions,
-            bracketBoringDepthPositions: p.bracketBoringDepthPositions,
-            isBracketSide: p.isBracketSide,
-            cornerNotch: p.cornerNotch,
-            sideNotches: p.sideNotches,
-            rebate: p.rebate,
-            meshName: p.meshName,
-            furnitureId: p.furnitureId,
-          } as any];
-          allResults.push({
-            stockPanel: oversizedStock,
-            panels: placed,
-            efficiency: 100,
-            wasteArea: 0,
-            usedArea: p.width * p.length,
-            isOversized: true,
-          } as any);
-        });
       }
 
       // 재최적화 비활성화 - 시트 낭비 방지
