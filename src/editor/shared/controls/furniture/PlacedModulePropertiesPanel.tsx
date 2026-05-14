@@ -6531,17 +6531,94 @@ const PlacedModulePropertiesPanel: React.FC = () => {
 
             // 1섹션 가구(상부장 3단형 등): 상단 섹션 에디터만 노출, 라벨은 "선반"으로 단순화
             const isSingleSection = effectiveSections.length < 2;
+            // 기본하부장(lower-half-cabinet): 선반 있음/없음 토글 추가
+            const isLowerHalfCabinet = !!currentPlacedModule?.moduleId?.includes('lower-half-cabinet');
+            const shelfPresent = isSingleSection
+              ? upperShelfCount > 0
+              : (upperShelfCount > 0 || lowerShelfCount > 0);
+            const toggleStyle: React.CSSProperties = {
+              width: '36px', height: '20px', borderRadius: '10px', border: 'none', cursor: 'pointer',
+              backgroundColor: shelfPresent ? 'var(--theme-primary, #4a90d9)' : '#ccc',
+              position: 'relative', transition: 'background-color 0.2s', flexShrink: 0,
+            };
+            const knobStyle: React.CSSProperties = {
+              position: 'absolute', top: '2px', width: '16px', height: '16px', borderRadius: '50%',
+              backgroundColor: '#fff', transition: 'left 0.2s',
+              left: shelfPresent ? '18px' : '2px',
+            };
+            const handleShelfToggle = () => {
+              if (shelfPresent) {
+                // 있음 → 없음: 모든 섹션의 count=0, shelfPositions=[]
+                const newSections = effectiveSections.map((sec: any) =>
+                  sec.type === 'shelf' ? { ...sec, count: 0, shelfPositions: [] } : sec
+                );
+                if (isSingleSection) {
+                  setUpperShelfCount(0);
+                  setUpperShelfPositionInputs([]);
+                } else {
+                  setUpperShelfCount(0);
+                  setLowerShelfCount(0);
+                  setUpperShelfPositionInputs([]);
+                  setLowerShelfPositionInputs([]);
+                }
+                updatePlacedModule(currentPlacedModule.id, { customSections: newSections });
+              } else {
+                // 없음 → 있음: 기본 2개로 복원
+                const DEFAULT_COUNT = 2;
+                const topFrameR = spaceInfo.frameSize?.top ?? 30;
+                const baseFrameR = currentPlacedModule?.baseFrameHeight !== undefined
+                  ? currentPlacedModule.baseFrameHeight
+                  : (spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height ?? 60) : 0);
+                const furnitureOuterR = (spaceInfo.height || 0) - topFrameR - baseFrameR;
+                const fixedSumR = effectiveSections.slice(0, -1).reduce((s: number, sec: any) => s + (sec.height || 0), 0);
+                const newSections = effectiveSections.map((sec: any, idx: number) => {
+                  if (sec.type !== 'shelf') return sec;
+                  const isLast = idx === effectiveSections.length - 1;
+                  const sectionH = isSingleSection
+                    ? Math.max(0, currentPlacedModule.customHeight ?? currentPlacedModule.freeHeight ?? moduleData?.dimensions?.height ?? 0)
+                    : (isLast ? Math.max(0, furnitureOuterR - fixedSumR) : (sec.height || 0));
+                  const innerH = sectionH - 2 * basicThickness;
+                  return {
+                    ...sec,
+                    count: DEFAULT_COUNT,
+                    shelfPositions: calculateEvenShelfPositions(innerH, DEFAULT_COUNT, basicThickness),
+                  };
+                });
+                if (isSingleSection) {
+                  const newSec = newSections[0];
+                  setUpperShelfCount(DEFAULT_COUNT);
+                  setUpperShelfPositionInputs((newSec.shelfPositions || []).map((p: number) => Math.round(p).toString()));
+                } else {
+                  const newUpperSec = newSections[1];
+                  const newLowerSec = newSections[0];
+                  setUpperShelfCount(DEFAULT_COUNT);
+                  setLowerShelfCount(DEFAULT_COUNT);
+                  setUpperShelfPositionInputs((newUpperSec.shelfPositions || []).map((p: number) => Math.round(p).toString()));
+                  setLowerShelfPositionInputs((newLowerSec.shelfPositions || []).map((p: number) => Math.round(p).toString()));
+                }
+                updatePlacedModule(currentPlacedModule.id, { customSections: newSections });
+              }
+            };
             return (
               <div className={styles.propertySection}>
                 <h5 className={styles.sectionTitle}>선반 설정</h5>
-                {isSingleSection
+                {isLowerHalfCabinet && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
+                    <span style={{ fontSize: '12px', color: 'var(--theme-text-secondary)' }}>선반</span>
+                    <button onClick={handleShelfToggle} style={toggleStyle}>
+                      <span style={knobStyle} />
+                    </button>
+                    <span style={{ fontSize: '12px', color: 'var(--theme-text-secondary)' }}>{shelfPresent ? '있음' : '없음'}</span>
+                  </div>
+                )}
+                {(!isLowerHalfCabinet || shelfPresent) && (isSingleSection
                   ? renderShelfEditor(0, '선반', upperShelfCount, setUpperShelfCount, upperShelfPositionInputs, setUpperShelfPositionInputs)
                   : (
                     <>
                       {renderShelfEditor(1, '상단 섹션', upperShelfCount, setUpperShelfCount, upperShelfPositionInputs, setUpperShelfPositionInputs)}
                       {renderShelfEditor(0, '하단 섹션', lowerShelfCount, setLowerShelfCount, lowerShelfPositionInputs, setLowerShelfPositionInputs)}
                     </>
-                  )
+                  ))
                 }
               </div>
             );
