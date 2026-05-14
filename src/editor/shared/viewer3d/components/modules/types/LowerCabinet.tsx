@@ -990,17 +990,12 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
   });
 
   // ㄱ자 꺾인 안쪽 전대(가로전대) 높이 결정
-  // - 상판내림 터치 + 상판내림 3단(반통): stoneThickness별로 결정
-  //   · 대리석 10mm = 65mm (아래로 10mm 확장)
+  // - 모든 상판내림 모듈(반통/한통/2단/3단/터치): stoneThickness별로 결정 (통일된 룰)
+  //   · 대리석 10mm = 65mm
   //   · 대리석 20mm = 55mm (기본)
-  //   · 대리석 30mm = 45mm (위로 10mm 축소)
-  // - 그 외 상판내림(반통 2단/half): 55mm 고정 (H 변경과 무관)
-  const isTopDown3TierForStretcher = moduleData.id.includes('lower-top-down-3tier') || moduleData.id.includes('dual-lower-top-down-3tier');
-  const useStoneThicknessStretcher = isTopDownTouchForStretcher || isTopDown3TierForStretcher;
+  //   · 대리석 30mm = 45mm
   const topDownStretcherHeightMm = isTopDownModule
-    ? (useStoneThicknessStretcher
-        ? (stoneThickness === 10 ? 65 : stoneThickness === 30 ? 45 : 55)
-        : 55)
+    ? (stoneThickness === 10 ? 65 : stoneThickness === 30 ? 45 : 55)
     : 55;
   const stoneFrontOff = useFurnitureStore(state => {
     if (!placedFurnitureId) return 0;
@@ -1350,10 +1345,10 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
                   ]
                 };
               })() : (moduleData.id.includes('lower-top-down-half') || moduleData.id.includes('dual-lower-top-down-half')) ? (() => {
-                // 상판내림 반통/한통: 노치는 캐비넷 상단 기준 120mm 아래 (H=785 기준 665, H 변경 시 함께 위로)
+                // 상판내림 반통/한통: 노치 = 가로전대 바로 아래 (stoneThk별 stretcher 반영, 터치와 동일)
                 const cabHmmH = Math.round(adjustedHeight / 0.01);
                 return {
-                  sideNotches: [{ y: 65, z: 40, fromBottom: cabHmmH - 120 }]
+                  sideNotches: [{ y: 65, z: 40, fromBottom: cabHmmH - (topDownStretcherHeightMm + 65) }]
                 };
               })() : {})}>
             {/* 내부 구조는 항상 렌더링 (서랍/선반) */}
@@ -1607,13 +1602,10 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
         const mmToThreeUnits = (mm: number) => mm * 0.01;
         // 상판내림 터치: 측판 따내기 = 가로전대 바로 아래
         // fromBottom = 캐비넷H - (stretcherH + notchHeight 65)
-        const isTopDownTouchHere = moduleData.id.includes('lower-top-down-touch-') || moduleData.id.includes('dual-lower-top-down-touch-');
+        // 상판내림 반통/한통/터치: 측판 따내기 = 가로전대 바로 아래 (stoneThk별 stretcher 반영)
         const cabinetHmmHere = Math.round(adjustedHeight / 0.01);
         const notchHeightLocal = 65;
-        // 상판내림 반통/한통: 캐비넷 상단 기준 120mm 아래 (H 변경 시 함께 위로 이동)
-        const notchFromBottomLocal = isTopDownTouchHere
-          ? (cabinetHmmHere - (topDownStretcherHeightMm + notchHeightLocal))
-          : (cabinetHmmHere - 120);
+        const notchFromBottomLocal = cabinetHmmHere - (topDownStretcherHeightMm + notchHeightLocal);
         const notch = { fromBottom: notchFromBottomLocal, height: notchHeightLocal };
         const basicThicknessMm = baseFurniture.basicThickness / 0.01;
         const frameWidth = mmToThreeUnits(adjustedWidth || moduleData.dimensions.width);
