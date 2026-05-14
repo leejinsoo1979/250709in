@@ -1426,7 +1426,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
               )}
               {/* BoxWithEdges 사용하여 도어 렌더링 (유리장은 금속프레임+유리) */}
               {moduleData?.id?.includes('glass-cabinet') ? (() => {
-                const fW = mmToThreeUnits(25);
+                const fW = mmToThreeUnits(22);
                 const gT = mmToThreeUnits(5);
                 const innerWL = leftDoorWidthUnits - 2 * fW;
                 const innerHL = doorHeight - 2 * fW;
@@ -1835,7 +1835,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
               )}
               {/* BoxWithEdges 사용하여 도어 렌더링 (유리장은 금속프레임+유리) */}
               {moduleData?.id?.includes('glass-cabinet') ? (() => {
-                const fW = mmToThreeUnits(25);
+                const fW = mmToThreeUnits(22);
                 const gT = mmToThreeUnits(5);
                 const innerWR = rightDoorWidthUnits - 2 * fW;
                 const innerHR = doorHeight - 2 * fW;
@@ -2387,7 +2387,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
             {/* BoxWithEdges 사용하여 도어 렌더링 — 유리장은 금속 프레임 + 브라운 유리 */}
             {moduleData?.id?.includes('glass-cabinet') ? (() => {
               // 금속 프레임 폭 25mm (정면 기준), 두께 18mm (도어 두께)
-              const frameWidthMm = 25;
+              const frameWidthMm = 22;
               const glassThicknessMm = 5;
               const fW = mmToThreeUnits(frameWidthMm);
               const gT = mmToThreeUnits(glassThicknessMm);
