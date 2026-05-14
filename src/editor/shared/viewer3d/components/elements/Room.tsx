@@ -4767,9 +4767,9 @@ const Room: React.FC<RoomProps> = ({
                     const fiZOffset = -mmToThreeUnits(spaceInfo.depth || 1500) / 2 + (mmToThreeUnits(spaceInfo.depth || 1500) - fiFurnitureDepth) / 2;
                     const upperFrontZ = fiZOffset - fiFurnitureDepth / 2 - mmToThreeUnits(20) + mmToThreeUnits(upperModDepthMm);
                     const upperFrameZ = upperFrontZ - mmToThreeUnits(END_PANEL_THICKNESS) / 2;
-                    // 신발장: 뒷면이 뒷벽+0, 앞면 = 뒷벽 + customDepth. 상단몰딩은 앞면 기준
+                    // 신발장 + 유리장: 뒷면이 뒷벽+0, 앞면 = 뒷벽 + customDepth. 상단몰딩은 앞면 기준
                     const modMidShoe = mod.moduleId || '';
-                    const isShoeMod = (modMidShoe.includes('-entryway-') || modMidShoe.includes('-shelf-') || modMidShoe.includes('-4drawer-shelf-') || modMidShoe.includes('-2drawer-shelf-'));
+                    const isShoeMod = (modMidShoe.includes('-entryway-') || modMidShoe.includes('-shelf-') || modMidShoe.includes('-4drawer-shelf-') || modMidShoe.includes('-2drawer-shelf-') || modMidShoe.includes('glass-cabinet'));
                     let shoeFrameZ: number | null = null;
                     if (isShoeMod) {
                       const shoeDepthMm = mod.upperSectionDepth || mod.customDepth || mod.freeDepth || 380;
