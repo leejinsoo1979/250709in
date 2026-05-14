@@ -336,6 +336,46 @@ const BoxModule: React.FC<BoxModuleProps> = ({
     };
   }, [insertFrameMaterial]);
 
+  // 키큰장찬넬 상부몰딩/걸레받이 머티리얼 — 옆 가구와 동일 (도어색 우선 → 없으면 프레임색)
+  const insertSurroundColorRaw = ((spaceInfo?.materialConfig as any)?.doorColor as string | undefined)
+    ?? ((spaceInfo?.materialConfig as any)?.frameColor as string | undefined);
+  const insertSurroundTextureRaw = ((spaceInfo?.materialConfig as any)?.doorTexture as string | undefined)
+    ?? ((spaceInfo?.materialConfig as any)?.frameTexture as string | undefined);
+  const insertSurroundMaterial = useMemo(() => {
+    const mat = new THREE.MeshStandardMaterial({
+      color: new THREE.Color(insertSurroundColorRaw || '#D4C5A9'),
+      metalness: 0.0,
+      roughness: 0.6,
+      envMapIntensity: 0.0,
+      emissive: new THREE.Color(0x000000),
+    });
+    if (insertSurroundTextureRaw) {
+      if (isOakTexture(insertSurroundTextureRaw)) applyOakTextureSettings(mat);
+      else if (isCabinetTexture1(insertSurroundTextureRaw)) applyCabinetTexture1Settings(mat);
+      const loader = new THREE.TextureLoader();
+      loader.load(insertSurroundTextureRaw, (texture) => {
+        texture.wrapS = THREE.RepeatWrapping;
+        texture.wrapT = THREE.RepeatWrapping;
+        texture.repeat.set(1, 1);
+        texture.rotation = Math.PI / 2;
+        texture.center.set(0.5, 0.5);
+        mat.map = texture;
+        if (isOakTexture(insertSurroundTextureRaw)) applyOakTextureSettings(mat);
+        else if (isCabinetTexture1(insertSurroundTextureRaw)) applyCabinetTexture1Settings(mat);
+        else applyDefaultImageTextureSettings(mat);
+        mat.needsUpdate = true;
+      });
+    }
+    return mat;
+  }, [insertSurroundColorRaw, insertSurroundTextureRaw]);
+
+  useEffect(() => {
+    return () => {
+      if (insertSurroundMaterial.map) insertSurroundMaterial.map.dispose();
+      insertSurroundMaterial.dispose();
+    };
+  }, [insertSurroundMaterial]);
+
   // 모든 간접조명은 UpperCabinetIndirectLight에서 통합 처리하므로 BoxModule에서는 렌더링하지 않음
   const showIndirectLight = false;
 
@@ -1264,24 +1304,24 @@ const BoxModule: React.FC<BoxModuleProps> = ({
           panelName="Insert전면프레임"
           furnitureId={placedFurnitureId}
         />
-        {/* 상단 프레임 (PET) - 옆 가구 상단몰딩과 같은 Z (가구 앞면 정렬) */}
+        {/* 상단 프레임 (PET) - 옆 가구 상단몰딩과 같은 Z + 같은 색상(도어색 우선) */}
         {topFrameMmIF > 0 && (
           <BoxWithEdges
             args={[frontFrameWidth, topFrameH, PT_THREE]}
             position={[0, topFrameCenterY, topBaseFrameZ]}
-            material={insertFrameMaterial}
+            material={insertSurroundMaterial}
             isDragging={isDragging}
             isEditMode={isEditMode}
             panelName="Insert상단프레임"
             furnitureId={placedFurnitureId}
           />
         )}
-        {/* 걸레받이 (PET) - 옆 가구 걸레받이와 같은 Z (가구 앞면 정렬) */}
+        {/* 걸레받이 (PET) - 옆 가구 걸레받이와 같은 Z + 같은 색상(도어색 우선) */}
         {baseFrameMmIF > 0 && (
           <BoxWithEdges
             args={[frontFrameWidth, baseFrameH, PT_THREE]}
             position={[0, baseFrameCenterY, topBaseFrameZ]}
-            material={insertFrameMaterial}
+            material={insertSurroundMaterial}
             isDragging={isDragging}
             isEditMode={isEditMode}
             panelName="Insert걸레받이"
