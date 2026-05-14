@@ -1419,8 +1419,9 @@ const BoxModule: React.FC<BoxModuleProps> = ({
             const horzY = cabinetBottomY + mmToUnits(notchFromBottomMm) + baseFurniture.basicThickness / 2;
             const horzZ = baseFurniture.depth / 2 - mmToUnits(40) / 2;
             const vertY = cabinetBottomY + mmToUnits(notchFromBottomMm) + baseFurniture.basicThickness + mmToUnits(verticalHMm) / 2;
-            // 수직부재 앞면 = 수평부재 뒷면 (= depth/2 - 40) 에 맞닿게 → 수직 중심 = 앞면 - basicThickness/2
-            const vertZ = baseFurniture.depth / 2 - mmToUnits(40) - baseFurniture.basicThickness / 2;
+            // 수직부재 뒷면 = 측판 따내기 안쪽 면 (= depth/2 - 40), 수직 중심 = 뒷면 + basicThickness/2
+            // → 수직부재는 수평부재 뒷쪽 끝부분 18mm 영역에 위치 (다른 상판내림 모듈과 동일 패턴)
+            const vertZ = baseFurniture.depth / 2 - mmToUnits(40) + baseFurniture.basicThickness / 2;
             return (
               <>
                 <BoxWithEdges
