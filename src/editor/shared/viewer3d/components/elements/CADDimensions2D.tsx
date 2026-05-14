@@ -1350,22 +1350,12 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
               const isDoorLift = modData.id?.includes('lower-door-lift-');
               const isTopDown = modData.id?.includes('lower-top-down-');
               if (isTopDown) {
-                // 상판내림: 도어 위치/크기는 stoneThk와 무관하게 고정 (-80, H 710)
+                // 상판내림: 도어 상단 = cabH + doorTopGap, 도어 하단 = -doorBottomGap (cabH 기반)
+                // stoneThk 변경 시 cabH(795/785/775) + doorTopGap(-90/-80/-70) 합산이 항상 705로 일정
                 const effectiveTopDownTopGap = mod.doorTopGap ?? -80;
                 const effectiveTopDownBottomGap = mod.doorBottomGap ?? 5;
-                const maidaSegments = computeLowerCabinetMaidaHeights(
-                  modData.id,
-                  cabinetH,
-                  effectiveTopDownTopGap,
-                  effectiveTopDownBottomGap,
-                  getStoneTopThicknessMm(mod)
-                );
-                const topMaida = maidaSegments?.[maidaSegments.length - 1];
-                const topDownReferenceH = cabinetH; // 상판내림: cabH 기반 (가구 상단~도어 상단 갭 일정)
                 doorBottomAbsMm = cabinetBottomAbs - effectiveTopDownBottomGap;
-                doorTopAbsMm = cabinetBottomAbs + (
-                  topMaida?.maidaTopMm ?? (topDownReferenceH + effectiveTopDownTopGap)
-                );
+                doorTopAbsMm = cabinetBottomAbs + cabinetH + effectiveTopDownTopGap;
                 doorHeightMm = Math.max(0, doorTopAbsMm - doorBottomAbsMm);
               } else if (isDoorLift) {
                 doorHeightMm = cabinetH + doorTopGapVal + doorBottomGapVal;
@@ -2711,22 +2701,12 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
               const isDoorLift = modData.id?.includes('lower-door-lift-');
               const isTopDown = modData.id?.includes('lower-top-down-');
               if (isTopDown) {
-                // 상판내림: 도어 위치/크기는 stoneThk와 무관하게 고정 (-80, H 710)
+                // 상판내림: 도어 상단 = cabH + doorTopGap, 도어 하단 = -doorBottomGap (cabH 기반)
+                // stoneThk 변경 시 cabH(795/785/775) + doorTopGap(-90/-80/-70) 합산이 항상 705로 일정
                 const effectiveTopDownTopGap = mod.doorTopGap ?? -80;
                 const effectiveTopDownBottomGap = mod.doorBottomGap ?? 5;
-                const maidaSegments = computeLowerCabinetMaidaHeights(
-                  modData.id,
-                  cabinetH,
-                  effectiveTopDownTopGap,
-                  effectiveTopDownBottomGap,
-                  getStoneTopThicknessMm(mod)
-                );
-                const topMaida = maidaSegments?.[maidaSegments.length - 1];
-                const topDownReferenceH = cabinetH; // 상판내림: cabH 기반 (가구 상단~도어 상단 갭 일정)
                 doorBottomAbsMm = cabinetBottomAbs - effectiveTopDownBottomGap;
-                doorTopAbsMm = cabinetBottomAbs + (
-                  topMaida?.maidaTopMm ?? (topDownReferenceH + effectiveTopDownTopGap)
-                );
+                doorTopAbsMm = cabinetBottomAbs + cabinetH + effectiveTopDownTopGap;
                 doorHeightMm = Math.max(0, doorTopAbsMm - doorBottomAbsMm);
               } else if (isDoorLift) {
                 doorHeightMm = cabinetH + doorTopGapVal + doorBottomGapVal;
