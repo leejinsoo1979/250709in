@@ -518,10 +518,12 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
               // category
             // });
 
+            // 도어분절 현관장(shelf-split): 두 섹션 모두 type='shelf'이지만 H 편집 가능해야 함
+            const isShelfSplit = !!furnitureId?.includes('shelf-split');
             const shouldShow = !isUpperOrLowerCabinet && !hideSectionDimensions && showDimensions && showDimensionsText &&
                               viewMode !== '3D' &&
                               !(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right' || view2DDirection === 'top')) &&
-                              (section.type === 'hanging' || section.type === 'drawer') &&
+                              (section.type === 'hanging' || section.type === 'drawer' || (isShelfSplit && section.type === 'shelf')) &&
                               !shouldHide2HangingUpper;
 
             // 2hanging만 로그
