@@ -915,9 +915,8 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     const isTopDown = moduleData?.id?.includes('lower-top-down-');
 
     if (isTopDown) {
-      // 상판내림: 도어 상단 = ㄱ자 수평 하단 - 20mm 갭
-      //   referenceH(785) 기준 topGap = -(stretcherH + 85). cabH는 사용자 변경 영향 없음
-      //   stoneThk 10→-150, 20→-140, 30→-130
+      // 상판내림: 도어 상단 = ㄱ자 수평 하단(가구 바닥 기준 785-stretcherH-65) - 20mm 갭
+      //   → topGap = -(stretcherH + 85). stoneThk 10→-150, 20→-140, 30→-130
       const topDownReferenceHeight = moduleData?.dimensions?.height || 785;
       const stoneThkForDoor = storePlacedModule?.stoneTopThickness ?? 0;
       const stretcherHForDoor = stoneThkForDoor === 10 ? 65 : stoneThkForDoor === 30 ? 45 : 55;
