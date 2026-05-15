@@ -2021,8 +2021,9 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
 
                     {/* 보강대 (각 섹션 백패널 상/하단) - 60mm 높이, 15.5mm 두께
                         2D 정면도에서는 숨김 (백패널 뒤에 위치하지만 선 렌더링으로 보임)
-                        상부/측면 뷰에서만 표시됨 */}
-                    {!(viewMode === '2D' && view2DDirection === 'front') && (() => {
+                        상부/측면 뷰에서만 표시됨
+                        ※ 유리장(glass-cabinet)은 후면 보강대 자체가 없는 구조 → 전체 스킵 */}
+                    {!(viewMode === '2D' && view2DDirection === 'front') && !moduleData?.id?.includes('glass-cabinet') && (() => {
                       const reinforcementHeight = mmToThreeUnits(60);
                       const reinforcementDepth = mmToThreeUnits((basicThicknessMm === 18.5 || basicThicknessMm === 15.5) ? 15.5 : 15);
                       // 양쪽 0.5mm씩 축소 (총 1mm)
