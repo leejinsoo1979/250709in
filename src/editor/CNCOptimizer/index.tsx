@@ -10,6 +10,7 @@ import styles from './style.module.css';
 import { Panel, StockPanel, OptimizedResult, PlacedPanel, PanelGroup } from './types';
 import PanelListItem from './components/PanelListItem';
 import PanelHighlight3DViewer from './components/PanelHighlight3DViewer';
+import { getExcludedPanelAliases } from '@/editor/shared/viewer3d/context/ExcludedPanelsContext';
 import StockItem from './components/StockItem';
 import OptimizationResult from './components/OptimizationResult';
 import CuttingLayoutPreview from './components/CuttingLayoutPreview';
@@ -117,12 +118,15 @@ const CNCOptimizer: React.FC = () => {
       }
     });
     // 가구 편집 팝업 패널 목록에서 사용자가 체크 해제한 패널들도 3D 뷰어에서 숨김
+    // ※ furnitureId가 붙은 복합 키만 추가 (범용 키를 넣으면 다른 가구의 동명 패널까지 숨겨짐)
     placedModules.forEach((module) => {
       const exclusions = module.panelExclusions;
       if (!exclusions || exclusions.length === 0) return;
       exclusions.forEach((panelName) => {
-        names.add(`${module.id}::${panelName}`);
-        names.add(panelName);
+        // alias 모두 furnitureId::alias 형태로만 추가
+        getExcludedPanelAliases(panelName).forEach((alias) => {
+          names.add(`${module.id}::${alias}`);
+        });
       });
     });
     console.log('🟪 [CNC index] excluded keys 생성:', Array.from(names).slice(0, 10), 'panels=', panelsList.slice(0, 3).map(p => ({ id: p.id, name: p.name, meshName: p.meshName, fid: (p as any).furnitureId })));
