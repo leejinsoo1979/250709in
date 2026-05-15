@@ -137,13 +137,17 @@ const EndPanelWithTexture: React.FC<EndPanelWithTextureProps> = ({
   const totalWidth = width;             // 사용자 입력 EP 두께(이미 Three.js 단위)
   const showSidePanel = !adjacentFurniture; // 인접 가구 없으면 측면 ep 표시
 
-  // 측면 ep, 전면 ep 모두 X 폭과 X 중심 동일 (EP 그룹 중심에 그대로)
+  // 좌측 EP: 부모 좌표에서 가구 본체는 +X 쪽, 바깥은 -X 쪽 → inward=+1
+  // 우측 EP: 가구 본체는 -X 쪽, 바깥은 +X 쪽 → inward=-1
+  const inward = side === 'left' ? 1 : -1;
+  // 측면 ep: 위치/크기 그대로
   const sideEpX = 0;
-  const frontEpX = 0;
-  // 측면 ep: 깊이 그대로, Z 중심도 0 (EP 그룹 중심)
   const sideEpZ = 0;
-  // 전면 ep: 측면 ep 앞면(=depth/2)에 뒷면이 닿고 +Z 방향으로 18.5mm 튀어나옴
-  //   전면 ep 뒷면 = depth/2, 전면 ep 중심 = depth/2 + frontEpDepthZ/2
+  // 전면 ep: 측면 ep 앞면(Z=depth/2)에 덧대지만, X 방향으로 측면 ep 두께만큼 안쪽으로 확장
+  //   폭 = 측면 ep 폭(totalWidth) + 측면 ep 두께(boardThickness)
+  //   X 중심 = 안쪽으로 boardThickness/2 만큼 이동
+  const frontEpWidth = totalWidth + boardThickness;
+  const frontEpX = inward * (boardThickness / 2);
   const frontEpZ = depth / 2 + frontEpDepthZ / 2;
 
   return (
@@ -159,11 +163,11 @@ const EndPanelWithTexture: React.FC<EndPanelWithTextureProps> = ({
           furnitureId={furnitureId}
         />
       )}
-      {/* 전면 ep — 측면 ep 앞면을 덮는 마감 보드 (폭 동일, Z 두께 18.5mm) */}
-      {totalWidth > 0 && (
+      {/* 전면 ep — 측면 ep 앞면을 덮으면서 안쪽으로 측면 ep 두께만큼 확장 */}
+      {frontEpWidth > 0 && (
         <BoxWithEdges
           isEndPanel={true}
-          args={[totalWidth, height, frontEpDepthZ]}
+          args={[frontEpWidth, height, frontEpDepthZ]}
           position={[frontEpX, 0, frontEpZ]}
           material={endPanelMaterial}
           renderMode={renderMode}
