@@ -4361,18 +4361,24 @@ const PlacedModulePropertiesPanel: React.FC = () => {
             const totalLimit = moduleH + 100; // 대략. 정확한 값은 사용자 입력 검증 시점에 재계산.
             const gapBetween = 3;
 
-            const handleChange = (idx: number, raw: string) => {
-              const num = parseInt(raw, 10);
+            const applyValue = (idx: number, num: number) => {
               if (!Number.isFinite(num) || num <= 0) return;
               const next = [...(current.length === maidaCount ? current : defaultMaida.slice(0, maidaCount))];
               next[idx] = num;
-              // 합 검증
               const sum = next.reduce((a, b) => a + b, 0) + (maidaCount - 1) * gapBetween;
               if (sum > totalLimit) {
                 alert(`마이다 합(${sum}mm)이 가구 영역(${totalLimit}mm)을 초과합니다.`);
                 return;
               }
               updatePlacedModule(currentPlacedModule.id, { customMaidaHeights: next });
+            };
+            const handleChange = (idx: number, raw: string) => {
+              const num = parseInt(raw, 10);
+              applyValue(idx, num);
+            };
+            const handleArrow = (idx: number, dir: 1 | -1) => {
+              const cur = current[idx] ?? defaultMaida[idx] ?? 0;
+              applyValue(idx, cur + dir);
             };
             const handleReset = () => {
               updatePlacedModule(currentPlacedModule.id, { customMaidaHeights: undefined });
@@ -4405,6 +4411,10 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                             value={val}
                             placeholder={String(defaultMaida[di] ?? '')}
                             onChange={(e) => handleChange(di, e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === 'ArrowUp') { e.preventDefault(); handleArrow(di, 1); }
+                              else if (e.key === 'ArrowDown') { e.preventDefault(); handleArrow(di, -1); }
+                            }}
                           />
                           <span className={styles.unit}>mm</span>
                         </div>
