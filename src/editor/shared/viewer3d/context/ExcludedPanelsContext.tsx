@@ -66,6 +66,28 @@ export function getExcludedPanelAliases(panelName: string): string[] {
   const frameMatch = withoutFurnitureLabel.match(/^(top-frame|base-frame)-\d+$/);
   if (frameMatch) aliases.add(frameMatch[1]);
 
+  // 패널 목록 팝업의 한국어 명칭 ↔ 3D mesh name 매핑
+  // mesh는 분절될 수 있어 'top-frame-0'..'top-frame-N' 등으로 나오므로 가능성 있는 인덱스도 추가
+  if (withoutFurnitureLabel === '상단몰딩') {
+    aliases.add('top-frame');
+    for (let i = 0; i < 20; i += 1) aliases.add(`top-frame-${i}`);
+  }
+  // 걸래받이/걸레받이/받침대 모두 동일 mesh 가리킴 (CLAUDE.md에선 '걸래받이' 사용)
+  if (withoutFurnitureLabel === '걸래받이' || withoutFurnitureLabel === '걸레받이' || withoutFurnitureLabel === '받침대') {
+    aliases.add('base-frame');
+    aliases.add('걸래받이');
+    aliases.add('걸레받이');
+    aliases.add('받침대');
+    for (let i = 0; i < 20; i += 1) aliases.add(`base-frame-${i}`);
+  }
+  // 역방향: 3D mesh name이 들어와도 한국어 패널명 매칭
+  if (withoutFurnitureLabel === 'top-frame') aliases.add('상단몰딩');
+  if (withoutFurnitureLabel === 'base-frame') {
+    aliases.add('걸래받이');
+    aliases.add('걸레받이');
+    aliases.add('받침대');
+  }
+
   if (withoutFurnitureLabel === '바닥') aliases.add('바닥판');
   if (withoutFurnitureLabel === '바닥판') aliases.add('바닥');
   if (withoutFurnitureLabel.endsWith(' 바닥')) aliases.add(withoutFurnitureLabel.replace(/ 바닥$/, ' 바닥판'));
