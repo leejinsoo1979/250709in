@@ -4396,12 +4396,12 @@ const PlacedModulePropertiesPanel: React.FC = () => {
             return (
               <div className={styles.propertySection}>
                 <h5 className={styles.sectionTitle}>레그라 마이다 사이즈</h5>
-                <div className={styles.epRow} style={{ flexWrap: 'wrap', gap: '8px' }}>
+                <div className={styles.epRow} style={{ gap: '8px' }}>
                   {labels.map((label, uiIdx) => {
                     const di = toInternalIdx(uiIdx);
                     const val = current[di] ?? defaultMaida[di] ?? '';
                     return (
-                      <div key={uiIdx} className={styles.epField} style={{ flex: maidaCount === 1 ? '1 1 100%' : '1 1 calc(50% - 4px)' }}>
+                      <div key={uiIdx} className={styles.epField} style={{ flex: '1 1 0' }}>
                         <label className={styles.epFieldLabel}>{label}</label>
                         <div className={styles.inputWithUnit}>
                           <input
@@ -4439,9 +4439,6 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                     기본값으로 복원
                   </button>
                 )}
-                <div style={{ fontSize: '11px', color: 'var(--theme-text-tertiary)', marginTop: '6px' }}>
-                  측판 자동 매칭: ≤125 → K(128.5) / ≤250 → C(177) / &gt;250 → F(241)
-                </div>
               </div>
             );
           })()}
