@@ -1318,35 +1318,34 @@ const BoxModule: React.FC<BoxModuleProps> = ({
     const spaceBottomY = fullYOffset - fullHeight / 2 + mmTo(floorFinishMm);
     const topFrameCenterY = spaceTopY - topFrameH / 2;
     const baseFrameCenterY = spaceBottomY + baseFrameH / 2;
-    // 걸레받이 Z (옆 가구와 동일 라인) — 가구 앞면(moduleD/2)에서 두께/2 안쪽 + 전체서라운드면 3mm 앞으로
-    //   계산: insertFrontInsetMm(=18 기본) 영향 없이, 옆 가구 걸레받이/상단몰딩 Room.tsx 산식과 일치하도록
-    //   옆 가구 산식(전체 서라운드): furnitureZOffset + furnitureDepth/2 - END_PANEL_THICKNESS/2 + 3
-    //                노서라운드:     furnitureZOffset + furnitureDepth/2 - END_PANEL_THICKNESS/2 - 20(=calculateMaxNoSurroundOffset)
-    //                도어기준 추가:  + 23(DOOR_FRONT_OFFSET_MM)
-    //   가구 그룹 Z (FurnitureItem 기본 분기): furnitureZOffset + furnitureDepth/2 - 0(doorThickness=0 for insert-frame) - moduleD/2 + baseDepthOffset
-    //   → 로컬 = 월드 - 그룹 Z = (- END_PANEL_THICKNESS/2 + 3) - (- moduleD/2 + baseDepthOffset)
-    //          = moduleD/2 - END_PANEL_THICKNESS/2 + 3 - baseDepthOffset (전체서라운드, 도어기준 아님)
-    const END_PANEL_THICKNESS_MM = 18;
+    // 상단몰딩 Z (옆 가구와 동일 라인) — Room.tsx의 topZPosition 산식과 일치
+    //   전체 서라운드: 월드 Z = furnitureZOffset + furnitureDepth/2 - END/2 + 3 (+ 23 if frameOffsetBase==='door')
+    //   노서라운드  : 월드 Z = furnitureZOffset + furnitureDepth/2 - END/2 - 20 (+ 23 if frameOffsetBase==='door')
+    // 걸레받이 Z (옆 가구와 동일 라인) — Room.tsx의 baseZBase 산식과 일치
+    //   걸레받이는 항상 가구 몸통 앞면 기준 (doorOffset 미적용):
+    //     월드 Z = furnitureZOffset + furnitureDepth/2 - END/2 - 20 - (baseConfig.depth ?? 0)
+    // 가구 그룹 월드 Z (FurnitureItem 기본 분기, insert-frame은 도어 없음 doorThickness=0):
+    //   = furnitureZOffset + furnitureDepth/2 - moduleD_mm/2 + baseDepthOffset
+    // → 로컬 Z (월드 - 그룹):
+    //   상단몰딩 = moduleD_mm/2 - END/2 + (전체서라운드 ? 3 : -20) + frameDoorOffset - baseDepthOffset
+    //   걸레받이 = moduleD_mm/2 - END/2 - 20 - (baseConfig.depth ?? 0) - baseDepthOffset
+    const END_PANEL_THK_MM = 18;
     const NO_SURROUND_OFFSET_MM = 20;
     const DOOR_FRONT_OFFSET_MM = 23;
+    const moduleD_mm = 58; // insert-frame baseFurniture.depth = 58mm
     const isFullSurroundIF = spaceInfo.surroundType === 'surround';
     const isFloatPlacementIF = spaceInfo.baseConfig?.type === 'stand'
       && spaceInfo.baseConfig?.placementType === 'float';
     const baseDepthOffsetMmIF = isFloatPlacementIF ? (spaceInfo.baseConfig?.depth || 0) : 0;
     const frameDoorOffsetMmIF = (spaceInfo as any).frameOffsetBase === 'door' ? DOOR_FRONT_OFFSET_MM : 0;
-    // 전체 서라운드: -END/2 + 3, 노서라운드: -END/2 - 20
-    const sideRefZMm = isFullSurroundIF
-      ? (-END_PANEL_THICKNESS_MM / 2 + 3)
-      : (-END_PANEL_THICKNESS_MM / 2 - NO_SURROUND_OFFSET_MM);
-    // 옆 가구 상단몰딩 월드 Z (mm 단위, furnitureZOffset + furnitureDepth/2 기준의 차이값)
-    //   = furnitureDepth/2 + sideRefZMm + frameDoorOffsetMmIF  (양수=앞, 음수=뒤)
-    // 가구 그룹 Z (mm 단위, 같은 기준):
-    //   = furnitureDepth/2 - moduleD_mm/2 + baseDepthOffsetMmIF (insert-frame: doorThickness=0)
-    // → 로컬 Z (mm) = (sideRefZMm + frameDoorOffsetMmIF) - (- moduleD/2 + baseDepthOffsetMmIF)
-    //              = moduleD/2 + sideRefZMm + frameDoorOffsetMmIF - baseDepthOffsetMmIF
-    const moduleD_mm = baseFurniture.depth * 100; // mmToThreeUnits 역변환 (100배)
-    const topBaseFrameZLocalMm = moduleD_mm / 2 + sideRefZMm + frameDoorOffsetMmIF - baseDepthOffsetMmIF;
-    const topBaseFrameZ = mmTo(topBaseFrameZLocalMm);
+    const baseConfigDepthMmIF = spaceInfo.baseConfig?.depth || 0;
+    // 상단몰딩 Z: 전체서라운드면 +3, 노서라운드면 -20
+    const topFrameRefZMm = isFullSurroundIF
+      ? (-END_PANEL_THK_MM / 2 + 3)
+      : (-END_PANEL_THK_MM / 2 - NO_SURROUND_OFFSET_MM);
+    const topFrameZ = mmTo(moduleD_mm / 2 + topFrameRefZMm + frameDoorOffsetMmIF - baseDepthOffsetMmIF);
+    // 걸레받이 Z: 노서라운드 산식 고정 + baseConfig.depth만큼 추가로 뒤로
+    const baseFrameZ = mmTo(moduleD_mm / 2 + (-END_PANEL_THK_MM / 2 - NO_SURROUND_OFFSET_MM) - baseConfigDepthMmIF - baseDepthOffsetMmIF);
 
     return (
       <>
@@ -1364,7 +1363,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
         {topFrameMmIF > 0 && (
           <BoxWithEdges
             args={[frontFrameWidth, topFrameH, PT_THREE]}
-            position={[0, topFrameCenterY, topBaseFrameZ]}
+            position={[0, topFrameCenterY, topFrameZ]}
             material={insertSurroundMaterial}
             isDragging={isDragging}
             isEditMode={isEditMode}
@@ -1376,7 +1375,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
         {baseFrameMmIF > 0 && (
           <BoxWithEdges
             args={[frontFrameWidth, baseFrameH, PT_THREE]}
-            position={[0, baseFrameCenterY, topBaseFrameZ]}
+            position={[0, baseFrameCenterY, baseFrameZ]}
             material={insertSurroundMaterial}
             isDragging={isDragging}
             isEditMode={isEditMode}
