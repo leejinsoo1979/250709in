@@ -16,6 +16,7 @@ import { isCustomizableModuleId, getCustomDimensionKey, getStandardDimensionKey 
 import { calcInsertFrameResizedPositionX, calcResizedPositionX } from '@/editor/shared/utils/freePlacementUtils';
 import { parseBackWallGapInput, stepBackWallGapMm } from '@/editor/shared/utils/backWallGapValidation';
 import { resolveCountertopThicknessMm } from '@/editor/shared/utils/countertopHeightCompensation';
+import { normalizeDoorHingePositionsMm, resolveDefaultDoorHingePositionsMm, type DoorHingeMode } from '@/editor/shared/utils/doorGeometryCalculator';
 import styles from './PlacedModulePropertiesPanel.module.css';
 
 // 가구 썸네일 이미지 경로 — ModuleGallery와 동일한 규칙
@@ -1809,7 +1810,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
     if (!moduleData) return [];
     return calculatePanelDetails(
       moduleData, customWidth, customDepth, hasDoor, t, doorOriginalWidth,
-      undefined, undefined, undefined, currentPlacedModule?.doorTopGap, currentPlacedModule?.doorBottomGap, undefined,
+      currentPlacedModule?.hingePosition, currentPlacedModule?.hingeType, undefined, currentPlacedModule?.doorTopGap, currentPlacedModule?.doorBottomGap, undefined,
       backPanelThicknessValue, currentPlacedModule?.customConfig,
       currentPlacedModule?.hasLeftEndPanel, currentPlacedModule?.hasRightEndPanel,
       currentPlacedModule?.endPanelThickness, adjustedFreeHeight,
@@ -1832,9 +1833,13 @@ const PlacedModulePropertiesPanel: React.FC = () => {
       undefined,
       undefined,
       endPanelTopOffsetForPanels,
-      endPanelBottomOffsetForPanels
+      endPanelBottomOffsetForPanels,
+      currentPlacedModule?.customMaidaHeights,
+      currentPlacedModule?.hingePositionsMm,
+      currentPlacedModule?.upperDoorHingePositionsMm,
+      currentPlacedModule?.lowerDoorHingePositionsMm
     );
-  }, [moduleData, customWidth, customDepth, hasDoor, t, doorOriginalWidth, backPanelThicknessValue, currentPlacedModule?.customConfig, currentPlacedModule?.hasLeftEndPanel, currentPlacedModule?.hasRightEndPanel, currentPlacedModule?.endPanelThickness, adjustedFreeHeight, topFrameHeightMm, visualBaseFrameHeightMm, currentPlacedModule?.hasTopFrame, currentPlacedModule?.hasBase, currentPlacedModule?.topFrameThickness, currentPlacedModule?.endPanelTopOffset, currentPlacedModule?.endPanelBottomOffset, currentPlacedModule?.isDualSlot, leftEpAdjacent, rightEpAdjacent, currentPlacedModule?.topPanelNotchSize, currentPlacedModule?.topPanelNotchSide, currentPlacedModule?.stoneTopThickness, currentPlacedModule?.stoneTopFrontOffset, currentPlacedModule?.stoneTopBackOffset, currentPlacedModule?.stoneTopLeftOffset, currentPlacedModule?.stoneTopRightOffset, currentPlacedModule?.doorTopGap, currentPlacedModule?.doorBottomGap, endPanelTopOffsetForPanels, endPanelBottomOffsetForPanels]);
+  }, [moduleData, customWidth, customDepth, hasDoor, t, doorOriginalWidth, backPanelThicknessValue, currentPlacedModule?.customConfig, currentPlacedModule?.hasLeftEndPanel, currentPlacedModule?.hasRightEndPanel, currentPlacedModule?.endPanelThickness, adjustedFreeHeight, topFrameHeightMm, visualBaseFrameHeightMm, currentPlacedModule?.hasTopFrame, currentPlacedModule?.hasBase, currentPlacedModule?.topFrameThickness, currentPlacedModule?.endPanelTopOffset, currentPlacedModule?.endPanelBottomOffset, currentPlacedModule?.isDualSlot, leftEpAdjacent, rightEpAdjacent, currentPlacedModule?.topPanelNotchSize, currentPlacedModule?.topPanelNotchSide, currentPlacedModule?.stoneTopThickness, currentPlacedModule?.stoneTopFrontOffset, currentPlacedModule?.stoneTopBackOffset, currentPlacedModule?.stoneTopLeftOffset, currentPlacedModule?.stoneTopRightOffset, currentPlacedModule?.doorTopGap, currentPlacedModule?.doorBottomGap, currentPlacedModule?.hingePositionsMm, currentPlacedModule?.upperDoorHingePositionsMm, currentPlacedModule?.lowerDoorHingePositionsMm, endPanelTopOffsetForPanels, endPanelBottomOffsetForPanels, currentPlacedModule?.customMaidaHeights]);
 
   // 서라운드 패널 계산 — 맨 좌측 가구에 좌측 서라운드, 맨 우측 가구에 우측 서라운드 귀속
   const surroundPanels = React.useMemo(() => {
@@ -2709,6 +2714,49 @@ const PlacedModulePropertiesPanel: React.FC = () => {
     if (activePopup.id) {
       updatePlacedModule(activePopup.id, { hingeType: type });
     }
+  };
+
+  type HingePositionsField = 'hingePositionsMm' | 'upperDoorHingePositionsMm' | 'lowerDoorHingePositionsMm';
+
+  const updateHingePositions = (field: HingePositionsField, positions: number[], doorHeightMm: number) => {
+    if (!currentPlacedModule?.id) return;
+    const normalized = normalizeDoorHingePositionsMm(positions, doorHeightMm);
+    updatePlacedModule(currentPlacedModule.id, { [field]: normalized } as any);
+  };
+
+  const handleHingePositionValueChange = (
+    field: HingePositionsField,
+    index: number,
+    value: string,
+    currentPositions: number[],
+    doorHeightMm: number
+  ) => {
+    if (value === '' || value === '-' || !/^-?\d+$/.test(value)) return;
+    const num = Math.max(1, Math.min(Math.max(1, Math.round(doorHeightMm) - 1), parseInt(value, 10)));
+    const next = [...currentPositions];
+    next[index] = num;
+    updateHingePositions(field, next, doorHeightMm);
+  };
+
+  const handleAddHingePosition = (
+    field: HingePositionsField,
+    currentPositions: number[],
+    doorHeightMm: number
+  ) => {
+    const nextPosition = currentPositions.length > 0
+      ? Math.min(Math.max(1, Math.round(doorHeightMm) - 1), currentPositions[currentPositions.length - 1] + 100)
+      : Math.round(doorHeightMm / 2);
+    updateHingePositions(field, [...currentPositions, nextPosition], doorHeightMm);
+  };
+
+  const handleRemoveHingePosition = (
+    field: HingePositionsField,
+    index: number,
+    currentPositions: number[],
+    doorHeightMm: number
+  ) => {
+    if (currentPositions.length <= 1) return;
+    updateHingePositions(field, currentPositions.filter((_, itemIndex) => itemIndex !== index), doorHeightMm);
   };
 
   const handleDoorChange = (doorEnabled: boolean) => {
@@ -4169,6 +4217,211 @@ const PlacedModulePropertiesPanel: React.FC = () => {
               </div>
             </div>
           )}
+
+          {!showDetails && currentPlacedModule?.hasDoor
+            && !(typeof currentPlacedModule?.moduleId === 'string' && currentPlacedModule.moduleId.includes('insert-frame'))
+            && !(typeof currentPlacedModule?.moduleId === 'string' && (
+              /^(dual-)?lower-drawer-/.test(currentPlacedModule.moduleId)
+              || /(^|-)lower-induction-cabinet-/.test(currentPlacedModule.moduleId)
+            ))
+            && (() => {
+              const doorPanels = panelDetails.filter((panel: any) => panel?.isDoor && typeof panel?.height === 'number');
+              const lowerDoorPanel = doorPanels.find((panel: any) => String(panel.name || '').includes('하부 도어'));
+              const upperDoorPanel = doorPanels.find((panel: any) => String(panel.name || '').includes('상부 도어'));
+              const defaultDoorPanel = doorPanels[0];
+              const isSplitDoor = !!lowerDoorPanel && !!upperDoorPanel;
+              const isUpperModule = moduleData?.category === 'upper' || moduleData?.id?.includes('upper-cabinet');
+              const isLowerModule = moduleData?.category === 'lower' || moduleData?.id?.includes('lower-cabinet');
+              const isPantrySplit = currentPlacedModule.moduleId?.includes('pantry-cabinet-split');
+              const buildPositions = (
+                field: HingePositionsField,
+                doorHeightMm: number,
+                hingeMode: DoorHingeMode
+              ) => {
+                const saved = normalizeDoorHingePositionsMm((currentPlacedModule as any)[field], doorHeightMm);
+                return saved.length > 0
+                  ? saved
+                  : resolveDefaultDoorHingePositionsMm({
+                    doorHeightMm,
+                    isUpperCabinet: !isSplitDoor && isUpperModule,
+                    isLowerCabinet: !isSplitDoor && isLowerModule,
+                    hingeMode
+                  });
+              };
+              const groups = isSplitDoor
+                ? [
+                  {
+                    label: '하부 도어 경첩',
+                    field: 'lowerDoorHingePositionsMm' as HingePositionsField,
+                    doorHeightMm: Math.round(lowerDoorPanel.height),
+                    hingeMode: (isPantrySplit ? 'lower4' : 'auto') as DoorHingeMode
+                  },
+                  {
+                    label: '상부 도어 경첩',
+                    field: 'upperDoorHingePositionsMm' as HingePositionsField,
+                    doorHeightMm: Math.round(upperDoorPanel.height),
+                    hingeMode: (isPantrySplit ? 'upper2' : 'auto') as DoorHingeMode
+                  }
+                ]
+                : defaultDoorPanel
+                  ? [{
+                    label: '도어 경첩',
+                    field: 'hingePositionsMm' as HingePositionsField,
+                    doorHeightMm: Math.round(defaultDoorPanel.height),
+                    hingeMode: 'auto' as DoorHingeMode
+                  }]
+                  : [];
+
+              if (groups.length === 0) return null;
+
+              return (
+                <div className={styles.propertySection}>
+                  <h5 className={styles.sectionTitle}>경첩 위치</h5>
+                  {groups.map((group) => {
+                    const positions = buildPositions(group.field, group.doorHeightMm, group.hingeMode);
+                    return (
+                      <div key={group.field} style={{ marginTop: '8px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                          <span style={{ fontSize: '12px', color: 'var(--theme-text-secondary)', fontWeight: 600 }}>{group.label}</span>
+                          <button
+                            type="button"
+                            onClick={() => handleAddHingePosition(group.field, positions, group.doorHeightMm)}
+                            style={{ border: '1px solid var(--theme-border)', background: 'var(--theme-surface)', color: 'var(--theme-text-primary)', borderRadius: '4px', padding: '2px 6px', fontSize: '11px', cursor: 'pointer' }}
+                          >
+                            추가
+                          </button>
+                        </div>
+                        {positions.map((positionMm, index) => (
+                          <div key={`${group.field}-${index}`} style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
+                            <label style={{ width: '44px', fontSize: '11px', color: 'var(--theme-text-tertiary)' }}>{index + 1}번</label>
+                            <div className={styles.inputWithUnit} style={{ flex: 1 }}>
+                              <input
+                                type="text"
+                                inputMode="numeric"
+                                value={positionMm}
+                                onChange={(e) => handleHingePositionValueChange(group.field, index, e.target.value, positions, group.doorHeightMm)}
+                                className={styles.depthInput}
+                                style={{ textAlign: 'center', fontSize: '12px' }}
+                              />
+                              <span className={styles.unit}>mm</span>
+                            </div>
+                            <button
+                              type="button"
+                              disabled={positions.length <= 1}
+                              onClick={() => handleRemoveHingePosition(group.field, index, positions, group.doorHeightMm)}
+                              style={{ border: '1px solid var(--theme-border)', background: 'var(--theme-surface)', color: positions.length <= 1 ? 'var(--theme-text-tertiary)' : 'var(--theme-text-primary)', borderRadius: '4px', padding: '2px 6px', fontSize: '11px', cursor: positions.length <= 1 ? 'not-allowed' : 'pointer' }}
+                            >
+                              삭제
+                            </button>
+                          </div>
+                        ))}
+                        <div style={{ fontSize: '10px', color: 'var(--theme-text-tertiary)', marginTop: '2px' }}>
+                          도어 하단 기준 경첩컵 중심 위치입니다. 도어 높이 {group.doorHeightMm}mm 범위 안에서 적용됩니다.
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              );
+            })()}
+
+          {/* 레그라박스 마이다 사이즈 설정 — 편집 탭 전용
+             대상: 인덕션장(1개), 도어올림 터치 2A/2B/3, 상판내림 터치 2/3
+             사용자가 마이다 사이즈를 변경하면 그에 맞는 LEGRABOX 등급(K/C/F) 측판 GLB 자동 매칭 */}
+          {!showDetails && currentPlacedModule && (() => {
+            const mid = currentPlacedModule.moduleId ?? '';
+            // 레그라 모듈 판별
+            const isInduction = /(^|-)lower-induction-cabinet-/.test(mid);
+            const isDoorLiftTouch2A = mid.includes('lower-door-lift-touch-2tier-a');
+            const isDoorLiftTouch2B = mid.includes('lower-door-lift-touch-2tier-b');
+            const isDoorLiftTouch3 = mid.includes('lower-door-lift-touch-3tier');
+            const isTopDownTouch2 = mid.includes('lower-top-down-touch-2tier');
+            const isTopDownTouch3 = mid.includes('lower-top-down-touch-3tier');
+            const isLegraModule = isInduction || isDoorLiftTouch2A || isDoorLiftTouch2B
+              || isDoorLiftTouch3 || isTopDownTouch2 || isTopDownTouch3;
+            if (!isLegraModule) return null;
+
+            // 마이다 개수
+            const maidaCount = isInduction ? 1
+              : (isDoorLiftTouch2A || isDoorLiftTouch2B || isTopDownTouch2) ? 2
+              : 3;
+
+            // 모듈 기본 마이다 값 (placeholder 표시용) — LowerCabinet.tsx의 baseMaidaHeightsMm와 동일
+            const defaultMaida: number[] = isDoorLiftTouch2A ? [408, 409]
+              : isDoorLiftTouch2B ? [408, 409]
+              : isDoorLiftTouch3 ? [360, 227, 227]
+              : isTopDownTouch2 ? [353, 354]
+              : isTopDownTouch3 ? [185, 240, 240]
+              : isInduction ? [0] // 인덕션은 패널 산식 따라
+              : [];
+
+            const current = (currentPlacedModule.customMaidaHeights ?? []) as number[];
+            // 가구 영역 한계 (대략적인 클램프) — LowerCabinet과 동일 산식 필요시 정밀화. 일단 가구 높이 - 100 정도로.
+            const moduleH = currentPlacedModule.freeHeight ?? (moduleData?.dimensions?.height ?? 780);
+            const totalLimit = moduleH + 100; // 대략. 정확한 값은 사용자 입력 검증 시점에 재계산.
+            const gapBetween = 3;
+
+            const handleChange = (idx: number, raw: string) => {
+              const num = parseInt(raw, 10);
+              if (!Number.isFinite(num) || num <= 0) return;
+              const next = [...(current.length === maidaCount ? current : defaultMaida.slice(0, maidaCount))];
+              next[idx] = num;
+              // 합 검증
+              const sum = next.reduce((a, b) => a + b, 0) + (maidaCount - 1) * gapBetween;
+              if (sum > totalLimit) {
+                alert(`마이다 합(${sum}mm)이 가구 영역(${totalLimit}mm)을 초과합니다.`);
+                return;
+              }
+              updatePlacedModule(currentPlacedModule.id, { customMaidaHeights: next });
+            };
+            const handleReset = () => {
+              updatePlacedModule(currentPlacedModule.id, { customMaidaHeights: undefined });
+            };
+
+            // di 0=아래, di N-1=위. UI는 위→아래 순서로 표시 (사용자 직관)
+            const labels = maidaCount === 1
+              ? ['1단']
+              : maidaCount === 2
+                ? ['1단(위)', '2단(아래)']
+                : ['1단(위)', '2단(중간)', '3단(아래)'];
+            // UI 인덱스 i → 내부 인덱스 di: 위가 di=N-1, 아래가 di=0
+            const toInternalIdx = (uiIdx: number) => (maidaCount - 1) - uiIdx;
+
+            return (
+              <div className={styles.propertySection}>
+                <h5 className={styles.sectionTitle}>레그라 마이다 사이즈</h5>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                  {labels.map((label, uiIdx) => {
+                    const di = toInternalIdx(uiIdx);
+                    const val = current[di] ?? defaultMaida[di] ?? '';
+                    return (
+                      <div key={uiIdx} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <label style={{ width: '72px', fontSize: '12px', color: 'var(--theme-text-secondary)' }}>{label}</label>
+                        <div className={styles.inputWithUnit} style={{ flex: 1 }}>
+                          <input
+                            type="number"
+                            value={val}
+                            placeholder={String(defaultMaida[di] ?? '')}
+                            onChange={(e) => handleChange(di, e.target.value)}
+                            style={{ width: '100%' }}
+                          />
+                          <span className={styles.unit}>mm</span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                  {current.length > 0 && (
+                    <button onClick={handleReset} style={{ marginTop: '4px', fontSize: '11px', padding: '4px', cursor: 'pointer' }}>
+                      기본값으로 복원
+                    </button>
+                  )}
+                  <div style={{ fontSize: '11px', color: 'var(--theme-text-tertiary)', marginTop: '4px' }}>
+                    ≤125: K(측판 128.5) / ≤220: C(177) / &gt;220: F(241) — 자동 매칭
+                  </div>
+                </div>
+              </div>
+            );
+          })()}
 
           {/* 섹션별 치수 설정 (2섹션 이상 가구: customConfig 또는 modelConfig) — 편집 탭 전용 */}
           {!showDetails && currentPlacedModule && (() => {

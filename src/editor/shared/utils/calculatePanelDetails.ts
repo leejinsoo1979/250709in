@@ -3,7 +3,7 @@ import { calculateHingePositions, calculateHingeCount } from '@/domain/boring/ca
 import { DEFAULT_HINGE_SETTINGS } from '@/domain/boring/constants';
 import type { CustomFurnitureConfig } from '@/editor/shared/furniture/types';
 import type { FreeSurroundConfig } from '@/store/core/spaceConfigStore';
-import { resolveDoorLeafDimensions } from './doorGeometryCalculator';
+import { normalizeDoorHingePositionsMm, resolveDoorLeafDimensions } from './doorGeometryCalculator';
 import { resolveShelfFrontInsetMm } from './shelfInsetCalculator';
 import { getTopDownStoneFrontVisibleHeightMm, resolveTopDown2TierGeometry } from './topDownCabinetGeometry';
 
@@ -51,7 +51,13 @@ export const calculatePanelDetails = (
   stoneTopBackLipFullFill?: boolean,
   stoneTopBackLipFillHeight?: number,
   endPanelTopOffsetMm?: number,
-  endPanelBottomOffsetMm?: number
+  endPanelBottomOffsetMm?: number,
+  // 레그라박스 마이다 개별 사이즈 (mm) — di=0(아래) ~ di=N(위)
+  // 있으면 fixed 마이다 값보다 우선. 없으면 모듈 기본값 사용.
+  customMaidaHeights?: number[],
+  customHingePositionsMm?: number[],
+  customUpperDoorHingePositionsMm?: number[],
+  customLowerDoorHingePositionsMm?: number[]
 ) => {
   const panels: { upper: any[]; lower: any[]; door: any[]; frame: any[] } = {
     upper: [],     // 상부장 패널
@@ -1341,7 +1347,7 @@ export const calculatePanelDetails = (
       hingeSide: hingePosition ?? 'left'
     });
     const actualDoorH = doorLeafDimensions.leafHeightMm;
-    const isPantryDoorSplitModule = moduleData.id.includes('pantry-cabinet-split');
+    const isDoorSplitPanelModule = moduleData.id.includes('pantry-cabinet-split') || moduleData.id.includes('shelf-split');
     let bracketHingeYPositions: number[] | null = null;
 
     const calculateFixedHingePositions = (doorH: number, hingeCount: number) => {
@@ -1355,10 +1361,19 @@ export const calculatePanelDetails = (
     };
 
     // 도어 보링 데이터 생성 헬퍼
-    const createDoorBoringData = (doorW: number, doorH: number, isLeftHinge: boolean, fixedHingeCount?: number) => {
-      const hingePositions = fixedHingeCount
-        ? calculateFixedHingePositions(doorH, fixedHingeCount)
-        : calculateHingePositions(doorH);
+    const createDoorBoringData = (
+      doorW: number,
+      doorH: number,
+      isLeftHinge: boolean,
+      fixedHingeCount?: number,
+      customPositionsMm?: number[]
+    ) => {
+      const customHingePositions = normalizeDoorHingePositionsMm(customPositionsMm, doorH);
+      const hingePositions = customHingePositions.length > 0
+        ? customHingePositions
+        : fixedHingeCount
+          ? calculateFixedHingePositions(doorH, fixedHingeCount)
+          : calculateHingePositions(doorH);
       // 힌지컵 X 위치 (도어 가장자리에서 cupEdgeDistance)
       const cupX = isLeftHinge
         ? DEFAULT_HINGE_SETTINGS.cupEdgeDistance
@@ -1380,7 +1395,7 @@ export const calculatePanelDetails = (
         screwPositions: hingePositions.flatMap(y => [y - screwYOffset, y + screwYOffset]),
         screwDepthPositions: [screwX],
         screwHoleSpacing,
-        hingeCount: fixedHingeCount ?? calculateHingeCount(doorH),
+        hingeCount: hingePositions.length,
         isLeftHinge,
       };
     };
@@ -1390,9 +1405,10 @@ export const calculatePanelDetails = (
       widthMm: number,
       heightMm: number,
       isLeftHinge: boolean,
-      fixedHingeCount?: number
+      fixedHingeCount?: number,
+      customPositionsMm?: number[]
     ) => {
-      const doorBoring = createDoorBoringData(widthMm, heightMm, isLeftHinge, fixedHingeCount);
+      const doorBoring = createDoorBoringData(widthMm, heightMm, isLeftHinge, fixedHingeCount, customPositionsMm);
       panels.door.push({
         name,
         width: widthMm,
@@ -1410,11 +1426,15 @@ export const calculatePanelDetails = (
       });
     };
 
-    if (isPantryDoorSplitModule) {
-      const lowerSectionTopMm = 1825;
-      const doorSplitGapMm = 3;
-      const lowerDoorTopMm = lowerSectionTopMm - doorSplitGapMm / 2;
-      const upperDoorBottomMm = lowerSectionTopMm + doorSplitGapMm / 2;
+    if (isDoorSplitPanelModule) {
+      const isPantryDoorSplitModule = moduleData.id.includes('pantry-cabinet-split');
+      const lowerSectionTopMm = isPantryDoorSplitModule ? 1825 : 860;
+      const lowerDoorTopMm = isPantryDoorSplitModule
+        ? lowerSectionTopMm - 2
+        : lowerSectionTopMm - 40;
+      const upperDoorBottomMm = isPantryDoorSplitModule
+        ? lowerSectionTopMm + 1
+        : lowerSectionTopMm - 20;
       const lowerDoorH = lowerDoorTopMm + (doorBottomGap ?? 0);
       const upperDoorH = height + (doorTopGap ?? 0) - upperDoorBottomMm;
       const lowerDoorBottomMm = -(doorBottomGap ?? 0);
@@ -1429,15 +1449,17 @@ export const calculatePanelDetails = (
             ? '우측 '
             : '';
 
-        const lowerHinges = calculateFixedHingePositions(lowerDoorH, 4);
-        const upperHinges = calculateFixedHingePositions(upperDoorH, 2);
+        const lowerHinges = normalizeDoorHingePositionsMm(customLowerDoorHingePositionsMm, lowerDoorH);
+        const upperHinges = normalizeDoorHingePositionsMm(customUpperDoorHingePositionsMm, upperDoorH);
+        const resolvedLowerHinges = lowerHinges.length > 0 ? lowerHinges : calculateFixedHingePositions(lowerDoorH, 4);
+        const resolvedUpperHinges = upperHinges.length > 0 ? upperHinges : calculateFixedHingePositions(upperDoorH, 2);
         bracketHingeYPositions?.push(
-          ...lowerHinges.map(y => lowerDoorBottomMm + y),
-          ...upperHinges.map(y => upperDoorBottomMm + y)
+          ...resolvedLowerHinges.map(y => lowerDoorBottomMm + y),
+          ...resolvedUpperHinges.map(y => upperDoorBottomMm + y)
         );
 
-        pushDoorPanel(`${prefix}하부 도어`, leaf.widthMm, lowerDoorH, isLeftHinge, 4);
-        pushDoorPanel(`${prefix}상부 도어`, leaf.widthMm, upperDoorH, isLeftHinge, 2);
+        pushDoorPanel(`${prefix}하부 도어`, leaf.widthMm, lowerDoorH, isLeftHinge, 4, customLowerDoorHingePositionsMm);
+        pushDoorPanel(`${prefix}상부 도어`, leaf.widthMm, upperDoorH, isLeftHinge, 2, customUpperDoorHingePositionsMm);
       });
 
       bracketHingeYPositions = Array.from(new Set(bracketHingeYPositions)).sort((a, b) => a - b);
@@ -1449,7 +1471,7 @@ export const calculatePanelDetails = (
           : leaf.name === 'right'
             ? '우측 도어'
             : '도어';
-        pushDoorPanel(doorName, leaf.widthMm, leaf.heightMm, isLeftHinge);
+        pushDoorPanel(doorName, leaf.widthMm, leaf.heightMm, isLeftHinge, undefined, customHingePositionsMm);
       });
     }
 
@@ -2234,11 +2256,19 @@ export const calculatePanelDetails = (
     const fixedMaidaTopDown2 = [353, 354];
     const fixedMaidaTopDown3 = [185, 240, 240];
 
+    // 사용자가 가구 편집 팝업에서 지정한 customMaidaHeights 우선 사용
+    const cmh = (customMaidaHeights && customMaidaHeights.length === drawerHeights.length
+      && customMaidaHeights.every(v => typeof v === 'number' && v > 0))
+      ? customMaidaHeights
+      : undefined;
+
     drawerHeights.forEach((dh, di) => {
       const drawerNum = di + 1;
       const backH = dh - drawerThicknessMm;
       let maidaH: number;
-      if (isDoorLift2Fixed) {
+      if (cmh) {
+        maidaH = cmh[di];
+      } else if (isDoorLift2Fixed) {
         maidaH = fixedMaidaDoorLift2[di];
       } else if (isDoorLift3Fixed) {
         maidaH = fixedMaidaDoorLift3[di];

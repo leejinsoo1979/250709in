@@ -13,6 +13,12 @@ interface LegraSideRailProps {
   drawerFrontZ: number;
   sidePanelInnerX: number;
   drawerHeightMm?: number;
+  // 마이다 높이(mm). 있으면 이 값을 기준으로 GLB 선택 (사용자가 마이다 사이즈 변경 → 측판 자동 매칭).
+  // 마이다 값과 LEGRABOX 표준 설치공간 매핑:
+  //   ≤ 125 → K (측판 128.5, Legra_M500.glb)
+  //   ≤ 220 → C (측판 177, Legra_L500.glb)
+  //    > 220 → F (측판 241, f500.glb)
+  maidaHeightMm?: number;
   renderMode?: string;
 }
 
@@ -141,6 +147,7 @@ const LegraSideRail: React.FC<LegraSideRailProps> = ({
   drawerFrontZ,
   sidePanelInnerX,
   drawerHeightMm,
+  maidaHeightMm,
   renderMode,
 }) => {
   const { viewMode, hideAccessories } = useSpace3DView();
@@ -148,7 +155,17 @@ const LegraSideRail: React.FC<LegraSideRailProps> = ({
   const view2DTheme = useUIStore(state => state.view2DTheme);
   const { theme } = useTheme();
 
-  const modelPath = drawerHeightMm != null
+  // GLB 선택: maidaHeightMm(사용자 마이다 사이즈)이 있으면 우선 사용.
+  //   마이다 → LEGRABOX 등급(설치공간) 매칭:
+  //     ≤ 125 → K (Legra_M500.glb, 측판 128.5)
+  //     ≤ 220 → C (Legra_L500.glb, 측판 177)
+  //      > 220 → F (f500.glb, 측판 241)
+  //   maidaHeightMm 없으면 기존 drawerHeightMm 분기 유지.
+  const modelPath = maidaHeightMm != null
+    ? (maidaHeightMm > 220 ? '/models/f500.glb'
+      : maidaHeightMm <= 125 ? '/models/Legra_M500.glb'
+      : '/models/Legra_L500.glb')
+    : drawerHeightMm != null
     ? (drawerHeightMm >= 200 ? '/models/f500.glb'
       : drawerHeightMm <= 120 ? '/models/Legra_M500.glb'
       : '/models/Legra_L500.glb')

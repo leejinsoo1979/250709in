@@ -433,7 +433,8 @@ export function useLivePanelData() {
             : ((placedModule as any).endPanelTopOffset !== undefined ? (placedModule as any).endPanelTopOffset : topFrameH),
           (placedModule as any).hasBase === false
             ? 0
-            : ((placedModule as any).endPanelBottomOffset !== undefined ? (placedModule as any).endPanelBottomOffset : baseFrameH)
+            : ((placedModule as any).endPanelBottomOffset !== undefined ? (placedModule as any).endPanelBottomOffset : baseFrameH),
+          (placedModule as any).customMaidaHeights // 레그라 마이다 개별 사이즈
         );
 
         console.log(`Module ${moduleIndex}: All panels list received:`, allPanelsList);
@@ -1251,7 +1252,8 @@ export function usePanelSubscription(callback: (panels: Panel[]) => void) {
           : ((placedModule as any).endPanelTopOffset !== undefined ? (placedModule as any).endPanelTopOffset : topFrameH2),
         (placedModule as any).hasBase === false
           ? 0
-          : ((placedModule as any).endPanelBottomOffset !== undefined ? (placedModule as any).endPanelBottomOffset : baseFrameH2)
+          : ((placedModule as any).endPanelBottomOffset !== undefined ? (placedModule as any).endPanelBottomOffset : baseFrameH2),
+        (placedModule as any).customMaidaHeights // 레그라 마이다 개별 사이즈
       );
 
       // calculatePanelDetailsShared는 평면 배열을 반환함 (섹션 헤더 포함)

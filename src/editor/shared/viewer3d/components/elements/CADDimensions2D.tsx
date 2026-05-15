@@ -365,6 +365,7 @@ const computeLowerCabinetMaidaHeights = (
   doorTopGap: number,
   doorBottomGap: number,
   stoneTopThicknessMm: number = 20,
+  customMaidaHeights?: number[],
 ): { maidaHeightMm: number; maidaBottomMm: number; maidaTopMm: number }[] | null => {
   // 하부장 서랍/마이다 모듈만 처리
   const isLowerDrawer = moduleId.includes('lower-drawer-');
@@ -440,15 +441,21 @@ const computeLowerCabinetMaidaHeights = (
     const isDoorLift3Fixed = drawerCount === 3 && isTouch3;
     const isTopDown2Fixed = drawerCount === 2 && isTDTouch2;
     const isTopDown3Fixed = drawerCount === 3 && isTDTouch3;
-    const baseMaidaHeightsMm = isDoorLift2Fixed
-      ? [408, 409]
-      : isDoorLift3Fixed
-        ? [360, 227, 227]
-        : isTopDown2Fixed
-          ? [353, 354]
-          : isTopDown3Fixed
-            ? [185, 240, 240]
-            : drawerHeights.map(h => (h / totalDrawerH) * totalMaidaMm);
+    // 사용자가 가구 편집 팝업에서 지정한 customMaidaHeights 우선 사용
+    const cmhValid = customMaidaHeights
+      && customMaidaHeights.length === drawerHeights.length
+      && customMaidaHeights.every(v => typeof v === 'number' && v > 0);
+    const baseMaidaHeightsMm = cmhValid
+      ? [...customMaidaHeights!]
+      : (isDoorLift2Fixed
+        ? [408, 409]
+        : isDoorLift3Fixed
+          ? [360, 227, 227]
+          : isTopDown2Fixed
+            ? [353, 354]
+            : isTopDown3Fixed
+              ? [185, 240, 240]
+              : drawerHeights.map(h => (h / totalDrawerH) * totalMaidaMm));
     const maidaHeightsMm = [...baseMaidaHeightsMm];
     if (maidaHeightsMm.length > 0) {
       maidaHeightsMm[0] = Math.max(0, maidaHeightsMm[0] + gapBottomExt);
@@ -456,7 +463,8 @@ const computeLowerCabinetMaidaHeights = (
       maidaHeightsMm[topIndex] = Math.max(0, maidaHeightsMm[topIndex] + gapTopExt);
     }
     // 도어올림 터치 2A/2B + 상판내림 터치 2단: 1단·2단 마이다 균등 분배 (정수, 도어 갭 3 + 상단 20 + 하단 5 유지)
-    if ((isDoorLift2Fixed || isTopDown2Fixed) && maidaHeightsMm.length === 2) {
+    //   ※ customMaidaHeights 있으면 사용자 입력값 보존 → 스킵
+    if (!cmhValid && (isDoorLift2Fixed || isTopDown2Fixed) && maidaHeightsMm.length === 2) {
       const total = Math.max(0, totalFrontMm - gapMm);
       const evenH = Math.floor(total / 2);
       maidaHeightsMm[0] = evenH;
@@ -2259,7 +2267,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                 ? modDefaultTopGap
                 : (mod.doorTopGap ?? modDefaultTopGap);
               const effectiveBotGap = mod.doorBottomGap ?? 5;
-              const lowerMaidas = computeLowerCabinetMaidaHeights(mod.moduleId, modHeightMm, effectiveTopGap, effectiveBotGap, getStoneTopThicknessMm(mod));
+              const lowerMaidas = computeLowerCabinetMaidaHeights(mod.moduleId, modHeightMm, effectiveTopGap, effectiveBotGap, getStoneTopThicknessMm(mod), (mod as any).customMaidaHeights);
               if (lowerMaidas && lowerMaidas.length > 0) {
                 const cabinetBottomY = furnitureBaseY;
 
@@ -3301,7 +3309,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                 ? modDefaultTopGap_r
                 : (mod.doorTopGap ?? modDefaultTopGap_r);
               const effectiveBotGap_r = mod.doorBottomGap ?? 5;
-              const lowerMaidas = computeLowerCabinetMaidaHeights(mod.moduleId, modHeightMm, effectiveTopGap_r, effectiveBotGap_r, getStoneTopThicknessMm(mod));
+              const lowerMaidas = computeLowerCabinetMaidaHeights(mod.moduleId, modHeightMm, effectiveTopGap_r, effectiveBotGap_r, getStoneTopThicknessMm(mod), (mod as any).customMaidaHeights);
               if (lowerMaidas && lowerMaidas.length > 0) {
                 const cabinetBottomY_r = furnitureBaseY;
 

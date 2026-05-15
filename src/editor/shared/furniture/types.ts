@@ -129,6 +129,9 @@ export interface PlacedModule {
   adjustedPosition?: { x: number; y: number; z: number }; // 기둥 침범으로 조정된 위치
   hingePosition?: 'left' | 'right'; // 힌지 위치 (기본값: 'right')
   hingeType?: 'A' | 'B'; // 경첩 타입 (A: 45mm, B: 48mm, 기본값: 'A')
+  hingePositionsMm?: number[]; // 도어 하단 기준 경첩컵 중심 Y 위치(mm)
+  upperDoorHingePositionsMm?: number[]; // 도어분절 상부 도어 하단 기준 경첩컵 중심 Y 위치(mm)
+  lowerDoorHingePositionsMm?: number[]; // 도어분절 하부 도어 하단 기준 경첩컵 중심 Y 위치(mm)
   isSplit?: boolean; // 기둥 C 분할 배치 여부
   
   // 자유배치 모드 속성
@@ -230,6 +233,12 @@ export interface PlacedModule {
   // 패널 옵티마이저 제외 목록 (체크 해제된 패널 이름 배열)
   // 비어있거나 undefined면 전체 포함 (기본 동작)
   panelExclusions?: string[];
+
+  // 레그라박스 마이다 개별 사이즈 (mm) — 사용자가 가구 편집 팝업에서 직접 지정
+  // 인덱스: di=0(아래) → di=N(위) 순서. undefined면 모듈 기본값(fixed) 사용.
+  // 적용 대상: 인덕션장, 도어올림 터치(2A/2B/3), 상판내림 터치(2/3)
+  // 마이다 합이 가구 영역(totalFrontMm)을 초과하면 UI에서 경고하고 저장 안 함.
+  customMaidaHeights?: number[];
 
   // 도어 셋팅 (자유배치 모드)
   doorSettingMode?: 'auto' | 'manual'; // 자동/수동 모드 (기본값: 'auto')
