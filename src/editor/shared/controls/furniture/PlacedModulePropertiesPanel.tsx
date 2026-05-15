@@ -5670,7 +5670,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                               if (v === '' || v === '-' || /^-?\d+$/.test(v)) {
                                 setEpInputs(s => ({ ...s, leftFront: v }));
                                 if (v !== '' && v !== '-') {
-                                  const num = Math.max(-200, Math.min(200, parseInt(v, 10)));
+                                  const num = Math.max(-580, Math.min(200, parseInt(v, 10)));
                                   updatePlacedModule(currentPlacedModule.id, { leftEndPanelOffset: num });
                                 }
                               }
@@ -5686,7 +5686,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                               if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
                                 e.preventDefault();
                                 const cur = currentPlacedModule.leftEndPanelOffset ?? 0;
-                                const next = Math.max(-200, Math.min(200, cur + (e.key === 'ArrowUp' ? 1 : -1)));
+                                const next = Math.max(-580, Math.min(200, cur + (e.key === 'ArrowUp' ? 1 : -1)));
                                 updatePlacedModule(currentPlacedModule.id, { leftEndPanelOffset: next });
                                 setEpInputs(s => ({ ...s, leftFront: undefined }));
                               }
@@ -5708,7 +5708,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                               if (v === '' || v === '-' || /^-?\d+$/.test(v)) {
                                 setEpInputs(s => ({ ...s, leftBack: v }));
                                 if (v !== '' && v !== '-') {
-                                  const num = Math.max(-200, Math.min(200, parseInt(v, 10)));
+                                  const num = Math.max(-580, Math.min(200, parseInt(v, 10)));
                                   updatePlacedModule(currentPlacedModule.id, { leftEndPanelBackOffset: num });
                                 }
                               }
@@ -5724,7 +5724,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                               if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
                                 e.preventDefault();
                                 const cur = currentPlacedModule.leftEndPanelBackOffset ?? 0;
-                                const next = Math.max(-200, Math.min(200, cur + (e.key === 'ArrowUp' ? 1 : -1)));
+                                const next = Math.max(-580, Math.min(200, cur + (e.key === 'ArrowUp' ? 1 : -1)));
                                 updatePlacedModule(currentPlacedModule.id, { leftEndPanelBackOffset: next });
                                 setEpInputs(s => ({ ...s, leftBack: undefined }));
                               }
@@ -5751,7 +5751,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                               if (v === '' || v === '-' || /^-?\d+$/.test(v)) {
                                 setEpInputs(s => ({ ...s, rightFront: v }));
                                 if (v !== '' && v !== '-') {
-                                  const num = Math.max(-200, Math.min(200, parseInt(v, 10)));
+                                  const num = Math.max(-580, Math.min(200, parseInt(v, 10)));
                                   updatePlacedModule(currentPlacedModule.id, { rightEndPanelOffset: num });
                                 }
                               }
@@ -5767,7 +5767,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                               if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
                                 e.preventDefault();
                                 const cur = currentPlacedModule.rightEndPanelOffset ?? 0;
-                                const next = Math.max(-200, Math.min(200, cur + (e.key === 'ArrowUp' ? 1 : -1)));
+                                const next = Math.max(-580, Math.min(200, cur + (e.key === 'ArrowUp' ? 1 : -1)));
                                 updatePlacedModule(currentPlacedModule.id, { rightEndPanelOffset: next });
                                 setEpInputs(s => ({ ...s, rightFront: undefined }));
                               }
@@ -5789,7 +5789,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                               if (v === '' || v === '-' || /^-?\d+$/.test(v)) {
                                 setEpInputs(s => ({ ...s, rightBack: v }));
                                 if (v !== '' && v !== '-') {
-                                  const num = Math.max(-200, Math.min(200, parseInt(v, 10)));
+                                  const num = Math.max(-580, Math.min(200, parseInt(v, 10)));
                                   updatePlacedModule(currentPlacedModule.id, { rightEndPanelBackOffset: num });
                                 }
                               }
@@ -5805,7 +5805,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                               if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
                                 e.preventDefault();
                                 const cur = currentPlacedModule.rightEndPanelBackOffset ?? 0;
-                                const next = Math.max(-200, Math.min(200, cur + (e.key === 'ArrowUp' ? 1 : -1)));
+                                const next = Math.max(-580, Math.min(200, cur + (e.key === 'ArrowUp' ? 1 : -1)));
                                 updatePlacedModule(currentPlacedModule.id, { rightEndPanelBackOffset: next });
                                 setEpInputs(s => ({ ...s, rightBack: undefined }));
                               }
@@ -5832,7 +5832,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                               if (v === '' || v === '-' || /^-?\d+$/.test(v)) {
                                 setEpInputs(s => ({ ...s, bottomFront: v } as any));
                                 if (v !== '' && v !== '-') {
-                                  const num = Math.max(-200, Math.min(200, parseInt(v, 10)));
+                                  const num = Math.max(-580, Math.min(200, parseInt(v, 10)));
                                   updatePlacedModule(currentPlacedModule.id, { bottomEndPanelOffset: num } as any);
                                 }
                               }
@@ -5848,7 +5848,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                               if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
                                 e.preventDefault();
                                 const cur = (currentPlacedModule as any).bottomEndPanelOffset ?? 0;
-                                const next = Math.max(-200, Math.min(200, cur + (e.key === 'ArrowUp' ? 1 : -1)));
+                                const next = Math.max(-580, Math.min(200, cur + (e.key === 'ArrowUp' ? 1 : -1)));
                                 updatePlacedModule(currentPlacedModule.id, { bottomEndPanelOffset: next } as any);
                                 setEpInputs(s => ({ ...s, bottomFront: undefined } as any));
                               }
@@ -5870,7 +5870,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                               if (v === '' || v === '-' || /^-?\d+$/.test(v)) {
                                 setEpInputs(s => ({ ...s, bottomBack: v } as any));
                                 if (v !== '' && v !== '-') {
-                                  const num = Math.max(-200, Math.min(200, parseInt(v, 10)));
+                                  const num = Math.max(-580, Math.min(200, parseInt(v, 10)));
                                   updatePlacedModule(currentPlacedModule.id, { bottomEndPanelBackOffset: num } as any);
                                 }
                               }
@@ -5886,7 +5886,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                               if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
                                 e.preventDefault();
                                 const cur = (currentPlacedModule as any).bottomEndPanelBackOffset ?? 35;
-                                const next = Math.max(-200, Math.min(200, cur + (e.key === 'ArrowUp' ? 1 : -1)));
+                                const next = Math.max(-580, Math.min(200, cur + (e.key === 'ArrowUp' ? 1 : -1)));
                                 updatePlacedModule(currentPlacedModule.id, { bottomEndPanelBackOffset: next } as any);
                                 setEpInputs(s => ({ ...s, bottomBack: undefined } as any));
                               }
