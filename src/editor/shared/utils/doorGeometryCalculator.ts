@@ -74,6 +74,11 @@ export interface DoorOpenGeometry {
   childPosition: [number, number, number]
 }
 
+export interface DoorWidthAdjustmentSides {
+  leftMm: number
+  rightMm: number
+}
+
 const DEFAULT_PANEL_THICKNESS_MM = 18
 const DEFAULT_UNIT_SCALE = 0.01
 const DEFAULT_DOOR_GAP_MM = 3
@@ -229,6 +234,17 @@ export const calculateDoorOpenInsetUnits = (
     hingeOffsetUnits,
     openInsetAdjustUnits: hingeOffsetUnits / 2
   }
+}
+
+export const resolveHingeOppositeDoorWidthAdjustment = (
+  adjustmentMm: number,
+  hingeSide: DoorHingeSide
+): DoorWidthAdjustmentSides => {
+  if (hingeSide === 'right') {
+    return { leftMm: adjustmentMm, rightMm: 0 }
+  }
+
+  return { leftMm: 0, rightMm: adjustmentMm }
 }
 
 export const calculateSingleDoorOpenGeometry = (

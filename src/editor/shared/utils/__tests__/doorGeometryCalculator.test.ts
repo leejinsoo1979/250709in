@@ -6,7 +6,8 @@ import {
   calculateSingleDoorOpenGeometry,
   mmToDoorGeometryUnits,
   resolveDoorLeafDimensions,
-  resolveDoorVerticalGeometry
+  resolveDoorVerticalGeometry,
+  resolveHingeOppositeDoorWidthAdjustment
 } from '../doorGeometryCalculator'
 
 describe('doorGeometryCalculator', () => {
@@ -198,6 +199,25 @@ describe('doorGeometryCalculator', () => {
     expect(rightOpenCenter[2]).toBeCloseTo(expectedOpenCenterZ, 8)
     expect(leftOpenCenter[1]).toBe(doorYPosition)
     expect(rightOpenCenter[1]).toBe(doorYPosition)
+  })
+
+  it('수동 도어 폭 조정은 경첩 반대 방향으로 분배한다', () => {
+    expect(resolveHingeOppositeDoorWidthAdjustment(30, 'right')).toEqual({
+      leftMm: 30,
+      rightMm: 0
+    })
+    expect(resolveHingeOppositeDoorWidthAdjustment(-20, 'right')).toEqual({
+      leftMm: -20,
+      rightMm: 0
+    })
+    expect(resolveHingeOppositeDoorWidthAdjustment(30, 'left')).toEqual({
+      leftMm: 0,
+      rightMm: 30
+    })
+    expect(resolveHingeOppositeDoorWidthAdjustment(-20, 'left')).toEqual({
+      leftMm: 0,
+      rightMm: -20
+    })
   })
 
   it('상부장 도어 패널 높이는 패널리스트 기존 기준값을 유지한다', () => {

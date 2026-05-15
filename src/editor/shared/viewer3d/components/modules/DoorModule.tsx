@@ -18,7 +18,7 @@ import { Hinge } from '../Hinge';
 import DimensionText from './components/DimensionText';
 import { useDimensionColor } from './hooks/useDimensionColor';
 import { isPanelKeyExcluded, useExcludedPanelsStore } from '../../context/ExcludedPanelsContext';
-import { calculateDualDoorOpenGeometry, calculateSingleDoorOpenGeometry } from '@/editor/shared/utils/doorGeometryCalculator';
+import { calculateDualDoorOpenGeometry, calculateSingleDoorOpenGeometry, resolveHingeOppositeDoorWidthAdjustment } from '@/editor/shared/utils/doorGeometryCalculator';
 import { resolveDoorHeightDimensionSides, shouldRenderDoorDimensionGuides } from '@/editor/shared/utils/doorDimensionGuides';
 
 const MIN_DOOR_BOX_GEOMETRY_SIZE = 0.001;
@@ -1288,10 +1288,13 @@ const DoorModule: React.FC<DoorModuleProps> = ({
       rightDoorWidth = halfWidth - doorGap;
     }
 
-    // EP ㄷ자 프레임 잠금 로직 제거: ㄷ자 EP는 X 방향 안쪽 확장이라 도어 회전을 방해하지 않음.
-    // 사용자가 EP 두께를 늘려도 도어가 정상 작동해야 함.
-    const leftDoorLocked = false;
-    const rightDoorLocked = false;
+    // EP ㄷ자 프레임 잠금: 힌지가 EP 쪽이면 도어 회전 시 ㄷ자 EP에 부딪힘 → 잠금.
+    // 힌지가 반대쪽이면 도어가 EP 반대 방향으로 열리므로 충돌 없음 → 통과.
+    // 듀얼 도어는 좌측 도어는 좌측 EP·왼손 힌지, 우측 도어는 우측 EP·오른손 힌지 조합에서만 잠금.
+    const epIsCFrame = !!(storePlacedModule && (storePlacedModule.endPanelThickness || 18) > 20);
+    // 듀얼 도어는 보통 좌측 도어 힌지=left, 우측 도어 힌지=right (외측 힌지)
+    const leftDoorLocked = !!(epIsCFrame && storePlacedModule?.hasLeftEndPanel);
+    const rightDoorLocked = !!(epIsCFrame && storePlacedModule?.hasRightEndPanel);
 
     // EP 앞으로 돌출 시 도어 너비 축소: 깊이 확장 front 또는 옵셋 양수(앞 확장)
     let leftEpTrimShift = 0;
@@ -2278,10 +2281,13 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     const doorGap = 3;
     let doorWidth = actualDoorWidth - doorGap; // 슬롯사이즈 - 갭
 
-    // EP ㄷ자 프레임 잠금: 싱글 도어는 어느 쪽이든 EP > 18mm이면 전체 잠금
-    const singleDoorLocked = !!(storePlacedModule && (
-      (storePlacedModule.hasLeftEndPanel && (storePlacedModule.endPanelThickness || 18) > 20)
-      || (storePlacedModule.hasRightEndPanel && (storePlacedModule.endPanelThickness || 18) > 20)
+    // EP ㄷ자 프레임 잠금: 힌지가 EP 쪽이면 도어 회전 시 ㄷ자 EP에 부딪힘 → 잠금
+    // 힌지가 반대쪽이면 도어가 EP 반대 방향으로 열리므로 충돌 없음 → 통과
+    const singleEpIsCFrame = !!(storePlacedModule && (storePlacedModule.endPanelThickness || 18) > 20);
+    const singleHinge = (storePlacedModule?.hingePosition ?? hingePosition ?? 'right') as 'left' | 'right';
+    const singleDoorLocked = !!(singleEpIsCFrame && (
+      (storePlacedModule?.hasLeftEndPanel && singleHinge === 'left')
+      || (storePlacedModule?.hasRightEndPanel && singleHinge === 'right')
     ));
 
     // EP 앞으로 돌출 시 도어 너비 축소: 깊이 확장 front 또는 옵셋 양수(앞 확장)
@@ -2323,7 +2329,9 @@ const DoorModule: React.FC<DoorModuleProps> = ({
       } else if (autoRightMm > 0) {
         insertExtendRight = total;
       } else {
-        insertExtendRight = total;
+        const manualAdjustment = resolveHingeOppositeDoorWidthAdjustment(total, adjustedHingePosition);
+        insertExtendLeft = manualAdjustment.leftMm;
+        insertExtendRight = manualAdjustment.rightMm;
       }
       doorWidth += insertExtendLeft + insertExtendRight;
     }
