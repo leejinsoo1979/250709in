@@ -220,6 +220,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   const isSide2DView = viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right');
   const isHingePositionEditMode = !!furnitureId && hingePositionEditModeModuleId === furnitureId;
   const [hingeGapDrafts, setHingeGapDrafts] = useState<Record<string, string>>({});
+  const [hingeGapEditBases, setHingeGapEditBases] = useState<Record<string, { topDistancesMm: number[]; doorHeightMm: number }>>({});
 
   // doorsOpen: true=전체열기, false=전체닫기, null=개별상태 사용
   const useIndividualState = furnitureId !== undefined;
@@ -1065,29 +1066,42 @@ const DoorModule: React.FC<DoorModuleProps> = ({
       delete next[draftKey];
       return next;
     });
+    setHingeGapEditBases((prev) => {
+      if (!(draftKey in prev)) return prev;
+      const next = { ...prev };
+      delete next[draftKey];
+      return next;
+    });
   };
 
   const updateHingeGapSegment = (
     segmentIndex: number,
     requestedGapMm: number,
-    positionsMm: number[]
+    positionsMm: number[],
+    editBasis?: { topDistancesMm: number[]; doorHeightMm: number }
   ) => {
     if (!furnitureId) return;
 
-    const doorHeightMm = Math.max(1, Math.round(actualDoorHeight));
-    const topDistancesMm = normalizeDoorHingePositionsMm(positionsMm, doorHeightMm)
+    const doorHeightMm = Math.max(1, Math.round(editBasis?.doorHeightMm ?? actualDoorHeight));
+    const topDistancesMm = editBasis?.topDistancesMm ?? normalizeDoorHingePositionsMm(positionsMm, doorHeightMm)
       .map(positionMm => Math.max(1, Math.min(doorHeightMm - 1, Math.round(doorHeightMm - positionMm))))
       .sort((a, b) => a - b);
     if (topDistancesMm.length === 0) return;
 
     const boundariesMm = [0, ...topDistancesMm, doorHeightMm];
-    const isLastSegment = segmentIndex === boundariesMm.length - 2;
-    const targetBoundaryIndex = isLastSegment ? boundariesMm.length - 2 : segmentIndex + 1;
+    const lastSegmentIndex = boundariesMm.length - 2;
+    const targetBoundaryIndex = segmentIndex === 0
+      ? 1
+      : segmentIndex === lastSegmentIndex
+        ? boundariesMm.length - 2
+        : segmentIndex;
     const previousBoundary = boundariesMm[targetBoundaryIndex - 1] ?? 0;
     const nextBoundary = boundariesMm[targetBoundaryIndex + 1] ?? doorHeightMm;
-    const requestedBoundary = isLastSegment
-      ? doorHeightMm - requestedGapMm
-      : previousBoundary + requestedGapMm;
+    const requestedBoundary = segmentIndex === 0
+      ? requestedGapMm
+      : segmentIndex === lastSegmentIndex
+        ? doorHeightMm - requestedGapMm
+        : boundariesMm[segmentIndex + 1] - requestedGapMm;
     const nextBoundaryValue = Math.max(
       previousBoundary + 1,
       Math.min(nextBoundary - 1, Math.round(requestedBoundary))
@@ -1217,7 +1231,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                       }
                       const nextValue = Math.max(1, Math.min(Math.round(actualDoorHeight) - 1, parseInt(value, 10)));
                       setHingeGapDrafts(prev => ({ ...prev, [draftKey]: String(nextValue) }));
-                      updateHingeGapSegment(index, nextValue, positionsMm);
+                      updateHingeGapSegment(index, nextValue, positionsMm, hingeGapEditBases[draftKey]);
                     }}
                     onKeyDownCapture={(event) => {
                       event.stopPropagation();
@@ -1241,10 +1255,22 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                       const delta = event.key === 'ArrowUp' ? step : -step;
                       const nextValue = Math.max(1, Math.min(Math.round(actualDoorHeight) - 1, (Number.isFinite(parsed) ? parsed : segmentMm) + delta));
                       setHingeGapDrafts(prev => ({ ...prev, [draftKey]: String(nextValue) }));
-                      updateHingeGapSegment(index, nextValue, positionsMm);
+                      updateHingeGapSegment(index, nextValue, positionsMm, hingeGapEditBases[draftKey]);
                     }}
                     onBlur={() => clearHingeGapDraft(draftKey)}
-                    onFocus={(event) => event.currentTarget.select()}
+                    onFocus={(event) => {
+                      const doorHeightMm = Math.max(1, Math.round(actualDoorHeight));
+                      setHingeGapEditBases(prev => ({
+                        ...prev,
+                        [draftKey]: {
+                          topDistancesMm: normalizeDoorHingePositionsMm(positionsMm, doorHeightMm)
+                            .map(positionMm => Math.max(1, Math.min(doorHeightMm - 1, Math.round(doorHeightMm - positionMm))))
+                            .sort((a, b) => a - b),
+                          doorHeightMm
+                        }
+                      }));
+                      event.currentTarget.select();
+                    }}
                     style={{
                       width: '70px',
                       height: '24px',

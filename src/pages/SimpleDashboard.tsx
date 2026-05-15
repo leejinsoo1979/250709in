@@ -183,6 +183,17 @@ const SimpleDashboard: React.FC = () => {
     };
   }, [contextMenu, blankContextMenu]);
 
+  // 대시보드 영역에서 브라우저 기본 컨텍스트 메뉴 항상 차단 (윈도우/맥 공통)
+  // React onContextMenu만으로는 일부 환경에서 native 메뉴가 먼저 뜨는 경우가 있어 native 리스너로 보강
+  const dashboardRootRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const el = dashboardRootRef.current;
+    if (!el) return;
+    const block = (e: Event) => e.preventDefault();
+    el.addEventListener('contextmenu', block);
+    return () => el.removeEventListener('contextmenu', block);
+  }, []);
+
   // --- 초기화 효과 ---
 
   // 로그인하지 않은 사용자 리다이렉트
@@ -316,6 +327,7 @@ const SimpleDashboard: React.FC = () => {
 
   const handleCreateFolderSubmit = useCallback(async () => {
     if (!newFolderName.trim() || !nav.currentProjectId) return;
+    if (isCreatingFolder) return; // 중복 호출 방지 (Enter+클릭, 더블클릭 등)
 
     setIsCreatingFolder(true);
     try {
@@ -720,7 +732,15 @@ const SimpleDashboard: React.FC = () => {
 
   // --- 렌더 ---
   return (
-    <div className={styles.explorerLayout}>
+    <div
+      ref={dashboardRootRef}
+      className={styles.explorerLayout}
+      onContextMenu={(e) => {
+        // 대시보드 영역에서 윈도우/브라우저 기본 컨텍스트 메뉴 차단
+        // (입력 모달은 portal/별도 레이어이므로 영향 없음)
+        e.preventDefault();
+      }}
+    >
       <DashboardHeader
         onLogoClick={() => nav.navigateToRoot()}
         onProfileClick={() => setIsProfilePopupOpen(true)}

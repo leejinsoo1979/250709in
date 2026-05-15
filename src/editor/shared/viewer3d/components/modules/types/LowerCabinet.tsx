@@ -752,16 +752,13 @@ const TouchDrawerAnimated: React.FC<TouchDrawerAnimatedProps> = ({
           : isTopDown3Fixed
             ? [185, 240, 240]
             : drawerHeights.map(h => (h / totalDrawerH) * totalMaidaMm));
+  // 마이다 영역은 도어갭과 분리. 도어갭은 도어 위치만 결정.
+  const maidaTotalFrontMm = moduleHeightMm + defaultTopExtMm + defaultBottomExtMm;
   const maidaHeightsMm = [...baseMaidaHeightsMm];
-  if (maidaHeightsMm.length > 0) {
-    maidaHeightsMm[0] = Math.max(0, maidaHeightsMm[0] + gapBottomExt);
-    const topIndex = maidaHeightsMm.length - 1;
-    maidaHeightsMm[topIndex] = Math.max(0, maidaHeightsMm[topIndex] + gapTopExt);
-  }
   // 도어올림 터치 2A/2B + 상판내림 터치 2단: 1단·2단 마이다 정수 균등 분배
   //   ※ customMaidaHeights 있으면 사용자 입력값 보존 → 스킵
   if (!customMaidaValid && (isDoorLift2Fixed || isTopDown2Fixed) && maidaHeightsMm.length === 2) {
-    const total = Math.max(0, totalFrontMm - gapMm);
+    const total = Math.max(0, maidaTotalFrontMm - gapMm);
     const evenH = Math.floor(total / 2);
     maidaHeightsMm[0] = evenH;
     maidaHeightsMm[1] = evenH;
@@ -772,7 +769,7 @@ const TouchDrawerAnimated: React.FC<TouchDrawerAnimatedProps> = ({
     const upperMaidasSum = maidaHeightsMm.slice(1).reduce((a, b) => a + b, 0);
     const upperGapsCount = maidaHeightsMm.length - 1;
     const upperBundle = upperMaidasSum + upperGapsCount * gapMm;
-    maidaHeightsMm[0] = Math.max(0, totalFrontMm - upperBundle);
+    maidaHeightsMm[0] = Math.max(0, maidaTotalFrontMm - upperBundle);
   }
 
   // 상판내림 터치: 마이다 묶음을 캐비넷 '상단'에서 채워 내려옴
@@ -782,10 +779,9 @@ const TouchDrawerAnimated: React.FC<TouchDrawerAnimatedProps> = ({
   // 그 외(터치 아닌 경우)는 기존대로 바닥에서 위로 누적
   let maidas: { height: number; centerY: number; tier: number; bottomMm: number }[];
   if ((isTopDownTouch || isDoorLift2Fixed) && maidaHeightsMm.length >= 2) {
-    // 마이다 최상단(맨 위 마이다 끝점) = totalFrontMm - bottomExtMm 위치 (= H + topExt)
-    // 위에서 아래로 채우기
+    // 마이다 영역은 도어갭과 무관. 항상 default 위치 사용.
     const lastIdx = maidaHeightsMm.length - 1;
-    const topPositionMm = -bottomExtMm + totalFrontMm; // 캐비넷 바닥 기준 마이다 묶음 끝
+    const topPositionMm = -defaultBottomExtMm + maidaTotalFrontMm;
     let cursorTop = topPositionMm;
     const result: { height: number; centerY: number; tier: number; bottomMm: number }[] = new Array(maidaHeightsMm.length);
     // 맨 위(lastIdx)부터 아래(1)까지 위치 고정
@@ -798,12 +794,13 @@ const TouchDrawerAnimated: React.FC<TouchDrawerAnimatedProps> = ({
         tier: i + 1,
         bottomMm
       };
-      cursorTop = bottomMm - gapMm; // 아래 마이다 위쪽 = 이 마이다 하단 - 갭
+      cursorTop = bottomMm - gapMm;
     }
-    // 맨 아래(0): customMaidaValid면 사용자 입력값 그대로, 아니면 cursorTop까지 흡수
+    // 맨 아래(0): 1·2단 마이다 묶음은 위에 고정(default 위치).
+    // 3단(아래) 하단만 도어 하단갭 반영 → 갭 늘면 3단만 가구 바닥 아래로 확장.
     if (customMaidaValid) {
       const h0 = maidaHeightsMm[0];
-      const bottomStart = cursorTop - h0; // 위에서 h0만큼 아래로 배치
+      const bottomStart = cursorTop - h0;
       result[0] = {
         height: h0,
         centerY: cabinetBottomY + mmToThreeUnits(bottomStart + h0 / 2),
@@ -811,18 +808,18 @@ const TouchDrawerAnimated: React.FC<TouchDrawerAnimatedProps> = ({
         bottomMm: bottomStart
       };
     } else {
-      const bottomStart = -bottomExtMm;
+      const bottomStart = -bottomExtMm; // 도어 하단갭 반영
       result[0] = {
         height: Math.max(0, cursorTop - bottomStart),
         centerY: cabinetBottomY + mmToThreeUnits((bottomStart + cursorTop) / 2),
         tier: 1,
         bottomMm: bottomStart
       };
-      maidaHeightsMm[0] = result[0].height; // 흡수된 새 높이 동기화
+      maidaHeightsMm[0] = result[0].height;
     }
     maidas = result;
   } else {
-    let currentBottomMm = -bottomExtMm;
+    let currentBottomMm = -defaultBottomExtMm;
     maidas = maidaHeightsMm.map((h, idx) => {
       const bottomMm = currentBottomMm;
       const centerY = cabinetBottomY + mmToThreeUnits(currentBottomMm + h / 2);

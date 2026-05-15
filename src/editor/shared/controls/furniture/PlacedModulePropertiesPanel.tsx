@@ -916,6 +916,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
   const [hingeType, setHingeType] = useState<'A' | 'B'>('A');
   const [hingePositionDrafts, setHingePositionDrafts] = useState<Record<string, string>>({});
   const [hingeGapDrafts, setHingeGapDrafts] = useState<Record<string, string>>({});
+  const [hingeGapEditBases, setHingeGapEditBases] = useState<Record<string, { topDistancesMm: number[]; doorHeightMm: number }>>({});
   const [hasDoor, setHasDoor] = useState<boolean>(false);
   const [doorSplit, setDoorSplit] = useState<boolean>(false);
   const [hasGapBackPanel, setHasGapBackPanel] = useState<boolean>(false); // 상하부장 사이 갭 백패널 상태
@@ -2775,6 +2776,12 @@ const PlacedModulePropertiesPanel: React.FC = () => {
       delete next[draftKey];
       return next;
     });
+    setHingeGapEditBases((prev) => {
+      if (!(draftKey in prev)) return prev;
+      const next = { ...prev };
+      delete next[draftKey];
+      return next;
+    });
   };
 
   const getHingeTopDistancesMm = (positions: number[], doorHeightMm: number) =>
@@ -2807,20 +2814,27 @@ const PlacedModulePropertiesPanel: React.FC = () => {
     currentPositions: number[],
     doorHeightMm: number,
     segmentIndex: number,
-    valueMm: number
+    valueMm: number,
+    editBasis?: { topDistancesMm: number[]; doorHeightMm: number }
   ) => {
-    const topDistances = getHingeTopDistancesMm(currentPositions, doorHeightMm);
+    const topDistances = editBasis?.topDistancesMm ?? getHingeTopDistancesMm(currentPositions, doorHeightMm);
     if (topDistances.length === 0) return;
 
-    const doorHeight = Math.round(doorHeightMm);
+    const doorHeight = Math.round(editBasis?.doorHeightMm ?? doorHeightMm);
     const boundaries = [0, ...topDistances, doorHeight];
-    const isLastSegment = segmentIndex === boundaries.length - 2;
-    const targetBoundaryIndex = isLastSegment ? boundaries.length - 2 : segmentIndex + 1;
+    const lastSegmentIndex = boundaries.length - 2;
+    const targetBoundaryIndex = segmentIndex === 0
+      ? 1
+      : segmentIndex === lastSegmentIndex
+        ? boundaries.length - 2
+        : segmentIndex;
     const previousBoundary = boundaries[targetBoundaryIndex - 1] ?? 0;
     const nextBoundary = boundaries[targetBoundaryIndex + 1] ?? doorHeight;
-    const requestedBoundary = isLastSegment
-      ? doorHeight - valueMm
-      : previousBoundary + valueMm;
+    const requestedBoundary = segmentIndex === 0
+      ? valueMm
+      : segmentIndex === lastSegmentIndex
+        ? doorHeight - valueMm
+        : boundaries[segmentIndex + 1] - valueMm;
     const clampedBoundary = Math.max(
       previousBoundary + 1,
       Math.min(nextBoundary - 1, Math.round(requestedBoundary))
@@ -2882,7 +2896,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
       return;
     }
     const gapMm = clampHingePositionMm(parseInt(value, 10), doorHeightMm);
-    applyHingeGapSegmentChange(field, currentPositions, doorHeightMm, segmentIndex, gapMm);
+    applyHingeGapSegmentChange(field, currentPositions, doorHeightMm, segmentIndex, gapMm, hingeGapEditBases[draftKey]);
   };
 
   const handleHingeGapKeyDown = (
@@ -2917,7 +2931,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
     const delta = event.key === 'ArrowUp' ? step : -step;
     const nextGap = clampHingePositionMm((Number.isFinite(parsed) ? parsed : fallback) + delta, doorHeightMm);
     setHingeGapDrafts((prev) => ({ ...prev, [draftKey]: String(nextGap) }));
-    applyHingeGapSegmentChange(field, currentPositions, doorHeightMm, segmentIndex, nextGap);
+    applyHingeGapSegmentChange(field, currentPositions, doorHeightMm, segmentIndex, nextGap, hingeGapEditBases[draftKey]);
   };
 
   const handleHingePositionKeyDown = (
@@ -4551,7 +4565,16 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                                   onChange={(e) => handleHingeGapValueChange(group.field, segmentIndex, e.target.value, positions, group.doorHeightMm, draftKey)}
                                   onKeyDownCapture={(e) => handleHingeGapKeyDown(e, group.field, segmentIndex, inputValue, positions, group.doorHeightMm, draftKey)}
                                   onBlur={() => clearHingeGapDraft(draftKey)}
-                                  onFocus={(e) => e.currentTarget.select()}
+                                  onFocus={(e) => {
+                                    setHingeGapEditBases((prev) => ({
+                                      ...prev,
+                                      [draftKey]: {
+                                        topDistancesMm: getHingeTopDistancesMm(positions, group.doorHeightMm),
+                                        doorHeightMm: group.doorHeightMm
+                                      }
+                                    }));
+                                    e.currentTarget.select();
+                                  }}
                                   className={styles.depthInput}
                                   style={{ textAlign: 'center', fontSize: '13px', height: '28px', opacity: isHingePositionEditMode ? 1 : 0.55, cursor: isHingePositionEditMode ? 'text' : 'not-allowed' }}
                                 />
@@ -4606,19 +4629,41 @@ const PlacedModulePropertiesPanel: React.FC = () => {
               : (isDoorLiftTouch2A || isDoorLiftTouch2B || isTopDownTouch2) ? 2
               : 3;
 
-            // 모듈 기본 마이다 값 (placeholder 표시용) — LowerCabinet.tsx의 baseMaidaHeightsMm와 동일
-            const defaultMaida: number[] = isDoorLiftTouch2A ? [408, 409]
-              : isDoorLiftTouch2B ? [408, 409]
-              : isDoorLiftTouch3 ? [360, 227, 227]
-              : isTopDownTouch2 ? [353, 354]
-              : isTopDownTouch3 ? [185, 240, 240]
-              : isInduction ? [0] // 인덕션은 패널 산식 따라
-              : [];
-
-            const current = (currentPlacedModule.customMaidaHeights ?? []) as number[];
-            // 가구 영역 한계 (대략적인 클램프) — LowerCabinet과 동일 산식 필요시 정밀화. 일단 가구 높이 - 100 정도로.
+            // 실제 렌더링 마이다 값 계산 (LowerCabinet과 동일 공식)
             const moduleH = currentPlacedModule.freeHeight ?? (moduleData?.dimensions?.height ?? 780);
-            const totalLimit = moduleH + 100; // 대략. 정확한 값은 사용자 입력 검증 시점에 재계산.
+            const stoneThk = (currentPlacedModule as any).stoneTopThickness ?? 20;
+            const isTopDownAny = isTopDownTouch2 || isTopDownTouch3;
+            const tdStretcherH = stoneThk === 10 ? 65 : stoneThk === 30 ? 45 : 55;
+            const defTopExt = isTopDownAny ? -(tdStretcherH + 25) : 30;
+            const defBottomExt = 5;
+            const topExt = isTopDownAny ? defTopExt : ((currentPlacedModule as any).doorTopGap ?? defTopExt);
+            const bottomExt = (currentPlacedModule as any).doorBottomGap ?? defBottomExt;
+            // 마이다 영역(default 기준) — 1·2단 위치 고정
+            const maidaTotalFront = moduleH + topExt + defBottomExt;
+            // 3단(맨 아래)은 도어 하단갭 늘면 추가 확장
+            const bottomGapExt = bottomExt - defBottomExt;
+            const gapM = 3;
+            const current = (currentPlacedModule.customMaidaHeights ?? []) as number[];
+            // 디폴트 마이다 값 (위→아래 순서가 아니라 di=0(아래)→di=N(위) 순서)
+            const defaultMaida: number[] = (() => {
+              if (isInduction) return [Math.max(0, Math.round(maidaTotalFront))];
+              if (isDoorLiftTouch2A || isDoorLiftTouch2B || isTopDownTouch2) {
+                const evenH = Math.floor(Math.max(0, maidaTotalFront - gapM) / 2);
+                return [evenH + bottomGapExt, evenH]; // [아래, 위]
+              }
+              if (isDoorLiftTouch3) {
+                const m2 = 227, m1 = 360; // 2단, 1단(위)
+                const m0 = Math.max(0, (maidaTotalFront - m1 - m2 - 2 * gapM)) + bottomGapExt;
+                return [m0, m2, m1]; // [3단(아래), 2단, 1단(위)]
+              }
+              if (isTopDownTouch3) {
+                const m2 = 240, m1 = 240;
+                const m0 = Math.max(0, (maidaTotalFront - m1 - m2 - 2 * gapM)) + bottomGapExt;
+                return [m0, m2, m1];
+              }
+              return [];
+            })();
+            const totalLimit = maidaTotalFront + Math.max(0, bottomGapExt) + 100;
             const gapBetween = 3;
 
             const applyValue = (idx: number, num: number) => {
@@ -4653,15 +4698,34 @@ const PlacedModulePropertiesPanel: React.FC = () => {
             // UI 인덱스 i → 내부 인덱스 di: 위가 di=N-1, 아래가 di=0
             const toInternalIdx = (uiIdx: number) => (maidaCount - 1) - uiIdx;
 
+            const editEnabled = current.length === maidaCount;
+            const toggleEdit = () => {
+              if (editEnabled) {
+                updatePlacedModule(currentPlacedModule.id, { customMaidaHeights: undefined });
+              } else {
+                updatePlacedModule(currentPlacedModule.id, {
+                  customMaidaHeights: defaultMaida.slice(0, maidaCount),
+                });
+              }
+            };
             return (
               <div className={styles.propertySection}>
-                <h5 className={styles.sectionTitle}>레그라 마이다 사이즈</h5>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                  <h5 className={styles.sectionTitle} style={{ margin: 0 }}>마이다 크기 변경</h5>
+                  <input
+                    type="checkbox"
+                    checked={editEnabled}
+                    onChange={toggleEdit}
+                    style={{ cursor: 'pointer', width: '16px', height: '16px' }}
+                    aria-label="마이다 크기 변경 모드"
+                  />
+                </div>
                 <div className={styles.epRow} style={{ gap: '8px' }}>
                   {labels.map((label, uiIdx) => {
                     const di = toInternalIdx(uiIdx);
                     const val = current[di] ?? defaultMaida[di] ?? '';
                     return (
-                      <div key={uiIdx} className={styles.epField} style={{ flex: '1 1 0' }}>
+                      <div key={uiIdx} className={styles.epField} style={{ flex: '1 1 0', opacity: editEnabled ? 1 : 0.5 }}>
                         <label className={styles.epFieldLabel}>{label}</label>
                         <div className={styles.inputWithUnit}>
                           <input
@@ -4670,11 +4734,13 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                             className={styles.epInput}
                             value={val}
                             placeholder={String(defaultMaida[di] ?? '')}
+                            disabled={!editEnabled}
                             onChange={(e) => handleChange(di, e.target.value)}
                             onKeyDown={(e) => {
                               if (e.key === 'ArrowUp') { e.preventDefault(); handleArrow(di, 1); }
                               else if (e.key === 'ArrowDown') { e.preventDefault(); handleArrow(di, -1); }
                             }}
+                            style={{ cursor: editEnabled ? 'text' : 'not-allowed' }}
                           />
                           <span className={styles.unit}>mm</span>
                         </div>
@@ -4682,7 +4748,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                     );
                   })}
                 </div>
-                {current.length > 0 && (
+                {editEnabled && (
                   <button
                     onClick={handleReset}
                     style={{
