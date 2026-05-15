@@ -123,64 +123,47 @@ const EndPanelWithTexture: React.FC<EndPanelWithTextureProps> = ({
   }
 
   // L자 EP: 사용자가 EP 두께를 18.5 초과로 늘렸을 때만 적용
-  //   측면 ep: 두께(X) 18.5mm 고정, EP 그룹 바깥쪽 끝에 위치
-  //   전면 ep: 두께(X) = 사용자 입력값 - 18.5mm, 측면 ep 안쪽에 붙음, EP 앞면(Z=앞)에 위치
-  //   EP 그룹 전체 두께(X) = 측면 ep + 전면 ep = 사용자 입력값
+  //   측면 ep: 사용자 입력 두께(X) × 원래 깊이(Z) 그대로 — 변형 없음
+  //   전면 ep: 측면 ep의 앞면을 덮는 마감 보드, 폭(X)=측면 ep와 동일, 두께(Z)=18.5mm
+  //            측면 ep 앞면(Z=depth/2)에 덧대어 +Z 방향으로 18.5mm 튀어나옴
   // 평면도(top view, 우측 EP 예시, 입력 51mm):
-  //   가구내경 ┤  전면 ep (32.5mm)  │측면│
-  //           │                    │ep │ ← 측면 ep 앞면 = 전면 ep 뒷면
-  //           └────────────────────┤   │
-  //                                │   │ (Z: 뒤로 끝까지)
-  //   ↑전면 ep 앞쪽 18.5mm(Z) 차지  └───┘
+  //   가구내경 ┤   측면 ep (51 × depth)   │  ← 측면 ep 그대로
+  //           ├──────────────────────────┤
+  //           │   전면 ep (51 × 18.5)    │  ← 측면 ep 앞쪽에 덧댐
+  //           └──────────────────────────┘
   // 인접 가구가 있으면 측면 ep 생략 → 전면 ep만 렌더링.
-  const boardThickness = 18.5 * 0.01; // PET 18.5mm → Three.js 단위
+  const boardThickness = 18.5 * 0.01;   // PET 18.5mm → Three.js 단위
   const frontEpDepthZ = boardThickness; // 전면 ep Z 두께 = 18.5mm
-  const totalWidth = width;             // 사용자 입력 EP 두께(전체 그룹 폭, 이미 Three.js 단위)
-  const sideEpWidth = boardThickness;   // 측면 ep 폭: 항상 18.5mm 고정
-  const frontEpWidth = Math.max(0, totalWidth - sideEpWidth); // 전면 ep 폭: 늘린 차이만큼
+  const totalWidth = width;             // 사용자 입력 EP 두께(이미 Three.js 단위)
   const showSidePanel = !adjacentFurniture; // 인접 가구 없으면 측면 ep 표시
 
-  // 측면 ep 깊이(Z): 원래 EP 깊이 - 전면 ep 두께 (앞 18.5mm는 전면 ep가 차지)
-  const sideEpDepth = Math.max(0, depth - boardThickness);
-
-  // 좌측 EP: 부모 좌표에서 가구 본체는 +X 쪽, 바깥은 -X 쪽 → outward=-1
-  // 우측 EP: 가구 본체는 -X 쪽, 바깥은 +X 쪽 → outward=+1
-  const outward = side === 'left' ? -1 : 1;
-  // 측면 ep X 중심: EP 그룹 바깥쪽 끝에 위치
-  //   바깥쪽 끝 = outward × totalWidth/2, 측면 ep 중심 = 바깥쪽 끝 - outward × sideEpWidth/2
-  //            = outward × (totalWidth/2 - sideEpWidth/2)
-  const sideEpX = outward * (totalWidth / 2 - sideEpWidth / 2);
-  // 전면 ep X 중심: 측면 ep 안쪽 면 ~ EP 그룹 안쪽 끝(가구 본체 라인)까지
-  //   안쪽 끝 = -outward × totalWidth/2
-  //   측면 ep 안쪽 면 = sideEpX - outward × sideEpWidth/2 = outward × (totalWidth/2 - sideEpWidth)
-  //   전면 ep 중심 = (안쪽 끝 + 측면 ep 안쪽 면) / 2
-  //              = outward × (totalWidth/2 - sideEpWidth - totalWidth/2) / 2... 정리하면
-  //              = -outward × (totalWidth/2 - frontEpWidth/2) ── (totalWidth/2 빼고 안쪽 frontEpWidth/2 더하기)
-  //   더 간단히: 안쪽 끝(=-outward × totalWidth/2)에서 outward × frontEpWidth/2 만큼 바깥쪽으로 이동
-  const frontEpX = -outward * (totalWidth / 2 - frontEpWidth / 2);
-  // Z 위치: 전면 ep는 EP 그룹의 앞면(=depth/2)에 붙음
-  const frontEpZ = depth / 2 - frontEpDepthZ / 2;
-  // 측면 ep는 앞면이 전면 ep 뒷면(=depth/2 - boardThickness)과 맞닿음
-  const sideEpZ = (depth / 2 - boardThickness) - sideEpDepth / 2;
+  // 측면 ep, 전면 ep 모두 X 폭과 X 중심 동일 (EP 그룹 중심에 그대로)
+  const sideEpX = 0;
+  const frontEpX = 0;
+  // 측면 ep: 깊이 그대로, Z 중심도 0 (EP 그룹 중심)
+  const sideEpZ = 0;
+  // 전면 ep: 측면 ep 앞면(=depth/2)에 뒷면이 닿고 +Z 방향으로 18.5mm 튀어나옴
+  //   전면 ep 뒷면 = depth/2, 전면 ep 중심 = depth/2 + frontEpDepthZ/2
+  const frontEpZ = depth / 2 + frontEpDepthZ / 2;
 
   return (
     <group position={position}>
-      {/* 측면 ep — 18.5mm 고정 두께, EP 그룹 바깥쪽 끝, 인접 가구 없을 때만 */}
-      {showSidePanel && sideEpDepth > 0 && (
+      {/* 측면 ep — 사용자 입력 두께 × 원래 깊이 그대로, 인접 가구 없을 때만 */}
+      {showSidePanel && depth > 0 && (
         <BoxWithEdges
           isEndPanel={true}
-          args={[sideEpWidth, height, sideEpDepth]}
+          args={[totalWidth, height, depth]}
           position={[sideEpX, 0, sideEpZ]}
           material={endPanelMaterial}
           renderMode={renderMode}
           furnitureId={furnitureId}
         />
       )}
-      {/* 전면 ep — 사용자가 늘린 두께만큼 안쪽(가구 본체 라인)으로 확장, EP 앞면에 위치 */}
-      {frontEpWidth > 0 && (
+      {/* 전면 ep — 측면 ep 앞면을 덮는 마감 보드 (폭 동일, Z 두께 18.5mm) */}
+      {totalWidth > 0 && (
         <BoxWithEdges
           isEndPanel={true}
-          args={[frontEpWidth, height, frontEpDepthZ]}
+          args={[totalWidth, height, frontEpDepthZ]}
           position={[frontEpX, 0, frontEpZ]}
           material={endPanelMaterial}
           renderMode={renderMode}
