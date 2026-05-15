@@ -4390,34 +4390,47 @@ const PlacedModulePropertiesPanel: React.FC = () => {
             return (
               <div className={styles.propertySection}>
                 <h5 className={styles.sectionTitle}>레그라 마이다 사이즈</h5>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                <div className={styles.epRow} style={{ flexWrap: 'wrap', gap: '8px' }}>
                   {labels.map((label, uiIdx) => {
                     const di = toInternalIdx(uiIdx);
                     const val = current[di] ?? defaultMaida[di] ?? '';
                     return (
-                      <div key={uiIdx} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <label style={{ width: '72px', fontSize: '12px', color: 'var(--theme-text-secondary)' }}>{label}</label>
-                        <div className={styles.inputWithUnit} style={{ flex: 1 }}>
+                      <div key={uiIdx} className={styles.epField} style={{ flex: maidaCount === 1 ? '1 1 100%' : '1 1 calc(50% - 4px)' }}>
+                        <label className={styles.epFieldLabel}>{label}</label>
+                        <div className={styles.inputWithUnit}>
                           <input
-                            type="number"
+                            type="text"
+                            inputMode="numeric"
+                            className={styles.epInput}
                             value={val}
                             placeholder={String(defaultMaida[di] ?? '')}
                             onChange={(e) => handleChange(di, e.target.value)}
-                            style={{ width: '100%' }}
                           />
                           <span className={styles.unit}>mm</span>
                         </div>
                       </div>
                     );
                   })}
-                  {current.length > 0 && (
-                    <button onClick={handleReset} style={{ marginTop: '4px', fontSize: '11px', padding: '4px', cursor: 'pointer' }}>
-                      기본값으로 복원
-                    </button>
-                  )}
-                  <div style={{ fontSize: '11px', color: 'var(--theme-text-tertiary)', marginTop: '4px' }}>
-                    ≤125: K(측판 128.5) / ≤220: C(177) / &gt;220: F(241) — 자동 매칭
-                  </div>
+                </div>
+                {current.length > 0 && (
+                  <button
+                    onClick={handleReset}
+                    style={{
+                      marginTop: '8px',
+                      padding: '6px 10px',
+                      fontSize: '11px',
+                      background: 'var(--theme-surface)',
+                      border: '1px solid var(--theme-border)',
+                      borderRadius: '4px',
+                      color: 'var(--theme-text-secondary)',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    기본값으로 복원
+                  </button>
+                )}
+                <div style={{ fontSize: '11px', color: 'var(--theme-text-tertiary)', marginTop: '6px' }}>
+                  측판 자동 매칭: ≤125 → K(128.5) / ≤250 → C(177) / &gt;250 → F(241)
                 </div>
               </div>
             );
