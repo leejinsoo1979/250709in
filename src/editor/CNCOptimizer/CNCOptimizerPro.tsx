@@ -635,8 +635,17 @@ function PageInner(){
         names.add(`${furnitureId}::${meshName}`);
       }
     });
+    // 가구 편집 팝업 패널 목록에서 사용자가 체크 해제한 패널들도 3D 뷰어에서 숨김
+    placedModules.forEach((module) => {
+      const exclusions = module.panelExclusions;
+      if (!exclusions || exclusions.length === 0) return;
+      exclusions.forEach((panelName) => {
+        names.add(`${module.id}::${panelName}`);
+        names.add(panelName);
+      });
+    });
     return names;
-  }, [excludedPanelIds, panels, livePanels]);
+  }, [excludedPanelIds, panels, livePanels, placedModules]);
 
   const handleOptimize = useCallback(async (overrideOptimizationType?: 'OPTIMAL_L' | 'OPTIMAL_W' | 'OPTIMAL_CNC', silent?: boolean) => {
     // overrideOptimizationType이 주어지면 그 값을 사용, 아니면 settings에서 가져옴

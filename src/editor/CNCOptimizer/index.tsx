@@ -116,9 +116,18 @@ const CNCOptimizer: React.FC = () => {
         names.add(mn);
       }
     });
+    // 가구 편집 팝업 패널 목록에서 사용자가 체크 해제한 패널들도 3D 뷰어에서 숨김
+    placedModules.forEach((module) => {
+      const exclusions = module.panelExclusions;
+      if (!exclusions || exclusions.length === 0) return;
+      exclusions.forEach((panelName) => {
+        names.add(`${module.id}::${panelName}`);
+        names.add(panelName);
+      });
+    });
     console.log('🟪 [CNC index] excluded keys 생성:', Array.from(names).slice(0, 10), 'panels=', panelsList.slice(0, 3).map(p => ({ id: p.id, name: p.name, meshName: p.meshName, fid: (p as any).furnitureId })));
     return names;
-  }, [hiddenPanelIds, selectedPanels, panelsList]);
+  }, [hiddenPanelIds, selectedPanels, panelsList, placedModules]);
 
   // 프로젝트 정보 가져오기
   const projectInfo = useMemo(() => {
