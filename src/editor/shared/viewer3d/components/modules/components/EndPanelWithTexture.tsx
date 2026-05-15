@@ -139,12 +139,13 @@ const EndPanelWithTexture: React.FC<EndPanelWithTextureProps> = ({
     ? totalWidth + boardThickness
     : totalWidth;
 
-  // 좌측 EP (dir=-1): EP 본체가 +X(가구 본체 라인 쪽), 전면 프레임은 EP 본체 + 바깥쪽 18mm 확장
-  // 우측 EP (dir=+1): 거울 대칭
-  const dir = side === 'left' ? -1 : 1;
-  // 전면 프레임 X 중심: 측판이 있으면 EP 바깥쪽으로 18mm 만큼 더 차지 → 중심이 바깥쪽으로 boardThickness/2 이동
+  // 좌측 EP: 부모 좌표에서 가구 본체는 +X 방향(가구 중심 쪽), EP 바깥은 -X 방향 → outward=-1
+  // 우측 EP: 가구 본체는 -X 방향, EP 바깥은 +X 방향 → outward=+1
+  const outward = side === 'left' ? -1 : 1;
+  // 전면 프레임 X 중심: 측판이 있으면 EP 바깥쪽(outward 방향)으로 boardThickness/2 만큼 이동
+  //   (총 폭이 EP두께 + boardThickness이고, 바깥쪽 끝이 EP 바깥보다 boardThickness만큼 더 나가도록)
   const frontFrameX = showSidePanel
-    ? dir * (-boardThickness / 2)  // 바깥쪽으로 boardThickness/2 이동
+    ? outward * (boardThickness / 2)
     : 0;
   // EP 본체 Z 중심: 앞쪽 boardThickness 만큼 잘려서 뒤로 이동 (앞면이 원래보다 18.5mm 뒤로)
   const sideEpDepth = Math.max(0, depth - boardThickness);
