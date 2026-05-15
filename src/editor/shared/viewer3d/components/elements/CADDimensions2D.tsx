@@ -1391,12 +1391,17 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                 doorBottomAbsMm = cabinetBottomAbs - doorBottomGapVal;
               }
             } else {
-              // 키큰장
+              // 키큰장: 도어 갭은 가구 본체에서 도어가 떨어진 거리 (도어가 가구 밖으로 확장)
+              //   도어 하단 = 가구 본체 하단 - doorBottomGap (도어가 가구 하단보다 아래로 25)
+              //   도어 상단 = 가구 본체 상단 + doorTopGap   (도어가 가구 상단보다 위로 5)
               const isFloorType = !spaceInfo.baseConfig || spaceInfo.baseConfig.type === 'floor';
               const floorFinishForDoor = (isFloorType && spaceInfo.hasFloorFinish)
                 ? (spaceInfo.floorFinish?.height || 0) : 0;
-              doorBottomAbsMm = doorBottomGapVal + floorFinishForDoor;
-              doorTopAbsMm = effectiveH_door - doorTopGapVal;
+              const cabinetBottomAbs = (isFloating ? floatHeightMm : (railOrBaseHeightMm + indivFloatMm)) + floorFinishForDoor;
+              const tallH = mod.customHeight ?? mod.freeHeight ?? modData.dimensions.height ?? 0;
+              const cabinetTopAbsTall = cabinetBottomAbs + tallH;
+              doorBottomAbsMm = cabinetBottomAbs - doorBottomGapVal;
+              doorTopAbsMm = cabinetTopAbsTall + doorTopGapVal;
               doorHeightMm = Math.max(0, doorTopAbsMm - doorBottomAbsMm);
             }
 
@@ -1533,7 +1538,6 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
               {/* 하부장 도어 하단갭: 바닥(또는 바닥마감재 상단) ~ 도어 최하단 */}
               {(() => {
                 if (allLowerDoorSegs.length === 0) return null;
-                // 도어 관련 세그먼트 중 가장 낮은 bottomY 찾기
                 const lowestBottomY = Math.min(...allLowerDoorSegs.map(s => s.bottomY));
                 const bottomStartY = floorFinishHeightMm > 0 ? mmToThreeUnits(floorFinishHeightMm) : 0;
                 const bottomGapMm = Math.round((lowestBottomY - bottomStartY) / 0.01);
@@ -1545,6 +1549,24 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                     <NativeLine name="dimension_line" points={[[-0.008, bottomStartY, dimZ], [0.008, bottomStartY, dimZ]]} color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false} />
                     <Text position={[0, (bottomStartY + lowestBottomY) / 2, dimZ + mmToThreeUnits(60)]} fontSize={largeFontSize} color={textColor} anchorX="center" anchorY="middle" renderOrder={100001} depthTest={false} rotation={[0, -Math.PI / 2, Math.PI / 2]}>
                       {bottomGapMm}
+                    </Text>
+                  </group>
+                );
+              })()}
+              {/* 하부장/키큰장 도어 상단갭: 도어 최상단 ~ 천장 */}
+              {(() => {
+                if (allLowerDoorSegs.length === 0) return null;
+                const highestTopY = Math.max(...allLowerDoorSegs.map(s => s.topY));
+                const ceilingY = mmToThreeUnits(spaceInfo.height);
+                const topGapMm = Math.round((ceilingY - highestTopY) / 0.01);
+                if (topGapMm <= 0) return null;
+                return (
+                  <group key="r-door-topgap">
+                    <ExtLine points={[[0, ceilingY, dimExtZ], [0, ceilingY, dimZ]]} color={dimensionColor} />
+                    <NativeLine name="dimension_line" points={[[0, highestTopY, dimZ], [0, ceilingY, dimZ]]} color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false} />
+                    <NativeLine name="dimension_line" points={[[-0.008, ceilingY, dimZ], [0.008, ceilingY, dimZ]]} color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false} />
+                    <Text position={[0, (highestTopY + ceilingY) / 2, dimZ + mmToThreeUnits(60)]} fontSize={largeFontSize} color={textColor} anchorX="center" anchorY="middle" renderOrder={100001} depthTest={false} rotation={[0, -Math.PI / 2, Math.PI / 2]}>
+                      {topGapMm}
                     </Text>
                   </group>
                 );

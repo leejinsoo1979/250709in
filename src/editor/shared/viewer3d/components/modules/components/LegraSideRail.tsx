@@ -19,6 +19,8 @@ interface LegraSideRailProps {
   //   ≤ 220 → C (측판 177, Legra_L500.glb)
   //    > 220 → F (측판 241, f500.glb)
   maidaHeightMm?: number;
+  // 사용자가 직접 선택한 레그라 종류 (있으면 GLB 강제 매칭)
+  legraTypeOverride?: 'M' | 'L' | 'F';
   renderMode?: string;
 }
 
@@ -148,6 +150,7 @@ const LegraSideRail: React.FC<LegraSideRailProps> = ({
   sidePanelInnerX,
   drawerHeightMm,
   maidaHeightMm,
+  legraTypeOverride,
   renderMode,
 }) => {
   const { viewMode, hideAccessories } = useSpace3DView();
@@ -155,16 +158,11 @@ const LegraSideRail: React.FC<LegraSideRailProps> = ({
   const view2DTheme = useUIStore(state => state.view2DTheme);
   const { theme } = useTheme();
 
-  // GLB 선택: maidaHeightMm(사용자 마이다 사이즈)이 있으면 우선 사용.
-  //   마이다(=설치공간) → LEGRABOX 등급 매칭 (표준 설치공간 기준):
-  //     ≤ 125 → K (Legra_M500.glb, 측판 128.5, 설치공간 144)
-  //     ≤ 250 → C (Legra_L500.glb, 측판 177, 설치공간 193~250 범위)
-  //      > 250 → F (f500.glb, 측판 241, 설치공간 257~)
-  //   ※ 240은 C(177) — 측판이 마이다보다 작아 마이다 안에 들어감
-  //   maidaHeightMm 없으면 기존 drawerHeightMm 분기 유지.
-  const modelPath = maidaHeightMm != null
-    ? (maidaHeightMm > 250 ? '/models/f500.glb'
-      : maidaHeightMm <= 125 ? '/models/Legra_M500.glb'
+  // GLB 선택: 사용자가 종류 직접 선택(legraTypeOverride) > drawerHeightMm 기준 자동 매칭
+  //   M(M500) 측판 128.5 / L(L500) 측판 177 / F(F500) 측판 241
+  const modelPath = legraTypeOverride
+    ? (legraTypeOverride === 'F' ? '/models/f500.glb'
+      : legraTypeOverride === 'M' ? '/models/Legra_M500.glb'
       : '/models/Legra_L500.glb')
     : drawerHeightMm != null
     ? (drawerHeightMm >= 200 ? '/models/f500.glb'

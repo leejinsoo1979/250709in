@@ -240,6 +240,10 @@ export interface PlacedModule {
   // 마이다 합이 가구 영역(totalFrontMm)을 초과하면 UI에서 경고하고 저장 안 함.
   customMaidaHeights?: number[];
 
+  // 레그라 서랍 종류 강제 지정 (사용자 선택). 미지정 시 drawerHeightMm 기준 자동 매칭.
+  // tier별 (di=0(아래) → di=N(위) 순서) — 'M' (M500, 측판 128.5) | 'L' (L500, 측판 177) | 'F' (F500, 측판 241)
+  legraDrawerTypes?: ('M' | 'L' | 'F')[];
+
   // 도어 셋팅 (자유배치 모드)
   doorSettingMode?: 'auto' | 'manual'; // 자동/수동 모드 (기본값: 'auto')
   doorOverlayLeft?: number;   // 도어 좌측 확장 (mm, 기본값: 0)

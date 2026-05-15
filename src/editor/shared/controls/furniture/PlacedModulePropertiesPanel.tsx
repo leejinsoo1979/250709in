@@ -4669,7 +4669,8 @@ const PlacedModulePropertiesPanel: React.FC = () => {
             const applyValue = (idx: number, num: number) => {
               if (!Number.isFinite(num) || num <= 0) return;
               const next = [...(current.length === maidaCount ? current : defaultMaida.slice(0, maidaCount))];
-              next[idx] = num;
+              // 3단(idx=0): 사용자가 보는 값은 base + bottomGapExt → 저장은 base값으로
+              next[idx] = idx === 0 ? Math.max(0, num - bottomGapExt) : num;
               const sum = next.reduce((a, b) => a + b, 0) + (maidaCount - 1) * gapBetween;
               if (sum > totalLimit) {
                 alert(`마이다 합(${sum}mm)이 가구 영역(${totalLimit}mm)을 초과합니다.`);
@@ -4682,8 +4683,10 @@ const PlacedModulePropertiesPanel: React.FC = () => {
               applyValue(idx, num);
             };
             const handleArrow = (idx: number, dir: 1 | -1) => {
-              const cur = current[idx] ?? defaultMaida[idx] ?? 0;
-              applyValue(idx, cur + dir);
+              // 3단(idx=0): 화면 표시값에 ±1
+              const baseCur = current[idx] ?? defaultMaida[idx] ?? 0;
+              const displayedCur = idx === 0 ? baseCur + bottomGapExt : baseCur;
+              applyValue(idx, displayedCur + dir);
             };
             const handleReset = () => {
               updatePlacedModule(currentPlacedModule.id, { customMaidaHeights: undefined });
@@ -4699,12 +4702,31 @@ const PlacedModulePropertiesPanel: React.FC = () => {
             const toInternalIdx = (uiIdx: number) => (maidaCount - 1) - uiIdx;
 
             const editEnabled = current.length === maidaCount;
+            // 체크박스 ON 시 초기값: 도어갭 영향 없는 default 기준 마이다 (가구 영역 내 안전값)
+            const initMaida: number[] = (() => {
+              if (isInduction) return [Math.max(0, Math.round(maidaTotalFront))];
+              if (isDoorLiftTouch2A || isDoorLiftTouch2B || isTopDownTouch2) {
+                const evenH = Math.floor(Math.max(0, maidaTotalFront - gapM) / 2);
+                return [evenH, evenH];
+              }
+              if (isDoorLiftTouch3) {
+                const m2 = 227, m1 = 360;
+                const m0 = Math.max(0, (maidaTotalFront - m1 - m2 - 2 * gapM));
+                return [m0, m2, m1];
+              }
+              if (isTopDownTouch3) {
+                const m2 = 240, m1 = 240;
+                const m0 = Math.max(0, (maidaTotalFront - m1 - m2 - 2 * gapM));
+                return [m0, m2, m1];
+              }
+              return [];
+            })();
             const toggleEdit = () => {
               if (editEnabled) {
                 updatePlacedModule(currentPlacedModule.id, { customMaidaHeights: undefined });
               } else {
                 updatePlacedModule(currentPlacedModule.id, {
-                  customMaidaHeights: defaultMaida.slice(0, maidaCount),
+                  customMaidaHeights: initMaida.slice(0, maidaCount),
                 });
               }
             };
@@ -4723,7 +4745,11 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                 <div className={styles.epRow} style={{ gap: '8px' }}>
                   {labels.map((label, uiIdx) => {
                     const di = toInternalIdx(uiIdx);
-                    const val = current[di] ?? defaultMaida[di] ?? '';
+                    // 3단(di=0, 맨 아래)은 도어 하단갭 늘면 마이다도 같이 늘어남
+                    const rawVal = current[di] ?? defaultMaida[di];
+                    const val = (di === 0 && typeof current[di] === 'number')
+                      ? (current[di]! + bottomGapExt)
+                      : (rawVal ?? '');
                     return (
                       <div key={uiIdx} className={styles.epField} style={{ flex: '1 1 0', opacity: editEnabled ? 1 : 0.5 }}>
                         <label className={styles.epFieldLabel}>{label}</label>
@@ -4765,6 +4791,55 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                     기본값으로 복원
                   </button>
                 )}
+                {/* 레그라 서랍 종류 선택 드롭다운 (tier별) */}
+                {(() => {
+                  const legraTypes = ((currentPlacedModule as any).legraDrawerTypes ?? []) as ('M' | 'L' | 'F' | undefined)[];
+                  const setLegraType = (di: number, type: 'M' | 'L' | 'F' | '') => {
+                    const next: (('M' | 'L' | 'F') | undefined)[] = Array.from({ length: maidaCount }, (_, i) => legraTypes[i]);
+                    next[di] = type === '' ? undefined : (type as 'M' | 'L' | 'F');
+                    const allEmpty = next.every(v => v === undefined);
+                    updatePlacedModule(currentPlacedModule.id, {
+                      legraDrawerTypes: allEmpty ? undefined : (next as any),
+                    } as any);
+                  };
+                  return (
+                    <div style={{ marginTop: '12px' }}>
+                      <div style={{ fontSize: '11px', color: 'var(--theme-text-secondary)', marginBottom: '6px' }}>
+                        레그라 서랍 종류
+                      </div>
+                      <div className={styles.epRow} style={{ gap: '8px' }}>
+                        {labels.map((label, uiIdx) => {
+                          const di = toInternalIdx(uiIdx);
+                          const cur = legraTypes[di] ?? '';
+                          return (
+                            <div key={uiIdx} className={styles.epField} style={{ flex: '1 1 0' }}>
+                              <label className={styles.epFieldLabel}>{label}</label>
+                              <select
+                                value={cur}
+                                onChange={(e) => setLegraType(di, e.target.value as any)}
+                                style={{
+                                  width: '100%',
+                                  padding: '4px',
+                                  fontSize: '12px',
+                                  border: '1px solid var(--theme-border)',
+                                  borderRadius: '4px',
+                                  background: 'var(--theme-surface)',
+                                  color: 'var(--theme-text-primary)',
+                                  cursor: 'pointer',
+                                }}
+                              >
+                                <option value="">자동</option>
+                                <option value="M">M</option>
+                                <option value="L">L</option>
+                                <option value="F">F</option>
+                              </select>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  );
+                })()}
               </div>
             );
           })()}

@@ -677,12 +677,26 @@ const TouchDrawerAnimated: React.FC<TouchDrawerAnimatedProps> = ({
     : [[228, 28], [228, 406]];
 
   const bottomPanelTopY = cabinetBottomY + mmToThreeUnits(basicThicknessMm);
-  const drawers = drawerSpecs.map(([dh, offsetFromBottomPanel], idx) => ({
-    height: dh,
-    backH: dh - drawerThicknessMm,
-    bottomY: bottomPanelTopY + mmToThreeUnits(offsetFromBottomPanel),
-    tier: idx + 1
-  }));
+  // 레그라 종류 override (di=0(아래) → di=N-1(위))
+  const legraDrawerTypesRawForDrawers = useFurnitureStore(state => {
+    if (!placedFurnitureId) return undefined;
+    const pm = state.placedModules.find(m => m.id === placedFurnitureId);
+    return (pm as any)?.legraDrawerTypes as ('M' | 'L' | 'F')[] | undefined;
+  });
+  // 레그라 종류별 서랍 본체 표준 높이 (측판 - 바닥두께):
+  //   M (M500, 측판 128.5) → 117  | L (L500, 측판 177) → 164  | F (F500, 측판 241) → 228
+  const legraHeightByType: Record<'M' | 'L' | 'F', number> = { M: 117, L: 164, F: 228 };
+  const drawers = drawerSpecs.map(([dh, offsetFromBottomPanel], idx) => {
+    const tierIdx = idx;
+    const overrideType = legraDrawerTypesRawForDrawers?.[tierIdx];
+    const effDh = overrideType ? legraHeightByType[overrideType] : dh;
+    return {
+      height: effDh,
+      backH: effDh - drawerThicknessMm,
+      bottomY: bottomPanelTopY + mmToThreeUnits(offsetFromBottomPanel),
+      tier: idx + 1
+    };
+  });
 
   // === 마이다 기하 ===
   const moduleWidthMm = adjustedWidth || 0;
@@ -736,6 +750,11 @@ const TouchDrawerAnimated: React.FC<TouchDrawerAnimatedProps> = ({
     if (!placedFurnitureId) return undefined;
     const pm = state.placedModules.find(m => m.id === placedFurnitureId);
     return (pm as any)?.customMaidaHeights as number[] | undefined;
+  });
+  const legraDrawerTypesRaw = useFurnitureStore(state => {
+    if (!placedFurnitureId) return undefined;
+    const pm = state.placedModules.find(m => m.id === placedFurnitureId);
+    return (pm as any)?.legraDrawerTypes as ('M' | 'L' | 'F')[] | undefined;
   });
   const customMaidaValid = customMaidaHeightsRaw
     && customMaidaHeightsRaw.length === drawerHeights.length
@@ -796,19 +815,23 @@ const TouchDrawerAnimated: React.FC<TouchDrawerAnimatedProps> = ({
       };
       cursorTop = bottomMm - gapMm;
     }
-    // 맨 아래(0): 1·2단 마이다 묶음은 위에 고정(default 위치).
-    // 3단(아래) 하단만 도어 하단갭 반영 → 갭 늘면 3단만 가구 바닥 아래로 확장.
+    // 맨 아래(0): 마이다 하단 = -bottomExtMm (도어 하단갭 반영, 가구 바닥 아래로 확장).
+    // customMaidaValid: 입력값에 하단갭 증가분(bottomExtMm-defaultBottomExtMm)을 더해서 그림.
+    //   사용자가 219 입력 + 하단갭 60(=defaultBottomExtMm 5 + 55) → 마이다 높이 = 219 + 55 = 274
+    //   마이다 상단은 줄어든 만큼 위 마이다와 갭 생김
+    // 자동 흡수: cursorTop ~ -bottomExtMm 까지 다 채움
+    const bottomStart = -bottomExtMm;
+    const bottomExtDelta = bottomExtMm - defaultBottomExtMm;
     if (customMaidaValid) {
-      const h0 = maidaHeightsMm[0];
-      const bottomStart = cursorTop - h0;
+      const h0 = maidaHeightsMm[0] + bottomExtDelta;
       result[0] = {
-        height: h0,
+        height: Math.max(0, h0),
         centerY: cabinetBottomY + mmToThreeUnits(bottomStart + h0 / 2),
         tier: 1,
         bottomMm: bottomStart
       };
+      maidaHeightsMm[0] = result[0].height;
     } else {
-      const bottomStart = -bottomExtMm; // 도어 하단갭 반영
       result[0] = {
         height: Math.max(0, cursorTop - bottomStart),
         centerY: cabinetBottomY + mmToThreeUnits((bottomStart + cursorTop) / 2),
@@ -878,6 +901,7 @@ const TouchDrawerAnimated: React.FC<TouchDrawerAnimatedProps> = ({
               sidePanelInnerX={mmToThreeUnits(widthMm / 2 - basicThicknessMm)}
               drawerHeightMm={d.height}
               maidaHeightMm={maidas[d.tier - 1]?.height}
+              legraTypeOverride={legraDrawerTypesRaw?.[d.tier - 1]}
               renderMode={renderMode}
             />
           </React.Fragment>
