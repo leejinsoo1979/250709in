@@ -139,7 +139,7 @@ const DoorGapInput: React.FC<{
           outline: 'none',
           boxSizing: 'border-box',
         }}
-        step="0.1"
+        step="1"
         min="0"
       />
     </td>
