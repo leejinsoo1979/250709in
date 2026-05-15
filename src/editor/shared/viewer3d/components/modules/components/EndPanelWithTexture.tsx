@@ -137,13 +137,13 @@ const EndPanelWithTexture: React.FC<EndPanelWithTextureProps> = ({
   //           │측면 │ 18 × (depth-18) — 안쪽
   //           │  ep │
   //           └─────┘
-  // 인접 가구가 있으면 바깥쪽 측면 ep 생략 → 전면 ep + 안쪽 측면 ep만 렌더링.
+  // ㄷ자 EP는 EP 폭 내부에 닫힌 구조 — 인접 가구가 있어도 측면 ep가 가구와 겹치지 않음.
+  // 단일 보드 EP와 달리 인접 가구 여부에 관계없이 양쪽 측면 ep 모두 렌더링.
   const boardThickness = 18 * 0.01;     // 규격 보드 두께 18mm → Three.js 단위
   const frontEpDepthZ = boardThickness; // 전면 ep Z 두께 = 18mm
   const totalWidth = width;             // 사용자 입력 EP 두께값 = 전체 X 공간
   const sideEpWidth = boardThickness;   // 측면 ep X 폭: 18mm 고정
   const frontEpWidth = totalWidth;      // 전면 ep X 폭: 입력값 전체
-  const showOuterSidePanel = !adjacentFurniture; // 인접 가구 없으면 바깥쪽 측면 ep 표시
 
   // 좌측 EP: 부모 좌표에서 가구 본체는 +X 쪽, 바깥은 -X 쪽 → outward=-1
   // 우측 EP: 가구 본체는 -X 쪽, 바깥은 +X 쪽 → outward=+1
@@ -163,8 +163,8 @@ const EndPanelWithTexture: React.FC<EndPanelWithTextureProps> = ({
 
   return (
     <group position={position}>
-      {/* 바깥쪽 측면 ep — 인접 가구 없을 때만 */}
-      {showOuterSidePanel && sideEpDepth > 0 && (
+      {/* 바깥쪽 측면 ep — ㄷ자 EP는 인접 가구와 겹치지 않으므로 항상 렌더링 */}
+      {sideEpDepth > 0 && (
         <BoxWithEdges
           isEndPanel={true}
           args={[sideEpWidth, height, sideEpDepth]}
