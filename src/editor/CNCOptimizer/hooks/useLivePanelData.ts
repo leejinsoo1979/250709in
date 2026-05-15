@@ -34,6 +34,10 @@ function toMeshName(cncName: string): string {
   // 터치 레그라 바닥판/뒷판: CNC "터치서랍1 바닥판" → 3D "터치1단서랍 바닥판"
   const touchLegraPanelMatch = cncName.match(/^터치서랍(\d+)\s+(바닥판|뒷판)$/);
   if (touchLegraPanelMatch) return `터치${touchLegraPanelMatch[1]}단서랍 ${touchLegraPanelMatch[2]}`;
+  // 목찬넬: 3D BoxModule은 번호 없이 렌더링하지만 CNC 목록은 (1) 번호가 붙을 수 있음
+  const woodChannelMatch = cncName.match(/^(목찬넬프레임수평|목찬넬프레임수직)(?:\(\d+\))?$/);
+  if (woodChannelMatch) return woodChannelMatch[1];
+  if (cncName === '전대') return '전대(분절후방)';
   // 프레임: CNC "상단몰딩" / "걸래받이" → 3D "top-frame" / "base-frame"
   if (cncName.includes('상단몰딩') || cncName.includes('상단 몰딩')) return 'top-frame';
   if (cncName.includes('걸래받이') || cncName.includes('걸래받이')) return 'base-frame';
@@ -772,16 +776,6 @@ export function useLivePanelData() {
         });
       }
 
-      // 프레임 패널 furnitureId 통일: 3D에서 프레임은 하나의 공유 객체이므로
-      // 모든 모듈의 프레임 패널을 첫 번째 모듈 ID로 통일해야 Room.tsx의 excludeKey와 매칭됨
-      // (상부 서라운드 프레임도 meshName='top-frame'이므로 포함)
-      const firstId = placedModules[0]?.id || '';
-      allPanels.forEach(p => {
-        if ((p.meshName === 'top-frame' || p.meshName === 'base-frame') && p.furnitureId !== firstId) {
-          p.furnitureId = firstId;
-        }
-      });
-
       console.log('========================================');
       console.log('📊 패널 추출 완료 요약:');
       console.log(`   - 배치된 가구 수: ${placedModules.length}`);
@@ -838,6 +832,7 @@ export function useLivePanelData() {
               grain: 'H' as any,
               meshName: 'top-frame',
               furnitureId: placedModules[0]?.id || '',
+              sourceFurnitureIds: group.moduleIds,
             });
           }
         });
@@ -856,6 +851,7 @@ export function useLivePanelData() {
               grain: 'H' as any,
               meshName: 'base-frame',
               furnitureId: placedModules[0]?.id || '',
+              sourceFurnitureIds: group.moduleIds,
             });
           }
         });

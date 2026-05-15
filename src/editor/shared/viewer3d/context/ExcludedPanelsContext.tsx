@@ -68,7 +68,12 @@ export function getExcludedPanelAliases(panelName: string): string[] {
 
   // 패널 목록 팝업의 한국어 명칭 ↔ 3D mesh name 매핑
   // mesh는 분절될 수 있어 'top-frame-0'..'top-frame-N' 등으로 나오므로 가능성 있는 인덱스도 추가
-  if (withoutFurnitureLabel === '상단몰딩') {
+  if (
+    withoutFurnitureLabel === '상단몰딩' ||
+    withoutFurnitureLabel.includes('상단몰딩') ||
+    withoutFurnitureLabel.includes('상단 몰딩') ||
+    withoutFurnitureLabel.includes('상부프래임')
+  ) {
     aliases.add('top-frame');
     for (let i = 0; i < 20; i += 1) aliases.add(`top-frame-${i}`);
   }
@@ -92,6 +97,23 @@ export function getExcludedPanelAliases(panelName: string): string[] {
   if (withoutFurnitureLabel === '바닥판') aliases.add('바닥');
   if (withoutFurnitureLabel.endsWith(' 바닥')) aliases.add(withoutFurnitureLabel.replace(/ 바닥$/, ' 바닥판'));
   if (withoutFurnitureLabel.endsWith(' 바닥판')) aliases.add(withoutFurnitureLabel.replace(/ 바닥판$/, ' 바닥'));
+
+  // 구버전/수동 패널 목록에는 상하 분리 측판이 통짜 좌측판/우측판으로 남아 있을 수 있다.
+  // 3D 현관장 H 등은 (상)/(하) 측판 mesh로 렌더링되므로 양방향 alias를 제공한다.
+  if (withoutFurnitureLabel === '좌측판') {
+    aliases.add('(하)좌측');
+    aliases.add('(상)좌측');
+  }
+  if (withoutFurnitureLabel === '우측판') {
+    aliases.add('(하)우측');
+    aliases.add('(상)우측');
+  }
+  if (withoutFurnitureLabel === '(하)좌측' || withoutFurnitureLabel === '(상)좌측') {
+    aliases.add('좌측판');
+  }
+  if (withoutFurnitureLabel === '(하)우측' || withoutFurnitureLabel === '(상)우측') {
+    aliases.add('우측판');
+  }
 
   if (withoutFurnitureLabel.includes('후면 보강대')) {
     aliases.add(withoutFurnitureLabel.replace('후면 보강대', '보강대').trim());
@@ -123,6 +145,26 @@ export function getExcludedPanelAliases(panelName: string): string[] {
 
   if (withoutFurnitureLabel === '가로전대(상)' || withoutFurnitureLabel === '가로전대(외경)') {
     aliases.add('전대');
+  }
+
+  const woodChannelMatch = withoutFurnitureLabel.match(/^(목찬넬프레임수평|목찬넬프레임수직)(?:\((\d+)\))?$/);
+  if (woodChannelMatch) {
+    const baseName = woodChannelMatch[1];
+    aliases.add(baseName);
+    if (woodChannelMatch[2]) {
+      aliases.add(`${baseName}(${woodChannelMatch[2]})`);
+    } else {
+      for (let i = 1; i <= 20; i += 1) aliases.add(`${baseName}(${i})`);
+    }
+  }
+
+  if (withoutFurnitureLabel === '전대' || withoutFurnitureLabel.startsWith('가로전대')) {
+    aliases.add('전대(분절후방)');
+  }
+  if (withoutFurnitureLabel === '전대(분절후방)') {
+    aliases.add('전대');
+    aliases.add('가로전대(1)');
+    aliases.add('가로전대(하1)');
   }
 
   const shelfMatch = withoutFurnitureLabel.match(/^(\([^)]+\))?선반\s*(\d+)$/);
@@ -179,7 +221,22 @@ export function isPanelKeyExcluded(
   panelName: string | null | undefined,
 ): boolean {
   if (excludedKeys.size === 0 || !panelName) return false;
-  return getExcludedPanelAliases(panelName).some((alias) => (
+  const panelAliases = getExcludedPanelAliases(panelName);
+  if (panelAliases.some((alias) => (
     excludedKeys.has(alias) || (furnitureId ? excludedKeys.has(`${furnitureId}::${alias}`) : false)
-  ));
+  ))) {
+    return true;
+  }
+
+  // store 동기화 전에 raw key가 들어오는 경로도 방어한다.
+  for (const key of excludedKeys) {
+    const separatorIndex = key.indexOf('::');
+    const keyFurnitureId = separatorIndex >= 0 ? key.slice(0, separatorIndex) : null;
+    const keyPanelName = separatorIndex >= 0 ? key.slice(separatorIndex + 2) : key;
+    if (keyFurnitureId && furnitureId && keyFurnitureId !== furnitureId) continue;
+    const keyAliases = getExcludedPanelAliases(keyPanelName);
+    if (panelAliases.some(alias => keyAliases.includes(alias))) return true;
+  }
+
+  return false;
 }

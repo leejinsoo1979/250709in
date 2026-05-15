@@ -111,7 +111,12 @@ const CNCOptimizer: React.FC = () => {
       if (!shouldExclude) return;
       const fid = (panel as any).furnitureId;
       const mn = panel.meshName;
-      if (fid && mn) {
+      const sourceFurnitureIds = (panel as any).sourceFurnitureIds as string[] | undefined;
+      if (mn && sourceFurnitureIds?.length) {
+        sourceFurnitureIds.forEach(sourceFurnitureId => {
+          names.add(`${sourceFurnitureId}::${mn}`);
+        });
+      } else if (fid && mn) {
         names.add(`${fid}::${mn}`);
       } else if (mn) {
         names.add(mn);

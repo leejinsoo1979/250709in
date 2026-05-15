@@ -99,8 +99,12 @@ describe('panelDetails regression baselines', () => {
       backPanelThicknessMm: 9
     })
 
-    expect(findPanel(panels, '좌측판').width).toBe(380)
-    expect(findPanel(panels, '우측판').width).toBe(380)
+    expect(findPanel(panels, '(하)좌측').width).toBe(380)
+    expect(findPanel(panels, '(상)좌측').width).toBe(380)
+    expect(findPanel(panels, '(하)우측').width).toBe(380)
+    expect(findPanel(panels, '(상)우측').width).toBe(380)
+    expect(panels.some(panel => panel.name === '좌측판')).toBe(false)
+    expect(panels.some(panel => panel.name === '우측판')).toBe(false)
     expect(findPanel(panels, '서랍받침대').depth).toBe(269)
     expect(findPanel(panels, '서랍속장(좌)').width).toBe(233)
     expect(findPanel(panels, '서랍1 바닥').depth).toBe(232)
@@ -201,6 +205,17 @@ describe('panelDetails regression baselines', () => {
     expectedDrawerModulePanels.forEach((name) => {
       expect(findPanel(panels, name)).toBeDefined()
     })
+  })
+
+  it('도어분절 현관장 하부 상단 목찬넬은 옵티마이저 패널 목록에 포함된다', () => {
+    const panels = calculatePanels('single-shelf-split-500', 500, 380, {
+      hasDoor: true,
+      backPanelThicknessMm: 9
+    })
+
+    expect(findPanel(panels, '목찬넬프레임수평(1)')).toBeDefined()
+    expect(findPanel(panels, '목찬넬프레임수직(1)')).toBeDefined()
+    expect(findPanel(panels, '전대')).toBeDefined()
   })
 
   it('듀얼 하부장 도어 패널은 전체 폭을 합산하지 않고 좌우 leaf 폭으로 생성된다', () => {

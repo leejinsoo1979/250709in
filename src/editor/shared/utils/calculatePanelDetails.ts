@@ -211,7 +211,8 @@ export const calculatePanelDetails = (
       // 2단 옷장/선반장 (single-2hanging, dual-2hanging, single-2shelf, dual-2shelf, single-shelf, dual-shelf): 첫 번째 섹션이 하부장, 두 번째 섹션이 상부장
       if (moduleData.id.includes('single-2hanging') || moduleData.id.includes('dual-2hanging') ||
           moduleData.id.includes('single-2shelf') || moduleData.id.includes('dual-2shelf') ||
-          moduleData.id.includes('single-shelf-') || moduleData.id.includes('dual-shelf-')) {
+          moduleData.id.includes('single-shelf-') || moduleData.id.includes('dual-shelf-') ||
+          moduleData.id.includes('entryway-h')) {
         if (sectionIndex === 0) {
           sectionName = '하부장';
           targetPanel = panels.lower;
@@ -308,6 +309,7 @@ export const calculatePanelDetails = (
         moduleData.id.includes('4drawer-hanging') ||
         moduleData.id.includes('2drawer-hanging') ||
         moduleData.id.includes('2hanging') ||
+        moduleData.id.includes('entryway-h') ||
         moduleData.id.includes('4drawer-shelf') ||
         moduleData.id.includes('2drawer-shelf') ||
         moduleData.id.includes('2shelf') ||
@@ -2197,6 +2199,37 @@ export const calculatePanelDetails = (
       thickness: basicThickness,
       material: 'PB',
     });
+  }
+
+  // === 도어분절 현관장 하부섹션 상단 목찬넬 ===
+  // BoxModule.tsx의 shelf-split 전용 렌더링과 동일한 부재를 패널 목록에도 노출한다.
+  if (moduleData.id.includes('shelf-split')) {
+    const woodChannelHeight = 80;
+    const woodChannelVerticalHeight = woodChannelHeight - basicThickness;
+    const channelGap = (basicThickness === 15.5 || basicThickness === 18.5) ? 0 : 1;
+    panels.frame.push(
+      {
+        name: '목찬넬프레임수평(1)',
+        width: customWidth,
+        depth: 40,
+        thickness: basicThickness,
+        material: 'PB',
+      },
+      {
+        name: '목찬넬프레임수직(1)',
+        width: customWidth,
+        height: woodChannelVerticalHeight,
+        thickness: basicThickness,
+        material: 'PB',
+      },
+      {
+        name: '전대',
+        width: innerWidth - channelGap,
+        height: woodChannelHeight,
+        thickness: basicThickness,
+        material: 'PB',
+      }
+    );
   }
 
   // === 상부장 하부 마감판 (3D UpperCabinet.tsx L131-148과 동일) ===

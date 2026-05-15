@@ -632,7 +632,11 @@ function PageInner(){
         }
       }
 
-      if (meshName && furnitureId) {
+      if (meshName && panel?.sourceFurnitureIds?.length) {
+        panel.sourceFurnitureIds.forEach(sourceFurnitureId => {
+          names.add(`${sourceFurnitureId}::${meshName}`);
+        });
+      } else if (meshName && furnitureId) {
         names.add(`${furnitureId}::${meshName}`);
       }
     });

@@ -35,6 +35,7 @@ export interface Panel {
   // 3D 뷰어 패널 하이라이트용
   meshName?: string;                       // 3D mesh 매칭용 패널 이름 (예: "좌측판", "선반 1")
   furnitureId?: string;                    // 해당 패널이 속한 가구 ID
+  sourceFurnitureIds?: string[];            // 병합 패널이 실제로 포함하는 가구 ID들
 }
 
 export interface StockPanel {
