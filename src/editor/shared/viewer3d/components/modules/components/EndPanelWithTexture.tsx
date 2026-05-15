@@ -122,35 +122,39 @@ const EndPanelWithTexture: React.FC<EndPanelWithTextureProps> = ({
     );
   }
 
-  // L자 EP: 사용자가 EP 두께값을 18 초과로 늘렸을 때만 적용
+  // ㄷ자 EP: 사용자가 EP 두께값을 18 초과로 늘렸을 때만 적용 (키큰장 찬넬과 동일 구조)
   //   패널은 규격 18mm으로 두께 고정.
-  //   사용자가 EP 두께값을 늘리면 EP가 차지하는 X 공간이 늘어나고:
-  //     - 측면 ep: 앞쪽 18mm가 전면 ep에게 자리 양보 (Z 깊이 -18mm, 뒤로 이동)
-  //     - 전면 ep: X 폭이 측면 ep까지 덮을 만큼(= 전체 입력값)으로 늘어남
-  //   결과: 전면 ep와 측면 ep가 L자로 맞물림. 전면 ep 뒷면 일부 = 측면 ep 앞면.
+  //   - 측면 ep (바깥): 18 × (depth-18), EP 그룹 바깥쪽 끝
+  //   - 측면 ep (안쪽): 18 × (depth-18), EP 그룹 안쪽 끝 (가구 본체 라인)
+  //   - 전면 ep: 입력값 × 18, 양 측면 ep 앞쪽 잘린 자리까지 모두 덮음
   //
   // 평면도(top view, 우측 EP, 입력 51mm):
-  //                              ┌─────┐
-  //                              │측면 │ 18 × (depth-18) ← 앞쪽 잘려 뒤로 이동
-  //   가구내경 ┤    전면 ep (51 × 18)        │ ← 측면 ep 앞쪽 잘린 자리까지 덮음
-  //           └────────────────────────────┘
-  //           전면 ep X 합 = 51mm (입력값)
-  // 인접 가구가 있으면 측면 ep 생략 → 전면 ep만 렌더링.
+  //                                  ┌─────┐
+  //                                  │측면 │ 18 × (depth-18) — 바깥
+  //                                  │  ep │
+  //   가구내경 ┤    전면 ep (51 × 18)            │
+  //           ├─────┐                          │
+  //           │측면 │ 18 × (depth-18) — 안쪽
+  //           │  ep │
+  //           └─────┘
+  // 인접 가구가 있으면 바깥쪽 측면 ep 생략 → 전면 ep + 안쪽 측면 ep만 렌더링.
   const boardThickness = 18 * 0.01;     // 규격 보드 두께 18mm → Three.js 단위
   const frontEpDepthZ = boardThickness; // 전면 ep Z 두께 = 18mm
   const totalWidth = width;             // 사용자 입력 EP 두께값 = 전체 X 공간
   const sideEpWidth = boardThickness;   // 측면 ep X 폭: 18mm 고정
-  const frontEpWidth = totalWidth;      // 전면 ep X 폭: 입력값 전체 (측면 ep까지 덮음)
-  const showSidePanel = !adjacentFurniture; // 인접 가구 없으면 측면 ep 표시
+  const frontEpWidth = totalWidth;      // 전면 ep X 폭: 입력값 전체
+  const showOuterSidePanel = !adjacentFurniture; // 인접 가구 없으면 바깥쪽 측면 ep 표시
 
   // 좌측 EP: 부모 좌표에서 가구 본체는 +X 쪽, 바깥은 -X 쪽 → outward=-1
   // 우측 EP: 가구 본체는 -X 쪽, 바깥은 +X 쪽 → outward=+1
   const outward = side === 'left' ? -1 : 1;
-  // 측면 ep X 중심: EP 그룹 바깥쪽 끝
-  const sideEpX = outward * (totalWidth / 2 - sideEpWidth / 2);
+  // 바깥쪽 측면 ep X 중심: EP 그룹 바깥쪽 끝
+  const outerSideEpX = outward * (totalWidth / 2 - sideEpWidth / 2);
+  // 안쪽 측면 ep X 중심: EP 그룹 안쪽 끝 (가구 본체 라인 쪽)
+  const innerSideEpX = -outward * (totalWidth / 2 - sideEpWidth / 2);
   // 전면 ep X 중심: EP 그룹 중심 (입력값 전체 폭이므로 0)
   const frontEpX = 0;
-  // 측면 ep Z 깊이: 앞쪽 18mm 잘림
+  // 측면 ep Z 깊이: 앞쪽 18mm 잘림 (전면 ep가 덮음)
   const sideEpDepth = Math.max(0, depth - boardThickness);
   // 측면 ep Z 중심: 잘린 만큼 뒤로 이동
   const sideEpZ = -boardThickness / 2;
@@ -159,18 +163,29 @@ const EndPanelWithTexture: React.FC<EndPanelWithTextureProps> = ({
 
   return (
     <group position={position}>
-      {/* 측면 ep — 18mm 고정 보드, 앞쪽 18mm 잘림, 인접 가구 없을 때만 */}
-      {showSidePanel && sideEpDepth > 0 && (
+      {/* 바깥쪽 측면 ep — 인접 가구 없을 때만 */}
+      {showOuterSidePanel && sideEpDepth > 0 && (
         <BoxWithEdges
           isEndPanel={true}
           args={[sideEpWidth, height, sideEpDepth]}
-          position={[sideEpX, 0, sideEpZ]}
+          position={[outerSideEpX, 0, sideEpZ]}
           material={endPanelMaterial}
           renderMode={renderMode}
           furnitureId={furnitureId}
         />
       )}
-      {/* 전면 ep — 18mm 두께 보드, X 폭=입력값 전체(측면 ep 앞쪽 잘린 자리까지 덮음) */}
+      {/* 안쪽 측면 ep — 가구 본체 라인 쪽 (키큰장 찬넬과 동일 구조) */}
+      {sideEpDepth > 0 && (
+        <BoxWithEdges
+          isEndPanel={true}
+          args={[sideEpWidth, height, sideEpDepth]}
+          position={[innerSideEpX, 0, sideEpZ]}
+          material={endPanelMaterial}
+          renderMode={renderMode}
+          furnitureId={furnitureId}
+        />
+      )}
+      {/* 전면 ep — 양 측면 ep 앞쪽 잘린 자리까지 모두 덮음 */}
       {frontEpWidth > 0 && (
         <BoxWithEdges
           isEndPanel={true}
