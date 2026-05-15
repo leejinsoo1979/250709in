@@ -319,6 +319,50 @@ describe('panelDetails regression baselines', () => {
     expect(builtInNames).not.toContain('(하)백패널')
   })
 
+  it('스타일러장 백패널과 보강대는 3D 옵티마이저 mesh 이름으로 생성된다', () => {
+    const panels = calculatePanels('dual-2drawer-styler-1200', 1200, 600, {
+      hasDoor: true,
+      backPanelThicknessMm: 9
+    })
+    const names = panels.map((panel) => panel.name)
+
+    ;[
+      '좌(하)백패널',
+      '좌(상)백패널',
+      '우백패널',
+      '(하)보강대',
+      '(상)보강대',
+      '우보강대'
+    ].forEach((name) => {
+      expect(findPanel(panels, name)).toBeDefined()
+    })
+
+    expect(names).not.toContain('(하)백패널')
+    expect(names).not.toContain('(상)백패널')
+    expect(names).not.toContain('(하)후면 보강대 1')
+    expect(names).not.toContain('(상)후면 보강대 1')
+  })
+
+  it('바지걸이장 후면 보강대는 번호 없는 3D mesh 이름으로 생성된다', () => {
+    const panels = calculatePanels('dual-4drawer-pantshanger-1200', 1200, 600, {
+      hasDoor: true,
+      backPanelThicknessMm: 9
+    })
+    const names = panels.map((panel) => panel.name)
+
+    ;[
+      '(하)백패널',
+      '(상)백패널',
+      '(하)보강대',
+      '(상)보강대'
+    ].forEach((name) => {
+      expect(findPanel(panels, name)).toBeDefined()
+    })
+
+    expect(names).not.toContain('(하)후면 보강대 1')
+    expect(names).not.toContain('(상)후면 보강대 1')
+  })
+
   it('듀얼 하부장 도어 패널은 전체 폭을 합산하지 않고 좌우 leaf 폭으로 생성된다', () => {
     const panels = calculatePanels('dual-lower-half-cabinet-1000', 1000, 650, {
       hasDoor: true

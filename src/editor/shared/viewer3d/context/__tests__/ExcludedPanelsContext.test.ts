@@ -41,4 +41,16 @@ describe('ExcludedPanelsContext aliases', () => {
     expect(isPanelKeyExcluded(new Set(['module-1::(상)후면 보강대 1']), 'module-1', '(2단)보강대 1')).toBe(true)
     expect(isPanelKeyExcluded(new Set(['module-1::(1단)보강대 3']), 'module-1', '(하)보강대 3')).toBe(true)
   })
+
+  it('스타일러장 좌우 백패널과 번호 없는 보강대 mesh 이름을 매칭한다', () => {
+    expect(isPanelKeyExcluded(new Set(['module-1::(하)백패널']), 'module-1', '좌(하)백패널')).toBe(true)
+    expect(isPanelKeyExcluded(new Set(['module-1::좌(상)백패널']), 'module-1', '(상)백패널')).toBe(true)
+    expect(isPanelKeyExcluded(new Set(['module-1::우후면 보강대 1']), 'module-1', '우보강대')).toBe(true)
+  })
+
+  it('바지걸이장 후면 보강대 번호 표기를 번호 없는 3D mesh 이름으로 매칭한다', () => {
+    expect(isPanelKeyExcluded(new Set(['module-1::(하)후면 보강대 1']), 'module-1', '(하)보강대')).toBe(true)
+    expect(isPanelKeyExcluded(new Set(['module-1::(상)후면 보강대 2']), 'module-1', '(상)보강대')).toBe(true)
+    expect(isPanelKeyExcluded(new Set(['module-1::(상)보강대']), 'module-1', '(2단)보강대 1')).toBe(true)
+  })
 })

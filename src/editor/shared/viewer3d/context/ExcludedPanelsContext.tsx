@@ -157,33 +157,79 @@ export function getExcludedPanelAliases(panelName: string): string[] {
     aliases.add(withoutFurnitureLabel.replace('후면 보강대', '보강대').trim());
   }
 
-  if (withoutFurnitureLabel === '(하)백패널') aliases.add('(1단)백패널');
+  if (withoutFurnitureLabel === '(하)백패널') {
+    aliases.add('(1단)백패널');
+    aliases.add('좌(하)백패널');
+  }
   if (withoutFurnitureLabel === '(상)백패널') {
+    aliases.add('좌(상)백패널');
     for (let i = 2; i <= 20; i += 1) aliases.add(`(${i}단)백패널`);
   }
+  if (withoutFurnitureLabel === '좌(하)백패널') aliases.add('(하)백패널');
+  if (withoutFurnitureLabel === '좌(상)백패널') aliases.add('(상)백패널');
   const nSectionBackPanelMatch = withoutFurnitureLabel.match(/^\((\d+)단\)백패널$/);
   if (nSectionBackPanelMatch) {
     aliases.add(Number(nSectionBackPanelMatch[1]) === 1 ? '(하)백패널' : '(상)백패널');
   }
 
-  const sectionReinforcementMatch = withoutFurnitureLabel.match(/^(\((?:하|상)\))(?:후면\s*)?보강대\s*(\d+)$/);
+  if (withoutFurnitureLabel === '우후면 보강대 1' || withoutFurnitureLabel === '우후면 보강대 2') {
+    aliases.add('우보강대');
+  }
+  if (withoutFurnitureLabel === '우보강대') {
+    aliases.add('우후면 보강대 1');
+    aliases.add('우후면 보강대 2');
+  }
+
+  const sectionReinforcementMatch = withoutFurnitureLabel.match(/^(\((?:하|상)\))(?:후면\s*)?보강대(?:\s*(\d+))?$/);
   if (sectionReinforcementMatch) {
     const prefix = sectionReinforcementMatch[1];
     const index = sectionReinforcementMatch[2];
-    aliases.add(`${prefix}후면 보강대 ${index}`);
-    aliases.add(`${prefix}보강대 ${index}`);
-    if (prefix === '(하)') {
-      aliases.add(`(1단)보강대 ${index}`);
+    aliases.add(`${prefix}후면 보강대`);
+    aliases.add(`${prefix}보강대`);
+    if (index) {
+      aliases.add(`${prefix}후면 보강대 ${index}`);
+      aliases.add(`${prefix}보강대 ${index}`);
     } else {
-      for (let i = 2; i <= 20; i += 1) aliases.add(`(${i}단)보강대 ${index}`);
+      aliases.add(`${prefix}후면 보강대 1`);
+      aliases.add(`${prefix}후면 보강대 2`);
+      aliases.add(`${prefix}보강대 1`);
+      aliases.add(`${prefix}보강대 2`);
+    }
+    if (prefix === '(하)') {
+      aliases.add('(1단)보강대');
+      if (index) {
+        aliases.add(`(1단)보강대 ${index}`);
+      } else {
+        aliases.add('(1단)보강대 1');
+        aliases.add('(1단)보강대 2');
+      }
+    } else {
+      for (let i = 2; i <= 20; i += 1) {
+        aliases.add(`(${i}단)보강대`);
+        if (index) {
+          aliases.add(`(${i}단)보강대 ${index}`);
+        } else {
+          aliases.add(`(${i}단)보강대 1`);
+          aliases.add(`(${i}단)보강대 2`);
+        }
+      }
     }
   }
-  const nSectionReinforcementMatch = withoutFurnitureLabel.match(/^\((\d+)단\)보강대\s*(\d+)$/);
+  const nSectionReinforcementMatch = withoutFurnitureLabel.match(/^\((\d+)단\)보강대(?:\s*(\d+))?$/);
   if (nSectionReinforcementMatch) {
     const prefix = Number(nSectionReinforcementMatch[1]) === 1 ? '(하)' : '(상)';
     const index = nSectionReinforcementMatch[2];
-    aliases.add(`${prefix}보강대 ${index}`);
-    aliases.add(`${prefix}후면 보강대 ${index}`);
+    aliases.add(`${prefix}보강대`);
+    aliases.add(`${prefix}후면 보강대`);
+    if (index) {
+      aliases.add(`${prefix}보강대 ${index}`);
+      aliases.add(`${prefix}후면 보강대 ${index}`);
+    } else {
+      aliases.add(`${prefix}보강대 1`);
+      aliases.add(`${prefix}보강대 2`);
+      aliases.add(`${prefix}후면 보강대 1`);
+      aliases.add(`${prefix}후면 보강대 2`);
+    }
   }
 
   const lowerStretcherMatch = withoutFurnitureLabel.match(/^가로전대\(하(\d+)\)$/);

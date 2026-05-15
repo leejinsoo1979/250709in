@@ -196,8 +196,18 @@ export const calculatePanelDetails = (
   // 듀얼 타입5,6 특별 처리 (leftSections/rightSections 구조)
   let sections;
   // 듀얼 타입5/6은 leftSections + rightSections 모두 처리
-  const isType5or6 = moduleData.id.includes('dual-4drawer-pantshanger') || moduleData.id.includes('dual-2drawer-styler');
+  const isStylerCabinet = moduleData.id.includes('dual-2drawer-styler');
   const isPantsHanger = moduleData.id.includes('dual-4drawer-pantshanger');
+  const isType5or6 = isPantsHanger || isStylerCabinet;
+  const stylerRightColumnWidth = isStylerCabinet
+    ? Math.max(0, Math.min(
+      moduleData.modelConfig?.rightAbsoluteWidth || (innerWidth - basicThickness) / 2,
+      innerWidth - basicThickness
+    ))
+    : 0;
+  const stylerLeftColumnWidth = isStylerCabinet
+    ? Math.max(0, innerWidth - stylerRightColumnWidth - basicThickness)
+    : 0;
   const rightSectionsForType5or6 = isType5or6 ? (moduleData.modelConfig?.rightSections || []) : [];
   if (isType5or6) {
     sections = moduleData.modelConfig?.leftSections || [];
@@ -391,8 +401,6 @@ export const calculatePanelDetails = (
 
       // Type5 스타일러장(2drawer-styler): 3D에서 우측판은 분할 안됨 (전체 높이 통짜)
       // 좌측판만 섹션별로 분할. DualType5.tsx line 921-932 주석 참조
-      const isStyler = moduleData.id.includes('2drawer-styler');
-
       // 다중 섹션이고 상하 분리 측판 가구인 경우만 섹션별로 추가
       // 그 외는 통짜로 첫 번째 섹션에만 추가
       if (sections.length >= 2 && isSplitSidePanelFurniture) {
@@ -413,7 +421,7 @@ export const calculatePanelDetails = (
           material: 'PB'
         });
 
-        if (isStyler) {
+        if (isStylerCabinet) {
           // 스타일러장: 우측판은 첫 번째 섹션에서만 전체 높이 통짜로 추가
           if (sectionIndex === 0) {
             targetPanel.push({
@@ -666,15 +674,19 @@ export const calculatePanelDetails = (
       const totalHeightExtension = basicThickness * 2 - heightExtension;
       let backPanelHeight = sectionHeightMm - basicThickness * 2 + heightExtension + totalHeightExtension;
 
-      // Type5/6 (4drawer-pantshanger, 2drawer-styler): 전체 너비, 상/하부 섹션 경계에서 높이 분할
+      // Type5/6 (4drawer-pantshanger, 2drawer-styler): 상/하부 섹션 경계에서 높이 분할
       let backPanelWidth = innerWidth + 10;
       let backPanelNamePrefix = sectionPrefix;
       if (isType5or6) {
-        // 너비: 전체 내경폭 (좌/우 분할 안 함)
+        // 바지걸이장은 전체 내경폭, 스타일러장은 좌측 컬럼 폭으로 산출한다.
         // 높이: 상/하부 섹션 경계에서 분할
         const leftLowerSectionHeightMm = moduleData.modelConfig?.leftSections?.[0]?.height || 0;
         const lowerBoundaryMm = basicThickness + leftLowerSectionHeightMm;
         const furnitureHeightMm = moduleData.dimensions.height;
+        if (isStylerCabinet) {
+          backPanelWidth = stylerLeftColumnWidth + 10;
+          backPanelNamePrefix = sectionPrefix ? `좌${sectionPrefix}` : '좌';
+        }
         if (sectionIndex === 0) {
           backPanelHeight = lowerBoundaryMm;
         } else if (sectionIndex === 1) {
@@ -687,8 +699,10 @@ export const calculatePanelDetails = (
       // 하부장 모듈은 하단 보강대 생략 (상단만)
       const reinforcementHeight = 60; // mm
       const reinforcementDepth = (basicThickness === 18.5 || basicThickness === 15.5) ? 15.5 : 15; // PB+PET 코팅 시 15.5mm
-      // 보강대 너비: 전체 내경폭 기준 (좌/우 분리 안 함)
-      const reinforcementWidth = innerWidth - sidePanelGap;
+      // 보강대 너비: 바지걸이장은 전체 내경폭, 스타일러장은 좌측 컬럼 폭 기준
+      const reinforcementWidth = isStylerCabinet
+        ? stylerLeftColumnWidth
+        : innerWidth - sidePanelGap;
       const isLowerCabinetModule = moduleData.id.includes('lower-');
       const isGlassCabinetModule = moduleData.id.includes('glass-cabinet');
       const sectionHasBackPanel = (section as any).hasBackPanel !== false;
@@ -739,7 +753,7 @@ export const calculatePanelDetails = (
           if (!isLowerCabinetModule) {
             if (!isGlassCabinetModule) {
               targetPanel.push({
-                name: `${sectionPrefix}후면 보강대 1`,
+                name: isType5or6 ? `${sectionPrefix}보강대` : `${sectionPrefix}후면 보강대 1`,
                 width: reinforcementWidth,
                 height: reinforcementHeight,
                 thickness: reinforcementDepth,
@@ -749,7 +763,7 @@ export const calculatePanelDetails = (
           }
           if (!isGlassCabinetModule) {
             targetPanel.push({
-              name: `${sectionPrefix}후면 보강대 2`,
+              name: isType5or6 ? `${sectionPrefix}보강대` : `${sectionPrefix}후면 보강대 2`,
               width: reinforcementWidth,
               height: reinforcementHeight,
               thickness: reinforcementDepth,
@@ -1232,6 +1246,31 @@ export const calculatePanelDetails = (
     const rightInnerWidth = innerWidth * rightRatio;
     const rightHorizontalPanelWidth = rightInnerWidth - 1; // 좌우 0.5mm 갭
 
+    if (isStylerCabinet) {
+      const reinforcementDepth = (basicThickness === 18.5 || basicThickness === 15.5) ? 15.5 : 15;
+      panels.upper.push({
+        name: '우백패널',
+        width: stylerRightColumnWidth + 10,
+        height,
+        thickness: backPanelThickness,
+        material: 'MDF'
+      });
+      panels.upper.push({
+        name: '우보강대',
+        width: stylerRightColumnWidth,
+        height: 60,
+        thickness: reinforcementDepth,
+        material: 'PB'
+      });
+      panels.upper.push({
+        name: '우보강대',
+        width: stylerRightColumnWidth,
+        height: 60,
+        thickness: reinforcementDepth,
+        material: 'PB'
+      });
+    }
+
     // 우측 섹션 높이 계산
     const rightFixedSections = rightSectionsForType5or6.filter(s => s.heightType === 'absolute');
     const rightTotalFixedHeight = rightFixedSections.reduce((sum, s) => sum + (s.height || 0), 0);
@@ -1257,7 +1296,7 @@ export const calculatePanelDetails = (
         ? panels.lower
         : panels.upper;
 
-      // 우측 백패널/보강대는 좌측과 통합 (전체 너비로 상/하 2장 생성됨)
+      // 바지걸이장은 우측 백패널/보강대가 좌측과 통합되고, 스타일러장은 위에서 우측 통짜 패널을 별도 생성한다.
 
       // 우측 섹션별 내부 요소 (hanging → 선반)
       if (section.type === 'hanging') {
