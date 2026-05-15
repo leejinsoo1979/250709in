@@ -121,43 +121,54 @@ const EndPanelWithTexture: React.FC<EndPanelWithTextureProps> = ({
     );
   }
 
-  // ㄷ자 프레임: 측판(바깥) + 전면연결판(안쪽) + 후면연결판(안쪽)
-  // 인접 가구가 있으면 측판 생략 → 전면연결판만 렌더링
+  // ㄱ자 프레임: EP 본체(앞쪽 18mm 잘림) + 전면 프레임(EP 폭 + 바깥쪽 18mm 확장)
+  // 평면도(top view)에서 본 단면:
+  //     ━━━━━━━━━━  ← 전면 프레임 (가구 본체 라인 ~ EP 바깥쪽 + 18mm)
+  //          ┃   ┃ ← EP 본체 (앞쪽 18mm 잘린 만큼 뒤로 위치)
+  //          ┃   ┃
+  //          ┃   ┃
+  // 인접 가구가 있으면 EP 본체 생략 → 전면 프레임만 렌더링
   const boardThickness = 18.5 * 0.01; // PET 18.5mm → Three.js 단위
-  const connectorDepthZ = boardThickness; // 연결판 Z축 깊이 = 패널 두께 (18.5mm)
+  const connectorDepthZ = boardThickness; // 전면 프레임 Z축 깊이 = 18.5mm
   const totalWidth = width;            // 전체 EP 두께 (이미 Three.js 단위)
-  const showSidePanel = !adjacentFurniture; // 인접 가구 없을 때만 측판 표시
-  const gapWidth = showSidePanel
-    ? totalWidth - boardThickness  // 측판 있으면: EP두께 - 측판두께
-    : totalWidth;                  // 측판 없으면: EP 전체 폭
+  const showSidePanel = !adjacentFurniture; // 인접 가구 없을 때만 EP 본체 표시
 
-  // 좌측 EP: 측판이 -X(바깥), 연결판이 +X(안쪽)
-  // 우측 EP: 측판이 +X(바깥), 연결판이 -X(안쪽)
+  // 전면 프레임 폭: EP 두께 + 바깥쪽 18mm (가구 본체 라인 안쪽으로는 안 들어감)
+  //   인접 가구 있으면 EP가 안 그려지므로 폭 = 사용자 지정 EP 두께만 (확장 안 함)
+  const frontFrameWidth = showSidePanel
+    ? totalWidth + boardThickness
+    : totalWidth;
+
+  // 좌측 EP (dir=-1): EP 본체가 +X(가구 본체 라인 쪽), 전면 프레임은 EP 본체 + 바깥쪽 18mm 확장
+  // 우측 EP (dir=+1): 거울 대칭
   const dir = side === 'left' ? -1 : 1;
-  const sideX = dir * (totalWidth / 2 - boardThickness / 2); // 측판 중심
-  const connectorX = showSidePanel
-    ? -dir * (boardThickness / 2)  // 측판 있으면: 측판 안쪽
-    : 0;                           // 측판 없으면: EP 중심
+  // 전면 프레임 X 중심: 측판이 있으면 EP 바깥쪽으로 18mm 만큼 더 차지 → 중심이 바깥쪽으로 boardThickness/2 이동
+  const frontFrameX = showSidePanel
+    ? dir * (-boardThickness / 2)  // 바깥쪽으로 boardThickness/2 이동
+    : 0;
+  // EP 본체 Z 중심: 앞쪽 boardThickness 만큼 잘려서 뒤로 이동 (앞면이 원래보다 18.5mm 뒤로)
+  const sideEpDepth = Math.max(0, depth - boardThickness);
+  const sideEpZ = -boardThickness / 2;
 
   return (
     <group position={position}>
-      {/* 측판 (바깥쪽) — 인접 가구 없을 때만 */}
-      {showSidePanel && (
+      {/* EP 본체 (전면 프레임만큼 앞쪽 잘림) — 인접 가구 없을 때만 */}
+      {showSidePanel && sideEpDepth > 0 && (
         <BoxWithEdges
           isEndPanel={true}
-          args={[boardThickness, height, depth]}
-          position={[sideX, 0, 0]}
+          args={[totalWidth, height, sideEpDepth]}
+          position={[0, 0, sideEpZ]}
           material={endPanelMaterial}
           renderMode={renderMode}
           furnitureId={furnitureId}
         />
       )}
-      {/* 전면연결판 (안쪽 앞) */}
-      {gapWidth > 0 && (
+      {/* 전면 프레임 (EP 앞면) — 바깥쪽으로 18mm 확장 */}
+      {frontFrameWidth > 0 && (
         <BoxWithEdges
           isEndPanel={true}
-          args={[gapWidth, height, connectorDepthZ]}
-          position={[connectorX, 0, depth / 2 - connectorDepthZ / 2]}
+          args={[frontFrameWidth, height, connectorDepthZ]}
+          position={[frontFrameX, 0, depth / 2 - connectorDepthZ / 2]}
           material={endPanelMaterial}
           renderMode={renderMode}
           furnitureId={furnitureId}
