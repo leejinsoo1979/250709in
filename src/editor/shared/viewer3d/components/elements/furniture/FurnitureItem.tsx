@@ -1522,7 +1522,73 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
 
   // customSections는 placedModule에 직접 저장된 것만 사용
   // (freeHeight에 의한 비례 조정은 useBaseFurniture에서 modelConfig.sections 자체를 조정)
-  const adjustedCustomSections = placedModule.customSections;
+  // 단, 사용자가 명시한 옷봉선반 갭(upperShelfTopGap)이 있으면
+  // 상부 hanging 섹션의 안전선반 위치를 매 렌더링 시 (innerH - gap - t/2)로 재계산.
+  // 이렇게 해야 상단몰딩/걸레받이/높이 변경에도 갭이 가구 상판 기준으로 유지됨.
+  const adjustedCustomSections = (() => {
+    const userGap = (placedModule as any).upperShelfTopGap as number | undefined;
+    const removed = !!(placedModule as any).removeUpperSafetyShelf;
+    const fallbackSections = (actualModuleData?.modelConfig?.sections as any[] | undefined);
+    const rawSections = placedModule.customSections ?? fallbackSections;
+    if (!rawSections || !Array.isArray(rawSections) || rawSections.length === 0) return placedModule.customSections;
+    const basicThicknessMm = (spaceInfo as any).panelThickness || 18;
+    // 안전선반 제거 토글 ON → customSections에서 안전선반(pos>0) 제거
+    if (removed) {
+      let upperIdxR = -1;
+      for (let i = rawSections.length - 1; i >= 0; i--) {
+        if ((rawSections[i] as any).type === 'hanging') { upperIdxR = i; break; }
+      }
+      if (upperIdxR < 0) return placedModule.customSections;
+      const next = rawSections.map((sec, idx) => {
+        if (idx !== upperIdxR) return sec;
+        const pos = Array.isArray((sec as any).shelfPositions) ? (sec as any).shelfPositions : [];
+        const filtered = pos.filter((p: number) => p <= 0);
+        const out: any = { ...sec, shelfPositions: filtered };
+        if ((sec as any).count === 1 && pos.some((p: number) => p > 0) && filtered.length === 0) {
+          delete out.count;
+        }
+        return out;
+      });
+      return next;
+    }
+    if (typeof userGap !== 'number') return placedModule.customSections;
+    // 마지막 hanging 섹션 인덱스
+    let upperIdx = -1;
+    for (let i = rawSections.length - 1; i >= 0; i--) {
+      if ((rawSections[i] as any).type === 'hanging') { upperIdx = i; break; }
+    }
+    if (upperIdx < 0) return placedModule.customSections;
+    const upper = rawSections[upperIdx] as any;
+    const shelfPositions = Array.isArray(upper.shelfPositions) ? [...upper.shelfPositions] : [];
+    let safetyIdx = shelfPositions.findIndex((p: number) => p > 0);
+    // 안전선반이 아직 없으면 추가 가능하도록 인덱스 끝에 자리 확보
+    let appendNew = false;
+    if (safetyIdx < 0) {
+      appendNew = true;
+      safetyIdx = shelfPositions.length;
+    }
+    // SectionsRenderer의 calculatedHeight (섹션 전체 높이, 상/하판 포함)
+    let sectionFullH: number;
+    if (upperIdx === rawSections.length - 1) {
+      const prev = rawSections.slice(0, upperIdx).reduce((s, sec: any) => s + (sec.height || 0), 0);
+      sectionFullH = Math.max(0, furnitureHeightMm - prev);
+    } else {
+      sectionFullH = Math.max(0, upper.height || 0);
+    }
+    // ShelfRenderer: 갭 = (sectionFullH - 2t) - positionMm - t/2 (선반 윗면 ~ 상판 아랫면)
+    // → positionMm = sectionFullH - 2t - userGap - t/2 = sectionFullH - userGap - 2.5t
+    // 단 useBaseFurniture가 preserveUpperSafetyShelfGap로 비례 조정 시
+    // currentGap = section.height-2t - pos - t/2 식을 쓰므로,
+    // section.height도 sectionFullH로 갱신하여 비례 조정이 작동하지 않도록 함.
+    const nextShelfPos = Math.max(0, Math.round((sectionFullH - 2 * basicThicknessMm) - userGap - basicThicknessMm / 2));
+    if (!appendNew && nextShelfPos === shelfPositions[safetyIdx] && (upper.height === sectionFullH)) {
+      return placedModule.customSections;
+    }
+    shelfPositions[safetyIdx] = nextShelfPos;
+    return rawSections.map((sec, idx) => idx === upperIdx
+      ? { ...sec, shelfPositions, height: sectionFullH }
+      : sec);
+  })();
 
   // 하부장과 키큰장의 띄워서 배치 처리
   if ((isLowerCabinetForY || isTallCabinetForY) && actualModuleData) {
@@ -4123,6 +4189,10 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
               doorTopGap={storeDoorTopGap ?? placedModule.doorTopGap ?? spaceInfo.doorTopGap}
               doorBottomGap={storeDoorBottomGap ?? placedModule.doorBottomGap ?? spaceInfo.doorBottomGap}
               slotWidths={undefined}
+              furnitureId={placedModule.id}
+              hingePositionsMm={placedModule.hingePositionsMm}
+              upperDoorHingePositionsMm={placedModule.upperDoorHingePositionsMm}
+              lowerDoorHingePositionsMm={placedModule.lowerDoorHingePositionsMm}
               zone={effectiveZone}
               internalHeight={furnitureHeightMm}
               isFreePlacement={placedModule.isFreePlacement}

@@ -18,7 +18,13 @@ import { Hinge } from '../Hinge';
 import DimensionText from './components/DimensionText';
 import { useDimensionColor } from './hooks/useDimensionColor';
 import { isPanelKeyExcluded, useExcludedPanelsStore } from '../../context/ExcludedPanelsContext';
-import { calculateDualDoorOpenGeometry, calculateSingleDoorOpenGeometry, resolveHingeOppositeDoorWidthAdjustment } from '@/editor/shared/utils/doorGeometryCalculator';
+import {
+  calculateDualDoorOpenGeometry,
+  calculateSingleDoorOpenGeometry,
+  normalizeDoorHingePositionsMm,
+  resolveDefaultDoorHingePositionsMm,
+  resolveHingeOppositeDoorWidthAdjustment
+} from '@/editor/shared/utils/doorGeometryCalculator';
 import { resolveDoorHeightDimensionSides, shouldRenderDoorDimensionGuides } from '@/editor/shared/utils/doorDimensionGuides';
 
 const MIN_DOOR_BOX_GEOMETRY_SIZE = 0.001;
@@ -157,6 +163,9 @@ interface DoorModuleProps {
   hideWidthDimension?: boolean; // 도어 가로 폭 치수 숨김 (분절 상부 도어용)
   hingeMode?: 'auto' | 'upper2' | 'lower4' | 'lower5'; // 경첩 개수 강제 — 도어분절 가구용
   splitDoorPanelName?: '하부 도어' | '상부 도어'; // 도어분절 가구의 패널 목록 이름
+  hingePositionsMm?: number[];
+  upperDoorHingePositionsMm?: number[];
+  lowerDoorHingePositionsMm?: number[];
 }
 
 const DoorModule: React.FC<DoorModuleProps> = ({
@@ -192,6 +201,9 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   hideWidthDimension = false, // 도어 가로 폭 치수 숨김
   hingeMode = 'auto', // 경첩 개수 모드
   splitDoorPanelName,
+  hingePositionsMm,
+  upperDoorHingePositionsMm,
+  lowerDoorHingePositionsMm,
 }) => {
   const storeSpaceInfo = useSpaceConfigStore(state => state.spaceInfo);
   const placementType = (storeSpaceInfo?.baseConfig?.placementType) ?? (spaceInfo?.baseConfig?.placementType);
@@ -200,12 +212,14 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   const floatHeightSource = storeFloatHeight !== undefined ? storeFloatHeight : (propFloatHeight ?? 0);
   const floatHeight = placementType === 'float' ? floatHeightSource : 0;
   // Store에서 재질 설정과 도어 상태 가져오기
-  const { doorsOpen, view2DDirection, view2DTheme, isIndividualDoorOpen, toggleIndividualDoor, selectedSlotIndex, showDimensions, highlightedDoorGap } = useUIStore() as any;
+  const { doorsOpen, view2DDirection, view2DTheme, isIndividualDoorOpen, toggleIndividualDoor, selectedSlotIndex, showDimensions, highlightedDoorGap, hingePositionEditModeModuleId } = useUIStore() as any;
   const { renderMode, viewMode, plainMaterial: isPlainMaterial } = useSpace3DView(); // context에서 renderMode와 viewMode 가져오기
   const { gl } = useThree(); // Three.js renderer 가져오기
   const { dimensionColor } = useDimensionColor(); // 치수 색상
 
   const isSide2DView = viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right');
+  const isHingePositionEditMode = !!furnitureId && hingePositionEditModeModuleId === furnitureId;
+  const [hingeGapDrafts, setHingeGapDrafts] = useState<Record<string, string>>({});
 
   // doorsOpen: true=전체열기, false=전체닫기, null=개별상태 사용
   const useIndividualState = furnitureId !== undefined;
@@ -664,6 +678,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
 
   // 인덱싱 정보 계산 - 원본 spaceInfo 사용 + slotCustomWidth 재분할 반영
   const allPlacedModules = useFurnitureStore(state => state.placedModules);
+  const updatePlacedModule = useFurnitureStore(state => state.updatePlacedModule);
   const doorHeightDimensionSides = useMemo(() => {
     const visibleModules = allPlacedModules
       .filter(module => !module.isSurroundPanel)
@@ -680,7 +695,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     isPlainMaterial,
     viewMode,
     view2DDirection
-  );
+  ) && !isHingePositionEditMode;
 
   const indexing = useMemo(() => {
     const base = calculateSpaceIndexing(originalSpaceInfo);
@@ -991,6 +1006,266 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   }
   // 도어 높이에 추가 조정 없음 (사용자 입력 갭이 완전히 제어)
   const doorHeight = mmToThreeUnits(actualDoorHeight);
+  const customHingePositionSource = splitDoorPanelName === '상부 도어'
+    ? (upperDoorHingePositionsMm ?? storePlacedModule?.upperDoorHingePositionsMm)
+    : splitDoorPanelName === '하부 도어'
+      ? (lowerDoorHingePositionsMm ?? storePlacedModule?.lowerDoorHingePositionsMm)
+      : (hingePositionsMm ?? storePlacedModule?.hingePositionsMm);
+  const customHingePositionsMm = normalizeDoorHingePositionsMm(
+    customHingePositionSource,
+    actualDoorHeight
+  );
+  const hasCustomHingePositions = customHingePositionsMm.length > 0;
+  const effectiveHingePositionsMm = hasCustomHingePositions
+    ? customHingePositionsMm
+    : resolveDefaultDoorHingePositionsMm({
+      doorHeightMm: actualDoorHeight,
+      isUpperCabinet,
+      isLowerCabinet,
+      hingeMode
+    });
+  const hingePositionsField = splitDoorPanelName === '상부 도어'
+    ? 'upperDoorHingePositionsMm'
+    : splitDoorPanelName === '하부 도어'
+      ? 'lowerDoorHingePositionsMm'
+      : 'hingePositionsMm';
+
+  useEffect(() => {
+    setHingeGapDrafts({});
+  }, [
+    furnitureId,
+    actualDoorHeight
+  ]);
+
+  const renderHingeMarkers = (
+    hingeX: number,
+    smallCircleXOffset: number,
+    positionsMm: number[],
+    keyPrefix: string
+  ) => positionsMm.map((positionMm, index) => (
+    <Hinge
+      key={`${keyPrefix}-${positionMm}-${index}`}
+      position={[
+        hingeX,
+        -doorHeight / 2 + mmToThreeUnits(positionMm),
+        doorThicknessUnits / 2 + 0.001
+      ]}
+      mainDiameter={17.5}
+      smallCircleDiameter={4}
+      smallCircleXOffset={smallCircleXOffset}
+      viewDirection={view2DDirection === 'left' || view2DDirection === 'right' ? 'side' : 'front'}
+      view2DDirection={view2DDirection}
+    />
+  ));
+
+  const clearHingeGapDraft = (draftKey: string) => {
+    setHingeGapDrafts((prev) => {
+      if (!(draftKey in prev)) return prev;
+      const next = { ...prev };
+      delete next[draftKey];
+      return next;
+    });
+  };
+
+  const updateHingeGapSegment = (
+    segmentIndex: number,
+    requestedGapMm: number,
+    positionsMm: number[]
+  ) => {
+    if (!furnitureId) return;
+
+    const doorHeightMm = Math.max(1, Math.round(actualDoorHeight));
+    const topDistancesMm = normalizeDoorHingePositionsMm(positionsMm, doorHeightMm)
+      .map(positionMm => Math.max(1, Math.min(doorHeightMm - 1, Math.round(doorHeightMm - positionMm))))
+      .sort((a, b) => a - b);
+    if (topDistancesMm.length === 0) return;
+
+    const boundariesMm = [0, ...topDistancesMm, doorHeightMm];
+    const isLastSegment = segmentIndex === boundariesMm.length - 2;
+    const targetBoundaryIndex = isLastSegment ? boundariesMm.length - 2 : segmentIndex + 1;
+    const previousBoundary = boundariesMm[targetBoundaryIndex - 1] ?? 0;
+    const nextBoundary = boundariesMm[targetBoundaryIndex + 1] ?? doorHeightMm;
+    const requestedBoundary = isLastSegment
+      ? doorHeightMm - requestedGapMm
+      : previousBoundary + requestedGapMm;
+    const nextBoundaryValue = Math.max(
+      previousBoundary + 1,
+      Math.min(nextBoundary - 1, Math.round(requestedBoundary))
+    );
+
+    const nextTopDistances = [...topDistancesMm];
+    nextTopDistances[targetBoundaryIndex - 1] = nextBoundaryValue;
+    const nextBottomPositions = nextTopDistances.map(topDistanceMm =>
+      Math.max(1, Math.min(doorHeightMm - 1, Math.round(doorHeightMm - topDistanceMm)))
+    );
+
+    updatePlacedModule(furnitureId, {
+      [hingePositionsField]: normalizeDoorHingePositionsMm(nextBottomPositions, doorHeightMm)
+    } as any);
+  };
+
+  const renderHingePositionGuides = (
+    hingeX: number,
+    side: 'left' | 'right',
+    positionsMm: number[],
+    keyPrefix: string
+  ) => {
+    if (!isHingePositionEditMode || viewMode !== '2D' || view2DDirection !== 'front' || positionsMm.length === 0) {
+      return null;
+    }
+
+    const topDistancesMm = positionsMm
+      .map(positionMm => Math.max(0, Math.min(actualDoorHeight, Math.round(actualDoorHeight - positionMm))))
+      .sort((a, b) => a - b);
+    const anchorsMm = [0, ...topDistancesMm, Math.round(actualDoorHeight)];
+    const direction = side === 'left' ? -1 : 1;
+    const dimX = hingeX + direction * mmToThreeUnits(145);
+    const extensionEndX = hingeX + direction * mmToThreeUnits(12);
+    const tickSize = mmToThreeUnits(18);
+    const zPos = doorThicknessUnits / 2 + 0.006;
+    const guideColor = '#38bdf8';
+    const textColor = view2DTheme === 'dark' ? '#E0F2FE' : '#075985';
+    const yFromTop = (distanceMm: number) => doorHeight / 2 - mmToThreeUnits(distanceMm);
+    const textX = dimX + direction * mmToThreeUnits(72);
+
+    return (
+      <group name={`${keyPrefix}-hinge-position-guides`} renderOrder={100010}>
+        {anchorsMm.map((distanceMm, index) => {
+          const y = yFromTop(distanceMm);
+          return (
+            <React.Fragment key={`${keyPrefix}-anchor-${distanceMm}-${index}`}>
+              <NativeLine
+                name="hinge-position-extension"
+                points={[[extensionEndX, y, zPos], [dimX, y, zPos]]}
+                color={guideColor}
+                lineWidth={1}
+                renderOrder={100010}
+                depthTest={false}
+                depthWrite={false}
+                transparent={true}
+              />
+              <NativeLine
+                name="hinge-position-tick"
+                points={[[dimX - tickSize / 2, y, zPos], [dimX + tickSize / 2, y, zPos]]}
+                color={guideColor}
+                lineWidth={1}
+                renderOrder={100010}
+                depthTest={false}
+                depthWrite={false}
+                transparent={true}
+              />
+            </React.Fragment>
+          );
+        })}
+        {anchorsMm.slice(0, -1).map((distanceMm, index) => {
+          const nextDistanceMm = anchorsMm[index + 1];
+          const topY = yFromTop(distanceMm);
+          const bottomY = yFromTop(nextDistanceMm);
+          const segmentMm = Math.max(0, nextDistanceMm - distanceMm);
+          if (segmentMm <= 0) return null;
+          const draftKey = `${keyPrefix}-gap-${index}`;
+          const inputValue = hingeGapDrafts[draftKey] ?? String(segmentMm);
+
+          return (
+            <React.Fragment key={`${keyPrefix}-segment-${index}`}>
+              <NativeLine
+                name="hinge-position-dimension"
+                points={[[dimX, topY, zPos], [dimX, bottomY, zPos]]}
+                color={guideColor}
+                lineWidth={1}
+                renderOrder={100010}
+                depthTest={false}
+                depthWrite={false}
+                transparent={true}
+              />
+              <Html
+                position={[textX, (topY + bottomY) / 2, zPos]}
+                center
+                occlude={false}
+                transform={false}
+                zIndexRange={[10000, 10]}
+                style={{ pointerEvents: 'auto' }}
+              >
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '2px',
+                    padding: '4px 6px',
+                    border: `1px solid ${guideColor}`,
+                    borderRadius: '4px',
+                    background: view2DTheme === 'dark' ? 'rgba(15,23,42,0.92)' : 'rgba(255,255,255,0.92)',
+                    color: textColor,
+                    boxShadow: '0 1px 4px rgba(0,0,0,0.25)'
+                  }}
+                  onPointerDown={(event) => event.stopPropagation()}
+                  onClick={(event) => event.stopPropagation()}
+                >
+                  <input
+                    type="number"
+                    inputMode="numeric"
+                    step={1}
+                    min={1}
+                    max={Math.max(1, Math.round(actualDoorHeight) - 1)}
+                    value={inputValue}
+                    onChange={(event) => {
+                      event.stopPropagation();
+                      const value = event.target.value;
+                      if (value === '' || value === '-' || !/^-?\d+$/.test(value)) {
+                        setHingeGapDrafts(prev => ({ ...prev, [draftKey]: value }));
+                        return;
+                      }
+                      const nextValue = Math.max(1, Math.min(Math.round(actualDoorHeight) - 1, parseInt(value, 10)));
+                      setHingeGapDrafts(prev => ({ ...prev, [draftKey]: String(nextValue) }));
+                      updateHingeGapSegment(index, nextValue, positionsMm);
+                    }}
+                    onKeyDownCapture={(event) => {
+                      event.stopPropagation();
+                      if (event.key === 'Enter') {
+                        event.preventDefault();
+                        clearHingeGapDraft(draftKey);
+                        event.currentTarget.blur();
+                        return;
+                      }
+                      if (event.key === 'Escape') {
+                        event.preventDefault();
+                        clearHingeGapDraft(draftKey);
+                        event.currentTarget.blur();
+                        return;
+                      }
+                      if (event.key !== 'ArrowUp' && event.key !== 'ArrowDown') return;
+                      event.preventDefault();
+                      const step = event.shiftKey ? 10 : 1;
+                      const liveValue = event.currentTarget.value;
+                      const parsed = /^-?\d+$/.test(liveValue) ? parseInt(liveValue, 10) : (/^-?\d+$/.test(inputValue) ? parseInt(inputValue, 10) : segmentMm);
+                      const delta = event.key === 'ArrowUp' ? step : -step;
+                      const nextValue = Math.max(1, Math.min(Math.round(actualDoorHeight) - 1, (Number.isFinite(parsed) ? parsed : segmentMm) + delta));
+                      setHingeGapDrafts(prev => ({ ...prev, [draftKey]: String(nextValue) }));
+                      updateHingeGapSegment(index, nextValue, positionsMm);
+                    }}
+                    onBlur={() => clearHingeGapDraft(draftKey)}
+                    onFocus={(event) => event.currentTarget.select()}
+                    style={{
+                      width: '70px',
+                      height: '24px',
+                      border: 'none',
+                      outline: 'none',
+                      background: 'transparent',
+                      color: textColor,
+                      fontSize: '13px',
+                      fontWeight: 700,
+                      textAlign: 'center'
+                    }}
+                  />
+                  <span style={{ fontSize: '11px', fontWeight: 700 }}>mm</span>
+                </div>
+              </Html>
+            </React.Fragment>
+          );
+        })}
+      </group>
+    );
+  };
   
   // === 문 Y 위치 계산 ===
   let doorYPosition: number;
@@ -1476,7 +1751,17 @@ const DoorModule: React.FC<DoorModuleProps> = ({
               
 
               {/* Hinges for left door - 상부장, 하부장, 키큰장 (잠금 시 숨김, 유리장 제외) */}
-              {viewMode === '2D' && !leftDoorLocked && !moduleData?.id?.includes('glass-cabinet') && (view2DDirection === 'front' || view2DDirection === 'left' || view2DDirection === 'right') && (
+              {viewMode === '2D' && hasCustomHingePositions && !leftDoorLocked && !moduleData?.id?.includes('glass-cabinet') && (view2DDirection === 'front' || view2DDirection === 'left' || view2DDirection === 'right') && (
+                <>
+                  {renderHingeMarkers(
+                    -leftDoorWidthUnits / 2 + mmToThreeUnits(24),
+                    9.5,
+                    customHingePositionsMm,
+                    'left-custom-hinge'
+                  )}
+                </>
+              )}
+              {viewMode === '2D' && !hasCustomHingePositions && !leftDoorLocked && !moduleData?.id?.includes('glass-cabinet') && (view2DDirection === 'front' || view2DDirection === 'left' || view2DDirection === 'right') && (
                 <>
                   {(isUpperCabinet || hingeMode === 'upper2') ? (
                     // 상부장 또는 도어분절 상부도어: 위에서 100mm, 아래에서 100mm
@@ -1557,10 +1842,16 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                   )}
                 </>
               )}
+              {!leftDoorLocked && !moduleData?.id?.includes('glass-cabinet') && renderHingePositionGuides(
+                -leftDoorWidthUnits / 2 + mmToThreeUnits(24),
+                'left',
+                effectiveHingePositionsMm,
+                'left-door-hinge'
+              )}
 
 
               {/* Door opening direction for left door - 잠금 시 숨김, 치수 OFF 시 숨김 */}
-              {showDimensions && !isPlainMaterial && !leftDoorLocked && (viewMode === '3D' || (viewMode === '2D' && view2DDirection === 'front')) && (() => {
+              {showDimensions && !isHingePositionEditMode && !isPlainMaterial && !leftDoorLocked && (viewMode === '3D' || (viewMode === '2D' && view2DDirection === 'front')) && (() => {
                 const segments = (() => {
                   const isFrontView = viewMode === '3D' || view2DDirection === 'front';
                   const segmentList: React.ReactNode[] = [];
@@ -1882,9 +2173,19 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                   isLocked={rightDoorLocked}
                 />
               )}
-              
+
               {/* Hinges for right door - 상부장, 하부장, 키큰장 (잠금 시 숨김, 유리장 제외) */}
-              {viewMode === '2D' && !rightDoorLocked && !moduleData?.id?.includes('glass-cabinet') && (view2DDirection === 'front' || view2DDirection === 'left' || view2DDirection === 'right') && (
+              {viewMode === '2D' && hasCustomHingePositions && !rightDoorLocked && !moduleData?.id?.includes('glass-cabinet') && (view2DDirection === 'front' || view2DDirection === 'left' || view2DDirection === 'right') && (
+                <>
+                  {renderHingeMarkers(
+                    rightDoorWidthUnits / 2 - mmToThreeUnits(24),
+                    -9.5,
+                    customHingePositionsMm,
+                    'right-custom-hinge'
+                  )}
+                </>
+              )}
+              {viewMode === '2D' && !hasCustomHingePositions && !rightDoorLocked && !moduleData?.id?.includes('glass-cabinet') && (view2DDirection === 'front' || view2DDirection === 'left' || view2DDirection === 'right') && (
                 <>
                   {(isUpperCabinet || hingeMode === 'upper2') ? (
                     // 상부장 또는 도어분절 상부도어: 위에서 100mm, 아래에서 100mm
@@ -1965,10 +2266,16 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                   )}
                 </>
               )}
+              {!rightDoorLocked && !moduleData?.id?.includes('glass-cabinet') && renderHingePositionGuides(
+                rightDoorWidthUnits / 2 - mmToThreeUnits(24),
+                'right',
+                effectiveHingePositionsMm,
+                'right-door-hinge'
+              )}
 
 
               {/* Door opening direction for right door - 잠금 시 숨김, 치수 OFF 시 숨김 */}
-              {showDimensions && !isPlainMaterial && !rightDoorLocked && (viewMode === '3D' || (viewMode === '2D' && view2DDirection === 'front')) && (() => {
+              {showDimensions && !isHingePositionEditMode && !isPlainMaterial && !rightDoorLocked && (viewMode === '3D' || (viewMode === '2D' && view2DDirection === 'front')) && (() => {
                 const segments = (() => {
                   const isFrontView = viewMode === '3D' || view2DDirection === 'front';
                   const segmentList: React.ReactNode[] = [];
@@ -2462,7 +2769,19 @@ const DoorModule: React.FC<DoorModuleProps> = ({
             )}
 
             {/* Hinges for single door - 상부장 2개, 하부장 2개, 키큰장 4개 (잠금 시 숨김, 유리장 제외) */}
-            {viewMode === '2D' && !singleDoorLocked && !moduleData?.id?.includes('glass-cabinet') && (view2DDirection === 'front' || view2DDirection === 'left' || view2DDirection === 'right') && (
+            {viewMode === '2D' && hasCustomHingePositions && !singleDoorLocked && !moduleData?.id?.includes('glass-cabinet') && (view2DDirection === 'front' || view2DDirection === 'left' || view2DDirection === 'right') && (
+              <>
+                {renderHingeMarkers(
+                  adjustedHingePosition === 'left'
+                    ? -doorWidthUnits / 2 + mmToThreeUnits(24)
+                    : doorWidthUnits / 2 - mmToThreeUnits(24),
+                  adjustedHingePosition === 'left' ? 9.5 : -9.5,
+                  customHingePositionsMm,
+                  'single-custom-hinge'
+                )}
+              </>
+            )}
+            {viewMode === '2D' && !hasCustomHingePositions && !singleDoorLocked && !moduleData?.id?.includes('glass-cabinet') && (view2DDirection === 'front' || view2DDirection === 'left' || view2DDirection === 'right') && (
               <>
                 {(isUpperCabinet || hingeMode === 'upper2') ? (
                   // 상부장 또는 도어분절 상부도어: 위에서 100mm, 아래에서 100mm
@@ -2575,10 +2894,18 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                 )}
               </>
             )}
+            {!singleDoorLocked && !moduleData?.id?.includes('glass-cabinet') && renderHingePositionGuides(
+              adjustedHingePosition === 'left'
+                ? -doorWidthUnits / 2 + mmToThreeUnits(24)
+                : doorWidthUnits / 2 - mmToThreeUnits(24),
+              adjustedHingePosition === 'left' ? 'left' : 'right',
+              effectiveHingePositionsMm,
+              'single-door-hinge'
+            )}
 
 
             {/* 도어 열리는 방향 표시 (2D 정면뷰/측면뷰 + 3D) - 잠금 시 숨김, 치수 OFF 시 숨김 */}
-            {showDimensions && !isPlainMaterial && !singleDoorLocked && (viewMode === '3D' || (viewMode === '2D' && view2DDirection === 'front')) && (() => {
+            {showDimensions && !isHingePositionEditMode && !isPlainMaterial && !singleDoorLocked && (viewMode === '3D' || (viewMode === '2D' && view2DDirection === 'front')) && (() => {
               const indicatorRotation = (adjustedHingePosition === 'left'
                 ? leftHingeDoorSpring.rotation
                 : rightHingeDoorSpring.rotation).to(value => {

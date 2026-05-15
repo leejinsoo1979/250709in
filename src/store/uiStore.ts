@@ -247,6 +247,10 @@ interface UIState {
   // 도어 갭 하이라이트 (상단갭/하단갭 입력 포커스 시 뷰어에 빨강 반투명 표시)
   highlightedDoorGap: { moduleIds: string[]; side: 'top' | 'bottom' } | null;
   setHighlightedDoorGap: (h: { moduleIds: string[]; side: 'top' | 'bottom' } | null) => void;
+
+  // 경첩 위치 변경 모드: 선택된 가구의 경첩 치수 가이드만 표시
+  hingePositionEditModeModuleId: string | null;
+  setHingePositionEditModeModuleId: (moduleId: string | null) => void;
   
   // 팝업 관리 액션들
   openFurniturePopup: (moduleId: string) => void;
@@ -342,6 +346,7 @@ const initialUIState = {
   showGuides: false, // 기본값: 그리드(가이드) 숨김
   showAxis: true, // 기본값: 축 표시
   highlightedDoorGap: null,  // 도어 갭 하이라이트
+  hingePositionEditModeModuleId: null,  // 기본값: 경첩 위치 변경 모드 비활성
   showFrame: true, // 기본값: 프레임 표시
   showAll: true, // 기본값: 모든 가이드 표시
   dimensionOptionsBackup: null,
@@ -597,6 +602,9 @@ export const useUIStore = create<UIState>()(
         set({ showAxis: show }),
 
       setHighlightedDoorGap: (h) => set({ highlightedDoorGap: h }),
+
+      setHingePositionEditModeModuleId: (moduleId) =>
+        set({ hingePositionEditModeModuleId: moduleId }),
 
       setShowFrame: (show) =>
         set({ showFrame: show }),

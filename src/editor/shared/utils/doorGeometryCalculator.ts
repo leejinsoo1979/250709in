@@ -79,6 +79,15 @@ export interface DoorWidthAdjustmentSides {
   rightMm: number
 }
 
+export type DoorHingeMode = 'auto' | 'upper2' | 'lower4' | 'lower5'
+
+export interface DefaultDoorHingePositionsInput {
+  doorHeightMm: number
+  isUpperCabinet?: boolean
+  isLowerCabinet?: boolean
+  hingeMode?: DoorHingeMode
+}
+
 const DEFAULT_PANEL_THICKNESS_MM = 18
 const DEFAULT_UNIT_SCALE = 0.01
 const DEFAULT_DOOR_GAP_MM = 3
@@ -245,6 +254,49 @@ export const resolveHingeOppositeDoorWidthAdjustment = (
   }
 
   return { leftMm: 0, rightMm: adjustmentMm }
+}
+
+export const normalizeDoorHingePositionsMm = (
+  positions: number[] | null | undefined,
+  doorHeightMm: number
+): number[] => {
+  if (!Array.isArray(positions) || !Number.isFinite(doorHeightMm) || doorHeightMm <= 0) {
+    return []
+  }
+
+  const min = 1
+  const max = Math.max(min, doorHeightMm - 1)
+  const normalized = positions
+    .map(position => Math.round(position))
+    .filter(position => Number.isFinite(position))
+    .map(position => Math.max(min, Math.min(max, position)))
+
+  return Array.from(new Set(normalized)).sort((a, b) => a - b)
+}
+
+export const resolveDefaultDoorHingePositionsMm = ({
+  doorHeightMm,
+  isUpperCabinet = false,
+  isLowerCabinet = false,
+  hingeMode = 'auto'
+}: DefaultDoorHingePositionsInput): number[] => {
+  if (!Number.isFinite(doorHeightMm) || doorHeightMm <= 0) {
+    return []
+  }
+
+  if (isUpperCabinet || hingeMode === 'upper2') {
+    return normalizeDoorHingePositionsMm([100, doorHeightMm - 100], doorHeightMm)
+  }
+
+  if (isLowerCabinet && hingeMode !== 'lower4' && hingeMode !== 'lower5') {
+    return normalizeDoorHingePositionsMm([149, doorHeightMm - 100], doorHeightMm)
+  }
+
+  if (hingeMode === 'lower5') {
+    return normalizeDoorHingePositionsMm([149, 749, doorHeightMm / 2, doorHeightMm - 700, doorHeightMm - 100], doorHeightMm)
+  }
+
+  return normalizeDoorHingePositionsMm([149, 749, doorHeightMm - 700, doorHeightMm - 100], doorHeightMm)
 }
 
 export const calculateSingleDoorOpenGeometry = (

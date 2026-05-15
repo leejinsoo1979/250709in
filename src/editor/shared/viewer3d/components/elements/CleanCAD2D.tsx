@@ -453,7 +453,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
     () => (showFurniture ? placedModulesStore : []),
     [placedModulesStore, showFurniture]
   );
-  const { view2DDirection, showDimensions: showDimensionsFromStore, showDimensionsText, view2DTheme, selectedSlotIndex, isLayoutBuilderOpen, selectedFurnitureId } = useUIStore();
+  const { view2DDirection, showDimensions: showDimensionsFromStore, showDimensionsText, view2DTheme, selectedSlotIndex, isLayoutBuilderOpen, selectedFurnitureId, hingePositionEditModeModuleId } = useUIStore();
   const { zones } = useDerivedSpaceStore();
 
   // 단내림 설정
@@ -1693,7 +1693,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
   const renderDimensions = () => {
     // showDimensions가 false이면 렌더링 안 함
 // console.log('🔵 renderDimensions called:', { showDimensions, currentViewDirection });
-    if (!showDimensions) {
+    if (!showDimensions || hingePositionEditModeModuleId) {
 // console.log('❌ showDimensions is false, returning null');
       return null;
     }
@@ -4212,8 +4212,9 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             const sections = ((leftViewMod as any)?.customSections || modData?.modelConfig?.sections) as any[] | undefined;
             if (sections && sections.length >= 2) {
               // 섹션 기준 furnitureH = 실제 가구 내경 (공간 - 실제 상단몰딩 - 실제 걸래받이 - 띄움)
+              // 상단몰딩 OFF: 슬롯/자유 모두 topFrameGap만큼 공간이 비므로 섹션 영역에서 차감
               const realTopFrame = leftmostMod.hasTopFrame === false
-                ? (isFreePlacement ? leftTopGapForDim : 0)
+                ? (isFreePlacement ? leftTopGapForDim : ((leftmostMod as any).topFrameGap ?? 0))
                 : (leftmostMod.topFrameThickness ?? globalTopFrame);
               // 띄움 배치: hasBase=false 이면 걸래받이 자리가 띄움 공간으로 대체됨
               // → individualFloatHeight 가 없으면 baseFrameHeight (= 띄움 기본) 사용
@@ -5051,8 +5052,9 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             const rSections = ((rightmostMod as any)?.customSections || rModData?.modelConfig?.sections) as any[] | undefined;
             if (rSections && rSections.length >= 2) {
               // 섹션 기준 furnitureH = 실제 가구 내경 (공간 - 실제 상단몰딩 - 실제 걸래받이)
+              // 상단몰딩 OFF: 슬롯/자유 모두 topFrameGap만큼 공간이 비므로 섹션 영역에서 차감
               const rRealTopFrame = rightmostMod.hasTopFrame === false
-                ? (isFreePlacement ? rTopGapForDim : 0)
+                ? (isFreePlacement ? rTopGapForDim : ((rightmostMod as any).topFrameGap ?? 0))
                 : (rightmostMod.topFrameThickness ?? rGlobalTopFrame);
               const rRealBottomFrame = (rightLowerMod as any)?.hasBase === false
                 ? ((rightLowerMod as any)?.individualFloatHeight ?? 0)

@@ -5,8 +5,10 @@ import {
   calculateDualDoorOpenGeometry,
   calculateSingleDoorOpenGeometry,
   mmToDoorGeometryUnits,
+  normalizeDoorHingePositionsMm,
   resolveDoorLeafDimensions,
   resolveDoorVerticalGeometry,
+  resolveDefaultDoorHingePositionsMm,
   resolveHingeOppositeDoorWidthAdjustment
 } from '../doorGeometryCalculator'
 
@@ -218,6 +220,33 @@ describe('doorGeometryCalculator', () => {
       leftMm: 0,
       rightMm: -20
     })
+  })
+
+  it('사용자 경첩 위치는 도어 높이 범위 안에서 중복 없이 하단 기준으로 정렬한다', () => {
+    expect(normalizeDoorHingePositionsMm([500.4, -20, 500.2, 900], 800)).toEqual([1, 500, 799])
+    expect(normalizeDoorHingePositionsMm(undefined, 800)).toEqual([])
+    expect(normalizeDoorHingePositionsMm([100], 0)).toEqual([])
+  })
+
+  it('기본 경첩 위치는 기존 2D 뷰어 배치 기준과 일치한다', () => {
+    expect(resolveDefaultDoorHingePositionsMm({
+      doorHeightMm: 800,
+      isUpperCabinet: true
+    })).toEqual([100, 700])
+
+    expect(resolveDefaultDoorHingePositionsMm({
+      doorHeightMm: 780,
+      isLowerCabinet: true
+    })).toEqual([149, 680])
+
+    expect(resolveDefaultDoorHingePositionsMm({
+      doorHeightMm: 2100
+    })).toEqual([149, 749, 1400, 2000])
+
+    expect(resolveDefaultDoorHingePositionsMm({
+      doorHeightMm: 2700,
+      hingeMode: 'lower5'
+    })).toEqual([149, 749, 1350, 2000, 2600])
   })
 
   it('상부장 도어 패널 높이는 패널리스트 기존 기준값을 유지한다', () => {

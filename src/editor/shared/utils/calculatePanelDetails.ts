@@ -1,4 +1,4 @@
-import { ModuleData } from '@/data/modules';
+import { ModuleData, type SectionConfig } from '@/data/modules';
 import { calculateHingePositions, calculateHingeCount } from '@/domain/boring/calculators/hingeCalculator';
 import { DEFAULT_HINGE_SETTINGS } from '@/domain/boring/constants';
 import type { CustomFurnitureConfig } from '@/editor/shared/furniture/types';
@@ -57,7 +57,8 @@ export const calculatePanelDetails = (
   customMaidaHeights?: number[],
   customHingePositionsMm?: number[],
   customUpperDoorHingePositionsMm?: number[],
-  customLowerDoorHingePositionsMm?: number[]
+  customLowerDoorHingePositionsMm?: number[],
+  customSectionsOverride?: SectionConfig[]
 ) => {
   const panels: { upper: any[]; lower: any[]; door: any[]; frame: any[] } = {
     upper: [],     // 상부장 패널
@@ -1387,7 +1388,7 @@ export const calculatePanelDetails = (
       const screwYOffset = screwHoleSpacing / 2; // A: 22.5mm, B: 24mm
 
       return {
-        // boringPositions: 힌지컵 Y좌표 배열 (상단 기준)
+        // boringPositions: 힌지컵 Y좌표 배열 (도어 하단 기준)
         boringPositions: hingePositions,
         // boringDepthPositions: 힌지컵 X좌표
         boringDepthPositions: [cupX],
@@ -1428,7 +1429,11 @@ export const calculatePanelDetails = (
 
     if (isDoorSplitPanelModule) {
       const isPantryDoorSplitModule = moduleData.id.includes('pantry-cabinet-split');
-      const lowerSectionTopMm = isPantryDoorSplitModule ? 1825 : 860;
+      const defaultLowerSectionTopMm = isPantryDoorSplitModule ? 1825 : 860;
+      const customLowerSectionTopMm = Array.isArray(customSectionsOverride) && customSectionsOverride[0]?.height > 0
+        ? customSectionsOverride[0].height
+        : undefined;
+      const lowerSectionTopMm = customLowerSectionTopMm ?? defaultLowerSectionTopMm;
       const lowerDoorTopMm = isPantryDoorSplitModule
         ? lowerSectionTopMm - 2
         : lowerSectionTopMm - 40;

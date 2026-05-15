@@ -229,6 +229,18 @@ const BoxModule: React.FC<BoxModuleProps> = ({
     const m = s.placedModules.find(p => p.id === placedFurnitureId);
     return (m as any)?.sectionDepthDirections as ('front' | 'back')[] | undefined;
   });
+  const placedHingePositionsMm = useFurnitureStore(s => {
+    if (!placedFurnitureId) return undefined;
+    return s.placedModules.find(p => p.id === placedFurnitureId)?.hingePositionsMm;
+  });
+  const placedUpperDoorHingePositionsMm = useFurnitureStore(s => {
+    if (!placedFurnitureId) return undefined;
+    return s.placedModules.find(p => p.id === placedFurnitureId)?.upperDoorHingePositionsMm;
+  });
+  const placedLowerDoorHingePositionsMm = useFurnitureStore(s => {
+    if (!placedFurnitureId) return undefined;
+    return s.placedModules.find(p => p.id === placedFurnitureId)?.lowerDoorHingePositionsMm;
+  });
   const placedModuleForReactive = (placedSectionDepths || placedSectionDepthDirections)
     ? { sectionDepths: placedSectionDepths, sectionDepthDirections: placedSectionDepthDirections }
     : null;
@@ -497,6 +509,9 @@ const BoxModule: React.FC<BoxModuleProps> = ({
                 textureUrl={baseFurniture.textureUrl}
                 panelGrainDirections={baseFurniture.panelGrainDirections}
                 furnitureId={placedFurnitureId}
+                hingePositionsMm={placedHingePositionsMm}
+                upperDoorHingePositionsMm={placedUpperDoorHingePositionsMm}
+                lowerDoorHingePositionsMm={placedLowerDoorHingePositionsMm}
                 floatHeight={spaceInfo?.baseConfig?.floatHeight}
                 doorTopGap={doorTopGap}
                 doorBottomGap={doorBottomGap}
@@ -1720,6 +1735,9 @@ const BoxModule: React.FC<BoxModuleProps> = ({
                     textureUrl={baseFurniture.textureUrl}
                     panelGrainDirections={baseFurniture.panelGrainDirections}
                     furnitureId={placedFurnitureId}
+                    hingePositionsMm={placedHingePositionsMm}
+                    upperDoorHingePositionsMm={placedUpperDoorHingePositionsMm}
+                    lowerDoorHingePositionsMm={placedLowerDoorHingePositionsMm}
                     floatHeight={spaceInfo?.baseConfig?.floatHeight}
                     doorTopGap={doorTopGap}
                     doorBottomGap={doorBottomGap}
@@ -1756,6 +1774,9 @@ const BoxModule: React.FC<BoxModuleProps> = ({
                     textureUrl={baseFurniture.textureUrl}
                     panelGrainDirections={baseFurniture.panelGrainDirections}
                     furnitureId={placedFurnitureId}
+                    hingePositionsMm={placedHingePositionsMm}
+                    upperDoorHingePositionsMm={placedUpperDoorHingePositionsMm}
+                    lowerDoorHingePositionsMm={placedLowerDoorHingePositionsMm}
                     floatHeight={spaceInfo?.baseConfig?.floatHeight}
                     doorTopGap={doorTopGap}
                     doorBottomGap={doorBottomGap}
@@ -1793,6 +1814,9 @@ const BoxModule: React.FC<BoxModuleProps> = ({
               textureUrl={baseFurniture.textureUrl} // 텍스처 URL 전달
               panelGrainDirections={baseFurniture.panelGrainDirections} // 결방향 정보 전달
               furnitureId={placedFurnitureId} // 가구 ID 전달
+              hingePositionsMm={placedHingePositionsMm}
+              upperDoorHingePositionsMm={placedUpperDoorHingePositionsMm}
+              lowerDoorHingePositionsMm={placedLowerDoorHingePositionsMm}
               floatHeight={spaceInfo?.baseConfig?.floatHeight} // 띄움 높이 전달
               doorTopGap={doorTopGap} // 천장에서 도어 상단까지의 갭
               doorBottomGap={doorBottomGap} // 바닥에서 도어 하단까지의 갭

@@ -7600,6 +7600,9 @@ export default React.memo(Room, (prevProps, nextProps) => {
     if (prev.customConfig !== next.customConfig) return false;
     if (prev.hasLeftEndPanel !== next.hasLeftEndPanel) return false;
     if (prev.hasRightEndPanel !== next.hasRightEndPanel) return false;
+    if (JSON.stringify(prev.hingePositionsMm) !== JSON.stringify(next.hingePositionsMm)) return false;
+    if (JSON.stringify(prev.upperDoorHingePositionsMm) !== JSON.stringify(next.upperDoorHingePositionsMm)) return false;
+    if (JSON.stringify(prev.lowerDoorHingePositionsMm) !== JSON.stringify(next.lowerDoorHingePositionsMm)) return false;
   }
 
   // 기둥 배열이 변경되었는지 확인 (프레임 분절에 영향)

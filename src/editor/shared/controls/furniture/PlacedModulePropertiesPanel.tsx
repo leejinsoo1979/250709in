@@ -794,6 +794,11 @@ const PlacedModulePropertiesPanel: React.FC = () => {
   const activePopup = useUIStore(state => state.activePopup);
   const closeAllPopups = useUIStore(state => state.closeAllPopups);
   const setHighlightedFrame = useUIStore(state => state.setHighlightedFrame);
+  const hingePositionEditModeModuleId = useUIStore(state => state.hingePositionEditModeModuleId);
+  const setHingePositionEditModeModuleId = useUIStore(state => state.setHingePositionEditModeModuleId);
+  const setViewMode = useUIStore(state => state.setViewMode);
+  const setView2DDirection = useUIStore(state => state.setView2DDirection);
+  const setShowDimensions = useUIStore(state => state.setShowDimensions);
 
   // 컴포넌트 언마운트 시 패널 강조 해제
   useEffect(() => {
@@ -909,6 +914,8 @@ const PlacedModulePropertiesPanel: React.FC = () => {
   const [widthError, setWidthError] = useState<string>('');
   const [hingePosition, setHingePosition] = useState<'left' | 'right'>('right');
   const [hingeType, setHingeType] = useState<'A' | 'B'>('A');
+  const [hingePositionDrafts, setHingePositionDrafts] = useState<Record<string, string>>({});
+  const [hingeGapDrafts, setHingeGapDrafts] = useState<Record<string, string>>({});
   const [hasDoor, setHasDoor] = useState<boolean>(false);
   const [doorSplit, setDoorSplit] = useState<boolean>(false);
   const [hasGapBackPanel, setHasGapBackPanel] = useState<boolean>(false); // 상하부장 사이 갭 백패널 상태
@@ -1054,6 +1061,22 @@ const PlacedModulePropertiesPanel: React.FC = () => {
   const currentPlacedModule = activePopup.type === 'furnitureEdit' && activePopup.id 
     ? placedModules.find(module => module.id === activePopup.id)
     : null;
+  const isHingePositionEditMode = !!currentPlacedModule && hingePositionEditModeModuleId === currentPlacedModule.id;
+
+  useEffect(() => {
+    if (
+      hingePositionEditModeModuleId &&
+      (activePopup.type !== 'furnitureEdit' || activePopup.id !== hingePositionEditModeModuleId)
+    ) {
+      setHingePositionEditModeModuleId(null);
+    }
+  }, [activePopup.type, activePopup.id, hingePositionEditModeModuleId, setHingePositionEditModeModuleId]);
+
+  useEffect(() => {
+    setHingeGapDrafts({});
+  }, [
+    currentPlacedModule?.id
+  ]);
 
   // 같은 슬롯의 반대편 캐비넷이 이미 백패널을 가지고 있는지 확인
   const isBackPanelAlreadyInSlot = React.useMemo(() => {
@@ -1837,9 +1860,10 @@ const PlacedModulePropertiesPanel: React.FC = () => {
       currentPlacedModule?.customMaidaHeights,
       currentPlacedModule?.hingePositionsMm,
       currentPlacedModule?.upperDoorHingePositionsMm,
-      currentPlacedModule?.lowerDoorHingePositionsMm
+      currentPlacedModule?.lowerDoorHingePositionsMm,
+      currentPlacedModule?.customSections
     );
-  }, [moduleData, customWidth, customDepth, hasDoor, t, doorOriginalWidth, backPanelThicknessValue, currentPlacedModule?.customConfig, currentPlacedModule?.hasLeftEndPanel, currentPlacedModule?.hasRightEndPanel, currentPlacedModule?.endPanelThickness, adjustedFreeHeight, topFrameHeightMm, visualBaseFrameHeightMm, currentPlacedModule?.hasTopFrame, currentPlacedModule?.hasBase, currentPlacedModule?.topFrameThickness, currentPlacedModule?.endPanelTopOffset, currentPlacedModule?.endPanelBottomOffset, currentPlacedModule?.isDualSlot, leftEpAdjacent, rightEpAdjacent, currentPlacedModule?.topPanelNotchSize, currentPlacedModule?.topPanelNotchSide, currentPlacedModule?.stoneTopThickness, currentPlacedModule?.stoneTopFrontOffset, currentPlacedModule?.stoneTopBackOffset, currentPlacedModule?.stoneTopLeftOffset, currentPlacedModule?.stoneTopRightOffset, currentPlacedModule?.doorTopGap, currentPlacedModule?.doorBottomGap, currentPlacedModule?.hingePositionsMm, currentPlacedModule?.upperDoorHingePositionsMm, currentPlacedModule?.lowerDoorHingePositionsMm, endPanelTopOffsetForPanels, endPanelBottomOffsetForPanels, currentPlacedModule?.customMaidaHeights]);
+  }, [moduleData, customWidth, customDepth, hasDoor, t, doorOriginalWidth, backPanelThicknessValue, currentPlacedModule?.customConfig, currentPlacedModule?.hasLeftEndPanel, currentPlacedModule?.hasRightEndPanel, currentPlacedModule?.endPanelThickness, adjustedFreeHeight, topFrameHeightMm, visualBaseFrameHeightMm, currentPlacedModule?.hasTopFrame, currentPlacedModule?.hasBase, currentPlacedModule?.topFrameThickness, currentPlacedModule?.endPanelTopOffset, currentPlacedModule?.endPanelBottomOffset, currentPlacedModule?.isDualSlot, leftEpAdjacent, rightEpAdjacent, currentPlacedModule?.topPanelNotchSize, currentPlacedModule?.topPanelNotchSide, currentPlacedModule?.stoneTopThickness, currentPlacedModule?.stoneTopFrontOffset, currentPlacedModule?.stoneTopBackOffset, currentPlacedModule?.stoneTopLeftOffset, currentPlacedModule?.stoneTopRightOffset, currentPlacedModule?.doorTopGap, currentPlacedModule?.doorBottomGap, currentPlacedModule?.hingePositionsMm, currentPlacedModule?.upperDoorHingePositionsMm, currentPlacedModule?.lowerDoorHingePositionsMm, currentPlacedModule?.customSections, endPanelTopOffsetForPanels, endPanelBottomOffsetForPanels, currentPlacedModule?.customMaidaHeights]);
 
   // 서라운드 패널 계산 — 맨 좌측 가구에 좌측 서라운드, 맨 우측 가구에 우측 서라운드 귀속
   const surroundPanels = React.useMemo(() => {
@@ -2718,10 +2742,112 @@ const PlacedModulePropertiesPanel: React.FC = () => {
 
   type HingePositionsField = 'hingePositionsMm' | 'upperDoorHingePositionsMm' | 'lowerDoorHingePositionsMm';
 
+  const clampHingePositionMm = (value: number, doorHeightMm: number) => {
+    const max = Math.max(1, Math.round(doorHeightMm) - 1);
+    return Math.max(1, Math.min(max, Math.round(value)));
+  };
+
+  const bottomToTopHingePositionMm = (positionMm: number, doorHeightMm: number) =>
+    clampHingePositionMm(Math.round(doorHeightMm) - positionMm, doorHeightMm);
+
+  const topToBottomHingePositionMm = (positionMm: number, doorHeightMm: number) =>
+    clampHingePositionMm(Math.round(doorHeightMm) - positionMm, doorHeightMm);
+
+  const getHingePositionDraftKey = (field: HingePositionsField, index: number) =>
+    `${currentPlacedModule?.id ?? 'module'}:${field}:${index}`;
+
+  const getHingeGapDraftKey = (field: HingePositionsField, index: number) =>
+    `${currentPlacedModule?.id ?? 'module'}:${field}:gap:${index}`;
+
+  const clearHingePositionDraft = (draftKey: string) => {
+    setHingePositionDrafts((prev) => {
+      if (!(draftKey in prev)) return prev;
+      const next = { ...prev };
+      delete next[draftKey];
+      return next;
+    });
+  };
+
+  const clearHingeGapDraft = (draftKey: string) => {
+    setHingeGapDrafts((prev) => {
+      if (!(draftKey in prev)) return prev;
+      const next = { ...prev };
+      delete next[draftKey];
+      return next;
+    });
+  };
+
+  const getHingeTopDistancesMm = (positions: number[], doorHeightMm: number) =>
+    normalizeDoorHingePositionsMm(positions, doorHeightMm)
+      .map(positionMm => bottomToTopHingePositionMm(positionMm, doorHeightMm))
+      .sort((a, b) => a - b);
+
+  const getHingeGapSegments = (positions: number[], doorHeightMm: number) => {
+    const topDistances = getHingeTopDistancesMm(positions, doorHeightMm);
+    const boundaries = [0, ...topDistances, Math.round(doorHeightMm)];
+    return boundaries.slice(0, -1).map((startMm, index) => {
+      const endMm = boundaries[index + 1];
+      const isFirst = index === 0;
+      const isLast = index === boundaries.length - 2;
+      const label = isFirst
+        ? '상단-1번'
+        : isLast
+          ? `${topDistances.length}번-하단`
+          : `${index}번-${index + 1}번`;
+      return {
+        label,
+        valueMm: Math.max(0, Math.round(endMm - startMm)),
+        segmentIndex: index
+      };
+    });
+  };
+
+  const applyHingeGapSegmentChange = (
+    field: HingePositionsField,
+    currentPositions: number[],
+    doorHeightMm: number,
+    segmentIndex: number,
+    valueMm: number
+  ) => {
+    const topDistances = getHingeTopDistancesMm(currentPositions, doorHeightMm);
+    if (topDistances.length === 0) return;
+
+    const doorHeight = Math.round(doorHeightMm);
+    const boundaries = [0, ...topDistances, doorHeight];
+    const isLastSegment = segmentIndex === boundaries.length - 2;
+    const targetBoundaryIndex = isLastSegment ? boundaries.length - 2 : segmentIndex + 1;
+    const previousBoundary = boundaries[targetBoundaryIndex - 1] ?? 0;
+    const nextBoundary = boundaries[targetBoundaryIndex + 1] ?? doorHeight;
+    const requestedBoundary = isLastSegment
+      ? doorHeight - valueMm
+      : previousBoundary + valueMm;
+    const clampedBoundary = Math.max(
+      previousBoundary + 1,
+      Math.min(nextBoundary - 1, Math.round(requestedBoundary))
+    );
+
+    const nextTopDistances = [...topDistances];
+    nextTopDistances[targetBoundaryIndex - 1] = clampedBoundary;
+    const nextBottomPositions = nextTopDistances.map(topDistanceMm =>
+      topToBottomHingePositionMm(topDistanceMm, doorHeight)
+    );
+    updateHingePositions(field, nextBottomPositions, doorHeight);
+  };
+
   const updateHingePositions = (field: HingePositionsField, positions: number[], doorHeightMm: number) => {
     if (!currentPlacedModule?.id) return;
     const normalized = normalizeDoorHingePositionsMm(positions, doorHeightMm);
     updatePlacedModule(currentPlacedModule.id, { [field]: normalized } as any);
+  };
+
+  const handleHingePositionEditModeChange = (checked: boolean) => {
+    if (!currentPlacedModule?.id) return;
+    setHingePositionEditModeModuleId(checked ? currentPlacedModule.id : null);
+    if (checked) {
+      setViewMode('2D');
+      setView2DDirection('front');
+      setShowDimensions(true);
+    }
   };
 
   const handleHingePositionValueChange = (
@@ -2729,12 +2855,91 @@ const PlacedModulePropertiesPanel: React.FC = () => {
     index: number,
     value: string,
     currentPositions: number[],
-    doorHeightMm: number
+    doorHeightMm: number,
+    draftKey: string
   ) => {
-    if (value === '' || value === '-' || !/^-?\d+$/.test(value)) return;
-    const num = Math.max(1, Math.min(Math.max(1, Math.round(doorHeightMm) - 1), parseInt(value, 10)));
+    if (value === '' || value === '-' || !/^-?\d+$/.test(value)) {
+      setHingePositionDrafts((prev) => ({ ...prev, [draftKey]: value }));
+      return;
+    }
+    const topDistanceMm = clampHingePositionMm(parseInt(value, 10), doorHeightMm);
+    setHingePositionDrafts((prev) => ({ ...prev, [draftKey]: String(topDistanceMm) }));
     const next = [...currentPositions];
-    next[index] = num;
+    next[index] = topToBottomHingePositionMm(topDistanceMm, doorHeightMm);
+    updateHingePositions(field, next, doorHeightMm);
+  };
+
+  const handleHingeGapValueChange = (
+    field: HingePositionsField,
+    segmentIndex: number,
+    value: string,
+    currentPositions: number[],
+    doorHeightMm: number,
+    draftKey: string
+  ) => {
+    setHingeGapDrafts((prev) => ({ ...prev, [draftKey]: value }));
+    if (value === '' || value === '-' || !/^-?\d+$/.test(value)) {
+      return;
+    }
+    const gapMm = clampHingePositionMm(parseInt(value, 10), doorHeightMm);
+    applyHingeGapSegmentChange(field, currentPositions, doorHeightMm, segmentIndex, gapMm);
+  };
+
+  const handleHingeGapKeyDown = (
+    event: React.KeyboardEvent<HTMLInputElement>,
+    field: HingePositionsField,
+    segmentIndex: number,
+    inputValue: string,
+    currentPositions: number[],
+    doorHeightMm: number,
+    draftKey: string
+  ) => {
+    event.stopPropagation();
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      clearHingeGapDraft(draftKey);
+      event.currentTarget.blur();
+      return;
+    }
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      clearHingeGapDraft(draftKey);
+      event.currentTarget.blur();
+      return;
+    }
+    if (event.key !== 'ArrowUp' && event.key !== 'ArrowDown') return;
+    event.preventDefault();
+    const step = event.shiftKey ? 10 : 1;
+    const segments = getHingeGapSegments(currentPositions, doorHeightMm);
+    const fallback = segments[segmentIndex]?.valueMm ?? 1;
+    const liveValue = event.currentTarget.value;
+    const parsed = /^-?\d+$/.test(liveValue) ? parseInt(liveValue, 10) : (/^-?\d+$/.test(inputValue) ? parseInt(inputValue, 10) : fallback);
+    const delta = event.key === 'ArrowUp' ? step : -step;
+    const nextGap = clampHingePositionMm((Number.isFinite(parsed) ? parsed : fallback) + delta, doorHeightMm);
+    setHingeGapDrafts((prev) => ({ ...prev, [draftKey]: String(nextGap) }));
+    applyHingeGapSegmentChange(field, currentPositions, doorHeightMm, segmentIndex, nextGap);
+  };
+
+  const handleHingePositionKeyDown = (
+    event: React.KeyboardEvent<HTMLInputElement>,
+    field: HingePositionsField,
+    index: number,
+    inputValue: string,
+    currentPositions: number[],
+    doorHeightMm: number,
+    draftKey: string
+  ) => {
+    if (event.key !== 'ArrowUp' && event.key !== 'ArrowDown') return;
+    event.preventDefault();
+    const step = event.shiftKey ? 10 : 1;
+    const parsed = /^-?\d+$/.test(inputValue)
+      ? parseInt(inputValue, 10)
+      : bottomToTopHingePositionMm(currentPositions[index], doorHeightMm);
+    const delta = event.key === 'ArrowUp' ? step : -step;
+    const nextTopDistanceMm = clampHingePositionMm((Number.isFinite(parsed) ? parsed : 1) + delta, doorHeightMm);
+    const next = [...currentPositions];
+    next[index] = topToBottomHingePositionMm(nextTopDistanceMm, doorHeightMm);
+    clearHingePositionDraft(draftKey);
     updateHingePositions(field, next, doorHeightMm);
   };
 
@@ -2743,9 +2948,27 @@ const PlacedModulePropertiesPanel: React.FC = () => {
     currentPositions: number[],
     doorHeightMm: number
   ) => {
-    const nextPosition = currentPositions.length > 0
-      ? Math.min(Math.max(1, Math.round(doorHeightMm) - 1), currentPositions[currentPositions.length - 1] + 100)
-      : Math.round(doorHeightMm / 2);
+    const sortedPositions = normalizeDoorHingePositionsMm(currentPositions, doorHeightMm);
+    let nextPosition = Math.round(doorHeightMm / 2);
+
+    if (sortedPositions.length === 1) {
+      const current = sortedPositions[0];
+      nextPosition = current > doorHeightMm / 2
+        ? current - 100
+        : current + 100;
+    } else if (sortedPositions.length > 1) {
+      let largestGapIndex = 0;
+      let largestGap = sortedPositions[1] - sortedPositions[0];
+      for (let i = 1; i < sortedPositions.length - 1; i++) {
+        const gap = sortedPositions[i + 1] - sortedPositions[i];
+        if (gap > largestGap) {
+          largestGap = gap;
+          largestGapIndex = i;
+        }
+      }
+      nextPosition = Math.round((sortedPositions[largestGapIndex] + sortedPositions[largestGapIndex + 1]) / 2);
+    }
+
     updateHingePositions(field, [...currentPositions, nextPosition], doorHeightMm);
   };
 
@@ -4276,47 +4499,84 @@ const PlacedModulePropertiesPanel: React.FC = () => {
 
               return (
                 <div className={styles.propertySection}>
-                  <h5 className={styles.sectionTitle}>경첩 위치</h5>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
+                    <h5 className={styles.sectionTitle} style={{ margin: 0 }}>경첩 위치</h5>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', color: 'var(--theme-text-secondary)', cursor: 'pointer' }}>
+                      <input
+                        type="checkbox"
+                        checked={isHingePositionEditMode}
+                        onChange={(e) => handleHingePositionEditModeChange(e.target.checked)}
+                      />
+                      경첩 위치 변경
+                    </label>
+                  </div>
                   {groups.map((group) => {
                     const positions = buildPositions(group.field, group.doorHeightMm, group.hingeMode);
+                    const displayPositions = positions
+                      .map((positionMm, sourceIndex) => ({
+                        positionMm,
+                        topDistanceMm: bottomToTopHingePositionMm(positionMm, group.doorHeightMm),
+                        sourceIndex
+                      }))
+                      .sort((a, b) => a.topDistanceMm - b.topDistanceMm);
+                    const gapSegments = getHingeGapSegments(positions, group.doorHeightMm);
                     return (
                       <div key={group.field} style={{ marginTop: '8px' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
                           <span style={{ fontSize: '12px', color: 'var(--theme-text-secondary)', fontWeight: 600 }}>{group.label}</span>
                           <button
                             type="button"
+                            disabled={!isHingePositionEditMode}
                             onClick={() => handleAddHingePosition(group.field, positions, group.doorHeightMm)}
-                            style={{ border: '1px solid var(--theme-border)', background: 'var(--theme-surface)', color: 'var(--theme-text-primary)', borderRadius: '4px', padding: '2px 6px', fontSize: '11px', cursor: 'pointer' }}
+                            style={{ border: '1px solid var(--theme-border)', background: 'var(--theme-surface)', color: isHingePositionEditMode ? 'var(--theme-text-primary)' : 'var(--theme-text-tertiary)', borderRadius: '4px', padding: '2px 6px', fontSize: '11px', cursor: isHingePositionEditMode ? 'pointer' : 'not-allowed' }}
                           >
                             추가
                           </button>
                         </div>
-                        {positions.map((positionMm, index) => (
-                          <div key={`${group.field}-${index}`} style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
-                            <label style={{ width: '44px', fontSize: '11px', color: 'var(--theme-text-tertiary)' }}>{index + 1}번</label>
-                            <div className={styles.inputWithUnit} style={{ flex: 1 }}>
-                              <input
-                                type="text"
-                                inputMode="numeric"
-                                value={positionMm}
-                                onChange={(e) => handleHingePositionValueChange(group.field, index, e.target.value, positions, group.doorHeightMm)}
-                                className={styles.depthInput}
-                                style={{ textAlign: 'center', fontSize: '12px' }}
-                              />
-                              <span className={styles.unit}>mm</span>
+                        {gapSegments.map(({ label, valueMm, segmentIndex }) => {
+                          const draftKey = getHingeGapDraftKey(group.field, segmentIndex);
+                          const inputValue = hingeGapDrafts[draftKey] ?? String(valueMm);
+                          return (
+                            <div key={`${group.field}-gap-${segmentIndex}`} style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
+                              <label style={{ width: '72px', fontSize: '11px', color: 'var(--theme-text-tertiary)' }}>{label}</label>
+                              <div className={styles.inputWithUnit} style={{ flex: 1 }}>
+                                <input
+                                  type="number"
+                                  inputMode="numeric"
+                                  step={1}
+                                  min={1}
+                                  max={Math.max(1, group.doorHeightMm - 1)}
+                                  disabled={!isHingePositionEditMode}
+                                  value={inputValue}
+                                  onChange={(e) => handleHingeGapValueChange(group.field, segmentIndex, e.target.value, positions, group.doorHeightMm, draftKey)}
+                                  onKeyDownCapture={(e) => handleHingeGapKeyDown(e, group.field, segmentIndex, inputValue, positions, group.doorHeightMm, draftKey)}
+                                  onBlur={() => clearHingeGapDraft(draftKey)}
+                                  onFocus={(e) => e.currentTarget.select()}
+                                  className={styles.depthInput}
+                                  style={{ textAlign: 'center', fontSize: '13px', height: '28px', opacity: isHingePositionEditMode ? 1 : 0.55, cursor: isHingePositionEditMode ? 'text' : 'not-allowed' }}
+                                />
+                                <span className={styles.unit}>mm</span>
+                              </div>
                             </div>
-                            <button
-                              type="button"
-                              disabled={positions.length <= 1}
-                              onClick={() => handleRemoveHingePosition(group.field, index, positions, group.doorHeightMm)}
-                              style={{ border: '1px solid var(--theme-border)', background: 'var(--theme-surface)', color: positions.length <= 1 ? 'var(--theme-text-tertiary)' : 'var(--theme-text-primary)', borderRadius: '4px', padding: '2px 6px', fontSize: '11px', cursor: positions.length <= 1 ? 'not-allowed' : 'pointer' }}
-                            >
-                              삭제
-                            </button>
+                          );
+                        })}
+                        {displayPositions.length > 0 && (
+                          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', marginTop: '6px' }}>
+                            {displayPositions.map(({ sourceIndex }, displayIndex) => (
+                              <button
+                                key={`${group.field}-delete-${sourceIndex}`}
+                                type="button"
+                                disabled={!isHingePositionEditMode || positions.length <= 1}
+                                onClick={() => handleRemoveHingePosition(group.field, sourceIndex, positions, group.doorHeightMm)}
+                                style={{ border: '1px solid var(--theme-border)', background: 'var(--theme-surface)', color: (!isHingePositionEditMode || positions.length <= 1) ? 'var(--theme-text-tertiary)' : 'var(--theme-text-primary)', borderRadius: '4px', padding: '2px 6px', fontSize: '10px', cursor: (!isHingePositionEditMode || positions.length <= 1) ? 'not-allowed' : 'pointer' }}
+                              >
+                                {displayIndex + 1}번 삭제
+                              </button>
+                            ))}
                           </div>
-                        ))}
+                        )}
                         <div style={{ fontSize: '10px', color: 'var(--theme-text-tertiary)', marginTop: '2px' }}>
-                          도어 하단 기준 경첩컵 중심 위치입니다. 도어 높이 {group.doorHeightMm}mm 범위 안에서 적용됩니다.
+                          뷰어와 같은 상단/경첩 사이/하단 간격입니다. 체크 시 팝업과 2D 정면뷰에서 직접 수정됩니다.
                         </div>
                       </div>
                     );
@@ -7273,30 +7533,14 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                   </span>
                 </div>
                 {topGap !== null && (() => {
-                  // 저장값이 아니라 현재 섹션 높이와 선반 위치에서 항상 재계산한다.
-                  const currentGap = topGap;
+                  // 사용자가 입력한 값이 있으면 그 값을 우선 표시 (실시간 ↑↓ 반응 위해)
+                  const currentGap = (typeof (currentPlacedModule as any).upperShelfTopGap === 'number')
+                    ? (currentPlacedModule as any).upperShelfTopGap
+                    : topGap;
                   const updateGap = (v: number) => {
                     const clamped = Math.max(0, Math.min(2000, v));
-                    const updates: any = { upperShelfTopGap: clamped };
-                    if (upperHangingIndex >= 0) {
-                      const nextSections = sectionList.map((section: any, index: number) => {
-                        if (index !== upperHangingIndex) return section;
-                        const innerH = Math.max(0, getEffectiveSectionHeight(index) - 2 * basicThicknessMm);
-                        const nextShelfPos = Math.max(0, Math.round(innerH - clamped - basicThicknessMm / 2));
-                        const shelfPositions = Array.isArray(section.shelfPositions)
-                          ? [...section.shelfPositions]
-                          : [];
-                        const safetyIndex = shelfPositions.findIndex((pos: number) => pos > 0);
-                        if (safetyIndex >= 0) {
-                          shelfPositions[safetyIndex] = nextShelfPos;
-                        } else {
-                          shelfPositions.push(nextShelfPos);
-                        }
-                        return { ...section, shelfPositions };
-                      });
-                      updates.customSections = nextSections;
-                    }
-                    updatePlacedModule(currentPlacedModule.id, updates);
+                    // upperShelfTopGap만 저장. shelfPositions은 FurnitureItem이 매 렌더링 시 자동 재계산.
+                    updatePlacedModule(currentPlacedModule.id, { upperShelfTopGap: clamped } as any);
                   };
                   return (
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '4px 0', fontSize: '12px' }}>
@@ -7315,7 +7559,13 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                           onKeyDown={(e) => {
                             if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
                               e.preventDefault();
+                              e.stopPropagation();
                               updateGap(currentGap + (e.key === 'ArrowUp' ? 1 : -1));
+                            } else if (e.key === 'Enter') {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              const v = (e.target as HTMLInputElement).value;
+                              updateGap(parseInt(v) || 0);
                             }
                           }}
                           onBlur={(e) => updateGap(parseInt(e.target.value) || 0)}
