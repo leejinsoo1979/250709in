@@ -75,6 +75,24 @@ export const calculatePanelDetails = (
     const insertHeightMm = (typeof spaceHeight === 'number' && spaceHeight > 0)
       ? spaceHeight
       : (moduleData.dimensions.height || 2400);
+
+    // 3D BoxModule.tsx Insert 분기와 동일: 상단 프레임(공간 frameSize.top, 기본 30)과
+    // 걸레받이(공간 baseConfig.height, 기본 65)가 옆 가구와 같은 라인에 함께 그려짐.
+    // 옆 가구의 상단몰딩/걸레받이와 동일 카테고리(frame). 사이즈는 공간 전체 높이 기준.
+    const insertTopFrameMm = (typeof topFrameHeightMm === 'number' && topFrameHeightMm > 0)
+      ? topFrameHeightMm
+      : 30;
+    const insertBaseFrameMm = (typeof baseFrameHeightMm === 'number' && baseFrameHeightMm > 0)
+      ? baseFrameHeightMm
+      : 65;
+    const hasInsertTopFrame = hasTopFrame !== false && insertTopFrameMm > 0;
+    const hasInsertBaseFrame = hasBase !== false && insertBaseFrameMm > 0;
+    // EP 본체 높이 = 전체 공간 높이 - 상단몰딩 - 걸레받이 (옆 가구 EP와 동일)
+    const insertEpHeightMm = Math.max(
+      0,
+      insertHeightMm - (hasInsertTopFrame ? insertTopFrameMm : 0) - (hasInsertBaseFrame ? insertBaseFrameMm : 0),
+    );
+
     const insertResult: any[] = [];
     insertResult.push({ name: '=== 키큰장찬넬 ===' });
     insertResult.push({
@@ -88,7 +106,7 @@ export const calculatePanelDetails = (
     insertResult.push({
       name: '키큰장찬넬 좌EP',
       width: insertEpThicknessMm,
-      height: insertHeightMm,
+      height: insertEpHeightMm,
       thickness: insertEpDepthMm,
       material: 'PET',
       quantity: 1,
@@ -96,11 +114,33 @@ export const calculatePanelDetails = (
     insertResult.push({
       name: '키큰장찬넬 우EP',
       width: insertEpThicknessMm,
-      height: insertHeightMm,
+      height: insertEpHeightMm,
       thickness: insertEpDepthMm,
       material: 'PET',
       quantity: 1,
     });
+    // 상단몰딩 — 공간 frameSize.top 기준 (옆 가구 상단몰딩과 동일)
+    if (hasInsertTopFrame) {
+      insertResult.push({
+        name: '상단몰딩',
+        width: insertOuterWidthMm,
+        height: insertTopFrameMm,
+        thickness: insertFrontFrameThicknessMm,
+        material: 'PET',
+        quantity: 1,
+      });
+    }
+    // 걸레받이 — 공간 baseConfig.height 기준 (옆 가구 걸레받이와 동일)
+    if (hasInsertBaseFrame) {
+      insertResult.push({
+        name: '걸래받이',
+        width: insertOuterWidthMm,
+        height: insertBaseFrameMm,
+        thickness: insertFrontFrameThicknessMm,
+        material: 'PET',
+        quantity: 1,
+      });
+    }
     return insertResult;
   }
 
@@ -175,6 +215,13 @@ export const calculatePanelDetails = (
   
   // === 섹션별 패널 계산 ===
   if (sections && sections.length > 0) {
+    const isKitchenNSectionFurniture =
+      sections.length >= 2 && (
+        moduleData.id.includes('pull-out-cabinet') ||
+        moduleData.id.includes('pantry-cabinet') ||
+        (moduleData.id.includes('fridge-cabinet') && !moduleData.id.includes('built-in-fridge'))
+      );
+
     // 섹션 높이 계산 함수 (전체 높이 기준으로 계산)
     const calculateSectionHeight = (section) => {
       const heightType = section.heightType || 'percentage';
@@ -252,7 +299,8 @@ export const calculatePanelDetails = (
       else if (
         moduleData.id.includes('pull-out-cabinet') ||
         moduleData.id.includes('pantry-cabinet') ||
-        moduleData.id.includes('fridge-cabinet')
+        moduleData.id.includes('fridge-cabinet') ||
+        moduleData.id.includes('built-in-fridge')
       ) {
         const isLowerSection = sectionIndex === 0;
         sectionName = isLowerSection ? '하부장' : '상부장';
@@ -358,7 +406,7 @@ export const calculatePanelDetails = (
           : basicThickness;
         // 상하 분리: 각 섹션마다 좌측판 추가
         targetPanel.push({
-          name: `${sectionPrefix}좌측`,
+          name: isKitchenNSectionFurniture ? `좌측판${sectionIndex + 1}` : `${sectionPrefix}좌측`,
           width: leftSideDepth,
           height: sidePanelHeight,
           thickness: splitSideThickness,
@@ -379,7 +427,7 @@ export const calculatePanelDetails = (
         } else {
           // 일반 분할 측판 가구: 우측판도 섹션별 분할
           targetPanel.push({
-            name: `${sectionPrefix}우측`,
+            name: isKitchenNSectionFurniture ? `우측판${sectionIndex + 1}` : `${sectionPrefix}우측`,
             width: rightSideDepth,
             height: sidePanelHeight,
             thickness: splitSideThickness,
@@ -501,30 +549,48 @@ export const calculatePanelDetails = (
       const sidePanelGap = (basicThickness === 15.5 || basicThickness === 18.5) ? 0 : 1;
       const horizontalPanelWidth = innerWidth - sidePanelGap;
 
-      // === 하판 (첫 번째 섹션만) - 뒤에서 26mm 줄임 ===
-      if (sectionIndex === 0) {
-        targetPanel.push({
-          name: `${sectionPrefix}바닥`,
-          width: horizontalPanelWidth,
-          depth: customDepth - 26, // 백패널과 맞닿게 26mm 감소
-          thickness: basicThickness,
-          material: 'PB'
-        });
-      }
-      const isMultiSection = sections.length >= 2;
-      if (isMultiSection && sectionIndex < sections.length - 1) {
-        // 다중 섹션이고 마지막이 아니면: 하부섹션 상판
-        targetPanel.push({
-          name: `${sectionPrefix}상판`,
-          width: horizontalPanelWidth,
-          depth: customDepth - 26, // 백패널과 맞닿게 26mm 감소
-          thickness: basicThickness,
-          material: 'PB'
-        });
-      } else if (sectionIndex === sections.length - 1) {
-        // 마지막 섹션
-        if (isMultiSection) {
-          // 다중 섹션: 상부섹션 바닥판
+      if (isKitchenNSectionFurniture) {
+        const isFridgeNoBackLower = moduleData.id.includes('fridge-cabinet') && sectionIndex === 0;
+        const lowerBackReduction = isFridgeNoBackLower ? basicThickness - 1 : 26;
+
+        // 3D BaseFurnitureShell은 N섹션 키큰장 수평재를 고정 이름으로 렌더링한다.
+        if (sectionIndex === 0) {
+          panels.lower.push({
+            name: '(하)바닥',
+            width: horizontalPanelWidth,
+            depth: customDepth - lowerBackReduction,
+            thickness: basicThickness,
+            material: 'PB'
+          });
+        }
+        if (sectionIndex < sections.length - 1) {
+          panels.lower.push({
+            name: '(하)상판',
+            width: horizontalPanelWidth,
+            depth: customDepth - lowerBackReduction,
+            thickness: basicThickness,
+            material: 'PB'
+          });
+          panels.upper.push({
+            name: '(상)바닥',
+            width: horizontalPanelWidth,
+            depth: customDepth - 26,
+            thickness: basicThickness,
+            material: 'PB'
+          });
+        }
+        if (sectionIndex === sections.length - 1) {
+          panels.upper.push({
+            name: '(상)상판',
+            width: horizontalPanelWidth,
+            depth: customDepth - 26,
+            thickness: basicThickness,
+            material: 'PB'
+          });
+        }
+      } else {
+        // === 하판 (첫 번째 섹션만) - 뒤에서 26mm 줄임 ===
+        if (sectionIndex === 0) {
           targetPanel.push({
             name: `${sectionPrefix}바닥`,
             width: horizontalPanelWidth,
@@ -533,34 +599,57 @@ export const calculatePanelDetails = (
             material: 'PB'
           });
         }
-        // 상판 - 뒤에서 26mm 줄임 (상판이 없는 하부장은 제외)
-        const noTopPanel = moduleData.id.includes('lower-half-cabinet') || moduleData.id.includes('dual-lower-half-cabinet')
-          || moduleData.id.includes('lower-sink-cabinet') || moduleData.id.includes('dual-lower-sink-cabinet')
-          || moduleData.id.includes('lower-induction-cabinet') || moduleData.id.includes('dual-lower-induction-cabinet')
-          || moduleData.id.includes('lower-drawer-');
-        if (!noTopPanel) {
-          // 상판내림: 10mm → 앞에서 8mm 추가 축소, 30mm → 앞에서 10mm 추가 축소
-          const isTopDownForTop = moduleData.id.includes('lower-top-down-') || moduleData.id.includes('dual-lower-top-down-');
-          const topDownExtraFrontReductionMm = isTopDownForTop
-            ? (stoneTopThickness === 30 ? 10 : stoneTopThickness === 10 ? -10.5 : 0)
-            : 0;
-          const topPanelEntry: any = {
+        const isMultiSection = sections.length >= 2;
+        if (isMultiSection && sectionIndex < sections.length - 1) {
+          // 다중 섹션이고 마지막이 아니면: 하부섹션 상판
+          targetPanel.push({
             name: `${sectionPrefix}상판`,
             width: horizontalPanelWidth,
-            depth: customDepth - 26 - topDownExtraFrontReductionMm, // 백패널과 맞닿게 26mm 감소 + 두께별 조정
+            depth: customDepth - 26, // 백패널과 맞닿게 26mm 감소
             thickness: basicThickness,
             material: 'PB'
-          };
-          // 상판 따내기 정보 추가 (상부장만)
-          if (topPanelNotchSize && moduleData.category === 'upper') {
-            const [nw, nd] = topPanelNotchSize.split('x').map(Number);
-            topPanelEntry.cornerNotch = {
-              width: nw,
-              depth: nd,
-              side: topPanelNotchSide || 'right'
-            };
+          });
+        } else if (sectionIndex === sections.length - 1) {
+          // 마지막 섹션
+          if (isMultiSection) {
+            // 다중 섹션: 상부섹션 바닥판
+            targetPanel.push({
+              name: `${sectionPrefix}바닥`,
+              width: horizontalPanelWidth,
+              depth: customDepth - 26, // 백패널과 맞닿게 26mm 감소
+              thickness: basicThickness,
+              material: 'PB'
+            });
           }
-          targetPanel.push(topPanelEntry);
+          // 상판 - 뒤에서 26mm 줄임 (상판이 없는 하부장은 제외)
+          const noTopPanel = moduleData.id.includes('lower-half-cabinet') || moduleData.id.includes('dual-lower-half-cabinet')
+            || moduleData.id.includes('lower-sink-cabinet') || moduleData.id.includes('dual-lower-sink-cabinet')
+            || moduleData.id.includes('lower-induction-cabinet') || moduleData.id.includes('dual-lower-induction-cabinet')
+            || moduleData.id.includes('lower-drawer-');
+          if (!noTopPanel) {
+            // 상판내림: 10mm → 앞에서 8mm 추가 축소, 30mm → 앞에서 10mm 추가 축소
+            const isTopDownForTop = moduleData.id.includes('lower-top-down-') || moduleData.id.includes('dual-lower-top-down-');
+            const topDownExtraFrontReductionMm = isTopDownForTop
+              ? (stoneTopThickness === 30 ? 10 : stoneTopThickness === 10 ? -10.5 : 0)
+              : 0;
+            const topPanelEntry: any = {
+              name: `${sectionPrefix}상판`,
+              width: horizontalPanelWidth,
+              depth: customDepth - 26 - topDownExtraFrontReductionMm, // 백패널과 맞닿게 26mm 감소 + 두께별 조정
+              thickness: basicThickness,
+              material: 'PB'
+            };
+            // 상판 따내기 정보 추가 (상부장만)
+            if (topPanelNotchSize && moduleData.category === 'upper') {
+              const [nw, nd] = topPanelNotchSize.split('x').map(Number);
+              topPanelEntry.cornerNotch = {
+                width: nw,
+                depth: nd,
+                side: topPanelNotchSide || 'right'
+              };
+            }
+            targetPanel.push(topPanelEntry);
+          }
         }
       }
 
@@ -593,14 +682,6 @@ export const calculatePanelDetails = (
         }
       }
 
-      targetPanel.push({
-        name: `${backPanelNamePrefix}백패널`,
-        width: backPanelWidth, // 내경폭 + 좌우 5mm씩 확장
-        height: backPanelHeight, // 섹션별 높이
-        thickness: backPanelThickness, // 9mm
-        material: 'MDF'
-      });
-
       // 백패널 보강대 (상단/하단) - 60mm 높이, PB 재질
       // 15mm/18mm: 양쪽 0.5mm씩 축소 (총 1mm), 15.5mm/18.5mm: 갭 없음
       // 하부장 모듈은 하단 보강대 생략 (상단만)
@@ -609,22 +690,79 @@ export const calculatePanelDetails = (
       // 보강대 너비: 전체 내경폭 기준 (좌/우 분리 안 함)
       const reinforcementWidth = innerWidth - sidePanelGap;
       const isLowerCabinetModule = moduleData.id.includes('lower-');
-      if (!isLowerCabinetModule) {
-        targetPanel.push({
-          name: `${sectionPrefix}후면 보강대 1`,
-          width: reinforcementWidth,
-          height: reinforcementHeight,
-          thickness: reinforcementDepth,
-          material: 'PB'
-        });
+      const sectionHasBackPanel = (section as any).hasBackPanel !== false;
+      if (isKitchenNSectionFurniture) {
+        const sectionNumberPrefix = `(${sectionIndex + 1}단)`;
+        if (sectionHasBackPanel) {
+          targetPanel.push({
+            name: `${sectionNumberPrefix}백패널`,
+            width: backPanelWidth,
+            height: backPanelHeight,
+            thickness: backPanelThickness,
+            material: 'MDF'
+          });
+          targetPanel.push({
+            name: `${sectionNumberPrefix}보강대 1`,
+            width: reinforcementWidth,
+            height: reinforcementHeight,
+            thickness: reinforcementDepth,
+            material: 'PB'
+          });
+          targetPanel.push({
+            name: `${sectionNumberPrefix}보강대 2`,
+            width: reinforcementWidth,
+            height: reinforcementHeight,
+            thickness: reinforcementDepth,
+            material: 'PB'
+          });
+        } else if (moduleData.id.includes('fridge-cabinet')) {
+          for (let reinforcementIndex = 1; reinforcementIndex <= 3; reinforcementIndex += 1) {
+            targetPanel.push({
+              name: `${sectionNumberPrefix}보강대 ${reinforcementIndex}`,
+              width: reinforcementWidth,
+              height: reinforcementHeight,
+              thickness: reinforcementDepth,
+              material: 'PB'
+            });
+          }
+        }
+      } else {
+        if (sectionHasBackPanel) {
+          targetPanel.push({
+            name: `${backPanelNamePrefix}백패널`,
+            width: backPanelWidth, // 내경폭 + 좌우 5mm씩 확장
+            height: backPanelHeight, // 섹션별 높이
+            thickness: backPanelThickness, // 9mm
+            material: 'MDF'
+          });
+          if (!isLowerCabinetModule) {
+            targetPanel.push({
+              name: `${sectionPrefix}후면 보강대 1`,
+              width: reinforcementWidth,
+              height: reinforcementHeight,
+              thickness: reinforcementDepth,
+              material: 'PB'
+            });
+          }
+          targetPanel.push({
+            name: `${sectionPrefix}후면 보강대 2`,
+            width: reinforcementWidth,
+            height: reinforcementHeight,
+            thickness: reinforcementDepth,
+            material: 'PB'
+          });
+        } else if (moduleData.id.includes('built-in-fridge') && sectionIndex === 0) {
+          ['상', '중', '하'].forEach((suffix) => {
+            targetPanel.push({
+              name: `(하)후면보강대${suffix}`,
+              width: reinforcementWidth,
+              height: reinforcementHeight,
+              thickness: reinforcementDepth,
+              material: 'PB'
+            });
+          });
+        }
       }
-      targetPanel.push({
-        name: `${sectionPrefix}후면 보강대 2`,
-        width: reinforcementWidth,
-        height: reinforcementHeight,
-        thickness: reinforcementDepth,
-        material: 'PB'
-      });
 
       // 서랍 섹션 처리 (DrawerRenderer.tsx 참조)
       if (section.type === 'drawer' && section.count) {
@@ -884,6 +1022,54 @@ export const calculatePanelDetails = (
         // CNC 절단 목록에 추가할 항목 없음
       }
     });
+
+    // 인출장 2단 전자렌지 인출 부재는 MicrowavePullOut에서 직접 렌더링되므로
+    // 섹션 루프(open 타입)에서 누락되지 않도록 3D panelName과 같은 이름으로 추가한다.
+    if (moduleData.id.includes('pull-out-cabinet')) {
+      const microwaveWingThickness = 18;
+      const microwaveWingHeight = 65;
+      const microwaveFrontInset = 35;
+      const microwaveFrontFrameThickness = 18;
+      const microwaveFrontFrameHeight = 62;
+      const microwaveSideGap = 2;
+      const microwaveTrayThickness = 18;
+      const microwaveTrayDepth = 450;
+      const backPanelFrontOffset = backPanelThickness + basicThickness - 1;
+      const wingDepth = customDepth - microwaveFrontInset - backPanelFrontOffset;
+      const wingInnerSpan = innerWidth - microwaveWingThickness * 2;
+      const trayAndFrameWidth = wingInnerSpan - microwaveSideGap * 2;
+
+      panels.upper.push(
+        {
+          name: '전자렌지 좌날개',
+          width: wingDepth,
+          height: microwaveWingHeight,
+          thickness: microwaveWingThickness,
+          material: 'PB'
+        },
+        {
+          name: '전자렌지 우날개',
+          width: wingDepth,
+          height: microwaveWingHeight,
+          thickness: microwaveWingThickness,
+          material: 'PB'
+        },
+        {
+          name: '전자렌지 전면프레임',
+          width: trayAndFrameWidth,
+          height: microwaveFrontFrameHeight,
+          thickness: microwaveFrontFrameThickness,
+          material: 'PB'
+        },
+        {
+          name: '전자렌지 인출 트레이 바닥판',
+          width: trayAndFrameWidth,
+          depth: microwaveTrayDepth,
+          thickness: microwaveTrayThickness,
+          material: 'PB'
+        }
+      );
+    }
 
     // LowerCabinet.tsx에서 직접 렌더링하는 하부장 다보선반.
     // 해당 모듈들은 modelConfig section count가 0이라 기존 섹션 루프에서는 패널목록에 누락된다.
