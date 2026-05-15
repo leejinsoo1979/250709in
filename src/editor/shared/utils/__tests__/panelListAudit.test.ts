@@ -774,4 +774,146 @@ describe('Panel List Audit — 전체 모듈 패널 누락/사이즈 검증', ()
 
     expect(issues, `시나리오 검증 이슈 ${issues.length}건 발견`).toEqual([]);
   });
+
+  /**
+   * 주방 키큰장 카테고리 상세 감사
+   * - 인출장(pull-out), 팬트리장(pantry/split), 일반 냉장고장(fridge-cabinet),
+   *   빌트인 냉장고장(built-in-fridge), 키큰장 채움재(insert-frame)
+   * - 패널/프레임/마이다/도어/서랍모듈 카테고리별 출력 + 사이즈 정상성 + 상세 패널 명세 출력
+   */
+  it('주방 키큰장 카테고리: 인출장/냉장고장/팬트리장 등 패널 누락 없음', () => {
+    const internalSpace = { width: SPACE_WIDTH, height: SPACE_HEIGHT, depth: SPACE_DEPTH };
+    const spaceInfo: any = { width: SPACE_WIDTH, height: SPACE_HEIGHT, depth: SPACE_DEPTH };
+    const allModules = generateDynamicModules(internalSpace, spaceInfo);
+
+    const KITCHEN_PATTERNS = [
+      'pull-out-cabinet',     // 인출장
+      'pantry-cabinet',       // 팬트리장 + 도어분절 팬트리장
+      'fridge-cabinet',       // 일반 냉장고장
+      'built-in-fridge',      // 빌트인 냉장고장
+      'insert-frame',         // 키큰장 채움재
+    ];
+    const kitchenModules = allModules.filter((m) =>
+      KITCHEN_PATTERNS.some((p) => m.id.includes(p)),
+    );
+
+    const issues: AuditIssue[] = [];
+    const perModuleReport: string[] = [];
+
+    for (const baseModule of kitchenModules) {
+      const moduleId = baseModule.id;
+      const category = baseModule.category;
+      const isDual = moduleId.includes('dual-');
+      const sInfo = makeSpaceInfo(baseModule.dimensions.width, baseModule.dimensions.depth, isDual);
+      const moduleData = getModuleById(moduleId, internalSpace, sInfo) || baseModule;
+
+      for (const hasDoor of [false, true]) {
+        let panels: PanelDetail[];
+        try {
+          panels = callCalc(moduleData, hasDoor);
+        } catch (err) {
+          issues.push({
+            moduleId,
+            category,
+            severity: 'CRITICAL',
+            type: 'THROW',
+            detail: `hasDoor=${hasDoor} 예외: ${(err as Error).message}`,
+          });
+          continue;
+        }
+
+        const realPanels = panels.filter(
+          (p) =>
+            p.name &&
+            !p.name.startsWith('===') &&
+            !p.name.includes('힌지') &&
+            !p.name.includes('정보'),
+        );
+
+        // 카테고리 카운트
+        const counts: Record<PanelCategory | 'other', number> = {
+          panel: 0, frame: 0, maida: 0, door: 0, drawer: 0, other: 0,
+        };
+        for (const p of realPanels) counts[classifyPanel(p)] += 1;
+
+        // 모듈별 상세 명세 (hasDoor=true만)
+        if (hasDoor) {
+          perModuleReport.push(
+            `  [${moduleId}] (${category}) — 총 ${realPanels.length}장: 패널=${counts.panel} 프레임=${counts.frame} 마이다=${counts.maida} 도어=${counts.door} 서랍=${counts.drawer} 기타=${counts.other}`,
+          );
+        }
+
+        // 사이즈 정상성
+        for (const panel of realPanels) {
+          const dimIssues = validatePanelDimensions(panel);
+          for (const di of dimIssues) {
+            if (di.endsWith('=0')) continue;
+            issues.push({
+              moduleId,
+              category,
+              severity: 'HIGH',
+              type: 'BAD_DIMENSION',
+              detail: `hasDoor=${hasDoor} '${panel.name}' ${di}`,
+            });
+          }
+        }
+
+        // 기대 카테고리
+        const expectedCats = inferExpectedCategories(moduleId, hasDoor);
+        if (expectedCats.panel && counts.panel === 0 && !moduleId.includes('insert-frame')) {
+          issues.push({
+            moduleId, category, severity: 'HIGH', type: 'MISSING_PANEL',
+            detail: `hasDoor=${hasDoor} 일반 패널 0개`,
+          });
+        }
+        if (expectedCats.frame && counts.frame === 0) {
+          issues.push({
+            moduleId, category, severity: 'MEDIUM', type: 'MISSING_FRAME',
+            detail: `hasDoor=${hasDoor} 프레임 0개`,
+          });
+        }
+        if (expectedCats.door && counts.door === 0) {
+          issues.push({
+            moduleId, category, severity: 'HIGH', type: 'MISSING_DOOR',
+            detail: `hasDoor=${hasDoor} 도어 0개`,
+          });
+        }
+        if (expectedCats.drawer && counts.drawer === 0) {
+          issues.push({
+            moduleId, category, severity: 'HIGH', type: 'MISSING_DRAWER',
+            detail: `hasDoor=${hasDoor} 서랍모듈 0개`,
+          });
+        }
+      }
+    }
+
+    // 보고서
+    const out: string[] = [];
+    out.push('');
+    out.push('===== 주방 키큰장 패널리스트 감사 =====');
+    out.push(`검사 모듈: ${kitchenModules.length}개`);
+    out.push('');
+    out.push('--- 모듈별 카테고리 카운트 (hasDoor=true 기준) ---');
+    out.push(...perModuleReport);
+    out.push('');
+    if (issues.length > 0) {
+      out.push(`--- 발견된 이슈 (${issues.length}건) ---`);
+      const byModule = new Map<string, AuditIssue[]>();
+      for (const i of issues) {
+        if (!byModule.has(i.moduleId)) byModule.set(i.moduleId, []);
+        byModule.get(i.moduleId)!.push(i);
+      }
+      for (const [mid, list] of byModule) {
+        out.push(`  [${mid}]`);
+        for (const i of list) out.push(`    - [${i.severity}] ${i.type}: ${i.detail}`);
+      }
+    } else {
+      out.push('--- 이슈 없음: 모든 모듈에서 카테고리·사이즈 정상 ---');
+    }
+    out.push('===================================');
+    // eslint-disable-next-line no-console
+    console.log(out.join('\n'));
+
+    expect(issues.length, `주방 키큰장 이슈 ${issues.length}건`).toBe(0);
+  });
 });
