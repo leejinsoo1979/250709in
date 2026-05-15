@@ -4700,15 +4700,18 @@ const Room: React.FC<RoomProps> = ({
                     }
                     const leftEpOffset = mod.leftEndPanelOffset ?? mod.endPanelOffset ?? 0;
                     const rightEpOffset = mod.rightEndPanelOffset ?? mod.endPanelOffset ?? 0;
+                    // EP 상단 갭이 0이면 상단몰딩이 EP 자리까지 X 확장 → leftEpAdj/rightEpAdj 0 처리
+                    const epTopGapMm = (mod as any).endPanelTopOffset;
+                    const topGapIsZero = epTopGapMm === 0;
                     let leftEpAdj = 0;
                     let rightEpAdj = 0;
                     if (isFullSurround) {
                       // 전체서라운드: EP가 앞으로 돌출(offset > 0)하면 축소, 아니면 유지
-                      if (mod.hasLeftEndPanel && leftEpOffset > 0) leftEpAdj = endPanelRenderThickness;
-                      if (mod.hasRightEndPanel && rightEpOffset > 0) rightEpAdj = endPanelRenderThickness;
+                      if (mod.hasLeftEndPanel && leftEpOffset > 0 && !topGapIsZero) leftEpAdj = endPanelRenderThickness;
+                      if (mod.hasRightEndPanel && rightEpOffset > 0 && !topGapIsZero) rightEpAdj = endPanelRenderThickness;
                     } else {
-                      if (mod.hasLeftEndPanel) leftEpAdj = endPanelRenderThickness;
-                      if (mod.hasRightEndPanel) rightEpAdj = endPanelRenderThickness;
+                      if (mod.hasLeftEndPanel && !topGapIsZero) leftEpAdj = endPanelRenderThickness;
+                      if (mod.hasRightEndPanel && !topGapIsZero) rightEpAdj = endPanelRenderThickness;
                     }
                     const modWidthMM = (modRight - modLeft) - leftEpAdj - rightEpAdj;
                     const modCenterXmm = (modLeft + leftEpAdj + modRight - rightEpAdj) / 2;
@@ -5663,14 +5666,17 @@ const Room: React.FC<RoomProps> = ({
                   const epThk = mod.endPanelThickness || 18.5;
                   const leftEpOffset = mod.leftEndPanelOffset ?? mod.endPanelOffset ?? 0;
                   const rightEpOffset = mod.rightEndPanelOffset ?? mod.endPanelOffset ?? 0;
+                  // EP 상단 갭이 0이면 상단몰딩이 EP 자리까지 X 확장 → 축소 안 함
+                  const epTopGapMm2 = (mod as any).endPanelTopOffset;
+                  const topGapIsZero2 = epTopGapMm2 === 0;
                   if (isFullSurround) {
                     // 전체서라운드: EP가 앞으로 돌출(offset > 0)하면 축소, 아니면 유지(EP 위를 덮음)
-                    if (mod.hasLeftEndPanel && leftEpOffset > 0) { modWidthMM -= epThk; modCenterXmm += epThk / 2; }
-                    if (mod.hasRightEndPanel && rightEpOffset > 0) { modWidthMM -= epThk; modCenterXmm -= epThk / 2; }
+                    if (mod.hasLeftEndPanel && leftEpOffset > 0 && !topGapIsZero2) { modWidthMM -= epThk; modCenterXmm += epThk / 2; }
+                    if (mod.hasRightEndPanel && rightEpOffset > 0 && !topGapIsZero2) { modWidthMM -= epThk; modCenterXmm -= epThk / 2; }
                   } else {
-                    // 양쪽서라운드/노서라운드: EP 달면 항상 축소
-                    if (mod.hasLeftEndPanel) { modWidthMM -= epThk; modCenterXmm += epThk / 2; }
-                    if (mod.hasRightEndPanel) { modWidthMM -= epThk; modCenterXmm -= epThk / 2; }
+                    // 양쪽서라운드/노서라운드: EP 달면 항상 축소 (단, 상단 갭 0이면 EP 자리까지 덮음)
+                    if (mod.hasLeftEndPanel && !topGapIsZero2) { modWidthMM -= epThk; modCenterXmm += epThk / 2; }
+                    if (mod.hasRightEndPanel && !topGapIsZero2) { modWidthMM -= epThk; modCenterXmm -= epThk / 2; }
                   }
                   const rawTopThickness = mod.topFrameThickness ?? globalTopFrameMm;
                   // 상단몰딩 갭: 천장 쪽에서 gap만큼 비우고 프레임 높이 축소 (가구쪽 하단은 고정)
@@ -7083,8 +7089,11 @@ const Room: React.FC<RoomProps> = ({
                         if (adjPosX != null) modCenterXmm = adjPosX * 100;
                       }
                       const epThk = mod.endPanelThickness || 18.5;
-                      if (mod.hasLeftEndPanel) { modWidthMM -= epThk; modCenterXmm += epThk / 2; }
-                      if (mod.hasRightEndPanel) { modWidthMM -= epThk; modCenterXmm -= epThk / 2; }
+                      // EP 하단 갭이 0이면 걸레받이가 EP 자리까지 X 확장 → 축소 안 함
+                      const epBottomGapMm = (mod as any).endPanelBottomOffset;
+                      const bottomGapIsZero = epBottomGapMm === 0;
+                      if (mod.hasLeftEndPanel && !bottomGapIsZero) { modWidthMM -= epThk; modCenterXmm += epThk / 2; }
+                      if (mod.hasRightEndPanel && !bottomGapIsZero) { modWidthMM -= epThk; modCenterXmm -= epThk / 2; }
                       const rawBaseHeight = mod.baseFrameHeight ?? globalBaseHeightMm;
                       // 걸래받이 갭: 바닥 쪽에서 gap만큼 비우고 프레임 높이 축소 (가구쪽 상단은 고정)
                       const baseFrameGapMm = Math.max(0, Math.min(rawBaseHeight - 1, mod.baseFrameGap ?? 0));
