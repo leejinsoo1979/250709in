@@ -22,7 +22,7 @@ import { Line } from '@react-three/drei';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
 import { resolveShelfFrontInsetMm } from '@/editor/shared/utils/shelfInsetCalculator';
 import { getTopDownStoneFrontVisibleHeightMm, resolveTopDown2TierGeometry } from '@/editor/shared/utils/topDownCabinetGeometry';
-import { useExcludedPanelsStore } from '../../../context/ExcludedPanelsContext';
+import { isPanelKeyExcluded, useExcludedPanelsStore } from '../../../context/ExcludedPanelsContext';
 
 /**
  * 졸리컷 수평 상판 — 앞면 하단 모서리가 45도로 가공된 판
@@ -102,7 +102,7 @@ const JollyCutHorizontalPlate: React.FC<{
   useFrame(() => {
     if (!groupRef.current || !compositeKey) return;
     const { excludedKeys } = useExcludedPanelsStore.getState();
-    const shouldHide = excludedKeys.size > 0 && excludedKeys.has(compositeKey);
+    const shouldHide = isPanelKeyExcluded(excludedKeys, furnitureId, panelName);
     if (groupRef.current.visible === shouldHide) {
       groupRef.current.visible = !shouldHide;
     }
@@ -202,7 +202,7 @@ const JollyCutVerticalPlate: React.FC<{
   useFrame(() => {
     if (!groupRef.current || !compositeKey) return;
     const { excludedKeys } = useExcludedPanelsStore.getState();
-    const shouldHide = excludedKeys.size > 0 && excludedKeys.has(compositeKey);
+    const shouldHide = isPanelKeyExcluded(excludedKeys, furnitureId, panelName);
     if (groupRef.current.visible === shouldHide) {
       groupRef.current.visible = !shouldHide;
     }

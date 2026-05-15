@@ -453,6 +453,7 @@ const Configurator: React.FC = () => {
   const [currentFolderName, setCurrentFolderName] = useState<string>('');
   const [currentFolderId, setCurrentFolderId] = useState<string | null>(null);
   const [showSpaceConfigPopup, setShowSpaceConfigPopup] = useState(false);
+  const localHistoryScopeRef = useRef(`local:${Date.now().toString(36)}:${Math.random().toString(36).slice(2)}`);
 
   // 프로젝트 권한 확인 (readonly 모드에서는 권한 체크 건너뛰기)
   // readonly 모드에서는 URL에서 직접 projectId 읽기
@@ -966,10 +967,7 @@ const Configurator: React.FC = () => {
   const isLoadingProjectRef = useRef(false);
 
   // History Store
-  const { saveState, undo: historyUndo, redo: historyRedo } = useHistoryStore();
-
-  // 히스토리 트래킹 활성화
-  useHistoryTracking();
+  const { undo: historyUndo, redo: historyRedo } = useHistoryStore();
 
   // URL 파라미터에서 프로젝트명과 디자인파일명 읽기 (fallback용)
   const urlProjectName = useMemo(() => {
@@ -981,6 +979,33 @@ const Configurator: React.FC = () => {
     const name = searchParams.get('designFileName');
     return name ? decodeURIComponent(name) : null;
   }, [searchParams]);
+
+  const historyDesignFileIdParam = searchParams.get('designFileId');
+  const historyScopeId = useMemo(() => {
+    const projectScope = currentProjectId || projectIdParam || (isDemoMode ? 'demo' : 'no-project');
+    const designScope = currentDesignFileId || historyDesignFileIdParam;
+
+    if (designScope) {
+      return `${projectScope}:${designScope}`;
+    }
+
+    if (modeParam === 'new-design' || isNewDesign) {
+      return `${projectScope}:${localHistoryScopeRef.current}`;
+    }
+
+    return `${projectScope}:project`;
+  }, [
+    currentProjectId,
+    currentDesignFileId,
+    historyDesignFileIdParam,
+    isDemoMode,
+    isNewDesign,
+    modeParam,
+    projectIdParam
+  ]);
+
+  // 히스토리 트래킹 활성화 - 현재 프로젝트/디자인 범위 안에서만 Undo/Redo
+  useHistoryTracking(historyScopeId);
 
   // 키보드 단축키 이벤트 리스너
   useEffect(() => {

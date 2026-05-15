@@ -17,7 +17,7 @@ import NativeLine from '../elements/NativeLine';
 import { Hinge } from '../Hinge';
 import DimensionText from './components/DimensionText';
 import { useDimensionColor } from './hooks/useDimensionColor';
-import { useExcludedPanelsStore } from '../../context/ExcludedPanelsContext';
+import { isPanelKeyExcluded, useExcludedPanelsStore } from '../../context/ExcludedPanelsContext';
 import { calculateDualDoorOpenGeometry, calculateSingleDoorOpenGeometry } from '@/editor/shared/utils/doorGeometryCalculator';
 import { resolveDoorHeightDimensionSides, shouldRenderDoorDimensionGuides } from '@/editor/shared/utils/doorDimensionGuides';
 
@@ -48,8 +48,7 @@ const BoxWithEdges: React.FC<{
   isLocked?: boolean; // EP ㄷ자 프레임 잠금 도어
 }> = ({ args, position, material, renderMode, isDragging = false, isEditMode = false, onClick, onPointerOver, onPointerOut, panelName, textureUrl, panelGrainDirections, furnitureId, isLocked = false }) => {
   const isExcludedByOptimizer = useExcludedPanelsStore((s) => {
-    if (s.excludedKeys.size === 0) return false;
-    return panelName && furnitureId ? s.excludedKeys.has(`${furnitureId}::${panelName}`) : false;
+    return isPanelKeyExcluded(s.excludedKeys, furnitureId, panelName);
   });
 
   const { theme } = useViewerTheme();

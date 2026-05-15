@@ -167,6 +167,42 @@ describe('panelDetails regression baselines', () => {
     expect(Math.max(...drawerFronts.map((panel) => panel.height))).toBeLessThanOrEqual(700)
   })
 
+  it('유리장 서랍 모듈 목재 패널은 옵티마이저 패널 목록에 모두 포함된다', () => {
+    const panels = calculatePanels('single-glass-cabinet-500', 500, 365, {
+      hasDoor: true,
+      backPanelThicknessMm: 9
+    })
+
+    const expectedDrawerModulePanels = [
+      '서랍 좌측판',
+      '서랍 우측판',
+      '서랍 바닥판',
+      '유리장 서랍1 좌측판',
+      '유리장 서랍1 우측판',
+      '유리장 서랍1 앞판',
+      '유리장 서랍1 뒷판',
+      '유리장 서랍1 바닥',
+      '유리장 서랍1 마이다',
+      '유리장 서랍2 좌측판',
+      '유리장 서랍2 우측판',
+      '유리장 서랍2 앞판',
+      '유리장 서랍2 뒷판',
+      '유리장 서랍2 바닥',
+      '유리장 서랍2 마이다',
+      '목찬넬프레임수평(1)',
+      '목찬넬프레임수직(1)',
+      '전대',
+      '상단뒤프레임',
+      '상단뒤프레임 안쪽판재',
+      '상단뒤프레임 하단판재',
+      '서랍 바닥판2'
+    ]
+
+    expectedDrawerModulePanels.forEach((name) => {
+      expect(findPanel(panels, name)).toBeDefined()
+    })
+  })
+
   it('듀얼 하부장 도어 패널은 전체 폭을 합산하지 않고 좌우 leaf 폭으로 생성된다', () => {
     const panels = calculatePanels('dual-lower-half-cabinet-1000', 1000, 650, {
       hasDoor: true

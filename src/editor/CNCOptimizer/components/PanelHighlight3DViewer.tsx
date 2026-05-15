@@ -7,7 +7,7 @@ import { useUIStore } from '@/store/uiStore';
 import Room from '@/editor/shared/viewer3d/components/elements/Room';
 import ThreeCanvas from '@/editor/shared/viewer3d/components/base/ThreeCanvas';
 import { Space3DViewProvider } from '@/editor/shared/viewer3d/context/Space3DViewContext';
-import { useExcludedPanelsStore } from '@/editor/shared/viewer3d/context/ExcludedPanelsContext';
+import { getExcludedPanelAliases, isPanelKeyExcluded, useExcludedPanelsStore } from '@/editor/shared/viewer3d/context/ExcludedPanelsContext';
 import { calculateOptimalDistance, mmToThreeUnits } from '@/editor/shared/viewer3d/components/base/utils/threeUtils';
 import styles from './PanelHighlight3DViewer.module.css';
 
@@ -65,90 +65,68 @@ function extractPanelName(objName: string): string | null {
   return null;
 }
 
-/**
- * PanelHider — 이전 scene traverse 방식에서 BoxWithEdges useFrame 폴링 방식으로 대체됨.
- * BoxWithEdges가 useFrame 내에서 ExcludedPanelsStore.getState()를 직접 읽어 visible 제어.
- * (R3F Canvas 별도 reconciler ↔ DOM Zustand 구독 호환 문제 회피)
- */
-const PanelHider: React.FC = () => null;
-
-function getExcludedPanelAliases(panelName: string): string[] {
-  const aliases = new Set<string>();
-
-  const lowerStretcherMatch = panelName.match(/^가로전대\(하(\d+)\)$/);
-  if (lowerStretcherMatch) {
-    aliases.add(`가로전대(${lowerStretcherMatch[1]})`);
-    aliases.add('전대');
-    aliases.add('가로전대(상)');
-    aliases.add('가로전대(외경)');
+function getOwningFurnitureId(obj: THREE.Object3D): string | null {
+  let current: THREE.Object3D | null = obj;
+  while (current) {
+    const furnitureId = current.userData?.furnitureId;
+    if (typeof furnitureId === 'string' && furnitureId) return furnitureId;
+    current = current.parent;
   }
-
-  const rawStretcherMatch = panelName.match(/^가로전대\((\d+)\)$/);
-  if (rawStretcherMatch) {
-    aliases.add(`가로전대(하${rawStretcherMatch[1]})`);
-    aliases.add('전대');
-    aliases.add('가로전대(상)');
-    aliases.add('가로전대(외경)');
-  }
-
-  if (panelName === '전대') {
-    aliases.add('가로전대');
-    aliases.add('가로전대(하1)');
-    aliases.add('가로전대(1)');
-    aliases.add('가로전대(상)');
-    aliases.add('가로전대(외경)');
-  }
-
-  if (panelName === '가로전대(상)' || panelName === '가로전대(외경)') {
-    aliases.add('전대');
-  }
-
-  const shelfMatch = panelName.match(/^(\([^)]+\))?선반\s*(\d+)$/);
-  if (shelfMatch) {
-    const prefix = shelfMatch[1] ?? '';
-    const shelfIndex = shelfMatch[2];
-    aliases.add(`${prefix}선반 ${shelfIndex}`);
-    aliases.add(`${prefix}선반${shelfIndex}`);
-    aliases.add(`선반 ${shelfIndex}`);
-    aliases.add(`선반${shelfIndex}`);
-    aliases.add(`(하)선반 ${shelfIndex}`);
-    aliases.add(`(상)선반 ${shelfIndex}`);
-  }
-
-  const dowelShelfMatch = panelName.match(/^다보선반(?:\s*|\()(\d+)\)?$/);
-  if (dowelShelfMatch) {
-    aliases.add(`선반 ${dowelShelfMatch[1]}`);
-  }
-
-  const touchLegraCncMatch = panelName.match(/^터치서랍(\d+)(?:\((마이다)\)|\s+(바닥판|뒷판))$/);
-  if (touchLegraCncMatch) {
-    const index = touchLegraCncMatch[1];
-    const part = touchLegraCncMatch[2] ? '(마이다)' : ` ${touchLegraCncMatch[3]}`;
-    aliases.add(`터치${index}단서랍${part}`);
-  }
-
-  const touchLegraMeshMatch = panelName.match(/^터치(\d+)단서랍(?:\((마이다)\)|\s+(바닥판|뒷판))$/);
-  if (touchLegraMeshMatch) {
-    const index = touchLegraMeshMatch[1];
-    const part = touchLegraMeshMatch[2] ? '(마이다)' : ` ${touchLegraMeshMatch[3]}`;
-    aliases.add(`터치서랍${index}${part}`);
-  }
-
-  // 유리장 서랍 패널: CNC ↔ 3D 동일 이름이지만 호환을 위한 명시적 alias
-  const glassDrawerMatch = panelName.match(/^유리장 서랍(\d+)\s+(좌측판|우측판|앞판|뒷판|바닥판|마이다)$/);
-  if (glassDrawerMatch) {
-    const index = glassDrawerMatch[1];
-    const part = glassDrawerMatch[2];
-    aliases.add(`유리장 서랍${index} ${part}`);
-    aliases.add(`유리장 서랍${index}(${part})`);
-  }
-  if (panelName === '서랍 좌측판' || panelName === '서랍 우측판' || panelName === '서랍 바닥판') {
-    aliases.add(panelName.replace('서랍 ', '유리장 서랍 '));
-  }
-
-  aliases.delete(panelName);
-  return Array.from(aliases);
+  return null;
 }
+
+function hasAncestorFlag(obj: THREE.Object3D, flag: string): boolean {
+  let current: THREE.Object3D | null = obj;
+  while (current) {
+    if (current.userData?.[flag]) return true;
+    current = current.parent;
+  }
+  return false;
+}
+
+/**
+ * PanelHider — 개별 렌더러의 visible 제어를 보조한다.
+ * 일부 특수 메시가 panelName/furnitureId props 경로를 타지 않아도 scene name + ancestor userData로 숨김을 보정한다.
+ */
+const PanelHider: React.FC = () => {
+  const { scene } = useThree();
+  const hiddenByHider = useRef<Set<string>>(new Set());
+
+  useFrame(() => {
+    const { excludedKeys } = useExcludedPanelsStore.getState();
+    scene.traverse((obj) => {
+      if (!(obj instanceof THREE.Mesh || obj instanceof THREE.Line || obj instanceof THREE.LineSegments)) return;
+      if (hasAncestorFlag(obj, 'skipCNC')) return;
+
+      const panelName = obj.name ? (extractPanelName(obj.name) ?? obj.name) : null;
+      const furnitureId = getOwningFurnitureId(obj);
+      const shouldHide = isPanelKeyExcluded(excludedKeys, furnitureId, panelName);
+
+      if (shouldHide) {
+        if (obj.visible) {
+          hiddenByHider.current.add(obj.uuid);
+          obj.visible = false;
+        }
+      } else if (hiddenByHider.current.has(obj.uuid)) {
+        obj.visible = true;
+        hiddenByHider.current.delete(obj.uuid);
+      }
+    });
+  });
+
+  useEffect(() => {
+    return () => {
+      scene.traverse((obj) => {
+        if (hiddenByHider.current.has(obj.uuid)) {
+          obj.visible = true;
+        }
+      });
+      hiddenByHider.current.clear();
+    };
+  }, [scene]);
+
+  return null;
+};
 
 function expandExcludedPanelKeys(keys: Set<string>): Set<string> {
   const expanded = new Set(keys);
@@ -482,14 +460,16 @@ const PanelHighlight3DViewer: React.FC<PanelHighlight3DViewerProps> = ({
   const placedModules = useFurnitureStore((state) => state.placedModules);
   const setHighlightedPanel = useUIStore((state) => state.setHighlightedPanel);
   const setExcludedKeys = useExcludedPanelsStore((s) => s.setExcludedKeys);
+  const clearExcludedKeys = useExcludedPanelsStore((s) => s.clearExcludedKeys);
+  const excludedOwnerIdRef = useRef(`cnc-panel-viewer-${Math.random().toString(36).slice(2)}`);
 
   // excludedMeshNames → Zustand store 동기화 (R3F Canvas 안에서 BoxWithEdges가 getState()로 접근)
   useEffect(() => {
     const keys = expandExcludedPanelKeys(excludedMeshNames ?? new Set());
     console.log('🟧 [CNC] excludedKeys 동기화:', Array.from(keys).slice(0, 20));
-    setExcludedKeys(keys);
-    return () => setExcludedKeys(new Set());
-  }, [excludedMeshNames, setExcludedKeys]);
+    setExcludedKeys(keys, excludedOwnerIdRef.current);
+    return () => clearExcludedKeys(excludedOwnerIdRef.current);
+  }, [excludedMeshNames, setExcludedKeys, clearExcludedKeys]);
 
   // 지연 마운트: 이전 WebGL 컨텍스트 정리 대기
   const [ready, setReady] = useState(false);

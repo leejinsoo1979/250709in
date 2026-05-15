@@ -13,7 +13,7 @@ import { Text, Line } from '@react-three/drei';
 import DimensionText from './DimensionText';
 import { useDimensionColor } from '../hooks/useDimensionColor';
 import { VentilationCap } from './VentilationCap';
-import { useExcludedPanelsStore } from '../../../context/ExcludedPanelsContext';
+import { isPanelKeyExcluded, useExcludedPanelsStore } from '../../../context/ExcludedPanelsContext';
 
 // 유리장 타일 텍스처 (이미지 로드 캐싱 — Image 객체로 직접 관리)
 let GLASS_TILE_IMAGE: HTMLImageElement | null = null;
@@ -49,7 +49,7 @@ const TileBackPanelMesh: React.FC<{
   useFrame(() => {
     if (!groupRef.current || !compositeKey) return;
     const { excludedKeys } = useExcludedPanelsStore.getState();
-    const shouldHide = excludedKeys.size > 0 && excludedKeys.has(compositeKey);
+    const shouldHide = isPanelKeyExcluded(excludedKeys, furnitureId, panelName);
     if (groupRef.current.visible === shouldHide) {
       groupRef.current.visible = !shouldHide;
     }

@@ -643,7 +643,9 @@ function PageInner(){
     const effectiveOptimizationType = overrideOptimizationType || settings.optimizationType;
     console.log('⚡ handleOptimize called with optimizationType:', effectiveOptimizationType, silent ? '(silent)' : '');
 
-    if (panels.length === 0) {
+    const includedPanels = panels.filter(panel => !excludedPanelIds.has(panel.id));
+
+    if (includedPanels.length === 0) {
       if (!silent) showToast(t('cnc.noPanelsError'), 'error', t('common.confirm'));
       return;
     }
@@ -704,7 +706,7 @@ function PageInner(){
 
       // ★★★ 디버그: panels store의 boringDepthPositions 확인 ★★★
       console.log('[handleOptimize] panels store 확인:');
-      panels.forEach(p => {
+      includedPanels.forEach(p => {
         if (p.label.includes('서랍') && (p.label.includes('좌측판') || p.label.includes('우측판'))) {
           console.log(`[handleOptimize] ${p.label}: boringDepthPositions=`, p.boringDepthPositions);
         }
@@ -729,7 +731,7 @@ function PageInner(){
       const regularList = [];
       const ext2750List = [];
       const ext3050List = [];
-      panels.forEach(p => {
+      includedPanels.forEach(p => {
         const hasG = p.grain && p.grain !== 'NONE';
         const canRot = !hasG;
         if (fitInBoard(p.width, p.length, canRot, stdW, stdL)) {
@@ -786,7 +788,7 @@ function PageInner(){
         totalGroupedPanels += totalQty;
         console.log(`  - ${key}: ${groupPanels.length}개 패널 (총 수량: ${totalQty})`);
       });
-      console.log(`[handleOptimize] 총 패널 수: ${panels.length}, 그룹화된 패널 수: ${totalGroupedPanels}`);
+      console.log(`[handleOptimize] 총 패널 수: ${panels.length}, 제외: ${excludedPanelIds.size}, 최적화 대상: ${includedPanels.length}, 그룹화된 패널 수: ${totalGroupedPanels}`);
 
       // Optimize each material/thickness group
       for (const [key, groupPanels] of panelGroups) {
@@ -1143,7 +1145,7 @@ function PageInner(){
     } finally {
       setIsOptimizing(false);
     }
-  }, [panels, stock, settings, setPlacements, setCurrentSheetIndex, setSawStats]);
+  }, [panels, excludedPanelIds, stock, settings, setPlacements, setCurrentSheetIndex, setSawStats]);
 
   // 시뮬레이션 완료 콜백 - 전체 시뮬레이션 모드일 때 다음 시트로 진행
   const handleSimulationComplete = useCallback(() => {

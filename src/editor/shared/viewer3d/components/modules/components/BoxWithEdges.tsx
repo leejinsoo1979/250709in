@@ -8,7 +8,7 @@ import { useFurnitureStore } from '@/store/core/furnitureStore';
 import { useTheme } from '@/contexts/ThemeContext';
 import { getDefaultGrainDirection, resolvePanelGrainDirection } from '@/editor/shared/utils/materialConstants';
 import { useTexture } from '@react-three/drei';
-import { useExcludedPanelsStore } from '../../../context/ExcludedPanelsContext';
+import { isPanelKeyExcluded, useExcludedPanelsStore } from '../../../context/ExcludedPanelsContext';
 import { useFurnitureGhostContext } from '../../../context/FurnitureGhostContext';
 import { NativeLine } from '../../elements/NativeLine';
 
@@ -115,7 +115,7 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
     }
     if (!compositeKey) return;
     const { excludedKeys } = useExcludedPanelsStore.getState();
-    const shouldHide = excludedKeys.size > 0 && excludedKeys.has(compositeKey);
+    const shouldHide = isPanelKeyExcluded(excludedKeys, furnitureId, panelName);
     if (groupRef.current.visible === shouldHide) {
       groupRef.current.visible = !shouldHide;
     }

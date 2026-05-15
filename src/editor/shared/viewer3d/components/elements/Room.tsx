@@ -30,7 +30,7 @@ import { FurnitureBoringOverlay } from './boring';
 import { useThree, useFrame } from '@react-three/fiber';
 import { Line, Html } from '@react-three/drei';
 import DimensionText from '../modules/components/DimensionText';
-import { useExcludedPanelsStore } from '../../context/ExcludedPanelsContext';
+import { getExcludedPanelAliases, useExcludedPanelsStore } from '../../context/ExcludedPanelsContext';
 
 interface RoomProps {
   spaceInfo: SpaceInfo;
@@ -250,9 +250,17 @@ const BoxWithEdges: React.FC<{
   // CNC 옵티마이저 패널 제외 체크: excludeKey 또는 excludeKeys 중 하나라도 매칭되면 숨김
   const isExcludedByOptimizer = useExcludedPanelsStore((s) => {
     if (s.excludedKeys.size === 0) return false;
-    if (excludeKey && s.excludedKeys.has(excludeKey)) return true;
-    if (excludeKeys) return excludeKeys.some(k => s.excludedKeys.has(k));
-    return false;
+    const keys = [excludeKey, ...(excludeKeys ?? [])].filter((key): key is string => !!key);
+    return keys.some((key) => {
+      if (s.excludedKeys.has(key)) return true;
+      const separatorIndex = key.indexOf('::');
+      if (separatorIndex < 0) {
+        return getExcludedPanelAliases(key).some(alias => s.excludedKeys.has(alias));
+      }
+      const furnitureId = key.slice(0, separatorIndex);
+      const panelName = key.slice(separatorIndex + 2);
+      return getExcludedPanelAliases(panelName).some(alias => s.excludedKeys.has(`${furnitureId}::${alias}`));
+    });
   });
 
   const geometry = useMemo(() => new THREE.BoxGeometry(...args), [args[0], args[1], args[2]]);
