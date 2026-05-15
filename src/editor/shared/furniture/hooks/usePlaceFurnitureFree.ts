@@ -282,8 +282,8 @@ export function placeFurnitureFree(params: PlaceFurnitureFreeParams): PlaceFurni
       isCustomizable: !isMyCabinetPlacement || isEditingMyCabinet,
       customConfig,
     }),
-    // 키큰장찬넬(insert-frame): 전면 프레임 안쪽 들임 기본 40mm
-    ...(moduleId.includes('insert-frame') ? { insertFrontInsetMm: 40 } : {}),
+    // 키큰장찬넬(insert-frame): 전면 프레임 안쪽 들임 기본 18mm
+    ...(moduleId.includes('insert-frame') ? { insertFrontInsetMm: 18 } : {}),
   };
 
   // 배치 완료 후 pendingPlacement 초기화

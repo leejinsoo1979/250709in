@@ -2938,9 +2938,9 @@ const PlacedModulePropertiesPanel: React.FC = () => {
               {/* 뒷벽과 이격 / 키큰장찬넬은 전면 옵셋 (전면 프레임이 EP 라인에서 뒤로 들어가는 mm) */}
               {currentPlacedModule && (() => {
                 const isInsertFrameRow = typeof currentPlacedModule.moduleId === 'string' && currentPlacedModule.moduleId.includes('insert-frame');
-                // 키큰장찬넬: 표시값 = insertFrontInsetMm (기본 40)
+                // 키큰장찬넬: 표시값 = insertFrontInsetMm (기본 18)
                 const displayValue = isInsertFrameRow
-                  ? String(currentPlacedModule.insertFrontInsetMm ?? 40)
+                  ? String(currentPlacedModule.insertFrontInsetMm ?? 18)
                   : String(currentPlacedModule.backWallGap ?? 0);
                 return (
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '6px' }}>
@@ -2968,7 +2968,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                         else if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
                           e.preventDefault();
                           if (isInsertFrameRow) {
-                            const cur = currentPlacedModule.insertFrontInsetMm ?? 40;
+                            const cur = currentPlacedModule.insertFrontInsetMm ?? 18;
                             const next = Math.max(0, cur + (e.key === 'ArrowUp' ? 1 : -1));
                             updatePlacedModule(currentPlacedModule.id, { insertFrontInsetMm: next });
                           } else {
