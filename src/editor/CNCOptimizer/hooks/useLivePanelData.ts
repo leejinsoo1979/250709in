@@ -16,6 +16,9 @@ import { withUpperSafetyShelfRemoved } from '@/editor/shared/utils/upperSafetySh
  * calculatePanelDetails와 BaseFurnitureShell/DrawerRenderer/ShelfRenderer 간 이름 차이 보정
  */
 function toMeshName(cncName: string): string {
+  if (cncName === '키큰장찬넬 전면프레임') return 'Insert전면프레임-마감판';
+  if (cncName === '키큰장찬넬 좌EP') return 'Insert좌EP-마감판';
+  if (cncName === '키큰장찬넬 우EP') return 'Insert우EP-마감판';
   // 단일 섹션 가구: "바닥" → "바닥판" (3D BaseFurnitureShell에서 단일 섹션이면 '바닥판' 사용)
   if (cncName === '바닥') return '바닥판';
   // 보강대: CNC "좌(상)후면 보강대 1" → 3D "좌(상)보강대 1"
@@ -456,7 +459,7 @@ export function useLivePanelData() {
           const GLASS_DRAWER_SIDE_H = 500;
           modulePanels = modulePanels.filter((item: any) => {
             // 후면 보강대 제거 (서랍 위/아래 영역에 위치)
-            if (item.name && item.name.includes('후면 보강대')) return false;
+            if (item.name && item.name.includes('보강대')) return false;
             return true;
           }).map((item: any) => {
             // 백패널 높이를 서랍 영역 크기로 축소 (+10mm extension 유지)
@@ -1270,7 +1273,7 @@ export function usePanelSubscription(callback: (panels: Panel[]) => void) {
       if (isGlassCabinetForFilter) {
         const GLASS_DRAWER_SIDE_H = 500;
         modulePanels = modulePanels.filter((item: any) => {
-          if (item.name && item.name.includes('후면 보강대')) return false;
+          if (item.name && item.name.includes('보강대')) return false;
           return true;
         }).map((item: any) => {
           if (item.name && item.name.includes('백패널')) {

@@ -156,6 +156,7 @@ interface DoorModuleProps {
   forcedDoorYMm?: number; // 도어 중심 Y 위치 강제 지정 (mm, 가구 중심 기준) — 도어 분절용
   hideWidthDimension?: boolean; // 도어 가로 폭 치수 숨김 (분절 상부 도어용)
   hingeMode?: 'auto' | 'upper2' | 'lower4' | 'lower5'; // 경첩 개수 강제 — 도어분절 가구용
+  splitDoorPanelName?: '하부 도어' | '상부 도어'; // 도어분절 가구의 패널 목록 이름
 }
 
 const DoorModule: React.FC<DoorModuleProps> = ({
@@ -190,6 +191,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   forcedDoorYMm, // 도어 Y 강제 (도어 분절)
   hideWidthDimension = false, // 도어 가로 폭 치수 숨김
   hingeMode = 'auto', // 경첩 개수 모드
+  splitDoorPanelName,
 }) => {
   const storeSpaceInfo = useSpaceConfigStore(state => state.spaceInfo);
   const placementType = (storeSpaceInfo?.baseConfig?.placementType) ?? (spaceInfo?.baseConfig?.placementType);
@@ -1465,7 +1467,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                   isDragging={isDragging}
                   isEditMode={isEditMode}
                   furnitureId={furnitureId}
-                  panelName="좌측 도어"
+                  panelName={splitDoorPanelName ? `좌측 ${splitDoorPanelName}` : '좌측 도어'}
                   textureUrl={textureUrl}
                   panelGrainDirections={panelGrainDirections}
                   isLocked={leftDoorLocked}
@@ -1874,7 +1876,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                   isDragging={isDragging}
                   isEditMode={isEditMode}
                   furnitureId={furnitureId}
-                  panelName="우측 도어"
+                  panelName={splitDoorPanelName ? `우측 ${splitDoorPanelName}` : '우측 도어'}
                   textureUrl={textureUrl}
                   panelGrainDirections={panelGrainDirections}
                   isLocked={rightDoorLocked}
@@ -2447,7 +2449,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                 isDragging={isDragging}
                 isEditMode={isEditMode}
                 furnitureId={furnitureId}
-                panelName="도어"
+                panelName={splitDoorPanelName ?? '도어'}
                 textureUrl={textureUrl}
                 panelGrainDirections={panelGrainDirections}
                 isLocked={singleDoorLocked}

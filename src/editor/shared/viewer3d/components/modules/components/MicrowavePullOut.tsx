@@ -26,6 +26,7 @@ interface MicrowavePullOutProps {
   basicThicknessMm: number;     // 패널 기본 두께 (18)
   material: THREE.Material;
   mmToThreeUnits: (mm: number) => number;
+  furnitureId?: string;
 }
 
 const MicrowavePullOut: React.FC<MicrowavePullOutProps> = ({
@@ -37,6 +38,7 @@ const MicrowavePullOut: React.FC<MicrowavePullOutProps> = ({
   basicThicknessMm,
   material,
   mmToThreeUnits,
+  furnitureId,
 }) => {
   // 사양 상수
   const WING_THICKNESS_MM = 18;       // 날개프레임 두께
@@ -134,6 +136,7 @@ const MicrowavePullOut: React.FC<MicrowavePullOutProps> = ({
         position={[toUnit(leftWingXMm), toUnit(wingCenterYMm), toUnit(wingCenterZMm)]}
         material={material}
         panelName="전자렌지 좌날개"
+        furnitureId={furnitureId}
       />
       {/* 우 날개프레임 (가구에 고정) */}
       <BoxWithEdges
@@ -141,6 +144,7 @@ const MicrowavePullOut: React.FC<MicrowavePullOutProps> = ({
         position={[toUnit(rightWingXMm), toUnit(wingCenterYMm), toUnit(wingCenterZMm)]}
         material={material}
         panelName="전자렌지 우날개"
+        furnitureId={furnitureId}
       />
       {/* 인출되는 부재: 전면프레임 + 트레이 바닥판 */}
       <animated.group position-z={slideSpring.offset}>
@@ -150,6 +154,7 @@ const MicrowavePullOut: React.FC<MicrowavePullOutProps> = ({
           position={[toUnit(frontFrameCenterXMm), toUnit(frontFrameCenterYMm), toUnit(frontFrameCenterZMm)]}
           material={material}
           panelName="전자렌지 전면프레임"
+          furnitureId={furnitureId}
         />
         {/* 인출 트레이 바닥판 */}
         <BoxWithEdges
@@ -157,6 +162,7 @@ const MicrowavePullOut: React.FC<MicrowavePullOutProps> = ({
           position={[0, toUnit(trayCenterYMm), toUnit(trayCenterZMm)]}
           material={material}
           panelName="전자렌지 인출 트레이 바닥판"
+          furnitureId={furnitureId}
         />
       </animated.group>
     </group>

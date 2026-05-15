@@ -66,6 +66,23 @@ export function getExcludedPanelAliases(panelName: string): string[] {
   const frameMatch = withoutFurnitureLabel.match(/^(top-frame|base-frame)-\d+$/);
   if (frameMatch) aliases.add(frameMatch[1]);
 
+  if (withoutFurnitureLabel === '키큰장찬넬 전면프레임') aliases.add('Insert전면프레임-마감판');
+  if (withoutFurnitureLabel === '키큰장찬넬 좌EP') aliases.add('Insert좌EP-마감판');
+  if (withoutFurnitureLabel === '키큰장찬넬 우EP') aliases.add('Insert우EP-마감판');
+  if (withoutFurnitureLabel === 'Insert전면프레임-마감판') aliases.add('키큰장찬넬 전면프레임');
+  if (withoutFurnitureLabel === 'Insert좌EP-마감판') aliases.add('키큰장찬넬 좌EP');
+  if (withoutFurnitureLabel === 'Insert우EP-마감판') aliases.add('키큰장찬넬 우EP');
+  if (withoutFurnitureLabel === 'Insert상단프레임') {
+    aliases.add('상단몰딩');
+    aliases.add('top-frame');
+  }
+  if (withoutFurnitureLabel === 'Insert걸레받이') {
+    aliases.add('걸래받이');
+    aliases.add('걸레받이');
+    aliases.add('받침대');
+    aliases.add('base-frame');
+  }
+
   // 패널 목록 팝업의 한국어 명칭 ↔ 3D mesh name 매핑
   // mesh는 분절될 수 있어 'top-frame-0'..'top-frame-N' 등으로 나오므로 가능성 있는 인덱스도 추가
   if (
@@ -75,6 +92,7 @@ export function getExcludedPanelAliases(panelName: string): string[] {
     withoutFurnitureLabel.includes('상부프래임')
   ) {
     aliases.add('top-frame');
+    aliases.add('Insert상단프레임');
     for (let i = 0; i < 20; i += 1) aliases.add(`top-frame-${i}`);
   }
   // 걸래받이/걸레받이/받침대 모두 동일 mesh 가리킴 (CLAUDE.md에선 '걸래받이' 사용)
@@ -83,6 +101,7 @@ export function getExcludedPanelAliases(panelName: string): string[] {
     aliases.add('걸래받이');
     aliases.add('걸레받이');
     aliases.add('받침대');
+    aliases.add('Insert걸레받이');
     for (let i = 0; i < 20; i += 1) aliases.add(`base-frame-${i}`);
   }
   // 역방향: 3D mesh name이 들어와도 한국어 패널명 매칭
@@ -103,20 +122,68 @@ export function getExcludedPanelAliases(panelName: string): string[] {
   if (withoutFurnitureLabel === '좌측판') {
     aliases.add('(하)좌측');
     aliases.add('(상)좌측');
+    for (let i = 1; i <= 20; i += 1) aliases.add(`좌측판${i}`);
   }
   if (withoutFurnitureLabel === '우측판') {
     aliases.add('(하)우측');
     aliases.add('(상)우측');
+    for (let i = 1; i <= 20; i += 1) aliases.add(`우측판${i}`);
   }
-  if (withoutFurnitureLabel === '(하)좌측' || withoutFurnitureLabel === '(상)좌측') {
+  if (withoutFurnitureLabel === '(하)좌측') {
     aliases.add('좌측판');
+    aliases.add('좌측판1');
   }
-  if (withoutFurnitureLabel === '(하)우측' || withoutFurnitureLabel === '(상)우측') {
+  if (withoutFurnitureLabel === '(상)좌측') {
+    aliases.add('좌측판');
+    for (let i = 2; i <= 20; i += 1) aliases.add(`좌측판${i}`);
+  }
+  if (withoutFurnitureLabel === '(하)우측') {
     aliases.add('우측판');
+    aliases.add('우측판1');
+  }
+  if (withoutFurnitureLabel === '(상)우측') {
+    aliases.add('우측판');
+    for (let i = 2; i <= 20; i += 1) aliases.add(`우측판${i}`);
+  }
+  const kitchenSideMatch = withoutFurnitureLabel.match(/^(좌측판|우측판)(\d+)$/);
+  if (kitchenSideMatch) {
+    const sideBase = kitchenSideMatch[1];
+    const sectionIndex = Number(kitchenSideMatch[2]);
+    aliases.add(sideBase);
+    aliases.add(`${sectionIndex === 1 ? '(하)' : '(상)'}${sideBase === '좌측판' ? '좌측' : '우측'}`);
   }
 
   if (withoutFurnitureLabel.includes('후면 보강대')) {
     aliases.add(withoutFurnitureLabel.replace('후면 보강대', '보강대').trim());
+  }
+
+  if (withoutFurnitureLabel === '(하)백패널') aliases.add('(1단)백패널');
+  if (withoutFurnitureLabel === '(상)백패널') {
+    for (let i = 2; i <= 20; i += 1) aliases.add(`(${i}단)백패널`);
+  }
+  const nSectionBackPanelMatch = withoutFurnitureLabel.match(/^\((\d+)단\)백패널$/);
+  if (nSectionBackPanelMatch) {
+    aliases.add(Number(nSectionBackPanelMatch[1]) === 1 ? '(하)백패널' : '(상)백패널');
+  }
+
+  const sectionReinforcementMatch = withoutFurnitureLabel.match(/^(\((?:하|상)\))(?:후면\s*)?보강대\s*(\d+)$/);
+  if (sectionReinforcementMatch) {
+    const prefix = sectionReinforcementMatch[1];
+    const index = sectionReinforcementMatch[2];
+    aliases.add(`${prefix}후면 보강대 ${index}`);
+    aliases.add(`${prefix}보강대 ${index}`);
+    if (prefix === '(하)') {
+      aliases.add(`(1단)보강대 ${index}`);
+    } else {
+      for (let i = 2; i <= 20; i += 1) aliases.add(`(${i}단)보강대 ${index}`);
+    }
+  }
+  const nSectionReinforcementMatch = withoutFurnitureLabel.match(/^\((\d+)단\)보강대\s*(\d+)$/);
+  if (nSectionReinforcementMatch) {
+    const prefix = Number(nSectionReinforcementMatch[1]) === 1 ? '(하)' : '(상)';
+    const index = nSectionReinforcementMatch[2];
+    aliases.add(`${prefix}보강대 ${index}`);
+    aliases.add(`${prefix}후면 보강대 ${index}`);
   }
 
   const lowerStretcherMatch = withoutFurnitureLabel.match(/^가로전대\(하(\d+)\)$/);

@@ -690,6 +690,7 @@ export const calculatePanelDetails = (
       // 보강대 너비: 전체 내경폭 기준 (좌/우 분리 안 함)
       const reinforcementWidth = innerWidth - sidePanelGap;
       const isLowerCabinetModule = moduleData.id.includes('lower-');
+      const isGlassCabinetModule = moduleData.id.includes('glass-cabinet');
       const sectionHasBackPanel = (section as any).hasBackPanel !== false;
       if (isKitchenNSectionFurniture) {
         const sectionNumberPrefix = `(${sectionIndex + 1}단)`;
@@ -731,26 +732,30 @@ export const calculatePanelDetails = (
           targetPanel.push({
             name: `${backPanelNamePrefix}백패널`,
             width: backPanelWidth, // 내경폭 + 좌우 5mm씩 확장
-            height: backPanelHeight, // 섹션별 높이
+            height: isGlassCabinetModule ? 510 : backPanelHeight, // 유리장은 서랍모듈 뒤 MDF 백패널만 CNC 대상
             thickness: backPanelThickness, // 9mm
             material: 'MDF'
           });
           if (!isLowerCabinetModule) {
+            if (!isGlassCabinetModule) {
+              targetPanel.push({
+                name: `${sectionPrefix}후면 보강대 1`,
+                width: reinforcementWidth,
+                height: reinforcementHeight,
+                thickness: reinforcementDepth,
+                material: 'PB'
+              });
+            }
+          }
+          if (!isGlassCabinetModule) {
             targetPanel.push({
-              name: `${sectionPrefix}후면 보강대 1`,
+              name: `${sectionPrefix}후면 보강대 2`,
               width: reinforcementWidth,
               height: reinforcementHeight,
               thickness: reinforcementDepth,
               material: 'PB'
             });
           }
-          targetPanel.push({
-            name: `${sectionPrefix}후면 보강대 2`,
-            width: reinforcementWidth,
-            height: reinforcementHeight,
-            thickness: reinforcementDepth,
-            material: 'PB'
-          });
         } else if (moduleData.id.includes('built-in-fridge') && sectionIndex === 0) {
           ['상', '중', '하'].forEach((suffix) => {
             targetPanel.push({

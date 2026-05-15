@@ -205,6 +205,34 @@ describe('panelDetails regression baselines', () => {
     expectedDrawerModulePanels.forEach((name) => {
       expect(findPanel(panels, name)).toBeDefined()
     })
+    expect(findPanel(panels, '백패널').height).toBe(510)
+    expect(panels.some(panel => panel.name?.includes('보강대'))).toBe(false)
+  })
+
+  it('키큰장찬넬 프레임 패널은 옵티마이저 패널 목록에 포함된다', () => {
+    const panels = calculatePanels('insert-frame-136', 136, 58, {
+      spaceHeight: 2400
+    })
+
+    ;[
+      '키큰장찬넬 전면프레임',
+      '키큰장찬넬 좌EP',
+      '키큰장찬넬 우EP',
+      '상단몰딩',
+      '걸래받이'
+    ].forEach((name) => {
+      expect(findPanel(panels, name)).toBeDefined()
+    })
+  })
+
+  it('도어분절 팬트리장 도어는 하부/상부 도어 이름으로 패널 목록에 포함된다', () => {
+    const panels = calculatePanels('single-pantry-cabinet-split-600', 600, 600, {
+      hasDoor: true,
+      backPanelThicknessMm: 9
+    })
+    const doorNames = panels.filter(panel => panel.isDoor).map(panel => panel.name)
+
+    expect(doorNames).toEqual(['하부 도어', '상부 도어'])
   })
 
   it('도어분절 현관장 하부 상단 목찬넬은 옵티마이저 패널 목록에 포함된다', () => {
@@ -216,6 +244,79 @@ describe('panelDetails regression baselines', () => {
     expect(findPanel(panels, '목찬넬프레임수평(1)')).toBeDefined()
     expect(findPanel(panels, '목찬넬프레임수직(1)')).toBeDefined()
     expect(findPanel(panels, '전대')).toBeDefined()
+  })
+
+  it('주방 키큰장 인출장 패널 목록은 3D 옵티마이저 mesh 이름과 일치한다', () => {
+    const panels = calculatePanels('single-pull-out-cabinet-600', 600, 600, {
+      hasDoor: true,
+      backPanelThicknessMm: 9
+    })
+    const names = panels.map((panel) => panel.name)
+
+    ;[
+      '좌측판1',
+      '우측판1',
+      '좌측판2',
+      '우측판2',
+      '좌측판3',
+      '우측판3',
+      '(1단)백패널',
+      '(2단)백패널',
+      '(3단)백패널',
+      '(1단)보강대 1',
+      '(1단)보강대 2',
+      '(2단)보강대 1',
+      '(2단)보강대 2',
+      '(3단)보강대 1',
+      '(3단)보강대 2',
+      '전자렌지 좌날개',
+      '전자렌지 우날개',
+      '전자렌지 전면프레임',
+      '전자렌지 인출 트레이 바닥판'
+    ].forEach((name) => {
+      expect(findPanel(panels, name)).toBeDefined()
+    })
+
+    expect(names.filter(name => name === '(하)상판')).toHaveLength(2)
+    expect(names.filter(name => name === '(상)바닥')).toHaveLength(2)
+    expect(names).not.toContain('(하)좌측')
+    expect(names).not.toContain('(상)좌측')
+    expect(names).not.toContain('(상)후면 보강대 1')
+  })
+
+  it('주방 키큰장 팬트리장/냉장고장 백패널과 보강대는 3D 이름으로 생성된다', () => {
+    const pantryPanels = calculatePanels('single-pantry-cabinet-600', 600, 600, {
+      hasDoor: true,
+      backPanelThicknessMm: 9
+    })
+    const fridgePanels = calculatePanels('single-fridge-cabinet-600', 600, 600, {
+      hasDoor: true,
+      backPanelThicknessMm: 9
+    })
+    const builtInPanels = calculatePanels('built-in-fridge-582', 582, 600, {
+      hasDoor: true,
+      backPanelThicknessMm: 9
+    })
+    const pantryNames = pantryPanels.map((panel) => panel.name)
+    const fridgeNames = fridgePanels.map((panel) => panel.name)
+    const builtInNames = builtInPanels.map((panel) => panel.name)
+
+    ;['좌측판1', '우측판1', '좌측판2', '우측판2', '(1단)백패널', '(2단)백패널', '(1단)보강대 1', '(2단)보강대 2'].forEach((name) => {
+      expect(findPanel(pantryPanels, name)).toBeDefined()
+    })
+    expect(pantryNames).not.toContain('(하)백패널')
+    expect(pantryNames).not.toContain('(상)후면 보강대 1')
+
+    ;['좌측판1', '우측판1', '좌측판2', '우측판2', '(1단)보강대 1', '(1단)보강대 2', '(1단)보강대 3', '(2단)백패널'].forEach((name) => {
+      expect(findPanel(fridgePanels, name)).toBeDefined()
+    })
+    expect(fridgeNames).not.toContain('(1단)백패널')
+    expect(fridgeNames).not.toContain('(하)백패널')
+
+    ;['(하)후면보강대상', '(하)후면보강대중', '(하)후면보강대하', '(상)백패널'].forEach((name) => {
+      expect(builtInNames.join('\n')).toContain(name)
+    })
+    expect(builtInNames).not.toContain('(하)백패널')
   })
 
   it('듀얼 하부장 도어 패널은 전체 폭을 합산하지 않고 좌우 leaf 폭으로 생성된다', () => {

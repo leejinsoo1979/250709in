@@ -1470,6 +1470,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
                 basicThicknessMm={basicThicknessMm}
                 material={baseFurniture.material}
                 mmToThreeUnits={baseFurniture.mmToThreeUnits}
+                furnitureId={placedFurnitureId}
               />
             );
           })()}
@@ -1706,6 +1707,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
                     parentGroupY={parentGroupY}
                     forcedDoorHeightMm={lowerDoorH}
                     forcedDoorYMm={lowerDoorY}
+                    splitDoorPanelName="하부 도어"
                   />
                 </group>
                 {/* 상부 도어 — 너비 치수 숨김 (하부 도어가 이미 표시) + 경첩 2개 (도어분절 팬트리장 사양) */}
@@ -1741,6 +1743,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
                     parentGroupY={parentGroupY}
                     forcedDoorHeightMm={upperDoorH}
                     forcedDoorYMm={upperDoorY}
+                    splitDoorPanelName="상부 도어"
                     hideWidthDimension={true}
                   />
                 </group>
