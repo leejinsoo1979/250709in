@@ -5676,8 +5676,10 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                               }
                             }}
                             onBlur={() => {
+                              // 사용자가 진짜 빈/부호만 남긴 경우에만 0으로 리셋
+                              // v === undefined는 사용자가 편집 안 한 상태이므로 store 값 그대로 유지
                               const v = epInputs.leftFront;
-                              if (v === '' || v === '-' || v === undefined) {
+                              if (v === '' || v === '-') {
                                 updatePlacedModule(currentPlacedModule.id, { leftEndPanelOffset: 0 });
                               }
                               setEpInputs(s => ({ ...s, leftFront: undefined }));
@@ -5715,7 +5717,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                             }}
                             onBlur={() => {
                               const v = epInputs.leftBack;
-                              if (v === '' || v === '-' || v === undefined) {
+                              if (v === '' || v === '-') {
                                 updatePlacedModule(currentPlacedModule.id, { leftEndPanelBackOffset: 0 });
                               }
                               setEpInputs(s => ({ ...s, leftBack: undefined }));
@@ -5758,7 +5760,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                             }}
                             onBlur={() => {
                               const v = epInputs.rightFront;
-                              if (v === '' || v === '-' || v === undefined) {
+                              if (v === '' || v === '-') {
                                 updatePlacedModule(currentPlacedModule.id, { rightEndPanelOffset: 0 });
                               }
                               setEpInputs(s => ({ ...s, rightFront: undefined }));
@@ -5796,7 +5798,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                             }}
                             onBlur={() => {
                               const v = epInputs.rightBack;
-                              if (v === '' || v === '-' || v === undefined) {
+                              if (v === '' || v === '-') {
                                 updatePlacedModule(currentPlacedModule.id, { rightEndPanelBackOffset: 0 });
                               }
                               setEpInputs(s => ({ ...s, rightBack: undefined }));
@@ -5839,7 +5841,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                             }}
                             onBlur={() => {
                               const v = (epInputs as any).bottomFront;
-                              if (v === '' || v === '-' || v === undefined) {
+                              if (v === '' || v === '-') {
                                 updatePlacedModule(currentPlacedModule.id, { bottomEndPanelOffset: 0 } as any);
                               }
                               setEpInputs(s => ({ ...s, bottomFront: undefined } as any));
@@ -5877,7 +5879,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                             }}
                             onBlur={() => {
                               const v = (epInputs as any).bottomBack;
-                              if (v === '' || v === '-' || v === undefined) {
+                              if (v === '' || v === '-') {
                                 updatePlacedModule(currentPlacedModule.id, { bottomEndPanelBackOffset: 35 } as any);
                               }
                               setEpInputs(s => ({ ...s, bottomBack: undefined } as any));
