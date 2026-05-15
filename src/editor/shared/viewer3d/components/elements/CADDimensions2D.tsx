@@ -423,7 +423,7 @@ const computeLowerCabinetMaidaHeights = (
     const defaultTopExtMm = isTopDownTouch ? -(tdTouchStretcherH + 25) : 30;
     const defaultBottomExtMm = 5;
     const topExtMm = isTopDownTouch ? defaultTopExtMm : doorTopGap;
-    const bottomExtMm = isTopDownTouch ? defaultBottomExtMm : doorBottomGap;
+    const bottomExtMm = doorBottomGap;
     const gapTopExt = topExtMm - defaultTopExtMm;
     const gapBottomExt = bottomExtMm - defaultBottomExtMm;
     const totalFrontMm = moduleHeightMm + topExtMm + bottomExtMm;
@@ -447,7 +447,7 @@ const computeLowerCabinetMaidaHeights = (
         : isTopDown2Fixed
           ? [353, 354]
           : isTopDown3Fixed
-            ? [284, 210, 210]
+            ? [185, 240, 240]
             : drawerHeights.map(h => (h / totalDrawerH) * totalMaidaMm);
     const maidaHeightsMm = [...baseMaidaHeightsMm];
     if (maidaHeightsMm.length > 0) {

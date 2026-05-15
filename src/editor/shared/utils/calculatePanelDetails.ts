@@ -2191,18 +2191,19 @@ export const calculatePanelDetails = (
     const isTDTouch2 = moduleData.id.includes('lower-top-down-touch-2tier');
     const isTDTouch3 = moduleData.id.includes('lower-top-down-touch-3tier');
     // 서랍 본체 높이 (바닥판/뒷판 제작용)
+    // 상판내림 터치 3단: 1·2·3단 모두 164로 통일 (1·2단을 3단과 동일하게)
     const drawerHeights = isTouch2A ? [228, 228]
       : isTouch2B ? [228, 164]
       : isTouch3 ? [228, 117, 117]
       : isTDTouch2 ? [228, 228]
-      : isTDTouch3 ? [164, 117, 117]
+      : isTDTouch3 ? [164, 164, 164]
       : [228, 228];
     // 마이다 비례 (2B는 2A와 동일하게 [228, 228])
     const maidaDrawerHeights = isTouch2A ? [228, 228]
       : isTouch2B ? [228, 228]
       : isTouch3 ? [228, 117, 117]
       : isTDTouch2 ? [228, 228]
-      : isTDTouch3 ? [164, 117, 117]
+      : isTDTouch3 ? [164, 164, 164]
       : [228, 228];
     const drawerThicknessMm = 15;
     const bottomSideGapMm = 17;
@@ -2231,7 +2232,7 @@ export const calculatePanelDetails = (
     const fixedMaidaDoorLift2 = [408, 409];
     const fixedMaidaDoorLift3 = [360, 227, 227];
     const fixedMaidaTopDown2 = [353, 354];
-    const fixedMaidaTopDown3 = [284, 210, 210];
+    const fixedMaidaTopDown3 = [185, 240, 240];
 
     drawerHeights.forEach((dh, di) => {
       const drawerNum = di + 1;

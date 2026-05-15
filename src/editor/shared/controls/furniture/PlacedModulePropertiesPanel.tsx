@@ -4070,7 +4070,6 @@ const PlacedModulePropertiesPanel: React.FC = () => {
               // 상판내림은 터치형(touch)만 서랍 → 그 외(half/2tier/3tier)는 도어 모듈
               /^(dual-)?lower-drawer-/.test(currentPlacedModule.moduleId)
               || /(^|-)lower-induction-cabinet-/.test(currentPlacedModule.moduleId)
-              || /(^|-)lower-top-down-touch-/.test(currentPlacedModule.moduleId)
             ))
             && (() => {
             const isDualSlot = currentPlacedModule.isDualSlot || currentPlacedModule.moduleId?.startsWith('dual-');

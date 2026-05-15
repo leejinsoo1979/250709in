@@ -673,7 +673,7 @@ const TouchDrawerAnimated: React.FC<TouchDrawerAnimatedProps> = ({
     : isTouch2B ? [[228, 28], [164, 406]]
     : isTouch3 ? [[228, 28], [117, 357], [117, 587]]
     : isTDTouch2 ? [[228, 28], [228, 356]]
-    : isTDTouch3 ? [[164, 28], [117, 280], [117, 493]]
+    : isTDTouch3 ? [[164, 28], [164, 166.4], [164, 438]]
     : [[228, 28], [228, 406]];
 
   const bottomPanelTopY = cabinetBottomY + mmToThreeUnits(basicThicknessMm);
@@ -697,7 +697,7 @@ const TouchDrawerAnimated: React.FC<TouchDrawerAnimatedProps> = ({
     : isTouch2B ? [228, 228]
     : isTouch3 ? [228, 117, 117]
     : isTDTouch2 ? [228, 228]
-    : isTDTouch3 ? [164, 117, 117]
+    : isTDTouch3 ? [164, 164, 164]
     : [228, 228];
 
   // 상판내림 터치: ㄱ자 상판 하단(=가로전대 하단)과 마이다 최상단 사이 갭을 항상 20mm 유지
@@ -712,9 +712,7 @@ const TouchDrawerAnimated: React.FC<TouchDrawerAnimatedProps> = ({
   const topExtMm = isTopDownTouch
     ? defaultTopExtMm
     : (doorTopGap ?? defaultTopExtMm);
-  const bottomExtMm = isTopDownTouch
-    ? defaultBottomExtMm
-    : (doorBottomGap ?? defaultBottomExtMm);
+  const bottomExtMm = doorBottomGap ?? defaultBottomExtMm;
   const gapTopExt = topExtMm - defaultTopExtMm;
   const gapBottomExt = bottomExtMm - defaultBottomExtMm;
   const totalFrontMm = moduleHeightMm + topExtMm + bottomExtMm;
@@ -738,7 +736,7 @@ const TouchDrawerAnimated: React.FC<TouchDrawerAnimatedProps> = ({
       : isTopDown2Fixed
         ? [353, 354]
         : isTopDown3Fixed
-          ? [284, 210, 210]
+          ? [185, 240, 240]
           : drawerHeights.map(h => (h / totalDrawerH) * totalMaidaMm);
   const maidaHeightsMm = [...baseMaidaHeightsMm];
   if (maidaHeightsMm.length > 0) {
