@@ -1993,7 +1993,7 @@ const createDualLowerCabinet2 = (dualWidth: number): ModuleData => {
  */
 const createLowerHalfCabinet = (columnWidth: number): ModuleData => {
   const widthForId = Math.round(columnWidth * 100) / 100;
-  const cabinetHeight = 785; // 캐비넷 본체 높이
+  const cabinetHeight = 780; // 캐비넷 본체 높이
 
   const base = createFurnitureBase(
     `lower-half-cabinet-${widthForId}`,
@@ -2035,7 +2035,7 @@ const createLowerHalfCabinet = (columnWidth: number): ModuleData => {
  */
 const createDualLowerHalfCabinet = (dualWidth: number, slotWidths?: number[]): ModuleData => {
   const widthForId = Math.round(dualWidth * 100) / 100;
-  const cabinetHeight = 785; // 캐비넷 본체 높이
+  const cabinetHeight = 780; // 캐비넷 본체 높이
 
   const base = createFurnitureBase(
     `dual-lower-half-cabinet-${widthForId}`,
@@ -2078,7 +2078,7 @@ const createDualLowerHalfCabinet = (dualWidth: number, slotWidths?: number[]): M
  */
 const createLowerSinkCabinet = (columnWidth: number): ModuleData => {
   const widthForId = Math.round(columnWidth * 100) / 100;
-  const cabinetHeight = 785;
+  const cabinetHeight = 780;
 
   const base = createFurnitureBase(
     `lower-sink-cabinet-${widthForId}`,
@@ -2119,7 +2119,7 @@ const createLowerSinkCabinet = (columnWidth: number): ModuleData => {
  */
 const createDualLowerSinkCabinet = (dualWidth: number, slotWidths?: number[]): ModuleData => {
   const widthForId = Math.round(dualWidth * 100) / 100;
-  const cabinetHeight = 785;
+  const cabinetHeight = 780;
 
   const base = createFurnitureBase(
     `dual-lower-sink-cabinet-${widthForId}`,
@@ -2162,7 +2162,7 @@ const createDualLowerSinkCabinet = (dualWidth: number, slotWidths?: number[]): M
  */
 const createLowerInductionCabinet = (columnWidth: number): ModuleData => {
   const widthForId = Math.round(columnWidth * 100) / 100;
-  const cabinetHeight = 785;
+  const cabinetHeight = 780;
 
   const base = createFurnitureBase(
     `lower-induction-cabinet-${widthForId}`,
@@ -2203,7 +2203,7 @@ const createLowerInductionCabinet = (columnWidth: number): ModuleData => {
  */
 const createDualLowerInductionCabinet = (dualWidth: number, slotWidths?: number[]): ModuleData => {
   const widthForId = Math.round(dualWidth * 100) / 100;
-  const cabinetHeight = 785;
+  const cabinetHeight = 780;
 
   const base = createFurnitureBase(
     `dual-lower-induction-cabinet-${widthForId}`,
@@ -2246,7 +2246,7 @@ const createDualLowerInductionCabinet = (dualWidth: number, slotWidths?: number[
  */
 const createDualLowerDrawer3Tier = (dualWidth: number, slotWidths?: number[]): ModuleData => {
   const widthForId = Math.round(dualWidth * 100) / 100;
-  const cabinetHeight = 785;
+  const cabinetHeight = 780;
 
   const base = createFurnitureBase(
     `dual-lower-drawer-3tier-${widthForId}`,
@@ -2289,7 +2289,7 @@ const createDualLowerDrawer3Tier = (dualWidth: number, slotWidths?: number[]): M
  */
 const createLowerDrawer3Tier = (columnWidth: number): ModuleData => {
   const widthForId = Math.round(columnWidth * 100) / 100;
-  const cabinetHeight = 785;
+  const cabinetHeight = 780;
 
   const base = createFurnitureBase(
     `lower-drawer-3tier-${widthForId}`,
@@ -2331,7 +2331,7 @@ const createLowerDrawer3Tier = (columnWidth: number): ModuleData => {
  */
 const createDualLowerDrawer2Tier = (dualWidth: number, slotWidths?: number[]): ModuleData => {
   const widthForId = Math.round(dualWidth * 100) / 100;
-  const cabinetHeight = 785;
+  const cabinetHeight = 780;
 
   const base = createFurnitureBase(
     `dual-lower-drawer-2tier-${widthForId}`,
@@ -2374,7 +2374,7 @@ const createDualLowerDrawer2Tier = (dualWidth: number, slotWidths?: number[]): M
  */
 const createLowerDrawer2Tier = (columnWidth: number): ModuleData => {
   const widthForId = Math.round(columnWidth * 100) / 100;
-  const cabinetHeight = 785; // 캐비넷 본체 높이
+  const cabinetHeight = 780; // 캐비넷 본체 높이
 
   const base = createFurnitureBase(
     `lower-drawer-2tier-${widthForId}`,
@@ -2419,7 +2419,7 @@ const createLowerDrawer2Tier = (columnWidth: number): ModuleData => {
  */
 const createLowerDoorLiftHalf = (columnWidth: number): ModuleData => {
   const widthForId = Math.round(columnWidth * 100) / 100;
-  const cabinetHeight = 785;
+  const cabinetHeight = 780;
 
   const base = createFurnitureBase(
     `lower-door-lift-half-${widthForId}`,
@@ -2460,7 +2460,7 @@ const createLowerDoorLiftHalf = (columnWidth: number): ModuleData => {
  */
 const createDualLowerDoorLiftHalf = (dualWidth: number, slotWidths?: number[]): ModuleData => {
   const widthForId = Math.round(dualWidth * 100) / 100;
-  const cabinetHeight = 785;
+  const cabinetHeight = 780;
 
   const base = createFurnitureBase(
     `dual-lower-door-lift-half-${widthForId}`,
@@ -2502,7 +2502,7 @@ const createDualLowerDoorLiftHalf = (dualWidth: number, slotWidths?: number[]): 
  */
 const createDualLowerDoorLift2Tier = (dualWidth: number, slotWidths?: number[]): ModuleData => {
   const widthForId = Math.round(dualWidth * 100) / 100;
-  const cabinetHeight = 785;
+  const cabinetHeight = 780;
 
   const base = createFurnitureBase(
     `dual-lower-door-lift-2tier-${widthForId}`,
@@ -2544,7 +2544,7 @@ const createDualLowerDoorLift2Tier = (dualWidth: number, slotWidths?: number[]):
  */
 const createDualLowerDoorLift3Tier = (dualWidth: number, slotWidths?: number[]): ModuleData => {
   const widthForId = Math.round(dualWidth * 100) / 100;
-  const cabinetHeight = 785;
+  const cabinetHeight = 780;
 
   const base = createFurnitureBase(
     `dual-lower-door-lift-3tier-${widthForId}`,
@@ -2586,7 +2586,7 @@ const createDualLowerDoorLift3Tier = (dualWidth: number, slotWidths?: number[]):
  */
 const createLowerDoorLift2Tier = (columnWidth: number): ModuleData => {
   const widthForId = Math.round(columnWidth * 100) / 100;
-  const cabinetHeight = 785;
+  const cabinetHeight = 780;
 
   const base = createFurnitureBase(
     `lower-door-lift-2tier-${widthForId}`,
@@ -2627,7 +2627,7 @@ const createLowerDoorLift2Tier = (columnWidth: number): ModuleData => {
  */
 const createLowerDoorLift3Tier = (columnWidth: number): ModuleData => {
   const widthForId = Math.round(columnWidth * 100) / 100;
-  const cabinetHeight = 785;
+  const cabinetHeight = 780;
 
   const base = createFurnitureBase(
     `lower-door-lift-3tier-${widthForId}`,
@@ -2673,7 +2673,7 @@ const createLowerDoorLift3Tier = (columnWidth: number): ModuleData => {
  */
 const createLowerDoorLiftTouch2TierA = (columnWidth: number): ModuleData => {
   const widthForId = Math.round(columnWidth * 100) / 100;
-  const cabinetHeight = 785;
+  const cabinetHeight = 780;
 
   const base = createFurnitureBase(
     `lower-door-lift-touch-2tier-a-${widthForId}`,
@@ -2710,7 +2710,7 @@ const createLowerDoorLiftTouch2TierA = (columnWidth: number): ModuleData => {
 
 const createDualLowerDoorLiftTouch2TierA = (dualWidth: number, slotWidths?: number[]): ModuleData => {
   const widthForId = Math.round(dualWidth * 100) / 100;
-  const cabinetHeight = 785;
+  const cabinetHeight = 780;
 
   const base = createFurnitureBase(
     `dual-lower-door-lift-touch-2tier-a-${widthForId}`,
@@ -2753,7 +2753,7 @@ const createDualLowerDoorLiftTouch2TierA = (dualWidth: number, slotWidths?: numb
  */
 const createLowerDoorLiftTouch2TierB = (columnWidth: number): ModuleData => {
   const widthForId = Math.round(columnWidth * 100) / 100;
-  const cabinetHeight = 785;
+  const cabinetHeight = 780;
 
   const base = createFurnitureBase(
     `lower-door-lift-touch-2tier-b-${widthForId}`,
@@ -2790,7 +2790,7 @@ const createLowerDoorLiftTouch2TierB = (columnWidth: number): ModuleData => {
 
 const createDualLowerDoorLiftTouch2TierB = (dualWidth: number, slotWidths?: number[]): ModuleData => {
   const widthForId = Math.round(dualWidth * 100) / 100;
-  const cabinetHeight = 785;
+  const cabinetHeight = 780;
 
   const base = createFurnitureBase(
     `dual-lower-door-lift-touch-2tier-b-${widthForId}`,
@@ -2833,7 +2833,7 @@ const createDualLowerDoorLiftTouch2TierB = (dualWidth: number, slotWidths?: numb
  */
 const createLowerDoorLiftTouch3Tier = (columnWidth: number): ModuleData => {
   const widthForId = Math.round(columnWidth * 100) / 100;
-  const cabinetHeight = 785;
+  const cabinetHeight = 780;
 
   const base = createFurnitureBase(
     `lower-door-lift-touch-3tier-${widthForId}`,
@@ -2870,7 +2870,7 @@ const createLowerDoorLiftTouch3Tier = (columnWidth: number): ModuleData => {
 
 const createDualLowerDoorLiftTouch3Tier = (dualWidth: number, slotWidths?: number[]): ModuleData => {
   const widthForId = Math.round(dualWidth * 100) / 100;
-  const cabinetHeight = 785;
+  const cabinetHeight = 780;
 
   const base = createFurnitureBase(
     `dual-lower-door-lift-touch-3tier-${widthForId}`,
@@ -2916,7 +2916,7 @@ const createDualLowerDoorLiftTouch3Tier = (dualWidth: number, slotWidths?: numbe
  */
 const createLowerTopDownHalf = (columnWidth: number): ModuleData => {
   const widthForId = Math.round(columnWidth * 100) / 100;
-  const cabinetHeight = 785;
+  const cabinetHeight = 780;
 
   const base = createFurnitureBase(
     `lower-top-down-half-${widthForId}`,
@@ -2957,7 +2957,7 @@ const createLowerTopDownHalf = (columnWidth: number): ModuleData => {
  */
 const createDualLowerTopDownHalf = (dualWidth: number, slotWidths?: number[]): ModuleData => {
   const widthForId = Math.round(dualWidth * 100) / 100;
-  const cabinetHeight = 785;
+  const cabinetHeight = 780;
 
   const base = createFurnitureBase(
     `dual-lower-top-down-half-${widthForId}`,
@@ -2999,7 +2999,7 @@ const createDualLowerTopDownHalf = (dualWidth: number, slotWidths?: number[]): M
  */
 const createLowerTopDown2Tier = (columnWidth: number): ModuleData => {
   const widthForId = Math.round(columnWidth * 100) / 100;
-  const cabinetHeight = 785;
+  const cabinetHeight = 780;
 
   const base = createFurnitureBase(
     `lower-top-down-2tier-${widthForId}`,
@@ -3040,7 +3040,7 @@ const createLowerTopDown2Tier = (columnWidth: number): ModuleData => {
  */
 const createDualLowerTopDown2Tier = (dualWidth: number, slotWidths?: number[]): ModuleData => {
   const widthForId = Math.round(dualWidth * 100) / 100;
-  const cabinetHeight = 785;
+  const cabinetHeight = 780;
 
   const base = createFurnitureBase(
     `dual-lower-top-down-2tier-${widthForId}`,
@@ -3082,7 +3082,7 @@ const createDualLowerTopDown2Tier = (dualWidth: number, slotWidths?: number[]): 
  */
 const createLowerTopDown3Tier = (columnWidth: number): ModuleData => {
   const widthForId = Math.round(columnWidth * 100) / 100;
-  const cabinetHeight = 785;
+  const cabinetHeight = 780;
 
   const base = createFurnitureBase(
     `lower-top-down-3tier-${widthForId}`,
@@ -3123,7 +3123,7 @@ const createLowerTopDown3Tier = (columnWidth: number): ModuleData => {
  */
 const createDualLowerTopDown3Tier = (dualWidth: number, slotWidths?: number[]): ModuleData => {
   const widthForId = Math.round(dualWidth * 100) / 100;
-  const cabinetHeight = 785;
+  const cabinetHeight = 780;
 
   const base = createFurnitureBase(
     `dual-lower-top-down-3tier-${widthForId}`,
@@ -3165,7 +3165,7 @@ const createDualLowerTopDown3Tier = (dualWidth: number, slotWidths?: number[]): 
  */
 const createLowerTopDownTouch2Tier = (columnWidth: number): ModuleData => {
   const widthForId = Math.round(columnWidth * 100) / 100;
-  const cabinetHeight = 785;
+  const cabinetHeight = 780;
 
   const base = createFurnitureBase(
     `lower-top-down-touch-2tier-${widthForId}`,
@@ -3195,7 +3195,7 @@ const createLowerTopDownTouch2Tier = (columnWidth: number): ModuleData => {
 
 const createDualLowerTopDownTouch2Tier = (dualWidth: number, slotWidths?: number[]): ModuleData => {
   const widthForId = Math.round(dualWidth * 100) / 100;
-  const cabinetHeight = 785;
+  const cabinetHeight = 780;
 
   const base = createFurnitureBase(
     `dual-lower-top-down-touch-2tier-${widthForId}`,
@@ -3230,7 +3230,7 @@ const createDualLowerTopDownTouch2Tier = (dualWidth: number, slotWidths?: number
  */
 const createLowerTopDownTouch3Tier = (columnWidth: number): ModuleData => {
   const widthForId = Math.round(columnWidth * 100) / 100;
-  const cabinetHeight = 785;
+  const cabinetHeight = 780;
 
   const base = createFurnitureBase(
     `lower-top-down-touch-3tier-${widthForId}`,
@@ -3260,7 +3260,7 @@ const createLowerTopDownTouch3Tier = (columnWidth: number): ModuleData => {
 
 const createDualLowerTopDownTouch3Tier = (dualWidth: number, slotWidths?: number[]): ModuleData => {
   const widthForId = Math.round(dualWidth * 100) / 100;
-  const cabinetHeight = 785;
+  const cabinetHeight = 780;
 
   const base = createFurnitureBase(
     `dual-lower-top-down-touch-3tier-${widthForId}`,
