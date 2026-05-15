@@ -121,60 +121,61 @@ const EndPanelWithTexture: React.FC<EndPanelWithTextureProps> = ({
     );
   }
 
-  // ㄱ자 프레임: EP 본체(앞쪽 18mm 잘림) + 전면 프레임(EP 폭 + 바깥쪽 18mm 확장)
-  // 평면도(top view)에서 본 단면:
-  //     ━━━━━━━━━━  ← 전면 프레임 (가구 본체 라인 ~ EP 바깥쪽 + 18mm)
-  //          ┃   ┃ ← EP 본체 (앞쪽 18mm 잘린 만큼 뒤로 위치)
-  //          ┃   ┃
-  //          ┃   ┃
-  // 인접 가구가 있으면 EP 본체 생략 → 전면 프레임만 렌더링
+  // L자 EP: 사용자가 EP 두께를 18 초과로 늘렸을 때만 적용
+  //   측면 ep(원래 EP, 두께는 사용자 입력값 그대로) +
+  //   전면 ep(측면 ep의 안쪽 가구 본체 라인에 추가로 붙는 보드, 두께 18.5mm)
+  // 평면도(top view, 우측 EP 예시):
+  //   가구내경 ┤전면ep│  측면 ep(사용자 입력 두께)  │
+  //           │      │                            │
+  //           └──────┤  ←측면 ep는 전면 ep 뒷면부터 뒤끝까지
+  //   ↑18.5mm│
+  //  (전면 ep만 앞쪽 18.5mm 차지)
+  // 인접 가구가 있으면 측면 ep 생략 → 전면 ep만 렌더링.
   const boardThickness = 18.5 * 0.01; // PET 18.5mm → Three.js 단위
-  const connectorDepthZ = boardThickness; // 전면 프레임 Z축 깊이 = 18.5mm
-  const totalWidth = width;            // 전체 EP 두께 (이미 Three.js 단위)
-  const showSidePanel = !adjacentFurniture; // 인접 가구 없을 때만 EP 본체 표시
+  const frontEpDepthZ = boardThickness; // 전면 ep Z 두께 = 18.5mm
+  const totalWidth = width;             // 사용자 입력 EP 두께(측면 ep 폭, 이미 Three.js 단위)
+  const showSidePanel = !adjacentFurniture; // 인접 가구 없으면 측면 ep 표시
 
-  // 전면 프레임 폭: EP 두께 + 바깥쪽 18mm (가구 본체 라인 안쪽으로는 안 들어감)
-  //   인접 가구 있으면 EP가 안 그려지므로 폭 = 사용자 지정 EP 두께만 (확장 안 함)
-  const frontFrameWidth = showSidePanel
-    ? totalWidth + boardThickness
-    : totalWidth;
-
-  // 좌측 EP: 부모 좌표에서 가구 본체는 +X 방향(가구 중심 쪽), EP 바깥은 -X 방향 → outward=-1
-  // 우측 EP: 가구 본체는 -X 방향, EP 바깥은 +X 방향 → outward=+1
-  const outward = side === 'left' ? -1 : 1;
-  // 전면 프레임 X 중심: 측판이 있으면 EP 바깥쪽(outward 방향)으로 boardThickness/2 만큼 이동
-  //   (총 폭이 EP두께 + boardThickness이고, 바깥쪽 끝이 EP 바깥보다 boardThickness만큼 더 나가도록)
-  const frontFrameX = showSidePanel
-    ? outward * (boardThickness / 2)
-    : 0;
-  // EP 본체 Z 중심: 앞쪽 boardThickness 만큼 잘려서 뒤로 이동 (앞면이 원래보다 18.5mm 뒤로)
+  // 측면 ep 깊이(Z): 원래 EP 깊이 - 전면 ep 두께 (앞 18.5mm는 전면 ep가 차지)
   const sideEpDepth = Math.max(0, depth - boardThickness);
-  const sideEpZ = -boardThickness / 2;
+
+  // 좌측 EP: 부모 좌표에서 가구 본체는 +X 쪽, 바깥은 -X 쪽 → outward=-1
+  // 우측 EP: 가구 본체는 -X 쪽, 바깥은 +X 쪽 → outward=+1
+  const outward = side === 'left' ? -1 : 1;
+  // 측면 ep X 중심: EP 그룹 중심에 그대로 (사용자 입력 두께 = 그룹 폭)
+  const sideEpX = 0;
+  // 전면 ep X 중심: 측면 ep의 안쪽(가구 본체 쪽) 면에 바로 붙음
+  //   측면 ep 안쪽 면 = -outward × totalWidth/2
+  //   전면 ep 중심 = 측면 ep 안쪽 면 + (-outward × boardThickness/2)
+  //              = -outward × (totalWidth/2 + boardThickness/2)
+  const frontEpX = -outward * (totalWidth / 2 + boardThickness / 2);
+  // Z 위치: 전면 ep는 EP 그룹의 앞면(=depth/2)에 붙음
+  const frontEpZ = depth / 2 - frontEpDepthZ / 2;
+  // 측면 ep는 앞면이 전면 ep 뒷면(=depth/2 - boardThickness)과 맞닿음
+  const sideEpZ = (depth / 2 - boardThickness) - sideEpDepth / 2;
 
   return (
     <group position={position}>
-      {/* EP 본체 (전면 프레임만큼 앞쪽 잘림) — 인접 가구 없을 때만 */}
+      {/* 측면 ep — 사용자 입력 두께 그대로, 인접 가구 없을 때만 */}
       {showSidePanel && sideEpDepth > 0 && (
         <BoxWithEdges
           isEndPanel={true}
           args={[totalWidth, height, sideEpDepth]}
-          position={[0, 0, sideEpZ]}
+          position={[sideEpX, 0, sideEpZ]}
           material={endPanelMaterial}
           renderMode={renderMode}
           furnitureId={furnitureId}
         />
       )}
-      {/* 전면 프레임 (EP 앞면) — 바깥쪽으로 18mm 확장 */}
-      {frontFrameWidth > 0 && (
-        <BoxWithEdges
-          isEndPanel={true}
-          args={[frontFrameWidth, height, connectorDepthZ]}
-          position={[frontFrameX, 0, depth / 2 - connectorDepthZ / 2]}
-          material={endPanelMaterial}
-          renderMode={renderMode}
-          furnitureId={furnitureId}
-        />
-      )}
+      {/* 전면 ep — 측면 ep의 안쪽(가구 본체 쪽)에 보드 두께만큼 추가로 붙음 */}
+      <BoxWithEdges
+        isEndPanel={true}
+        args={[boardThickness, height, frontEpDepthZ]}
+        position={[frontEpX, 0, frontEpZ]}
+        material={endPanelMaterial}
+        renderMode={renderMode}
+        furnitureId={furnitureId}
+      />
     </group>
   );
 };
