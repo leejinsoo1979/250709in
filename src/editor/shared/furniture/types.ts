@@ -227,6 +227,10 @@ export interface PlacedModule {
     [panelName: string]: 'horizontal' | 'vertical'; // 패널 이름별 결 방향
   };
 
+  // 패널 옵티마이저 제외 목록 (체크 해제된 패널 이름 배열)
+  // 비어있거나 undefined면 전체 포함 (기본 동작)
+  panelExclusions?: string[];
+
   // 도어 셋팅 (자유배치 모드)
   doorSettingMode?: 'auto' | 'manual'; // 자동/수동 모드 (기본값: 'auto')
   doorOverlayLeft?: number;   // 도어 좌측 확장 (mm, 기본값: 0)

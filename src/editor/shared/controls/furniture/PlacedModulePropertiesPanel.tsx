@@ -2998,10 +2998,52 @@ const PlacedModulePropertiesPanel: React.FC = () => {
               !panel.name?.startsWith('===') && !panel.isInfo
             ).length;
 
+            // 옵티마이저 제외 목록 (체크 해제된 패널)
+            const exclusions = currentPlacedModule?.panelExclusions ?? [];
+            const realPanelNames = allPanelDetails
+              .filter(p => p.name && !p.name.startsWith('===') && !p.isInfo)
+              .map(p => p.name as string);
+            const isPanelChecked = (name?: string) => {
+              if (!name) return true;
+              return !exclusions.includes(name);
+            };
+            const togglePanel = (name: string, checked: boolean) => {
+              if (!currentPlacedModule) return;
+              const cur = currentPlacedModule.panelExclusions ?? [];
+              const next = checked
+                ? cur.filter((n: string) => n !== name)
+                : [...cur, name];
+              updatePlacedModule(currentPlacedModule.id, {
+                panelExclusions: next.length > 0 ? next : undefined,
+              });
+            };
+            const allChecked = realPanelNames.every(n => isPanelChecked(n));
+            const someChecked = realPanelNames.some(n => isPanelChecked(n));
+            const toggleAll = (checked: boolean) => {
+              if (!currentPlacedModule) return;
+              updatePlacedModule(currentPlacedModule.id, {
+                panelExclusions: checked ? undefined : [...realPanelNames],
+              });
+            };
+
             return (
               <div className={styles.detailsSection}>
-                <h5 className={styles.sectionTitle}>
-                  {t('furniture.panelDetails')} (총 {actualPanelCount}장)
+                <h5 className={styles.sectionTitle} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+                  <span>{t('furniture.panelDetails')} (총 {actualPanelCount}장)</span>
+                  <label
+                    style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, fontWeight: 400, cursor: 'pointer' }}
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={allChecked}
+                      ref={(el) => {
+                        if (el) el.indeterminate = !allChecked && someChecked;
+                      }}
+                      onChange={(e) => toggleAll(e.target.checked)}
+                    />
+                    <span>전체</span>
+                  </label>
                 </h5>
                 <div className={styles.panelList}>
                   {allPanelDetails.map((panel, index) => {
@@ -3121,11 +3163,12 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                     dimensionDisplay = `${panel.width || panel.height || panel.depth}`;
                   }
 
+                  const panelChecked = isPanelChecked(panel.name);
                   return (
                     <div
                       key={index}
                       className={`${styles.panelItem} ${selectedPanelIndex === index ? styles.panelItemSelected : selectedPanelIndex !== null ? styles.panelItemDimmed : ''}`}
-                      style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}
+                      style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', opacity: panelChecked ? 1 : 0.5 }}
                       onClick={() => {
                         const newIndex = selectedPanelIndex === index ? null : index;
                         setSelectedPanelIndex(newIndex);
@@ -3141,6 +3184,15 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                         }
                       }}
                     >
+                      <input
+                        type="checkbox"
+                        checked={panelChecked}
+                        onClick={(e) => e.stopPropagation()}
+                        onChange={(e) => {
+                          if (panel.name) togglePanel(panel.name, e.target.checked);
+                        }}
+                        style={{ cursor: 'pointer', flexShrink: 0 }}
+                      />
                       <div style={{ flex: 1 }}>
                         <span className={styles.panelName}>{panel.name}:</span>
                         <span className={styles.panelSize}>

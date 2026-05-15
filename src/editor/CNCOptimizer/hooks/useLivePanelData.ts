@@ -437,11 +437,14 @@ export function useLivePanelData() {
         // 또한 width나 depth 속성이 있어야 실제 패널로 간주
         // 유리장: 도어(금속 프레임+브라운 유리)는 별도 제작이므로 CNC 패널 추출 제외
         const isGlassCabinet = moduleData?.id?.includes('glass-cabinet');
+        // 사용자가 패널 목록 팝업에서 체크 해제한 패널은 옵티마이저 출력에서 제외
+        const panelExclusionSet = new Set<string>(placedModule.panelExclusions ?? []);
         let modulePanels = allPanelsList.filter((item: any) => {
           const isNotHeader = item.name && !item.name.includes('===');
           const hasValidDimensions = item.width !== undefined || item.depth !== undefined;
           const isGlassDoor = isGlassCabinet && item.name && (item.name.includes('도어') || item.name.includes('Door'));
-          return isNotHeader && hasValidDimensions && !isStonePanel(item) && !isGlassDoor;
+          const isExcluded = item.name && panelExclusionSet.has(item.name);
+          return isNotHeader && hasValidDimensions && !isStonePanel(item) && !isGlassDoor && !isExcluded;
         });
 
         // 유리장: 백패널은 서랍모듈 뒤(서랍 측판 H=500) 영역만 포함, 후면 보강대는 제외
@@ -1257,11 +1260,14 @@ export function usePanelSubscription(callback: (panels: Panel[]) => void) {
       // 또한 width나 depth 속성이 있어야 실제 패널로 간주
       // 유리장: 도어(금속 프레임+브라운 유리) 별도 제작 → CNC 추출 제외
       const isGlassCabinetForFilter = moduleData?.id?.includes('glass-cabinet');
+      // 사용자가 패널 목록 팝업에서 체크 해제한 패널은 옵티마이저 출력에서 제외
+      const panelExclusionSet2 = new Set<string>(placedModule.panelExclusions ?? []);
       let modulePanels = allPanelsList.filter((item: any) => {
         const isNotHeader = item.name && !item.name.includes('===');
         const hasValidDimensions = item.width !== undefined || item.depth !== undefined;
         const isGlassDoor = isGlassCabinetForFilter && item.name && (item.name.includes('도어') || item.name.includes('Door'));
-        return isNotHeader && hasValidDimensions && !isStonePanel(item) && !isGlassDoor;
+        const isExcluded = item.name && panelExclusionSet2.has(item.name);
+        return isNotHeader && hasValidDimensions && !isStonePanel(item) && !isGlassDoor && !isExcluded;
       });
 
       // 유리장: 백패널은 서랍모듈 뒤(서랍 측판 H=500) 영역만 포함, 후면 보강대는 제외
@@ -1468,6 +1474,9 @@ export function usePanelSubscription(callback: (panels: Panel[]) => void) {
           cornerNotch: panel.cornerNotch,
           sideNotches: panel.sideNotches,
           rebate: panel.rebate,
+          // 3D 뷰어 패널 하이라이트/제외용
+          meshName: toMeshName(panel.name),
+          furnitureId: placedModule.id,
         };
       });
 
