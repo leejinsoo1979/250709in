@@ -483,9 +483,16 @@ const computeLowerCabinetMaidaHeights = (
         result[i] = { maidaHeightMm: h, maidaBottomMm: bottomMm, maidaTopMm: cursorTop };
         cursorTop = bottomMm - gapMm;
       }
-      const bottomStart = -bottomExtMm;
-      const newMaida0H = Math.max(0, cursorTop - bottomStart);
-      result[0] = { maidaHeightMm: newMaida0H, maidaBottomMm: bottomStart, maidaTopMm: bottomStart + newMaida0H };
+      if (cmhValid) {
+        // customMaidaHeights 있으면 사용자 입력값 그대로 적용
+        const h0 = maidaHeightsMm[0];
+        const bottomStart = cursorTop - h0;
+        result[0] = { maidaHeightMm: h0, maidaBottomMm: bottomStart, maidaTopMm: cursorTop };
+      } else {
+        const bottomStart = -bottomExtMm;
+        const newMaida0H = Math.max(0, cursorTop - bottomStart);
+        result[0] = { maidaHeightMm: newMaida0H, maidaBottomMm: bottomStart, maidaTopMm: bottomStart + newMaida0H };
+      }
       return result;
     }
 

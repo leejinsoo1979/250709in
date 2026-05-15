@@ -800,15 +800,26 @@ const TouchDrawerAnimated: React.FC<TouchDrawerAnimatedProps> = ({
       };
       cursorTop = bottomMm - gapMm; // 아래 마이다 위쪽 = 이 마이다 하단 - 갭
     }
-    // 맨 아래(0)는 -bottomExt부터 시작 ~ cursorTop까지
-    const bottomStart = -bottomExtMm;
-    result[0] = {
-      height: Math.max(0, cursorTop - bottomStart),
-      centerY: cabinetBottomY + mmToThreeUnits((bottomStart + cursorTop) / 2),
-      tier: 1,
-      bottomMm: bottomStart
-    };
-    maidaHeightsMm[0] = result[0].height; // 흡수된 새 높이 동기화
+    // 맨 아래(0): customMaidaValid면 사용자 입력값 그대로, 아니면 cursorTop까지 흡수
+    if (customMaidaValid) {
+      const h0 = maidaHeightsMm[0];
+      const bottomStart = cursorTop - h0; // 위에서 h0만큼 아래로 배치
+      result[0] = {
+        height: h0,
+        centerY: cabinetBottomY + mmToThreeUnits(bottomStart + h0 / 2),
+        tier: 1,
+        bottomMm: bottomStart
+      };
+    } else {
+      const bottomStart = -bottomExtMm;
+      result[0] = {
+        height: Math.max(0, cursorTop - bottomStart),
+        centerY: cabinetBottomY + mmToThreeUnits((bottomStart + cursorTop) / 2),
+        tier: 1,
+        bottomMm: bottomStart
+      };
+      maidaHeightsMm[0] = result[0].height; // 흡수된 새 높이 동기화
+    }
     maidas = result;
   } else {
     let currentBottomMm = -bottomExtMm;
