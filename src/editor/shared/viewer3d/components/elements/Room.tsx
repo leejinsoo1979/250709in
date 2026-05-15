@@ -4841,6 +4841,9 @@ const Room: React.FC<RoomProps> = ({
                   ];
                   const isMergedHighlighted = false; // 설계 과정에서는 항상 분절
                   const isIndividualHighlighted = seg.placedModuleId && highlightedFrame === `top-${seg.placedModuleId}`;
+                  // segment를 만든 owning 가구 ID — 사용자가 그 가구의 패널 목록에서 상단몰딩을 체크 해제하면
+                  // 해당 segment만 숨기기 위해 사용 (firstModuleId 대신 segment별 placedModuleId 사용)
+                  const owningId = seg.placedModuleId || firstModuleId;
                   return (
                     <React.Fragment key={`free-top-merged-${idx}`}>
                       <BoxWithEdges
@@ -4852,7 +4855,9 @@ const Room: React.FC<RoomProps> = ({
                         material={seg.material ?? topSurrMat}
                         renderMode={renderMode}
                         shadowEnabled={shadowEnabled}
-                        excludeKey={`${firstModuleId}::top-frame`}
+                        excludeKey={`${owningId}::top-frame`}
+                        furnitureId={owningId}
+                        panelName="top-frame"
                       />
                       {(isMergedHighlighted || isIndividualHighlighted) && <mesh position={pos}><boxGeometry args={args} /><primitive object={highlightOverlayMaterial} attach="material" /></mesh>}
                     </React.Fragment>
@@ -5742,6 +5747,7 @@ const Room: React.FC<RoomProps> = ({
                     ];
                     const isMergedHighlighted = false; // 설계 과정에서는 항상 분절
                     const isIndividualHighlighted = seg.placedModuleId && highlightedFrame === `top-${seg.placedModuleId}`;
+                    const owningId = seg.placedModuleId || firstModuleId;
                     return (
                       <React.Fragment key={`slot-top-merged-${idx}`}>
                         <BoxWithEdges
@@ -5754,7 +5760,9 @@ const Room: React.FC<RoomProps> = ({
                           renderMode={renderMode}
                           shadowEnabled={shadowEnabled}
                           renderOrder={seg.behindCeiling ? -1 : undefined}
-                          excludeKey={`${firstModuleId}::top-frame`}
+                          excludeKey={`${owningId}::top-frame`}
+                          furnitureId={owningId}
+                          panelName="top-frame"
                         />
                         {(isMergedHighlighted || isIndividualHighlighted) && <mesh position={pos}><boxGeometry args={args} /><primitive object={highlightOverlayMaterial} attach="material" /></mesh>}
                       </React.Fragment>
