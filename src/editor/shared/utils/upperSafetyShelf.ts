@@ -56,9 +56,12 @@ export const withUpperSafetyShelfRemoved = (
   removeUpperSafetyShelf?: boolean,
 ): ModuleData => {
   if (!removeUpperSafetyShelf) return moduleData;
-  if (!isUpperSafetyShelfModule(moduleData.id)) return moduleData;
+  // hanging 섹션이 있는 모든 모듈에서 토글 작동하도록 ID 가드 제거
   const sections = moduleData.modelConfig?.sections;
   if (!sections) return moduleData;
+  // hanging 섹션이 있는 모듈만 처리
+  const hasHanging = sections.some(s => s.type === 'hanging');
+  if (!hasHanging) return moduleData;
   const nextSections = applyRemoveUpperSafetyShelf(sections);
   return {
     ...moduleData,
