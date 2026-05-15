@@ -1759,15 +1759,16 @@ const PlacedModulePropertiesPanel: React.FC = () => {
   // 받침대 높이는 바닥마감재와 무관하게 원래 값 사용
   const floorFinishH = spaceInfo.hasFloorFinish ? (spaceInfo.floorFinish?.height || 15) : 0;
   const visualBaseFrameHeightMm = baseFrameHeightMm;
+  // 사용자가 명시한 값(0 포함, undefined가 아니면)을 우선 사용. undefined일 때만 default.
   const endPanelTopOffsetForPanels = currentPlacedModule?.hasTopFrame === false
     ? 0
-    : ((currentPlacedModule?.endPanelTopOffset ?? 0) > 0
-      ? (currentPlacedModule?.endPanelTopOffset as number)
+    : (currentPlacedModule?.endPanelTopOffset !== undefined
+      ? (currentPlacedModule.endPanelTopOffset as number)
       : (currentPlacedModule?.topFrameThickness ?? topFrameHeightMm));
   const endPanelBottomOffsetForPanels = currentPlacedModule?.hasBase === false
     ? 0
-    : ((currentPlacedModule?.endPanelBottomOffset ?? 0) > 0
-      ? (currentPlacedModule?.endPanelBottomOffset as number)
+    : (currentPlacedModule?.endPanelBottomOffset !== undefined
+      ? (currentPlacedModule.endPanelBottomOffset as number)
       : visualBaseFrameHeightMm);
 
   // 패널 상세정보 계산 (hasDoor 변경 시 자동 재계산)
@@ -5431,11 +5432,12 @@ const PlacedModulePropertiesPanel: React.FC = () => {
             const epBaseDefault = epBaseEnabled
               ? (spaceInfo.baseConfig?.type === 'stand' ? 0 : (currentPlacedModule.baseFrameHeight ?? (spaceInfo.baseConfig?.height ?? 65)))
               : 0;
+            // 사용자가 명시한 값(undefined가 아니면 0 포함)을 우선 사용. undefined일 때만 default.
             const epTopOffsetValue = epTopEnabled
-              ? ((currentPlacedModule.endPanelTopOffset ?? 0) > 0 ? (currentPlacedModule.endPanelTopOffset as number) : epTopDefault)
+              ? (currentPlacedModule.endPanelTopOffset !== undefined ? currentPlacedModule.endPanelTopOffset : epTopDefault)
               : 0;
             const epBottomOffsetValue = epBaseEnabled
-              ? ((currentPlacedModule.endPanelBottomOffset ?? 0) > 0 ? (currentPlacedModule.endPanelBottomOffset as number) : epBaseDefault)
+              ? (currentPlacedModule.endPanelBottomOffset !== undefined ? currentPlacedModule.endPanelBottomOffset : epBaseDefault)
               : 0;
             return (
             <div className={styles.propertySection}>

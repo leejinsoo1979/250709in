@@ -1964,12 +1964,13 @@ export const calculatePanelDetails = (
   const epThicknessMm = endPanelThickness || 18; // 사용자 설정 EP 두께
   const isEpCFrame = epThicknessMm > 18; // >18mm이면 ㄷ자 프레임
   const epConnectorWidth = epThicknessMm - 18.5; // 전면/후면 연결판 폭 = EP두께 - 외판두께
+  // 사용자가 명시한 값(0 포함, undefined가 아니면)을 우선 사용. undefined일 때만 default.
   const effectiveEndPanelTopOffsetMm = hasTopFrame === false
     ? 0
-    : ((endPanelTopOffsetMm ?? 0) > 0 ? (endPanelTopOffsetMm as number) : (topFrameHeightMm ?? 0));
+    : (endPanelTopOffsetMm !== undefined ? (endPanelTopOffsetMm as number) : (topFrameHeightMm ?? 0));
   const effectiveEndPanelBottomOffsetMm = hasBase === false
     ? 0
-    : ((endPanelBottomOffsetMm ?? 0) > 0 ? (endPanelBottomOffsetMm as number) : (baseFrameHeightMm ?? 0));
+    : (endPanelBottomOffsetMm !== undefined ? (endPanelBottomOffsetMm as number) : (baseFrameHeightMm ?? 0));
   const endPanelHeight = height + effectiveEndPanelTopOffsetMm + effectiveEndPanelBottomOffsetMm;
 
   if (hasLeftEndPanel) {

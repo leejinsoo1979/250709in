@@ -416,10 +416,10 @@ const FurnitureInfoModal: React.FC<FurnitureInfoModalProps> = ({
     undefined,
     placedModule?.hasTopFrame === false
       ? 0
-      : ((placedModule?.endPanelTopOffset ?? 0) > 0 ? placedModule?.endPanelTopOffset : topFrameHeightMm),
+      : (placedModule?.endPanelTopOffset !== undefined ? placedModule.endPanelTopOffset : topFrameHeightMm),
     placedModule?.hasBase === false
       ? 0
-      : ((placedModule?.endPanelBottomOffset ?? 0) > 0 ? placedModule?.endPanelBottomOffset : baseFrameHeightMm)
+      : (placedModule?.endPanelBottomOffset !== undefined ? placedModule.endPanelBottomOffset : baseFrameHeightMm)
   );
 
   // 서라운드 패널 (공간 전체 단위)

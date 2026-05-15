@@ -430,10 +430,10 @@ export function useLivePanelData() {
           placedModule.stoneTopBackLipFillHeight,
           (placedModule as any).hasTopFrame === false
             ? 0
-            : (((placedModule as any).endPanelTopOffset ?? 0) > 0 ? (placedModule as any).endPanelTopOffset : topFrameH),
+            : ((placedModule as any).endPanelTopOffset !== undefined ? (placedModule as any).endPanelTopOffset : topFrameH),
           (placedModule as any).hasBase === false
             ? 0
-            : (((placedModule as any).endPanelBottomOffset ?? 0) > 0 ? (placedModule as any).endPanelBottomOffset : baseFrameH)
+            : ((placedModule as any).endPanelBottomOffset !== undefined ? (placedModule as any).endPanelBottomOffset : baseFrameH)
         );
 
         console.log(`Module ${moduleIndex}: All panels list received:`, allPanelsList);
@@ -1248,10 +1248,10 @@ export function usePanelSubscription(callback: (panels: Panel[]) => void) {
         undefined,
         (placedModule as any).hasTopFrame === false
           ? 0
-          : (((placedModule as any).endPanelTopOffset ?? 0) > 0 ? (placedModule as any).endPanelTopOffset : topFrameH2),
+          : ((placedModule as any).endPanelTopOffset !== undefined ? (placedModule as any).endPanelTopOffset : topFrameH2),
         (placedModule as any).hasBase === false
           ? 0
-          : (((placedModule as any).endPanelBottomOffset ?? 0) > 0 ? (placedModule as any).endPanelBottomOffset : baseFrameH2)
+          : ((placedModule as any).endPanelBottomOffset !== undefined ? (placedModule as any).endPanelBottomOffset : baseFrameH2)
       );
 
       // calculatePanelDetailsShared는 평면 배열을 반환함 (섹션 헤더 포함)

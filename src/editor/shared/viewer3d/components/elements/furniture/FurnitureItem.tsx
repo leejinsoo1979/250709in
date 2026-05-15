@@ -3915,12 +3915,13 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                 : (spaceInfo.baseConfig?.type === 'stand'
                   ? 0
                   : (placedModule.baseFrameHeight ?? (spaceInfo.baseConfig?.height ?? 65)));
+              // 사용자가 명시한 값(0 포함, undefined가 아니면)을 우선 사용. undefined일 때만 default.
               const epTopOffsetMm = placedModule.hasTopFrame === false
                 ? 0
-                : ((placedModule.endPanelTopOffset ?? 0) > 0 ? (placedModule.endPanelTopOffset as number) : defaultEpTopOffsetMm);
+                : (placedModule.endPanelTopOffset !== undefined ? (placedModule.endPanelTopOffset as number) : defaultEpTopOffsetMm);
               const epBottomOffsetMm = placedModule.hasBase === false
                 ? 0
-                : ((placedModule.endPanelBottomOffset ?? 0) > 0 ? (placedModule.endPanelBottomOffset as number) : defaultEpBottomOffsetMm);
+                : (placedModule.endPanelBottomOffset !== undefined ? (placedModule.endPanelBottomOffset as number) : defaultEpBottomOffsetMm);
               const topOff = mmToThreeUnits(epTopOffsetMm);
               const bottomOff = mmToThreeUnits(epBottomOffsetMm);
 
