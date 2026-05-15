@@ -4745,13 +4745,21 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                 <div className={styles.epRow} style={{ gap: '8px' }}>
                   {labels.map((label, uiIdx) => {
                     const di = toInternalIdx(uiIdx);
-                    // 3단(di=0, 맨 아래)은 도어 하단갭 늘면 마이다도 같이 늘어남
-                    const rawVal = current[di] ?? defaultMaida[di];
-                    const val = (di === 0 && typeof current[di] === 'number')
-                      ? (current[di]! + bottomGapExt)
-                      : (rawVal ?? '');
+                    // 3단(맨 아래)은 항상 자동 흡수값 — 1·2단 + 갭 + 자동흡수 = 가구 본체 영역
+                    // 1·2단은 사용자 입력값 우선
+                    const isBottomTier = di === 0;
+                    let val: number | string = '';
+                    if (isBottomTier) {
+                      // 자동 흡수: maidaTotalFront - (1단+2단) - 갭×2 + bottomGapExt
+                      const m1 = current[2] ?? defaultMaida[2] ?? 0;
+                      const m2 = current[1] ?? defaultMaida[1] ?? 0;
+                      val = Math.max(0, Math.round(maidaTotalFront - m1 - m2 - 2 * gapM + bottomGapExt));
+                    } else {
+                      val = current[di] ?? defaultMaida[di] ?? '';
+                    }
+                    const fieldDisabled = !editEnabled || isBottomTier;
                     return (
-                      <div key={uiIdx} className={styles.epField} style={{ flex: '1 1 0', opacity: editEnabled ? 1 : 0.5 }}>
+                      <div key={uiIdx} className={styles.epField} style={{ flex: '1 1 0', opacity: fieldDisabled ? 0.5 : 1 }}>
                         <label className={styles.epFieldLabel}>{label}</label>
                         <div className={styles.inputWithUnit}>
                           <input
@@ -4760,13 +4768,13 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                             className={styles.epInput}
                             value={val}
                             placeholder={String(defaultMaida[di] ?? '')}
-                            disabled={!editEnabled}
+                            disabled={fieldDisabled}
                             onChange={(e) => handleChange(di, e.target.value)}
                             onKeyDown={(e) => {
                               if (e.key === 'ArrowUp') { e.preventDefault(); handleArrow(di, 1); }
                               else if (e.key === 'ArrowDown') { e.preventDefault(); handleArrow(di, -1); }
                             }}
-                            style={{ cursor: editEnabled ? 'text' : 'not-allowed' }}
+                            style={{ cursor: fieldDisabled ? 'not-allowed' : 'text' }}
                           />
                           <span className={styles.unit}>mm</span>
                         </div>
@@ -4802,6 +4810,18 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                       legraDrawerTypes: allEmpty ? undefined : (next as any),
                     } as any);
                   };
+                  // 모듈별 기본 서랍 본체 높이 (drawerHeights, di=0(아래)→di=N(위) 순서)
+                  const drawerHeightsByModule: number[] =
+                    isDoorLiftTouch2A ? [228, 228]
+                    : isDoorLiftTouch2B ? [228, 228]
+                    : isDoorLiftTouch3 ? [228, 117, 117]
+                    : isTopDownTouch2 ? [228, 228]
+                    : isTopDownTouch3 ? [164, 164, 164]
+                    : isInduction ? [228]
+                    : [228, 228];
+                  // drawerHeight → 자동 매칭된 레그라 종류
+                  const autoLegraType = (dh: number): 'M' | 'L' | 'F' =>
+                    dh >= 200 ? 'F' : dh <= 120 ? 'M' : 'L';
                   return (
                     <div style={{ marginTop: '12px' }}>
                       <div style={{ fontSize: '11px', color: 'var(--theme-text-secondary)', marginBottom: '6px' }}>
@@ -4810,7 +4830,8 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                       <div className={styles.epRow} style={{ gap: '8px' }}>
                         {labels.map((label, uiIdx) => {
                           const di = toInternalIdx(uiIdx);
-                          const cur = legraTypes[di] ?? '';
+                          const autoType = autoLegraType(drawerHeightsByModule[di] ?? 164);
+                          const cur = legraTypes[di] ?? autoType; // 사용자 선택 없으면 실제 배치 종류 표시
                           return (
                             <div key={uiIdx} className={styles.epField} style={{ flex: '1 1 0' }}>
                               <label className={styles.epFieldLabel}>{label}</label>
@@ -4828,7 +4849,6 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                                   cursor: 'pointer',
                                 }}
                               >
-                                <option value="">자동</option>
                                 <option value="M">M</option>
                                 <option value="L">L</option>
                                 <option value="F">F</option>

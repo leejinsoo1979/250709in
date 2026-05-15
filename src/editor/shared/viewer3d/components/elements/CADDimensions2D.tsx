@@ -483,16 +483,12 @@ const computeLowerCabinetMaidaHeights = (
         result[i] = { maidaHeightMm: h, maidaBottomMm: bottomMm, maidaTopMm: cursorTop };
         cursorTop = bottomMm - gapMm;
       }
-      if (cmhValid) {
-        // customMaidaHeights 있으면 사용자 입력값 그대로 적용
-        const h0 = maidaHeightsMm[0];
-        const bottomStart = cursorTop - h0;
-        result[0] = { maidaHeightMm: h0, maidaBottomMm: bottomStart, maidaTopMm: cursorTop };
-      } else {
-        const bottomStart = -bottomExtMm;
-        const newMaida0H = Math.max(0, cursorTop - bottomStart);
-        result[0] = { maidaHeightMm: newMaida0H, maidaBottomMm: bottomStart, maidaTopMm: bottomStart + newMaida0H };
-      }
+      // 3단(맨 아래) 마이다는 항상 자동 흡수 (LowerCabinet과 동일)
+      //   하단 = -bottomExtMm (가구 본체 바닥, 도어 하단갭 늘면 아래로 확장)
+      //   상단 = cursorTop (1·2단 묶음 끝)
+      const bottomStart = -bottomExtMm;
+      const newMaida0H = Math.max(0, cursorTop - bottomStart);
+      result[0] = { maidaHeightMm: newMaida0H, maidaBottomMm: bottomStart, maidaTopMm: bottomStart + newMaida0H };
       return result;
     }
 
@@ -1391,17 +1387,12 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                 doorBottomAbsMm = cabinetBottomAbs - doorBottomGapVal;
               }
             } else {
-              // 키큰장: 도어 갭은 가구 본체에서 도어가 떨어진 거리 (도어가 가구 밖으로 확장)
-              //   도어 하단 = 가구 본체 하단 - doorBottomGap (도어가 가구 하단보다 아래로 25)
-              //   도어 상단 = 가구 본체 상단 + doorTopGap   (도어가 가구 상단보다 위로 5)
+              // 키큰장 (원본 로직 복구)
               const isFloorType = !spaceInfo.baseConfig || spaceInfo.baseConfig.type === 'floor';
               const floorFinishForDoor = (isFloorType && spaceInfo.hasFloorFinish)
                 ? (spaceInfo.floorFinish?.height || 0) : 0;
-              const cabinetBottomAbs = (isFloating ? floatHeightMm : (railOrBaseHeightMm + indivFloatMm)) + floorFinishForDoor;
-              const tallH = mod.customHeight ?? mod.freeHeight ?? modData.dimensions.height ?? 0;
-              const cabinetTopAbsTall = cabinetBottomAbs + tallH;
-              doorBottomAbsMm = cabinetBottomAbs - doorBottomGapVal;
-              doorTopAbsMm = cabinetTopAbsTall + doorTopGapVal;
+              doorBottomAbsMm = doorBottomGapVal + floorFinishForDoor;
+              doorTopAbsMm = effectiveH_door - doorTopGapVal;
               doorHeightMm = Math.max(0, doorTopAbsMm - doorBottomAbsMm);
             }
 
@@ -1549,24 +1540,6 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                     <NativeLine name="dimension_line" points={[[-0.008, bottomStartY, dimZ], [0.008, bottomStartY, dimZ]]} color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false} />
                     <Text position={[0, (bottomStartY + lowestBottomY) / 2, dimZ + mmToThreeUnits(60)]} fontSize={largeFontSize} color={textColor} anchorX="center" anchorY="middle" renderOrder={100001} depthTest={false} rotation={[0, -Math.PI / 2, Math.PI / 2]}>
                       {bottomGapMm}
-                    </Text>
-                  </group>
-                );
-              })()}
-              {/* 하부장/키큰장 도어 상단갭: 도어 최상단 ~ 천장 */}
-              {(() => {
-                if (allLowerDoorSegs.length === 0) return null;
-                const highestTopY = Math.max(...allLowerDoorSegs.map(s => s.topY));
-                const ceilingY = mmToThreeUnits(spaceInfo.height);
-                const topGapMm = Math.round((ceilingY - highestTopY) / 0.01);
-                if (topGapMm <= 0) return null;
-                return (
-                  <group key="r-door-topgap">
-                    <ExtLine points={[[0, ceilingY, dimExtZ], [0, ceilingY, dimZ]]} color={dimensionColor} />
-                    <NativeLine name="dimension_line" points={[[0, highestTopY, dimZ], [0, ceilingY, dimZ]]} color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false} />
-                    <NativeLine name="dimension_line" points={[[-0.008, ceilingY, dimZ], [0.008, ceilingY, dimZ]]} color={dimensionColor} lineWidth={1} renderOrder={100000} depthTest={false} />
-                    <Text position={[0, (highestTopY + ceilingY) / 2, dimZ + mmToThreeUnits(60)]} fontSize={largeFontSize} color={textColor} anchorX="center" anchorY="middle" renderOrder={100001} depthTest={false} rotation={[0, -Math.PI / 2, Math.PI / 2]}>
-                      {topGapMm}
                     </Text>
                   </group>
                 );

@@ -815,31 +815,17 @@ const TouchDrawerAnimated: React.FC<TouchDrawerAnimatedProps> = ({
       };
       cursorTop = bottomMm - gapMm;
     }
-    // 맨 아래(0): 마이다 하단 = -bottomExtMm (도어 하단갭 반영, 가구 바닥 아래로 확장).
-    // customMaidaValid: 입력값에 하단갭 증가분(bottomExtMm-defaultBottomExtMm)을 더해서 그림.
-    //   사용자가 219 입력 + 하단갭 60(=defaultBottomExtMm 5 + 55) → 마이다 높이 = 219 + 55 = 274
-    //   마이다 상단은 줄어든 만큼 위 마이다와 갭 생김
-    // 자동 흡수: cursorTop ~ -bottomExtMm 까지 다 채움
+    // 맨 아래(0): 항상 자동 흡수 (customMaidaValid 여부와 무관)
+    //   하단 = -bottomExtMm (가구 바닥), 상단 = cursorTop (1·2단 묶음 끝)
+    //   하단갭 늘리면 가구 바닥 아래로 확장
     const bottomStart = -bottomExtMm;
-    const bottomExtDelta = bottomExtMm - defaultBottomExtMm;
-    if (customMaidaValid) {
-      const h0 = maidaHeightsMm[0] + bottomExtDelta;
-      result[0] = {
-        height: Math.max(0, h0),
-        centerY: cabinetBottomY + mmToThreeUnits(bottomStart + h0 / 2),
-        tier: 1,
-        bottomMm: bottomStart
-      };
-      maidaHeightsMm[0] = result[0].height;
-    } else {
-      result[0] = {
-        height: Math.max(0, cursorTop - bottomStart),
-        centerY: cabinetBottomY + mmToThreeUnits((bottomStart + cursorTop) / 2),
-        tier: 1,
-        bottomMm: bottomStart
-      };
-      maidaHeightsMm[0] = result[0].height;
-    }
+    result[0] = {
+      height: Math.max(0, cursorTop - bottomStart),
+      centerY: cabinetBottomY + mmToThreeUnits((bottomStart + cursorTop) / 2),
+      tier: 1,
+      bottomMm: bottomStart
+    };
+    maidaHeightsMm[0] = result[0].height;
     maidas = result;
   } else {
     let currentBottomMm = -defaultBottomExtMm;
