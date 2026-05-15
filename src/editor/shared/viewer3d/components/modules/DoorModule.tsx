@@ -1288,13 +1288,10 @@ const DoorModule: React.FC<DoorModuleProps> = ({
       rightDoorWidth = halfWidth - doorGap;
     }
 
-    // EP ㄷ자 프레임 잠금: EP > 18mm이면 해당 쪽 도어 잠금 (안 열림, 힌지 없음, 빨간선)
-    const leftDoorLocked = !!(storePlacedModule
-      && storePlacedModule.hasLeftEndPanel
-      && (storePlacedModule.endPanelThickness || 18) > 20);
-    const rightDoorLocked = !!(storePlacedModule
-      && storePlacedModule.hasRightEndPanel
-      && (storePlacedModule.endPanelThickness || 18) > 20);
+    // EP ㄷ자 프레임 잠금 로직 제거: ㄷ자 EP는 X 방향 안쪽 확장이라 도어 회전을 방해하지 않음.
+    // 사용자가 EP 두께를 늘려도 도어가 정상 작동해야 함.
+    const leftDoorLocked = false;
+    const rightDoorLocked = false;
 
     // EP 앞으로 돌출 시 도어 너비 축소: 깊이 확장 front 또는 옵셋 양수(앞 확장)
     let leftEpTrimShift = 0;
