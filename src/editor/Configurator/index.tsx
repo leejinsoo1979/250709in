@@ -7979,13 +7979,19 @@ const Configurator: React.FC = () => {
                 width: '28px',
                 height: '28px',
                 background: 'transparent',
+                backgroundColor: 'transparent',
                 border: 'none',
+                outline: 'none',
                 padding: 0,
+                margin: 0,
                 cursor: 'pointer',
                 color: isLiveDimensionMode ? 'var(--theme-primary)' : 'var(--theme-text-muted, #6b7280)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
+                boxShadow: 'none',
+                appearance: 'none',
+                WebkitAppearance: 'none',
               }}
             >
               <TbZoomScan size={18} />
@@ -7998,13 +8004,19 @@ const Configurator: React.FC = () => {
                 width: '28px',
                 height: '28px',
                 background: 'transparent',
+                backgroundColor: 'transparent',
                 border: 'none',
+                outline: 'none',
                 padding: 0,
+                margin: 0,
                 cursor: 'pointer',
                 color: isTapeMeasureMode ? 'var(--theme-primary)' : 'var(--theme-text-muted, #6b7280)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
+                boxShadow: 'none',
+                appearance: 'none',
+                WebkitAppearance: 'none',
               }}
             >
               <RulerDimensionLine size={18} />
