@@ -1161,9 +1161,7 @@ const buildGlassCabinetSections = (): SectionConfig[] => {
 
 const createSingleGlassCabinet = (columnWidth: number, maxHeight?: number): ModuleData => {
   const widthForId = Math.round(columnWidth * 100) / 100;
-  // 공간 높이에 맞춰 유리장 H 동적 계산 (maxHeight = 내경 높이 = 천장 - 상부몰딩 - 바닥마감)
-  // 띄움 200mm 위에서 천장-상부몰딩까지: H = maxHeight - 띄움200
-  // 유리장도 일반 키큰장처럼 동작 — 띄움 자동 차감 제거
+  // 유리장 H = 내경 (천장 - 상단몰딩 - 받침대) — 일반 키큰장과 동일
   const glassHeight = maxHeight ?? GLASS_CABINET_HEIGHT;
   const base = createFurnitureBase(
     `single-glass-cabinet-${widthForId}`,
