@@ -7957,71 +7957,71 @@ const Configurator: React.FC = () => {
           </button>
         )}
 
-        {/* 3D 모드 전용: 스캔/줄자 세로 버튼 — 우측 ? 도움말 버튼과 동일 스타일/정렬 */}
+        {/* 3D 모드 전용: 스캔 아이콘 — 독립 배치 */}
         {!isReadOnly && viewMode === '3D' && (
-          <div
+          <button
+            className="canvas-icon-btn"
+            onClick={toggleLiveDimensionMode}
+            title="3D 스캔"
             style={{
               position: 'absolute',
-              right: isRightPanelOpen ? 'calc(var(--right-panel-width, 320px) + 12px)' : '12px',
-              top: '90px', // ? 버튼 아래 충분한 간격
+              right: isRightPanelOpen ? 'calc(var(--right-panel-width, 320px) + 18px)' : '18px',
+              top: '90px',
+              width: '28px',
+              height: '28px',
+              background: 'transparent',
+              backgroundColor: 'transparent',
+              border: 'none',
+              outline: 'none',
+              padding: 0,
+              margin: 0,
+              cursor: 'pointer',
+              color: isLiveDimensionMode ? 'var(--theme-primary)' : 'var(--theme-text-muted, #6b7280)',
               display: 'flex',
-              flexDirection: 'column',
-              gap: '8px', // ? 버튼과의 간격(12px)보다 약간 좁게 — 그룹감 표현
+              alignItems: 'center',
+              justifyContent: 'center',
+              boxShadow: 'none',
+              appearance: 'none',
+              WebkitAppearance: 'none',
               zIndex: 10002,
               transition: 'right 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
             }}
           >
-            <button
-              onClick={toggleLiveDimensionMode}
-              title="3D 스캔"
-              style={{
-                position: 'static',
-                width: '28px',
-                height: '28px',
-                background: 'transparent',
-                backgroundColor: 'transparent',
-                border: 'none',
-                outline: 'none',
-                padding: 0,
-                margin: 0,
-                cursor: 'pointer',
-                color: isLiveDimensionMode ? 'var(--theme-primary)' : 'var(--theme-text-muted, #6b7280)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                boxShadow: 'none',
-                appearance: 'none',
-                WebkitAppearance: 'none',
-              }}
-            >
-              <TbZoomScan size={18} />
-            </button>
-            <button
-              onClick={toggleTapeMeasureMode}
-              title="3D 줄자"
-              style={{
-                position: 'static',
-                width: '28px',
-                height: '28px',
-                background: 'transparent',
-                backgroundColor: 'transparent',
-                border: 'none',
-                outline: 'none',
-                padding: 0,
-                margin: 0,
-                cursor: 'pointer',
-                color: isTapeMeasureMode ? 'var(--theme-primary)' : 'var(--theme-text-muted, #6b7280)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                boxShadow: 'none',
-                appearance: 'none',
-                WebkitAppearance: 'none',
-              }}
-            >
-              <RulerDimensionLine size={18} />
-            </button>
-          </div>
+            <TbZoomScan size={18} />
+          </button>
+        )}
+        {/* 3D 모드 전용: 줄자 아이콘 — 독립 배치 */}
+        {!isReadOnly && viewMode === '3D' && (
+          <button
+            className="canvas-icon-btn"
+            onClick={toggleTapeMeasureMode}
+            title="3D 줄자"
+            style={{
+              position: 'absolute',
+              right: isRightPanelOpen ? 'calc(var(--right-panel-width, 320px) + 18px)' : '18px',
+              top: '128px', // 스캔(90px) + 28px + 10px 간격
+              width: '28px',
+              height: '28px',
+              background: 'transparent',
+              backgroundColor: 'transparent',
+              border: 'none',
+              outline: 'none',
+              padding: 0,
+              margin: 0,
+              cursor: 'pointer',
+              color: isTapeMeasureMode ? 'var(--theme-primary)' : 'var(--theme-text-muted, #6b7280)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              boxShadow: 'none',
+              appearance: 'none',
+              WebkitAppearance: 'none',
+              zIndex: 10002,
+              transition: 'right 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+            }}
+          >
+            <RulerDimensionLine size={18} />
+          </button>
         )}
 
         {/* 우측 패널 컨테이너 - 읽기 전용 모드에서는 숨김 */}
