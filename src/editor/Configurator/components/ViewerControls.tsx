@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { BiDoorOpen } from 'react-icons/bi';
 import { PiHandTapThin } from 'react-icons/pi';
 import { TbBorderOuter } from 'react-icons/tb';
-import { Edit3, Eye, EyeOff, Grid3X3, Ruler, Box, Layers, Sun, Moon, MoreHorizontal } from 'lucide-react';
+import { Edit3, Eye, EyeOff, Grid3X3, Ruler, RulerDimensionLine, Box, Layers, Sun, Moon, MoreHorizontal } from 'lucide-react';
 import { useUIStore } from '@/store/uiStore';
 import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
@@ -76,7 +76,7 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
   frameMergeEnabled = false,
   onFrameMergeToggle
 }) => {
-  const { view2DDirection, setView2DDirection, view2DTheme, toggleView2DTheme, setView2DTheme, isLiveDimensionMode, toggleLiveDimensionMode, showFurnitureEditHandles, setShowFurnitureEditHandles, shadowEnabled, setShadowEnabled, edgeOutlineEnabled, setEdgeOutlineEnabled, isLayoutBuilderOpen, equalDistribution, toggleEqualDistribution, setDoorsOpen, slotWidthEditMode, setSlotWidthEditMode, slotEditOriginalColumnCount, setSlotEditOriginalColumnCount } = useUIStore();
+  const { view2DDirection, setView2DDirection, view2DTheme, toggleView2DTheme, setView2DTheme, isLiveDimensionMode, toggleLiveDimensionMode, isTapeMeasureMode, toggleTapeMeasureMode, showFurnitureEditHandles, setShowFurnitureEditHandles, shadowEnabled, setShadowEnabled, edgeOutlineEnabled, setEdgeOutlineEnabled, isLayoutBuilderOpen, equalDistribution, toggleEqualDistribution, setDoorsOpen, slotWidthEditMode, setSlotWidthEditMode, slotEditOriginalColumnCount, setSlotEditOriginalColumnCount } = useUIStore();
   const { user } = useAuth();
   const isAllowedUser = user?.email === ALLOWED_EMAIL;
   const { spaceInfo } = useSpaceConfigStore();
@@ -258,6 +258,11 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
                 </button>
               )}
               {viewMode === '3D' && (
+                <button className={`${styles.mobileOptionItem} ${isTapeMeasureMode ? styles.active : ''}`} onClick={toggleTapeMeasureMode}>
+                  <RulerDimensionLine size={18} /><span>줄자</span>
+                </button>
+              )}
+              {viewMode === '3D' && (
                 <button className={`${styles.mobileOptionItem} ${showFurnitureEditHandles ? styles.active : ''}`} onClick={() => setShowFurnitureEditHandles(!showFurnitureEditHandles)}>
                   <Edit3 size={18} /><span>아이콘</span>
                 </button>
@@ -390,6 +395,14 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
             >
               <Ruler size={13} />
               스캔
+            </button>
+            <button
+              className={`${styles.segmentButton} ${styles.segmentIconText} ${isTapeMeasureMode ? styles.segmentAccentActive : ''}`}
+              onClick={toggleTapeMeasureMode}
+              title="3D 줄자"
+            >
+              <RulerDimensionLine size={13} />
+              줄자
             </button>
           </div>
         )}

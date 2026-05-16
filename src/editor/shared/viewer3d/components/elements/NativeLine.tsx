@@ -42,13 +42,16 @@ export const NativeLine: React.FC<NativeLineProps> = ({
 }) => {
   const lineRef = useRef<Line2>(null!);
   const { size } = useThree();
-  const liveDimensionFocused = useUIStore(state => state.viewMode === '3D' && state.isLiveDimensionMode && !!state.liveDimensionSelectedKey);
+  const inspectorFocused = useUIStore(state => (
+    state.viewMode === '3D' &&
+    ((state.isLiveDimensionMode && !!state.liveDimensionSelectedKey) || state.isTapeMeasureMode)
+  ));
   const isDimensionOverlay = typeof name === 'string' && (
     name.includes('dimension') ||
     name.includes('guide') ||
     name.includes('dim')
   );
-  const effectiveOpacity = isDimensionOverlay && liveDimensionFocused ? Math.min(opacity, 0.18) : opacity;
+  const effectiveOpacity = isDimensionOverlay && inspectorFocused ? Math.min(opacity, 0.18) : opacity;
   const effectiveDepthTest = isDimensionOverlay ? false : depthTest;
   const effectiveDepthWrite = isDimensionOverlay ? false : depthWrite;
   const effectiveRenderOrder = isDimensionOverlay ? Math.max(renderOrder, 100000) : renderOrder;

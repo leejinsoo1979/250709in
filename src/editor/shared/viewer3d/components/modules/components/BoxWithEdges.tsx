@@ -93,7 +93,7 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
   ], [args[0], args[1], args[2]]);
 
   const { viewMode, plainMaterial: isPlainMaterial } = useSpace3DView();
-  const { view2DDirection, shadowEnabled, edgeOutlineEnabled, isLiveDimensionMode, liveDimensionSelectedKey } = useUIStore(); // view2DDirection, shadowEnabled, edgeOutlineEnabled 추가
+  const { view2DDirection, shadowEnabled, edgeOutlineEnabled, isLiveDimensionMode, isTapeMeasureMode, liveDimensionSelectedKey } = useUIStore(); // view2DDirection, shadowEnabled, edgeOutlineEnabled 추가
   const { theme } = useViewerTheme();
   const { view2DTheme } = useUIStore();
   const { theme: appTheme } = useTheme();
@@ -135,10 +135,11 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
   const activePopup = useUIStore(state => state.activePopup);
   const selectedFurnitureId = useUIStore(state => state.selectedFurnitureId);
   const liveDimensionInspecting = viewMode === '3D' && isLiveDimensionMode;
-  const storeEditMode = !liveDimensionInspecting && furnitureId ? (activePopup.type === 'furnitureEdit' && activePopup.id === furnitureId) : false;
+  const inspectorModeActive = viewMode === '3D' && (isLiveDimensionMode || isTapeMeasureMode);
+  const storeEditMode = !inspectorModeActive && furnitureId ? (activePopup.type === 'furnitureEdit' && activePopup.id === furnitureId) : false;
   const storeSelected = furnitureId ? (selectedFurnitureId === furnitureId) : false;
   const parentEditMode = useFurnitureGhostContext();
-  const effectiveEditMode = !liveDimensionInspecting && (isEditMode || parentEditMode || storeEditMode);
+  const effectiveEditMode = !inspectorModeActive && (isEditMode || parentEditMode || storeEditMode);
   const effectiveSelected = storeSelected;
   // 3D 편집/드래그 중에는 wireframe 대신 solid로 강제 (2D에서는 원래 renderMode 유지)
   const effectiveRenderMode = (viewMode === '3D' && (effectiveEditMode || isDragging)) ? 'solid' as const : renderMode;
@@ -403,7 +404,8 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
 
   // cornerNotch / backCenterNotch ExtrudeGeometry는 축 스왑으로 일부 면 winding이 뒤집힘 → DoubleSide로 양면 렌더링
   const finalMaterial = React.useMemo(() => {
-    const needsClone = isLiveDimensionSelected || isLiveDimensionDimmed || cornerNotch || backCenterNotch;
+    const tapeMeasureInspecting = viewMode === '3D' && isTapeMeasureMode;
+    const needsClone = tapeMeasureInspecting || isLiveDimensionSelected || isLiveDimensionDimmed || cornerNotch || backCenterNotch;
     if (!needsClone) return panelSpecificMaterial;
 
     if (
@@ -418,7 +420,11 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
         mat.side = THREE.DoubleSide;
       }
 
-      if (isLiveDimensionDimmed) {
+      if (tapeMeasureInspecting) {
+        mat.transparent = true;
+        mat.opacity = Math.min(mat.opacity ?? 1, 0.65);
+        mat.depthWrite = false;
+      } else if (isLiveDimensionDimmed) {
         mat.transparent = true;
         mat.opacity = Math.min(mat.opacity ?? 1, 0.48);
         mat.depthWrite = false;
@@ -438,7 +444,7 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
     }
 
     return panelSpecificMaterial;
-  }, [panelSpecificMaterial, cornerNotch, backCenterNotch, isLiveDimensionSelected, isLiveDimensionDimmed, themePrimaryColor]);
+  }, [panelSpecificMaterial, cornerNotch, backCenterNotch, isLiveDimensionSelected, isLiveDimensionDimmed, themePrimaryColor, viewMode, isTapeMeasureMode]);
 
   // useEffect 제거: useMemo에서 이미 모든 회전 로직을 처리하므로 중복 실행 방지
 
@@ -850,6 +856,29 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
     return lines;
   }, [notch, notches, bottomRebate, cornerNotch, backCenterNotch, hasAnyNotch, safeArgs]);
 
+  const liveDimensionNotchLines = React.useMemo(
+    () => (hasAnyNotch ? getNotchEdgeLines() : undefined),
+    [hasAnyNotch, getNotchEdgeLines]
+  );
+
+  const liveDimensionSideNotches = React.useMemo(() => {
+    const sourceNotches = notches && notches.length > 0
+      ? notches
+      : notch
+        ? [{ ...notch, fromBottom: safeArgs[1] - notch.y }]
+        : [];
+
+    if (sourceNotches.length === 0) return undefined;
+
+    return sourceNotches.map((n) => ({
+      y: n.y,
+      z: n.z,
+      fromBottom: n.fromBottom,
+      heightMm: Math.round(n.y / 0.01),
+      depthMm: Math.round(n.z / 0.01),
+    }));
+  }, [notch, notches, safeArgs]);
+
   // 2D 모드에서 엣지 렌더링 (panelName 기반 opacity 적용)
   const render2DEdgesWithDepth = React.useCallback(() => {
     const [width, height, depth] = safeArgs;
@@ -1218,6 +1247,8 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
             heightMm: Math.round(safeArgs[1] / 0.01),
             depthMm: Math.round(safeArgs[2] / 0.01),
           },
+          ...(liveDimensionNotchLines ? { liveDimensionNotchLines } : {}),
+          ...(liveDimensionSideNotches ? { liveDimensionSideNotches } : {}),
         }}
         receiveShadow={viewMode === '3D' && effectiveRenderMode === 'solid' && shadowEnabled}
         castShadow={viewMode === '3D' && effectiveRenderMode === 'solid' && shadowEnabled}
@@ -1240,6 +1271,14 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
           return render2DEdgesWithDepth();
         }
 
+        const tapeEdgeActive = viewMode === '3D' && isTapeMeasureMode;
+        const scanDimmedEdgeActive = viewMode === '3D' && isLiveDimensionDimmed;
+        const inspectionEdgeActive = tapeEdgeActive || scanDimmedEdgeActive;
+        const resolvedEdgeColor = tapeEdgeActive ? '#4b5563' : scanDimmedEdgeActive ? '#4b5563' : edgeColor;
+        const resolvedEdgeOpacity = tapeEdgeActive ? 0.72 : scanDimmedEdgeActive ? 0.52 : (isHighlighted ? 1.0 : (effectiveRenderMode === 'wireframe' ? 1.0 : 0.65));
+        const resolvedEdgeLineWidth = tapeEdgeActive ? 1.0 : scanDimmedEdgeActive ? 0.85 : (isHighlighted ? 3 : 1);
+        const resolvedEdgeDepthTest = tapeEdgeActive ? false : effectiveRenderMode !== 'wireframe';
+
         // 3D 모드: notch가 있으면 L자형 엣지
         if (hasAnyNotch) {
           const notchLines = getNotchEdgeLines();
@@ -1251,24 +1290,39 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
           return (
             <>
               {notchLines.map((line, i) => (
-                <line key={`${notchEdgeName}-${i}-${line[0].join(',')}-${line[1].join(',')}`} name={`${notchEdgeName}-${i}`}>
-                  <bufferGeometry>
-                    <bufferAttribute
-                      attach="attributes-position"
-                      count={2}
-                      array={new Float32Array([...line[0], ...line[1]])}
-                      itemSize={3}
-                    />
-                  </bufferGeometry>
-                  <lineBasicMaterial
-                    color={edgeColor}
-                    transparent={effectiveRenderMode !== 'wireframe'}
-                    opacity={isHighlighted ? 1.0 : (effectiveRenderMode === 'wireframe' ? 1.0 : 0.65)}
-                    depthTest={effectiveRenderMode !== 'wireframe'}
+                inspectionEdgeActive ? (
+                  <NativeLine
+                    key={`${notchEdgeName}-${i}-${line[0].join(',')}-${line[1].join(',')}`}
+                    name={`${notchEdgeName}-${i}`}
+                    points={line}
+                    color={resolvedEdgeColor}
+                    lineWidth={resolvedEdgeLineWidth}
+                    opacity={resolvedEdgeOpacity}
+                    transparent
+                    depthTest={resolvedEdgeDepthTest}
                     depthWrite={false}
-                    linewidth={isHighlighted ? 3 : 1}
+                    renderOrder={100010}
                   />
-                </line>
+                ) : (
+                  <line key={`${notchEdgeName}-${i}-${line[0].join(',')}-${line[1].join(',')}`} name={`${notchEdgeName}-${i}`}>
+                    <bufferGeometry>
+                      <bufferAttribute
+                        attach="attributes-position"
+                        count={2}
+                        array={new Float32Array([...line[0], ...line[1]])}
+                        itemSize={3}
+                      />
+                    </bufferGeometry>
+                    <lineBasicMaterial
+                      color={resolvedEdgeColor}
+                      transparent={effectiveRenderMode !== 'wireframe'}
+                      opacity={resolvedEdgeOpacity}
+                      depthTest={resolvedEdgeDepthTest}
+                      depthWrite={false}
+                      linewidth={resolvedEdgeLineWidth}
+                    />
+                  </line>
+                )
               ))}
             </>
           );
@@ -1312,24 +1366,39 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
           return (
             <>
               {lines.map((line, i) => (
-                <line key={i} name={`${partialEdgeName}-${i}`}>
-                  <bufferGeometry>
-                    <bufferAttribute
-                      attach="attributes-position"
-                      count={2}
-                      array={new Float32Array([...line[0], ...line[1]])}
-                      itemSize={3}
-                    />
-                  </bufferGeometry>
-                  <lineBasicMaterial
-                    color={edgeColor}
-                    transparent={effectiveRenderMode !== 'wireframe'}
-                    opacity={isHighlighted ? 1.0 : (effectiveRenderMode === 'wireframe' ? 1.0 : 0.65)}
-                    depthTest={effectiveRenderMode !== 'wireframe'}
+                inspectionEdgeActive ? (
+                  <NativeLine
+                    key={i}
+                    name={`${partialEdgeName}-${i}`}
+                    points={line}
+                    color={resolvedEdgeColor}
+                    lineWidth={resolvedEdgeLineWidth}
+                    opacity={resolvedEdgeOpacity}
+                    transparent
+                    depthTest={resolvedEdgeDepthTest}
                     depthWrite={false}
-                    linewidth={isHighlighted ? 3 : 1}
+                    renderOrder={100010}
                   />
-                </line>
+                ) : (
+                  <line key={i} name={`${partialEdgeName}-${i}`}>
+                    <bufferGeometry>
+                      <bufferAttribute
+                        attach="attributes-position"
+                        count={2}
+                        array={new Float32Array([...line[0], ...line[1]])}
+                        itemSize={3}
+                      />
+                    </bufferGeometry>
+                    <lineBasicMaterial
+                      color={resolvedEdgeColor}
+                      transparent={effectiveRenderMode !== 'wireframe'}
+                      opacity={resolvedEdgeOpacity}
+                      depthTest={resolvedEdgeDepthTest}
+                      depthWrite={false}
+                      linewidth={resolvedEdgeLineWidth}
+                    />
+                  </line>
+                )
               ))}
             </>
           );
@@ -1340,20 +1409,58 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
             : isBackPanel
               ? `back-panel-edge${panelName ? `-${panelName}` : ''}`
               : `furniture-edge${panelName ? `-${panelName}` : ''}`;
+          if (inspectionEdgeActive) {
+            const [width, height, depth] = safeArgs;
+            const halfW = width / 2;
+            const halfH = height / 2;
+            const halfD = depth / 2;
+            const lines: [number, number, number][][] = [
+              [[-halfW, -halfH, -halfD], [halfW, -halfH, -halfD]],
+              [[halfW, -halfH, -halfD], [halfW, halfH, -halfD]],
+              [[halfW, halfH, -halfD], [-halfW, halfH, -halfD]],
+              [[-halfW, halfH, -halfD], [-halfW, -halfH, -halfD]],
+              [[-halfW, -halfH, halfD], [halfW, -halfH, halfD]],
+              [[halfW, -halfH, halfD], [halfW, halfH, halfD]],
+              [[halfW, halfH, halfD], [-halfW, halfH, halfD]],
+              [[-halfW, halfH, halfD], [-halfW, -halfH, halfD]],
+              [[-halfW, -halfH, -halfD], [-halfW, -halfH, halfD]],
+              [[halfW, -halfH, -halfD], [halfW, -halfH, halfD]],
+              [[halfW, halfH, -halfD], [halfW, halfH, halfD]],
+              [[-halfW, halfH, -halfD], [-halfW, halfH, halfD]],
+            ];
+            return (
+              <>
+                {lines.map((line, i) => (
+                  <NativeLine
+                    key={`${edgeName}-${i}`}
+                    name={`${edgeName}-${i}`}
+                    points={line}
+                    color={resolvedEdgeColor}
+                    lineWidth={resolvedEdgeLineWidth}
+                    opacity={resolvedEdgeOpacity}
+                    transparent
+                    depthTest={resolvedEdgeDepthTest}
+                    depthWrite={false}
+                    renderOrder={100010}
+                  />
+                ))}
+              </>
+            );
+          }
           return (
             <>
               <lineSegments name={edgeName}>
                 <edgesGeometry key={`${safeArgs[0]}-${safeArgs[1]}-${safeArgs[2]}`} args={[new THREE.BoxGeometry(...safeArgs)]} />
                 <lineBasicMaterial
-                  color={edgeColor}
+                  color={resolvedEdgeColor}
                   transparent={effectiveRenderMode !== 'wireframe'}
-                  opacity={isHighlighted ? 1.0 : (effectiveRenderMode === 'wireframe' ? 1.0 : 0.65)}
-                  depthTest={effectiveRenderMode !== 'wireframe'}
+                  opacity={resolvedEdgeOpacity}
+                  depthTest={resolvedEdgeDepthTest}
                   depthWrite={false}
                   polygonOffset={true}
                   polygonOffsetFactor={-10}
                   polygonOffsetUnits={-10}
-                  linewidth={isHighlighted ? 3 : 1}
+                  linewidth={resolvedEdgeLineWidth}
                 />
               </lineSegments>
             </>

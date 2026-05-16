@@ -16,6 +16,8 @@ interface HoverDimension {
   center: [number, number, number];
   quaternion: [number, number, number, number];
   sizeThree: [number, number, number];
+  notchLines?: LineSegment[];
+  sideNotches?: SideNotchDimension[];
   widthMm: number;
   heightMm: number;
   depthMm: number;
@@ -28,6 +30,16 @@ interface ViewSigns {
 }
 
 type DimensionAxis = 'x' | 'y' | 'z';
+type Point3 = [number, number, number];
+type LineSegment = [Point3, Point3];
+
+interface SideNotchDimension {
+  y: number;
+  z: number;
+  fromBottom: number;
+  heightMm: number;
+  depthMm: number;
+}
 
 const THREE_UNITS_TO_MM = 100;
 const PANEL_GRID_MINOR_COLOR = '#343a40';
@@ -154,6 +166,51 @@ const createBoxOutlineSegments = (w: number, h: number, d: number) => {
   ] as [number, number, number][][];
 };
 
+const normalizeLineSegments = (value: unknown): LineSegment[] | undefined => {
+  if (!Array.isArray(value)) return undefined;
+
+  const lines = value
+    .map((line) => {
+      if (!Array.isArray(line) || line.length !== 2) return null;
+      const start = line[0];
+      const end = line[1];
+      if (!Array.isArray(start) || !Array.isArray(end) || start.length !== 3 || end.length !== 3) return null;
+      const normalizedStart = start.map(Number) as Point3;
+      const normalizedEnd = end.map(Number) as Point3;
+      if (
+        normalizedStart.some((v) => !Number.isFinite(v)) ||
+        normalizedEnd.some((v) => !Number.isFinite(v))
+      ) {
+        return null;
+      }
+      return [normalizedStart, normalizedEnd] as LineSegment;
+    })
+    .filter((line): line is LineSegment => Boolean(line));
+
+  return lines.length > 0 ? lines : undefined;
+};
+
+const normalizeSideNotches = (value: unknown): SideNotchDimension[] | undefined => {
+  if (!Array.isArray(value)) return undefined;
+
+  const notches = value
+    .map((item) => {
+      if (!item || typeof item !== 'object') return null;
+      const source = item as Partial<SideNotchDimension>;
+      const y = Number(source.y);
+      const z = Number(source.z);
+      const fromBottom = Number(source.fromBottom);
+      const heightMm = Number(source.heightMm);
+      const depthMm = Number(source.depthMm);
+      if (![y, z, fromBottom, heightMm, depthMm].every(Number.isFinite)) return null;
+      if (y <= 0 || z <= 0) return null;
+      return { y, z, fromBottom, heightMm, depthMm };
+    })
+    .filter((item): item is SideNotchDimension => Boolean(item));
+
+  return notches.length > 0 ? notches : undefined;
+};
+
 const findUserData = (object: THREE.Object3D, key: string): any => {
   let current: THREE.Object3D | null = object;
   while (current) {
@@ -268,6 +325,8 @@ const getHoverDimension = (object: THREE.Object3D): HoverDimension | null => {
     center: [center.x, center.y, center.z],
     quaternion: [quaternion.x, quaternion.y, quaternion.z, quaternion.w],
     sizeThree: [size.x, size.y, size.z],
+    notchLines: normalizeLineSegments(findUserData(object, 'liveDimensionNotchLines')),
+    sideNotches: normalizeSideNotches(findUserData(object, 'liveDimensionSideNotches')),
     widthMm,
     heightMm,
     depthMm,
@@ -313,7 +372,7 @@ const LiveDimensionOverlay: React.FC<{ hover: HoverDimension }> = ({ hover }) =>
   const [w, h, d] = hover.sizeThree;
   const [viewSigns, setViewSigns] = useState<ViewSigns>(() => getCameraViewSigns(camera, hover.center, hover.quaternion));
   const gridPositions = useMemo(() => createPanelGridPositions(w, h, d), [w, h, d]);
-  const outlineSegments = useMemo(() => createBoxOutlineSegments(w, h, d), [w, h, d]);
+  const outlineSegments = useMemo(() => hover.notchLines ?? createBoxOutlineSegments(w, h, d), [hover.notchLines, w, h, d]);
   const inspectorColor = useMemo(() => getThemePrimaryColor(), [theme.color]);
   const margin = Math.max(0.18, Math.min(0.55, Math.max(w, h, d) * 0.08));
   const x0 = -w / 2;
@@ -408,20 +467,49 @@ const LiveDimensionOverlay: React.FC<{ hover: HoverDimension }> = ({ hover }) =>
     renderOrder: 100001,
   } as const;
   const endpointHalfLength = Math.max(0.045, Math.min(0.09, margin * 0.18));
+  const sideNotchGuides = useMemo(() => {
+    if (!hover.sideNotches?.length) return [];
+    const sideX = viewSigns.x * (w / 2 + 0.012);
+
+    return hover.sideNotches.map((notchValue, index) => {
+      const notchBottom = -h / 2 + notchValue.fromBottom;
+      const notchTop = notchBottom + notchValue.y;
+      const outerZ = d / 2;
+      const innerZ = d / 2 - notchValue.z;
+
+      return {
+        index,
+        depthLine: [
+          [sideX, notchBottom, outerZ],
+          [sideX, notchBottom, innerZ],
+        ] as LineSegment,
+        heightLine: [
+          [sideX, notchBottom, innerZ],
+          [sideX, notchTop, innerZ],
+        ] as LineSegment,
+        depthLabel: [sideX, notchBottom - margin * 0.13, (outerZ + innerZ) / 2] as Point3,
+        heightLabel: [sideX, (notchBottom + notchTop) / 2, innerZ - margin * 0.12] as Point3,
+        depthMm: notchValue.depthMm,
+        heightMm: notchValue.heightMm,
+      };
+    });
+  }, [hover.sideNotches, viewSigns.x, w, h, d, margin]);
 
   return (
     <group position={hover.center} quaternion={hover.quaternion} userData={{ liveDimensionOverlay: true }}>
-      <mesh renderOrder={99998}>
-        <boxGeometry args={hover.sizeThree} />
-        <meshBasicMaterial
-          color={inspectorColor}
-          wireframe
-          transparent
-          opacity={0.75}
-          depthTest={false}
-          depthWrite={false}
-        />
-      </mesh>
+      {!hover.notchLines?.length && (
+        <mesh renderOrder={99998}>
+          <boxGeometry args={hover.sizeThree} />
+          <meshBasicMaterial
+            color={inspectorColor}
+            wireframe
+            transparent
+            opacity={0.75}
+            depthTest={false}
+            depthWrite={false}
+          />
+        </mesh>
+      )}
       <lineSegments renderOrder={99998}>
         <bufferGeometry>
           <bufferAttribute attach="attributes-position" args={[gridPositions.minor, 3]} />
@@ -448,6 +536,18 @@ const LiveDimensionOverlay: React.FC<{ hover: HoverDimension }> = ({ hover }) =>
           depthTest={false}
           renderOrder={100002}
         />
+      ))}
+      {sideNotchGuides.map((guide) => (
+        <React.Fragment key={`side-notch-guide-${guide.index}`}>
+          <Line points={guide.depthLine} {...lineProps} />
+          <Line points={guide.heightLine} {...lineProps} />
+          <DimensionLabel position={guide.depthLabel} color={DIMENSION_GUIDE_COLOR}>
+            {guide.depthMm}
+          </DimensionLabel>
+          <DimensionLabel position={guide.heightLabel} color={DIMENSION_GUIDE_COLOR}>
+            {guide.heightMm}
+          </DimensionLabel>
+        </React.Fragment>
       ))}
 
       <Line points={[faceHorizontalStart, faceHorizontalEnd]} {...lineProps} />

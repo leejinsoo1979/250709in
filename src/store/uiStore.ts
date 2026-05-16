@@ -188,6 +188,11 @@ interface UIState {
   setLiveDimensionMode: (enabled: boolean) => void;
   setLiveDimensionSelectedKey: (key: string | null) => void;
 
+  // 3D 줄자 모드
+  isTapeMeasureMode: boolean;
+  toggleTapeMeasureMode: () => void;
+  setTapeMeasureMode: (enabled: boolean) => void;
+
   // 지우개 모드 상태
   isEraserMode: boolean;
   hoveredMeasureLineId: string | null; // 호버 중인 측정선 ID
@@ -398,6 +403,7 @@ const initialUIState = {
   measureLines: [],  // 기본값: 저장된 측정 라인 없음
   isLiveDimensionMode: false,  // 기본값: 3D 라이브 치수 측정 비활성
   liveDimensionSelectedKey: null,
+  isTapeMeasureMode: false,  // 기본값: 3D 줄자 모드 비활성
   isEraserMode: false,  // 기본값: 지우개 모드 비활성화
   hoveredMeasureLineId: null,  // 기본값: 호버 중인 측정선 없음
   equalDistribution: false,  // 기본값: 균등배치 비활성화
@@ -476,6 +482,7 @@ export const useUIStore = create<UIState>()(
             dimensionOptionsBackup: null,
           } : {
             isLiveDimensionMode: false,
+            isTapeMeasureMode: false,
             liveDimensionSelectedKey: null,
           })
         })),
@@ -840,6 +847,7 @@ export const useUIStore = create<UIState>()(
           const enabled = !state.isLiveDimensionMode;
           return {
             isLiveDimensionMode: enabled,
+            isTapeMeasureMode: false,
             isMeasureMode: false,
             isEraserMode: false,
             measurePoints: null,
@@ -854,6 +862,38 @@ export const useUIStore = create<UIState>()(
       setLiveDimensionMode: (enabled) =>
         set({
           isLiveDimensionMode: enabled,
+          isTapeMeasureMode: false,
+          isMeasureMode: false,
+          isEraserMode: false,
+          measurePoints: null,
+          hoveredMeasureLineId: null,
+          liveDimensionSelectedKey: null,
+          ...(enabled ? {
+            showFurniture: true,
+          } : {}),
+        }),
+
+      toggleTapeMeasureMode: () =>
+        set((state) => {
+          const enabled = !state.isTapeMeasureMode;
+          return {
+            isTapeMeasureMode: enabled,
+            isLiveDimensionMode: false,
+            isMeasureMode: false,
+            isEraserMode: false,
+            measurePoints: null,
+            hoveredMeasureLineId: null,
+            liveDimensionSelectedKey: null,
+            ...(enabled ? {
+              showFurniture: true,
+            } : {}),
+          };
+        }),
+
+      setTapeMeasureMode: (enabled) =>
+        set({
+          isTapeMeasureMode: enabled,
+          isLiveDimensionMode: false,
           isMeasureMode: false,
           isEraserMode: false,
           measurePoints: null,

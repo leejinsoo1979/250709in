@@ -20,7 +20,7 @@ interface ColumnGuidesProps {
 const ColumnGuides: React.FC<ColumnGuidesProps> = ({ viewMode: viewModeProp }) => {
   const { spaceInfo, setSpaceInfo } = useSpaceConfigStore();
   const { placedModules, clearAllModules } = useFurnitureStore();
-  const { viewMode: contextViewMode, showDimensions, view2DDirection, activeDroppedCeilingTab, setActiveDroppedCeilingTab, view2DTheme, slotWidthEditMode, isLiveDimensionMode } = useUIStore();
+  const { viewMode: contextViewMode, showDimensions, view2DDirection, activeDroppedCeilingTab, setActiveDroppedCeilingTab, view2DTheme, slotWidthEditMode, isLiveDimensionMode, isTapeMeasureMode } = useUIStore();
   
   // prop으로 받은 viewMode를 우선 사용, 없으면 context의 viewMode 사용
   const viewMode = viewModeProp || contextViewMode;
@@ -356,7 +356,7 @@ const ColumnGuides: React.FC<ColumnGuidesProps> = ({ viewMode: viewModeProp }) =
     return null;
   }
 
-  if (viewMode === '3D' && isLiveDimensionMode) {
+  if (viewMode === '3D' && (isLiveDimensionMode || isTapeMeasureMode)) {
     return null;
   }
 

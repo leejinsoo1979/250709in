@@ -111,6 +111,23 @@ const MobileToolbar: React.FC<MobileToolbarProps> = ({
             </svg>
           </button>
         )}
+        {viewMode === '3D' && (
+          <button
+            className={`${styles.iconButton} ${uiStore.isTapeMeasureMode ? styles.active : ''}`}
+            onClick={uiStore.toggleTapeMeasureMode}
+            title="3D 줄자"
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+              <path d="M4 7h16" />
+              <path d="M4 7v4" />
+              <path d="M20 7v4" />
+              <rect x="3" y="13" width="18" height="6" rx="1.5" />
+              <path d="M8 13v3" />
+              <path d="M12 13v3" />
+              <path d="M16 13v3" />
+            </svg>
+          </button>
+        )}
         <button
           className={`${styles.iconButton} ${showDimensions ? styles.active : ''}`}
           onClick={onToggleDimensions}

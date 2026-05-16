@@ -13,6 +13,7 @@ interface FurniturePlacementPlaneProps {
 const FurniturePlacementPlane: React.FC<FurniturePlacementPlaneProps> = ({ spaceInfo }) => {
   const placedModules = useFurnitureStore(state => state.placedModules);
   const isLiveDimensionMode = useUIStore(state => state.isLiveDimensionMode);
+  const isTapeMeasureMode = useUIStore(state => state.isTapeMeasureMode);
   const viewMode = useUIStore(state => state.viewMode);
   const { theme } = useTheme();
 
@@ -132,7 +133,7 @@ const FurniturePlacementPlane: React.FC<FurniturePlacementPlaneProps> = ({ space
   };
   
   // 도어가 하나라도 장착되면 바닥 슬롯 매쉬를 모두 숨김 (기존 동작 유지)
-  if (viewMode === '3D' && isLiveDimensionMode) {
+  if (viewMode === '3D' && (isLiveDimensionMode || isTapeMeasureMode)) {
     return null;
   }
 

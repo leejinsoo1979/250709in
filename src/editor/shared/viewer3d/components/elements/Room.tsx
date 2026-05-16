@@ -393,8 +393,9 @@ const Room: React.FC<RoomProps> = ({
   const { theme: appTheme } = useTheme(); // 앱 테마 가져오기
   const { renderMode: contextRenderMode, plainMaterial: isPlainMaterial } = useSpace3DView(); // context에서 renderMode 가져오기
   const renderMode = renderModeProp || contextRenderMode; // props로 전달된 값을 우선 사용
-  const { highlightedFrame, setHighlightedFrame, activeDroppedCeilingTab, view2DTheme, shadowEnabled, cameraMode: cameraModeFromStore, selectedSlotIndex, showBorings, isLayoutBuilderOpen, openSurroundEditPopup, activePopup, isLiveDimensionMode } = useUIStore();
+  const { highlightedFrame, setHighlightedFrame, activeDroppedCeilingTab, view2DTheme, shadowEnabled, cameraMode: cameraModeFromStore, selectedSlotIndex, showBorings, isLayoutBuilderOpen, openSurroundEditPopup, activePopup, isLiveDimensionMode, isTapeMeasureMode } = useUIStore();
   const isLiveDimensionInspecting = viewMode === '3D' && isLiveDimensionMode;
+  const isInspectionMode = viewMode === '3D' && (isLiveDimensionMode || isTapeMeasureMode);
   const isDesignMode = isLayoutBuilderOpen || activePopup?.type === 'customizableEdit';
   const wireframeColor = view2DTheme === 'dark' ? "#ffffff" : "#333333"; // 은선모드 벽 라인 색상
   const placedModulesFromStore = useFurnitureStore((state) => state.placedModules); // 가구 정보 가져오기
@@ -1689,7 +1690,7 @@ const Room: React.FC<RoomProps> = ({
       {/* 주변 벽면들 - ShaderMaterial 기반 그라데이션 (3D perspective 모드에서만 표시) */}
       {/* 아일랜드 모드에서는 벽/천장/바닥 그라데이션 숨김 */}
       {/* console.log('🔍 Room viewMode 체크:', viewMode, typeof viewMode) */}
-      {!spaceInfo.isIsland && viewMode !== '2D' && cameraMode === 'perspective' && !isLiveDimensionInspecting && (
+      {!spaceInfo.isIsland && viewMode !== '2D' && cameraMode === 'perspective' && !isInspectionMode && (
         <>
           {/* 왼쪽 외부 벽면 - 단내림 고려 */}
           {/* 프리스탠딩이 아니고 (세미스탠딩에서 왼쪽 벽이 있거나 빌트인)일 때만 표시 */}
@@ -2765,7 +2766,7 @@ const Room: React.FC<RoomProps> = ({
           })()}
 
           {/* 바닥면 - ShaderMaterial 그라데이션 (앞쪽: 흰색, 뒤쪽: 회색) - 탑뷰/아일랜드에서는 숨김 */}
-          {!spaceInfo.isIsland && viewMode !== '2D' && renderMode === 'solid' && !isLiveDimensionInspecting && (
+          {!spaceInfo.isIsland && viewMode !== '2D' && renderMode === 'solid' && !isInspectionMode && (
               <mesh
                 position={[xOffset + width / 2, panelStartY - 0.001, extendedZOffset + extendedPanelDepth / 2]}
                 rotation={[-Math.PI / 2, 0, 0]}
