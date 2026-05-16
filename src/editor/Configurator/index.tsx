@@ -7974,18 +7974,40 @@ const Configurator: React.FC = () => {
             <button
               onClick={toggleLiveDimensionMode}
               title="3D 스캔"
-              className={`${styles.slotGuideHelpButton} ${isLiveDimensionMode ? styles.active : ''}`}
-              style={{ position: 'static', background: 'transparent', backdropFilter: 'none' }}
+              style={{
+                position: 'static',
+                width: '28px',
+                height: '28px',
+                background: 'transparent',
+                border: 'none',
+                padding: 0,
+                cursor: 'pointer',
+                color: isLiveDimensionMode ? 'var(--theme-primary)' : 'var(--theme-text-muted, #6b7280)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
             >
-              <TbZoomScan size={14} />
+              <TbZoomScan size={18} />
             </button>
             <button
               onClick={toggleTapeMeasureMode}
               title="3D 줄자"
-              className={`${styles.slotGuideHelpButton} ${isTapeMeasureMode ? styles.active : ''}`}
-              style={{ position: 'static', background: 'transparent', backdropFilter: 'none' }}
+              style={{
+                position: 'static',
+                width: '28px',
+                height: '28px',
+                background: 'transparent',
+                border: 'none',
+                padding: 0,
+                cursor: 'pointer',
+                color: isTapeMeasureMode ? 'var(--theme-primary)' : 'var(--theme-text-muted, #6b7280)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
             >
-              <RulerDimensionLine size={14} />
+              <RulerDimensionLine size={18} />
             </button>
           </div>
         )}
