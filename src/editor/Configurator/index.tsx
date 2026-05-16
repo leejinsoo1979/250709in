@@ -7957,18 +7957,17 @@ const Configurator: React.FC = () => {
           </button>
         )}
 
-        {/* 3D 모드 전용: 스캔/줄자 세로 버튼 — 우측 패널 토글 옆에 배치 */}
+        {/* 3D 모드 전용: 스캔/줄자 세로 버튼 — 우측 ? 도움말 버튼 바로 아래에 배치 */}
         {!isReadOnly && viewMode === '3D' && (
           <div
             style={{
               position: 'absolute',
-              right: isRightPanelOpen ? 'calc(var(--right-panel-width, 320px) + 8px)' : '8px',
-              top: '50%',
-              transform: 'translateY(-50%)',
+              right: isRightPanelOpen ? 'calc(var(--right-panel-width, 320px) + 12px)' : '12px',
+              top: '52px', // ? 버튼(top:12px, height:28px) 아래 12px 간격
               display: 'flex',
               flexDirection: 'column',
               gap: '6px',
-              zIndex: 100,
+              zIndex: 10001,
               transition: 'right 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
             }}
           >
