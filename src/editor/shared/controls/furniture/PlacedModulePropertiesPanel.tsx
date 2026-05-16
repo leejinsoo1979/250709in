@@ -3931,15 +3931,15 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                               updates.topFrameGap = nextTopGap;
                               updates.individualFloatHeight = nextFloat;
                             } else if (heightDelta < 0) {
-                              // 줄어들 때: 띄움 먼저 복구 → 상단갭 복구 (200까지)
+                              // 줄어들 때: 상단갭 먼저 복구 (위에서 아래로) → 띄움 복구
                               const need = -heightDelta;
-                              const floatRoom = Math.max(0, 200 - curFloat);
-                              const toFloat = Math.min(floatRoom, need);
-                              let remaining = need - toFloat;
                               const topGapRoom = Math.max(0, 200 - curTopGap);
-                              const toTopGap = Math.min(topGapRoom, remaining);
-                              updates.individualFloatHeight = curFloat + toFloat;
+                              const toTopGap = Math.min(topGapRoom, need);
+                              const remaining = need - toTopGap;
+                              const floatRoom = Math.max(0, 200 - curFloat);
+                              const toFloat = Math.min(floatRoom, remaining);
                               updates.topFrameGap = curTopGap + toTopGap;
+                              updates.individualFloatHeight = curFloat + toFloat;
                             }
                           }
                           updatePlacedModule(currentPlacedModule.id, updates);
