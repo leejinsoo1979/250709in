@@ -212,8 +212,8 @@ service cloud.firestore {
     match /designFiles/{id} {
       // 공유 링크를 위해 읽기는 모두 허용
       allow read: if true;
-      // list/listen: 기업회원/관리자만 (일반회원은 대시보드 접근 불가 정책)
-      allow list: if isEnterpriseOrAdmin();
+      // list/listen: 프로젝트 전체 공유 링크에서 디자인파일 탭 목록을 표시하기 위해 허용
+      allow list: if true;
 
       // 생성: 기업회원/관리자만, 본인이 소유자인 경우
       allow create: if isEnterpriseOrAdmin() && request.auth.uid == request.resource.data.userId;

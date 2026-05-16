@@ -472,6 +472,55 @@ export const getDesignFiles = async (projectId: string): Promise<{ designFiles: 
   }
 };
 
+// 공유 조회용 - 인증 없이 프로젝트의 디자인파일 목록 조회
+export const getDesignFilesPublic = async (projectId: string): Promise<{ designFiles: DesignFileSummary[]; error: string | null }> => {
+  try {
+    const q = query(
+      collection(db, 'designFiles'),
+      where('projectId', '==', projectId)
+    );
+    const snapshot = await getDocsFromServer(q);
+
+    const designFiles = snapshot.docs
+      .map((docSnap) => {
+        const data = docSnap.data();
+        return {
+          id: docSnap.id,
+          name: data.name || '디자인',
+          projectId: data.projectId || projectId,
+          folderId: data.folderId,
+          updatedAt: data.updatedAt,
+          spaceSize: {
+            width: data.spaceConfig?.width || 3600,
+            height: data.spaceConfig?.height || 2400,
+            depth: data.spaceConfig?.depth || 1500,
+          },
+          furnitureCount: data.furniture?.placedModules?.length || 0,
+          thumbnail: data.thumbnail,
+          isDeleted: data.isDeleted,
+          deletedAt: data.deletedAt,
+          spaceConfig: data.spaceConfig,
+          furniture: data.furniture || { placedModules: [] },
+          userId: data.userId,
+        } as DesignFileSummary;
+      })
+      .filter((file) => !file.isDeleted)
+      .sort((a, b) => {
+        const aTime = a.updatedAt?.seconds || 0;
+        const bTime = b.updatedAt?.seconds || 0;
+        return bTime - aTime;
+      });
+
+    return { designFiles, error: null };
+  } catch (error: any) {
+    console.error('공유 디자인파일 목록 조회 에러:', error);
+    if (error?.code === 'permission-denied') {
+      return { designFiles: [], error: 'Firebase 보안 규칙에 의해 접근이 거부되었습니다.' };
+    }
+    return { designFiles: [], error: '디자인파일 목록을 가져오는 중 오류가 발생했습니다.' };
+  }
+};
+
 // 프로젝트 통계 업데이트
 const updateProjectStats = async (projectId: string) => {
   try {

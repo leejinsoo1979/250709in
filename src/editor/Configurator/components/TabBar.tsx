@@ -44,18 +44,20 @@ const TabBar: React.FC<TabBarProps> = ({ onTabSwitch, onTabClose, onNewDesign, o
             <span className={styles.tabSeparator}>/</span>
             {tab.designFileName}
           </span>
-          <button
-            className={styles.closeButton}
-            onClick={(e) => {
-              e.stopPropagation();
-              onTabClose(tab);
-            }}
-            title="탭 닫기"
-          >
-            <svg width="8" height="8" viewBox="0 0 8 8" fill="none">
-              <path d="M1 1L7 7M7 1L1 7" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
-            </svg>
-          </button>
+          {!readOnly && (
+            <button
+              className={styles.closeButton}
+              onClick={(e) => {
+                e.stopPropagation();
+                onTabClose(tab);
+              }}
+              title="탭 닫기"
+            >
+              <svg width="8" height="8" viewBox="0 0 8 8" fill="none">
+                <path d="M1 1L7 7M7 1L1 7" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
+              </svg>
+            </button>
+          )}
         </div>
       ))}
     </div>

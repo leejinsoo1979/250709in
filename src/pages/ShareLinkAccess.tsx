@@ -10,6 +10,21 @@ import {
 import { createProjectSharedNotification } from '@/firebase/notifications';
 import styles from './ShareLinkAccess.module.css';
 
+const getViewerUrl = (link: ShareLink) => {
+  const params = new URLSearchParams({
+    projectId: link.projectId,
+    mode: 'readonly',
+    scope: link.designFileId ? 'design' : 'project',
+  });
+  if (link.designFileId) {
+    params.set('designFileId', link.designFileId);
+  }
+  if (link.designFileName) {
+    params.set('designFileName', link.designFileName);
+  }
+  return `/shared-viewer?${params.toString()}`;
+};
+
 export const ShareLinkAccess: React.FC = () => {
   const { token } = useParams<{ token: string }>();
   const navigate = useNavigate();
@@ -62,14 +77,7 @@ export const ShareLinkAccess: React.FC = () => {
             console.log('👁️ 조회 권한 - 비회원 접근 허용, 프로젝트로 이동');
             setSuccess(true);
             setTimeout(() => {
-              let url = `/configurator?projectId=${validation.link.projectId}&mode=readonly`;
-              if (validation.link.designFileId) {
-                url += `&designFileId=${validation.link.designFileId}`;
-              }
-              if (validation.link.designFileName) {
-                url += `&designFileName=${encodeURIComponent(validation.link.designFileName)}`;
-              }
-              navigate(url);
+              navigate(getViewerUrl(validation.link));
             }, 2000);
             setIsValidating(false);
             return;
@@ -194,14 +202,7 @@ export const ShareLinkAccess: React.FC = () => {
       console.log('👁️ 조회 권한 + 비밀번호 확인 완료 - 프로젝트로 이동');
       setSuccess(true);
       setTimeout(() => {
-        let url = `/configurator?projectId=${link.projectId}&mode=readonly`;
-        if (link.designFileId) {
-          url += `&designFileId=${link.designFileId}`;
-        }
-        if (link.designFileName) {
-          url += `&designFileName=${encodeURIComponent(link.designFileName)}`;
-        }
-        navigate(url);
+        navigate(getViewerUrl(link));
       }, 2000);
       return;
     }

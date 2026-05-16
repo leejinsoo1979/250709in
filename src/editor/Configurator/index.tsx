@@ -12,7 +12,7 @@ import { useMyCabinetStore } from '@/store/core/myCabinetStore';
 import { useUIStore, type EditorTab, type View2DDirection } from '@/store/uiStore';
 import { useDerivedSpaceStore } from '@/store/derivedSpaceStore';
 import { useFurnitureSpaceAdapter } from '@/editor/shared/furniture/hooks/useFurnitureSpaceAdapter';
-import { getProject, updateProject, createProject, createDesignFile, getDesignFiles } from '@/firebase/projects';
+import { getProject, updateProject, createProject, createDesignFile, getDesignFiles, getDesignFilesPublic } from '@/firebase/projects';
 import { captureProjectThumbnail, generateDefaultThumbnail } from '@/editor/shared/utils/thumbnailCapture';
 import { useAuth } from '@/auth/AuthProvider';
 import { useProjectPermission } from '@/hooks/useProjectPermission';
@@ -455,6 +455,26 @@ const makeWorkingDesignKey = (projectId?: string | null, designFileId?: string |
   return `${projectId}:${designFileId || 'project'}`;
 };
 
+const buildSharedViewerUrl = (
+  projectId: string,
+  designFileId?: string | null,
+  designFileName?: string | null,
+  scope: 'project' | 'design' = 'project'
+) => {
+  const params = new URLSearchParams({
+    projectId,
+    mode: 'readonly',
+    scope,
+  });
+  if (designFileId) {
+    params.set('designFileId', designFileId);
+  }
+  if (designFileName) {
+    params.set('designFileName', designFileName);
+  }
+  return `/shared-viewer?${params.toString()}`;
+};
+
 const Configurator: React.FC = () => {
   const { user: authUser } = useAuth();
   const [searchParams] = useSearchParams();
@@ -468,6 +488,7 @@ const Configurator: React.FC = () => {
   // URL 파라미터 미리 추출
   const modeParam = searchParams.get('mode');
   const isReadOnlyMode = modeParam === 'readonly';
+  const shareScopeParam = searchParams.get('scope') === 'project' ? 'project' : 'design';
   const isNewDesign = isDemoMode ? true : searchParams.get('design') === 'new';
   const projectIdParam = isDemoMode ? null : (searchParams.get('projectId') || searchParams.get('id') || searchParams.get('project'));
 
@@ -516,9 +537,9 @@ const Configurator: React.FC = () => {
 
   // 새로운 UI 상태들
   const [activeSidebarTab, setActiveSidebarTab] = useState<SidebarTab | null>(() => {
-    // readonly 모드일 때는 좌측 사이드바 접힌 상태로 시작
+    // readonly 모드에서는 조회자가 좌측 재질바를 바로 볼 수 있게 연 상태로 시작
     const mode = searchParams.get('mode');
-    return mode === 'readonly' ? null : 'module';
+    return mode === 'readonly' ? 'material' : 'module';
   });
   const [activeRightPanelTab, setActiveRightPanelTab] = useState<'placement' | 'module'>('placement');
   const [isRightPanelOpen, setIsRightPanelOpen] = useState(() => {
@@ -804,8 +825,8 @@ const Configurator: React.FC = () => {
     }
   };
 
-  // readonly 모드에서 로드 완료 추적 (무한 루프 방지)
-  const hasLoadedInReadonlyRef = useRef(false);
+  // readonly 모드에서 같은 디자인 재로드만 방지하고, 탭 전환은 허용
+  const loadedReadonlyKeyRef = useRef<string | null>(null);
 
   // 3D 씬 참조 (GLB 내보내기용)
   const sceneRef = useRef<any>(null);
@@ -827,8 +848,8 @@ const Configurator: React.FC = () => {
       uiStore.setViewMode('3D');
       uiStore.setView2DDirection('front');
       uiStore.setCameraMode('perspective');
-      uiStore.setShowDimensions(false);
-      uiStore.setShowDimensionsText(false);
+      uiStore.setShowDimensions(true);
+      uiStore.setShowDimensionsText(true);
     } else {
       // 편집 모드 진입 시 치수 항상 켜기
       if (!uiStore.showDimensions) {
@@ -1563,6 +1584,28 @@ const Configurator: React.FC = () => {
         }
         setPlacedModules(migratedModules);
         setCurrentProjectId(projectId);
+
+        if (isReadOnlyMode && shareScopeParam === 'project') {
+          const { designFiles } = await getDesignFilesPublic(projectId);
+          if (!isLatestDesignLoad(loadKey)) {
+            return;
+          }
+          const visibleDesignFiles = designFiles.filter(file => !file.isDeleted);
+          [...visibleDesignFiles].reverse().forEach(file => {
+            useUIStore.getState().addTab({
+              projectId,
+              projectName: projectTitle,
+              designFileId: file.id,
+              designFileName: file.name,
+            });
+          });
+          const firstDesign = visibleDesignFiles[0];
+          if (firstDesign && !searchParams.get('designFileId')) {
+            navigate(buildSharedViewerUrl(projectId, firstDesign.id, firstDesign.name, 'project'), { replace: true });
+            return;
+          }
+        }
+
         // 다음 렌더 사이클 이후 플래그 해제
         requestAnimationFrame(() => {
           // spaceInfo가 완전히 안정화된 후 previousSpaceInfo를 다시 동기화
@@ -2705,8 +2748,10 @@ const Configurator: React.FC = () => {
     const skipLoad = skipLoadParam;
     const isNewDesign = isNewDesignParam;
 
-    // readonly 모드에서 이미 로드됐으면 재실행 방지 (무한 루프 방지)
-    if (mode === 'readonly' && hasLoadedInReadonlyRef.current) {
+    const readonlyLoadKey = `${projectId || 'no-project'}:${designFileId || 'project'}`;
+
+    // readonly 모드에서 같은 대상만 재실행 방지하고, 다른 탭 전환은 허용
+    if (mode === 'readonly' && loadedReadonlyKeyRef.current === readonlyLoadKey) {
 // console.log('✅ readonly 모드 - 이미 로드 완료, useEffect 재실행 건너뜀 (무한 루프 방지)');
       return;
     }
@@ -2858,7 +2903,7 @@ const Configurator: React.FC = () => {
 
             // readonly 모드에서는 데이터 로드 전에 ref 먼저 설정 (setState 리렌더링 차단)
             if (mode === 'readonly') {
-              hasLoadedInReadonlyRef.current = true;
+              loadedReadonlyKeyRef.current = readonlyLoadKey;
 // console.log('✅ readonly 모드 - ref 먼저 설정 (setState 리렌더링 차단)');
             }
 
@@ -2912,6 +2957,22 @@ const Configurator: React.FC = () => {
 // console.log('👑 [디자인파일] 소유자 정보 설정 (저장된 정보):', ownerData);
                       setProjectOwner(ownerData);
                     }
+                  }
+
+                  if (mode === 'readonly' && shareScopeParam === 'project') {
+                    const { designFiles } = await getDesignFilesPublic(designFile.projectId);
+                    if (!isLatestDesignLoad(requestedLoadKey)) {
+                      return;
+                    }
+                    [...designFiles].reverse().forEach(file => {
+                      useUIStore.getState().addTab({
+                        projectId: designFile.projectId,
+                        projectName: project.title || '프로젝트',
+                        designFileId: file.id,
+                        designFileName: file.name,
+                      });
+                    });
+                    useUIStore.getState().setActiveTab(`${designFile.projectId}_${designFileId}`);
                   }
 
                   // 읽기 전용 모드에서는 URL 변경 금지
@@ -3106,7 +3167,7 @@ const Configurator: React.FC = () => {
       }, 500);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [projectIdParam, designFileIdParam, urlDesignFileNameParam, modeParam, skipLoadParam, isNewDesignParam]);
+  }, [projectIdParam, designFileIdParam, urlDesignFileNameParam, modeParam, shareScopeParam, skipLoadParam, isNewDesignParam]);
 
   // 협업자 정보 가져오기 (현재 디자인 파일 기준으로 필터링)
   useEffect(() => {
@@ -3806,20 +3867,29 @@ const Configurator: React.FC = () => {
   // 탭 전환 핸들러 (자동 저장 → 활성 탭 전환 → 네비게이션)
   const handleTabSwitch = async (tab: EditorTab) => {
     const navigationToken = ++tabNavigationTokenRef.current;
-    try {
-      await saveCurrentDesignBeforeNavigation();
-    } catch (e) {
-      console.warn('탭 전환 전 자동 저장 실패:', e);
+    if (!isReadOnly) {
+      try {
+        await saveCurrentDesignBeforeNavigation();
+      } catch (e) {
+        console.warn('탭 전환 전 자동 저장 실패:', e);
+      }
     }
     if (navigationToken !== tabNavigationTokenRef.current) {
       return;
     }
     useUIStore.getState().setActiveTab(tab.id);
-    navigate(`/configurator?projectId=${tab.projectId}&designFileId=${tab.designFileId}`, { replace: true });
+    if (isReadOnly) {
+      navigate(buildSharedViewerUrl(tab.projectId, tab.designFileId, tab.designFileName, shareScopeParam), { replace: true });
+    } else {
+      navigate(`/configurator?projectId=${tab.projectId}&designFileId=${tab.designFileId}`, { replace: true });
+    }
   };
 
   // 탭 닫기 핸들러 (자동 저장 → 탭 제거 → 인접 탭 또는 대시보드)
   const handleTabClose = async (tab: EditorTab) => {
+    if (isReadOnly) {
+      return;
+    }
     // 닫히는 탭이 활성 탭이면 저장
     if (useUIStore.getState().activeTabId === tab.id) {
       try {

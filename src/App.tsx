@@ -203,6 +203,8 @@ function AppContent() {
         <Route path="/sketchup-oauth" element={<SketchUpOAuth />} />
         {/* 데모 라우트 (로그인/저장 없음, 새로고침 시 초기화) */}
         <Route path="/demo" element={<ConfiguratorWrapper />} />
+        {/* 공유 조회 전용 라우트 (로그인 없이 readonly configurator 접근) */}
+        <Route path="/shared-viewer" element={<ConfiguratorWrapper />} />
         {/* 공장(파트너) 전용 — 받은 발주 목록 */}
         <Route path="/factory/orders" element={<FactoryOrders />} />
         {/* 발주자 — 본인 발주 현황 */}
