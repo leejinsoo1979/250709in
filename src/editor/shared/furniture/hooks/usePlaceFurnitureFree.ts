@@ -134,16 +134,16 @@ export function placeFurnitureFree(params: PlaceFurnitureFreeParams): PlaceFurni
     }
   }
 
-  // 유리장(glass-cabinet): 일반 키큰장과 동일하게 공간 높이에 맞춰 본체 H 동적 계산
-  //   본체 H = 공간 H - 바닥마감 - 상단몰딩 - 받침대 (받침대 위에 배치)
+  // 유리장(glass-cabinet): 슬롯배치와 동일하게 공간 높이에 맞춰 본체 H 동적 계산
+  //   본체 H = 공간 H - 바닥마감 - 상단몰딩 - 띄움(200) (슬롯배치 createSingleGlassCabinet 로직과 일치)
   if (moduleId.includes('glass-cabinet')) {
     const topFrameMm = spaceInfo.frameSize?.top ?? 30;
     const floorFinishMm = (spaceInfo.hasFloorFinish && spaceInfo.floorFinish?.height) || 0;
-    const baseMm = spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height ?? 65) : 0;
+    const floatMm = (moduleData as any).individualFloatHeight ?? 200;
     const zoneH = effectiveZone === 'dropped' && droppedZone.droppedInternalHeight !== undefined
       ? droppedZone.droppedInternalHeight + (spaceInfo.baseConfig?.height ?? 65)
       : spaceInfo.height;
-    effectiveHeight = Math.max(0, zoneH - topFrameMm - floorFinishMm - baseMm);
+    effectiveHeight = Math.max(0, zoneH - topFrameMm - floorFinishMm - floatMm);
   }
   // 멍장 키큰장(single-dummy-full / dual-dummy-full): 다른 키큰장과 동일하게 공간 H 맞춤
   if (moduleId.includes('dummy-full')) {
