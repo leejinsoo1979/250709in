@@ -7963,7 +7963,7 @@ const Configurator: React.FC = () => {
             style={{
               position: 'absolute',
               right: isRightPanelOpen ? 'calc(var(--right-panel-width, 320px) + 12px)' : '12px',
-              top: '52px', // ? 버튼(top:12px + height:28px = 40px) + 간격 12px
+              top: '64px', // ? 버튼(top:12px + height:28px = 40px) + 간격 24px
               display: 'flex',
               flexDirection: 'column',
               gap: '8px', // ? 버튼과의 간격(12px)보다 약간 좁게 — 그룹감 표현
