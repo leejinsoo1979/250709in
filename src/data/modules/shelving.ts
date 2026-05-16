@@ -1163,7 +1163,8 @@ const createSingleGlassCabinet = (columnWidth: number, maxHeight?: number): Modu
   const widthForId = Math.round(columnWidth * 100) / 100;
   // 공간 높이에 맞춰 유리장 H 동적 계산 (maxHeight = 내경 높이 = 천장 - 상부몰딩 - 바닥마감)
   // 띄움 200mm 위에서 천장-상부몰딩까지: H = maxHeight - 띄움200
-  const glassHeight = maxHeight ? Math.max(0, maxHeight - GLASS_CABINET_FLOAT) : GLASS_CABINET_HEIGHT;
+  // 유리장도 일반 키큰장처럼 동작 — 띄움 자동 차감 제거
+  const glassHeight = maxHeight ?? GLASS_CABINET_HEIGHT;
   const base = createFurnitureBase(
     `single-glass-cabinet-${widthForId}`,
     `유리장 ${widthForId}mm`,
@@ -1181,7 +1182,6 @@ const createSingleGlassCabinet = (columnWidth: number, maxHeight?: number): Modu
     hasDoor: true,
     hasBase: false,
     hasBackPanel: false,
-    individualFloatHeight: GLASS_CABINET_FLOAT,
     thumbnail: '/images/furniture-thumbnails/glass_single.png',
     modelConfig: {
       ...base.modelConfig,
@@ -1196,7 +1196,8 @@ const createDualGlassCabinet = (
   maxHeight?: number
 ): ModuleData => {
   const widthForId = Math.round(dualColumnWidth * 100) / 100;
-  const glassHeight = maxHeight ? Math.max(0, maxHeight - GLASS_CABINET_FLOAT) : GLASS_CABINET_HEIGHT;
+  // 유리장도 일반 키큰장처럼 동작 — 띄움 자동 차감 제거
+  const glassHeight = maxHeight ?? GLASS_CABINET_HEIGHT;
   const base = createFurnitureBase(
     `dual-glass-cabinet-${widthForId}`,
     `유리장 ${widthForId}mm`,
@@ -1215,7 +1216,6 @@ const createDualGlassCabinet = (
     hasDoor: true,
     hasBase: false,
     hasBackPanel: false,
-    individualFloatHeight: GLASS_CABINET_FLOAT,
     thumbnail: '/images/furniture-thumbnails/glass_dual.png',
     modelConfig: {
       ...base.modelConfig,

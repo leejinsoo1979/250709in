@@ -3898,49 +3898,13 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                           if (currentPlacedModule.moduleId?.includes('lower-drawer-2tier') || currentPlacedModule.moduleId?.includes('dual-lower-drawer-2tier')) {
                             updates.cabinetBodyHeight = val;
                           }
-                          // 키큰장(full): 가구 높이 줄이면 상단몰딩이 늘어나야 함
-                          //   ※ 유리장은 별도 흡수 로직 적용 (아래)
-                          if (moduleData.category === 'full' && !isPlainShoeShelfModuleId(currentPlacedModule.moduleId)
-                              && !currentPlacedModule.moduleId?.includes('glass-cabinet')) {
+                          // 키큰장(full) 및 유리장: 가구 높이 변경 시 상단몰딩이 흡수
+                          if (moduleData.category === 'full' && !isPlainShoeShelfModuleId(currentPlacedModule.moduleId)) {
                             const iSpace = calculateInternalSpace(spaceInfo);
-                            const originalH = iSpace.height; // 원래 내경 높이
+                            const originalH = iSpace.height;
                             const globalTopFrame = spaceInfo.frameSize?.top || 30;
-                            const heightDiff = originalH - val; // 줄어든 만큼
-                            if (heightDiff > 0) {
-                              updates.topFrameThickness = globalTopFrame + heightDiff;
-                            } else {
-                              // 원래보다 크거나 같으면 상단몰딩 기본값
-                              updates.topFrameThickness = Math.max(0, globalTopFrame + heightDiff);
-                            }
-                          }
-                          // 유리장: 가구 H 변경 시 상단갭(topFrameGap) 우선 흡수 → 부족하면 띄움(individualFloatHeight) 흡수
-                          //   ※ 가구는 위→아래 순서로 확장 (서랍 모듈 크기 변경 없음)
-                          if (currentPlacedModule.moduleId?.includes('glass-cabinet')) {
-                            const curH = currentPlacedModule.freeHeight ?? moduleData.dimensions.height ?? 0;
-                            const heightDelta = val - curH; // 양수=커짐, 음수=줄어듦
-                            const curTopGap = currentPlacedModule.topFrameGap ?? 0;
-                            const curFloat = currentPlacedModule.individualFloatHeight ?? 200;
-                            if (heightDelta > 0) {
-                              // 1순위: 상단갭 줄여 위로 확장
-                              const fromTopGap = Math.min(curTopGap, heightDelta);
-                              let remaining = heightDelta - fromTopGap;
-                              const nextTopGap = curTopGap - fromTopGap;
-                              // 2순위: 띄움 줄여 아래로 확장
-                              const fromFloat = Math.min(curFloat, remaining);
-                              const nextFloat = curFloat - fromFloat;
-                              updates.topFrameGap = nextTopGap;
-                              updates.individualFloatHeight = nextFloat;
-                            } else if (heightDelta < 0) {
-                              // 줄어들 때: 상단갭 먼저 복구 (위에서 아래로) → 띄움 복구
-                              const need = -heightDelta;
-                              const topGapRoom = Math.max(0, 200 - curTopGap);
-                              const toTopGap = Math.min(topGapRoom, need);
-                              const remaining = need - toTopGap;
-                              const floatRoom = Math.max(0, 200 - curFloat);
-                              const toFloat = Math.min(floatRoom, remaining);
-                              updates.topFrameGap = curTopGap + toTopGap;
-                              updates.individualFloatHeight = curFloat + toFloat;
-                            }
+                            const heightDiff = originalH - val;
+                            updates.topFrameThickness = Math.max(0, globalTopFrame + heightDiff);
                           }
                           updatePlacedModule(currentPlacedModule.id, updates);
                           setFreeHeightInput(displayVal.toString()); // 표시는 사용자 입력값(흡수분 포함) 그대로 유지
@@ -4012,8 +3976,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                             const updates: any = moduleData.category === 'upper'
                               ? { customHeight: val, freeHeight: undefined }
                               : { freeHeight: val };
-                            if (moduleData.category === 'full' && !isPlainShoeShelfModuleId(currentPlacedModule.moduleId)
-                                && !currentPlacedModule.moduleId?.includes('glass-cabinet')) {
+                            if (moduleData.category === 'full' && !isPlainShoeShelfModuleId(currentPlacedModule.moduleId)) {
                               const iSpace = calculateInternalSpace(spaceInfo);
                               const globalTopFrame = spaceInfo.frameSize?.top || 30;
                               updates.topFrameThickness = Math.max(0, globalTopFrame + (iSpace.height - val));
@@ -4021,29 +3984,6 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                             // 2단서랍장: cabinetBodyHeight도 함께 저장
                             if (currentPlacedModule.moduleId?.includes('lower-drawer-2tier') || currentPlacedModule.moduleId?.includes('dual-lower-drawer-2tier')) {
                               updates.cabinetBodyHeight = val;
-                            }
-                            // 유리장: 상단갭 → 띄움 순서로 흡수
-                            if (currentPlacedModule.moduleId?.includes('glass-cabinet')) {
-                              const curH = currentPlacedModule.freeHeight ?? moduleData.dimensions.height ?? 0;
-                              const heightDelta = val - curH;
-                              const curTopGap = currentPlacedModule.topFrameGap ?? 0;
-                              const curFloat = currentPlacedModule.individualFloatHeight ?? 200;
-                              if (heightDelta > 0) {
-                                const fromTopGap = Math.min(curTopGap, heightDelta);
-                                const remaining = heightDelta - fromTopGap;
-                                const fromFloat = Math.min(curFloat, remaining);
-                                updates.topFrameGap = curTopGap - fromTopGap;
-                                updates.individualFloatHeight = curFloat - fromFloat;
-                              } else if (heightDelta < 0) {
-                                const need = -heightDelta;
-                                const floatRoom = Math.max(0, 200 - curFloat);
-                                const toFloat = Math.min(floatRoom, need);
-                                const remaining = need - toFloat;
-                                const topGapRoom = Math.max(0, 200 - curTopGap);
-                                const toTopGap = Math.min(topGapRoom, remaining);
-                                updates.individualFloatHeight = curFloat + toFloat;
-                                updates.topFrameGap = curTopGap + toTopGap;
-                              }
                             }
                             // 동기화 useEffect가 store stale 값으로 덮어쓰지 않도록 focused 유지 후 store 업데이트
                             freeHeightFocusedRef.current = true;
@@ -4090,34 +4030,10 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                             const arrowUpdates: any = moduleData.category === 'upper'
                               ? { customHeight: next, freeHeight: undefined }
                               : { freeHeight: next };
-                            if (moduleData.category === 'full' && !isPlainShoeShelfModuleId(currentPlacedModule.moduleId)
-                                && !currentPlacedModule.moduleId?.includes('glass-cabinet')) {
+                            if (moduleData.category === 'full' && !isPlainShoeShelfModuleId(currentPlacedModule.moduleId)) {
                               const iSpace = calculateInternalSpace(spaceInfo);
                               const globalTopFrame = spaceInfo.frameSize?.top || 30;
                               arrowUpdates.topFrameThickness = Math.max(0, globalTopFrame + (iSpace.height - next));
-                            }
-                            // 유리장: 상단갭 → 띄움 순서로 흡수
-                            if (currentPlacedModule.moduleId?.includes('glass-cabinet')) {
-                              const curH = currentPlacedModule.freeHeight ?? moduleData.dimensions.height ?? 0;
-                              const heightDelta = next - curH;
-                              const curTopGap = currentPlacedModule.topFrameGap ?? 0;
-                              const curFloat = currentPlacedModule.individualFloatHeight ?? 200;
-                              if (heightDelta > 0) {
-                                const fromTopGap = Math.min(curTopGap, heightDelta);
-                                const remaining = heightDelta - fromTopGap;
-                                const fromFloat = Math.min(curFloat, remaining);
-                                arrowUpdates.topFrameGap = curTopGap - fromTopGap;
-                                arrowUpdates.individualFloatHeight = curFloat - fromFloat;
-                              } else if (heightDelta < 0) {
-                                const need = -heightDelta;
-                                const floatRoom = Math.max(0, 200 - curFloat);
-                                const toFloat = Math.min(floatRoom, need);
-                                const remaining = need - toFloat;
-                                const topGapRoom = Math.max(0, 200 - curTopGap);
-                                const toTopGap = Math.min(topGapRoom, remaining);
-                                arrowUpdates.individualFloatHeight = curFloat + toFloat;
-                                arrowUpdates.topFrameGap = curTopGap + toTopGap;
-                              }
                             }
                             updatePlacedModule(currentPlacedModule.id, arrowUpdates);
                             setSectionHeightInputs({}); // 섹션 높이 캐시 초기화
