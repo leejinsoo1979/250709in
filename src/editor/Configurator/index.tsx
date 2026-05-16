@@ -8000,7 +8000,7 @@ const Configurator: React.FC = () => {
             style={{
               position: 'absolute',
               right: isRightPanelOpen ? 'calc(var(--right-panel-width, 320px) + 12px)' : '12px',
-              top: '180px', // 스캔 bottom(124) + 56px 간격 (?-스캔과 동일)
+              top: '136px', // 스캔(96) + 28(h) + 12(간격) — 스캔과 동일 간격으로 가깝게
               width: '28px',
               height: '28px',
               borderRadius: '50%',
