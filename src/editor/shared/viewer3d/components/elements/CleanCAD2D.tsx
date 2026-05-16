@@ -25,6 +25,7 @@ interface CleanCAD2DProps {
   viewDirection?: '3D' | 'front' | 'left' | 'right' | 'top';
   showDimensions?: boolean;
   isStep2?: boolean;
+  readOnly?: boolean;
 }
 
 // 줌아웃 시 Html 내부 UI가 같이 작아지도록 CSS scale 적용하는 래퍼
@@ -425,7 +426,7 @@ const GlassDrawerGapEditor: React.FC<{
  * 깔끔한 CAD 스타일 2D 뷰어 (그리드 없음)
  * 이미지와 동일한 스타일의 치수선과 가이드라인만 표시
  */
-const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: showDimensionsProp, isStep2 }) => {
+const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: showDimensionsProp, isStep2, readOnly = false }) => {
   // 카메라 zoom 구독 — 줌아웃 시 편집 UI가 함께 축소되도록 CSS scale 계산
   // (Canvas 컨텍스트 내부이므로 R3F 훅 사용 가능)
   const camera = useThree(state => state.camera);
@@ -442,7 +443,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
   const uiScaleStyle: React.CSSProperties = { transform: `scale(${uiScale})`, transformOrigin: 'center', display: 'inline-block' };
   // 줌아웃이 과도하면 편집 UI 숨김 (너무 작아져서 시인성/조작성 나빠짐)
   // 임계값 5: 어느 정도 확대 상태에서는 거의 항상 보이도록 완화 (이전 20은 너무 보수적)
-  const showShelfEditUi = camZoom >= 5;
+  const showShelfEditUi = !readOnly && camZoom >= 5;
 
   const { spaceInfo } = useSpaceConfigStore();
   const placedModulesStore = useFurnitureStore(state => state.placedModules);
@@ -1631,7 +1632,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             color={dimensionColor} lineWidth={0.6}
           />
         ))}
-        {isSideView ? (
+        {(isSideView || readOnly) ? (
           <Text
             renderOrder={100001}
             depthTest={false}
@@ -1642,7 +1643,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             anchorY="middle"
             outlineWidth={textOutlineWidth}
             outlineColor={textOutlineColor}
-            rotation={sideTextRotation}
+            rotation={isSideView ? sideTextRotation : [0, 0, 0]}
           >
             {lowerH}
           </Text>
@@ -1672,7 +1673,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         >
           {drawerH}
         </Text>
-        {isSideView ? (
+        {(isSideView || readOnly) ? (
           <Text
             renderOrder={100001}
             depthTest={false}
@@ -1683,7 +1684,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             anchorY="middle"
             outlineWidth={textOutlineWidth}
             outlineColor={textOutlineColor}
-            rotation={sideTextRotation}
+            rotation={isSideView ? sideTextRotation : [0, 0, 0]}
           >
             {upperH}
           </Text>
@@ -6962,24 +6963,38 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               color={dimensionColor} lineWidth={0.6}
             />
             {/* 3개 치수 텍스트 (하/상은 클릭하여 직접 입력 가능, 중간 서랍 H는 고정 500) */}
-            <Html
-              position={[leftTextX, (yGlassBottom + yDrawerBottom) / 2, 0.01]}
-              center
-              style={{ pointerEvents: 'auto', background: 'transparent' }}
-              occlude={false}
-              zIndexRange={[10000, 10]}
-              transform={false}
-            >
-              <GlassDrawerGapEditor
-                value={lowerH}
-                color={dimensionColor}
-                onChange={(v) => {
-                  const maxOffset = Math.max(0, glassH - SIDE_H);
-                  const next = Math.max(0, Math.min(maxOffset, v));
-                  updatePlacedModule(module.id, { glassDrawerOffsetMm: next });
-                }}
-              />
-            </Html>
+            {readOnly ? (
+              <Text
+                position={[leftTextX, (yGlassBottom + yDrawerBottom) / 2, 0.01]}
+                fontSize={baseFontSize}
+                color={textColor}
+                anchorX="right"
+                anchorY="middle"
+                outlineWidth={textOutlineWidth}
+                outlineColor={textOutlineColor}
+              >
+                {lowerH}
+              </Text>
+            ) : (
+              <Html
+                position={[leftTextX, (yGlassBottom + yDrawerBottom) / 2, 0.01]}
+                center
+                style={{ pointerEvents: 'auto', background: 'transparent' }}
+                occlude={false}
+                zIndexRange={[10000, 10]}
+                transform={false}
+              >
+                <GlassDrawerGapEditor
+                  value={lowerH}
+                  color={dimensionColor}
+                  onChange={(v) => {
+                    const maxOffset = Math.max(0, glassH - SIDE_H);
+                    const next = Math.max(0, Math.min(maxOffset, v));
+                    updatePlacedModule(module.id, { glassDrawerOffsetMm: next });
+                  }}
+                />
+              </Html>
+            )}
             <Text
               position={[leftTextX, (yDrawerBottom + yDrawerTop) / 2, 0.01]}
               fontSize={baseFontSize}
@@ -6991,27 +7006,41 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             >
               {drawerH}
             </Text>
-            <Html
-              position={[leftTextX, (yDrawerTop + yGlassTop) / 2, 0.01]}
-              center
-              style={{ pointerEvents: 'auto', background: 'transparent' }}
-              occlude={false}
-              zIndexRange={[10000, 10]}
-              transform={false}
-            >
-              <GlassDrawerGapEditor
-                value={upperH}
-                color={dimensionColor}
-                onChange={(v) => {
-                  const maxOffset = Math.max(0, glassH - SIDE_H);
-                  const next = Math.max(0, Math.min(maxOffset, glassH - SIDE_H - v));
-                  updatePlacedModule(module.id, { glassDrawerOffsetMm: next });
-                }}
-              />
-            </Html>
+            {readOnly ? (
+              <Text
+                position={[leftTextX, (yDrawerTop + yGlassTop) / 2, 0.01]}
+                fontSize={baseFontSize}
+                color={textColor}
+                anchorX="right"
+                anchorY="middle"
+                outlineWidth={textOutlineWidth}
+                outlineColor={textOutlineColor}
+              >
+                {upperH}
+              </Text>
+            ) : (
+              <Html
+                position={[leftTextX, (yDrawerTop + yGlassTop) / 2, 0.01]}
+                center
+                style={{ pointerEvents: 'auto', background: 'transparent' }}
+                occlude={false}
+                zIndexRange={[10000, 10]}
+                transform={false}
+              >
+                <GlassDrawerGapEditor
+                  value={upperH}
+                  color={dimensionColor}
+                  onChange={(v) => {
+                    const maxOffset = Math.max(0, glassH - SIDE_H);
+                    const next = Math.max(0, Math.min(maxOffset, glassH - SIDE_H - v));
+                    updatePlacedModule(module.id, { glassDrawerOffsetMm: next });
+                  }}
+                />
+              </Html>
+            )}
 
             {/* 서랍 영역 위치 조절 스피너 (▲▼) — 더 크게 */}
-            <Html
+            {!readOnly && <Html
               position={[cxX, drawCenterYThree, 0.02]}
               center
               style={{ pointerEvents: 'auto', background: 'transparent' }}
@@ -7076,7 +7105,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   >▼</button>
                 </div>
               </div>
-            </Html>
+            </Html>}
           </React.Fragment>
         );
       })}

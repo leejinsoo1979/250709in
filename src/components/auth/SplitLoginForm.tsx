@@ -20,7 +20,7 @@ interface SplitLoginFormProps {
 
 export const SplitLoginForm: React.FC<SplitLoginFormProps> = ({ onSuccess, defaultSignUp }) => {
   const navigate = useNavigate();
-  useAuth();
+  const { user: authUser, loading: authLoading } = useAuth();
   const [error, setError] = useState<string | null>(null);
   const [googleLoading, setGoogleLoading] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -103,13 +103,30 @@ export const SplitLoginForm: React.FC<SplitLoginFormProps> = ({ onSuccess, defau
       const result = await handleRedirectResult();
       if (result.user) {
         const path = await resolvePostLoginPath(result.user);
-        navigate(path);
+        navigate(path, { replace: true });
       } else if (result.error) {
         setError(result.error);
       }
     };
     checkRedirectResult();
   }, [navigate]);
+
+  useEffect(() => {
+    if (authLoading || !authUser) return;
+
+    let cancelled = false;
+    const redirectAuthenticatedUser = async () => {
+      const path = await resolvePostLoginPath(authUser);
+      if (!cancelled) {
+        navigate(path, { replace: true });
+      }
+    };
+
+    redirectAuthenticatedUser();
+    return () => {
+      cancelled = true;
+    };
+  }, [authUser, authLoading, navigate]);
 
   // SketchUp 외부 OAuth 위임 흐름의 토큰 수신 콜백 등록
   useEffect(() => {
@@ -142,7 +159,7 @@ export const SplitLoginForm: React.FC<SplitLoginFormProps> = ({ onSuccess, defau
         const userCred = await signInWithCredential(auth, credential);
         if (userCred.user) {
           const path = await resolvePostLoginPath(userCred.user);
-          navigate(path);
+          navigate(path, { replace: true });
         }
       } catch (err: any) {
         console.error('signInWithCredential 실패:', err);
@@ -183,7 +200,7 @@ export const SplitLoginForm: React.FC<SplitLoginFormProps> = ({ onSuccess, defau
       } else if (result.user) {
         onSuccess?.();
         const path = await resolvePostLoginPath(result.user);
-        navigate(path);
+        navigate(path, { replace: true });
       }
     } catch {
       setError('예상치 못한 오류가 발생했습니다.');
@@ -216,7 +233,7 @@ export const SplitLoginForm: React.FC<SplitLoginFormProps> = ({ onSuccess, defau
         setError(result.error);
       } else if (result.user) {
         const path = await resolvePostLoginPath(result.user);
-        navigate(path);
+        navigate(path, { replace: true });
       }
       // result.user가 null이면 redirect 진행 중 - 페이지가 곧 떠나므로 대기
     } catch {

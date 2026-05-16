@@ -1229,8 +1229,8 @@ const Header: React.FC<HeaderProps> = ({
             </div>
           )}
 
-          {/* 설정 버튼 (데모 모드에서는 숨김) */}
-          {!isDemoMode && (
+          {/* 설정 버튼 (데모/읽기 전용 모드에서는 숨김) */}
+          {!isDemoMode && !readOnly && (
             <button
               className={styles.settingsButton}
               onClick={() => window.dispatchEvent(new CustomEvent('openSettingsPanel'))}

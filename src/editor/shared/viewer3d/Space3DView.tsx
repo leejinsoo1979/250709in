@@ -2012,6 +2012,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
                   viewDirection={viewMode === '3D' ? '3D' : view2DDirection}
                   showDimensions={dimensionDisplayEnabled}
                   isStep2={isStep2}
+                  readOnly={readOnly}
                 />
               )}
 
@@ -2441,6 +2442,7 @@ const QuadrantContent: React.FC<{
           viewDirection={viewDirection}
           showDimensions={dimensionDisplayEnabled}
           isStep2={isStep2}
+          readOnly={readOnly}
         />
       )}
 
