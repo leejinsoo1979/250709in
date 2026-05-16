@@ -1713,12 +1713,12 @@ const BoxModule: React.FC<BoxModuleProps> = ({
             const upperDoorDepthPlacement = resolveSplitDoorDepthPlacement(1);
             return (
               <>
-                {/* 하부 도어 — 너비 치수 숨김 (분절 가구는 단일 너비 치수만 표시) */}
+                {/* 하부 도어 — 너비 치수 표시 (분절 가구는 단일 너비 치수만 표시: 하부만) */}
                 <group position={[0, 0, lowerDoorDepthPlacement.zOffset]}>
                   <DoorModule
                     key="shelf-split-lower-door"
                     hingeMode={isPantrySplit ? 'lower4' : 'auto'}
-                    hideWidthDimension={true}
+                    hideWidthDimension={false}
                     moduleWidth={doorWidth || moduleData.dimensions.width}
                     moduleDepth={lowerDoorDepthPlacement.moduleDepthMm}
                     hingePosition={hingePosition}
