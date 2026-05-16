@@ -3,10 +3,10 @@ import { TbRulerMeasure } from 'react-icons/tb';
 import { GoQuestion } from 'react-icons/go';
 import { IoIosArrowDropup } from 'react-icons/io';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { useSpaceConfigStore, SPACE_LIMITS, DEFAULT_SPACE_VALUES, DEFAULT_DROPPED_CEILING_VALUES, normalizeSpaceInfoFrameSize } from '@/store/core/spaceConfigStore';
+import { useSpaceConfigStore, SPACE_LIMITS, DEFAULT_SPACE_VALUES, DEFAULT_DROPPED_CEILING_VALUES, normalizeSpaceInfoFrameSize, type SpaceInfo } from '@/store/core/spaceConfigStore';
 import { inferFrameConfig } from '@/editor/shared/utils/frameConfigBridge';
 import { generateSurround } from '@/editor/shared/utils/surroundGenerator';
-import { useProjectStore } from '@/store/core/projectStore';
+import { useProjectStore, type BasicInfo } from '@/store/core/projectStore';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
 import { useMyCabinetStore } from '@/store/core/myCabinetStore';
 import { useUIStore, type EditorTab, type View2DDirection } from '@/store/uiStore';
@@ -28,8 +28,6 @@ import IslandSetupModal, { IslandSetupValues } from '@/components/common/IslandS
 import { useHistoryStore } from '@/store/historyStore';
 import { useHistoryTracking } from './hooks/useHistoryTracking';
 import { use3DExport, type ExportFormat } from '@/editor/shared/hooks/use3DExport';
-import type { BasicInfo } from '@/store/core/projectStore';
-import type { SpaceInfo } from '@/store/core/spaceConfigStore';
 import type { PlacedModule } from '@/editor/shared/furniture/types';
 
 // 새로운 컴포넌트들 import
@@ -997,6 +995,7 @@ const Configurator: React.FC = () => {
   const isLoadingProjectRef = useRef(false);
   const workingDesignSnapshotsRef = useRef<Map<string, WorkingDesignSnapshot>>(new Map());
   const activeDesignLoadKeyRef = useRef<string | null>(null);
+  const tabNavigationTokenRef = useRef(0);
 
   const persistCurrentWorkingDesignSnapshot = useCallback(() => {
     if (isDemoMode || isReadOnly) return null;
@@ -3806,10 +3805,14 @@ const Configurator: React.FC = () => {
 
   // 탭 전환 핸들러 (자동 저장 → 활성 탭 전환 → 네비게이션)
   const handleTabSwitch = async (tab: EditorTab) => {
+    const navigationToken = ++tabNavigationTokenRef.current;
     try {
       await saveCurrentDesignBeforeNavigation();
     } catch (e) {
       console.warn('탭 전환 전 자동 저장 실패:', e);
+    }
+    if (navigationToken !== tabNavigationTokenRef.current) {
+      return;
     }
     useUIStore.getState().setActiveTab(tab.id);
     navigate(`/configurator?projectId=${tab.projectId}&designFileId=${tab.designFileId}`, { replace: true });
@@ -7132,8 +7135,10 @@ const Configurator: React.FC = () => {
                       className={`${styles.fileTreeFileCard} ${searchParams.get('designFileId') === file.id ? styles.fileTreeFileCardActive : ''
                         }`}
                       onClick={async () => {
+                        const navigationToken = ++tabNavigationTokenRef.current;
                         // 현재 파일 자동 저장
                         try { await saveCurrentDesignBeforeNavigation(); } catch { }
+                        if (navigationToken !== tabNavigationTokenRef.current) return;
                         // 탭 추가 (프로젝트명 조회) — 닫힌 탭 기록에서 제거하여 재오픈 허용
                         const proj = fileTreeProjects.find(p => p.id === fileTreeSelectedProjectId);
                         useUIStore.getState().addTab({
