@@ -11438,8 +11438,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   </>
       )}
 
-      {/* 3D 모드: 각 가구 측면에 깊이 치수 표시 — renderFrontView의 zOffset 평행이동을 -zOffset으로 상쇄 */}
-      {is3DMode && showDimensions && placedModules.length > 0 && (
+      {/* (3D 깊이 치수는 renderDimensions 바깥 최상위 group으로 이동됨 — zOffset 영향 회피) */}
+      {false && is3DMode && showDimensions && placedModules.length > 0 && (
         <group position={[0, 0, -zOffset]} renderOrder={999999}>
           {placedModules.map((module, mIdx) => {
             const moduleData = getModuleById(
@@ -11603,9 +11603,143 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
     >
       {/* 치수선 렌더링 - 조건은 renderDimensions 내부에서 처리 */}
       {renderDimensions()}
-      
+
       {/* 기둥 렌더링 - 조건은 renderColumns 내부에서 처리 */}
       {renderColumns()}
+
+      {/* 3D 모드: 각 가구 측면에 깊이 치수 표시 (renderFrontView 바깥 — zOffset 영향 없음) */}
+      {(() => {
+        if (is3DMode) {
+          console.log('🔴 [3D 깊이치수] is3DMode=true, showDimensions=', showDimensions, 'placedModules.length=', placedModules.length, 'currentViewDirection=', currentViewDirection);
+        }
+        return null;
+      })()}
+      {is3DMode && showDimensions && placedModules.length > 0 && placedModules.map((module, mIdx) => {
+        const moduleData = getModuleById(
+          module.moduleId,
+          { width: spaceInfo.width, height: spaceInfo.height, depth: spaceInfo.depth },
+          spaceInfo
+        );
+        if (!moduleData || !moduleData.dimensions) return null;
+        if (module.moduleId?.includes('insert-frame')) return null;
+        if (module.moduleId?.includes('glass-cabinet')) return null;
+
+        const indexing3D = calculateSpaceIndexing(spaceInfo);
+        const isColFront3D = (module as any).columnPlacementMode === 'front';
+        const slotFullW3D = module.slotIndex !== undefined ? (indexing3D.slotWidths?.[module.slotIndex] ?? indexing3D.columnWidth) : undefined;
+        const moduleWidthMm3D = (module.isFreePlacement && module.freeWidth)
+          ? module.freeWidth
+          : isColFront3D
+            ? (slotFullW3D || moduleData.dimensions.width)
+            : (module.customWidth || module.adjustedWidth || moduleData.dimensions.width);
+        const halfWidth = mmToThreeUnits(moduleWidthMm3D) / 2;
+        const cxX3D = isColFront3D
+          ? (module.slotIndex !== undefined ? (indexing3D.threeUnitPositions?.[module.slotIndex] ?? module.position.x) : module.position.x)
+          : module.position.x;
+        const showOnLeftSide = cxX3D < 0;
+        const sideOffsetMm = 100;
+        const sideX = showOnLeftSide ? (cxX3D - halfWidth - mmToThreeUnits(sideOffsetMm)) : (cxX3D + halfWidth + mmToThreeUnits(sideOffsetMm));
+        const textOffsetX = showOnLeftSide ? -mmToThreeUnits(60) : mmToThreeUnits(60);
+
+        const panelDepthMm3D = spaceInfo.depth || 600;
+        const furnitureDepthMm3D = Math.min(panelDepthMm3D, 600);
+        const doorThicknessMm3D = 20;
+        const panelDepth3D = mmToThreeUnits(panelDepthMm3D);
+        const furnitureDepth3D = mmToThreeUnits(furnitureDepthMm3D);
+        const doorThickness3D = mmToThreeUnits(doorThicknessMm3D);
+        const zOff3D = -panelDepth3D / 2;
+        const furnitureZOffset3D = zOff3D + (panelDepth3D - furnitureDepth3D) / 2;
+        const isFloating3D = spaceInfo.baseConfig?.type === 'stand' && spaceInfo.baseConfig?.placementType === 'float';
+        const baseDepthOffset3D = isFloating3D ? mmToThreeUnits(spaceInfo.baseConfig?.depth || 0) : 0;
+        const moduleBackWallGapMm3D = (module as any).backWallGap ?? 0;
+        const moduleBackWallGapZ3D = moduleBackWallGapMm3D > 0 ? mmToThreeUnits(moduleBackWallGapMm3D) : 0;
+        const mid3D = module.moduleId || '';
+        const isShoeCab3D = (mid3D.includes('-entryway-') || mid3D.includes('-shelf-')
+          || mid3D.includes('-4drawer-shelf-') || mid3D.includes('-2drawer-shelf-'));
+        const isUpper3D = moduleData.category === 'upper' || mid3D.includes('upper-cabinet');
+
+        const actualDepthMm3D = module.customDepth || module.upperSectionDepth || module.lowerSectionDepth || moduleData.dimensions.depth;
+        const depth3D = mmToThreeUnits(actualDepthMm3D);
+
+        let backZ3D: number;
+        if (isUpper3D) {
+          backZ3D = furnitureZOffset3D - furnitureDepth3D / 2 - doorThickness3D + moduleBackWallGapZ3D;
+        } else if (isShoeCab3D) {
+          backZ3D = furnitureZOffset3D - furnitureDepth3D / 2 - doorThickness3D + baseDepthOffset3D + moduleBackWallGapZ3D;
+        } else {
+          backZ3D = furnitureZOffset3D + furnitureDepth3D / 2 - doorThickness3D - depth3D + baseDepthOffset3D + moduleBackWallGapZ3D;
+        }
+        const frontZ3D = backZ3D + depth3D;
+
+        const moduleHeightMm3D = isUpper3D
+          ? (module.customHeight ?? module.freeHeight ?? moduleData.dimensions.height ?? 600)
+          : (module.freeHeight ?? module.customHeight ?? moduleData.dimensions.height ?? 2200);
+        const floorFinishMm3D = spaceInfo.hasFloorFinish && spaceInfo.floorFinish?.height ? spaceInfo.floorFinish.height : 0;
+        const baseFrameMm3D = (module as any).hasBase === false ? 0
+          : ((module as any).baseFrameHeight ?? (spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height || 65) : 0));
+        const floatMm3D = (module as any).hasBase === false ? ((module as any).individualFloatHeight ?? 0) : 0;
+        const topFrameMm3D = (module as any).topFrameThickness ?? (spaceInfo.frameSize?.top ?? 30);
+        const moduleBottomMm3D = isUpper3D
+          ? Math.max(0, Math.round(spaceInfo.height - topFrameMm3D - moduleHeightMm3D))
+          : (floorFinishMm3D + baseFrameMm3D + floatMm3D);
+        const midY3D = mmToThreeUnits(moduleBottomMm3D + moduleHeightMm3D / 2);
+
+        const textRotation: [number, number, number] = showOnLeftSide
+          ? [0, -Math.PI / 2, 0]
+          : [0, Math.PI / 2, 0];
+
+        const cabinetSideX = showOnLeftSide ? (cxX3D - halfWidth) : (cxX3D + halfWidth);
+        const depthDimColor = '#FF3333'; // 3D 깊이 치수는 빨간색으로 명확히 구분
+
+        return (
+          <group key={`3d-depth-dim-${module.id}-${mIdx}`} name={`3d-depth-dim-${module.id}`} renderOrder={1000002}>
+            {/* 깊이 치수선 (Z축 방향) */}
+            <NativeLine name="3d-depth-dimension"
+              points={[[sideX, midY3D, backZ3D], [sideX, midY3D, frontZ3D]]}
+              color={depthDimColor} lineWidth={2}
+              renderOrder={1000002} depthTest={false}
+            />
+            {/* 화살표 */}
+            <NativeLine name="3d-depth-dimension"
+              points={createArrowHead([sideX, midY3D, backZ3D], [sideX, midY3D, backZ3D + 0.02])}
+              color={depthDimColor} lineWidth={2}
+              renderOrder={1000002} depthTest={false}
+            />
+            <NativeLine name="3d-depth-dimension"
+              points={createArrowHead([sideX, midY3D, frontZ3D], [sideX, midY3D, frontZ3D - 0.02])}
+              color={depthDimColor} lineWidth={2}
+              renderOrder={1000002} depthTest={false}
+            />
+            {/* 깊이 텍스트 */}
+            <Text
+              position={[sideX + textOffsetX, midY3D, (backZ3D + frontZ3D) / 2]}
+              fontSize={0.6}
+              color={depthDimColor}
+              anchorX="center"
+              anchorY="middle"
+              outlineWidth={0.02}
+              outlineColor="#ffffff"
+              rotation={textRotation}
+              renderOrder={1000003}
+              material-depthTest={false}
+              material-transparent={true}
+            >
+              {Math.round(actualDepthMm3D)}
+            </Text>
+            {/* 연장선 */}
+            <NativeLine name="3d-depth-dimension-ext"
+              points={[[cabinetSideX, midY3D, backZ3D], [sideX, midY3D, backZ3D]]}
+              color={depthDimColor} lineWidth={1}
+              renderOrder={1000002} depthTest={false}
+            />
+            <NativeLine name="3d-depth-dimension-ext"
+              points={[[cabinetSideX, midY3D, frontZ3D], [sideX, midY3D, frontZ3D]]}
+              color={depthDimColor} lineWidth={1}
+              renderOrder={1000002} depthTest={false}
+            />
+          </group>
+        );
+      })}
       
       {/* 단내림 구간 경계선 및 가이드 - 2D 정면뷰에서는 숨김 */}
       {spaceInfo.droppedCeiling?.enabled && currentViewDirection === 'front' && false && (
