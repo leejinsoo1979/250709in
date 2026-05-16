@@ -7957,67 +7957,35 @@ const Configurator: React.FC = () => {
           </button>
         )}
 
-        {/* 3D 모드 전용: 스캔/줄자 세로 버튼 — 우측 ? 도움말 버튼 바로 아래에 배치 */}
+        {/* 3D 모드 전용: 스캔/줄자 세로 버튼 — 우측 ? 도움말 버튼과 동일 스타일/정렬 */}
         {!isReadOnly && viewMode === '3D' && (
           <div
             style={{
               position: 'absolute',
               right: isRightPanelOpen ? 'calc(var(--right-panel-width, 320px) + 12px)' : '12px',
-              top: '130px', // ? 버튼 아래로 더 내림
+              top: '52px', // ? 버튼(top:12px + height:28px = 40px) + 간격 12px
               display: 'flex',
               flexDirection: 'column',
-              gap: '6px',
-              zIndex: 10001,
+              gap: '8px', // ? 버튼과의 간격(12px)보다 약간 좁게 — 그룹감 표현
+              zIndex: 10002,
               transition: 'right 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
             }}
           >
             <button
               onClick={toggleLiveDimensionMode}
               title="3D 스캔"
-              style={{
-                width: '36px',
-                height: '36px',
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '2px',
-                background: isLiveDimensionMode ? 'var(--theme-primary, #2196F3)' : 'var(--theme-surface, #fff)',
-                color: isLiveDimensionMode ? '#fff' : 'var(--theme-text-primary, #333)',
-                border: '1px solid var(--theme-border, #ddd)',
-                borderRadius: '6px',
-                cursor: 'pointer',
-                boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-                fontSize: '9px',
-                fontWeight: 500,
-              }}
+              className={`${styles.slotGuideHelpButton} ${isLiveDimensionMode ? styles.active : ''}`}
+              style={{ position: 'static' }}
             >
-              <TbZoomScan size={16} />
-              <span>스캔</span>
+              <TbZoomScan size={14} />
             </button>
             <button
               onClick={toggleTapeMeasureMode}
               title="3D 줄자"
-              style={{
-                width: '36px',
-                height: '36px',
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '2px',
-                background: isTapeMeasureMode ? 'var(--theme-primary, #2196F3)' : 'var(--theme-surface, #fff)',
-                color: isTapeMeasureMode ? '#fff' : 'var(--theme-text-primary, #333)',
-                border: '1px solid var(--theme-border, #ddd)',
-                borderRadius: '6px',
-                cursor: 'pointer',
-                boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-                fontSize: '9px',
-                fontWeight: 500,
-              }}
+              className={`${styles.slotGuideHelpButton} ${isTapeMeasureMode ? styles.active : ''}`}
+              style={{ position: 'static' }}
             >
-              <RulerDimensionLine size={16} />
-              <span>줄자</span>
+              <RulerDimensionLine size={14} />
             </button>
           </div>
         )}
