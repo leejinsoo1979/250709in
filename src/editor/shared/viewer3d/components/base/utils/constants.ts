@@ -4,7 +4,7 @@ export const CAMERA_SETTINGS = {
   ORTHOGRAPHIC_ZOOM: 1, // 20에서 1로 변경 - 더 가까이서 보기
   NEAR_PLANE: 0.1,
   FAR_PLANE: 1000,
-  MIN_DISTANCE: 5, // 8→5로 더 가까이
+  MIN_DISTANCE: 1, // 더 가까이 줌인 가능 (5 → 1)
   MAX_DISTANCE: 200, // 60→200으로 큰 공간 지원
   POLAR_ANGLE_MIN: 0, // 0도 (정수직 위에서 내려다보기까지 허용)
   POLAR_ANGLE_MAX: Math.PI, // 180도 (정수직 아래에서 올려다보기까지 허용)

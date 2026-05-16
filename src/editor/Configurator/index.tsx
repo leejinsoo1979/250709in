@@ -28,6 +28,9 @@ import IslandSetupModal, { IslandSetupValues } from '@/components/common/IslandS
 import { useHistoryStore } from '@/store/historyStore';
 import { useHistoryTracking } from './hooks/useHistoryTracking';
 import { use3DExport, type ExportFormat } from '@/editor/shared/hooks/use3DExport';
+import type { BasicInfo } from '@/store/core/projectStore';
+import type { SpaceInfo } from '@/store/core/spaceConfigStore';
+import type { PlacedModule } from '@/editor/shared/furniture/types';
 
 // 새로운 컴포넌트들 import
 import Header from './components/Header';
@@ -426,6 +429,33 @@ const ZoneSizeStepCeilingRow: React.FC<{ spaceInfo: any; styles: any; }> = ({ sp
     <span style={{ fontSize: '11px', color: 'var(--theme-text-muted)' }}>mm</span>
   </div>
 );
+
+type WorkingDesignSnapshot = {
+  projectId: string;
+  designFileId: string;
+  designFileName: string;
+  folderName: string;
+  folderId: string | null;
+  basicInfo: BasicInfo;
+  spaceInfo: SpaceInfo;
+  placedModules: PlacedModule[];
+  projectDirty: boolean;
+  spaceDirty: boolean;
+  furnitureDirty: boolean;
+};
+
+const cloneForWorkingSnapshot = <T,>(value: T): T => {
+  if (typeof structuredClone === 'function') {
+    return structuredClone(value);
+  }
+
+  return JSON.parse(JSON.stringify(value));
+};
+
+const makeWorkingDesignKey = (projectId?: string | null, designFileId?: string | null) => {
+  if (!projectId) return null;
+  return `${projectId}:${designFileId || 'project'}`;
+};
 
 const Configurator: React.FC = () => {
   const { user: authUser } = useAuth();
@@ -965,6 +995,80 @@ const Configurator: React.FC = () => {
   });
   // 프로젝트 로드 중에는 가구 재배치 방지
   const isLoadingProjectRef = useRef(false);
+  const workingDesignSnapshotsRef = useRef<Map<string, WorkingDesignSnapshot>>(new Map());
+  const activeDesignLoadKeyRef = useRef<string | null>(null);
+
+  const persistCurrentWorkingDesignSnapshot = useCallback(() => {
+    if (isDemoMode || isReadOnly) return null;
+
+    const urlProjectId = searchParams.get('projectId') || searchParams.get('id') || searchParams.get('project');
+    const urlDesignFileId = searchParams.get('designFileId');
+    const projectId = currentProjectId || urlProjectId;
+    const designFileId = currentDesignFileId || urlDesignFileId;
+    const key = makeWorkingDesignKey(projectId, designFileId);
+
+    if (!projectId || !designFileId || !key) return null;
+
+    const projectState = useProjectStore.getState();
+    const spaceState = useSpaceConfigStore.getState();
+    const furnitureState = useFurnitureStore.getState();
+    const snapshot: WorkingDesignSnapshot = {
+      projectId,
+      designFileId,
+      designFileName: currentDesignFileName,
+      folderName: currentFolderName,
+      folderId: currentFolderId,
+      basicInfo: cloneForWorkingSnapshot(projectState.basicInfo),
+      spaceInfo: cloneForWorkingSnapshot(spaceState.spaceInfo),
+      placedModules: cloneForWorkingSnapshot(furnitureState.placedModules),
+      projectDirty: projectState.isDirty,
+      spaceDirty: spaceState.isDirty,
+      furnitureDirty: !!furnitureState.hasUnsavedChanges,
+    };
+
+    workingDesignSnapshotsRef.current.set(key, snapshot);
+    return snapshot;
+  }, [
+    currentDesignFileId,
+    currentDesignFileName,
+    currentFolderId,
+    currentFolderName,
+    currentProjectId,
+    isDemoMode,
+    isReadOnly,
+    searchParams,
+  ]);
+
+  const hydrateWorkingDesignSnapshot = useCallback((snapshot: WorkingDesignSnapshot) => {
+    isLoadingProjectRef.current = true;
+    setBasicInfo(cloneForWorkingSnapshot(snapshot.basicInfo));
+    resetSpaceInfo();
+    setSpaceInfo(cloneForWorkingSnapshot(snapshot.spaceInfo));
+    setPreviousSpaceInfo(cloneForWorkingSnapshot(snapshot.spaceInfo));
+    setPlacedModules(cloneForWorkingSnapshot(snapshot.placedModules));
+    setCurrentProjectId(snapshot.projectId);
+    setCurrentDesignFileId(snapshot.designFileId);
+    setCurrentDesignFileName(snapshot.designFileName);
+    setCurrentFolderName(snapshot.folderName);
+    setCurrentFolderId(snapshot.folderId);
+    useProjectStore.setState({ isDirty: snapshot.projectDirty });
+    useSpaceConfigStore.setState({ isDirty: snapshot.spaceDirty });
+    useFurnitureStore.setState({ hasUnsavedChanges: snapshot.furnitureDirty });
+    requestAnimationFrame(() => {
+      setPreviousSpaceInfo(useSpaceConfigStore.getState().spaceInfo);
+      isLoadingProjectRef.current = false;
+    });
+  }, [resetSpaceInfo, setBasicInfo, setPlacedModules, setSpaceInfo]);
+
+  const beginDesignLoad = useCallback((projectId?: string | null, designFileId?: string | null) => {
+    const key = makeWorkingDesignKey(projectId, designFileId);
+    activeDesignLoadKeyRef.current = key;
+    return key;
+  }, []);
+
+  const isLatestDesignLoad = useCallback((loadKey: string | null) => {
+    return activeDesignLoadKeyRef.current === loadKey;
+  }, []);
 
   // History Store
   const { undo: historyUndo, redo: historyRedo } = useHistoryStore();
@@ -1352,16 +1456,17 @@ const Configurator: React.FC = () => {
 
   // 프로젝트 데이터 로드
   const loadProject = async (projectId: string) => {
+    const loadKey = beginDesignLoad(projectId, null);
     setLoading(true);
-
-    // 프로젝트 로드 전에 store 초기화 (이전 데이터 제거)
-// console.log('🧹 프로젝트 로드 전 store 초기화');
-    setPlacedModules([]);
 
     try {
 // console.log('🔄 프로젝트 로드 시작:', projectId);
       const { project, error } = await getProject(projectId);
 // console.log('📦 프로젝트 로드 결과:', { project, error });
+
+      if (!isLatestDesignLoad(loadKey)) {
+        return;
+      }
 
       if (error) {
         console.error('❌ 프로젝트 로드 에러:', error);
@@ -1417,6 +1522,9 @@ const Configurator: React.FC = () => {
         if (spaceConfig.surroundType === 'no-surround') {
           try {
             const defaults = await getSpaceConfigDefaults();
+            if (!isLatestDesignLoad(loadKey)) {
+              return;
+            }
             if (defaults) {
               const defLeft = defaults.gapLeft ?? 1.5;
               const defRight = defaults.gapRight ?? 1.5;
@@ -1451,6 +1559,9 @@ const Configurator: React.FC = () => {
           }
           return m;
         });
+        if (!isLatestDesignLoad(loadKey)) {
+          return;
+        }
         setPlacedModules(migratedModules);
         setCurrentProjectId(projectId);
         // 다음 렌더 사이클 이후 플래그 해제
@@ -1517,6 +1628,9 @@ const Configurator: React.FC = () => {
         useFurnitureStore.getState().markAsSaved();
       }
     } catch (error) {
+      if (!isLatestDesignLoad(loadKey)) {
+        return;
+      }
       console.error('프로젝트 로드 실패:', error);
       // 읽기 전용 모드에서는 alert도 표시하지 않음
       const mode = searchParams.get('mode');
@@ -1527,7 +1641,9 @@ const Configurator: React.FC = () => {
 // console.log('👁️ 읽기 전용 모드 - 에러 무시');
       }
     } finally {
-      setLoading(false);
+      if (isLatestDesignLoad(loadKey)) {
+        setLoading(false);
+      }
     }
   };
 
@@ -1966,6 +2082,22 @@ const Configurator: React.FC = () => {
       setSaving(false);
       saveInProgressRef.current = false;
     }
+  };
+
+  const waitForSaveIdle = async () => {
+    let retryCount = 0;
+    while (saveInProgressRef.current && retryCount < 200) {
+      await new Promise(resolve => setTimeout(resolve, 50));
+      retryCount += 1;
+    }
+  };
+
+  const saveCurrentDesignBeforeNavigation = async () => {
+    persistCurrentWorkingDesignSnapshot();
+    await waitForSaveIdle();
+    await saveProject();
+    await waitForSaveIdle();
+    persistCurrentWorkingDesignSnapshot();
   };
 
   // 새 디자인 생성 함수 (현재 프로젝트 내에)
@@ -2585,6 +2717,8 @@ const Configurator: React.FC = () => {
 // console.log('👁️ 읽기 전용 모드 활성화 (useMemo로 처리됨)');
     }
 
+    const requestedLoadKey = projectId ? beginDesignLoad(projectId, designFileId) : null;
+
 // console.log('🔍 useEffect 실행:', {
       // urlProjectId: projectId,
       // urlDesignFileId: designFileId,
@@ -2616,6 +2750,15 @@ const Configurator: React.FC = () => {
       if (projectId !== currentProjectId) setCurrentProjectId(projectId);
       if (designFileId !== currentDesignFileId) setCurrentDesignFileId(designFileId);
 
+      setLoading(false);
+      return;
+    }
+
+    const cachedSnapshot = requestedLoadKey && designFileId && mode !== 'readonly' && !skipLoad && !isNewDesign
+      ? workingDesignSnapshotsRef.current.get(requestedLoadKey)
+      : null;
+    if (cachedSnapshot) {
+      hydrateWorkingDesignSnapshot(cachedSnapshot);
       setLoading(false);
       return;
     }
@@ -2710,6 +2853,10 @@ const Configurator: React.FC = () => {
         import('@/firebase/projects').then(({ getDesignFileByIdPublic, getProjectByIdPublic }) => {
 // console.log('🔥 getDesignFileByIdPublic 호출 (readonly 모드):', designFileId);
           getDesignFileByIdPublic(designFileId).then(async ({ designFile, error }) => {
+            if (!isLatestDesignLoad(requestedLoadKey)) {
+              return;
+            }
+
             // readonly 모드에서는 데이터 로드 전에 ref 먼저 설정 (setState 리렌더링 차단)
             if (mode === 'readonly') {
               hasLoadedInReadonlyRef.current = true;
@@ -2728,6 +2875,9 @@ const Configurator: React.FC = () => {
               // 프로젝트 기본 정보 설정 - projectId로 프로젝트 정보 가져오기
               if (designFile.projectId) {
                 const { project, error: projectError } = await getProjectByIdPublic(designFile.projectId);
+                if (!isLatestDesignLoad(requestedLoadKey)) {
+                  return;
+                }
                 if (project && !projectError) {
                   setBasicInfo({ title: project.title });
 // console.log('📝 프로젝트 데이터 설정:', project.title);
@@ -2902,6 +3052,9 @@ const Configurator: React.FC = () => {
               if (designFile.projectId) {
                 try {
                   const folderResult = await loadFolderDataFn(designFile.projectId);
+                  if (!isLatestDesignLoad(requestedLoadKey)) {
+                    return;
+                  }
                   if (folderResult.folders && folderResult.folders.length > 0) {
                     let foundFolder = null;
                     // 1차: folderId로 직접 매칭
@@ -2938,7 +3091,9 @@ const Configurator: React.FC = () => {
               console.error('디자인파일 로드 실패:', error);
             }
 
-            setLoading(false);
+            if (isLatestDesignLoad(requestedLoadKey)) {
+              setLoading(false);
+            }
           });
         });
       } else {
@@ -3650,9 +3805,12 @@ const Configurator: React.FC = () => {
   };
 
   // 탭 전환 핸들러 (자동 저장 → 활성 탭 전환 → 네비게이션)
-  const handleTabSwitch = (tab: EditorTab) => {
-    // 현재 파일 자동 저장 (백그라운드 — 탭 전환 차단하지 않음)
-    saveProject().catch(e => console.warn('탭 전환 전 자동 저장 실패:', e));
+  const handleTabSwitch = async (tab: EditorTab) => {
+    try {
+      await saveCurrentDesignBeforeNavigation();
+    } catch (e) {
+      console.warn('탭 전환 전 자동 저장 실패:', e);
+    }
     useUIStore.getState().setActiveTab(tab.id);
     navigate(`/configurator?projectId=${tab.projectId}&designFileId=${tab.designFileId}`, { replace: true });
   };
@@ -3662,7 +3820,7 @@ const Configurator: React.FC = () => {
     // 닫히는 탭이 활성 탭이면 저장
     if (useUIStore.getState().activeTabId === tab.id) {
       try {
-        await saveProject();
+        await saveCurrentDesignBeforeNavigation();
       } catch (e) {
         console.warn('탭 닫기 전 자동 저장 실패:', e);
       }
@@ -6975,7 +7133,7 @@ const Configurator: React.FC = () => {
                         }`}
                       onClick={async () => {
                         // 현재 파일 자동 저장
-                        try { await saveProject(); } catch { }
+                        try { await saveCurrentDesignBeforeNavigation(); } catch { }
                         // 탭 추가 (프로젝트명 조회) — 닫힌 탭 기록에서 제거하여 재오픈 허용
                         const proj = fileTreeProjects.find(p => p.id === fileTreeSelectedProjectId);
                         useUIStore.getState().addTab({
