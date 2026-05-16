@@ -80,7 +80,7 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
   const { theme } = useViewerTheme();
 
   // UIStore에서 2D 뷰 테마, 카메라 설정, 측정 모드, 지우개 모드 가져오기
-  const { view2DTheme, isFurnitureDragging, isDraggingColumn, isSlotDragging, cameraMode: cameraModeFromStore, cameraFov, shadowEnabled, isMeasureMode, isEraserMode } = useUIStore();
+  const { view2DTheme, isFurnitureDragging, isDraggingColumn, isSlotDragging, cameraMode: cameraModeFromStore, cameraFov, shadowEnabled, isMeasureMode, isEraserMode, isLiveDimensionMode } = useUIStore();
 
   // Props가 있으면 props를 사용, 없으면 UIStore 값을 사용
   const cameraMode = cameraModeFromProps || cameraModeFromStore;
@@ -202,7 +202,7 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
 
   // 클린 아키텍처: 각 책임을 전용 훅으로 위임
   const camera = useCameraManager(viewMode, cameraPosition, view2DDirection, cameraTarget, cameraUp, isSplitView, zoomMultiplier);
-  const controlsConfig = useOrbitControlsConfig(camera.target, viewMode, camera.spaceWidth, camera.spaceHeight, isMobile);
+  const controlsConfig = useOrbitControlsConfig(camera.target, viewMode, camera.spaceWidth, camera.spaceHeight, isMobile, viewMode === '3D' && isLiveDimensionMode);
 
   // cameraPosition/cameraTarget이 변경될 때 초기 상태 업데이트 (스페이스바 리셋용)
   useEffect(() => {

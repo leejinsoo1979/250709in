@@ -96,6 +96,21 @@ const MobileToolbar: React.FC<MobileToolbarProps> = ({
 
       {/* 뷰 옵션 그룹: 치수, 더보기 */}
       <div className={styles.buttonGroup}>
+        {viewMode === '3D' && (
+          <button
+            className={`${styles.iconButton} ${uiStore.isLiveDimensionMode ? styles.active : ''}`}
+            onClick={uiStore.toggleLiveDimensionMode}
+            title="3D 스캔"
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+              <path d="M4 17L17 4" />
+              <path d="M14 4h3v3" />
+              <path d="M4 14v3h3" />
+              <path d="M7 20h10" />
+              <path d="M20 7v10" />
+            </svg>
+          </button>
+        )}
         <button
           className={`${styles.iconButton} ${showDimensions ? styles.active : ''}`}
           onClick={onToggleDimensions}

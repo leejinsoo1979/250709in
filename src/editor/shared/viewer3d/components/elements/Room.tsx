@@ -245,7 +245,9 @@ const BoxWithEdges: React.FC<{
   renderOrder?: number; // 렌더링 순서 (낮을수록 먼저 그려짐)
   excludeKey?: string; // CNC 옵티마이저 패널 제외용 복합키 (furnitureId::meshName)
   excludeKeys?: string[]; // 복수 excludeKey (L자 서라운드: 전면+측면 중 어느 쪽이든 제외 시 숨김)
-}> = ({ args, position, material, renderMode, onBeforeRender, viewMode: viewModeProp, view2DTheme, isEndPanel = false, shadowEnabled = true, hideEdges = false, isOuterFrame = false, name, renderOrder, excludeKey, excludeKeys }) => {
+  furnitureId?: string;
+  panelName?: string;
+}> = ({ args, position, material, renderMode, onBeforeRender, viewMode: viewModeProp, view2DTheme, isEndPanel = false, shadowEnabled = true, hideEdges = false, isOuterFrame = false, name, renderOrder, excludeKey, excludeKeys, furnitureId, panelName }) => {
 
   // CNC 옵티마이저 패널 제외 체크: excludeKey 또는 excludeKeys 중 하나라도 매칭되면 숨김
   const isExcludedByOptimizer = useExcludedPanelsStore((s) => {
@@ -268,6 +270,22 @@ const BoxWithEdges: React.FC<{
   const { viewMode: contextViewMode } = useSpace3DView();
   const viewMode = viewModeProp || contextViewMode;
   const { theme } = useViewerTheme();
+  const liveDimensionPanelName = panelName || name;
+  const liveDimensionKey = excludeKey || (furnitureId && liveDimensionPanelName
+    ? `${furnitureId}::${liveDimensionPanelName}`
+    : liveDimensionPanelName
+      ? `room-frame::${liveDimensionPanelName}`
+      : undefined);
+  const liveDimensionUserData = liveDimensionPanelName ? {
+    ...(furnitureId ? { furnitureId } : {}),
+    panelName: liveDimensionPanelName,
+    ...(liveDimensionKey ? { liveDimensionKey } : {}),
+    liveDimension: {
+      widthMm: Math.round(args[0] / 0.01),
+      heightMm: Math.round(args[1] / 0.01),
+      depthMm: Math.round(args[2] / 0.01),
+    },
+  } : undefined;
 
   // 메모리 누수 방지: 컴포넌트 언마운트 시 geometry 정리
   useEffect(() => {
@@ -278,10 +296,18 @@ const BoxWithEdges: React.FC<{
   }, [geometry, edgesGeometry]);
 
   return (
-    <group position={position} name={name} visible={!isExcludedByOptimizer}>
+    <group position={position} name={name} visible={!isExcludedByOptimizer} userData={liveDimensionUserData}>
       {/* Solid 모드일 때만 면 렌더링 */}
       {renderMode === 'solid' && (
-        <mesh geometry={geometry} receiveShadow={viewMode === '3D' && shadowEnabled} castShadow={viewMode === '3D' && shadowEnabled} onBeforeRender={onBeforeRender} name={name ? `${name}-mesh` : undefined} renderOrder={renderOrder}>
+        <mesh
+          geometry={geometry}
+          receiveShadow={viewMode === '3D' && shadowEnabled}
+          castShadow={viewMode === '3D' && shadowEnabled}
+          onBeforeRender={onBeforeRender}
+          name={name ? `${name}-mesh` : undefined}
+          renderOrder={renderOrder}
+          userData={liveDimensionUserData}
+        >
           <primitive key={material.uuid} object={material} attach="material" />
         </mesh>
       )}
@@ -367,7 +393,8 @@ const Room: React.FC<RoomProps> = ({
   const { theme: appTheme } = useTheme(); // 앱 테마 가져오기
   const { renderMode: contextRenderMode, plainMaterial: isPlainMaterial } = useSpace3DView(); // context에서 renderMode 가져오기
   const renderMode = renderModeProp || contextRenderMode; // props로 전달된 값을 우선 사용
-  const { highlightedFrame, setHighlightedFrame, activeDroppedCeilingTab, view2DTheme, shadowEnabled, cameraMode: cameraModeFromStore, selectedSlotIndex, showBorings, isLayoutBuilderOpen, openSurroundEditPopup, activePopup } = useUIStore();
+  const { highlightedFrame, setHighlightedFrame, activeDroppedCeilingTab, view2DTheme, shadowEnabled, cameraMode: cameraModeFromStore, selectedSlotIndex, showBorings, isLayoutBuilderOpen, openSurroundEditPopup, activePopup, isLiveDimensionMode } = useUIStore();
+  const isLiveDimensionInspecting = viewMode === '3D' && isLiveDimensionMode;
   const isDesignMode = isLayoutBuilderOpen || activePopup?.type === 'customizableEdit';
   const wireframeColor = view2DTheme === 'dark' ? "#ffffff" : "#333333"; // 은선모드 벽 라인 색상
   const placedModulesFromStore = useFurnitureStore((state) => state.placedModules); // 가구 정보 가져오기
@@ -1662,7 +1689,7 @@ const Room: React.FC<RoomProps> = ({
       {/* 주변 벽면들 - ShaderMaterial 기반 그라데이션 (3D perspective 모드에서만 표시) */}
       {/* 아일랜드 모드에서는 벽/천장/바닥 그라데이션 숨김 */}
       {/* console.log('🔍 Room viewMode 체크:', viewMode, typeof viewMode) */}
-      {!spaceInfo.isIsland && viewMode !== '2D' && cameraMode === 'perspective' && (
+      {!spaceInfo.isIsland && viewMode !== '2D' && cameraMode === 'perspective' && !isLiveDimensionInspecting && (
         <>
           {/* 왼쪽 외부 벽면 - 단내림 고려 */}
           {/* 프리스탠딩이 아니고 (세미스탠딩에서 왼쪽 벽이 있거나 빌트인)일 때만 표시 */}
@@ -2738,7 +2765,7 @@ const Room: React.FC<RoomProps> = ({
           })()}
 
           {/* 바닥면 - ShaderMaterial 그라데이션 (앞쪽: 흰색, 뒤쪽: 회색) - 탑뷰/아일랜드에서는 숨김 */}
-          {!spaceInfo.isIsland && viewMode !== '2D' && renderMode === 'solid' && (
+          {!spaceInfo.isIsland && viewMode !== '2D' && renderMode === 'solid' && !isLiveDimensionInspecting && (
               <mesh
                 position={[xOffset + width / 2, panelStartY - 0.001, extendedZOffset + extendedPanelDepth / 2]}
                 rotation={[-Math.PI / 2, 0, 0]}
@@ -3306,7 +3333,7 @@ const Room: React.FC<RoomProps> = ({
       )}
 
       {/* 공간 윤곽선: wireframe 또는 orthographic 모드에서 표시 (아일랜드 모드에서는 숨김) */}
-      {!spaceInfo.isIsland && viewMode !== '2D' && (renderMode === 'wireframe' || cameraMode === 'orthographic') && (() => {
+      {!spaceInfo.isIsland && viewMode !== '2D' && !isLiveDimensionInspecting && (renderMode === 'wireframe' || cameraMode === 'orthographic') && (() => {
             const wfLineColor = theme?.mode === 'dark' ? "#ffffff" : "#333333";
             const hasLeftWall = spaceInfo.installType === 'builtin' || spaceInfo.installType === 'built-in' ||
               (spaceInfo.installType === 'semistanding' && wallConfig?.left);
@@ -3681,7 +3708,7 @@ const Room: React.FC<RoomProps> = ({
       )}
 
       {/* 슬롯 바닥면 - 그린색으로 표시 - showAll이 true일 때만 */}
-      {showAll && (() => {
+      {showAll && !isLiveDimensionInspecting && (() => {
         // 내경 공간 계산 (ColumnGuides와 동일한 방식)
         const internalSpace = calculateInternalSpace(spaceInfo);
         const mmToThreeUnits = (mm: number) => mm * 0.01;
@@ -5905,6 +5932,7 @@ const Room: React.FC<RoomProps> = ({
                     <BoxWithEdges
                       hideEdges={hideEdges}
                       isOuterFrame
+                      name="top-frame"
                       args={[
                         droppedFrameWidth,
                         topBottomFrameHeight,
@@ -5921,6 +5949,9 @@ const Room: React.FC<RoomProps> = ({
                       material={topDroppedFrameMaterial ?? createFrameMaterial('top')}
                       renderMode={renderMode}
                       shadowEnabled={shadowEnabled}
+                      excludeKey={`${firstModuleId}::top-frame`}
+                      furnitureId={firstModuleId}
+                      panelName="top-frame"
                     />
                   )}
                   {/* 일반 영역 상단 몰딩 - 측면뷰에서 일반 구간 선택시만 표시 */}
@@ -5928,6 +5959,7 @@ const Room: React.FC<RoomProps> = ({
                     <BoxWithEdges
                       hideEdges={hideEdges}
                       isOuterFrame
+                      name="top-frame"
                       args={[
                         normalFrameWidth,
                         topBottomFrameHeight,
@@ -5945,6 +5977,9 @@ const Room: React.FC<RoomProps> = ({
                       renderMode={renderMode}
 
                       shadowEnabled={shadowEnabled}
+                      excludeKey={`${firstModuleId}::top-frame`}
+                      furnitureId={firstModuleId}
+                      panelName="top-frame"
                     />
                   )}
                 </>
@@ -6008,6 +6043,7 @@ const Room: React.FC<RoomProps> = ({
                 <BoxWithEdges
                   hideEdges={hideEdges}
                   isOuterFrame
+                  name="top-frame"
                   args={[
                     frameWidth, // 노서라운드 모드에서는 전체 너비 사용
                     topBottomFrameHeight,
@@ -6025,6 +6061,9 @@ const Room: React.FC<RoomProps> = ({
                   renderMode={renderMode}
 
                   shadowEnabled={shadowEnabled}
+                  excludeKey={`${firstModuleId}::top-frame`}
+                  furnitureId={firstModuleId}
+                  panelName="top-frame"
                 />
               );
             }
@@ -6066,6 +6105,8 @@ const Room: React.FC<RoomProps> = ({
 
                   shadowEnabled={shadowEnabled}
                   excludeKey={`${firstModuleId}::top-frame`}
+                  furnitureId={firstModuleId}
+                  panelName="top-frame"
                 />
               );
             });
@@ -6279,6 +6320,9 @@ const Room: React.FC<RoomProps> = ({
                   >
                     <BoxWithEdges
                       hideEdges={hideEdges}
+                      name="left-surround-inner-side"
+                      panelName="left-surround-inner-side"
+                      furnitureId={leftMostModuleId}
                       key={`left-dropped-vertical-${materialConfig?.doorColor}-${materialConfig?.doorTexture}`}
                       args={[
                         mmToThreeUnits(44),
@@ -6302,6 +6346,9 @@ const Room: React.FC<RoomProps> = ({
                   >
                     <BoxWithEdges
                       hideEdges={hideEdges}
+                      name="left-surround-inner-front"
+                      panelName="left-surround-inner-front"
+                      furnitureId={leftMostModuleId}
                       key={`left-dropped-front-${materialConfig?.doorColor}-${materialConfig?.doorTexture}`}
                       args={[
                         frameRenderThickness.left,
@@ -6339,6 +6386,9 @@ const Room: React.FC<RoomProps> = ({
                   >
                     <BoxWithEdges
                       hideEdges={hideEdges}
+                      name="left-surround-inner-side"
+                      panelName="left-surround-inner-side"
+                      furnitureId={leftMostModuleId}
                       key={`left-step-vertical-${materialConfig?.doorColor}-${materialConfig?.doorTexture}`}
                       args={[
                         mmToThreeUnits(44),
@@ -6362,6 +6412,9 @@ const Room: React.FC<RoomProps> = ({
                   >
                     <BoxWithEdges
                       hideEdges={hideEdges}
+                      name="left-surround-inner-front"
+                      panelName="left-surround-inner-front"
+                      furnitureId={leftMostModuleId}
                       key={`left-step-front-${materialConfig?.doorColor}-${materialConfig?.doorTexture}`}
                       args={[
                         frameRenderThickness.left,
@@ -6407,6 +6460,9 @@ const Room: React.FC<RoomProps> = ({
                         >
                           <BoxWithEdges
                             hideEdges={hideEdges}
+                            name={`left-surround-inner-side-${idx}`}
+                            panelName="left-surround-inner-side"
+                            furnitureId={leftMostModuleId}
                             key={`left-normal-vertical-split-inner-${idx}-${om.category}-${Math.round(om.heightMm)}-${Math.round(om.bottomMm)}-${Math.round(om.depthMm)}-${materialConfig?.doorColor}-${materialConfig?.doorTexture}`}
                             args={[mmToThreeUnits(44), segH, mmToThreeUnits(END_PANEL_THICKNESS)]}
                             position={[0, 0, 0]}
@@ -6431,6 +6487,9 @@ const Room: React.FC<RoomProps> = ({
                   >
                     <BoxWithEdges
                       hideEdges={hideEdges}
+                      name="left-surround-inner-side"
+                      panelName="left-surround-inner-side"
+                      furnitureId={leftMostModuleId}
                       key={`left-normal-vertical-${materialConfig?.doorColor}-${materialConfig?.doorTexture}`}
                       args={[
                         mmToThreeUnits(44),
@@ -6492,6 +6551,9 @@ const Room: React.FC<RoomProps> = ({
                   >
                     <BoxWithEdges
                       hideEdges={hideEdges}
+                      name="right-surround-inner-front"
+                      panelName="right-surround-inner-front"
+                      furnitureId={rightMostModuleId}
                       key={`right-dropped-front-${materialConfig?.doorColor}-${materialConfig?.doorTexture}`}
                       args={[
                         frameRenderThickness.right,
@@ -6517,6 +6579,9 @@ const Room: React.FC<RoomProps> = ({
                   >
                     <BoxWithEdges
                       hideEdges={hideEdges}
+                      name="right-surround-inner-side"
+                      panelName="right-surround-inner-side"
+                      furnitureId={rightMostModuleId}
                       key={`right-dropped-vertical-${materialConfig?.doorColor}-${materialConfig?.doorTexture}`}
                       args={[
                         mmToThreeUnits(44),
@@ -6553,6 +6618,9 @@ const Room: React.FC<RoomProps> = ({
                   >
                     <BoxWithEdges
                       hideEdges={hideEdges}
+                      name="right-surround-inner-front"
+                      panelName="right-surround-inner-front"
+                      furnitureId={rightMostModuleId}
                       key={`right-step-front-${materialConfig?.doorColor}-${materialConfig?.doorTexture}`}
                       args={[
                         frameRenderThickness.right,
@@ -6577,6 +6645,9 @@ const Room: React.FC<RoomProps> = ({
                   >
                     <BoxWithEdges
                       hideEdges={hideEdges}
+                      name="right-surround-inner-side"
+                      panelName="right-surround-inner-side"
+                      furnitureId={rightMostModuleId}
                       key={`right-step-vertical-${materialConfig?.doorColor}-${materialConfig?.doorTexture}`}
                       args={[
                         mmToThreeUnits(44),
@@ -6622,6 +6693,9 @@ const Room: React.FC<RoomProps> = ({
                         >
                           <BoxWithEdges
                             hideEdges={hideEdges}
+                            name={`right-surround-inner-side-${idx}`}
+                            panelName="right-surround-inner-side"
+                            furnitureId={rightMostModuleId}
                             key={`right-normal-vertical-split-inner-${idx}-${om.category}-${Math.round(om.heightMm)}-${Math.round(om.bottomMm)}-${Math.round(om.depthMm)}-${materialConfig?.doorColor}-${materialConfig?.doorTexture}`}
                             args={[mmToThreeUnits(44), segH, mmToThreeUnits(END_PANEL_THICKNESS)]}
                             position={[0, 0, 0]}
@@ -6646,6 +6720,9 @@ const Room: React.FC<RoomProps> = ({
                   >
                     <BoxWithEdges
                       hideEdges={hideEdges}
+                      name="right-surround-inner-side"
+                      panelName="right-surround-inner-side"
+                      furnitureId={rightMostModuleId}
                       key={`right-normal-vertical-${materialConfig?.doorColor}-${materialConfig?.doorTexture}`}
                       args={[
                         mmToThreeUnits(44),
@@ -6931,17 +7008,19 @@ const Room: React.FC<RoomProps> = ({
                 const isIndividualHighlighted = seg.placedModuleId && highlightedFrame === `base-${seg.placedModuleId}`;
                 return (
                   <React.Fragment key={`free-base-merged-${idx}`}>
-                    <BoxWithEdges
-                      hideEdges={hideEdges}
-                      isOuterFrame
-                      name={spaceInfo.frameMergeEnabled ? `base-frame-${idx}` : 'base-frame'}
-                      args={args}
+                      <BoxWithEdges
+                        hideEdges={hideEdges}
+                        isOuterFrame
+                        name={spaceInfo.frameMergeEnabled ? `base-frame-${idx}` : 'base-frame'}
+                        args={args}
                       position={pos}
                       material={seg.material ?? baseMat}
-                      renderMode={renderMode}
-                      shadowEnabled={shadowEnabled}
-                      excludeKey={`${firstModuleId}::base-frame`}
-                    />
+                        renderMode={renderMode}
+                        shadowEnabled={shadowEnabled}
+                        excludeKey={`${firstModuleId}::base-frame`}
+                        furnitureId={seg.placedModuleId || firstModuleId}
+                        panelName="base-frame"
+                      />
                     {(isMergedHighlighted || isIndividualHighlighted) && <mesh position={pos}><boxGeometry args={args} /><primitive object={highlightOverlayMaterial} attach="material" /></mesh>}
                   </React.Fragment>
                 );
@@ -7282,6 +7361,8 @@ const Room: React.FC<RoomProps> = ({
                               shadowEnabled={shadowEnabled}
                               renderOrder={seg.behindCeiling ? -1 : undefined}
                               excludeKey={`${firstModuleId}::base-frame`}
+                              furnitureId={seg.placedModuleId || firstModuleId}
+                              panelName="base-frame"
                             />
                             {(isMergedHighlighted || isIndividualHighlighted) && <mesh position={pos}><boxGeometry args={args} /><primitive object={highlightOverlayMaterial} attach="material" /></mesh>}
                           </React.Fragment>
@@ -7371,6 +7452,8 @@ const Room: React.FC<RoomProps> = ({
 
                       shadowEnabled={shadowEnabled}
                       excludeKey={`${firstModuleId}::base-frame`}
+                      furnitureId={firstModuleId}
+                      panelName="base-frame"
                     />
                   );
                 }
@@ -7414,6 +7497,8 @@ const Room: React.FC<RoomProps> = ({
 
                       shadowEnabled={shadowEnabled}
                       excludeKey={`${firstModuleId}::base-frame`}
+                      furnitureId={firstModuleId}
+                      panelName="base-frame"
                     />
                   );
                 });

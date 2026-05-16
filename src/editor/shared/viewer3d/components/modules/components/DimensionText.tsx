@@ -59,7 +59,7 @@ const DimensionText: React.FC<DimensionTextProps> = ({
   shadowOffset = [0.01, -0.01, 0],
   name
 }) => {
-  const { showDimensions, showDimensionsText, view2DDirection, view2DTheme } = useUIStore();
+  const { showDimensions, showDimensionsText, view2DDirection, view2DTheme, isLiveDimensionMode, liveDimensionSelectedKey } = useUIStore();
   const { viewMode } = useSpace3DView();
   const [isHovered, setIsHovered] = useState(false);
 
@@ -101,6 +101,8 @@ const DimensionText: React.FC<DimensionTextProps> = ({
   const highlightColor = '#00ff00'; // 형광 녹색
   const normalColor = color || (viewMode === '3D' ? getThemeColor() : (view2DTheme === 'dark' ? '#ffffff' : '#000000'));
   const textColor = isHovered ? highlightColor : normalColor;
+  const liveDimensionFocused = viewMode === '3D' && isLiveDimensionMode && !!liveDimensionSelectedKey && !forceShow;
+  const textOpacity = liveDimensionFocused ? 0.18 : 1;
   
   // 치수 텍스트 크기 통일 (2D: 0.4, 3D: 0.5)
   const baseFontSize = viewMode === '3D' ? 0.5 : 0.4;
@@ -121,6 +123,7 @@ const DimensionText: React.FC<DimensionTextProps> = ({
       material-depthTest={false}
       material-depthWrite={false}
       material-transparent={true}
+      material-opacity={textOpacity}
       position={position}
       fontSize={fontSize}
       color={textColor}

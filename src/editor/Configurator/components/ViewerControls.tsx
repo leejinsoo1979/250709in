@@ -76,7 +76,7 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
   frameMergeEnabled = false,
   onFrameMergeToggle
 }) => {
-  const { view2DDirection, setView2DDirection, view2DTheme, toggleView2DTheme, setView2DTheme, isMeasureMode, toggleMeasureMode, showFurnitureEditHandles, setShowFurnitureEditHandles, shadowEnabled, setShadowEnabled, edgeOutlineEnabled, setEdgeOutlineEnabled, isLayoutBuilderOpen, equalDistribution, toggleEqualDistribution, setDoorsOpen, slotWidthEditMode, setSlotWidthEditMode, slotEditOriginalColumnCount, setSlotEditOriginalColumnCount } = useUIStore();
+  const { view2DDirection, setView2DDirection, view2DTheme, toggleView2DTheme, setView2DTheme, isLiveDimensionMode, toggleLiveDimensionMode, showFurnitureEditHandles, setShowFurnitureEditHandles, shadowEnabled, setShadowEnabled, edgeOutlineEnabled, setEdgeOutlineEnabled, isLayoutBuilderOpen, equalDistribution, toggleEqualDistribution, setDoorsOpen, slotWidthEditMode, setSlotWidthEditMode, slotEditOriginalColumnCount, setSlotEditOriginalColumnCount } = useUIStore();
   const { user } = useAuth();
   const isAllowedUser = user?.email === ALLOWED_EMAIL;
   const { spaceInfo } = useSpaceConfigStore();
@@ -253,6 +253,11 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
                 </button>
               )}
               {viewMode === '3D' && (
+                <button className={`${styles.mobileOptionItem} ${isLiveDimensionMode ? styles.active : ''}`} onClick={toggleLiveDimensionMode}>
+                  <Ruler size={18} /><span>스캔</span>
+                </button>
+              )}
+              {viewMode === '3D' && (
                 <button className={`${styles.mobileOptionItem} ${showFurnitureEditHandles ? styles.active : ''}`} onClick={() => setShowFurnitureEditHandles(!showFurnitureEditHandles)}>
                   <Edit3 size={18} /><span>아이콘</span>
                 </button>
@@ -375,6 +380,19 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
             >{mode.label}</button>
           ))}
         </div>
+
+        {viewMode === '3D' && (
+          <div className={styles.segmentedControl}>
+            <button
+              className={`${styles.segmentButton} ${styles.segmentIconText} ${isLiveDimensionMode ? styles.segmentAccentActive : ''}`}
+              onClick={toggleLiveDimensionMode}
+              title="3D 스캔"
+            >
+              <Ruler size={13} />
+              스캔
+            </button>
+          </div>
+        )}
 
         {onDoorInstallationToggle && hasFurniture && (
           <div className={styles.segmentedControl} style={{ position: 'relative' }}>

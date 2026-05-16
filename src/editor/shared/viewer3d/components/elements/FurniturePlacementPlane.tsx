@@ -4,6 +4,7 @@ import { calculateInternalSpace } from '../../utils/geometry';
 import { calculateSpaceIndexing } from '@/editor/shared/utils/indexing';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
 import { useTheme } from '@/contexts/ThemeContext';
+import { useUIStore } from '@/store/uiStore';
 
 interface FurniturePlacementPlaneProps {
   spaceInfo: SpaceInfo;
@@ -11,6 +12,8 @@ interface FurniturePlacementPlaneProps {
 
 const FurniturePlacementPlane: React.FC<FurniturePlacementPlaneProps> = ({ spaceInfo }) => {
   const placedModules = useFurnitureStore(state => state.placedModules);
+  const isLiveDimensionMode = useUIStore(state => state.isLiveDimensionMode);
+  const viewMode = useUIStore(state => state.viewMode);
   const { theme } = useTheme();
 
   // 내경 공간 계산
@@ -129,6 +132,10 @@ const FurniturePlacementPlane: React.FC<FurniturePlacementPlaneProps> = ({ space
   };
   
   // 도어가 하나라도 장착되면 바닥 슬롯 매쉬를 모두 숨김 (기존 동작 유지)
+  if (viewMode === '3D' && isLiveDimensionMode) {
+    return null;
+  }
+
   if (hasAnyDoor) {
     return null;
   }

@@ -20,7 +20,7 @@ interface ColumnGuidesProps {
 const ColumnGuides: React.FC<ColumnGuidesProps> = ({ viewMode: viewModeProp }) => {
   const { spaceInfo, setSpaceInfo } = useSpaceConfigStore();
   const { placedModules, clearAllModules } = useFurnitureStore();
-  const { viewMode: contextViewMode, showDimensions, view2DDirection, activeDroppedCeilingTab, setActiveDroppedCeilingTab, view2DTheme, slotWidthEditMode } = useUIStore();
+  const { viewMode: contextViewMode, showDimensions, view2DDirection, activeDroppedCeilingTab, setActiveDroppedCeilingTab, view2DTheme, slotWidthEditMode, isLiveDimensionMode } = useUIStore();
   
   // prop으로 받은 viewMode를 우선 사용, 없으면 context의 viewMode 사용
   const viewMode = viewModeProp || contextViewMode;
@@ -353,6 +353,10 @@ const ColumnGuides: React.FC<ColumnGuidesProps> = ({ viewMode: viewModeProp }) =
 
   // 자유배치 모드에서는 슬롯 가이드 숨김
   if (spaceInfo.layoutMode === 'free-placement') {
+    return null;
+  }
+
+  if (viewMode === '3D' && isLiveDimensionMode) {
     return null;
   }
 

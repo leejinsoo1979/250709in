@@ -53,7 +53,8 @@ export const useOrbitControlsConfig = (
   viewMode: '2D' | '3D' = '3D',
   spaceWidth?: number,
   spaceHeight?: number,
-  isMobile: boolean = false
+  isMobile: boolean = false,
+  unrestrictedRotate: boolean = false
 ): OrbitControlsConfig => {
 
   // 공간 크기에 따른 동적 거리 계산
@@ -93,10 +94,10 @@ export const useOrbitControlsConfig = (
     return {
       enabled: true,
       target: cameraTarget,
-      minPolarAngle: is2DMode ? undefined : CAMERA_SETTINGS.POLAR_ANGLE_MIN,
-      maxPolarAngle: is2DMode ? undefined : CAMERA_SETTINGS.POLAR_ANGLE_MAX,
-      minAzimuthAngle: is2DMode ? undefined : CAMERA_SETTINGS.AZIMUTH_ANGLE_MIN,
-      maxAzimuthAngle: is2DMode ? undefined : CAMERA_SETTINGS.AZIMUTH_ANGLE_MAX,
+      minPolarAngle: is2DMode ? undefined : (unrestrictedRotate ? 0 : CAMERA_SETTINGS.POLAR_ANGLE_MIN),
+      maxPolarAngle: is2DMode ? undefined : (unrestrictedRotate ? Math.PI : CAMERA_SETTINGS.POLAR_ANGLE_MAX),
+      minAzimuthAngle: is2DMode ? undefined : (unrestrictedRotate ? -Infinity : CAMERA_SETTINGS.AZIMUTH_ANGLE_MIN),
+      maxAzimuthAngle: is2DMode ? undefined : (unrestrictedRotate ? Infinity : CAMERA_SETTINGS.AZIMUTH_ANGLE_MAX),
       enablePan: true, // 팬 기능 활성화 (중간 버튼으로 사용)
       enableZoom: true, // 줌은 항상 허용
       enableRotate: !is2DMode, // 2D 모드에서는 회전 비활성화, 3D 모드에서만 허용
@@ -117,7 +118,7 @@ export const useOrbitControlsConfig = (
         TWO: THREE.TOUCH.DOLLY_PAN, // 두 손가락: 줌+팬 (핀치 줌)
       },
     };
-  }, [cameraTarget, viewMode, calculateDynamicDistances, isMobile]);
+  }, [cameraTarget, viewMode, calculateDynamicDistances, isMobile, unrestrictedRotate]);
 
   return config;
 }; 

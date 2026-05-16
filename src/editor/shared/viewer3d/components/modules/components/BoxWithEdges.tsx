@@ -93,7 +93,7 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
   ], [args[0], args[1], args[2]]);
 
   const { viewMode, plainMaterial: isPlainMaterial } = useSpace3DView();
-  const { view2DDirection, shadowEnabled, edgeOutlineEnabled } = useUIStore(); // view2DDirection, shadowEnabled, edgeOutlineEnabled 추가
+  const { view2DDirection, shadowEnabled, edgeOutlineEnabled, isLiveDimensionMode, liveDimensionSelectedKey } = useUIStore(); // view2DDirection, shadowEnabled, edgeOutlineEnabled 추가
   const { theme } = useViewerTheme();
   const { view2DTheme } = useUIStore();
   const { theme: appTheme } = useTheme();
@@ -107,6 +107,16 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
   // DOM 쪽 Zustand 구독이 R3F 내부 컴포넌트 리렌더를 트리거하지 못함
   const groupRef = useRef<THREE.Group>(null);
   const compositeKey = furnitureId && panelName ? `${furnitureId}::${panelName}` : null;
+  const liveDimensionSelectedFurnitureId = liveDimensionSelectedKey?.split('::')[0] ?? null;
+  const isLiveDimensionActive = viewMode === '3D' && isLiveDimensionMode && !!liveDimensionSelectedKey && !!compositeKey && liveDimensionSelectedFurnitureId === furnitureId;
+  const isLiveDimensionSelected = !!(isLiveDimensionActive && liveDimensionSelectedKey === compositeKey);
+  const isLiveDimensionDimmed = !!(
+    viewMode === '3D' &&
+    isLiveDimensionMode &&
+    liveDimensionSelectedKey &&
+    compositeKey &&
+    liveDimensionSelectedKey !== compositeKey
+  );
   useFrame(() => {
     if (!groupRef.current) return;
     if (hiddenByViewMode) {
@@ -124,10 +134,11 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
   // 전역 스토어에서 직접 편집 상태 감지 (Context bridge 문제 회피)
   const activePopup = useUIStore(state => state.activePopup);
   const selectedFurnitureId = useUIStore(state => state.selectedFurnitureId);
-  const storeEditMode = furnitureId ? (activePopup.type === 'furnitureEdit' && activePopup.id === furnitureId) : false;
+  const liveDimensionInspecting = viewMode === '3D' && isLiveDimensionMode;
+  const storeEditMode = !liveDimensionInspecting && furnitureId ? (activePopup.type === 'furnitureEdit' && activePopup.id === furnitureId) : false;
   const storeSelected = furnitureId ? (selectedFurnitureId === furnitureId) : false;
   const parentEditMode = useFurnitureGhostContext();
-  const effectiveEditMode = isEditMode || parentEditMode || storeEditMode;
+  const effectiveEditMode = !liveDimensionInspecting && (isEditMode || parentEditMode || storeEditMode);
   const effectiveSelected = storeSelected;
   // 3D 편집/드래그 중에는 wireframe 대신 solid로 강제 (2D에서는 원래 renderMode 유지)
   const effectiveRenderMode = (viewMode === '3D' && (effectiveEditMode || isDragging)) ? 'solid' as const : renderMode;
@@ -171,6 +182,13 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
   
   // 실제 사용할 material (plainMaterial 모드면 항상 기본 색상, 아니면 prop 우선)
   const baseMaterial = isPlainMaterial ? defaultMaterial : (material || defaultMaterial);
+  const themePrimaryColor = React.useMemo(() => {
+    if (typeof window !== 'undefined') {
+      const primaryColor = getComputedStyle(document.documentElement).getPropertyValue('--theme-primary').trim();
+      if (primaryColor) return primaryColor;
+    }
+    return '#10b981';
+  }, [appTheme.color]);
 
   // 드래그/편집 고스트 효과 + 2D 솔리드 모드 투명 처리
   const processedMaterial = React.useMemo(() => {
@@ -186,24 +204,11 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
       return baseMaterial;
     }
 
-    // 테마 색상 가져오기 (드래그/편집 공용)
-    const getThemeColor = () => {
-      if (typeof window !== "undefined") {
-        const computedStyle = getComputedStyle(document.documentElement);
-        const primaryColor = computedStyle.getPropertyValue("--theme-primary").trim();
-        if (primaryColor) {
-          return primaryColor;
-        }
-      }
-      return "#10b981"; // 기본값 (green)
-    };
-
     // 3D에서만 고스트 적용 (2D에서는 치수 확인을 위해 원래 재질 유지)
     // MeshBasicMaterial 사용: 조명/카메라 각도에 무관하게 일관된 고스트 색상
-    if (viewMode === '3D' && (isDragging || effectiveEditMode) && baseMaterial instanceof THREE.MeshStandardMaterial) {
-      const themeColor = getThemeColor();
+    if (viewMode === '3D' && !liveDimensionInspecting && (isDragging || effectiveEditMode) && baseMaterial instanceof THREE.MeshStandardMaterial) {
       const ghostMaterial = new THREE.MeshBasicMaterial({
-        color: new THREE.Color(themeColor),
+        color: new THREE.Color(themePrimaryColor),
         transparent: true,
         opacity: 0.05,
         depthWrite: false,
@@ -278,7 +283,7 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
       }
     }
     return baseMaterial;
-  }, [baseMaterial, isDragging, effectiveEditMode, effectiveSelected, viewMode, effectiveRenderMode, isClothingRod, panelName, view2DDirection, view2DTheme]);
+  }, [baseMaterial, isDragging, effectiveEditMode, effectiveSelected, viewMode, effectiveRenderMode, isClothingRod, panelName, view2DDirection, view2DTheme, liveDimensionInspecting, themePrimaryColor]);
 
   // activePanelGrainDirections를 JSON 문자열로 변환하여 값 변경 감지
   const activePanelGrainDirectionsStr = activePanelGrainDirections ? JSON.stringify(activePanelGrainDirections) : '';
@@ -398,14 +403,42 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
 
   // cornerNotch / backCenterNotch ExtrudeGeometry는 축 스왑으로 일부 면 winding이 뒤집힘 → DoubleSide로 양면 렌더링
   const finalMaterial = React.useMemo(() => {
-    if ((cornerNotch || backCenterNotch) && panelSpecificMaterial instanceof THREE.MeshStandardMaterial) {
+    const needsClone = isLiveDimensionSelected || isLiveDimensionDimmed || cornerNotch || backCenterNotch;
+    if (!needsClone) return panelSpecificMaterial;
+
+    if (
+      panelSpecificMaterial instanceof THREE.MeshStandardMaterial ||
+      panelSpecificMaterial instanceof THREE.MeshBasicMaterial ||
+      panelSpecificMaterial instanceof THREE.MeshLambertMaterial ||
+      panelSpecificMaterial instanceof THREE.MeshPhongMaterial
+    ) {
       const mat = panelSpecificMaterial.clone();
+
+      if (cornerNotch || backCenterNotch) {
+        mat.side = THREE.DoubleSide;
+      }
+
+      if (isLiveDimensionDimmed) {
+        mat.transparent = true;
+        mat.opacity = Math.min(mat.opacity ?? 1, 0.48);
+        mat.depthWrite = false;
+      } else if (isLiveDimensionSelected) {
+        mat.transparent = false;
+        mat.opacity = 1;
+        mat.depthWrite = true;
+        if (mat instanceof THREE.MeshStandardMaterial) {
+          mat.emissive = new THREE.Color(themePrimaryColor);
+          mat.emissiveIntensity = 0.65;
+        }
+      }
+
       mat.side = THREE.DoubleSide;
       mat.needsUpdate = true;
       return mat;
     }
+
     return panelSpecificMaterial;
-  }, [panelSpecificMaterial, cornerNotch, backCenterNotch]);
+  }, [panelSpecificMaterial, cornerNotch, backCenterNotch, isLiveDimensionSelected, isLiveDimensionDimmed, themePrimaryColor]);
 
   // useEffect 제거: useMemo에서 이미 모든 회전 로직을 처리하므로 중복 실행 방지
 
@@ -1169,14 +1202,23 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
   }, [notch, notches, bottomRebate, cornerNotch, backCenterNotch, hasCircleHoles, circleHoles, hasAnyNotch, hasCustomGeometry, safeArgs]);
 
   return (
-    <group ref={groupRef} position={position} userData={furnitureId ? { furnitureId } : undefined}
+    <group ref={groupRef} position={position} userData={furnitureId ? { furnitureId, panelName, liveDimensionKey: compositeKey } : undefined}
       visible={!hiddenByViewMode}
     >
       {/* 면 렌더링 - 와이어프레임에서는 투명하게 */}
       {/* DXF 내보내기를 위해 mesh에도 이름 추가 */}
       <mesh
         name={isClothingRod ? 'clothing-rod-mesh' : isBackPanel ? `back-panel-mesh${panelName ? `-${panelName}` : ''}` : `furniture-mesh${panelName ? `-${panelName}` : ''}`}
-        userData={furnitureId ? { furnitureId } : undefined}
+        userData={{
+          ...(furnitureId ? { furnitureId } : {}),
+          ...(panelName ? { panelName } : {}),
+          ...(compositeKey ? { liveDimensionKey: compositeKey } : {}),
+          liveDimension: {
+            widthMm: Math.round(safeArgs[0] / 0.01),
+            heightMm: Math.round(safeArgs[1] / 0.01),
+            depthMm: Math.round(safeArgs[2] / 0.01),
+          },
+        }}
         receiveShadow={viewMode === '3D' && effectiveRenderMode === 'solid' && shadowEnabled}
         castShadow={viewMode === '3D' && effectiveRenderMode === 'solid' && shadowEnabled}
         renderOrder={renderOrder ?? 10}

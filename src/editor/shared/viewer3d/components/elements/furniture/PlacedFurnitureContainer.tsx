@@ -39,7 +39,7 @@ const PlacedFurnitureContainer: React.FC<PlacedFurnitureContainerProps> = ({
   islandSideFilter,
 }) => {
   const { spaceInfo } = useSpaceConfigStore();
-  const { activePopup, view2DDirection: contextView2DDirection, selectedSlotIndex, selectedFurnitureId } = useUIStore();
+  const { activePopup, view2DDirection: contextView2DDirection, selectedSlotIndex, selectedFurnitureId, isLiveDimensionMode } = useUIStore();
   const { zones } = useDerivedSpaceStore();
 
   const storePlacedModules = useFurnitureStore(state => state.placedModules);
@@ -167,7 +167,8 @@ const PlacedFurnitureContainer: React.FC<PlacedFurnitureContainerProps> = ({
     <group name="FurnitureContainer">
       {filteredModules.map((placedModule) => {
         const isDragMode = selectionState.dragMode;
-        const isEditMode = activePopup.type === 'furnitureEdit' && activePopup.id === placedModule.id;
+        const isLiveDimensionInspecting = viewMode === '3D' && isLiveDimensionMode;
+        const isEditMode = !isLiveDimensionInspecting && activePopup.type === 'furnitureEdit' && activePopup.id === placedModule.id;
         const isDraggingThis = dragHandlers.draggingModuleId === placedModule.id;
         const isThisSelected = selectedFurnitureId === placedModule.id;
         // 선택/편집 중인 가구는 solid로 렌더링 (2D wireframe 모드에서도 고스트 표시)

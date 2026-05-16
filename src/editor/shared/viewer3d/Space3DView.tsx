@@ -21,6 +21,7 @@ import CADDimensions2D from './components/elements/CADDimensions2D';
 import CADGrid from './components/elements/CADGrid';
 import DroppedCeilingSpace from './components/elements/DroppedCeilingSpace';
 import { MeasurementTool } from './components/elements/MeasurementTool';
+import LiveDimensionInspector from './components/elements/LiveDimensionInspector';
 
 import SlotDropZonesSimple from './components/elements/SlotDropZonesSimple';
 import SlotPlacementIndicators from './components/elements/SlotPlacementIndicators';
@@ -102,7 +103,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
   const location = useLocation();
   const { spaceInfo: storeSpaceInfo, updateColumn, removeColumn, updateWall, removeWall, addWall, removePanelB, updatePanelB } = useSpaceConfigStore();
   const { placedModules, updateFurnitureForColumns } = useFurnitureStore();
-  const { view2DDirection, showDimensions: storeShowDimensions, showDimensionsText, showGuides, showAxis, activePopup, setView2DDirection, setViewMode: setUIViewMode, isColumnCreationMode, isWallCreationMode, isPanelBCreationMode, view2DTheme, showFurniture: storeShowFurniture, isMeasureMode, toggleMeasureMode, isEraserMode, selectedSlotIndex, setSelectedSlotIndex, cameraMode, isLayoutBuilderOpen, sunAngle, selectedColumnId } = useUIStore();
+  const { view2DDirection, showDimensions: storeShowDimensions, showDimensionsText, showGuides, showAxis, activePopup, setView2DDirection, setViewMode: setUIViewMode, isColumnCreationMode, isWallCreationMode, isPanelBCreationMode, view2DTheme, showFurniture: storeShowFurniture, isMeasureMode, toggleMeasureMode, isEraserMode, selectedSlotIndex, setSelectedSlotIndex, cameraMode, isLayoutBuilderOpen, sunAngle, selectedColumnId, isLiveDimensionMode } = useUIStore();
 
   // props로 전달된 showFurniture가 있으면 사용, 없으면 store 값 사용
   const showFurniture = showFurnitureProp !== undefined ? showFurnitureProp : storeShowFurniture;
@@ -1827,6 +1828,8 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
                 ghostHighlightSlotIndex={previewGhostSlotIndex}
                 islandSideFilter={islandViewSide}
               />
+
+              <LiveDimensionInspector enabled={viewMode === '3D' && isLiveDimensionMode} />
 
               {/* 단내림 공간 렌더링 */}
               <DroppedCeilingSpace spaceInfo={spaceInfo} />

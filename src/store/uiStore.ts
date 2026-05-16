@@ -181,6 +181,13 @@ interface UIState {
   measurePoints: [MeasurePoint, MeasurePoint | null] | null; // [시작점, 끝점 또는 null]
   measureLines: MeasureLine[]; // 저장된 측정 라인들
 
+  // 3D 라이브 치수 측정 모드
+  isLiveDimensionMode: boolean;
+  liveDimensionSelectedKey: string | null;
+  toggleLiveDimensionMode: () => void;
+  setLiveDimensionMode: (enabled: boolean) => void;
+  setLiveDimensionSelectedKey: (key: string | null) => void;
+
   // 지우개 모드 상태
   isEraserMode: boolean;
   hoveredMeasureLineId: string | null; // 호버 중인 측정선 ID
@@ -389,6 +396,8 @@ const initialUIState = {
   isMeasureMode: false,  // 기본값: 측정 모드 비활성화
   measurePoints: null,  // 기본값: 측정 포인트 없음
   measureLines: [],  // 기본값: 저장된 측정 라인 없음
+  isLiveDimensionMode: false,  // 기본값: 3D 라이브 치수 측정 비활성
+  liveDimensionSelectedKey: null,
   isEraserMode: false,  // 기본값: 지우개 모드 비활성화
   hoveredMeasureLineId: null,  // 기본값: 호버 중인 측정선 없음
   equalDistribution: false,  // 기본값: 균등배치 비활성화
@@ -465,7 +474,10 @@ export const useUIStore = create<UIState>()(
             showDimensionsText: true,
             showFurnitureEditHandles: true,
             dimensionOptionsBackup: null,
-          } : {})
+          } : {
+            isLiveDimensionMode: false,
+            liveDimensionSelectedKey: null,
+          })
         })),
         
       setActiveDroppedCeilingTab: (tab) => {
@@ -822,6 +834,38 @@ export const useUIStore = create<UIState>()(
           // 라인 추가 후 측정 포인트 초기화
           measurePoints: null
         })),
+
+      toggleLiveDimensionMode: () =>
+        set((state) => {
+          const enabled = !state.isLiveDimensionMode;
+          return {
+            isLiveDimensionMode: enabled,
+            isMeasureMode: false,
+            isEraserMode: false,
+            measurePoints: null,
+            hoveredMeasureLineId: null,
+            liveDimensionSelectedKey: null,
+            ...(enabled ? {
+              showFurniture: true,
+            } : {}),
+          };
+        }),
+
+      setLiveDimensionMode: (enabled) =>
+        set({
+          isLiveDimensionMode: enabled,
+          isMeasureMode: false,
+          isEraserMode: false,
+          measurePoints: null,
+          hoveredMeasureLineId: null,
+          liveDimensionSelectedKey: null,
+          ...(enabled ? {
+            showFurniture: true,
+          } : {}),
+        }),
+
+      setLiveDimensionSelectedKey: (key) =>
+        set({ liveDimensionSelectedKey: key }),
 
       removeMeasureLine: (id) =>
         set((state) => ({
