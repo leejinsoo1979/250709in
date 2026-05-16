@@ -4817,9 +4817,9 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                                   cursor: 'pointer',
                                 }}
                               >
-                                <option value="M">M</option>
-                                <option value="L">L</option>
-                                <option value="F">F</option>
+                                <option value="M">소</option>
+                                <option value="L">중</option>
+                                <option value="F">대</option>
                               </select>
                             </div>
                           );
