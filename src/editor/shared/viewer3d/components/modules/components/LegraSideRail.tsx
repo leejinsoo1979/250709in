@@ -1,9 +1,11 @@
 import React, { useMemo } from 'react';
 import * as THREE from 'three';
 import { useGLTF } from '@react-three/drei';
+import { useFrame } from '@react-three/fiber';
 import { useSpace3DView } from '../../../context/useSpace3DView';
 import { useUIStore } from '@/store/uiStore';
 import { useTheme } from '@/contexts/ThemeContext';
+import { getPanelSimulationSourceRegistryVersion, removePanelSimulationSource, updatePanelSimulationSource } from '../../../utils/panelSimulationRegistry';
 
 interface LegraSideRailProps {
   drawerTier: number;
@@ -22,6 +24,7 @@ interface LegraSideRailProps {
   // 사용자가 직접 선택한 레그라 종류 (있으면 GLB 강제 매칭)
   legraTypeOverride?: 'M' | 'L' | 'F';
   renderMode?: string;
+  furnitureId?: string;
 }
 
 // glTF meters → project units (0.01 = 1mm)
@@ -152,11 +155,18 @@ const LegraSideRail: React.FC<LegraSideRailProps> = ({
   maidaHeightMm,
   legraTypeOverride,
   renderMode,
+  furnitureId,
 }) => {
   const { viewMode, hideAccessories } = useSpace3DView();
   const view2DDirection = useUIStore(state => state.view2DDirection);
   const view2DTheme = useUIStore(state => state.view2DTheme);
+  const panelSimulationRevision = useUIStore(state => state.panelSimulationRevision);
+  const panelSimulationPhase = useUIStore(state => state.panelSimulationPhase);
   const { theme } = useTheme();
+  const leftGroupRef = React.useRef<THREE.Group>(null);
+  const rightGroupRef = React.useRef<THREE.Group>(null);
+  const leftSourceSignatureRef = React.useRef<string | null>(null);
+  const rightSourceSignatureRef = React.useRef<string | null>(null);
 
   // GLB 선택: 사용자가 종류 직접 선택(legraTypeOverride) > drawerHeightMm 기준 자동 매칭
   //   M(M500) 측판 128.5 / L(L500) 측판 177 / F(F500) 측판 241
@@ -211,16 +221,69 @@ const LegraSideRail: React.FC<LegraSideRailProps> = ({
     return { leftPos: lPos, rightPos: rPos };
   }, [prepared, drawerBottomY, drawerFrontZ, sidePanelInnerX, modelPath]);
 
+  const railSize = useMemo<[number, number, number]>(() => {
+    const size = prepared.box.getSize(new THREE.Vector3());
+    return [
+      Math.max(0.025, size.x),
+      Math.max(0.025, size.y),
+      Math.max(0.025, size.z),
+    ];
+  }, [prepared]);
+
+  const leftRegistryKey = furnitureId ? `accessory::${furnitureId}::레그라서랍측판-${drawerTier}-좌` : null;
+  const rightRegistryKey = furnitureId ? `accessory::${furnitureId}::레그라서랍측판-${drawerTier}-우` : null;
+
+  React.useEffect(() => {
+    return () => {
+      if (leftRegistryKey) removePanelSimulationSource(leftRegistryKey);
+      if (rightRegistryKey) removePanelSimulationSource(rightRegistryKey);
+      leftSourceSignatureRef.current = null;
+      rightSourceSignatureRef.current = null;
+    };
+  }, [leftRegistryKey, rightRegistryKey]);
+
+  useFrame(() => {
+    const isSimulationActive = viewMode === '3D' && panelSimulationRevision > 0 && !!furnitureId;
+    const registerRail = (
+      group: THREE.Group | null,
+      key: string | null,
+      panelName: string
+    ) => {
+      if (!group) return;
+      if (!isSimulationActive || !key || !furnitureId) {
+        group.visible = true;
+        return;
+      }
+      const signature = `${getPanelSimulationSourceRegistryVersion()}:${panelSimulationRevision}:${panelSimulationPhase}:${key}:${railSize.join(',')}`;
+      const signatureRef = panelName.includes('좌') ? leftSourceSignatureRef : rightSourceSignatureRef;
+      if (signatureRef.current !== signature) {
+        updatePanelSimulationSource({
+          key,
+          furnitureId,
+          panelName,
+          args: railSize,
+          object: group,
+          assemblyOnly: true,
+        });
+        signatureRef.current = signature;
+      }
+      group.visible = false;
+    };
+
+    registerRail(leftGroupRef.current, leftRegistryKey, `레그라 서랍${drawerTier} 측판 좌`);
+    registerRail(rightGroupRef.current, rightRegistryKey, `레그라 서랍${drawerTier} 측판 우`);
+  });
+
   if (hideAccessories) return null;
   if (viewMode === '2D' && view2DDirection === 'top') return null;
 
   // 좌우 미러링은 group scale로 처리. scene은 인스턴스별 경량 clone (엣지/스냅박스는 템플릿에서 이미 생성됨).
   return (
     <>
-      <group position={leftPos} scale={[GLTF_SCALE, GLTF_SCALE, GLTF_SCALE]}>
+      <group ref={leftGroupRef} position={leftPos} scale={[GLTF_SCALE, GLTF_SCALE, GLTF_SCALE]}>
         <primitive object={leftScene} />
       </group>
-      <group position={rightPos} scale={[-GLTF_SCALE, GLTF_SCALE, GLTF_SCALE]}>
+      <group ref={rightGroupRef} position={rightPos} scale={[-GLTF_SCALE, GLTF_SCALE, GLTF_SCALE]}>
         <primitive object={rightScene} />
       </group>
     </>

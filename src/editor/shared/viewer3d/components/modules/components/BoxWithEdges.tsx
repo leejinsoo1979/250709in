@@ -11,8 +11,100 @@ import { useTexture } from '@react-three/drei';
 import { isPanelKeyExcluded, useExcludedPanelsStore } from '../../../context/ExcludedPanelsContext';
 import { useFurnitureGhostContext } from '../../../context/FurnitureGhostContext';
 import { NativeLine } from '../../elements/NativeLine';
+import {
+  getPanelAssemblySequence,
+  getPanelSimulationLayoutKey,
+  PANEL_SIMULATION_ASSEMBLY_DELAY_STEP,
+  resolvePanelSimulationTarget
+} from '../../../utils/panelSimulationMotion';
+import { getPanelSimulationSourceRegistryVersion, removePanelSimulationSource, updatePanelSimulationSource } from '../../../utils/panelSimulationRegistry';
 
 const MIN_BOX_GEOMETRY_SIZE = 0.001;
+const PANEL_SIMULATION_DURATION = 0.92;
+const PANEL_SIMULATION_DELAY_STEP = 0.0045;
+const panelSimulationSlots = new Map<string, number>();
+
+const getPanelSimulationSlot = (key: string) => {
+  const existing = panelSimulationSlots.get(key);
+  if (existing !== undefined) return existing;
+  const next = panelSimulationSlots.size;
+  panelSimulationSlots.set(key, next);
+  return next;
+};
+
+const easeInOutCubic = (t: number) => {
+  const clamped = Math.max(0, Math.min(1, t));
+  return clamped < 0.5
+    ? 4 * clamped * clamped * clamped
+    : 1 - Math.pow(-2 * clamped + 2, 3) / 2;
+};
+
+const getAssemblyStage = (panelName?: string, isClothingRod = false) => {
+  const name = panelName || '';
+  if (isClothingRod || name.includes('옷봉')) return 4;
+  if (name.includes('걸레받이') || name.includes('걸래받이') || name.includes('상단몰딩') || name === 'top-frame' || name === 'base-frame') return 5;
+  if (name.includes('도어')) return 6;
+  if (name.includes('(하)') || name.includes('하부')) return 1;
+  if (name.includes('(상)') || name.includes('상부')) return 2;
+  return 3;
+};
+
+const getAssemblySequence = (
+  furnitureId: string | undefined,
+  panelName: string | undefined,
+  isClothingRod: boolean,
+  localPosition: [number, number, number],
+  parent?: THREE.Object3D | null
+) => {
+  const modules = useFurnitureStore.getState().placedModules;
+  const sortedIds = [...modules]
+    .sort((a, b) => (a.position?.x || 0) - (b.position?.x || 0))
+    .map(module => module.id);
+  const furnitureIndex = furnitureId ? Math.max(0, sortedIds.indexOf(furnitureId)) : 0;
+  const stage = getAssemblyStage(panelName, isClothingRod);
+  const worldPosition = new THREE.Vector3(localPosition[0], localPosition[1], localPosition[2]);
+  if (parent) parent.localToWorld(worldPosition);
+  const localOrder = Math.max(0, Math.round((worldPosition.x + 50) * 0.18 + (worldPosition.y + 20) * 0.08));
+  return furnitureIndex * 120 + stage * 16 + localOrder;
+};
+
+const getFlatPanelAxes = (dims: [number, number, number]) => {
+  const axes = [
+    { name: 'x' as const, size: dims[0], index: 0 },
+    { name: 'y' as const, size: dims[1], index: 1 },
+    { name: 'z' as const, size: dims[2], index: 2 },
+  ].sort((a, b) => a.size - b.size);
+  const thicknessAxis = axes[0];
+  const faceAxes = axes.slice(1).sort((a, b) => a.size - b.size);
+  return {
+    thicknessAxis,
+    widthAxis: faceAxes[0],
+    lengthAxis: faceAxes[1],
+  };
+};
+
+const buildFlatPanelQuaternion = (dims: [number, number, number], rotationZ: number) => {
+  const { thicknessAxis, widthAxis, lengthAxis } = getFlatPanelAxes(dims);
+  const localBasis = {
+    x: new THREE.Vector3(),
+    y: new THREE.Vector3(),
+    z: new THREE.Vector3(),
+  };
+  const widthVector = new THREE.Vector3(1, 0, 0).applyAxisAngle(new THREE.Vector3(0, 1, 0), rotationZ);
+  const lengthVector = new THREE.Vector3(0, 0, 1).applyAxisAngle(new THREE.Vector3(0, 1, 0), rotationZ);
+
+  localBasis[thicknessAxis.name].set(0, 1, 0);
+  localBasis[widthAxis.name].copy(widthVector);
+  localBasis[lengthAxis.name].copy(lengthVector);
+
+  const matrix = new THREE.Matrix4().makeBasis(localBasis.x, localBasis.y, localBasis.z);
+  if (matrix.determinant() < 0) {
+    localBasis[lengthAxis.name].multiplyScalar(-1);
+    matrix.makeBasis(localBasis.x, localBasis.y, localBasis.z);
+  }
+
+  return new THREE.Quaternion().setFromRotationMatrix(matrix);
+};
 
 const sanitizeBoxGeometrySize = (value: number): number => {
   if (!Number.isFinite(value) || value <= 0) {
@@ -93,7 +185,7 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
   ], [args[0], args[1], args[2]]);
 
   const { viewMode, plainMaterial: isPlainMaterial } = useSpace3DView();
-  const { view2DDirection, shadowEnabled, edgeOutlineEnabled, isLiveDimensionMode, isTapeMeasureMode, liveDimensionSelectedKey } = useUIStore(); // view2DDirection, shadowEnabled, edgeOutlineEnabled 추가
+  const { view2DDirection, shadowEnabled, edgeOutlineEnabled, isLiveDimensionMode, isTapeMeasureMode, liveDimensionSelectedKey, panelSimulationPhase, panelSimulationRevision, panelSimulationLayouts } = useUIStore(); // view2DDirection, shadowEnabled, edgeOutlineEnabled 추가
   const { theme } = useViewerTheme();
   const { view2DTheme } = useUIStore();
   const { theme: appTheme } = useTheme();
@@ -106,7 +198,32 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
   // NOTE: React hook (useExcludedPanelsStore) 대신 useFrame으로 폴링 — R3F Canvas는 별도 React reconciler를 사용하므로
   // DOM 쪽 Zustand 구독이 R3F 내부 컴포넌트 리렌더를 트리거하지 못함
   const groupRef = useRef<THREE.Group>(null);
+  const simulationStartTimeRef = React.useRef(0);
+  const simulationRevisionRef = React.useRef(panelSimulationRevision);
+  const assemblySourceSignatureRef = React.useRef<string | null>(null);
+  const simulationFrameStateRef = React.useRef<{
+    signature: string;
+    sequenceIndex: number;
+    startPosition: THREE.Vector3;
+    startQuaternion: THREE.Quaternion;
+    startScale: THREE.Vector3;
+    targetPosition: THREE.Vector3;
+    targetQuaternion: THREE.Quaternion;
+    targetScale: THREE.Vector3;
+    hasLayout: boolean;
+    hasSimulationLayouts: boolean;
+  } | null>(null);
   const compositeKey = furnitureId && panelName ? `${furnitureId}::${panelName}` : null;
+  const panelSimulationLayoutCount = React.useMemo(
+    () => Object.keys(panelSimulationLayouts).length,
+    [panelSimulationLayouts]
+  );
+  React.useEffect(() => {
+    return () => {
+      if (compositeKey) removePanelSimulationSource(compositeKey);
+      assemblySourceSignatureRef.current = null;
+    };
+  }, [compositeKey]);
   const liveDimensionSelectedFurnitureId = liveDimensionSelectedKey?.split('::')[0] ?? null;
   const isLiveDimensionActive = viewMode === '3D' && isLiveDimensionMode && !!liveDimensionSelectedKey && !!compositeKey && liveDimensionSelectedFurnitureId === furnitureId;
   const isLiveDimensionSelected = !!(isLiveDimensionActive && liveDimensionSelectedKey === compositeKey);
@@ -119,16 +236,147 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
   );
   useFrame(() => {
     if (!groupRef.current) return;
+    if (groupRef.current.visible === false && !hiddenByViewMode) {
+      groupRef.current.visible = true;
+    }
     if (hiddenByViewMode) {
       groupRef.current.visible = false;
       return;
     }
-    if (!compositeKey) return;
-    const { excludedKeys } = useExcludedPanelsStore.getState();
-    const shouldHide = isPanelKeyExcluded(excludedKeys, furnitureId, panelName);
-    if (groupRef.current.visible === shouldHide) {
-      groupRef.current.visible = !shouldHide;
+
+    let shouldHide = false;
+    if (compositeKey) {
+      const { excludedKeys } = useExcludedPanelsStore.getState();
+      shouldHide = isPanelKeyExcluded(excludedKeys, furnitureId, panelName);
+      if (groupRef.current.visible === shouldHide) {
+        groupRef.current.visible = !shouldHide;
+      }
     }
+
+    if (viewMode !== '3D') {
+      groupRef.current.position.set(position[0], position[1], position[2]);
+      groupRef.current.quaternion.identity();
+      groupRef.current.scale.set(1, 1, 1);
+      return;
+    }
+
+    if (shouldHide || !compositeKey || !furnitureId || !panelName) return;
+
+    if (simulationRevisionRef.current !== panelSimulationRevision) {
+      simulationRevisionRef.current = panelSimulationRevision;
+      simulationStartTimeRef.current = performance.now() / 1000;
+      simulationFrameStateRef.current = null;
+    }
+
+    if (panelSimulationRevision <= 0) return;
+
+    const group = groupRef.current;
+    const parent = group.parent;
+    if (isClothingRod) {
+      const sourceKey = `accessory::${furnitureId}::${panelName}`;
+      const signature = `${getPanelSimulationSourceRegistryVersion()}:${panelSimulationRevision}:${panelSimulationPhase}:${sourceKey}:${safeArgs.join(',')}`;
+      if (assemblySourceSignatureRef.current !== signature) {
+        updatePanelSimulationSource({
+          key: sourceKey,
+          furnitureId,
+          panelName,
+          args: safeArgs,
+          object: group,
+          material: processedMaterial || material || undefined,
+          assemblyOnly: true,
+        });
+        assemblySourceSignatureRef.current = signature;
+      }
+      group.visible = false;
+      return;
+    }
+    const signature = `${panelSimulationRevision}:${panelSimulationPhase}:${compositeKey}:${safeArgs.join(',')}:${panelSimulationLayoutCount}`;
+    let frameState = simulationFrameStateRef.current;
+    if (!frameState || frameState.signature !== signature) {
+      const simulationTarget = resolvePanelSimulationTarget(panelSimulationLayouts, furnitureId, panelName, safeArgs);
+      const layoutKey = simulationTarget?.key || getPanelSimulationLayoutKey(panelSimulationLayouts, furnitureId, panelName) || compositeKey;
+      const slot = getPanelSimulationSlot(layoutKey);
+      const simulationLayout = simulationTarget?.layout;
+      const hasSimulationLayouts = panelSimulationLayoutCount > 0;
+      if (simulationLayout && layoutKey) {
+        removePanelSimulationSource(layoutKey);
+      }
+
+      const shouldUseLayoutTarget = panelSimulationPhase === 'layout' && !!simulationLayout;
+      const targetScaleVector = new THREE.Vector3(1, 1, 1);
+      if (shouldUseLayoutTarget && simulationLayout) {
+        const { thicknessAxis, widthAxis, lengthAxis } = getFlatPanelAxes(safeArgs);
+        targetScaleVector.setComponent(thicknessAxis.index, simulationLayout.scale);
+        targetScaleVector.setComponent(widthAxis.index, simulationLayout.widthWorld / Math.max(safeArgs[widthAxis.index], MIN_BOX_GEOMETRY_SIZE));
+        targetScaleVector.setComponent(lengthAxis.index, simulationLayout.heightWorld / Math.max(safeArgs[lengthAxis.index], MIN_BOX_GEOMETRY_SIZE));
+      }
+
+      let targetPosition = new THREE.Vector3(position[0], position[1], position[2]);
+      let targetQuaternion = new THREE.Quaternion();
+      if (shouldUseLayoutTarget && simulationLayout) {
+        const thickness = Math.min(safeArgs[0], safeArgs[1], safeArgs[2]);
+        targetPosition = new THREE.Vector3(
+          simulationLayout.worldX,
+          simulationLayout.worldY + thickness * simulationLayout.scale * 0.5 + 0.03,
+          simulationLayout.worldZ
+        );
+        targetQuaternion = buildFlatPanelQuaternion(safeArgs, simulationLayout.rotationZ);
+      }
+
+      if (shouldUseLayoutTarget && parent) {
+        parent.updateWorldMatrix(true, false);
+        parent.worldToLocal(targetPosition);
+
+        const parentWorldQuaternion = new THREE.Quaternion();
+        parent.getWorldQuaternion(parentWorldQuaternion);
+        targetQuaternion.premultiply(parentWorldQuaternion.invert());
+      }
+
+      const sequenceIndex = shouldUseLayoutTarget && simulationLayout
+        ? (simulationLayout.order ?? slot)
+        : getPanelAssemblySequence(furnitureId, panelName, position, parent, isClothingRod);
+
+      frameState = {
+        signature,
+        sequenceIndex,
+        startPosition: group.position.clone(),
+        startQuaternion: group.quaternion.clone(),
+        startScale: group.scale.clone(),
+        targetPosition,
+        targetQuaternion,
+        targetScale: targetScaleVector,
+        hasLayout: !!simulationLayout,
+        hasSimulationLayouts,
+      };
+      simulationFrameStateRef.current = frameState;
+    }
+
+    if (!frameState.hasLayout) {
+      group.visible = true;
+      group.position.set(position[0], position[1], position[2]);
+      group.quaternion.identity();
+      group.scale.set(1, 1, 1);
+      if (frameState.hasSimulationLayouts && panelSimulationPhase === 'layout' && import.meta.env.DEV) {
+        console.warn('[PanelSimulation] layout target missing, keeping original visible:', `${furnitureId}::${panelName}`);
+      }
+      return;
+    }
+    if (group.visible === false) {
+      group.visible = true;
+    }
+    const cameraSettleDelay = panelSimulationPhase === 'layout' ? 1.05 : 1.35;
+    const elapsed = performance.now() / 1000 - simulationStartTimeRef.current - cameraSettleDelay - frameState.sequenceIndex * (panelSimulationPhase === 'layout' ? PANEL_SIMULATION_DELAY_STEP : PANEL_SIMULATION_ASSEMBLY_DELAY_STEP);
+    if (elapsed < 0) {
+      group.visible = true;
+      return;
+    }
+    if (group.visible === false) {
+      group.visible = true;
+    }
+    const progress = easeInOutCubic(elapsed / PANEL_SIMULATION_DURATION);
+    group.position.copy(frameState.startPosition).lerp(frameState.targetPosition, progress);
+    group.quaternion.copy(frameState.startQuaternion).slerp(frameState.targetQuaternion, progress);
+    group.scale.copy(frameState.startScale).lerp(frameState.targetScale, progress);
   });
 
   // 전역 스토어에서 직접 편집 상태 감지 (Context bridge 문제 회피)
@@ -1246,6 +1494,7 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
             widthMm: Math.round(safeArgs[0] / 0.01),
             heightMm: Math.round(safeArgs[1] / 0.01),
             depthMm: Math.round(safeArgs[2] / 0.01),
+            useObjectBounds: true,
           },
           ...(liveDimensionNotchLines ? { liveDimensionNotchLines } : {}),
           ...(liveDimensionSideNotches ? { liveDimensionSideNotches } : {}),

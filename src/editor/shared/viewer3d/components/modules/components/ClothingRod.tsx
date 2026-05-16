@@ -41,9 +41,10 @@ export const ClothingRod: React.FC<ClothingRodProps> = ({
   addFrontFillLight,
   furnitureId,
 }) => {
-  const { view2DTheme, view2DDirection, highlightedPanel } = useUIStore();
+  const { view2DTheme, view2DDirection, highlightedPanel, panelSimulationPhase, panelSimulationViewBackup } = useUIStore();
   const ctx = useSpace3DView();
   const viewMode = ctx.viewMode;
+  const isPanelSimulationPresentation = viewMode === '3D' && (panelSimulationPhase === 'layout' || !!panelSimulationViewBackup);
 
   // 패널 하이라이팅이 활성화되어 있으면 옷봉을 투명하게 처리
   const shouldDim = highlightedPanel && furnitureId && highlightedPanel.startsWith(`${furnitureId}-`);
@@ -126,7 +127,7 @@ export const ClothingRod: React.FC<ClothingRodProps> = ({
     }
   }, [viewMode, addFrontFillLight, yPosition, zPosition]);
 
-  const shouldAddFillLight = viewMode === '3D' && (addFrontFillLight ?? yPosition < 0);
+  const shouldAddFillLight = viewMode === '3D' && (addFrontFillLight ?? yPosition < 0) && !isPanelSimulationPresentation;
 
   // 숨김 조건이면 렌더링하지 않음 (모든 hook 이후)
   if (shouldHide) return null;
@@ -158,6 +159,8 @@ export const ClothingRod: React.FC<ClothingRodProps> = ({
         isDragging={isDragging}
         isEditMode={isEditMode}
         isClothingRod={true}
+        furnitureId={furnitureId}
+        panelName="옷봉 좌측브라켓"
       />
 
       {/* 우측 브라켓 */}
@@ -169,6 +172,8 @@ export const ClothingRod: React.FC<ClothingRodProps> = ({
         isDragging={isDragging}
         isEditMode={isEditMode}
         isClothingRod={true}
+        furnitureId={furnitureId}
+        panelName="옷봉 우측브라켓"
       />
 
       {/* 옷봉 렌더링: 2D는 가로선 3줄 + 중간선, 3D는 박스 */}
@@ -236,6 +241,8 @@ export const ClothingRod: React.FC<ClothingRodProps> = ({
           isDragging={isDragging}
           isEditMode={isEditMode}
           isClothingRod={true}
+          furnitureId={furnitureId}
+          panelName="옷봉"
         />
       )}
     </group>

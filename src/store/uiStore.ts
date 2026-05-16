@@ -30,6 +30,85 @@ export interface MeasureLine {
   viewDirection?: View2DDirection; // 측정한 시점 (해당 시점에서만 표시)
 }
 
+export interface PanelSimulationLayout {
+  worldX: number;
+  worldY: number;
+  worldZ: number;
+  rotationZ: number;
+  scale: number;
+  widthWorld: number;
+  heightWorld: number;
+  order: number;
+  sheetIndex: number;
+}
+
+export interface PanelSimulationSheetLayout {
+  centerX: number;
+  centerY: number;
+  centerZ: number;
+  sheetWidthWorld: number;
+  sheetHeightWorld: number;
+  sheetGapWorld: number;
+  sheetCount: number;
+  sheets?: Array<{
+    centerX: number;
+    widthWorld: number;
+    heightWorld: number;
+    label?: string;
+    material?: string;
+    thickness?: number;
+    widthMm?: number;
+    heightMm?: number;
+  }>;
+  panels?: Array<{
+    key: string;
+    label: string;
+    material?: string;
+    worldX: number;
+    worldY: number;
+    worldZ: number;
+    widthWorld: number;
+    heightWorld: number;
+    thicknessWorld: number;
+    rotationZ: number;
+    sheetIndex: number;
+    order: number;
+  }>;
+}
+
+export interface PanelSimulationStockSummary {
+  label?: string;
+  material: string;
+  thickness?: number;
+  width: number;
+  height: number;
+  count: number;
+}
+
+export interface PanelSimulationMaterialSummary {
+  material: string;
+  count: number;
+}
+
+export interface PanelSimulationSummary {
+  revision: number;
+  sheetCount: number;
+  panelCount: number;
+  stockSpecs: PanelSimulationStockSummary[];
+  materialCounts: PanelSimulationMaterialSummary[];
+}
+
+const createPanelSimulationFallbackSheet = (): PanelSimulationSheetLayout => ({
+  centerX: 0,
+  centerY: 15,
+  centerZ: 0,
+  sheetWidthWorld: 7.32,
+  sheetHeightWorld: 14.64,
+  sheetGapWorld: 1.2,
+  sheetCount: 1,
+  sheets: [{ centerX: 0, widthWorld: 7.32, heightWorld: 14.64 }],
+});
+
 // UI 상태 타입
 interface UIState {
   // 뷰어 모드 상태
@@ -192,6 +271,28 @@ interface UIState {
   isTapeMeasureMode: boolean;
   toggleTapeMeasureMode: () => void;
   setTapeMeasureMode: (enabled: boolean) => void;
+
+  // 3D 패널 시뮬레이션 모드
+  panelSimulationPhase: 'assembled' | 'layout';
+  panelSimulationRevision: number;
+  panelSimulationLayouts: Record<string, PanelSimulationLayout>;
+  panelSimulationSheet: PanelSimulationSheetLayout | null;
+  panelSimulationSummary: PanelSimulationSummary | null;
+  panelSimulationViewBackup: {
+    showFurnitureEditHandles: boolean;
+    showDimensions: boolean;
+    showDimensionsText: boolean;
+    showGuides: boolean;
+    showAxis: boolean;
+  } | null;
+  togglePanelSimulation: () => void;
+  setPanelSimulationPhase: (phase: 'assembled' | 'layout') => void;
+  setPanelSimulationLayouts: (
+    layouts: Record<string, PanelSimulationLayout>,
+    sheet: PanelSimulationSheetLayout | null
+  ) => void;
+  setPanelSimulationSummary: (summary: PanelSimulationSummary | null) => void;
+  completePanelSimulationAssembly: (revision: number) => void;
 
   // 지우개 모드 상태
   isEraserMode: boolean;
@@ -404,6 +505,12 @@ const initialUIState = {
   isLiveDimensionMode: false,  // 기본값: 3D 라이브 치수 측정 비활성
   liveDimensionSelectedKey: null,
   isTapeMeasureMode: false,  // 기본값: 3D 줄자 모드 비활성
+  panelSimulationPhase: 'assembled' as const,  // 기본값: 가구 조립 상태
+  panelSimulationRevision: 0,
+  panelSimulationLayouts: {},
+  panelSimulationSheet: null,
+  panelSimulationSummary: null,
+  panelSimulationViewBackup: null,
   isEraserMode: false,  // 기본값: 지우개 모드 비활성화
   hoveredMeasureLineId: null,  // 기본값: 호버 중인 측정선 없음
   equalDistribution: false,  // 기본값: 균등배치 비활성화
@@ -483,6 +590,11 @@ export const useUIStore = create<UIState>()(
           } : {
             isLiveDimensionMode: false,
             isTapeMeasureMode: false,
+            panelSimulationPhase: 'assembled',
+            panelSimulationRevision: state.panelSimulationRevision + 1,
+            panelSimulationLayouts: {},
+            panelSimulationSheet: null,
+            panelSimulationViewBackup: null,
             liveDimensionSelectedKey: null,
           })
         })),
@@ -902,6 +1014,103 @@ export const useUIStore = create<UIState>()(
           ...(enabled ? {
             showFurniture: true,
           } : {}),
+        }),
+
+      togglePanelSimulation: () =>
+        set((state) => {
+          const nextPhase = state.panelSimulationPhase === 'layout' ? 'assembled' : 'layout';
+          const backup = state.panelSimulationViewBackup;
+          const nextRevision = state.panelSimulationRevision + 1;
+
+          if (nextPhase === 'assembled' && backup) {
+            window.setTimeout(() => {
+              const latest = get();
+              if (latest.panelSimulationPhase !== 'assembled' || latest.panelSimulationRevision !== nextRevision) {
+                return;
+              }
+              get().completePanelSimulationAssembly(nextRevision);
+            }, 90000);
+          }
+
+          return {
+            panelSimulationPhase: nextPhase,
+            panelSimulationRevision: nextRevision,
+            panelSimulationSummary: null,
+            ...(nextPhase === 'layout' ? {
+              panelSimulationSheet: createPanelSimulationFallbackSheet(),
+              panelSimulationViewBackup: {
+                showFurnitureEditHandles: state.showFurnitureEditHandles,
+                showDimensions: state.showDimensions,
+                showDimensionsText: state.showDimensionsText,
+                showGuides: state.showGuides,
+                showAxis: state.showAxis,
+              },
+              showFurnitureEditHandles: false,
+              showDimensions: false,
+              showDimensionsText: false,
+              showGuides: false,
+              showAxis: false,
+            } : {
+              panelSimulationViewBackup: backup,
+              showFurnitureEditHandles: false,
+              showDimensions: false,
+              showDimensionsText: false,
+              showGuides: false,
+              showAxis: false,
+            }),
+            isLiveDimensionMode: false,
+            isTapeMeasureMode: false,
+            isMeasureMode: false,
+            isEraserMode: false,
+            liveDimensionSelectedKey: null,
+            measurePoints: null,
+            hoveredMeasureLineId: null,
+            viewMode: '3D',
+            showFurniture: true,
+          };
+        }),
+
+      setPanelSimulationPhase: (phase) =>
+        set((state) => ({
+          panelSimulationPhase: phase,
+          panelSimulationRevision: state.panelSimulationRevision + 1,
+          ...(phase === 'assembled' ? {
+            panelSimulationLayouts: {},
+            panelSimulationSheet: null,
+            panelSimulationViewBackup: null,
+          } : {}),
+          panelSimulationSummary: null,
+        })),
+
+      setPanelSimulationLayouts: (layouts, sheet) =>
+        set({
+          panelSimulationLayouts: layouts,
+          panelSimulationSheet: sheet,
+          panelSimulationSummary: null,
+        }),
+
+      setPanelSimulationSummary: (summary) =>
+        set({
+          panelSimulationSummary: summary,
+        }),
+
+      completePanelSimulationAssembly: (revision) =>
+        set((state) => {
+          if (state.panelSimulationPhase !== 'assembled' || state.panelSimulationRevision !== revision || !state.panelSimulationViewBackup) {
+            return {};
+          }
+          const backup = state.panelSimulationViewBackup;
+          return {
+            panelSimulationViewBackup: null,
+            panelSimulationLayouts: {},
+            panelSimulationSheet: null,
+            panelSimulationSummary: null,
+            showFurnitureEditHandles: backup.showFurnitureEditHandles,
+            showDimensions: true,
+            showDimensionsText: true,
+            showGuides: true,
+            showAxis: backup.showAxis,
+          };
         }),
 
       setLiveDimensionSelectedKey: (key) =>

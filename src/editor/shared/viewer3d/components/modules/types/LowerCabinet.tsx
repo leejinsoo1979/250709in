@@ -23,6 +23,119 @@ import { useFurnitureStore } from '@/store/core/furnitureStore';
 import { resolveShelfFrontInsetMm } from '@/editor/shared/utils/shelfInsetCalculator';
 import { getTopDownStoneFrontVisibleHeightMm, resolveTopDown2TierGeometry } from '@/editor/shared/utils/topDownCabinetGeometry';
 import { isPanelKeyExcluded, useExcludedPanelsStore } from '../../../context/ExcludedPanelsContext';
+import {
+  buildFlatPanelQuaternion,
+  easeInOutCubic,
+  getFlatPanelAxes,
+  getPanelAssemblySequence,
+  getPanelSimulationLayoutKey,
+  MIN_SIMULATION_BOX_SIZE,
+  PANEL_SIMULATION_ASSEMBLY_DELAY_STEP,
+  PANEL_SIMULATION_DELAY_STEP,
+  PANEL_SIMULATION_DURATION,
+  resolvePanelSimulationTarget
+} from '../../../utils/panelSimulationMotion';
+
+const applyLowerPanelSimulation = ({
+  group,
+  position,
+  args,
+  furnitureId,
+  panelName,
+  viewMode,
+  panelSimulationPhase,
+  panelSimulationRevision,
+  panelSimulationLayouts,
+  simulationRevisionRef,
+  simulationStartTimeRef,
+  material,
+}: {
+  group: THREE.Group;
+  position: [number, number, number];
+  args: [number, number, number];
+  furnitureId?: string;
+  panelName?: string;
+  viewMode: '2D' | '3D';
+  panelSimulationPhase: 'assembled' | 'layout';
+  panelSimulationRevision: number;
+  panelSimulationLayouts: Record<string, any>;
+  simulationRevisionRef: React.MutableRefObject<number>;
+  simulationStartTimeRef: React.MutableRefObject<number>;
+  material?: THREE.Material;
+}) => {
+  if (viewMode !== '3D' || !furnitureId || !panelName) {
+    group.position.set(position[0], position[1], position[2]);
+    group.quaternion.identity();
+    group.scale.set(1, 1, 1);
+    return;
+  }
+
+  if (simulationRevisionRef.current !== panelSimulationRevision) {
+    simulationRevisionRef.current = panelSimulationRevision;
+    simulationStartTimeRef.current = performance.now() / 1000;
+  }
+
+  if (panelSimulationRevision <= 0) return;
+
+  const safeArgs = args.map(value => Math.max(MIN_SIMULATION_BOX_SIZE, value)) as [number, number, number];
+  const simulationTarget = resolvePanelSimulationTarget(panelSimulationLayouts, furnitureId, panelName, safeArgs);
+  const simulationLayout = simulationTarget?.layout;
+  const hasSimulationLayouts = Object.keys(panelSimulationLayouts).length > 0;
+  if (!simulationLayout) {
+    group.visible = true;
+    group.position.set(position[0], position[1], position[2]);
+    group.quaternion.identity();
+    group.scale.set(1, 1, 1);
+    if (hasSimulationLayouts && panelSimulationPhase === 'layout' && import.meta.env.DEV) {
+      console.warn('[PanelSimulation] lower panel layout target missing, keeping original visible:', `${furnitureId}::${panelName}`);
+    }
+    return;
+  }
+  group.visible = true;
+
+  const layoutKey = simulationTarget?.key || getPanelSimulationLayoutKey(panelSimulationLayouts, furnitureId, panelName) || `${furnitureId}::${panelName}`;
+  const slot = layoutKey ? 0 : 0;
+  const { thicknessAxis, widthAxis, lengthAxis } = getFlatPanelAxes(safeArgs);
+  const targetScaleVector = new THREE.Vector3(1, 1, 1);
+  if (panelSimulationPhase === 'layout') {
+    targetScaleVector.setComponent(thicknessAxis.index, simulationLayout.scale);
+    targetScaleVector.setComponent(widthAxis.index, simulationLayout.widthWorld / Math.max(safeArgs[widthAxis.index], MIN_SIMULATION_BOX_SIZE));
+    targetScaleVector.setComponent(lengthAxis.index, simulationLayout.heightWorld / Math.max(safeArgs[lengthAxis.index], MIN_SIMULATION_BOX_SIZE));
+  }
+
+  let targetPosition = new THREE.Vector3(position[0], position[1], position[2]);
+  let targetQuaternion = new THREE.Quaternion();
+  if (panelSimulationPhase === 'layout') {
+    const thickness = Math.min(safeArgs[0], safeArgs[1], safeArgs[2]);
+    targetPosition = new THREE.Vector3(
+      simulationLayout.worldX,
+      simulationLayout.worldY + thickness * simulationLayout.scale * 0.5 + 0.03,
+      simulationLayout.worldZ
+    );
+    targetQuaternion = buildFlatPanelQuaternion(safeArgs, simulationLayout.rotationZ);
+    const parent = group.parent;
+    if (parent) {
+      parent.updateWorldMatrix(true, false);
+      parent.worldToLocal(targetPosition);
+      const parentWorldQuaternion = new THREE.Quaternion();
+      parent.getWorldQuaternion(parentWorldQuaternion);
+      targetQuaternion.premultiply(parentWorldQuaternion.invert());
+    }
+  }
+
+  const sequenceIndex = panelSimulationPhase === 'layout'
+    ? (simulationLayout.order ?? slot)
+    : getPanelAssemblySequence(furnitureId, panelName, position, group.parent, false);
+  const cameraSettleDelay = panelSimulationPhase === 'layout' ? 1.05 : 1.35;
+  const elapsed = performance.now() / 1000 - simulationStartTimeRef.current - cameraSettleDelay - sequenceIndex * (panelSimulationPhase === 'layout' ? PANEL_SIMULATION_DELAY_STEP : PANEL_SIMULATION_ASSEMBLY_DELAY_STEP);
+  if (elapsed < 0) {
+    return;
+  }
+  const progress = easeInOutCubic(elapsed / PANEL_SIMULATION_DURATION);
+  group.position.lerp(targetPosition, progress * 0.18);
+  group.quaternion.slerp(targetQuaternion, progress * 0.18);
+  group.scale.lerp(targetScaleVector, progress * 0.18);
+};
 
 /**
  * 졸리컷 수평 상판 — 앞면 하단 모서리가 45도로 가공된 판
@@ -98,6 +211,10 @@ const JollyCutHorizontalPlate: React.FC<{
   const lineColor = renderMode === 'wireframe' ? '#ffffff' : '#555555';
   const groupRef = useRef<THREE.Group>(null);
   const compositeKey = furnitureId && panelName ? `${furnitureId}::${panelName}` : null;
+  const { viewMode } = useSpace3DView();
+  const { panelSimulationPhase, panelSimulationRevision, panelSimulationLayouts } = useUIStore();
+  const simulationRevisionRef = useRef(panelSimulationRevision);
+  const simulationStartTimeRef = useRef(0);
 
   useFrame(() => {
     if (!groupRef.current || !compositeKey) return;
@@ -106,6 +223,21 @@ const JollyCutHorizontalPlate: React.FC<{
     if (groupRef.current.visible === shouldHide) {
       groupRef.current.visible = !shouldHide;
     }
+    if (shouldHide) return;
+    applyLowerPanelSimulation({
+      group: groupRef.current,
+      position,
+      args: [width, t, d],
+      furnitureId,
+      panelName,
+      viewMode,
+      panelSimulationPhase,
+      panelSimulationRevision,
+      panelSimulationLayouts,
+      simulationRevisionRef,
+      simulationStartTimeRef,
+      material,
+    });
   });
 
   return (
@@ -198,6 +330,10 @@ const JollyCutVerticalPlate: React.FC<{
   const lineColor = renderMode === 'wireframe' ? '#ffffff' : '#555555';
   const groupRef = useRef<THREE.Group>(null);
   const compositeKey = furnitureId && panelName ? `${furnitureId}::${panelName}` : null;
+  const { viewMode } = useSpace3DView();
+  const { panelSimulationPhase, panelSimulationRevision, panelSimulationLayouts } = useUIStore();
+  const simulationRevisionRef = useRef(panelSimulationRevision);
+  const simulationStartTimeRef = useRef(0);
 
   useFrame(() => {
     if (!groupRef.current || !compositeKey) return;
@@ -206,6 +342,21 @@ const JollyCutVerticalPlate: React.FC<{
     if (groupRef.current.visible === shouldHide) {
       groupRef.current.visible = !shouldHide;
     }
+    if (shouldHide) return;
+    applyLowerPanelSimulation({
+      group: groupRef.current,
+      position,
+      args: [width, h, t],
+      furnitureId,
+      panelName,
+      viewMode,
+      panelSimulationPhase,
+      panelSimulationRevision,
+      panelSimulationLayouts,
+      simulationRevisionRef,
+      simulationStartTimeRef,
+      material,
+    });
   });
 
   return (
@@ -473,6 +624,7 @@ const InductionDrawerAnimated: React.FC<InductionDrawerAnimatedProps> = ({
             drawerFrontZ={drawerFrontZ}
             sidePanelInnerX={mmToThreeUnits(widthMm / 2 - basicThicknessMm)}
             renderMode={renderMode}
+            furnitureId={placedFurnitureId}
           />
           {/* 2단 서랍 레그라 측판 (GLB 모델) */}
           <LegraSideRail
@@ -483,6 +635,7 @@ const InductionDrawerAnimated: React.FC<InductionDrawerAnimatedProps> = ({
             drawerFrontZ={drawerFrontZ}
             sidePanelInnerX={mmToThreeUnits(widthMm / 2 - basicThicknessMm)}
             renderMode={renderMode}
+            furnitureId={placedFurnitureId}
           />
         </animated.group>
       )}
@@ -889,6 +1042,7 @@ const TouchDrawerAnimated: React.FC<TouchDrawerAnimatedProps> = ({
               maidaHeightMm={maidas[d.tier - 1]?.height}
               legraTypeOverride={legraDrawerTypesRaw?.[d.tier - 1]}
               renderMode={renderMode}
+              furnitureId={placedFurnitureId}
             />
           </React.Fragment>
         ))}

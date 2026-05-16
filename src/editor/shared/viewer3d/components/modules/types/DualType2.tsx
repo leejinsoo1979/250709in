@@ -656,6 +656,7 @@ const DualType2: React.FC<FurnitureTypeProps> = ({
                     isEditMode={isEditMode}
                     adjustedDepthForShelves={sectionAdjustedDepth}
                     depth={currentSectionDepth}
+                    furnitureId={placedFurnitureId}
                   />
                 );
               });

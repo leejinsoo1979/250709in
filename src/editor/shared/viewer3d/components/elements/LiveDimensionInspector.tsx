@@ -283,11 +283,35 @@ const getHoverDimension = (object: THREE.Object3D): HoverDimension | null => {
   object.matrixWorld.decompose(center, quaternion, scale);
 
   if (explicit) {
-    size.set(
-      Math.max(0.001, explicit.widthMm / THREE_UNITS_TO_MM),
-      Math.max(0.001, explicit.heightMm / THREE_UNITS_TO_MM),
-      Math.max(0.001, explicit.depthMm / THREE_UNITS_TO_MM)
-    );
+    if (explicit.useObjectBounds && object instanceof THREE.Mesh && object.geometry) {
+      if (!object.geometry.boundingBox) {
+        object.geometry.computeBoundingBox();
+      }
+      const box = object.geometry.boundingBox;
+      if (!box || box.isEmpty()) return null;
+
+      const localCenter = new THREE.Vector3();
+      box.getCenter(localCenter);
+      box.getSize(size);
+      center.copy(localCenter.applyMatrix4(object.matrixWorld));
+      size.set(
+        Math.abs(size.x * scale.x),
+        Math.abs(size.y * scale.y),
+        Math.abs(size.z * scale.z)
+      );
+    } else if (Array.isArray(explicit.sizeThree) && explicit.sizeThree.length === 3) {
+      size.set(
+        Math.max(0.001, Number(explicit.sizeThree[0]) || 0),
+        Math.max(0.001, Number(explicit.sizeThree[1]) || 0),
+        Math.max(0.001, Number(explicit.sizeThree[2]) || 0)
+      );
+    } else {
+      size.set(
+        Math.max(0.001, explicit.widthMm / THREE_UNITS_TO_MM),
+        Math.max(0.001, explicit.heightMm / THREE_UNITS_TO_MM),
+        Math.max(0.001, explicit.depthMm / THREE_UNITS_TO_MM)
+      );
+    }
   } else if (object instanceof THREE.Mesh && object.geometry) {
     if (!object.geometry.boundingBox) {
       object.geometry.computeBoundingBox();
@@ -359,6 +383,39 @@ const DimensionLabel: React.FC<{
         lineHeight: 1.2,
         whiteSpace: 'nowrap',
         boxShadow: '0 2px 8px rgba(0,0,0,0.25)',
+      }}
+    >
+      {children}
+    </div>
+  </Html>
+);
+
+const PanelCenterTitle: React.FC<{
+  position: [number, number, number];
+  children: React.ReactNode;
+}> = ({ position, children }) => (
+  <Html
+    position={position}
+    center
+    occlude={false}
+    transform={false}
+    style={{ pointerEvents: 'none' }}
+    zIndexRange={[10001, 10]}
+  >
+    <div
+      style={{
+        padding: '3px 7px',
+        borderRadius: '3px',
+        background: 'rgba(8, 15, 23, 0.74)',
+        color: '#ffffff',
+        fontSize: '11px',
+        fontWeight: 800,
+        lineHeight: 1.2,
+        whiteSpace: 'nowrap',
+        maxWidth: '180px',
+        overflow: 'hidden',
+        textOverflow: 'ellipsis',
+        boxShadow: '0 1px 5px rgba(0,0,0,0.22)',
       }}
     >
       {children}
@@ -537,6 +594,9 @@ const LiveDimensionOverlay: React.FC<{ hover: HoverDimension }> = ({ hover }) =>
           renderOrder={100002}
         />
       ))}
+      <PanelCenterTitle position={point({ [thicknessAxis]: faceDepthEdge + viewSigns[thicknessAxis] * 0.018 })}>
+        {hover.label}
+      </PanelCenterTitle>
       {sideNotchGuides.map((guide) => (
         <React.Fragment key={`side-notch-guide-${guide.index}`}>
           <Line points={guide.depthLine} {...lineProps} />
@@ -574,12 +634,6 @@ const LiveDimensionOverlay: React.FC<{ hover: HoverDimension }> = ({ hover }) =>
       </DimensionLabel>
       <DimensionLabel position={point({ [faceHorizontalAxis]: thicknessLineHorizontalOffset + viewSigns[faceHorizontalAxis] * margin * 0.14, [faceVerticalAxis]: faceVerticalEdge })} color={DIMENSION_GUIDE_COLOR}>
         {axisValues[thicknessAxis]}
-      </DimensionLabel>
-      <DimensionLabel position={[0, 0, 0]} color={inspectorColor} variant="summary">
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '3px' }}>
-          <span style={{ fontSize: '11px', fontWeight: 700, opacity: 0.92 }}>{hover.label}</span>
-          <span>{hover.widthMm} / {hover.heightMm} / {hover.depthMm}</span>
-        </div>
       </DimensionLabel>
     </group>
   );

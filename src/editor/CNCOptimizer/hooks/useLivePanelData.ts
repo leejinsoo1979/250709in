@@ -10,54 +10,14 @@ import { calculateShelfBoringPositions } from '@/domain/boring/utils/calculateSh
 import { computeFrameMergeGroups, computeStoneTopMergeGroups } from '@/editor/shared/utils/frameMergeUtils';
 import { getDefaultGrainDirection } from '@/editor/shared/utils/materialConstants';
 import { withUpperSafetyShelfRemoved } from '@/editor/shared/utils/upperSafetyShelf';
+import { toViewerPanelName } from '@/editor/shared/utils/panelNameCanonical';
 
 /**
  * CNC 패널 이름 → 3D panelName 변환
  * calculatePanelDetails와 BaseFurnitureShell/DrawerRenderer/ShelfRenderer 간 이름 차이 보정
  */
 function toMeshName(cncName: string): string {
-  if (cncName === '키큰장찬넬 전면프레임') return 'Insert전면프레임-마감판';
-  if (cncName === '키큰장찬넬 좌EP') return 'Insert좌EP-마감판';
-  if (cncName === '키큰장찬넬 우EP') return 'Insert우EP-마감판';
-  // 단일 섹션 가구: "바닥" → "바닥판" (3D BaseFurnitureShell에서 단일 섹션이면 '바닥판' 사용)
-  if (cncName === '바닥') return '바닥판';
-  // 보강대: CNC "좌(상)후면 보강대 1" → 3D "좌(상)보강대 1"
-  if (cncName.includes('후면 보강대')) return cncName.replace('후면 보강대', '보강대').trim();
-  // 하부장 노치 보강 가로전대: CNC "가로전대(1)" → 3D "가로전대(하1)"
-  const lowerStretcherMatch = cncName.match(/^가로전대\((\d+)\)$/);
-  if (lowerStretcherMatch) return `가로전대(하${lowerStretcherMatch[1]})`;
-  // 하부장 직접 다보선반: CNC/기존 저장값 "다보선반(1)" → 3D "선반 1"
-  const dowelShelfMatch = cncName.match(/^다보선반(?:\s*|\()(\d+)\)?$/);
-  if (dowelShelfMatch) return `선반 ${dowelShelfMatch[1]}`;
-  const compactShelfMatch = cncName.match(/^(\([^)]+\))?선반(\d+)$/);
-  if (compactShelfMatch) return `${compactShelfMatch[1] ?? ''}선반 ${compactShelfMatch[2]}`;
-  // 터치 레그라 마이다: CNC "터치서랍1(마이다)" → 3D "터치1단서랍(마이다)"
-  const touchLegraMaidaMatch = cncName.match(/^터치서랍(\d+)\(마이다\)$/);
-  if (touchLegraMaidaMatch) return `터치${touchLegraMaidaMatch[1]}단서랍(마이다)`;
-  // 터치 레그라 바닥판/뒷판: CNC "터치서랍1 바닥판" → 3D "터치1단서랍 바닥판"
-  const touchLegraPanelMatch = cncName.match(/^터치서랍(\d+)\s+(바닥판|뒷판)$/);
-  if (touchLegraPanelMatch) return `터치${touchLegraPanelMatch[1]}단서랍 ${touchLegraPanelMatch[2]}`;
-  // 목찬넬: 3D BoxModule은 번호 없이 렌더링하지만 CNC 목록은 (1) 번호가 붙을 수 있음
-  const woodChannelMatch = cncName.match(/^(목찬넬프레임수평|목찬넬프레임수직)(?:\(\d+\))?$/);
-  if (woodChannelMatch) return woodChannelMatch[1];
-  if (cncName === '전대') return '전대(분절후방)';
-  // 프레임: CNC "상단몰딩" / "걸래받이" → 3D "top-frame" / "base-frame"
-  if (cncName.includes('상단몰딩') || cncName.includes('상단 몰딩')) return 'top-frame';
-  if (cncName.includes('걸래받이') || cncName.includes('걸래받이')) return 'base-frame';
-  // 서라운드: CNC → 3D Room name
-  // L자 측면판/전면판 (자유배치)
-  if (cncName.includes('좌측 서라운드 측면판')) return 'left-surround-lshape-side';
-  if (cncName.includes('좌측 서라운드 전면판')) return 'left-surround-lshape-front';
-  if (cncName.includes('우측 서라운드 측면판')) return 'right-surround-lshape-side';
-  if (cncName.includes('우측 서라운드 전면판')) return 'right-surround-lshape-front';
-  // 일반 서라운드
-  if (cncName.includes('좌측 서라운드 프레임') || cncName === '좌측 서라운드') return 'left-surround-ep';
-  if (cncName.includes('우측 서라운드 프레임') || cncName === '우측 서라운드') return 'right-surround-ep';
-  if (cncName.includes('상부 서라운드 프레임')) return 'top-frame';
-  // 커튼박스 L자 프레임
-  if (cncName.includes('커튼박스 전면판')) return 'slot-cb-front-panel';
-  if (cncName.includes('커튼박스 측면판')) return 'slot-cb-border-panel';
-  return cncName;
+  return toViewerPanelName(cncName);
 }
 
 /**
@@ -811,7 +771,7 @@ export function useLivePanelData() {
         // 기존 개별 프레임 패널 제거 (상부 서라운드 프레임도 병합 상단몰딩과 중복이므로 제거)
         const framePanelIndices: number[] = [];
         allPanels.forEach((p, idx) => {
-          if (p.name.includes('상단몰딩') || p.name.includes('걸래받이') || p.name === '상부 서라운드 프레임') {
+          if (p.name.includes('상단몰딩') || p.name.includes('걸래받이') || p.name.includes('걸레받이') || p.name === '상부 서라운드 프레임') {
             framePanelIndices.push(idx);
           }
         });
@@ -835,7 +795,7 @@ export function useLivePanelData() {
               quantity: 1,
               grain: 'H' as any,
               meshName: 'top-frame',
-              furnitureId: placedModules[0]?.id || '',
+              furnitureId: group.moduleIds[0] || placedModules[0]?.id || '',
               sourceFurnitureIds: group.moduleIds,
             });
           }
@@ -854,7 +814,7 @@ export function useLivePanelData() {
               quantity: 1,
               grain: 'H' as any,
               meshName: 'base-frame',
-              furnitureId: placedModules[0]?.id || '',
+              furnitureId: group.moduleIds[0] || placedModules[0]?.id || '',
               sourceFurnitureIds: group.moduleIds,
             });
           }

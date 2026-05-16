@@ -31,6 +31,8 @@ import { useThree, useFrame } from '@react-three/fiber';
 import { Line, Html } from '@react-three/drei';
 import DimensionText from '../modules/components/DimensionText';
 import { getExcludedPanelAliases, useExcludedPanelsStore } from '../../context/ExcludedPanelsContext';
+import { getPanelSimulationLayoutKey, resolvePanelSimulationLayout } from '../../utils/panelSimulationMotion';
+import { removePanelSimulationSource, updatePanelSimulationSource } from '../../utils/panelSimulationRegistry';
 
 interface RoomProps {
   spaceInfo: SpaceInfo;
@@ -61,9 +63,90 @@ interface RoomProps {
 
 // mm를 Three.js 단위로 변환 (1mm = 0.01 Three.js units)
 const mmToThreeUnits = (mm: number): number => mm * 0.01;
+const PANEL_SIMULATION_DURATION = 1.25;
+const PANEL_SIMULATION_DELAY_STEP = 0.045;
+const MIN_SIMULATION_BOX_SIZE = 0.001;
+const panelSimulationSlots = new Map<string, number>();
 
 const END_PANEL_THICKNESS = 18; // 슬롯/프레임 계산 기준
 const endPanelRenderThickness = 18.5; // 물리적 렌더링 두께 (PET)
+
+const getPanelSimulationSlot = (key: string) => {
+  const existing = panelSimulationSlots.get(key);
+  if (existing !== undefined) return existing;
+  const next = panelSimulationSlots.size;
+  panelSimulationSlots.set(key, next);
+  return next;
+};
+
+const easeInOutCubic = (t: number) => {
+  const clamped = Math.max(0, Math.min(1, t));
+  return clamped < 0.5
+    ? 4 * clamped * clamped * clamped
+    : 1 - Math.pow(-2 * clamped + 2, 3) / 2;
+};
+
+const getFrameAssemblyStage = (panelName?: string) => {
+  const name = panelName || '';
+  if (name.includes('걸레받이') || name.includes('걸래받이') || name.includes('상단몰딩') || name === 'top-frame' || name === 'base-frame') return 5;
+  return 3;
+};
+
+const getFrameAssemblySequence = (
+  furnitureId: string | undefined,
+  panelName: string | undefined,
+  localPosition: [number, number, number],
+  parent?: THREE.Object3D | null
+) => {
+  const modules = useFurnitureStore.getState().placedModules;
+  const sortedIds = [...modules]
+    .sort((a, b) => (a.position?.x || 0) - (b.position?.x || 0))
+    .map(module => module.id);
+  const furnitureIndex = furnitureId ? Math.max(0, sortedIds.indexOf(furnitureId)) : 0;
+  const stage = getFrameAssemblyStage(panelName);
+  const worldPosition = new THREE.Vector3(localPosition[0], localPosition[1], localPosition[2]);
+  if (parent) parent.localToWorld(worldPosition);
+  const localOrder = Math.max(0, Math.round((worldPosition.x + 50) * 0.18 + (worldPosition.y + 20) * 0.08));
+  return furnitureIndex * 120 + stage * 16 + localOrder;
+};
+
+const getFlatPanelAxes = (dims: [number, number, number]) => {
+  const axes = [
+    { name: 'x' as const, size: dims[0], index: 0 },
+    { name: 'y' as const, size: dims[1], index: 1 },
+    { name: 'z' as const, size: dims[2], index: 2 },
+  ].sort((a, b) => a.size - b.size);
+  const thicknessAxis = axes[0];
+  const faceAxes = axes.slice(1).sort((a, b) => a.size - b.size);
+  return {
+    thicknessAxis,
+    widthAxis: faceAxes[0],
+    lengthAxis: faceAxes[1],
+  };
+};
+
+const buildFlatPanelQuaternion = (dims: [number, number, number], rotationZ: number) => {
+  const { thicknessAxis, widthAxis, lengthAxis } = getFlatPanelAxes(dims);
+  const localBasis = {
+    x: new THREE.Vector3(),
+    y: new THREE.Vector3(),
+    z: new THREE.Vector3(),
+  };
+  const widthVector = new THREE.Vector3(1, 0, 0).applyAxisAngle(new THREE.Vector3(0, 1, 0), rotationZ);
+  const lengthVector = new THREE.Vector3(0, 0, 1).applyAxisAngle(new THREE.Vector3(0, 1, 0), rotationZ);
+
+  localBasis[thicknessAxis.name].set(0, 1, 0);
+  localBasis[widthAxis.name].copy(widthVector);
+  localBasis[lengthAxis.name].copy(lengthVector);
+
+  const matrix = new THREE.Matrix4().makeBasis(localBasis.x, localBasis.y, localBasis.z);
+  if (matrix.determinant() < 0) {
+    localBasis[lengthAxis.name].multiplyScalar(-1);
+    matrix.makeBasis(localBasis.x, localBasis.y, localBasis.z);
+  }
+
+  return new THREE.Quaternion().setFromRotationMatrix(matrix);
+};
 
 // 전역 렌더링 카운터 (컴포넌트 마운트/언마운트에 영향받지 않음)
 if (typeof window !== 'undefined') {
@@ -248,6 +331,16 @@ const BoxWithEdges: React.FC<{
   furnitureId?: string;
   panelName?: string;
 }> = ({ args, position, material, renderMode, onBeforeRender, viewMode: viewModeProp, view2DTheme, isEndPanel = false, shadowEnabled = true, hideEdges = false, isOuterFrame = false, name, renderOrder, excludeKey, excludeKeys, furnitureId, panelName }) => {
+  const groupRef = useRef<THREE.Group>(null);
+  const { panelSimulationPhase, panelSimulationRevision, panelSimulationLayouts } = useUIStore();
+  const simulationRevisionRef = useRef(panelSimulationRevision);
+  const simulationStartTimeRef = useRef(0);
+  const cleanupKey = excludeKey || (furnitureId && panelName ? `${furnitureId}::${panelName}` : undefined);
+  useEffect(() => {
+    return () => {
+      if (cleanupKey) removePanelSimulationSource(cleanupKey);
+    };
+  }, [cleanupKey]);
 
   // CNC 옵티마이저 패널 제외 체크: excludeKey 또는 excludeKeys 중 하나라도 매칭되면 숨김
   const isExcludedByOptimizer = useExcludedPanelsStore((s) => {
@@ -287,6 +380,131 @@ const BoxWithEdges: React.FC<{
     },
   } : undefined;
 
+  useFrame(() => {
+    if (!groupRef.current) return;
+    const group = groupRef.current;
+    const separatorIndex = excludeKey?.indexOf('::') ?? -1;
+    const keyFurnitureId = separatorIndex >= 0 ? excludeKey!.slice(0, separatorIndex) : furnitureId;
+    const keyPanelName = panelName || (separatorIndex >= 0 ? excludeKey!.slice(separatorIndex + 2) : name);
+    const compositeKey = excludeKey || (keyFurnitureId && keyPanelName ? `${keyFurnitureId}::${keyPanelName}` : undefined);
+
+    if (viewMode !== '3D' || isExcludedByOptimizer || !compositeKey || !keyFurnitureId || !keyPanelName) {
+      group.position.set(position[0], position[1], position[2]);
+      group.quaternion.identity();
+      group.scale.set(1, 1, 1);
+      group.visible = !isExcludedByOptimizer;
+      return;
+    }
+
+    if (simulationRevisionRef.current !== panelSimulationRevision) {
+      simulationRevisionRef.current = panelSimulationRevision;
+      simulationStartTimeRef.current = performance.now() / 1000;
+    }
+
+    if (panelSimulationRevision <= 0) return;
+
+    const safeArgs = args.map(value => Math.max(MIN_SIMULATION_BOX_SIZE, value)) as [number, number, number];
+    const simulationLayout = resolvePanelSimulationLayout(panelSimulationLayouts, keyFurnitureId, keyPanelName);
+    const hasSimulationLayouts = Object.keys(panelSimulationLayouts).length > 0;
+    const isMergedFramePiece = keyPanelName === 'top-frame' || keyPanelName === 'base-frame';
+    if (panelSimulationPhase === 'assembled' && hasSimulationLayouts && !simulationLayout) {
+      group.visible = false;
+      if (import.meta.env.DEV) {
+        console.warn('[PanelSimulation] room frame assembly target missing, hiding original pop-in:', `${keyFurnitureId}::${keyPanelName}`);
+      }
+      return;
+    }
+    if (panelSimulationPhase === 'layout' && !simulationLayout) {
+      if (isMergedFramePiece && hasSimulationLayouts) {
+        group.visible = false;
+        return;
+      }
+      group.visible = false;
+      group.position.set(position[0], position[1], position[2]);
+      group.quaternion.identity();
+      group.scale.set(1, 1, 1);
+      if (hasSimulationLayouts && import.meta.env.DEV) {
+        console.warn('[PanelSimulation] room frame layout target missing:', `${keyFurnitureId}::${keyPanelName}`);
+      }
+      return;
+    }
+
+    if (group.visible === false) {
+      group.visible = true;
+    }
+
+    const parent = group.parent;
+    const layoutKey = getPanelSimulationLayoutKey(panelSimulationLayouts, keyFurnitureId, keyPanelName) || compositeKey;
+    const slot = getPanelSimulationSlot(layoutKey);
+    const targetScaleVector = new THREE.Vector3(1, 1, 1);
+    let targetPosition = new THREE.Vector3(position[0], position[1], position[2]);
+    let targetQuaternion = new THREE.Quaternion();
+
+    if (panelSimulationPhase === 'layout' && simulationLayout) {
+      updatePanelSimulationSource({
+        key: layoutKey,
+        furnitureId: keyFurnitureId,
+        panelName: keyPanelName,
+        args: safeArgs,
+        object: group,
+        material,
+      });
+      group.visible = false;
+      return;
+    }
+    if (panelSimulationPhase === 'assembled' && simulationLayout) {
+      updatePanelSimulationSource({
+        key: layoutKey,
+        furnitureId: keyFurnitureId,
+        panelName: keyPanelName,
+        args: safeArgs,
+        object: group,
+        material,
+      });
+      group.visible = false;
+      return;
+    }
+
+    if (panelSimulationPhase === 'layout' && simulationLayout) {
+      const { thicknessAxis, widthAxis, lengthAxis } = getFlatPanelAxes(safeArgs);
+      targetScaleVector.setComponent(thicknessAxis.index, simulationLayout.scale);
+      targetScaleVector.setComponent(widthAxis.index, simulationLayout.widthWorld / Math.max(safeArgs[widthAxis.index], MIN_SIMULATION_BOX_SIZE));
+      targetScaleVector.setComponent(lengthAxis.index, simulationLayout.heightWorld / Math.max(safeArgs[lengthAxis.index], MIN_SIMULATION_BOX_SIZE));
+      const thickness = Math.min(safeArgs[0], safeArgs[1], safeArgs[2]);
+      targetPosition = new THREE.Vector3(
+        simulationLayout.worldX,
+        simulationLayout.worldY + thickness * simulationLayout.scale * 0.5 + 0.03,
+        simulationLayout.worldZ
+      );
+      targetQuaternion = buildFlatPanelQuaternion(safeArgs, simulationLayout.rotationZ);
+
+      if (parent) {
+        parent.updateWorldMatrix(true, false);
+        parent.worldToLocal(targetPosition);
+
+        const parentWorldQuaternion = new THREE.Quaternion();
+        parent.getWorldQuaternion(parentWorldQuaternion);
+        targetQuaternion.premultiply(parentWorldQuaternion.invert());
+      }
+    }
+
+    const sequenceIndex = panelSimulationPhase === 'layout'
+      ? (simulationLayout?.order ?? slot)
+      : getFrameAssemblySequence(keyFurnitureId, keyPanelName, position, parent);
+    const elapsed = performance.now() / 1000 - simulationStartTimeRef.current - sequenceIndex * PANEL_SIMULATION_DELAY_STEP;
+    if (elapsed < 0) {
+      if (panelSimulationPhase === 'assembled' && panelSimulationRevision > 0) {
+        group.visible = false;
+      }
+      return;
+    }
+
+    const progress = easeInOutCubic(elapsed / PANEL_SIMULATION_DURATION);
+    group.position.lerp(targetPosition, progress * 0.18);
+    group.quaternion.slerp(targetQuaternion, progress * 0.18);
+    group.scale.lerp(targetScaleVector, progress * 0.18);
+  });
+
   // 메모리 누수 방지: 컴포넌트 언마운트 시 geometry 정리
   useEffect(() => {
     return () => {
@@ -296,7 +514,7 @@ const BoxWithEdges: React.FC<{
   }, [geometry, edgesGeometry]);
 
   return (
-    <group position={position} name={name} visible={!isExcludedByOptimizer} userData={liveDimensionUserData}>
+    <group ref={groupRef} position={position} name={name} visible={!isExcludedByOptimizer} userData={liveDimensionUserData}>
       {/* Solid 모드일 때만 면 렌더링 */}
       {renderMode === 'solid' && (
         <mesh
@@ -393,9 +611,10 @@ const Room: React.FC<RoomProps> = ({
   const { theme: appTheme } = useTheme(); // 앱 테마 가져오기
   const { renderMode: contextRenderMode, plainMaterial: isPlainMaterial } = useSpace3DView(); // context에서 renderMode 가져오기
   const renderMode = renderModeProp || contextRenderMode; // props로 전달된 값을 우선 사용
-  const { highlightedFrame, setHighlightedFrame, activeDroppedCeilingTab, view2DTheme, shadowEnabled, cameraMode: cameraModeFromStore, selectedSlotIndex, showBorings, isLayoutBuilderOpen, openSurroundEditPopup, activePopup, isLiveDimensionMode, isTapeMeasureMode } = useUIStore();
+  const { highlightedFrame, setHighlightedFrame, activeDroppedCeilingTab, view2DTheme, shadowEnabled, cameraMode: cameraModeFromStore, selectedSlotIndex, showBorings, isLayoutBuilderOpen, openSurroundEditPopup, activePopup, isLiveDimensionMode, isTapeMeasureMode, panelSimulationPhase, panelSimulationViewBackup } = useUIStore();
   const isLiveDimensionInspecting = viewMode === '3D' && isLiveDimensionMode;
   const isInspectionMode = viewMode === '3D' && (isLiveDimensionMode || isTapeMeasureMode);
+  const isPanelSimulationLayout = viewMode === '3D' && (panelSimulationPhase === 'layout' || !!panelSimulationViewBackup);
   const isDesignMode = isLayoutBuilderOpen || activePopup?.type === 'customizableEdit';
   const wireframeColor = view2DTheme === 'dark' ? "#ffffff" : "#333333"; // 은선모드 벽 라인 색상
   const placedModulesFromStore = useFurnitureStore((state) => state.placedModules); // 가구 정보 가져오기
@@ -1690,7 +1909,7 @@ const Room: React.FC<RoomProps> = ({
       {/* 주변 벽면들 - ShaderMaterial 기반 그라데이션 (3D perspective 모드에서만 표시) */}
       {/* 아일랜드 모드에서는 벽/천장/바닥 그라데이션 숨김 */}
       {/* console.log('🔍 Room viewMode 체크:', viewMode, typeof viewMode) */}
-      {!spaceInfo.isIsland && viewMode !== '2D' && cameraMode === 'perspective' && !isInspectionMode && (
+      {!spaceInfo.isIsland && viewMode !== '2D' && cameraMode === 'perspective' && !isInspectionMode && !isPanelSimulationLayout && (
         <>
           {/* 왼쪽 외부 벽면 - 단내림 고려 */}
           {/* 프리스탠딩이 아니고 (세미스탠딩에서 왼쪽 벽이 있거나 빌트인)일 때만 표시 */}
@@ -2766,7 +2985,7 @@ const Room: React.FC<RoomProps> = ({
           })()}
 
           {/* 바닥면 - ShaderMaterial 그라데이션 (앞쪽: 흰색, 뒤쪽: 회색) - 탑뷰/아일랜드에서는 숨김 */}
-          {!spaceInfo.isIsland && viewMode !== '2D' && renderMode === 'solid' && !isInspectionMode && (
+          {!spaceInfo.isIsland && viewMode !== '2D' && renderMode === 'solid' && !isInspectionMode && !isPanelSimulationLayout && (
               <mesh
                 position={[xOffset + width / 2, panelStartY - 0.001, extendedZOffset + extendedPanelDepth / 2]}
                 rotation={[-Math.PI / 2, 0, 0]}
@@ -3334,7 +3553,7 @@ const Room: React.FC<RoomProps> = ({
       )}
 
       {/* 공간 윤곽선: wireframe 또는 orthographic 모드에서 표시 (아일랜드 모드에서는 숨김) */}
-      {!spaceInfo.isIsland && viewMode !== '2D' && !isLiveDimensionInspecting && (renderMode === 'wireframe' || cameraMode === 'orthographic') && (() => {
+      {!spaceInfo.isIsland && viewMode !== '2D' && !isLiveDimensionInspecting && !isPanelSimulationLayout && (renderMode === 'wireframe' || cameraMode === 'orthographic') && (() => {
             const wfLineColor = theme?.mode === 'dark' ? "#ffffff" : "#333333";
             const hasLeftWall = spaceInfo.installType === 'builtin' || spaceInfo.installType === 'built-in' ||
               (spaceInfo.installType === 'semistanding' && wallConfig?.left);

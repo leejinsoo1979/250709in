@@ -452,6 +452,7 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
                   isEditMode={isEditMode}
                   adjustedDepthForShelves={currentAdjustedDepthForShelves}
                   depth={currentSectionDepth}
+                  furnitureId={placedFurnitureId}
                 />
               );
             });

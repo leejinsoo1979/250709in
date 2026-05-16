@@ -170,6 +170,7 @@ const SingleType1: React.FC<FurnitureTypeProps> = ({
           isEditMode={isEditMode}
           adjustedDepthForShelves={adjustedDepthForShelves}
           depth={depth}
+          furnitureId={placedFurnitureId}
         />
       );
     });
@@ -183,7 +184,8 @@ const SingleType1: React.FC<FurnitureTypeProps> = ({
     innerWidth,
     renderMode,
     isEditMode,
-    adjustedDepthForShelves
+    adjustedDepthForShelves,
+    placedFurnitureId
   ]);
 
   // 띄움 배치 여부 확인

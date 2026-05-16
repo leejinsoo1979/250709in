@@ -166,6 +166,8 @@ export const AdjustableFootsRenderer: React.FC<AdjustableFootsRendererProps> = (
           renderMode={renderMode}
           isHighlighted={isHighlighted}
           baseHeight={effectiveBaseHeight}
+          furnitureId={placedFurnitureId}
+          panelName={`조절발 ${index + 1}`}
         />
       ))}
     </group>

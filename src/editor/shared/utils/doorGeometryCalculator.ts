@@ -296,6 +296,12 @@ export const resolveDefaultDoorHingePositionsMm = ({
     return normalizeDoorHingePositionsMm([149, 749, doorHeightMm / 2, doorHeightMm - 700, doorHeightMm - 100], doorHeightMm)
   }
 
+  // 도어 H가 작아 749와 (H-700)이 가까워지면 중간 2점이 겹쳐 보임
+  // → H < 1500이면 3점(149/중앙/H-100)으로 기본 배치, 사용자가 필요하면 추가
+  if (doorHeightMm < 1500) {
+    return normalizeDoorHingePositionsMm([149, doorHeightMm / 2, doorHeightMm - 100], doorHeightMm)
+  }
+
   return normalizeDoorHingePositionsMm([149, 749, doorHeightMm - 700, doorHeightMm - 100], doorHeightMm)
 }
 

@@ -305,7 +305,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   useEffect(() => {
     debugLog('🎯 FurnitureItem - showFurniture:', showFurniture, 'placedModuleId:', placedModule.id, 'moduleId:', placedModule.moduleId);
   }, [showFurniture, placedModule.id, placedModule.moduleId]);
-  const { isFurnitureDragging, showDimensions, view2DTheme, selectedFurnitureId, selectedSlotIndex, showFurnitureEditHandles, isLayoutBuilderOpen, isLiveDimensionMode, isTapeMeasureMode } = useUIStore();
+  const { isFurnitureDragging, showDimensions, view2DTheme, selectedFurnitureId, selectedSlotIndex, showFurnitureEditHandles, isLayoutBuilderOpen, isLiveDimensionMode, isTapeMeasureMode, panelSimulationPhase, panelSimulationViewBackup } = useUIStore();
   const isPanelListTabActive = useUIStore(state => state.isPanelListTabActive);
   const activePopup = useUIStore(state => state.activePopup);
   const { updatePlacedModule } = useFurnitureStore();
@@ -4530,6 +4530,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
 
       {/* 편집 아이콘 표시 (하단 연필 아이콘) — 설계모드, 2D 측면/평면, 인서트 프레임에서는 숨김 */}
       {!readOnly && showFurnitureEditHandles && showDimensions && !isLayoutBuilderOpen &&
+        panelSimulationPhase !== 'layout' && !panelSimulationViewBackup &&
         !(viewMode === '3D' && (isLiveDimensionMode || isTapeMeasureMode)) &&
         !placedModule.moduleId?.includes('insert-frame') &&
         !(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right' || view2DDirection === 'top')) && (

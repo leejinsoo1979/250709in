@@ -26,14 +26,77 @@ import {
   resolveHingeOppositeDoorWidthAdjustment
 } from '@/editor/shared/utils/doorGeometryCalculator';
 import { resolveDoorHeightDimensionSides, shouldRenderDoorDimensionGuides } from '@/editor/shared/utils/doorDimensionGuides';
+import {
+  getPanelAssemblySequence,
+  getPanelSimulationLayoutKey,
+  PANEL_SIMULATION_ASSEMBLY_DELAY_STEP,
+  resolvePanelSimulationTarget
+} from '../../utils/panelSimulationMotion';
+import { getPanelSimulationSourceRegistryVersion, removePanelSimulationSource, updatePanelSimulationSource } from '../../utils/panelSimulationRegistry';
 
 const MIN_DOOR_BOX_GEOMETRY_SIZE = 0.001;
+const PANEL_SIMULATION_DURATION = 0.92;
+const PANEL_SIMULATION_DELAY_STEP = 0.0045;
+const panelSimulationSlots = new Map<string, number>();
 
 const sanitizeDoorBoxGeometrySize = (value: number): number => {
   if (!Number.isFinite(value) || value <= 0) {
     return MIN_DOOR_BOX_GEOMETRY_SIZE;
   }
   return value;
+};
+
+const getPanelSimulationSlot = (key: string) => {
+  const existing = panelSimulationSlots.get(key);
+  if (existing !== undefined) return existing;
+  const next = panelSimulationSlots.size;
+  panelSimulationSlots.set(key, next);
+  return next;
+};
+
+const easeInOutCubic = (t: number) => {
+  const clamped = Math.max(0, Math.min(1, t));
+  return clamped < 0.5
+    ? 4 * clamped * clamped * clamped
+    : 1 - Math.pow(-2 * clamped + 2, 3) / 2;
+};
+
+const getFlatPanelAxes = (dims: [number, number, number]) => {
+  const axes = [
+    { name: 'x' as const, size: dims[0], index: 0 },
+    { name: 'y' as const, size: dims[1], index: 1 },
+    { name: 'z' as const, size: dims[2], index: 2 },
+  ].sort((a, b) => a.size - b.size);
+  const thicknessAxis = axes[0];
+  const faceAxes = axes.slice(1).sort((a, b) => a.size - b.size);
+  return {
+    thicknessAxis,
+    widthAxis: faceAxes[0],
+    lengthAxis: faceAxes[1],
+  };
+};
+
+const buildFlatPanelQuaternion = (dims: [number, number, number], rotationZ: number) => {
+  const { thicknessAxis, widthAxis, lengthAxis } = getFlatPanelAxes(dims);
+  const localBasis = {
+    x: new THREE.Vector3(),
+    y: new THREE.Vector3(),
+    z: new THREE.Vector3(),
+  };
+  const widthVector = new THREE.Vector3(1, 0, 0).applyAxisAngle(new THREE.Vector3(0, 1, 0), rotationZ);
+  const lengthVector = new THREE.Vector3(0, 0, 1).applyAxisAngle(new THREE.Vector3(0, 1, 0), rotationZ);
+
+  localBasis[thicknessAxis.name].set(0, 1, 0);
+  localBasis[widthAxis.name].copy(widthVector);
+  localBasis[lengthAxis.name].copy(lengthVector);
+
+  const matrix = new THREE.Matrix4().makeBasis(localBasis.x, localBasis.y, localBasis.z);
+  if (matrix.determinant() < 0) {
+    localBasis[lengthAxis.name].multiplyScalar(-1);
+    matrix.makeBasis(localBasis.x, localBasis.y, localBasis.z);
+  }
+
+  return new THREE.Quaternion().setFromRotationMatrix(matrix);
 };
 
 // BoxWithEdges 컴포넌트 정의 (독립적인 그림자 업데이트 포함)
@@ -53,17 +116,42 @@ const BoxWithEdges: React.FC<{
   furnitureId?: string;
   isLocked?: boolean; // EP ㄷ자 프레임 잠금 도어
 }> = ({ args, position, material, renderMode, isDragging = false, isEditMode = false, onClick, onPointerOver, onPointerOut, panelName, textureUrl, panelGrainDirections, furnitureId, isLocked = false }) => {
+  const groupRef = React.useRef<THREE.Group>(null);
   const isExcludedByOptimizer = useExcludedPanelsStore((s) => {
     return isPanelKeyExcluded(s.excludedKeys, furnitureId, panelName);
   });
 
   const { theme } = useViewerTheme();
-  const { view2DTheme, shadowEnabled } = useUIStore();
+  const { view2DTheme, shadowEnabled, panelSimulationPhase, panelSimulationRevision, panelSimulationLayouts } = useUIStore();
+  const simulationRevisionRef = React.useRef(panelSimulationRevision);
+  const simulationStartTimeRef = React.useRef(0);
+  const simulationFrameStateRef = React.useRef<{
+    signature: string;
+    sequenceIndex: number;
+    startPosition: THREE.Vector3;
+    startQuaternion: THREE.Quaternion;
+    startScale: THREE.Vector3;
+    targetPosition: THREE.Vector3;
+    targetQuaternion: THREE.Quaternion;
+    targetScale: THREE.Vector3;
+    hasLayout: boolean;
+    hasSimulationLayouts: boolean;
+  } | null>(null);
+  const compositeKeyForCleanup = furnitureId && panelName ? `${furnitureId}::${panelName}` : undefined;
+  React.useEffect(() => {
+    return () => {
+      if (compositeKeyForCleanup) removePanelSimulationSource(compositeKeyForCleanup);
+    };
+  }, [compositeKeyForCleanup]);
   const safeArgs = useMemo<[number, number, number]>(() => [
     sanitizeDoorBoxGeometrySize(args[0]),
     sanitizeDoorBoxGeometrySize(args[1]),
     sanitizeDoorBoxGeometrySize(args[2]),
   ], [args[0], args[1], args[2]]);
+  const panelSimulationLayoutCount = useMemo(
+    () => Object.keys(panelSimulationLayouts).length,
+    [panelSimulationLayouts]
+  );
   const geometry = useMemo(() => new THREE.BoxGeometry(...safeArgs), [safeArgs]);
   const edgesGeometry = useMemo(() => new THREE.EdgesGeometry(geometry), [geometry]);
 
@@ -82,16 +170,144 @@ const BoxWithEdges: React.FC<{
     return '#10b981'; // 기본값 (green)
   };
 
+  useFrame(() => {
+    if (!groupRef.current) return;
+    const group = groupRef.current;
+    const compositeKey = furnitureId && panelName ? `${furnitureId}::${panelName}` : undefined;
+
+    if (viewMode !== '3D' || isExcludedByOptimizer || !compositeKey || !furnitureId || !panelName) {
+      group.position.set(position[0], position[1], position[2]);
+      group.quaternion.identity();
+      group.scale.set(1, 1, 1);
+      group.visible = !isExcludedByOptimizer;
+      return;
+    }
+
+    if (simulationRevisionRef.current !== panelSimulationRevision) {
+      simulationRevisionRef.current = panelSimulationRevision;
+      simulationStartTimeRef.current = performance.now() / 1000;
+      simulationFrameStateRef.current = null;
+    }
+
+    if (panelSimulationRevision <= 0) return;
+
+    const signature = `${panelSimulationRevision}:${panelSimulationPhase}:${compositeKey}:${safeArgs.join(',')}:${panelSimulationLayoutCount}`;
+    let frameState = simulationFrameStateRef.current;
+    if (!frameState || frameState.signature !== signature) {
+      const simulationTarget = resolvePanelSimulationTarget(panelSimulationLayouts, furnitureId, panelName, safeArgs);
+      const simulationLayout = simulationTarget?.layout;
+      const hasSimulationLayouts = panelSimulationLayoutCount > 0;
+      const parent = group.parent;
+      const layoutKey = simulationTarget?.key || getPanelSimulationLayoutKey(panelSimulationLayouts, furnitureId, panelName) || compositeKey;
+      const slot = getPanelSimulationSlot(layoutKey);
+      const targetScaleVector = new THREE.Vector3(1, 1, 1);
+      let targetPosition = new THREE.Vector3(position[0], position[1], position[2]);
+      let targetQuaternion = new THREE.Quaternion();
+
+      if (simulationLayout) {
+        removePanelSimulationSource(layoutKey);
+      }
+
+      if (panelSimulationPhase === 'layout' && simulationLayout) {
+        const { thicknessAxis, widthAxis, lengthAxis } = getFlatPanelAxes(safeArgs);
+        targetScaleVector.setComponent(thicknessAxis.index, simulationLayout.scale);
+        targetScaleVector.setComponent(widthAxis.index, simulationLayout.widthWorld / Math.max(safeArgs[widthAxis.index], MIN_DOOR_BOX_GEOMETRY_SIZE));
+        targetScaleVector.setComponent(lengthAxis.index, simulationLayout.heightWorld / Math.max(safeArgs[lengthAxis.index], MIN_DOOR_BOX_GEOMETRY_SIZE));
+
+        const thickness = Math.min(safeArgs[0], safeArgs[1], safeArgs[2]);
+        targetPosition = new THREE.Vector3(
+          simulationLayout.worldX,
+          simulationLayout.worldY + thickness * simulationLayout.scale * 0.5 + 0.03,
+          simulationLayout.worldZ
+        );
+        targetQuaternion = buildFlatPanelQuaternion(safeArgs, simulationLayout.rotationZ);
+
+        if (parent) {
+          parent.updateWorldMatrix(true, false);
+          parent.worldToLocal(targetPosition);
+          const parentWorldQuaternion = new THREE.Quaternion();
+          parent.getWorldQuaternion(parentWorldQuaternion);
+          targetQuaternion.premultiply(parentWorldQuaternion.invert());
+        }
+      }
+
+      const sequenceIndex = panelSimulationPhase === 'layout'
+        ? (simulationLayout?.order ?? slot)
+        : getPanelAssemblySequence(furnitureId, panelName, position, parent, false);
+
+      frameState = {
+        signature,
+        sequenceIndex,
+        startPosition: group.position.clone(),
+        startQuaternion: group.quaternion.clone(),
+        startScale: group.scale.clone(),
+        targetPosition,
+        targetQuaternion,
+        targetScale: targetScaleVector,
+        hasLayout: !!simulationLayout,
+        hasSimulationLayouts,
+      };
+      simulationFrameStateRef.current = frameState;
+    }
+
+    if (panelSimulationPhase === 'assembled' && frameState.hasSimulationLayouts && !frameState.hasLayout) {
+      group.visible = false;
+      if (import.meta.env.DEV) {
+        console.warn('[PanelSimulation] door assembly target missing, hiding original pop-in:', `${furnitureId}::${panelName}`);
+      }
+      return;
+    }
+    if (panelSimulationPhase === 'layout' && !frameState.hasLayout) {
+      group.visible = false;
+      group.position.set(position[0], position[1], position[2]);
+      group.quaternion.identity();
+      group.scale.set(1, 1, 1);
+      if (frameState.hasSimulationLayouts && import.meta.env.DEV) {
+        console.warn('[PanelSimulation] door layout target missing:', `${furnitureId}::${panelName}`);
+      }
+      return;
+    }
+
+    if (group.visible === false) {
+      group.visible = true;
+    }
+    const cameraSettleDelay = panelSimulationPhase === 'layout' ? 1.05 : 1.35;
+    const elapsed = performance.now() / 1000 - simulationStartTimeRef.current - cameraSettleDelay - frameState.sequenceIndex * (panelSimulationPhase === 'layout' ? PANEL_SIMULATION_DELAY_STEP : PANEL_SIMULATION_ASSEMBLY_DELAY_STEP);
+    if (elapsed < 0) {
+      group.visible = true;
+      return;
+    }
+    if (group.visible === false) {
+      group.visible = true;
+    }
+
+    const progress = easeInOutCubic(elapsed / PANEL_SIMULATION_DURATION);
+    group.position.copy(frameState.startPosition).lerp(frameState.targetPosition, progress);
+    group.quaternion.copy(frameState.startQuaternion).slerp(frameState.targetQuaternion, progress);
+    group.scale.copy(frameState.startScale).lerp(frameState.targetScale, progress);
+  });
+
   // Shadow auto-update enabled - manual shadow updates removed
 
   return (
-    <group position={position} visible={!isExcludedByOptimizer}>
+    <group ref={groupRef} position={position} visible={!isExcludedByOptimizer}>
       {/* Solid 모드일 때만 면 렌더링 */}
       {renderMode === 'solid' && (
         <mesh
           name={`furniture-mesh${panelName ? `-${panelName}` : ''}`}
           geometry={geometry}
           material={material}
+          userData={{
+            ...(furnitureId ? { furnitureId } : {}),
+            ...(panelName ? { panelName } : {}),
+            ...(compositeKeyForCleanup ? { liveDimensionKey: compositeKeyForCleanup } : {}),
+            liveDimension: {
+              widthMm: Math.round(safeArgs[0] / 0.01),
+              heightMm: Math.round(safeArgs[1] / 0.01),
+              depthMm: Math.round(safeArgs[2] / 0.01),
+              useObjectBounds: true,
+            },
+          }}
           receiveShadow={viewMode === '3D' && !isEditMode && shadowEnabled}
           castShadow={viewMode === '3D' && !isEditMode && shadowEnabled}
           renderOrder={isEditMode ? 999 : 10}
@@ -126,6 +342,59 @@ const BoxWithEdges: React.FC<{
           </lineSegments>
         )
       )}
+    </group>
+  );
+};
+
+const GlassDoorAssemblySource: React.FC<{
+  sourceKey: string;
+  furnitureId?: string;
+  panelName: string;
+  args: [number, number, number];
+  material?: THREE.Material;
+  children: React.ReactNode;
+}> = ({ sourceKey, furnitureId, panelName, args, material, children }) => {
+  const groupRef = React.useRef<THREE.Group>(null);
+  const assemblySourceSignatureRef = React.useRef<string | null>(null);
+  const { viewMode } = useSpace3DView();
+  const panelSimulationRevision = useUIStore(state => state.panelSimulationRevision);
+  const panelSimulationPhase = useUIStore(state => state.panelSimulationPhase);
+  const registryKey = furnitureId ? `accessory::${furnitureId}::${sourceKey}` : null;
+
+  useEffect(() => {
+    return () => {
+      if (registryKey) removePanelSimulationSource(registryKey);
+      assemblySourceSignatureRef.current = null;
+    };
+  }, [registryKey]);
+
+  useFrame(() => {
+    const group = groupRef.current;
+    if (!group) return;
+    if (viewMode === '3D' && panelSimulationRevision > 0 && furnitureId && registryKey) {
+      const signature = `${getPanelSimulationSourceRegistryVersion()}:${panelSimulationRevision}:${panelSimulationPhase}:${registryKey}:${args.join(',')}`;
+      if (assemblySourceSignatureRef.current !== signature) {
+        updatePanelSimulationSource({
+          key: registryKey,
+          furnitureId,
+          panelName,
+          args,
+          object: group,
+          material,
+          assemblyOnly: true,
+          shape: 'glassDoor',
+        });
+        assemblySourceSignatureRef.current = signature;
+      }
+      group.visible = false;
+      return;
+    }
+    group.visible = true;
+  });
+
+  return (
+    <group ref={groupRef}>
+      {children}
     </group>
   );
 };
@@ -212,11 +481,13 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   const floatHeightSource = storeFloatHeight !== undefined ? storeFloatHeight : (propFloatHeight ?? 0);
   const floatHeight = placementType === 'float' ? floatHeightSource : 0;
   // Store에서 재질 설정과 도어 상태 가져오기
-  const { doorsOpen, view2DDirection, view2DTheme, isIndividualDoorOpen, toggleIndividualDoor, selectedSlotIndex, showDimensions, highlightedDoorGap, hingePositionEditModeModuleId } = useUIStore() as any;
+  const { doorsOpen, view2DDirection, view2DTheme, isIndividualDoorOpen, toggleIndividualDoor, selectedSlotIndex, showDimensions, highlightedDoorGap, hingePositionEditModeModuleId, panelSimulationPhase, panelSimulationViewBackup } = useUIStore() as any;
   const { renderMode, viewMode, plainMaterial: isPlainMaterial } = useSpace3DView(); // context에서 renderMode와 viewMode 가져오기
   const { gl } = useThree(); // Three.js renderer 가져오기
   const { dimensionColor } = useDimensionColor(); // 치수 색상
 
+  const isPanelSimulationPresentation = viewMode === '3D' && (panelSimulationPhase === 'layout' || !!panelSimulationViewBackup);
+  const effectiveShowDimensions = isPanelSimulationPresentation ? false : showDimensions;
   const isSide2DView = viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right');
   const isHingePositionEditMode = !!furnitureId && hingePositionEditModeModuleId === furnitureId;
   const [hingeGapDrafts, setHingeGapDrafts] = useState<Record<string, string>>({});
@@ -692,7 +963,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     return resolveDoorHeightDimensionSides(visibleModules, furnitureId);
   }, [allPlacedModules, furnitureId]);
   const showDoorDimensionGuides = shouldRenderDoorDimensionGuides(
-    showDimensions,
+    effectiveShowDimensions,
     isPlainMaterial,
     viewMode,
     view2DDirection
@@ -1735,7 +2006,14 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                   transmission: 0.4, thickness: 0.5, ior: 1.45, side: THREE.DoubleSide,
                 });
                 return (
-                  <group key={`glass-left-door-${leftDoorMaterial.uuid}`}>
+                  <GlassDoorAssemblySource
+                    key={`glass-left-door-${leftDoorMaterial.uuid}`}
+                    sourceKey="유리장-금속도어-좌"
+                    furnitureId={furnitureId}
+                    panelName="유리장 금속도어 좌"
+                    args={[leftDoorWidthUnits, doorHeight, doorThicknessUnits]}
+                    material={frameMat}
+                  >
                     <mesh position={[0, doorHeight / 2 - fW / 2, 0]} userData={{ skipCNC: true }}>
                       <boxGeometry args={[leftDoorWidthUnits, fW, doorThicknessUnits]} />
                       <primitive object={frameMat} attach="material" />
@@ -1756,7 +2034,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                       <boxGeometry args={[innerWL, innerHL, gT]} />
                       <primitive object={glassMat} attach="material" />
                     </mesh>
-                  </group>
+                  </GlassDoorAssemblySource>
                 );
               })() : (
                 <BoxWithEdges
@@ -1877,7 +2155,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
 
 
               {/* Door opening direction for left door - 잠금 시 숨김, 치수 OFF 시 숨김 */}
-              {showDimensions && !isHingePositionEditMode && !isPlainMaterial && !leftDoorLocked && (viewMode === '3D' || (viewMode === '2D' && view2DDirection === 'front')) && (() => {
+              {effectiveShowDimensions && !isHingePositionEditMode && !isPlainMaterial && !leftDoorLocked && (viewMode === '3D' || (viewMode === '2D' && view2DDirection === 'front')) && (() => {
                 const segments = (() => {
                   const isFrontView = viewMode === '3D' || view2DDirection === 'front';
                   const segmentList: React.ReactNode[] = [];
@@ -2160,7 +2438,14 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                   transmission: 0.4, thickness: 0.5, ior: 1.45, side: THREE.DoubleSide,
                 });
                 return (
-                  <group key={`glass-right-door-${rightDoorMaterial.uuid}`}>
+                  <GlassDoorAssemblySource
+                    key={`glass-right-door-${rightDoorMaterial.uuid}`}
+                    sourceKey="유리장-금속도어-우"
+                    furnitureId={furnitureId}
+                    panelName="유리장 금속도어 우"
+                    args={[rightDoorWidthUnits, doorHeight, doorThicknessUnits]}
+                    material={frameMat}
+                  >
                     <mesh position={[0, doorHeight / 2 - fW / 2, 0]} userData={{ skipCNC: true }}>
                       <boxGeometry args={[rightDoorWidthUnits, fW, doorThicknessUnits]} />
                       <primitive object={frameMat} attach="material" />
@@ -2181,7 +2466,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                       <boxGeometry args={[innerWR, innerHR, gT]} />
                       <primitive object={glassMat} attach="material" />
                     </mesh>
-                  </group>
+                  </GlassDoorAssemblySource>
                 );
               })() : (
                 <BoxWithEdges
@@ -2301,7 +2586,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
 
 
               {/* Door opening direction for right door - 잠금 시 숨김, 치수 OFF 시 숨김 */}
-              {showDimensions && !isHingePositionEditMode && !isPlainMaterial && !rightDoorLocked && (viewMode === '3D' || (viewMode === '2D' && view2DDirection === 'front')) && (() => {
+              {effectiveShowDimensions && !isHingePositionEditMode && !isPlainMaterial && !rightDoorLocked && (viewMode === '3D' || (viewMode === '2D' && view2DDirection === 'front')) && (() => {
                 const segments = (() => {
                   const isFrontView = viewMode === '3D' || view2DDirection === 'front';
                   const segmentList: React.ReactNode[] = [];
@@ -2749,7 +3034,14 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                 side: THREE.DoubleSide,
               });
               return (
-                <group key={`glass-door-${doorMaterial.uuid}`}>
+                <GlassDoorAssemblySource
+                  key={`glass-door-${doorMaterial.uuid}`}
+                  sourceKey="유리장-금속도어"
+                  furnitureId={furnitureId}
+                  panelName="유리장 금속도어"
+                  args={[doorWidthUnits, doorHeight, doorThicknessUnits]}
+                  material={frameMaterial}
+                >
                   {/* 상단 프레임 */}
                   <mesh position={[0, doorHeight / 2 - fW / 2, 0]} userData={{ skipCNC: true }}>
                     <boxGeometry args={[doorWidthUnits, fW, doorThicknessUnits]} />
@@ -2775,7 +3067,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                     <boxGeometry args={[innerW, innerH, gT]} />
                     <primitive object={glassMaterial} attach="material" />
                   </mesh>
-                </group>
+                </GlassDoorAssemblySource>
               );
             })() : (
               <BoxWithEdges
@@ -2931,7 +3223,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
 
 
             {/* 도어 열리는 방향 표시 (2D 정면뷰/측면뷰 + 3D) - 잠금 시 숨김, 치수 OFF 시 숨김 */}
-            {showDimensions && !isHingePositionEditMode && !isPlainMaterial && !singleDoorLocked && (viewMode === '3D' || (viewMode === '2D' && view2DDirection === 'front')) && (() => {
+            {effectiveShowDimensions && !isHingePositionEditMode && !isPlainMaterial && !singleDoorLocked && (viewMode === '3D' || (viewMode === '2D' && view2DDirection === 'front')) && (() => {
               const indicatorRotation = (adjustedHingePosition === 'left'
                 ? leftHingeDoorSpring.rotation
                 : rightHingeDoorSpring.rotation).to(value => {

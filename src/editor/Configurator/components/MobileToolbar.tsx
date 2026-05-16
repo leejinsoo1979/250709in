@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { TbZoomScan } from 'react-icons/tb';
 import styles from './MobileToolbar.module.css';
 import { ViewMode } from './ViewerControls';
 import { useUIStore } from '@/store/uiStore';
@@ -102,13 +103,7 @@ const MobileToolbar: React.FC<MobileToolbarProps> = ({
             onClick={uiStore.toggleLiveDimensionMode}
             title="3D 스캔"
           >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-              <path d="M4 17L17 4" />
-              <path d="M14 4h3v3" />
-              <path d="M4 14v3h3" />
-              <path d="M7 20h10" />
-              <path d="M20 7v10" />
-            </svg>
+            <TbZoomScan size={20} />
           </button>
         )}
         {viewMode === '3D' && (

@@ -1,8 +1,16 @@
 import React, { useMemo } from 'react';
 import * as THREE from 'three';
 import { Line } from '@react-three/drei';
+import { useFrame } from '@react-three/fiber';
 import { useSpace3DView } from '../../../context/useSpace3DView';
 import { useUIStore } from '@/store/uiStore';
+import { useFurnitureStore } from '@/store/core/furnitureStore';
+import {
+  PANEL_SIMULATION_ASSEMBLY_DELAY_STEP,
+  PANEL_SIMULATION_DURATION,
+  PANEL_SIMULATION_FURNITURE_SPAN
+} from '../../../utils/panelSimulationMotion';
+import { getPanelSimulationSourceRegistryVersion, removePanelSimulationSource, updatePanelSimulationSource } from '../../../utils/panelSimulationRegistry';
 
 interface AdjustableFootProps {
   position: [number, number, number];
@@ -11,7 +19,33 @@ interface AdjustableFootProps {
   renderMode?: 'solid' | 'wireframe';
   isHighlighted?: boolean;
   baseHeight?: number; // 받침대 높이 (mm)
+  furnitureId?: string;
+  panelName?: string;
 }
+
+const getFootAssemblySequence = (
+  furnitureId: string | undefined,
+  localPosition: [number, number, number],
+  parent?: THREE.Object3D | null
+) => {
+  const modules = useFurnitureStore.getState().placedModules;
+  const sortedIds = [...modules]
+    .sort((a, b) => {
+      const aSlot = typeof a.slotIndex === 'number' ? a.slotIndex : Number.POSITIVE_INFINITY;
+      const bSlot = typeof b.slotIndex === 'number' ? b.slotIndex : Number.POSITIVE_INFINITY;
+      if (aSlot !== bSlot) return aSlot - bSlot;
+      return (a.position?.x || 0) - (b.position?.x || 0);
+    })
+    .map(module => module.id);
+  const furnitureIndex = furnitureId ? Math.max(0, sortedIds.indexOf(furnitureId)) : 0;
+  const worldPosition = new THREE.Vector3(localPosition[0], localPosition[1], localPosition[2]);
+  if (parent) parent.localToWorld(worldPosition);
+  const localOrder = Math.min(80, Math.max(0, Math.round(
+    (worldPosition.x + 50) * 0.3 +
+    (worldPosition.z + 50) * 0.18
+  )));
+  return furnitureIndex * PANEL_SIMULATION_FURNITURE_SPAN + localOrder;
+};
 
 /**
  * 조절발통 컴포넌트
@@ -25,9 +59,17 @@ export const AdjustableFoot: React.FC<AdjustableFootProps> = ({
   renderMode = 'solid',
   isHighlighted = false,
   baseHeight = 65, // 기본값 65mm
+  furnitureId,
+  panelName,
 }) => {
+  const groupRef = React.useRef<THREE.Group>(null);
+  const simulationStartTimeRef = React.useRef(0);
+  const { panelSimulationPhase, panelSimulationRevision } = useUIStore();
+  const simulationRevisionRef = React.useRef(panelSimulationRevision);
+  const assemblySourceSignatureRef = React.useRef<string | null>(null);
   const { viewMode } = useSpace3DView();
   const { view2DTheme, view2DDirection } = useUIStore();
+  const registryKey = furnitureId && panelName ? `accessory::${furnitureId}::${panelName}` : null;
   
   const mmToThreeUnits = (mm: number) => mm * 0.01;
   
@@ -65,6 +107,79 @@ export const AdjustableFoot: React.FC<AdjustableFootProps> = ({
 
   const finalMaterial = material || defaultMaterial;
 
+  React.useEffect(() => {
+    return () => {
+      if (registryKey) removePanelSimulationSource(registryKey);
+      assemblySourceSignatureRef.current = null;
+    };
+  }, [registryKey]);
+
+  useFrame(() => {
+    if (!groupRef.current) return;
+    const group = groupRef.current;
+    if (viewMode === '3D' && furnitureId && panelName && registryKey && panelSimulationRevision > 0) {
+      const sourceArgs: [number, number, number] = [plateWidth, mmToThreeUnits(baseHeight), plateWidth];
+      const signature = `${getPanelSimulationSourceRegistryVersion()}:${panelSimulationRevision}:${panelSimulationPhase}:${registryKey}:${sourceArgs.join(',')}`;
+      if (assemblySourceSignatureRef.current !== signature) {
+        updatePanelSimulationSource({
+          key: registryKey,
+          furnitureId,
+          panelName,
+          args: sourceArgs,
+          object: group,
+          material: finalMaterial,
+          assemblyOnly: true,
+          shape: 'adjustableFoot',
+        });
+        assemblySourceSignatureRef.current = signature;
+      }
+      group.visible = false;
+      return;
+    }
+    if (panelSimulationPhase === 'layout') {
+      groupRef.current.visible = false;
+      return;
+    }
+    if (groupRef.current.visible === false) {
+      groupRef.current.visible = true;
+    }
+    if (viewMode !== '3D' || !furnitureId || !panelName || panelSimulationRevision <= 0) {
+      groupRef.current.position.set(position[0], position[1], position[2]);
+      groupRef.current.quaternion.identity();
+      groupRef.current.scale.set(1, 1, 1);
+      return;
+    }
+
+    if (simulationRevisionRef.current !== panelSimulationRevision) {
+      simulationRevisionRef.current = panelSimulationRevision;
+      simulationStartTimeRef.current = performance.now() / 1000;
+      if (panelSimulationPhase === 'assembled') {
+        group.visible = true;
+        group.position.set(position[0], position[1] + 1.35, position[2] + 0.45);
+        group.scale.set(1, 1, 1);
+      }
+    }
+    const parent = group.parent;
+    let targetPosition = new THREE.Vector3(position[0], position[1], position[2]);
+    let targetScale = 1;
+
+    const order = getFootAssemblySequence(furnitureId, position, parent);
+    const elapsed = performance.now() / 1000 - simulationStartTimeRef.current - order * PANEL_SIMULATION_ASSEMBLY_DELAY_STEP;
+    if (elapsed < 0) {
+      group.visible = true;
+      return;
+    }
+    if (group.visible === false) {
+      group.visible = true;
+    }
+    const t = Math.min(1, elapsed / PANEL_SIMULATION_DURATION);
+    const eased = t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+
+    group.position.lerp(targetPosition, eased * 0.18);
+    group.quaternion.slerp(new THREE.Quaternion(), eased * 0.18);
+    group.scale.lerp(new THREE.Vector3(targetScale, targetScale, targetScale), eased * 0.18);
+  });
+
   // 2D 모드에서는 투명 재질 사용, 3D 모드에서는 기본 재질 사용
   const meshMaterial = viewMode === '2D' ? transparentMaterial : finalMaterial;
 
@@ -84,7 +199,7 @@ export const AdjustableFoot: React.FC<AdjustableFootProps> = ({
   }, [viewMode, view2DTheme, footDepthOpacity]);
 
   return (
-    <group position={position} rotation={[0, rotation, 0]}>
+    <group ref={groupRef} position={position} rotation={[0, rotation, 0]}>
       {/* 상단 플레이트 (64×64mm, 두께 7mm) - 윗면이 가구 바닥판 아래에 부착 */}
       {/* DXF 내보내기를 위해 mesh에도 이름 추가 */}
       {renderMode !== 'wireframe' && (

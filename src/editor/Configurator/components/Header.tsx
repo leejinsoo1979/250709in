@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styles from './Header.module.css';
-import { Settings, User, ChevronDown, Undo, Redo, FileText, Sun, Moon } from 'lucide-react';
+import { Settings, User, ChevronDown, Undo, Redo, FileText, Sun, Moon, Play, RotateCcw } from 'lucide-react';
 import { FiSunset } from 'react-icons/fi';
 import { FaRegKeyboard } from 'react-icons/fa';
 import { SiConvertio } from 'react-icons/si';
@@ -268,7 +268,7 @@ const Header: React.FC<HeaderProps> = ({
   const [isExitModalOpen, setIsExitModalOpen] = useState(false);
   const [isFrameMergeModalOpen, setIsFrameMergeModalOpen] = useState(false);
   // UIStore에서 카메라 및 그래픽 설정 가져오기
-  const { cameraMode, setCameraMode, shadowEnabled, setShadowEnabled, viewMode, setViewMode, view2DDirection, setView2DDirection, sunAngle, setSunAngle } = useUIStore();
+  const { cameraMode, setCameraMode, shadowEnabled, setShadowEnabled, viewMode, setViewMode, view2DDirection, setView2DDirection, sunAngle, setSunAngle, panelSimulationPhase, togglePanelSimulation } = useUIStore();
   const { colors } = useThemeColors();
   const { theme, toggleMode } = useTheme();
   const profileButtonRef = useRef<HTMLDivElement>(null);
@@ -1060,6 +1060,19 @@ const Header: React.FC<HeaderProps> = ({
                 <polyline points="17,21 17,13 7,13 7,21" stroke="currentColor" strokeWidth="2" />
                 <polyline points="7,3 7,8 15,8" stroke="currentColor" strokeWidth="2" />
               </svg>
+            </button>
+          )}
+
+          {/* 패널 레이아웃 시뮬레이션 — 다크/라이트 토글 왼쪽 */}
+          {!isMobile && (
+            <button
+              className={`${styles.settingsButton} ${panelSimulationPhase === 'layout' ? styles.simulationActive : ''}`}
+              onClick={togglePanelSimulation}
+              title={panelSimulationPhase === 'layout' ? '패널 조립 역재생' : '패널 레이아웃 시뮬레이션'}
+            >
+              {panelSimulationPhase === 'layout'
+                ? <RotateCcw size={18} strokeWidth={1.8} />
+                : <Play size={18} strokeWidth={1.8} />}
             </button>
           )}
 

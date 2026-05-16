@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState, useCallback, useRef } from 'react';
+import * as THREE from 'three';
 import { RxDimensions } from 'react-icons/rx';
 import { LuEraser } from 'react-icons/lu';
 import { Sun, Moon } from 'lucide-react';
@@ -41,7 +42,7 @@ import { useLocation } from 'react-router-dom';
 import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
 import { useUIStore } from '@/store/uiStore';
-import { Environment } from '@react-three/drei';
+import type { PanelSimulationLayout, PanelSimulationSheetLayout, PanelSimulationSummary } from '@/store/uiStore';
 import { useFrame } from '@react-three/fiber';
 import { calculateSpaceIndexing } from '@/editor/shared/utils/indexing';
 import { calculateOptimalDistance, mmToThreeUnits, calculateCameraTarget, threeUnitsToMm } from './components/base/utils/threeUtils';
@@ -50,6 +51,504 @@ import { useTheme } from '@/contexts/ThemeContext';
 import { getModuleById } from '@/data/modules';
 import { useThrottle } from '@/editor/shared/hooks/useThrottle';
 import { useResponsive } from '@/hooks/useResponsive';
+import { getCanonicalPanelNameCandidates } from '@/editor/shared/utils/panelNameCanonical';
+import { useLivePanelData } from '@/editor/CNCOptimizer/hooks/useLivePanelData';
+import { optimizePanelsMultiple } from '@/editor/CNCOptimizer/utils/optimizer';
+import type { Panel as OptimizerPanel, OptimizedResult, StockPanel } from '@/editor/CNCOptimizer/types';
+import { getExcludedPanelAliases } from './context/ExcludedPanelsContext';
+import { clearPanelSimulationSources, getPanelSimulationSources } from './utils/panelSimulationRegistry';
+import {
+  buildFlatPanelQuaternion,
+  easeInOutCubic,
+  easeOutCubic,
+  getPanelAssemblySequence,
+  getFlatPanelAxes,
+  PANEL_SIMULATION_ASSEMBLY_DELAY_STEP,
+  PANEL_SIMULATION_DELAY_STEP,
+  PANEL_SIMULATION_DURATION,
+  PANEL_SIMULATION_FINAL_STAGE_ORDER,
+  PANEL_SIMULATION_FURNITURE_SPAN,
+  smootherStep
+} from './utils/panelSimulationMotion';
+
+const PANEL_SIMULATION_MM_TO_WORLD = 0.006;
+const PANEL_SIMULATION_SOURCE_MM_TO_WORLD = 0.01;
+const PANEL_SIMULATION_SCALE = PANEL_SIMULATION_MM_TO_WORLD / PANEL_SIMULATION_SOURCE_MM_TO_WORLD;
+const PANEL_SIMULATION_SHEET_GAP_WORLD = 1.2;
+const PANEL_SIMULATION_LAYOUT_DELAY_STEP = 0.0045;
+
+const clampNumber = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value));
+
+const getPanelSimulationExportOrder = (
+  panelName: string | undefined,
+  layoutOrder: number,
+  sourceIndex: number,
+  sameTypeIndex: number
+) => {
+  const name = panelName || '';
+  let groupBase = 4000;
+  if (name.includes('도어')) {
+    groupBase = 0;
+  } else if (name.includes('걸레받이') || name.includes('걸래받이') || name === 'base-frame') {
+    groupBase = 68;
+  } else if (name.includes('상단몰딩') || name === 'top-frame') {
+    groupBase = 86;
+  } else if (name.includes('서랍') || name.includes('마이다')) {
+    groupBase = 112;
+  } else if (name.includes('(상)') || name.includes('상부')) {
+    groupBase = 146;
+  } else if (name.includes('(하)') || name.includes('하부')) {
+    groupBase = 178;
+  } else {
+    groupBase = 210;
+  }
+  const stagger = name.includes('도어')
+    ? sameTypeIndex * 12
+    : (sourceIndex % 90);
+  return groupBase + stagger + layoutOrder * 0.15;
+};
+
+type CutlistGrain = 'H' | 'V' | 'NONE';
+
+interface SimulationCutPanel {
+  id: string;
+  label: string;
+  width: number;
+  length: number;
+  thickness: number;
+  quantity: number;
+  material?: string;
+  grain?: CutlistGrain;
+  canRotate?: boolean;
+  boringPositions?: number[];
+  boringDepthPositions?: number[];
+  groovePositions?: any[];
+  screwPositions?: number[];
+  screwDepthPositions?: number[];
+  isDoor?: boolean;
+  isLeftHinge?: boolean;
+  screwHoleSpacing?: number;
+  bracketBoringPositions?: number[];
+  bracketBoringDepthPositions?: number[];
+  isBracketSide?: boolean;
+  cornerNotch?: { width: number; depth: number; side: 'left' | 'right' };
+  sideNotches?: Array<{ y: number; z: number; fromBottom: number }>;
+  rebate?: { width: number; height: number; position: string };
+  meshName?: string;
+  furnitureId?: string;
+  sourceFurnitureIds?: string[];
+}
+
+interface SimulationSettings {
+  kerf: number;
+  trimTop: number;
+  trimBottom: number;
+  trimLeft: number;
+  trimRight: number;
+  singleSheetOnly: boolean;
+  considerMaterial: boolean;
+  considerGrain: boolean;
+  alignVerticalCuts: boolean;
+  optimizationType: 'OPTIMAL_L' | 'OPTIMAL_W' | 'BY_LENGTH' | 'BY_WIDTH' | 'OPTIMAL_CNC';
+}
+
+interface SimulationStockSheet {
+  label: string;
+  width: number;
+  length: number;
+  thickness: number;
+  quantity: number;
+  material: string;
+}
+
+const getPanelSimulationSettings = (): SimulationSettings => {
+  const defaults: SimulationSettings = {
+    kerf: 5,
+    trimTop: 5,
+    trimBottom: 5,
+    trimLeft: 5,
+    trimRight: 5,
+    singleSheetOnly: false,
+    considerMaterial: true,
+    considerGrain: true,
+    alignVerticalCuts: true,
+    optimizationType: 'OPTIMAL_L',
+  };
+
+  try {
+    const saved = localStorage.getItem('cnc_settings');
+    if (!saved) return defaults;
+    return { ...defaults, ...JSON.parse(saved), optimizationType: 'OPTIMAL_L' };
+  } catch {
+    return defaults;
+  }
+};
+
+const getPanelSimulationStock = (panels: SimulationCutPanel[]): SimulationStockSheet[] => {
+  const isPET = panels.some(p => [18.5, 15.5, 9.5, 5.5].includes(p.thickness));
+  const stock: SimulationStockSheet[] = isPET ? [
+    { label: 'PB_18.5T_2440x1220', width: 1220, length: 2440, thickness: 18.5, quantity: 999, material: 'PB' },
+    { label: 'PET_18.5T_2440x1220', width: 1220, length: 2440, thickness: 18.5, quantity: 999, material: 'PET' },
+    { label: 'PB_15.5T_2440x1220', width: 1220, length: 2440, thickness: 15.5, quantity: 999, material: 'PB' },
+    { label: 'MDF_15.5T_2440x1220', width: 1220, length: 2440, thickness: 15.5, quantity: 999, material: 'MDF' },
+    { label: 'MDF_9.5T_2440x1220', width: 1220, length: 2440, thickness: 9.5, quantity: 999, material: 'MDF' },
+    { label: 'MDF_5.5T_2440x1220', width: 1220, length: 2440, thickness: 5.5, quantity: 999, material: 'MDF' },
+  ] : [
+    { label: 'PB_18T_2440x1220', width: 1220, length: 2440, thickness: 18, quantity: 999, material: 'PB' },
+    { label: 'PET_18.5T_2440x1220', width: 1220, length: 2440, thickness: 18.5, quantity: 999, material: 'PET' },
+    { label: 'PB_15T_2440x1220', width: 1220, length: 2440, thickness: 15, quantity: 999, material: 'PB' },
+    { label: 'MDF_15T_2440x1220', width: 1220, length: 2440, thickness: 15, quantity: 999, material: 'MDF' },
+    { label: 'MDF_9T_2440x1220', width: 1220, length: 2440, thickness: 9, quantity: 999, material: 'MDF' },
+    { label: 'MDF_5T_2440x1220', width: 1220, length: 2440, thickness: 5, quantity: 999, material: 'MDF' },
+  ];
+
+  panels.forEach(panel => {
+    if (panel.material !== '인조대리석') return;
+    if (stock.some(s => s.material === '인조대리석' && s.thickness === panel.thickness)) return;
+    stock.push({
+      label: `인조대리석_${panel.thickness}T_3680x760`,
+      width: 760,
+      length: 3680,
+      thickness: panel.thickness,
+      quantity: 999,
+      material: '인조대리석',
+    });
+  });
+
+  return stock;
+};
+
+const toSimulationCutPanel = (panel: OptimizerPanel): SimulationCutPanel => {
+  const panelName = (panel.name || '').toLowerCase();
+  const isBackPanel = panelName.includes('백패널');
+  const isStoneTop = panel.material === '인조대리석';
+  const width = isBackPanel || panel.grain === 'VERTICAL' ? panel.width : panel.height;
+  const length = isBackPanel || panel.grain === 'VERTICAL' ? panel.height : panel.width;
+  let material = panel.material || 'PB';
+
+  if (isStoneTop) {
+    material = '인조대리석';
+  } else if (panelName.includes('백패널')) {
+    material = 'MDF';
+  } else if (
+    panelName.includes('도어') ||
+    panelName.includes('door') ||
+    panelName.includes('엔드') ||
+    panelName.includes('end') ||
+    panelName.includes('프레임') ||
+    panelName.includes('서라운드')
+  ) {
+    material = 'PET';
+  }
+
+  return {
+    id: panel.id,
+    label: panel.name || `Panel_${panel.id}`,
+    width,
+    length,
+    thickness: panel.thickness || (isStoneTop ? panel.thickness || 18 : material === 'PET' ? 18.5 : 18),
+    quantity: panel.quantity || 1,
+    material,
+    grain: isBackPanel ? 'H' : isStoneTop ? 'NONE' : panel.grain === 'NONE' ? 'NONE' : 'H',
+    canRotate: true,
+    boringPositions: panel.boringPositions,
+    boringDepthPositions: panel.boringDepthPositions,
+    groovePositions: panel.groovePositions,
+    screwPositions: panel.screwPositions,
+    screwDepthPositions: panel.screwDepthPositions,
+    isDoor: panel.isDoor,
+    isLeftHinge: panel.isLeftHinge,
+    screwHoleSpacing: panel.screwHoleSpacing,
+    bracketBoringPositions: panel.bracketBoringPositions,
+    bracketBoringDepthPositions: panel.bracketBoringDepthPositions,
+    isBracketSide: panel.isBracketSide,
+    cornerNotch: panel.cornerNotch,
+    sideNotches: panel.sideNotches,
+    rebate: panel.rebate,
+    meshName: panel.meshName,
+    furnitureId: panel.furnitureId,
+    sourceFurnitureIds: panel.sourceFurnitureIds,
+  };
+};
+
+const toOptimizerPanel = (panel: SimulationCutPanel): OptimizerPanel => ({
+  id: panel.id,
+  name: panel.label,
+  width: panel.width,
+  height: panel.length,
+  thickness: panel.thickness,
+  quantity: panel.quantity,
+  material: panel.material || 'PB',
+  color: 'MW',
+  grain: panel.grain === 'H' ? 'HORIZONTAL' : panel.grain === 'V' ? 'VERTICAL' : 'VERTICAL',
+  boringPositions: panel.boringPositions,
+  boringDepthPositions: panel.boringDepthPositions,
+  groovePositions: panel.groovePositions,
+  screwPositions: panel.screwPositions,
+  screwDepthPositions: panel.screwDepthPositions,
+  isDoor: panel.isDoor,
+  isLeftHinge: panel.isLeftHinge,
+  screwHoleSpacing: panel.screwHoleSpacing,
+  bracketBoringPositions: panel.bracketBoringPositions,
+  bracketBoringDepthPositions: panel.bracketBoringDepthPositions,
+  isBracketSide: panel.isBracketSide,
+  cornerNotch: panel.cornerNotch,
+  sideNotches: panel.sideNotches,
+  rebate: panel.rebate,
+  meshName: panel.meshName,
+  furnitureId: panel.furnitureId,
+  sourceFurnitureIds: panel.sourceFurnitureIds,
+} as OptimizerPanel);
+
+const fitsInSimulationBoard = (width: number, length: number, canRotate: boolean, stockWidth: number, stockLength: number) => {
+  const shortSide = Math.min(width, length);
+  const longSide = Math.max(width, length);
+  if (shortSide <= stockWidth && longSide <= stockLength) return true;
+  if (canRotate) return false;
+  return width <= stockWidth && length <= stockLength;
+};
+
+const buildPanelSimulationResults = async (
+  panels: SimulationCutPanel[],
+  settings: SimulationSettings,
+  stock: SimulationStockSheet[]
+): Promise<OptimizedResult[]> => {
+  const stdW = 1220;
+  const stdL = 2440;
+  const ext2750 = 2750;
+  const ext3050 = 3050;
+  const results: OptimizedResult[] = [];
+  const regularList: SimulationCutPanel[] = [];
+  const ext2750List: SimulationCutPanel[] = [];
+  const ext3050List: SimulationCutPanel[] = [];
+
+  panels.forEach(panel => {
+    const hasGrain = panel.grain && panel.grain !== 'NONE';
+    const canRotate = !hasGrain;
+    if (fitsInSimulationBoard(panel.width, panel.length, canRotate, stdW, stdL)) {
+      regularList.push(panel);
+    } else if (fitsInSimulationBoard(panel.width, panel.length, canRotate, stdW, ext2750)) {
+      ext2750List.push(panel);
+    } else if (fitsInSimulationBoard(panel.width, panel.length, canRotate, stdW, ext3050)) {
+      ext3050List.push(panel);
+    } else {
+      regularList.push(panel);
+    }
+  });
+
+  const optimizeGroup = async (groupPanels: SimulationCutPanel[], stockWidth: number, stockLength: number, oversized = false) => {
+    const groups = new Map<string, SimulationCutPanel[]>();
+    groupPanels.forEach(panel => {
+      const hasGrain = panel.grain && panel.grain !== 'NONE';
+      const processed = { ...panel, canRotate: !hasGrain };
+      const key = settings.considerMaterial
+        ? `${processed.material || 'PB'}_${processed.thickness || 18}`
+        : `THICKNESS_${processed.thickness || 18}`;
+      if (!groups.has(key)) groups.set(key, []);
+      groups.get(key)!.push(processed);
+    });
+
+    for (const [key, group] of groups) {
+      const keyParts = key.split('_');
+      const material = key.startsWith('THICKNESS_') ? undefined : keyParts[0];
+      const thickness = parseFloat(keyParts[keyParts.length - 1]) || 18;
+      let matchingStock = material
+        ? stock.find(s => s.material === material && s.thickness === thickness && s.width === stockWidth && s.length === stockLength)
+        : undefined;
+      if (!matchingStock) matchingStock = stock.find(s => s.thickness === thickness && s.width === stockWidth && s.length === stockLength);
+      if (!matchingStock && stockWidth === stdW && stockLength === stdL) matchingStock = stock.find(s => s.thickness === thickness);
+
+      const stockPanel: StockPanel = {
+        id: matchingStock?.label || `${material || 'PB'}_${thickness}T_${stockLength}x${stockWidth}`,
+        width: matchingStock?.width || stockWidth,
+        height: matchingStock?.length || stockLength,
+        material: material || matchingStock?.material || 'PB',
+        color: 'MW',
+        price: 0,
+        stock: matchingStock?.quantity || 999,
+        thickness,
+      };
+      const adjustedStockPanel: StockPanel = {
+        ...stockPanel,
+        width: stockPanel.width - (settings.trimLeft || 10) - (settings.trimRight || 10),
+        height: stockPanel.height - (settings.trimTop || 10) - (settings.trimBottom || 10),
+      };
+
+      const optimized = await optimizePanelsMultiple(
+        group.map(toOptimizerPanel),
+        adjustedStockPanel,
+        settings.singleSheetOnly ? 1 : 999,
+        settings.alignVerticalCuts !== false,
+        settings.kerf || 5,
+        settings.optimizationType as any
+      );
+
+      optimized.forEach(result => {
+        result.panels.forEach(panel => {
+          panel.x += (settings.trimLeft || 10);
+          panel.y += (settings.trimBottom || 10);
+        });
+        result.stockPanel = stockPanel;
+        result.isOversized = oversized;
+      });
+      results.push(...optimized);
+    }
+  };
+
+  await optimizeGroup(regularList, stdW, stdL);
+  await optimizeGroup(ext2750List, stdW, ext2750, true);
+  await optimizeGroup(ext3050List, stdW, ext3050, true);
+
+  return results;
+};
+
+const buildPanelSimulationTargets = (
+  results: OptimizedResult[],
+  boardCenterY: number
+): {
+  layouts: Record<string, PanelSimulationLayout>;
+  sheet: PanelSimulationSheetLayout | null;
+} => {
+  if (results.length === 0) {
+    return { layouts: {}, sheet: null };
+  }
+
+  const maxSheetWidth = Math.max(...results.map(result => result.stockPanel.width || 1220));
+  const maxSheetHeight = Math.max(...results.map(result => result.stockPanel.height || 2440));
+  const sheetWidthWorld = maxSheetWidth * PANEL_SIMULATION_MM_TO_WORLD;
+  const sheetHeightWorld = maxSheetHeight * PANEL_SIMULATION_MM_TO_WORLD;
+  const sheetGapWorld = PANEL_SIMULATION_SHEET_GAP_WORLD;
+  const sheetCount = results.length;
+  const totalWidthWorld = results.reduce((sum, result, index) => {
+    const width = (result.stockPanel.width || maxSheetWidth) * PANEL_SIMULATION_MM_TO_WORLD;
+    return sum + width + (index === results.length - 1 ? 0 : sheetGapWorld);
+  }, 0);
+  const startX = -totalWidthWorld / 2;
+  const layouts: Record<string, PanelSimulationLayout> = {};
+  const sheets: NonNullable<PanelSimulationSheetLayout['sheets']> = [];
+  const panels: NonNullable<PanelSimulationSheetLayout['panels']> = [];
+  let currentSheetLeft = startX;
+  let order = 0;
+
+  const addLayoutAliases = (panel: OptimizerPanel, layout: PanelSimulationLayout) => {
+    const furnitureIds = new Set<string>();
+    if (panel.furnitureId) furnitureIds.add(panel.furnitureId);
+    panel.sourceFurnitureIds?.forEach(id => {
+      if (id) furnitureIds.add(id);
+    });
+    if (furnitureIds.size === 0) return;
+
+    const names = new Set<string>();
+    if (panel.meshName) names.add(panel.meshName);
+    if (panel.name) {
+      names.add(panel.name);
+      const parts = panel.name.split(/\s+/).filter(Boolean);
+      for (let index = 1; index < parts.length; index += 1) {
+        names.add(parts.slice(index).join(' '));
+      }
+    }
+    Array.from(names).forEach(name => {
+      getExcludedPanelAliases(name).forEach(alias => names.add(alias));
+      getCanonicalPanelNameCandidates(name).forEach(candidate => names.add(candidate));
+    });
+    const assignLayout = (baseKey: string) => {
+      if (!layouts[baseKey]) {
+        layouts[baseKey] = layout;
+        return;
+      }
+      let duplicateIndex = 2;
+      let duplicateKey = `${baseKey}#${duplicateIndex}`;
+      while (layouts[duplicateKey]) {
+        duplicateIndex += 1;
+        duplicateKey = `${baseKey}#${duplicateIndex}`;
+      }
+      layouts[duplicateKey] = layout;
+    };
+
+    furnitureIds.forEach(furnitureId => {
+      names.forEach(name => {
+        if (name) assignLayout(`${furnitureId}::${name}`);
+      });
+    });
+  };
+
+  results.forEach((result, sheetIndex) => {
+    const stockWidth = result.stockPanel.width || maxSheetWidth;
+    const stockHeight = result.stockPanel.height || maxSheetHeight;
+    const sheetWidth = stockWidth * PANEL_SIMULATION_MM_TO_WORLD;
+    const sheetHeight = stockHeight * PANEL_SIMULATION_MM_TO_WORLD;
+    const sheetLeft = currentSheetLeft;
+    sheets.push({
+      centerX: sheetLeft + sheetWidth / 2,
+      widthWorld: sheetWidth,
+      heightWorld: sheetHeight,
+      label: result.stockPanel.id,
+      material: result.stockPanel.material,
+      thickness: result.stockPanel.thickness,
+      widthMm: result.stockPanel.width,
+      heightMm: result.stockPanel.height,
+    });
+
+    result.panels.forEach(panel => {
+      const footprintWidth = (panel.rotated ? panel.height : panel.width) || panel.width;
+      const footprintHeight = (panel.rotated ? panel.width : panel.height) || panel.height;
+      const centerXmm = clampNumber(
+        panel.x + footprintWidth / 2,
+        footprintWidth / 2,
+        Math.max(footprintWidth / 2, stockWidth - footprintWidth / 2)
+      );
+      const centerYmm = clampNumber(
+        panel.y + footprintHeight / 2,
+        footprintHeight / 2,
+        Math.max(footprintHeight / 2, stockHeight - footprintHeight / 2)
+      );
+      const layout = {
+        worldX: sheetLeft + centerXmm * PANEL_SIMULATION_MM_TO_WORLD,
+        worldY: boardCenterY,
+        worldZ: sheetHeight / 2 - centerYmm * PANEL_SIMULATION_MM_TO_WORLD,
+        rotationZ: panel.rotated ? Math.PI / 2 : 0,
+        scale: PANEL_SIMULATION_SCALE,
+        widthWorld: footprintWidth * PANEL_SIMULATION_MM_TO_WORLD,
+        heightWorld: footprintHeight * PANEL_SIMULATION_MM_TO_WORLD,
+        order,
+        sheetIndex,
+      };
+      addLayoutAliases(panel, layout);
+      panels.push({
+        key: `${sheetIndex}:${order}:${panel.id || panel.name || 'panel'}`,
+        label: panel.name || panel.label || '패널',
+        material: panel.material || result.stockPanel.material,
+        worldX: layout.worldX,
+        worldY: layout.worldY,
+        worldZ: layout.worldZ,
+        widthWorld: layout.widthWorld,
+        heightWorld: layout.heightWorld,
+        thicknessWorld: (panel.thickness || result.stockPanel.thickness || 18) * PANEL_SIMULATION_MM_TO_WORLD,
+        rotationZ: layout.rotationZ,
+        sheetIndex,
+        order,
+      });
+      order += 1;
+    });
+
+    currentSheetLeft += sheetWidth + sheetGapWorld;
+  });
+
+  return {
+    layouts,
+    sheet: {
+      centerX: 0,
+      centerY: boardCenterY,
+      centerZ: 0,
+      sheetWidthWorld,
+      sheetHeightWorld,
+      sheetGapWorld,
+      sheetCount,
+      sheets,
+      panels,
+    },
+  };
+};
 
 /**
  * SunLight — sunAngle에 따라 부드럽게 회전하는 메인 조명
@@ -94,6 +593,944 @@ const SunLight: React.FC<{ sunAngle: number; castShadow: boolean }> = ({ sunAngl
 const DUPLICATE_FURNITURE_EVENT_HANDLED_FLAG = '__configuratorDuplicateFurnitureHandled';
 let lastDuplicateFurnitureRequest: { furnitureId: string; at: number } | null = null;
 
+const PanelSimulationBoard: React.FC = () => {
+  const panelSimulationPhase = useUIStore(state => state.panelSimulationPhase);
+  const panelSimulationSheet = useUIStore(state => state.panelSimulationSheet);
+  const panelSimulationViewBackup = useUIStore(state => state.panelSimulationViewBackup);
+  const createGridPositions = useCallback((width: number, height: number) => {
+    const cols = 12;
+    const rows = 24;
+    const values: number[] = [];
+    const pushLine = (x1: number, y1: number, x2: number, y2: number) => {
+      values.push(x1, y1, 0.006, x2, y2, 0.006);
+    };
+
+    for (let i = 0; i <= cols; i += 1) {
+      const x = -width / 2 + (width * i) / cols;
+      pushLine(x, -height / 2, x, height / 2);
+    }
+    for (let i = 0; i <= rows; i += 1) {
+      const y = -height / 2 + (height * i) / rows;
+      pushLine(-width / 2, y, width / 2, y);
+    }
+
+    return new Float32Array(values);
+  }, []);
+  if ((panelSimulationPhase !== 'layout' && !panelSimulationViewBackup) || !panelSimulationSheet) return null;
+
+  const {
+    centerY,
+    centerZ,
+    sheetWidthWorld,
+    sheetHeightWorld,
+    sheetGapWorld,
+    sheetCount,
+  } = panelSimulationSheet;
+  const sheets = panelSimulationSheet.sheets?.length
+    ? panelSimulationSheet.sheets
+    : Array.from({ length: sheetCount }).map((_, index) => {
+      const totalWidth = sheetCount * sheetWidthWorld + Math.max(0, sheetCount - 1) * sheetGapWorld;
+      return {
+        centerX: panelSimulationSheet.centerX - totalWidth / 2 + sheetWidthWorld / 2 + index * (sheetWidthWorld + sheetGapWorld),
+        widthWorld: sheetWidthWorld,
+        heightWorld: sheetHeightWorld,
+      };
+    });
+  return (
+    <group userData={{ panelSimulationBoard: true }}>
+      {sheets.map((sheet, index) => (
+        <group
+          key={index}
+          position={[sheet.centerX, centerY, centerZ]}
+          rotation={[-Math.PI / 2, 0, 0]}
+        >
+          <mesh renderOrder={9990}>
+            <planeGeometry args={[sheet.widthWorld, sheet.heightWorld]} />
+            <meshBasicMaterial
+              color="#f1f5f9"
+              transparent
+              opacity={0.52}
+              depthWrite={false}
+              depthTest={true}
+              side={2}
+            />
+          </mesh>
+          <lineSegments renderOrder={9991}>
+            <bufferGeometry>
+              <bufferAttribute attach="attributes-position" args={[createGridPositions(sheet.widthWorld, sheet.heightWorld), 3]} />
+            </bufferGeometry>
+            <lineBasicMaterial color="#64748b" transparent opacity={0.72} depthTest={true} depthWrite={false} />
+          </lineSegments>
+          <lineSegments renderOrder={9992}>
+            <edgesGeometry attach="geometry" args={[new THREE.PlaneGeometry(sheet.widthWorld, sheet.heightWorld)]} />
+            <lineBasicMaterial color="#334155" transparent opacity={0.9} depthTest={true} depthWrite={false} />
+          </lineSegments>
+        </group>
+      ))}
+    </group>
+  );
+};
+
+const buildPanelSimulationSummary = (
+  revision: number,
+  sheet: PanelSimulationSheetLayout,
+): PanelSimulationSummary => {
+  const sheets = sheet.sheets?.length
+    ? sheet.sheets
+    : Array.from({ length: Math.max(0, sheet.sheetCount) }).map(() => ({
+      centerX: sheet.centerX,
+      widthWorld: sheet.sheetWidthWorld,
+      heightWorld: sheet.sheetHeightWorld,
+      material: '미지정',
+      widthMm: Math.round(sheet.sheetWidthWorld / PANEL_SIMULATION_MM_TO_WORLD),
+      heightMm: Math.round(sheet.sheetHeightWorld / PANEL_SIMULATION_MM_TO_WORLD),
+    }));
+  const stockBySpec = new Map<string, PanelSimulationSummary['stockSpecs'][number]>();
+  const materialByName = new Map<string, number>();
+
+  sheets.forEach(item => {
+    const material = (item.material || '미지정').trim() || '미지정';
+    const width = Math.round(item.widthMm || item.widthWorld / PANEL_SIMULATION_MM_TO_WORLD);
+    const height = Math.round(item.heightMm || item.heightWorld / PANEL_SIMULATION_MM_TO_WORLD);
+    const thickness = Number.isFinite(item.thickness) ? item.thickness : undefined;
+    const key = `${material}|${thickness ?? ''}|${width}|${height}|${item.label || ''}`;
+    const existing = stockBySpec.get(key);
+    if (existing) {
+      existing.count += 1;
+    } else {
+      stockBySpec.set(key, {
+        label: item.label,
+        material,
+        thickness,
+        width,
+        height,
+        count: 1,
+      });
+    }
+    materialByName.set(material, (materialByName.get(material) || 0) + 1);
+  });
+
+  const materialRank = (material: string) => {
+    const normalized = material.toUpperCase();
+    if (normalized === 'PB') return 0;
+    if (normalized === 'MDF') return 1;
+    if (normalized === 'PET') return 2;
+    return 3;
+  };
+
+  return {
+    revision,
+    sheetCount: sheets.length,
+    panelCount: sheet.panels?.length || 0,
+    stockSpecs: Array.from(stockBySpec.values()).sort((a, b) => {
+      const materialDiff = materialRank(a.material) - materialRank(b.material);
+      if (materialDiff !== 0) return materialDiff;
+      return (a.thickness || 0) - (b.thickness || 0) || a.height - b.height || a.width - b.width;
+    }),
+    materialCounts: Array.from(materialByName.entries())
+      .map(([material, count]) => ({ material, count }))
+      .sort((a, b) => materialRank(a.material) - materialRank(b.material) || a.material.localeCompare(b.material)),
+  };
+};
+
+const PanelSimulationSummaryPopup: React.FC = () => {
+  const summary = useUIStore(state => state.panelSimulationSummary);
+  const setPanelSimulationSummary = useUIStore(state => state.setPanelSimulationSummary);
+
+  if (!summary) return null;
+
+  const formatThickness = (value?: number) => {
+    if (!Number.isFinite(value)) return '두께미지정';
+    return `${Number(value).toFixed(1).replace(/\.0$/, '')}mm`;
+  };
+  const materialThicknessCounts = Array.from(
+    summary.stockSpecs.reduce((map, item) => {
+      const key = `${item.material}|${item.thickness ?? ''}`;
+      const existing = map.get(key);
+      if (existing) {
+        existing.count += item.count;
+      } else {
+        map.set(key, {
+          material: item.material,
+          thickness: item.thickness,
+          count: item.count,
+        });
+      }
+      return map;
+    }, new Map<string, { material: string; thickness?: number; count: number }>())
+      .values()
+  );
+
+  return (
+    <div
+      style={{
+        position: 'absolute',
+        inset: 0,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        zIndex: 80,
+        pointerEvents: 'none',
+        color: '#f8fafc',
+        fontFamily: 'Pretendard, Inter, system-ui, sans-serif',
+      }}
+    >
+      <div
+        style={{
+          width: 'min(430px, calc(100% - 40px))',
+          pointerEvents: 'auto',
+          background: 'linear-gradient(145deg, rgba(15, 23, 42, 0.94), rgba(30, 41, 59, 0.9))',
+          border: '1px solid rgba(248, 250, 252, 0.16)',
+          borderRadius: 8,
+          boxShadow: '0 24px 70px rgba(2, 6, 23, 0.42)',
+          padding: '16px',
+          backdropFilter: 'blur(18px)',
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+          <div>
+            <div style={{ fontSize: 12, color: '#38bdf8', fontWeight: 800 }}>PANEL LAYOUT</div>
+            <div style={{ marginTop: 2, fontSize: 20, fontWeight: 900, letterSpacing: 0 }}>
+              레이아웃 계산 완료
+            </div>
+          </div>
+          <button
+            type="button"
+            aria-label="닫기"
+            onClick={() => setPanelSimulationSummary(null)}
+            style={{
+              flex: '0 0 auto',
+              width: 30,
+              height: 30,
+              border: '1px solid rgba(226, 232, 240, 0.18)',
+              borderRadius: 8,
+              background: 'rgba(255, 255, 255, 0.07)',
+              color: '#e2e8f0',
+              fontSize: 18,
+              lineHeight: '26px',
+              cursor: 'pointer',
+            }}
+          >
+            ×
+          </button>
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 8, marginTop: 14 }}>
+          <div style={{ borderRadius: 8, background: 'rgba(248, 250, 252, 0.08)', border: '1px solid rgba(248, 250, 252, 0.08)', padding: '10px 12px' }}>
+            <div style={{ fontSize: 11, color: '#94a3b8', fontWeight: 700 }}>원장 수량</div>
+            <div style={{ marginTop: 2, fontSize: 24, fontWeight: 900 }}>{summary.sheetCount}</div>
+          </div>
+          <div style={{ borderRadius: 8, background: 'rgba(248, 250, 252, 0.08)', border: '1px solid rgba(248, 250, 252, 0.08)', padding: '10px 12px' }}>
+            <div style={{ fontSize: 11, color: '#94a3b8', fontWeight: 700 }}>패널 수량</div>
+            <div style={{ marginTop: 2, fontSize: 24, fontWeight: 900 }}>{summary.panelCount}</div>
+          </div>
+        </div>
+
+        <div style={{ marginTop: 12, display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+          {materialThicknessCounts.map(item => (
+            <div
+              key={`${item.material}-${item.thickness ?? ''}`}
+              style={{
+                borderRadius: 7,
+                background: 'rgba(14, 165, 233, 0.12)',
+                border: '1px solid rgba(125, 211, 252, 0.18)',
+                color: '#f8fafc',
+                padding: '7px 9px',
+                fontSize: 12,
+                fontWeight: 800,
+              }}
+            >
+              {item.material} {formatThickness(item.thickness)} {item.count}장
+            </div>
+          ))}
+        </div>
+
+        <div style={{ marginTop: 12, display: 'grid', gap: 0, maxHeight: 164, overflowY: 'auto' }}>
+          {summary.stockSpecs.map(item => (
+            <div
+              key={`${item.material}-${item.thickness ?? ''}-${item.width}-${item.height}-${item.label ?? ''}`}
+              style={{
+                display: 'grid',
+                gridTemplateColumns: '1fr auto',
+                alignItems: 'center',
+                gap: 12,
+                fontSize: 12,
+                color: '#cbd5e1',
+                borderTop: '1px solid rgba(226, 232, 240, 0.1)',
+                padding: '8px 0',
+              }}
+            >
+              <span>
+                <strong style={{ color: '#ffffff' }}>{item.material}</strong>
+                {' '}{formatThickness(item.thickness)} · {item.width}×{item.height}
+              </span>
+              <strong style={{ color: '#ffffff' }}>{item.count}장</strong>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const PanelSimulationSourcePrimitive: React.FC<{ source: ReturnType<typeof getPanelSimulationSources>[number] }> = ({ source }) => {
+  const clone = useMemo(() => {
+    if (!source.objectClone) return null;
+    const nextClone = source.objectClone.clone(true);
+    nextClone.visible = true;
+    nextClone.traverse(child => {
+      child.visible = true;
+    });
+    return nextClone;
+  }, [source.objectClone]);
+  if (!clone) return null;
+  return <primitive object={clone} />;
+};
+
+const PanelSimulationAccessoryVisual: React.FC<{ source: ReturnType<typeof getPanelSimulationSources>[number] }> = ({ source }) => {
+  if (source.objectClone) {
+    return <PanelSimulationSourcePrimitive source={source} />;
+  }
+
+  const materialProps = {
+    color: source.color,
+    roughness: 0.62,
+    metalness: source.panelName.includes('옷봉') || source.panelName.includes('조절발') || source.panelName.includes('레그라') || source.panelName.includes('금속') ? 0.35 : 0.02,
+    transparent: source.opacity < 1,
+    opacity: source.opacity,
+    depthTest: true,
+    depthWrite: true,
+  };
+
+  if (source.shape === 'adjustableFoot') {
+    const plateHeight = Math.min(source.args[1] * 0.24, 0.07);
+    const cylinderHeight = Math.max(0.02, source.args[1] - plateHeight);
+    const cylinderRadius = source.args[0] * 0.44;
+    return (
+      <>
+        <mesh renderOrder={9998} position={[0, source.args[1] / 2 - plateHeight / 2, 0]}>
+          <boxGeometry args={[source.args[0], plateHeight, source.args[2]]} />
+          <meshStandardMaterial {...materialProps} />
+        </mesh>
+        <mesh renderOrder={9998} position={[0, -plateHeight / 2, 0]}>
+          <cylinderGeometry args={[cylinderRadius, cylinderRadius, cylinderHeight, 32]} />
+          <meshStandardMaterial {...materialProps} />
+        </mesh>
+      </>
+    );
+  }
+
+  return (
+    <>
+      <mesh renderOrder={9998}>
+        <boxGeometry args={source.args} />
+        <meshStandardMaterial {...materialProps} />
+      </mesh>
+      <lineSegments renderOrder={9999}>
+        <edgesGeometry attach="geometry" args={[new THREE.BoxGeometry(...source.args)]} />
+        <lineBasicMaterial color="#475569" transparent opacity={0.78} depthTest={true} depthWrite={false} />
+      </lineSegments>
+    </>
+  );
+};
+
+const getPanelSimulationCinematicPosition = (
+  fromPosition: THREE.Vector3,
+  toPosition: THREE.Vector3,
+  progress: number,
+  sourceIndex: number
+) => {
+  const distance = fromPosition.distanceTo(toPosition);
+  const liftHeight = Math.min(4.6, Math.max(1.35, distance * 0.2));
+  const drift = new THREE.Vector3(
+    Math.sin(sourceIndex * 1.37) * Math.min(1.2, distance * 0.08),
+    0,
+    Math.cos(sourceIndex * 0.91) * Math.min(1.0, distance * 0.06)
+  );
+
+  const liftStart = fromPosition.clone().add(new THREE.Vector3(0, liftHeight * 0.75, 0)).add(drift.clone().multiplyScalar(0.35));
+  if (progress < 0.24) {
+    return fromPosition.clone().lerp(liftStart, easeOutCubic(progress / 0.24));
+  }
+  const sheetApproach = toPosition.clone().add(new THREE.Vector3(0, liftHeight * 0.48, 0)).sub(drift.clone().multiplyScalar(0.25));
+  if (progress < 0.82) {
+    const t = smootherStep((progress - 0.24) / 0.58);
+    const control = fromPosition.clone().lerp(toPosition, 0.52).add(new THREE.Vector3(0, liftHeight * 1.1, 0)).add(drift);
+    const a = liftStart.clone().lerp(control, t);
+    const b = control.clone().lerp(sheetApproach, t);
+    return a.lerp(b, t);
+  }
+  return sheetApproach.lerp(toPosition, smootherStep((progress - 0.82) / 0.18));
+};
+
+const getPanelSimulationAssemblyDropPosition = (
+  fromPosition: THREE.Vector3,
+  toPosition: THREE.Vector3,
+  progress: number,
+  sourceIndex: number
+) => {
+  const distance = fromPosition.distanceTo(toPosition);
+  const liftHeight = Math.min(4.2, Math.max(1.45, distance * 0.18));
+  const aboveTarget = toPosition.clone().add(new THREE.Vector3(0, liftHeight, 0));
+  const takeoff = fromPosition.clone().add(new THREE.Vector3(0, liftHeight * 0.42, 0));
+
+  if (progress < 0.18) {
+    return fromPosition.clone().lerp(takeoff, easeOutCubic(progress / 0.18));
+  }
+  if (progress < 0.72) {
+    const t = smootherStep((progress - 0.18) / 0.54);
+    const control = fromPosition
+      .clone()
+      .lerp(aboveTarget, 0.48)
+      .add(new THREE.Vector3(0, liftHeight * 0.38, 0));
+    const sideOffset = new THREE.Vector3(
+      Math.sin(sourceIndex * 0.73) * Math.min(0.22, distance * 0.018),
+      0,
+      Math.cos(sourceIndex * 0.61) * Math.min(0.18, distance * 0.014)
+    );
+    control.add(sideOffset);
+    const a = takeoff.clone().lerp(control, t);
+    const b = control.clone().lerp(aboveTarget, t);
+    return a.lerp(b, t);
+  }
+  return aboveTarget.lerp(toPosition, smootherStep((progress - 0.72) / 0.28));
+};
+
+const PanelSimulationAccessoryItem: React.FC<{
+  source: ReturnType<typeof getPanelSimulationSources>[number];
+  sourceIndex: number;
+  startPosition: THREE.Vector3;
+  stagingQuaternion: THREE.Quaternion;
+  assemblyOrder: number;
+  phase: 'assembled' | 'layout';
+  startTimeRef: React.MutableRefObject<number>;
+}> = ({ source, sourceIndex, startPosition, stagingQuaternion, assemblyOrder, phase, startTimeRef }) => {
+  const groupRef = useRef<THREE.Group>(null);
+  const sourcePosition = source.worldPosition;
+  const sourceQuaternion = source.worldQuaternion;
+
+  useFrame(() => {
+    const group = groupRef.current;
+    if (!group) return;
+
+    if (phase === 'layout') {
+      group.position.copy(startPosition);
+      group.quaternion.copy(stagingQuaternion);
+      return;
+    }
+
+    const elapsedBase = performance.now() / 1000 - startTimeRef.current;
+    const delay = assemblyOrder * PANEL_SIMULATION_ASSEMBLY_DELAY_STEP;
+    const rawProgress = Math.max(0, Math.min(1, (elapsedBase - delay) / PANEL_SIMULATION_DURATION));
+    const progress = easeInOutCubic(rawProgress);
+    const position = getPanelSimulationAssemblyDropPosition(startPosition, sourcePosition, progress, sourceIndex);
+    const quaternion = stagingQuaternion.clone().slerp(sourceQuaternion, progress);
+    group.position.copy(position);
+    group.quaternion.copy(quaternion);
+  });
+
+  return (
+    <group
+      ref={groupRef}
+      position={phase === 'layout' ? startPosition : startPosition}
+      quaternion={stagingQuaternion}
+      renderOrder={9998}
+      userData={{
+        furnitureId: source.furnitureId,
+        panelName: source.panelName,
+        liveDimensionKey: `panel-simulation::${source.key}`,
+        liveDimension: {
+          widthMm: Math.round(source.args[0] * 100),
+          heightMm: Math.round(source.args[1] * 100),
+          depthMm: Math.round(source.args[2] * 100),
+          sizeThree: [
+            Math.max(0.001, source.args[0]),
+            Math.max(0.001, source.args[1]),
+            Math.max(0.001, source.args[2]),
+          ],
+        },
+      }}
+    >
+      <PanelSimulationAccessoryVisual source={source} />
+    </group>
+  );
+};
+
+const PanelSimulationMovingPanels: React.FC = () => {
+  const panelSimulationPhase = useUIStore(state => state.panelSimulationPhase);
+  const panelSimulationRevision = useUIStore(state => state.panelSimulationRevision);
+  const panelSimulationLayouts = useUIStore(state => state.panelSimulationLayouts);
+  const panelSimulationSheet = useUIStore(state => state.panelSimulationSheet);
+  const panelSimulationViewBackup = useUIStore(state => state.panelSimulationViewBackup);
+  const completePanelSimulationAssembly = useUIStore(state => state.completePanelSimulationAssembly);
+  const setPanelSimulationSummary = useUIStore(state => state.setPanelSimulationSummary);
+  const startTimeRef = useRef(0);
+  const shownSummaryRevisionRef = useRef(0);
+  const [sourcesSnapshot, setSourcesSnapshot] = useState<ReturnType<typeof getPanelSimulationSources>>([]);
+
+  useEffect(() => {
+    if (panelSimulationRevision <= 0) return;
+    if (Object.keys(panelSimulationLayouts).length === 0) return;
+    const cameraSettleDelay = panelSimulationPhase === 'layout' ? 1.05 : 1.35;
+    startTimeRef.current = performance.now() / 1000 + cameraSettleDelay;
+    const updateSources = () => {
+      const next = getPanelSimulationSources().filter(source => source.assemblyOnly);
+      setSourcesSnapshot(prev => {
+        if (prev.length === next.length && prev.every((source, index) => source === next[index])) {
+          return prev;
+        }
+        return next;
+      });
+    };
+    updateSources();
+    const intervalId = window.setInterval(() => {
+      updateSources();
+    }, 250);
+    return () => window.clearInterval(intervalId);
+  }, [panelSimulationPhase, panelSimulationRevision, panelSimulationLayouts]);
+
+  useEffect(() => {
+    if (panelSimulationPhase !== 'layout' || panelSimulationRevision <= 0 || !panelSimulationSheet) return;
+    if (shownSummaryRevisionRef.current === panelSimulationRevision) return;
+    const panelCount = panelSimulationSheet.panels?.length || 0;
+    if (panelCount === 0) return;
+
+    const maxOrder = panelSimulationSheet.panels?.reduce((max, panel) => Math.max(max, panel.order || 0), 0) ?? 0;
+    const completeMs = Math.ceil((1.05 + maxOrder * PANEL_SIMULATION_DELAY_STEP + PANEL_SIMULATION_DURATION + 0.45) * 1000);
+    const timeoutId = window.setTimeout(() => {
+      shownSummaryRevisionRef.current = panelSimulationRevision;
+      setPanelSimulationSummary(buildPanelSimulationSummary(panelSimulationRevision, panelSimulationSheet));
+    }, completeMs);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [panelSimulationPhase, panelSimulationRevision, panelSimulationSheet, setPanelSimulationSummary]);
+
+  useEffect(() => {
+    if (panelSimulationPhase !== 'assembled' || panelSimulationRevision <= 0 || !panelSimulationViewBackup) return;
+    const sources = getPanelSimulationSources();
+    const modules = useFurnitureStore.getState().placedModules;
+    const furnitureCount = Math.max(1, modules.filter(module => !module.isSurroundPanel).length);
+    const sourceMaxOrder = sources.reduce((maxOrder, source, sourceIndex) => {
+      const order = getPanelAssemblySequence(
+        source.furnitureId,
+        source.panelName,
+        [source.worldPosition.x, source.worldPosition.y, source.worldPosition.z],
+        null,
+        source.panelName.includes('옷봉')
+      ) + (sourceIndex % 5);
+      return Math.max(maxOrder, order);
+    }, 0);
+    const expectedLastOrder = Math.max(
+      sourceMaxOrder,
+      furnitureCount * PANEL_SIMULATION_FURNITURE_SPAN + PANEL_SIMULATION_FINAL_STAGE_ORDER + 160
+    );
+    const completeMs = Math.ceil((1.35 + expectedLastOrder * PANEL_SIMULATION_ASSEMBLY_DELAY_STEP + PANEL_SIMULATION_DURATION + 0.65) * 1000);
+    const timeoutId = window.setTimeout(() => {
+      completePanelSimulationAssembly(panelSimulationRevision);
+    }, completeMs);
+    return () => window.clearTimeout(timeoutId);
+  }, [panelSimulationPhase, panelSimulationRevision, panelSimulationViewBackup, completePanelSimulationAssembly, panelSimulationLayouts]);
+
+  if (panelSimulationRevision <= 0 || Object.keys(panelSimulationLayouts).length === 0) return null;
+
+  const sources = sourcesSnapshot;
+  const sameTypeIndexBySourceKey = new Map<string, number>();
+  const assemblyOnlyIndexBySourceKey = new Map<string, number>();
+  const assemblyOnlyCategoryBySourceKey = new Map<string, string>();
+  const assemblyOnlyCategoryOrders = new Map<string, number>();
+  const assemblyOnlySortedSources: ReturnType<typeof getPanelSimulationSources> = [];
+  const furnitureDoorCounts = new Map<string, number>();
+  const furniturePanelCounts = new Map<string, number>();
+  const getAssemblyOnlyCategory = (panelName: string) => {
+    if (panelName.includes('조절발')) return 'feet';
+    if (panelName.includes('레그라')) return 'legra';
+    if (panelName.includes('옷봉')) return 'rod';
+    if (panelName.includes('유리장') || panelName.includes('금속도어') || panelName.includes('유리')) return 'glass';
+    return 'other';
+  };
+  const getAssemblyOnlySortWeight = (panelName: string) => {
+    const category = getAssemblyOnlyCategory(panelName);
+    if (category === 'feet') return 0;
+    if (category === 'legra') return 1;
+    if (category === 'rod') return 2;
+    if (category === 'glass') return 3;
+    return 4;
+  };
+  sources.forEach(source => {
+    const furnitureKey = source.furnitureId || 'unknown';
+    const isDoor = source.panelName.includes('도어');
+    const counterKey = furnitureKey;
+    const map = isDoor ? furnitureDoorCounts : furniturePanelCounts;
+    const nextIndex = map.get(counterKey) || 0;
+    sameTypeIndexBySourceKey.set(source.key, nextIndex);
+    map.set(counterKey, nextIndex + 1);
+    if (source.assemblyOnly) {
+      assemblyOnlySortedSources.push(source);
+    }
+  });
+  assemblyOnlySortedSources
+    .sort((a, b) => {
+      const weightDiff = getAssemblyOnlySortWeight(a.panelName) - getAssemblyOnlySortWeight(b.panelName);
+      if (weightDiff !== 0) return weightDiff;
+      const furnitureDiff = (a.furnitureId || '').localeCompare(b.furnitureId || '');
+      if (furnitureDiff !== 0) return furnitureDiff;
+      return a.panelName.localeCompare(b.panelName);
+    })
+    .forEach((source, index) => {
+      const category = getAssemblyOnlyCategory(source.panelName);
+      const categoryIndex = assemblyOnlyCategoryOrders.get(category) || 0;
+      assemblyOnlyIndexBySourceKey.set(source.key, index);
+      assemblyOnlyCategoryBySourceKey.set(source.key, category);
+      assemblyOnlyCategoryOrders.set(category, categoryIndex + 1);
+    });
+  const claimedLayoutKeys = new Set<string>();
+  const getAssemblyOnlyStartPosition = (
+    source: ReturnType<typeof getPanelSimulationSources>[number],
+    assemblyIndex: number,
+    category: string
+  ) => {
+    const sheets = panelSimulationSheet?.sheets || [];
+    const rightEdge = sheets.length
+      ? Math.max(...sheets.map(sheet => sheet.centerX + sheet.widthWorld / 2))
+      : (panelSimulationSheet?.centerX || 0) + (panelSimulationSheet?.sheetWidthWorld || 8) / 2;
+    const columns = 4;
+    const rowGap = 1.05;
+    const colGap = 1.15;
+    const column = assemblyIndex % columns;
+    const row = Math.floor(assemblyIndex / columns);
+    const rowCount = Math.ceil(Math.max(1, assemblyOnlySortedSources.length) / columns);
+    const zStart = -((rowCount - 1) * rowGap) / 2;
+    return new THREE.Vector3(
+      rightEdge + 1.25 + column * colGap,
+      (panelSimulationSheet?.centerY || 0) + Math.max(0.35, source.args[1] * 0.5 + 0.08),
+      zStart + row * rowGap
+    );
+  };
+  const getCinematicPosition = (
+    fromPosition: THREE.Vector3,
+    toPosition: THREE.Vector3,
+    progress: number,
+    isAssembling: boolean,
+    sourceIndex: number
+  ) => {
+    const distance = fromPosition.distanceTo(toPosition);
+    const liftHeight = Math.min(4.6, Math.max(1.35, distance * 0.2));
+    const drift = new THREE.Vector3(
+      Math.sin(sourceIndex * 1.37) * Math.min(1.2, distance * 0.08),
+      0,
+      Math.cos(sourceIndex * 0.91) * Math.min(1.0, distance * 0.06)
+    );
+
+    if (isAssembling) {
+      const travelEnd = toPosition.clone().add(new THREE.Vector3(0, liftHeight, 0));
+      if (progress < 0.66) {
+        const t = smootherStep(progress / 0.66);
+        const controlA = fromPosition.clone().add(new THREE.Vector3(0, liftHeight * 0.65, 0)).add(drift);
+        const controlB = travelEnd.clone().add(new THREE.Vector3(0, liftHeight * 0.28, 0)).sub(drift.clone().multiplyScalar(0.28));
+        const a = fromPosition.clone().lerp(controlA, t);
+        const b = controlA.clone().lerp(controlB, t);
+        const c = controlB.clone().lerp(travelEnd, t);
+        const d = a.lerp(b, t);
+        const e = b.lerp(c, t);
+        return d.lerp(e, t);
+      }
+      const settle = smootherStep((progress - 0.66) / 0.34);
+      return travelEnd.lerp(toPosition, settle);
+    }
+
+    const liftStart = fromPosition.clone().add(new THREE.Vector3(0, liftHeight * 0.75, 0)).add(drift.clone().multiplyScalar(0.35));
+    if (progress < 0.24) {
+      return fromPosition.clone().lerp(liftStart, easeOutCubic(progress / 0.24));
+    }
+    const sheetApproach = toPosition.clone().add(new THREE.Vector3(0, liftHeight * 0.48, 0)).sub(drift.clone().multiplyScalar(0.25));
+    if (progress < 0.82) {
+      const t = smootherStep((progress - 0.24) / 0.58);
+      const control = fromPosition.clone().lerp(toPosition, 0.52).add(new THREE.Vector3(0, liftHeight * 1.1, 0)).add(drift);
+      const a = liftStart.clone().lerp(control, t);
+      const b = control.clone().lerp(sheetApproach, t);
+      return a.lerp(b, t);
+    }
+    return sheetApproach.lerp(toPosition, smootherStep((progress - 0.82) / 0.18));
+  };
+  const getAssemblyDropPosition = (
+    fromPosition: THREE.Vector3,
+    toPosition: THREE.Vector3,
+    progress: number,
+    sourceIndex: number
+  ) => {
+    const distance = fromPosition.distanceTo(toPosition);
+    const liftHeight = Math.min(4.2, Math.max(1.45, distance * 0.18));
+    const aboveTarget = toPosition.clone().add(new THREE.Vector3(0, liftHeight, 0));
+    const takeoff = fromPosition.clone().add(new THREE.Vector3(0, liftHeight * 0.42, 0));
+
+    if (progress < 0.18) {
+      return fromPosition.clone().lerp(takeoff, easeOutCubic(progress / 0.18));
+    }
+    if (progress < 0.72) {
+      const t = smootherStep((progress - 0.18) / 0.54);
+      const control = fromPosition
+        .clone()
+        .lerp(aboveTarget, 0.48)
+        .add(new THREE.Vector3(0, liftHeight * 0.38, 0));
+      const sideOffset = new THREE.Vector3(
+        Math.sin(sourceIndex * 0.73) * Math.min(0.22, distance * 0.018),
+        0,
+        Math.cos(sourceIndex * 0.61) * Math.min(0.18, distance * 0.014)
+      );
+      control.add(sideOffset);
+      const a = takeoff.clone().lerp(control, t);
+      const b = control.clone().lerp(aboveTarget, t);
+      return a.lerp(b, t);
+    }
+    return aboveTarget.lerp(toPosition, smootherStep((progress - 0.72) / 0.28));
+  };
+  const getFallbackLayoutPosition = (source: ReturnType<typeof getPanelSimulationSources>[number], fallbackIndex: number) => {
+    const sheets = panelSimulationSheet?.sheets || [];
+    const rightEdge = sheets.length
+      ? Math.max(...sheets.map(sheet => sheet.centerX + sheet.widthWorld / 2))
+      : (panelSimulationSheet?.centerX || 0) + (panelSimulationSheet?.sheetWidthWorld || 8) / 2;
+    return new THREE.Vector3(
+      rightEdge + 1.25 + (fallbackIndex % 4) * 1.15,
+      (panelSimulationSheet?.centerY || 0) + Math.max(0.35, source.args[1] * 0.5 + 0.08),
+      -2.1 + Math.floor(fallbackIndex / 4) * 1.05
+    );
+  };
+  const renderAssemblyOnlySource = (source: ReturnType<typeof getPanelSimulationSources>[number]) => {
+    if (source.objectClone) {
+      return <PanelSimulationSourcePrimitive source={source} />;
+    }
+
+    const materialProps = {
+      color: source.color,
+      roughness: 0.62,
+      metalness: source.panelName.includes('옷봉') || source.panelName.includes('조절발') || source.panelName.includes('레그라') || source.panelName.includes('금속') ? 0.35 : 0.02,
+      transparent: source.opacity < 1,
+      opacity: source.opacity,
+      depthTest: true,
+      depthWrite: true,
+    };
+
+    if (source.shape === 'adjustableFoot') {
+      const plateHeight = Math.min(source.args[1] * 0.24, 0.07);
+      const cylinderHeight = Math.max(0.02, source.args[1] - plateHeight);
+      const cylinderRadius = source.args[0] * 0.44;
+      return (
+        <>
+          <mesh renderOrder={9998} position={[0, source.args[1] / 2 - plateHeight / 2, 0]}>
+            <boxGeometry args={[source.args[0], plateHeight, source.args[2]]} />
+            <meshStandardMaterial {...materialProps} />
+          </mesh>
+          <mesh renderOrder={9998} position={[0, -plateHeight / 2, 0]}>
+            <cylinderGeometry args={[cylinderRadius, cylinderRadius, cylinderHeight, 32]} />
+            <meshStandardMaterial {...materialProps} />
+          </mesh>
+        </>
+      );
+    }
+
+    if (source.shape === 'glassDoor') {
+      const [width, height, depth] = source.args;
+      const frame = Math.min(width, height) * 0.08;
+      const glassWidth = Math.max(0.01, width - frame * 2);
+      const glassHeight = Math.max(0.01, height - frame * 2);
+      return (
+        <>
+          <mesh renderOrder={9998} position={[0, height / 2 - frame / 2, 0]}>
+            <boxGeometry args={[width, frame, depth]} />
+            <meshStandardMaterial {...materialProps} />
+          </mesh>
+          <mesh renderOrder={9998} position={[0, -height / 2 + frame / 2, 0]}>
+            <boxGeometry args={[width, frame, depth]} />
+            <meshStandardMaterial {...materialProps} />
+          </mesh>
+          <mesh renderOrder={9998} position={[-width / 2 + frame / 2, 0, 0]}>
+            <boxGeometry args={[frame, glassHeight, depth]} />
+            <meshStandardMaterial {...materialProps} />
+          </mesh>
+          <mesh renderOrder={9998} position={[width / 2 - frame / 2, 0, 0]}>
+            <boxGeometry args={[frame, glassHeight, depth]} />
+            <meshStandardMaterial {...materialProps} />
+          </mesh>
+          <mesh renderOrder={9997}>
+            <boxGeometry args={[glassWidth, glassHeight, Math.max(0.01, depth * 0.28)]} />
+            <meshPhysicalMaterial
+              color="#8a6f52"
+              roughness={0.18}
+              metalness={0}
+              transparent
+              opacity={0.28}
+              depthTest={true}
+              depthWrite={false}
+            />
+          </mesh>
+        </>
+      );
+    }
+
+    return (
+      <>
+        <mesh renderOrder={9998}>
+          <boxGeometry args={source.args} />
+          <meshStandardMaterial {...materialProps} />
+        </mesh>
+        <lineSegments renderOrder={9999}>
+          <edgesGeometry attach="geometry" args={[new THREE.BoxGeometry(...source.args)]} />
+          <lineBasicMaterial color="#475569" transparent opacity={0.78} depthTest={true} depthWrite={false} />
+        </lineSegments>
+      </>
+    );
+  };
+
+  return (
+    <group userData={{ panelSimulationMovingPanels: true }}>
+      {sources.map((source, sourceIndex) => {
+        const sourcePosition = source.worldPosition.clone();
+        if (source.assemblyOnly) {
+          const assemblyOnlyIndex = assemblyOnlyIndexBySourceKey.get(source.key) || 0;
+          const assemblyCategory = assemblyOnlyCategoryBySourceKey.get(source.key) || getAssemblyOnlyCategory(source.panelName);
+          const startPosition = getAssemblyOnlyStartPosition(source, assemblyOnlyIndex, assemblyCategory);
+          const stagingQuaternion = source.shape === 'adjustableFoot'
+            ? new THREE.Quaternion()
+            : buildFlatPanelQuaternion(source.args, 0);
+          const sameTypeIndex = sameTypeIndexBySourceKey.get(source.key) || 0;
+          const assemblyOrder = getPanelAssemblySequence(
+            source.furnitureId,
+            source.panelName,
+            [sourcePosition.x, sourcePosition.y, sourcePosition.z],
+            null,
+            source.panelName.includes('옷봉')
+          ) + sameTypeIndex * 12;
+          return (
+            <PanelSimulationAccessoryItem
+              key={source.key}
+              source={source}
+              sourceIndex={sourceIndex}
+              startPosition={startPosition}
+              stagingQuaternion={stagingQuaternion}
+              assemblyOrder={assemblyOrder}
+              phase={panelSimulationPhase}
+              startTimeRef={startTimeRef}
+            />
+          );
+        }
+        const { thicknessAxis, widthAxis, lengthAxis } = getFlatPanelAxes(source.args);
+        const layoutCandidates = Object.entries(panelSimulationLayouts)
+          .filter(([key]) => key === source.layoutKey || key.startsWith(`${source.layoutKey}#`))
+          .filter(([key]) => !claimedLayoutKeys.has(key))
+          .sort(([, a], [, b]) => {
+            const aWidth = a.widthWorld / Math.max(a.scale, 0.001);
+            const aHeight = a.heightWorld / Math.max(a.scale, 0.001);
+            const bWidth = b.widthWorld / Math.max(b.scale, 0.001);
+            const bHeight = b.heightWorld / Math.max(b.scale, 0.001);
+            const sourceWidth = source.args[widthAxis.index];
+            const sourceHeight = source.args[lengthAxis.index];
+            const aDiff = Math.abs(aWidth - sourceWidth) + Math.abs(aHeight - sourceHeight);
+            const bDiff = Math.abs(bWidth - sourceWidth) + Math.abs(bHeight - sourceHeight);
+            return aDiff - bDiff;
+          });
+        const selectedCandidate = layoutCandidates[0];
+        const fallbackLayoutIndex = sourceIndex;
+        const fallbackPosition = getFallbackLayoutPosition(source, fallbackLayoutIndex);
+        let selectedLayoutKey: string | undefined;
+        let layout = selectedCandidate?.[1];
+        if (selectedCandidate) {
+          [selectedLayoutKey, layout] = selectedCandidate;
+          claimedLayoutKeys.add(selectedLayoutKey);
+        }
+
+        const sameTypeIndex = sameTypeIndexBySourceKey.get(source.key) || 0;
+        const isDoorPanel = source.panelName.includes('도어');
+        const assemblyOrder = getPanelAssemblySequence(
+          source.furnitureId,
+          source.panelName,
+          [sourcePosition.x, sourcePosition.y, sourcePosition.z],
+          null,
+          source.panelName.includes('옷봉')
+        ) + (isDoorPanel ? sameTypeIndex * 28 : (sourceIndex % 5));
+        const exportOrder = getPanelSimulationExportOrder(source.panelName, layout.order, sourceIndex, sameTypeIndex);
+        const delay = panelSimulationPhase === 'layout'
+          ? exportOrder * PANEL_SIMULATION_LAYOUT_DELAY_STEP
+          : assemblyOrder * PANEL_SIMULATION_ASSEMBLY_DELAY_STEP;
+        const duration = panelSimulationPhase === 'layout' ? 1.05 : PANEL_SIMULATION_DURATION;
+        const rawProgress = Math.max(0, Math.min(1, (elapsedBase - delay) / duration));
+        const progress = easeInOutCubic(rawProgress);
+        const targetScale = new THREE.Vector3(1, 1, 1);
+        const layoutScale = layout?.scale ?? 1;
+        targetScale.setComponent(thicknessAxis.index, layoutScale);
+        targetScale.setComponent(widthAxis.index, layout ? layout.widthWorld / Math.max(source.args[widthAxis.index], 0.001) : 1);
+        targetScale.setComponent(lengthAxis.index, layout ? layout.heightWorld / Math.max(source.args[lengthAxis.index], 0.001) : 1);
+
+        const thickness = Math.min(source.args[0], source.args[1], source.args[2]);
+        const targetPosition = new THREE.Vector3(
+          layout?.worldX ?? fallbackPosition.x,
+          layout ? layout.worldY + thickness * layout.scale * 0.5 + 0.03 : fallbackPosition.y,
+          layout?.worldZ ?? fallbackPosition.z
+        );
+        const targetQuaternion = buildFlatPanelQuaternion(source.args, layout?.rotationZ ?? 0);
+        const fromPosition = panelSimulationPhase === 'layout' ? sourcePosition : targetPosition;
+        const toPosition = panelSimulationPhase === 'layout' ? targetPosition : sourcePosition;
+        const fromQuaternion = panelSimulationPhase === 'layout' ? sourceQuaternion : targetQuaternion;
+        const toQuaternion = panelSimulationPhase === 'layout' ? targetQuaternion : sourceQuaternion;
+        const fromScale = panelSimulationPhase === 'layout' ? new THREE.Vector3(1, 1, 1) : targetScale;
+        const toScale = panelSimulationPhase === 'layout' ? targetScale : new THREE.Vector3(1, 1, 1);
+        const currentPosition = panelSimulationPhase === 'assembled'
+          ? getAssemblyDropPosition(fromPosition, toPosition, progress, sourceIndex)
+          : getCinematicPosition(fromPosition, toPosition, progress, false, sourceIndex);
+        const currentQuaternion = fromQuaternion.clone().slerp(toQuaternion, progress);
+        const currentScale = fromScale.clone().lerp(toScale, progress);
+        const liveDimensionData = {
+          widthMm: Math.round(source.args[0] * 100),
+          heightMm: Math.round(source.args[1] * 100),
+          depthMm: Math.round(source.args[2] * 100),
+          useObjectBounds: true,
+        };
+
+        return (
+          <group
+            key={source.key}
+            position={currentPosition}
+            quaternion={currentQuaternion}
+            scale={currentScale}
+            renderOrder={9998}
+            userData={{
+              furnitureId: source.furnitureId,
+              panelName: source.panelName,
+              liveDimensionKey: `panel-simulation::${source.key}`,
+              liveDimension: liveDimensionData,
+            }}
+          >
+            <mesh
+              name={`panel-simulation-mesh-${source.panelName}`}
+              renderOrder={9998}
+              userData={{
+                furnitureId: source.furnitureId,
+                panelName: source.panelName,
+                liveDimensionKey: `panel-simulation::${source.key}`,
+                liveDimension: liveDimensionData,
+              }}
+            >
+              <boxGeometry args={source.args} />
+              <meshStandardMaterial
+                color={source.color}
+                roughness={0.62}
+                metalness={0.02}
+                transparent={source.opacity < 1}
+                opacity={source.opacity}
+                depthTest={true}
+                depthWrite={true}
+              />
+            </mesh>
+            <lineSegments renderOrder={9999}>
+              <edgesGeometry attach="geometry" args={[new THREE.BoxGeometry(...source.args)]} />
+              <lineBasicMaterial color="#475569" transparent opacity={0.78} depthTest={true} depthWrite={false} />
+            </lineSegments>
+          </group>
+        );
+      })}
+    </group>
+  );
+};
+
 /**
  * Space3DView 컴포넌트
  * 공간 정보를 3D로 표시하는 Three.js 뷰어
@@ -104,7 +1541,8 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
   const location = useLocation();
   const { spaceInfo: storeSpaceInfo, updateColumn, removeColumn, updateWall, removeWall, addWall, removePanelB, updatePanelB } = useSpaceConfigStore();
   const { placedModules, updateFurnitureForColumns } = useFurnitureStore();
-  const { view2DDirection, showDimensions: storeShowDimensions, showDimensionsText, showGuides, showAxis, activePopup, setView2DDirection, setViewMode: setUIViewMode, isColumnCreationMode, isWallCreationMode, isPanelBCreationMode, view2DTheme, showFurniture: storeShowFurniture, isMeasureMode, toggleMeasureMode, isEraserMode, selectedSlotIndex, setSelectedSlotIndex, cameraMode, isLayoutBuilderOpen, sunAngle, selectedColumnId, isLiveDimensionMode, isTapeMeasureMode } = useUIStore();
+  const { view2DDirection, showDimensions: storeShowDimensions, showDimensionsText, showGuides, showAxis, activePopup, setView2DDirection, setViewMode: setUIViewMode, isColumnCreationMode, isWallCreationMode, isPanelBCreationMode, view2DTheme, showFurniture: storeShowFurniture, isMeasureMode, toggleMeasureMode, isEraserMode, selectedSlotIndex, setSelectedSlotIndex, cameraMode, isLayoutBuilderOpen, sunAngle, selectedColumnId, isLiveDimensionMode, isTapeMeasureMode, panelSimulationPhase, panelSimulationRevision, panelSimulationSheet, panelSimulationViewBackup, setPanelSimulationLayouts } = useUIStore();
+  const { panels: livePanelsForSimulation } = useLivePanelData();
 
   // props로 전달된 showFurniture가 있으면 사용, 없으면 store 값 사용
   const showFurniture = showFurnitureProp !== undefined ? showFurnitureProp : storeShowFurniture;
@@ -150,7 +1588,19 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
     doorColor: '#FFFFFF'  // 기본값도 흰색으로 변경 (테스트용)
   };
   const showDimensions = showDimensionsProp !== undefined ? showDimensionsProp : storeShowDimensions;
-  const dimensionDisplayEnabled = showDimensions && showDimensionsText;
+  const isPanelSimulationPresentation = viewMode === '3D' && (panelSimulationPhase === 'layout' || !!panelSimulationViewBackup);
+  const effectiveShowDimensions = isPanelSimulationPresentation ? false : showDimensions;
+  const effectiveShowDimensionsText = isPanelSimulationPresentation ? false : showDimensionsText;
+  const effectiveShowGuides = isPanelSimulationPresentation ? false : showGuides;
+  const effectiveShowAxis = isPanelSimulationPresentation ? false : showAxis;
+  const dimensionDisplayEnabled = effectiveShowDimensions && effectiveShowDimensionsText;
+  const clearedPanelSimulationRevisionRef = useRef(panelSimulationRevision);
+
+  useEffect(() => {
+    if (panelSimulationRevision <= 0 || clearedPanelSimulationRevisionRef.current === panelSimulationRevision) return;
+    clearPanelSimulationSources();
+    clearedPanelSimulationRevisionRef.current = panelSimulationRevision;
+  }, [panelSimulationRevision]);
 
   // ESC 키 이벤트 리스너 - selectedFurnitureId 해제
   // (E 키 지우개 토글은 Configurator의 단축키 핸들러에서 처리)
@@ -791,6 +2241,174 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
   // 카메라 타겟 배열 memoization (하위 컴포넌트의 불필요한 useEffect 재실행 방지)
   const cameraTargetArr = useMemo<[number, number, number]>(() => [0, targetY, 0], [targetY]);
 
+  useEffect(() => {
+    let cancelled = false;
+
+    if (panelSimulationPhase !== 'layout') {
+      if (!panelSimulationViewBackup) {
+        setPanelSimulationLayouts({}, null);
+      }
+      return () => {
+        cancelled = true;
+      };
+    }
+
+    const excludedByFurniture = new Map<string, Set<string>>();
+    placedModules.forEach((module: any) => {
+      if (!module?.id || !Array.isArray(module.panelExclusions)) return;
+      const aliases = new Set<string>();
+      module.panelExclusions.forEach((panelName: string) => {
+        getExcludedPanelAliases(panelName).forEach(alias => aliases.add(alias));
+      });
+      if (aliases.size > 0) excludedByFurniture.set(module.id, aliases);
+    });
+
+    const includedPanels = livePanelsForSimulation
+      .filter(panel => {
+        if (!panel.furnitureId || !panel.meshName) return true;
+        const excluded = excludedByFurniture.get(panel.furnitureId);
+        return !excluded?.has(panel.meshName);
+      })
+      .map(toSimulationCutPanel);
+
+    if (includedPanels.length === 0) {
+      setPanelSimulationLayouts({}, null);
+      return () => {
+        cancelled = true;
+      };
+    }
+
+    const boardCenterY = mmToThreeUnits(spaceInfo?.height || 2400) + 3;
+
+    (async () => {
+      const settings = getPanelSimulationSettings();
+      const stock = getPanelSimulationStock(includedPanels);
+      const results = await buildPanelSimulationResults(includedPanels, settings, stock);
+      if (cancelled) return;
+      const { layouts, sheet } = buildPanelSimulationTargets(results, boardCenterY);
+      setPanelSimulationLayouts(layouts, sheet);
+    })().catch(error => {
+      console.error('[PanelSimulation] optimizer layout failed:', error);
+      if (!cancelled) {
+        setPanelSimulationLayouts({}, null);
+      }
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    panelSimulationPhase,
+    panelSimulationRevision,
+    livePanelsForSimulation,
+    placedModules,
+    spaceInfo?.height,
+    panelSimulationViewBackup,
+    setPanelSimulationLayouts,
+  ]);
+
+  useEffect(() => {
+    if (panelSimulationPhase !== 'layout') {
+      const controls = orbitControlsRef.current;
+      if (controls?.object) {
+        if (panelSimulationRevision > 0 && viewMode === '3D') {
+          const camera = controls.object;
+          const startPosition = camera.position.clone();
+          const startTarget = controls.target.clone();
+          const endPosition = new THREE.Vector3(cameraPosition[0], cameraPosition[1], cameraPosition[2]);
+          const endTarget = new THREE.Vector3(cameraTargetArr[0], cameraTargetArr[1], cameraTargetArr[2]);
+          const duration = 1450;
+          const startTime = performance.now();
+          let rafId = 0;
+
+          const animate = (now: number) => {
+            const progress = Math.min(1, (now - startTime) / duration);
+            const eased = progress < 0.5
+              ? 4 * progress * progress * progress
+              : 1 - Math.pow(-2 * progress + 2, 3) / 2;
+            camera.position.lerpVectors(startPosition, endPosition, eased);
+            controls.target.lerpVectors(startTarget, endTarget, eased);
+            camera.up.set(0, 1, 0);
+            camera.lookAt(controls.target);
+            controls.update();
+            updateSliderFromCamera(controls);
+
+            if (progress < 1) {
+              rafId = requestAnimationFrame(animate);
+            }
+          };
+
+          rafId = requestAnimationFrame(animate);
+          return () => cancelAnimationFrame(rafId);
+        }
+
+        controls.object.up.set(0, 1, 0);
+        controls.update();
+      }
+      return;
+    }
+    const controls = orbitControlsRef.current;
+    if (!controls?.object) return;
+
+    const camera = controls.object;
+    const startPosition = camera.position.clone();
+    const startTarget = controls.target.clone();
+    const endTarget = new THREE.Vector3(
+      panelSimulationSheet?.centerX ?? 0,
+      panelSimulationSheet?.centerY ?? targetY,
+      panelSimulationSheet?.centerZ ?? 0
+    );
+    const fallbackWidth = Math.max(8, mmToThreeUnits(spaceInfo?.width || 2400));
+    const fallbackHeight = Math.max(8, mmToThreeUnits(spaceInfo?.height || 2400));
+    const sheetWorldWidth = panelSimulationSheet
+      ? ((panelSimulationSheet.sheets || []).reduce((sum, sheet, index) => (
+        sum + sheet.widthWorld + (index === (panelSimulationSheet.sheets?.length || 0) - 1 ? 0 : panelSimulationSheet.sheetGapWorld)
+      ), 0) || panelSimulationSheet.sheetWidthWorld)
+      : fallbackWidth;
+    const sheetWorldHeight = panelSimulationSheet?.sheetHeightWorld ?? fallbackHeight;
+    const distance = Math.max(26, sheetWorldHeight * 1.45, sheetWorldWidth * 1.08);
+    const endPosition = new THREE.Vector3(
+      (panelSimulationSheet?.centerX ?? 0) - distance * 0.52,
+      (panelSimulationSheet?.centerY ?? targetY) + distance * 0.78,
+      (panelSimulationSheet?.centerZ ?? 0) + distance * 0.68
+    );
+    const duration = 1200;
+    const startTime = performance.now();
+    let rafId = 0;
+
+    const animate = (now: number) => {
+      const progress = Math.min(1, (now - startTime) / duration);
+      const eased = 1 - Math.pow(1 - progress, 3);
+      camera.position.lerpVectors(startPosition, endPosition, eased);
+      controls.target.lerpVectors(startTarget, endTarget, eased);
+      camera.up.set(0, 1, 0);
+      camera.lookAt(controls.target);
+      controls.update();
+      updateSliderFromCamera(controls);
+
+      if (progress < 1) {
+        rafId = requestAnimationFrame(animate);
+      }
+    };
+
+    rafId = requestAnimationFrame(animate);
+
+    return () => {
+      cancelAnimationFrame(rafId);
+    };
+  }, [
+    panelSimulationPhase,
+    panelSimulationRevision,
+    panelSimulationSheet,
+    cameraPosition,
+    cameraTargetArr,
+    spaceInfo?.width,
+    spaceInfo?.height,
+    targetY,
+    viewMode,
+    updateSliderFromCamera,
+  ]);
+
   // Canvas key를 완전히 제거하여 재생성 방지
   // viewMode나 view2DDirection 변경 시에도 Canvas를 재생성하지 않음
 
@@ -1263,18 +2881,24 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
   }, [isEmbedded, isMobile, viewMode, cameraMode]);
 
   const shouldShowGrid = useMemo(() => {
+    if (isPanelSimulationPresentation) {
+      return false;
+    }
     if (isEmbedded && viewMode === '2D') {
       return true;
     }
-    return showDimensions && showGuides;
-  }, [isEmbedded, viewMode, showDimensions, showGuides]);
+    return effectiveShowDimensions && effectiveShowGuides;
+  }, [isPanelSimulationPresentation, isEmbedded, viewMode, effectiveShowDimensions, effectiveShowGuides]);
 
   const shouldShowAxis = useMemo(() => {
+    if (isPanelSimulationPresentation) {
+      return false;
+    }
     if (isEmbedded && viewMode === '2D') {
       return true;
     }
-    return showDimensions && showAxis;
-  }, [isEmbedded, viewMode, showDimensions, showAxis]);
+    return effectiveShowDimensions && effectiveShowAxis;
+  }, [isPanelSimulationPresentation, isEmbedded, viewMode, effectiveShowDimensions, effectiveShowAxis]);
 
   const previewGhostSlotIndex = useMemo(() => {
     if (isEmbedded && viewMode === '3D') {
@@ -1818,8 +3442,8 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
                 materialConfig={materialConfig}
                 showAll={showAll}
                 showFrame={showFrame}
-                showDimensions={showDimensions}
-                showGuides={showGuides}
+                showDimensions={effectiveShowDimensions}
+                showGuides={effectiveShowGuides}
                 isStep2={isStep2}
                 activeZone={activeZone}
                 showFurniture={showFurniture}
@@ -1832,24 +3456,30 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
 
               <LiveDimensionInspector enabled={viewMode === '3D' && isLiveDimensionMode} />
               <TapeMeasureInspector enabled={viewMode === '3D' && isTapeMeasureMode} />
+              <PanelSimulationBoard />
+              <PanelSimulationMovingPanels />
 
               {/* 단내림 공간 렌더링 */}
-              <DroppedCeilingSpace spaceInfo={spaceInfo} />
+              {!isPanelSimulationPresentation && <DroppedCeilingSpace spaceInfo={spaceInfo} />}
 
               {/* 상하부장 사이 백패널 렌더링 */}
-              <BackPanelBetweenCabinets
-                placedModules={placedModules}
-                spaceInfo={spaceInfo}
-              />
+              {!isPanelSimulationPresentation && (
+                <BackPanelBetweenCabinets
+                  placedModules={placedModules}
+                  spaceInfo={spaceInfo}
+                />
+              )}
 
               {/* 상부장 간접조명 및 띄워서 배치 간접조명 렌더링 */}
-              <UpperCabinetIndirectLight
-                placedModules={placedModules}
-                spaceInfo={spaceInfo}
-              />
+              {!isPanelSimulationPresentation && (
+                <UpperCabinetIndirectLight
+                  placedModules={placedModules}
+                  spaceInfo={spaceInfo}
+                />
+              )}
 
               {/* 기둥 에셋 렌더링 */}
-              {(spaceInfo?.columns || []).map((column) => {
+              {!isPanelSimulationPresentation && (spaceInfo?.columns || []).map((column) => {
                 // 기둥이 단내림 영역에 있는지 확인
                 let columnHeight = spaceInfo.height || column.height || 2400; // 항상 공간 높이 우선
                 if (spaceInfo.droppedCeiling?.enabled && spaceInfo.layoutMode !== 'free-placement') {
@@ -1925,7 +3555,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
               })}
 
               {/* 가벽 에셋 렌더링 */}
-              {(spaceInfo?.walls || []).map((wall) => {
+              {!isPanelSimulationPresentation && (spaceInfo?.walls || []).map((wall) => {
                 // 가벽이 단내림 영역에 있는지 확인
                 let wallHeight = wall.height;
                 if (spaceInfo.droppedCeiling?.enabled && spaceInfo.layoutMode !== 'free-placement') {
@@ -1978,7 +3608,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
               })}
 
               {/* 패널B 렌더링 */}
-              {spaceInfo?.panelBs?.map((panelB) => (
+              {!isPanelSimulationPresentation && spaceInfo?.panelBs?.map((panelB) => (
                 <PanelBAsset
                   key={panelB.id}
                   id={panelB.id}
@@ -2009,10 +3639,10 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
 
               {/* Configurator에서 표시되는 요소들 */}
               {/* 컬럼 가이드 표시 - 2D와 3D 모두에서 showDimensions와 showAll(가이드)이 모두 true일 때만 */}
-              {showDimensions && showAll && <ColumnGuides viewMode={viewMode} />}
+              {!isPanelSimulationPresentation && effectiveShowDimensions && showAll && <ColumnGuides viewMode={viewMode} />}
 
               {/* CAD 스타일 치수/가이드 표시 - 3D 모드 또는 2D 정면/탑뷰에서 표시 */}
-              {showDimensions && showDimensionsText && (viewMode === '3D' || (viewMode === '2D' && view2DDirection !== 'left' && view2DDirection !== 'right')) && (
+              {effectiveShowDimensions && effectiveShowDimensionsText && (viewMode === '3D' || (viewMode === '2D' && view2DDirection !== 'left' && view2DDirection !== 'right')) && (
                 <CleanCAD2D
                   viewDirection={viewMode === '3D' ? '3D' : view2DDirection}
                   showDimensions={dimensionDisplayEnabled}
@@ -2022,7 +3652,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
               )}
 
               {/* 측면뷰 전용 치수 표시 - 2D 측면뷰에서만 (Configurator 전용, 자유배치모드에서는 가구 배치 후 표시) */}
-              {showDimensions && showDimensionsText && !isStep2 && viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right') && (spaceInfo?.layoutMode !== 'free-placement' || placedModules.length > 0) && (
+              {effectiveShowDimensions && effectiveShowDimensionsText && !isStep2 && viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right') && (spaceInfo?.layoutMode !== 'free-placement' || placedModules.length > 0) && (
                 <CADDimensions2D
                   viewDirection={view2DDirection}
                   showDimensions={dimensionDisplayEnabled}
@@ -2032,21 +3662,24 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
 
               {/* PlacedFurniture는 Room 내부에서 렌더링되므로 중복 제거 */}
 
-              <SlotDropZonesSimple spaceInfo={spaceInfo} showAll={showAll} showDimensions={showDimensions} viewMode={viewMode} view2DDirection={view2DDirection} />
+              {!isPanelSimulationPresentation && (
+                <SlotDropZonesSimple spaceInfo={spaceInfo} showAll={showAll} showDimensions={effectiveShowDimensions} viewMode={viewMode} view2DDirection={view2DDirection} />
+              )}
 
               {/* 자유배치 모드 드롭존 */}
-              <FreePlacementDropZone />
+              {!isPanelSimulationPresentation && <FreePlacementDropZone />}
 
               {/* 슬롯 배치 인디케이터 - 가구 선택 시 + 아이콘 표시 */}
-              <SlotPlacementIndicators onSlotClick={placeFurniture} />
+              {!isPanelSimulationPresentation && <SlotPlacementIndicators onSlotClick={placeFurniture} />}
 
               {/* 내경 치수 표시 - showDimensions 상태에 따라 표시/숨김 */}
-              <InternalDimensionDisplay />
+              {!isPanelSimulationPresentation && <InternalDimensionDisplay />}
 
               {/* CAD 측정 도구 - 2D 모드에서만 표시 */}
-              {viewMode === '2D' && <MeasurementTool viewDirection={view2DDirection} />}
+              {!isPanelSimulationPresentation && viewMode === '2D' && <MeasurementTool viewDirection={view2DDirection} />}
             </React.Suspense>
           </ThreeCanvas>
+          <PanelSimulationSummaryPopup />
 
           {/* 분할 모드 버튼 - 2D 모드에서만 표시 (임베디드 모드에서는 숨김) */}
           {!isEmbedded && viewMode === '2D' && view2DDirection !== 'all' && (
