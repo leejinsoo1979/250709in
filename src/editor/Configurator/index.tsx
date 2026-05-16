@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
-import { TbRulerMeasure } from 'react-icons/tb';
+import { TbRulerMeasure, TbZoomScan } from 'react-icons/tb';
+import { RulerDimensionLine } from 'lucide-react';
 import { GoQuestion } from 'react-icons/go';
 import { IoIosArrowDropup } from 'react-icons/io';
 import { useSearchParams, useNavigate } from 'react-router-dom';
@@ -534,6 +535,10 @@ const Configurator: React.FC = () => {
   const equalDistributionLower = useUIStore(s => s.equalDistributionLower);
   const toggleEqualDistributionUpper = useUIStore(s => s.toggleEqualDistributionUpper);
   const toggleEqualDistributionLower = useUIStore(s => s.toggleEqualDistributionLower);
+  const isLiveDimensionMode = useUIStore(s => s.isLiveDimensionMode);
+  const toggleLiveDimensionMode = useUIStore(s => s.toggleLiveDimensionMode);
+  const isTapeMeasureMode = useUIStore(s => s.isTapeMeasureMode);
+  const toggleTapeMeasureMode = useUIStore(s => s.toggleTapeMeasureMode);
 
   // 새로운 UI 상태들
   const [activeSidebarTab, setActiveSidebarTab] = useState<SidebarTab | null>(() => {
@@ -7950,6 +7955,72 @@ const Configurator: React.FC = () => {
               <path d={isRightPanelOpen ? "M1 1L6 6L1 11" : "M6 1L1 6L6 11"} stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
           </button>
+        )}
+
+        {/* 3D 모드 전용: 스캔/줄자 세로 버튼 — 우측 패널 토글 옆에 배치 */}
+        {!isReadOnly && viewMode === '3D' && (
+          <div
+            style={{
+              position: 'absolute',
+              right: isRightPanelOpen ? 'calc(var(--right-panel-width, 320px) + 8px)' : '8px',
+              top: '50%',
+              transform: 'translateY(-50%)',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '6px',
+              zIndex: 100,
+              transition: 'right 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+            }}
+          >
+            <button
+              onClick={toggleLiveDimensionMode}
+              title="3D 스캔"
+              style={{
+                width: '36px',
+                height: '36px',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '2px',
+                background: isLiveDimensionMode ? 'var(--theme-primary, #2196F3)' : 'var(--theme-surface, #fff)',
+                color: isLiveDimensionMode ? '#fff' : 'var(--theme-text-primary, #333)',
+                border: '1px solid var(--theme-border, #ddd)',
+                borderRadius: '6px',
+                cursor: 'pointer',
+                boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+                fontSize: '9px',
+                fontWeight: 500,
+              }}
+            >
+              <TbZoomScan size={16} />
+              <span>스캔</span>
+            </button>
+            <button
+              onClick={toggleTapeMeasureMode}
+              title="3D 줄자"
+              style={{
+                width: '36px',
+                height: '36px',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '2px',
+                background: isTapeMeasureMode ? 'var(--theme-primary, #2196F3)' : 'var(--theme-surface, #fff)',
+                color: isTapeMeasureMode ? '#fff' : 'var(--theme-text-primary, #333)',
+                border: '1px solid var(--theme-border, #ddd)',
+                borderRadius: '6px',
+                cursor: 'pointer',
+                boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+                fontSize: '9px',
+                fontWeight: 500,
+              }}
+            >
+              <RulerDimensionLine size={16} />
+              <span>줄자</span>
+            </button>
+          </div>
         )}
 
         {/* 우측 패널 컨테이너 - 읽기 전용 모드에서는 숨김 */}

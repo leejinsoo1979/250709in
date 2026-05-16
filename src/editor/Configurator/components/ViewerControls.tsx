@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { BiDoorOpen } from 'react-icons/bi';
 import { PiHandTapThin } from 'react-icons/pi';
-import { TbBorderOuter } from 'react-icons/tb';
+import { TbBorderOuter, TbZoomScan } from 'react-icons/tb';
 import { Edit3, Eye, EyeOff, Grid3X3, Ruler, RulerDimensionLine, Box, Layers, Sun, Moon, MoreHorizontal } from 'lucide-react';
 import { useUIStore } from '@/store/uiStore';
 import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
@@ -254,7 +254,7 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
               )}
               {viewMode === '3D' && (
                 <button className={`${styles.mobileOptionItem} ${isLiveDimensionMode ? styles.active : ''}`} onClick={toggleLiveDimensionMode}>
-                  <Ruler size={18} /><span>스캔</span>
+                  <TbZoomScan size={18} /><span>스캔</span>
                 </button>
               )}
               {viewMode === '3D' && (
@@ -386,26 +386,7 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
           ))}
         </div>
 
-        {viewMode === '3D' && (
-          <div className={styles.segmentedControl}>
-            <button
-              className={`${styles.segmentButton} ${styles.segmentIconText} ${isLiveDimensionMode ? styles.segmentAccentActive : ''}`}
-              onClick={toggleLiveDimensionMode}
-              title="3D 스캔"
-            >
-              <Ruler size={13} />
-              스캔
-            </button>
-            <button
-              className={`${styles.segmentButton} ${styles.segmentIconText} ${isTapeMeasureMode ? styles.segmentAccentActive : ''}`}
-              onClick={toggleTapeMeasureMode}
-              title="3D 줄자"
-            >
-              <RulerDimensionLine size={13} />
-              줄자
-            </button>
-          </div>
-        )}
+        {/* 스캔/줄자 버튼 — 우측 패널 토글 옆 세로 배열로 이동 (Configurator/index.tsx 참조) */}
 
         {onDoorInstallationToggle && hasFurniture && (
           <div className={styles.segmentedControl} style={{ position: 'relative' }}>
