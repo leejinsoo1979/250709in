@@ -1364,6 +1364,50 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
               doorBottomAbsMm = doorBottomGapVal + floorFinishForDoor;
               doorTopAbsMm = effectiveH_door - doorTopGapVal;
               doorHeightMm = Math.max(0, doorTopAbsMm - doorBottomAbsMm);
+
+              // 도어분절 가구(shelf-split / pantry-cabinet-split): 도어 2장으로 분리 표시
+              const isShelfSplitDoorSeg = typeof modData.id === 'string' &&
+                (modData.id.includes('shelf-split') || modData.id.includes('pantry-cabinet-split'));
+              if (isShelfSplitDoorSeg) {
+                const isPantrySplitDim = modData.id.includes('pantry-cabinet-split');
+                const defaultLowerSecTopMm = isPantrySplitDim ? 1825 : 860;
+                const customSecsForDim = (mod as any).customSections;
+                const customLowerH = (customSecsForDim && customSecsForDim.length > 0)
+                  ? customSecsForDim[0].height : undefined;
+                const lowerSecTopMm = (typeof customLowerH === 'number' && customLowerH > 0)
+                  ? customLowerH : defaultLowerSecTopMm;
+                const lowerDoorTopFromBottom = isPantrySplitDim ? (lowerSecTopMm - 1.5) : (lowerSecTopMm - 40);
+                const upperDoorBottomFromBottom = isPantrySplitDim ? (lowerSecTopMm + 1.5) : (lowerSecTopMm - 20);
+                const cabinetBottomAbsS = floorFinishForDoor + (isFloorType ? (spaceInfo.baseConfig?.height ?? 0) : 0);
+                const cabinetTopAbsS = effectiveH_door - (mod.topFrameThickness ?? (spaceInfo.frameSize?.top ?? 30));
+
+                const lowerDoorBottomAbs = cabinetBottomAbsS - (doorBottomGapVal || 0);
+                const lowerDoorTopAbs = cabinetBottomAbsS + lowerDoorTopFromBottom;
+                const lowerDoorH = lowerDoorTopAbs - lowerDoorBottomAbs;
+                const upperDoorBottomAbs = cabinetBottomAbsS + upperDoorBottomFromBottom;
+                const upperDoorTopAbs = cabinetTopAbsS + (doorTopGapVal || 0);
+                const upperDoorH = upperDoorTopAbs - upperDoorBottomAbs;
+
+                if (lowerDoorH > 0) {
+                  doorSegs.push({
+                    bottomY: mmToThreeUnits(lowerDoorBottomAbs),
+                    topY: mmToThreeUnits(lowerDoorTopAbs),
+                    heightMm: Math.round(lowerDoorH),
+                    key: `door-split-lower-${moduleIndex}`,
+                    isUpper: false,
+                  });
+                }
+                if (upperDoorH > 0) {
+                  doorSegs.push({
+                    bottomY: mmToThreeUnits(upperDoorBottomAbs),
+                    topY: mmToThreeUnits(upperDoorTopAbs),
+                    heightMm: Math.round(upperDoorH),
+                    key: `door-split-upper-${moduleIndex}`,
+                    isUpper: false,
+                  });
+                }
+                return; // 분절 가구는 위 단일 도어 푸시 건너뜀
+              }
             }
 
             if (doorHeightMm <= 0) return;
@@ -2713,6 +2757,48 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
               doorBottomAbsMm = doorBottomGapVal + floorFinishForDoor;
               doorTopAbsMm = effectiveH_rd - doorTopGapVal;
               doorHeightMm = Math.max(0, doorTopAbsMm - doorBottomAbsMm);
+
+              // 도어분절 가구(shelf-split / pantry-cabinet-split): 도어 2장으로 분리 표시
+              const isShelfSplitDoorSegR = typeof modData.id === 'string' &&
+                (modData.id.includes('shelf-split') || modData.id.includes('pantry-cabinet-split'));
+              if (isShelfSplitDoorSegR) {
+                const isPantrySplitDimR = modData.id.includes('pantry-cabinet-split');
+                const defaultLowerSecTopMmR = isPantrySplitDimR ? 1825 : 860;
+                const customSecsForDimR = (mod as any).customSections;
+                const customLowerHR = (customSecsForDimR && customSecsForDimR.length > 0)
+                  ? customSecsForDimR[0].height : undefined;
+                const lowerSecTopMmR = (typeof customLowerHR === 'number' && customLowerHR > 0)
+                  ? customLowerHR : defaultLowerSecTopMmR;
+                const lowerDoorTopFromBottomR = isPantrySplitDimR ? (lowerSecTopMmR - 1.5) : (lowerSecTopMmR - 40);
+                const upperDoorBottomFromBottomR = isPantrySplitDimR ? (lowerSecTopMmR + 1.5) : (lowerSecTopMmR - 20);
+                const cabinetBottomAbsR = floorFinishForDoor + (isFloorType ? (spaceInfo.baseConfig?.height ?? 0) : 0);
+                const cabinetTopAbsR = effectiveH_rd - (mod.topFrameThickness ?? (spaceInfo.frameSize?.top ?? 30));
+
+                const lowerDoorBottomAbsR = cabinetBottomAbsR - (doorBottomGapVal || 0);
+                const lowerDoorTopAbsR = cabinetBottomAbsR + lowerDoorTopFromBottomR;
+                const lowerDoorHR = lowerDoorTopAbsR - lowerDoorBottomAbsR;
+                const upperDoorBottomAbsR = cabinetBottomAbsR + upperDoorBottomFromBottomR;
+                const upperDoorTopAbsR = cabinetTopAbsR + (doorTopGapVal || 0);
+                const upperDoorHR = upperDoorTopAbsR - upperDoorBottomAbsR;
+
+                if (lowerDoorHR > 0) {
+                  doorSegs_r.push({
+                    bottomY: mmToThreeUnits(lowerDoorBottomAbsR),
+                    topY: mmToThreeUnits(lowerDoorTopAbsR),
+                    heightMm: Math.round(lowerDoorHR),
+                    key: `door-split-lower-r-${moduleIndex}`,
+                  });
+                }
+                if (upperDoorHR > 0) {
+                  doorSegs_r.push({
+                    bottomY: mmToThreeUnits(upperDoorBottomAbsR),
+                    topY: mmToThreeUnits(upperDoorTopAbsR),
+                    heightMm: Math.round(upperDoorHR),
+                    key: `door-split-upper-r-${moduleIndex}`,
+                  });
+                }
+                return;
+              }
             }
 
             if (doorHeightMm <= 0) return;
