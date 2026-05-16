@@ -11438,7 +11438,133 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   </>
       )}
 
-      
+      {/* 3D 모드: 각 가구 측면에 깊이 치수 표시 (회전된 가이드선 + 화살표 + 라벨) */}
+      {is3DMode && showDimensions && placedModules.length > 0 && placedModules.map((module, mIdx) => {
+        const moduleData = getModuleById(
+          module.moduleId,
+          { width: spaceInfo.width, height: spaceInfo.height, depth: spaceInfo.depth },
+          spaceInfo
+        );
+        if (!moduleData || !moduleData.dimensions) return null;
+        // 키큰장찬넬/유리장은 깊이 치수 가이드 숨김 (기존 좌측뷰 로직과 동일)
+        if (module.moduleId?.includes('insert-frame')) return null;
+        if (module.moduleId?.includes('glass-cabinet')) return null;
+
+        // 너비
+        const isColFront3D = (module as any).columnPlacementMode === 'front';
+        const slotFullW3D = module.slotIndex !== undefined ? (indexing.slotWidths?.[module.slotIndex] ?? indexing.columnWidth) : undefined;
+        const moduleWidthMm3D = (module.isFreePlacement && module.freeWidth)
+          ? module.freeWidth
+          : isColFront3D
+            ? (slotFullW3D || moduleData.dimensions.width)
+            : (module.customWidth || module.adjustedWidth || moduleData.dimensions.width);
+        const halfWidth = mmToThreeUnits(moduleWidthMm3D) / 2;
+        const cxX3D = isColFront3D
+          ? (module.slotIndex !== undefined ? (indexing.threeUnitPositions?.[module.slotIndex] ?? module.position.x) : module.position.x)
+          : module.position.x;
+        // 좌측 = 음수 X에 있는 가구는 좌측면, 우측 = 양수 X 가구는 우측면에 표시
+        const showOnLeftSide = cxX3D < 0;
+        const sideX = showOnLeftSide ? (cxX3D - halfWidth) : (cxX3D + halfWidth);
+        const textOffsetX = showOnLeftSide ? -mmToThreeUnits(60) : mmToThreeUnits(60);
+
+        // 가구 Z 위치 계산 (FurnitureItem과 동일 로직, 좌측뷰 깊이 치수와 일치)
+        const panelDepthMm3D = spaceInfo.depth || 600;
+        const furnitureDepthMm3D = Math.min(panelDepthMm3D, 600);
+        const doorThicknessMm3D = 20;
+        const panelDepth3D = mmToThreeUnits(panelDepthMm3D);
+        const furnitureDepth3D = mmToThreeUnits(furnitureDepthMm3D);
+        const doorThickness3D = mmToThreeUnits(doorThicknessMm3D);
+        const zOff3D = -panelDepth3D / 2;
+        const furnitureZOffset3D = zOff3D + (panelDepth3D - furnitureDepth3D) / 2;
+        const isFloating3D = spaceInfo.baseConfig?.type === 'stand' && spaceInfo.baseConfig?.placementType === 'float';
+        const baseDepthOffset3D = isFloating3D ? mmToThreeUnits(spaceInfo.baseConfig?.depth || 0) : 0;
+        const moduleBackWallGapMm3D = (module as any).backWallGap ?? 0;
+        const moduleBackWallGapZ3D = moduleBackWallGapMm3D > 0 ? mmToThreeUnits(moduleBackWallGapMm3D) : 0;
+        const mid3D = module.moduleId || '';
+        const isShoeCab3D = (mid3D.includes('-entryway-') || mid3D.includes('-shelf-')
+          || mid3D.includes('-4drawer-shelf-') || mid3D.includes('-2drawer-shelf-'));
+        const isUpper3D = moduleData.category === 'upper' || mid3D.includes('upper-cabinet');
+
+        const actualDepthMm3D = module.customDepth || module.upperSectionDepth || module.lowerSectionDepth || moduleData.dimensions.depth;
+        const depth3D = mmToThreeUnits(actualDepthMm3D);
+
+        let backZ3D: number;
+        let frontZ3D: number;
+        if (isUpper3D) {
+          backZ3D = furnitureZOffset3D - furnitureDepth3D / 2 - doorThickness3D + moduleBackWallGapZ3D;
+        } else if (isShoeCab3D) {
+          backZ3D = furnitureZOffset3D - furnitureDepth3D / 2 - doorThickness3D + baseDepthOffset3D + moduleBackWallGapZ3D;
+        } else {
+          backZ3D = furnitureZOffset3D + furnitureDepth3D / 2 - doorThickness3D - depth3D + baseDepthOffset3D + moduleBackWallGapZ3D;
+        }
+        frontZ3D = backZ3D + depth3D;
+
+        // Y 위치 (가구 중간높이)
+        const moduleHeightMm3D = isUpper3D
+          ? (module.customHeight ?? module.freeHeight ?? moduleData.dimensions.height ?? 600)
+          : (module.freeHeight ?? module.customHeight ?? moduleData.dimensions.height ?? 2200);
+        const floorFinishMm3D = spaceInfo.hasFloorFinish && spaceInfo.floorFinish?.height ? spaceInfo.floorFinish.height : 0;
+        const baseFrameMm3D = (module as any).hasBase === false ? 0
+          : ((module as any).baseFrameHeight ?? (spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height || 65) : 0));
+        const floatMm3D = (module as any).hasBase === false ? ((module as any).individualFloatHeight ?? 0) : 0;
+        const topFrameMm3D = (module as any).topFrameThickness ?? (spaceInfo.frameSize?.top ?? 30);
+        const moduleBottomMm3D = isUpper3D
+          ? Math.max(0, Math.round(spaceInfo.height - topFrameMm3D - moduleHeightMm3D))
+          : (floorFinishMm3D + baseFrameMm3D + floatMm3D);
+        const midY3D = mmToThreeUnits(moduleBottomMm3D + moduleHeightMm3D / 2);
+
+        const arrowSize = 0.015;
+        // 회전된 텍스트: Y축 기준 회전으로 가구 측면에 평행하게 보이도록
+        const textRotation: [number, number, number] = showOnLeftSide
+          ? [0, -Math.PI / 2, 0]
+          : [0, Math.PI / 2, 0];
+
+        return (
+          <group key={`3d-depth-dim-${module.id}-${mIdx}`} name={`3d-depth-dim-${module.id}`}>
+            {/* 깊이 치수선 (Z축 방향) */}
+            <Line
+              points={[[sideX, midY3D, backZ3D], [sideX, midY3D, frontZ3D]]}
+              color={dimensionColor} lineWidth={0.6}
+            />
+            {/* 화살표 (뒷면) */}
+            <Line
+              points={createArrowHead([sideX, midY3D, backZ3D], [sideX, midY3D, backZ3D + arrowSize])}
+              color={dimensionColor} lineWidth={0.6}
+            />
+            {/* 화살표 (앞면) */}
+            <Line
+              points={createArrowHead([sideX, midY3D, frontZ3D], [sideX, midY3D, frontZ3D - arrowSize])}
+              color={dimensionColor} lineWidth={0.6}
+            />
+            {/* 깊이 텍스트 */}
+            <Text
+              position={[sideX + textOffsetX, midY3D, (backZ3D + frontZ3D) / 2]}
+              fontSize={baseFontSize}
+              color={textColor}
+              anchorX="center"
+              anchorY="middle"
+              outlineWidth={textOutlineWidth}
+              outlineColor={textOutlineColor}
+              rotation={textRotation}
+              renderOrder={100001}
+              depthTest={false}
+            >
+              {Math.round(actualDepthMm3D)}
+            </Text>
+            {/* 연장선 (가구 뒷면 - 치수선) */}
+            <Line
+              points={[[showOnLeftSide ? (cxX3D - halfWidth) : (cxX3D + halfWidth), midY3D, backZ3D], [sideX, midY3D, backZ3D]]}
+              color={dimensionColor} lineWidth={0.3}
+            />
+            {/* 연장선 (가구 앞면 - 치수선) */}
+            <Line
+              points={[[showOnLeftSide ? (cxX3D - halfWidth) : (cxX3D + halfWidth), midY3D, frontZ3D], [sideX, midY3D, frontZ3D]]}
+              color={dimensionColor} lineWidth={0.3}
+            />
+          </group>
+        );
+      })}
+
     </group>
   );
   };
