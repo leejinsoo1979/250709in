@@ -7966,7 +7966,7 @@ const Configurator: React.FC = () => {
             style={{
               position: 'absolute',
               right: isRightPanelOpen ? 'calc(var(--right-panel-width, 320px) + 12px)' : '12px',
-              top: '80px', // ? (top:12 + h:28 = 40) 아래 충분히 내림
+              top: '96px', // ? bottom(40) + 56px 간격 (안 가리도록 충분히 + 줄자와 동일 간격)
               width: '28px',
               height: '28px',
               borderRadius: '50%',
@@ -8000,7 +8000,7 @@ const Configurator: React.FC = () => {
             style={{
               position: 'absolute',
               right: isRightPanelOpen ? 'calc(var(--right-panel-width, 320px) + 12px)' : '12px',
-              top: '120px', // 스캔(top:80 + h:28 = 108) + 12 간격
+              top: '180px', // 스캔 bottom(124) + 56px 간격 (?-스캔과 동일)
               width: '28px',
               height: '28px',
               borderRadius: '50%',
