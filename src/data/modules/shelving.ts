@@ -1126,25 +1126,24 @@ const createSingle2DrawerShelf = (columnWidth: number, maxHeight: number): Modul
 };
 
 // ============================================================================
-// 유리장 (싱글) — 띄움배치 가구
-// - H 1920mm 고정, D 365mm 고정
-// - 조절발 없음 (hasBase: false)
-// - 띄움 200mm (개별 individualFloatHeight=200, 측판은 띄움 위에서 1920까지 하나로)
-// - 도어 없음
+// 유리장 (싱글)
+// - D 365mm 고정, H는 공간 내경에 맞춤
+// - 걸레받이/상단몰딩 토글은 일반 키큰장과 동일 기준
+// - 일반 키큰장처럼 상단몰딩/걸레받이 안쪽 높이를 사용
+// - 유리도어 있음
 // - 측판 하나(상하 분리 없음) → 단일 sections 처리
 // - 하단 서랍 2단(서랍 측판 146mm 기준) + 상단 다보선반 2개(칸 3개)
 // ============================================================================
 
 // 유리장 사양
 // - 외형: H 1920 / D 365 (외형치수만 고정)
-// - 띄움: 200mm
+// - 띄움 없음
 // - 내부 구조는 패널 두께(BASIC_THICKNESS = 18mm 기준)에 종속해 동적 계산
 //   상부오픈(다보선반 2 — 칸 3) : 서랍영역 : 하부오픈 = 약 6.1 : 2.7 : 1.3 (도면 비율)
 //   서랍 1단 외부높이 = 서랍측판 + 마이다(패널두께) + 갭
 //   상부 오픈 칸 비율: 위 약 3 : 중 약 3 : 아래 약 5 (도면 301/302.5/501.5)
 const GLASS_CABINET_HEIGHT = 1920;
 const GLASS_CABINET_DEPTH = 365;
-const GLASS_CABINET_FLOAT = 200;
 const GLASS_CABINET_DRAWER_SIDE_H = 146; // 서랍 측판 높이 (가구재 종속 아님)
 
 const buildGlassCabinetSections = (): SectionConfig[] => {
@@ -1161,9 +1160,7 @@ const buildGlassCabinetSections = (): SectionConfig[] => {
 
 const createSingleGlassCabinet = (columnWidth: number, maxHeight?: number): ModuleData => {
   const widthForId = Math.round(columnWidth * 100) / 100;
-  // 공간 높이에 맞춰 유리장 H 동적 계산 (maxHeight = 내경 높이 = 천장 - 상부몰딩 - 바닥마감)
-  // 띄움 200mm 위에서 천장-상부몰딩까지: H = maxHeight - 띄움200
-  const glassHeight = maxHeight ? Math.max(0, maxHeight - GLASS_CABINET_FLOAT) : GLASS_CABINET_HEIGHT;
+  const glassHeight = maxHeight ? Math.max(0, maxHeight) : GLASS_CABINET_HEIGHT;
   const base = createFurnitureBase(
     `single-glass-cabinet-${widthForId}`,
     `유리장 ${widthForId}mm`,
@@ -1171,7 +1168,7 @@ const createSingleGlassCabinet = (columnWidth: number, maxHeight?: number): Modu
     glassHeight,
     GLASS_CABINET_DEPTH,
     '#90A4AE',
-    `유리장 (띄움 ${GLASS_CABINET_FLOAT}mm · 다보선반 2 + 서랍 2단 + 하부오픈)`,
+    `유리장 (다보선반 2 + 서랍 2단 + 하부오픈)`,
     GLASS_CABINET_DEPTH,
     'full'
   );
@@ -1179,9 +1176,8 @@ const createSingleGlassCabinet = (columnWidth: number, maxHeight?: number): Modu
   return {
     ...base,
     hasDoor: true,
-    hasBase: false,
+    hasBase: true,
     hasBackPanel: false,
-    individualFloatHeight: GLASS_CABINET_FLOAT,
     thumbnail: '/images/furniture-thumbnails/glass_single.png',
     modelConfig: {
       ...base.modelConfig,
@@ -1196,7 +1192,7 @@ const createDualGlassCabinet = (
   maxHeight?: number
 ): ModuleData => {
   const widthForId = Math.round(dualColumnWidth * 100) / 100;
-  const glassHeight = maxHeight ? Math.max(0, maxHeight - GLASS_CABINET_FLOAT) : GLASS_CABINET_HEIGHT;
+  const glassHeight = maxHeight ? Math.max(0, maxHeight) : GLASS_CABINET_HEIGHT;
   const base = createFurnitureBase(
     `dual-glass-cabinet-${widthForId}`,
     `유리장 ${widthForId}mm`,
@@ -1204,7 +1200,7 @@ const createDualGlassCabinet = (
     glassHeight,
     GLASS_CABINET_DEPTH,
     '#90A4AE',
-    `듀얼 유리장 (띄움 ${GLASS_CABINET_FLOAT}mm · 다보선반 2 + 서랍 2단 + 하부오픈)`,
+    `듀얼 유리장 (다보선반 2 + 서랍 2단 + 하부오픈)`,
     GLASS_CABINET_DEPTH,
     'full'
   );
@@ -1213,9 +1209,8 @@ const createDualGlassCabinet = (
     ...base,
     slotWidths,
     hasDoor: true,
-    hasBase: false,
+    hasBase: true,
     hasBackPanel: false,
-    individualFloatHeight: GLASS_CABINET_FLOAT,
     thumbnail: '/images/furniture-thumbnails/glass_dual.png',
     modelConfig: {
       ...base.modelConfig,
@@ -3612,11 +3607,8 @@ export const generateShelvingModules = (
   modules.push(createSingleShelfSplit(columnWidth, maxHeight));
   modules.push(createSingle4DrawerShelf(columnWidth, maxHeight));
   modules.push(createSingle2DrawerShelf(columnWidth, maxHeight));
-  // 유리장 (싱글) — 띄움 200mm, H는 공간 높이 - 상부몰딩 - 띄움200 (걸레받이 자리는 띄움이 흡수)
-  // maxHeight는 받침대(걸레받이) 차감 후이므로 받침대 다시 더해서 사용 (유리장은 띄움이라 받침대 자리 없음)
-  const _topFrame = indexingSpaceInfo.frameSize?.top ?? 30;
-  const _floorFinish = indexingSpaceInfo.hasFloorFinish ? (indexingSpaceInfo.floorFinish?.height ?? 0) : 0;
-  const glassMaxHeight = indexingSpaceInfo.height - _topFrame - _floorFinish;
+  // 유리장 (싱글) — 일반 키큰장처럼 상단몰딩/걸레받이 안쪽 높이 사용
+  const glassMaxHeight = maxHeight;
   modules.push(createSingleGlassCabinet(columnWidth, glassMaxHeight));
 
   // === 듀얼 가구 생성 ===
@@ -3686,7 +3678,6 @@ export const generateShelvingModules = (
     modules.push(createDual4DrawerShelf(dualWidth, maxHeight, dualSlotWidths));
     modules.push(createDual2DrawerShelf(dualWidth, maxHeight, dualSlotWidths));
     // 유리장 (듀얼)
-    // 유리장 듀얼도 동일하게 받침대 무시 (위에서 계산한 glassMaxHeight 재사용)
     modules.push(createDualGlassCabinet(dualWidth, dualSlotWidths, glassMaxHeight));
 
     // === 상부장 가구 생성 ===

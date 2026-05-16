@@ -134,17 +134,6 @@ export function placeFurnitureFree(params: PlaceFurnitureFreeParams): PlaceFurni
     }
   }
 
-  // 유리장(glass-cabinet): 슬롯배치와 동일하게 공간 높이에 맞춰 본체 H 동적 계산
-  //   본체 H = 공간 H - 바닥마감 - 상단몰딩 - 띄움(200) (슬롯배치 createSingleGlassCabinet 로직과 일치)
-  if (moduleId.includes('glass-cabinet')) {
-    const topFrameMm = spaceInfo.frameSize?.top ?? 30;
-    const floorFinishMm = (spaceInfo.hasFloorFinish && spaceInfo.floorFinish?.height) || 0;
-    const floatMm = (moduleData as any).individualFloatHeight ?? 200;
-    const zoneH = effectiveZone === 'dropped' && droppedZone.droppedInternalHeight !== undefined
-      ? droppedZone.droppedInternalHeight + (spaceInfo.baseConfig?.height ?? 65)
-      : spaceInfo.height;
-    effectiveHeight = Math.max(0, zoneH - topFrameMm - floorFinishMm - floatMm);
-  }
   // 멍장 키큰장(single-dummy-full / dual-dummy-full): 다른 키큰장과 동일하게 공간 H 맞춤
   if (moduleId.includes('dummy-full')) {
     const topFrameMm = spaceInfo.frameSize?.top ?? 30;
@@ -258,14 +247,14 @@ export function placeFurnitureFree(params: PlaceFurnitureFreeParams): PlaceFurni
     freeHeight: effectiveHeight,
     freeDepth: effectiveDepth,
     zone: effectiveZone,
-    // ModuleData가 명시적으로 hasBase=false 라면 우선 (유리장 등 띄움 전용 가구)
+    // ModuleData가 명시적으로 hasBase=false 라면 우선
     hasBase: shouldHaveBaseFrame,
     hasTopFrame: shouldHaveTopFrame,
     hasBottomFrame: shouldHaveBaseFrame,
     topFrameThickness,
     ...(shouldHaveTopFrame ? {} : { topFrameGap: initialTopFrameGap }),
-    // ModuleData에 individualFloatHeight 가 정의된 가구(예: 유리장 200mm)
-    ...(initialFloatHeight > 0 || !shouldHaveBaseFrame
+    // ModuleData에 individualFloatHeight 가 정의된 가구
+    ...(initialFloatHeight > 0
       ? { individualFloatHeight: initialFloatHeight }
       : {}),
     ...(!shouldHaveBaseFrame && inheritedDoorBottomGap !== undefined
@@ -307,7 +296,7 @@ export function calculateYPosition(
   heightMM: number,
   spaceInfo: SpaceInfo,
   droppedInternalHeight?: number,
-  moduleIndividualFloatHeight?: number, // 가구 개별 띄움(예: 유리장 200)
+  moduleIndividualFloatHeight?: number, // 가구 개별 띄움
   hasBaseOverride?: boolean,            // hasBase=false면 걸레받이 자리 무시
 ): number {
   const floorFinishMM =
@@ -336,9 +325,9 @@ export function calculateYPosition(
     spaceInfo.baseConfig?.placementType === 'float' &&
     (spaceInfo.baseConfig?.floatHeight || 0) > 0;
 
-  // 가구 개별 띄움(예: 유리장 200mm) 우선 — hasBase=false 가구
-  if ((moduleIndividualFloatHeight ?? 0) > 0 && hasBaseOverride === false) {
-    return floorFinish + (moduleIndividualFloatHeight as number) * 0.01 + (heightMM * 0.01) / 2;
+  // 가구 개별 띄움 우선 — hasBase=false 가구는 받침대 높이를 더하지 않음
+  if (hasBaseOverride === false) {
+    return floorFinish + (moduleIndividualFloatHeight ?? 0) * 0.01 + (heightMM * 0.01) / 2;
   }
 
   if (isFloat) {

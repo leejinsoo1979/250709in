@@ -697,9 +697,9 @@ export function placeFurnitureAtSlot(params: PlaceFurnitureParams): PlaceFurnitu
     ...(isCustomizable !== undefined && { isCustomizable }),
     ...(moduleWidth !== undefined && { moduleWidth }),
     // ModuleData 정의에서 hasBase: false / individualFloatHeight / hasBackPanel: false 가
-    // 명시된 가구(예: 유리장)의 띄움/백패널 속성을 PlacedModule로 전파
+    // 명시된 가구의 띄움/백패널 속성을 PlacedModule로 전파
     ...((moduleData as any).hasBackPanel === false ? { hasBackPanel: false } : {}),
-    ...(initialFloatHeight > 0 || !shouldHaveBaseFrame
+    ...(initialFloatHeight > 0
       ? { individualFloatHeight: initialFloatHeight }
       : {}),
     ...(!shouldHaveBaseFrame && inheritedDoorBottomGap !== undefined

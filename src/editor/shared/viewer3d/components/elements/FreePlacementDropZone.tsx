@@ -442,14 +442,6 @@ const FreePlacementDropZone: React.FC = () => {
   const activeDimensions = useMemo(() => {
     if (!activeModuleData) return null;
     let h = activeModuleData.dimensions.height;
-    // 유리장(glass-cabinet): 공간 높이에 맞춰 본체 H 동적 계산 (슬롯배치와 동일)
-    //   본체 H = 공간 H - 상단몰딩 - 바닥마감 - 띄움(200)
-    if (activeModuleData.id?.includes('glass-cabinet')) {
-      const topFrameMm = spaceInfo.frameSize?.top ?? 30;
-      const floorFinishMm = (spaceInfo.hasFloorFinish && spaceInfo.floorFinish?.height) || 0;
-      const floatMm = (activeModuleData as any).individualFloatHeight ?? 200;
-      h = Math.max(0, (spaceInfo.height || 0) - topFrameMm - floorFinishMm - floatMm);
-    }
     // 멍장 키큰장(single-dummy-full / dual-dummy-full): 다른 키큰장과 동일하게 공간 H 맞춤
     //   본체 H = 공간 H - 상단몰딩 - 걸레받이 - 바닥마감
     if (activeModuleData.id?.includes('dummy-full')) {
