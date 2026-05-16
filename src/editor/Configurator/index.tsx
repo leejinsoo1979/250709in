@@ -7963,7 +7963,7 @@ const Configurator: React.FC = () => {
             style={{
               position: 'absolute',
               right: isRightPanelOpen ? 'calc(var(--right-panel-width, 320px) + 12px)' : '12px',
-              top: '52px', // ? 버튼(top:12px, height:28px) 아래 12px 간격
+              top: '80px', // ? 버튼(top:12px, height:28px = 40px) 아래로 충분히 내림
               display: 'flex',
               flexDirection: 'column',
               gap: '6px',
