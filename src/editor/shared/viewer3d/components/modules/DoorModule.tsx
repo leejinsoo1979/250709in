@@ -359,6 +359,7 @@ const GlassDoorAssemblySource: React.FC<{
   const { viewMode } = useSpace3DView();
   const panelSimulationRevision = useUIStore(state => state.panelSimulationRevision);
   const panelSimulationPhase = useUIStore(state => state.panelSimulationPhase);
+  const panelSimulationViewBackup = useUIStore(state => state.panelSimulationViewBackup);
   const registryKey = furnitureId ? `accessory::${furnitureId}::${sourceKey}` : null;
 
   useEffect(() => {
@@ -371,7 +372,8 @@ const GlassDoorAssemblySource: React.FC<{
   useFrame(() => {
     const group = groupRef.current;
     if (!group) return;
-    if (viewMode === '3D' && panelSimulationRevision > 0 && furnitureId && registryKey) {
+    const isPanelSimulationPresentation = viewMode === '3D' && panelSimulationRevision > 0 && (panelSimulationPhase === 'layout' || !!panelSimulationViewBackup);
+    if (isPanelSimulationPresentation && furnitureId && registryKey) {
       const signature = `${getPanelSimulationSourceRegistryVersion()}:${panelSimulationRevision}:${panelSimulationPhase}:${registryKey}:${args.join(',')}`;
       if (assemblySourceSignatureRef.current !== signature) {
         updatePanelSimulationSource({

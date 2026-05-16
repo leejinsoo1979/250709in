@@ -1013,9 +1013,11 @@ const PanelSimulationAccessoryItem: React.FC<{
     const group = groupRef.current;
     if (!group) return;
 
+    const layoutScale = PANEL_SIMULATION_SCALE;
     if (phase === 'layout') {
       group.position.copy(startPosition);
       group.quaternion.copy(stagingQuaternion);
+      group.scale.setScalar(layoutScale);
       return;
     }
 
@@ -1027,6 +1029,7 @@ const PanelSimulationAccessoryItem: React.FC<{
     const quaternion = stagingQuaternion.clone().slerp(sourceQuaternion, progress);
     group.position.copy(position);
     group.quaternion.copy(quaternion);
+    group.scale.setScalar(THREE.MathUtils.lerp(layoutScale, 1, progress));
   });
 
   return (
@@ -1034,6 +1037,7 @@ const PanelSimulationAccessoryItem: React.FC<{
       ref={groupRef}
       position={phase === 'layout' ? startPosition : startPosition}
       quaternion={stagingQuaternion}
+      scale={phase === 'layout' ? PANEL_SIMULATION_SCALE : PANEL_SIMULATION_SCALE}
       renderOrder={9998}
       userData={{
         furnitureId: source.furnitureId,
@@ -1136,6 +1140,7 @@ const PanelSimulationMovingPanels: React.FC = () => {
   const sources = sourcesSnapshot;
   const sameTypeIndexBySourceKey = new Map<string, number>();
   const assemblyOnlyIndexBySourceKey = new Map<string, number>();
+  const assemblyOnlyCategoryIndexBySourceKey = new Map<string, number>();
   const assemblyOnlyCategoryBySourceKey = new Map<string, string>();
   const assemblyOnlyCategoryOrders = new Map<string, number>();
   const assemblyOnlySortedSources: ReturnType<typeof getPanelSimulationSources> = [];
@@ -1145,7 +1150,7 @@ const PanelSimulationMovingPanels: React.FC = () => {
     if (panelName.includes('조절발')) return 'feet';
     if (panelName.includes('레그라')) return 'legra';
     if (panelName.includes('옷봉')) return 'rod';
-    if (panelName.includes('유리장') || panelName.includes('금속도어') || panelName.includes('유리')) return 'glass';
+    if (panelName.includes('유리장') || panelName.includes('금속도어') || panelName.includes('유리') || panelName.includes('타일')) return 'glass';
     return 'other';
   };
   const getAssemblyOnlySortWeight = (panelName: string) => {
@@ -1154,6 +1159,21 @@ const PanelSimulationMovingPanels: React.FC = () => {
     if (category === 'legra') return 1;
     if (category === 'rod') return 2;
     if (category === 'glass') return 3;
+    return 4;
+  };
+  const getGlassAccessoryGroup = (panelName: string) => {
+    if (panelName.includes('도어')) return 'door';
+    if (panelName.includes('선반')) return 'shelf';
+    if (panelName.includes('브라켓')) return 'bracket';
+    if (panelName.includes('백패널') || panelName.includes('타일')) return 'back';
+    return 'other';
+  };
+  const getGlassAccessorySortWeight = (panelName: string) => {
+    const group = getGlassAccessoryGroup(panelName);
+    if (group === 'door') return 0;
+    if (group === 'shelf') return 1;
+    if (group === 'bracket') return 2;
+    if (group === 'back') return 3;
     return 4;
   };
   sources.forEach(source => {
@@ -1172,6 +1192,10 @@ const PanelSimulationMovingPanels: React.FC = () => {
     .sort((a, b) => {
       const weightDiff = getAssemblyOnlySortWeight(a.panelName) - getAssemblyOnlySortWeight(b.panelName);
       if (weightDiff !== 0) return weightDiff;
+      if (getAssemblyOnlyCategory(a.panelName) === 'glass') {
+        const glassWeightDiff = getGlassAccessorySortWeight(a.panelName) - getGlassAccessorySortWeight(b.panelName);
+        if (glassWeightDiff !== 0) return glassWeightDiff;
+      }
       const furnitureDiff = (a.furnitureId || '').localeCompare(b.furnitureId || '');
       if (furnitureDiff !== 0) return furnitureDiff;
       return a.panelName.localeCompare(b.panelName);
@@ -1180,19 +1204,73 @@ const PanelSimulationMovingPanels: React.FC = () => {
       const category = getAssemblyOnlyCategory(source.panelName);
       const categoryIndex = assemblyOnlyCategoryOrders.get(category) || 0;
       assemblyOnlyIndexBySourceKey.set(source.key, index);
+      assemblyOnlyCategoryIndexBySourceKey.set(source.key, categoryIndex);
       assemblyOnlyCategoryBySourceKey.set(source.key, category);
       assemblyOnlyCategoryOrders.set(category, categoryIndex + 1);
     });
+  const glassAssemblyPositionsBySourceKey = new Map<string, THREE.Vector3>();
+  const glassAssemblySources = assemblyOnlySortedSources.filter(source => getAssemblyOnlyCategory(source.panelName) === 'glass');
+  const glassGroups = ['door', 'shelf', 'bracket', 'back', 'other'];
+  const glassGroupRows = glassGroups
+    .map(group => glassAssemblySources.filter(source => getGlassAccessoryGroup(source.panelName) === group))
+    .filter(groupSources => groupSources.length > 0);
+  const glassRowMetrics = glassGroupRows.map(groupSources => {
+    const footprints = groupSources.map(source => {
+      const { thicknessAxis, widthAxis, lengthAxis } = getFlatPanelAxes(source.args);
+      return {
+        source,
+        width: source.args[widthAxis.index] * PANEL_SIMULATION_SCALE,
+        length: source.args[lengthAxis.index] * PANEL_SIMULATION_SCALE,
+        thickness: source.args[thicknessAxis.index] * PANEL_SIMULATION_SCALE,
+      };
+    });
+    return {
+      footprints,
+      maxLength: Math.max(1.05, ...footprints.map(footprint => footprint.length)),
+      maxThickness: Math.max(0.04, ...footprints.map(footprint => footprint.thickness)),
+    };
+  });
+  const glassTotalDepth = glassRowMetrics.reduce((sum, row, index) => (
+    sum + row.maxLength + (index === glassRowMetrics.length - 1 ? 0 : 0.82)
+  ), 0);
   const claimedLayoutKeys = new Set<string>();
   const getAssemblyOnlyStartPosition = (
     source: ReturnType<typeof getPanelSimulationSources>[number],
     assemblyIndex: number,
-    category: string
+    category: string,
+    categoryIndex: number
   ) => {
     const sheets = panelSimulationSheet?.sheets || [];
     const rightEdge = sheets.length
       ? Math.max(...sheets.map(sheet => sheet.centerX + sheet.widthWorld / 2))
       : (panelSimulationSheet?.centerX || 0) + (panelSimulationSheet?.sheetWidthWorld || 8) / 2;
+
+    if (category === 'glass') {
+      const cachedPosition = glassAssemblyPositionsBySourceKey.get(source.key);
+      if (cachedPosition) return cachedPosition.clone();
+
+      let cursorZ = -glassTotalDepth / 2;
+      glassRowMetrics.forEach(row => {
+        let cursorX = rightEdge + 1.55;
+        row.footprints.forEach(footprint => {
+          const position = new THREE.Vector3(
+            cursorX + footprint.width / 2,
+            (panelSimulationSheet?.centerY || 0) + Math.max(0.12, footprint.thickness * 0.5 + 0.08),
+            cursorZ + row.maxLength / 2
+          );
+          glassAssemblyPositionsBySourceKey.set(footprint.source.key, position);
+          cursorX += footprint.width + 0.86;
+        });
+        cursorZ += row.maxLength + 0.82;
+      });
+
+      return glassAssemblyPositionsBySourceKey.get(source.key)?.clone() || new THREE.Vector3(
+        rightEdge + 1.55 + categoryIndex * 1.35,
+        panelSimulationSheet?.centerY || 0,
+        0
+      );
+    }
+
     const columns = 4;
     const rowGap = 1.05;
     const colGap = 1.15;
@@ -1388,7 +1466,8 @@ const PanelSimulationMovingPanels: React.FC = () => {
         if (source.assemblyOnly) {
           const assemblyOnlyIndex = assemblyOnlyIndexBySourceKey.get(source.key) || 0;
           const assemblyCategory = assemblyOnlyCategoryBySourceKey.get(source.key) || getAssemblyOnlyCategory(source.panelName);
-          const startPosition = getAssemblyOnlyStartPosition(source, assemblyOnlyIndex, assemblyCategory);
+          const assemblyCategoryIndex = assemblyOnlyCategoryIndexBySourceKey.get(source.key) || 0;
+          const startPosition = getAssemblyOnlyStartPosition(source, assemblyOnlyIndex, assemblyCategory, assemblyCategoryIndex);
           const stagingQuaternion = source.shape === 'adjustableFoot'
             ? new THREE.Quaternion()
             : buildFlatPanelQuaternion(source.args, 0);

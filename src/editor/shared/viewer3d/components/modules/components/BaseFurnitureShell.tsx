@@ -14,6 +14,7 @@ import DimensionText from './DimensionText';
 import { useDimensionColor } from '../hooks/useDimensionColor';
 import { VentilationCap } from './VentilationCap';
 import { isPanelKeyExcluded, useExcludedPanelsStore } from '../../../context/ExcludedPanelsContext';
+import { getPanelSimulationSourceRegistryVersion, removePanelSimulationSource, updatePanelSimulationSource } from '../../../utils/panelSimulationRegistry';
 
 // 유리장 타일 텍스처 (이미지 로드 캐싱 — Image 객체로 직접 관리)
 let GLASS_TILE_IMAGE: HTMLImageElement | null = null;
@@ -33,6 +34,62 @@ const loadGlassTileImage = (): Promise<HTMLImageElement> => {
   return GLASS_TILE_LOAD_PROMISE;
 };
 
+const GlassAccessoryAssemblySource: React.FC<{
+  sourceKey: string;
+  furnitureId?: string;
+  panelName: string;
+  args: [number, number, number];
+  material?: THREE.Material;
+  children: React.ReactNode;
+}> = ({ sourceKey, furnitureId, panelName, args, material, children }) => {
+  const groupRef = useRef<THREE.Group>(null);
+  const assemblySourceSignatureRef = useRef<string | null>(null);
+  const registryKey = furnitureId ? `accessory::${furnitureId}::${sourceKey}` : null;
+  const { viewMode } = useSpace3DView();
+  const panelSimulationPhase = useUIStore(state => state.panelSimulationPhase);
+  const panelSimulationRevision = useUIStore(state => state.panelSimulationRevision);
+  const panelSimulationViewBackup = useUIStore(state => state.panelSimulationViewBackup);
+
+  useEffect(() => {
+    return () => {
+      if (registryKey) removePanelSimulationSource(registryKey);
+      assemblySourceSignatureRef.current = null;
+    };
+  }, [registryKey]);
+
+  useFrame(() => {
+    const group = groupRef.current;
+    if (!group || !furnitureId || !registryKey) return;
+
+    const isPanelSimulationPresentation = viewMode === '3D'
+      && panelSimulationRevision > 0
+      && (panelSimulationPhase === 'layout' || !!panelSimulationViewBackup);
+
+    if (isPanelSimulationPresentation) {
+      const signature = `${getPanelSimulationSourceRegistryVersion()}:${panelSimulationRevision}:${panelSimulationPhase}:${registryKey}:${args.join(',')}`;
+      if (assemblySourceSignatureRef.current !== signature) {
+        updatePanelSimulationSource({
+          key: registryKey,
+          furnitureId,
+          panelName,
+          args,
+          object: group,
+          material,
+          assemblyOnly: true,
+          shape: 'box',
+        });
+        assemblySourceSignatureRef.current = signature;
+      }
+      group.visible = false;
+      return;
+    }
+
+    group.visible = true;
+  });
+
+  return <group ref={groupRef}>{children}</group>;
+};
+
 // 타일 백패널 mesh 컴포넌트 — 텍스처를 useEffect에서 로드 후 적용
 const TileBackPanelMesh: React.FC<{
   position: [number, number, number];
@@ -44,15 +101,48 @@ const TileBackPanelMesh: React.FC<{
 }> = ({ position, args, widthMm, heightMm, panelName, furnitureId }) => {
   const [texture, setTexture] = React.useState<THREE.Texture | null>(null);
   const groupRef = useRef<THREE.Group>(null);
+  const meshRef = useRef<THREE.Mesh>(null);
+  const assemblySourceSignatureRef = useRef<string | null>(null);
   const compositeKey = furnitureId && panelName ? `${furnitureId}::${panelName}` : null;
+  const registryKey = furnitureId && panelName ? `accessory::${furnitureId}::${panelName}` : null;
+  const { viewMode } = useSpace3DView();
+  const panelSimulationPhase = useUIStore(state => state.panelSimulationPhase);
+  const panelSimulationRevision = useUIStore(state => state.panelSimulationRevision);
+  const panelSimulationViewBackup = useUIStore(state => state.panelSimulationViewBackup);
+
+  React.useEffect(() => {
+    return () => {
+      if (registryKey) removePanelSimulationSource(registryKey);
+      assemblySourceSignatureRef.current = null;
+    };
+  }, [registryKey]);
 
   useFrame(() => {
     if (!groupRef.current || !compositeKey) return;
     const { excludedKeys } = useExcludedPanelsStore.getState();
     const shouldHide = isPanelKeyExcluded(excludedKeys, furnitureId, panelName);
-    if (groupRef.current.visible === shouldHide) {
-      groupRef.current.visible = !shouldHide;
+    const isPanelSimulationPresentation = viewMode === '3D' && panelSimulationRevision > 0 && (panelSimulationPhase === 'layout' || !!panelSimulationViewBackup);
+
+    if (isPanelSimulationPresentation && furnitureId && panelName && registryKey && meshRef.current && !shouldHide) {
+      const signature = `${getPanelSimulationSourceRegistryVersion()}:${panelSimulationRevision}:${panelSimulationPhase}:${registryKey}:${args.join(',')}`;
+      if (assemblySourceSignatureRef.current !== signature) {
+        updatePanelSimulationSource({
+          key: registryKey,
+          furnitureId,
+          panelName,
+          args,
+          object: meshRef.current,
+          material: Array.isArray(meshRef.current.material) ? meshRef.current.material[0] : meshRef.current.material,
+          assemblyOnly: true,
+          shape: 'box',
+        });
+        assemblySourceSignatureRef.current = signature;
+      }
+      groupRef.current.visible = false;
+      return;
     }
+
+    groupRef.current.visible = !shouldHide;
   });
 
   React.useEffect(() => {
@@ -74,7 +164,7 @@ const TileBackPanelMesh: React.FC<{
 
   return (
     <group ref={groupRef}>
-      <mesh position={position} userData={{ skipCNC: true }} renderOrder={1}>
+      <mesh ref={meshRef} position={position} userData={{ skipCNC: true }} renderOrder={1}>
         <boxGeometry args={args} />
         {texture ? (
           <meshStandardMaterial
@@ -346,6 +436,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
   const highlightedSection = useUIStore(state => state.highlightedSection);
   const highlightedPanel = useUIStore(state => state.highlightedPanel);
   const doorsOpen = useUIStore(state => state.doorsOpen);
+  const isGlassCabinet = !!moduleData?.id?.includes('glass-cabinet');
 
   // 유리장 서랍 인출 애니메이션 — 도어가 90도 회전한 후 서랍 인출 (200mm)
   // 열기: doorsOpen=true → 500ms 지연 후 200mm 인출 (도어 회전이 먼저)
@@ -1769,7 +1860,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
         {/* Type4 하부섹션 바닥판 두께 치수 표시 - 제거됨 (2D에서 18mm 두께 표시 불필요) */}
 
         {/* 뒷면 판재 (9mm 백패널) - hasBackPanel이 true일 때만 렌더링 */}
-        {hasBackPanel && (
+        {hasBackPanel && !isGlassCabinet && (
         <>
           {(moduleData?.id?.includes('pull-out-cabinet') || moduleData?.id?.includes('pantry-cabinet') || moduleData?.id?.includes('fridge-cabinet')) && isMultiSectionFurniture() && getSectionHeights().length >= 2 ? (
             // 인출장/팬트리장/냉장고장: N섹션 백패널 분할 + 후면 보강대 (각 섹션 위/아래)
@@ -2023,7 +2114,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                         2D 정면도에서는 숨김 (백패널 뒤에 위치하지만 선 렌더링으로 보임)
                         상부/측면 뷰에서만 표시됨
                         ※ 유리장(glass-cabinet)은 후면 보강대 자체가 없는 구조 → 전체 스킵 */}
-                    {!(viewMode === '2D' && view2DDirection === 'front') && !moduleData?.id?.includes('glass-cabinet') && (() => {
+                    {!(viewMode === '2D' && view2DDirection === 'front') && (() => {
                       const reinforcementHeight = mmToThreeUnits(60);
                       const reinforcementDepth = mmToThreeUnits((basicThicknessMm === 18.5 || basicThicknessMm === 15.5) ? 15.5 : 15);
                       // 양쪽 0.5mm씩 축소 (총 1mm)
@@ -2301,7 +2392,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
         })()}
 
         {/* 유리장 전용: 서랍 영역 좌우 단일 측판 (D277 × H500 × t18) */}
-        {moduleData?.id?.includes('glass-cabinet') && (() => {
+        {isGlassCabinet && (() => {
           // 측판 사이즈 (mm): D 277, H 500, T = basicThickness(18mm)
           const sidePanelW_mm = 18; // 패널 두께
           const sidePanelH_mm = 500;
@@ -2834,49 +2925,58 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                       const shelfCenterY = shelfTopY - fT / 2;
                       const edgeColor = '#1a1410'; // 브론즈보다 훨씬 어두운 윤곽선 (선명하게 보이도록)
                       return (
-                        <group key={`glass-shelf-${n}`}>
+                        <GlassAccessoryAssemblySource
+                          key={`glass-shelf-${n}`}
+                          sourceKey={`유리장-금속프레임-유리선반-${n}`}
+                          furnitureId={placedFurnitureId}
+                          panelName={`유리장 금속프레임 유리선반 ${n}`}
+                          args={[shelfW, fT, shelfD]}
+                          material={shelfFrameMaterial}
+                        >
+                        <group position={[0, shelfCenterY, shelfCenterZ]}>
                           {/* 앞 프레임 (가로 막대) + 윤곽선 */}
-                          <mesh position={[0, shelfCenterY, shelfCenterZ + shelfD / 2 - fW / 2]} userData={{ skipCNC: true }}>
+                          <mesh position={[0, 0, shelfD / 2 - fW / 2]} userData={{ skipCNC: true }}>
                             <boxGeometry args={[shelfW, fT, fW]} />
                             <primitive object={shelfFrameMaterial} attach="material" />
                           </mesh>
-                          <lineSegments position={[0, shelfCenterY, shelfCenterZ + shelfD / 2 - fW / 2]} userData={{ skipCNC: true }}>
+                          <lineSegments position={[0, 0, shelfD / 2 - fW / 2]} userData={{ skipCNC: true }}>
                             <edgesGeometry args={[new THREE.BoxGeometry(shelfW, fT, fW)]} />
                             <lineBasicMaterial color={edgeColor} linewidth={2} />
                           </lineSegments>
                           {/* 뒤 프레임 */}
-                          <mesh position={[0, shelfCenterY, shelfCenterZ - shelfD / 2 + fW / 2]} userData={{ skipCNC: true }}>
+                          <mesh position={[0, 0, -shelfD / 2 + fW / 2]} userData={{ skipCNC: true }}>
                             <boxGeometry args={[shelfW, fT, fW]} />
                             <primitive object={shelfFrameMaterial} attach="material" />
                           </mesh>
-                          <lineSegments position={[0, shelfCenterY, shelfCenterZ - shelfD / 2 + fW / 2]} userData={{ skipCNC: true }}>
+                          <lineSegments position={[0, 0, -shelfD / 2 + fW / 2]} userData={{ skipCNC: true }}>
                             <edgesGeometry args={[new THREE.BoxGeometry(shelfW, fT, fW)]} />
                             <lineBasicMaterial color={edgeColor} linewidth={2} />
                           </lineSegments>
                           {/* 좌 프레임 */}
-                          <mesh position={[-shelfW / 2 + fW / 2, shelfCenterY, shelfCenterZ]} userData={{ skipCNC: true }}>
+                          <mesh position={[-shelfW / 2 + fW / 2, 0, 0]} userData={{ skipCNC: true }}>
                             <boxGeometry args={[fW, fT, shelfD - 2 * fW]} />
                             <primitive object={shelfFrameMaterial} attach="material" />
                           </mesh>
-                          <lineSegments position={[-shelfW / 2 + fW / 2, shelfCenterY, shelfCenterZ]} userData={{ skipCNC: true }}>
+                          <lineSegments position={[-shelfW / 2 + fW / 2, 0, 0]} userData={{ skipCNC: true }}>
                             <edgesGeometry args={[new THREE.BoxGeometry(fW, fT, shelfD - 2 * fW)]} />
                             <lineBasicMaterial color={edgeColor} linewidth={2} />
                           </lineSegments>
                           {/* 우 프레임 */}
-                          <mesh position={[shelfW / 2 - fW / 2, shelfCenterY, shelfCenterZ]} userData={{ skipCNC: true }}>
+                          <mesh position={[shelfW / 2 - fW / 2, 0, 0]} userData={{ skipCNC: true }}>
                             <boxGeometry args={[fW, fT, shelfD - 2 * fW]} />
                             <primitive object={shelfFrameMaterial} attach="material" />
                           </mesh>
-                          <lineSegments position={[shelfW / 2 - fW / 2, shelfCenterY, shelfCenterZ]} userData={{ skipCNC: true }}>
+                          <lineSegments position={[shelfW / 2 - fW / 2, 0, 0]} userData={{ skipCNC: true }}>
                             <edgesGeometry args={[new THREE.BoxGeometry(fW, fT, shelfD - 2 * fW)]} />
                             <lineBasicMaterial color={edgeColor} linewidth={2} />
                           </lineSegments>
                           {/* 유리판 (중앙) */}
-                          <mesh position={[0, shelfCenterY, shelfCenterZ]} userData={{ skipCNC: true }}>
+                          <mesh position={[0, 0, 0]} userData={{ skipCNC: true }}>
                             <boxGeometry args={[innerW, gT, innerD]} />
                             <primitive object={shelfGlassMaterial} attach="material" />
                           </mesh>
                         </group>
+                        </GlassAccessoryAssemblySource>
                       );
                     })}
                   </>
@@ -2907,15 +3007,35 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                 return (
                   <>
                     {/* 천판 앞 갭 채움 */}
-                    <mesh position={[0, topFrameY, frameZ]} userData={{ skipCNC: true }}>
-                      <boxGeometry args={[frameW, panelH, gapD]} />
-                      <primitive object={gapFrameMaterial} attach="material" />
-                    </mesh>
+                    <GlassAccessoryAssemblySource
+                      sourceKey="유리장-상판앞-금속브라켓"
+                      furnitureId={placedFurnitureId}
+                      panelName="유리장 상판 앞 금속 브라켓"
+                      args={[frameW, panelH, gapD]}
+                      material={gapFrameMaterial}
+                    >
+                      <group position={[0, topFrameY, frameZ]}>
+                        <mesh userData={{ skipCNC: true }}>
+                          <boxGeometry args={[frameW, panelH, gapD]} />
+                          <primitive object={gapFrameMaterial} attach="material" />
+                        </mesh>
+                      </group>
+                    </GlassAccessoryAssemblySource>
                     {/* 바닥판 앞 갭 채움 */}
-                    <mesh position={[0, bottomFrameY, frameZ]} userData={{ skipCNC: true }}>
-                      <boxGeometry args={[frameW, panelH, gapD]} />
-                      <primitive object={gapFrameMaterial} attach="material" />
-                    </mesh>
+                    <GlassAccessoryAssemblySource
+                      sourceKey="유리장-바닥판앞-금속브라켓"
+                      furnitureId={placedFurnitureId}
+                      panelName="유리장 바닥판 앞 금속 브라켓"
+                      args={[frameW, panelH, gapD]}
+                      material={gapFrameMaterial}
+                    >
+                      <group position={[0, bottomFrameY, frameZ]}>
+                        <mesh userData={{ skipCNC: true }}>
+                          <boxGeometry args={[frameW, panelH, gapD]} />
+                          <primitive object={gapFrameMaterial} attach="material" />
+                        </mesh>
+                      </group>
+                    </GlassAccessoryAssemblySource>
                   </>
                 );
               })()}
@@ -2957,7 +3077,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                         args={[tileBackW, lowerH, tileBackThk]}
                         widthMm={widthMm}
                         heightMm={lowerH / 0.01}
-                        panelName="백패널"
+                        panelName="유리장 타일 백패널 하부"
                         furnitureId={placedFurnitureId}
                       />
                     )}
@@ -2967,7 +3087,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                         args={[tileBackW, upperH, tileBackThk]}
                         widthMm={widthMm}
                         heightMm={upperH / 0.01}
-                        panelName="백패널"
+                        panelName="유리장 타일 백패널 상부"
                         furnitureId={placedFurnitureId}
                       />
                     )}

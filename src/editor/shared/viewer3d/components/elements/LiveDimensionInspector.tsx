@@ -220,6 +220,15 @@ const findUserData = (object: THREE.Object3D, key: string): any => {
   return undefined;
 };
 
+const findUserDataOwner = (object: THREE.Object3D, key: string): THREE.Object3D | null => {
+  let current: THREE.Object3D | null = object;
+  while (current) {
+    if (current.userData && current.userData[key] !== undefined) return current;
+    current = current.parent;
+  }
+  return null;
+};
+
 const hasInspectableMetadata = (object: THREE.Object3D) => {
   return Boolean(
     findUserData(object, 'liveDimension') ||
@@ -228,8 +237,50 @@ const hasInspectableMetadata = (object: THREE.Object3D) => {
   );
 };
 
+const hasHiddenAncestor = (object: THREE.Object3D) => {
+  let current: THREE.Object3D | null = object;
+  while (current) {
+    if (!current.visible) return true;
+    current = current.parent;
+  }
+  return false;
+};
+
+const hasExcludedScanAncestor = (object: THREE.Object3D) => {
+  let current: THREE.Object3D | null = object;
+  while (current) {
+    const data = current.userData || {};
+    if (
+      data.liveDimensionOverlay ||
+      data.tapeMeasureOverlay ||
+      data.decoration ||
+      data.panelSimulationMovingPanels ||
+      data.panelSimulationBoard ||
+      data.dimensionLine ||
+      data.measureLine
+    ) {
+      return true;
+    }
+    const name = current.name || '';
+    if (
+      name.includes('dimension') ||
+      name.includes('grid') ||
+      name.includes('axis') ||
+      name.includes('ghost') ||
+      name.includes('highlight') ||
+      name.includes('pick-helper') ||
+      name.includes('placement')
+    ) {
+      return true;
+    }
+    current = current.parent;
+  }
+  return false;
+};
+
 const shouldInspectObject = (object: THREE.Object3D): object is THREE.Mesh => {
   if (!(object instanceof THREE.Mesh) || !object.visible) return false;
+  if (hasHiddenAncestor(object) || hasExcludedScanAncestor(object)) return false;
   if (object.userData?.liveDimensionOverlay || object.userData?.decoration) return false;
   if (!hasInspectableMetadata(object)) return false;
 
@@ -250,6 +301,7 @@ const shouldInspectObject = (object: THREE.Object3D): object is THREE.Mesh => {
   const material = object.material as THREE.Material | THREE.Material[] | undefined;
   const materials = Array.isArray(material) ? material : material ? [material] : [];
   if (materials.some((mat) => mat.visible === false)) return false;
+  if (materials.length > 0 && materials.every((mat) => mat.transparent && mat.opacity <= 0.03)) return false;
 
   return true;
 };
@@ -279,37 +331,46 @@ const getHoverDimension = (object: THREE.Object3D): HoverDimension | null => {
   const scale = new THREE.Vector3();
   const size = new THREE.Vector3();
 
-  const explicit = findUserData(object, 'liveDimension');
-  object.matrixWorld.decompose(center, quaternion, scale);
+  const explicitOwner = findUserDataOwner(object, 'liveDimension');
+  const metadataObject = explicitOwner || object;
+  const explicit = explicitOwner?.userData?.liveDimension;
+  metadataObject.updateMatrixWorld(true);
+  metadataObject.matrixWorld.decompose(center, quaternion, scale);
 
   if (explicit) {
-    if (explicit.useObjectBounds && object instanceof THREE.Mesh && object.geometry) {
-      if (!object.geometry.boundingBox) {
-        object.geometry.computeBoundingBox();
+    if (explicit.useObjectBounds && metadataObject instanceof THREE.Mesh && metadataObject.geometry) {
+      if (!metadataObject.geometry.boundingBox) {
+        metadataObject.geometry.computeBoundingBox();
       }
-      const box = object.geometry.boundingBox;
+      const box = metadataObject.geometry.boundingBox;
       if (!box || box.isEmpty()) return null;
 
       const localCenter = new THREE.Vector3();
       box.getCenter(localCenter);
       box.getSize(size);
-      center.copy(localCenter.applyMatrix4(object.matrixWorld));
+      center.copy(localCenter.applyMatrix4(metadataObject.matrixWorld));
       size.set(
         Math.abs(size.x * scale.x),
         Math.abs(size.y * scale.y),
         Math.abs(size.z * scale.z)
       );
+    } else if (explicit.useObjectBounds) {
+      const box = new THREE.Box3().setFromObject(metadataObject);
+      if (box.isEmpty()) return null;
+      box.getCenter(center);
+      box.getSize(size);
+      quaternion.identity();
     } else if (Array.isArray(explicit.sizeThree) && explicit.sizeThree.length === 3) {
       size.set(
-        Math.max(0.001, Number(explicit.sizeThree[0]) || 0),
-        Math.max(0.001, Number(explicit.sizeThree[1]) || 0),
-        Math.max(0.001, Number(explicit.sizeThree[2]) || 0)
+        Math.max(0.001, Math.abs((Number(explicit.sizeThree[0]) || 0) * scale.x)),
+        Math.max(0.001, Math.abs((Number(explicit.sizeThree[1]) || 0) * scale.y)),
+        Math.max(0.001, Math.abs((Number(explicit.sizeThree[2]) || 0) * scale.z))
       );
     } else {
       size.set(
-        Math.max(0.001, explicit.widthMm / THREE_UNITS_TO_MM),
-        Math.max(0.001, explicit.heightMm / THREE_UNITS_TO_MM),
-        Math.max(0.001, explicit.depthMm / THREE_UNITS_TO_MM)
+        Math.max(0.001, Math.abs((explicit.widthMm / THREE_UNITS_TO_MM) * scale.x)),
+        Math.max(0.001, Math.abs((explicit.heightMm / THREE_UNITS_TO_MM) * scale.y)),
+        Math.max(0.001, Math.abs((explicit.depthMm / THREE_UNITS_TO_MM) * scale.z))
       );
     }
   } else if (object instanceof THREE.Mesh && object.geometry) {
@@ -343,9 +404,9 @@ const getHoverDimension = (object: THREE.Object3D): HoverDimension | null => {
   const depthMm = explicit?.depthMm ?? Math.round(size.z * THREE_UNITS_TO_MM);
 
   return {
-    key: String(findUserData(object, 'liveDimensionKey') || object.uuid),
-    selectionKey: String(findUserData(object, 'liveDimensionKey') || object.uuid),
-    label: formatMeshName(object),
+    key: String(findUserData(metadataObject, 'liveDimensionKey') || metadataObject.uuid),
+    selectionKey: String(findUserData(metadataObject, 'liveDimensionKey') || metadataObject.uuid),
+    label: formatMeshName(metadataObject),
     center: [center.x, center.y, center.z],
     quaternion: [quaternion.x, quaternion.y, quaternion.z, quaternion.w],
     sizeThree: [size.x, size.y, size.z],
