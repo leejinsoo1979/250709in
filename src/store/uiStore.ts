@@ -98,6 +98,13 @@ export interface PanelSimulationSummary {
   materialCounts: PanelSimulationMaterialSummary[];
 }
 
+export type PanelSimulationPlaybackRate = 0.25 | 0.5 | 1 | 1.5 | 2;
+export type PanelSimulationAnimationStyle = 'cinematic' | 'precision' | 'dynamic';
+
+const getPanelSimulationNow = () => (
+  typeof performance !== 'undefined' ? performance.now() / 1000 : Date.now() / 1000
+);
+
 const createPanelSimulationFallbackSheet = (): PanelSimulationSheetLayout => ({
   centerX: 0,
   centerY: 15,
@@ -278,6 +285,12 @@ interface UIState {
   panelSimulationLayouts: Record<string, PanelSimulationLayout>;
   panelSimulationSheet: PanelSimulationSheetLayout | null;
   panelSimulationSummary: PanelSimulationSummary | null;
+  panelSimulationPlaybackRate: PanelSimulationPlaybackRate;
+  panelSimulationAnimationStyle: PanelSimulationAnimationStyle;
+  panelSimulationIsPlaying: boolean;
+  panelSimulationStartedAt: number;
+  panelSimulationOffsetSeconds: number;
+  panelSimulationDurationSeconds: number;
   panelSimulationViewBackup: {
     showFurnitureEditHandles: boolean;
     showDimensions: boolean;
@@ -292,6 +305,11 @@ interface UIState {
     sheet: PanelSimulationSheetLayout | null
   ) => void;
   setPanelSimulationSummary: (summary: PanelSimulationSummary | null) => void;
+  setPanelSimulationPlaybackRate: (rate: PanelSimulationPlaybackRate) => void;
+  setPanelSimulationAnimationStyle: (style: PanelSimulationAnimationStyle) => void;
+  setPanelSimulationPlaying: (playing: boolean) => void;
+  setPanelSimulationElapsedSeconds: (seconds: number) => void;
+  setPanelSimulationDurationSeconds: (seconds: number) => void;
   completePanelSimulationAssembly: (revision: number) => void;
 
   // 지우개 모드 상태
@@ -510,6 +528,12 @@ const initialUIState = {
   panelSimulationLayouts: {},
   panelSimulationSheet: null,
   panelSimulationSummary: null,
+  panelSimulationPlaybackRate: 1,
+  panelSimulationAnimationStyle: 'cinematic' as const,
+  panelSimulationIsPlaying: false,
+  panelSimulationStartedAt: 0,
+  panelSimulationOffsetSeconds: 0,
+  panelSimulationDurationSeconds: 1,
   panelSimulationViewBackup: null,
   isEraserMode: false,  // 기본값: 지우개 모드 비활성화
   hoveredMeasureLineId: null,  // 기본값: 호버 중인 측정선 없음
@@ -1036,6 +1060,10 @@ export const useUIStore = create<UIState>()(
             panelSimulationPhase: nextPhase,
             panelSimulationRevision: nextRevision,
             panelSimulationSummary: null,
+            panelSimulationIsPlaying: true,
+            panelSimulationStartedAt: getPanelSimulationNow(),
+            panelSimulationOffsetSeconds: 0,
+            panelSimulationDurationSeconds: 1,
             ...(nextPhase === 'layout' ? {
               panelSimulationSheet: createPanelSimulationFallbackSheet(),
               panelSimulationViewBackup: {
@@ -1074,6 +1102,10 @@ export const useUIStore = create<UIState>()(
         set((state) => ({
           panelSimulationPhase: phase,
           panelSimulationRevision: state.panelSimulationRevision + 1,
+          panelSimulationIsPlaying: true,
+          panelSimulationStartedAt: getPanelSimulationNow(),
+          panelSimulationOffsetSeconds: 0,
+          panelSimulationDurationSeconds: 1,
           ...(phase === 'assembled' ? {
             panelSimulationLayouts: {},
             panelSimulationSheet: null,
@@ -1094,6 +1126,50 @@ export const useUIStore = create<UIState>()(
           panelSimulationSummary: summary,
         }),
 
+      setPanelSimulationPlaybackRate: (rate) =>
+        set((state) => {
+          const now = getPanelSimulationNow();
+          const elapsed = state.panelSimulationOffsetSeconds + (
+            state.panelSimulationIsPlaying
+              ? Math.max(0, now - state.panelSimulationStartedAt) * state.panelSimulationPlaybackRate
+              : 0
+          );
+          return {
+            panelSimulationPlaybackRate: rate,
+            panelSimulationOffsetSeconds: elapsed,
+            panelSimulationStartedAt: now,
+          };
+        }),
+
+      setPanelSimulationAnimationStyle: (style) =>
+        set({ panelSimulationAnimationStyle: style }),
+
+      setPanelSimulationPlaying: (playing) =>
+        set((state) => {
+          const now = getPanelSimulationNow();
+          const elapsed = state.panelSimulationOffsetSeconds + (
+            state.panelSimulationIsPlaying
+              ? Math.max(0, now - state.panelSimulationStartedAt) * state.panelSimulationPlaybackRate
+              : 0
+          );
+          return {
+            panelSimulationIsPlaying: playing,
+            panelSimulationOffsetSeconds: elapsed,
+            panelSimulationStartedAt: now,
+          };
+        }),
+
+      setPanelSimulationElapsedSeconds: (seconds) =>
+        set((state) => ({
+          panelSimulationOffsetSeconds: Math.max(0, Math.min(seconds, Math.max(1, state.panelSimulationDurationSeconds))),
+          panelSimulationStartedAt: getPanelSimulationNow(),
+        })),
+
+      setPanelSimulationDurationSeconds: (seconds) =>
+        set({
+          panelSimulationDurationSeconds: Math.max(1, seconds),
+        }),
+
       completePanelSimulationAssembly: (revision) =>
         set((state) => {
           if (state.panelSimulationPhase !== 'assembled' || state.panelSimulationRevision !== revision || !state.panelSimulationViewBackup) {
@@ -1105,6 +1181,10 @@ export const useUIStore = create<UIState>()(
             panelSimulationLayouts: {},
             panelSimulationSheet: null,
             panelSimulationSummary: null,
+            panelSimulationIsPlaying: false,
+            panelSimulationStartedAt: 0,
+            panelSimulationOffsetSeconds: 0,
+            panelSimulationDurationSeconds: 1,
             showFurnitureEditHandles: backup.showFurnitureEditHandles,
             showDimensions: true,
             showDimensionsText: true,

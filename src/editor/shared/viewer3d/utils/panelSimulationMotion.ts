@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import type { PanelSimulationLayout } from '@/store/uiStore';
+import type { PanelSimulationAnimationStyle, PanelSimulationLayout } from '@/store/uiStore';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
 import { getExcludedPanelAliases } from '../context/ExcludedPanelsContext';
 import {
@@ -14,6 +14,67 @@ export const PANEL_SIMULATION_ASSEMBLY_DELAY_STEP = 0.0038;
 export const PANEL_SIMULATION_FURNITURE_SPAN = 960;
 export const PANEL_SIMULATION_FINAL_STAGE_ORDER = 600;
 export const MIN_SIMULATION_BOX_SIZE = 0.001;
+
+export interface PanelSimulationPlaybackSnapshot {
+  panelSimulationIsPlaying: boolean;
+  panelSimulationStartedAt: number;
+  panelSimulationOffsetSeconds: number;
+  panelSimulationPlaybackRate: number;
+}
+
+export const getPanelSimulationPlaybackElapsed = (snapshot: PanelSimulationPlaybackSnapshot) => {
+  const now = typeof performance !== 'undefined' ? performance.now() / 1000 : Date.now() / 1000;
+  return snapshot.panelSimulationOffsetSeconds + (
+    snapshot.panelSimulationIsPlaying
+      ? Math.max(0, now - snapshot.panelSimulationStartedAt) * snapshot.panelSimulationPlaybackRate
+      : 0
+  );
+};
+
+export const getPanelSimulationStyleMotion = (style: PanelSimulationAnimationStyle) => {
+  if (style === 'precision') {
+    return { lift: 0.58, drift: 0.04, settle: 0.86 };
+  }
+  if (style === 'dynamic') {
+    return { lift: 1.55, drift: 1.85, settle: 1.16 };
+  }
+  return { lift: 2.15, drift: 2.45, settle: 1.28 };
+};
+
+export const getPanelSimulationStyleTiming = (style: PanelSimulationAnimationStyle) => {
+  if (style === 'precision') {
+    return {
+      duration: PANEL_SIMULATION_DURATION * 1.18,
+      layoutDuration: 1.16,
+      layoutDelayStep: PANEL_SIMULATION_DELAY_STEP * 1.22,
+      assemblyDelayStep: PANEL_SIMULATION_ASSEMBLY_DELAY_STEP * 1.34,
+      cameraSettleLayout: 1.12,
+      cameraSettleAssembly: 1.48,
+      completionPadding: 0.72,
+    };
+  }
+  if (style === 'dynamic') {
+    return {
+      duration: PANEL_SIMULATION_DURATION * 0.72,
+      layoutDuration: 0.82,
+      layoutDelayStep: PANEL_SIMULATION_DELAY_STEP * 0.68,
+      assemblyDelayStep: PANEL_SIMULATION_ASSEMBLY_DELAY_STEP * 0.72,
+      cameraSettleLayout: 0.88,
+      cameraSettleAssembly: 1.08,
+      completionPadding: 0.46,
+    };
+  }
+  return {
+    duration: PANEL_SIMULATION_DURATION * 1.75,
+    layoutDuration: 1.12,
+    layoutDelayStep: PANEL_SIMULATION_DELAY_STEP * 0.9,
+    // 시네마틱은 공정 순서 설명이 아니라 전체 패널이 한 번에 쏟아져 조립되는 CF형 연출이다.
+    assemblyDelayStep: PANEL_SIMULATION_ASSEMBLY_DELAY_STEP * 0.08,
+    cameraSettleLayout: 1.05,
+    cameraSettleAssembly: 0.78,
+    completionPadding: 0.42,
+  };
+};
 
 const panelSimulationSlots = new Map<string, number>();
 
@@ -40,6 +101,20 @@ export const easeOutCubic = (t: number) => {
 export const smootherStep = (t: number) => {
   const clamped = Math.max(0, Math.min(1, t));
   return clamped * clamped * clamped * (clamped * (clamped * 6 - 15) + 10);
+};
+
+export const getPanelSimulationStyleProgress = (style: PanelSimulationAnimationStyle, t: number) => {
+  const clamped = Math.max(0, Math.min(1, t));
+  if (style === 'precision') {
+    return smootherStep(clamped);
+  }
+  if (style === 'dynamic') {
+    if (clamped < 0.72) {
+      return Math.min(0.94, easeOutCubic(clamped / 0.72) * 0.94);
+    }
+    return 0.94 + smootherStep((clamped - 0.72) / 0.28) * 0.06;
+  }
+  return smootherStep(clamped);
 };
 
 export const normalizeSimulationPanelName = (name?: string) => {

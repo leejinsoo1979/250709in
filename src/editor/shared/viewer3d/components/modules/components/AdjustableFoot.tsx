@@ -6,8 +6,9 @@ import { useSpace3DView } from '../../../context/useSpace3DView';
 import { useUIStore } from '@/store/uiStore';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
 import {
-  PANEL_SIMULATION_ASSEMBLY_DELAY_STEP,
-  PANEL_SIMULATION_DURATION,
+  getPanelSimulationPlaybackElapsed,
+  getPanelSimulationStyleProgress,
+  getPanelSimulationStyleTiming,
   PANEL_SIMULATION_FURNITURE_SPAN
 } from '../../../utils/panelSimulationMotion';
 import { getPanelSimulationSourceRegistryVersion, removePanelSimulationSource, updatePanelSimulationSource } from '../../../utils/panelSimulationRegistry';
@@ -163,8 +164,10 @@ export const AdjustableFoot: React.FC<AdjustableFootProps> = ({
     let targetPosition = new THREE.Vector3(position[0], position[1], position[2]);
     let targetScale = 1;
 
+    const playback = useUIStore.getState();
+    const timing = getPanelSimulationStyleTiming(playback.panelSimulationAnimationStyle);
     const order = getFootAssemblySequence(furnitureId, position, parent);
-    const elapsed = performance.now() / 1000 - simulationStartTimeRef.current - order * PANEL_SIMULATION_ASSEMBLY_DELAY_STEP;
+    const elapsed = getPanelSimulationPlaybackElapsed(playback) - timing.cameraSettleAssembly - order * timing.assemblyDelayStep;
     if (elapsed < 0) {
       group.visible = true;
       return;
@@ -172,8 +175,7 @@ export const AdjustableFoot: React.FC<AdjustableFootProps> = ({
     if (group.visible === false) {
       group.visible = true;
     }
-    const t = Math.min(1, elapsed / PANEL_SIMULATION_DURATION);
-    const eased = t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+    const eased = getPanelSimulationStyleProgress(playback.panelSimulationAnimationStyle, elapsed / timing.duration);
 
     group.position.lerp(targetPosition, eased * 0.18);
     group.quaternion.slerp(new THREE.Quaternion(), eased * 0.18);

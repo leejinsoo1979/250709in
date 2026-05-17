@@ -59,9 +59,13 @@ const DimensionText: React.FC<DimensionTextProps> = ({
   shadowOffset = [0.01, -0.01, 0],
   name
 }) => {
-  const { showDimensions, showDimensionsText, view2DDirection, view2DTheme, isLiveDimensionMode, isTapeMeasureMode, liveDimensionSelectedKey } = useUIStore();
+  const { showDimensions, showDimensionsText, view2DDirection, view2DTheme, isLiveDimensionMode, isTapeMeasureMode, liveDimensionSelectedKey, panelSimulationPhase, panelSimulationViewBackup } = useUIStore();
   const { viewMode } = useSpace3DView();
   const [isHovered, setIsHovered] = useState(false);
+
+  if (viewMode === '3D' && (panelSimulationPhase === 'layout' || !!panelSimulationViewBackup)) {
+    return null;
+  }
 
   // 디버그: forceShow와 측면 뷰 확인
   React.useEffect(() => {

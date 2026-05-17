@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState, useCallback, useRef } from 'react'
 import * as THREE from 'three';
 import { RxDimensions } from 'react-icons/rx';
 import { LuEraser } from 'react-icons/lu';
-import { Sun, Moon } from 'lucide-react';
+import { Gauge, Pause, Play, SlidersHorizontal, Square, Sun, Moon } from 'lucide-react';
 import { Space3DViewProps } from './types';
 import { Space3DViewProvider } from './context/Space3DViewContext';
 import { ViewerThemeProvider } from './context/ViewerThemeContext';
@@ -59,13 +59,13 @@ import { getExcludedPanelAliases } from './context/ExcludedPanelsContext';
 import { clearPanelSimulationSources, getPanelSimulationSources } from './utils/panelSimulationRegistry';
 import {
   buildFlatPanelQuaternion,
-  easeInOutCubic,
   easeOutCubic,
+  getPanelSimulationPlaybackElapsed,
+  getPanelSimulationStyleProgress,
+  getPanelSimulationStyleMotion,
+  getPanelSimulationStyleTiming,
   getPanelAssemblySequence,
   getFlatPanelAxes,
-  PANEL_SIMULATION_ASSEMBLY_DELAY_STEP,
-  PANEL_SIMULATION_DELAY_STEP,
-  PANEL_SIMULATION_DURATION,
   PANEL_SIMULATION_FINAL_STAGE_ORDER,
   PANEL_SIMULATION_FURNITURE_SPAN,
   smootherStep
@@ -75,7 +75,6 @@ const PANEL_SIMULATION_MM_TO_WORLD = 0.006;
 const PANEL_SIMULATION_SOURCE_MM_TO_WORLD = 0.01;
 const PANEL_SIMULATION_SCALE = PANEL_SIMULATION_MM_TO_WORLD / PANEL_SIMULATION_SOURCE_MM_TO_WORLD;
 const PANEL_SIMULATION_SHEET_GAP_WORLD = 1.2;
-const PANEL_SIMULATION_LAYOUT_DELAY_STEP = 0.0045;
 
 const clampNumber = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value));
 
@@ -873,6 +872,310 @@ const PanelSimulationSummaryPopup: React.FC = () => {
   );
 };
 
+const PANEL_SIMULATION_PLAYBACK_RATES = [0.25, 0.5, 1, 1.5, 2] as const;
+const PANEL_SIMULATION_STYLE_OPTIONS = [
+  { value: 'cinematic', label: '시네마틱' },
+  { value: 'precision', label: '정밀 조립' },
+  { value: 'dynamic', label: '다이나믹' },
+] as const;
+
+const formatSimulationTime = (seconds: number) => {
+  const safeSeconds = Math.max(0, Math.floor(seconds));
+  const minutes = Math.floor(safeSeconds / 60);
+  const remainSeconds = safeSeconds % 60;
+  return `${minutes}:${String(remainSeconds).padStart(2, '0')}`;
+};
+
+const getPanelSimulationStyleTiltQuaternion = (
+  style: typeof PANEL_SIMULATION_STYLE_OPTIONS[number]['value'],
+  progress: number,
+  sourceIndex: number
+) => {
+  if (style === 'precision' || progress <= 0 || progress >= 1) {
+    return new THREE.Quaternion();
+  }
+  const wave = Math.sin(Math.PI * Math.max(0, Math.min(1, progress)));
+  const direction = sourceIndex % 2 === 0 ? 1 : -1;
+  const yaw = style === 'dynamic' ? 0.28 * wave * direction : 0.42 * wave * direction;
+  const roll = style === 'dynamic' ? 0.18 * wave * Math.sin(sourceIndex * 0.7) : 0.24 * wave * Math.cos(sourceIndex * 0.5);
+  const pitch = style === 'dynamic' ? 0.14 * wave : 0.18 * wave;
+  return new THREE.Quaternion().setFromEuler(new THREE.Euler(pitch, yaw, roll, 'XYZ'));
+};
+
+const getSmoothCinematicArcPosition = (
+  fromPosition: THREE.Vector3,
+  toPosition: THREE.Vector3,
+  progress: number,
+  liftHeight: number,
+  sourceIndex: number,
+  driftScale: number
+) => {
+  const t = smootherStep(progress);
+  const distance = fromPosition.distanceTo(toPosition);
+  const drift = new THREE.Vector3(
+    Math.sin(sourceIndex * 1.37) * Math.min(1.4, distance * 0.09) * driftScale,
+    0,
+    Math.cos(sourceIndex * 0.91) * Math.min(1.15, distance * 0.07) * driftScale
+  );
+  const controlA = fromPosition
+    .clone()
+    .lerp(toPosition, 0.28)
+    .add(new THREE.Vector3(0, liftHeight, 0))
+    .add(drift);
+  const controlB = fromPosition
+    .clone()
+    .lerp(toPosition, 0.72)
+    .add(new THREE.Vector3(0, liftHeight * 0.62, 0))
+    .sub(drift.clone().multiplyScalar(0.35));
+  const a = fromPosition.clone().lerp(controlA, t);
+  const b = controlA.clone().lerp(controlB, t);
+  const c = controlB.clone().lerp(toPosition, t);
+  const d = a.lerp(b, t);
+  const e = b.lerp(c, t);
+  return d.lerp(e, t);
+};
+
+const PanelSimulationPlaybackControls: React.FC = () => {
+  const panelSimulationPhase = useUIStore(state => state.panelSimulationPhase);
+  const panelSimulationRevision = useUIStore(state => state.panelSimulationRevision);
+  const panelSimulationViewBackup = useUIStore(state => state.panelSimulationViewBackup);
+  const playbackRate = useUIStore(state => state.panelSimulationPlaybackRate);
+  const animationStyle = useUIStore(state => state.panelSimulationAnimationStyle);
+  const isPlaying = useUIStore(state => state.panelSimulationIsPlaying);
+  const durationSeconds = useUIStore(state => state.panelSimulationDurationSeconds);
+  const setPlaybackRate = useUIStore(state => state.setPanelSimulationPlaybackRate);
+  const setAnimationStyle = useUIStore(state => state.setPanelSimulationAnimationStyle);
+  const setPlaying = useUIStore(state => state.setPanelSimulationPlaying);
+  const setElapsedSeconds = useUIStore(state => state.setPanelSimulationElapsedSeconds);
+  const [elapsedSeconds, setElapsedSecondsState] = useState(0);
+  const completedRevisionRef = useRef(0);
+
+  const isActive = panelSimulationRevision > 0 && (panelSimulationPhase === 'layout' || !!panelSimulationViewBackup);
+  const showControls = panelSimulationPhase === 'assembled' && !!panelSimulationViewBackup;
+
+  useEffect(() => {
+    setElapsedSecondsState(0);
+    completedRevisionRef.current = 0;
+  }, [panelSimulationPhase, panelSimulationRevision]);
+
+  useEffect(() => {
+    if (!isActive) {
+      setElapsedSecondsState(0);
+      completedRevisionRef.current = 0;
+      return;
+    }
+
+    let rafId = 0;
+    const tick = () => {
+      const state = useUIStore.getState();
+      const elapsed = Math.min(
+        state.panelSimulationDurationSeconds,
+        getPanelSimulationPlaybackElapsed(state)
+      );
+      setElapsedSecondsState(elapsed);
+
+      if (elapsed >= state.panelSimulationDurationSeconds - 0.02) {
+        if (state.panelSimulationIsPlaying) {
+          state.setPanelSimulationPlaying(false);
+          state.setPanelSimulationElapsedSeconds(state.panelSimulationDurationSeconds);
+        }
+        if (state.panelSimulationPhase === 'layout' && state.panelSimulationSheet && !state.panelSimulationSummary && completedRevisionRef.current !== state.panelSimulationRevision) {
+          completedRevisionRef.current = state.panelSimulationRevision;
+          state.setPanelSimulationSummary(buildPanelSimulationSummary(state.panelSimulationRevision, state.panelSimulationSheet));
+        }
+        if (state.panelSimulationPhase === 'assembled' && state.panelSimulationViewBackup) {
+          state.completePanelSimulationAssembly(state.panelSimulationRevision);
+        }
+      }
+
+      rafId = window.requestAnimationFrame(tick);
+    };
+    rafId = window.requestAnimationFrame(tick);
+    return () => window.cancelAnimationFrame(rafId);
+  }, [isActive]);
+
+  if (!showControls) return null;
+
+  const safeDuration = Math.max(1, durationSeconds);
+  const progress = Math.max(0, Math.min(100, (elapsedSeconds / safeDuration) * 100));
+
+  const handlePlay = () => {
+    if (elapsedSeconds >= safeDuration - 0.02) {
+      setElapsedSeconds(0);
+    }
+    setPlaying(true);
+  };
+
+  const handlePause = () => {
+    setPlaying(false);
+  };
+
+  const handleStop = () => {
+    setElapsedSeconds(0);
+    setPlaying(false);
+  };
+
+  return (
+    <div
+      style={{
+        position: 'absolute',
+        left: '50%',
+        bottom: 18,
+        transform: 'translateX(-50%)',
+        width: 'min(760px, calc(100% - 48px))',
+        zIndex: 72,
+        display: 'grid',
+        gridTemplateColumns: 'auto auto auto 1fr auto auto',
+        alignItems: 'center',
+        gap: 10,
+        padding: '10px 12px',
+        borderRadius: 8,
+        background: 'rgba(15, 23, 42, 0.86)',
+        border: '1px solid rgba(226, 232, 240, 0.18)',
+        boxShadow: '0 18px 48px rgba(2, 6, 23, 0.34)',
+        backdropFilter: 'blur(14px)',
+        color: '#f8fafc',
+        fontFamily: 'Pretendard, Inter, system-ui, sans-serif',
+      }}
+    >
+      <button
+        type="button"
+        onClick={handlePlay}
+        aria-label="재생"
+        title="재생"
+        style={{
+          width: 34,
+          height: 34,
+          borderRadius: 8,
+          border: '1px solid rgba(248, 250, 252, 0.18)',
+          background: 'rgba(248, 250, 252, 0.1)',
+          color: '#ffffff',
+          display: 'inline-flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          cursor: 'pointer',
+        }}
+      >
+        <Play size={16} />
+      </button>
+
+      <button
+        type="button"
+        onClick={handlePause}
+        aria-label="멈춤"
+        title="멈춤"
+        style={{
+          width: 34,
+          height: 34,
+          borderRadius: 8,
+          border: '1px solid rgba(248, 250, 252, 0.18)',
+          background: isPlaying ? 'rgba(249, 115, 22, 0.18)' : 'rgba(248, 250, 252, 0.08)',
+          color: '#ffffff',
+          display: 'inline-flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          cursor: 'pointer',
+        }}
+      >
+        <Pause size={16} />
+      </button>
+
+      <button
+        type="button"
+        onClick={handleStop}
+        aria-label="정지"
+        title="정지"
+        style={{
+          width: 34,
+          height: 34,
+          borderRadius: 8,
+          border: '1px solid rgba(248, 250, 252, 0.18)',
+          background: 'rgba(248, 250, 252, 0.08)',
+          color: '#ffffff',
+          display: 'inline-flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          cursor: 'pointer',
+        }}
+      >
+        <Square size={14} />
+      </button>
+
+      <div style={{ display: 'grid', gridTemplateColumns: 'auto 1fr auto', alignItems: 'center', gap: 10, minWidth: 0 }}>
+        <span style={{ fontSize: 12, fontWeight: 800, color: '#cbd5e1', fontVariantNumeric: 'tabular-nums' }}>
+          {formatSimulationTime(elapsedSeconds)}
+        </span>
+        <input
+          type="range"
+          min={0}
+          max={1000}
+          value={Math.round(progress * 10)}
+          onChange={(event) => {
+            const nextProgress = Number(event.currentTarget.value) / 1000;
+            setElapsedSeconds(safeDuration * nextProgress);
+          }}
+          style={{
+            width: '100%',
+            accentColor: '#f97316',
+            cursor: 'pointer',
+          }}
+          aria-label="조립 시뮬레이션 탐색"
+        />
+        <span style={{ fontSize: 12, fontWeight: 800, color: '#94a3b8', fontVariantNumeric: 'tabular-nums' }}>
+          {formatSimulationTime(safeDuration)}
+        </span>
+      </div>
+
+      <label style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+        <Gauge size={15} color="#cbd5e1" />
+        <select
+          value={playbackRate}
+          onChange={(event) => setPlaybackRate(Number(event.currentTarget.value) as typeof PANEL_SIMULATION_PLAYBACK_RATES[number])}
+          style={{
+            height: 32,
+            borderRadius: 7,
+            border: '1px solid rgba(226, 232, 240, 0.18)',
+            background: 'rgba(15, 23, 42, 0.82)',
+            color: '#f8fafc',
+            fontSize: 12,
+            fontWeight: 800,
+            padding: '0 8px',
+            cursor: 'pointer',
+          }}
+        >
+          {PANEL_SIMULATION_PLAYBACK_RATES.map(rate => (
+            <option key={rate} value={rate}>{rate}x</option>
+          ))}
+        </select>
+      </label>
+
+      <label style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+        <SlidersHorizontal size={15} color="#cbd5e1" />
+        <select
+          value={animationStyle}
+          onChange={(event) => setAnimationStyle(event.currentTarget.value as typeof PANEL_SIMULATION_STYLE_OPTIONS[number]['value'])}
+          style={{
+            height: 32,
+            minWidth: 104,
+            borderRadius: 7,
+            border: '1px solid rgba(226, 232, 240, 0.18)',
+            background: 'rgba(15, 23, 42, 0.82)',
+            color: '#f8fafc',
+            fontSize: 12,
+            fontWeight: 800,
+            padding: '0 8px',
+            cursor: 'pointer',
+          }}
+        >
+          {PANEL_SIMULATION_STYLE_OPTIONS.map(option => (
+            <option key={option.value} value={option.value}>{option.label}</option>
+          ))}
+        </select>
+      </label>
+    </div>
+  );
+};
+
 const PanelSimulationSourcePrimitive: React.FC<{ source: ReturnType<typeof getPanelSimulationSources>[number] }> = ({ source }) => {
   const clone = useMemo(() => {
     if (!source.objectClone) return null;
@@ -938,14 +1241,19 @@ const getPanelSimulationCinematicPosition = (
   fromPosition: THREE.Vector3,
   toPosition: THREE.Vector3,
   progress: number,
-  sourceIndex: number
+  sourceIndex: number,
+  style = useUIStore.getState().panelSimulationAnimationStyle
 ) => {
   const distance = fromPosition.distanceTo(toPosition);
-  const liftHeight = Math.min(4.6, Math.max(1.35, distance * 0.2));
+  const motion = getPanelSimulationStyleMotion(style);
+  const liftHeight = Math.min(4.6, Math.max(1.35, distance * 0.2)) * motion.lift;
+  if (style === 'cinematic') {
+    return getSmoothCinematicArcPosition(fromPosition, toPosition, progress, liftHeight, sourceIndex, motion.drift);
+  }
   const drift = new THREE.Vector3(
-    Math.sin(sourceIndex * 1.37) * Math.min(1.2, distance * 0.08),
+    Math.sin(sourceIndex * 1.37) * Math.min(1.2, distance * 0.08) * motion.drift,
     0,
-    Math.cos(sourceIndex * 0.91) * Math.min(1.0, distance * 0.06)
+    Math.cos(sourceIndex * 0.91) * Math.min(1.0, distance * 0.06) * motion.drift
   );
 
   const liftStart = fromPosition.clone().add(new THREE.Vector3(0, liftHeight * 0.75, 0)).add(drift.clone().multiplyScalar(0.35));
@@ -967,10 +1275,15 @@ const getPanelSimulationAssemblyDropPosition = (
   fromPosition: THREE.Vector3,
   toPosition: THREE.Vector3,
   progress: number,
-  sourceIndex: number
+  sourceIndex: number,
+  style = useUIStore.getState().panelSimulationAnimationStyle
 ) => {
   const distance = fromPosition.distanceTo(toPosition);
-  const liftHeight = Math.min(4.2, Math.max(1.45, distance * 0.18));
+  const motion = getPanelSimulationStyleMotion(style);
+  const liftHeight = Math.min(4.2, Math.max(1.45, distance * 0.18)) * motion.lift;
+  if (style === 'cinematic') {
+    return getSmoothCinematicArcPosition(fromPosition, toPosition, progress, liftHeight, sourceIndex, motion.drift);
+  }
   const aboveTarget = toPosition.clone().add(new THREE.Vector3(0, liftHeight, 0));
   const takeoff = fromPosition.clone().add(new THREE.Vector3(0, liftHeight * 0.42, 0));
 
@@ -1012,6 +1325,7 @@ const PanelSimulationAccessoryItem: React.FC<{
   useFrame(() => {
     const group = groupRef.current;
     if (!group) return;
+    const playback = useUIStore.getState();
 
     const layoutScale = PANEL_SIMULATION_SCALE;
     if (phase === 'layout') {
@@ -1021,12 +1335,16 @@ const PanelSimulationAccessoryItem: React.FC<{
       return;
     }
 
-    const elapsedBase = performance.now() / 1000 - startTimeRef.current;
-    const delay = assemblyOrder * PANEL_SIMULATION_ASSEMBLY_DELAY_STEP;
-    const rawProgress = Math.max(0, Math.min(1, (elapsedBase - delay) / PANEL_SIMULATION_DURATION));
-    const progress = easeInOutCubic(rawProgress);
-    const position = getPanelSimulationAssemblyDropPosition(startPosition, sourcePosition, progress, sourceIndex);
-    const quaternion = stagingQuaternion.clone().slerp(sourceQuaternion, progress);
+    const elapsedBase = getPanelSimulationPlaybackElapsed(playback) - startTimeRef.current;
+    const timing = getPanelSimulationStyleTiming(playback.panelSimulationAnimationStyle);
+    const delay = assemblyOrder * timing.assemblyDelayStep;
+    const rawProgress = Math.max(0, Math.min(1, (elapsedBase - delay) / timing.duration));
+    const progress = getPanelSimulationStyleProgress(playback.panelSimulationAnimationStyle, rawProgress);
+    const position = getPanelSimulationAssemblyDropPosition(startPosition, sourcePosition, progress, sourceIndex, playback.panelSimulationAnimationStyle);
+    const quaternion = stagingQuaternion
+      .clone()
+      .slerp(sourceQuaternion, progress)
+      .multiply(getPanelSimulationStyleTiltQuaternion(playback.panelSimulationAnimationStyle, progress, sourceIndex));
     group.position.copy(position);
     group.quaternion.copy(quaternion);
     group.scale.setScalar(THREE.MathUtils.lerp(layoutScale, 1, progress));
@@ -1066,17 +1384,17 @@ const PanelSimulationMovingPanels: React.FC = () => {
   const panelSimulationLayouts = useUIStore(state => state.panelSimulationLayouts);
   const panelSimulationSheet = useUIStore(state => state.panelSimulationSheet);
   const panelSimulationViewBackup = useUIStore(state => state.panelSimulationViewBackup);
-  const completePanelSimulationAssembly = useUIStore(state => state.completePanelSimulationAssembly);
-  const setPanelSimulationSummary = useUIStore(state => state.setPanelSimulationSummary);
+  const panelSimulationAnimationStyle = useUIStore(state => state.panelSimulationAnimationStyle);
+  const setPanelSimulationDurationSeconds = useUIStore(state => state.setPanelSimulationDurationSeconds);
   const startTimeRef = useRef(0);
-  const shownSummaryRevisionRef = useRef(0);
   const [sourcesSnapshot, setSourcesSnapshot] = useState<ReturnType<typeof getPanelSimulationSources>>([]);
 
   useEffect(() => {
     if (panelSimulationRevision <= 0) return;
     if (Object.keys(panelSimulationLayouts).length === 0) return;
-    const cameraSettleDelay = panelSimulationPhase === 'layout' ? 1.05 : 1.35;
-    startTimeRef.current = performance.now() / 1000 + cameraSettleDelay;
+    const timing = getPanelSimulationStyleTiming(panelSimulationAnimationStyle);
+    const cameraSettleDelay = panelSimulationPhase === 'layout' ? timing.cameraSettleLayout : timing.cameraSettleAssembly;
+    startTimeRef.current = cameraSettleDelay;
     const updateSources = () => {
       const next = getPanelSimulationSources().filter(source => source.assemblyOnly);
       setSourcesSnapshot(prev => {
@@ -1091,23 +1409,17 @@ const PanelSimulationMovingPanels: React.FC = () => {
       updateSources();
     }, 250);
     return () => window.clearInterval(intervalId);
-  }, [panelSimulationPhase, panelSimulationRevision, panelSimulationLayouts]);
+  }, [panelSimulationPhase, panelSimulationRevision, panelSimulationLayouts, panelSimulationAnimationStyle]);
 
   useEffect(() => {
     if (panelSimulationPhase !== 'layout' || panelSimulationRevision <= 0 || !panelSimulationSheet) return;
-    if (shownSummaryRevisionRef.current === panelSimulationRevision) return;
     const panelCount = panelSimulationSheet.panels?.length || 0;
     if (panelCount === 0) return;
 
+    const timing = getPanelSimulationStyleTiming(panelSimulationAnimationStyle);
     const maxOrder = panelSimulationSheet.panels?.reduce((max, panel) => Math.max(max, panel.order || 0), 0) ?? 0;
-    const completeMs = Math.ceil((1.05 + maxOrder * PANEL_SIMULATION_DELAY_STEP + PANEL_SIMULATION_DURATION + 0.45) * 1000);
-    const timeoutId = window.setTimeout(() => {
-      shownSummaryRevisionRef.current = panelSimulationRevision;
-      setPanelSimulationSummary(buildPanelSimulationSummary(panelSimulationRevision, panelSimulationSheet));
-    }, completeMs);
-
-    return () => window.clearTimeout(timeoutId);
-  }, [panelSimulationPhase, panelSimulationRevision, panelSimulationSheet, setPanelSimulationSummary]);
+    setPanelSimulationDurationSeconds(timing.cameraSettleLayout + maxOrder * timing.layoutDelayStep + timing.layoutDuration + timing.completionPadding);
+  }, [panelSimulationPhase, panelSimulationRevision, panelSimulationSheet, panelSimulationAnimationStyle, setPanelSimulationDurationSeconds]);
 
   useEffect(() => {
     if (panelSimulationPhase !== 'assembled' || panelSimulationRevision <= 0 || !panelSimulationViewBackup) return;
@@ -1128,12 +1440,9 @@ const PanelSimulationMovingPanels: React.FC = () => {
       sourceMaxOrder,
       furnitureCount * PANEL_SIMULATION_FURNITURE_SPAN + PANEL_SIMULATION_FINAL_STAGE_ORDER + 160
     );
-    const completeMs = Math.ceil((1.35 + expectedLastOrder * PANEL_SIMULATION_ASSEMBLY_DELAY_STEP + PANEL_SIMULATION_DURATION + 0.65) * 1000);
-    const timeoutId = window.setTimeout(() => {
-      completePanelSimulationAssembly(panelSimulationRevision);
-    }, completeMs);
-    return () => window.clearTimeout(timeoutId);
-  }, [panelSimulationPhase, panelSimulationRevision, panelSimulationViewBackup, completePanelSimulationAssembly, panelSimulationLayouts]);
+    const timing = getPanelSimulationStyleTiming(panelSimulationAnimationStyle);
+    setPanelSimulationDurationSeconds(timing.cameraSettleAssembly + expectedLastOrder * timing.assemblyDelayStep + timing.duration + timing.completionPadding);
+  }, [panelSimulationPhase, panelSimulationRevision, panelSimulationViewBackup, panelSimulationAnimationStyle, setPanelSimulationDurationSeconds, panelSimulationLayouts]);
 
   if (panelSimulationRevision <= 0 || Object.keys(panelSimulationLayouts).length === 0) return null;
 
@@ -1289,14 +1598,19 @@ const PanelSimulationMovingPanels: React.FC = () => {
     toPosition: THREE.Vector3,
     progress: number,
     isAssembling: boolean,
-    sourceIndex: number
+    sourceIndex: number,
+    style = useUIStore.getState().panelSimulationAnimationStyle
   ) => {
     const distance = fromPosition.distanceTo(toPosition);
-    const liftHeight = Math.min(4.6, Math.max(1.35, distance * 0.2));
+    const motion = getPanelSimulationStyleMotion(style);
+    const liftHeight = Math.min(4.6, Math.max(1.35, distance * 0.2)) * motion.lift;
+    if (style === 'cinematic') {
+      return getSmoothCinematicArcPosition(fromPosition, toPosition, progress, liftHeight, sourceIndex, motion.drift);
+    }
     const drift = new THREE.Vector3(
-      Math.sin(sourceIndex * 1.37) * Math.min(1.2, distance * 0.08),
+      Math.sin(sourceIndex * 1.37) * Math.min(1.2, distance * 0.08) * motion.drift,
       0,
-      Math.cos(sourceIndex * 0.91) * Math.min(1.0, distance * 0.06)
+      Math.cos(sourceIndex * 0.91) * Math.min(1.0, distance * 0.06) * motion.drift
     );
 
     if (isAssembling) {
@@ -1334,10 +1648,15 @@ const PanelSimulationMovingPanels: React.FC = () => {
     fromPosition: THREE.Vector3,
     toPosition: THREE.Vector3,
     progress: number,
-    sourceIndex: number
+    sourceIndex: number,
+    style = useUIStore.getState().panelSimulationAnimationStyle
   ) => {
     const distance = fromPosition.distanceTo(toPosition);
-    const liftHeight = Math.min(4.2, Math.max(1.45, distance * 0.18));
+    const motion = getPanelSimulationStyleMotion(style);
+    const liftHeight = Math.min(4.2, Math.max(1.45, distance * 0.18)) * motion.lift;
+    if (style === 'cinematic') {
+      return getSmoothCinematicArcPosition(fromPosition, toPosition, progress, liftHeight, sourceIndex, motion.drift);
+    }
     const aboveTarget = toPosition.clone().add(new THREE.Vector3(0, liftHeight, 0));
     const takeoff = fromPosition.clone().add(new THREE.Vector3(0, liftHeight * 0.42, 0));
 
@@ -1351,9 +1670,9 @@ const PanelSimulationMovingPanels: React.FC = () => {
         .lerp(aboveTarget, 0.48)
         .add(new THREE.Vector3(0, liftHeight * 0.38, 0));
       const sideOffset = new THREE.Vector3(
-        Math.sin(sourceIndex * 0.73) * Math.min(0.22, distance * 0.018),
+        Math.sin(sourceIndex * 0.73) * Math.min(0.22, distance * 0.018) * motion.drift,
         0,
-        Math.cos(sourceIndex * 0.61) * Math.min(0.18, distance * 0.014)
+        Math.cos(sourceIndex * 0.61) * Math.min(0.18, distance * 0.014) * motion.drift
       );
       control.add(sideOffset);
       const a = takeoff.clone().lerp(control, t);
@@ -1462,6 +1781,9 @@ const PanelSimulationMovingPanels: React.FC = () => {
   return (
     <group userData={{ panelSimulationMovingPanels: true }}>
       {sources.map((source, sourceIndex) => {
+        const playback = useUIStore.getState();
+        const elapsedBase = getPanelSimulationPlaybackElapsed(playback) - startTimeRef.current;
+        const animationStyle = playback.panelSimulationAnimationStyle;
         const sourcePosition = source.worldPosition.clone();
         if (source.assemblyOnly) {
           const assemblyOnlyIndex = assemblyOnlyIndexBySourceKey.get(source.key) || 0;
@@ -1527,12 +1849,13 @@ const PanelSimulationMovingPanels: React.FC = () => {
           source.panelName.includes('옷봉')
         ) + (isDoorPanel ? sameTypeIndex * 28 : (sourceIndex % 5));
         const exportOrder = getPanelSimulationExportOrder(source.panelName, layout.order, sourceIndex, sameTypeIndex);
+        const timing = getPanelSimulationStyleTiming(animationStyle);
         const delay = panelSimulationPhase === 'layout'
-          ? exportOrder * PANEL_SIMULATION_LAYOUT_DELAY_STEP
-          : assemblyOrder * PANEL_SIMULATION_ASSEMBLY_DELAY_STEP;
-        const duration = panelSimulationPhase === 'layout' ? 1.05 : PANEL_SIMULATION_DURATION;
+          ? exportOrder * timing.layoutDelayStep
+          : assemblyOrder * timing.assemblyDelayStep;
+        const duration = panelSimulationPhase === 'layout' ? timing.layoutDuration : timing.duration;
         const rawProgress = Math.max(0, Math.min(1, (elapsedBase - delay) / duration));
-        const progress = easeInOutCubic(rawProgress);
+        const progress = getPanelSimulationStyleProgress(animationStyle, rawProgress);
         const targetScale = new THREE.Vector3(1, 1, 1);
         const layoutScale = layout?.scale ?? 1;
         targetScale.setComponent(thicknessAxis.index, layoutScale);
@@ -1553,9 +1876,12 @@ const PanelSimulationMovingPanels: React.FC = () => {
         const fromScale = panelSimulationPhase === 'layout' ? new THREE.Vector3(1, 1, 1) : targetScale;
         const toScale = panelSimulationPhase === 'layout' ? targetScale : new THREE.Vector3(1, 1, 1);
         const currentPosition = panelSimulationPhase === 'assembled'
-          ? getAssemblyDropPosition(fromPosition, toPosition, progress, sourceIndex)
-          : getCinematicPosition(fromPosition, toPosition, progress, false, sourceIndex);
-        const currentQuaternion = fromQuaternion.clone().slerp(toQuaternion, progress);
+          ? getAssemblyDropPosition(fromPosition, toPosition, progress, sourceIndex, animationStyle)
+          : getCinematicPosition(fromPosition, toPosition, progress, false, sourceIndex, animationStyle);
+        const currentQuaternion = fromQuaternion
+          .clone()
+          .slerp(toQuaternion, progress)
+          .multiply(getPanelSimulationStyleTiltQuaternion(animationStyle, progress, sourceIndex));
         const currentScale = fromScale.clone().lerp(toScale, progress);
         const liveDimensionData = {
           widthMm: Math.round(source.args[0] * 100),
@@ -3759,6 +4085,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
             </React.Suspense>
           </ThreeCanvas>
           <PanelSimulationSummaryPopup />
+          <PanelSimulationPlaybackControls />
 
           {/* 분할 모드 버튼 - 2D 모드에서만 표시 (임베디드 모드에서는 숨김) */}
           {!isEmbedded && viewMode === '2D' && view2DDirection !== 'all' && (

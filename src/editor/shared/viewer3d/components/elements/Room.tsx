@@ -31,7 +31,13 @@ import { useThree, useFrame } from '@react-three/fiber';
 import { Line, Html } from '@react-three/drei';
 import DimensionText from '../modules/components/DimensionText';
 import { getExcludedPanelAliases, useExcludedPanelsStore } from '../../context/ExcludedPanelsContext';
-import { getPanelSimulationLayoutKey, resolvePanelSimulationLayout } from '../../utils/panelSimulationMotion';
+import {
+  getPanelSimulationLayoutKey,
+  getPanelSimulationPlaybackElapsed,
+  getPanelSimulationStyleProgress,
+  getPanelSimulationStyleTiming,
+  resolvePanelSimulationLayout
+} from '../../utils/panelSimulationMotion';
 import { removePanelSimulationSource, updatePanelSimulationSource } from '../../utils/panelSimulationRegistry';
 
 interface RoomProps {
@@ -63,8 +69,6 @@ interface RoomProps {
 
 // mm를 Three.js 단위로 변환 (1mm = 0.01 Three.js units)
 const mmToThreeUnits = (mm: number): number => mm * 0.01;
-const PANEL_SIMULATION_DURATION = 1.25;
-const PANEL_SIMULATION_DELAY_STEP = 0.045;
 const MIN_SIMULATION_BOX_SIZE = 0.001;
 const panelSimulationSlots = new Map<string, number>();
 
@@ -77,13 +81,6 @@ const getPanelSimulationSlot = (key: string) => {
   const next = panelSimulationSlots.size;
   panelSimulationSlots.set(key, next);
   return next;
-};
-
-const easeInOutCubic = (t: number) => {
-  const clamped = Math.max(0, Math.min(1, t));
-  return clamped < 0.5
-    ? 4 * clamped * clamped * clamped
-    : 1 - Math.pow(-2 * clamped + 2, 3) / 2;
 };
 
 const getFrameAssemblyStage = (panelName?: string) => {
@@ -491,7 +488,9 @@ const BoxWithEdges: React.FC<{
     const sequenceIndex = panelSimulationPhase === 'layout'
       ? (simulationLayout?.order ?? slot)
       : getFrameAssemblySequence(keyFurnitureId, keyPanelName, position, parent);
-    const elapsed = performance.now() / 1000 - simulationStartTimeRef.current - sequenceIndex * PANEL_SIMULATION_DELAY_STEP;
+    const playback = useUIStore.getState();
+    const timing = getPanelSimulationStyleTiming(playback.panelSimulationAnimationStyle);
+    const elapsed = getPanelSimulationPlaybackElapsed(playback) - (panelSimulationPhase === 'layout' ? timing.cameraSettleLayout : timing.cameraSettleAssembly) - sequenceIndex * (panelSimulationPhase === 'layout' ? timing.layoutDelayStep : timing.assemblyDelayStep);
     if (elapsed < 0) {
       if (panelSimulationPhase === 'assembled' && panelSimulationRevision > 0) {
         group.visible = false;
@@ -499,7 +498,7 @@ const BoxWithEdges: React.FC<{
       return;
     }
 
-    const progress = easeInOutCubic(elapsed / PANEL_SIMULATION_DURATION);
+    const progress = getPanelSimulationStyleProgress(playback.panelSimulationAnimationStyle, elapsed / (panelSimulationPhase === 'layout' ? timing.layoutDuration : timing.duration));
     group.position.lerp(targetPosition, progress * 0.18);
     group.quaternion.slerp(targetQuaternion, progress * 0.18);
     group.scale.lerp(targetScaleVector, progress * 0.18);

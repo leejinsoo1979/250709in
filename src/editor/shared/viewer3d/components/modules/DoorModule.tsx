@@ -28,15 +28,15 @@ import {
 import { resolveDoorHeightDimensionSides, shouldRenderDoorDimensionGuides } from '@/editor/shared/utils/doorDimensionGuides';
 import {
   getPanelAssemblySequence,
+  getPanelSimulationPlaybackElapsed,
+  getPanelSimulationStyleProgress,
+  getPanelSimulationStyleTiming,
   getPanelSimulationLayoutKey,
-  PANEL_SIMULATION_ASSEMBLY_DELAY_STEP,
   resolvePanelSimulationTarget
 } from '../../utils/panelSimulationMotion';
 import { getPanelSimulationSourceRegistryVersion, removePanelSimulationSource, updatePanelSimulationSource } from '../../utils/panelSimulationRegistry';
 
 const MIN_DOOR_BOX_GEOMETRY_SIZE = 0.001;
-const PANEL_SIMULATION_DURATION = 0.92;
-const PANEL_SIMULATION_DELAY_STEP = 0.0045;
 const panelSimulationSlots = new Map<string, number>();
 
 const sanitizeDoorBoxGeometrySize = (value: number): number => {
@@ -52,13 +52,6 @@ const getPanelSimulationSlot = (key: string) => {
   const next = panelSimulationSlots.size;
   panelSimulationSlots.set(key, next);
   return next;
-};
-
-const easeInOutCubic = (t: number) => {
-  const clamped = Math.max(0, Math.min(1, t));
-  return clamped < 0.5
-    ? 4 * clamped * clamped * clamped
-    : 1 - Math.pow(-2 * clamped + 2, 3) / 2;
 };
 
 const getFlatPanelAxes = (dims: [number, number, number]) => {
@@ -200,36 +193,46 @@ const BoxWithEdges: React.FC<{
       const parent = group.parent;
       const layoutKey = simulationTarget?.key || getPanelSimulationLayoutKey(panelSimulationLayouts, furnitureId, panelName) || compositeKey;
       const slot = getPanelSimulationSlot(layoutKey);
-      const targetScaleVector = new THREE.Vector3(1, 1, 1);
-      let targetPosition = new THREE.Vector3(position[0], position[1], position[2]);
-      let targetQuaternion = new THREE.Quaternion();
+      const originalPosition = new THREE.Vector3(position[0], position[1], position[2]);
+      const originalQuaternion = new THREE.Quaternion();
+      const originalScale = new THREE.Vector3(1, 1, 1);
+      const layoutScaleVector = new THREE.Vector3(1, 1, 1);
+      let layoutPosition = originalPosition.clone();
+      let layoutQuaternion = new THREE.Quaternion();
 
       if (simulationLayout) {
         removePanelSimulationSource(layoutKey);
       }
 
-      if (panelSimulationPhase === 'layout' && simulationLayout) {
+      if (simulationLayout) {
         const { thicknessAxis, widthAxis, lengthAxis } = getFlatPanelAxes(safeArgs);
-        targetScaleVector.setComponent(thicknessAxis.index, simulationLayout.scale);
-        targetScaleVector.setComponent(widthAxis.index, simulationLayout.widthWorld / Math.max(safeArgs[widthAxis.index], MIN_DOOR_BOX_GEOMETRY_SIZE));
-        targetScaleVector.setComponent(lengthAxis.index, simulationLayout.heightWorld / Math.max(safeArgs[lengthAxis.index], MIN_DOOR_BOX_GEOMETRY_SIZE));
+        layoutScaleVector.setComponent(thicknessAxis.index, simulationLayout.scale);
+        layoutScaleVector.setComponent(widthAxis.index, simulationLayout.widthWorld / Math.max(safeArgs[widthAxis.index], MIN_DOOR_BOX_GEOMETRY_SIZE));
+        layoutScaleVector.setComponent(lengthAxis.index, simulationLayout.heightWorld / Math.max(safeArgs[lengthAxis.index], MIN_DOOR_BOX_GEOMETRY_SIZE));
 
         const thickness = Math.min(safeArgs[0], safeArgs[1], safeArgs[2]);
-        targetPosition = new THREE.Vector3(
+        layoutPosition = new THREE.Vector3(
           simulationLayout.worldX,
           simulationLayout.worldY + thickness * simulationLayout.scale * 0.5 + 0.03,
           simulationLayout.worldZ
         );
-        targetQuaternion = buildFlatPanelQuaternion(safeArgs, simulationLayout.rotationZ);
+        layoutQuaternion = buildFlatPanelQuaternion(safeArgs, simulationLayout.rotationZ);
 
         if (parent) {
           parent.updateWorldMatrix(true, false);
-          parent.worldToLocal(targetPosition);
+          parent.worldToLocal(layoutPosition);
           const parentWorldQuaternion = new THREE.Quaternion();
           parent.getWorldQuaternion(parentWorldQuaternion);
-          targetQuaternion.premultiply(parentWorldQuaternion.invert());
+          layoutQuaternion.premultiply(parentWorldQuaternion.invert());
         }
       }
+
+      const targetPosition = panelSimulationPhase === 'layout' ? layoutPosition : originalPosition;
+      const targetQuaternion = panelSimulationPhase === 'layout' ? layoutQuaternion : originalQuaternion;
+      const targetScaleVector = panelSimulationPhase === 'layout' ? layoutScaleVector : originalScale;
+      const startPosition = panelSimulationPhase === 'layout' ? group.position.clone() : layoutPosition.clone();
+      const startQuaternion = panelSimulationPhase === 'layout' ? group.quaternion.clone() : layoutQuaternion.clone();
+      const startScale = panelSimulationPhase === 'layout' ? group.scale.clone() : layoutScaleVector.clone();
 
       const sequenceIndex = panelSimulationPhase === 'layout'
         ? (simulationLayout?.order ?? slot)
@@ -238,9 +241,9 @@ const BoxWithEdges: React.FC<{
       frameState = {
         signature,
         sequenceIndex,
-        startPosition: group.position.clone(),
-        startQuaternion: group.quaternion.clone(),
-        startScale: group.scale.clone(),
+        startPosition,
+        startQuaternion,
+        startScale,
         targetPosition,
         targetQuaternion,
         targetScale: targetScaleVector,
@@ -271,17 +274,22 @@ const BoxWithEdges: React.FC<{
     if (group.visible === false) {
       group.visible = true;
     }
-    const cameraSettleDelay = panelSimulationPhase === 'layout' ? 1.05 : 1.35;
-    const elapsed = performance.now() / 1000 - simulationStartTimeRef.current - cameraSettleDelay - frameState.sequenceIndex * (panelSimulationPhase === 'layout' ? PANEL_SIMULATION_DELAY_STEP : PANEL_SIMULATION_ASSEMBLY_DELAY_STEP);
+    const playback = useUIStore.getState();
+    const timing = getPanelSimulationStyleTiming(playback.panelSimulationAnimationStyle);
+    const cameraSettleDelay = panelSimulationPhase === 'layout' ? timing.cameraSettleLayout : timing.cameraSettleAssembly;
+    const elapsed = getPanelSimulationPlaybackElapsed(playback) - cameraSettleDelay - frameState.sequenceIndex * (panelSimulationPhase === 'layout' ? timing.layoutDelayStep : timing.assemblyDelayStep);
     if (elapsed < 0) {
       group.visible = true;
+      group.position.copy(frameState.startPosition);
+      group.quaternion.copy(frameState.startQuaternion);
+      group.scale.copy(frameState.startScale);
       return;
     }
     if (group.visible === false) {
       group.visible = true;
     }
 
-    const progress = easeInOutCubic(elapsed / PANEL_SIMULATION_DURATION);
+    const progress = getPanelSimulationStyleProgress(playback.panelSimulationAnimationStyle, elapsed / (panelSimulationPhase === 'layout' ? timing.layoutDuration : timing.duration));
     group.position.copy(frameState.startPosition).lerp(frameState.targetPosition, progress);
     group.quaternion.copy(frameState.startQuaternion).slerp(frameState.targetQuaternion, progress);
     group.scale.copy(frameState.startScale).lerp(frameState.targetScale, progress);
