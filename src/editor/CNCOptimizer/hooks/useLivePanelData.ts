@@ -29,6 +29,28 @@ function getDefaultGrain(panelName: string): 'HORIZONTAL' | 'VERTICAL' {
   return getDefaultGrainDirection(panelName) === 'vertical' ? 'VERTICAL' : 'HORIZONTAL';
 }
 
+function isInsertFrameVerticalPanel(panelName?: string): boolean {
+  return Boolean(panelName && (
+    panelName.includes('키큰장찬넬 전면프레임') ||
+    panelName.includes('키큰장찬넬 좌EP') ||
+    panelName.includes('키큰장찬넬 우EP')
+  ));
+}
+
+function resolveOptimizerGrain(
+  panelName: string,
+  panelGrainDirections: Record<string, 'horizontal' | 'vertical' | undefined>
+): 'HORIZONTAL' | 'VERTICAL' {
+  if (isInsertFrameVerticalPanel(panelName)) {
+    return 'VERTICAL';
+  }
+
+  const grainDirection = panelGrainDirections[panelName];
+  return grainDirection
+    ? (grainDirection === 'vertical' ? 'VERTICAL' : 'HORIZONTAL')
+    : getDefaultGrain(panelName);
+}
+
 function isStonePanel(panel: { name?: string; material?: string }): boolean {
   return panel.material === '인조대리석' || !!panel.name?.includes('인조대리석');
 }
@@ -494,10 +516,8 @@ export function useLivePanelData() {
         // Panel 타입으로 변환하고 고유 ID 할당
         const convertedPanels: Panel[] = modulePanels.map((panel, panelIndex) => {
           // 패널 이름으로 결방향 찾기 (사용자 설정 > 패널 타입 기본값)
-          const grainDirection = panelGrainDirections[panel.name];
-          const grainValue = grainDirection
-            ? (grainDirection === 'vertical' ? 'VERTICAL' : 'HORIZONTAL')
-            : getDefaultGrain(panel.name);
+          const grainDirection = isInsertFrameVerticalPanel(panel.name) ? 'vertical' : panelGrainDirections[panel.name];
+          const grainValue = resolveOptimizerGrain(panel.name, panelGrainDirections);
 
           // 측판인지 확인
           const isDrawerSidePanel = panel.name.includes('서랍') && (panel.name.includes('좌측판') || panel.name.includes('우측판'));
@@ -1287,10 +1307,8 @@ export function usePanelSubscription(callback: (panels: Panel[]) => void) {
       // Panel 타입으로 변환하고 고유 ID 할당
       const convertedPanels: Panel[] = modulePanels.map((panel, panelIndex) => {
         // 패널 이름으로 결방향 찾기 (사용자 설정 > 패널 타입 기본값)
-        const grainDirection = panelGrainDirections[panel.name];
-        const grainValue = grainDirection
-          ? (grainDirection === 'vertical' ? 'VERTICAL' : 'HORIZONTAL')
-          : getDefaultGrain(panel.name);
+        const grainDirection = isInsertFrameVerticalPanel(panel.name) ? 'vertical' : panelGrainDirections[panel.name];
+        const grainValue = resolveOptimizerGrain(panel.name, panelGrainDirections);
 
         // 측판인지 확인 (가구 측판 + 서랍 본체 측판 모두 포함)
         const isDrawerSidePanel = panel.name.includes('서랍') && (panel.name.includes('좌측판') || panel.name.includes('우측판'));

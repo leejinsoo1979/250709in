@@ -1158,7 +1158,10 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
             lowerKey.includes('back') ||
             lowerKey.includes('뒷판') ||
             lowerKey.includes('도어') ||
-            lowerKey.includes('door')) {
+            lowerKey.includes('door') ||
+            key.includes('키큰장찬넬 전면프레임') ||
+            key.includes('키큰장찬넬 좌EP') ||
+            key.includes('키큰장찬넬 우EP')) {
             delete newDirections[key];
           }
         });

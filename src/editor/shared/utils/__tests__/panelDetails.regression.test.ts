@@ -4,6 +4,7 @@ import type { SectionConfig } from '@/data/modules'
 import type { SpaceInfo } from '@/store/core/spaceConfigStore'
 import { calculatePanelDetails } from '../calculatePanelDetails'
 import { resolveTopDown2TierGeometry } from '../topDownCabinetGeometry'
+import { getDefaultGrainDirection } from '../materialConstants'
 
 const translate = (key: string) => key
 
@@ -249,6 +250,12 @@ describe('panelDetails regression baselines', () => {
     ].forEach((name) => {
       expect(findPanel(panels, name)).toBeDefined()
     })
+  })
+
+  it('키큰장찬넬 세로 프레임 패널은 높이 방향 재단으로 고정된다', () => {
+    expect(getDefaultGrainDirection('키큰장찬넬 전면프레임')).toBe('vertical')
+    expect(getDefaultGrainDirection('키큰장찬넬 좌EP')).toBe('vertical')
+    expect(getDefaultGrainDirection('키큰장찬넬 우EP')).toBe('vertical')
   })
 
   it('도어분절 팬트리장 도어는 하부/상부 도어 이름으로 패널 목록에 포함된다', () => {
