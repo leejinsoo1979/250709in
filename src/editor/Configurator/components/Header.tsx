@@ -271,6 +271,7 @@ const Header: React.FC<HeaderProps> = ({
   const { cameraMode, setCameraMode, shadowEnabled, setShadowEnabled, viewMode, setViewMode, view2DDirection, setView2DDirection, sunAngle, setSunAngle, panelSimulationPhase, togglePanelSimulation } = useUIStore();
   const { colors } = useThemeColors();
   const { theme, toggleMode } = useTheme();
+  const canUsePanelSimulation = user?.email?.toLowerCase().trim() === 'sbbc212@gmail.com';
   const profileButtonRef = useRef<HTMLDivElement>(null);
   const fileMenuTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const convertMenuRef = useRef<HTMLDivElement>(null);
@@ -1064,7 +1065,7 @@ const Header: React.FC<HeaderProps> = ({
           )}
 
           {/* 패널 레이아웃 시뮬레이션 — 다크/라이트 토글 왼쪽 */}
-          {!isMobile && (
+          {!isMobile && canUsePanelSimulation && (
             <button
               className={`${styles.settingsButton} ${panelSimulationPhase === 'layout' ? styles.simulationActive : ''}`}
               onClick={togglePanelSimulation}
