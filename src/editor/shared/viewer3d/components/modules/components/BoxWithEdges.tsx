@@ -1417,6 +1417,20 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
 
   // 엣지 색상 결정
   const edgeColor = React.useMemo(() => {
+    // 메라톤 4319 / 8832: 어두운 재질이라 검정 윤곽선이 묻혀서 연한 그레이로 표시
+    const getTextureSrc = (mat: any): string => {
+      try {
+        const map = mat?.map;
+        if (!map) return '';
+        return map?.image?.src || map?.source?.data?.src || map?.userData?.src || '';
+      } catch {
+        return '';
+      }
+    };
+    const texSrc = getTextureSrc(baseMaterial);
+    if (texSrc && /MELATONE_(4319|8832)/i.test(texSrc)) {
+      return '#b0b0b0';
+    }
     // 인조대리석 상판은 연한 그레이 윤곽선
     if (panelName && panelName.includes('인조대리석')) {
       return '#b0b0b0';
@@ -1486,6 +1500,14 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
       if (effectiveRenderMode === 'wireframe') {
         return view2DTheme === 'dark' ? "#ffffff" : "#000000"; // 3D 은선모드에서는 최대 대비 색상
       }
+      const textureSource = `${textureUrl || ''} ${
+        baseMaterial instanceof THREE.MeshStandardMaterial && baseMaterial.map?.image?.src
+          ? baseMaterial.map.image.src
+          : ''
+      }`.toLowerCase();
+      if (textureSource.includes('melatone_4319') || textureSource.includes('melatone_8832')) {
+        return "#d8d8d8";
+      }
       return "#5a5a5a"; // 3D 솔리드 모드: 진한 회색이 Windows 저DPR에서 뭉개져 보여 살짝 밝게
     } else if (effectiveRenderMode === 'wireframe') {
       return view2DTheme === 'dark' ? "#FFFFFF" : "#000000"; // 2D 와이어프레임 다크모드는 흰색(최대 대비), 라이트모드는 검정색
@@ -1499,7 +1521,7 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
         return view2DTheme === 'dark' ? "#FF4500" : "#444444"; // 다크모드는 붉은 주황색
       }
     }
-  }, [viewMode, effectiveRenderMode, view2DTheme, view2DDirection, baseMaterial, isHighlighted, highlightColor, panelName]);
+  }, [viewMode, effectiveRenderMode, view2DTheme, view2DDirection, baseMaterial, isHighlighted, highlightColor, panelName, textureUrl]);
 
   // Debug log for position
 
