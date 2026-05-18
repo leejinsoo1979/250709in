@@ -194,8 +194,8 @@ const BoxWithEdges: React.FC<{
     if (!doorEdgeBandingColor) return null;
     return new THREE.MeshStandardMaterial({
       color: new THREE.Color(doorEdgeBandingColor),
-      roughness: 0.6,
-      metalness: 0.05,
+      roughness: 0.18,
+      metalness: 0.2,
       side: THREE.DoubleSide,
     });
   }, [doorEdgeBandingColor]);

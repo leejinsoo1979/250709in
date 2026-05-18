@@ -2343,8 +2343,8 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
     const isDoorPanel = !!panelName && (panelName.includes('도어') || panelName.includes('door'));
     const edgeMat = new THREE.MeshStandardMaterial({
       color: new THREE.Color(edgeBandingColor),
-      roughness: 0.6,
-      metalness: 0.05,
+      roughness: 0.18,
+      metalness: 0.2,
       side: THREE.DoubleSide,
     });
     if (notchGeometry) {
