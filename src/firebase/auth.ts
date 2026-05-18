@@ -45,6 +45,17 @@ if (auth) {
   }
 }
 
+const getEmailVerificationUrl = () => {
+  const configuredOrigin = import.meta.env.VITE_AUTH_CONTINUE_ORIGIN || import.meta.env.VITE_APP_ORIGIN;
+  const runtimeOrigin =
+    typeof window !== 'undefined' &&
+    /^(localhost|127\.0\.0\.1)$/i.test(window.location.hostname)
+      ? 'https://www.tttcraft.com'
+      : window.location.origin;
+  const origin = (configuredOrigin || runtimeOrigin).replace(/\/+$/, '');
+  return `${origin}/auth/verified`;
+};
+
 // 구글 인증 제공자 생성
 const googleProvider = new GoogleAuthProvider();
 
@@ -101,7 +112,7 @@ export const signInWithEmail = async (email: string, password: string) => {
     if (!userCredential.user.emailVerified) {
       try {
         await sendEmailVerification(userCredential.user, {
-          url: `${window.location.origin}/auth/verified`,
+          url: getEmailVerificationUrl(),
           handleCodeInApp: false,
         });
       } catch (verificationError) {
@@ -263,7 +274,7 @@ export const signUpWithEmail = async (
     }
 
     await sendEmailVerification(userCredential.user, {
-      url: `${window.location.origin}/auth/verified`,
+      url: getEmailVerificationUrl(),
       handleCodeInApp: false,
     });
     if (!options?.staySignedIn) {
@@ -289,7 +300,7 @@ export const resendVerificationEmail = async () => {
     if (!user) return { error: '로그인이 필요합니다.' };
     if (user.emailVerified) return { error: '이미 인증된 계정입니다.' };
     await sendEmailVerification(user, {
-      url: `${window.location.origin}/auth/verified`,
+      url: getEmailVerificationUrl(),
       handleCodeInApp: false,
     });
     return { error: null };

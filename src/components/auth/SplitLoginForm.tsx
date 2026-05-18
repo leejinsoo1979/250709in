@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { signInWithCredential, GoogleAuthProvider } from 'firebase/auth';
 import { useAuth } from '@/auth/AuthProvider';
-import { auth, signInWithEmail, signUpWithEmail, signInWithGoogle, handleRedirectResult } from '@/firebase/auth';
+import { auth, signInWithEmail, signUpWithEmail, signInWithGoogle, handleRedirectResult, signOutUser } from '@/firebase/auth';
 import { isSuperAdmin, isUserAdmin } from '@/firebase/admins';
 import { collection, doc, getDoc, getDocs, limit, orderBy, query, setDoc, where } from 'firebase/firestore';
 import { db } from '@/firebase/config';
@@ -117,6 +117,16 @@ export const SplitLoginForm: React.FC<SplitLoginFormProps> = ({ onSuccess, defau
 
     let cancelled = false;
     const redirectAuthenticatedUser = async () => {
+      const isPasswordUser = authUser.providerData.some((provider) => provider.providerId === 'password');
+      if (isPasswordUser && !authUser.emailVerified) {
+        await signOutUser();
+        if (!cancelled) {
+          setError(null);
+          setNotice('이메일 인증이 필요합니다. 메일함에서 인증 링크를 확인한 뒤 로그인해주세요.');
+        }
+        return;
+      }
+
       const path = await resolvePostLoginPath(authUser);
       if (!cancelled) {
         navigate(path, { replace: true });

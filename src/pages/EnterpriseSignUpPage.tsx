@@ -6,7 +6,7 @@ import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { EmailAuthProvider, linkWithCredential } from 'firebase/auth';
 import { httpsCallable } from 'firebase/functions';
 import { db, storage, auth, functions } from '@/firebase/config';
-import { signUpWithEmail } from '@/firebase/auth';
+import { signOutUser, signUpWithEmail } from '@/firebase/auth';
 import { useAuth } from '@/auth/AuthProvider';
 import { Eye, EyeOff, Upload, X, FileText, Check, AlertCircle, Loader2 } from 'lucide-react';
 import {
@@ -508,6 +508,7 @@ export default function EnterpriseSignUpPage() {
         });
       }
 
+      await signOutUser();
       setSubmitted(true);
     } catch (err: unknown) {
       const e = err as { code?: string; message?: string };
