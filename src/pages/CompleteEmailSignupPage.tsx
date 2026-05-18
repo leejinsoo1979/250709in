@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { CheckCircle, Lock, Mail, User } from 'lucide-react';
+import { Check, Lock, Mail, User } from 'lucide-react';
 import { completeEmailSignupFromLink, getPendingEmailSignup } from '@/firebase/auth';
 
 export default function CompleteEmailSignupPage() {
@@ -43,43 +43,49 @@ export default function CompleteEmailSignupPage() {
   };
 
   return (
-    <main className="min-h-screen bg-white text-zinc-950 flex items-center justify-center px-6">
-      <section className="w-full max-w-md">
+    <main className="min-h-screen bg-[#050505] text-white flex items-center justify-center px-6">
+      <section className="w-full max-w-[440px]">
         {done ? (
           <div className="text-center">
-            <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-emerald-50 text-emerald-600">
-              <CheckCircle size={34} />
+            <div className="mb-10 text-[11px] font-semibold tracking-[0.34em] text-zinc-500">
+              TTTCRAFT
             </div>
-            <h1 className="text-2xl font-bold mb-3">가입이 완료되었습니다</h1>
-            <p className="text-sm leading-relaxed text-zinc-500 mb-8">
+            <div className="mx-auto mb-7 flex h-14 w-14 items-center justify-center rounded-full border border-white/15 bg-white/[0.03] text-white">
+              <Check size={28} strokeWidth={1.8} />
+            </div>
+            <h1 className="text-[24px] font-semibold tracking-[-0.01em] mb-3">가입이 완료되었습니다</h1>
+            <p className="text-sm leading-relaxed text-zinc-500 mb-9">
               이제 설정한 비밀번호로 로그인할 수 있습니다.
             </p>
             <button
               type="button"
               onClick={() => navigate('/demo', { replace: true })}
-              className="w-full rounded-full bg-zinc-950 px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-zinc-800"
+              className="w-full rounded-full border border-white bg-white px-5 py-3.5 text-sm font-semibold text-zinc-950 transition-colors hover:bg-zinc-200"
             >
               시작하기
             </button>
           </div>
         ) : (
-          <form onSubmit={handleSubmit} className="rounded-2xl border border-zinc-200 bg-white p-8 shadow-sm">
-            <h1 className="text-2xl font-bold mb-2">비밀번호 설정</h1>
+          <form onSubmit={handleSubmit} className="rounded-[28px] border border-white/10 bg-white/[0.035] p-8 shadow-2xl shadow-black/30 backdrop-blur">
+            <div className="mb-8 text-[11px] font-semibold tracking-[0.34em] text-zinc-500">
+              TTTCRAFT
+            </div>
+            <h1 className="text-[24px] font-semibold tracking-[-0.01em] mb-2">비밀번호 설정</h1>
             <p className="text-sm text-zinc-500 mb-8">
               이메일 인증이 확인되었습니다. 사용할 비밀번호를 설정해주세요.
             </p>
 
-            <div className="space-y-4">
+            <div className="space-y-5">
               <label className="block">
                 <span className="text-xs font-semibold text-zinc-500">이메일</span>
                 <div className="relative mt-2">
-                  <Mail size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-400" />
+                  <Mail size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500" />
                   <input
                     type="email"
                     value={email}
                     onChange={(event) => setEmail(event.target.value)}
                     required
-                    className="w-full rounded-full border border-zinc-200 bg-zinc-50 py-3 pl-11 pr-4 text-sm outline-none focus:border-zinc-500"
+                    className="w-full rounded-2xl border border-white/10 bg-zinc-950/70 py-3.5 pl-11 pr-4 text-sm text-white outline-none transition-colors placeholder:text-zinc-700 focus:border-white/35"
                   />
                 </div>
               </label>
@@ -87,12 +93,12 @@ export default function CompleteEmailSignupPage() {
               <label className="block">
                 <span className="text-xs font-semibold text-zinc-500">이름</span>
                 <div className="relative mt-2">
-                  <User size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-400" />
+                  <User size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500" />
                   <input
                     type="text"
                     value={name}
                     onChange={(event) => setName(event.target.value)}
-                    className="w-full rounded-full border border-zinc-200 bg-zinc-50 py-3 pl-11 pr-4 text-sm outline-none focus:border-zinc-500"
+                    className="w-full rounded-2xl border border-white/10 bg-zinc-950/70 py-3.5 pl-11 pr-4 text-sm text-white outline-none transition-colors placeholder:text-zinc-700 focus:border-white/35"
                   />
                 </div>
               </label>
@@ -100,7 +106,7 @@ export default function CompleteEmailSignupPage() {
               <label className="block">
                 <span className="text-xs font-semibold text-zinc-500">비밀번호</span>
                 <div className="relative mt-2">
-                  <Lock size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-400" />
+                  <Lock size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500" />
                   <input
                     type="password"
                     value={password}
@@ -108,7 +114,7 @@ export default function CompleteEmailSignupPage() {
                     required
                     minLength={6}
                     autoComplete="new-password"
-                    className="w-full rounded-full border border-zinc-200 bg-zinc-50 py-3 pl-11 pr-4 text-sm outline-none focus:border-zinc-500"
+                    className="w-full rounded-2xl border border-white/10 bg-zinc-950/70 py-3.5 pl-11 pr-4 text-sm text-white outline-none transition-colors placeholder:text-zinc-700 focus:border-white/35"
                   />
                 </div>
               </label>
@@ -116,7 +122,7 @@ export default function CompleteEmailSignupPage() {
               <label className="block">
                 <span className="text-xs font-semibold text-zinc-500">비밀번호 확인</span>
                 <div className="relative mt-2">
-                  <Lock size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-400" />
+                  <Lock size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500" />
                   <input
                     type="password"
                     value={passwordConfirm}
@@ -124,14 +130,14 @@ export default function CompleteEmailSignupPage() {
                     required
                     minLength={6}
                     autoComplete="new-password"
-                    className="w-full rounded-full border border-zinc-200 bg-zinc-50 py-3 pl-11 pr-4 text-sm outline-none focus:border-zinc-500"
+                    className="w-full rounded-2xl border border-white/10 bg-zinc-950/70 py-3.5 pl-11 pr-4 text-sm text-white outline-none transition-colors placeholder:text-zinc-700 focus:border-white/35"
                   />
                 </div>
               </label>
             </div>
 
             {error && (
-              <div className="mt-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
+              <div className="mt-6 rounded-2xl border border-red-500/25 bg-red-500/10 px-4 py-3 text-sm text-red-300">
                 {error}
               </div>
             )}
@@ -139,7 +145,7 @@ export default function CompleteEmailSignupPage() {
             <button
               type="submit"
               disabled={submitting}
-              className="mt-7 w-full rounded-full bg-zinc-950 px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-zinc-800 disabled:cursor-not-allowed disabled:opacity-50"
+              className="mt-8 w-full rounded-full border border-white bg-white px-5 py-3.5 text-sm font-semibold text-zinc-950 transition-colors hover:bg-zinc-200 disabled:cursor-not-allowed disabled:opacity-50"
             >
               {submitting ? '처리 중...' : '가입 완료'}
             </button>

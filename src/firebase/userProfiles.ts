@@ -435,88 +435,38 @@ export const adminDeleteUserData = async (
   targetEmail?: string
 ): Promise<{ error: string | null; deletedCounts?: { projects: number } }> => {
   try {
-    if (!targetUid) {
-      return { error: '대상 UID가 없습니다.' };
+    if (!targetUid && !targetEmail) {
+      return { error: '대상 UID 또는 이메일이 없습니다.' };
     }
 
-    // 1) userProfiles/{uid}
-    try {
-      const profileRef = doc(db, USER_PROFILES_COLLECTION, targetUid);
-      await deleteDoc(profileRef);
-    } catch (e) {
-      console.warn('userProfiles 삭제 경고(없을 수 있음):', e);
-    }
-
-    // 2) users/{uid}
-    try {
-      const userRef = doc(db, 'users', targetUid);
-      await deleteDoc(userRef);
-    } catch (e) {
-      console.warn('users 삭제 경고(없을 수 있음):', e);
-    }
-
-    // 3) admins/{uid} (관리자였다면 권한 해제)
-    try {
-      const adminRef = doc(db, 'admins', targetUid);
-      await deleteDoc(adminRef);
-    } catch (e) {
-      console.warn('admins 삭제 경고(없을 수 있음):', e);
-    }
-
-    // 4) projects (userId == targetUid)
-    let projectCount = 0;
-    try {
-      const projectsRef = collection(db, 'projects');
-      const projectsQuery = query(projectsRef, where('userId', '==', targetUid));
-      const projectsSnap = await getDocs(projectsQuery);
-      for (const p of projectsSnap.docs) {
-        await deleteDoc(p.ref);
-        projectCount += 1;
-      }
-    } catch (e) {
-      console.warn('projects 삭제 경고:', e);
-    }
-
-    // 5) Firebase Auth 계정 삭제 (Cloud Function 호출 — Admin SDK 사용)
     try {
       const functions = getFunctions(app, 'asia-northeast3');
       const fn = httpsCallable<
-        { targetUid: string },
-        { ok: boolean; message?: string }
-      >(functions, 'adminDeleteAuthUser');
-      const result = await fn({ targetUid });
-      console.log('✅ Auth 계정 삭제 완료:', result.data);
-    } catch (e: any) {
-      const uidError = e?.message || String(e);
-      console.warn('UID 기준 Auth 계정 삭제 실패(Cloud Function):', uidError);
-
-      if (targetEmail) {
-        try {
-          const functions = getFunctions(app, 'asia-northeast3');
-          const fnByEmail = httpsCallable<
-            { targetEmail: string },
-            { ok: boolean; uid?: string; email?: string; message?: string }
-          >(functions, 'adminDeleteAuthUserByEmail');
-          const result = await fnByEmail({ targetEmail });
-          console.log('✅ 이메일 기준 Auth 계정 삭제 완료:', result.data);
-        } catch (emailError: any) {
-          const emailMessage = emailError?.message || String(emailError);
-          console.warn('이메일 기준 Auth 계정 삭제 실패(Cloud Function):', emailMessage);
-          return {
-            error: `Firestore 데이터는 삭제됐지만 Firebase Auth 계정 삭제에 실패했습니다. 같은 이메일 재가입이 막힐 수 있습니다. (${emailMessage})`,
-            deletedCounts: { projects: projectCount },
+        { targetUid: string; targetEmail?: string },
+        {
+          ok: boolean;
+          deletedCounts?: {
+            projects: number;
+            users: number;
+            userProfiles: number;
+            admins: number;
+            auth: number;
           };
         }
-      } else {
-        return {
-          error: `Firestore 데이터는 삭제됐지만 Firebase Auth 계정 삭제에 실패했습니다. 같은 이메일 재가입이 막힐 수 있습니다. (${uidError})`,
-          deletedCounts: { projects: projectCount },
-        };
-      }
+      >(functions, 'adminDeleteUserFull');
+      const result = await fn({ targetUid, targetEmail });
+      console.log('✅ 관리자 회원 전체 탈퇴 처리 완료:', result.data);
+      return {
+        error: null,
+        deletedCounts: { projects: result.data.deletedCounts?.projects ?? 0 },
+      };
+    } catch (e: any) {
+      const message = e?.message || String(e);
+      console.warn('관리자 전체 탈퇴 처리 실패(Cloud Function):', message);
+      return {
+        error: `Firebase Auth/Firestore 탈퇴 처리 실패: ${message}`,
+      };
     }
-
-    console.log('✅ 관리자 회원 데이터 삭제 완료:', targetUid, '/ 삭제 프로젝트:', projectCount);
-    return { error: null, deletedCounts: { projects: projectCount } };
   } catch (error) {
     console.error('❌ 관리자 회원 삭제 실패:', error);
     return { error: '회원 삭제 중 오류가 발생했습니다.' };

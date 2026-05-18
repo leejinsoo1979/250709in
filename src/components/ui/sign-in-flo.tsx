@@ -6,6 +6,7 @@ import { Eye, EyeOff, Mail, Lock, User, ChevronLeft } from "lucide-react";
 import { motion, useAnimation } from "motion/react";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useResponsive } from "@/hooks/useResponsive";
+import EmailVerificationField from "@/components/auth/EmailVerificationField";
 
 /* ── Exported Props ── */
 export interface SignInFloProps {
@@ -40,10 +41,13 @@ export const SignInFlo: React.FC<SignInFloProps> = ({
 }) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [passwordConfirm, setPasswordConfirm] = useState("");
   const [name, setName] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isSignUp, setIsSignUp] = useState(defaultSignUp);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [signupEmailVerified, setSignupEmailVerified] = useState(false);
+  const [localError, setLocalError] = useState<string | null>(null);
 
   // Animation states (from LandingPage)
   const [tttAnimating, setTttAnimating] = useState(false);
@@ -108,6 +112,23 @@ export const SignInFlo: React.FC<SignInFloProps> = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!onSubmit) return;
+    setLocalError(null);
+
+    if (isSignUp) {
+      if (!signupEmailVerified) {
+        setLocalError('이메일 인증을 먼저 완료해주세요.');
+        return;
+      }
+      if (password.length < 6) {
+        setLocalError('비밀번호는 6자 이상이어야 합니다.');
+        return;
+      }
+      if (password !== passwordConfirm) {
+        setLocalError('비밀번호가 일치하지 않습니다.');
+        return;
+      }
+    }
+
     setIsSubmitting(true);
     try {
       await onSubmit({ email, password, name: isSignUp ? name : undefined, isSignUp });
@@ -120,8 +141,11 @@ export const SignInFlo: React.FC<SignInFloProps> = ({
     setIsSignUp(!isSignUp);
     setEmail("");
     setPassword("");
+    setPasswordConfirm("");
     setName("");
     setShowPassword(false);
+    setSignupEmailVerified(false);
+    setLocalError(null);
   };
 
   return (
@@ -339,14 +363,27 @@ export const SignInFlo: React.FC<SignInFloProps> = ({
               </div>
             )}
 
-            <div className="relative">
-              {!isSignUp && (
+            {isSignUp ? (
+              <EmailVerificationField
+                value={email}
+                onEmailChange={(nextEmail) => {
+                  setEmail(nextEmail);
+                  setSignupEmailVerified(false);
+                  setPassword("");
+                  setPasswordConfirm("");
+                  setLocalError(null);
+                }}
+                onVerified={(verifiedEmail) => {
+                  setEmail(verifiedEmail.trim().toLowerCase());
+                  setSignupEmailVerified(true);
+                  setLocalError(null);
+                }}
+                disabled={loading}
+                placeholder="Email Address"
+              />
+            ) : (
+              <div className="relative">
                 <Mail size={16} className="absolute left-4 top-1/2 -translate-y-1/2" style={{ color: isDark ? '#71717a' : '#555' }} />
-              )}
-              <div className="contents">
-                {isSignUp && (
-                  <Mail size={16} className="absolute left-4 top-1/2 -translate-y-1/2" style={{ color: isDark ? '#71717a' : '#555' }} />
-                )}
                 <input
                   type="email"
                   value={email}
@@ -363,7 +400,7 @@ export const SignInFlo: React.FC<SignInFloProps> = ({
                   }}
                 />
               </div>
-            </div>
+            )}
 
             {isSignUp && (
               <div
@@ -372,11 +409,11 @@ export const SignInFlo: React.FC<SignInFloProps> = ({
                   color: isDark ? '#a1a1aa' : '#6b7280',
                 }}
               >
-                인증 링크를 먼저 보냅니다. 링크 확인 후 비밀번호를 설정하면 가입이 완료됩니다.
+                이메일 인증을 완료한 뒤 비밀번호를 설정하면 가입이 완료됩니다.
               </div>
             )}
 
-            {!isSignUp && (
+            {(!isSignUp || signupEmailVerified) && (
               <div className="relative">
                 <Lock size={16} className="absolute left-4 top-1/2 -translate-y-1/2" style={{ color: isDark ? '#71717a' : '#555' }} />
                 <input
@@ -385,7 +422,7 @@ export const SignInFlo: React.FC<SignInFloProps> = ({
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="Password"
                   required
-                  autoComplete="current-password"
+                  autoComplete={isSignUp ? "new-password" : "current-password"}
                   className={`w-full rounded-full pl-11 pr-11 py-3.5 focus:outline-none transition-colors ${isMobile ? 'text-base' : 'text-sm'}`}
                   style={{
                     background: isDark ? '#18181b' : '#f9fafb',
@@ -405,6 +442,27 @@ export const SignInFlo: React.FC<SignInFloProps> = ({
               </div>
             )}
 
+            {isSignUp && signupEmailVerified && (
+              <div className="relative">
+                <Lock size={16} className="absolute left-4 top-1/2 -translate-y-1/2" style={{ color: isDark ? '#71717a' : '#555' }} />
+                <input
+                  type={showPassword ? "text" : "password"}
+                  value={passwordConfirm}
+                  onChange={(e) => setPasswordConfirm(e.target.value)}
+                  placeholder="Confirm Password"
+                  required
+                  autoComplete="new-password"
+                  className={`w-full rounded-full pl-11 pr-5 py-3.5 focus:outline-none transition-colors ${isMobile ? 'text-base' : 'text-sm'}`}
+                  style={{
+                    background: isDark ? '#18181b' : '#f9fafb',
+                    border: `1px solid ${isDark ? '#27272a' : '#e5e7eb'}`,
+                    color: isDark ? '#fff' : '#111',
+                    ...(isMobile ? { fontSize: '16px', minHeight: '48px' } : {}),
+                  }}
+                />
+              </div>
+            )}
+
             {!isSignUp && (
               <div className="flex justify-end">
                 <button
@@ -417,9 +475,9 @@ export const SignInFlo: React.FC<SignInFloProps> = ({
               </div>
             )}
 
-            {externalError && (
+            {(externalError || localError) && (
               <div className="px-4 py-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-sm text-center">
-                {externalError}
+                {localError || externalError}
               </div>
             )}
             {externalNotice && (

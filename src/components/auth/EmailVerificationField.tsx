@@ -16,7 +16,9 @@
  * 5. 이메일이 변경되면 인증 상태 초기화
  */
 import React, { useEffect, useRef, useState } from 'react';
+import { fetchSignInMethodsForEmail } from 'firebase/auth';
 import { sendVerificationCode, verifyCode } from '@/auth/emailVerification';
+import { auth } from '@/firebase/config';
 
 interface Props {
   value: string;
@@ -64,6 +66,18 @@ export const EmailVerificationField: React.FC<Props> = ({
     if (sendBtnDisabled) return;
     setSending(true);
     setMessage(null);
+
+    try {
+      const methods = await fetchSignInMethodsForEmail(auth, value.trim().toLowerCase());
+      if (methods.length > 0) {
+        setSending(false);
+        setMessage({ type: 'error', text: '이미 가입된 이메일입니다. 로그인해주세요.' });
+        return;
+      }
+    } catch {
+      // 이메일 존재 확인 실패 시에도 인증코드 발송 API에서 최종 처리한다.
+    }
+
     const res = await sendVerificationCode(value);
     setSending(false);
     if (res.ok) {
@@ -95,9 +109,9 @@ export const EmailVerificationField: React.FC<Props> = ({
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
       {/* 이메일 입력 + 인증 버튼 */}
-      <div style={{ display: 'flex', gap: 8 }}>
+      <div style={{ display: 'flex', gap: 12, alignItems: 'stretch' }}>
         <input
           type="email"
           value={value}
@@ -107,10 +121,11 @@ export const EmailVerificationField: React.FC<Props> = ({
           autoComplete="email"
           style={{
             flex: 1,
-            padding: '11px 14px',
-            borderRadius: 8,
-            border: stage === 'verified' ? '1.5px solid #10b981' : '1px solid var(--theme-border, #d1d5db)',
-            background: stage === 'verified' ? 'rgba(16, 185, 129, 0.06)' : 'var(--theme-surface, #fff)',
+            minHeight: 46,
+            padding: '0 15px',
+            borderRadius: 12,
+            border: stage === 'verified' ? '1px solid var(--theme-text-primary, #111827)' : '1px solid var(--theme-border, #d1d5db)',
+            background: stage === 'verified' ? 'var(--theme-surface-secondary, #f4f4f5)' : 'var(--theme-surface, #fff)',
             color: 'var(--theme-text-primary, #111827)',
             fontSize: 14,
             outline: 'none',
@@ -121,12 +136,13 @@ export const EmailVerificationField: React.FC<Props> = ({
           onClick={handleSendCode}
           disabled={sendBtnDisabled}
           style={{
-            padding: '0 16px',
-            minWidth: 110,
-            borderRadius: 8,
-            border: '1px solid var(--theme-primary, #2196F3)',
-            background: stage === 'verified' ? '#10b981' : 'var(--theme-primary, #2196F3)',
-            color: '#ffffff',
+            minHeight: 46,
+            padding: '0 18px',
+            minWidth: 124,
+            borderRadius: 12,
+            border: '1px solid var(--theme-text-primary, #111827)',
+            background: stage === 'verified' ? 'var(--theme-surface-secondary, #f4f4f5)' : 'var(--theme-text-primary, #111827)',
+            color: stage === 'verified' ? 'var(--theme-text-primary, #111827)' : 'var(--theme-surface, #ffffff)',
             fontSize: 13,
             fontWeight: 700,
             cursor: sendBtnDisabled ? 'not-allowed' : 'pointer',
@@ -148,7 +164,7 @@ export const EmailVerificationField: React.FC<Props> = ({
 
       {/* 인증코드 입력 */}
       {stage === 'codeInput' && (
-        <div style={{ display: 'flex', gap: 8 }}>
+        <div style={{ display: 'flex', gap: 12, alignItems: 'stretch' }}>
           <input
             type="text"
             inputMode="numeric"
@@ -161,8 +177,9 @@ export const EmailVerificationField: React.FC<Props> = ({
             autoComplete="one-time-code"
             style={{
               flex: 1,
-              padding: '11px 14px',
-              borderRadius: 8,
+              minHeight: 46,
+              padding: '0 15px',
+              borderRadius: 12,
               border: '1px solid var(--theme-border, #d1d5db)',
               background: 'var(--theme-surface, #fff)',
               color: 'var(--theme-text-primary, #111827)',
@@ -178,12 +195,13 @@ export const EmailVerificationField: React.FC<Props> = ({
             onClick={handleVerifyCode}
             disabled={!!disabled || verifying || code.length !== 6}
             style={{
-              padding: '0 16px',
-              minWidth: 110,
-              borderRadius: 8,
-              border: '1px solid #111827',
-              background: '#111827',
-              color: '#ffffff',
+              minHeight: 46,
+              padding: '0 18px',
+              minWidth: 124,
+              borderRadius: 12,
+              border: '1px solid var(--theme-text-primary, #111827)',
+              background: 'var(--theme-text-primary, #111827)',
+              color: 'var(--theme-surface, #ffffff)',
               fontSize: 13,
               fontWeight: 700,
               cursor: verifying || code.length !== 6 ? 'not-allowed' : 'pointer',
@@ -205,7 +223,7 @@ export const EmailVerificationField: React.FC<Props> = ({
               message.type === 'error'
                 ? '#dc2626'
                 : message.type === 'success'
-                  ? '#059669'
+                  ? 'var(--theme-text-primary, #111827)'
                   : 'var(--theme-text-secondary, #6b7280)',
           }}
         >

@@ -25,6 +25,54 @@ const TELEGRAM_BOT_TOKEN = defineSecret('TELEGRAM_BOT_TOKEN');
 // 관리자 chat_id (텔레그램에서 메시지 받을 채팅방)
 const TELEGRAM_CHAT_ID = defineSecret('TELEGRAM_CHAT_ID');
 
+async function assertAdminCaller(request) {
+  const callerUid = request.auth?.uid;
+  const callerEmail = String(request.auth?.token?.email || '').toLowerCase();
+  if (!callerUid) {
+    throw new HttpsError('unauthenticated', '로그인이 필요합니다.');
+  }
+
+  if (callerEmail === 'sbbc212@gmail.com') {
+    return { callerUid, callerEmail, isSuperAdmin: true };
+  }
+
+  try {
+    const adminDoc = await admin.firestore().doc(`admins/${callerUid}`).get();
+    if (!adminDoc.exists) {
+      throw new HttpsError('permission-denied', '관리자 권한이 필요합니다.');
+    }
+    return { callerUid, callerEmail, isSuperAdmin: false };
+  } catch (e) {
+    if (e instanceof HttpsError) throw e;
+    console.error('관리자 권한 확인 실패:', e);
+    throw new HttpsError('internal', '관리자 권한 확인 중 오류가 발생했습니다.');
+  }
+}
+
+async function deleteQuerySnapshot(querySnapshot) {
+  let count = 0;
+  let batch = admin.firestore().batch();
+  let batchCount = 0;
+
+  for (const doc of querySnapshot.docs) {
+    batch.delete(doc.ref);
+    count += 1;
+    batchCount += 1;
+
+    if (batchCount >= 450) {
+      await batch.commit();
+      batch = admin.firestore().batch();
+      batchCount = 0;
+    }
+  }
+
+  if (batchCount > 0) {
+    await batch.commit();
+  }
+
+  return count;
+}
+
 // ─────────────────────────────────────────────
 // 텔레그램 헬퍼
 // ─────────────────────────────────────────────
@@ -136,22 +184,7 @@ exports.verifyBusinessNumber = onCall(
 exports.adminDeleteAuthUser = onCall(
   { region: 'asia-northeast3' },
   async (request) => {
-    const callerUid = request.auth?.uid;
-    if (!callerUid) {
-      throw new HttpsError('unauthenticated', '로그인이 필요합니다.');
-    }
-
-    // 호출자가 관리자인지 확인
-    try {
-      const adminDoc = await admin.firestore().doc(`admins/${callerUid}`).get();
-      if (!adminDoc.exists) {
-        throw new HttpsError('permission-denied', '관리자 권한이 필요합니다.');
-      }
-    } catch (e) {
-      if (e instanceof HttpsError) throw e;
-      console.error('관리자 권한 확인 실패:', e);
-      throw new HttpsError('internal', '관리자 권한 확인 중 오류가 발생했습니다.');
-    }
+    const { callerUid } = await assertAdminCaller(request);
 
     const targetUid = String(request.data?.targetUid || '').trim();
     if (!targetUid) {
@@ -188,23 +221,7 @@ exports.adminDeleteAuthUser = onCall(
 exports.adminDeleteAuthUserByEmail = onCall(
   { region: 'asia-northeast3' },
   async (request) => {
-    const callerUid = request.auth?.uid;
-    const callerEmail = String(request.auth?.token?.email || '').toLowerCase();
-    if (!callerUid) {
-      throw new HttpsError('unauthenticated', '로그인이 필요합니다.');
-    }
-
-    try {
-      const isSuperAdmin = callerEmail === 'sbbc212@gmail.com';
-      const adminDoc = await admin.firestore().doc(`admins/${callerUid}`).get();
-      if (!isSuperAdmin && !adminDoc.exists) {
-        throw new HttpsError('permission-denied', '관리자 권한이 필요합니다.');
-      }
-    } catch (e) {
-      if (e instanceof HttpsError) throw e;
-      console.error('관리자 권한 확인 실패:', e);
-      throw new HttpsError('internal', '관리자 권한 확인 중 오류가 발생했습니다.');
-    }
+    const { callerUid, callerEmail } = await assertAdminCaller(request);
 
     const targetEmail = String(request.data?.targetEmail || '').trim().toLowerCase();
     if (!targetEmail) {
@@ -231,6 +248,158 @@ exports.adminDeleteAuthUserByEmail = onCall(
       if (err instanceof HttpsError) throw err;
       console.error('❌ Auth 계정 이메일 삭제 실패:', err);
       throw new HttpsError('internal', `Auth 계정 삭제 실패: ${err?.message || code || 'unknown'}`);
+    }
+  }
+);
+
+/**
+ * 관리자 회원 전체 탈퇴 처리
+ *
+ * 클라이언트 권한에 기대지 않고 Admin SDK로 Firestore 데이터와 Auth 계정을 함께 삭제한다.
+ */
+exports.adminDeleteUserFull = onCall(
+  { region: 'asia-northeast3' },
+  async (request) => {
+    const { callerUid, callerEmail } = await assertAdminCaller(request);
+    const targetUid = String(request.data?.targetUid || '').trim();
+    const targetEmail = String(request.data?.targetEmail || '').trim().toLowerCase();
+
+    if (!targetUid && !targetEmail) {
+      throw new HttpsError('invalid-argument', '대상 UID 또는 이메일이 필요합니다.');
+    }
+    if (targetUid && targetUid === callerUid) {
+      throw new HttpsError('failed-precondition', '본인 계정은 삭제할 수 없습니다.');
+    }
+    if (targetEmail && targetEmail === callerEmail) {
+      throw new HttpsError('failed-precondition', '본인 계정은 삭제할 수 없습니다.');
+    }
+
+    const db = admin.firestore();
+    let resolvedUid = targetUid;
+    let resolvedEmail = targetEmail;
+
+    if (!resolvedUid && targetEmail) {
+      try {
+        const authUser = await admin.auth().getUserByEmail(targetEmail);
+        resolvedUid = authUser.uid;
+        resolvedEmail = authUser.email || targetEmail;
+      } catch (err) {
+        if (err?.code !== 'auth/user-not-found') {
+          throw new HttpsError('internal', `Auth 계정 조회 실패: ${err?.message || err?.code || 'unknown'}`);
+        }
+      }
+    }
+
+    const counts = {
+      projects: 0,
+      users: 0,
+      userProfiles: 0,
+      admins: 0,
+      auth: 0,
+    };
+
+    if (resolvedUid) {
+      const profileRef = db.collection('userProfiles').doc(resolvedUid);
+      const userRef = db.collection('users').doc(resolvedUid);
+      const adminRef = db.collection('admins').doc(resolvedUid);
+
+      const [profileDoc, userDoc, adminDoc] = await Promise.all([
+        profileRef.get(),
+        userRef.get(),
+        adminRef.get(),
+      ]);
+
+      if (!resolvedEmail) {
+        resolvedEmail = profileDoc.data()?.email || userDoc.data()?.email || '';
+      }
+
+      const projectSnap = await db.collection('projects').where('userId', '==', resolvedUid).get();
+      counts.projects = await deleteQuerySnapshot(projectSnap);
+
+      if (profileDoc.exists) {
+        await profileRef.delete();
+        counts.userProfiles = 1;
+      }
+      if (userDoc.exists) {
+        await userRef.delete();
+        counts.users = 1;
+      }
+      if (adminDoc.exists) {
+        await adminRef.delete();
+        counts.admins = 1;
+      }
+
+      try {
+        await admin.auth().deleteUser(resolvedUid);
+        counts.auth = 1;
+      } catch (err) {
+        if (err?.code !== 'auth/user-not-found') {
+          throw new HttpsError('internal', `Auth 계정 삭제 실패: ${err?.message || err?.code || 'unknown'}`);
+        }
+      }
+    } else if (targetEmail) {
+      const userByEmailSnap = await db.collection('users').where('email', '==', targetEmail).get();
+      const profileByEmailSnap = await db.collection('userProfiles').where('email', '==', targetEmail).get();
+      counts.users = await deleteQuerySnapshot(userByEmailSnap);
+      counts.userProfiles = await deleteQuerySnapshot(profileByEmailSnap);
+    }
+
+    if (targetEmail && counts.auth === 0) {
+      try {
+        const authUser = await admin.auth().getUserByEmail(targetEmail);
+        if (authUser.uid === callerUid) {
+          throw new HttpsError('failed-precondition', '본인 계정은 삭제할 수 없습니다.');
+        }
+        await admin.auth().deleteUser(authUser.uid);
+        resolvedUid = resolvedUid || authUser.uid;
+        resolvedEmail = authUser.email || targetEmail;
+        counts.auth = 1;
+      } catch (err) {
+        if (err instanceof HttpsError) throw err;
+        if (err?.code !== 'auth/user-not-found') {
+          throw new HttpsError('internal', `이메일 기준 Auth 계정 삭제 실패: ${err?.message || err?.code || 'unknown'}`);
+        }
+      }
+    }
+
+    console.log('✅ 관리자 전체 탈퇴 처리 완료:', {
+      targetUid: resolvedUid,
+      targetEmail: resolvedEmail,
+      counts,
+      callerUid,
+    });
+
+    return {
+      ok: true,
+      uid: resolvedUid || null,
+      email: resolvedEmail || targetEmail || null,
+      deletedCounts: counts,
+    };
+  }
+);
+
+exports.checkEmailSignUpStatus = onCall(
+  { region: 'asia-northeast3' },
+  async (request) => {
+    const email = String(request.data?.email || '').trim().toLowerCase();
+    if (!email || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
+      throw new HttpsError('invalid-argument', '유효한 이메일이 필요합니다.');
+    }
+
+    try {
+      const user = await admin.auth().getUserByEmail(email);
+      return {
+        exists: true,
+        disabled: !!user.disabled,
+        emailVerified: !!user.emailVerified,
+        providers: user.providerData.map((provider) => provider.providerId),
+      };
+    } catch (err) {
+      if (err?.code === 'auth/user-not-found') {
+        return { exists: false };
+      }
+      console.error('이메일 가입 상태 확인 실패:', err);
+      throw new HttpsError('internal', '이메일 가입 상태 확인 중 오류가 발생했습니다.');
     }
   }
 );

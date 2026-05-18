@@ -1,9 +1,9 @@
 import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
-  sendSignInLinkToEmail,
   isSignInWithEmailLink,
   signInWithEmailLink,
+  fetchSignInMethodsForEmail,
   signInWithPopup,
   signInWithRedirect,
   GoogleAuthProvider,
@@ -25,6 +25,7 @@ import { FirebaseError } from 'firebase/app';
 import { auth } from './config';
 import { FLAGS } from '@/flags';
 import { isSketchUpEnvironment } from '@/editor/shared/utils/sketchupBridge';
+import { checkVerificationStatus } from '@/auth/emailVerification';
 
 // Re-export auth for convenience
 export { auth };
@@ -103,6 +104,10 @@ const clearPendingEmailSignup = () => {
 
 export const requiresEmailVerification = (user: User) => {
   if (user.emailVerified) return false;
+  // 개인회원은 TTTCRAFT 인증코드 확인 후에만 Firebase 계정을 생성한다.
+  // Firebase Auth의 emailVerified 플래그는 Firebase 발송 메일을 쓸 때만 true가 되므로
+  // 여기서 다시 차단하면 정상 인증을 마친 사용자도 로그인할 수 없다.
+  if (user.providerData.some((provider) => provider.providerId === 'password')) return false;
   const createdAt = user.metadata.creationTime ? new Date(user.metadata.creationTime).getTime() : 0;
   if (!createdAt) return false;
   return createdAt >= EMAIL_VERIFICATION_ENFORCED_AT_MS;
@@ -315,21 +320,31 @@ export const signUpWithEmail = async (
 
     if (!options?.staySignedIn) {
       const normalizedEmail = email.trim().toLowerCase();
-      await sendSignInLinkToEmail(auth, normalizedEmail, {
-        url: getEmailSignupUrl(),
-        handleCodeInApp: true,
-      });
-      savePendingEmailSignup({
-        email: normalizedEmail,
-        displayName: displayName?.trim() || undefined,
-        sentAt: Date.now(),
-      });
+      const methods = await fetchSignInMethodsForEmail(auth, normalizedEmail);
+      if (methods.length > 0) {
+        return { user: null, error: '이미 가입된 이메일입니다. 로그인해주세요.' };
+      }
+
+      const verification = await checkVerificationStatus(normalizedEmail);
+      if (!verification.ok || !verification.verified) {
+        return { user: null, error: verification.error || '이메일 인증을 먼저 완료해주세요.' };
+      }
+
+      const userCredential = await createUserWithEmailAndPassword(auth, normalizedEmail, password);
+
+      if (displayName?.trim() && userCredential.user) {
+        await updateProfile(userCredential.user, { displayName: displayName.trim() });
+      }
+
+      if (FLAGS.teamScope) {
+        await ensurePersonalTeam(userCredential.user, 'TTTCRAFT 이메일 인증코드 회원가입');
+      }
 
       return {
-        user: null,
+        user: userCredential.user,
         error: null,
-        needsEmailVerification: true,
-        message: '인증메일을 보냈습니다. 메일의 링크를 누른 뒤 비밀번호를 설정해주세요.',
+        needsEmailVerification: false,
+        message: '가입이 완료되었습니다.',
       };
     }
 

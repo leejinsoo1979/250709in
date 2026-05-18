@@ -7,6 +7,51 @@ import '@/styles/global.css'
 import './i18n' // i18n 초기화
 // import { disableAllConsole } from './utils/disableConsole'
 
+const setupStaleAssetReload = () => {
+  if (typeof window === 'undefined') return;
+
+  const reloadKey = 'tttcraft:stale-asset-reloaded';
+  const reloadOnce = () => {
+    if (sessionStorage.getItem(reloadKey) === '1') return;
+    sessionStorage.setItem(reloadKey, '1');
+    window.location.reload();
+  };
+
+  window.addEventListener('load', () => {
+    sessionStorage.removeItem(reloadKey);
+  });
+
+  window.addEventListener('error', (event) => {
+    const target = event.target as HTMLElement | null;
+    const src =
+      target instanceof HTMLScriptElement ? target.src :
+      target instanceof HTMLLinkElement ? target.href :
+      '';
+
+    if (src.includes('/assets/') && /\.(js|css)(\?|$)/.test(src)) {
+      reloadOnce();
+      return;
+    }
+
+    const message = String(event.message || '');
+    if (
+      message.includes('Failed to fetch dynamically imported module') ||
+      message.includes('Importing a module script failed')
+    ) {
+      reloadOnce();
+    }
+  }, true);
+
+  window.addEventListener('unhandledrejection', (event) => {
+    const message = String(event.reason?.message || event.reason || '');
+    if (message.includes('Failed to fetch dynamically imported module')) {
+      reloadOnce();
+    }
+  });
+};
+
+setupStaleAssetReload();
+
 // 개발 모드에서 유틸리티 스크립트 로드
 if (import.meta.env.DEV) {
   import('./scripts/fixUserCreatedAt');

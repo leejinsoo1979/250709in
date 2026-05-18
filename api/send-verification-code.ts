@@ -84,7 +84,7 @@ const buildHtml = (code: string) => `<!DOCTYPE html>
             <p style="margin:0 0 28px;font-size:15px;line-height:1.7;color:#374151;">아래 6자리 인증 코드를 가입 화면에 입력해주세요.</p>
           </td></tr>
           <tr><td style="padding:0 40px;">
-            <div style="background:#0f172a;color:#ffffff;border-radius:12px;padding:24px;text-align:center;font-size:34px;font-weight:800;letter-spacing:0.4em;font-family:'SF Mono',Menlo,Consolas,monospace;">${code}</div>
+            <div style="background:#050505;color:#ffffff;border-radius:12px;padding:24px;text-align:center;font-size:34px;font-weight:800;letter-spacing:0.4em;font-family:'SF Mono',Menlo,Consolas,monospace;">${code}</div>
           </td></tr>
           <tr><td style="padding:24px 40px 0 40px;">
             <p style="margin:0;font-size:13px;line-height:1.7;color:#6b7280;">인증 코드는 <strong>10분간</strong> 유효합니다.<br/>본인이 요청하지 않으셨다면 이 메일을 무시해주세요.</p>
