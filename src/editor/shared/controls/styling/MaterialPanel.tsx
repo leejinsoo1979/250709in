@@ -237,6 +237,76 @@ const MaterialPanel: React.FC = () => {
               </div>
             ))}
           </div>
+
+          {/* 엣지밴딩 색상: 속장/도어 탭에서만 표시 */}
+          {(materialTab === 'interior' || materialTab === 'door') && (() => {
+            const edgeKey = materialTab === 'interior' ? 'interiorEdgeColor' : 'doorEdgeColor';
+            const currentEdge = (materialConfig as any)[edgeKey] || '#FFFFFF';
+            const label = materialTab === 'interior' ? '속장 엣지' : '도어 엣지';
+            return (
+              <div style={{
+                marginTop: 16,
+                padding: '12px 14px',
+                borderTop: '1px solid var(--theme-border, #e5e7eb)',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 12,
+              }}>
+                <span style={{ fontSize: 13, color: 'var(--theme-text-primary, #111827)', fontWeight: 600, minWidth: 80 }}>
+                  {label}
+                </span>
+                <label style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 8,
+                  cursor: 'pointer',
+                }}>
+                  <input
+                    type="color"
+                    value={currentEdge}
+                    onChange={(e) => {
+                      const newColor = e.target.value;
+                      setSpaceInfo({
+                        materialConfig: { ...materialConfig, [edgeKey]: newColor },
+                      });
+                    }}
+                    style={{
+                      width: 36,
+                      height: 28,
+                      border: '1px solid var(--theme-border, #d1d5db)',
+                      borderRadius: 6,
+                      padding: 0,
+                      cursor: 'pointer',
+                      background: 'transparent',
+                    }}
+                  />
+                  <span style={{ fontSize: 12, color: 'var(--theme-text-secondary, #6b7280)', fontFamily: 'SF Mono, Menlo, monospace' }}>
+                    {currentEdge.toUpperCase()}
+                  </span>
+                </label>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const newConfig = { ...materialConfig };
+                    delete (newConfig as any)[edgeKey];
+                    setSpaceInfo({ materialConfig: newConfig });
+                  }}
+                  style={{
+                    marginLeft: 'auto',
+                    fontSize: 11,
+                    padding: '4px 8px',
+                    borderRadius: 6,
+                    border: '1px solid var(--theme-border, #d1d5db)',
+                    background: 'transparent',
+                    color: 'var(--theme-text-secondary, #6b7280)',
+                    cursor: 'pointer',
+                  }}
+                >
+                  초기화
+                </button>
+              </div>
+            );
+          })()}
         </div>
       </div>
     </div>
