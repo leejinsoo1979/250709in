@@ -7148,7 +7148,7 @@ const Configurator: React.FC = () => {
           onNewDesign={handleNewDesign}
           onFileTreeToggle={handleFileTreeToggle}
           isFileTreeOpen={isFileTreeOpen}
-          readOnly={isReadOnly}
+          readOnly={isReadOnly || isDemoMode}
         />
       )}
 

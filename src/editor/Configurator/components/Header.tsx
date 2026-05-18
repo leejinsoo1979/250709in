@@ -654,7 +654,7 @@ const Header: React.FC<HeaderProps> = ({
         </div>
 
         {/* 파일 메뉴 + 저장 버튼 */}
-        {!isMobile && !readOnly && (
+        {!isMobile && !readOnly && !isDemoMode && (
           <div className={styles.fileActionGroup}>
             <div
               className={styles.fileMenuContainer}
