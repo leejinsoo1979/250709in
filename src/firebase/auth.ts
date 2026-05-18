@@ -1,6 +1,9 @@
 import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
+  sendSignInLinkToEmail,
+  isSignInWithEmailLink,
+  signInWithEmailLink,
   signInWithPopup,
   signInWithRedirect,
   GoogleAuthProvider,
@@ -56,6 +59,55 @@ const getEmailVerificationUrl = () => {
   return `${origin}/auth/verified`;
 };
 
+const getEmailSignupUrl = () => {
+  const configuredOrigin = import.meta.env.VITE_AUTH_CONTINUE_ORIGIN || import.meta.env.VITE_APP_ORIGIN;
+  const runtimeOrigin =
+    typeof window !== 'undefined' &&
+    /^(localhost|127\.0\.0\.1)$/i.test(window.location.hostname)
+      ? 'https://www.tttcraft.com'
+      : window.location.origin;
+  const origin = (configuredOrigin || runtimeOrigin).replace(/\/+$/, '');
+  return `${origin}/auth/complete-signup`;
+};
+
+const PENDING_EMAIL_SIGNUP_KEY = 'tttcraft:pending-email-signup';
+const EMAIL_VERIFICATION_ENFORCED_AT_MS = new Date('2026-05-18T17:00:00+09:00').getTime();
+
+interface PendingEmailSignup {
+  email: string;
+  displayName?: string;
+  sentAt: number;
+}
+
+const savePendingEmailSignup = (pending: PendingEmailSignup) => {
+  if (typeof window === 'undefined') return;
+  window.localStorage.setItem(PENDING_EMAIL_SIGNUP_KEY, JSON.stringify(pending));
+};
+
+export const getPendingEmailSignup = (): PendingEmailSignup | null => {
+  if (typeof window === 'undefined') return null;
+  try {
+    const raw = window.localStorage.getItem(PENDING_EMAIL_SIGNUP_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as PendingEmailSignup;
+    return parsed?.email ? parsed : null;
+  } catch {
+    return null;
+  }
+};
+
+const clearPendingEmailSignup = () => {
+  if (typeof window === 'undefined') return;
+  window.localStorage.removeItem(PENDING_EMAIL_SIGNUP_KEY);
+};
+
+export const requiresEmailVerification = (user: User) => {
+  if (user.emailVerified) return false;
+  const createdAt = user.metadata.creationTime ? new Date(user.metadata.creationTime).getTime() : 0;
+  if (!createdAt) return false;
+  return createdAt >= EMAIL_VERIFICATION_ENFORCED_AT_MS;
+};
+
 // 구글 인증 제공자 생성
 const googleProvider = new GoogleAuthProvider();
 
@@ -109,7 +161,7 @@ export const signInWithEmail = async (email: string, password: string) => {
     await setPersistence(auth, browserLocalPersistence);
 
     const userCredential = await signInWithEmailAndPassword(auth, email, password);
-    if (!userCredential.user.emailVerified) {
+    if (requiresEmailVerification(userCredential.user)) {
       try {
         await sendEmailVerification(userCredential.user, {
           url: getEmailVerificationUrl(),
@@ -261,6 +313,26 @@ export const signUpWithEmail = async (
     // 인증 상태 유지 설정 (새로고침 시에도 로그인 유지)
     await setPersistence(auth, browserLocalPersistence);
 
+    if (!options?.staySignedIn) {
+      const normalizedEmail = email.trim().toLowerCase();
+      await sendSignInLinkToEmail(auth, normalizedEmail, {
+        url: getEmailSignupUrl(),
+        handleCodeInApp: true,
+      });
+      savePendingEmailSignup({
+        email: normalizedEmail,
+        displayName: displayName?.trim() || undefined,
+        sentAt: Date.now(),
+      });
+
+      return {
+        user: null,
+        error: null,
+        needsEmailVerification: true,
+        message: '인증메일을 보냈습니다. 메일의 링크를 누른 뒤 비밀번호를 설정해주세요.',
+      };
+    }
+
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
 
     // 사용자 이름 설정
@@ -287,6 +359,43 @@ export const signUpWithEmail = async (
       needsEmailVerification: true,
       message: '가입이 완료되었습니다. 이메일 인증 링크를 확인한 뒤 로그인해주세요.',
     };
+  } catch (error) {
+    const firebaseError = error as FirebaseError;
+    return { user: null, error: getKoreanAuthError(firebaseError) };
+  }
+};
+
+export const completeEmailSignupFromLink = async (
+  email: string,
+  password: string,
+  displayName?: string
+) => {
+  try {
+    if (typeof window === 'undefined' || !isSignInWithEmailLink(auth, window.location.href)) {
+      return { user: null, error: '유효하지 않은 인증 링크입니다.' };
+    }
+    if (!email || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
+      return { user: null, error: '인증할 이메일을 입력해주세요.' };
+    }
+    if (password.length < 6) {
+      return { user: null, error: '비밀번호는 6자 이상이어야 합니다.' };
+    }
+
+    await setPersistence(auth, browserLocalPersistence);
+    const userCredential = await signInWithEmailLink(auth, email.trim().toLowerCase(), window.location.href);
+
+    if (displayName?.trim()) {
+      await updateProfile(userCredential.user, { displayName: displayName.trim() });
+    }
+    await updatePassword(userCredential.user, password);
+
+    if (FLAGS.teamScope) {
+      await ensurePersonalTeam(userCredential.user, '이메일 링크 회원가입');
+    }
+
+    clearPendingEmailSignup();
+    window.history.replaceState({}, document.title, '/auth/complete-signup');
+    return { user: userCredential.user, error: null };
   } catch (error) {
     const firebaseError = error as FirebaseError;
     return { user: null, error: getKoreanAuthError(firebaseError) };

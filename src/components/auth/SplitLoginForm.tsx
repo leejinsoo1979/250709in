@@ -2,7 +2,15 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { signInWithCredential, GoogleAuthProvider } from 'firebase/auth';
 import { useAuth } from '@/auth/AuthProvider';
-import { auth, signInWithEmail, signUpWithEmail, signInWithGoogle, handleRedirectResult, signOutUser } from '@/firebase/auth';
+import {
+  auth,
+  handleRedirectResult,
+  requiresEmailVerification,
+  signInWithEmail,
+  signOutUser,
+  signUpWithEmail,
+  signInWithGoogle,
+} from '@/firebase/auth';
 import { isSuperAdmin, isUserAdmin } from '@/firebase/admins';
 import { collection, doc, getDoc, getDocs, limit, orderBy, query, setDoc, where } from 'firebase/firestore';
 import { db } from '@/firebase/config';
@@ -118,7 +126,7 @@ export const SplitLoginForm: React.FC<SplitLoginFormProps> = ({ onSuccess, defau
     let cancelled = false;
     const redirectAuthenticatedUser = async () => {
       const isPasswordUser = authUser.providerData.some((provider) => provider.providerId === 'password');
-      if (isPasswordUser && !authUser.emailVerified) {
+      if (isPasswordUser && requiresEmailVerification(authUser)) {
         await signOutUser();
         if (!cancelled) {
           setError(null);

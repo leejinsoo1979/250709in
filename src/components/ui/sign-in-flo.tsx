@@ -372,36 +372,38 @@ export const SignInFlo: React.FC<SignInFloProps> = ({
                   color: isDark ? '#a1a1aa' : '#6b7280',
                 }}
               >
-                버튼을 누르면 입력한 이메일로 인증 링크가 발송됩니다.
+                인증 링크를 먼저 보냅니다. 링크 확인 후 비밀번호를 설정하면 가입이 완료됩니다.
               </div>
             )}
 
-            <div className="relative">
-              <Lock size={16} className="absolute left-4 top-1/2 -translate-y-1/2" style={{ color: isDark ? '#71717a' : '#555' }} />
-              <input
-                type={showPassword ? "text" : "password"}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Password"
-                required
-                autoComplete={isSignUp ? "new-password" : "current-password"}
-                className={`w-full rounded-full pl-11 pr-11 py-3.5 focus:outline-none transition-colors ${isMobile ? 'text-base' : 'text-sm'}`}
-                style={{
-                  background: isDark ? '#18181b' : '#f9fafb',
-                  border: `1px solid ${isDark ? '#27272a' : '#e5e7eb'}`,
-                  color: isDark ? '#fff' : '#111',
-                  ...(isMobile ? { fontSize: '16px', minHeight: '48px' } : {}),
-                }}
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-4 top-1/2 -translate-y-1/2 transition-colors"
-                style={{ color: isDark ? '#71717a' : '#555' }}
-              >
-                {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-              </button>
-            </div>
+            {!isSignUp && (
+              <div className="relative">
+                <Lock size={16} className="absolute left-4 top-1/2 -translate-y-1/2" style={{ color: isDark ? '#71717a' : '#555' }} />
+                <input
+                  type={showPassword ? "text" : "password"}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Password"
+                  required
+                  autoComplete="current-password"
+                  className={`w-full rounded-full pl-11 pr-11 py-3.5 focus:outline-none transition-colors ${isMobile ? 'text-base' : 'text-sm'}`}
+                  style={{
+                    background: isDark ? '#18181b' : '#f9fafb',
+                    border: `1px solid ${isDark ? '#27272a' : '#e5e7eb'}`,
+                    color: isDark ? '#fff' : '#111',
+                    ...(isMobile ? { fontSize: '16px', minHeight: '48px' } : {}),
+                  }}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 transition-colors"
+                  style={{ color: isDark ? '#71717a' : '#555' }}
+                >
+                  {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                </button>
+              </div>
+            )}
 
             {!isSignUp && (
               <div className="flex justify-end">
@@ -438,7 +440,7 @@ export const SignInFlo: React.FC<SignInFloProps> = ({
               {loading ? (
                 <div className="w-5 h-5 border-2 border-zinc-300 border-t-zinc-900 rounded-full animate-spin mx-auto" />
               ) : (
-                isSignUp ? "가입 및 인증메일 발송" : "Sign In"
+                isSignUp ? "인증메일 받기" : "Sign In"
               )}
             </button>
           </form>

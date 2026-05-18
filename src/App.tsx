@@ -30,6 +30,7 @@ import GalleryDetailPage from '@/pages/GalleryDetailPage';
 import LandingPage from '@/pages/LandingPage';
 import SignUpPage from '@/pages/SignUpPage';
 import AuthVerifiedPage from '@/pages/AuthVerifiedPage';
+import CompleteEmailSignupPage from '@/pages/CompleteEmailSignupPage';
 import EnterpriseSignUpPage from '@/pages/EnterpriseSignUpPage';
 import AdminLayout from '@/pages/admin/AdminLayout';
 import AdminDashboard from '@/pages/admin/Dashboard';
@@ -176,6 +177,7 @@ function AppContent() {
         <Route path="/login" element={<SplitLoginForm />} />
         <Route path="/signup" element={<SignUpPage />} />
         <Route path="/auth/verified" element={<AuthVerifiedPage />} />
+        <Route path="/auth/complete-signup" element={<CompleteEmailSignupPage />} />
         <Route path="/enterprise-signup" element={<EnterpriseSignUpPage />} />
         <Route path="/auth" element={<SplitLoginForm />} />
         <Route path="/auth/gradient" element={<GradientLoginForm />} />
