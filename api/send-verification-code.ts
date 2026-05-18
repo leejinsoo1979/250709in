@@ -13,7 +13,8 @@ import { Resend } from 'resend';
 
 const RESEND_API_KEY = process.env.RESEND_API_KEY || '';
 const FIREBASE_PROJECT_ID = process.env.VITE_FIREBASE_PROJECT_ID || 'in-f8873';
-const FROM = 'TTTCRAFT <contact@tttcraft.com>';
+const FROM = 'TTTCRAFT <noreply@tttcraft.com>';
+const REPLY_TO = 'contact@tttcraft.com';
 
 const CODE_TTL_SEC = 10 * 60;           // 10분
 const RESEND_COOLDOWN_SEC = 60;          // 재발송 60초 제한
@@ -154,6 +155,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const { data, error } = await resend.emails.send({
       from: FROM,
       to: normalizedEmail,
+      replyTo: REPLY_TO,
       subject: '[TTTCRAFT] 이메일 인증 코드',
       html: buildHtml(code),
       text: buildText(code),

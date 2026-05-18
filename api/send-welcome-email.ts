@@ -2,7 +2,8 @@ import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { Resend } from 'resend';
 
 const RESEND_API_KEY = process.env.RESEND_API_KEY || '';
-const FROM = 'TTTCRAFT <contact@tttcraft.com>';
+const FROM = 'TTTCRAFT <noreply@tttcraft.com>';
+const REPLY_TO = 'contact@tttcraft.com';
 
 const FEATURES = [
   '실시간 3D 가구 설계',
@@ -94,6 +95,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const { data, error } = await resend.emails.send({
       from: FROM,
       to: email,
+      replyTo: REPLY_TO,
       subject: '[TTTCRAFT] 가입을 환영합니다',
       html: buildHtml(),
       text: buildText(),
