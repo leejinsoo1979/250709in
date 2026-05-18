@@ -2549,19 +2549,19 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
             <React.Fragment key={`door-edge-face-${faceIndex}`}>
               <mesh position={[0, safeArgs[1] / 2 - doorEdgeBandingStrip.strip / 2, z]} renderOrder={10020} raycast={() => null}>
                 <boxGeometry args={[doorEdgeBandingStrip.horizontalWidth, doorEdgeBandingStrip.strip, doorEdgeBandingStrip.stripDepth]} />
-                <meshBasicMaterial color={edgeBandingColor} toneMapped={false} depthTest={false} depthWrite={false} side={THREE.DoubleSide} />
+                <meshBasicMaterial color={edgeBandingColor} toneMapped={false} depthTest={true} depthWrite={false} side={THREE.DoubleSide} />
               </mesh>
               <mesh position={[0, -safeArgs[1] / 2 + doorEdgeBandingStrip.strip / 2, z]} renderOrder={10020} raycast={() => null}>
                 <boxGeometry args={[doorEdgeBandingStrip.horizontalWidth, doorEdgeBandingStrip.strip, doorEdgeBandingStrip.stripDepth]} />
-                <meshBasicMaterial color={edgeBandingColor} toneMapped={false} depthTest={false} depthWrite={false} side={THREE.DoubleSide} />
+                <meshBasicMaterial color={edgeBandingColor} toneMapped={false} depthTest={true} depthWrite={false} side={THREE.DoubleSide} />
               </mesh>
               <mesh position={[-safeArgs[0] / 2 + doorEdgeBandingStrip.strip / 2, 0, z]} renderOrder={10020} raycast={() => null}>
                 <boxGeometry args={[doorEdgeBandingStrip.strip, doorEdgeBandingStrip.verticalHeight, doorEdgeBandingStrip.stripDepth]} />
-                <meshBasicMaterial color={edgeBandingColor} toneMapped={false} depthTest={false} depthWrite={false} side={THREE.DoubleSide} />
+                <meshBasicMaterial color={edgeBandingColor} toneMapped={false} depthTest={true} depthWrite={false} side={THREE.DoubleSide} />
               </mesh>
               <mesh position={[safeArgs[0] / 2 - doorEdgeBandingStrip.strip / 2, 0, z]} renderOrder={10020} raycast={() => null}>
                 <boxGeometry args={[doorEdgeBandingStrip.strip, doorEdgeBandingStrip.verticalHeight, doorEdgeBandingStrip.stripDepth]} />
-                <meshBasicMaterial color={edgeBandingColor} toneMapped={false} depthTest={false} depthWrite={false} side={THREE.DoubleSide} />
+                <meshBasicMaterial color={edgeBandingColor} toneMapped={false} depthTest={true} depthWrite={false} side={THREE.DoubleSide} />
               </mesh>
             </React.Fragment>
           ))}

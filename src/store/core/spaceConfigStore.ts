@@ -452,15 +452,25 @@ export const useSpaceConfigStore = create<SpaceConfigState>()((set) => ({
         };
       }
 
+      const nextMaterialConfig = processedInfo.materialConfig !== undefined
+        ? { ...state.spaceInfo.materialConfig }
+        : state.spaceInfo.materialConfig;
+      if (processedInfo.materialConfig !== undefined) {
+        Object.entries(processedInfo.materialConfig).forEach(([key, value]) => {
+          if (value === undefined) {
+            delete (nextMaterialConfig as Record<string, unknown>)[key];
+          } else {
+            (nextMaterialConfig as Record<string, unknown>)[key] = value;
+          }
+        });
+      }
+
       // 임시 spaceInfo 생성
-      // materialConfig, baseConfig는 명시적으로 병합하여 기존 값 보존
+      // materialConfig는 undefined 값으로 키 삭제까지 처리하고, baseConfig는 명시적으로 병합하여 기존 값 보존
       let tempSpaceInfo = {
         ...state.spaceInfo,
         ...processedInfo,
-        materialConfig: {
-          ...state.spaceInfo.materialConfig,
-          ...processedInfo.materialConfig
-        },
+        materialConfig: nextMaterialConfig,
         // baseConfig도 deep merge — type/placementType 등 기본값 유실 방지
         ...(processedInfo.baseConfig !== undefined ? {
           baseConfig: {

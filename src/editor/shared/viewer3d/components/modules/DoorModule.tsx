@@ -185,6 +185,87 @@ const BoxWithEdges: React.FC<{
     return material;
   }, [material, viewMode, isTransparentMode]);
 
+  const doorEdgeBandingColor = useSpaceConfigStore(state => {
+    if (viewMode !== '3D') return undefined;
+    return state.spaceInfo.materialConfig?.doorEdgeColor || undefined;
+  });
+
+  const doorEdgeBandingMaterial = useMemo(() => {
+    if (!doorEdgeBandingColor) return null;
+    return new THREE.MeshStandardMaterial({
+      color: new THREE.Color(doorEdgeBandingColor),
+      roughness: 0.6,
+      metalness: 0.05,
+      side: THREE.DoubleSide,
+    });
+  }, [doorEdgeBandingColor]);
+
+  useEffect(() => {
+    return () => {
+      doorEdgeBandingMaterial?.dispose();
+    };
+  }, [doorEdgeBandingMaterial]);
+
+  const meshMaterial = useMemo<THREE.Material | THREE.Material[]>(() => {
+    if (viewMode !== '3D' || renderMode !== 'solid' || !doorEdgeBandingMaterial) {
+      return displayMaterial;
+    }
+
+    const [w, h, d] = safeArgs;
+    const minDim = Math.min(w, h, d);
+    const isThinX = w === minDim;
+    const isThinY = h === minDim && !isThinX;
+    const isThinZ = d === minDim && !isThinX && !isThinY;
+    // BoxGeometry face order: [+X, -X, +Y, -Y, +Z, -Z]
+    // 도어는 전후 메인 면을 제외한 4면에 엣지밴딩 색을 적용한다.
+    const mats: THREE.Material[] = [
+      displayMaterial,
+      displayMaterial,
+      displayMaterial,
+      displayMaterial,
+      displayMaterial,
+      displayMaterial,
+    ];
+
+    if (isThinX) {
+      mats[2] = doorEdgeBandingMaterial;
+      mats[3] = doorEdgeBandingMaterial;
+      mats[4] = doorEdgeBandingMaterial;
+      mats[5] = doorEdgeBandingMaterial;
+    } else if (isThinY) {
+      mats[0] = doorEdgeBandingMaterial;
+      mats[1] = doorEdgeBandingMaterial;
+      mats[4] = doorEdgeBandingMaterial;
+      mats[5] = doorEdgeBandingMaterial;
+    } else if (isThinZ) {
+      mats[0] = doorEdgeBandingMaterial;
+      mats[1] = doorEdgeBandingMaterial;
+      mats[2] = doorEdgeBandingMaterial;
+      mats[3] = doorEdgeBandingMaterial;
+    } else {
+      mats[0] = doorEdgeBandingMaterial;
+      mats[1] = doorEdgeBandingMaterial;
+      mats[2] = doorEdgeBandingMaterial;
+      mats[3] = doorEdgeBandingMaterial;
+    }
+
+    return mats;
+  }, [displayMaterial, doorEdgeBandingMaterial, renderMode, safeArgs, viewMode]);
+
+  const doorEdgeBandingStrip = useMemo(() => {
+    if (viewMode !== '3D' || renderMode !== 'solid' || !doorEdgeBandingColor) return null;
+    const strip = Math.min(0.025, safeArgs[0] / 3, safeArgs[1] / 3);
+    if (strip <= 0) return null;
+    return {
+      strip,
+      frontZ: safeArgs[2] / 2 + 0.004,
+      backZ: -safeArgs[2] / 2 - 0.004,
+      stripDepth: 0.003,
+      horizontalWidth: safeArgs[0],
+      verticalHeight: Math.max(0.001, safeArgs[1] - strip * 2),
+    };
+  }, [doorEdgeBandingColor, renderMode, safeArgs, viewMode]);
+
   useFrame(() => {
     if (!groupRef.current) return;
     const group = groupRef.current;
@@ -326,7 +407,7 @@ const BoxWithEdges: React.FC<{
         <mesh
           name={`furniture-mesh${panelName ? `-${panelName}` : ''}`}
           geometry={geometry}
-          material={displayMaterial}
+          material={meshMaterial as any}
           userData={{
             ...(furnitureId ? { furnitureId } : {}),
             ...(panelName ? { panelName } : {}),
@@ -345,6 +426,33 @@ const BoxWithEdges: React.FC<{
           onPointerOver={onPointerOver}
           onPointerOut={onPointerOut}
         />
+      )}
+      {viewMode === '3D' && doorEdgeBandingStrip && doorEdgeBandingColor && renderMode === 'solid' && (
+        <group
+          name={`door-edge-banding${panelName ? `-${panelName}` : ''}`}
+          userData={{ decoration: true, edgeBandingOverlay: true }}
+        >
+          {[doorEdgeBandingStrip.frontZ, doorEdgeBandingStrip.backZ].map((z, faceIndex) => (
+            <React.Fragment key={`door-edge-face-${faceIndex}`}>
+              <mesh position={[0, safeArgs[1] / 2 - doorEdgeBandingStrip.strip / 2, z]} renderOrder={10020} raycast={() => null}>
+                <boxGeometry args={[doorEdgeBandingStrip.horizontalWidth, doorEdgeBandingStrip.strip, doorEdgeBandingStrip.stripDepth]} />
+                <meshBasicMaterial color={doorEdgeBandingColor} toneMapped={false} depthTest={true} depthWrite={false} side={THREE.DoubleSide} />
+              </mesh>
+              <mesh position={[0, -safeArgs[1] / 2 + doorEdgeBandingStrip.strip / 2, z]} renderOrder={10020} raycast={() => null}>
+                <boxGeometry args={[doorEdgeBandingStrip.horizontalWidth, doorEdgeBandingStrip.strip, doorEdgeBandingStrip.stripDepth]} />
+                <meshBasicMaterial color={doorEdgeBandingColor} toneMapped={false} depthTest={true} depthWrite={false} side={THREE.DoubleSide} />
+              </mesh>
+              <mesh position={[-safeArgs[0] / 2 + doorEdgeBandingStrip.strip / 2, 0, z]} renderOrder={10020} raycast={() => null}>
+                <boxGeometry args={[doorEdgeBandingStrip.strip, doorEdgeBandingStrip.verticalHeight, doorEdgeBandingStrip.stripDepth]} />
+                <meshBasicMaterial color={doorEdgeBandingColor} toneMapped={false} depthTest={true} depthWrite={false} side={THREE.DoubleSide} />
+              </mesh>
+              <mesh position={[safeArgs[0] / 2 - doorEdgeBandingStrip.strip / 2, 0, z]} renderOrder={10020} raycast={() => null}>
+                <boxGeometry args={[doorEdgeBandingStrip.strip, doorEdgeBandingStrip.verticalHeight, doorEdgeBandingStrip.stripDepth]} />
+                <meshBasicMaterial color={doorEdgeBandingColor} toneMapped={false} depthTest={true} depthWrite={false} side={THREE.DoubleSide} />
+              </mesh>
+            </React.Fragment>
+          ))}
+        </group>
       )}
       {/* 윤곽선 렌더링 - 3D에서 더 강력한 렌더링 */}
       {viewMode === '3D' ? (

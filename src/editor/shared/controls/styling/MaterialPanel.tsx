@@ -220,7 +220,10 @@ const MaterialPanel: React.FC = () => {
           <div className={styles.tabContent} style={{ padding: '8px 12px' }}>
             {(['interior', 'door'] as const).map((target) => {
               const edgeKey = target === 'interior' ? 'interiorEdgeColor' : 'doorEdgeColor';
-              const currentEdge = (materialConfig as any)[edgeKey] || '#FFFFFF';
+              const currentEdge = (materialConfig as any)[edgeKey] as string | undefined;
+              const fallbackEdge = target === 'interior'
+                ? (materialConfig.interiorColor || '#FFFFFF')
+                : (materialConfig.doorColor || '#E0E0E0');
               const label = target === 'interior' ? '속장 엣지' : '도어 엣지';
               return (
                 <div
@@ -239,7 +242,7 @@ const MaterialPanel: React.FC = () => {
                   <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
                     <input
                       type="color"
-                      value={currentEdge}
+                      value={currentEdge || fallbackEdge}
                       onChange={(e) => {
                         const newColor = e.target.value;
                         setSpaceInfo({
@@ -261,13 +264,13 @@ const MaterialPanel: React.FC = () => {
                       color: 'var(--theme-text-secondary, #6b7280)',
                       fontFamily: 'SF Mono, Menlo, monospace',
                     }}>
-                      {currentEdge.toUpperCase()}
+                      {currentEdge ? currentEdge.toUpperCase() : '기본'}
                     </span>
                   </label>
                   <button
                     type="button"
                     onClick={() => {
-                      // store가 materialConfig를 deep merge하므로 명시적으로 undefined를 보내야 키가 제거됨
+                      // 엣지 색 키를 삭제하면 패널 본체 재질과 동일하게 표시된다.
                       setSpaceInfo({
                         materialConfig: { ...materialConfig, [edgeKey]: undefined as any },
                       });
