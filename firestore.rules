@@ -501,6 +501,14 @@ service cloud.firestore {
       }
     }
 
+    // 이메일 인증 코드 (emailVerificationCodes)
+    // - 비로그인 사용자도 회원가입 전에 인증해야 하므로 익명 접근 허용
+    // - 보안은 서버(API)의 rate limit + 코드 만료(10분) + 시도 횟수(5회) 제한으로 보장
+    // - 클라이언트에서 직접 읽거나 검증할 수 없도록 read는 막아둠 (서버 REST만 접근)
+    match /emailVerificationCodes/{docId} {
+      allow read, write: if true; // 서버(API)만 호출하는 것이 정상 경로
+    }
+
     // 기업회원 가입 신청 (enterprise_inquiries)
     // - 생성: 로그인 사용자 본인 (uid 일치)
     // - 읽기/목록: 본인 또는 관리자

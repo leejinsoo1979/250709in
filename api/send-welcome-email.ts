@@ -25,7 +25,12 @@ const buildHtml = () => `<!DOCTYPE html>
           <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#ffffff;border-radius:14px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.04);">
             <tr>
               <td style="padding:40px 40px 8px 40px;">
-                <div style="font-size:18px;font-weight:800;color:#111827;letter-spacing:-0.02em;">TTTCRAFT</div>
+                <table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr>
+                  <td style="padding-right:4px;"><div style="width:12px;height:12px;background:#111827;border-radius:50%;"></div></td>
+                  <td style="padding-right:4px;"><div style="width:12px;height:12px;background:#111827;border-radius:50%;"></div></td>
+                  <td style="padding-right:10px;"><div style="width:12px;height:12px;background:#111827;border-radius:50%;"></div></td>
+                  <td><span style="font-size:18px;font-weight:900;color:#374151;letter-spacing:0.15em;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">CRAFT</span></td>
+                </tr></table>
               </td>
             </tr>
             <tr>

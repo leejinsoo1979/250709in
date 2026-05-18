@@ -789,7 +789,7 @@ export default function EnterpriseSignUpPage() {
 
               <div className="space-y-5">
                 <Field label="로그인 이메일" required>
-                  <div className="flex gap-2">
+                  <div className="flex gap-3">
                     <input
                       type="email"
                       value={form.loginEmail}
@@ -832,7 +832,7 @@ export default function EnterpriseSignUpPage() {
 
                   {/* 인증코드 입력 */}
                   {!isSocialLoggedIn && !emailVerified && codeStage === 'sent' && (
-                    <div className="mt-2 flex gap-2">
+                    <div className="mt-2 flex gap-3">
                       <input
                         type="text"
                         inputMode="numeric"
@@ -1022,7 +1022,7 @@ export default function EnterpriseSignUpPage() {
 
                     return (
                       <>
-                        <div className="flex gap-2">
+                        <div className="flex gap-3">
                           <input
                             type="text"
                             value={form.businessNumber}
