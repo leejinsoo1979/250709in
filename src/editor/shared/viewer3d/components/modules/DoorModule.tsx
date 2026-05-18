@@ -115,7 +115,7 @@ const BoxWithEdges: React.FC<{
   });
 
   const { theme } = useViewerTheme();
-  const { view2DTheme, shadowEnabled, panelSimulationPhase, panelSimulationRevision, panelSimulationLayouts } = useUIStore();
+  const { view2DTheme, shadowEnabled, isTransparentMode, panelSimulationPhase, panelSimulationRevision, panelSimulationLayouts } = useUIStore();
   const simulationRevisionRef = React.useRef(panelSimulationRevision);
   const simulationStartTimeRef = React.useRef(0);
   const simulationFrameStateRef = React.useRef<{
@@ -162,6 +162,28 @@ const BoxWithEdges: React.FC<{
     }
     return '#10b981'; // 기본값 (green)
   };
+
+  const displayMaterial = useMemo(() => {
+    if (
+      viewMode === '3D' &&
+      isTransparentMode &&
+      (
+        material instanceof THREE.MeshStandardMaterial ||
+        material instanceof THREE.MeshBasicMaterial ||
+        material instanceof THREE.MeshLambertMaterial ||
+        material instanceof THREE.MeshPhongMaterial
+      )
+    ) {
+      material.transparent = true;
+      material.opacity = 0.28;
+      material.depthWrite = false;
+      material.depthTest = true;
+      material.side = THREE.DoubleSide;
+      material.needsUpdate = true;
+      return material;
+    }
+    return material;
+  }, [material, viewMode, isTransparentMode]);
 
   useFrame(() => {
     if (!groupRef.current) return;
@@ -304,7 +326,7 @@ const BoxWithEdges: React.FC<{
         <mesh
           name={`furniture-mesh${panelName ? `-${panelName}` : ''}`}
           geometry={geometry}
-          material={material}
+          material={displayMaterial}
           userData={{
             ...(furnitureId ? { furnitureId } : {}),
             ...(panelName ? { panelName } : {}),
@@ -491,7 +513,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   const floatHeightSource = storeFloatHeight !== undefined ? storeFloatHeight : (propFloatHeight ?? 0);
   const floatHeight = placementType === 'float' ? floatHeightSource : 0;
   // Store에서 재질 설정과 도어 상태 가져오기
-  const { doorsOpen, view2DDirection, view2DTheme, isIndividualDoorOpen, toggleIndividualDoor, selectedSlotIndex, showDimensions, highlightedDoorGap, hingePositionEditModeModuleId, panelSimulationPhase, panelSimulationViewBackup } = useUIStore() as any;
+  const { doorsOpen, view2DDirection, view2DTheme, isIndividualDoorOpen, toggleIndividualDoor, selectedSlotIndex, showDimensions, highlightedDoorGap, hingePositionEditModeModuleId, isTransparentMode, panelSimulationPhase, panelSimulationViewBackup } = useUIStore() as any;
   const { renderMode, viewMode, plainMaterial: isPlainMaterial } = useSpace3DView(); // context에서 renderMode와 viewMode 가져오기
   const { gl } = useThree(); // Three.js renderer 가져오기
   const { dimensionColor } = useDimensionColor(); // 치수 색상
@@ -691,7 +713,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
         mat.needsUpdate = true;
       }
     });
-  }, [doorColor, isDragging, isEditMode, viewMode, renderMode, view2DDirection, view2DTheme, isPlainMaterial]);
+  }, [doorColor, isDragging, isEditMode, viewMode, renderMode, view2DDirection, view2DTheme, isPlainMaterial, isTransparentMode]);
 
   // 편집/드래그/2D 모드일 때 텍스처 제거
   useEffect(() => {
