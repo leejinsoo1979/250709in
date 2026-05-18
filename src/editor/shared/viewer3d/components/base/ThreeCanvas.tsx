@@ -209,7 +209,7 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
     camera.spaceHeight,
     isMobile,
     viewMode === '3D' && (isLiveDimensionMode || isTapeMeasureMode),
-    viewMode === '3D' && isTapeMeasureMode
+    viewMode === '3D' && (isLiveDimensionMode || isTapeMeasureMode)
   );
 
   // cameraPosition/cameraTarget이 변경될 때 초기 상태 업데이트 (스페이스바 리셋용)

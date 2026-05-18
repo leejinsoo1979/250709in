@@ -108,8 +108,9 @@ export const useOrbitControlsConfig = (
       enableRotate: !is2DMode, // 2D 모드에서는 회전 비활성화, 3D 모드에서만 허용
       minDistance: calculateDynamicDistances.minDistance,
       maxDistance: calculateDynamicDistances.maxDistance,
-      minZoom: unrestrictedZoom && !is2DMode ? 0.05 : 0.5,
-      maxZoom: unrestrictedZoom && !is2DMode ? 160 : 10,
+      // 3D(오쏘메트릭 포함)에서는 기본적으로 줌 범위를 넓게 풀어둠 (이전엔 0.5~10으로 막혀서 가까이 못 감)
+      minZoom: is2DMode ? 0.5 : 0.05,
+      maxZoom: is2DMode ? 10 : 160,
       rotateSpeed: 0.5, // 회전 속도를 0.5로 낮춤 (기본값 1.0보다 느리게, 더 묵직하게)
       zoomSpeed: isMobile && is2DMode ? -1.0 : 1.0, // 모바일 2D 모드에서 줌 제스처 반전
       enableDamping: true, // 관성 효과 활성화로 더 부드럽고 묵직한 움직임
