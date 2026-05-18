@@ -45,7 +45,7 @@ import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
 import { useUIStore } from '@/store/uiStore';
 import type { PanelSimulationLayout, PanelSimulationSheetLayout, PanelSimulationSummary } from '@/store/uiStore';
-import { useFrame, useThree } from '@react-three/fiber';
+import { useFrame } from '@react-three/fiber';
 import { calculateSpaceIndexing } from '@/editor/shared/utils/indexing';
 import { calculateOptimalDistance, mmToThreeUnits, calculateCameraTarget, threeUnitsToMm } from './components/base/utils/threeUtils';
 import { useThemeColors } from '@/hooks/useThemeColors';
@@ -83,90 +83,6 @@ const PANEL_SIMULATION_ADMIN_EMAIL = 'sbbc212@gmail.com';
 const clampNumber = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value));
 
 const normalizeEmail = (email?: string | null) => (email || '').toLowerCase().trim();
-
-const TRANSPARENT_MODE_ORIGINAL_KEY = '__transparentModeOriginal';
-
-const hasFurnitureMarker = (object: THREE.Object3D | null) => {
-  let current = object;
-  while (current) {
-    const data = current.userData || {};
-    if (data.furnitureId || data.panelName || data.liveDimensionKey) return true;
-    if (
-      data.decoration ||
-      data.tapeMeasureOverlay ||
-      data.liveDimensionOverlay ||
-      data.panelSimulationBoard ||
-      data.panelSimulationMovingPanels
-    ) {
-      return false;
-    }
-    current = current.parent;
-  }
-  return false;
-};
-
-const applyTransparentModeToMaterial = (material: THREE.Material, enabled: boolean) => {
-  const data = material.userData as Record<string, any>;
-  if (enabled) {
-    if (!data[TRANSPARENT_MODE_ORIGINAL_KEY]) {
-      data[TRANSPARENT_MODE_ORIGINAL_KEY] = {
-        transparent: material.transparent,
-        opacity: material.opacity,
-        depthWrite: material.depthWrite,
-        side: material.side,
-      };
-    }
-    material.transparent = true;
-    material.opacity = 0.12;
-    material.depthWrite = false;
-    material.side = THREE.DoubleSide;
-    material.needsUpdate = true;
-    return;
-  }
-
-  const original = data[TRANSPARENT_MODE_ORIGINAL_KEY];
-  if (!original) return;
-  material.transparent = original.transparent;
-  material.opacity = original.opacity;
-  material.depthWrite = original.depthWrite;
-  material.side = original.side;
-  material.needsUpdate = true;
-  delete data[TRANSPARENT_MODE_ORIGINAL_KEY];
-};
-
-const TransparentModeSceneController: React.FC = () => {
-  const { scene } = useThree();
-  const { viewMode } = useSpace3DView();
-  const isTransparentMode = useUIStore(state => state.isTransparentMode);
-  const lastAppliedRef = useRef<boolean | null>(null);
-
-  const applyToScene = useCallback((enabled: boolean) => {
-    scene.traverse((object) => {
-      const mesh = object as THREE.Mesh;
-      if (!mesh.isMesh || !mesh.material || !hasFurnitureMarker(mesh)) return;
-      const materials = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
-      materials.forEach((material) => applyTransparentModeToMaterial(material, enabled));
-    });
-  }, [scene]);
-
-  useFrame(() => {
-    const enabled = viewMode === '3D' && isTransparentMode;
-    if (lastAppliedRef.current !== enabled) {
-      applyToScene(enabled);
-      lastAppliedRef.current = enabled;
-      return;
-    }
-    if (enabled) {
-      applyToScene(true);
-    }
-  });
-
-  useEffect(() => {
-    return () => applyToScene(false);
-  }, [applyToScene]);
-
-  return null;
-};
 
 const usePanelSimulationAccess = () => {
   const [email, setEmail] = useState(() => normalizeEmail(auth.currentUser?.email));
@@ -2209,11 +2125,6 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
       );
       if (isTextInput || e.ctrlKey || e.metaKey || e.altKey) return;
 
-      if (e.key.toLowerCase() === 'k') {
-        useUIStore.getState().toggleTransparentMode();
-        return;
-      }
-
       if (e.key === 'Escape') {
         const { selectedFurnitureId, setSelectedFurnitureId } = useUIStore.getState();
         if (selectedFurnitureId) {
@@ -4005,7 +3916,6 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
             onControlsReady={handleControlsReady}
           >
             <React.Suspense fallback={null}>
-              <TransparentModeSceneController />
               {/* 배경 클릭 감지용 평면 - selectedFurnitureId 해제 */}
               <mesh
                 position={[0, 0, -100]}

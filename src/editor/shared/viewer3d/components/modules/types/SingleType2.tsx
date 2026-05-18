@@ -219,7 +219,7 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
                   onClick={handleCabinetBodyClick}
                   panelName={`${index === 0 ? '(하)' : '(상)'}좌측`}
                   panelGrainDirections={hookPanelGrainDirections}
-                  textureUrl={spaceInfo.materialConfig?.doorTexture}
+                  textureUrl={spaceInfo.materialConfig?.interiorTexture}
                   faceGrooves={createBackPanelFaceGrooves('right', sectionHeight)}
                 />
 
@@ -236,7 +236,7 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
                   onClick={handleCabinetBodyClick}
                   panelName={`${index === 0 ? '(하)' : '(상)'}우측`}
                   panelGrainDirections={hookPanelGrainDirections}
-                  textureUrl={spaceInfo.materialConfig?.doorTexture}
+                  textureUrl={spaceInfo.materialConfig?.interiorTexture}
                   faceGrooves={createBackPanelFaceGrooves('left', sectionHeight)}
                 />
                 
@@ -274,7 +274,7 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
                         onClick={handleCabinetBodyClick}
                         panelName="(하)상판"
                         panelGrainDirections={hookPanelGrainDirections}
-                        textureUrl={spaceInfo.materialConfig?.doorTexture}
+                        textureUrl={spaceInfo.materialConfig?.interiorTexture}
                       />
 
                       {/* 상부 섹션 바닥판 - 상부 섹션 깊이 적용 + 뒤에서 26mm 줄임, 좌우 각 0.5mm씩 줄임 */}
@@ -290,7 +290,7 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
                         onClick={handleCabinetBodyClick}
                         panelName="(상)바닥"
                         panelGrainDirections={hookPanelGrainDirections}
-                        textureUrl={spaceInfo.materialConfig?.doorTexture}
+                        textureUrl={spaceInfo.materialConfig?.interiorTexture}
                       />
                     </>
                   );
@@ -315,7 +315,7 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
             onClick={handleCabinetBodyClick}
             panelName="좌측판"
             panelGrainDirections={hookPanelGrainDirections}
-            textureUrl={spaceInfo.materialConfig?.doorTexture}
+            textureUrl={spaceInfo.materialConfig?.interiorTexture}
             faceGrooves={createBackPanelFaceGrooves('right', height)}
           />
 
@@ -331,7 +331,7 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
             onClick={handleCabinetBodyClick}
             panelName="우측판"
             panelGrainDirections={hookPanelGrainDirections}
-            textureUrl={spaceInfo.materialConfig?.doorTexture}
+            textureUrl={spaceInfo.materialConfig?.interiorTexture}
             faceGrooves={createBackPanelFaceGrooves('left', height)}
           />
         </>
@@ -357,7 +357,7 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
             furnitureId={moduleData.id}
             category={moduleData.category}
             placedFurnitureId={placedFurnitureId}
-              textureUrl={spaceInfo.materialConfig?.doorTexture}
+              textureUrl={spaceInfo.materialConfig?.interiorTexture}
               panelGrainDirections={panelGrainDirections}
             sectionDepths={sectionDepths}
             sectionDepthDirections={[lowerSectionDepthDirection, upperSectionDepthDirection]}
@@ -494,7 +494,7 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
             onClick={handleCabinetBodyClick}
             panelName={isMultiSectionFurniture() ? "(상)상판" : "상판"}
             panelGrainDirections={hookPanelGrainDirections}
-            textureUrl={spaceInfo.materialConfig?.doorTexture}
+            textureUrl={spaceInfo.materialConfig?.interiorTexture}
           />
         );
       })()}
@@ -520,7 +520,7 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
             onClick={handleCabinetBodyClick}
             panelName={isMultiSectionFurniture() ? "(하)바닥" : "바닥판"}
             panelGrainDirections={hookPanelGrainDirections}
-            textureUrl={spaceInfo.materialConfig?.doorTexture}
+            textureUrl={spaceInfo.materialConfig?.interiorTexture}
           />
         );
       })()}
@@ -573,7 +573,7 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
                   isHighlighted={highlightedSection === `${placedFurnitureId}-0`}
                   panelName="(하)백패널"
                   panelGrainDirections={hookPanelGrainDirections}
-                  textureUrl={spaceInfo.materialConfig?.doorTexture}
+                  textureUrl={spaceInfo.materialConfig?.interiorTexture}
                 />
 
                 {/* 상부 섹션 백패널 - 상부 섹션 깊이 적용 */}
@@ -589,7 +589,7 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
                   isHighlighted={highlightedSection === `${placedFurnitureId}-1`}
                   panelName="(상)백패널"
                   panelGrainDirections={hookPanelGrainDirections}
-                  textureUrl={spaceInfo.materialConfig?.doorTexture}
+                  textureUrl={spaceInfo.materialConfig?.interiorTexture}
                 />
 
                 {/* 보강대 (각 섹션 백패널 상/하단) - 60mm 높이, 15.5mm 두께
@@ -673,7 +673,7 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
             isBackPanel={true}
             panelName="백패널"
             panelGrainDirections={hookPanelGrainDirections}
-            textureUrl={spaceInfo.materialConfig?.doorTexture}
+            textureUrl={spaceInfo.materialConfig?.interiorTexture}
           />
 
           {/* 보강대 (단일 섹션 백패널 상/하단) - 60mm 높이, 15.5mm 두께

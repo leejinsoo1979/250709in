@@ -378,8 +378,8 @@ export const useBaseFurniture = (
     return '#10b981'; // 기본값 (green)
   };
   
-  // 색상 결정: 드래그 중이거나 편집 모드면 테마 색상 사용, 아니면 기본 색상
-  const furnitureColor = (isDragging || isEditMode) ? getThemeColor() : (
+  // 색상 결정: 드래그 중에만 테마 색상 사용, 편집 선택 상태에서는 원본 재질 색상을 유지한다.
+  const furnitureColor = isDragging ? getThemeColor() : (
     color || (materialConfig.interiorColor === materialConfig.doorColor 
       ? materialConfig.doorColor
       : materialConfig.interiorColor)
@@ -403,12 +403,13 @@ export const useBaseFurniture = (
   // 재질 속성 업데이트 (재생성 없이)
   useEffect(() => {
     if (material) {
-      // 드래그 중이거나 편집 모드일 때는 항상 테마 색상 사용 (2D/3D 모두)
-      if (isDragging || isEditMode) {
+      // 드래그 중에는 임시 고스트 색상을 사용한다.
+      // 편집 모드는 BoxWithEdges에서 별도 고스트 재질로 처리하므로 원본 texture map을 지우지 않는다.
+      if (isDragging) {
         material.color.set(getThemeColor());
-        material.map = null; // 드래그 중이거나 편집 모드에는 텍스처 제거
-        material.emissive.set(new THREE.Color(getThemeColor())); // 편집 모드에서 발광 효과
-        material.emissiveIntensity = 0.2; // 약간의 발광
+        material.map = null; // 드래그 중에는 텍스처 제거
+        material.emissive.set(new THREE.Color(getThemeColor()));
+        material.emissiveIntensity = 0.2;
       } else {
         material.emissive.set(new THREE.Color(0x000000)); // 발광 제거
         material.emissiveIntensity = 0;
@@ -419,10 +420,10 @@ export const useBaseFurniture = (
       }
       
       // 투명도 설정 - 2D 모드에서는 편집 모드 여부와 관계없이 일정한 투명도 유지
-      material.transparent = effectiveRenderMode === 'wireframe' || (viewMode === '2D' && effectiveRenderMode === 'solid') || isDragging || isEditMode;
+      material.transparent = effectiveRenderMode === 'wireframe' || (viewMode === '2D' && effectiveRenderMode === 'solid') || isDragging;
       material.opacity = effectiveRenderMode === 'wireframe' ? 0.3 :
                         (viewMode === '2D' && effectiveRenderMode === 'solid') ? 0.5 : // 2D 모드에서는 항상 0.5
-                        ((isDragging || isEditMode) ? 0.6 : 1.0);
+                        (isDragging ? 0.6 : 1.0);
       
       // 은선모드 또는 2D 투명 모드에서는 depthWrite를 false로 설정하여 치수 텍스트가 가려지지 않도록
       const shouldDisableDepthWrite = effectiveRenderMode === 'wireframe' || (viewMode === '2D' && effectiveRenderMode === 'solid');
@@ -439,8 +440,9 @@ export const useBaseFurniture = (
 
   // 텍스처 적용 (별도 useEffect로 처리)
   useEffect(() => {
-    // 드래그 중이거나 편집 모드일 때 텍스처 적용하지 않음 (고스트 테마색이 보이도록)
-    if (isDragging || isEditMode) {
+    // 드래그 중에는 텍스처 적용하지 않음 (고스트 테마색이 보이도록)
+    // 편집 모드에서는 원본 material의 texture map을 유지해야 편집 종료/재선택 시 재질이 사라지지 않는다.
+    if (isDragging) {
       if (material) {
         material.map = null;
         material.needsUpdate = true;

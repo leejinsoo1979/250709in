@@ -259,9 +259,6 @@ interface UIState {
   // 윤곽선(엣지) 설정
   edgeOutlineEnabled: boolean;
 
-  // 3D 투명 모드
-  isTransparentMode: boolean;
-
   // 보링 시각화 상태
   showBorings: boolean;
 
@@ -378,9 +375,6 @@ interface UIState {
   setShowFurniture: (show: boolean) => void;
   setRenderMode: (mode: 'solid' | 'wireframe') => void;
   setView2DTheme: (theme: 'dark' | 'light') => void;
-  toggleTransparentMode: () => void;
-  setTransparentMode: (enabled: boolean) => void;
-
   // 도어 갭 하이라이트 (상단갭/하단갭 입력 포커스 시 뷰어에 빨강 반투명 표시)
   highlightedDoorGap: { moduleIds: string[]; side: 'top' | 'bottom' } | null;
   setHighlightedDoorGap: (h: { moduleIds: string[]; side: 'top' | 'bottom' } | null) => void;
@@ -522,7 +516,6 @@ const initialUIState = {
   shadowEnabled: false,  // 기본값: 그림자 비활성화
   sunAngle: 45,  // 기본값: 태양 각도 45도 (우측 앞쪽)
   edgeOutlineEnabled: true,  // 기본값: 윤곽선 활성화
-  isTransparentMode: false,  // 기본값: 3D 투명 모드 비활성화
   showBorings: false,  // 기본값: 보링 시각화 비활성화
   isMeasureMode: false,  // 기본값: 측정 모드 비활성화
   measurePoints: null,  // 기본값: 측정 포인트 없음
@@ -790,12 +783,6 @@ export const useUIStore = create<UIState>()(
       setView2DTheme: (theme) =>
         set({ view2DTheme: theme }),
 
-      toggleTransparentMode: () =>
-        set((state) => ({ isTransparentMode: !state.isTransparentMode })),
-
-      setTransparentMode: (enabled) =>
-        set({ isTransparentMode: enabled }),
-      
       // 가구 팝업 열기 (다른 모든 팝업 닫기)
       openFurniturePopup: (moduleId) =>
         set({ 

@@ -329,7 +329,7 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
     return themeColorMap[theme.color] || '#3b82f6';
   };
 
-  const furnitureColor = (isDragging || isEditMode) ? getThemeColor() : (
+  const furnitureColor = isDragging ? getThemeColor() : (
     color || materialConfig.interiorColor || '#D4C5A9'
   );
 

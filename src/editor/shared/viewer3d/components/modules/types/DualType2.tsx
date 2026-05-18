@@ -220,7 +220,7 @@ const DualType2: React.FC<FurnitureTypeProps> = ({
                   isHighlighted={isSectionHighlighted}
                   panelName={`${index === 0 ? '(하)' : '(상)'}좌측`}
                   panelGrainDirections={panelGrainDirections}
-                  textureUrl={spaceInfo.materialConfig?.doorTexture}
+                  textureUrl={spaceInfo.materialConfig?.interiorTexture}
                   faceGrooves={createBackPanelFaceGrooves('right', sectionHeight)}
                 />
 
@@ -236,7 +236,7 @@ const DualType2: React.FC<FurnitureTypeProps> = ({
                   isHighlighted={isSectionHighlighted}
                   panelName={`${index === 0 ? '(하)' : '(상)'}우측`}
                   panelGrainDirections={panelGrainDirections}
-                  textureUrl={spaceInfo.materialConfig?.doorTexture}
+                  textureUrl={spaceInfo.materialConfig?.interiorTexture}
                   faceGrooves={createBackPanelFaceGrooves('left', sectionHeight)}
                 />
                 
@@ -267,7 +267,7 @@ const DualType2: React.FC<FurnitureTypeProps> = ({
                       isHighlighted={highlightedSection === `${placedFurnitureId}-0`}
                       panelName="(하)상판"
                       panelGrainDirections={panelGrainDirections}
-                      textureUrl={spaceInfo.materialConfig?.doorTexture}
+                      textureUrl={spaceInfo.materialConfig?.interiorTexture}
                     />
                   );
                 })()}
@@ -305,7 +305,7 @@ const DualType2: React.FC<FurnitureTypeProps> = ({
                         isHighlighted={highlightedSection === `${placedFurnitureId}-1`}
                         panelName="(상)바닥"
                         panelGrainDirections={panelGrainDirections}
-                        textureUrl={spaceInfo.materialConfig?.doorTexture}
+                        textureUrl={spaceInfo.materialConfig?.interiorTexture}
                       />
                   </>
                   );
@@ -328,7 +328,7 @@ const DualType2: React.FC<FurnitureTypeProps> = ({
             isDragging={isDragging}
             panelName="좌측판"
             panelGrainDirections={panelGrainDirections}
-            textureUrl={spaceInfo.materialConfig?.doorTexture}
+            textureUrl={spaceInfo.materialConfig?.interiorTexture}
             faceGrooves={createBackPanelFaceGrooves('right', height)}
           />
 
@@ -342,7 +342,7 @@ const DualType2: React.FC<FurnitureTypeProps> = ({
             isDragging={isDragging}
             panelName="우측판"
             panelGrainDirections={panelGrainDirections}
-            textureUrl={spaceInfo.materialConfig?.doorTexture}
+            textureUrl={spaceInfo.materialConfig?.interiorTexture}
             faceGrooves={createBackPanelFaceGrooves('left', height)}
           />
         </>
@@ -359,7 +359,7 @@ const DualType2: React.FC<FurnitureTypeProps> = ({
         isHighlighted={isMulti ? highlightedSection === `${placedFurnitureId}-${sectionHeights.length - 1}` : false}
         panelName={isMulti ? "(상)상판" : "상판"}
         panelGrainDirections={panelGrainDirections}
-        textureUrl={spaceInfo.materialConfig?.doorTexture}
+        textureUrl={spaceInfo.materialConfig?.interiorTexture}
       />
 
       {/* 상단 상판 두께 치수 표시 - 제거됨 (2D에서 18mm 두께 표시 불필요) */}
@@ -375,7 +375,7 @@ const DualType2: React.FC<FurnitureTypeProps> = ({
         isHighlighted={isMulti ? highlightedSection === `${placedFurnitureId}-0` : false}
         panelName={isMulti ? "(하)바닥" : "바닥판"}
         panelGrainDirections={panelGrainDirections}
-        textureUrl={spaceInfo.materialConfig?.doorTexture}
+        textureUrl={spaceInfo.materialConfig?.interiorTexture}
       />
 
       {/* 뒷면 판재 (9mm 백패널, 섹션별로 분리) */}
@@ -421,7 +421,7 @@ const DualType2: React.FC<FurnitureTypeProps> = ({
                   isHighlighted={highlightedSection === `${placedFurnitureId}-0`}
                   panelName="(하)백패널"
                   panelGrainDirections={panelGrainDirections}
-                  textureUrl={spaceInfo.materialConfig?.doorTexture}
+                  textureUrl={spaceInfo.materialConfig?.interiorTexture}
                 />
 
                 {/* 상부 섹션 백패널 */}
@@ -436,7 +436,7 @@ const DualType2: React.FC<FurnitureTypeProps> = ({
                   isHighlighted={highlightedSection === `${placedFurnitureId}-1`}
                   panelName="(상)백패널"
                   panelGrainDirections={panelGrainDirections}
-                  textureUrl={spaceInfo.materialConfig?.doorTexture}
+                  textureUrl={spaceInfo.materialConfig?.interiorTexture}
                 />
 
                 {/* 보강대 (각 섹션 백패널 상/하단) - 60mm 높이, 15.5mm 두께
@@ -518,7 +518,7 @@ const DualType2: React.FC<FurnitureTypeProps> = ({
             isBackPanel={true}
             panelName="백패널"
             panelGrainDirections={panelGrainDirections}
-            textureUrl={spaceInfo.materialConfig?.doorTexture}
+            textureUrl={spaceInfo.materialConfig?.interiorTexture}
           />
 
           {/* 보강대 (단일 섹션 백패널 상/하단) - 60mm 높이, 15.5mm 두께
@@ -588,7 +588,7 @@ const DualType2: React.FC<FurnitureTypeProps> = ({
                 upperSectionWidth !== undefined ? baseFurniture.mmToThreeUnits(upperSectionWidth) : baseFurniture.innerWidth,
               ]}
               sectionWidthDirections={[lowerSectionWidthDirection, upperSectionWidthDirection]}
-              textureUrl={spaceInfo.materialConfig?.doorTexture}
+              textureUrl={spaceInfo.materialConfig?.interiorTexture}
               panelGrainDirections={panelGrainDirections}
               lowerSectionTopOffsetMm={(moduleData?.id?.includes('entryway-h')) ? 85 : lowerSectionTopOffset}
               shelfFrontInsetMm={resolveShelfFrontInsetMm({
