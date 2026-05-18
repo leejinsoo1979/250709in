@@ -121,6 +121,8 @@ export const UltraModernLoginForm: React.FC = () => {
 
       if (result.error) {
         setError(result.error);
+      } else if ('needsEmailVerification' in result && result.needsEmailVerification) {
+        setError(result.message || '가입이 완료되었습니다. 이메일 인증 후 로그인해주세요.');
       } else if (result.user) {
         navigate('/');
       }

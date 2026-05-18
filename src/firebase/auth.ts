@@ -98,6 +98,21 @@ export const signInWithEmail = async (email: string, password: string) => {
     await setPersistence(auth, browserLocalPersistence);
 
     const userCredential = await signInWithEmailAndPassword(auth, email, password);
+    if (!userCredential.user.emailVerified) {
+      try {
+        await sendEmailVerification(userCredential.user, {
+          url: `${window.location.origin}/auth/verified`,
+          handleCodeInApp: false,
+        });
+      } catch (verificationError) {
+        console.warn('이메일 인증 재발송 실패:', verificationError);
+      }
+      await signOut(auth);
+      return {
+        user: null,
+        error: '이메일 인증이 필요합니다. 인증 메일을 확인한 뒤 다시 로그인해주세요.',
+      };
+    }
 
     // 팀 자동 생성 (최초 로그인 시)
     if (FLAGS.teamScope) {
@@ -225,7 +240,12 @@ export const signInWithGoogle = async () => {
 };
 
 // 이메일/비밀번호로 회원가입
-export const signUpWithEmail = async (email: string, password: string, displayName?: string) => {
+export const signUpWithEmail = async (
+  email: string,
+  password: string,
+  displayName?: string,
+  options?: { staySignedIn?: boolean }
+) => {
   try {
     // 인증 상태 유지 설정 (새로고침 시에도 로그인 유지)
     await setPersistence(auth, browserLocalPersistence);
@@ -242,20 +262,20 @@ export const signUpWithEmail = async (email: string, password: string, displayNa
       await ensurePersonalTeam(userCredential.user, '이메일 회원가입');
     }
 
-    // 환영메일 발송 (Resend, 비동기 - 실패해도 가입 흐름 막지 않음)
-    // 이메일 인증은 이미 가입 전 단계에서 6자리 코드로 완료됨
-    if (userCredential.user?.email) {
-      const userEmail = userCredential.user.email;
-      fetch('/api/send-welcome-email', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: userEmail }),
-      }).catch((welcomeErr) => {
-        console.warn('환영메일 발송 실패(가입은 성공):', welcomeErr);
-      });
+    await sendEmailVerification(userCredential.user, {
+      url: `${window.location.origin}/auth/verified`,
+      handleCodeInApp: false,
+    });
+    if (!options?.staySignedIn) {
+      await signOut(auth);
     }
 
-    return { user: userCredential.user, error: null };
+    return {
+      user: options?.staySignedIn ? userCredential.user : null,
+      error: null,
+      needsEmailVerification: true,
+      message: '가입이 완료되었습니다. 이메일 인증 링크를 확인한 뒤 로그인해주세요.',
+    };
   } catch (error) {
     const firebaseError = error as FirebaseError;
     return { user: null, error: getKoreanAuthError(firebaseError) };

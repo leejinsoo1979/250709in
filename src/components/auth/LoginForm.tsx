@@ -119,6 +119,8 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSuccess }) => {
 
       if (result.error) {
         setError(result.error);
+      } else if ('needsEmailVerification' in result && result.needsEmailVerification) {
+        setError(result.message || '가입이 완료되었습니다. 이메일 인증 후 로그인해주세요.');
       } else if (result.user) {
         console.log('✅ 인증 성공:', result.user.email);
         onSuccess?.();

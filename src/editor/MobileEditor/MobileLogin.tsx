@@ -46,6 +46,10 @@ const MobileLogin: React.FC = () => {
         setError(result.error);
         return;
       }
+      if ('needsEmailVerification' in result && result.needsEmailVerification) {
+        setError(result.message || '가입이 완료되었습니다. 이메일 인증 후 로그인해주세요.');
+        return;
+      }
       navigate(redirectTo, { replace: true });
     } catch (err: any) {
       setError(err?.message || '로그인에 실패했습니다.');

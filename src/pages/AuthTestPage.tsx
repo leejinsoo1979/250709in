@@ -101,6 +101,8 @@ const AuthTestPage: React.FC = () => {
       const result = await signUpWithEmail(email, password);
       if (result.error) {
         setMessage(`❌ 회원가입 실패: ${result.error}`);
+      } else if ('needsEmailVerification' in result && result.needsEmailVerification) {
+        setMessage(`✅ ${result.message || '가입이 완료되었습니다. 이메일 인증 후 로그인해주세요.'}`);
       } else {
         setMessage('✅ 회원가입 성공!');
       }

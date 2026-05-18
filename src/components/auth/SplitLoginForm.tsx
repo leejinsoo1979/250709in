@@ -22,6 +22,7 @@ export const SplitLoginForm: React.FC<SplitLoginFormProps> = ({ onSuccess, defau
   const navigate = useNavigate();
   const { user: authUser, loading: authLoading } = useAuth();
   const [error, setError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
   const [googleLoading, setGoogleLoading] = useState(false);
   const [loading, setLoading] = useState(false);
 
@@ -189,6 +190,7 @@ export const SplitLoginForm: React.FC<SplitLoginFormProps> = ({ onSuccess, defau
   }) => {
     setLoading(true);
     setError(null);
+    setNotice(null);
 
     try {
       const result = data.isSignUp
@@ -197,6 +199,8 @@ export const SplitLoginForm: React.FC<SplitLoginFormProps> = ({ onSuccess, defau
 
       if (result.error) {
         setError(result.error);
+      } else if ('needsEmailVerification' in result && result.needsEmailVerification) {
+        setNotice(result.message || '가입이 완료되었습니다. 이메일 인증 후 로그인해주세요.');
       } else if (result.user) {
         onSuccess?.();
         const path = await resolvePostLoginPath(result.user);
@@ -250,6 +254,7 @@ export const SplitLoginForm: React.FC<SplitLoginFormProps> = ({ onSuccess, defau
       onGoogleLogin={handleGoogleLogin}
       onNavigateHome={() => navigate('/')}
       error={error}
+      notice={notice}
       loading={loading}
       googleLoading={googleLoading}
       defaultSignUp={defaultSignUp}
