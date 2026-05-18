@@ -7957,7 +7957,7 @@ const Configurator: React.FC = () => {
           </button>
         )}
 
-        {/* 3D 모드 전용: 스캔 아이콘 — ?와 동일한 원형 + 같은 X 라인 */}
+        {/* 3D 모드 전용: 스캔 아이콘 — 활성 시 primary 배경 + 흰 아이콘 (?와 동일 패턴) */}
         {!isReadOnly && viewMode === '3D' && (
           <button
             className="canvas-icon-btn"
@@ -7966,32 +7966,48 @@ const Configurator: React.FC = () => {
             style={{
               position: 'absolute',
               right: isRightPanelOpen ? 'calc(var(--right-panel-width, 320px) + 12px)' : '12px',
-              top: '96px', // ? bottom(40) + 56px 간격 (안 가리도록 충분히 + 줄자와 동일 간격)
+              top: '96px',
               width: '28px',
               height: '28px',
               borderRadius: '50%',
-              border: '1.5px solid var(--theme-border, #d1d5db)',
-              background: 'transparent',
-              backgroundColor: 'transparent',
+              border: isLiveDimensionMode
+                ? '1.5px solid var(--theme-primary)'
+                : '1.5px solid var(--theme-border, #d1d5db)',
+              background: isLiveDimensionMode ? 'var(--theme-primary)' : 'transparent',
+              backgroundColor: isLiveDimensionMode ? 'var(--theme-primary)' : 'transparent',
               outline: 'none',
               padding: 0,
               margin: 0,
               cursor: 'pointer',
-              color: isLiveDimensionMode ? 'var(--theme-primary)' : 'var(--theme-text-muted, #6b7280)',
+              color: isLiveDimensionMode ? '#ffffff' : 'var(--theme-text-muted, #6b7280)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              boxShadow: 'none',
+              boxShadow: isLiveDimensionMode
+                ? '0 2px 8px color-mix(in srgb, var(--theme-primary) 35%, transparent)'
+                : 'none',
               appearance: 'none',
               WebkitAppearance: 'none',
-              zIndex: 10002,
-              transition: 'right 0.3s cubic-bezier(0.4, 0, 0.2, 1), color 0.2s, border-color 0.2s',
+              zIndex: 9999,
+              transition: 'right 0.3s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.15s, color 0.15s, border-color 0.15s, box-shadow 0.15s',
+            }}
+            onMouseEnter={(e) => {
+              if (!isLiveDimensionMode) {
+                (e.currentTarget as HTMLButtonElement).style.borderColor = 'var(--theme-primary)';
+                (e.currentTarget as HTMLButtonElement).style.color = 'var(--theme-primary)';
+              }
+            }}
+            onMouseLeave={(e) => {
+              if (!isLiveDimensionMode) {
+                (e.currentTarget as HTMLButtonElement).style.borderColor = 'var(--theme-border, #d1d5db)';
+                (e.currentTarget as HTMLButtonElement).style.color = 'var(--theme-text-muted, #6b7280)';
+              }
             }}
           >
             <TbZoomScan size={14} />
           </button>
         )}
-        {/* 3D 모드 전용: 줄자 아이콘 — ?와 동일한 원형 + 같은 X 라인 */}
+        {/* 3D 모드 전용: 줄자 아이콘 — 활성 시 primary 배경 + 흰 아이콘 */}
         {!isReadOnly && viewMode === '3D' && (
           <button
             className="canvas-icon-btn"
@@ -8000,26 +8016,42 @@ const Configurator: React.FC = () => {
             style={{
               position: 'absolute',
               right: isRightPanelOpen ? 'calc(var(--right-panel-width, 320px) + 12px)' : '12px',
-              top: '136px', // 스캔(96) + 28(h) + 12(간격) — 스캔과 동일 간격으로 가깝게
+              top: '136px',
               width: '28px',
               height: '28px',
               borderRadius: '50%',
-              border: '1.5px solid var(--theme-border, #d1d5db)',
-              background: 'transparent',
-              backgroundColor: 'transparent',
+              border: isTapeMeasureMode
+                ? '1.5px solid var(--theme-primary)'
+                : '1.5px solid var(--theme-border, #d1d5db)',
+              background: isTapeMeasureMode ? 'var(--theme-primary)' : 'transparent',
+              backgroundColor: isTapeMeasureMode ? 'var(--theme-primary)' : 'transparent',
               outline: 'none',
               padding: 0,
               margin: 0,
               cursor: 'pointer',
-              color: isTapeMeasureMode ? 'var(--theme-primary)' : 'var(--theme-text-muted, #6b7280)',
+              color: isTapeMeasureMode ? '#ffffff' : 'var(--theme-text-muted, #6b7280)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              boxShadow: 'none',
+              boxShadow: isTapeMeasureMode
+                ? '0 2px 8px color-mix(in srgb, var(--theme-primary) 35%, transparent)'
+                : 'none',
               appearance: 'none',
               WebkitAppearance: 'none',
-              zIndex: 10002,
-              transition: 'right 0.3s cubic-bezier(0.4, 0, 0.2, 1), color 0.2s, border-color 0.2s',
+              zIndex: 9999,
+              transition: 'right 0.3s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.15s, color 0.15s, border-color 0.15s, box-shadow 0.15s',
+            }}
+            onMouseEnter={(e) => {
+              if (!isTapeMeasureMode) {
+                (e.currentTarget as HTMLButtonElement).style.borderColor = 'var(--theme-primary)';
+                (e.currentTarget as HTMLButtonElement).style.color = 'var(--theme-primary)';
+              }
+            }}
+            onMouseLeave={(e) => {
+              if (!isTapeMeasureMode) {
+                (e.currentTarget as HTMLButtonElement).style.borderColor = 'var(--theme-border, #d1d5db)';
+                (e.currentTarget as HTMLButtonElement).style.color = 'var(--theme-text-muted, #6b7280)';
+              }
             }}
           >
             <RulerDimensionLine size={14} />
