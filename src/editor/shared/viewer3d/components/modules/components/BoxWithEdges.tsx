@@ -2331,7 +2331,17 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
       side: THREE.DoubleSide,
     });
     if (notchGeometry) {
-      // 어떤 BufferGeometry든 face별 normal을 직접 계산해서 +Z 방향 face만 엣지로 분리
+      // 패널 두께 축을 먼저 판정 — 그 축이 메인면, 나머지가 엣지 띠
+      const [tw, th, td] = safeArgs;
+      const tMin = Math.min(tw, th, td);
+      const thinAxis: 'x' | 'y' | 'z' = tw === tMin ? 'x' : th === tMin ? 'y' : 'z';
+      // 백패널은 뒤에 가려져 엣지 노출 없음
+      const isBackPanelOrSimilar = !!panelName && (
+        panelName.includes('백패널') ||
+        panelName.includes('뒷판') ||
+        panelName.includes('back')
+      );
+      if (!isDoorPanel && isBackPanelOrSimilar) return finalMaterial;
       const geom = notchGeometry as THREE.BufferGeometry;
       const pos = geom.attributes.position;
       if (!pos) return finalMaterial;
@@ -2358,9 +2368,11 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
         cb.subVectors(vC, vB);
         ab.subVectors(vA, vB);
         cb.cross(ab).normalize();
-        const isEdgeFace = isDoorPanel
-          ? (Math.abs(cb.z) < 0.7) // 도어: 메인 ±Z 제외 4면
-          : (cb.z > 0.7);          // 속장: +Z 방향 단면만 (앞쪽)
+        // 메인 면 = 두께 축 방향. 엣지 띠 = 두께 축이 아닌 방향
+        const absX = Math.abs(cb.x), absY = Math.abs(cb.y), absZ = Math.abs(cb.z);
+        const mainAxis: 'x' | 'y' | 'z' = absX >= absY && absX >= absZ ? 'x' : absY >= absZ ? 'y' : 'z';
+        const isMainFace = mainAxis === thinAxis;
+        const isEdgeFace = !isMainFace && (isDoorPanel ? true : cb.z > 0.7);
         if (isEdgeFace) {
           frontMask[f] = 1;
           frontCount++;
@@ -2406,9 +2418,28 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
       else if (isThinZ) { mats[0] = edgeMat; mats[1] = edgeMat; mats[2] = edgeMat; mats[3] = edgeMat; }
       else { mats[0] = edgeMat; mats[1] = edgeMat; mats[2] = edgeMat; mats[3] = edgeMat; }
     } else {
-      // 속장: 가구 앞쪽으로 보이는 노출 단면만 엣지밴딩 (+Z 1면)
-      // 좌/우/위/아래/뒷면은 다른 가구 부재로 가려져 보이지 않으므로 본체색 유지
-      mats[4] = edgeMat;
+      // 속장: 패널 두께(가장 짧은 축)만큼의 띠가 엣지. 메인 면은 본체 텍스처 유지
+      // 두께 축에 따라 노출되는 엣지 띠 위치가 다름:
+      //   - 두께=X(측판류): 앞쪽 노출 띠 = +Z (18 × h)
+      //   - 두께=Y(선반/상판/바닥): 앞쪽 노출 띠 = +Z (w × 18)
+      //   - 두께=Z(마이다 등 정면판): 둘레 4면이 띠(±X, ±Y). 백패널은 뒤편이라 적용 제외
+      const isBackPanelOrSimilar = !!panelName && (
+        panelName.includes('백패널') ||
+        panelName.includes('뒷판') ||
+        panelName.includes('back')
+      );
+      if (isThinX) {
+        mats[4] = edgeMat;
+      } else if (isThinY) {
+        mats[4] = edgeMat;
+      } else if (isThinZ) {
+        if (!isBackPanelOrSimilar) {
+          mats[0] = edgeMat;
+          mats[1] = edgeMat;
+          mats[2] = edgeMat;
+          mats[3] = edgeMat;
+        }
+      }
     }
     return mats;
   }, [finalMaterial, edgeBandingColor, notchGeometry, safeArgs, viewMode, panelName]);
