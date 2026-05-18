@@ -1429,7 +1429,7 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
     };
     const texSrc = getTextureSrc(baseMaterial);
     if (texSrc && /MELATONE_(4319|8832)/i.test(texSrc)) {
-      return '#b0b0b0';
+      return '#888888';
     }
     // 인조대리석 상판은 연한 그레이 윤곽선
     if (panelName && panelName.includes('인조대리석')) {
