@@ -1938,15 +1938,21 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
     const halfW = width / 2;
     const halfH = height / 2;
     const halfD = depth / 2;
+    const isFrontView = view2DDirection === 'front';
+    const hasOnlyFaceGrooves = hasFaceGrooves && !notch && !(notches && notches.length > 0) && !bottomRebate && !cornerNotch && !backCenterNotch;
+    const isCabinetSidePanelFaceGroove = hasOnlyFaceGrooves &&
+      !!panelName &&
+      !panelName.includes('서랍') &&
+      (panelName.includes('좌측') || panelName.includes('우측') || panelName.includes('측판'));
 
     const faceGroovesSpanFullDepth = normalizedFaceGrooves.length > 0 && normalizedFaceGrooves.every((groove) =>
       groove.z0 <= -halfD + 0.00001 && groove.z1 >= halfD - 0.00001
     );
     const hideFaceGrooveEdgesInTop2D = view2DDirection === 'top' && hasFaceGrooves;
     const showFaceGrooveOpeningsInTop2D = hideFaceGrooveEdgesInTop2D && !faceGroovesSpanFullDepth;
-    const openFaceGrooveMouthsInFront2D = view2DDirection === 'front' && hasFaceGrooves && faceGroovesSpanFullDepth;
+    const openFaceGrooveMouthsInFront2D = false;
     // notch가 있으면 L자형 엣지 사용. 탑뷰에서는 백패널/서랍 홈가공 내부선만 제외해 외곽선은 유지한다.
-    const lines: [number, number, number][][] = hasAnyNotch
+    const lines: [number, number, number][][] = hasAnyNotch && !(isFrontView && isCabinetSidePanelFaceGroove)
       ? getNotchEdgeLines({
         includeFaceGrooveEdges: !(hideFaceGrooveEdgesInTop2D || openFaceGrooveMouthsInFront2D),
         openFaceGrooveMouthsInTopView: showFaceGrooveOpeningsInTop2D,
@@ -1956,13 +1962,9 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
     if (showFaceGrooveOpeningsInTop2D) {
       lines.push(...buildTopViewFaceGrooveEdgeLines(normalizedFaceGrooves));
     }
-    if (openFaceGrooveMouthsInFront2D) {
-      lines.push(...buildFrontViewFaceGrooveEdgeLines(normalizedFaceGrooves));
-    }
 
-    if (!hasAnyNotch) {
+    if (!hasAnyNotch || (isFrontView && isCabinetSidePanelFaceGroove)) {
     // 입면도(front)에서는 앞면 사각형만 표시 (뒷면·연결 엣지 제거 → 불필요한 중앙선 방지)
-    const isFrontView = view2DDirection === 'front';
 
     // 앞면 사각형
     if (!hideTopEdge) lines.push([[-halfW, halfH, halfD], [halfW, halfH, halfD]]);
@@ -2348,8 +2350,14 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
       else if (isThinZ) { mats[0] = edgeMat; mats[1] = edgeMat; mats[2] = edgeMat; mats[3] = edgeMat; }
       else { mats[0] = edgeMat; mats[1] = edgeMat; mats[2] = edgeMat; mats[3] = edgeMat; }
     } else {
-      // 속장: 가구 앞쪽으로 보이는 +Z 단면 한 면에만 엣지밴딩
-      mats[4] = edgeMat;
+      // 속장: 두께 단면(엣지) 4면에 엣지밴딩
+      // 두께 축(가장 짧은 차원) 외의 4면이 단면 = 엣지 띠
+      // BoxGeometry face order: [+X, -X, +Y, -Y, +Z, -Z]
+      // 메인 면(가장 큰 두 면)은 두께 축의 ±면. 나머지 4면이 두께 띠 = 엣지
+      if (isThinX) { mats[2] = edgeMat; mats[3] = edgeMat; mats[4] = edgeMat; mats[5] = edgeMat; }
+      else if (isThinY) { mats[0] = edgeMat; mats[1] = edgeMat; mats[4] = edgeMat; mats[5] = edgeMat; }
+      else if (isThinZ) { mats[0] = edgeMat; mats[1] = edgeMat; mats[2] = edgeMat; mats[3] = edgeMat; }
+      else { mats[0] = edgeMat; mats[1] = edgeMat; mats[2] = edgeMat; mats[3] = edgeMat; }
     }
     return mats;
   }, [finalMaterial, edgeBandingColor, notchGeometry, safeArgs, viewMode, panelName]);
