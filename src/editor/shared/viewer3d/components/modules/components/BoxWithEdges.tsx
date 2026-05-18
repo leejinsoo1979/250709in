@@ -1944,13 +1944,18 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
       !!panelName &&
       !panelName.includes('서랍') &&
       (panelName.includes('좌측') || panelName.includes('우측') || panelName.includes('측판'));
+    const isDrawerFaceGroovePanel = hasOnlyFaceGrooves &&
+      isFrontView &&
+      !!panelName &&
+      panelName.includes('서랍') &&
+      (panelName.includes('좌측') || panelName.includes('우측') || panelName.includes('측판'));
 
     const faceGroovesSpanFullDepth = normalizedFaceGrooves.length > 0 && normalizedFaceGrooves.every((groove) =>
       groove.z0 <= -halfD + 0.00001 && groove.z1 >= halfD - 0.00001
     );
     const hideFaceGrooveEdgesInTop2D = view2DDirection === 'top' && hasFaceGrooves;
     const showFaceGrooveOpeningsInTop2D = hideFaceGrooveEdgesInTop2D && !faceGroovesSpanFullDepth;
-    const openFaceGrooveMouthsInFront2D = false;
+    const openFaceGrooveMouthsInFront2D = isDrawerFaceGroovePanel && faceGroovesSpanFullDepth;
     // notch가 있으면 L자형 엣지 사용. 탑뷰에서는 백패널/서랍 홈가공 내부선만 제외해 외곽선은 유지한다.
     const lines: [number, number, number][][] = hasAnyNotch && !(isFrontView && isCabinetSidePanelFaceGroove)
       ? getNotchEdgeLines({
@@ -1961,6 +1966,9 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
       : [];
     if (showFaceGrooveOpeningsInTop2D) {
       lines.push(...buildTopViewFaceGrooveEdgeLines(normalizedFaceGrooves));
+    }
+    if (openFaceGrooveMouthsInFront2D) {
+      lines.push(...buildFrontViewFaceGrooveEdgeLines(normalizedFaceGrooves));
     }
 
     if (!hasAnyNotch || (isFrontView && isCabinetSidePanelFaceGroove)) {
@@ -2323,18 +2331,64 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
       side: THREE.DoubleSide,
     });
     if (notchGeometry) {
-      // ExtrudeGeometry: group 0=옆면(extrude 측면, 두께 단면 = 엣지), group 1=캡(메인 면)
-      // 속장이든 도어든 측면 전체가 두께 단면이므로 엣지 적용
-      const groups = (notchGeometry as any).groups as { materialIndex?: number }[] | undefined;
-      if (groups && groups.length >= 2) {
-        const maxIdx = groups.reduce((m, g) => Math.max(m, g.materialIndex ?? 0), 0);
-        const mats: THREE.Material[] = [];
-        for (let i = 0; i <= maxIdx; i++) {
-          mats[i] = i === 0 ? edgeMat : main;
+      // ExtrudeGeometry: 측면 전체에 적용하면 뒷/위/아래까지 칠해짐
+      // face별로 normal Z를 검사 → +Z 방향 face만 분리해서 엣지 그룹으로 설정
+      const geom = notchGeometry as THREE.BufferGeometry;
+      const pos = geom.attributes.position;
+      const indexAttr = geom.index;
+      if (!pos || !indexAttr) return finalMaterial;
+      const vertCount = indexAttr.count;
+      const faceCount = vertCount / 3;
+      const frontMask = new Uint8Array(faceCount);
+      const arr = pos.array as Float32Array;
+      const idxArr = indexAttr.array as ArrayLike<number>;
+      const vA = new THREE.Vector3(), vB = new THREE.Vector3(), vC = new THREE.Vector3();
+      const cb = new THREE.Vector3(), ab = new THREE.Vector3();
+      let frontCount = 0;
+      for (let f = 0; f < faceCount; f++) {
+        const ia = idxArr[f * 3];
+        const ib = idxArr[f * 3 + 1];
+        const ic = idxArr[f * 3 + 2];
+        vA.set(arr[ia * 3], arr[ia * 3 + 1], arr[ia * 3 + 2]);
+        vB.set(arr[ib * 3], arr[ib * 3 + 1], arr[ib * 3 + 2]);
+        vC.set(arr[ic * 3], arr[ic * 3 + 1], arr[ic * 3 + 2]);
+        cb.subVectors(vC, vB);
+        ab.subVectors(vA, vB);
+        cb.cross(ab).normalize();
+        // 도어: 4면 모두 엣지 → ±Z(메인면, |nz|>0.7) 제외 모든 face
+        // 속장: 앞쪽으로 보이는 +Z 방향 단면만 (nz > 0.7)
+        const isEdgeFace = isDoorPanel
+          ? (Math.abs(cb.z) < 0.7)
+          : (cb.z > 0.7);
+        if (isEdgeFace) {
+          frontMask[f] = 1;
+          frontCount++;
         }
-        return mats;
       }
-      return finalMaterial;
+      if (frontCount === 0) return finalMaterial;
+      // index 재배열: 엣지 face들을 앞쪽으로, 본체 face들을 뒤쪽으로
+      const newIndex = new Uint32Array(vertCount);
+      let cursor = 0;
+      for (let f = 0; f < faceCount; f++) {
+        if (frontMask[f] === 1) {
+          newIndex[cursor++] = idxArr[f * 3];
+          newIndex[cursor++] = idxArr[f * 3 + 1];
+          newIndex[cursor++] = idxArr[f * 3 + 2];
+        }
+      }
+      const edgeIdxCount = cursor;
+      for (let f = 0; f < faceCount; f++) {
+        if (frontMask[f] === 0) {
+          newIndex[cursor++] = idxArr[f * 3];
+          newIndex[cursor++] = idxArr[f * 3 + 1];
+          newIndex[cursor++] = idxArr[f * 3 + 2];
+        }
+      }
+      geom.setIndex(new THREE.BufferAttribute(newIndex, 1));
+      geom.clearGroups();
+      geom.addGroup(0, edgeIdxCount, 0);
+      geom.addGroup(edgeIdxCount, vertCount - edgeIdxCount, 1);
+      return [edgeMat, main];
     }
     const [w, h, d] = safeArgs;
     const minDim = Math.min(w, h, d);
