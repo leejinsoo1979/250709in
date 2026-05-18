@@ -1825,16 +1825,17 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
       groove.z0 <= -halfD + 0.00001 && groove.z1 >= halfD - 0.00001
     );
     const hideFaceGrooveEdgesInTop2D = view2DDirection === 'top' && hasFaceGrooves;
+    const showFaceGrooveOpeningsInTop2D = hideFaceGrooveEdgesInTop2D && !faceGroovesSpanFullDepth;
     const openFaceGrooveMouthsInFront2D = view2DDirection === 'front' && hasFaceGrooves && faceGroovesSpanFullDepth;
     // notch가 있으면 L자형 엣지 사용. 탑뷰에서는 백패널/서랍 홈가공 내부선만 제외해 외곽선은 유지한다.
     const lines: [number, number, number][][] = hasAnyNotch
       ? getNotchEdgeLines({
         includeFaceGrooveEdges: !(hideFaceGrooveEdgesInTop2D || openFaceGrooveMouthsInFront2D),
-        openFaceGrooveMouthsInTopView: hideFaceGrooveEdgesInTop2D,
+        openFaceGrooveMouthsInTopView: showFaceGrooveOpeningsInTop2D,
         openFaceGrooveMouthsInFrontView: openFaceGrooveMouthsInFront2D,
       })
       : [];
-    if (hideFaceGrooveEdgesInTop2D) {
+    if (showFaceGrooveOpeningsInTop2D) {
       lines.push(...buildTopViewFaceGrooveEdgeLines(normalizedFaceGrooves));
     }
     if (openFaceGrooveMouthsInFront2D) {
