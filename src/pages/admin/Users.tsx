@@ -6,7 +6,7 @@ import { useAuth } from '@/auth/AuthProvider';
 import { SearchIcon } from '@/components/common/Icons';
 import { getAllAdmins, isSuperAdmin } from '@/firebase/admins';
 import { updateUserPlan, PLANS, PlanType } from '@/firebase/plans';
-import { adminDeleteUserData } from '@/firebase/userProfiles';
+import { adminDeleteAuthUserByEmail, adminDeleteUserData } from '@/firebase/userProfiles';
 import { getAllUserUsageStats, clearUserUsageStatsCache, UserUsageStats } from '@/firebase/userUsageStats';
 import { GiImperialCrown } from 'react-icons/gi';
 import { FiUser } from 'react-icons/fi';
@@ -59,6 +59,8 @@ const Users = () => {
     confirmInput: string;
     submitting: boolean;
   }>({ show: false, userId: '', userEmail: '', userName: '', confirmInput: '', submitting: false });
+  const [authCleanupEmail, setAuthCleanupEmail] = useState('');
+  const [authCleanupLoading, setAuthCleanupLoading] = useState(false);
 
   const isAdminUser = user && (isSuperAdmin(user.email) || getAllAdmins().then(admins => admins.has(user.uid)));
 
@@ -229,7 +231,7 @@ const Users = () => {
 
     setDeleteDialog((prev) => ({ ...prev, submitting: true }));
     try {
-      const { error, deletedCounts } = await adminDeleteUserData(userId);
+      const { error, deletedCounts } = await adminDeleteUserData(userId, userEmail);
       if (error) {
         alert('❌ 회원 삭제 실패: ' + error);
         setDeleteDialog((prev) => ({ ...prev, submitting: false }));
@@ -251,6 +253,37 @@ const Users = () => {
     } catch (e) {
       alert('❌ 회원 삭제 중 예외 발생: ' + (e as Error).message);
       setDeleteDialog((prev) => ({ ...prev, submitting: false }));
+    }
+  };
+
+  const handleAuthCleanupByEmail = async () => {
+    const email = authCleanupEmail.trim().toLowerCase();
+    if (!email) {
+      alert('정리할 이메일을 입력해주세요.');
+      return;
+    }
+    const confirmed = window.confirm(
+      `${email} Firebase Auth 계정을 삭제합니다.\nFirestore 목록에 없어도 Auth에 남은 계정을 정리합니다.`
+    );
+    if (!confirmed) return;
+
+    setAuthCleanupLoading(true);
+    try {
+      const { error, uid, message } = await adminDeleteAuthUserByEmail(email);
+      if (error) {
+        alert('❌ Auth 계정 정리 실패: ' + error);
+        return;
+      }
+      alert(
+        `✅ Auth 계정 정리 완료\n` +
+        `- 이메일: ${email}\n` +
+        `- UID: ${uid || '-'}\n` +
+        `${message ? `- ${message}\n` : ''}` +
+        `이제 동일 이메일로 재가입할 수 있습니다.`
+      );
+      setAuthCleanupEmail('');
+    } finally {
+      setAuthCleanupLoading(false);
     }
   };
 
@@ -346,6 +379,27 @@ const Users = () => {
               onChange={(e) => setSearchQuery(e.target.value)}
               className={styles.searchInput}
             />
+          </div>
+        </div>
+
+        <div className={styles.filterGroup}>
+          <label className={styles.filterLabel}>Auth 계정 정리</label>
+          <div className={styles.authCleanupBox}>
+            <input
+              type="email"
+              placeholder="잔존 Auth 이메일"
+              value={authCleanupEmail}
+              onChange={(e) => setAuthCleanupEmail(e.target.value)}
+              className={styles.authCleanupInput}
+            />
+            <button
+              type="button"
+              onClick={handleAuthCleanupByEmail}
+              disabled={authCleanupLoading || !authCleanupEmail.trim()}
+              className={styles.authCleanupButton}
+            >
+              {authCleanupLoading ? '정리 중' : 'Auth 삭제'}
+            </button>
           </div>
         </div>
 

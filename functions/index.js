@@ -180,6 +180,62 @@ exports.adminDeleteAuthUser = onCall(
 );
 
 /**
+ * 관리자 회원 Auth 계정 이메일 기준 삭제
+ *
+ * Firestore 사용자 문서가 이미 삭제됐거나 생성되지 않은 Auth-only 계정도
+ * 동일 이메일 재가입을 막을 수 있으므로, 관리자 화면에서 이메일로 정리한다.
+ */
+exports.adminDeleteAuthUserByEmail = onCall(
+  { region: 'asia-northeast3' },
+  async (request) => {
+    const callerUid = request.auth?.uid;
+    const callerEmail = String(request.auth?.token?.email || '').toLowerCase();
+    if (!callerUid) {
+      throw new HttpsError('unauthenticated', '로그인이 필요합니다.');
+    }
+
+    try {
+      const isSuperAdmin = callerEmail === 'sbbc212@gmail.com';
+      const adminDoc = await admin.firestore().doc(`admins/${callerUid}`).get();
+      if (!isSuperAdmin && !adminDoc.exists) {
+        throw new HttpsError('permission-denied', '관리자 권한이 필요합니다.');
+      }
+    } catch (e) {
+      if (e instanceof HttpsError) throw e;
+      console.error('관리자 권한 확인 실패:', e);
+      throw new HttpsError('internal', '관리자 권한 확인 중 오류가 발생했습니다.');
+    }
+
+    const targetEmail = String(request.data?.targetEmail || '').trim().toLowerCase();
+    if (!targetEmail) {
+      throw new HttpsError('invalid-argument', '대상 이메일이 필요합니다.');
+    }
+    if (targetEmail === callerEmail) {
+      throw new HttpsError('failed-precondition', '본인 계정은 삭제할 수 없습니다.');
+    }
+
+    try {
+      const targetUser = await admin.auth().getUserByEmail(targetEmail);
+      if (targetUser.uid === callerUid) {
+        throw new HttpsError('failed-precondition', '본인 계정은 삭제할 수 없습니다.');
+      }
+      await admin.auth().deleteUser(targetUser.uid);
+      console.log('✅ Auth 계정 이메일 삭제 완료:', targetEmail, targetUser.uid, '(요청자:', callerUid, ')');
+      return { ok: true, uid: targetUser.uid, email: targetEmail };
+    } catch (err) {
+      const code = err?.code;
+      if (code === 'auth/user-not-found') {
+        console.log('Auth 계정 이미 없음:', targetEmail);
+        return { ok: true, email: targetEmail, message: 'Auth 계정이 이미 없습니다.' };
+      }
+      if (err instanceof HttpsError) throw err;
+      console.error('❌ Auth 계정 이메일 삭제 실패:', err);
+      throw new HttpsError('internal', `Auth 계정 삭제 실패: ${err?.message || code || 'unknown'}`);
+    }
+  }
+);
+
+/**
  * [관리자 전용] 기업회원 신청 처리 — status + plan을 트랜잭션으로 동시 변경
  *
  * 입력: { inquiryId: string, action: 'approve'|'hold'|'reject'|'pending', reason?: string }

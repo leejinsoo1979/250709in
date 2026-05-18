@@ -134,7 +134,7 @@ function getKoreanAuthError(error: FirebaseError): string {
     case 'auth/weak-password':
       return '비밀번호는 6자 이상이어야 합니다.';
     case 'auth/operation-not-allowed':
-      return '이메일/비밀번호 로그인이 비활성화되어 있습니다. 관리자에게 문의하세요.';
+      return 'Firebase 이메일 링크 인증이 비활성화되어 있습니다. Firebase Authentication의 Email/Password와 Email link 설정을 확인해주세요.';
     // 로그인 에러
     case 'auth/user-not-found':
       return '등록되지 않은 이메일 주소입니다.';

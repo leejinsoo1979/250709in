@@ -427,14 +427,12 @@ export const deleteUserProfile = async (): Promise<{ error: string | null }> => 
  * [관리자 전용] 임의 사용자의 Firestore 데이터 일괄 삭제
  *
  * 클라이언트 SDK는 다른 사용자의 Firebase Auth 계정을 직접 삭제할 수 없습니다.
- * 따라서 이 함수는 Firestore 데이터(users / userProfiles / admins / projects)만 삭제하고,
- * 동일 이메일로 재가입(특히 기업회원 재가입) 가능하도록 처리합니다.
- *
- * Auth 계정 자체 삭제가 필요하면 Firebase Console에서 수동 삭제하거나
- * Cloud Functions(Admin SDK)로 별도 처리해야 합니다.
+ * Firestore 데이터(users / userProfiles / admins / projects)와 Firebase Auth 계정을 함께 삭제하고,
+ * 동일 이메일로 재가입 가능하도록 처리합니다.
  */
 export const adminDeleteUserData = async (
-  targetUid: string
+  targetUid: string,
+  targetEmail?: string
 ): Promise<{ error: string | null; deletedCounts?: { projects: number } }> => {
   try {
     if (!targetUid) {
@@ -489,12 +487,32 @@ export const adminDeleteUserData = async (
       const result = await fn({ targetUid });
       console.log('✅ Auth 계정 삭제 완료:', result.data);
     } catch (e: any) {
-      console.warn('Auth 계정 삭제 실패(Cloud Function):', e?.message || e);
-      // Cloud Function 미배포 또는 호출 실패 시 — Firestore 삭제는 성공이므로 경고만
-      return {
-        error: null,
-        deletedCounts: { projects: projectCount },
-      };
+      const uidError = e?.message || String(e);
+      console.warn('UID 기준 Auth 계정 삭제 실패(Cloud Function):', uidError);
+
+      if (targetEmail) {
+        try {
+          const functions = getFunctions(app, 'asia-northeast3');
+          const fnByEmail = httpsCallable<
+            { targetEmail: string },
+            { ok: boolean; uid?: string; email?: string; message?: string }
+          >(functions, 'adminDeleteAuthUserByEmail');
+          const result = await fnByEmail({ targetEmail });
+          console.log('✅ 이메일 기준 Auth 계정 삭제 완료:', result.data);
+        } catch (emailError: any) {
+          const emailMessage = emailError?.message || String(emailError);
+          console.warn('이메일 기준 Auth 계정 삭제 실패(Cloud Function):', emailMessage);
+          return {
+            error: `Firestore 데이터는 삭제됐지만 Firebase Auth 계정 삭제에 실패했습니다. 같은 이메일 재가입이 막힐 수 있습니다. (${emailMessage})`,
+            deletedCounts: { projects: projectCount },
+          };
+        }
+      } else {
+        return {
+          error: `Firestore 데이터는 삭제됐지만 Firebase Auth 계정 삭제에 실패했습니다. 같은 이메일 재가입이 막힐 수 있습니다. (${uidError})`,
+          deletedCounts: { projects: projectCount },
+        };
+      }
     }
 
     console.log('✅ 관리자 회원 데이터 삭제 완료:', targetUid, '/ 삭제 프로젝트:', projectCount);
@@ -502,6 +520,33 @@ export const adminDeleteUserData = async (
   } catch (error) {
     console.error('❌ 관리자 회원 삭제 실패:', error);
     return { error: '회원 삭제 중 오류가 발생했습니다.' };
+  }
+};
+
+export const adminDeleteAuthUserByEmail = async (
+  targetEmail: string
+): Promise<{ error: string | null; uid?: string; message?: string }> => {
+  try {
+    const normalizedEmail = targetEmail.trim().toLowerCase();
+    if (!normalizedEmail) {
+      return { error: '대상 이메일이 없습니다.' };
+    }
+
+    const functions = getFunctions(app, 'asia-northeast3');
+    const fn = httpsCallable<
+      { targetEmail: string },
+      { ok: boolean; uid?: string; email?: string; message?: string }
+    >(functions, 'adminDeleteAuthUserByEmail');
+    const result = await fn({ targetEmail: normalizedEmail });
+    return {
+      error: null,
+      uid: result.data.uid,
+      message: result.data.message,
+    };
+  } catch (error) {
+    console.error('❌ 이메일 기준 Auth 계정 삭제 실패:', error);
+    const e = error as { message?: string };
+    return { error: e?.message || 'Firebase Auth 계정 삭제에 실패했습니다.' };
   }
 };
 
