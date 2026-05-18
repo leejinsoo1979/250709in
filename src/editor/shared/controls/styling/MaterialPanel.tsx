@@ -267,9 +267,10 @@ const MaterialPanel: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => {
-                      const newConfig = { ...materialConfig };
-                      delete (newConfig as any)[edgeKey];
-                      setSpaceInfo({ materialConfig: newConfig });
+                      // store가 materialConfig를 deep merge하므로 명시적으로 undefined를 보내야 키가 제거됨
+                      setSpaceInfo({
+                        materialConfig: { ...materialConfig, [edgeKey]: undefined as any },
+                      });
                     }}
                     style={{
                       marginLeft: 'auto',
