@@ -577,12 +577,26 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
 
     const handleKeyDown = (e: KeyboardEvent) => {
       canvasLog('⌨️ 키 눌림:', e.code, e.keyCode);
+      const target = e.target as HTMLElement | null;
+      const isTextInput = !!target && (
+        target.tagName === 'INPUT' ||
+        target.tagName === 'TEXTAREA' ||
+        target.tagName === 'SELECT' ||
+        target.isContentEditable
+      );
+
+      if (!isTextInput && !e.ctrlKey && !e.metaKey && !e.altKey && (e.code === 'KeyK' || e.key.toLowerCase() === 'k')) {
+        e.preventDefault();
+        e.stopPropagation();
+        e.stopImmediatePropagation();
+        useUIStore.getState().toggleTransparentMode();
+        return;
+      }
 
       // 스페이스바 (32) 또는 Space 키
       if (e.code === 'Space' || e.keyCode === 32) {
         // 입력 중이면 무시 (텍스트 입력 방해 방지)
-        const tag = (e.target as HTMLElement)?.tagName;
-        if (tag === 'INPUT' || tag === 'TEXTAREA' || (e.target as HTMLElement)?.isContentEditable) {
+        if (isTextInput) {
           return;
         }
         e.preventDefault(); // 페이지 스크롤 방지

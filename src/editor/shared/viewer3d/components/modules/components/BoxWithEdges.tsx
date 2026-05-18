@@ -806,7 +806,7 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
   ], [args[0], args[1], args[2]]);
 
   const { viewMode, plainMaterial: isPlainMaterial } = useSpace3DView();
-  const { view2DDirection, shadowEnabled, edgeOutlineEnabled, isLiveDimensionMode, isTapeMeasureMode, liveDimensionSelectedKey, setLiveDimensionSelectedKey, panelSimulationPhase, panelSimulationRevision, panelSimulationLayouts } = useUIStore(); // view2DDirection, shadowEnabled, edgeOutlineEnabled 추가
+  const { view2DDirection, shadowEnabled, edgeOutlineEnabled, isTransparentMode, isLiveDimensionMode, isTapeMeasureMode, liveDimensionSelectedKey, setLiveDimensionSelectedKey, panelSimulationPhase, panelSimulationRevision, panelSimulationLayouts } = useUIStore(); // view2DDirection, shadowEnabled, edgeOutlineEnabled 추가
   const { theme } = useViewerTheme();
   const { view2DTheme } = useUIStore();
   const { theme: appTheme } = useTheme();
@@ -1077,6 +1077,26 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
 
   // 드래그/편집 고스트 효과 + 2D 솔리드 모드 투명 처리
   const processedMaterial = React.useMemo(() => {
+    if (
+      viewMode === '3D' &&
+      isTransparentMode &&
+      (
+        baseMaterial instanceof THREE.MeshStandardMaterial ||
+        baseMaterial instanceof THREE.MeshBasicMaterial ||
+        baseMaterial instanceof THREE.MeshLambertMaterial ||
+        baseMaterial instanceof THREE.MeshPhongMaterial
+      )
+    ) {
+      const transparentMaterial = baseMaterial.clone();
+      transparentMaterial.transparent = true;
+      transparentMaterial.opacity = 0.22;
+      transparentMaterial.depthWrite = false;
+      transparentMaterial.depthTest = true;
+      transparentMaterial.side = THREE.DoubleSide;
+      transparentMaterial.needsUpdate = true;
+      return transparentMaterial;
+    }
+
     // MeshBasicMaterial인 경우
     // - 패널 하이라이팅용 highlightMaterial은 그대로 사용 (투명 처리 안 함)
     // - 프레임 형광색 등도 그대로 사용
@@ -1168,7 +1188,7 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
       }
     }
     return baseMaterial;
-  }, [baseMaterial, isDragging, effectiveEditMode, effectiveSelected, viewMode, effectiveRenderMode, isClothingRod, panelName, view2DDirection, view2DTheme, liveDimensionInspecting, themePrimaryColor]);
+  }, [baseMaterial, isDragging, effectiveEditMode, effectiveSelected, viewMode, effectiveRenderMode, isClothingRod, panelName, view2DDirection, view2DTheme, liveDimensionInspecting, themePrimaryColor, isTransparentMode]);
 
   // activePanelGrainDirections를 JSON 문자열로 변환하여 값 변경 감지
   const activePanelGrainDirectionsStr = activePanelGrainDirections ? JSON.stringify(activePanelGrainDirections) : '';

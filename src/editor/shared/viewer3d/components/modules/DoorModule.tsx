@@ -491,7 +491,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   const floatHeightSource = storeFloatHeight !== undefined ? storeFloatHeight : (propFloatHeight ?? 0);
   const floatHeight = placementType === 'float' ? floatHeightSource : 0;
   // Store에서 재질 설정과 도어 상태 가져오기
-  const { doorsOpen, view2DDirection, view2DTheme, isIndividualDoorOpen, toggleIndividualDoor, selectedSlotIndex, showDimensions, highlightedDoorGap, hingePositionEditModeModuleId, panelSimulationPhase, panelSimulationViewBackup } = useUIStore() as any;
+  const { doorsOpen, view2DDirection, view2DTheme, isIndividualDoorOpen, toggleIndividualDoor, selectedSlotIndex, showDimensions, highlightedDoorGap, hingePositionEditModeModuleId, panelSimulationPhase, panelSimulationViewBackup, isTransparentMode } = useUIStore() as any;
   const { renderMode, viewMode, plainMaterial: isPlainMaterial } = useSpace3DView(); // context에서 renderMode와 viewMode 가져오기
   const { gl } = useThree(); // Three.js renderer 가져오기
   const { dimensionColor } = useDimensionColor(); // 치수 색상
@@ -654,6 +654,15 @@ const DoorModule: React.FC<DoorModuleProps> = ({
           mat.color.set(getThemeColor());
           mat.depthWrite = false;
           mat.side = THREE.DoubleSide;
+        } else if (viewMode === '3D' && isTransparentMode) {
+          mat.transparent = true;
+          mat.opacity = 0.22;
+          mat.depthWrite = false;
+          mat.depthTest = true;
+          mat.side = THREE.DoubleSide;
+          if (!mat.map) {
+            mat.color.set(doorColor);
+          }
         } else if (viewMode === '2D') {
           if (view2DDirection === 'front') {
             // 정면뷰: early return으로 처리되므로 여기는 도달하지 않음
@@ -691,7 +700,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
         mat.needsUpdate = true;
       }
     });
-  }, [doorColor, isDragging, isEditMode, viewMode, renderMode, view2DDirection, view2DTheme, isPlainMaterial]);
+  }, [doorColor, isDragging, isEditMode, viewMode, renderMode, view2DDirection, view2DTheme, isPlainMaterial, isTransparentMode]);
 
   // 편집/드래그/2D 모드일 때 텍스처 제거
   useEffect(() => {
