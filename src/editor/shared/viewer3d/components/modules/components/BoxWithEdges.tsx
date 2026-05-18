@@ -2406,14 +2406,9 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
       else if (isThinZ) { mats[0] = edgeMat; mats[1] = edgeMat; mats[2] = edgeMat; mats[3] = edgeMat; }
       else { mats[0] = edgeMat; mats[1] = edgeMat; mats[2] = edgeMat; mats[3] = edgeMat; }
     } else {
-      // 속장: 두께 단면(엣지) 4면에 엣지밴딩
-      // 두께 축(가장 짧은 차원) 외의 4면이 단면 = 엣지 띠
-      // BoxGeometry face order: [+X, -X, +Y, -Y, +Z, -Z]
-      // 메인 면(가장 큰 두 면)은 두께 축의 ±면. 나머지 4면이 두께 띠 = 엣지
-      if (isThinX) { mats[2] = edgeMat; mats[3] = edgeMat; mats[4] = edgeMat; mats[5] = edgeMat; }
-      else if (isThinY) { mats[0] = edgeMat; mats[1] = edgeMat; mats[4] = edgeMat; mats[5] = edgeMat; }
-      else if (isThinZ) { mats[0] = edgeMat; mats[1] = edgeMat; mats[2] = edgeMat; mats[3] = edgeMat; }
-      else { mats[0] = edgeMat; mats[1] = edgeMat; mats[2] = edgeMat; mats[3] = edgeMat; }
+      // 속장: 가구 앞쪽으로 보이는 노출 단면만 엣지밴딩 (+Z 1면)
+      // 좌/우/위/아래/뒷면은 다른 가구 부재로 가려져 보이지 않으므로 본체색 유지
+      mats[4] = edgeMat;
     }
     return mats;
   }, [finalMaterial, edgeBandingColor, notchGeometry, safeArgs, viewMode, panelName]);
