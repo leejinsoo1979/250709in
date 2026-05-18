@@ -75,6 +75,7 @@
     "react-konva": "^18.2.10",
     "react-router-dom": "^7.6.0",
     "recharts": "^3.4.1",
+    "resend": "^6.12.3",
     "svg2pdf.js": "^2.5.0",
     "tailwind-merge": "^3.4.0",
     "three": "^0.178.0",

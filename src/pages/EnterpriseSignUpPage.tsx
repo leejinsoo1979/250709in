@@ -14,6 +14,7 @@ import {
   getDigitsOnly,
   isValidBusinessNumberFormat,
 } from '@/utils/businessNumber';
+import { sendVerificationCode, verifyCode as verifyEmailCode } from '@/auth/emailVerification';
 
 interface EnterpriseForm {
   companyName: string;
@@ -58,6 +59,68 @@ export default function EnterpriseSignUpPage() {
 
   // 소셜 로그인 사용자가 비밀번호도 설정할지 선택 (기본: 미설정 = 구글 로그인만 사용)
   const [setExtraPassword, setSetExtraPassword] = useState(false);
+
+  // ===== 이메일 인증 (소셜 로그인 X일 때만 사용) =====
+  const [emailVerified, setEmailVerified] = useState(false);
+  const [verifiedEmail, setVerifiedEmail] = useState('');
+  const [codeStage, setCodeStage] = useState<'idle' | 'sent'>('idle');
+  const [codeInput, setCodeInput] = useState('');
+  const [emailSending, setEmailSending] = useState(false);
+  const [codeVerifying, setCodeVerifying] = useState(false);
+  const [emailVerifyMsg, setEmailVerifyMsg] = useState<{ type: 'info' | 'error' | 'success'; text: string } | null>(null);
+  const [emailCooldown, setEmailCooldown] = useState(0);
+
+  useEffect(() => {
+    if (emailCooldown <= 0) return;
+    const t = setInterval(() => setEmailCooldown(s => Math.max(0, s - 1)), 1000);
+    return () => clearInterval(t);
+  }, [emailCooldown]);
+
+  // 이메일 변경되면 인증 상태 초기화
+  useEffect(() => {
+    const normalized = (form.loginEmail || '').trim().toLowerCase();
+    if (emailVerified && normalized !== verifiedEmail) {
+      setEmailVerified(false);
+      setCodeStage('idle');
+      setCodeInput('');
+      setEmailVerifyMsg(null);
+    }
+  }, [form.loginEmail, emailVerified, verifiedEmail]);
+
+  const isValidLoginEmail = /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(form.loginEmail || '');
+
+  const handleSendVerifyCode = async () => {
+    if (!isValidLoginEmail || emailSending || emailCooldown > 0) return;
+    setEmailSending(true);
+    setEmailVerifyMsg(null);
+    const res = await sendVerificationCode(form.loginEmail);
+    setEmailSending(false);
+    if (res.ok) {
+      setCodeStage('sent');
+      setEmailCooldown(res.cooldownSec || 60);
+      setEmailVerifyMsg({ type: 'info', text: '인증코드를 발송했습니다. 메일함을 확인해주세요.' });
+    } else {
+      if (res.retryAfterSec) setEmailCooldown(res.retryAfterSec);
+      setEmailVerifyMsg({ type: 'error', text: res.error || '발송 실패' });
+    }
+  };
+
+  const handleVerifyCode = async () => {
+    if (!/^\d{6}$/.test(codeInput)) {
+      setEmailVerifyMsg({ type: 'error', text: '6자리 숫자를 입력해주세요.' });
+      return;
+    }
+    setCodeVerifying(true);
+    const res = await verifyEmailCode(form.loginEmail, codeInput);
+    setCodeVerifying(false);
+    if (res.ok && res.verified) {
+      setEmailVerified(true);
+      setVerifiedEmail(form.loginEmail.trim().toLowerCase());
+      setEmailVerifyMsg({ type: 'success', text: '이메일 인증이 완료되었습니다.' });
+    } else {
+      setEmailVerifyMsg({ type: 'error', text: res.error || '인증 실패' });
+    }
+  };
 
   // 사업자등록번호 검증 상태
   type BizVerifyStatus = 'idle' | 'verifying' | 'active' | 'inactive' | 'closed' | 'not_found' | 'error';
@@ -263,6 +326,18 @@ export default function EnterpriseSignUpPage() {
     e.preventDefault();
     setSubmitting(true);
     setError(null);
+
+    // 이메일 인증 체크 (소셜 로그인 X일 때만)
+    if (!isSocialLoggedIn && !emailVerified) {
+      setError('이메일 인증을 먼저 완료해주세요.');
+      setSubmitting(false);
+      return;
+    }
+    if (!isSocialLoggedIn && emailVerified && form.loginEmail.trim().toLowerCase() !== verifiedEmail) {
+      setError('인증한 이메일과 입력된 이메일이 다릅니다. 이메일을 다시 인증해주세요.');
+      setSubmitting(false);
+      return;
+    }
 
     // 비밀번호 검증: 소셜 로그인 사용자는 setExtraPassword=true일 때만, 신규 가입자는 항상
     const passwordRequired = !isSocialLoggedIn || setExtraPassword;
@@ -714,14 +789,89 @@ export default function EnterpriseSignUpPage() {
 
               <div className="space-y-5">
                 <Field label="로그인 이메일" required>
-                  <Input
-                    type="email"
-                    value={form.loginEmail}
-                    onChange={(v) => update('loginEmail', v)}
-                    placeholder="login@company.com"
-                    required
-                    readOnly={isSocialLoggedIn}
-                  />
+                  <div className="flex gap-2">
+                    <input
+                      type="email"
+                      value={form.loginEmail}
+                      onChange={(e) => update('loginEmail', e.target.value)}
+                      placeholder="login@company.com"
+                      required
+                      readOnly={isSocialLoggedIn || emailVerified}
+                      autoComplete="email"
+                      className={`flex-1 bg-zinc-900 border rounded-xl px-4 py-3 text-white text-sm placeholder:text-zinc-600 focus:outline-none transition-colors ${
+                        emailVerified
+                          ? 'border-emerald-500/60'
+                          : 'border-white/30 focus:border-zinc-500'
+                      }`}
+                    />
+                    {!isSocialLoggedIn && (
+                      <button
+                        type="button"
+                        onClick={handleSendVerifyCode}
+                        disabled={!isValidLoginEmail || emailSending || emailCooldown > 0 || emailVerified}
+                        className={`min-w-[110px] px-4 rounded-xl text-sm font-semibold transition-colors whitespace-nowrap ${
+                          emailVerified
+                            ? 'bg-emerald-500 text-white cursor-default'
+                            : (!isValidLoginEmail || emailSending || emailCooldown > 0)
+                              ? 'bg-zinc-700 text-zinc-400 cursor-not-allowed'
+                              : 'bg-white text-zinc-900 hover:bg-zinc-200'
+                        }`}
+                      >
+                        {emailVerified
+                          ? '✓ 인증완료'
+                          : emailSending
+                            ? '발송중…'
+                            : emailCooldown > 0
+                              ? `재발송(${emailCooldown}s)`
+                              : codeStage === 'sent'
+                                ? '재발송'
+                                : '이메일 인증'}
+                      </button>
+                    )}
+                  </div>
+
+                  {/* 인증코드 입력 */}
+                  {!isSocialLoggedIn && !emailVerified && codeStage === 'sent' && (
+                    <div className="mt-2 flex gap-2">
+                      <input
+                        type="text"
+                        inputMode="numeric"
+                        maxLength={6}
+                        value={codeInput}
+                        onChange={(e) => setCodeInput(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                        placeholder="6자리 인증코드"
+                        autoComplete="one-time-code"
+                        className="flex-1 bg-zinc-900 border border-white/30 focus:border-zinc-500 rounded-xl px-4 py-3 text-white text-base placeholder:text-zinc-600 focus:outline-none text-center tracking-[0.3em] font-mono"
+                      />
+                      <button
+                        type="button"
+                        onClick={handleVerifyCode}
+                        disabled={codeVerifying || codeInput.length !== 6}
+                        className={`min-w-[110px] px-4 rounded-xl text-sm font-semibold transition-colors whitespace-nowrap ${
+                          (codeVerifying || codeInput.length !== 6)
+                            ? 'bg-zinc-700 text-zinc-400 cursor-not-allowed'
+                            : 'bg-emerald-500 text-white hover:bg-emerald-600'
+                        }`}
+                      >
+                        {codeVerifying ? '확인중…' : '확인'}
+                      </button>
+                    </div>
+                  )}
+
+                  {/* 메시지 */}
+                  {emailVerifyMsg && (
+                    <div
+                      className={`mt-2 text-xs ${
+                        emailVerifyMsg.type === 'error'
+                          ? 'text-red-400'
+                          : emailVerifyMsg.type === 'success'
+                            ? 'text-emerald-400'
+                            : 'text-zinc-400'
+                      }`}
+                    >
+                      {emailVerifyMsg.text}
+                    </div>
+                  )}
                 </Field>
 
                 {/* 소셜 로그인 사용자: 비밀번호 추가 설정 옵션 */}
@@ -745,8 +895,14 @@ export default function EnterpriseSignUpPage() {
                   </div>
                 )}
 
-                {/* 비밀번호 입력 필드: 비로그인 신규 가입자이거나, 소셜 로그인 사용자가 비밀번호 설정을 선택한 경우 */}
-                {(!isSocialLoggedIn || setExtraPassword) && (() => {
+                {/* 비밀번호 입력 필드: 비로그인 신규 가입자이거나, 소셜 로그인 사용자가 비밀번호 설정을 선택한 경우
+                    단, 이메일 회원가입은 이메일 인증 완료 후에만 활성화 */}
+                {(!isSocialLoggedIn || setExtraPassword) && !isSocialLoggedIn && !emailVerified && (
+                  <div className="rounded-xl bg-zinc-900/40 border border-white/10 px-4 py-4 text-zinc-400 text-xs">
+                    이메일 인증을 먼저 완료해주세요. 인증 후 비밀번호 입력이 활성화됩니다.
+                  </div>
+                )}
+                {(!isSocialLoggedIn || setExtraPassword) && (isSocialLoggedIn || emailVerified) && (() => {
                   // 실시간 검증 상태
                   const pwLength = form.password.length;
                   const pwLengthOk = pwLength >= 6;

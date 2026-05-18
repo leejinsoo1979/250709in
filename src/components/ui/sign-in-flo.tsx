@@ -6,6 +6,7 @@ import { Eye, EyeOff, Mail, Lock, User, ChevronLeft } from "lucide-react";
 import { motion, useAnimation } from "motion/react";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useResponsive } from "@/hooks/useResponsive";
+import { sendVerificationCode, verifyCode } from "@/auth/emailVerification";
 
 /* ── Exported Props ── */
 export interface SignInFloProps {
@@ -42,6 +43,67 @@ export const SignInFlo: React.FC<SignInFloProps> = ({
   const [showPassword, setShowPassword] = useState(false);
   const [isSignUp, setIsSignUp] = useState(defaultSignUp);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // 이메일 인증 (회원가입 모드에서만 활성)
+  const [emailVerified, setEmailVerified] = useState(false);
+  const [verifiedEmail, setVerifiedEmail] = useState("");
+  const [codeStage, setCodeStage] = useState<'idle' | 'sent'>('idle');
+  const [codeInput, setCodeInput] = useState("");
+  const [verifySending, setVerifySending] = useState(false);
+  const [verifyChecking, setVerifyChecking] = useState(false);
+  const [verifyMsg, setVerifyMsg] = useState<{ type: 'info' | 'error' | 'success'; text: string } | null>(null);
+  const [verifyCooldown, setVerifyCooldown] = useState(0);
+
+  useEffect(() => {
+    if (verifyCooldown <= 0) return;
+    const t = setInterval(() => setVerifyCooldown(s => Math.max(0, s - 1)), 1000);
+    return () => clearInterval(t);
+  }, [verifyCooldown]);
+
+  useEffect(() => {
+    const normalized = email.trim().toLowerCase();
+    if (emailVerified && normalized !== verifiedEmail) {
+      setEmailVerified(false);
+      setCodeStage('idle');
+      setCodeInput('');
+      setVerifyMsg(null);
+    }
+  }, [email, emailVerified, verifiedEmail]);
+
+  const isValidEmail = /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email);
+
+  const handleSendVerifyCode = async () => {
+    if (!isValidEmail || verifySending || verifyCooldown > 0 || emailVerified) return;
+    setVerifySending(true);
+    setVerifyMsg(null);
+    const res = await sendVerificationCode(email);
+    setVerifySending(false);
+    if (res.ok) {
+      setCodeStage('sent');
+      setVerifyCooldown(res.cooldownSec || 60);
+      setVerifyMsg({ type: 'info', text: '인증코드를 발송했습니다. 메일함을 확인해주세요.' });
+    } else {
+      if (res.retryAfterSec) setVerifyCooldown(res.retryAfterSec);
+      setVerifyMsg({ type: 'error', text: res.error || '발송 실패' });
+    }
+  };
+
+  const handleVerifyCode = async () => {
+    if (!/^\d{6}$/.test(codeInput)) {
+      setVerifyMsg({ type: 'error', text: '6자리 숫자를 입력해주세요.' });
+      return;
+    }
+    setVerifyChecking(true);
+    const res = await verifyCode(email, codeInput);
+    setVerifyChecking(false);
+    if (res.ok && res.verified) {
+      setEmailVerified(true);
+      setVerifiedEmail(email.trim().toLowerCase());
+      setVerifyMsg({ type: 'success', text: '이메일 인증이 완료되었습니다.' });
+    } else {
+      setVerifyMsg({ type: 'error', text: res.error || '인증 실패' });
+    }
+  };
 
   // Animation states (from LandingPage)
   const [tttAnimating, setTttAnimating] = useState(false);
@@ -106,6 +168,17 @@ export const SignInFlo: React.FC<SignInFloProps> = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!onSubmit) return;
+    // 회원가입 시 이메일 인증 필수
+    if (isSignUp) {
+      if (!emailVerified) {
+        setVerifyMsg({ type: 'error', text: '이메일 인증을 먼저 완료해주세요.' });
+        return;
+      }
+      if (email.trim().toLowerCase() !== verifiedEmail) {
+        setVerifyMsg({ type: 'error', text: '인증한 이메일과 입력된 이메일이 다릅니다. 다시 인증해주세요.' });
+        return;
+      }
+    }
     setIsSubmitting(true);
     try {
       await onSubmit({ email, password, name: isSignUp ? name : undefined, isSignUp });
@@ -120,6 +193,12 @@ export const SignInFlo: React.FC<SignInFloProps> = ({
     setPassword("");
     setName("");
     setShowPassword(false);
+    setEmailVerified(false);
+    setVerifiedEmail("");
+    setCodeStage('idle');
+    setCodeInput("");
+    setVerifyMsg(null);
+    setVerifyCooldown(0);
   };
 
   return (
@@ -337,23 +416,120 @@ export const SignInFlo: React.FC<SignInFloProps> = ({
               </div>
             )}
 
-            <div className="relative">
-              <Mail size={16} className="absolute left-4 top-1/2 -translate-y-1/2" style={{ color: isDark ? '#71717a' : '#555' }} />
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="Email Address"
-                required
-                className={`w-full rounded-full pl-11 pr-5 py-3.5 focus:outline-none transition-colors ${isMobile ? 'text-base' : 'text-sm'}`}
-                style={{
-                  background: isDark ? '#18181b' : '#f9fafb',
-                  border: `1px solid ${isDark ? '#27272a' : '#e5e7eb'}`,
-                  color: isDark ? '#fff' : '#111',
-                  ...(isMobile ? { fontSize: '16px', minHeight: '48px' } : {}),
-                }}
-              />
+            <div className={isSignUp ? "flex gap-2" : "relative"}>
+              {!isSignUp && (
+                <Mail size={16} className="absolute left-4 top-1/2 -translate-y-1/2" style={{ color: isDark ? '#71717a' : '#555' }} />
+              )}
+              <div className={isSignUp ? "relative flex-1" : "contents"}>
+                {isSignUp && (
+                  <Mail size={16} className="absolute left-4 top-1/2 -translate-y-1/2" style={{ color: isDark ? '#71717a' : '#555' }} />
+                )}
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="Email Address"
+                  required
+                  readOnly={isSignUp && emailVerified}
+                  autoComplete="email"
+                  className={`w-full rounded-full pl-11 pr-5 py-3.5 focus:outline-none transition-colors ${isMobile ? 'text-base' : 'text-sm'}`}
+                  style={{
+                    background: isDark ? '#18181b' : '#f9fafb',
+                    border: `1px solid ${isSignUp && emailVerified ? '#10b981' : (isDark ? '#27272a' : '#e5e7eb')}`,
+                    color: isDark ? '#fff' : '#111',
+                    ...(isMobile ? { fontSize: '16px', minHeight: '48px' } : {}),
+                  }}
+                />
+              </div>
+              {isSignUp && (
+                <button
+                  type="button"
+                  onClick={handleSendVerifyCode}
+                  disabled={!isValidEmail || verifySending || verifyCooldown > 0 || emailVerified}
+                  className={`px-4 rounded-full font-semibold transition-colors whitespace-nowrap ${isMobile ? 'text-xs min-h-[48px]' : 'text-xs'}`}
+                  style={{
+                    minWidth: 96,
+                    background: emailVerified
+                      ? '#10b981'
+                      : (!isValidEmail || verifySending || verifyCooldown > 0)
+                        ? (isDark ? '#27272a' : '#e5e7eb')
+                        : (isDark ? '#fff' : '#111'),
+                    color: emailVerified
+                      ? '#ffffff'
+                      : (!isValidEmail || verifySending || verifyCooldown > 0)
+                        ? (isDark ? '#71717a' : '#9ca3af')
+                        : (isDark ? '#09090b' : '#ffffff'),
+                    cursor: (!isValidEmail || verifySending || verifyCooldown > 0 || emailVerified) ? 'not-allowed' : 'pointer',
+                  }}
+                >
+                  {emailVerified
+                    ? '✓ 인증완료'
+                    : verifySending
+                      ? '발송중'
+                      : verifyCooldown > 0
+                        ? `${verifyCooldown}s`
+                        : codeStage === 'sent'
+                          ? '재발송'
+                          : '인증'}
+                </button>
+              )}
             </div>
+
+            {/* 인증코드 입력 (회원가입 + 발송됨 + 미인증) */}
+            {isSignUp && codeStage === 'sent' && !emailVerified && (
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  maxLength={6}
+                  value={codeInput}
+                  onChange={(e) => setCodeInput(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                  placeholder="6자리 인증코드"
+                  autoComplete="one-time-code"
+                  className={`flex-1 rounded-full px-5 py-3.5 focus:outline-none transition-colors text-center font-mono ${isMobile ? 'text-base' : 'text-base'}`}
+                  style={{
+                    background: isDark ? '#18181b' : '#f9fafb',
+                    border: `1px solid ${isDark ? '#27272a' : '#e5e7eb'}`,
+                    color: isDark ? '#fff' : '#111',
+                    letterSpacing: '0.3em',
+                    ...(isMobile ? { fontSize: '16px', minHeight: '48px' } : {}),
+                  }}
+                />
+                <button
+                  type="button"
+                  onClick={handleVerifyCode}
+                  disabled={verifyChecking || codeInput.length !== 6}
+                  className={`px-4 rounded-full font-semibold transition-colors whitespace-nowrap ${isMobile ? 'text-xs min-h-[48px]' : 'text-xs'}`}
+                  style={{
+                    minWidth: 96,
+                    background: (verifyChecking || codeInput.length !== 6)
+                      ? (isDark ? '#27272a' : '#e5e7eb')
+                      : '#10b981',
+                    color: (verifyChecking || codeInput.length !== 6)
+                      ? (isDark ? '#71717a' : '#9ca3af')
+                      : '#ffffff',
+                    cursor: (verifyChecking || codeInput.length !== 6) ? 'not-allowed' : 'pointer',
+                  }}
+                >
+                  {verifyChecking ? '확인중' : '확인'}
+                </button>
+              </div>
+            )}
+
+            {isSignUp && verifyMsg && (
+              <div
+                className="text-xs px-2"
+                style={{
+                  color: verifyMsg.type === 'error'
+                    ? '#f87171'
+                    : verifyMsg.type === 'success'
+                      ? '#10b981'
+                      : (isDark ? '#a1a1aa' : '#6b7280'),
+                }}
+              >
+                {verifyMsg.text}
+              </div>
+            )}
 
             <div className="relative">
               <Lock size={16} className="absolute left-4 top-1/2 -translate-y-1/2" style={{ color: isDark ? '#71717a' : '#555' }} />
@@ -361,13 +537,16 @@ export const SignInFlo: React.FC<SignInFloProps> = ({
                 type={showPassword ? "text" : "password"}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="Password"
+                placeholder={isSignUp && !emailVerified ? "이메일 인증 후 입력 가능" : "Password"}
                 required
+                readOnly={isSignUp && !emailVerified}
+                autoComplete={isSignUp ? "new-password" : "current-password"}
                 className={`w-full rounded-full pl-11 pr-11 py-3.5 focus:outline-none transition-colors ${isMobile ? 'text-base' : 'text-sm'}`}
                 style={{
                   background: isDark ? '#18181b' : '#f9fafb',
                   border: `1px solid ${isDark ? '#27272a' : '#e5e7eb'}`,
                   color: isDark ? '#fff' : '#111',
+                  opacity: isSignUp && !emailVerified ? 0.55 : 1,
                   ...(isMobile ? { fontSize: '16px', minHeight: '48px' } : {}),
                 }}
               />

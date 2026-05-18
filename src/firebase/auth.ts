@@ -15,7 +15,8 @@ import {
   deleteUser,
   reauthenticateWithPopup,
   setPersistence,
-  browserLocalPersistence
+  browserLocalPersistence,
+  sendEmailVerification,
 } from 'firebase/auth';
 import { FirebaseError } from 'firebase/app';
 import { auth } from './config';
@@ -241,10 +242,40 @@ export const signUpWithEmail = async (email: string, password: string, displayNa
       await ensurePersonalTeam(userCredential.user, '이메일 회원가입');
     }
 
+    // 환영메일 발송 (Resend, 비동기 - 실패해도 가입 흐름 막지 않음)
+    // 이메일 인증은 이미 가입 전 단계에서 6자리 코드로 완료됨
+    if (userCredential.user?.email) {
+      const userEmail = userCredential.user.email;
+      fetch('/api/send-welcome-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: userEmail }),
+      }).catch((welcomeErr) => {
+        console.warn('환영메일 발송 실패(가입은 성공):', welcomeErr);
+      });
+    }
+
     return { user: userCredential.user, error: null };
   } catch (error) {
     const firebaseError = error as FirebaseError;
     return { user: null, error: getKoreanAuthError(firebaseError) };
+  }
+};
+
+// 인증메일 재발송
+export const resendVerificationEmail = async () => {
+  try {
+    const user = auth.currentUser;
+    if (!user) return { error: '로그인이 필요합니다.' };
+    if (user.emailVerified) return { error: '이미 인증된 계정입니다.' };
+    await sendEmailVerification(user, {
+      url: `${window.location.origin}/auth/verified`,
+      handleCodeInApp: false,
+    });
+    return { error: null };
+  } catch (error) {
+    const firebaseError = error as FirebaseError;
+    return { error: getKoreanAuthError(firebaseError) };
   }
 };
 
