@@ -49,6 +49,17 @@ interface LiveDimensionMetadata {
   depthMm: number;
 }
 
+interface FaceGrooveDimension {
+  face: 'left' | 'right';
+  fromY: number;
+  height: number;
+  fromZ: number;
+  depth: number;
+  cutDepth: number;
+  grooveWidthMm?: number;
+  cutDepthMm: number;
+}
+
 const THREE_UNITS_TO_MM = 100;
 const TAPE_EDGE_COLOR = '#dc2626';
 const TAPE_CORNER_COLOR = '#16a34a';
@@ -239,6 +250,81 @@ const createBoxEdges = (
   ];
 };
 
+const normalizeFaceGrooves = (value: unknown): FaceGrooveDimension[] => {
+  if (!Array.isArray(value)) return [];
+
+  return value
+    .map((item) => {
+      if (!item || typeof item !== 'object') return null;
+      const source = item as Partial<FaceGrooveDimension>;
+      const face = source.face === 'left' || source.face === 'right' ? source.face : null;
+      const fromY = Number(source.fromY);
+      const height = Number(source.height);
+      const fromZ = Number(source.fromZ);
+      const depth = Number(source.depth);
+      const cutDepth = Number(source.cutDepth);
+      const grooveWidthMm = Number(source.grooveWidthMm);
+      const cutDepthMm = Number(source.cutDepthMm);
+      if (!face) return null;
+      if (![fromY, height, fromZ, depth, cutDepth, grooveWidthMm, cutDepthMm].every(Number.isFinite)) return null;
+      if (height <= 0 || depth <= 0 || cutDepth <= 0) return null;
+      return { face, fromY, height, fromZ, depth, cutDepth, grooveWidthMm, cutDepthMm };
+    })
+    .filter((item): item is FaceGrooveDimension => Boolean(item));
+};
+
+const createFaceGrooveEdges = (
+  grooves: FaceGrooveDimension[],
+  width: number,
+  height: number,
+  depth: number
+): TapeEdge[] => {
+  if (!grooves.length) return [];
+
+  const xHalf = width / 2;
+  const yHalf = height / 2;
+  const zHalf = depth / 2;
+
+  return grooves.flatMap((groove, index) => {
+    const faceSign = groove.face === 'right' ? 1 : -1;
+    const faceX = faceSign * xHalf;
+    const bottomX = faceX - faceSign * groove.cutDepth;
+    const y0 = Math.max(-yHalf, Math.min(yHalf, -yHalf + groove.fromY));
+    const y1 = Math.max(y0, Math.min(yHalf, y0 + groove.height));
+    const z0 = Math.max(-zHalf, Math.min(zHalf, -zHalf + groove.fromZ));
+    const z1 = Math.max(z0, Math.min(zHalf, z0 + groove.depth));
+    const sectionZ = z1;
+    const thicknessOnY = groove.height <= groove.depth;
+    const thicknessStart: [number, number, number] = thicknessOnY
+      ? [bottomX, y0, sectionZ]
+      : [bottomX, y1, z0];
+    const thicknessEnd: [number, number, number] = thicknessOnY
+      ? [bottomX, y1, sectionZ]
+      : [bottomX, y1, z1];
+
+    return [
+      {
+        axis: 'x',
+        start: [faceX, y1, sectionZ] as [number, number, number],
+        end: [bottomX, y1, sectionZ] as [number, number, number],
+        lengthMm: groove.cutDepthMm,
+      },
+      {
+        axis: thicknessOnY ? 'y' : 'z',
+        start: thicknessStart,
+        end: thicknessEnd,
+        lengthMm: groove.grooveWidthMm ?? Math.round(Math.min(groove.height, groove.depth) * THREE_UNITS_TO_MM),
+      },
+    ].map((edge, edgeIndex) => ({
+      ...edge,
+      start: edge.start,
+      end: edge.end,
+      lengthMm: edge.lengthMm,
+      key: `face-groove-${index}-${edgeIndex}`,
+    } as TapeEdge));
+  });
+};
+
 const createBoxCorners = (width: number, height: number, depth: number): [number, number, number][] => {
   const x0 = -width / 2;
   const x1 = width / 2;
@@ -257,6 +343,40 @@ const createBoxCorners = (width: number, height: number, depth: number): [number
     [x0, y1, z1],
     [x1, y1, z1],
   ];
+};
+
+const createFaceGrooveCorners = (
+  grooves: FaceGrooveDimension[],
+  width: number,
+  height: number,
+  depth: number
+): [number, number, number][] => {
+  if (!grooves.length) return [];
+
+  const xHalf = width / 2;
+  const yHalf = height / 2;
+  const zHalf = depth / 2;
+
+  return grooves.flatMap((groove) => {
+    const faceSign = groove.face === 'right' ? 1 : -1;
+    const faceX = faceSign * xHalf;
+    const bottomX = faceX - faceSign * groove.cutDepth;
+    const y0 = Math.max(-yHalf, Math.min(yHalf, -yHalf + groove.fromY));
+    const y1 = Math.max(y0, Math.min(yHalf, y0 + groove.height));
+    const z0 = Math.max(-zHalf, Math.min(zHalf, -zHalf + groove.fromZ));
+    const z1 = Math.max(z0, Math.min(zHalf, z0 + groove.depth));
+
+    return [
+      [faceX, y0, z0],
+      [faceX, y0, z1],
+      [faceX, y1, z0],
+      [faceX, y1, z1],
+      [bottomX, y0, z0],
+      [bottomX, y0, z1],
+      [bottomX, y1, z0],
+      [bottomX, y1, z1],
+    ] as [number, number, number][];
+  });
 };
 
 const toPoint3 = (vector: THREE.Vector3): [number, number, number] => [vector.x, vector.y, vector.z];
@@ -383,8 +503,15 @@ const getTapeHover = (object: THREE.Object3D, hitPoint: THREE.Vector3): TapeHove
   const widthMm = explicit?.widthMm ?? Math.round(size.x * THREE_UNITS_TO_MM);
   const heightMm = explicit?.heightMm ?? Math.round(size.y * THREE_UNITS_TO_MM);
   const depthMm = explicit?.depthMm ?? Math.round(size.z * THREE_UNITS_TO_MM);
-  const edges = createBoxEdges(size.x, size.y, size.z, widthMm, heightMm, depthMm);
-  const corners = createBoxCorners(size.x, size.y, size.z);
+  const faceGrooves = normalizeFaceGrooves(findUserData(object, 'liveDimensionFaceGrooves'));
+  const edges = [
+    ...createBoxEdges(size.x, size.y, size.z, widthMm, heightMm, depthMm),
+    ...createFaceGrooveEdges(faceGrooves, size.x, size.y, size.z),
+  ];
+  const corners = [
+    ...createBoxCorners(size.x, size.y, size.z),
+    ...createFaceGrooveCorners(faceGrooves, size.x, size.y, size.z),
+  ];
 
   let nearestCorner: { point: THREE.Vector3; distance: number; index: number } | null = null;
   corners.forEach((corner, index) => {

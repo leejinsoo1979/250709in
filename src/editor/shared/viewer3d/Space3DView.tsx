@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState, useCallback, useRef } from 'react'
 import * as THREE from 'three';
 import { RxDimensions } from 'react-icons/rx';
 import { LuEraser } from 'react-icons/lu';
-import { Gauge, Pause, Play, SlidersHorizontal, Square, Sun, Moon } from 'lucide-react';
+import { Gauge, Pause, Play, SlidersHorizontal, Square, Sun, Moon, X } from 'lucide-react';
 import { Space3DViewProps } from './types';
 import { Space3DViewProvider } from './context/Space3DViewContext';
 import { ViewerThemeProvider } from './context/ViewerThemeContext';
@@ -969,6 +969,7 @@ const PanelSimulationPlaybackControls: React.FC = () => {
   const setPlaying = useUIStore(state => state.setPanelSimulationPlaying);
   const setElapsedSeconds = useUIStore(state => state.setPanelSimulationElapsedSeconds);
   const togglePanelSimulation = useUIStore(state => state.togglePanelSimulation);
+  const closePanelSimulation = useUIStore(state => state.closePanelSimulation);
   const [elapsedSeconds, setElapsedSecondsState] = useState(0);
   const completedRevisionRef = useRef(0);
 
@@ -1065,7 +1066,7 @@ const PanelSimulationPlaybackControls: React.FC = () => {
         gridTemplateColumns: 'auto auto auto 1fr auto auto',
         alignItems: 'center',
         gap: 10,
-        padding: '10px 12px',
+        padding: '10px 42px 10px 12px',
         borderRadius: 8,
         background: 'rgba(15, 23, 42, 0.86)',
         border: '1px solid rgba(226, 232, 240, 0.18)',
@@ -1075,6 +1076,30 @@ const PanelSimulationPlaybackControls: React.FC = () => {
         fontFamily: 'Pretendard, Inter, system-ui, sans-serif',
       }}
     >
+      <button
+        type="button"
+        onClick={closePanelSimulation}
+        aria-label="조립 시뮬레이션 닫기"
+        title="닫기"
+        style={{
+          position: 'absolute',
+          top: 8,
+          right: 8,
+          width: 26,
+          height: 26,
+          borderRadius: 7,
+          border: '1px solid rgba(248, 250, 252, 0.16)',
+          background: 'rgba(248, 250, 252, 0.08)',
+          color: '#e2e8f0',
+          display: 'inline-flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          cursor: 'pointer',
+        }}
+      >
+        <X size={15} />
+      </button>
+
       <button
         type="button"
         onClick={handlePlay}

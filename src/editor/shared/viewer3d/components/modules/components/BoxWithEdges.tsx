@@ -106,6 +106,512 @@ const sanitizeBoxGeometrySize = (value: number): number => {
   return value;
 };
 
+type FaceGroove = {
+  face: 'left' | 'right';
+  fromY: number;
+  height: number;
+  fromZ: number;
+  depth: number;
+  cutDepth: number;
+};
+
+type NormalizedFaceGroove = FaceGroove & {
+  y0: number;
+  y1: number;
+  z0: number;
+  z1: number;
+  faceX: number;
+  bottomX: number;
+};
+
+const buildBoxEdgeLines = (width: number, height: number, depth: number): [number, number, number][][] => {
+  const halfW = width / 2;
+  const halfH = height / 2;
+  const halfD = depth / 2;
+
+  return [
+    [[-halfW, -halfH, -halfD], [halfW, -halfH, -halfD]],
+    [[halfW, -halfH, -halfD], [halfW, halfH, -halfD]],
+    [[halfW, halfH, -halfD], [-halfW, halfH, -halfD]],
+    [[-halfW, halfH, -halfD], [-halfW, -halfH, -halfD]],
+    [[-halfW, -halfH, halfD], [halfW, -halfH, halfD]],
+    [[halfW, -halfH, halfD], [halfW, halfH, halfD]],
+    [[halfW, halfH, halfD], [-halfW, halfH, halfD]],
+    [[-halfW, halfH, halfD], [-halfW, -halfH, halfD]],
+    [[-halfW, -halfH, -halfD], [-halfW, -halfH, halfD]],
+    [[halfW, -halfH, -halfD], [halfW, -halfH, halfD]],
+    [[halfW, halfH, -halfD], [halfW, halfH, halfD]],
+    [[-halfW, halfH, -halfD], [-halfW, halfH, halfD]],
+  ];
+};
+
+const normalizeFaceGrooves = (
+  faceGrooves: FaceGroove[] | undefined,
+  size: [number, number, number]
+): NormalizedFaceGroove[] => {
+  if (!faceGrooves || faceGrooves.length === 0) return [];
+
+  const [width, height, depth] = size;
+  const halfW = width / 2;
+  const halfH = height / 2;
+  const halfD = depth / 2;
+  const minSpan = 0.0005;
+
+  return faceGrooves
+    .map((groove) => {
+      const y0 = Math.max(-halfH, Math.min(halfH - minSpan, -halfH + groove.fromY));
+      const y1 = Math.max(y0 + minSpan, Math.min(halfH, y0 + groove.height));
+      const z0 = Math.max(-halfD, Math.min(halfD - minSpan, -halfD + groove.fromZ));
+      const z1 = Math.max(z0 + minSpan, Math.min(halfD, z0 + groove.depth));
+      const cutDepth = Math.max(minSpan, Math.min(Math.abs(groove.cutDepth), width - minSpan));
+      const faceX = groove.face === 'right' ? halfW : -halfW;
+      const bottomX = groove.face === 'right' ? halfW - cutDepth : -halfW + cutDepth;
+
+      return {
+        ...groove,
+        y0,
+        y1,
+        z0,
+        z1,
+        cutDepth,
+        faceX,
+        bottomX,
+      };
+    })
+    .filter((groove) => groove.y1 > groove.y0 && groove.z1 > groove.z0 && Math.abs(groove.faceX - groove.bottomX) > minSpan);
+};
+
+const buildProfileYZ = (
+  height: number,
+  depth: number,
+  notch?: { y: number; z: number },
+  notches?: Array<{ y: number; z: number; fromBottom: number }>
+): [number, number][] => {
+  const halfH = height / 2;
+  const halfD = depth / 2;
+  const profileVertices: [number, number][] = [];
+
+  if (notches && notches.length > 0) {
+    profileVertices.push([-halfH, -halfD]);
+    profileVertices.push([-halfH, halfD]);
+
+    const sortedNotches = [...notches].sort((a, b) => a.fromBottom - b.fromBottom);
+    for (let ni = 0; ni < sortedNotches.length; ni++) {
+      const n = sortedNotches[ni];
+      const notchBottom = -halfH + n.fromBottom;
+      const notchTop = notchBottom + n.y;
+      const isUppermostNotch = Math.abs(notchTop - halfH) < 0.01;
+      const next = ni < sortedNotches.length - 1 ? sortedNotches[ni + 1] : null;
+      const nextBottom = next ? -halfH + next.fromBottom : null;
+      const adjacentToNext = next && nextBottom !== null && Math.abs(notchTop - nextBottom) < 0.01;
+      const prev = ni > 0 ? sortedNotches[ni - 1] : null;
+      const prevTop = prev ? -halfH + prev.fromBottom + prev.y : null;
+      const adjacentToPrev = prev && prevTop !== null && Math.abs(prevTop - notchBottom) < 0.01;
+
+      if (!adjacentToPrev) {
+        profileVertices.push([notchBottom, halfD]);
+      }
+      profileVertices.push([notchBottom, halfD - n.z]);
+      profileVertices.push([notchTop, halfD - n.z]);
+
+      if (isUppermostNotch) {
+        profileVertices.push([halfH, -halfD]);
+      } else if (!adjacentToNext) {
+        profileVertices.push([notchTop, halfD]);
+      }
+    }
+
+    const lastNotch = sortedNotches[sortedNotches.length - 1];
+    const lastNotchTop = -halfH + lastNotch.fromBottom + lastNotch.y;
+    if (Math.abs(lastNotchTop - halfH) >= 0.001) {
+      profileVertices.push([halfH, halfD]);
+      profileVertices.push([halfH, -halfD]);
+    }
+  } else if (notch) {
+    profileVertices.push([-halfH, -halfD]);
+    profileVertices.push([-halfH, halfD]);
+    profileVertices.push([halfH - notch.y, halfD]);
+    profileVertices.push([halfH - notch.y, halfD - notch.z]);
+    profileVertices.push([halfH, halfD - notch.z]);
+    profileVertices.push([halfH, -halfD]);
+  } else {
+    profileVertices.push([-halfH, -halfD]);
+    profileVertices.push([-halfH, halfD]);
+    profileVertices.push([halfH, halfD]);
+    profileVertices.push([halfH, -halfD]);
+  }
+
+  return profileVertices.filter((v, i) =>
+    i === 0 || v[0] !== profileVertices[i - 1][0] || v[1] !== profileVertices[i - 1][1]
+  );
+};
+
+const buildFaceGrooveEdgeLines = (grooves: NormalizedFaceGroove[]): [number, number, number][][] => {
+  const lines: [number, number, number][][] = [];
+
+  grooves.forEach(({ y0, y1, z0, z1, faceX, bottomX }) => {
+    const faceRect: [number, number, number][] = [
+      [faceX, y0, z0],
+      [faceX, y1, z0],
+      [faceX, y1, z1],
+      [faceX, y0, z1],
+    ];
+    const bottomRect: [number, number, number][] = [
+      [bottomX, y0, z0],
+      [bottomX, y1, z0],
+      [bottomX, y1, z1],
+      [bottomX, y0, z1],
+    ];
+
+    for (let i = 0; i < 4; i++) {
+      const next = (i + 1) % 4;
+      lines.push([faceRect[i], faceRect[next]]);
+      lines.push([bottomRect[i], bottomRect[next]]);
+      lines.push([faceRect[i], bottomRect[i]]);
+    }
+  });
+
+  return lines;
+};
+
+const buildTopViewFaceGrooveEdgeLines = (grooves: NormalizedFaceGroove[]): [number, number, number][][] => {
+  const lines: [number, number, number][][] = [];
+
+  grooves.forEach(({ y1, z0, z1, faceX, bottomX }) => {
+    // 탑뷰에서는 홈을 닫힌 사각형으로 그리면 측판 내부에 불필요한 세로선이 생긴다.
+    // 실제 절삭 윤곽만 보이도록 홈 바닥선 + 양 끝 절삭 깊이선만 표시한다.
+    lines.push(
+      [[faceX, y1, z0], [bottomX, y1, z0]],
+      [[bottomX, y1, z0], [bottomX, y1, z1]],
+      [[bottomX, y1, z1], [faceX, y1, z1]]
+    );
+  });
+
+  return lines;
+};
+
+const createGroovedPanelGeometry = (
+  size: [number, number, number],
+  grooves: NormalizedFaceGroove[],
+  notch?: { y: number; z: number },
+  notches?: Array<{ y: number; z: number; fromBottom: number }>
+): THREE.BufferGeometry => {
+  const [width, height, depth] = size;
+  const halfW = width / 2;
+  const halfH = height / 2;
+  const halfD = depth / 2;
+  const contour = buildProfileYZ(height, depth, notch, notches).map(([y, z]) => new THREE.Vector2(y, z));
+  const positions: number[] = [];
+  const uvs: number[] = [];
+  const eps = 0.0001;
+  const isPlainRectContour = !notch && !(notches && notches.length > 0);
+
+  const pushVertex = (x: number, y: number, z: number, u: number, v: number) => {
+    positions.push(x, y, z);
+    uvs.push(u, v);
+  };
+
+  const pushTri = (
+    a: [number, number, number],
+    b: [number, number, number],
+    c: [number, number, number],
+    uvA: [number, number],
+    uvB: [number, number],
+    uvC: [number, number]
+  ) => {
+    pushVertex(a[0], a[1], a[2], uvA[0], uvA[1]);
+    pushVertex(b[0], b[1], b[2], uvB[0], uvB[1]);
+    pushVertex(c[0], c[1], c[2], uvC[0], uvC[1]);
+  };
+
+  const pushQuad = (
+    a: [number, number, number],
+    b: [number, number, number],
+    c: [number, number, number],
+    d: [number, number, number],
+    uvA: [number, number] = [0, 0],
+    uvB: [number, number] = [1, 0],
+    uvC: [number, number] = [1, 1],
+    uvD: [number, number] = [0, 1]
+  ) => {
+    pushTri(a, b, c, uvA, uvB, uvC);
+    pushTri(a, c, d, uvA, uvC, uvD);
+  };
+
+  const uvForYZ = (point: THREE.Vector2): [number, number] => [
+    (point.y + halfD) / depth,
+    (point.x + halfH) / height,
+  ];
+
+  const pushSplitCap = (x: number, face: 'left' | 'right', sideGrooves: NormalizedFaceGroove[]) => {
+    const yCuts = [-halfH, halfH];
+    const zCuts = [-halfD, halfD];
+
+    sideGrooves.forEach((groove) => {
+      yCuts.push(Math.max(-halfH, Math.min(halfH, groove.y0)));
+      yCuts.push(Math.max(-halfH, Math.min(halfH, groove.y1)));
+      zCuts.push(Math.max(-halfD, Math.min(halfD, groove.z0)));
+      zCuts.push(Math.max(-halfD, Math.min(halfD, groove.z1)));
+    });
+
+    const sortedYCuts = [...new Set(yCuts.map((value) => Number(value.toFixed(6))))].sort((a, b) => a - b);
+    const sortedZCuts = [...new Set(zCuts.map((value) => Number(value.toFixed(6))))].sort((a, b) => a - b);
+
+    for (let yi = 0; yi < sortedYCuts.length - 1; yi++) {
+      for (let zi = 0; zi < sortedZCuts.length - 1; zi++) {
+        const y0 = sortedYCuts[yi];
+        const y1 = sortedYCuts[yi + 1];
+        const z0 = sortedZCuts[zi];
+        const z1 = sortedZCuts[zi + 1];
+        if (y1 - y0 < eps || z1 - z0 < eps) continue;
+
+        const centerY = (y0 + y1) / 2;
+        const centerZ = (z0 + z1) / 2;
+        const insideGroove = sideGrooves.some((groove) =>
+          centerY > groove.y0 + eps &&
+          centerY < groove.y1 - eps &&
+          centerZ > groove.z0 + eps &&
+          centerZ < groove.z1 - eps
+        );
+        if (insideGroove) continue;
+
+        if (face === 'right') {
+          pushQuad(
+            [x, y0, z0],
+            [x, y1, z0],
+            [x, y1, z1],
+            [x, y0, z1],
+            [(z0 + halfD) / depth, (y0 + halfH) / height],
+            [(z0 + halfD) / depth, (y1 + halfH) / height],
+            [(z1 + halfD) / depth, (y1 + halfH) / height],
+            [(z1 + halfD) / depth, (y0 + halfH) / height]
+          );
+        } else {
+          pushQuad(
+            [x, y0, z1],
+            [x, y1, z1],
+            [x, y1, z0],
+            [x, y0, z0],
+            [(z1 + halfD) / depth, (y0 + halfH) / height],
+            [(z1 + halfD) / depth, (y1 + halfH) / height],
+            [(z0 + halfD) / depth, (y1 + halfH) / height],
+            [(z0 + halfD) / depth, (y0 + halfH) / height]
+          );
+        }
+      }
+    }
+  };
+
+  const pushCap = (x: number, face: 'left' | 'right') => {
+    const sideGrooves = grooves.filter((groove) => groove.face === face);
+    if (isPlainRectContour) {
+      pushSplitCap(x, face, sideGrooves);
+      return;
+    }
+
+    const holes = sideGrooves.map((groove) => {
+      const y0 = Math.max(-halfH + eps, Math.min(halfH - eps, groove.y0));
+      const y1 = Math.max(y0 + eps, Math.min(halfH - eps, groove.y1));
+      const z0 = Math.max(-halfD + eps, Math.min(halfD - eps, groove.z0));
+      const z1 = Math.max(z0 + eps, Math.min(halfD - eps, groove.z1));
+      return [
+        new THREE.Vector2(y0, z0),
+        new THREE.Vector2(y1, z0),
+        new THREE.Vector2(y1, z1),
+        new THREE.Vector2(y0, z1),
+      ];
+    });
+    const triangles = THREE.ShapeUtils.triangulateShape(contour, holes);
+    const points = [...contour, ...holes.flat()];
+
+    triangles.forEach((tri) => {
+      const ordered = face === 'right' ? tri : [tri[2], tri[1], tri[0]];
+      const a = points[ordered[0]];
+      const b = points[ordered[1]];
+      const c = points[ordered[2]];
+      pushTri(
+        [x, a.x, a.y],
+        [x, b.x, b.y],
+        [x, c.x, c.y],
+        uvForYZ(a),
+        uvForYZ(b),
+        uvForYZ(c)
+      );
+    });
+  };
+
+  const pushEndWallWithOpenGrooves = (z: number, yStart: number, yEnd: number, openedGrooves: NormalizedFaceGroove[]) => {
+    const yMin = Math.min(yStart, yEnd);
+    const yMax = Math.max(yStart, yEnd);
+    const xCuts = [-halfW, halfW];
+    const yCuts = [yMin, yMax];
+
+    openedGrooves.forEach((groove) => {
+      xCuts.push(Math.min(groove.faceX, groove.bottomX));
+      xCuts.push(Math.max(groove.faceX, groove.bottomX));
+      yCuts.push(Math.max(yMin, Math.min(yMax, groove.y0)));
+      yCuts.push(Math.max(yMin, Math.min(yMax, groove.y1)));
+    });
+
+    const sortedXCuts = [...new Set(xCuts.map((value) => Number(value.toFixed(6))))].sort((a, b) => a - b);
+    const sortedYCuts = [...new Set(yCuts.map((value) => Number(value.toFixed(6))))].sort((a, b) => a - b);
+
+    for (let xi = 0; xi < sortedXCuts.length - 1; xi++) {
+      for (let yi = 0; yi < sortedYCuts.length - 1; yi++) {
+        const x0 = sortedXCuts[xi];
+        const x1 = sortedXCuts[xi + 1];
+        const y0 = sortedYCuts[yi];
+        const y1 = sortedYCuts[yi + 1];
+        if (x1 - x0 < eps || y1 - y0 < eps) continue;
+
+        const centerX = (x0 + x1) / 2;
+        const centerY = (y0 + y1) / 2;
+        const insideOpening = openedGrooves.some((groove) => {
+          const gx0 = Math.min(groove.faceX, groove.bottomX);
+          const gx1 = Math.max(groove.faceX, groove.bottomX);
+          return centerX > gx0 + eps &&
+            centerX < gx1 - eps &&
+            centerY > groove.y0 + eps &&
+            centerY < groove.y1 - eps;
+        });
+        if (insideOpening) continue;
+
+        pushQuad(
+          [x0, y0, z],
+          [x1, y0, z],
+          [x1, y1, z],
+          [x0, y1, z],
+          [(x0 + halfW) / width, (y0 + halfH) / height],
+          [(x1 + halfW) / width, (y0 + halfH) / height],
+          [(x1 + halfW) / width, (y1 + halfH) / height],
+          [(x0 + halfW) / width, (y1 + halfH) / height]
+        );
+      }
+    }
+  };
+
+  const pushHorizontalWallWithOpenGrooves = (y: number, zStart: number, zEnd: number, openedGrooves: NormalizedFaceGroove[]) => {
+    const zMin = Math.min(zStart, zEnd);
+    const zMax = Math.max(zStart, zEnd);
+    const xCuts = [-halfW, halfW];
+    const zCuts = [zMin, zMax];
+
+    openedGrooves.forEach((groove) => {
+      xCuts.push(Math.min(groove.faceX, groove.bottomX));
+      xCuts.push(Math.max(groove.faceX, groove.bottomX));
+      zCuts.push(Math.max(zMin, Math.min(zMax, groove.z0)));
+      zCuts.push(Math.max(zMin, Math.min(zMax, groove.z1)));
+    });
+
+    const sortedXCuts = [...new Set(xCuts.map((value) => Number(value.toFixed(6))))].sort((a, b) => a - b);
+    const sortedZCuts = [...new Set(zCuts.map((value) => Number(value.toFixed(6))))].sort((a, b) => a - b);
+
+    for (let xi = 0; xi < sortedXCuts.length - 1; xi++) {
+      for (let zi = 0; zi < sortedZCuts.length - 1; zi++) {
+        const x0 = sortedXCuts[xi];
+        const x1 = sortedXCuts[xi + 1];
+        const z0 = sortedZCuts[zi];
+        const z1 = sortedZCuts[zi + 1];
+        if (x1 - x0 < eps || z1 - z0 < eps) continue;
+
+        const centerX = (x0 + x1) / 2;
+        const centerZ = (z0 + z1) / 2;
+        const insideOpening = openedGrooves.some((groove) => {
+          const gx0 = Math.min(groove.faceX, groove.bottomX);
+          const gx1 = Math.max(groove.faceX, groove.bottomX);
+          return centerX > gx0 + eps &&
+            centerX < gx1 - eps &&
+            centerZ > groove.z0 + eps &&
+            centerZ < groove.z1 - eps;
+        });
+        if (insideOpening) continue;
+
+        pushQuad(
+          [x0, y, z0],
+          [x0, y, z1],
+          [x1, y, z1],
+          [x1, y, z0],
+          [(x0 + halfW) / width, (z0 + halfD) / depth],
+          [(x0 + halfW) / width, (z1 + halfD) / depth],
+          [(x1 + halfW) / width, (z1 + halfD) / depth],
+          [(x1 + halfW) / width, (z0 + halfD) / depth]
+        );
+      }
+    }
+  };
+
+  pushCap(halfW, 'right');
+  pushCap(-halfW, 'left');
+
+  for (let i = 0; i < contour.length; i++) {
+    const next = (i + 1) % contour.length;
+    const a = contour[i];
+    const b = contour[next];
+    const isEndWall = Math.abs(a.y - b.y) < eps && (Math.abs(a.y - halfD) < eps || Math.abs(a.y + halfD) < eps);
+    if (isPlainRectContour && isEndWall) {
+      const openedGrooves = grooves.filter((groove) =>
+        a.y > 0
+          ? groove.z1 >= halfD - eps
+          : groove.z0 <= -halfD + eps
+      );
+      if (openedGrooves.length > 0) {
+        pushEndWallWithOpenGrooves(a.y, a.x, b.x, openedGrooves);
+        continue;
+      }
+    }
+    const isHorizontalWall = Math.abs(a.x - b.x) < eps && (Math.abs(a.x - halfH) < eps || Math.abs(a.x + halfH) < eps);
+    if (isPlainRectContour && isHorizontalWall) {
+      const openedGrooves = grooves.filter((groove) =>
+        a.x > 0
+          ? groove.y1 >= halfH - eps
+          : groove.y0 <= -halfH + eps
+      );
+      if (openedGrooves.length > 0) {
+        pushHorizontalWallWithOpenGrooves(a.x, a.y, b.y, openedGrooves);
+        continue;
+      }
+    }
+    pushQuad(
+      [-halfW, a.x, a.y],
+      [halfW, a.x, a.y],
+      [halfW, b.x, b.y],
+      [-halfW, b.x, b.y],
+      [0, 0],
+      [1, 0],
+      [1, 1],
+      [0, 1]
+    );
+  }
+
+  grooves.forEach(({ y0, y1, z0, z1, faceX, bottomX }) => {
+    const openAtBack = z0 <= -halfD + eps;
+    const openAtFront = z1 >= halfD - eps;
+    const openAtBottom = y0 <= -halfH + eps;
+    const openAtTop = y1 >= halfH - eps;
+    pushQuad([bottomX, y0, z0], [bottomX, y1, z0], [bottomX, y1, z1], [bottomX, y0, z1]);
+    if (!openAtBack) {
+      pushQuad([faceX, y0, z0], [bottomX, y0, z0], [bottomX, y1, z0], [faceX, y1, z0]);
+    }
+    if (!openAtTop) {
+      pushQuad([faceX, y1, z0], [bottomX, y1, z0], [bottomX, y1, z1], [faceX, y1, z1]);
+    }
+    if (!openAtFront) {
+      pushQuad([faceX, y1, z1], [bottomX, y1, z1], [bottomX, y0, z1], [faceX, y0, z1]);
+    }
+    if (!openAtBottom) {
+      pushQuad([faceX, y0, z1], [bottomX, y0, z1], [bottomX, y0, z0], [faceX, y0, z0]);
+    }
+  });
+
+  const geometry = new THREE.BufferGeometry();
+  geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+  geometry.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2));
+  geometry.computeVertexNormals();
+  geometry.computeBoundingBox();
+  geometry.computeBoundingSphere();
+  return geometry;
+};
+
 interface BoxWithEdgesProps {
   args: [number, number, number];
   position: [number, number, number];
@@ -134,6 +640,7 @@ interface BoxWithEdgesProps {
   bottomRebate?: { width: number; height: number }; // 하단 양쪽 반턱 따내기 (width: 양쪽 폭, height: 따내기 높이, Three.js 단위)
   cornerNotch?: { width: number; depth: number; side: 'left' | 'right' }; // 상판 코너 따내기 (XZ평면, 위에서 본 ㄴ자형)
   backCenterNotch?: { sideStrip: number; depth: number }; // 뒷면 가운데 따내기 (XZ평면, 위에서 본 ㄷ자형) — sideStrip: 좌우 띠 폭, depth: 뒤에서 앞으로 깊이
+  faceGrooves?: FaceGroove[]; // 측판 안쪽면 반턱 홈 (백패널/서랍바닥 끼움용)
   circleHoles?: Array<{ x: number; y: number; radius: number }>; // 백패널 등 평면 패널의 원형 타공 (Three.js 단위, 패널 중심 기준 X/Y)
 }
 
@@ -169,6 +676,7 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
   bottomRebate,
   cornerNotch,
   backCenterNotch,
+  faceGrooves,
   circleHoles
 }) => {
   const safeArgs = React.useMemo<[number, number, number]>(() => [
@@ -462,7 +970,7 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
 
     // 3D에서만 고스트 적용 (2D에서는 치수 확인을 위해 원래 재질 유지)
     // MeshBasicMaterial 사용: 조명/카메라 각도에 무관하게 일관된 고스트 색상
-    if (viewMode === '3D' && !liveDimensionInspecting && (isDragging || effectiveEditMode) && baseMaterial instanceof THREE.MeshStandardMaterial) {
+    if (viewMode === '3D' && !liveDimensionInspecting && isDragging && baseMaterial instanceof THREE.MeshStandardMaterial) {
       const ghostMaterial = new THREE.MeshBasicMaterial({
         color: new THREE.Color(themePrimaryColor),
         transparent: true,
@@ -657,9 +1165,14 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
     return panelMaterial;
   }, [processedMaterial, panelName, activePanelGrainDirectionsStr, isDragging, effectiveEditMode, textureSignature, viewMode, effectiveRenderMode, isPlainMaterial]);
 
-  // cornerNotch / backCenterNotch ExtrudeGeometry는 축 스왑으로 일부 면 winding이 뒤집힘 → DoubleSide로 양면 렌더링
+  const normalizedFaceGrooves = React.useMemo(
+    () => normalizeFaceGrooves(faceGrooves, safeArgs),
+    [faceGrooves, safeArgs]
+  );
+
+  // cornerNotch / backCenterNotch / faceGrooves 커스텀 지오메트리는 일부 면 winding이 뒤집힐 수 있어 DoubleSide로 양면 렌더링
   const finalMaterial = React.useMemo(() => {
-    const needsClone = isLiveDimensionSelected || cornerNotch || backCenterNotch;
+    const needsClone = isLiveDimensionSelected || cornerNotch || backCenterNotch || normalizedFaceGrooves.length > 0;
     if (!needsClone) return panelSpecificMaterial;
 
     if (
@@ -670,7 +1183,7 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
     ) {
       const mat = panelSpecificMaterial.clone();
 
-      if (cornerNotch || backCenterNotch) {
+      if (cornerNotch || backCenterNotch || normalizedFaceGrooves.length > 0) {
         mat.side = THREE.DoubleSide;
       }
 
@@ -701,7 +1214,7 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
     }
 
     return panelSpecificMaterial;
-  }, [panelSpecificMaterial, cornerNotch, backCenterNotch, isLiveDimensionSelected, selectedPanelHighlightColor]);
+  }, [panelSpecificMaterial, cornerNotch, backCenterNotch, normalizedFaceGrooves.length, isLiveDimensionSelected, selectedPanelHighlightColor]);
 
   // useEffect 제거: useMemo에서 이미 모든 회전 로직을 처리하므로 중복 실행 방지
 
@@ -899,18 +1412,30 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
 
   // 다중 노치 여부 판별 (notches가 있으면 우선 사용)
   const hasCircleHoles = !!(circleHoles && circleHoles.length > 0);
-  const hasAnyNotch = !!(notch || (notches && notches.length > 0) || bottomRebate || cornerNotch || backCenterNotch);
+  const hasFaceGrooves = normalizedFaceGrooves.length > 0;
+  const hasAnyNotch = !!(notch || (notches && notches.length > 0) || bottomRebate || cornerNotch || backCenterNotch || hasFaceGrooves);
   const hasCustomGeometry = hasAnyNotch || hasCircleHoles;
 
   // L자형 노치 엣지 라인 생성 (2D/3D 공용) — 단일 및 다중 노치 지원
-  const getNotchEdgeLines = React.useCallback((): [number, number, number][][] => {
+  const getNotchEdgeLines = React.useCallback((options?: {
+    includeFaceGrooveEdges?: boolean;
+  }): [number, number, number][][] => {
     if (!hasAnyNotch) return [];
+    const includeFaceGrooveEdges = options?.includeFaceGrooveEdges ?? true;
     const [width, height, depth] = safeArgs;
     const halfW = width / 2, halfH = height / 2, halfD = depth / 2;
     const lines: [number, number, number][][] = [];
 
     // 프로필 꼭짓점 계산 (YZ 평면) — 앞면 윤곽선 경로
     const profileVertices: [number, number][] = []; // [Y, Z] 쌍
+
+    if (hasFaceGrooves && !notch && !(notches && notches.length > 0) && !bottomRebate && !cornerNotch && !backCenterNotch) {
+      lines.push(...buildBoxEdgeLines(width, height, depth));
+      if (includeFaceGrooveEdges) {
+        lines.push(...buildFaceGrooveEdgeLines(normalizedFaceGrooves));
+      }
+      return lines;
+    }
 
     if (bottomRebate) {
       // 반턱: 정면(XY)에서 양쪽 하단 모서리 깎기 — 엣지 라인
@@ -966,6 +1491,7 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
       for (const v of connectPts) {
         lines.push([[v[0], v[1], -halfD], [v[0], v[1], halfD]]);
       }
+      if (hasFaceGrooves && includeFaceGrooveEdges) lines.push(...buildFaceGrooveEdgeLines(normalizedFaceGrooves));
       return lines;
     } else if (notches && notches.length > 0) {
       // 다중 노치: bottom-back → bottom-front → 각 노치 → top-back
@@ -1110,8 +1636,12 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
       }
     }
 
+    if (hasFaceGrooves && includeFaceGrooveEdges) {
+      lines.push(...buildFaceGrooveEdgeLines(normalizedFaceGrooves));
+    }
+
     return lines;
-  }, [notch, notches, bottomRebate, cornerNotch, backCenterNotch, hasAnyNotch, safeArgs]);
+  }, [notch, notches, bottomRebate, cornerNotch, backCenterNotch, hasAnyNotch, hasFaceGrooves, normalizedFaceGrooves, safeArgs]);
 
   const liveDimensionNotchLines = React.useMemo(
     () => (hasAnyNotch ? getNotchEdgeLines() : undefined),
@@ -1136,6 +1666,23 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
     }));
   }, [notch, notches, safeArgs]);
 
+  const liveDimensionFaceGrooves = React.useMemo(() => {
+    if (!normalizedFaceGrooves.length) return undefined;
+
+    return normalizedFaceGrooves.map((groove) => ({
+      face: groove.face,
+      fromY: groove.y0 + safeArgs[1] / 2,
+      height: groove.y1 - groove.y0,
+      fromZ: groove.z0 + safeArgs[2] / 2,
+      depth: groove.z1 - groove.z0,
+      cutDepth: Math.abs(groove.faceX - groove.bottomX),
+      heightMm: Math.round((groove.y1 - groove.y0) / 0.01),
+      lengthMm: Math.round((groove.z1 - groove.z0) / 0.01),
+      grooveWidthMm: Math.round(Math.min(groove.y1 - groove.y0, groove.z1 - groove.z0) / 0.01),
+      cutDepthMm: Math.round((Math.abs(groove.faceX - groove.bottomX) / 0.01) * 10) / 10,
+    }));
+  }, [normalizedFaceGrooves, safeArgs]);
+
   // 2D 모드에서 엣지 렌더링 (panelName 기반 opacity 적용)
   const render2DEdgesWithDepth = React.useCallback(() => {
     const [width, height, depth] = safeArgs;
@@ -1143,8 +1690,14 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
     const halfH = height / 2;
     const halfD = depth / 2;
 
-    // notch가 있으면 L자형 엣지 사용
-    const lines: [number, number, number][][] = hasAnyNotch ? getNotchEdgeLines() : [];
+    const hideFaceGrooveEdgesInTop2D = view2DDirection === 'top' && hasFaceGrooves;
+    // notch가 있으면 L자형 엣지 사용. 탑뷰에서는 백패널/서랍 홈가공 내부선만 제외해 외곽선은 유지한다.
+    const lines: [number, number, number][][] = hasAnyNotch
+      ? getNotchEdgeLines({ includeFaceGrooveEdges: !hideFaceGrooveEdgesInTop2D })
+      : [];
+    if (hideFaceGrooveEdgesInTop2D) {
+      lines.push(...buildTopViewFaceGrooveEdgeLines(normalizedFaceGrooves));
+    }
 
     if (!hasAnyNotch) {
     // 입면도(front)에서는 앞면 사각형만 표시 (뒷면·연결 엣지 제거 → 불필요한 중앙선 방지)
@@ -1238,6 +1791,10 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
     if (!hasCustomGeometry) return null;
     const [w, h, d] = safeArgs;
     const halfW = w / 2, halfH = h / 2, halfD = d / 2;
+
+    if (hasFaceGrooves && !bottomRebate && !cornerNotch && !backCenterNotch && !hasCircleHoles) {
+      return createGroovedPanelGeometry(safeArgs, normalizedFaceGrooves, notch, notches);
+    }
 
     // YZ 평면 Shape 생성 (shapeX=Y축, shapeY=Z축)
     const shape = new THREE.Shape();
@@ -1485,7 +2042,7 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
     geom.computeVertexNormals();
 
     return geom;
-  }, [notch, notches, bottomRebate, cornerNotch, backCenterNotch, hasCircleHoles, circleHoles, hasAnyNotch, hasCustomGeometry, safeArgs]);
+  }, [notch, notches, bottomRebate, cornerNotch, backCenterNotch, hasCircleHoles, circleHoles, hasAnyNotch, hasCustomGeometry, hasFaceGrooves, normalizedFaceGrooves, safeArgs]);
 
   const selectedOutlineLines = React.useMemo<[number, number, number][][]>(() => {
     if (!isLiveDimensionSelected || viewMode !== '3D') return [];
@@ -1532,6 +2089,7 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
           },
           ...(liveDimensionNotchLines ? { liveDimensionNotchLines } : {}),
           ...(liveDimensionSideNotches ? { liveDimensionSideNotches } : {}),
+          ...(liveDimensionFaceGrooves ? { liveDimensionFaceGrooves } : {}),
         }}
         receiveShadow={viewMode === '3D' && effectiveRenderMode === 'solid' && shadowEnabled}
         castShadow={viewMode === '3D' && effectiveRenderMode === 'solid' && shadowEnabled}
@@ -1542,7 +2100,7 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
         material={finalMaterial}
       >
         {notchGeometry ? (
-          <primitive key={`notch-${safeArgs[0]}-${safeArgs[1]}-${safeArgs[2]}-${JSON.stringify(notch || notches || cornerNotch || backCenterNotch || circleHoles)}`} object={notchGeometry} attach="geometry" />
+          <primitive key={`notch-${safeArgs[0]}-${safeArgs[1]}-${safeArgs[2]}-${JSON.stringify(notch || notches || cornerNotch || backCenterNotch || faceGrooves || circleHoles)}`} object={notchGeometry} attach="geometry" />
         ) : (
           <boxGeometry key={`${safeArgs[0]}-${safeArgs[1]}-${safeArgs[2]}`} args={safeArgs} />
         )}
@@ -1556,7 +2114,7 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
           userData={{ tapeMeasureOverlay: true, liveDimensionOverlay: true, decoration: true }}
         >
           {notchGeometry ? (
-            <primitive key={`selected-glow-notch-${safeArgs[0]}-${safeArgs[1]}-${safeArgs[2]}-${JSON.stringify(notch || notches || cornerNotch || backCenterNotch || circleHoles)}`} object={notchGeometry} attach="geometry" />
+            <primitive key={`selected-glow-notch-${safeArgs[0]}-${safeArgs[1]}-${safeArgs[2]}-${JSON.stringify(notch || notches || cornerNotch || backCenterNotch || faceGrooves || circleHoles)}`} object={notchGeometry} attach="geometry" />
           ) : (
             <boxGeometry key={`selected-glow-${safeArgs[0]}-${safeArgs[1]}-${safeArgs[2]}`} args={safeArgs} />
           )}

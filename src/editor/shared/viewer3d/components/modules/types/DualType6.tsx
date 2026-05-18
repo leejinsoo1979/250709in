@@ -97,6 +97,14 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
 
   // Three.js 단위를 mm로 변환하는 함수
   const threeUnitsToMm = (units: number) => units * 100;
+  const createBackPanelFaceGrooves = React.useCallback((face: 'left' | 'right', panelHeight: number) => [{
+    face,
+    fromY: 0,
+    height: panelHeight,
+    fromZ: basicThickness - mmToThreeUnits(1),
+    depth: backPanelThickness + mmToThreeUnits(1),
+    cutDepth: mmToThreeUnits(5.5),
+  }], [basicThickness, backPanelThickness, mmToThreeUnits]);
 
   const { view2DDirection, showDimensions, showDimensionsText } = useUIStore();
   const { dimensionColor, baseFontSize, viewMode } = useDimensionColor();
@@ -611,6 +619,7 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
                 isDragging={isDragging}
                 isEditMode={isEditMode}
                 panelName="(하)좌측"
+                faceGrooves={createBackPanelFaceGrooves('right', lowerH)}
               />
               {/* (상)좌측 */}
               <BoxWithEdges
@@ -622,6 +631,7 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
                 isDragging={isDragging}
                 isEditMode={isEditMode}
                 panelName="(상)좌측"
+                faceGrooves={createBackPanelFaceGrooves('right', upperH)}
               />
               {/* (하)우측 */}
               <BoxWithEdges
@@ -633,6 +643,7 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
                 isDragging={isDragging}
                 isEditMode={isEditMode}
                 panelName="(하)우측"
+                faceGrooves={createBackPanelFaceGrooves('left', lowerH)}
               />
               {/* (상)우측 */}
               <BoxWithEdges
@@ -644,6 +655,7 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
                 isDragging={isDragging}
                 isEditMode={isEditMode}
                 panelName="(상)우측"
+                faceGrooves={createBackPanelFaceGrooves('left', upperH)}
               />
             </>
           );
@@ -661,6 +673,7 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
               isDragging={isDragging}
               isEditMode={isEditMode}
               panelName="좌측판"
+              faceGrooves={createBackPanelFaceGrooves('right', height)}
             />
             <BoxWithEdges
               args={[basicThickness, height, depth]}
@@ -671,6 +684,7 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
               isDragging={isDragging}
               isEditMode={isEditMode}
               panelName="우측판"
+              faceGrooves={createBackPanelFaceGrooves('left', height)}
             />
           </>
         );

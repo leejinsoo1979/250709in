@@ -437,6 +437,21 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
   const highlightedPanel = useUIStore(state => state.highlightedPanel);
   const doorsOpen = useUIStore(state => state.doorsOpen);
   const isGlassCabinet = !!moduleData?.id?.includes('glass-cabinet');
+  const createBackPanelFaceGrooves = useCallback((
+    face: 'left' | 'right',
+    panelHeight: number,
+    panelHasBackPanel = hasBackPanel
+  ) => {
+    if (!panelHasBackPanel || isGlassCabinet) return undefined;
+    return [{
+      face,
+      fromY: 0,
+      height: panelHeight,
+      fromZ: mmToThreeUnits(backPanelConfig.depthOffset),
+      depth: backPanelThickness + mmToThreeUnits(1),
+      cutDepth: mmToThreeUnits(5.5),
+    }];
+  }, [backPanelConfig.depthOffset, backPanelThickness, hasBackPanel, isGlassCabinet, mmToThreeUnits]);
 
   // 유리장 서랍 인출 애니메이션 — 도어가 90도 회전한 후 서랍 인출 (200mm)
   // 열기: doorsOpen=true → 500ms 지연 후 200mm 인출 (도어 회전이 먼저)
@@ -608,6 +623,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                     furnitureId={placedFurnitureId}
                     textureUrl={textureUrl}
                     notches={lowerNotches}
+                    faceGrooves={createBackPanelFaceGrooves('right', adjustedLowerHeight)}
                   />
 
                   {/* 왼쪽 상부 측판 */}
@@ -625,6 +641,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                     panelGrainDirections={panelGrainDirections}
                     furnitureId={placedFurnitureId}
                     textureUrl={textureUrl}
+                    faceGrooves={createBackPanelFaceGrooves('right', adjustedUpperHeight)}
                   />
 
                   {/* 오른쪽 하부 측판 */}
@@ -643,6 +660,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                     furnitureId={placedFurnitureId}
                     textureUrl={textureUrl}
                     notches={lowerNotches}
+                    faceGrooves={createBackPanelFaceGrooves('left', adjustedLowerHeight)}
                   />
 
                   {/* 오른쪽 상부 측판 */}
@@ -660,6 +678,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                     panelGrainDirections={panelGrainDirections}
                     furnitureId={placedFurnitureId}
                     textureUrl={textureUrl}
+                    faceGrooves={createBackPanelFaceGrooves('left', adjustedUpperHeight)}
                   />
                 </>
               );
@@ -745,6 +764,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                       panelGrainDirections={panelGrainDirections}
                       furnitureId={placedFurnitureId}
                       textureUrl={textureUrl}
+                      faceGrooves={createBackPanelFaceGrooves('right', height)}
                       {...(allNotches ? { notches: allNotches } : { notch: { y: notchY, z: notchZ } })}
                     />
 
@@ -762,6 +782,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                       panelGrainDirections={panelGrainDirections}
                       furnitureId={placedFurnitureId}
                       textureUrl={textureUrl}
+                      faceGrooves={createBackPanelFaceGrooves('left', height)}
                       {...(allNotches ? { notches: allNotches } : { notch: { y: notchY, z: notchZ } })}
                     />
 
@@ -867,6 +888,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                   : null;
                 const sectionDepthsArr = placedMod?.sectionDepths as number[] | undefined;
                 const sectionDirArr = placedMod?.sectionDepthDirections as ('front'|'back')[] | undefined;
+                const sectionBackPanelConfigs = ((moduleData as any)?.modelConfig as any)?.sections as { hasBackPanel?: boolean }[] | undefined;
                 const hasCustomSectionDepths = !!sectionDepthsArr && sectionDepthsArr.some(d => typeof d === 'number');
                 const moduleDepthMm = depth * 100;
                 let cursorY = -height / 2;
@@ -884,6 +906,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                   const leftPanelX = -halfOuterWidth + sidePanelThickness / 2;
                   const rightPanelX = halfOuterWidth - sidePanelThickness / 2;
                   const sectionHighlighted = highlightedSection === `${placedFurnitureId}-${idx}`;
+                  const sectionHasBackPanel = sectionBackPanelConfigs?.[idx]?.hasBackPanel !== false;
                   return (
                     <React.Fragment key={`side-panel-section-${idx}`}>
                       <BoxWithEdges
@@ -900,6 +923,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                         panelGrainDirections={panelGrainDirections}
                         furnitureId={placedFurnitureId}
                         textureUrl={textureUrl}
+                        faceGrooves={createBackPanelFaceGrooves('right', sh, sectionHasBackPanel)}
                       />
                       <BoxWithEdges
                         key={`right-panel-sec-${idx}-${getSidePanelMaterial('우측판').uuid}`}
@@ -915,6 +939,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                         panelGrainDirections={panelGrainDirections}
                         furnitureId={placedFurnitureId}
                         textureUrl={textureUrl}
+                        faceGrooves={createBackPanelFaceGrooves('left', sh, sectionHasBackPanel)}
                       />
                     </React.Fragment>
                   );
@@ -936,6 +961,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                   panelGrainDirections={panelGrainDirections}
                   furnitureId={placedFurnitureId}
                   textureUrl={textureUrl}
+                  faceGrooves={createBackPanelFaceGrooves('right', height)}
                 />
 
                 {/* 오른쪽 측면 판재 */}
@@ -952,6 +978,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                   panelGrainDirections={panelGrainDirections}
                   furnitureId={placedFurnitureId}
                   textureUrl={textureUrl}
+                  faceGrooves={createBackPanelFaceGrooves('left', height)}
                 />
               </>
             )}
@@ -2542,6 +2569,14 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                       const frontZ = drawerBodyCenterZ + drawerBodyD / 2 - DRAWER_SIDE_T / 2;
                       const backZ = drawerBodyCenterZ - drawerBodyD / 2 + DRAWER_SIDE_T / 2;
                       const sectionPrefix = `유리장 서랍${idx + 1}`;
+                      const drawerBottomGroove = (face: 'left' | 'right') => [{
+                        face,
+                        fromY: mmToThreeUnits(10),
+                        height: DRAWER_BOTTOM_T + mmToThreeUnits(1),
+                        fromZ: 0,
+                        depth: drawerBodyD,
+                        cutDepth: mmToThreeUnits(5.5),
+                      }];
                       return (
                         <animated.group key={`glass-drawer-${idx}`} position-z={glassDrawerSpring.z}>
                           {/* 좌측판 */}
@@ -2557,6 +2592,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                             panelGrainDirections={panelGrainDirections}
                             furnitureId={placedFurnitureId}
                             textureUrl={textureUrl}
+                            faceGrooves={drawerBottomGroove('right')}
                           />
                           {/* 우측판 */}
                           <BoxWithEdges
@@ -2571,6 +2607,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                             panelGrainDirections={panelGrainDirections}
                             furnitureId={placedFurnitureId}
                             textureUrl={textureUrl}
+                            faceGrooves={drawerBottomGroove('left')}
                           />
                           {/* 앞판 (측판 안쪽 끼움) */}
                           <BoxWithEdges

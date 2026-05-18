@@ -310,6 +310,7 @@ interface UIState {
   setPanelSimulationPlaying: (playing: boolean) => void;
   setPanelSimulationElapsedSeconds: (seconds: number) => void;
   setPanelSimulationDurationSeconds: (seconds: number) => void;
+  closePanelSimulation: () => void;
   completePanelSimulationAssembly: (revision: number) => void;
 
   // 지우개 모드 상태
@@ -1174,6 +1175,28 @@ export const useUIStore = create<UIState>()(
       setPanelSimulationDurationSeconds: (seconds) =>
         set({
           panelSimulationDurationSeconds: Math.max(1, seconds),
+        }),
+
+      closePanelSimulation: () =>
+        set((state) => {
+          const backup = state.panelSimulationViewBackup;
+          return {
+            panelSimulationPhase: 'assembled',
+            panelSimulationRevision: 0,
+            panelSimulationLayouts: {},
+            panelSimulationSheet: null,
+            panelSimulationSummary: null,
+            panelSimulationIsPlaying: false,
+            panelSimulationStartedAt: getPanelSimulationNow(),
+            panelSimulationOffsetSeconds: 0,
+            panelSimulationDurationSeconds: 1,
+            panelSimulationViewBackup: null,
+            showFurnitureEditHandles: backup?.showFurnitureEditHandles ?? state.showFurnitureEditHandles,
+            showDimensions: backup?.showDimensions ?? state.showDimensions,
+            showDimensionsText: backup?.showDimensionsText ?? state.showDimensionsText,
+            showGuides: backup?.showGuides ?? state.showGuides,
+            showAxis: backup?.showAxis ?? state.showAxis,
+          };
         }),
 
       completePanelSimulationAssembly: (revision) =>

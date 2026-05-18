@@ -183,6 +183,15 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
     leftDepth = rightDepth = mmToThreeUnits(leftDepthMm);
   }
 
+  const createBackPanelFaceGrooves = React.useCallback((face: 'left' | 'right', panelHeight: number) => [{
+    face,
+    fromY: 0,
+    height: panelHeight,
+    fromZ: basicThickness - mmToThreeUnits(1),
+    depth: backPanelThickness + mmToThreeUnits(1),
+    cutDepth: mmToThreeUnits(5.5),
+  }], [basicThickness, backPanelThickness, mmToThreeUnits]);
+
   // 우측 스타일러장은 항상 Z=0 중심 (660mm 깊이 기준)
 
   // 좌측 섹션 높이 계산 (좌측 측면판 분할용)
@@ -923,6 +932,7 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
                   isEditMode={isEditMode}
                   edgeOpacity={visibleSectionIndex === 1 ? 0.1 : undefined}
                   panelName={totalSections > 1 ? (isFirstSection ? '(하)좌측' : '(상)좌측') : '좌측판'}
+                  faceGrooves={createBackPanelFaceGrooves('right', adjustedHeight)}
                 />
               );
             });
@@ -939,6 +949,7 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
         isEditMode={isEditMode}
         edgeOpacity={(view2DDirection === 'left' || visibleSectionIndex === 0) && visibleSectionIndex !== 1 ? 0.1 : undefined}
         panelName="우측판"
+        faceGrooves={createBackPanelFaceGrooves('left', height)}
       />
       
       {/* 상단 판재 - 좌/우 분리, 뒤에서 26mm 줄여서 백패널과 맞닿게 */}

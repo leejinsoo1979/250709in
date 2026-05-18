@@ -18,6 +18,7 @@ interface HoverDimension {
   sizeThree: [number, number, number];
   notchLines?: LineSegment[];
   sideNotches?: SideNotchDimension[];
+  faceGrooves?: FaceGrooveDimension[];
   widthMm: number;
   heightMm: number;
   depthMm: number;
@@ -39,6 +40,19 @@ interface SideNotchDimension {
   fromBottom: number;
   heightMm: number;
   depthMm: number;
+}
+
+interface FaceGrooveDimension {
+  face: 'left' | 'right';
+  fromY: number;
+  height: number;
+  fromZ: number;
+  depth: number;
+  cutDepth: number;
+  heightMm: number;
+  lengthMm: number;
+  grooveWidthMm?: number;
+  cutDepthMm: number;
 }
 
 const THREE_UNITS_TO_MM = 100;
@@ -209,6 +223,33 @@ const normalizeSideNotches = (value: unknown): SideNotchDimension[] | undefined 
     .filter((item): item is SideNotchDimension => Boolean(item));
 
   return notches.length > 0 ? notches : undefined;
+};
+
+const normalizeFaceGrooves = (value: unknown): FaceGrooveDimension[] | undefined => {
+  if (!Array.isArray(value)) return undefined;
+
+  const grooves = value
+    .map((item) => {
+      if (!item || typeof item !== 'object') return null;
+      const source = item as Partial<FaceGrooveDimension>;
+      const face = source.face === 'left' || source.face === 'right' ? source.face : null;
+      const fromY = Number(source.fromY);
+      const height = Number(source.height);
+      const fromZ = Number(source.fromZ);
+      const depth = Number(source.depth);
+      const cutDepth = Number(source.cutDepth);
+      const heightMm = Number(source.heightMm);
+      const lengthMm = Number(source.lengthMm);
+      const grooveWidthMm = Number(source.grooveWidthMm ?? source.lengthMm);
+      const cutDepthMm = Number(source.cutDepthMm);
+      if (!face) return null;
+      if (![fromY, height, fromZ, depth, cutDepth, heightMm, lengthMm, grooveWidthMm, cutDepthMm].every(Number.isFinite)) return null;
+      if (height <= 0 || depth <= 0 || cutDepth <= 0) return null;
+      return { face, fromY, height, fromZ, depth, cutDepth, heightMm, lengthMm, grooveWidthMm, cutDepthMm };
+    })
+    .filter((item): item is FaceGrooveDimension => Boolean(item));
+
+  return grooves.length > 0 ? grooves : undefined;
 };
 
 const findUserData = (object: THREE.Object3D, key: string): unknown => {
@@ -455,6 +496,7 @@ const getHoverDimension = (object: THREE.Object3D): HoverDimension | null => {
     sizeThree: [size.x, size.y, size.z],
     notchLines: normalizeLineSegments(findUserData(object, 'liveDimensionNotchLines')),
     sideNotches: normalizeSideNotches(findUserData(object, 'liveDimensionSideNotches')),
+    faceGrooves: normalizeFaceGrooves(findUserData(object, 'liveDimensionFaceGrooves')),
     widthMm,
     heightMm,
     depthMm,
@@ -648,6 +690,39 @@ const LiveDimensionOverlay: React.FC<{ hover: HoverDimension }> = ({ hover }) =>
       };
     });
   }, [hover.sideNotches, viewSigns.x, w, h, d, margin]);
+  const faceGrooveGuides = useMemo(() => {
+    if (!hover.faceGrooves?.length) return [];
+
+    return hover.faceGrooves.map((groove, index) => {
+      const faceSign = groove.face === 'right' ? 1 : -1;
+      const faceX = faceSign * w / 2;
+      const bottomX = faceX - faceSign * groove.cutDepth;
+      const y0 = Math.max(-h / 2, Math.min(h / 2, -h / 2 + groove.fromY));
+      const y1 = Math.max(y0, Math.min(h / 2, y0 + groove.height));
+      const z0 = Math.max(-d / 2, Math.min(d / 2, -d / 2 + groove.fromZ));
+      const z1 = Math.max(z0, Math.min(d / 2, z0 + groove.depth));
+      const crossSectionZ = z1;
+      const labelOffsetY = Math.min(0.08, Math.max(0.025, margin * 0.14));
+      const labelOffsetX = faceSign * Math.min(0.08, Math.max(0.025, margin * 0.14));
+      const showThicknessOnY = groove.height <= groove.depth;
+      const thicknessLine = showThicknessOnY
+        ? [[bottomX, y0, crossSectionZ], [bottomX, y1, crossSectionZ]]
+        : [[bottomX, y1, z0], [bottomX, y1, z1]];
+      const thicknessLabel = showThicknessOnY
+        ? [bottomX + labelOffsetX, (y0 + y1) / 2, crossSectionZ]
+        : [bottomX + labelOffsetX, y1, (z0 + z1) / 2];
+
+      return {
+        index,
+        cutLine: [[faceX, y1, crossSectionZ], [bottomX, y1, crossSectionZ]] as LineSegment,
+        heightLine: thicknessLine as LineSegment,
+        cutLabel: [(faceX + bottomX) / 2, y1 + labelOffsetY, crossSectionZ] as Point3,
+        heightLabel: thicknessLabel as Point3,
+        cutDepthMm: groove.cutDepthMm,
+        grooveWidthMm: groove.grooveWidthMm ?? groove.lengthMm,
+      };
+    });
+  }, [hover.faceGrooves, w, h, d, margin]);
 
   return (
     <group position={hover.center} quaternion={hover.quaternion} userData={{ liveDimensionOverlay: true }}>
@@ -703,6 +778,18 @@ const LiveDimensionOverlay: React.FC<{ hover: HoverDimension }> = ({ hover }) =>
           </DimensionLabel>
           <DimensionLabel position={guide.heightLabel} color={DIMENSION_GUIDE_COLOR}>
             {guide.heightMm}
+          </DimensionLabel>
+        </React.Fragment>
+      ))}
+      {faceGrooveGuides.map((guide) => (
+        <React.Fragment key={`face-groove-guide-${guide.index}`}>
+          <Line points={guide.cutLine} {...lineProps} />
+          <Line points={guide.heightLine} {...lineProps} />
+          <DimensionLabel position={guide.cutLabel} color={DIMENSION_GUIDE_COLOR}>
+            {guide.cutDepthMm}
+          </DimensionLabel>
+          <DimensionLabel position={guide.heightLabel} color={DIMENSION_GUIDE_COLOR}>
+            {guide.grooveWidthMm}
           </DimensionLabel>
         </React.Fragment>
       ))}

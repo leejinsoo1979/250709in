@@ -160,6 +160,15 @@ const DualType2: React.FC<FurnitureTypeProps> = ({
     ];
   }, [lowerSectionDepth, upperSectionDepth, depth, mmToThreeUnits]);
 
+  const createBackPanelFaceGrooves = React.useCallback((face: 'left' | 'right', panelHeight: number) => [{
+    face,
+    fromY: 0,
+    height: panelHeight,
+    fromZ: basicThickness - mmToThreeUnits(1),
+    depth: backPanelThickness + mmToThreeUnits(1),
+    cutDepth: mmToThreeUnits(5.5),
+  }], [basicThickness, backPanelThickness, mmToThreeUnits]);
+
   // 디버그: showFurniture 값 확인
   useEffect(() => {
     console.log('🎨 DualType2 - showFurniture:', showFurniture, 'moduleId:', moduleData.id);
@@ -212,6 +221,7 @@ const DualType2: React.FC<FurnitureTypeProps> = ({
                   panelName={`${index === 0 ? '(하)' : '(상)'}좌측`}
                   panelGrainDirections={panelGrainDirections}
                   textureUrl={spaceInfo.materialConfig?.doorTexture}
+                  faceGrooves={createBackPanelFaceGrooves('right', sectionHeight)}
                 />
 
                 {/* 오른쪽 측면 판재 - 섹션별로 분할 */}
@@ -227,6 +237,7 @@ const DualType2: React.FC<FurnitureTypeProps> = ({
                   panelName={`${index === 0 ? '(하)' : '(상)'}우측`}
                   panelGrainDirections={panelGrainDirections}
                   textureUrl={spaceInfo.materialConfig?.doorTexture}
+                  faceGrooves={createBackPanelFaceGrooves('left', sectionHeight)}
                 />
                 
                 {/* 중간 구분 패널 (하부 섹션 상판) - 뒤에서 26mm 줄여서 백패널과 맞닿게 + 사용자 오프셋 (앞에서 줄어듦) */}
@@ -318,6 +329,7 @@ const DualType2: React.FC<FurnitureTypeProps> = ({
             panelName="좌측판"
             panelGrainDirections={panelGrainDirections}
             textureUrl={spaceInfo.materialConfig?.doorTexture}
+            faceGrooves={createBackPanelFaceGrooves('right', height)}
           />
 
           {/* 오른쪽 측면 판재 */}
@@ -331,6 +343,7 @@ const DualType2: React.FC<FurnitureTypeProps> = ({
             panelName="우측판"
             panelGrainDirections={panelGrainDirections}
             textureUrl={spaceInfo.materialConfig?.doorTexture}
+            faceGrooves={createBackPanelFaceGrooves('left', height)}
           />
         </>
       )}

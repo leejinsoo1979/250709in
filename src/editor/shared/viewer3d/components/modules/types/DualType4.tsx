@@ -141,6 +141,15 @@ const DualType4: React.FC<FurnitureTypeProps> = ({
     return result;
   })();
 
+  const createBackPanelFaceGrooves = React.useCallback((face: 'left' | 'right', panelHeight: number) => [{
+    face,
+    fromY: 0,
+    height: panelHeight,
+    fromZ: basicThickness - mmToThreeUnits(1),
+    depth: backPanelThickness + mmToThreeUnits(1),
+    cutDepth: mmToThreeUnits(5.5),
+  }], [basicThickness, backPanelThickness, mmToThreeUnits]);
+
   // 패널 강조용 형광색 material
   const highlightMaterial = React.useMemo(() =>
     new THREE.MeshBasicMaterial({
@@ -228,6 +237,7 @@ const DualType4: React.FC<FurnitureTypeProps> = ({
                         isEditMode={isEditMode}
                         isHighlighted={isSectionHighlighted}
                         panelName="(하)좌측"
+                        faceGrooves={createBackPanelFaceGrooves('right', drawerSectionHeight)}
                       />
 
                       {/* 오른쪽 측면 판재 */}
@@ -241,6 +251,7 @@ const DualType4: React.FC<FurnitureTypeProps> = ({
                         isEditMode={isEditMode}
                         isHighlighted={isSectionHighlighted}
                         panelName="(하)우측"
+                        faceGrooves={createBackPanelFaceGrooves('left', drawerSectionHeight)}
                       />
                     </>
                   ) : (
@@ -257,6 +268,7 @@ const DualType4: React.FC<FurnitureTypeProps> = ({
                         isEditMode={isEditMode}
                         isHighlighted={isSectionHighlighted}
                         panelName="(상)좌측"
+                        faceGrooves={createBackPanelFaceGrooves('right', hangingSectionHeight)}
                       />
 
                       {/* 오른쪽 측면 판재 */}
@@ -270,6 +282,7 @@ const DualType4: React.FC<FurnitureTypeProps> = ({
                         isEditMode={isEditMode}
                         isHighlighted={isSectionHighlighted}
                         panelName="(상)우측"
+                        faceGrooves={createBackPanelFaceGrooves('left', hangingSectionHeight)}
                       />
                     </>
                   )}
@@ -339,6 +352,7 @@ const DualType4: React.FC<FurnitureTypeProps> = ({
             isDragging={isDragging}
             isEditMode={isEditMode}
             panelName="좌측판"
+            faceGrooves={createBackPanelFaceGrooves('right', height)}
           />
 
           {/* 오른쪽 측면 판재 */}
@@ -351,6 +365,7 @@ const DualType4: React.FC<FurnitureTypeProps> = ({
             isDragging={isDragging}
             isEditMode={isEditMode}
             panelName="우측판"
+            faceGrooves={createBackPanelFaceGrooves('left', height)}
           />
         </>
       )}

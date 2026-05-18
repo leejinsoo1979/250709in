@@ -281,6 +281,18 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
   const backPanelDepthOffsetMm = 17; // 백패널 뒤쪽에서의 오프셋
   const drawerTopInsetMm = 85; // 서랍 섹션 상판 앞쪽 들여쓰기
   const drawerTopInset = mmToUnit(drawerTopInsetMm);
+  const createBackPanelFaceGrooves = (
+    face: 'left' | 'right',
+    panelHeight: number,
+    enabled = true,
+  ) => enabled ? [{
+    face,
+    fromY: 0,
+    height: panelHeight,
+    fromZ: mmToUnit(backPanelDepthOffsetMm),
+    depth: backPanelT + mmToUnit(1),
+    cutDepth: mmToUnit(5.5),
+  }] : undefined;
 
   // Three.js 단위 치수
   const W = mmToUnit(width);
@@ -1529,6 +1541,7 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
           args={[t, boxH + leftSideExt, leftD]} position={[-bInnerW / 2 - t / 2, centerY - leftSideExt / 2, leftZOffset]}
           material={material} renderMode={renderMode} isDragging={isDragging} isHighlighted={isHighlighted}
           panelName={`${sectionLabel}좌측판`} panelGrainDirections={panelGrainDirections} furnitureId={placedFurnitureId}
+          faceGrooves={createBackPanelFaceGrooves('right', boxH + leftSideExt, getAreaShowBackPanel('left') !== false)}
         />
       );
       // ── 우측 측판 ── (바닥판 올림 시 조절발 높이만큼 아래로 확장)
@@ -1538,6 +1551,7 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
           args={[t, boxH + rightSideExt, rightD]} position={[bInnerW / 2 + t / 2, centerY - rightSideExt / 2, rightZOffset]}
           material={material} renderMode={renderMode} isDragging={isDragging} isHighlighted={isHighlighted}
           panelName={`${sectionLabel}우측판`} panelGrainDirections={panelGrainDirections} furnitureId={placedFurnitureId}
+          faceGrooves={createBackPanelFaceGrooves('left', boxH + rightSideExt, getAreaShowBackPanel('right') !== false)}
         />
       );
 
@@ -1644,6 +1658,7 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
         panelName={`${sectionLabel}좌측판`}
         panelGrainDirections={panelGrainDirections}
         furnitureId={placedFurnitureId}
+        faceGrooves={createBackPanelFaceGrooves('right', boxH + singleSideExt, getAreaShowBackPanel('left') !== false)}
       />
     );
     meshes.push(
@@ -1658,6 +1673,7 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
         panelName={`${sectionLabel}우측판`}
         panelGrainDirections={panelGrainDirections}
         furnitureId={placedFurnitureId}
+        faceGrooves={createBackPanelFaceGrooves('left', boxH + singleSideExt, getAreaShowBackPanel('right') !== false)}
       />
     );
 
@@ -1894,6 +1910,7 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
           panelName={`${label}좌측판`}
           panelGrainDirections={panelGrainDirections}
           furnitureId={placedFurnitureId}
+          faceGrooves={createBackPanelFaceGrooves('right', sbBoxH + hsSideExt, hsGetAreaShowBackPanel(side) !== false)}
         />
       );
       subMeshes.push(
@@ -1908,6 +1925,7 @@ const CustomizableBoxModule: React.FC<CustomizableBoxModuleProps> = ({
           panelName={`${label}우측판`}
           panelGrainDirections={panelGrainDirections}
           furnitureId={placedFurnitureId}
+          faceGrooves={createBackPanelFaceGrooves('left', sbBoxH + hsSideExt, hsGetAreaShowBackPanel(side) !== false)}
         />
       );
 

@@ -501,6 +501,18 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
     const drawerBodyDepth = actualDrawerDepth - HANDLE_PLATE_THICKNESS;
     // 서랍 본체 중심 (뒤쪽으로 10mm 이동)
     const drawerBodyCenterZ = centerZ - HANDLE_PLATE_THICKNESS / 2;
+    const drawerSidePanelHeight = drawerHeight - mmToThreeUnits(30);
+    const drawerBottomPanelThickness = backPanelThickness;
+    const drawerBottomPanelDepth = drawerBodyDepth - mmToThreeUnits(10);
+    const drawerBottomGrooveFromY = Math.max(0, basicThickness + mmToThreeUnits(10) - mmToThreeUnits(15));
+    const drawerBottomGroove = (face: 'left' | 'right') => [{
+      face,
+      fromY: drawerBottomGrooveFromY,
+      height: drawerBottomPanelThickness + mmToThreeUnits(1),
+      fromZ: 0,
+      depth: drawerBodyDepth,
+      cutDepth: mmToThreeUnits(5.5),
+    }];
 
     return (
       <animated.group key={key} position-z={drawerSlideSpring.offset}>
@@ -517,9 +529,9 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
         {(() => {
           const panelName = sectionName ? `${sectionName}서랍${drawerIndex + 1} 바닥` : `서랍${drawerIndex + 1} 바닥`;
           const mat = getPanelMaterial(panelName);
-          const bottomThk = backPanelThickness; // 바닥판 두께 = 백패널 두께
+          const bottomThk = drawerBottomPanelThickness; // 바닥판 두께 = 백패널 두께
           // 앞쪽 10mm 여유는 유지(홈 끼움), 뒤쪽은 본체 끝까지 확장
-          const bottomDepth = drawerBodyDepth - mmToThreeUnits(10);
+          const bottomDepth = drawerBottomPanelDepth;
           // Z: 앞쪽 고정, 뒤로만 늘어남 → 중심이 뒤쪽으로 5mm 이동
           const bottomZ = drawerBodyCenterZ - mmToThreeUnits(5);
           return (
@@ -593,7 +605,7 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
           return (
             <BoxWithEdges
               key={`drawer-${drawerIndex}-left-${mat.uuid}`}
-              args={[DRAWER_SIDE_THICKNESS, drawerHeight - mmToThreeUnits(30), drawerBodyDepth]}
+              args={[DRAWER_SIDE_THICKNESS, drawerSidePanelHeight, drawerBodyDepth]}
               position={[centerX - drawerWidth/2 + DRAWER_SIDE_THICKNESS/2 + mmToThreeUnits(38), centerY, drawerBodyCenterZ]}
               material={mat}
               renderMode={renderMode}
@@ -602,6 +614,7 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
               textureUrl={textureUrl}
               panelGrainDirections={panelGrainDirections}
               furnitureId={furnitureId}
+              faceGrooves={drawerBottomGroove('right')}
             />
           );
         })()}
@@ -613,7 +626,7 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
           return (
             <BoxWithEdges
               key={`drawer-${drawerIndex}-right-${mat.uuid}`}
-              args={[DRAWER_SIDE_THICKNESS, drawerHeight - mmToThreeUnits(30), drawerBodyDepth]}
+              args={[DRAWER_SIDE_THICKNESS, drawerSidePanelHeight, drawerBodyDepth]}
               position={[centerX + drawerWidth/2 - DRAWER_SIDE_THICKNESS/2 - mmToThreeUnits(38), centerY, drawerBodyCenterZ]}
               material={mat}
               renderMode={renderMode}
@@ -622,6 +635,7 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
               textureUrl={textureUrl}
               panelGrainDirections={panelGrainDirections}
               furnitureId={furnitureId}
+              faceGrooves={drawerBottomGroove('left')}
             />
           );
         })()}
