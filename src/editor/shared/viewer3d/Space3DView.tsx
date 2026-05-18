@@ -1,10 +1,12 @@
 import React, { useEffect, useMemo, useState, useCallback, useRef } from 'react';
 import * as THREE from 'three';
+import { onAuthStateChanged } from 'firebase/auth';
 import { RxDimensions } from 'react-icons/rx';
 import { LuEraser } from 'react-icons/lu';
 import { Gauge, Pause, Play, SlidersHorizontal, Square, Sun, Moon, X } from 'lucide-react';
 import { Space3DViewProps } from './types';
 import { Space3DViewProvider } from './context/Space3DViewContext';
+import { useSpace3DView } from './context/useSpace3DView';
 import { ViewerThemeProvider } from './context/ViewerThemeContext';
 import ThreeCanvas from './components/base/ThreeCanvas';
 import Room from './components/elements/Room';
@@ -51,6 +53,7 @@ import { useTheme } from '@/contexts/ThemeContext';
 import { getModuleById } from '@/data/modules';
 import { useThrottle } from '@/editor/shared/hooks/useThrottle';
 import { useResponsive } from '@/hooks/useResponsive';
+import { auth } from '@/firebase/config';
 import { getCanonicalPanelNameCandidates } from '@/editor/shared/utils/panelNameCanonical';
 import { useLivePanelData } from '@/editor/CNCOptimizer/hooks/useLivePanelData';
 import { optimizePanelsMultiple } from '@/editor/CNCOptimizer/utils/optimizer';
@@ -75,8 +78,29 @@ const PANEL_SIMULATION_MM_TO_WORLD = 0.006;
 const PANEL_SIMULATION_SOURCE_MM_TO_WORLD = 0.01;
 const PANEL_SIMULATION_SCALE = PANEL_SIMULATION_MM_TO_WORLD / PANEL_SIMULATION_SOURCE_MM_TO_WORLD;
 const PANEL_SIMULATION_SHEET_GAP_WORLD = 1.2;
+const PANEL_SIMULATION_ADMIN_EMAIL = 'sbbc212@gmail.com';
 
 const clampNumber = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value));
+
+const normalizeEmail = (email?: string | null) => (email || '').toLowerCase().trim();
+
+const usePanelSimulationAccess = () => {
+  const [email, setEmail] = useState(() => normalizeEmail(auth.currentUser?.email));
+  const [ready, setReady] = useState(() => !!auth.currentUser);
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (nextUser) => {
+      setEmail(normalizeEmail(nextUser?.email));
+      setReady(true);
+    });
+    return unsubscribe;
+  }, []);
+
+  return {
+    ready,
+    canUsePanelSimulation: email === PANEL_SIMULATION_ADMIN_EMAIL,
+  };
+};
 
 const getPanelSimulationExportOrder = (
   panelName: string | undefined,
@@ -954,7 +978,8 @@ const getSmoothCinematicArcPosition = (
   return d.lerp(e, t);
 };
 
-const PanelSimulationPlaybackControls: React.FC = () => {
+const PanelSimulationPlaybackControls: React.FC<{ enabled: boolean }> = ({ enabled }) => {
+  const { viewMode } = useSpace3DView();
   const panelSimulationPhase = useUIStore(state => state.panelSimulationPhase);
   const panelSimulationRevision = useUIStore(state => state.panelSimulationRevision);
   const panelSimulationViewBackup = useUIStore(state => state.panelSimulationViewBackup);
@@ -969,7 +994,6 @@ const PanelSimulationPlaybackControls: React.FC = () => {
   const setPlaying = useUIStore(state => state.setPanelSimulationPlaying);
   const setElapsedSeconds = useUIStore(state => state.setPanelSimulationElapsedSeconds);
   const togglePanelSimulation = useUIStore(state => state.togglePanelSimulation);
-  const closePanelSimulation = useUIStore(state => state.closePanelSimulation);
   const [elapsedSeconds, setElapsedSecondsState] = useState(0);
   const completedRevisionRef = useRef(0);
 
@@ -981,10 +1005,11 @@ const PanelSimulationPlaybackControls: React.FC = () => {
     && panelSimulationRevision > 0
     && !panelSimulationViewBackup
     && !isPlaying;
-  const showControls =
+  const showControls = enabled && viewMode === '3D' && (
     (panelSimulationPhase === 'assembled' && !!panelSimulationViewBackup) ||
     isLayoutComplete ||
-    isAssemblyComplete;
+    isAssemblyComplete
+  );
 
   useEffect(() => {
     setElapsedSecondsState(0);
@@ -2010,7 +2035,8 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
   const location = useLocation();
   const { spaceInfo: storeSpaceInfo, updateColumn, removeColumn, updateWall, removeWall, addWall, removePanelB, updatePanelB } = useSpaceConfigStore();
   const { placedModules, updateFurnitureForColumns } = useFurnitureStore();
-  const { view2DDirection, showDimensions: storeShowDimensions, showDimensionsText, showGuides, showAxis, activePopup, setView2DDirection, setViewMode: setUIViewMode, isColumnCreationMode, isWallCreationMode, isPanelBCreationMode, view2DTheme, showFurniture: storeShowFurniture, isMeasureMode, toggleMeasureMode, isEraserMode, selectedSlotIndex, setSelectedSlotIndex, cameraMode, isLayoutBuilderOpen, sunAngle, selectedColumnId, isLiveDimensionMode, isTapeMeasureMode, panelSimulationPhase, panelSimulationRevision, panelSimulationSheet, panelSimulationViewBackup, setPanelSimulationLayouts, setRenderMode } = useUIStore();
+  const { view2DDirection, showDimensions: storeShowDimensions, showDimensionsText, showGuides, showAxis, activePopup, setView2DDirection, setViewMode: setUIViewMode, isColumnCreationMode, isWallCreationMode, isPanelBCreationMode, view2DTheme, showFurniture: storeShowFurniture, isMeasureMode, toggleMeasureMode, isEraserMode, selectedSlotIndex, setSelectedSlotIndex, cameraMode, isLayoutBuilderOpen, sunAngle, selectedColumnId, isLiveDimensionMode, isTapeMeasureMode, panelSimulationPhase, panelSimulationRevision, panelSimulationSheet, panelSimulationViewBackup, setPanelSimulationLayouts, setRenderMode, closePanelSimulation } = useUIStore();
+  const { ready: panelSimulationAccessReady, canUsePanelSimulation } = usePanelSimulationAccess();
   const isInspectionMode3D = viewMode === '3D' && (isLiveDimensionMode || isTapeMeasureMode);
   const effectiveRenderMode = isInspectionMode3D ? 'solid' : renderMode;
   const { panels: livePanelsForSimulation } = useLivePanelData();
@@ -2065,7 +2091,8 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
     doorColor: '#FFFFFF'  // 기본값도 흰색으로 변경 (테스트용)
   };
   const showDimensions = showDimensionsProp !== undefined ? showDimensionsProp : storeShowDimensions;
-  const isPanelSimulationPresentation = viewMode === '3D' && (panelSimulationPhase === 'layout' || !!panelSimulationViewBackup);
+  const canRenderPanelSimulation = panelSimulationAccessReady && canUsePanelSimulation;
+  const isPanelSimulationPresentation = canRenderPanelSimulation && viewMode === '3D' && (panelSimulationPhase === 'layout' || !!panelSimulationViewBackup);
   const effectiveShowDimensions = isPanelSimulationPresentation ? false : showDimensions;
   const effectiveShowDimensionsText = isPanelSimulationPresentation ? false : showDimensionsText;
   const effectiveShowGuides = isPanelSimulationPresentation ? false : showGuides;
@@ -2078,6 +2105,11 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
     clearPanelSimulationSources();
     clearedPanelSimulationRevisionRef.current = panelSimulationRevision;
   }, [panelSimulationRevision]);
+
+  useEffect(() => {
+    if (!panelSimulationAccessReady || canUsePanelSimulation || panelSimulationRevision <= 0) return;
+    closePanelSimulation();
+  }, [panelSimulationAccessReady, canUsePanelSimulation, panelSimulationRevision, closePanelSimulation]);
 
   // ESC 키 이벤트 리스너 - selectedFurnitureId 해제
   // (E 키 지우개 토글은 Configurator의 단축키 핸들러에서 처리)
@@ -3938,8 +3970,8 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
 
               <LiveDimensionInspector enabled={viewMode === '3D' && isLiveDimensionMode} />
               <TapeMeasureInspector enabled={viewMode === '3D' && isTapeMeasureMode} />
-              <PanelSimulationBoard />
-              <PanelSimulationMovingPanels />
+              {canRenderPanelSimulation && <PanelSimulationBoard />}
+              {canRenderPanelSimulation && <PanelSimulationMovingPanels />}
 
               {/* 단내림 공간 렌더링 */}
               {!isPanelSimulationPresentation && <DroppedCeilingSpace spaceInfo={spaceInfo} />}
@@ -4161,8 +4193,8 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
               {!isPanelSimulationPresentation && viewMode === '2D' && <MeasurementTool viewDirection={view2DDirection} />}
             </React.Suspense>
           </ThreeCanvas>
-          <PanelSimulationSummaryPopup />
-          <PanelSimulationPlaybackControls />
+          {canRenderPanelSimulation && <PanelSimulationSummaryPopup />}
+          <PanelSimulationPlaybackControls enabled={canRenderPanelSimulation} />
 
           {/* 분할 모드 버튼 - 2D 모드에서만 표시 (임베디드 모드에서는 숨김) */}
           {!isEmbedded && viewMode === '2D' && view2DDirection !== 'all' && (
