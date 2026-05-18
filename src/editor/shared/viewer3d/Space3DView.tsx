@@ -994,6 +994,7 @@ const PanelSimulationPlaybackControls: React.FC<{ enabled: boolean }> = ({ enabl
   const setPlaying = useUIStore(state => state.setPanelSimulationPlaying);
   const setElapsedSeconds = useUIStore(state => state.setPanelSimulationElapsedSeconds);
   const togglePanelSimulation = useUIStore(state => state.togglePanelSimulation);
+  const closePanelSimulation = useUIStore(state => state.closePanelSimulation);
   const [elapsedSeconds, setElapsedSecondsState] = useState(0);
   const completedRevisionRef = useRef(0);
 
