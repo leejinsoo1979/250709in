@@ -770,7 +770,7 @@ const PanelSimulationSummaryPopup: React.FC = () => {
         justifyContent: 'center',
         zIndex: 80,
         pointerEvents: 'none',
-        color: '#f8fafc',
+        color: 'var(--theme-text-primary, #111827)',
         fontFamily: 'Pretendard, Inter, system-ui, sans-serif',
       }}
     >
@@ -778,18 +778,17 @@ const PanelSimulationSummaryPopup: React.FC = () => {
         style={{
           width: 'min(430px, calc(100% - 40px))',
           pointerEvents: 'auto',
-          background: 'linear-gradient(145deg, rgba(15, 23, 42, 0.94), rgba(30, 41, 59, 0.9))',
-          border: '1px solid rgba(248, 250, 252, 0.16)',
+          background: 'var(--theme-surface, #ffffff)',
+          border: '1px solid var(--theme-border, #e5e7eb)',
           borderRadius: 8,
-          boxShadow: '0 24px 70px rgba(2, 6, 23, 0.42)',
+          boxShadow: '0 24px 70px rgba(0, 0, 0, 0.18)',
           padding: '16px',
-          backdropFilter: 'blur(18px)',
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
           <div>
-            <div style={{ fontSize: 12, color: '#38bdf8', fontWeight: 800 }}>PANEL LAYOUT</div>
-            <div style={{ marginTop: 2, fontSize: 20, fontWeight: 900, letterSpacing: 0 }}>
+            <div style={{ fontSize: 12, color: 'var(--theme-primary, #2196F3)', fontWeight: 800 }}>PANEL LAYOUT</div>
+            <div style={{ marginTop: 2, fontSize: 20, fontWeight: 900, letterSpacing: 0, color: 'var(--theme-text-primary)' }}>
               레이아웃 계산 완료
             </div>
           </div>
@@ -801,10 +800,10 @@ const PanelSimulationSummaryPopup: React.FC = () => {
               flex: '0 0 auto',
               width: 30,
               height: 30,
-              border: '1px solid rgba(226, 232, 240, 0.18)',
+              border: '1px solid var(--theme-border, #e5e7eb)',
               borderRadius: 8,
-              background: 'rgba(255, 255, 255, 0.07)',
-              color: '#e2e8f0',
+              background: 'var(--theme-background-secondary, #f3f4f6)',
+              color: 'var(--theme-text-secondary, #6b7280)',
               fontSize: 18,
               lineHeight: '26px',
               cursor: 'pointer',
@@ -815,13 +814,13 @@ const PanelSimulationSummaryPopup: React.FC = () => {
         </div>
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 8, marginTop: 14 }}>
-          <div style={{ borderRadius: 8, background: 'rgba(248, 250, 252, 0.08)', border: '1px solid rgba(248, 250, 252, 0.08)', padding: '10px 12px' }}>
-            <div style={{ fontSize: 11, color: '#94a3b8', fontWeight: 700 }}>원장 수량</div>
-            <div style={{ marginTop: 2, fontSize: 24, fontWeight: 900 }}>{summary.sheetCount}</div>
+          <div style={{ borderRadius: 8, background: 'var(--theme-background-secondary, #f3f4f6)', border: '1px solid var(--theme-border, #e5e7eb)', padding: '10px 12px' }}>
+            <div style={{ fontSize: 11, color: 'var(--theme-text-secondary, #6b7280)', fontWeight: 700 }}>원장 수량</div>
+            <div style={{ marginTop: 2, fontSize: 24, fontWeight: 900, color: 'var(--theme-text-primary)' }}>{summary.sheetCount}</div>
           </div>
-          <div style={{ borderRadius: 8, background: 'rgba(248, 250, 252, 0.08)', border: '1px solid rgba(248, 250, 252, 0.08)', padding: '10px 12px' }}>
-            <div style={{ fontSize: 11, color: '#94a3b8', fontWeight: 700 }}>패널 수량</div>
-            <div style={{ marginTop: 2, fontSize: 24, fontWeight: 900 }}>{summary.panelCount}</div>
+          <div style={{ borderRadius: 8, background: 'var(--theme-background-secondary, #f3f4f6)', border: '1px solid var(--theme-border, #e5e7eb)', padding: '10px 12px' }}>
+            <div style={{ fontSize: 11, color: 'var(--theme-text-secondary, #6b7280)', fontWeight: 700 }}>패널 수량</div>
+            <div style={{ marginTop: 2, fontSize: 24, fontWeight: 900, color: 'var(--theme-text-primary)' }}>{summary.panelCount}</div>
           </div>
         </div>
 
@@ -831,9 +830,9 @@ const PanelSimulationSummaryPopup: React.FC = () => {
               key={`${item.material}-${item.thickness ?? ''}`}
               style={{
                 borderRadius: 7,
-                background: 'rgba(14, 165, 233, 0.12)',
-                border: '1px solid rgba(125, 211, 252, 0.18)',
-                color: '#f8fafc',
+                background: 'color-mix(in srgb, var(--theme-primary) 12%, transparent)',
+                border: '1px solid color-mix(in srgb, var(--theme-primary) 28%, transparent)',
+                color: 'var(--theme-primary)',
                 padding: '7px 9px',
                 fontSize: 12,
                 fontWeight: 800,
@@ -854,19 +853,39 @@ const PanelSimulationSummaryPopup: React.FC = () => {
                 alignItems: 'center',
                 gap: 12,
                 fontSize: 12,
-                color: '#cbd5e1',
-                borderTop: '1px solid rgba(226, 232, 240, 0.1)',
+                color: 'var(--theme-text-secondary, #6b7280)',
+                borderTop: '1px solid var(--theme-border, #e5e7eb)',
                 padding: '8px 0',
               }}
             >
               <span>
-                <strong style={{ color: '#ffffff' }}>{item.material}</strong>
+                <strong style={{ color: 'var(--theme-text-primary)' }}>{item.material}</strong>
                 {' '}{formatThickness(item.thickness)} · {item.width}×{item.height}
               </span>
-              <strong style={{ color: '#ffffff' }}>{item.count}장</strong>
+              <strong style={{ color: 'var(--theme-text-primary)' }}>{item.count}장</strong>
             </div>
           ))}
         </div>
+
+        <button
+          type="button"
+          onClick={() => setPanelSimulationSummary(null)}
+          style={{
+            marginTop: 14,
+            width: '100%',
+            height: 38,
+            border: 'none',
+            borderRadius: 8,
+            background: 'var(--theme-primary)',
+            color: '#ffffff',
+            fontSize: 13,
+            fontWeight: 900,
+            cursor: 'pointer',
+            boxShadow: '0 4px 12px color-mix(in srgb, var(--theme-primary) 25%, transparent)',
+          }}
+        >
+          확인
+        </button>
       </div>
     </div>
   );
@@ -939,6 +958,7 @@ const PanelSimulationPlaybackControls: React.FC = () => {
   const panelSimulationPhase = useUIStore(state => state.panelSimulationPhase);
   const panelSimulationRevision = useUIStore(state => state.panelSimulationRevision);
   const panelSimulationViewBackup = useUIStore(state => state.panelSimulationViewBackup);
+  const panelSimulationSummary = useUIStore(state => state.panelSimulationSummary);
   const playbackRate = useUIStore(state => state.panelSimulationPlaybackRate);
   const animationStyle = useUIStore(state => state.panelSimulationAnimationStyle);
   const isPlaying = useUIStore(state => state.panelSimulationIsPlaying);
@@ -951,7 +971,9 @@ const PanelSimulationPlaybackControls: React.FC = () => {
   const completedRevisionRef = useRef(0);
 
   const isActive = panelSimulationRevision > 0 && (panelSimulationPhase === 'layout' || !!panelSimulationViewBackup);
-  const showControls = panelSimulationPhase === 'assembled' && !!panelSimulationViewBackup;
+  const showControls =
+    (panelSimulationPhase === 'assembled' && !!panelSimulationViewBackup) ||
+    (panelSimulationPhase === 'layout' && !!panelSimulationSummary);
 
   useEffect(() => {
     setElapsedSecondsState(0);
