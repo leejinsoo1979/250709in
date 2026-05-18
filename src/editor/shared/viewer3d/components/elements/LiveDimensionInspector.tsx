@@ -3,7 +3,7 @@ import * as THREE from 'three';
 import { Html, Line } from '@react-three/drei';
 import { useFrame, useThree } from '@react-three/fiber';
 import { useUIStore } from '@/store/uiStore';
-import { useTheme } from '@/contexts/ThemeContext';
+import { getExcludedPanelAliases, useExcludedPanelsStore } from '../../context/ExcludedPanelsContext';
 
 interface LiveDimensionInspectorProps {
   enabled: boolean;
@@ -211,7 +211,7 @@ const normalizeSideNotches = (value: unknown): SideNotchDimension[] | undefined 
   return notches.length > 0 ? notches : undefined;
 };
 
-const findUserData = (object: THREE.Object3D, key: string): any => {
+const findUserData = (object: THREE.Object3D, key: string): unknown => {
   let current: THREE.Object3D | null = object;
   while (current) {
     if (current.userData && current.userData[key] !== undefined) return current.userData[key];
@@ -227,6 +227,49 @@ const findUserDataOwner = (object: THREE.Object3D, key: string): THREE.Object3D 
     current = current.parent;
   }
   return null;
+};
+
+const getScanExclusionKeys = (object: THREE.Object3D) => {
+  const keys = new Set<string>();
+  const liveDimensionKey = findUserData(object, 'liveDimensionKey');
+  const liveDimensionKeyText = typeof liveDimensionKey === 'string' ? liveDimensionKey : null;
+  const separatorIndex = liveDimensionKeyText?.indexOf('::') ?? -1;
+
+  let furnitureId = typeof findUserData(object, 'furnitureId') === 'string'
+    ? findUserData(object, 'furnitureId') as string
+    : null;
+  let panelName = typeof findUserData(object, 'panelName') === 'string'
+    ? findUserData(object, 'panelName') as string
+    : null;
+
+  if (liveDimensionKeyText && separatorIndex >= 0) {
+    furnitureId = liveDimensionKeyText.slice(0, separatorIndex);
+    panelName = liveDimensionKeyText.slice(separatorIndex + 2);
+  }
+
+  if (!furnitureId || !panelName) return keys;
+
+  getExcludedPanelAliases(panelName).forEach((alias) => {
+    keys.add(`${furnitureId}::${alias}`);
+  });
+  return keys;
+};
+
+const getScanExclusionKeysFromSelectionKey = (selectionKey: string | null | undefined) => {
+  const keys = new Set<string>();
+  if (!selectionKey) return keys;
+
+  const separatorIndex = selectionKey.indexOf('::');
+  if (separatorIndex < 0) return keys;
+
+  const furnitureId = selectionKey.slice(0, separatorIndex);
+  const panelName = selectionKey.slice(separatorIndex + 2);
+  if (!furnitureId || !panelName) return keys;
+
+  getExcludedPanelAliases(panelName).forEach((alias) => {
+    keys.add(`${furnitureId}::${alias}`);
+  });
+  return keys;
 };
 
 const hasInspectableMetadata = (object: THREE.Object3D) => {
@@ -486,19 +529,12 @@ const PanelCenterTitle: React.FC<{
 
 const LiveDimensionOverlay: React.FC<{ hover: HoverDimension }> = ({ hover }) => {
   const { camera } = useThree();
-  const { theme } = useTheme();
   const [w, h, d] = hover.sizeThree;
   const [viewSigns, setViewSigns] = useState<ViewSigns>(() => getCameraViewSigns(camera, hover.center, hover.quaternion));
   const gridPositions = useMemo(() => createPanelGridPositions(w, h, d), [w, h, d]);
   const outlineSegments = useMemo(() => hover.notchLines ?? createBoxOutlineSegments(w, h, d), [hover.notchLines, w, h, d]);
-  const inspectorColor = useMemo(() => getThemePrimaryColor(), [theme.color]);
+  const inspectorColor = useMemo(() => getThemePrimaryColor(), []);
   const margin = Math.max(0.18, Math.min(0.55, Math.max(w, h, d) * 0.08));
-  const x0 = -w / 2;
-  const x1 = w / 2;
-  const y0 = -h / 2;
-  const y1 = h / 2;
-  const z0 = -d / 2;
-  const z1 = d / 2;
   const axisSizes = useMemo<Record<DimensionAxis, number>>(() => ({ x: w, y: h, z: d }), [w, h, d]);
   const axisValues = useMemo<Record<DimensionAxis, number>>(() => ({
     x: hover.widthMm,
@@ -703,12 +739,24 @@ const LiveDimensionOverlay: React.FC<{ hover: HoverDimension }> = ({ hover }) =>
 const LiveDimensionInspector: React.FC<LiveDimensionInspectorProps> = ({ enabled }) => {
   const { camera, scene, gl } = useThree();
   const { liveDimensionSelectedKey, setLiveDimensionSelectedKey } = useUIStore();
+  const setExcludedKeys = useExcludedPanelsStore(state => state.setExcludedKeys);
+  const clearExcludedKeys = useExcludedPanelsStore(state => state.clearExcludedKeys);
   const raycaster = useMemo(() => new THREE.Raycaster(), []);
   const pointer = useMemo(() => new THREE.Vector2(), []);
   const rafRef = useRef<number | null>(null);
   const lastEventRef = useRef<PointerEvent | null>(null);
+  const pointerDownRef = useRef<{ x: number; y: number; button: number } | null>(null);
+  const handledPointerClickRef = useRef(false);
+  const liveDimensionSelectedKeyRef = useRef<string | null>(null);
+  const selectedTargetRef = useRef<THREE.Object3D | null>(null);
+  const scanExcludedKeysRef = useRef<Set<string>>(new Set());
+  const excludedOwnerIdRef = useRef(`scan-measure-${Math.random().toString(36).slice(2)}`);
   const [hover, setHover] = useState<HoverDimension | null>(null);
   const [selectedHover, setSelectedHover] = useState<HoverDimension | null>(null);
+
+  useEffect(() => {
+    liveDimensionSelectedKeyRef.current = liveDimensionSelectedKey;
+  }, [liveDimensionSelectedKey]);
 
   useEffect(() => {
     const canvas = gl.domElement;
@@ -724,12 +772,37 @@ const LiveDimensionInspector: React.FC<LiveDimensionInspectorProps> = ({ enabled
     if (!enabled) {
       setHover(null);
       setSelectedHover(null);
+      selectedTargetRef.current = null;
+      scanExcludedKeysRef.current.clear();
+      clearExcludedKeys(excludedOwnerIdRef.current);
+      setLiveDimensionSelectedKey(null);
+      liveDimensionSelectedKeyRef.current = null;
       return;
     }
 
     const canvas = gl.domElement;
 
-    const pickDimension = (event: PointerEvent) => {
+    const restoreHiddenPanels = () => {
+      scanExcludedKeysRef.current.clear();
+      clearExcludedKeys(excludedOwnerIdRef.current);
+    };
+
+    const hideSelectedPanel = () => {
+      const target = selectedTargetRef.current;
+      const keys = target
+        ? getScanExclusionKeys(target)
+        : getScanExclusionKeysFromSelectionKey(liveDimensionSelectedKeyRef.current);
+      if (keys.size === 0) return;
+      keys.forEach(key => scanExcludedKeysRef.current.add(key));
+      setExcludedKeys(new Set(scanExcludedKeysRef.current), excludedOwnerIdRef.current);
+      selectedTargetRef.current = null;
+      setSelectedHover(null);
+      setLiveDimensionSelectedKey(null);
+      liveDimensionSelectedKeyRef.current = null;
+      setHover(null);
+    };
+
+    const pickDimension = (event: PointerEvent | MouseEvent) => {
       const rect = canvas.getBoundingClientRect();
       pointer.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
       pointer.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
@@ -738,7 +811,12 @@ const LiveDimensionInspector: React.FC<LiveDimensionInspectorProps> = ({ enabled
       scene.updateMatrixWorld(true);
       const intersects = raycaster.intersectObjects(scene.children, true);
       const hit = intersects.find((item) => shouldInspectObject(item.object));
-      return hit ? getHoverDimension(hit.object) : null;
+      return hit
+        ? {
+          hover: getHoverDimension(hit.object),
+          target: hit.object,
+        }
+        : { hover: null, target: null };
     };
 
     const updateHover = () => {
@@ -746,7 +824,7 @@ const LiveDimensionInspector: React.FC<LiveDimensionInspectorProps> = ({ enabled
       const event = lastEventRef.current;
       if (!event) return;
 
-      const next = pickDimension(event);
+      const next = pickDimension(event).hover;
       if (!next) {
         setHover(null);
         return;
@@ -779,44 +857,115 @@ const LiveDimensionInspector: React.FC<LiveDimensionInspectorProps> = ({ enabled
       setHover(null);
     };
 
-    const handleClick = (event: PointerEvent) => {
+    const selectFromEvent = (event: PointerEvent | MouseEvent) => {
+      const picked = pickDimension(event);
+      const next = picked.hover;
+      if (!next) {
+        setSelectedHover(null);
+        selectedTargetRef.current = null;
+        setLiveDimensionSelectedKey(null);
+        liveDimensionSelectedKeyRef.current = null;
+        return false;
+      }
+
       event.preventDefault();
       event.stopPropagation();
       event.stopImmediatePropagation();
 
-      const next = pickDimension(event);
-      if (!next) {
+      if (liveDimensionSelectedKeyRef.current === next.selectionKey) {
         setSelectedHover(null);
+        selectedTargetRef.current = null;
         setLiveDimensionSelectedKey(null);
-        return;
-      }
-
-      if (liveDimensionSelectedKey === next.selectionKey) {
-        setSelectedHover(null);
-        setLiveDimensionSelectedKey(null);
-        return;
+        liveDimensionSelectedKeyRef.current = null;
+        return true;
       }
 
       setSelectedHover(next);
+      selectedTargetRef.current = picked.target;
       setLiveDimensionSelectedKey(next.selectionKey);
+      liveDimensionSelectedKeyRef.current = next.selectionKey;
+      return true;
+    };
+
+    const handlePointerDown = (event: PointerEvent) => {
+      if (event.button !== 0) return;
+      pointerDownRef.current = {
+        x: event.clientX,
+        y: event.clientY,
+        button: event.button,
+      };
+    };
+
+    const handlePointerUp = (event: PointerEvent) => {
+      const down = pointerDownRef.current;
+      pointerDownRef.current = null;
+      if (!down || down.button !== 0 || event.button !== 0) return;
+
+      const dx = event.clientX - down.x;
+      const dy = event.clientY - down.y;
+      if ((dx * dx) + (dy * dy) > 25) return;
+
+      handledPointerClickRef.current = selectFromEvent(event);
+    };
+
+    const handleClick = (event: MouseEvent) => {
+      if (!handledPointerClickRef.current) return;
+      handledPointerClickRef.current = false;
+      event.preventDefault();
+      event.stopPropagation();
+      event.stopImmediatePropagation();
+    };
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      const target = event.target as HTMLElement | null;
+      const isTyping = target && (
+        target.tagName === 'INPUT' ||
+        target.tagName === 'TEXTAREA' ||
+        target.isContentEditable
+      );
+      if (isTyping) return;
+
+      if (event.key.toLowerCase() === 'h') {
+        event.preventDefault();
+        hideSelectedPanel();
+        return;
+      }
+
+      if (event.key === 'Escape') {
+        restoreHiddenPanels();
+        selectedTargetRef.current = null;
+        setSelectedHover(null);
+        setLiveDimensionSelectedKey(null);
+        liveDimensionSelectedKeyRef.current = null;
+      }
     };
 
     canvas.addEventListener('pointermove', handlePointerMove);
     canvas.addEventListener('pointerleave', handlePointerLeave);
+    canvas.addEventListener('pointerdown', handlePointerDown, true);
+    canvas.addEventListener('pointerup', handlePointerUp, true);
     canvas.addEventListener('click', handleClick, true);
+    window.addEventListener('keydown', handleKeyDown);
 
     return () => {
       canvas.removeEventListener('pointermove', handlePointerMove);
       canvas.removeEventListener('pointerleave', handlePointerLeave);
+      canvas.removeEventListener('pointerdown', handlePointerDown, true);
+      canvas.removeEventListener('pointerup', handlePointerUp, true);
       canvas.removeEventListener('click', handleClick, true);
+      window.removeEventListener('keydown', handleKeyDown);
       if (rafRef.current !== null) {
         cancelAnimationFrame(rafRef.current);
         rafRef.current = null;
       }
+      restoreHiddenPanels();
+      selectedTargetRef.current = null;
+      setLiveDimensionSelectedKey(null);
+      liveDimensionSelectedKeyRef.current = null;
       setHover(null);
       setSelectedHover(null);
     };
-  }, [enabled, gl, camera, scene, pointer, raycaster, liveDimensionSelectedKey, setLiveDimensionSelectedKey]);
+  }, [enabled, gl, camera, scene, pointer, raycaster, setLiveDimensionSelectedKey, setExcludedKeys, clearExcludedKeys]);
 
   useEffect(() => {
     if (!enabled || !liveDimensionSelectedKey) {

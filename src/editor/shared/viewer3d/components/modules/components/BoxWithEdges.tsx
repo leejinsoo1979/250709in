@@ -178,7 +178,7 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
   ], [args[0], args[1], args[2]]);
 
   const { viewMode, plainMaterial: isPlainMaterial } = useSpace3DView();
-  const { view2DDirection, shadowEnabled, edgeOutlineEnabled, isLiveDimensionMode, isTapeMeasureMode, liveDimensionSelectedKey, panelSimulationPhase, panelSimulationRevision, panelSimulationLayouts } = useUIStore(); // view2DDirection, shadowEnabled, edgeOutlineEnabled 추가
+  const { view2DDirection, shadowEnabled, edgeOutlineEnabled, isLiveDimensionMode, isTapeMeasureMode, liveDimensionSelectedKey, setLiveDimensionSelectedKey, panelSimulationPhase, panelSimulationRevision, panelSimulationLayouts } = useUIStore(); // view2DDirection, shadowEnabled, edgeOutlineEnabled 추가
   const { theme } = useViewerTheme();
   const { view2DTheme } = useUIStore();
   const { theme: appTheme } = useTheme();
@@ -218,23 +218,28 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
     };
   }, [compositeKey]);
   const liveDimensionSelectedFurnitureId = liveDimensionSelectedKey?.split('::')[0] ?? null;
-  const isLiveDimensionActive = viewMode === '3D' && isLiveDimensionMode && !!liveDimensionSelectedKey && !!compositeKey && liveDimensionSelectedFurnitureId === furnitureId;
+  const isLiveDimensionActive = viewMode === '3D' && (isLiveDimensionMode || isTapeMeasureMode) && !!liveDimensionSelectedKey && !!compositeKey && liveDimensionSelectedFurnitureId === furnitureId;
   const isLiveDimensionSelected = !!(isLiveDimensionActive && liveDimensionSelectedKey === compositeKey);
-  const isLiveDimensionDimmed = !!(
-    viewMode === '3D' &&
-    isLiveDimensionMode &&
-    liveDimensionSelectedKey &&
-    compositeKey &&
-    liveDimensionSelectedKey !== compositeKey
-  );
+  const activePopup = useUIStore(state => state.activePopup);
+  const selectedFurnitureId = useUIStore(state => state.selectedFurnitureId);
+  const liveDimensionInspecting = viewMode === '3D' && isLiveDimensionMode;
+  const inspectorModeActive = viewMode === '3D' && (isLiveDimensionMode || isTapeMeasureMode);
+  const handlePanelClick = React.useCallback((e: any) => {
+    if (inspectorModeActive && compositeKey) {
+      e.stopPropagation?.();
+      setLiveDimensionSelectedKey(liveDimensionSelectedKey === compositeKey ? null : compositeKey);
+      return;
+    }
+    onClick?.(e);
+  }, [inspectorModeActive, compositeKey, liveDimensionSelectedKey, setLiveDimensionSelectedKey, onClick]);
   useFrame(() => {
     if (!groupRef.current) return;
-    if (groupRef.current.visible === false && !hiddenByViewMode) {
-      groupRef.current.visible = true;
-    }
     if (hiddenByViewMode) {
       groupRef.current.visible = false;
       return;
+    }
+    if (groupRef.current.visible === false) {
+      groupRef.current.visible = true;
     }
 
     let shouldHide = false;
@@ -385,17 +390,13 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
   });
 
   // 전역 스토어에서 직접 편집 상태 감지 (Context bridge 문제 회피)
-  const activePopup = useUIStore(state => state.activePopup);
-  const selectedFurnitureId = useUIStore(state => state.selectedFurnitureId);
-  const liveDimensionInspecting = viewMode === '3D' && isLiveDimensionMode;
-  const inspectorModeActive = viewMode === '3D' && (isLiveDimensionMode || isTapeMeasureMode);
   const storeEditMode = !inspectorModeActive && furnitureId ? (activePopup.type === 'furnitureEdit' && activePopup.id === furnitureId) : false;
   const storeSelected = furnitureId ? (selectedFurnitureId === furnitureId) : false;
   const parentEditMode = useFurnitureGhostContext();
   const effectiveEditMode = !inspectorModeActive && (isEditMode || parentEditMode || storeEditMode);
   const effectiveSelected = storeSelected;
   // 3D 편집/드래그 중에는 wireframe 대신 solid로 강제 (2D에서는 원래 renderMode 유지)
-  const effectiveRenderMode = (viewMode === '3D' && (effectiveEditMode || isDragging)) ? 'solid' as const : renderMode;
+  const effectiveRenderMode = (viewMode === '3D' && (effectiveEditMode || isDragging || inspectorModeActive)) ? 'solid' as const : renderMode;
 
   // 스토어에서 직접 panelGrainDirections 가져오기 (실시간 업데이트 보장)
   // Zustand는 selector 함수의 참조가 바뀌면 재구독하므로, furnitureId별로 안정적인 selector 필요
@@ -443,6 +444,7 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
     }
     return '#10b981';
   }, [appTheme.color]);
+  const selectedPanelHighlightColor = '#ef4444';
 
   // 드래그/편집 고스트 효과 + 2D 솔리드 모드 투명 처리
   const processedMaterial = React.useMemo(() => {
@@ -657,8 +659,7 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
 
   // cornerNotch / backCenterNotch ExtrudeGeometry는 축 스왑으로 일부 면 winding이 뒤집힘 → DoubleSide로 양면 렌더링
   const finalMaterial = React.useMemo(() => {
-    const tapeMeasureInspecting = viewMode === '3D' && isTapeMeasureMode;
-    const needsClone = tapeMeasureInspecting || isLiveDimensionSelected || isLiveDimensionDimmed || cornerNotch || backCenterNotch;
+    const needsClone = isLiveDimensionSelected || cornerNotch || backCenterNotch;
     if (!needsClone) return panelSpecificMaterial;
 
     if (
@@ -673,21 +674,24 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
         mat.side = THREE.DoubleSide;
       }
 
-      if (tapeMeasureInspecting) {
-        mat.transparent = true;
-        mat.opacity = Math.min(mat.opacity ?? 1, 0.65);
-        mat.depthWrite = false;
-      } else if (isLiveDimensionDimmed) {
-        mat.transparent = true;
-        mat.opacity = Math.min(mat.opacity ?? 1, 0.48);
-        mat.depthWrite = false;
-      } else if (isLiveDimensionSelected) {
+      if (isLiveDimensionSelected) {
+        const highlightColor = new THREE.Color(selectedPanelHighlightColor);
+        if ('color' in mat && mat.color instanceof THREE.Color) {
+          mat.color.lerp(highlightColor, 0.62);
+        }
         mat.transparent = false;
         mat.opacity = 1;
         mat.depthWrite = true;
+        mat.depthTest = true;
+        if ('toneMapped' in mat) {
+          mat.toneMapped = false;
+        }
         if (mat instanceof THREE.MeshStandardMaterial) {
-          mat.emissive = new THREE.Color(themePrimaryColor);
-          mat.emissiveIntensity = 0.65;
+          mat.emissive = highlightColor;
+          mat.emissiveIntensity = 1.25;
+        } else if (mat instanceof THREE.MeshPhongMaterial || mat instanceof THREE.MeshLambertMaterial) {
+          mat.emissive = highlightColor;
+          mat.emissiveIntensity = 0.85;
         }
       }
 
@@ -697,7 +701,7 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
     }
 
     return panelSpecificMaterial;
-  }, [panelSpecificMaterial, cornerNotch, backCenterNotch, isLiveDimensionSelected, isLiveDimensionDimmed, themePrimaryColor, viewMode, isTapeMeasureMode]);
+  }, [panelSpecificMaterial, cornerNotch, backCenterNotch, isLiveDimensionSelected, selectedPanelHighlightColor]);
 
   // useEffect 제거: useMemo에서 이미 모든 회전 로직을 처리하므로 중복 실행 방지
 
@@ -1483,6 +1487,31 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
     return geom;
   }, [notch, notches, bottomRebate, cornerNotch, backCenterNotch, hasCircleHoles, circleHoles, hasAnyNotch, hasCustomGeometry, safeArgs]);
 
+  const selectedOutlineLines = React.useMemo<[number, number, number][][]>(() => {
+    if (!isLiveDimensionSelected || viewMode !== '3D') return [];
+    if (hasAnyNotch) return getNotchEdgeLines();
+
+    const [width, height, depth] = safeArgs;
+    const halfW = width / 2;
+    const halfH = height / 2;
+    const halfD = depth / 2;
+
+    return [
+      [[-halfW, -halfH, -halfD], [halfW, -halfH, -halfD]],
+      [[halfW, -halfH, -halfD], [halfW, halfH, -halfD]],
+      [[halfW, halfH, -halfD], [-halfW, halfH, -halfD]],
+      [[-halfW, halfH, -halfD], [-halfW, -halfH, -halfD]],
+      [[-halfW, -halfH, halfD], [halfW, -halfH, halfD]],
+      [[halfW, -halfH, halfD], [halfW, halfH, halfD]],
+      [[halfW, halfH, halfD], [-halfW, halfH, halfD]],
+      [[-halfW, halfH, halfD], [-halfW, -halfH, halfD]],
+      [[-halfW, -halfH, -halfD], [-halfW, -halfH, halfD]],
+      [[halfW, -halfH, -halfD], [halfW, -halfH, halfD]],
+      [[halfW, halfH, -halfD], [halfW, halfH, halfD]],
+      [[-halfW, halfH, -halfD], [-halfW, halfH, halfD]],
+    ];
+  }, [isLiveDimensionSelected, viewMode, hasAnyNotch, getNotchEdgeLines, safeArgs]);
+
   return (
     <group ref={groupRef} position={position} userData={furnitureId ? { furnitureId, panelName, liveDimensionKey: compositeKey } : undefined}
       visible={!hiddenByViewMode}
@@ -1507,7 +1536,7 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
         receiveShadow={viewMode === '3D' && effectiveRenderMode === 'solid' && shadowEnabled}
         castShadow={viewMode === '3D' && effectiveRenderMode === 'solid' && shadowEnabled}
         renderOrder={renderOrder ?? 10}
-        onClick={onClick}
+        onClick={handlePanelClick}
         onPointerOver={onPointerOver}
         onPointerOut={onPointerOut}
         material={finalMaterial}
@@ -1518,6 +1547,61 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
           <boxGeometry key={`${safeArgs[0]}-${safeArgs[1]}-${safeArgs[2]}`} args={safeArgs} />
         )}
       </mesh>
+      {isLiveDimensionSelected && viewMode === '3D' && (
+        <mesh
+          name={`tape-selected-panel-glow${panelName ? `-${panelName}` : ''}`}
+          scale={[1.012, 1.012, 1.012]}
+          renderOrder={(renderOrder ?? 10) + 1000}
+          raycast={() => null}
+          userData={{ tapeMeasureOverlay: true, liveDimensionOverlay: true, decoration: true }}
+        >
+          {notchGeometry ? (
+            <primitive key={`selected-glow-notch-${safeArgs[0]}-${safeArgs[1]}-${safeArgs[2]}-${JSON.stringify(notch || notches || cornerNotch || backCenterNotch || circleHoles)}`} object={notchGeometry} attach="geometry" />
+          ) : (
+            <boxGeometry key={`selected-glow-${safeArgs[0]}-${safeArgs[1]}-${safeArgs[2]}`} args={safeArgs} />
+          )}
+          <meshBasicMaterial
+            color={selectedPanelHighlightColor}
+            transparent
+            opacity={0.28}
+            depthTest={false}
+            depthWrite={false}
+            blending={THREE.AdditiveBlending}
+            toneMapped={false}
+            side={THREE.DoubleSide}
+          />
+        </mesh>
+      )}
+      {selectedOutlineLines.length > 0 && (
+        <group userData={{ tapeMeasureOverlay: true, liveDimensionOverlay: true, decoration: true }}>
+          {selectedOutlineLines.map((line, index) => (
+            <React.Fragment key={`selected-outline-${index}-${line[0].join(',')}-${line[1].join(',')}`}>
+              <NativeLine
+                name={`tape-selected-panel-outline-shadow${panelName ? `-${panelName}` : ''}-${index}`}
+                points={line}
+                color="#111827"
+                lineWidth={2.4}
+                opacity={0.42}
+                transparent
+                depthTest={false}
+                depthWrite={false}
+                renderOrder={(renderOrder ?? 10) + 1002}
+              />
+              <NativeLine
+                name={`tape-selected-panel-outline${panelName ? `-${panelName}` : ''}-${index}`}
+                points={line}
+                color={selectedPanelHighlightColor}
+                lineWidth={1.35}
+                opacity={0.98}
+                transparent
+                depthTest={false}
+                depthWrite={false}
+                renderOrder={(renderOrder ?? 10) + 1003}
+              />
+            </React.Fragment>
+          ))}
+        </group>
+      )}
       {/* 윤곽선 렌더링 - hideEdges prop 또는 edgeOutlineEnabled 스토어 설정으로 제어 */}
       {!hideEdges && edgeOutlineEnabled && (() => {
         // 2D 모드: 깊이 기반 개별 라인 opacity 적용
@@ -1525,13 +1609,11 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
           return render2DEdgesWithDepth();
         }
 
-        const tapeEdgeActive = viewMode === '3D' && isTapeMeasureMode;
-        const scanDimmedEdgeActive = viewMode === '3D' && isLiveDimensionDimmed;
-        const inspectionEdgeActive = tapeEdgeActive || scanDimmedEdgeActive;
-        const resolvedEdgeColor = tapeEdgeActive ? '#4b5563' : scanDimmedEdgeActive ? '#4b5563' : edgeColor;
-        const resolvedEdgeOpacity = tapeEdgeActive ? 0.72 : scanDimmedEdgeActive ? 0.52 : (isHighlighted ? 1.0 : (effectiveRenderMode === 'wireframe' ? 1.0 : 0.65));
-        const resolvedEdgeLineWidth = tapeEdgeActive ? 1.0 : scanDimmedEdgeActive ? 0.85 : (isHighlighted ? 3 : 1);
-        const resolvedEdgeDepthTest = tapeEdgeActive ? false : effectiveRenderMode !== 'wireframe';
+        const inspectionEdgeActive = false;
+        const resolvedEdgeColor = edgeColor;
+        const resolvedEdgeOpacity = isHighlighted ? 1.0 : (effectiveRenderMode === 'wireframe' ? 1.0 : 0.65);
+        const resolvedEdgeLineWidth = isHighlighted ? 3 : 1;
+        const resolvedEdgeDepthTest = effectiveRenderMode !== 'wireframe';
 
         // 3D 모드: notch가 있으면 L자형 엣지
         if (hasAnyNotch) {

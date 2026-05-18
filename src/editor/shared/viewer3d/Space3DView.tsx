@@ -958,6 +958,7 @@ const PanelSimulationPlaybackControls: React.FC = () => {
   const panelSimulationPhase = useUIStore(state => state.panelSimulationPhase);
   const panelSimulationRevision = useUIStore(state => state.panelSimulationRevision);
   const panelSimulationViewBackup = useUIStore(state => state.panelSimulationViewBackup);
+  const panelSimulationSheet = useUIStore(state => state.panelSimulationSheet);
   const panelSimulationSummary = useUIStore(state => state.panelSimulationSummary);
   const playbackRate = useUIStore(state => state.panelSimulationPlaybackRate);
   const animationStyle = useUIStore(state => state.panelSimulationAnimationStyle);
@@ -967,13 +968,22 @@ const PanelSimulationPlaybackControls: React.FC = () => {
   const setAnimationStyle = useUIStore(state => state.setPanelSimulationAnimationStyle);
   const setPlaying = useUIStore(state => state.setPanelSimulationPlaying);
   const setElapsedSeconds = useUIStore(state => state.setPanelSimulationElapsedSeconds);
+  const togglePanelSimulation = useUIStore(state => state.togglePanelSimulation);
   const [elapsedSeconds, setElapsedSecondsState] = useState(0);
   const completedRevisionRef = useRef(0);
 
   const isActive = panelSimulationRevision > 0 && (panelSimulationPhase === 'layout' || !!panelSimulationViewBackup);
+  const isLayoutComplete = panelSimulationPhase === 'layout'
+    && !!panelSimulationSheet
+    && (!!panelSimulationSummary || (!isPlaying && panelSimulationRevision > 0));
+  const isAssemblyComplete = panelSimulationPhase === 'assembled'
+    && panelSimulationRevision > 0
+    && !panelSimulationViewBackup
+    && !isPlaying;
   const showControls =
     (panelSimulationPhase === 'assembled' && !!panelSimulationViewBackup) ||
-    (panelSimulationPhase === 'layout' && !!panelSimulationSummary);
+    isLayoutComplete ||
+    isAssemblyComplete;
 
   useEffect(() => {
     setElapsedSecondsState(0);
@@ -982,7 +992,7 @@ const PanelSimulationPlaybackControls: React.FC = () => {
 
   useEffect(() => {
     if (!isActive) {
-      setElapsedSecondsState(0);
+      setElapsedSecondsState(isAssemblyComplete ? durationSeconds : 0);
       completedRevisionRef.current = 0;
       return;
     }
@@ -1014,14 +1024,19 @@ const PanelSimulationPlaybackControls: React.FC = () => {
     };
     rafId = window.requestAnimationFrame(tick);
     return () => window.cancelAnimationFrame(rafId);
-  }, [isActive]);
+  }, [isActive, isAssemblyComplete, durationSeconds]);
 
   if (!showControls) return null;
 
   const safeDuration = Math.max(1, durationSeconds);
   const progress = Math.max(0, Math.min(100, (elapsedSeconds / safeDuration) * 100));
+  const playLabel = panelSimulationPhase === 'layout' && isLayoutComplete ? '조립 재생' : '재생';
 
   const handlePlay = () => {
+    if (panelSimulationPhase === 'layout' && isLayoutComplete) {
+      togglePanelSimulation();
+      return;
+    }
     if (elapsedSeconds >= safeDuration - 0.02) {
       setElapsedSeconds(0);
     }
@@ -1063,8 +1078,8 @@ const PanelSimulationPlaybackControls: React.FC = () => {
       <button
         type="button"
         onClick={handlePlay}
-        aria-label="재생"
-        title="재생"
+        aria-label={playLabel}
+        title={playLabel}
         style={{
           width: 34,
           height: 34,
@@ -1134,7 +1149,9 @@ const PanelSimulationPlaybackControls: React.FC = () => {
           value={Math.round(progress * 10)}
           onChange={(event) => {
             const nextProgress = Number(event.currentTarget.value) / 1000;
-            setElapsedSeconds(safeDuration * nextProgress);
+            const nextElapsed = safeDuration * nextProgress;
+            setElapsedSecondsState(nextElapsed);
+            setElapsedSeconds(nextElapsed);
           }}
           style={{
             width: '100%',
@@ -1968,8 +1985,16 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
   const location = useLocation();
   const { spaceInfo: storeSpaceInfo, updateColumn, removeColumn, updateWall, removeWall, addWall, removePanelB, updatePanelB } = useSpaceConfigStore();
   const { placedModules, updateFurnitureForColumns } = useFurnitureStore();
-  const { view2DDirection, showDimensions: storeShowDimensions, showDimensionsText, showGuides, showAxis, activePopup, setView2DDirection, setViewMode: setUIViewMode, isColumnCreationMode, isWallCreationMode, isPanelBCreationMode, view2DTheme, showFurniture: storeShowFurniture, isMeasureMode, toggleMeasureMode, isEraserMode, selectedSlotIndex, setSelectedSlotIndex, cameraMode, isLayoutBuilderOpen, sunAngle, selectedColumnId, isLiveDimensionMode, isTapeMeasureMode, panelSimulationPhase, panelSimulationRevision, panelSimulationSheet, panelSimulationViewBackup, setPanelSimulationLayouts } = useUIStore();
+  const { view2DDirection, showDimensions: storeShowDimensions, showDimensionsText, showGuides, showAxis, activePopup, setView2DDirection, setViewMode: setUIViewMode, isColumnCreationMode, isWallCreationMode, isPanelBCreationMode, view2DTheme, showFurniture: storeShowFurniture, isMeasureMode, toggleMeasureMode, isEraserMode, selectedSlotIndex, setSelectedSlotIndex, cameraMode, isLayoutBuilderOpen, sunAngle, selectedColumnId, isLiveDimensionMode, isTapeMeasureMode, panelSimulationPhase, panelSimulationRevision, panelSimulationSheet, panelSimulationViewBackup, setPanelSimulationLayouts, setRenderMode } = useUIStore();
+  const isInspectionMode3D = viewMode === '3D' && (isLiveDimensionMode || isTapeMeasureMode);
+  const effectiveRenderMode = isInspectionMode3D ? 'solid' : renderMode;
   const { panels: livePanelsForSimulation } = useLivePanelData();
+
+  useEffect(() => {
+    if (isInspectionMode3D && renderMode !== 'solid') {
+      setRenderMode('solid');
+    }
+  }, [isInspectionMode3D, renderMode, setRenderMode]);
 
   // props로 전달된 showFurniture가 있으면 사용, 없으면 store 값 사용
   const showFurniture = showFurnitureProp !== undefined ? showFurnitureProp : storeShowFurniture;
@@ -2460,10 +2485,15 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
   const getDistanceRange = useCallback(() => {
     const initDist = initialCameraDistRef.current || 30;
     // 슬라이더 50 = 초기 거리, 0 = 2배 멀리, 100 = 최대 줌인
-    const minD = Math.max(2, initDist * 0.15); // 줌인 한계
+    const minD = isTapeMeasureMode ? Math.max(0.08, initDist * 0.01) : Math.max(2, initDist * 0.15); // 줌인 한계
     const maxD = initDist * 2;                   // 줌아웃 한계
     return { minD, maxD };
-  }, []);
+  }, [isTapeMeasureMode]);
+
+  const getOrthographicZoomRange = useCallback(() => ({
+    minZ: 0.5,
+    maxZ: isTapeMeasureMode ? 160 : 10,
+  }), [isTapeMeasureMode]);
 
   // OrbitControls 준비 콜백 - 줌 슬라이더 동기화를 위해 change 이벤트 리스닝
   const handleControlsReady = useCallback((controls: any) => {
@@ -2502,7 +2532,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
     const cam = controls.object;
     if (cam.isOrthographicCamera) {
       // 2D: zoom 0.5~10 → slider 0~100 (로그 스케일)
-      const minZ = 0.5, maxZ = 10;
+      const { minZ, maxZ } = getOrthographicZoomRange();
       const logMin = Math.log(minZ), logMax = Math.log(maxZ);
       const logVal = Math.log(Math.max(minZ, Math.min(maxZ, cam.zoom)));
       const val = ((logVal - logMin) / (logMax - logMin)) * 100;
@@ -2517,7 +2547,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
       zoomSliderValueRef.current = val;
       setZoomSliderValue(val);
     }
-  }, [getDistanceRange]);
+  }, [getDistanceRange, getOrthographicZoomRange]);
 
   // 슬라이더 값 변경 → 카메라 줌 즉시 적용 (피드백 루프만 차단)
   const handleZoomSliderChange = useCallback((value: number) => {
@@ -2529,7 +2559,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
     if (controls?.object) {
       const cam = controls.object;
       if (cam.isOrthographicCamera) {
-        const minZ = 0.5, maxZ = 10;
+        const { minZ, maxZ } = getOrthographicZoomRange();
         const logMin = Math.log(minZ), logMax = Math.log(maxZ);
         const logVal = logMin + (value / 100) * (logMax - logMin);
         cam.zoom = Math.exp(logVal);
@@ -2550,7 +2580,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
         sliderRafRef.current = null;
       });
     }
-  }, [getDistanceRange]);
+  }, [getDistanceRange, getOrthographicZoomRange]);
 
   // 슬라이더 드래그 종료 시 플래그 해제
   const handleZoomSliderEnd = useCallback(() => {
@@ -2588,7 +2618,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
       if (controls?.object) {
         const cam = controls.object;
         if (cam.isOrthographicCamera) {
-          const minZ = 0.5, maxZ = 10;
+          const { minZ, maxZ } = getOrthographicZoomRange();
           const logMin = Math.log(minZ), logMax = Math.log(maxZ);
           cam.zoom = Math.exp(logMin + (currentValue / 100) * (logMax - logMin));
           cam.updateProjectionMatrix();
@@ -2610,7 +2640,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
     };
 
     zoomAnimationRef.current = requestAnimationFrame(animate);
-  }, [zoomSliderValue, getDistanceRange]);
+  }, [zoomSliderValue, getDistanceRange, getOrthographicZoomRange]);
 
   // 2D 뷰 방향별 카메라 위치 계산 - threeUtils의 최적화된 거리 사용
   const cameraPosition = useMemo(() => {
@@ -3351,7 +3381,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
   if (viewMode === '2D' && view2DDirection === 'all') {
     return (
       <ViewerThemeProvider viewMode={viewMode}>
-        <Space3DViewProvider spaceInfo={spaceInfo} svgSize={svgSize} renderMode={renderMode} viewMode={viewMode} activeZone={activeZone}>
+        <Space3DViewProvider spaceInfo={spaceInfo} svgSize={svgSize} renderMode={effectiveRenderMode} viewMode={viewMode} activeZone={activeZone}>
           <div
             style={{
               width: '100%',
@@ -3407,7 +3437,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
                 cameraUp={getOptimizedCameraForView('front').up}
                 viewMode="2D"
                 view2DDirection="front"
-                renderMode={renderMode}
+                renderMode={effectiveRenderMode}
                 isSplitView={true}
               >
                 <QuadrantContent
@@ -3424,7 +3454,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
                   isStep2={isStep2}
                   showFurniture={showFurniture}
                   readOnly={readOnly}
-                  renderMode={renderMode}
+                  renderMode={effectiveRenderMode}
                   onFurnitureClick={handleFurnitureClickInSplitView}
                 />
               </ThreeCanvas>
@@ -3493,7 +3523,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
                 cameraUp={getOptimizedCameraForView('top').up}
                 viewMode="2D"
                 view2DDirection="top"
-                renderMode={renderMode}
+                renderMode={effectiveRenderMode}
                 isSplitView={true}
               >
                 <QuadrantContent
@@ -3510,7 +3540,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
                   isStep2={isStep2}
                   showFurniture={showFurniture}
                   readOnly={readOnly}
-                  renderMode={renderMode}
+                  renderMode={effectiveRenderMode}
                   onFurnitureClick={handleFurnitureClickInSplitView}
                 />
               </ThreeCanvas>
@@ -3584,7 +3614,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
                   cameraUp={getOptimizedCameraForView('left').up}
                   viewMode="2D"
                   view2DDirection="left"
-                  renderMode={renderMode}
+                  renderMode={effectiveRenderMode}
                   isSplitView={true}
                 >
                   <QuadrantContent
@@ -3601,7 +3631,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
                     isStep2={isStep2}
                     showFurniture={showFurniture}
                     readOnly={readOnly}
-                    renderMode={renderMode}
+                    renderMode={effectiveRenderMode}
                     onFurnitureClick={handleFurnitureClickInSplitView}
                   />
                 </ThreeCanvas>
@@ -3698,7 +3728,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
                   cameraUp={getOptimizedCameraForView('right').up}
                   viewMode="2D"
                   view2DDirection="right"
-                  renderMode={renderMode}
+                  renderMode={effectiveRenderMode}
                   isSplitView={true}
                 >
                   <QuadrantContent
@@ -3715,7 +3745,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
                     isStep2={isStep2}
                     readOnly={readOnly}
                     showFurniture={showFurniture}
-                    renderMode={renderMode}
+                    renderMode={effectiveRenderMode}
                     onFurnitureClick={handleFurnitureClickInSplitView}
                   />
                 </ThreeCanvas>
@@ -3796,7 +3826,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
 
   return (
     <ViewerThemeProvider viewMode={viewMode}>
-      <Space3DViewProvider spaceInfo={spaceInfo} svgSize={svgSize} renderMode={renderMode} viewMode={viewMode} activeZone={activeZone}>
+      <Space3DViewProvider spaceInfo={spaceInfo} svgSize={svgSize} renderMode={effectiveRenderMode} viewMode={viewMode} activeZone={activeZone}>
         <div
           style={{
             width: '100%',
@@ -3813,7 +3843,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
             cameraTarget={cameraTargetArr}
             viewMode={viewMode}
             view2DDirection={view2DDirection}
-            renderMode={renderMode}
+            renderMode={effectiveRenderMode}
             sceneRef={sceneRef}
             zoomMultiplier={embeddedZoomMultiplier ?? mobileViewerZoomMultiplier}
             onControlsReady={handleControlsReady}
@@ -3865,7 +3895,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
                 spaceInfo={spaceInfo}
                 viewMode={viewMode}
                 view2DDirection={view2DDirection}
-                renderMode={renderMode}
+                renderMode={effectiveRenderMode}
                 materialConfig={materialConfig}
                 showAll={showAll}
                 showFrame={showFrame}
@@ -3949,7 +3979,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
                       hasBackPanelFinish={column.hasBackPanelFinish}
                       hasFrontPanelFinish={column.hasFrontPanelFinish}
                       spaceInfo={spaceInfo}
-                      renderMode={renderMode}
+                      renderMode={effectiveRenderMode}
                       onPositionChange={(id, newPosition) => {
                         throttledUpdateColumn(id, { position: newPosition });
                       }}
@@ -4023,7 +4053,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
                     depth={wall.depth}
                     color={wall.color}
                     spaceInfo={spaceInfo}
-                    renderMode={renderMode}
+                    renderMode={effectiveRenderMode}
                     onPositionChange={(id, newPosition) => {
                       updateWall(id, { position: newPosition });
                     }}
@@ -4541,7 +4571,7 @@ const QuadrantContent: React.FC<{
         spaceInfo={spaceInfo}
         viewMode="2D"
         view2DDirection={viewDirection}
-        renderMode={renderMode}
+        renderMode={effectiveRenderMode}
         showDimensions={showDimensions}
         showAll={showAll}
         isStep2={isStep2}

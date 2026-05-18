@@ -41,13 +41,13 @@ export const ClothingRod: React.FC<ClothingRodProps> = ({
   addFrontFillLight,
   furnitureId,
 }) => {
-  const { view2DTheme, view2DDirection, highlightedPanel, panelSimulationPhase, panelSimulationViewBackup } = useUIStore();
+  const { view2DTheme, view2DDirection, highlightedPanel, panelSimulationPhase, panelSimulationViewBackup, isTapeMeasureMode, isLiveDimensionMode } = useUIStore();
   const ctx = useSpace3DView();
   const viewMode = ctx.viewMode;
   const isPanelSimulationPresentation = viewMode === '3D' && (panelSimulationPhase === 'layout' || !!panelSimulationViewBackup);
 
   // 패널 하이라이팅이 활성화되어 있으면 옷봉을 투명하게 처리
-  const shouldDim = highlightedPanel && furnitureId && highlightedPanel.startsWith(`${furnitureId}-`);
+  const shouldDim = !(isTapeMeasureMode || isLiveDimensionMode) && highlightedPanel && furnitureId && highlightedPanel.startsWith(`${furnitureId}-`);
 
   // 숨김 여부 계산 (hook 이전에 early return 하지 않도록)
   const shouldHide = React.useMemo(() => {

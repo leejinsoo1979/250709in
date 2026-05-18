@@ -776,7 +776,9 @@ export const useUIStore = create<UIState>()(
         set({ showFurnitureEditHandles: show }),
       
       setRenderMode: (mode) =>
-        set({ renderMode: mode }),
+        set((state) => ({
+          renderMode: state.isTapeMeasureMode || state.isLiveDimensionMode ? 'solid' : mode,
+        })),
       
       setView2DTheme: (theme) =>
         set({ view2DTheme: theme }),
@@ -991,6 +993,7 @@ export const useUIStore = create<UIState>()(
             liveDimensionSelectedKey: null,
             ...(enabled ? {
               showFurniture: true,
+              renderMode: 'solid' as const,
             } : {}),
           };
         }),
@@ -1006,6 +1009,7 @@ export const useUIStore = create<UIState>()(
           liveDimensionSelectedKey: null,
           ...(enabled ? {
             showFurniture: true,
+            renderMode: 'solid' as const,
           } : {}),
         }),
 
@@ -1022,6 +1026,7 @@ export const useUIStore = create<UIState>()(
             liveDimensionSelectedKey: null,
             ...(enabled ? {
               showFurniture: true,
+              renderMode: 'solid' as const,
             } : {}),
           };
         }),
@@ -1037,6 +1042,7 @@ export const useUIStore = create<UIState>()(
           liveDimensionSelectedKey: null,
           ...(enabled ? {
             showFurniture: true,
+            renderMode: 'solid' as const,
           } : {}),
         }),
 
@@ -1182,9 +1188,8 @@ export const useUIStore = create<UIState>()(
             panelSimulationSheet: null,
             panelSimulationSummary: null,
             panelSimulationIsPlaying: false,
-            panelSimulationStartedAt: 0,
-            panelSimulationOffsetSeconds: 0,
-            panelSimulationDurationSeconds: 1,
+            panelSimulationStartedAt: getPanelSimulationNow(),
+            panelSimulationOffsetSeconds: Math.max(1, state.panelSimulationDurationSeconds),
             showFurnitureEditHandles: backup.showFurnitureEditHandles,
             showDimensions: true,
             showDimensionsText: true,

@@ -322,8 +322,8 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   // 커스텀 가구 편집 중에는 선택 하이라이트 끄기 (실시간 변경 확인을 위해)
   const isCustomEditing = placedModule.isCustomizable && activePopup.type === 'customizableEdit' && activePopup.id === placedModule.id;
   const isSelected = selectedFurnitureId === placedModule.id && !isCustomEditing;
-  // 2D 모드에서도 선택/편집 중인 가구는 solid로 렌더링 (고스트 효과를 위해)
-  const effectiveRenderMode = (isSelected || isEditMode) ? 'solid' : renderMode;
+  // 선택/편집/줄자모드 중인 가구는 solid로 렌더링
+  const effectiveRenderMode = (isSelected || isEditMode || (viewMode === '3D' && (isLiveDimensionMode || isTapeMeasureMode))) ? 'solid' : renderMode;
   // 편집 모드 고스트: 측면/상면뷰에서는 비활성화 (정면/3D에서만 표시)
   const isEditModeForView = isEditMode && (viewMode === '3D' || view2DDirection === 'front' || view2DDirection === 'all');
   const { theme: appTheme } = useTheme();
@@ -1178,6 +1178,9 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     if (viewMode !== '3D') {
       return false;
     }
+    if (isLiveDimensionMode || isTapeMeasureMode) {
+      return false;
+    }
     if (highlightSlotIndex === undefined) {
       return false;
     }
@@ -1189,7 +1192,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       );
     }
     return highlightSlotIndex === ghostHighlightSlotIndex;
-  }, [ghostHighlightSlotIndex, viewMode, highlightSlotIndex, placedModule.isDualSlot, moduleData?.id]);
+  }, [ghostHighlightSlotIndex, viewMode, isLiveDimensionMode, isTapeMeasureMode, highlightSlotIndex, placedModule.isDualSlot, moduleData?.id]);
 
   const slotInfo = globalSlotIndex !== undefined ? columnSlots[globalSlotIndex] : undefined;
 
@@ -3350,6 +3353,13 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         position={furnitureGroupPosition}
         rotation={furnitureGroupRotation}
         onClick={(e) => {
+          if (viewMode === '3D' && (isLiveDimensionMode || isTapeMeasureMode)) {
+            (window as any).__r3fClickHandled = true;
+            (window as any).__r3fFurnitureClicked = true;
+            e.stopPropagation();
+            return;
+          }
+
           // 이동 모드 중 가구 클릭 → 배치 확정
           if ((window as any).__furnitureMoveMode) {
             e.stopPropagation();

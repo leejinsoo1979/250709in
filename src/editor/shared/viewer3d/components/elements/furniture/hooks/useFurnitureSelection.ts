@@ -26,6 +26,12 @@ export const useFurnitureSelection = (options?: UseFurnitureSelectionOptions) =>
 
   // 가구 클릭 핸들러 (원클릭 편집모드)
   const handleFurnitureClick = (e: ThreeEvent<MouseEvent>, placedModuleId: string) => {
+    const uiState = useUIStore.getState();
+    if (uiState.viewMode === '3D' && (uiState.isLiveDimensionMode || uiState.isTapeMeasureMode)) {
+      e.stopPropagation();
+      return;
+    }
+
     // 읽기 전용 모드에서는 편집 불가
     if (readOnly) {
       console.log('🚫 읽기 전용 모드 - 가구 편집 차단');

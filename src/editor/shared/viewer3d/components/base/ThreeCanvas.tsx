@@ -202,7 +202,15 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
 
   // 클린 아키텍처: 각 책임을 전용 훅으로 위임
   const camera = useCameraManager(viewMode, cameraPosition, view2DDirection, cameraTarget, cameraUp, isSplitView, zoomMultiplier);
-  const controlsConfig = useOrbitControlsConfig(camera.target, viewMode, camera.spaceWidth, camera.spaceHeight, isMobile, viewMode === '3D' && (isLiveDimensionMode || isTapeMeasureMode));
+  const controlsConfig = useOrbitControlsConfig(
+    camera.target,
+    viewMode,
+    camera.spaceWidth,
+    camera.spaceHeight,
+    isMobile,
+    viewMode === '3D' && (isLiveDimensionMode || isTapeMeasureMode),
+    viewMode === '3D' && isTapeMeasureMode
+  );
 
   // cameraPosition/cameraTarget이 변경될 때 초기 상태 업데이트 (스페이스바 리셋용)
   useEffect(() => {
@@ -1292,6 +1300,8 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
             enableRotate={controlsConfig.enableRotate && !isFurnitureDragging && !isDraggingColumn && !isSlotDragging}
             minDistance={controlsConfig.minDistance}
             maxDistance={controlsConfig.maxDistance}
+            minZoom={controlsConfig.minZoom}
+            maxZoom={controlsConfig.maxZoom}
             mouseButtons={controlsConfig.mouseButtons}
             touches={controlsConfig.touches}
             panSpeed={0.8}

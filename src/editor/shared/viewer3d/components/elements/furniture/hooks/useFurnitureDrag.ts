@@ -153,6 +153,11 @@ export const useFurnitureDrag = ({ spaceInfo }: UseFurnitureDragProps) => {
 
   // 드래그 시작
   const handlePointerDown = (e: ThreeEvent<PointerEvent>, placedModuleId: string) => {
+    const uiState = useUIStore.getState();
+    if (uiState.viewMode === '3D' && (uiState.isLiveDimensionMode || uiState.isTapeMeasureMode)) {
+      return;
+    }
+
     // 왼쪽 버튼이 아니면 드래그 시작하지 않음 (오른쪽 버튼은 OrbitControls 회전용)
     if (e.button !== 0) {
       return;
@@ -695,4 +700,4 @@ export const useFurnitureDrag = ({ spaceInfo }: UseFurnitureDragProps) => {
     handlePointerUp,
     forceRender // React 리렌더링 강제를 위한 state
   };
-}; 
+};

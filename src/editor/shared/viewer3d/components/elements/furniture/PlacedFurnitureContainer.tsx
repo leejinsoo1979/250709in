@@ -171,8 +171,8 @@ const PlacedFurnitureContainer: React.FC<PlacedFurnitureContainerProps> = ({
         const isEditMode = !isInspecting3D && activePopup.type === 'furnitureEdit' && activePopup.id === placedModule.id;
         const isDraggingThis = dragHandlers.draggingModuleId === placedModule.id;
         const isThisSelected = selectedFurnitureId === placedModule.id;
-        // 선택/편집 중인 가구는 solid로 렌더링 (2D wireframe 모드에서도 고스트 표시)
-        const effectiveRenderMode = (isThisSelected || isEditMode) ? 'solid' as const : renderMode;
+        // 선택/편집/줄자모드 중인 가구는 solid로 렌더링
+        const effectiveRenderMode = (isThisSelected || isEditMode || isInspecting3D) ? 'solid' as const : renderMode;
 
 
         // 좌측뷰/우측뷰에서는 선택된 가구를 X=0에 렌더링

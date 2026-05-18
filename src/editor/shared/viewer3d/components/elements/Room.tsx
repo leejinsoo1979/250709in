@@ -329,7 +329,7 @@ const BoxWithEdges: React.FC<{
   panelName?: string;
 }> = ({ args, position, material, renderMode, onBeforeRender, viewMode: viewModeProp, view2DTheme, isEndPanel = false, shadowEnabled = true, hideEdges = false, isOuterFrame = false, name, renderOrder, excludeKey, excludeKeys, furnitureId, panelName }) => {
   const groupRef = useRef<THREE.Group>(null);
-  const { panelSimulationPhase, panelSimulationRevision, panelSimulationLayouts } = useUIStore();
+  const { panelSimulationPhase, panelSimulationRevision, panelSimulationLayouts, liveDimensionSelectedKey, setLiveDimensionSelectedKey, isLiveDimensionMode, isTapeMeasureMode } = useUIStore();
   const simulationRevisionRef = useRef(panelSimulationRevision);
   const simulationStartTimeRef = useRef(0);
   const cleanupKey = excludeKey || (furnitureId && panelName ? `${furnitureId}::${panelName}` : undefined);
@@ -376,6 +376,37 @@ const BoxWithEdges: React.FC<{
       depthMm: Math.round(args[2] / 0.01),
     },
   } : undefined;
+  const isInspectionMode = viewMode === '3D' && (isLiveDimensionMode || isTapeMeasureMode);
+  const isLiveDimensionSelected = !!(liveDimensionKey && liveDimensionSelectedKey === liveDimensionKey);
+  const handleFrameClick = (e: any) => {
+    if (!isInspectionMode || !liveDimensionKey) return;
+    e.stopPropagation?.();
+    setLiveDimensionSelectedKey(isLiveDimensionSelected ? null : liveDimensionKey);
+  };
+  const selectedOutlineLines = useMemo<[number, number, number][][]>(() => {
+    const [w, h, d] = args;
+    const x0 = -w / 2;
+    const x1 = w / 2;
+    const y0 = -h / 2;
+    const y1 = h / 2;
+    const z0 = -d / 2;
+    const z1 = d / 2;
+
+    return [
+      [[x0, y0, z0], [x1, y0, z0]],
+      [[x1, y0, z0], [x1, y1, z0]],
+      [[x1, y1, z0], [x0, y1, z0]],
+      [[x0, y1, z0], [x0, y0, z0]],
+      [[x0, y0, z1], [x1, y0, z1]],
+      [[x1, y0, z1], [x1, y1, z1]],
+      [[x1, y1, z1], [x0, y1, z1]],
+      [[x0, y1, z1], [x0, y0, z1]],
+      [[x0, y0, z0], [x0, y0, z1]],
+      [[x1, y0, z0], [x1, y0, z1]],
+      [[x1, y1, z0], [x1, y1, z1]],
+      [[x0, y1, z0], [x0, y1, z1]],
+    ];
+  }, [args]);
 
   useFrame(() => {
     if (!groupRef.current) return;
@@ -513,7 +544,14 @@ const BoxWithEdges: React.FC<{
   }, [geometry, edgesGeometry]);
 
   return (
-    <group ref={groupRef} position={position} name={name} visible={!isExcludedByOptimizer} userData={liveDimensionUserData}>
+    <group
+      ref={groupRef}
+      position={position}
+      name={name}
+      visible={!isExcludedByOptimizer}
+      userData={liveDimensionUserData}
+      onClick={handleFrameClick}
+    >
       {/* Solid 모드일 때만 면 렌더링 */}
       {renderMode === 'solid' && (
         <mesh
@@ -524,13 +562,32 @@ const BoxWithEdges: React.FC<{
           name={name ? `${name}-mesh` : undefined}
           renderOrder={renderOrder}
           userData={liveDimensionUserData}
+          onClick={handleFrameClick}
         >
           <primitive key={material.uuid} object={material} attach="material" />
         </mesh>
       )}
+      {renderMode === 'solid' && isLiveDimensionSelected && (
+        <mesh
+          geometry={geometry}
+          renderOrder={(renderOrder ?? 10) + 1000}
+          raycast={() => null}
+          userData={{ liveDimensionOverlay: true, tapeMeasureOverlay: true, decoration: true }}
+          scale={[1.012, 1.012, 1.012]}
+        >
+          <meshBasicMaterial
+            color="#ef4444"
+            transparent
+            opacity={0.28}
+            depthTest={false}
+            depthWrite={false}
+            blending={THREE.AdditiveBlending}
+          />
+        </mesh>
+      )}
       {/* 모서리 라인 렌더링 - hideEdges가 false일 때만 표시 */}
       {!hideEdges && (
-        <lineSegments name={name || "space-frame"} geometry={edgesGeometry}>
+        <lineSegments name={name || "space-frame"} geometry={edgesGeometry} onClick={handleFrameClick}>
           <lineBasicMaterial
             color={
               // 3D solid 모드에서 외곽 프레임 엣지도 표시
@@ -551,6 +608,39 @@ const BoxWithEdges: React.FC<{
             transparent={false}
           />
         </lineSegments>
+      )}
+      {isLiveDimensionSelected && (
+        <group
+          scale={[1.014, 1.014, 1.014]}
+          userData={{ liveDimensionOverlay: true, tapeMeasureOverlay: true, decoration: true }}
+        >
+          {selectedOutlineLines.map((line, index) => (
+            <React.Fragment key={`frame-selected-outline-${name || 'frame'}-${index}`}>
+              <NativeLine
+                name={`frame-selected-outline-shadow-${name || 'frame'}-${index}`}
+                points={line}
+                color="#111827"
+                lineWidth={2.4}
+                opacity={0.42}
+                transparent
+                depthTest={false}
+                depthWrite={false}
+                renderOrder={(renderOrder ?? 10) + 1002}
+              />
+              <NativeLine
+                name={`frame-selected-outline-${name || 'frame'}-${index}`}
+                points={line}
+                color="#ef4444"
+                lineWidth={1.35}
+                opacity={0.98}
+                transparent
+                depthTest={false}
+                depthWrite={false}
+                renderOrder={(renderOrder ?? 10) + 1003}
+              />
+            </React.Fragment>
+          ))}
+        </group>
       )}
     </group>
   );

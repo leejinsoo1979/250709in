@@ -14,6 +14,8 @@ export interface OrbitControlsConfig {
   enableRotate: boolean;
   minDistance: number;
   maxDistance: number;
+  minZoom?: number;
+  maxZoom?: number;
   rotateSpeed?: number; // 회전 속도 조절
   dampingFactor?: number; // 관성 효과
   enableDamping?: boolean; // 관성 효과 활성화
@@ -54,7 +56,8 @@ export const useOrbitControlsConfig = (
   spaceWidth?: number,
   spaceHeight?: number,
   isMobile: boolean = false,
-  unrestrictedRotate: boolean = false
+  unrestrictedRotate: boolean = false,
+  unrestrictedZoom: boolean = false
 ): OrbitControlsConfig => {
 
   // 공간 크기에 따른 동적 거리 계산
@@ -74,7 +77,9 @@ export const useOrbitControlsConfig = (
     const is2D = viewMode === '2D';
 
     // 최소 거리: 2D 모드에서는 더 가까이 허용
-    const minDistance = is2D ? CAMERA_SETTINGS.MIN_DISTANCE * 0.5 : CAMERA_SETTINGS.MIN_DISTANCE;
+    const minDistance = unrestrictedZoom && !is2D
+      ? 0.08
+      : (is2D ? CAMERA_SETTINGS.MIN_DISTANCE * 0.5 : CAMERA_SETTINGS.MIN_DISTANCE);
 
     // 최대 거리: 2D 모드에서는 더 제한적으로
     const zoomMultiplier = is2D ? 3 : 8; // 2D에서는 3배, 3D에서는 8배
@@ -85,7 +90,7 @@ export const useOrbitControlsConfig = (
     );
 
     return { minDistance, maxDistance };
-  }, [spaceWidth, spaceHeight, viewMode]);
+  }, [spaceWidth, spaceHeight, viewMode, unrestrictedZoom]);
 
   const config = useMemo(() => {
     // 2D 모드에서는 회전 비활성화
@@ -103,6 +108,8 @@ export const useOrbitControlsConfig = (
       enableRotate: !is2DMode, // 2D 모드에서는 회전 비활성화, 3D 모드에서만 허용
       minDistance: calculateDynamicDistances.minDistance,
       maxDistance: calculateDynamicDistances.maxDistance,
+      minZoom: unrestrictedZoom && !is2DMode ? 0.05 : 0.5,
+      maxZoom: unrestrictedZoom && !is2DMode ? 160 : 10,
       rotateSpeed: 0.5, // 회전 속도를 0.5로 낮춤 (기본값 1.0보다 느리게, 더 묵직하게)
       zoomSpeed: isMobile && is2DMode ? -1.0 : 1.0, // 모바일 2D 모드에서 줌 제스처 반전
       enableDamping: true, // 관성 효과 활성화로 더 부드럽고 묵직한 움직임
@@ -118,7 +125,7 @@ export const useOrbitControlsConfig = (
         TWO: THREE.TOUCH.DOLLY_PAN, // 두 손가락: 줌+팬 (핀치 줌)
       },
     };
-  }, [cameraTarget, viewMode, calculateDynamicDistances, isMobile, unrestrictedRotate]);
+  }, [cameraTarget, viewMode, calculateDynamicDistances, isMobile, unrestrictedRotate, unrestrictedZoom]);
 
   return config;
 }; 
