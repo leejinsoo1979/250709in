@@ -404,7 +404,13 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
   //   - 도어 닫힐 때: 서랍이 먼저 들어감 → 그 후 도어 회전
   // 일반 서랍장(외부 서랍)은 인출 애니메이션 없음
   const { doorsOpen } = useUIStore();
-  const shouldOpenDrawers = doorsOpen === true;
+  // 도어가 없는 가구는 서랍 인출 애니메이션을 무시 (최초 배치 시 닫힘 + 도어 제거 시 자동 닫힘)
+  const hasDoorOnModule = useFurnitureStore(state => {
+    if (!furnitureId) return true; // furnitureId 없으면 보수적으로 기존 동작 유지
+    const m = state.placedModules.find(p => p.id === furnitureId);
+    return m?.hasDoor === true;
+  });
+  const shouldOpenDrawers = doorsOpen === true && hasDoorOnModule;
   // 현재 가구가 속서랍 인출 애니메이션 대상인지 확인
   // - 인출장(pull-out-cabinet): 1단 속서랍 인출
   // - 의류장 서랍 가구(2drawer-hanging, 4drawer-hanging 등): 도어 안쪽 서랍 인출

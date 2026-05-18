@@ -4,6 +4,7 @@ import { useSpring, animated } from '@react-spring/three';
 import { useFrame, useThree } from '@react-three/fiber';
 import { useSpace3DView } from '../../context/useSpace3DView';
 import { useUIStore } from '@/store/uiStore';
+import { useFurnitureStore } from '@/store/core/furnitureStore';
 import { Line } from '@react-three/drei';
 import BoxWithEdges from './components/BoxWithEdges';
 import DimensionText from './components/DimensionText';
@@ -392,9 +393,16 @@ export const ExternalDrawerRenderer: React.FC<ExternalDrawerRendererProps> = ({
 
   // === 서랍 오픈 상태 (도어 오픈과 연동, 재질 속장탭 제외) ===
   const isInteriorMaterialMode = useUIStore(s => s.isInteriorMaterialMode);
-  const isDoorOpen = (doorsOpen !== null && !isInteriorMaterialMode)
+  // 도어가 없는 가구는 서랍 인출 무시 (최초 배치 시 닫힘 + 도어 제거 시 자동 닫힘)
+  const hasDoorOnModule = useFurnitureStore(state => {
+    if (!furnitureId) return true;
+    const m = state.placedModules.find(p => p.id === furnitureId);
+    return m?.hasDoor === true;
+  });
+  const isDoorOpenRaw = (doorsOpen !== null && !isInteriorMaterialMode)
     ? doorsOpen
     : furnitureId ? isIndividualDoorOpen(furnitureId, 0) : false;
+  const isDoorOpen = isDoorOpenRaw && hasDoorOnModule;
   const shouldOpenDrawers = useMemo(
     () => isDoorOpen,
     [isDoorOpen]
