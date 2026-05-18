@@ -159,7 +159,7 @@ export const GradientLoginForm: React.FC = () => {
                 {loading ? (
                   <Loader2 className="w-5 h-5 animate-spin" />
                 ) : (
-                  isSignUp ? '가입하기' : '로그인'
+                  isSignUp ? '가입 및 인증메일 발송' : '로그인'
                 )}
               </button>
             </form>

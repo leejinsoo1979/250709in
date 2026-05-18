@@ -163,7 +163,7 @@ const MobileLogin: React.FC = () => {
         <button type="submit" disabled={loading} style={{
           ...primaryBtnStyle,
           opacity: loading ? 0.6 : 1,
-        }}>{loading ? '처리중...' : (mode === 'login' ? '로그인' : '회원가입')}</button>
+        }}>{loading ? '처리중...' : (mode === 'login' ? '로그인' : '가입 및 인증메일 발송')}</button>
       </form>
 
       {/* 구분선 */}

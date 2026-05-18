@@ -441,7 +441,7 @@ export const UltraModernLoginForm: React.FC = () => {
                   ) : (
                     <>
                       {isSignUp ? <Rocket className="w-5 h-5" /> : <LogIn className="w-5 h-5" />}
-                      <span>{isSignUp ? '시작하기' : '로그인'}</span>
+                      <span>{isSignUp ? '가입 및 인증메일 발송' : '로그인'}</span>
                     </>
                   )}
                 </div>

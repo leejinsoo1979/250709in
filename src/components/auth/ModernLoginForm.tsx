@@ -200,7 +200,7 @@ export const ModernLoginForm: React.FC = () => {
               ) : (
                 <>
                   {isSignUp ? <UserPlus className="w-5 h-5" /> : <LogIn className="w-5 h-5" />}
-                  <span>{isSignUp ? '가입하기' : '로그인'}</span>
+                  <span>{isSignUp ? '가입 및 인증메일 발송' : '로그인'}</span>
                 </>
               )}
             </motion.button>

@@ -438,7 +438,7 @@ export const SignInFlo: React.FC<SignInFloProps> = ({
               {loading ? (
                 <div className="w-5 h-5 border-2 border-zinc-300 border-t-zinc-900 rounded-full animate-spin mx-auto" />
               ) : (
-                isSignUp ? "Create Account" : "Sign In"
+                isSignUp ? "가입 및 인증메일 발송" : "Sign In"
               )}
             </button>
           </form>
