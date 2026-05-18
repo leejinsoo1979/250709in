@@ -5,6 +5,7 @@ import { useSpace3DView } from '../../../context/useSpace3DView';
 import { useViewerTheme } from '../../../context/ViewerThemeContext';
 import { useUIStore } from '@/store/uiStore';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
+import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
 import { useTheme } from '@/contexts/ThemeContext';
 import { getDefaultGrainDirection, resolvePanelGrainDirection } from '@/editor/shared/utils/materialConstants';
 import { useTexture } from '@react-three/drei';
@@ -1376,6 +1377,14 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
     return panelSpecificMaterial;
   }, [panelSpecificMaterial, cornerNotch, backCenterNotch, normalizedFaceGrooves.length, isLiveDimensionSelected, selectedPanelHighlightColor]);
 
+  // 엣지밴딩 색상 (속장/도어 패널 단면 PVC 띠) 적용용 (실제 multi-material 변환은 notchGeometry 선언 후에 수행)
+  const edgeBandingColor = useSpaceConfigStore(state => {
+    const cfg = state.spaceInfo.materialConfig;
+    if (!cfg) return undefined;
+    const isDoorPanel = !!panelName && (panelName.includes('도어') || panelName.includes('door'));
+    return isDoorPanel ? cfg.doorEdgeColor : cfg.interiorEdgeColor;
+  });
+
   // useEffect 제거: useMemo에서 이미 모든 회전 로직을 처리하므로 중복 실행 방지
 
   // 테마 색상 매핑
@@ -2253,6 +2262,31 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
     return geom;
   }, [notch, notches, bottomRebate, cornerNotch, backCenterNotch, hasCircleHoles, circleHoles, hasAnyNotch, hasCustomGeometry, hasFaceGrooves, normalizedFaceGrooves, safeArgs]);
 
+  // notchGeometry가 없는 표준 박스 패널에 한해 엣지밴딩 multi-material 적용
+  const meshMaterial = React.useMemo<THREE.Material | THREE.Material[]>(() => {
+    if (!edgeBandingColor) return finalMaterial;
+    if (notchGeometry) return finalMaterial; // 커스텀 geometry는 face group 미정의 → 추후 대응
+    const [w, h, d] = safeArgs;
+    const minDim = Math.min(w, h, d);
+    const isThinX = w === minDim;
+    const isThinY = h === minDim && !isThinX;
+    const isThinZ = d === minDim && !isThinX && !isThinY;
+    const edgeMat = new THREE.MeshStandardMaterial({
+      color: new THREE.Color(edgeBandingColor),
+      roughness: 0.6,
+      metalness: 0.05,
+      side: THREE.DoubleSide,
+    });
+    const main = finalMaterial as THREE.Material;
+    // BoxGeometry face order: [+X, -X, +Y, -Y, +Z, -Z]
+    const mats: THREE.Material[] = [edgeMat, edgeMat, edgeMat, edgeMat, edgeMat, edgeMat];
+    if (isThinX) { mats[0] = main; mats[1] = main; }
+    else if (isThinY) { mats[2] = main; mats[3] = main; }
+    else if (isThinZ) { mats[4] = main; mats[5] = main; }
+    else { mats[4] = main; mats[5] = main; }
+    return mats;
+  }, [finalMaterial, edgeBandingColor, notchGeometry, safeArgs]);
+
   const selectedOutlineLines = React.useMemo<[number, number, number][][]>(() => {
     if (!isLiveDimensionSelected || viewMode !== '3D') return [];
     if (hasAnyNotch) return getNotchEdgeLines();
@@ -2306,7 +2340,7 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
         onClick={handlePanelClick}
         onPointerOver={onPointerOver}
         onPointerOut={onPointerOut}
-        material={finalMaterial}
+        material={meshMaterial as any}
       >
         {notchGeometry ? (
           <primitive key={`notch-${safeArgs[0]}-${safeArgs[1]}-${safeArgs[2]}-${JSON.stringify(notch || notches || cornerNotch || backCenterNotch || faceGrooves || circleHoles)}`} object={notchGeometry} attach="geometry" />
