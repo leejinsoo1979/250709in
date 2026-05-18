@@ -733,7 +733,7 @@ export default function EnterpriseSignUpPage() {
 
                   {!isSocialLoggedIn && (
                     <div className="mt-2 text-xs text-zinc-400">
-                      신청 완료 후 Firebase 인증 링크를 발송합니다. 인증 완료 후 이메일/비밀번호 로그인이 가능합니다.
+                      제출하면 입력한 이메일로 인증 링크가 발송됩니다. 인증 완료 후 이메일/비밀번호 로그인이 가능합니다.
                     </div>
                   )}
                 </Field>

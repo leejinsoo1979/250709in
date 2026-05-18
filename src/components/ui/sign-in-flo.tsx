@@ -372,7 +372,7 @@ export const SignInFlo: React.FC<SignInFloProps> = ({
                   color: isDark ? '#a1a1aa' : '#6b7280',
                 }}
               >
-                가입 후 이메일 인증 링크를 보내드립니다. 인증 완료 후 로그인할 수 있습니다.
+                버튼을 누르면 입력한 이메일로 인증 링크가 발송됩니다.
               </div>
             )}
 
