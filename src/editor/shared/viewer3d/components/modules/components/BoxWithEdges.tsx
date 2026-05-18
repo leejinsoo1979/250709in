@@ -2320,8 +2320,25 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
   // - 도어 패널: 두께 축 외 4면 모두 엣지 (전후 메인면 제외)
   // - ExtrudeGeometry(faceGroove 있는 측판/백패널)는 측면 분리 불가 → 속장은 적용 보류
   const meshMaterial = React.useMemo<THREE.Material | THREE.Material[]>(() => {
-    if (viewMode !== '3D') return finalMaterial; // 엣지 색은 3D에서만 표시
-    if (!edgeBandingColor) return finalMaterial;
+    // 엣지 미적용/2D 모드: ExtrudeGeometry에 이전에 분리해둔 groups가 있으면 원상복구
+    const restoreGeomGroups = () => {
+      if (!notchGeometry) return;
+      const geom = notchGeometry as THREE.BufferGeometry;
+      const orig = (geom.userData as any)?.__edgeBandingOriginalIndex as Uint32Array | undefined;
+      if (orig) {
+        geom.setIndex(new THREE.BufferAttribute(orig, 1));
+        geom.clearGroups();
+        delete (geom.userData as any).__edgeBandingOriginalIndex;
+      }
+    };
+    if (viewMode !== '3D') {
+      restoreGeomGroups();
+      return finalMaterial;
+    }
+    if (!edgeBandingColor) {
+      restoreGeomGroups();
+      return finalMaterial;
+    }
     const main = finalMaterial as THREE.Material;
     const isDoorPanel = !!panelName && (panelName.includes('도어') || panelName.includes('door'));
     const edgeMat = new THREE.MeshStandardMaterial({
@@ -2341,10 +2358,25 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
         panelName.includes('뒷판') ||
         panelName.includes('back')
       );
-      if (!isDoorPanel && isBackPanelOrSimilar) return finalMaterial;
+      if (!isDoorPanel && isBackPanelOrSimilar) {
+        restoreGeomGroups();
+        return finalMaterial;
+      }
       const geom = notchGeometry as THREE.BufferGeometry;
       const pos = geom.attributes.position;
       if (!pos) return finalMaterial;
+      // 원본 인덱스 백업 (첫 적용 시에만)
+      if (!(geom.userData as any).__edgeBandingOriginalIndex) {
+        const origIdx = geom.index
+          ? new Uint32Array(geom.index.array as ArrayLike<number>)
+          : (() => {
+              const n = pos.count;
+              const a = new Uint32Array(n);
+              for (let i = 0; i < n; i++) a[i] = i;
+              return a;
+            })();
+        (geom.userData as any).__edgeBandingOriginalIndex = origIdx;
+      }
       const arr = pos.array as Float32Array;
       const indexAttr = geom.index;
       const isIndexed = !!indexAttr;
@@ -2378,7 +2410,10 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
           frontCount++;
         }
       }
-      if (frontCount === 0) return finalMaterial;
+      if (frontCount === 0) {
+        restoreGeomGroups();
+        return finalMaterial;
+      }
       // 새 index를 만들어 엣지/본체 face 분리
       const newIndex = new Uint32Array(vertCount);
       let cursor = 0;
