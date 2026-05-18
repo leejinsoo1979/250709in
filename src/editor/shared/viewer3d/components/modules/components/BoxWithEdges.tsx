@@ -290,6 +290,126 @@ const buildTopViewFaceGrooveEdgeLines = (grooves: NormalizedFaceGroove[]): [numb
   return lines;
 };
 
+const buildFrontViewFaceGrooveEdgeLines = (grooves: NormalizedFaceGroove[]): [number, number, number][][] => {
+  const lines: [number, number, number][][] = [];
+
+  grooves.forEach(({ y0, y1, z1, faceX, bottomX }) => {
+    lines.push(
+      [[faceX, y0, z1], [bottomX, y0, z1]],
+      [[bottomX, y0, z1], [bottomX, y1, z1]],
+      [[bottomX, y1, z1], [faceX, y1, z1]]
+    );
+  });
+
+  return lines;
+};
+
+const buildTopViewBoxEdgeLinesWithFaceGrooveOpenings = (
+  width: number,
+  height: number,
+  depth: number,
+  grooves: NormalizedFaceGroove[]
+): [number, number, number][][] => {
+  const halfW = width / 2;
+  const halfH = height / 2;
+  const halfD = depth / 2;
+  const eps = 0.00001;
+  const lines = buildBoxEdgeLines(width, height, depth).filter((line) => {
+    const [a, b] = line;
+    const isFaceZEdge =
+      Math.abs(a[0] - b[0]) < eps &&
+      Math.abs(Math.abs(a[0]) - halfW) < eps &&
+      Math.abs(a[1] - b[1]) < eps &&
+      Math.abs(Math.abs(a[1]) - halfH) < eps &&
+      Math.abs(a[2] - b[2]) > eps;
+    return !isFaceZEdge;
+  });
+
+  ([-halfW, halfW] as const).forEach((faceX) => {
+    const faceGrooves = grooves
+      .filter((groove) => Math.abs(groove.faceX - faceX) < eps)
+      .map((groove) => [Math.max(-halfD, groove.z0), Math.min(halfD, groove.z1)] as [number, number])
+      .sort((a, b) => a[0] - b[0]);
+    if (!faceGrooves.length) {
+      lines.push(
+        [[faceX, -halfH, -halfD], [faceX, -halfH, halfD]],
+        [[faceX, halfH, -halfD], [faceX, halfH, halfD]]
+      );
+      return;
+    }
+
+    const segments: [number, number][] = [];
+    let cursor = -halfD;
+    faceGrooves.forEach(([z0, z1]) => {
+      if (z0 > cursor + eps) segments.push([cursor, z0]);
+      cursor = Math.max(cursor, z1);
+    });
+    if (cursor < halfD - eps) segments.push([cursor, halfD]);
+
+    segments.forEach(([z0, z1]) => {
+      lines.push(
+        [[faceX, -halfH, z0], [faceX, -halfH, z1]],
+        [[faceX, halfH, z0], [faceX, halfH, z1]]
+      );
+    });
+  });
+
+  return lines;
+};
+
+const buildFrontViewBoxEdgeLinesWithFaceGrooveOpenings = (
+  width: number,
+  height: number,
+  depth: number,
+  grooves: NormalizedFaceGroove[]
+): [number, number, number][][] => {
+  const halfW = width / 2;
+  const halfH = height / 2;
+  const halfD = depth / 2;
+  const eps = 0.00001;
+  const lines = buildBoxEdgeLines(width, height, depth).filter((line) => {
+    const [a, b] = line;
+    const isFaceYEdge =
+      Math.abs(a[0] - b[0]) < eps &&
+      Math.abs(Math.abs(a[0]) - halfW) < eps &&
+      Math.abs(a[2] - b[2]) < eps &&
+      Math.abs(Math.abs(a[2]) - halfD) < eps &&
+      Math.abs(a[1] - b[1]) > eps;
+    return !isFaceYEdge;
+  });
+
+  ([-halfW, halfW] as const).forEach((faceX) => {
+    const faceGrooves = grooves
+      .filter((groove) => Math.abs(groove.faceX - faceX) < eps)
+      .map((groove) => [Math.max(-halfH, groove.y0), Math.min(halfH, groove.y1)] as [number, number])
+      .sort((a, b) => a[0] - b[0]);
+    if (!faceGrooves.length) {
+      lines.push(
+        [[faceX, -halfH, -halfD], [faceX, halfH, -halfD]],
+        [[faceX, -halfH, halfD], [faceX, halfH, halfD]]
+      );
+      return;
+    }
+
+    const segments: [number, number][] = [];
+    let cursor = -halfH;
+    faceGrooves.forEach(([y0, y1]) => {
+      if (y0 > cursor + eps) segments.push([cursor, y0]);
+      cursor = Math.max(cursor, y1);
+    });
+    if (cursor < halfH - eps) segments.push([cursor, halfH]);
+
+    segments.forEach(([y0, y1]) => {
+      lines.push(
+        [[faceX, y0, -halfD], [faceX, y1, -halfD]],
+        [[faceX, y0, halfD], [faceX, y1, halfD]]
+      );
+    });
+  });
+
+  return lines;
+};
+
 const createGroovedPanelGeometry = (
   size: [number, number, number],
   grooves: NormalizedFaceGroove[],
@@ -693,7 +813,8 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
 
   const hideInTop2D = viewMode === '2D' && view2DDirection === 'top' && panelName && (panelName.includes('(하)상판') || panelName.includes('(상)바닥'));
   const hideRearReinforcementInFront2D = viewMode === '2D' && view2DDirection === 'front' && panelName?.includes('보강대');
-  const hiddenByViewMode = !!(hideInTop2D || hideRearReinforcementInFront2D);
+  const hideDrawerInnerFrontPanelInFront2D = viewMode === '2D' && view2DDirection === 'front' && !!panelName && panelName.includes('서랍') && panelName.includes('앞판');
+  const hiddenByViewMode = !!(hideInTop2D || hideRearReinforcementInFront2D || hideDrawerInnerFrontPanelInFront2D);
 
   // CNC 옵티마이저에서 체크 해제된 패널이면 렌더링 생략 (furnitureId::panelName 복합키)
   // NOTE: React hook (useExcludedPanelsStore) 대신 useFrame으로 폴링 — R3F Canvas는 별도 React reconciler를 사용하므로
@@ -1419,9 +1540,13 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
   // L자형 노치 엣지 라인 생성 (2D/3D 공용) — 단일 및 다중 노치 지원
   const getNotchEdgeLines = React.useCallback((options?: {
     includeFaceGrooveEdges?: boolean;
+    openFaceGrooveMouthsInTopView?: boolean;
+    openFaceGrooveMouthsInFrontView?: boolean;
   }): [number, number, number][][] => {
     if (!hasAnyNotch) return [];
     const includeFaceGrooveEdges = options?.includeFaceGrooveEdges ?? true;
+    const openFaceGrooveMouthsInTopView = options?.openFaceGrooveMouthsInTopView ?? false;
+    const openFaceGrooveMouthsInFrontView = options?.openFaceGrooveMouthsInFrontView ?? false;
     const [width, height, depth] = safeArgs;
     const halfW = width / 2, halfH = height / 2, halfD = depth / 2;
     const lines: [number, number, number][][] = [];
@@ -1430,7 +1555,13 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
     const profileVertices: [number, number][] = []; // [Y, Z] 쌍
 
     if (hasFaceGrooves && !notch && !(notches && notches.length > 0) && !bottomRebate && !cornerNotch && !backCenterNotch) {
-      lines.push(...buildBoxEdgeLines(width, height, depth));
+      lines.push(...(
+        openFaceGrooveMouthsInTopView
+          ? buildTopViewBoxEdgeLinesWithFaceGrooveOpenings(width, height, depth, normalizedFaceGrooves)
+          : openFaceGrooveMouthsInFrontView
+            ? buildFrontViewBoxEdgeLinesWithFaceGrooveOpenings(width, height, depth, normalizedFaceGrooves)
+          : buildBoxEdgeLines(width, height, depth)
+      ));
       if (includeFaceGrooveEdges) {
         lines.push(...buildFaceGrooveEdgeLines(normalizedFaceGrooves));
       }
@@ -1690,13 +1821,24 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
     const halfH = height / 2;
     const halfD = depth / 2;
 
+    const faceGroovesSpanFullDepth = normalizedFaceGrooves.length > 0 && normalizedFaceGrooves.every((groove) =>
+      groove.z0 <= -halfD + 0.00001 && groove.z1 >= halfD - 0.00001
+    );
     const hideFaceGrooveEdgesInTop2D = view2DDirection === 'top' && hasFaceGrooves;
+    const openFaceGrooveMouthsInFront2D = view2DDirection === 'front' && hasFaceGrooves && faceGroovesSpanFullDepth;
     // notch가 있으면 L자형 엣지 사용. 탑뷰에서는 백패널/서랍 홈가공 내부선만 제외해 외곽선은 유지한다.
     const lines: [number, number, number][][] = hasAnyNotch
-      ? getNotchEdgeLines({ includeFaceGrooveEdges: !hideFaceGrooveEdgesInTop2D })
+      ? getNotchEdgeLines({
+        includeFaceGrooveEdges: !(hideFaceGrooveEdgesInTop2D || openFaceGrooveMouthsInFront2D),
+        openFaceGrooveMouthsInTopView: hideFaceGrooveEdgesInTop2D,
+        openFaceGrooveMouthsInFrontView: openFaceGrooveMouthsInFront2D,
+      })
       : [];
     if (hideFaceGrooveEdgesInTop2D) {
       lines.push(...buildTopViewFaceGrooveEdgeLines(normalizedFaceGrooves));
+    }
+    if (openFaceGrooveMouthsInFront2D) {
+      lines.push(...buildFrontViewFaceGrooveEdgeLines(normalizedFaceGrooves));
     }
 
     if (!hasAnyNotch) {
@@ -1784,7 +1926,7 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
         ))}
       </>
     );
-  }, [args, safeArgs, edgeColor, hideTopEdge, hideBottomEdge, isHighlighted, isBackPanel, isClothingRod, panelName, panelDepthOpacity, view2DTheme, view2DDirection, hasAnyNotch, getNotchEdgeLines]);
+  }, [args, safeArgs, edgeColor, hideTopEdge, hideBottomEdge, isHighlighted, isBackPanel, isClothingRod, panelName, panelDepthOpacity, view2DTheme, view2DDirection, hasAnyNotch, hasFaceGrooves, normalizedFaceGrooves, getNotchEdgeLines]);
 
   // 노치 지오메트리 (단일 notch 또는 다중 notches 지원)
   const notchGeometry = React.useMemo(() => {
