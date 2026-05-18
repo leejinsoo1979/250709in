@@ -2323,7 +2323,8 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
       side: THREE.DoubleSide,
     });
     if (notchGeometry) {
-      if (!isDoorPanel) return finalMaterial; // 속장 ExtrudeGeometry는 측면 분리 어려워 보류
+      // ExtrudeGeometry: group 0=옆면(extrude 측면, 두께 단면 = 엣지), group 1=캡(메인 면)
+      // 속장이든 도어든 측면 전체가 두께 단면이므로 엣지 적용
       const groups = (notchGeometry as any).groups as { materialIndex?: number }[] | undefined;
       if (groups && groups.length >= 2) {
         const maxIdx = groups.reduce((m, g) => Math.max(m, g.materialIndex ?? 0), 0);
