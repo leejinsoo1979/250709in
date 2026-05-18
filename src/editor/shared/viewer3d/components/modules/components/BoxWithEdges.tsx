@@ -1377,11 +1377,17 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
     return panelSpecificMaterial;
   }, [panelSpecificMaterial, cornerNotch, backCenterNotch, normalizedFaceGrooves.length, isLiveDimensionSelected, selectedPanelHighlightColor]);
 
-  // 엣지밴딩 색상 (속장/도어 패널 단면 PVC 띠) 적용용 (실제 multi-material 변환은 notchGeometry 선언 후에 수행)
+  // 엣지밴딩 색상 (속장/도어 패널 단면 PVC 띠) 적용용
+  // 판재 패널(MDF/PB)에만 적용 — 옷봉/브래킷/조절발/레그라/금속/손잡이 등 부속 부품은 제외
   const edgeBandingColor = useSpaceConfigStore(state => {
     const cfg = state.spaceInfo.materialConfig;
     if (!cfg) return undefined;
-    const isDoorPanel = !!panelName && (panelName.includes('도어') || panelName.includes('door'));
+    if (!panelName) return undefined;
+    // 부속 부품 제외
+    if (isClothingRod) return undefined;
+    const nonPanelKeywords = ['옷봉', '브라켓', '브래킷', '조절발', '레그라', '금속', '손잡이', '핸들', '경첩', '레일'];
+    if (nonPanelKeywords.some(k => panelName.includes(k))) return undefined;
+    const isDoorPanel = panelName.includes('도어') || panelName.includes('door');
     return isDoorPanel ? cfg.doorEdgeColor : cfg.interiorEdgeColor;
   });
 
@@ -2262,22 +2268,38 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
     return geom;
   }, [notch, notches, bottomRebate, cornerNotch, backCenterNotch, hasCircleHoles, circleHoles, hasAnyNotch, hasCustomGeometry, hasFaceGrooves, normalizedFaceGrooves, safeArgs]);
 
-  // notchGeometry가 없는 표준 박스 패널에 한해 엣지밴딩 multi-material 적용
+  // 엣지밴딩 multi-material 적용
+  // - BoxGeometry: 6면 중 두께 축의 양 면을 메인면, 나머지 4면을 엣지면으로
+  // - ExtrudeGeometry: group 1(extrude 캡 = 메인면), group 0(extrude 측면 = 엣지면)
   const meshMaterial = React.useMemo<THREE.Material | THREE.Material[]>(() => {
     if (!edgeBandingColor) return finalMaterial;
-    if (notchGeometry) return finalMaterial; // 커스텀 geometry는 face group 미정의 → 추후 대응
-    const [w, h, d] = safeArgs;
-    const minDim = Math.min(w, h, d);
-    const isThinX = w === minDim;
-    const isThinY = h === minDim && !isThinX;
-    const isThinZ = d === minDim && !isThinX && !isThinY;
+    const main = finalMaterial as THREE.Material;
     const edgeMat = new THREE.MeshStandardMaterial({
       color: new THREE.Color(edgeBandingColor),
       roughness: 0.6,
       metalness: 0.05,
       side: THREE.DoubleSide,
     });
-    const main = finalMaterial as THREE.Material;
+    if (notchGeometry) {
+      // ExtrudeGeometry는 기본적으로 두 그룹: 0=옆면(extrude 측면, 두께 단면), 1=캡(앞/뒤 메인 면)
+      // 일부 가공(원형 홀, faceGroove 등)에서 그룹 수가 달라질 수 있어 안전 처리
+      const groups = (notchGeometry as any).groups as { materialIndex?: number }[] | undefined;
+      if (groups && groups.length >= 2) {
+        const maxIdx = groups.reduce((m, g) => Math.max(m, g.materialIndex ?? 0), 0);
+        const mats: THREE.Material[] = [];
+        for (let i = 0; i <= maxIdx; i++) {
+          // 관례: index 0 = 측면(엣지), index 1 = 캡(메인). 그 외는 메인으로
+          mats[i] = i === 0 ? edgeMat : main;
+        }
+        return mats;
+      }
+      return finalMaterial;
+    }
+    const [w, h, d] = safeArgs;
+    const minDim = Math.min(w, h, d);
+    const isThinX = w === minDim;
+    const isThinY = h === minDim && !isThinX;
+    const isThinZ = d === minDim && !isThinX && !isThinY;
     // BoxGeometry face order: [+X, -X, +Y, -Y, +Z, -Z]
     const mats: THREE.Material[] = [edgeMat, edgeMat, edgeMat, edgeMat, edgeMat, edgeMat];
     if (isThinX) { mats[0] = main; mats[1] = main; }
