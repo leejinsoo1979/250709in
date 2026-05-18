@@ -2331,57 +2331,58 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
       side: THREE.DoubleSide,
     });
     if (notchGeometry) {
-      // ExtrudeGeometry: 측면 전체에 적용하면 뒷/위/아래까지 칠해짐
-      // face별로 normal Z를 검사 → +Z 방향 face만 분리해서 엣지 그룹으로 설정
+      // 어떤 BufferGeometry든 face별 normal을 직접 계산해서 +Z 방향 face만 엣지로 분리
       const geom = notchGeometry as THREE.BufferGeometry;
       const pos = geom.attributes.position;
-      const indexAttr = geom.index;
-      if (!pos || !indexAttr) return finalMaterial;
-      const vertCount = indexAttr.count;
-      const faceCount = vertCount / 3;
-      const frontMask = new Uint8Array(faceCount);
+      if (!pos) return finalMaterial;
       const arr = pos.array as Float32Array;
-      const idxArr = indexAttr.array as ArrayLike<number>;
+      const indexAttr = geom.index;
+      const isIndexed = !!indexAttr;
+      const vertCount = isIndexed ? indexAttr!.count : pos.count;
+      const faceCount = vertCount / 3;
+      const idxArr: ArrayLike<number> = isIndexed
+        ? (indexAttr!.array as ArrayLike<number>)
+        : { length: vertCount, [Symbol.iterator]: undefined as any } as any;
+      const getIdx = (k: number): number => isIndexed ? (idxArr as any)[k] : k;
+      const frontMask = new Uint8Array(faceCount);
       const vA = new THREE.Vector3(), vB = new THREE.Vector3(), vC = new THREE.Vector3();
       const cb = new THREE.Vector3(), ab = new THREE.Vector3();
       let frontCount = 0;
       for (let f = 0; f < faceCount; f++) {
-        const ia = idxArr[f * 3];
-        const ib = idxArr[f * 3 + 1];
-        const ic = idxArr[f * 3 + 2];
+        const ia = getIdx(f * 3);
+        const ib = getIdx(f * 3 + 1);
+        const ic = getIdx(f * 3 + 2);
         vA.set(arr[ia * 3], arr[ia * 3 + 1], arr[ia * 3 + 2]);
         vB.set(arr[ib * 3], arr[ib * 3 + 1], arr[ib * 3 + 2]);
         vC.set(arr[ic * 3], arr[ic * 3 + 1], arr[ic * 3 + 2]);
         cb.subVectors(vC, vB);
         ab.subVectors(vA, vB);
         cb.cross(ab).normalize();
-        // 도어: 4면 모두 엣지 → ±Z(메인면, |nz|>0.7) 제외 모든 face
-        // 속장: 앞쪽으로 보이는 +Z 방향 단면만 (nz > 0.7)
         const isEdgeFace = isDoorPanel
-          ? (Math.abs(cb.z) < 0.7)
-          : (cb.z > 0.7);
+          ? (Math.abs(cb.z) < 0.7) // 도어: 메인 ±Z 제외 4면
+          : (cb.z > 0.7);          // 속장: +Z 방향 단면만 (앞쪽)
         if (isEdgeFace) {
           frontMask[f] = 1;
           frontCount++;
         }
       }
       if (frontCount === 0) return finalMaterial;
-      // index 재배열: 엣지 face들을 앞쪽으로, 본체 face들을 뒤쪽으로
+      // 새 index를 만들어 엣지/본체 face 분리
       const newIndex = new Uint32Array(vertCount);
       let cursor = 0;
       for (let f = 0; f < faceCount; f++) {
         if (frontMask[f] === 1) {
-          newIndex[cursor++] = idxArr[f * 3];
-          newIndex[cursor++] = idxArr[f * 3 + 1];
-          newIndex[cursor++] = idxArr[f * 3 + 2];
+          newIndex[cursor++] = getIdx(f * 3);
+          newIndex[cursor++] = getIdx(f * 3 + 1);
+          newIndex[cursor++] = getIdx(f * 3 + 2);
         }
       }
       const edgeIdxCount = cursor;
       for (let f = 0; f < faceCount; f++) {
         if (frontMask[f] === 0) {
-          newIndex[cursor++] = idxArr[f * 3];
-          newIndex[cursor++] = idxArr[f * 3 + 1];
-          newIndex[cursor++] = idxArr[f * 3 + 2];
+          newIndex[cursor++] = getIdx(f * 3);
+          newIndex[cursor++] = getIdx(f * 3 + 1);
+          newIndex[cursor++] = getIdx(f * 3 + 2);
         }
       }
       geom.setIndex(new THREE.BufferAttribute(newIndex, 1));
