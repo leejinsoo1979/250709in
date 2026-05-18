@@ -3872,17 +3872,17 @@ const Configurator: React.FC = () => {
   // 탭 전환 핸들러 (자동 저장 → 활성 탭 전환 → 네비게이션)
   const handleTabSwitch = async (tab: EditorTab) => {
     const navigationToken = ++tabNavigationTokenRef.current;
+    // ✅ 클릭 즉시 탭 활성 상태 반영 (사용자 피드백) — 저장/네트워크 응답을 기다리지 않음
+    useUIStore.getState().setActiveTab(tab.id);
     if (!isReadOnly) {
-      try {
-        await saveCurrentDesignBeforeNavigation();
-      } catch (e) {
+      // 자동 저장은 백그라운드에서 진행 (탭 전환 UX를 막지 않음)
+      saveCurrentDesignBeforeNavigation().catch((e) => {
         console.warn('탭 전환 전 자동 저장 실패:', e);
-      }
+      });
     }
     if (navigationToken !== tabNavigationTokenRef.current) {
       return;
     }
-    useUIStore.getState().setActiveTab(tab.id);
     if (isReadOnly) {
       navigate(buildSharedViewerUrl(tab.projectId, tab.designFileId, tab.designFileName, shareScopeParam), { replace: true });
     } else {
