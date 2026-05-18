@@ -424,6 +424,7 @@ const createGroovedPanelGeometry = (
   const contour = buildProfileYZ(height, depth, notch, notches).map(([y, z]) => new THREE.Vector2(y, z));
   const positions: number[] = [];
   const uvs: number[] = [];
+  const triangleMaterialIndices: number[] = [];
   const eps = 0.0001;
   const isPlainRectContour = !notch && !(notches && notches.length > 0);
 
@@ -438,11 +439,13 @@ const createGroovedPanelGeometry = (
     c: [number, number, number],
     uvA: [number, number],
     uvB: [number, number],
-    uvC: [number, number]
+    uvC: [number, number],
+    materialIndex = 0
   ) => {
     pushVertex(a[0], a[1], a[2], uvA[0], uvA[1]);
     pushVertex(b[0], b[1], b[2], uvB[0], uvB[1]);
     pushVertex(c[0], c[1], c[2], uvC[0], uvC[1]);
+    triangleMaterialIndices.push(materialIndex);
   };
 
   const pushQuad = (
@@ -453,10 +456,11 @@ const createGroovedPanelGeometry = (
     uvA: [number, number] = [0, 0],
     uvB: [number, number] = [1, 0],
     uvC: [number, number] = [1, 1],
-    uvD: [number, number] = [0, 1]
+    uvD: [number, number] = [0, 1],
+    materialIndex = 0
   ) => {
-    pushTri(a, b, c, uvA, uvB, uvC);
-    pushTri(a, c, d, uvA, uvC, uvD);
+    pushTri(a, b, c, uvA, uvB, uvC, materialIndex);
+    pushTri(a, c, d, uvA, uvC, uvD, materialIndex);
   };
 
   const uvForYZ = (point: THREE.Vector2): [number, number] => [
@@ -505,7 +509,8 @@ const createGroovedPanelGeometry = (
             [(z0 + halfD) / depth, (y0 + halfH) / height],
             [(z0 + halfD) / depth, (y1 + halfH) / height],
             [(z1 + halfD) / depth, (y1 + halfH) / height],
-            [(z1 + halfD) / depth, (y0 + halfH) / height]
+            [(z1 + halfD) / depth, (y0 + halfH) / height],
+            1
           );
         } else {
           pushQuad(
@@ -516,7 +521,8 @@ const createGroovedPanelGeometry = (
             [(z1 + halfD) / depth, (y0 + halfH) / height],
             [(z1 + halfD) / depth, (y1 + halfH) / height],
             [(z0 + halfD) / depth, (y1 + halfH) / height],
-            [(z0 + halfD) / depth, (y0 + halfH) / height]
+            [(z0 + halfD) / depth, (y0 + halfH) / height],
+            1
           );
         }
       }
@@ -556,7 +562,8 @@ const createGroovedPanelGeometry = (
         [x, c.x, c.y],
         uvForYZ(a),
         uvForYZ(b),
-        uvForYZ(c)
+        uvForYZ(c),
+        1
       );
     });
   };
@@ -727,6 +734,18 @@ const createGroovedPanelGeometry = (
   const geometry = new THREE.BufferGeometry();
   geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
   geometry.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2));
+  if (triangleMaterialIndices.length > 0) {
+    let groupStart = 0;
+    let groupMaterialIndex = triangleMaterialIndices[0] ?? 0;
+    for (let i = 1; i <= triangleMaterialIndices.length; i++) {
+      const nextMaterialIndex = triangleMaterialIndices[i];
+      if (i === triangleMaterialIndices.length || nextMaterialIndex !== groupMaterialIndex) {
+        geometry.addGroup(groupStart * 3, (i - groupStart) * 3, groupMaterialIndex);
+        groupStart = i;
+        groupMaterialIndex = nextMaterialIndex ?? 0;
+      }
+    }
+  }
   geometry.computeVertexNormals();
   geometry.computeBoundingBox();
   geometry.computeBoundingSphere();
@@ -2272,6 +2291,7 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
   // - BoxGeometry: 6면 중 두께 축의 양 면을 메인면, 나머지 4면을 엣지면으로
   // - ExtrudeGeometry: group 1(extrude 캡 = 메인면), group 0(extrude 측면 = 엣지면)
   const meshMaterial = React.useMemo<THREE.Material | THREE.Material[]>(() => {
+    if (viewMode !== '3D') return finalMaterial; // 엣지 색은 3D에서만 표시
     if (!edgeBandingColor) return finalMaterial;
     const main = finalMaterial as THREE.Material;
     const edgeMat = new THREE.MeshStandardMaterial({
@@ -2307,7 +2327,7 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
     else if (isThinZ) { mats[4] = main; mats[5] = main; }
     else { mats[4] = main; mats[5] = main; }
     return mats;
-  }, [finalMaterial, edgeBandingColor, notchGeometry, safeArgs]);
+  }, [finalMaterial, edgeBandingColor, notchGeometry, safeArgs, viewMode]);
 
   const selectedOutlineLines = React.useMemo<[number, number, number][][]>(() => {
     if (!isLiveDimensionSelected || viewMode !== '3D') return [];
