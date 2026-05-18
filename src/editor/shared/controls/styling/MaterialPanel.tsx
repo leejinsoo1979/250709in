@@ -4,7 +4,7 @@ import { useUIStore } from '@/store/uiStore';
 import { useTranslation } from '@/i18n/useTranslation';
 import styles from './MaterialPanel.module.css';
 
-type MaterialTab = 'interior' | 'door' | 'countertop';
+type MaterialTab = 'interior' | 'door' | 'countertop' | 'edge';
 
 // cn utility 함수
 const cn = (...classes: (string | undefined | null | false)[]) => {
@@ -184,10 +184,19 @@ const MaterialPanel: React.FC = () => {
         >
           <span className={styles.tabLabel}>상판</span>
         </button>
+        <button
+          className={cn(styles.tab, materialTab === 'edge' && styles.activeTab)}
+          onClick={() => {
+            setMaterialTab('edge');
+            setCategoryFilter(null);
+          }}
+        >
+          <span className={styles.tabLabel}>엣지</span>
+        </button>
       </div>
 
-      {/* 카테고리 필터 */}
-      <div className={styles.filterBar}>
+      {/* 카테고리 필터 (엣지 탭에서는 숨김) */}
+      <div className={styles.filterBar} style={materialTab === 'edge' ? { display: 'none' } : undefined}>
         <button
           className={cn(styles.filterChip, categoryFilter === null && styles.filterChipActive)}
           onClick={() => setCategoryFilter(null)}
@@ -207,6 +216,87 @@ const MaterialPanel: React.FC = () => {
 
       {/* 탭 컨텐츠 */}
       <div className={styles.content}>
+        {materialTab === 'edge' ? (
+          <div className={styles.tabContent} style={{ padding: '8px 12px' }}>
+            {(['interior', 'door'] as const).map((target) => {
+              const edgeKey = target === 'interior' ? 'interiorEdgeColor' : 'doorEdgeColor';
+              const currentEdge = (materialConfig as any)[edgeKey] || '#FFFFFF';
+              const label = target === 'interior' ? '속장 엣지' : '도어 엣지';
+              return (
+                <div
+                  key={edgeKey}
+                  style={{
+                    padding: '14px 0',
+                    borderBottom: '1px solid var(--theme-border, #e5e7eb)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 12,
+                  }}
+                >
+                  <span style={{ fontSize: 13, color: 'var(--theme-text-primary, #111827)', fontWeight: 600, minWidth: 80 }}>
+                    {label}
+                  </span>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
+                    <input
+                      type="color"
+                      value={currentEdge}
+                      onChange={(e) => {
+                        const newColor = e.target.value;
+                        setSpaceInfo({
+                          materialConfig: { ...materialConfig, [edgeKey]: newColor },
+                        });
+                      }}
+                      style={{
+                        width: 40,
+                        height: 32,
+                        border: '1px solid var(--theme-border, #d1d5db)',
+                        borderRadius: 6,
+                        padding: 0,
+                        cursor: 'pointer',
+                        background: 'transparent',
+                      }}
+                    />
+                    <span style={{
+                      fontSize: 12,
+                      color: 'var(--theme-text-secondary, #6b7280)',
+                      fontFamily: 'SF Mono, Menlo, monospace',
+                    }}>
+                      {currentEdge.toUpperCase()}
+                    </span>
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const newConfig = { ...materialConfig };
+                      delete (newConfig as any)[edgeKey];
+                      setSpaceInfo({ materialConfig: newConfig });
+                    }}
+                    style={{
+                      marginLeft: 'auto',
+                      fontSize: 11,
+                      padding: '4px 10px',
+                      borderRadius: 6,
+                      border: '1px solid var(--theme-border, #d1d5db)',
+                      background: 'transparent',
+                      color: 'var(--theme-text-secondary, #6b7280)',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    초기화
+                  </button>
+                </div>
+              );
+            })}
+            <p style={{
+              marginTop: 16,
+              fontSize: 12,
+              color: 'var(--theme-text-secondary, #6b7280)',
+              lineHeight: 1.5,
+            }}>
+              패널 단면(엣지밴딩)에 표시될 색상을 지정합니다. 색을 지정하지 않으면 패널 본체 재질과 동일하게 표시됩니다.
+            </p>
+          </div>
+        ) : (
         <div className={styles.tabContent}>
           {/* 재질 카드 그리드 */}
           <div className={styles.materialGrid}>
@@ -238,76 +328,8 @@ const MaterialPanel: React.FC = () => {
             ))}
           </div>
 
-          {/* 엣지밴딩 색상: 속장/도어 탭에서만 표시 */}
-          {(materialTab === 'interior' || materialTab === 'door') && (() => {
-            const edgeKey = materialTab === 'interior' ? 'interiorEdgeColor' : 'doorEdgeColor';
-            const currentEdge = (materialConfig as any)[edgeKey] || '#FFFFFF';
-            const label = materialTab === 'interior' ? '속장 엣지' : '도어 엣지';
-            return (
-              <div style={{
-                marginTop: 16,
-                padding: '12px 14px',
-                borderTop: '1px solid var(--theme-border, #e5e7eb)',
-                display: 'flex',
-                alignItems: 'center',
-                gap: 12,
-              }}>
-                <span style={{ fontSize: 13, color: 'var(--theme-text-primary, #111827)', fontWeight: 600, minWidth: 80 }}>
-                  {label}
-                </span>
-                <label style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 8,
-                  cursor: 'pointer',
-                }}>
-                  <input
-                    type="color"
-                    value={currentEdge}
-                    onChange={(e) => {
-                      const newColor = e.target.value;
-                      setSpaceInfo({
-                        materialConfig: { ...materialConfig, [edgeKey]: newColor },
-                      });
-                    }}
-                    style={{
-                      width: 36,
-                      height: 28,
-                      border: '1px solid var(--theme-border, #d1d5db)',
-                      borderRadius: 6,
-                      padding: 0,
-                      cursor: 'pointer',
-                      background: 'transparent',
-                    }}
-                  />
-                  <span style={{ fontSize: 12, color: 'var(--theme-text-secondary, #6b7280)', fontFamily: 'SF Mono, Menlo, monospace' }}>
-                    {currentEdge.toUpperCase()}
-                  </span>
-                </label>
-                <button
-                  type="button"
-                  onClick={() => {
-                    const newConfig = { ...materialConfig };
-                    delete (newConfig as any)[edgeKey];
-                    setSpaceInfo({ materialConfig: newConfig });
-                  }}
-                  style={{
-                    marginLeft: 'auto',
-                    fontSize: 11,
-                    padding: '4px 8px',
-                    borderRadius: 6,
-                    border: '1px solid var(--theme-border, #d1d5db)',
-                    background: 'transparent',
-                    color: 'var(--theme-text-secondary, #6b7280)',
-                    cursor: 'pointer',
-                  }}
-                >
-                  초기화
-                </button>
-              </div>
-            );
-          })()}
         </div>
+        )}
       </div>
     </div>
   );
