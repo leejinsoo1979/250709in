@@ -1399,6 +1399,7 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
   // 엣지밴딩 색상 (속장/도어 패널 단면 PVC 띠) 적용용
   // 판재 패널(MDF/PB)에만 적용 — 옷봉/브래킷/조절발/레그라/금속/손잡이 등 부속 부품은 제외
   const edgeBandingColor = useSpaceConfigStore(state => {
+    if (viewMode !== '3D') return undefined;
     const cfg = state.spaceInfo.materialConfig;
     if (!cfg) return undefined;
     if (!panelName) return undefined;
@@ -1409,6 +1410,23 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
     const isDoorPanel = panelName.includes('도어') || panelName.includes('door');
     return isDoorPanel ? cfg.doorEdgeColor : cfg.interiorEdgeColor;
   });
+  const isDoorEdgeBandingPanel = !!edgeBandingColor && !!panelName && (panelName.includes('도어') || panelName.includes('door'));
+  const doorEdgeBandingStrip = React.useMemo(() => {
+    if (!isDoorEdgeBandingPanel) return null;
+    const strip = Math.min(0.025, safeArgs[0] / 3, safeArgs[1] / 3);
+    if (strip <= 0) return null;
+    const frontZ = safeArgs[2] / 2 + 0.004;
+    const backZ = -safeArgs[2] / 2 - 0.004;
+    const stripDepth = 0.003;
+    return {
+      strip,
+      frontZ,
+      backZ,
+      stripDepth,
+      horizontalWidth: safeArgs[0],
+      verticalHeight: Math.max(0.001, safeArgs[1] - strip * 2),
+    };
+  }, [isDoorEdgeBandingPanel, safeArgs]);
 
   // useEffect 제거: useMemo에서 이미 모든 회전 로직을 처리하므로 중복 실행 방지
 
@@ -2288,12 +2306,14 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
   }, [notch, notches, bottomRebate, cornerNotch, backCenterNotch, hasCircleHoles, circleHoles, hasAnyNotch, hasCustomGeometry, hasFaceGrooves, normalizedFaceGrooves, safeArgs]);
 
   // 엣지밴딩 multi-material 적용
-  // - BoxGeometry: 6면 중 두께 축의 양 면을 메인면, 나머지 4면을 엣지면으로
-  // - ExtrudeGeometry: group 1(extrude 캡 = 메인면), group 0(extrude 측면 = 엣지면)
+  // - 속장 패널: 가구 앞쪽으로 보이는 +Z 단면 한 면에만 (좌/우/뒷/위/아래는 본체색)
+  // - 도어 패널: 두께 축 외 4면 모두 엣지 (전후 메인면 제외)
+  // - ExtrudeGeometry(faceGroove 있는 측판/백패널)는 측면 분리 불가 → 속장은 적용 보류
   const meshMaterial = React.useMemo<THREE.Material | THREE.Material[]>(() => {
     if (viewMode !== '3D') return finalMaterial; // 엣지 색은 3D에서만 표시
     if (!edgeBandingColor) return finalMaterial;
     const main = finalMaterial as THREE.Material;
+    const isDoorPanel = !!panelName && (panelName.includes('도어') || panelName.includes('door'));
     const edgeMat = new THREE.MeshStandardMaterial({
       color: new THREE.Color(edgeBandingColor),
       roughness: 0.6,
@@ -2301,14 +2321,12 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
       side: THREE.DoubleSide,
     });
     if (notchGeometry) {
-      // ExtrudeGeometry는 기본적으로 두 그룹: 0=옆면(extrude 측면, 두께 단면), 1=캡(앞/뒤 메인 면)
-      // 일부 가공(원형 홀, faceGroove 등)에서 그룹 수가 달라질 수 있어 안전 처리
+      if (!isDoorPanel) return finalMaterial; // 속장 ExtrudeGeometry는 측면 분리 어려워 보류
       const groups = (notchGeometry as any).groups as { materialIndex?: number }[] | undefined;
       if (groups && groups.length >= 2) {
         const maxIdx = groups.reduce((m, g) => Math.max(m, g.materialIndex ?? 0), 0);
         const mats: THREE.Material[] = [];
         for (let i = 0; i <= maxIdx; i++) {
-          // 관례: index 0 = 측면(엣지), index 1 = 캡(메인). 그 외는 메인으로
           mats[i] = i === 0 ? edgeMat : main;
         }
         return mats;
@@ -2321,13 +2339,20 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
     const isThinY = h === minDim && !isThinX;
     const isThinZ = d === minDim && !isThinX && !isThinY;
     // BoxGeometry face order: [+X, -X, +Y, -Y, +Z, -Z]
-    const mats: THREE.Material[] = [edgeMat, edgeMat, edgeMat, edgeMat, edgeMat, edgeMat];
-    if (isThinX) { mats[0] = main; mats[1] = main; }
-    else if (isThinY) { mats[2] = main; mats[3] = main; }
-    else if (isThinZ) { mats[4] = main; mats[5] = main; }
-    else { mats[4] = main; mats[5] = main; }
+    // 기본은 본체색, 노출되는 단면만 엣지색으로 덮어씀
+    const mats: THREE.Material[] = [main, main, main, main, main, main];
+    if (isDoorPanel) {
+      // 도어: 두께 축 외 4면 모두 엣지밴딩 표시
+      if (isThinX) { mats[2] = edgeMat; mats[3] = edgeMat; mats[4] = edgeMat; mats[5] = edgeMat; }
+      else if (isThinY) { mats[0] = edgeMat; mats[1] = edgeMat; mats[4] = edgeMat; mats[5] = edgeMat; }
+      else if (isThinZ) { mats[0] = edgeMat; mats[1] = edgeMat; mats[2] = edgeMat; mats[3] = edgeMat; }
+      else { mats[0] = edgeMat; mats[1] = edgeMat; mats[2] = edgeMat; mats[3] = edgeMat; }
+    } else {
+      // 속장: 가구 앞쪽으로 보이는 +Z 단면 한 면에만 엣지밴딩
+      mats[4] = edgeMat;
+    }
     return mats;
-  }, [finalMaterial, edgeBandingColor, notchGeometry, safeArgs, viewMode]);
+  }, [finalMaterial, edgeBandingColor, notchGeometry, safeArgs, viewMode, panelName]);
 
   const selectedOutlineLines = React.useMemo<[number, number, number][][]>(() => {
     if (!isLiveDimensionSelected || viewMode !== '3D') return [];
@@ -2390,6 +2415,33 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
           <boxGeometry key={`${safeArgs[0]}-${safeArgs[1]}-${safeArgs[2]}`} args={safeArgs} />
         )}
       </mesh>
+      {viewMode === '3D' && doorEdgeBandingStrip && edgeBandingColor && effectiveRenderMode === 'solid' && (
+        <group
+          name={`door-edge-banding${panelName ? `-${panelName}` : ''}`}
+          userData={{ decoration: true, edgeBandingOverlay: true }}
+        >
+          {[doorEdgeBandingStrip.frontZ, doorEdgeBandingStrip.backZ].map((z, faceIndex) => (
+            <React.Fragment key={`door-edge-face-${faceIndex}`}>
+              <mesh position={[0, safeArgs[1] / 2 - doorEdgeBandingStrip.strip / 2, z]} renderOrder={10020} raycast={() => null}>
+                <boxGeometry args={[doorEdgeBandingStrip.horizontalWidth, doorEdgeBandingStrip.strip, doorEdgeBandingStrip.stripDepth]} />
+                <meshBasicMaterial color={edgeBandingColor} toneMapped={false} depthTest={false} depthWrite={false} side={THREE.DoubleSide} />
+              </mesh>
+              <mesh position={[0, -safeArgs[1] / 2 + doorEdgeBandingStrip.strip / 2, z]} renderOrder={10020} raycast={() => null}>
+                <boxGeometry args={[doorEdgeBandingStrip.horizontalWidth, doorEdgeBandingStrip.strip, doorEdgeBandingStrip.stripDepth]} />
+                <meshBasicMaterial color={edgeBandingColor} toneMapped={false} depthTest={false} depthWrite={false} side={THREE.DoubleSide} />
+              </mesh>
+              <mesh position={[-safeArgs[0] / 2 + doorEdgeBandingStrip.strip / 2, 0, z]} renderOrder={10020} raycast={() => null}>
+                <boxGeometry args={[doorEdgeBandingStrip.strip, doorEdgeBandingStrip.verticalHeight, doorEdgeBandingStrip.stripDepth]} />
+                <meshBasicMaterial color={edgeBandingColor} toneMapped={false} depthTest={false} depthWrite={false} side={THREE.DoubleSide} />
+              </mesh>
+              <mesh position={[safeArgs[0] / 2 - doorEdgeBandingStrip.strip / 2, 0, z]} renderOrder={10020} raycast={() => null}>
+                <boxGeometry args={[doorEdgeBandingStrip.strip, doorEdgeBandingStrip.verticalHeight, doorEdgeBandingStrip.stripDepth]} />
+                <meshBasicMaterial color={edgeBandingColor} toneMapped={false} depthTest={false} depthWrite={false} side={THREE.DoubleSide} />
+              </mesh>
+            </React.Fragment>
+          ))}
+        </group>
+      )}
       {isLiveDimensionSelected && viewMode === '3D' && (
         <mesh
           name={`tape-selected-panel-glow${panelName ? `-${panelName}` : ''}`}
