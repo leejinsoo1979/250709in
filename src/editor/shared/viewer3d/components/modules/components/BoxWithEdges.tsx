@@ -1417,7 +1417,7 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
 
   // 엣지 색상 결정
   const edgeColor = React.useMemo(() => {
-    // 메라톤 4319 / 8832: 어두운 재질이라 검정 윤곽선이 묻혀서 연한 그레이로 표시
+    // 메라톤 4319 / 8832: 어두운 재질이라 검정 윤곽선이 묻히므로 재질별 진한 색상 사용
     const getTextureSrc = (mat: any): string => {
       try {
         const map = mat?.map;
@@ -1428,8 +1428,13 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
       }
     };
     const texSrc = getTextureSrc(baseMaterial);
-    if (texSrc && /MELATONE_(4319|8832)/i.test(texSrc)) {
-      return '#888888';
+    if (texSrc) {
+      if (/MELATONE_4319/i.test(texSrc)) {
+        return '#2f5d3a'; // 4319 → 진한 녹색
+      }
+      if (/MELATONE_8832/i.test(texSrc)) {
+        return '#4a2e1f'; // 8832 → 진한 갈색
+      }
     }
     // 인조대리석 상판은 연한 그레이 윤곽선
     if (panelName && panelName.includes('인조대리석')) {
@@ -1506,7 +1511,7 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
           : ''
       }`.toLowerCase();
       if (textureSource.includes('melatone_4319') || textureSource.includes('melatone_8832')) {
-        return "#d8d8d8";
+        return "#1f5f3a";
       }
       return "#5a5a5a"; // 3D 솔리드 모드: 진한 회색이 Windows 저DPR에서 뭉개져 보여 살짝 밝게
     } else if (effectiveRenderMode === 'wireframe') {
