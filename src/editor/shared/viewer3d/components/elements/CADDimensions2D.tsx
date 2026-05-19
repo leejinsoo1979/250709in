@@ -440,9 +440,19 @@ const computeLowerCabinetMaidaHeights = (
       maidaHeightsMm[0] = evenH;
       maidaHeightsMm[1] = evenH;
     }
-    // 상판내림 터치(2단/3단) + 도어올림 터치 2A/2B: 상단 마이다 묶음(맨 위 마이다들 + 사이 갭 3mm)은 크기 고정,
+    // 도어올림 터치 3단: 맨아래(3단·maida0) 360 고정, 위 2개(1·2단) 균등 분배
+    //   ※ customMaidaHeights 있으면 사용자 입력값 보존 → 스킵
+    if (!cmhValid && isDoorLift3Fixed && maidaHeightsMm.length === 3) {
+      const bottomFixed = 360;
+      maidaHeightsMm[0] = bottomFixed;
+      const remaining = Math.max(0, totalFrontMm - bottomFixed - gapMm * 2);
+      const evenH = Math.floor(remaining / 2);
+      maidaHeightsMm[1] = evenH;
+      maidaHeightsMm[2] = evenH;
+    }
+    // 상판내림 터치(2단/3단) + 도어올림 터치 2A/2B/3: 상단 마이다 묶음(맨 위 마이다들 + 사이 갭 3mm)은 크기 고정,
     // 마이다 묶음을 캐비넷 상단에서 아래로 채워 내림. 맨 아래(maida0)가 남은 공간 흡수.
-    if ((isTopDown2Fixed || isTopDown3Fixed || isDoorLift2Fixed) && maidaHeightsMm.length >= 2) {
+    if ((isTopDown2Fixed || isTopDown3Fixed || isDoorLift2Fixed || isDoorLift3Fixed) && maidaHeightsMm.length >= 2) {
       const lastIdx = maidaHeightsMm.length - 1;
       const topPositionMm = -bottomExtMm + totalFrontMm; // 마이다 묶음 끝 (캐비넷 바닥 기준)
       const result: { maidaHeightMm: number; maidaBottomMm: number; maidaTopMm: number }[] = new Array(maidaHeightsMm.length);

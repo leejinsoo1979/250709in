@@ -943,6 +943,17 @@ const TouchDrawerAnimated: React.FC<TouchDrawerAnimatedProps> = ({
     maidaHeightsMm[0] = evenH;
     maidaHeightsMm[1] = evenH;
   }
+  // 도어올림 터치 3단: 맨아래(3단) 마이다 360 고정, 위 2칸(1단/2단)은 균등 분배
+  //   maida[0] = 3단(맨아래)·360 고정, maida[1] = 2단, maida[2] = 1단
+  //   H 변경 시 위 2개 마이다 + 갭이 같이 늘어/줄어듦. 1·2단 서랍은 그에 맞춰 위로 이동.
+  if (!customMaidaValid && isDoorLift3Fixed && maidaHeightsMm.length === 3) {
+    const bottomFixed = 360;
+    maidaHeightsMm[0] = bottomFixed;
+    const remaining = Math.max(0, maidaTotalFrontMm - bottomFixed - gapMm * 2);
+    const evenH = Math.floor(remaining / 2);
+    maidaHeightsMm[1] = evenH;
+    maidaHeightsMm[2] = evenH;
+  }
   // 상판내림 터치(2단/3단): H 변경 시 상단 묶음(맨 위 마이다들 + 사이 갭) 크기 고정, maida0이 흡수
   //   ※ customMaidaHeights 있으면 사용자 입력값 보존 → 스킵
   if (!customMaidaValid && (isTopDown2Fixed || isTopDown3Fixed) && maidaHeightsMm.length >= 2) {
@@ -958,7 +969,7 @@ const TouchDrawerAnimated: React.FC<TouchDrawerAnimatedProps> = ({
   //   → 맨 아래 마이다(3단/maidas[0])가 남은 공간 흡수
   // 그 외(터치 아닌 경우)는 기존대로 바닥에서 위로 누적
   let maidas: { height: number; centerY: number; tier: number; bottomMm: number }[];
-  if ((isTopDownTouch || isDoorLift2Fixed) && maidaHeightsMm.length >= 2) {
+  if ((isTopDownTouch || isDoorLift2Fixed || isDoorLift3Fixed) && maidaHeightsMm.length >= 2) {
     // 마이다 영역은 도어갭과 무관. 항상 default 위치 사용.
     const lastIdx = maidaHeightsMm.length - 1;
     const topPositionMm = -defaultBottomExtMm + maidaTotalFrontMm;
@@ -1001,7 +1012,7 @@ const TouchDrawerAnimated: React.FC<TouchDrawerAnimatedProps> = ({
   // 상판내림 터치 + 도어올림 터치 2A/2B: 서랍 2단~ 위치를 마이다 시작점에 묶음
   // - 1단 서랍은 원본 위치 유지 (캐비넷 바닥 기준)
   // - 2단~ 서랍은 마이다 위치 변화에 따라 이동
-  if ((isTopDownTouch || isDoorLift2Fixed) && drawers.length >= 2 && maidas.length >= drawers.length) {
+  if ((isTopDownTouch || isDoorLift2Fixed || isDoorLift3Fixed) && drawers.length >= 2 && maidas.length >= drawers.length) {
     const drawerOffsetInsideMaida = 21;
     for (let i = 1; i < drawers.length; i++) {
       const newBottomY = cabinetBottomY + mmToThreeUnits(maidas[i].bottomMm + drawerOffsetInsideMaida);
