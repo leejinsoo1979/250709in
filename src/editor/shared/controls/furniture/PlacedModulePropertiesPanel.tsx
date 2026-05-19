@@ -4637,8 +4637,23 @@ const PlacedModulePropertiesPanel: React.FC = () => {
             const applyValue = (idx: number, num: number) => {
               if (!Number.isFinite(num) || num <= 0) return;
               const next = [...(current.length === maidaCount ? current : defaultMaida.slice(0, maidaCount))];
+              // 변경 전 base값
+              const prevBase = next[idx];
               // 3단(idx=0): 사용자가 보는 값은 base + bottomGapExt → 저장은 base값으로
-              next[idx] = idx === 0 ? Math.max(0, num - bottomGapExt) : num;
+              const newBase = idx === 0 ? Math.max(0, num - bottomGapExt) : num;
+              const delta = newBase - prevBase;
+              next[idx] = newBase;
+              // 변경된 마이다 윗변이 이동하면 그 위 마이다(idx+1)의 하단이 따라 이동 → 위 마이다 높이 -delta
+              // 맨 위(idx === maidaCount-1)는 위에 마이다 없음 → 보정 없음 (가구 천장 넘으면 sum 체크로 alert)
+              if (maidaCount > 1 && idx < maidaCount - 1) {
+                const aboveIdx = idx + 1;
+                const newAboveH = next[aboveIdx] - delta;
+                if (newAboveH <= 0) {
+                  alert(`위 마이다가 0 이하로 줄어듭니다. 더 작은 값을 입력하세요.`);
+                  return;
+                }
+                next[aboveIdx] = newAboveH;
+              }
               const sum = next.reduce((a, b) => a + b, 0) + (maidaCount - 1) * gapBetween;
               if (sum > totalLimit) {
                 alert(`마이다 합(${sum}mm)이 가구 영역(${totalLimit}mm)을 초과합니다.`);
