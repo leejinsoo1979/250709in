@@ -162,14 +162,20 @@ const FrameOffsetRow: React.FC<{
   onToggle: () => void; onSizeChange: (v: number) => void; onOffsetChange: (v: number) => void;
   highlightKey: string; toAlpha: (n: number) => string; styles: any;
   setHighlightedFrame: (key: string | null) => void;
-}> = ({ num, label, enabled, sizeMM, offset, onToggle, onSizeChange, onOffsetChange, highlightKey, toAlpha, styles, setHighlightedFrame }) => {
+  gap?: number; onGapChange?: (v: number) => void;
+}> = ({ num, label, enabled, sizeMM, offset, onToggle, onSizeChange, onOffsetChange, highlightKey, toAlpha, styles, setHighlightedFrame, gap, onGapChange }) => {
   const [sizeText, setSizeText] = useState(String(sizeMM || ''));
   const [offsetText, setOffsetText] = useState(offset !== 0 ? String(offset) : '');
+  const [gapText, setGapText] = useState((gap ?? 0) !== 0 ? String(gap) : '');
   const sizeFocusRef = useRef(false);
   const offsetFocusRef = useRef(false);
+  const gapFocusRef = useRef(false);
 
   useEffect(() => { if (!sizeFocusRef.current) setSizeText(sizeMM ? String(sizeMM) : ''); }, [sizeMM]);
   useEffect(() => { if (!offsetFocusRef.current) setOffsetText(offset !== 0 ? String(offset) : ''); }, [offset]);
+  useEffect(() => { if (!gapFocusRef.current) setGapText((gap ?? 0) !== 0 ? String(gap) : ''); }, [gap]);
+
+  const showGap = typeof onGapChange === 'function';
 
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '3px 0' }}>
@@ -209,6 +215,24 @@ const FrameOffsetRow: React.FC<{
               className={styles.frameNumberInput}
             />
           </div>
+          {showGap && (
+            <div className={styles.frameItemInput} style={{ flex: 1 }}>
+              <span style={{ fontSize: '10px', color: 'var(--theme-text-secondary)', padding: '0 2px', flexShrink: 0 }}>갭</span>
+              <input type="text" inputMode="numeric" value={gapText} placeholder="0"
+                onFocus={() => { gapFocusRef.current = true; setHighlightedFrame(highlightKey); }}
+                onKeyDown={(e) => {
+                  if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    const next = Math.max(0, Math.min(2000, (gap || 0) + (e.key === 'ArrowUp' ? 1 : -1)));
+                    setGapText(String(next)); onGapChange?.(next);
+                  } else if (e.key === 'Enter') { (e.target as HTMLInputElement).blur(); }
+                }}
+                onChange={(e) => { const v = e.target.value; if (v === '' || /^\d+$/.test(v)) setGapText(v); }}
+                onBlur={(e) => { gapFocusRef.current = false; setHighlightedFrame(null); const c = Math.max(0, Math.min(2000, parseInt(e.target.value) || 0)); setGapText(String(c)); onGapChange?.(c); }}
+                className={styles.frameNumberInput}
+              />
+            </div>
+          )}
         </div>
       ) : null}
     </div>
@@ -5882,9 +5906,11 @@ const Configurator: React.FC = () => {
                         enabled={true}
                         sizeMM={firstTop.topFrameThickness ?? globalTop}
                         offset={firstTop.topFrameOffset ?? topOffsetDefaultU}
+                        gap={firstTop.topFrameGap ?? 0}
                         onToggle={() => topFreeMods.forEach(m => updatePlacedModule(m.id, { hasTopFrame: false, topFrameGap: m.topFrameGap ?? 0, doorTopGap: -5 }))}
                         onSizeChange={(v) => topFreeMods.forEach(m => updatePlacedModule(m.id, { topFrameThickness: Math.max(0, v) }))}
                         onOffsetChange={(v) => topFreeMods.forEach(m => updatePlacedModule(m.id, { topFrameOffset: v }))}
+                        onGapChange={(v) => topFreeMods.forEach(m => updatePlacedModule(m.id, { topFrameGap: Math.max(0, v) }))}
                         highlightKey="top-all-free"
                         toAlpha={toAlpha} styles={styles} setHighlightedFrame={setHighlightedFrame}
                       />;
@@ -5946,12 +5972,14 @@ const Configurator: React.FC = () => {
                     return <FrameOffsetRow key={`top-${mod.id}`}
                       num={tn} label="(상)"
                       enabled={mod.hasTopFrame !== false} sizeMM={upperTopFrame} offset={mod.topFrameOffset ?? upperOffsetDefault}
+                      gap={mod.topFrameGap ?? 0}
                       onToggle={() => {
                         const newVal = !(mod.hasTopFrame !== false);
                         updatePlacedModule(mod.id, { hasTopFrame: newVal, doorTopGap: getTopDoorGapForFrameState(spaceInfo, newVal) });
                       }}
                       onSizeChange={(v) => updatePlacedModule(mod.id, { topFrameThickness: Math.max(0, v) })}
                       onOffsetChange={(v) => updatePlacedModule(mod.id, { topFrameOffset: v })}
+                      onGapChange={(v) => updatePlacedModule(mod.id, { topFrameGap: Math.max(0, v) })}
                       highlightKey={`top-${mod.id}`}
                       toAlpha={toAlpha} styles={styles} setHighlightedFrame={setHighlightedFrame}
                     />;
@@ -5976,6 +6004,7 @@ const Configurator: React.FC = () => {
                   return <FrameOffsetRow key={`top-${mod.id}`}
                     num={tn} label="(상)"
                     enabled={mod.hasTopFrame !== false} sizeMM={actualTopFrameSize} offset={mod.topFrameOffset ?? 0}
+                    gap={mod.topFrameGap ?? 0}
                     onToggle={() => {
                       const newVal = !(mod.hasTopFrame !== false);
                       updatePlacedModule(mod.id, { hasTopFrame: newVal, doorTopGap: getTopDoorGapForFrameState(spaceInfo, newVal) });
@@ -5987,6 +6016,7 @@ const Configurator: React.FC = () => {
                       updatePlacedModule(mod.id, { freeHeight: newFreeHeight });
                     }}
                     onOffsetChange={(v) => updatePlacedModule(mod.id, { topFrameOffset: v })}
+                    onGapChange={(v) => updatePlacedModule(mod.id, { topFrameGap: Math.max(0, v) })}
                     highlightKey={`top-${mod.id}`}
                     toAlpha={toAlpha} styles={styles} setHighlightedFrame={setHighlightedFrame}
                   />;
@@ -6026,9 +6056,11 @@ const Configurator: React.FC = () => {
                         enabled={true}
                         sizeMM={firstBase.baseFrameHeight ?? globalBaseLocal}
                         offset={firstBase.baseFrameOffset ?? (isLowerFirst ? 65 : 0)}
+                        gap={(firstBase as any).baseFrameGap ?? 0}
                         onToggle={() => baseFreeMods.forEach(m => updatePlacedModule(m.id, { hasBase: false, individualFloatHeight: 0, doorBottomGap: -5 }))}
                         onSizeChange={(v) => baseFreeMods.forEach(m => updatePlacedModule(m.id, { baseFrameHeight: Math.max(0, v) }))}
                         onOffsetChange={(v) => baseFreeMods.forEach(m => updatePlacedModule(m.id, { baseFrameOffset: v }))}
+                        onGapChange={(v) => baseFreeMods.forEach(m => updatePlacedModule(m.id, { baseFrameGap: Math.max(0, v) } as any))}
                         highlightKey="base-all-free"
                         toAlpha={toAlpha} styles={styles} setHighlightedFrame={setHighlightedFrame}
                       />;

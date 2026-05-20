@@ -2101,19 +2101,7 @@ const Room: React.FC<RoomProps> = ({
 
                 // 그 외: 전체 높이 렌더링
                 if (!hasDroppedCeiling || !isLeftDropped) {
-                  const wallEdgeColor = (() => {
-                    const tcMap: Record<string, string> = {
-                      green: '#10b981', blue: '#3b82f6', purple: '#8b5cf6', vivid: '#a25378',
-                      red: '#D2042D', pink: '#ec4899', indigo: '#6366f1', teal: '#14b8a6',
-                      yellow: '#eab308', gray: '#6b7280', cyan: '#06b6d4', lime: '#84cc16',
-                      black: '#1a1a1a', wine: '#845EC2', gold: '#d97706', navy: '#1e3a8a',
-                      emerald: '#059669', violet: '#C128D7', mint: '#0CBA80', neon: '#18CF23',
-                      rust: '#FF7438', white: '#D65DB1', plum: '#790963', brown: '#5A2B1D',
-                      darkgray: '#2C3844', maroon: '#3F0D0D', turquoise: '#003A7A',
-                      slate: '#2E3A47', copper: '#AD4F34', forest: '#1B3924', olive: '#4C462C'
-                    };
-                    return tcMap[appTheme.color] || '#3b82f6';
-                  })();
+                  const wallEdgeColor = '#8f8f8f';
                   // 좌벽 로컬 좌표: planeGeometry args=[extendedPanelDepth, height]
                   // local X = 깊이(=월드 Z), local Y = 높이(=월드 Y)
                   // Z축 방향 라인 = 좌벽의 위/아래 가로 모서리 (천장-좌벽, 바닥-좌벽 교차선)
@@ -2823,19 +2811,7 @@ const Room: React.FC<RoomProps> = ({
             const x1 = xOffset;               // 좌측 벽 X
             const x2 = xOffset + width;        // 우측 벽 X
 
-            // 테마 색상 가져오기
-            const tcMap: Record<string, string> = {
-              green: '#10b981', blue: '#3b82f6', purple: '#8b5cf6', vivid: '#a25378',
-              red: '#D2042D', pink: '#ec4899', indigo: '#6366f1', teal: '#14b8a6',
-              yellow: '#eab308', gray: '#6b7280', cyan: '#06b6d4', lime: '#84cc16',
-              black: '#1a1a1a', wine: '#845EC2', gold: '#d97706', navy: '#1e3a8a',
-              emerald: '#059669', violet: '#C128D7', mint: '#0CBA80', neon: '#18CF23',
-              rust: '#FF7438', white: '#D65DB1', plum: '#790963', brown: '#5A2B1D',
-              darkgray: '#2C3844', maroon: '#3F0D0D', turquoise: '#003A7A',
-              slate: '#2E3A47', copper: '#AD4F34', forest: '#1B3924', olive: '#4C462C'
-            };
-            const edgeColor = tcMap[appTheme.color] || '#3b82f6';
-            const threeEdgeColor = new THREE.Color(edgeColor);
+            const threeEdgeColor = new THREE.Color('#8f8f8f');
 
             // 단내림 정보
             const hasDC = spaceInfo.droppedCeiling?.enabled;
@@ -3061,11 +3037,12 @@ const Room: React.FC<RoomProps> = ({
             const positions = new Float32Array(lines.length * 6);
             const vertColors = new Float32Array(lines.length * 6);
             const bgColor = theme?.mode === 'dark' ? new THREE.Color("#1a1a2e") : new THREE.Color("#f5f5f5");
-            const softenSpaceLines = isWindowsPlatform && viewMode === '3D';
-            const lineBackMix = softenSpaceLines ? 0.38 : 0;
-            const lineFrontMix = softenSpaceLines ? 0.9 : 0.7;
-            const lineBackColor = threeEdgeColor.clone().lerp(bgColor, lineBackMix);
-            const lineFrontColor = threeEdgeColor.clone().lerp(bgColor, lineFrontMix);
+            const softenSpaceLines = viewMode === '3D';
+            const lineBaseColor = softenSpaceLines ? new THREE.Color('#8f8f8f') : threeEdgeColor;
+            const lineBackMix = softenSpaceLines ? 0.12 : 0;
+            const lineFrontMix = softenSpaceLines ? 0.68 : 0.7;
+            const lineBackColor = lineBaseColor.clone().lerp(bgColor, lineBackMix);
+            const lineFrontColor = lineBaseColor.clone().lerp(bgColor, lineFrontMix);
 
             lines.forEach((line, i) => {
               for (let j = 0; j < 6; j++) positions[i * 6 + j] = line[j];
@@ -3127,7 +3104,7 @@ const Room: React.FC<RoomProps> = ({
                       depthTest={true}
                       depthWrite={false}
                       transparent={softenSpaceLines}
-                      opacity={softenSpaceLines ? 0.68 : 1}
+                      opacity={softenSpaceLines ? 0.82 : 1}
                     />
                   </lineSegments>
                 )}
@@ -3142,7 +3119,7 @@ const Room: React.FC<RoomProps> = ({
                       depthTest={true}
                       depthWrite={false}
                       transparent
-                      opacity={softenSpaceLines ? 0.62 : 1}
+                      opacity={softenSpaceLines ? 0.78 : 1}
                       polygonOffset
                       polygonOffsetFactor={-50}
                       polygonOffsetUnits={-50}
