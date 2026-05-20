@@ -257,81 +257,71 @@ const FreePlacementDropZone: React.FC = () => {
     const scZone = zones.find(z => z.zone === 'stepCeiling');
 
     // 구간별 균등배분 함수
-    // 잠긴 가구는 원위치·원사이즈 그대로, 잠기지 않은 가구들만 남은 공간에서 균등
+    // 잠긴 가구는 원위치·원사이즈 그대로, unlocked 가구는 잠긴 가구 영역을 제외한 가용공간에서
+    // 전체 unit 기준 균등 분배 (싱글 unit, 듀얼 unit×2). 잠긴 가구 사이사이 빈 구간들에 순서대로 배치.
     const distributeInZone = (mods: typeof freeModules, zoneStartMm: number, zoneEndMm: number) => {
       if (mods.length === 0) return;
       const sortedAll = [...mods].sort((a, b) => (a.position?.x || 0) - (b.position?.x || 0));
-      // 잠긴 가구의 좌-우 mm 범위 (가구 폭 = freeWidth ?? moduleWidth)
-      const lockedRanges: { leftMm: number; rightMm: number }[] = [];
-      const unlocked: typeof sortedAll = [];
+
+      type Range = { leftMm: number; rightMm: number };
+      const sortedLockedRaw: Range[] = [];
+      const unlockedSorted: typeof sortedAll = [];
       sortedAll.forEach(m => {
         if ((m as any).isLocked) {
           const wMm = (m as any).freeWidth ?? (m as any).moduleWidth ?? 0;
           const centerXmm = (m.position?.x ?? 0) / 0.01;
-          lockedRanges.push({ leftMm: centerXmm - wMm / 2, rightMm: centerXmm + wMm / 2 });
+          sortedLockedRaw.push({ leftMm: centerXmm - wMm / 2, rightMm: centerXmm + wMm / 2 });
         } else {
-          unlocked.push(m);
+          unlockedSorted.push(m);
         }
       });
-      if (unlocked.length === 0) return; // 모두 잠겨있으면 아무것도 하지 않음
+      if (unlockedSorted.length === 0) return;
 
-      // 잠긴 가구를 제외한 잠기지 않은 가구만 균등
-      const isDualArr = unlocked.map(mod => mod.isDualSlot === true || mod.moduleId?.includes('dual-'));
-      const singleCount = isDualArr.filter(d => !d).length;
-      const dualCount = isDualArr.filter(d => d).length;
-      const totalUnits = singleCount + dualCount * 2;
-      if (totalUnits === 0) return;
-
-      // 잠긴 가구가 차지하는 폭 제외하고 가용 공간 계산
-      // 잠긴 영역 [zoneStartMm, zoneEndMm] 안쪽 부분만 차감
-      const lockedTotalMm = lockedRanges.reduce((sum, r) => {
-        const overlapL = Math.max(zoneStartMm, r.leftMm);
-        const overlapR = Math.min(zoneEndMm, r.rightMm);
-        return sum + Math.max(0, overlapR - overlapL);
-      }, 0);
-      const availableWidth = (zoneEndMm - zoneStartMm) - lockedTotalMm;
-      if (availableWidth <= 0) return;
-
-      const exactUnitWidth = availableWidth / totalUnits;
-      const cappedUnitWidth = Math.min(MAX_SINGLE, exactUnitWidth);
-      const singleW = Math.min(Math.round(cappedUnitWidth), MAX_SINGLE);
-      const singleSum = singleW * singleCount;
-      const remainingForDual = availableWidth - singleSum;
-      const dualW = dualCount > 0
-        ? Math.min(Math.round(remainingForDual / dualCount), MAX_DUAL)
-        : 0;
-
-      // 잠긴 범위를 경계로 zone을 분할하여 잠긴 가구 사이사이로 배치
-      // 잠긴 범위(zone 내) 정렬
-      const sortedLocked = [...lockedRanges]
+      // zone 내 잠긴 영역
+      const clampedLocked = sortedLockedRaw
         .map(r => ({ leftMm: Math.max(zoneStartMm, r.leftMm), rightMm: Math.min(zoneEndMm, r.rightMm) }))
         .filter(r => r.rightMm > r.leftMm)
         .sort((a, b) => a.leftMm - b.leftMm);
 
-      // 가용 구간(잠긴 영역 사이 빈 구간) 목록 만들기
-      type Gap = { start: number; end: number };
+      // 가용 구간(잠긴 영역 사이 빈 구간) 목록
+      type Gap = { start: number; end: number; widthMm: number };
       const gaps: Gap[] = [];
       let cursor = zoneStartMm;
-      sortedLocked.forEach(r => {
-        if (r.leftMm > cursor) gaps.push({ start: cursor, end: r.leftMm });
+      clampedLocked.forEach(r => {
+        if (r.leftMm > cursor) gaps.push({ start: cursor, end: r.leftMm, widthMm: r.leftMm - cursor });
         cursor = Math.max(cursor, r.rightMm);
       });
-      if (cursor < zoneEndMm) gaps.push({ start: cursor, end: zoneEndMm });
+      if (cursor < zoneEndMm) gaps.push({ start: cursor, end: zoneEndMm, widthMm: zoneEndMm - cursor });
+      if (gaps.length === 0) return;
 
-      // unlocked 가구를 정렬된 순서대로 가용 구간에 차례로 채워 넣기
-      // (잠긴 가구 위치 기준 좌→우로 사이사이에 배치)
-      let gapIdx = 0;
-      let gapCursor = gaps[0]?.start ?? zoneStartMm;
-      unlocked.forEach((mod, i) => {
-        const w = isDualArr[i] ? dualW : singleW;
-        // 현재 gap에 들어갈 수 없으면 다음 gap으로
-        while (gapIdx < gaps.length && gapCursor + w > gaps[gapIdx].end + 0.5) {
-          gapIdx++;
-          if (gapIdx < gaps.length) gapCursor = gaps[gapIdx].start;
+      // 전체 unit 계산 (싱글 1, 듀얼 2)
+      const isDualArr = unlockedSorted.map(mod => mod.isDualSlot === true || mod.moduleId?.includes('dual-'));
+      const totalUnits = isDualArr.reduce((s, d) => s + (d ? 2 : 1), 0);
+      if (totalUnits === 0) return;
+
+      const totalAvailable = gaps.reduce((s, g) => s + g.widthMm, 0);
+      const exactUnitWidth = totalAvailable / totalUnits;
+      const cappedUnitWidth = Math.min(MAX_SINGLE, exactUnitWidth);
+      const singleW = Math.min(Math.round(cappedUnitWidth), MAX_SINGLE);
+      const dualW = Math.min(singleW * 2, MAX_DUAL);
+
+      // 가구 폭 배열
+      const widths = isDualArr.map(d => (d ? dualW : singleW));
+
+      // 가구를 정렬된 순서대로 gap에 채워 넣기 — 한 gap에서 못 들어가면 다음 gap으로
+      let gIdx = 0;
+      let curX = gaps[0]?.start ?? zoneStartMm;
+      unlockedSorted.forEach((mod, i) => {
+        const w = widths[i];
+        // 현재 gap에 안 들어가면 다음 gap으로 이동
+        while (gIdx < gaps.length && curX + w > gaps[gIdx].end + 0.5) {
+          gIdx++;
+          if (gIdx < gaps.length) curX = gaps[gIdx].start;
         }
-        if (gapIdx >= gaps.length) {
-          // 들어갈 공간 없음 — 그냥 zone 끝에 배치 (fallback)
-          const centerXmm = zoneEndMm - w / 2;
+        if (gIdx >= gaps.length) {
+          // 들어갈 자리 없으면 마지막 gap 끝에 배치
+          const fallback = gaps[gaps.length - 1];
+          const centerXmm = fallback.end - w / 2;
           updatePlacedModule(mod.id, {
             freeWidth: w,
             moduleWidth: w,
@@ -339,13 +329,13 @@ const FreePlacementDropZone: React.FC = () => {
           });
           return;
         }
-        const centerXmm = gapCursor + w / 2;
+        const centerXmm = curX + w / 2;
         updatePlacedModule(mod.id, {
           freeWidth: w,
           moduleWidth: w,
           position: { ...mod.position, x: centerXmm * 0.01 },
         });
-        gapCursor += w;
+        curX += w;
       });
     };
 
