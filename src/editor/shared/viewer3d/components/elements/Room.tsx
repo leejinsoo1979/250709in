@@ -1262,13 +1262,10 @@ const Room: React.FC<RoomProps> = ({
     widthMm, heightMm, panelDepthMm, furnitureDepthMm, floorFinishHeightMm, frameThicknessMm, baseFrameMm, topBottomFrameHeightMm, baseFrameHeightMm
   } = dimensions;
 
-  // 받침대 시각적 높이: baseConfig.height는 바닥마감재 포함 값이므로 실제 렌더링 시 바닥마감재를 빼야 함
-  const visualBaseFrameHeight = spaceInfo.baseConfig?.type === 'floor' && spaceInfo.hasFloorFinish && floorFinishHeight > 0
-    ? Math.max(0, baseFrameHeight - floorFinishHeight)
-    : baseFrameHeight;
-  const visualBaseFrameHeightMm = spaceInfo.baseConfig?.type === 'floor' && spaceInfo.hasFloorFinish && floorFinishHeightMm > 0
-    ? Math.max(0, baseFrameHeightMm - floorFinishHeightMm)
-    : baseFrameHeightMm;
+  // 받침대 시각적 높이: 사용자가 설정한 baseFrameHeight를 그대로 유지.
+  //   바닥마감재가 깔리면 받침대는 마감재 위에 그대로 얹혀서 전체적으로 마감재 두께만큼 위로 올라감.
+  const visualBaseFrameHeight = baseFrameHeight;
+  const visualBaseFrameHeightMm = baseFrameHeightMm;
 
   // 좌우 프레임 렌더링 크기: 가구와 1.5mm 이격을 위해 프레임 두께를 1.5mm 줄임
   // (가구 배치 공간 계산에는 원본 frameThickness 사용, 렌더링에만 적용)
