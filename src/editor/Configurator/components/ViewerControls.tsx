@@ -400,8 +400,8 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
               <BiDoorOpen size={13} />
               {hasDoorsInstalled ? '도어제거' : '도어설치'}
             </button>
-            {/* 도어 설치 안내 툴팁 */}
-            {showDoorGuide && !hasDoorsInstalled && (
+            {/* 도어 설치 안내 툴팁 (3D 뷰에서만) */}
+            {showDoorGuide && !hasDoorsInstalled && viewMode === '3D' && (
               <div
                 className={styles.doorGuideTooltip}
                 onClick={() => setShowDoorGuide(false)}
