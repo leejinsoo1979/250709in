@@ -16,6 +16,14 @@
   cursor: default !important;
 }
 
+@media (min-width: 768px) {
+  :global(html.platform-windows) .configurator {
+    width: 125%;
+    height: 125%;
+    zoom: 0.8;
+  }
+}
+
 /* 메인 컨텐츠 영역 */
 .mainContent {
   flex: 1;

@@ -52,6 +52,23 @@ const setupStaleAssetReload = () => {
 
 setupStaleAssetReload();
 
+const setupPlatformClass = () => {
+  if (typeof window === 'undefined') return;
+
+  const ua = window.navigator.userAgent || '';
+  const platform = window.navigator.platform || '';
+  const userAgentDataPlatform = (window.navigator as Navigator & {
+    userAgentData?: { platform?: string };
+  }).userAgentData?.platform || '';
+  const platformText = `${ua} ${platform} ${userAgentDataPlatform}`;
+  const root = document.documentElement;
+
+  root.classList.toggle('platform-windows', /Windows/i.test(platformText));
+  root.classList.toggle('platform-macos', /\bMac/i.test(platformText) && !/iPhone|iPad|iPod/i.test(platformText));
+};
+
+setupPlatformClass();
+
 // 개발 모드에서 유틸리티 스크립트 로드
 if (import.meta.env.DEV) {
   import('./scripts/fixUserCreatedAt');
