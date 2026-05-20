@@ -214,7 +214,7 @@ const ContentToolbar: React.FC<ContentToolbarProps> = ({
     }
   };
 
-  const currentViewOption = VIEW_OPTIONS.find(v => v.mode === viewMode) || VIEW_OPTIONS[2];
+  const currentViewOption = VIEW_OPTIONS.find(v => v.mode === viewMode) || VIEW_OPTIONS[0];
 
   const getBreadcrumbIcon = (item: BreadcrumbItem) => {
     switch (item.type) {
@@ -500,6 +500,7 @@ const ContentToolbar: React.FC<ContentToolbarProps> = ({
         value={sortBy}
         onChange={e => onSortChange(e.target.value as SortBy)}
       >
+        <option value="workOrder">작업순서</option>
         <option value="date">수정일순</option>
         <option value="name">이름순</option>
         <option value="type">종류순</option>

@@ -489,6 +489,7 @@ export const getDesignFilesPublic = async (projectId: string): Promise<{ designF
           name: data.name || '디자인',
           projectId: data.projectId || projectId,
           folderId: data.folderId,
+          createdAt: data.createdAt,
           updatedAt: data.updatedAt,
           spaceSize: {
             width: data.spaceConfig?.width || 3600,

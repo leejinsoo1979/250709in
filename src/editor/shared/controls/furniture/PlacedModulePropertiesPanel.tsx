@@ -18,6 +18,7 @@ import { parseBackWallGapInput, stepBackWallGapMm } from '@/editor/shared/utils/
 import { resolveCountertopThicknessMm } from '@/editor/shared/utils/countertopHeightCompensation';
 import { normalizeDoorHingePositionsMm, resolveDefaultDoorHingePositionsMm, type DoorHingeMode } from '@/editor/shared/utils/doorGeometryCalculator';
 import { resolveDoorOuterOpenSides } from '@/editor/shared/utils/doorOuterGap';
+import { FurniturePresetButtons } from './FurniturePresetButtons';
 import styles from './PlacedModulePropertiesPanel.module.css';
 
 // 가구 썸네일 이미지 경로 — ModuleGallery와 동일한 규칙
@@ -3160,7 +3161,14 @@ const PlacedModulePropertiesPanel: React.FC = () => {
           </div>
           <button className={styles.closeButton} onClick={handleClose} aria-label="닫기"></button>
         </div>
-        
+
+        {currentPlacedModule && (
+          <FurniturePresetButtons
+            placedModule={currentPlacedModule}
+            moduleCategory={moduleData?.category}
+          />
+        )}
+
         <div className={styles.content}>
           <div className={styles.moduleInfo}>
             <div className={styles.modulePreview}>

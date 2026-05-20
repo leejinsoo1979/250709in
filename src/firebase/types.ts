@@ -251,6 +251,7 @@ export interface DesignFileSummary {
   name: string;
   projectId: string;
   folderId?: string;
+  createdAt?: Timestamp;
   updatedAt: Timestamp;
   spaceSize: {
     width: number;

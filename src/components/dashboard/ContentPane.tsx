@@ -63,6 +63,14 @@ const ContentPane: React.FC<ContentPaneProps> = ({
   const { isMobile } = useResponsive();
   const iconSize = VIEW_MODE_ICON_SIZE[viewMode];
 
+  const getSortTime = (value: any): number => {
+    if (!value) return 0;
+    if (typeof value === 'number') return value;
+    if (value.toMillis) return value.toMillis();
+    if (value.seconds) return value.seconds * 1000;
+    return new Date(value).getTime() || 0;
+  };
+
   // 검색 + 정렬
   const filteredItems = useMemo(() => {
     let result = items;
@@ -72,23 +80,31 @@ const ContentPane: React.FC<ContentPaneProps> = ({
       result = result.filter(item => item.name.toLowerCase().includes(term));
     }
 
-    result = [...result].sort((a, b) => {
+    result = [...result]
+      .map((item, index) => ({ item, index }))
+      .sort((aEntry, bEntry) => {
+      const a = aEntry.item;
+      const b = bEntry.item;
       if (a.type === 'folder' && b.type !== 'folder') return -1;
       if (a.type !== 'folder' && b.type === 'folder') return 1;
 
       let cmp = 0;
-      if (sortBy === 'name') {
+      if (sortBy === 'workOrder') {
+        cmp = getSortTime(a.createdAt || a.updatedAt) - getSortTime(b.createdAt || b.updatedAt);
+        if (cmp === 0) cmp = aEntry.index - bEntry.index;
+      } else if (sortBy === 'name') {
         cmp = a.name.localeCompare(b.name, 'ko');
       } else if (sortBy === 'date') {
-        const aTime = a.updatedAt?.toMillis?.() || 0;
-        const bTime = b.updatedAt?.toMillis?.() || 0;
+        const aTime = getSortTime(a.updatedAt);
+        const bTime = getSortTime(b.updatedAt);
         cmp = aTime - bTime;
       } else if (sortBy === 'type') {
         cmp = a.type.localeCompare(b.type);
       }
 
       return sortDirection === 'desc' ? -cmp : cmp;
-    });
+    })
+      .map(entry => entry.item);
 
     return result;
   }, [items, searchTerm, sortBy, sortDirection]);

@@ -332,7 +332,7 @@ export function useExplorerData(
             items.push({
               id: df.id, name: df.name, type: 'design',
               projectId, folderId: df.folderId,
-              updatedAt: df.updatedAt, thumbnail: df.thumbnail,
+              createdAt: df.createdAt, updatedAt: df.updatedAt, thumbnail: df.thumbnail,
               spaceSize: df.spaceSize, furnitureCount: df.furnitureCount,
               userId: df.userId,
               ownerName: owner?.displayName,
@@ -351,6 +351,7 @@ export function useExplorerData(
             items.push({
               id: folder.id, name: folder.name, type: 'folder',
               projectId,
+              createdAt: folderTimestamp ? Timestamp.fromMillis(folderTimestamp) : undefined,
               updatedAt: folderTimestamp ? Timestamp.fromMillis(folderTimestamp) : undefined,
             });
           }
@@ -378,7 +379,7 @@ export function useExplorerData(
           items.push({
             id: df.id, name: df.name, type: 'design',
             projectId, folderId: df.folderId,
-            updatedAt: df.deletedAt || df.updatedAt, thumbnail: df.thumbnail,
+            createdAt: df.createdAt, updatedAt: df.deletedAt || df.updatedAt, thumbnail: df.thumbnail,
             spaceSize: df.spaceSize, furnitureCount: df.furnitureCount,
             userId: df.userId,
             ownerName: owner?.displayName,
@@ -405,7 +406,7 @@ export function useExplorerData(
     if (activeMenu === 'shared-with-me') {
       return sharedWithMeProjects.map(p => ({
         id: p.id, name: p.title, type: 'project' as const,
-        updatedAt: p.updatedAt, thumbnail: p.thumbnail,
+        createdAt: p.createdAt, updatedAt: p.updatedAt, thumbnail: p.thumbnail,
         spaceSize: p.spaceSize, status: p.status, isShared: true,
       }));
     }
@@ -413,7 +414,7 @@ export function useExplorerData(
     if (activeMenu === 'shared-by-me') {
       return sharedByMeProjects.map(p => ({
         id: p.id, name: p.title, type: 'project' as const,
-        updatedAt: p.updatedAt, thumbnail: p.thumbnail,
+        createdAt: p.createdAt, updatedAt: p.updatedAt, thumbnail: p.thumbnail,
         spaceSize: p.spaceSize, status: p.status, isShared: true,
       }));
     }
@@ -447,6 +448,7 @@ export function useExplorerData(
         items.push({
           id: folder.id, name: folder.name, type: 'folder',
           projectId: currentProjectId,
+          createdAt: folderTimestamp ? Timestamp.fromMillis(folderTimestamp) : undefined,
           updatedAt: folderTimestamp ? Timestamp.fromMillis(folderTimestamp) : undefined,
         });
       });
@@ -464,7 +466,7 @@ export function useExplorerData(
       items.push({
         id: df.id, name: df.name, type: 'design',
         projectId: currentProjectId, folderId: df.folderId,
-        updatedAt: df.updatedAt, thumbnail: df.thumbnail,
+        createdAt: df.createdAt, updatedAt: df.updatedAt, thumbnail: df.thumbnail,
         spaceSize: df.spaceSize, furnitureCount: df.furnitureCount,
         userId: df.userId,
         ownerName: owner?.displayName,

@@ -85,7 +85,7 @@ export const VIEW_MODE_ICON_SIZE: Record<ViewMode, number> = {
 };
 
 // 정렬 기준
-export type SortBy = 'name' | 'date' | 'type';
+export type SortBy = 'workOrder' | 'name' | 'date' | 'type';
 export type SortDirection = 'asc' | 'desc';
 
 // 컨텍스트 메뉴 상태

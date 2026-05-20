@@ -229,6 +229,14 @@ interface UIState {
   // Shift+클릭 다중 선택 (단일 선택 시 1개, 다중 시 여러 개)
   selectedFurnitureIds: string[];
 
+  // 가구 옵션 프리셋 (카테고리별 1개, 세션 메모리)
+  //   - 가구 편집 팝업에서 "옵션 저장" 클릭 시 현재 가구 속성을 카테고리(full/upper/lower)별로 저장
+  //   - 다른 같은 카테고리 가구 팝업에서 "속성 주입" 시 사용자가 선택한 그룹의 속성만 덮어씀
+  //   - 새 저장 시 같은 카테고리의 기존 프리셋은 덮어쓰기됨
+  furniturePresets: Partial<Record<'full' | 'upper' | 'lower', { savedAt: number; props: Record<string, any> }>>;
+  setFurniturePreset: (category: 'full' | 'upper' | 'lower', props: Record<string, any>) => void;
+  clearFurniturePreset: (category: 'full' | 'upper' | 'lower') => void;
+
   // 강조된 섹션 (가구ID-섹션인덱스 형식: "furnitureId-0" 또는 "furnitureId-1")
   highlightedSection: string | null;
 
@@ -513,6 +521,7 @@ const initialUIState = {
   highlightedCompartment: null,  // 기본값: 강조된 칸 없음
   selectedFurnitureId: null,
   selectedFurnitureIds: [],
+  furniturePresets: {},
   highlightedSection: null,  // 기본값: 강조된 섹션 없음
   highlightedPanel: null,  // 기본값: 강조된 패널 없음
   selectedModuleForPlacement: null,  // 기본값: 선택된 모듈 없음
@@ -987,6 +996,18 @@ export const useUIStore = create<UIState>()(
 
       clearSelectedFurnitureIds: () =>
         set({ selectedFurnitureIds: [], selectedFurnitureId: null }),
+
+      setFurniturePreset: (category, props) => set((state) => ({
+        furniturePresets: {
+          ...state.furniturePresets,
+          [category]: { savedAt: Date.now(), props },
+        },
+      })),
+      clearFurniturePreset: (category) => set((state) => {
+        const next = { ...state.furniturePresets };
+        delete next[category];
+        return { furniturePresets: next };
+      }),
 
       setSelectedSlotIndex: (index) =>
         set({ selectedSlotIndex: index }),

@@ -46,9 +46,9 @@ const SimpleDashboard: React.FC = () => {
   const { isMobile } = useResponsive();
 
   // --- 로컬 UI 상태 ---
-  const [viewMode, setViewMode] = useState<ViewMode>('medium');
-  const [sortBy, setSortBy] = useState<SortBy>('date');
-  const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
+  const [viewMode, setViewMode] = useState<ViewMode>('large');
+  const [sortBy, setSortBy] = useState<SortBy>('workOrder');
+  const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
   const [searchTerm, setSearchTerm] = useState('');
 
   // --- Explorer 훅 ---
@@ -624,6 +624,11 @@ const SimpleDashboard: React.FC = () => {
     setSortDirection(prev => (prev === 'asc' ? 'desc' : 'asc'));
   }, []);
 
+  const handleSortChange = useCallback((nextSort: SortBy) => {
+    setSortBy(nextSort);
+    setSortDirection(nextSort === 'date' ? 'desc' : 'asc');
+  }, []);
+
   // --- 선택된 아이템 헬퍼 ---
   const getSelectedExplorerItems = useCallback(() => {
     return data.currentItems.filter(item => actions.selectedItems.has(item.id));
@@ -828,7 +833,7 @@ const SimpleDashboard: React.FC = () => {
                 viewMode={effectiveViewMode}
                 sortBy={sortBy}
                 onViewModeChange={setViewMode}
-                onSortChange={setSortBy}
+                onSortChange={handleSortChange}
                 onCreateProject={handleCreateProject}
                 onCreateFolder={nav.currentProjectId ? handleCreateFolder : undefined}
                 onCreateDesign={nav.currentProjectId ? handleSaasCreateDesign : undefined}

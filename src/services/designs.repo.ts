@@ -77,6 +77,7 @@ export async function listDesignFiles(
               name: data.name,
               projectId: data.projectId,
               folderId: data.folderId,
+              createdAt: data.createdAt,
               updatedAt: data.updatedAt,
               spaceSize: {
                 width: data.spaceConfig?.width || 0,
@@ -122,6 +123,7 @@ export async function listDesignFiles(
               name: data.name,
               projectId: data.projectId,
               folderId: data.folderId,
+              createdAt: data.createdAt,
               updatedAt: data.updatedAt,
               spaceSize: {
                 width: data.spaceConfig?.width || 0,
@@ -179,6 +181,7 @@ export async function listDesignFiles(
         name: data.name,
         projectId: data.projectId,
         folderId: data.folderId,
+        createdAt: data.createdAt,
         updatedAt: data.updatedAt,
         spaceSize: {
           width: data.spaceConfig?.width || 0,
