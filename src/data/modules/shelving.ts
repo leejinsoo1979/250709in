@@ -3380,11 +3380,6 @@ export const generateShelvingModules = (
   spaceInfo?: SpaceInfo
 ): ModuleData[] => {
   let { height: maxHeight } = internalSpace;
-  // 가구 maxHeight는 마감재에 영향받지 않음 (가구 자체 높이는 받침대~상단몰딩 사이 영역).
-  //   internalSpace.height는 마감재까지 차감된 값이라 마감재 두께만큼 보정해 다시 더해줌.
-  if (spaceInfo?.hasFloorFinish && spaceInfo.floorFinish?.height) {
-    maxHeight = maxHeight + spaceInfo.floorFinish.height;
-  }
 
   // 단내림 구간인 경우 로그 출력
   if (spaceInfo && (spaceInfo as any).zone === 'dropped') {

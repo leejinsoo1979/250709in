@@ -122,14 +122,11 @@ export const calculateInternalSpace = (spaceInfo: SpaceInfo, hasLeftFurniture: b
     internalWidth = spaceInfo.width - frameThickness.left - frameThickness.right;
   }
   
-  // 내경 높이 = 전체 높이 - 상단 프레임 - 받침대 - 바닥마감재
-  //   가구 영역(보라색 메쉬) = 상단몰딩 아래 ~ 받침대+마감재 위 사이.
-  //   상단몰딩 두께(예: 30)는 메쉬 위쪽에 갭으로 남아야 함.
+  // 내경 높이 = 전체 높이 - 상단 프레임 - 받침대
+  //   바닥마감재는 startY에만 반영(가구가 마감재 위에 얹힘) — 내경 높이에서는 빼지 않음.
+  //   가구 자체 높이는 마감재 영향 없이 유지.
   let internalHeight = spaceInfo.height;
   internalHeight -= baseFrameHeight;
-  if (spaceInfo.hasFloorFinish) {
-    internalHeight -= floorFinishHeight;
-  }
   internalHeight -= topFrameHeight;
   
   // 단내림 구간의 경우 높이 조정
