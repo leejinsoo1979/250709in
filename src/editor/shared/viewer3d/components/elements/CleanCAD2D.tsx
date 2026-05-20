@@ -17,7 +17,7 @@ import { ColumnIndexer } from '@/editor/shared/utils/indexing/ColumnIndexer';
 import { calculateFrameThickness, calculateInternalSpace, END_PANEL_THICKNESS } from '@/editor/shared/viewer3d/utils/geometry';
 import { analyzeColumnSlots, calculateFurnitureBounds } from '@/editor/shared/utils/columnSlotProcessor';
 import { isCustomizableModuleId, getCustomDimensionKey, getStandardDimensionKey } from '@/editor/shared/controls/furniture/CustomizableFurnitureLibrary';
-import { calcInsertFrameResizedPositionX, calcResizedPositionX } from '@/editor/shared/utils/freePlacementUtils';
+import { calcInsertFrameResizedPositionX, calcResizedPositionX, getColumnObstacleBoundsX } from '@/editor/shared/utils/freePlacementUtils';
 import { filterSideViewModules } from '@/editor/shared/utils/sideViewModuleFilter';
 import { resolveCountertopThicknessMm } from '@/editor/shared/utils/countertopHeightCompensation';
 
@@ -1076,6 +1076,11 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
   // 가구별 실시간 치수선 및 가이드 미리 계산 (hooks는 항상 호출되어야 함)
   const furnitureDimensions = React.useMemo(() => {
     if (placedModules.length === 0 || currentViewDirection === 'top') return null;
+
+    const columnObstacles = getColumnObstacleBoundsX(spaceInfo.columns || []).map(bounds => ({
+      left: bounds.left * 0.01,
+      right: bounds.right * 0.01,
+    }));
     
     return placedModules.map((module, index) => {
       const moduleData = getModuleById(
@@ -1302,6 +1307,23 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             }
           }
         }
+
+        for (const column of columnObstacles) {
+          if (column.right <= moduleLeft + 0.001) {
+            const distMm = Math.round((moduleLeft - column.right) * 100);
+            if (distMm < nearestLeftDistance) {
+              nearestLeftDistance = distMm;
+              hasAdjacentLeft = true;
+            }
+          }
+          if (column.left >= moduleRight - 0.001) {
+            const distMm = Math.round((column.left - moduleRight) * 100);
+            if (distMm < nearestRightDistance) {
+              nearestRightDistance = distMm;
+              hasAdjacentRight = true;
+            }
+          }
+        }
       } else {
         // 같은 구간 내 다른 가구들의 위치를 고려
         // 왼쪽: 현재 가구 좌측 ~ (왼쪽에 인접한 가구의 우측 또는 구간 왼쪽 경계)
@@ -1343,6 +1365,15 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           // 오른쪽에 있는 가구 중 가장 가까운 것
           if (otherLeft >= moduleRight - 0.05 && otherLeft < rightEdge) {
             rightEdge = Math.max(otherLeft, moduleRight);
+          }
+        }
+
+        for (const column of columnObstacles) {
+          if (column.right <= moduleLeft + 0.05 && column.right > leftEdge) {
+            leftEdge = Math.min(column.right, moduleLeft);
+          }
+          if (column.left >= moduleRight - 0.05 && column.left < rightEdge) {
+            rightEdge = Math.max(column.left, moduleRight);
           }
         }
 

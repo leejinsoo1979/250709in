@@ -3467,8 +3467,14 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
               </mesh>
             )}
 
-            {/* 가구 상단 아이콘 툴바 (readOnly에서는 숨김, 2D 측면/상면뷰에서는 숨김) */}
-            {!isPanelListTabActive && !readOnly && (viewMode === '3D' || view2DDirection === 'front' || view2DDirection === 'all') && (
+            {/* 가구 상단 아이콘 툴바 (readOnly에서는 숨김, 2D 측면/상면뷰에서는 숨김)
+                다중 선택 시: 마지막에 선택한 가구 위에 통합 툴바 1개만 표시 */}
+            {!isPanelListTabActive && !readOnly && (viewMode === '3D' || view2DDirection === 'front' || view2DDirection === 'all')
+              && (
+                (selectedFurnitureIds?.length ?? 0) < 2
+                || selectedFurnitureIds[selectedFurnitureIds.length - 1] === placedModule.id
+              )
+              && (
               <Html
                 position={[0, height / 2 + mmToThreeUnits(50), depth / 2 + 0.03]}
                 center
@@ -3503,19 +3509,15 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                     boxShadow: '0 3px 12px rgba(0,0,0,0.25)'
                   }}
                 >
-                  {/* 잠금 버튼 — 슬롯/자유배치 모두 표시 */}
+                  {/* 잠금 버튼 — 슬롯/자유배치 모두 표시. 다중 선택 시 모든 선택 가구 일괄 토글 */}
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
                       (window as any).__r3fClickHandled = true;
                       const updatePlacedModule = useFurnitureStore.getState().updatePlacedModule;
+                      const ids = (selectedFurnitureIds?.length ?? 0) >= 2 ? selectedFurnitureIds : [placedModule.id];
                       const newLockedState = !placedModule.isLocked;
-                      updatePlacedModule(placedModule.id, { isLocked: newLockedState });
-
-                      // 상태 확인
-                      setTimeout(() => {
-                        const currentState = useFurnitureStore.getState().placedModules.find(m => m.id === placedModule.id);
-                      }, 100);
+                      ids.forEach(id => updatePlacedModule(id, { isLocked: newLockedState }));
                     }}
                     style={{
                       width: '24px',
@@ -3544,16 +3546,19 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                     </svg>
                   </button>
 
-                  {/* 삭제 버튼 */}
+                  {/* 삭제 버튼 — 다중 선택 시 모든 비잠금 선택 가구 일괄 삭제 */}
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
                       (window as any).__r3fClickHandled = true;
-                      if (placedModule.isLocked) {
-                        return;
-                      }
                       const removeModule = useFurnitureStore.getState().removeModule;
-                      removeModule(placedModule.id);
+                      const placed = useFurnitureStore.getState().placedModules;
+                      const ids = (selectedFurnitureIds?.length ?? 0) >= 2 ? selectedFurnitureIds : [placedModule.id];
+                      ids.forEach(id => {
+                        const m = placed.find(p => p.id === id);
+                        if (!m || (m as any).isLocked) return;
+                        removeModule(id);
+                      });
                     }}
                     style={{
                       width: '24px',
@@ -3580,17 +3585,20 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                     </svg>
                   </button>
 
-                  {/* 복제 버튼 */}
+                  {/* 복제 버튼 — 다중 선택 시 모든 비잠금 선택 가구 일괄 복제 */}
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
                       (window as any).__r3fClickHandled = true;
-                      if (placedModule.isLocked) {
-                        return;
-                      }
-                      window.dispatchEvent(new CustomEvent('duplicate-furniture', {
-                        detail: { furnitureId: placedModule.id }
-                      }));
+                      const placed = useFurnitureStore.getState().placedModules;
+                      const ids = (selectedFurnitureIds?.length ?? 0) >= 2 ? selectedFurnitureIds : [placedModule.id];
+                      ids.forEach(id => {
+                        const m = placed.find(p => p.id === id);
+                        if (!m || (m as any).isLocked) return;
+                        window.dispatchEvent(new CustomEvent('duplicate-furniture', {
+                          detail: { furnitureId: id }
+                        }));
+                      });
                     }}
                     style={{
                       width: '24px',

@@ -8,7 +8,7 @@ import { isSlotAvailable } from '@/editor/shared/utils/slotAvailability';
 import { analyzeColumnSlots } from '@/editor/shared/utils/columnSlotProcessor';
 import { placeFurnitureAtSlot } from '@/editor/shared/furniture/hooks/usePlaceFurnitureAtSlot';
 import { placeFurnitureFree } from '@/editor/shared/furniture/hooks/usePlaceFurnitureFree';
-import { getInternalSpaceBoundsX, getModuleBoundsX } from '@/editor/shared/utils/freePlacementUtils';
+import { getInternalSpaceBoundsX, getModuleBoundsX, getColumnObstacleBoundsX } from '@/editor/shared/utils/freePlacementUtils';
 import styles from './ModuleGallery.module.css';
 import { useAlert } from '@/hooks/useAlert';
 import { useUIStore } from '@/store/uiStore';
@@ -685,7 +685,9 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
         const dualBuiltInTotalWidth = 1300;
 
         const freeModules = placedModules.filter(m => m.isFreePlacement && !m.isSurroundPanel);
-        const allBounds = freeModules.map(m => getModuleBoundsX(m)).sort((a, b) => a.left - b.left);
+        const furnitureBounds = freeModules.map(m => getModuleBoundsX(m));
+        const columnBounds = getColumnObstacleBoundsX(spaceInfo.columns || []);
+        const allBounds = [...furnitureBounds, ...columnBounds].sort((a, b) => a.left - b.left);
 
         // upper/lower 공존: 다른 카테고리 가구는 장애물에서 제외
         const isCoexistable = newCategory === 'upper' || newCategory === 'lower';
