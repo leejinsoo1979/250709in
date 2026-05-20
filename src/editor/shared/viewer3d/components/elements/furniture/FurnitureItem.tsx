@@ -3492,8 +3492,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                     boxShadow: '0 3px 12px rgba(0,0,0,0.25)'
                   }}
                 >
-                  {/* 잠금 버튼 (자유배치 모드에서는 숨김) */}
-                  {spaceInfo.layoutMode !== 'free-placement' && (
+                  {/* 잠금 버튼 — 슬롯/자유배치 모두 표시 */}
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
@@ -3533,7 +3532,6 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                       )}
                     </svg>
                   </button>
-                  )}
 
                   {/* 삭제 버튼 */}
                   <button
