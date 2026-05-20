@@ -1759,6 +1759,16 @@ const Room: React.FC<RoomProps> = ({
 
   // 바닥재료가 있을 때 좌우 패널의 시작 Y 위치와 높이 조정
   const panelStartY = spaceInfo.hasFloorFinish && floorFinishHeight > 0 ? floorFinishHeight : 0;
+  if (typeof window !== 'undefined') {
+    // 디버그: floorFinish 두께 → panelStartY 추적
+    // eslint-disable-next-line no-console
+    console.log('[floor-finish-debug]', {
+      hasFloorFinish: spaceInfo.hasFloorFinish,
+      floorFinishMm: spaceInfo.floorFinish?.height,
+      floorFinishHeight,
+      panelStartY,
+    });
+  }
 
   // 띄워서 배치일 때 높이 조정
   const floatHeight = spaceInfo.baseConfig?.type === 'stand' && spaceInfo.baseConfig?.placementType === 'float'
