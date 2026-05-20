@@ -277,11 +277,25 @@ const FreePlacementDropZone: React.FC = () => {
       });
       if (unlockedSorted.length === 0) return;
 
-      // zone 내 잠긴 영역만 obstacle로 (기둥은 가구가 옆에 붙어도 폭 줄지 않으므로 제외)
-      const clampedLocked = sortedLockedRaw
+      // zone 내 잠긴 영역 + 기둥 영역 모두 obstacle로 (기둥도 차지 공간이라 가용에서 제외)
+      const columnRangesMm: Range[] = columnObstacleBounds.map(b => ({
+        leftMm: b.left * 100,
+        rightMm: b.right * 100,
+      }));
+      const obstaclesRaw = [...sortedLockedRaw, ...columnRangesMm]
         .map(r => ({ leftMm: Math.max(zoneStartMm, r.leftMm), rightMm: Math.min(zoneEndMm, r.rightMm) }))
         .filter(r => r.rightMm > r.leftMm)
         .sort((a, b) => a.leftMm - b.leftMm);
+      // 겹치는 영역 병합
+      const clampedLocked: Range[] = [];
+      obstaclesRaw.forEach(r => {
+        const last = clampedLocked[clampedLocked.length - 1];
+        if (last && r.leftMm <= last.rightMm) {
+          last.rightMm = Math.max(last.rightMm, r.rightMm);
+        } else {
+          clampedLocked.push({ ...r });
+        }
+      });
 
       // 가용 구간(잠긴 영역 사이 빈 구간) 목록
       type Gap = { start: number; end: number; widthMm: number };
@@ -380,7 +394,7 @@ const FreePlacementDropZone: React.FC = () => {
       if (mainModules.length > 0) runMain(mainModules);
       runDropped(droppedModules);
     }
-  }, [equalDistribution, equalDistributionUpper, equalDistributionLower, isFreePlacement, zonePlacementBounds, spaceBounds]);
+  }, [equalDistribution, equalDistributionUpper, equalDistributionLower, isFreePlacement, zonePlacementBounds, spaceBounds, columnObstacleBounds]);
 
   // ── 서라운드 패널 자동 배치 (선택 즉시 배치, 클릭 위치 불필요) ──
   useEffect(() => {

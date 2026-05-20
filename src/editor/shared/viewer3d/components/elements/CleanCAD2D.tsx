@@ -747,6 +747,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
   // 기둥 간격 편집 핸들러
   const handleColumnDistanceEdit = (columnId: string, side: 'left' | 'right' | 'width', currentValue: number) => {
 // console.log('🖱️ 기둥 간격 편집 시작:', { columnId, side, currentValue });
+    const column = spaceInfo.columns?.find(col => col.id === columnId);
+    if (readOnly || column?.isLocked) return;
     
     // 기존 편집 모드 먼저 해제
     if (editingColumnId) {
@@ -769,7 +771,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
     const value = parseInt(editingValue) || 0;
     const column = spaceInfo.columns?.find(col => col.id === editingColumnId);
     
-    if (!column) return;
+    if (!column || readOnly || column.isLocked) return;
 
 // console.log('✅ 편집 완료:', { columnId: editingColumnId, side: editingSide, value });
 
@@ -856,6 +858,9 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
 
   // 자유배치 가구 너비 편집 핸들러
   const handleFurnitureWidthEdit = (moduleId: string, currentWidth: number) => {
+    const module = placedModules.find(m => m.id === moduleId);
+    if (readOnly || module?.isLocked) return;
+
     setEditingFurnitureWidthId(moduleId);
     setEditingFurnitureWidthValue(Math.round(currentWidth).toString());
     setTimeout(() => {
@@ -874,7 +879,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
     }
     const clamped = Math.max(100, Math.min(3000, Math.round(value)));
     const module = placedModules.find(m => m.id === editingFurnitureWidthId);
-    if (module) {
+    if (module && !module.isLocked && !readOnly) {
       const freshSI = useSpaceConfigStore.getState().spaceInfo;
       const isInsertFrame = typeof module.moduleId === 'string' && module.moduleId.includes('insert-frame');
       const newX = module.isFreePlacement
@@ -6234,13 +6239,16 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     fontSize: '12px',
                     fontWeight: 'bold',
                     color: dimensionColor,
-                    cursor: 'pointer',
+                    cursor: module.isLocked || readOnly ? 'default' : 'pointer',
                     userSelect: 'none',
                     whiteSpace: 'nowrap',
                     background: currentViewDirection !== '3D' && view2DTheme === 'dark' ? 'rgba(31,41,55,0.7)' : 'rgba(255,255,255,0.7)',
                     borderRadius: '3px',
                   }}
-                  onClick={(e) => { e.stopPropagation(); handleFurnitureWidthEdit(module.id, actualWidth); }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (!module.isLocked && !readOnly) handleFurnitureWidthEdit(module.id, actualWidth);
+                  }}
                 >
                   {(() => {
                     const r = Math.round(actualWidth * 2) / 2; // 0.5mm 단위
@@ -7363,17 +7371,19 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         );
       })()}
 
-      {/* 기둥별 치수선 (개별 기둥 너비) - 불필요하므로 비활성화 */}
-      {false && showDimensions && spaceInfo.columns && spaceInfo.columns.length > 0 && currentViewDirection !== 'top' && spaceInfo.columns.map((column, index) => {
+      {/* 기둥별 상단 너비 치수선 */}
+      {showDimensions && spaceInfo.columns && spaceInfo.columns.length > 0 && (currentViewDirection === 'front' || currentViewDirection === '3D') && spaceInfo.columns.map((column) => {
         const columnWidthM = column.width * 0.01;
         const leftX = column.position[0] - columnWidthM / 2;
         const rightX = column.position[0] + columnWidthM / 2;
-        // 개별 슬롯 치수선은 내부너비(columnDimensionY) 아래에 배치
         const dimY = slotDimensionY;
+        const tickHalf = mmToThreeUnits(18);
+        const columnTopY = mmToThreeUnits(Math.min(column.height || spaceInfo.height, spaceInfo.height));
+        const isLockedColumn = !!column.isLocked;
+        const isEditingColumnWidth = !isLockedColumn && editingColumnId === column.id && editingSide === 'width';
 
         return (
           <group key={`column-dim-${column.id}`}>
-            {/* 기둥 치수선 */}
             <NativeLine name="dimension_line"
               points={[[leftX, dimY, 0.002], [rightX, dimY, 0.002]]}
               color={dimensionColor}
@@ -7382,7 +7392,6 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               depthTest={false}
             />
 
-            {/* 좌측 화살표 */}
             <NativeLine name="dimension_line"
               points={createArrowHead([leftX, dimY, 0.002], [leftX + 0.02, dimY, 0.002], 0.01)}
               color={dimensionColor}
@@ -7391,7 +7400,6 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               depthTest={false}
             />
 
-            {/* 우측 화살표 */}
             <NativeLine name="dimension_line"
               points={createArrowHead([rightX, dimY, 0.002], [rightX - 0.02, dimY, 0.002], 0.01)}
               color={dimensionColor}
@@ -7400,35 +7408,72 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               depthTest={false}
             />
 
-            {/* 기둥 치수 텍스트 - 치수선 아래에 표시 */}
-            <Text
-              position={[column.position[0], dimY - mmToThreeUnits(25), 0.01]}
-              fontSize={baseFontSize}
-              color={textColor}
-              anchorX="center"
-              anchorY="middle"
-              outlineWidth={textOutlineWidth}
-              outlineColor={textOutlineColor}
-              renderOrder={1000000}
-              depthTest={false}
-            >
-              {Math.round(column.width)}
-            </Text>
+            {isEditingColumnWidth ? (
+              <Html
+                position={[column.position[0], dimY + mmToThreeUnits(30), 0.01]}
+                center
+                style={{ pointerEvents: 'auto' }}
+                zIndexRange={[10000, 10001]}
+              >
+                <div style={{ background: currentViewDirection !== '3D' && view2DTheme === 'dark' ? 'rgba(31,41,55,0.98)' : 'rgba(255,255,255,0.98)', padding: '3px', borderRadius: '4px', border: '2px solid #2196F3', boxShadow: '0 2px 10px rgba(0,0,0,0.3)' }}>
+                  <input
+                    ref={inputRef}
+                    type="number"
+                    step="1"
+                    value={editingValue}
+                    onChange={(e) => setEditingValue(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === 'Enter') handleEditSubmit(); else if (e.key === 'Escape') handleEditCancel(); }}
+                    onBlur={handleEditSubmit}
+                    style={{ width: '60px', padding: '2px 4px', border: '1px solid #555', borderRadius: '2px', fontSize: '12px', fontWeight: 'bold', textAlign: 'center', outline: 'none', background: currentViewDirection !== '3D' && view2DTheme === 'dark' ? '#1f2937' : '#fff', color: currentViewDirection !== '3D' && view2DTheme === 'dark' ? '#fff' : '#000' }}
+                    autoFocus
+                    onClick={(e) => e.stopPropagation()}
+                    onMouseDown={(e) => e.stopPropagation()}
+                  />
+                  <span style={{ marginLeft: '2px', fontSize: '11px', color: currentViewDirection !== '3D' && view2DTheme === 'dark' ? '#9ca3af' : '#666' }}>mm</span>
+                </div>
+              </Html>
+            ) : (
+              <Html
+                position={[column.position[0], dimY + mmToThreeUnits(30), 0.01]}
+                center
+                style={{ pointerEvents: 'auto' }}
+                zIndexRange={[9999, 10000]}
+              >
+                <div
+                  style={{
+                    padding: '2px 6px',
+                    fontSize: '12px',
+                    fontWeight: 'bold',
+                    color: textColor,
+                    cursor: readOnly || isLockedColumn ? 'default' : 'pointer',
+                    userSelect: 'none',
+                    whiteSpace: 'nowrap',
+                    background: currentViewDirection !== '3D' && view2DTheme === 'dark' ? 'rgba(31,41,55,0.7)' : 'rgba(255,255,255,0.7)',
+                    borderRadius: '3px',
+                  }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (!readOnly && !isLockedColumn) handleColumnDistanceEdit(column.id, 'width', column.width);
+                  }}
+                >
+                  {Math.round(column.width)}
+                </div>
+              </Html>
+            )}
 
-            {/* 연장선 - 치수선에서 아래로 15mm만 */}
             <NativeLine name="dimension_line"
-              points={[[leftX, dimY, 0.001], [leftX, dimY - mmToThreeUnits(15), 0.001]]}
+              points={[[leftX, columnTopY, 0.001], [leftX, dimY + tickHalf, 0.001]]}
               color={dimensionColor}
-              lineWidth={0.6}
+              lineWidth={0.3}
               renderOrder={1000000}
               depthTest={false}
               depthWrite={false}
               transparent={true}
             />
             <NativeLine name="dimension_line"
-              points={[[rightX, dimY, 0.001], [rightX, dimY - mmToThreeUnits(15), 0.001]]}
+              points={[[rightX, columnTopY, 0.001], [rightX, dimY + tickHalf, 0.001]]}
               color={dimensionColor}
-              lineWidth={0.6}
+              lineWidth={0.3}
               renderOrder={1000000}
               depthTest={false}
               depthWrite={false}

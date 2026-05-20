@@ -42,7 +42,6 @@ const ColumnAsset: React.FC<ColumnAssetProps> = ({
   renderMode = 'solid',
   onPositionChange,
   onRemove,
-  onColumnUpdate,
   spaceInfo,
   hasBackPanelFinish = false,
   hasFrontPanelFinish = false
@@ -528,7 +527,7 @@ const ColumnAsset: React.FC<ColumnAssetProps> = ({
             <edgesGeometry args={[new THREE.BoxGeometry(width * 0.01, height * 0.01, depth * 0.01)]} />
             <lineBasicMaterial color={isSelected ? "#4CAF50" : "#999999"} />
           </lineSegments>
-          
+
           {/* 빗살무늬 (뷰별 적절한 면에 표시) */}
           {(() => {
             const color = isSelected ? "#4CAF50" : "#cccccc";

@@ -4059,8 +4059,10 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
                     />
                     {/* 기둥 벽면 간격 라벨 (기둥 선택/팝업/편집 모달 중 하나라도 활성) */}
                     {(
-                      selectedColumnId === column.id ||
-                      ((activePopup.type === 'column' || activePopup.type === 'columnEdit') && activePopup.id === column.id)
+                      !(viewMode === '2D' && view2DDirection === 'front') && (
+                        selectedColumnId === column.id ||
+                        ((activePopup.type === 'column' || activePopup.type === 'columnEdit') && activePopup.id === column.id)
+                      )
                     ) && (
                       <ColumnDistanceLabels
                         column={column}
