@@ -75,6 +75,7 @@ const FreePlacementDropZone: React.FC = () => {
   const viewMode = useUIStore(state => state.viewMode);
   const view2DDirection = useUIStore(state => state.view2DDirection);
   const showFurnitureEditHandles = useUIStore(state => state.showFurnitureEditHandles);
+  const selectedFurnitureIds = useUIStore(state => state.selectedFurnitureIds);
   const pendingPlacement = useMyCabinetStore(state => state.pendingPlacement);
 
   const [hoverXmm, setHoverXmm] = useState<number | null>(null);
@@ -1796,15 +1797,21 @@ const FreePlacementDropZone: React.FC = () => {
       const step = e.shiftKey ? KEYBOARD_SHIFT_STEP_MM : KEYBOARD_STEP_MM;
       const deltaMm = direction * step;
 
-      // 단일/다중 모두 키보드 이동은 충돌 검사 없이 deltaMm만 적용 (가구 붙어있어도 이동 가능)
+      // 단일 선택: 충돌 검사로 이동 방향 결정 — 붙어있는 쪽은 못 가고 열린 쪽만 이동
       if (targetIds.length === 1) {
         const tId = targetIds[0];
         const mod = placedModules.find(m => m.id === tId);
         if (!mod) return;
-        const newXmm = mod.position.x * 100 + deltaMm;
-        const zoneUpdate = recalcZoneUpdate(mod, newXmm);
+        const currentXmm = mod.position.x * 100;
+        const newXmm = currentXmm + deltaMm;
+        const result = calcMovedPosition(newXmm, tId, true);
+        if (result.colliding) {
+          // 충돌 — 그 방향은 막힘 (반대 방향은 키 한 번 더 누르면 이동 가능)
+          return;
+        }
+        const zoneUpdate = recalcZoneUpdate(mod, result.x);
         updatePlacedModule(tId, {
-          position: { x: newXmm * 0.01, y: zoneUpdate.y, z: mod.position.z },
+          position: { x: result.x * 0.01, y: zoneUpdate.y, z: mod.position.z },
           freeHeight: zoneUpdate.freeHeight,
           zone: zoneUpdate.zone as 'normal' | 'dropped',
         });
@@ -1826,7 +1833,7 @@ const FreePlacementDropZone: React.FC = () => {
 
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [isFreePlacement, movingModuleId, editingFreeModuleId, placedModules, calcMovedPosition, updatePlacedModule, recalcZoneUpdate, isMoveMode]);
+  }, [isFreePlacement, movingModuleId, editingFreeModuleId, placedModules, calcMovedPosition, updatePlacedModule, recalcZoneUpdate, isMoveMode, selectedFurnitureIds]);
 
   // 렌더링 조건: 자유배치 모드가 아니면 null
   const hasActiveModule = !!(activeModuleId && effectiveDimensions);
