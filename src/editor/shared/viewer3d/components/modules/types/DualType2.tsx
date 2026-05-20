@@ -634,7 +634,7 @@ const DualType2: React.FC<FurnitureTypeProps> = ({
                   rodYPosition = safetyShelfY - basicThickness / 2 - mmToThreeUnits(75 / 2);
                 } else if (sectionIndex === 0) {
                   // 하부 섹션: 브라켓 상단이 하부 섹션 상판 밑면에 닿음
-                  const lowerTopPanelY = sectionBottomY + sectionHeight - basicThickness / 2;
+                  const lowerTopPanelY = sectionBottomY + sectionHeight - basicThickness * 1.5;
                   const lowerTopPanelBottom = lowerTopPanelY - basicThickness / 2;
                   rodYPosition = lowerTopPanelBottom - mmToThreeUnits(75 / 2);
                 } else if (hasFinishPanel) {
