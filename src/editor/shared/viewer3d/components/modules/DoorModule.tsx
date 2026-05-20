@@ -2624,7 +2624,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
               })()}
 
               {/* 왼쪽 도어 가로 폭 치수 (2D 정면뷰 + 3D) */}
-              {showDoorDimensionGuides && !hideWidthDimension && doorHeightDimensionSides.left && (() => {
+              {showDoorDimensionGuides && !hideWidthDimension && (() => {
                 const is3D = viewMode === '3D';
                 const extensionLineStart = mmToThreeUnits(70);
                 const extensionLineLength = mmToThreeUnits(110);
@@ -3080,7 +3080,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
               })()}
 
               {/* 오른쪽 도어 가로 폭 치수 (2D 정면뷰 + 3D) */}
-              {showDoorDimensionGuides && !hideWidthDimension && doorHeightDimensionSides.right && (() => {
+              {showDoorDimensionGuides && !hideWidthDimension && (() => {
                 const is3D = viewMode === '3D';
                 const extensionLineStart = mmToThreeUnits(70);
                 const extensionLineLength = mmToThreeUnits(110);
@@ -3826,7 +3826,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
             })()}
 
             {/* 도어 가로 폭 치수 (2D 정면뷰 + 3D) */}
-            {showDoorDimensionGuides && !hideWidthDimension && (doorHeightDimensionSides.left || doorHeightDimensionSides.right) && (() => {
+            {showDoorDimensionGuides && !hideWidthDimension && (() => {
               const is3D = viewMode === '3D';
               const extensionLineStart = mmToThreeUnits(70);
               const extensionLineLength = mmToThreeUnits(110);
@@ -3842,35 +3842,57 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                   {(doorHeightDimensionSides.left || doorHeightDimensionSides.right) && (
                   <>
                   {doorHeightDimensionSides.left && (
-                    <NativeLine
-                      name="door-dimension-height"
-                      points={[
-                        [-doorWidthUnits / 2 - mmToThreeUnits(90), doorDimensionBottomY, zPos],
-                        [-doorWidthUnits / 2 - mmToThreeUnits(90), doorDimensionTopY, zPos]
-                      ]}
-                      color={dimColor}
-                      lineWidth={1}
-                      renderOrder={100001}
-                      depthTest={false}
-                      depthWrite={false}
-                      transparent={true}
-                    />
+                    <>
+                      {renderDoorDimensionHoverPlane({
+                        keyName: 'single-door-left-height-hover',
+                        position: [
+                          -doorWidthUnits / 2 - mmToThreeUnits(90),
+                          (doorDimensionTopY + doorDimensionBottomY) / 2,
+                          zPos + 0.002
+                        ],
+                        args: [mmToThreeUnits(80), Math.max(mmToThreeUnits(120), Math.abs(doorDimensionTopY - doorDimensionBottomY))]
+                      })}
+                      <NativeLine
+                        name="door-dimension-height"
+                        points={[
+                          [-doorWidthUnits / 2 - mmToThreeUnits(90), doorDimensionBottomY, zPos],
+                          [-doorWidthUnits / 2 - mmToThreeUnits(90), doorDimensionTopY, zPos]
+                        ]}
+                        color={dimColor}
+                        lineWidth={1}
+                        renderOrder={100001}
+                        depthTest={false}
+                        depthWrite={false}
+                        transparent={true}
+                      />
+                    </>
                   )}
 
                   {doorHeightDimensionSides.right && (
-                    <NativeLine
-                      name="door-dimension-height"
-                      points={[
-                        [doorWidthUnits / 2 + mmToThreeUnits(90), doorDimensionBottomY, zPos],
-                        [doorWidthUnits / 2 + mmToThreeUnits(90), doorDimensionTopY, zPos]
-                      ]}
-                      color={dimColor}
-                      lineWidth={1}
-                      renderOrder={100001}
-                      depthTest={false}
-                      depthWrite={false}
-                      transparent={true}
-                    />
+                    <>
+                      {renderDoorDimensionHoverPlane({
+                        keyName: 'single-door-right-height-hover',
+                        position: [
+                          doorWidthUnits / 2 + mmToThreeUnits(90),
+                          (doorDimensionTopY + doorDimensionBottomY) / 2,
+                          zPos + 0.002
+                        ],
+                        args: [mmToThreeUnits(80), Math.max(mmToThreeUnits(120), Math.abs(doorDimensionTopY - doorDimensionBottomY))]
+                      })}
+                      <NativeLine
+                        name="door-dimension-height"
+                        points={[
+                          [doorWidthUnits / 2 + mmToThreeUnits(90), doorDimensionBottomY, zPos],
+                          [doorWidthUnits / 2 + mmToThreeUnits(90), doorDimensionTopY, zPos]
+                        ]}
+                        color={dimColor}
+                        lineWidth={1}
+                        renderOrder={100001}
+                        depthTest={false}
+                        depthWrite={false}
+                        transparent={true}
+                      />
+                    </>
                   )}
 
                   {[
@@ -3925,6 +3947,8 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                         value={actualDoorHeight}
                         position={[-doorWidthUnits / 2 - mmToThreeUnits(125), 0, zPos]}
                         color={dimColor}
+                        hoverColor={doorDimensionHoverColor}
+                        onHoverChange={setIsDoorDimensionHovered}
                         anchorX="center"
                         anchorY="middle"
                         forceShow={true}
@@ -3969,6 +3993,8 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                         value={actualDoorHeight}
                         position={[doorWidthUnits / 2 + mmToThreeUnits(125), 0, zPos]}
                         color={dimColor}
+                        hoverColor={doorDimensionHoverColor}
+                        onHoverChange={setIsDoorDimensionHovered}
                         anchorX="center"
                         anchorY="middle"
                         forceShow={true}
@@ -3986,6 +4012,11 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                   </>
                   )}
 
+                  {renderDoorDimensionHoverPlane({
+                    keyName: 'single-door-width-hover',
+                    position: [0, dimensionLinePos, zPos + 0.002],
+                    args: [doorWidthUnits + mmToThreeUnits(260), mmToThreeUnits(80)]
+                  })}
                   <NativeLine
                     name="door-dimension"
                     points={[
@@ -4061,6 +4092,8 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                     value={doorWidth}
                     position={[0, dimensionLinePos + mmToThreeUnits(15), zPos]}
                     color={dimColor}
+                    hoverColor={doorDimensionHoverColor}
+                    onHoverChange={setIsDoorDimensionHovered}
                     anchorX="center"
                     anchorY="bottom"
                     forceShow={true}
