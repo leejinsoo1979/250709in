@@ -21,15 +21,18 @@ declare global {
 }
 
 /* ── 프레임 행 컴포넌트 (모듈 레벨) ── */
-const FrameRow = React.memo(({ label, enabled, widthMM = 0, sizeMM, offset, onToggle, onSizeChange, onOffsetChange, hlKey, setHighlightedFrame }: {
+const FrameRow = React.memo(({ label, enabled, widthMM = 0, sizeMM, offset, onToggle, onSizeChange, onOffsetChange, hlKey, setHighlightedFrame, gap, onGapChange }: {
   label: string; enabled: boolean; widthMM?: number; sizeMM: number; offset: number;
   onToggle: () => void; onSizeChange: (v: number) => void; onOffsetChange: (v: number) => void; hlKey: string;
   setHighlightedFrame: (v: string | null) => void;
+  gap?: number; onGapChange?: (v: number) => void;
 }) => {
   const [sizeText, setSizeText] = React.useState(String(sizeMM || ''));
   const [offsetText, setOffsetText] = React.useState(offset !== 0 ? String(offset) : '');
+  const [gapText, setGapText] = React.useState((gap ?? 0) !== 0 ? String(gap) : '');
   const sizeEditingRef = React.useRef(false);
   const offsetEditingRef = React.useRef(false);
+  const gapEditingRef = React.useRef(false);
 
   React.useEffect(() => {
     if (!sizeEditingRef.current) setSizeText(sizeMM ? String(sizeMM) : '');
@@ -37,6 +40,10 @@ const FrameRow = React.memo(({ label, enabled, widthMM = 0, sizeMM, offset, onTo
   React.useEffect(() => {
     if (!offsetEditingRef.current) setOffsetText(offset !== 0 ? String(offset) : '');
   }, [offset]);
+  React.useEffect(() => {
+    if (!gapEditingRef.current) setGapText((gap ?? 0) !== 0 ? String(gap) : '');
+  }, [gap]);
+  const showGap = typeof onGapChange === 'function';
 
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '3px 0' }}>
@@ -107,15 +114,38 @@ const FrameRow = React.memo(({ label, enabled, widthMM = 0, sizeMM, offset, onTo
             style={{ width: '100%', border: 'none', outline: 'none', fontSize: '12px', textAlign: 'center', background: 'transparent', color: 'var(--theme-text-primary)' }}
           />
         </div>
+        {showGap && (
+          <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '2px', border: '1px solid var(--theme-border)', borderRadius: '4px', padding: '2px 4px' }}>
+            <span style={{ fontSize: '10px', color: 'var(--theme-text-secondary)', flexShrink: 0 }}>갭</span>
+            <input type="text" inputMode="numeric"
+              value={gapText} placeholder="0"
+              onFocus={() => { gapEditingRef.current = true; setHighlightedFrame(hlKey); }}
+              onKeyDown={(e) => {
+                if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                  e.preventDefault();
+                  const next = Math.max(0, Math.min(2000, (gap || 0) + (e.key === 'ArrowUp' ? 1 : -1)));
+                  setGapText(String(next));
+                  onGapChange?.(next);
+                } else if (e.key === 'Enter') {
+                  (e.target as HTMLInputElement).blur();
+                }
+              }}
+              onChange={(e) => { const v = e.target.value; if (v === '' || /^\d+$/.test(v)) setGapText(v); }}
+              onBlur={(e) => { gapEditingRef.current = false; setHighlightedFrame(null); const clamped = Math.max(0, Math.min(2000, parseInt(e.target.value) || 0)); setGapText(String(clamped)); onGapChange?.(clamped); }}
+              style={{ width: '100%', border: 'none', outline: 'none', fontSize: '12px', textAlign: 'center', background: 'transparent', color: 'var(--theme-text-primary)' }}
+            />
+          </div>
+        )}
       </div>
     </div>
   );
 });
 
-const MergedFrameRow = React.memo(({ label, enabled, widthMM, heightMM, offset, onToggle, onHeightChange, onOffsetChange, hlKey, setHighlightedFrame, isLowerCategory = false, userBaseHeightDefault }: {
+const MergedFrameRow = React.memo(({ label, enabled, widthMM, heightMM, offset, onToggle, onHeightChange, onOffsetChange, hlKey, setHighlightedFrame, isLowerCategory = false, userBaseHeightDefault, gap, onGapChange }: {
   label: string; enabled: boolean; widthMM: number; heightMM: number; offset: number;
   onToggle: () => void; onHeightChange: (v: number) => void; onOffsetChange: (v: number) => void; hlKey: string;
   setHighlightedFrame: (v: string | null) => void; isLowerCategory?: boolean; userBaseHeightDefault?: number;
+  gap?: number; onGapChange?: (v: number) => void;
 }) => {
   const bfMin = isLowerCategory ? 60 : 40;
   const bfMax = isLowerCategory ? 150 : 100;
@@ -123,8 +153,10 @@ const MergedFrameRow = React.memo(({ label, enabled, widthMM, heightMM, offset, 
   const bfDefault = isLowerCategory ? 100 : (userBaseHeightDefault ?? 60);
   const [heightText, setHeightText] = React.useState(String(heightMM || ''));
   const [offsetText, setOffsetText] = React.useState(offset !== 0 ? String(offset) : '');
+  const [gapText, setGapText] = React.useState((gap ?? 0) !== 0 ? String(gap) : '');
   const heightEditingRef = React.useRef(false);
   const offsetEditingRef = React.useRef(false);
+  const gapEditingRef = React.useRef(false);
 
   React.useEffect(() => {
     if (!heightEditingRef.current) setHeightText(heightMM ? String(heightMM) : '');
@@ -132,6 +164,10 @@ const MergedFrameRow = React.memo(({ label, enabled, widthMM, heightMM, offset, 
   React.useEffect(() => {
     if (!offsetEditingRef.current) setOffsetText(offset !== 0 ? String(offset) : '');
   }, [offset]);
+  React.useEffect(() => {
+    if (!gapEditingRef.current) setGapText((gap ?? 0) !== 0 ? String(gap) : '');
+  }, [gap]);
+  const showGap = typeof onGapChange === 'function';
 
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '3px 0' }}>
@@ -203,6 +239,28 @@ const MergedFrameRow = React.memo(({ label, enabled, widthMM, heightMM, offset, 
             style={{ width: '100%', border: 'none', outline: 'none', fontSize: '12px', textAlign: 'center', background: 'transparent', color: 'var(--theme-text-primary)' }}
           />
         </div>
+        {showGap && (
+          <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '2px', border: '1px solid var(--theme-border)', borderRadius: '4px', padding: '2px 4px' }}>
+            <span style={{ fontSize: '10px', color: 'var(--theme-text-secondary)', flexShrink: 0 }}>갭</span>
+            <input type="text" inputMode="numeric"
+              value={gapText} placeholder="0"
+              onFocus={() => { gapEditingRef.current = true; setHighlightedFrame(hlKey); }}
+              onKeyDown={(e) => {
+                if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                  e.preventDefault();
+                  const next = Math.max(0, Math.min(2000, (gap || 0) + (e.key === 'ArrowUp' ? 1 : -1)));
+                  setGapText(String(next));
+                  onGapChange?.(next);
+                } else if (e.key === 'Enter') {
+                  (e.target as HTMLInputElement).blur();
+                }
+              }}
+              onChange={(e) => { const v = e.target.value; if (v === '' || /^\d+$/.test(v)) setGapText(v); }}
+              onBlur={(e) => { gapEditingRef.current = false; setHighlightedFrame(null); const clamped = Math.max(0, Math.min(2000, parseInt(e.target.value) || 0)); setGapText(String(clamped)); onGapChange?.(clamped); }}
+              style={{ width: '100%', border: 'none', outline: 'none', fontSize: '12px', textAlign: 'center', background: 'transparent', color: 'var(--theme-text-primary)' }}
+            />
+          </div>
+        )}
       </div>
     </div>
   );
@@ -1437,6 +1495,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
                             widthMM={group.totalWidthMm}
                             heightMM={firstMod?.topFrameThickness ?? globalTop}
                             offset={getTopOffsetDisplay(firstMod)}
+                            gap={firstMod?.topFrameGap ?? 0}
                             userBaseHeightDefault={userDefaults.frameTop}
                             onToggle={() => {
                               const newVal = !allEnabled;
@@ -1447,6 +1506,9 @@ const RightPanel: React.FC<RightPanelProps> = ({
                             }}
                             onOffsetChange={(v) => {
                               group.moduleIds.forEach(id => updatePlacedModule(id, { topFrameOffset: v }));
+                            }}
+                            onGapChange={(v) => {
+                              group.moduleIds.forEach(id => updatePlacedModule(id, { topFrameGap: Math.max(0, v) }));
                             }}
                             hlKey={hlKey}
                             setHighlightedFrame={setHighlightedFrame}
@@ -1481,6 +1543,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
                               widthMM={group.totalWidthMm}
                               heightMM={firstMod?.baseFrameHeight ?? globalBase}
                               offset={firstMod?.baseFrameOffset ?? 0}
+                              gap={(firstMod as any)?.baseFrameGap ?? 0}
                               userBaseHeightDefault={userDefaults.baseHeight}
                               onToggle={() => {
                                 const newVal = !allEnabled;
@@ -1495,6 +1558,9 @@ const RightPanel: React.FC<RightPanelProps> = ({
                               }}
                               onOffsetChange={(v) => {
                                 group.moduleIds.forEach(id => updatePlacedModule(id, { baseFrameOffset: v }));
+                              }}
+                              onGapChange={(v) => {
+                                group.moduleIds.forEach(id => updatePlacedModule(id, { baseFrameGap: Math.max(0, v) } as any));
                               }}
                               hlKey={hlKey}
                               setHighlightedFrame={setHighlightedFrame}
@@ -1557,12 +1623,14 @@ const RightPanel: React.FC<RightPanelProps> = ({
                           widthMM={Math.round(totalWidthMM * 10) / 10}
                           sizeMM={first.topFrameThickness ?? globalTop}
                           offset={getTopOffsetDisplay(first)}
+                          gap={first.topFrameGap ?? 0}
                           onToggle={() => {
                             const newVal = !unifiedEnabled;
                             sorted.forEach(m => updatePlacedModule(m.id, { hasTopFrame: newVal, doorTopGap: getTopDoorGapForFrameState(spaceInfo, newVal) }));
                           }}
                           onSizeChange={(v) => sorted.forEach(m => updatePlacedModule(m.id, { topFrameThickness: v }))}
                           onOffsetChange={(v) => sorted.forEach(m => updatePlacedModule(m.id, { topFrameOffset: v }))}
+                          onGapChange={(v) => sorted.forEach(m => updatePlacedModule(m.id, { topFrameGap: Math.max(0, v) }))}
                           hlKey="top-all"
                           setHighlightedFrame={setHighlightedFrame}
                         />
@@ -1579,6 +1647,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
                           widthMM={modWidthMM}
                           sizeMM={mod.topFrameThickness ?? globalTop}
                           offset={getTopOffsetDisplay(mod)}
+                          gap={mod.topFrameGap ?? 0}
                           onToggle={() => {
                             const newVal = !(mod.hasTopFrame !== false);
                             updatePlacedModule(mod.id, { hasTopFrame: newVal, doorTopGap: getTopDoorGapForFrameState(spaceInfo, newVal) });
@@ -1587,6 +1656,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
                             updatePlacedModule(mod.id, { topFrameThickness: v });
                           }}
                           onOffsetChange={(v) => updatePlacedModule(mod.id, { topFrameOffset: v })}
+                          onGapChange={(v) => updatePlacedModule(mod.id, { topFrameGap: Math.max(0, v) })}
                           hlKey={`top-${mod.id}`}
                           setHighlightedFrame={setHighlightedFrame}
                         />

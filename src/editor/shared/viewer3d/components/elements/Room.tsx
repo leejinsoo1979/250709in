@@ -825,6 +825,48 @@ const Room: React.FC<RoomProps> = ({
 
   // Three.js hooks for camera tracking
   const { camera, invalidate } = useThree();
+  const spaceLineTone = useMemo(() => {
+    const platformInfo = typeof navigator !== 'undefined'
+      ? `${navigator.platform || ''} ${navigator.userAgent || ''}`
+      : '';
+    const dpr = typeof window !== 'undefined' ? window.devicePixelRatio || 1 : 1;
+    const isWindows = /Win/i.test(platformInfo);
+    const isMac = /Mac/i.test(platformInfo);
+
+    if (isWindows || dpr < 1.5) {
+      return {
+        base: '#a0a0a0',
+        wallEdge: '#9a9a9a',
+        backMix: 0.18,
+        frontMix: 0.62,
+        fadeWhiteMax: 0.78,
+        lineOpacity: 0.74,
+        cornerOpacity: 0.7
+      };
+    }
+
+    if (isMac || dpr >= 1.5) {
+      return {
+        base: '#7c7c7c',
+        wallEdge: '#808080',
+        backMix: 0.08,
+        frontMix: 0.38,
+        fadeWhiteMax: 0.5,
+        lineOpacity: 0.92,
+        cornerOpacity: 0.88
+      };
+    }
+
+    return {
+      base: '#8f8f8f',
+      wallEdge: '#8f8f8f',
+      backMix: 0.12,
+      frontMix: 0.48,
+      fadeWhiteMax: 0.62,
+      lineOpacity: 0.86,
+      cornerOpacity: 0.82
+    };
+  }, []);
 
   // 벽 재질 refs - ShaderMaterial로 타입 변경
   const leftWallMaterialRef = useRef<THREE.ShaderMaterial>(null);
@@ -2100,7 +2142,9 @@ const Room: React.FC<RoomProps> = ({
 
                 // 그 외: 전체 높이 렌더링
                 if (!hasDroppedCeiling || !isLeftDropped) {
-                  const wallEdgeColor = '#8f8f8f';
+                  const bgColor = theme?.mode === 'dark' ? new THREE.Color("#1a1a2e") : new THREE.Color("#f5f5f5");
+                  const wallEdgeBackColor = new THREE.Color(spaceLineTone.wallEdge).lerp(bgColor, spaceLineTone.backMix);
+                  const wallEdgeFrontColor = new THREE.Color(spaceLineTone.wallEdge).lerp(bgColor, spaceLineTone.frontMix);
                   // 좌벽 로컬 좌표: planeGeometry args=[extendedPanelDepth, height]
                   // local X = 깊이(=월드 Z), local Y = 높이(=월드 Y)
                   // Z축 방향 라인 = 좌벽의 위/아래 가로 모서리 (천장-좌벽, 바닥-좌벽 교차선)
@@ -2109,6 +2153,12 @@ const Room: React.FC<RoomProps> = ({
                   const wallEdgePos = new Float32Array([
                     -halfD, halfH, 0, halfD, halfH, 0,
                     -halfD, -halfH, 0, halfD, -halfH, 0,
+                  ]);
+                  const wallEdgeColors = new Float32Array([
+                    wallEdgeFrontColor.r, wallEdgeFrontColor.g, wallEdgeFrontColor.b,
+                    wallEdgeBackColor.r, wallEdgeBackColor.g, wallEdgeBackColor.b,
+                    wallEdgeFrontColor.r, wallEdgeFrontColor.g, wallEdgeFrontColor.b,
+                    wallEdgeBackColor.r, wallEdgeBackColor.g, wallEdgeBackColor.b,
                   ]);
                   return renderMode === 'solid' ? (
                     <mesh
@@ -2123,8 +2173,15 @@ const Room: React.FC<RoomProps> = ({
                       <lineSegments renderOrder={2}>
                         <bufferGeometry>
                           <bufferAttribute attach="attributes-position" args={[wallEdgePos, 3]} />
+                          <bufferAttribute attach="attributes-color" args={[wallEdgeColors, 3]} />
                         </bufferGeometry>
-                        <lineBasicMaterial color={wallEdgeColor} />
+                        <lineBasicMaterial
+                          vertexColors
+                          transparent
+                          opacity={spaceLineTone.lineOpacity}
+                          depthTest={true}
+                          depthWrite={false}
+                        />
                       </lineSegments>
                     </mesh>
                   ) : null;
@@ -2232,12 +2289,20 @@ const Room: React.FC<RoomProps> = ({
 
                 // 그 외: 전체 높이로 렌더링
                 if (!hasDroppedCeiling || !isRightDropped) {
-                  const wallEdgeColor = '#8f8f8f';
+                  const bgColor = theme?.mode === 'dark' ? new THREE.Color("#1a1a2e") : new THREE.Color("#f5f5f5");
+                  const wallEdgeBackColor = new THREE.Color(spaceLineTone.wallEdge).lerp(bgColor, spaceLineTone.backMix);
+                  const wallEdgeFrontColor = new THREE.Color(spaceLineTone.wallEdge).lerp(bgColor, spaceLineTone.frontMix);
                   const halfD = extendedPanelDepth / 2;
                   const halfH = height / 2;
                   const wallEdgePos = new Float32Array([
                     -halfD, halfH, 0, halfD, halfH, 0,
                     -halfD, -halfH, 0, halfD, -halfH, 0,
+                  ]);
+                  const wallEdgeColors = new Float32Array([
+                    wallEdgeBackColor.r, wallEdgeBackColor.g, wallEdgeBackColor.b,
+                    wallEdgeFrontColor.r, wallEdgeFrontColor.g, wallEdgeFrontColor.b,
+                    wallEdgeBackColor.r, wallEdgeBackColor.g, wallEdgeBackColor.b,
+                    wallEdgeFrontColor.r, wallEdgeFrontColor.g, wallEdgeFrontColor.b,
                   ]);
                   return renderMode === 'solid' ? (
                     <mesh
@@ -2252,8 +2317,15 @@ const Room: React.FC<RoomProps> = ({
                       <lineSegments renderOrder={2}>
                         <bufferGeometry>
                           <bufferAttribute attach="attributes-position" args={[wallEdgePos, 3]} />
+                          <bufferAttribute attach="attributes-color" args={[wallEdgeColors, 3]} />
                         </bufferGeometry>
-                        <lineBasicMaterial color={wallEdgeColor} />
+                        <lineBasicMaterial
+                          vertexColors
+                          transparent
+                          opacity={spaceLineTone.lineOpacity}
+                          depthTest={true}
+                          depthWrite={false}
+                        />
                       </lineSegments>
                     </mesh>
                   ) : null;
@@ -3050,9 +3122,9 @@ const Room: React.FC<RoomProps> = ({
             const vertColors = new Float32Array(lines.length * 6);
             const bgColor = theme?.mode === 'dark' ? new THREE.Color("#1a1a2e") : new THREE.Color("#f5f5f5");
             const softenSpaceLines = viewMode === '3D';
-            const lineBaseColor = softenSpaceLines ? new THREE.Color('#8f8f8f') : threeEdgeColor;
-            const lineBackMix = softenSpaceLines ? 0.12 : 0;
-            const lineFrontMix = softenSpaceLines ? 0.48 : 0.7;
+            const lineBaseColor = softenSpaceLines ? new THREE.Color(spaceLineTone.base) : threeEdgeColor;
+            const lineBackMix = softenSpaceLines ? spaceLineTone.backMix : 0;
+            const lineFrontMix = softenSpaceLines ? spaceLineTone.frontMix : 0.7;
             const lineBackColor = lineBaseColor.clone().lerp(bgColor, lineBackMix);
             const lineFrontColor = lineBaseColor.clone().lerp(bgColor, lineFrontMix);
 
@@ -3079,12 +3151,12 @@ const Room: React.FC<RoomProps> = ({
               const zEnd = extendedZOffset + extendedPanelDepth;
               const zRange = Math.max(0.0001, zEnd - zStart);
               // 회색 베이스: 윈도우 저DPR에서는 더 연한 회색으로 시작해 선 번짐을 줄임
-              const baseGray = new THREE.Color(softenSpaceLines ? '#8f8f8f' : '#555555');
+              const baseGray = new THREE.Color(softenSpaceLines ? spaceLineTone.base : '#555555');
               const baseR = baseGray.r;
               const baseG = baseGray.g;
               const baseB = baseGray.b;
               // 앞쪽으로 갈수록 흰색에 섞이는 비율
-              const fadeWhiteMax = softenSpaceLines ? 0.62 : 0.7;
+              const fadeWhiteMax = softenSpaceLines ? spaceLineTone.fadeWhiteMax : 0.7;
               solidThemeLines.forEach((line, i) => {
                 for (let j = 0; j < 6; j++) solidThemePositions![i * 6 + j] = line[j];
                 // 각 endpoint의 z값으로 진하기 결정 (z1 → 0, z2 → 1)
@@ -3116,7 +3188,7 @@ const Room: React.FC<RoomProps> = ({
                       depthTest={true}
                       depthWrite={false}
                       transparent={softenSpaceLines}
-                      opacity={softenSpaceLines ? 0.86 : 1}
+                      opacity={softenSpaceLines ? spaceLineTone.lineOpacity : 1}
                     />
                   </lineSegments>
                 )}
@@ -3131,7 +3203,7 @@ const Room: React.FC<RoomProps> = ({
                       depthTest={true}
                       depthWrite={false}
                       transparent
-                      opacity={softenSpaceLines ? 0.82 : 1}
+                      opacity={softenSpaceLines ? spaceLineTone.cornerOpacity : 1}
                       polygonOffset
                       polygonOffsetFactor={-50}
                       polygonOffsetUnits={-50}
