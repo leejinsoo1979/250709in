@@ -4382,34 +4382,22 @@ const PlacedModulePropertiesPanel: React.FC = () => {
             // 가구 하단 ~ 바닥 = baseFrameMm
             const bodyBottomToFloorMm = Math.max(0, baseFrameMm);
 
-            const ceilingFloorMode = !!(currentPlacedModule as any)._doorGapRefCF;
-            const toggleRefMode = () => {
-              updatePlacedModule(currentPlacedModule.id, { _doorGapRefCF: !ceilingFloorMode } as any);
-            };
-            // 표시값(천장/바닥 기준): 도어가 천장/바닥과의 실제 거리(양수).
-            //   - 상단갭(천장 기준) = 천장~가구상단 거리 - 몸통 기준 상단갭
-            //   - 하단갭(바닥 기준) = 가구하단~바닥 거리 - 몸통 기준 하단갭
-            //   예: 걸레받이 65, 몸통 기준 하단갭 25 → 바닥 기준 = 65 - 25 = 40
-            const displayTopGap = ceilingFloorMode
-              ? String(Math.round(ceilingToBodyTopMm - (parseFloat(doorTopGapInput) || 0)))
-              : doorTopGapInput;
-            const displayBottomGap = ceilingFloorMode
-              ? String(Math.round(bodyBottomToFloorMm - (parseFloat(doorBottomGapInput) || 0)))
-              : doorBottomGapInput;
-            const onTopChange = (v: string) => {
-              if (!ceilingFloorMode) return handleDoorTopGapChange(v);
-              // 천장 기준 입력값을 몸통 기준으로 변환: 몸통 = 천장~가구상단 - 천장기준
-              // 천장 뚫고 올라갈 수 없으니 0 ≤ v ≤ ceilingToBodyTopMm
+            // 천장/바닥 기준 표시값: 도어와 천장/바닥 사이의 실제 거리 (양수)
+            //   - 천장 기준 = 천장~가구상단 - 몸통 기준 상단갭
+            //   - 바닥 기준 = 가구하단~바닥 - 몸통 기준 하단갭
+            const cfTopValue = String(Math.round(ceilingToBodyTopMm - (parseFloat(doorTopGapInput) || 0)));
+            const cfBotValue = String(Math.round(bodyBottomToFloorMm - (parseFloat(doorBottomGapInput) || 0)));
+
+            // 천장/바닥 기준 입력 → 몸통 기준으로 변환 (0~최대거리로 클램프, 뚫고 나가지 못함)
+            const onTopCfChange = (v: string) => {
               const raw = parseFloat(v);
-              if (isNaN(raw)) return handleDoorTopGapChange(v);
+              if (isNaN(raw)) return;
               const num = Math.max(0, Math.min(ceilingToBodyTopMm, raw));
               handleDoorTopGapChange(String(Math.round(ceilingToBodyTopMm - num)));
             };
-            const onBotChange = (v: string) => {
-              if (!ceilingFloorMode) return handleDoorBottomGapChange(v);
-              // 바닥 뚫고 내려갈 수 없으니 0 ≤ v ≤ bodyBottomToFloorMm
+            const onBotCfChange = (v: string) => {
               const raw = parseFloat(v);
-              if (isNaN(raw)) return handleDoorBottomGapChange(v);
+              if (isNaN(raw)) return;
               const num = Math.max(0, Math.min(bodyBottomToFloorMm, raw));
               handleDoorBottomGapChange(String(Math.round(bodyBottomToFloorMm - num)));
             };
@@ -4419,34 +4407,16 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                 <h5 className={styles.sectionTitle}>
                   <span style={{ color: 'var(--theme-primary, #10b981)', marginRight: '4px' }}>●</span>
                   도어 셋팅
-                  <span style={{ marginLeft: '4px', color: 'var(--theme-text-tertiary)', fontSize: '11px', cursor: 'help' }} title={ceilingFloorMode ? '도어와 천장/바닥 사이의 거리 (mm)' : '도어와 가구 상단/하단 사이의 간격 (mm)'}>ⓘ</span>
+                  <span style={{ marginLeft: '4px', color: 'var(--theme-text-tertiary)', fontSize: '11px', cursor: 'help' }} title="좌측: 몸통 기준 / 우측: 천장·바닥 기준 (양쪽 동기화)">ⓘ</span>
                 </h5>
-                {/* 기준 토글 (몸통 ↔ 천장/바닥) */}
-                <div style={{ display: 'flex', gap: '4px', marginBottom: '8px' }}>
-                  <button
-                    type="button"
-                    onClick={() => { if (ceilingFloorMode) toggleRefMode(); }}
-                    style={{
-                      flex: 1, padding: '4px 8px', fontSize: '11px',
-                      background: !ceilingFloorMode ? 'var(--theme-primary, #4a90d9)' : 'var(--theme-bg-secondary, #f0f0f0)',
-                      color: !ceilingFloorMode ? 'white' : 'var(--theme-text-primary)',
-                      border: '1px solid var(--theme-border)', borderRadius: '4px', cursor: 'pointer', fontWeight: 600,
-                    }}
-                  >몸통 기준</button>
-                  <button
-                    type="button"
-                    onClick={() => { if (!ceilingFloorMode) toggleRefMode(); }}
-                    style={{
-                      flex: 1, padding: '4px 8px', fontSize: '11px',
-                      background: ceilingFloorMode ? 'var(--theme-primary, #4a90d9)' : 'var(--theme-bg-secondary, #f0f0f0)',
-                      color: ceilingFloorMode ? 'white' : 'var(--theme-text-primary)',
-                      border: '1px solid var(--theme-border)', borderRadius: '4px', cursor: 'pointer', fontWeight: 600,
-                    }}
-                  >천장/바닥 기준</button>
-                </div>
                 {/* 도어 헤더 행: 도어 N */}
                 <div style={{ textAlign: 'center', fontSize: '12px', color: 'var(--theme-text-secondary)', marginBottom: '6px' }}>
                   {Array.from({ length: doorCount }, (_, i) => `도어 ${i + 1}`).join(' / ')}
+                </div>
+                {/* 기준 헤더 (몸통 / 천장·바닥) */}
+                <div style={{ display: 'flex', gap: '6px', fontSize: '10px', color: 'var(--theme-text-tertiary)', marginBottom: '4px', paddingLeft: '60px' }}>
+                  <div style={{ flex: 1, textAlign: 'center' }}>몸통 기준</div>
+                  <div style={{ flex: 1, textAlign: 'center' }}>천장·바닥 기준</div>
                 </div>
                 {/* 상단갭 */}
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
@@ -4455,10 +4425,21 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                     <input
                       type="text"
                       inputMode="numeric"
-                      value={displayTopGap}
-                      onChange={(e) => onTopChange(e.target.value)}
+                      value={doorTopGapInput}
+                      onChange={(e) => handleDoorTopGapChange(e.target.value)}
                       onBlur={handleDoorTopGapBlur}
                       onKeyDown={handleDoorTopGapKeyDown}
+                      className={styles.depthInput}
+                      style={{ textAlign: 'center', fontSize: '13px' }}
+                    />
+                    <span className={styles.unit}>mm</span>
+                  </div>
+                  <div className={styles.inputWithUnit} style={{ flex: 1 }}>
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      value={cfTopValue}
+                      onChange={(e) => onTopCfChange(e.target.value)}
                       className={styles.depthInput}
                       style={{ textAlign: 'center', fontSize: '13px' }}
                     />
@@ -4472,10 +4453,21 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                     <input
                       type="text"
                       inputMode="numeric"
-                      value={displayBottomGap}
-                      onChange={(e) => onBotChange(e.target.value)}
+                      value={doorBottomGapInput}
+                      onChange={(e) => handleDoorBottomGapChange(e.target.value)}
                       onBlur={handleDoorBottomGapBlur}
                       onKeyDown={handleDoorBottomGapKeyDown}
+                      className={styles.depthInput}
+                      style={{ textAlign: 'center', fontSize: '13px' }}
+                    />
+                    <span className={styles.unit}>mm</span>
+                  </div>
+                  <div className={styles.inputWithUnit} style={{ flex: 1 }}>
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      value={cfBotValue}
+                      onChange={(e) => onBotCfChange(e.target.value)}
                       className={styles.depthInput}
                       style={{ textAlign: 'center', fontSize: '13px' }}
                     />
