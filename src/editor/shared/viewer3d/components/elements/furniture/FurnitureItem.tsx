@@ -20,9 +20,55 @@ import EndPanelWithTexture from '../../modules/components/EndPanelWithTexture';
 import { useTheme } from '@/contexts/ThemeContext';
 import { isCustomizableModuleId, getCustomizableCategory, CUSTOMIZABLE_DEFAULTS } from '@/editor/shared/controls/furniture/CustomizableFurnitureLibrary';
 import SurroundPanelMesh from '../../modules/SurroundPanelMesh';
+import { FaRegObjectGroup } from 'react-icons/fa';
 
 // 엔드패널 슬롯 계산 기준 두께
 const END_PANEL_THICKNESS = 18; // mm
+
+let furnitureModifierTrackingInstalled = false;
+
+const ensureFurnitureModifierTracking = () => {
+  if (typeof window === 'undefined' || furnitureModifierTrackingInstalled) {
+    return;
+  }
+  furnitureModifierTrackingInstalled = true;
+
+  const handleKeyDown = (event: KeyboardEvent) => {
+    if (event.key === 'Shift' || event.code === 'ShiftLeft' || event.code === 'ShiftRight') (window as any).__furnitureShiftPressed = true;
+    if (event.key === 'Control' || event.code === 'ControlLeft' || event.code === 'ControlRight') (window as any).__furnitureCtrlPressed = true;
+    if (event.key === 'Meta' || event.code === 'MetaLeft' || event.code === 'MetaRight') (window as any).__furnitureMetaPressed = true;
+  };
+  const handleKeyUp = (event: KeyboardEvent) => {
+    if (event.key === 'Shift' || event.code === 'ShiftLeft' || event.code === 'ShiftRight') (window as any).__furnitureShiftPressed = false;
+    if (event.key === 'Control' || event.code === 'ControlLeft' || event.code === 'ControlRight') (window as any).__furnitureCtrlPressed = false;
+    if (event.key === 'Meta' || event.code === 'MetaLeft' || event.code === 'MetaRight') (window as any).__furnitureMetaPressed = false;
+  };
+  const clearModifierState = () => {
+    (window as any).__furnitureShiftPressed = false;
+    (window as any).__furnitureCtrlPressed = false;
+    (window as any).__furnitureMetaPressed = false;
+  };
+
+  window.addEventListener('keydown', handleKeyDown, true);
+  window.addEventListener('keyup', handleKeyUp, true);
+  document.addEventListener('keydown', handleKeyDown, true);
+  document.addEventListener('keyup', handleKeyUp, true);
+  window.addEventListener('blur', clearModifierState);
+};
+
+const isMultiSelectModifierPressed = (event?: MouseEvent | PointerEvent | null): boolean => {
+  if (event?.shiftKey || event?.ctrlKey || event?.metaKey) {
+    return true;
+  }
+  if (typeof window === 'undefined') {
+    return false;
+  }
+  return !!(
+    (window as any).__furnitureShiftPressed ||
+    (window as any).__furnitureCtrlPressed ||
+    (window as any).__furnitureMetaPressed
+  );
+};
 
 // 커스텀 가구 ID인지 확인하는 함수
 const isCustomFurnitureId = (moduleId: string): boolean => {
@@ -323,7 +369,12 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   const isCustomEditing = placedModule.isCustomizable && activePopup.type === 'customizableEdit' && activePopup.id === placedModule.id;
   const selectedFurnitureIds = useUIStore(state => state.selectedFurnitureIds);
   const isMultiSelected = selectedFurnitureIds?.includes(placedModule.id) ?? false;
-  const isSelected = (selectedFurnitureId === placedModule.id || isMultiSelected) && !isCustomEditing;
+  const isGroupedSelection = !!placedModule.groupId && placedModules.some(module =>
+    module.groupId === placedModule.groupId &&
+    (selectedFurnitureId === module.id || (selectedFurnitureIds?.includes(module.id) ?? false))
+  );
+  const isSelected = (selectedFurnitureId === placedModule.id || isMultiSelected || isGroupedSelection) && !isCustomEditing;
+  const selectedFurnitureCount = selectedFurnitureIds?.length ?? 0;
   // 선택/편집/줄자모드 중인 가구는 solid로 렌더링
   const effectiveRenderMode = (isSelected || isEditMode || (viewMode === '3D' && (isLiveDimensionMode || isTapeMeasureMode))) ? 'solid' : renderMode;
   // 편집 모드 고스트: 측면/상면뷰에서는 비활성화 (정면/3D에서만 표시)
@@ -337,6 +388,10 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       setShowSurroundOptions(false);
     }
   }, [isDraggingThis, isEditMode]);
+
+  useEffect(() => {
+    ensureFurnitureModifierTracking();
+  }, []);
 
   // 허공 클릭 시 도어 옵션 패널 닫기
   useEffect(() => {
@@ -1197,6 +1252,84 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   }, [ghostHighlightSlotIndex, viewMode, isLiveDimensionMode, isTapeMeasureMode, highlightSlotIndex, placedModule.isDualSlot, moduleData?.id]);
 
   const slotInfo = globalSlotIndex !== undefined ? columnSlots[globalSlotIndex] : undefined;
+
+  const groupedFurnitureModules = React.useMemo(() => {
+    if (!placedModule.groupId) {
+      return [];
+    }
+    return placedModules
+      .filter((module) => module.groupId === placedModule.groupId);
+  }, [placedModule.groupId, placedModules]);
+
+  const groupedFurnitureIds = React.useMemo(() => {
+    return groupedFurnitureModules.map((module) => module.id);
+  }, [groupedFurnitureModules]);
+
+  const isGroupSelected = React.useMemo(() => {
+    if (!placedModule.groupId || groupedFurnitureModules.length < 2) {
+      return false;
+    }
+    return groupedFurnitureModules.some(module =>
+      selectedFurnitureId === module.id || (selectedFurnitureIds?.includes(module.id) ?? false)
+    );
+  }, [placedModule.groupId, groupedFurnitureModules, selectedFurnitureId, selectedFurnitureIds]);
+
+  const isLeftmostGroupedFurniture = React.useMemo(() => {
+    if (!placedModule.groupId || groupedFurnitureModules.length < 2) {
+      return false;
+    }
+    const leftmost = groupedFurnitureModules.reduce((current, module) =>
+      module.position.x < current.position.x ? module : current
+    );
+    return leftmost.id === placedModule.id;
+  }, [placedModule.groupId, groupedFurnitureModules, placedModule.id]);
+
+  const columnActionContext = React.useMemo(() => {
+    if (slotInfo?.hasColumn && slotInfo.column) {
+      return { slotInfo, module: placedModule };
+    }
+
+    const candidateIds = new Set<string>();
+    groupedFurnitureIds.forEach((id) => candidateIds.add(id));
+
+    if ((selectedFurnitureIds?.length ?? 0) >= 2 && selectedFurnitureIds?.includes(placedModule.id)) {
+      selectedFurnitureIds?.forEach((id) => candidateIds.add(id));
+    }
+
+    for (const id of candidateIds) {
+      const module = placedModules.find((item) => item.id === id);
+      if (!module) {
+        continue;
+      }
+
+      const candidateGlobalSlotIndex = convertZoneToGlobalIndex(
+        module.slotIndex,
+        module.zone as 'normal' | 'dropped'
+      );
+      const candidateSlotInfo = candidateGlobalSlotIndex !== undefined
+        ? columnSlots[candidateGlobalSlotIndex]
+        : undefined;
+
+      if (candidateSlotInfo?.hasColumn && candidateSlotInfo.column) {
+        return { slotInfo: candidateSlotInfo, module };
+      }
+    }
+
+    return undefined;
+  }, [
+    slotInfo,
+    groupedFurnitureIds,
+    selectedFurnitureIds,
+    placedModule.id,
+    placedModules,
+    convertZoneToGlobalIndex,
+    columnSlots
+  ]);
+  const columnActionSlotInfo = columnActionContext?.slotInfo;
+  const columnActionModule = columnActionContext?.module;
+  const usesGroupedColumnAction = !!columnActionContext && columnActionModule?.id !== placedModule.id;
+  const shouldRenderColumnActionControls = isSelected ||
+    (isGroupSelected && isLeftmostGroupedFurniture && !!columnActionSlotInfo?.hasColumn && !!columnActionSlotInfo.column);
 
   // 단내림 구간 기둥 디버깅
   if (placedModule.zone === 'dropped' && slotInfo) {
@@ -2992,6 +3125,17 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
 
   // Column C 전용 이벤트 핸들러 래핑
   const handlePointerDown = (e: ThreeEvent<PointerEvent>) => {
+    const nativeEvent = e.nativeEvent as PointerEvent;
+    const isMultiSelectPointer = isMultiSelectModifierPressed(nativeEvent);
+    if (isMultiSelectPointer) {
+      e.stopPropagation();
+      (window as any).__r3fClickHandled = true;
+      (window as any).__r3fFurnitureClicked = true;
+      (window as any).__multiSelectPointerHandled = placedModule.id;
+      useUIStore.getState().setSelectedColumnId(null);
+      useUIStore.getState().toggleSelectedFurnitureId(placedModule.id);
+      return;
+    }
 
     // 잠긴 가구는 드래그 불가
     if (placedModule.isLocked) {
@@ -3374,17 +3518,49 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
           // FreePlacementDropZone의 1프레임 지연 닫기 로직에서 가구 클릭임을 확인하기 위한 플래그
           (window as any).__r3fFurnitureClicked = true;
 
-          // Shift+클릭: 다중 선택 토글 (편집 팝업/이동 모드 진입 X)
-          const isShiftClick = !!(e.nativeEvent && (e.nativeEvent as any).shiftKey);
-          if (isShiftClick) {
+          // Shift/Ctrl/Cmd+클릭: 다중 선택 토글 (편집 팝업/이동 모드 진입 X)
+          const nativeEvent = e.nativeEvent as MouseEvent;
+          const isMultiSelectClick = isMultiSelectModifierPressed(nativeEvent);
+          if (isMultiSelectClick) {
             e.stopPropagation();
+            if ((window as any).__multiSelectPointerHandled === placedModule.id) {
+              (window as any).__multiSelectPointerHandled = null;
+              return;
+            }
+            useUIStore.getState().setSelectedColumnId(null);
             useUIStore.getState().toggleSelectedFurnitureId(placedModule.id);
             return;
+          }
+
+          // 다중 선택된 가구를 다시 클릭해도 선택 그룹을 단일 선택으로 무너뜨리지 않는다.
+          if ((selectedFurnitureIds?.length ?? 0) >= 2 && selectedFurnitureIds.includes(placedModule.id)) {
+            e.stopPropagation();
+            useUIStore.getState().setSelectedColumnId(null);
+            return;
+          }
+
+          if (placedModule.groupId) {
+            const groupIds = useFurnitureStore.getState().placedModules
+              .filter(m => m.groupId === placedModule.groupId)
+              .map(m => m.id);
+            if (groupIds.length >= 2) {
+              e.stopPropagation();
+              (window as any).__r3fClickHandled = true;
+              useUIStore.getState().setSelectedColumnId(null);
+              useFurnitureStore.getState().setSelectedFurnitureId(placedModule.id);
+              useFurnitureStore.getState().setSelectedPlacedModuleId(placedModule.id);
+              useUIStore.getState().setSelectedFurnitureIds(groupIds);
+              return;
+            }
           }
 
           // 가구 클릭 시 해당 슬롯 선택 (4분할 뷰 또는 미리보기에서 사용)
           if (onFurnitureClick && placedModule.slotIndex !== undefined) {
             e.stopPropagation();
+            useUIStore.getState().setSelectedColumnId(null);
+            useFurnitureStore.getState().setSelectedFurnitureId(placedModule.id);
+            useFurnitureStore.getState().setSelectedPlacedModuleId(placedModule.id);
+            useUIStore.getState().setSelectedFurnitureId(placedModule.id);
             onFurnitureClick(placedModule.id, placedModule.slotIndex);
             return;
           }
@@ -3444,10 +3620,39 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
             />
           </mesh>
         )}
-        {isSelected && width > 0 && height > 0 && depth > 0 && (
+        {placedModule.groupId && !readOnly && width > 0 && height > 0 && depth > 0 && (
+          <Html
+            position={[0, 0, depth / 2 + 0.04]}
+            center
+            occlude={false}
+            zIndexRange={[9000, 9001]}
+            style={{
+              pointerEvents: 'none',
+              userSelect: 'none',
+              background: 'transparent'
+            }}
+          >
+            <div
+              style={{
+                width: '30px',
+                height: '30px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                borderRadius: '50%',
+                background: 'rgba(45, 45, 45, 0.72)',
+                border: '1px solid rgba(255, 255, 255, 0.55)',
+                boxShadow: '0 2px 8px rgba(0, 0, 0, 0.22)'
+              }}
+            >
+              <FaRegObjectGroup size={15} color="#ffffff" />
+            </div>
+          </Html>
+        )}
+        {shouldRenderColumnActionControls && width > 0 && height > 0 && depth > 0 && (
           <>
             {/* 선택 하이라이트: 3D에서만 표시 (2D에서는 치수 확인을 위해 숨김) */}
-            {viewMode === '3D' && (
+            {isSelected && viewMode === '3D' && (
               <mesh
                 ref={highlightMeshRef}
                 position={[0, 0, 0]}
@@ -3469,7 +3674,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
 
             {/* 가구 상단 아이콘 툴바 (readOnly에서는 숨김, 2D 측면/상면뷰에서는 숨김)
                 다중 선택 시: 마지막에 선택한 가구 위에 통합 툴바 1개만 표시 */}
-            {!isPanelListTabActive && !readOnly && (viewMode === '3D' || view2DDirection === 'front' || view2DDirection === 'all')
+            {isSelected && !isPanelListTabActive && !readOnly && (viewMode === '3D' || view2DDirection === 'front' || view2DDirection === 'all')
               && (
                 (selectedFurnitureIds?.length ?? 0) < 2
                 || selectedFurnitureIds[selectedFurnitureIds.length - 1] === placedModule.id
@@ -3509,6 +3714,60 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                     boxShadow: '0 3px 12px rgba(0,0,0,0.25)'
                   }}
                 >
+                  {selectedFurnitureCount >= 2 && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        (window as any).__r3fClickHandled = true;
+                        const updatePlacedModule = useFurnitureStore.getState().updatePlacedModule;
+                        const placed = useFurnitureStore.getState().placedModules;
+                        const ids = (useUIStore.getState().selectedFurnitureIds || [])
+                          .filter(id => {
+                            const m = placed.find(p => p.id === id);
+                            return !!m && !(m as any).isLocked;
+                          });
+                        if (ids.length < 2) return;
+                        const selectedModules = ids
+                          .map(id => placed.find(p => p.id === id))
+                          .filter(Boolean) as typeof placed;
+                        const selectedGroupIds = Array.from(new Set(
+                          selectedModules
+                            .map(module => module.groupId)
+                            .filter(Boolean)
+                        ));
+                        const shouldUngroup = selectedGroupIds.length === 1
+                          && selectedModules.length === ids.length
+                          && selectedModules.every(module => module.groupId === selectedGroupIds[0]);
+                        if (shouldUngroup) {
+                          ids.forEach(id => updatePlacedModule(id, { groupId: undefined }));
+                          useUIStore.getState().setSelectedFurnitureIds(ids);
+                          return;
+                        }
+                        const groupId = `furniture-group-${Date.now()}`;
+                        ids.forEach(id => updatePlacedModule(id, { groupId }));
+                        useUIStore.getState().setSelectedFurnitureIds(ids);
+                      }}
+                      style={{
+                        width: '24px',
+                        height: '24px',
+                        background: 'transparent',
+                        border: 'none',
+                        borderRadius: '0',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        transition: 'opacity 0.2s',
+                        padding: 0
+                      }}
+                      onMouseEnter={(e) => e.currentTarget.style.opacity = '0.7'}
+                      onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}
+                      title="그룹 묶기/해제"
+                    >
+                      <FaRegObjectGroup size={16} color="#ffffff" />
+                    </button>
+                  )}
+
                   {/* 잠금 버튼 — 슬롯/자유배치 모두 표시. 다중 선택 시 모든 선택 가구 일괄 토글 */}
                   <button
                     onClick={(e) => {
@@ -3627,25 +3886,92 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
 
             {/* 앞↔측면 배치 전환 화살표 — 가구 선택 시 가구↔기둥 사이 표시 */}
             {/* 기둥 타입(columnType)과 무관하게 기둥이 있고 가구 앞 여유가 있으면 전환 가능 */}
-            {isSelected && !readOnly && slotInfo?.hasColumn && slotInfo.column && (() => {
-              const columnDepthMm = slotInfo.column.depth;
-              const originalDepth = actualModuleData?.dimensions.depth || 600;
-              const isFrontMode = (placedModule as any).columnPlacementMode === 'front';
+            {isSelected && !readOnly && columnActionSlotInfo?.hasColumn && columnActionSlotInfo.column && (() => {
+              const columnDepthMm = columnActionSlotInfo.column.depth;
+              const actionModule = columnActionModule ?? placedModule;
+              const actionModuleData = actionModule.id === placedModule.id
+                ? actualModuleData
+                : getModuleById(actionModule.moduleId, internalSpace, spaceInfo);
+              const originalDepth = actionModuleData?.dimensions.depth || (actionModule as any).freeDepth || (actionModule as any).customDepth || 600;
+              const isFrontMode = (actionModule as any).columnPlacementMode === 'front';
               // front 모드가 아닐 때: 가구깊이 - 기둥깊이 >= 290 필요 (앞 배치 후 최소 깊이 확보)
               if (!isFrontMode) {
-                const depthDiff = (placedModule.customDepth ?? originalDepth) - columnDepthMm;
-                if (depthDiff < 290) return null;
+                const depthDiff = ((actionModule as any).customDepth ?? originalDepth) - columnDepthMm;
+                if (depthDiff < 290 && !usesGroupedColumnAction) return null;
               }
 
-              // front 모드면 화살표 반대 방향 (측면배치 방향으로 표시)
-              // 측면배치 모드면 기둥 쪽 방향으로 표시
-              const showReverse = isFrontMode;
+              // 양쪽(좌·우) 모두 화살표 표시. 클릭 시 동일하게 측면↔앞 토글.
               const arrowZ = depth / 2 + 0.05;
-              const arrowX = slotInfo.intrusionDirection === 'from-left' ? -mmToThreeUnits(100) : mmToThreeUnits(100);
 
-              return (
+              const handleArrowClick = () => {
+                (window as any).__r3fClickHandled = true;
+                const storeSelectedIds = useUIStore.getState().selectedFurnitureIds || [];
+                const renderedSelectedIds = selectedFurnitureIds || [];
+                const placed = useFurnitureStore.getState().placedModules;
+                const groupIds = placedModule.groupId
+                  ? placed
+                    .filter(m => m.groupId === placedModule.groupId)
+                    .map(m => m.id)
+                  : [];
+                const ids = Array.from(new Set(
+                  (groupIds.length >= 2 ? groupIds : storeSelectedIds.length >= 2 ? storeSelectedIds : renderedSelectedIds.length >= 2 ? renderedSelectedIds : [placedModule.id])
+                ));
+                const nextFrontMode = !isFrontMode;
+
+                ids.forEach((id) => {
+                  const targetModule = placed.find(m => m.id === id);
+                  if (!targetModule || (targetModule as any).isLocked) return;
+
+                  const targetGlobalSlotIndex = convertZoneToGlobalIndex(
+                    targetModule.slotIndex,
+                    targetModule.zone as 'normal' | 'dropped'
+                  );
+                  const targetSlotInfo = targetGlobalSlotIndex !== undefined
+                    ? columnSlots[targetGlobalSlotIndex]
+                    : undefined;
+                  if (!targetSlotInfo?.hasColumn || !targetSlotInfo.column) return;
+
+                  if (!nextFrontMode) {
+                    updatePlacedModule(id, {
+                      customDepth: undefined,
+                      lowerSectionDepth: undefined,
+                      upperSectionDepth: undefined,
+                      lowerSectionDepthDirection: undefined,
+                      upperSectionDepthDirection: undefined,
+                      columnPlacementMode: undefined,
+                    } as any);
+                    return;
+                  }
+
+                  const targetModuleData = getModuleById(
+                    targetModule.moduleId,
+                    internalSpace,
+                    spaceInfo
+                  );
+                  const targetOriginalDepth = targetModuleData?.dimensions.depth
+                    || (targetModule as any).freeDepth
+                    || (targetModule as any).customDepth
+                    || originalDepth;
+                  const targetDepth = ((targetModule as any).customDepth ?? targetOriginalDepth) - targetSlotInfo.column.depth;
+                  if (targetDepth < 290) return;
+
+                  updatePlacedModule(id, {
+                    customDepth: targetDepth,
+                    lowerSectionDepth: targetDepth,
+                    upperSectionDepth: targetDepth,
+                    lowerSectionDepthDirection: 'back',
+                    upperSectionDepthDirection: 'back',
+                    customWidth: undefined,
+                    adjustedWidth: undefined,
+                    columnPlacementMode: 'front',
+                  } as any);
+                });
+              };
+
+              const renderArrow = (side: 'left' | 'right') => (
                 <Html
-                  position={[arrowX, 0, arrowZ]}
+                  key={side}
+                  position={[side === 'left' ? -mmToThreeUnits(100) : mmToThreeUnits(100), 0, arrowZ]}
                   center
                   zIndexRange={[10000, 10001]}
                   style={{ pointerEvents: 'auto', userSelect: 'none', background: 'transparent' }}
@@ -3657,32 +3983,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                     }}
                     onClick={(e) => {
                       e.stopPropagation();
-                      (window as any).__r3fClickHandled = true;
-                      if (isFrontMode) {
-                        // 측면 배치로 복원: 원래 깊이로 되돌리고 섹션 설정 초기화
-                        updatePlacedModule(placedModule.id, {
-                          customDepth: undefined,
-                          lowerSectionDepth: undefined,
-                          upperSectionDepth: undefined,
-                          lowerSectionDepthDirection: undefined,
-                          upperSectionDepthDirection: undefined,
-                          columnPlacementMode: undefined,
-                        } as any);
-                      } else {
-                        // 기둥 앞 배치로 전환
-                        const targetDepth = (placedModule.customDepth ?? originalDepth) - columnDepthMm;
-                        updatePlacedModule(placedModule.id, {
-                          customDepth: targetDepth,
-                          lowerSectionDepth: targetDepth,
-                          upperSectionDepth: targetDepth,
-                          // 내부값 'back' = UI "앞고정"
-                          lowerSectionDepthDirection: 'back',
-                          upperSectionDepthDirection: 'back',
-                          customWidth: undefined,
-                          adjustedWidth: undefined,
-                          columnPlacementMode: 'front',
-                        } as any);
-                      }
+                      handleArrowClick();
                     }}
                     onMouseEnter={(e) => (e.currentTarget.style.opacity = '0.8')}
                     onMouseLeave={(e) => (e.currentTarget.style.opacity = '1')}
@@ -3696,22 +3997,21 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                     title={isFrontMode ? '기둥 측면 배치로 복원' : '기둥 앞으로 배치'}
                   >
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      {(() => {
-                        // intrusionDirection=from-left: 측면배치 모드는 ← (기둥쪽=왼쪽)
-                        //                               front 모드는 → (원래위치=오른쪽)
-                        // intrusionDirection=from-right: 반대
-                        const leftChev = !showReverse
-                          ? slotInfo.intrusionDirection === 'from-left'
-                          : slotInfo.intrusionDirection !== 'from-left';
-                        return leftChev ? (
-                          <polyline points="15 18 9 12 15 6" />
-                        ) : (
-                          <polyline points="9 18 15 12 9 6" />
-                        );
-                      })()}
+                      {side === 'left' ? (
+                        <polyline points="15 18 9 12 15 6" />
+                      ) : (
+                        <polyline points="9 18 15 12 9 6" />
+                      )}
                     </svg>
                   </button>
                 </Html>
+              );
+
+              return (
+                <>
+                  {renderArrow('left')}
+                  {renderArrow('right')}
+                </>
               );
             })()}
 
