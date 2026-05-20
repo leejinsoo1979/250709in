@@ -1466,6 +1466,7 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
   };
 
   const highlightColor = themeColorMap[appTheme.color] || '#3b82f6';
+  const isWindowsPlatform = typeof document !== 'undefined' && document.documentElement.classList.contains('platform-windows');
 
   // 엣지 색상 결정
   const edgeColor = React.useMemo(() => {
@@ -1565,7 +1566,7 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
       if (textureSource.includes('melatone_4319') || textureSource.includes('melatone_8832')) {
         return "#1f5f3a";
       }
-      return "#5a5a5a"; // 3D 솔리드 모드: 진한 회색이 Windows 저DPR에서 뭉개져 보여 살짝 밝게
+      return isWindowsPlatform ? "#666b72" : "#5a5a5a"; // Windows 저DPR에서는 선 대비를 낮춰 번짐을 줄임
     } else if (effectiveRenderMode === 'wireframe') {
       return view2DTheme === 'dark' ? "#FFFFFF" : "#000000"; // 2D 와이어프레임 다크모드는 흰색(최대 대비), 라이트모드는 검정색
     } else {
@@ -1578,7 +1579,7 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
         return view2DTheme === 'dark' ? "#FF4500" : "#444444"; // 다크모드는 붉은 주황색
       }
     }
-  }, [viewMode, effectiveRenderMode, view2DTheme, view2DDirection, baseMaterial, isHighlighted, highlightColor, panelName, textureUrl]);
+  }, [viewMode, effectiveRenderMode, view2DTheme, view2DDirection, baseMaterial, isHighlighted, highlightColor, panelName, textureUrl, isWindowsPlatform]);
 
   // Debug log for position
 
@@ -2631,8 +2632,8 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
 
         const inspectionEdgeActive = false;
         const resolvedEdgeColor = edgeColor;
-        const resolvedEdgeOpacity = isHighlighted ? 1.0 : (effectiveRenderMode === 'wireframe' ? 1.0 : 0.65);
-        const resolvedEdgeLineWidth = isHighlighted ? 3 : 1;
+        const resolvedEdgeOpacity = isHighlighted ? 1.0 : (effectiveRenderMode === 'wireframe' ? 1.0 : (isWindowsPlatform ? 0.52 : 0.65));
+        const resolvedEdgeLineWidth = isHighlighted ? (isWindowsPlatform ? 2 : 3) : 1;
         const resolvedEdgeDepthTest = effectiveRenderMode !== 'wireframe';
 
         // 3D 모드: notch가 있으면 L자형 엣지

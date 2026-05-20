@@ -210,6 +210,24 @@
 
 .segmentIconText svg { flex-shrink: 0; }
 
+:global(html.platform-windows) .viewerControls {
+  text-rendering: geometricPrecision;
+}
+
+:global(html.platform-windows) .toggleLabel,
+:global(html.platform-windows) .chip,
+:global(html.platform-windows) .segmentButton {
+  font-weight: 400;
+  letter-spacing: 0;
+}
+
+:global(html.platform-windows) .chipActive,
+:global(html.platform-windows) .segmentActive,
+:global(html.platform-windows) .segmentAccent,
+:global(html.platform-windows) .segmentAccentActive {
+  font-weight: 500;
+}
+
 /* ── Icon Button ── */
 .iconButton {
   width: 28px;

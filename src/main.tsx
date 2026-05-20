@@ -7,6 +7,25 @@ import '@/styles/global.css'
 import './i18n' // i18n 초기화
 // import { disableAllConsole } from './utils/disableConsole'
 
+const setupPlatformClass = () => {
+  if (typeof window === 'undefined') return;
+
+  const userAgentDataPlatform =
+    (window.navigator as Navigator & { userAgentData?: { platform?: string } }).userAgentData?.platform || '';
+  const platformText = [
+    window.navigator.userAgent || '',
+    window.navigator.platform || '',
+    userAgentDataPlatform,
+  ].join(' ');
+
+  const root = document.documentElement;
+  const isWindows = /Windows/i.test(platformText);
+  const isMac = /\bMac/i.test(platformText) && !/iPhone|iPad|iPod/i.test(platformText);
+
+  root.classList.toggle('platform-windows', isWindows);
+  root.classList.toggle('platform-macos', isMac);
+};
+
 const setupStaleAssetReload = () => {
   if (typeof window === 'undefined') return;
 
@@ -50,6 +69,7 @@ const setupStaleAssetReload = () => {
   });
 };
 
+setupPlatformClass();
 setupStaleAssetReload();
 
 // 개발 모드에서 유틸리티 스크립트 로드

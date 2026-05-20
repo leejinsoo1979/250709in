@@ -194,6 +194,40 @@
   animation: tooltipIn 0.15s ease 0.4s forwards;
 }
 
+:global(html.platform-windows) .sidebar {
+  text-rendering: geometricPrecision;
+}
+
+:global(html.platform-windows) .tabIcon {
+  opacity: 0.68;
+}
+
+:global(html.platform-windows) .tabButton.active .tabIcon,
+:global(html.platform-windows) .tabButton:hover .tabIcon {
+  opacity: 0.92;
+}
+
+:global(html.platform-windows) .tabLabel {
+  font-weight: 400;
+  letter-spacing: 0;
+  opacity: 0.68;
+}
+
+:global(html.platform-windows) .tabButton.active .tabLabel,
+:global(html.platform-windows) .tabButton:hover .tabLabel {
+  opacity: 0.92;
+}
+
+:global(html.platform-windows) .tabButton.active .tabLabel {
+  font-weight: 500;
+}
+
+:global(html.platform-windows) .actionButton[data-tooltip]:hover::after,
+:global(html.platform-windows) .tabButton[data-tooltip]:hover::after {
+  font-weight: 400;
+  letter-spacing: 0;
+}
+
 @keyframes tooltipIn {
   to { opacity: 1; }
 }

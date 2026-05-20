@@ -194,6 +194,23 @@
   flex-shrink: 0;
 }
 
+:global(html.platform-windows) .header {
+  -webkit-font-smoothing: antialiased;
+  text-rendering: geometricPrecision;
+}
+
+:global(html.platform-windows) .projectName,
+:global(html.platform-windows) .designFileName,
+:global(html.platform-windows) .title,
+:global(html.platform-windows) .actionButton {
+  font-weight: 400;
+  letter-spacing: 0;
+}
+
+:global(html.platform-windows) .projectName {
+  font-weight: 500;
+}
+
 /* 도어 설치 버튼 상태별 스타일 */
 .doorNotInstalled {
   background: var(--theme-background-secondary);

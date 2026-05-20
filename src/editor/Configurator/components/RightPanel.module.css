@@ -201,6 +201,25 @@
   color: var(--theme-text);
 }
 
+:global(html.platform-windows) .rightPanel {
+  -webkit-font-smoothing: antialiased;
+  text-rendering: geometricPrecision;
+}
+
+:global(html.platform-windows) .tabButton,
+:global(html.platform-windows) .formLabel,
+:global(html.platform-windows) .brandLabel,
+:global(html.platform-windows) .brandOption,
+:global(html.platform-windows) .priceLabel {
+  font-weight: 400;
+  letter-spacing: 0;
+}
+
+:global(html.platform-windows) .tabButton.active,
+:global(html.platform-windows) .priceValue {
+  font-weight: 500;
+}
+
 /* ── Color Wheel ── */
 .colorWheel {
   display: flex;
