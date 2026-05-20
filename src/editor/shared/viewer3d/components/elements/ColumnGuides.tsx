@@ -391,11 +391,17 @@ const ColumnGuides: React.FC<ColumnGuidesProps> = ({ viewMode: viewModeProp }) =
   // 바닥과 천장 높이 (Three.js 단위)
   //   floorY = 바닥마감재(있으면) + 걸레받이(있으면) 위에서 시작
   //   ceilingY = 천장 - 상단몰딩(있으면)
+  //   ※ 가구에서 hasTopFrame/hasBase=false 토글이 켜져 있으면 해당 프레임이 비활성 → 메쉬가 그 영역까지 늘어남
   const floorFinishMmCeil = spaceInfo.hasFloorFinish && spaceInfo.floorFinish ? spaceInfo.floorFinish.height : 0;
   const baseFrameMmCeil = spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height ?? 65) : 0;
   const topFrameMmCeil = spaceInfo.frameSize?.top ?? 30;
-  const floorY = mmToThreeUnits(floorFinishMmCeil + baseFrameMmCeil) + floatHeight;
-  const ceilingY = mmToThreeUnits(spaceInfo.height - topFrameMmCeil);
+  // 배치된 가구 중에 hasTopFrame=false가 있으면 (상단몰딩 토글 해제) 메쉬가 천장까지 늘어남
+  const anyTopFrameOff = placedModules.some(m => (m as any).hasTopFrame === false);
+  const anyBaseOff = placedModules.some(m => (m as any).hasBase === false);
+  const effectiveTopFrameMm = anyTopFrameOff ? 0 : topFrameMmCeil;
+  const effectiveBaseFrameMm = anyBaseOff ? 0 : baseFrameMmCeil;
+  const floorY = mmToThreeUnits(floorFinishMmCeil + effectiveBaseFrameMm) + floatHeight;
+  const ceilingY = mmToThreeUnits(spaceInfo.height - effectiveTopFrameMm);
   
   // 단내림 천장 높이: 바닥(0)에서 단내림 전체 높이 - 상단몰딩 높이
   // 이것이 상단몰딩의 하단 위치입니다
