@@ -9,57 +9,92 @@ import type { PlacedModule } from '@/editor/shared/furniture/types';
 const FIELD_GROUPS: { id: string; label: string; fields: string[] }[] = [
   {
     id: 'door',
-    label: '도어 설정 (상/하단갭, 확장량, 도어 옵션)',
+    label: '도어 설정 (갭, 확장량, 경첩, 도어 분할/확장)',
     fields: [
+      'hasDoor',
       'doorTopGap', 'doorBottomGap',
       'doorWidthAdjustEnabled', 'doorWidthAdjustMm',
-      'hasDoor', 'hingePosition',
+      'hingePosition', 'hingeType',
+      'hingePositionsMm', 'upperDoorHingePositionsMm', 'lowerDoorHingePositionsMm',
+      'doorSettingMode', 'doorOverlayLeft', 'doorOverlayRight', 'doorOverlayTop', 'doorOverlayBottom',
+      'doorSplit',
     ],
   },
   {
     id: 'drawer',
-    label: '마이다 / 서랍',
+    label: '마이다 / 서랍 (개별 높이, 레그라 종류)',
     fields: [
       'customMaidaHeights',
       'legraDrawerTypes',
+      'glassDrawerOffsetMm',
     ],
   },
   {
     id: 'topBottom',
-    label: '상부몰딩 / 걸레받이',
+    label: '상부몰딩 / 걸레받이 (사이즈, 옵셋, 갭, 띄움)',
     fields: [
       'hasTopFrame', 'topFrameThickness', 'topFrameOffset', 'topFrameGap',
-      'hasBase', 'baseFrameHeight', 'baseFrameOffset', 'baseFrameGap',
+      'hasBase', 'hasBottomFrame', 'baseFrameHeight', 'baseFrameOffset', 'baseFrameGap',
       'individualFloatHeight',
+      'cabinetBodyHeight',
     ],
   },
   {
     id: 'backPanel',
-    label: '백패널',
-    fields: ['backPanelThickness'],
+    label: '백패널 (두께, 갭 백패널, 뒷벽 이격)',
+    fields: [
+      'backPanelThickness',
+      'hasBackPanel', 'hasGapBackPanel',
+      'backWallGap',
+    ],
   },
   {
     id: 'endPanel',
-    label: '엔드패널 (EP)',
-    fields: ['hasLeftEndPanel', 'hasRightEndPanel', 'endPanelDepth'],
+    label: '엔드패널 (좌/우 EP, 두께, 깊이, 옵셋, 높이 모드)',
+    fields: [
+      'hasLeftEndPanel', 'hasRightEndPanel',
+      'endPanelThickness', 'endPanelDepth', 'endPanelDepthDirection',
+      'endPanelOffset',
+      'leftEndPanelOffset', 'rightEndPanelOffset',
+      'leftEndPanelBackOffset', 'rightEndPanelBackOffset',
+      'endPanelHeightMode', 'endPanelTopOffset', 'endPanelBottomOffset',
+    ],
   },
   {
     id: 'shelfRod',
-    label: '옷봉 / 선반 / 내부 구성',
+    label: '옷봉 / 선반 / 내부 구성 (커스텀 섹션)',
     fields: ['customConfig', 'customSections'],
   },
   {
     id: 'rodShelf',
-    label: '옷봉선반 옵션',
-    fields: ['removeSafetyShelf'],
+    label: '옷봉선반 옵션 (안전선반 제거, 상부 선반 갭)',
+    fields: [
+      'removeUpperSafetyShelf',
+      'upperShelfTopGap',
+      'insertFrontInsetMm',
+    ],
+  },
+  {
+    id: 'topNotch',
+    label: '상판 따내기 / 상판설치 (인조대리석/PET)',
+    fields: [
+      'topPanelNotchSize', 'topPanelNotchSide',
+      'stoneTopMaterial', 'stoneTopThickness',
+      'stoneTopFrontOffset', 'stoneTopBackOffset', 'stoneTopLeftOffset', 'stoneTopRightOffset',
+      'stoneTopBackLip', 'stoneTopBackLipThickness',
+      'stoneTopBackLipDepthOffset', 'stoneTopBackLipTopOffset', 'stoneTopBackLipTopBackOffset',
+      'stoneTopBackLipFullFill', 'stoneTopBackLipFillHeight',
+    ],
   },
   {
     id: 'materialColor',
-    label: '재질 / 색상',
+    label: '재질 / 색상 (속장/도어/엣지/결방향)',
     fields: [
       'doorColor', 'doorTextureUrl', 'doorMaterial',
       'bodyColor', 'bodyTextureUrl', 'bodyMaterial',
       'interiorEdgeColor', 'doorEdgeColor',
+      'panelGrainDirections',
+      'panelExclusions',
     ],
   },
 ];
@@ -73,50 +108,54 @@ const getCategory = (m: PlacedModule | undefined, fallbackCategory?: string): 'f
   return 'full';
 };
 
-// 그룹별로 현재 가구 또는 프리셋 데이터에 의미 있는 값이 있는지 판단.
-//   - 의미 없는 그룹(예: 도어 없는 가구의 도어 설정, 서랍 없는 가구의 마이다)은 모달에서 숨김.
-//   - 프리셋이 있는 경우는 프리셋에 해당 필드가 들어있는지로 판단 (저장 시점 가구 기준).
+// 그룹별로 현재 가구에 적용 가능한지 판단 (가구 종류 기반).
+//   - 프리셋에 해당 필드가 없어도 가구가 이 옵션을 가질 수 있으면 표시 (적용 가능).
+//   - 저장 시점에 사용자가 어떤 값이든 변경했을 수 있으므로 너무 엄격하게 판단하면 안 됨.
 const isGroupApplicable = (
   groupId: string,
-  presetProps: Record<string, any> | undefined,
+  _presetProps: Record<string, any> | undefined,
   targetModule: PlacedModule,
   category: 'full' | 'upper' | 'lower' | null,
 ): boolean => {
   const id = (targetModule.moduleId || '').toLowerCase();
   const mod = targetModule as any;
-  const hasInPreset = (fields: string[]) =>
-    !!presetProps && fields.some(f => presetProps[f] !== undefined);
 
   switch (groupId) {
     case 'door': {
-      const targetHasDoor = mod.hasDoor !== false; // 기본 true
-      return targetHasDoor && hasInPreset(['doorTopGap', 'doorBottomGap', 'doorWidthAdjustEnabled', 'doorWidthAdjustMm', 'hasDoor', 'hingePosition']);
+      // 도어 가질 수 있는 가구만 (insert-frame 같은 채움재는 제외)
+      if (id.includes('insert-frame')) return false;
+      return mod.hasDoor !== false; // hasDoor가 명시적 false가 아니면 표시
     }
     case 'drawer': {
-      // 마이다/서랍 모듈만
-      const isDrawerType = /lower-drawer-|lower-induction-cabinet-|lower-door-lift-touch|lower-top-down-touch/.test(id);
-      return isDrawerType && hasInPreset(['customMaidaHeights', 'legraDrawerTypes']);
+      // 마이다/서랍 가구만
+      return /lower-drawer-|lower-induction-cabinet-|lower-door-lift-touch|lower-top-down-touch/.test(id);
     }
     case 'topBottom': {
       // 상부장은 상부몰딩/걸레받이 무관
-      if (category === 'upper') return false;
-      return hasInPreset(['hasTopFrame', 'topFrameThickness', 'topFrameOffset', 'topFrameGap', 'hasBase', 'baseFrameHeight', 'baseFrameOffset', 'baseFrameGap', 'individualFloatHeight']);
+      return category !== 'upper';
     }
     case 'backPanel':
-      return hasInPreset(['backPanelThickness']);
-    case 'endPanel': {
-      // EP는 자유배치이거나 슬롯 끝 가구에서만 의미 있지만 단순화: 프리셋에 EP 필드 있으면 표시
-      return hasInPreset(['hasLeftEndPanel', 'hasRightEndPanel', 'endPanelDepth']);
-    }
+      // 거의 모든 가구가 가짐
+      return !id.includes('insert-frame');
+    case 'endPanel':
+      // 자유배치이거나 EP 옵션이 있는 가구 (사실상 모든 가구)
+      return !id.includes('insert-frame');
     case 'shelfRod': {
-      // 커스텀 가구 (customSections 보유) 또는 커스터마이즈 가능 가구만
-      const isCustomizable = id.startsWith('customizable-') || !!mod.customSections || !!mod.customConfig;
-      return isCustomizable && hasInPreset(['customConfig', 'customSections']);
+      // 커스텀/커스터마이즈 가능 가구만
+      return id.startsWith('customizable-') || !!mod.customSections || !!mod.customConfig;
     }
-    case 'rodShelf':
-      return hasInPreset(['removeSafetyShelf']);
+    case 'rodShelf': {
+      // 옷봉/선반 있는 가구 (코트장, 붙박이장 시리즈, 키큰장 일부) — 상부 안전선반 옵션
+      // 너무 엄격하지 않게: 상부장 제외하고 표시
+      return category !== 'upper' && !id.includes('insert-frame');
+    }
+    case 'topNotch': {
+      // 상부장 코너 노치, 하부장 상판설치
+      return category === 'upper' || category === 'lower';
+    }
     case 'materialColor':
-      return hasInPreset(['doorColor', 'doorTextureUrl', 'doorMaterial', 'bodyColor', 'bodyTextureUrl', 'bodyMaterial', 'interiorEdgeColor', 'doorEdgeColor']);
+      // 모든 가구
+      return true;
     default:
       return false;
   }
