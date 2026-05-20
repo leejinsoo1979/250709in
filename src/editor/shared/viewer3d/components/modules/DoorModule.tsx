@@ -2518,12 +2518,12 @@ const DoorModule: React.FC<DoorModuleProps> = ({
 
                     <NativeLine name="door-dimension-height" points={[
                       [-leftDoorWidthUnits / 2, -doorHeight / 2, zPos],
-                      [-leftDoorWidthUnits / 2 - mmToThreeUnits(70), -doorHeight / 2, zPos]
+                      [-leftDoorWidthUnits / 2 - mmToThreeUnits(90), -doorHeight / 2, zPos]
                     ]} color={dimColor} lineWidth={1} renderOrder={100001} depthTest={false} depthWrite={false} transparent={true} />
 
                     <NativeLine name="door-dimension-height" points={[
                       [-leftDoorWidthUnits / 2, doorHeight / 2, zPos],
-                      [-leftDoorWidthUnits / 2 - mmToThreeUnits(70), doorHeight / 2, zPos]
+                      [-leftDoorWidthUnits / 2 - mmToThreeUnits(90), doorHeight / 2, zPos]
                     ]} color={dimColor} lineWidth={1} renderOrder={100001} depthTest={false} depthWrite={false} transparent={true} />
 
                     <DimensionText
@@ -2533,7 +2533,6 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                       color={dimColor}
                       anchorX="center"
                       anchorY="middle"
-                      rotation={[0, 0, Math.PI / 2]}
                       forceShow={true}
                     />
                     </>
@@ -2949,12 +2948,12 @@ const DoorModule: React.FC<DoorModuleProps> = ({
 
                     <NativeLine name="door-dimension-height" points={[
                       [rightDoorWidthUnits / 2, -doorHeight / 2, zPos],
-                      [rightDoorWidthUnits / 2 + mmToThreeUnits(70), -doorHeight / 2, zPos]
+                      [rightDoorWidthUnits / 2 + mmToThreeUnits(90), -doorHeight / 2, zPos]
                     ]} color={dimColor} lineWidth={1} renderOrder={100001} depthTest={false} depthWrite={false} transparent={true} />
 
                     <NativeLine name="door-dimension-height" points={[
                       [rightDoorWidthUnits / 2, doorHeight / 2, zPos],
-                      [rightDoorWidthUnits / 2 + mmToThreeUnits(70), doorHeight / 2, zPos]
+                      [rightDoorWidthUnits / 2 + mmToThreeUnits(90), doorHeight / 2, zPos]
                     ]} color={dimColor} lineWidth={1} renderOrder={100001} depthTest={false} depthWrite={false} transparent={true} />
 
                     <DimensionText
@@ -2964,7 +2963,6 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                       color={dimColor}
                       anchorX="center"
                       anchorY="middle"
-                      rotation={[0, 0, Math.PI / 2]}
                       forceShow={true}
                     />
                     </>
@@ -3712,7 +3710,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                     <>
                       <NativeLine
                         name="door-dimension-height"
-                        points={[[-doorWidthUnits / 2, -doorHeight / 2, zPos], [-doorWidthUnits / 2 - mmToThreeUnits(70), -doorHeight / 2, zPos]]}
+                        points={[[-doorWidthUnits / 2, -doorHeight / 2, zPos], [-doorWidthUnits / 2 - mmToThreeUnits(90), -doorHeight / 2, zPos]]}
                         color={dimColor}
                         lineWidth={1}
                         renderOrder={100001}
@@ -3723,7 +3721,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
 
                       <NativeLine
                         name="door-dimension-height"
-                        points={[[-doorWidthUnits / 2, doorHeight / 2, zPos], [-doorWidthUnits / 2 - mmToThreeUnits(70), doorHeight / 2, zPos]]}
+                        points={[[-doorWidthUnits / 2, doorHeight / 2, zPos], [-doorWidthUnits / 2 - mmToThreeUnits(90), doorHeight / 2, zPos]]}
                         color={dimColor}
                         lineWidth={1}
                         renderOrder={100001}
@@ -3739,7 +3737,6 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                         color={dimColor}
                         anchorX="center"
                         anchorY="middle"
-                        rotation={[0, 0, Math.PI / 2]}
                         forceShow={true}
                       />
                     </>
@@ -3749,7 +3746,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                     <>
                       <NativeLine
                         name="door-dimension-height"
-                        points={[[doorWidthUnits / 2, -doorHeight / 2, zPos], [doorWidthUnits / 2 + mmToThreeUnits(70), -doorHeight / 2, zPos]]}
+                        points={[[doorWidthUnits / 2, -doorHeight / 2, zPos], [doorWidthUnits / 2 + mmToThreeUnits(90), -doorHeight / 2, zPos]]}
                         color={dimColor}
                         lineWidth={1}
                         renderOrder={100001}
@@ -3760,7 +3757,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
 
                       <NativeLine
                         name="door-dimension-height"
-                        points={[[doorWidthUnits / 2, doorHeight / 2, zPos], [doorWidthUnits / 2 + mmToThreeUnits(70), doorHeight / 2, zPos]]}
+                        points={[[doorWidthUnits / 2, doorHeight / 2, zPos], [doorWidthUnits / 2 + mmToThreeUnits(90), doorHeight / 2, zPos]]}
                         color={dimColor}
                         lineWidth={1}
                         renderOrder={100001}
@@ -3776,7 +3773,6 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                         color={dimColor}
                         anchorX="center"
                         anchorY="middle"
-                        rotation={[0, 0, Math.PI / 2]}
                         forceShow={true}
                       />
                     </>

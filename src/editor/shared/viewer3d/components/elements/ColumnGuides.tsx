@@ -389,22 +389,27 @@ const ColumnGuides: React.FC<ColumnGuidesProps> = ({ viewMode: viewModeProp }) =
   const floatHeight = isFloating ? mmToThreeUnits(spaceInfo.baseConfig?.floatHeight || 0) : 0;
   
   // 바닥과 천장 높이 (Three.js 단위)
-  //   floorY = 바닥마감재(있으면) + 걸레받이(있으면) 위에서 시작 + 띄움 높이
-  //   ceilingY = 천장 - 상단몰딩(있으면) - 상단 갭(topFrameGap)
-  //   ※ 가구의 hasTopFrame/hasBase=false 토글 / topFrameGap / baseFrameGap / individualFloatHeight 모두 반영
+  //   floorY = 바닥마감재 + 걸레받이(또는 OFF 시 띄움) + 띄움 높이
+  //   ceilingY = 천장 - 상단몰딩(또는 OFF 시 0) - (OFF 시 그 갭)
+  //   ※ topFrameGap/baseFrameGap은 두 종류
+  //     - 토글 ON 갭: 상단몰딩↔천장 또는 걸레받이↔바닥 사이 빈 공간 → 가구/메쉬 영향 X
+  //     - 토글 OFF 갭(흡수 시 갭): 가구가 그쪽 영역까지 늘어나지만 갭만큼은 비움 → 메쉬도 그 갭만큼 비움
   const floorFinishMmCeil = spaceInfo.hasFloorFinish && spaceInfo.floorFinish ? spaceInfo.floorFinish.height : 0;
   const baseFrameMmCeil = spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height ?? 65) : 0;
   const topFrameMmCeil = spaceInfo.frameSize?.top ?? 30;
-  // 배치된 가구 중 가장 큰 갭/띄움 값 사용 (메쉬는 보수적으로 가구 영역만 표시)
-  const anyTopFrameOff = placedModules.some(m => (m as any).hasTopFrame === false);
-  const anyBaseOff = placedModules.some(m => (m as any).hasBase === false);
-  const maxTopFrameGap = placedModules.reduce((acc, m) => Math.max(acc, (m as any).topFrameGap || 0), 0);
-  const maxBaseFrameGap = placedModules.reduce((acc, m) => Math.max(acc, (m as any).baseFrameGap || 0), 0);
+  // 배치된 가구 중 토글 OFF인 가구만 갭 적용
+  const topOffMods = placedModules.filter(m => (m as any).hasTopFrame === false);
+  const baseOffMods = placedModules.filter(m => (m as any).hasBase === false);
+  const anyTopFrameOff = topOffMods.length > 0;
+  const anyBaseOff = baseOffMods.length > 0;
+  // 토글 OFF 가구 중 가장 큰 갭만 메쉬에 적용
+  const offTopFrameGap = topOffMods.reduce((acc, m) => Math.max(acc, (m as any).topFrameGap || 0), 0);
+  const offBaseFrameGap = baseOffMods.reduce((acc, m) => Math.max(acc, (m as any).baseFrameGap || 0), 0);
   const maxIndividualFloat = placedModules.reduce((acc, m) => Math.max(acc, (m as any).individualFloatHeight || 0), 0);
-  const effectiveTopFrameMm = anyTopFrameOff ? 0 : topFrameMmCeil;
-  const effectiveBaseFrameMm = anyBaseOff ? maxIndividualFloat : baseFrameMmCeil;
-  const floorY = mmToThreeUnits(floorFinishMmCeil + effectiveBaseFrameMm + maxBaseFrameGap) + floatHeight;
-  const ceilingY = mmToThreeUnits(spaceInfo.height - effectiveTopFrameMm - maxTopFrameGap);
+  const effectiveTopFrameMm = anyTopFrameOff ? offTopFrameGap : topFrameMmCeil;
+  const effectiveBaseFrameMm = anyBaseOff ? (maxIndividualFloat + offBaseFrameGap) : baseFrameMmCeil;
+  const floorY = mmToThreeUnits(floorFinishMmCeil + effectiveBaseFrameMm) + floatHeight;
+  const ceilingY = mmToThreeUnits(spaceInfo.height - effectiveTopFrameMm);
   
   // 단내림 천장 높이: 바닥(0)에서 단내림 전체 높이 - 상단몰딩 높이
   // 이것이 상단몰딩의 하단 위치입니다
