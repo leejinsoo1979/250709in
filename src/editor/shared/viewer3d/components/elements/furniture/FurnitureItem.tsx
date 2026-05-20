@@ -3571,15 +3571,22 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
           }
 
           if (placedModule.groupId) {
-            const groupIds = useFurnitureStore.getState().placedModules
-              .filter(m => m.groupId === placedModule.groupId)
-              .map(m => m.id);
+            const groupModulesAll = useFurnitureStore.getState().placedModules
+              .filter(m => m.groupId === placedModule.groupId);
+            const groupIds = groupModulesAll.map(m => m.id);
             if (groupIds.length >= 2) {
               e.stopPropagation();
               (window as any).__r3fClickHandled = true;
               useUIStore.getState().setSelectedColumnId(null);
-              useFurnitureStore.getState().setSelectedFurnitureId(placedModule.id);
-              useFurnitureStore.getState().setSelectedPlacedModuleId(placedModule.id);
+              // 그룹 묶인 가구는 어떤 멤버를 클릭해도 동일한 그룹 상태 유지.
+              //   대표(activeId)는 이미 그룹에서 선택된 가구가 있으면 그대로, 없으면 그룹의 가장 왼쪽 가구.
+              const currentActiveId = useFurnitureStore.getState().selectedFurnitureId;
+              const isCurrentInGroup = !!currentActiveId && groupIds.includes(currentActiveId);
+              const leftmostId = [...groupModulesAll]
+                .sort((a, b) => a.position.x - b.position.x)[0]?.id ?? placedModule.id;
+              const activeId = isCurrentInGroup ? currentActiveId! : leftmostId;
+              useFurnitureStore.getState().setSelectedFurnitureId(activeId);
+              useFurnitureStore.getState().setSelectedPlacedModuleId(activeId);
               useUIStore.getState().setSelectedFurnitureIds(groupIds);
               return;
             }
