@@ -1552,6 +1552,16 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
   const dimLevels = hasZoneSplit
     ? (hasPlacedModules ? 4 : (cbOnly ? 2 : 3))
     : isFreePlacement ? 3 : 3;
+  const hasInstalledDoorForVerticalGuides = placedModules.some((module) => {
+    if (!module.hasDoor) return false;
+    const moduleData = getModuleById(
+      module.moduleId,
+      { width: spaceInfo.width, height: spaceInfo.height, depth: spaceInfo.depth },
+      spaceInfo
+    );
+    return !!moduleData?.hasDoor;
+  });
+  const doorVerticalGuideExpansionMm = hasInstalledDoorForVerticalGuides ? 160 : 0;
   // 최상단: 전체 너비 (3600)
   const topDimensionY = spaceHeight + mmToThreeUnits(DIM_GAP * dimLevels);
   // 2단: 구간사이즈 (2700 / 900)
@@ -1560,7 +1570,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
   const slotTotalDimensionY = spaceHeight + mmToThreeUnits(DIM_GAP * (dimLevels - 2));
   // 최하단: 개별 슬롯 너비
   const slotDimensionY = spaceHeight + mmToThreeUnits(DIM_GAP);
-  const leftFrameDimensionX = -mmToThreeUnits(120); // 좌측 프레임 분해 치수선 (공간에 가까운 안쪽)
+  const leftFrameDimensionX = -mmToThreeUnits(120 + doorVerticalGuideExpansionMm); // 좌측 프레임 분해 치수선 (공간에 가까운 안쪽)
   const leftDimensionX = leftFrameDimensionX - mmToThreeUnits(200); // 좌측 전체높이 치수선 (프레임 분해보다 충분히 바깥)
 
   // 좌측 오프셋 (가로 공간치수의 절반)
@@ -4896,9 +4906,9 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
 
           // ── 공통 변수 ──
           const rightWallX = mmToThreeUnits(spaceInfo.width) + leftOffset;
-          const rightInnerX = rightWallX + mmToThreeUnits(200);   // 1단(안쪽): 프레임 분해
-          const rightOuterX = rightWallX + mmToThreeUnits(400);   // 2단: 단내림 높이 or 전체 높이
-          const rightCBOuterX = rightWallX + mmToThreeUnits(600); // 3단(바깥): 커튼박스 높이
+          const rightInnerX = rightWallX + mmToThreeUnits(200 + doorVerticalGuideExpansionMm);   // 1단(안쪽): 프레임 분해
+          const rightOuterX = rightWallX + mmToThreeUnits(400 + doorVerticalGuideExpansionMm);   // 2단: 단내림 높이 or 전체 높이
+          const rightCBOuterX = rightWallX + mmToThreeUnits(600 + doorVerticalGuideExpansionMm); // 3단(바깥): 커튼박스 높이
           const floorFinishYR = floorFinishHeightMmGlobal > 0 ? mmToThreeUnits(floorFinishHeightMmGlobal) : 0;
           const hasFloorFinishR = floorFinishHeightMmGlobal > 0;
           const floorFinishMidYR = floorFinishYR / 2;

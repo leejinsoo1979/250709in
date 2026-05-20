@@ -580,38 +580,6 @@ const Configurator: React.FC = () => {
   const isTapeMeasureMode = useUIStore(s => s.isTapeMeasureMode);
   const toggleTapeMeasureMode = useUIStore(s => s.toggleTapeMeasureMode);
 
-  // 바닥마감재 두께 변경 시 배치된 가구 Y 위치 재계산 (마감재+받침대 위에 정렬)
-  //   가구 카테고리별로 'lower' 하부장은 가구 중심 = startY + h/2
-  //                  'upper' 상부장은 가구 중심 = ceilingY - h/2 (천장 - 상단몰딩 - h/2)
-  //                  'full'  키큰장은 가구 중심 = startY + h/2
-  useEffect(() => {
-    const floorMm = (spaceInfo.hasFloorFinish && spaceInfo.floorFinish?.height) ? spaceInfo.floorFinish.height : 0;
-    const baseMm = spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height ?? 65) : 0;
-    const topMm = spaceInfo.frameSize?.top ?? 30;
-    const startYMm = floorMm + baseMm;
-    const ceilingMm = spaceInfo.height - topMm;
-    const modules = useFurnitureStore.getState().placedModules;
-    modules.forEach(m => {
-      if (m.isFreePlacement) return; // 자유배치는 사용자 지정 Y
-      const id = m.moduleId || '';
-      const isUpper = id.includes('upper');
-      const isLower = id.includes('lower');
-      const hMm = (m.customHeight ?? m.freeHeight ?? m.moduleWidth ?? 0); // 가구 높이
-      // 가구 높이는 모듈 데이터에서 와야 정확하지만, 비교적 가벼운 보정만:
-      //   placedModule.position.y는 three-units. 새로운 중심 Y 계산.
-      const halfHThree = (hMm > 0 ? hMm * 0.01 / 2 : 0);
-      let newYThree: number;
-      if (isUpper) {
-        newYThree = ceilingMm * 0.01 - halfHThree;
-      } else {
-        newYThree = startYMm * 0.01 + halfHThree;
-      }
-      if (Math.abs(newYThree - (m.position?.y ?? 0)) > 0.0001) {
-        updatePlacedModule(m.id, { position: { ...m.position, y: newYThree } });
-      }
-    });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [spaceInfo.hasFloorFinish, spaceInfo.floorFinish?.height, spaceInfo.baseConfig?.height, spaceInfo.frameSize?.top]);
 
   // 새로운 UI 상태들
   const [activeSidebarTab, setActiveSidebarTab] = useState<SidebarTab | null>(() => {
