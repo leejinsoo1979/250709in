@@ -705,7 +705,6 @@ const Room: React.FC<RoomProps> = ({
   const isInspectionMode = viewMode === '3D' && (isLiveDimensionMode || isTapeMeasureMode);
   const isPanelSimulationLayout = viewMode === '3D' && (panelSimulationPhase === 'layout' || !!panelSimulationViewBackup);
   const isDesignMode = isLayoutBuilderOpen || activePopup?.type === 'customizableEdit';
-  const isWindowsPlatform = typeof document !== 'undefined' && document.documentElement.classList.contains('platform-windows');
   const wireframeColor = view2DTheme === 'dark' ? "#ffffff" : "#333333"; // 은선모드 벽 라인 색상
   const placedModulesFromStore = useFurnitureStore((state) => state.placedModules); // 가구 정보 가져오기
   const firstModuleId = placedModulesFromStore[0]?.id || ''; // CNC 프레임 제외용
