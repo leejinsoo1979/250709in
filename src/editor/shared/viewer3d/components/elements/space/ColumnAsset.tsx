@@ -14,6 +14,7 @@ import {
   applyOakTextureSettings
 } from '@/editor/shared/utils/materialConstants';
 import { calculateSpaceIndexing } from '@/editor/shared/utils/indexing';
+import { getInternalSpaceBoundsX } from '@/editor/shared/utils/freePlacementUtils';
 
 
 interface ColumnAssetProps {
@@ -102,6 +103,29 @@ const ColumnAsset: React.FC<ColumnAssetProps> = ({
     return false;
   };
 
+  const getColumnXBounds = (spaceInfoValue: any, columnWidthMm: number) => {
+    const halfWidth = (columnWidthMm * 0.01) / 2;
+    if (spaceInfoValue?.layoutMode === 'free-placement') {
+      const { startX, endX } = getInternalSpaceBoundsX(spaceInfoValue);
+      return {
+        minX: startX * 0.01 + halfWidth,
+        maxX: endX * 0.01 - halfWidth,
+      };
+    }
+
+    const halfSpace = (spaceInfoValue?.width || 3000) * 0.005;
+    return {
+      minX: -halfSpace + halfWidth,
+      maxX: halfSpace - halfWidth,
+    };
+  };
+
+  const clampColumnX = (x: number, spaceInfoValue: any, columnWidthMm: number) => {
+    const { minX, maxX } = getColumnXBounds(spaceInfoValue, columnWidthMm);
+    if (minX > maxX) return (minX + maxX) / 2;
+    return Math.max(minX, Math.min(maxX, x));
+  };
+
   // 키보드 이동: 슬롯배치 → 슬롯 경계 스냅, 자유배치 → 1mm씩
   useEffect(() => {
     if (!isSelected || isLocked) return;
@@ -115,8 +139,8 @@ const ColumnAsset: React.FC<ColumnAssetProps> = ({
       const col = cols.find((c: any) => c.id === id);
       if (!col || col.isLocked) return;
       const isFree = spaceInfoNow.layoutMode === 'free-placement';
-      const sw = (spaceInfoNow.width || 3000) * 0.01;
       const hw = (col.width * 0.01) / 2;
+      const { minX, maxX } = getColumnXBounds(spaceInfoNow, col.width);
       let newX: number;
       if (isFree) {
         // 자유배치: 1mm씩 (Shift 10mm) - 다른 기둥 만나면 그 반대편으로 건너뛰기
@@ -139,7 +163,7 @@ const ColumnAsset: React.FC<ColumnAssetProps> = ({
         const indexing = calculateSpaceIndexing(spaceInfoNow);
         const boundaries: number[] = indexing?.threeUnitBoundaries || [];
         const EPS = 0.005;
-        const candidates: number[] = [-sw / 2 + hw, sw / 2 - hw];
+        const candidates: number[] = [minX, maxX];
         for (let i = 0; i < boundaries.length - 1; i++) {
           const left = boundaries[i] + hw;
           const right = boundaries[i + 1] - hw;
@@ -157,8 +181,7 @@ const ColumnAsset: React.FC<ColumnAssetProps> = ({
         newX = found;
       }
       // 벽 경계 체크
-      if (newX < -sw / 2 + hw) newX = -sw / 2 + hw;
-      if (newX > sw / 2 - hw) newX = sw / 2 - hw;
+      newX = clampColumnX(newX, spaceInfoNow, col.width);
       // 최종 충돌 체크 (방어)
       if (wouldCollideWithOtherColumns(newX, hw, id, cols)) return;
       const updated = cols.map((c: any) =>
@@ -346,9 +369,7 @@ const ColumnAsset: React.FC<ColumnAssetProps> = ({
     
     // 드래그 시작 시 필요한 값들 미리 계산
     const spaceWidthHalf = (spaceInfo?.width || 3000) * 0.005;
-    const columnHalfWidth = width * 0.005;
-    const minX = -spaceWidthHalf + columnHalfWidth;
-    const maxX = spaceWidthHalf - columnHalfWidth;
+    const { minX, maxX } = getColumnXBounds(spaceInfo, width);
     
     // Canvas 찾기 (한 번만)
     if (!canvasRef.current) {
@@ -934,12 +955,12 @@ const ColumnAsset: React.FC<ColumnAssetProps> = ({
                     const col = cols.find((c: any) => c.id === id);
                     if (!col || col.isLocked) return;
                     const isFree = spaceInfoNow.layoutMode === 'free-placement';
-                    const sw = (spaceInfoNow.width || 3000) * 0.01;
                     const hw = (col.width * 0.01) / 2;
+                    const { minX } = getColumnXBounds(spaceInfoNow, col.width);
                     let newX: number;
                     if (isFree) {
                       // 자유배치: 좌측 벽 끝까지 이동 (다른 기둥에 막히면 바로 앞까지)
-                      let candidate = -sw / 2 + hw;
+                      let candidate = minX;
                       // 이동 경로상 다른 기둥에 부딪히면 그 기둥 우측면 + hw에서 멈춤
                       for (const other of cols) {
                         if (other.id === id) continue;
@@ -951,8 +972,7 @@ const ColumnAsset: React.FC<ColumnAssetProps> = ({
                       newX = candidate;
                     } else {
                       // 슬롯배치: 1mm씩 좌측 이동
-                      newX = col.position[0] - 0.01;
-                      if (newX < -sw / 2 + hw) newX = -sw / 2 + hw;
+                      newX = clampColumnX(col.position[0] - 0.01, spaceInfoNow, col.width);
                       // 충돌 체크 → 충돌하면 이동 안 함
                       if (wouldCollideWithOtherColumns(newX, hw, id, cols)) return;
                     }
@@ -1000,12 +1020,12 @@ const ColumnAsset: React.FC<ColumnAssetProps> = ({
                     const col = cols.find((c: any) => c.id === id);
                     if (!col || col.isLocked) return;
                     const isFree = spaceInfoNow.layoutMode === 'free-placement';
-                    const sw = (spaceInfoNow.width || 3000) * 0.01;
                     const hw = (col.width * 0.01) / 2;
+                    const { maxX } = getColumnXBounds(spaceInfoNow, col.width);
                     let newX: number;
                     if (isFree) {
                       // 자유배치: 우측 벽 끝까지 이동 (다른 기둥에 막히면 바로 앞까지)
-                      let candidate = sw / 2 - hw;
+                      let candidate = maxX;
                       for (const other of cols) {
                         if (other.id === id) continue;
                         const otherLeft = other.position[0] - (other.width * 0.01) / 2;
@@ -1016,8 +1036,7 @@ const ColumnAsset: React.FC<ColumnAssetProps> = ({
                       newX = candidate;
                     } else {
                       // 슬롯배치: 1mm씩 우측 이동
-                      newX = col.position[0] + 0.01;
-                      if (newX > sw / 2 - hw) newX = sw / 2 - hw;
+                      newX = clampColumnX(col.position[0] + 0.01, spaceInfoNow, col.width);
                       if (wouldCollideWithOtherColumns(newX, hw, id, cols)) return;
                     }
                     const updated = cols.map((c: any) =>

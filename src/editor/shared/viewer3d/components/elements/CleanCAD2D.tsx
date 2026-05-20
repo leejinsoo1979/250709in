@@ -777,18 +777,31 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
 
     const spaceWidthM = spaceInfo.width * 0.01;
     const columnWidthM = column.width * 0.01;
+    const clampColumnX = (x: number, widthMm: number) => {
+      if (spaceInfo.layoutMode !== 'free-placement') return x;
+      const { startX, endX } = getInternalSpaceBoundsX(spaceInfo);
+      const halfWidth = (widthMm * 0.01) / 2;
+      const minX = startX * 0.01 + halfWidth;
+      const maxX = endX * 0.01 - halfWidth;
+      if (minX > maxX) return (minX + maxX) / 2;
+      return Math.max(minX, Math.min(maxX, x));
+    };
 
     if (editingSide === 'left') {
       // 왼쪽 벽과 기둥 좌측면 사이의 간격
-      const newX = -(spaceWidthM / 2) + (value * 0.01) + (columnWidthM / 2);
+      const newX = clampColumnX(-(spaceWidthM / 2) + (value * 0.01) + (columnWidthM / 2), column.width);
       updateColumn(editingColumnId, { position: [newX, column.position[1], column.position[2]] });
     } else if (editingSide === 'right') {
       // 오른쪽 벽과 기둥 우측면 사이의 간격
-      const newX = (spaceWidthM / 2) - (value * 0.01) - (columnWidthM / 2);
+      const newX = clampColumnX((spaceWidthM / 2) - (value * 0.01) - (columnWidthM / 2), column.width);
       updateColumn(editingColumnId, { position: [newX, column.position[1], column.position[2]] });
     } else if (editingSide === 'width') {
       // 기둥 너비 변경
-      updateColumn(editingColumnId, { width: value });
+      const nextWidth = Math.max(1, value);
+      updateColumn(editingColumnId, {
+        width: nextWidth,
+        position: [clampColumnX(column.position[0], nextWidth), column.position[1], column.position[2]],
+      });
     }
 
     setEditingColumnId(null);
@@ -2189,7 +2202,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     padding: '2px 6px',
                     fontSize: '12px',
                     fontWeight: 'bold',
-                    color: module.isLocked ? '#ff3333' : dimensionColor,
+                    color: dimensionColor,
                     cursor: hasLeftWall ? 'pointer' : 'default',
                     userSelect: 'none',
                     whiteSpace: 'nowrap',

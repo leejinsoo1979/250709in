@@ -2480,9 +2480,19 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
       const column = columns.find((c: any) => c.id === columnId);
       if (!column) return;
       const newId = `column-${Date.now()}`;
+      const activeSpaceInfo = useSpaceConfigStore.getState().spaceInfo;
+      const clampColumnX = (x: number, widthMm: number) => {
+        if (activeSpaceInfo.layoutMode !== 'free-placement') return x;
+        const { startX, endX } = getInternalSpaceBoundsX(activeSpaceInfo);
+        const halfWidth = (widthMm * 0.01) / 2;
+        const minX = startX * 0.01 + halfWidth;
+        const maxX = endX * 0.01 - halfWidth;
+        if (minX > maxX) return (minX + maxX) / 2;
+        return Math.max(minX, Math.min(maxX, x));
+      };
       // 약간 우측(+200mm)으로 이동시켜 복제
       const newPosition: [number, number, number] = [
-        (column.position[0] || 0) + 0.2,
+        clampColumnX((column.position[0] || 0) + 0.2, column.width || 300),
         column.position[1] || 0,
         column.position[2] || 0,
       ];
@@ -3076,7 +3086,17 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
   const handleColumnDrop = (e: React.DragEvent, columnData: any) => {
     // 캔버스 중앙에 기둥 배치 (임시)
     const rect = e.currentTarget.getBoundingClientRect();
-    const centerX = (e.clientX - rect.left - rect.width / 2) / 100; // 대략적인 위치 계산
+    const rawCenterX = (e.clientX - rect.left - rect.width / 2) / 100; // 대략적인 위치 계산
+    const columnWidthMm = columnData.width || 300;
+    const centerX = (() => {
+      if (spaceInfo?.layoutMode !== 'free-placement') return rawCenterX;
+      const { startX, endX } = getInternalSpaceBoundsX(spaceInfo);
+      const halfWidth = (columnWidthMm * 0.01) / 2;
+      const minX = startX * 0.01 + halfWidth;
+      const maxX = endX * 0.01 - halfWidth;
+      if (minX > maxX) return (minX + maxX) / 2;
+      return Math.max(minX, Math.min(maxX, rawCenterX));
+    })();
 
     // 공간 깊이 계산하여 뒷벽에 맞닿도록 배치
     const spaceDepthM = (spaceInfo?.depth || 1500) * 0.01; // mm를 Three.js 단위로 변환
@@ -3087,7 +3107,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
     const newColumn = {
       id: `column-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
       position: [centerX, 0, zPosition] as [number, number, number], // 바닥 기준: Y=0
-      width: columnData.width || 300, // columnData에서 폭 가져오기
+      width: columnWidthMm, // columnData에서 폭 가져오기
       height: spaceInfo?.height || 2400, // 항상 공간 높이 사용
       depth: columnData.depth || 730, // columnData에서 깊이 가져오기
       color: columnData.color || '#888888',

@@ -8,7 +8,7 @@ import { useDerivedSpaceStore } from '@/store/derivedSpaceStore';
 import { useSpace3DView } from '../../../context/useSpace3DView';
 import { useThree } from '@react-three/fiber';
 import { Column } from '@/types/space';
-import { checkColumnCollision, getModuleBoundsX, FurnitureBoundsX } from '@/editor/shared/utils/freePlacementUtils';
+import { checkColumnCollision, getInternalSpaceBoundsX, getModuleBoundsX, FurnitureBoundsX } from '@/editor/shared/utils/freePlacementUtils';
 
 interface ColumnCreationMarkersProps {
   spaceInfo: any;
@@ -117,13 +117,27 @@ const ColumnCreationMarkers: React.FC<ColumnCreationMarkersProps> = ({ spaceInfo
     const finalPosition = position || ghostPosition;
     if (!finalPosition) return;
 
+    const clampColumnPosition = (rawPosition: [number, number, number], widthMm: number): [number, number, number] => {
+      if (spaceInfo?.layoutMode !== 'free-placement') return rawPosition;
+      const { startX, endX } = getInternalSpaceBoundsX(spaceInfo);
+      const halfWidth = (widthMm * 0.01) / 2;
+      const minX = startX * 0.01 + halfWidth;
+      const maxX = endX * 0.01 - halfWidth;
+      const clampedX = minX > maxX
+        ? (minX + maxX) / 2
+        : Math.max(minX, Math.min(maxX, rawPosition[0]));
+      return [clampedX, rawPosition[1], rawPosition[2]];
+    };
+
     // 공간 높이 가져오기
     const spaceHeightMm = spaceInfo?.height || 2400;
+    const columnWidthMm = 300;
+    const clampedPosition = clampColumnPosition(finalPosition, columnWidthMm);
 
     const newColumn: Column = {
       id: `column-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-      position: finalPosition,
-      width: 300, // 300mm
+      position: clampedPosition,
+      width: columnWidthMm, // 300mm
       height: spaceHeightMm, // 공간 높이와 동일
       depth: 730, // 730mm
       color: '#E0E0E0',
@@ -132,7 +146,7 @@ const ColumnCreationMarkers: React.FC<ColumnCreationMarkersProps> = ({ spaceInfo
 
     // 가구와 기둥 충돌 체크 (자유배치 모드)
     if (spaceInfo?.layoutMode === 'free-placement') {
-      const colCenterXmm = finalPosition[0] * 100;
+      const colCenterXmm = clampedPosition[0] * 100;
       const colHalfW = newColumn.width / 2;
       for (const mod of placedModules) {
         if (!mod.isFreePlacement || mod.isSurroundPanel) continue;

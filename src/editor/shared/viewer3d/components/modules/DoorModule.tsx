@@ -1136,6 +1136,8 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     }
   }
 
+  const moduleIdentifier = moduleData?.id || storePlacedModule?.moduleId || '';
+
   // 듀얼 가구인지 판단: moduleData ID 또는 PlacedModule.isDualSlot (커스텀 가구 지원)
   const isDualByModuleId = moduleData?.id?.startsWith('dual-') || storePlacedModule?.isDualSlot || false;
 
@@ -1285,7 +1287,19 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     moduleData?.id?.includes('upper-cabinet') &&
     !moduleData?.id?.startsWith('dual-')
   );
-  const isDualFurniture = isDualByModuleId || (!isSingleDoorOnlyCabinet && !isSingleUpperCabinet && Math.round(effectiveFurnitureWidth) >= 601);
+  const isExplicitSingleByModuleId = !!(
+    moduleIdentifier.startsWith('single-') ||
+    (
+      moduleIdentifier.includes('lower-cabinet') &&
+      !moduleIdentifier.startsWith('dual-')
+    )
+  );
+  const isDualFurniture = isDualByModuleId || (
+    !isExplicitSingleByModuleId &&
+    !isSingleDoorOnlyCabinet &&
+    !isSingleUpperCabinet &&
+    Math.round(effectiveFurnitureWidth) >= 601
+  );
   
   // mm를 Three.js 단위로 변환
   const mmToThreeUnits = (mm: number) => mm * 0.01;

@@ -5,6 +5,7 @@ import { ColumnIndexer, calculateSpaceIndexing, recalculateWithCustomWidths } fr
 import { getModuleById } from '@/data/modules';
 import { calculateInternalSpace } from '@/editor/shared/viewer3d/utils/geometry';
 import { useSpaceConfigStore } from './spaceConfigStore';
+import { useUIStore } from '@/store/uiStore';
 import { getCategoryDefaultFurnitureDepth } from '@/editor/shared/utils/furnitureDepthDefaults';
 
 // 가구 데이터 Store 상태 타입 정의
@@ -590,6 +591,16 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
     if (spaceStore.spaceInfo.frameMergeEnabled) {
       spaceStore.setSpaceInfo({ frameMergeEnabled: false });
     }
+
+    // 자유배치: 가구 삭제 시 균등 모드 자동 해제 (남은 가구가 자동으로 폭 늘어나지 않도록)
+    try {
+      const uis = useUIStore.getState();
+      if (uis.equalDistribution || uis.equalDistributionUpper || uis.equalDistributionLower) {
+        uis.setEqualDistribution?.(false);
+        uis.setEqualDistributionUpper?.(false);
+        uis.setEqualDistributionLower?.(false);
+      }
+    } catch {}
   },
 
   // 모듈 이동 함수 (기존 Context 로직과 동일)
