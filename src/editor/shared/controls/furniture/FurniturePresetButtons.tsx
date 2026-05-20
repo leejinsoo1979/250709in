@@ -64,8 +64,6 @@ const FIELD_GROUPS: { id: string; label: string; fields: string[] }[] = [
   },
 ];
 
-const ALL_GROUP_IDS = FIELD_GROUPS.map(g => g.id);
-
 const getCategory = (m: PlacedModule | undefined, fallbackCategory?: string): 'full' | 'upper' | 'lower' | null => {
   if (!m) return null;
   const id = m.moduleId || '';
@@ -73,6 +71,55 @@ const getCategory = (m: PlacedModule | undefined, fallbackCategory?: string): 'f
   if (fallbackCategory === 'lower' || id.includes('lower')) return 'lower';
   if (fallbackCategory === 'full' || id.startsWith('dual-') || id.startsWith('single-') || id.includes('full')) return 'full';
   return 'full';
+};
+
+// 그룹별로 현재 가구 또는 프리셋 데이터에 의미 있는 값이 있는지 판단.
+//   - 의미 없는 그룹(예: 도어 없는 가구의 도어 설정, 서랍 없는 가구의 마이다)은 모달에서 숨김.
+//   - 프리셋이 있는 경우는 프리셋에 해당 필드가 들어있는지로 판단 (저장 시점 가구 기준).
+const isGroupApplicable = (
+  groupId: string,
+  presetProps: Record<string, any> | undefined,
+  targetModule: PlacedModule,
+  category: 'full' | 'upper' | 'lower' | null,
+): boolean => {
+  const id = (targetModule.moduleId || '').toLowerCase();
+  const mod = targetModule as any;
+  const hasInPreset = (fields: string[]) =>
+    !!presetProps && fields.some(f => presetProps[f] !== undefined);
+
+  switch (groupId) {
+    case 'door': {
+      const targetHasDoor = mod.hasDoor !== false; // 기본 true
+      return targetHasDoor && hasInPreset(['doorTopGap', 'doorBottomGap', 'doorWidthAdjustEnabled', 'doorWidthAdjustMm', 'hasDoor', 'hingePosition']);
+    }
+    case 'drawer': {
+      // 마이다/서랍 모듈만
+      const isDrawerType = /lower-drawer-|lower-induction-cabinet-|lower-door-lift-touch|lower-top-down-touch/.test(id);
+      return isDrawerType && hasInPreset(['customMaidaHeights', 'legraDrawerTypes']);
+    }
+    case 'topBottom': {
+      // 상부장은 상부몰딩/걸레받이 무관
+      if (category === 'upper') return false;
+      return hasInPreset(['hasTopFrame', 'topFrameThickness', 'topFrameOffset', 'topFrameGap', 'hasBase', 'baseFrameHeight', 'baseFrameOffset', 'baseFrameGap', 'individualFloatHeight']);
+    }
+    case 'backPanel':
+      return hasInPreset(['backPanelThickness']);
+    case 'endPanel': {
+      // EP는 자유배치이거나 슬롯 끝 가구에서만 의미 있지만 단순화: 프리셋에 EP 필드 있으면 표시
+      return hasInPreset(['hasLeftEndPanel', 'hasRightEndPanel', 'endPanelDepth']);
+    }
+    case 'shelfRod': {
+      // 커스텀 가구 (customSections 보유) 또는 커스터마이즈 가능 가구만
+      const isCustomizable = id.startsWith('customizable-') || !!mod.customSections || !!mod.customConfig;
+      return isCustomizable && hasInPreset(['customConfig', 'customSections']);
+    }
+    case 'rodShelf':
+      return hasInPreset(['removeSafetyShelf']);
+    case 'materialColor':
+      return hasInPreset(['doorColor', 'doorTextureUrl', 'doorMaterial', 'bodyColor', 'bodyTextureUrl', 'bodyMaterial', 'interiorEdgeColor', 'doorEdgeColor']);
+    default:
+      return false;
+  }
 };
 
 interface FurniturePresetButtonsProps {
@@ -88,8 +135,14 @@ export const FurniturePresetButtons: React.FC<FurniturePresetButtonsProps> = ({ 
   const category = getCategory(placedModule, moduleCategory);
   const preset = category ? furniturePresets[category] : undefined;
 
+  // 현재 가구에 적용 가능한 그룹만 노출 (의미 없는 도어/EP/마이다 등은 숨김)
+  const applicableGroups = FIELD_GROUPS.filter(g =>
+    isGroupApplicable(g.id, preset?.props, placedModule, category)
+  );
+  const applicableIds = applicableGroups.map(g => g.id);
+
   const [showInjectModal, setShowInjectModal] = useState(false);
-  const [selectedGroups, setSelectedGroups] = useState<string[]>(ALL_GROUP_IDS);
+  const [selectedGroups, setSelectedGroups] = useState<string[]>(applicableIds);
 
   // 저장 가능한 모든 필드 수집
   const collectProps = (): Record<string, any> => {
@@ -111,7 +164,7 @@ export const FurniturePresetButtons: React.FC<FurniturePresetButtonsProps> = ({ 
 
   const handleInjectClick = () => {
     if (!preset) return;
-    setSelectedGroups(ALL_GROUP_IDS);
+    setSelectedGroups(applicableIds);
     setShowInjectModal(true);
   };
 
@@ -194,31 +247,38 @@ export const FurniturePresetButtons: React.FC<FurniturePresetButtonsProps> = ({ 
         >
           <div
             style={{
-              background: 'var(--theme-bg-primary, white)', borderRadius: '8px',
-              padding: '20px', minWidth: '360px', maxWidth: '480px',
+              background: 'var(--theme-bg-primary, white)', borderRadius: '10px',
+              padding: '28px 32px', minWidth: '520px', maxWidth: '640px',
               boxShadow: '0 8px 32px rgba(0,0,0,0.3)',
             }}
             onClick={(e) => e.stopPropagation()}
           >
-            <h3 style={{ margin: '0 0 12px 0', fontSize: '14px', color: 'var(--theme-text-primary)' }}>
+            <h3 style={{ margin: '0 0 14px 0', fontSize: '16px', color: 'var(--theme-text-primary)' }}>
               속성 주입 — {categoryLabel}
             </h3>
-            <div style={{ fontSize: '11px', color: 'var(--theme-text-tertiary)', marginBottom: '12px' }}>
-              적용할 그룹을 선택하세요. 가구 폭/높이/깊이/위치는 항상 제외됩니다.
+            <div style={{ fontSize: '12px', color: 'var(--theme-text-tertiary)', marginBottom: '18px', lineHeight: 1.5 }}>
+              적용할 그룹을 선택하세요. 가구 폭/높이/깊이/위치는 항상 제외됩니다.<br />
+              현재 가구에 의미 없는 그룹은 자동으로 숨김 처리됩니다.
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginBottom: '16px', maxHeight: '320px', overflowY: 'auto' }}>
-              {FIELD_GROUPS.map(g => (
-                <label key={g.id} style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', color: 'var(--theme-text-primary)', cursor: 'pointer' }}>
-                  <input
-                    type="checkbox"
-                    checked={selectedGroups.includes(g.id)}
-                    onChange={() => toggleGroup(g.id)}
-                    style={{ accentColor: 'var(--theme-primary, #4a90d9)', cursor: 'pointer' }}
-                  />
-                  {g.label}
-                </label>
-              ))}
-            </div>
+            {applicableGroups.length === 0 ? (
+              <div style={{ padding: '20px', fontSize: '13px', color: 'var(--theme-text-tertiary)', textAlign: 'center', background: 'var(--theme-bg-secondary, #f5f5f5)', borderRadius: '6px', marginBottom: '18px' }}>
+                저장된 프리셋 중 이 가구에 적용 가능한 속성이 없습니다.
+              </div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '20px', maxHeight: '380px', overflowY: 'auto' }}>
+                {applicableGroups.map(g => (
+                  <label key={g.id} style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '13px', color: 'var(--theme-text-primary)', cursor: 'pointer' }}>
+                    <input
+                      type="checkbox"
+                      checked={selectedGroups.includes(g.id)}
+                      onChange={() => toggleGroup(g.id)}
+                      style={{ accentColor: 'var(--theme-primary, #4a90d9)', cursor: 'pointer', width: '16px', height: '16px' }}
+                    />
+                    {g.label}
+                  </label>
+                ))}
+              </div>
+            )}
             <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
               <button
                 type="button"
