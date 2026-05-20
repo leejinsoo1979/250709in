@@ -272,11 +272,6 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
                   <Sun size={18} /><span>그림자</span>
                 </button>
               )}
-              {viewMode === '3D' && (
-                <button className={`${styles.mobileOptionItem} ${edgeOutlineEnabled ? styles.active : ''}`} onClick={() => setEdgeOutlineEnabled(!edgeOutlineEnabled)}>
-                  <Box size={18} /><span>윤곽선</span>
-                </button>
-              )}
             </div>
           </div>
         )}

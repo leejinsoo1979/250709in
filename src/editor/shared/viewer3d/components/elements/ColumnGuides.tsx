@@ -907,6 +907,7 @@ const ColumnGuides: React.FC<ColumnGuidesProps> = ({ viewMode: viewModeProp }) =
             transparent
             opacity={opacity}
             side={THREE.DoubleSide}
+            depthWrite={false}
           />
         </mesh>
       );

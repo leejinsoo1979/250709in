@@ -141,16 +141,6 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({ isOpen, onClose, onSpaceD
                     <span className={styles.slider}></span>
                   </label>
                 </div>
-                <div className={styles.settingItem}>
-                  <div className={styles.settingInfo}>
-                    <span className={styles.settingLabel}>윤곽선</span>
-                    <span className={styles.settingDescription}>3D 뷰에서 엣지 윤곽선 표시</span>
-                  </div>
-                  <label className={styles.switch}>
-                    <input type="checkbox" checked={edgeOutlineEnabled} onChange={() => setEdgeOutlineEnabled(!edgeOutlineEnabled)} />
-                    <span className={styles.slider}></span>
-                  </label>
-                </div>
               </div>
             </div>
           )}

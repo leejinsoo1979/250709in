@@ -951,8 +951,8 @@ export const useUIStore = create<UIState>()(
       setSunAngle: (angle) =>
         set({ sunAngle: angle }),
 
-      setEdgeOutlineEnabled: (enabled) =>
-        set({ edgeOutlineEnabled: enabled }),
+      setEdgeOutlineEnabled: (_enabled) =>
+        set({ edgeOutlineEnabled: true }), // 항상 켜짐 강제
 
       setShowBorings: (show) =>
         set({ showBorings: show }),
