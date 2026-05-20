@@ -278,9 +278,10 @@ const FreePlacementDropZone: React.FC = () => {
       if (unlockedSorted.length === 0) return;
 
       // zone 내 잠긴 영역 + 기둥 영역 모두 obstacle로 (기둥도 차지 공간이라 가용에서 제외)
+      // columnObstacleBounds는 이미 mm 단위
       const columnRangesMm: Range[] = columnObstacleBounds.map(b => ({
-        leftMm: b.left * 100,
-        rightMm: b.right * 100,
+        leftMm: b.left,
+        rightMm: b.right,
       }));
       const obstaclesRaw = [...sortedLockedRaw, ...columnRangesMm]
         .map(r => ({ leftMm: Math.max(zoneStartMm, r.leftMm), rightMm: Math.min(zoneEndMm, r.rightMm) }))
