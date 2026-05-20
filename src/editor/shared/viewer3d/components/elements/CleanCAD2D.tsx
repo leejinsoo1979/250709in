@@ -6413,6 +6413,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               // 실제 빈 공간 기준으로 버튼 표시 — 가구 사이 빈 공간이 3mm 이상일 때만
               // 다중선택(그룹)일 때: 그룹의 양쪽 끝 가구에서만 바깥 방향 화살표 표시.
               //   - 그룹 내부 화살표는 의미가 없어 숨김 (그룹 안쪽엔 같이 선택된 가구가 있음).
+              //   - 슬롯배치 모드는 그룹 이동 자체 불가 (슬롯 인덱스 고정 → 슬롯 밖으로 벗어남 방지).
               const multiIds = (selectedFurnitureIds ?? []);
               const isMulti = multiIds.length >= 2 && multiIds.includes(module.id);
               const groupModules = isMulti
@@ -6424,8 +6425,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               const isRightmostInGroup = isMulti
                 ? groupModules.every(m => m.id === module.id || m.position.x <= module.position.x)
                 : true;
-              const canMoveLeft = realLeftGapMm >= 3 && isLeftmostInGroup;
-              const canMoveRight = realRightGapMm >= 3 && isRightmostInGroup;
+              const canMoveLeft = realLeftGapMm >= 3 && isLeftmostInGroup && (!isMulti || isFreePlacement);
+              const canMoveRight = realRightGapMm >= 3 && isRightmostInGroup && (!isMulti || isFreePlacement);
               // 좌측 한계: 벽 이격 경계 또는 인접 가구 우측 끝
               const leftLimit = leftX - mmToThreeUnits(realLeftGapMm);
               // 우측 한계: 벽 이격 경계 또는 인접 가구 좌측 끝
