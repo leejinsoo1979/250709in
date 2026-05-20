@@ -4275,10 +4275,11 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                       checked={!!(currentPlacedModule as any).doorWidthAdjustEnabled}
                       onChange={(e) => {
                         const enabled = e.target.checked;
-                        // 토글 ON 시 현재 자동 확장값(insertExtensionMm)을 초기값으로 박음
+                        // 토글 ON 시 초기값: 키큰장 찬넬 인접 시 자동값(insertExtensionMm), 그 외엔 노서라운드 기본 -1.5
                         // 토글 OFF 시 사용자 입력값 제거(자동값 복귀)
                         if (enabled) {
-                          const initial = (currentPlacedModule as any).doorWidthAdjustMm ?? insertExtensionMm;
+                          const autoInitial = insertExtensionMm > 0 ? insertExtensionMm : -1.5;
+                          const initial = (currentPlacedModule as any).doorWidthAdjustMm ?? autoInitial;
                           updatePlacedModule(currentPlacedModule.id, {
                             doorWidthAdjustEnabled: true,
                             doorWidthAdjustMm: initial,
@@ -4300,18 +4301,21 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                         <input
                           type="text"
                           inputMode="numeric"
-                          value={(currentPlacedModule as any).doorWidthAdjustMm ?? insertExtensionMm}
+                          value={(currentPlacedModule as any).doorWidthAdjustMm ?? (insertExtensionMm > 0 ? insertExtensionMm : -1.5)}
                           onChange={(e) => {
                             const v = e.target.value;
-                            if (v === '' || v === '-' || /^-?\d+$/.test(v)) {
-                              const num = v === '' || v === '-' ? 0 : parseInt(v, 10);
-                              updatePlacedModule(currentPlacedModule.id, { doorWidthAdjustMm: Math.max(-500, Math.min(500, num)) } as any);
+                            // 정수/소수/음수 모두 허용 (-1.5 등)
+                            if (v === '' || v === '-' || /^-?\d*(\.\d*)?$/.test(v)) {
+                              const num = v === '' || v === '-' || v === '.' ? 0 : parseFloat(v);
+                              if (!isNaN(num)) {
+                                updatePlacedModule(currentPlacedModule.id, { doorWidthAdjustMm: Math.max(-500, Math.min(500, num)) } as any);
+                              }
                             }
                           }}
                           onKeyDown={(e) => {
                             if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
                               e.preventDefault();
-                              const cur = (currentPlacedModule as any).doorWidthAdjustMm ?? insertExtensionMm;
+                              const cur = (currentPlacedModule as any).doorWidthAdjustMm ?? (insertExtensionMm > 0 ? insertExtensionMm : -1.5);
                               const next = Math.max(-500, Math.min(500, cur + (e.key === 'ArrowUp' ? 1 : -1)));
                               updatePlacedModule(currentPlacedModule.id, { doorWidthAdjustMm: next } as any);
                             }
