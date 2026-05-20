@@ -3084,18 +3084,15 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
 
   // 기둥 드롭 핸들러
   const handleColumnDrop = (e: React.DragEvent, columnData: any) => {
-    // 캔버스 중앙에 기둥 배치 (임시)
-    const rect = e.currentTarget.getBoundingClientRect();
-    const rawCenterX = (e.clientX - rect.left - rect.width / 2) / 100; // 대략적인 위치 계산
     const columnWidthMm = columnData.width || 300;
+    // 기둥은 항상 공간 맨 왼쪽 벽에 붙여서 배치
     const centerX = (() => {
-      if (spaceInfo?.layoutMode !== 'free-placement') return rawCenterX;
       const { startX, endX } = getInternalSpaceBoundsX(spaceInfo);
       const halfWidth = (columnWidthMm * 0.01) / 2;
-      const minX = startX * 0.01 + halfWidth;
+      const minX = startX * 0.01 + halfWidth; // 좌측 벽에 붙인 중심 X
       const maxX = endX * 0.01 - halfWidth;
       if (minX > maxX) return (minX + maxX) / 2;
-      return Math.max(minX, Math.min(maxX, rawCenterX));
+      return minX;
     })();
 
     // 공간 깊이 계산하여 뒷벽에 맞닿도록 배치
