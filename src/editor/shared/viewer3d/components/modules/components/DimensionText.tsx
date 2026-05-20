@@ -37,6 +37,10 @@ interface DimensionTextProps {
 
   // Three.js 객체 이름 (DXF 추출 시 레이어 분류에 사용)
   name?: string;
+
+  // hover 색상/상태 전달
+  hoverColor?: string;
+  onHoverChange?: (hovered: boolean) => void;
 }
 
 /**
@@ -57,7 +61,9 @@ const DimensionText: React.FC<DimensionTextProps> = ({
   forceShow = false,
   rotation,
   shadowOffset = [0.01, -0.01, 0],
-  name
+  name,
+  hoverColor = '#00ff00',
+  onHoverChange
 }) => {
   const { showDimensions, showDimensionsText, view2DDirection, view2DTheme, isLiveDimensionMode, isTapeMeasureMode, liveDimensionSelectedKey, panelSimulationPhase, panelSimulationViewBackup } = useUIStore();
   const { viewMode } = useSpace3DView();
@@ -102,7 +108,7 @@ const DimensionText: React.FC<DimensionTextProps> = ({
   };
   
   // 색상 결정 - 호버 시 형광색
-  const highlightColor = '#00ff00'; // 형광 녹색
+  const highlightColor = hoverColor;
   const normalColor = color || (viewMode === '3D' ? getThemeColor() : (view2DTheme === 'dark' ? '#ffffff' : '#000000'));
   const textColor = isHovered ? highlightColor : normalColor;
   const inspectorFocused = viewMode === '3D' && ((isLiveDimensionMode && !!liveDimensionSelectedKey) || isTapeMeasureMode) && !forceShow;
@@ -139,11 +145,13 @@ const DimensionText: React.FC<DimensionTextProps> = ({
       onPointerOver={(e) => {
         e.stopPropagation();
         setIsHovered(true);
+        onHoverChange?.(true);
         // cursor 변경 제거
       }}
       onPointerOut={(e) => {
         e.stopPropagation();
         setIsHovered(false);
+        onHoverChange?.(false);
         // cursor 변경 제거
       }}
     >

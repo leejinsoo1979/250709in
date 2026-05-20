@@ -634,6 +634,19 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   const isHingePositionEditMode = !!furnitureId && hingePositionEditModeModuleId === furnitureId;
   const [hingeGapDrafts, setHingeGapDrafts] = useState<Record<string, string>>({});
   const [hingeGapEditBases, setHingeGapEditBases] = useState<Record<string, { topDistancesMm: number[]; doorHeightMm: number }>>({});
+  const [isDoorDimensionHovered, setIsDoorDimensionHovered] = useState(false);
+  const doorDimensionHoverColor = '#0b3d91';
+  const activeDoorDimensionColor = isDoorDimensionHovered ? doorDimensionHoverColor : dimensionColor;
+  const doorDimensionHoverHandlers = {
+    onPointerOver: (e: ThreeEvent<PointerEvent>) => {
+      e.stopPropagation();
+      setIsDoorDimensionHovered(true);
+    },
+    onPointerOut: (e: ThreeEvent<PointerEvent>) => {
+      e.stopPropagation();
+      setIsDoorDimensionHovered(false);
+    },
+  };
 
   // doorsOpen: true=전체열기, false=전체닫기, null=개별상태 사용
   const useIndividualState = furnitureId !== undefined;
@@ -732,8 +745,8 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     return '#10b981'; // 기본값 (green)
   };
 
-  // 3D 뷰 대각선 점선 색상: 도어 밝기에 따라 결정
-  const diagonalLineColor3D = isDoorDark ? '#FFFFFF' : getThemeColor();
+  // 3D 뷰 대각선 점선 색상: 도어 밝기에 따라 결정 (가구 고스트 상태에선 흰색 강제)
+  const diagonalLineColor3D = isEditMode ? '#FFFFFF' : (isDoorDark ? '#FFFFFF' : getThemeColor());
   // 도어 재질 생성 함수 (듀얼 가구용 개별 재질 생성) - 초기 생성용
   const createDoorMaterial = useCallback(() => {
     return new THREE.MeshStandardMaterial({
@@ -2593,7 +2606,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                 const extensionLineLength = mmToThreeUnits(110);
                 const tickSize = 0.008;
                 const zPos = is3D ? doorThicknessUnits / 2 + 0.01 : doorThicknessUnits / 2 + 0.001;
-                const dimColor = dimensionColor;
+                const dimColor = activeDoorDimensionColor;
 
                 const dimensionLinePos = -doorHeight / 2 - extensionLineStart - extensionLineLength;
                 const extensionStart = -doorHeight / 2 - extensionLineStart;
@@ -3031,7 +3044,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                 const extensionLineLength = mmToThreeUnits(110);
                 const tickSize = 0.008;
                 const zPos = is3D ? doorThicknessUnits / 2 + 0.01 : doorThicknessUnits / 2 + 0.001;
-                const dimColor = dimensionColor;
+                const dimColor = activeDoorDimensionColor;
 
                 const dimensionLinePos = -doorHeight / 2 - extensionLineStart - extensionLineLength;
                 const extensionStart = -doorHeight / 2 - extensionLineStart;
@@ -3759,7 +3772,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
               const extensionLineLength = mmToThreeUnits(110);
               const tickSize = 0.008;
               const zPos = is3D ? doorThicknessUnits / 2 + 0.01 : doorThicknessUnits / 2 + 0.001;
-              const dimColor = dimensionColor;
+              const dimColor = activeDoorDimensionColor;
 
               const dimensionLinePos = -doorHeight / 2 - extensionLineStart - extensionLineLength;
               const extensionStart = -doorHeight / 2 - extensionLineStart;
