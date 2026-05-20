@@ -20,6 +20,84 @@ export interface CameraConfig {
   zoom: number;
 }
 
+interface ViewportSize {
+  width: number;
+  height: number;
+}
+
+const getFallbackViewportSize = (): ViewportSize => {
+  if (typeof document !== 'undefined') {
+    const canvas = document.querySelector('canvas');
+    if (canvas && canvas.clientWidth > 0 && canvas.clientHeight > 0) {
+      return { width: canvas.clientWidth, height: canvas.clientHeight };
+    }
+  }
+
+  if (typeof window !== 'undefined') {
+    return { width: window.innerWidth, height: window.innerHeight };
+  }
+
+  return { width: 1200, height: 800 };
+};
+
+const getRequired2DViewSizeMm = (
+  view2DDirection: 'front' | 'left' | 'right' | 'top' | undefined,
+  width: number,
+  height: number,
+  depth: number,
+  hasDroppedCeiling: boolean
+) => {
+  const dimLevels = hasDroppedCeiling ? 4 : 3;
+  const topLabelArea = 120 * dimLevels + 80;
+  const bottomMargin = 100;
+  const sideMargin = 220;
+  const viewHeight = height + topLabelArea + bottomMargin;
+
+  if (view2DDirection === 'top') {
+    return {
+      width: width + sideMargin * 2,
+      height: depth + sideMargin * 2
+    };
+  }
+
+  if (view2DDirection === 'left' || view2DDirection === 'right') {
+    return {
+      width: depth + sideMargin * 2,
+      height: viewHeight
+    };
+  }
+
+  return {
+    width: width + sideMargin * 2,
+    height: viewHeight
+  };
+};
+
+const calculate2DOrthographicZoom = (
+  view2DDirection: 'front' | 'left' | 'right' | 'top' | undefined,
+  viewportSize: ViewportSize | undefined,
+  width: number,
+  height: number,
+  depth: number,
+  hasDroppedCeiling: boolean,
+  zoomMultiplierOverride: number | undefined,
+  legacyZoom: number
+) => {
+  const fallbackSize = getFallbackViewportSize();
+  const viewportWidth = Math.max(1, viewportSize?.width || fallbackSize.width);
+  const viewportHeight = Math.max(1, viewportSize?.height || fallbackSize.height);
+  const requiredSize = getRequired2DViewSizeMm(view2DDirection, width, height, depth, hasDroppedCeiling);
+
+  const safetyMargin = 1.1;
+  const requiredWidth = mmToThreeUnits(requiredSize.width) * safetyMargin;
+  const requiredHeight = mmToThreeUnits(requiredSize.height) * safetyMargin;
+  const fitZoom = Math.min(viewportWidth / requiredWidth, viewportHeight / requiredHeight);
+  const overrideScale = zoomMultiplierOverride ?? 1;
+
+  // 기존 맥북 기준 카메라 크기는 유지하고, 화면이 작아 잘릴 때만 자동으로 줌아웃한다.
+  return Math.max(0.5, Math.min(160, Math.min(legacyZoom, fitZoom * overrideScale)));
+};
+
 /**
  * 카메라 설정을 관리하는 훅
  * step0 이후로는 모든 step이 configurator로 통일되어 동일하게 처리
@@ -34,7 +112,8 @@ export const useCameraManager = (
   cameraTarget?: [number, number, number],
   cameraUp?: [number, number, number],
   isSplitView?: boolean,
-  zoomMultiplierOverride?: number
+  zoomMultiplierOverride?: number,
+  viewportSize?: ViewportSize
 ): CameraConfig => {
   // 스토어에서 공간 정보 가져오기 (상위 의존성)
   const { spaceInfo } = useSpaceConfigStore();
@@ -64,17 +143,28 @@ export const useCameraManager = (
     // zoomMultiplierOverride가 있으면 우선 적용 (미리보기 모드 등)
     const is3DOrthographic = viewMode === '3D' && cameraMode === 'orthographic';
     const zoomMultiplier = zoomMultiplierOverride ?? (isSplitView ? 0.35 : (is2DMode ? 0.7 : (is3DOrthographic ? 0.7 : 1.0)));
-    const zoom = (1200 / distance) * zoomMultiplier;
+    const legacyZoom = (1200 / distance) * zoomMultiplier;
+    const zoom = is2DMode
+      ? calculate2DOrthographicZoom(
+        view2DDirection,
+        viewportSize,
+        spaceInfo.width,
+        spaceInfo.height,
+        spaceInfo.depth || 600,
+        hasDroppedCeiling,
+        zoomMultiplierOverride,
+        legacyZoom
+      )
+      : legacyZoom;
 
     // 실제 뷰어 영역의 aspect ratio 계산 (window 크기 대신)
     // Canvas 요소의 실제 크기를 기준으로 계산
     const getViewerAspectRatio = () => {
-      const canvas = document.querySelector('canvas');
-      if (canvas && canvas.clientWidth > 0 && canvas.clientHeight > 0) {
-        return canvas.clientWidth / canvas.clientHeight;
+      const size = viewportSize || getFallbackViewportSize();
+      if (size.width > 0 && size.height > 0) {
+        return size.width / size.height;
       }
-      // fallback: window 크기 기준
-      return window.innerWidth / window.innerHeight;
+      return 1;
     };
     const canvasAspectRatio = getViewerAspectRatio();
     
@@ -99,7 +189,7 @@ export const useCameraManager = (
       canvasAspectRatio,
       zoom,
     };
-  }, [viewMode, view2DDirection, spaceInfo.height, spaceInfo.width, spaceInfo.depth, spaceInfo.droppedCeiling?.enabled, cameraPosition, cameraTarget, cameraUp, placedModules.length, isSplitView, cameraMode, zoomMultiplierOverride]);
+  }, [viewMode, view2DDirection, spaceInfo.height, spaceInfo.width, spaceInfo.depth, spaceInfo.droppedCeiling?.enabled, cameraPosition, cameraTarget, cameraUp, placedModules.length, isSplitView, cameraMode, zoomMultiplierOverride, viewportSize?.width, viewportSize?.height]);
 
   return cameraConfig;
 }; 

@@ -130,6 +130,7 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
   const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
   const controlsRef = useRef<any>(null);
+  const [viewportSize, setViewportSize] = useState({ width: 0, height: 0 });
 
   // 초기 카메라 설정 저장 (2D와 3D 각각)
   // 이 값은 props가 변경될 때마다 업데이트되어야 함 (스페이스바 리셋용)
@@ -200,8 +201,40 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
     prevDroppedPositionRef.current = currentPos;
   }, [spaceInfo?.droppedCeiling?.position, spaceInfo?.droppedCeiling?.enabled]);
 
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    const updateViewportSize = () => {
+      const rect = container.getBoundingClientRect();
+      const width = Math.round(rect.width);
+      const height = Math.round(rect.height);
+      if (width <= 0 || height <= 0) return;
+
+      setViewportSize(prev => (
+        prev.width === width && prev.height === height
+          ? prev
+          : { width, height }
+      ));
+    };
+
+    updateViewportSize();
+
+    let observer: ResizeObserver | null = null;
+    if (typeof ResizeObserver !== 'undefined') {
+      observer = new ResizeObserver(updateViewportSize);
+      observer.observe(container);
+    }
+
+    window.addEventListener('resize', updateViewportSize);
+    return () => {
+      observer?.disconnect();
+      window.removeEventListener('resize', updateViewportSize);
+    };
+  }, []);
+
   // 클린 아키텍처: 각 책임을 전용 훅으로 위임
-  const camera = useCameraManager(viewMode, cameraPosition, view2DDirection, cameraTarget, cameraUp, isSplitView, zoomMultiplier);
+  const camera = useCameraManager(viewMode, cameraPosition, view2DDirection, cameraTarget, cameraUp, isSplitView, zoomMultiplier, viewportSize);
   const controlsConfig = useOrbitControlsConfig(
     camera.target,
     viewMode,
@@ -211,6 +244,31 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
     viewMode === '3D' && (isLiveDimensionMode || isTapeMeasureMode),
     viewMode === '3D' && (isLiveDimensionMode || isTapeMeasureMode)
   );
+
+  useEffect(() => {
+    if (viewMode !== '2D') return;
+    const controls = controlsRef.current;
+    const ortho = controls?.object as THREE.OrthographicCamera | undefined;
+    if (!ortho?.isOrthographicCamera) return;
+
+    ortho.position.set(...camera.position);
+    ortho.up.set(...(camera.up || [0, 1, 0]));
+    ortho.zoom = camera.zoom;
+
+    const canvas = controls.domElement as HTMLCanvasElement | undefined;
+    const rect = canvas?.getBoundingClientRect();
+    if (rect && rect.width > 0 && rect.height > 0) {
+      ortho.left = rect.width / -2;
+      ortho.right = rect.width / 2;
+      ortho.top = rect.height / 2;
+      ortho.bottom = rect.height / -2;
+    }
+
+    controls.target.set(...camera.target);
+    ortho.lookAt(controls.target);
+    ortho.updateProjectionMatrix();
+    controls.update();
+  }, [viewMode, view2DDirection, camera.position, camera.target, camera.up, camera.zoom, viewportSize.width, viewportSize.height]);
 
   // cameraPosition/cameraTarget이 변경될 때 초기 상태 업데이트 (스페이스바 리셋용)
   useEffect(() => {
