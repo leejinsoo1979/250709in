@@ -116,8 +116,7 @@ const SimpleDashboard: React.FC = () => {
   const [galleryPublishOpen, setGalleryPublishOpen] = useState(false);
   const [galleryPublishItem, setGalleryPublishItem] = useState<ExplorerItem | null>(null);
 
-  // 모바일 뷰모드 강제 (중간 아이콘)
-  const effectiveViewMode = isMobile ? 'medium' as ViewMode : viewMode;
+  const effectiveViewMode = viewMode;
 
   // Pull-to-refresh (모바일에서만)
   const { isRefreshing, pullDistance, pullIndicatorStyle, containerRef: pullContainerRef } = usePullToRefresh({
