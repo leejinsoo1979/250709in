@@ -18,6 +18,7 @@ import {
   detectHoverZoneType,
   getZoneRemainingWidth,
   calculateOptimalFurnitureWidth,
+  getColumnObstacleBoundsX,
 } from '@/editor/shared/utils/freePlacementUtils';
 import { placeFurnitureFree, calculateYPosition } from '@/editor/shared/furniture/hooks/usePlaceFurnitureFree';
 import BoxModule from '../modules/BoxModule';
@@ -178,14 +179,26 @@ const FreePlacementDropZone: React.FC = () => {
     sortedBoundsWithId.map(({ id, ...rest }) => rest),
     [sortedBoundsWithId]
   );
+  const columnObstacleBounds = useMemo(() =>
+    getColumnObstacleBoundsX(spaceInfo.columns || []).sort((a, b) => a.left - b.left),
+    [spaceInfo.columns]
+  );
 
   // 남은 최대 빈 공간 계산 (이미 배치된 가구를 제외한 최대 연속 빈 공간)
   const maxRemainingWidth = useMemo(() => {
     const { startX, endX } = spaceBounds;
     const totalAvailable = endX - startX;
-    if (freeModules.length === 0) return totalAvailable;
+    if (freeModules.length === 0 && columnObstacleBounds.length === 0) return totalAvailable;
 
-    const collapsedBounds = sortedBoundsCache.reduce<Array<{ left: number; right: number }>>((acc, b) => {
+    const occupiedBounds = [...sortedBoundsCache, ...columnObstacleBounds]
+      .map(b => ({
+        left: Math.max(startX, b.left),
+        right: Math.min(endX, b.right),
+      }))
+      .filter(b => b.right > b.left)
+      .sort((a, b) => a.left - b.left);
+
+    const collapsedBounds = occupiedBounds.reduce<Array<{ left: number; right: number }>>((acc, b) => {
       const width = Math.round(b.right - b.left);
       const last = acc[acc.length - 1];
       if (last && b.left - last.right <= TINY_FURNITURE_GAP_MM) {
@@ -206,7 +219,7 @@ const FreePlacementDropZone: React.FC = () => {
     // 마지막 가구 ~ 오른쪽 벽
     maxGap = Math.max(maxGap, endX - bounds[bounds.length - 1].right);
     return Math.round(maxGap);
-  }, [placedModules, spaceBounds]);
+  }, [freeModules.length, sortedBoundsCache, columnObstacleBounds, spaceBounds]);
 
   // ── 균등배치 모드: 구간별로 분리하여 균등 배분 ──
   // 메인 구간 가구는 메인 범위 내에서, 단내림 구간 가구는 단내림 범위 내에서 균등
@@ -554,7 +567,7 @@ const FreePlacementDropZone: React.FC = () => {
       const hoverZone = detectHoverZoneType(xMm, spaceInfo);
       const zoneInfo = zonePlacementBounds.find(z => z.zone === hoverZone);
       if (zoneInfo) {
-        const zoneRemaining = getZoneRemainingWidth(zoneInfo, freeModules);
+        const zoneRemaining = getZoneRemainingWidth(zoneInfo, freeModules, undefined, spaceInfo.columns || []);
         let effectiveWidth = calculateOptimalFurnitureWidth(zoneRemaining, isSelectedDual);
         effectiveWidth = Math.max(200, effectiveWidth);
         setHoverZoneWidth(effectiveWidth);
@@ -584,12 +597,13 @@ const FreePlacementDropZone: React.FC = () => {
 
     // 배치된 가구의 X범위 (캐싱된 값 사용)
     const bounds = sortedBoundsCache;
+    const obstacleBounds = [...bounds, ...columnObstacleBounds];
 
     // 스냅 포인트 수집: 벽 + 가구 가장자리
     const snapPoints: number[] = [];
     snapPoints.push(effectiveStartX + halfWidth);   // 왼쪽 벽 (잠긴 이격 반영)
     snapPoints.push(effectiveEndX - halfWidth);     // 오른쪽 벽 (잠긴 이격 반영)
-    for (const b of bounds) {
+    for (const b of obstacleBounds) {
       snapPoints.push(b.right + halfWidth); // 가구 오른쪽에 붙기
       snapPoints.push(b.left - halfWidth);  // 가구 왼쪽에 붙기
     }
@@ -637,7 +651,7 @@ const FreePlacementDropZone: React.FC = () => {
     const sealTinyFurnitureGap = (centerX: number) => {
       const left = centerX - halfWidth;
       const right = centerX + halfWidth;
-      for (const b of bounds) {
+      for (const b of obstacleBounds) {
         const canCoexist =
           (category === 'upper' && b.category === 'lower') ||
           (category === 'lower' && b.category === 'upper');
@@ -738,7 +752,7 @@ const FreePlacementDropZone: React.FC = () => {
     }
 
     setHoverXmm(clampedX);
-  }, [spaceInfo, placedModules, spaceBounds, zonePlacementBounds, freeModules, isSelectedDual, selectedFurnitureId, lastCustomDimensions, pendingPlacement]);
+  }, [spaceInfo, placedModules, spaceBounds, zonePlacementBounds, freeModules, isSelectedDual, selectedFurnitureId, lastCustomDimensions, pendingPlacement, columnObstacleBounds]);
 
   // 배치 실행 공통 함수 — 성공 시 배치된 모듈 ID 반환, 실패 시 null
   const executePlacement = useCallback((moduleId: string, xMm: number, dims: { width: number; height: number; depth: number }, modData: any, skipCollision?: boolean): string | null => {
@@ -812,7 +826,7 @@ const FreePlacementDropZone: React.FC = () => {
       }
       e.stopPropagation();
       const isDesignMode = useUIStore.getState().isLayoutBuilderOpen;
-      const placedId = executePlacement(activeModuleId, hoverXmm, effectiveDimensions, activeModuleData, isSnapped);
+      const placedId = executePlacement(activeModuleId, hoverXmm, effectiveDimensions, activeModuleData, false);
       if (placedId) {
         // 배치 성공 후 배치 모드 해제 (고스트 제거)
         useFurnitureStore.getState().setFurniturePlacementMode(false);
@@ -1430,7 +1444,7 @@ const FreePlacementDropZone: React.FC = () => {
       const snapPoints: number[] = [];
       snapPoints.push(effectiveStartX + halfWidth);
       snapPoints.push(effectiveEndX - halfWidth);
-      for (const b of bounds) {
+      for (const b of [...bounds, ...columnObstacleBounds]) {
         snapPoints.push(b.right + halfWidth);
         snapPoints.push(b.left - halfWidth);
       }
@@ -1466,7 +1480,7 @@ const FreePlacementDropZone: React.FC = () => {
     const sealTinyFurnitureGap = (centerX: number) => {
       const left = centerX - halfWidth;
       const right = centerX + halfWidth;
-      for (const b of bounds) {
+      for (const b of [...bounds, ...columnObstacleBounds]) {
         const canCoexist =
           (movingCategory === 'upper' && b.category === 'lower') ||
           (movingCategory === 'lower' && b.category === 'upper');
@@ -1496,7 +1510,7 @@ const FreePlacementDropZone: React.FC = () => {
     const colliding = checkFreeCollision(otherModules, newBounds) || checkColumnCollision(dragColumns, newBounds);
 
     return { x: Math.round(clampedX), snapped, colliding };
-  }, [freeModules, placedModules, sortedBoundsWithId, spaceInfo, spaceBounds, zonePlacementBounds]);
+  }, [freeModules, placedModules, sortedBoundsWithId, spaceInfo, spaceBounds, zonePlacementBounds, columnObstacleBounds]);
 
   // 배치된 가구 마우스 드래그 시작
   const handlePlacedPointerDown = useCallback((e: any, moduleId: string) => {
@@ -1642,7 +1656,7 @@ const FreePlacementDropZone: React.FC = () => {
         if (targetZone && !userResized) {
           const zoneInfo = zonePlacementBounds.find(z => z.zone === targetZone);
           if (zoneInfo) {
-            const remaining = getZoneRemainingWidth(zoneInfo, freeModules, mod.id);
+            const remaining = getZoneRemainingWidth(zoneInfo, freeModules, mod.id, spaceInfo.columns || []);
             if (remaining >= 200) {
               const optimalWidth = Math.round(remaining);
 
@@ -1651,6 +1665,11 @@ const FreePlacementDropZone: React.FC = () => {
               for (const other of freeModules) {
                 if (other.id === mod.id || other.isSurroundPanel) continue;
                 const ob = getModuleBoundsX(other);
+                const oStart = Math.max(ob.left, zoneInfo.placementStartXmm);
+                const oEnd = Math.min(ob.right, zoneInfo.placementEndXmm);
+                if (oEnd > oStart) occupiedRanges.push({ left: oStart, right: oEnd });
+              }
+              for (const ob of columnObstacleBounds) {
                 const oStart = Math.max(ob.left, zoneInfo.placementStartXmm);
                 const oEnd = Math.min(ob.right, zoneInfo.placementEndXmm);
                 if (oEnd > oStart) occupiedRanges.push({ left: oStart, right: oEnd });

@@ -321,7 +321,9 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   const [doorBottomGapInput, setDoorBottomGapInput] = useState<string>((storeDoorBottomGap ?? placedModule.doorBottomGap ?? 1.5).toString());
   // 커스텀 가구 편집 중에는 선택 하이라이트 끄기 (실시간 변경 확인을 위해)
   const isCustomEditing = placedModule.isCustomizable && activePopup.type === 'customizableEdit' && activePopup.id === placedModule.id;
-  const isSelected = selectedFurnitureId === placedModule.id && !isCustomEditing;
+  const selectedFurnitureIds = useUIStore(state => state.selectedFurnitureIds);
+  const isMultiSelected = selectedFurnitureIds?.includes(placedModule.id) ?? false;
+  const isSelected = (selectedFurnitureId === placedModule.id || isMultiSelected) && !isCustomEditing;
   // 선택/편집/줄자모드 중인 가구는 solid로 렌더링
   const effectiveRenderMode = (isSelected || isEditMode || (viewMode === '3D' && (isLiveDimensionMode || isTapeMeasureMode))) ? 'solid' : renderMode;
   // 편집 모드 고스트: 측면/상면뷰에서는 비활성화 (정면/3D에서만 표시)
@@ -3371,6 +3373,15 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
           (window as any).__r3fClickHandled = true;
           // FreePlacementDropZone의 1프레임 지연 닫기 로직에서 가구 클릭임을 확인하기 위한 플래그
           (window as any).__r3fFurnitureClicked = true;
+
+          // Shift+클릭: 다중 선택 토글 (편집 팝업/이동 모드 진입 X)
+          const isShiftClick = !!(e.nativeEvent && (e.nativeEvent as any).shiftKey);
+          if (isShiftClick) {
+            e.stopPropagation();
+            useUIStore.getState().toggleSelectedFurnitureId(placedModule.id);
+            return;
+          }
+
           // 가구 클릭 시 해당 슬롯 선택 (4분할 뷰 또는 미리보기에서 사용)
           if (onFurnitureClick && placedModule.slotIndex !== undefined) {
             e.stopPropagation();

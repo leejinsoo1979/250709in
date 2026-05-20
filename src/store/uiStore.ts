@@ -226,6 +226,8 @@ interface UIState {
   // 강조된 가구 칸 (가구ID-칸인덱스 형식)
   highlightedCompartment: string | null;
   selectedFurnitureId: string | null;
+  // Shift+클릭 다중 선택 (단일 선택 시 1개, 다중 시 여러 개)
+  selectedFurnitureIds: string[];
 
   // 강조된 섹션 (가구ID-섹션인덱스 형식: "furnitureId-0" 또는 "furnitureId-1")
   highlightedSection: string | null;
@@ -430,6 +432,9 @@ interface UIState {
   setShowBorings: (show: boolean) => void;
   toggleBorings: () => void;
   setSelectedFurnitureId: (id: string | null) => void;
+  setSelectedFurnitureIds: (ids: string[]) => void;
+  toggleSelectedFurnitureId: (id: string) => void; // Shift+클릭 토글
+  clearSelectedFurnitureIds: () => void;
 
   // 측정 모드 액션들
   toggleMeasureMode: () => void;
@@ -507,6 +512,7 @@ const initialUIState = {
   activeDroppedCeilingTab: 'main' as const,  // 기본값: 메인구간 탭
   highlightedCompartment: null,  // 기본값: 강조된 칸 없음
   selectedFurnitureId: null,
+  selectedFurnitureIds: [],
   highlightedSection: null,  // 기본값: 강조된 섹션 없음
   highlightedPanel: null,  // 기본값: 강조된 패널 없음
   selectedModuleForPlacement: null,  // 기본값: 선택된 모듈 없음
@@ -961,7 +967,20 @@ export const useUIStore = create<UIState>()(
         set((state) => ({ showBorings: !state.showBorings })),
 
       setSelectedFurnitureId: (id) =>
-        set({ selectedFurnitureId: id }),
+        set({ selectedFurnitureId: id, selectedFurnitureIds: id ? [id] : [] }),
+
+      setSelectedFurnitureIds: (ids) =>
+        set({ selectedFurnitureIds: ids, selectedFurnitureId: ids[ids.length - 1] ?? null }),
+
+      toggleSelectedFurnitureId: (id) => {
+        const cur = get().selectedFurnitureIds || [];
+        const exists = cur.includes(id);
+        const next = exists ? cur.filter(x => x !== id) : [...cur, id];
+        set({ selectedFurnitureIds: next, selectedFurnitureId: next[next.length - 1] ?? null });
+      },
+
+      clearSelectedFurnitureIds: () =>
+        set({ selectedFurnitureIds: [], selectedFurnitureId: null }),
 
       setSelectedSlotIndex: (index) =>
         set({ selectedSlotIndex: index }),

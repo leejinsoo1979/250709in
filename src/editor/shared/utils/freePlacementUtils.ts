@@ -183,12 +183,9 @@ export function checkColumnCollision(
   columns: Column[],
   newBounds: FurnitureBoundsX
 ): boolean {
-  for (const col of columns) {
-    // column.position[0]은 Three.js 단위 (중심점), * 100으로 mm 변환
-    const colCenterXmm = col.position[0] * 100;
-    const colHalfWidth = col.width / 2;
-    const colLeft = colCenterXmm - colHalfWidth;
-    const colRight = colCenterXmm + colHalfWidth;
+  for (const colBounds of getColumnObstacleBoundsX(columns)) {
+    const colLeft = colBounds.left;
+    const colRight = colBounds.right;
 
     // X 겹침 체크
     const hasOverlap =
@@ -198,6 +195,24 @@ export function checkColumnCollision(
     if (hasOverlap) return true;
   }
   return false;
+}
+
+/**
+ * 자유배치에서 기둥을 X축 장애물로 변환.
+ * noCollision 기둥은 사용자가 의도적으로 가구 충돌을 끈 상태이므로 제외한다.
+ */
+export function getColumnObstacleBoundsX(columns: Column[]): FurnitureBoundsX[] {
+  return columns
+    .filter(col => !col.noCollision && col.width > 0)
+    .map(col => {
+      const colCenterXmm = col.position[0] * 100;
+      const colHalfWidth = col.width / 2;
+      return {
+        left: colCenterXmm - colHalfWidth,
+        right: colCenterXmm + colHalfWidth,
+        category: 'full' as const,
+      };
+    });
 }
 
 /**
@@ -748,7 +763,8 @@ export function detectHoverZoneType(xMm: number, spaceInfo: SpaceInfo): ZoneType
 export function getZoneRemainingWidth(
   zoneInfo: ZonePlacementInfo,
   modules: PlacedModule[],
-  excludeId?: string
+  excludeId?: string,
+  columns: Column[] = []
 ): number {
   let occupied = 0;
   for (const mod of modules) {
@@ -758,6 +774,14 @@ export function getZoneRemainingWidth(
 
     const bounds = getModuleBoundsX(mod);
     // 구간 범위와의 겹침(overlap) 계산
+    const overlapStart = Math.max(bounds.left, zoneInfo.placementStartXmm);
+    const overlapEnd = Math.min(bounds.right, zoneInfo.placementEndXmm);
+    if (overlapEnd > overlapStart) {
+      occupied += overlapEnd - overlapStart;
+    }
+  }
+
+  for (const bounds of getColumnObstacleBoundsX(columns)) {
     const overlapStart = Math.max(bounds.left, zoneInfo.placementStartXmm);
     const overlapEnd = Math.min(bounds.right, zoneInfo.placementEndXmm);
     if (overlapEnd > overlapStart) {
