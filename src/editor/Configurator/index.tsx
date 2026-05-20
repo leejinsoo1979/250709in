@@ -695,6 +695,7 @@ const Configurator: React.FC = () => {
   // 가구별 천장/바닥까지 거리 계산 (천장·바닥 기준 변환용)
   //   - topDistance: 천장 ~ 가구 상단 거리 (mm)
   //   - bottomDistance: 가구 하단 ~ 바닥 거리 (mm)
+  //   가구 편집 팝업의 식과 동일하게 계산해야 표시값이 일치함.
   const computeRefDistances = useCallback((mod: any): { topDistance: number; bottomDistance: number } => {
     if (!mod) return { topDistance: 0, bottomDistance: 0 };
     let ceilingMm = spaceInfo.height;
@@ -704,9 +705,12 @@ const Configurator: React.FC = () => {
     const baseFrameMm = mod.hasBase === false
       ? (mod.individualFloatHeight ?? 0)
       : (mod.baseFrameHeight ?? (spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height ?? 65) : 0));
-    const bodyHmm = (mod.freeHeight ?? mod.customHeight ?? 0);
-    const fallbackBodyMm = bodyHmm > 0 ? bodyHmm : (ceilingMm - baseFrameMm);
-    const topDistance = Math.max(0, ceilingMm - (baseFrameMm + fallbackBodyMm));
+    // 가구 몸통 높이: customHeight/freeHeight 우선 → 모듈 데이터 → fallback
+    const internalSp = { width: spaceInfo.width, height: spaceInfo.height, depth: spaceInfo.depth || 1500 };
+    const moduleData = getModuleById(mod.moduleId, internalSp, spaceInfo);
+    const moduleH = moduleData?.dimensions?.height ?? 0;
+    const bodyHmm = mod.customHeight ?? mod.freeHeight ?? moduleH;
+    const topDistance = Math.max(0, ceilingMm - (baseFrameMm + bodyHmm));
     const bottomDistance = Math.max(0, baseFrameMm);
     return { topDistance, bottomDistance };
   }, [spaceInfo]);
