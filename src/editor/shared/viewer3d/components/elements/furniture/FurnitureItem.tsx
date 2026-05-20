@@ -3711,7 +3711,8 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
             )}
 
             {/* 가구 상단 아이콘 툴바 (readOnly에서는 숨김, 2D 측면/상면뷰에서는 숨김)
-                다중 선택 시: 마지막에 선택한 가구 위에 통합 툴바 1개만 표시 */}
+                다중 선택 시: 마지막에 선택한 가구 위에 통합 툴바 1개만 표시.
+                그룹 다중선택일 땐 그룹 X 중앙으로 이동하여 양쪽 끝의 가운데에 표시. */}
             {isSelected && !isPanelListTabActive && !readOnly && (viewMode === '3D' || view2DDirection === 'front' || view2DDirection === 'all')
               && (
                 (selectedFurnitureIds?.length ?? 0) < 2
@@ -3719,7 +3720,22 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
               )
               && (
               <Html
-                position={[0, height / 2 + mmToThreeUnits(50), depth / 2 + 0.03]}
+                position={(() => {
+                  const baseY = height / 2 + mmToThreeUnits(50);
+                  const baseZ = depth / 2 + 0.03;
+                  const ids = selectedFurnitureIds ?? [];
+                  if (ids.length >= 2) {
+                    const groupMembers = placedModules.filter(m => ids.includes(m.id) && !m.isSurroundPanel);
+                    if (groupMembers.length >= 2) {
+                      const xs = groupMembers.map(m => m.position.x);
+                      const groupCenterX = (Math.min(...xs) + Math.max(...xs)) / 2;
+                      // 로컬 좌표계 기준 오프셋: 그룹 중심 - 자기 위치
+                      const localOffsetX = groupCenterX - placedModule.position.x;
+                      return [localOffsetX, baseY, baseZ] as [number, number, number];
+                    }
+                  }
+                  return [0, baseY, baseZ] as [number, number, number];
+                })()}
                 center
                 occlude={false}
                 zIndexRange={[10000, 10001]}
