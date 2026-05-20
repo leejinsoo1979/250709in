@@ -2063,18 +2063,18 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     let leftExtendMm = 0;
     let rightExtendMm = 0;
     if (doorAdjEnabledDual) {
-      const total = (userDoorExtendMmDual ?? (autoExtendLeftMm + autoExtendRightMm));
+      const totalRaw = (userDoorExtendMmDual ?? (autoExtendLeftMm + autoExtendRightMm));
       // 자동 인접 방향이 있으면 그쪽으로 우선 배분, 양쪽 모두면 균등
       if (autoExtendLeftMm > 0 && autoExtendRightMm > 0) {
-        leftExtendMm = total / 2;
-        rightExtendMm = total / 2;
+        leftExtendMm = totalRaw / 2;
+        rightExtendMm = totalRaw / 2;
       } else if (autoExtendLeftMm > 0) {
-        leftExtendMm = total;
+        leftExtendMm = totalRaw;
       } else if (autoExtendRightMm > 0) {
-        rightExtendMm = total;
+        rightExtendMm = totalRaw;
       } else {
-        // 인접 없음: 우측에 적용 (관례)
-        rightExtendMm = total;
+        // 수동 확장: v + 1.5 를 경첩 반대쪽(관례: 우측)에 적용
+        rightExtendMm = totalRaw + 1.5;
       }
     }
     let leftInsertExtendShift = 0;
@@ -3108,16 +3108,23 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     let insertExtendLeft = 0;
     let insertExtendRight = 0;
     if (doorAdjEnabled) {
-      const total = (userDoorExtendMm ?? (autoLeftMm + autoRightMm));
+      // 입력값 의미: 경첩 반대쪽 도어 끝과 몸통 끝의 거리 (음수=안쪽, 양수=바깥쪽).
+      //   기준 doorWidth는 (몸통-3)에서 시작이므로 경첩쪽 -1.5 + 경첩반대쪽 v 의미가 되도록
+      //   경첩 반대쪽에 (v + 1.5)만큼 적용 (v=-1.5→0, v=0→+1.5, v=50→+51.5).
+      // 자동 인접(insert frame) 모드는 기존 동작 유지 (양쪽 같이 확장).
+      const totalRaw = (userDoorExtendMm ?? (autoLeftMm + autoRightMm));
       if (autoLeftMm > 0 && autoRightMm > 0) {
+        const total = totalRaw;
         insertExtendLeft = total / 2;
         insertExtendRight = total / 2;
       } else if (autoLeftMm > 0) {
-        insertExtendLeft = total;
+        insertExtendLeft = totalRaw;
       } else if (autoRightMm > 0) {
-        insertExtendRight = total;
+        insertExtendRight = totalRaw;
       } else {
-        const manualAdjustment = resolveHingeOppositeDoorWidthAdjustment(total, adjustedHingePosition);
+        // 수동 확장: v + 1.5 를 경첩 반대쪽에 적용
+        const totalAdj = totalRaw + 1.5;
+        const manualAdjustment = resolveHingeOppositeDoorWidthAdjustment(totalAdj, adjustedHingePosition);
         insertExtendLeft = manualAdjustment.leftMm;
         insertExtendRight = manualAdjustment.rightMm;
       }
