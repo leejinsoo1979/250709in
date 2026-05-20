@@ -6447,15 +6447,28 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 : Math.min(maxModWidth, Math.floor(totalAvailableMm));
               const newHalfWThree = mmToThreeUnits(newWidthMm) / 2;
 
-              // 그룹 이동: 듀얼 가구처럼 한계까지 한 번에 슬라이드.
-              //   - 그룹 가구 간 상대 간격 유지 (deltaX 통일)
-              //   - 좌측 한계 = 그룹 가장 왼쪽 가구의 realLeftGap만큼 왼쪽
-              //   - 우측 한계 = 그룹 가장 오른쪽 가구의 realRightGap만큼 오른쪽
+              // 그룹 이동: 좌·우 동일한 한 칸 단위로 이동 (그룹 내 최소 가구 폭).
+              //   - 양쪽 빈 공간 중 더 작은 쪽이 stepMm보다 작으면 그 값으로 제한 → 좌우 대칭 보장.
+              const groupStepBaseMm = isMulti
+                ? Math.min(...groupModules.map(m => (m.freeWidth || m.customWidth || m.moduleWidth || 600)))
+                : currentWidthMm;
+              // 그룹 양쪽 끝 가구의 빈 공간 확인 (좌·우 같은 step 적용 위해)
+              const groupLeftmost = isMulti
+                ? groupModules.reduce((min, m) => (m.position.x < min.position.x ? m : min), groupModules[0])
+                : module;
+              const groupRightmost = isMulti
+                ? groupModules.reduce((max, m) => (m.position.x > max.position.x ? m : max), groupModules[0])
+                : module;
+              // 자기 위치(module)가 leftmost일 때 realLeftGap이 의미 있음.
+              const leftEdgeGapMm = (isMulti && groupLeftmost.id === module.id) ? realLeftGapMm : 0;
+              const rightEdgeGapMm = (isMulti && groupRightmost.id === module.id) ? realRightGapMm : 0;
+
               const moveLeft = (e: any) => {
                 stopAll(e);
                 if (isMulti) {
-                  if (realLeftGapMm <= 0) return;
-                  const deltaThree = -mmToThreeUnits(realLeftGapMm);
+                  const stepMm = Math.min(groupStepBaseMm, leftEdgeGapMm);
+                  if (stepMm <= 0) return;
+                  const deltaThree = -mmToThreeUnits(stepMm);
                   groupModules.forEach(m => {
                     if ((m as any).isLocked) return;
                     updatePlacedModule(m.id, { position: { ...m.position, x: snap(m.position.x + deltaThree) } });
@@ -6473,8 +6486,9 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               const moveRight = (e: any) => {
                 stopAll(e);
                 if (isMulti) {
-                  if (realRightGapMm <= 0) return;
-                  const deltaThree = mmToThreeUnits(realRightGapMm);
+                  const stepMm = Math.min(groupStepBaseMm, rightEdgeGapMm);
+                  if (stepMm <= 0) return;
+                  const deltaThree = mmToThreeUnits(stepMm);
                   groupModules.forEach(m => {
                     if ((m as any).isLocked) return;
                     updatePlacedModule(m.id, { position: { ...m.position, x: snap(m.position.x + deltaThree) } });
