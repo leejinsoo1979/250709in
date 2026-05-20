@@ -1773,19 +1773,17 @@ const FreePlacementDropZone: React.FC = () => {
         return;
       }
 
-      // 이동할 가구: movingModuleId > 편집 중인 자유배치 가구 > 단순 선택된 자유배치 가구
+      // 이동할 가구: movingModuleId > 편집 중인 자유배치 가구 > 다중 선택 > 단순 선택된 가구
       const uiSelectedId = useUIStore.getState().selectedFurnitureId;
+      const uiSelectedIds = useUIStore.getState().selectedFurnitureIds || [];
       const storeSelectedId = useFurnitureStore.getState().selectedFurnitureId;
       const selectedId = uiSelectedId || storeSelectedId;
-      // isFreePlacement 필터 제거: 자유배치 모드에서는 가구 자체가 모두 자유배치이므로 plain selectedId도 허용
-      const selectedMod = selectedId ? placedModules.find(m => m.id === selectedId) : null;
-      const targetId = movingModuleId || editingFreeModuleId || (selectedMod ? selectedId : null);
-      if (!targetId) {
-        console.log('🎯 [화살표 이동 무시] 선택된 가구 없음', { movingModuleId, editingFreeModuleId, uiSelectedId, storeSelectedId });
-        return;
-      }
-      const mod = placedModules.find(m => m.id === targetId);
-      if (!mod) return;
+      const targetIds: string[] = movingModuleId
+        ? [movingModuleId]
+        : editingFreeModuleId
+          ? [editingFreeModuleId]
+          : (uiSelectedIds.length >= 2 ? uiSelectedIds : (selectedId ? [selectedId] : []));
+      if (targetIds.length === 0) return;
 
       // input/textarea 포커스 중에는 방향키 무시 (숫자 입력 등 방해 방지)
       const active = document.activeElement;
@@ -1793,21 +1791,40 @@ const FreePlacementDropZone: React.FC = () => {
         return;
       }
 
-      // 화살표 키는 input 포커스와 무관하게 가구 이동 처리
       e.preventDefault();
       const direction = e.key === 'ArrowLeft' ? -1 : 1;
       const step = e.shiftKey ? KEYBOARD_SHIFT_STEP_MM : KEYBOARD_STEP_MM;
-      const currentXmm = mod.position.x * 100;
-      const newXmm = currentXmm + direction * step;
+      const deltaMm = direction * step;
 
-      // 키보드 이동은 스냅 건너뜀 (정확한 1mm 이동)
-      const result = calcMovedPosition(newXmm, targetId, true);
-      if (!result.colliding) {
-        const zoneUpdate = recalcZoneUpdate(mod, result.x);
-        updatePlacedModule(targetId, {
-          position: { x: result.x * 0.01, y: zoneUpdate.y, z: mod.position.z },
-          freeHeight: zoneUpdate.freeHeight,
-          zone: zoneUpdate.zone as 'normal' | 'dropped',
+      // 다중 선택 시: 선택된 가구들 모두를 동일 deltaMm로 이동.
+      // 다중 선택이 아닐 때(단일): 충돌 검사 통과한 경우에만 이동.
+      if (targetIds.length === 1) {
+        const tId = targetIds[0];
+        const mod = placedModules.find(m => m.id === tId);
+        if (!mod) return;
+        const currentXmm = mod.position.x * 100;
+        const newXmm = currentXmm + deltaMm;
+        const result = calcMovedPosition(newXmm, tId, true);
+        if (!result.colliding) {
+          const zoneUpdate = recalcZoneUpdate(mod, result.x);
+          updatePlacedModule(tId, {
+            position: { x: result.x * 0.01, y: zoneUpdate.y, z: mod.position.z },
+            freeHeight: zoneUpdate.freeHeight,
+            zone: zoneUpdate.zone as 'normal' | 'dropped',
+          });
+        }
+      } else {
+        // 다중 선택: 선택된 가구들을 그룹으로 보고 동시 이동 (충돌 검사는 그룹 외부 가구만 대상)
+        targetIds.forEach(tId => {
+          const mod = placedModules.find(m => m.id === tId);
+          if (!mod || (mod as any).isLocked) return;
+          const newXmm = mod.position.x * 100 + deltaMm;
+          const zoneUpdate = recalcZoneUpdate(mod, newXmm);
+          updatePlacedModule(tId, {
+            position: { x: newXmm * 0.01, y: zoneUpdate.y, z: mod.position.z },
+            freeHeight: zoneUpdate.freeHeight,
+            zone: zoneUpdate.zone as 'normal' | 'dropped',
+          });
         });
       }
     };

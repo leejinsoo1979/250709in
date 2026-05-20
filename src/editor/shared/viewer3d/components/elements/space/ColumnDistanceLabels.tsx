@@ -6,6 +6,7 @@ import { useTheme } from '@/contexts/ThemeContext';
 import { Column } from '@/types/space';
 import { useUIStore } from '@/store/uiStore';
 import { calculateSpaceIndexing } from '@/editor/shared/utils/indexing';
+import { getInternalSpaceBoundsX } from '@/editor/shared/utils/freePlacementUtils';
 
 interface ColumnDistanceLabelsProps {
   column: Column;
@@ -228,20 +229,32 @@ const ColumnDistanceLabels: React.FC<ColumnDistanceLabelsProps> = ({ column, spa
   const handleWidthChange = (newWidth: number) => {
     // console.log('📐 너비 변경 시도:', { newWidth, columnId: currentColumn.id });
     
-    if (!onColumnUpdate) {
+    if (!onColumnUpdate || currentColumn.isLocked) {
       // console.error('❌ onColumnUpdate 함수가 없습니다');
       return;
     }
-    
-    // 유효한 너비 범위 검증 (800mm ~ 3000mm)
-    if (newWidth < 800 || newWidth > 3000) {
-      // console.warn('⚠️ 유효하지 않은 너비:', newWidth);
+
+    if (!Number.isFinite(newWidth) || newWidth <= 0) {
       return;
     }
-    
-    // 현재 위치 유지하면서 너비만 변경
-    onColumnUpdate(currentColumn.id, { 
-      width: newWidth
+
+    const maxWidth = spaceInfo?.width || 10000;
+    const nextWidth = Math.max(1, Math.min(maxWidth, Math.round(newWidth)));
+    let nextX = currentColumn.position[0];
+
+    if (spaceInfo?.layoutMode === 'free-placement') {
+      const { startX, endX } = getInternalSpaceBoundsX(spaceInfo);
+      const halfWidth = (nextWidth * 0.01) / 2;
+      const minX = startX * 0.01 + halfWidth;
+      const maxX = endX * 0.01 - halfWidth;
+      nextX = minX > maxX
+        ? (minX + maxX) / 2
+        : Math.max(minX, Math.min(maxX, nextX));
+    }
+
+    onColumnUpdate(currentColumn.id, {
+      width: nextWidth,
+      position: [nextX, currentColumn.position[1], currentColumn.position[2]],
     });
   };
 
@@ -301,6 +314,7 @@ const ColumnDistanceLabels: React.FC<ColumnDistanceLabelsProps> = ({ column, spa
     if (event) {
       event.stopPropagation();
     }
+    if (currentColumn.isLocked) return;
     
     // console.log('🖱️ 편집 모드 활성화:', direction, '기둥 ID:', currentColumn.id);
     
@@ -720,7 +734,7 @@ const ColumnDistanceLabels: React.FC<ColumnDistanceLabelsProps> = ({ column, spa
           columnHeightM + 2.0,
           currentColumn.position[2]
         ]}>
-          {editingDistance === 'width' ? (
+	          {editingDistance === 'width' && !currentColumn.isLocked ? (
             <Html
               transform
               distanceFactor={10}
@@ -772,9 +786,9 @@ const ColumnDistanceLabels: React.FC<ColumnDistanceLabelsProps> = ({ column, spa
                   style={inputStyle}
                   onBlur={() => handleEditComplete()}
                   autoFocus
-                  min="800"
-                  max="3000"
-                  step="200"
+	                  min="1"
+	                  max={spaceInfo?.width || 10000}
+	                  step="1"
                 />
               </div>
             </Html>
