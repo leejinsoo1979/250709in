@@ -2889,6 +2889,10 @@ const Room: React.FC<RoomProps> = ({
             const z2 = extendedZOffset + extendedPanelDepth; // 앞쪽 Z
             const x1 = xOffset;               // 좌측 벽 X
             const x2 = xOffset + width;        // 우측 벽 X
+            const cornerLineNudge = mmToThreeUnits(1);
+            const leftCornerLineX = x1 + cornerLineNudge;
+            const rightCornerLineX = x2 - cornerLineNudge;
+            const topCornerLineY = (y: number) => y - cornerLineNudge;
 
             const threeEdgeColor = new THREE.Color('#8f8f8f');
 
@@ -2926,7 +2930,7 @@ const Room: React.FC<RoomProps> = ({
                 else if (dcIsLeft) leftCY = cY - dcDropH;                  // 슬롯단내림: 아래로 축소
                 else if (cbIsLeft) leftCY = cY + cbDropHLine;              // 슬롯 커튼박스 (단독 또는 DC 반대쪽): 위로 확장
               }
-              lines.push([x1, leftCY, z1, x1, leftCY, z2]);
+              lines.push([leftCornerLineX, topCornerLineY(leftCY), z1, leftCornerLineX, topCornerLineY(leftCY), z2]);
             }
             // 천장-우벽 경계
             if (hasRW) {
@@ -2939,7 +2943,7 @@ const Room: React.FC<RoomProps> = ({
                 else if (dcIsRight) rightCY = cY - dcDropH;
                 else if (cbIsRight) rightCY = cY + cbDropHLine;            // 슬롯 커튼박스 (단독 또는 DC 반대쪽): 위로 확장
               }
-              lines.push([x2, rightCY, z1, x2, rightCY, z2]);
+              lines.push([rightCornerLineX, topCornerLineY(rightCY), z1, rightCornerLineX, topCornerLineY(rightCY), z2]);
             }
             // 바닥-좌벽 경계
             if (hasLW) {
@@ -2982,15 +2986,15 @@ const Room: React.FC<RoomProps> = ({
               if (dcIsL && hasLW) {
                 // 커튼박스: 천장이 메인보다 높으므로 외벽 라인도 뒷벽 근처로 제한
                 if (isFreePlacement) {
-                  lines.push([x1, droppedCY, z1, x1, droppedCY, z2]);
+                  lines.push([leftCornerLineX, topCornerLineY(droppedCY), z1, leftCornerLineX, topCornerLineY(droppedCY), z2]);
                 } else {
-                  lines.push([x1, droppedCY, z1, x1, droppedCY, z2]);
+                  lines.push([leftCornerLineX, topCornerLineY(droppedCY), z1, leftCornerLineX, topCornerLineY(droppedCY), z2]);
                 }
               } else if (!dcIsL && hasRW) {
                 if (isFreePlacement) {
-                  lines.push([x2, droppedCY, z1, x2, droppedCY, z2]);
+                  lines.push([rightCornerLineX, topCornerLineY(droppedCY), z1, rightCornerLineX, topCornerLineY(droppedCY), z2]);
                 } else {
-                  lines.push([x2, droppedCY, z1, x2, droppedCY, z2]);
+                  lines.push([rightCornerLineX, topCornerLineY(droppedCY), z1, rightCornerLineX, topCornerLineY(droppedCY), z2]);
                 }
               }
             }
@@ -3011,9 +3015,9 @@ const Room: React.FC<RoomProps> = ({
 
               // 커튼박스 쪽 외벽의 천장 높이 Z축 라인 (뒷벽 근처로 제한)
               if (cbIsL && hasLW) {
-                lines.push([x1, cbCeilingY, z1, x1, cbCeilingY, z2]);
+                lines.push([leftCornerLineX, topCornerLineY(cbCeilingY), z1, leftCornerLineX, topCornerLineY(cbCeilingY), z2]);
               } else if (!cbIsL && hasRW) {
-                lines.push([x2, cbCeilingY, z1, x2, cbCeilingY, z2]);
+                lines.push([rightCornerLineX, topCornerLineY(cbCeilingY), z1, rightCornerLineX, topCornerLineY(cbCeilingY), z2]);
               }
             }
 
@@ -3033,7 +3037,7 @@ const Room: React.FC<RoomProps> = ({
                 else if (dcIsLeft) leftCY2 = cY - dcDropH;
                 else if (_cbSL) leftCY2 = cY + cbDropHLine;
               }
-              solidThemeLines.push([x1, leftCY2, z1, x1, leftCY2, z2]); // 좌벽-천장
+              solidThemeLines.push([leftCornerLineX, topCornerLineY(leftCY2), z1, leftCornerLineX, topCornerLineY(leftCY2), z2]); // 좌벽-천장
               solidThemeLines.push([x1, fY, z1, x1, fY, z2]); // 좌벽-바닥
             }
             // 우벽-천장, 우벽-바닥 z축 라인
@@ -3048,7 +3052,7 @@ const Room: React.FC<RoomProps> = ({
                 else if (dcIsRight) rightCY2 = cY - dcDropH;
                 else if (_cbSR) rightCY2 = cY + cbDropHLine;
               }
-              solidThemeLines.push([x2, rightCY2, z1, x2, rightCY2, z2]); // 우벽-천장
+              solidThemeLines.push([rightCornerLineX, topCornerLineY(rightCY2), z1, rightCornerLineX, topCornerLineY(rightCY2), z2]); // 우벽-천장
               solidThemeLines.push([x2, fY, z1, x2, fY, z2]); // 우벽-바닥
             }
 

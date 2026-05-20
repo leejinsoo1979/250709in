@@ -41,10 +41,28 @@ const FloorFinishControls: React.FC<FloorFinishControlsProps> = ({
     }
   };
 
+  const commitThickness = (numValue: number) => {
+    const clamped = Math.max(5, Math.min(100, Math.round(numValue)));
+    onUpdate({
+      hasFloorFinish: true,
+      floorFinish: { height: clamped }
+    });
+    return clamped;
+  };
+
   const handleThicknessChange = (value: string) => {
-    // 숫자와 빈 문자열만 허용
+    // 숫자와 빈 문자열만 허용 + 입력 즉시 실시간 반영 (5~100 범위 내)
     if (value === '' || /^\d+$/.test(value)) {
       setFloorThickness(value);
+      if (value !== '') {
+        const num = parseInt(value, 10);
+        if (!isNaN(num) && num >= 5 && num <= 100) {
+          onUpdate({
+            hasFloorFinish: true,
+            floorFinish: { height: num }
+          });
+        }
+      }
     }
   };
 
@@ -52,34 +70,32 @@ const FloorFinishControls: React.FC<FloorFinishControlsProps> = ({
     const value = floorThickness;
     if (value === '') {
       setFloorThickness('15');
+      commitThickness(15);
       return;
     }
-    
-    const numValue = parseInt(value);
-    
-    // 범위 검증 (5-100mm)
-    if (numValue >= 5 && numValue <= 100) {
-      onUpdate({
-        hasFloorFinish: true,
-        floorFinish: {
-          height: numValue
-        }
-      });
-    } else {
-      // 범위를 벗어나면 기본값으로 되돌림
+    const num = parseInt(value, 10);
+    if (isNaN(num)) {
       setFloorThickness('15');
-      onUpdate({
-        hasFloorFinish: true,
-        floorFinish: {
-          height: 15
-        }
-      });
+      commitThickness(15);
+      return;
     }
+    const clamped = commitThickness(num);
+    setFloorThickness(String(clamped));
   };
 
   const handleThicknessKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
       handleThicknessBlur();
+      return;
+    }
+    // ArrowUp/Down으로 1mm씩 증감 (Shift: 10mm)
+    if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+      e.preventDefault();
+      const cur = parseInt(floorThickness, 10) || 15;
+      const step = (e as any).shiftKey ? 10 : 1;
+      const next = Math.max(5, Math.min(100, cur + (e.key === 'ArrowUp' ? step : -step)));
+      setFloorThickness(String(next));
+      commitThickness(next);
     }
   };
 

@@ -33,6 +33,28 @@ export const useHistoryTracking = (scopeId: string) => {
   // 상태 변경 감지 및 히스토리 저장 (디바운싱 적용)
   useEffect(() => {
     const currentState = JSON.stringify({ scopeId, spaceInfo, placedModules, basicInfo });
+
+    // Undo/Redo로 히스토리의 기존 스냅샷을 적용한 경우에는 새 상태로 저장하지 않는다.
+    // 여기서 저장하면 currentIndex 이후 redo 스택이 잘려 Ctrl+Y가 바로 무력화된다.
+    const { history, currentIndex, activeScopeId } = useHistoryStore.getState();
+    const activeHistoryState = history[currentIndex];
+    if (activeScopeId === scopeId && activeHistoryState) {
+      const activeHistoryJson = JSON.stringify({
+        scopeId,
+        spaceInfo: activeHistoryState.spaceInfo,
+        placedModules: activeHistoryState.placedModules,
+        basicInfo: activeHistoryState.basicInfo
+      });
+
+      if (activeHistoryJson === currentState) {
+        if (timeoutRef.current) {
+          clearTimeout(timeoutRef.current);
+          timeoutRef.current = null;
+        }
+        lastSavedRef.current = currentState;
+        return;
+      }
+    }
     
     // 상태가 변경되었을 때만 저장
     if (currentState !== lastSavedRef.current && spaceInfo && basicInfo) {
