@@ -3020,11 +3020,7 @@ const Room: React.FC<RoomProps> = ({
             // solidThemeLines(X/Y축 뒷벽 실선)는 제거 — 이상한 윤곽선 원인
             const solidThemeLines: [number, number, number, number, number, number][] = [];
 
-            // 코너 라인 z 범위 — 가구 앞면까지로 제한 (공간 메쉬가 +300mm 늘어났어도 라인은 가구를 넘지 않음).
-            //   가구 앞면 Z = furnitureZOffset + furnitureDepth / 2
-            const cornerZ2 = Math.min(z2, furnitureZOffset + furnitureDepth / 2);
-
-            // === 천장/바닥-벽 교차 z축(z1→cornerZ2) 윤곽선 ===
+            // === 천장/바닥-벽 교차 z축(z1→z2) 윤곽선 ===
             // 좌벽-천장 z축 라인
             if (hasLW) {
               let leftCY2 = cY;
@@ -3037,8 +3033,8 @@ const Room: React.FC<RoomProps> = ({
                 else if (dcIsLeft) leftCY2 = cY - dcDropH;
                 else if (_cbSL) leftCY2 = cY + cbDropHLine;
               }
-              solidThemeLines.push([x1, leftCY2, z1, x1, leftCY2, cornerZ2]); // 좌벽-천장
-              solidThemeLines.push([x1, fY, z1, x1, fY, cornerZ2]); // 좌벽-바닥
+              solidThemeLines.push([x1, leftCY2, z1, x1, leftCY2, z2]); // 좌벽-천장
+              solidThemeLines.push([x1, fY, z1, x1, fY, z2]); // 좌벽-바닥
             }
             // 우벽-천장, 우벽-바닥 z축 라인
             if (hasRW) {
@@ -3052,8 +3048,8 @@ const Room: React.FC<RoomProps> = ({
                 else if (dcIsRight) rightCY2 = cY - dcDropH;
                 else if (_cbSR) rightCY2 = cY + cbDropHLine;
               }
-              solidThemeLines.push([x2, rightCY2, z1, x2, rightCY2, cornerZ2]); // 우벽-천장
-              solidThemeLines.push([x2, fY, z1, x2, fY, cornerZ2]); // 우벽-바닥
+              solidThemeLines.push([x2, rightCY2, z1, x2, rightCY2, z2]); // 우벽-천장
+              solidThemeLines.push([x2, fY, z1, x2, fY, z2]); // 우벽-바닥
             }
 
             // === 단내림 천장 메쉬 z축 앞면(z=z2) 윤곽선 ===

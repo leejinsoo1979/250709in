@@ -6882,6 +6882,17 @@ const Configurator: React.FC = () => {
               <span className={styles.sectionDot}></span>
               <h3 className={styles.sectionTitle}>도어 셋팅</h3>
               {/* 표시 기준 토글 (몸통 / 천장·바닥) */}
+              <label
+                style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11px', color: 'var(--theme-text-secondary)', cursor: 'pointer', marginLeft: '8px' }}
+              >
+                <input
+                  type="checkbox"
+                  checked={doorGapAllSync}
+                  onChange={(e) => setDoorGapAllSync(e.target.checked)}
+                  style={{ cursor: 'pointer', accentColor: 'var(--theme-primary, #4a90d9)' }}
+                />
+                <span>전체</span>
+              </label>
               <div style={{ display: 'flex', gap: '2px', marginLeft: '8px' }}>
                 <button
                   type="button"
@@ -6904,17 +6915,6 @@ const Configurator: React.FC = () => {
                   }}
                 >천장·바닥</button>
               </div>
-              <label
-                style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11px', color: 'var(--theme-text-secondary)', cursor: 'pointer', marginLeft: '8px' }}
-              >
-                <input
-                  type="checkbox"
-                  checked={doorGapAllSync}
-                  onChange={(e) => setDoorGapAllSync(e.target.checked)}
-                  style={{ cursor: 'pointer', accentColor: 'var(--theme-primary, #4a90d9)' }}
-                />
-                <span>전체</span>
-              </label>
               <HelpBtn title="도어 셋팅" text="상걸래받이 섹션에서 '상하프레임 가림' 또는 '상하프레임 노출'을 선택하면 도어 갭이 자동 계산됩니다." />
             </div>
 
