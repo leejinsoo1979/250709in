@@ -213,6 +213,7 @@ export const FurniturePresetButtons: React.FC<FurniturePresetButtonsProps> = ({ 
                     type="checkbox"
                     checked={selectedGroups.includes(g.id)}
                     onChange={() => toggleGroup(g.id)}
+                    style={{ accentColor: 'var(--theme-primary, #4a90d9)', cursor: 'pointer' }}
                   />
                   {g.label}
                 </label>
