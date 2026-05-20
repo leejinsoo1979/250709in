@@ -6411,18 +6411,21 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 ? (nearestRightDistance || 0)
                 : Math.max(0, (nearestRightDistance || 0) - wallGapRight);
               // 실제 빈 공간 기준으로 버튼 표시 — 가구 사이 빈 공간이 3mm 이상일 때만
-              const canMoveLeft = realLeftGapMm >= 3;
-              const canMoveRight = realRightGapMm >= 3;
-              if (isSelected && module.isFreePlacement) {
-                // eslint-disable-next-line no-console
-                console.log('[arrow-debug]', module.id, {
-                  hasAdjacentLeft, hasAdjacentRight,
-                  nearestLeftDistance, nearestRightDistance,
-                  realLeftGapMm, realRightGapMm,
-                  canMoveLeft, canMoveRight,
-                  wallGapLeft, wallGapRight,
-                });
-              }
+              // 다중선택(그룹)일 때: 그룹의 양쪽 끝 가구에서만 바깥 방향 화살표 표시.
+              //   - 그룹 내부 화살표는 의미가 없어 숨김 (그룹 안쪽엔 같이 선택된 가구가 있음).
+              const multiIds = (selectedFurnitureIds ?? []);
+              const isMulti = multiIds.length >= 2 && multiIds.includes(module.id);
+              const groupModules = isMulti
+                ? placedModules.filter(m => multiIds.includes(m.id) && !m.isSurroundPanel)
+                : [];
+              const isLeftmostInGroup = isMulti
+                ? groupModules.every(m => m.id === module.id || m.position.x >= module.position.x)
+                : true;
+              const isRightmostInGroup = isMulti
+                ? groupModules.every(m => m.id === module.id || m.position.x <= module.position.x)
+                : true;
+              const canMoveLeft = realLeftGapMm >= 3 && isLeftmostInGroup;
+              const canMoveRight = realRightGapMm >= 3 && isRightmostInGroup;
               // 좌측 한계: 벽 이격 경계 또는 인접 가구 우측 끝
               const leftLimit = leftX - mmToThreeUnits(realLeftGapMm);
               // 우측 한계: 벽 이격 경계 또는 인접 가구 좌측 끝
@@ -6444,6 +6447,16 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
 
               const moveLeft = (e: any) => {
                 stopAll(e);
+                if (isMulti) {
+                  // 그룹 이동: 좌측 끝 가구의 leftLimit까지 그룹 전체를 같은 deltaX로 이동 (폭 유지)
+                  const newSelfX = snap(leftLimit + mmToThreeUnits(currentWidthMm) / 2);
+                  const deltaX = newSelfX - module.position.x;
+                  groupModules.forEach(m => {
+                    if ((m as any).isLocked) return;
+                    updatePlacedModule(m.id, { position: { ...m.position, x: snap(m.position.x + deltaX) } });
+                  });
+                  return;
+                }
                 const newX = snap(leftLimit + newHalfWThree);
                 const updates: any = { position: { ...module.position, x: newX } };
                 if (!userResized) {
@@ -6454,6 +6467,15 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               };
               const moveRight = (e: any) => {
                 stopAll(e);
+                if (isMulti) {
+                  const newSelfX = snap(rightLimit - mmToThreeUnits(currentWidthMm) / 2);
+                  const deltaX = newSelfX - module.position.x;
+                  groupModules.forEach(m => {
+                    if ((m as any).isLocked) return;
+                    updatePlacedModule(m.id, { position: { ...m.position, x: snap(m.position.x + deltaX) } });
+                  });
+                  return;
+                }
                 const newX = snap(rightLimit - newHalfWThree);
                 const updates: any = { position: { ...module.position, x: newX } };
                 if (!userResized) {
