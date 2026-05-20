@@ -388,11 +388,13 @@ const ColumnGuides: React.FC<ColumnGuidesProps> = ({ viewMode: viewModeProp }) =
   const lineWidth = viewMode === '2D' ? 0.3 : 0.5; // 더 얇은 점선으로 조정
   const floatHeight = isFloating ? mmToThreeUnits(spaceInfo.baseConfig?.floatHeight || 0) : 0;
   
-  // 바닥과 천장 높이 (Three.js 단위) - 띄움 높이 적용
-  //   ceilingY는 절대 위치 = 공간 천장 - 상단몰딩 두께
-  //   floorY는 startY(마감재+받침대)에 띄움 높이 적용
-  const floorY = mmToThreeUnits(internalSpace.startY) + floatHeight;
+  // 바닥과 천장 높이 (Three.js 단위)
+  //   floorY = 바닥마감재(있으면) + 걸레받이(있으면) 위에서 시작
+  //   ceilingY = 천장 - 상단몰딩(있으면)
+  const floorFinishMmCeil = spaceInfo.hasFloorFinish && spaceInfo.floorFinish ? spaceInfo.floorFinish.height : 0;
+  const baseFrameMmCeil = spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height ?? 65) : 0;
   const topFrameMmCeil = spaceInfo.frameSize?.top ?? 30;
+  const floorY = mmToThreeUnits(floorFinishMmCeil + baseFrameMmCeil) + floatHeight;
   const ceilingY = mmToThreeUnits(spaceInfo.height - topFrameMmCeil);
   
   // 단내림 천장 높이: 바닥(0)에서 단내림 전체 높이 - 상단몰딩 높이
