@@ -3699,8 +3699,8 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
           </>
         )}
 
-        {/* 잠긴 가구 중앙에 자물쇠 아이콘 표시 (선택 여부와 무관, readOnly/자유배치 모드에서는 숨김) */}
-        {placedModule.isLocked && !readOnly && spaceInfo.layoutMode !== 'free-placement' && (
+        {/* 잠긴 가구 중앙에 자물쇠 아이콘 표시 (선택 여부와 무관, readOnly 모드에서는 숨김) */}
+        {placedModule.isLocked && !readOnly && (
           <Html
             position={[0, 0, 0]}
             center
