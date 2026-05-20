@@ -2232,6 +2232,13 @@ const Room: React.FC<RoomProps> = ({
 
                 // 그 외: 전체 높이로 렌더링
                 if (!hasDroppedCeiling || !isRightDropped) {
+                  const wallEdgeColor = '#8f8f8f';
+                  const halfD = extendedPanelDepth / 2;
+                  const halfH = height / 2;
+                  const wallEdgePos = new Float32Array([
+                    -halfD, halfH, 0, halfD, halfH, 0,
+                    -halfD, -halfH, 0, halfD, -halfH, 0,
+                  ]);
                   return renderMode === 'solid' ? (
                     <mesh
                       position={[width / 2 + 0.001, panelStartY + height / 2, extendedZOffset + extendedPanelDepth / 2]}
@@ -2242,6 +2249,12 @@ const Room: React.FC<RoomProps> = ({
                       <primitive
                         ref={rightWallMaterialRef}
                         object={rightWallMaterial} />
+                      <lineSegments renderOrder={2}>
+                        <bufferGeometry>
+                          <bufferAttribute attach="attributes-position" args={[wallEdgePos, 3]} />
+                        </bufferGeometry>
+                        <lineBasicMaterial color={wallEdgeColor} />
+                      </lineSegments>
                     </mesh>
                   ) : null;
                 }
@@ -3039,7 +3052,7 @@ const Room: React.FC<RoomProps> = ({
             const softenSpaceLines = viewMode === '3D';
             const lineBaseColor = softenSpaceLines ? new THREE.Color('#8f8f8f') : threeEdgeColor;
             const lineBackMix = softenSpaceLines ? 0.12 : 0;
-            const lineFrontMix = softenSpaceLines ? 0.68 : 0.7;
+            const lineFrontMix = softenSpaceLines ? 0.48 : 0.7;
             const lineBackColor = lineBaseColor.clone().lerp(bgColor, lineBackMix);
             const lineFrontColor = lineBaseColor.clone().lerp(bgColor, lineFrontMix);
 
@@ -3071,7 +3084,7 @@ const Room: React.FC<RoomProps> = ({
               const baseG = baseGray.g;
               const baseB = baseGray.b;
               // 앞쪽으로 갈수록 흰색에 섞이는 비율
-              const fadeWhiteMax = softenSpaceLines ? 0.92 : 0.7;
+              const fadeWhiteMax = softenSpaceLines ? 0.62 : 0.7;
               solidThemeLines.forEach((line, i) => {
                 for (let j = 0; j < 6; j++) solidThemePositions![i * 6 + j] = line[j];
                 // 각 endpoint의 z값으로 진하기 결정 (z1 → 0, z2 → 1)
@@ -3103,7 +3116,7 @@ const Room: React.FC<RoomProps> = ({
                       depthTest={true}
                       depthWrite={false}
                       transparent={softenSpaceLines}
-                      opacity={softenSpaceLines ? 0.82 : 1}
+                      opacity={softenSpaceLines ? 0.86 : 1}
                     />
                   </lineSegments>
                 )}
@@ -3118,7 +3131,7 @@ const Room: React.FC<RoomProps> = ({
                       depthTest={true}
                       depthWrite={false}
                       transparent
-                      opacity={softenSpaceLines ? 0.78 : 1}
+                      opacity={softenSpaceLines ? 0.82 : 1}
                       polygonOffset
                       polygonOffsetFactor={-50}
                       polygonOffsetUnits={-50}
