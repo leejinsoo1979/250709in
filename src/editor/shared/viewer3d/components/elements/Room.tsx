@@ -3201,9 +3201,6 @@ const Room: React.FC<RoomProps> = ({
                       depthWrite={false}
                       transparent
                       opacity={softenSpaceLines ? spaceLineTone.cornerOpacity : 1}
-                      polygonOffset
-                      polygonOffsetFactor={-50}
-                      polygonOffsetUnits={-50}
                     />
                   </lineSegments>
                 )}
